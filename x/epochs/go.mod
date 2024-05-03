@@ -1,6 +1,6 @@
 module cosmossdk.io/x/epochs
 
-go 1.21.0
+go 1.22
 
 require (
 	cosmossdk.io/api v0.7.4
@@ -158,6 +158,7 @@ require cosmossdk.io/depinject v1.0.0-alpha.4
 require (
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
+	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/lib/pq v1.10.7 // indirect
@@ -174,6 +175,7 @@ replace (
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
+	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/staking => ../staking
 	cosmossdk.io/x/tx => ../tx
 )

@@ -2431,7 +2431,7 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	baseapptestutil.RegisterKeyValueServer(suite.baseApp.MsgServiceRouter(), MsgKeyValueImpl{})
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
 	require.NoError(t, err)
@@ -2440,9 +2440,9 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	reqCheckTx := abci.RequestCheckTx{
+	reqCheckTx := abci.CheckTxRequest{
 		Tx:   txBytes,
-		Type: abci.CheckTxType_New,
+		Type: abci.CHECK_TX_TYPE_CHECK,
 	}
 	_, err = suite.baseApp.CheckTx(&reqCheckTx)
 	require.NoError(t, err)
@@ -2458,7 +2458,7 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	require.Equal(t, 2, pool.CountTx())
 
 	// call prepareProposal before calling recheck tx, just as a sanity check
-	reqPrepareProposal := abci.RequestPrepareProposal{
+	reqPrepareProposal := abci.PrepareProposalRequest{
 		MaxTxBytes: 1000,
 		Height:     1,
 	}
@@ -2467,9 +2467,9 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	require.Equal(t, 2, len(resPrepareProposal.Txs))
 
 	// call recheck on the first tx, it MUST return an error
-	reqReCheckTx := abci.RequestCheckTx{
+	reqReCheckTx := abci.CheckTxRequest{
 		Tx:   txBytes,
-		Type: abci.CheckTxType_Recheck,
+		Type: abci.CHECK_TX_TYPE_RECHECK,
 	}
 	resp, err := suite.baseApp.CheckTx(&reqReCheckTx)
 	require.NoError(t, err)
@@ -2488,17 +2488,17 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	reqProposalTxBytes := [][]byte{
 		tx2Bytes,
 	}
-	reqProcessProposal := abci.RequestProcessProposal{
+	reqProcessProposal := abci.ProcessProposalRequest{
 		Txs:    reqProposalTxBytes,
 		Height: reqPrepareProposal.Height,
 	}
 
 	resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
 	require.NoError(t, err)
-	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
+	require.Equal(t, abci.PROCESS_PROPOSAL_STATUS_ACCEPT, resProcessProposal.Status)
 
 	// the same txs as in PrepareProposal
-	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+	res, err := suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: suite.baseApp.LastBlockHeight() + 1,
 		Txs:    reqProposalTxBytes,
 	})

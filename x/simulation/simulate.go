@@ -335,7 +335,7 @@ Comment: %s`,
 			queueOperations(operationQueue, timeOperationQueue, futureOps)
 
 			if testingMode && opCount%50 == 0 {
-				fmt.Fprintf(w, "\rSimulating... block %d/%d, operation %d/%d. ",
+				_, _ = fmt.Fprintf(w, "\rSimulating... block %d/%d, operation %d/%d. ",
 					header.Height, config.NumBlocks, opCount, blocksize)
 			}
 

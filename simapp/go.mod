@@ -234,6 +234,36 @@ require (
 // 	<temporary replace>
 // )
 
+// SimApp on main always tests the latest extracted SDK modules importing the sdk
+replace (
+	cosmossdk.io/api => ../api
+	cosmossdk.io/client/v2 => ../client/v2
+	cosmossdk.io/collections => ../collections
+	cosmossdk.io/core => ../core
+	cosmossdk.io/depinject => ../depinject
+	cosmossdk.io/tools/confix => ../tools/confix
+	cosmossdk.io/x/accounts => ../x/accounts
+	cosmossdk.io/x/accounts/defaults/lockup => ../x/accounts/defaults/lockup
+	cosmossdk.io/x/auth => ../x/auth
+	cosmossdk.io/x/authz => ../x/authz
+	cosmossdk.io/x/bank => ../x/bank
+	cosmossdk.io/x/circuit => ../x/circuit
+	cosmossdk.io/x/distribution => ../x/distribution
+	cosmossdk.io/x/epochs => ../x/epochs
+	cosmossdk.io/x/evidence => ../x/evidence
+	cosmossdk.io/x/feegrant => ../x/feegrant
+	cosmossdk.io/x/gov => ../x/gov
+	cosmossdk.io/x/group => ../x/group
+	cosmossdk.io/x/mint => ../x/mint
+	cosmossdk.io/x/nft => ../x/nft
+	cosmossdk.io/x/params => ../x/params
+	cosmossdk.io/x/protocolpool => ../x/protocolpool
+	cosmossdk.io/x/slashing => ../x/slashing
+	cosmossdk.io/x/staking => ../x/staking
+	cosmossdk.io/x/upgrade => ../x/upgrade
+	cosmossdk.io/store => ../store
+)
+
 // Below are the long-lived replace of the SimApp
 replace (
 	// use cosmos fork of keyring

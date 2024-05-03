@@ -21,11 +21,11 @@ For more information on SDK tooling, see the [Tooling](https://docs.cosmos.netwo
 ## State Management
 
 * [Collections](./02-collections.md) - State management library
-* [ORM](_category_.json/03-orm.md) - State management library
+* [ORM](./03-orm.md) - State management library
 
 ## Automation
 
-* [Depinject](./01-depinject.md) - Dependency injection framework
+* [Depinject](https://github.com/cosmos/cosmos-sdk-docs/blob/main/docs/build/packages/01-depinject.md) - Dependency injection framework
 * [Client/v2](https://pkg.go.dev/cosmossdk.io/client/v2) - Library powering [AutoCLI](https://docs.cosmos.network/main/core/autocli)
 
 ## Utilities

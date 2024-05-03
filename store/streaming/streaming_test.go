@@ -26,9 +26,9 @@ type PluginTestSuite struct {
 
 	workDir string
 
-	finalizeBlockReq abci.RequestFinalizeBlock
-	finalizeBlockRes abci.ResponseFinalizeBlock
-	commitRes        abci.ResponseCommit
+	finalizeBlockReq abci.FinalizeBlockRequest
+	finalizeBlockRes abci.FinalizeBlockResponse
+	commitRes        abci.CommitResponse
 
 	changeSet []*storetypes.StoreKVPair
 }
@@ -67,14 +67,14 @@ func (s *PluginTestSuite) SetupTest() {
 
 	// test abci message types
 
-	s.finalizeBlockReq = abci.RequestFinalizeBlock{
+	s.finalizeBlockReq = abci.FinalizeBlockRequest{
 		Height:            s.loggerCtx.BlockHeight(),
 		Txs:               [][]byte{{1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}},
 		Misbehavior:       []abci.Misbehavior{},
 		Hash:              []byte{1, 2, 3, 4, 5, 6, 7, 8, 9},
 		DecidedLastCommit: abci.CommitInfo{},
 	}
-	s.finalizeBlockRes = abci.ResponseFinalizeBlock{
+	s.finalizeBlockRes = abci.FinalizeBlockResponse{
 		Events:                []abci.Event{},
 		ConsensusParamUpdates: &cmtproto.ConsensusParams{},
 		ValidatorUpdates:      []abci.ValidatorUpdate{},
@@ -89,7 +89,7 @@ func (s *PluginTestSuite) SetupTest() {
 			Log:       "mockLog",
 		}},
 	}
-	s.commitRes = abci.ResponseCommit{}
+	s.commitRes = abci.CommitResponse{}
 
 	// test store kv pair types
 	for range [2000]int{} {
@@ -147,7 +147,7 @@ func (m MockContext) Logger() log.Logger                            { return m.l
 func (m MockContext) StreamingManager() storetypes.StreamingManager { return m.streamingManager }
 
 func (m MockContext) BlockHeader() cmtproto.Header {
-	msg := proto.Clone(&m.header).(*tmproto.Header)
+	msg := proto.Clone(&m.header).(*cmtproto.Header)
 	return *msg
 }
 

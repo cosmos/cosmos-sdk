@@ -1307,7 +1307,7 @@ type BlockMetadata struct {
 
 	ResponseCommit        *v1.CommitResponse        `protobuf:"bytes,6,opt,name=response_commit,json=responseCommit,proto3" json:"response_commit,omitempty"`
 	RequestFinalizeBlock  *v1.FinalizeBlockRequest  `protobuf:"bytes,7,opt,name=request_finalize_block,json=requestFinalizeBlock,proto3" json:"request_finalize_block,omitempty"`
-	ResponseFinalizeBlock *v1.FinalizeBlockResponse `protobuf:"bytes,8,opt,name=response_finalize_block,json=responseFinalizeBlock,proto3" json:"response_finalize_block,omitempty"` // TODO: should we renumber this?
+	ResponseFinalizeBlock *v1.FinalizeBlockResponse `protobuf:"bytes,8,opt,name=response_finalize_block,json=responseFinalizeBlock,proto3" json:"response_finalize_block,omitempty"`
 }
 
 func (x *BlockMetadata) Reset() {

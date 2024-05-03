@@ -32,7 +32,7 @@ message BlockMetadata {
 
   cometbft.abci.v1.CommitResponse        response_commit         = 6;
   cometbft.abci.v1.FinalizeBlockRequest  request_finalize_block  = 7;
-  cometbft.abci.v1.FinalizeBlockResponse response_finalize_block = 8; // TODO: should we renumber this?
+  cometbft.abci.v1.FinalizeBlockResponse response_finalize_block = 8;
 
   reserved 1, 2, 3, 4, 5; // reserved for from previous use in comet <= 0.37
 }

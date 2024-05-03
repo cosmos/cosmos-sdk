@@ -395,7 +395,10 @@ func (s *Store) writeSC(cs *corestore.Changeset) error {
 			if err := s.stateCommitment.Close(); err != nil {
 				return fmt.Errorf("failed to close the old SC store: %w", err)
 			}
-			s.stateCommitment = s.migrationManager.GetStateCommitment()
+			newStateCommitment := s.migrationManager.GetStateCommitment()
+			if newStateCommitment != nil {
+				s.stateCommitment = newStateCommitment
+			}
 			if err := s.migrationManager.Close(); err != nil {
 				return fmt.Errorf("failed to close migration manager: %w", err)
 			}

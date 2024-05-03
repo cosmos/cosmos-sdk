@@ -2,7 +2,9 @@ package migration
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
+	"io"
 	"sync"
 	"time"
 
@@ -14,6 +16,7 @@ import (
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/snapshots"
+	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 	"cosmossdk.io/store/v2/storage"
 )
 
@@ -49,6 +52,8 @@ type Manager struct {
 }
 
 // NewManager returns a new Manager.
+//
+// NOTE: `sc` can be `nil` if don't want to migrate the commitment.
 func NewManager(db store.RawDB, sm *snapshots.Manager, ss *storage.StorageStore, sc *commitment.CommitStore, logger log.Logger) *Manager {
 	return &Manager{
 		logger:           logger,
@@ -106,8 +111,51 @@ func (m *Manager) Migrate(height uint64) error {
 	})
 	eg.Go(func() error {
 		defer close(chStorage)
-		_, err := m.stateCommitment.Restore(height, 0, ms, chStorage)
-		return err
+		if m.stateCommitment != nil {
+			if _, err := m.stateCommitment.Restore(height, 0, ms, chStorage); err != nil {
+				return err
+			}
+		} else { // there is no commitment migration, just consume the stream to restore the state storage
+			var storeKey []byte
+		loop:
+			for {
+				snapshotItem := snapshotstypes.SnapshotItem{}
+				err := ms.ReadMsg(&snapshotItem)
+				if errors.Is(err, io.EOF) {
+					break
+				}
+				if err != nil {
+					return fmt.Errorf("failed to read snapshot item: %w", err)
+				}
+				switch item := snapshotItem.Item.(type) {
+				case *snapshotstypes.SnapshotItem_Store:
+					storeKey = []byte(item.Store.Name)
+				case *snapshotstypes.SnapshotItem_IAVL:
+					if item.IAVL.Height == 0 { // only restore the leaf nodes
+						key := item.IAVL.Key
+						if key == nil {
+							key = []byte{}
+						}
+						value := item.IAVL.Value
+						if value == nil {
+							value = []byte{}
+						}
+						chStorage <- &corestore.StateChanges{
+							Actor: storeKey,
+							StateChanges: []corestore.KVPair{
+								{
+									Key:   key,
+									Value: value,
+								},
+							},
+						}
+					}
+				default:
+					break loop
+				}
+			}
+		}
+		return nil
 	})
 
 	if err := eg.Wait(); err != nil {
@@ -186,12 +234,13 @@ func (m *Manager) Sync() error {
 			if err := encoding.UnmarshalChangeset(cs, csBytes); err != nil {
 				return fmt.Errorf("failed to unmarshal changeset: %w", err)
 			}
-
-			if err := m.stateCommitment.WriteBatch(cs); err != nil {
-				return fmt.Errorf("failed to write changeset to commitment: %w", err)
-			}
-			if _, err := m.stateCommitment.Commit(version); err != nil {
-				return fmt.Errorf("failed to commit changeset to commitment: %w", err)
+			if m.stateCommitment != nil {
+				if err := m.stateCommitment.WriteBatch(cs); err != nil {
+					return fmt.Errorf("failed to write changeset to commitment: %w", err)
+				}
+				if _, err := m.stateCommitment.Commit(version); err != nil {
+					return fmt.Errorf("failed to commit changeset to commitment: %w", err)
+				}
 			}
 			if err := m.stateStorage.ApplyChangeset(version, cs); err != nil {
 				return fmt.Errorf("failed to write changeset to storage: %w", err)
@@ -212,7 +261,9 @@ func (m *Manager) Close() error {
 	if err := m.db.Close(); err != nil {
 		return fmt.Errorf("failed to close db: %w", err)
 	}
-	m.snapshotsManager.EndMigration(m.stateCommitment)
+	if m.stateCommitment != nil {
+		m.snapshotsManager.EndMigration(m.stateCommitment)
+	}
 
 	return nil
 }

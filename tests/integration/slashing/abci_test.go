@@ -19,6 +19,7 @@ import (
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -83,8 +84,9 @@ func TestBeginBlocker(t *testing.T) {
 			BlockIDFlag: comet.BlockIDFlagCommit,
 		}}},
 	})
+	cometInfoService := runtime.NewContextAwareCometInfoService()
 
-	err = slashing.BeginBlocker(ctx, slashingKeeper)
+	err = slashing.BeginBlocker(ctx, slashingKeeper, cometInfoService)
 	require.NoError(t, err)
 
 	info, err := slashingKeeper.ValidatorSigningInfo.Get(ctx, sdk.ConsAddress(pk.Address()))
@@ -102,7 +104,7 @@ func TestBeginBlocker(t *testing.T) {
 	for ; height < signedBlocksWindow; height++ {
 		ctx = ctx.WithHeaderInfo(coreheader.Info{Height: height})
 
-		err = slashing.BeginBlocker(ctx, slashingKeeper)
+		err = slashing.BeginBlocker(ctx, slashingKeeper, cometInfoService)
 		require.NoError(t, err)
 	}
 
@@ -117,7 +119,7 @@ func TestBeginBlocker(t *testing.T) {
 			}}},
 		})
 
-		err = slashing.BeginBlocker(ctx, slashingKeeper)
+		err = slashing.BeginBlocker(ctx, slashingKeeper, cometInfoService)
 		require.NoError(t, err)
 	}
 

@@ -36,7 +36,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+<<<<<<< HEAD
 ## [v2.0.0-beta.2] - 2024-XX-XX
+=======
+<!-- ## [v2.1.0-beta.1] to be tagged after v0.51 final or in SDK agnostic version -->
+
+### Features
+
+* [#18626](https://github.com/cosmos/cosmos-sdk/pull/18626) Support for off-chain signing and verification of a file.
+* [#18461](https://github.com/cosmos/cosmos-sdk/pull/18461) Support governance proposals.
+* [#19039](https://github.com/cosmos/cosmos-sdk/pull/19039) Add support for pubkey in autocli.
+* [#20266](https://github.com/cosmos/cosmos-sdk/pull/20266) Ability to override the short description in AutoCLI-generated top-level commands.
+>>>>>>> 7a505ade6 (feat(client/v2): override short description in generated command (#20266))
 
 ### Improvements
 

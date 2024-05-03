@@ -241,7 +241,3 @@ Those modules can be considered as part of the Cosmos SDK, but features and impr
 ### Modules that do not depend on the Cosmos SDK
 
 Modules that do not depend on the Cosmos SDK can be released at any time from the `main` branch of the Cosmos SDK repository.
-
-#### Exception to the rule
-
-* Store v1 is released from `release/v0.50.x` branch.

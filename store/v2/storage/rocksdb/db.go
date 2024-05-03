@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-
 	"slices"
 
 	"github.com/linxGnu/grocksdb"
@@ -212,7 +211,7 @@ func storePrefix(storeKey []byte) []byte {
 	return append([]byte(StorePrefixTpl), storeKey...)
 }
 
-func prependStoreKey(storeKey []byte, key []byte) []byte {
+func prependStoreKey(storeKey, key []byte) []byte {
 	return append(storePrefix(storeKey), key...)
 }
 

@@ -21,9 +21,7 @@ import (
 	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
-var (
-	storeKey1 = []byte("store1")
-)
+var storeKey1 = []byte("store1")
 
 var (
 	backends = map[string]func(dataDir string) (store.VersionedDatabase, error){

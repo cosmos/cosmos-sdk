@@ -1,6 +1,6 @@
 module cosmossdk.io/x/authz
 
-go 1.22.2
+go 1.22
 
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.33.0-20240130113600-88ef6483f90f.1 // indirect

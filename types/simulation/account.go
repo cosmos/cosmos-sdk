@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	"golang.org/x/exp/maps"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -31,23 +33,26 @@ func RandomAcc(r *rand.Rand, accs []Account) (Account, int) {
 	return accs[idx], idx
 }
 
-// RandomAccounts generates n random accounts
+// RandomAccounts generates n random accounts without duplicates.
 func RandomAccounts(r *rand.Rand, n int) []Account {
-	accs := make([]Account, n)
-
-	for i := 0; i < n; i++ {
+	accs := make(map[string]Account, n)
+	for len(accs) < n {
 		// don't need that much entropy for simulation
 		privkeySeed := make([]byte, 15)
-		r.Read(privkeySeed)
 
-		accs[i].PrivKey = secp256k1.GenPrivKeyFromSecret(privkeySeed)
-		accs[i].PubKey = accs[i].PrivKey.PubKey()
-		accs[i].Address = sdk.AccAddress(accs[i].PubKey.Address())
-
-		accs[i].ConsKey = ed25519.GenPrivKeyFromSecret(privkeySeed)
+		if _, err := r.Read(privkeySeed); err != nil {
+			panic(err)
+		}
+		privKey := secp256k1.GenPrivKeyFromSecret(privkeySeed)
+		addr := sdk.AccAddress(privKey.PubKey().Address())
+		accs[string(addr.Bytes())] = Account{
+			PrivKey: privKey,
+			PubKey:  privKey.PubKey(),
+			Address: addr,
+			ConsKey: ed25519.GenPrivKeyFromSecret(privkeySeed),
+		}
 	}
-
-	return accs
+	return maps.Values(accs)
 }
 
 // FindAccount iterates over all the simulation accounts to find the one that matches

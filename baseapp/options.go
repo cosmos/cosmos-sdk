@@ -372,3 +372,13 @@ func (app *BaseApp) SetStreamingManager(manager storetypes.StreamingManager) {
 func (app *BaseApp) SetDisableBlockGasMeter(disableBlockGasMeter bool) {
 	app.disableBlockGasMeter = disableBlockGasMeter
 }
+
+// SetMsgServiceRouter sets the MsgServiceRouter of a BaseApp.
+func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
+	app.msgServiceRouter = msgServiceRouter
+}
+
+// SetGRPCQueryRouter sets the GRPCQueryRouter of the BaseApp.
+func (app *BaseApp) SetGRPCQueryRouter(grpcQueryRouter *GRPCQueryRouter) {
+	app.grpcQueryRouter = grpcQueryRouter
+}

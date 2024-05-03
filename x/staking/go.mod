@@ -12,7 +12,7 @@ require (
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/store v1.1.0
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91 // indirect
-	github.com/cometbft/cometbft v0.38.7-0.20240412124004-1f67e396cf45
+	github.com/cometbft/cometbft v0.38.7
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.51.0
 	github.com/cosmos/gogoproto v1.4.12

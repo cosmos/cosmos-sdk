@@ -18,6 +18,8 @@ require (
 	google.golang.org/protobuf v1.34.0
 )
 
+require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
+
 require (
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	go.opencensus.io v0.24.0 // indirect
@@ -179,6 +181,7 @@ replace (
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
+	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/distribution => ../distribution
 	cosmossdk.io/x/mint => ../mint
 	cosmossdk.io/x/slashing => ../slashing

@@ -13,6 +13,8 @@ require (
 	github.com/cosmos/gogoproto v1.4.12
 )
 
+require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
+
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.33.0-20240312114316-c0d3497e35d6.1 // indirect
 	github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240429102542-490e9bc3de65 // indirect
@@ -175,6 +177,7 @@ replace (
 	cosmossdk.io/x/accounts => ../../.
 	cosmossdk.io/x/auth => ../../../auth
 	cosmossdk.io/x/bank => ../../../bank
+	cosmossdk.io/x/consensus => ../../../consensus
 	cosmossdk.io/x/distribution => ../../../distribution
 	cosmossdk.io/x/gov => ../../../gov
 	cosmossdk.io/x/mint => ../../../mint

@@ -47,6 +47,8 @@ require (
 
 require github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240429102542-490e9bc3de65
 
+require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
+
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.33.0-20240312114316-c0d3497e35d6.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.33.0-20240130113600-88ef6483f90f.1 // indirect
@@ -249,6 +251,7 @@ replace (
 	cosmossdk.io/x/authz => ../x/authz
 	cosmossdk.io/x/bank => ../x/bank
 	cosmossdk.io/x/circuit => ../x/circuit
+	cosmossdk.io/x/consensus => ../x/consensus
 	cosmossdk.io/x/distribution => ../x/distribution
 	cosmossdk.io/x/epochs => ../x/epochs
 	cosmossdk.io/x/evidence => ../x/evidence

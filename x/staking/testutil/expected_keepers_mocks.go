@@ -15,7 +15,6 @@ import (
 	v1 "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	types0 "github.com/cosmos/cosmos-sdk/crypto/types"
 	types1 "github.com/cosmos/cosmos-sdk/types"
-	types2 "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	gomock "github.com/golang/mock/gomock"
 )
 

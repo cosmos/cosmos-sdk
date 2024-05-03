@@ -9,17 +9,19 @@ import (
 	"os/signal"
 	"syscall"
 
-	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/server/v2/cometbft"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/client/v2/offchain"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
+	"cosmossdk.io/server/v2/cometbft"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 	authcmd "cosmossdk.io/x/auth/client/cli"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -30,12 +32,12 @@ import (
 
 	// TODO migrate all server dependencies to server/v2
 	// "github.com/cosmos/cosmos-sdk/server"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/server"
 	serverv2 "cosmossdk.io/server/v2"
+	"github.com/cosmos/cosmos-sdk/server"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+
 	// end TODO
 
-	dbm "github.com/cosmos/cosmos-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -60,8 +62,8 @@ func (t *temporaryTxDecoder) DecodeJSON(bz []byte) (transaction.Tx, error) {
 func initRootCmd(
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,
-	interfaceRegistry codectypes.InterfaceRegistry,
-	appCodec codec.Codec,
+	_ codectypes.InterfaceRegistry,
+	_ codec.Codec,
 	moduleManager *runtimev2.MM,
 	v1moduleManager *module.Manager,
 ) {
@@ -77,7 +79,7 @@ func initRootCmd(
 		// snapshot.Cmd(newApp),
 	)
 
-	serverv2.AddCommands(rootCmd, log.NewNopLogger(), tempDir(), nil) // TODO: How to cast from AppModule to ServerModule 
+	serverv2.AddCommands(rootCmd, log.NewNopLogger(), tempDir(), nil) // TODO: How to cast from AppModule to ServerModule
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(

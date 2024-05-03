@@ -3,8 +3,6 @@ package cmd
 import (
 	"os"
 
-	"cosmossdk.io/runtime/v2"
-
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/client/v2/autocli"
@@ -13,6 +11,7 @@ import (
 	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/simapp/v2"
 	"cosmossdk.io/x/auth/tx"
 	authtxconfig "cosmossdk.io/x/auth/tx/config"

@@ -9,8 +9,9 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"cosmossdk.io/log"
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/log"
 )
 
 func Commands(logger log.Logger, homePath string, modules ...ServerModule) (CLIConfig, error) {

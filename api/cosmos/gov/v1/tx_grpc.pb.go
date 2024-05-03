@@ -50,25 +50,15 @@ type MsgClient interface {
 	Deposit(ctx context.Context, in *MsgDeposit, opts ...grpc.CallOption) (*MsgDepositResponse, error)
 	// UpdateParams defines a governance operation for updating the x/gov module
 	// parameters. The authority is defined in the keeper.
-	//
-	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	// CancelProposal defines a method to cancel governance proposal
-	//
-	// Since: cosmos-sdk 0.50
 	CancelProposal(ctx context.Context, in *MsgCancelProposal, opts ...grpc.CallOption) (*MsgCancelProposalResponse, error)
 	// SubmitMultipleChoiceProposal defines a method to create new multiple choice proposal.
-	//
-	// Since: x/gov 1.0.0
 	SubmitMultipleChoiceProposal(ctx context.Context, in *MsgSubmitMultipleChoiceProposal, opts ...grpc.CallOption) (*MsgSubmitMultipleChoiceProposalResponse, error)
 	// UpdateMessageParams defines a method to create or update message params when used in a governance proposal.
-	//
-	// Since: x/gov 1.0.0
 	UpdateMessageParams(ctx context.Context, in *MsgUpdateMessageParams, opts ...grpc.CallOption) (*MsgUpdateMessageParamsResponse, error)
 	// SudoExec defines a method to execute an inner message as the governance module.
 	// It permits to execute any message from a proposal, even if they weren't meant to be governance proposals.
-	//
-	// Since: x/gov 1.0.0
 	SudoExec(ctx context.Context, in *MsgSudoExec, opts ...grpc.CallOption) (*MsgSudoExecResponse, error)
 }
 
@@ -187,25 +177,15 @@ type MsgServer interface {
 	Deposit(context.Context, *MsgDeposit) (*MsgDepositResponse, error)
 	// UpdateParams defines a governance operation for updating the x/gov module
 	// parameters. The authority is defined in the keeper.
-	//
-	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	// CancelProposal defines a method to cancel governance proposal
-	//
-	// Since: cosmos-sdk 0.50
 	CancelProposal(context.Context, *MsgCancelProposal) (*MsgCancelProposalResponse, error)
 	// SubmitMultipleChoiceProposal defines a method to create new multiple choice proposal.
-	//
-	// Since: x/gov 1.0.0
 	SubmitMultipleChoiceProposal(context.Context, *MsgSubmitMultipleChoiceProposal) (*MsgSubmitMultipleChoiceProposalResponse, error)
 	// UpdateMessageParams defines a method to create or update message params when used in a governance proposal.
-	//
-	// Since: x/gov 1.0.0
 	UpdateMessageParams(context.Context, *MsgUpdateMessageParams) (*MsgUpdateMessageParamsResponse, error)
 	// SudoExec defines a method to execute an inner message as the governance module.
 	// It permits to execute any message from a proposal, even if they weren't meant to be governance proposals.
-	//
-	// Since: x/gov 1.0.0
 	SudoExec(context.Context, *MsgSudoExec) (*MsgSudoExecResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }

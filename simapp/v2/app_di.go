@@ -5,13 +5,14 @@ import (
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	"cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/root"
-
-	"cosmossdk.io/depinject"
+	"cosmossdk.io/x/accounts"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
@@ -28,8 +29,6 @@ import (
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
-
-	"cosmossdk.io/runtime/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -54,6 +53,7 @@ type SimApp struct {
 	consensusAuthority consensustypes.Authority
 
 	// keepers
+	AccountsKeeper        accounts.Keeper
 	AuthKeeper            authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
 	StakingKeeper         *stakingkeeper.Keeper
@@ -122,7 +122,7 @@ func NewSimApp(
 					},
 					SCRawDB: scRawDb,
 				},
-				//appOpts,
+				// appOpts,
 
 				// ADVANCED CONFIGURATION
 

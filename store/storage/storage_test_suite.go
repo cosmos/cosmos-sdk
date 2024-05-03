@@ -273,7 +273,7 @@ func (s *StorageTestSuite) TestDatabase_Iterator() {
 		s.Require().False(itr.Valid())
 	}
 
-	// iterator with with a start and end domain over multiple versions
+	// iterator with a start and end domain over multiple versions
 	for v := uint64(1); v < 5; v++ {
 		itr2, err := db.Iterator(storeKey1Bytes, v, []byte("key010"), []byte("key019"))
 		s.Require().NoError(err)

@@ -1,7 +1,7 @@
 package types // noalias
 
 import (
-	context "context"
+	"context"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
@@ -31,4 +31,5 @@ type BankKeeper interface {
 	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	MintCoins(ctx context.Context, name string, amt sdk.Coins) error
+	GetSupply(ctx context.Context, denom string) sdk.Coin
 }

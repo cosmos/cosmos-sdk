@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -54,7 +53,7 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 
 	// create upgrade dir
 	upgradeLocation := cfg.UpgradeDir(upgradeName)
-	if err := os.MkdirAll(path.Join(upgradeLocation, "bin"), 0o750); err != nil {
+	if err := os.MkdirAll(path.Join(upgradeLocation, "bin"), 0o755); err != nil {
 		return fmt.Errorf("failed to create upgrade directory: %w", err)
 	}
 
@@ -94,7 +93,7 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		logger.Info(fmt.Sprintf("%s created, %s upgrade binary will switch at height %d", filepath.Join(cfg.UpgradeInfoFilePath(), upgradetypes.UpgradeInfoFilename), upgradeName, upgradeHeight))
+		logger.Info(fmt.Sprintf("%s created, %s upgrade binary will switch at height %d", cfg.UpgradeInfoFilePath(), upgradeName, upgradeHeight))
 	}
 
 	return nil
@@ -110,7 +109,8 @@ func saveOrAbort(path string, data []byte, force bool) error {
 		return fmt.Errorf("failed to check if file exists: %w", err)
 	}
 
-	if err := os.WriteFile(path, data, 0o600); err != nil {
+	//nolint:gosec // We need broader permissions to make it executable
+	if err := os.WriteFile(path, data, 0o755); err != nil {
 		return fmt.Errorf("failed to write binary to location: %w", err)
 	}
 

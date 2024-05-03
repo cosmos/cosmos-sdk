@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/log v1.3.1
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cockroachdb/pebble v1.1.0
-	github.com/cometbft/cometbft v0.38.6
+	github.com/cometbft/cometbft v0.38.7
 	github.com/cosmos/gogoproto v1.4.12
 	github.com/cosmos/iavl v1.1.1
 	github.com/cosmos/ics23/go v0.10.0

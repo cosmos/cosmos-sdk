@@ -1,13 +1,15 @@
 package types
 
 import (
+	coretransaction "cosmossdk.io/core/transaction"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
-	_ sdk.Msg = &MsgCreateVestingAccount{}
-	_ sdk.Msg = &MsgCreatePermanentLockedAccount{}
-	_ sdk.Msg = &MsgCreatePeriodicVestingAccount{}
+	_ coretransaction.Type = &MsgCreateVestingAccount{}
+	_ coretransaction.Type = &MsgCreatePermanentLockedAccount{}
+	_ coretransaction.Type = &MsgCreatePeriodicVestingAccount{}
 )
 
 // NewMsgCreateVestingAccount returns a reference to a new MsgCreateVestingAccount.

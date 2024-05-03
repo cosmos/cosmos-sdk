@@ -35,3 +35,17 @@ $SIMD genesis collect-gentxs
 
 cd v2/simdv2/
 go run main.go start
+
+# Comment since its not working for now
+# # Wait to chain start then query block
+# sleep 15
+# cd ../..
+
+# $SIMD query block --type=height 5
+# if [ $? -eq 0 ]; then
+#     echo "Success"
+#     exit 0
+# else 
+#     echo "Fail"
+#     exit 1
+# fi

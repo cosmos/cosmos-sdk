@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/math"
+	"cosmossdk.io/x/mint/types"
 )
 
 // Migrator is a struct for handling in-place state migrations.
@@ -35,7 +35,8 @@ func (m Migrator) Migrate2to3(ctx context.Context) error {
 	}
 
 	// Initialize the new MaxSupply parameter with the default value
-	params.MaxSupply = math.ZeroInt()
+	defaultParams := types.DefaultParams()
+	params.MaxSupply = defaultParams.MaxSupply
 
 	// Set the updated params
 	err = m.keeper.Params.Set(ctx, params)

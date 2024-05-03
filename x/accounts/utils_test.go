@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
+	coretransaction "cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	"cosmossdk.io/x/tx/signing"
@@ -22,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ address.Codec = (*addressCodec)(nil)
@@ -63,7 +63,7 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 	queryRouter := baseapp.NewGRPCQueryRouter()
 	queryRouter.SetInterfaceRegistry(ir)
 
-	ir.RegisterImplementations((*sdk.Msg)(nil),
+	ir.RegisterImplementations((*coretransaction.Type)(nil),
 		&bankv1beta1.MsgSend{},
 		&bankv1beta1.MsgBurn{},
 		&bankv1beta1.MsgSetSendEnabled{},

@@ -40,7 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvement
 
-* (runtime) Expose grpc query router via depinject.
+* (runtime) [#20264](https://github.com/cosmos/cosmos-sdk/pull/20264) Expose grpc query router via depinject.
 
 ### Bug Fixes
 

@@ -1,6 +1,6 @@
 module cosmossdk.io/x/circuit
 
-go 1.22
+go 1.22.2
 
 require (
 	cosmossdk.io/api v0.7.5

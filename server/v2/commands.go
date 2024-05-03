@@ -11,10 +11,13 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 )
 
-func Commands(logger log.Logger, homePath string, modules ...ServerModule) (CLIConfig, error) {
+type NewCometBFTServerFunc func(*cobra.Command, transaction.Codec[transaction.Tx]) ServerModule
+
+func Commands(rootCmd *cobra.Command, codec transaction.Codec[transaction.Tx], logger log.Logger, homePath string, newCometFunc NewCometBFTServerFunc, modules ...ServerModule,) (CLIConfig, error) {
 	if len(modules) == 0 {
 		// TODO figure if we should define default modules
 		// and if so it should be done here to avoid uncessary dependencies
@@ -34,6 +37,10 @@ func Commands(logger log.Logger, homePath string, modules ...ServerModule) (CLIC
 			if err := v.BindPFlags(cmd.Flags()); err != nil { // the server modules are already instantiated here, so binding the flags is useless.
 				return err
 			}
+
+			// Init CometBFTServer when server start
+			cometServer := newCometFunc(rootCmd, codec)
+			server.modules = append(server.modules, cometServer)
 
 			srvConfig := Config{StartBlock: true}
 			ctx := cmd.Context()
@@ -65,8 +72,8 @@ func Commands(logger log.Logger, homePath string, modules ...ServerModule) (CLIC
 	return cmds, nil
 }
 
-func AddCommands(rootCmd *cobra.Command, logger log.Logger, homePath string, modules ...ServerModule) error {
-	cmds, err := Commands(logger, homePath, modules...)
+func AddCommands(rootCmd *cobra.Command, codec transaction.Codec[transaction.Tx], logger log.Logger, homePath string, newCometFunc NewCometBFTServerFunc, modules ...ServerModule) error {
+	cmds, err := Commands(rootCmd, codec, logger, homePath, newCometFunc, modules...)
 	if err != nil {
 		return err
 	}

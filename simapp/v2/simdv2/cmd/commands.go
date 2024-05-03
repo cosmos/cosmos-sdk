@@ -32,6 +32,7 @@ import (
 
 	// TODO migrate all server dependencies to server/v2
 	"github.com/cosmos/cosmos-sdk/server"
+	serverv2 "cosmossdk.io/server/v2"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -54,6 +55,26 @@ func (t *temporaryTxDecoder) DecodeJSON(bz []byte) (transaction.Tx, error) {
 	return t.txConfig.TxJSONDecoder()(bz)
 }
 
+// newApp creates the application
+func newCometBFTServer(
+	cmd *cobra.Command,
+	txCodec transaction.Codec[transaction.Tx],
+) serverv2.ServerModule {
+	serverCtx := server.GetServerContextFromCmd(cmd)
+	sa := simapp.NewSimApp(serverCtx.Logger, serverCtx.Viper)
+	am := sa.App.AppManager
+	serverCfg := cometbft.Config{CmtConfig: serverCtx.Config, ConsensusAuthority: sa.GetConsensusAuthority()}
+
+	cometServer := cometbft.NewCometBFTServer[transaction.Tx](
+		am,
+		sa.GetStore(),
+		sa.GetLogger(),
+		serverCfg,
+		txCodec,
+	)
+	return cometServer
+}
+
 func initRootCmd(
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,
@@ -69,12 +90,12 @@ func initRootCmd(
 		genutilcli.InitCmd(moduleManager),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
-		startCommand(&temporaryTxDecoder{txConfig}),
+		// startCommand(&temporaryTxDecoder{txConfig}),
 		// pruning.Cmd(newApp),
 		// snapshot.Cmd(newApp),
 	)
 
-	// server.AddCommands(rootCmd, log.NewNopLogger(), tempDir()) // TODO: How to cast from AppModule to ServerModule
+	serverv2.AddCommands(rootCmd, &temporaryTxDecoder{txConfig}, log.NewNopLogger(), tempDir(), newCometBFTServer, nil) // TODO: How to cast from AppModule to ServerModule
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(

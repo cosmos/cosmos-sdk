@@ -45,6 +45,8 @@ require (
 	google.golang.org/protobuf v1.34.0
 )
 
+require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
+
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20240130113600-88ef6483f90f.1 // indirect
 	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.32.0-20231117195010-33ed361a9051.1 // indirect
@@ -242,6 +244,7 @@ replace (
 	cosmossdk.io/x/authz => ../x/authz
 	cosmossdk.io/x/bank => ../x/bank
 	cosmossdk.io/x/circuit => ../x/circuit
+	cosmossdk.io/x/consensus => ../x/consensus
 	cosmossdk.io/x/distribution => ../x/distribution
 	cosmossdk.io/x/epochs => ../x/epochs
 	cosmossdk.io/x/evidence => ../x/evidence

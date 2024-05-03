@@ -1,6 +1,6 @@
 module cosmossdk.io/x/auth
 
-go 1.21.0
+go 1.22
 
 require (
 	cosmossdk.io/api v0.7.4
@@ -13,6 +13,7 @@ require (
 	cosmossdk.io/store v1.1.0
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
+	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.13.3
 	github.com/cometbft/cometbft v0.38.7
@@ -171,5 +172,6 @@ replace (
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/bank => ../bank
+	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/staking => ../staking
 )

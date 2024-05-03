@@ -1,6 +1,6 @@
 module cosmossdk.io/client/v2
 
-go 1.21.0
+go 1.22
 
 require (
 	cosmossdk.io/api v0.7.4
@@ -165,6 +165,7 @@ require (
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20240130113600-88ef6483f90f.1 // indirect
 	buf.build/gen/go/tendermint/tendermint/protocolbuffers/go v1.32.0-20231117195010-33ed361a9051.1 // indirect
+	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 )
 
 replace github.com/cosmos/cosmos-sdk => ./../../
@@ -176,6 +177,7 @@ replace (
 	cosmossdk.io/x/accounts => ./../../x/accounts
 	cosmossdk.io/x/auth => ./../../x/auth
 	cosmossdk.io/x/bank => ./../../x/bank
+	cosmossdk.io/x/consensus => ./../../x/consensus
 	cosmossdk.io/x/distribution => ./../../x/distribution
 	cosmossdk.io/x/gov => ./../../x/gov
 	cosmossdk.io/x/mint => ./../../x/mint

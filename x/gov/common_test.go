@@ -2,10 +2,9 @@ package gov_test
 
 import (
 	"cosmossdk.io/math"
+	_ "cosmossdk.io/x/consensus"
 	"cosmossdk.io/x/gov/types/v1beta1"
 	stakingtypes "cosmossdk.io/x/staking/types"
-
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 )
 
 var (

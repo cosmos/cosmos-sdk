@@ -11,8 +11,8 @@ import (
 	address "cosmossdk.io/core/address"
 	appmodule "cosmossdk.io/core/appmodule"
 	types "cosmossdk.io/x/auth/types"
+	types1 "cosmossdk.io/x/consensus/types"
 	types0 "github.com/cosmos/cosmos-sdk/types"
-	types1 "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	gomock "github.com/golang/mock/gomock"
 )
 

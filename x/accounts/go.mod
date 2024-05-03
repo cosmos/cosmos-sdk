@@ -1,6 +1,6 @@
 module cosmossdk.io/x/accounts
 
-go 1.21.0
+go 1.22
 
 require (
 	cosmossdk.io/api v0.7.4
@@ -17,6 +17,8 @@ require (
 	google.golang.org/grpc v1.63.2
 	google.golang.org/protobuf v1.34.0
 )
+
+require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.32.0-20240130113600-88ef6483f90f.1 // indirect
@@ -169,6 +171,7 @@ replace (
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
+	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/distribution => ../distribution
 	cosmossdk.io/x/mint => ../mint
 	cosmossdk.io/x/slashing => ../slashing

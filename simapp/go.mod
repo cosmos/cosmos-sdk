@@ -1,6 +1,6 @@
 module cosmossdk.io/simapp
 
-go 1.21.0
+go 1.22.2
 
 require (
 	cosmossdk.io/api v0.7.3
@@ -241,6 +241,7 @@ replace (
 	cosmossdk.io/collections => ../collections
 	cosmossdk.io/core => ../core
 	cosmossdk.io/depinject => ../depinject
+	cosmossdk.io/store => ../store
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/accounts/defaults/lockup => ../x/accounts/defaults/lockup
@@ -261,7 +262,6 @@ replace (
 	cosmossdk.io/x/slashing => ../x/slashing
 	cosmossdk.io/x/staking => ../x/staking
 	cosmossdk.io/x/upgrade => ../x/upgrade
-	cosmossdk.io/store => ../store
 )
 
 // Below are the long-lived replace of the SimApp

@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
+	crypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 )
 
 type Store interface {

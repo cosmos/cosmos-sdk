@@ -1,6 +1,6 @@
 module cosmossdk.io/store
 
-go 1.21
+go 1.22.2
 
 require (
 	cosmossdk.io/errors v1.0.0
@@ -27,6 +27,12 @@ require (
 )
 
 require (
+	cosmossdk.io/math v1.3.0
+	github.com/cometbft/cometbft/api v1.0.0-alpha.2
+	github.com/cosmos/cosmos-db v1.0.2
+)
+
+require (
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4 // indirect
@@ -37,6 +43,7 @@ require (
 	github.com/cockroachdb/pebble v1.1.1 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
+	github.com/cosmos/crypto v0.0.0-20240309083813-82ed2537802e // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/emicklei/dot v1.6.1 // indirect

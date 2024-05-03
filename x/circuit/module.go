@@ -5,26 +5,21 @@ import (
 	"encoding/json"
 	"fmt"
 
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	corecodec "cosmossdk.io/core/codec"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/circuit/keeper"
 	"cosmossdk.io/x/circuit/types"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 // ConsensusVersion defines the current circuit module consensus version.
 const ConsensusVersion = 1
 
 var (
-	_ module.HasName        = AppModule{}
-	_ module.HasGRPCGateway = AppModule{}
-
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
@@ -33,7 +28,7 @@ var (
 
 // AppModule implements an application module for the circuit module.
 type AppModule struct {
-	cdc    codec.Codec
+	cdc    corecodec.JSONCodec
 	keeper keeper.Keeper
 }
 
@@ -44,7 +39,7 @@ func (AppModule) IsAppModule() {}
 func (AppModule) Name() string { return types.ModuleName }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the circuit module.
-func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
+func (AppModule) RegisterGRPCGatewayRoutes(clientCtx gogogrpc.ClientConn, mux *gwruntime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -64,7 +59,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+func NewAppModule(cdc corecodec.JSONCodec, keeper keeper.Keeper) AppModule {
 	return AppModule{
 		cdc:    cdc,
 		keeper: keeper,
@@ -76,7 +71,11 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // DefaultGenesis returns default genesis state as raw bytes for the circuit module.
 func (am AppModule) DefaultGenesis() json.RawMessage {
-	return am.cdc.MustMarshalJSON(types.DefaultGenesisState())
+	jr, err := am.cdc.MarshalJSON(types.DefaultGenesisState())
+	if err != nil {
+		panic(err)
+	}
+	return jr
 }
 
 // ValidateGenesis performs genesis state validation for the circuit module.

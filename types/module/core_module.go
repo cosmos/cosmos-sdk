@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/cosmos/gogoproto/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -182,7 +183,7 @@ func (c coreAppModuleAdaptor) GetTxCmd() *cobra.Command {
 // RegisterGRPCGatewayRoutes implements HasGRPCGateway
 func (c coreAppModuleAdaptor) RegisterGRPCGatewayRoutes(ctx client.Context, mux *runtime.ServeMux) {
 	if mod, ok := c.module.(interface {
-		RegisterGRPCGatewayRoutes(context client.Context, mux *runtime.ServeMux)
+		RegisterGRPCGatewayRoutes(grpc.ClientConn, *runtime.ServeMux)
 	}); ok {
 		mod.RegisterGRPCGatewayRoutes(ctx, mux)
 	}

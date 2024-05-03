@@ -4,13 +4,13 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	corecodec "cosmossdk.io/core/codec"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/circuit/keeper"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 )
 
@@ -30,7 +30,7 @@ type ModuleInputs struct {
 	depinject.In
 
 	Config      *modulev1.Module
-	Cdc         codec.Codec
+	Cdc         corecodec.Codec
 	Environment appmodule.Environment
 
 	AddressCodec address.Codec

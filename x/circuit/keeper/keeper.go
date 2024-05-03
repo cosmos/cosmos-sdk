@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	corecodec "cosmossdk.io/core/codec"
 	"cosmossdk.io/x/circuit/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,7 +16,7 @@ import (
 type Keeper struct {
 	appmodule.Environment
 
-	cdc          codec.BinaryCodec
+	cdc          corecodec.BinaryCodec
 	addressCodec address.Codec
 	authority    []byte
 
@@ -27,7 +28,7 @@ type Keeper struct {
 }
 
 // NewKeeper constructs a new Circuit Keeper instance
-func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, authority string, addressCodec address.Codec) Keeper {
+func NewKeeper(env appmodule.Environment, cdc corecodec.BinaryCodec, authority string, addressCodec address.Codec) Keeper {
 	auth, err := addressCodec.StringToBytes(authority)
 	if err != nil {
 		panic(err)

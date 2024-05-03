@@ -1,6 +1,8 @@
 package simulation
 
 import (
+	"bytes"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -75,10 +77,7 @@ func SimulateFromSeed(
 	testingMode, _, b := getTestingMode(tb)
 
 	// r := rand.New(rand.NewSource(config.Seed))
-	var rng arraySource
-	rng.arr = config.XSeeds
-	rng.src = rand.New(rand.NewSource(config.Seed))
-	r := rand.New(&rng)
+	r := rand.New(NewByteSource(config.FuzzSeed, config.Seed))
 	params := RandomParams(r)
 
 	startTime := time.Now()
@@ -423,6 +422,34 @@ const (
 	rngMax  = 1 << 63
 	rngMask = rngMax - 1
 )
+
+type ByteSource struct {
+	seed     *bytes.Reader
+	fallback *rand.Rand
+}
+
+func NewByteSource(fuzzSeed []byte, seed int64) *ByteSource {
+	return &ByteSource{
+		seed:     bytes.NewReader(fuzzSeed),
+		fallback: rand.New(rand.NewSource(seed)),
+	}
+}
+
+func (s *ByteSource) Uint64() uint64 {
+	if s.seed.Len() < 8 {
+		return s.fallback.Uint64()
+	}
+	var b [8]byte
+	if _, err := s.seed.Read(b[:]); err != nil && err != io.EOF {
+		panic(err) // Should not happen.
+	}
+	return binary.BigEndian.Uint64(b[:])
+}
+
+func (s *ByteSource) Int63() int64 {
+	return int64(s.Uint64() & rngMask)
+}
+func (s *ByteSource) Seed(seed int64) {}
 
 type arraySource struct {
 	pos int

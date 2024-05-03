@@ -197,7 +197,7 @@ func TestAppStateDeterminism(t *testing.T) {
 		}
 	}
 	// run simulations
-	RunWithSeeds(t, interBlockCachingAppFactory, setupStateFactory, seeds, []int64{}, captureAndCheckHash)
+	RunWithSeeds(t, interBlockCachingAppFactory, setupStateFactory, seeds, []byte{}, captureAndCheckHash)
 }
 
 type ComparableStoreApp interface {
@@ -241,18 +241,17 @@ func AssertEqualStores(t *testing.T, app ComparableStoreApp, newApp ComparableSt
 
 func FuzzFullAppSimulation(f *testing.F) {
 	// f.Add(int64(1))
-	f.Fuzz(func(t *testing.T, raw_seeds []byte) {
-		if len(raw_seeds) < 8 {
+	f.Fuzz(func(t *testing.T, rawSeed []byte) {
+		if len(rawSeed) < 8 {
 			t.Skip()
+			return
 		}
-		var seeds, xseeds []int64
-		for len(raw_seeds) > 7 {
-			seeds = append(seeds, int64(binary.BigEndian.Uint64(raw_seeds)))
-			raw_seeds = raw_seeds[8:]
-		}
-		if len(seeds) > 1 {
-			xseeds = seeds[1:]
-		}
-		RunWithSeeds(t, NewSimApp, setupStateFactory, []int64{seeds[0]}, xseeds)
+		RunWithSeeds(
+			t,
+			NewSimApp,
+			setupStateFactory,
+			[]int64{int64(binary.BigEndian.Uint64(rawSeed))},
+			rawSeed[8:],
+		)
 	})
 }

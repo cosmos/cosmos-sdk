@@ -13,6 +13,10 @@ HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
 
+ifeq ($(findstring .,$(VERSION)),)
+	VERSION := 0.0.0
+endif
+
 # process build tags
 build_tags = netgo
 ifeq ($(LEDGER_ENABLED),true)
@@ -213,6 +217,13 @@ test-integration-cov:
 	$(MAKE) -C tests test-integration-cov
 #? test-all: Run all test
 test-all: test-unit test-e2e test-integration test-ledger-mock test-race
+
+.PHONY: test-system
+test-system: build
+	mkdir -p ./systemtests/binaries/
+	cp $(BUILDDIR)/simd ./systemtests/binaries/
+	$(MAKE) -C systemtests test
+
 
 TEST_PACKAGES=./...
 TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-race test-ledger test-race

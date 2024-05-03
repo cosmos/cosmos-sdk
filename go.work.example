@@ -16,6 +16,7 @@ use (
 	./simapp
 	./tests
 	./store
+	./store/v2
 	./tools/cosmovisor
 	./tools/confix
 	./tools/hubl

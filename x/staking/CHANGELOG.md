@@ -43,6 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#20238](https://github.com/cosmos/cosmos-sdk/pull/20238) `NewKeeper` now accepts a `core/comet.Service` as its last argument. 
 * [#19788](https://github.com/cosmos/cosmos-sdk/pull/19788) Remove `ABCIValidatorUpdate` and `ABCIValidatorUpdateZero`, use `ModuleValidatorUpdate` and `ModuleValidatorUpdateIsZero` instead.
 * [#19754](https://github.com/cosmos/cosmos-sdk/pull/19754) Update to use `[]appmodule.ValidatorUpdate` as return for `ApplyAndReturnValidatorSetUpdates`.
 * [#19414](https://github.com/cosmos/cosmos-sdk/pull/19414) `NewStakingKeeper` takes an environment variable instead of individual services.

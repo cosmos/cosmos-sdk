@@ -108,8 +108,8 @@ schema = 3
     version = "v0.0.0-20230807174530-cc333fc44b06"
     hash = "sha256-yZdBXkTVzPxRYntI9I2Gu4gkI11m52Nwl8RNNdlXSrA="
   [mod."github.com/cometbft/cometbft"]
-    version = "v0.38.7-0.20240412124004-1f67e396cf45"
-    hash = "sha256-BYBhYbEiifnEfYzTDnV994yue23vM0wBgfDb18teVV8="
+    version = "v0.38.7"
+    hash = "sha256-mN7L3Q4xZ0YcwMIRkIsodCzRPBZqrSKD7VgDHBOWM98="
   [mod."github.com/cometbft/cometbft-db"]
     version = "v0.11.0"
     hash = "sha256-qs3J+9ZW7gStN2W+5SQf/JSmgX5Q5kmIau1BLxze5iE="
@@ -547,8 +547,8 @@ schema = 3
     version = "v1.63.2"
     hash = "sha256-RmtVjYLam97k7IHTHU7Gn16xNX+GvA9AiLKlQwOiZXU="
   [mod."google.golang.org/protobuf"]
-    version = "v1.33.0"
-    hash = "sha256-cWwQjtUwSIEkAlAadrlxK1PYZXTRrV4NKzt7xDpJgIU="
+    version = "v1.34.0"
+    hash = "sha256-0fqsqQTyOicm4+NiuAf2IaJhavMVJh50VhNcRmZPSus="
   [mod."gopkg.in/ini.v1"]
     version = "v1.67.0"
     hash = "sha256-V10ahGNGT+NLRdKUyRg1dos5RxLBXBk1xutcnquc/+4="

@@ -1,6 +1,6 @@
 module cosmossdk.io/x/group
 
-go 1.22.2
+go 1.22
 
 require (
 	cosmossdk.io/api v0.7.4
@@ -32,7 +32,7 @@ require (
 	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f
 	google.golang.org/genproto/googleapis/api v0.0.0-20240227224415-6ceb2ff114de
 	google.golang.org/grpc v1.63.2
-	google.golang.org/protobuf v1.33.0
+	google.golang.org/protobuf v1.34.0
 	pgregory.net/rapid v1.1.0
 )
 

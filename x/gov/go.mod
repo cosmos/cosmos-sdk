@@ -1,6 +1,6 @@
 module cosmossdk.io/x/gov
 
-go 1.22.2
+go 1.22
 
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.33.0-20240130113600-88ef6483f90f.1 // indirect
@@ -32,7 +32,7 @@ require (
 	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f
 	google.golang.org/genproto/googleapis/api v0.0.0-20240227224415-6ceb2ff114de
 	google.golang.org/grpc v1.63.2
-	google.golang.org/protobuf v1.33.0
+	google.golang.org/protobuf v1.34.0
 	gotest.tools/v3 v3.5.1
 )
 

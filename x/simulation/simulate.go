@@ -74,7 +74,11 @@ func SimulateFromSeed(
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, _, b := getTestingMode(tb)
 
-	r := rand.New(rand.NewSource(config.Seed))
+	// r := rand.New(rand.NewSource(config.Seed))
+	var rng arraySource
+	rng.arr = config.XSeeds
+	rng.src = rand.New(rand.NewSource(config.Seed))
+	r := rand.New(&rng)
 	params := RandomParams(r)
 
 	startTime := time.Now()
@@ -414,3 +418,35 @@ func runQueuedTimeOperations(tb testing.TB, queueOps []simulation.FutureOperatio
 
 	return numOpsRan, allFutureOps
 }
+
+const (
+	rngMax  = 1 << 63
+	rngMask = rngMax - 1
+)
+
+type arraySource struct {
+	pos int
+	arr []int64
+	src *rand.Rand
+}
+
+// Int63 returns a non-negative pseudo-random 63-bit integer as an int64.
+func (rng *arraySource) Int63() int64 {
+	return int64(rng.Uint64() & rngMask)
+}
+
+// Uint64 returns a non-negative pseudo-random 64-bit integer as an uint64.
+func (rng *arraySource) Uint64() uint64 {
+	if rng.pos >= len(rng.arr) {
+		return rng.src.Uint64()
+	}
+	val := rng.arr[rng.pos]
+	rng.pos = rng.pos + 1
+	if val < 0 {
+		return uint64(-val)
+	}
+
+	return uint64(val)
+}
+
+func (rng *arraySource) Seed(seed int64) {}

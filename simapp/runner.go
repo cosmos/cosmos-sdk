@@ -66,7 +66,7 @@ func Run[T SimulationApp](
 	setupStateFactory func(app T) SimStateFactory,
 	postRunActions ...func(t *testing.T, app TestInstance[T]),
 ) {
-	RunWithSeeds(t, appFactory, setupStateFactory, defaultSeeds, postRunActions...)
+	RunWithSeeds(t, appFactory, setupStateFactory, defaultSeeds, []int64{}, postRunActions...)
 }
 
 func RunWithSeeds[T SimulationApp](
@@ -81,6 +81,7 @@ func RunWithSeeds[T SimulationApp](
 	) T,
 	setupStateFactory func(app T) SimStateFactory,
 	seeds []int64,
+	xseeds []int64,
 	postRunActions ...func(t *testing.T, app TestInstance[T]),
 ) {
 	cfg := cli.NewConfigFromFlags()
@@ -92,6 +93,7 @@ func RunWithSeeds[T SimulationApp](
 			// setup environment
 			tCfg := cfg.Clone()
 			tCfg.Seed = seed
+			tCfg.XSeeds = xseeds
 			testInstance := NewSimulationAppInstance(t, tCfg, appFactory)
 
 			app := testInstance.App

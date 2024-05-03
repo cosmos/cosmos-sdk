@@ -22,6 +22,7 @@ type Config struct {
 
 	DBBackend   string // custom db backend type
 	BlockMaxGas int64  // custom max gas for block
+	XSeeds      []int64
 }
 
 func (c Config) Clone() Config {

@@ -64,7 +64,19 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 
 	// run randomized simulation
-	simParams, simErr := simulation.SimulateFromSeed(b, log.NewNopLogger(), os.Stdout, app.BaseApp, simtestutil.AppStateFn(app.AppCodec(), app.AuthKeeper.AddressCodec(), app.StakingKeeper.ValidatorAddressCodec(), app.SimulationManager(), app.DefaultGenesis()), simtypes.RandomAccounts, simtestutil.SimulationOperations(app, app.AppCodec(), config, app.txConfig), BlockedAddresses(), config, app.AppCodec(), app.txConfig.SigningContext().AddressCodec())
+	simParams, simErr := simulation.SimulateFromSeed(
+		b,
+		log.NewNopLogger(),
+		os.Stdout,
+		app.BaseApp,
+		simtestutil.AppStateFn(app.AppCodec(), app.AuthKeeper.AddressCodec(), app.StakingKeeper.ValidatorAddressCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		simtypes.RandomAccounts,
+		simtestutil.SimulationOperations(app, app.AppCodec(), config, app.txConfig),
+		BlockedAddresses(),
+		config,
+		app.AppCodec(),
+		app.txConfig.SigningContext().AddressCodec(),
+	)
 
 	// export state and simParams before the simulation error is checked
 	if err = simtestutil.CheckExportSimulation(app, config, simParams); err != nil {

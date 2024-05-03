@@ -4,6 +4,8 @@ import (
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/auth/migrations/legacytx"
 
+	coretransaction "cosmossdk.io/core/transaction"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -56,7 +58,7 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 		&ModuleCredential{},
 	)
 
-	registrar.RegisterImplementations((*sdk.Msg)(nil),
+	registrar.RegisterImplementations((*coretransaction.Type)(nil),
 		&MsgUpdateParams{},
 		&MsgNonAtomicExec{},
 	)

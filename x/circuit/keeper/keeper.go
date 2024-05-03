@@ -8,8 +8,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	corecodec "cosmossdk.io/core/codec"
 	"cosmossdk.io/x/circuit/types"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // Keeper defines the circuit module's keeper.
@@ -46,7 +44,7 @@ func NewKeeper(env appmodule.Environment, cdc corecodec.BinaryCodec, authority s
 			types.AccountPermissionPrefix,
 			"permissions",
 			collections.BytesKey,
-			codec.CollValue[types.Permissions](cdc),
+			CollValue[types.Permissions](),
 		),
 		DisableList: collections.NewKeySet(
 			sb,

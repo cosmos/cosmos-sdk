@@ -29,7 +29,7 @@ func (s *E2ETestSuite) TestQueryGRPC() {
 			&minttypes.QueryParamsResponse{},
 			&minttypes.QueryParamsResponse{
 				Params: minttypes.NewParams("stake", math.LegacyNewDecWithPrec(13, 2), math.LegacyNewDecWithPrec(100, 2),
-					math.LegacyNewDec(1), math.LegacyNewDecWithPrec(67, 2), (60 * 60 * 8766 / 5)),
+					math.LegacyNewDec(1), math.LegacyNewDecWithPrec(67, 2), (60 * 60 * 8766 / 5), math.ZeroInt()),
 			},
 		},
 		{

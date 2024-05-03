@@ -53,6 +53,7 @@ func (s *IntegrationTestSuite) TestUpdateParams() {
 					InflationMin:        sdkmath.LegacyNewDecWithPrec(2, 2),
 					GoalBonded:          sdkmath.LegacyNewDecWithPrec(37, 2),
 					BlocksPerYear:       uint64(60 * 60 * 8766 / 5),
+					MaxSupply:           sdkmath.ZeroInt(), // infinite supply
 				},
 			},
 			expectErr: false,

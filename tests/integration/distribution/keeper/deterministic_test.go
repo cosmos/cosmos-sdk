@@ -5,11 +5,13 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	authkeeper "cosmossdk.io/x/auth/keeper"
@@ -27,8 +29,8 @@ import (
 	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
 	"cosmossdk.io/x/staking"
-	_ "cosmossdk.io/x/staking"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
+	stakingtestutil "cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -42,8 +44,6 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
-
-	sdkmath "cosmossdk.io/math"
 )
 
 type deterministicFixture struct {
@@ -198,13 +198,13 @@ func TestQueryParamsDeterministic(t *testing.T) {
 	rapid.Check(t, func(rt *rapid.T) {
 		req := &distrtypes.QueryParamsRequest{}
 
-		communityTaxGen := rapid.Map(rapid.Float64Range(0.0, 0.2), func(t float64) sdkmath.LegacyDec {
+		communityTaxGen := rapid.Map(rapid.Float64Range(0.0, 1), func(t float64) sdkmath.LegacyDec {
 			return sdkmath.LegacyNewDecWithPrec(int64(t*100), 2)
 		})
-		baseProposerRewardGen := rapid.Map(rapid.Float64Range(0.0, 0.1), func(t float64) sdkmath.LegacyDec {
+		baseProposerRewardGen := rapid.Map(rapid.Float64Range(0.0, 1), func(t float64) sdkmath.LegacyDec {
 			return sdkmath.LegacyNewDecWithPrec(int64(t*100), 2)
 		})
-		bonusProposerRewardGen := rapid.Map(rapid.Float64Range(0.0, 0.1), func(t float64) sdkmath.LegacyDec {
+		bonusProposerRewardGen := rapid.Map(rapid.Float64Range(0.0, 1), func(t float64) sdkmath.LegacyDec {
 			return sdkmath.LegacyNewDecWithPrec(int64(t*100), 2)
 		})
 		withdrawAddrEnabledGen := rapid.Bool()
@@ -216,11 +216,49 @@ func TestQueryParamsDeterministic(t *testing.T) {
 			BonusProposerReward: bonusProposerRewardGen.Draw(rt, "bonus_proposer_reward"),
 			WithdrawAddrEnabled: withdrawAddrEnabledGen.Draw(rt, "withdraw_addr_enabled"),
 		})
-
 		if err != nil {
 			rt.Fatalf("error setting params: %v", err)
 		}
 
 		testdata.DeterministicIterations(t, f.sdkCtx, req, f.queryClient.Params, 0, true)
+	})
+}
+
+func TestQueryValidatorOutstandingRewardsDeterministic(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+
+	rapid.Check(t, func(rt *rapid.T) {
+		// set module account coins
+		initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
+		assert.NilError(t, f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))))
+
+		// Set default staking params
+		assert.NilError(t, f.stakingKeeper.Params.Set(f.sdkCtx, stakingtypes.DefaultParams()))
+
+		valCommission := sdk.DecCoins{
+			sdk.NewDecCoinFromDec("mytoken", sdkmath.LegacyNewDec(5000)),
+			sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(300)),
+		}
+
+		// send funds to val addr
+		funds := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
+		assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, distrtypes.ModuleName, sdk.AccAddress(f.valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds))))
+		f.accountKeeper.SetAccount(f.sdkCtx, f.accountKeeper.NewAccountWithAddress(f.sdkCtx, sdk.AccAddress(f.valAddr)))
+		initialStake := int64(10)
+		tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
+		tstaking.Commission = stakingtypes.NewCommissionRates(sdkmath.LegacyNewDecWithPrec(5, 1), sdkmath.LegacyNewDecWithPrec(5, 1), sdkmath.LegacyNewDec(0))
+		tstaking.CreateValidator(f.valAddr, valConsPk0, sdkmath.NewInt(initialStake), true)
+
+		// set outstanding rewards
+		err := f.distrKeeper.ValidatorOutstandingRewards.Set(f.sdkCtx, f.valAddr, distrtypes.ValidatorOutstandingRewards{Rewards: valCommission})
+		assert.NilError(t, err)
+
+		req := &distrtypes.QueryValidatorOutstandingRewardsRequest{
+			ValidatorAddress: f.valAddr.String(),
+		}
+		testdata.DeterministicIterations(t, f.sdkCtx, req, f.queryClient.ValidatorOutstandingRewards, 0, true)
+
+		f = initDeterministicFixture(t) // reset
 	})
 }

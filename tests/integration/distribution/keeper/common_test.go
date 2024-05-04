@@ -20,11 +20,6 @@ var (
 	valConsPk0 = PKS[0]
 )
 
-func setupDefaultParams(t *testing.T, f *fixture) {
-	t.Helper()
-	assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, types.DefaultParams()))
-}
-
 func setupValidatorWithCommission(t *testing.T, f *fixture, valAddr sdk.ValAddress, initialStake int64) {
 	t.Helper()
 	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))

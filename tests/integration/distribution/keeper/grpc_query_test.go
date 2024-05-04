@@ -73,7 +73,7 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	setupDefaultParams(t, f)
+	assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, types.DefaultParams()))
 	setupValidatorWithCommission(t, f, f.valAddr, 10) // Setup a validator with commission
 
 	valCommission := sdk.DecCoins{
@@ -134,8 +134,8 @@ func TestGRPCValidatorCommission(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	setupDefaultParams(t, f)                          // Set default distribution parameters
-	setupValidatorWithCommission(t, f, f.valAddr, 10) // Setup a validator with commission
+	assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, types.DefaultParams())) // Set default distribution parameters
+	setupValidatorWithCommission(t, f, f.valAddr, 10)                             // Setup a validator with commission
 
 	commission := sdk.DecCoins{sdk.DecCoin{Denom: "token1", Amount: math.LegacyNewDec(4)}, {Denom: "token2", Amount: math.LegacyNewDec(2)}}
 	assert.NilError(t, f.distrKeeper.ValidatorsAccumulatedCommission.Set(f.sdkCtx, f.valAddr, types.ValidatorAccumulatedCommission{Commission: commission}))
@@ -437,7 +437,7 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	}))
 
 	initialStake := int64(10)
-	setupDefaultParams(t, f)
+	assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, types.DefaultParams()))
 	setupValidatorWithCommission(t, f, f.valAddr, initialStake) // Setup a validator with commission
 	val, found := f.stakingKeeper.GetValidator(f.sdkCtx, f.valAddr)
 	assert.Assert(t, found)

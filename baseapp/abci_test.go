@@ -1361,6 +1361,78 @@ func TestABCI_Query(t *testing.T) {
 	require.Equal(t, value, res.Value)
 }
 
+func TestABCI_QueryWhenReqPathEqualsToQueryPathBroadcastTx(t *testing.T) {
+	suite := NewBaseAppSuite(t)
+	query := abci.RequestQuery{
+		Path: baseapp.QueryPathBroadcastTx,
+	}
+	actual, err := suite.baseApp.Query(context.TODO(), &query)
+	require.NoError(t, err)
+
+	expected := &abci.ResponseQuery{
+		Code:      18,
+		Log:       "can't route a broadcast tx message: invalid request",
+		Index:     0,
+		Height:    0,
+		Codespace: "sdk",
+	}
+
+	require.Equal(t, expected, actual)
+}
+
+func TestABCI_QueryWhenReqPathIsEmpty(t *testing.T) {
+	suite := NewBaseAppSuite(t)
+	query := abci.RequestQuery{Path: ""}
+	actual, err := suite.baseApp.Query(context.TODO(), &query)
+	require.NoError(t, err)
+
+	expected := abci.ResponseQuery{
+		Code:      6,
+		Log:       "no query path provided: unknown request",
+		Index:     0,
+		Height:    0,
+		Codespace: "sdk",
+	}
+
+	require.Equal(t, expected, *actual)
+}
+
+func TestABCI_QueryWhenReqPathHasCustomPrefix(t *testing.T) {
+	suite := NewBaseAppSuite(t)
+	query := abci.RequestQuery{Path: "custom/req/path"}
+	actual, err := suite.baseApp.Query(context.TODO(), &query)
+	require.NoError(t, err)
+
+	expected := abci.ResponseQuery{
+		Code:      6,
+		Log:       "unknown query path: unknown request",
+		Index:     0,
+		Height:    0,
+		Codespace: "sdk",
+	}
+
+	require.Equal(t, expected, *actual)
+}
+
+func TestABCI_QueryRecoverWhenRiseAPanic(t *testing.T) {
+	suite := NewBaseAppSuite(t)
+	// by setting GRPCQueryRouter the method Query will panic, but it should be recovered
+	suite.baseApp.SetGRPCQueryRouter(nil)
+	query := abci.RequestQuery{Path: "custom/req/path"}
+	actual, err := suite.baseApp.Query(context.TODO(), &query)
+	require.NoError(t, err)
+
+	expected := abci.ResponseQuery{
+		Code:      0x1b276,
+		Log:       "runtime error: invalid memory address or nil pointer dereference: panic",
+		Index:     0,
+		Height:    0,
+		Codespace: "undefined",
+	}
+
+	require.Equal(t, expected, *actual)
+}
+
 func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 	logger := log.NewTestLogger(t)
 	db := dbm.NewMemDB()

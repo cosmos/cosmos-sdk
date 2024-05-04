@@ -3,11 +3,13 @@ package baseapp_test
 import (
 	"bytes"
 	"context"
+	authtx "cosmossdk.io/x/auth/tx"
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -78,6 +80,51 @@ func TestABCI_Info(t *testing.T) {
 	res, err = suite.baseApp.Info(&reqInfo)
 	require.NoError(t, err)
 	require.Equal(t, uint64(1), res.AppVersion)
+}
+
+func TestABCI_InfoFailedWhenCreateQueryContext(t *testing.T) {
+	suite := NewBaseAppSuite(t)
+	ctx := suite.baseApp.NewContext(true)
+	err := suite.baseApp.StoreConsensusParams(ctx, cmttypes.DefaultConsensusParams().ToProto())
+	require.NoError(t, err)
+
+	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	require.NoError(t, err)
+	_, err = suite.baseApp.Commit()
+	require.NoError(t, err)
+
+	// current height is 1 but in MultiStore is 0 and Info method should return error
+	dms := DummyMultiStore{Version: 0}
+	suite.baseApp.SetQueryMultiStore(dms)
+
+	reqInfo := abci.RequestInfo{}
+	_, err = suite.baseApp.Info(&reqInfo)
+	require.Error(t, err)
+}
+
+func TestABCI_InfoFailedWhenParamStoreIsNotSet(t *testing.T) {
+	cdc := codectestutil.CodecOptions{}.NewCodec()
+	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+	signingCtx := cdc.InterfaceRegistry().SigningContext()
+
+	txConfig := authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
+	db := dbm.NewMemDB()
+	logBuffer := new(bytes.Buffer)
+	logger := log.NewLogger(logBuffer, log.ColorOption(false))
+
+	app := baseapp.NewBaseApp(t.Name(), logger, db, txConfig.TxDecoder())
+
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	require.NoError(t, err)
+	_, err = app.Commit()
+	require.NoError(t, err)
+
+	// If the param store is not set (nil), then Info method should fail when try to get AppVersion from it.
+	app.SetParamStore(nil)
+
+	reqInfo := abci.RequestInfo{}
+	_, err = app.Info(&reqInfo)
+	require.Error(t, err)
 }
 
 func TestABCI_First_block_Height(t *testing.T) {
@@ -213,6 +260,75 @@ func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 	_, err = app.Commit()
 	require.NoError(t, err)
 	require.Equal(t, int64(3), app.LastBlockHeight())
+}
+
+func TestABCI_InitChain_SetInitialVersionOfStoresFailed(t *testing.T) {
+	app := baseapp.NewBaseApp(t.Name(), log.NewTestLogger(t), nil, nil)
+	app.SetCMS(DummyMultiStore{})
+
+	_, err := app.InitChain(
+		&abci.RequestInitChain{
+			InitialHeight: 3,
+		},
+	)
+	require.Error(t, err)
+}
+
+func TestABCI_InitChain_StoreConsensusParamsFailed(t *testing.T) {
+	app := baseapp.NewBaseApp(t.Name(), log.NewTestLogger(t), nil, nil)
+
+	_, err := app.InitChain(
+		&abci.RequestInitChain{
+			InitialHeight: 0,
+			ConsensusParams: &cmtproto.ConsensusParams{
+				Abci: &cmtproto.ABCIParams{
+					VoteExtensionsEnableHeight: 200,
+				},
+			},
+		},
+	)
+	require.Error(t, err)
+}
+
+func TestABCI_InitChain_InitChainerFailed(t *testing.T) {
+	app := baseapp.NewBaseApp(t.Name(), log.NewTestLogger(t), nil, nil)
+
+	var initChainer sdk.InitChainer = func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+		return &abci.ResponseInitChain{}, errors.New("fail")
+	}
+	app.SetInitChainer(initChainer)
+
+	_, err := app.InitChain(&abci.RequestInitChain{InitialHeight: 3})
+	require.Error(t, err)
+}
+
+func TestABCI_InitChain_ReqValidatorsLengthIsDifferentFromRespValidatorsLength(t *testing.T) {
+	app := baseapp.NewBaseApp(t.Name(), log.NewTestLogger(t), nil, nil)
+	var initChainer sdk.InitChainer = func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+		return &abci.ResponseInitChain{}, nil
+	}
+
+	app.SetInitChainer(initChainer)
+
+	_, err := app.InitChain(&abci.RequestInitChain{InitialHeight: 0, Validators: []abci.ValidatorUpdate{{}}})
+	require.Error(t, err)
+}
+
+func TestABCI_InitChain_ReqValidatorsAreDifferentFromRespValidators(t *testing.T) {
+	app := baseapp.NewBaseApp(t.Name(), log.NewTestLogger(t), nil, nil)
+	var initChainer sdk.InitChainer = func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+		return &abci.ResponseInitChain{Validators: []abci.ValidatorUpdate{{
+			Power: 0,
+		}}}, nil
+	}
+
+	app.SetInitChainer(initChainer)
+
+	_, err := app.InitChain(&abci.RequestInitChain{
+		InitialHeight: 0,
+		Validators:    []abci.ValidatorUpdate{{Power: 1}},
+	})
+	require.Error(t, err)
 }
 
 func TestABCI_FinalizeBlock_WithInitialHeight(t *testing.T) {
@@ -2498,4 +2614,25 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 
 	require.NotEmpty(t, res.TxResults[0].Events)
 	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
+}
+
+//type Dummy struct {
+//	storetypes.CommitMultiStore
+//}
+//
+//func (d Dummy) SetInitialVersion(version int64) error {
+//	return errors.New("err")
+//}
+
+type DummyMultiStore struct {
+	storetypes.CommitMultiStore
+	Version int64
+}
+
+func (d DummyMultiStore) LatestVersion() int64 {
+	return d.Version
+}
+
+func (d DummyMultiStore) SetInitialVersion(version int64) error {
+	return errors.New("err")
 }

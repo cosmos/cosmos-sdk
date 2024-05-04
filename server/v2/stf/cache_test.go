@@ -45,7 +45,7 @@ func TestMockCacheCtx(t *testing.T) {
 	cacheContainer = ctx.Cache.GetContainer([]byte(actorNameStr))
 	v, ok = cacheContainer.Get([]byte("item"))
 	require.True(t, ok)
-	require.Equal(t, []byte("1000"), v.(uint64))
+	require.Equal(t, []byte("1000"), v.([]byte))
 
 	// has
 	has, err := item.Has(ctx)

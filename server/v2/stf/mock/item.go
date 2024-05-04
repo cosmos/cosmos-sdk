@@ -18,13 +18,13 @@ type MockMap struct {
 }
 
 // MockItem is a type declaration based on MockMap
-// without encode/decode.
+// without encode/decode so saving raw bytes in store
 type MockItem struct {
 	m            MockMap
 	getContainer func(ctx context.Context) container.Service
 }
 
-// NewMockItem instantiates a new MockItem instance for uint64 types,
+// NewMockItem instantiates a new MockItem instance for  types,
 // given the store service.
 func NewMockItem(
 	storeService store.KVStoreService,
@@ -50,7 +50,7 @@ func NewMockItem(
 	return item
 }
 
-// Get gets the uint64 item, if it is not set it returns an ErrNotFound error.
+// Get gets the item, if it is not set it returns an ErrNotFound error.
 // If value decoding fails then an ErrEncoding is returned.
 func (i MockItem) Get(ctx context.Context) ([]byte, error) {
 	var toCache bool
@@ -70,7 +70,7 @@ func (i MockItem) Get(ctx context.Context) ([]byte, error) {
 	return v, err
 }
 
-// Set sets the uint64 item in the store. If Value encoding fails then an ErrEncoding is returned.
+// Set sets the item in the store. If Value encoding fails then an ErrEncoding is returned.
 func (i MockItem) Set(ctx context.Context, value []byte) error {
 	kvStore := i.m.sa(ctx)
 	err := kvStore.Set(i.m.prefix, value)

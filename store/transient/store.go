@@ -13,7 +13,7 @@ var (
 	_ types.KVStore   = (*Store)(nil)
 )
 
-// Store is a wrapper for a MemDB with Commiter implementation
+// Store is a wrapper for a MemDB with Committer implementation
 type Store struct {
 	dbadapter.Store
 }

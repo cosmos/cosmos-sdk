@@ -242,7 +242,6 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 				hinfo := suite.environment.HeaderService.HeaderInfo(suite.ctx)
 				hinfo.Time = hinfo.Time.Add(240 * time.Hour)
 				suite.ctx = suite.ctx.WithHeaderInfo(hinfo)
-
 			},
 			recipientAddress: recipientAddr,
 			claimableFunds:   sdk.NewInt64Coin("foo", 100), // claiming the whole budget, 2 * 50foo = 100foo

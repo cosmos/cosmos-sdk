@@ -30,8 +30,8 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error
 		if budget.LastClaimedAt == nil || budget.LastClaimedAt.IsZero() {
 			budget.LastClaimedAt = &currentTime
 		}
-		// ignore budgets with period <= 0
-		if budget.Period != nil && budget.Period.Seconds() <= 0 {
+		// ignore budgets with period <= 0 || nil
+		if budget.Period == nil || (budget.Period != nil && budget.Period.Seconds() <= 0) {
 			continue
 		}
 

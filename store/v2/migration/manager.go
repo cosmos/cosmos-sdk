@@ -12,7 +12,6 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/snapshots"
@@ -43,7 +42,7 @@ type Manager struct {
 	stateStorage    *storage.StorageStore
 	stateCommitment *commitment.CommitStore
 
-	db              store.RawDB
+	db              corestore.KVStoreWithBatch
 	mtx             sync.Mutex // mutex for migratedVersion
 	migratedVersion uint64
 
@@ -54,7 +53,7 @@ type Manager struct {
 // NewManager returns a new Manager.
 //
 // NOTE: `sc` can be `nil` if don't want to migrate the commitment.
-func NewManager(db store.RawDB, sm *snapshots.Manager, ss *storage.StorageStore, sc *commitment.CommitStore, logger log.Logger) *Manager {
+func NewManager(db corestore.KVStoreWithBatch, sm *snapshots.Manager, ss *storage.StorageStore, sc *commitment.CommitStore, logger log.Logger) *Manager {
 	return &Manager{
 		logger:           logger,
 		snapshotsManager: sm,

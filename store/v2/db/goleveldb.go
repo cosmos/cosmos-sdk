@@ -19,9 +19,9 @@ import (
 	storeerrors "cosmossdk.io/store/v2/errors"
 )
 
-var _ store.RawDB = (*GoLevelDB)(nil)
+var _ corestore.KVStoreWithBatch = (*GoLevelDB)(nil)
 
-// GoLevelDB implements RawDB using github.com/syndtr/goleveldb/leveldb.
+// GoLevelDB implements corestore.KVStore using github.com/syndtr/goleveldb/leveldb.
 // It is used for only store v2 migration, since some clients use goleveldb as
 // the IAVL v0/v1 backend.
 type GoLevelDB struct {
@@ -52,7 +52,7 @@ func NewGoLevelDBWithOpts(name, dir string, o *opt.Options) (*GoLevelDB, error) 
 	return &GoLevelDB{db: db}, nil
 }
 
-// Get implements RawDB.
+// Get implements corestore.KVStore.
 func (db *GoLevelDB) Get(key []byte) ([]byte, error) {
 	if len(key) == 0 {
 		return nil, storeerrors.ErrKeyEmpty
@@ -67,12 +67,12 @@ func (db *GoLevelDB) Get(key []byte) ([]byte, error) {
 	return res, nil
 }
 
-// Has implements RawDB.
+// Has implements corestore.KVStore.
 func (db *GoLevelDB) Has(key []byte) (bool, error) {
 	return db.db.Has(key, nil)
 }
 
-// Set implements RawDB.
+// Set implements corestore.KVStore.
 func (db *GoLevelDB) Set(key, value []byte) error {
 	if len(key) == 0 {
 		return storeerrors.ErrKeyEmpty
@@ -83,7 +83,7 @@ func (db *GoLevelDB) Set(key, value []byte) error {
 	return db.db.Put(key, value, nil)
 }
 
-// SetSync implements RawDB.
+// SetSync implements corestore.KVStore.
 func (db *GoLevelDB) SetSync(key, value []byte) error {
 	if len(key) == 0 {
 		return storeerrors.ErrKeyEmpty
@@ -94,7 +94,7 @@ func (db *GoLevelDB) SetSync(key, value []byte) error {
 	return db.db.Put(key, value, &opt.WriteOptions{Sync: true})
 }
 
-// Delete implements RawDB.
+// Delete implements corestore.KVStore.
 func (db *GoLevelDB) Delete(key []byte) error {
 	if len(key) == 0 {
 		return storeerrors.ErrKeyEmpty
@@ -102,7 +102,7 @@ func (db *GoLevelDB) Delete(key []byte) error {
 	return db.db.Delete(key, nil)
 }
 
-// DeleteSync implements RawDB.
+// DeleteSync implements corestore.KVStore.
 func (db *GoLevelDB) DeleteSync(key []byte) error {
 	if len(key) == 0 {
 		return storeerrors.ErrKeyEmpty
@@ -114,12 +114,12 @@ func (db *GoLevelDB) RawDB() *leveldb.DB {
 	return db.db
 }
 
-// Close implements RawDB.
+// Close implements corestore.KVStore.
 func (db *GoLevelDB) Close() error {
 	return db.db.Close()
 }
 
-// Print implements RawDB.
+// Print implements corestore.KVStore.
 func (db *GoLevelDB) Print() error {
 	str, err := db.db.GetProperty("leveldb.stats")
 	if err != nil {
@@ -136,7 +136,7 @@ func (db *GoLevelDB) Print() error {
 	return nil
 }
 
-// Stats implements RawDB.
+// Stats implements corestore.KVStore.
 func (db *GoLevelDB) Stats() map[string]string {
 	keys := []string{
 		"leveldb.num-files-at-level{n}",
@@ -162,17 +162,17 @@ func (db *GoLevelDB) ForceCompact(start, limit []byte) error {
 	return db.db.CompactRange(util.Range{Start: start, Limit: limit})
 }
 
-// NewBatch implements RawDB.
-func (db *GoLevelDB) NewBatch() store.RawBatch {
+// NewBatch implements corestore.BatchCreator.
+func (db *GoLevelDB) NewBatch() corestore.Batch {
 	return newGoLevelDBBatch(db)
 }
 
-// NewBatchWithSize implements RawDB.
-func (db *GoLevelDB) NewBatchWithSize(size int) store.RawBatch {
+// NewBatchWithSize implements corestore.BatchCreator.
+func (db *GoLevelDB) NewBatchWithSize(size int) corestore.Batch {
 	return newGoLevelDBBatchWithSize(db, size)
 }
 
-// Iterator implements RawDB.
+// Iterator implements corestore.KVStore.
 func (db *GoLevelDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, storeerrors.ErrKeyEmpty
@@ -181,7 +181,7 @@ func (db *GoLevelDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 	return newGoLevelDBIterator(itr, start, end, false), nil
 }
 
-// ReverseIterator implements RawDB.
+// ReverseIterator implements corestore.KVStore.
 func (db *GoLevelDB) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, storeerrors.ErrKeyEmpty
@@ -323,7 +323,7 @@ type goLevelDBBatch struct {
 	batch *leveldb.Batch
 }
 
-var _ store.RawBatch = (*goLevelDBBatch)(nil)
+var _ corestore.Batch = (*goLevelDBBatch)(nil)
 
 func newGoLevelDBBatch(db *GoLevelDB) *goLevelDBBatch {
 	return &goLevelDBBatch{

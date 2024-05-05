@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/errors"
 )
 
@@ -14,20 +13,20 @@ import (
 type PrefixDB struct {
 	mtx    sync.Mutex
 	prefix []byte
-	db     store.RawDB
+	db     corestore.KVStoreWithBatch
 }
 
-var _ store.RawDB = (*PrefixDB)(nil)
+var _ corestore.KVStoreWithBatch = (*PrefixDB)(nil)
 
-// NewPrefixDB lets you namespace multiple RawDBs within a single RawDB.
-func NewPrefixDB(db store.RawDB, prefix []byte) *PrefixDB {
+// NewPrefixDB lets you namespace multiple corestore.KVStores within a single corestore.KVStore.
+func NewPrefixDB(db corestore.KVStoreWithBatch, prefix []byte) *PrefixDB {
 	return &PrefixDB{
 		prefix: prefix,
 		db:     db,
 	}
 }
 
-// Get implements RawDB.
+// Get implements corestore.KVStore.
 func (pdb *PrefixDB) Get(key []byte) ([]byte, error) {
 	if len(key) == 0 {
 		return nil, errors.ErrKeyEmpty
@@ -41,7 +40,7 @@ func (pdb *PrefixDB) Get(key []byte) ([]byte, error) {
 	return value, nil
 }
 
-// Has implements RawDB.
+// Has implements corestore.KVStore.
 func (pdb *PrefixDB) Has(key []byte) (bool, error) {
 	if len(key) == 0 {
 		return false, errors.ErrKeyEmpty
@@ -55,7 +54,26 @@ func (pdb *PrefixDB) Has(key []byte) (bool, error) {
 	return ok, nil
 }
 
-// Iterator implements RawDB.
+// Set implements corestore.KVStore.
+func (pdb *PrefixDB) Set(key, value []byte) error {
+	if len(key) == 0 {
+		return errors.ErrKeyEmpty
+	}
+	if value == nil {
+		return errors.ErrValueNil
+	}
+	return pdb.db.Set(pdb.prefixed(key), value)
+}
+
+// Delete implements corestore.KVStore.
+func (pdb *PrefixDB) Delete(key []byte) error {
+	if len(key) == 0 {
+		return errors.ErrKeyEmpty
+	}
+	return pdb.db.Delete(pdb.prefixed(key))
+}
+
+// Iterator implements corestore.KVStore.
 func (pdb *PrefixDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errors.ErrKeyEmpty
@@ -76,7 +94,7 @@ func (pdb *PrefixDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 	return newPrefixIterator(pdb.prefix, start, end, itr)
 }
 
-// ReverseIterator implements RawDB.
+// ReverseIterator implements corestore.KVStore.
 func (pdb *PrefixDB) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errors.ErrKeyEmpty
@@ -97,17 +115,17 @@ func (pdb *PrefixDB) ReverseIterator(start, end []byte) (corestore.Iterator, err
 	return newPrefixIterator(pdb.prefix, start, end, ritr)
 }
 
-// NewBatch implements RawDB.
-func (pdb *PrefixDB) NewBatch() store.RawBatch {
+// NewBatch implements corestore.BatchCreator.
+func (pdb *PrefixDB) NewBatch() corestore.Batch {
 	return newPrefixBatch(pdb.prefix, pdb.db.NewBatch())
 }
 
-// NewBatchWithSize implements RawDB.
-func (pdb *PrefixDB) NewBatchWithSize(size int) store.RawBatch {
+// NewBatchWithSize implements corestore.BatchCreator.
+func (pdb *PrefixDB) NewBatchWithSize(size int) corestore.Batch {
 	return newPrefixBatch(pdb.prefix, pdb.db.NewBatchWithSize(size))
 }
 
-// Close implements RawDB.
+// Close implements corestore.KVStore.
 func (pdb *PrefixDB) Close() error {
 	pdb.mtx.Lock()
 	defer pdb.mtx.Unlock()
@@ -115,7 +133,7 @@ func (pdb *PrefixDB) Close() error {
 	return pdb.db.Close()
 }
 
-// Print implements RawDB.
+// Print implements corestore.KVStore.
 func (pdb *PrefixDB) Print() error {
 	fmt.Printf("prefix: %X\n", pdb.prefix)
 
@@ -138,7 +156,7 @@ func (pdb *PrefixDB) prefixed(key []byte) []byte {
 
 // IteratePrefix is a convenience function for iterating over a key domain
 // restricted by prefix.
-func IteratePrefix(db store.RawDB, prefix []byte) (corestore.Iterator, error) {
+func IteratePrefix(db corestore.KVStore, prefix []byte) (corestore.Iterator, error) {
 	var start, end []byte
 	if len(prefix) == 0 {
 		start = nil
@@ -263,12 +281,12 @@ func (itr *prefixDBIterator) assertIsValid() {
 
 type prefixDBBatch struct {
 	prefix []byte
-	source store.RawBatch
+	source corestore.Batch
 }
 
-var _ store.RawBatch = (*prefixDBBatch)(nil)
+var _ corestore.Batch = (*prefixDBBatch)(nil)
 
-func newPrefixBatch(prefix []byte, source store.RawBatch) prefixDBBatch {
+func newPrefixBatch(prefix []byte, source corestore.Batch) prefixDBBatch {
 	return prefixDBBatch{
 		prefix: prefix,
 		source: source,

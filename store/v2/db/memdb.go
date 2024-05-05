@@ -9,7 +9,6 @@ import (
 	"github.com/google/btree"
 
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/errors"
 )
 
@@ -41,6 +40,8 @@ func newPair(key, value []byte) item {
 	return item{key: key, value: value}
 }
 
+var _ corestore.KVStoreWithBatch = (*MemDB)(nil)
+
 // MemDB is an in-memory database backend using a B-tree for storage.
 //
 // For performance reasons, all given and returned keys and values are pointers to the in-memory
@@ -51,8 +52,6 @@ type MemDB struct {
 	mtx   sync.RWMutex
 	btree *btree.BTree
 }
-
-var _ store.RawDB = (*MemDB)(nil)
 
 // NewMemDB creates a new in-memory database.
 func NewMemDB() *MemDB {
@@ -168,13 +167,13 @@ func (db *MemDB) Stats() map[string]string {
 }
 
 // NewBatch implements DB.
-func (db *MemDB) NewBatch() store.RawBatch {
+func (db *MemDB) NewBatch() corestore.Batch {
 	return newMemDBBatch(db)
 }
 
 // NewBatchWithSize implements DB.
 // It does the same thing as NewBatch because we can't pre-allocate memDBBatch
-func (db *MemDB) NewBatchWithSize(size int) store.RawBatch {
+func (db *MemDB) NewBatchWithSize(size int) corestore.Batch {
 	return newMemDBBatch(db)
 }
 
@@ -382,7 +381,7 @@ type memDBBatch struct {
 	size int
 }
 
-var _ store.RawBatch = (*memDBBatch)(nil)
+var _ corestore.Batch = (*memDBBatch)(nil)
 
 // newMemDBBatch creates a new memDBBatch
 func newMemDBBatch(db *MemDB) *memDBBatch {

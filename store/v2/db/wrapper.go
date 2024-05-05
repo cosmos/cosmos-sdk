@@ -6,7 +6,7 @@ import (
 	corestore "cosmossdk.io/core/store"
 )
 
-// Wrapper wraps a RawDB to implement iavl.DB which is used by iavl.Tree.
+// Wrapper wraps a `corestore.KVStoreWithBatch` to implement iavl.DB which is used by iavl.Tree.
 type Wrapper struct {
 	corestore.KVStoreWithBatch
 }

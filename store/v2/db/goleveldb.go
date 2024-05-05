@@ -339,7 +339,7 @@ func newGoLevelDBBatchWithSize(db *GoLevelDB, size int) *goLevelDBBatch {
 	}
 }
 
-// Set implements RawBatch.
+// Set implements corestore.Batch.
 func (b *goLevelDBBatch) Set(key, value []byte) error {
 	if len(key) == 0 {
 		return storeerrors.ErrKeyEmpty
@@ -354,7 +354,7 @@ func (b *goLevelDBBatch) Set(key, value []byte) error {
 	return nil
 }
 
-// Delete implements RawBatch.
+// Delete implements corestore.Batch.
 func (b *goLevelDBBatch) Delete(key []byte) error {
 	if len(key) == 0 {
 		return storeerrors.ErrKeyEmpty
@@ -366,12 +366,12 @@ func (b *goLevelDBBatch) Delete(key []byte) error {
 	return nil
 }
 
-// Write implements RawBatch.
+// Write implements corestore.Batch.
 func (b *goLevelDBBatch) Write() error {
 	return b.write(false)
 }
 
-// WriteSync implements RawBatch.
+// WriteSync implements corestore.Batch.
 func (b *goLevelDBBatch) WriteSync() error {
 	return b.write(true)
 }
@@ -387,7 +387,7 @@ func (b *goLevelDBBatch) write(sync bool) error {
 	return b.Close()
 }
 
-// Close implements RawBatch.
+// Close implements corestore.Batch.
 func (b *goLevelDBBatch) Close() error {
 	if b.batch != nil {
 		b.batch.Reset()
@@ -396,7 +396,7 @@ func (b *goLevelDBBatch) Close() error {
 	return nil
 }
 
-// GetByteSize implements RawBatch
+// GetByteSize implements corestore.Batch
 func (b *goLevelDBBatch) GetByteSize() (int, error) {
 	if b.batch == nil {
 		return 0, storeerrors.ErrBatchClosed

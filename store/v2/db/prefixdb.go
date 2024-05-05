@@ -293,7 +293,7 @@ func newPrefixBatch(prefix []byte, source corestore.Batch) prefixDBBatch {
 	}
 }
 
-// Set implements RawBatch.
+// Set implements corestore.Batch.
 func (pb prefixDBBatch) Set(key, value []byte) error {
 	if len(key) == 0 {
 		return errors.ErrKeyEmpty
@@ -305,7 +305,7 @@ func (pb prefixDBBatch) Set(key, value []byte) error {
 	return pb.source.Set(pkey, value)
 }
 
-// Delete implements RawBatch.
+// Delete implements corestore.Batch.
 func (pb prefixDBBatch) Delete(key []byte) error {
 	if len(key) == 0 {
 		return errors.ErrKeyEmpty
@@ -314,22 +314,22 @@ func (pb prefixDBBatch) Delete(key []byte) error {
 	return pb.source.Delete(pkey)
 }
 
-// Write implements RawBatch.
+// Write implements corestore.Batch.
 func (pb prefixDBBatch) Write() error {
 	return pb.source.Write()
 }
 
-// WriteSync implements RawBatch.
+// WriteSync implements corestore.Batch.
 func (pb prefixDBBatch) WriteSync() error {
 	return pb.source.WriteSync()
 }
 
-// Close implements RawBatch.
+// Close implements corestore.Batch.
 func (pb prefixDBBatch) Close() error {
 	return pb.source.Close()
 }
 
-// GetByteSize implements RawBatch
+// GetByteSize implements corestore.Batch
 func (pb prefixDBBatch) GetByteSize() (int, error) {
 	if pb.source == nil {
 		return 0, errors.ErrBatchClosed

@@ -2,6 +2,7 @@ package header
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 )
 
@@ -17,4 +18,21 @@ type Info struct {
 	Time    time.Time // Time returns the time of the block
 	ChainID string    // ChainId returns the chain ID of the block
 	AppHash []byte    // AppHash used in the current block header
+}
+
+// TODO: remove
+func (i *Info) Bytes() []byte {
+	b, _ := json.Marshal(i) // TODO: this needs to be more efficient
+	return b
+}
+
+// TODO: remove
+func (i *Info) FromBytes(bytes []byte) error {
+	info := Info{}
+	err := json.Unmarshal(bytes, &info)
+	if err != nil {
+		return err
+	}
+	*i = info
+	return nil
 }

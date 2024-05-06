@@ -42,3 +42,5 @@ func (n NoOpMeter) Limit() coregas.Gas { return coregas.NoGasLimit }
 func (n NoOpMeter) Consume(_ coregas.Gas, _ string) error { return nil }
 
 func (n NoOpMeter) Refund(_ coregas.Gas, _ string) error { return nil }
+
+func (n NoOpMeter) Remaining() coregas.Gas { return coregas.NoGasLimit }

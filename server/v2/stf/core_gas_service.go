@@ -4,8 +4,19 @@ import (
 	"context"
 
 	"cosmossdk.io/core/gas"
+	"cosmossdk.io/core/store"
 )
 
+type (
+	// gasMeter is a function type that takes a gas limit as input and returns a gas.Meter.
+	// It is used to measure and limit the amount of gas consumed during the execution of a function.
+	gasMeter func(gasLimit uint64) gas.Meter
+
+	// wrapGasMeter is a function type that wraps a gas meter and a store writer map.
+	wrapGasMeter func(meter gas.Meter, store store.WriterMap) store.WriterMap
+)
+
+// NewGasMeterService creates a new instance of the gas meter service.
 func NewGasMeterService() gas.Service {
 	return gasService{}
 }

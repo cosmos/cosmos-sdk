@@ -83,12 +83,14 @@ type CoreGasmeter struct {
 	gm storetypes.GasMeter
 }
 
-func (cgm CoreGasmeter) Consume(amount gas.Gas, descriptor string) {
+func (cgm CoreGasmeter) Consume(amount gas.Gas, descriptor string) error {
 	cgm.gm.ConsumeGas(amount, descriptor)
+	return nil
 }
 
-func (cgm CoreGasmeter) Refund(amount gas.Gas, descriptor string) {
+func (cgm CoreGasmeter) Refund(amount gas.Gas, descriptor string) error {
 	cgm.gm.RefundGas(amount, descriptor)
+	return nil
 }
 
 func (cgm CoreGasmeter) Remaining() gas.Gas {

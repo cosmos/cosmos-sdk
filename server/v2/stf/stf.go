@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
+
 	stfgas "cosmossdk.io/server/v2/stf/gas"
 )
 
@@ -31,8 +32,8 @@ type STF[T transaction.Tx] struct {
 	postTxExec     func(ctx context.Context, tx T, success bool) error
 
 	branch           branchdb // branch is a function that given a readonly state it returns a writable version of it.
-	getGasMeter      func(gasLimit uint64) gas.Meter
-	wrapWithGasMeter func(meter gas.Meter, store store.WriterMap) store.WriterMap
+	getGasMeter      gasMeter
+	wrapWithGasMeter wrapGasMeter
 }
 
 // NewSTF returns a new STF instance.
@@ -57,8 +58,8 @@ func NewSTF[T transaction.Tx](
 		doValidatorUpdate: doValidatorUpdate,
 		postTxExec:        postTxExec, // TODO
 		branch:            branch,
-		getGasMeter:       stfgas.DefaultGasMeter,
-		wrapWithGasMeter:  stfgas.DefaultWrapWithGasMeter,
+		getGasMeter:       stfgas.DefaultGasMeter,         //TODO replacable?
+		wrapWithGasMeter:  stfgas.DefaultWrapWithGasMeter, // TODO replacable?
 	}
 }
 
@@ -73,25 +74,26 @@ func (s STF[T]) DeliverBlock(
 	// creates a new branch state, from the readonly view of the state
 	// that can be written to.
 	newState = s.branch(state)
-	// set header info
-	err = s.setHeaderInfo(newState, header.Info{
+	hi := header.Info{
 		Hash:    block.Hash,
 		AppHash: block.AppHash,
 		ChainID: block.ChainId,
 		Time:    block.Time,
 		Height:  int64(block.Height),
-	})
+	}
+	// set header info
+	err = s.setHeaderInfo(newState, hi) // TODO: Should we start this in a goroutine to avoid blocking for encoding
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to set initial header info")
 	}
 
-	consMessagesResponses, err := s.runConsensusMessages(ctx, newState, block.ConsensusMessages)
+	consMessagesResponses, err := s.runConsensusMessages(ctx, newState, block.ConsensusMessages, hi)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to execute consensus messages: %w", err)
 	}
 
 	// pre block is called separate from begin block in order to prepopulate state
-	preBlockEvents, err := s.preBlock(ctx, newState, block.Txs)
+	preBlockEvents, err := s.preBlock(ctx, newState, block.Txs, hi)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -101,7 +103,7 @@ func (s STF[T]) DeliverBlock(
 	}
 
 	// begin block
-	beginBlockEvents, err := s.beginBlock(ctx, newState)
+	beginBlockEvents, err := s.beginBlock(ctx, newState, hi)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -119,10 +121,10 @@ func (s STF[T]) DeliverBlock(
 		if err = isCtxCancelled(ctx); err != nil {
 			return nil, nil, err
 		}
-		txResults[i] = s.deliverTx(ctx, newState, txBytes, corecontext.ExecModeFinalize)
+		txResults[i] = s.deliverTx(ctx, newState, txBytes, corecontext.ExecModeFinalize, hi)
 	}
 	// end block
-	endBlockEvents, valset, err := s.endBlock(ctx, newState)
+	endBlockEvents, valset, err := s.endBlock(ctx, newState, hi)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -144,6 +146,7 @@ func (s STF[T]) deliverTx(
 	state store.WriterMap,
 	tx T,
 	execMode corecontext.ExecMode,
+	hi header.Info,
 ) appmanager.TxResult {
 	// recover in the case of a panic
 	var recoveryError error
@@ -174,7 +177,7 @@ func (s STF[T]) deliverTx(
 		}
 	}
 
-	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode)
+	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode, hi)
 	return appmanager.TxResult{
 		Events:    append(validationEvents, execEvents...),
 		GasUsed:   execGas + validateGas,
@@ -199,7 +202,9 @@ func (s STF[T]) validateTx(
 		return 0, nil, err
 	}
 
-	return validateCtx.meter.Consumed(), validateCtx.events, applyStateChanges(state, validateState)
+	consumed := validateCtx.meter.Limit() - validateCtx.meter.Remaining()
+
+	return consumed, validateCtx.events, applyStateChanges(state, validateState)
 }
 
 // execTx executes the tx messages on the provided state. If the tx fails then the state is discarded.
@@ -209,15 +214,17 @@ func (s STF[T]) execTx(
 	gasLimit uint64,
 	tx T,
 	execMode corecontext.ExecMode,
+	hi header.Info,
 ) ([]transaction.Type, uint64, []event.Event, error) {
 	execState := s.branch(state)
 
-	msgsResp, gasUsed, runTxMsgsEvents, txErr := s.runTxMsgs(ctx, execState, gasLimit, tx, execMode)
+	msgsResp, gasUsed, runTxMsgsEvents, txErr := s.runTxMsgs(ctx, execState, gasLimit, tx, execMode, hi)
 	if txErr != nil {
 		// in case of error during message execution, we do not apply the exec state.
 		// instead we run the post exec handler in a new branch from the initial state.
 		postTxState := s.branch(state)
 		postTxCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, postTxState, gas.NoGasLimit, execMode)
+		postTxCtx.setHeaderInfo(hi)
 
 		// TODO: runtime sets a noop posttxexec if the app doesnt set anything (julien)
 
@@ -239,6 +246,7 @@ func (s STF[T]) execTx(
 	// in case the execution of the post tx fails, then no state change is applied and the
 	// whole execution step is rolled back.
 	postTxCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, execState, gas.NoGasLimit, execMode) // NO gas limit.
+	postTxCtx.setHeaderInfo(hi)
 	postTxErr := s.postTxExec(postTxCtx, tx, true)
 	if postTxErr != nil {
 		// if post tx fails, then we do not apply any state change, we return the post tx error,
@@ -262,6 +270,7 @@ func (s STF[T]) runTxMsgs(
 	gasLimit uint64,
 	tx T,
 	execMode corecontext.ExecMode,
+	hi header.Info,
 ) ([]transaction.Type, uint64, []event.Event, error) {
 	txSenders, err := tx.GetSenders()
 	if err != nil {
@@ -274,6 +283,7 @@ func (s STF[T]) runTxMsgs(
 	msgResps := make([]transaction.Type, len(msgs))
 
 	execCtx := s.makeContext(ctx, nil, state, gasLimit, execMode)
+	execCtx.setHeaderInfo(hi)
 	for i, msg := range msgs {
 		execCtx.sender = txSenders[i]
 		resp, err := s.handleMsg(execCtx, msg)
@@ -282,11 +292,19 @@ func (s STF[T]) runTxMsgs(
 		}
 		msgResps[i] = resp
 	}
-	return msgResps, execCtx.meter.Consumed(), execCtx.events, nil
+
+	consumed := execCtx.meter.Limit() - execCtx.meter.Remaining()
+	return msgResps, consumed, execCtx.events, nil
 }
 
-func (s STF[T]) preBlock(ctx context.Context, state store.WriterMap, txs []T) ([]event.Event, error) {
+func (s STF[T]) preBlock(
+	ctx context.Context,
+	state store.WriterMap,
+	txs []T,
+	hi header.Info,
+) ([]event.Event, error) {
 	pbCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, state, gas.NoGasLimit, corecontext.ExecModeFinalize)
+	pbCtx.setHeaderInfo(hi)
 	err := s.doPreBlock(pbCtx, txs)
 	if err != nil {
 		return nil, err
@@ -306,9 +324,10 @@ func (s STF[T]) runConsensusMessages(
 	ctx context.Context,
 	state store.WriterMap,
 	messages []transaction.Type,
+	hi header.Info,
 ) ([]transaction.Type, error) {
 	cmCtx := s.makeContext(ctx, appmanager.ConsensusIdentity, state, gas.NoGasLimit, corecontext.ExecModeFinalize)
-
+	cmCtx.setHeaderInfo(hi)
 	responses := make([]transaction.Type, len(messages))
 	for i := range messages {
 		resp, err := s.handleMsg(cmCtx, messages[i])
@@ -321,8 +340,13 @@ func (s STF[T]) runConsensusMessages(
 	return responses, nil
 }
 
-func (s STF[T]) beginBlock(ctx context.Context, state store.WriterMap) (beginBlockEvents []event.Event, err error) {
+func (s STF[T]) beginBlock(
+	ctx context.Context,
+	state store.WriterMap,
+	hi header.Info,
+) (beginBlockEvents []event.Event, err error) {
 	bbCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, state, gas.NoGasLimit, corecontext.ExecModeFinalize)
+	bbCtx.setHeaderInfo(hi)
 	err = s.doBeginBlock(bbCtx)
 	if err != nil {
 		return nil, err
@@ -341,14 +365,16 @@ func (s STF[T]) beginBlock(ctx context.Context, state store.WriterMap) (beginBlo
 func (s STF[T]) endBlock(
 	ctx context.Context,
 	state store.WriterMap,
+	hi header.Info,
 ) ([]event.Event, []appmodulev2.ValidatorUpdate, error) {
 	ebCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, state, gas.NoGasLimit, corecontext.ExecModeFinalize)
+	ebCtx.setHeaderInfo(hi)
 	err := s.doEndBlock(ebCtx)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	events, valsetUpdates, err := s.validatorUpdates(ctx, state)
+	events, valsetUpdates, err := s.validatorUpdates(ctx, state, hi)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -369,8 +395,10 @@ func (s STF[T]) endBlock(
 func (s STF[T]) validatorUpdates(
 	ctx context.Context,
 	state store.WriterMap,
+	hi header.Info,
 ) ([]event.Event, []appmodulev2.ValidatorUpdate, error) {
 	ebCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, state, gas.NoGasLimit, corecontext.ExecModeFinalize)
+	ebCtx.setHeaderInfo(hi)
 	valSetUpdates, err := s.doValidatorUpdate(ebCtx)
 	if err != nil {
 		return nil, nil, err
@@ -380,6 +408,7 @@ func (s STF[T]) validatorUpdates(
 
 const headerInfoPrefix = 0x0
 
+// setHeaderInfo sets the header info in the state to be used by queries in the future.
 func (s STF[T]) setHeaderInfo(state store.WriterMap, headerInfo header.Info) error {
 	runtimeStore, err := state.GetWriter(appmanager.RuntimeIdentity)
 	if err != nil {
@@ -392,6 +421,7 @@ func (s STF[T]) setHeaderInfo(state store.WriterMap, headerInfo header.Info) err
 	return nil
 }
 
+// getHeaderInfo gets the header info from the state. It should only be used for queries
 func (s STF[T]) getHeaderInfo(state store.WriterMap) (i header.Info, err error) {
 	runtimeStore, err := state.GetWriter(appmanager.RuntimeIdentity)
 	if err != nil {
@@ -417,7 +447,11 @@ func (s STF[T]) Simulate(
 	tx T,
 ) (appmanager.TxResult, store.WriterMap) {
 	simulationState := s.branch(state)
-	txr := s.deliverTx(ctx, simulationState, tx, corecontext.ExecModeSimulate)
+	hi, err := s.getHeaderInfo(simulationState)
+	if err != nil {
+		return appmanager.TxResult{}, nil
+	}
+	txr := s.deliverTx(ctx, simulationState, tx, corecontext.ExecModeSimulate, hi)
 
 	return txr, simulationState
 }
@@ -447,7 +481,12 @@ func (s STF[T]) Query(
 	req transaction.Type,
 ) (transaction.Type, error) {
 	queryState := s.branch(state)
+	hi, err := s.getHeaderInfo(queryState)
+	if err != nil {
+		return nil, err
+	}
 	queryCtx := s.makeContext(ctx, nil, queryState, gasLimit, corecontext.ExecModeSimulate)
+	queryCtx.setHeaderInfo(hi)
 	return s.handleQuery(queryCtx, req)
 }
 
@@ -464,6 +503,7 @@ func (s STF[T]) RunWithCtx(
 	closure func(ctx context.Context) error,
 ) (store.WriterMap, error) {
 	branchedState := s.branch(state)
+	// TODO  do we need headerinfo for genesis?
 	stfCtx := s.makeContext(ctx, nil, branchedState, gas.NoGasLimit, corecontext.ExecModeFinalize)
 	return branchedState, closure(stfCtx)
 }
@@ -498,7 +538,21 @@ type executionContext struct {
 	execMode   corecontext.ExecMode
 }
 
+// setHeaderInfo sets the header info in the state to be used by queries in the future.
+func (e *executionContext) setHeaderInfo(hi header.Info) {
+	e.headerInfo = hi
+}
+
 // TODO: too many calls to makeContext can be expensive
+// makeContext creates and returns a new execution context for the STF[T] type.
+// It takes in the following parameters:
+// - ctx: The context.Context object for the execution.
+// - sender: The transaction.Identity object representing the sender of the transaction.
+// - store: The store.WriterMap object for accessing and modifying the state.
+// - gasLimit: The maximum amount of gas allowed for the execution.
+// - execMode: The corecontext.ExecMode object representing the execution mode.
+//
+// It returns a pointer to the executionContext struct
 func (s STF[T]) makeContext(
 	ctx context.Context,
 	sender transaction.Identity,
@@ -506,11 +560,6 @@ func (s STF[T]) makeContext(
 	gasLimit uint64,
 	execMode corecontext.ExecMode,
 ) *executionContext {
-	headerInfo, err := s.getHeaderInfo(store)
-	if err != nil {
-		panic(err) // TODO: remove panic pls
-	}
-
 	meter := s.getGasMeter(gasLimit)
 	store = s.wrapWithGasMeter(meter, store)
 	return &executionContext{
@@ -520,11 +569,15 @@ func (s STF[T]) makeContext(
 		events:     make([]event.Event, 0),
 		sender:     sender,
 		branchdb:   BrachService{s.branch},
-		headerInfo: headerInfo,
+		headerInfo: header.Info{},
 		execMode:   execMode,
 	}
 }
 
+// applyStateChanges applies the state changes from the source store to the destination store.
+// It retrieves the state changes from the source store using GetStateChanges method,
+// and then applies those changes to the destination store using ApplyStateChanges method.
+// If an error occurs during the retrieval or application of state changes, it is returned.
 func applyStateChanges(dst, src store.WriterMap) error {
 	changes, err := src.GetStateChanges()
 	if err != nil {

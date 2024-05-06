@@ -6,9 +6,9 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/registry"
 
+	"github.com/cosmos/cosmos-sdk/testutil/x/counter/keeper"
+	"github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/counter/keeper"
-	"github.com/cosmos/cosmos-sdk/x/counter/types"
 )
 
 var (

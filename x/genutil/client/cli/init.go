@@ -19,11 +19,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	corectx "cosmossdk.io/core/context"
 )
 
 const (
@@ -84,8 +84,8 @@ func InitCmd(mm hasDefaultGenesis) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
-			serverCtx := server.GetServerContextFromCmd(cmd)
-			config := serverCtx.Config
+			serverCtx := corectx.GetServerContextFromCmd(cmd)
+			config := serverCtx.GetConfig()
 
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
 			switch {

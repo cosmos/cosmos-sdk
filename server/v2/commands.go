@@ -2,49 +2,59 @@ package serverv2
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
 	"path/filepath"
+
 	"syscall"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 )
 
-type NewCometBFTServerFunc func(*cobra.Command, transaction.Codec[transaction.Tx]) ServerModule
+type NewCometBFTServerFunc func(*viper.Viper, log.Logger, transaction.Codec[transaction.Tx]) ServerModule
+
 
 func Commands(rootCmd *cobra.Command, codec transaction.Codec[transaction.Tx], logger log.Logger, homePath string, newCometFunc NewCometBFTServerFunc, modules ...ServerModule,) (CLIConfig, error) {
-	if len(modules) == 0 {
-		// TODO figure if we should define default modules
-		// and if so it should be done here to avoid uncessary dependencies
-		return CLIConfig{}, errors.New("no modules provided")
-	}
+	// if len(modules) == 0 {
+	// 	// TODO figure if we should define default modules
+	// 	// and if so it should be done here to avoid uncessary dependencies
+	// 	return CLIConfig{}, errors.New("no modules provided")
+	// }
 
-	v, err := ReadConfig(filepath.Join(homePath, "config"))
-	if err != nil {
-		return CLIConfig{}, fmt.Errorf("failed to read config: %w", err)
-	}
+	
+
 
 	server := NewServer(logger, modules...)
 	startCmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the application",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			v, err := ReadConfig(filepath.Join(homePath, "config"))
+			if err != nil {
+				return fmt.Errorf("failed to read config: %w", err)
+			}
 			if err := v.BindPFlags(cmd.Flags()); err != nil { // the server modules are already instantiated here, so binding the flags is useless.
 				return err
 			}
 
 			// Init CometBFTServer when server start
-			cometServer := newCometFunc(rootCmd, codec)
+			cometServer := newCometFunc(v, logger, codec)
 			server.modules = append(server.modules, cometServer)
 
-			srvConfig := Config{StartBlock: true}
+			srvContext := Context{
+				Viper: v,
+				Logger: logger,
+				Config: Config{
+					StartBlock: true,
+				},
+			}
 			ctx := cmd.Context()
-			ctx = context.WithValue(ctx, ServerContextKey, srvConfig)
+			ctx = context.WithValue(ctx, ServerContextKey, srvContext)
 			ctx, cancelFn := context.WithCancel(ctx)
 			go func() {
 				sigCh := make(chan os.Signal, 1)

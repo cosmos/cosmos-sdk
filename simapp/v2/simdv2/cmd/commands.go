@@ -33,7 +33,7 @@ import (
 	// TODO migrate all server dependencies to server/v2
 	"github.com/cosmos/cosmos-sdk/server"
 	serverv2 "cosmossdk.io/server/v2"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types" // there only ExportedApp consider here
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -56,14 +56,15 @@ func (t *temporaryTxDecoder) DecodeJSON(bz []byte) (transaction.Tx, error) {
 }
 
 // newApp creates the application
+// Q: should we only init cometserver when start or earlier is ok?
 func newCometBFTServer(
-	cmd *cobra.Command,
+	viper *viper.Viper,
+	logger log.Logger,
 	txCodec transaction.Codec[transaction.Tx],
 ) serverv2.ServerModule {
-	serverCtx := server.GetServerContextFromCmd(cmd)
-	sa := simapp.NewSimApp(serverCtx.Logger, serverCtx.Viper)
+	sa := simapp.NewSimApp(logger, viper)
 	am := sa.App.AppManager
-	serverCfg := cometbft.Config{CmtConfig: serverCtx.Config, ConsensusAuthority: sa.GetConsensusAuthority()}
+	serverCfg := cometbft.Config{CmtConfig: serverv2.GetCometConfigFromViper(viper), ConsensusAuthority: sa.GetConsensusAuthority()}
 
 	cometServer := cometbft.NewCometBFTServer[transaction.Tx](
 		am,
@@ -95,7 +96,12 @@ func initRootCmd(
 		// snapshot.Cmd(newApp),
 	)
 
-	serverv2.AddCommands(rootCmd, &temporaryTxDecoder{txConfig}, log.NewNopLogger(), tempDir(), newCometBFTServer, nil) // TODO: How to cast from AppModule to ServerModule
+	
+
+	err := serverv2.AddCommands(rootCmd, &temporaryTxDecoder{txConfig}, log.NewNopLogger(), tempDir(), newCometBFTServer) // TODO: How to cast from AppModule to ServerModule
+	if err != nil {
+		panic(fmt.Sprintf("Add cmd, %v", err))
+	}
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
@@ -257,5 +263,6 @@ var tempDir = func() string {
 	}
 	defer os.RemoveAll(dir)
 
-	return dir
+	// Hardcode here so it not breake AddCommand
+	return simapp.DefaultNodeHome
 }

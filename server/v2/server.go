@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
+	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
@@ -33,15 +35,20 @@ type HasConfig interface {
 var _ ServerModule = (*Server)(nil)
 
 // Configs returns a viper instance of the config file
+// Currently just set comet config to viper to init comet
+// TODO: should set both app.toml?
 func ReadConfig(configPath string) (*viper.Viper, error) {
 	v := viper.New()
-	v.SetConfigFile(configPath)
+	cmtConfigFile := filepath.Join(configPath, "config.toml")
+	v.SetConfigFile(cmtConfigFile)
 	v.SetConfigType("toml")
 	if err := v.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to read config: %s: %w", configPath, err)
 	}
 	v.WatchConfig()
 
+	config := cmtcfg.DefaultConfig()
+	v.Unmarshal(config)
 	return v, nil
 }
 

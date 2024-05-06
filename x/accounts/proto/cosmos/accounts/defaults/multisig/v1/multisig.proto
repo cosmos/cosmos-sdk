@@ -26,8 +26,8 @@ message MsgCreateProposalResponse {
 }
 
 message MsgVote {
-  uint64 proposal_id = 1;
-  VoteOption   vote        = 2;
+  uint64     proposal_id = 1;
+  VoteOption vote        = 2;
 }
 
 message MsgVoteResponse {}

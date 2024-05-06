@@ -1,6 +1,6 @@
 module cosmossdk.io/x/params
 
-go 1.21.0
+go 1.22
 
 require (
 	cosmossdk.io/api v0.7.4
@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/store v1.1.0
 	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
-	github.com/cometbft/cometbft v0.38.7-0.20240412124004-1f67e396cf45
+	github.com/cometbft/cometbft v0.38.7
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.51.0
@@ -32,6 +32,7 @@ require (
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
+	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.13.3 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -171,6 +172,7 @@ replace (
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
+	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/distribution => ../distribution
 	cosmossdk.io/x/gov => ../gov
 	cosmossdk.io/x/mint => ../mint

@@ -431,10 +431,11 @@ func NewSimApp(
 
 	app.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
-			// insert epoch hooks receivers here
-			// Note: Disable mint hooks and enable BeginBlocker of mint if you want to mint tokens based on supply not on epochs.
-			// By default, we are minting based on epochs.
-			app.MintKeeper.Hooks(),
+		// insert epoch hooks receivers here
+		// Note: Enable mint hooks and disable BeginBlocker of mint if you want to mint tokens based on epochs not on supply.
+		// By default, we are minting based on supply.
+
+		// app.MintKeeper.Hooks(),
 		),
 	)
 

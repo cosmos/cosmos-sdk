@@ -43,6 +43,17 @@ func (s *E2ETestSuite) TestQueryGRPC() {
 			},
 		},
 		{
+			"grpc request epoch provisions",
+			fmt.Sprintf("%s/cosmos/mint/v1beta1/epoch_provisions", baseURL),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			&minttypes.QueryEpochProvisionsResponse{},
+			&minttypes.QueryEpochProvisionsResponse{
+				EpochProvisions: math.LegacyNewDec(5000000),
+			},
+		},
+		{
 			"gRPC request annual provisions",
 			fmt.Sprintf("%s/cosmos/mint/v1beta1/annual_provisions", baseURL),
 			map[string]string{

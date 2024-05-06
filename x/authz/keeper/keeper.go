@@ -70,10 +70,6 @@ func (k Keeper) getGrant(ctx context.Context, skey []byte) (grant authz.Grant, f
 	return grant, true
 }
 
-// func (k Keeper) SetAuthzOptions(options map[string]map[string][]string) {
-// 	k.AuthzOptions = options
-// }
-
 func (k Keeper) GetAuthzOptions() map[string]map[string]string {
 	return k.authzOptions
 }

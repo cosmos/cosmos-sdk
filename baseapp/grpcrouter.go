@@ -21,7 +21,7 @@ type QueryRouter interface {
 	HybridHandlerByRequestName(name string) []func(ctx context.Context, req protoiface.MessageV1, resp protoiface.MessageV1) error
 	RegisterService(sd *grpc.ServiceDesc, handler interface{})
 	ResponseNameByRequestName(requestName string) string
-	Route(path string) func(ctx sdk.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error)
+	Route(path string) GRPCQueryHandler
 	SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry)
 }
 

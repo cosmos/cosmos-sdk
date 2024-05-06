@@ -60,7 +60,7 @@ The minter is a space for holding current inflation information.
 * Minter: `0x00 -> ProtocolBuffer(minter)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/7e402fb1435790976fa4eafdb3467940fb7f6d1c/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L10-L30
+https://github.com/cosmos/cosmos-sdk/blob/7527bb29d73fc481e5321748ed2c6692864f141e/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L10-L30
 ```
 
 ### Params
@@ -73,7 +73,7 @@ A value of `0` indicates an unlimited supply.
 * Params: `mint/params -> legacy_amino(params)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/7e402fb1435790976fa4eafdb3467940fb7f6d1c/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L32-L90
+https://github.com/cosmos/cosmos-sdk/blob/7527bb29d73fc481e5321748ed2c6692864f141e/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L32-L95
 ```
 
 ### LastReductionEpoch

@@ -18,7 +18,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 // RegisterInterfaces registers the interfaces types with the Interface Registry.
 func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
-	registrar.RegisterImplementations((*coretransaction.Type)(nil),
+	registrar.RegisterImplementations((*coretransaction.Msg)(nil),
 		&MsgUnjail{},
 		&MsgUpdateParams{},
 	)

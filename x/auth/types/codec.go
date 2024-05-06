@@ -58,7 +58,7 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 		&ModuleCredential{},
 	)
 
-	registrar.RegisterImplementations((*coretransaction.Type)(nil),
+	registrar.RegisterImplementations((*coretransaction.Msg)(nil),
 		&MsgUpdateParams{},
 		&MsgNonAtomicExec{},
 	)

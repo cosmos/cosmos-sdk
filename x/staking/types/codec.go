@@ -30,7 +30,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 // RegisterInterfaces registers the x/staking interfaces types with the interface registry
 func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
-	registrar.RegisterImplementations((*coretransaction.Type)(nil),
+	registrar.RegisterImplementations((*coretransaction.Msg)(nil),
 		&MsgCreateValidator{},
 		&MsgEditValidator{},
 		&MsgDelegate{},

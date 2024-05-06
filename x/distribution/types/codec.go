@@ -24,7 +24,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 	registrar.RegisterImplementations(
-		(*coretransaction.Type)(nil),
+		(*coretransaction.Msg)(nil),
 		&MsgWithdrawDelegatorReward{},
 		&MsgWithdrawValidatorCommission{},
 		&MsgSetWithdrawAddress{},

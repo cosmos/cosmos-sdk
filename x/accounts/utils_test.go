@@ -63,7 +63,7 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 	queryRouter := baseapp.NewGRPCQueryRouter()
 	queryRouter.SetInterfaceRegistry(ir)
 
-	ir.RegisterImplementations((*coretransaction.Type)(nil),
+	ir.RegisterImplementations((*coretransaction.Msg)(nil),
 		&bankv1beta1.MsgSend{},
 		&bankv1beta1.MsgBurn{},
 		&bankv1beta1.MsgSetSendEnabled{},

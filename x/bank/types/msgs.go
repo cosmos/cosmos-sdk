@@ -7,9 +7,9 @@ import (
 )
 
 var (
-	_ coretransaction.Type = &MsgSend{}
-	_ coretransaction.Type = &MsgMultiSend{}
-	_ coretransaction.Type = &MsgUpdateParams{}
+	_ coretransaction.Msg = &MsgSend{}
+	_ coretransaction.Msg = &MsgMultiSend{}
+	_ coretransaction.Msg = &MsgUpdateParams{}
 )
 
 // NewMsgSend - construct a msg to send coins from one account to another.

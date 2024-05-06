@@ -13,14 +13,14 @@ import (
 )
 
 var (
-	_ coretransaction.Type               = &MsgCreateValidator{}
+	_ coretransaction.Msg                = &MsgCreateValidator{}
 	_ codectypes.UnpackInterfacesMessage = (*MsgCreateValidator)(nil)
-	_ coretransaction.Type               = &MsgEditValidator{}
-	_ coretransaction.Type               = &MsgDelegate{}
-	_ coretransaction.Type               = &MsgUndelegate{}
-	_ coretransaction.Type               = &MsgBeginRedelegate{}
-	_ coretransaction.Type               = &MsgCancelUnbondingDelegation{}
-	_ coretransaction.Type               = &MsgUpdateParams{}
+	_ coretransaction.Msg                = &MsgEditValidator{}
+	_ coretransaction.Msg                = &MsgDelegate{}
+	_ coretransaction.Msg                = &MsgUndelegate{}
+	_ coretransaction.Msg                = &MsgBeginRedelegate{}
+	_ coretransaction.Msg                = &MsgCancelUnbondingDelegation{}
+	_ coretransaction.Msg                = &MsgUpdateParams{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.

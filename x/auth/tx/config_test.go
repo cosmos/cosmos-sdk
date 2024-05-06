@@ -21,7 +21,7 @@ import (
 func TestGenerator(t *testing.T) {
 	interfaceRegistry := testutil.CodecOptions{}.NewInterfaceRegistry()
 	std.RegisterInterfaces(interfaceRegistry)
-	interfaceRegistry.RegisterImplementations((*coretransaction.Type)(nil), &testdata.TestMsg{})
+	interfaceRegistry.RegisterImplementations((*coretransaction.Msg)(nil), &testdata.TestMsg{})
 	protoCodec := codec.NewProtoCodec(interfaceRegistry)
 	signingCtx := protoCodec.InterfaceRegistry().SigningContext()
 	suite.Run(t, txtestutil.NewTxConfigTestSuite(tx.NewTxConfig(protoCodec, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), tx.DefaultSignModes)))

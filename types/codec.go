@@ -14,7 +14,7 @@ const (
 
 // RegisterLegacyAminoCodec registers the sdk message type.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterInterface((*coretransaction.Type)(nil), nil)
+	cdc.RegisterInterface((*coretransaction.Msg)(nil), nil)
 	cdc.RegisterInterface((*Tx)(nil), nil)
 }
 

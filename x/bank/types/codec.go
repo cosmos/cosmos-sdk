@@ -22,7 +22,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
-	registrar.RegisterImplementations((*coretransaction.Type)(nil),
+	registrar.RegisterImplementations((*coretransaction.Msg)(nil),
 		&MsgSend{},
 		&MsgMultiSend{},
 		&MsgUpdateParams{},

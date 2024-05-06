@@ -9,7 +9,7 @@ import (
 
 func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 	registrar.RegisterImplementations(
-		(*coretransaction.Type)(nil),
+		(*coretransaction.Msg)(nil),
 		&MsgIncreaseCounter{},
 	)
 

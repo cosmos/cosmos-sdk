@@ -7,9 +7,9 @@ import (
 )
 
 var (
-	_ coretransaction.Type = &MsgCreateVestingAccount{}
-	_ coretransaction.Type = &MsgCreatePermanentLockedAccount{}
-	_ coretransaction.Type = &MsgCreatePeriodicVestingAccount{}
+	_ coretransaction.Msg = &MsgCreateVestingAccount{}
+	_ coretransaction.Msg = &MsgCreatePermanentLockedAccount{}
+	_ coretransaction.Msg = &MsgCreatePeriodicVestingAccount{}
 )
 
 // NewMsgCreateVestingAccount returns a reference to a new MsgCreateVestingAccount.

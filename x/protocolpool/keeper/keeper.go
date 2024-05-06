@@ -350,10 +350,14 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipientAddr string) (am
 		return sdk.Coin{}, err
 	}
 
+	totalBudgetAmountLeftToDistribute := budget.BudgetPerTranche.Amount.Mul(math.NewIntFromUint64(budget.TranchesLeft))
+	totalBudgetAmountLeft := sdk.NewCoin(budget.BudgetPerTranche.Denom, totalBudgetAmountLeftToDistribute)
+	zeroAmount := sdk.NewCoin(totalBudgetAmountLeft.Denom, math.ZeroInt())
+
 	// check if the distribution is completed
 	if budget.TranchesLeft == 0 && budget.ClaimedAmount != nil {
-		// check that claimed amount is equal to total budget
-		if budget.ClaimedAmount.Equal(budget.TotalBudget) {
+		// check that total budget amount left to distribute equals zero
+		if totalBudgetAmountLeft.Equal(zeroAmount) {
 			// remove the entry of budget ended recipient
 			if err := k.BudgetProposal.Remove(ctx, recipient); err != nil {
 				return sdk.Coin{}, err
@@ -373,7 +377,7 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipientAddr string) (am
 	}
 
 	if budget.TranchesLeft != 0 && budget.ClaimedAmount == nil {
-		zeroCoin := sdk.NewCoin(budget.TotalBudget.Denom, math.ZeroInt())
+		zeroCoin := sdk.NewCoin(budget.BudgetPerTranche.Denom, math.ZeroInt())
 		budget.ClaimedAmount = &zeroCoin
 	}
 
@@ -398,7 +402,7 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 
 	// Calculate the amount to distribute for all passed periods
 	coinsToDistribute := math.NewInt(periodsPassed).Mul(budget.BudgetPerTranche.Amount)
-	amount = sdk.NewCoin(budget.TotalBudget.Denom, coinsToDistribute)
+	amount = sdk.NewCoin(budget.BudgetPerTranche.Denom, coinsToDistribute)
 
 	// update the budget's remaining tranches
 	if budget.TranchesLeft > uint64(periodsPassed) {
@@ -426,11 +430,11 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 }
 
 func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.MsgSubmitBudgetProposal) (*types.Budget, error) {
-	if bp.TotalBudget.IsZero() {
-		return nil, fmt.Errorf("invalid budget proposal: total budget cannot be zero")
+	if bp.BudgetPerTranche.IsZero() {
+		return nil, fmt.Errorf("invalid budget proposal: budget per tranche cannot be zero")
 	}
 
-	if err := validateAmount(sdk.NewCoins(*bp.TotalBudget)); err != nil {
+	if err := validateAmount(sdk.NewCoins(*bp.BudgetPerTranche)); err != nil {
 		return nil, fmt.Errorf("invalid budget proposal: %w", err)
 	}
 
@@ -451,17 +455,13 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.Ms
 		return nil, fmt.Errorf("invalid budget proposal: period length should be greater than zero")
 	}
 
-	budgetPerTrancheAmount := bp.TotalBudget.Amount.Quo(math.NewIntFromUint64(bp.Tranches))
-	budgetPerTranche := sdk.NewCoin(bp.TotalBudget.Denom, budgetPerTrancheAmount)
-
 	// Create and return an updated budget proposal
 	updatedBudget := types.Budget{
 		RecipientAddress: bp.RecipientAddress,
-		TotalBudget:      bp.TotalBudget,
+		BudgetPerTranche: bp.BudgetPerTranche,
 		LastClaimedAt:    bp.StartTime,
 		TranchesLeft:     bp.Tranches,
 		Period:           bp.Period,
-		BudgetPerTranche: &budgetPerTranche,
 	}
 
 	return &updatedBudget, nil

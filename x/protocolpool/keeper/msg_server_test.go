@@ -36,7 +36,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 			input: &types.MsgSubmitBudgetProposal{
 				Authority:        suite.poolKeeper.GetAuthority(),
 				RecipientAddress: "",
-				TotalBudget:      &fooCoin,
+				BudgetPerTranche: &fooCoin,
 				StartTime:        &startTime,
 				Tranches:         2,
 				Period:           &period,
@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 			input: &types.MsgSubmitBudgetProposal{
 				Authority:        "",
 				RecipientAddress: recipientStrAddr,
-				TotalBudget:      &fooCoin,
+				BudgetPerTranche: &fooCoin,
 				StartTime:        &startTime,
 				Tranches:         2,
 				Period:           &period,
@@ -60,7 +60,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 			input: &types.MsgSubmitBudgetProposal{
 				Authority:        "invalid_authority",
 				RecipientAddress: recipientStrAddr,
-				TotalBudget:      &fooCoin,
+				BudgetPerTranche: &fooCoin,
 				StartTime:        &startTime,
 				Tranches:         2,
 				Period:           &period,
@@ -72,19 +72,19 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 			input: &types.MsgSubmitBudgetProposal{
 				Authority:        suite.poolKeeper.GetAuthority(),
 				RecipientAddress: recipientStrAddr,
-				TotalBudget:      &invalidCoin,
+				BudgetPerTranche: &invalidCoin,
 				StartTime:        &startTime,
 				Tranches:         2,
 				Period:           &period,
 			},
 			expErr:    true,
-			expErrMsg: "total budget cannot be zero",
+			expErrMsg: "budget per tranche cannot be zero",
 		},
 		"invalid start time": {
 			input: &types.MsgSubmitBudgetProposal{
 				Authority:        suite.poolKeeper.GetAuthority(),
 				RecipientAddress: recipientStrAddr,
-				TotalBudget:      &fooCoin,
+				BudgetPerTranche: &fooCoin,
 				StartTime:        &invalidStartTime,
 				Tranches:         2,
 				Period:           &period,
@@ -96,7 +96,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 			input: &types.MsgSubmitBudgetProposal{
 				Authority:        suite.poolKeeper.GetAuthority(),
 				RecipientAddress: recipientStrAddr,
-				TotalBudget:      &fooCoin,
+				BudgetPerTranche: &fooCoin,
 				StartTime:        &startTime,
 				Tranches:         0,
 				Period:           &period,
@@ -108,7 +108,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 			input: &types.MsgSubmitBudgetProposal{
 				Authority:        suite.poolKeeper.GetAuthority(),
 				RecipientAddress: recipientStrAddr,
-				TotalBudget:      &fooCoin,
+				BudgetPerTranche: &fooCoin,
 				StartTime:        &startTime,
 				Tranches:         2,
 				Period:           &zeroPeriod,
@@ -120,7 +120,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitBudgetProposal() {
 			input: &types.MsgSubmitBudgetProposal{
 				Authority:        suite.poolKeeper.GetAuthority(),
 				RecipientAddress: recipientStrAddr,
-				TotalBudget:      &fooCoin,
+				BudgetPerTranche: &fooCoin2,
 				StartTime:        &startTime,
 				Tranches:         2,
 				Period:           &period,
@@ -174,7 +174,6 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 				// Prepare the budget proposal with a future last claimed at time
 				budget := types.Budget{
 					RecipientAddress: recipientStrAddr,
-					TotalBudget:      &fooCoin,
 					TranchesLeft:     2,
 					Period:           &period,
 					LastClaimedAt:    &startTime,
@@ -193,7 +192,6 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 				// Prepare the budget proposal with start time and a short period
 				budget := types.Budget{
 					RecipientAddress: recipientStrAddr,
-					TotalBudget:      &fooCoin,
 					LastClaimedAt:    &startTime,
 					TranchesLeft:     1,
 					Period:           &period,
@@ -211,7 +209,6 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 				// Prepare the budget proposal with valid start time and period
 				budget := types.Budget{
 					RecipientAddress: recipientStrAddr,
-					TotalBudget:      &fooCoin,
 					LastClaimedAt:    &startTime,
 					TranchesLeft:     2,
 					Period:           &period,
@@ -229,7 +226,6 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 				// Prepare the budget proposal with valid start time and period
 				budget := types.Budget{
 					RecipientAddress: recipientStrAddr,
-					TotalBudget:      &fooCoin,
 					LastClaimedAt:    &startTime,
 					TranchesLeft:     2,
 					Period:           &period,
@@ -258,7 +254,6 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 				// Prepare the budget proposal with valid start time and period
 				budget := types.Budget{
 					RecipientAddress: recipientStrAddr,
-					TotalBudget:      &fooCoin,
 					LastClaimedAt:    &startTime,
 					TranchesLeft:     2,
 					Period:           &period,
@@ -287,7 +282,6 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 				// Prepare the budget proposal with valid start time and period of 1 month (in seconds)
 				budget := types.Budget{
 					RecipientAddress: recipientStrAddr,
-					TotalBudget:      &fooCoin,
 					LastClaimedAt:    &startTimeBeforeMonth,
 					TranchesLeft:     2,
 					Period:           &oneMonthPeriod,
@@ -319,7 +313,6 @@ func (suite *KeeperTestSuite) TestMsgClaimBudget() {
 				// Prepare the budget proposal with valid start time and period
 				budget := types.Budget{
 					RecipientAddress: recipientStrAddr,
-					TotalBudget:      &fooCoin,
 					LastClaimedAt:    &startTime,
 					TranchesLeft:     2,
 					Period:           &period,

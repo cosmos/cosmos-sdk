@@ -24,7 +24,7 @@ func NewRouterService(storeService store.KVStoreService, queryRouter baseapp.Que
 			router: queryRouter,
 		},
 		msgRouterService: &msgRouterService{
-			storeService: storeService,
+			storeService: storeService, // TODO(@julienrbrt): this will be used later on as authenticating modules before routing
 			router:       msgRouter,
 		},
 	}

@@ -7,8 +7,6 @@ import (
 	"strings"
 	"time"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
-
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/errors"
@@ -16,7 +14,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -478,24 +475,13 @@ func (v Validator) ConsPubKey() (cryptotypes.PubKey, error) {
 }
 
 // CmtConsPublicKey casts Validator.ConsensusPubkey to cmtprotocrypto.PubKey.
-func (v Validator) CmtConsPublicKey() (cmtprotocrypto.PublicKey, error) {
+func (v Validator) CmtConsPublicKey() (cryptotypes.PubKey, error) {
 	pk, err := v.ConsPubKey()
 	if err != nil {
-		return cmtprotocrypto.PublicKey{}, err
+		return nil, err
 	}
 
-	tmPk, err := cryptocodec.ToCmtProtoPublicKey(pk)
-	if err != nil {
-		return cmtprotocrypto.PublicKey{}, err
-	}
-
-	return tmPk, nil
-}
-
-// Deprecated: use CmtConsPublicKey instead
-// We do not delete this function as it is part of the ValidatorI interface
-func (v Validator) TmConsPublicKey() (cmtprotocrypto.PublicKey, error) {
-	return v.CmtConsPublicKey()
+	return pk, nil
 }
 
 // GetConsAddr extracts Consensus key address

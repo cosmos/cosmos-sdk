@@ -1,7 +1,6 @@
 package math
 
 import (
-	"fmt"
 	"math/big"
 
 	"cosmossdk.io/errors"
@@ -45,65 +44,64 @@ var dec128Context = apd.Context{
 	Traps:       apd.DefaultTraps,
 }
 
-func NewDecFromString(s string) (Dec, error) {
-	if s == "" {
-		s = "0"
+type SetupConstraint func(Dec) error
+
+// AssertNotNegative greater or equal 0
+func AssertNotNegative() SetupConstraint {
+	return func(d Dec) error {
+		if d.IsNegative() {
+			return ErrInvalidDecString.Wrap("is negative")
+		}
+		return nil
 	}
+}
+
+// AssertGreaterThanZero greater than 0
+func AssertGreaterThanZero() SetupConstraint {
+	return func(d Dec) error {
+		if !d.IsPositive() {
+			return ErrInvalidDecString.Wrap("is negative")
+		}
+		return nil
+	}
+}
+
+// AssertMaxDecimals limit the decimal places
+func AssertMaxDecimals(max uint32) SetupConstraint {
+	return func(d Dec) error {
+		if d.NumDecimalPlaces() > max {
+			return ErrInvalidDecString.Wrapf("exceeds maximum decimal places: %d", max)
+		}
+		return nil
+	}
+}
+
+// NewDecFromString constructor
+func NewDecFromString(s string, c ...SetupConstraint) (Dec, error) {
 	d, _, err := apd.NewFromString(s)
 	if err != nil {
 		return Dec{}, ErrInvalidDecString.Wrap(err.Error())
 	}
 
-	d1 := Dec{*d}
-	if d1.dec.Form == apd.Infinite {
-		return d1, ErrInfiniteString.Wrapf(s)
+	switch d.Form {
+	case apd.NaN, apd.NaNSignaling:
+		return Dec{}, ErrInvalidDecString.Wrap("not a number")
+	case apd.Infinite:
+		return Dec{}, ErrInfiniteString.Wrapf(s)
+	default:
+		result := Dec{*d}
+		for _, v := range c {
+			if err := v(result); err != nil {
+				return Dec{}, err
+			}
+		}
+		return result, nil
 	}
-
-	return d1, nil
 }
 
-func NewNonNegativeDecFromString(s string) (Dec, error) {
-	d, err := NewDecFromString(s)
-	if err != nil {
-		return Dec{}, ErrInvalidDecString.Wrap(err.Error())
-	}
-	if d.IsNegative() {
-		return Dec{}, ErrInvalidDecString.Wrapf("expected a non-negative decimal, got %s", s)
-	}
-	return d, nil
-}
-
-func NewNonNegativeFixedDecFromString(s string, max uint32) (Dec, error) {
-	d, err := NewNonNegativeDecFromString(s)
-	if err != nil {
-		return Dec{}, err
-	}
-	if d.NumDecimalPlaces() > max {
-		return Dec{}, fmt.Errorf("%s exceeds maximum decimal places: %d", s, max)
-	}
-	return d, nil
-}
-
-func NewPositiveDecFromString(s string) (Dec, error) {
-	d, err := NewDecFromString(s)
-	if err != nil {
-		return Dec{}, ErrInvalidDecString.Wrap(err.Error())
-	}
-	if !d.IsPositive() || !d.IsFinite() {
-		return Dec{}, ErrInvalidDecString.Wrapf("expected a positive decimal, got %s", s)
-	}
-	return d, nil
-}
-
-func NewPositiveFixedDecFromString(s string, max uint32) (Dec, error) {
-	d, err := NewPositiveDecFromString(s)
-	if err != nil {
-		return Dec{}, err
-	}
-	if d.NumDecimalPlaces() > max {
-		return Dec{}, fmt.Errorf("%s exceeds maximum decimal places: %d", s, max)
-	}
-	return d, nil
+// NewNonNegativeDecFromString constructor
+func NewNonNegativeDecFromString(s string, c ...SetupConstraint) (Dec, error) {
+	return NewDecFromString(s, append(c, AssertNotNegative())...)
 }
 
 func NewDecFromInt64(x int64) Dec {
@@ -216,7 +214,7 @@ func (x Dec) BigInt() (*big.Int, error) {
 // Panics if x is bigger the SDK Int max value
 func (x Dec) SdkIntTrim() Int {
 	y, _ := x.Reduce()
-	var r = y.dec.Coeff
+	r := y.dec.Coeff
 	if y.dec.Exponent != 0 {
 		decs := big.NewInt(10)
 		if y.dec.Exponent > 0 {

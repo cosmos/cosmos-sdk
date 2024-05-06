@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
-
 	stfgas "cosmossdk.io/server/v2/stf/gas"
 )
 
@@ -58,7 +57,7 @@ func NewSTF[T transaction.Tx](
 		doValidatorUpdate: doValidatorUpdate,
 		postTxExec:        postTxExec, // TODO
 		branch:            branch,
-		getGasMeter:       stfgas.DefaultGasMeter,         //TODO replacable?
+
 		wrapWithGasMeter:  stfgas.DefaultWrapWithGasMeter, // TODO replacable?
 	}
 }
@@ -89,13 +88,13 @@ func (s STF[T]) DeliverBlock(
 
 	exCtx := s.makeContext(ctx, appmanager.ConsensusIdentity, newState, corecontext.ExecModeFinalize)
 	exCtx.setHeaderInfo(hi)
-	consMessagesResponses, err := s.runConsensusMessages(exCtx, newState, block.ConsensusMessages, hi)
+	consMessagesResponses, err := s.runConsensusMessages(exCtx, block.ConsensusMessages)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to execute consensus messages: %w", err)
 	}
 
 	// pre block is called separate from begin block in order to prepopulate state
-	preBlockEvents, err := s.preBlock(exCtx, newState, block.Txs)
+	preBlockEvents, err := s.preBlock(exCtx, block.Txs)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -105,7 +104,7 @@ func (s STF[T]) DeliverBlock(
 	}
 
 	// begin block
-	beginBlockEvents, err := s.beginBlock(exCtx, newState)
+	beginBlockEvents, err := s.beginBlock(exCtx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -126,7 +125,7 @@ func (s STF[T]) DeliverBlock(
 		txResults[i] = s.deliverTx(ctx, newState, txBytes, corecontext.ExecModeFinalize, hi)
 	}
 	// end block
-	endBlockEvents, valset, err := s.endBlock(exCtx, newState)
+	endBlockEvents, valset, err := s.endBlock(exCtx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -308,7 +307,6 @@ func (s STF[T]) runTxMsgs(
 
 func (s STF[T]) preBlock(
 	ctx *executionContext,
-	state store.WriterMap,
 	txs []T,
 ) ([]event.Event, error) {
 	err := s.doPreBlock(ctx, txs)
@@ -328,9 +326,7 @@ func (s STF[T]) preBlock(
 
 func (s STF[T]) runConsensusMessages(
 	ctx *executionContext,
-	state store.WriterMap,
 	messages []transaction.Type,
-	hi header.Info,
 ) ([]transaction.Type, error) {
 	responses := make([]transaction.Type, len(messages))
 	for i := range messages {
@@ -346,7 +342,6 @@ func (s STF[T]) runConsensusMessages(
 
 func (s STF[T]) beginBlock(
 	ctx *executionContext,
-	state store.WriterMap,
 ) (beginBlockEvents []event.Event, err error) {
 	err = s.doBeginBlock(ctx)
 	if err != nil {
@@ -365,14 +360,13 @@ func (s STF[T]) beginBlock(
 
 func (s STF[T]) endBlock(
 	ctx *executionContext,
-	state store.WriterMap,
 ) ([]event.Event, []appmodulev2.ValidatorUpdate, error) {
 	err := s.doEndBlock(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	events, valsetUpdates, err := s.validatorUpdates(ctx, state)
+	events, valsetUpdates, err := s.validatorUpdates(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -392,7 +386,6 @@ func (s STF[T]) endBlock(
 // validatorUpdates returns the validator updates for the current block. It is called by endBlock after the endblock execution has concluded
 func (s STF[T]) validatorUpdates(
 	ctx *executionContext,
-	state store.WriterMap,
 ) ([]event.Event, []appmodulev2.ValidatorUpdate, error) {
 	valSetUpdates, err := s.doValidatorUpdate(ctx)
 	if err != nil {

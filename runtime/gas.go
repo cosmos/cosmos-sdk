@@ -59,11 +59,15 @@ func (gm SDKGasMeter) Limit() storetypes.Gas {
 }
 
 func (gm SDKGasMeter) ConsumeGas(amount storetypes.Gas, descriptor string) {
-	gm.gm.Consume(amount, descriptor)
+	if err := gm.gm.Consume(amount, descriptor); err != nil {
+		panic(err)
+	}
 }
 
 func (gm SDKGasMeter) RefundGas(amount storetypes.Gas, descriptor string) {
-	gm.gm.Refund(amount, descriptor)
+	if err := gm.gm.Refund(amount, descriptor); err != nil {
+		panic(err)
+	}
 }
 
 func (gm SDKGasMeter) IsPastLimit() bool {

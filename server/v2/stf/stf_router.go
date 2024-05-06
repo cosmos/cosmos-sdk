@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
+
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 )
 
 var ErrNoHandler = errors.New("no handler")

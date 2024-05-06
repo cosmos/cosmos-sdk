@@ -67,7 +67,11 @@ ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
   build_tags += boltdb
 endif
 
-build_tags += blst
+# handle blst
+ifeq (boltdb,$(findstring blst,$(COSMOS_BUILD_OPTIONS)))
+  CGO_ENABLED=1
+  build_tags += blst
+endif
 
 whitespace :=
 whitespace += $(whitespace)

@@ -3,8 +3,9 @@ package keeper_test
 import (
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log"
@@ -74,6 +75,8 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Validator: defaultConsensusParams.Validator,
 					Evidence:  defaultConsensusParams.Evidence,
 					Abci:      defaultConsensusParams.Abci,
+					Synchrony: defaultConsensusParams.Synchrony,
+					Feature:   defaultConsensusParams.Feature,
 				}
 				_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, input)
 				s.Require().NoError(err)
@@ -85,6 +88,8 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Evidence:  defaultConsensusParams.Evidence,
 					Version:   defaultConsensusParams.Version,
 					Abci:      defaultConsensusParams.Abci,
+					Synchrony: defaultConsensusParams.Synchrony,
+					Feature:   defaultConsensusParams.Feature,
 				},
 			},
 			true,
@@ -98,8 +103,13 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Block:     defaultConsensusParams.Block,
 					Validator: defaultConsensusParams.Validator,
 					Evidence:  defaultConsensusParams.Evidence,
-					Abci: &cmtproto.ABCIParams{
+					Abci: &cmtproto.ABCIParams{ //nolint: staticcheck // needs update in a follow up pr
 						VoteExtensionsEnableHeight: 1234,
+					},
+					Synchrony: defaultConsensusParams.Synchrony,
+					Feature: &cmtproto.FeatureParams{
+						VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 1234},
+						PbtsEnableHeight:           &gogotypes.Int64Value{Value: 0},
 					},
 				}
 				_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, input)
@@ -111,8 +121,11 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Validator: defaultConsensusParams.Validator,
 					Evidence:  defaultConsensusParams.Evidence,
 					Version:   defaultConsensusParams.Version,
-					Abci: &cmtproto.ABCIParams{
-						VoteExtensionsEnableHeight: 1234,
+					Abci:      defaultConsensusParams.Abci,
+					Synchrony: defaultConsensusParams.Synchrony,
+					Feature: &cmtproto.FeatureParams{
+						VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 1234},
+						PbtsEnableHeight:           &gogotypes.Int64Value{Value: 0},
 					},
 				},
 			},

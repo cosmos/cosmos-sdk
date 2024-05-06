@@ -15,7 +15,6 @@ require (
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/bits-and-blooms/bitset v1.10.0
 	github.com/cockroachdb/errors v1.11.1
-	github.com/cometbft/cometbft v1.0.0-alpha.2.0.20240429102542-490e9bc3de65
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.51.0
 	github.com/cosmos/gogoproto v1.4.12
@@ -50,6 +49,7 @@ require (
 	github.com/cockroachdb/pebble v1.1.0 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
+	github.com/cometbft/cometbft v1.0.0-alpha.2.0.20240429102542-490e9bc3de65 // indirect
 	github.com/cometbft/cometbft-db v0.12.0 // indirect
 	github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240429102542-490e9bc3de65 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect

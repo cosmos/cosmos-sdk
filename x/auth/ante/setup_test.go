@@ -3,7 +3,6 @@ package ante_test
 import (
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
@@ -39,12 +38,7 @@ func TestSetupDecorator_BlockMaxGas(t *testing.T) {
 
 	suite.ctx = suite.ctx.
 		WithBlockHeight(1).
-		WithGasMeter(storetypes.NewGasMeter(0)).
-		WithConsensusParams(cmtproto.ConsensusParams{ // TODO: This is being ignored
-			Block: &cmtproto.BlockParams{
-				MaxGas: 100,
-			},
-		})
+		WithGasMeter(storetypes.NewGasMeter(0))
 
 	_, err = antehandler(suite.ctx, tx, false)
 	require.Error(t, err)

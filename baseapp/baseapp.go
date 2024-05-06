@@ -462,7 +462,7 @@ func (app *BaseApp) setTrace(trace bool) {
 }
 
 func (app *BaseApp) setIndexEvents(ie []string) {
-	app.indexEvents = make(map[string]struct{})
+	app.indexEvents = make(map[string]struct{}, len(ie))
 
 	for _, e := range ie {
 		app.indexEvents[e] = struct{}{}
@@ -871,8 +871,12 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	}
 
 	msgs := tx.GetMsgs()
-	if err := validateBasicTxMsgs(app.msgServiceRouter, msgs); err != nil {
-		return sdk.GasInfo{}, nil, nil, err
+	// run validate basic if mode != recheck.
+	// as validate basic is stateless, it is guaranteed to pass recheck, given that its passed checkTx.
+	if mode != execModeReCheck {
+		if err := validateBasicTxMsgs(app.msgServiceRouter, msgs); err != nil {
+			return sdk.GasInfo{}, nil, nil, err
+		}
 	}
 
 	if app.anteHandler != nil {
@@ -911,6 +915,12 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		gasWanted = ctx.GasMeter().Limit()
 
 		if err != nil {
+			if mode == execModeReCheck {
+				// if the ante handler fails on recheck, we want to remove the tx from the mempool
+				if mempoolErr := app.mempool.Remove(tx); mempoolErr != nil {
+					return gInfo, nil, anteEvents, errors.Join(err, mempoolErr)
+				}
+			}
 			return gInfo, nil, nil, err
 		}
 

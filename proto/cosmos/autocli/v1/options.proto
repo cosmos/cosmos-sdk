@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package cosmos.autocli.v1;
 
+import "cosmos_proto/cosmos.proto";
 option go_package = "cosmossdk.io/api/cosmos/base/cli/v1;cliv1";
 
 // ModuleOptions describes the CLI options for a Cosmos SDK module.
@@ -35,6 +36,9 @@ message ServiceCommandDescriptor {
   // exists, or enhance the existing command. If set to true, the custom command will be enhanced with the services from
   // gRPC. otherwise when a custom command exists, no commands will be generated for the service.
   bool enhance_custom_command = 4;
+
+  // short is an optional parameter used to override the short description of the auto generated command.
+  string short = 5;
 }
 
 // RpcCommandOptions specifies options for commands generated from protobuf
@@ -91,9 +95,7 @@ message RpcCommandOptions {
   // Normally autocli generates a transaction containing the message and broadcast it.
   // However, when true, autocli generates a proposal transaction containing the message and broadcast it.
   // This option is ineffective for query commands.
-  //
-  // Since: client/v2 v2.0.0-beta.2
-  bool gov_proposal = 13;
+  bool gov_proposal = 13 [(cosmos_proto.field_added_in) = "client/v2 v2.0.0-beta.2"];
 }
 
 // FlagOptions are options for flags generated from rpc request fields.

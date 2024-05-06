@@ -24,8 +24,6 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // EventGrant is emitted on Msg/Grant
-//
-// Since: cosmos-sdk 0.43
 type EventGrant struct {
 	// Msg type URL for which an authorization is granted
 	MsgTypeUrl string `protobuf:"bytes,2,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
@@ -90,8 +88,6 @@ func (m *EventGrant) GetGrantee() string {
 }
 
 // EventRevoke is emitted on Msg/Revoke
-//
-// Since: cosmos-sdk 0.43
 type EventRevoke struct {
 	// Msg type URL for which an authorization is revoked
 	MsgTypeUrl string `protobuf:"bytes,2,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
@@ -155,9 +151,62 @@ func (m *EventRevoke) GetGrantee() string {
 	return ""
 }
 
+// EventRevokeAll is emitted on Msg/RevokeAll
+type EventRevokeAll struct {
+	// Msg type URL for which all authorizations are revoked
+	MsgTypeUrl string `protobuf:"bytes,2,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
+	// Granter account address
+	Granter string `protobuf:"bytes,3,opt,name=granter,proto3" json:"granter,omitempty"`
+}
+
+func (m *EventRevokeAll) Reset()         { *m = EventRevokeAll{} }
+func (m *EventRevokeAll) String() string { return proto.CompactTextString(m) }
+func (*EventRevokeAll) ProtoMessage()    {}
+func (*EventRevokeAll) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1f88cbc71a8baf1f, []int{2}
+}
+func (m *EventRevokeAll) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventRevokeAll) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventRevokeAll.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventRevokeAll) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventRevokeAll.Merge(m, src)
+}
+func (m *EventRevokeAll) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventRevokeAll) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventRevokeAll.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventRevokeAll proto.InternalMessageInfo
+
+func (m *EventRevokeAll) GetMsgTypeUrl() string {
+	if m != nil {
+		return m.MsgTypeUrl
+	}
+	return ""
+}
+
+func (m *EventRevokeAll) GetGranter() string {
+	if m != nil {
+		return m.Granter
+	}
+	return ""
+}
+
 // EventPruneExpiredGrants is emitted on Msg/PruneExpiredGrants
-//
-// Since: x/authz 1.0.0
 type EventPruneExpiredGrants struct {
 	// Address of the pruner
 	Pruner string `protobuf:"bytes,2,opt,name=pruner,proto3" json:"pruner,omitempty"`
@@ -167,7 +216,7 @@ func (m *EventPruneExpiredGrants) Reset()         { *m = EventPruneExpiredGrants
 func (m *EventPruneExpiredGrants) String() string { return proto.CompactTextString(m) }
 func (*EventPruneExpiredGrants) ProtoMessage()    {}
 func (*EventPruneExpiredGrants) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1f88cbc71a8baf1f, []int{2}
+	return fileDescriptor_1f88cbc71a8baf1f, []int{3}
 }
 func (m *EventPruneExpiredGrants) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -206,30 +255,34 @@ func (m *EventPruneExpiredGrants) GetPruner() string {
 func init() {
 	proto.RegisterType((*EventGrant)(nil), "cosmos.authz.v1beta1.EventGrant")
 	proto.RegisterType((*EventRevoke)(nil), "cosmos.authz.v1beta1.EventRevoke")
+	proto.RegisterType((*EventRevokeAll)(nil), "cosmos.authz.v1beta1.EventRevokeAll")
 	proto.RegisterType((*EventPruneExpiredGrants)(nil), "cosmos.authz.v1beta1.EventPruneExpiredGrants")
 }
 
 func init() { proto.RegisterFile("cosmos/authz/v1beta1/event.proto", fileDescriptor_1f88cbc71a8baf1f) }
 
 var fileDescriptor_1f88cbc71a8baf1f = []byte{
-	// 269 bytes of a gzipped FileDescriptorProto
+	// 317 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x48, 0xce, 0x2f, 0xce,
 	0xcd, 0x2f, 0xd6, 0x4f, 0x2c, 0x2d, 0xc9, 0xa8, 0xd2, 0x2f, 0x33, 0x4c, 0x4a, 0x2d, 0x49, 0x34,
 	0xd4, 0x4f, 0x2d, 0x4b, 0xcd, 0x2b, 0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x81, 0xa8,
 	0xd0, 0x03, 0xab, 0xd0, 0x83, 0xaa, 0x90, 0x92, 0x84, 0x88, 0xc6, 0x83, 0xd5, 0xe8, 0x43, 0x95,
-	0x80, 0x39, 0x4a, 0xd3, 0x18, 0xb9, 0xb8, 0x5c, 0x41, 0x06, 0xb8, 0x17, 0x25, 0xe6, 0x95, 0x08,
+	0x80, 0x39, 0x4a, 0xab, 0x19, 0xb9, 0xb8, 0x5c, 0x41, 0x06, 0xb8, 0x17, 0x25, 0xe6, 0x95, 0x08,
 	0x29, 0x70, 0xf1, 0xe4, 0x16, 0xa7, 0xc7, 0x97, 0x54, 0x16, 0xa4, 0xc6, 0x97, 0x16, 0xe5, 0x48,
 	0x30, 0x29, 0x30, 0x6a, 0x70, 0x06, 0x71, 0xe5, 0x16, 0xa7, 0x87, 0x54, 0x16, 0xa4, 0x86, 0x16,
 	0xe5, 0x08, 0x19, 0x71, 0xb1, 0xa7, 0x83, 0x94, 0xa6, 0x16, 0x49, 0x30, 0x83, 0x24, 0x9d, 0x24,
 	0x2e, 0x6d, 0xd1, 0x85, 0x59, 0xeb, 0x98, 0x92, 0x52, 0x94, 0x5a, 0x5c, 0x1c, 0x5c, 0x52, 0x94,
-	0x99, 0x97, 0x1e, 0x04, 0x53, 0x88, 0xd0, 0x93, 0x2a, 0xc1, 0x42, 0x9c, 0x9e, 0x54, 0xa5, 0xe9,
-	0x8c, 0x5c, 0xdc, 0x60, 0x87, 0x05, 0xa5, 0x96, 0xe5, 0x67, 0xa7, 0x0e, 0x22, 0x97, 0x79, 0x73,
-	0x89, 0x83, 0x1d, 0x16, 0x50, 0x54, 0x9a, 0x97, 0xea, 0x5a, 0x51, 0x90, 0x59, 0x94, 0x9a, 0x02,
-	0x0e, 0xbd, 0x62, 0x21, 0x03, 0x2e, 0xb6, 0x02, 0x90, 0x68, 0x11, 0xc4, 0x79, 0x78, 0x4c, 0x83,
-	0xaa, 0x73, 0xd2, 0x3b, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18,
-	0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28, 0xa8, 0xbe,
-	0xe2, 0x94, 0x6c, 0xbd, 0xcc, 0x7c, 0xfd, 0x0a, 0x48, 0xa4, 0x27, 0xb1, 0x81, 0xa3, 0xcd, 0x18,
-	0x10, 0x00, 0x00, 0xff, 0xff, 0xe8, 0x9f, 0xa5, 0x63, 0x0b, 0x02, 0x00, 0x00,
+	0x99, 0x97, 0x1e, 0x04, 0x53, 0x88, 0xd0, 0x93, 0x2a, 0xc1, 0x42, 0x9c, 0x9e, 0x54, 0x2b, 0xe1,
+	0x4b, 0x5b, 0x74, 0xf9, 0x21, 0x4a, 0x74, 0x8b, 0x53, 0xb2, 0x15, 0x0c, 0xf4, 0x4c, 0x8c, 0x95,
+	0xd6, 0x30, 0x72, 0x71, 0x83, 0x5d, 0x1b, 0x94, 0x5a, 0x96, 0x9f, 0x9d, 0x3a, 0xd8, 0x9d, 0x5b,
+	0xcd, 0xc5, 0x87, 0xe4, 0x5a, 0xc7, 0x9c, 0x1c, 0xda, 0x38, 0x18, 0x8b, 0xe5, 0xa6, 0x86, 0x4a,
+	0x71, 0x5c, 0xe2, 0x60, 0xcb, 0x03, 0x8a, 0x4a, 0xf3, 0x52, 0x5d, 0x2b, 0x0a, 0x32, 0x8b, 0x52,
+	0x53, 0xc0, 0x91, 0x5c, 0x2c, 0x64, 0xc0, 0xc5, 0x56, 0x00, 0x12, 0x2d, 0x82, 0xd8, 0x8f, 0xc7,
+	0x0a, 0xa8, 0x3a, 0x2b, 0xc1, 0x4b, 0x5b, 0x74, 0x79, 0x2b, 0x20, 0x09, 0x4f, 0xc1, 0x50, 0xcf,
+	0x40, 0xcf, 0xc0, 0x49, 0xef, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f, 0xe4, 0x18, 0x1f, 0x3c, 0x92,
+	0x63, 0x9c, 0xf0, 0x58, 0x8e, 0xe1, 0xc2, 0x63, 0x39, 0x86, 0x1b, 0x8f, 0xe5, 0x18, 0xa2, 0xa0,
+	0x46, 0x15, 0xa7, 0x64, 0xeb, 0x65, 0xe6, 0xeb, 0x43, 0x75, 0x25, 0xb1, 0x81, 0x13, 0x9c, 0x31,
+	0x20, 0x00, 0x00, 0xff, 0xff, 0xd2, 0xfe, 0x86, 0xc9, 0xc5, 0x02, 0x00, 0x00,
 }
 
 func (m *EventGrant) Marshal() (dAtA []byte, err error) {
@@ -303,6 +356,43 @@ func (m *EventRevoke) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x22
 	}
+	if len(m.Granter) > 0 {
+		i -= len(m.Granter)
+		copy(dAtA[i:], m.Granter)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Granter)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.MsgTypeUrl) > 0 {
+		i -= len(m.MsgTypeUrl)
+		copy(dAtA[i:], m.MsgTypeUrl)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.MsgTypeUrl)))
+		i--
+		dAtA[i] = 0x12
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventRevokeAll) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventRevokeAll) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventRevokeAll) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
 	if len(m.Granter) > 0 {
 		i -= len(m.Granter)
 		copy(dAtA[i:], m.Granter)
@@ -397,6 +487,23 @@ func (m *EventRevoke) Size() (n int) {
 		n += 1 + l + sovEvent(uint64(l))
 	}
 	l = len(m.Grantee)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	return n
+}
+
+func (m *EventRevokeAll) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.MsgTypeUrl)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	l = len(m.Granter)
 	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
 	}
@@ -692,6 +799,120 @@ func (m *EventRevoke) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Grantee = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvent(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventRevokeAll) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvent
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventRevokeAll: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventRevokeAll: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MsgTypeUrl", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MsgTypeUrl = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Granter", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Granter = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

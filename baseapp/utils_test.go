@@ -395,9 +395,9 @@ func (s SendServerImpl) Send(ctx context.Context, send *baseapptestutil.MsgSend)
 	return &baseapptestutil.MsgSendResponse{}, nil
 }
 
-type NesteMessgesServerImpl struct{}
+type NestedMessgesServerImpl struct{}
 
-func (n NesteMessgesServerImpl) Check(ctx context.Context, message *baseapptestutil.MsgNestedMessages) (*baseapptestutil.MsgCreateNestedMessagesResponse, error) {
+func (n NestedMessgesServerImpl) Check(_ context.Context, message *baseapptestutil.MsgNestedMessages) (*baseapptestutil.MsgCreateNestedMessagesResponse, error) {
 	cdc := codectestutil.CodecOptions{}.NewCodec()
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 

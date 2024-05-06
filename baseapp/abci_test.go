@@ -774,7 +774,7 @@ func TestABCI_Query_SimulateNestedMessagesTx(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	baseapptestutil.RegisterNestedMessagesServer(suite.baseApp.MsgServiceRouter(), NesteMessgesServerImpl{})
+	baseapptestutil.RegisterNestedMessagesServer(suite.baseApp.MsgServiceRouter(), NestedMessgesServerImpl{})
 	baseapptestutil.RegisterSendServer(suite.baseApp.MsgServiceRouter(), SendServerImpl{})
 
 	_, _, addr := testdata.KeyTestPubAddr()

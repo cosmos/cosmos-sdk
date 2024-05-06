@@ -16,7 +16,6 @@ import (
 	"cosmossdk.io/math"
 	authcli "cosmossdk.io/x/auth/client/cli"
 	authclitestutil "cosmossdk.io/x/auth/client/testutil"
-	authtestutil "cosmossdk.io/x/auth/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
 	govtestutil "cosmossdk.io/x/gov/client/testutil"
 	govtypes "cosmossdk.io/x/gov/types/v1beta1"
@@ -1293,7 +1292,7 @@ func TestGetBroadcastCommandOfflineFlag(t *testing.T) {
 
 func TestGetBroadcastCommandWithoutOfflineFlag(t *testing.T) {
 	var txCfg client.TxConfig
-	err := depinject.Inject(authtestutil.AppConfig, &txCfg)
+	err := depinject.Inject(AppConfig, &txCfg)
 	require.NoError(t, err)
 	clientCtx := client.Context{}
 	clientCtx = clientCtx.WithTxConfig(txCfg)

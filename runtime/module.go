@@ -16,6 +16,7 @@ import (
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
@@ -101,6 +102,7 @@ func init() {
 			ProvideModuleManager,
 			ProvideAppVersionModifier,
 			ProvideAddressCodec,
+			ProvideCometService,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -172,7 +174,11 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.ModuleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 }
 
-func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec address.ValidatorAddressCodec, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
+func ProvideInterfaceRegistry(
+	addressCodec address.Codec,
+	validatorAddressCodec address.ValidatorAddressCodec,
+	customGetSigners []signing.CustomGetSigner,
+) (codectypes.InterfaceRegistry, error) {
 	signingOptions := signing.Options{
 		AddressCodec:          addressCodec,
 		ValidatorAddressCodec: validatorAddressCodec,
@@ -209,7 +215,11 @@ func storeKeyOverride(config *runtimev1alpha1.Module, moduleName string) *runtim
 	return nil
 }
 
-func ProvideKVStoreKey(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) *storetypes.KVStoreKey {
+func ProvideKVStoreKey(
+	config *runtimev1alpha1.Module,
+	key depinject.ModuleKey,
+	app *AppBuilder,
+) *storetypes.KVStoreKey {
 	override := storeKeyOverride(config, key.Name())
 
 	var storeKeyName string
@@ -273,6 +283,10 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 
 func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
 	return app.app
+}
+
+func ProvideCometService() comet.Service {
+	return NewContextAwareCometInfoService()
 }
 
 type AddressCodecInputs struct {

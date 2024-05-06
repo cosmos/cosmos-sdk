@@ -72,26 +72,23 @@ message Params {
     (gogoproto.nullable)   = false
   ];
   // epoch_identifier mint epoch identifier e.g. (day, week).
-  // string epoch_identifier = 8 [(cosmos_proto.field_added_in) = "cosmos-sdk v0.52"];
-  string epoch_identifier = 8;
+  string epoch_identifier = 8 [(cosmos_proto.field_added_in) = "cosmos-sdk v0.52"];
   // reduction_period_in_epochs the number of epochs it takes
   // to reduce the rewards.
-  // int64 reduction_period_in_epochs = 9 [(cosmos_proto.field_added_in) = "cosmos-sdk v0.52"];
-  int64 reduction_period_in_epochs = 9;
+  int64 reduction_period_in_epochs = 9 [(cosmos_proto.field_added_in) = "cosmos-sdk v0.52"];
   // reduction_factor is the reduction multiplier to execute
   // at the end of each period set by reduction_period_in_epochs.
   string reduction_factor = 10 [
-    // (cosmos_proto.field_added_in) = "cosmos-sdk v0.52",
+    (cosmos_proto.field_added_in) = "cosmos-sdk v0.52",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
   // minting_rewards_distribution_start_epoch start epoch to distribute minting
   // rewards
-  // int64 minting_rewards_distribution_start_epoch = 11 [(cosmos_proto.field_added_in) = "cosmos-sdk v0.52"];
-  int64 minting_rewards_distribution_start_epoch = 11;
+  int64 minting_rewards_distribution_start_epoch = 11 [(cosmos_proto.field_added_in) = "cosmos-sdk v0.52"];
   // genesis_epoch_provisions epoch provisions from the first epoch.
   string genesis_epoch_provisions = 12 [
-    // (cosmos_proto.field_added_in) = "cosmos-sdk v0.52",
+    (cosmos_proto.field_added_in) = "cosmos-sdk v0.52",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];

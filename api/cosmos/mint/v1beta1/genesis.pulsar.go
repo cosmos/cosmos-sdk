@@ -601,9 +601,7 @@ type GenesisState struct {
 	Params *Params `protobuf:"bytes,2,opt,name=params,proto3" json:"params,omitempty"`
 	// reduction_started_epoch is the first epoch in which the reduction of mint
 	// begins.
-	//
-	// Since: cosmos-sdk 0.51
-	ReductionStartedEpoch int64 `protobuf:"varint,3,opt,name=reduction_started_epoch,json=reductionStartedEpoch,proto3" json:"reduction_started_epoch,omitempty"`
+	ReductionStartedEpoch int64 `protobuf:"varint,3,opt,name=reduction_started_epoch,json=reductionStartedEpoch,proto3" json:"reduction_started_epoch,omitempty"` // int64 reduction_started_epoch = 3 [(cosmos_proto.field_added_in) = "cosmos-sdk v0.52"];
 }
 
 func (x *GenesisState) Reset() {

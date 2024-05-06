@@ -28,7 +28,7 @@ service Query {
 
   // EpochProvisions returns the current minting epoch provisions value.
   rpc EpochProvisions(QueryEpochProvisionsRequest) returns (QueryEpochProvisionsResponse) {
-    option (google.api.http).get = "/cosmos/mint/v1beta1/epoch_provisions";
+    option (google.api.http).get          = "/cosmos/mint/v1beta1/epoch_provisions";
     option (cosmos_proto.method_added_in) = "cosmos-sdk v0.52";
   }
 }

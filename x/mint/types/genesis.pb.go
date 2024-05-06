@@ -32,8 +32,6 @@ type GenesisState struct {
 	Params Params `protobuf:"bytes,2,opt,name=params,proto3" json:"params"`
 	// reduction_started_epoch is the first epoch in which the reduction of mint
 	// begins.
-	//
-	// Since: cosmos-sdk 0.51
 	ReductionStartedEpoch int64 `protobuf:"varint,3,opt,name=reduction_started_epoch,json=reductionStartedEpoch,proto3" json:"reduction_started_epoch,omitempty"`
 }
 

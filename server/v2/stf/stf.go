@@ -94,7 +94,7 @@ func (s STF[T]) DeliverBlock(
 	}
 
 	// reset events
-	exCtx.events = nil
+	exCtx.events = make([]event.Event, 0)
 	// pre block is called separate from begin block in order to prepopulate state
 	preBlockEvents, err := s.preBlock(exCtx, block.Txs)
 	if err != nil {
@@ -106,7 +106,7 @@ func (s STF[T]) DeliverBlock(
 	}
 
 	// reset events
-	exCtx.events = nil
+	exCtx.events = make([]event.Event, 0)
 	// begin block
 	beginBlockEvents, err := s.beginBlock(exCtx)
 	if err != nil {
@@ -129,7 +129,7 @@ func (s STF[T]) DeliverBlock(
 		txResults[i] = s.deliverTx(ctx, newState, txBytes, corecontext.ExecModeFinalize, hi)
 	}
 	// reset events
-	exCtx.events = nil
+	exCtx.events = make([]event.Event, 0)
 	// end block
 	endBlockEvents, valset, err := s.endBlock(exCtx)
 	if err != nil {

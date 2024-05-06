@@ -12,6 +12,7 @@ import (
 )
 
 // Environment is used to get all services to their respective module
+// Contract: All fields of environment are always populated.
 type Environment struct {
 	Logger log.Logger
 

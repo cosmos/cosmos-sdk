@@ -271,7 +271,7 @@ func ProvideEnvironment(
 	return kvService, memStoreService, NewEnvironment(
 		kvService,
 		logger.With(log.ModuleKey, fmt.Sprintf("x/%s", key.Name())),
-		EnvWithRouterService(queryServiceRouter, msgServiceRouter),
+		EnvWithRouterService(queryServiceRouter, msgServiceRouter, map[string]bool{}), // TODO(@julienrbrt): add allow list in app config
 		EnvWithMemStoreService(memStoreService),
 	)
 }

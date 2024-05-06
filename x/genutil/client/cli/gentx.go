@@ -63,7 +63,12 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			cdc := clientCtx.Codec
 			config := serverCtx.Config
 
-			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(serverCtx.Config)
+			consensusKey, err := cmd.Flags().GetString(FlagConsensusKeyAlgo)
+			if err != nil {
+				return errors.Wrap(err, "Failed to get consensus key algo")
+			}
+
+			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(serverCtx.Config, consensusKey)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize node validator files")
 			}
@@ -213,6 +218,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 		},
 	}
 
+	cmd.Flags().String(FlagConsensusKeyAlgo, "ed25519", "algorithm to use for the consensus key")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "Write the genesis transaction JSON document to the given file instead of the default location")
 	cmd.Flags().AddFlagSet(fsCreateValidator)
 	flags.AddTxFlagsToCmd(cmd)

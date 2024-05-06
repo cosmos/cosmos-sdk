@@ -67,6 +67,8 @@ ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
   build_tags += boltdb
 endif
 
+build_tags += blst
+
 whitespace :=
 whitespace += $(whitespace)
 comma := ,

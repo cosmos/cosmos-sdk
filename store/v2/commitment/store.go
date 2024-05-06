@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io"
-	"math" // nolint:typecheck //it is used
-
 	protoio "github.com/cosmos/gogoproto/io"
+	"io"
+	"math"
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"

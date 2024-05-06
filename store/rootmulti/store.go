@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
+	"math" // nolint:typecheck // this is used, false positive
 	"sort"
 	"strings"
 	"sync"
@@ -830,7 +830,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	keys := keysFromStoreKeyMap(rs.stores)
 	for _, key := range keys {
 		switch store := rs.GetCommitKVStore(key).(type) {
-		case *iavl.Store:
+		case *iavl.Store: // nolint:typecheck // ignore linting issues in v1
 			stores = append(stores, namedStore{name: key.Name(), Store: store})
 		case *transient.Store, *mem.Store:
 			// Non-persisted stores shouldn't be snapshotted
@@ -850,7 +850,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	// are demarcated by new SnapshotStore items.
 	for _, store := range stores {
 		rs.logger.Debug("starting snapshot", "store", store.name, "height", height)
-		exporter, err := store.Export(int64(height))
+		exporter, err := store.Export(int64(height)) // nolint:typecheck // ignore linting issues in v1
 		if err != nil {
 			rs.logger.Error("snapshot failed; exporter error", "store", store.name, "err", err)
 			return err

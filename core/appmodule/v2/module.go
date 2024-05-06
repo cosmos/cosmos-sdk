@@ -97,7 +97,7 @@ type HasUpdateValidators interface {
 type ValidatorUpdate struct {
 	PubKey     []byte
 	PubKeyType string
-	Power      int64 // updated power of the validtor
+	Power      int64 // updated power of the validator
 }
 
 // HasRegisterInterfaces is the interface for modules to register their msg types.

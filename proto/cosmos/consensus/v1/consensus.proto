@@ -2,20 +2,22 @@
 syntax = "proto3";
 package cosmos.consensus.v1;
 
-import "tendermint/types/params.proto";
+import "cometbft/types/v1/params.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/consensus/types";
+option go_package = "cosmossdk.io/x/consensus/types";
 
 // ConsensusMsgParams is the Msg/Params request type. This is a consensus message that is sent from cometbft.
 message ConsensusMsgParams {
   // params defines the x/consensus parameters to be passed from comet.
   //
   // NOTE: All parameters must be supplied.
-  tendermint.types.VersionParams   version   = 1;
-  tendermint.types.BlockParams     block     = 2;
-  tendermint.types.EvidenceParams  evidence  = 3;
-  tendermint.types.ValidatorParams validator = 4;
-  tendermint.types.ABCIParams      abci      = 5;
+  cometbft.types.v1.VersionParams   version   = 1;
+  cometbft.types.v1.BlockParams     block     = 2;
+  cometbft.types.v1.EvidenceParams  evidence  = 3;
+  cometbft.types.v1.ValidatorParams validator = 4;
+  cometbft.types.v1.ABCIParams      abci      = 5 [deprecated = true];
+  cometbft.types.v1.SynchronyParams synchrony = 6;
+  cometbft.types.v1.FeatureParams   feature   = 7;
 }
 
 // ConsensusMsgParamsResponse defines the response structure for executing a

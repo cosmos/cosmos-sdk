@@ -55,11 +55,11 @@ type Keeper interface {
 
 // BaseKeeper manages transfers between accounts. It implements the Keeper interface.
 type BaseKeeper struct {
+	appmodule.Environment
 	BaseSendKeeper
 
 	ak                     types.AccountKeeper
 	cdc                    codec.BinaryCodec
-	environment            appmodule.Environment
 	mintCoinsRestrictionFn types.MintingRestrictionFn
 }
 
@@ -96,10 +96,10 @@ func NewBaseKeeper(
 	env.Logger = env.Logger.With(log.ModuleKey, "x/"+types.ModuleName)
 
 	return BaseKeeper{
+		Environment:            env,
 		BaseSendKeeper:         NewBaseSendKeeper(env, cdc, ak, blockedAddrs, authority),
 		ak:                     ak,
 		cdc:                    cdc,
-		environment:            env,
 		mintCoinsRestrictionFn: types.NoOpMintingRestrictionFn,
 	}
 }
@@ -154,7 +154,7 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 	if err != nil {
 		return err
 	}
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCoinSpent,
 		event.NewAttribute(types.AttributeKeySpender, delAddrStr),
 		event.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
@@ -348,7 +348,7 @@ func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sdk.Coins) error {
 	err := k.mintCoinsRestrictionFn(ctx, amounts)
 	if err != nil {
-		k.Logger().Error(fmt.Sprintf("Module %q attempted to mint coins %s it doesn't have permission for, error %v", moduleName, amounts, err))
+		k.Logger.Error(fmt.Sprintf("Module %q attempted to mint coins %s it doesn't have permission for, error %v", moduleName, amounts, err))
 		return err
 	}
 	acc := k.ak.GetModuleAccount(ctx, moduleName)
@@ -371,7 +371,7 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 		k.setSupply(ctx, supply)
 	}
 
-	k.Logger().Debug("minted coins from module account", "amount", amounts.String(), "from", moduleName)
+	k.Logger.Debug("minted coins from module account", "amount", amounts.String(), "from", moduleName)
 
 	addrStr, err := k.ak.AddressCodec().BytesToString(acc.GetAddress())
 	if err != nil {
@@ -379,7 +379,7 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 	}
 
 	// emit mint event
-	return k.environment.EventService.EventManager(ctx).EmitKV(
+	return k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCoinMint,
 		event.NewAttribute(types.AttributeKeyMinter, addrStr),
 		event.NewAttribute(sdk.AttributeKeyAmount, amounts.String()),
@@ -411,14 +411,14 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.C
 		k.setSupply(ctx, supply)
 	}
 
-	k.Logger().Debug("burned tokens from account", "amount", amounts.String(), "from", address)
+	k.Logger.Debug("burned tokens from account", "amount", amounts.String(), "from", address)
 
 	addrStr, err := k.ak.AddressCodec().BytesToString(acc.GetAddress())
 	if err != nil {
 		return err
 	}
 	// emit burn event
-	return k.environment.EventService.EventManager(ctx).EmitKV(
+	return k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCoinBurn,
 		event.NewAttribute(types.AttributeKeyBurner, addrStr),
 		event.NewAttribute(sdk.AttributeKeyAmount, amounts.String()),
@@ -449,7 +449,7 @@ func (k BaseKeeper) trackDelegation(ctx context.Context, addr sdk.AccAddress, ba
 	vacc, ok := acc.(types.VestingAccount)
 	if ok {
 		// TODO: return error on account.TrackDelegation
-		vacc.TrackDelegation(k.environment.HeaderService.GetHeaderInfo(ctx).Time, balance, amt)
+		vacc.TrackDelegation(k.HeaderService.HeaderInfo(ctx).Time, balance, amt)
 		k.ak.SetAccount(ctx, acc)
 	}
 

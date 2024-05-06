@@ -2,7 +2,7 @@ package ormfield
 
 import (
 	"fmt"
-	io "io"
+	"io"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )

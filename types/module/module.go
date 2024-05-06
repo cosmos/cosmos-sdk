@@ -27,7 +27,6 @@ import (
 	"sort"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtcryptoproto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
@@ -54,7 +53,7 @@ type AppModuleBasic interface {
 
 // AppModule is the form for an application module. Most of
 // its functionality has been moved to extension interfaces.
-// Deprecated: use appmodule.AppModule with a combination of extension interfaces interfaces instead.
+// Deprecated: use appmodule.AppModule with a combination of extension interfaces instead.
 type AppModule interface {
 	HasName
 
@@ -426,7 +425,7 @@ func (m *Manager) RegisterServices(cfg Configurator) error {
 // InitGenesis performs init genesis functionality for modules. Exactly one
 // module must return a non-empty validator set update to correctly initialize
 // the chain.
-func (m *Manager) InitGenesis(ctx sdk.Context, genesisData map[string]json.RawMessage) (*abci.ResponseInitChain, error) {
+func (m *Manager) InitGenesis(ctx sdk.Context, genesisData map[string]json.RawMessage) (*abci.InitChainResponse, error) {
 	var validatorUpdates []ValidatorUpdate
 	ctx.Logger().Info("initializing blockchain state from genesis.json")
 	for _, moduleName := range m.OrderInitGenesis {
@@ -441,30 +440,30 @@ func (m *Manager) InitGenesis(ctx sdk.Context, genesisData map[string]json.RawMe
 			// core API genesis
 			source, err := genesis.SourceFromRawJSON(genesisData[moduleName])
 			if err != nil {
-				return &abci.ResponseInitChain{}, err
+				return &abci.InitChainResponse{}, err
 			}
 
 			err = module.InitGenesis(ctx, source)
 			if err != nil {
-				return &abci.ResponseInitChain{}, err
+				return &abci.InitChainResponse{}, err
 			}
 		} else if module, ok := mod.(HasGenesis); ok {
 			ctx.Logger().Debug("running initialization for module", "module", moduleName)
 			if err := module.InitGenesis(ctx, genesisData[moduleName]); err != nil {
-				return &abci.ResponseInitChain{}, err
+				return &abci.InitChainResponse{}, err
 			}
 		} else if module, ok := mod.(HasABCIGenesis); ok {
 			ctx.Logger().Debug("running initialization for module", "module", moduleName)
 			moduleValUpdates, err := module.InitGenesis(ctx, genesisData[moduleName])
 			if err != nil {
-				return &abci.ResponseInitChain{}, err
+				return &abci.InitChainResponse{}, err
 			}
 
 			// use these validator updates if provided, the module manager assumes
 			// only one module will update the validator set
 			if len(moduleValUpdates) > 0 {
 				if len(validatorUpdates) > 0 {
-					return &abci.ResponseInitChain{}, errors.New("validator InitGenesis updates already set by a previous module")
+					return &abci.InitChainResponse{}, errors.New("validator InitGenesis updates already set by a previous module")
 				}
 				validatorUpdates = moduleValUpdates
 			}
@@ -473,34 +472,19 @@ func (m *Manager) InitGenesis(ctx sdk.Context, genesisData map[string]json.RawMe
 
 	// a chain must initialize with a non-empty validator set
 	if len(validatorUpdates) == 0 {
-		return &abci.ResponseInitChain{}, fmt.Errorf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction)
+		return &abci.InitChainResponse{}, fmt.Errorf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction)
 	}
 
 	cometValidatorUpdates := make([]abci.ValidatorUpdate, len(validatorUpdates))
 	for i, v := range validatorUpdates {
-		var pubkey cmtcryptoproto.PublicKey
-		switch v.PubKeyType {
-		case "ed25519":
-			pubkey = cmtcryptoproto.PublicKey{
-				Sum: &cmtcryptoproto.PublicKey_Ed25519{
-					Ed25519: v.PubKey,
-				},
-			}
-		case "secp256k1":
-			pubkey = cmtcryptoproto.PublicKey{
-				Sum: &cmtcryptoproto.PublicKey_Secp256K1{
-					Secp256K1: v.PubKey,
-				},
-			}
-		}
-
 		cometValidatorUpdates[i] = abci.ValidatorUpdate{
-			PubKey: pubkey,
-			Power:  v.Power,
+			PubKeyBytes: v.PubKey,
+			Power:       v.Power,
+			PubKeyType:  v.PubKeyType,
 		}
 	}
 
-	return &abci.ResponseInitChain{
+	return &abci.InitChainResponse{
 		Validators: cometValidatorUpdates,
 	}, nil
 }
@@ -798,25 +782,10 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 
 	cometValidatorUpdates := make([]abci.ValidatorUpdate, len(validatorUpdates))
 	for i, v := range validatorUpdates {
-		var pubkey cmtcryptoproto.PublicKey
-		switch v.PubKeyType {
-		case "ed25519":
-			pubkey = cmtcryptoproto.PublicKey{
-				Sum: &cmtcryptoproto.PublicKey_Ed25519{
-					Ed25519: v.PubKey,
-				},
-			}
-		case "secp256k1":
-			pubkey = cmtcryptoproto.PublicKey{
-				Sum: &cmtcryptoproto.PublicKey_Secp256K1{
-					Secp256K1: v.PubKey,
-				},
-			}
-		}
-
 		cometValidatorUpdates[i] = abci.ValidatorUpdate{
-			PubKey: pubkey,
-			Power:  v.Power,
+			PubKeyBytes: v.PubKey,
+			PubKeyType:  v.PubKeyType,
+			Power:       v.Power,
 		}
 	}
 

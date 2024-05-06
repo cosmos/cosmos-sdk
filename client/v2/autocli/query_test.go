@@ -339,7 +339,7 @@ func TestMap(t *testing.T) {
 	assert.ErrorContains(t, err, "invalid argument \"bar=123.9\" for \"--map-string-uint32\" flag: strconv.ParseUint: parsing \"123.9\": invalid syntax")
 }
 
-// TestEveything tests all the different types of flags are correctly read and as well as correctly returned
+// TestEverything tests all the different types of flags are correctly read and as well as correctly returned
 // This tests the flag binding and the message building
 func TestEverything(t *testing.T) {
 	fixture := initFixture(t)

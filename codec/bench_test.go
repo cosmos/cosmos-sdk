@@ -12,8 +12,8 @@ import (
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	countertypes "github.com/cosmos/cosmos-sdk/x/counter/types"
 )
 
 type msgCounterWrapper struct {

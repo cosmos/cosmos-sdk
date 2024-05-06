@@ -10,8 +10,8 @@ import (
 
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cometbft/cometbft/crypto/tmhash"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/maps"
@@ -462,7 +462,7 @@ func (app *BaseApp) setTrace(trace bool) {
 }
 
 func (app *BaseApp) setIndexEvents(ie []string) {
-	app.indexEvents = make(map[string]struct{})
+	app.indexEvents = make(map[string]struct{}, len(ie))
 
 	for _, e := range ie {
 		app.indexEvents[e] = struct{}{}
@@ -524,7 +524,7 @@ func (app *BaseApp) SetCircuitBreaker(cb CircuitBreaker) {
 
 // GetConsensusParams returns the current consensus parameters from the BaseApp's
 // ParamStore. If the BaseApp has no ParamStore defined, nil is returned.
-func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams {
+func (app *BaseApp) GetConsensusParams(ctx context.Context) cmtproto.ConsensusParams {
 	if app.paramStore == nil {
 		return cmtproto.ConsensusParams{}
 	}
@@ -543,7 +543,7 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) cmtproto.ConsensusParams
 
 // StoreConsensusParams sets the consensus parameters to the BaseApp's param
 // store.
-func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp cmtproto.ConsensusParams) error {
+func (app *BaseApp) StoreConsensusParams(ctx context.Context, cp cmtproto.ConsensusParams) error {
 	if app.paramStore == nil {
 		return errors.New("cannot store consensus params with no params store set")
 	}
@@ -581,7 +581,7 @@ func (app *BaseApp) GetMaximumBlockGas(ctx sdk.Context) uint64 {
 	}
 }
 
-func (app *BaseApp) validateFinalizeBlockHeight(req *abci.RequestFinalizeBlock) error {
+func (app *BaseApp) validateFinalizeBlockHeight(req *abci.FinalizeBlockRequest) error {
 	if req.Height < 1 {
 		return fmt.Errorf("invalid height: %d", req.Height)
 	}
@@ -704,7 +704,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	return ctx.WithMultiStore(msCache), msCache
 }
 
-func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) error {
+func (app *BaseApp) preBlock(req *abci.FinalizeBlockRequest) error {
 	if app.preBlocker != nil {
 		ctx := app.finalizeBlockState.Context()
 		if err := app.preBlocker(ctx, req); err != nil {
@@ -721,7 +721,7 @@ func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) error {
 	return nil
 }
 
-func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, error) {
+func (app *BaseApp) beginBlock(req *abci.FinalizeBlockRequest) (sdk.BeginBlock, error) {
 	var (
 		resp sdk.BeginBlock
 		err  error
@@ -871,8 +871,12 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	}
 
 	msgs := tx.GetMsgs()
-	if err := validateBasicTxMsgs(app.msgServiceRouter, msgs); err != nil {
-		return sdk.GasInfo{}, nil, nil, err
+	// run validate basic if mode != recheck.
+	// as validate basic is stateless, it is guaranteed to pass recheck, given that its passed checkTx.
+	if mode != execModeReCheck {
+		if err := validateBasicTxMsgs(app.msgServiceRouter, msgs); err != nil {
+			return sdk.GasInfo{}, nil, nil, err
+		}
 	}
 
 	if app.anteHandler != nil {
@@ -911,6 +915,12 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		gasWanted = ctx.GasMeter().Limit()
 
 		if err != nil {
+			if mode == execModeReCheck {
+				// if the ante handler fails on recheck, we want to remove the tx from the mempool
+				if mempoolErr := app.mempool.Remove(tx); mempoolErr != nil {
+					return gInfo, nil, anteEvents, errors.Join(err, mempoolErr)
+				}
+			}
 			return gInfo, nil, nil, err
 		}
 

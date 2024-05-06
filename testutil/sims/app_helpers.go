@@ -6,8 +6,8 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 
@@ -34,6 +34,9 @@ const DefaultGenTxGas = 10000000
 // DefaultConsensusParams defines the default CometBFT consensus params used in
 // SimApp testing.
 var DefaultConsensusParams = &cmtproto.ConsensusParams{
+	Version: &cmtproto.VersionParams{
+		App: 1,
+	},
 	Block: &cmtproto.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   100_000_000,
@@ -46,6 +49,7 @@ var DefaultConsensusParams = &cmtproto.ConsensusParams{
 	Validator: &cmtproto.ValidatorParams{
 		PubKeyTypes: []string{
 			cmttypes.ABCIPubKeyTypeEd25519,
+			cmttypes.ABCIPubKeyTypeSecp256k1,
 		},
 	},
 }
@@ -110,7 +114,7 @@ func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...interface{}) (*r
 
 // NextBlock starts a new block.
 func NextBlock(app *runtime.App, ctx sdk.Context, jumpTime time.Duration) (sdk.Context, error) {
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: ctx.BlockHeight(), Time: ctx.BlockTime()})
+	_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: ctx.BlockHeight(), Time: ctx.BlockTime()})
 	if err != nil {
 		return sdk.Context{}, err
 	}
@@ -130,11 +134,7 @@ func NextBlock(app *runtime.App, ctx sdk.Context, jumpTime time.Duration) (sdk.C
 		Time:   header.Time,
 	})
 
-	if err != nil {
-		return sdk.Context{}, err
-	}
-
-	return newCtx, err
+	return newCtx, nil
 }
 
 // SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.
@@ -188,7 +188,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	}
 
 	// init chain will set the validator set and initialize the genesis accounts
-	_, err = app.InitChain(&abci.RequestInitChain{
+	_, err = app.InitChain(&abci.InitChainRequest{
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: DefaultConsensusParams,
 		AppStateBytes:   stateBytes,
@@ -199,7 +199,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 
 	// commit genesis changes
 	if !startupConfig.AtGenesis {
-		_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{
 			Height:             app.LastBlockHeight() + 1,
 			NextValidatorsHash: valSet.Hash(),
 		})

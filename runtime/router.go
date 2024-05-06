@@ -17,18 +17,15 @@ import (
 )
 
 // NewRouterService creates a router.Service which allows to invoke messages and queries using the msg router.
-// NOTE: modulesAllowList should eventually allow more customizable permissions (module x module or module x module message)
-// Currently a model present in the module allow list map, can use the msg router service. When no modules are provided, all modules can use both routers.
-// A module is always allowed to use the query router.
-func NewRouterService(storeService store.KVStoreService, queryRouter baseapp.QueryRouter, msgRouter baseapp.MessageRouter, modulesAllowList map[string]bool) router.Service {
+// Eventually a permission system will be added based on the caller.
+func NewRouterService(storeService store.KVStoreService, queryRouter baseapp.QueryRouter, msgRouter baseapp.MessageRouter) router.Service {
 	return &routerService{
 		queryRouterService: &queryRouterService{
 			router: queryRouter,
 		},
 		msgRouterService: &msgRouterService{
-			storeService:     storeService,
-			modulesAllowList: modulesAllowList,
-			router:           msgRouter,
+			storeService: storeService,
+			router:       msgRouter,
 		},
 	}
 }
@@ -53,17 +50,12 @@ func (r *routerService) QueryRouterService() router.Router {
 var _ router.Router = (*msgRouterService)(nil)
 
 type msgRouterService struct {
-	storeService     store.KVStoreService
-	router           baseapp.MessageRouter
-	modulesAllowList map[string]bool
+	storeService store.KVStoreService
+	router       baseapp.MessageRouter
 }
 
 // CanInvoke returns an error if the given message cannot be invoked.
 func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error {
-	if err := m.isAllowed(ctx); err != nil {
-		return err
-	}
-
 	if typeURL == "" {
 		return fmt.Errorf("missing type url")
 	}
@@ -82,10 +74,6 @@ func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error 
 // The response must be known and passed as a parameter.
 // Use InvokeUntyped if the response type is not known.
 func (m *msgRouterService) InvokeTyped(ctx context.Context, msg, resp protoiface.MessageV1) error {
-	if err := m.isAllowed(ctx); err != nil {
-		return err
-	}
-
 	messageName := msgTypeURL(msg)
 	handler := m.router.HybridHandlerByMsgName(messageName)
 	if handler == nil {
@@ -97,10 +85,6 @@ func (m *msgRouterService) InvokeTyped(ctx context.Context, msg, resp protoiface
 
 // InvokeUntyped execute a message and returns a response.
 func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg protoiface.MessageV1) (protoiface.MessageV1, error) {
-	if err := m.isAllowed(ctx); err != nil {
-		return nil, err
-	}
-
 	messageName := msgTypeURL(msg)
 	respName := m.router.ResponseNameByMsgName(messageName)
 	if respName == "" {
@@ -118,18 +102,6 @@ func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg protoiface.Mes
 	}
 
 	return msgResp, m.InvokeTyped(ctx, msg, msgResp)
-}
-
-func (m *msgRouterService) isAllowed(ctx context.Context) error {
-	caller, _ := m.storeService.OpenKVStore(ctx).Get([]byte("storeKey")) // TODO(@julienrbrt): store storeKey/modules of modules at a specific key to enable this.
-	if len(caller) > 0 {
-		allow, ok := m.modulesAllowList[string(caller)]
-		if !allow || !ok {
-			return fmt.Errorf("%s not allowed to use msg router service: %v", caller, m.modulesAllowList)
-		}
-	}
-
-	return nil
 }
 
 var _ router.Router = (*queryRouterService)(nil)

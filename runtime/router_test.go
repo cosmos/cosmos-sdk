@@ -31,7 +31,7 @@ func TestRouterService(t *testing.T) {
 	countertypes.RegisterMsgServer(msgRouter, counterKeeper)
 	countertypes.RegisterQueryServer(queryRouter, counterKeeper)
 
-	routerService := runtime.NewRouterService(storeService, queryRouter, msgRouter, map[string]bool{})
+	routerService := runtime.NewRouterService(storeService, queryRouter, msgRouter)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 
 	// Messages

@@ -30,6 +30,8 @@ func NewAccount(d accountstd.Dependencies) (Account, error) {
 		Counter:        collections.NewItem(d.SchemaBuilder, CounterPrefix, "counter", collections.Uint64Value),
 		TestStateCodec: collections.NewItem(d.SchemaBuilder, TestStateCodecPrefix, "test_state_codec", codec.CollValue[counterv1.MsgTestDependencies](d.LegacyStateCodec)),
 		addressCodec:   d.AddressCodec,
+		hs:             d.Environment.HeaderService,
+		gs:             d.Environment.GasService,
 	}, nil
 }
 

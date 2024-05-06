@@ -41,7 +41,7 @@ func (azd AuthzDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, 
 				// }
 
 				if sendRules, ok := options["send"]; !ok {
-					if checkSendAuthzRulesVoilated(authzMsg, authzConverted, sendRules) {
+					if checkSendAuthzRulesViolated(authzMsg, authzConverted, sendRules) {
 						return ctx, fmt.Errorf("authz rules are not meeting")
 					}
 				}
@@ -67,8 +67,8 @@ func (azd AuthzDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, 
 	return next(ctx, tx, simulate)
 }
 
-// checkSendAuthzRulesVoilated returns true if the rules are voilated
-func checkSendAuthzRulesVoilated(msgGrant *authztypes.MsgGrant, authz *banktypes.SendAuthorization, sendAuthzRules map[string]string) bool {
+// checkSendAuthzRulesViolated returns true if the rules are voilated
+func checkSendAuthzRulesViolated(msgGrant *authztypes.MsgGrant, authz *banktypes.SendAuthorization, sendAuthzRules map[string]string) bool {
 	fmt.Printf("\">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\": %v\n", ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
 	fmt.Printf("sendAuthzRules: %v\n", sendAuthzRules)
 	if blockedAddrsStr, ok := sendAuthzRules["blockedAddresses"]; ok {

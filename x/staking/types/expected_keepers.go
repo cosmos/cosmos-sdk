@@ -1,13 +1,14 @@
 package types
 
 import (
-	context "context"
+	"context"
 
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
+	consensustypes "cosmossdk.io/x/consensus/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -115,3 +116,7 @@ type StakingHooksWrapper struct{ StakingHooks }
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (StakingHooksWrapper) IsOnePerModuleType() {}
+
+type ConsensusKeeper interface {
+	Params(context.Context, *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error)
+}

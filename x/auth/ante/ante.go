@@ -1,6 +1,7 @@
 package ante
 
 import (
+	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth/types"
@@ -13,6 +14,7 @@ import (
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
+	Environment              appmodule.Environment
 	AccountKeeper            AccountKeeper
 	AccountAbstractionKeeper AccountAbstractionKeeper
 	BankKeeper               types.BankKeeper
@@ -40,9 +42,9 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 
 	anteDecorators := []sdk.AnteDecorator{
-		NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
+		NewSetUpContextDecorator(options.Environment), // outermost AnteDecorator. SetUpContext must be called first
 		NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
-		NewValidateBasicDecorator(options.AccountKeeper.GetEnvironment()),
+		NewValidateBasicDecorator(options.Environment),
 		NewTxTimeoutHeightDecorator(),
 		NewValidateMemoDecorator(options.AccountKeeper),
 		NewConsumeGasForTxSizeDecorator(options.AccountKeeper),

@@ -20,7 +20,7 @@ import (
 // `accAddr` is the address to be added to the genesis state, `amountStr` is the list of initial coins
 // to be added for the account, `appendAcct` updates the account if already exists.
 // `vestingStart, vestingEnd and vestingAmtStr` respectively are the schedule start time, end time (unix epoch)
-// `moduleName“ is the module name for which the account is being created
+// `moduleName` is the module name for which the account is being created
 // and coins to be appended to the account already in the genesis.json file.
 func AddGenesisAccount(
 	cdc codec.Codec,

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	proto "github.com/cosmos/gogoproto/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"

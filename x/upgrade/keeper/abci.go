@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	storetypes "cosmossdk.io/store/types"
+	consensusv1 "cosmossdk.io/x/consensus/types"
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -47,9 +48,12 @@ func (k Keeper) PreBlocker(ctx context.Context) error {
 			if lastAppliedPlan != "" && !k.HasHandler(lastAppliedPlan) {
 				var appVersion uint64
 
-				cp := sdkCtx.ConsensusParams()
-				if cp.Version != nil {
-					appVersion = cp.Version.App
+				var res consensusv1.QueryParamsResponse
+				if err := k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
+					return errors.New("failed to query consensus params")
+				}
+				if res.Params.Version != nil {
+					appVersion = res.Params.Version.App
 				}
 
 				return fmt.Errorf("wrong app version %d, upgrade handler is missing for %s upgrade plan", appVersion, lastAppliedPlan)

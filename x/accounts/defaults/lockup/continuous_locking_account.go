@@ -41,7 +41,7 @@ func (cva ContinuousLockingAccount) Init(ctx context.Context, msg *lockuptypes.M
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid end time %s", msg.EndTime.String())
 	}
 
-	if msg.EndTime.Before(msg.StartTime) {
+	if !msg.EndTime.After(msg.StartTime) {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("invalid start and end time (must be start before end)")
 	}
 
@@ -66,12 +66,6 @@ func (cva *ContinuousLockingAccount) Delegate(ctx context.Context, msg *lockupty
 	return cva.BaseLockup.Delegate(ctx, msg, cva.GetLockedCoinsWithDenoms)
 }
 
-func (cva *ContinuousLockingAccount) Undelegate(ctx context.Context, msg *lockuptypes.MsgUndelegate) (
-	*lockuptypes.MsgExecuteMessagesResponse, error,
-) {
-	return cva.BaseLockup.Undelegate(ctx, msg)
-}
-
 func (cva *ContinuousLockingAccount) SendCoins(ctx context.Context, msg *lockuptypes.MsgSend) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
@@ -89,35 +83,19 @@ func (cva ContinuousLockingAccount) GetLockCoinsInfo(ctx context.Context, blockT
 	unlockedCoins = sdk.Coins{}
 	lockedCoins = sdk.Coins{}
 
-	// We must handle the case where the start time for a lockup account has
-	// been set into the future or when the start of the chain is not exactly
-	// known.
-	startTime, err := cva.StartTime.Get(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-	endTime, err := cva.EndTime.Get(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-	var originalVesting sdk.Coins
+	var originalLocking sdk.Coins
 	err = cva.IterateCoinEntries(ctx, cva.OriginalLocking, func(key string, value math.Int) (stop bool, err error) {
-		originalVesting = append(originalVesting, sdk.NewCoin(key, value))
-		vestedCoin, vestingCoin, err := cva.GetLockCoinInfoWithDenom(ctx, blockTime, key)
+		originalLocking = append(originalLocking, sdk.NewCoin(key, value))
+		unlockedCoin, lockedCoin, err := cva.GetLockCoinInfoWithDenom(ctx, blockTime, key)
 		if err != nil {
 			return true, err
 		}
-		unlockedCoins = append(unlockedCoins, *vestedCoin)
-		lockedCoins = append(lockedCoins, *vestingCoin)
+		unlockedCoins = append(unlockedCoins, *unlockedCoin)
+		lockedCoins = append(lockedCoins, *lockedCoin)
 		return false, nil
 	})
 	if err != nil {
 		return nil, nil, err
-	}
-	if startTime.After(blockTime) {
-		return unlockedCoins, originalVesting, nil
-	} else if endTime.Before(blockTime) {
-		return originalVesting, lockedCoins, nil
 	}
 
 	return unlockedCoins, lockedCoins, nil
@@ -215,9 +193,9 @@ func (cva ContinuousLockingAccount) RegisterInitHandler(builder *accountstd.Init
 
 func (cva ContinuousLockingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, cva.Delegate)
-	accountstd.RegisterExecuteHandler(builder, cva.Undelegate)
 	accountstd.RegisterExecuteHandler(builder, cva.SendCoins)
 	accountstd.RegisterExecuteHandler(builder, cva.WithdrawUnlockedCoins)
+	cva.BaseLockup.RegisterExecuteHandlers(builder)
 }
 
 func (cva ContinuousLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

@@ -35,6 +35,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#20238](https://github.com/cosmos/cosmos-sdk/pull/20238) `NewAppModule` now takes in a `core/comet.Service` an argument.  `BeginBlocker` now takes in a `core/comet.Service`.
 * [#20026](https://github.com/cosmos/cosmos-sdk/pull/20026) Removal of the Address.String() method and related changes:
     * `Migrate` now takes a `ValidatorAddressCodec` as argument.
     * `Migrator` has a new field of `ValidatorAddressCodec` type.
@@ -46,6 +47,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * remove from `Keeper`: `AddPubkey`
 * [#19440](https://github.com/cosmos/cosmos-sdk/pull/19440) Slashing Module creation takes `appmodule.Environment` instead of individual services
 * [#19458](https://github.com/cosmos/cosmos-sdk/pull/19458) ValidatorSigningInfo.IndexOffset is deprecated, and no longer used. The index is now derived using just the StartHeight.
-* [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) Verify `InitGenesis` and `ExportGenesis` module code and keeper code do not panic.
+* [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) `InitGenesis` and `ExportGenesis` module code and keeper code do not panic but return errors.
 
 ### Bug Fixes

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"net/url"
 	"reflect"
 	"strconv"
@@ -374,4 +375,59 @@ func wonkyMsg(t *testing.T, cfg client.TxConfig, tx signing.Tx) signing.Tx {
 	err := builder.SetMsgs(msgs...)
 	require.NoError(t, err)
 	return builder.GetTx()
+}
+
+type SendServerImpl struct{}
+
+func (s SendServerImpl) Send(ctx context.Context, send *baseapptestutil.MsgSend) (*baseapptestutil.MsgSendResponse, error) {
+
+	if send.From == "" {
+		return nil, errors.New("from address cannot be empty")
+	}
+	if send.To == "" {
+		return nil, errors.New("to address cannot be empty")
+	}
+
+	_, err := sdk.ParseCoinNormalized(send.Amount)
+	if err != nil {
+		return nil, err
+	}
+
+	return &baseapptestutil.MsgSendResponse{}, nil
+}
+
+type NesteMessgesServerImpl struct {
+}
+
+func (n NesteMessgesServerImpl) Check(ctx context.Context, message *baseapptestutil.MsgNestedMessages) (*baseapptestutil.MsgCreateNestedMessagesResponse, error) {
+	cdc := codectestutil.CodecOptions{}.NewCodec()
+	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+
+	signer, _, err := cdc.GetMsgV1Signers(message)
+	if err != nil {
+		return nil, err
+	}
+	if len(signer) != 1 {
+		return nil, fmt.Errorf("expected 1 signer, got %d", len(signer))
+	}
+
+	msgs, err := message.GetMsgs()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, msg := range msgs {
+		s, _, err := cdc.GetMsgV1Signers(msg)
+		if err != nil {
+			return nil, err
+		}
+		if len(s) != 1 {
+			return nil, fmt.Errorf("expected 1 signer, got %d", len(s))
+		}
+		if !bytes.Equal(signer[0], s[0]) {
+			return nil, errors.New("signer does not match")
+		}
+
+	}
+	return nil, nil
 }

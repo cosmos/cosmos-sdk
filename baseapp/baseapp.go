@@ -13,9 +13,11 @@ import (
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-proto/anyutil"
 	"github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/maps"
 	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
@@ -810,6 +812,10 @@ func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
 	return endblock, nil
 }
 
+type HasNestedMsgs interface {
+	GetMsgs() ([]sdk.Msg, error)
+}
+
 // runTx processes a transaction within a given execution mode, encoded transaction
 // bytes, and the decoded transaction itself. All state transitions occur through
 // a cached Context depending on the mode provided. State only gets persisted
@@ -954,6 +960,20 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		result, err = app.runMsgs(runMsgCtx, msgs, msgsV2, mode)
 	}
 
+	if mode == execModeSimulate {
+		nestedMsgsContext, _ := app.cacheTxContext(ctx, txBytes)
+		for _, msg := range msgs {
+			msg, ok := msg.(HasNestedMsgs)
+			if !ok {
+				continue
+			}
+			nestedErr := app.simulateNestedMessages(nestedMsgsContext, msg)
+			if nestedErr != nil {
+				return gInfo, nil, anteEvents, nestedErr
+			}
+		}
+	}
+
 	// Run optional postHandlers (should run regardless of the execution result).
 	//
 	// Note: If the postHandler fails, we also revert the runMsgs state.
@@ -1058,6 +1078,48 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 		Events:       events.ToABCIEvents(),
 		MsgResponses: msgResponses,
 	}, nil
+}
+
+// simulateNestedMessages simulates a message nested messages.
+func (app *BaseApp) simulateNestedMessages(ctx sdk.Context, msg HasNestedMsgs) error {
+	msgs, err := msg.GetMsgs()
+	if err != nil {
+		return err
+	}
+
+	if err := validateBasicTxMsgs(app.msgServiceRouter, msgs); err != nil {
+		return err
+	}
+
+	msgsV2, err := app.msgsV1ToMsgsV2(msgs)
+	if err != nil {
+		return err
+	}
+
+	_, err = app.runMsgs(ctx, msgs, msgsV2, execModeSimulate)
+	return err
+}
+
+// msgsV1ToMsgsV2 transforms v1 messages into v2.
+func (app *BaseApp) msgsV1ToMsgsV2(msgs []sdk.Msg) ([]protov2.Message, error) {
+	msgsV2 := make([]protov2.Message, len(msgs))
+	for i, msg := range msgs {
+		gogoAny, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			return nil, err
+		}
+		anyMsg := &anypb.Any{
+			TypeUrl: gogoAny.TypeUrl,
+			Value:   gogoAny.Value,
+		}
+		msgV2, err := anyutil.Unpack(anyMsg, app.cdc.InterfaceRegistry().SigningContext().FileResolver(), app.cdc.InterfaceRegistry().SigningContext().TypeResolver())
+		if err != nil {
+			return nil, err
+		}
+		msgsV2[i] = msgV2
+	}
+
+	return msgsV2, nil
 }
 
 // makeABCIData generates the Data field to be sent to ABCI Check/DeliverTx.

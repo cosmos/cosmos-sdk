@@ -23,6 +23,7 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
+	any "github.com/cosmos/gogoproto/types/any"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
@@ -33,7 +34,6 @@ import (
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth/signing"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
@@ -756,6 +756,124 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 
 	msgCounter2 := getIntFromStore(t, store, deliverKey2)
 	require.Equal(t, int64(2), msgCounter2)
+}
+
+func TestABCI_Query_SimulateNestedMessagesTx(t *testing.T) {
+	gasConsumed := uint64(5)
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasConsumed))
+			return
+		})
+	}
+	suite := NewBaseAppSuite(t, anteOpt)
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+	require.NoError(t, err)
+
+	baseapptestutil.RegisterNestedMessagesServer(suite.baseApp.MsgServiceRouter(), NesteMessgesServerImpl{})
+	baseapptestutil.RegisterSendServer(suite.baseApp.MsgServiceRouter(), SendServerImpl{})
+
+	_, _, addr := testdata.KeyTestPubAddr()
+	_, _, toAddr := testdata.KeyTestPubAddr()
+	tests := []struct {
+		name       string
+		nestedMsgs []*baseapptestutil.MsgSend
+		wantErr    bool
+	}{
+		{
+			name: "ok nested message",
+			nestedMsgs: []*baseapptestutil.MsgSend{
+				{
+					From:   addr.String(),
+					To:     toAddr.String(),
+					Amount: "10000stake",
+				},
+			},
+		},
+		{
+			name: "different signers",
+			nestedMsgs: []*baseapptestutil.MsgSend{
+				{
+					From:   toAddr.String(),
+					To:     addr.String(),
+					Amount: "10000stake",
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty from",
+			nestedMsgs: []*baseapptestutil.MsgSend{
+				{
+					From:   "",
+					To:     toAddr.String(),
+					Amount: "10000stake",
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty to",
+			nestedMsgs: []*baseapptestutil.MsgSend{
+				{
+					From:   addr.String(),
+					To:     "",
+					Amount: "10000stake",
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "negative amount",
+			nestedMsgs: []*baseapptestutil.MsgSend{
+				{
+					From:   addr.String(),
+					To:     toAddr.String(),
+					Amount: "-10000stake",
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			nestedMessages := make([]*any.Any, len(tt.nestedMsgs))
+			for i, msg := range tt.nestedMsgs {
+				b, err := suite.cdc.Marshal(msg)
+				require.NoError(t, err)
+				nestedMessages[i] = &any.Any{
+					TypeUrl: sdk.MsgTypeURL(msg),
+					Value:   b,
+				}
+			}
+			msg := &baseapptestutil.MsgNestedMessages{
+				Messages: nestedMessages,
+				Signer:   addr.String(),
+			}
+
+			builder := suite.txConfig.NewTxBuilder()
+			err = builder.SetMsgs(msg)
+			require.NoError(t, err)
+			setTxSignature(t, builder, 0)
+			tx := builder.GetTx()
+
+			txBytes, err := suite.txConfig.TxEncoder()(tx)
+			require.Nil(t, err)
+
+			_, result, err := suite.baseApp.Simulate(txBytes)
+			if tt.wantErr {
+				require.Error(t, err)
+				require.Nil(t, result)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, result)
+			}
+
+		})
+	}
 }
 
 func TestABCI_Query_SimulateTx(t *testing.T) {

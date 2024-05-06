@@ -1,18 +1,17 @@
-package types_test
+package keeper
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/x/auth/testutil"
 	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 )
 
 func TestAccountRetriever(t *testing.T) {
-	cfg, err := network.DefaultConfigWithAppConfig(testutil.AppConfig)
+	cfg, err := network.DefaultConfigWithAppConfig(AppConfig)
 	require.NoError(t, err)
 	cfg.NumValidators = 1
 

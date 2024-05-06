@@ -1,4 +1,4 @@
-package testutil
+package keeper
 
 import (
 	_ "cosmossdk.io/x/accounts"       // import as blank for app wiring

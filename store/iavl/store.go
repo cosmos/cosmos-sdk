@@ -223,7 +223,7 @@ func (st *Store) Delete(key []byte) {
 	}
 }
 
-// DeleteVersionsTo deletes versions upto the given version from the MutableTree. An error
+// DeleteVersionsTo deletes versions up to the given version from the MutableTree. An error
 // is returned if any single version is invalid or the delete fails. All writes
 // happen in a single batch with a single commit.
 func (st *Store) DeleteVersionsTo(version int64) error {

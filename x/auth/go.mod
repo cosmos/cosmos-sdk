@@ -12,9 +12,7 @@ require (
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
-	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.13.3
 	github.com/cometbft/cometbft v1.0.0-alpha.2.0.20240429102542-490e9bc3de65
 	github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240429102542-490e9bc3de65
@@ -41,6 +39,8 @@ require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.33.0-20240312114316-c0d3497e35d6.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.33.0-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
+	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
+	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect

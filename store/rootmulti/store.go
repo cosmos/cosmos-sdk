@@ -670,7 +670,7 @@ func (rs *Store) handlePruning(version int64) error {
 	return rs.PruneStores(pruneHeight)
 }
 
-// PruneStores prunes all history upto the specific height of the multi store.
+// PruneStores prunes all history up to the specific height of the multi store.
 func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 	if pruningHeight <= 0 {
 		rs.logger.Debug("pruning skipped, height is less than or equal to 0")

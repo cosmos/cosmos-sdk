@@ -34,16 +34,17 @@ type Keeper struct {
 	cdc          codec.Codec
 	router       baseapp.MessageRouter
 	authKeeper   authz.AccountKeeper
-	AuthzOptions map[string]map[string]string
+	authzOptions map[string]map[string]string
 }
 
 // NewKeeper constructs a message authorization Keeper
-func NewKeeper(storeService corestoretypes.KVStoreService, cdc codec.Codec, router baseapp.MessageRouter, ak authz.AccountKeeper) Keeper {
+func NewKeeper(storeService corestoretypes.KVStoreService, cdc codec.Codec, router baseapp.MessageRouter, ak authz.AccountKeeper, options map[string]map[string]string) Keeper {
 	return Keeper{
 		storeService: storeService,
 		cdc:          cdc,
 		router:       router,
 		authKeeper:   ak,
+		authzOptions: options,
 	}
 }
 
@@ -74,7 +75,7 @@ func (k Keeper) getGrant(ctx context.Context, skey []byte) (grant authz.Grant, f
 // }
 
 func (k Keeper) GetAuthzOptions() map[string]map[string]string {
-	return k.AuthzOptions
+	return k.authzOptions
 }
 
 func (k Keeper) update(ctx context.Context, grantee, granter sdk.AccAddress, updated authz.Authorization) error {

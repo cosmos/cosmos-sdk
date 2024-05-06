@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	protoio "github.com/cosmos/gogoproto/io"
 	"io"
 	"math"
+
+	protoio "github.com/cosmos/gogoproto/io"
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"

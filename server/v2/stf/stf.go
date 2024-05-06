@@ -546,14 +546,8 @@ func (e *executionContext) setGasLimit(meter gasMeter, limit uint64) {
 
 // TODO: too many calls to makeContext can be expensive
 // makeContext creates and returns a new execution context for the STF[T] type.
-// It takes in the following parameters:
-// - ctx: The context.Context object for the execution.
-// - sender: The transaction.Identity object representing the sender of the transaction.
-// - store: The store.WriterMap object for accessing and modifying the state.
-// - gasLimit: The maximum amount of gas allowed for the execution.
-// - execMode: The corecontext.ExecMode object representing the execution mode.
-//
-// It returns a pointer to the executionContext struct
+// It assumes there is no gaslimit. If you need to set a gas limit, use setGasLimit on the returned context.
+// It assumes the headerInfo is empty, if you need to set the headerInfo, use setHeaderInfo on the returned context.
 func (s STF[T]) makeContext(
 	ctx context.Context,
 	sender transaction.Identity,

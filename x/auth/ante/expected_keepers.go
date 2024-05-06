@@ -7,7 +7,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 // AccountKeeper defines the contract needed for AccountKeeper related APIs.
@@ -26,5 +25,5 @@ type FeegrantKeeper interface {
 }
 
 type AuthzKeeper interface {
-	GetAuthzRules(ctx context.Context) (authz.AuthzRules, error)
+	GetAuthzOptions() map[string]map[string]string
 }

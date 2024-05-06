@@ -337,6 +337,18 @@ func NewSimApp(
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(runtime.NewKVStoreService(keys[authzkeeper.StoreKey]), appCodec, app.MsgServiceRouter(), app.AccountKeeper)
 
+	options := map[string]map[string]string{
+		"Send": {
+			"BlockedAddresses": "cosmos1rnr5jrt4exl0samwj0yegv99jeskl0hsge5zwt",
+			"SpendLimit":       "1000stake",
+		},
+		"Generic": {
+			"BlockedMessages": "cosmos.bank.v1beta1.MsgDelegate,cosmos.bank.v1beta1.MsgRedelegate",
+		},
+	}
+	// app.AuthzKeeper = app.AuthzKeeper.SetAuthzOptions(options)
+	app.AuthzKeeper.AuthzOptions = options
+
 	groupConfig := group.DefaultConfig()
 	/*
 		Example of setting group params:

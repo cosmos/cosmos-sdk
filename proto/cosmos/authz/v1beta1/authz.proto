@@ -48,35 +48,35 @@ message GrantQueueItem {
   repeated string msg_type_urls = 1;
 }
 
-// AuthzRules defines the rules for authz messages.
-message AuthzRules {
-  // Send authz rules
-  SendAuthzRules send = 1 [(gogoproto.nullable) = false];
+// // AuthzRules defines the rules for authz messages.
+// message AuthzRules {
+//   // Send authz rules
+//   SendAuthzRules send = 1 [(gogoproto.nullable) = false];
 
-  // Stake authz rules
-  StakeAuthzRules stake = 2 [(gogoproto.nullable) = false];
+//   // Stake authz rules
+//   StakeAuthzRules stake = 2 [(gogoproto.nullable) = false];
 
-  // Generic authz rules
-  GenericAuthzRules generic = 3 [(gogoproto.nullable) = false];
-}
+//   // Generic authz rules
+//   GenericAuthzRules generic = 3 [(gogoproto.nullable) = false];
+// }
 
-// Send authz rules
-message SendAuthzRules {
-  repeated cosmos.base.v1beta1.Coin spend_limit = 1 [
-    (gogoproto.nullable)     = false,
-    (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "legacy_coins",
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
-  repeated string blocked_recipients = 2;
-}
+// // Send authz rules
+// message SendAuthzRules {
+//   repeated cosmos.base.v1beta1.Coin spend_limit = 1 [
+//     (gogoproto.nullable)     = false,
+//     (amino.dont_omitempty)   = true,
+//     (amino.encoding)         = "legacy_coins",
+//     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+//   ];
+//   repeated string blocked_recipients = 2;
+// }
 
-// Stake authz rules
-message StakeAuthzRules {
-  repeated string blocked_validators = 1;
-}
+// // Stake authz rules
+// message StakeAuthzRules {
+//   repeated string blocked_validators = 1;
+// }
 
-// Generic authz rules
-message GenericAuthzRules {
-  repeated string blocked_messages = 1;
-}
+// // Generic authz rules
+// message GenericAuthzRules {
+//   repeated string blocked_messages = 1;
+// }

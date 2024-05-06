@@ -34,6 +34,7 @@ type Keeper struct {
 	cdc          codec.Codec
 	router       baseapp.MessageRouter
 	authKeeper   authz.AccountKeeper
+	AuthzOptions map[string]map[string]string
 }
 
 // NewKeeper constructs a message authorization Keeper
@@ -68,52 +69,12 @@ func (k Keeper) getGrant(ctx context.Context, skey []byte) (grant authz.Grant, f
 	return grant, true
 }
 
-func (k Keeper) GetAuthzRules(ctx context.Context) (authz.AuthzRules, error) {
-	store := k.storeService.OpenKVStore(ctx)
+// func (k Keeper) SetAuthzOptions(options map[string]map[string][]string) {
+// 	k.AuthzOptions = options
+// }
 
-	bz, err := store.Get(AuthzRulesPrefix)
-	if err != nil {
-		return authz.AuthzRules{}, err
-	}
-
-	authzRules1 := authz.AuthzRules{
-		Send: authz.SendAuthzRules{
-			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)),
-			BlockedRecipients: []string{
-				"cosmos1rnr5jrt4exl0samwj0yegv99jeskl0hsge5zwt",
-			},
-		},
-		Generic: authz.GenericAuthzRules{
-			BlockedMessages: []string{"cosmos.bank.v1beta1.MsgDelegate"},
-		},
-	}
-
-	if bz == nil {
-		return authzRules1, nil
-	}
-
-	// if bz == nil {
-	// 	return authz.AuthzRules{}, authz.ErrEmptyAuthzRules
-	// }
-
-	var authzRules authz.AuthzRules
-	err = k.cdc.Unmarshal(bz, &authzRules)
-	if err != nil {
-		return authz.AuthzRules{}, err
-	}
-
-	return authzRules, nil
-}
-
-func (k Keeper) SetAuthzRules(ctx context.Context, rules authz.AuthzRules) error {
-	store := k.storeService.OpenKVStore(ctx)
-
-	bz, err := k.cdc.Marshal(&rules)
-	if err != nil {
-		return err
-	}
-
-	return store.Set(AuthzRulesPrefix, bz)
+func (k Keeper) GetAuthzOptions() map[string]map[string]string {
+	return k.AuthzOptions
 }
 
 func (k Keeper) update(ctx context.Context, grantee, granter sdk.AccAddress, updated authz.Authorization) error {

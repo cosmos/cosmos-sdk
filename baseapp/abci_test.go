@@ -2120,6 +2120,19 @@ func TestABCI_ProcessProposal_PanicRecovery(t *testing.T) {
 	})
 }
 
+func TestABCI_PrepareProposalIsNotSet(t *testing.T) {
+	logBuffer := new(bytes.Buffer)
+	logger := log.NewLogger(logBuffer, log.ColorOption(false))
+	baseApp := baseapp.NewBaseApp(t.Name(), logger, nil, nil)
+	baseApp.SetPrepareProposal(nil)
+	req := abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+		Height:     1,
+	}
+	_, err := baseApp.PrepareProposal(&req)
+	require.Error(t, err)
+}
+
 // TestABCI_Proposal_Reset_State ensures that state is reset between runs of
 // PrepareProposal and ProcessProposal in case they are called multiple times.
 // This is only valid for heights > 1, given that on height 1 we always set the
@@ -2688,13 +2701,19 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 }
 
-//type Dummy struct {
-//	storetypes.CommitMultiStore
-//}
-//
-//func (d Dummy) SetInitialVersion(version int64) error {
-//	return errors.New("err")
-//}
+func TestABCI_CheckTxWithUnknownType(t *testing.T) {
+	suite := NewBaseAppSuite(t)
+	tx := newTxCounter(t, suite.txConfig, 0, 1)
+	txBytes, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	reqCheckTx := abci.RequestCheckTx{
+		Tx:   txBytes,
+		Type: abci.CheckTxType(3),
+	}
+	_, err = suite.baseApp.CheckTx(&reqCheckTx)
+	require.Error(t, err)
+}
 
 type DummyMultiStore struct {
 	storetypes.CommitMultiStore

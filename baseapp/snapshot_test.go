@@ -345,3 +345,53 @@ func TestABCI_ApplySnapshotChunk(t *testing.T) {
 	// the target should now have the same hash as the source
 	require.Equal(t, srcSuite.baseApp.LastCommitID(), targetSuite.baseApp.LastCommitID())
 }
+
+func TestABCI_ListSnapshotsWhenSnapshotMangerIsNotSet(t *testing.T) {
+	suite := NewBaseAppSuite(t)
+	resp, err := suite.baseApp.ListSnapshots(&abci.RequestListSnapshots{})
+
+	require.NoError(t, err)
+	require.Equal(t, &abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{}}, resp)
+}
+
+func TestABCI_LoadSnapshotChunkWhenSnapshotMangerIsNotSet(t *testing.T) {
+	suite := NewBaseAppSuite(t)
+	resp, err := suite.baseApp.LoadSnapshotChunk(&abci.RequestLoadSnapshotChunk{})
+
+	require.NoError(t, err)
+	require.Equal(t, &abci.ResponseLoadSnapshotChunk{}, resp)
+}
+
+func TestABCI_LoadMissingSnapshotChunk(t *testing.T) {
+	ssCfg := SnapshotsConfig{
+		blocks:             5,
+		blockTxs:           4,
+		snapshotInterval:   2,
+		snapshotKeepRecent: 2,
+		pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
+	}
+
+	suite := NewBaseAppSuiteWithSnapshots(t, ssCfg)
+	resp, err := suite.baseApp.LoadSnapshotChunk(&abci.RequestLoadSnapshotChunk{Height: 7, Format: 8, Chunk: 6})
+
+	require.NoError(t, err)
+	require.Equal(t, &abci.ResponseLoadSnapshotChunk{Chunk: nil}, resp)
+}
+
+func TestABCI_OfferSnapshotWhenManagerIsNotSet(t *testing.T) {
+	suite := NewBaseAppSuite(t)
+	resp, err := suite.baseApp.OfferSnapshot(&abci.RequestOfferSnapshot{})
+
+	expected := &abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}
+	require.NoError(t, err)
+	require.Equal(t, expected, resp)
+}
+
+func TestABCI_ApplySnapshotChunkWhenManagerIsNotSet(t *testing.T) {
+	suite := NewBaseAppSuite(t)
+	resp, err := suite.baseApp.ApplySnapshotChunk(&abci.RequestApplySnapshotChunk{})
+
+	expected := &abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}
+	require.NoError(t, err)
+	require.Equal(t, expected, resp)
+}

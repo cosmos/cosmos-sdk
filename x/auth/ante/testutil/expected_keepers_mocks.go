@@ -52,10 +52,10 @@ func (mr *MockAccountKeeperMockRecorder) AddressCodec() *gomock.Call {
 }
 
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types1.AccAddress) types1.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
-	ret0, _ := ret[0].(types.AccountI)
+	ret0, _ := ret[0].(types1.AccountI)
 	return ret0
 }
 
@@ -66,10 +66,10 @@ func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr interface{}) *gomo
 }
 
 // GetModuleAddress mocks base method.
-func (m *MockAccountKeeper) GetModuleAddress(moduleName string) types.AccAddress {
+func (m *MockAccountKeeper) GetModuleAddress(moduleName string) types1.AccAddress {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetModuleAddress", moduleName)
-	ret0, _ := ret[0].(types.AccAddress)
+	ret0, _ := ret[0].(types1.AccAddress)
 	return ret0
 }
 
@@ -93,8 +93,22 @@ func (mr *MockAccountKeeperMockRecorder) GetParams(ctx interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetParams", reflect.TypeOf((*MockAccountKeeper)(nil).GetParams), ctx)
 }
 
+// NewAccountWithAddress mocks base method.
+func (m *MockAccountKeeper) NewAccountWithAddress(ctx context.Context, addr types1.AccAddress) types1.AccountI {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NewAccountWithAddress", ctx, addr)
+	ret0, _ := ret[0].(types1.AccountI)
+	return ret0
+}
+
+// NewAccountWithAddress indicates an expected call of NewAccountWithAddress.
+func (mr *MockAccountKeeperMockRecorder) NewAccountWithAddress(ctx, addr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewAccountWithAddress", reflect.TypeOf((*MockAccountKeeper)(nil).NewAccountWithAddress), ctx, addr)
+}
+
 // SetAccount mocks base method.
-func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types.AccountI) {
+func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types1.AccountI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetAccount", ctx, acc)
 }
@@ -129,7 +143,7 @@ func (m *MockFeegrantKeeper) EXPECT() *MockFeegrantKeeperMockRecorder {
 }
 
 // UseGrantedFees mocks base method.
-func (m *MockFeegrantKeeper) UseGrantedFees(ctx context.Context, granter, grantee types.AccAddress, fee types.Coins, msgs []types.Msg) error {
+func (m *MockFeegrantKeeper) UseGrantedFees(ctx context.Context, granter, grantee types1.AccAddress, fee types1.Coins, msgs []types1.Msg) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UseGrantedFees", ctx, granter, grantee, fee, msgs)
 	ret0, _ := ret[0].(error)
@@ -166,10 +180,10 @@ func (m *MockConsensusKeeper) EXPECT() *MockConsensusKeeperMockRecorder {
 }
 
 // Params mocks base method.
-func (m *MockConsensusKeeper) Params(arg0 context.Context, arg1 *types1.QueryParamsRequest) (*types1.QueryParamsResponse, error) {
+func (m *MockConsensusKeeper) Params(arg0 context.Context, arg1 *types0.QueryParamsRequest) (*types0.QueryParamsResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Params", arg0, arg1)
-	ret0, _ := ret[0].(*types1.QueryParamsResponse)
+	ret0, _ := ret[0].(*types0.QueryParamsResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

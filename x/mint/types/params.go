@@ -12,7 +12,7 @@ import (
 )
 
 // NewParams returns Params instance with the given values.
-func NewParams(mintDenom string, inflationRateChange, inflationMax, inflationMin, goalBonded math.LegacyDec, blocksPerYear uint64, epochIdentifier string, reductionPeriodInEpochs int64, reductionFactor math.LegacyDec, mintingRewardsDistrStartEpoch int64, epochProvisions math.LegacyDec) Params {
+func NewParams(mintDenom string, inflationRateChange, inflationMax, inflationMin, goalBonded math.LegacyDec, blocksPerYear uint64, maxSupply math.Int, epochIdentifier string, reductionPeriodInEpochs int64, reductionFactor math.LegacyDec, mintingRewardsDistrStartEpoch int64, epochProvisions math.LegacyDec) Params {
 	return Params{
 		MintDenom:                            mintDenom,
 		InflationRateChange:                  inflationRateChange,
@@ -20,6 +20,7 @@ func NewParams(mintDenom string, inflationRateChange, inflationMax, inflationMin
 		InflationMin:                         inflationMin,
 		GoalBonded:                           goalBonded,
 		BlocksPerYear:                        blocksPerYear,
+		MaxSupply:                            maxSupply,
 		EpochIdentifier:                      epochIdentifier,
 		ReductionPeriodInEpochs:              reductionPeriodInEpochs,
 		ReductionFactor:                      reductionFactor,
@@ -36,7 +37,8 @@ func DefaultParams() Params {
 		InflationMax:                         math.LegacyNewDecWithPrec(20, 2),
 		InflationMin:                         math.LegacyNewDecWithPrec(7, 2),
 		GoalBonded:                           math.LegacyNewDecWithPrec(67, 2),
-		BlocksPerYear:                        uint64(60 * 60 * 8766 / 5),
+		BlocksPerYear:                        uint64(60 * 60 * 8766 / 5),      // assuming 5 second block times
+		MaxSupply:                            math.ZeroInt(),                  // assuming zero is infinite
 		EpochIdentifier:                      "week",                          // 1 week
 		ReductionPeriodInEpochs:              156,                             // 3 years
 		ReductionFactor:                      math.LegacyNewDecWithPrec(5, 1), // 0.5
@@ -63,6 +65,9 @@ func (p Params) Validate() error {
 		return err
 	}
 	if err := validateBlocksPerYear(p.BlocksPerYear); err != nil {
+		return err
+	}
+	if err := validateMaxSupply(p.MaxSupply); err != nil {
 		return err
 	}
 	if p.InflationMax.LT(p.InflationMin) {
@@ -196,6 +201,19 @@ func validateReductionFactor(v math.LegacyDec) error {
 func validateMintingRewardsDistributionStartEpoch(v int64) error {
 	if v < 0 {
 		return fmt.Errorf("start epoch must be non-negative")
+	}
+
+	return nil
+}
+
+func validateMaxSupply(i interface{}) error {
+	v, ok := i.(math.Int)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("max supply must be positive: %d", v)
 	}
 
 	return nil

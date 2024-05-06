@@ -116,6 +116,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		inflationMin,
 		goalBonded,
 		blocksPerYear,
+		math.ZeroInt(),
 		epochIdentifier,
 		reductionPeriodInEpochs,
 		reductionFactor,

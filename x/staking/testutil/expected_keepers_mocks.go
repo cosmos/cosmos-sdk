@@ -12,10 +12,10 @@ import (
 	address "cosmossdk.io/core/address"
 	math "cosmossdk.io/math"
 	types "cosmossdk.io/x/staking/types"
+	types2 "cosmossdk.io/x/consensus/types"
 	crypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	types0 "github.com/cosmos/cosmos-sdk/crypto/types"
 	types1 "github.com/cosmos/cosmos-sdk/types"
-	types2 "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	gomock "github.com/golang/mock/gomock"
 )
 

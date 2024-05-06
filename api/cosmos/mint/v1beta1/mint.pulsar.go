@@ -564,6 +564,7 @@ func (x *fastReflection_Minter) ProtoMethods() *protoiface.Methods {
 }
 
 var (
+<<<<<<< HEAD
 	md_Params                                          protoreflect.MessageDescriptor
 	fd_Params_mint_denom                               protoreflect.FieldDescriptor
 	fd_Params_inflation_rate_change                    protoreflect.FieldDescriptor
@@ -576,6 +577,16 @@ var (
 	fd_Params_reduction_factor                         protoreflect.FieldDescriptor
 	fd_Params_minting_rewards_distribution_start_epoch protoreflect.FieldDescriptor
 	fd_Params_genesis_epoch_provisions                 protoreflect.FieldDescriptor
+=======
+	md_Params                       protoreflect.MessageDescriptor
+	fd_Params_mint_denom            protoreflect.FieldDescriptor
+	fd_Params_inflation_rate_change protoreflect.FieldDescriptor
+	fd_Params_inflation_max         protoreflect.FieldDescriptor
+	fd_Params_inflation_min         protoreflect.FieldDescriptor
+	fd_Params_goal_bonded           protoreflect.FieldDescriptor
+	fd_Params_blocks_per_year       protoreflect.FieldDescriptor
+	fd_Params_max_supply            protoreflect.FieldDescriptor
+>>>>>>> b795646c9b2a5098e774f1726f8eac114ad79b13
 )
 
 func init() {
@@ -587,11 +598,15 @@ func init() {
 	fd_Params_inflation_min = md_Params.Fields().ByName("inflation_min")
 	fd_Params_goal_bonded = md_Params.Fields().ByName("goal_bonded")
 	fd_Params_blocks_per_year = md_Params.Fields().ByName("blocks_per_year")
+<<<<<<< HEAD
 	fd_Params_epoch_identifier = md_Params.Fields().ByName("epoch_identifier")
 	fd_Params_reduction_period_in_epochs = md_Params.Fields().ByName("reduction_period_in_epochs")
 	fd_Params_reduction_factor = md_Params.Fields().ByName("reduction_factor")
 	fd_Params_minting_rewards_distribution_start_epoch = md_Params.Fields().ByName("minting_rewards_distribution_start_epoch")
 	fd_Params_genesis_epoch_provisions = md_Params.Fields().ByName("genesis_epoch_provisions")
+=======
+	fd_Params_max_supply = md_Params.Fields().ByName("max_supply")
+>>>>>>> b795646c9b2a5098e774f1726f8eac114ad79b13
 }
 
 var _ protoreflect.Message = (*fastReflection_Params)(nil)
@@ -695,6 +710,7 @@ func (x *fastReflection_Params) Range(f func(protoreflect.FieldDescriptor, proto
 			return
 		}
 	}
+<<<<<<< HEAD
 	if x.EpochIdentifier != "" {
 		value := protoreflect.ValueOfString(x.EpochIdentifier)
 		if !f(fd_Params_epoch_identifier, value) {
@@ -722,6 +738,11 @@ func (x *fastReflection_Params) Range(f func(protoreflect.FieldDescriptor, proto
 	if x.GenesisEpochProvisions != "" {
 		value := protoreflect.ValueOfString(x.GenesisEpochProvisions)
 		if !f(fd_Params_genesis_epoch_provisions, value) {
+=======
+	if x.MaxSupply != "" {
+		value := protoreflect.ValueOfString(x.MaxSupply)
+		if !f(fd_Params_max_supply, value) {
+>>>>>>> b795646c9b2a5098e774f1726f8eac114ad79b13
 			return
 		}
 	}
@@ -752,6 +773,7 @@ func (x *fastReflection_Params) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.GoalBonded != ""
 	case "cosmos.mint.v1beta1.Params.blocks_per_year":
 		return x.BlocksPerYear != uint64(0)
+<<<<<<< HEAD
 	case "cosmos.mint.v1beta1.Params.epoch_identifier":
 		return x.EpochIdentifier != ""
 	case "cosmos.mint.v1beta1.Params.reduction_period_in_epochs":
@@ -762,6 +784,10 @@ func (x *fastReflection_Params) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.MintingRewardsDistributionStartEpoch != int64(0)
 	case "cosmos.mint.v1beta1.Params.genesis_epoch_provisions":
 		return x.GenesisEpochProvisions != ""
+=======
+	case "cosmos.mint.v1beta1.Params.max_supply":
+		return x.MaxSupply != ""
+>>>>>>> b795646c9b2a5098e774f1726f8eac114ad79b13
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.mint.v1beta1.Params"))
@@ -790,6 +816,7 @@ func (x *fastReflection_Params) Clear(fd protoreflect.FieldDescriptor) {
 		x.GoalBonded = ""
 	case "cosmos.mint.v1beta1.Params.blocks_per_year":
 		x.BlocksPerYear = uint64(0)
+<<<<<<< HEAD
 	case "cosmos.mint.v1beta1.Params.epoch_identifier":
 		x.EpochIdentifier = ""
 	case "cosmos.mint.v1beta1.Params.reduction_period_in_epochs":
@@ -800,6 +827,10 @@ func (x *fastReflection_Params) Clear(fd protoreflect.FieldDescriptor) {
 		x.MintingRewardsDistributionStartEpoch = int64(0)
 	case "cosmos.mint.v1beta1.Params.genesis_epoch_provisions":
 		x.GenesisEpochProvisions = ""
+=======
+	case "cosmos.mint.v1beta1.Params.max_supply":
+		x.MaxSupply = ""
+>>>>>>> b795646c9b2a5098e774f1726f8eac114ad79b13
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.mint.v1beta1.Params"))
@@ -834,6 +865,7 @@ func (x *fastReflection_Params) Get(descriptor protoreflect.FieldDescriptor) pro
 	case "cosmos.mint.v1beta1.Params.blocks_per_year":
 		value := x.BlocksPerYear
 		return protoreflect.ValueOfUint64(value)
+<<<<<<< HEAD
 	case "cosmos.mint.v1beta1.Params.epoch_identifier":
 		value := x.EpochIdentifier
 		return protoreflect.ValueOfString(value)
@@ -848,6 +880,10 @@ func (x *fastReflection_Params) Get(descriptor protoreflect.FieldDescriptor) pro
 		return protoreflect.ValueOfInt64(value)
 	case "cosmos.mint.v1beta1.Params.genesis_epoch_provisions":
 		value := x.GenesisEpochProvisions
+=======
+	case "cosmos.mint.v1beta1.Params.max_supply":
+		value := x.MaxSupply
+>>>>>>> b795646c9b2a5098e774f1726f8eac114ad79b13
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
@@ -881,6 +917,7 @@ func (x *fastReflection_Params) Set(fd protoreflect.FieldDescriptor, value proto
 		x.GoalBonded = value.Interface().(string)
 	case "cosmos.mint.v1beta1.Params.blocks_per_year":
 		x.BlocksPerYear = value.Uint()
+<<<<<<< HEAD
 	case "cosmos.mint.v1beta1.Params.epoch_identifier":
 		x.EpochIdentifier = value.Interface().(string)
 	case "cosmos.mint.v1beta1.Params.reduction_period_in_epochs":
@@ -891,6 +928,10 @@ func (x *fastReflection_Params) Set(fd protoreflect.FieldDescriptor, value proto
 		x.MintingRewardsDistributionStartEpoch = value.Int()
 	case "cosmos.mint.v1beta1.Params.genesis_epoch_provisions":
 		x.GenesisEpochProvisions = value.Interface().(string)
+=======
+	case "cosmos.mint.v1beta1.Params.max_supply":
+		x.MaxSupply = value.Interface().(string)
+>>>>>>> b795646c9b2a5098e774f1726f8eac114ad79b13
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.mint.v1beta1.Params"))
@@ -923,6 +964,7 @@ func (x *fastReflection_Params) Mutable(fd protoreflect.FieldDescriptor) protore
 		panic(fmt.Errorf("field goal_bonded of message cosmos.mint.v1beta1.Params is not mutable"))
 	case "cosmos.mint.v1beta1.Params.blocks_per_year":
 		panic(fmt.Errorf("field blocks_per_year of message cosmos.mint.v1beta1.Params is not mutable"))
+<<<<<<< HEAD
 	case "cosmos.mint.v1beta1.Params.epoch_identifier":
 		panic(fmt.Errorf("field epoch_identifier of message cosmos.mint.v1beta1.Params is not mutable"))
 	case "cosmos.mint.v1beta1.Params.reduction_period_in_epochs":
@@ -933,6 +975,10 @@ func (x *fastReflection_Params) Mutable(fd protoreflect.FieldDescriptor) protore
 		panic(fmt.Errorf("field minting_rewards_distribution_start_epoch of message cosmos.mint.v1beta1.Params is not mutable"))
 	case "cosmos.mint.v1beta1.Params.genesis_epoch_provisions":
 		panic(fmt.Errorf("field genesis_epoch_provisions of message cosmos.mint.v1beta1.Params is not mutable"))
+=======
+	case "cosmos.mint.v1beta1.Params.max_supply":
+		panic(fmt.Errorf("field max_supply of message cosmos.mint.v1beta1.Params is not mutable"))
+>>>>>>> b795646c9b2a5098e774f1726f8eac114ad79b13
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.mint.v1beta1.Params"))
@@ -958,6 +1004,7 @@ func (x *fastReflection_Params) NewField(fd protoreflect.FieldDescriptor) protor
 		return protoreflect.ValueOfString("")
 	case "cosmos.mint.v1beta1.Params.blocks_per_year":
 		return protoreflect.ValueOfUint64(uint64(0))
+<<<<<<< HEAD
 	case "cosmos.mint.v1beta1.Params.epoch_identifier":
 		return protoreflect.ValueOfString("")
 	case "cosmos.mint.v1beta1.Params.reduction_period_in_epochs":
@@ -967,6 +1014,9 @@ func (x *fastReflection_Params) NewField(fd protoreflect.FieldDescriptor) protor
 	case "cosmos.mint.v1beta1.Params.minting_rewards_distribution_start_epoch":
 		return protoreflect.ValueOfInt64(int64(0))
 	case "cosmos.mint.v1beta1.Params.genesis_epoch_provisions":
+=======
+	case "cosmos.mint.v1beta1.Params.max_supply":
+>>>>>>> b795646c9b2a5098e774f1726f8eac114ad79b13
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -1060,6 +1110,7 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		if x.BlocksPerYear != 0 {
 			n += 1 + runtime.Sov(uint64(x.BlocksPerYear))
 		}
+<<<<<<< HEAD
 		l = len(x.EpochIdentifier)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
@@ -1075,6 +1126,9 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 			n += 1 + runtime.Sov(uint64(x.MintingRewardsDistributionStartEpoch))
 		}
 		l = len(x.GenesisEpochProvisions)
+=======
+		l = len(x.MaxSupply)
+>>>>>>> b795646c9b2a5098e774f1726f8eac114ad79b13
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -1107,6 +1161,7 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
+<<<<<<< HEAD
 		if len(x.GenesisEpochProvisions) > 0 {
 			i -= len(x.GenesisEpochProvisions)
 			copy(dAtA[i:], x.GenesisEpochProvisions)
@@ -1135,6 +1190,12 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 			i -= len(x.EpochIdentifier)
 			copy(dAtA[i:], x.EpochIdentifier)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.EpochIdentifier)))
+=======
+		if len(x.MaxSupply) > 0 {
+			i -= len(x.MaxSupply)
+			copy(dAtA[i:], x.MaxSupply)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MaxSupply)))
+>>>>>>> b795646c9b2a5098e774f1726f8eac114ad79b13
 			i--
 			dAtA[i] = 0x3a
 		}
@@ -1408,7 +1469,11 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 				}
 			case 7:
 				if wireType != 2 {
+<<<<<<< HEAD
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field EpochIdentifier", wireType)
+=======
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MaxSupply", wireType)
+>>>>>>> b795646c9b2a5098e774f1726f8eac114ad79b13
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -1436,6 +1501,7 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
+<<<<<<< HEAD
 				x.EpochIdentifier = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 8:
@@ -1539,6 +1605,9 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				x.GenesisEpochProvisions = string(dAtA[iNdEx:postIndex])
+=======
+				x.MaxSupply = string(dAtA[iNdEx:postIndex])
+>>>>>>> b795646c9b2a5098e774f1726f8eac114ad79b13
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -1661,6 +1730,7 @@ type Params struct {
 	GoalBonded string `protobuf:"bytes,5,opt,name=goal_bonded,json=goalBonded,proto3" json:"goal_bonded,omitempty"`
 	// expected blocks per year
 	BlocksPerYear uint64 `protobuf:"varint,6,opt,name=blocks_per_year,json=blocksPerYear,proto3" json:"blocks_per_year,omitempty"`
+<<<<<<< HEAD
 	// epoch_identifier mint epoch identifier e.g. (day, week).
 	EpochIdentifier string `protobuf:"bytes,7,opt,name=epoch_identifier,json=epochIdentifier,proto3" json:"epoch_identifier,omitempty"`
 	// reduction_period_in_epochs the number of epochs it takes
@@ -1674,6 +1744,10 @@ type Params struct {
 	MintingRewardsDistributionStartEpoch int64 `protobuf:"varint,10,opt,name=minting_rewards_distribution_start_epoch,json=mintingRewardsDistributionStartEpoch,proto3" json:"minting_rewards_distribution_start_epoch,omitempty"`
 	// genesis_epoch_provisions epoch provisions from the first epoch.
 	GenesisEpochProvisions string `protobuf:"bytes,11,opt,name=genesis_epoch_provisions,json=genesisEpochProvisions,proto3" json:"genesis_epoch_provisions,omitempty"`
+=======
+	// maximum supply for the token
+	MaxSupply string `protobuf:"bytes,7,opt,name=max_supply,json=maxSupply,proto3" json:"max_supply,omitempty"`
+>>>>>>> b795646c9b2a5098e774f1726f8eac114ad79b13
 }
 
 func (x *Params) Reset() {
@@ -1738,6 +1812,7 @@ func (x *Params) GetBlocksPerYear() uint64 {
 	return 0
 }
 
+<<<<<<< HEAD
 func (x *Params) GetEpochIdentifier() string {
 	if x != nil {
 		return x.EpochIdentifier
@@ -1769,6 +1844,11 @@ func (x *Params) GetMintingRewardsDistributionStartEpoch() int64 {
 func (x *Params) GetGenesisEpochProvisions() string {
 	if x != nil {
 		return x.GenesisEpochProvisions
+=======
+func (x *Params) GetMaxSupply() string {
+	if x != nil {
+		return x.MaxSupply
+>>>>>>> b795646c9b2a5098e774f1726f8eac114ad79b13
 	}
 	return ""
 }
@@ -1795,12 +1875,16 @@ var file_cosmos_mint_v1beta1_mint_proto_rawDesc = []byte{
 	0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61,
 	0x63, 0x79, 0x44, 0x65, 0x63, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
 	0x44, 0x65, 0x63, 0x52, 0x10, 0x61, 0x6e, 0x6e, 0x75, 0x61, 0x6c, 0x50, 0x72, 0x6f, 0x76, 0x69,
+<<<<<<< HEAD
 	0x73, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x4e, 0x0a, 0x10, 0x65, 0x70, 0x6f, 0x63, 0x68, 0x5f, 0x70,
 	0x72, 0x6f, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42,
 	0x23, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73,
 	0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63,
 	0x79, 0x44, 0x65, 0x63, 0x52, 0x0f, 0x65, 0x70, 0x6f, 0x63, 0x68, 0x50, 0x72, 0x6f, 0x76, 0x69,
 	0x73, 0x69, 0x6f, 0x6e, 0x73, 0x22, 0xdc, 0x06, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
+=======
+	0x73, 0x69, 0x6f, 0x6e, 0x73, 0x22, 0xb9, 0x04, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
+>>>>>>> b795646c9b2a5098e774f1726f8eac114ad79b13
 	0x12, 0x1d, 0x0a, 0x0a, 0x6d, 0x69, 0x6e, 0x74, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01,
 	0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6d, 0x69, 0x6e, 0x74, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12,
 	0x6a, 0x0a, 0x15, 0x69, 0x6e, 0x66, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x72, 0x61, 0x74,
@@ -1829,6 +1913,7 @@ var file_cosmos_mint_v1beta1_mint_proto_rawDesc = []byte{
 	0x2a, 0x01, 0x52, 0x0a, 0x67, 0x6f, 0x61, 0x6c, 0x42, 0x6f, 0x6e, 0x64, 0x65, 0x64, 0x12, 0x26,
 	0x0a, 0x0f, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x73, 0x5f, 0x70, 0x65, 0x72, 0x5f, 0x79, 0x65, 0x61,
 	0x72, 0x18, 0x06, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0d, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x73, 0x50,
+<<<<<<< HEAD
 	0x65, 0x72, 0x59, 0x65, 0x61, 0x72, 0x12, 0x29, 0x0a, 0x10, 0x65, 0x70, 0x6f, 0x63, 0x68, 0x5f,
 	0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x65, 0x72, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09,
 	0x52, 0x0f, 0x65, 0x70, 0x6f, 0x63, 0x68, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x65,
@@ -1868,6 +1953,28 @@ var file_cosmos_mint_v1beta1_mint_proto_rawDesc = []byte{
 	0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x4d, 0x69,
 	0x6e, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x33,
+=======
+	0x65, 0x72, 0x59, 0x65, 0x61, 0x72, 0x12, 0x4a, 0x0a, 0x0a, 0x6d, 0x61, 0x78, 0x5f, 0x73, 0x75,
+	0x70, 0x70, 0x6c, 0x79, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00,
+	0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f,
+	0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x09, 0x6d, 0x61, 0x78, 0x53, 0x75, 0x70, 0x70,
+	0x6c, 0x79, 0x3a, 0x1d, 0x8a, 0xe7, 0xb0, 0x2a, 0x18, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d,
+	0x73, 0x64, 0x6b, 0x2f, 0x78, 0x2f, 0x6d, 0x69, 0x6e, 0x74, 0x2f, 0x50, 0x61, 0x72, 0x61, 0x6d,
+	0x73, 0x42, 0xc4, 0x01, 0x0a, 0x17, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x09, 0x4d,
+	0x69, 0x6e, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2f, 0x6d, 0x69, 0x6e, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x3b, 0x6d, 0x69, 0x6e, 0x74, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43,
+	0x4d, 0x58, 0xaa, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x4d, 0x69, 0x6e, 0x74,
+	0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x5c, 0x4d, 0x69, 0x6e, 0x74, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02,
+	0x1f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x4d, 0x69, 0x6e, 0x74, 0x5c, 0x56, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0xea, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x4d, 0x69, 0x6e, 0x74, 0x3a,
+	0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+>>>>>>> b795646c9b2a5098e774f1726f8eac114ad79b13
 }
 
 var (

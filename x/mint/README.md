@@ -67,6 +67,8 @@ https://github.com/cosmos/cosmos-sdk/blob/7e402fb1435790976fa4eafdb3467940fb7f6d
 
 The mint module stores its params in state with the prefix of `0x01`,
 it can be updated with governance or the address with authority.
+**Note:** With the latest update, the addition of the `MaxSupply` parameter allows controlling the maximum supply of tokens minted by the module. 
+A value of `0` indicates an unlimited supply.
 
 * Params: `mint/params -> legacy_amino(params)`
 
@@ -102,6 +104,8 @@ This fee collector is specified as the `auth` module's `FeeCollector` `ModuleAcc
 ## Begin-Block
 
 Minting parameters are recalculated and inflation paid at the beginning of each block.
+
+The minting logic in the `BeginBlocker` function provides an optional feature for controlling token minting based on the maximum allowable supply (MaxSupply). This feature allows users to adjust the minting process according to their specific requirements and use cases. However, it's important to note that the MaxSupply parameter is independent of the minting process and assumes that any adjustments to the total supply, including burning tokens, are handled by external modules.
 
 NOTE: Only one of BeginBlock or BeginEpoch hooks should be enabled for minting.
 
@@ -167,19 +171,21 @@ BlockProvision(params Params) sdk.Coin {
 ## Parameters
 
 The minting module contains the following parameters:
+Note: `0` indicates unlimited supply for MaxSupply param
 
-| Key                    | Type            | Example                |
-|------------------------|-----------------|------------------------|
-| MintDenom              | string          | "uatom"                |
-| InflationRateChange    | string (dec)    | "0.130000000000000000" |
-| InflationMax           | string (dec)    | "0.200000000000000000" |
-| InflationMin           | string (dec)    | "0.070000000000000000" |
-| GoalBonded             | string (dec)    | "0.670000000000000000" |
-| BlocksPerYear          | string (uint64) | "6311520"              |
-| EpochIdentifier        | string          | "week"                 |
-| GenesisEpochProvisions | string (dec)    | "5000000"              |
-| ReductionFactor        | string (dec)    | "0.500000000000000000" |
-| ReductionPeriodInEpochs| string (int64)  | "156"                  |
+| Key                    | Type             | Example                |
+|------------------------|------------------|------------------------|
+| MintDenom              | string           | "uatom"                |
+| InflationRateChange    | string (dec)     | "0.130000000000000000" |
+| InflationMax           | string (dec)     | "0.200000000000000000" |
+| InflationMin           | string (dec)     | "0.070000000000000000" |
+| GoalBonded             | string (dec)     | "0.670000000000000000" |
+| BlocksPerYear          | string (uint64)  | "6311520"              |
+| MaxSupply              | string (math.Int)| "0"                    |
+| EpochIdentifier        | string           | "week"                 |
+| GenesisEpochProvisions | string (dec)     | "5000000"              |
+| ReductionFactor        | string (dec)     | "0.500000000000000000" |
+| ReductionPeriodInEpochs| string (int64)   | "156"                  |
 
 
 ## Events
@@ -291,6 +297,7 @@ inflation_rate_change: "130000000000000000"
 mint_denom: stake
 reduction_factor: "500000000000000000"
 reduction_period_in_epochs: "156"
+max_supply: "0"
 ```
 
 ### gRPC
@@ -392,7 +399,8 @@ Example Output:
     "epochIdentifier": "week",
     "reductionPeriodInEpochs": "156",
     "reductionFactor": "500000000000000000",
-    "genesisEpochProvisions": "5000000000000000000000000"
+    "genesisEpochProvisions": "5000000000000000000000000",
+    "maxSupply": "0",
   }
 }
 ```
@@ -487,7 +495,8 @@ Example Output:
     "epochIdentifier": "week",
     "reductionPeriodInEpochs": "156",
     "reductionFactor": "500000000000000000",
-    "genesisEpochProvisions": "5000000000000000000000000"
+    "genesisEpochProvisions": "5000000000000000000000000",
+    "maxSupply": "0",
   }
 }
 ```

@@ -16,7 +16,6 @@ import (
 
 type (
 	// Msg defines the interface a transaction message needed to fulfill.
-	// DEPRECATED: use cosmossdk.io/core/transaction.Type
 	Msg = coretransaction.Msg
 
 	// LegacyMsg defines the interface a transaction message needed to fulfill up through

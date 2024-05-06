@@ -59,6 +59,9 @@ type Store struct {
 	isMigrating bool
 }
 
+// New creates a new root Store instance.
+//
+// NOTE: The migration manager is optional and can be nil if no migration is required.
 func New(
 	logger log.Logger,
 	ss store.VersionedDatabase,
@@ -73,6 +76,7 @@ func New(
 		stateCommitment:  sc,
 		migrationManager: mm,
 		telemetry:        m,
+		isMigrating:      mm != nil,
 	}, nil
 }
 
@@ -163,21 +167,15 @@ func (s *Store) Query(storeKey []byte, version uint64, key []byte, prove bool) (
 		defer s.telemetry.MeasureSince(now, "root_store", "query")
 	}
 
-	val, err := s.stateStorage.Get(storeKey, version, key)
-	if err != nil || val == nil {
-		// fallback to querying SC backend if not found in SS backend
-		//
-		// Note, this should only used during migration, i.e. while SS and IAVL v2
-		// are being asynchronously synced.
-		if val == nil {
-			bz, scErr := s.stateCommitment.Get(storeKey, version, key)
-			if scErr != nil {
-				return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", scErr)
-			}
-
-			val = bz
+	var val []byte
+	var err error
+	if s.isMigrating { // if we're migrating, we need to query the SC backend
+		val, err = s.stateCommitment.Get(storeKey, version, key)
+		if err != nil {
+			return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", err)
 		}
-
+	} else {
+		val, err = s.stateStorage.Get(storeKey, version, key)
 		if err != nil {
 			return store.QueryResult{}, fmt.Errorf("failed to query SS store: %w", err)
 		}
@@ -235,6 +233,11 @@ func (s *Store) loadVersion(v uint64) error {
 	// set lastCommitInfo explicitly s.t. Commit commits the correct version, i.e. v+1
 	s.lastCommitInfo = &proof.CommitInfo{Version: v}
 
+	// if we're migrating, we need to start the migration process
+	if s.isMigrating {
+		s.startMigration()
+	}
+
 	return nil
 }
 
@@ -289,20 +292,18 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 
 	eg := new(errgroup.Group)
 
-	// commit SS async
-	eg.Go(func() error {
-		// if we're migrating, we don't want to commit to the state storage
-		// to avoid parallel writes
-		if s.isMigrating {
+	// if we're migrating, we don't want to commit to the state storage to avoid
+	// parallel writes
+	if !s.isMigrating {
+		// commit SS async
+		eg.Go(func() error {
+			if err := s.stateStorage.ApplyChangeset(version, cs); err != nil {
+				return fmt.Errorf("failed to commit SS: %w", err)
+			}
+
 			return nil
-		}
-
-		if err := s.stateStorage.ApplyChangeset(version, cs); err != nil {
-			return fmt.Errorf("failed to commit SS: %w", err)
-		}
-
-		return nil
-	})
+		})
+	}
 
 	// commit SC async
 	eg.Go(func() error {
@@ -344,21 +345,18 @@ func (s *Store) Prune(version uint64) error {
 	return nil
 }
 
-// StartMigration starts the migration process and initializes the channels.
-// An error is returned if migration is already in progress.
+// startMigration starts a migration process to migrate the RootStore/v1 to the
+// SS and SC backends of store/v2 and initializes the channels.
+// It runs in a separate goroutine and replaces the current RootStore with the
+// migrated new backends once the migration is complete.
+//
 // NOTE: This method should only be called once after loadVersion.
-func (s *Store) StartMigration() error {
-	if s.isMigrating {
-		return fmt.Errorf("migration already in progress")
-	}
-
+func (s *Store) startMigration() {
 	// buffer at most 1 changeset, if the receiver is behind attempting to buffer
 	// more than 1 will block.
 	s.chChangeset = make(chan *migration.VersionedChangeset, 1)
 	// it is used to signal the migration manager that the migration is done
 	s.chDone = make(chan struct{})
-
-	s.isMigrating = true
 
 	mtx := sync.Mutex{}
 	mtx.Lock()
@@ -374,8 +372,6 @@ func (s *Store) StartMigration() error {
 	// wait for the migration manager to start
 	mtx.Lock()
 	defer mtx.Unlock()
-
-	return nil
 }
 
 // writeSC accepts a Changeset and writes that as a batch to the underlying SC

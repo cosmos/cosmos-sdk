@@ -1176,7 +1176,8 @@ func (s *decCoinTestSuite) TestDecCoin_ParseDecAmount() {
 	}{
 		"Parse empty string": {"", "", "", false},
 		"Parse string which start with character different from digit, space, and letter": {"✨🌟⭐", "", "", true},
-		"Parse string started with letter":                                                {"", "", "", true},
+		"Parse string started with letter":                                                {"h10", "", "h10", false},
+		"Parse string started with dot":                                                   {".atom", ".", "atom", false},
 
 		"Parse string that contain only numbers": {"10", "10", "", false},
 		"Use number for denom":                   {"10 11", "", "", true},

@@ -57,8 +57,8 @@ func NewSTF[T transaction.Tx](
 		doValidatorUpdate: doValidatorUpdate,
 		postTxExec:        postTxExec, // TODO
 		branch:            branch,
-
-		wrapWithGasMeter:  stfgas.DefaultWrapWithGasMeter, // TODO replacable?
+		getGasMeter:       stfgas.DefaultGasMeter,
+		wrapWithGasMeter:  stfgas.DefaultWrapWithGasMeter,
 	}
 }
 

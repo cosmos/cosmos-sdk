@@ -2,7 +2,7 @@
 version: v1
 name: buf.build/cosmos/cosmos-sdk
 deps:
-  - buf.build/tendermint/tendermint:33ed361a90514289beabf3189e1d7665 # latest tendermint buf is v0.38.x which is what we want (https://buf.build/tendermint/tendermint/compare/v0.38.x..33ed361a90514289beabf3189e1d7665)
+  - buf.build/cometbft/cometbft:4a62c99d422068a5165429b62a7eb824df46cca9 
   - buf.build/cosmos/cosmos-proto
   - buf.build/cosmos/gogo-proto
   - buf.build/googleapis/googleapis

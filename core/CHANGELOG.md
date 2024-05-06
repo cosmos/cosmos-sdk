@@ -59,7 +59,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#19672](https://github.com/cosmos/cosmos-sdk/pull/19672) `PreBlock` now returns only an error for consistency with server/v2. The SDK has upgraded x/upgrade accordingly.
 * [#18857](https://github.com/cosmos/cosmos-sdk/pull/18857) Moved `FormatCoins` to `x/tx`.
-* [#18861](httpes://github.com/cosmos/cosmos-sdk/pull/18861) Moved `coin.ParseCoin` to `client/v2/internal`.
+* [#18861](https://github.com/cosmos/cosmos-sdk/pull/18861) Moved `coin.ParseCoin` to `client/v2/internal`.
 * [#18866](https://github.com/cosmos/cosmos-sdk/pull/18866) All items related to depinject have been moved to `cosmossdk.io/depinject` (`Provide`, `Invoke`, `Register`)
 * [#19041](https://github.com/cosmos/cosmos-sdk/pull/19041) `HasEventListeners` was removed from appmodule due to the fact that it was not used anywhere in the SDK nor implemented
 

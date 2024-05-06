@@ -25,3 +25,7 @@ func NewMockContext(
 		ctx, ss, accNumber, accountAddr, sender, funds, moduleExec, moduleExecUntyped, moduleQuery,
 	), ss
 }
+
+func SetSender(ctx context.Context, sender []byte) context.Context {
+	return implementation.SetSender(ctx, sender)
+}

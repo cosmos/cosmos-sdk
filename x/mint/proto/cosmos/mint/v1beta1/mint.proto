@@ -80,8 +80,8 @@ message Params {
   // at the end of each period set by reduction_period_in_epochs.
   string reduction_factor = 10 [
     (cosmos_proto.field_added_in) = "cosmos-sdk v0.52",
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
-    (gogoproto.nullable)   = false
+    (gogoproto.customtype)        = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)          = false
   ];
   // minting_rewards_distribution_start_epoch start epoch to distribute minting
   // rewards
@@ -89,7 +89,7 @@ message Params {
   // genesis_epoch_provisions epoch provisions from the first epoch.
   string genesis_epoch_provisions = 12 [
     (cosmos_proto.field_added_in) = "cosmos-sdk v0.52",
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
-    (gogoproto.nullable)   = false
+    (gogoproto.customtype)        = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)          = false
   ];
 }

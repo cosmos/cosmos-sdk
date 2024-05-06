@@ -51,6 +51,8 @@ func TestBranchService(t *testing.T) {
 
 	branchService := BranchService{}
 
+	// TODO: add events check + gas limit precision test
+
 	t.Run("ok", func(t *testing.T) {
 		stfCtx := makeContext()
 		gasUsed, err := branchService.ExecuteWithGasLimit(stfCtx, 10000, func(ctx context.Context) error {

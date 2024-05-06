@@ -5,13 +5,17 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/simapp"
+	"cosmossdk.io/x/accounts/defaults/lockup/types"
 	"cosmossdk.io/x/bank/testutil"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+type ProtoMsg = protoiface.MessageV1
 
 var (
 	ownerAddr = secp256k1.GenPrivKey().PubKey().Address()
@@ -48,6 +52,23 @@ func (s *E2ETestSuite) executeTx(ctx sdk.Context, msg sdk.Msg, app *simapp.SimAp
 	return err
 }
 
+func (s *E2ETestSuite) queryAcc(ctx sdk.Context, req sdk.Msg, app *simapp.SimApp, accAddr []byte) (ProtoMsg, error) {
+	resp, err := app.AccountsKeeper.Query(ctx, accAddr, req)
+	return resp, err
+}
+
 func (s *E2ETestSuite) fundAccount(app *simapp.SimApp, ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) {
 	require.NoError(s.T(), testutil.FundAccount(ctx, app.BankKeeper, addr, amt))
+}
+
+func (s *E2ETestSuite) queryLockupAccInfo(ctx sdk.Context, app *simapp.SimApp, accAddr []byte) *types.QueryLockupAccountInfoResponse {
+	req := &types.QueryLockupAccountInfoRequest{}
+	resp, err := s.queryAcc(ctx, req, app, accAddr)
+	require.NoError(s.T(), err)
+	require.NotNil(s.T(), resp)
+
+	lockupAccountInfoResponse, ok := resp.(*types.QueryLockupAccountInfoResponse)
+	require.True(s.T(), ok)
+
+	return lockupAccountInfoResponse
 }

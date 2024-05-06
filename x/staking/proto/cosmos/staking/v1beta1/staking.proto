@@ -9,8 +9,8 @@ import "google/protobuf/timestamp.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "amino/amino.proto";
-import "tendermint/types/types.proto";
-import "tendermint/abci/types.proto";
+import "cometbft/types/v1/types.proto";
+import "cometbft/abci/v1/types.proto";
 
 option go_package = "cosmossdk.io/x/staking/types";
 
@@ -21,8 +21,8 @@ option go_package = "cosmossdk.io/x/staking/types";
 message HistoricalInfo {
   option deprecated = true;
 
-  tendermint.types.Header header = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  repeated Validator      valset = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  cometbft.types.v1.Header header = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated Validator       valset = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // Historical contains a set of minimum values needed for evaluating historical validator sets and blocks.
@@ -133,12 +133,11 @@ message Validator {
   // commission defines the commission parameters.
   Commission commission = 10 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // min_self_delegation is the validator's self declared minimum self delegation.
-  //
-  // Since: cosmos-sdk 0.46
   string min_self_delegation = 11 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
+    (cosmos_proto.scalar)         = "cosmos.Int",
+    (gogoproto.customtype)        = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)          = false,
+    (cosmos_proto.field_added_in) = "cosmos-sdk 0.47"
   ];
 
   // strictly positive if this validator's unbonding has been stopped by external modules
@@ -408,7 +407,7 @@ enum Infraction {
 message ValidatorUpdates {
   option deprecated = true;
 
-  repeated tendermint.abci.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated cometbft.abci.v1.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // ConsPubKeyRotationHistory contains a validator's consensus public key rotation history.

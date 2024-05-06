@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	coreevent "cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -1372,28 +1372,32 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 
 	suite.mockSendCoins(suite.ctx, acc0, accAddrs[1])
 	require.NoError(suite.bankKeeper.SendCoins(suite.ctx, accAddrs[0], accAddrs[1], newCoins))
-	event1 := sdk.Event{
+	event1 := coreevent.Event{
 		Type:       banktypes.EventTypeTransfer,
-		Attributes: []abci.EventAttribute{},
+		Attributes: []coreevent.Attribute{},
 	}
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: acc1StrAddr},
+		coreevent.Attribute{Key: banktypes.AttributeKeyRecipient, Value: acc1StrAddr},
 	)
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: banktypes.AttributeKeySender, Value: acc0StrAddr},
+		coreevent.Attribute{Key: banktypes.AttributeKeySender, Value: acc0StrAddr},
 	)
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()},
+		coreevent.Attribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()},
 	)
 
 	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	// events are shifted due to the funding account events
-	events := ctx.EventManager().ABCIEvents()
+	events := ctx.EventManager().Events()
 	require.Equal(8, len(events))
-	require.Equal(abci.Event(event1), events[7])
+	require.Equal(event1.Type, events[7].Type)
+	for i := range event1.Attributes {
+		require.Equal(event1.Attributes[i].Key, events[7].Attributes[i].Key)
+		require.Equal(event1.Attributes[i].Value, events[7].Attributes[i].Value)
+	}
 }
 
 func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
@@ -1453,32 +1457,40 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	events = ctx.EventManager().ABCIEvents()
 	require.Equal(25, len(events)) // 25 due to account funding + coin_spent + coin_recv events
 
-	event1 := sdk.Event{
+	event1 := coreevent.Event{
 		Type:       banktypes.EventTypeTransfer,
-		Attributes: []abci.EventAttribute{},
+		Attributes: []coreevent.Attribute{},
 	}
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: acc2StrAddr},
+		coreevent.Attribute{Key: banktypes.AttributeKeyRecipient, Value: acc2StrAddr},
 	)
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()})
-	event2 := sdk.Event{
+		coreevent.Attribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()})
+	event2 := coreevent.Event{
 		Type:       banktypes.EventTypeTransfer,
-		Attributes: []abci.EventAttribute{},
+		Attributes: []coreevent.Attribute{},
 	}
 	event2.Attributes = append(
 		event2.Attributes,
-		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: acc3StrAddr},
+		coreevent.Attribute{Key: banktypes.AttributeKeyRecipient, Value: acc3StrAddr},
 	)
 	event2.Attributes = append(
 		event2.Attributes,
-		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins2.String()},
+		coreevent.Attribute{Key: sdk.AttributeKeyAmount, Value: newCoins2.String()},
 	)
 	// events are shifted due to the funding account events
-	require.Equal(abci.Event(event1), events[22])
-	require.Equal(abci.Event(event2), events[24])
+	require.Equal(event1.Type, events[22].Type)
+	for i := range event1.Attributes {
+		require.Equal(event1.Attributes[i].Key, events[22].Attributes[i].Key)
+		require.Equal(event1.Attributes[i].Value, events[22].Attributes[i].Value)
+	}
+	require.Equal(event2.Type, events[24].Type)
+	for i := range event2.Attributes {
+		require.Equal(event2.Attributes[i].Key, events[24].Attributes[i].Key)
+		require.Equal(event2.Attributes[i].Value, events[24].Attributes[i].Value)
+	}
 }
 
 func (suite *KeeperTestSuite) TestSpendableCoins() {

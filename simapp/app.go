@@ -337,7 +337,7 @@ func NewSimApp(
 
 	options := map[string]map[string]string{
 		"Send": {
-			"BlockedAddresses": "cosmos1rnr5jrt4exl0samwj0yegv99jeskl0hsge5zwt",
+			"BlockedAddresses": "cosmos1rnr5jrt4exl0samwj0yegv99jeskl0hsge5zwt,cosmos1rnr5jrt4exl0samwj0yegv99jeskl0hsge5zwt",
 			"SpendLimit":       "1000stake",
 		},
 		"Generic": {

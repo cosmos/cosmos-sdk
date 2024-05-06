@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"context"
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	tx2 "cosmossdk.io/client/v2/internal/tx"
+	tx2 "cosmossdk.io/client/v2/internal"
 	"cosmossdk.io/client/v2/offchain"
 	"errors"
 	"fmt"

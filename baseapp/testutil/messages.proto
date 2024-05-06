@@ -37,8 +37,8 @@ message MsgCreateKeyValueResponse {}
 message MsgSend {
   option (cosmos.msg.v1.signer) = "from";
 
-  string from = 1;
-  string to = 2;
+  string from   = 1;
+  string to     = 2;
   string amount = 3;
 }
 
@@ -48,7 +48,7 @@ message MsgNestedMessages {
   option (cosmos.msg.v1.signer) = "signer";
 
   repeated google.protobuf.Any messages = 1;
-  string signer = 2;
+  string                       signer   = 2;
 }
 
 message MsgCreateNestedMessagesResponse {}

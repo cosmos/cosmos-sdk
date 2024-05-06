@@ -2,6 +2,7 @@ package testutil
 
 import (
 	errorsmod "cosmossdk.io/errors"
+
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/codec"

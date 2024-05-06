@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"net/url"
 	"reflect"
 	"strconv"
@@ -33,6 +32,7 @@ import (
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -380,7 +380,6 @@ func wonkyMsg(t *testing.T, cfg client.TxConfig, tx signing.Tx) signing.Tx {
 type SendServerImpl struct{}
 
 func (s SendServerImpl) Send(ctx context.Context, send *baseapptestutil.MsgSend) (*baseapptestutil.MsgSendResponse, error) {
-
 	if send.From == "" {
 		return nil, errors.New("from address cannot be empty")
 	}
@@ -396,8 +395,7 @@ func (s SendServerImpl) Send(ctx context.Context, send *baseapptestutil.MsgSend)
 	return &baseapptestutil.MsgSendResponse{}, nil
 }
 
-type NesteMessgesServerImpl struct {
-}
+type NesteMessgesServerImpl struct{}
 
 func (n NesteMessgesServerImpl) Check(ctx context.Context, message *baseapptestutil.MsgNestedMessages) (*baseapptestutil.MsgCreateNestedMessagesResponse, error) {
 	cdc := codectestutil.CodecOptions{}.NewCodec()

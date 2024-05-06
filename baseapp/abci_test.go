@@ -34,6 +34,7 @@ import (
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth/signing"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
@@ -871,7 +872,6 @@ func TestABCI_Query_SimulateNestedMessagesTx(t *testing.T) {
 				require.NoError(t, err)
 				require.NotNil(t, result)
 			}
-
 		})
 	}
 }

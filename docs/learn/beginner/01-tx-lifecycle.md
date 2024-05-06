@@ -75,7 +75,7 @@ The function `BroadcastTx` in `client/tx/tx.go` demonstrates how a transaction i
 ```go
 res, err := clientCtx.BroadcastTx(txBytes)
 if err != nil {
-	return err
+ return err
 }
 ```
 
@@ -106,9 +106,9 @@ Each transaction contains one or more messages (`sdk.Msg`), and each message has
 The BaseApp holds a `MsgServiceRouter` which maps each message type to a specific module's handler. When a transaction is processed, `BaseApp` uses this router to direct the message to the correct module.
 
 
-###	Example of Routing
+### Example of Routing
 
-Let's say there is a transaction that involves transferring tokens. The message type might be `MsgSend`, and the `MsgServiceRouter` in `BaseApp` would route this message to the bank module's handler. The bank module would then validate the transaction details (like sender balance) and update the state to reflect the transfer if valid..
+Let's say there is a transaction that involves transferring tokens. The message type might be `MsgSend`, and the `MsgServiceRouter` in `BaseApp` would route this message to the bank module's handler. The bank module would then validate the transaction details (like sender balance) and update the state to reflect the transfer if valid...
 
 ### Module Execution
 

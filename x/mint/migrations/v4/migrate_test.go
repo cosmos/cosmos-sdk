@@ -7,11 +7,11 @@ import (
 
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
+	v4 "cosmossdk.io/x/mint/migrations/v4"
 	"cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
 )
 
 func TestMigrateStore(t *testing.T) {
@@ -25,7 +25,7 @@ func TestMigrateStore(t *testing.T) {
 	require.NoError(t, err)
 
 	// Run migrations.
-	err = v3.MigrateStore(ctx, lastReductionEpoch)
+	err = v4.MigrateStore(ctx, lastReductionEpoch)
 	require.NoError(t, err)
 
 	newLastReductionEpoch, err := lastReductionEpoch.Get(ctx)

@@ -3,15 +3,16 @@ package context
 import (
 	"fmt"
 
-	"cosmossdk.io/log"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"cosmossdk.io/log"
 )
 
 const ServerContextKey ContextKey = "server-ctx"
 
-type ServerContext interface{
+type ServerContext interface {
 	GetLogger() log.Logger
 	GetViper() *viper.Viper
 	GetConfig() *cmtcfg.Config

@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 
+	corectx "cosmossdk.io/core/context"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math/unsafe"
 
@@ -23,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	corectx "cosmossdk.io/core/context"
 )
 
 const (

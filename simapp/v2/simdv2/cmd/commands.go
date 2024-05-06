@@ -17,6 +17,7 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
+	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/cometbft"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
@@ -29,10 +30,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-
 	// TODO migrate all server dependencies to server/v2
 	"github.com/cosmos/cosmos-sdk/server"
-	serverv2 "cosmossdk.io/server/v2"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types" // there only ExportedApp consider here
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -95,8 +94,6 @@ func initRootCmd(
 		// pruning.Cmd(newApp),
 		// snapshot.Cmd(newApp),
 	)
-
-	
 
 	err := serverv2.AddCommands(rootCmd, &temporaryTxDecoder{txConfig}, log.NewNopLogger(), tempDir(), newCometBFTServer) // TODO: How to cast from AppModule to ServerModule
 	if err != nil {

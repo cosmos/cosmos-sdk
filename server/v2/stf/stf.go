@@ -87,13 +87,15 @@ func (s STF[T]) DeliverBlock(
 		return nil, nil, fmt.Errorf("unable to set initial header info")
 	}
 
-	consMessagesResponses, err := s.runConsensusMessages(ctx, newState, block.ConsensusMessages, hi)
+	exCtx := s.makeContext(ctx, appmanager.ConsensusIdentity, newState, corecontext.ExecModeFinalize)
+	exCtx.setHeaderInfo(hi)
+	consMessagesResponses, err := s.runConsensusMessages(exCtx, newState, block.ConsensusMessages, hi)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to execute consensus messages: %w", err)
 	}
 
 	// pre block is called separate from begin block in order to prepopulate state
-	preBlockEvents, err := s.preBlock(ctx, newState, block.Txs, hi)
+	preBlockEvents, err := s.preBlock(exCtx, newState, block.Txs)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -103,7 +105,7 @@ func (s STF[T]) DeliverBlock(
 	}
 
 	// begin block
-	beginBlockEvents, err := s.beginBlock(ctx, newState, hi)
+	beginBlockEvents, err := s.beginBlock(exCtx, newState)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -124,7 +126,7 @@ func (s STF[T]) DeliverBlock(
 		txResults[i] = s.deliverTx(ctx, newState, txBytes, corecontext.ExecModeFinalize, hi)
 	}
 	// end block
-	endBlockEvents, valset, err := s.endBlock(ctx, newState, hi)
+	endBlockEvents, valset, err := s.endBlock(exCtx, newState)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -196,7 +198,13 @@ func (s STF[T]) validateTx(
 	tx T,
 ) (gasUsed uint64, events []event.Event, err error) {
 	validateState := s.branch(state)
-	validateCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, validateState, gasLimit, corecontext.ExecModeCheck)
+	hi, err := s.getHeaderInfo(validateState)
+	if err != nil {
+		return 0, nil, err
+	}
+	validateCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, validateState, corecontext.ExecModeCheck)
+	validateCtx.setHeaderInfo(hi)
+	validateCtx.setGasLimit(s.getGasMeter, gasLimit)
 	err = s.doTxValidation(validateCtx, tx)
 	if err != nil {
 		return 0, nil, err
@@ -223,7 +231,7 @@ func (s STF[T]) execTx(
 		// in case of error during message execution, we do not apply the exec state.
 		// instead we run the post exec handler in a new branch from the initial state.
 		postTxState := s.branch(state)
-		postTxCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, postTxState, gas.NoGasLimit, execMode)
+		postTxCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, postTxState, execMode)
 		postTxCtx.setHeaderInfo(hi)
 
 		// TODO: runtime sets a noop posttxexec if the app doesnt set anything (julien)
@@ -245,7 +253,7 @@ func (s STF[T]) execTx(
 	// tx execution went fine, now we use the same state to run the post tx exec handler,
 	// in case the execution of the post tx fails, then no state change is applied and the
 	// whole execution step is rolled back.
-	postTxCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, execState, gas.NoGasLimit, execMode) // NO gas limit.
+	postTxCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, execState, execMode) // NO gas limit.
 	postTxCtx.setHeaderInfo(hi)
 	postTxErr := s.postTxExec(postTxCtx, tx, true)
 	if postTxErr != nil {
@@ -282,8 +290,9 @@ func (s STF[T]) runTxMsgs(
 	}
 	msgResps := make([]transaction.Type, len(msgs))
 
-	execCtx := s.makeContext(ctx, nil, state, gasLimit, execMode)
+	execCtx := s.makeContext(ctx, nil, state, execMode)
 	execCtx.setHeaderInfo(hi)
+	execCtx.setGasLimit(s.getGasMeter, gasLimit)
 	for i, msg := range msgs {
 		execCtx.sender = txSenders[i]
 		resp, err := s.handleMsg(execCtx, msg)
@@ -298,39 +307,34 @@ func (s STF[T]) runTxMsgs(
 }
 
 func (s STF[T]) preBlock(
-	ctx context.Context,
+	ctx *executionContext,
 	state store.WriterMap,
 	txs []T,
-	hi header.Info,
 ) ([]event.Event, error) {
-	pbCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, state, gas.NoGasLimit, corecontext.ExecModeFinalize)
-	pbCtx.setHeaderInfo(hi)
-	err := s.doPreBlock(pbCtx, txs)
+	err := s.doPreBlock(ctx, txs)
 	if err != nil {
 		return nil, err
 	}
 
-	for i, e := range pbCtx.events {
-		pbCtx.events[i].Attributes = append(
+	for i, e := range ctx.events {
+		ctx.events[i].Attributes = append(
 			e.Attributes,
 			event.Attribute{Key: "mode", Value: "PreBlock"},
 		)
 	}
 
-	return pbCtx.events, nil
+	return ctx.events, nil
 }
 
 func (s STF[T]) runConsensusMessages(
-	ctx context.Context,
+	ctx *executionContext,
 	state store.WriterMap,
 	messages []transaction.Type,
 	hi header.Info,
 ) ([]transaction.Type, error) {
-	cmCtx := s.makeContext(ctx, appmanager.ConsensusIdentity, state, gas.NoGasLimit, corecontext.ExecModeFinalize)
-	cmCtx.setHeaderInfo(hi)
 	responses := make([]transaction.Type, len(messages))
 	for i := range messages {
-		resp, err := s.handleMsg(cmCtx, messages[i])
+		resp, err := s.handleMsg(ctx, messages[i])
 		if err != nil {
 			return nil, err
 		}
@@ -341,69 +345,60 @@ func (s STF[T]) runConsensusMessages(
 }
 
 func (s STF[T]) beginBlock(
-	ctx context.Context,
+	ctx *executionContext,
 	state store.WriterMap,
-	hi header.Info,
 ) (beginBlockEvents []event.Event, err error) {
-	bbCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, state, gas.NoGasLimit, corecontext.ExecModeFinalize)
-	bbCtx.setHeaderInfo(hi)
-	err = s.doBeginBlock(bbCtx)
+	err = s.doBeginBlock(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	for i, e := range bbCtx.events {
-		bbCtx.events[i].Attributes = append(
+	for i, e := range ctx.events {
+		ctx.events[i].Attributes = append(
 			e.Attributes,
 			event.Attribute{Key: "mode", Value: "BeginBlock"},
 		)
 	}
 
-	return bbCtx.events, nil
+	return ctx.events, nil
 }
 
 func (s STF[T]) endBlock(
-	ctx context.Context,
+	ctx *executionContext,
 	state store.WriterMap,
-	hi header.Info,
 ) ([]event.Event, []appmodulev2.ValidatorUpdate, error) {
-	ebCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, state, gas.NoGasLimit, corecontext.ExecModeFinalize)
-	ebCtx.setHeaderInfo(hi)
-	err := s.doEndBlock(ebCtx)
+	err := s.doEndBlock(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	events, valsetUpdates, err := s.validatorUpdates(ctx, state, hi)
+	events, valsetUpdates, err := s.validatorUpdates(ctx, state)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	ebCtx.events = append(ebCtx.events, events...)
+	ctx.events = append(ctx.events, events...)
 
-	for i, e := range ebCtx.events {
-		ebCtx.events[i].Attributes = append(
+	for i, e := range ctx.events {
+		ctx.events[i].Attributes = append(
 			e.Attributes,
 			event.Attribute{Key: "mode", Value: "BeginBlock"},
 		)
 	}
 
-	return ebCtx.events, valsetUpdates, nil
+	return ctx.events, valsetUpdates, nil
 }
 
 // validatorUpdates returns the validator updates for the current block. It is called by endBlock after the endblock execution has concluded
 func (s STF[T]) validatorUpdates(
-	ctx context.Context,
+	ctx *executionContext,
 	state store.WriterMap,
-	hi header.Info,
 ) ([]event.Event, []appmodulev2.ValidatorUpdate, error) {
-	ebCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, state, gas.NoGasLimit, corecontext.ExecModeFinalize)
-	ebCtx.setHeaderInfo(hi)
-	valSetUpdates, err := s.doValidatorUpdate(ebCtx)
+	valSetUpdates, err := s.doValidatorUpdate(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
-	return ebCtx.events, valSetUpdates, nil
+	return ctx.events, valSetUpdates, nil
 }
 
 const headerInfoPrefix = 0x0
@@ -485,8 +480,9 @@ func (s STF[T]) Query(
 	if err != nil {
 		return nil, err
 	}
-	queryCtx := s.makeContext(ctx, nil, queryState, gasLimit, corecontext.ExecModeSimulate)
+	queryCtx := s.makeContext(ctx, nil, queryState, corecontext.ExecModeSimulate)
 	queryCtx.setHeaderInfo(hi)
+	queryCtx.setGasLimit(s.getGasMeter, gasLimit)
 	return s.handleQuery(queryCtx, req)
 }
 
@@ -504,7 +500,7 @@ func (s STF[T]) RunWithCtx(
 ) (store.WriterMap, error) {
 	branchedState := s.branch(state)
 	// TODO  do we need headerinfo for genesis?
-	stfCtx := s.makeContext(ctx, nil, branchedState, gas.NoGasLimit, corecontext.ExecModeFinalize)
+	stfCtx := s.makeContext(ctx, nil, branchedState, corecontext.ExecModeFinalize)
 	return branchedState, closure(stfCtx)
 }
 
@@ -543,6 +539,11 @@ func (e *executionContext) setHeaderInfo(hi header.Info) {
 	e.headerInfo = hi
 }
 
+// setGasLimit sets the gas limit for the execution context.
+func (e *executionContext) setGasLimit(meter gasMeter, limit uint64) {
+	e.meter = meter(limit)
+}
+
 // TODO: too many calls to makeContext can be expensive
 // makeContext creates and returns a new execution context for the STF[T] type.
 // It takes in the following parameters:
@@ -557,10 +558,9 @@ func (s STF[T]) makeContext(
 	ctx context.Context,
 	sender transaction.Identity,
 	store store.WriterMap,
-	gasLimit uint64,
 	execMode corecontext.ExecMode,
 ) *executionContext {
-	meter := s.getGasMeter(gasLimit)
+	meter := s.getGasMeter(gas.NoGasLimit)
 	store = s.wrapWithGasMeter(meter, store)
 	return &executionContext{
 		Context:    ctx,

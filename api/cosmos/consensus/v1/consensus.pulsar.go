@@ -2,7 +2,7 @@
 package consensusv1
 
 import (
-	types "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/types"
+	v1 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/types/v1"
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -20,6 +20,8 @@ var (
 	fd_ConsensusMsgParams_evidence  protoreflect.FieldDescriptor
 	fd_ConsensusMsgParams_validator protoreflect.FieldDescriptor
 	fd_ConsensusMsgParams_abci      protoreflect.FieldDescriptor
+	fd_ConsensusMsgParams_synchrony protoreflect.FieldDescriptor
+	fd_ConsensusMsgParams_feature   protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -30,6 +32,8 @@ func init() {
 	fd_ConsensusMsgParams_evidence = md_ConsensusMsgParams.Fields().ByName("evidence")
 	fd_ConsensusMsgParams_validator = md_ConsensusMsgParams.Fields().ByName("validator")
 	fd_ConsensusMsgParams_abci = md_ConsensusMsgParams.Fields().ByName("abci")
+	fd_ConsensusMsgParams_synchrony = md_ConsensusMsgParams.Fields().ByName("synchrony")
+	fd_ConsensusMsgParams_feature = md_ConsensusMsgParams.Fields().ByName("feature")
 }
 
 var _ protoreflect.Message = (*fastReflection_ConsensusMsgParams)(nil)
@@ -127,6 +131,18 @@ func (x *fastReflection_ConsensusMsgParams) Range(f func(protoreflect.FieldDescr
 			return
 		}
 	}
+	if x.Synchrony != nil {
+		value := protoreflect.ValueOfMessage(x.Synchrony.ProtoReflect())
+		if !f(fd_ConsensusMsgParams_synchrony, value) {
+			return
+		}
+	}
+	if x.Feature != nil {
+		value := protoreflect.ValueOfMessage(x.Feature.ProtoReflect())
+		if !f(fd_ConsensusMsgParams_feature, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -152,6 +168,10 @@ func (x *fastReflection_ConsensusMsgParams) Has(fd protoreflect.FieldDescriptor)
 		return x.Validator != nil
 	case "cosmos.consensus.v1.ConsensusMsgParams.abci":
 		return x.Abci != nil
+	case "cosmos.consensus.v1.ConsensusMsgParams.synchrony":
+		return x.Synchrony != nil
+	case "cosmos.consensus.v1.ConsensusMsgParams.feature":
+		return x.Feature != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgParams"))
@@ -178,6 +198,10 @@ func (x *fastReflection_ConsensusMsgParams) Clear(fd protoreflect.FieldDescripto
 		x.Validator = nil
 	case "cosmos.consensus.v1.ConsensusMsgParams.abci":
 		x.Abci = nil
+	case "cosmos.consensus.v1.ConsensusMsgParams.synchrony":
+		x.Synchrony = nil
+	case "cosmos.consensus.v1.ConsensusMsgParams.feature":
+		x.Feature = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgParams"))
@@ -209,6 +233,12 @@ func (x *fastReflection_ConsensusMsgParams) Get(descriptor protoreflect.FieldDes
 	case "cosmos.consensus.v1.ConsensusMsgParams.abci":
 		value := x.Abci
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "cosmos.consensus.v1.ConsensusMsgParams.synchrony":
+		value := x.Synchrony
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "cosmos.consensus.v1.ConsensusMsgParams.feature":
+		value := x.Feature
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgParams"))
@@ -230,15 +260,19 @@ func (x *fastReflection_ConsensusMsgParams) Get(descriptor protoreflect.FieldDes
 func (x *fastReflection_ConsensusMsgParams) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "cosmos.consensus.v1.ConsensusMsgParams.version":
-		x.Version = value.Message().Interface().(*types.VersionParams)
+		x.Version = value.Message().Interface().(*v1.VersionParams)
 	case "cosmos.consensus.v1.ConsensusMsgParams.block":
-		x.Block = value.Message().Interface().(*types.BlockParams)
+		x.Block = value.Message().Interface().(*v1.BlockParams)
 	case "cosmos.consensus.v1.ConsensusMsgParams.evidence":
-		x.Evidence = value.Message().Interface().(*types.EvidenceParams)
+		x.Evidence = value.Message().Interface().(*v1.EvidenceParams)
 	case "cosmos.consensus.v1.ConsensusMsgParams.validator":
-		x.Validator = value.Message().Interface().(*types.ValidatorParams)
+		x.Validator = value.Message().Interface().(*v1.ValidatorParams)
 	case "cosmos.consensus.v1.ConsensusMsgParams.abci":
-		x.Abci = value.Message().Interface().(*types.ABCIParams)
+		x.Abci = value.Message().Interface().(*v1.ABCIParams)
+	case "cosmos.consensus.v1.ConsensusMsgParams.synchrony":
+		x.Synchrony = value.Message().Interface().(*v1.SynchronyParams)
+	case "cosmos.consensus.v1.ConsensusMsgParams.feature":
+		x.Feature = value.Message().Interface().(*v1.FeatureParams)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgParams"))
@@ -261,29 +295,39 @@ func (x *fastReflection_ConsensusMsgParams) Mutable(fd protoreflect.FieldDescrip
 	switch fd.FullName() {
 	case "cosmos.consensus.v1.ConsensusMsgParams.version":
 		if x.Version == nil {
-			x.Version = new(types.VersionParams)
+			x.Version = new(v1.VersionParams)
 		}
 		return protoreflect.ValueOfMessage(x.Version.ProtoReflect())
 	case "cosmos.consensus.v1.ConsensusMsgParams.block":
 		if x.Block == nil {
-			x.Block = new(types.BlockParams)
+			x.Block = new(v1.BlockParams)
 		}
 		return protoreflect.ValueOfMessage(x.Block.ProtoReflect())
 	case "cosmos.consensus.v1.ConsensusMsgParams.evidence":
 		if x.Evidence == nil {
-			x.Evidence = new(types.EvidenceParams)
+			x.Evidence = new(v1.EvidenceParams)
 		}
 		return protoreflect.ValueOfMessage(x.Evidence.ProtoReflect())
 	case "cosmos.consensus.v1.ConsensusMsgParams.validator":
 		if x.Validator == nil {
-			x.Validator = new(types.ValidatorParams)
+			x.Validator = new(v1.ValidatorParams)
 		}
 		return protoreflect.ValueOfMessage(x.Validator.ProtoReflect())
 	case "cosmos.consensus.v1.ConsensusMsgParams.abci":
 		if x.Abci == nil {
-			x.Abci = new(types.ABCIParams)
+			x.Abci = new(v1.ABCIParams)
 		}
 		return protoreflect.ValueOfMessage(x.Abci.ProtoReflect())
+	case "cosmos.consensus.v1.ConsensusMsgParams.synchrony":
+		if x.Synchrony == nil {
+			x.Synchrony = new(v1.SynchronyParams)
+		}
+		return protoreflect.ValueOfMessage(x.Synchrony.ProtoReflect())
+	case "cosmos.consensus.v1.ConsensusMsgParams.feature":
+		if x.Feature == nil {
+			x.Feature = new(v1.FeatureParams)
+		}
+		return protoreflect.ValueOfMessage(x.Feature.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgParams"))
@@ -298,19 +342,25 @@ func (x *fastReflection_ConsensusMsgParams) Mutable(fd protoreflect.FieldDescrip
 func (x *fastReflection_ConsensusMsgParams) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.consensus.v1.ConsensusMsgParams.version":
-		m := new(types.VersionParams)
+		m := new(v1.VersionParams)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.consensus.v1.ConsensusMsgParams.block":
-		m := new(types.BlockParams)
+		m := new(v1.BlockParams)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.consensus.v1.ConsensusMsgParams.evidence":
-		m := new(types.EvidenceParams)
+		m := new(v1.EvidenceParams)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.consensus.v1.ConsensusMsgParams.validator":
-		m := new(types.ValidatorParams)
+		m := new(v1.ValidatorParams)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.consensus.v1.ConsensusMsgParams.abci":
-		m := new(types.ABCIParams)
+		m := new(v1.ABCIParams)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "cosmos.consensus.v1.ConsensusMsgParams.synchrony":
+		m := new(v1.SynchronyParams)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "cosmos.consensus.v1.ConsensusMsgParams.feature":
+		m := new(v1.FeatureParams)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -401,6 +451,14 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 			l = options.Size(x.Abci)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		if x.Synchrony != nil {
+			l = options.Size(x.Synchrony)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Feature != nil {
+			l = options.Size(x.Feature)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -429,6 +487,34 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Feature != nil {
+			encoded, err := options.Marshal(x.Feature)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x3a
+		}
+		if x.Synchrony != nil {
+			encoded, err := options.Marshal(x.Synchrony)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x32
 		}
 		if x.Abci != nil {
 			encoded, err := options.Marshal(x.Abci)
@@ -579,7 +665,7 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Version == nil {
-					x.Version = &types.VersionParams{}
+					x.Version = &v1.VersionParams{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Version); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -615,7 +701,7 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Block == nil {
-					x.Block = &types.BlockParams{}
+					x.Block = &v1.BlockParams{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Block); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -651,7 +737,7 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Evidence == nil {
-					x.Evidence = &types.EvidenceParams{}
+					x.Evidence = &v1.EvidenceParams{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Evidence); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -687,7 +773,7 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Validator == nil {
-					x.Validator = &types.ValidatorParams{}
+					x.Validator = &v1.ValidatorParams{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Validator); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -723,9 +809,81 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Abci == nil {
-					x.Abci = &types.ABCIParams{}
+					x.Abci = &v1.ABCIParams{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Abci); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Synchrony", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Synchrony == nil {
+					x.Synchrony = &v1.SynchronyParams{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Synchrony); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 7:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Feature", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Feature == nil {
+					x.Feature = &v1.FeatureParams{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Feature); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -1144,11 +1302,14 @@ type ConsensusMsgParams struct {
 	// params defines the x/consensus parameters to be passed from comet.
 	//
 	// NOTE: All parameters must be supplied.
-	Version   *types.VersionParams   `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
-	Block     *types.BlockParams     `protobuf:"bytes,2,opt,name=block,proto3" json:"block,omitempty"`
-	Evidence  *types.EvidenceParams  `protobuf:"bytes,3,opt,name=evidence,proto3" json:"evidence,omitempty"`
-	Validator *types.ValidatorParams `protobuf:"bytes,4,opt,name=validator,proto3" json:"validator,omitempty"`
-	Abci      *types.ABCIParams      `protobuf:"bytes,5,opt,name=abci,proto3" json:"abci,omitempty"`
+	Version   *v1.VersionParams   `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
+	Block     *v1.BlockParams     `protobuf:"bytes,2,opt,name=block,proto3" json:"block,omitempty"`
+	Evidence  *v1.EvidenceParams  `protobuf:"bytes,3,opt,name=evidence,proto3" json:"evidence,omitempty"`
+	Validator *v1.ValidatorParams `protobuf:"bytes,4,opt,name=validator,proto3" json:"validator,omitempty"`
+	// Deprecated: Do not use.
+	Abci      *v1.ABCIParams      `protobuf:"bytes,5,opt,name=abci,proto3" json:"abci,omitempty"`
+	Synchrony *v1.SynchronyParams `protobuf:"bytes,6,opt,name=synchrony,proto3" json:"synchrony,omitempty"`
+	Feature   *v1.FeatureParams   `protobuf:"bytes,7,opt,name=feature,proto3" json:"feature,omitempty"`
 }
 
 func (x *ConsensusMsgParams) Reset() {
@@ -1171,37 +1332,52 @@ func (*ConsensusMsgParams) Descriptor() ([]byte, []int) {
 	return file_cosmos_consensus_v1_consensus_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *ConsensusMsgParams) GetVersion() *types.VersionParams {
+func (x *ConsensusMsgParams) GetVersion() *v1.VersionParams {
 	if x != nil {
 		return x.Version
 	}
 	return nil
 }
 
-func (x *ConsensusMsgParams) GetBlock() *types.BlockParams {
+func (x *ConsensusMsgParams) GetBlock() *v1.BlockParams {
 	if x != nil {
 		return x.Block
 	}
 	return nil
 }
 
-func (x *ConsensusMsgParams) GetEvidence() *types.EvidenceParams {
+func (x *ConsensusMsgParams) GetEvidence() *v1.EvidenceParams {
 	if x != nil {
 		return x.Evidence
 	}
 	return nil
 }
 
-func (x *ConsensusMsgParams) GetValidator() *types.ValidatorParams {
+func (x *ConsensusMsgParams) GetValidator() *v1.ValidatorParams {
 	if x != nil {
 		return x.Validator
 	}
 	return nil
 }
 
-func (x *ConsensusMsgParams) GetAbci() *types.ABCIParams {
+// Deprecated: Do not use.
+func (x *ConsensusMsgParams) GetAbci() *v1.ABCIParams {
 	if x != nil {
 		return x.Abci
+	}
+	return nil
+}
+
+func (x *ConsensusMsgParams) GetSynchrony() *v1.SynchronyParams {
+	if x != nil {
+		return x.Synchrony
+	}
+	return nil
+}
+
+func (x *ConsensusMsgParams) GetFeature() *v1.FeatureParams {
+	if x != nil {
+		return x.Feature
 	}
 	return nil
 }
@@ -1240,44 +1416,52 @@ var file_cosmos_consensus_v1_consensus_proto_rawDesc = []byte{
 	0x0a, 0x23, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73,
 	0x75, 0x73, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x13, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f,
-	0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31, 0x1a, 0x1d, 0x74, 0x65, 0x6e, 0x64,
-	0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2f, 0x70, 0x61, 0x72,
-	0x61, 0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xb5, 0x02, 0x0a, 0x12, 0x43, 0x6f,
-	0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x4d, 0x73, 0x67, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
-	0x12, 0x39, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x1f, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x74,
-	0x79, 0x70, 0x65, 0x73, 0x2e, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x61, 0x72, 0x61,
-	0x6d, 0x73, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x33, 0x0a, 0x05, 0x62,
-	0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x74, 0x65, 0x6e,
-	0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x42, 0x6c,
-	0x6f, 0x63, 0x6b, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x05, 0x62, 0x6c, 0x6f, 0x63, 0x6b,
-	0x12, 0x3c, 0x0a, 0x08, 0x65, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x20, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e,
-	0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x50, 0x61,
-	0x72, 0x61, 0x6d, 0x73, 0x52, 0x08, 0x65, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x3f,
-	0x0a, 0x09, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x04, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x21, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x74,
-	0x79, 0x70, 0x65, 0x73, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x50, 0x61,
-	0x72, 0x61, 0x6d, 0x73, 0x52, 0x09, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x12,
-	0x30, 0x0a, 0x04, 0x61, 0x62, 0x63, 0x69, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e,
-	0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73,
-	0x2e, 0x41, 0x42, 0x43, 0x49, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x04, 0x61, 0x62, 0x63,
-	0x69, 0x22, 0x1c, 0x0a, 0x1a, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x4d, 0x73,
-	0x67, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42,
-	0xc9, 0x01, 0x0a, 0x17, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63,
-	0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31, 0x42, 0x0e, 0x43, 0x6f, 0x6e,
-	0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73,
-	0x2f, 0x76, 0x31, 0x3b, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x76, 0x31, 0xa2,
-	0x02, 0x03, 0x43, 0x43, 0x58, 0xaa, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x43,
-	0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x13, 0x43, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x5c, 0x56,
-	0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x43, 0x6f, 0x6e, 0x73, 0x65,
-	0x6e, 0x73, 0x75, 0x73, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64,
-	0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x43, 0x6f,
-	0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31, 0x1a, 0x1e, 0x63, 0x6f, 0x6d, 0x65,
+	0x74, 0x62, 0x66, 0x74, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2f, 0x76, 0x31, 0x2f, 0x70, 0x61,
+	0x72, 0x61, 0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xbc, 0x03, 0x0a, 0x12, 0x43,
+	0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x4d, 0x73, 0x67, 0x50, 0x61, 0x72, 0x61, 0x6d,
+	0x73, 0x12, 0x3a, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x20, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79,
+	0x70, 0x65, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x61,
+	0x72, 0x61, 0x6d, 0x73, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x34, 0x0a,
+	0x05, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63,
+	0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x76, 0x31,
+	0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x05, 0x62, 0x6c,
+	0x6f, 0x63, 0x6b, 0x12, 0x3d, 0x0a, 0x08, 0x65, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74,
+	0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e,
+	0x63, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x08, 0x65, 0x76, 0x69, 0x64, 0x65, 0x6e,
+	0x63, 0x65, 0x12, 0x40, 0x0a, 0x09, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x18,
+	0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74,
+	0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61,
+	0x74, 0x6f, 0x72, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x09, 0x76, 0x61, 0x6c, 0x69, 0x64,
+	0x61, 0x74, 0x6f, 0x72, 0x12, 0x35, 0x0a, 0x04, 0x61, 0x62, 0x63, 0x69, 0x18, 0x05, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79,
+	0x70, 0x65, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x41, 0x42, 0x43, 0x49, 0x50, 0x61, 0x72, 0x61, 0x6d,
+	0x73, 0x42, 0x02, 0x18, 0x01, 0x52, 0x04, 0x61, 0x62, 0x63, 0x69, 0x12, 0x40, 0x0a, 0x09, 0x73,
+	0x79, 0x6e, 0x63, 0x68, 0x72, 0x6f, 0x6e, 0x79, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22,
+	0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e,
+	0x76, 0x31, 0x2e, 0x53, 0x79, 0x6e, 0x63, 0x68, 0x72, 0x6f, 0x6e, 0x79, 0x50, 0x61, 0x72, 0x61,
+	0x6d, 0x73, 0x52, 0x09, 0x73, 0x79, 0x6e, 0x63, 0x68, 0x72, 0x6f, 0x6e, 0x79, 0x12, 0x3a, 0x0a,
+	0x07, 0x66, 0x65, 0x61, 0x74, 0x75, 0x72, 0x65, 0x18, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20,
+	0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e,
+	0x76, 0x31, 0x2e, 0x46, 0x65, 0x61, 0x74, 0x75, 0x72, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
+	0x52, 0x07, 0x66, 0x65, 0x61, 0x74, 0x75, 0x72, 0x65, 0x22, 0x1c, 0x0a, 0x1a, 0x43, 0x6f, 0x6e,
+	0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x4d, 0x73, 0x67, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0xc9, 0x01, 0x0a, 0x17, 0x63, 0x6f, 0x6d, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73,
+	0x2e, 0x76, 0x31, 0x42, 0x0e, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x50, 0x72,
+	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b,
+	0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63,
+	0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2f, 0x76, 0x31, 0x3b, 0x63, 0x6f, 0x6e, 0x73,
+	0x65, 0x6e, 0x73, 0x75, 0x73, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x43, 0x58, 0xaa, 0x02, 0x13,
+	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73,
+	0x2e, 0x56, 0x31, 0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x43, 0x6f, 0x6e,
+	0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x5c, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x5c, 0x56, 0x31, 0x5c,
+	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x3a,
+	0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1296,23 +1480,27 @@ var file_cosmos_consensus_v1_consensus_proto_msgTypes = make([]protoimpl.Message
 var file_cosmos_consensus_v1_consensus_proto_goTypes = []interface{}{
 	(*ConsensusMsgParams)(nil),         // 0: cosmos.consensus.v1.ConsensusMsgParams
 	(*ConsensusMsgParamsResponse)(nil), // 1: cosmos.consensus.v1.ConsensusMsgParamsResponse
-	(*types.VersionParams)(nil),        // 2: tendermint.types.VersionParams
-	(*types.BlockParams)(nil),          // 3: tendermint.types.BlockParams
-	(*types.EvidenceParams)(nil),       // 4: tendermint.types.EvidenceParams
-	(*types.ValidatorParams)(nil),      // 5: tendermint.types.ValidatorParams
-	(*types.ABCIParams)(nil),           // 6: tendermint.types.ABCIParams
+	(*v1.VersionParams)(nil),           // 2: cometbft.types.v1.VersionParams
+	(*v1.BlockParams)(nil),             // 3: cometbft.types.v1.BlockParams
+	(*v1.EvidenceParams)(nil),          // 4: cometbft.types.v1.EvidenceParams
+	(*v1.ValidatorParams)(nil),         // 5: cometbft.types.v1.ValidatorParams
+	(*v1.ABCIParams)(nil),              // 6: cometbft.types.v1.ABCIParams
+	(*v1.SynchronyParams)(nil),         // 7: cometbft.types.v1.SynchronyParams
+	(*v1.FeatureParams)(nil),           // 8: cometbft.types.v1.FeatureParams
 }
 var file_cosmos_consensus_v1_consensus_proto_depIdxs = []int32{
-	2, // 0: cosmos.consensus.v1.ConsensusMsgParams.version:type_name -> tendermint.types.VersionParams
-	3, // 1: cosmos.consensus.v1.ConsensusMsgParams.block:type_name -> tendermint.types.BlockParams
-	4, // 2: cosmos.consensus.v1.ConsensusMsgParams.evidence:type_name -> tendermint.types.EvidenceParams
-	5, // 3: cosmos.consensus.v1.ConsensusMsgParams.validator:type_name -> tendermint.types.ValidatorParams
-	6, // 4: cosmos.consensus.v1.ConsensusMsgParams.abci:type_name -> tendermint.types.ABCIParams
-	5, // [5:5] is the sub-list for method output_type
-	5, // [5:5] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	2, // 0: cosmos.consensus.v1.ConsensusMsgParams.version:type_name -> cometbft.types.v1.VersionParams
+	3, // 1: cosmos.consensus.v1.ConsensusMsgParams.block:type_name -> cometbft.types.v1.BlockParams
+	4, // 2: cosmos.consensus.v1.ConsensusMsgParams.evidence:type_name -> cometbft.types.v1.EvidenceParams
+	5, // 3: cosmos.consensus.v1.ConsensusMsgParams.validator:type_name -> cometbft.types.v1.ValidatorParams
+	6, // 4: cosmos.consensus.v1.ConsensusMsgParams.abci:type_name -> cometbft.types.v1.ABCIParams
+	7, // 5: cosmos.consensus.v1.ConsensusMsgParams.synchrony:type_name -> cometbft.types.v1.SynchronyParams
+	8, // 6: cosmos.consensus.v1.ConsensusMsgParams.feature:type_name -> cometbft.types.v1.FeatureParams
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_consensus_v1_consensus_proto_init() }

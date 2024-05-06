@@ -107,11 +107,11 @@ Minting parameters are recalculated and inflation paid at the beginning of each 
 
 The minting logic in the `BeginBlocker` function provides an optional feature for controlling token minting based on the maximum allowable supply (MaxSupply). This feature allows users to adjust the minting process according to their specific requirements and use cases. However, it's important to note that the MaxSupply parameter is independent of the minting process and assumes that any adjustments to the total supply, including burning tokens, are handled by external modules.
 
-NOTE: Only one of BeginBlock or BeginEpoch hooks should be enabled for minting.
+NOTE: Only one of the BeginBlock or BeginEpoch hooks should be enabled for minting.
 
 ### Inflation rate calculation
 
-Inflation rate is calculated using an "inflation calculation function" that's
+The inflation rate is calculated using an "inflation calculation function" that's
 passed to the `NewAppModule` function. If no function is passed, then the SDK's
 default inflation function will be used (`NextInflationRate`). In case a custom
 inflation calculation logic is needed, this can be achieved by defining and

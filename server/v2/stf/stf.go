@@ -93,6 +93,8 @@ func (s STF[T]) DeliverBlock(
 		return nil, nil, fmt.Errorf("failed to execute consensus messages: %w", err)
 	}
 
+	// reset events
+	exCtx.events = nil
 	// pre block is called separate from begin block in order to prepopulate state
 	preBlockEvents, err := s.preBlock(exCtx, block.Txs)
 	if err != nil {
@@ -103,6 +105,8 @@ func (s STF[T]) DeliverBlock(
 		return nil, nil, err
 	}
 
+	// reset events
+	exCtx.events = nil
 	// begin block
 	beginBlockEvents, err := s.beginBlock(exCtx)
 	if err != nil {
@@ -124,6 +128,8 @@ func (s STF[T]) DeliverBlock(
 		}
 		txResults[i] = s.deliverTx(ctx, newState, txBytes, corecontext.ExecModeFinalize, hi)
 	}
+	// reset events
+	exCtx.events = nil
 	// end block
 	endBlockEvents, valset, err := s.endBlock(exCtx)
 	if err != nil {

@@ -7,7 +7,6 @@ import (
 
 	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/branch"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
@@ -31,7 +30,7 @@ type STF[T transaction.Tx] struct {
 	doTxValidation func(ctx context.Context, tx T) error
 	postTxExec     func(ctx context.Context, tx T, success bool) error
 
-	branch           branchdb // branch is a function that given a readonly state it returns a writable version of it.
+	branch           branchFn // branch is a function that given a readonly state it returns a writable version of it.
 	getGasMeter      gasMeter
 	wrapWithGasMeter wrapGasMeter
 }
@@ -58,7 +57,7 @@ func NewSTF[T transaction.Tx](
 		doValidatorUpdate: doValidatorUpdate,
 		postTxExec:        postTxExec, // TODO
 		branch:            branch,
-		getGasMeter:       stfgas.DefaultGasMeter,         //TODO replacable?
+		getGasMeter:       stfgas.DefaultGasMeter,         // TODO replacable?
 		wrapWithGasMeter:  stfgas.DefaultWrapWithGasMeter, // TODO replacable?
 	}
 }
@@ -533,9 +532,10 @@ type executionContext struct {
 	meter      gas.Meter
 	events     []event.Event
 	sender     transaction.Identity
-	branchdb   branch.Service
 	headerInfo header.Info
 	execMode   corecontext.ExecMode
+
+	branchFn branchFn
 }
 
 // setHeaderInfo sets the header info in the state to be used by queries in the future.
@@ -548,7 +548,7 @@ func (e *executionContext) setHeaderInfo(hi header.Info) {
 // It takes in the following parameters:
 // - ctx: The context.Context object for the execution.
 // - sender: The transaction.Identity object representing the sender of the transaction.
-// - store: The store.WriterMap object for accessing and modifying the state.
+// - state: The store.WriterMap object for accessing and modifying the state.
 // - gasLimit: The maximum amount of gas allowed for the execution.
 // - execMode: The corecontext.ExecMode object representing the execution mode.
 //
@@ -556,21 +556,22 @@ func (e *executionContext) setHeaderInfo(hi header.Info) {
 func (s STF[T]) makeContext(
 	ctx context.Context,
 	sender transaction.Identity,
-	store store.WriterMap,
+	state store.WriterMap,
 	gasLimit uint64,
 	execMode corecontext.ExecMode,
 ) *executionContext {
 	meter := s.getGasMeter(gasLimit)
-	store = s.wrapWithGasMeter(meter, store)
+	meteredState := s.wrapWithGasMeter(meter, state)
 	return &executionContext{
 		Context:    ctx,
-		state:      store,
+		state:      meteredState,
 		meter:      meter,
 		events:     make([]event.Event, 0),
 		sender:     sender,
-		branchdb:   BrachService{s.branch},
 		headerInfo: header.Info{},
 		execMode:   execMode,
+
+		branchFn: s.branch,
 	}
 }
 

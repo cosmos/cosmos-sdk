@@ -49,7 +49,6 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 				// Prepare a valid budget proposal
 				budget := types.Budget{
 					RecipientAddress: recipientStrAddr,
-					TotalBudget:      &fooCoin,
 					LastClaimedAt:    &startTime,
 					TranchesLeft:     2,
 					Period:           &period,
@@ -64,7 +63,6 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 			expErr:         false,
 			unclaimedFunds: &fooCoin,
 			resp: &types.QueryUnclaimedBudgetResponse{
-				TotalBudget:     &fooCoin,
 				ClaimedAmount:   &zeroCoin,
 				UnclaimedAmount: &fooCoin,
 				NextClaimFrom:   &nextClaimFrom,
@@ -78,7 +76,6 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 				// Prepare a valid budget proposal
 				budget := types.Budget{
 					RecipientAddress: recipientStrAddr,
-					TotalBudget:      &fooCoin,
 					LastClaimedAt:    &startTime,
 					TranchesLeft:     2,
 					Period:           &period,
@@ -102,7 +99,6 @@ func (suite *KeeperTestSuite) TestUnclaimedBudget() {
 			expErr:         false,
 			unclaimedFunds: &fooCoin2,
 			resp: &types.QueryUnclaimedBudgetResponse{
-				TotalBudget:     &fooCoin,
 				ClaimedAmount:   &fooCoin2,
 				UnclaimedAmount: &fooCoin2,
 				NextClaimFrom:   &secondClaimFrom,

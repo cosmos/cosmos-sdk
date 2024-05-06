@@ -82,7 +82,6 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 		}
 		budget = append(budget, &types.Budget{
 			RecipientAddress: recipient,
-			TotalBudget:      value.TotalBudget,
 			ClaimedAmount:    value.ClaimedAmount,
 			LastClaimedAt:    value.LastClaimedAt,
 			TranchesLeft:     value.TranchesLeft,

@@ -80,12 +80,12 @@ message MsgSubmitBudgetProposal {
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // RecipientAddress is the address of the recipient who can claim the budget.
   string recipient_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // TotalBudget is the total amount allocated for the budget.
-  cosmos.base.v1beta1.Coin total_budget = 3;
+  // BudgetPerTranche is the amount allocated per tranche.
+  cosmos.base.v1beta1.Coin budget_per_tranche = 3;
   // StartTime is the time when the budget becomes claimable.
   // If StartTime is less than the current block time, proposal will not be accepted.
   google.protobuf.Timestamp start_time = 4 [(gogoproto.stdtime) = true];
-  // Tranches is the number of times the total budget amount is to be distributed.
+  // Tranches is the number of times the budget amount is to be distributed.
   uint64 tranches = 5;
   // Period is the time interval(number of seconds) at which funds distribution should be performed.
   // For example, if a period is set to 3600, it represents an action that

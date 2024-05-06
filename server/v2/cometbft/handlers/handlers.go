@@ -22,10 +22,10 @@ type (
 	// VerifyVoteExtensionhandler is a function type that handles the verification of a vote extension request.
 	// It takes a context, a store reader map, and a request to verify a vote extension.
 	// It returns a response to verify the vote extension and an error if any.
-	VerifyVoteExtensionhandler func(context.Context, store.ReaderMap, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
+	VerifyVoteExtensionhandler func(context.Context, store.ReaderMap, *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error)
 
 	// ExtendVoteHandler is a function type that handles the extension of a vote.
 	// It takes a context, a store reader map, and a request to extend a vote.
 	// It returns a response to extend the vote and an error if any.
-	ExtendVoteHandler func(context.Context, store.ReaderMap, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error)
+	ExtendVoteHandler func(context.Context, store.ReaderMap, *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error)
 )

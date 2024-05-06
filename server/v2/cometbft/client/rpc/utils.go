@@ -3,7 +3,7 @@ package rpc
 import (
 	"fmt"
 
-	tmtypes "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/types"
+	v11 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/types/v1"
 	abciv1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -11,8 +11,8 @@ import (
 )
 
 // formatBlockResults parses the indexed blocks into a slice of BlockResponse objects.
-func formatBlockResults(resBlocks []*coretypes.ResultBlock) ([]*tmtypes.Block, error) {
-	out := make([]*tmtypes.Block, len(resBlocks))
+func formatBlockResults(resBlocks []*coretypes.ResultBlock) ([]*v11.Block, error) {
+	out := make([]*v11.Block, len(resBlocks))
 	for i := range resBlocks {
 		out[i] = NewResponseResultBlock(resBlocks[i])
 		if out[i] == nil {
@@ -23,7 +23,7 @@ func formatBlockResults(resBlocks []*coretypes.ResultBlock) ([]*tmtypes.Block, e
 	return out, nil
 }
 
-func NewSearchBlocksResult(totalCount, count, page, limit int64, blocks []*tmtypes.Block) *abciv1beta1.SearchBlocksResult {
+func NewSearchBlocksResult(totalCount, count, page, limit int64, blocks []*v11.Block) *abciv1beta1.SearchBlocksResult {
 	totalPages := calcTotalPages(totalCount, limit)
 	return &abciv1beta1.SearchBlocksResult{
 		TotalCount: totalCount,
@@ -36,7 +36,7 @@ func NewSearchBlocksResult(totalCount, count, page, limit int64, blocks []*tmtyp
 }
 
 // NewResponseResultBlock returns a BlockResponse given a ResultBlock from CometBFT
-func NewResponseResultBlock(res *coretypes.ResultBlock) *tmtypes.Block {
+func NewResponseResultBlock(res *coretypes.ResultBlock) *v11.Block {
 	blkProto, err := res.Block.ToProto()
 	if err != nil {
 		panic(err)
@@ -46,7 +46,7 @@ func NewResponseResultBlock(res *coretypes.ResultBlock) *tmtypes.Block {
 		panic(err)
 	}
 
-	blk := &tmtypes.Block{}
+	blk := &v11.Block{}
 	err = protov2.Unmarshal(blkBz, blk)
 	if err != nil {
 		panic(err)

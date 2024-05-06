@@ -26,7 +26,7 @@ var (
 )
 
 type (
-	abciQueryFn = func(context.Context, *abci.RequestQuery) (*abci.ResponseQuery, error)
+	abciQueryFn = func(context.Context, *abci.QueryRequest) (*abci.QueryResponse, error)
 
 	queryServer struct {
 		client  rpc.CometRPC

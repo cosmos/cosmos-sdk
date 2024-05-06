@@ -35,7 +35,7 @@ func NewDefaultProposalHandler[T transaction.Tx](mp mempool.Mempool[T]) *Default
 
 func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 	return func(ctx context.Context, app AppManager[T], txs []T, req proto.Message) ([]T, error) {
-		abciReq, ok := req.(*abci.RequestPrepareProposal)
+		abciReq, ok := req.(*abci.PrepareProposalRequest)
 		if !ok {
 			return nil, fmt.Errorf("invalid request type: %T", req)
 		}
@@ -111,7 +111,7 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
 			return nil
 		}
 
-		_, ok := req.(*abci.RequestProcessProposal)
+		_, ok := req.(*abci.PrepareProposalRequest)
 		if !ok {
 			return fmt.Errorf("invalid request type: %T", req)
 		}
@@ -173,15 +173,15 @@ func NoOpProcessProposal[T transaction.Tx]() ProcessHandler[T] {
 // NoOpExtendVote defines a no-op ExtendVote handler. It will always return an
 // empty byte slice as the vote extension.
 func NoOpExtendVote() ExtendVoteHandler {
-	return func(context.Context, store.ReaderMap, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
-		return &abci.ResponseExtendVote{VoteExtension: []byte{}}, nil
+	return func(context.Context, store.ReaderMap, *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error) {
+		return &abci.ExtendVoteResponse{VoteExtension: []byte{}}, nil
 	}
 }
 
 // NoOpVerifyVoteExtensionHandler defines a no-op VerifyVoteExtension handler. It
 // will always return an ACCEPT status with no error.
 func NoOpVerifyVoteExtensionHandler() VerifyVoteExtensionhandler {
-	return func(context.Context, store.ReaderMap, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
-		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+	return func(context.Context, store.ReaderMap, *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
+		return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT}, nil
 	}
 }

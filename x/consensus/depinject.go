@@ -35,16 +35,15 @@ type ModuleInputs struct {
 	AddressCodec address.Codec
 }
 
-type Authority string
-
 type ModuleOutputs struct {
 	depinject.Out
 
-	Authority     Authority
 	Keeper        keeper.Keeper
 	Module        appmodule.AppModule
-	BaseAppOption runtime.BaseAppOption // This is only useful for chains using baseapp.
+	BaseAppOption runtime.BaseAppOption
 }
+
+type Authority string
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// default to governance authority if not provided
@@ -68,6 +67,5 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		Keeper:        k,
 		Module:        m,
 		BaseAppOption: baseappOpt,
-		Authority:     Authority(authority.String()),
 	}
 }

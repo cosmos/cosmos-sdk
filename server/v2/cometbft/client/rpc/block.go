@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	tmtypes "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/types"
+	v11 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/types/v1"
 	abciv1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 )
 
@@ -55,7 +55,7 @@ func QueryBlocks(ctx context.Context, rpcClient CometRPC, page, limit int, query
 }
 
 // get block by height
-func GetBlockByHeight(ctx context.Context, rpcClient CometRPC, height *int64) (*tmtypes.Block, error) {
+func GetBlockByHeight(ctx context.Context, rpcClient CometRPC, height *int64) (*v11.Block, error) {
 	// header -> BlockchainInfo
 	// header, tx -> Block
 	// results -> BlockResults
@@ -72,7 +72,7 @@ func GetBlockByHeight(ctx context.Context, rpcClient CometRPC, height *int64) (*
 	return out, nil
 }
 
-func GetBlockByHash(ctx context.Context, rpcClient CometRPC, hashHexString string) (*tmtypes.Block, error) {
+func GetBlockByHash(ctx context.Context, rpcClient CometRPC, hashHexString string) (*v11.Block, error) {
 	hash, err := hex.DecodeString(hashHexString)
 	if err != nil {
 		return nil, err

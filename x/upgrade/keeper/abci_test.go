@@ -16,7 +16,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/upgrade"
-	"cosmossdk.io/x/upgrade/expected"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
 
@@ -557,8 +556,6 @@ func TestDowngradeVerification(t *testing.T) {
 }
 
 type emptyConsensusParams struct{}
-
-var _ expected.ConsensusKeeper = &emptyConsensusParams{}
 
 func (e emptyConsensusParams) GetParams(ctx context.Context) (cmtproto.ConsensusParams, error) {
 	return cmtproto.ConsensusParams{}, nil

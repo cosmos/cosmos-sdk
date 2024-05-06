@@ -30,7 +30,7 @@ import (
 
 func (s *CometBFTServer[T]) rpcClient() (rpc.CometRPC, error) {
 	if s.config.Standalone {
-		client, err := rpchttp.New(s.config.CmtConfig.RPC.ListenAddress, "/websocket")
+		client, err := rpchttp.New(s.config.CmtConfig.RPC.ListenAddress)
 		if err != nil {
 			return nil, err
 		}
@@ -157,7 +157,7 @@ func (s *CometBFTServer[T]) VersionCmd() *cobra.Command {
 				BlockProtocol uint64
 				P2PProtocol   uint64
 			}{
-				CometBFT:      cmtversion.TMCoreSemVer,
+				CometBFT:      cmtversion.CMTSemVer,
 				ABCI:          cmtversion.ABCIVersion,
 				BlockProtocol: cmtversion.BlockProtocol,
 				P2PProtocol:   cmtversion.P2PProtocol,
@@ -403,7 +403,8 @@ func (s *CometBFTServer[T]) BootstrapStateCmd() *cobra.Command {
 				}
 			}
 
-			return node.BootstrapState(cmd.Context(), s.config.CmtConfig, cmtcfg.DefaultDBProvider, height, nil)
+			// TODO genensis doc provider and apphash
+			return node.BootstrapState(cmd.Context(), s.config.CmtConfig, cmtcfg.DefaultDBProvider, nil, height, nil)
 		},
 	}
 

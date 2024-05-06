@@ -64,9 +64,9 @@ import (
 	_ "cosmossdk.io/x/upgrade" // import for side-effects
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
+	_ "cosmossdk.io/x/consensus" // import for side-effects
+	consensustypes "cosmossdk.io/x/consensus/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import for side-effects
-	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 

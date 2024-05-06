@@ -5,13 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	storetypes "cosmossdk.io/store/types"
 	consensusv1 "cosmossdk.io/x/consensus/types"
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	consensusv1 "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 // PreBlocker will check if there is a scheduled plan and if it is ready to be executed.

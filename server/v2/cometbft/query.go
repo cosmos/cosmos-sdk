@@ -5,14 +5,14 @@ import (
 	"strings"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/proto/tendermint/crypto"
+	crypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/server/v2/cometbft/types"
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 )
 
-func (c *Consensus[T]) handleQueryP2P(path []string) (*abci.ResponseQuery, error) {
+func (c *Consensus[T]) handleQueryP2P(path []string) (*abci.QueryResponse, error) {
 	// "/p2p" prefix for p2p queries
 	if len(path) < 4 {
 		return nil, errorsmod.Wrap(cometerrors.ErrUnknownRequest, "path should be p2p filter <addr|id> <parameter>")
@@ -44,7 +44,7 @@ func (c *Consensus[T]) handleQueryP2P(path []string) (*abci.ResponseQuery, error
 // simulates the transaction using the application, and returns the simulation result.
 // If the second element is 'version', it returns the version of the application.
 // If the second element is neither 'simulate' nor 'version', it returns an error indicating an unknown query.
-func (c *Consensus[T]) handlerQueryApp(ctx context.Context, path []string, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
+func (c *Consensus[T]) handlerQueryApp(ctx context.Context, path []string, req *abci.QueryRequest) (*abci.QueryResponse, error) {
 	if len(path) < 2 {
 		return nil, errorsmod.Wrap(
 			cometerrors.ErrUnknownRequest,
@@ -69,14 +69,14 @@ func (c *Consensus[T]) handlerQueryApp(ctx context.Context, path []string, req *
 			return nil, errorsmod.Wrap(err, "failed to marshal txResult")
 		}
 
-		return &abci.ResponseQuery{
+		return &abci.QueryResponse{
 			Codespace: cometerrors.RootCodespace,
 			Value:     bz,
 			Height:    req.Height,
 		}, nil
 
 	case "version":
-		return &abci.ResponseQuery{
+		return &abci.QueryResponse{
 			Codespace: cometerrors.RootCodespace,
 			Value:     []byte(c.cfg.Version),
 			Height:    req.Height,
@@ -86,7 +86,7 @@ func (c *Consensus[T]) handlerQueryApp(ctx context.Context, path []string, req *
 	return nil, errorsmod.Wrapf(cometerrors.ErrUnknownRequest, "unknown query: %s", path)
 }
 
-func (c *Consensus[T]) handleQueryStore(path []string, st types.Store, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
+func (c *Consensus[T]) handleQueryStore(path []string, st types.Store, req *abci.QueryRequest) (*abci.QueryResponse, error) {
 	req.Path = "/" + strings.Join(path[1:], "/")
 	if req.Height <= 1 && req.Prove {
 		return nil, errorsmod.Wrap(
@@ -103,7 +103,7 @@ func (c *Consensus[T]) handleQueryStore(path []string, st types.Store, req *abci
 		return nil, err
 	}
 
-	res := &abci.ResponseQuery{
+	res := &abci.QueryResponse{
 		Codespace: cometerrors.RootCodespace,
 		Height:    int64(qRes.Version),
 		Key:       qRes.Key,

@@ -72,7 +72,7 @@ func TestConsensus(t *testing.T) {
 	c := NewConsensus[mock.Tx](am, mempool.NoOpMempool[mock.Tx]{}, mockStore, Config{}, mock.TxCodec{}, nil)
 
 	t.Run("Check tx basic", func(t *testing.T) {
-		res, err := c.CheckTx(context.Background(), &abci.RequestCheckTx{
+		res, err := c.CheckTx(context.Background(), &abci.CheckTxRequest{
 			Tx:   mockTx.Bytes(),
 			Type: 0,
 		})

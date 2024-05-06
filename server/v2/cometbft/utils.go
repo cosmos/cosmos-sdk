@@ -9,15 +9,14 @@ import (
 
 	"cosmossdk.io/core/transaction"
 
-	sdkabci "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/abci"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogoany "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	abciv1 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/abci/v1"
 	v1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -25,10 +24,10 @@ import (
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 
-	consensus "github.com/cosmos/cosmos-sdk/x/consensus/types"
+	consensus "cosmossdk.io/x/consensus/types"
 )
 
-func queryResponse(res transaction.Type) (*abci.ResponseQuery, error) {
+func queryResponse(res transaction.Type) (*abci.QueryResponse, error) {
 	// TODO(kocu): we are tightly coupled go gogoproto here, is this problem?
 	bz, err := gogoproto.Marshal(res)
 	if err != nil {
@@ -36,7 +35,7 @@ func queryResponse(res transaction.Type) (*abci.ResponseQuery, error) {
 	}
 
 	// TODO: how do I reply? I suppose we need to different replies depending of the query
-	return &abci.ResponseQuery{
+	return &abci.QueryResponse{
 		Code:  0,
 		Log:   "",
 		Info:  "",
@@ -82,10 +81,10 @@ func finalizeBlockResponse(
 	cp *cmtproto.ConsensusParams,
 	appHash []byte,
 	indexSet map[string]struct{},
-) (*abci.ResponseFinalizeBlock, error) {
+) (*abci.FinalizeBlockResponse, error) {
 	allEvents := append(in.BeginBlockEvents, in.EndBlockEvents...)
 
-	resp := &abci.ResponseFinalizeBlock{
+	resp := &abci.FinalizeBlockResponse{
 		Events:                intoABCIEvents(allEvents, indexSet),
 		TxResults:             intoABCITxResults(in.TxResults, indexSet),
 		ValidatorUpdates:      intoABCIValidatorUpdates(in.ValidatorUpdates),
@@ -98,22 +97,11 @@ func finalizeBlockResponse(
 func intoABCIValidatorUpdates(updates []appmodulev2.ValidatorUpdate) []abci.ValidatorUpdate {
 	valsetUpdates := make([]abci.ValidatorUpdate, len(updates))
 
-	for i := range updates {
+	for i, v := range updates {
 		valsetUpdates[i] = abci.ValidatorUpdate{
-			PubKey: cmtprotocrypto.PublicKey{
-				Sum: &cmtprotocrypto.PublicKey_Ed25519{ // by default we set ed25519
-					Ed25519: updates[i].PubKey,
-				},
-			},
-			Power: updates[i].Power,
-		}
-
-		if updates[i].PubKeyType == "secp256k1" {
-			valsetUpdates[i].PubKey = cmtprotocrypto.PublicKey{
-				Sum: &cmtprotocrypto.PublicKey_Secp256K1{
-					Secp256K1: updates[i].PubKey,
-				},
-			}
+			PubKeyBytes: v.PubKey,
+			PubKeyType:  v.PubKeyType,
+			Power:       v.Power,
 		}
 	}
 
@@ -163,16 +151,16 @@ func intoABCIEvents(events []event.Event, indexSet map[string]struct{}) []abci.E
 
 func intoABCISimulationResponse(txRes appmanager.TxResult, indexSet map[string]struct{}) ([]byte, error) {
 	indexAll := len(indexSet) == 0
-	abciEvents := make([]*sdkabci.Event, len(txRes.Events))
+	abciEvents := make([]*abciv1.Event, len(txRes.Events))
 	for i, e := range txRes.Events {
-		abciEvents[i] = &sdkabci.Event{
+		abciEvents[i] = &abciv1.Event{
 			Type:       e.Type,
-			Attributes: make([]*sdkabci.EventAttribute, len(e.Attributes)),
+			Attributes: make([]*abciv1.EventAttribute, len(e.Attributes)),
 		}
 
 		for j, attr := range e.Attributes {
 			_, index := indexSet[fmt.Sprintf("%s.%s", e.Type, attr.Key)]
-			abciEvents[i].Attributes[j] = &sdkabci.EventAttribute{
+			abciEvents[i].Attributes[j] = &abciv1.EventAttribute{
 				Key:   attr.Key,
 				Value: attr.Value,
 				Index: index || indexAll,
@@ -207,15 +195,15 @@ func intoABCISimulationResponse(txRes appmanager.TxResult, indexSet map[string]s
 }
 
 // ToSDKEvidence takes comet evidence and returns sdk evidence
-func ToSDKEvidence(ev []abci.Misbehavior) []*consensus.Evidence {
-	evidence := make([]*consensus.Evidence, len(ev))
+func ToSDKEvidence(ev []abci.Misbehavior) []*comet.Evidence {
+	evidence := make([]*comet.Evidence, len(ev))
 	for i, e := range ev {
-		evidence[i] = &consensus.Evidence{
-			EvidenceType:     consensus.MisbehaviorType(e.Type),
+		evidence[i] = &comet.Evidence{
+			Type:             comet.MisbehaviorType(e.Type),
 			Height:           e.Height,
-			Time:             &e.Time,
+			Time:             e.Time,
 			TotalVotingPower: e.TotalVotingPower,
-			Validator: &consensus.Validator{
+			Validator: comet.Validator{
 				Address: e.Validator.Address,
 				Power:   e.Validator.Power,
 			},
@@ -225,18 +213,18 @@ func ToSDKEvidence(ev []abci.Misbehavior) []*consensus.Evidence {
 }
 
 // ToSDKDecidedCommitInfo takes comet commit info and returns sdk commit info
-func ToSDKCommitInfo(commit abci.CommitInfo) *consensus.CommitInfo {
-	ci := consensus.CommitInfo{
+func ToSDKCommitInfo(commit abci.CommitInfo) *comet.CommitInfo {
+	ci := comet.CommitInfo{
 		Round: commit.Round,
 	}
 
 	for _, v := range commit.Votes {
-		ci.Votes = append(ci.Votes, &consensus.VoteInfo{
-			Validator: &consensus.Validator{
+		ci.Votes = append(ci.Votes, comet.VoteInfo{
+			Validator: comet.Validator{
 				Address: v.Validator.Address,
 				Power:   v.Validator.Power,
 			},
-			BlockIdFlag: consensus.BlockIDFlag(v.BlockIdFlag),
+			BlockIDFlag: comet.BlockIDFlag(v.BlockIdFlag),
 		})
 	}
 	return &ci
@@ -263,16 +251,16 @@ func ToSDKExtendedCommitInfo(commit abci.ExtendedCommitInfo) comet.CommitInfo {
 
 // QueryResult returns a ResponseQuery from an error. It will try to parse ABCI
 // info from the error.
-func QueryResult(err error, debug bool) *abci.ResponseQuery {
+func QueryResult(err error, debug bool) *abci.QueryResponse {
 	space, code, log := errorsmod.ABCIInfo(err, debug)
-	return &abci.ResponseQuery{
+	return &abci.QueryResponse{
 		Codespace: space,
 		Code:      code,
 		Log:       log,
 	}
 }
 
-func (c *Consensus[T]) validateFinalizeBlockHeight(req *abci.RequestFinalizeBlock) error {
+func (c *Consensus[T]) validateFinalizeBlockHeight(req *abci.FinalizeBlockRequest) error {
 	if req.Height < 1 {
 		return fmt.Errorf("invalid height: %d", req.Height)
 	}

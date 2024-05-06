@@ -6,10 +6,10 @@ import (
 	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
+	consensusv1 "cosmossdk.io/x/consensus/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	consensusv1 "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 // GasTx defines a Tx with a GetGas() method which is needed to use SetUpContextDecorator

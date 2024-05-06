@@ -115,7 +115,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		authority.String(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
@@ -230,7 +230,12 @@ func createValidator(t *testing.T, rt *rapid.T, f *deterministicFixture) staking
 }
 
 // createAndSetValidatorWithStatus creates a validator with random values but with given status and sets to the state
-func createAndSetValidatorWithStatus(t *testing.T, rt *rapid.T, f *deterministicFixture, status stakingtypes.BondStatus) stakingtypes.Validator {
+func createAndSetValidatorWithStatus(
+	t *testing.T,
+	rt *rapid.T,
+	f *deterministicFixture,
+	status stakingtypes.BondStatus,
+) stakingtypes.Validator {
 	t.Helper()
 	val := createValidator(t, rt, f)
 	val.Status = status
@@ -338,14 +343,26 @@ func getStaticValidator2(t *testing.T, f *deterministicFixture) stakingtypes.Val
 }
 
 // createDelegationAndDelegate funds the delegator account with a random delegation in range 100-1000 and delegates.
-func createDelegationAndDelegate(t *testing.T, rt *rapid.T, f *deterministicFixture, delegator sdk.AccAddress, validator stakingtypes.Validator) (newShares math.LegacyDec, err error) {
+func createDelegationAndDelegate(
+	t *testing.T,
+	rt *rapid.T,
+	f *deterministicFixture,
+	delegator sdk.AccAddress,
+	validator stakingtypes.Validator,
+) (newShares math.LegacyDec, err error) {
 	t.Helper()
 	amt := f.stakingKeeper.TokensFromConsensusPower(f.ctx, rapid.Int64Range(100, 1000).Draw(rt, "amount"))
 	return fundAccountAndDelegate(t, f, delegator, validator, amt)
 }
 
 // fundAccountAndDelegate funds the delegator account with the specified delegation and delegates.
-func fundAccountAndDelegate(t *testing.T, f *deterministicFixture, delegator sdk.AccAddress, validator stakingtypes.Validator, amt math.Int) (newShares math.LegacyDec, err error) {
+func fundAccountAndDelegate(
+	t *testing.T,
+	f *deterministicFixture,
+	delegator sdk.AccAddress,
+	validator stakingtypes.Validator,
+	amt math.Int,
+) (newShares math.LegacyDec, err error) {
 	t.Helper()
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt))
 

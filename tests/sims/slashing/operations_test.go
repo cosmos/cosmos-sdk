@@ -184,7 +184,7 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	suite.Require().NoError(suite.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(val0AccAddress, sdk.AccAddress(val0AccAddress)), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	// begin a new block
-	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash, Time: blockTime})
+	_, err = suite.app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash, Time: blockTime})
 	suite.Require().NoError(err)
 
 	// execute operation

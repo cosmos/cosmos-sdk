@@ -23,6 +23,7 @@ import (
 	authtestutil "cosmossdk.io/x/auth/testutil"
 	txtestutil "cosmossdk.io/x/auth/tx/testutil"
 	"cosmossdk.io/x/auth/types"
+	consensustypes "cosmossdk.io/x/consensus/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -38,7 +39,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 // TestAccount represents an account used in the tests in x/auth/ante.
@@ -113,7 +113,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 
 	suite.clientCtx = client.Context{}.
 		WithTxConfig(suite.encCfg.TxConfig).
-		WithClient(clitestutil.NewMockCometRPC(abci.ResponseQuery{}))
+		WithClient(clitestutil.NewMockCometRPC(abci.QueryResponse{}))
 
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{

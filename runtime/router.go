@@ -11,21 +11,19 @@ import (
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/core/router"
-	"cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
 // NewRouterService creates a router.Service which allows to invoke messages and queries using the msg router.
-// Eventually a permission system will be added based on the caller.
-func NewRouterService(storeService store.KVStoreService, queryRouter baseapp.QueryRouter, msgRouter baseapp.MessageRouter) router.Service {
+// TODO: Eventually a permission system will be added based on the caller.
+func NewRouterService(queryRouter baseapp.QueryRouter, msgRouter baseapp.MessageRouter) router.Service {
 	return &routerService{
 		queryRouterService: &queryRouterService{
 			router: queryRouter,
 		},
 		msgRouterService: &msgRouterService{
-			storeService: storeService, // TODO(@julienrbrt): this will be used later on as authenticating modules before routing
-			router:       msgRouter,
+			router: msgRouter,
 		},
 	}
 }
@@ -50,8 +48,7 @@ func (r *routerService) QueryRouterService() router.Router {
 var _ router.Router = (*msgRouterService)(nil)
 
 type msgRouterService struct {
-	storeService store.KVStoreService
-	router       baseapp.MessageRouter
+	router baseapp.MessageRouter
 }
 
 // CanInvoke returns an error if the given message cannot be invoked.

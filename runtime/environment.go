@@ -30,7 +30,7 @@ func NewEnvironment(
 		GasService:         GasService{},
 		TransactionService: TransactionService{},
 		KVStoreService:     kvService,
-		RouterService:      NewRouterService(kvService, &failingQueryRouter{}, &failingMsgRouter{}),
+		RouterService:      NewRouterService(&failingQueryRouter{}, &failingMsgRouter{}),
 		MemStoreService:    failingMemStore{},
 	}
 
@@ -48,7 +48,7 @@ func EnvWithRouterService(
 	msgServiceRouter *baseapp.MsgServiceRouter,
 ) EnvOption {
 	return func(env *appmodule.Environment) {
-		env.RouterService = NewRouterService(env.KVStoreService, queryServiceRouter, msgServiceRouter)
+		env.RouterService = NewRouterService(queryServiceRouter, msgServiceRouter)
 	}
 }
 

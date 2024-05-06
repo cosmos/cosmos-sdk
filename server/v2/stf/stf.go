@@ -30,9 +30,9 @@ type STF[T transaction.Tx] struct {
 	doTxValidation func(ctx context.Context, tx T) error
 	postTxExec     func(ctx context.Context, tx T, success bool) error
 
-	branch           branchFn // branch is a function that given a readonly state it returns a writable version of it.
-	getGasMeter      gasMeter
-	wrapWithGasMeter wrapGasMeter
+	branchFn            branchFn // branchFn is a function that given a readonly state it returns a writable version of it.
+	makeGasMeter        makeGasMeterFn
+	makeGasMeteredState makeGasMeteredStateFn
 }
 
 // NewSTF returns a new STF instance.
@@ -48,17 +48,17 @@ func NewSTF[T transaction.Tx](
 	branch func(store store.ReaderMap) store.WriterMap,
 ) *STF[T] {
 	return &STF[T]{
-		handleMsg:         handleMsg,
-		handleQuery:       handleQuery,
-		doPreBlock:        doPreBlock,
-		doBeginBlock:      doBeginBlock,
-		doEndBlock:        doEndBlock,
-		doTxValidation:    doTxValidation,
-		doValidatorUpdate: doValidatorUpdate,
-		postTxExec:        postTxExec, // TODO
-		branch:            branch,
-		getGasMeter:       stfgas.DefaultGasMeter,         // TODO replacable?
-		wrapWithGasMeter:  stfgas.DefaultWrapWithGasMeter, // TODO replacable?
+		handleMsg:           handleMsg,
+		handleQuery:         handleQuery,
+		doPreBlock:          doPreBlock,
+		doBeginBlock:        doBeginBlock,
+		doEndBlock:          doEndBlock,
+		doTxValidation:      doTxValidation,
+		doValidatorUpdate:   doValidatorUpdate,
+		postTxExec:          postTxExec, // TODO
+		branchFn:            branch,
+		makeGasMeter:        stfgas.DefaultGasMeter,         // TODO replacable?
+		makeGasMeteredState: stfgas.DefaultWrapWithGasMeter, // TODO replacable?
 	}
 }
 
@@ -70,9 +70,9 @@ func (s STF[T]) DeliverBlock(
 	block *appmanager.BlockRequest[T],
 	state store.ReaderMap,
 ) (blockResult *appmanager.BlockResponse, newState store.WriterMap, err error) {
-	// creates a new branch state, from the readonly view of the state
+	// creates a new branchFn state, from the readonly view of the state
 	// that can be written to.
-	newState = s.branch(state)
+	newState = s.branchFn(state)
 	hi := header.Info{
 		Hash:    block.Hash,
 		AppHash: block.AppHash,
@@ -194,7 +194,7 @@ func (s STF[T]) validateTx(
 	gasLimit uint64,
 	tx T,
 ) (gasUsed uint64, events []event.Event, err error) {
-	validateState := s.branch(state)
+	validateState := s.branchFn(state)
 	validateCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, validateState, gasLimit, corecontext.ExecModeCheck)
 	err = s.doTxValidation(validateCtx, tx)
 	if err != nil {
@@ -215,13 +215,13 @@ func (s STF[T]) execTx(
 	execMode corecontext.ExecMode,
 	hi header.Info,
 ) ([]transaction.Type, uint64, []event.Event, error) {
-	execState := s.branch(state)
+	execState := s.branchFn(state)
 
 	msgsResp, gasUsed, runTxMsgsEvents, txErr := s.runTxMsgs(ctx, execState, gasLimit, tx, execMode, hi)
 	if txErr != nil {
 		// in case of error during message execution, we do not apply the exec state.
-		// instead we run the post exec handler in a new branch from the initial state.
-		postTxState := s.branch(state)
+		// instead we run the post exec handler in a new branchFn from the initial state.
+		postTxState := s.branchFn(state)
 		postTxCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, postTxState, gas.NoGasLimit, execMode)
 		postTxCtx.setHeaderInfo(hi)
 
@@ -445,7 +445,7 @@ func (s STF[T]) Simulate(
 	gasLimit uint64,
 	tx T,
 ) (appmanager.TxResult, store.WriterMap) {
-	simulationState := s.branch(state)
+	simulationState := s.branchFn(state)
 	hi, err := s.getHeaderInfo(simulationState)
 	if err != nil {
 		return appmanager.TxResult{}, nil
@@ -463,7 +463,7 @@ func (s STF[T]) ValidateTx(
 	gasLimit uint64,
 	tx T,
 ) appmanager.TxResult {
-	validationState := s.branch(state)
+	validationState := s.branchFn(state)
 	gasUsed, events, err := s.validateTx(ctx, validationState, gasLimit, tx)
 	return appmanager.TxResult{
 		Events:  events,
@@ -479,7 +479,7 @@ func (s STF[T]) Query(
 	gasLimit uint64,
 	req transaction.Type,
 ) (transaction.Type, error) {
-	queryState := s.branch(state)
+	queryState := s.branchFn(state)
 	hi, err := s.getHeaderInfo(queryState)
 	if err != nil {
 		return nil, err
@@ -501,7 +501,7 @@ func (s STF[T]) RunWithCtx(
 	state store.ReaderMap,
 	closure func(ctx context.Context) error,
 ) (store.WriterMap, error) {
-	branchedState := s.branch(state)
+	branchedState := s.branchFn(state)
 	// TODO  do we need headerinfo for genesis?
 	stfCtx := s.makeContext(ctx, nil, branchedState, gas.NoGasLimit, corecontext.ExecModeFinalize)
 	return branchedState, closure(stfCtx)
@@ -510,17 +510,17 @@ func (s STF[T]) RunWithCtx(
 // clone clones STF.
 func (s STF[T]) clone() STF[T] {
 	return STF[T]{
-		handleMsg:         s.handleMsg,
-		handleQuery:       s.handleQuery,
-		doPreBlock:        s.doPreBlock,
-		doBeginBlock:      s.doBeginBlock,
-		doEndBlock:        s.doEndBlock,
-		doValidatorUpdate: s.doValidatorUpdate,
-		doTxValidation:    s.doTxValidation,
-		postTxExec:        s.postTxExec,
-		branch:            s.branch,
-		getGasMeter:       s.getGasMeter,
-		wrapWithGasMeter:  s.wrapWithGasMeter,
+		handleMsg:           s.handleMsg,
+		handleQuery:         s.handleQuery,
+		doPreBlock:          s.doPreBlock,
+		doBeginBlock:        s.doBeginBlock,
+		doEndBlock:          s.doEndBlock,
+		doValidatorUpdate:   s.doValidatorUpdate,
+		doTxValidation:      s.doTxValidation,
+		postTxExec:          s.postTxExec,
+		branchFn:            s.branchFn,
+		makeGasMeter:        s.makeGasMeter,
+		makeGasMeteredState: s.makeGasMeteredState,
 	}
 }
 
@@ -528,19 +528,39 @@ func (s STF[T]) clone() STF[T] {
 type executionContext struct {
 	context.Context
 
-	state      store.WriterMap
-	meter      gas.Meter
-	events     []event.Event
-	sender     transaction.Identity
+	// unmeteredState is storage without metering. Changes here are propagated to state which is the metered
+	// version.
+	unmeteredState store.WriterMap
+	// state is the gas metered state.
+	state store.WriterMap
+	// meter is the gas meter.
+	meter gas.Meter
+	// events are the current events.
+	events []event.Event
+	// sender is the causer of the state transition.
+	sender transaction.Identity
+	// headerInfo contains the block info.
 	headerInfo header.Info
-	execMode   corecontext.ExecMode
+	// execMode retains information about the exec mode.
+	execMode corecontext.ExecMode
 
-	branchFn branchFn
+	branchFn            branchFn
+	makeGasMeter        makeGasMeterFn
+	makeGasMeteredStore makeGasMeteredStateFn
 }
 
 // setHeaderInfo sets the header info in the state to be used by queries in the future.
 func (e *executionContext) setHeaderInfo(hi header.Info) {
 	e.headerInfo = hi
+}
+
+// setGasLimit will update the gas limit of the *executionContext
+func (e *executionContext) setGasLimit(limit uint64) {
+	meter := e.makeGasMeter(limit)
+	meteredState := e.makeGasMeteredStore(meter, e.unmeteredState)
+
+	e.meter = meter
+	e.state = meteredState
 }
 
 // TODO: too many calls to makeContext can be expensive
@@ -560,18 +580,43 @@ func (s STF[T]) makeContext(
 	gasLimit uint64,
 	execMode corecontext.ExecMode,
 ) *executionContext {
-	meter := s.getGasMeter(gasLimit)
-	meteredState := s.wrapWithGasMeter(meter, state)
-	return &executionContext{
-		Context:    ctx,
-		state:      meteredState,
-		meter:      meter,
-		events:     make([]event.Event, 0),
-		sender:     sender,
-		headerInfo: header.Info{},
-		execMode:   execMode,
+	return newExecutionContext(
+		s.makeGasMeter,
+		s.makeGasMeteredState,
+		s.branchFn,
+		ctx,
+		sender,
+		state,
+		gasLimit,
+		execMode,
+	)
+}
 
-		branchFn: s.branch,
+func newExecutionContext(
+	makeGasMeterFn makeGasMeterFn,
+	makeGasMeteredStoreFn makeGasMeteredStateFn,
+	branchFn branchFn,
+	ctx context.Context,
+	sender transaction.Identity,
+	state store.WriterMap,
+	gasLimit uint64,
+	execMode corecontext.ExecMode,
+) *executionContext {
+	meter := makeGasMeterFn(gasLimit)
+	meteredState := makeGasMeteredStoreFn(meter, state)
+
+	return &executionContext{
+		Context:             ctx,
+		unmeteredState:      state,
+		state:               meteredState,
+		meter:               meter,
+		events:              make([]event.Event, 0),
+		sender:              sender,
+		headerInfo:          header.Info{},
+		execMode:            execMode,
+		branchFn:            branchFn,
+		makeGasMeter:        makeGasMeterFn,
+		makeGasMeteredStore: makeGasMeteredStoreFn,
 	}
 }
 

@@ -8,12 +8,12 @@ import (
 )
 
 type (
-	// gasMeter is a function type that takes a gas limit as input and returns a gas.Meter.
+	// makeGasMeterFn is a function type that takes a gas limit as input and returns a gas.Meter.
 	// It is used to measure and limit the amount of gas consumed during the execution of a function.
-	gasMeter func(gasLimit uint64) gas.Meter
+	makeGasMeterFn func(gasLimit uint64) gas.Meter
 
-	// wrapGasMeter is a function type that wraps a gas meter and a store writer map.
-	wrapGasMeter func(meter gas.Meter, store store.WriterMap) store.WriterMap
+	// makeGasMeteredStateFn is a function type that wraps a gas meter and a store writer map.
+	makeGasMeteredStateFn func(meter gas.Meter, store store.WriterMap) store.WriterMap
 )
 
 // NewGasMeterService creates a new instance of the gas meter service.

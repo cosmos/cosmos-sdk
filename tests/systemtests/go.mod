@@ -1,4 +1,4 @@
-module cosmossdk.io/systemtests
+module cosmossdk.io/tests/systemtests
 
 go 1.22
 

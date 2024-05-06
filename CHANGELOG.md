@@ -41,6 +41,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
 
 ### Features
+
+* (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simualte nested messages.
 * (tests) [#20013](https://github.com/cosmos/cosmos-sdk/pull/20013) Introduce system tests to run multi node local testnet in CI
 * (runtime) [#19953](https://github.com/cosmos/cosmos-sdk/pull/19953) Implement `core/transaction.Service` in runtime.
 * (client) [#19905](https://github.com/cosmos/cosmos-sdk/pull/19905) Add grpc client config to `client.toml`.

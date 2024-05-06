@@ -318,7 +318,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 
 	nci := comet.Info{Evidence: []comet.Evidence{{
 		Validator: comet.Validator{Address: valpubkey.Address(), Power: power},
-		Type:      comet.MisbehaviorType(abci.MisbehaviorType_DUPLICATE_VOTE),
+		Type:      comet.MisbehaviorType(abci.MISBEHAVIOR_TYPE_DUPLICATE_VOTE),
 		Time:      ctx.HeaderInfo().Time,
 		Height:    0,
 	}}}
@@ -399,7 +399,7 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 	nci := comet.Info{
 		Evidence: []comet.Evidence{{
 			Validator: comet.Validator{Address: valpubkey.Address(), Power: power},
-			Type:      comet.MisbehaviorType(abci.MisbehaviorType_DUPLICATE_VOTE),
+			Type:      comet.MisbehaviorType(abci.MISBEHAVIOR_TYPE_DUPLICATE_VOTE),
 			Time:      time.Unix(0, 0),
 			Height:    0,
 		}},

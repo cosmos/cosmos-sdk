@@ -139,7 +139,7 @@ var actorName = []byte("cookies")
 
 func kvSet(t *testing.T, ctx context.Context, v string) error {
 	t.Helper()
-	executionCtx := stf.GetExecutionContext(ctx)
+	executionCtx := stf.GetExecutionContext(ctx) //TODO: what to do here?
 	require.NotNil(t, executionCtx)
 	state, err := executionCtx.State.GetWriter(actorName)
 	require.NoError(t, err)

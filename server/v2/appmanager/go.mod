@@ -2,6 +2,7 @@ module cosmossdk.io/server/v2/appmanager
 
 go 1.21
 
+// TODO: remove prior to final release
 replace (
 	cosmossdk.io/core => ../../../core
 	cosmossdk.io/server/v2/stf => ../stf

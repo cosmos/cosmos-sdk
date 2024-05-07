@@ -15,17 +15,18 @@ import (
 )
 
 // AppManager is a coordinator for all things related to an application
+// TODO: add exportGenesis function
 type AppManager[T transaction.Tx] struct {
 	config Config
 
 	db store.Store
 
 	exportState func(ctx context.Context, dst map[string]io.Writer) error
-	importState func(ctx context.Context, src map[string]io.Reader) error
+	importState func(ctx context.Context, src map[string]io.Reader) error //TODO: possibly remove?
 
 	initGenesis func(ctx context.Context, state io.Reader, txHandler func(tx json.RawMessage) error) error
 
-	stf *stf.STF[T]
+	stf *stf.STF[T] // TODO: define interface
 }
 
 func (a AppManager[T]) InitGenesis(
@@ -38,7 +39,7 @@ func (a AppManager[T]) InitGenesis(
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to get latest state: %w", err)
 	}
-	if v != 0 {
+	if v != 0 { // TODO: genesis state may be > 0, we need to set version on store
 		return nil, nil, fmt.Errorf("cannot init genesis on non-zero state")
 	}
 
@@ -56,7 +57,7 @@ func (a AppManager[T]) InitGenesis(
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to import genesis state: %w", err)
 	}
-	// run block 0
+	// run block
 	// TODO: in an ideal world, genesis state is simply an initial state being applied
 	// unaware of what that state means in relation to every other, so here we can
 	// chain genesis
@@ -64,10 +65,11 @@ func (a AppManager[T]) InitGenesis(
 
 	blockresponse, genesisState, err := a.stf.DeliverBlock(ctx, blockRequest, zeroState)
 	if err != nil {
-		return blockresponse, nil, fmt.Errorf("failed to deliver block 0: %w", err)
+		return blockresponse, nil, fmt.Errorf("failed to deliver block %s: %w", blockRequest.Height, err)
 	}
 
 	return blockresponse, genesisState, err
+	// consensus server will need to set the version of the store
 }
 
 func (a AppManager[T]) DeliverBlock(
@@ -108,7 +110,7 @@ func (a AppManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult,
 	if err != nil {
 		return appmanager.TxResult{}, nil, err
 	}
-	result, cs := a.stf.Simulate(ctx, state, a.config.SimulationGasLimit, tx)
+	result, cs := a.stf.Simulate(ctx, state, a.config.SimulationGasLimit, tx) // TODO: check if this is done in the antehandler
 	return result, cs, nil
 }
 
@@ -130,10 +132,6 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request transa
 		return nil, err
 	}
 	return a.stf.Query(ctx, queryState, a.config.QueryGasLimit, request)
-}
-
-func (a AppManager[T]) Message(ctx context.Context, message transaction.Type) (transaction.Type, error) {
-	return a.stf.Message(ctx, message)
 }
 
 // QueryWithState executes a query with the provided state. This allows to process a query

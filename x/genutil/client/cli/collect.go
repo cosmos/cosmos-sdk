@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/json"
+	"fmt"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
@@ -23,12 +24,15 @@ func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, validator ty
 		Short: "Collect genesis txs and output a genesis.json file",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			serverCtx := server.GetServerContextFromCmd(cmd)
-			config := serverCtx.Config
+			config, ok := serverCtx.GetConfig().(server.CometConfig)
+			if !ok {
+				return fmt.Errorf("Can not convert cometbft config")
+			}
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			cdc := clientCtx.Codec
 
-			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(config)
+			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(config.Config)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize node validator files")
 			}
@@ -47,7 +51,7 @@ func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, validator ty
 			toPrint := newPrintInfo(config.Moniker, appGenesis.ChainID, nodeID, genTxsDir, json.RawMessage(""))
 			initCfg := types.NewInitConfig(appGenesis.ChainID, genTxsDir, nodeID, valPubKey)
 
-			appMessage, err := genutil.GenAppStateFromConfig(cdc, clientCtx.TxConfig, config, initCfg, appGenesis, genBalIterator, validator, clientCtx.ValidatorAddressCodec, clientCtx.AddressCodec)
+			appMessage, err := genutil.GenAppStateFromConfig(cdc, clientCtx.TxConfig, config.Config, initCfg, appGenesis, genBalIterator, validator, clientCtx.ValidatorAddressCodec, clientCtx.AddressCodec)
 			if err != nil {
 				return errors.Wrap(err, "failed to get genesis app state from config")
 			}

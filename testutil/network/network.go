@@ -341,7 +341,8 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		appCfg.Telemetry.Enabled = false
 
 		ctx := server.NewDefaultContext()
-		cmtCfg := ctx.Config
+		cmtCfg, _ := ctx.GetConfig().(server.CometConfig)
+
 		cmtCfg.Consensus.TimeoutCommit = cfg.TimeoutCommit
 
 		// Only allow the first validator to expose an RPC, API and gRPC
@@ -437,7 +438,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			mnemonic = cfg.Mnemonics[i]
 		}
 
-		nodeID, pubKey, err := genutil.InitializeNodeValidatorFilesFromMnemonic(cmtCfg, mnemonic)
+		nodeID, pubKey, err := genutil.InitializeNodeValidatorFilesFromMnemonic(cmtCfg.Config, mnemonic)
 		if err != nil {
 			return nil, err
 		}

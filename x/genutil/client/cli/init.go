@@ -82,7 +82,10 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
-			config := serverCtx.Config
+			config, ok := serverCtx.GetConfig().(server.CometConfig)
+			if !ok {
+				return fmt.Errorf("Can not convert cometbft config")
+			}
 
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
 			switch {
@@ -115,7 +118,7 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 				initHeight = 1
 			}
 
-			nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(config, mnemonic)
+			nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(config.Config, mnemonic)
 			if err != nil {
 				return err
 			}
@@ -177,7 +180,7 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 
 			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)
 
-			cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
+			cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config.Config)
 			return displayInfo(toPrint)
 		},
 	}

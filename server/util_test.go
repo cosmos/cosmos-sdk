@@ -83,7 +83,7 @@ func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T
 	}
 
 	// Test that CometBFT config is initialized
-	if serverCtx.Config == nil {
+	if serverCtx.GetConfig() == nil {
 		t.Fatal("CometBFT config not created")
 	}
 
@@ -147,7 +147,12 @@ func TestInterceptConfigsPreRunHandlerReadsConfigToml(t *testing.T) {
 
 	serverCtx = server.GetServerContextFromCmd(cmd)
 
-	if testDbBackend != serverCtx.Config.DBBackend {
+	config, ok := serverCtx.GetConfig().(server.CometConfig)
+	if !ok {
+		t.Error("can not convert to cometbft config")
+	}
+
+	if testDbBackend != config.DBBackend {
 		t.Error("backend was not set from config.toml")
 	}
 }
@@ -217,7 +222,12 @@ func TestInterceptConfigsPreRunHandlerReadsFlags(t *testing.T) {
 
 	serverCtx = server.GetServerContextFromCmd(cmd)
 
-	if testAddr != serverCtx.Config.RPC.ListenAddress {
+	config, ok := serverCtx.GetConfig().(server.CometConfig)
+	if !ok {
+		t.Error("can not convert to cometbft config")
+	}
+
+	if testAddr != config.RPC.ListenAddress {
 		t.Error("RPCListenAddress was not set from command flags")
 	}
 }
@@ -255,7 +265,12 @@ func TestInterceptConfigsPreRunHandlerReadsEnvVars(t *testing.T) {
 
 	serverCtx = server.GetServerContextFromCmd(cmd)
 
-	if testAddr != serverCtx.Config.RPC.ListenAddress {
+	config, ok := serverCtx.GetConfig().(server.CometConfig)
+	if !ok {
+		t.Error("can not convert to cometbft config")
+	}
+
+	if testAddr != config.RPC.ListenAddress {
 		t.Errorf("RPCListenAddress was not set from env. var. %q", envVarName)
 	}
 }
@@ -364,7 +379,12 @@ func TestInterceptConfigsPreRunHandlerPrecedenceFlag(t *testing.T) {
 
 	serverCtx = server.GetServerContextFromCmd(testCommon.cmd)
 
-	if TestAddrExpected != serverCtx.Config.RPC.ListenAddress {
+	config, ok := serverCtx.GetConfig().(server.CometConfig)
+	if !ok {
+		t.Error("can not convert to cometbft config")
+	}
+
+	if TestAddrExpected != config.RPC.ListenAddress {
 		t.Fatalf("RPCListenAddress was not set from flag %q", testCommon.flagName)
 	}
 }
@@ -382,7 +402,12 @@ func TestInterceptConfigsPreRunHandlerPrecedenceEnvVar(t *testing.T) {
 
 	serverCtx = server.GetServerContextFromCmd(testCommon.cmd)
 
-	if TestAddrExpected != serverCtx.Config.RPC.ListenAddress {
+	config, ok := serverCtx.GetConfig().(server.CometConfig)
+	if !ok {
+		t.Error("can not convert to cometbft config")
+	}
+
+	if TestAddrExpected != config.RPC.ListenAddress {
 		t.Errorf("RPCListenAddress was not set from env. var. %q", testCommon.envVarName)
 	}
 }
@@ -400,7 +425,12 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigFile(t *testing.T) {
 
 	serverCtx = server.GetServerContextFromCmd(testCommon.cmd)
 
-	if TestAddrExpected != serverCtx.Config.RPC.ListenAddress {
+	config, ok := serverCtx.GetConfig().(server.CometConfig)
+	if !ok {
+		t.Error("can not convert to cometbft config")
+	}
+
+	if TestAddrExpected != config.RPC.ListenAddress {
 		t.Errorf("RPCListenAddress was not read from file %q", testCommon.configTomlPath)
 	}
 }
@@ -418,7 +448,12 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigDefault(t *testing.T) {
 
 	serverCtx = server.GetServerContextFromCmd(testCommon.cmd)
 
-	if serverCtx.Config.RPC.ListenAddress != "tcp://127.0.0.1:26657" {
+	config, ok := serverCtx.GetConfig().(server.CometConfig)
+	if !ok {
+		t.Error("can not convert to cometbft config")
+	}
+
+	if config.RPC.ListenAddress != "tcp://127.0.0.1:26657" {
 		t.Error("RPCListenAddress is not using default")
 	}
 }
@@ -456,7 +491,7 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	// Run InitCmd to create necessary config files.
 	clientCtx := client.Context{}.WithHomeDir(tempDir).WithCodec(encCfg.Codec)
 	serverCtx := server.NewDefaultContext()
-	serverCtx.Config.SetRoot(tempDir)
+	serverCtx.SetRoot(tempDir)
 	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	cmd := genutilcli.InitCmd(module.NewManager())

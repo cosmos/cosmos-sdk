@@ -32,7 +32,7 @@ import (
 
 func startInProcess(cfg Config, val *Validator) error {
 	logger := val.ctx.Logger
-	cmtCfg := val.ctx.Config
+	cmtCfg := val.ctx.GetConfig().(server.CometConfig)
 	cmtCfg.Instrumentation.Prometheus = false
 
 	if err := val.AppConfig.ValidateBasic(); err != nil {
@@ -66,7 +66,7 @@ func startInProcess(cfg Config, val *Validator) error {
 	cmtApp := server.NewCometABCIWrapper(app)
 	tmNode, err := node.NewNode( //resleak:notresource
 		context.TODO(),
-		cmtCfg,
+		cmtCfg.Config,
 		pvm.LoadOrGenFilePV(cmtCfg.PrivValidatorKeyFile(), cmtCfg.PrivValidatorStateFile()),
 		nodeKey,
 		proxy.NewLocalClientCreator(cmtApp),
@@ -140,7 +140,7 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 	}
 
 	for i := 0; i < cfg.NumValidators; i++ {
-		cmtCfg := vals[i].ctx.Config
+		cmtCfg := vals[i].ctx.GetConfig().(server.CometConfig)
 
 		nodeDir := filepath.Join(outputDir, vals[i].moniker, "simd")
 		gentxsDir := filepath.Join(outputDir, "gentxs")
@@ -157,7 +157,7 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 		}
 
 		appState, err := genutil.GenAppStateFromConfig(cfg.Codec, cfg.TxConfig,
-			cmtCfg, initCfg, appGenesis, banktypes.GenesisBalancesIterator{}, genutiltypes.DefaultMessageValidator,
+			cmtCfg.Config, initCfg, appGenesis, banktypes.GenesisBalancesIterator{}, genutiltypes.DefaultMessageValidator,
 			cfg.ValidatorAddressCodec, cfg.AddressCodec)
 		if err != nil {
 			return err

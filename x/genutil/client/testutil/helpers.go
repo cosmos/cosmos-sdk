@@ -19,14 +19,9 @@ import (
 
 func ExecInitCmd(mm *module.Manager, home string, cdc codec.Codec) error {
 	logger := log.NewNopLogger()
-	cfg, err := CreateDefaultCometConfig(home)
-	if err != nil {
-		return err
-	}
-
 	cmd := genutilcli.InitCmd(mm)
-	serverCtx := server.NewContext(viper.New(), cfg, logger)
-	serverCtx.Config.SetRoot(home)
+	serverCtx := server.NewContext(viper.New(), logger)
+	serverCtx.SetRoot(home)
 	clientCtx := client.Context{}.WithCodec(cdc).WithHomeDir(home)
 
 	_, out := testutil.ApplyMockIO(cmd)

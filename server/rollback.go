@@ -27,13 +27,18 @@ application.
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := GetServerContextFromCmd(cmd)
 
-			db, err := OpenDB(ctx.Config.RootDir, GetAppDBBackend(ctx.Viper))
+			config, ok := ctx.GetConfig().(CometConfig)
+			if !ok {
+				return fmt.Errorf("Can not convert cometbft config")
+			}
+
+			db, err := OpenDB(config.RootDir, GetAppDBBackend(ctx.Viper))
 			if err != nil {
 				return err
 			}
 			app := appCreator(ctx.Logger, db, nil, ctx.Viper)
 			// rollback CometBFT state
-			height, hash, err := cmtcmd.RollbackState(ctx.Config, removeBlock)
+			height, hash, err := cmtcmd.RollbackState(config.Config, removeBlock)
 			if err != nil {
 				return fmt.Errorf("failed to rollback CometBFT state: %w", err)
 			}

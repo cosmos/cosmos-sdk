@@ -39,7 +39,10 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			serverCtx := server.GetServerContextFromCmd(cmd)
-			config := serverCtx.Config
+			config, ok := serverCtx.GetConfig().(server.CometConfig)
+			if !ok {
+				return fmt.Errorf("Can not convert cometbft config")
+			}
 
 			var kr keyring.Keyring
 			addr, err := addressCodec.StringToBytes(args[0])

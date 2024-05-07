@@ -22,11 +22,15 @@ func ValidateGenesisCmd(mm *module.Manager) *cobra.Command {
 		Short:   "Validates the genesis file at the default location or at the location passed as an arg",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			serverCtx := server.GetServerContextFromCmd(cmd)
+			cfg, ok := serverCtx.GetConfig().(server.CometConfig)
+			if !ok {
+				return fmt.Errorf("Can not convert cometbft config")
+			}
 
 			// Load default if passed no args, otherwise load passed file
 			var genesis string
 			if len(args) == 0 {
-				genesis = serverCtx.Config.GenesisFile()
+				genesis = cfg.GenesisFile()
 			} else {
 				genesis = args[0]
 			}

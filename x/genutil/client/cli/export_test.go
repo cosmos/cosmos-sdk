@@ -11,7 +11,6 @@ import (
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	cmtcfg "github.com/cometbft/cometbft/config"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/rs/zerolog"
@@ -67,10 +66,9 @@ func NewExportSystem(t *testing.T, exporter types.AppExporter) *ExportSystem {
 
 	sCtx := server.NewContext(
 		viper.New(),
-		cmtcfg.DefaultConfig(),
 		log.NewCustomLogger(zerolog.New(tw)),
 	)
-	sCtx.Config.SetRoot(homeDir)
+	sCtx.SetRoot(homeDir)
 
 	cCtx := (client.Context{}).WithHomeDir(homeDir)
 

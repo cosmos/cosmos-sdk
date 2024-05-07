@@ -32,12 +32,16 @@ func ExportCmd(appExporter servertypes.AppExporter) *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			serverCtx := server.GetServerContextFromCmd(cmd)
+			config, ok := serverCtx.GetConfig().(server.CometConfig)
+			if !ok {
+				return fmt.Errorf("Can not convert cometbft config")
+			}
 
-			if _, err := os.Stat(serverCtx.Config.GenesisFile()); os.IsNotExist(err) {
+			if _, err := os.Stat(config.GenesisFile()); os.IsNotExist(err) {
 				return err
 			}
 
-			db, err := server.OpenDB(serverCtx.Config.RootDir, server.GetAppDBBackend(serverCtx.Viper))
+			db, err := server.OpenDB(config.RootDir, server.GetAppDBBackend(serverCtx.Viper))
 			if err != nil {
 				return err
 			}
@@ -51,7 +55,7 @@ func ExportCmd(appExporter servertypes.AppExporter) *cobra.Command {
 				// It is possible that the genesis file is large,
 				// so we don't need to read it all into memory
 				// before we stream it out.
-				f, err := os.OpenFile(serverCtx.Config.GenesisFile(), os.O_RDONLY, 0)
+				f, err := os.OpenFile(config.GenesisFile(), os.O_RDONLY, 0)
 				if err != nil {
 					return err
 				}
@@ -82,7 +86,7 @@ func ExportCmd(appExporter servertypes.AppExporter) *cobra.Command {
 				return fmt.Errorf("error exporting state: %w", err)
 			}
 
-			appGenesis, err := genutiltypes.AppGenesisFromFile(serverCtx.Config.GenesisFile())
+			appGenesis, err := genutiltypes.AppGenesisFromFile(config.GenesisFile())
 			if err != nil {
 				return err
 			}

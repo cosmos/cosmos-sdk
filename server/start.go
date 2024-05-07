@@ -252,13 +252,18 @@ func startStandAlone[T types.Application](svrCtx *Context, svrCfg serverconfig.C
 
 	g, ctx := getCtx(svrCtx, false)
 
+	config, ok := svrCtx.GetConfig().(CometConfig)
+	if !ok {
+		return fmt.Errorf("Can not convert cometbft config")
+	}
+
 	// Add the tx service to the gRPC router. We only need to register this
 	// service if API or gRPC is enabled, and avoid doing so in the general
 	// case, because it spawns a new local CometBFT RPC client.
 	if svrCfg.API.Enable || svrCfg.GRPC.Enable {
 		// create tendermint client
 		// assumes the rpc listen address is where tendermint has its rpc server
-		rpcclient, err := rpchttp.New(svrCtx.Config.RPC.ListenAddress)
+		rpcclient, err := rpchttp.New(config.RPC.ListenAddress)
 		if err != nil {
 			return err
 		}
@@ -277,7 +282,7 @@ func startStandAlone[T types.Application](svrCtx *Context, svrCfg serverconfig.C
 		return err
 	}
 
-	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, svrCtx.Config.RootDir, grpcSrv, metrics)
+	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, config.RootDir, grpcSrv, metrics)
 	if err != nil {
 		return err
 	}
@@ -307,7 +312,10 @@ func startStandAlone[T types.Application](svrCtx *Context, svrCfg serverconfig.C
 func startInProcess[T types.Application](svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app T,
 	metrics *telemetry.Metrics, opts StartCmdOptions[T],
 ) error {
-	cmtCfg := svrCtx.Config
+	cmtCfg, ok := svrCtx.GetConfig().(CometConfig)
+	if !ok {
+		return fmt.Errorf("Can not convert cometbft config")
+	}
 	gRPCOnly := svrCtx.Viper.GetBool(flagGRPCOnly)
 
 	g, ctx := getCtx(svrCtx, true)
@@ -318,7 +326,7 @@ func startInProcess[T types.Application](svrCtx *Context, svrCfg serverconfig.Co
 		svrCfg.GRPC.Enable = true
 	} else {
 		svrCtx.Logger.Info("starting node with ABCI CometBFT in-process")
-		tmNode, cleanupFn, err := startCmtNode(ctx, cmtCfg, app, svrCtx)
+		tmNode, cleanupFn, err := startCmtNode(ctx, cmtCfg.Config, app, svrCtx)
 		if err != nil {
 			return err
 		}
@@ -627,7 +635,12 @@ func startApp[T types.Application](svrCtx *Context, appCreator types.AppCreator[
 		return app, traceCleanupFn, err
 	}
 
-	home := svrCtx.Config.RootDir
+	cmtCfg, ok := svrCtx.GetConfig().(CometConfig)
+	if !ok {
+		return app, traceCleanupFn, fmt.Errorf("Can not convert cometbft config")
+	}
+
+	home := cmtCfg.RootDir
 	db, err := opts.DBOpener(home, GetAppDBBackend(svrCtx.Viper))
 	if err != nil {
 		return app, traceCleanupFn, err
@@ -754,7 +767,10 @@ you want to test the upgrade handler itself.
 // testnetify modifies both state and blockStore, allowing the provided operator address and local validator key to control the network
 // that the state in the data folder represents. The chainID of the local genesis file is modified to match the provided chainID.
 func testnetify[T types.Application](ctx *Context, testnetAppCreator types.AppCreator[T], db dbm.DB, traceWriter io.WriteCloser) (*T, error) {
-	config := ctx.Config
+	config, ok := ctx.GetConfig().(CometConfig)
+	if !ok {
+		return nil, fmt.Errorf("Can not convert cometbft config")
+	}
 
 	newChainID, ok := ctx.Viper.Get(KeyNewChainID).(string)
 	if !ok {
@@ -776,16 +792,16 @@ func testnetify[T types.Application](ctx *Context, testnetAppCreator types.AppCr
 	}
 
 	// Load the comet genesis doc provider.
-	genDocProvider := node.DefaultGenesisDocProviderFunc(config)
+	genDocProvider := node.DefaultGenesisDocProviderFunc(config.Config)
 
 	// Initialize blockStore and stateDB.
-	blockStoreDB, err := cmtcfg.DefaultDBProvider(&cmtcfg.DBContext{ID: "blockstore", Config: config})
+	blockStoreDB, err := cmtcfg.DefaultDBProvider(&cmtcfg.DBContext{ID: "blockstore", Config: config.Config})
 	if err != nil {
 		return nil, err
 	}
 	blockStore := store.NewBlockStore(blockStoreDB)
 
-	stateDB, err := cmtcfg.DefaultDBProvider(&cmtcfg.DBContext{ID: "state", Config: config})
+	stateDB, err := cmtcfg.DefaultDBProvider(&cmtcfg.DBContext{ID: "state", Config: config.Config})
 	if err != nil {
 		return nil, err
 	}

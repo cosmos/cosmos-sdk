@@ -56,14 +56,17 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := server.GetServerContextFromCmd(cmd)
+			config, ok := serverCtx.GetConfig().(server.CometConfig)
+			if !ok {
+				return fmt.Errorf("Can not convert cometbft config")
+			}
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 			cdc := clientCtx.Codec
-			config := serverCtx.Config
 
-			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(serverCtx.Config)
+			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(config.Config)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize node validator files")
 			}

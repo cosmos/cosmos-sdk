@@ -74,7 +74,10 @@ func ShowNodeIDCmd() *cobra.Command {
 		Short: "Show this node's ID",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
-			cfg := serverCtx.Config
+			cfg, ok := serverCtx.GetConfig().(CometConfig)
+			if !ok {
+				return fmt.Errorf("Can not convert cometbft config")
+			}
 
 			nodeKey, err := p2p.LoadNodeKey(cfg.NodeKeyFile())
 			if err != nil {
@@ -94,7 +97,10 @@ func ShowValidatorCmd() *cobra.Command {
 		Short: "Show this node's CometBFT validator info",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
-			cfg := serverCtx.Config
+			cfg, ok := serverCtx.GetConfig().(CometConfig)
+			if !ok {
+				return fmt.Errorf("Can not convert cometbft config")
+			}
 
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			pk, err := privValidator.GetPubKey()
@@ -128,7 +134,10 @@ func ShowAddressCmd() *cobra.Command {
 		Short: "Shows this node's CometBFT validator consensus address",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
-			cfg := serverCtx.Config
+			cfg, ok := serverCtx.GetConfig().(CometConfig)
+			if !ok {
+				return fmt.Errorf("Can not convert cometbft config")
+			}
 
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 
@@ -364,7 +373,10 @@ func BootstrapStateCmd[T types.Application](appCreator types.AppCreator[T]) *cob
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
 			logger := log.NewLogger(cmd.OutOrStdout())
-			cfg := serverCtx.Config
+			cfg, ok := serverCtx.GetConfig().(CometConfig)
+			if !ok {
+				return fmt.Errorf("Can not convert cometbft config")
+			}
 
 			height, err := cmd.Flags().GetInt64("height")
 			if err != nil {
@@ -381,7 +393,7 @@ func BootstrapStateCmd[T types.Application](appCreator types.AppCreator[T]) *cob
 				height = app.CommitMultiStore().LastCommitID().Version
 			}
 
-			return node.BootstrapState(cmd.Context(), cfg, cmtcfg.DefaultDBProvider, getGenDocProvider(cfg), uint64(height), nil)
+			return node.BootstrapState(cmd.Context(), cfg.Config, cmtcfg.DefaultDBProvider, getGenDocProvider(cfg.Config), uint64(height), nil)
 		},
 	}
 

@@ -1,6 +1,8 @@
 package snapshot
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log"
@@ -17,13 +19,17 @@ func ExportSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCrea
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := server.GetServerContextFromCmd(cmd)
+			cfg, ok := ctx.GetConfig().(server.CometConfig)
+			if !ok {
+				return fmt.Errorf("Can not convert cometbft config")
+			}
 
 			height, err := cmd.Flags().GetInt64("height")
 			if err != nil {
 				return err
 			}
 
-			home := ctx.Config.RootDir
+			home := cfg.RootDir
 			db, err := openDB(home, server.GetAppDBBackend(ctx.Viper))
 			if err != nil {
 				return err

@@ -71,14 +71,12 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			home := t.TempDir()
 			logger := log.NewNopLogger()
-			cfg, err := genutiltest.CreateDefaultCometConfig(home)
-			require.NoError(t, err)
 
 			appCodec := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}).Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 
-			serverCtx := server.NewContext(viper.New(), cfg, logger)
+			serverCtx := server.NewContext(viper.New(), logger)
 			clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(home).WithAddressCodec(ac)
 
 			if tc.withKeyring {

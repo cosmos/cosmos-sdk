@@ -1,6 +1,7 @@
 package snapshot
 
 import (
+	"fmt"
 	"path/filepath"
 	"strconv"
 
@@ -22,6 +23,10 @@ func RestoreSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCre
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := server.GetServerContextFromCmd(cmd)
+			cfg, ok := ctx.GetConfig().(server.CometConfig)
+			if !ok {
+				return fmt.Errorf("Can not convert cometbft config")
+			}
 
 			height, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
@@ -32,7 +37,7 @@ func RestoreSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCre
 				return err
 			}
 
-			home := ctx.Config.RootDir
+			home := cfg.RootDir
 			db, err := openDB(home, server.GetAppDBBackend(ctx.Viper))
 			if err != nil {
 				return err

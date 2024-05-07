@@ -63,10 +63,8 @@ func TestInitCmd(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			home := t.TempDir()
 			logger := log.NewNopLogger()
-			cfg, err := genutiltest.CreateDefaultCometConfig(home)
-			require.NoError(t, err)
 
-			serverCtx := server.NewContext(viper.New(), cfg, logger)
+			serverCtx := server.NewContext(viper.New(), logger)
 			interfaceRegistry := types.NewInterfaceRegistry()
 			marshaler := codec.NewProtoCodec(interfaceRegistry)
 			clientCtx := client.Context{}.
@@ -96,10 +94,8 @@ func TestInitCmd(t *testing.T) {
 func TestInitRecover(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()
-	cfg, err := genutiltest.CreateDefaultCometConfig(home)
-	require.NoError(t, err)
 
-	serverCtx := server.NewContext(viper.New(), cfg, logger)
+	serverCtx := server.NewContext(viper.New(), logger)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
@@ -127,10 +123,8 @@ func TestInitRecover(t *testing.T) {
 func TestInitDefaultBondDenom(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()
-	cfg, err := genutiltest.CreateDefaultCometConfig(home)
-	require.NoError(t, err)
 
-	serverCtx := server.NewContext(viper.New(), cfg, logger)
+	serverCtx := server.NewContext(viper.New(), logger)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
@@ -154,11 +148,9 @@ func TestInitDefaultBondDenom(t *testing.T) {
 func TestEmptyState(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()
-	cfg, err := genutiltest.CreateDefaultCometConfig(home)
-	require.NoError(t, err)
 
-	serverCtx := server.NewContext(viper.New(), cfg, logger)
-	serverCtx.Config.SetRoot(home)
+	serverCtx := server.NewContext(viper.New(), logger)
+	serverCtx.SetRoot(home)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
@@ -248,10 +240,8 @@ func TestInitNodeValidatorFiles(t *testing.T) {
 func TestInitConfig(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()
-	cfg, err := genutiltest.CreateDefaultCometConfig(home)
-	require.NoError(t, err)
 
-	serverCtx := server.NewContext(viper.New(), cfg, logger)
+	serverCtx := server.NewContext(viper.New(), logger)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
@@ -297,7 +287,7 @@ func TestInitWithHeight(t *testing.T) {
 	cfg, err := genutiltest.CreateDefaultCometConfig(home)
 	require.NoError(t, err)
 
-	serverCtx := server.NewContext(viper.New(), cfg, logger)
+	serverCtx := server.NewContext(viper.New(), logger)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
@@ -329,7 +319,7 @@ func TestInitWithNegativeHeight(t *testing.T) {
 	cfg, err := genutiltest.CreateDefaultCometConfig(home)
 	require.NoError(t, err)
 
-	serverCtx := server.NewContext(viper.New(), cfg, logger)
+	serverCtx := server.NewContext(viper.New(), logger)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.

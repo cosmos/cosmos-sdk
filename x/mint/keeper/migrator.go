@@ -50,11 +50,6 @@ func (m Migrator) Migrate2to3(ctx context.Context) error {
 
 // Migrate3to4 migrates from version 3 to 4.
 func (m Migrator) Migrate3to4(ctx context.Context) error {
-	lre, err := m.keeper.LastReductionEpoch.Get(ctx)
-	if err != nil {
-		return err
-	}
-
 	// Initialize the new LastReductionEpoch with the default value
 	defaultGenesisState := types.DefaultGenesisState()
 	reductionStartedEpoch := defaultGenesisState.ReductionStartedEpoch

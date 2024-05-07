@@ -16,6 +16,7 @@ import (
 	"cosmossdk.io/x/consensus/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var StoreKey = "Consensus"
@@ -69,11 +70,25 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 	if err != nil {
 		return nil, err
 	}
-	if err := cmttypes.ConsensusParamsFromProto(consensusParams).ValidateBasic(); err != nil {
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	paramsProto, err := k.ParamsStore.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	params := cmttypes.ConsensusParamsFromProto(paramsProto)
+
+	nextParams := params.Update(&consensusParams)
+
+	if err := nextParams.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
-	if err := k.ParamsStore.Set(ctx, consensusParams); err != nil {
+	if err := params.ValidateUpdate(&consensusParams, sdkCtx.BlockHeight()); err != nil {
+		return nil, err
+	}
+
+	if err := k.ParamsStore.Set(ctx, nextParams.ToProto()); err != nil {
 		return nil, err
 	}
 

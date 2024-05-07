@@ -55,18 +55,17 @@ func NewAppModule(
 	cdc codec.Codec,
 	keeper keeper.Keeper,
 	ak types.AccountKeeper,
-	ic types.MintFn,
+	mintFn types.MintFn,
 ) AppModule {
-	if ic == nil {
-		ic = types.DefaultMintFn
+	if mintFn == nil {
+		mintFn = keeper.DefaultMintFn
 	}
 
 	return AppModule{
 		cdc:        cdc,
 		keeper:     keeper,
 		authKeeper: ak,
-		// inflationCalculator: ic,
-		mintFn: ic,
+		mintFn:     mintFn,
 	}
 }
 

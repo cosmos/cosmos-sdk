@@ -23,7 +23,7 @@ func (k Keeper) BeginBlocker(ctx context.Context, ic types.MintFn) error {
 		return err
 	}
 
-	err = ic(ctx, k.Environment, &minter, params, k.MintCoins, k.AddCollectedFees)
+	err = ic(ctx, k.Environment, &minter, params)
 	if err != nil {
 		return err
 	}

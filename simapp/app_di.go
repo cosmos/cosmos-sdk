@@ -176,6 +176,7 @@ func NewSimApp(
 				// custom function that implements the minttypes.InflationCalculationFn
 				// interface.
 			),
+			depinject.Provide(ProvideMintFn),
 		)
 	)
 

@@ -13,7 +13,6 @@ import (
 	math "cosmossdk.io/math"
 	types "cosmossdk.io/x/consensus/types"
 	types0 "cosmossdk.io/x/staking/types"
-	v1 "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	types1 "github.com/cosmos/cosmos-sdk/crypto/types"
 	types2 "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
@@ -312,10 +311,10 @@ func (mr *MockValidatorSetMockRecorder) Delegation(arg0, arg1, arg2 interface{})
 }
 
 // GetPubKeyByConsAddr mocks base method.
-func (m *MockValidatorSet) GetPubKeyByConsAddr(arg0 context.Context, arg1 types2.ConsAddress) (v1.PublicKey, error) {
+func (m *MockValidatorSet) GetPubKeyByConsAddr(arg0 context.Context, arg1 types2.ConsAddress) (types1.PubKey, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPubKeyByConsAddr", arg0, arg1)
-	ret0, _ := ret[0].(v1.PublicKey)
+	ret0, _ := ret[0].(types1.PubKey)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

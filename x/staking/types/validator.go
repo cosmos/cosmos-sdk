@@ -474,16 +474,6 @@ func (v Validator) ConsPubKey() (cryptotypes.PubKey, error) {
 	return pk, nil
 }
 
-// CmtConsPublicKey casts Validator.ConsensusPubkey to cmtprotocrypto.PubKey.
-func (v Validator) CmtConsPublicKey() (cryptotypes.PubKey, error) {
-	pk, err := v.ConsPubKey()
-	if err != nil {
-		return nil, err
-	}
-
-	return pk, nil
-}
-
 // GetConsAddr extracts Consensus key address
 func (v Validator) GetConsAddr() ([]byte, error) {
 	pk, ok := v.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)

@@ -601,7 +601,7 @@ func (k Keeper) GetPubKeyByConsAddr(ctx context.Context, addr sdk.ConsAddress) (
 		return nil, err
 	}
 
-	pubkey, err := v.CmtConsPublicKey()
+	pubkey, err := v.ConsPubKey()
 	if err != nil {
 		return nil, err
 	}

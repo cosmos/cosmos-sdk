@@ -86,7 +86,8 @@ func (ctx *Context) SetRoot(rootDir string) {
 }
 
 func (config CometConfig) SetRoot(root string) corectx.CometConfig {
-	return config.SetRoot(root)
+	config.Config.SetRoot(root)
+	return config
 }
 
 func GetCometConfigFromViper(v *viper.Viper) corectx.CometConfig {

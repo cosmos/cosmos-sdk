@@ -31,6 +31,7 @@ type ModuleInputs struct {
 	Environment            appmodule.Environment
 	Cdc                    codec.Codec
 	InflationCalculationFn types.InflationCalculationFn `optional:"true"`
+	MintFn                 types.MintFn                 `optional:"true"`
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -72,7 +73,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	)
 
 	// when no inflation calculation function is provided it will use the default types.DefaultInflationCalculationFn
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.InflationCalculationFn)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.MintFn)
 
 	return ModuleOutputs{MintKeeper: k, Module: m}
 }

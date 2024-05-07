@@ -141,7 +141,7 @@ Example:
 			}
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
-			config := serverCtx.Config
+			config := serverCtx.GetConfig().(server.CometConfig)
 
 			args := initArgs{}
 			args.outputDir, _ = cmd.Flags().GetString(flagOutputDir)
@@ -161,7 +161,7 @@ Example:
 				return err
 			}
 
-			return initTestnetFiles(clientCtx, cmd, config, mm, genBalIterator, args)
+			return initTestnetFiles(clientCtx, cmd, config.Config, mm, genBalIterator, args)
 		},
 	}
 

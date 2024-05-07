@@ -57,7 +57,7 @@ func Test_TestnetCmd(t *testing.T) {
 	err = genutiltest.ExecInitCmd(moduleManager, home, encodingConfig.Codec)
 	require.NoError(t, err)
 
-	serverCtx := server.NewContext(viper.New(), cfg, logger)
+	serverCtx := server.NewContext(viper.New(), logger)
 	clientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
 		WithHomeDir(home).

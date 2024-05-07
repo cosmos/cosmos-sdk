@@ -229,7 +229,7 @@ func NewTestNetworkFixture() network.TestFixture {
 	appCtr := func(val network.ValidatorI) servertypes.Application {
 		return NewSimApp(
 			val.GetCtx().Logger, dbm.NewMemDB(), nil, true,
-			simtestutil.NewAppOptionsWithFlagHome(val.GetCtx().Config.RootDir),
+			simtestutil.NewAppOptionsWithFlagHome(val.GetCtx().GetConfig().(server.CometConfig).RootDir),
 			bam.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			bam.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
 			bam.SetChainID(val.GetCtx().Viper.GetString(flags.FlagChainID)),

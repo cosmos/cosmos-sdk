@@ -31,22 +31,32 @@ func RandomAcc(r *rand.Rand, accs []Account) (Account, int) {
 	return accs[idx], idx
 }
 
-// RandomAccounts generates n random accounts
+// RandomAccounts deterministic generates n random accounts without duplicates.
 func RandomAccounts(r *rand.Rand, n int) []Account {
 	accs := make([]Account, n)
-
-	for i := 0; i < n; i++ {
+	idx := make(map[string]struct{}, n)
+	var i int
+	for i < n {
 		// don't need that much entropy for simulation
 		privkeySeed := make([]byte, 15)
-		r.Read(privkeySeed)
-
-		accs[i].PrivKey = secp256k1.GenPrivKeyFromSecret(privkeySeed)
-		accs[i].PubKey = accs[i].PrivKey.PubKey()
-		accs[i].Address = sdk.AccAddress(accs[i].PubKey.Address())
-
-		accs[i].ConsKey = ed25519.GenPrivKeyFromSecret(privkeySeed)
+		if _, err := r.Read(privkeySeed); err != nil {
+			panic(err)
+		}
+		privKey := secp256k1.GenPrivKeyFromSecret(privkeySeed)
+		pubKey := privKey.PubKey()
+		addr := sdk.AccAddress(pubKey.Address())
+		if _, exists := idx[string(addr.Bytes())]; exists {
+			continue
+		}
+		idx[string(addr.Bytes())] = struct{}{}
+		accs[i] = Account{
+			Address: addr,
+			PrivKey: privKey,
+			PubKey:  pubKey,
+			ConsKey: ed25519.GenPrivKeyFromSecret(privkeySeed),
+		}
+		i++
 	}
-
 	return accs
 }
 

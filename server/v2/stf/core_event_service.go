@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"slices"
 
-	"cosmossdk.io/core/event"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/maps"
 	"google.golang.org/protobuf/runtime/protoiface"
+
+	"cosmossdk.io/core/event"
 )
 
 func NewEventService() event.Service {
@@ -80,7 +81,7 @@ func TypedEventToEvent(tev gogoproto.Message) (event.Event, error) {
 	}
 
 	return event.Event{
-		Type:       string(evtType),
+		Type:       evtType,
 		Attributes: attrs,
 	}, nil
 }

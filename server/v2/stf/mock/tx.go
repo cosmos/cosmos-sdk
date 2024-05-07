@@ -100,6 +100,7 @@ func (TxCodec) Decode(bytes []byte) (Tx, error) {
 	t.Decode(bytes)
 	return *t, nil
 }
+
 func (TxCodec) DecodeJSON(bytes []byte) (Tx, error) {
 	t := new(Tx)
 	t.DecodeJSON(bytes)

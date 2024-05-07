@@ -155,7 +155,7 @@ func VersionCmd() *cobra.Command {
 				BlockProtocol uint64
 				P2PProtocol   uint64
 			}{
-				CometBFT:      cmtversion.TMCoreSemVer,
+				CometBFT:      cmtversion.CMTSemVer,
 				ABCI:          cmtversion.ABCIVersion,
 				BlockProtocol: cmtversion.BlockProtocol,
 				P2PProtocol:   cmtversion.P2PProtocol,
@@ -381,7 +381,7 @@ func BootstrapStateCmd[T types.Application](appCreator types.AppCreator[T]) *cob
 				height = app.CommitMultiStore().LastCommitID().Version
 			}
 
-			return node.BootstrapStateWithGenProvider(cmd.Context(), cfg, cmtcfg.DefaultDBProvider, getGenDocProvider(cfg), uint64(height), nil)
+			return node.BootstrapState(cmd.Context(), cfg, cmtcfg.DefaultDBProvider, getGenDocProvider(cfg), uint64(height), nil)
 		},
 	}
 

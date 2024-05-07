@@ -14,8 +14,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	counterkeeper "github.com/cosmos/cosmos-sdk/x/counter/keeper"
-	countertypes "github.com/cosmos/cosmos-sdk/x/counter/types"
+	counterkeeper "github.com/cosmos/cosmos-sdk/testutil/x/counter/keeper"
+	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 )
 
 func TestRouterService(t *testing.T) {

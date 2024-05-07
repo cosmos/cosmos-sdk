@@ -181,6 +181,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (baseapp) [#19993](https://github.com/cosmos/cosmos-sdk/pull/19993) Indicate pruning with error code "not found" rather than "invalid request".
 * (x/consensus) [#20010](https://github.com/cosmos/cosmos-sdk/pull/20010) Move consensus module to be its own go.mod
 * (server) [#20140](https://github.com/cosmos/cosmos-sdk/pull/20140) Remove embedded grpc-web proxy in favor of standalone grpc-web proxy. [Envoy Proxy](https://www.envoyproxy.io/docs/envoy/latest/start/start)
+* (all) [#19726](https://github.com/cosmos/cosmos-sdk/pull/19726) Integrate comet v1
 
 ### Client Breaking Changes
 

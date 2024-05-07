@@ -50,9 +50,9 @@ func TestSTF(t *testing.T) {
 			kvSet(t, ctx, "post-tx-exec")
 			return nil
 		},
-		branch:           branch.DefaultNewWriterMap,
-		getGasMeter:      gas.DefaultGasMeter,
-		wrapWithGasMeter: gas.DefaultWrapWithGasMeter,
+		branchFn:            branch.DefaultNewWriterMap,
+		makeGasMeter:        gas.DefaultGasMeter,
+		makeGasMeteredState: gas.DefaultWrapWithGasMeter,
 	}
 
 	t.Run("begin and end block", func(t *testing.T) {

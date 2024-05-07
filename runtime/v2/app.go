@@ -3,18 +3,18 @@ package runtime
 import (
 	"context"
 	"encoding/json"
+	"errors"
 
 	"golang.org/x/exp/slices"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	coreappmanager "cosmossdk.io/core/app"
-	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -24,11 +24,11 @@ var _ AppI[transaction.Tx] = (*App)(nil)
 
 // AppI is an interface that defines the methods required by the App.
 type AppI[T transaction.Tx] interface {
-	DeliverBlock(ctx context.Context, block *coreappmanager.BlockRequest[T]) (*coreappmanager.BlockResponse, corestore.WriterMap, error)
+	DeliverBlock(ctx context.Context, block *coreappmanager.BlockRequest[T]) (*coreappmanager.BlockResponse, store.WriterMap, error)
 	ValidateTx(ctx context.Context, tx T) (coreappmanager.TxResult, error)
-	Simulate(ctx context.Context, tx T) (coreappmanager.TxResult, corestore.WriterMap, error)
+	Simulate(ctx context.Context, tx T) (coreappmanager.TxResult, store.WriterMap, error)
 	Query(ctx context.Context, version uint64, request transaction.Type) (transaction.Type, error)
-	QueryWithState(ctx context.Context, state corestore.ReaderMap, request transaction.Type) (transaction.Type, error)
+	QueryWithState(ctx context.Context, state store.ReaderMap, request transaction.Type) (transaction.Type, error)
 
 	Logger() log.Logger
 	ModuleManager() *MM
@@ -51,7 +51,7 @@ type App struct {
 	stf                *stf.STF[transaction.Tx]
 	msgRouterBuilder   *stf.MsgRouterBuilder
 	queryRouterBuilder *stf.MsgRouterBuilder
-	db                 Store // TODO: double check
+	db                 Store
 
 	// app configuration
 	logger    log.Logger
@@ -59,7 +59,7 @@ type App struct {
 	appConfig *appv1alpha1.Config
 
 	// modules configuration
-	storeKeys         []storetypes.StoreKey
+	storeKeys         []string
 	interfaceRegistry codectypes.InterfaceRegistry
 	cdc               codec.Codec
 	amino             *codec.LegacyAmino
@@ -100,27 +100,26 @@ func (a *App) Close() error {
 // This method should only be used for registering extra stores
 // wiich is necessary for modules that not registered using the app config.
 // To be used in combination of RegisterModules.
-func (a *App) RegisterStores(keys ...storetypes.StoreKey) error {
+func (a *App) RegisterStores(keys ...string) error {
 	a.storeKeys = append(a.storeKeys, keys...)
-	// a.MountStores(keys...)
 
 	return nil
 }
 
 // GetStoreKeys returns all the stored store keys.
-func (a *App) GetStoreKeys() []storetypes.StoreKey {
+func (a *App) GetStoreKeys() []string {
 	return a.storeKeys
 }
 
 // UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.
 // NOTE: This should only be used in testing.
-func (a *App) UnsafeFindStoreKey(storeKey string) storetypes.StoreKey {
-	i := slices.IndexFunc(a.storeKeys, func(s storetypes.StoreKey) bool { return s.Name() == storeKey })
+func (a *App) UnsafeFindStoreKey(storeKey string) (string, error) {
+	i := slices.IndexFunc(a.storeKeys, func(s string) bool { return s == storeKey })
 	if i == -1 {
-		return nil
+		return "", errors.New("store key not found")
 	}
 
-	return a.storeKeys[i]
+	return a.storeKeys[i], nil
 }
 
 func (a *App) GetStore() Store {
@@ -129,4 +128,16 @@ func (a *App) GetStore() Store {
 
 func (a *App) GetLogger() log.Logger {
 	return a.logger
+}
+
+func (a *App) ExecuteGenesisTx(_ []byte) error {
+	panic("not implemented")
+}
+
+func (a *App) SetAppVersion(context.Context, uint64) error {
+	panic("not implemented")
+}
+
+func (a *App) AppVersion(context.Context) (uint64, error) {
+	panic("not implemented")
 }

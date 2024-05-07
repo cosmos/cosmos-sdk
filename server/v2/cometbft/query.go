@@ -97,7 +97,8 @@ func (c *Consensus[T]) handleQueryStore(path []string, st types.Store, req *abci
 
 	// "/store/<storeName>" for store queries
 	storeName := path[1]
-	qRes, err := c.store.Query(storeName, uint64(req.Height), req.Data, req.Prove)
+	storeNameBz := []byte(storeName) // TODO fastpath?
+	qRes, err := c.store.Query(storeNameBz, uint64(req.Height), req.Data, req.Prove)
 	if err != nil {
 		return nil, err
 	}

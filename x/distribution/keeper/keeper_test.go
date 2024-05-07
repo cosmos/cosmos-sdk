@@ -39,7 +39,8 @@ func initFixture(t *testing.T) (sdk.Context, []sdk.AccAddress, keeper.Keeper, de
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
+	cdcOpts := codectestutil.CodecOptions{}
+	encCfg := moduletestutil.MakeTestEncodingConfig(cdcOpts, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	addrs := simtestutil.CreateIncrementalAccounts(2)
 
@@ -59,6 +60,9 @@ func initFixture(t *testing.T) (sdk.Context, []sdk.AccAddress, keeper.Keeper, de
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 
+	authorityAddr, err := cdcOpts.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
+	require.NoError(t, err)
+
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
 		env,
@@ -67,7 +71,7 @@ func initFixture(t *testing.T) (sdk.Context, []sdk.AccAddress, keeper.Keeper, de
 		stakingKeeper,
 		poolKeeper,
 		"fee_collector",
-		authtypes.NewModuleAddress("gov").String(),
+		authorityAddr,
 	)
 
 	params := types.DefaultParams()

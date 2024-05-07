@@ -23,7 +23,6 @@ COPY x/mint/go.mod x/mint/go.sum /work/x/mint/
 COPY x/accounts/go.mod x/accounts/go.sum /work/x/accounts/
 COPY runtime/v2/go.mod runtime/v2/go.sum /work/runtime/v2/
 COPY server/v2/appmanager/go.mod server/v2/appmanager/go.sum /work/server/v2/appmanager/
-COPY server/v2/core/go.mod server/v2/core/go.sum /work/server/v2/core/
 COPY server/v2/stf/go.mod server/v2/stf/go.sum /work/server/v2/stf/
 
 RUN go mod download

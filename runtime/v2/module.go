@@ -18,15 +18,17 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
-	storetypes "cosmossdk.io/store/types"
+	rootstorev2 "cosmossdk.io/store/v2/root"
 	"cosmossdk.io/x/tx/signing"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -42,6 +44,9 @@ var (
 type appModule struct {
 	app *App
 }
+
+func (m appModule) IsOnePerModuleType() {}
+func (m appModule) IsAppModule()        {}
 
 func (m appModule) RegisterServices(registar grpc.ServiceRegistrar) error {
 	autoCliQueryService, err := services.NewAutoCLIQueryService(m.app.moduleManager.modules)
@@ -60,25 +65,56 @@ func (m appModule) RegisterServices(registar grpc.ServiceRegistrar) error {
 	return nil
 }
 
-func (m appModule) IsOnePerModuleType() {}
-func (m appModule) IsAppModule()        {}
+func (m appModule) AutoCLIOptions() *autocliv1.ModuleOptions {
+	return &autocliv1.ModuleOptions{
+		Query: &autocliv1.ServiceCommandDescriptor{
+			Service: appv1alpha1.Query_ServiceDesc.ServiceName,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{
+					RpcMethod: "Config",
+					Short:     "Query the current app config",
+				},
+			},
+			SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{
+				"autocli": {
+					Service: autocliv1.Query_ServiceDesc.ServiceName,
+					RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+						{
+							RpcMethod: "AppOptions",
+							Short:     "Query the custom autocli options",
+						},
+					},
+				},
+				"reflection": {
+					Service: reflectionv1.ReflectionService_ServiceDesc.ServiceName,
+					RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+						{
+							RpcMethod: "FileDescriptors",
+							Short:     "Query the app's protobuf file descriptors",
+						},
+					},
+				},
+			},
+		},
+	}
+}
 
 func init() {
 	appconfig.Register(&runtimev2.Module{},
 		appconfig.Provide(
-			ProvideApp,
+			ProvideAppBuilder,
 			ProvideInterfaceRegistry,
-			ProvideKVStoreKey,
 			ProvideEnvironment,
 			ProvideModuleManager,
-			ProvideMemoryStoreKey,
 			ProvideAddressCodec,
+			ProvideGenesisTxHandler,
+			ProvideAppVersionModifier,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
 }
 
-func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
+func ProvideAppBuilder(interfaceRegistry codectypes.InterfaceRegistry) (
 	codec.Codec,
 	*codec.LegacyAmino,
 	*AppBuilder,
@@ -86,7 +122,6 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 	appmodulev2.AppModule,
 	protodesc.Resolver,
 	protoregistry.MessageTypeResolver,
-	error,
 ) {
 	protoFiles := proto.HybridResolver
 	protoTypes := protoregistry.GlobalTypes
@@ -106,15 +141,16 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	msgRouterBuilder := stf.NewMsgRouterBuilder()
 	app := &App{
-		storeKeys:         nil,
-		interfaceRegistry: interfaceRegistry,
-		cdc:               cdc,
-		amino:             amino,
-		msgRouterBuilder:  msgRouterBuilder,
+		storeKeys:          nil,
+		interfaceRegistry:  interfaceRegistry,
+		cdc:                cdc,
+		amino:              amino,
+		msgRouterBuilder:   msgRouterBuilder,
+		queryRouterBuilder: stf.NewMsgRouterBuilder(), // TODO dedicated query router
 	}
 	appBuilder := &AppBuilder{app: app}
 
-	return cdc, amino, appBuilder, msgRouterBuilder, appModule{app}, protoFiles, protoTypes, nil
+	return cdc, amino, appBuilder, msgRouterBuilder, appModule{app}, protoFiles, protoTypes
 }
 
 type AppInputs struct {
@@ -127,6 +163,7 @@ type AppInputs struct {
 	InterfaceRegistry codectypes.InterfaceRegistry
 	LegacyAmino       *codec.LegacyAmino
 	Logger            log.Logger
+	StoreOptions      *rootstorev2.FactoryOptions `optional:"true"`
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -137,13 +174,29 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager = inputs.ModuleManager
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistry)
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
+
+	// TODO: this is a bit of a hack, but it's the only way to get the store keys into the app
+	// registerStoreKey could instead set this on StoreOptions directly
+	if inputs.StoreOptions != nil {
+		inputs.AppBuilder.storeOptions = inputs.StoreOptions
+		inputs.AppBuilder.storeOptions.StoreKeys = inputs.AppBuilder.app.storeKeys
+	}
 }
 
-func ProvideModuleManager(logger log.Logger, cdc codec.Codec, config *runtimev2.Module, modules map[string]appmodulev2.AppModule) *MM {
+func ProvideModuleManager(
+	logger log.Logger,
+	cdc codec.Codec,
+	config *runtimev2.Module,
+	modules map[string]appmodulev2.AppModule,
+) *MM {
 	return NewModuleManager(logger, cdc, config, modules)
 }
 
-func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec ValidatorAddressCodec, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
+func ProvideInterfaceRegistry(
+	addressCodec address.Codec,
+	validatorAddressCodec address.ValidatorAddressCodec,
+	customGetSigners []signing.CustomGetSigner,
+) (codectypes.InterfaceRegistry, error) {
 	signingOptions := signing.Options{
 		AddressCodec:          addressCodec,
 		ValidatorAddressCodec: validatorAddressCodec,
@@ -167,7 +220,40 @@ func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec 
 	return interfaceRegistry, nil
 }
 
-func registerStoreKey(wrapper *AppBuilder, key storetypes.StoreKey) {
+// ProvideEnvironment provides the environment for keeper modules, while maintaining backward compatibility and provide services directly as well.
+func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinject.ModuleKey, app *AppBuilder) (
+	appmodulev2.Environment,
+	store.KVStoreService,
+	store.MemoryStoreService,
+) {
+	var kvStoreKey string
+	storeKeyOverride := storeKeyOverride(config, key.Name())
+	if storeKeyOverride != nil {
+		kvStoreKey = storeKeyOverride.KvStoreKey
+	} else {
+		kvStoreKey = key.Name()
+	}
+	registerStoreKey(app, kvStoreKey)
+	kvService := stf.NewKVStoreService([]byte(kvStoreKey))
+
+	memStoreKey := fmt.Sprintf("memory:%s", key.Name())
+	registerStoreKey(app, memStoreKey)
+	memService := stf.NewMemoryStoreService([]byte(memStoreKey))
+
+	env := appmodulev2.Environment{
+		Logger:          logger,
+		BranchService:   nil, // TODO
+		EventService:    stf.NewEventService(),
+		GasService:      stf.NewGasMeterService(),
+		HeaderService:   stf.HeaderService{},
+		KVStoreService:  kvService,
+		MemStoreService: memService,
+	}
+
+	return env, kvService, memService
+}
+
+func registerStoreKey(wrapper *AppBuilder, key string) {
 	wrapper.app.storeKeys = append(wrapper.app.storeKeys, key)
 }
 
@@ -177,62 +263,9 @@ func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.St
 			return cfg
 		}
 	}
+
 	return nil
 }
-
-func ProvideKVStoreKey(config *runtimev2.Module, key depinject.ModuleKey, app *AppBuilder) *storetypes.KVStoreKey {
-	override := storeKeyOverride(config, key.Name())
-
-	var storeKeyName string
-	if override != nil {
-		storeKeyName = override.KvStoreKey
-	} else {
-		storeKeyName = key.Name()
-	}
-
-	storeKey := storetypes.NewKVStoreKey(storeKeyName)
-	registerStoreKey(app, storeKey)
-	return storeKey
-}
-
-func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes.MemoryStoreKey {
-	storeKey := storetypes.NewMemoryStoreKey(fmt.Sprintf("memory:%s", key.Name()))
-	registerStoreKey(app, storeKey)
-	return storeKey
-}
-
-// ProvideEnvironment provides the environment for keeper modules, while maintaining backward compatibility and provide services directly as well.
-func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinject.ModuleKey, app *AppBuilder) (
-	appmodulev2.Environment,
-	store.KVStoreService,
-	store.MemoryStoreService,
-) {
-	kvStoreKey := ProvideKVStoreKey(config, key, app)
-	kvService := stf.NewKVStoreService([]byte(kvStoreKey.Name()))
-
-	memStoreKey := ProvideMemoryStoreKey(key, app)
-	memService := stf.NewMemoryStoreService([]byte(memStoreKey.Name()))
-
-	env := appmodulev2.Environment{
-		Logger:          logger,
-		BranchService:   nil, // TODO
-		EventService:    stf.NewEventService(),
-		GasService:      stf.NewGasMeterService(),
-		HeaderService:   nil, // TODO
-		KVStoreService:  kvService,
-		MemStoreService: memService,
-	}
-
-	return env, kvService, memService
-}
-
-type (
-	// ValidatorAddressCodec is an alias for address.Codec for validator addresses.
-	ValidatorAddressCodec address.Codec
-
-	// ConsensusAddressCodec is an alias for address.Codec for validator consensus addresses.
-	ConsensusAddressCodec address.Codec
-)
 
 type AddressCodecInputs struct {
 	depinject.In
@@ -240,14 +273,14 @@ type AddressCodecInputs struct {
 	AuthConfig    *authmodulev1.Module    `optional:"true"`
 	StakingConfig *stakingmodulev1.Module `optional:"true"`
 
-	AddressCodecFactory          func() address.Codec         `optional:"true"`
-	ValidatorAddressCodecFactory func() ValidatorAddressCodec `optional:"true"`
-	ConsensusAddressCodecFactory func() ConsensusAddressCodec `optional:"true"`
+	AddressCodecFactory          func() address.Codec                 `optional:"true"`
+	ValidatorAddressCodecFactory func() address.ValidatorAddressCodec `optional:"true"`
+	ConsensusAddressCodecFactory func() address.ConsensusAddressCodec `optional:"true"`
 }
 
 // ProvideAddressCodec provides an address.Codec to the container for any
 // modules that want to do address string <> bytes conversion.
-func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, ValidatorAddressCodec, ConsensusAddressCodec) {
+func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, address.ValidatorAddressCodec, address.ConsensusAddressCodec) {
 	if in.AddressCodecFactory != nil && in.ValidatorAddressCodecFactory != nil && in.ConsensusAddressCodecFactory != nil {
 		return in.AddressCodecFactory(), in.ValidatorAddressCodecFactory(), in.ConsensusAddressCodecFactory()
 	}
@@ -271,4 +304,12 @@ func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, ValidatorAddress
 	return addresscodec.NewBech32Codec(in.AuthConfig.Bech32Prefix),
 		addresscodec.NewBech32Codec(in.StakingConfig.Bech32PrefixValidator),
 		addresscodec.NewBech32Codec(in.StakingConfig.Bech32PrefixConsensus)
+}
+
+func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
+	return appBuilder.app
+}
+
+func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
+	return app.app
 }

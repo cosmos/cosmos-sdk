@@ -7,60 +7,30 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/core/transaction"
+
 	sdkabci "buf.build/gen/go/tendermint/tendermint/protocolbuffers/go/tendermint/abci"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	gogoany "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	v1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
-	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
+
+	consensus "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
-// parseQueryRequest parses a RequestQuery into a proto.Message, if it is a proto query
-func parseQueryRequest(req *abci.RequestQuery) (proto.Message, error) {
-	desc, err := gogoproto.HybridResolver.FindDescriptorByName(protoreflect.FullName(req.Path))
-	if err != nil {
-		return nil, err
-	}
-
-	methodDesc, ok := desc.(protoreflect.MethodDescriptor)
-	if !ok {
-		return nil, fmt.Errorf("invalid method descriptor %s", desc.FullName())
-	}
-
-	queryReqType := dynamicpb.NewMessage(methodDesc.Input())
-	err = proto.Unmarshal(req.Data, queryReqType)
-
-	return queryReqType, err
-}
-
-// queryResponse needs the request to get the path
-func queryResponse(req *abci.RequestQuery, res proto.Message) (*abci.ResponseQuery, error) {
-	desc, err := gogoproto.HybridResolver.FindDescriptorByName(protoreflect.FullName(req.Path))
-	if err != nil {
-		return nil, err
-	}
-
-	methodDesc, ok := desc.(protoreflect.MethodDescriptor)
-	if !ok {
-		return nil, fmt.Errorf("invalid method descriptor %s", desc.FullName())
-	}
-
-	queryRespType := dynamicpb.NewMessage(methodDesc.Output())
-	proto.Merge(queryRespType, res)
-	bz, err := proto.Marshal(res)
+func queryResponse(res transaction.Type) (*abci.ResponseQuery, error) {
+	// TODO(kocu): we are tightly coupled go gogoproto here, is this problem?
+	bz, err := gogoproto.Marshal(res)
 	if err != nil {
 		return nil, err
 	}
@@ -130,8 +100,8 @@ func intoABCIValidatorUpdates(updates []appmodulev2.ValidatorUpdate) []abci.Vali
 
 	for i := range updates {
 		valsetUpdates[i] = abci.ValidatorUpdate{
-			PubKey: cmtcrypto.PublicKey{
-				Sum: &cmtcrypto.PublicKey_Ed25519{ // by default we set ed25519
+			PubKey: cmtprotocrypto.PublicKey{
+				Sum: &cmtprotocrypto.PublicKey_Ed25519{ // by default we set ed25519
 					Ed25519: updates[i].PubKey,
 				},
 			},
@@ -139,8 +109,8 @@ func intoABCIValidatorUpdates(updates []appmodulev2.ValidatorUpdate) []abci.Vali
 		}
 
 		if updates[i].PubKeyType == "secp256k1" {
-			valsetUpdates[i].PubKey = cmtcrypto.PublicKey{
-				Sum: &cmtcrypto.PublicKey_Secp256K1{
+			valsetUpdates[i].PubKey = cmtprotocrypto.PublicKey{
+				Sum: &cmtprotocrypto.PublicKey_Secp256K1{
 					Secp256K1: updates[i].PubKey,
 				},
 			}
@@ -212,11 +182,12 @@ func intoABCISimulationResponse(txRes appmanager.TxResult, indexSet map[string]s
 
 	msgResponses := make([]*anypb.Any, len(txRes.Resp))
 	for i, resp := range txRes.Resp {
-		any, err := anypb.New(resp)
+		// use this hack to maintain the protov2 API here for now
+		anyMsg, err := gogoany.NewAnyWithCacheWithValue(resp)
 		if err != nil {
 			return nil, err
 		}
-		msgResponses[i] = any
+		msgResponses[i] = &anypb.Any{TypeUrl: anyMsg.TypeUrl, Value: anyMsg.Value}
 	}
 
 	res := &v1beta1.SimulationResponse{
@@ -236,15 +207,15 @@ func intoABCISimulationResponse(txRes appmanager.TxResult, indexSet map[string]s
 }
 
 // ToSDKEvidence takes comet evidence and returns sdk evidence
-func ToSDKEvidence(ev []abci.Misbehavior) []*consensusv1.Evidence {
-	evidence := make([]*consensusv1.Evidence, len(ev))
+func ToSDKEvidence(ev []abci.Misbehavior) []*consensus.Evidence {
+	evidence := make([]*consensus.Evidence, len(ev))
 	for i, e := range ev {
-		evidence[i] = &consensusv1.Evidence{
-			EvidenceType:     consensusv1.MisbehaviorType(e.Type),
+		evidence[i] = &consensus.Evidence{
+			EvidenceType:     consensus.MisbehaviorType(e.Type),
 			Height:           e.Height,
-			Time:             &timestamppb.Timestamp{Seconds: int64(e.Time.Second())}, // safe?
+			Time:             &e.Time,
 			TotalVotingPower: e.TotalVotingPower,
-			Validator: &consensusv1.Validator{
+			Validator: &consensus.Validator{
 				Address: e.Validator.Address,
 				Power:   e.Validator.Power,
 			},
@@ -254,18 +225,18 @@ func ToSDKEvidence(ev []abci.Misbehavior) []*consensusv1.Evidence {
 }
 
 // ToSDKDecidedCommitInfo takes comet commit info and returns sdk commit info
-func ToSDKCommitInfo(commit abci.CommitInfo) *consensusv1.CommitInfo {
-	ci := consensusv1.CommitInfo{
+func ToSDKCommitInfo(commit abci.CommitInfo) *consensus.CommitInfo {
+	ci := consensus.CommitInfo{
 		Round: commit.Round,
 	}
 
 	for _, v := range commit.Votes {
-		ci.Votes = append(ci.Votes, &consensusv1.VoteInfo{
-			Validator: &consensusv1.Validator{
+		ci.Votes = append(ci.Votes, &consensus.VoteInfo{
+			Validator: &consensus.Validator{
 				Address: v.Validator.Address,
 				Power:   v.Validator.Power,
 			},
-			BlockIdFlag: consensusv1.BlockIDFlag(v.BlockIdFlag),
+			BlockIdFlag: consensus.BlockIDFlag(v.BlockIdFlag),
 		})
 	}
 	return &ci
@@ -333,21 +304,22 @@ func (c *Consensus[T]) validateFinalizeBlockHeight(req *abci.RequestFinalizeBloc
 	return nil
 }
 
-// GetConsensusParams makes a query to the consensus module in order to get the latest consensus parameters from committed state
+// GetConsensusParams makes a query to the consensus module in order to get the latest consensus
+// parameters from committed state
 func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.ConsensusParams, error) {
 	cs := &cmtproto.ConsensusParams{}
-	latestVersion, err := c.store.LatestVersion()
+	latestVersion, err := c.store.GetLatestVersion()
 
-	res, err := c.app.Query(ctx, latestVersion, &consensusv1.QueryParamsRequest{})
+	res, err := c.app.Query(ctx, latestVersion, &consensus.QueryParamsRequest{})
 	if err != nil {
 		return nil, err
 	}
 
-	if r, ok := res.(*consensusv1.QueryParamsResponse); !ok {
+	if r, ok := res.(*consensus.QueryParamsResponse); !ok {
 		return nil, fmt.Errorf("failed to query consensus params")
 	} else {
 		// convert our params to cometbft params
-		evidenceMaxDuration := time.Duration(r.Params.Evidence.MaxAgeDuration.Seconds)
+		evidenceMaxDuration := r.Params.Evidence.MaxAgeDuration
 		cs = &cmtproto.ConsensusParams{
 			Block: &cmtproto.BlockParams{
 				MaxBytes: r.Params.Block.MaxBytes,

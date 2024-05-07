@@ -2,7 +2,6 @@ package store
 
 import (
 	"cosmossdk.io/core/store"
-	corestore "cosmossdk.io/core/store"
 )
 
 // Store defines the underlying storage engine of an app.
@@ -33,9 +32,9 @@ type Database interface {
 
 	// Iterator returns an iterator for iterating over a range of key-value pairs in the database
 	// for a given store key, version, start key, and end key.
-	Iterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error)
+	Iterator(storeKey []byte, version uint64, start, end []byte) (store.Iterator, error)
 
 	// ReverseIterator returns a reverse iterator for iterating over a range of key-value pairs in the database
 	// for a given store key, version, start key, and end key in reverse order.
-	ReverseIterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error)
+	ReverseIterator(storeKey []byte, version uint64, start, end []byte) (store.Iterator, error)
 }

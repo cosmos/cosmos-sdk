@@ -1,7 +1,9 @@
 package appmanager
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 
@@ -21,10 +23,57 @@ type AppManager[T transaction.Tx] struct {
 	exportState func(ctx context.Context, dst map[string]io.Writer) error
 	importState func(ctx context.Context, src map[string]io.Reader) error
 
-	stf stf.STFI[T]
+	initGenesis func(ctx context.Context, state io.Reader, txHandler func(tx json.RawMessage) error) error
+
+	stf *stf.STF[T]
 }
 
-func (a AppManager[T]) DeliverBlock(ctx context.Context, block *appmanager.BlockRequest[T]) (*appmanager.BlockResponse, corestore.WriterMap, error) {
+func (a AppManager[T]) InitGenesis(
+	ctx context.Context,
+	blockRequest *appmanager.BlockRequest[T],
+	initGenesisJSON []byte,
+	txDecoder transaction.Codec[T],
+) (*appmanager.BlockResponse, corestore.WriterMap, error) {
+	v, zeroState, err := a.db.StateLatest()
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to get latest state: %w", err)
+	}
+	if v != 0 {
+		return nil, nil, fmt.Errorf("cannot init genesis on non-zero state")
+	}
+
+	var genTxs []T
+	zeroState, err = a.stf.RunWithCtx(ctx, zeroState, func(ctx context.Context) error {
+		return a.initGenesis(ctx, bytes.NewBuffer(initGenesisJSON), func(jsonTx json.RawMessage) error {
+			genTx, err := txDecoder.DecodeJSON(jsonTx)
+			if err != nil {
+				return fmt.Errorf("failed to decode genesis transaction: %w", err)
+			}
+			genTxs = append(genTxs, genTx)
+			return nil
+		})
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to import genesis state: %w", err)
+	}
+	// run block 0
+	// TODO: in an ideal world, genesis state is simply an initial state being applied
+	// unaware of what that state means in relation to every other, so here we can
+	// chain genesis
+	blockRequest.Txs = genTxs
+
+	blockresponse, genesisState, err := a.stf.DeliverBlock(ctx, blockRequest, zeroState)
+	if err != nil {
+		return blockresponse, nil, fmt.Errorf("failed to deliver block 0: %w", err)
+	}
+
+	return blockresponse, genesisState, err
+}
+
+func (a AppManager[T]) DeliverBlock(
+	ctx context.Context,
+	block *appmanager.BlockRequest[T],
+) (*appmanager.BlockResponse, corestore.WriterMap, error) {
 	latestVersion, currentState, err := a.db.StateLatest()
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
@@ -50,7 +99,7 @@ func (a AppManager[T]) ValidateTx(ctx context.Context, tx T) (appmanager.TxResul
 	if err != nil {
 		return appmanager.TxResult{}, err
 	}
-	return a.stf.ValidateTx(ctx, latestState, a.config.ValidateTxGasLimit, tx, nil), nil
+	return a.stf.ValidateTx(ctx, latestState, a.config.ValidateTxGasLimit, tx), nil
 }
 
 // Simulate runs validation and execution flow of a Tx.
@@ -83,9 +132,17 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request transa
 	return a.stf.Query(ctx, queryState, a.config.QueryGasLimit, request)
 }
 
+func (a AppManager[T]) Message(ctx context.Context, message transaction.Type) (transaction.Type, error) {
+	return a.stf.Message(ctx, message)
+}
+
 // QueryWithState executes a query with the provided state. This allows to process a query
 // independently of the db state. For example, it can be used to process a query with temporary
 // and uncommitted state
-func (a AppManager[T]) QueryWithState(ctx context.Context, state corestore.ReaderMap, request transaction.Type) (transaction.Type, error) {
+func (a AppManager[T]) QueryWithState(
+	ctx context.Context,
+	state corestore.ReaderMap,
+	request transaction.Type,
+) (transaction.Type, error) {
 	return a.stf.Query(ctx, state, a.config.QueryGasLimit, request)
 }

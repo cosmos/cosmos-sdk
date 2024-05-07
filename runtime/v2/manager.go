@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/golang/protobuf/proto"
 	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
 	protobuf "google.golang.org/protobuf/proto"
@@ -25,6 +26,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 type MM struct {
@@ -54,8 +56,8 @@ func NewModuleManager(
 	if len(config.EndBlockers) == 0 {
 		config.EndBlockers = modulesName
 	}
-	if len(config.TxValidation) == 0 {
-		config.TxValidation = modulesName
+	if len(config.TxValidators) == 0 {
+		config.TxValidators = modulesName
 	}
 	if len(config.InitGenesis) == 0 {
 		config.InitGenesis = modulesName
@@ -77,7 +79,6 @@ func NewModuleManager(
 
 	if err := mm.validateConfig(); err != nil {
 		panic(err)
-
 	}
 
 	return mm
@@ -139,14 +140,123 @@ func (m *MM) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 	return nil
 }
 
-// InitGenesis performs init genesis functionality for modules.
-func (m *MM) InitGenesis() {
-	panic("implement me")
+// InitGenesisJSON performs init genesis functionality for modules from genesis data in JSON format
+func (m *MM) InitGenesisJSON(ctx context.Context, genesisData map[string]json.RawMessage, txHandler func(json.RawMessage) error) error {
+	m.logger.Info("initializing blockchain state from genesis.json", "order", m.config.InitGenesis)
+	var seenValUpdates bool
+	for _, moduleName := range m.config.InitGenesis {
+		if genesisData[moduleName] == nil {
+			continue
+		}
+
+		mod := m.modules[moduleName]
+
+		// skip genutil as it's a special module that handles gentxs
+		// TODO: should this be an empty extension interface on genutil for server v2?
+		if moduleName == "genutil" {
+			var genesisState types.GenesisState
+			err := m.cdc.UnmarshalJSON(genesisData[moduleName], &genesisState)
+			if err != nil {
+				return fmt.Errorf("failed to unmarshal %s genesis state: %w", moduleName, err)
+			}
+			for _, jsonTx := range genesisState.GenTxs {
+				txHandler(jsonTx)
+			}
+			continue
+		}
+
+		// we might get an adapted module, a native core API module or a legacy module
+		if _, ok := mod.(appmodule.HasGenesisAuto); ok {
+			panic(fmt.Sprintf("module %s isn't server/v2 compatible", moduleName))
+		} else if module, ok := mod.(appmodulev2.HasGenesis); ok {
+			m.logger.Debug("running initialization for module", "module", moduleName)
+			if err := module.InitGenesis(ctx, genesisData[moduleName]); err != nil {
+				return err
+			}
+		} else if module, ok := mod.(appmodulev2.HasABCIGenesis); ok {
+			m.logger.Debug("running initialization for module", "module", moduleName)
+			moduleValUpdates, err := module.InitGenesis(ctx, genesisData[moduleName])
+			if err != nil {
+				return err
+			}
+
+			// use these validator updates if provided, the module manager assumes
+			// only one module will update the validator set
+			if len(moduleValUpdates) > 0 {
+				if seenValUpdates {
+					return errors.New("validator InitGenesis updates already set by a previous module")
+				} else {
+					seenValUpdates = true
+				}
+			}
+		}
+	}
+	return nil
 }
 
-// ExportGenesis performs export genesis functionality for modules
-func (m *MM) ExportGenesis() {
-	panic("implement me")
+// ExportGenesisForModules performs export genesis functionality for modules
+func (m *MM) ExportGenesisForModules(ctx context.Context, modulesToExport ...string) (map[string]json.RawMessage, error) {
+	if len(modulesToExport) == 0 {
+		modulesToExport = m.config.ExportGenesis
+	}
+	// verify modules exists in app, so that we don't panic in the middle of an export
+	if err := m.checkModulesExists(modulesToExport); err != nil {
+		return nil, err
+	}
+
+	type genesisResult struct {
+		bz  json.RawMessage
+		err error
+	}
+
+	type ModuleI interface {
+		ExportGenesis(ctx context.Context) (json.RawMessage, error)
+	}
+
+	channels := make(map[string]chan genesisResult)
+	for _, moduleName := range modulesToExport {
+		mod := m.modules[moduleName]
+		var moduleI ModuleI
+
+		if module, hasGenesis := mod.(appmodulev2.HasGenesis); hasGenesis {
+			moduleI = module.(ModuleI)
+		} else if module, hasABCIGenesis := mod.(appmodulev2.HasGenesis); hasABCIGenesis {
+			moduleI = module.(ModuleI)
+		}
+
+		channels[moduleName] = make(chan genesisResult)
+		go func(moduleI ModuleI, ch chan genesisResult) {
+			jm, err := moduleI.ExportGenesis(ctx)
+			if err != nil {
+				ch <- genesisResult{nil, err}
+				return
+			}
+			ch <- genesisResult{jm, nil}
+		}(moduleI, channels[moduleName])
+	}
+
+	genesisData := make(map[string]json.RawMessage)
+	for moduleName := range channels {
+		res := <-channels[moduleName]
+		if res.err != nil {
+			return nil, fmt.Errorf("genesis export error in %s: %w", moduleName, res.err)
+		}
+
+		genesisData[moduleName] = res.bz
+	}
+
+	return genesisData, nil
+}
+
+// checkModulesExists verifies that all modules in the list exist in the app
+func (m *MM) checkModulesExists(moduleName []string) error {
+	for _, name := range moduleName {
+		if _, ok := m.modules[name]; !ok {
+			return fmt.Errorf("module %s does not exist", name)
+		}
+	}
+
+	return nil
 }
 
 // BeginBlock runs the begin-block logic of all modules
@@ -235,12 +345,12 @@ func (m *MM) PreBlocker() func(ctx context.Context, txs []transaction.Tx) error 
 }
 
 // TxValidators validates incoming transactions
-func (m *MM) TxValidation() func(ctx context.Context, tx transaction.Tx) error {
+func (m *MM) TxValidators() func(ctx context.Context, tx transaction.Tx) error {
 	return func(ctx context.Context, tx transaction.Tx) error {
-		for _, moduleName := range m.config.TxValidation {
-			if module, ok := m.modules[moduleName].(appmodulev2.HasTxValidation[transaction.Tx]); ok {
+		for _, moduleName := range m.config.TxValidators {
+			if module, ok := m.modules[moduleName].(appmodulev2.HasTxValidator[transaction.Tx]); ok {
 				if err := module.TxValidator(ctx, tx); err != nil {
-					return fmt.Errorf("failed to run txvalidator for %s: %w", moduleName, err)
+					return fmt.Errorf("failed to run tx validator for %s: %w", moduleName, err)
 				}
 			}
 		}
@@ -354,44 +464,42 @@ func (m *MM) validateConfig() error {
 		return err
 	}
 
-	if err := m.assertNoForgottenModules("TxValidation", m.config.TxValidation, func(moduleName string) bool {
+	if err := m.assertNoForgottenModules("TxValidators", m.config.TxValidators, func(moduleName string) bool {
 		module := m.modules[moduleName]
-		_, hasTxValidation := module.(appmodulev2.HasTxValidation[transaction.Tx])
-		return !hasTxValidation
+		_, hasTxValidator := module.(appmodulev2.HasTxValidator[transaction.Tx])
+		return !hasTxValidator
 	}); err != nil {
 		return err
 	}
 
 	if err := m.assertNoForgottenModules("InitGenesis", m.config.InitGenesis, func(moduleName string) bool {
 		module := m.modules[moduleName]
+		if _, hasGenesis := module.(appmodule.HasGenesisAuto); hasGenesis {
+			panic(fmt.Sprintf("module %s isn't server/v2 compatible", moduleName))
+		}
+
 		if _, hasGenesis := module.(appmodulev2.HasGenesis); hasGenesis {
 			return !hasGenesis
 		}
 
-		// TODO, if we actually don't support old genesis, let's panic here saying this module isn't server/v2 compatible
-		if _, hasABCIGenesis := module.(sdkmodule.HasABCIGenesis); hasABCIGenesis {
-			return !hasABCIGenesis
-		}
-
-		_, hasGenesis := module.(sdkmodule.HasGenesis)
-		return !hasGenesis
+		_, hasABCIGenesis := module.(sdkmodule.HasABCIGenesis)
+		return !hasABCIGenesis
 	}); err != nil {
 		return err
 	}
 
 	if err := m.assertNoForgottenModules("ExportGenesis", m.config.ExportGenesis, func(moduleName string) bool {
 		module := m.modules[moduleName]
+		if _, hasGenesis := module.(appmodule.HasGenesisAuto); hasGenesis {
+			panic(fmt.Sprintf("module %s isn't server/v2 compatible", moduleName))
+		}
+
 		if _, hasGenesis := module.(appmodulev2.HasGenesis); hasGenesis {
 			return !hasGenesis
 		}
 
-		// TODO, if we actually don't support old genesis, let's panic here saying this module isn't server/v2 compatible
-		if _, hasABCIGenesis := module.(sdkmodule.HasABCIGenesis); hasABCIGenesis {
-			return !hasABCIGenesis
-		}
-
-		_, hasGenesis := module.(sdkmodule.HasGenesis)
-		return !hasGenesis
+		_, hasABCIGenesis := module.(sdkmodule.HasABCIGenesis)
+		return !hasABCIGenesis
 	}); err != nil {
 		return err
 	}
@@ -406,7 +514,11 @@ func (m *MM) validateConfig() error {
 // assertNoForgottenModules checks that we didn't forget any modules in the *runtimev2.Module config.
 // `pass` is a closure which allows one to omit modules from `moduleNames`.
 // If you provide non-nil `pass` and it returns true, the module would not be subject of the assertion.
-func (m *MM) assertNoForgottenModules(setOrderFnName string, moduleNames []string, pass func(moduleName string) bool) error {
+func (m *MM) assertNoForgottenModules(
+	setOrderFnName string,
+	moduleNames []string,
+	pass func(moduleName string) bool,
+) error {
 	ms := make(map[string]bool)
 	for _, m := range moduleNames {
 		ms[m] = true
@@ -476,7 +588,7 @@ func (c *configurator) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
 func (c *configurator) registerQueryHandlers(sd *grpc.ServiceDesc, ss interface{}) error {
 	for _, md := range sd.Methods {
 		// TODO(tip): what if a query is not deterministic?
-		err := registerMethod(c.cdc, c.stfQueryRouter, sd, md, ss)
+		err := registerMethod(c.stfQueryRouter, sd, md, ss)
 		if err != nil {
 			return fmt.Errorf("unable to register query handler %s: %w", md.MethodName, err)
 		}
@@ -486,7 +598,7 @@ func (c *configurator) registerQueryHandlers(sd *grpc.ServiceDesc, ss interface{
 
 func (c *configurator) registerMsgHandlers(sd *grpc.ServiceDesc, ss interface{}) error {
 	for _, md := range sd.Methods {
-		err := registerMethod(c.cdc, c.stfMsgRouter, sd, md, ss)
+		err := registerMethod(c.stfMsgRouter, sd, md, ss)
 		if err != nil {
 			return fmt.Errorf("unable to register msg handler %s: %w", md.MethodName, err)
 		}
@@ -494,30 +606,28 @@ func (c *configurator) registerMsgHandlers(sd *grpc.ServiceDesc, ss interface{})
 	return nil
 }
 
-func registerMethod(cdc codec.BinaryCodec, stfRouter *stf.MsgRouterBuilder, sd *grpc.ServiceDesc, md grpc.MethodDesc, ss interface{}) error {
+func registerMethod(
+	stfRouter *stf.MsgRouterBuilder,
+	sd *grpc.ServiceDesc,
+	md grpc.MethodDesc,
+	ss interface{},
+) error {
 	requestName, err := protocompat.RequestFullNameFromMethodDesc(sd, md)
 	if err != nil {
 		return err
 	}
 
-	responseName, err := protocompat.ResponseFullNameFromMethodDesc(sd, md)
-	if err != nil {
-		return err
-	}
-
-	// now we create the hybrid handler
-	hybridHandler, err := protocompat.MakeHybridHandler(cdc, sd, md, ss)
-	if err != nil {
-		return err
-	}
-
-	responseV2Type, err := protoregistry.GlobalTypes.FindMessageByName(responseName)
-	if err != nil {
-		return err
-	}
-
-	return stfRouter.RegisterHandler(string(requestName), func(ctx context.Context, msg appmodulev2.Message) (resp appmodulev2.Message, err error) {
-		resp = responseV2Type.New().Interface().(appmodulev2.Message)
-		return resp, hybridHandler(ctx, msg, resp)
+	return stfRouter.RegisterHandler(string(requestName), func(
+		ctx context.Context,
+		msg appmodulev2.Message,
+	) (resp appmodulev2.Message, err error) {
+		res, err := md.Handler(ss, ctx, func(dstMsg any) error {
+			proto.Merge(dstMsg.(proto.Message), msg)
+			return nil
+		}, nil)
+		if err != nil {
+			return nil, err
+		}
+		return res.(appmodulev2.Message), nil
 	})
 }

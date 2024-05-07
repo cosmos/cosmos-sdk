@@ -12,3 +12,9 @@ const (
 	ExecModeSimulate
 	ExecModeFinalize
 )
+
+// TODO: remove
+type ContextKey string
+
+// TODO: remove
+const CometInfoKey ContextKey = "comet-info"

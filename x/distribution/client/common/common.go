@@ -6,18 +6,17 @@ import (
 	"cosmossdk.io/x/distribution/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // QueryDelegationRewards queries a delegation rewards between a delegator and a
 // validator.
 func QueryDelegationRewards(clientCtx client.Context, delAddr, valAddr string) ([]byte, int64, error) {
-	delegatorAddr, err := sdk.AccAddressFromBech32(delAddr)
+	delegatorAddr, err := clientCtx.AddressCodec.StringToBytes(delAddr)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	validatorAddr, err := sdk.ValAddressFromBech32(valAddr)
+	validatorAddr, err := clientCtx.ValidatorAddressCodec.StringToBytes(valAddr)
 	if err != nil {
 		return nil, 0, err
 	}

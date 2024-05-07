@@ -3,6 +3,7 @@ package codec_test
 import (
 	"testing"
 
+	"github.com/cosmos/gogoproto/types/any/test"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -11,7 +12,7 @@ import (
 )
 
 func TestMarshalYAML(t *testing.T) {
-	dog := &testdata.Dog{
+	dog := &test.Dog{
 		Size_: "small",
 		Name:  "Spot",
 	}
@@ -27,7 +28,7 @@ func TestMarshalYAML(t *testing.T) {
 	bz, err := codec.MarshalYAML(protoCdc, hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t, `animal:
-  '@type': /testpb.Dog
+  '@type': /test.Dog
   name: Spot
   size: small
 x: "0"
@@ -37,12 +38,10 @@ x: "0"
 	aminoCdc := codec.NewAminoCodec(&codec.LegacyAmino{testdata.NewTestAmino()})
 	bz, err = codec.MarshalYAML(aminoCdc, hasAnimal)
 	require.NoError(t, err)
-	require.Equal(t, `type: testpb/HasAnimal
+	require.Equal(t, `type: test/HasAnimal
 value:
   animal:
-    type: testpb/Dog
-    value:
-      name: Spot
-      size: small
+    name: Spot
+    size: small
 `, string(bz))
 }

@@ -11,6 +11,26 @@
       "program": "${fileDirname}",
       "args": ["-test.timeout", "30m", "-test.v"],
       "buildFlags": "-tags e2e"
+    },
+    {
+      "name": "simapp v2",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "simapp/v2/simdv2",
+      "args": ["init", "--chain-id", "aurn-chain", "aurn-node"],
+      // "args": ["start"],
+      // "args": ["genesis", "add-genesis-account", "cosmos130ch823d2pwh9wpfm335plg6ktatzw7j427qgs", "1000000000stake"],
+    },
+    {
+      "name": "simapp v1",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "simapp/simd",
+      "args": ["init", "--chain-id", "aurn-chain", "aurn-node"],
+      // "args": ["start"],
+      // "args": ["genesis", "add-genesis-account", "cosmos1r8prwezs37hvxq4kc520pfhg67lgz42m4mdvrf", "1000000000stake"],
     }
   ]
 }

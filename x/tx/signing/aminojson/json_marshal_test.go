@@ -210,6 +210,34 @@ func TestMarshalDuration(t *testing.T) {
 	require.Equal(t, `{"duration":"1s"}`, string(bz))
 }
 
+func TestWithAJson(t *testing.T) {
+	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{})
+
+	// list
+	msg := &testpb.WithAJson{
+		Field1: []byte(`[{"name":"child1"}]`),
+	}
+	bz, err := encoder.Marshal(msg)
+	require.NoError(t, err)
+	require.Equal(t, `{"field1":[{"name":"child1"}]}`, string(bz))
+
+	// string
+	msg = &testpb.WithAJson{
+		Field1: []byte(`"hello again"`),
+	}
+	bz, err = encoder.Marshal(msg)
+	require.NoError(t, err)
+	require.Equal(t, `{"field1":"hello again"}`, string(bz))
+
+	// object
+	msg = &testpb.WithAJson{
+		Field1: []byte(`{"deeper":{"nesting":1}}`),
+	}
+	bz, err = encoder.Marshal(msg)
+	require.NoError(t, err)
+	require.Equal(t, `{"field1":{"deeper":{"nesting":1}}}`, string(bz))
+}
+
 func TestIndent(t *testing.T) {
 	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{Indent: "	"})
 

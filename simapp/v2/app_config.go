@@ -6,7 +6,8 @@ import (
 
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+	accountsmodulev1 "cosmossdk.io/api/cosmos/accounts/module/v1"
+	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	authzmodulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
@@ -28,6 +29,8 @@ import (
 	upgrademodulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/depinject/appconfig"
+	"cosmossdk.io/x/accounts"
+	_ "cosmossdk.io/x/auth"           // import for side-effects
 	_ "cosmossdk.io/x/auth/tx/config" // import for side-effects
 	authtypes "cosmossdk.io/x/auth/types"
 	_ "cosmossdk.io/x/auth/vesting" // import for side-effects
@@ -99,7 +102,7 @@ var (
 		Modules: []*appv1alpha1.ModuleConfig{
 			{
 				Name: runtime.ModuleName,
-				Config: appconfig.WrapAny(&runtimev1alpha1.Module{
+				Config: appconfig.WrapAny(&runtimev2.Module{
 					AppName: "SimAppV2",
 					// NOTE: upgrade module is required to be prioritized
 					PreBlockers: []string{
@@ -124,7 +127,7 @@ var (
 						group.ModuleName,
 						pooltypes.ModuleName,
 					},
-					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
+					OverrideStoreKeys: []*runtimev2.StoreKeyConfig{
 						{
 							ModuleName: authtypes.ModuleName,
 							KvStoreKey: "acc",
@@ -134,6 +137,7 @@ var (
 					// properly initialized with tokens from genesis accounts.
 					// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
 					InitGenesis: []string{
+						accounts.ModuleName,
 						authtypes.ModuleName,
 						banktypes.ModuleName,
 						distrtypes.ModuleName,
@@ -157,6 +161,12 @@ var (
 					// ExportGenesis: []string{},
 					// Uncomment if you want to set a custom migration order here.
 					// OrderMigrations: []string{},
+					// TODO GasConfig was added to the config in runtimev2.  Where/how was it set in v1?
+					GasConfig: &runtimev2.GasConfig{
+						ValidateTxGasLimit: 100_000,
+						QueryGasLimit:      100_000,
+						SimulationGasLimit: 100_000,
+					},
 				}),
 			},
 			{
@@ -240,8 +250,14 @@ var (
 				Config: appconfig.WrapAny(&govmodulev1.Module{}),
 			},
 			{
-				Name:   consensustypes.ModuleName,
-				Config: appconfig.WrapAny(&consensusmodulev1.Module{}),
+				Name: consensustypes.ModuleName,
+				Config: appconfig.WrapAny(&consensusmodulev1.Module{
+					Authority: "consensus",
+				}),
+			},
+			{
+				Name:   accounts.ModuleName,
+				Config: appconfig.WrapAny(&accountsmodulev1.Module{}),
 			},
 			{
 				Name:   circuittypes.ModuleName,

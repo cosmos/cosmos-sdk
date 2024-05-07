@@ -57,6 +57,11 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
+	authorityAddr, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
+	if err != nil {
+		panic(err)
+	}
+
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.Environment,
@@ -65,7 +70,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.StakingKeeper,
 		in.PoolKeeper,
 		feeCollectorName,
-		authority.String(),
+		authorityAddr,
 	)
 
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.PoolKeeper)

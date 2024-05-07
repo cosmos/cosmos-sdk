@@ -17,7 +17,7 @@ Each node exposes the following endpoints for users to interact with a node, eac
 * the CometBFT RPC endpoint (default port: `26657`).
 
 :::tip
-The node also exposes some other endpoints, such as the CometBFT P2P endpoint, or the [Prometheus endpoint](https://docs.cometbft.com/v0.37/core/metrics), which are not directly related to the Cosmos SDK. Please refer to the [CometBFT documentation](https://docs.cometbft.com/v0.37/core/configuration) for more information about these endpoints.
+The node also exposes some other endpoints, such as the CometBFT P2P endpoint, or the [Prometheus endpoint](https://docs.cometbft.com/v1.0/explanation/core/metrics), which are not directly related to the Cosmos SDK. Please refer to the [CometBFT Configuration Manual](https://docs.cometbft.com/v1.0/references/config/) for more information about how to configure these CometBFT endpoints.
 :::
 
 :::note
@@ -82,7 +82,7 @@ The Cosmos SDK's [Swagger generation script](https://github.com/cosmos/cosmos-sd
 
 ## CometBFT RPC
 
-Independently from the Cosmos SDK, CometBFT also exposes a RPC server. This RPC server can be configured by tuning parameters under the `rpc` table in the `~/.simapp/config/config.toml`, the default listening address is `tcp://localhost:26657`. An OpenAPI specification of all CometBFT RPC endpoints is available [here](https://docs.cometbft.com/main/rpc/).
+Independently from the Cosmos SDK, CometBFT also exposes a RPC server. This RPC server can be configured by tuning parameters under the `rpc` table in the `~/.simapp/config/config.toml`, the default listening address is `tcp://localhost:26657`. An OpenAPI specification of all CometBFT RPC endpoints is available [here](https://docs.cometbft.com/v1.0/rpc/).
 
 Some CometBFT RPC endpoints are directly related to the Cosmos SDK:
 

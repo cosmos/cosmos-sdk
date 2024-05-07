@@ -7,6 +7,12 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	"cosmossdk.io/runtime/v2"
+	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/commitment/iavl"
+	"cosmossdk.io/store/v2/db"
+	"cosmossdk.io/store/v2/root"
+	"cosmossdk.io/x/accounts"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
@@ -24,11 +30,11 @@ import (
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
-	"cosmossdk.io/runtime/v2"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus"
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 )
 
@@ -40,12 +46,14 @@ var DefaultNodeHome string
 // capabilities aren't needed for testing.
 type SimApp struct {
 	*runtime.App
-	legacyAmino       *codec.LegacyAmino
-	appCodec          codec.Codec
-	txConfig          client.TxConfig
-	interfaceRegistry codectypes.InterfaceRegistry
+	legacyAmino        *codec.LegacyAmino
+	appCodec           codec.Codec
+	txConfig           client.TxConfig
+	interfaceRegistry  codectypes.InterfaceRegistry
+	consensusAuthority consensustypes.Authority
 
 	// keepers
+	AccountsKeeper        accounts.Keeper
 	AuthKeeper            authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
 	StakingKeeper         *stakingkeeper.Keeper
@@ -83,23 +91,38 @@ func AppConfig() depinject.Config {
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(
 	logger log.Logger,
-	db runtime.Store,
-	loadLatest bool,
 	appOpts servertypes.AppOptions,
 ) *SimApp {
+	homeDir := appOpts.Get("home").(string) // TODO
+	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(homeDir, "data"), nil)
+	if err != nil {
+		panic(err)
+	}
 	var (
 		app        = &SimApp{}
 		appBuilder *runtime.AppBuilder
-		err        error
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
 			AppConfig(),
 			depinject.Supply(
-				// supply the application options
-				appOpts,
-				// supply the logger
 				logger,
+				&root.FactoryOptions{
+					Logger:  logger,
+					RootDir: homeDir,
+					SSType:  0,
+					SCType:  0,
+					PruneOptions: &store.PruneOptions{
+						KeepRecent: 0,
+						Interval:   0,
+					},
+					IavlConfig: &iavl.Config{
+						CacheSize:              100_000,
+						SkipFastStorageUpgrade: true,
+					},
+					SCRawDB: scRawDb,
+				},
+				// appOpts,
 
 				// ADVANCED CONFIGURATION
 
@@ -166,11 +189,12 @@ func NewSimApp(
 		&app.ConsensusParamsKeeper,
 		&app.CircuitBreakerKeeper,
 		&app.PoolKeeper,
+		&app.consensusAuthority,
 	); err != nil {
 		panic(err)
 	}
 
-	app.App, err = appBuilder.Build(db)
+	app.App, err = appBuilder.Build()
 	if err != nil {
 		panic(err)
 	}
@@ -185,6 +209,7 @@ func NewSimApp(
 	// wire snapshot manager
 	// wire unordered tx manager
 
+	// TODO re-enable once store is provided with config
 	if err := app.LoadLatest(); err != nil {
 		panic(err)
 	}
@@ -216,4 +241,8 @@ func (app *SimApp) InterfaceRegistry() codectypes.InterfaceRegistry {
 // TxConfig returns SimApp's TxConfig
 func (app *SimApp) TxConfig() client.TxConfig {
 	return app.txConfig
+}
+
+func (app *SimApp) GetConsensusAuthority() string {
+	return string(app.consensusAuthority)
 }

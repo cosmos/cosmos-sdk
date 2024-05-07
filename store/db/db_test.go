@@ -106,14 +106,16 @@ func TestPebbleDBSuite(t *testing.T) {
 	})
 }
 
-func TestRocksDBSuite(t *testing.T) {
-	db, err := NewRocksDB(t.TempDir())
-	require.NoError(t, err)
+// TODO: re-enable behind build flag
+//
+// func TestRocksDBSuite(t *testing.T) {
+// 	db, err := NewRocksDB(t.TempDir())
+// 	require.NoError(t, err)
 
-	suite.Run(t, &DBTestSuite{
-		db: db,
-	})
-}
+// 	suite.Run(t, &DBTestSuite{
+// 		db: db,
+// 	})
+// }
 
 func TestGoLevelDBSuite(t *testing.T) {
 	db, err := NewGoLevelDB("test", t.TempDir(), nil)

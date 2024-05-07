@@ -20,7 +20,7 @@ var (
 	_ Iterator = (*senderNonceMempoolIterator)(nil)
 )
 
-var DefaultMaxTx = 0
+var DefaultMaxTx = -1
 
 // SenderNonceMempool is a mempool that prioritizes transactions within a sender
 // by nonce, the lowest first, but selects a random sender on each iteration.

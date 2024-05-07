@@ -31,6 +31,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#19868](https://github.com/cosmos/cosmos-sdk/pull/19868) Removes Accounts String method
+    * `NewMsgSetWithdrawAddress` now takes strings as argument instead of `sdk.AccAddress`.
+    * `NewGenesisState` now takes a string as argument instead of `sdk.ConsAddress`.
 * [#19445](https://github.com/cosmos/cosmos-sdk/pull/19445) `appmodule.Environment` is received on the Keeper to get access to different application services
 * [#17115](https://github.com/cosmos/cosmos-sdk/pull/17115) Use collections for `PreviousProposer` and `ValidatorSlashEvents`:
     * remove from `Keeper`: `GetPreviousProposerConsAddr`, `SetPreviousProposerConsAddr`, `GetValidatorHistoricalReferenceCount`, `GetValidatorSlashEvent`, `SetValidatorSlashEvent`.
@@ -49,7 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * remove `Keeper`: `IterateValidatorCurrentRewards`, `GetValidatorCurrentRewards`, `SetValidatorCurrentRewards`, `DeleteValidatorCurrentRewards`
 * [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) The distribution module keeper now takes a new argument `PoolKeeper` in addition.
 * [#17670](https://github.com/cosmos/cosmos-sdk/pull/17670) `AllocateTokens` takes `comet.VoteInfos` instead of `[]abci.VoteInfo`
-* [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) Verify `InitGenesis` and `ExportGenesis` module code and keeper code do not panic.
+* [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) `InitGenesis` and `ExportGenesis` module code and keeper code do not panic but return errors.
 
 ### Improvements
 

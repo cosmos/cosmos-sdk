@@ -3,6 +3,7 @@ package codec_test
 import (
 	"testing"
 
+	"github.com/cosmos/gogoproto/types/any/test"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -10,30 +11,29 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 func NewTestInterfaceRegistry() codectypes.InterfaceRegistry {
 	registry := codectypes.NewInterfaceRegistry()
-	registry.RegisterInterface("Animal", (*testdata.Animal)(nil))
+	registry.RegisterInterface("Animal", (*test.Animal)(nil))
 	registry.RegisterImplementations(
-		(*testdata.Animal)(nil),
-		&testdata.Dog{},
-		&testdata.Cat{},
+		(*test.Animal)(nil),
+		&test.Dog{},
+		&test.Cat{},
 	)
 	return registry
 }
 
 func TestMarshalAny(t *testing.T) {
 	catRegistry := codectypes.NewInterfaceRegistry()
-	catRegistry.RegisterImplementations((*testdata.Animal)(nil), &testdata.Cat{})
+	catRegistry.RegisterImplementations((*test.Animal)(nil), &test.Cat{})
 
 	registry := codectypes.NewInterfaceRegistry()
 
 	cdc := codec.NewProtoCodec(registry)
 
-	kitty := &testdata.Cat{Moniker: "Kitty"}
+	kitty := &test.Cat{Moniker: "Kitty"}
 	emptyBz, err := cdc.MarshalInterface(kitty)
 	require.ErrorContains(t, err, "does not have a registered interface")
 
@@ -41,11 +41,11 @@ func TestMarshalAny(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, catBz)
 
-	var animal testdata.Animal
+	var animal test.Animal
 
 	// deserializing cat bytes should error in an empty registry
 	err = cdc.UnmarshalInterface(catBz, &animal)
-	require.ErrorContains(t, err, "no registered implementations of type testdata.Animal")
+	require.ErrorContains(t, err, "no registered implementations of type test.Animal")
 
 	// deserializing an empty byte array will return nil, but no error
 	err = cdc.UnmarshalInterface(emptyBz, &animal)
@@ -53,7 +53,7 @@ func TestMarshalAny(t *testing.T) {
 	require.NoError(t, err)
 
 	// wrong type registration should fail
-	registry.RegisterImplementations((*testdata.Animal)(nil), &testdata.Dog{})
+	registry.RegisterImplementations((*test.Animal)(nil), &test.Dog{})
 	err = cdc.UnmarshalInterface(catBz, &animal)
 	require.Error(t, err)
 

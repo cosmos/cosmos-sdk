@@ -1,6 +1,6 @@
 package store
 
-import "golang.org/x/exp/maps"
+import "maps"
 
 // TraceContext contains KVStore context data. It will be written with every
 // trace operation.
@@ -17,9 +17,7 @@ func (tc TraceContext) Merge(newTc TraceContext) TraceContext {
 		tc = TraceContext{}
 	}
 
-	for k, v := range newTc {
-		tc[k] = v
-	}
+	maps.Copy(tc, newTc)
 
 	return tc
 }

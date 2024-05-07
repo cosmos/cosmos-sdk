@@ -1,9 +1,15 @@
 package cmd
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"io"
 	"os"
+	"os/signal"
+	"syscall"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -11,6 +17,7 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
+	"cosmossdk.io/server/v2/cometbft"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 	authcmd "cosmossdk.io/x/auth/client/cli"
@@ -22,6 +29,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
+	// TODO migrate all server dependencies to server/v2
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,12 +38,29 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
+var _ transaction.Codec[transaction.Tx] = &temporaryTxDecoder{}
+
+type temporaryTxDecoder struct {
+	txConfig client.TxConfig
+}
+
+// Decode implements transaction.Codec.
+func (t *temporaryTxDecoder) Decode(bz []byte) (transaction.Tx, error) {
+	return t.txConfig.TxDecoder()(bz)
+}
+
+// DecodeJSON implements transaction.Codec.
+func (t *temporaryTxDecoder) DecodeJSON(bz []byte) (transaction.Tx, error) {
+	return t.txConfig.TxJSONDecoder()(bz)
+}
+
 func initRootCmd(
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,
-	interfaceRegistry codectypes.InterfaceRegistry,
-	appCodec codec.Codec,
-	moduleManager *module.Manager,
+	_ codectypes.InterfaceRegistry,
+	_ codec.Codec,
+	moduleManager *runtimev2.MM,
+	v1moduleManager *module.Manager,
 ) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
@@ -43,16 +69,17 @@ func initRootCmd(
 		genutilcli.InitCmd(moduleManager),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
+		startCommand(&temporaryTxDecoder{txConfig}),
 		// pruning.Cmd(newApp),
 		// snapshot.Cmd(newApp),
 	)
 
-	// server.AddCommands(rootCmd, newApp, func(startCmd *cobra.Command) {})
+	// server.AddCommands(rootCmd, log.NewNopLogger(), tempDir()) // TODO: How to cast from AppModule to ServerModule
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
 		server.StatusCommand(),
-		// genesisCommand(txConfig, moduleManager, appExport),
+		genesisCommand(txConfig, v1moduleManager, appExport),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
@@ -60,8 +87,53 @@ func initRootCmd(
 	)
 }
 
+func startCommand(txCodec transaction.Codec[transaction.Tx]) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "start",
+		Short: "Start the application",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			sa := simapp.NewSimApp(serverCtx.Logger, serverCtx.Viper)
+			am := sa.App.AppManager
+			serverCfg := cometbft.Config{CmtConfig: serverCtx.Config, ConsensusAuthority: sa.GetConsensusAuthority()}
+
+			cometServer := cometbft.NewCometBFTServer[transaction.Tx](
+				am,
+				sa.GetStore(),
+				sa.GetLogger(),
+				serverCfg,
+				txCodec,
+			)
+			ctx := cmd.Context()
+			ctx, cancelFn := context.WithCancel(ctx)
+			go func() {
+				sigCh := make(chan os.Signal, 1)
+				signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+				sig := <-sigCh
+				cancelFn()
+				cmd.Printf("caught %s signal\n", sig.String())
+
+				if err := cometServer.Stop(ctx); err != nil {
+					cmd.PrintErrln("failed to stop servers:", err)
+				}
+			}()
+
+			if err := cometServer.Start(ctx); err != nil {
+				return fmt.Errorf("failed to start servers: %w", err)
+			}
+			return nil
+		},
+	}
+	return cmd
+}
+
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
-func genesisCommand(txConfig client.TxConfig, moduleManager *module.Manager, appExport servertypes.AppExporter, cmds ...*cobra.Command) *cobra.Command {
+func genesisCommand(
+	txConfig client.TxConfig,
+	moduleManager *module.Manager,
+	appExport servertypes.AppExporter,
+	cmds ...*cobra.Command,
+) *cobra.Command {
 	cmd := genutilcli.Commands(txConfig, moduleManager, appExport)
 
 	for _, subCmd := range cmds {
@@ -116,19 +188,11 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
-// newApp creates the application
-func newApp(
-	logger log.Logger,
-	db runtimev2.Store,
-	appOpts servertypes.AppOptions,
-) runtimev2.AppI[transaction.Tx] {
-	return simapp.NewSimApp(logger, db, true, appOpts)
-}
-
 // appExport creates a new simapp (optionally at a given height) and exports state.
 func appExport(
 	logger log.Logger,
-	db runtimev2.Store,
+	_ dbm.DB,
+	_ io.Writer,
 	height int64,
 	forZeroHeight bool,
 	jailAllowedAddrs []string,
@@ -153,13 +217,13 @@ func appExport(
 
 	var simApp *simapp.SimApp
 	if height != -1 {
-		simApp = simapp.NewSimApp(logger, db, false, appOpts)
+		simApp = simapp.NewSimApp(logger, appOpts)
 
 		if err := simApp.LoadHeight(uint64(height)); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		simApp = simapp.NewSimApp(logger, db, true, appOpts)
+		simApp = simapp.NewSimApp(logger, appOpts)
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)

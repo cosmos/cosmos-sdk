@@ -8,8 +8,10 @@ import (
 	"cosmossdk.io/client/v2/autocli"
 	clientv2keyring "cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/simapp/v2"
 	"cosmossdk.io/x/auth/tx"
 	authtxconfig "cosmossdk.io/x/auth/tx/config"
@@ -20,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -29,9 +30,10 @@ import (
 // NewRootCmd creates a new root command for simd. It is called once in the main function.
 func NewRootCmd() *cobra.Command {
 	var (
-		autoCliOpts   autocli.AppOptions
-		moduleManager *module.Manager
-		clientCtx     client.Context
+		autoCliOpts     autocli.AppOptions
+		moduleManager   *runtime.MM
+		v1ModuleManager *module.Manager
+		clientCtx       client.Context
 	)
 
 	if err := depinject.Inject(
@@ -41,12 +43,12 @@ func NewRootCmd() *cobra.Command {
 				simtestutil.NewAppOptionsWithFlagHome(tempDir()),
 			),
 			depinject.Provide(
-				ProvideClientContext,
-				ProvideKeyring,
+				ProvideClientContext, ProvideKeyring, ProvideV1ModuleManager,
 			),
 		),
 		&autoCliOpts,
 		&moduleManager,
+		&v1ModuleManager,
 		&clientCtx,
 	); err != nil {
 		panic(err)
@@ -84,7 +86,13 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, clientCtx.TxConfig, clientCtx.InterfaceRegistry, clientCtx.Codec, moduleManager)
+	initRootCmd(
+		rootCmd,
+		clientCtx.TxConfig,
+		clientCtx.InterfaceRegistry,
+		clientCtx.Codec,
+		moduleManager,
+		v1ModuleManager)
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
@@ -99,8 +107,8 @@ func ProvideClientContext(
 	txConfigOpts tx.ConfigOptions,
 	legacyAmino *codec.LegacyAmino,
 	addressCodec address.Codec,
-	validatorAddressCodec runtime.ValidatorAddressCodec,
-	consensusAddressCodec runtime.ConsensusAddressCodec,
+	validatorAddressCodec address.ValidatorAddressCodec,
+	consensusAddressCodec address.ConsensusAddressCodec,
 ) client.Context {
 	var err error
 
@@ -141,4 +149,8 @@ func ProvideKeyring(clientCtx client.Context, addressCodec address.Codec) (clien
 	}
 
 	return keyring.NewAutoCLIKeyring(kb)
+}
+
+func ProvideV1ModuleManager(modules map[string]appmodule.AppModule) *module.Manager {
+	return module.NewManagerFromMap(modules)
 }

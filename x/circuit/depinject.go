@@ -41,7 +41,7 @@ type ModuleOutputs struct {
 
 	CircuitKeeper  keeper.Keeper
 	Module         appmodule.AppModule
-	BaseappOptions runtime.BaseAppOption
+	BaseappOptions runtime.BaseAppOption // This is only useful for chains using baseapp. Server/v2 chains use TxValidator and PreMessageHandlers
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -51,10 +51,15 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
+	authorityAddr, err := in.AddressCodec.BytesToString(authority)
+	if err != nil {
+		panic(err)
+	}
+
 	circuitkeeper := keeper.NewKeeper(
 		in.Environment,
 		in.Cdc,
-		authority.String(),
+		authorityAddr,
 		in.AddressCodec,
 	)
 	m := NewAppModule(in.Cdc, circuitkeeper)

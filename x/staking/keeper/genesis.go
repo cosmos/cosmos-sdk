@@ -5,11 +5,11 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 // InitGenesis sets the pool and parameters for the provided keeper.  For each
@@ -17,7 +17,7 @@ import (
 // setting the indexes. In addition, it also sets any delegations found in
 // data. Finally, it updates the bonded validators.
 // Returns final validator set after applying all declaration and delegations
-func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]module.ValidatorUpdate, error) {
+func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]appmodule.ValidatorUpdate, error) {
 	bondedTokens := math.ZeroInt()
 	notBondedTokens := math.ZeroInt()
 
@@ -26,9 +26,9 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]mo
 	// initialized for the validator set e.g. with a one-block offset - the
 	// first TM block is at height 1, so state updates applied from
 	// genesis.json are in block 0.
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx = sdkCtx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay) // TODO: remove this need for WithBlockHeight
-	ctx = sdkCtx
+	//sdkCtx := sdk.UnwrapSDKContext(ctx)
+	//sdkCtx = sdkCtx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay) // TODO: remove this need for WithBlockHeight
+	//ctx = sdkCtx
 
 	if err := k.Params.Set(ctx, data.Params); err != nil {
 		return nil, err
@@ -175,7 +175,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]mo
 	}
 
 	// don't need to run CometBFT updates if we exported
-	var moduleValidatorUpdates []module.ValidatorUpdate
+	var moduleValidatorUpdates []appmodule.ValidatorUpdate
 	if data.Exported {
 		for _, lv := range data.LastValidatorPowers {
 			valAddr, err := k.validatorAddressCodec.StringToBytes(lv.Address)

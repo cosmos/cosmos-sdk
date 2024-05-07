@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -14,6 +15,7 @@ import (
 	"cosmossdk.io/core/event"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus/exported"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
@@ -21,10 +23,12 @@ import (
 var StoreKey = "Consensus"
 
 type Keeper struct {
-	environment appmodule.Environment
+	appmodule.Environment
 
 	authority   string
 	ParamsStore collections.Item[cmtproto.ConsensusParams]
+	// storage of the last comet info
+	cometInfo collections.Item[types.CometInfo]
 }
 
 var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
@@ -32,7 +36,7 @@ var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
 func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, authority string) Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	return Keeper{
-		environment: env,
+		Environment: env,
 		authority:   authority,
 		ParamsStore: collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
 	}
@@ -42,12 +46,16 @@ func (k *Keeper) GetAuthority() string {
 	return k.authority
 }
 
+func (k Keeper) GetParams(ctx context.Context) (cmtproto.ConsensusParams, error) {
+	return k.ParamsStore.Get(ctx)
+}
+
 // Querier
 
 var _ types.QueryServer = Keeper{}
 
 // Params queries params of consensus module
-func (k Keeper) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (k Keeper) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	params, err := k.ParamsStore.Get(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -77,7 +85,7 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 		return nil, err
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		"update_consensus_params",
 		event.NewAttribute("authority", msg.Authority),
 		event.NewAttribute("parameters", consensusParams.String())); err != nil {
@@ -89,7 +97,10 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 
 // SetParams sets the consensus parameters on init of a chain. This is a consensus message. It can only be called by the consensus server
 // This is used in the consensus message handler set in module.go.
-func (k Keeper) SetParams(ctx context.Context, req *types.ConsensusMsgParams) (*types.ConsensusMsgParamsResponse, error) {
+func (k Keeper) SetParams(
+	ctx context.Context,
+	req *types.ConsensusMsgParams,
+) (*types.ConsensusMsgParamsResponse, error) {
 	consensusParams, err := req.ToProtoConsensusParams()
 	if err != nil {
 		return nil, err
@@ -103,4 +114,47 @@ func (k Keeper) SetParams(ctx context.Context, req *types.ConsensusMsgParams) (*
 	}
 
 	return &types.ConsensusMsgParamsResponse{}, nil
+}
+
+// GetCometInfo returns info related to comet. If the application is using v1 then the information will be present on context,
+// if the application is using v2 then the information will be present in the cometInfo store.
+// TODO: use or delete
+func (k Keeper) GetCometInfo(ctx context.Context, req *types.MsgCometInfoRequest) (*types.MsgCometInfoResponse, error) {
+	ci, err := k.cometInfo.Get(ctx)
+	// if the value is not found we may be using baseapp and not have consensus messages
+	if errors.Is(err, collections.ErrNotFound) {
+		ci := sdk.UnwrapSDKContext(ctx).CometInfo()
+		res := &types.MsgCometInfoResponse{CometInfo: &types.CometInfo{
+			ValidatorsHash:  ci.ValidatorsHash,
+			ProposerAddress: ci.ProposerAddress,
+		}}
+
+		for _, vote := range ci.LastCommit.Votes {
+			res.CometInfo.LastCommit.Votes = append(res.CometInfo.LastCommit.Votes, &types.VoteInfo{
+				Validator: &types.Validator{
+					Address: vote.Validator.Address,
+					Power:   vote.Validator.Power,
+				},
+				BlockIdFlag: types.BlockIDFlag(vote.BlockIDFlag),
+			})
+		}
+		res.CometInfo.LastCommit.Round = ci.LastCommit.Round
+
+		for _, evi := range ci.Evidence {
+			res.CometInfo.Evidence = append(res.CometInfo.Evidence, &types.Evidence{
+				EvidenceType: types.MisbehaviorType(evi.Type),
+				Validator: &types.Validator{
+					Address: evi.Validator.Address,
+					Power:   evi.Validator.Power,
+				},
+				Height:           evi.Height,
+				Time:             &evi.Time,
+				TotalVotingPower: evi.TotalVotingPower,
+			})
+		}
+
+		return res, err
+	}
+
+	return &types.MsgCometInfoResponse{CometInfo: &ci}, err
 }

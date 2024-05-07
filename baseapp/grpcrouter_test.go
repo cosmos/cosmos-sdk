@@ -168,7 +168,7 @@ func testQueryDataRacesSameHandler(t *testing.T, makeClientConn func(*baseapp.GR
 	qr := baseapp.NewGRPCQueryRouter()
 	interfaceRegistry := testdata.NewTestInterfaceRegistry()
 	qr.SetInterfaceRegistry(interfaceRegistry)
-	testdata.RegisterQueryServer(qr, testdata.QueryImpl{})
+	testdata_pulsar.RegisterQueryServer(qr, testdata_pulsar.QueryImpl{})
 
 	// The goal is to invoke the router concurrently and check for any data races.
 	// 0. Run with: go test -race

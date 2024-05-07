@@ -2,7 +2,6 @@ package branch
 
 import (
 	"cosmossdk.io/core/store"
-	corestore "cosmossdk.io/core/store"
 )
 
 var _ store.Writer = (*Store[store.Reader])(nil)
@@ -55,19 +54,19 @@ func (s Store[T]) Delete(key []byte) error {
 // Iteration
 
 // Iterator implements types.KVStore.
-func (s Store[T]) Iterator(start, end []byte) (corestore.Iterator, error) {
+func (s Store[T]) Iterator(start, end []byte) (store.Iterator, error) {
 	return s.iterator(start, end, true)
 }
 
 // ReverseIterator implements types.KVStore.
-func (s Store[T]) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
+func (s Store[T]) ReverseIterator(start, end []byte) (store.Iterator, error) {
 	return s.iterator(start, end, false)
 }
 
-func (s Store[T]) iterator(start, end []byte, ascending bool) (corestore.Iterator, error) {
+func (s Store[T]) iterator(start, end []byte, ascending bool) (store.Iterator, error) {
 	var (
 		err           error
-		parent, cache corestore.Iterator
+		parent, cache store.Iterator
 	)
 
 	if ascending {

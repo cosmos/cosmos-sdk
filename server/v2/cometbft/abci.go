@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 
-	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
+	"cosmossdk.io/core/comet"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+
 	coreappmgr "cosmossdk.io/core/app"
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -22,6 +25,7 @@ import (
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
+	abci "github.com/cometbft/cometbft/abci/types"
 )
 
 const (
@@ -60,14 +64,16 @@ func NewConsensus[T transaction.Tx](
 	mp mempool.Mempool[T],
 	store types.Store,
 	cfg Config,
-	txcodec transaction.Codec[T],
+	txCodec transaction.Codec[T],
+	logger log.Logger,
 ) *Consensus[T] {
 	return &Consensus[T]{
 		mempool: mp,
 		store:   store,
 		app:     app,
 		cfg:     cfg,
-		txCodec: txcodec,
+		txCodec: txCodec,
+		logger:  logger,
 	}
 }
 
@@ -155,10 +161,10 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abci.RequestInfo) (*abci.Res
 		return nil, err
 	}
 
-	cp, err := c.GetConsensusParams(ctx)
-	if err != nil {
-		return nil, err
-	}
+	// cp, err := c.GetConsensusParams(ctx)
+	// if err != nil {
+	//	return nil, err
+	// }
 
 	cid, err := c.store.LastCommitID()
 	if err != nil {
@@ -166,9 +172,10 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abci.RequestInfo) (*abci.Res
 	}
 
 	return &abci.ResponseInfo{
-		Data:             c.cfg.Name,
-		Version:          c.cfg.Version,
-		AppVersion:       cp.GetVersion().App,
+		Data:    c.cfg.Name,
+		Version: c.cfg.Version,
+		// AppVersion:       cp.GetVersion().App,
+		AppVersion:       0, // TODO fetch from store?
 		LastBlockHeight:  int64(version),
 		LastBlockAppHash: cid.Hash,
 	}, nil
@@ -177,16 +184,22 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abci.RequestInfo) (*abci.Res
 // Query implements types.Application.
 // It is called by cometbft to query application state.
 func (c *Consensus[T]) Query(ctx context.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
-	appreq, err := parseQueryRequest(req)
+	// follow the query path from here
+	decodedMsg, err := c.txCodec.Decode(req.Data)
+	protoMsg, ok := any(decodedMsg).(transaction.Type)
+	if !ok {
+		return nil, fmt.Errorf("decoded type T %T must implement core/transaction.Type", decodedMsg)
+	}
+
 	// if no error is returned then we can handle the query with the appmanager
 	// otherwise it is a KV store query
 	if err == nil {
-		res, err := c.app.Query(ctx, uint64(req.Height), appreq)
+		res, err := c.app.Query(ctx, uint64(req.Height), protoMsg)
 		if err != nil {
 			return nil, err
 		}
 
-		return queryResponse(req, res)
+		return queryResponse(res)
 	}
 
 	// this error most probably means that we can't handle it with a proto message, so
@@ -223,19 +236,68 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.RequestQuery) (*abci
 func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	c.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
 
+	// store chainID to be used later on in execution
 	c.chainID = req.ChainId
 
-	// TODO: populate
+	// On a new chain, we consider the init chain block height as 0, even though
+	// req.InitialHeight is 1 by default.
+	// TODO
+
+	var consMessages []transaction.Type
+	if req.ConsensusParams != nil {
+		consMessages = append(consMessages, &consensustypes.MsgUpdateParams{
+			Authority: c.cfg.ConsensusAuthority,
+			Block:     req.ConsensusParams.Block,
+			Evidence:  req.ConsensusParams.Evidence,
+			Validator: req.ConsensusParams.Validator,
+			Abci:      req.ConsensusParams.Abci,
+		})
+	}
+
+	br := &coreappmgr.BlockRequest[T]{
+		Height:            uint64(req.InitialHeight),
+		Time:              req.Time,
+		Hash:              nil,
+		AppHash:           nil,
+		ChainId:           req.ChainId,
+		ConsensusMessages: consMessages,
+	}
+
+	blockresponse, genesisState, err := c.app.InitGenesis(
+		ctx,
+		br,
+		req.AppStateBytes,
+		c.txCodec)
+	if err != nil {
+		return nil, fmt.Errorf("genesis state init failure: %w", err)
+	}
+
+	validatorUpdates := intoABCIValidatorUpdates(blockresponse.ValidatorUpdates)
+
+	stateChanges, err := genesisState.GetStateChanges()
+	if err != nil {
+		return nil, err
+	}
+	stateRoot, err := c.store.Commit(&store.Changeset{
+		Changes: stateChanges,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("unable to commit the changeset: %w", err)
+	}
+
 	return &abci.ResponseInitChain{
 		ConsensusParams: req.ConsensusParams,
-		Validators:      req.Validators,
-		AppHash:         []byte{},
+		Validators:      validatorUpdates,
+		AppHash:         stateRoot,
 	}, nil
 }
 
 // PrepareProposal implements types.Application.
 // It is called by cometbft to prepare a proposal block.
-func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
+func (c *Consensus[T]) PrepareProposal(
+	ctx context.Context,
+	req *abci.RequestPrepareProposal,
+) (resp *abci.ResponsePrepareProposal, err error) {
 	if req.Height < 1 {
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
@@ -268,7 +330,10 @@ func (c *Consensus[T]) PrepareProposal(ctx context.Context, req *abci.RequestPre
 
 // ProcessProposal implements types.Application.
 // It is called by cometbft to process/verify a proposal block.
-func (c *Consensus[T]) ProcessProposal(ctx context.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+func (c *Consensus[T]) ProcessProposal(
+	ctx context.Context,
+	req *abci.RequestProcessProposal,
+) (*abci.ResponseProcessProposal, error) {
 	decodedTxs := make([]T, len(req.Txs))
 	for _, tx := range req.Txs {
 		decTx, err := c.txCodec.Decode(tx)
@@ -295,7 +360,10 @@ func (c *Consensus[T]) ProcessProposal(ctx context.Context, req *abci.RequestPro
 
 // FinalizeBlock implements types.Application.
 // It is called by cometbft to finalize a block.
-func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+func (c *Consensus[T]) FinalizeBlock(
+	ctx context.Context,
+	req *abci.RequestFinalizeBlock,
+) (*abci.ResponseFinalizeBlock, error) {
 	if err := c.validateFinalizeBlockHeight(req); err != nil {
 		return nil, err
 	}
@@ -305,14 +373,22 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 	}
 
 	// for passing consensus info as a consensus message
-	cometInfo := &consensusv1.ConsensusMsgCometInfoRequest{
-		Info: &consensusv1.CometInfo{
+	cometInfo := &consensustypes.ConsensusMsgCometInfoRequest{
+		Info: &consensustypes.CometInfo{
 			Evidence:        ToSDKEvidence(req.Misbehavior),
 			ValidatorsHash:  req.NextValidatorsHash,
 			ProposerAddress: req.ProposerAddress,
 			LastCommit:      ToSDKCommitInfo(req.DecidedLastCommit),
 		},
 	}
+
+	// TODO remove this once we have a better way to pass consensus info
+	ctx = context.WithValue(ctx, corecontext.CometInfoKey, &comet.Info{
+		Evidence:        sdktypes.ToSDKEvidence(req.Misbehavior),
+		ValidatorsHash:  req.NextValidatorsHash,
+		ProposerAddress: req.ProposerAddress,
+		LastCommit:      sdktypes.ToSDKCommitInfo(req.DecidedLastCommit),
+	})
 
 	// TODO(tip): can we expect some txs to not decode? if so, what we do in this case? this does not seem to be the case,
 	// considering that prepare and process always decode txs, assuming they're the ones providing txs we should never
@@ -348,7 +424,7 @@ func (c *Consensus[T]) FinalizeBlock(ctx context.Context, req *abci.RequestFinal
 	if err != nil {
 		return nil, err
 	}
-	appHash, err := c.store.StateCommit(stateChanges)
+	appHash, err := c.store.Commit(nil)
 	if err != nil {
 		return nil, fmt.Errorf("unable to commit the changeset: %w", err)
 	}
@@ -406,7 +482,10 @@ func (c *Consensus[T]) Commit(ctx context.Context, _ *abci.RequestCommit) (*abci
 
 // Vote extensions
 // VerifyVoteExtension implements types.Application.
-func (c *Consensus[T]) VerifyVoteExtension(ctx context.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+func (c *Consensus[T]) VerifyVoteExtension(
+	ctx context.Context,
+	req *abci.RequestVerifyVoteExtension,
+) (*abci.ResponseVerifyVoteExtension, error) {
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
 	cp, err := c.GetConsensusParams(ctx)

@@ -14,8 +14,8 @@ use (
 	./math
 	./orm
 	./simapp
+	./simapp/v2
 	./tests
-	./tests/starship/tests
 	./store
 	./tools/cosmovisor
 	./tools/confix
@@ -38,6 +38,7 @@ use (
 	./x/staking
 	./x/tx
 	./x/upgrade
+	./x/epochs
 	./x/accounts/defaults/lockup
 	./server/v2/appmanager
 	./server/v2/cometbft

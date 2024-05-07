@@ -100,7 +100,7 @@ with only the necessary methods. The `StorageStore` interface is meant to wrap o
 accept this `Database` type, e.g. RocksDB.
 
 The `StorageStore` interface is an abstraction or wrapper around the backing SS
-engine can be seen as the the main entry point to using SS.
+engine can be seen as the main entry point to using SS.
 
 Higher up the stack, there should exist a `root.Store` implementation. The `root.Store`
 is meant to encapsulate both an SS backend and an SC backend. The SS backend is

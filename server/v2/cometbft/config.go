@@ -30,4 +30,7 @@ type Config struct {
 
 	// MempoolConfig
 	CmtConfig *cmtcfg.Config
+
+	// Must be set by the application to grant authority to the consensus engine to send messages to the consensus module
+	ConsensusAuthority string
 }

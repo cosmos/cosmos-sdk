@@ -1,7 +1,6 @@
 package accounts
 
 import (
-	"context"
 	"testing"
 
 	"github.com/cosmos/gogoproto/types"
@@ -9,6 +8,7 @@ import (
 
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/x/accounts/internal/implementation"
+	v1 "cosmossdk.io/x/accounts/v1"
 )
 
 func TestGenesis(t *testing.T) {
@@ -16,7 +16,6 @@ func TestGenesis(t *testing.T) {
 		acc, err := NewTestAccount(deps)
 		return "test", acc, err
 	})
-	k.queryRouter = mockQuery(func(ctx context.Context, req, resp implementation.ProtoMsg) error { return nil })
 	// we init two accounts of the same type
 
 	// we set counter to 10
@@ -49,4 +48,29 @@ func TestGenesis(t *testing.T) {
 	resp, err = k.Query(ctx, addr2, &types.DoubleValue{})
 	require.NoError(t, err)
 	require.Equal(t, &types.UInt64Value{Value: 20}, resp)
+}
+
+func TestImportAccountError(t *testing.T) {
+	// Initialize the keeper and context for testing
+	k, ctx := newKeeper(t, func(deps implementation.Dependencies) (string, implementation.Account, error) {
+		acc, err := NewTestAccount(deps)
+		return "test", acc, err
+	})
+
+	// Define a mock GenesisAccount with a non-existent account type
+	acc := &v1.GenesisAccount{
+		Address:       "test-address",
+		AccountType:   "non-existent-type",
+		AccountNumber: 1,
+		State:         nil,
+	}
+
+	// Attempt to import the mock GenesisAccount into the state
+	err := k.importAccount(ctx, acc)
+
+	// Assert that an error is returned
+	require.Error(t, err)
+
+	// Assert that the error message contains the expected substring
+	require.Contains(t, err.Error(), "account type non-existent-type not found in the registered accounts")
 }

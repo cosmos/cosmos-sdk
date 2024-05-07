@@ -10,6 +10,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	authkeeper "cosmossdk.io/x/auth/keeper"
+	authtestutil "cosmossdk.io/x/auth/testutil"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
@@ -37,23 +38,31 @@ func TestFundsMigration(t *testing.T) {
 	cms := integration.CreateMultiStore(keys, logger)
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, bank.AppModule{}, distribution.AppModule{})
 	ctx := sdk.NewContext(cms, true, logger)
-
+	addressCodec := addresscodec.NewBech32Codec(sdk.Bech32MainPrefix)
 	maccPerms := map[string][]string{
 		pooltypes.ModuleName: nil,
 		disttypes.ModuleName: {authtypes.Minter},
 	}
 
-	authority := authtypes.NewModuleAddress("gov")
+	authority, err := addressCodec.BytesToString(authtypes.NewModuleAddress("gov"))
+	require.NoError(t, err)
+
+	// gomock initializations
+	ctrl := gomock.NewController(t)
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	// create account keeper
 	accountKeeper := authkeeper.NewAccountKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		encCfg.Codec,
 		authtypes.ProtoBaseAccount,
+		acctsModKeeper,
 		maccPerms,
-		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
+		addressCodec,
 		sdk.Bech32MainPrefix,
-		authority.String(),
+		authority,
 	)
 
 	// create bank keeper
@@ -62,13 +71,8 @@ func TestFundsMigration(t *testing.T) {
 		encCfg.Codec,
 		accountKeeper,
 		map[string]bool{},
-		authority.String(),
+		authority,
 	)
-
-	// gomock initializations
-	ctrl := gomock.NewController(t)
-	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
-	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	// create distribution keeper
 	distrKeeper := keeper.NewKeeper(
@@ -79,7 +83,7 @@ func TestFundsMigration(t *testing.T) {
 		stakingKeeper,
 		poolKeeper,
 		disttypes.ModuleName,
-		authority.String(),
+		authority,
 	)
 
 	// Set feepool
@@ -87,7 +91,7 @@ func TestFundsMigration(t *testing.T) {
 	feepool := disttypes.FeePool{
 		CommunityPool: sdk.NewDecCoinsFromCoins(poolAmount),
 	}
-	err := distrKeeper.FeePool.Set(ctx, feepool)
+	err = distrKeeper.FeePool.Set(ctx, feepool)
 	require.NoError(t, err)
 
 	distrAcc := authtypes.NewEmptyModuleAccount(disttypes.ModuleName)

@@ -29,9 +29,9 @@ message Module {
   // no end blocker will be registered.
   repeated string end_blockers = 4;
 
-  // tx_validation specifies the module names for tx validations
+  // tx_validators specifies the module names for tx validators
   // If this is left empty, no tx validation will be registered.
-  repeated string tx_validation = 5;
+  repeated string tx_validators = 5;
 
   // init_genesis specifies the module names of init genesis functions
   // to call in the order in which they should be called. If this is left empty

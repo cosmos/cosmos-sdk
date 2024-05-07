@@ -181,7 +181,7 @@ func (x *_Module_5_list) Append(value protoreflect.Value) {
 }
 
 func (x *_Module_5_list) AppendMutable() protoreflect.Value {
-	panic(fmt.Errorf("AppendMutable can not be called on message Module at list field TxValidation as it is not of Message kind"))
+	panic(fmt.Errorf("AppendMutable can not be called on message Module at list field TxValidators as it is not of Message kind"))
 }
 
 func (x *_Module_5_list) Truncate(n int) {
@@ -392,7 +392,7 @@ var (
 	fd_Module_pre_blockers        protoreflect.FieldDescriptor
 	fd_Module_begin_blockers      protoreflect.FieldDescriptor
 	fd_Module_end_blockers        protoreflect.FieldDescriptor
-	fd_Module_tx_validation       protoreflect.FieldDescriptor
+	fd_Module_tx_validators       protoreflect.FieldDescriptor
 	fd_Module_init_genesis        protoreflect.FieldDescriptor
 	fd_Module_export_genesis      protoreflect.FieldDescriptor
 	fd_Module_order_migrations    protoreflect.FieldDescriptor
@@ -407,7 +407,7 @@ func init() {
 	fd_Module_pre_blockers = md_Module.Fields().ByName("pre_blockers")
 	fd_Module_begin_blockers = md_Module.Fields().ByName("begin_blockers")
 	fd_Module_end_blockers = md_Module.Fields().ByName("end_blockers")
-	fd_Module_tx_validation = md_Module.Fields().ByName("tx_validation")
+	fd_Module_tx_validators = md_Module.Fields().ByName("tx_validators")
 	fd_Module_init_genesis = md_Module.Fields().ByName("init_genesis")
 	fd_Module_export_genesis = md_Module.Fields().ByName("export_genesis")
 	fd_Module_order_migrations = md_Module.Fields().ByName("order_migrations")
@@ -504,9 +504,9 @@ func (x *fastReflection_Module) Range(f func(protoreflect.FieldDescriptor, proto
 			return
 		}
 	}
-	if len(x.TxValidation) != 0 {
-		value := protoreflect.ValueOfList(&_Module_5_list{list: &x.TxValidation})
-		if !f(fd_Module_tx_validation, value) {
+	if len(x.TxValidators) != 0 {
+		value := protoreflect.ValueOfList(&_Module_5_list{list: &x.TxValidators})
+		if !f(fd_Module_tx_validators, value) {
 			return
 		}
 	}
@@ -563,8 +563,8 @@ func (x *fastReflection_Module) Has(fd protoreflect.FieldDescriptor) bool {
 		return len(x.BeginBlockers) != 0
 	case "cosmos.app.runtime.v2.Module.end_blockers":
 		return len(x.EndBlockers) != 0
-	case "cosmos.app.runtime.v2.Module.tx_validation":
-		return len(x.TxValidation) != 0
+	case "cosmos.app.runtime.v2.Module.tx_validators":
+		return len(x.TxValidators) != 0
 	case "cosmos.app.runtime.v2.Module.init_genesis":
 		return len(x.InitGenesis) != 0
 	case "cosmos.app.runtime.v2.Module.export_genesis":
@@ -599,8 +599,8 @@ func (x *fastReflection_Module) Clear(fd protoreflect.FieldDescriptor) {
 		x.BeginBlockers = nil
 	case "cosmos.app.runtime.v2.Module.end_blockers":
 		x.EndBlockers = nil
-	case "cosmos.app.runtime.v2.Module.tx_validation":
-		x.TxValidation = nil
+	case "cosmos.app.runtime.v2.Module.tx_validators":
+		x.TxValidators = nil
 	case "cosmos.app.runtime.v2.Module.init_genesis":
 		x.InitGenesis = nil
 	case "cosmos.app.runtime.v2.Module.export_genesis":
@@ -648,11 +648,11 @@ func (x *fastReflection_Module) Get(descriptor protoreflect.FieldDescriptor) pro
 		}
 		listValue := &_Module_4_list{list: &x.EndBlockers}
 		return protoreflect.ValueOfList(listValue)
-	case "cosmos.app.runtime.v2.Module.tx_validation":
-		if len(x.TxValidation) == 0 {
+	case "cosmos.app.runtime.v2.Module.tx_validators":
+		if len(x.TxValidators) == 0 {
 			return protoreflect.ValueOfList(&_Module_5_list{})
 		}
-		listValue := &_Module_5_list{list: &x.TxValidation}
+		listValue := &_Module_5_list{list: &x.TxValidators}
 		return protoreflect.ValueOfList(listValue)
 	case "cosmos.app.runtime.v2.Module.init_genesis":
 		if len(x.InitGenesis) == 0 {
@@ -715,10 +715,10 @@ func (x *fastReflection_Module) Set(fd protoreflect.FieldDescriptor, value proto
 		lv := value.List()
 		clv := lv.(*_Module_4_list)
 		x.EndBlockers = *clv.list
-	case "cosmos.app.runtime.v2.Module.tx_validation":
+	case "cosmos.app.runtime.v2.Module.tx_validators":
 		lv := value.List()
 		clv := lv.(*_Module_5_list)
-		x.TxValidation = *clv.list
+		x.TxValidators = *clv.list
 	case "cosmos.app.runtime.v2.Module.init_genesis":
 		lv := value.List()
 		clv := lv.(*_Module_6_list)
@@ -775,11 +775,11 @@ func (x *fastReflection_Module) Mutable(fd protoreflect.FieldDescriptor) protore
 		}
 		value := &_Module_4_list{list: &x.EndBlockers}
 		return protoreflect.ValueOfList(value)
-	case "cosmos.app.runtime.v2.Module.tx_validation":
-		if x.TxValidation == nil {
-			x.TxValidation = []string{}
+	case "cosmos.app.runtime.v2.Module.tx_validators":
+		if x.TxValidators == nil {
+			x.TxValidators = []string{}
 		}
-		value := &_Module_5_list{list: &x.TxValidation}
+		value := &_Module_5_list{list: &x.TxValidators}
 		return protoreflect.ValueOfList(value)
 	case "cosmos.app.runtime.v2.Module.init_genesis":
 		if x.InitGenesis == nil {
@@ -836,7 +836,7 @@ func (x *fastReflection_Module) NewField(fd protoreflect.FieldDescriptor) protor
 	case "cosmos.app.runtime.v2.Module.end_blockers":
 		list := []string{}
 		return protoreflect.ValueOfList(&_Module_4_list{list: &list})
-	case "cosmos.app.runtime.v2.Module.tx_validation":
+	case "cosmos.app.runtime.v2.Module.tx_validators":
 		list := []string{}
 		return protoreflect.ValueOfList(&_Module_5_list{list: &list})
 	case "cosmos.app.runtime.v2.Module.init_genesis":
@@ -945,8 +945,8 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
-		if len(x.TxValidation) > 0 {
-			for _, s := range x.TxValidation {
+		if len(x.TxValidators) > 0 {
+			for _, s := range x.TxValidators {
 				l = len(s)
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
@@ -1065,11 +1065,11 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 				dAtA[i] = 0x32
 			}
 		}
-		if len(x.TxValidation) > 0 {
-			for iNdEx := len(x.TxValidation) - 1; iNdEx >= 0; iNdEx-- {
-				i -= len(x.TxValidation[iNdEx])
-				copy(dAtA[i:], x.TxValidation[iNdEx])
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.TxValidation[iNdEx])))
+		if len(x.TxValidators) > 0 {
+			for iNdEx := len(x.TxValidators) - 1; iNdEx >= 0; iNdEx-- {
+				i -= len(x.TxValidators[iNdEx])
+				copy(dAtA[i:], x.TxValidators[iNdEx])
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.TxValidators[iNdEx])))
 				i--
 				dAtA[i] = 0x2a
 			}
@@ -1287,7 +1287,7 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 5:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TxValidation", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TxValidators", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -1315,7 +1315,7 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.TxValidation = append(x.TxValidation, string(dAtA[iNdEx:postIndex]))
+				x.TxValidators = append(x.TxValidators, string(dAtA[iNdEx:postIndex]))
 				iNdEx = postIndex
 			case 6:
 				if wireType != 2 {
@@ -2535,9 +2535,9 @@ type Module struct {
 	// to call in the order in which they should be called. If this is left empty
 	// no end blocker will be registered.
 	EndBlockers []string `protobuf:"bytes,4,rep,name=end_blockers,json=endBlockers,proto3" json:"end_blockers,omitempty"`
-	// tx_validation specifies the module names for tx validations
+	// tx_validators specifies the module names for tx validators
 	// If this is left empty, no tx validation will be registered.
-	TxValidation []string `protobuf:"bytes,5,rep,name=tx_validation,json=txValidation,proto3" json:"tx_validation,omitempty"`
+	TxValidators []string `protobuf:"bytes,5,rep,name=tx_validators,json=txValidators,proto3" json:"tx_validators,omitempty"`
 	// init_genesis specifies the module names of init genesis functions
 	// to call in the order in which they should be called. If this is left empty
 	// no init genesis function will be registered.
@@ -2604,9 +2604,9 @@ func (x *Module) GetEndBlockers() []string {
 	return nil
 }
 
-func (x *Module) GetTxValidation() []string {
+func (x *Module) GetTxValidators() []string {
 	if x != nil {
-		return x.TxValidation
+		return x.TxValidators
 	}
 	return nil
 }
@@ -2763,9 +2763,9 @@ var file_cosmos_app_runtime_v2_module_proto_rawDesc = []byte{
 	0x62, 0x65, 0x67, 0x69, 0x6e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x65, 0x72, 0x73, 0x12, 0x21, 0x0a,
 	0x0c, 0x65, 0x6e, 0x64, 0x5f, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x65, 0x72, 0x73, 0x18, 0x04, 0x20,
 	0x03, 0x28, 0x09, 0x52, 0x0b, 0x65, 0x6e, 0x64, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x65, 0x72, 0x73,
-	0x12, 0x23, 0x0a, 0x0d, 0x74, 0x78, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x69, 0x6f,
-	0x6e, 0x18, 0x05, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0c, 0x74, 0x78, 0x56, 0x61, 0x6c, 0x69, 0x64,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x21, 0x0a, 0x0c, 0x69, 0x6e, 0x69, 0x74, 0x5f, 0x67, 0x65,
+	0x12, 0x23, 0x0a, 0x0d, 0x74, 0x78, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
+	0x73, 0x18, 0x05, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0c, 0x74, 0x78, 0x56, 0x61, 0x6c, 0x69, 0x64,
+	0x61, 0x74, 0x6f, 0x72, 0x73, 0x12, 0x21, 0x0a, 0x0c, 0x69, 0x6e, 0x69, 0x74, 0x5f, 0x67, 0x65,
 	0x6e, 0x65, 0x73, 0x69, 0x73, 0x18, 0x06, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0b, 0x69, 0x6e, 0x69,
 	0x74, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x12, 0x25, 0x0a, 0x0e, 0x65, 0x78, 0x70, 0x6f,
 	0x72, 0x74, 0x5f, 0x67, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x18, 0x07, 0x20, 0x03, 0x28, 0x09,

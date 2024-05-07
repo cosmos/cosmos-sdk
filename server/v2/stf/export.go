@@ -21,7 +21,7 @@ func NewExecutionContext() *executionContext {
 	executionCtx := &executionContext{Context: context.Background()}
 	executionCtx.Cache = NewModuleContainer()
 	state := mock.DB()
-	executionCtx.State = branch.DefaultNewWriterMap(state)
+	executionCtx.state = branch.DefaultNewWriterMap(state)
 	return executionCtx
 }
 

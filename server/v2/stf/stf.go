@@ -286,7 +286,7 @@ func (s STF[T]) runTxMsgs(
 		}
 		msgResps[i] = resp
 	}
-	applyContextCache(ctx, postTxCtx)
+	applyContextCache(ctx, execCtx)
 	return msgResps, execCtx.meter.Consumed(), execCtx.events, nil
 }
 
@@ -539,7 +539,7 @@ func (s STF[T]) makeContext(
 		branchdb:   BrachService{s.branch},
 		headerInfo: headerInfo,
 		execMode:   execMode,
-		Cache: 		cache
+		Cache: 		cache,
 	}
 }
 

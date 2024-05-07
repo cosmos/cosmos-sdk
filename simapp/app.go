@@ -264,7 +264,7 @@ func NewSimApp(
 		govtypes.StoreKey, consensusparamtypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, circuittypes.StoreKey,
 		authzkeeper.StoreKey, nftkeeper.StoreKey, group.StoreKey, pooltypes.StoreKey,
-		accounts.StoreKey, epochstypes.StoreKey,
+		accounts.StoreKey, epochstypes.StoreKey, "tx",
 	)
 
 	// register streaming services

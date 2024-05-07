@@ -8,7 +8,6 @@ import (
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/simapp"
-	"cosmossdk.io/x/accounts/defaults/lockup/types"
 	"cosmossdk.io/x/bank/testutil"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -65,16 +64,4 @@ func (s *E2ETestSuite) queryAcc(ctx sdk.Context, req sdk.Msg, app *simapp.SimApp
 
 func (s *E2ETestSuite) fundAccount(app *simapp.SimApp, ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) {
 	require.NoError(s.T(), testutil.FundAccount(ctx, app.BankKeeper, addr, amt))
-}
-
-func (s *E2ETestSuite) queryLockupAccInfo(ctx sdk.Context, app *simapp.SimApp, accAddr []byte) *types.QueryLockupAccountInfoResponse {
-	req := &types.QueryLockupAccountInfoRequest{}
-	resp, err := s.queryAcc(ctx, req, app, accAddr)
-	require.NoError(s.T(), err)
-	require.NotNil(s.T(), resp)
-
-	lockupAccountInfoResponse, ok := resp.(*types.QueryLockupAccountInfoResponse)
-	require.True(s.T(), ok)
-
-	return lockupAccountInfoResponse
 }

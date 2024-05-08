@@ -13,9 +13,8 @@ import (
 const ConsensusVersion = 1
 
 var (
-	_ appmodule.AppModule   = AppModule{}
-	_ appmodule.HasServices = AppModule{}
-	_ appmodule.HasGenesis  = AppModule{}
+	_ appmodule.AppModule  = AppModule{}
+	_ appmodule.HasGenesis = AppModule{}
 )
 
 // AppModule implements an application module for the circuit module.

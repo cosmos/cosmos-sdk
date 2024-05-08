@@ -6,13 +6,9 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
-
-	"cosmossdk.io/core/comet"
 	consensustypes "cosmossdk.io/x/consensus/types"
 
 	coreappmgr "cosmossdk.io/core/app"
-	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -255,12 +251,13 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.InitChainRequest
 	}
 
 	br := &coreappmgr.BlockRequest[T]{
-		Height:            uint64(req.InitialHeight),
+		Height:            uint64(req.InitialHeight - 1),
 		Time:              req.Time,
 		Hash:              nil,
 		AppHash:           nil,
 		ChainId:           req.ChainId,
 		ConsensusMessages: consMessages,
+		IsGenesis:         true,
 	}
 
 	blockresponse, genesisState, err := c.app.InitGenesis(
@@ -278,9 +275,14 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.InitChainRequest
 	if err != nil {
 		return nil, err
 	}
-	stateRoot, err := c.store.Commit(&store.Changeset{
+	cs := &store.Changeset{
 		Changes: stateChanges,
-	})
+	}
+	_, err = c.store.WorkingHash(cs)
+	if err != nil {
+		return nil, fmt.Errorf("unable to commit the changeset: %w", err)
+	}
+	stateRoot, err := c.store.Commit(cs)
 	if err != nil {
 		return nil, fmt.Errorf("unable to commit the changeset: %w", err)
 	}
@@ -372,24 +374,23 @@ func (c *Consensus[T]) FinalizeBlock(
 		return nil, err
 	}
 
-	// TODO: maybe neeed for storing consnensus info?
-	// for passing consensus info as a consensus message
-	// cometInfo := &consensustypes.ConsensusMsgCometInfoRequest{
-	// 	Info: &consensustypes.CometInfo{
-	// 		Evidence:        ToSDKEvidence(req.Misbehavior),
-	// 		ValidatorsHash:  req.NextValidatorsHash,
-	// 		ProposerAddress: req.ProposerAddress,
-	// 		LastCommit:      ToSDKCommitInfo(req.DecidedLastCommit),
-	// 	},
-	// }
+	cometInfo := &consensustypes.MsgUpdateCometInfo{
+		Authority: c.cfg.ConsensusAuthority,
+		CometInfo: &consensustypes.CometInfo{
+			Evidence:        req.Misbehavior,
+			ValidatorsHash:  req.NextValidatorsHash,
+			ProposerAddress: req.ProposerAddress,
+			LastCommit:      req.DecidedLastCommit,
+		},
+	}
 
 	// TODO remove this once we have a better way to pass consensus info
-	ctx = context.WithValue(ctx, corecontext.CometInfoKey, &comet.Info{
-		Evidence:        sdktypes.ToSDKEvidence(req.Misbehavior),
-		ValidatorsHash:  req.NextValidatorsHash,
-		ProposerAddress: req.ProposerAddress,
-		LastCommit:      sdktypes.ToSDKCommitInfo(req.DecidedLastCommit),
-	})
+	// ctx = context.WithValue(ctx, corecontext.CometInfoKey, &comet.Info{
+	// 	Evidence:        sdktypes.ToSDKEvidence(req.Misbehavior),
+	// 	ValidatorsHash:  req.NextValidatorsHash,
+	// 	ProposerAddress: req.ProposerAddress,
+	// 	LastCommit:      sdktypes.ToSDKCommitInfo(req.DecidedLastCommit),
+	// })
 
 	// TODO(tip): can we expect some txs to not decode? if so, what we do in this case? this does not seem to be the case,
 	// considering that prepare and process always decode txs, assuming they're the ones providing txs we should never
@@ -405,13 +406,13 @@ func (c *Consensus[T]) FinalizeBlock(
 	}
 
 	blockReq := &coreappmgr.BlockRequest[T]{
-		Height:  uint64(req.Height),
-		Time:    req.Time,
-		Hash:    req.Hash,
-		AppHash: cid.Hash,
-		ChainId: c.chainID,
-		Txs:     decodedTxs,
-		// ConsensusMessages: []transaction.Type{cometInfo},
+		Height:            uint64(req.Height),
+		Time:              req.Time,
+		Hash:              req.Hash,
+		AppHash:           cid.Hash,
+		ChainId:           c.chainID,
+		Txs:               decodedTxs,
+		ConsensusMessages: []transaction.Type{cometInfo},
 	}
 
 	resp, newState, err := c.app.DeliverBlock(ctx, blockReq)

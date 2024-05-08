@@ -100,10 +100,13 @@ func (s STF[T]) DeliverBlock(
 		return nil, nil, err
 	}
 
-	// begin block
-	beginBlockEvents, err := s.beginBlock(ctx, newState)
-	if err != nil {
-		return nil, nil, err
+	var beginBlockEvents []event.Event
+	if !block.IsGenesis {
+		// begin block
+		beginBlockEvents, err = s.beginBlock(ctx, newState)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	// check if we need to return early

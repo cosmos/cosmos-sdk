@@ -21,7 +21,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_UpdateParams_FullMethodName = "/cosmos.consensus.v1.Msg/UpdateParams"
+	Msg_UpdateParams_FullMethodName    = "/cosmos.consensus.v1.Msg/UpdateParams"
+	Msg_UpdateCometInfo_FullMethodName = "/cosmos.consensus.v1.Msg/UpdateCometInfo"
 )
 
 // MsgClient is the client API for Msg service.
@@ -31,6 +32,9 @@ type MsgClient interface {
 	// UpdateParams defines a governance operation for updating the x/consensus module parameters.
 	// The authority is defined in the keeper.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
+	// UpdateCometInfo defines a governance operation for updating the x/consensus module's comet info.
+	// The authority is defined in the keeper.
+	UpdateCometInfo(ctx context.Context, in *MsgUpdateCometInfo, opts ...grpc.CallOption) (*MsgUpdateCometInfoResponse, error)
 }
 
 type msgClient struct {
@@ -50,6 +54,15 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 	return out, nil
 }
 
+func (c *msgClient) UpdateCometInfo(ctx context.Context, in *MsgUpdateCometInfo, opts ...grpc.CallOption) (*MsgUpdateCometInfoResponse, error) {
+	out := new(MsgUpdateCometInfoResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateCometInfo_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -57,6 +70,9 @@ type MsgServer interface {
 	// UpdateParams defines a governance operation for updating the x/consensus module parameters.
 	// The authority is defined in the keeper.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
+	// UpdateCometInfo defines a governance operation for updating the x/consensus module's comet info.
+	// The authority is defined in the keeper.
+	UpdateCometInfo(context.Context, *MsgUpdateCometInfo) (*MsgUpdateCometInfoResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -66,6 +82,9 @@ type UnimplementedMsgServer struct {
 
 func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
+}
+func (UnimplementedMsgServer) UpdateCometInfo(context.Context, *MsgUpdateCometInfo) (*MsgUpdateCometInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateCometInfo not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -98,6 +117,24 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UpdateCometInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateCometInfo)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateCometInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateCometInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateCometInfo(ctx, req.(*MsgUpdateCometInfo))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -108,6 +145,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateParams",
 			Handler:    _Msg_UpdateParams_Handler,
+		},
+		{
+			MethodName: "UpdateCometInfo",
+			Handler:    _Msg_UpdateCometInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

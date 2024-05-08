@@ -59,7 +59,7 @@ func (b WriterMap) ApplyStateChanges(stateChanges []store.StateChanges) error {
 }
 
 func (b WriterMap) GetStateChanges() ([]store.StateChanges, error) {
-	sc := make([]store.StateChanges, len(b.branchedWriterState))
+	var sc []store.StateChanges
 	for account, stateChange := range b.branchedWriterState {
 		kvChanges, err := stateChange.ChangeSets()
 		if err != nil {

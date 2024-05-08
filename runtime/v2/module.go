@@ -18,6 +18,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
@@ -109,6 +110,7 @@ func init() {
 			ProvideAddressCodec,
 			ProvideGenesisTxHandler,
 			ProvideAppVersionModifier,
+			ProvideCometService,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -312,4 +314,8 @@ func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
 
 func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
 	return app.app
+}
+
+func ProvideCometService() comet.Service {
+	return &services.ContextAwareCometInfoService{}
 }

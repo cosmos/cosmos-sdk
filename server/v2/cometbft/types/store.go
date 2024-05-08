@@ -14,9 +14,11 @@ type Store interface {
 	// associated with it.
 	StateLatest() (uint64, store.ReaderMap, error)
 
+	WorkingHash(*store.Changeset) ([]byte, error)
+
 	// StateCommit commits the provided changeset and returns
 	// the new state root of the state.
-	Commit(changes *store.Changeset) (store.Hash, error)
+	Commit(*store.Changeset) (store.Hash, error)
 
 	// Query is a key/value query directly to the underlying database. This skips the appmanager
 	Query(storeKey []byte, version uint64, key []byte, prove bool) (storev2.QueryResult, error)

@@ -17,11 +17,10 @@ func setup(t *testing.T, ctx context.Context, ss store.KVStoreService, timefn fu
 	t.Helper()
 	deps := makeMockDependencies(ss, timefn)
 
-	multisig := NewAccount("multisig")
-	_, acc, err := multisig(deps)
+	acc, err := NewAccount(deps)
 	require.NoError(t, err)
 
-	return acc.(*Account)
+	return acc
 }
 
 func TestInit(t *testing.T) {

@@ -156,8 +156,9 @@ func (mi *memIterator) Domain() (start, end []byte) {
 }
 
 // Close releases any resources held by the iterator.
-func (mi *memIterator) Close() {
+func (mi *memIterator) Close() error {
 	mi.iter.Release()
+	return nil
 }
 
 // Error returns the error state of the iterator.

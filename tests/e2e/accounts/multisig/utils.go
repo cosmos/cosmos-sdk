@@ -14,9 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	members = []sdk.AccAddress{}
-)
+var members = []sdk.AccAddress{}
 
 type ProtoMsg = protoiface.MessageV1
 

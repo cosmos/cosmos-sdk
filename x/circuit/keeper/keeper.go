@@ -43,7 +43,7 @@ func NewKeeper(storeSvc store.KVStoreService, authority string, addressCodec add
 			types.AccountPermissionPrefix,
 			"permissions",
 			collections.BytesKey,
-			codec.CollValue[types.Permissions](cdc),
+			CollValue[types.Permissions](),
 		),
 		DisableList: collections.NewKeySet(
 			sb,

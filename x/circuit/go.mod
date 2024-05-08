@@ -7,6 +7,7 @@ require (
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/errors v1.0.1
 	github.com/cosmos/gogoproto v1.4.12
+	github.com/gogo/protobuf v1.3.2
 	google.golang.org/genproto/googleapis/api v0.0.0-20240227224415-6ceb2ff114de
 )
 

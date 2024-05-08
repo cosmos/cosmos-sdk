@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
 
 ### Features
+
 * (tests) [#20013](https://github.com/cosmos/cosmos-sdk/pull/20013) Introduce system tests to run multi node local testnet in CI
 * (runtime) [#19953](https://github.com/cosmos/cosmos-sdk/pull/19953) Implement `core/transaction.Service` in runtime.
 * (client) [#19905](https://github.com/cosmos/cosmos-sdk/pull/19905) Add grpc client config to `client.toml`.
@@ -177,7 +178,9 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
     * Additionally, to reflect this change, the module manager does not take a codec either.
 * (runtime) [#19747](https://github.com/cosmos/cosmos-sdk/pull/19747) `runtime.ValidatorAddressCodec` and `runtime.ConsensusAddressCodec` have been moved to `core`.
 * (baseapp) [#19993](https://github.com/cosmos/cosmos-sdk/pull/19993) Indicate pruning with error code "not found" rather than "invalid request".
+* (x/consensus) [#20010](https://github.com/cosmos/cosmos-sdk/pull/20010) Move consensus module to be its own go.mod
 * (server) [#20140](https://github.com/cosmos/cosmos-sdk/pull/20140) Remove embedded grpc-web proxy in favor of standalone grpc-web proxy. [Envoy Proxy](https://www.envoyproxy.io/docs/envoy/latest/start/start)
+* (all) [#19726](https://github.com/cosmos/cosmos-sdk/pull/19726) Integrate comet v1
 
 ### Client Breaking Changes
 

@@ -36,6 +36,9 @@ message ServiceCommandDescriptor {
   // exists, or enhance the existing command. If set to true, the custom command will be enhanced with the services from
   // gRPC. otherwise when a custom command exists, no commands will be generated for the service.
   bool enhance_custom_command = 4;
+
+  // short is an optional parameter used to override the short description of the auto generated command.
+  string short = 5;
 }
 
 // RpcCommandOptions specifies options for commands generated from protobuf

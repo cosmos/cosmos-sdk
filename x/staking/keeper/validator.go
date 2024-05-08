@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"cosmossdk.io/collections"
@@ -17,6 +16,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/staking/types"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -594,15 +594,16 @@ func (k Keeper) IsValidatorJailed(ctx context.Context, addr sdk.ConsAddress) (bo
 }
 
 // GetPubKeyByConsAddr returns the consensus public key by consensus address.
-func (k Keeper) GetPubKeyByConsAddr(ctx context.Context, addr sdk.ConsAddress) (cmtprotocrypto.PublicKey, error) {
+// Caller receives a Cosmos SDK Pubkey type and must cast it to a comet type
+func (k Keeper) GetPubKeyByConsAddr(ctx context.Context, addr sdk.ConsAddress) (cryptotypes.PubKey, error) {
 	v, err := k.GetValidatorByConsAddr(ctx, addr)
 	if err != nil {
-		return cmtprotocrypto.PublicKey{}, err
+		return nil, err
 	}
 
-	pubkey, err := v.CmtConsPublicKey()
+	pubkey, err := v.ConsPubKey()
 	if err != nil {
-		return cmtprotocrypto.PublicKey{}, err
+		return nil, err
 	}
 
 	return pubkey, nil

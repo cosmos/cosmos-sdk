@@ -3,8 +3,9 @@ package types
 import (
 	"errors"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 )
 
 func (msg ConsensusMsgParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, error) {
@@ -25,12 +26,13 @@ func (msg ConsensusMsgParams) ToProtoConsensusParams() (cmtproto.ConsensusParams
 		Validator: &cmtproto.ValidatorParams{
 			PubKeyTypes: msg.Validator.PubKeyTypes,
 		},
+
 		Version: cmttypes.DefaultConsensusParams().ToProto().Version, // Version is stored in x/upgrade
 	}
 
 	if msg.Abci != nil {
-		cp.Abci = &cmtproto.ABCIParams{
-			VoteExtensionsEnableHeight: msg.Abci.VoteExtensionsEnableHeight,
+		cp.Feature = &cmtproto.FeatureParams{
+			VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: msg.Abci.VoteExtensionsEnableHeight},
 		}
 	}
 

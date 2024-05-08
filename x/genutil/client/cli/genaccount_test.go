@@ -77,6 +77,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 			require.NoError(t, err)
 
 			serverCtx := server.NewContext(viper.New(), logger)
+			writeAndTrackDefaultConfig(serverCtx.Viper, home)
 			clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(home).WithAddressCodec(ac)
 
 			if tc.withKeyring {

@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  tests:
+  stf:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

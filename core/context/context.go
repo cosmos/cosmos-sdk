@@ -7,8 +7,10 @@ type ExecMode uint8
 const (
 	ExecModeCheck ExecMode = iota
 	ExecModeReCheck
+	ExecModeSimulate
 	ExecModePrepareProposal
 	ExecModeProcessProposal
-	ExecModeSimulate
+	ExecModeVoteExtension
+	ExecModeVerifyVoteExtension
 	ExecModeFinalize
 )

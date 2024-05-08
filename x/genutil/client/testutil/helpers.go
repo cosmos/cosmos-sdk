@@ -24,7 +24,8 @@ func ExecInitCmd(mm *module.Manager, home string, cdc codec.Codec) error {
 	logger := log.NewNopLogger()
 	cmd := genutilcli.InitCmd(mm)
 	serverCtx := server.NewContext(viper.New(), logger)
-	WriteAndTrackConfig(serverCtx.GetViper(), home)
+	cfg, _ := CreateDefaultCometConfig(home)
+	WriteAndTrackConfig(serverCtx.GetViper(), home, cfg)
 	clientCtx := client.Context{}.WithCodec(cdc).WithHomeDir(home)
 
 	_, out := testutil.ApplyMockIO(cmd)
@@ -53,12 +54,7 @@ func CreateDefaultCometConfig(rootDir string) (*cmtcfg.Config, error) {
 	return conf, nil
 }
 
-func WriteAndTrackConfig(v *viper.Viper, home string) error {
-	cfg, err := CreateDefaultCometConfig(home)
-	if err != nil {
-		return err
-	}
-	
+func WriteAndTrackConfig(v *viper.Viper, home string, cfg *cmtcfg.Config) error {
 	cmtcfg.WriteConfigFile(filepath.Join(home, "config", "config.toml"), cfg)
 
 	v.Set(flags.FlagHome, home)

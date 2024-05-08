@@ -66,7 +66,7 @@ func TestInitCmd(t *testing.T) {
 			logger := log.NewNopLogger()
 
 			serverCtx := server.NewContext(viper.New(), logger)
-			genutiltest.WriteAndTrackConfig(serverCtx.GetViper(), home)
+			writeAndTrackDefaultConfig(serverCtx.GetViper(), home)
 			interfaceRegistry := types.NewInterfaceRegistry()
 			marshaler := codec.NewProtoCodec(interfaceRegistry)
 			clientCtx := client.Context{}.
@@ -98,7 +98,7 @@ func TestInitRecover(t *testing.T) {
 	logger := log.NewNopLogger()
 
 	serverCtx := server.NewContext(viper.New(), logger)
-	genutiltest.WriteAndTrackConfig(serverCtx.GetViper(), home)
+	writeAndTrackDefaultConfig(serverCtx.GetViper(), home)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
@@ -128,7 +128,7 @@ func TestInitDefaultBondDenom(t *testing.T) {
 	logger := log.NewNopLogger()
 
 	serverCtx := server.NewContext(viper.New(), logger)
-	genutiltest.WriteAndTrackConfig(serverCtx.GetViper(), home)
+	writeAndTrackDefaultConfig(serverCtx.GetViper(), home)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
@@ -154,7 +154,7 @@ func TestEmptyState(t *testing.T) {
 	logger := log.NewNopLogger()
 
 	serverCtx := server.NewContext(viper.New(), logger)
-	genutiltest.WriteAndTrackConfig(serverCtx.GetViper(), home)
+	writeAndTrackDefaultConfig(serverCtx.GetViper(), home)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
@@ -246,7 +246,7 @@ func TestInitConfig(t *testing.T) {
 	logger := log.NewNopLogger()
 
 	serverCtx := server.NewContext(viper.New(), logger)
-	genutiltest.WriteAndTrackConfig(serverCtx.GetViper(), home)
+	writeAndTrackDefaultConfig(serverCtx.GetViper(), home)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
@@ -293,7 +293,7 @@ func TestInitWithHeight(t *testing.T) {
 	require.NoError(t, err)
 
 	serverCtx := server.NewContext(viper.New(), logger)
-	genutiltest.WriteAndTrackConfig(serverCtx.GetViper(), home)
+	writeAndTrackDefaultConfig(serverCtx.GetViper(), home)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
@@ -326,7 +326,7 @@ func TestInitWithNegativeHeight(t *testing.T) {
 	require.NoError(t, err)
 
 	serverCtx := server.NewContext(viper.New(), logger)
-	genutiltest.WriteAndTrackConfig(serverCtx.GetViper(), home)
+	writeAndTrackDefaultConfig(serverCtx.GetViper(), home)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
@@ -363,4 +363,9 @@ func makeAminoCodec() *codec.LegacyAmino {
 func makeCodec() codec.Codec {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	return codec.NewProtoCodec(interfaceRegistry)
+}
+
+func writeAndTrackDefaultConfig(v *viper.Viper, home string) {
+	cfg, _ := genutiltest.CreateDefaultCometConfig(home)
+	genutiltest.WriteAndTrackConfig(v, home, cfg)
 }

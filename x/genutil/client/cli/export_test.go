@@ -25,7 +25,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/cmdtest"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	gentestutil "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -69,7 +68,7 @@ func NewExportSystem(t *testing.T, exporter types.AppExporter) *ExportSystem {
 		viper.New(),
 		log.NewCustomLogger(zerolog.New(tw)),
 	)
-	gentestutil.WriteAndTrackConfig(sCtx.GetViper(), homeDir)
+	writeAndTrackDefaultConfig(sCtx.GetViper(), homeDir)
 
 	cCtx := (client.Context{}).WithHomeDir(homeDir)
 

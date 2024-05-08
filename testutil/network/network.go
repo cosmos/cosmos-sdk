@@ -57,6 +57,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	gentestutil "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 )
 
 // package-wide network lock to only allow one test network at a time
@@ -433,6 +434,8 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		cmtCfg.P2P.AddrBookStrict = false
 		cmtCfg.P2P.AllowDuplicateIP = true
 
+		// write comet config file and track by viper
+		gentestutil.WriteAndTrackConfig(ctx.GetViper(), nodeDir, cmtCfg.Config)
 		var mnemonic string
 		if i < len(cfg.Mnemonics) {
 			mnemonic = cfg.Mnemonics[i]

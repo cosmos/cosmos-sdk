@@ -22,6 +22,8 @@ func NewMsgRouterBuilder() *MsgRouterBuilder {
 }
 
 type MsgRouterBuilder struct {
+	err error
+
 	handlers           map[string]appmodulev2.Handler
 	globalPreHandlers  []appmodulev2.PreMsgHandler
 	preHandlers        map[string][]appmodulev2.PreMsgHandler
@@ -29,13 +31,15 @@ type MsgRouterBuilder struct {
 	globalPostHandlers []appmodulev2.PostMsgHandler
 }
 
-func (b *MsgRouterBuilder) RegisterHandler(msgType string, handler appmodulev2.Handler) error {
+func (b *MsgRouterBuilder) RegisterHandler(msgType string, handler appmodulev2.Handler) {
+	if b.err != nil {
+		return
+	}
 	// panic on override
 	if _, ok := b.handlers[msgType]; ok {
-		return fmt.Errorf("handler already registered: %s", msgType)
+		b.err = fmt.Errorf("handler already registered: %s", msgType)
 	}
 	b.handlers[msgType] = handler
-	return nil
 }
 
 func (b *MsgRouterBuilder) RegisterGlobalPreHandler(handler appmodulev2.PreMsgHandler) {

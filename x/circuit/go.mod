@@ -6,6 +6,7 @@ require (
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/errors v1.0.1
+	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000
 	github.com/cosmos/gogoproto v1.4.12
 	github.com/gogo/protobuf v1.3.2
 	google.golang.org/genproto/googleapis/api v0.0.0-20240227224415-6ceb2ff114de
@@ -38,5 +39,7 @@ require (
 )
 
 replace cosmossdk.io/core => ../../core
+
+replace cosmossdk.io/server/v2/stf => ../../server/v2/stf
 
 replace cosmossdk.io/errors => ../../errors

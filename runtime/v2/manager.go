@@ -617,7 +617,7 @@ func registerMethod(
 		return err
 	}
 
-	return stfRouter.RegisterHandler(string(requestName), func(
+	stfRouter.RegisterHandler(string(requestName), func(
 		ctx context.Context,
 		msg appmodulev2.Message,
 	) (resp appmodulev2.Message, err error) {
@@ -630,4 +630,6 @@ func registerMethod(
 		}
 		return res.(appmodulev2.Message), nil
 	})
+
+	return nil
 }

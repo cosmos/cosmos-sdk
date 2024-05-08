@@ -29,8 +29,8 @@ type (
 //	}
 //
 // ```
-func RegisterHandler[R interface{ Register(string, Handler) }, Req, Resp Message](
-	router R,
+func RegisterHandler[Req, Resp Message](
+	router interface{ RegisterHandler(string, Handler) },
 	handler func(ctx context.Context, msg Req) (msgResp Resp, err error),
 ) {
 	untypedHandler := func(ctx context.Context, m Message) (Message, error) {
@@ -40,7 +40,7 @@ func RegisterHandler[R interface{ Register(string, Handler) }, Req, Resp Message
 		}
 		return handler(ctx, typed)
 	}
-	router.Register(MessageName[Req](), untypedHandler)
+	router.RegisterHandler(MessageName[Req](), untypedHandler)
 }
 
 // RegisterPreHandler is a helper function that modules can use to not lose type safety when registering PreMsgHandler to the

@@ -13,11 +13,13 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	stfgas "cosmossdk.io/server/v2/stf/gas"
 )
 
 // STF is a struct that manages the state transition component of the app.
 type STF[T transaction.Tx] struct {
+	logger      log.Logger
 	handleMsg   func(ctx context.Context, msg transaction.Type) (transaction.Type, error)
 	handleQuery func(ctx context.Context, req transaction.Type) (transaction.Type, error)
 
@@ -159,7 +161,7 @@ func (s STF[T]) deliverTx(
 	defer func() {
 		if r := recover(); r != nil {
 			recoveryError = fmt.Errorf("panic during transaction execution: %s", r)
-			fmt.Println(recoveryError)
+			s.logger.Error("panic during transaction execution", "error", recoveryError)
 		}
 	}()
 	// handle error from GetGasLimit

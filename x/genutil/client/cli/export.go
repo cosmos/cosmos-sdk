@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	corectx "cosmossdk.io/core/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -31,7 +32,7 @@ func ExportCmd(appExporter servertypes.AppExporter) *cobra.Command {
 		Short: "Export state to JSON",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			serverCtx := server.GetServerContextFromCmd(cmd)
+			serverCtx := corectx.GetServerContextFromCmd(cmd)
 			config, ok := serverCtx.GetConfig().(server.CometConfig)
 			if !ok {
 				return fmt.Errorf("Can not convert cometbft config")
@@ -41,7 +42,7 @@ func ExportCmd(appExporter servertypes.AppExporter) *cobra.Command {
 				return err
 			}
 
-			db, err := server.OpenDB(config.RootDir, server.GetAppDBBackend(serverCtx.Viper))
+			db, err := server.OpenDB(config.RootDir, server.GetAppDBBackend(serverCtx.GetViper()))
 			if err != nil {
 				return err
 			}
@@ -69,7 +70,7 @@ func ExportCmd(appExporter servertypes.AppExporter) *cobra.Command {
 			}
 
 			traceWriterFile, _ := cmd.Flags().GetString(flagTraceStore)
-			traceWriter, cleanup, err := server.SetupTraceWriter(serverCtx.Logger, traceWriterFile) //resleak:notresource
+			traceWriter, cleanup, err := server.SetupTraceWriter(serverCtx.GetLogger(), traceWriterFile) //resleak:notresource
 			if err != nil {
 				return err
 			}
@@ -81,7 +82,7 @@ func ExportCmd(appExporter servertypes.AppExporter) *cobra.Command {
 			modulesToExport, _ := cmd.Flags().GetStringSlice(flagModulesToExport)
 			outputDocument, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
 
-			exported, err := appExporter(serverCtx.Logger, db, traceWriter, height, forZeroHeight, jailAllowedAddrs, serverCtx.Viper, modulesToExport)
+			exported, err := appExporter(serverCtx.GetLogger(), db, traceWriter, height, forZeroHeight, jailAllowedAddrs, serverCtx.GetViper(), modulesToExport)
 			if err != nil {
 				return fmt.Errorf("error exporting state: %w", err)
 			}

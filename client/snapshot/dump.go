@@ -11,6 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	corectx "cosmossdk.io/core/context"
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
@@ -21,8 +22,8 @@ func DumpArchiveCmd() *cobra.Command {
 		Short: "Dump the snapshot as portable archive format",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := server.GetServerContextFromCmd(cmd)
-			snapshotStore, err := server.GetSnapshotStore(ctx.Viper)
+			ctx := corectx.GetServerContextFromCmd(cmd)
+			snapshotStore, err := server.GetSnapshotStore(ctx.GetViper())
 			if err != nil {
 				return err
 			}

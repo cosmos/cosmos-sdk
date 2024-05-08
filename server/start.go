@@ -39,6 +39,7 @@ import (
 	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
+	corectx "cosmossdk.io/core/context"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
@@ -177,8 +178,8 @@ bypassed and can be used when legacy queries are needed after an on-chain upgrad
 is performed. Note, when enabled, gRPC will also be automatically enabled.
 `,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			serverCtx := GetServerContextFromCmd(cmd)
-			_, err := GetPruningOptionsFromFlags(serverCtx.Viper)
+			serverCtx := corectx.GetServerContextFromCmd(cmd).(*Context)
+			_, err := GetPruningOptionsFromFlags(serverCtx.GetViper())
 			if err != nil {
 				return err
 			}
@@ -190,19 +191,19 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 
 			withCMT, _ := cmd.Flags().GetBool(flagWithComet)
 			if !withCMT {
-				serverCtx.Logger.Info("starting ABCI without CometBFT")
+				serverCtx.GetLogger().Info("starting ABCI without CometBFT")
 			}
 
 			err = wrapCPUProfile(serverCtx, func() error {
 				return opts.StartCommandHandler(serverCtx, clientCtx, appCreator, withCMT, opts)
 			})
 
-			serverCtx.Logger.Debug("received quit signal")
+			serverCtx.GetLogger().Debug("received quit signal")
 			graceDuration, _ := cmd.Flags().GetDuration(FlagShutdownGrace)
 			if graceDuration > 0 {
-				serverCtx.Logger.Info("graceful shutdown start", FlagShutdownGrace, graceDuration)
+				serverCtx.GetLogger().Info("graceful shutdown start", FlagShutdownGrace, graceDuration)
 				<-time.After(graceDuration)
-				serverCtx.Logger.Info("graceful shutdown complete")
+				serverCtx.GetLogger().Info("graceful shutdown complete")
 			}
 
 			return err
@@ -239,8 +240,8 @@ func start[T types.Application](svrCtx *Context, clientCtx client.Context, appCr
 }
 
 func startStandAlone[T types.Application](svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app T, metrics *telemetry.Metrics, opts StartCmdOptions[T]) error {
-	addr := svrCtx.Viper.GetString(flagAddress)
-	transport := svrCtx.Viper.GetString(flagTransport)
+	addr := svrCtx.GetViper().GetString(flagAddress)
+	transport := svrCtx.GetViper().GetString(flagTransport)
 
 	cmtApp := NewCometABCIWrapper(app)
 	svr, err := server.NewServer(addr, transport, cmtApp)
@@ -248,7 +249,7 @@ func startStandAlone[T types.Application](svrCtx *Context, svrCfg serverconfig.C
 		return fmt.Errorf("error creating listener: %w", err)
 	}
 
-	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger.With("module", "abci-server")})
+	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: svrCtx.GetLogger().With("module", "abci-server")})
 
 	g, ctx := getCtx(svrCtx, false)
 
@@ -295,14 +296,14 @@ func startStandAlone[T types.Application](svrCtx *Context, svrCfg serverconfig.C
 
 	g.Go(func() error {
 		if err := svr.Start(); err != nil {
-			svrCtx.Logger.Error("failed to start out-of-process ABCI server", "err", err)
+			svrCtx.GetLogger().Error("failed to start out-of-process ABCI server", "err", err)
 			return err
 		}
 
 		// Wait for the calling process to be canceled or close the provided context,
 		// so we can gracefully stop the ABCI server.
 		<-ctx.Done()
-		svrCtx.Logger.Info("stopping the ABCI server...")
+		svrCtx.GetLogger().Info("stopping the ABCI server...")
 		return svr.Stop()
 	})
 
@@ -316,16 +317,16 @@ func startInProcess[T types.Application](svrCtx *Context, svrCfg serverconfig.Co
 	if !ok {
 		return fmt.Errorf("Can not convert cometbft config")
 	}
-	gRPCOnly := svrCtx.Viper.GetBool(flagGRPCOnly)
+	gRPCOnly := svrCtx.GetViper().GetBool(flagGRPCOnly)
 
 	g, ctx := getCtx(svrCtx, true)
 
 	if gRPCOnly {
 		// TODO: Generalize logic so that gRPC only is really in startStandAlone
-		svrCtx.Logger.Info("starting node in gRPC only mode; CometBFT is disabled")
+		svrCtx.GetLogger().Info("starting node in gRPC only mode; CometBFT is disabled")
 		svrCfg.GRPC.Enable = true
 	} else {
-		svrCtx.Logger.Info("starting node with ABCI CometBFT in-process")
+		svrCtx.GetLogger().Info("starting node with ABCI CometBFT in-process")
 		tmNode, cleanupFn, err := startCmtNode(ctx, cmtCfg.Config, app, svrCtx)
 		if err != nil {
 			return err
@@ -389,7 +390,7 @@ func startCmtNode(
 		getGenDocProvider(cfg),
 		cmtcfg.DefaultDBProvider,
 		node.DefaultMetricsProvider(cfg.Instrumentation),
-		servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger},
+		servercmtlog.CometLoggerWrapper{Logger: svrCtx.GetLogger()},
 	)
 	if err != nil {
 		return tmNode, cleanupFn, err
@@ -409,7 +410,7 @@ func startCmtNode(
 }
 
 func getAndValidateConfig(svrCtx *Context) (serverconfig.Config, error) {
-	config, err := serverconfig.GetConfig(svrCtx.Viper)
+	config, err := serverconfig.GetConfig(svrCtx.GetViper())
 	if err != nil {
 		return config, err
 	}
@@ -522,7 +523,7 @@ func startGrpcServer(
 	}
 
 	clientCtx = clientCtx.WithGRPCClient(grpcClient)
-	svrCtx.Logger.Debug("gRPC client assigned to client context", "target", config.Address)
+	svrCtx.GetLogger().Debug("gRPC client assigned to client context", "target", config.Address)
 
 	grpcSrv, err := servergrpc.NewGRPCServer(clientCtx, app, config)
 	if err != nil {
@@ -532,7 +533,7 @@ func startGrpcServer(
 	// Start the gRPC server in a goroutine. Note, the provided ctx will ensure
 	// that the server is gracefully shut down.
 	g.Go(func() error {
-		return servergrpc.StartGRPCServer(ctx, svrCtx.Logger.With("module", "grpc-server"), config, grpcSrv)
+		return servergrpc.StartGRPCServer(ctx, svrCtx.GetLogger().With("module", "grpc-server"), config, grpcSrv)
 	})
 	return grpcSrv, clientCtx, nil
 }
@@ -554,7 +555,7 @@ func startAPIServer(
 
 	clientCtx = clientCtx.WithHomeDir(home)
 
-	apiSrv := api.New(clientCtx, svrCtx.Logger.With("module", "api-server"), grpcSrv)
+	apiSrv := api.New(clientCtx, svrCtx.GetLogger().With("module", "api-server"), grpcSrv)
 	app.RegisterAPIRoutes(apiSrv, svrCfg.API)
 
 	if svrCfg.Telemetry.Enabled {
@@ -577,24 +578,24 @@ func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {
 //
 // NOTE: We expect the caller to handle graceful shutdown and signal handling.
 func wrapCPUProfile(svrCtx *Context, callbackFn func() error) error {
-	if cpuProfile := svrCtx.Viper.GetString(flagCPUProfile); cpuProfile != "" {
+	if cpuProfile := svrCtx.GetViper().GetString(flagCPUProfile); cpuProfile != "" {
 		f, err := os.Create(cpuProfile)
 		if err != nil {
 			return err
 		}
 
-		svrCtx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
+		svrCtx.GetLogger().Info("starting CPU profiler", "profile", cpuProfile)
 
 		if err := pprof.StartCPUProfile(f); err != nil {
 			return err
 		}
 
 		defer func() {
-			svrCtx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
+			svrCtx.GetLogger().Info("stopping CPU profiler", "profile", cpuProfile)
 			pprof.StopCPUProfile()
 
 			if err := f.Close(); err != nil {
-				svrCtx.Logger.Info("failed to close cpu-profile file", "profile", cpuProfile, "err", err.Error())
+				svrCtx.GetLogger().Info("failed to close cpu-profile file", "profile", cpuProfile, "err", err.Error())
 			}
 		}()
 	}
@@ -625,12 +626,12 @@ func getCtx(svrCtx *Context, block bool) (*errgroup.Group, context.Context) {
 	ctx, cancelFn := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
 	// listen for quit signals so the calling parent process can gracefully exit
-	ListenForQuitSignals(g, block, cancelFn, svrCtx.Logger)
+	ListenForQuitSignals(g, block, cancelFn, svrCtx.GetLogger())
 	return g, ctx
 }
 
 func startApp[T types.Application](svrCtx *Context, appCreator types.AppCreator[T], opts StartCmdOptions[T]) (app T, cleanupFn func(), err error) {
-	traceWriter, traceCleanupFn, err := SetupTraceWriter(svrCtx.Logger, svrCtx.Viper.GetString(flagTraceStore))
+	traceWriter, traceCleanupFn, err := SetupTraceWriter(svrCtx.GetLogger(), svrCtx.GetViper().GetString(flagTraceStore))
 	if err != nil {
 		return app, traceCleanupFn, err
 	}
@@ -641,12 +642,12 @@ func startApp[T types.Application](svrCtx *Context, appCreator types.AppCreator[
 	}
 
 	home := cmtCfg.RootDir
-	db, err := opts.DBOpener(home, GetAppDBBackend(svrCtx.Viper))
+	db, err := opts.DBOpener(home, GetAppDBBackend(svrCtx.GetViper()))
 	if err != nil {
 		return app, traceCleanupFn, err
 	}
 
-	if isTestnet, ok := svrCtx.Viper.Get(KeyIsTestnet).(bool); ok && isTestnet {
+	if isTestnet, ok := svrCtx.GetViper().Get(KeyIsTestnet).(bool); ok && isTestnet {
 		var appPtr *T
 		appPtr, err = testnetify[T](svrCtx, appCreator, db, traceWriter)
 		if err != nil {
@@ -654,13 +655,13 @@ func startApp[T types.Application](svrCtx *Context, appCreator types.AppCreator[
 		}
 		app = *appPtr
 	} else {
-		app = appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
+		app = appCreator(svrCtx.GetLogger(), db, traceWriter, svrCtx.GetViper())
 	}
 
 	cleanupFn = func() {
 		traceCleanupFn()
 		if localErr := app.Close(); localErr != nil {
-			svrCtx.Logger.Error(localErr.Error())
+			svrCtx.GetLogger().Error(localErr.Error())
 		}
 	}
 	return app, cleanupFn, nil
@@ -703,8 +704,8 @@ you want to test the upgrade handler itself.
 		Example: "in-place-testnet localosmosis osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj",
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			serverCtx := GetServerContextFromCmd(cmd)
-			_, err := GetPruningOptionsFromFlags(serverCtx.Viper)
+			serverCtx := corectx.GetServerContextFromCmd(cmd).(*Context)
+			_, err := GetPruningOptionsFromFlags(serverCtx.GetViper())
 			if err != nil {
 				return err
 			}
@@ -716,7 +717,7 @@ you want to test the upgrade handler itself.
 
 			withCMT, _ := cmd.Flags().GetBool(flagWithComet)
 			if !withCMT {
-				serverCtx.Logger.Info("starting ABCI without CometBFT")
+				serverCtx.GetLogger().Info("starting ABCI without CometBFT")
 			}
 
 			newChainID := args[0]
@@ -738,20 +739,20 @@ you want to test the upgrade handler itself.
 
 			// Set testnet keys to be used by the application.
 			// This is done to prevent changes to existing start API.
-			serverCtx.Viper.Set(KeyIsTestnet, true)
-			serverCtx.Viper.Set(KeyNewChainID, newChainID)
-			serverCtx.Viper.Set(KeyNewOpAddr, newOperatorAddress)
+			serverCtx.GetViper().Set(KeyIsTestnet, true)
+			serverCtx.GetViper().Set(KeyNewChainID, newChainID)
+			serverCtx.GetViper().Set(KeyNewOpAddr, newOperatorAddress)
 
 			err = wrapCPUProfile(serverCtx, func() error {
 				return opts.StartCommandHandler(serverCtx, clientCtx, testnetAppCreator, withCMT, opts)
 			})
 
-			serverCtx.Logger.Debug("received quit signal")
+			serverCtx.GetLogger().Debug("received quit signal")
 			graceDuration, _ := cmd.Flags().GetDuration(FlagShutdownGrace)
 			if graceDuration > 0 {
-				serverCtx.Logger.Info("graceful shutdown start", FlagShutdownGrace, graceDuration)
+				serverCtx.GetLogger().Info("graceful shutdown start", FlagShutdownGrace, graceDuration)
 				<-time.After(graceDuration)
-				serverCtx.Logger.Info("graceful shutdown complete")
+				serverCtx.GetLogger().Info("graceful shutdown complete")
 			}
 
 			return err
@@ -772,7 +773,7 @@ func testnetify[T types.Application](ctx *Context, testnetAppCreator types.AppCr
 		return nil, fmt.Errorf("Can not convert cometbft config")
 	}
 
-	newChainID, ok := ctx.Viper.Get(KeyNewChainID).(string)
+	newChainID, ok := ctx.GetViper().Get(KeyNewChainID).(string)
 	if !ok {
 		return nil, fmt.Errorf("expected string for key %s", KeyNewChainID)
 	}
@@ -825,9 +826,9 @@ func testnetify[T types.Application](ctx *Context, testnetAppCreator types.AppCr
 		return nil, err
 	}
 
-	ctx.Viper.Set(KeyNewValAddr, validatorAddress)
-	ctx.Viper.Set(KeyUserPubKey, userPubKey)
-	testnetApp := testnetAppCreator(ctx.Logger, db, traceWriter, ctx.Viper)
+	ctx.GetViper().Set(KeyNewValAddr, validatorAddress)
+	ctx.GetViper().Set(KeyUserPubKey, userPubKey)
+	testnetApp := testnetAppCreator(ctx.GetLogger(), db, traceWriter, ctx.GetViper())
 
 	// We need to create a temporary proxyApp to get the initial state of the application.
 	// Depending on how the node was stopped, the application height can differ from the blockStore height.

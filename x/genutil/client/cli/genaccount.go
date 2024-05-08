@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/core/address"
 
+	corectx "cosmossdk.io/core/context"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -38,7 +39,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			serverCtx := server.GetServerContextFromCmd(cmd)
+			serverCtx := corectx.GetServerContextFromCmd(cmd)
 			config, ok := serverCtx.GetConfig().(server.CometConfig)
 			if !ok {
 				return fmt.Errorf("Can not convert cometbft config")

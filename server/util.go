@@ -45,7 +45,6 @@ import (
 const ServerContextKey = corectx.ServerContextKey
 
 var _ corectx.ServerContext = &Context{}
-var _ corectx.BaseConfig = cmtcfg.BaseConfig{}
 var _ corectx.CometConfig = &CometConfig{}
 
 type CometConfig struct {
@@ -69,20 +68,10 @@ func (ctx *Context) GetLogger() log.Logger {
 func (ctx *Context) GetViper() *viper.Viper {
 	return ctx.Viper
 }
-// cfg.BaseConfig.RootDir = root
-// 	cfg.RPC.RootDir = root
-// 	cfg.P2P.RootDir = root
-// 	cfg.Mempool.RootDir = root
-// 	cfg.Consensus.RootDir = root
 
-// Apply change to viper when config root is changed
+// Set rootdir to viper
 func (ctx *Context) SetRoot(rootDir string) {
-	v := ctx.GetViper()
-	v.Set("base_config.root_dir", rootDir)
-	v.Set("rpc.root_dir", rootDir)
-	v.Set("p2p.root_dir", rootDir)
-	v.Set("mempool.root_dir", rootDir)
-	v.Set("consensus.root_dir", rootDir)
+	ctx.GetViper().Set(flags.FlagHome, rootDir)
 }
 
 func (config CometConfig) SetRoot(root string) corectx.CometConfig {
@@ -93,10 +82,11 @@ func (config CometConfig) SetRoot(root string) corectx.CometConfig {
 func GetCometConfigFromViper(v *viper.Viper) corectx.CometConfig {
 	conf := cmtcfg.DefaultConfig()
 	err := v.Unmarshal(conf)
+	rootDir := v.GetString(flags.FlagHome)
 	if err != nil {
-		return CometConfig{cmtcfg.DefaultConfig()}
+		return CometConfig{cmtcfg.DefaultConfig().SetRoot(rootDir)}
 	}
-	return CometConfig{conf}
+	return CometConfig{conf.SetRoot(rootDir)}
 }
 
 func NewDefaultContext() *Context {
@@ -246,16 +236,16 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	return log.NewLogger(out, opts...), nil
 }
 
-// GetServerContextFromCmd returns a Context from a command or an empty Context
-// if it has not been set.
-func GetServerContextFromCmd(cmd *cobra.Command) *Context {
-	if v := cmd.Context().Value(ServerContextKey); v != nil {
-		serverCtxPtr := v.(*Context)
-		return serverCtxPtr
-	}
+// // GetServerContextFromCmd returns a Context from a command or an empty Context
+// // if it has not been set.
+// func GetServerContextFromCmd(cmd *cobra.Command) *Context {
+// 	if v := cmd.Context().Value(ServerContextKey); v != nil {
+// 		serverCtxPtr := v.(*Context)
+// 		return serverCtxPtr
+// 	}
 
-	return NewDefaultContext()
-}
+// 	return NewDefaultContext()
+// }
 
 // SetCmdServerContext sets a command's Context value to the provided argument.
 // If the context has not been set, set the given context as the default.

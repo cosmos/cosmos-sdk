@@ -1,8 +1,6 @@
 package context
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -36,7 +34,6 @@ type CometConfig interface {
 
 func GetServerContextFromCmd(cmd *cobra.Command) ServerContext {
 	if v := cmd.Context().Value(ServerContextKey); v != nil {
-		fmt.Println("serverCtxPtr", v)
 		serverCtxPtr := v.(ServerContext)
 		return serverCtxPtr
 	}

@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	corectx "cosmossdk.io/core/context"
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
@@ -13,8 +14,8 @@ var ListSnapshotsCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List local snapshots",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx := server.GetServerContextFromCmd(cmd)
-		snapshotStore, err := server.GetSnapshotStore(ctx.Viper)
+		ctx := corectx.GetServerContextFromCmd(cmd)
+		snapshotStore, err := server.GetSnapshotStore(ctx.GetViper())
 		if err != nil {
 			return err
 		}

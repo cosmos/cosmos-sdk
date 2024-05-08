@@ -9,6 +9,7 @@ import (
 
 	"cosmossdk.io/errors"
 
+	corectx "cosmossdk.io/core/context"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -23,7 +24,7 @@ func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, validator ty
 		Use:   "collect-gentxs",
 		Short: "Collect genesis txs and output a genesis.json file",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			serverCtx := server.GetServerContextFromCmd(cmd)
+			serverCtx := corectx.GetServerContextFromCmd(cmd)
 			config, ok := serverCtx.GetConfig().(server.CometConfig)
 			if !ok {
 				return fmt.Errorf("Can not convert cometbft config")

@@ -26,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	corectx "cosmossdk.io/core/context"
 )
 
 var errCanceledInPreRun = errors.New("canceled in prerun")
@@ -65,7 +66,7 @@ func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	serverCtx = server.GetServerContextFromCmd(cmd)
+	serverCtx = corectx.GetServerContextFromCmd(cmd).(*server.Context)
 
 	// Test that config.toml is created
 	configTomlPath := path.Join(tempDir, "config", "config.toml")
@@ -145,7 +146,7 @@ func TestInterceptConfigsPreRunHandlerReadsConfigToml(t *testing.T) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	serverCtx = server.GetServerContextFromCmd(cmd)
+	serverCtx = corectx.GetServerContextFromCmd(cmd).(*server.Context)
 
 	config, ok := serverCtx.GetConfig().(server.CometConfig)
 	if !ok {
@@ -190,7 +191,7 @@ func TestInterceptConfigsPreRunHandlerReadsAppToml(t *testing.T) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	serverCtx = server.GetServerContextFromCmd(cmd)
+	serverCtx = corectx.GetServerContextFromCmd(cmd).(*server.Context)
 
 	if testHaltTime != serverCtx.Viper.GetInt("halt-time") {
 		t.Error("Halt time was not set from app.toml")
@@ -220,7 +221,7 @@ func TestInterceptConfigsPreRunHandlerReadsFlags(t *testing.T) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	serverCtx = server.GetServerContextFromCmd(cmd)
+	serverCtx = corectx.GetServerContextFromCmd(cmd).(*server.Context)
 
 	config, ok := serverCtx.GetConfig().(server.CometConfig)
 	if !ok {
@@ -263,7 +264,7 @@ func TestInterceptConfigsPreRunHandlerReadsEnvVars(t *testing.T) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	serverCtx = server.GetServerContextFromCmd(cmd)
+	serverCtx = corectx.GetServerContextFromCmd(cmd).(*server.Context)
 
 	config, ok := serverCtx.GetConfig().(server.CometConfig)
 	if !ok {
@@ -377,7 +378,7 @@ func TestInterceptConfigsPreRunHandlerPrecedenceFlag(t *testing.T) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	serverCtx = server.GetServerContextFromCmd(testCommon.cmd)
+	serverCtx = corectx.GetServerContextFromCmd(testCommon.cmd).(*server.Context)
 
 	config, ok := serverCtx.GetConfig().(server.CometConfig)
 	if !ok {
@@ -400,7 +401,7 @@ func TestInterceptConfigsPreRunHandlerPrecedenceEnvVar(t *testing.T) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	serverCtx = server.GetServerContextFromCmd(testCommon.cmd)
+	serverCtx = corectx.GetServerContextFromCmd(testCommon.cmd).(*server.Context)
 
 	config, ok := serverCtx.GetConfig().(server.CometConfig)
 	if !ok {
@@ -423,7 +424,7 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigFile(t *testing.T) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	serverCtx = server.GetServerContextFromCmd(testCommon.cmd)
+	serverCtx = corectx.GetServerContextFromCmd(testCommon.cmd).(*server.Context)
 
 	config, ok := serverCtx.GetConfig().(server.CometConfig)
 	if !ok {
@@ -446,7 +447,7 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigDefault(t *testing.T) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	serverCtx = server.GetServerContextFromCmd(testCommon.cmd)
+	serverCtx = corectx.GetServerContextFromCmd(testCommon.cmd).(*server.Context)
 
 	config, ok := serverCtx.GetConfig().(server.CometConfig)
 	if !ok {

@@ -21,6 +21,7 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	corectx "cosmossdk.io/core/context"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -140,7 +141,7 @@ Example:
 				return err
 			}
 
-			serverCtx := server.GetServerContextFromCmd(cmd)
+			serverCtx := corectx.GetServerContextFromCmd(cmd)
 			config := serverCtx.GetConfig().(server.CometConfig)
 
 			args := initArgs{}

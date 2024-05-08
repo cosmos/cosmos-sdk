@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	corectx "cosmossdk.io/core/context"
 )
 
 // RestoreSnapshotCmd returns a command to restore a snapshot
@@ -22,7 +23,7 @@ func RestoreSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCre
 		Long:  "Restore app state from local snapshot",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := server.GetServerContextFromCmd(cmd)
+			ctx := corectx.GetServerContextFromCmd(cmd)
 			cfg, ok := ctx.GetConfig().(server.CometConfig)
 			if !ok {
 				return fmt.Errorf("Can not convert cometbft config")
@@ -38,12 +39,12 @@ func RestoreSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCre
 			}
 
 			home := cfg.RootDir
-			db, err := openDB(home, server.GetAppDBBackend(ctx.Viper))
+			db, err := openDB(home, server.GetAppDBBackend(ctx.GetViper()))
 			if err != nil {
 				return err
 			}
 			logger := log.NewLogger(cmd.OutOrStdout())
-			app := appCreator(logger, db, nil, ctx.Viper)
+			app := appCreator(logger, db, nil, ctx.GetViper())
 
 			sm := app.SnapshotManager()
 			return sm.RestoreLocalSnapshot(height, uint32(format))

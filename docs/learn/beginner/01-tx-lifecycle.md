@@ -13,7 +13,6 @@ This document describes the lifecycle of a transaction from creation to committe
 * [Anatomy of a Cosmos SDK Application](./00-app-anatomy.md)
 :::
 
-
 ## Transaction Creation
 
 One of the main application interfaces is the command-line interface. The transaction `Tx` can be created by the user inputting a command in the following format from the [command-line](../advanced/07-cli.md), providing the type of transaction in `[command]`, arguments in `[args]`, and configurations such as gas prices in `[flags]`:
@@ -110,6 +109,26 @@ Let's say there is a transaction that involves transferring tokens. The message 
 ### Validation
 
 Preliminary checks are performed. These include signature verification to ensure the transaction hasn't been tampered with and checking if the transaction meets the minimum fee requirements, which is handled by the AnteHandler. The Antehandler is invoked during the `runTx` method in `BaseApp`.
+
+#### Types of Transaction Checks
+
+During the transaction lifecycle, full-nodes perform a series of checks to validate transactions before they are finalized in a block. These checks are categorized into stateless and stateful checks.
+
+**Stateless Checks**:
+Stateless checks are validations that do not require access to the state of the blockchain. They are computationally inexpensive and can be performed by light clients or offline nodes. Examples include:
+
+* Ensuring addresses are not empty.
+* Enforcing nonnegative values for transaction fields.
+* Validating the format of the data in the transaction.
+
+**Stateful Checks**:
+Stateful checks involve validating transactions against the current committed state of the blockchain. These checks are more computationally intensive as they require access to the state. Examples include:
+
+* Verifying that the account has sufficient funds.
+* Checking that the sender has the necessary permissions for the transaction.
+* Ensuring that the transaction does not result in any state conflicts.
+
+Full-nodes use these checks during the validation process to quickly reject invalid transactions, minimizing wasted computational resources. Further validation occurs during the transaction execution phase, where transactions are fully executed.
 
 #### ValidateBasic (deprecated)
 

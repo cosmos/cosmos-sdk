@@ -4,7 +4,6 @@ import (
 	"context"
 
 	appmanager "cosmossdk.io/core/app"
-	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 )
@@ -16,12 +15,12 @@ type StateTransitionFunction[T transaction.Tx] interface {
 		state store.ReaderMap,
 	) (blockResult *appmanager.BlockResponse, newState store.WriterMap, err error)
 
-	validateTx(
+	ValidateTx(
 		ctx context.Context,
-		state store.WriterMap,
+		state store.ReaderMap,
 		gasLimit uint64,
 		tx T,
-	) (gasUsed uint64, events []event.Event, err error)
+	) appmanager.TxResult
 
 	Simulate(
 		ctx context.Context,
@@ -29,4 +28,17 @@ type StateTransitionFunction[T transaction.Tx] interface {
 		gasLimit uint64,
 		tx T,
 	) (appmanager.TxResult, store.WriterMap)
+
+	Query(
+		ctx context.Context,
+		state store.ReaderMap,
+		gasLimit uint64,
+		req transaction.Type,
+	) (transaction.Type, error)
+
+	RunWithCtx(
+		ctx context.Context,
+		state store.ReaderMap,
+		closure func(ctx context.Context) error,
+	) (store.WriterMap, error)
 }

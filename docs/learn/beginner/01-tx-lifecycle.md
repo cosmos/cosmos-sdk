@@ -155,11 +155,11 @@ Validator nodes maintain a transaction pool to prevent replay attacks, similar t
 
 ### Module Execution
 
-1. The transaction is first routed to the appropriate module based on the message type. This is handled by the `MsgServiceRouter`.
+After the transaction has been appropriately routed to the correct module by the `MsgServiceRouter` and passed all necessary validations, the execution phase begins:
 
-2. Each module has specific handlers that are triggered once the message is routed to the module. These handlers contain the logic needed to process the transaction, such as updating account balances, transferring tokens, or other state changes.
-
-3. After initial checks are completed in the transaction processing phase, each message within the transaction is executed. This execution is managed by a routing component, which ensures that each message is directed to the correct module for handling. The routing is based on the message type, utilizing a mechanism similar to the `MsgServiceRouter`. This ensures that messages are processed by the appropriate module's handler, according to the specific business logic required.
+* **Handler Activation**: Each module's handler processes the routed message, applying the necessary business logic such as updating account balances or transferring tokens.
+* **State Changes**: Handlers may modify the state as required by the business logic, which could involve writing to the module's portion of the state store.
+* **Event Emission and Logging**: During execution, modules can emit events and log information, which are crucial for monitoring and querying transaction outcomes.
 
 For messages that adhere to older standards or specific formats, a routing function retrieves the route name from the message, identifying the corresponding module. The message is then processed by the designated handler within that module, ensuring accurate and consistent application of the transaction's logic.
 
@@ -167,16 +167,8 @@ For messages that adhere to older standards or specific formats, a routing funct
 
 5. Modules can emit events and log information during execution, which are used for monitoring and querying transaction outcomes.
 
+During the module execution phase, each message that has been routed to the appropriate module is processed according to the module-specific business logic. For example, the `handleMsgSend` function in the bank module processes `MsgSend` messages by checking balances, transferring tokens, and emitting events:
 
-### State Changes During Consensus
-
-Before finalizing the transactions within a block, full-nodes perform a second round of checks using `validateBasicMsgs` and `AnteHandler`. This is crucial to ensure that all transactions are valid, especially since a malicious proposer might include invalid transactions. Unlike the checks during the transaction addition to the Mempool, the `AnteHandler` in this phase does not compare the transaction's `gas-prices` to the node's `min-gas-prices`. This is because `min-gas-prices` can vary between nodes, and using them here would lead to nondeterministic results across the network.
-
-* After module execution, the transactions are included in a block proposal by the proposer.
-
-* All full-nodes that receive this block proposal execute the transactions to ensure that the state changes are applied consistently across all nodes, maintaining the deterministic nature of the blockchain. This includes the execution of initial, transaction-specific, and finalizing operations.
-
-The following code snippet demonstrates how a module handler function processes a transaction and applies state changes, reflecting the checks and operations discussed:
 
 ```go 
 func handleMsgSend(ctx sdk.Context, keeper BankKeeper, msg MsgSend) error {
@@ -191,7 +183,16 @@ func handleMsgSend(ctx sdk.Context, keeper BankKeeper, msg MsgSend) error {
 }
 ```
 
-This function checks the sender's balance, transfers coins if sufficient funds are available, and emits an event to log the transaction. This is an example of state changes being applied during the module execution phase.
+This function exemplifies how a module's handler executes the transaction logic, modifies the state, and logs the transaction events, which are essential aspects of module execution.
+
+
+### State Changes During Consensus
+
+Before finalizing the transactions within a block, full-nodes perform a second round of checks using `validateBasicMsgs` and `AnteHandler`. This is crucial to ensure that all transactions are valid, especially since a malicious proposer might include invalid transactions. Unlike the checks during the transaction addition to the Mempool, the `AnteHandler` in this phase does not compare the transaction's `gas-prices` to the node's `min-gas-prices`. This is because `min-gas-prices` can vary between nodes, and using them here would lead to nondeterministic results across the network.
+
+* After module execution, the transactions are included in a block proposal by the proposer.
+
+* All full-nodes that receive this block proposal execute the transactions to ensure that the state changes are applied consistently across all nodes, maintaining the deterministic nature of the blockchain. This includes the execution of initial, transaction-specific, and finalizing operations.
 
 ## Inclusion in a Block
 

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	"cosmossdk.io/x/circuit/types"
 )
@@ -35,7 +36,7 @@ func (qs QueryServer) Account(ctx context.Context, req *types.QueryAccountReques
 
 // Account returns account permissions.
 func (qs QueryServer) Accounts(ctx context.Context, req *types.QueryAccountsRequest) (*types.AccountsResponse, error) {
-	return nil.errors.New("not implemented")
+	return nil, errors.New("not implemented")
 }
 
 // DisabledList returns a list of disabled message urls

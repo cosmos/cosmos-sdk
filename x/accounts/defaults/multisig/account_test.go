@@ -5,12 +5,11 @@ import (
 	"testing"
 	"time"
 
-	types "github.com/cosmos/gogoproto/types/any"
-	"github.com/stretchr/testify/require"
-
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/accountstd"
 	v1 "cosmossdk.io/x/accounts/defaults/multisig/v1"
+	types "github.com/cosmos/gogoproto/types/any"
+	"github.com/stretchr/testify/require"
 )
 
 func setup(t *testing.T, ctx context.Context, ss store.KVStoreService, timefn func() time.Time) *Account {
@@ -319,6 +318,8 @@ func TestUpdateConfig(t *testing.T) {
 			acc := setup(t, ctx, ss, nil)
 			_, err := acc.Init(ctx, startAcc)
 			require.NoError(t, err)
+
+			ctx = accountstd.SetSender(ctx, []byte("mock_multisig_account"))
 
 			_, err = acc.UpdateConfig(ctx, tc.msg)
 			if tc.expErr != "" {

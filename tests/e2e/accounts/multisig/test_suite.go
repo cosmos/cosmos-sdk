@@ -95,5 +95,6 @@ func (s *E2ETestSuite) initAccount(ctx context.Context, sender []byte, membersPo
 }
 
 // createProposal
-// func (s *E2ETestSuite) createProposal(ctx context.Context, accAddr []byte, sender []byte, msgs ...sdk.Msg) error {
-// }
+func (s *E2ETestSuite) createProposal(ctx context.Context, accAddr []byte, sender []byte, msgs ...sdk.Msg) error {
+	return nil
+}

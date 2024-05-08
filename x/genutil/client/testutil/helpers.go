@@ -3,13 +3,16 @@ package testutil
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/spf13/viper"
 
+	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -21,7 +24,7 @@ func ExecInitCmd(mm *module.Manager, home string, cdc codec.Codec) error {
 	logger := log.NewNopLogger()
 	cmd := genutilcli.InitCmd(mm)
 	serverCtx := server.NewContext(viper.New(), logger)
-	serverCtx.SetRoot(home)
+	WriteAndTrackConfig(serverCtx.GetViper(), home)
 	clientCtx := client.Context{}.WithCodec(cdc).WithHomeDir(home)
 
 	_, out := testutil.ApplyMockIO(cmd)
@@ -29,11 +32,13 @@ func ExecInitCmd(mm *module.Manager, home string, cdc codec.Codec) error {
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+	ctx = context.WithValue(ctx, corectx.ServerContextKey, serverCtx)
 
 	cmd.SetArgs([]string{"appnode-test"})
 
-	return cmd.ExecuteContext(ctx)
+	err := cmd.ExecuteContext(ctx)
+
+	return err
 }
 
 func CreateDefaultCometConfig(rootDir string) (*cmtcfg.Config, error) {
@@ -46,4 +51,19 @@ func CreateDefaultCometConfig(rootDir string) (*cmtcfg.Config, error) {
 	}
 
 	return conf, nil
+}
+
+func WriteAndTrackConfig(v *viper.Viper, home string) error {
+	cfg, err := CreateDefaultCometConfig(home)
+	if err != nil {
+		return err
+	}
+	
+	cmtcfg.WriteConfigFile(filepath.Join(home, "config", "config.toml"), cfg)
+
+	v.Set(flags.FlagHome, home)
+	v.SetConfigType("toml")
+	v.SetConfigName("config")
+	v.AddConfigPath(filepath.Join(home, "config"))
+	return v.ReadInConfig()
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/staking"
 
@@ -65,6 +66,7 @@ func TestInitCmd(t *testing.T) {
 			logger := log.NewNopLogger()
 
 			serverCtx := server.NewContext(viper.New(), logger)
+			genutiltest.WriteAndTrackConfig(serverCtx.GetViper(), home)
 			interfaceRegistry := types.NewInterfaceRegistry()
 			marshaler := codec.NewProtoCodec(interfaceRegistry)
 			clientCtx := client.Context{}.
@@ -74,7 +76,7 @@ func TestInitCmd(t *testing.T) {
 
 			ctx := context.Background()
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+			ctx = context.WithValue(ctx, corectx.ServerContextKey, serverCtx)
 
 			cmd := genutilcli.InitCmd(testMbm)
 			cmd.SetArgs(
@@ -96,6 +98,7 @@ func TestInitRecover(t *testing.T) {
 	logger := log.NewNopLogger()
 
 	serverCtx := server.NewContext(viper.New(), logger)
+	genutiltest.WriteAndTrackConfig(serverCtx.GetViper(), home)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
@@ -105,7 +108,7 @@ func TestInitRecover(t *testing.T) {
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+	ctx = context.WithValue(ctx, corectx.ServerContextKey, serverCtx)
 
 	cmd := genutilcli.InitCmd(testMbm)
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
@@ -125,6 +128,7 @@ func TestInitDefaultBondDenom(t *testing.T) {
 	logger := log.NewNopLogger()
 
 	serverCtx := server.NewContext(viper.New(), logger)
+	genutiltest.WriteAndTrackConfig(serverCtx.GetViper(), home)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
@@ -134,7 +138,7 @@ func TestInitDefaultBondDenom(t *testing.T) {
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+	ctx = context.WithValue(ctx, corectx.ServerContextKey, serverCtx)
 
 	cmd := genutilcli.InitCmd(testMbm)
 
@@ -150,7 +154,7 @@ func TestEmptyState(t *testing.T) {
 	logger := log.NewNopLogger()
 
 	serverCtx := server.NewContext(viper.New(), logger)
-	serverCtx.SetRoot(home)
+	genutiltest.WriteAndTrackConfig(serverCtx.GetViper(), home)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
@@ -160,7 +164,7 @@ func TestEmptyState(t *testing.T) {
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+	ctx = context.WithValue(ctx, corectx.ServerContextKey, serverCtx)
 
 	cmd := genutilcli.InitCmd(testMbm)
 	cmd.SetArgs([]string{"appnode-test"})
@@ -242,6 +246,7 @@ func TestInitConfig(t *testing.T) {
 	logger := log.NewNopLogger()
 
 	serverCtx := server.NewContext(viper.New(), logger)
+	genutiltest.WriteAndTrackConfig(serverCtx.GetViper(), home)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
@@ -252,7 +257,7 @@ func TestInitConfig(t *testing.T) {
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+	ctx = context.WithValue(ctx, corectx.ServerContextKey, serverCtx)
 
 	cmd := genutilcli.InitCmd(testMbm)
 	cmd.SetArgs([]string{"testnode"})
@@ -288,6 +293,7 @@ func TestInitWithHeight(t *testing.T) {
 	require.NoError(t, err)
 
 	serverCtx := server.NewContext(viper.New(), logger)
+	genutiltest.WriteAndTrackConfig(serverCtx.GetViper(), home)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
@@ -298,7 +304,7 @@ func TestInitWithHeight(t *testing.T) {
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+	ctx = context.WithValue(ctx, corectx.ServerContextKey, serverCtx)
 
 	testInitialHeight := int64(333)
 
@@ -320,6 +326,7 @@ func TestInitWithNegativeHeight(t *testing.T) {
 	require.NoError(t, err)
 
 	serverCtx := server.NewContext(viper.New(), logger)
+	genutiltest.WriteAndTrackConfig(serverCtx.GetViper(), home)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
@@ -330,7 +337,7 @@ func TestInitWithNegativeHeight(t *testing.T) {
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+	ctx = context.WithValue(ctx, corectx.ServerContextKey, serverCtx)
 
 	testInitialHeight := int64(-333)
 

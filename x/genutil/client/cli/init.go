@@ -15,6 +15,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math/unsafe"
+	corectx "cosmossdk.io/core/context"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -81,7 +82,7 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
-			serverCtx := server.GetServerContextFromCmd(cmd)
+			serverCtx := corectx.GetServerContextFromCmd(cmd)
 			config, ok := serverCtx.GetConfig().(server.CometConfig)
 			if !ok {
 				return fmt.Errorf("Can not convert cometbft config")

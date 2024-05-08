@@ -67,7 +67,7 @@ The signed transaction is sent to the network. This is handled by the `Broadcast
 Once received by a node, the transaction is propagated to other nodes in the network. This ensures that all nodes have a copy of the transaction.
 
 4. **Consensus Engine Interaction:**
-The specific method of broadcasting may vary depending on the consensus engine used. The SDK's design allows for easy integration with any consensus engine by configuring the clientCtx appropriately.
+The specific method of broadcasting may vary depending on the consensus engine used. The SDK's design allows for easy integration with any consensus engine by configuring the `clientCtx` appropriately.
 
 The function `BroadcastTx` in `client/tx/tx.go` demonstrates how a transaction is prepared, signed, and broadcasted. Here's the relevant part of the function that handles the broadcasting:
 
@@ -108,7 +108,7 @@ Let's say there is a transaction that involves transferring tokens. The message 
 
 ### Validation
 
-Preliminary checks are performed. These include signature verification to ensure the transaction hasn't been tampered with and checking if the transaction meets the minimum fee requirements, which is handled by the AnteHandler. The Antehandler is invoked during the `runTx` method in `BaseApp`.
+Preliminary checks are performed. These include signature verification to ensure the transaction hasn't been tampered with and checking if the transaction meets the minimum fee requirements, which is handled by the `AnteHandler`. The `Antehandler` is invoked during the `runTx` method in `BaseApp`.
 
 #### Types of Transaction Checks
 

@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"strings"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/circuit/types"
+)
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+var (
+	ErrUnauthorized   = errorsmod.New("circuit", 0, "unauthorized")
+	ErrInvalidRequest = errorsmod.New("circuit", 1, "invalid request")
 )
 
 type msgServer struct {
@@ -38,14 +39,14 @@ func (srv msgServer) AuthorizeCircuitBreaker(ctx context.Context, msg *types.Msg
 		perms, err := srv.Permissions.Get(ctx, address)
 		if err != nil {
 			if errorsmod.IsOf(err, collections.ErrNotFound) {
-				return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "only super admins can authorize users")
+				return nil, errorsmod.Wrap(ErrUnauthorized, "only super admins can authorize users")
 			}
 
 			return nil, err
 		}
 
 		if perms.Level != types.Permissions_LEVEL_SUPER_ADMIN {
-			return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "only super admins can authorize users")
+			return nil, errorsmod.Wrap(ErrUnauthorized, "only super admins can authorize users")
 		}
 	}
 
@@ -55,20 +56,11 @@ func (srv msgServer) AuthorizeCircuitBreaker(ctx context.Context, msg *types.Msg
 	}
 
 	if msg.Permissions == nil {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "permissions cannot be nil")
+		return nil, errorsmod.Wrap(ErrInvalidRequest, "permissions cannot be nil")
 	}
 
 	// Append the account in the msg to the store's set of authorized super admins
 	if err = srv.Permissions.Set(ctx, grantee, *msg.Permissions); err != nil {
-		return nil, err
-	}
-
-	if err = srv.Keeper.EventService.EventManager(ctx).EmitKV(
-		"authorize_circuit_breaker",
-		event.NewAttribute("granter", msg.Granter),
-		event.NewAttribute("grantee", msg.Grantee),
-		event.NewAttribute("permission", msg.Permissions.String()),
-	); err != nil {
 		return nil, err
 	}
 
@@ -106,26 +98,16 @@ func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types.MsgTripC
 		case perms.Level == types.Permissions_LEVEL_SOME_MSGS:
 			// if the sender has permission for some messages, check if the sender has permission for this specific message
 			if !hasPermissionForMsg(perms, msgTypeURL) {
-				return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "account does not have permission to trip circuit breaker for message %s", msgTypeURL)
+				return nil, errorsmod.Wrapf(ErrUnauthorized, "account does not have permission to trip circuit breaker for message %s", msgTypeURL)
 			}
 		default:
-			return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "account does not have permission to trip circuit breaker")
+			return nil, errorsmod.Wrap(ErrUnauthorized, "account does not have permission to trip circuit breaker")
 		}
 
 		if err = srv.DisableList.Set(ctx, msgTypeURL); err != nil {
 			return nil, err
 		}
 
-	}
-
-	urls := strings.Join(msg.GetMsgTypeUrls(), ",")
-
-	if err = srv.Keeper.EventService.EventManager(ctx).EmitKV(
-		"trip_circuit_breaker",
-		event.NewAttribute("authority", msg.Authority),
-		event.NewAttribute("msg_url", urls),
-	); err != nil {
-		return nil, err
 	}
 
 	return &types.MsgTripCircuitBreakerResponse{
@@ -165,25 +147,15 @@ func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types.MsgRese
 		case perms.Level == types.Permissions_LEVEL_SOME_MSGS:
 			// if the sender has permission for some messages, check if the sender has permission for this specific message
 			if !hasPermissionForMsg(perms, msgTypeURL) {
-				return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "account does not have permission to reset circuit breaker for message %s", msgTypeURL)
+				return nil, errorsmod.Wrapf(ErrUnauthorized, "account does not have permission to reset circuit breaker for message %s", msgTypeURL)
 			}
 		default:
-			return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "account does not have permission to reset circuit breaker")
+			return nil, errorsmod.Wrap(ErrUnauthorized, "account does not have permission to reset circuit breaker")
 		}
 
 		if err = srv.DisableList.Remove(ctx, msgTypeURL); err != nil {
 			return nil, err
 		}
-	}
-
-	urls := strings.Join(msg.GetMsgTypeUrls(), ",")
-
-	if err = srv.Keeper.EventService.EventManager(ctx).EmitKV(
-		"reset_circuit_breaker",
-		event.NewAttribute("authority", msg.Authority),
-		event.NewAttribute("msg_url", urls),
-	); err != nil {
-		return nil, err
 	}
 
 	return &types.MsgResetCircuitBreakerResponse{Success: true}, nil

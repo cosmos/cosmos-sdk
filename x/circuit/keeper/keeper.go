@@ -3,21 +3,19 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/core/store"
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/circuit/types"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // Keeper defines the circuit module's keeper.
 type Keeper struct {
-	appmodule.Environment
+	x appmodule.Environment
 
-	cdc          codec.BinaryCodec
 	addressCodec address.Codec
 	authority    []byte
 
@@ -29,17 +27,15 @@ type Keeper struct {
 }
 
 // NewKeeper constructs a new Circuit Keeper instance
-func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, authority string, addressCodec address.Codec) Keeper {
+func NewKeeper(storeSvc store.KVStoreService, authority string, addressCodec address.Codec) Keeper {
 	auth, err := addressCodec.StringToBytes(authority)
 	if err != nil {
 		panic(err)
 	}
 
-	sb := collections.NewSchemaBuilder(env.KVStoreService)
+	sb := collections.NewSchemaBuilder(storeSvc)
 
 	k := Keeper{
-		Environment:  env,
-		cdc:          cdc,
 		authority:    auth,
 		addressCodec: addressCodec,
 		Permissions: collections.NewMap(

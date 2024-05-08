@@ -4,8 +4,6 @@ import (
 	"context"
 
 	"cosmossdk.io/x/circuit/types"
-
-	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 var _ types.QueryServer = QueryServer{}
@@ -37,26 +35,7 @@ func (qs QueryServer) Account(ctx context.Context, req *types.QueryAccountReques
 
 // Account returns account permissions.
 func (qs QueryServer) Accounts(ctx context.Context, req *types.QueryAccountsRequest) (*types.AccountsResponse, error) {
-	results, pageRes, err := query.CollectionPaginate(
-		ctx,
-		qs.keeper.Permissions,
-		req.Pagination,
-		func(key []byte, value types.Permissions) (*types.GenesisAccountPermissions, error) {
-			addrStr, err := qs.keeper.addressCodec.BytesToString(key)
-			if err != nil {
-				return nil, err
-			}
-			return &types.GenesisAccountPermissions{
-				Address:     addrStr,
-				Permissions: &value,
-			}, nil
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.AccountsResponse{Accounts: results, Pagination: pageRes}, nil
+	return nil.errors.New("not implemented")
 }
 
 // DisabledList returns a list of disabled message urls

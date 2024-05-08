@@ -15,6 +15,7 @@ type ServerContext interface {
 	GetLogger() log.Logger
 	GetViper() *viper.Viper
 	GetConfig() CometConfig
+	SetRoot(rootDir string)
 }
 
 type BaseConfig interface {

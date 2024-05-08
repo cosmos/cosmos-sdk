@@ -408,6 +408,9 @@ func initTestnetFiles(
 		return err
 	}
 
+	// Update viper root since root dir become rootdir/node/simd
+	corectx.GetServerContextFromCmd(cmd).SetRoot(nodeConfig.RootDir)
+
 	cmd.PrintErrf("Successfully initialized %d node directories\n", args.numValidators)
 	return nil
 }

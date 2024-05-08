@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/x/auth"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/staking"
+	corectx "cosmossdk.io/core/context"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -75,7 +76,7 @@ func Test_TestnetCmd(t *testing.T) {
 	err = cmd.ExecuteContext(ctx)
 	require.NoError(t, err)
 
-	genFile := cfg.GenesisFile()
+	genFile := corectx.GetServerContextFromCmd(cmd).GetConfig().GenesisFile()
 	appState, _, err := genutiltypes.GenesisStateFromGenFile(genFile)
 	require.NoError(t, err)
 

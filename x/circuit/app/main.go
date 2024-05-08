@@ -1,6 +1,6 @@
 package main
 
+var app = NewStf()
+
 func main() {
-	stf := NewStf()
-	_ = stf
 }

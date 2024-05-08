@@ -1,4 +1,4 @@
-package lockup
+package multisig
 
 import (
 	"testing"

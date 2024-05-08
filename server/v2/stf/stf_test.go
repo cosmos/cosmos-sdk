@@ -60,7 +60,12 @@ func TestSTF(t *testing.T) {
 	}
 
 	t.Run("begin and end block", func(t *testing.T) {
-		_, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{}, state)
+		_, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
+			Height:  uint64(1),
+			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
+			AppHash: sum[:],
+			Hash:    sum[:],
+		}, state)
 		require.NoError(t, err)
 		stateHas(t, newState, "begin-block")
 		stateHas(t, newState, "end-block")

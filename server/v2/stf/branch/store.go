@@ -1,6 +1,8 @@
 package branch
 
 import (
+	"errors"
+
 	"cosmossdk.io/core/store"
 )
 
@@ -31,6 +33,10 @@ func (s Store[T]) Get(key []byte) (value []byte, err error) {
 
 // Set implements types.KVStore.
 func (s Store[T]) Set(key, value []byte) error {
+	if value == nil {
+		return errors.New("cannot set a nil value")
+	}
+
 	s.changeSet.set(key, value)
 	return nil
 }

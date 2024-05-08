@@ -6,24 +6,6 @@ option go_package = "cosmossdk.io/x/circuit/types";
 import "cosmos/circuit/v1/types.proto";
 import "google/api/annotations.proto";
 
-// Query defines the circuit gRPC querier service.
-service Query {
-  // Account returns account permissions.
-  rpc Account(QueryAccountRequest) returns (AccountResponse) {
-    option (google.api.http).get = "/cosmos/circuit/v1/accounts/{address}";
-  }
-
-  // Account returns account permissions.
-  rpc Accounts(QueryAccountsRequest) returns (AccountsResponse) {
-    option (google.api.http).get = "/cosmos/circuit/v1/accounts";
-  }
-
-  // DisabledList returns a list of disabled message urls
-  rpc DisabledList(QueryDisabledListRequest) returns (DisabledListResponse) {
-    option (google.api.http).get = "/cosmos/circuit/v1/disable_list";
-  }
-}
-
 // QueryAccountRequest is the request type for the Query/Account RPC method.
 message QueryAccountRequest {
   string address = 1;

@@ -19,11 +19,9 @@ type msgServer struct {
 	Keeper
 }
 
-var _ types.MsgServer = msgServer{}
-
 // NewMsgServerImpl returns an implementation of the circuit MsgServer interface
 // for the provided Keeper.
-func NewMsgServerImpl(keeper Keeper) types.MsgServer {
+func NewMsgServerImpl(keeper Keeper) *msgServer {
 	return &msgServer{Keeper: keeper}
 }
 

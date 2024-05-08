@@ -7,15 +7,13 @@ import (
 	"cosmossdk.io/x/circuit/types"
 )
 
-var _ types.QueryServer = QueryServer{}
-
 type QueryServer struct {
 	keeper Keeper
 }
 
 // NewQueryServer returns an implementation of the circuit QueryServer interface
 // for the provided Keeper.
-func NewQueryServer(keeper Keeper) types.QueryServer {
+func NewQueryServer(keeper Keeper) *QueryServer {
 	return &QueryServer{keeper: keeper}
 }
 

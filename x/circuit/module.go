@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 
-	"google.golang.org/grpc"
-
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/circuit/keeper"
 	"cosmossdk.io/x/circuit/types"
@@ -24,6 +22,8 @@ var (
 type AppModule struct {
 	keeper keeper.Keeper
 }
+
+func (am AppModule) IsOnePerModuleType() {}
 
 func (am AppModule) DefaultGenesis() json.RawMessage {
 	// TODO implement me
@@ -50,14 +50,6 @@ func (AppModule) IsAppModule() {}
 
 // Name returns the circuit module's name.
 func (AppModule) Name() string { return types.ModuleName }
-
-// RegisterServices registers module services.
-func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	types.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(registrar, keeper.NewQueryServer(am.keeper))
-
-	return nil
-}
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(keeper keeper.Keeper) AppModule {

@@ -40,6 +40,8 @@ func (cdsa commitDBStoreAdapter) WorkingHash() []byte {
 	return commithash
 }
 
+func (cdsa commitDBStoreAdapter) SetCommitting(_ bool) {}
+
 func (cdsa commitDBStoreAdapter) SetPruning(_ pruningtypes.PruningOptions) {}
 
 // GetPruning is a no-op as pruning options cannot be directly set on this store.

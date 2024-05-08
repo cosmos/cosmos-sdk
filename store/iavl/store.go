@@ -52,7 +52,7 @@ func LoadStore(db dbm.DB, logger log.Logger, key types.StoreKey, id types.Commit
 // provided DB. An error is returned if the version fails to load, or if called with a positive
 // version on an empty tree.
 func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, initialVersion uint64, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics) (types.CommitKVStore, error) {
-	tree := iavl.NewMutableTree(wrapper.NewDBWrapper(db), cacheSize, disableFastNode, logger, iavl.InitialVersionOption(initialVersion))
+	tree := iavl.NewMutableTree(wrapper.NewDBWrapper(db), cacheSize, disableFastNode, logger, iavl.InitialVersionOption(initialVersion), iavl.AsyncPruningOption(true))
 
 	isUpgradeable, err := tree.IsUpgradeable()
 	if err != nil {
@@ -144,6 +144,15 @@ func (st *Store) LastCommitID() types.CommitID {
 	return types.CommitID{
 		Version: st.tree.Version(),
 		Hash:    st.tree.Hash(),
+	}
+}
+
+// SetCommitting implements CommitKVStore interface.
+func (st *Store) SetCommitting(isCommit bool) {
+	if isCommit {
+		st.tree.SetCommitting()
+	} else {
+		st.tree.UnsetCommitting()
 	}
 }
 

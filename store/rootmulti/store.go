@@ -458,6 +458,13 @@ func (rs *Store) LastCommitID() types.CommitID {
 	return rs.lastCommitInfo.CommitID()
 }
 
+// SetCommitting implements Committer/CommitStore.
+func (rs *Store) SetCommitting(committing bool) {
+	for _, store := range rs.stores {
+		store.SetCommitting(committing)
+	}
+}
+
 // Commit implements Committer/CommitStore.
 func (rs *Store) Commit() types.CommitID {
 	var previousHeight, version int64
@@ -479,7 +486,11 @@ func (rs *Store) Commit() types.CommitID {
 		rs.logger.Debug("commit header and version mismatch", "header_height", rs.commitHeader.Height, "version", version)
 	}
 
+	// set the committing flag on all stores to block the pruning
+	rs.SetCommitting(true)
 	rs.lastCommitInfo = commitStores(version, rs.stores, rs.removalMap)
+	// unset the committing flag on all stores to continue the pruning
+	rs.SetCommitting(false)
 	rs.lastCommitInfo.Timestamp = rs.commitHeader.Time
 	defer rs.flushMetadata(rs.db, version, rs.lastCommitInfo)
 

@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
+	"math" // nolint:typecheck // this is used, false positive
 	"sort"
 	"strings"
 	"sync"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	gogotypes "github.com/cosmos/gogoproto/types"
@@ -247,7 +247,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		if upgrades.IsAdded(key.Name()) || upgrades.RenamedFrom(key.Name()) != "" {
 			storeParams.initialVersion = uint64(ver) + 1
 		} else if commitID.Version != ver && storeParams.typ == types.StoreTypeIAVL {
-			return fmt.Errorf("version of store %s mismatch root store's version; expected %d got %d; new stores should be added using StoreUpgrades", key.Name(), ver, commitID.Version)
+			return fmt.Errorf("version of store %q mismatch root store's version; expected %d got %d; new stores should be added using StoreUpgrades", key.Name(), ver, commitID.Version)
 		}
 
 		store, err := rs.loadCommitStoreFromParams(key, commitID, storeParams)
@@ -830,7 +830,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	keys := keysFromStoreKeyMap(rs.stores)
 	for _, key := range keys {
 		switch store := rs.GetCommitKVStore(key).(type) {
-		case *iavl.Store:
+		case *iavl.Store: // nolint:typecheck // ignore linting issues in v1
 			stores = append(stores, namedStore{name: key.Name(), Store: store})
 		case *transient.Store, *mem.Store:
 			// Non-persisted stores shouldn't be snapshotted
@@ -850,7 +850,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	// are demarcated by new SnapshotStore items.
 	for _, store := range stores {
 		rs.logger.Debug("starting snapshot", "store", store.name, "height", height)
-		exporter, err := store.Export(int64(height))
+		exporter, err := store.Export(int64(height)) // nolint:typecheck // ignore linting issues in v1
 		if err != nil {
 			rs.logger.Error("snapshot failed; exporter error", "store", store.name, "err", err)
 			return err

@@ -16,4 +16,7 @@ var (
 
 	// ErrInvalidSnapshotVersion is returned when the snapshot version is invalid
 	ErrInvalidSnapshotVersion = errors.New("invalid snapshot version")
+
+	// ErrTimedOutSnapshotChunks is returned when the snapshot chunks takes more than 2min
+	ErrTimedOutSnapshotChunks = errors.New("invalid snapshot version")
 )

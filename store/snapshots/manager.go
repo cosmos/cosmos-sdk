@@ -140,6 +140,22 @@ func (m *Manager) endLocked() {
 	m.restoreChunkIndex = 0
 }
 
+// Reset cleans up the current state of the Manager and prepares it for new operations.
+// This method should be used with caution.
+// State Clearing: Calls endLocked to reset the internal state, which includes closing channels and resetting variables.
+//
+//	Improper use might lead to issues if not all components are reinitialized correctly.
+func (m *Manager) Reset() error {
+	m.mtx.Lock() // Ensure mutual exclusion to prevent race conditions
+	defer m.mtx.Unlock()
+
+	// Call endLocked to clear the current state
+	m.endLocked()
+
+	m.logger.Info("Manager state has been reset")
+	return nil
+}
+
 // GetInterval returns snapshot interval represented in heights.
 func (m *Manager) GetInterval() uint64 {
 	return m.opts.Interval

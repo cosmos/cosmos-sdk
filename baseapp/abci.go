@@ -277,31 +277,32 @@ func (app *BaseApp) OfferSnapshot(req *abci.OfferSnapshotRequest) (*abci.OfferSn
 		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT}, nil
 	}
 
-	err = app.snapshotManager.Restore(snapshot)
-	switch {
-	case err == nil:
-		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_ACCEPT}, nil
+	if err := app.snapshotManager.Restore(snapshot); err != nil {
+		return app.handleSnapshotRestoreError(err, req)
+	}
 
+	return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_ACCEPT}, nil
+}
+
+// handleSnapshotRestoreError handles specific snapshot restore errors
+func (app *BaseApp) handleSnapshotRestoreError(err error, req *abci.OfferSnapshotRequest) (*abci.OfferSnapshotResponse, error) {
+	app.logger.Error("failed to restore snapshot", "height", req.Snapshot.Height, "format", req.Snapshot.Format, "err", err)
+
+	switch {
 	case errors.Is(err, snapshottypes.ErrUnknownFormat):
 		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT_FORMAT}, nil
 
 	case errors.Is(err, snapshottypes.ErrInvalidMetadata):
-		app.logger.Error(
-			"rejecting invalid snapshot",
-			"height", req.Snapshot.Height,
-			"format", req.Snapshot.Format,
-			"err", err,
-		)
 		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT}, nil
 
-	default:
-		app.logger.Error(
-			"failed to restore snapshot",
-			"height", req.Snapshot.Height,
-			"format", req.Snapshot.Format,
-			"err", err,
-		)
+	case errors.Is(err, snapshottypes.ErrTimedOutSnapshotChunks):
+		if resetErr := app.snapshotManager.Reset(); resetErr != nil {
+			app.logger.Error("failed to reset snapshot manager", "err", resetErr)
+			return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_ABORT}, nil
+		}
+		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_ACCEPT}, nil
 
+	default:
 		// We currently don't support resetting the IAVL stores and retrying a
 		// different snapshot, so we ask CometBFT to abort all snapshot restoration.
 		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_ABORT}, nil

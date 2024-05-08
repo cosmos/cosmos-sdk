@@ -18,7 +18,7 @@ Currently, the module is split accross different keepers with scattered and dupl
 
 Additionally, the integration of the token factory into the bank module allows for standardization, and better integration within the core modules.
 
-This rewrite will not only reduce the complexity but also improve the efficiency and UX of the bank module.
+This rewrite will reduce complexity and enhance the efficiency and UX of the bank module.
 
 ## Context
 
@@ -30,7 +30,7 @@ Additionally, there is an overlap in functionality with a Token Factory module, 
 
 ## Decision
 
-**Permission Tightening**: Access to the module can be restricted to selected denominations only, ensuring that it operates within designated boundaries and does not exceed its intended scope. Currently the permissions allow all denoms, so this should be changed. Send restrictions functionality will be maintained.
+**Permission Tightening**: Access to the module can be restricted to selected denominations only, ensuring that it operates within designated boundaries and does not exceed its intended scope. Currently, the permissions allow all denoms, so this should be changed. Send restrictions functionality will be maintained.
 
 **Simplification of Logic**: The bank module will focus on core functionalities `Send`, `Mint`, and `Burn`. This refinement aims to streamline the architecture, enhancing both maintainability and performance.
 

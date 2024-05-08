@@ -58,8 +58,8 @@ func NewSTF[T transaction.Tx](
 		doValidatorUpdate:   doValidatorUpdate,
 		postTxExec:          postTxExec, // TODO
 		branchFn:            branch,
-		makeGasMeter:        stfgas.DefaultGasMeter,         // TODO replacable?
-		makeGasMeteredState: stfgas.DefaultWrapWithGasMeter, // TODO replacable?
+		makeGasMeter:        stfgas.DefaultGasMeter,
+		makeGasMeteredState: stfgas.DefaultWrapWithGasMeter,
 	}
 }
 
@@ -82,7 +82,7 @@ func (s STF[T]) DeliverBlock(
 		Height:  int64(block.Height),
 	}
 	// set header info
-	err = s.setHeaderInfo(newState, hi) // TODO: Should we start this in a goroutine to avoid blocking for encoding
+	err = s.setHeaderInfo(newState, hi)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to set initial header info, %w", err)
 	}

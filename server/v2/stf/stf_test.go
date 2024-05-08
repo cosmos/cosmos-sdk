@@ -2,8 +2,10 @@ package stf
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -25,6 +27,8 @@ func TestSTF(t *testing.T) {
 		Msg:      wrapperspb.Bool(true), // msg does not matter at all because our handler does nothing.
 		GasLimit: 100_000,
 	}
+
+	sum := sha256.Sum256([]byte("test-hash"))
 
 	s := &STF[mock.Tx]{
 		handleMsg: func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
@@ -64,7 +68,11 @@ func TestSTF(t *testing.T) {
 
 	t.Run("basic tx", func(t *testing.T) {
 		result, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
-			Txs: []mock.Tx{mockTx},
+			Height:  uint64(1),
+			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
+			AppHash: sum[:],
+			Hash:    sum[:],
+			Txs:     []mock.Tx{mockTx},
 		}, state)
 		require.NoError(t, err)
 		stateHas(t, newState, "validate")
@@ -97,7 +105,11 @@ func TestSTF(t *testing.T) {
 		}
 
 		result, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
-			Txs: []mock.Tx{mockTx},
+			Height:  uint64(1),
+			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
+			AppHash: sum[:],
+			Hash:    sum[:],
+			Txs:     []mock.Tx{mockTx},
 		}, state)
 		require.NoError(t, err)
 		stateNotHas(t, newState, "gas_failure") // assert during out of gas no state changes leaked.
@@ -112,7 +124,11 @@ func TestSTF(t *testing.T) {
 		}
 
 		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
-			Txs: []mock.Tx{mockTx},
+			Height:  uint64(1),
+			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
+			AppHash: sum[:],
+			Hash:    sum[:],
+			Txs:     []mock.Tx{mockTx},
 		}, state)
 		require.NoError(t, err)
 		require.ErrorContains(t, blockResult.TxResults[0].Error, "failure")
@@ -129,7 +145,11 @@ func TestSTF(t *testing.T) {
 			return fmt.Errorf("post tx failure")
 		}
 		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
-			Txs: []mock.Tx{mockTx},
+			Height:  uint64(1),
+			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
+			AppHash: sum[:],
+			Hash:    sum[:],
+			Txs:     []mock.Tx{mockTx},
 		}, state)
 		require.NoError(t, err)
 		require.ErrorContains(t, blockResult.TxResults[0].Error, "post tx failure")
@@ -147,7 +167,11 @@ func TestSTF(t *testing.T) {
 		}
 		s.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error { return fmt.Errorf("post tx failure") }
 		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
-			Txs: []mock.Tx{mockTx},
+			Height:  uint64(1),
+			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
+			AppHash: sum[:],
+			Hash:    sum[:],
+			Txs:     []mock.Tx{mockTx},
 		}, state)
 		require.NoError(t, err)
 		require.ErrorContains(t, blockResult.TxResults[0].Error, "exec failure\npost tx failure")
@@ -163,7 +187,11 @@ func TestSTF(t *testing.T) {
 		s := s.clone()
 		s.doTxValidation = func(ctx context.Context, tx mock.Tx) error { return fmt.Errorf("failure") }
 		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
-			Txs: []mock.Tx{mockTx},
+			Height:  uint64(1),
+			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
+			AppHash: sum[:],
+			Hash:    sum[:],
+			Txs:     []mock.Tx{mockTx},
 		}, state)
 		require.NoError(t, err)
 		require.ErrorContains(t, blockResult.TxResults[0].Error, "failure")

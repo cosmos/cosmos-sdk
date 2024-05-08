@@ -32,26 +32,21 @@ func (b WriterMap) GetReader(actor []byte) (store.Reader, error) {
 }
 
 func (b WriterMap) GetWriter(actor []byte) (store.Writer, error) {
-	actorState, ok := b.branchedWriterState[unsafeString(actor)]
-	if ok {
+	// Simplify and optimize state retrieval
+	if actorState, ok := b.branchedWriterState[unsafeString(actor)]; ok {
+		return actorState, nil
+	} else if writerState, err := b.state.GetReader(actor); err != nil {
+		return nil, err
+	} else {
+		actorState = b.branch(writerState)
+		b.branchedWriterState[string(actor)] = actorState
 		return actorState, nil
 	}
-
-	writerState, err := b.state.GetReader(actor)
-	if err != nil {
-		return nil, err
-	}
-
-	actorState = b.branch(writerState)
-	b.branchedWriterState[string(actor)] = actorState
-
-	return actorState, nil
 }
 
 func (b WriterMap) ApplyStateChanges(stateChanges []store.StateChanges) error {
 	for _, sc := range stateChanges {
-		err := b.applyStateChange(sc)
-		if err != nil {
+		if err := b.applyStateChange(sc); err != nil {
 			return fmt.Errorf("unable to apply state change for actor %X: %w", sc.Actor, err)
 		}
 	}

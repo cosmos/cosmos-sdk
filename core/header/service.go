@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"time"
 )
 
@@ -80,7 +79,6 @@ func (i *Info) FromBytes(bytes []byte) error {
 	copy(i.AppHash, bytes)
 	bytes = bytes[hashSize:]
 
-	fmt.Println(len(bytes))
 	// Decode ChainID
 	chainIDLen := int(bytes[0])
 	bytes = bytes[1:]

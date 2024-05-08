@@ -82,7 +82,7 @@ func (s STF[T]) DeliverBlock(
 	// set header info
 	err = s.setHeaderInfo(newState, hi) // TODO: Should we start this in a goroutine to avoid blocking for encoding
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to set initial header info")
+		return nil, nil, fmt.Errorf("unable to set initial header info, %w", err)
 	}
 
 	exCtx := s.makeContext(ctx, appmanager.ConsensusIdentity, newState, corecontext.ExecModeFinalize)
@@ -201,14 +201,14 @@ func (s STF[T]) validateTx(
 	gasLimit uint64,
 	tx T,
 ) (gasUsed uint64, events []event.Event, err error) {
-	validateState := s.branch(state)
+	validateState := s.branchFn(state)
 	hi, err := s.getHeaderInfo(validateState)
 	if err != nil {
 		return 0, nil, err
 	}
 	validateCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, validateState, corecontext.ExecModeCheck)
 	validateCtx.setHeaderInfo(hi)
-	validateCtx.setGasLimit(s.getGasMeter, gasLimit)
+	validateCtx.setGasLimit(gasLimit)
 	err = s.doTxValidation(validateCtx, tx)
 	if err != nil {
 		return 0, nil, err
@@ -235,7 +235,7 @@ func (s STF[T]) execTx(
 		// in case of error during message execution, we do not apply the exec state.
 		// instead we run the post exec handler in a new branchFn from the initial state.
 		postTxState := s.branchFn(state)
-		postTxCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, postTxState, gas.NoGasLimit, execMode)
+		postTxCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, postTxState, execMode)
 		postTxCtx.setHeaderInfo(hi)
 
 		// TODO: runtime sets a noop posttxexec if the app doesnt set anything (julien)
@@ -296,7 +296,7 @@ func (s STF[T]) runTxMsgs(
 
 	execCtx := s.makeContext(ctx, nil, state, execMode)
 	execCtx.setHeaderInfo(hi)
-	execCtx.setGasLimit(s.getGasMeter, gasLimit)
+	execCtx.setGasLimit(gasLimit)
 	for i, msg := range msgs {
 		execCtx.sender = txSenders[i]
 		resp, err := s.handleMsg(execCtx, msg)
@@ -407,7 +407,11 @@ func (s STF[T]) setHeaderInfo(state store.WriterMap, headerInfo header.Info) err
 	if err != nil {
 		return err
 	}
-	err = runtimeStore.Set([]byte{headerInfoPrefix}, headerInfo.Bytes())
+	bz, err := headerInfo.Bytes()
+	if err != nil {
+		return err
+	}
+	err = runtimeStore.Set([]byte{headerInfoPrefix}, bz)
 	if err != nil {
 		return err
 	}
@@ -480,7 +484,7 @@ func (s STF[T]) Query(
 	}
 	queryCtx := s.makeContext(ctx, nil, queryState, corecontext.ExecModeSimulate)
 	queryCtx.setHeaderInfo(hi)
-	queryCtx.setGasLimit(s.getGasMeter, gasLimit)
+	queryCtx.setGasLimit(gasLimit)
 	return s.handleQuery(queryCtx, req)
 }
 
@@ -574,16 +578,13 @@ func (s STF[T]) makeContext(
 	store store.WriterMap,
 	execMode corecontext.ExecMode,
 ) *executionContext {
-	meter := s.getGasMeter(gas.NoGasLimit)
-	store = s.wrapWithGasMeter(meter, store)
 	return newExecutionContext(
 		s.makeGasMeter,
 		s.makeGasMeteredState,
 		s.branchFn,
 		ctx,
 		sender,
-		state,
-		gasLimit,
+		store,
 		execMode,
 	)
 }
@@ -595,10 +596,9 @@ func newExecutionContext(
 	ctx context.Context,
 	sender transaction.Identity,
 	state store.WriterMap,
-	gasLimit uint64,
 	execMode corecontext.ExecMode,
 ) *executionContext {
-	meter := makeGasMeterFn(gasLimit)
+	meter := makeGasMeterFn(gas.NoGasLimit)
 	meteredState := makeGasMeteredStoreFn(meter, state)
 
 	return &executionContext{

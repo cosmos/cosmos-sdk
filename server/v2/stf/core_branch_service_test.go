@@ -46,7 +46,9 @@ func TestBranchService(t *testing.T) {
 	makeContext := func() *executionContext {
 		state := mock.DB()
 		writableState := s.branchFn(state)
-		return s.makeContext(context.Background(), []byte("cookies"), writableState, 1_000_000, 0)
+		ctx := s.makeContext(context.Background(), []byte("cookies"), writableState, 0)
+		ctx.setGasLimit(1000000)
+		return ctx
 	}
 
 	branchService := BranchService{}

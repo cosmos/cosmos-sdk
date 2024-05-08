@@ -91,12 +91,14 @@ func (k Keeper) AfterEpochEnd(ctx context.Context, epochIdentifier string, epoch
 			defer telemetry.ModuleSetGauge(types.ModuleName, float32(mintedCoin.Amount.Int64()), "minted_tokens")
 		}
 
-		return k.EventService.EventManager(ctx).EmitKV(
+		if err := k.EventService.EventManager(ctx).EmitKV(
 			types.EventTypeMint,
 			event.NewAttribute(types.AttributeEpochNumber, fmt.Sprintf("%d", epochNumber)),
 			event.NewAttribute(types.AttributeKeyEpochProvisions, minter.EpochProvisions.String()),
 			event.NewAttribute(sdk.AttributeKeyAmount, mintedCoin.Amount.String()),
-		)
+		); err != nil {
+			return err
+		}
 	}
 	return nil
 }

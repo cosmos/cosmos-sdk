@@ -152,13 +152,12 @@ Currently existing preventative measures include fees and a `sequence` (nonce) c
 
 Validator nodes maintain a transaction pool to prevent replay attacks, similar to full-nodes, but also use it to hold unconfirmed transactions in preparation for block inclusion. It's important to note that even if a `Tx` passes all preliminary checks, it can still be found invalid later on, as these initial checks do not fully execute the transaction's logic.
 
-
 ### Module Execution
 
 After the transaction has been appropriately routed to the correct module by the `MsgServiceRouter` and passed all necessary validations, the execution phase begins:
 
 * **Handler Activation**: Each module's handler processes the routed message, applying the necessary business logic such as updating account balances or transferring tokens.
-* **State Changes**: Handlers may modify the state as required by the business logic, which could involve writing to the module's portion of the state store.
+* **State Changes**: Handlers may modify the state as required by the business logic, which could involve writing to the module's portion of the state store. This can be seen in the next subsection.
 * **Event Emission and Logging**: During execution, modules can emit events and log information, which are crucial for monitoring and querying transaction outcomes.
 
 For messages that adhere to older standards or specific formats, a routing function retrieves the route name from the message, identifying the corresponding module. The message is then processed by the designated handler within that module, ensuring accurate and consistent application of the transaction's logic.
@@ -168,7 +167,6 @@ For messages that adhere to older standards or specific formats, a routing funct
 5. Modules can emit events and log information during execution, which are used for monitoring and querying transaction outcomes.
 
 During the module execution phase, each message that has been routed to the appropriate module is processed according to the module-specific business logic. For example, the `handleMsgSend` function in the bank module processes `MsgSend` messages by checking balances, transferring tokens, and emitting events:
-
 
 ```go 
 func handleMsgSend(ctx sdk.Context, keeper BankKeeper, msg MsgSend) error {
@@ -184,7 +182,6 @@ func handleMsgSend(ctx sdk.Context, keeper BankKeeper, msg MsgSend) error {
 ```
 
 This function exemplifies how a module's handler executes the transaction logic, modifies the state, and logs the transaction events, which are essential aspects of module execution.
-
 
 ### State Changes During Consensus
 

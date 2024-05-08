@@ -71,12 +71,12 @@ func (i *Info) FromBytes(bytes []byte) error {
 
 	// Decode Time
 	unixTime := int64(binary.LittleEndian.Uint64(bytes[:8]))
-	i.Time = time.Unix(unixTime, 0)
+	i.Time = time.Unix(unixTime, 0).UTC()
 	bytes = bytes[8:]
 
 	// Decode AppHash
-	i.AppHash = make([]byte, len(bytes))
-	copy(i.AppHash, bytes)
+	i.AppHash = make([]byte, hashSize)
+	copy(i.AppHash, bytes[:hashSize])
 	bytes = bytes[hashSize:]
 
 	// Decode ChainID

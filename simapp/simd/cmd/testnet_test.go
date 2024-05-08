@@ -58,6 +58,8 @@ func Test_TestnetCmd(t *testing.T) {
 	require.NoError(t, err)
 
 	serverCtx := server.NewContext(viper.New(), logger)
+	err = genutiltest.WriteAndTrackConfig(serverCtx.GetViper(), home, cfg)
+	require.NoError(t, err)
 	clientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
 		WithHomeDir(home).

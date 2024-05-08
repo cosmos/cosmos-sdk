@@ -36,26 +36,35 @@ func newChangeSet() changeSet {
 	}
 }
 
+// set adds a new key-value pair to the change set's tree.
 func (bt changeSet) set(key, value []byte) {
 	bt.tree.Set(newItem(key, value))
 }
 
+// get retrieves the value associated with the given key from the changeSet's tree.
 func (bt changeSet) get(key []byte) (value []byte, found bool) {
 	it, found := bt.tree.Get(item{key: key})
 	return it.value, found
 }
 
+// delete removes the value associated with the given key from the change set.
+// If the key does not exist in the change set, this method does nothing.
 func (bt changeSet) delete(key []byte) {
 	bt.set(key, nil)
 }
 
+// iterator returns a new iterator over the key-value pairs in the changeSet
+// that have keys greater than or equal to the start key and less than the end key.
 func (bt changeSet) iterator(start, end []byte) (store.Iterator, error) {
-	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
+	if len(start) == 0 || len(end) == 0 {
 		return nil, errKeyEmpty
 	}
 	return newMemIterator(start, end, bt.tree, true), nil
 }
 
+// reverseIterator returns a new iterator that iterates over the key-value pairs in reverse order
+// within the specified range [start, end) in the changeSet's tree.
+// If start or end is an empty byte slice, it returns an error indicating that the key is empty.
 func (bt changeSet) reverseIterator(start, end []byte) (store.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errKeyEmpty
@@ -91,6 +100,18 @@ type memIterator struct {
 	valid     bool
 }
 
+// newMemIterator creates a new memory iterator for a given range of keys in a B-tree.
+// The iterator starts at the specified start key and ends at the specified end key.
+// The `tree` parameter is the B-tree to iterate over.
+// The `ascending` parameter determines the direction of iteration.
+// If `ascending` is true, the iterator will iterate in ascending order.
+// If `ascending` is false, the iterator will iterate in descending order.
+// The returned iterator is positioned at the first key that is greater than or equal to the start key.
+// If the start key is nil, the iterator is positioned at the first key in the B-tree.
+// If the end key is nil, the iterator is positioned at the last key in the B-tree.
+// The iterator is inclusive of the start key and exclusive of the end key.
+// The `valid` field of the iterator indicates whether the iterator is positioned at a valid key.
+// The `start` and `end` fields of the iterator store the start and end keys respectively.
 func newMemIterator(start, end []byte, tree *btree.BTreeG[item], ascending bool) *memIterator {
 	iter := tree.Iter()
 	var valid bool
@@ -129,15 +150,19 @@ func newMemIterator(start, end []byte, tree *btree.BTreeG[item], ascending bool)
 	return mi
 }
 
+// Domain returns the start and end keys of the iterator's domain.
 func (mi *memIterator) Domain() (start, end []byte) {
 	return mi.start, mi.end
 }
 
-func (mi *memIterator) Close() error {
+// Close releases any resources held by the iterator.
+func (mi *memIterator) Close() {
 	mi.iter.Release()
-	return nil
 }
 
+// Error returns the error state of the iterator.
+// If the iterator is not valid, it returns the errInvalidIterator error.
+// Otherwise, it returns nil.
 func (mi *memIterator) Error() error {
 	if !mi.Valid() {
 		return errInvalidIterator
@@ -145,10 +170,16 @@ func (mi *memIterator) Error() error {
 	return nil
 }
 
+// Valid returns whether the iterator is currently pointing to a valid entry.
+// It returns true if the iterator is valid, and false otherwise.
 func (mi *memIterator) Valid() bool {
 	return mi.valid
 }
 
+// Next advances the iterator to the next key-value pair.
+// If the iterator is in ascending order, it moves to the next key-value pair.
+// If the iterator is in descending order, it moves to the previous key-value pair.
+// It also checks if the new key-value pair is within the specified range.
 func (mi *memIterator) Next() {
 	mi.assertValid()
 
@@ -163,6 +194,12 @@ func (mi *memIterator) Next() {
 	}
 }
 
+// keyInRange checks if the given key is within the range defined by the iterator.
+// If the iterator is in ascending order and the end key is not nil, it returns false
+// if the key is greater than or equal to the end key.
+// If the iterator is in descending order and the start key is not nil, it returns false
+// if the key is less than the start key.
+// Otherwise, it returns true.
 func (mi *memIterator) keyInRange(key []byte) bool {
 	if mi.ascending && mi.end != nil && bytes.Compare(key, mi.end) >= 0 {
 		return false
@@ -173,14 +210,18 @@ func (mi *memIterator) keyInRange(key []byte) bool {
 	return true
 }
 
+// Key returns the key of the current item in the iterator.
 func (mi *memIterator) Key() []byte {
 	return mi.iter.Item().key
 }
 
+// Value returns the value of the current item in the iterator.
 func (mi *memIterator) Value() []byte {
 	return mi.iter.Item().value
 }
 
+// assertValid checks if the memIterator is in a valid state.
+// If there is an error, it panics with the error message.
 func (mi *memIterator) assertValid() {
 	if err := mi.Error(); err != nil {
 		panic(err)

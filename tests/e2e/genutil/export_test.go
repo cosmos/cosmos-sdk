@@ -20,6 +20,7 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
+	corectx "cosmossdk.io/core/context"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -27,8 +28,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	gentestutil "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	cmtcfg "github.com/cometbft/cometbft/config"
 )
 
 func TestExportCmd_ConsensusParams(t *testing.T) {
@@ -55,8 +58,8 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 func TestExportCmd_HomeDir(t *testing.T) {
 	_, ctx, _, cmd := setupApp(t, t.TempDir())
 
-	serverCtxPtr := ctx.Value(server.ServerContextKey)
-	serverCtxPtr.(*server.Context).Config.SetRoot("foobar")
+	serverCtxPtr := ctx.Value(corectx.ServerContextKey)
+	serverCtxPtr.(corectx.ServerContext).GetConfig().SetRoot("foobar")
 
 	err := cmd.ExecuteContext(ctx)
 	assert.ErrorContains(t, err, "stat foobar/config/genesis.json: no such file or directory")
@@ -169,7 +172,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	assert.NilError(t, err)
 
 	serverCtx := server.NewDefaultContext()
-	serverCtx.Config.RootDir = tempDir
+	gentestutil.WriteAndTrackConfig(serverCtx.GetViper(), tempDir, cmtcfg.DefaultConfig())
 
 	clientCtx := client.Context{}.WithCodec(app.AppCodec())
 	appGenesis := genutiltypes.AppGenesis{
@@ -181,7 +184,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	}
 
 	// save genesis file
-	err = genutil.ExportGenesisFile(&appGenesis, serverCtx.Config.GenesisFile())
+	err = genutil.ExportGenesisFile(&appGenesis, serverCtx.GetConfig().GenesisFile())
 	assert.NilError(t, err)
 
 	_, err = app.InitChain(&abci.InitChainRequest{

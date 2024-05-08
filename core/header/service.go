@@ -2,7 +2,9 @@ package header
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -17,9 +19,11 @@ type Info struct {
 	Height  int64     // Height returns the height of the block
 	Hash    []byte    // Hash returns the hash of the block header
 	Time    time.Time // Time returns the time of the block
-	ChainID string    // ChainId returns the chain ID of the block
 	AppHash []byte    // AppHash used in the current block header
+	ChainID string    // ChainId returns the chain ID of the block
 }
+
+const hashSize = sha256.Size
 
 // Bytes encodes the Info struct into a byte slice using little-endian encoding
 func (i *Info) Bytes() ([]byte, error) {
@@ -31,6 +35,9 @@ func (i *Info) Bytes() ([]byte, error) {
 	buf = append(buf, heightBytes...)
 
 	// Encode Hash
+	if len(i.Hash) != hashSize {
+		return nil, errors.New("invalid hash size")
+	}
 	buf = append(buf, i.Hash...)
 
 	// Encode Time
@@ -38,47 +45,49 @@ func (i *Info) Bytes() ([]byte, error) {
 	binary.LittleEndian.PutUint64(timeBytes, uint64(i.Time.Unix()))
 	buf = append(buf, timeBytes...)
 
-	// Encode ChainID
-	buf = append(buf, []byte(i.ChainID)...)
-
 	// Encode AppHash
+	if len(i.Hash) != hashSize {
+		return nil, errors.New("invalid hash size")
+	}
 	buf = append(buf, i.AppHash...)
+
+	// Encode ChainID
+	chainIDLen := len(i.ChainID)
+	buf = append(buf, byte(chainIDLen))
+	buf = append(buf, []byte(i.ChainID)...)
 
 	return buf, nil
 }
 
 // FromBytes decodes the byte slice into an Info struct using little-endian encoding
 func (i *Info) FromBytes(bytes []byte) error {
-	if len(bytes) < 40 {
-		return fmt.Errorf("invalid byte slice length")
-	}
-
 	// Decode Height
 	i.Height = int64(binary.LittleEndian.Uint64(bytes[:8]))
 	bytes = bytes[8:]
 
 	// Decode Hash
-	i.Hash = make([]byte, 32)
-	copy(i.Hash, bytes[:32])
-	bytes = bytes[32:]
+	i.Hash = make([]byte, hashSize)
+	copy(i.Hash, bytes[:hashSize])
+	bytes = bytes[hashSize:]
 
 	// Decode Time
 	unixTime := int64(binary.LittleEndian.Uint64(bytes[:8]))
 	i.Time = time.Unix(unixTime, 0)
 	bytes = bytes[8:]
 
+	// Decode AppHash
+	i.AppHash = make([]byte, len(bytes))
+	copy(i.AppHash, bytes)
+	bytes = bytes[hashSize:]
+
+	fmt.Println(len(bytes))
 	// Decode ChainID
 	chainIDLen := int(bytes[0])
 	bytes = bytes[1:]
 	if len(bytes) < chainIDLen {
-		return fmt.Errorf("invalid byte slice length")
+		return errors.New("invalid byte slice length")
 	}
 	i.ChainID = string(bytes[:chainIDLen])
-	bytes = bytes[chainIDLen:]
-
-	// Decode AppHash
-	i.AppHash = make([]byte, len(bytes))
-	copy(i.AppHash, bytes)
 
 	return nil
 }

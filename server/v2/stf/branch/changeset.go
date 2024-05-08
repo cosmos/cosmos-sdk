@@ -56,7 +56,7 @@ func (bt changeSet) delete(key []byte) {
 // iterator returns a new iterator over the key-value pairs in the changeSet
 // that have keys greater than or equal to the start key and less than the end key.
 func (bt changeSet) iterator(start, end []byte) (store.Iterator, error) {
-	if len(start) == 0 || len(end) == 0 {
+	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errKeyEmpty
 	}
 	return newMemIterator(start, end, bt.tree, true), nil

@@ -54,6 +54,11 @@ func (b *MsgRouterBuilder) RegisterGlobalPostHandler(handler appmodulev2.PostMsg
 	b.globalPostHandlers = append(b.globalPostHandlers, handler)
 }
 
+func (b *MsgRouterBuilder) HandlerExists(msgType string) bool {
+	_, ok := b.handlers[msgType]
+	return ok
+}
+
 func (b *MsgRouterBuilder) Build() (appmodulev2.Handler, error) {
 	handlers := make(map[string]appmodulev2.Handler)
 

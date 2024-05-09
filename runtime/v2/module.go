@@ -223,7 +223,7 @@ func ProvideInterfaceRegistry(
 }
 
 // ProvideEnvironment provides the environment for keeper modules, while maintaining backward compatibility and provide services directly as well.
-func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinject.ModuleKey, app *AppBuilder) (
+func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinject.ModuleKey, appBuilder *AppBuilder) (
 	appmodulev2.Environment,
 	store.KVStoreService,
 	store.MemoryStoreService,
@@ -235,11 +235,11 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 	} else {
 		kvStoreKey = key.Name()
 	}
-	registerStoreKey(app, kvStoreKey)
+	registerStoreKey(appBuilder, kvStoreKey)
 	kvService := stf.NewKVStoreService([]byte(kvStoreKey))
 
 	memStoreKey := fmt.Sprintf("memory:%s", key.Name())
-	registerStoreKey(app, memStoreKey)
+	registerStoreKey(appBuilder, memStoreKey)
 	memService := stf.NewMemoryStoreService([]byte(memStoreKey))
 
 	env := appmodulev2.Environment{
@@ -248,6 +248,7 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 		EventService:       stf.NewEventService(),
 		GasService:         stf.NewGasMeterService(),
 		HeaderService:      stf.HeaderService{},
+		RouterService:      stf.NewRouterService(kvService, appBuilder.app.queryRouterBuilder, appBuilder.app.msgRouterBuilder),
 		KVStoreService:     kvService,
 		MemStoreService:    memService,
 		TransactionService: services.NewContextAwareTransactionService(),

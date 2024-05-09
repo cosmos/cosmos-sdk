@@ -84,6 +84,7 @@ func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to build STF message handler: %w", err)
 	}
+
 	stfQueryHandler, err := a.app.queryRouterBuilder.Build()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build query handler: %w", err)

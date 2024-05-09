@@ -631,7 +631,10 @@ func (k Keeper) SubmitProposal(ctx context.Context, msg *group.MsgSubmitProposal
 	if msg.Exec == group.Exec_EXEC_TRY {
 		// Consider proposers as Yes votes
 		for _, proposer := range msg.Proposers {
-			k.GasService.GasMeter(ctx).Consume(gasCostPerIteration, "vote on proposal")
+			err = k.GasService.GasMeter(ctx).Consume(gasCostPerIteration, "vote on proposal")
+			if err != nil {
+				return &group.MsgSubmitProposalResponse{ProposalId: id}, errorsmod.Wrap(err, "the proposal was created but failed on gas consumption for vote")
+			}
 			_, err = k.Vote(ctx, &group.MsgVote{
 				ProposalId: id,
 				Voter:      proposer,

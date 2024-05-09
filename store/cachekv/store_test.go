@@ -32,7 +32,7 @@ func TestCacheKVStore(t *testing.T) {
 	st.Set(keyFmt(1), valFmt(1))
 	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
 
-	// update it in cache, shoudn't change mem
+	// update it in cache, shouldn't change mem
 	st.Set(keyFmt(1), valFmt(2))
 	require.Equal(t, valFmt(2), st.Get(keyFmt(1)))
 	require.Equal(t, valFmt(1), mem.Get(keyFmt(1)))

@@ -250,7 +250,7 @@ func mockStoreWithStuff() types.KVStore {
 	store.Set(bz("key3"), bz("value3"))
 	store.Set(bz("something"), bz("else"))
 	store.Set(bz("k"), bz("val"))
-	store.Set(bz("ke"), bz("valu"))
+	store.Set(bz("ke"), bz("value"))
 	store.Set(bz("kee"), bz("valuu"))
 	return store
 }

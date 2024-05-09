@@ -6,8 +6,8 @@ import (
 
 // ToABCIRequestQuery converts a gRPC ABCIQueryRequest type to an ABCI
 // RequestQuery type.
-func (req *ABCIQueryRequest) ToABCIRequestQuery() *abci.RequestQuery {
-	return &abci.RequestQuery{
+func (req *ABCIQueryRequest) ToABCIRequestQuery() *abci.QueryRequest {
+	return &abci.QueryRequest{
 		Data:   req.Data,
 		Path:   req.Path,
 		Height: req.Height,

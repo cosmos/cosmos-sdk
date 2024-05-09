@@ -19,6 +19,7 @@ import (
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
+	consensustypes "cosmossdk.io/x/consensus/types"
 	minttypes "cosmossdk.io/x/mint/types"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
 	"cosmossdk.io/x/staking"
@@ -35,7 +36,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 var PKs = simtestutil.CreateTestPubKeys(500)

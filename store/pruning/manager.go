@@ -43,7 +43,7 @@ func (e *NegativeHeightsError) Error() string {
 var pruneSnapshotHeightsKey = []byte("s/prunesnapshotheights")
 
 // NewManager returns a new Manager with the given db and logger.
-// The retuned manager uses a pruning strategy of "nothing" which
+// The returned manager uses a pruning strategy of "nothing" which
 // keeps all heights. Users of the Manager may change the strategy
 // by calling SetOptions.
 func NewManager(db dbm.DB, logger log.Logger) *Manager {
@@ -99,7 +99,7 @@ func (m *Manager) SetSnapshotInterval(snapshotInterval uint64) {
 	m.snapshotInterval = snapshotInterval
 }
 
-// GetPruningHeight returns the height which can prune upto if it is able to prune at the given height.
+// GetPruningHeight returns the height which can prune up to if it is able to prune at the given height.
 func (m *Manager) GetPruningHeight(height int64) int64 {
 	if m.opts.GetPruningStrategy() == types.PruningNothing {
 		return 0
@@ -128,7 +128,7 @@ func (m *Manager) GetPruningHeight(height int64) int64 {
 	}
 
 	// the snapshot `m.pruneSnapshotHeights[0]` is already operated,
-	// so we can prune upto `m.pruneSnapshotHeights[0] + int64(m.snapshotInterval) - 1`
+	// so we can prune up to `m.pruneSnapshotHeights[0] + int64(m.snapshotInterval) - 1`
 	snHeight := m.pruneSnapshotHeights[0] + int64(m.snapshotInterval) - 1
 	if snHeight < pruneHeight {
 		return snHeight

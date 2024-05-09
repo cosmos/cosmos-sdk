@@ -13,11 +13,10 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/cosmos-proto/anyutil"
 	"github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/maps"
 	protov2 "google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/protoadapt"
 
 	"cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
@@ -1104,19 +1103,7 @@ func (app *BaseApp) simulateNestedMessages(ctx sdk.Context, msg HasNestedMsgs) e
 func (app *BaseApp) msgsV1ToMsgsV2(msgs []sdk.Msg) ([]protov2.Message, error) {
 	msgsV2 := make([]protov2.Message, len(msgs))
 	for i, msg := range msgs {
-		gogoAny, err := codectypes.NewAnyWithValue(msg)
-		if err != nil {
-			return nil, err
-		}
-		anyMsg := &anypb.Any{
-			TypeUrl: gogoAny.TypeUrl,
-			Value:   gogoAny.Value,
-		}
-		msgV2, err := anyutil.Unpack(anyMsg, app.cdc.InterfaceRegistry().SigningContext().FileResolver(), app.cdc.InterfaceRegistry().SigningContext().TypeResolver())
-		if err != nil {
-			return nil, err
-		}
-		msgsV2[i] = msgV2
+		msgsV2[i] = protoadapt.MessageV2Of(msg)
 	}
 
 	return msgsV2, nil

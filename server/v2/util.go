@@ -20,9 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 )
 
-// ContextKey defines the context key used to retrieve a server.Context from
-// a command's Context.
-
 var _ corectx.ServerContext = &Context{}
 
 // Context server context
@@ -34,7 +31,6 @@ type Context struct {
 
 func (ctx *Context) GetConfig() *cmtcfg.Config {
 	return GetCometConfigFromViper(ctx.Viper)
-
 }
 
 func (ctx *Context) GetLogger() log.Logger {
@@ -45,13 +41,19 @@ func (ctx *Context) GetViper() *viper.Viper {
 	return ctx.Viper
 }
 
+// Set rootdir to viper
+func (ctx *Context) SetRoot(rootDir string) {
+	ctx.GetViper().Set(FlagHome, rootDir)
+}
+
 func GetCometConfigFromViper(v *viper.Viper) *cmtcfg.Config {
 	conf := cmtcfg.DefaultConfig()
 	err := v.Unmarshal(conf)
+	rootDir := v.GetString(FlagHome)
 	if err != nil {
-		return cmtcfg.DefaultConfig()
+		return cmtcfg.DefaultConfig().SetRoot(rootDir)
 	}
-	return conf
+	return conf.SetRoot(rootDir)
 }
 
 // InterceptConfigsPreRunHandler is identical to InterceptConfigsAndCreateContext

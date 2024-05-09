@@ -6,6 +6,7 @@ const (
 	FlagLogFormat  = "log_format"
 	FlagLogNoColor = "log_no_color"
 	FlagTrace      = "trace"
+	FlagHome       = "home"
 
 	OutputFormatJSON = "json"
 )

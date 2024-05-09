@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/core/address"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 )
 
@@ -64,6 +65,30 @@ func TestNewBech32Codec(t *testing.T) {
 			assert.DeepEqual(t, accAddr, cachedStrAddr)
 		})
 	}
+}
+
+func TestMultipleBech32Codec(t *testing.T) {
+	cosmosAc, ok := NewBech32Codec("cosmos").(cachedBech32Codec)
+	assert.Assert(t, ok)
+	stakeAc := NewBech32Codec("stake").(cachedBech32Codec)
+	assert.Assert(t, ok)
+	assert.Equal(t, cosmosAc.cache, stakeAc.cache)
+
+	addr := secp256k1.GenPrivKey().PubKey().Address()
+	cosmosAddr, err := cosmosAc.BytesToString(addr)
+	assert.NilError(t, err)
+	stakeAddr, err := stakeAc.BytesToString(addr)
+	assert.NilError(t, err)
+	assert.Assert(t, cosmosAddr != stakeAddr)
+
+	cachedCosmosAddr, err := cosmosAc.BytesToString(addr)
+	assert.NilError(t, err)
+	assert.Equal(t, cosmosAddr, cachedCosmosAddr)
+
+	cachedStakeAddr, err := stakeAc.BytesToString(addr)
+	assert.NilError(t, err)
+	assert.Equal(t, stakeAddr, cachedStakeAddr)
+
 }
 
 func TestBech32CodecRace(t *testing.T) {

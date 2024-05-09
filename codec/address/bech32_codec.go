@@ -132,7 +132,8 @@ func (bc Bech32Codec) BytesToString(bz []byte) (string, error) {
 }
 
 func (cbc cachedBech32Codec) BytesToString(bz []byte) (string, error) {
-	key := conv.UnsafeBytesToStr(bz)
+	// caches prefix is added to the key to make sure keys are unique in case codecs with different bech32 prefix are defined.
+	key := cbc.codec.Bech32Prefix + conv.UnsafeBytesToStr(bz)
 	cbc.mu.Lock()
 	defer cbc.mu.Unlock()
 

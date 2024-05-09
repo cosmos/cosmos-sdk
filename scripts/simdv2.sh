@@ -4,13 +4,13 @@ set -o errexit
 set -o nounset
 set -x
 
-rm -rf $HOME/.simapp
+rm -rf $HOME/.simappv2
 
 ROOT=$PWD
-SIMD="${SIMD:-go run ./v2/simdv2/main.go}"
-CONFIG="${CONFIG:-$HOME/.simapp/config}"
+cd "$ROOT"/simapp/v2
+SIMD="${SIMD:-go run simdv2/main.go}"
+CONFIG="${CONFIG:-$HOME/.simappv2/config}"
 
-cd simapp
 $SIMD init aurn-node --chain-id aurn-chain
 
 cd $CONFIG
@@ -25,7 +25,7 @@ jq '.app_state.gov.voting_params.voting_period = "600s"' genesis.json > temp.jso
 # to change the inflation
 jq '.app_state.mint.minter.inflation = "0.300000000000000000"' genesis.json > temp.json && mv temp.json genesis.json
 
-cd "$ROOT"/simapp
+cd "$ROOT"/simapp/v2/
 $SIMD keys add test_validator --keyring-backend test
 VALIDATOR_ADDRESS=$($SIMD keys show test_validator -a --keyring-backend test)
 
@@ -33,8 +33,7 @@ $SIMD genesis add-genesis-account "$VALIDATOR_ADDRESS" 1000000000stake
 $SIMD genesis gentx test_validator 1000000000stake --keyring-backend test
 $SIMD genesis collect-gentxs
 
-cd v2/simdv2/
-go run main.go start
+$SIMD start
 
 # Comment since its not working for now
 # # Wait to chain start then query block

@@ -243,15 +243,15 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 	memService := stf.NewMemoryStoreService([]byte(memStoreKey))
 
 	env := appmodulev2.Environment{
-		Logger:          logger,
-		BranchService:   nil, // TODO
-		EventService:    stf.NewEventService(),
-		GasService:      stf.NewGasMeterService(),
-		HeaderService:   stf.HeaderService{},
-		RouterService:   stf.NewRouterService(kvService, appBuilder.app.queryRouterBuilder, appBuilder.app.msgRouterBuilder),
-		KVStoreService:  kvService,
-		MemStoreService: memService,
-    TransactionService: services.NewContextAwareTransactionService(),
+		Logger:             logger,
+		BranchService:      nil, // TODO
+		EventService:       stf.NewEventService(),
+		GasService:         stf.NewGasMeterService(),
+		HeaderService:      stf.HeaderService{},
+		RouterService:      stf.NewRouterService(appBuilder.app.queryRouterBuilder, appBuilder.app.msgRouterBuilder),
+		KVStoreService:     kvService,
+		MemStoreService:    memService,
+		TransactionService: services.NewContextAwareTransactionService(),
 	}
 
 	return env, kvService, memService

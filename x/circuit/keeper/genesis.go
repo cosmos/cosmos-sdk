@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	context "context"
+	"context"
 
 	"cosmossdk.io/x/circuit/types"
 )

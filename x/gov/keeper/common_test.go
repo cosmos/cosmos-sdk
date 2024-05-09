@@ -43,7 +43,7 @@ var (
 // See: https://github.com/cosmos/cosmos-sdk/blob/0e34478eb7420b69869ed50f129fc274a97a9b06/x/mint/types/keys.go#L13
 const (
 	mintModuleName     = "mint"
-	protocolModuleName = "protocol-pool"
+	protocolModuleName = "protocolpool"
 )
 
 // getTestProposal creates and returns a test proposal message.
@@ -77,7 +77,14 @@ type mocks struct {
 }
 
 func mockAccountKeeperExpectations(ctx sdk.Context, m mocks) {
-	m.acctKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(govAcct).AnyTimes()
+	m.acctKeeper.EXPECT().GetModuleAddress(types.ModuleName).DoAndReturn(func(name string) sdk.AccAddress {
+		if name == types.ModuleName {
+			return govAcct
+		} else if name == protocolModuleName {
+			return poolAcct
+		}
+		panic(fmt.Sprintf("unexpected module name: %s", name))
+	}).AnyTimes()
 	m.acctKeeper.EXPECT().GetModuleAddress(protocolModuleName).Return(poolAcct).AnyTimes()
 	m.acctKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).AnyTimes()
 	m.acctKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
@@ -150,6 +157,75 @@ func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 
 	// Gov keeper initializations
 	govKeeper := keeper.NewKeeper(encCfg.Codec, environment, m.acctKeeper, m.bankKeeper, m.stakingKeeper, m.poolKeeper, keeper.DefaultConfig(), govAddr)
+	require.NoError(t, govKeeper.ProposalID.Set(ctx, 1))
+	govRouter := v1beta1.NewRouter() // Also register legacy gov handlers to test them too.
+	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)
+	govKeeper.SetLegacyRouter(govRouter)
+	err = govKeeper.Params.Set(ctx, v1.DefaultParams())
+	require.NoError(t, err)
+	err = govKeeper.Constitution.Set(ctx, "constitution")
+	require.NoError(t, err)
+
+	// Register all handlers for the MegServiceRouter.
+	v1.RegisterMsgServer(baseApp.MsgServiceRouter(), keeper.NewMsgServerImpl(govKeeper))
+	banktypes.RegisterMsgServer(baseApp.MsgServiceRouter(), nil) // Nil is fine here as long as we never execute the proposal's Msgs.
+
+	return govKeeper, m, encCfg, ctx
+}
+
+// setupGovKeeperWithMaxVoteOptionsLen creates a govKeeper with a defined maxVoteOptionsLen, as well as all its dependencies.
+func setupGovKeeperWithMaxVoteOptionsLen(t *testing.T, maxVoteOptionsLen uint64, expectations ...func(sdk.Context, mocks)) (
+	*keeper.Keeper,
+	mocks,
+	moduletestutil.TestEncodingConfig,
+	sdk.Context,
+) {
+	t.Helper()
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
+	v1.RegisterInterfaces(encCfg.InterfaceRegistry)
+	v1beta1.RegisterInterfaces(encCfg.InterfaceRegistry)
+	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
+
+	baseApp := baseapp.NewBaseApp(
+		"authz",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+	baseApp.SetCMS(testCtx.CMS)
+	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+
+	environment := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(baseApp.GRPCQueryRouter(), baseApp.MsgServiceRouter()))
+
+	// gomock initializations
+	ctrl := gomock.NewController(t)
+	m := mocks{
+		acctKeeper:    govtestutil.NewMockAccountKeeper(ctrl),
+		bankKeeper:    govtestutil.NewMockBankKeeper(ctrl),
+		stakingKeeper: govtestutil.NewMockStakingKeeper(ctrl),
+		poolKeeper:    govtestutil.NewMockPoolKeeper(ctrl),
+	}
+	if len(expectations) == 0 {
+		err := mockDefaultExpectations(ctx, m)
+		require.NoError(t, err)
+	} else {
+		for _, exp := range expectations {
+			exp(ctx, m)
+		}
+	}
+
+	govAddr, err := m.acctKeeper.AddressCodec().BytesToString(govAcct)
+	require.NoError(t, err)
+
+	config := keeper.DefaultConfig()
+	config.MaxVoteOptionsLen = maxVoteOptionsLen
+
+	// Gov keeper initializations
+	govKeeper := keeper.NewKeeper(encCfg.Codec, environment, m.acctKeeper, m.bankKeeper, m.stakingKeeper, m.poolKeeper, config, govAddr)
 	require.NoError(t, govKeeper.ProposalID.Set(ctx, 1))
 	govRouter := v1beta1.NewRouter() // Also register legacy gov handlers to test them too.
 	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)

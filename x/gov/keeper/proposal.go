@@ -39,7 +39,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		}
 	}
 
-	msgs := []string{} // will hold a string slice of all Msg type URLs.
+	msgs := make([]string, 0, len(messages)) // will hold a string slice of all Msg type URLs.
 
 	// Loop through all messages and confirm that each has a handler and the gov module account as the only signer
 	for _, msg := range messages {

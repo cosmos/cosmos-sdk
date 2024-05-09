@@ -162,7 +162,7 @@ func TestRandomIntBetween(t *testing.T) {
 		max  int
 	}{
 		{"random int between 0 and 10", rand.New(rand.NewSource(0)), 0, 10},
-		{"random int between 11 ans 1000", rand.New(rand.NewSource(1)), 11, 1000},
+		{"random int between 11 and 1000", rand.New(rand.NewSource(1)), 11, 1000},
 		{"random int between 10001 and 100000", rand.New(rand.NewSource(-1)), 1001, 10000},
 	}
 	for _, tt := range tests {

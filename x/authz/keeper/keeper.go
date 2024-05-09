@@ -20,7 +20,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// TODO: Revisit this once we have propoer gas fee framework.
+// TODO: Revisit this once we have proper gas fee framework.
 // Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054,
 // https://github.com/cosmos/cosmos-sdk/discussions/9072
 const gasCostPerIteration = uint64(20)
@@ -256,6 +256,31 @@ func (k Keeper) DeleteGrant(ctx context.Context, grantee, granter sdk.AccAddress
 	})
 }
 
+// DeleteAllGrants revokes all authorizations granted to the grantee by the granter.
+func (k Keeper) DeleteAllGrants(ctx context.Context, granter sdk.AccAddress) error {
+	var keysToDelete [][]byte
+
+	err := k.IterateGranterGrants(ctx, granter, func(grantee sdk.AccAddress, msgType string) (stop bool, err error) {
+		keysToDelete = append(keysToDelete, grantStoreKey(grantee, granter, msgType))
+		return false, nil
+	})
+	if err != nil {
+		return err
+	}
+	if len(keysToDelete) == 0 {
+		return errorsmod.Wrapf(authz.ErrNoAuthorizationFound, "no grants found for granter %s", granter)
+	}
+	for _, key := range keysToDelete {
+		_, granteeAddr, msgType := parseGrantStoreKey(key)
+		if err := k.DeleteGrant(ctx, granteeAddr, granter, msgType); err != nil {
+			return err
+		}
+	}
+	return k.EventService.EventManager(ctx).Emit(&authz.EventRevokeAll{
+		Granter: granter.String(),
+	})
+}
+
 // GetAuthorizations Returns list of `Authorizations` granted to the grantee by the granter.
 func (k Keeper) GetAuthorizations(ctx context.Context, grantee, granter sdk.AccAddress) ([]authz.Authorization, error) {
 	store := runtime.KVStoreAdapter(k.KVStoreService.OpenKVStore(ctx))
@@ -315,6 +340,29 @@ func (k Keeper) IterateGrants(ctx context.Context,
 		granterAddr, granteeAddr, _ := parseGrantStoreKey(iter.Key())
 		k.cdc.MustUnmarshal(iter.Value(), &grant)
 		ok, err := handler(granterAddr, granteeAddr, grant)
+		if err != nil {
+			return err
+		}
+		if ok {
+			break
+		}
+	}
+	return nil
+}
+
+func (k Keeper) IterateGranterGrants(ctx context.Context, granter sdk.AccAddress,
+	handler func(granteeAddr sdk.AccAddress, msgType string) (stop bool, err error),
+) error {
+	// no-op if handler is nil
+	if handler == nil {
+		return nil
+	}
+	store := runtime.KVStoreAdapter(k.KVStoreService.OpenKVStore(ctx))
+	iter := storetypes.KVStorePrefixIterator(store, granterStoreKey(granter))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		_, granteeAddr, msgType := parseGrantStoreKey(iter.Key())
+		ok, err := handler(granteeAddr, msgType)
 		if err != nil {
 			return err
 		}

@@ -11,6 +11,7 @@ import (
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/14647
 	_ "cosmossdk.io/api/cosmos/bank/v1beta1"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
@@ -22,7 +23,9 @@ import (
 	authtestutil "cosmossdk.io/x/auth/testutil"
 	txtestutil "cosmossdk.io/x/auth/tx/testutil"
 	"cosmossdk.io/x/auth/types"
+	consensustypes "cosmossdk.io/x/consensus/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -30,6 +33,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	_ "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,16 +49,18 @@ type TestAccount struct {
 
 // AnteTestSuite is a test suite to be used with ante handler tests.
 type AnteTestSuite struct {
-	anteHandler    sdk.AnteHandler
-	ctx            sdk.Context
-	clientCtx      client.Context
-	txBuilder      client.TxBuilder
-	accountKeeper  keeper.AccountKeeper
-	bankKeeper     *authtestutil.MockBankKeeper
-	acctsModKeeper *authtestutil.MockAccountsModKeeper
-	txBankKeeper   *txtestutil.MockBankKeeper
-	feeGrantKeeper *antetestutil.MockFeegrantKeeper
-	encCfg         moduletestutil.TestEncodingConfig
+	env             appmodule.Environment
+	anteHandler     sdk.AnteHandler
+	ctx             sdk.Context
+	clientCtx       client.Context
+	txBuilder       client.TxBuilder
+	accountKeeper   keeper.AccountKeeper
+	bankKeeper      *authtestutil.MockBankKeeper
+	consensusKeeper *antetestutil.MockConsensusKeeper
+	acctsModKeeper  *authtestutil.MockAccountsModKeeper
+	txBankKeeper    *txtestutil.MockBankKeeper
+	feeGrantKeeper  *antetestutil.MockFeegrantKeeper
+	encCfg          moduletestutil.TestEncodingConfig
 }
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
@@ -82,6 +88,17 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 		"random":                 {"random"},
 	}
 
+	msgRouter := baseapp.NewMsgServiceRouter()
+	grpcQueryRouter := baseapp.NewGRPCQueryRouter()
+	grpcQueryRouter.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
+
+	suite.consensusKeeper = antetestutil.NewMockConsensusKeeper(ctrl)
+	suite.consensusKeeper.EXPECT().Params(gomock.Any(), gomock.Any()).Return(&consensustypes.QueryParamsResponse{
+		Params: simtestutil.DefaultConsensusParams,
+	}, nil).AnyTimes()
+	consensustypes.RegisterQueryServer(grpcQueryRouter, suite.consensusKeeper)
+
+	suite.env = runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger(), runtime.EnvWithRouterService(grpcQueryRouter, msgRouter))
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger()), suite.encCfg.Codec, types.ProtoBaseAccount, suite.acctsModKeeper, maccPerms, authcodec.NewBech32Codec("cosmos"),
 		sdk.Bech32MainPrefix, types.NewModuleAddress("gov").String(),
@@ -96,7 +113,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 
 	suite.clientCtx = client.Context{}.
 		WithTxConfig(suite.encCfg.TxConfig).
-		WithClient(clitestutil.NewMockCometRPC(abci.ResponseQuery{}))
+		WithClient(clitestutil.NewMockCometRPC(abci.QueryResponse{}))
 
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
@@ -105,6 +122,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 			FeegrantKeeper:  suite.feeGrantKeeper,
 			SignModeHandler: suite.encCfg.TxConfig.SignModeHandler(),
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			Environment:     suite.env,
 		},
 	)
 

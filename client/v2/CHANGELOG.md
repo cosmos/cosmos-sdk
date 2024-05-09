@@ -43,9 +43,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18626](https://github.com/cosmos/cosmos-sdk/pull/18626) Support for off-chain signing and verification of a file.
 * [#18461](https://github.com/cosmos/cosmos-sdk/pull/18461) Support governance proposals.
 * [#19039](https://github.com/cosmos/cosmos-sdk/pull/19039) Add support for pubkey in autocli.
+* [#20266](https://github.com/cosmos/cosmos-sdk/pull/20266) Ability to override the short description in AutoCLI-generated top-level commands.
 
 ### Improvements
 
+* [#20083](https://github.com/cosmos/cosmos-sdk/pull/20083) Integrate latest version of cosmos-proto and improve version filtering.
 * [#19618](https://github.com/cosmos/cosmos-sdk/pull/19618) Marshal enum as string in queries.
 * [#19060](https://github.com/cosmos/cosmos-sdk/pull/19060) Use client context from root (or enhanced) command in autocli commands.
   * Note, the given command must have a `client.Context` in its context.

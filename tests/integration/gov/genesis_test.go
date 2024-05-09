@@ -20,6 +20,7 @@ import (
 	_ "cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/consensus"
 	"cosmossdk.io/x/gov"
 	"cosmossdk.io/x/gov/keeper"
 	"cosmossdk.io/x/gov/types"
@@ -33,7 +34,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 )
 
 type suite struct {
@@ -74,7 +74,7 @@ func TestImportExportQueues(t *testing.T) {
 	ctx := s1.app.BaseApp.NewContext(false)
 	addrs := simtestutil.AddTestAddrs(s1.BankKeeper, s1.StakingKeeper, ctx, 1, valTokens)
 
-	_, err = s1.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = s1.app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: s1.app.LastBlockHeight() + 1,
 	})
 	assert.NilError(t, err)
@@ -140,7 +140,7 @@ func TestImportExportQueues(t *testing.T) {
 	assert.NilError(t, err)
 
 	_, err = s2.app.InitChain(
-		&abci.RequestInitChain{
+		&abci.InitChainRequest{
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: simtestutil.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
@@ -148,12 +148,12 @@ func TestImportExportQueues(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	_, err = s2.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = s2.app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: s2.app.LastBlockHeight() + 1,
 	})
 	assert.NilError(t, err)
 
-	_, err = s2.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = s2.app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: s2.app.LastBlockHeight() + 1,
 	})
 	assert.NilError(t, err)

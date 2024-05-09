@@ -130,6 +130,8 @@ func (suite *SimTestSuite) TestSimulateCreateGroup() {
 	accounts := suite.getTestingAccounts(r, 1)
 
 	acc := accounts[0]
+	accAddr, err := suite.accountKeeper.AddressCodec().BytesToString(acc.Address)
+	suite.Require().NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgCreateGroup(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper)
@@ -140,7 +142,7 @@ func (suite *SimTestSuite) TestSimulateCreateGroup() {
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal(acc.Address.String(), msg.Admin)
+	suite.Require().Equal(accAddr, msg.Admin)
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -151,6 +153,8 @@ func (suite *SimTestSuite) TestSimulateCreateGroupWithPolicy() {
 	accounts := suite.getTestingAccounts(r, 1)
 
 	acc := accounts[0]
+	accAddr, err := suite.accountKeeper.AddressCodec().BytesToString(acc.Address)
+	suite.Require().NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgCreateGroupWithPolicy(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper)
@@ -161,7 +165,7 @@ func (suite *SimTestSuite) TestSimulateCreateGroupWithPolicy() {
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal(acc.Address.String(), msg.Admin)
+	suite.Require().Equal(accAddr, msg.Admin)
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -171,14 +175,16 @@ func (suite *SimTestSuite) TestSimulateCreateGroupPolicy() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 1)
 	acc := accounts[0]
+	accAddr, err := suite.accountKeeper.AddressCodec().BytesToString(acc.Address)
+	suite.Require().NoError(err)
 
 	// setup a group
-	_, err := suite.groupKeeper.CreateGroup(suite.ctx,
+	_, err = suite.groupKeeper.CreateGroup(suite.ctx,
 		&group.MsgCreateGroup{
-			Admin: acc.Address.String(),
+			Admin: accAddr,
 			Members: []group.MemberRequest{
 				{
-					Address: acc.Address.String(),
+					Address: accAddr,
 					Weight:  "1",
 				},
 			},
@@ -195,7 +201,7 @@ func (suite *SimTestSuite) TestSimulateCreateGroupPolicy() {
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal(acc.Address.String(), msg.Admin)
+	suite.Require().Equal(accAddr, msg.Admin)
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -205,15 +211,17 @@ func (suite *SimTestSuite) TestSimulateSubmitProposal() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 1)
 	acc := accounts[0]
+	accAddr, err := suite.accountKeeper.AddressCodec().BytesToString(acc.Address)
+	suite.Require().NoError(err)
 
 	// setup a group
 	ctx := suite.ctx
 	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
 		&group.MsgCreateGroup{
-			Admin: acc.Address.String(),
+			Admin: accAddr,
 			Members: []group.MemberRequest{
 				{
-					Address: acc.Address.String(),
+					Address: accAddr,
 					Weight:  "1",
 				},
 			},
@@ -223,7 +231,7 @@ func (suite *SimTestSuite) TestSimulateSubmitProposal() {
 
 	// setup a group account
 	accountReq := &group.MsgCreateGroupPolicy{
-		Admin:   acc.Address.String(),
+		Admin:   accAddr,
 		GroupId: groupRes.GroupId,
 	}
 	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
@@ -250,10 +258,12 @@ func (suite *SimTestSuite) TestWithdrawProposal() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 	acc := accounts[0]
+	accAddr, err := suite.accountKeeper.AddressCodec().BytesToString(acc.Address)
+	suite.Require().NoError(err)
 
 	// setup a group
 	ctx := suite.ctx
-	addr := acc.Address.String()
+	addr := accAddr
 	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
 		&group.MsgCreateGroup{
 			Admin: addr,
@@ -308,10 +318,12 @@ func (suite *SimTestSuite) TestSimulateVote() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 1)
 	acc := accounts[0]
+	accAddr, err := suite.accountKeeper.AddressCodec().BytesToString(acc.Address)
+	suite.Require().NoError(err)
 
 	// setup a group
 	ctx := suite.ctx
-	addr := acc.Address.String()
+	addr := accAddr
 	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
 		&group.MsgCreateGroup{
 			Admin: addr,
@@ -367,10 +379,12 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 1)
 	acc := accounts[0]
+	accAddr, err := suite.accountKeeper.AddressCodec().BytesToString(acc.Address)
+	suite.Require().NoError(err)
 
 	// setup a group
 	ctx := suite.ctx
-	addr := acc.Address.String()
+	addr := accAddr
 	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
 		&group.MsgCreateGroup{
 			Admin: addr,
@@ -434,14 +448,16 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupAdmin() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 2)
 	acc := accounts[0]
+	accAddr, err := suite.accountKeeper.AddressCodec().BytesToString(acc.Address)
+	suite.Require().NoError(err)
 
 	// setup a group
-	_, err := suite.groupKeeper.CreateGroup(suite.ctx,
+	_, err = suite.groupKeeper.CreateGroup(suite.ctx,
 		&group.MsgCreateGroup{
-			Admin: acc.Address.String(),
+			Admin: accAddr,
 			Members: []group.MemberRequest{
 				{
-					Address: acc.Address.String(),
+					Address: accAddr,
 					Weight:  "1",
 				},
 			},
@@ -458,7 +474,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupAdmin() {
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal(acc.Address.String(), msg.Admin)
+	suite.Require().Equal(accAddr, msg.Admin)
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -468,14 +484,16 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupMetadata() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 2)
 	acc := accounts[0]
+	accAddr, err := suite.accountKeeper.AddressCodec().BytesToString(acc.Address)
+	suite.Require().NoError(err)
 
 	// setup a group
-	_, err := suite.groupKeeper.CreateGroup(suite.ctx,
+	_, err = suite.groupKeeper.CreateGroup(suite.ctx,
 		&group.MsgCreateGroup{
-			Admin: acc.Address.String(),
+			Admin: accAddr,
 			Members: []group.MemberRequest{
 				{
-					Address: acc.Address.String(),
+					Address: accAddr,
 					Weight:  "1",
 				},
 			},
@@ -492,7 +510,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupMetadata() {
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal(acc.Address.String(), msg.Admin)
+	suite.Require().Equal(accAddr, msg.Admin)
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -502,14 +520,16 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupMembers() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 2)
 	acc := accounts[0]
+	accAddr, err := suite.accountKeeper.AddressCodec().BytesToString(acc.Address)
+	suite.Require().NoError(err)
 
 	// setup a group
-	_, err := suite.groupKeeper.CreateGroup(suite.ctx,
+	_, err = suite.groupKeeper.CreateGroup(suite.ctx,
 		&group.MsgCreateGroup{
-			Admin: acc.Address.String(),
+			Admin: accAddr,
 			Members: []group.MemberRequest{
 				{
-					Address: acc.Address.String(),
+					Address: accAddr,
 					Weight:  "1",
 				},
 			},
@@ -526,7 +546,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupMembers() {
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal(acc.Address.String(), msg.Admin)
+	suite.Require().Equal(accAddr, msg.Admin)
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -536,15 +556,17 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyAdmin() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 2)
 	acc := accounts[0]
+	accAddr, err := suite.accountKeeper.AddressCodec().BytesToString(acc.Address)
+	suite.Require().NoError(err)
 
 	// setup a group
 	ctx := suite.ctx
 	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
 		&group.MsgCreateGroup{
-			Admin: acc.Address.String(),
+			Admin: accAddr,
 			Members: []group.MemberRequest{
 				{
-					Address: acc.Address.String(),
+					Address: accAddr,
 					Weight:  "1",
 				},
 			},
@@ -554,7 +576,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyAdmin() {
 
 	// setup a group account
 	accountReq := &group.MsgCreateGroupPolicy{
-		Admin:   acc.Address.String(),
+		Admin:   accAddr,
 		GroupId: groupRes.GroupId,
 	}
 	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
@@ -581,15 +603,17 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyDecisionPolicy() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 2)
 	acc := accounts[0]
+	accAddr, err := suite.accountKeeper.AddressCodec().BytesToString(acc.Address)
+	suite.Require().NoError(err)
 
 	// setup a group
 	ctx := suite.ctx
 	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
 		&group.MsgCreateGroup{
-			Admin: acc.Address.String(),
+			Admin: accAddr,
 			Members: []group.MemberRequest{
 				{
-					Address: acc.Address.String(),
+					Address: accAddr,
 					Weight:  "1",
 				},
 			},
@@ -599,7 +623,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyDecisionPolicy() {
 
 	// setup a group account
 	accountReq := &group.MsgCreateGroupPolicy{
-		Admin:   acc.Address.String(),
+		Admin:   accAddr,
 		GroupId: groupRes.GroupId,
 	}
 	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
@@ -626,15 +650,17 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyMetadata() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 2)
 	acc := accounts[0]
+	accAddr, err := suite.accountKeeper.AddressCodec().BytesToString(acc.Address)
+	suite.Require().NoError(err)
 
 	// setup a group
 	ctx := suite.ctx
 	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
 		&group.MsgCreateGroup{
-			Admin: acc.Address.String(),
+			Admin: accAddr,
 			Members: []group.MemberRequest{
 				{
-					Address: acc.Address.String(),
+					Address: accAddr,
 					Weight:  "1",
 				},
 			},
@@ -644,7 +670,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyMetadata() {
 
 	// setup a group account
 	accountReq := &group.MsgCreateGroupPolicy{
-		Admin:   acc.Address.String(),
+		Admin:   accAddr,
 		GroupId: groupRes.GroupId,
 	}
 	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
@@ -673,26 +699,31 @@ func (suite *SimTestSuite) TestSimulateLeaveGroup() {
 	// setup 4 account
 	accounts := suite.getTestingAccounts(r, 4)
 	admin := accounts[0]
-	member1 := accounts[1]
-	member2 := accounts[2]
-	member3 := accounts[3]
+	adminAddr, err := suite.accountKeeper.AddressCodec().BytesToString(admin.Address)
+	suite.Require().NoError(err)
+	member1, err := suite.accountKeeper.AddressCodec().BytesToString(accounts[1].Address)
+	suite.Require().NoError(err)
+	member2, err := suite.accountKeeper.AddressCodec().BytesToString(accounts[2].Address)
+	suite.Require().NoError(err)
+	member3, err := suite.accountKeeper.AddressCodec().BytesToString(accounts[3].Address)
+	suite.Require().NoError(err)
 
 	// setup a group
 	ctx := suite.ctx
 	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
 		&group.MsgCreateGroup{
-			Admin: admin.Address.String(),
+			Admin: adminAddr,
 			Members: []group.MemberRequest{
 				{
-					Address: member1.Address.String(),
+					Address: member1,
 					Weight:  "1",
 				},
 				{
-					Address: member2.Address.String(),
+					Address: member2,
 					Weight:  "2",
 				},
 				{
-					Address: member3.Address.String(),
+					Address: member3,
 					Weight:  "1",
 				},
 			},
@@ -702,7 +733,7 @@ func (suite *SimTestSuite) TestSimulateLeaveGroup() {
 
 	// setup a group account
 	accountReq := &group.MsgCreateGroupPolicy{
-		Admin:    admin.Address.String(),
+		Admin:    adminAddr,
 		GroupId:  groupRes.GroupId,
 		Metadata: "",
 	}

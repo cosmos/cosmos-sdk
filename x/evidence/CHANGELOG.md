@@ -27,8 +27,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Api Breaking Changes
 
+* [#20238](https://github.com/cosmos/cosmos-sdk/pull/20238) `NewAppModule` now takes in a `core/comet.Service` an argument.  `BeginBlocker` now takes in a `core/comet.Service`.
+* [#20016](https://github.com/cosmos/cosmos-sdk/pull/20016) `NewMsgSubmitEvidence` now takes a string as argument instead of an `AccAddress`.
 * [#19482](https://github.com/cosmos/cosmos-sdk/pull/19482) `appmodule.Environment` is passed to `NewKeeper` instead of individual services
 * [#19627](https://github.com/cosmos/cosmos-sdk/pull/19627) `NewAppModule` now takes in a `codec.Codec` as its first argument
+
+
+## [v0.1.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/evidence/v0.1.1) - 2024-04-22
+
+### Improvements
+
+* (deps) [#19810](https://github.com/cosmos/cosmos-sdk/pull/19810) Upgrade SDK version due to Prometheus breaking change.
+* (deps) [#19810](https://github.com/cosmos/cosmos-sdk/pull/19810) Bump `cosmossdk.io/store` to v1.1.0.
 
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/evidence/v0.1.0) - 2023-11-07
 
@@ -39,7 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
-* [#16008](https://github.com/cosmos/cosmos-sdk/pull/16008) NewKeeper now takes in a KVStoreService instead of KVStoreKey, most functions use context.Context instead of sdk.Context and `IterateEvidence` callback function now returns an error to stop interation (`errors.ErrStopIterating`).
+* [#16008](https://github.com/cosmos/cosmos-sdk/pull/16008) NewKeeper now takes in a KVStoreService instead of KVStoreKey, most functions use context.Context instead of sdk.Context and `IterateEvidence` callback function now returns an error to stop iteration (`errors.ErrStopIterating`).
 * (keeper) [#15825](https://github.com/cosmos/cosmos-sdk/pull/15825) Evidence constructor now requires an `address.Codec` (`import "cosmossdk.io/core/address"`)
 * [#16336](https://github.com/cosmos/cosmos-sdk/pull/16336) Use collections for state management:
     * Removed: keeper `SetEvidence`, `GetEvidence`, `IterateEvidences`, `GetAllEvidences`, `MustMarshalEvidence`, `MustUnmarshalEvidence`, `MarshalEvidence`, `UnmarshalEvidence`

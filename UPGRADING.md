@@ -61,6 +61,10 @@ For non depinject users, simply call `RegisterLegacyAminoCodec` and `RegisterInt
 
 Additionally, thanks to the genesis simplification, as explained in [the genesis interface update](#genesis-interface), the module manager `InitGenesis` and `ExportGenesis` methods do not require the codec anymore.
 
+##### GRPC-WEB
+
+Grpc-web embedded client has been removed from the server. If you would like to use grpc-web, you can use the [envoy proxy](https://www.envoyproxy.io/docs/envoy/latest/start/start).
+
 ##### AnteHandlers
 
 The `GasConsumptionDecorator` and `IncreaseSequenceDecorator` have been merged with the SigVerificationDecorator, so you'll
@@ -148,9 +152,39 @@ There is no longer a need for the Cosmos SDK to host these protos for itself and
 That package containing proto v2 generated code, but the SDK now uses [buf generated go SDK instead](https://buf.build/docs/bsr/generated-sdks/go).
 If you were depending on `cosmossdk.io/api/tendermint`, please use the buf generated go SDK instead, or ask CometBFT host the generated proto v2 code.
 
+The `codectypes.Any` has moved to `github.com/cosmos/gogoproto/types/any`. Module developers can update the `buf.gen.gogo.yaml` configuration files by adjusting the corresponding `opt` option to `Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any` for directly mapping the`Any` type to its new location. This change is optional as `codectypes.Any` is aliased to `gogoproto.Any` in the SDK.
+
 ### Modules
 
 #### `**all**`
+
+##### Core API
+
+Core API has been introduced for modules since v0.47. With the deprecation of `sdk.Context`, we strongly recommend to use the `cosmossdk.io/core/appmodule` interfaces for the modules. This will allow the modules to work out of the box with server/v2 and baseapp, as well as limit their dependencies on the SDK.
+
+Additionally, the `appmodule.Environment` struct is introduced to fetch different services from the application.
+This should be used as an alternative to using `sdk.UnwrapContext(ctx)` to fetch the services.
+It needs to be passed into a module at instantiation (or depinject will inject the correct environment). 
+
+`x/circuit` is used as an example:
+
+```go
+app.CircuitKeeper = circuitkeeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[circuittypes.StoreKey]), logger.With(log.ModuleKey, "x/circuit")), appCodec, authtypes.NewModuleAddress(govtypes.ModuleName).String(), app.AuthKeeper.AddressCodec())
+```
+
+If your module requires a message server or query server, it should be passed in the environment as well.
+
+```diff
+-govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[govtypes.StoreKey]), app.AuthKeeper, app.BankKeeper,app.StakingKeeper, app.PoolKeeper, app.MsgServiceRouter(), govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
++govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[govtypes.StoreKey]), logger.With(log.ModuleKey, "x/circuit"), runtime.EnvWithRouterService(app.GRPCQueryRouter(), app.MsgServiceRouter())), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper, govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+```
+
+The signature of the extension interface `HasRegisterInterfaces` has been changed to accept a `cosmossdk.io/core/registry.InterfaceRegistrar` instead of a `codec.InterfaceRegistry`.   `HasRegisterInterfaces` is now a part of `cosmossdk.io/core/appmodule`.  Modules should update their `HasRegisterInterfaces` implementation to accept a `cosmossdk.io/core/registry.InterfaceRegistrar` interface.
+
+```diff
+-func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
++func (AppModule) RegisterInterfaces(registry registry.InterfaceRegistrar) {
+```
 
 ##### Simulation
 
@@ -160,34 +194,6 @@ been added to avoid the use of the Accounts.String() method.
 ```diff
 -type MsgSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []Account) sdk.Msg
 +type MsgSimulatorFn func(r *rand.Rand, accs []Account, cdc address.Codec) (sdk.Msg, error)
-```
-
-##### Core API
-
-Core API has been introduced for modules since v0.47. With the deprecation of `sdk.Context`, we strongly recommend to use the `cosmossdk.io/core/appmodule` interfaces for the modules. This will allow the modules to work out of the box with server/v2 and baseapp, as well as limit their dependencies on the SDK.
-
-Additionally, the `appmodule.Environment` interface is introduced to fetch different services from the application.
-This should be used as an alternative to using `sdk.UnwrapContext(ctx)` to fetch the services.
-It needs to be passed into a module at instantiation. 
-
-`x/circuit` is used as an example:
-
-```go
-app.CircuitKeeper = circuitkeeper.NewKeeper(runtime.NewEnvironment((keys[circuittypes.StoreKey])), appCodec, authtypes.NewModuleAddress(govtypes.ModuleName).String(), app.AuthKeeper.AddressCodec())
-```
-
-If your module requires a message server or query server, it should be passed in the environment as well.
-
-```diff
--govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[govtypes.StoreKey]), app.AuthKeeper, app.BankKeeper,app.StakingKeeper, app.PoolKeeper, app.MsgServiceRouter(), govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-+govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[govtypes.StoreKey]), logger, runtime.EnvWithRouterService(app.GRPCQueryRouter(), app.MsgServiceRouter())), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper, govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-```
-
-The signature of the extension interface `HasRegisterInterfaces` has been changed to accept a `cosmossdk.io/core/registry.InterfaceRegistrar` instead of a `codec.InterfaceRegistry`.   `HasRegisterInterfaces` is now a part of `cosmossdk.io/core/appmodule`.  Modules should update their `HasRegisterInterfaces` implementation to accept a `cosmossdk.io/core/registry.InterfaceRegistrar` interface.
-
-```diff
--func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-+func (AppModule) RegisterInterfaces(registry registry.InterfaceRegistrar) {
 ```
 
 ##### Dependency Injection
@@ -440,7 +446,7 @@ With the deprecation of the Amino JSON codec defined in [cosmos/gogoproto](https
 
 For core SDK types equivalence is asserted by generative testing of [SignableTypes](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/tests/integration/rapidgen/rapidgen.go#L102) in [TestAminoJSON_Equivalence](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/tests/integration/tx/aminojson/aminojson_test.go#L94).
 
-**TODO: summarize proto annotation requirements.**
+Read more about the available annotations [here](https://docs.cosmos.network/v0.50/build/building-modules/protobuf-annotations).
 
 #### Stringer
 

@@ -16,20 +16,24 @@ import (
 )
 
 func TestEquivocation_Valid(t *testing.T) {
+	consCodec := address.NewBech32Codec("cosmosvalcons")
 	n, _ := time.Parse(time.RFC3339, "2006-01-02T15:04:05Z")
-	addr := sdk.ConsAddress("foo_________________")
+	addr, err := consCodec.BytesToString(sdk.ConsAddress("foo_________________"))
+	require.NoError(t, err)
 
 	e := types.Equivocation{
 		Height:           100,
 		Time:             n,
 		Power:            1000000,
-		ConsensusAddress: addr.String(),
+		ConsensusAddress: addr,
 	}
 
+	consAddr, err := consCodec.BytesToString(e.GetConsensusAddress(consCodec))
+	require.NoError(t, err)
 	require.Equal(t, e.GetTotalPower(), int64(0))
 	require.Equal(t, e.GetValidatorPower(), e.Power)
 	require.Equal(t, e.GetTime(), e.Time)
-	require.Equal(t, e.GetConsensusAddress(address.NewBech32Codec("cosmosvalcons")).String(), e.ConsensusAddress)
+	require.Equal(t, consAddr, e.ConsensusAddress)
 	require.Equal(t, e.GetHeight(), e.Height)
 	require.Equal(t, e.Route(), types.RouteEquivocation)
 	require.Equal(t, strings.ToUpper(hex.EncodeToString(e.Hash())), "1E10F9267BEA3A9A4AB5302C2C510CC1AFD7C54E232DA5B2E3360DFAFACF7A76")
@@ -39,7 +43,7 @@ func TestEquivocation_Valid(t *testing.T) {
 	require.Equal(t, int64(0), e.GetTotalPower())
 	require.Equal(t, e.Power, e.GetValidatorPower())
 	require.Equal(t, e.Time, e.GetTime())
-	require.Equal(t, e.ConsensusAddress, e.GetConsensusAddress(address.NewBech32Codec("cosmosvalcons")).String())
+	require.Equal(t, e.ConsensusAddress, consAddr)
 	require.Equal(t, e.Height, e.GetHeight())
 	require.Equal(t, types.RouteEquivocation, e.Route())
 	require.Equal(t, "1E10F9267BEA3A9A4AB5302C2C510CC1AFD7C54E232DA5B2E3360DFAFACF7A76", strings.ToUpper(hex.EncodeToString(e.Hash())))
@@ -49,7 +53,8 @@ func TestEquivocation_Valid(t *testing.T) {
 
 func TestEquivocationValidateBasic(t *testing.T) {
 	var zeroTime time.Time
-	addr := sdk.ConsAddress("foo_________________")
+	addr, err := address.NewBech32Codec("cosmosvalcons").BytesToString(sdk.ConsAddress("foo_________________"))
+	require.NoError(t, err)
 
 	n, _ := time.Parse(time.RFC3339, "2006-01-02T15:04:05Z")
 	testCases := []struct {
@@ -57,10 +62,10 @@ func TestEquivocationValidateBasic(t *testing.T) {
 		e         types.Equivocation
 		expectErr bool
 	}{
-		{"valid", types.Equivocation{100, n, 1000000, addr.String()}, false},
-		{"invalid time", types.Equivocation{100, zeroTime, 1000000, addr.String()}, true},
-		{"invalid height", types.Equivocation{0, n, 1000000, addr.String()}, true},
-		{"invalid power", types.Equivocation{100, n, 0, addr.String()}, true},
+		{"valid", types.Equivocation{100, n, 1000000, addr}, false},
+		{"invalid time", types.Equivocation{100, zeroTime, 1000000, addr}, true},
+		{"invalid height", types.Equivocation{0, n, 1000000, addr}, true},
+		{"invalid power", types.Equivocation{100, n, 0, addr}, true},
 		{"invalid address", types.Equivocation{100, n, 1000000, ""}, true},
 	}
 

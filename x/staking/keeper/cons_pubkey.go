@@ -22,7 +22,7 @@ func (k Keeper) setConsPubKeyRotationHistory(
 	ctx context.Context, valAddr sdk.ValAddress,
 	oldPubKey, newPubKey *codectypes.Any, fee sdk.Coin,
 ) error {
-	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	headerInfo := k.HeaderService.HeaderInfo(ctx)
 	height := uint64(headerInfo.Height)
 	history := types.ConsPubKeyRotationHistory{
 		OperatorAddress: valAddr.Bytes(),
@@ -219,7 +219,7 @@ func (k Keeper) getAndRemoveAllMaturedRotatedKeys(ctx context.Context, matureTim
 
 // GetBlockConsPubKeyRotationHistory returns the rotation history for the current height.
 func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx context.Context) ([]types.ConsPubKeyRotationHistory, error) {
-	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	headerInfo := k.HeaderService.HeaderInfo(ctx)
 
 	iterator, err := k.RotationHistory.Indexes.Block.MatchExact(ctx, uint64(headerInfo.Height))
 	if err != nil {

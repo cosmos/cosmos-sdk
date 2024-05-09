@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/appmodule"
@@ -38,6 +38,9 @@ type TestSuite struct {
 	ctx       sdk.Context
 	baseApp   *baseapp.BaseApp
 	encCfg    moduletestutil.TestEncodingConfig
+
+	key storetypes.StoreKey
+	env appmodule.Environment
 }
 
 func (s *TestSuite) VerifyDoUpgrade(t *testing.T) {
@@ -111,13 +114,13 @@ func (s *TestSuite) VerifySet(t *testing.T, skipUpgradeHeights map[int64]bool) {
 
 func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 	t.Helper()
-	s := TestSuite{}
-	s.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, upgrade.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	s := TestSuite{
+		key: key,
+	}
+	s.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, upgrade.AppModule{})
 
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	s.baseApp = baseapp.NewBaseApp(
 		"upgrade",
 		log.NewNopLogger(),
@@ -125,12 +128,15 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 		s.encCfg.TxConfig.TxDecoder(),
 	)
 
+	storeService := runtime.NewKVStoreService(key)
+	s.env = runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(s.baseApp.GRPCQueryRouter(), s.baseApp.MsgServiceRouter()))
+
 	s.baseApp.SetParamStore(&paramStore{params: cmtproto.ConsensusParams{Version: &cmtproto.VersionParams{App: 1}}})
 
 	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govModuleName))
 	require.NoError(t, err)
 
-	s.keeper = keeper.NewKeeper(env, skip, s.encCfg.Codec, t.TempDir(), s.baseApp, authority)
+	s.keeper = keeper.NewKeeper(s.env, skip, s.encCfg.Codec, t.TempDir(), s.baseApp, authority)
 
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: height})
 
@@ -457,38 +463,23 @@ func TestBinaryVersion(t *testing.T) {
 }
 
 func TestDowngradeVerification(t *testing.T) {
-	// could not use setupTest() here, because we have to use the same key
-	// for the two keepers.
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, upgrade.AppModule{})
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: 10})
-
-	skip := map[int64]bool{}
-
-	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govModuleName))
-	require.NoError(t, err)
-
-	k := keeper.NewKeeper(env, skip, encCfg.Codec, t.TempDir(), nil, authority)
-	m := upgrade.NewAppModule(k)
+	s := setupTest(t, 10, map[int64]bool{})
 
 	// submit a plan.
 	planName := "downgrade"
-	err = k.ScheduleUpgrade(ctx, types.Plan{Name: planName, Height: ctx.HeaderInfo().Height + 1})
+	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: planName, Height: s.ctx.HeaderInfo().Height + 1})
 	require.NoError(t, err)
-	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
+	s.ctx = s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 1})
 
 	// set the handler.
-	k.SetUpgradeHandler(planName, func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+	s.keeper.SetUpgradeHandler(planName, func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		return vm, nil
 	})
 
 	// successful upgrade.
-	err = m.PreBlock(ctx)
+	err = s.preModule.PreBlock(s.ctx)
 	require.NoError(t, err)
-	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
+	s.ctx = s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 1})
 
 	testCases := map[string]struct {
 		preRun      func(*keeper.Keeper, sdk.Context, string)
@@ -514,13 +505,13 @@ func TestDowngradeVerification(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		ctx, _ := ctx.CacheContext()
+		ctx, _ := s.ctx.CacheContext()
 
 		authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govModuleName))
 		require.NoError(t, err)
 
 		// downgrade. now keeper does not have the handler.
-		k := keeper.NewKeeper(env, skip, encCfg.Codec, t.TempDir(), nil, authority)
+		k := keeper.NewKeeper(s.env, map[int64]bool{}, s.encCfg.Codec, t.TempDir(), nil, authority)
 		m := upgrade.NewAppModule(k)
 
 		// assertions

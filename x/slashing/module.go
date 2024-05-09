@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/simulation"
@@ -40,8 +41,9 @@ var (
 
 // AppModule implements an application module for the slashing module.
 type AppModule struct {
-	cdc      codec.Codec
-	registry cdctypes.InterfaceRegistry
+	cdc          codec.Codec
+	registry     cdctypes.InterfaceRegistry
+	cometService comet.Service
 
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
@@ -57,6 +59,7 @@ func NewAppModule(
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
 	registry cdctypes.InterfaceRegistry,
+	cs comet.Service,
 ) AppModule {
 	return AppModule{
 		cdc:           cdc,
@@ -65,6 +68,7 @@ func NewAppModule(
 		accountKeeper: ak,
 		bankKeeper:    bk,
 		stakingKeeper: sk,
+		cometService:  cs,
 	}
 }
 
@@ -103,7 +107,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 
 // RegisterMigrations registers module migrations.
 func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
-	m := keeper.NewMigrator(am.keeper)
+	m := keeper.NewMigrator(am.keeper, am.stakingKeeper.ValidatorAddressCodec())
 
 	if err := mr.Register(types.ModuleName, 1, m.Migrate1to2); err != nil {
 		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %w", types.ModuleName, err)
@@ -158,7 +162,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the slashing module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	return BeginBlocker(ctx, am.keeper)
+	return BeginBlocker(ctx, am.keeper, am.cometService)
 }
 
 // AppModuleSimulation functions

@@ -181,9 +181,14 @@ func (k Keeper) AddDeposit(ctx context.Context, proposalID uint64, depositorAddr
 		return false, err
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	depositorStrAddr, err := k.authKeeper.AddressCodec().BytesToString(depositorAddr)
+	if err != nil {
+		return false, err
+	}
+
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeProposalDeposit,
-		event.NewAttribute(types.AttributeKeyDepositor, depositorAddr.String()),
+		event.NewAttribute(types.AttributeKeyDepositor, depositorStrAddr),
 		event.NewAttribute(sdk.AttributeKeyAmount, depositAmount.String()),
 		event.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
 	); err != nil {
@@ -320,7 +325,7 @@ func (k Keeper) validateInitialDeposit(params v1.Params, initialDeposit sdk.Coin
 
 // validateDepositDenom validates if the deposit denom is accepted by the governance module.
 func (k Keeper) validateDepositDenom(params v1.Params, depositAmount sdk.Coins) error {
-	denoms := []string{}
+	denoms := make([]string, 0, len(params.MinDeposit))
 	acceptedDenoms := make(map[string]bool, len(params.MinDeposit))
 	for _, coin := range params.MinDeposit {
 		acceptedDenoms[coin.Denom] = true

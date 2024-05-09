@@ -10,7 +10,6 @@ import (
 	reflect "reflect"
 
 	appmodule "cosmossdk.io/core/appmodule"
-	registry "cosmossdk.io/core/registry"
 	types "github.com/cosmos/cosmos-sdk/types"
 	module "github.com/cosmos/cosmos-sdk/types/module"
 	gomock "github.com/golang/mock/gomock"
@@ -147,18 +146,6 @@ func (m *MockAppModuleWithAllExtensions) Name() string {
 func (mr *MockAppModuleWithAllExtensionsMockRecorder) Name() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).Name))
-}
-
-// RegisterInterfaces mocks base method.
-func (m *MockAppModuleWithAllExtensions) RegisterInterfaces(arg0 registry.InterfaceRegistrar) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterInterfaces", arg0)
-}
-
-// RegisterInterfaces indicates an expected call of RegisterInterfaces.
-func (mr *MockAppModuleWithAllExtensionsMockRecorder) RegisterInterfaces(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInterfaces", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).RegisterInterfaces), arg0)
 }
 
 // RegisterInvariants mocks base method.
@@ -331,18 +318,6 @@ func (m *MockAppModuleWithAllExtensionsABCI) Name() string {
 func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) Name() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).Name))
-}
-
-// RegisterInterfaces mocks base method.
-func (m *MockAppModuleWithAllExtensionsABCI) RegisterInterfaces(arg0 registry.InterfaceRegistrar) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterInterfaces", arg0)
-}
-
-// RegisterInterfaces indicates an expected call of RegisterInterfaces.
-func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) RegisterInterfaces(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInterfaces", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).RegisterInterfaces), arg0)
 }
 
 // RegisterInvariants mocks base method.

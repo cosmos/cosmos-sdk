@@ -15,7 +15,7 @@ import (
 
 // Info is the special structure that the Plan.Info string can be (as json).
 type Info struct {
-	parseConfig ParseConfig `json:"-"`
+	parseConfig ParseConfig
 
 	Binaries BinaryDownloadURLMap `json:"binaries"`
 }

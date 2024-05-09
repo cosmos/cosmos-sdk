@@ -66,13 +66,18 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
+	authorityAddr, err := in.AddressCodec.BytesToString(authority)
+	if err != nil {
+		panic(err)
+	}
+
 	k := keeper.NewKeeper(
 		in.Codec,
 		in.StoreService,
 		invalidCheckPeriod,
 		in.BankKeeper,
 		feeCollectorName,
-		authority.String(),
+		authorityAddr,
 		in.AddressCodec,
 	)
 

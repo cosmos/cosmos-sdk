@@ -10,6 +10,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
+	_ "cosmossdk.io/x/accounts"
+
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -93,7 +95,7 @@ func (s *IntegrationTestSuite) TestQueryABCIHeight() {
 			clientCtx := val.GetClientCtx()
 			clientCtx = clientCtx.WithHeight(tc.ctxHeight)
 
-			req := abci.RequestQuery{
+			req := abci.QueryRequest{
 				Path:   "store/bank/key",
 				Height: tc.reqHeight,
 				Data:   address.MustLengthPrefix(val.GetAddress()),

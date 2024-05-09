@@ -7,7 +7,6 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
-	"cosmossdk.io/core/registry"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -93,6 +92,3 @@ func (am AppModule) GenTxValidator() types.MessageValidator {
 
 // ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return 1 }
-
-// RegisterInterfaces implements module.AppModule.
-func (AppModule) RegisterInterfaces(registry.InterfaceRegistrar) {}

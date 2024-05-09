@@ -2,15 +2,16 @@ package consensus
 
 import (
 	modulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	authtypes "cosmossdk.io/x/auth/types"
+	"cosmossdk.io/x/consensus/keeper"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -28,9 +29,10 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config      *modulev1.Module
-	Cdc         codec.Codec
-	Environment appmodule.Environment
+	Config       *modulev1.Module
+	Cdc          codec.Codec
+	Environment  appmodule.Environment
+	AddressCodec address.Codec
 }
 
 type ModuleOutputs struct {
@@ -48,7 +50,12 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	k := keeper.NewKeeper(in.Cdc, in.Environment, authority.String())
+	authorityAddr, err := in.AddressCodec.BytesToString(authority)
+	if err != nil {
+		panic(err)
+	}
+
+	k := keeper.NewKeeper(in.Cdc, in.Environment, authorityAddr)
 	m := NewAppModule(in.Cdc, k)
 	baseappOpt := func(app *baseapp.BaseApp) {
 		app.SetParamStore(k.ParamsStore)

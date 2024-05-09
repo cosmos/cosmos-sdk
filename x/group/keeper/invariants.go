@@ -26,7 +26,7 @@ func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
 // GroupTotalWeightInvariant checks that group's TotalWeight must be equal to the sum of its members.
 func GroupTotalWeightInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-		msg, broken := GroupTotalWeightInvariantHelper(ctx, keeper.environment.KVStoreService, keeper.groupTable, keeper.groupMemberByGroupIndex)
+		msg, broken := GroupTotalWeightInvariantHelper(ctx, keeper.KVStoreService, keeper.groupTable, keeper.groupMemberByGroupIndex)
 		return sdk.FormatInvariant(group.ModuleName, weightInvariant, msg), broken
 	}
 }

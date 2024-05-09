@@ -257,7 +257,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	require.Equal(cfg.UpgradeBin("chain3"), currentBin)
 }
 
-// TestCustomPreupgrade will try running the script a few times and watch upgrades work properly
+// TestLaunchProcessWithDownloadsAndMissingPreupgrade will try running the script a few times and watch upgrades work properly
 // and args are passed through
 func (s *processTestSuite) TestLaunchProcessWithDownloadsAndMissingPreupgrade() {
 	// test case upgrade path (binaries from testdata/download directory):
@@ -293,7 +293,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloadsAndMissingPreupgrade() 
 	require.ErrorIs(err, fs.ErrNotExist)
 }
 
-// TestCustomPreupgrade will try running the script a few times and watch upgrades work properly
+// TestLaunchProcessWithDownloadsAndPreupgrade will try running the script a few times and watch upgrades work properly
 // and args are passed through
 func (s *processTestSuite) TestLaunchProcessWithDownloadsAndPreupgrade() {
 	// test case upgrade path (binaries from testdata/download directory):

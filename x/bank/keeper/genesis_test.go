@@ -4,6 +4,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/bank/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
@@ -21,7 +22,7 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 
 	for i := range []int{1, 2} {
 		suite.bankKeeper.SetDenomMetaData(ctx, expectedMetadata[i])
-		accAddr, err1 := sdk.AccAddressFromBech32(expectedBalances[i].Address)
+		accAddr, err1 := suite.authKeeper.AddressCodec().StringToBytes(expectedBalances[i].Address)
 		if err1 != nil {
 			panic(err1)
 		}
@@ -49,17 +50,25 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 }
 
 func (suite *KeeperTestSuite) getTestBalancesAndSupply() ([]types.Balance, sdk.Coins) {
-	addr2, _ := sdk.AccAddressFromBech32("cosmos1f9xjhxm0plzrh9cskf4qee4pc2xwp0n0556gh0")
-	addr1, _ := sdk.AccAddressFromBech32("cosmos1t5u0jfg3ljsjrh2m9e47d4ny2hea7eehxrzdgd")
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
+	addr2, err := suite.authKeeper.AddressCodec().StringToBytes("cosmos1f9xjhxm0plzrh9cskf4qee4pc2xwp0n0556gh0")
+	suite.Require().NoError(err)
+	addr1, _ := suite.authKeeper.AddressCodec().StringToBytes("cosmos1t5u0jfg3ljsjrh2m9e47d4ny2hea7eehxrzdgd")
+	suite.Require().NoError(err)
 	addr1Balance := sdk.Coins{sdk.NewInt64Coin("testcoin3", 10)}
 	addr2Balance := sdk.Coins{sdk.NewInt64Coin("testcoin1", 32), sdk.NewInt64Coin("testcoin2", 34)}
 
 	totalSupply := addr1Balance
 	totalSupply = totalSupply.Add(addr2Balance...)
 
+	addr2Str, err := ac.BytesToString(addr2)
+	suite.Require().NoError(err)
+	addr1Str, err := ac.BytesToString(addr1)
+	suite.Require().NoError(err)
+
 	return []types.Balance{
-		{Address: addr2.String(), Coins: addr2Balance},
-		{Address: addr1.String(), Coins: addr1Balance},
+		{Address: addr2Str, Coins: addr2Balance},
+		{Address: addr1Str, Coins: addr1Balance},
 	}, totalSupply
 }
 

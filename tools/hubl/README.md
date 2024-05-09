@@ -5,7 +5,7 @@ sidebar_position: 1
 # Hubl
 
 `Hubl` is a tool that allows you to query any Cosmos SDK based blockchain.
-It takes advantage of the new [AutoCLI](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/client/v2@v2.0.0-20220916140313-c5245716b516/cli) feature <!-- TODO replace with AutoCLI docs --> of the Cosmos SDK.
+It takes advantage of the new [AutoCLI](https://docs.cosmos.network/main/learn/advanced/autocli) feature of the Cosmos SDK.
 
 ## Installation
 

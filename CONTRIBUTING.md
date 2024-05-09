@@ -344,7 +344,7 @@ Members must:
 * Be active contributors to the Cosmos SDK, and furthermore should be continuously making substantial contributions
   to the project's codebase, review process, documentation and ADRs
 * Have stake in the Cosmos SDK project, represented by:
-    * Being a client / user of the Comsos SDK
+    * Being a client / user of the Cosmos SDK
     * "[giving back](https://www.debian.org/social_contract)" to the software
 * Delegate representation in case of vacation or absence
 

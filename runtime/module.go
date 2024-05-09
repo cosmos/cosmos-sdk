@@ -11,9 +11,12 @@ import (
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
@@ -31,9 +34,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
+// appModule defines runtime as an AppModule
 type appModule struct {
 	app *App
 }
+
+func (m appModule) IsOnePerModuleType() {}
+func (m appModule) IsAppModule()        {}
 
 func (m appModule) RegisterServices(configurator module.Configurator) { // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
 	err := m.app.registerRuntimeServices(configurator)
@@ -42,8 +49,32 @@ func (m appModule) RegisterServices(configurator module.Configurator) { // nolin
 	}
 }
 
-func (m appModule) IsOnePerModuleType() {}
-func (m appModule) IsAppModule()        {}
+func (m appModule) AutoCLIOptions() *autocliv1.ModuleOptions {
+	return &autocliv1.ModuleOptions{
+		Query: &autocliv1.ServiceCommandDescriptor{
+			SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{
+				"autocli": {
+					Service: autocliv1.Query_ServiceDesc.ServiceName,
+					RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+						{
+							RpcMethod: "AppOptions",
+							Short:     "Query the custom autocli options",
+						},
+					},
+				},
+				"reflection": {
+					Service: reflectionv1.ReflectionService_ServiceDesc.ServiceName,
+					RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+						{
+							RpcMethod: "FileDescriptors",
+							Short:     "Query the app's protobuf file descriptors",
+						},
+					},
+				},
+			},
+		},
+	}
+}
 
 var (
 	_ appmodule.AppModule = appModule{}
@@ -71,6 +102,7 @@ func init() {
 			ProvideModuleManager,
 			ProvideAppVersionModifier,
 			ProvideAddressCodec,
+			ProvideCometService,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -142,7 +174,11 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.ModuleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 }
 
-func ProvideInterfaceRegistry(addressCodec address.Codec, validatorAddressCodec address.ValidatorAddressCodec, customGetSigners []signing.CustomGetSigner) (codectypes.InterfaceRegistry, error) {
+func ProvideInterfaceRegistry(
+	addressCodec address.Codec,
+	validatorAddressCodec address.ValidatorAddressCodec,
+	customGetSigners []signing.CustomGetSigner,
+) (codectypes.InterfaceRegistry, error) {
 	signingOptions := signing.Options{
 		AddressCodec:          addressCodec,
 		ValidatorAddressCodec: validatorAddressCodec,
@@ -179,7 +215,11 @@ func storeKeyOverride(config *runtimev1alpha1.Module, moduleName string) *runtim
 	return nil
 }
 
-func ProvideKVStoreKey(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) *storetypes.KVStoreKey {
+func ProvideKVStoreKey(
+	config *runtimev1alpha1.Module,
+	key depinject.ModuleKey,
+	app *AppBuilder,
+) *storetypes.KVStoreKey {
 	override := storeKeyOverride(config, key.Name())
 
 	var storeKeyName string
@@ -230,7 +270,7 @@ func ProvideEnvironment(
 
 	return kvService, memStoreService, NewEnvironment(
 		kvService,
-		logger,
+		logger.With(log.ModuleKey, fmt.Sprintf("x/%s", key.Name())),
 		EnvWithRouterService(queryServiceRouter, msgServiceRouter),
 		EnvWithMemStoreService(memStoreService),
 	)
@@ -243,6 +283,10 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 
 func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
 	return app.app
+}
+
+func ProvideCometService() comet.Service {
+	return NewContextAwareCometInfoService()
 }
 
 type AddressCodecInputs struct {

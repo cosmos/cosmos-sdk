@@ -10,7 +10,7 @@ import (
 )
 
 func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error {
-	currentTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
+	currentTime := k.HeaderService.HeaderInfo(ctx).Time
 	for _, cf := range data.ContinuousFund {
 		// ignore expired ContinuousFunds
 		if cf.Expiry != nil && cf.Expiry.Before(currentTime) {

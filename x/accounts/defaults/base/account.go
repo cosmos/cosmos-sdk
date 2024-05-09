@@ -38,6 +38,7 @@ func NewAccount(name string, handlerMap *signing.HandlerMap) accountstd.AccountC
 			Sequence:        collections.NewSequence(deps.SchemaBuilder, SequencePrefix, "sequence"),
 			addrCodec:       deps.AddressCodec,
 			signingHandlers: handlerMap,
+			hs:              deps.Environment.HeaderService,
 		}, nil
 	}
 }
@@ -127,7 +128,7 @@ func (a Account) computeSignerData(ctx context.Context) (secp256k1.PubKey, signi
 	if err != nil {
 		return secp256k1.PubKey{}, signing.SignerData{}, err
 	}
-	chainID := a.hs.GetHeaderInfo(ctx).ChainID
+	chainID := a.hs.HeaderInfo(ctx).ChainID
 
 	wantSequence, err := a.Sequence.Next(ctx)
 	if err != nil {

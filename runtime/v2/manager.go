@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/golang/protobuf/proto"
 	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
 	protobuf "google.golang.org/protobuf/proto"
@@ -141,7 +140,11 @@ func (m *MM) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 }
 
 // InitGenesisJSON performs init genesis functionality for modules from genesis data in JSON format
-func (m *MM) InitGenesisJSON(ctx context.Context, genesisData map[string]json.RawMessage, txHandler func(json.RawMessage) error) error {
+func (m *MM) InitGenesisJSON(
+	ctx context.Context,
+	genesisData map[string]json.RawMessage,
+	txHandler func(json.RawMessage) error,
+) error {
 	m.logger.Info("initializing blockchain state from genesis.json", "order", m.config.InitGenesis)
 	var seenValUpdates bool
 	for _, moduleName := range m.config.InitGenesis {
@@ -195,7 +198,10 @@ func (m *MM) InitGenesisJSON(ctx context.Context, genesisData map[string]json.Ra
 }
 
 // ExportGenesisForModules performs export genesis functionality for modules
-func (m *MM) ExportGenesisForModules(ctx context.Context, modulesToExport ...string) (map[string]json.RawMessage, error) {
+func (m *MM) ExportGenesisForModules(
+	ctx context.Context,
+	modulesToExport ...string,
+) (map[string]json.RawMessage, error) {
 	if len(modulesToExport) == 0 {
 		modulesToExport = m.config.ExportGenesis
 	}
@@ -621,13 +627,23 @@ func registerMethod(
 		ctx context.Context,
 		msg appmodulev2.Message,
 	) (resp appmodulev2.Message, err error) {
-		res, err := md.Handler(ss, ctx, func(dstMsg any) error {
-			proto.Merge(dstMsg.(proto.Message), msg)
-			return nil
-		}, nil)
+		res, err := md.Handler(ss, ctx, noopDecoder, messageClosureInterceptor(msg))
 		if err != nil {
 			return nil, err
 		}
 		return res.(appmodulev2.Message), nil
 	})
+}
+
+func noopDecoder(_ interface{}) error { return nil }
+
+func messageClosureInterceptor(msg appmodulev2.Message) grpc.UnaryServerInterceptor {
+	return func(
+		ctx context.Context,
+		req interface{},
+		_ *grpc.UnaryServerInfo,
+		handler grpc.UnaryHandler,
+	) (interface{}, error) {
+		return handler(ctx, msg)
+	}
 }

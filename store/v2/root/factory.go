@@ -5,12 +5,14 @@ import (
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
+	"cosmossdk.io/store/v2/commitment/mem"
 	"cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/pebbledb"
 	"cosmossdk.io/store/v2/storage/sqlite"
 	"fmt"
 	"os"
+	"strings"
 )
 
 type SSType int
@@ -75,16 +77,19 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 	}
 	ss = storage.NewStorageStore(ssDb, opts.PruneOptions, opts.Logger)
 
-	switch opts.SCType {
-	case SCTypeIavl:
-		trees := make(map[string]commitment.Tree)
-		for _, key := range opts.StoreKeys {
-			tree := iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, opts.IavlConfig)
-			trees[key] = tree
+	trees := make(map[string]commitment.Tree)
+	for _, key := range opts.StoreKeys {
+		if strings.HasPrefix(key, "memory:") {
+			trees[key] = mem.New()
+		} else {
+			switch opts.SCType {
+			case SCTypeIavl:
+				trees[key] = iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, opts.IavlConfig)
+			case SCTypeIavlV2:
+				return nil, fmt.Errorf("iavl v2 not supported")
+			}
 		}
 		sc, err = commitment.NewCommitStore(trees, opts.SCRawDB, opts.PruneOptions, opts.Logger)
-	case SCTypeIavlV2:
-		return nil, fmt.Errorf("iavl v2 not supported")
 	}
 
 	if err != nil {

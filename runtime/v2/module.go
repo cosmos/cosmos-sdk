@@ -251,6 +251,7 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 		RouterService:   stf.NewRouterService(kvService, appBuilder.app.queryRouterBuilder, appBuilder.app.msgRouterBuilder),
 		KVStoreService:  kvService,
 		MemStoreService: memService,
+    TransactionService: services.NewContextAwareTransactionService(),
 	}
 
 	return env, kvService, memService

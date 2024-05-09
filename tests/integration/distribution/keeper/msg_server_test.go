@@ -56,6 +56,8 @@ type fixture struct {
 	cdc    codec.Codec
 	keys   map[string]*storetypes.KVStoreKey
 
+	queryClient distrtypes.QueryClient
+
 	accountKeeper authkeeper.AccountKeeper
 	bankKeeper    bankkeeper.Keeper
 	distrKeeper   distrkeeper.Keeper
@@ -174,6 +176,9 @@ func initFixture(t *testing.T) *fixture {
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(distrKeeper))
 	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(distrKeeper))
 
+	qr := integrationApp.QueryHelper()
+	distrQueryClient := distrtypes.NewQueryClient(qr)
+
 	return &fixture{
 		app:           integrationApp,
 		sdkCtx:        sdkCtx,
@@ -186,6 +191,7 @@ func initFixture(t *testing.T) *fixture {
 		poolKeeper:    poolKeeper,
 		addr:          addr,
 		valAddr:       valAddr,
+		queryClient:   distrQueryClient,
 	}
 }
 

@@ -3,11 +3,12 @@ package runtime
 import (
 	"context"
 
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/runtime/protoiface"
+
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	"google.golang.org/grpc"
-	"google.golang.org/protobuf/runtime/protoiface"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -82,7 +83,7 @@ type failingQueryRouter struct {
 	*baseapp.GRPCQueryRouter
 }
 
-func (failingQueryRouter) HybridHandlerByRequestName(name string) []func(ctx context.Context, req protoiface.MessageV1, resp protoiface.MessageV1) error {
+func (failingQueryRouter) HybridHandlerByRequestName(name string) []func(ctx context.Context, req, resp protoiface.MessageV1) error {
 	panic("query router not set")
 }
 

@@ -18,7 +18,7 @@ import (
 )
 
 type QueryRouter interface {
-	HybridHandlerByRequestName(name string) []func(ctx context.Context, req protoiface.MessageV1, resp protoiface.MessageV1) error
+	HybridHandlerByRequestName(name string) []func(ctx context.Context, req, resp protoiface.MessageV1) error
 	RegisterService(sd *grpc.ServiceDesc, handler interface{})
 	ResponseNameByRequestName(requestName string) string
 	Route(path string) GRPCQueryHandler
@@ -48,8 +48,10 @@ type serviceData struct {
 	handler     interface{}
 }
 
-var _ gogogrpc.Server = &GRPCQueryRouter{}
-var _ QueryRouter = &GRPCQueryRouter{}
+var (
+	_ gogogrpc.Server = &GRPCQueryRouter{}
+	_ QueryRouter     = &GRPCQueryRouter{}
+)
 
 // NewGRPCQueryRouter creates a new GRPCQueryRouter
 func NewGRPCQueryRouter() *GRPCQueryRouter {

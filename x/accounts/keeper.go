@@ -52,7 +52,7 @@ type MsgRouter interface {
 
 // SignerProvider defines an interface used to get the expected sender from a message.
 type SignerProvider interface {
-	// GetMsgV1Signers returns the signers of the message.
+	// GetMsgSigners returns the signers of the message.
 	GetMsgSigners(msg gogoproto.Message) ([][]byte, protoreflect.Message, error)
 }
 

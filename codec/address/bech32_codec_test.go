@@ -88,7 +88,6 @@ func TestMultipleBech32Codec(t *testing.T) {
 	cachedStakeAddr, err := stakeAc.BytesToString(addr)
 	assert.NilError(t, err)
 	assert.Equal(t, stakeAddr, cachedStakeAddr)
-
 }
 
 func TestBech32CodecRace(t *testing.T) {

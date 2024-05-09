@@ -60,7 +60,7 @@ func TestNewBech32Codec(t *testing.T) {
 			assert.NilError(t, err)
 			assert.Equal(t, tt.lru.Len(), 2)
 
-			cachedStrAddr, ok := tt.lru.Get(conv.UnsafeBytesToStr(addr))
+			cachedStrAddr, ok := tt.lru.Get(cached.codec.Bech32Prefix + conv.UnsafeBytesToStr(addr))
 			assert.Assert(t, ok)
 			assert.DeepEqual(t, accAddr, cachedStrAddr)
 		})

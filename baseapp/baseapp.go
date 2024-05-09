@@ -13,10 +13,11 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-proto/anyutil"
 	"github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/maps"
 	protov2 "google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/protoadapt"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
@@ -962,10 +963,6 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	if mode == execModeSimulate {
 		nestedMsgsContext, _ := app.cacheTxContext(ctx, txBytes)
 		for _, msg := range msgs {
-			msg, ok := msg.(HasNestedMsgs)
-			if !ok {
-				continue
-			}
 			nestedErr := app.simulateNestedMessages(nestedMsgsContext, msg)
 			if nestedErr != nil {
 				return gInfo, nil, anteEvents, nestedErr
@@ -1080,10 +1077,22 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 }
 
 // simulateNestedMessages simulates a message nested messages.
-func (app *BaseApp) simulateNestedMessages(ctx sdk.Context, msg HasNestedMsgs) error {
-	msgs, err := msg.GetMsgs()
+func (app *BaseApp) simulateNestedMessages(ctx sdk.Context, msg sdk.Msg) error {
+	nestedMsgs, ok := msg.(HasNestedMsgs)
+	if !ok {
+		return nil
+	}
+
+	msgs, err := nestedMsgs.GetMsgs()
 	if err != nil {
 		return err
+	}
+
+	for _, msg := range msgs {
+		err = app.simulateNestedMessages(ctx, msg)
+		if err != nil {
+			return err
+		}
 	}
 
 	if err := validateBasicTxMsgs(app.msgServiceRouter, msgs); err != nil {
@@ -1103,7 +1112,19 @@ func (app *BaseApp) simulateNestedMessages(ctx sdk.Context, msg HasNestedMsgs) e
 func (app *BaseApp) msgsV1ToMsgsV2(msgs []sdk.Msg) ([]protov2.Message, error) {
 	msgsV2 := make([]protov2.Message, len(msgs))
 	for i, msg := range msgs {
-		msgsV2[i] = protoadapt.MessageV2Of(msg)
+		gogoAny, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			return nil, err
+		}
+		anyMsg := &anypb.Any{
+			TypeUrl: gogoAny.TypeUrl,
+			Value:   gogoAny.Value,
+		}
+		msgV2, err := anyutil.Unpack(anyMsg, app.cdc.InterfaceRegistry().SigningContext().FileResolver(), app.cdc.InterfaceRegistry().SigningContext().TypeResolver())
+		if err != nil {
+			return nil, err
+		}
+		msgsV2[i] = msgV2
 	}
 
 	return msgsV2, nil

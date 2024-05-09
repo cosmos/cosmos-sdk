@@ -14,6 +14,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
@@ -760,6 +762,16 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	require.Equal(t, int64(2), msgCounter2)
 }
 
+func anyMessage(t *testing.T, cdc codec.Codec, msg *baseapptestutil.MsgSend) *any.Any {
+	t.Helper()
+	b, err := cdc.Marshal(msg)
+	require.NoError(t, err)
+	return &any.Any{
+		TypeUrl: sdk.MsgTypeURL(msg),
+		Value:   b,
+	}
+}
+
 func TestABCI_Query_SimulateNestedMessagesTx(t *testing.T) {
 	gasConsumed := uint64(5)
 	anteOpt := func(bapp *baseapp.BaseApp) {
@@ -781,60 +793,92 @@ func TestABCI_Query_SimulateNestedMessagesTx(t *testing.T) {
 	_, _, addr := testdata.KeyTestPubAddr()
 	_, _, toAddr := testdata.KeyTestPubAddr()
 	tests := []struct {
-		name       string
-		nestedMsgs []*baseapptestutil.MsgSend
-		wantErr    bool
+		name    string
+		message sdk.Msg
+		wantErr bool
 	}{
 		{
 			name: "ok nested message",
-			nestedMsgs: []*baseapptestutil.MsgSend{
-				{
-					From:   addr.String(),
-					To:     toAddr.String(),
-					Amount: "10000stake",
-				},
+			message: &baseapptestutil.MsgSend{
+				From:   addr.String(),
+				To:     toAddr.String(),
+				Amount: "10000stake",
 			},
 		},
 		{
 			name: "different signers",
-			nestedMsgs: []*baseapptestutil.MsgSend{
-				{
-					From:   toAddr.String(),
-					To:     addr.String(),
-					Amount: "10000stake",
-				},
+			message: &baseapptestutil.MsgSend{
+				From:   toAddr.String(),
+				To:     addr.String(),
+				Amount: "10000stake",
 			},
 			wantErr: true,
 		},
 		{
 			name: "empty from",
-			nestedMsgs: []*baseapptestutil.MsgSend{
-				{
-					From:   "",
-					To:     toAddr.String(),
-					Amount: "10000stake",
-				},
+			message: &baseapptestutil.MsgSend{
+				From:   "",
+				To:     toAddr.String(),
+				Amount: "10000stake",
 			},
 			wantErr: true,
 		},
 		{
 			name: "empty to",
-			nestedMsgs: []*baseapptestutil.MsgSend{
-				{
-					From:   addr.String(),
-					To:     "",
-					Amount: "10000stake",
-				},
+			message: &baseapptestutil.MsgSend{
+				From:   addr.String(),
+				To:     "",
+				Amount: "10000stake",
 			},
 			wantErr: true,
 		},
 		{
 			name: "negative amount",
-			nestedMsgs: []*baseapptestutil.MsgSend{
-				{
-					From:   addr.String(),
-					To:     toAddr.String(),
-					Amount: "-10000stake",
+			message: &baseapptestutil.MsgSend{
+				From:   addr.String(),
+				To:     toAddr.String(),
+				Amount: "-10000stake",
+			},
+			wantErr: true,
+		},
+		{
+			name: "with nested messages",
+			message: &baseapptestutil.MsgNestedMessages{
+				Signer: addr.String(),
+				Messages: []*any.Any{
+					anyMessage(t, suite.cdc, &baseapptestutil.MsgSend{
+						From:   addr.String(),
+						To:     toAddr.String(),
+						Amount: "10000stake",
+					}),
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "with invalid nested messages",
+			message: &baseapptestutil.MsgNestedMessages{
+				Signer: addr.String(),
+				Messages: []*any.Any{
+					anyMessage(t, suite.cdc, &baseapptestutil.MsgSend{
+						From:   "",
+						To:     toAddr.String(),
+						Amount: "10000stake",
+					}),
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "with different signer ",
+			message: &baseapptestutil.MsgNestedMessages{
+				Signer: addr.String(),
+				Messages: []*any.Any{
+					anyMessage(t, suite.cdc, &baseapptestutil.MsgSend{
+						From:   toAddr.String(),
+						To:     addr.String(),
+						Amount: "10000stake",
+					}),
 				},
 			},
 			wantErr: true,
@@ -842,15 +886,14 @@ func TestABCI_Query_SimulateNestedMessagesTx(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			nestedMessages := make([]*any.Any, len(tt.nestedMsgs))
-			for i, msg := range tt.nestedMsgs {
-				b, err := suite.cdc.Marshal(msg)
-				require.NoError(t, err)
-				nestedMessages[i] = &any.Any{
-					TypeUrl: sdk.MsgTypeURL(msg),
-					Value:   b,
-				}
+			nestedMessages := make([]*any.Any, 1)
+			b, err := suite.cdc.Marshal(tt.message)
+			require.NoError(t, err)
+			nestedMessages[0] = &any.Any{
+				TypeUrl: sdk.MsgTypeURL(tt.message),
+				Value:   b,
 			}
+
 			msg := &baseapptestutil.MsgNestedMessages{
 				Messages: nestedMessages,
 				Signer:   addr.String(),

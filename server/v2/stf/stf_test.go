@@ -31,7 +31,7 @@ func TestSTF(t *testing.T) {
 	sum := sha256.Sum256([]byte("test-hash"))
 
 	s := &STF[mock.Tx]{
-		handleMsg: func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
+		handleMsg: func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
 			kvSet(t, ctx, "exec")
 			return nil, nil
 		},
@@ -124,7 +124,7 @@ func TestSTF(t *testing.T) {
 	t.Run("fail exec tx", func(t *testing.T) {
 		// update the stf to fail on the handler
 		s := s.clone()
-		s.handleMsg = func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
+		s.handleMsg = func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
 			return nil, fmt.Errorf("failure")
 		}
 
@@ -167,7 +167,7 @@ func TestSTF(t *testing.T) {
 
 	t.Run("tx failed and post tx failed", func(t *testing.T) {
 		s := s.clone()
-		s.handleMsg = func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
+		s.handleMsg = func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
 			return nil, fmt.Errorf("exec failure")
 		}
 		s.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error { return fmt.Errorf("post tx failure") }

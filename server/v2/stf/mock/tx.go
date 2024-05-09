@@ -5,16 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 
-	"google.golang.org/protobuf/types/known/anypb"
-
 	"cosmossdk.io/core/transaction"
+	gogoproto "github.com/cosmos/gogoproto/types"
 )
 
 var _ transaction.Tx = Tx{}
 
 type Tx struct {
 	Sender   []byte
-	Msg      transaction.Type
+	Msg      transaction.Msg
 	GasLimit uint64
 }
 
@@ -22,11 +21,8 @@ func (t Tx) Hash() [32]byte {
 	return sha256.Sum256(t.Bytes())
 }
 
-func (t Tx) GetMessages() ([]transaction.Type, error) {
-	if t.Msg == nil {
-		return nil, errors.New("messages not available or are nil")
-	}
-	return []transaction.Type{t.Msg}, nil
+func (t Tx) GetMessages() []transaction.Msg {
+	return []transaction.Msg{t.Msg}
 }
 
 func (t Tx) GetSenders() ([]transaction.Identity, error) {
@@ -42,13 +38,13 @@ func (t Tx) GetGasLimit() (uint64, error) {
 
 type encodedTx struct {
 	Sender   []byte     `json:"sender"`
-	Msg      *anypb.Any `json:"message"`
+	Msg      *gogoproto.Any `json:"message"`
 	GasLimit uint64     `json:"gas_limit"`
 }
 
 func (t Tx) Bytes() []byte {
 	v2Msg := t.Msg
-	msg, err := anypb.New(v2Msg)
+	msg, err := gogoproto.MarshalAny(v2Msg)
 	if err != nil {
 		panic(err)
 	}
@@ -69,8 +65,8 @@ func (t *Tx) Decode(b []byte) {
 	if err != nil {
 		panic(err)
 	}
-	msg, err := rawTx.Msg.UnmarshalNew()
-	if err != nil {
+	var msg transaction.Msg
+	if err := gogoproto.UnmarshalAny(rawTx.Msg, msg); err != nil {
 		panic(err)
 	}
 	t.Msg = msg
@@ -84,8 +80,8 @@ func (t *Tx) DecodeJSON(b []byte) {
 	if err != nil {
 		panic(err)
 	}
-	msg, err := rawTx.Msg.UnmarshalNew()
-	if err != nil {
+	var msg transaction.Msg
+	if err := gogoproto.UnmarshalAny(rawTx.Msg, msg); err != nil {
 		panic(err)
 	}
 	t.Msg = msg

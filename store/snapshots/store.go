@@ -3,6 +3,7 @@ package snapshots
 import (
 	"crypto/sha256"
 	"encoding/binary"
+	"fmt"
 	"hash"
 	"io"
 	"math"

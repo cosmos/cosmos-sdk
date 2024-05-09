@@ -8,10 +8,10 @@ import (
 
 	"cosmossdk.io/core/address"
 
+	corectx "cosmossdk.io/core/context"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
@@ -38,8 +38,8 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			serverCtx := server.GetServerContextFromCmd(cmd)
-			config := serverCtx.Config
+			serverCtx := corectx.GetServerContextFromCmd(cmd)
+			config := serverCtx.GetConfig()
 
 			var kr keyring.Keyring
 			addr, err := addressCodec.StringToBytes(args[0])

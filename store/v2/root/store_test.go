@@ -58,6 +58,25 @@ func (s *RootStoreTestSuite) SetupTest() {
 	s.rootStore = rs
 }
 
+func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruneOptions) {
+	noopLog := log.NewNopLogger()
+
+	sqliteDB, err := sqlite.New(s.T().TempDir())
+	s.Require().NoError(err)
+	ss := storage.NewStorageStore(sqliteDB, config, noopLog)
+
+	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+	tree2 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+	tree3 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree, testStoreKey2: tree2, testStoreKey3: tree3}, dbm.NewMemDB(), config, noopLog)
+	s.Require().NoError(err)
+
+	rs, err := New(noopLog, ss, sc, nil, nil)
+	s.Require().NoError(err)
+
+	s.rootStore = rs
+}
+
 func (s *RootStoreTestSuite) TearDownTest() {
 	err := s.rootStore.Close()
 	s.Require().NoError(err)
@@ -334,4 +353,85 @@ func (s *RootStoreTestSuite) TestStateAt() {
 			s.Require().Equal([]byte(val), result)
 		}
 	}
+}
+
+func (s *RootStoreTestSuite) TestPrune() {
+	// perform changes
+	cs := corestore.NewChangeset()
+	for i := 0; i < 100; i++ {
+		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
+		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
+
+		cs.Add(testStoreKeyBytes, []byte(key), []byte(val), false)
+	}
+
+	testCases := []struct {
+		name        string
+		numVersions int64
+		po          store.PruneOptions
+		deleted     []uint64
+		saved       []uint64
+	}{
+		{"prune nothing", 10, *store.DefaultPruneOptions(), nil, []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
+		{"prune everything", 12, store.PruneOptions{
+			KeepRecent: 1,
+			Interval:   0,
+		}, []uint64{1, 2, 3, 4, 5, 6, 7}, []uint64{8, 9, 10, 11, 12}},
+		{"prune some; no batch", 10, store.PruneOptions{
+			KeepRecent: 2,
+			Interval:   1,
+		}, []uint64{1, 2, 3, 4, 6, 5, 7}, []uint64{8, 9, 10}},
+		{"prune some; small batch", 10, store.PruneOptions{
+			KeepRecent: 2,
+			Interval:   3,
+		}, []uint64{1, 2, 3, 4, 5, 6}, []uint64{7, 8, 9, 10}},
+		{"prune some; large batch", 10, store.PruneOptions{
+			KeepRecent: 2,
+			Interval:   11,
+		}, nil, []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.newStoreWithPruneConfig(&tc.po)
+
+		// write keys over multiple versions
+		for i := int64(0); i < tc.numVersions; i++ {
+			// execute WorkingHash and Commit
+			wHash, err := s.rootStore.WorkingHash(cs)
+			s.Require().NoError(err)
+
+			cHash, err := s.rootStore.Commit(cs)
+			s.Require().NoError(err)
+			s.Require().Equal(wHash, cHash)
+		}
+
+		for _, v := range tc.saved {
+			_, err := s.rootStore.StateAt(v)
+			s.Require().NoError(err, "expected no error when loading height: %d", v)
+		}
+
+		for _, v := range tc.deleted {
+			_, err := s.rootStore.StateAt(v)
+			s.Require().Error(err, "expected error when loading height: %d", v)
+		}
+	}
+
+}
+
+func (s *RootStoreTestSuite) TestMultiStore_Pruning_SameHeightsTwice() {
+
+}
+
+func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
+
+}
+
+func (s *RootStoreTestSuite) TestMultiStoreRestart() {
+
+}
+
+func (s *RootStoreTestSuite) TestUnevenStoresHeightCheck() {
+
 }

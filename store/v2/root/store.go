@@ -323,6 +323,8 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 
 	s.workingHash = nil
 
+	fmt.Println(version)
+
 	return s.lastCommitInfo.Hash(), nil
 }
 

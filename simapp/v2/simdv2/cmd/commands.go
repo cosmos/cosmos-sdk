@@ -63,7 +63,7 @@ func newCometBFTServer(
 ) serverv2.ServerModule {
 	sa := simapp.NewSimApp(logger, viper)
 	am := sa.App.AppManager
-	serverCfg := cometbft.Config{CmtConfig: serverv2.GetCometConfigFromViper(viper), ConsensusAuthority: sa.GetConsensusAuthority()}
+	serverCfg := cometbft.Config{CmtConfig: client.GetConfigFromViper(viper), ConsensusAuthority: sa.GetConsensusAuthority()}
 
 	cometServer := cometbft.NewCometBFTServer[transaction.Tx](
 		am,

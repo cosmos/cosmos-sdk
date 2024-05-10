@@ -46,15 +46,10 @@ func Commands(rootCmd *cobra.Command, codec transaction.Codec[transaction.Tx], l
 			cometServer := newCometFunc(v, logger, codec)
 			server.modules = append(server.modules, cometServer)
 
-			srvContext := Context{
-				Viper: v,
-				Logger: logger,
-				Config: Config{
-					StartBlock: true,
-				},
-			}
+			srvConfig := Config{StartBlock: true}
 			ctx := cmd.Context()
-			ctx = context.WithValue(ctx, ServerContextKey, srvContext)
+			ctx = context.WithValue(ctx, ServerContextKey, srvConfig)
+			SetCmdServerContext(cmd, v, logger)
 			ctx, cancelFn := context.WithCancel(ctx)
 			go func() {
 				sigCh := make(chan os.Signal, 1)

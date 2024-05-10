@@ -20,42 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 )
 
-var _ corectx.ServerContext = &Context{}
-
-// Context server context
-type Context struct {
-	Viper  *viper.Viper
-	Logger log.Logger
-	Config Config // serverv2 config, not CometConfig
-}
-
-func (ctx *Context) GetConfig() *cmtcfg.Config {
-	return GetCometConfigFromViper(ctx.Viper)
-}
-
-func (ctx *Context) GetLogger() log.Logger {
-	return ctx.Logger
-}
-
-func (ctx *Context) GetViper() *viper.Viper {
-	return ctx.Viper
-}
-
-// Set rootdir to viper
-func (ctx *Context) SetRoot(rootDir string) {
-	ctx.GetViper().Set(FlagHome, rootDir)
-}
-
-func GetCometConfigFromViper(v *viper.Viper) *cmtcfg.Config {
-	conf := cmtcfg.DefaultConfig()
-	err := v.Unmarshal(conf)
-	rootDir := v.GetString(FlagHome)
-	if err != nil {
-		return cmtcfg.DefaultConfig().SetRoot(rootDir)
-	}
-	return conf.SetRoot(rootDir)
-}
-
 // InterceptConfigsPreRunHandler is identical to InterceptConfigsAndCreateContext
 // except it also sets the server context on the command and the server logger.
 func InterceptConfigsPreRunHandler(
@@ -76,10 +40,7 @@ func InterceptConfigsPreRunHandler(
 	}
 
 	// set server context
-	return SetCmdServerContext(cmd, &Context{
-		Viper:  viper,
-		Logger: logger,
-	})
+	return SetCmdServerContext(cmd, viper, logger)
 }
 
 // InterceptConfigsAndCreateContext performs a pre-run function for the root daemon
@@ -271,7 +232,7 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 
 // SetCmdServerContext sets a command's Context value to the provided argument.
 // If the context has not been set, set the given context as the default.
-func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
+func SetCmdServerContext(cmd *cobra.Command, viper *viper.Viper, logger log.Logger) error {
 	var cmdCtx context.Context
 
 	if cmd.Context() == nil {
@@ -280,7 +241,8 @@ func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
 		cmdCtx = cmd.Context()
 	}
 
-	cmd.SetContext(context.WithValue(cmdCtx, ServerContextKey, serverCtx))
+	cmd.SetContext(context.WithValue(cmdCtx, corectx.LoggerContextKey, logger))
+	cmd.SetContext(context.WithValue(cmdCtx, corectx.ViperContextKey, viper))
 
 	return nil
 }

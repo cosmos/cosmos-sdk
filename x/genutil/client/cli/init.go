@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 
-	corectx "cosmossdk.io/core/context"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math/unsafe"
 
@@ -84,8 +83,7 @@ func InitCmd(mm hasDefaultGenesis) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
-			serverCtx := corectx.GetServerContextFromCmd(cmd)
-			config := serverCtx.GetConfig()
+			config := client.GetConfigFromCmd(cmd)
 
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
 			switch {

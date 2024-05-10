@@ -8,7 +8,6 @@ import (
 
 	"cosmossdk.io/errors"
 
-	corectx "cosmossdk.io/core/context"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -22,8 +21,7 @@ func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, validator ty
 		Use:   "collect-gentxs",
 		Short: "Collect genesis txs and output a genesis.json file",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			serverCtx := corectx.GetServerContextFromCmd(cmd)
-			config := serverCtx.GetConfig()
+			config := client.GetConfigFromCmd(cmd)
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			cdc := clientCtx.Codec

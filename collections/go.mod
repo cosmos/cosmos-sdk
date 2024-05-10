@@ -10,7 +10,7 @@ require (
 )
 
 require (
-	cosmossdk.io/api v0.7.4 // indirect
+	cosmossdk.io/api v0.7.5 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -34,7 +34,7 @@ require (
 	github.com/onsi/gomega v1.20.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_golang v1.19.0 // indirect
+	github.com/prometheus/client_golang v1.19.1 // indirect
 	github.com/prometheus/client_model v0.6.0 // indirect
 	github.com/prometheus/common v0.53.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect

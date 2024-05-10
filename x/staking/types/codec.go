@@ -2,10 +2,10 @@ package types
 
 import (
 	"cosmossdk.io/core/registry"
+	coretransaction "cosmossdk.io/core/transaction"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
@@ -30,7 +30,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 // RegisterInterfaces registers the x/staking interfaces types with the interface registry
 func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
-	registrar.RegisterImplementations((*sdk.Msg)(nil),
+	registrar.RegisterImplementations((*coretransaction.Msg)(nil),
 		&MsgCreateValidator{},
 		&MsgEditValidator{},
 		&MsgDelegate{},

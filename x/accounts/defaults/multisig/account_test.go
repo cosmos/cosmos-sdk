@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/accountstd"
 	v1 "cosmossdk.io/x/accounts/defaults/multisig/v1"
+	accountsv1 "cosmossdk.io/x/accounts/v1"
 )
 
 func setup(t *testing.T, ctx context.Context, ss store.KVStoreService, timefn func() time.Time) *Account {
@@ -464,6 +465,9 @@ func TestProposal_NotPassing(t *testing.T) {
 }
 
 func TestProposalPassing(t *testing.T) {
+	// ctx, ss := newMockContext(t)
+	// acc := setup(t, ctx, ss, nil)
+
 	// all test cases start from the same initial state
 	startAcc := &v1.MsgInit{
 		Config: &v1.Config{
@@ -492,12 +496,20 @@ func TestProposalPassing(t *testing.T) {
 	}
 
 	var acc *Account
-	ctx, ss := accountstd.NewMockContext(
+	var ctx context.Context
+	var ss store.KVStoreService
+	ctx, ss = accountstd.NewMockContext(
 		0, []byte("multisig_acc"), []byte("addr1"), TestFunds, func(ctx context.Context, sender []byte, msg, msgResp ProtoMsg) error {
 			return nil
-		}, func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error) {
-			if _, ok := msg.(*v1.MsgUpdateConfig); ok {
-				return acc.UpdateConfig(ctx, msg.(*v1.MsgUpdateConfig))
+		}, func(ictx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error) {
+			if execmsg, ok := msg.(*accountsv1.MsgExecute); ok {
+				updateCfg, err := accountstd.UnpackAny[v1.MsgUpdateConfig](execmsg.GetMessage())
+				if err != nil {
+					return nil, err
+				}
+
+				ctx = accountstd.SetSender(ctx, []byte("multisig_acc"))
+				return acc.UpdateConfig(ctx, updateCfg)
 			}
 			return nil, nil
 		}, func(ctx context.Context, req, resp ProtoMsg) error {
@@ -524,12 +536,21 @@ func TestProposalPassing(t *testing.T) {
 	anymsg, err := accountstd.PackAny(msg)
 	require.NoError(t, err)
 
+	execMsg := &accountsv1.MsgExecute{
+		Sender:  "multisig_acc",
+		Target:  "multisig_acc",
+		Message: anymsg,
+		Funds:   nil,
+	}
+	execMsgAny, err := accountstd.PackAny(execMsg)
+	require.NoError(t, err)
+
 	// create a proposal
 	createRes, err := acc.CreateProposal(ctx, &v1.MsgCreateProposal{
 		Proposal: &v1.Proposal{
 			Title:    "test",
 			Summary:  "test",
-			Messages: []*types.Any{anymsg},
+			Messages: []*types.Any{execMsgAny},
 		},
 	})
 	require.NoError(t, err)
@@ -575,7 +596,7 @@ func TestProposalPassing(t *testing.T) {
 	require.NoError(t, err)
 	for _, v := range cfg.Members {
 		if v.Address == "addr1" {
-			require.Equal(t, uint64(500), v.Weight)
+			require.Equal(t, 500, int(v.Weight))
 		}
 	}
 }

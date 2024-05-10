@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
 
@@ -53,6 +54,11 @@ func (b *MsgRouterBuilder) RegisterPostHandler(msgType string, handler appmodule
 
 func (b *MsgRouterBuilder) RegisterGlobalPostHandler(handler appmodulev2.PostMsgHandler) {
 	b.globalPostHandlers = append(b.globalPostHandlers, handler)
+}
+
+func (b *MsgRouterBuilder) HandlerExists(msgType string) bool {
+	_, ok := b.handlers[msgType]
+	return ok
 }
 
 func (b *MsgRouterBuilder) Build() (appmodulev2.Handler, error) {

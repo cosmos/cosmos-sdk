@@ -2,6 +2,7 @@ package authz
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,5 +32,9 @@ func (a GenericAuthorization) ValidateBasic() error {
 	if a.Msg == "" {
 		return errors.New("msg type cannot be empty")
 	}
+	return nil
+}
+
+func (a GenericAuthorization) GetOptions() json.RawMessage {
 	return nil
 }

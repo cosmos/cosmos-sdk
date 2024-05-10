@@ -30,6 +30,9 @@ message Grant {
   // doesn't have a time expiration (other conditions  in `authorization`
   // may apply to invalidate the grant)
   google.protobuf.Timestamp expiration = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = true];
+
+  // rules are conditions to execute the grant.
+  bytes rules = 3;
 }
 
 // GrantAuthorization extends a grant with both the addresses of the grantee and granter.
@@ -80,3 +83,8 @@ message GrantQueueItem {
 // message GenericAuthzRules {
 //   repeated string blocked_messages = 1;
 // }
+
+// AuthzRuleKeys is app specific options to the keys
+message AuthzRuleKeys {
+  bytes raw_json = 1;
+}

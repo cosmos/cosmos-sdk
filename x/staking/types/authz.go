@@ -2,6 +2,7 @@ package types
 
 import (
 	context "context"
+	"encoding/json"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -151,6 +152,10 @@ func (a StakeAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.Acce
 			MaxTokens:         &limitLeft,
 		},
 	}, nil
+}
+
+func (a StakeAuthorization) GetOptions() json.RawMessage {
+	return nil
 }
 
 func validateAllowAndDenyValidators(allowed, denied []sdk.ValAddress) ([]string, []string, error) {

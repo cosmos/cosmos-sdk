@@ -335,17 +335,7 @@ func NewSimApp(
 	app.CircuitKeeper = circuitkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[circuittypes.StoreKey]), authtypes.NewModuleAddress(govtypes.ModuleName).String(), app.AccountKeeper.AddressCodec())
 	app.BaseApp.SetCircuitBreaker(&app.CircuitKeeper)
 
-	options := map[string]map[string]string{
-		"Send": {
-			"BlockedAddresses": "cosmos1rnr5jrt4exl0samwj0yegv99jeskl0hsge5zwt,cosmos1rnr5jrt4exl0samwj0yegv99jeskl0hsge5zwt",
-			"SpendLimit":       "1000stake",
-		},
-		"Generic": {
-			"BlockedMessages": "cosmos.bank.v1beta1.MsgDelegate,cosmos.bank.v1beta1.MsgRedelegate",
-		},
-	}
-
-	app.AuthzKeeper = authzkeeper.NewKeeper(runtime.NewKVStoreService(keys[authzkeeper.StoreKey]), appCodec, app.MsgServiceRouter(), app.AccountKeeper, options)
+	app.AuthzKeeper = authzkeeper.NewKeeper(runtime.NewKVStoreService(keys[authzkeeper.StoreKey]), appCodec, app.MsgServiceRouter(), app.AccountKeeper)
 
 	groupConfig := group.DefaultConfig()
 	/*

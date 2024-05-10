@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -34,17 +35,15 @@ type Keeper struct {
 	cdc          codec.Codec
 	router       baseapp.MessageRouter
 	authKeeper   authz.AccountKeeper
-	authzOptions map[string]map[string]string
 }
 
 // NewKeeper constructs a message authorization Keeper
-func NewKeeper(storeService corestoretypes.KVStoreService, cdc codec.Codec, router baseapp.MessageRouter, ak authz.AccountKeeper, options map[string]map[string]string) Keeper {
+func NewKeeper(storeService corestoretypes.KVStoreService, cdc codec.Codec, router baseapp.MessageRouter, ak authz.AccountKeeper) Keeper {
 	return Keeper{
 		storeService: storeService,
 		cdc:          cdc,
 		router:       router,
 		authKeeper:   ak,
-		authzOptions: options,
 	}
 }
 
@@ -70,8 +69,59 @@ func (k Keeper) getGrant(ctx context.Context, skey []byte) (grant authz.Grant, f
 	return grant, true
 }
 
+func (k Keeper) SetAuthzRulesKeys(ctx context.Context, options json.RawMessage) error {
+	store := k.storeService.OpenKVStore(ctx)
+
+	optionsBytes, err := json.Marshal(options)
+	if err != nil {
+		return err
+	}
+
+	authzRuleKeys := authz.AuthzRuleKeys{
+		RawJson: optionsBytes,
+	}
+
+	bz, err := k.cdc.Marshal(&authzRuleKeys)
+	if err != nil {
+		return err
+	}
+
+	err = store.Set(AuthzOptionsKeys, bz)
+	return err
+}
+
+func (k Keeper) GetAuthzRulesKeys(ctx context.Context) (map[string]interface{}, error) {
+	store := k.storeService.OpenKVStore(ctx)
+	bz, err := store.Get(AuthzOptionsKeys)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var keys json.RawMessage
+	var authzRuleKeys authz.AuthzRuleKeys
+	err = k.cdc.Unmarshal(bz, &authzRuleKeys)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(authzRuleKeys.RawJson, &keys)
+	if err != nil {
+		return nil, err
+	}
+
+	rules := map[string]interface{}{
+		"Send":  []string{"AllowRecipients", "SpendLImit"},
+		"Stake": []string{"DelegateLimit"},
+	}
+
+	return rules, nil
+
+	// return keys, nil
+}
+
 func (k Keeper) GetAuthzOptions() map[string]map[string]string {
-	return k.authzOptions
+	return nil
 }
 
 func (k Keeper) update(ctx context.Context, grantee, granter sdk.AccAddress, updated authz.Authorization) error {
@@ -306,6 +356,27 @@ func (k Keeper) GetAuthorization(ctx context.Context, grantee, granter sdk.AccAd
 	}
 
 	return auth, grant.Expiration
+}
+
+func (k Keeper) GetAuthzWithRules(ctx context.Context, grantee, granter sdk.AccAddress, msgType string) (authz.Authorization, map[string]interface{}) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, msgType))
+	if !found || (grant.Expiration != nil && grant.Expiration.Before(sdkCtx.BlockHeader().Time)) {
+		return nil, nil
+	}
+
+	auth, err := grant.GetAuthorization()
+	if err != nil {
+		return nil, nil
+	}
+
+	var rules map[string]interface{}
+	err = json.Unmarshal(grant.Rules, &rules)
+	if err != nil {
+		return nil, nil
+	}
+
+	return auth, rules
 }
 
 // IterateGrants iterates over all authorization grants

@@ -2,6 +2,7 @@ package authz
 
 import (
 	context "context"
+	"encoding/json"
 
 	"github.com/cosmos/gogoproto/proto"
 
@@ -24,6 +25,9 @@ type Authorization interface {
 	// ValidateBasic does a simple validation check that
 	// doesn't require access to any other information.
 	ValidateBasic() error
+
+	// GetOptions are, rules defined if any.
+	GetOptions() json.RawMessage
 }
 
 // AcceptResponse instruments the controller of an authz message if the request is accepted

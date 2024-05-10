@@ -18,7 +18,7 @@ import (
 var (
 	GrantKey         = []byte{0x01} // prefix for each key
 	GrantQueuePrefix = []byte{0x02}
-	AuthzRulesPrefix = []byte{0x03}
+	AuthzOptionsKeys = []byte{0x04}
 )
 
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))
@@ -98,8 +98,3 @@ func firstAddressFromGrantStoreKey(key []byte) sdk.AccAddress {
 	addrLen := key[0]
 	return sdk.AccAddress(key[1 : 1+addrLen])
 }
-
-// func BuildAuthzRulesKey(grantName string) []byte {
-// 	g := conv.UnsafeStrToBytes(grantName)
-// 	return append(AuthzRulesPrefix, g...)
-// }

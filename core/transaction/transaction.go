@@ -1,11 +1,11 @@
 package transaction
 
 import (
-	"google.golang.org/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 type (
-	Type     = proto.Message
+	Msg      = proto.Message
 	Identity = []byte
 )
 
@@ -20,9 +20,9 @@ type Codec[T Tx] interface {
 
 type Tx interface {
 	// Hash returns the unique identifier for the Tx.
-	Hash() [32]byte // TODO evaluate if 32 bytes is the right size & benchmark overhead of hashing instead of using identifier
+	Hash() [32]byte
 	// GetMessages returns the list of state transitions of the Tx.
-	GetMessages() ([]Type, error)
+	GetMessages() []Msg
 	// GetSenders returns the tx state transition sender.
 	GetSenders() ([]Identity, error) // TODO reduce this to a single identity if accepted
 	// GetGasLimit returns the gas limit of the tx. Must return math.MaxUint64 for infinite gas

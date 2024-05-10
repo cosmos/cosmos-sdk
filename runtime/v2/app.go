@@ -24,11 +24,14 @@ var _ AppI[transaction.Tx] = (*App)(nil)
 
 // AppI is an interface that defines the methods required by the App.
 type AppI[T transaction.Tx] interface {
-	DeliverBlock(ctx context.Context, block *coreappmanager.BlockRequest[T]) (*coreappmanager.BlockResponse, store.WriterMap, error)
+	DeliverBlock(
+		ctx context.Context,
+		block *coreappmanager.BlockRequest[T],
+	) (*coreappmanager.BlockResponse, store.WriterMap, error)
 	ValidateTx(ctx context.Context, tx T) (coreappmanager.TxResult, error)
 	Simulate(ctx context.Context, tx T) (coreappmanager.TxResult, store.WriterMap, error)
-	Query(ctx context.Context, version uint64, request transaction.Type) (transaction.Type, error)
-	QueryWithState(ctx context.Context, state store.ReaderMap, request transaction.Type) (transaction.Type, error)
+	Query(ctx context.Context, version uint64, request transaction.Msg) (transaction.Msg, error)
+	QueryWithState(ctx context.Context, state store.ReaderMap, request transaction.Msg) (transaction.Msg, error)
 
 	Logger() log.Logger
 	ModuleManager() *MM

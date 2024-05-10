@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"strings"
 
+	"google.golang.org/protobuf/runtime/protoiface"
+
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/router"
-	"google.golang.org/protobuf/runtime/protoiface"
 )
 
 // NewRouterService creates a router.Service which allows to invoke messages and queries using the msg router.

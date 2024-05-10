@@ -21,8 +21,8 @@ import (
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	"cosmossdk.io/runtime/v2/protocompat"
 	"cosmossdk.io/server/v2/stf"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
@@ -606,13 +606,27 @@ func (c *configurator) registerMsgHandlers(sd *grpc.ServiceDesc, ss interface{})
 	return nil
 }
 
+// RequestFullNameFromMethodDesc returns the fully-qualified name of the request message of the provided service's method.
+func requestFullNameFromMethodDesc(sd *grpc.ServiceDesc, method grpc.MethodDesc) (protoreflect.FullName, error) {
+	methodFullName := protoreflect.FullName(fmt.Sprintf("%s.%s", sd.ServiceName, method.MethodName))
+	desc, err := gogoproto.HybridResolver.FindDescriptorByName(methodFullName)
+	if err != nil {
+		return "", fmt.Errorf("cannot find method descriptor %s", methodFullName)
+	}
+	methodDesc, ok := desc.(protoreflect.MethodDescriptor)
+	if !ok {
+		return "", fmt.Errorf("invalid method descriptor %s", methodFullName)
+	}
+	return methodDesc.Input().FullName(), nil
+}
+
 func registerMethod(
 	stfRouter *stf.MsgRouterBuilder,
 	sd *grpc.ServiceDesc,
 	md grpc.MethodDesc,
 	ss interface{},
 ) error {
-	requestName, err := protocompat.RequestFullNameFromMethodDesc(sd, md)
+	requestName, err := requestFullNameFromMethodDesc(sd, md)
 	if err != nil {
 		return err
 	}

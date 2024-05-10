@@ -97,10 +97,12 @@ func (k msgServer) SubmitProposal(ctx context.Context, msg *v1.MsgSubmitProposal
 	}
 
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/9683
-	k.GasService.GasMeter(ctx).Consume(
+	if err := k.GasService.GasMeter(ctx).Consume(
 		3*k.GasService.GasConfig(ctx).WriteCostPerByte*uint64(len(bytes)),
 		"submit proposal",
-	)
+	); err != nil {
+		return nil, err
+	}
 
 	votingStarted, err := k.Keeper.AddDeposit(ctx, proposal.Id, proposer, msg.GetInitialDeposit())
 	if err != nil {

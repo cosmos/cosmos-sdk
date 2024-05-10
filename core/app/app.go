@@ -26,12 +26,12 @@ type BlockRequest[T any] struct {
 	ChainId           string
 	AppHash           []byte
 	Txs               []T
-	ConsensusMessages []transaction.Type
+	ConsensusMessages []transaction.Msg
 }
 
 type BlockResponse struct {
 	Apphash                   []byte
-	ConsensusMessagesResponse []transaction.Type
+	ConsensusMessagesResponse []transaction.Msg
 	ValidatorUpdates          []appmodulev2.ValidatorUpdate
 	PreBlockEvents            []event.Event
 	BeginBlockEvents          []event.Event
@@ -54,7 +54,7 @@ type ResponseInitChain struct {
 
 type TxResult struct {
 	Events    []event.Event
-	Resp      []transaction.Type
+	Resp      []transaction.Msg
 	Error     error
 	Code      uint32
 	Data      []byte

@@ -222,9 +222,9 @@ test-all: test-unit test-e2e test-integration test-ledger-mock test-race
 
 .PHONY: test-system
 test-system: build
-	mkdir -p ./systemtests/binaries/
-	cp $(BUILDDIR)/simd ./systemtests/binaries/
-	$(MAKE) -C systemtests test
+	mkdir -p ./tests/systemtests/binaries/
+	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
+	$(MAKE) -C tests/systemtests test
 
 
 TEST_PACKAGES=./...

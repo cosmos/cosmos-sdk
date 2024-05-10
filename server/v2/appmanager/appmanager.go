@@ -69,9 +69,13 @@ func (a AppManager[T]) InitGenesis(
 }
 
 // ExportGenesis exports the genesis state of the application.
-func (AppManager[T]) ExportGenesis(ctx context.Context, version uint64) ([]byte, error) {
+func (a AppManager[T]) ExportGenesis(ctx context.Context, version uint64) ([]byte, error) {
+	bz, err := a.exportGenesis(ctx, version)
+	if err != nil {
+		return nil, fmt.Errorf("failed to export genesis state: %w", err)
+	}
 
-	return nil, nil
+	return bz, nil
 }
 
 func (a AppManager[T]) DeliverBlock(

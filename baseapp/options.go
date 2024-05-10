@@ -23,6 +23,12 @@ import (
 // File for storing in-package BaseApp optional functions,
 // for options that need access to non-exported fields of the BaseApp
 
+func SetCommitSync(sync bool) func(app *BaseApp) {
+	return func(bapp *BaseApp) {
+		bapp.cms.SetCommitSync(sync)
+	}
+}
+
 // SetPruning sets a pruning option on the multistore associated with the app
 func SetPruning(opts pruningtypes.PruningOptions) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetPruning(opts) }

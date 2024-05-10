@@ -177,7 +177,7 @@ func (suite *KeeperTestSuite) mockMintCoins(moduleAcc *authtypes.ModuleAccount) 
 
 func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(moduleAcc *authtypes.ModuleAccount, accAddr sdk.AccAddress) {
 	suite.authKeeper.EXPECT().GetModuleAddress(moduleAcc.Name).Return(moduleAcc.GetAddress())
-	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc)
+	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc).AnyTimes()
 }
 
 func (suite *KeeperTestSuite) mockBurnCoins(moduleAcc *authtypes.ModuleAccount) {
@@ -393,29 +393,25 @@ func (suite *KeeperTestSuite) TestSendCoinsFromModuleToAccount_CoinSendDisabled(
 	suite.mockMintCoins(mintAcc)
 	require.NoError(keeper.MintCoins(ctx, banktypes.MintModuleName, initCoins))
 
-	params := banktypes.Params{
+	keeper.SetSendEnabled(ctx, sdk.DefaultBondDenom, false)
 
-		SendEnabled: []*banktypes.SendEnabled{
-			{
-				Denom:   sdk.DefaultBondDenom,
-				Enabled: false,
-			},
-		},
-	}
-
-	require.NoError(keeper.SetParams(ctx, params))
-
-	suite.authKeeper.EXPECT().GetModuleAddress(mintAcc.Name).Return(mintAcc.GetAddress())
+	suite.authKeeper.EXPECT().GetModuleAddress(mintAcc.Name).Return(mintAcc.GetAddress()).AnyTimes()
 	err := keeper.SendCoinsFromModuleToAccount(
-		ctx, banktypes.MintModuleName, accAddrs[4], initCoins,
+		ctx, banktypes.MintModuleName, accAddrs[2], initCoins,
 	)
-	require.Contains(err.Error(), "stake transfers are currently disabled")
+	require.Contains(err.Error(), "stake, is prohibited from being sent at this time")
+	keeper.SetSendEnabled(ctx, sdk.DefaultBondDenom, true)
+
 }
 
 func (suite *KeeperTestSuite) TestSupply_DelegateUndelegateCoins() {
 	ctx := suite.ctx
 	require := suite.Require()
 	authKeeper, keeper := suite.authKeeper, suite.bankKeeper
+
+	res, err1 := keeper.SendEnabled(ctx, &banktypes.QuerySendEnabledRequest{})
+	require.NoError(err1)
+	fmt.Println(res)
 
 	// set initial balances
 	suite.mockMintCoins(mintAcc)

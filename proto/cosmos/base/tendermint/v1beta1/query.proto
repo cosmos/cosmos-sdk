@@ -10,6 +10,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/tendermint/v1beta1/types.proto";
 import "cosmos_proto/cosmos.proto";
 import "cometbft/types/v1/block.proto";
+import "cometbft/crypto/v1/proof.proto";
 import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice";
@@ -175,14 +176,16 @@ message ABCIQueryResponse {
   uint32 code = 1;
   // Deprecated: use "value" instead
   reserved 2;
-  string   log       = 3; // nondeterministic
-  string   info      = 4; // nondeterministic
-  int64    index     = 5;
-  bytes    key       = 6;
-  bytes    value     = 7;
-  ProofOps proof_ops = 8;
-  int64    height    = 9;
-  string   codespace = 10;
+  string log   = 3; // nondeterministic
+  string info  = 4; // nondeterministic
+  int64  index = 5;
+  bytes  key   = 6;
+  bytes  value = 7;
+  // deprecated in favor of comet proof type
+  reserved 8;
+  int64                        height    = 9;
+  string                       codespace = 10;
+  .cometbft.crypto.v1.ProofOps proof_ops = 11;
 }
 
 // ProofOp defines an operation used for calculating Merkle root. The data could
@@ -191,14 +194,16 @@ message ABCIQueryResponse {
 //
 // Note: This type is a duplicate of the ProofOp proto type defined in Tendermint.
 message ProofOp {
-  string type = 1;
-  bytes  key  = 2;
-  bytes  data = 3;
+  option deprecated = true;
+  string type       = 1;
+  bytes  key        = 2;
+  bytes  data       = 3;
 }
 
 // ProofOps is Merkle proof defined by the list of ProofOps.
 //
 // Note: This type is a duplicate of the ProofOps proto type defined in Tendermint.
 message ProofOps {
-  repeated ProofOp ops = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  option           deprecated = true;
+  repeated ProofOp ops        = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

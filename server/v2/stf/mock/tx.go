@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 
-	"cosmossdk.io/core/transaction"
 	gogoproto "github.com/cosmos/gogoproto/types"
+
+	"cosmossdk.io/core/transaction"
 )
 
 var _ transaction.Tx = Tx{}
@@ -37,9 +38,9 @@ func (t Tx) GetGasLimit() (uint64, error) {
 }
 
 type encodedTx struct {
-	Sender   []byte     `json:"sender"`
+	Sender   []byte         `json:"sender"`
 	Msg      *gogoproto.Any `json:"message"`
-	GasLimit uint64     `json:"gas_limit"`
+	GasLimit uint64         `json:"gas_limit"`
 }
 
 func (t Tx) Bytes() []byte {

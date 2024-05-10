@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/gas"
 	"cosmossdk.io/server/v2/stf/mock"
-	"github.com/stretchr/testify/require"
 )
 
 func TestBranchService(t *testing.T) {

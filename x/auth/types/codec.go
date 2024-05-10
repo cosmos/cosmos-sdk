@@ -2,9 +2,8 @@ package types
 
 import (
 	"cosmossdk.io/core/registry"
-	"cosmossdk.io/x/auth/migrations/legacytx"
-
 	coretransaction "cosmossdk.io/core/transaction"
+	"cosmossdk.io/x/auth/migrations/legacytx"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"

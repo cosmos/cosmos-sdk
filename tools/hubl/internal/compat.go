@@ -15,6 +15,7 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1beta1 "cosmossdk.io/api/cosmos/base/reflection/v1beta1"
+	"cosmossdk.io/errors"
 )
 
 // loadFileDescriptorsGRPCReflection attempts to load the file descriptor set using gRPC reflection when cosmos.reflection.v1
@@ -47,7 +48,7 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 	go func() {
 		for {
 			in, err := reflectClient.Recv()
-			if err == io.EOF {
+			if errors.IsOf(err, io.EOF) {
 				// read done.
 				close(waitc)
 				return
@@ -172,7 +173,7 @@ func addMissingFileDescriptors(ctx context.Context, client *grpc.ClientConn, fdM
 	go func() {
 		for {
 			in, err := reflectClient.Recv()
-			if err == io.EOF {
+			if errors.IsOf(err, io.EOF) {
 				// read done.
 				close(waitc)
 				return

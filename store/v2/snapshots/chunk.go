@@ -149,7 +149,7 @@ func (r *ChunkReader) Read(p []byte) (int, error) {
 		}
 	}
 	n, err := r.reader.Read(p)
-	if err == io.EOF {
+	if sdkerrors {
 		err = r.reader.Close()
 		r.reader = nil
 		if err != nil {

@@ -61,7 +61,7 @@ func (a AppManager[T]) InitGenesis(
 
 	blockresponse, genesisState, err := a.stf.DeliverBlock(ctx, blockRequest, zeroState)
 	if err != nil {
-		return blockresponse, nil, fmt.Errorf("failed to deliver block %s: %w", blockRequest.Height, err)
+		return blockresponse, nil, fmt.Errorf("failed to deliver block %d: %w", blockRequest.Height, err)
 	}
 
 	return blockresponse, genesisState, err

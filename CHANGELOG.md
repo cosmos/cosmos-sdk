@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
 
 ### Features
+
 * (tests) [#20013](https://github.com/cosmos/cosmos-sdk/pull/20013) Introduce system tests to run multi node local testnet in CI
 * (runtime) [#19953](https://github.com/cosmos/cosmos-sdk/pull/19953) Implement `core/transaction.Service` in runtime.
 * (client) [#19905](https://github.com/cosmos/cosmos-sdk/pull/19905) Add grpc client config to `client.toml`.
@@ -58,6 +59,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (x/consensus) [#19483](https://github.com/cosmos/cosmos-sdk/pull/19483) Add consensus messages registration to consensus module.
 * (types) [#19759](https://github.com/cosmos/cosmos-sdk/pull/19759) Align SignerExtractionAdapter in PriorityNonceMempool Remove.
 * (client) [#19870](https://github.com/cosmos/cosmos-sdk/pull/19870) Add new query command `wait-tx`. Alias `event-query-tx-for` to `wait-tx` for backward compatibility.
+* (crypto/keyring) [#20212](https://github.com/cosmos/cosmos-sdk/pull/20212) Expose the db keyring used in the keystore.
 * (genutil) [#19971](https://github.com/cosmos/cosmos-sdk/pull/19971) Allow manually setting the consensus key type in genesis
 
 ### Improvements
@@ -179,6 +181,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (baseapp) [#19993](https://github.com/cosmos/cosmos-sdk/pull/19993) Indicate pruning with error code "not found" rather than "invalid request".
 * (x/consensus) [#20010](https://github.com/cosmos/cosmos-sdk/pull/20010) Move consensus module to be its own go.mod
 * (server) [#20140](https://github.com/cosmos/cosmos-sdk/pull/20140) Remove embedded grpc-web proxy in favor of standalone grpc-web proxy. [Envoy Proxy](https://www.envoyproxy.io/docs/envoy/latest/start/start)
+* (client) [#20255](https://github.com/cosmos/cosmos-sdk/pull/20255) Use comet proofOp proto type instead of sdk version to avoid needing to translate to later be proven in the merkle proof runtime. 
+* (all) [#19726](https://github.com/cosmos/cosmos-sdk/pull/19726) Integrate comet v1
 
 ### Client Breaking Changes
 

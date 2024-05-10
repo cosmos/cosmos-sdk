@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/cosmos/cosmos-sdk/x/counter/types"
+	"github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 )
 
 type fuzzSuite struct {

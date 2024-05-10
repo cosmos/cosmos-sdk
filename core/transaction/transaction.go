@@ -14,6 +14,7 @@ type Codec[T Tx] interface {
 	// Decode decodes the tx bytes into a DecodedTx, containing
 	// both concrete and bytes representation of the tx.
 	Decode([]byte) (T, error)
+	// DecodeJSON decodes the tx JSON bytes into a DecodedTx
 	DecodeJSON([]byte) (T, error)
 }
 

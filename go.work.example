@@ -16,6 +16,7 @@ use (
 	./simapp
 	./tests
 	./server/v2/stf
+	./server/v2/appmanager
 	./store
 	./store/v2
 	./runtime/v2

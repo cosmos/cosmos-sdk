@@ -127,7 +127,7 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Validator: modifiedConsensusParams.Validator,
 					Evidence:  modifiedConsensusParams.Evidence,
 					Synchrony: modifiedConsensusParams.Synchrony,
-					Abci: &cmtproto.ABCIParams{ //nolint: staticcheck
+					Abci: &cmtproto.ABCIParams{ //nolint: staticcheck // testing backwards compatibility
 						VoteExtensionsEnableHeight: 1234,
 					},
 				}
@@ -313,7 +313,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
-				Abci: &cmtproto.ABCIParams{ //nolint: staticcheck
+				Abci: &cmtproto.ABCIParams{ //nolint: staticcheck // testing backwards compatibility
 					VoteExtensionsEnableHeight: 90,
 				},
 			},
@@ -327,7 +327,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
-				Abci: &cmtproto.ABCIParams{ //nolint: staticcheck
+				Abci: &cmtproto.ABCIParams{ //nolint: staticcheck // testing backwards compatibility
 					VoteExtensionsEnableHeight: 3000,
 				},
 				Feature: &cmtproto.FeatureParams{

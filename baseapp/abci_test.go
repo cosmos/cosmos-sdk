@@ -501,6 +501,50 @@ func TestABCI_ExtendVote(t *testing.T) {
 	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
 }
 
+func TestABCI_ExtendVote_HandlerNotSet(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+	app.SetExtendVoteHandler(nil)
+
+	_, err := app.ExtendVote(context.Background(), &abci.RequestExtendVote{Height: 123, Hash: []byte("thehash")})
+	require.Error(t, err)
+}
+
+func TestABCI_ExtendVote_RecoveryFromPanic(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+	app.SetExtendVoteHandler(func(c sdk.Context, vote *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+		panic("should recover from this panic")
+	})
+
+	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+		// do some kind of verification here
+		expectedVoteExt := fooStr + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
+		if !bytes.Equal(req.VoteExtension, []byte(expectedVoteExt)) {
+			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+		}
+
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+	})
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	_, err := app.InitChain(
+		&abci.RequestInitChain{
+			InitialHeight: 1,
+			ConsensusParams: &cmtproto.ConsensusParams{
+				Abci: &cmtproto.ABCIParams{
+					VoteExtensionsEnableHeight: 200,
+				},
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	_, err = app.ExtendVote(context.Background(), &abci.RequestExtendVote{Height: 123, Hash: []byte("thehash")})
+	require.Error(t, err)
+}
+
 // TestABCI_OnlyVerifyVoteExtension makes sure we can call VerifyVoteExtension
 // without having called ExtendVote before.
 func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
@@ -2130,6 +2174,37 @@ func TestABCI_PrepareProposalIsNotSet(t *testing.T) {
 		Height:     1,
 	}
 	_, err := baseApp.PrepareProposal(&req)
+	require.Error(t, err)
+}
+
+func TestABCI_PrepareProposal_BeforeFirstHeight(t *testing.T) {
+	suite := NewBaseAppSuite(t)
+	reqPrepareProposal := abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+		Height:     0,
+	}
+	_, err := suite.baseApp.PrepareProposal(&reqPrepareProposal)
+	require.Error(t, err)
+}
+
+func TestABCI_ProcessProposalIsNotSet(t *testing.T) {
+	logBuffer := new(bytes.Buffer)
+	logger := log.NewLogger(logBuffer, log.ColorOption(false))
+	baseApp := baseapp.NewBaseApp(t.Name(), logger, nil, nil)
+	baseApp.SetPrepareProposal(nil)
+	req := abci.RequestProcessProposal{
+		Height: 1,
+	}
+	_, err := baseApp.ProcessProposal(&req)
+	require.Error(t, err)
+}
+
+func TestABCI_ProcessProposal_BeforeFirstHeight(t *testing.T) {
+	suite := NewBaseAppSuite(t)
+	reqProcessProposal := abci.RequestProcessProposal{
+		Height: 0,
+	}
+	_, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
 	require.Error(t, err)
 }
 

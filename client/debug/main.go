@@ -266,7 +266,7 @@ func AddrCmd() *cobra.Command {
 				clientCtx.ValidatorAddressCodec.StringToBytes,
 				clientCtx.ConsensusAddressCodec.StringToBytes,
 			}
-			errs := make([]error 0, len(decodeFns))
+			errs := make([]any, 0, len(decodeFns))
 			for _, fn := range decodeFns {
 				if addr, err = fn(addrString); err == nil {
 					break

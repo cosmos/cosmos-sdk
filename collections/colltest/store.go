@@ -3,8 +3,6 @@ package colltest
 import (
 	"context"
 
-	db "github.com/cosmos/cosmos-db"
-
 	"cosmossdk.io/core/store"
 )
 
@@ -14,8 +12,7 @@ type contextStoreKey struct{}
 // They can be used to test collections. The StoreService.NewStoreContext
 // can be used to instantiate a new empty KVStore.
 func MockStore() (*StoreService, context.Context) {
-	kv := db.NewMemDB()
-	ctx := context.WithValue(context.Background(), contextStoreKey{}, &testStore{kv})
+	ctx := context.WithValue(context.Background(), contextStoreKey{}, &testStore{nil})
 	return &StoreService{}, ctx
 }
 
@@ -26,12 +23,11 @@ func (s StoreService) OpenKVStore(ctx context.Context) store.KVStore {
 }
 
 func (s StoreService) NewStoreContext() context.Context {
-	kv := db.NewMemDB()
-	return context.WithValue(context.Background(), contextStoreKey{}, &testStore{kv})
+	return context.WithValue(context.Background(), contextStoreKey{}, &testStore{nil})
 }
 
 type testStore struct {
-	db db.DB
+	db store.KVStore
 }
 
 func (t testStore) Get(key []byte) ([]byte, error) {

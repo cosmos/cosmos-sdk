@@ -3,15 +3,13 @@ package indexes
 import (
 	"context"
 
-	db "github.com/cosmos/cosmos-db"
-
 	"cosmossdk.io/core/store"
 )
 
 // TODO remove this when we add testStore to core/store.
 
 type testStore struct {
-	db db.DB
+	db store.KVStore
 }
 
 func (t testStore) OpenKVStore(ctx context.Context) store.KVStore {
@@ -45,8 +43,7 @@ func (t testStore) ReverseIterator(start, end []byte) (store.Iterator, error) {
 var _ store.KVStore = testStore{}
 
 func deps() (store.KVStoreService, context.Context) {
-	kv := db.NewMemDB()
-	return &testStore{kv}, context.Background()
+	return &testStore{nil}, context.Background()
 }
 
 type company struct {

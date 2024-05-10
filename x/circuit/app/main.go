@@ -5,14 +5,14 @@ import (
 	"time"
 
 	appmanager "cosmossdk.io/core/app"
+	"cosmossdk.io/x/circuit/app/deps"
 )
 
-var app = NewStf()
+var app = deps.NewStf()
 
-//go:wasm-module stf
-//export add
-func execute_block() {
-	_, _, _ = app.DeliverBlock(context.Background(), &appmanager.BlockRequest[Tx]{
+// main is required for the `wasi` target, even if it isn't used.
+func main() {
+	_, _, _ = app.DeliverBlock(context.Background(), &appmanager.BlockRequest[deps.Tx]{
 		Height:            0,
 		Time:              time.Time{},
 		Hash:              nil,
@@ -24,6 +24,3 @@ func execute_block() {
 		nil, // TODO: state
 	)
 }
-
-// main is required for the `wasi` target, even if it isn't used.
-func main() {}

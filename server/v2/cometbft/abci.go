@@ -269,6 +269,13 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.InitChainRequest
 		return nil, fmt.Errorf("genesis state init failure: %w", err)
 	}
 
+	// TODO necessary? where should this WARN live if it all. helpful for testing
+	for _, txRes := range blockresponse.TxResults {
+		if txRes.Error != nil {
+			c.logger.Warn("genesis tx failed", "code", txRes.Code, "log", txRes.Log, "error", txRes.Error)
+		}
+	}
+
 	validatorUpdates := intoABCIValidatorUpdates(blockresponse.ValidatorUpdates)
 
 	stateChanges, err := genesisState.GetStateChanges()

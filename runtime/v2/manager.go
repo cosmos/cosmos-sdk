@@ -627,7 +627,7 @@ func registerMethod(
 		ctx context.Context,
 		msg appmodulev2.Message,
 	) (resp appmodulev2.Message, err error) {
-		res, err := md.Handler(ss, ctx, noopDecoder, messageClosureInterceptor(msg))
+		res, err := md.Handler(ss, ctx, noopDecoder, messagePassingInterceptor(msg))
 		if err != nil {
 			return nil, err
 		}
@@ -637,7 +637,7 @@ func registerMethod(
 
 func noopDecoder(_ interface{}) error { return nil }
 
-func messageClosureInterceptor(msg appmodulev2.Message) grpc.UnaryServerInterceptor {
+func messagePassingInterceptor(msg appmodulev2.Message) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
 		req interface{},

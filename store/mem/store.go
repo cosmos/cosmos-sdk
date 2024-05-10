@@ -1,9 +1,8 @@
 package mem
 
 import (
-	"io"
-
 	dbm "github.com/cosmos/cosmos-db"
+	"io"
 
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/dbadapter"

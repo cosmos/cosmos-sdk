@@ -2,6 +2,7 @@ package root
 
 import (
 	"cosmossdk.io/log"
+	"cosmossdk.io/store/types"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
@@ -12,7 +13,6 @@ import (
 	"cosmossdk.io/store/v2/storage/sqlite"
 	"fmt"
 	"os"
-	"strings"
 )
 
 type SSType int
@@ -79,7 +79,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 
 	trees := make(map[string]commitment.Tree)
 	for _, key := range opts.StoreKeys {
-		if strings.HasPrefix(key, "memory:") {
+		if types.IsMemoryStoreKey(key) {
 			trees[key] = mem.New()
 		} else {
 			switch opts.SCType {

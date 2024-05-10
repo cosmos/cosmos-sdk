@@ -2,6 +2,7 @@ package commitment
 
 import (
 	"bytes"
+	"cosmossdk.io/store/types"
 	"errors"
 	"fmt"
 	"io"
@@ -44,7 +45,12 @@ type CommitStore struct {
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(trees map[string]Tree, db store.RawDB, pruneOpts *store.PruneOptions, logger log.Logger) (*CommitStore, error) {
+func NewCommitStore(
+	trees map[string]Tree,
+	db store.RawDB,
+	pruneOpts *store.PruneOptions,
+	logger log.Logger,
+) (*CommitStore, error) {
 	if pruneOpts == nil {
 		pruneOpts = store.DefaultPruneOptions()
 	}
@@ -83,6 +89,9 @@ func (c *CommitStore) WriteBatch(cs *corestore.Changeset) error {
 func (c *CommitStore) WorkingCommitInfo(version uint64) *proof.CommitInfo {
 	storeInfos := make([]proof.StoreInfo, 0, len(c.multiTrees))
 	for storeKey, tree := range c.multiTrees {
+		if types.IsMemoryStoreKey(storeKey) {
+			continue
+		}
 		bz := []byte(storeKey)
 		storeInfos = append(storeInfos, proof.StoreInfo{
 			Name: bz,
@@ -198,6 +207,9 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 	storeInfos := make([]proof.StoreInfo, 0, len(c.multiTrees))
 
 	for storeKey, tree := range c.multiTrees {
+		if types.IsMemoryStoreKey(storeKey) {
+			continue
+		}
 		// If a commit event execution is interrupted, a new iavl store's version
 		// will be larger than the RMS's metadata, when the block is replayed, we
 		// should avoid committing that iavl store again.
@@ -376,7 +388,12 @@ func (c *CommitStore) Snapshot(version uint64, protoWriter protoio.Writer) error
 }
 
 // Restore implements snapshotstypes.CommitSnapshotter.
-func (c *CommitStore) Restore(version uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *corestore.StateChanges) (snapshotstypes.SnapshotItem, error) {
+func (c *CommitStore) Restore(
+	version uint64,
+	format uint32,
+	protoReader protoio.Reader,
+	chStorage chan<- *corestore.StateChanges,
+) (snapshotstypes.SnapshotItem, error) {
 	var (
 		importer     Importer
 		snapshotItem snapshotstypes.SnapshotItem

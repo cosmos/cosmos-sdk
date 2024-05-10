@@ -1,18 +1,19 @@
 package root
 
 import (
+	"fmt"
+	"os"
+
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/types"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	"cosmossdk.io/store/v2/commitment/mem"
 	"cosmossdk.io/store/v2/db"
+	"cosmossdk.io/store/v2/internal"
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/pebbledb"
 	"cosmossdk.io/store/v2/storage/sqlite"
-	"fmt"
-	"os"
 )
 
 type SSType int
@@ -79,7 +80,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 
 	trees := make(map[string]commitment.Tree)
 	for _, key := range opts.StoreKeys {
-		if types.IsMemoryStoreKey(key) {
+		if internal.IsMemoryStoreKey(key) {
 			trees[key] = mem.New()
 		} else {
 			switch opts.SCType {

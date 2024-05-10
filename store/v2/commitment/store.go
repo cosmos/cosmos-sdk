@@ -2,7 +2,6 @@ package commitment
 
 import (
 	"bytes"
-	"cosmossdk.io/store/types"
 	"errors"
 	"fmt"
 	"io"
@@ -13,7 +12,8 @@ import (
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
-	internal "cosmossdk.io/store/v2/internal/conv"
+	"cosmossdk.io/store/v2/internal"
+	"cosmossdk.io/store/v2/internal/conv"
 	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/snapshots"
@@ -66,7 +66,7 @@ func NewCommitStore(
 func (c *CommitStore) WriteBatch(cs *corestore.Changeset) error {
 	for _, pairs := range cs.Changes {
 
-		key := internal.UnsafeBytesToStr(pairs.Actor)
+		key := conv.UnsafeBytesToStr(pairs.Actor)
 
 		tree, ok := c.multiTrees[key]
 		if !ok {
@@ -89,7 +89,7 @@ func (c *CommitStore) WriteBatch(cs *corestore.Changeset) error {
 func (c *CommitStore) WorkingCommitInfo(version uint64) *proof.CommitInfo {
 	storeInfos := make([]proof.StoreInfo, 0, len(c.multiTrees))
 	for storeKey, tree := range c.multiTrees {
-		if types.IsMemoryStoreKey(storeKey) {
+		if internal.IsMemoryStoreKey(storeKey) {
 			continue
 		}
 		bz := []byte(storeKey)
@@ -207,7 +207,7 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 	storeInfos := make([]proof.StoreInfo, 0, len(c.multiTrees))
 
 	for storeKey, tree := range c.multiTrees {
-		if types.IsMemoryStoreKey(storeKey) {
+		if internal.IsMemoryStoreKey(storeKey) {
 			continue
 		}
 		// If a commit event execution is interrupted, a new iavl store's version
@@ -263,7 +263,7 @@ func (c *CommitStore) SetInitialVersion(version uint64) error {
 }
 
 func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]proof.CommitmentOp, error) {
-	tree, ok := c.multiTrees[internal.UnsafeBytesToStr(storeKey)]
+	tree, ok := c.multiTrees[conv.UnsafeBytesToStr(storeKey)]
 	if !ok {
 		return nil, fmt.Errorf("store %s not found", storeKey)
 	}
@@ -289,7 +289,7 @@ func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]p
 }
 
 func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, error) {
-	tree, ok := c.multiTrees[internal.UnsafeBytesToStr(storeKey)]
+	tree, ok := c.multiTrees[conv.UnsafeBytesToStr(storeKey)]
 	if !ok {
 		return nil, fmt.Errorf("store %s not found", storeKey)
 	}

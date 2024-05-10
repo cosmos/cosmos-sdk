@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	mathrand "math/rand"
 	"strings"
 	"testing"
@@ -61,11 +62,12 @@ func (s *addressTestSuite) testMarshal(original, res interface{}, marshal func()
 	s.Require().Equal(original, res)
 }
 
-func (s *addressTestSuite) testMarshalYAML(original, res interface{}, marshal func() (interface{}, error), unmarshal func([]byte) error) {
+func testMarshalYAML(t *testing.T, original, res interface{}, marshal func() (interface{}, error), unmarshal func([]byte) error) {
 	bz, err := marshal()
-	s.Require().NoError(err)
-	s.Require().NoError(unmarshal([]byte(bz.(string))))
-	s.Require().Equal(original, res)
+
+	assert.NoError(t, err)
+	assert.NoError(t, unmarshal([]byte(bz.(string))))
+	assert.Equal(t, original, res)
 }
 
 func (s *addressTestSuite) TestEmptyAddresses() {
@@ -143,29 +145,36 @@ func (s *addressTestSuite) TestRandBech32AccAddrConsistency() {
 	s.Require().Equal(types.ErrEmptyHexAddress, err)
 }
 
-func (s *addressTestSuite) TestRandBech32AccAddrConsistencyYAML() {
-	pubBz := make([]byte, ed25519.PubKeySize)
-	pub := &ed25519.PubKey{Key: pubBz}
+func FuzzBech32AccAddrConsistencyYAML(f *testing.F) {
+	if testing.Short() {
+		f.Skip("running in -short mode")
+	}
 
-	for i := 0; i < 1000; i++ {
-		_, err := rand.Read(pub.Key)
-		s.Require().NoError(err)
-		acc := types.AccAddress(pub.Address())
+	f.Add([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
+	f.Add([]byte{16, 1, 2, 3, 4, 5, 16, 27, 58, 9, 51, 11, 12, 13, 14, 15, 16, 17, 20, 21})
+	f.Add([]byte{19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0})
+
+	f.Fuzz(func(t *testing.T, input []byte) {
+		acc := types.AccAddress(input)
 		res := &types.AccAddress{}
 
-		s.testMarshalYAML(&acc, res, acc.MarshalYAML, res.UnmarshalYAML)
-		s.testMarshalYAML(&acc, res, acc.MarshalYAML, res.UnmarshalYAML)
+		testMarshalYAML(t, &acc, res, acc.MarshalYAML, res.UnmarshalYAML)
+		testMarshalYAML(t, &acc, res, acc.MarshalYAML, res.UnmarshalYAML)
 
 		str := acc.String()
+		var err error
 		*res, err = types.AccAddressFromBech32(str)
-		s.Require().NoError(err)
-		s.Require().Equal(acc, *res)
+		assert.NoError(t, err)
+		assert.Equal(t, acc, *res)
 
 		str = hex.EncodeToString(acc)
 		*res, err = types.AccAddressFromHexUnsafe(str)
-		s.Require().NoError(err)
-		s.Require().Equal(acc, *res)
-	}
+		assert.NoError(t, err)
+		assert.Equal(t, acc, *res)
+	})
+}
+
+func (s *addressTestSuite) TestUnmarshalYAMLWithInvalidInput() {
 
 	for _, str := range invalidStrs {
 		_, err := types.AccAddressFromHexUnsafe(str)

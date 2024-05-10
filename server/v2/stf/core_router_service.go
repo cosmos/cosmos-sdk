@@ -13,7 +13,7 @@ import (
 )
 
 // NewRouterService creates a router.Service which allows to invoke messages and queries using the msg router.
-func NewRouterService(queryRouterBuilder *MsgRouterBuilder, msgRouterBuilder *MsgRouterBuilder) router.Service {
+func NewRouterService(queryRouterBuilder, msgRouterBuilder *MsgRouterBuilder) router.Service {
 	queryRouter, err := queryRouterBuilder.Build()
 	if err != nil {
 		panic("cannot create queryRouter")
@@ -77,9 +77,12 @@ func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error 
 // InvokeTyped execute a message and fill-in a response.
 // The response must be known and passed as a parameter.
 // Use InvokeUntyped if the response type is not known.
-func (m *msgRouterService) InvokeTyped(ctx context.Context, msg, resp protoiface.MessageV1) error {
+func (m *msgRouterService) InvokeTyped(
+	ctx context.Context,
+	msg, resp protoiface.MessageV1, // nolint:staticcheck // interface types implicitly store a pointer
+) error {
 	var err error
-	resp, err = m.handler(ctx, msg)
+	resp, err = m.handler(ctx, msg) // nolint:ineffassign,staticcheck // interface types implicitly store a pointer
 	return err
 }
 
@@ -112,13 +115,19 @@ func (m *queryRouterService) CanInvoke(ctx context.Context, typeURL string) erro
 // InvokeTyped execute a message and fill-in a response.
 // The response must be known and passed as a parameter.
 // Use InvokeUntyped if the response type is not known.
-func (m *queryRouterService) InvokeTyped(ctx context.Context, req, resp protoiface.MessageV1) error {
+func (m *queryRouterService) InvokeTyped(
+	ctx context.Context,
+	req, resp protoiface.MessageV1, // nolint:staticcheck // interface types implicitly store a pointer
+) error {
 	var err error
-	resp, err = m.handler(ctx, req)
+	resp, err = m.handler(ctx, req) // nolint:ineffassign,staticcheck // interface types implicitly store a pointer
 	return err
 }
 
 // InvokeUntyped execute a message and returns a response.
-func (m *queryRouterService) InvokeUntyped(ctx context.Context, req protoiface.MessageV1) (protoiface.MessageV1, error) {
+func (m *queryRouterService) InvokeUntyped(
+	ctx context.Context,
+	req protoiface.MessageV1,
+) (protoiface.MessageV1, error) {
 	return m.handler(ctx, req)
 }

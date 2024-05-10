@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/golang/protobuf/proto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
-	protobuf "google.golang.org/protobuf/proto"
+	proto "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
@@ -22,7 +22,6 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/stf"
-	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
@@ -160,7 +159,9 @@ func (m *MM) InitGenesisJSON(ctx context.Context, genesisData map[string]json.Ra
 				return fmt.Errorf("failed to unmarshal %s genesis state: %w", moduleName, err)
 			}
 			for _, jsonTx := range genesisState.GenTxs {
-				txHandler(jsonTx)
+				if err := txHandler(jsonTx); err != nil {
+					return fmt.Errorf("failed to handle genesis transaction: %w", err)
+				}
 			}
 			continue
 		}
@@ -572,7 +573,7 @@ func (c *configurator) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
 		return
 	}
 
-	if !protobuf.HasExtension(prefSd.(protoreflect.ServiceDescriptor).Options(), cosmosmsg.E_Service) {
+	if !proto.HasExtension(prefSd.(protoreflect.ServiceDescriptor).Options(), cosmosmsg.E_Service) {
 		err = c.registerQueryHandlers(sd, ss)
 		if err != nil {
 			c.err = err
@@ -606,7 +607,7 @@ func (c *configurator) registerMsgHandlers(sd *grpc.ServiceDesc, ss interface{})
 	return nil
 }
 
-// RequestFullNameFromMethodDesc returns the fully-qualified name of the request message of the provided service's method.
+// requestFullNameFromMethodDesc returns the fully-qualified name of the request message of the provided service's method.
 func requestFullNameFromMethodDesc(sd *grpc.ServiceDesc, method grpc.MethodDesc) (protoreflect.FullName, error) {
 	methodFullName := protoreflect.FullName(fmt.Sprintf("%s.%s", sd.ServiceName, method.MethodName))
 	desc, err := gogoproto.HybridResolver.FindDescriptorByName(methodFullName)
@@ -635,13 +636,23 @@ func registerMethod(
 		ctx context.Context,
 		msg appmodulev2.Message,
 	) (resp appmodulev2.Message, err error) {
-		res, err := md.Handler(ss, ctx, func(dstMsg any) error {
-			proto.Merge(dstMsg.(proto.Message), msg)
-			return nil
-		}, nil)
+		res, err := md.Handler(ss, ctx, noopDecoder, messagePassingInterceptor(msg))
 		if err != nil {
 			return nil, err
 		}
 		return res.(appmodulev2.Message), nil
 	})
+}
+
+func noopDecoder(_ interface{}) error { return nil }
+
+func messagePassingInterceptor(msg appmodulev2.Message) grpc.UnaryServerInterceptor {
+	return func(
+		ctx context.Context,
+		req interface{},
+		_ *grpc.UnaryServerInfo,
+		handler grpc.UnaryHandler,
+	) (interface{}, error) {
+		return handler(ctx, msg)
+	}
 }

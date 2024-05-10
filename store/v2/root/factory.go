@@ -16,8 +16,10 @@ import (
 	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
-type SSType int
-type SCType int
+type (
+	SSType int
+	SCType int
+)
 
 const (
 	SSTypeSQLite SSType = 0
@@ -49,7 +51,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		sc        store.Committer
 		err       error
 		ensureDir = func(dir string) error {
-			if err := os.MkdirAll(dir, 0755); err != nil {
+			if err := os.MkdirAll(dir, 0x0755); err != nil {
 				return fmt.Errorf("failed to create directory %s: %w", dir, err)
 			}
 			return nil

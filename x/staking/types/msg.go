@@ -2,6 +2,7 @@ package types
 
 import (
 	"cosmossdk.io/core/address"
+	coretransaction "cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
@@ -12,14 +13,14 @@ import (
 )
 
 var (
-	_ sdk.Msg                            = &MsgCreateValidator{}
+	_ coretransaction.Msg                = &MsgCreateValidator{}
 	_ codectypes.UnpackInterfacesMessage = (*MsgCreateValidator)(nil)
-	_ sdk.Msg                            = &MsgEditValidator{}
-	_ sdk.Msg                            = &MsgDelegate{}
-	_ sdk.Msg                            = &MsgUndelegate{}
-	_ sdk.Msg                            = &MsgBeginRedelegate{}
-	_ sdk.Msg                            = &MsgCancelUnbondingDelegation{}
-	_ sdk.Msg                            = &MsgUpdateParams{}
+	_ coretransaction.Msg                = &MsgEditValidator{}
+	_ coretransaction.Msg                = &MsgDelegate{}
+	_ coretransaction.Msg                = &MsgUndelegate{}
+	_ coretransaction.Msg                = &MsgBeginRedelegate{}
+	_ coretransaction.Msg                = &MsgCancelUnbondingDelegation{}
+	_ coretransaction.Msg                = &MsgUpdateParams{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.

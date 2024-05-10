@@ -1,13 +1,15 @@
 package mem
 
 import (
+	ics23 "github.com/cosmos/ics23/go"
+
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/db"
-	ics23 "github.com/cosmos/ics23/go"
 )
 
 var _ commitment.Tree = (*Tree)(nil)
 
+// Tree is a simple in-memory implementation of commitment.Tree.
 type Tree struct {
 	*db.MemDB
 }

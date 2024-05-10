@@ -53,6 +53,9 @@ func (s *DBTestSuite) TestDBOperations() {
 
 	// Set & Delete
 	s.Require().NoError(s.db.Set([]byte("key3"), []byte("value3")))
+	has, err = s.db.Has([]byte("key3"))
+	s.Require().NoError(err)
+	s.Require().True(has)
 	value, err = s.db.Get([]byte("key3"))
 	s.Require().NoError(err)
 	s.Require().Equal([]byte("value3"), value)
@@ -60,6 +63,9 @@ func (s *DBTestSuite) TestDBOperations() {
 	has, err = s.db.Has([]byte("key3"))
 	s.Require().NoError(err)
 	s.Require().False(has)
+	value, err = s.db.Get([]byte("key3"))
+	s.Require().NoError(err)
+	s.Require().Nil(value)
 }
 
 func (s *DBTestSuite) TestIterator() {

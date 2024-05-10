@@ -37,6 +37,7 @@ func (pdb *PrefixDB) Get(key []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return value, nil
 }
 
@@ -59,9 +60,7 @@ func (pdb *PrefixDB) Set(key, value []byte) error {
 	if len(key) == 0 {
 		return errors.ErrKeyEmpty
 	}
-	if value == nil {
-		return errors.ErrValueNil
-	}
+
 	return pdb.db.Set(pdb.prefixed(key), value)
 }
 
@@ -70,6 +69,7 @@ func (pdb *PrefixDB) Delete(key []byte) error {
 	if len(key) == 0 {
 		return errors.ErrKeyEmpty
 	}
+
 	return pdb.db.Delete(pdb.prefixed(key))
 }
 

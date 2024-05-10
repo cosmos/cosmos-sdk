@@ -76,6 +76,7 @@ type KVStoreWithBatch interface {
 	KVStore
 	BatchCreator
 
+	// Close closes the KVStoreWithBatch, releasing any resources held.
 	Close() error
 }
 

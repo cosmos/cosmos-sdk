@@ -3,7 +3,7 @@ module cosmossdk.io/store
 go 1.22.2
 
 require (
-	cosmossdk.io/errors v1.0.0
+	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.3.1
 	cosmossdk.io/math v1.3.0
 	github.com/cockroachdb/errors v1.11.1 // indirect

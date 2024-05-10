@@ -69,11 +69,24 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 	if err != nil {
 		return nil, err
 	}
-	if err := cmttypes.ConsensusParamsFromProto(consensusParams).ValidateBasic(); err != nil {
+
+	paramsProto, err := k.ParamsStore.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	params := cmttypes.ConsensusParamsFromProto(paramsProto)
+
+	nextParams := params.Update(&consensusParams)
+
+	if err := nextParams.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
-	if err := k.ParamsStore.Set(ctx, consensusParams); err != nil {
+	if err := params.ValidateUpdate(&consensusParams, k.HeaderService.HeaderInfo(ctx).Height); err != nil {
+		return nil, err
+	}
+
+	if err := k.ParamsStore.Set(ctx, nextParams.ToProto()); err != nil {
 		return nil, err
 	}
 
@@ -85,22 +98,4 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
-}
-
-// SetParams sets the consensus parameters on init of a chain. This is a consensus message. It can only be called by the consensus server
-// This is used in the consensus message handler set in module.go.
-func (k Keeper) SetParams(ctx context.Context, req *types.ConsensusMsgParams) (*types.ConsensusMsgParamsResponse, error) {
-	consensusParams, err := req.ToProtoConsensusParams()
-	if err != nil {
-		return nil, err
-	}
-	if err := cmttypes.ConsensusParamsFromProto(consensusParams).ValidateBasic(); err != nil {
-		return nil, err
-	}
-
-	if err := k.ParamsStore.Set(ctx, consensusParams); err != nil {
-		return nil, err
-	}
-
-	return &types.ConsensusMsgParamsResponse{}, nil
 }

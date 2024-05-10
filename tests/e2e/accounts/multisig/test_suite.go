@@ -10,10 +10,10 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
+	multisigaccount "cosmossdk.io/x/accounts/defaults/multisig"
 	v1 "cosmossdk.io/x/accounts/defaults/multisig/v1"
 	"cosmossdk.io/x/bank/testutil"
 
-	multisigaccount "cosmossdk.io/x/accounts/defaults/multisig"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -98,7 +98,7 @@ func (s *E2ETestSuite) initAccount(ctx context.Context, sender []byte, membersPo
 }
 
 // createProposal
-func (s *E2ETestSuite) createProposal(ctx context.Context, accAddr []byte, sender []byte, msgs ...*codectypes.Any) {
+func (s *E2ETestSuite) createProposal(ctx context.Context, accAddr, sender []byte, msgs ...*codectypes.Any) {
 	propReq := &v1.MsgCreateProposal{
 		Proposal: &v1.Proposal{
 			Title:    "test",
@@ -110,7 +110,7 @@ func (s *E2ETestSuite) createProposal(ctx context.Context, accAddr []byte, sende
 	s.NoError(err)
 }
 
-func (s *E2ETestSuite) executeProposal(ctx context.Context, accAddr []byte, sender []byte, proposalID uint64) error {
+func (s *E2ETestSuite) executeProposal(ctx context.Context, accAddr, sender []byte, proposalID uint64) error {
 	execReq := &v1.MsgExecuteProposal{
 		ProposalId: proposalID,
 	}

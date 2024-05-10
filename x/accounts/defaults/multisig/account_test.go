@@ -5,11 +5,12 @@ import (
 	"testing"
 	"time"
 
+	types "github.com/cosmos/gogoproto/types/any"
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/accountstd"
 	v1 "cosmossdk.io/x/accounts/defaults/multisig/v1"
-	types "github.com/cosmos/gogoproto/types/any"
-	"github.com/stretchr/testify/require"
 )
 
 func setup(t *testing.T, ctx context.Context, ss store.KVStoreService, timefn func() time.Time) *Account {

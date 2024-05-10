@@ -385,6 +385,33 @@ func (suite *KeeperTestSuite) TestSendCoinsFromModuleToAccount_Blocklist() {
 	))
 }
 
+func (suite *KeeperTestSuite) TestSendCoinsFromModuleToAccount_CoinSendDisabled() {
+	ctx := suite.ctx
+	require := suite.Require()
+	keeper := suite.bankKeeper
+
+	suite.mockMintCoins(mintAcc)
+	require.NoError(keeper.MintCoins(ctx, banktypes.MintModuleName, initCoins))
+
+	params := banktypes.Params{
+
+		SendEnabled: []*banktypes.SendEnabled{
+			{
+				Denom:   sdk.DefaultBondDenom,
+				Enabled: false,
+			},
+		},
+	}
+
+	require.NoError(keeper.SetParams(ctx, params))
+
+	suite.authKeeper.EXPECT().GetModuleAddress(mintAcc.Name).Return(mintAcc.GetAddress())
+	err := keeper.SendCoinsFromModuleToAccount(
+		ctx, banktypes.MintModuleName, accAddrs[4], initCoins,
+	)
+	require.Contains(err.Error(), "stake transfers are currently disabled")
+}
+
 func (suite *KeeperTestSuite) TestSupply_DelegateUndelegateCoins() {
 	ctx := suite.ctx
 	require := suite.Require()

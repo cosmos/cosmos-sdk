@@ -22,15 +22,12 @@ func TestE2ETestSuite(t *testing.T) {
 	suite.Run(t, NewE2ETestSuite())
 }
 
-// TestFullMultisig creates a multisig account with 1 member, sends a tx, votes and executes it
-// then adds 2 more members and changes the config to require 2/3 majority (also through a proposal).
-// Finally it creates a proposal that won't pass.
-func (s *E2ETestSuite) TestFullMultisig() {
+// TestSimpleSendProposal creates a multisig account with 1 member, sends a tx, votes and executes it.
+func (s *E2ETestSuite) TestSimpleSendProposal() {
 	ctx := sdk.NewContext(s.app.CommitMultiStore(), false, s.app.Logger()).WithHeaderInfo(header.Info{
 		Time: time.Now(),
 	})
 
-	s.fundAccount(ctx, s.members[0], sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000000))})
 	randAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	addr, err := s.app.AuthKeeper.AddressCodec().BytesToString(randAcc)
 	s.NoError(err)
@@ -57,15 +54,7 @@ func (s *E2ETestSuite) TestFullMultisig() {
 	anyMsg, err := codectypes.NewAnyWithValue(msg)
 	s.NoError(err)
 
-	propReq := &v1.MsgCreateProposal{
-		Proposal: &v1.Proposal{
-			Title:    "test",
-			Summary:  "test",
-			Messages: []*codectypes.Any{anyMsg},
-		},
-	}
-	err = s.executeTx(ctx, propReq, accountAddr, s.members[0])
-	s.NoError(err)
+	s.createProposal(ctx, accountAddr, s.members[0], anyMsg)
 
 	// now we vote for it
 	voteReq := &v1.MsgVote{
@@ -77,15 +66,13 @@ func (s *E2ETestSuite) TestFullMultisig() {
 	s.NoError(err)
 
 	// now we execute it
-	execReq := &v1.MsgExecuteProposal{
-		ProposalId: 0,
-	}
-
-	err = s.executeTx(ctx, execReq, accountAddr, s.members[0])
+	err = s.executeProposal(ctx, accountAddr, s.members[0], 0)
 	s.NoError(err)
 
+	foundPropResult := false
 	for _, v := range ctx.EventManager().Events() {
 		if v.Type == "proposal_tally" {
+			foundPropResult = true
 			status, found := v.GetAttribute("status")
 			s.True(found)
 			s.Equal(v1.ProposalStatus_PROPOSAL_STATUS_PASSED.String(), status.Value)
@@ -111,11 +98,27 @@ func (s *E2ETestSuite) TestFullMultisig() {
 			s.Equal("<nil>", rejectErr.Value)
 		}
 	}
+	s.True(foundPropResult)
+
 	balance = s.app.BankKeeper.GetBalance(ctx, randAcc, "stake")
 	s.Equal(int64(100), balance.Amount.Int64())
 
-	err = s.executeTx(ctx, execReq, accountAddr, s.members[0])
+	// try to execute again, should fail
+	err = s.executeProposal(ctx, accountAddr, s.members[0], 0)
 	s.Error(err)
+}
+
+// TestConfigUpdate creates a multisig with 1 member, adds 2 more members and
+// changes the config to require 2/3 majority (also through a proposal).
+func (s *E2ETestSuite) TestConfigUpdate() {
+	ctx := sdk.NewContext(s.app.CommitMultiStore(), false, s.app.Logger()).WithHeaderInfo(header.Info{
+		Time: time.Now(),
+	})
+
+	initialMembers := map[string]uint64{
+		s.membersAddr[0]: 100,
+	}
+	accountAddr, accAddrStr := s.initAccount(ctx, s.members[0], initialMembers)
 
 	// Add 2 members and pass the proposal
 	// create proposal
@@ -146,30 +149,18 @@ func (s *E2ETestSuite) TestFullMultisig() {
 		Funds:   []sdk.Coin{},
 	}
 
-	proposal := &v1.MsgCreateProposal{
-		Proposal: &v1.Proposal{
-			Title:    "Change config",
-			Summary:  "Change config",
-			Messages: []*codectypes.Any{codectypes.UnsafePackAny(msgExec)},
-		},
-	}
-
-	err = s.executeTx(ctx, proposal, accountAddr, s.members[0])
-	s.NoError(err)
+	s.createProposal(ctx, accountAddr, s.members[0], codectypes.UnsafePackAny(msgExec))
 
 	// vote
-	voteReq = &v1.MsgVote{
-		ProposalId: 1,
+	voteReq := &v1.MsgVote{
+		ProposalId: 0,
 		Vote:       v1.VoteOption_VOTE_OPTION_YES,
 	}
 
-	err = s.executeTx(ctx, voteReq, accountAddr, s.members[0])
+	err := s.executeTx(ctx, voteReq, accountAddr, s.members[0])
 	s.NoError(err)
 
-	execReq = &v1.MsgExecuteProposal{
-		ProposalId: 1,
-	}
-	err = s.executeTx(ctx, execReq, accountAddr, s.members[0])
+	err = s.executeProposal(ctx, accountAddr, s.members[0], 0)
 	s.NoError(err)
 
 	// get members
@@ -181,61 +172,46 @@ func (s *E2ETestSuite) TestFullMultisig() {
 
 	// Try to remove a member, but it doesn't reach passing threshold
 	// create proposal
-	updateMsg = &v1.MsgUpdateConfig{
-		UpdateMembers: []*v1.Member{
-			{
-				Address: s.membersAddr[1],
-				Weight:  0,
-			},
-		},
-		Config: &v1.Config{
-			Threshold:      200, // 3 members with 100 power each, 2/3 majority
-			Quorum:         200,
-			VotingPeriod:   120,
-			Revote:         false,
-			EarlyExecution: false,
-		},
-	}
-
 	msgExec = &accountsv1.MsgExecute{
-		Sender:  accAddrStr,
-		Target:  accAddrStr,
-		Message: codectypes.UnsafePackAny(updateMsg),
-		Funds:   []sdk.Coin{},
+		Sender: accAddrStr,
+		Target: accAddrStr,
+		Message: codectypes.UnsafePackAny(&v1.MsgUpdateConfig{
+			UpdateMembers: []*v1.Member{
+				{
+					Address: s.membersAddr[1],
+					Weight:  0,
+				},
+			},
+			Config: &v1.Config{
+				Threshold:      200, // 3 members with 100 power each, 2/3 majority
+				Quorum:         200,
+				VotingPeriod:   120,
+				Revote:         false,
+				EarlyExecution: false,
+			},
+		}),
+		Funds: []sdk.Coin{},
 	}
 
-	proposal = &v1.MsgCreateProposal{
-		Proposal: &v1.Proposal{
-			Title:    "Change config",
-			Summary:  "Change config",
-			Messages: []*codectypes.Any{codectypes.UnsafePackAny(msgExec)},
-		},
-	}
-
-	err = s.executeTx(ctx, proposal, accountAddr, s.members[0])
-	s.NoError(err)
+	s.createProposal(ctx, accountAddr, s.members[0], codectypes.UnsafePackAny(msgExec))
 
 	// vote
 	voteReq = &v1.MsgVote{
-		ProposalId: 2,
+		ProposalId: 1,
 		Vote:       v1.VoteOption_VOTE_OPTION_NO,
 	}
 
 	err = s.executeTx(ctx, voteReq, accountAddr, s.members[0])
 	s.NoError(err)
 
-	execReq = &v1.MsgExecuteProposal{
-		ProposalId: 2,
-	}
-
 	// need to wait until voting period is over because we disabled early execution on the last
 	// config update
-	err = s.executeTx(ctx, execReq, accountAddr, s.members[0])
+	err = s.executeProposal(ctx, accountAddr, s.members[0], 0)
 	s.ErrorContains(err, "voting period has not ended yet, and early execution is not enabled")
 
 	// vote with member 1
 	voteReq = &v1.MsgVote{
-		ProposalId: 2,
+		ProposalId: 1,
 		Vote:       v1.VoteOption_VOTE_OPTION_NO,
 	}
 
@@ -244,7 +220,7 @@ func (s *E2ETestSuite) TestFullMultisig() {
 
 	// need to wait until voting period is over because we disabled early execution on the last
 	// config update
-	err = s.executeTx(ctx, execReq, accountAddr, s.members[0])
+	err = s.executeProposal(ctx, accountAddr, s.members[0], 1)
 	s.ErrorContains(err, "voting period has not ended yet, and early execution is not enabled")
 
 	headerInfo := ctx.HeaderInfo()
@@ -252,15 +228,17 @@ func (s *E2ETestSuite) TestFullMultisig() {
 	ctx = ctx.WithHeaderInfo(headerInfo)
 
 	// now it should work, but the proposal will fail
-	err = s.executeTx(ctx, execReq, accountAddr, s.members[0])
+	err = s.executeProposal(ctx, accountAddr, s.members[0], 1)
 	s.NoError(err)
 
+	foundPropResult := false
 	for _, v := range ctx.EventManager().Events() {
 		if v.Type == "proposal_tally" {
 			propID, found := v.GetAttribute("proposal_id")
 			s.True(found)
 
-			if propID.Value == "2" {
+			if propID.Value == "1" {
+				foundPropResult = true
 				status, found := v.GetAttribute("status")
 				s.True(found)
 				s.Equal(v1.ProposalStatus_PROPOSAL_STATUS_REJECTED.String(), status.Value)
@@ -276,6 +254,7 @@ func (s *E2ETestSuite) TestFullMultisig() {
 			}
 		}
 	}
+	s.True(foundPropResult)
 
 	// get members
 	res, err = s.queryAcc(ctx, &v1.QueryConfig{}, accountAddr)

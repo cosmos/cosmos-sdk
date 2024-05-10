@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/x/bank/testutil"
 
 	multisigaccount "cosmossdk.io/x/accounts/defaults/multisig"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -53,23 +54,25 @@ func setupApp(t *testing.T) *simapp.SimApp {
 	return app
 }
 
-func (s *E2ETestSuite) executeTx(ctx sdk.Context, msg sdk.Msg, accAddr, sender []byte) error {
+func (s *E2ETestSuite) executeTx(ctx context.Context, msg sdk.Msg, accAddr, sender []byte) error {
 	_, err := s.app.AccountsKeeper.Execute(ctx, accAddr, sender, msg, nil)
 	return err
 }
 
-func (s *E2ETestSuite) queryAcc(ctx sdk.Context, req sdk.Msg, accAddr []byte) (ProtoMsg, error) {
+func (s *E2ETestSuite) queryAcc(ctx context.Context, req sdk.Msg, accAddr []byte) (ProtoMsg, error) {
 	resp, err := s.app.AccountsKeeper.Query(ctx, accAddr, req)
 	return resp, err
 }
 
-func (s *E2ETestSuite) fundAccount(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) {
+func (s *E2ETestSuite) fundAccount(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) {
 	require.NoError(s.T(), testutil.FundAccount(ctx, s.app.BankKeeper, addr, amt))
 }
 
 // initAccount initializes a multisig account with the given members and powers
 // and returns the account address
 func (s *E2ETestSuite) initAccount(ctx context.Context, sender []byte, membersPowers map[string]uint64) ([]byte, string) {
+	s.fundAccount(ctx, sender, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000000))})
+
 	members := []*v1.Member{}
 	for addrStr, power := range membersPowers {
 		members = append(members, &v1.Member{Address: addrStr, Weight: power})
@@ -95,6 +98,21 @@ func (s *E2ETestSuite) initAccount(ctx context.Context, sender []byte, membersPo
 }
 
 // createProposal
-func (s *E2ETestSuite) createProposal(ctx context.Context, accAddr []byte, sender []byte, msgs ...sdk.Msg) error {
-	return nil
+func (s *E2ETestSuite) createProposal(ctx context.Context, accAddr []byte, sender []byte, msgs ...*codectypes.Any) {
+	propReq := &v1.MsgCreateProposal{
+		Proposal: &v1.Proposal{
+			Title:    "test",
+			Summary:  "test",
+			Messages: msgs,
+		},
+	}
+	err := s.executeTx(ctx, propReq, accAddr, sender)
+	s.NoError(err)
+}
+
+func (s *E2ETestSuite) executeProposal(ctx context.Context, accAddr []byte, sender []byte, proposalID uint64) error {
+	execReq := &v1.MsgExecuteProposal{
+		ProposalId: proposalID,
+	}
+	return s.executeTx(ctx, execReq, accAddr, sender)
 }

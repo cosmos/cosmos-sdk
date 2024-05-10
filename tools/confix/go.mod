@@ -9,7 +9,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
-	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f
+	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
 	gotest.tools/v3 v3.5.1
 )
 
@@ -47,7 +47,7 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.4.12 // indirect
-	github.com/cosmos/iavl v1.1.2 // indirect
+	github.com/cosmos/iavl v1.1.4 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect

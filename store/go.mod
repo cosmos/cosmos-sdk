@@ -24,7 +24,7 @@ require (
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/stretchr/testify v1.9.0
 	github.com/tidwall/btree v1.7.0
-	golang.org/x/exp v0.0.0-20240404231335-c0f41cb1a7a0
+	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
 	google.golang.org/grpc v1.63.2
 	google.golang.org/protobuf v1.34.1
 	gotest.tools/v3 v3.5.1
@@ -33,12 +33,12 @@ require (
 require (
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/emicklei/dot v1.6.1 // indirect
+	github.com/emicklei/dot v1.6.2 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/getsentry/sentry-go v0.27.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -49,7 +49,7 @@ require (
 	github.com/hashicorp/go-uuid v1.0.1 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/jhump/protoreflect v1.15.3 // indirect
-	github.com/klauspost/compress v1.17.7 // indirect
+	github.com/klauspost/compress v1.17.8 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/linxGnu/grocksdb v1.8.14 // indirect
@@ -63,7 +63,7 @@ require (
 	github.com/prometheus/client_golang v1.19.1 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.53.0 // indirect
-	github.com/prometheus/procfs v0.13.0 // indirect
+	github.com/prometheus/procfs v0.14.0 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/rs/zerolog v1.32.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect

@@ -1,10 +1,6 @@
 package appmanager
 
 import (
-	"context"
-	"encoding/json"
-	"io"
-
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/appmanager/store"
 	"cosmossdk.io/server/v2/stf"
@@ -23,7 +19,10 @@ type Builder[T transaction.Tx] struct {
 
 	// InitGenesis is a function that initializes the application state from a genesis file.
 	// It takes a context, a source reader for the genesis file, and a transaction handler function.
-	InitGenesis func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) error
+	InitGenesis InitGenesis
+	// ExportGenesis is a function that exports the application state to a genesis file.
+	// It takes a context and a version number for the genesis file.
+	ExportGenesis ExportGenesis
 }
 
 // Build creates a new instance of AppManager with the provided configuration and returns it.
@@ -35,10 +34,9 @@ func (b Builder[T]) Build() (*AppManager[T], error) {
 			QueryGasLimit:      b.QueryGasLimit,
 			SimulationGasLimit: b.SimulationGasLimit,
 		},
-		db:          b.DB,
-		exportState: nil,
-		importState: nil,
-		initGenesis: b.InitGenesis,
-		stf:         b.STF,
+		db:            b.DB,
+		initGenesis:   b.InitGenesis,
+		exportGenesis: b.ExportGenesis,
+		stf:           b.STF,
 	}, nil
 }

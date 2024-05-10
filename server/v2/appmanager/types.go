@@ -38,8 +38,8 @@ type StateTransitionFunction[T transaction.Tx] interface {
 		ctx context.Context,
 		state store.ReaderMap,
 		gasLimit uint64,
-		req transaction.Type,
-	) (transaction.Type, error)
+		req transaction.Msg,
+	) (transaction.Msg, error)
 
 	// TODO: remove
 	RunWithCtx(

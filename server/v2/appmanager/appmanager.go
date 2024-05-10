@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 
 	appmanager "cosmossdk.io/core/app"
 	corestore "cosmossdk.io/core/store"
@@ -20,10 +19,8 @@ type AppManager[T transaction.Tx] struct {
 
 	db store.Store
 
-	exportState func(ctx context.Context, dst map[string]io.Writer) error
-	importState func(ctx context.Context, src map[string]io.Reader) error //TODO: possibly remove?
-
-	initGenesis func(ctx context.Context, state io.Reader, txHandler func(tx json.RawMessage) error) error
+	initGenesis   InitGenesis
+	exportGenesis ExportGenesis
 
 	stf StateTransitionFunction[T]
 }
@@ -71,6 +68,12 @@ func (a AppManager[T]) InitGenesis(
 	// consensus server will need to set the version of the store
 }
 
+// ExportGenesis exports the genesis state of the application.
+func (AppManager[T]) ExportGenesis(ctx context.Context, version uint64) ([]byte, error) {
+
+	return nil, nil
+}
+
 func (a AppManager[T]) DeliverBlock(
 	ctx context.Context,
 	block *appmanager.BlockRequest[T],
@@ -115,7 +118,7 @@ func (a AppManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult,
 
 // Query queries the application at the provided version.
 // CONTRACT: Version must always be provided, if 0, get latest
-func (a AppManager[T]) Query(ctx context.Context, version uint64, request transaction.Type) (transaction.Type, error) {
+func (a AppManager[T]) Query(ctx context.Context, version uint64, request transaction.Msg) (transaction.Msg, error) {
 	// if version is provided attempt to do a height query.
 	if version != 0 {
 		queryState, err := a.db.StateAt(version)
@@ -139,7 +142,7 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request transa
 func (a AppManager[T]) QueryWithState(
 	ctx context.Context,
 	state corestore.ReaderMap,
-	request transaction.Type,
-) (transaction.Type, error) {
+	request transaction.Msg,
+) (transaction.Msg, error) {
 	return a.stf.Query(ctx, state, a.config.QueryGasLimit, request)
 }

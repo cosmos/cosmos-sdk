@@ -25,11 +25,11 @@ func TestAppManager(t *testing.T) {
 	}
 
 	s := stf.NewSTF(
-		func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
+		func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
 			err = kvSet(t, ctx, "exec")
 			return nil, err
 		},
-		func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
+		func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
 			err = kvSet(t, ctx, "query")
 			return nil, err
 		},

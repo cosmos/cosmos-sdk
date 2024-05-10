@@ -3,15 +3,9 @@ module cosmossdk.io/server/v2/appmanager
 go 1.21
 
 // TODO: remove prior to final release
-replace (
-	cosmossdk.io/core => ../../../core
-	cosmossdk.io/server/v2/stf => ../stf
-)
+replace cosmossdk.io/core => ../../../core
 
-require (
-	cosmossdk.io/core v0.12.0
-	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000
-)
+require cosmossdk.io/core v0.12.0
 
 require (
 	cosmossdk.io/log v1.3.1 // indirect

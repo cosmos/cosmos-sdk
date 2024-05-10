@@ -3,14 +3,13 @@ package appmanager
 import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/appmanager/store"
-	"cosmossdk.io/server/v2/stf"
 )
 
 // Builder is a struct that represents the application builder for managing transactions.
 // It contains various fields and methods for initializing the application and handling transactions.
 type Builder[T transaction.Tx] struct {
-	STF *stf.STF[T] // The state transition function for processing transactions.
-	DB  store.Store // The database for storing application data.
+	STF StateTransitionFunction[T] // The state transition function for processing transactions.
+	DB  store.Store                // The database for storing application data.
 
 	// Gas limits for validating, querying, and simulating transactions.
 	ValidateTxGasLimit uint64

@@ -1,13 +1,15 @@
 package types
 
 import (
+	coretransaction "cosmossdk.io/core/transaction"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
-	_ sdk.Msg = &MsgSend{}
-	_ sdk.Msg = &MsgMultiSend{}
-	_ sdk.Msg = &MsgUpdateParams{}
+	_ coretransaction.Msg = &MsgSend{}
+	_ coretransaction.Msg = &MsgMultiSend{}
+	_ coretransaction.Msg = &MsgUpdateParams{}
 )
 
 // NewMsgSend - construct a msg to send coins from one account to another.

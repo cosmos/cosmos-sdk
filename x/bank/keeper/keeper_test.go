@@ -395,13 +395,12 @@ func (suite *KeeperTestSuite) TestSendCoinsFromModuleToAccount_CoinSendDisabled(
 
 	keeper.SetSendEnabled(ctx, sdk.DefaultBondDenom, false)
 
-	suite.authKeeper.EXPECT().GetModuleAddress(mintAcc.Name).Return(mintAcc.GetAddress()).AnyTimes()
+	suite.authKeeper.EXPECT().GetModuleAddress(mintAcc.Name).Return(mintAcc.GetAddress())
 	err := keeper.SendCoinsFromModuleToAccount(
 		ctx, banktypes.MintModuleName, accAddrs[2], initCoins,
 	)
 	require.Contains(err.Error(), "stake, is prohibited from being sent at this time")
 	keeper.SetSendEnabled(ctx, sdk.DefaultBondDenom, true)
-
 }
 
 func (suite *KeeperTestSuite) TestSupply_DelegateUndelegateCoins() {
@@ -409,9 +408,9 @@ func (suite *KeeperTestSuite) TestSupply_DelegateUndelegateCoins() {
 	require := suite.Require()
 	authKeeper, keeper := suite.authKeeper, suite.bankKeeper
 
-	res, err1 := keeper.SendEnabled(ctx, &banktypes.QuerySendEnabledRequest{})
-	require.NoError(err1)
-	fmt.Println(res)
+	require.NoError(keeper.SetParams(ctx, banktypes.Params{
+		DefaultSendEnabled: banktypes.DefaultDefaultSendEnabled,
+	}))
 
 	// set initial balances
 	suite.mockMintCoins(mintAcc)

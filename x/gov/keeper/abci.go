@@ -78,7 +78,9 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 
 		var res consensustypes.QueryParamsResponse
 
-		k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensustypes.QueryParamsRequest{}, &res)
+		if err := k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensustypes.QueryParamsRequest{}, &res); err != nil {
+			return err
+		}
 
 		// called when proposal become inactive
 		// call hook when proposal become inactive

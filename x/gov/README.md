@@ -278,6 +278,12 @@ There are three parameters that define if the deposit of a proposal should be bu
 
 > Note: These parameters are modifiable via governance.
 
+#### Execution
+
+Execution is the process of executing the messages contained in a proposal. The execution phase will commence after the proposal has been accepted by the network. The messages contained in the proposal will be executed in the order they were submitted.
+
+Execution has a upper limit on how many messages can be executed in a single block. This limit is defined by the `MaxMessagesPerProposal` parameter. We use the MaxBlockGas from the consensus engine, value stored in the consensus module, to calculate the limit of messages that can be executed in a block.
+
 ## State
 
 ### Constitution

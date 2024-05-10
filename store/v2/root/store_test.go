@@ -110,6 +110,31 @@ func (s *RootStoreTestSuite) TestQuery() {
 	s.Require().Equal([]byte("foo"), result.ProofOps[0].Key)
 }
 
+func (s *RootStoreTestSuite) TestGetFallback() {
+	sc := s.rootStore.GetStateCommitment()
+
+	// create a changeset and commit it to SC ONLY
+	cs := corestore.NewChangeset()
+	cs.Add(testStoreKeyBytes, []byte("foo"), []byte("bar"), false)
+
+	err := sc.WriteBatch(cs)
+	s.Require().NoError(err)
+
+	ci := sc.WorkingCommitInfo(1)
+	_, err = sc.Commit(ci.Version)
+	s.Require().NoError(err)
+
+	// ensure we can query for the key, which should fallback to SC
+	qResult, err := s.rootStore.Query(testStoreKeyBytes, 1, []byte("foo"), false)
+	s.Require().NoError(err)
+	s.Require().Equal([]byte("bar"), qResult.Value)
+
+	// non-existent key
+	qResult, err = s.rootStore.Query(testStoreKeyBytes, 1, []byte("non_existent_key"), false)
+	s.Require().NoError(err)
+	s.Require().Nil(qResult.Value)
+}
+
 func (s *RootStoreTestSuite) TestQueryProof() {
 	cs := corestore.NewChangeset()
 	// testStoreKey

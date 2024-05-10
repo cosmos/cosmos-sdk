@@ -15,6 +15,7 @@ use (
 	./orm
 	./simapp
 	./tests
+	./server/v2/stf
 	./store
 	./store/v2
 	./tools/cosmovisor

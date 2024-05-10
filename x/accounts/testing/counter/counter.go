@@ -117,7 +117,9 @@ func (a Account) TestDependencies(ctx context.Context, _ *counterv1.MsgTestDepen
 	// test gas meter
 	gm := a.gs.GasMeter(ctx)
 	gasBefore := gm.Limit() - gm.Remaining()
-	gm.Consume(10, "test")
+	if err := gm.Consume(10, "test"); err != nil {
+		return nil, err
+	}
 	gasAfter := gm.Limit() - gm.Remaining()
 
 	// test funds

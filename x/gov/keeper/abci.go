@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/router"
+	consensustypes "cosmossdk.io/x/consensus/types"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 
@@ -75,11 +76,16 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 			return err
 		}
 
+		var res consensustypes.QueryParamsResponse
+
+		k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensustypes.QueryParamsRequest{}, &res)
+
 		// called when proposal become inactive
 		// call hook when proposal become inactive
-		if err := k.BranchService.Execute(ctx, func(ctx context.Context) error {
+		_, err = k.BranchService.ExecuteWithGasLimit(ctx, uint64(res.Params.Block.MaxGas), func(ctx context.Context) error {
 			return k.Hooks().AfterProposalFailedMinDeposit(ctx, proposal.Id)
-		}); err != nil {
+		})
+		if err != nil {
 			// purposely ignoring the error here not to halt the chain if the hook fails
 			k.Logger.Error("failed to execute AfterProposalFailedMinDeposit hook", "error", err)
 		}

@@ -1,6 +1,9 @@
 syntax = "proto3";
 package cosmos.counter.v1;
 
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+
 option go_package = "github.com/cosmos/cosmos-sdk/testutil/x/counter/types";
 
 // Query defines the gRPC querier service.
@@ -15,4 +18,6 @@ message QueryGetCountRequest {}
 // QueryGetCountResponse defines the response type for querying x/mock count.
 message QueryGetCountResponse {
   int64 total_count = 1;
+
+  string amount = 2 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int"];
 }

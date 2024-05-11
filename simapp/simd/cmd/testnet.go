@@ -21,7 +21,6 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	corectx "cosmossdk.io/core/context"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -141,8 +140,7 @@ Example:
 				return err
 			}
 
-			serverCtx := corectx.GetServerContextFromCmd(cmd)
-			config := serverCtx.GetConfig().(server.CometConfig)
+			config := client.GetConfigFromCmd(cmd)
 
 			args := initArgs{}
 			args.outputDir, _ = cmd.Flags().GetString(flagOutputDir)
@@ -162,7 +160,7 @@ Example:
 				return err
 			}
 
-			return initTestnetFiles(clientCtx, cmd, config.Config, mm, genBalIterator, args)
+			return initTestnetFiles(clientCtx, cmd, config, mm, genBalIterator, args)
 		},
 	}
 
@@ -409,7 +407,7 @@ func initTestnetFiles(
 	}
 
 	// Update viper root since root dir become rootdir/node/simd
-	corectx.GetServerContextFromCmd(cmd).SetRoot(nodeConfig.RootDir)
+	client.GetViperFromCmd(cmd).Set(flags.FlagHome, nodeConfig.RootDir)
 
 	cmd.PrintErrf("Successfully initialized %d node directories\n", args.numValidators)
 	return nil

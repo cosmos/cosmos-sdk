@@ -19,8 +19,8 @@ import (
 
 	"cosmossdk.io/log"
 
+	corectx "cosmossdk.io/core/context"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/cmdtest"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -36,8 +36,9 @@ type ExportSystem struct {
 
 	Ctx context.Context
 
-	Sctx *server.Context
-	Cctx client.Context
+	Viper  *viper.Viper
+	Logger log.Logger
+	Cctx   client.Context
 
 	HomeDir string
 }
@@ -64,21 +65,22 @@ func NewExportSystem(t *testing.T, exporter types.AppExporter) *ExportSystem {
 	tw := zerolog.NewTestWriter(t)
 	tw.Frame = 5 // Seems to be the magic number to get source location to match logger calls.
 
-	sCtx := server.NewContext(
-		viper.New(),
-		log.NewCustomLogger(zerolog.New(tw)),
-	)
-	writeAndTrackDefaultConfig(sCtx.GetViper(), homeDir)
+	viper := viper.New()
+	logger := log.NewCustomLogger(zerolog.New(tw))
+	writeAndTrackDefaultConfig(viper, homeDir)
 
 	cCtx := (client.Context{}).WithHomeDir(homeDir)
 
-	ctx := context.WithValue(context.Background(), server.ServerContextKey, sCtx)
+	ctx := context.WithValue(context.Background(), corectx.ViperContextKey, viper)
+	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
+
 	ctx = context.WithValue(ctx, client.ClientContextKey, &cCtx)
 
 	return &ExportSystem{
 		sys:     sys,
 		Ctx:     ctx,
-		Sctx:    sCtx,
+		Viper:   viper,
+		Logger:  logger,
 		Cctx:    cCtx,
 		HomeDir: homeDir,
 	}

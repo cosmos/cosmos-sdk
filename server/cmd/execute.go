@@ -2,14 +2,18 @@ package cmd
 
 import (
 	"context"
+	"os"
 
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
+	"cosmossdk.io/log"
+
+	corectx "cosmossdk.io/core/context"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/server"
 )
 
 // Execute executes the root command of an application. It handles creating a
@@ -37,9 +41,10 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 // CreateExecuteContext returns a base Context with server and client context
 // values initialized.
 func CreateExecuteContext(ctx context.Context) context.Context {
-	srvCtx := server.NewDefaultContext()
+	// srvCtx := server.NewDefaultContext()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &client.Context{})
-	ctx = context.WithValue(ctx, server.ServerContextKey, srvCtx)
+	ctx = context.WithValue(ctx, corectx.LoggerContextKey, log.NewLogger(os.Stdout))
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
 
 	return ctx
 }

@@ -16,10 +16,8 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 
-	"cosmossdk.io/log"
 	auth "cosmossdk.io/x/auth/client/cli"
 
-	corectx "cosmossdk.io/core/context"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
@@ -74,11 +72,7 @@ func ShowNodeIDCmd() *cobra.Command {
 		Use:   "show-node-id",
 		Short: "Show this node's ID",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			serverCtx := corectx.GetServerContextFromCmd(cmd)
-			cfg, ok := serverCtx.GetConfig().(CometConfig)
-			if !ok {
-				return fmt.Errorf("Can not convert cometbft config")
-			}
+			cfg := client.GetConfigFromCmd(cmd)
 
 			nodeKey, err := p2p.LoadNodeKey(cfg.NodeKeyFile())
 			if err != nil {
@@ -97,11 +91,7 @@ func ShowValidatorCmd() *cobra.Command {
 		Use:   "show-validator",
 		Short: "Show this node's CometBFT validator info",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			serverCtx := corectx.GetServerContextFromCmd(cmd)
-			cfg, ok := serverCtx.GetConfig().(CometConfig)
-			if !ok {
-				return fmt.Errorf("Can not convert cometbft config")
-			}
+			cfg := client.GetConfigFromCmd(cmd)
 
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			pk, err := privValidator.GetPubKey()
@@ -134,11 +124,7 @@ func ShowAddressCmd() *cobra.Command {
 		Use:   "show-address",
 		Short: "Shows this node's CometBFT validator consensus address",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			serverCtx := corectx.GetServerContextFromCmd(cmd)
-			cfg, ok := serverCtx.GetConfig().(CometConfig)
-			if !ok {
-				return fmt.Errorf("Can not convert cometbft config")
-			}
+			cfg := client.GetConfigFromCmd(cmd)
 
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 
@@ -372,29 +358,26 @@ func BootstrapStateCmd[T types.Application](appCreator types.AppCreator[T]) *cob
 		Short: "Bootstrap CometBFT state at an arbitrary block height using a light client",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			serverCtx := corectx.GetServerContextFromCmd(cmd)
-			logger := log.NewLogger(cmd.OutOrStdout())
-			cfg, ok := serverCtx.GetConfig().(CometConfig)
-			if !ok {
-				return fmt.Errorf("Can not convert cometbft config")
-			}
+			cfg := client.GetConfigFromCmd(cmd)
+			logger := client.GetLoggerFromCmd(cmd)
+			viper := client.GetViperFromCmd(cmd)
 
 			height, err := cmd.Flags().GetInt64("height")
 			if err != nil {
 				return err
 			}
 			if height == 0 {
-				home := serverCtx.GetViper().GetString(flags.FlagHome)
-				db, err := OpenDB(home, GetAppDBBackend(serverCtx.GetViper()))
+				home := viper.GetString(flags.FlagHome)
+				db, err := OpenDB(home, GetAppDBBackend(viper))
 				if err != nil {
 					return err
 				}
 
-				app := appCreator(logger, db, nil, serverCtx.GetViper())
+				app := appCreator(logger, db, nil, viper)
 				height = app.CommitMultiStore().LastCommitID().Version
 			}
 
-			return node.BootstrapState(cmd.Context(), cfg.Config, cmtcfg.DefaultDBProvider, getGenDocProvider(cfg.Config), uint64(height), nil)
+			return node.BootstrapState(cmd.Context(), cfg, cmtcfg.DefaultDBProvider, getGenDocProvider(cfg), uint64(height), nil)
 		},
 	}
 

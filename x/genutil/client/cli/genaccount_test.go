@@ -10,12 +10,12 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/auth"
 
+	corectx "cosmossdk.io/core/context"
 	"github.com/cosmos/cosmos-sdk/client"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -71,13 +71,13 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			home := t.TempDir()
 			logger := log.NewNopLogger()
+			viper := viper.New()
 
 			appCodec := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}).Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 
-			serverCtx := server.NewContext(viper.New(), logger)
-			writeAndTrackDefaultConfig(serverCtx.Viper, home)
+			writeAndTrackDefaultConfig(viper, home)
 			clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(home).WithAddressCodec(ac)
 
 			if tc.withKeyring {
@@ -91,7 +91,8 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 
 			ctx := context.Background()
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+			ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
+			ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
 
 			cmd := genutilcli.AddGenesisAccountCmd(addresscodec.NewBech32Codec("cosmos"))
 			cmd.SetArgs([]string{

@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -22,10 +21,10 @@ import (
 
 func ExecInitCmd(mm *module.Manager, home string, cdc codec.Codec) error {
 	logger := log.NewNopLogger()
+	viper := viper.New()
 	cmd := genutilcli.InitCmd(mm)
-	serverCtx := server.NewContext(viper.New(), logger)
 	cfg, _ := CreateDefaultCometConfig(home)
-	WriteAndTrackConfig(serverCtx.GetViper(), home, cfg)
+	WriteAndTrackConfig(viper, home, cfg)
 	clientCtx := client.Context{}.WithCodec(cdc).WithHomeDir(home)
 
 	_, out := testutil.ApplyMockIO(cmd)
@@ -33,7 +32,8 @@ func ExecInitCmd(mm *module.Manager, home string, cdc codec.Codec) error {
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, corectx.ServerContextKey, serverCtx)
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
+	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
 
 	cmd.SetArgs([]string{"appnode-test"})
 

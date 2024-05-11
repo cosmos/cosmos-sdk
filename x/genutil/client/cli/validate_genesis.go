@@ -6,8 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	corectx "cosmossdk.io/core/context"
-	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
@@ -22,11 +21,7 @@ func ValidateGenesisCmd(mm *module.Manager) *cobra.Command {
 		Args:    cobra.RangeArgs(0, 1),
 		Short:   "Validates the genesis file at the default location or at the location passed as an arg",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			serverCtx := corectx.GetServerContextFromCmd(cmd)
-			cfg, ok := serverCtx.GetConfig().(server.CometConfig)
-			if !ok {
-				return fmt.Errorf("Can not convert cometbft config")
-			}
+			cfg := client.GetConfigFromCmd(cmd)
 
 			// Load default if passed no args, otherwise load passed file
 			var genesis string

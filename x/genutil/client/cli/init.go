@@ -15,17 +15,16 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math/unsafe"
-	corectx "cosmossdk.io/core/context"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	corectx "cosmossdk.io/core/context"
 )
 
 const (
@@ -82,11 +81,11 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
-			serverCtx := corectx.GetServerContextFromCmd(cmd)
-			config, ok := serverCtx.GetConfig().(server.CometConfig)
-			if !ok {
-				return fmt.Errorf("Can not convert cometbft config")
-			}
+			fmt.Println("Init viper", cmd.Context().Value(corectx.ViperContextKey))
+
+			config := client.GetConfigFromCmd(cmd)
+
+			fmt.Println("Init Root", config.RootDir)
 
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
 			switch {
@@ -119,7 +118,7 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 				initHeight = 1
 			}
 
-			nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(config.Config, mnemonic)
+			nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(config, mnemonic)
 			if err != nil {
 				return err
 			}
@@ -181,7 +180,7 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 
 			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)
 
-			cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config.Config)
+			cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 			return displayInfo(toPrint)
 		},
 	}

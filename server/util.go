@@ -40,65 +40,7 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-// ServerContextKey defines the context key used to retrieve a server.Context from
-// a command's Context.
-const ServerContextKey = corectx.ServerContextKey
 
-var _ corectx.ServerContext = &Context{}
-var _ corectx.CometConfig = &CometConfig{}
-
-type CometConfig struct {
-	*cmtcfg.Config
-}
-
-// Context server context
-type Context struct {
-	Viper  *viper.Viper
-	Logger log.Logger
-}
-
-func (ctx *Context) GetConfig() corectx.CometConfig {
-	return GetCometConfigFromViper(ctx.Viper)
-}
-
-func (ctx *Context) GetLogger() log.Logger {
-	return ctx.Logger
-}
-
-func (ctx *Context) GetViper() *viper.Viper {
-	return ctx.Viper
-}
-
-// Set rootdir to viper
-func (ctx *Context) SetRoot(rootDir string) {
-	ctx.GetViper().Set(flags.FlagHome, rootDir)
-}
-
-func (config CometConfig) SetRoot(root string) corectx.CometConfig {
-	config.Config.SetRoot(root)
-	return config
-}
-
-func GetCometConfigFromViper(v *viper.Viper) corectx.CometConfig {
-	conf := cmtcfg.DefaultConfig()
-	err := v.Unmarshal(conf)
-	rootDir := v.GetString(flags.FlagHome)
-	if err != nil {
-		return CometConfig{cmtcfg.DefaultConfig().SetRoot(rootDir)}
-	}
-	return CometConfig{conf.SetRoot(rootDir)}
-}
-
-func NewDefaultContext() *Context {
-	return NewContext(
-		viper.New(),
-		log.NewLogger(os.Stdout),
-	)
-}
-
-func NewContext(v *viper.Viper, logger log.Logger) *Context {
-	return &Context{v, logger}
-}
 
 func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) {
 	defer func() {
@@ -137,20 +79,19 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 // InterceptConfigsPreRunHandler is identical to InterceptConfigsAndCreateContext
 // except it also sets the server context on the command and the server logger.
 func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, cmtConfig *cmtcfg.Config) error {
-	serverCtx, err := InterceptConfigsAndCreateContext(cmd, customAppConfigTemplate, customAppConfig, cmtConfig)
+	viper, err := InterceptConfigsAndCreateContext(cmd, customAppConfigTemplate, customAppConfig, cmtConfig)
 	if err != nil {
 		return err
 	}
 
 	// overwrite default server logger
-	logger, err := CreateSDKLogger(serverCtx, cmd.OutOrStdout())
+	logger, err := CreateSDKLogger(viper, cmd.OutOrStdout())
 	if err != nil {
 		return err
 	}
-	serverCtx.Logger = logger.With(log.ModuleKey, "server")
 
 	// set server context
-	return SetCmdServerContext(cmd, serverCtx)
+	return SetCmdServerContext(cmd, viper, logger)
 }
 
 // InterceptConfigsAndCreateContext performs a pre-run function for the root daemon
@@ -163,8 +104,8 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 // is used to read and parse the application configuration. Command handlers can
 // fetch the server Context to get the CometBFT configuration or to get access
 // to Viper.
-func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, cmtConfig *cmtcfg.Config) (*Context, error) {
-	serverCtx := NewDefaultContext()
+func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, cmtConfig *cmtcfg.Config) (*viper.Viper, error) {
+	v := viper.New()
 
 	// Get the executable name and configure the viper instance so that environmental
 	// variables are checked based off that name. The underscore character is used
@@ -177,44 +118,44 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 	basename := path.Base(executableName)
 
 	// configure the viper instance
-	if err := serverCtx.Viper.BindPFlags(cmd.Flags()); err != nil {
+	if err := v.BindPFlags(cmd.Flags()); err != nil {
 		return nil, err
 	}
-	if err := serverCtx.Viper.BindPFlags(cmd.PersistentFlags()); err != nil {
+	if err := v.BindPFlags(cmd.PersistentFlags()); err != nil {
 		return nil, err
 	}
 
-	serverCtx.Viper.SetEnvPrefix(basename)
-	serverCtx.Viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
-	serverCtx.Viper.AutomaticEnv()
+	v.SetEnvPrefix(basename)
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
+	v.AutomaticEnv()
 
 	// intercept configuration files, using both Viper instances separately
-	err = interceptConfigs(serverCtx.Viper, customAppConfigTemplate, customAppConfig, cmtConfig)
+	err = interceptConfigs(v, customAppConfigTemplate, customAppConfig, cmtConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = bindFlags(basename, cmd, serverCtx.Viper); err != nil {
+	if err = bindFlags(basename, cmd, v); err != nil {
 		return nil, err
 	}
 
-	return serverCtx, nil
+	return v, nil
 }
 
 // CreateSDKLogger creates a the default SDK logger.
 // It reads the log level and format from the server context.
-func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
+func CreateSDKLogger(v *viper.Viper, out io.Writer) (log.Logger, error) {
 	var opts []log.Option
-	if ctx.Viper.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {
+	if v.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {
 		opts = append(opts, log.OutputJSONOption())
 	}
 	opts = append(opts,
-		log.ColorOption(!ctx.Viper.GetBool(flags.FlagLogNoColor)),
+		log.ColorOption(!v.GetBool(flags.FlagLogNoColor)),
 		// We use CometBFT flag (cmtcli.TraceFlag) for trace logging.
-		log.TraceOption(ctx.Viper.GetBool(FlagTrace)))
+		log.TraceOption(v.GetBool(FlagTrace)))
 
 	// check and set filter level or keys for the logger if any
-	logLvlStr := ctx.Viper.GetString(flags.FlagLogLevel)
+	logLvlStr := v.GetString(flags.FlagLogLevel)
 	if logLvlStr == "" {
 		return log.NewLogger(out, opts...), nil
 	}
@@ -236,20 +177,9 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	return log.NewLogger(out, opts...), nil
 }
 
-// // GetServerContextFromCmd returns a Context from a command or an empty Context
-// // if it has not been set.
-// func GetServerContextFromCmd(cmd *cobra.Command) *Context {
-// 	if v := cmd.Context().Value(ServerContextKey); v != nil {
-// 		serverCtxPtr := v.(*Context)
-// 		return serverCtxPtr
-// 	}
-
-// 	return NewDefaultContext()
-// }
-
 // SetCmdServerContext sets a command's Context value to the provided argument.
 // If the context has not been set, set the given context as the default.
-func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
+func SetCmdServerContext(cmd *cobra.Command, viper *viper.Viper, logger log.Logger) error {
 	var cmdCtx context.Context
 
 	if cmd.Context() == nil {
@@ -258,7 +188,8 @@ func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
 		cmdCtx = cmd.Context()
 	}
 
-	cmd.SetContext(context.WithValue(cmdCtx, ServerContextKey, serverCtx))
+	cmd.SetContext(context.WithValue(cmdCtx, corectx.LoggerContextKey, logger))
+	cmd.SetContext(context.WithValue(cmdCtx, corectx.ViperContextKey, viper))
 
 	return nil
 }

@@ -1,13 +1,11 @@
 package snapshot
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log"
 
-	corectx "cosmossdk.io/core/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 )
@@ -19,11 +17,8 @@ func ExportSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCrea
 		Short: "Export app state to snapshot store",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := corectx.GetServerContextFromCmd(cmd)
-			cfg, ok := ctx.GetConfig().(server.CometConfig)
-			if !ok {
-				return fmt.Errorf("Can not convert cometbft config")
-			}
+			cfg := client.GetConfigFromCmd(cmd)
+			viper := client.GetViperFromCmd(cmd)
 
 			height, err := cmd.Flags().GetInt64("height")
 			if err != nil {
@@ -31,12 +26,12 @@ func ExportSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCrea
 			}
 
 			home := cfg.RootDir
-			db, err := openDB(home, server.GetAppDBBackend(ctx.GetViper()))
+			db, err := openDB(home, server.GetAppDBBackend(viper))
 			if err != nil {
 				return err
 			}
 			logger := log.NewLogger(cmd.OutOrStdout())
-			app := appCreator(logger, db, nil, ctx.GetViper())
+			app := appCreator(logger, db, nil, viper)
 
 			if height == 0 {
 				height = app.CommitMultiStore().LastCommitID().Version

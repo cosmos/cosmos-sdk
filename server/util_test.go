@@ -27,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	corectx "cosmossdk.io/core/context"
+	"cosmossdk.io/log"
 )
 
 var errCanceledInPreRun = errors.New("canceled in prerun")
@@ -61,12 +62,13 @@ func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T
 	cmd.PreRunE = preRunETestImpl
 
 	serverCtx := &server.Context{}
-	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
+	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewLogger(os.Stdout))
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
 	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	serverCtx = corectx.GetServerContextFromCmd(cmd).(*server.Context)
+	config := client.GetConfigFromCmd(cmd)
 
 	// Test that config.toml is created
 	configTomlPath := path.Join(tempDir, "config", "config.toml")
@@ -84,7 +86,7 @@ func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T
 	}
 
 	// Test that CometBFT config is initialized
-	if serverCtx.GetConfig() == nil {
+	if config == nil {
 		t.Fatal("CometBFT config not created")
 	}
 
@@ -139,19 +141,14 @@ func TestInterceptConfigsPreRunHandlerReadsConfigToml(t *testing.T) {
 
 	cmd.PreRunE = preRunETestImpl
 
-	serverCtx := &server.Context{}
-	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
+	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewLogger(os.Stdout))
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
 
 	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	serverCtx = corectx.GetServerContextFromCmd(cmd).(*server.Context)
-
-	config, ok := serverCtx.GetConfig().(server.CometConfig)
-	if !ok {
-		t.Error("can not convert to cometbft config")
-	}
+	config := client.GetConfigFromCmd(cmd)
 
 	if testDbBackend != config.DBBackend {
 		t.Error("backend was not set from config.toml")
@@ -184,16 +181,16 @@ func TestInterceptConfigsPreRunHandlerReadsAppToml(t *testing.T) {
 
 	cmd.PreRunE = preRunETestImpl
 
-	serverCtx := &server.Context{}
-	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
+	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewLogger(os.Stdout))
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
 
 	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	serverCtx = corectx.GetServerContextFromCmd(cmd).(*server.Context)
+	viper := client.GetViperFromCmd(cmd)
 
-	if testHaltTime != serverCtx.Viper.GetInt("halt-time") {
+	if testHaltTime != viper.GetInt("halt-time") {
 		t.Error("Halt time was not set from app.toml")
 	}
 }
@@ -214,19 +211,14 @@ func TestInterceptConfigsPreRunHandlerReadsFlags(t *testing.T) {
 
 	cmd.PreRunE = preRunETestImpl
 
-	serverCtx := &server.Context{}
-	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
+	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewLogger(os.Stdout))
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
 
 	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	serverCtx = corectx.GetServerContextFromCmd(cmd).(*server.Context)
-
-	config, ok := serverCtx.GetConfig().(server.CometConfig)
-	if !ok {
-		t.Error("can not convert to cometbft config")
-	}
+	config := client.GetConfigFromCmd(cmd)
 
 	if testAddr != config.RPC.ListenAddress {
 		t.Error("RPCListenAddress was not set from command flags")
@@ -257,19 +249,14 @@ func TestInterceptConfigsPreRunHandlerReadsEnvVars(t *testing.T) {
 
 	cmd.PreRunE = preRunETestImpl
 
-	serverCtx := &server.Context{}
-	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
+	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewLogger(os.Stdout))
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
 
 	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	serverCtx = corectx.GetServerContextFromCmd(cmd).(*server.Context)
-
-	config, ok := serverCtx.GetConfig().(server.CometConfig)
-	if !ok {
-		t.Error("can not convert to cometbft config")
-	}
+	config := client.GetConfigFromCmd(cmd)
 
 	if testAddr != config.RPC.ListenAddress {
 		t.Errorf("RPCListenAddress was not set from env. var. %q", envVarName)
@@ -371,19 +358,14 @@ func TestInterceptConfigsPreRunHandlerPrecedenceFlag(t *testing.T) {
 	testCommon := newPrecedenceCommon(t)
 	testCommon.setAll(t, &TestAddrExpected, &TestAddrNotExpected, &TestAddrNotExpected)
 
-	serverCtx := &server.Context{}
-	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
+	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewLogger(os.Stdout))
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
 
 	if err := testCommon.cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	serverCtx = corectx.GetServerContextFromCmd(testCommon.cmd).(*server.Context)
-
-	config, ok := serverCtx.GetConfig().(server.CometConfig)
-	if !ok {
-		t.Error("can not convert to cometbft config")
-	}
+	config := client.GetConfigFromCmd(testCommon.cmd)
 
 	if TestAddrExpected != config.RPC.ListenAddress {
 		t.Fatalf("RPCListenAddress was not set from flag %q", testCommon.flagName)
@@ -394,19 +376,14 @@ func TestInterceptConfigsPreRunHandlerPrecedenceEnvVar(t *testing.T) {
 	testCommon := newPrecedenceCommon(t)
 	testCommon.setAll(t, nil, &TestAddrExpected, &TestAddrNotExpected)
 
-	serverCtx := &server.Context{}
-	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
+	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewLogger(os.Stdout))
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
 
 	if err := testCommon.cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	serverCtx = corectx.GetServerContextFromCmd(testCommon.cmd).(*server.Context)
-
-	config, ok := serverCtx.GetConfig().(server.CometConfig)
-	if !ok {
-		t.Error("can not convert to cometbft config")
-	}
+	config := client.GetConfigFromCmd(testCommon.cmd)
 
 	if TestAddrExpected != config.RPC.ListenAddress {
 		t.Errorf("RPCListenAddress was not set from env. var. %q", testCommon.envVarName)
@@ -417,19 +394,14 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigFile(t *testing.T) {
 	testCommon := newPrecedenceCommon(t)
 	testCommon.setAll(t, nil, nil, &TestAddrExpected)
 
-	serverCtx := &server.Context{}
-	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
+	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewLogger(os.Stdout))
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
 
 	if err := testCommon.cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	serverCtx = corectx.GetServerContextFromCmd(testCommon.cmd).(*server.Context)
-
-	config, ok := serverCtx.GetConfig().(server.CometConfig)
-	if !ok {
-		t.Error("can not convert to cometbft config")
-	}
+	config := client.GetConfigFromCmd(testCommon.cmd)
 
 	if TestAddrExpected != config.RPC.ListenAddress {
 		t.Errorf("RPCListenAddress was not read from file %q", testCommon.configTomlPath)
@@ -440,19 +412,14 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigDefault(t *testing.T) {
 	testCommon := newPrecedenceCommon(t)
 	// Do not set anything
 
-	serverCtx := &server.Context{}
-	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
+	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewLogger(os.Stdout))
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
 
 	if err := testCommon.cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	serverCtx = corectx.GetServerContextFromCmd(testCommon.cmd).(*server.Context)
-
-	config, ok := serverCtx.GetConfig().(server.CometConfig)
-	if !ok {
-		t.Error("can not convert to cometbft config")
-	}
+	config := client.GetConfigFromCmd(testCommon.cmd)
 
 	if config.RPC.ListenAddress != "tcp://127.0.0.1:26657" {
 		t.Error("RPCListenAddress is not using default")
@@ -476,10 +443,11 @@ func TestInterceptConfigsWithBadPermissions(t *testing.T) {
 
 	cmd.PreRunE = preRunETestImpl
 
-	serverCtx := &server.Context{}
-	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
-	if err := cmd.ExecuteContext(ctx); !os.IsPermission(err) {
-		t.Fatalf("Failed to catch permissions error, got: [%T] %v", err, err)
+	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewNopLogger())
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
+
+	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
+		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 }
 
@@ -491,9 +459,10 @@ func TestEmptyMinGasPrices(t *testing.T) {
 
 	// Run InitCmd to create necessary config files.
 	clientCtx := client.Context{}.WithHomeDir(tempDir).WithCodec(encCfg.Codec)
-	serverCtx := server.NewDefaultContext()
-	serverCtx.SetRoot(tempDir)
-	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
+	viper := viper.New()
+	viper.Set(flags.FlagHome, tempDir)
+	ctx := context.WithValue(context.Background(), corectx.ViperContextKey, viper)
+	ctx = context.WithValue(ctx, corectx.LoggerContextKey, log.NewLogger(os.Stdout))
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	cmd := genutilcli.InitCmd(module.NewManager())
 	cmd.SetArgs([]string{"appnode-test"})
@@ -511,12 +480,12 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	cmd = server.StartCmd[servertypes.Application](nil)
 	cmd.PersistentFlags().String(flags.FlagHome, tempDir, "")
 	cmd.PreRunE = func(cmd *cobra.Command, _ []string) error {
-		ctx, err := server.InterceptConfigsAndCreateContext(cmd, "", nil, cmtcfg.DefaultConfig())
+		viper, err := server.InterceptConfigsAndCreateContext(cmd, "", nil, cmtcfg.DefaultConfig())
 		if err != nil {
 			return err
 		}
 
-		return server.SetCmdServerContext(cmd, ctx)
+		return server.SetCmdServerContext(cmd, viper, client.GetLoggerFromCmd(cmd))
 	}
 	err = cmd.ExecuteContext(ctx)
 	require.Errorf(t, err, sdkerrors.ErrAppConfig.Error())

@@ -77,13 +77,9 @@ func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error 
 // InvokeTyped execute a message and fill-in a response.
 // The response must be known and passed as a parameter.
 // Use InvokeUntyped if the response type is not known.
-func (m *msgRouterService) InvokeTyped(
-	ctx context.Context,
-	msg, resp protoiface.MessageV1,
-) error {
-	var err error
-	resp, err = m.handler(ctx, msg)
-	return err
+func (m *msgRouterService) InvokeTyped(ctx context.Context, msg, resp protoiface.MessageV1) error {
+	// see https://github.com/cosmos/cosmos-sdk/pull/20349
+	panic("not implemented")
 }
 
 // InvokeUntyped execute a message and returns a response.
@@ -119,9 +115,8 @@ func (m *queryRouterService) InvokeTyped(
 	ctx context.Context,
 	req, resp protoiface.MessageV1,
 ) error {
-	var err error
-	resp, err = m.handler(ctx, req)
-	return err
+	// see https://github.com/cosmos/cosmos-sdk/pull/20349
+	panic("not implemented")
 }
 
 // InvokeUntyped execute a message and returns a response.

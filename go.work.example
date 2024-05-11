@@ -15,7 +15,9 @@ use (
 	./orm
 	./simapp
 	./tests
+	./server/v2/stf
 	./store
+	./store/v2
 	./tools/cosmovisor
 	./tools/confix
 	./tools/hubl
@@ -24,6 +26,7 @@ use (
 	./x/authz
 	./x/bank
 	./x/circuit
+	./x/consensus
 	./x/distribution
 	./x/evidence
 	./x/feegrant

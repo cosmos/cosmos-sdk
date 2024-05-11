@@ -6,13 +6,14 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmtsecp256k1 "github.com/cometbft/cometbft/crypto/secp256k1"
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -27,6 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/client"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -92,14 +94,16 @@ func NewABCIUtilsTestSuite(t *testing.T) *ABCIUtilsTestSuite {
 	s.valStore = valStore
 
 	// set up mock
-	s.valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), s.vals[0].consAddr.Bytes()).Return(s.vals[0].tmPk, nil).AnyTimes()
-	s.valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), s.vals[1].consAddr.Bytes()).Return(s.vals[1].tmPk, nil).AnyTimes()
-	s.valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), s.vals[2].consAddr.Bytes()).Return(s.vals[2].tmPk, nil).AnyTimes()
+	for _, val := range s.vals {
+		pk, err := cryptocodec.FromCmtProtoPublicKey(val.tmPk)
+		require.NoError(t, err)
+		valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), val.consAddr.Bytes()).Return(pk, nil).AnyTimes()
+	}
 
 	// create context
 	s.ctx = sdk.Context{}.WithConsensusParams(cmtproto.ConsensusParams{
-		Abci: &cmtproto.ABCIParams{
-			VoteExtensionsEnableHeight: 2,
+		Feature: &cmtproto.FeatureParams{
+			VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 2},
 		},
 	}).WithBlockHeader(cmtproto.Header{
 		ChainID: chainID,
@@ -499,12 +503,12 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 
 	testCases := map[string]struct {
 		ctx         sdk.Context
-		req         *abci.RequestPrepareProposal
+		req         *abci.PrepareProposalRequest
 		expectedTxs int
 	}{
 		"small max tx bytes": {
 			ctx: s.ctx,
-			req: &abci.RequestPrepareProposal{
+			req: &abci.PrepareProposalRequest{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
 				MaxTxBytes: 10,
 			},
@@ -516,7 +520,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 					MaxGas: 10,
 				},
 			}),
-			req: &abci.RequestPrepareProposal{
+			req: &abci.PrepareProposalRequest{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
 				MaxTxBytes: 465,
 			},
@@ -524,7 +528,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 		},
 		"large max tx bytes": {
 			ctx: s.ctx,
-			req: &abci.RequestPrepareProposal{
+			req: &abci.PrepareProposalRequest{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
 				MaxTxBytes: 465,
 			},
@@ -532,7 +536,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 		},
 		"large max tx bytes len calculation": {
 			ctx: s.ctx,
-			req: &abci.RequestPrepareProposal{
+			req: &abci.PrepareProposalRequest{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
 				MaxTxBytes: 456,
 			},
@@ -544,7 +548,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 					MaxGas: 200,
 				},
 			}),
-			req: &abci.RequestPrepareProposal{
+			req: &abci.PrepareProposalRequest{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
 				MaxTxBytes: 465,
 			},
@@ -628,14 +632,14 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 	testCases := map[string]struct {
 		ctx         sdk.Context
 		txInputs    []testTx
-		req         *abci.RequestPrepareProposal
+		req         *abci.PrepareProposalRequest
 		handler     sdk.PrepareProposalHandler
 		expectedTxs []int
 	}{
 		"skip same-sender non-sequential sequence and then add others txs": {
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[0], testTxs[1], testTxs[2], testTxs[3]},
-			req: &abci.RequestPrepareProposal{
+			req: &abci.PrepareProposalRequest{
 				MaxTxBytes: 180 + 181,
 			},
 			expectedTxs: []int{0, 3},
@@ -643,7 +647,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 		"skip multi-signers msg non-sequential sequence": {
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[4], testTxs[5], testTxs[6], testTxs[7], testTxs[8]},
-			req: &abci.RequestPrepareProposal{
+			req: &abci.PrepareProposalRequest{
 				MaxTxBytes: 263 + 264,
 			},
 			expectedTxs: []int{4, 8},
@@ -652,7 +656,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 			// Because tx 10 is valid, tx 11 can't be valid as they have higher sequence numbers.
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[9], testTxs[10], testTxs[11]},
-			req: &abci.RequestPrepareProposal{
+			req: &abci.PrepareProposalRequest{
 				MaxTxBytes: 263 + 264,
 			},
 			expectedTxs: []int{9},
@@ -662,7 +666,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 			// the rest of the txs fail because they have a seq of 4.
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[12], testTxs[13], testTxs[14]},
-			req: &abci.RequestPrepareProposal{
+			req: &abci.PrepareProposalRequest{
 				MaxTxBytes: 112,
 			},
 			expectedTxs: []int{},

@@ -13,6 +13,7 @@ import (
 	authtypes "cosmossdk.io/x/auth/types"
 	_ "cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/consensus"
 	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 )
 
 // GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts

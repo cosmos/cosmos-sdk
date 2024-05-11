@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"context"
 	"io"
+	"strings"
 
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"github.com/cosmos/gogoproto/proto"
@@ -57,8 +58,8 @@ func NewReflectionService() (*ReflectionService, error) {
 		return true
 	})
 
-	slices.SortFunc(fds.File, func(x, y *descriptorpb.FileDescriptorProto) bool {
-		return *x.Name < *y.Name
+	slices.SortFunc(fds.File, func(x, y *descriptorpb.FileDescriptorProto) int {
+		return strings.Compare(*x.Name, *y.Name)
 	})
 
 	return &ReflectionService{files: fds}, nil

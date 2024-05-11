@@ -7,29 +7,16 @@ replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/depinject => ../../depinject
-	cosmossdk.io/server/v2 => ../../server/v2
 	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager
 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
 	cosmossdk.io/store/v2 => ../../store/v2
 	cosmossdk.io/x/accounts => ../../x/accounts
 	cosmossdk.io/x/auth => ../../x/auth
-	cosmossdk.io/x/authz => ../../x/authz
 	cosmossdk.io/x/bank => ../../x/bank
-	cosmossdk.io/x/circuit => ../../x/circuit
 	cosmossdk.io/x/consensus => ../../x/consensus
 	cosmossdk.io/x/distribution => ../../x/distribution
-	cosmossdk.io/x/evidence => ../../x/evidence
-	cosmossdk.io/x/feegrant => ../../x/feegrant
-	cosmossdk.io/x/gov => ../../x/gov
-	cosmossdk.io/x/group => ../../x/group
-	cosmossdk.io/x/mint => ../../x/mint
-	cosmossdk.io/x/nft => ../../x/nft
-	cosmossdk.io/x/params => ../../x/params
-	cosmossdk.io/x/protocolpool => ../../x/protocolpool
-	cosmossdk.io/x/slashing => ../../x/slashing
 	cosmossdk.io/x/staking => ../../x/staking
 	cosmossdk.io/x/tx => ../../x/tx
-	cosmossdk.io/x/upgrade => ../../x/upgrade
 	github.com/cosmos/cosmos-sdk => ../..
 )
 
@@ -44,7 +31,6 @@ require (
 	cosmossdk.io/x/tx v0.13.3
 	github.com/cosmos/cosmos-sdk v0.51.0
 	github.com/cosmos/gogoproto v1.4.12
-	github.com/golang/protobuf v1.5.4
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
 	google.golang.org/grpc v1.63.2
 	google.golang.org/protobuf v1.34.1
@@ -108,6 +94,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/glog v1.2.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/flatbuffers v2.0.8+incompatible // indirect

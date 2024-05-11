@@ -79,10 +79,10 @@ func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error 
 // Use InvokeUntyped if the response type is not known.
 func (m *msgRouterService) InvokeTyped(
 	ctx context.Context,
-	msg, resp protoiface.MessageV1, // nolint:staticcheck // interface types implicitly store a pointer
+	msg, resp protoiface.MessageV1,
 ) error {
 	var err error
-	resp, err = m.handler(ctx, msg) // nolint:ineffassign,staticcheck // interface types implicitly store a pointer
+	resp, err = m.handler(ctx, msg)
 	return err
 }
 
@@ -117,10 +117,10 @@ func (m *queryRouterService) CanInvoke(ctx context.Context, typeURL string) erro
 // Use InvokeUntyped if the response type is not known.
 func (m *queryRouterService) InvokeTyped(
 	ctx context.Context,
-	req, resp protoiface.MessageV1, // nolint:staticcheck // interface types implicitly store a pointer
+	req, resp protoiface.MessageV1,
 ) error {
 	var err error
-	resp, err = m.handler(ctx, req) // nolint:ineffassign,staticcheck // interface types implicitly store a pointer
+	resp, err = m.handler(ctx, req)
 	return err
 }
 

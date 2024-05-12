@@ -51,7 +51,7 @@ type App struct {
 	*appmanager.AppManager[transaction.Tx]
 
 	// app manager dependencies
-	stf                *stf.STF[transaction.Tx]
+	stf                appmanager.StateTransitionFunction[transaction.Tx]
 	msgRouterBuilder   *stf.MsgRouterBuilder
 	queryRouterBuilder *stf.MsgRouterBuilder
 	db                 Store

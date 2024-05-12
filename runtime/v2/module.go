@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -29,7 +30,6 @@ import (
 	rootstorev2 "cosmossdk.io/store/v2/root"
 	"cosmossdk.io/x/tx/signing"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -314,10 +314,20 @@ func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
 	return appBuilder.app
 }
 
-func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
+func ProvideAppVersionModifier(app *AppBuilder) AppVersionModifier {
 	return app.app
 }
 
 func ProvideCometService() comet.Service {
 	return &services.ContextAwareCometInfoService{}
+}
+
+// TODO is this needed?
+// AppVersionModifier defines the interface fulfilled by BaseApp
+// which allows getting and setting it's appVersion field. This
+// in turn updates the consensus params that are sent to the
+// consensus engine in EndBlock
+type AppVersionModifier interface {
+	SetAppVersion(context.Context, uint64) error
+	AppVersion(context.Context) (uint64, error)
 }

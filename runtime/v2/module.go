@@ -244,7 +244,7 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 
 	env := appmodulev2.Environment{
 		Logger:             logger,
-		BranchService:      nil, // TODO
+		BranchService:      stf.BranchService{},
 		EventService:       stf.NewEventService(),
 		GasService:         stf.NewGasMeterService(),
 		HeaderService:      stf.HeaderService{},

@@ -75,15 +75,19 @@ func TestSetCmdClientContextHandler(t *testing.T) {
 		return c
 	}
 
+	defaultContext := context.WithValue(context.Background(), client.ClientContextKey, &client.Context{})
+
 	testCases := []struct {
 		name            string
 		expectedContext client.Context
 		args            []string
+		ctx             context.Context
 	}{
 		{
 			"no flags set",
 			initClientCtx,
 			[]string{},
+			defaultContext,
 		},
 		{
 			"flags set",
@@ -91,6 +95,7 @@ func TestSetCmdClientContextHandler(t *testing.T) {
 			[]string{
 				fmt.Sprintf("--%s=new-chain-id", flags.FlagChainID),
 			},
+			defaultContext,
 		},
 		{
 			"flags set with space",
@@ -99,6 +104,16 @@ func TestSetCmdClientContextHandler(t *testing.T) {
 				fmt.Sprintf("--%s", flags.FlagHome),
 				"/tmp/dir",
 			},
+			defaultContext,
+		},
+		{
+			"no context provided",
+			initClientCtx.WithHomeDir("/tmp/noctx"),
+			[]string{
+				fmt.Sprintf("--%s", flags.FlagHome),
+				"/tmp/noctx",
+			},
+			nil,
 		},
 	}
 
@@ -106,13 +121,11 @@ func TestSetCmdClientContextHandler(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := context.WithValue(context.Background(), client.ClientContextKey, &client.Context{})
-
 			cmd := newCmd()
 			_ = testutil.ApplyMockIODiscardOutErr(cmd)
 			cmd.SetArgs(tc.args)
 
-			require.NoError(t, cmd.ExecuteContext(ctx))
+			require.NoError(t, cmd.ExecuteContext(tc.ctx))
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			require.Equal(t, tc.expectedContext, clientCtx)

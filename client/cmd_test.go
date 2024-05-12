@@ -75,8 +75,6 @@ func TestSetCmdClientContextHandler(t *testing.T) {
 		return c
 	}
 
-	defaultContext := context.WithValue(context.Background(), client.ClientContextKey, &client.Context{})
-
 	testCases := []struct {
 		name            string
 		expectedContext client.Context
@@ -87,7 +85,7 @@ func TestSetCmdClientContextHandler(t *testing.T) {
 			"no flags set",
 			initClientCtx,
 			[]string{},
-			defaultContext,
+			context.WithValue(context.Background(), client.ClientContextKey, &client.Context{}),
 		},
 		{
 			"flags set",
@@ -95,7 +93,7 @@ func TestSetCmdClientContextHandler(t *testing.T) {
 			[]string{
 				fmt.Sprintf("--%s=new-chain-id", flags.FlagChainID),
 			},
-			defaultContext,
+			context.WithValue(context.Background(), client.ClientContextKey, &client.Context{}),
 		},
 		{
 			"flags set with space",
@@ -104,7 +102,7 @@ func TestSetCmdClientContextHandler(t *testing.T) {
 				fmt.Sprintf("--%s", flags.FlagHome),
 				"/tmp/dir",
 			},
-			defaultContext,
+			context.Background(),
 		},
 		{
 			"no context provided",
@@ -114,6 +112,15 @@ func TestSetCmdClientContextHandler(t *testing.T) {
 				"/tmp/noctx",
 			},
 			nil,
+		},
+		{
+			"with invalid client value in the context",
+			initClientCtx.WithHomeDir("/tmp/invalid"),
+			[]string{
+				fmt.Sprintf("--%s", flags.FlagHome),
+				"/tmp/invalid",
+			},
+			context.WithValue(context.Background(), client.ClientContextKey, "invalid"),
 		},
 	}
 

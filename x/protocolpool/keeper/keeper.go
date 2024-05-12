@@ -170,7 +170,7 @@ func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipientAddr string
 	withdrawnAmount := sdk.NewCoin(denom, fundsAllocated)
 	err = k.DistributeFromStreamFunds(ctx, sdk.NewCoins(withdrawnAmount), recipient)
 	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("error while distributing funds to the recipient %s: %v", recipientAddr, err)
+		return sdk.Coin{}, fmt.Errorf("error while distributing funds to the recipient %s: %w", recipientAddr, err)
 	}
 
 	// reset fund distribution
@@ -220,7 +220,7 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 
 	err = k.ToDistribute.Set(ctx, amount.AmountOf(denom))
 	if err != nil {
-		return fmt.Errorf("error while setting ToDistribute: %v", err)
+		return fmt.Errorf("error while setting ToDistribute: %w", err)
 	}
 	return nil
 }

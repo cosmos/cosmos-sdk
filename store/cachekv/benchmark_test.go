@@ -72,7 +72,7 @@ type CacheStack struct {
 	cacheStores []types.CacheKVStore
 }
 
-// CurrentContext returns the top context of cached stack,
+// CurrentStore returns the top context of cached stack,
 // if the stack is empty, returns the initial context.
 func (cs *CacheStack) CurrentStore() types.CacheKVStore {
 	l := len(cs.cacheStores)

@@ -1,6 +1,7 @@
 package upgrade
 
 import (
+	"cosmossdk.io/core/app"
 	"github.com/spf13/cast"
 
 	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
@@ -12,7 +13,6 @@ import (
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -39,7 +39,7 @@ type ModuleInputs struct {
 	Environment        appmodule.Environment
 	Cdc                codec.Codec
 	AddressCodec       address.Codec
-	AppVersionModifier baseapp.AppVersionModifier
+	AppVersionModifier app.AppVersionModifier
 
 	AppOpts servertypes.AppOptions `optional:"true"`
 }

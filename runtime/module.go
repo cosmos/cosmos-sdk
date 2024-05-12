@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"cosmossdk.io/core/app"
 	"fmt"
 	"os"
 
@@ -281,7 +282,7 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 	return transientStoreService{key: storeKey}
 }
 
-func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
+func ProvideAppVersionModifier(app *AppBuilder) app.AppVersionModifier {
 	return app.app
 }
 

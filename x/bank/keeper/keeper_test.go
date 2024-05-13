@@ -154,6 +154,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 		authority,
 	)
 
+	suite.Require().NoError(suite.bankKeeper.SetParams(ctx, banktypes.Params{
+		DefaultSendEnabled: banktypes.DefaultDefaultSendEnabled,
+	}))
+
 	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
@@ -177,7 +181,7 @@ func (suite *KeeperTestSuite) mockMintCoins(moduleAcc *authtypes.ModuleAccount) 
 
 func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(moduleAcc *authtypes.ModuleAccount, _ sdk.AccAddress) {
 	suite.authKeeper.EXPECT().GetModuleAddress(moduleAcc.Name).Return(moduleAcc.GetAddress())
-	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc).AnyTimes()
+	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc)
 }
 
 func (suite *KeeperTestSuite) mockBurnCoins(moduleAcc *authtypes.ModuleAccount) {
@@ -407,13 +411,6 @@ func (suite *KeeperTestSuite) TestSupply_DelegateUndelegateCoins() {
 	ctx := suite.ctx
 	require := suite.Require()
 	authKeeper, keeper := suite.authKeeper, suite.bankKeeper
-
-	require.NoError(keeper.SetParams(ctx, banktypes.Params{
-		DefaultSendEnabled: banktypes.DefaultDefaultSendEnabled,
-	}))
-
-	res := keeper.GetParams(ctx)
-	fmt.Println(res)
 
 	// set initial balances
 	suite.mockMintCoins(mintAcc)
@@ -1702,10 +1699,6 @@ func (suite *KeeperTestSuite) TestDelegateCoins() {
 	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.HeaderInfo().Time.Unix(), endTime.Unix())
 	suite.Require().NoError(err)
 
-	suite.Require().NoError(suite.bankKeeper.SetParams(suite.ctx, banktypes.Params{
-		DefaultSendEnabled: banktypes.DefaultDefaultSendEnabled,
-	}))
-
 	suite.mockFundAccount(accAddrs[0])
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], origCoins))
 
@@ -1883,10 +1876,6 @@ func (suite *KeeperTestSuite) TestIterateAllDenomMetaData() {
 
 func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 	require := suite.Require()
-
-	require.NoError(suite.bankKeeper.SetParams(suite.ctx, banktypes.Params{
-		DefaultSendEnabled: banktypes.DefaultDefaultSendEnabled,
-	}))
 
 	// mint coins
 	suite.mockMintCoins(multiPermAcc)

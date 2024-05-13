@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -35,4 +36,8 @@ func ProvideInterfaceRegistry(
 	}
 
 	return interfaceRegistry, nil
+}
+
+func ProvideCodecs() legacy.Amino {
+	return NewLegacyAmino()
 }

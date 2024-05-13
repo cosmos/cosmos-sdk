@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 
+	"cosmossdk.io/core/legacy"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/tendermint/go-amino"
 
@@ -22,6 +23,8 @@ type LegacyAmino struct {
 func (cdc *LegacyAmino) Seal() {
 	cdc.Amino.Seal()
 }
+
+var _ legacy.Amino = &LegacyAmino{}
 
 func NewLegacyAmino() *LegacyAmino {
 	return &LegacyAmino{amino.NewCodec()}

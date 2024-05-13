@@ -591,9 +591,25 @@ func TestProposalPassing(t *testing.T) {
 	// check if addr1's weight changed
 	cfg, err := acc.QueryConfig(ctx, &v1.QueryConfig{})
 	require.NoError(t, err)
-	for _, v := range cfg.Members {
-		if v.Address == "addr1" {
-			require.Equal(t, 500, int(v.Weight))
-		}
+
+	expectedMembers := []*v1.Member{
+		{
+			Address: "addr1",
+			Weight:  500,
+		},
+		{
+			Address: "addr2",
+			Weight:  1000,
+		},
+		{
+			Address: "addr3",
+			Weight:  1000,
+		},
+		{
+			Address: "addr4",
+			Weight:  1000,
+		},
 	}
+
+	require.Equal(t, expectedMembers, cfg.Members)
 }

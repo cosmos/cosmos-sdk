@@ -76,15 +76,9 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 			return err
 		}
 
-		var res consensustypes.QueryParamsResponse
-
-		if err := k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensustypes.QueryParamsRequest{}, &res); err != nil {
-			return err
-		}
-
 		// called when proposal become inactive
 		// call hook when proposal become inactive
-		_, err = k.BranchService.ExecuteWithGasLimit(ctx, uint64(res.Params.Block.MaxGas), func(ctx context.Context) error {
+		err = k.BranchService.Execute(ctx, func(ctx context.Context) error {
 			return k.Hooks().AfterProposalFailedMinDeposit(ctx, proposal.Id)
 		})
 		if err != nil {
@@ -197,11 +191,17 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 				break
 			}
 
+			var res consensustypes.QueryParamsResponse
+
+			if err := k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensustypes.QueryParamsRequest{}, &res); err != nil {
+				return err
+			}
+
 			// attempt to execute all messages within the passed proposal
 			// Messages may mutate state thus we use a cached context. If one of
 			// the handlers fails, no state mutation is written and the error
 			// message is logged.
-			if err := k.BranchService.Execute(ctx, func(ctx context.Context) error {
+			_, err = k.BranchService.ExecuteWithGasLimit(ctx, uint64(res.Params.Block.MaxGas), func(ctx context.Context) error {
 				// execute all messages
 				for idx, msg = range messages {
 					if _, err := safeExecuteHandler(ctx, msg, k.RouterService.MessageRouterService()); err != nil {
@@ -220,7 +220,8 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 				logMsg = "passed"
 
 				return nil
-			}); err != nil {
+			})
+			if err != nil {
 				break // We do not anything with the error. Returning an error halts the chain, and proposal struct is already updated.
 			}
 		case !burnDeposits && (proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED ||

@@ -77,6 +77,25 @@ func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruneOptions)
 	s.rootStore = rs
 }
 
+func (s *RootStoreTestSuite) newStoreWithDBMount(config *store.PruneOptions, dbm1, dbm2, dbm3, dbm4 *dbm.MemDB) {
+	noopLog := log.NewNopLogger()
+
+	sqliteDB, err := sqlite.New(s.T().TempDir())
+	s.Require().NoError(err)
+	ss := storage.NewStorageStore(sqliteDB, config, noopLog)
+
+	tree := iavl.NewIavlTree(dbm1, noopLog, iavl.DefaultConfig())
+	tree2 := iavl.NewIavlTree(dbm2, noopLog, iavl.DefaultConfig())
+	tree3 := iavl.NewIavlTree(dbm3, noopLog, iavl.DefaultConfig())
+	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree, testStoreKey2: tree2, testStoreKey3: tree3}, dbm4, config, noopLog)
+	s.Require().NoError(err)
+
+	rs, err := New(noopLog, ss, sc, nil, nil)
+	s.Require().NoError(err)
+
+	s.rootStore = rs
+}
+
 func (s *RootStoreTestSuite) TearDownTest() {
 	err := s.rootStore.Close()
 	s.Require().NoError(err)
@@ -358,7 +377,7 @@ func (s *RootStoreTestSuite) TestStateAt() {
 func (s *RootStoreTestSuite) TestPrune() {
 	// perform changes
 	cs := corestore.NewChangeset()
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 10; i++ {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
 
@@ -375,8 +394,8 @@ func (s *RootStoreTestSuite) TestPrune() {
 		{"prune nothing", 10, *store.DefaultPruneOptions(), nil, []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
 		{"prune everything", 12, store.PruneOptions{
 			KeepRecent: 1,
-			Interval:   0,
-		}, []uint64{1, 2, 3, 4, 5, 6, 7}, []uint64{8, 9, 10, 11, 12}},
+			Interval:   10,
+		}, []uint64{1, 2, 3, 4, 5, 6, 7, 8}, []uint64{9, 10, 11, 12}},
 		{"prune some; no batch", 10, store.PruneOptions{
 			KeepRecent: 2,
 			Interval:   1,
@@ -408,28 +427,268 @@ func (s *RootStoreTestSuite) TestPrune() {
 		}
 
 		for _, v := range tc.saved {
-			_, err := s.rootStore.StateAt(v)
-			s.Require().NoError(err, "expected no error when loading height: %d", v)
+			ro, err := s.rootStore.StateAt(v)
+			s.Require().NoError(err, "expected no error when loading height %d at test %s", v, tc.name)
+
+			for i := 0; i < 10; i++ {
+				key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
+				val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
+
+				reader, err := ro.GetReader(testStoreKeyBytes)
+				s.Require().NoError(err)
+				result, err := reader.Get([]byte(key))
+				s.Require().NoError(err)
+				s.Require().Equal([]byte(val), result, "value should be equal for test: %s", tc.name)
+			}
 		}
 
 		for _, v := range tc.deleted {
 			_, err := s.rootStore.StateAt(v)
-			s.Require().Error(err, "expected error when loading height: %d", v)
+			s.Require().Error(err, "expected error when loading height %d at test %s", v, tc.name)
 		}
 	}
 
 }
 
 func (s *RootStoreTestSuite) TestMultiStore_Pruning_SameHeightsTwice() {
+	// perform changes
+	cs := corestore.NewChangeset()
+	cs.Add(testStoreKeyBytes, []byte("key"), []byte("val"), false)
 
+	const (
+		numVersions uint64 = 10
+		keepRecent  uint64 = 1
+		interval    uint64 = 10
+	)
+
+	s.newStoreWithPruneConfig(&store.PruneOptions{
+		KeepRecent: keepRecent,
+		Interval:   interval,
+	})
+	s.Require().NoError(s.rootStore.LoadLatestVersion())
+
+	for i := uint64(0); i < numVersions; i++ {
+		// execute WorkingHash and Commit
+		wHash, err := s.rootStore.WorkingHash(cs)
+		s.Require().NoError(err)
+
+		cHash, err := s.rootStore.Commit(cs)
+		s.Require().NoError(err)
+		s.Require().Equal(wHash, cHash)
+	}
+
+	latestVer, err := s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(numVersions, latestVer)
+
+	for v := uint64(1); v < numVersions-uint64(keepRecent); v++ {
+		err := s.rootStore.LoadVersion(v)
+		s.Require().Error(err, "expected error when loading pruned height: %d", v)
+	}
+
+	for v := (numVersions - uint64(keepRecent)); v < numVersions; v++ {
+		err := s.rootStore.LoadVersion(v)
+		s.Require().NoError(err, "expected no error when loading height: %d", v)
+	}
+
+	// Get latest
+	err = s.rootStore.LoadVersion(numVersions - 1)
+	s.Require().NoError(err)
+
+	// Test pruning the same heights again
+	_, err = s.rootStore.WorkingHash(cs)
+	s.Require().NoError(err)
+	_, err = s.rootStore.Commit(cs)
+	s.Require().NoError(err)
+
+	// Ensure that can commit one more height with no panic
+	_, err = s.rootStore.WorkingHash(cs)
+	s.Require().NoError(err)
+	_, err = s.rootStore.Commit(cs)
+	s.Require().NoError(err)
 }
 
 func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
+	// perform changes
+	cs := corestore.NewChangeset()
+	cs.Add(testStoreKeyBytes, []byte("key"), []byte("val"), false)
 
+	pruneOpt := store.PruneOptions{
+		KeepRecent: 2,
+		Interval:   11,
+	}
+
+	db1 := dbm.NewMemDB()
+	db2 := dbm.NewMemDB()
+	db3 := dbm.NewMemDB()
+	db4 := dbm.NewMemDB()
+
+	s.newStoreWithDBMount(&pruneOpt, db1, db2, db3, db4)
+	s.Require().NoError(s.rootStore.LoadLatestVersion())
+
+	// Commit enough to build up heights to prune, where on the next block we should
+	// batch delete.
+	for i := uint64(0); i < 10; i++ {
+		// execute WorkingHash and Commit
+		wHash, err := s.rootStore.WorkingHash(cs)
+		s.Require().NoError(err)
+
+		cHash, err := s.rootStore.Commit(cs)
+		s.Require().NoError(err)
+		s.Require().Equal(wHash, cHash)
+	}
+
+	latestVer, err := s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+
+	ok, actualHeightToPrune := pruneOpt.ShouldPrune(latestVer)
+	s.Require().False(ok)
+	s.Require().Equal(uint64(0), actualHeightToPrune)
+
+	// "restart"
+	s.newStoreWithDBMount(&pruneOpt, db1, db2, db3, db4)
+	err = s.rootStore.LoadLatestVersion()
+	s.Require().NoError(err)
+
+	latestVer, err = s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+
+	ok, actualHeightToPrune = pruneOpt.ShouldPrune(latestVer)
+	s.Require().False(ok)
+	s.Require().Equal(uint64(0), actualHeightToPrune)
+
+	// commit one more block and ensure the heights have been pruned
+	// execute WorkingHash and Commit
+	wHash, err := s.rootStore.WorkingHash(cs)
+	s.Require().NoError(err)
+
+	cHash, err := s.rootStore.Commit(cs)
+	s.Require().NoError(err)
+	s.Require().Equal(wHash, cHash)
+
+	latestVer, err = s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+
+	ok, actualHeightToPrune = pruneOpt.ShouldPrune(latestVer)
+	s.Require().True(ok)
+	s.Require().Equal(uint64(8), actualHeightToPrune)
+
+	for v := uint64(1); v <= actualHeightToPrune; v++ {
+		err := s.rootStore.LoadVersion(v)
+		s.Require().Error(err, "expected error when loading height: %d", v)
+	}
 }
 
 func (s *RootStoreTestSuite) TestMultiStoreRestart() {
+	db1 := dbm.NewMemDB()
+	db2 := dbm.NewMemDB()
+	db3 := dbm.NewMemDB()
+	db4 := dbm.NewMemDB()
 
+	s.newStoreWithDBMount(nil, db1, db2, db3, db4)
+	s.Require().NoError(s.rootStore.LoadLatestVersion())
+
+	// perform changes
+	for i := uint64(1); i < 3; i++ {
+		cs := corestore.NewChangeset()
+		key := fmt.Sprintf("key%03d", i)         // key000, key001, ..., key099
+		val := fmt.Sprintf("val%03d_%03d", i, 1) // val000_1, val001_1, ..., val099_1
+
+		cs.Add(testStoreKeyBytes, []byte(key), []byte(val), false)
+
+		key = fmt.Sprintf("key%03d", i)         // key000, key001, ..., key099
+		val = fmt.Sprintf("val%03d_%03d", i, 2) // val000_1, val001_1, ..., val099_1
+
+		cs.Add(testStoreKey2Bytes, []byte(key), []byte(val), false)
+
+		key = fmt.Sprintf("key%03d", i)         // key000, key001, ..., key099
+		val = fmt.Sprintf("val%03d_%03d", i, 3) // val000_1, val001_1, ..., val099_1
+
+		cs.Add(testStoreKey3Bytes, []byte(key), []byte(val), false)
+
+		// execute WorkingHash and Commit
+		wHash, err := s.rootStore.WorkingHash(cs)
+		s.Require().NoError(err)
+
+		cHash, err := s.rootStore.Commit(cs)
+		s.Require().NoError(err)
+		s.Require().Equal(wHash, cHash)
+
+		latestVer, err := s.rootStore.GetLatestVersion()
+		s.Require().NoError(err)
+		s.Require().Equal(i, latestVer)
+	}
+
+	// more changes
+	cs1 := corestore.NewChangeset()
+	key := fmt.Sprintf("key%03d", 3)         // key000, key001, ..., key099
+	val := fmt.Sprintf("val%03d_%03d", 3, 1) // val000_1, val001_1, ..., val099_1
+
+	cs1.Add(testStoreKeyBytes, []byte(key), []byte(val), false)
+
+	key = fmt.Sprintf("key%03d", 3)         // key000, key001, ..., key099
+	val = fmt.Sprintf("val%03d_%03d", 3, 2) // val000_1, val001_1, ..., val099_1
+
+	cs1.Add(testStoreKey2Bytes, []byte(key), []byte(val), false)
+
+	// execute WorkingHash and Commit
+	wHash, err := s.rootStore.WorkingHash(cs1)
+	s.Require().NoError(err)
+
+	cHash, err := s.rootStore.Commit(cs1)
+	s.Require().NoError(err)
+	s.Require().Equal(wHash, cHash)
+
+	latestVer, err := s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(3), latestVer)
+
+	cs2 := corestore.NewChangeset()
+	key = fmt.Sprintf("key%03d", 4)         // key000, key001, ..., key099
+	val = fmt.Sprintf("val%03d_%03d", 4, 3) // val000_1, val001_1, ..., val099_1
+
+	cs2.Add(testStoreKey3Bytes, []byte(key), []byte(val), false)
+
+	// execute WorkingHash and Commit
+	wHash, err = s.rootStore.WorkingHash(cs2)
+	s.Require().NoError(err)
+
+	cHash, err = s.rootStore.Commit(cs2)
+	s.Require().NoError(err)
+	s.Require().Equal(wHash, cHash)
+
+	latestVer, err = s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(4), latestVer)
+
+	// "restart"
+	s.newStoreWithDBMount(nil, db1, db2, db3, db4)
+	err = s.rootStore.LoadLatestVersion()
+	s.Require().Nil(err)
+
+	latestVer, err = s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(4), latestVer)
+
+	_, ro, err := s.rootStore.StateLatest()
+	s.Require().Nil(err)
+	reader, err := ro.GetReader(testStoreKeyBytes)
+	s.Require().NoError(err)
+	result, err := reader.Get([]byte(fmt.Sprintf("key%03d", 3)))
+	s.Require().NoError(err)
+	s.Require().Equal([]byte(fmt.Sprintf("val%03d_%03d", 3, 1)), result, "value should be equal")
+
+	reader, err = ro.GetReader(testStoreKey2Bytes)
+	s.Require().NoError(err)
+	result, err = reader.Get([]byte(fmt.Sprintf("key%03d", 2)))
+	s.Require().NoError(err)
+	s.Require().Equal([]byte(fmt.Sprintf("val%03d_%03d", 4, 3)), result, "value should be equal")
+
+	reader, err = ro.GetReader(testStoreKey3Bytes)
+	s.Require().NoError(err)
+	result, err = reader.Get([]byte(fmt.Sprintf("key%03d", 4)))
+	s.Require().NoError(err)
+	s.Require().Equal([]byte(fmt.Sprintf("val%03d_%03d", 2, 2)), result, "value should be equal")
 }
 
 func (s *RootStoreTestSuite) TestUnevenStoresHeightCheck() {

@@ -590,7 +590,6 @@ func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []
 	}
 	var missing []string
 	for m := range m.Modules {
-		m := m
 		if pass != nil && pass(m) {
 			continue
 		}
@@ -831,7 +830,6 @@ func (m *Manager) GetVersionMap() VersionMap {
 		if v, ok := v.(appmodule.HasConsensusVersion); ok {
 			version = v.ConsensusVersion()
 		}
-		name := name
 		vermap[name] = version
 	}
 

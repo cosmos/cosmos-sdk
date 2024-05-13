@@ -72,7 +72,7 @@ func TestPromptParseInteger(t *testing.T) {
 	}
 
 	for _, tc := range values {
-		tc := tc
+
 		t.Run(tc.in, func(t *testing.T) {
 			origStdin := readline.Stdin
 			defer func() {

@@ -938,7 +938,6 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			params, err := queryClient.Params(gocontext.Background(), &tc.req)
@@ -1008,7 +1007,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryMessagedBasedParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			params, err := queryClient.MessageBasedParams(suite.ctx, &tc.req)
 			if tc.expErrMsg != "" {

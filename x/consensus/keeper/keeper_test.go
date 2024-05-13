@@ -152,7 +152,6 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 
 		s.Run(tc.msg, func() {
 			s.SetupTest(false) // reset
@@ -559,7 +558,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		s.Run(tc.name, func() {
 			s.SetupTest(tc.enabledFeatures)
 			_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, tc.input)

@@ -167,7 +167,7 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	}
 
 	for name, tc := range cases {
-		tc := tc
+
 		suite.Run(name, func() {
 			allow, _ := suite.feegrantKeeper.GetAllowance(suite.ctx, tc.granter, tc.grantee)
 
@@ -261,7 +261,7 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	}
 
 	for name, tc := range cases {
-		tc := tc
+
 		suite.Run(name, func() {
 			err := suite.feegrantKeeper.GrantAllowance(suite.ctx, tc.granter, tc.grantee, future)
 			suite.Require().NoError(err)
@@ -412,7 +412,7 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		suite.Run(tc.name, func() {
 			if tc.preRun != nil {
 				tc.preRun()

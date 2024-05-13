@@ -377,7 +377,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		t.Run(tc.msg, func(t *testing.T) {
 			delAuth, err := stakingtypes.NewStakeAuthorization(tc.allowed, tc.denied, tc.msgType, tc.limit, valAddressCodec)
 			require.NoError(t, err)

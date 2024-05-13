@@ -60,7 +60,7 @@ func TestFindStartIndex(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
+
 		t.Run(tt.name, func(t *testing.T) {
 			body := tt.sortedL
 			got := findStartIndex(body, tt.query)
@@ -129,7 +129,7 @@ func TestFindEndIndex(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
+
 		t.Run(tt.name, func(t *testing.T) {
 			body := tt.sortedL
 			got := findEndIndex(body, tt.query)

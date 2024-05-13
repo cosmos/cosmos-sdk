@@ -1339,7 +1339,6 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 
 		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 		_, err := tc.bapp.InitChain(&abci.InitChainRequest{

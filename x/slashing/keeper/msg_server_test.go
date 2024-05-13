@@ -135,7 +135,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		s.Run(tc.name, func() {
 			_, err := s.msgServer.UpdateParams(s.ctx, tc.request)
 			if tc.expectErr {
@@ -345,7 +345,7 @@ func (s *KeeperTestSuite) TestUnjail() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		s.Run(tc.name, func() {
 			req := tc.malleate()
 			_, err := s.msgServer.Unjail(s.ctx, req)

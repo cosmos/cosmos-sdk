@@ -424,7 +424,6 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdFeeGrant()
@@ -628,7 +627,6 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdFeeGrant()
@@ -691,7 +689,6 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 
 		s.Run(tc.name, func() {
 			err := tc.malleate()

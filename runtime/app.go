@@ -41,7 +41,7 @@ type App struct {
 	*baseapp.BaseApp
 
 	ModuleManager     *module.Manager
-	configurator      module.Configurator // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
+	configurator      module.Configurator 
 	config            *runtimev1alpha1.Module
 	storeKeys         []storetypes.StoreKey
 	interfaceRegistry codectypes.InterfaceRegistry
@@ -233,7 +233,7 @@ func (a *App) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
 }
 
 // Configurator returns the app's configurator.
-func (a *App) Configurator() module.Configurator { // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
+func (a *App) Configurator() module.Configurator { 
 	return a.configurator
 }
 

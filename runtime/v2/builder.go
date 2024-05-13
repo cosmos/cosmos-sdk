@@ -17,7 +17,7 @@ import (
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 )
 
-// AppBuilder is a type that is injected into a container by the runtime module
+// AppBuilder is a type that is injected into a container by the runtime/v2 module
 // (as *AppBuilder) which can be used to create an app which is compatible with
 // the existing app.go initialization conventions.
 type AppBuilder struct {
@@ -159,8 +159,7 @@ func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 	return a.app, nil
 }
 
-// AppBuilderOption is a function that can be passed to AppBuilder.Build to
-// customize the resulting app.
+// AppBuilderOption is a function that can be passed to AppBuilder.Build to customize the resulting app.
 type AppBuilderOption func(*AppBuilder)
 
 // AppBuilderWithBranch sets a custom branch implementation for the app.

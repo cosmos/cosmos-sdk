@@ -9,7 +9,7 @@ import (
 
 // NewKVStoreService creates a new KVStoreService.
 // This wrapper is kept for backwards compatibility.
-// When migration from runtime to runtime/v2, use NewKVStoreService(storeKey.Name()) instead of NewKVStoreService(storeKey).
+// When migrating from runtime to runtime/v2, use runtimev2.NewKVStoreService(storeKey.Name()) instead of runtime.NewKVStoreService(storeKey).
 func NewKVStoreService(storeKey string) store.KVStoreService {
 	return stf.NewKVStoreService([]byte(storeKey))
 }

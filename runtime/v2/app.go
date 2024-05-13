@@ -46,7 +46,7 @@ type AppI[T transaction.Tx] interface {
 //
 // App can be used to create a hybrid app.go setup where some configuration is
 // done declaratively with an app config and the rest of it is done the old way.
-// See simapp/app_.go for an example of this setup.
+// See simapp/app_v2.go for an example of this setup.
 type App struct {
 	*appmanager.AppManager[transaction.Tx]
 
@@ -99,7 +99,7 @@ func (a *App) Close() error {
 	return nil
 }
 
-// GetStoreKeys returns all the stored store keys.
+// GetStoreKeys returns all the app store keys.
 func (a *App) GetStoreKeys() []string {
 	return a.storeKeys
 }
@@ -115,10 +115,12 @@ func (a *App) UnsafeFindStoreKey(storeKey string) (string, error) {
 	return a.storeKeys[i], nil
 }
 
+// GetStore returns the app store.
 func (a *App) GetStore() Store {
 	return a.db
 }
 
+// GetLogger returns the app logger.
 func (a *App) GetLogger() log.Logger {
 	return a.logger
 }

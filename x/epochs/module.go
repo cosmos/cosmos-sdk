@@ -91,7 +91,7 @@ func (am AppModule) InitGenesis(ctx context.Context, bz json.RawMessage) error {
 	var gs types.GenesisState
 	err := am.cdc.UnmarshalJSON(bz, &gs)
 	if err != nil {
-		return (fmt.Errorf("failed to unmarshal %s genesis state: %s", types.ModuleName, err))
+		return (fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err))
 	}
 
 	return am.keeper.InitGenesis(ctx, gs)

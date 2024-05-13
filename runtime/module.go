@@ -15,6 +15,7 @@ import (
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/app"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/genesis"
@@ -281,7 +282,7 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 	return transientStoreService{key: storeKey}
 }
 
-func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
+func ProvideAppVersionModifier(app *AppBuilder) app.VersionModifier {
 	return app.app
 }
 

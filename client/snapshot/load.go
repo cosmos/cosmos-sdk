@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -80,7 +81,7 @@ func LoadArchiveCmd() *cobra.Command {
 			for i := uint32(0); i < snapshot.Chunks; i++ {
 				hdr, err = tr.Next()
 				if err != nil {
-					if err == io.EOF {
+					if errors.Is(err, io.EOF) {
 						break
 					}
 					return err

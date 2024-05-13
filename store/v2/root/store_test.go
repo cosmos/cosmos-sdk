@@ -77,12 +77,10 @@ func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruneOptions)
 	s.rootStore = rs
 }
 
-func (s *RootStoreTestSuite) newStoreWithDBMount(config *store.PruneOptions, dbm1, dbm2, dbm3, dbm4 *dbm.MemDB) {
+func (s *RootStoreTestSuite) newStoreWithDBMount(config *store.PruneOptions, dbm1, dbm2, dbm3, dbm4 *dbm.MemDB, db storage.Database) {
 	noopLog := log.NewNopLogger()
 
-	sqliteDB, err := sqlite.New(s.T().TempDir())
-	s.Require().NoError(err)
-	ss := storage.NewStorageStore(sqliteDB, config, noopLog)
+	ss := storage.NewStorageStore(db, config, noopLog)
 
 	tree := iavl.NewIavlTree(dbm1, noopLog, iavl.DefaultConfig())
 	tree2 := iavl.NewIavlTree(dbm2, noopLog, iavl.DefaultConfig())
@@ -522,8 +520,10 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	db2 := dbm.NewMemDB()
 	db3 := dbm.NewMemDB()
 	db4 := dbm.NewMemDB()
+	sqliteDB, err := sqlite.New(s.T().TempDir())
+	s.Require().NoError(err)
 
-	s.newStoreWithDBMount(&pruneOpt, db1, db2, db3, db4)
+	s.newStoreWithDBMount(&pruneOpt, db1, db2, db3, db4, sqliteDB)
 	s.Require().NoError(s.rootStore.LoadLatestVersion())
 
 	// Commit enough to build up heights to prune, where on the next block we should
@@ -546,7 +546,7 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	s.Require().Equal(uint64(0), actualHeightToPrune)
 
 	// "restart"
-	s.newStoreWithDBMount(&pruneOpt, db1, db2, db3, db4)
+	s.newStoreWithDBMount(&pruneOpt, db1, db2, db3, db4, sqliteDB)
 	err = s.rootStore.LoadLatestVersion()
 	s.Require().NoError(err)
 
@@ -585,11 +585,14 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 	db3 := dbm.NewMemDB()
 	db4 := dbm.NewMemDB()
 
-	s.newStoreWithDBMount(nil, db1, db2, db3, db4)
+	sqliteDB, err := sqlite.New(s.T().TempDir())
+	s.Require().NoError(err)
+
+	s.newStoreWithDBMount(nil, db1, db2, db3, db4, sqliteDB)
 	s.Require().NoError(s.rootStore.LoadLatestVersion())
 
 	// perform changes
-	for i := uint64(1); i < 3; i++ {
+	for i := 1; i < 3; i++ {
 		cs := corestore.NewChangeset()
 		key := fmt.Sprintf("key%03d", i)         // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d_%03d", i, 1) // val000_1, val001_1, ..., val099_1
@@ -616,7 +619,7 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 
 		latestVer, err := s.rootStore.GetLatestVersion()
 		s.Require().NoError(err)
-		s.Require().Equal(i, latestVer)
+		s.Require().Equal(uint64(i), latestVer)
 	}
 
 	// more changes
@@ -661,17 +664,22 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 	s.Require().NoError(err)
 	s.Require().Equal(uint64(4), latestVer)
 
+	_, ro1, err := s.rootStore.StateLatest()
+	s.Require().Nil(err)
+	reader1, err := ro1.GetReader(testStoreKeyBytes)
+	s.Require().NoError(err)
+	result1, err := reader1.Get([]byte(fmt.Sprintf("key%03d", 3)))
+	s.Require().NoError(err)
+	s.Require().Equal([]byte(fmt.Sprintf("val%03d_%03d", 3, 1)), result1, "value should be equal")
+
 	// "restart"
-	s.newStoreWithDBMount(nil, db1, db2, db3, db4)
+	s.newStoreWithDBMount(nil, db1, db2, db3, db4, sqliteDB)
 	err = s.rootStore.LoadLatestVersion()
 	s.Require().Nil(err)
 
-	latestVer, err = s.rootStore.GetLatestVersion()
-	s.Require().NoError(err)
-	s.Require().Equal(uint64(4), latestVer)
-
-	_, ro, err := s.rootStore.StateLatest()
+	latestVer, ro, err := s.rootStore.StateLatest()
 	s.Require().Nil(err)
+	s.Require().Equal(uint64(4), latestVer)
 	reader, err := ro.GetReader(testStoreKeyBytes)
 	s.Require().NoError(err)
 	result, err := reader.Get([]byte(fmt.Sprintf("key%03d", 3)))
@@ -682,15 +690,11 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 	s.Require().NoError(err)
 	result, err = reader.Get([]byte(fmt.Sprintf("key%03d", 2)))
 	s.Require().NoError(err)
-	s.Require().Equal([]byte(fmt.Sprintf("val%03d_%03d", 4, 3)), result, "value should be equal")
+	s.Require().Equal([]byte(fmt.Sprintf("val%03d_%03d", 2, 2)), result, "value should be equal")
 
 	reader, err = ro.GetReader(testStoreKey3Bytes)
 	s.Require().NoError(err)
 	result, err = reader.Get([]byte(fmt.Sprintf("key%03d", 4)))
 	s.Require().NoError(err)
-	s.Require().Equal([]byte(fmt.Sprintf("val%03d_%03d", 2, 2)), result, "value should be equal")
-}
-
-func (s *RootStoreTestSuite) TestUnevenStoresHeightCheck() {
-
+	s.Require().Equal([]byte(fmt.Sprintf("val%03d_%03d", 4, 3)), result, "value should be equal")
 }

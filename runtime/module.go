@@ -96,6 +96,7 @@ func init() {
 			// to decouple runtime from sdk/codec ProvideInterfaceReistry can be registered from the app
 			// i.e. in the call to depinject.Inject(...)
 			codec.ProvideInterfaceRegistry,
+			codec.ProvideCodecs,
 			ProvideKVStoreKey,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
@@ -111,9 +112,11 @@ func init() {
 	)
 }
 
-func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
-	codec.Codec,
-	*codec.LegacyAmino,
+func ProvideApp(
+	interfaceRegistry codectypes.InterfaceRegistry,
+	amino legacy.Amino,
+	protoCodec *codec.ProtoCodec,
+) (
 	*AppBuilder,
 	*baseapp.MsgServiceRouter,
 	*baseapp.GRPCQueryRouter,
@@ -132,25 +135,22 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 	}
 
-	amino := codec.NewLegacyAmino()
-
 	std.RegisterInterfaces(interfaceRegistry)
 	std.RegisterLegacyAminoCodec(amino)
 
-	cdc := codec.NewProtoCodec(interfaceRegistry)
 	msgServiceRouter := baseapp.NewMsgServiceRouter()
 	grpcQueryRouter := baseapp.NewGRPCQueryRouter()
 	app := &App{
 		storeKeys:         nil,
 		interfaceRegistry: interfaceRegistry,
-		cdc:               cdc,
+		cdc:               protoCodec,
 		amino:             amino,
 		msgServiceRouter:  msgServiceRouter,
 		grpcQueryRouter:   grpcQueryRouter,
 	}
 	appBuilder := &AppBuilder{app}
 
-	return cdc, amino, appBuilder, msgServiceRouter, grpcQueryRouter, appModule{app}, protoFiles, protoTypes, nil
+	return appBuilder, msgServiceRouter, grpcQueryRouter, appModule{app}, protoFiles, protoTypes, nil
 }
 
 type AppInputs struct {

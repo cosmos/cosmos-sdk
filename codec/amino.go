@@ -7,9 +7,10 @@ import (
 	"fmt"
 	"io"
 
-	"cosmossdk.io/core/legacy"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/tendermint/go-amino"
+
+	"cosmossdk.io/core/legacy"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )

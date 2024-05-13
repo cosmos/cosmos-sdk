@@ -2,6 +2,7 @@ package std
 
 import (
 	"cosmossdk.io/core/legacy"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"

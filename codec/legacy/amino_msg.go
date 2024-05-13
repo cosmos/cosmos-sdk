@@ -1,8 +1,10 @@
 package legacy
 
 import (
-	"cosmossdk.io/core/legacy"
 	"fmt"
+
+
+	"cosmossdk.io/core/legacy"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

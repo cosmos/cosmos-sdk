@@ -110,11 +110,8 @@ func ProvideClientContext(
 ) client.Context {
 	var err error
 
-	var amino *codec.LegacyAmino
-	switch cdc := legacyAmino.(type) {
-	case *codec.LegacyAmino:
-		amino = cdc
-	default:
+	amino, ok := legacyAmino.(*codec.LegacyAmino)
+	if !ok {
 		panic("ProvideClientContext requires a *codec.LegacyAmino instance")
 	}
 

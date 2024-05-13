@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"cosmossdk.io/core/app"
 	"fmt"
 	"os"
 
@@ -16,6 +15,7 @@ import (
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/app"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/genesis"

@@ -109,7 +109,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
 	if err := mr.Register(group.ModuleName, 1, m.Migrate1to2); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %v", group.ModuleName, err)
+		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %w", group.ModuleName, err)
 	}
 
 	return nil

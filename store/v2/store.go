@@ -72,12 +72,6 @@ type RootStore interface {
 	// old versions of the RootStore by the CLI.
 	Prune(version uint64) error
 
-	// StartMigration starts a migration process to migrate the RootStore/v1 to the
-	// SS and SC backends of store/v2.
-	// It runs in a separate goroutine and replaces the current RootStore with the
-	// migrated new backends once the migration is complete.
-	StartMigration() error
-
 	// SetMetrics sets the telemetry handler on the RootStore.
 	SetMetrics(m metrics.Metrics)
 

@@ -37,7 +37,7 @@ var (
 // and trees.
 type CommitStore struct {
 	logger     log.Logger
-	db         store.RawDB
+	db         corestore.KVStoreWithBatch
 	multiTrees map[string]Tree
 
 	// pruneOptions is the pruning configuration.
@@ -45,12 +45,7 @@ type CommitStore struct {
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(
-	trees map[string]Tree,
-	db store.RawDB,
-	pruneOpts *store.PruneOptions,
-	logger log.Logger,
-) (*CommitStore, error) {
+func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, pruneOpts *store.PruneOptions, logger log.Logger) (*CommitStore, error) {
 	if pruneOpts == nil {
 		pruneOpts = store.DefaultPruneOptions()
 	}

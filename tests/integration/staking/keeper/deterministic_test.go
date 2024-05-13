@@ -201,7 +201,7 @@ func bondTypeGenerator() *rapid.Generator[stakingtypes.BondStatus] {
 }
 
 // createValidator creates a validator with random values.
-func createValidator(t *testing.T, rt *rapid.T, f *deterministicFixture) stakingtypes.Validator {
+func createValidator(t *testing.T, rt *rapid.T, _ *deterministicFixture) stakingtypes.Validator {
 	t.Helper()
 	pubkey := pubKeyGenerator().Draw(rt, "pubkey")
 	pubkeyAny, err := codectypes.NewAnyWithValue(&pubkey)

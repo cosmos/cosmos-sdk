@@ -16,6 +16,7 @@ import (
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/app"
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
@@ -29,7 +30,6 @@ import (
 	rootstorev2 "cosmossdk.io/store/v2/root"
 	"cosmossdk.io/x/tx/signing"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -315,7 +315,7 @@ func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
 }
 
 // AppVersionModifier is only a baseapp concept. x/upgrade skips the logic when nil is provided.
-func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
+func ProvideAppVersionModifier(app *AppBuilder) app.VersionModifier {
 	return nil
 }
 

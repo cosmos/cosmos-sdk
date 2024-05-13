@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
@@ -37,7 +38,7 @@ type FactoryOptions struct {
 	PruneOptions *store.PruneOptions
 	IavlConfig   *iavl.Config
 	StoreKeys    []string
-	SCRawDB      store.RawDB
+	SCRawDB      corestore.KVStoreWithBatch
 }
 
 // CreateRootStore is a convenience function to create a root store based on the

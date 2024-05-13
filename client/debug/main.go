@@ -256,6 +256,7 @@ $ %s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			var addr []byte
 
 			// try hex, then bech32
+<<<<<<< HEAD
 			var err error
 			addr, err = hex.DecodeString(addrString)
 			if err != nil {
@@ -268,13 +269,55 @@ $ %s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 					if err3 != nil {
 						return fmt.Errorf("expected hex or bech32. Got errors: hex: %v, bech32 acc: %v, bech32 val: %v", err, err2, err3)
 					}
+=======
+			var (
+				addr []byte
+				err  error
+			)
+			decodeFns := []func(text string) ([]byte, error){
+				hex.DecodeString,
+				clientCtx.AddressCodec.StringToBytes,
+				clientCtx.ValidatorAddressCodec.StringToBytes,
+				clientCtx.ConsensusAddressCodec.StringToBytes,
+			}
+			errs := make([]any, 0, len(decodeFns))
+			for _, fn := range decodeFns {
+				if addr, err = fn(addrString); err == nil {
+					break
+>>>>>>> 11de28062 (feat(client): add consensus address for debug cmd (#20328))
 				}
+				errs = append(errs, err)
+			}
+			if len(errs) == len(decodeFns) {
+				errTags := []string{
+					"hex", "bech32 acc", "bech32 val", "bech32 con",
+				}
+				format := ""
+				for i := range errs {
+					if format != "" {
+						format += ", "
+					}
+					format += errTags[i] + ": %w"
+				}
+				return fmt.Errorf("expected hex or bech32. Got errors: "+format, errs...)
 			}
 
+<<<<<<< HEAD
 			cmd.Println("Address:", addr)
 			cmd.Printf("Address (hex): %X\n", addr)
 			cmd.Printf("Bech32 Acc: %s\n", sdk.AccAddress(addr))
 			cmd.Printf("Bech32 Val: %s\n", sdk.ValAddress(addr))
+=======
+			acc, _ := clientCtx.AddressCodec.BytesToString(addr)
+			val, _ := clientCtx.ValidatorAddressCodec.BytesToString(addr)
+			con, _ := clientCtx.ConsensusAddressCodec.BytesToString(addr)
+
+			cmd.Println("Address:", addr)
+			cmd.Printf("Address (hex): %X\n", addr)
+			cmd.Printf("Bech32 Acc: %s\n", acc)
+			cmd.Printf("Bech32 Val: %s\n", val)
+			cmd.Printf("Bech32 Con: %s\n", con)
+>>>>>>> 11de28062 (feat(client): add consensus address for debug cmd (#20328))
 			return nil
 		},
 	}

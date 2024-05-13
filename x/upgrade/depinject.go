@@ -1,11 +1,11 @@
 package upgrade
 
 import (
-	"cosmossdk.io/core/app"
 	"github.com/spf13/cast"
 
 	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/app"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"

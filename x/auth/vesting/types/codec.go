@@ -2,6 +2,7 @@ package types
 
 import (
 	"cosmossdk.io/core/registry"
+	coretransaction "cosmossdk.io/core/transaction"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/auth/vesting/exported"
 
@@ -56,7 +57,7 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 	)
 
 	registrar.RegisterImplementations(
-		(*sdk.Msg)(nil),
+		(*coretransaction.Msg)(nil),
 		&MsgCreateVestingAccount{},
 		&MsgCreatePermanentLockedAccount{},
 	)

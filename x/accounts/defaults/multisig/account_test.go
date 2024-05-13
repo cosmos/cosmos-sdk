@@ -344,6 +344,52 @@ func TestUpdateConfig(t *testing.T) {
 	}
 }
 
+func TestProposal_WrongSender(t *testing.T) {
+	startAcc := &v1.MsgInit{
+		Config: &v1.Config{
+			Threshold:    2640,
+			Quorum:       2000,
+			VotingPeriod: 60,
+		},
+		Members: []*v1.Member{
+			{
+				Address: "addr1",
+				Weight:  1000,
+			},
+			{
+				Address: "addr2",
+				Weight:  1000,
+			},
+			{
+				Address: "addr3",
+				Weight:  1000,
+			},
+			{
+				Address: "addr4",
+				Weight:  1000,
+			},
+		},
+	}
+
+	ctx, ss := newMockContext(t)
+	acc := setup(t, ctx, ss, nil)
+	_, err := acc.Init(ctx, startAcc)
+	require.NoError(t, err)
+
+	// change the sender to be something else to trigger an error
+	ctx = accountstd.SetSender(ctx, []byte("wrong_sender_here"))
+
+	newCfg := startAcc.Config
+	newCfg.VotingPeriod = 120
+	updateCfg := &v1.MsgUpdateConfig{
+		Config: newCfg,
+	}
+
+	_, err = acc.UpdateConfig(ctx, updateCfg)
+	require.ErrorContains(t, err, "only the account itself can update the config (through a proposal)")
+
+}
+
 func TestProposal_NotPassing(t *testing.T) {
 	// all test cases start from the same initial state
 	startAcc := &v1.MsgInit{

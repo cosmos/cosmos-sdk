@@ -7,13 +7,6 @@ import (
 	"cosmossdk.io/math"
 )
 
-// InflationCalculationFn defines the function required to calculate inflation rate during
-// BeginBlock. It receives the minter and params stored in the keeper, along with the current
-// bondedRatio and returns the newly calculated inflation rate.
-// It can be used to specify a custom inflation calculation logic, instead of relying on the
-// default logic provided by the sdk.
-type InflationCalculationFn func(ctx context.Context, minter Minter, params Params, bondedRatio math.LegacyDec) math.LegacyDec
-
 type MintFn func(ctx context.Context, env appmodule.Environment, minter *Minter, params Params) error
 
 // DefaultInflationCalculationFn is the default function used to calculate inflation.

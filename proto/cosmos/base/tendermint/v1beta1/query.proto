@@ -181,7 +181,7 @@ message ABCIQueryResponse {
   int64  index = 5;
   bytes  key   = 6;
   bytes  value = 7;
-  // depreacted in favor of comet proof type
+  // deprecated in favor of comet proof type
   reserved 8;
   int64                        height    = 9;
   string                       codespace = 10;

@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -47,7 +48,7 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 	go func() {
 		for {
 			in, err := reflectClient.Recv()
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				// read done.
 				close(waitc)
 				return
@@ -172,7 +173,7 @@ func addMissingFileDescriptors(ctx context.Context, client *grpc.ClientConn, fdM
 	go func() {
 		for {
 			in, err := reflectClient.Recv()
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				// read done.
 				close(waitc)
 				return

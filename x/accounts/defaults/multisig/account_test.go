@@ -387,7 +387,6 @@ func TestProposal_WrongSender(t *testing.T) {
 
 	_, err = acc.UpdateConfig(ctx, updateCfg)
 	require.ErrorContains(t, err, "only the account itself can update the config (through a proposal)")
-
 }
 
 func TestProposal_NotPassing(t *testing.T) {

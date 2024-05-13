@@ -465,9 +465,6 @@ func TestProposal_NotPassing(t *testing.T) {
 }
 
 func TestProposalPassing(t *testing.T) {
-	// ctx, ss := newMockContext(t)
-	// acc := setup(t, ctx, ss, nil)
-
 	// all test cases start from the same initial state
 	startAcc := &v1.MsgInit{
 		Config: &v1.Config{

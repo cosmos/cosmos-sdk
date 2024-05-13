@@ -244,14 +244,14 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 
 	env := appmodulev2.Environment{
 		Logger:             logger,
-		BranchService:      nil, // TODO
+		BranchService:      stf.BranchService{},
 		EventService:       stf.NewEventService(),
 		GasService:         stf.NewGasMeterService(),
 		HeaderService:      stf.HeaderService{},
 		RouterService:      stf.NewRouterService(appBuilder.app.queryRouterBuilder, appBuilder.app.msgRouterBuilder),
+		TransactionService: services.NewContextAwareTransactionService(),
 		KVStoreService:     kvService,
 		MemStoreService:    memService,
-		TransactionService: services.NewContextAwareTransactionService(),
 	}
 
 	return env, kvService, memService
@@ -314,8 +314,9 @@ func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
 	return appBuilder.app
 }
 
+// AppVersionModifier is only a baseapp concept. x/upgrade skips the logic when nil is provided.
 func ProvideAppVersionModifier(app *AppBuilder) baseapp.AppVersionModifier {
-	return app.app
+	return nil
 }
 
 func ProvideCometService() comet.Service {

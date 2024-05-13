@@ -17,8 +17,6 @@ import (
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 )
 
-type branchFunc func(state store.ReaderMap) store.WriterMap
-
 // AppBuilder is a type that is injected into a container by the runtime module
 // (as *AppBuilder) which can be used to create an app which is compatible with
 // the existing app.go initialization conventions.
@@ -27,8 +25,9 @@ type AppBuilder struct {
 	storeOptions *rootstore.FactoryOptions
 
 	// the following fields are used to overwrite the default
-	branch      branchFunc
+	branch      func(state store.ReaderMap) store.WriterMap
 	txValidator func(ctx context.Context, tx transaction.Tx) error
+	postTxExec  func(ctx context.Context, tx transaction.Tx, success bool) error
 }
 
 // DefaultGenesis returns a default genesis from the registered AppModule's.
@@ -60,6 +59,17 @@ func (a *AppBuilder) RegisterModules(modules ...appmodulev2.AppModule) error {
 	return nil
 }
 
+// RegisterStores registers the provided store keys.
+// This method should only be used for registering extra stores
+// wiich is necessary for modules that not registered using the app config.
+// To be used in combination of RegisterModules.
+func (a *AppBuilder) RegisterStores(keys ...string) {
+	a.app.storeKeys = append(a.app.storeKeys, keys...)
+	if a.storeOptions != nil {
+		a.storeOptions.StoreKeys = append(a.storeOptions.StoreKeys, keys...)
+	}
+}
+
 // Build builds an *App instance.
 func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 	for _, opt := range opts {
@@ -74,6 +84,13 @@ func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 	// default tx validator
 	if a.txValidator == nil {
 		a.txValidator = a.app.moduleManager.TxValidators()
+	}
+
+	// default post tx exec
+	if a.postTxExec == nil {
+		a.postTxExec = func(ctx context.Context, tx transaction.Tx, success bool) error {
+			return nil
+		}
 	}
 
 	if err := a.app.moduleManager.RegisterServices(a.app); err != nil {
@@ -92,12 +109,6 @@ func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 
 	endBlocker, valUpdate := a.app.moduleManager.EndBlock()
 
-	// TODO how to set?
-	// no-op postTxExec
-	postTxExec := func(ctx context.Context, tx transaction.Tx, success bool) error {
-		return nil
-	}
-
 	a.app.stf = stf.NewSTF[transaction.Tx](
 		stfMsgHandler,
 		stfQueryHandler,
@@ -106,7 +117,7 @@ func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 		endBlocker,
 		a.txValidator,
 		valUpdate,
-		postTxExec,
+		a.postTxExec,
 		a.branch,
 	)
 
@@ -153,7 +164,7 @@ func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 type AppBuilderOption func(*AppBuilder)
 
 // AppBuilderWithBranch sets a custom branch implementation for the app.
-func AppBuilderWithBranch(branch branchFunc) AppBuilderOption {
+func AppBuilderWithBranch(branch func(state store.ReaderMap) store.WriterMap) AppBuilderOption {
 	return func(a *AppBuilder) {
 		a.branch = branch
 	}
@@ -161,8 +172,16 @@ func AppBuilderWithBranch(branch branchFunc) AppBuilderOption {
 
 // AppBuilderWithTxValidator sets the tx validator for the app.
 // It overrides all default tx validators defined by modules.
-func AppBuilderWithTxValidator(validator func(ctx context.Context, tx transaction.Tx) error) AppBuilderOption {
+func AppBuilderWithTxValidator(txValidators func(ctx context.Context, tx transaction.Tx) error) AppBuilderOption {
 	return func(a *AppBuilder) {
-		a.txValidator = validator
+		a.txValidator = txValidators
+	}
+}
+
+// AppBuilderWithPostTxExec sets logic that will be executed after each transaction.
+// When not provided, a no-op function will be used.
+func AppBuilderWithPostTxExec(postTxExec func(ctx context.Context, tx transaction.Tx, success bool) error) AppBuilderOption {
+	return func(a *AppBuilder) {
+		a.postTxExec = postTxExec
 	}
 }

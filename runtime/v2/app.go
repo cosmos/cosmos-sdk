@@ -99,16 +99,6 @@ func (a *App) Close() error {
 	return nil
 }
 
-// RegisterStores registers the provided store keys.
-// This method should only be used for registering extra stores
-// wiich is necessary for modules that not registered using the app config.
-// To be used in combination of RegisterModules.
-func (a *App) RegisterStores(keys ...string) error {
-	a.storeKeys = append(a.storeKeys, keys...)
-
-	return nil
-}
-
 // GetStoreKeys returns all the stored store keys.
 func (a *App) GetStoreKeys() []string {
 	return a.storeKeys
@@ -134,13 +124,5 @@ func (a *App) GetLogger() log.Logger {
 }
 
 func (a *App) ExecuteGenesisTx(_ []byte) error {
-	panic("not implemented")
-}
-
-func (a *App) SetAppVersion(context.Context, uint64) error {
-	panic("not implemented")
-}
-
-func (a *App) AppVersion(context.Context) (uint64, error) {
 	panic("not implemented")
 }

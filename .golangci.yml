@@ -30,9 +30,11 @@ linters:
     - misspell
     - nakedret
     - nolintlint
+    - mirror
     - revive
     - staticcheck
     - stylecheck
+    - promlinter
     - thelper
     - typecheck
     - unconvert

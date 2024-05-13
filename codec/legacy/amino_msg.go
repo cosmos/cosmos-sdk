@@ -3,7 +3,6 @@ package legacy
 import (
 	"fmt"
 
-
 	"cosmossdk.io/core/legacy"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

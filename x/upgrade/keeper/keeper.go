@@ -53,7 +53,7 @@ func NewKeeper(
 	skipUpgradeHeights map[int64]bool,
 	cdc codec.BinaryCodec,
 	homePath string,
-	vs xp.AppVersionModifier,
+	vs app.VersionModifier,
 	authority string,
 ) *Keeper {
 	k := &Keeper{

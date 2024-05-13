@@ -722,7 +722,7 @@ func (app *BaseApp) preBlock(req *abci.FinalizeBlockRequest) error {
 	return nil
 }
 
-func (app *BaseApp) beginBlock(req *abci.FinalizeBlockRequest) (sdk.BeginBlock, error) {
+func (app *BaseApp) beginBlock(_ *abci.FinalizeBlockRequest) (sdk.BeginBlock, error) {
 	var (
 		resp sdk.BeginBlock
 		err  error

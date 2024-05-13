@@ -103,7 +103,7 @@ type autocliConfigurator struct {
 	err           error
 }
 
-var _ module.Configurator = &autocliConfigurator{} 
+var _ module.Configurator = &autocliConfigurator{}
 
 func (a *autocliConfigurator) MsgServer() gogogrpc.Server { return &a.msgServer }
 

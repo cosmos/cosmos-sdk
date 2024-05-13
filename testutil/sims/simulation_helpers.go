@@ -74,7 +74,7 @@ func SimulationOperations(app runtime.AppSimI, cdc codec.Codec, config simtypes.
 		}
 	}
 
-	simState.LegacyProposalContents = app.SimulationManager().GetProposalContents(simState) 
+	simState.LegacyProposalContents = app.SimulationManager().GetProposalContents(simState)
 	simState.ProposalMsgs = app.SimulationManager().GetProposalMsgs(simState)
 	return app.SimulationManager().WeightedOperations(simState)
 }

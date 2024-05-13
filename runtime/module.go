@@ -43,7 +43,7 @@ type appModule struct {
 func (m appModule) IsOnePerModuleType() {}
 func (m appModule) IsAppModule()        {}
 
-func (m appModule) RegisterServices(configurator module.Configurator) { 
+func (m appModule) RegisterServices(configurator module.Configurator) {
 	err := m.app.registerRuntimeServices(configurator)
 	if err != nil {
 		panic(err)

@@ -2,6 +2,7 @@ package module
 
 import (
 	"context"
+	"cosmossdk.io/core/legacy"
 	"encoding/json"
 	"fmt"
 
@@ -50,7 +51,13 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak authz.AccountKeeper, bk authz.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
+func NewAppModule(
+	cdc codec.Codec,
+	keeper keeper.Keeper,
+	ak authz.AccountKeeper,
+	bk authz.BankKeeper,
+	registry cdctypes.InterfaceRegistry,
+) AppModule {
 	return AppModule{
 		cdc:           cdc,
 		keeper:        keeper,
@@ -87,7 +94,7 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 }
 
 // RegisterLegacyAminoCodec registers the authz module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 	authz.RegisterLegacyAminoCodec(cdc)
 }
 

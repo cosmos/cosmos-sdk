@@ -14,11 +14,11 @@ import (
 
 	"github.com/hashicorp/go-metrics"
 
+	"cosmossdk.io/core/app"
 	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-	xp "cosmossdk.io/x/upgrade/exported"
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -36,7 +36,7 @@ type Keeper struct {
 	skipUpgradeHeights map[int64]bool                  // map of heights to skip for an upgrade
 	cdc                codec.BinaryCodec               // App-wide binary codec
 	upgradeHandlers    map[string]types.UpgradeHandler // map of plan name to upgrade handler
-	versionModifier    xp.AppVersionModifier           // implements setting the protocol version field on BaseApp
+	versionModifier    app.VersionModifier             // implements setting the protocol version field on BaseApp
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
 	authority          string                          // the address capable of executing and canceling an upgrade. Usually the gov module account
 	initVersionMap     module.VersionMap               // the module version map at init genesis
@@ -48,7 +48,14 @@ type Keeper struct {
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
 // vs - the interface implemented by baseapp which allows setting baseapp's protocol version field
-func NewKeeper(env appmodule.Environment, skipUpgradeHeights map[int64]bool, cdc codec.BinaryCodec, homePath string, vs xp.AppVersionModifier, authority string) *Keeper {
+func NewKeeper(
+	env appmodule.Environment,
+	skipUpgradeHeights map[int64]bool,
+	cdc codec.BinaryCodec,
+	homePath string,
+	vs xp.AppVersionModifier,
+	authority string,
+) *Keeper {
 	k := &Keeper{
 		Environment:        env,
 		homePath:           homePath,

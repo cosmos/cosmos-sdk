@@ -39,7 +39,7 @@ type ModuleInputs struct {
 	Environment        appmodule.Environment
 	Cdc                codec.Codec
 	AddressCodec       address.Codec
-	AppVersionModifier app.AppVersionModifier
+	AppVersionModifier app.VersionModifier
 
 	AppOpts servertypes.AppOptions `optional:"true"`
 }

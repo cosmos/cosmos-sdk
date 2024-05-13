@@ -282,7 +282,7 @@ func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) stor
 	return transientStoreService{key: storeKey}
 }
 
-func ProvideAppVersionModifier(app *AppBuilder) app.AppVersionModifier {
+func ProvideAppVersionModifier(app *AppBuilder) app.VersionModifier {
 	return app.app
 }
 

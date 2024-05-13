@@ -2,30 +2,24 @@ package log
 
 import (
 	"time"
-
-	"github.com/rs/zerolog"
 )
 
 // defaultConfig has all the options disabled, except Color and TimeFormat
 var defaultConfig = Config{
-	Level:      zerolog.NoLevel,
 	Filter:     nil,
 	OutputJSON: false,
 	Color:      true,
 	StackTrace: false,
 	TimeFormat: time.Kitchen,
-	Hooks:      nil,
 }
 
 // Config defines configuration for the logger.
 type Config struct {
-	Level      zerolog.Level
 	Filter     FilterFunc
 	OutputJSON bool
 	Color      bool
 	StackTrace bool
 	TimeFormat string
-	Hooks      []zerolog.Hook
 }
 
 type Option func(*Config)
@@ -34,14 +28,6 @@ type Option func(*Config)
 func FilterOption(filter FilterFunc) Option {
 	return func(cfg *Config) {
 		cfg.Filter = filter
-	}
-}
-
-// LevelOption sets the level for the Logger.
-// Messages with a lower level will be discarded.
-func LevelOption(level zerolog.Level) Option {
-	return func(cfg *Config) {
-		cfg.Level = level
 	}
 }
 
@@ -87,12 +73,5 @@ func TimeFormatOption(format string) Option {
 func TraceOption(val bool) Option {
 	return func(cfg *Config) {
 		cfg.StackTrace = val
-	}
-}
-
-// HooksOption append hooks to the Logger hooks
-func HooksOption(hooks ...zerolog.Hook) Option {
-	return func(cfg *Config) {
-		cfg.Hooks = append(cfg.Hooks, hooks...)
 	}
 }

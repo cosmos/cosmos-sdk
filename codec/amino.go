@@ -179,10 +179,14 @@ func (*LegacyAmino) UnpackAny(*types.Any, interface{}) error {
 }
 
 func (cdc *LegacyAmino) RegisterInterface(ptr interface{}, iopts *legacy.InterfaceOptions) {
-	cdc.Amino.RegisterInterface(ptr, &amino.InterfaceOptions{
-		Priority:           iopts.Priority,
-		AlwaysDisambiguate: iopts.AlwaysDisambiguate,
-	})
+	if iopts == nil {
+		cdc.Amino.RegisterInterface(ptr, nil)
+	} else {
+		cdc.Amino.RegisterInterface(ptr, &amino.InterfaceOptions{
+			Priority:           iopts.Priority,
+			AlwaysDisambiguate: iopts.AlwaysDisambiguate,
+		})
+	}
 }
 
 func (cdc *LegacyAmino) RegisterConcrete(o interface{}, name string) {

@@ -63,12 +63,6 @@ func (k Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, burnDe
 }
 
 // tallyStandard tallies the votes of a standard proposal
-// If there is not enough quorum of votes, the proposal fails
-// If no one votes (everyone abstains), proposal fails
-// If more than 1/3 of voters veto, proposal fails
-// If more than 1/2 of non-abstaining voters vote Yes, proposal passes
-// If more than 1/2 of non-abstaining voters vote No, proposal fails
-// Checking for spam votes is done before calling this function
 func (k Keeper) tallyStandard(ctx context.Context, proposal v1.Proposal, totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
 	tallyResults = v1.NewTallyResultFromMap(results)
 
@@ -125,12 +119,6 @@ func (k Keeper) tallyStandard(ctx context.Context, proposal v1.Proposal, totalVo
 }
 
 // tallyExpedited tallies the votes of an expedited proposal
-// If there is not enough expedited quorum of votes, the proposal fails
-// If no one votes (everyone abstains), proposal fails
-// If more than 1/3 of voters veto, proposal fails
-// If more than 2/3 of non-abstaining voters vote Yes, proposal passes
-// If more than 1/2 of non-abstaining voters vote No, proposal fails
-// Checking for spam votes is done before calling this function
 func (k Keeper) tallyExpedited(totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
 	tallyResults = v1.NewTallyResultFromMap(results)
 
@@ -170,10 +158,6 @@ func (k Keeper) tallyExpedited(totalVoterPower math.LegacyDec, totalBonded math.
 }
 
 // tallyOptimistic tallies the votes of an optimistic proposal
-// If proposal has no votes, proposal passes
-// If the threshold of no is reached, proposal fails
-// Any other case, proposal passes
-// Checking for spam votes is done before calling this function
 func (k Keeper) tallyOptimistic(totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
 	tallyResults = v1.NewTallyResultFromMap(results)
 	optimisticNoThreshold, _ := math.LegacyNewDecFromStr(params.OptimisticRejectedThreshold)
@@ -192,9 +176,6 @@ func (k Keeper) tallyOptimistic(totalVoterPower math.LegacyDec, totalBonded math
 }
 
 // tallyMultipleChoice tallies the votes of a multiple choice proposal
-// If there is not enough quorum of votes, the proposal fails
-// Any other case, proposal passes
-// Checking for spam votes is done before calling this function
 func (k Keeper) tallyMultipleChoice(totalVoterPower math.LegacyDec, totalBonded math.Int, results map[v1.VoteOption]math.LegacyDec, params v1.Params) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
 	tallyResults = v1.NewTallyResultFromMap(results)
 
@@ -206,7 +187,6 @@ func (k Keeper) tallyMultipleChoice(totalVoterPower math.LegacyDec, totalBonded 
 	}
 
 	// a multiple choice proposal always passes unless it was spam or quorum was not reached.
-
 	return true, false, tallyResults, nil
 }
 
@@ -225,7 +205,6 @@ func (k Keeper) getCurrentValidators(ctx context.Context) (map[string]v1.Validat
 			math.LegacyZeroDec(),
 			v1.WeightedVoteOptions{},
 		)
-
 		return false
 	}); err != nil {
 		return nil, err
@@ -240,59 +219,37 @@ func defaultCalculateVoteResultsAndVotingPower(
 	ctx context.Context,
 	k Keeper,
 	proposalID uint64,
-	validators map[string]v1.ValidatorGovInfo,
+	_ map[string]v1.ValidatorGovInfo, // This parameter is no longer necessary
 ) (math.LegacyDec, map[v1.VoteOption]math.LegacyDec, error) {
 	totalVP := math.LegacyZeroDec()
 	results := createEmptyResults()
 
-	// iterate over all votes, tally up the voting power of each validator
+	// iterate over all votes, tally up the voting power of each voter (delegators directly)
 	rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposalID)
 	votesToRemove := []collections.Pair[uint64, sdk.AccAddress]{}
 	if err := k.Votes.Walk(ctx, rng, func(key collections.Pair[uint64, sdk.AccAddress], vote v1.Vote) (bool, error) {
-		// if validator, just record it in the map
+		// Compute voting power from the voter directly
 		voter, err := k.authKeeper.AddressCodec().StringToBytes(vote.Voter)
 		if err != nil {
 			return false, err
 		}
 
-		valAddrStr, err := k.sk.ValidatorAddressCodec().BytesToString(voter)
-		if err != nil {
-			return false, err
-		}
-
-		if val, ok := validators[valAddrStr]; ok {
-			val.Vote = vote.Options
-			validators[valAddrStr] = val
-		}
-
-		// iterate over all delegations from voter, deduct from any delegated-to validators
+		votingPower := math.LegacyZeroDec()
 		err = k.sk.IterateDelegations(ctx, voter, func(index int64, delegation sdk.DelegationI) (stop bool) {
-			valAddrStr := delegation.GetValidatorAddr()
-
-			if val, ok := validators[valAddrStr]; ok {
-				// There is no need to handle the special case that validator address equal to voter address.
-				// Because voter's voting power will tally again even if there will be deduction of voter's voting power from validator.
-				val.DelegatorDeductions = val.DelegatorDeductions.Add(delegation.GetShares())
-				validators[valAddrStr] = val
-
-				// delegation shares * bonded / total shares
-				votingPower := delegation.GetShares().MulInt(val.BondedTokens).Quo(val.DelegatorShares)
-
-				for _, option := range vote.Options {
-					weight, _ := math.LegacyNewDecFromStr(option.Weight)
-					subPower := votingPower.Mul(weight)
-					results[option.Option] = results[option.Option].Add(subPower)
-				}
-
-				totalVP = totalVP.Add(votingPower)
-			}
-
+			votingPower = votingPower.Add(delegation.GetShares())
 			return false
 		})
 		if err != nil {
 			return false, err
 		}
 
+		for _, option := range vote.Options {
+			weight, _ := math.LegacyNewDecFromStr(option.Weight)
+			subPower := votingPower.Mul(weight)
+			results[option.Option] = results[option.Option].Add(subPower)
+		}
+
+		totalVP = totalVP.Add(votingPower)
 		votesToRemove = append(votesToRemove, key)
 		return false, nil
 	}); err != nil {
@@ -304,23 +261,6 @@ func defaultCalculateVoteResultsAndVotingPower(
 		if err := k.Votes.Remove(ctx, key); err != nil {
 			return math.LegacyDec{}, nil, err
 		}
-	}
-
-	// iterate over the validators again to tally their voting power
-	for _, val := range validators {
-		if len(val.Vote) == 0 {
-			continue
-		}
-
-		sharesAfterDeductions := val.DelegatorShares.Sub(val.DelegatorDeductions)
-		votingPower := sharesAfterDeductions.MulInt(val.BondedTokens).Quo(val.DelegatorShares)
-
-		for _, option := range val.Vote {
-			weight, _ := math.LegacyNewDecFromStr(option.Weight)
-			subPower := votingPower.Mul(weight)
-			results[option.Option] = results[option.Option].Add(subPower)
-		}
-		totalVP = totalVP.Add(votingPower)
 	}
 
 	return totalVP, results, nil

@@ -1,6 +1,6 @@
 module cosmossdk.io/depinject
 
-go 1.20
+go 1.22.2
 
 require (
 	cosmossdk.io/api v0.7.5

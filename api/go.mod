@@ -1,8 +1,6 @@
 module cosmossdk.io/api
 
-go 1.21
-
-toolchain go1.22.1
+go 1.22.2
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.0-20240312114316-c0d3497e35d6.1

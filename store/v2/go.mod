@@ -1,6 +1,6 @@
 module cosmossdk.io/store/v2
 
-go 1.21
+go 1.22.2
 
 require (
 	cosmossdk.io/core v0.12.0

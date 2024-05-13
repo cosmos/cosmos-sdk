@@ -1,6 +1,6 @@
 module cosmossdk.io/core
 
-go 1.20
+go 1.22.2
 
 require (
 	cosmossdk.io/log v1.3.1

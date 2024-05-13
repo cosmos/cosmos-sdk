@@ -1,6 +1,6 @@
 module cosmossdk.io/server/v2/appmanager
 
-go 1.21
+go 1.22.2
 
 // TODO: remove prior to final release
 replace cosmossdk.io/core => ../../../core

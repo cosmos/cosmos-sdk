@@ -10,6 +10,7 @@ import (
 	vestingtypes "cosmossdk.io/x/auth/vesting/types"
 	"cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/bank/types"
+	banktypes "cosmossdk.io/x/bank/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -606,6 +607,10 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 	suite.mockMintCoins(mintAcc)
 	suite.Require().NoError(keeper.MintCoins(ctx, types.MintModuleName, initCoins))
 
+	suite.Require().NoError(suite.bankKeeper.SetParams(suite.ctx, banktypes.Params{
+		DefaultSendEnabled: banktypes.DefaultDefaultSendEnabled,
+	}))
+
 	for i := 0; i < 10; i++ {
 		addr := sdk.AccAddress(fmt.Sprintf("account-%d", i))
 
@@ -830,6 +835,10 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwnersByQuery() {
 	newCoins := sdk.NewCoins(sdk.NewCoin(denom, initTokens))
 	suite.mockMintCoins(mintAcc)
 	suite.Require().NoError(keeper.MintCoins(ctx, types.MintModuleName, newCoins))
+
+	suite.Require().NoError(suite.bankKeeper.SetParams(suite.ctx, banktypes.Params{
+		DefaultSendEnabled: banktypes.DefaultDefaultSendEnabled,
+	}))
 
 	for i := 0; i < 10; i++ {
 		addr := sdk.AccAddress(fmt.Sprintf("account-%d", i))

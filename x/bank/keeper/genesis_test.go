@@ -3,6 +3,7 @@ package keeper_test
 import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/bank/types"
+	banktypes "cosmossdk.io/x/bank/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,6 +20,10 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 	genesisSupply, _, err := suite.bankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.PaginationMaxLimit})
 	suite.Require().NoError(err)
 	expTotalSupply = expTotalSupply.Add(genesisSupply...)
+
+	suite.Require().NoError(suite.bankKeeper.SetParams(suite.ctx, banktypes.Params{
+		DefaultSendEnabled: banktypes.DefaultDefaultSendEnabled,
+	}))
 
 	for i := range []int{1, 2} {
 		suite.bankKeeper.SetDenomMetaData(ctx, expectedMetadata[i])

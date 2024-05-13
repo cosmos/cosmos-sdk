@@ -175,7 +175,7 @@ func (suite *KeeperTestSuite) mockMintCoins(moduleAcc *authtypes.ModuleAccount) 
 	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, moduleAcc.Name).Return(moduleAcc)
 }
 
-func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(moduleAcc *authtypes.ModuleAccount, accAddr sdk.AccAddress) {
+func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(moduleAcc *authtypes.ModuleAccount, _ sdk.AccAddress) {
 	suite.authKeeper.EXPECT().GetModuleAddress(moduleAcc.Name).Return(moduleAcc.GetAddress())
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc).AnyTimes()
 }
@@ -195,7 +195,7 @@ func (suite *KeeperTestSuite) mockSendCoinsFromAccountToModule(acc *authtypes.Ba
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, acc.GetAddress()).Return(acc)
 }
 
-func (suite *KeeperTestSuite) mockSendCoins(ctx context.Context, sender sdk.AccountI, receiver sdk.AccAddress) {
+func (suite *KeeperTestSuite) mockSendCoins(ctx context.Context, sender sdk.AccountI, _ sdk.AccAddress) {
 	suite.authKeeper.EXPECT().GetAccount(ctx, sender.GetAddress()).Return(sender)
 }
 
@@ -204,7 +204,7 @@ func (suite *KeeperTestSuite) mockFundAccount(receiver sdk.AccAddress) {
 	suite.mockSendCoinsFromModuleToAccount(mintAcc, receiver)
 }
 
-func (suite *KeeperTestSuite) mockInputOutputCoins(inputs []sdk.AccountI, outputs []sdk.AccAddress) {
+func (suite *KeeperTestSuite) mockInputOutputCoins(inputs []sdk.AccountI, _ []sdk.AccAddress) {
 	for _, input := range inputs {
 		suite.authKeeper.EXPECT().GetAccount(suite.ctx, input.GetAddress()).Return(input)
 	}
@@ -411,6 +411,9 @@ func (suite *KeeperTestSuite) TestSupply_DelegateUndelegateCoins() {
 	require.NoError(keeper.SetParams(ctx, banktypes.Params{
 		DefaultSendEnabled: banktypes.DefaultDefaultSendEnabled,
 	}))
+
+	res := keeper.GetParams(ctx)
+	fmt.Println(res)
 
 	// set initial balances
 	suite.mockMintCoins(mintAcc)
@@ -1699,6 +1702,10 @@ func (suite *KeeperTestSuite) TestDelegateCoins() {
 	vacc, err := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.HeaderInfo().Time.Unix(), endTime.Unix())
 	suite.Require().NoError(err)
 
+	suite.Require().NoError(suite.bankKeeper.SetParams(suite.ctx, banktypes.Params{
+		DefaultSendEnabled: banktypes.DefaultDefaultSendEnabled,
+	}))
+
 	suite.mockFundAccount(accAddrs[0])
 	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], origCoins))
 
@@ -1877,6 +1884,10 @@ func (suite *KeeperTestSuite) TestIterateAllDenomMetaData() {
 func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 	require := suite.Require()
 
+	require.NoError(suite.bankKeeper.SetParams(suite.ctx, banktypes.Params{
+		DefaultSendEnabled: banktypes.DefaultDefaultSendEnabled,
+	}))
+
 	// mint coins
 	suite.mockMintCoins(multiPermAcc)
 	require.NoError(
@@ -1885,6 +1896,7 @@ func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 			multiPermAcc.Name,
 			sdk.NewCoins(sdk.NewCoin("utxo", math.NewInt(100000)))),
 	)
+
 	// send coins to address
 	suite.mockSendCoinsFromModuleToAccount(multiPermAcc, accAddrs[0])
 	require.NoError(

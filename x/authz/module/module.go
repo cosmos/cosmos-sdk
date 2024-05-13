@@ -2,7 +2,6 @@ package module
 
 import (
 	"context"
-	"cosmossdk.io/core/legacy"
 	"encoding/json"
 	"fmt"
 
@@ -11,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/authz"

@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"cosmossdk.io/core/legacy"
 	"encoding/json"
 	"fmt"
 
@@ -10,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/auth/keeper"
 	"cosmossdk.io/x/auth/simulation"

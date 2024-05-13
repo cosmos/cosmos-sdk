@@ -43,7 +43,8 @@ type AppModule struct {
 	keeper     keeper.Keeper
 	authKeeper types.AccountKeeper
 
-	// mintFn is used to mint new coins during BeginBlock.
+	// mintFn is used to mint new coins during BeginBlock. This function is in charge of
+	// minting new coins based on arbitrary logic, previously done through InflationCalculationFn.
 	// If mintFn is nil, the default minting logic is used.
 	mintFn types.MintFn
 }

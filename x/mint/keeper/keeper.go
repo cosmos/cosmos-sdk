@@ -21,6 +21,7 @@ type Keeper struct {
 	cdc              codec.BinaryCodec
 	stakingKeeper    types.StakingKeeper
 	bankKeeper       types.BankKeeper
+	epochsKeeper     types.EpochsKeeper
 	logger           log.Logger
 	feeCollectorName string
 	// the address capable of executing a MsgUpdateParams message. Typically, this
@@ -40,6 +41,7 @@ func NewKeeper(
 	sk types.StakingKeeper,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
+	ek types.EpochsKeeper,
 	feeCollectorName string,
 	authority string,
 ) Keeper {
@@ -54,6 +56,7 @@ func NewKeeper(
 		cdc:                cdc,
 		stakingKeeper:      sk,
 		bankKeeper:         bk,
+		epochsKeeper:       ek,
 		logger:             env.Logger,
 		feeCollectorName:   feeCollectorName,
 		authority:          authority,

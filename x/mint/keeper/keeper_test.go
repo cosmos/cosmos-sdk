@@ -50,6 +50,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
 	accountKeeper := minttestutil.NewMockAccountKeeper(ctrl)
 	bankKeeper := minttestutil.NewMockBankKeeper(ctrl)
+	epochsKeeper := minttestutil.NewMockEpochsKeeper(ctrl)
 	stakingKeeper := minttestutil.NewMockStakingKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(sdk.AccAddress{})
@@ -60,6 +61,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 		stakingKeeper,
 		accountKeeper,
 		bankKeeper,
+		epochsKeeper,
 		authtypes.FeeCollectorName,
 		govModuleNameStr,
 	)

@@ -34,6 +34,7 @@ type ModuleInputs struct {
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
+	EpochsKeeper  types.EpochsKeeper
 	StakingKeeper types.StakingKeeper
 }
 
@@ -67,6 +68,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.StakingKeeper,
 		in.AccountKeeper,
 		in.BankKeeper,
+		in.EpochsKeeper,
 		feeCollectorName,
 		as,
 	)

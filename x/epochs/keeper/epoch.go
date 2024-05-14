@@ -7,6 +7,16 @@ import (
 	"cosmossdk.io/x/epochs/types"
 )
 
+// GetEpochInfo returns epoch info by identifier.
+func (k Keeper) GetEpochInfo(ctx context.Context, identifier string) (types.EpochInfo, error) {
+	epoch, err := k.EpochInfo.Get(ctx, identifier)
+	if err != nil {
+		return types.EpochInfo{}, fmt.Errorf("epoch with identifier %s not found", identifier)
+	}
+
+	return epoch, nil
+}
+
 // AddEpochInfo adds a new epoch info. Will return an error if the epoch fails validation,
 // or re-uses an existing identifier.
 // This method also sets the start time if left unset, and sets the epoch start height.

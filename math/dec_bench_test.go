@@ -232,6 +232,50 @@ func BenchmarkCompareLegacyDecAndNewDecMul(b *testing.B) {
 	}
 }
 
+func BenchmarkCompareLegacyDecAndNewDecMarshalUnmarshal(b *testing.B) {
+	specs := map[string]struct {
+		src string
+	}{
+		"small": {
+			src: "1",
+		},
+		"big18": {
+			src: "999999999999999999",
+		},
+		"negative big34": {
+			src: "9999999999999999999999999999999999",
+		},
+		"decimal": {
+			src: "12345.678901234341",
+		},
+	}
+	for name, spec := range specs {
+		b.Run(name, func(b *testing.B) {
+			b.Run("LegacyDec", func(b *testing.B) {
+				src := LegacyMustNewDecFromStr(spec.src)
+				b.ResetTimer()
+				for i := 0; i < b.N; i++ {
+					bz, err := src.Marshal()
+					require.NoError(b, err)
+					var d LegacyDec
+					require.NoError(b, d.Unmarshal(bz))
+				}
+			})
+
+			b.Run("NewDec", func(b *testing.B) {
+				src := must(NewDecFromString(spec.src))
+				b.ResetTimer()
+				for i := 0; i < b.N; i++ {
+					bz, err := src.Marshal()
+					require.NoError(b, err)
+					var d Dec
+					require.NoError(b, d.Unmarshal(bz))
+				}
+			})
+		})
+	}
+}
+
 func BenchmarkCompareLegacyDecAndNewDecQuoInteger(b *testing.B) {
 	legacyB1 := LegacyNewDec(100)
 	newB1 := NewDecFromInt64(100)

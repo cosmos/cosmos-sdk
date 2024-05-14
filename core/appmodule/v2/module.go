@@ -2,8 +2,9 @@ package appmodule
 
 import (
 	"context"
-	"cosmossdk.io/core/legacy"
 
+
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 )

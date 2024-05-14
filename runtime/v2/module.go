@@ -1,7 +1,7 @@
 package runtime
 
 import (
-	"cosmossdk.io/core/registry"
+	"fmt"
 	"os"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -18,6 +18,7 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
@@ -25,7 +26,6 @@ import (
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
 	rootstorev2 "cosmossdk.io/store/v2/root"
-	"fmt"
 )
 
 var (
@@ -125,8 +125,8 @@ func ProvideAppBuilder(
 	}
 
 	// TODO register as Invoker from simapp v2; remove if not needed
-	//std.RegisterInterfaces(interfaceRegistrar)
-	//std.RegisterLegacyAminoCodec(amino)
+	// std.RegisterInterfaces(interfaceRegistrar)
+	// std.RegisterLegacyAminoCodec(amino)
 
 	msgRouterBuilder := stf.NewMsgRouterBuilder()
 	app := &App{

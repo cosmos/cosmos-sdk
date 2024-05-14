@@ -2,6 +2,7 @@ package appmodule
 
 import (
 	"context"
+
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule/v2"

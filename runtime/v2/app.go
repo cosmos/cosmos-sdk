@@ -2,8 +2,6 @@ package runtime
 
 import (
 	"context"
-	"cosmossdk.io/core/legacy"
-	"cosmossdk.io/core/registry"
 	"encoding/json"
 	"errors"
 
@@ -12,6 +10,8 @@ import (
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	coreappmanager "cosmossdk.io/core/app"
+	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"

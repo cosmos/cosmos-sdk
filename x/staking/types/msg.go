@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -125,12 +123,6 @@ func (msg MsgEditValidator) ValidateBasic() error {
 	if msg.CommissionRate != nil {
 		if msg.CommissionRate.GT(math.LegacyOneDec()) || msg.CommissionRate.IsNegative() {
 			return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "commission rate must be between 0 and 1 (inclusive)")
-		}
-		if msg.CommissionRate.LT(MinCommissionRate) {
-			return errorsmod.Wrap(
-				ErrCommissionTooSmall,
-				fmt.Sprintf("minimum commission rate is %s", MinCommissionRate.String()),
-			)
 		}
 	}
 

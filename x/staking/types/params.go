@@ -34,8 +34,6 @@ const (
 var (
 	// DefaultMinCommissionRate is set to 0%
 	DefaultMinCommissionRate = math.LegacyZeroDec()
-
-	MinCommissionRate = math.LegacyMustNewDecFromStr("0.05")
 )
 
 // NewParams creates a new Params instance

@@ -20,6 +20,7 @@ import (
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
+	consensustypes "cosmossdk.io/x/consensus/types"
 	minttypes "cosmossdk.io/x/mint/types"
 	"cosmossdk.io/x/slashing"
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
@@ -39,7 +40,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 type fixture struct {
@@ -106,13 +106,17 @@ func initFixture(tb testing.TB) *fixture {
 		authority.String(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(queryRouter, msgRouter)), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	assert.NilError(tb, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
+
+	cometInfoService := runtime.NewContextAwareCometInfoService()
+
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(queryRouter, msgRouter)), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), cometInfoService)
 
 	slashingKeeper := slashingkeeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(queryRouter, msgRouter)), cdc, &codec.LegacyAmino{}, stakingKeeper, authority.String())
 
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
-	slashingModule := slashing.NewAppModule(cdc, slashingKeeper, accountKeeper, bankKeeper, stakingKeeper, cdc.InterfaceRegistry())
+	slashingModule := slashing.NewAppModule(cdc, slashingKeeper, accountKeeper, bankKeeper, stakingKeeper, cdc.InterfaceRegistry(), cometInfoService)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
 		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),

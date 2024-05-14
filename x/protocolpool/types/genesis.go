@@ -44,16 +44,16 @@ func validateBudget(bp Budget) error {
 		return fmt.Errorf("recipient cannot be empty")
 	}
 
-	// Validate TotalBudget
-	amount := sdk.NewCoins(*bp.TotalBudget)
+	// Validate BudgetPerTranche
+	amount := sdk.NewCoins(*bp.BudgetPerTranche)
 	if amount.IsZero() {
-		return fmt.Errorf("total budget cannot be zero")
+		return fmt.Errorf("budget per tranche cannot be zero")
 	}
 	if err := amount.Validate(); err != nil {
 		return errors.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
 	}
 
-	if bp.Tranches == 0 {
+	if bp.TranchesLeft == 0 {
 		return fmt.Errorf("invalid budget proposal: tranches must be greater than zero")
 	}
 

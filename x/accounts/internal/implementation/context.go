@@ -70,6 +70,12 @@ func MakeAccountContext(
 	})
 }
 
+func SetSender(ctx context.Context, sender []byte) context.Context {
+	v := getCtx(ctx)
+	v.sender = sender
+	return addCtx(v.parentContext, v)
+}
+
 // makeAccountStore creates the prefixed store for the account.
 // It uses the number of the account, this gives constant size
 // bytes prefixes for the account state.

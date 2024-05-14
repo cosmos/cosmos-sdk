@@ -2,6 +2,7 @@ package cosmovisor
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -270,15 +271,18 @@ func (l *Launcher) doPreUpgrade() error {
 		if err := l.executePreUpgradeCmd(); err != nil {
 			counter++
 
-			switch err.(*exec.ExitError).ProcessState.ExitCode() {
-			case 1:
-				l.logger.Info("pre-upgrade command does not exist. continuing the upgrade.")
-				return nil
-			case 30:
-				return fmt.Errorf("pre-upgrade command failed : %w", err)
-			case 31:
-				l.logger.Error("pre-upgrade command failed. retrying", "error", err, "attempt", counter)
-				continue
+			var exitErr *exec.ExitError
+			if errors.As(err, &exitErr) {
+				switch exitErr.ProcessState.ExitCode() {
+				case 1:
+					l.logger.Info("pre-upgrade command does not exist. continuing the upgrade.")
+					return nil
+				case 30:
+					return fmt.Errorf("pre-upgrade command failed : %w", err)
+				case 31:
+					l.logger.Error("pre-upgrade command failed. retrying", "error", err, "attempt", counter)
+					continue
+				}
 			}
 		}
 

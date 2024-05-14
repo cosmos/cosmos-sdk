@@ -8,8 +8,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	crypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-	types "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/crypto/types"
+	types0 "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -37,10 +37,10 @@ func (m *MockValidatorStore) EXPECT() *MockValidatorStoreMockRecorder {
 }
 
 // GetPubKeyByConsAddr mocks base method.
-func (m *MockValidatorStore) GetPubKeyByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (crypto.PublicKey, error) {
+func (m *MockValidatorStore) GetPubKeyByConsAddr(arg0 context.Context, arg1 types0.ConsAddress) (types.PubKey, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPubKeyByConsAddr", arg0, arg1)
-	ret0, _ := ret[0].(crypto.PublicKey)
+	ret0, _ := ret[0].(types.PubKey)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -112,7 +112,7 @@ func (m *MockProposalTxVerifier) EXPECT() *MockProposalTxVerifierMockRecorder {
 }
 
 // PrepareProposalVerifyTx mocks base method.
-func (m *MockProposalTxVerifier) PrepareProposalVerifyTx(tx types.Tx) ([]byte, error) {
+func (m *MockProposalTxVerifier) PrepareProposalVerifyTx(tx types0.Tx) ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PrepareProposalVerifyTx", tx)
 	ret0, _ := ret[0].([]byte)
@@ -127,10 +127,10 @@ func (mr *MockProposalTxVerifierMockRecorder) PrepareProposalVerifyTx(tx interfa
 }
 
 // ProcessProposalVerifyTx mocks base method.
-func (m *MockProposalTxVerifier) ProcessProposalVerifyTx(txBz []byte) (types.Tx, error) {
+func (m *MockProposalTxVerifier) ProcessProposalVerifyTx(txBz []byte) (types0.Tx, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ProcessProposalVerifyTx", txBz)
-	ret0, _ := ret[0].(types.Tx)
+	ret0, _ := ret[0].(types0.Tx)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -142,10 +142,10 @@ func (mr *MockProposalTxVerifierMockRecorder) ProcessProposalVerifyTx(txBz inter
 }
 
 // TxDecode mocks base method.
-func (m *MockProposalTxVerifier) TxDecode(txBz []byte) (types.Tx, error) {
+func (m *MockProposalTxVerifier) TxDecode(txBz []byte) (types0.Tx, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TxDecode", txBz)
-	ret0, _ := ret[0].(types.Tx)
+	ret0, _ := ret[0].(types0.Tx)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -157,7 +157,7 @@ func (mr *MockProposalTxVerifierMockRecorder) TxDecode(txBz interface{}) *gomock
 }
 
 // TxEncode mocks base method.
-func (m *MockProposalTxVerifier) TxEncode(tx types.Tx) ([]byte, error) {
+func (m *MockProposalTxVerifier) TxEncode(tx types0.Tx) ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TxEncode", tx)
 	ret0, _ := ret[0].([]byte)
@@ -207,7 +207,7 @@ func (mr *MockTxSelectorMockRecorder) Clear() *gomock.Call {
 }
 
 // SelectTxForProposal mocks base method.
-func (m *MockTxSelector) SelectTxForProposal(ctx context.Context, maxTxBytes, maxBlockGas uint64, memTx types.Tx, txBz []byte) bool {
+func (m *MockTxSelector) SelectTxForProposal(ctx context.Context, maxTxBytes, maxBlockGas uint64, memTx types0.Tx, txBz []byte) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SelectTxForProposal", ctx, maxTxBytes, maxBlockGas, memTx, txBz)
 	ret0, _ := ret[0].(bool)

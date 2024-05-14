@@ -3,7 +3,8 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     gomod2nix = {
-      url = "github:nix-community/gomod2nix";
+      # https://github.com/nix-community/gomod2nix/pull/156
+      url = "github:nix-community/gomod2nix/pull/156/head";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
     };
@@ -53,7 +54,7 @@
           devShells = rec {
             default = with pkgs; mkShell {
               buildInputs = [
-                simd.go
+                go_1_22 # Use Go 1.22 version
                 rocksdb
                 gomod2nix
               ];

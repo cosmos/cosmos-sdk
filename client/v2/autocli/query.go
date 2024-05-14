@@ -41,7 +41,11 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 	for cmdName, subCmdDesc := range cmdDescriptor.SubCommands {
 		subCmd := findSubCommand(cmd, cmdName)
 		if subCmd == nil {
-			subCmd = topLevelCmd(cmd.Context(), cmdName, fmt.Sprintf("Querying commands for the %s service", subCmdDesc.Service))
+			short := subCmdDesc.Short
+			if short == "" {
+				short = fmt.Sprintf("Querying commands for the %s service", subCmdDesc.Service)
+			}
+			subCmd = topLevelCmd(cmd.Context(), cmdName, short)
 		}
 
 		if err := b.AddQueryServiceCommands(subCmd, subCmdDesc); err != nil {

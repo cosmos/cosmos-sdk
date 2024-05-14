@@ -21,11 +21,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	countertypes "github.com/cosmos/cosmos-sdk/x/counter/types"
 )
 
 func newTestTxConfig() (client.TxConfig, codec.Codec) {

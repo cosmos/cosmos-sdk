@@ -24,3 +24,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
+
+### Features
+
+* [#19988](https://github.com/cosmos/cosmos-sdk/pull/19988) Implemented `x/accounts/multisig`.

@@ -235,7 +235,7 @@ func (s *Store) loadVersion(v uint64) error {
 	s.logger.Debug("loading version", "version", v)
 
 	if err := s.stateCommitment.LoadVersion(v); err != nil {
-		return fmt.Errorf("failed to load SS version %d: %w", v, err)
+		return fmt.Errorf("failed to load SC version %d: %w", v, err)
 	}
 
 	s.workingHash = nil

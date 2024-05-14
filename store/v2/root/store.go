@@ -3,7 +3,6 @@ package root
 import (
 	"bytes"
 	"fmt"
-	"slices"
 	"sync"
 	"time"
 
@@ -40,9 +39,6 @@ type Store struct {
 
 	// lastCommitInfo reflects the last version/hash that has been committed
 	lastCommitInfo *proof.CommitInfo
-
-	// workingHash defines the current (yet to be committed) hash
-	workingHash []byte
 
 	// telemetry reflects a telemetry agent responsible for emitting metrics (if any)
 	telemetry metrics.StoreMetrics
@@ -238,7 +234,6 @@ func (s *Store) loadVersion(v uint64) error {
 		return fmt.Errorf("failed to load SS version %d: %w", v, err)
 	}
 
-	s.workingHash = nil
 	s.commitHeader = nil
 
 	// set lastCommitInfo explicitly s.t. Commit commits the correct version, i.e. v+1
@@ -256,43 +251,19 @@ func (s *Store) SetCommitHeader(h *coreheader.Info) {
 	s.commitHeader = h
 }
 
-// WorkingHash returns the working hash of the root store. Note, WorkingHash()
-// should only be called once per block once all writes are complete and prior
-// to Commit() being called.
-//
-// If working hash is nil, then we need to compute and set it on the root store
-// by constructing a CommitInfo object, which in turn creates and writes a batch
-// of the current changeset to the SC tree.
-func (s *Store) WorkingHash(cs *corestore.Changeset) ([]byte, error) {
-	if s.telemetry != nil {
-		now := time.Now()
-		defer s.telemetry.MeasureSince(now, "root_store", "working_hash")
-	}
-
-	if s.workingHash == nil {
-		if err := s.writeSC(cs); err != nil {
-			return nil, err
-		}
-
-		s.workingHash = s.lastCommitInfo.Hash()
-	}
-
-	return slices.Clone(s.workingHash), nil
-}
-
-// Commit commits all state changes to the underlying SS and SC backends. Note,
-// at the time of Commit(), we expect WorkingHash() to have already been called
-// with the same Changeset, which internally sets the working hash, retrieved by
-// writing a batch of the changeset to the SC tree, and CommitInfo on the root
-// store.
+// Commit commits all state changes to the underlying SS and SC backends. It
+// writes a batch of the changeset to the SC tree, and retrieves the CommitInfo
+// from the SC tree. Finally, it commits the SC tree and returns the hash of the
+// CommitInfo.
 func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	if s.telemetry != nil {
 		now := time.Now()
 		defer s.telemetry.MeasureSince(now, "root_store", "commit")
 	}
 
-	if s.workingHash == nil {
-		return nil, fmt.Errorf("working hash is nil; must call WorkingHash() before Commit()")
+	// write the changeset to the SC tree and update lastCommitInfo
+	if err := s.writeSC(cs); err != nil {
+		return nil, err
 	}
 
 	version := s.lastCommitInfo.Version
@@ -318,7 +289,7 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 
 	// commit SC async
 	eg.Go(func() error {
-		if err := s.commitSC(cs); err != nil {
+		if err := s.commitSC(); err != nil {
 			return fmt.Errorf("failed to commit SC: %w", err)
 		}
 
@@ -332,8 +303,6 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	if s.commitHeader != nil {
 		s.lastCommitInfo.Timestamp = s.commitHeader.Time
 	}
-
-	s.workingHash = nil
 
 	return s.lastCommitInfo.Hash(), nil
 }
@@ -441,24 +410,17 @@ func (s *Store) writeSC(cs *corestore.Changeset) error {
 }
 
 // commitSC commits the SC store. At this point, a batch of the current changeset
-// should have already been written to the SC via WorkingHash(). This method
-// solely commits that batch. An error is returned if commit fails or if the
-// resulting commit hash is not equivalent to the working hash.
-func (s *Store) commitSC(cs *corestore.Changeset) error {
+// should have already been written to the SC via writeSC(). This method solely
+// commits that batch. An error is returned if commit fails or the hash of the
+// committed state does not match the hash of the working state.
+func (s *Store) commitSC() error {
 	cInfo, err := s.stateCommitment.Commit(s.lastCommitInfo.Version)
 	if err != nil {
 		return fmt.Errorf("failed to commit SC store: %w", err)
 	}
 
-	commitHash := cInfo.Hash()
-
-	workingHash, err := s.WorkingHash(cs)
-	if err != nil {
-		return fmt.Errorf("failed to get working hash: %w", err)
-	}
-
-	if !bytes.Equal(commitHash, workingHash) {
-		return fmt.Errorf("unexpected commit hash; got: %X, expected: %X", commitHash, workingHash)
+	if !bytes.Equal(cInfo.Hash(), s.lastCommitInfo.Hash()) {
+		return fmt.Errorf("unexpected commit hash; got: %X, expected: %X", cInfo.Hash(), s.lastCommitInfo.Hash())
 	}
 
 	return nil

@@ -108,8 +108,6 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", latestVersion, i)), []byte(fmt.Sprintf("value-%d-%d", latestVersion, i)), false)
 			}
 		}
-		_, err := s.rootStore.WorkingHash(cs)
-		s.Require().NoError(err)
 		_, err = s.rootStore.Commit(cs)
 		s.Require().NoError(err)
 
@@ -156,8 +154,6 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
 			}
 		}
-		_, err := s.rootStore.WorkingHash(cs)
-		s.Require().NoError(err)
 		_, err = s.rootStore.Commit(cs)
 		s.Require().NoError(err)
 	}

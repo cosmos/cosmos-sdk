@@ -61,6 +61,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (client) [#19870](https://github.com/cosmos/cosmos-sdk/pull/19870) Add new query command `wait-tx`. Alias `event-query-tx-for` to `wait-tx` for backward compatibility.
 * (crypto/keyring) [#20212](https://github.com/cosmos/cosmos-sdk/pull/20212) Expose the db keyring used in the keystore.
 * (genutil) [#19971](https://github.com/cosmos/cosmos-sdk/pull/19971) Allow manually setting the consensus key type in genesis
+* (debug) [#20328](https://github.com/cosmos/cosmos-sdk/pull/20328) Add consensus address for debug cmd.
 
 ### Improvements
 

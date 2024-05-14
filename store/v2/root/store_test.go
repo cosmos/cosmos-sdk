@@ -437,7 +437,6 @@ func (s *RootStoreTestSuite) TestPrune() {
 			s.Require().Error(err, "expected error when loading height %d at test %s", v, tc.name)
 		}
 	}
-
 }
 
 func (s *RootStoreTestSuite) TestMultiStore_Pruning_SameHeightsTwice() {
@@ -471,12 +470,12 @@ func (s *RootStoreTestSuite) TestMultiStore_Pruning_SameHeightsTwice() {
 	s.Require().NoError(err)
 	s.Require().Equal(numVersions, latestVer)
 
-	for v := uint64(1); v < numVersions-uint64(keepRecent); v++ {
+	for v := uint64(1); v < numVersions-keepRecent; v++ {
 		err := s.rootStore.LoadVersion(v)
 		s.Require().Error(err, "expected error when loading pruned height: %d", v)
 	}
 
-	for v := (numVersions - uint64(keepRecent)); v < numVersions; v++ {
+	for v := (numVersions - keepRecent); v < numVersions; v++ {
 		err := s.rootStore.LoadVersion(v)
 		s.Require().NoError(err, "expected no error when loading height: %d", v)
 	}

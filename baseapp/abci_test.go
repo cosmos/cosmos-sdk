@@ -602,6 +602,14 @@ func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
 }
 
+func TestABCI_VerifyVoteExtensionHandlerNotSet(t *testing.T) {
+	app := baseapp.NewBaseApp(t.Name(), log.NewTestLogger(t), nil, nil)
+	app.SetVerifyVoteExtensionHandler(nil)
+
+	_, err := app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{})
+	require.Error(t, err)
+}
+
 func TestABCI_GRPCQuery(t *testing.T) {
 	grpcQueryOpt := func(bapp *baseapp.BaseApp) {
 		testdata.RegisterQueryServer(
@@ -2191,12 +2199,28 @@ func TestABCI_ProcessProposalIsNotSet(t *testing.T) {
 	logBuffer := new(bytes.Buffer)
 	logger := log.NewLogger(logBuffer, log.ColorOption(false))
 	baseApp := baseapp.NewBaseApp(t.Name(), logger, nil, nil)
-	baseApp.SetPrepareProposal(nil)
+	baseApp.SetProcessProposal(nil)
 	req := abci.RequestProcessProposal{
 		Height: 1,
 	}
 	_, err := baseApp.ProcessProposal(&req)
 	require.Error(t, err)
+}
+
+func TestABCI_Proposal_Rejected(t *testing.T) {
+	logBuffer := new(bytes.Buffer)
+	logger := log.NewLogger(logBuffer, log.ColorOption(false))
+	baseApp := baseapp.NewBaseApp(t.Name(), logger, nil, nil)
+
+	reqProcessProposal := abci.RequestProcessProposal{Height: 1}
+	dms := DummyMultiStore{}
+	baseApp.SetCMS(dms)
+	baseApp.SetProcessProposal(func(c sdk.Context, proposal *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+		return nil, errors.New("reject proposal")
+	})
+	resProcessProposal, err := baseApp.ProcessProposal(&reqProcessProposal)
+	require.NoError(t, err)
+	require.Equal(t, abci.ResponseProcessProposal_REJECT, resProcessProposal.Status)
 }
 
 func TestABCI_ProcessProposal_BeforeFirstHeight(t *testing.T) {
@@ -2795,10 +2819,8 @@ type DummyMultiStore struct {
 	Version int64
 }
 
-func (d DummyMultiStore) LatestVersion() int64 {
-	return d.Version
-}
-
-func (d DummyMultiStore) SetInitialVersion(version int64) error {
-	return errors.New("err")
-}
+func (d DummyMultiStore) LatestVersion() int64                        { return d.Version }
+func (d DummyMultiStore) SetInitialVersion(version int64) error       { return errors.New("err") }
+func (d DummyMultiStore) LastCommitID() storetypes.CommitID           { return storetypes.CommitID{} }
+func (d DummyMultiStore) CacheMultiStore() storetypes.CacheMultiStore { return d }
+func (d DummyMultiStore) Write()                                      {}

@@ -16,9 +16,8 @@ func NewQueryServer(k Keeper) v1.QueryServer {
 	// Pre-calculate schemas for efficient retrieval.
 	schemas := v1.MakeAccountsSchemas(k.accounts)
 	return &queryServer{
-		k:           k,
-		schemaCache: make(map[string]*v1.SchemaResponse, len(schemas)), // Initialize with precomputed length
-		schemas:     schemas,                                           // Store precalculated schemas.
+		k:       k,
+		schemas: schemas, // Store precalculated schemas.
 	}
 }
 

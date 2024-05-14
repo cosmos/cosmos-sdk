@@ -77,16 +77,8 @@ func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruneOptions)
 	s.rootStore = rs
 }
 
-func (s *RootStoreTestSuite) newStoreWithDBMount(config *store.PruneOptions, dbm1, dbm2, dbm3, dbm4 *dbm.MemDB, db storage.Database) {
+func (s *RootStoreTestSuite) newStoreWithBackendMount(ss store.VersionedDatabase, sc store.Committer) {
 	noopLog := log.NewNopLogger()
-
-	ss := storage.NewStorageStore(db, config, noopLog)
-
-	tree := iavl.NewIavlTree(dbm1, noopLog, iavl.DefaultConfig())
-	tree2 := iavl.NewIavlTree(dbm2, noopLog, iavl.DefaultConfig())
-	tree3 := iavl.NewIavlTree(dbm3, noopLog, iavl.DefaultConfig())
-	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree, testStoreKey2: tree2, testStoreKey3: tree3}, dbm4, config, noopLog)
-	s.Require().NoError(err)
 
 	rs, err := New(noopLog, ss, sc, nil, nil)
 	s.Require().NoError(err)
@@ -516,14 +508,19 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 		Interval:   11,
 	}
 
-	db1 := dbm.NewMemDB()
-	db2 := dbm.NewMemDB()
-	db3 := dbm.NewMemDB()
-	db4 := dbm.NewMemDB()
+	noopLog := log.NewNopLogger()
+
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
 
-	s.newStoreWithDBMount(&pruneOpt, db1, db2, db3, db4, sqliteDB)
+	ss := storage.NewStorageStore(sqliteDB, &pruneOpt, noopLog)
+
+	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+
+	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, dbm.NewMemDB(), &pruneOpt, noopLog)
+	s.Require().NoError(err)
+
+	s.newStoreWithBackendMount(ss, sc)
 	s.Require().NoError(s.rootStore.LoadLatestVersion())
 
 	// Commit enough to build up heights to prune, where on the next block we should
@@ -546,7 +543,7 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	s.Require().Equal(uint64(0), actualHeightToPrune)
 
 	// "restart"
-	s.newStoreWithDBMount(&pruneOpt, db1, db2, db3, db4, sqliteDB)
+	s.newStoreWithBackendMount(ss, sc)
 	err = s.rootStore.LoadLatestVersion()
 	s.Require().NoError(err)
 
@@ -580,15 +577,21 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 }
 
 func (s *RootStoreTestSuite) TestMultiStoreRestart() {
-	db1 := dbm.NewMemDB()
-	db2 := dbm.NewMemDB()
-	db3 := dbm.NewMemDB()
-	db4 := dbm.NewMemDB()
+	noopLog := log.NewNopLogger()
 
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
 
-	s.newStoreWithDBMount(nil, db1, db2, db3, db4, sqliteDB)
+	ss := storage.NewStorageStore(sqliteDB, nil, noopLog)
+
+	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+	tree2 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+	tree3 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+
+	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree, testStoreKey2: tree2, testStoreKey3: tree3}, dbm.NewMemDB(), nil, noopLog)
+	s.Require().NoError(err)
+
+	s.newStoreWithBackendMount(ss, sc)
 	s.Require().NoError(s.rootStore.LoadLatestVersion())
 
 	// perform changes
@@ -673,7 +676,7 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 	s.Require().Equal([]byte(fmt.Sprintf("val%03d_%03d", 3, 1)), result1, "value should be equal")
 
 	// "restart"
-	s.newStoreWithDBMount(nil, db1, db2, db3, db4, sqliteDB)
+	s.newStoreWithBackendMount(ss, sc)
 	err = s.rootStore.LoadLatestVersion()
 	s.Require().Nil(err)
 

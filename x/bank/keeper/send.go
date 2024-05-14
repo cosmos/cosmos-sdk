@@ -185,11 +185,6 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 			return err
 		}
 
-		outAddress, err = k.sendRestriction.apply(ctx, inAddress, outAddress, out.Coins)
-		if err != nil {
-			return err
-		}
-
 		if err := k.addCoins(ctx, outAddress, out.Coins); err != nil {
 			return err
 		}

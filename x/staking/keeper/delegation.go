@@ -834,7 +834,7 @@ func (k Keeper) Unbond(
 		validator.TokensFromShares(delegation.Shares).TruncateInt().LT(validator.MinSelfDelegation) {
 		err = k.jailValidator(ctx, validator)
 		if err != nil {
-			return amount, fmt.Errorf("failed to jail validator: %v", err)
+			return amount, fmt.Errorf("failed to jail validator: %w", err)
 		}
 		validator, err = k.GetValidator(ctx, valbz)
 		if err != nil {

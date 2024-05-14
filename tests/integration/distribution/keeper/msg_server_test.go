@@ -22,6 +22,7 @@ import (
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
+	consensustypes "cosmossdk.io/x/consensus/types"
 	"cosmossdk.io/x/distribution"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
 	distrtypes "cosmossdk.io/x/distribution/types"
@@ -41,7 +42,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 var (
@@ -55,6 +55,8 @@ type fixture struct {
 	sdkCtx sdk.Context
 	cdc    codec.Codec
 	keys   map[string]*storetypes.KVStoreKey
+
+	queryClient distrtypes.QueryClient
 
 	accountKeeper authkeeper.AccountKeeper
 	bankKeeper    bankkeeper.Keeper
@@ -116,10 +118,13 @@ func initFixture(t *testing.T) *fixture {
 		authority.String(),
 	)
 
+	assert.NilError(t, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
+
 	msgRouter := baseapp.NewMsgServiceRouter()
 	grpcRouter := baseapp.NewGRPCQueryRouter()
+	cometService := runtime.NewContextAwareCometInfoService()
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(grpcRouter, msgRouter)), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(grpcRouter, msgRouter)), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), cometService)
 	require.NoError(t, stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams()))
 
 	poolKeeper := poolkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[pooltypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, stakingKeeper, authority.String())
@@ -173,6 +178,9 @@ func initFixture(t *testing.T) *fixture {
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(distrKeeper))
 	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(distrKeeper))
 
+	qr := integrationApp.QueryHelper()
+	distrQueryClient := distrtypes.NewQueryClient(qr)
+
 	return &fixture{
 		app:           integrationApp,
 		sdkCtx:        sdkCtx,
@@ -185,6 +193,7 @@ func initFixture(t *testing.T) *fixture {
 		poolKeeper:    poolKeeper,
 		addr:          addr,
 		valAddr:       valAddr,
+		queryClient:   distrQueryClient,
 	}
 }
 

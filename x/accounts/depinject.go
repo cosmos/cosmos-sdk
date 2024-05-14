@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/depinject/appconfig"
 	baseaccount "cosmossdk.io/x/accounts/defaults/base"
 	"cosmossdk.io/x/accounts/defaults/lockup"
+	"cosmossdk.io/x/accounts/defaults/multisig"
 	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -74,6 +75,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		lockup.NewPeriodicLockingAccount(true),
 		lockup.NewDelayedLockingAccount(true),
 		lockup.NewPermanentLockingAccount(true),
+
+		accountstd.AddAccount(multisig.MULTISIG_ACCOUNT, multisig.NewAccount),
 	)
 	if err != nil {
 		panic(err)

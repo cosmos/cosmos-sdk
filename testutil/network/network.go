@@ -32,7 +32,8 @@ import (
 	authtypes "cosmossdk.io/x/auth/types"
 	_ "cosmossdk.io/x/bank" // import bank as a blank
 	banktypes "cosmossdk.io/x/bank/types"
-	_ "cosmossdk.io/x/staking" // import staking as a blank
+	_ "cosmossdk.io/x/consensus" // import consensus as a blank
+	_ "cosmossdk.io/x/staking"   // import staking as a blank
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -55,7 +56,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import consensus as a blank
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 

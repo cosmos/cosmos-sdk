@@ -46,8 +46,8 @@ type Service interface {
 
 // Meter represents a gas meter for modules consumption
 type Meter interface {
-	Consume(amount Gas, descriptor string)
-	Refund(amount Gas, descriptor string)
+	Consume(amount Gas, descriptor string) error
+	Refund(amount Gas, descriptor string) error
 	Remaining() Gas
 	Limit() Gas
 }

@@ -680,6 +680,7 @@ func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 
 	if mode == execModeSimulate {
 		ctx, _ = ctx.CacheContext()
+		ctx = ctx.WithExecMode(sdk.ExecMode(execModeSimulate))
 	}
 
 	return ctx
@@ -721,7 +722,7 @@ func (app *BaseApp) preBlock(req *abci.FinalizeBlockRequest) error {
 	return nil
 }
 
-func (app *BaseApp) beginBlock(req *abci.FinalizeBlockRequest) (sdk.BeginBlock, error) {
+func (app *BaseApp) beginBlock(_ *abci.FinalizeBlockRequest) (sdk.BeginBlock, error) {
 	var (
 		resp sdk.BeginBlock
 		err  error

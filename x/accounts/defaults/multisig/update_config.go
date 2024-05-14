@@ -4,11 +4,17 @@ import (
 	"context"
 	"errors"
 
+	"cosmossdk.io/x/accounts/accountstd"
 	v1 "cosmossdk.io/x/accounts/defaults/multisig/v1"
 )
 
 // UpdateConfig updates the configuration of the multisig account.
 func (a Account) UpdateConfig(ctx context.Context, msg *v1.MsgUpdateConfig) (*v1.MsgUpdateConfigResponse, error) {
+	// this function can only be executed by the account itself
+	if !accountstd.SenderIsSelf(ctx) {
+		return nil, errors.New("only the account itself can update the config (through a proposal)")
+	}
+
 	// set members
 	for i := range msg.UpdateMembers {
 		addrBz, err := a.addrCodec.StringToBytes(msg.UpdateMembers[i].Address)

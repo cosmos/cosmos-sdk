@@ -62,6 +62,7 @@ func (s *addressTestSuite) testMarshal(original, res interface{}, marshal func()
 }
 
 func testMarshalYAML(t *testing.T, original, res interface{}, marshal func() (interface{}, error), unmarshal func([]byte) error) {
+	t.Helper()
 	bz, err := marshal()
 
 	require.NoError(t, err)
@@ -589,10 +590,9 @@ func (s *addressTestSuite) TestGetBech32PrefixConsPub() {
 }
 
 func (s *addressTestSuite) TestMustAccAddressFromBech32() {
-	src := types.MustAccAddressFromBech32("cosmos1qqqsyqcyq5rqwzqfpg9scrgwpugpzysnrk363e")
-	exp := types.AccAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
-	s.Assert().Equal(exp, src)
-
+	accAddress1 := types.AccAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
+	accAddress2 := types.MustAccAddressFromBech32(accAddress1.String())
+	s.Require().Equal(accAddress1, accAddress2)
 }
 
 func (s *addressTestSuite) TestMustAccAddressFromBech32Panic() {
@@ -649,8 +649,8 @@ func (s *addressTestSuite) TestFormatAccAddressAsPointer() {
 }
 
 func (s *addressTestSuite) TestFormatAccAddressWhenVerbIsDifferentFromSOrP() {
-	myAddr := types.AccAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
-	exp := "000102030405060708090A0B0C0D0E0F10111213"
+	myAddr := types.AccAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20})
+	exp := "000102030405060708090A0B0C0D0E0F10111214"
 	spec := []string{"%v", "%#v", "%t", "%b", "%c", "%d", "%o", "%O", "%x", "%X", "%U", "%e", "%E", "%f", "%F", "%g", "%G"}
 	for _, v := range spec {
 		s.Require().Equal(exp, fmt.Sprintf(v, myAddr), v)
@@ -744,7 +744,9 @@ func (s *addressTestSuite) TestFormatConsAddressAsString() {
 	consAddr := types.ConsAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
 	actual := fmt.Sprintf("%s", consAddr)
 
-	expected := "cosmosvalcons1qqqsyqcyq5rqwzqfpg9scrgwpugpzysnj3kn3t"
+	hrp := types.GetConfig().GetBech32ConsensusAddrPrefix()
+	expected, err := bech32.ConvertAndEncode(hrp, consAddr)
+	s.Require().NoError(err)
 	s.Require().Equal(expected, actual)
 }
 

@@ -153,6 +153,19 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		return err
 	}
 
+	var outAddress sdk.AccAddress
+	for _, out := range outputs {
+		outAddress, err = k.ak.AddressCodec().StringToBytes(out.Address)
+		if err != nil {
+			return err
+		}
+
+		outAddress, err = k.sendRestriction.apply(ctx, inAddress, outAddress, out.Coins)
+		if err != nil {
+			return err
+		}
+	}
+
 	err = k.subUnlockedCoins(ctx, inAddress, input.Coins)
 	if err != nil {
 		return err
@@ -166,14 +179,8 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		),
 	)
 
-	var outAddress sdk.AccAddress
 	for _, out := range outputs {
 		outAddress, err = k.ak.AddressCodec().StringToBytes(out.Address)
-		if err != nil {
-			return err
-		}
-
-		outAddress, err = k.sendRestriction.apply(ctx, inAddress, outAddress, out.Coins)
 		if err != nil {
 			return err
 		}

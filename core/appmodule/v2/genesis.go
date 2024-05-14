@@ -15,6 +15,20 @@ type HasGenesis interface {
 	InitGenesis(ctx context.Context, data json.RawMessage) error
 	ExportGenesis(ctx context.Context) (json.RawMessage, error)
 }
+
+// HasGenesisBasics is the legacy interface for stateless genesis methods.
+type HasGenesisBasics interface {
+	HasName
+
+	DefaultGenesis() json.RawMessage
+	ValidateGenesis(json.RawMessage) error
+}
+
 type HasABCIGenesis interface {
+	DefaultGenesis() json.RawMessage
 	InitGenesis(ctx context.Context, data json.RawMessage) ([]ValidatorUpdate, error)
+}
+
+type GenesisDecoder interface {
+	DecodeGenesisJSON(data json.RawMessage) ([]json.RawMessage, error)
 }

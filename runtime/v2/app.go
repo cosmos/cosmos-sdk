@@ -2,6 +2,8 @@ package runtime
 
 import (
 	"context"
+	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 	"encoding/json"
 	"errors"
 
@@ -15,9 +17,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 var _ AppI[transaction.Tx] = (*App)(nil)
@@ -62,11 +61,10 @@ type App struct {
 	appConfig *appv1alpha1.Config
 
 	// modules configuration
-	storeKeys         []string
-	interfaceRegistry codectypes.InterfaceRegistry
-	cdc               codec.Codec
-	amino             *codec.LegacyAmino
-	moduleManager     *MM
+	storeKeys          []string
+	interfaceRegistrar registry.InterfaceRegistrar
+	amino              legacy.Amino
+	moduleManager      *MM
 }
 
 // Logger returns the app logger.

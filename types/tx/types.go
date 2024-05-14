@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"cosmossdk.io/core/registry"
 	"fmt"
 
 	protov2 "google.golang.org/protobuf/proto"
@@ -226,7 +227,7 @@ func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 // RegisterInterfaces registers the sdk.Tx and MsgResponse interfaces.
 // Note: the registration of sdk.Msg is done in sdk.RegisterInterfaces, but it
 // could be moved inside this function.
-func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func RegisterInterfaces(registry registry.InterfaceRegistrar) {
 	registry.RegisterInterface(msgResponseInterfaceProtoName, (*MsgResponse)(nil))
 
 	registry.RegisterInterface("cosmos.tx.v1beta1.Tx", (*sdk.HasMsgs)(nil))

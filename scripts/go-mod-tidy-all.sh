@@ -19,7 +19,7 @@ then
     if ! command -v gomod2nix &> /dev/null
     then
         echo "gomod2nix could not be found in PATH, installing..."
-        go install github.com/nix-community/gomod2nix@latest
+        go install github.com/nix-community/gomod2nix@872b63ddd28f318489c929d25f1f0a3c6039c971
     fi
     gomod2nix
 fi

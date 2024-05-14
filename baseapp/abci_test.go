@@ -14,8 +14,6 @@ import (
 	"testing"
 	"time"
 
-	authtx "cosmossdk.io/x/auth/tx"
-
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -42,7 +40,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"

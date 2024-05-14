@@ -6,6 +6,8 @@ cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cosmossdk.io/errors v1.0.1 h1:bzu+Kcr0kS/1DuPBtUFdWjzLqyUuCiyHjyJB6srBV/0=
 cosmossdk.io/errors v1.0.1/go.mod h1:MeelVSZThMi4bEakzhhhE/CKqVv3nOJDA25bIqRDu/U=
+cosmossdk.io/log v1.3.1 h1:UZx8nWIkfbbNEWusZqzAx3ZGvu54TZacWib3EzUYmGI=
+cosmossdk.io/log v1.3.1/go.mod h1:2/dIomt8mKdk6vl3OWJcPk2be3pGOS8OQaLUM/3/tCM=
 cosmossdk.io/math v1.3.0 h1:RC+jryuKeytIiictDslBP9i1fhkVm6ZDmZEoNP316zE=
 cosmossdk.io/math v1.3.0/go.mod h1:vnRTxewy+M7BtXBNFybkuhSH4WfedVAAnERHgVFhp3k=
 cosmossdk.io/schema v0.1.1 h1:I0M6pgI7R10nq+/HCQfbO6BsGBZA8sQy+duR1Y3aKcA=
@@ -16,6 +18,8 @@ cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 h1:eb
 cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5/go.mod h1:drzY4oVisyWvSgpsM7ccQ7IX3efMuVIvd9Eij1Gm/6o=
 cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 h1:GuBrfHsK3RD5vlD4DuBz3DXslR6VlnzrYmHOC3L679Q=
 cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337/go.mod h1:PhLn1pMBilyRC4GfRkoYhm+XVAYhF4adVrzut8AdpJI=
+cosmossdk.io/x/tx v0.13.3 h1:Ha4mNaHmxBc6RMun9aKuqul8yHiL78EKJQ8g23Zf73g=
+cosmossdk.io/x/tx v0.13.3/go.mod h1:I8xaHv0rhUdIvIdptKIqzYy27+n2+zBVaxO6fscFhys=
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
 github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 h1:/vQbFIOMbk2FiG/kXiLl8BRyzTWDw7gX/Hz7Dd5eDMs=
@@ -83,8 +87,8 @@ github.com/cncf/xds/go v0.0.0-20210805033703-aa0b78936158/go.mod h1:eXthEFrGJvWH
 github.com/cncf/xds/go v0.0.0-20210922020428-25de7278fc84/go.mod h1:eXthEFrGJvWHgFFCl3hGmgk+/aYT6PnTQLykKQRLhEs=
 github.com/cncf/xds/go v0.0.0-20211001041855-01bcc9b48dfe/go.mod h1:eXthEFrGJvWHgFFCl3hGmgk+/aYT6PnTQLykKQRLhEs=
 github.com/cncf/xds/go v0.0.0-20211011173535-cb28da3451f1/go.mod h1:eXthEFrGJvWHgFFCl3hGmgk+/aYT6PnTQLykKQRLhEs=
-github.com/cockroachdb/apd/v2 v2.0.2 h1:weh8u7Cneje73dDh+2tEVLUvyBc89iwepWCD8b8034E=
-github.com/cockroachdb/apd/v2 v2.0.2/go.mod h1:DDxRlzC2lo3/vSlmSoS7JkqbbrARPuFOGr0B9pvN3Gw=
+github.com/cockroachdb/apd/v3 v3.2.1 h1:U+8j7t0axsIgvQUqthuNm82HIrYXodOV2iWLWtEaIwg=
+github.com/cockroachdb/apd/v3 v3.2.1/go.mod h1:klXJcjp+FffLTHlhIG69tezTDvdP065naDsHzKhYSqc=
 github.com/cockroachdb/datadriven v1.0.3-0.20230413201302-be42291fc80f h1:otljaYPt5hWxV3MUfO5dFPFiOXg9CyG5/kCfayTqsJ4=
 github.com/cockroachdb/datadriven v1.0.3-0.20230413201302-be42291fc80f/go.mod h1:a9RdTaap04u637JoCzcUoIcDmvwSUtcUFtT/C3kJlTU=
 github.com/cockroachdb/errors v1.11.1 h1:xSEW75zKaKCWzR3OfxXUxgrk/NtT4G1MiOv5lWZazG8=

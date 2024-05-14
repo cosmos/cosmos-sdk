@@ -18,7 +18,7 @@ require (
 	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
-	github.com/cockroachdb/apd/v2 v2.0.2
+	github.com/cockroachdb/apd/v3 v3.2.1
 	github.com/cometbft/cometbft v1.0.0-rc1
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
 	github.com/cosmos/cosmos-db v1.0.2
@@ -182,14 +182,12 @@ require (
 
 replace github.com/cosmos/cosmos-sdk => ../../
 
-// TODO remove post spinning out all modules
 replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/depinject => ../../depinject
-	cosmossdk.io/log => ../../log
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/accounts/defaults/multisig => ../accounts/defaults/multisig
 	cosmossdk.io/x/auth => ../auth
@@ -202,5 +200,4 @@ replace (
 	cosmossdk.io/x/protocolpool => ../protocolpool
 	cosmossdk.io/x/slashing => ../slashing
 	cosmossdk.io/x/staking => ../staking
-	cosmossdk.io/x/tx => ../tx
 )

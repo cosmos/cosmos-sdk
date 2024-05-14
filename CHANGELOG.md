@@ -99,7 +99,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (server) [#19966](https://github.com/cosmos/cosmos-sdk/pull/19966) Return BlockHeader by shallow copy in server Context.
 * (proto) [#20098](https://github.com/cosmos/cosmos-sdk/pull/20098) Use cosmos_proto added_in annotation instead of // Since comments.
 * (baseapp) [#20208](https://github.com/cosmos/cosmos-sdk/pull/20208) Skip running validateBasic for rechecking txs.
-* (query) [#XX](https://github.com/cosmos/cosmos-sdk/pull/XX) Enhanced ParsePagination documentation method 
+* (query) [#20385](https://github.com/cosmos/cosmos-sdk/pull/20385) Enhanced the ParsePagination method documentation. 
 
 ### Bug Fixes
 

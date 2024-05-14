@@ -96,7 +96,8 @@ func init() {
 			// to decouple runtime from sdk/codec ProvideInterfaceReistry can be registered from the app
 			// i.e. in the call to depinject.Inject(...)
 			codec.ProvideInterfaceRegistry,
-			codec.ProvideCodecs,
+			codec.ProvideLegacyAmino,
+			codec.ProvideProtoCodec,
 			ProvideKVStoreKey,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,

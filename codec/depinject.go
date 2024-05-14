@@ -38,6 +38,10 @@ func ProvideInterfaceRegistry(
 	return interfaceRegistry, nil
 }
 
-func ProvideCodecs(interfaceRegistry types.InterfaceRegistry) (legacy.Amino, *ProtoCodec) {
-	return NewLegacyAmino(), NewProtoCodec(interfaceRegistry)
+func ProvideLegacyAmino() legacy.Amino {
+	return NewLegacyAmino()
+}
+
+func ProvideProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
+	return NewProtoCodec(interfaceRegistry)
 }

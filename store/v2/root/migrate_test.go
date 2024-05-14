@@ -87,8 +87,16 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 	originalLatestVersion, err := s.rootStore.GetLatestVersion()
 	s.Require().NoError(err)
 
-	// start the migration process
-	s.Require().NoError(s.rootStore.StartMigration())
+	// check if the Query fallback to the original SC
+	for version := uint64(1); version <= originalLatestVersion; version++ {
+		for _, storeKey := range storeKeys {
+			for i := 0; i < 10; i++ {
+				res, err := s.rootStore.Query([]byte(storeKey), version, []byte(fmt.Sprintf("key-%d-%d", version, i)), true)
+				s.Require().NoError(err)
+				s.Require().Equal([]byte(fmt.Sprintf("value-%d-%d", version, i)), res.Value)
+			}
+		}
+	}
 
 	// continue to apply changeset against the original store
 	latestVersion := originalLatestVersion + 1

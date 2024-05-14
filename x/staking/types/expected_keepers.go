@@ -3,8 +3,6 @@ package types
 import (
 	"context"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
-
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
@@ -74,7 +72,7 @@ type ValidatorSet interface {
 
 	// GetPubKeyByConsAddr returns the consensus public key for a validator. Used in vote
 	// extension validation.
-	GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
+	GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cryptotypes.PubKey, error)
 }
 
 // DelegationSet expected properties for the set of all delegations for a particular (noalias)

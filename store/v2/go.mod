@@ -10,7 +10,7 @@ require (
 	github.com/cockroachdb/pebble v1.1.0
 	github.com/cometbft/cometbft v0.38.7
 	github.com/cosmos/gogoproto v1.4.12
-	github.com/cosmos/iavl v1.1.1
+	github.com/cosmos/iavl v1.1.4
 	github.com/cosmos/ics23/go v0.10.0
 	github.com/google/btree v1.1.2
 	github.com/hashicorp/go-metrics v0.5.3
@@ -65,7 +65,7 @@ require (
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240401170217-c3f982113cda // indirect
 	google.golang.org/grpc v1.63.2 // indirect
-	google.golang.org/protobuf v1.34.0 // indirect
+	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

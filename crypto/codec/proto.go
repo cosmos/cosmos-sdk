@@ -2,6 +2,7 @@ package codec
 
 import (
 	"cosmossdk.io/core/registry"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"

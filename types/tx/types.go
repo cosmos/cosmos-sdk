@@ -1,11 +1,11 @@
 package tx
 
 import (
-	"cosmossdk.io/core/registry"
 	"fmt"
 
 	protov2 "google.golang.org/protobuf/proto"
 
+	"cosmossdk.io/core/registry"
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"

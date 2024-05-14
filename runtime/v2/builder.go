@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"context"
-	"cosmossdk.io/core/appmodule"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -38,7 +37,7 @@ func (a *AppBuilder) DefaultGenesis() map[string]json.RawMessage {
 // This is the primary hook for integrating with modules which are not registered using the app config.
 func (a *AppBuilder) RegisterModules(modules ...appmodulev2.AppModule) error {
 	for _, appModule := range modules {
-		if mod, ok := appModule.(appmodule.HasName); ok {
+		if mod, ok := appModule.(appmodulev2.HasName); ok {
 			name := mod.Name()
 			if _, ok := a.app.moduleManager.modules[name]; ok {
 				return fmt.Errorf("module named %q already exists", name)
@@ -49,7 +48,7 @@ func (a *AppBuilder) RegisterModules(modules ...appmodulev2.AppModule) error {
 				mod.RegisterInterfaces(a.app.interfaceRegistrar)
 			}
 
-			if mod, ok := appModule.(appmodule.HasAminoCodec); ok {
+			if mod, ok := appModule.(appmodulev2.HasAminoCodec); ok {
 				mod.RegisterLegacyAminoCodec(a.app.amino)
 			}
 		}

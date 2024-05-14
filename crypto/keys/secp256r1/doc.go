@@ -3,9 +3,10 @@
 package secp256r1
 
 import (
-	"cosmossdk.io/core/registry"
 	"crypto/elliptic"
 	"fmt"
+
+	"cosmossdk.io/core/registry"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )

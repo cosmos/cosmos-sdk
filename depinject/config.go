@@ -1,9 +1,10 @@
 package depinject
 
 import (
+	"errors"
 	"reflect"
 
-	"github.com/cockroachdb/errors"
+	pkgerrors "github.com/pkg/errors"
 )
 
 // Config is a functional configuration of a container.
@@ -33,7 +34,7 @@ func Provide(providers ...interface{}) Config {
 func ProvideInModule(moduleName string, providers ...interface{}) Config {
 	return containerConfig(func(ctr *container) error {
 		if moduleName == "" {
-			return errors.Errorf("expected non-empty module name")
+			return errors.New("expected non-empty module name")
 		}
 
 		return provide(ctr, ctr.moduleKeyContext.createOrGetModuleKey(moduleName), providers)
@@ -44,11 +45,11 @@ func provide(ctr *container, key *moduleKey, providers []interface{}) error {
 	for _, c := range providers {
 		rc, err := extractProviderDescriptor(c)
 		if err != nil {
-			return errors.WithStack(err)
+			return pkgerrors.WithStack(err)
 		}
 		_, err = ctr.addNode(&rc, key)
 		if err != nil {
-			return errors.WithStack(err)
+			return pkgerrors.WithStack(err)
 		}
 	}
 	return nil
@@ -80,7 +81,7 @@ func Invoke(invokers ...interface{}) Config {
 func InvokeInModule(moduleName string, invokers ...interface{}) Config {
 	return containerConfig(func(ctr *container) error {
 		if moduleName == "" {
-			return errors.Errorf("expected non-empty module name")
+			return errors.New("expected non-empty module name")
 		}
 
 		return invoke(ctr, ctr.moduleKeyContext.createOrGetModuleKey(moduleName), invokers)

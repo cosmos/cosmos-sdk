@@ -175,8 +175,8 @@ func (am AppModule) BeginBlock(ctx sdk.Context) {
 
 // EndBlock returns the end blocker for the bank module. It returns no validator
 // updates.
-func (am AppModule) EndBlock(ctx sdk.Context) error {
-	EndBlocker(ctx, am.keeper)
+func (am AppModule) EndBlock(ctx context.Context) error {
+	EndBlocker(sdk.UnwrapSDKContext(ctx), am.keeper)
 	return nil
 }
 

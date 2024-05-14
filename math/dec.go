@@ -284,3 +284,11 @@ func (x Dec) Reduce() (Dec, int) {
 	_, n := y.dec.Reduce(&x.dec)
 	return y, n
 }
+
+func (d Dec) Marshal() ([]byte, error) {
+	return d.dec.MarshalText()
+}
+
+func (d *Dec) Unmarshal(data []byte) error {
+	return d.dec.UnmarshalText(data)
+}

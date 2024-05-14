@@ -23,7 +23,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [v0.1.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/evidence/v0.1.1) - 2024-XX-XX
+## [v0.1.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/evidence/v0.1.1) - 2024-04-22
 
 ### Improvements
 

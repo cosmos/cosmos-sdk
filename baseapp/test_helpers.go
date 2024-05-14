@@ -36,7 +36,7 @@ func (app *BaseApp) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo,
 	return gasInfo, result, err
 }
 
-// Context with current {check, deliver}State of the app used by tests.
+// Context with current {check, deliver}State of the app.
 func (app *BaseApp) NewContext(isCheckTx bool, header tmproto.Header) sdk.Context {
 	if isCheckTx {
 		return sdk.NewContext(app.checkState.ms, header, true, app.logger).

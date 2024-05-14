@@ -74,11 +74,12 @@ type BaseApp struct { // nolint: maligned
 	moduleRouter
 	migrator
 
-	// volatile states:
-	//
-	// checkState is set on InitChain and reset on Commit
-	// deliverState is set on InitChain and BeginBlock and set to nil on Commit
-	checkState   *state // for CheckTx
+	// checkState is used for CheckTx, which is set based on the previous
+	// block's state. This state is never committed. This state is volatile in
+	// that it is set on InitChain and every subsequent Commit.
+	checkState *state
+	// deliverState is used for DeliverTx. This state is volatile in that it is
+	// set on InitChain and BeginBlock and set to nil on Commit.
 	deliverState *state // for DeliverTx
 
 	// paramStore is used to query for ABCI consensus parameters from an
@@ -309,6 +310,7 @@ func (app *BaseApp) MountStores(keys ...storetypes.StoreKey) {
 // BaseApp multistore.
 func (app *BaseApp) MountKVStores(keys map[string]*storetypes.KVStoreKey) {
 	for _, key := range keys {
+		app.logger.Debug("mounting KVStore", key)
 		if !app.fauxMerkleMode {
 			app.MountStore(key, storetypes.StoreTypeIAVL)
 		} else {
@@ -341,9 +343,13 @@ func (app *BaseApp) MountStore(key storetypes.StoreKey, typ storetypes.StoreType
 	app.cms.MountStoreWithDB(key, typ, nil)
 }
 
-// LoadLatestVersion loads the latest application version. It will panic if
-// called more than once on a running BaseApp.
+// LoadLatestVersion loads the latest version from the commit multi-store. In
+// this context version == block height. It will panic if called more than once
+// on a running BaseApp.
+//
+// Side-effect: calls baseapp.Init()
 func (app *BaseApp) LoadLatestVersion() error {
+	app.logger.Debug(fmt.Sprintf("loading latest version %v\n", app.cms.LatestVersion()))
 	err := app.storeLoader(app.cms)
 	if err != nil {
 		return fmt.Errorf("failed to load latest version: %w", err)
@@ -464,10 +470,10 @@ func (app *BaseApp) Seal() { app.sealed = true }
 // IsSealed returns true if the BaseApp is sealed and false otherwise.
 func (app *BaseApp) IsSealed() bool { return app.sealed }
 
-// setCheckState sets the BaseApp's checkState with a branched multi-store
-// (i.e. a CacheMultiStore) and a new Context with the same multi-store branch,
-// provided header, and minimum gas prices set. It is set on InitChain and reset
-// on Commit.
+// setCheckState sets the BaseApp's checkState with a branched multi-store (i.e.
+// a CacheMultiStore) and a new Context with the same multi-store branch,
+// provided header, and minimum gas prices set. This function should be invoked
+// on InitChain and reset every Commit.
 func (app *BaseApp) setCheckState(header tmproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{

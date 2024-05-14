@@ -64,6 +64,7 @@ type Store struct {
 }
 
 var (
+	// Store implements the CommitMultiStore interface.
 	_ types.CommitMultiStore = (*Store)(nil)
 	_ types.Queryable        = (*Store)(nil)
 )

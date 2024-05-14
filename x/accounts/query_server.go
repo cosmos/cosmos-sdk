@@ -22,9 +22,8 @@ func NewQueryServer(k Keeper) v1.QueryServer {
 }
 
 type queryServer struct {
-	k           Keeper
-	schemaCache map[string]*v1.SchemaResponse
-	schemas     map[string]*v1.SchemaResponse // Stores precalculated schemas.
+	k       Keeper
+	schemas map[string]*v1.SchemaResponse // Stores precalculated schemas.
 }
 
 func (q *queryServer) AccountQuery(ctx context.Context, request *v1.AccountQueryRequest) (*v1.AccountQueryResponse, error) {

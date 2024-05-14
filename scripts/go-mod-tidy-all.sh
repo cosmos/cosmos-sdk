@@ -5,7 +5,7 @@ set -euo pipefail
 for modfile in $(find . -name go.mod); do
  echo "Updating $modfile"
  DIR=$(dirname $modfile)
- (cd $DIR; go mod tidy -go=1.22.2)
+ (cd $DIR; go mod tidy -go="1.22.2")
 done
 
 # update gomod2nix.toml for simapp

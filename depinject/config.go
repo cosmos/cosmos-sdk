@@ -2,9 +2,9 @@ package depinject
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
-
-	pkgerrors "github.com/pkg/errors"
+	"runtime"
 )
 
 // Config is a functional configuration of a container.
@@ -45,11 +45,11 @@ func provide(ctr *container, key *moduleKey, providers []interface{}) error {
 	for _, c := range providers {
 		rc, err := extractProviderDescriptor(c)
 		if err != nil {
-			return pkgerrors.WithStack(err)
+			return fmt.Errorf("%w\n%s", err, getStackTrace())
 		}
 		_, err = ctr.addNode(&rc, key)
 		if err != nil {
-			return pkgerrors.WithStack(err)
+			return fmt.Errorf("%w\n%s", err, getStackTrace())
 		}
 	}
 	return nil
@@ -92,7 +92,7 @@ func invoke(ctr *container, key *moduleKey, invokers []interface{}) error {
 	for _, c := range invokers {
 		rc, err := extractInvokerDescriptor(c)
 		if err != nil {
-			return errors.WithStack(err)
+			return fmt.Errorf("%w\n%s", err, getStackTrace())
 		}
 		err = ctr.addInvoker(&rc, key)
 		if err != nil {
@@ -152,7 +152,7 @@ func Supply(values ...interface{}) Config {
 		for _, v := range values {
 			err := ctr.supply(reflect.ValueOf(v), loc)
 			if err != nil {
-				return errors.WithStack(err)
+				return fmt.Errorf("%w\n%s", err, getStackTrace())
 			}
 		}
 		return nil
@@ -163,7 +163,7 @@ func Supply(values ...interface{}) Config {
 // fail immediately.
 func Error(err error) Config {
 	return containerConfig(func(*container) error {
-		return errors.WithStack(err)
+		return fmt.Errorf("%w\n%s", err, getStackTrace())
 	})
 }
 
@@ -173,7 +173,7 @@ func Configs(opts ...Config) Config {
 		for _, opt := range opts {
 			err := opt.apply(ctr)
 			if err != nil {
-				return errors.WithStack(err)
+				return fmt.Errorf("%w\n%s", err, getStackTrace())
 			}
 		}
 		return nil
@@ -187,3 +187,9 @@ func (c containerConfig) apply(ctr *container) error {
 }
 
 var _ Config = (*containerConfig)(nil)
+
+func getStackTrace() string {
+	var stack [4096]byte
+	n := runtime.Stack(stack[:], false)
+	return string(stack[:n])
+}

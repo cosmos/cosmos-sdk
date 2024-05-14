@@ -2,6 +2,7 @@ package multisig
 
 import (
 	"context"
+	"math"
 	"testing"
 	"time"
 
@@ -657,4 +658,35 @@ func TestProposalPassing(t *testing.T) {
 	}
 
 	require.Equal(t, expectedMembers, cfg.Members)
+}
+
+func TestWeightOverflow(t *testing.T) {
+	ctx, ss := newMockContext(t)
+	acc := setup(t, ctx, ss, nil)
+
+	startAcc := &v1.MsgInit{
+		Config: &v1.Config{
+			Threshold:    2640,
+			Quorum:       2000,
+			VotingPeriod: 60,
+		},
+		Members: []*v1.Member{
+			{
+				Address: "addr1",
+				Weight:  math.MaxUint64,
+			},
+		},
+	}
+
+	_, err := acc.Init(ctx, startAcc)
+	require.NoError(t, err)
+
+	// add another member with weight 1 to trigger an overflow
+	startAcc.Members = append(startAcc.Members, &v1.Member{
+		Address: "addr2",
+		Weight:  1,
+	})
+	_, err = acc.Init(ctx, startAcc)
+	require.ErrorContains(t, err, "overflow")
+
 }

@@ -91,7 +91,10 @@ func (a *Account) Init(ctx context.Context, msg *v1.MsgInit) (*v1.MsgInitRespons
 			return nil, err
 		}
 
-		totalWeight += msg.Members[i].Weight
+		totalWeight, err = safeAdd(totalWeight, msg.Members[i].Weight)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if err := validateConfig(*msg.Config, totalWeight); err != nil {
@@ -266,11 +269,20 @@ func (a Account) ExecuteProposal(ctx context.Context, msg *v1.MsgExecuteProposal
 
 		switch v1.VoteOption(vote) {
 		case v1.VoteOption_VOTE_OPTION_YES:
-			yesVotes += weight
+			yesVotes, err = safeAdd(yesVotes, weight)
+			if err != nil {
+				return true, err
+			}
 		case v1.VoteOption_VOTE_OPTION_NO:
-			noVotes += weight
+			noVotes, err = safeAdd(noVotes, weight)
+			if err != nil {
+				return true, err
+			}
 		case v1.VoteOption_VOTE_OPTION_ABSTAIN:
-			abstainVotes += weight
+			abstainVotes, err = safeAdd(abstainVotes, weight)
+			if err != nil {
+				return true, err
+			}
 		}
 		return false, nil
 	})
@@ -278,7 +290,11 @@ func (a Account) ExecuteProposal(ctx context.Context, msg *v1.MsgExecuteProposal
 		return nil, err
 	}
 
-	totalWeight := yesVotes + noVotes + abstainVotes
+	totalWeight, err := safeAdd(yesVotes, noVotes, abstainVotes)
+	if err != nil {
+		return nil, err
+	}
+
 	var (
 		rejectErr error
 		execErr   error
@@ -386,4 +402,15 @@ func (a *Account) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, a.QuerySequence)
 	accountstd.RegisterQueryHandler(builder, a.QueryProposal)
 	accountstd.RegisterQueryHandler(builder, a.QueryConfig)
+}
+
+func safeAdd(nums ...uint64) (uint64, error) {
+	var sum uint64
+	for _, num := range nums {
+		if sum+num < sum {
+			return 0, errors.New("overflow")
+		}
+		sum += num
+	}
+	return sum, nil
 }

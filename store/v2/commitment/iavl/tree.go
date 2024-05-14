@@ -6,8 +6,8 @@ import (
 	"github.com/cosmos/iavl"
 	ics23 "github.com/cosmos/ics23/go"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	dbm "cosmossdk.io/store/v2/db"
 )
@@ -20,7 +20,7 @@ type IavlTree struct {
 }
 
 // NewIavlTree creates a new IavlTree instance.
-func NewIavlTree(db store.RawDB, logger log.Logger, cfg *Config) *IavlTree {
+func NewIavlTree(db corestore.KVStoreWithBatch, logger log.Logger, cfg *Config) *IavlTree {
 	tree := iavl.NewMutableTree(dbm.NewWrapper(db), cfg.CacheSize, cfg.SkipFastStorageUpgrade, logger)
 	return &IavlTree{
 		tree: tree,

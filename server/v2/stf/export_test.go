@@ -11,4 +11,3 @@ func GetExecutionContext(ctx context.Context) *executionContext {
 	}
 	return executionCtx
 }
-

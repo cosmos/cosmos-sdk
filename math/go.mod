@@ -1,8 +1,11 @@
 module cosmossdk.io/math
 
-go 1.20
+go 1.21
+
+toolchain go1.23.1
 
 require (
+	github.com/cockroachdb/apd/v3 v3.2.1
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	sigs.k8s.io/yaml v1.4.0
@@ -30,7 +33,6 @@ require (
 
 require (
 	cosmossdk.io/errors v1.0.1
-	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cosmos/cosmos-sdk v0.50.5
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect

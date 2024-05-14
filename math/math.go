@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/errors"
-	"github.com/cockroachdb/apd/v2"
+	"github.com/cockroachdb/apd/v3"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func BenchmarkCompareLegacyDecAndNewDec(b *testing.B) {
+func BenchmarkCompareLegacyDecAndNewDecQuotient(b *testing.B) {
 	specs := map[string]struct {
 		dividend, divisor string
 	}{
@@ -14,13 +14,19 @@ func BenchmarkCompareLegacyDecAndNewDec(b *testing.B) {
 		"big18/ small": {
 			dividend: "999999999999999999", divisor: "10",
 		},
-		"big18/ big18": {
+		"self18/ self18": {
 			dividend: "999999999999999999", divisor: "999999999999999999",
+		},
+		"big18/ big18": {
+			dividend: "888888888888888888", divisor: "444444444444444444",
+		},
+		"decimal18b/ decimal18c": {
+			dividend: "8.88888888888888888", divisor: "4.1234567890123",
 		},
 		"small/ big18": {
 			dividend: "100", divisor: "999999999999999999",
 		},
-		"big34/big34": {
+		"big34/ big34": {
 			dividend: "9999999999999999999999999999999999", divisor: "1999999999999999999999999999999999",
 		},
 		"negative big34": {
@@ -28,6 +34,9 @@ func BenchmarkCompareLegacyDecAndNewDec(b *testing.B) {
 		},
 		"decimal small": {
 			dividend: "0.0000000001", divisor: "10",
+		},
+		"decimal small/decimal small ": {
+			dividend: "0.0000000001", divisor: "0.0001",
 		},
 	}
 	for name, spec := range specs {
@@ -45,6 +54,53 @@ func BenchmarkCompareLegacyDecAndNewDec(b *testing.B) {
 				b.ResetTimer()
 				for i := 0; i < b.N; i++ {
 					_, _ = dv.Quo(ds)
+				}
+			})
+		})
+	}
+}
+
+func BenchmarkCompareLegacyDecAndNewDecSum(b *testing.B) {
+	specs := map[string]struct {
+		summands []string
+	}{
+		"1+2": {
+			summands: []string{"1", "2"},
+		},
+		"growing numbers": {
+			summands: []string{"1", "100", "1000", "100000", "10000000", "10000000000", "10000000000000", "100000000000000000"},
+		},
+		"decimals": {
+			summands: []string{"0.1", "0.01", "0.001", "0.000001", "0.00000001", "0.00000000001", "0.00000000000001", "0.000000000000000001"},
+		},
+	}
+	for name, spec := range specs {
+		b.Run(name, func(b *testing.B) {
+			b.Run("LegacyDec", func(b *testing.B) {
+				summands := make([]LegacyDec, len(spec.summands))
+				for i, s := range spec.summands {
+					summands[i] = LegacyMustNewDecFromStr(s)
+				}
+				sum := LegacyNewDec(0)
+				b.ResetTimer()
+				for i := 0; i < b.N; i++ {
+					for _, s := range summands {
+						sum = sum.Add(s)
+					}
+				}
+			})
+
+			b.Run("NewDec", func(b *testing.B) {
+				summands := make([]Dec, len(spec.summands))
+				for i, s := range spec.summands {
+					summands[i] = must(NewDecFromString(s))
+				}
+				sum := NewDecFromInt64(0)
+				b.ResetTimer()
+				for i := 0; i < b.N; i++ {
+					for _, s := range summands {
+						sum, _ = sum.Add(s)
+					}
 				}
 			})
 		})

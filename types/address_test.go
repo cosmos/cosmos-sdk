@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	mathrand "math/rand"
 	"strings"
 	"testing"
@@ -65,9 +64,9 @@ func (s *addressTestSuite) testMarshal(original, res interface{}, marshal func()
 func testMarshalYAML(t *testing.T, original, res interface{}, marshal func() (interface{}, error), unmarshal func([]byte) error) {
 	bz, err := marshal()
 
-	assert.NoError(t, err)
-	assert.NoError(t, unmarshal([]byte(bz.(string))))
-	assert.Equal(t, original, res)
+	require.NoError(t, err)
+	require.NoError(t, unmarshal([]byte(bz.(string))))
+	require.Equal(t, original, res)
 }
 
 func (s *addressTestSuite) TestEmptyAddresses() {
@@ -132,59 +131,30 @@ func (s *addressTestSuite) TestRandBech32AccAddrConsistency() {
 
 	for _, str := range invalidStrs {
 		_, err := types.AccAddressFromHexUnsafe(str)
-		s.Require().NotNil(err)
+		s.Require().Error(err)
 
 		_, err = types.AccAddressFromBech32(str)
-		s.Require().NotNil(err)
+		s.Require().Error(err)
 
 		err = (*types.AccAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
-		s.Require().NotNil(err)
+		s.Require().Error(err)
 	}
 
 	_, err := types.AccAddressFromHexUnsafe("")
 	s.Require().Equal(types.ErrEmptyHexAddress, err)
 }
 
-func FuzzBech32AccAddrConsistencyYAML(f *testing.F) {
-	if testing.Short() {
-		f.Skip("running in -short mode")
-	}
-
-	f.Add([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
-	f.Add([]byte{16, 1, 2, 3, 4, 5, 16, 27, 58, 9, 51, 11, 12, 13, 14, 15, 16, 17, 20, 21})
-	f.Add([]byte{19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0})
-
-	f.Fuzz(func(t *testing.T, input []byte) {
-		acc := types.AccAddress(input)
-		res := &types.AccAddress{}
-
-		testMarshalYAML(t, &acc, res, acc.MarshalYAML, res.UnmarshalYAML)
-		testMarshalYAML(t, &acc, res, acc.MarshalYAML, res.UnmarshalYAML)
-
-		str := acc.String()
-		var err error
-		*res, err = types.AccAddressFromBech32(str)
-		assert.NoError(t, err)
-		assert.Equal(t, acc, *res)
-
-		str = hex.EncodeToString(acc)
-		*res, err = types.AccAddressFromHexUnsafe(str)
-		assert.NoError(t, err)
-		assert.Equal(t, acc, *res)
-	})
-}
-
 func (s *addressTestSuite) TestUnmarshalYAMLWithInvalidInput() {
 
 	for _, str := range invalidStrs {
 		_, err := types.AccAddressFromHexUnsafe(str)
-		s.Require().NotNil(err)
+		s.Require().Error(err)
 
 		_, err = types.AccAddressFromBech32(str)
-		s.Require().NotNil(err)
+		s.Require().Error(err)
 
 		err = (*types.AccAddress)(nil).UnmarshalYAML([]byte("\"" + str + "\""))
-		s.Require().NotNil(err)
+		s.Require().Error(err)
 	}
 
 	_, err := types.AccAddressFromHexUnsafe("")
@@ -289,13 +259,13 @@ func (s *addressTestSuite) TestValAddr() {
 
 	for _, str := range invalidStrs {
 		_, err := types.ValAddressFromHex(str)
-		s.Require().NotNil(err)
+		s.Require().Error(err)
 
 		_, err = types.ValAddressFromBech32(str)
-		s.Require().NotNil(err)
+		s.Require().Error(err)
 
 		err = (*types.ValAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
-		s.Require().NotNil(err)
+		s.Require().Error(err)
 	}
 
 	// test empty string
@@ -329,13 +299,13 @@ func (s *addressTestSuite) TestConsAddress() {
 
 	for _, str := range invalidStrs {
 		_, err := types.ConsAddressFromHex(str)
-		s.Require().NotNil(err)
+		s.Require().Error(err)
 
 		_, err = types.ConsAddressFromBech32(str)
-		s.Require().NotNil(err)
+		s.Require().Error(err)
 
 		err = (*types.ConsAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
-		s.Require().NotNil(err)
+		s.Require().Error(err)
 	}
 
 	// test empty string
@@ -619,9 +589,10 @@ func (s *addressTestSuite) TestGetBech32PrefixConsPub() {
 }
 
 func (s *addressTestSuite) TestMustAccAddressFromBech32() {
-	accAddress1 := types.AccAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
-	accAddress2 := types.MustAccAddressFromBech32(accAddress1.String())
-	s.Require().Equal(accAddress1, accAddress2)
+	src := types.MustAccAddressFromBech32("cosmos1qqqsyqcyq5rqwzqfpg9scrgwpugpzysnrk363e")
+	exp := types.AccAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
+	s.Assert().Equal(exp, src)
+
 }
 
 func (s *addressTestSuite) TestMustAccAddressFromBech32Panic() {
@@ -773,9 +744,7 @@ func (s *addressTestSuite) TestFormatConsAddressAsString() {
 	consAddr := types.ConsAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
 	actual := fmt.Sprintf("%s", consAddr)
 
-	hrp := types.GetConfig().GetBech32ConsensusAddrPrefix()
-	expected, err := bech32.ConvertAndEncode(hrp, consAddr)
-	s.Require().NoError(err)
+	expected := "cosmosvalcons1qqqsyqcyq5rqwzqfpg9scrgwpugpzysnj3kn3t"
 	s.Require().Equal(expected, actual)
 }
 

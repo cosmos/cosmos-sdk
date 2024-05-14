@@ -43,7 +43,7 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]appmodule.Validato
 		return nil, err
 	}
 
-	time := k.environment.HeaderService.GetHeaderInfo(ctx).Time
+	time := k.HeaderService.HeaderInfo(ctx).Time
 	// Remove all mature unbonding delegations from the ubd queue.
 	matureUnbonds, err := k.DequeueAllMatureUBDQueue(ctx, time)
 	if err != nil {
@@ -65,7 +65,7 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]appmodule.Validato
 			continue
 		}
 
-		if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		if err := k.EventService.EventManager(ctx).EmitKV(
 			types.EventTypeCompleteUnbonding,
 			event.NewAttribute(sdk.AttributeKeyAmount, balances.String()),
 			event.NewAttribute(types.AttributeKeyValidator, dvPair.ValidatorAddress),
@@ -105,7 +105,7 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]appmodule.Validato
 			continue
 		}
 
-		if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		if err := k.EventService.EventManager(ctx).EmitKV(
 			types.EventTypeCompleteRedelegation,
 			event.NewAttribute(sdk.AttributeKeyAmount, balances.String()),
 			event.NewAttribute(types.AttributeKeyDelegator, dvvTriplet.DelegatorAddress),
@@ -454,7 +454,7 @@ func (k Keeper) BeginUnbondingValidator(ctx context.Context, validator types.Val
 
 	validator = validator.UpdateStatus(types.Unbonding)
 
-	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	headerInfo := k.HeaderService.HeaderInfo(ctx)
 	// set the unbonding completion time and completion height appropriately
 	validator.UnbondingTime = headerInfo.Time.Add(params.UnbondingTime)
 	validator.UnbondingHeight = headerInfo.Height

@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/router"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 )
 
@@ -14,11 +15,12 @@ import (
 type Environment struct {
 	Logger log.Logger
 
-	BranchService branch.Service
-	EventService  event.Service
-	GasService    gas.Service
-	HeaderService header.Service
-	RouterService router.Service
+	BranchService      branch.Service
+	EventService       event.Service
+	GasService         gas.Service
+	HeaderService      header.Service
+	RouterService      router.Service
+	TransactionService transaction.Service
 
 	KVStoreService  store.KVStoreService
 	MemStoreService store.MemoryStoreService

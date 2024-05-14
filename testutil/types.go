@@ -22,4 +22,5 @@ const (
 	StakingModuleName      = "staking"
 	TxModuleName           = "tx"
 	UpgradeModuleName      = "upgrade"
+	EpochsModuleName       = "epochs"
 )

@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
+	consensustypes "cosmossdk.io/x/consensus/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -41,6 +42,7 @@ type KeeperTestSuite struct {
 	suite.Suite
 
 	ctx           sdk.Context
+	baseApp       *baseapp.BaseApp
 	stakingKeeper *stakingkeeper.Keeper
 	bankKeeper    *stakingtestutil.MockBankKeeper
 	accountKeeper *stakingtestutil.MockAccountKeeper
@@ -55,12 +57,20 @@ func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
 	s.key = key
 	storeService := runtime.NewKVStoreService(key)
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.key = key
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	s.cdc = encCfg.Codec
+
+	s.baseApp = baseapp.NewBaseApp(
+		"staking",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+	s.baseApp.SetCMS(testCtx.CMS)
+	s.baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
 	ctrl := gomock.NewController(s.T())
 	accountKeeper := stakingtestutil.NewMockAccountKeeper(ctrl)
@@ -68,7 +78,16 @@ func (s *KeeperTestSuite) SetupTest() {
 	accountKeeper.EXPECT().GetModuleAddress(stakingtypes.NotBondedPoolName).Return(notBondedAcc.GetAddress())
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
+	// create consensus keeper
+	ck := stakingtestutil.NewMockConsensusKeeper(ctrl)
+	ck.EXPECT().Params(gomock.Any(), gomock.Any()).Return(&consensustypes.QueryParamsResponse{
+		Params: simtestutil.DefaultConsensusParams,
+	}, nil).AnyTimes()
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
+	consensustypes.RegisterQueryServer(queryHelper, ck)
+
 	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(queryHelper.GRPCQueryRouter, s.baseApp.MsgServiceRouter()))
 	authority, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(stakingtypes.GovModuleName))
 	s.Require().NoError(err)
 	keeper := stakingkeeper.NewKeeper(
@@ -79,6 +98,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		authority,
 		address.NewBech32Codec("cosmosvaloper"),
 		address.NewBech32Codec("cosmosvalcons"),
+		runtime.NewContextAwareCometInfoService(),
 	)
 	require.NoError(keeper.Params.Set(ctx, stakingtypes.DefaultParams()))
 
@@ -88,7 +108,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.accountKeeper = accountKeeper
 
 	stakingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
 	stakingtypes.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: keeper})
 	s.queryClient = stakingtypes.NewQueryClient(queryHelper)
 	s.msgServer = stakingkeeper.NewMsgServerImpl(keeper)

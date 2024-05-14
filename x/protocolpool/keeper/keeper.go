@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/protocolpool/types"
 
@@ -20,7 +19,8 @@ import (
 )
 
 type Keeper struct {
-	environment   appmodule.Environment
+	appmodule.Environment
+
 	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
@@ -55,7 +55,7 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.Accoun
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	keeper := Keeper{
-		environment:               env,
+		Environment:               env,
 		authKeeper:                ak,
 		bankKeeper:                bk,
 		stakingKeeper:             sk,
@@ -80,11 +80,6 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.Accoun
 // GetAuthority returns the x/protocolpool module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
-}
-
-// Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx context.Context) log.Logger {
-	return k.environment.Logger.With(log.ModuleKey, "x/"+types.ModuleName)
 }
 
 // FundCommunityPool allows an account to directly fund the community fund pool.
@@ -126,7 +121,7 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipientAddr string
 		}
 		return sdk.Coin{}, fmt.Errorf("get continuous fund failed for recipient: %s", recipientAddr)
 	}
-	if cf.Expiry != nil && cf.Expiry.Before(k.environment.HeaderService.GetHeaderInfo(ctx).Time) {
+	if cf.Expiry != nil && cf.Expiry.Before(k.HeaderService.HeaderInfo(ctx).Time) {
 		return sdk.Coin{}, fmt.Errorf("cannot withdraw continuous funds: continuous fund expired for recipient: %s", recipientAddr)
 	}
 
@@ -193,7 +188,7 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 	if err != nil {
 		return err
 	}
-	hasPermission, err := k.hasPermission(ctx, authAddr)
+	hasPermission, err := k.hasPermission(authAddr)
 	if err != nil {
 		return err
 	}
@@ -249,7 +244,7 @@ func (k Keeper) sendFundsToStreamModule(ctx context.Context, denom string, perce
 	return nil
 }
 
-func (k Keeper) hasPermission(ctx context.Context, addr []byte) (bool, error) {
+func (k Keeper) hasPermission(addr []byte) (bool, error) {
 	authority := k.GetAuthority()
 	authAcc, err := k.authKeeper.AddressCodec().StringToBytes(authority)
 	if err != nil {
@@ -355,10 +350,14 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipientAddr string) (am
 		return sdk.Coin{}, err
 	}
 
+	totalBudgetAmountLeftToDistribute := budget.BudgetPerTranche.Amount.Mul(math.NewIntFromUint64(budget.TranchesLeft))
+	totalBudgetAmountLeft := sdk.NewCoin(budget.BudgetPerTranche.Denom, totalBudgetAmountLeftToDistribute)
+	zeroAmount := sdk.NewCoin(totalBudgetAmountLeft.Denom, math.ZeroInt())
+
 	// check if the distribution is completed
 	if budget.TranchesLeft == 0 && budget.ClaimedAmount != nil {
-		// check that claimed amount is equal to total budget
-		if budget.ClaimedAmount.Equal(budget.TotalBudget) {
+		// check that total budget amount left to distribute equals zero
+		if totalBudgetAmountLeft.Equal(zeroAmount) {
 			// remove the entry of budget ended recipient
 			if err := k.BudgetProposal.Remove(ctx, recipient); err != nil {
 				return sdk.Coin{}, err
@@ -368,21 +367,17 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipientAddr string) (am
 		}
 	}
 
-	currentTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
-	startTime := budget.StartTime
+	currentTime := k.HeaderService.HeaderInfo(ctx).Time
 
-	// Check if the start time is reached
-	if currentTime.Before(*startTime) {
-		return sdk.Coin{}, fmt.Errorf("distribution has not started yet")
+	// Check if the distribution time has not reached
+	if budget.LastClaimedAt != nil {
+		if currentTime.Before(*budget.LastClaimedAt) {
+			return sdk.Coin{}, fmt.Errorf("distribution has not started yet")
+		}
 	}
 
-	if budget.NextClaimFrom == nil || budget.NextClaimFrom.IsZero() {
-		budget.NextClaimFrom = budget.StartTime
-	}
-
-	if budget.TranchesLeft == 0 && budget.ClaimedAmount == nil {
-		budget.TranchesLeft = budget.Tranches
-		zeroCoin := sdk.NewCoin(budget.TotalBudget.Denom, math.ZeroInt())
+	if budget.TranchesLeft != 0 && budget.ClaimedAmount == nil {
+		zeroCoin := sdk.NewCoin(budget.BudgetPerTranche.Denom, math.ZeroInt())
 		budget.ClaimedAmount = &zeroCoin
 	}
 
@@ -391,7 +386,7 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipientAddr string) (am
 
 func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAddress, budget types.Budget, currentTime time.Time) (amount sdk.Coin, err error) {
 	// Calculate the time elapsed since the last claim time
-	timeElapsed := currentTime.Sub(*budget.NextClaimFrom)
+	timeElapsed := currentTime.Sub(*budget.LastClaimedAt)
 
 	// Check the time elapsed has passed period length
 	if timeElapsed < *budget.Period {
@@ -401,22 +396,30 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 	// Calculate how many periods have passed
 	periodsPassed := int64(timeElapsed) / int64(*budget.Period)
 
+	if periodsPassed > int64(budget.TranchesLeft) {
+		periodsPassed = int64(budget.TranchesLeft)
+	}
+
 	// Calculate the amount to distribute for all passed periods
-	coinsToDistribute := math.NewInt(periodsPassed).Mul(budget.TotalBudget.Amount.QuoRaw(int64(budget.Tranches)))
-	amount = sdk.NewCoin(budget.TotalBudget.Denom, coinsToDistribute)
+	coinsToDistribute := math.NewInt(periodsPassed).Mul(budget.BudgetPerTranche.Amount)
+	amount = sdk.NewCoin(budget.BudgetPerTranche.Denom, coinsToDistribute)
 
 	// update the budget's remaining tranches
-	budget.TranchesLeft -= uint64(periodsPassed)
+	if budget.TranchesLeft > uint64(periodsPassed) {
+		budget.TranchesLeft -= uint64(periodsPassed)
+	} else {
+		budget.TranchesLeft = 0
+	}
 
 	// update the ClaimedAmount
 	claimedAmount := budget.ClaimedAmount.Add(amount)
 	budget.ClaimedAmount = &claimedAmount
 
 	// Update the last claim time for the budget
-	nextClaimFrom := budget.NextClaimFrom.Add(*budget.Period)
-	budget.NextClaimFrom = &nextClaimFrom
+	nextClaimFrom := budget.LastClaimedAt.Add(*budget.Period * time.Duration(periodsPassed))
+	budget.LastClaimedAt = &nextClaimFrom
 
-	k.Logger(ctx).Debug(fmt.Sprintf("Processing budget for recipient: %s. Amount: %s", budget.RecipientAddress, coinsToDistribute.String()))
+	k.Logger.Debug(fmt.Sprintf("Processing budget for recipient: %s. Amount: %s", budget.RecipientAddress, coinsToDistribute.String()))
 
 	// Save the updated budget in the state
 	if err := k.BudgetProposal.Set(ctx, recipient, budget); err != nil {
@@ -427,15 +430,15 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 }
 
 func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.MsgSubmitBudgetProposal) (*types.Budget, error) {
-	if bp.TotalBudget.IsZero() {
-		return nil, fmt.Errorf("invalid budget proposal: total budget cannot be zero")
+	if bp.BudgetPerTranche.IsZero() {
+		return nil, fmt.Errorf("invalid budget proposal: budget per tranche cannot be zero")
 	}
 
-	if err := validateAmount(sdk.NewCoins(*bp.TotalBudget)); err != nil {
+	if err := validateAmount(sdk.NewCoins(*bp.BudgetPerTranche)); err != nil {
 		return nil, fmt.Errorf("invalid budget proposal: %w", err)
 	}
 
-	currentTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
+	currentTime := k.HeaderService.HeaderInfo(ctx).Time
 	if bp.StartTime.IsZero() || bp.StartTime == nil {
 		bp.StartTime = &currentTime
 	}
@@ -455,9 +458,9 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.Ms
 	// Create and return an updated budget proposal
 	updatedBudget := types.Budget{
 		RecipientAddress: bp.RecipientAddress,
-		TotalBudget:      bp.TotalBudget,
-		StartTime:        bp.StartTime,
-		Tranches:         bp.Tranches,
+		BudgetPerTranche: bp.BudgetPerTranche,
+		LastClaimedAt:    bp.StartTime,
+		TranchesLeft:     bp.Tranches,
 		Period:           bp.Period,
 	}
 
@@ -478,7 +481,7 @@ func (k Keeper) validateContinuousFund(ctx context.Context, msg types.MsgCreateC
 	}
 
 	// Validate expiry
-	currentTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
+	currentTime := k.HeaderService.HeaderInfo(ctx).Time
 	if msg.Expiry != nil && msg.Expiry.Compare(currentTime) == -1 {
 		return fmt.Errorf("expiry time cannot be less than the current block time")
 	}

@@ -13,7 +13,8 @@ import (
 
 // InitGenesis initializes the bank module's state from a given genesis state.
 func (k BaseKeeper) InitGenesis(ctx context.Context, genState *types.GenesisState) error {
-	if err := k.SetParams(ctx, genState.Params); err != nil {
+	var err error
+	if err = k.SetParams(ctx, genState.Params); err != nil {
 		return err
 	}
 
@@ -22,7 +23,10 @@ func (k BaseKeeper) InitGenesis(ctx context.Context, genState *types.GenesisStat
 	}
 	totalSupplyMap := sdk.NewMapCoins(sdk.Coins{})
 
-	genState.Balances = types.SanitizeGenesisBalances(genState.Balances)
+	genState.Balances, err = types.SanitizeGenesisBalances(genState.Balances, k.ak.AddressCodec())
+	if err != nil {
+		return err
+	}
 
 	for _, balance := range genState.Balances {
 		addr := balance.GetAddress()

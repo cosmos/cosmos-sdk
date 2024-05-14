@@ -54,6 +54,9 @@ func ComposeMintingRestrictions(restrictions ...MintingRestrictionFn) MintingRes
 // A SendRestrictionFn can restrict sends and/or provide a new receiver address.
 type SendRestrictionFn func(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (newToAddr sdk.AccAddress, err error)
 
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (SendRestrictionFn) IsOnePerModuleType() {}
+
 var _ SendRestrictionFn = NoOpSendRestrictionFn
 
 // NoOpSendRestrictionFn is a no-op SendRestrictionFn.

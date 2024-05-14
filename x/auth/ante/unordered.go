@@ -3,6 +3,8 @@ package ante
 import (
 	"crypto/sha256"
 
+	"cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/auth/ante/unorderedtx"
 
@@ -28,12 +30,14 @@ type UnorderedTxDecorator struct {
 	// maxUnOrderedTTL defines the maximum TTL a transaction can define.
 	maxUnOrderedTTL uint64
 	txManager       *unorderedtx.Manager
+	env             appmodule.Environment
 }
 
-func NewUnorderedTxDecorator(maxTTL uint64, m *unorderedtx.Manager) *UnorderedTxDecorator {
+func NewUnorderedTxDecorator(maxTTL uint64, m *unorderedtx.Manager, env appmodule.Environment) *UnorderedTxDecorator {
 	return &UnorderedTxDecorator{
 		maxUnOrderedTTL: maxTTL,
 		txManager:       m,
+		env:             env,
 	}
 }
 
@@ -42,7 +46,7 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 	if !ok || !unorderedTx.GetUnordered() {
 		// If the transaction does not implement unordered capabilities or has the
 		// unordered value as false, we bypass.
-		return next(ctx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
+		return next(ctx, tx, false)
 	}
 
 	// TTL is defined as a specific block height at which this tx is no longer valid
@@ -65,10 +69,10 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "tx %X is duplicated")
 	}
 
-	if ctx.ExecMode() == sdk.ExecModeFinalize {
+	if d.env.TransactionService.ExecMode(ctx) == transaction.ExecModeFinalize {
 		// a new tx included in the block, add the hash to the unordered tx manager
 		d.txManager.Add(txHash, ttl)
 	}
 
-	return next(ctx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
+	return next(ctx, tx, false)
 }

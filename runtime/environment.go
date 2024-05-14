@@ -17,12 +17,13 @@ func NewEnvironment(
 	opts ...EnvOption,
 ) appmodule.Environment {
 	env := appmodule.Environment{
-		Logger:         logger,
-		EventService:   EventService{},
-		HeaderService:  HeaderService{},
-		BranchService:  BranchService{},
-		GasService:     GasService{},
-		KVStoreService: kvService,
+		Logger:             logger,
+		EventService:       EventService{},
+		HeaderService:      HeaderService{},
+		BranchService:      BranchService{},
+		GasService:         GasService{},
+		TransactionService: TransactionService{},
+		KVStoreService:     kvService,
 	}
 
 	for _, opt := range opts {
@@ -34,7 +35,10 @@ func NewEnvironment(
 
 type EnvOption func(*appmodule.Environment)
 
-func EnvWithRouterService(queryServiceRouter *baseapp.GRPCQueryRouter, msgServiceRouter *baseapp.MsgServiceRouter) EnvOption {
+func EnvWithRouterService(
+	queryServiceRouter *baseapp.GRPCQueryRouter,
+	msgServiceRouter *baseapp.MsgServiceRouter,
+) EnvOption {
 	return func(env *appmodule.Environment) {
 		env.RouterService = NewRouterService(env.KVStoreService, queryServiceRouter, msgServiceRouter)
 	}

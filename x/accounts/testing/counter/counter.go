@@ -30,6 +30,8 @@ func NewAccount(d accountstd.Dependencies) (Account, error) {
 		Counter:        collections.NewItem(d.SchemaBuilder, CounterPrefix, "counter", collections.Uint64Value),
 		TestStateCodec: collections.NewItem(d.SchemaBuilder, TestStateCodecPrefix, "test_state_codec", codec.CollValue[counterv1.MsgTestDependencies](d.LegacyStateCodec)),
 		addressCodec:   d.AddressCodec,
+		hs:             d.Environment.HeaderService,
+		gs:             d.Environment.GasService,
 	}, nil
 }
 
@@ -110,10 +112,10 @@ func (a Account) TestDependencies(ctx context.Context, _ *counterv1.MsgTestDepen
 	}
 
 	// test header service
-	chainID := a.hs.GetHeaderInfo(ctx).ChainID
+	chainID := a.hs.HeaderInfo(ctx).ChainID
 
 	// test gas meter
-	gm := a.gs.GetGasMeter(ctx)
+	gm := a.gs.GasMeter(ctx)
 	gasBefore := gm.Limit() - gm.Remaining()
 	gm.Consume(10, "test")
 	gasAfter := gm.Limit() - gm.Remaining()

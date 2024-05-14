@@ -15,7 +15,7 @@ import (
 
 // IterateValidators iterates through the validator set and perform the provided function
 func (k Keeper) IterateValidators(ctx context.Context, fn func(index int64, validator sdk.ValidatorI) (stop bool)) error {
-	store := k.environment.KVStoreService.OpenKVStore(ctx)
+	store := k.KVStoreService.OpenKVStore(ctx)
 	iterator, err := store.Iterator(types.ValidatorsKey, storetypes.PrefixEndBytes(types.ValidatorsKey))
 	if err != nil {
 		return err
@@ -42,7 +42,7 @@ func (k Keeper) IterateValidators(ctx context.Context, fn func(index int64, vali
 
 // IterateBondedValidatorsByPower iterates through the bonded validator set and perform the provided function
 func (k Keeper) IterateBondedValidatorsByPower(ctx context.Context, fn func(index int64, validator sdk.ValidatorI) (stop bool)) error {
-	store := k.environment.KVStoreService.OpenKVStore(ctx)
+	store := k.KVStoreService.OpenKVStore(ctx)
 	maxValidators, err := k.MaxValidators(ctx)
 	if err != nil {
 		return err
@@ -119,7 +119,7 @@ func (k Keeper) IterateDelegations(ctx context.Context, delAddr sdk.AccAddress,
 // GetAllSDKDelegations returns all delegations used during genesis dump
 // TODO: remove this func, change all usage for iterate functionality
 func (k Keeper) GetAllSDKDelegations(ctx context.Context) (delegations []types.Delegation, err error) {
-	store := k.environment.KVStoreService.OpenKVStore(ctx)
+	store := k.KVStoreService.OpenKVStore(ctx)
 	iterator, err := store.Iterator(types.DelegationKey, storetypes.PrefixEndBytes(types.DelegationKey))
 	if err != nil {
 		return delegations, err

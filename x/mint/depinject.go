@@ -26,15 +26,13 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	ModuleKey              depinject.OwnModuleKey
-	Config                 *modulev1.Module
-	Environment            appmodule.Environment
-	Cdc                    codec.Codec
-	InflationCalculationFn types.InflationCalculationFn `optional:"true"`
+	ModuleKey   depinject.OwnModuleKey
+	Config      *modulev1.Module
+	Environment appmodule.Environment
+	Cdc         codec.Codec
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
-	StakingKeeper types.StakingKeeper
 }
 
 type ModuleOutputs struct {
@@ -64,15 +62,13 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.Environment,
-		in.StakingKeeper,
 		in.AccountKeeper,
 		in.BankKeeper,
 		feeCollectorName,
 		as,
 	)
 
-	// when no inflation calculation function is provided it will use the default types.DefaultInflationCalculationFn
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.InflationCalculationFn)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper)
 
 	return ModuleOutputs{MintKeeper: k, Module: m}
 }

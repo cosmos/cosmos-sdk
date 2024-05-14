@@ -13,13 +13,8 @@ sidebar_position: 1
 * [Begin Epoch](#begin-epoch)
     * [NextEpochProvisions](#nextepochprovisions)
     * [EpochProvision](#epochprovision)
-* [Begin-Block](#begin-block)
-    * [NextInflationRate](#nextinflationrate)
-    * [NextAnnualProvisions](#nextannualprovisions)
-    * [BlockProvision](#blockprovision)
 * [Parameters](#parameters)
-* [Events](#events)
-    * [BeginBlocker](#beginblocker)
+* [Hooks](#hooks)
 * [Client](#client)
     * [CLI](#cli)
     * [gRPC](#grpc)
@@ -101,72 +96,6 @@ provisions. The provisions are then minted by the `mint` module's
 `FeeCollector`, which handles distributing the rewards per the chain's needs.
 This fee collector is specified as the `auth` module's `FeeCollector` `ModuleAccount`.
 
-## Begin-Block
-
-Minting parameters are recalculated and inflation paid at the beginning of each block.
-
-The minting logic in the `BeginBlocker` function provides an optional feature for controlling token minting based on the maximum allowable supply (MaxSupply). This feature allows users to adjust the minting process according to their specific requirements and use cases. However, it's important to note that the MaxSupply parameter is independent of the minting process and assumes that any adjustments to the total supply, including burning tokens, are handled by external modules.
-
-NOTE: Only one of the BeginBlock or BeginEpoch hooks should be enabled for minting.
-
-### Inflation rate calculation
-
-The inflation rate is calculated using an "inflation calculation function" that's
-passed to the `NewAppModule` function. If no function is passed, then the SDK's
-default inflation function will be used (`NextInflationRate`). In case a custom
-inflation calculation logic is needed, this can be achieved by defining and
-passing a function that matches `InflationCalculationFn`'s signature.
-
-```go
-type InflationCalculationFn func(ctx sdk.Context, minter Minter, params Params, bondedRatio math.LegacyDec) math.LegacyDec
-```
-
-#### NextInflationRate
-
-The target annual inflation rate is recalculated each block.
-The inflation is also subject to a rate change (positive or negative)
-depending on the distance from the desired ratio (67%). The maximum rate change
-possible is defined to be 13% per year, however, the annual inflation is capped
-as between 7% and 20%.
-
-```go
-NextInflationRate(params Params, bondedRatio math.LegacyDec) (inflation math.LegacyDec) {
-	inflationRateChangePerYear = (1 - bondedRatio/params.GoalBonded) * params.InflationRateChange
-	inflationRateChange = inflationRateChangePerYear/blocksPerYr
-
-	// increase the new annual inflation for this next block
-	inflation += inflationRateChange
-	if inflation > params.InflationMax {
-		inflation = params.InflationMax
-	}
-	if inflation < params.InflationMin {
-		inflation = params.InflationMin
-	}
-
-	return inflation
-}
-```
-
-### NextAnnualProvisions
-
-Calculate the annual provisions based on current total supply and inflation
-rate. This parameter is calculated once per block.
-
-```go
-NextAnnualProvisions(params Params, totalSupply math.LegacyDec) (provisions math.LegacyDec) {
-	return Inflation * totalSupply
-```
-
-### BlockProvision
-
-Calculate the provisions generated for each block based on current annual provisions. The provisions are then minted by the `mint` module's `ModuleMinterAccount` and then transferred to the `auth`'s `FeeCollector` `ModuleAccount`.
-
-```go
-BlockProvision(params Params) sdk.Coin {
-	provisionAmt = AnnualProvisions/ params.BlocksPerYear
-	return sdk.NewCoin(params.MintDenom, provisionAmt.Truncate())
-```
-
 
 ## Parameters
 
@@ -187,19 +116,7 @@ Note: `0` indicates unlimited supply for MaxSupply param
 | ReductionFactor        | string (dec)     | "0.500000000000000000" |
 | ReductionPeriodInEpochs| string (int64)   | "156"                  |
 
-
-## Events
-
-The minting module emits the following events:
-
-### BeginBlocker
-
-| Type | Attribute Key     | Attribute Value    |
-|------|-------------------|--------------------|
-| mint | bonded_ratio      | {bondedRatio}      |
-| mint | inflation         | {inflation}        |
-| mint | annual_provisions | {annualProvisions} |
-| mint | amount            | {amount}           |
+## Hooks
 
 
 ## Client

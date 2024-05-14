@@ -30,7 +30,6 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
-	_ appmodule.HasBeginBlocker       = AppModule{}
 	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
@@ -42,29 +41,18 @@ type AppModule struct {
 	cdc        codec.Codec
 	keeper     keeper.Keeper
 	authKeeper types.AccountKeeper
-
-	// inflationCalculator is used to calculate the inflation rate during BeginBlock.
-	// If inflationCalculator is nil, the default inflation calculation logic is used.
-	inflationCalculator types.InflationCalculationFn
 }
 
 // NewAppModule creates a new AppModule object.
-// If the InflationCalculationFn argument is nil, then the SDK's default inflation function will be used.
 func NewAppModule(
 	cdc codec.Codec,
 	keeper keeper.Keeper,
 	ak types.AccountKeeper,
-	ic types.InflationCalculationFn,
 ) AppModule {
-	if ic == nil {
-		ic = types.DefaultInflationCalculationFn
-	}
-
 	return AppModule{
-		cdc:                 cdc,
-		keeper:              keeper,
-		authKeeper:          ak,
-		inflationCalculator: ic,
+		cdc:        cdc,
+		keeper:     keeper,
+		authKeeper: ak,
 	}
 }
 
@@ -157,12 +145,6 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 
 // ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
-
-// BeginBlock returns the begin blocker for the mint module.
-func (am AppModule) BeginBlock(ctx context.Context) error {
-	// Note: Set `mintAtBeginBlock` to `false` and enable mint hooks at app level, to mint tokens based on epochs not on supply.
-	return am.keeper.BeginBlocker(ctx, am.inflationCalculator, true)
-}
 
 // AppModuleSimulation functions
 

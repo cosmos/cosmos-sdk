@@ -51,14 +51,13 @@ func (s *GenesisTestSuite) SetupTest() {
 	s.sdkCtx = testCtx.Ctx
 	s.key = key
 
-	stakingKeeper := minttestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := minttestutil.NewMockAccountKeeper(ctrl)
 	bankKeeper := minttestutil.NewMockBankKeeper(ctrl)
 	s.accountKeeper = accountKeeper
 	accountKeeper.EXPECT().GetModuleAddress(minterAcc.Name).Return(minterAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAccount(s.sdkCtx, minterAcc.Name).Return(minterAcc)
 
-	s.keeper = keeper.NewKeeper(s.cdc, runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger()), stakingKeeper, accountKeeper, bankKeeper, "", "")
+	s.keeper = keeper.NewKeeper(s.cdc, runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger()), accountKeeper, bankKeeper, "", "")
 }
 
 func (s *GenesisTestSuite) TestImportExportGenesis() {

@@ -9,63 +9,9 @@ import (
 	reflect "reflect"
 
 	address "cosmossdk.io/core/address"
-	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
 )
-
-// MockStakingKeeper is a mock of StakingKeeper interface.
-type MockStakingKeeper struct {
-	ctrl     *gomock.Controller
-	recorder *MockStakingKeeperMockRecorder
-}
-
-// MockStakingKeeperMockRecorder is the mock recorder for MockStakingKeeper.
-type MockStakingKeeperMockRecorder struct {
-	mock *MockStakingKeeper
-}
-
-// NewMockStakingKeeper creates a new mock instance.
-func NewMockStakingKeeper(ctrl *gomock.Controller) *MockStakingKeeper {
-	mock := &MockStakingKeeper{ctrl: ctrl}
-	mock.recorder = &MockStakingKeeperMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
-	return m.recorder
-}
-
-// BondedRatio mocks base method.
-func (m *MockStakingKeeper) BondedRatio(ctx context.Context) (math.LegacyDec, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BondedRatio", ctx)
-	ret0, _ := ret[0].(math.LegacyDec)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// BondedRatio indicates an expected call of BondedRatio.
-func (mr *MockStakingKeeperMockRecorder) BondedRatio(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BondedRatio", reflect.TypeOf((*MockStakingKeeper)(nil).BondedRatio), ctx)
-}
-
-// StakingTokenSupply mocks base method.
-func (m *MockStakingKeeper) StakingTokenSupply(ctx context.Context) (math.Int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "StakingTokenSupply", ctx)
-	ret0, _ := ret[0].(math.Int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// StakingTokenSupply indicates an expected call of StakingTokenSupply.
-func (mr *MockStakingKeeperMockRecorder) StakingTokenSupply(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StakingTokenSupply", reflect.TypeOf((*MockStakingKeeper)(nil).StakingTokenSupply), ctx)
-}
 
 // MockAccountKeeper is a mock of AccountKeeper interface.
 type MockAccountKeeper struct {

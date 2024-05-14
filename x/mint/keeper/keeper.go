@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
-	"cosmossdk.io/math"
 	"cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,7 +18,6 @@ type Keeper struct {
 	appmodule.Environment
 
 	cdc              codec.BinaryCodec
-	stakingKeeper    types.StakingKeeper
 	bankKeeper       types.BankKeeper
 	logger           log.Logger
 	feeCollectorName string
@@ -37,7 +35,6 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	env appmodule.Environment,
-	sk types.StakingKeeper,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	feeCollectorName string,
@@ -52,7 +49,6 @@ func NewKeeper(
 	k := Keeper{
 		Environment:        env,
 		cdc:                cdc,
-		stakingKeeper:      sk,
 		bankKeeper:         bk,
 		logger:             env.Logger,
 		feeCollectorName:   feeCollectorName,
@@ -75,20 +71,8 @@ func (k Keeper) GetAuthority() string {
 	return k.authority
 }
 
-// StakingTokenSupply implements an alias call to the underlying staking keeper's
-// StakingTokenSupply to be used in BeginBlocker.
-func (k Keeper) StakingTokenSupply(ctx context.Context) (math.Int, error) {
-	return k.stakingKeeper.StakingTokenSupply(ctx)
-}
-
-// BondedRatio implements an alias call to the underlying staking keeper's
-// BondedRatio to be used in BeginBlocker.
-func (k Keeper) BondedRatio(ctx context.Context) (math.LegacyDec, error) {
-	return k.stakingKeeper.BondedRatio(ctx)
-}
-
 // MintCoins implements an alias call to the underlying supply keeper's
-// MintCoins to be used in BeginBlocker.
+// MintCoins to be used in epochs hooks for minting.
 func (k Keeper) MintCoins(ctx context.Context, newCoins sdk.Coins) error {
 	if newCoins.Empty() {
 		// skip as no coins need to be minted
@@ -99,7 +83,7 @@ func (k Keeper) MintCoins(ctx context.Context, newCoins sdk.Coins) error {
 }
 
 // AddCollectedFees implements an alias call to the underlying supply keeper's
-// AddCollectedFees to be used in BeginBlocker.
+// AddCollectedFees to be used in epochs hooks for minting.
 func (k Keeper) AddCollectedFees(ctx context.Context, fees sdk.Coins) error {
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
 }

@@ -70,7 +70,7 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuild
 // populate account and sequence numbers from a foreign account.
 // This function should only be used when signing with a multisig. For
 // normal keys, please use SignTx directly.
-func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, addr sdk.AccAddress,
+func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, addr sdk.AccAddress, members [][]byte,
 	name string, txBuilder client.TxBuilder, offline, overwrite bool,
 ) (err error) {
 	// Multisigs only support LEGACY_AMINO_JSON signing.
@@ -78,13 +78,7 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
-	// check whether the address is a signer
-	signers, err := txBuilder.GetTx().GetSigners()
-	if err != nil {
-		return err
-	}
-
-	if !isTxSigner(addr, signers) {
+	if !isTxSigner(addr, members) {
 		return fmt.Errorf("%s: %s", errors.ErrorInvalidSigner, name)
 	}
 

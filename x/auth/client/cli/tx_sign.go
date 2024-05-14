@@ -228,15 +228,49 @@ func sign(clientCtx client.Context, txBuilder client.TxBuilder, txFactory tx.Fac
 }
 
 func multisigSign(clientCtx client.Context, txBuilder client.TxBuilder, txFactory tx.Factory, multisig string) error {
-	multisigAddr, _, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), multisig)
+	multisigAddr, multisigName, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), multisig)
 	if err != nil {
 		return fmt.Errorf("error getting account from keybase: %w", err)
+	}
+
+	multisigkey, err := getMultisigRecord(clientCtx, multisigName)
+	if err != nil {
+		return err
+	}
+
+	multisigPubKey, err := multisigkey.GetPubKey()
+	if err != nil {
+		return err
+	}
+	multisigLegacyPub := multisigPubKey.(*kmultisig.LegacyAminoPubKey)
+
+	fromRecord, err := clientCtx.Keyring.Key(clientCtx.GetFromName())
+	if err != nil {
+		return fmt.Errorf("error getting account from keybase: %w", err)
+	}
+
+	fromPubKey, err := fromRecord.GetPubKey()
+	if err != nil {
+		return err
+	}
+
+	var found bool
+	members := [][]byte{}
+	for _, pubkey := range multisigLegacyPub.GetPubKeys() {
+		members = append(members, pubkey.Address().Bytes())
+		if pubkey.Equals(fromPubKey) {
+			found = true
+		}
+	}
+	if !found {
+		return fmt.Errorf("signing key is not a part of multisig key")
 	}
 
 	if err = authclient.SignTxWithSignerAddress(
 		txFactory,
 		clientCtx,
 		multisigAddr,
+		members,
 		clientCtx.GetFromName(),
 		txBuilder,
 		clientCtx.Offline,
@@ -385,7 +419,9 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txF tx.Factory, newTx 
 		}
 
 		var found bool
+		members := [][]byte{}
 		for _, pubkey := range multisigLegacyPub.GetPubKeys() {
+			members = append(members, pubkey.Address().Bytes())
 			if pubkey.Equals(fromPubKey) {
 				found = true
 			}
@@ -394,7 +430,7 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txF tx.Factory, newTx 
 			return fmt.Errorf("signing key is not a part of multisig key")
 		}
 		err = authclient.SignTxWithSignerAddress(
-			txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite)
+			txF, clientCtx, multisigAddr, members, fromName, txBuilder, clientCtx.Offline, overwrite)
 		if err != nil {
 			return err
 		}

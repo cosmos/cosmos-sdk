@@ -688,5 +688,4 @@ func TestWeightOverflow(t *testing.T) {
 	})
 	_, err = acc.Init(ctx, startAcc)
 	require.ErrorContains(t, err, "overflow")
-
 }

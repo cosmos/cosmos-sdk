@@ -3,7 +3,7 @@ package types_test
 import (
 	"encoding/hex"
 	"testing"
-	
+
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
@@ -21,7 +21,6 @@ func FuzzBech32AccAddrConsistencyYAML(f *testing.F) {
 		acc := types.AccAddress(input)
 		res := &types.AccAddress{}
 
-		testMarshalYAML(t, &acc, res, acc.MarshalYAML, res.UnmarshalYAML)
 		testMarshalYAML(t, &acc, res, acc.MarshalYAML, res.UnmarshalYAML)
 
 		str := acc.String()

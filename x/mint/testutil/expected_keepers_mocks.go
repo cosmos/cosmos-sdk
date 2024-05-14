@@ -10,8 +10,7 @@ import (
 
 	address "cosmossdk.io/core/address"
 	math "cosmossdk.io/math"
-	types "cosmossdk.io/x/epochs/types"
-	types0 "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -106,10 +105,10 @@ func (mr *MockAccountKeeperMockRecorder) AddressCodec() *gomock.Call {
 }
 
 // GetModuleAccount mocks base method.
-func (m *MockAccountKeeper) GetModuleAccount(ctx context.Context, moduleName string) types0.ModuleAccountI {
+func (m *MockAccountKeeper) GetModuleAccount(ctx context.Context, moduleName string) types.ModuleAccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetModuleAccount", ctx, moduleName)
-	ret0, _ := ret[0].(types0.ModuleAccountI)
+	ret0, _ := ret[0].(types.ModuleAccountI)
 	return ret0
 }
 
@@ -120,10 +119,10 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAccount(ctx, moduleName interf
 }
 
 // GetModuleAddress mocks base method.
-func (m *MockAccountKeeper) GetModuleAddress(name string) types0.AccAddress {
+func (m *MockAccountKeeper) GetModuleAddress(name string) types.AccAddress {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetModuleAddress", name)
-	ret0, _ := ret[0].(types0.AccAddress)
+	ret0, _ := ret[0].(types.AccAddress)
 	return ret0
 }
 
@@ -134,7 +133,7 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(name interface{}) *gom
 }
 
 // SetModuleAccount mocks base method.
-func (m *MockAccountKeeper) SetModuleAccount(arg0 context.Context, arg1 types0.ModuleAccountI) {
+func (m *MockAccountKeeper) SetModuleAccount(arg0 context.Context, arg1 types.ModuleAccountI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetModuleAccount", arg0, arg1)
 }
@@ -169,10 +168,10 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 }
 
 // GetSupply mocks base method.
-func (m *MockBankKeeper) GetSupply(ctx context.Context, denom string) types0.Coin {
+func (m *MockBankKeeper) GetSupply(ctx context.Context, denom string) types.Coin {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSupply", ctx, denom)
-	ret0, _ := ret[0].(types0.Coin)
+	ret0, _ := ret[0].(types.Coin)
 	return ret0
 }
 
@@ -183,7 +182,7 @@ func (mr *MockBankKeeperMockRecorder) GetSupply(ctx, denom interface{}) *gomock.
 }
 
 // MintCoins mocks base method.
-func (m *MockBankKeeper) MintCoins(ctx context.Context, name string, amt types0.Coins) error {
+func (m *MockBankKeeper) MintCoins(ctx context.Context, name string, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MintCoins", ctx, name, amt)
 	ret0, _ := ret[0].(error)
@@ -197,7 +196,7 @@ func (mr *MockBankKeeperMockRecorder) MintCoins(ctx, name, amt interface{}) *gom
 }
 
 // SendCoinsFromModuleToAccount mocks base method.
-func (m *MockBankKeeper) SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr types0.AccAddress, amt types0.Coins) error {
+func (m *MockBankKeeper) SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr types.AccAddress, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendCoinsFromModuleToAccount", ctx, senderModule, recipientAddr, amt)
 	ret0, _ := ret[0].(error)
@@ -211,7 +210,7 @@ func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderMo
 }
 
 // SendCoinsFromModuleToModule mocks base method.
-func (m *MockBankKeeper) SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt types0.Coins) error {
+func (m *MockBankKeeper) SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt types.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendCoinsFromModuleToModule", ctx, senderModule, recipientModule, amt)
 	ret0, _ := ret[0].(error)
@@ -222,42 +221,4 @@ func (m *MockBankKeeper) SendCoinsFromModuleToModule(ctx context.Context, sender
 func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToModule(ctx, senderModule, recipientModule, amt interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToModule", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToModule), ctx, senderModule, recipientModule, amt)
-}
-
-// MockEpochsKeeper is a mock of EpochsKeeper interface.
-type MockEpochsKeeper struct {
-	ctrl     *gomock.Controller
-	recorder *MockEpochsKeeperMockRecorder
-}
-
-// MockEpochsKeeperMockRecorder is the mock recorder for MockEpochsKeeper.
-type MockEpochsKeeperMockRecorder struct {
-	mock *MockEpochsKeeper
-}
-
-// NewMockEpochsKeeper creates a new mock instance.
-func NewMockEpochsKeeper(ctrl *gomock.Controller) *MockEpochsKeeper {
-	mock := &MockEpochsKeeper{ctrl: ctrl}
-	mock.recorder = &MockEpochsKeeperMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockEpochsKeeper) EXPECT() *MockEpochsKeeperMockRecorder {
-	return m.recorder
-}
-
-// GetEpochInfo mocks base method.
-func (m *MockEpochsKeeper) GetEpochInfo(ctx context.Context, identifier string) (types.EpochInfo, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEpochInfo", ctx, identifier)
-	ret0, _ := ret[0].(types.EpochInfo)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetEpochInfo indicates an expected call of GetEpochInfo.
-func (mr *MockEpochsKeeperMockRecorder) GetEpochInfo(ctx, identifier interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEpochInfo", reflect.TypeOf((*MockEpochsKeeper)(nil).GetEpochInfo), ctx, identifier)
 }

@@ -5,7 +5,6 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
-	epochstypes "cosmossdk.io/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -33,8 +32,4 @@ type BankKeeper interface {
 	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	MintCoins(ctx context.Context, name string, amt sdk.Coins) error
 	GetSupply(ctx context.Context, denom string) sdk.Coin
-}
-
-type EpochsKeeper interface {
-	GetEpochInfo(ctx context.Context, identifier string) (epochstypes.EpochInfo, error)
 }

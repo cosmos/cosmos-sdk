@@ -11,32 +11,6 @@ import (
 )
 
 // BeginBlocker mints new tokens for the previous block.
-func (k Keeper) BeginBlocker2(ctx context.Context, ic types.InflationCalculationFn) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
-
-	params, err := k.Params.Get(ctx)
-	if err != nil {
-		return err
-	}
-
-	epochIdentifier := params.EpochIdentifier
-	epochInfo, err := k.epochsKeeper.GetEpochInfo(ctx, epochIdentifier)
-	if err != nil {
-		return err
-	}
-	curEpochNum := epochInfo.CurrentEpoch
-
-	// Execute minting logic similar to AfterEpochEnd
-	err = k.AfterEpochEnd(ctx, epochIdentifier, curEpochNum)
-	if err != nil {
-		return err
-	}
-	
-
-	return nil
-}
-
-// BeginBlocker mints new tokens for the previous block.
 func (k Keeper) BeginBlocker(ctx context.Context, ic types.InflationCalculationFn, mintAtBeginBlock bool) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
 

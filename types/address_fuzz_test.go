@@ -4,8 +4,9 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 func FuzzBech32AccAddrConsistencyYAML(f *testing.F) {

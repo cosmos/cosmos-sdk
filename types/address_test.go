@@ -146,7 +146,6 @@ func (s *addressTestSuite) TestRandBech32AccAddrConsistency() {
 }
 
 func (s *addressTestSuite) TestUnmarshalYAMLWithInvalidInput() {
-
 	for _, str := range invalidStrs {
 		_, err := types.AccAddressFromHexUnsafe(str)
 		s.Require().Error(err)

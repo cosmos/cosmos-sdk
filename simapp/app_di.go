@@ -12,6 +12,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cast"
 
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -67,7 +68,7 @@ var (
 // capabilities aren't needed for testing.
 type SimApp struct {
 	*runtime.App
-	legacyAmino       *codec.LegacyAmino
+	legacyAmino       legacy.Amino
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
@@ -342,7 +343,12 @@ func (app *SimApp) Close() error {
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
 func (app *SimApp) LegacyAmino() *codec.LegacyAmino {
-	return app.legacyAmino
+	switch cdc := app.legacyAmino.(type) {
+	case *codec.LegacyAmino:
+		return cdc
+	default:
+		panic("unexpected codec type")
+	}
 }
 
 // AppCodec returns SimApp's app codec.

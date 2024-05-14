@@ -20,7 +20,8 @@ import (
 type Keeper struct {
 	appmodule.Environment
 
-	cdc         codec.BinaryCodec
+	cdc codec.BinaryCodec
+	// deprecated!
 	legacyAmino *codec.LegacyAmino
 	sk          types.StakingKeeper
 

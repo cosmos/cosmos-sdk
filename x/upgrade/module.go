@@ -10,19 +10,15 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/upgrade/client/cli"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
-
-func init() {
-	types.RegisterLegacyAminoCodec(codec.NewLegacyAmino())
-}
 
 // ConsensusVersion defines the current x/upgrade module consensus version.
 const ConsensusVersion uint64 = 3
@@ -61,7 +57,7 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the upgrade types on the LegacyAmino codec
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 

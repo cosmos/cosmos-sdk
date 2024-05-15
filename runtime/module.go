@@ -19,12 +19,12 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/genesis"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -93,7 +93,11 @@ func init() {
 	appconfig.RegisterModule(&runtimev1alpha1.Module{},
 		appconfig.Provide(
 			ProvideApp,
-			ProvideInterfaceRegistry,
+			// to decouple runtime from sdk/codec ProvideInterfaceReistry can be registered from the app
+			// i.e. in the call to depinject.Inject(...)
+			codec.ProvideInterfaceRegistry,
+			codec.ProvideLegacyAmino,
+			codec.ProvideProtoCodec,
 			ProvideKVStoreKey,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
@@ -109,9 +113,11 @@ func init() {
 	)
 }
 
-func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
-	codec.Codec,
-	*codec.LegacyAmino,
+func ProvideApp(
+	interfaceRegistry codectypes.InterfaceRegistry,
+	amino legacy.Amino,
+	protoCodec *codec.ProtoCodec,
+) (
 	*AppBuilder,
 	*baseapp.MsgServiceRouter,
 	*baseapp.GRPCQueryRouter,
@@ -130,25 +136,22 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 	}
 
-	amino := codec.NewLegacyAmino()
-
 	std.RegisterInterfaces(interfaceRegistry)
 	std.RegisterLegacyAminoCodec(amino)
 
-	cdc := codec.NewProtoCodec(interfaceRegistry)
 	msgServiceRouter := baseapp.NewMsgServiceRouter()
 	grpcQueryRouter := baseapp.NewGRPCQueryRouter()
 	app := &App{
 		storeKeys:         nil,
 		interfaceRegistry: interfaceRegistry,
-		cdc:               cdc,
+		cdc:               protoCodec,
 		amino:             amino,
 		msgServiceRouter:  msgServiceRouter,
 		grpcQueryRouter:   grpcQueryRouter,
 	}
 	appBuilder := &AppBuilder{app}
 
-	return cdc, amino, appBuilder, msgServiceRouter, grpcQueryRouter, appModule{app}, protoFiles, protoTypes, nil
+	return appBuilder, msgServiceRouter, grpcQueryRouter, appModule{app}, protoFiles, protoTypes, nil
 }
 
 type AppInputs struct {
@@ -161,7 +164,7 @@ type AppInputs struct {
 	ModuleManager     *module.Manager
 	BaseAppOptions    []BaseAppOption
 	InterfaceRegistry codectypes.InterfaceRegistry
-	LegacyAmino       *codec.LegacyAmino
+	LegacyAmino       legacy.Amino
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -173,34 +176,6 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.ModuleManager = inputs.ModuleManager
 	app.ModuleManager.RegisterInterfaces(inputs.InterfaceRegistry)
 	app.ModuleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
-}
-
-func ProvideInterfaceRegistry(
-	addressCodec address.Codec,
-	validatorAddressCodec address.ValidatorAddressCodec,
-	customGetSigners []signing.CustomGetSigner,
-) (codectypes.InterfaceRegistry, error) {
-	signingOptions := signing.Options{
-		AddressCodec:          addressCodec,
-		ValidatorAddressCodec: validatorAddressCodec,
-	}
-	for _, signer := range customGetSigners {
-		signingOptions.DefineCustomGetSigners(signer.MsgType, signer.Fn)
-	}
-
-	interfaceRegistry, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
-		ProtoFiles:     proto.HybridResolver,
-		SigningOptions: signingOptions,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if err := interfaceRegistry.SigningContext().Validate(); err != nil {
-		return nil, err
-	}
-
-	return interfaceRegistry, nil
 }
 
 func registerStoreKey(wrapper *AppBuilder, key storetypes.StoreKey) {

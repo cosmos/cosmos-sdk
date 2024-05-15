@@ -34,12 +34,12 @@ import (
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/genesis"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -78,7 +78,7 @@ type HasGenesisBasics interface {
 // HasAminoCodec is the interface for modules that have amino codec registration.
 // Deprecated: modules should not need to register their own amino codecs.
 type HasAminoCodec interface {
-	RegisterLegacyAminoCodec(*codec.LegacyAmino)
+	RegisterLegacyAminoCodec(legacy.Amino)
 }
 
 // HasGRPCGateway is the interface for modules to register their gRPC gateway routes.
@@ -299,7 +299,7 @@ func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 }
 
 // RegisterLegacyAminoCodec registers all module codecs
-func (m *Manager) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (m *Manager) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 	for _, b := range m.Modules {
 		if mod, ok := b.(HasAminoCodec); ok {
 			mod.RegisterLegacyAminoCodec(cdc)

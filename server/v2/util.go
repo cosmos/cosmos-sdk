@@ -17,12 +17,11 @@ import (
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/server/config"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ContextKey defines the context key used to retrieve a server.Context from
 // a command's Context.
-const ContextKey = sdk.ContextKey("server.context")
+const ContextKey = "server.context"
 
 // Context server context
 type Context struct {

@@ -31,8 +31,10 @@ const (
 type QueryClient interface {
 	// Params returns the total set of minting parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// Deprecated: Do not use.
 	// Inflation returns the current minting inflation value.
 	Inflation(ctx context.Context, in *QueryInflationRequest, opts ...grpc.CallOption) (*QueryInflationResponse, error)
+	// Deprecated: Do not use.
 	// AnnualProvisions current minting annual provisions value.
 	AnnualProvisions(ctx context.Context, in *QueryAnnualProvisionsRequest, opts ...grpc.CallOption) (*QueryAnnualProvisionsResponse, error)
 	// EpochProvisions returns the current minting epoch provisions value.
@@ -56,6 +58,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *queryClient) Inflation(ctx context.Context, in *QueryInflationRequest, opts ...grpc.CallOption) (*QueryInflationResponse, error) {
 	out := new(QueryInflationResponse)
 	err := c.cc.Invoke(ctx, Query_Inflation_FullMethodName, in, out, opts...)
@@ -65,6 +68,7 @@ func (c *queryClient) Inflation(ctx context.Context, in *QueryInflationRequest, 
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *queryClient) AnnualProvisions(ctx context.Context, in *QueryAnnualProvisionsRequest, opts ...grpc.CallOption) (*QueryAnnualProvisionsResponse, error) {
 	out := new(QueryAnnualProvisionsResponse)
 	err := c.cc.Invoke(ctx, Query_AnnualProvisions_FullMethodName, in, out, opts...)
@@ -89,8 +93,10 @@ func (c *queryClient) EpochProvisions(ctx context.Context, in *QueryEpochProvisi
 type QueryServer interface {
 	// Params returns the total set of minting parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// Deprecated: Do not use.
 	// Inflation returns the current minting inflation value.
 	Inflation(context.Context, *QueryInflationRequest) (*QueryInflationResponse, error)
+	// Deprecated: Do not use.
 	// AnnualProvisions current minting annual provisions value.
 	AnnualProvisions(context.Context, *QueryAnnualProvisionsRequest) (*QueryAnnualProvisionsResponse, error)
 	// EpochProvisions returns the current minting epoch provisions value.

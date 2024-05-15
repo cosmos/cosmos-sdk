@@ -15,7 +15,7 @@ message Minter {
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
-    deprecated = true
+    deprecated             = true
   ];
   // current annual expected provisions
   // Deprecated: Use of annual_provisions in Minter is deprecated as we no longer use this in minting.
@@ -23,7 +23,7 @@ message Minter {
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
-    deprecated = true
+    deprecated             = true
   ];
   // epoch_provisions represent rewards for the current epoch.
   string epoch_provisions = 3 [

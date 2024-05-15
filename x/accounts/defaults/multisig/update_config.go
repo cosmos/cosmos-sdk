@@ -47,7 +47,7 @@ func (a Account) UpdateConfig(ctx context.Context, msg *v1.MsgUpdateConfig) (*v1
 		var adderr error
 		totalWeight, adderr = safeAdd(totalWeight, value)
 		if adderr != nil {
-			return true, err
+			return true, adderr
 		}
 		return false, nil
 	})

@@ -3,7 +3,6 @@ package runtime
 import (
 	"fmt"
 	"os"
-	"slices"
 
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -231,10 +230,6 @@ func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
 	return appBuilder.app
 }
 
-// when no kv store service use stub interface
-// use that in environment when not available
-// from https://github.com/cosmos/cosmos-sdk/pulls
-
 func ProvideEnvironment(
 	logger log.Logger,
 	config *runtimev1alpha1.Module,
@@ -243,10 +238,6 @@ func ProvideEnvironment(
 	msgServiceRouter *baseapp.MsgServiceRouter,
 	queryServiceRouter *baseapp.GRPCQueryRouter,
 ) (store.KVStoreService, store.MemoryStoreService, appmodule.Environment) {
-	if slices.Contains(config.SkipStoreKeys, key.Name()) {
-
-	}
-
 	storeKey := ProvideKVStoreKey(config, key, app)
 	kvService := kvStoreService{key: storeKey}
 

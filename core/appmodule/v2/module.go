@@ -3,8 +3,6 @@ package appmodule
 import (
 	"context"
 
-
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 )
@@ -47,10 +45,6 @@ type HasEndBlocker interface {
 	// EndBlock is a method that will be run after transactions are processed in
 	// a block.
 	EndBlock(context.Context) error
-}
-
-type HasABCIEndBlock interface {
-	EndBlock(context.Context) ([]ValidatorUpdate, error)
 }
 
 // HasTxValidator is the extension interface that modules should implement to run
@@ -109,12 +103,4 @@ type ValidatorUpdate struct {
 // HasRegisterInterfaces is the interface for modules to register their msg types.
 type HasRegisterInterfaces interface {
 	RegisterInterfaces(registry.InterfaceRegistrar)
-}
-
-type HasName interface {
-	Name() string
-}
-
-type HasAminoCodec interface {
-	RegisterLegacyAminoCodec(legacy.Amino)
 }

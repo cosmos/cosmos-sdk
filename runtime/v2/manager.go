@@ -278,6 +278,11 @@ func (m *MM) BeginBlock() func(ctx context.Context) error {
 	}
 }
 
+// hasABCIEndBlock is the legacy EndBlocker implemented by x/staking in the CosmosSDK
+type hasABCIEndBlock interface {
+	EndBlock(context.Context) ([]appmodulev2.ValidatorUpdate, error)
+}
+
 // EndBlock runs the end-block logic of all modules and tx validator updates
 func (m *MM) EndBlock() (endBlockFunc func(ctx context.Context) error, valUpdateFunc func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error)) {
 	var validatorUpdates []appmodulev2.ValidatorUpdate
@@ -288,7 +293,7 @@ func (m *MM) EndBlock() (endBlockFunc func(ctx context.Context) error, valUpdate
 				if err != nil {
 					return fmt.Errorf("failed to run endblock for %s: %w", moduleName, err)
 				}
-			} else if module, ok := m.modules[moduleName].(appmodulev2.HasABCIEndBlock); ok { // we need to keep this for our module compatibility promise
+			} else if module, ok := m.modules[moduleName].(hasABCIEndBlock); ok { // we need to keep this for our module compatibility promise
 				moduleValUpdates, err := module.EndBlock(ctx)
 				if err != nil {
 					return fmt.Errorf("failed to run enblock for %s: %w", moduleName, err)

@@ -3,62 +3,62 @@ package simulation
 import (
 	"math/rand"
 
-	"cosmossdk.io/x/bank/keeper"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+
 	"cosmossdk.io/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	types3 "github.com/cosmos/cosmos-sdk/crypto/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
-	types2 "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/simulation"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// sendMsgSend sends a transaction with a MsgSend from a provided random account.
-func sendMsgSend(
-	r *rand.Rand, app *baseapp.BaseApp,
+type AppEntrypoint interface {
+	SimDeliver(_txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error)
+}
+
+func DeliverSimsMsg(
+	reporter SimulationReporter,
+	r *rand.Rand,
+	app AppEntrypoint,
 	txGen client.TxConfig,
-	bk keeper.Keeper, ak types.AccountKeeper,
-	msg *types.MsgSend, ctx types2.Context, chainID string, privkeys []types3.PrivKey,
-) error {
-	var (
-		fees types2.Coins
-		err  error
-	)
-
-	from, err := ak.AddressCodec().StringToBytes(msg.FromAddress)
-	if err != nil {
-		return err
+	ak types.AccountKeeper,
+	msg sdk.Msg,
+	ctx sdk.Context,
+	chainID string,
+	senders ...SimAccount,
+) simtypes.OperationMsg {
+	if reporter.IsSkipped() {
+		return reporter.ToLegacyOperationMsg()
+	}
+	accountNumbers := make([]uint64, len(senders))
+	sequenceNumbers := make([]uint64, len(senders))
+	for i := 0; i < len(senders); i++ {
+		acc := ak.GetAccount(ctx, senders[i].Address)
+		accountNumbers[i] = acc.GetAccountNumber()
+		sequenceNumbers[i] = acc.GetSequence()
 	}
 
-	account := ak.GetAccount(ctx, from)
-	spendable := bk.SpendableCoins(ctx, account.GetAddress())
-
-	coins, hasNeg := spendable.SafeSub(msg.Amount...)
-	if !hasNeg {
-		fees, err = simulation.RandomFees(r, coins)
-		if err != nil {
-			return err
-		}
-	}
+	fees := senders[0].LiquidBalance().RandFees()
 	tx, err := sims.GenSignedMockTx(
 		r,
 		txGen,
-		[]types2.Msg{msg},
+		[]sdk.Msg{msg},
 		fees,
 		sims.DefaultGenTxGas,
 		chainID,
-		[]uint64{account.GetAccountNumber()},
-		[]uint64{account.GetSequence()},
-		privkeys...,
+		accountNumbers,
+		sequenceNumbers,
+		Collect(senders, func(a SimAccount) cryptotypes.PrivKey { return a.PrivKey })...,
 	)
 	if err != nil {
-		return err
+		reporter.Fail(err, "encoding TX")
+		return reporter.ToLegacyOperationMsg()
 	}
-
 	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 	if err != nil {
-		return err
+		reporter.Fail(err, "delivering tx")
+		return reporter.ToLegacyOperationMsg()
 	}
-
-	return nil
+	reporter.Success(msg)
+	return reporter.ToLegacyOperationMsg()
 }

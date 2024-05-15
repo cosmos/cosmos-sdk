@@ -1,120 +1,101 @@
 package simulation
 
 import (
-	"math/rand"
-	"testing"
+	"slices"
 
-	"cosmossdk.io/core/address"
+	"cosmossdk.io/x/bank/keeper"
+	"cosmossdk.io/x/bank/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"golang.org/x/exp/maps"
 )
 
-// weight  (in context of the module)
-// msg
+func MsgSendFactory(bk keeper.Keeper, testData *ChainDataSource, reporter SimulationReporter, ctx sdk.Context) ([]SimAccount, *types.MsgSend) {
+	from := testData.AnyAccount(reporter, WithSpendableBalance())
+	to := testData.AnyAccount(reporter, ExcludeAccounts(from))
+	coins := from.LiquidBalance().RandSubsetCoins()
 
-// need:
-// * account factory: existing account
-// * banlance.SpendableCoins
-
-// on failure: simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "invalid transfers")
-// on success: simtypes.NewOperationMsg(msg, true, "")
-
-// helper
-// random coins
-// random fees
-
-type SimAccount struct {
-	simulation.Account
-	r             *rand.Rand
-	liquidBalance *SimsAccountBalance
-	addressCodec  address.Codec
-}
-
-func (a SimAccount) LiquidBalance() *SimsAccountBalance {
-	return a.liquidBalance
-}
-
-func (a SimAccount) AddressString() string {
-	addr, err := a.addressCodec.BytesToString(a.Account.Address)
-	if err != nil {
-		panic(err.Error()) // todo: should be handled better
+	// Check send_enabled status of each coin denom
+	if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
+		reporter.Skipf("not sendable coins: %s", coins.Denoms())
+		return nil, nil
 	}
-	return addr
+	return []SimAccount{from}, types.NewMsgSend(from.AddressString(), to.AddressString(), coins)
 }
 
-type SimsAccountBalance struct {
-	sdk.Coins
-	r *rand.Rand
-}
-
-// RandSubsetCoins return a random amount from the current balance. This can be empty.
-// The amount is removed from the liquid balance.
-func (b *SimsAccountBalance) RandSubsetCoins() sdk.Coins {
-	amount := simtypes.RandSubsetCoins(b.r, b.Coins)
-	b.Coins = b.Coins.Sub(amount...)
-	return amount
-}
-
-func (b *SimsAccountBalance) RandFees() sdk.Coins {
-	amount, err := simtypes.RandomFees(b.r, b.Coins)
-	if err != nil {
-		panic(err.Error()) // todo: setup a better way to abort execution
+func MsgSendToModuleAccountFactory(bk keeper.Keeper, testData *ChainDataSource, reporter SimulationReporter, ctx sdk.Context) ([]SimAccount, *types.MsgSend) {
+	from := testData.AnyAccount(reporter, WithSpendableBalance())
+	toStr := testData.ModuleAccountAddress(reporter, distributionModuleName)
+	coins := from.LiquidBalance().RandSubsetCoins()
+	// Check send_enabled status of each coin denom
+	if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
+		reporter.Skipf("not sendable coins: %s", coins.Denoms())
+		return nil, nil
 	}
-	return amount
+	return []SimAccount{from}, types.NewMsgSend(from.AddressString(), toStr, coins)
 }
 
-type SimAccountFilter func(a SimAccount) bool // returns true to accept
+func MsgMultiSendFactory(bk keeper.Keeper, testData *ChainDataSource, reporter SimulationReporter, ctx sdk.Context) ([]SimAccount, *types.MsgMultiSend) {
+	r := testData.Rand()
+	// random number of inputs/outputs between [1, 3]
+	inputs := make([]types.Input, r.Intn(1)+1) //nolint:staticcheck // SA4030: (*math/rand.Rand).Intn(n) generates a random value 0 <= x < n; that is, the generated values don't include n; r.Intn(1) therefore always returns 0
+	outputs := make([]types.Output, r.Intn(3)+1)
+	senderAcc := make([]SimAccount, len(inputs))
+	// use map to check if address already exists as input
+	usedAddrs := make(map[string]struct{})
 
-func NotEqualToAccount(other SimAccount) SimAccountFilter {
-	return func(a SimAccount) bool {
-		return !a.Address.Equals(other.Address)
-	}
-}
-
-// todo: liquid token but sent may not be enabled for all or any
-func WithSpendableBalance() SimAccountFilter {
-	return func(a SimAccount) bool {
-		return !a.liquidBalance.Empty()
-	}
-}
-
-type ChainDataSource struct {
-	t        *testing.T
-	r        *rand.Rand
-	accounts []SimAccount
-}
-
-func NewChainDataSource(t *testing.T, r *rand.Rand, oldSimAcc ...simulation.Account) *ChainDataSource {
-	acc := make([]SimAccount, len(oldSimAcc))
-	for i, a := range oldSimAcc {
-		acc[i] = SimAccount{
-			Account:       a,
-			r:             r,
-			liquidBalance: nil, // todo
+	var totalSentCoins sdk.Coins
+	for i := range inputs {
+		// generate random input fields, ignore to address
+		from := testData.AnyAccount(reporter, WithSpendableBalance(), ExcludeAddresses(maps.Keys(usedAddrs)...))
+		if reporter.IsSkipped() {
+			return nil, nil
 		}
+		coins := from.LiquidBalance().RandSubsetCoins()
+		fromAddr := from.AddressString()
+
+		// set input address in used address map
+		usedAddrs[fromAddr] = struct{}{}
+
+		// set signer privkey
+		senderAcc[i] = from
+
+		// set next input and accumulate total sent coins
+		inputs[i] = types.NewInput(fromAddr, coins)
+		totalSentCoins = totalSentCoins.Add(coins...)
 	}
-	return &ChainDataSource{t: t, r: r}
-}
 
-func (c *ChainDataSource) AnyAccount(constrains ...SimAccountFilter) SimAccount {
-	acc := c.randomAccount(10, constrains...)
-	return acc
-}
-
-//
-
-func (c *ChainDataSource) randomAccount(retryCount int, filters ...SimAccountFilter) SimAccount {
-	if retryCount < 0 {
-		c.t.Skip("failed to find a matching account")
-		return SimAccount{}
+	// Check send_enabled status of each sent coin denom
+	if err := bk.IsSendEnabledCoins(ctx, totalSentCoins...); err != nil {
+		reporter.Skipf("not sendable coins: %s", totalSentCoins.Denoms())
+		return nil, nil
 	}
-	idx := c.r.Intn(len(c.accounts))
-	acc := c.accounts[idx]
-	for _, constr := range filters {
-		if !constr(acc) {
-			return c.randomAccount(retryCount-1, filters...)
+
+	for i := range outputs {
+		out := testData.AnyAccount(reporter)
+		outAddr := out.AddressString()
+		if reporter.IsSkipped() {
+			return nil, nil
 		}
+
+		var outCoins sdk.Coins
+		// split total sent coins into random subsets for output
+		if i == len(outputs)-1 {
+			outCoins = totalSentCoins
+		} else {
+			// take random subset of remaining coins for output
+			// and update remaining coins
+			outCoins = simulation.RandSubsetCoins(r, totalSentCoins)
+			totalSentCoins = totalSentCoins.Sub(outCoins...)
+		}
+
+		outputs[i] = types.NewOutput(outAddr, outCoins)
 	}
-	return acc
+
+	// remove any output that has no coins
+	slices.DeleteFunc(outputs, func(o types.Output) bool {
+		return o.Coins.Empty()
+	})
+
+	return senderAcc, &types.MsgMultiSend{Inputs: inputs, Outputs: outputs}
 }

@@ -55,7 +55,6 @@ func TestBech32KeysOutputNestedMsig(t *testing.T) {
 	require.NotNil(t, k)
 	require.NoError(t, err)
 	pubKey, err := k.GetPubKey()
-	fmt.Println(pubKey.Bytes())
 	require.NoError(t, err)
 	accAddr := sdk.AccAddress(pubKey.Address())
 	expectedOutput, err := NewKeyOutput(k.Name, k.GetType(), accAddr, multisigPk, addresscodec.NewBech32Codec("cosmos"))

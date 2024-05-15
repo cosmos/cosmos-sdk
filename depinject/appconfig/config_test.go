@@ -121,11 +121,122 @@ modules:
 	expectContainerErrorContains(t, opt, "module should have ModuleDescriptor.go_import specified")
 }
 
+func TestComposeGogoTypes(t *testing.T) {
+	opt := appconfig.LoadJSON([]byte(`{"modules":[{}]}`))
+	expectContainerErrorContains(t, opt, "module is missing name")
+
+	opt = appconfig.LoadJSON([]byte(`{"modules":[{"name": "a"}]}`))
+	expectContainerErrorContains(t, opt, `module "a" is missing a config object`)
+
+	opt = appconfig.LoadYAML([]byte(`
+modules:
+- name: a
+  config:
+    "@type": testpb.ModuleFoo
+`))
+	expectContainerErrorContains(t, opt, `unable to resolve`)
+
+	opt = appconfig.LoadYAML([]byte(`
+modules:
+- name: a
+  config:
+    "@type": cosmos.app.v1alpha1.Config # this is not actually a module config type!
+`))
+	expectContainerErrorContains(t, opt, "does not have the option cosmos.app.v1alpha1.module")
+	expectContainerErrorContains(t, opt, "registered modules are")
+	expectContainerErrorContains(t, opt, "testpb.TestModuleA")
+
+	opt = appconfig.LoadYAML([]byte(`
+modules:
+- name: a
+  config:
+    "@type": testpb.TestGogoUnregisteredModule
+`))
+	expectContainerErrorContains(t, opt, "did you forget to import cosmossdk.io/core/internal/testpb")
+	expectContainerErrorContains(t, opt, "registered modules are")
+	expectContainerErrorContains(t, opt, "testpb.TestModuleA")
+
+	var app App
+	opt = appconfig.LoadYAML([]byte(`
+modules:
+- name: runtime
+  config:
+   "@type": testpb.TestGogoRuntimeModule
+- name: a
+  config:
+   "@type": testpb.TestGogoModuleA
+- name: b
+  config:
+   "@type": testpb.TestGogoModuleB
+`))
+	assert.NilError(t, depinject.Inject(opt, &app))
+	buf := &bytes.Buffer{}
+	app(buf)
+	const expected = `got store key a
+got store key b
+running module handler a
+result: hello
+running module handler b
+result: goodbye
+`
+	assert.Equal(t, expected, buf.String())
+
+	opt = appconfig.LoadYAML([]byte(`
+golang_bindings:
+  - interfaceType: interfaceType/package.name 
+    implementation: implementationType/package.name
+  - interfaceType: interfaceType/package.nameTwo 
+    implementation: implementationType/package.nameTwo
+modules:
+  - name: a
+    config:
+      "@type": testpb.TestGogoModuleA
+    golang_bindings:
+      - interfaceType: interfaceType/package.name 
+        implementation: implementationType/package.name
+      - interfaceType: interfaceType/package.nameTwo 
+        implementation: implementationType/package.nameTwo
+`))
+	assert.NilError(t, depinject.Inject(opt))
+
+	// module registration failures:
+	appconfig.RegisterModule(&testpb.TestGogoNoModuleOptionModule{})
+	opt = appconfig.LoadYAML([]byte(`
+modules:
+- name: a
+  config:
+   "@type": testpb.TestNoGoImportModule
+`))
+	expectContainerErrorContains(t, opt, "module should have the option cosmos.app.v1alpha1.module")
+
+	internal.ModuleRegistry = map[reflect.Type]*internal.ModuleInitializer{} // reset module registry
+	appconfig.RegisterModule(&testpb.TestGogoNoGoImportModule{})
+	opt = appconfig.LoadYAML([]byte(`
+modules:
+- name: a
+  config:
+   "@type": testpb.TestNoGoImportModule
+`))
+	expectContainerErrorContains(t, opt, "module should have ModuleDescriptor.go_import specified")
+}
+
 //
 // Test Module Initialization Logic
 //
 
 func init() {
+	appconfig.RegisterModule(&testpb.TestGogoRuntimeModule{},
+		appconfig.Provide(ProvideRuntimeState, ProvideStoreKey, ProvideApp),
+	)
+
+	appconfig.RegisterModule(&testpb.TestGogoModuleA{},
+		appconfig.Provide(ProvideModuleA),
+	)
+
+	appconfig.RegisterModule(&testpb.TestGogoModuleB{},
+		appconfig.Provide(ProvideModuleB),
+	)
+
 	appconfig.RegisterModule(&testpb.TestRuntimeModule{},
 		appconfig.Provide(ProvideRuntimeState, ProvideStoreKey, ProvideApp),
 	)

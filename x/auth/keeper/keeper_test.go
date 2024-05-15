@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -62,6 +63,12 @@ func (suite *KeeperTestSuite) SetupTest() {
 	ctrl := gomock.NewController(suite.T())
 	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
 	suite.acctsModKeeper = acctsModKeeper
+	accNum := uint64(0)
+	suite.acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
+		currNum := accNum
+		accNum = accNum + 1
+		return currNum, nil
+	})
 
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,

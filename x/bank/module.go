@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/simsx"
+
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -174,9 +176,9 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	ak, bk := am.accountKeeper, am.keeper
-	reg := simulation.NewSimsRegistryAdapter(&simulation.BasicSimulationReporter{}, ak, bk, simState.TxConfig)
+	reg := simsx.NewSimsRegistryAdapter(&simsx.BasicSimulationReporter{}, ak, bk, simState.TxConfig)
 	reg.Add(100, simulation.MsgSendFactory(bk))
-	//reg.Add(10, simulation.MsgSendToModuleAccountFactory(bk)) // todo: not allowed
+	// reg.Add(10, simulation.MsgSendToModuleAccountFactory(bk)) // todo: not allowed
 	reg.Add(10, simulation.MsgMultiSendFactory(bk))
 	// todo: should we make the weights configurable from outside as before with AppParams ?
 	return reg.ToLegacyWeightedOperations()

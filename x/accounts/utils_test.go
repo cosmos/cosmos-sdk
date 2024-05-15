@@ -74,10 +74,7 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 	msgRouter.RegisterService(&bankv1beta1.Msg_ServiceDesc, &bankMsgServer{})
 
 	ss, ctx := colltest.MockStore()
-	env := runtime.NewEnvironment(ss, log.NewNopLogger(), runtime.EnvWithRouterService(
-		queryRouter,
-		msgRouter,
-	))
+	env := runtime.NewEnvironment(ss, log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter))
 	env.EventService = eventService{}
 	m, err := NewKeeper(codec.NewProtoCodec(ir), env, addressCodec, ir, accounts...)
 	require.NoError(t, err)

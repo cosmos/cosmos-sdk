@@ -16,42 +16,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
-// NewRouterService creates a router.Service which allows to invoke messages and queries using the msg router.
-func NewRouterService(storeService store.KVStoreService, queryRouter *baseapp.GRPCQueryRouter, msgRouter baseapp.MessageRouter) router.Service {
-	return &routerService{
-		queryRouterService: &queryRouterService{
-			storeService: storeService, // TODO: this will be used later on as authenticating modules before routing
-			router:       queryRouter,
-		},
-		msgRouterService: &msgRouterService{
-			storeService: storeService, // TODO: this will be used later on as authenticating modules before routing
-			router:       msgRouter,
-		},
+// NewMessageRouterService implements router.Service.
+func NewMessageRouterService(msgRouter baseapp.MessageRouter) router.Service {
+	return &msgRouterService{
+		router: msgRouter,
 	}
 }
 
-var _ router.Service = (*routerService)(nil)
-
-type routerService struct {
-	queryRouterService router.Router
-	msgRouterService   router.Router
-}
-
-// MessageRouterService implements router.Service.
-func (r *routerService) MessageRouterService() router.Router {
-	return r.msgRouterService
-}
-
-// QueryRouterService implements router.Service.
-func (r *routerService) QueryRouterService() router.Router {
-	return r.queryRouterService
-}
-
-var _ router.Router = (*msgRouterService)(nil)
+var _ router.Service = (*msgRouterService)(nil)
 
 type msgRouterService struct {
-	storeService store.KVStoreService
-	router       baseapp.MessageRouter
+	// TODO: enventually authenticate modules to use the message router
+	router baseapp.MessageRouter
 }
 
 // CanInvoke returns an error if the given message cannot be invoked.
@@ -104,7 +80,14 @@ func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg protoiface.Mes
 	return msgResp, m.InvokeTyped(ctx, msg, msgResp)
 }
 
-var _ router.Router = (*queryRouterService)(nil)
+// NewQueryRouterService implements router.Service.
+func NewQueryRouterService(queryRouter *baseapp.GRPCQueryRouter) router.Service {
+	return &queryRouterService{
+		router: queryRouter,
+	}
+}
+
+var _ router.Service = (*queryRouterService)(nil)
 
 type queryRouterService struct {
 	storeService store.KVStoreService

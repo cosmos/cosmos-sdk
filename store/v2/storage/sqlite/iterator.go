@@ -167,7 +167,7 @@ func (itr *iterator) parseRow() {
 		value []byte
 	)
 	if err := itr.rows.Scan(&key, &value); err != nil {
-		itr.err = fmt.Errorf("failed to scan row: %s", err)
+		itr.err = fmt.Errorf("failed to scan row: %w", err)
 		itr.valid = false
 		return
 	}

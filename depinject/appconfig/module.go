@@ -3,8 +3,6 @@ package appconfig
 import (
 	"reflect"
 
-	"google.golang.org/protobuf/proto"
-
 	internal "cosmossdk.io/depinject/internal/appconfig"
 )
 
@@ -19,7 +17,7 @@ var Register = RegisterModule
 // Protobuf message types used for module configuration should define the
 // cosmos.app.v1alpha.module option and must explicitly specify go_package
 // to make debugging easier for users.
-func RegisterModule(msg proto.Message, options ...Option) {
+func RegisterModule(msg any, options ...Option) {
 	ty := reflect.TypeOf(msg)
 	init := &internal.ModuleInitializer{
 		ConfigProtoMessage: msg,

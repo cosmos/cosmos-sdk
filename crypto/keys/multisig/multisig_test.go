@@ -389,6 +389,21 @@ func TestAminoBinary(t *testing.T) {
 	require.Equal(t, msig.Threshold, newMsig.(*kmultisig.LegacyAminoPubKey).Threshold)
 }
 
+// func TestAminoBinaryNested(t *testing.T) {
+// 	pubkeys := generatePubKeys(4)
+// 	nestedMsig := kmultisig.NewLegacyAminoPubKey(2, pubkeys[:2])
+// 	msig := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pubkeys[2], pubkeys[3], nestedMsig})
+
+// 	// Do a round-trip key->bytes->key.
+// 	bz, err := legacy.Cdc.Marshal(msig)
+// 	require.NoError(t, err)
+// 	var newMsig cryptotypes.PubKey
+// 	err = legacy.Cdc.Unmarshal(bz, &newMsig)
+// 	require.NoError(t, err)
+// 	require.Equal(t, msig.Threshold, newMsig.(*kmultisig.LegacyAminoPubKey).Threshold)
+// 	require.Equal(t, len(msig.PubKeys), len(newMsig.(*kmultisig.LegacyAminoPubKey).PubKeys))
+// }
+
 func TestAminoMarshalJSON(t *testing.T) {
 	pubkeys := generatePubKeys(2)
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pubkeys)

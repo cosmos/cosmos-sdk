@@ -16,7 +16,7 @@ import (
 func NewMsgRouterService(msgRouterBuilder *MsgRouterBuilder) router.Service {
 	msgRouter, err := msgRouterBuilder.Build()
 	if err != nil {
-		panic("cannot create msgRouter")
+		panic(fmt.Errorf("cannot create msgRouter: %w", err))
 	}
 
 	return &msgRouterService{
@@ -63,7 +63,7 @@ func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg protoiface.Mes
 func NewQueryRouterService(queryRouterBuilder *MsgRouterBuilder) router.Service {
 	queryRouter, err := queryRouterBuilder.Build()
 	if err != nil {
-		panic("cannot create queryRouter")
+		panic(fmt.Errorf("cannot create queryRouter: %w", err))
 	}
 
 	return &queryRouterService{

@@ -11,7 +11,6 @@ import (
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/core/router"
-	"cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
@@ -90,8 +89,7 @@ func NewQueryRouterService(queryRouter *baseapp.GRPCQueryRouter) router.Service 
 var _ router.Service = (*queryRouterService)(nil)
 
 type queryRouterService struct {
-	storeService store.KVStoreService
-	router       *baseapp.GRPCQueryRouter
+	router *baseapp.GRPCQueryRouter
 }
 
 // CanInvoke returns an error if the given request cannot be invoked.

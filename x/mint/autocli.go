@@ -21,13 +21,11 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "Inflation",
-					Use:       "inflation",
-					Short:     "Query the current minting inflation value",
+					Skip:      true, // Skipping this command as the query is deprecated.
 				},
 				{
 					RpcMethod: "AnnualProvisions",
-					Use:       "annual-provisions",
-					Short:     "Query the current minting annual provisions value",
+					Skip:      true, // Skipping this command as the query is deprecated.
 				},
 				{
 					RpcMethod: "EpochProvisions",

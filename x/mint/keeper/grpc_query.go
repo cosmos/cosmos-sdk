@@ -26,6 +26,8 @@ func (q queryServer) Params(ctx context.Context, _ *types.QueryParamsRequest) (*
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
+// Deprecated: DO NOT USE
+// This method uses deprecated query request.
 // Inflation returns minter.Inflation of the mint module.
 func (q queryServer) Inflation(ctx context.Context, _ *types.QueryInflationRequest) (*types.QueryInflationResponse, error) {
 	minter, err := q.k.Minter.Get(ctx)
@@ -36,6 +38,8 @@ func (q queryServer) Inflation(ctx context.Context, _ *types.QueryInflationReque
 	return &types.QueryInflationResponse{Inflation: minter.Inflation}, nil
 }
 
+// Deprecated: DO NOT USE
+// This method uses deprecated query request.
 // AnnualProvisions returns minter.AnnualProvisions of the mint module.
 func (q queryServer) AnnualProvisions(ctx context.Context, _ *types.QueryAnnualProvisionsRequest) (*types.QueryAnnualProvisionsResponse, error) {
 	minter, err := q.k.Minter.Get(ctx)

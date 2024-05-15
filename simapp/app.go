@@ -431,11 +431,11 @@ func NewSimApp(
 
 	app.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
-		// insert epoch hooks receivers here
-		// Note: Enable mint hooks and disable BeginBlocker of mint if you want to mint tokens based on epochs not on supply.
-		// By default, we are minting based on supply.
+			// insert epoch hooks receivers here
+			// Note: Enable mint hooks and disable BeginBlocker of mint if you want to mint tokens based on epochs not on supply.
+			// By default, we are minting based on supply.
 
-		// app.MintKeeper.Hooks(),
+			app.MintKeeper.Hooks(),
 		),
 	)
 
@@ -477,7 +477,7 @@ func NewSimApp(
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	app.ModuleManager.SetOrderBeginBlockers(
-		minttypes.ModuleName,
+		// minttypes.ModuleName,
 		distrtypes.ModuleName,
 		slashingtypes.ModuleName,
 		evidencetypes.ModuleName,

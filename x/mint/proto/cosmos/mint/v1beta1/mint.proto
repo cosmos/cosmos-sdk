@@ -10,16 +10,20 @@ import "amino/amino.proto";
 // Minter represents the minting state.
 message Minter {
   // current annual inflation rate
+  // Deprecated: Use of inflation in Minter is deprecated as we no longer use this in minting.
   string inflation = 1 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    deprecated = true
   ];
   // current annual expected provisions
+  // Deprecated: Use of annual_provisions in Minter is deprecated as we no longer use this in minting.
   string annual_provisions = 2 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    deprecated = true
   ];
   // epoch_provisions represent rewards for the current epoch.
   string epoch_provisions = 3 [

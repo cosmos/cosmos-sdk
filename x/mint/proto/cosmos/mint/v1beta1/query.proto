@@ -18,11 +18,13 @@ service Query {
 
   // Inflation returns the current minting inflation value.
   rpc Inflation(QueryInflationRequest) returns (QueryInflationResponse) {
+    option deprecated            = true;
     option (google.api.http).get = "/cosmos/mint/v1beta1/inflation";
   }
 
   // AnnualProvisions current minting annual provisions value.
   rpc AnnualProvisions(QueryAnnualProvisionsRequest) returns (QueryAnnualProvisionsResponse) {
+    option deprecated            = true;
     option (google.api.http).get = "/cosmos/mint/v1beta1/annual_provisions";
   }
 
@@ -43,11 +45,19 @@ message QueryParamsResponse {
 }
 
 // QueryInflationRequest is the request type for the Query/Inflation RPC method.
-message QueryInflationRequest {}
+//
+// Deprecated
+message QueryInflationRequest {
+  option deprecated = true;
+}
 
 // QueryInflationResponse is the response type for the Query/Inflation RPC
 // method.
+//
+// Deprecated
 message QueryInflationResponse {
+  option deprecated = true;
+
   // inflation is the current minting inflation value.
   string inflation = 1 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
@@ -59,11 +69,19 @@ message QueryInflationResponse {
 
 // QueryAnnualProvisionsRequest is the request type for the
 // Query/AnnualProvisions RPC method.
-message QueryAnnualProvisionsRequest {}
+//
+// Deprecated
+message QueryAnnualProvisionsRequest {
+  option deprecated = true;
+}
 
 // QueryAnnualProvisionsResponse is the response type for the
 // Query/AnnualProvisions RPC method.
+//
+// Deprecated
 message QueryAnnualProvisionsResponse {
+  option deprecated = true;
+
   // annual_provisions is the current minting annual provisions value.
   string annual_provisions = 1 [
     (cosmos_proto.scalar)  = "cosmos.Dec",

@@ -15,8 +15,6 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/log"
-
-	"github.com/cosmos/cosmos-sdk/server/config"
 )
 
 // ContextKey defines the context key used to retrieve a server.Context from
@@ -171,35 +169,36 @@ func interceptConfigs(
 
 	conf.SetRoot(rootDir)
 
-	appCfgFilePath := filepath.Join(configPath, "app.toml")
-	if _, err := os.Stat(appCfgFilePath); os.IsNotExist(err) {
-		if (customAppTemplate != "" && customConfig == nil) || (customAppTemplate == "" && customConfig != nil) {
-			return nil, fmt.Errorf("customAppTemplate and customConfig should be both nil or not nil")
-		}
+	// TODO: do configs
+	// appCfgFilePath := filepath.Join(configPath, "app.toml")
+	// if _, err := os.Stat(appCfgFilePath); os.IsNotExist(err) {
+	// 	if (customAppTemplate != "" && customConfig == nil) || (customAppTemplate == "" && customConfig != nil) {
+	// 		return nil, fmt.Errorf("customAppTemplate and customConfig should be both nil or not nil")
+	// 	}
 
-		if customAppTemplate != "" {
-			if err := config.SetConfigTemplate(customAppTemplate); err != nil {
-				return nil, fmt.Errorf("failed to set config template: %w", err)
-			}
+	// 	if customAppTemplate != "" {
+	// 		if err := SetConfigTemplate(customAppTemplate); err != nil {
+	// 			return nil, fmt.Errorf("failed to set config template: %w", err)
+	// 		}
 
-			if err = rootViper.Unmarshal(&customConfig); err != nil {
-				return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
-			}
+	// 		if err = rootViper.Unmarshal(&customConfig); err != nil {
+	// 			return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
+	// 		}
 
-			if err := config.WriteConfigFile(appCfgFilePath, customConfig); err != nil {
-				return nil, fmt.Errorf("failed to write %s: %w", appCfgFilePath, err)
-			}
-		} else {
-			appConf, err := config.ParseConfig(rootViper)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
-			}
+	// 		if err := WriteConfigFile(appCfgFilePath, customConfig); err != nil {
+	// 			return nil, fmt.Errorf("failed to write %s: %w", appCfgFilePath, err)
+	// 		}
+	// 	} else {
+	// 		appConf, err := config.ParseConfig(rootViper)
+	// 		if err != nil {
+	// 			return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
+	// 		}
 
-			if err := config.WriteConfigFile(appCfgFilePath, appConf); err != nil {
-				return nil, fmt.Errorf("failed to write %s: %w", appCfgFilePath, err)
-			}
-		}
-	}
+	// 		if err := WriteConfigFile(appCfgFilePath, appConf); err != nil {
+	// 			return nil, fmt.Errorf("failed to write %s: %w", appCfgFilePath, err)
+	// 		}
+	// 	}
+	// }
 
 	rootViper.SetConfigType("toml")
 	rootViper.SetConfigName("app")

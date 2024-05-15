@@ -118,6 +118,8 @@ func initFixture(t *testing.T) *fixture {
 		authority.String(),
 	)
 
+	assert.NilError(t, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
+
 	msgRouter := baseapp.NewMsgServiceRouter()
 	grpcRouter := baseapp.NewGRPCQueryRouter()
 	cometService := runtime.NewContextAwareCometInfoService()

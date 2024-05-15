@@ -35,7 +35,6 @@ type ModuleInputs struct {
 	Config       *modulev1.Module
 	Environment  appmodule.Environment
 	Cdc          codec.Codec
-	LegacyAmino  *codec.LegacyAmino
 	Registry     cdctypes.InterfaceRegistry
 	CometService comet.Service
 
@@ -64,7 +63,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		panic(fmt.Errorf("unable to decode authority in slashing: %w", err))
 	}
 
-	k := keeper.NewKeeper(in.Environment, in.Cdc, in.LegacyAmino, in.StakingKeeper, authStr)
+	k := keeper.NewKeeper(in.Environment, in.Cdc, nil, in.StakingKeeper, authStr)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.Registry, in.CometService)
 	return ModuleOutputs{
 		Keeper: k,

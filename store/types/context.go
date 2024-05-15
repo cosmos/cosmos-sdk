@@ -1,7 +1,7 @@
 package types
 
 import (
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
 )
 
 // Context is an interface used by an App to pass context information

@@ -6,8 +6,8 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/log"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank/types"

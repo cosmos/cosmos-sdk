@@ -5,7 +5,6 @@ go 1.21
 require (
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/log v1.3.1
 	github.com/cockroachdb/errors v1.11.1
 	github.com/cockroachdb/pebble v1.1.0
 	github.com/cometbft/cometbft v0.38.7
@@ -23,6 +22,7 @@ require (
 )
 
 require (
+	cosmossdk.io/log v1.3.1 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect

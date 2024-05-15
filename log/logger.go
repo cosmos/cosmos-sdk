@@ -29,11 +29,14 @@ func init() {
 }
 
 // ModuleKey defines a module logging key.
-const ModuleKey = "module"
+const ModuleKey = corelog.ModuleKey
 
 // ContextKey is used to store the logger in the context.
 var ContextKey struct{}
 
+// Logger is the Cosmos SDK logger interface.
+// It maintains as much backward compatibility with the CometBFT logger as possible.
+// All functionalities of the logger are available through the Impl() method.
 type Logger = corelog.Logger
 
 // WithJSONMarshal configures zerolog global json encoding.
@@ -147,19 +150,38 @@ func (l zeroLogWrapper) Impl() interface{} {
 }
 
 // NewNopLogger returns a new logger that does nothing.
-func NewNopLogger() Logger {
-	// The custom nopLogger is about 3x faster than a zeroLogWrapper with zerolog.Nop().
-	return nopLogger{}
+var NewNopLogger = corelog.NewNopLogger
+
+// LogWrapper wraps a Logger and implements the Logger interface.
+// it is only meant to avoid breakage of legacy versions of the Logger interface.
+type LogWrapper struct {
+	corelog.Logger
 }
 
-// nopLogger is a Logger that does nothing when called.
-// See the "specialized nop logger" benchmark and compare with the "zerolog nop logger" benchmark.
-// The custom implementation is about 3x faster.
-type nopLogger struct{}
+func NewLogWrapper(logger corelog.Logger) Logger {
+	return LogWrapper{logger}
+}
 
-func (nopLogger) Info(string, ...any)  {}
-func (nopLogger) Warn(string, ...any)  {}
-func (nopLogger) Error(string, ...any) {}
-func (nopLogger) Debug(string, ...any) {}
-func (nopLogger) With(...any) Logger   { return nopLogger{} }
-func (nopLogger) Impl() any            { return nopLogger{} }
+func (l LogWrapper) Impl() interface{} {
+	return l.Logger
+}
+
+func (l LogWrapper) With(keyVals ...interface{}) Logger {
+	return NewLogWrapper(l.Logger.With(keyVals...))
+}
+
+func (l LogWrapper) Info(msg string, keyVals ...interface{}) {
+	l.Logger.Info(msg, keyVals...)
+}
+
+func (l LogWrapper) Warn(msg string, keyVals ...interface{}) {
+	l.Logger.Warn(msg, keyVals...)
+}
+
+func (l LogWrapper) Error(msg string, keyVals ...interface{}) {
+	l.Logger.Error(msg, keyVals...)
+}
+
+func (l LogWrapper) Debug(msg string, keyVals ...interface{}) {
+	l.Logger.Debug(msg, keyVals...)
+}

@@ -1,5 +1,7 @@
 package log
 
+const ModuleKey = "module"
+
 // Logger is the Cosmos SDK logger interface.
 // It maintains as much backward compatibility with the CometBFT logger as possible.
 // All functionalities of the logger are available through the Impl() method.

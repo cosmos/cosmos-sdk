@@ -12,7 +12,7 @@ import (
 	_ "cosmossdk.io/api/cosmos/bank/v1beta1"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	"cosmossdk.io/x/auth/ante"

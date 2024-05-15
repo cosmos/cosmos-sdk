@@ -11,7 +11,7 @@ import (
 
 	_ "cosmossdk.io/api/cosmos/counter/v1"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
 	"cosmossdk.io/x/auth/signing"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"

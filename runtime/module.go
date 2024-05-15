@@ -20,10 +20,10 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"

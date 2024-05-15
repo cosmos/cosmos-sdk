@@ -85,7 +85,7 @@ func (m *MM) Modules() map[string]appmodulev2.AppModule {
 // RegisterLegacyAminoCodec registers all module codecs
 func (m *MM) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 	for _, b := range m.modules {
-		if mod, ok := b.(appmodulev2.HasAminoCodec); ok {
+		if mod, ok := b.(appmodule.HasAminoCodec); ok {
 			mod.RegisterLegacyAminoCodec(cdc)
 		}
 	}
@@ -104,7 +104,7 @@ func (m *MM) RegisterInterfaces(registry registry.InterfaceRegistrar) {
 func (m *MM) DefaultGenesis() map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
 	for name, b := range m.modules {
-		if mod, ok := b.(appmodulev2.HasGenesisBasics); ok {
+		if mod, ok := b.(appmodule.HasGenesisBasics); ok {
 			genesisData[mod.Name()] = mod.DefaultGenesis()
 		} else if mod, ok := b.(appmodulev2.HasGenesis); ok {
 			genesisData[name] = mod.DefaultGenesis()
@@ -119,7 +119,7 @@ func (m *MM) DefaultGenesis() map[string]json.RawMessage {
 // ValidateGenesis performs genesis state validation for all modules
 func (m *MM) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 	for name, b := range m.modules {
-		if mod, ok := b.(appmodulev2.HasGenesisBasics); ok {
+		if mod, ok := b.(appmodule.HasGenesisBasics); ok {
 			if err := mod.ValidateGenesis(genesisData[mod.Name()]); err != nil {
 				return err
 			}
@@ -467,7 +467,7 @@ func (m *MM) validateConfig() error {
 			return !hasEndBlock
 		}
 
-		_, hasABCIEndBlock := module.(appmodulev2.HasABCIEndBlock)
+		_, hasABCIEndBlock := module.(hasABCIEndBlock)
 		return !hasABCIEndBlock
 	}); err != nil {
 		return err

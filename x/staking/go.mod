@@ -32,7 +32,7 @@ require (
 )
 
 require (
-	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.0-20240130113600-88ef6483f90f.1 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.1-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/tx v0.13.3 // indirect
@@ -158,7 +158,7 @@ require (
 )
 
 require (
-	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.0-20240312114316-c0d3497e35d6.1 // indirect
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.1-20240312114316-c0d3497e35d6.1 // indirect
 	github.com/cosmos/crypto v0.0.0-20240309083813-82ed2537802e // indirect
 	github.com/dgraph-io/badger/v4 v4.2.0 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect

@@ -16,7 +16,7 @@ require (
 require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 
 require (
-	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.0-20240312114316-c0d3497e35d6.1 // indirect
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.1-20240312114316-c0d3497e35d6.1 // indirect
 	github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240429102542-490e9bc3de65 // indirect
 	github.com/cosmos/crypto v0.0.0-20240309083813-82ed2537802e // indirect
 	github.com/dgraph-io/badger/v4 v4.2.0 // indirect
@@ -29,7 +29,7 @@ require (
 )
 
 require (
-	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.0-20240130113600-88ef6483f90f.1 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.1-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/api v0.7.5 // indirect
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.3.1 // indirect

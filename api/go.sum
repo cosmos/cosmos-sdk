@@ -1,7 +1,7 @@
-buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.0-20240312114316-c0d3497e35d6.1 h1:d5TnPxZfjHX7HORoYV5oCIJ4nyckbn8DfTYtQr0w6dE=
-buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.0-20240312114316-c0d3497e35d6.1/go.mod h1:6QedSUlapsZs/tork8dfjZN0UTHtQ6lkj07IrhXcpKI=
-buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.0-20240130113600-88ef6483f90f.1 h1:j0cGun4zlJ6xOPdHlzQPtShZ2jzLy+K2HRt2JwnYdDs=
-buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.0-20240130113600-88ef6483f90f.1/go.mod h1:tpIkOWU8NEMMCz45S90xh/DgeiFzf21yuLTdJ4HRnJE=
+buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.1-20240312114316-c0d3497e35d6.1 h1:lBlYy54lX1iBjFhbkd13bWlH7dMnoiyENzZ0Wok1YH4=
+buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.1-20240312114316-c0d3497e35d6.1/go.mod h1:fYP6DZCfO5Ex4U+Xq1PqQwB8NQQhW5Y+Qbyzd/7dw7o=
+buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.1-20240130113600-88ef6483f90f.1 h1:MfK7sTqm7NFqM/GOuuKOOemQzW8P7z07YQIW0vsYr38=
+buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.1-20240130113600-88ef6483f90f.1/go.mod h1:RigkrxrsA6FPZontmsidcr0WGWF8zNFYleIktv6XdLc=
 github.com/cosmos/cosmos-proto v1.0.0-beta.5 h1:eNcayDLpip+zVLRLYafhzLvQlSmyab+RC5W7ZfmxJLA=
 github.com/cosmos/cosmos-proto v1.0.0-beta.5/go.mod h1:hQGLpiIUloJBMdQMMWb/4wRApmI9hjHH05nefC0Ojec=
 github.com/cosmos/gogoproto v1.4.12 h1:vB6Lbe/rtnYGjQuFxkPiPYiCybqFT8QvLipDZP8JpFE=
@@ -28,6 +28,5 @@ google.golang.org/genproto/googleapis/rpc v0.0.0-20240401170217-c3f982113cda/go.
 google.golang.org/grpc v1.63.2 h1:MUeiw1B2maTVZthpU5xvASfTh3LDbxHd6IJ6QQVU+xM=
 google.golang.org/grpc v1.63.2/go.mod h1:WAX/8DgncnokcFUldAxq7GeB5DXHDbMF+lLvDomNkRA=
 google.golang.org/protobuf v1.26.0-rc.1/go.mod h1:jlhhOSvTdKEhbULTjvd4ARK9grFBp09yW+WbY/TyQbw=
-google.golang.org/protobuf v1.34.0/go.mod h1:c6P6GXX6sHbq/GpV6MGZEdwhWPcYBgnhAHhKbcUYpos=
 google.golang.org/protobuf v1.34.1 h1:9ddQBjfCyZPOHPUiPxpYESBLc+T8P3E+Vo4IbKZgFWg=
 google.golang.org/protobuf v1.34.1/go.mod h1:c6P6GXX6sHbq/GpV6MGZEdwhWPcYBgnhAHhKbcUYpos=

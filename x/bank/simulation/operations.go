@@ -65,9 +65,7 @@ func SimulateMsgSend(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		testData := NewChainDataSource(r, ak, BankSourceFn(func(addr sdk.AccAddress) sdk.Coins {
-			return bk.SpendableCoins(ctx, addr)
-		}), ak.AddressCodec(), accs...)
+		testData := NewChainDataSource(r, ak, NewBalanceSource(ctx, bk), ak.AddressCodec(), accs...)
 		reporter = reporter.WithScope(&types.MsgSend{})
 
 		sender, msg := MsgSendFactory(bk, testData, reporter, ctx)

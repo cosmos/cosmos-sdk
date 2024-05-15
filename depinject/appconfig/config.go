@@ -13,19 +13,31 @@ import (
 	"sigs.k8s.io/yaml"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	appv2 "cosmossdk.io/api/cosmos/app/v2"
 	"cosmossdk.io/depinject"
 	internal "cosmossdk.io/depinject/internal/appconfig"
+
+	"github.com/cosmos/gogoproto/jsonpb"
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types"
 )
 
 // LoadJSON loads an app config in JSON format.
 func LoadJSON(bz []byte) depinject.Config {
-	config := &appv1alpha1.Config{}
-	err := protojson.Unmarshal(bz, config)
-	if err != nil {
-		return depinject.Error(err)
+	gogoConfig := &appv2.Config{}
+	err := jsonpb.UnmarshalString(string(bz), gogoConfig)
+	if err == nil {
+		return ComposeGogo(gogoConfig)
 	}
 
-	return Compose(config)
+
+	config := &appv1alpha1.Config{}
+	err = protojson.Unmarshal(bz, config)
+	if err == nil {
+		return Compose(config)
+	}
+
+	return depinject.Error(err)
 }
 
 // LoadYAML loads an app config in YAML format.
@@ -55,6 +67,11 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 		depinject.Supply(appConfig),
 	}
 
+	modules, err := internal.ModulesByProtoMessageName()
+	if err != nil {
+		return depinject.Error(err)
+	}
+
 	for _, module := range appConfig.Modules {
 		if module.Name == "" {
 			return depinject.Error(fmt.Errorf("module is missing name"))
@@ -65,11 +82,6 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 		}
 
 		msgType, err := protoregistry.GlobalTypes.FindMessageByURL(module.Config.TypeUrl)
-		if err != nil {
-			return depinject.Error(err)
-		}
-
-		modules, err := internal.ModulesByProtoMessageName()
 		if err != nil {
 			return depinject.Error(err)
 		}
@@ -86,7 +98,12 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 				module.Config.TypeUrl, modDesc.GoImport, dumpRegisteredModules(modules)))
 		}
 
-		config := init.ConfigProtoMessage.ProtoReflect().Type().New().Interface()
+		configMsg, ok := init.ConfigProtoMessage.(proto.Message)
+		if !ok {
+			return depinject.Error(fmt.Errorf("Message %s is not a golang protobuf type", string(msgType.Descriptor().FullName())))
+		}
+		config := configMsg.ProtoReflect().Type().New().Interface()
+
 		err = anypb.UnmarshalTo(module.Config, config, proto.UnmarshalOptions{})
 		if err != nil {
 			return depinject.Error(err)
@@ -120,4 +137,71 @@ func dumpRegisteredModules(modules map[protoreflect.FullName]*internal.ModuleIni
 		mods = append(mods, "  "+string(name))
 	}
 	return fmt.Sprintf("registered modules are:\n%s", strings.Join(mods, "\n"))
+}
+
+// ComposeGogo composes a gogo types app config into a container option by resolving
+// the required modules and composing their options.
+func ComposeGogo(appConfig *appv2.Config) depinject.Config {
+	opts := []depinject.Config{
+		depinject.Supply(appConfig),
+	}
+
+	modules, err := internal.ModulesByProtoMessageName()
+	if err != nil {
+		return depinject.Error(err)
+	}
+
+	for _, module := range appConfig.Modules {
+		if module.Name == "" {
+			return depinject.Error(fmt.Errorf("module is missing name"))
+		}
+
+		if module.Config == nil {
+			return depinject.Error(fmt.Errorf("module %q is missing a config object", module.Name))
+		}
+
+		var descriptor protoreflect.MessageDescriptor
+
+		des, err := gogoproto.GogoResolver.FindDescriptorByName(protoreflect.FullName(module.Config.TypeUrl))
+		descriptor = des.(protoreflect.MessageDescriptor)
+
+		init, ok := modules[descriptor.FullName()]
+		if !ok {
+			modDesc := proto.GetExtension(descriptor.Options(), appv1alpha1.E_Module).(*appv1alpha1.ModuleDescriptor)
+			if modDesc == nil {
+				return depinject.Error(fmt.Errorf("no module registered for type URL %s and that protobuf type does not have the option %s\n\n%s",
+					module.Config.TypeUrl, appv1alpha1.E_Module.TypeDescriptor().FullName(), dumpRegisteredModules(modules)))
+			}
+
+			return depinject.Error(fmt.Errorf("no module registered for type URL %s, did you forget to import %s: find more information on how to make a module ready for app wiring: https://docs.cosmos.network/main/building-modules/depinject\n\n%s",
+				module.Config.TypeUrl, modDesc.GoImport, dumpRegisteredModules(modules)))
+		}
+
+		config := init.ConfigProtoMessage.(gogoproto.Message)
+
+		gogotypes.UnmarshalAny(module.Config, config)
+		if err != nil {
+			return depinject.Error(err)
+		}
+
+		opts = append(opts, depinject.Supply(config))
+
+		for _, provider := range init.Providers {
+			opts = append(opts, depinject.ProvideInModule(module.Name, provider))
+		}
+
+		for _, invoker := range init.Invokers {
+			opts = append(opts, depinject.InvokeInModule(module.Name, invoker))
+		}
+
+		for _, binding := range module.GolangBindings {
+			opts = append(opts, depinject.BindInterfaceInModule(module.Name, binding.InterfaceType, binding.Implementation))
+		}
+	}
+
+	for _, binding := range appConfig.GolangBindings {
+		opts = append(opts, depinject.BindInterface(binding.InterfaceType, binding.Implementation))
+	}
+
+	return depinject.Configs(opts...)
 }

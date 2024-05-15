@@ -173,7 +173,11 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, simState.TxConfig, am.accountKeeper, am.keeper,
-	)
+	ak, bk := am.accountKeeper, am.keeper
+	reg := simulation.NewSimsRegistryAdapter(&simulation.BasicSimulationReporter{}, ak, bk, simState.TxConfig)
+	reg.Add(100, &types.MsgSend{}, simulation.MsgSendFactory(bk))
+	reg.Add(10, &types.MsgSend{}, simulation.MsgSendToModuleAccountFactory(bk))
+	reg.Add(10, &types.MsgMultiSend{}, simulation.MsgMultiSendFactory(bk))
+	// todo: should we make the weights configurable from outside as before with AppParams ?
+	return reg.ToLegacyWeightedOperations()
 }

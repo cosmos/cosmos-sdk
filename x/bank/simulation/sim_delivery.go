@@ -1,11 +1,11 @@
 package simulation
 
 import (
+	"context"
 	"math/rand"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"cosmossdk.io/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -15,13 +15,16 @@ import (
 type AppEntrypoint interface {
 	SimDeliver(_txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error)
 }
+type AccountSource interface {
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+}
 
 func DeliverSimsMsg(
 	reporter SimulationReporter,
 	r *rand.Rand,
 	app AppEntrypoint,
 	txGen client.TxConfig,
-	ak types.AccountKeeper,
+	ak AccountSource,
 	msg sdk.Msg,
 	ctx sdk.Context,
 	chainID string,

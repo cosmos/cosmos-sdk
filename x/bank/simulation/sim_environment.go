@@ -26,7 +26,7 @@ type SimAccount struct {
 	r             *rand.Rand
 	liquidBalance *SimsAccountBalance
 	addressCodec  address.Codec
-	bank          BalanceSource
+	bank          SpendableCoinser
 }
 
 func (a *SimAccount) LiquidBalance() *SimsAccountBalance {
@@ -92,24 +92,26 @@ func WithSpendableBalance() SimAccountFilter {
 	}
 }
 
-type AccountSource interface {
+type ModuleAccountSource interface {
 	GetModuleAddress(moduleName string) sdk.AccAddress
 }
-type BalanceSource interface {
+type SpendableCoinser interface {
 	SpendableCoins(addr sdk.AccAddress) sdk.Coins
 }
 
-type BankSourceFn func(addr sdk.AccAddress) sdk.Coins
+type SpendableCoinserFn func(addr sdk.AccAddress) sdk.Coins
 
-func (b BankSourceFn) SpendableCoins(addr sdk.AccAddress) sdk.Coins {
+func (b SpendableCoinserFn) SpendableCoins(addr sdk.AccAddress) sdk.Coins {
 	return b(addr)
 }
 
-func NewBalanceSource(ctx sdk.Context, bk interface {
+type BalanceSource interface {
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
-},
-) BalanceSource {
-	return BankSourceFn(func(addr sdk.AccAddress) sdk.Coins {
+}
+
+func NewBalanceSource(ctx sdk.Context, bk BalanceSource,
+) SpendableCoinser {
+	return SpendableCoinserFn(func(addr sdk.AccAddress) sdk.Coins {
 		return bk.SpendableCoins(ctx, addr)
 	})
 }
@@ -117,11 +119,11 @@ func NewBalanceSource(ctx sdk.Context, bk interface {
 type ChainDataSource struct {
 	r             *rand.Rand
 	accounts      []SimAccount
-	accountSource AccountSource
+	accountSource ModuleAccountSource
 	addressCodec  address.Codec
 }
 
-func NewChainDataSource(r *rand.Rand, ak AccountSource, bk BalanceSource, codec address.Codec, oldSimAcc ...simtypes.Account) *ChainDataSource {
+func NewChainDataSource(r *rand.Rand, ak ModuleAccountSource, bk SpendableCoinser, codec address.Codec, oldSimAcc ...simtypes.Account) *ChainDataSource {
 	acc := make([]SimAccount, len(oldSimAcc))
 	for i, a := range oldSimAcc {
 		acc[i] = SimAccount{

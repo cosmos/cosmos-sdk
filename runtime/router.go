@@ -16,8 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
-// NewMessageRouterService implements router.Service.
-func NewMessageRouterService(msgRouter baseapp.MessageRouter) router.Service {
+// NewMsgRouterService implements router.Service.
+func NewMsgRouterService(msgRouter baseapp.MessageRouter) router.Service {
 	return &msgRouterService{
 		router: msgRouter,
 	}

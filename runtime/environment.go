@@ -37,7 +37,7 @@ type EnvOption func(*appmodule.Environment)
 
 func EnvWithMsgRouterService(msgServiceRouter *baseapp.MsgServiceRouter) EnvOption {
 	return func(env *appmodule.Environment) {
-		env.MsgRouterService = NewMessageRouterService(msgServiceRouter)
+		env.MsgRouterService = NewMsgRouterService(msgServiceRouter)
 	}
 }
 

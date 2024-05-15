@@ -26,8 +26,6 @@ type Store interface {
 	// state. Must error when the version does not exist.
 	StateAt(version uint64) (store.ReaderMap, error)
 
-	WorkingHash(*store.Changeset) ([]byte, error)
-
 	Commit(changeset *store.Changeset) (store.Hash, error)
 
 	// Query is a key/value query directly to the underlying database. This skips the appmanager

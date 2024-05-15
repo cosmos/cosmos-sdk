@@ -57,7 +57,6 @@ type SimTestSuite struct {
 	ctx sdk.Context
 
 	app               *runtime.App
-	legacyAmino       *codec.LegacyAmino
 	codec             codec.Codec
 	interfaceRegistry codectypes.InterfaceRegistry
 	txConfig          client.TxConfig
@@ -72,7 +71,6 @@ func (suite *SimTestSuite) SetupTest() {
 			AppConfig,
 			depinject.Supply(log.NewNopLogger()),
 		),
-		&suite.legacyAmino,
 		&suite.codec,
 		&suite.interfaceRegistry,
 		&suite.txConfig,

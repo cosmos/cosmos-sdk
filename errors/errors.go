@@ -5,8 +5,6 @@ import (
 	"reflect"
 
 	"github.com/pkg/errors"
-	grpccodes "google.golang.org/grpc/codes"
-	grpcstatus "google.golang.org/grpc/status"
 )
 
 // UndefinedCodespace when we explicitly declare no codespace
@@ -32,18 +30,11 @@ var (
 //
 // Use this function only during a program startup phase.
 func Register(codespace string, code uint32, description string) *Error {
-	return RegisterWithGRPCCode(codespace, code, grpccodes.Unknown, description)
-}
-
-// RegisterWithGRPCCode is a version of Register that associates a gRPC error
-// code with a registered error.
-func RegisterWithGRPCCode(codespace string, code uint32, grpcCode grpccodes.Code, description string) *Error {
-	// TODO - uniqueness is (codespace, code) combo
 	if e := getUsed(codespace, code); e != nil {
 		panic(fmt.Sprintf("error with code %d is already registered: %q", code, e.desc))
 	}
 
-	err := &Error{codespace: codespace, code: code, desc: description, grpcCode: grpcCode}
+	err := &Error{codespace: codespace, code: code, desc: description}
 	setUsed(err)
 
 	return err
@@ -94,7 +85,6 @@ type Error struct {
 	codespace string
 	code      uint32
 	desc      string
-	grpcCode  grpccodes.Code
 }
 
 // New is an alias for Register.
@@ -153,10 +143,6 @@ func (e *Error) Wrap(desc string) error { return Wrap(e, desc) }
 // Wrapf extends this error with an additional information.
 // It's a handy function to call Wrapf with sdk errors.
 func (e *Error) Wrapf(desc string, args ...interface{}) error { return Wrapf(e, desc, args...) }
-
-func (e *Error) GRPCStatus() *grpcstatus.Status {
-	return grpcstatus.Newf(e.grpcCode, "codespace %s code %d: %s", e.codespace, e.code, e.desc)
-}
 
 func isNilErr(err error) bool {
 	// Reflect usage is necessary to correctly compare with
@@ -244,27 +230,6 @@ func (e *wrappedError) Is(target error) bool {
 // Unwrap implements the built-in errors.Unwrap
 func (e *wrappedError) Unwrap() error {
 	return e.parent
-}
-
-// GRPCStatus gets the gRPC status from the wrapped error or returns an unknown gRPC status.
-func (e *wrappedError) GRPCStatus() *grpcstatus.Status {
-	w := e.Cause()
-	for {
-		if hasStatus, ok := w.(interface {
-			GRPCStatus() *grpcstatus.Status
-		}); ok {
-			status := hasStatus.GRPCStatus()
-			return grpcstatus.New(status.Code(), fmt.Sprintf("%s: %s", status.Message(), e.msg))
-		}
-
-		x, ok := w.(causer)
-		if ok {
-			w = x.Cause()
-		}
-		if x == nil {
-			return grpcstatus.New(grpccodes.Unknown, e.msg)
-		}
-	}
 }
 
 // Recover captures a panic and stop its propagation. If panic happens it is

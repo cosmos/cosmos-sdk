@@ -107,6 +107,28 @@ func (k Keeper) IsAccountsModuleAccount(
 	return hasAcc
 }
 
+func (k Keeper) CurrentAccountNumber(
+	ctx context.Context,
+) (accNum uint64, err error) {
+	accNum, err = k.AccountNumber.Peek(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	return accNum, nil
+}
+
+func (k Keeper) NextAccountNumber(
+	ctx context.Context,
+) (accNum uint64, err error) {
+	accNum, err = k.AccountNumber.Next(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	return accNum, nil
+}
+
 // Init creates a new account of the given type.
 func (k Keeper) Init(
 	ctx context.Context,

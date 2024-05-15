@@ -134,3 +134,33 @@ func (mr *MockAccountsModKeeperMockRecorder) SendModuleMessageUntyped(ctx, sende
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendModuleMessageUntyped", reflect.TypeOf((*MockAccountsModKeeper)(nil).SendModuleMessageUntyped), ctx, sender, msg)
 }
+
+// CurrentAccountNumber mocks base method.
+func (m *MockAccountsModKeeper) CurrentAccountNumber(ctx context.Context) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CurrentAccountNumber", ctx)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CurrentAccountNumber indicates an expected call of CurrentAccountNumber.
+func (mr *MockAccountsModKeeperMockRecorder) ç(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CurrentAccountNumber", reflect.TypeOf((*MockAccountsModKeeper)(nil).CurrentAccountNumber), ctx)
+}
+
+// NextAccountNumber mocks base method.
+func (m *MockAccountsModKeeper) NextAccountNumber(ctx context.Context) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NextAccountNumber", ctx)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NextAccountNumber indicates an expected call of NextAccountNumber.
+func (mr *MockAccountsModKeeperMockRecorder) NextAccountNumber(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextAccountNumber", reflect.TypeOf((*MockAccountsModKeeper)(nil).NextAccountNumber), ctx)
+}

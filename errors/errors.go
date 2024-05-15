@@ -11,8 +11,6 @@ import (
 const UndefinedCodespace = "undefined"
 
 var (
-	// errInternal should never be exposed, but we reserve this code for non-specified errors
-	errInternal = Register(UndefinedCodespace, 1, "internal")
 
 	// ErrStopIterating is used to break out of an iteration
 	ErrStopIterating = Register(UndefinedCodespace, 2, "stop iterating")

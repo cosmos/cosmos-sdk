@@ -117,8 +117,8 @@ func InterceptConfigsAndCreateContext(
 // viperCfg object.
 func interceptConfigs(
 	rootViper *viper.Viper,
-	customAppTemplate string,
-	customConfig interface{},
+	_ string,
+	_ interface{},
 	cmtConfig *cmtcfg.Config,
 ) (*cmtcfg.Config, error) {
 	rootDir := rootViper.GetString("home")

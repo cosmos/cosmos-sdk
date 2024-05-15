@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cockroachdb/errors"
-
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
@@ -76,7 +74,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 	// determine if the validator signed the previous block
 	previous, err := k.GetMissedBlockBitmapValue(ctx, consAddr, index)
 	if err != nil {
-		return errors.Wrap(err, "failed to get the validator's bitmap value")
+		return fmt.Errorf("failed to get the validator's bitmap value: %w", err)
 	}
 
 	modifiedSignInfo := false

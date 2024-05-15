@@ -5,5 +5,4 @@ import (
 )
 
 func TestMigrate(t *testing.T) {
-
 }

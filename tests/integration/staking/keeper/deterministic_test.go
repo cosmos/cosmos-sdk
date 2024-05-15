@@ -96,7 +96,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	accNum := uint64(0)
 	acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
 		currentNum := accNum
-		accNum = accNum + 1
+		accNum++
 		return currentNum, nil
 	})
 

@@ -65,7 +65,10 @@ func (m Migrator) v56SetAccounts(ctx context.Context) error {
 			return true, err
 		}
 
-		baseAccount.SetAccountNumber(nextAccNum)
+		err = baseAccount.SetAccountNumber(nextAccNum)
+		if err != nil {
+			return true, err
+		}
 		m.keeper.SetAccount(ctx, baseAccount)
 
 		return false, nil

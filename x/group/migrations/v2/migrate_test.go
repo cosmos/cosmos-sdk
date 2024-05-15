@@ -126,7 +126,7 @@ func createOldPolicyAccount(t *testing.T, ctx sdk.Context, storeKey storetypes.S
 			return nil, nil, err
 		}
 		acctsModKeeper.EXPECT().NextAccountNumber(ctx).Return(accNum, nil)
-		accNum = accNum + 1
+		accNum++
 
 		acc := accountKeeper.NewAccount(ctx, &authtypes.ModuleAccount{
 			BaseAccount: &authtypes.BaseAccount{

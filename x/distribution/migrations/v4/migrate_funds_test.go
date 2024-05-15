@@ -57,7 +57,7 @@ func TestFundsMigration(t *testing.T) {
 	accNum := uint64(0)
 	acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
 		currNum := accNum
-		accNum = accNum + 1
+		accNum++
 		return currNum, nil
 	})
 

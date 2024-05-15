@@ -26,7 +26,7 @@ func NewMsgRouterService(msgRouter baseapp.MessageRouter) router.Service {
 var _ router.Service = (*msgRouterService)(nil)
 
 type msgRouterService struct {
-	// TODO: enventually authenticate modules to use the message router
+	// TODO: eventually authenticate modules to use the message router
 	router baseapp.MessageRouter
 }
 

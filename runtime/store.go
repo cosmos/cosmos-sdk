@@ -48,12 +48,6 @@ func (t transientStoreService) OpenTransientStore(ctx context.Context) store.KVS
 	return newKVStore(sdk.UnwrapSDKContext(ctx).KVStore(t.key))
 }
 
-type failingStoreService struct{}
-
-func (failingStoreService) OpenKVStore(ctx context.Context) store.KVStore {
-	panic("the (mem, transient) kv store service is not available for this module")
-}
-
 // CoreKVStore is a wrapper of Core/Store kvstore interface
 // Remove after https://github.com/cosmos/cosmos-sdk/issues/14714 is closed
 type coreKVStore struct {

@@ -11,36 +11,25 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-func MsgSendFactory(bk keeper.Keeper) SimMsgFactory {
+func MsgSendFactory(bk keeper.Keeper) SimMsgFactoryFn[*types.MsgSend] {
 	return func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) ([]SimAccount, sdk.Msg) {
 		from := testData.AnyAccount(reporter, WithSpendableBalance())
 		to := testData.AnyAccount(reporter, ExcludeAccounts(from))
-		coins := from.LiquidBalance().RandSubsetCoins()
-
-		// Check send_enabled status of each coin denom
-		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
-			reporter.Skipf("not sendable coins: %s", coins.Denoms())
-			return nil, nil
-		}
+		coins := from.LiquidBalance().RandSubsetCoins(reporter, WithSendEnabledCoins(ctx, bk))
 		return []SimAccount{from}, types.NewMsgSend(from.AddressString(), to.AddressString(), coins)
 	}
 }
 
-func MsgSendToModuleAccountFactory(bk keeper.Keeper) SimMsgFactory {
+func MsgSendToModuleAccountFactory(bk keeper.Keeper) SimMsgFactoryFn[*types.MsgSend] {
 	return func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) ([]SimAccount, sdk.Msg) {
 		from := testData.AnyAccount(reporter, WithSpendableBalance())
 		toStr := testData.ModuleAccountAddress(reporter, "distribution")
-		coins := from.LiquidBalance().RandSubsetCoins()
-		// Check send_enabled status of each coin denom
-		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
-			reporter.Skipf("not sendable coins: %s", coins.Denoms())
-			return nil, nil
-		}
+		coins := from.LiquidBalance().RandSubsetCoins(reporter, WithSendEnabledCoins(ctx, bk))
 		return []SimAccount{from}, types.NewMsgSend(from.AddressString(), toStr, coins)
 	}
 }
 
-func MsgMultiSendFactory(bk keeper.Keeper) SimMsgFactory {
+func MsgMultiSendFactory(bk keeper.Keeper) SimMsgFactoryFn[*types.MsgMultiSend] {
 	return func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) ([]SimAccount, sdk.Msg) {
 		r := testData.Rand()
 		// random number of inputs/outputs between [1, 3]
@@ -57,7 +46,7 @@ func MsgMultiSendFactory(bk keeper.Keeper) SimMsgFactory {
 			if reporter.IsSkipped() {
 				return nil, nil
 			}
-			coins := from.LiquidBalance().RandSubsetCoins()
+			coins := from.LiquidBalance().RandSubsetCoins(reporter)
 			fromAddr := from.AddressString()
 
 			// set input address in used address map

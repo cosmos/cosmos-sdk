@@ -49,7 +49,6 @@ type SimTestSuite struct {
 	accountKeeper     authkeeper.AccountKeeper
 	bankKeeper        bankkeeper.Keeper
 	cdc               codec.Codec
-	legacyAmino       *codec.LegacyAmino
 }
 
 func (suite *SimTestSuite) SetupTest() {
@@ -74,7 +73,6 @@ func (suite *SimTestSuite) SetupTest() {
 		&suite.interfaceRegistry,
 		&suite.txConfig,
 		&suite.cdc,
-		&suite.legacyAmino,
 	)
 	suite.Require().NoError(err)
 

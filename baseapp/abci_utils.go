@@ -3,10 +3,10 @@ package baseapp
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 
-	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"

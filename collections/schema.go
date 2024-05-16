@@ -36,9 +36,7 @@ func NewSchemaBuilderFromAccessor(accessorFunc func(ctx context.Context) store.K
 // done adding collections to the schema.
 func NewSchemaBuilder(service store.KVStoreService) *SchemaBuilder {
 	sb := NewSchemaBuilderFromAccessor(service.OpenKVStore)
-	kl, ok := service.(interface {
-		OpenContainer(ctx context.Context) container.Service
-	})
+	kl, ok := service.(container.CacheService)
 	if ok {
 		sb.schema.container = kl.OpenContainer
 	}

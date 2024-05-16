@@ -8,6 +8,7 @@ import (
 )
 
 var _ store.KVStoreService = (*storeService)(nil)
+var _ container.CacheService = (*storeService)(nil)
 
 func NewKVStoreService(address []byte) store.KVStoreService {
 	return storeService{actor: address}

@@ -29,12 +29,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
-func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, decodedTx *decode.DecodedTx) (w *gogoTxWrapper, err error) {
-	// set msgsv1
-	msgs, err := decodeMsgsV1(cdc, decodedTx.Tx.Body.Messages)
-	if err != nil {
-		return nil, fmt.Errorf("unable to convert messagev2 to messagev1: %w", err)
-	}
+func newWrapperFromDecodedTx(
+	addrCodec address.Codec,
+	cdc codec.BinaryCodec,
+	decodedTx *decode.DecodedTx,
+) (w *gogoTxWrapper, err error) {
 	// set fees
 	fees := make(sdk.Coins, len(decodedTx.Tx.AuthInfo.Fee.Amount))
 	for i, fee := range decodedTx.Tx.AuthInfo.Fee.Amount {
@@ -73,21 +72,12 @@ func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, dec
 			return nil, err
 		}
 	}
-
-	// reflectMsgs
-	reflectMsgs := make([]protoreflect.Message, len(msgs))
-	for i, msg := range decodedTx.Messages {
-		reflectMsgs[i] = msg.ProtoReflect()
-	}
-
 	return &gogoTxWrapper{
-		cdc:         cdc,
-		decodedTx:   decodedTx,
-		reflectMsgs: reflectMsgs,
-		msgs:        msgs,
-		fees:        fees,
-		feePayer:    feePayer,
-		feeGranter:  feeGranter,
+		cdc:        cdc,
+		decodedTx:  decodedTx,
+		fees:       fees,
+		feePayer:   feePayer,
+		feeGranter: feeGranter,
 	}, nil
 }
 
@@ -97,11 +87,9 @@ type gogoTxWrapper struct {
 	decodedTx *decode.DecodedTx
 	cdc       codec.BinaryCodec
 
-	msgs        []proto.Message
-	reflectMsgs []protoreflect.Message
-	fees        sdk.Coins
-	feePayer    []byte
-	feeGranter  []byte
+	fees       sdk.Coins
+	feePayer   []byte
+	feeGranter []byte
 
 	// Cache for hash and full bytes
 	cachedHash   [32]byte
@@ -143,16 +131,27 @@ func (w *gogoTxWrapper) GetGasLimit() (uint64, error) {
 	return w.decodedTx.Tx.AuthInfo.Fee.GasLimit, nil
 }
 
-func (w *gogoTxWrapper) GetMessages() ([]protov2.Message, error) {
+func (w *gogoTxWrapper) GetMessages() ([]proto.Message, error) {
 	if w.decodedTx == nil || w.decodedTx.Messages == nil {
 		return nil, errors.New("messages not available or are nil")
 	}
 	return w.decodedTx.Messages, nil
 }
 
+func (w *gogoTxWrapper) GetMsgs() []sdk.Msg {
+	return w.decodedTx.Messages
+}
+
+func (w *gogoTxWrapper) GetReflectMessages() ([]protoreflect.Message, error) {
+	if w.decodedTx == nil || w.decodedTx.ReflectMessages == nil {
+		return nil, errors.New("messages not available or are nil")
+	}
+	return w.decodedTx.ReflectMessages, nil
+}
+
 func (w *gogoTxWrapper) GetSenders() ([][]byte, error) {
 	if w.decodedTx == nil || w.decodedTx.Signers == nil {
-		return nil, errors.New("Senders not available or are nil")
+		return nil, errors.New("senders not available or are nil")
 	}
 	return w.decodedTx.Signers, nil
 }
@@ -168,17 +167,6 @@ type ExtensionOptionsTxBuilder interface {
 
 	SetExtensionOptions(...*codectypes.Any)
 	SetNonCriticalExtensionOptions(...*codectypes.Any)
-}
-
-func (w *gogoTxWrapper) GetMsgs() []sdk.Msg {
-	if w.msgs == nil {
-		panic("fill in msgs")
-	}
-	return w.msgs
-}
-
-func (w *gogoTxWrapper) GetReflectMessages() ([]protoreflect.Message, error) {
-	return w.reflectMsgs, nil
 }
 
 func (w *gogoTxWrapper) ValidateBasic() error {

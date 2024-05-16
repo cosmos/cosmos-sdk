@@ -3,9 +3,13 @@ package decode
 import (
 	"crypto/sha256"
 	"errors"
+	"fmt"
+	"reflect"
+	"strings"
 
-	"github.com/cosmos/cosmos-proto/anyutil"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/core/transaction"
@@ -15,7 +19,8 @@ import (
 
 // DecodedTx contains the decoded transaction, its signers, and other flags.
 type DecodedTx struct {
-	Messages                     []proto.Message
+	Messages                     []gogoproto.Message
+	ReflectMessages              []protoreflect.Message
 	Tx                           *v1beta1.Tx
 	TxRaw                        *v1beta1.TxRaw
 	Signers                      [][]byte
@@ -27,16 +32,22 @@ type DecodedTx struct {
 	cachedHashed bool
 }
 
+type gogoProtoCodec interface {
+	Unmarshal([]byte, gogoproto.Message) error
+}
+
 var _ transaction.Tx = &DecodedTx{}
 
 // Decoder contains the dependencies required for decoding transactions.
 type Decoder struct {
 	signingCtx *signing.Context
+	codec      gogoProtoCodec
 }
 
 // Options are options for creating a Decoder.
 type Options struct {
 	SigningContext *signing.Context
+	ProtoCodec     gogoProtoCodec
 }
 
 // NewDecoder creates a new Decoder for decoding transactions.
@@ -44,9 +55,13 @@ func NewDecoder(options Options) (*Decoder, error) {
 	if options.SigningContext == nil {
 		return nil, errors.New("signing context is required")
 	}
+	if options.ProtoCodec == nil {
+		return nil, errors.New("proto codec is required for unmarshalling gogoproto messages")
+	}
 
 	return &Decoder{
 		signingCtx: options.SigningContext,
+		codec:      options.ProtoCodec,
 	}, nil
 }
 
@@ -104,16 +119,44 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 		Signatures: raw.Signatures,
 	}
 
-	var signers [][]byte
-	var msgs []proto.Message
+	var (
+		signers [][]byte
+		// dynamicMsgs []proto.Message
+		reflectMsgs []protoreflect.Message
+		msgs        []gogoproto.Message
+	)
 	seenSigners := map[string]struct{}{}
 	for _, anyMsg := range body.Messages {
-		msg, signerErr := anyutil.Unpack(anyMsg, fileResolver, d.signingCtx.TypeResolver())
-		if signerErr != nil {
-			return nil, errorsmod.Wrap(ErrTxDecode, signerErr.Error())
+		typeURL := strings.TrimPrefix(anyMsg.TypeUrl, "/")
+
+		// unmarshal into dynamic message
+		// msgDesc, err := fileResolver.FindDescriptorByName(protoreflect.FullName(typeURL))
+		// if err != nil {
+		// 	return nil, fmt.Errorf("protoFiles does not have descriptor %s: %w", anyMsg.TypeUrl, err)
+		// }
+		// dynamicMsg := dynamicpb.NewMessageType(msgDesc.(protoreflect.MessageDescriptor)).New().Interface()
+		// err = anyMsg.UnmarshalTo(dynamicMsg)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// dynamicMsgs = append(dynamicMsgs, dynamicMsg)
+
+		reflectMsgs = append(reflectMsgs, anyMsg.ProtoReflect())
+
+		// unmarshal into gogoproto message
+		gogoType := gogoproto.MessageType(typeURL)
+		if gogoType == nil {
+			return nil, fmt.Errorf("cannot find type: %s", anyMsg.TypeUrl)
+		}
+		msg := reflect.New(gogoType.Elem()).Interface().(gogoproto.Message)
+		err = d.codec.Unmarshal(anyMsg.Value, msg)
+		if err != nil {
+			return nil, err
 		}
 		msgs = append(msgs, msg)
-		ss, signerErr := d.signingCtx.GetSigners(msg)
+
+		// fetch signers with dynamic message
+		ss, signerErr := d.signingCtx.GetSigners(anyMsg)
 		if signerErr != nil {
 			return nil, errorsmod.Wrap(ErrTxDecode, signerErr.Error())
 		}
@@ -129,6 +172,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 
 	return &DecodedTx{
 		Messages:                     msgs,
+		ReflectMessages:              reflectMsgs,
 		Tx:                           theTx,
 		TxRaw:                        &raw,
 		TxBodyHasUnknownNonCriticals: txBodyHasUnknownNonCriticals,
@@ -151,7 +195,7 @@ func (dtx *DecodedTx) GetGasLimit() (uint64, error) {
 	return dtx.Tx.AuthInfo.Fee.GasLimit, nil
 }
 
-func (dtx *DecodedTx) GetMessages() ([]proto.Message, error) {
+func (dtx *DecodedTx) GetMessages() ([]gogoproto.Message, error) {
 	if dtx == nil || dtx.Messages == nil {
 		return nil, errors.New("messages not available or are nil")
 	}

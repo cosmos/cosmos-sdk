@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 
+	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -13,8 +14,6 @@ import (
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
 	rootstore "cosmossdk.io/store/v2/root"
-
-	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 )
 
 // AppBuilder is a type that is injected into a container by the runtime/v2 module
@@ -39,7 +38,7 @@ func (a *AppBuilder) DefaultGenesis() map[string]json.RawMessage {
 // This is the primary hook for integrating with modules which are not registered using the app config.
 func (a *AppBuilder) RegisterModules(modules ...appmodulev2.AppModule) error {
 	for _, appModule := range modules {
-		if mod, ok := appModule.(sdkmodule.HasName); ok {
+		if mod, ok := appModule.(appmodule.HasName); ok {
 			name := mod.Name()
 			if _, ok := a.app.moduleManager.modules[name]; ok {
 				return fmt.Errorf("module named %q already exists", name)
@@ -47,10 +46,10 @@ func (a *AppBuilder) RegisterModules(modules ...appmodulev2.AppModule) error {
 			a.app.moduleManager.modules[name] = appModule
 
 			if mod, ok := appModule.(appmodulev2.HasRegisterInterfaces); ok {
-				mod.RegisterInterfaces(a.app.interfaceRegistry)
+				mod.RegisterInterfaces(a.app.interfaceRegistrar)
 			}
 
-			if mod, ok := appModule.(sdkmodule.HasAminoCodec); ok {
+			if mod, ok := appModule.(appmodule.HasAminoCodec); ok {
 				mod.RegisterLegacyAminoCodec(a.app.amino)
 			}
 		}
@@ -179,7 +178,13 @@ func AppBuilderWithTxValidator(txValidators func(ctx context.Context, tx transac
 
 // AppBuilderWithPostTxExec sets logic that will be executed after each transaction.
 // When not provided, a no-op function will be used.
-func AppBuilderWithPostTxExec(postTxExec func(ctx context.Context, tx transaction.Tx, success bool) error) AppBuilderOption {
+func AppBuilderWithPostTxExec(
+	postTxExec func(
+		ctx context.Context,
+		tx transaction.Tx,
+		success bool,
+	) error,
+) AppBuilderOption {
 	return func(a *AppBuilder) {
 		a.postTxExec = postTxExec
 	}

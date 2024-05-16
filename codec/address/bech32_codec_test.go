@@ -14,15 +14,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 )
 
-func generateAddresses(totalAddresses int) [][]byte {
+func generateAddresses(totalAddresses int) ([][]byte, error) {
 	keys := make([][]byte, totalAddresses)
 	addr := make([]byte, 32)
 	for i := 0; i < totalAddresses; i++ {
-		rand.Read(addr)
+		_, err := rand.Read(addr)
+		if err != nil {
+			return nil, err
+		}
 		keys[i] = addr
 	}
 
-	return keys
+	return keys, nil
 }
 
 func TestNewBech32Codec(t *testing.T) {

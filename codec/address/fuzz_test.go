@@ -16,7 +16,9 @@ func FuzzCachedAddressCodec(f *testing.F) {
 		f.Skip()
 	}
 
-	addresses := generateAddresses(2)
+	addresses, err := generateAddresses(2)
+	require.NoError(f, err)
+
 	for _, addr := range addresses {
 		f.Add(addr)
 	}
@@ -31,7 +33,9 @@ func FuzzAddressCodec(f *testing.F) {
 	if testing.Short() {
 		f.Skip()
 	}
-	addresses := generateAddresses(2)
+	addresses, err := generateAddresses(2)
+	require.NoError(f, err)
+
 	for _, addr := range addresses {
 		f.Add(addr)
 	}

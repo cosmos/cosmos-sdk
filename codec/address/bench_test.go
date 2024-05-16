@@ -1,6 +1,7 @@
 package address
 
 import (
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,7 +21,8 @@ func BenchmarkCodecWithoutCache(b *testing.B) {
 
 func bytesToString(b *testing.B, cdc address.Codec) {
 	b.Helper()
-	addresses := generateAddresses(10)
+	addresses, err := generateAddresses(10)
+	require.NoError(b, err)
 
 	b.Helper()
 	b.ReportAllocs()

@@ -52,6 +52,7 @@ type (
 	// Tx defines an interface a transaction must fulfill.
 	Tx interface {
 		HasMsgs
+		coretransaction.Tx
 
 		// GetReflectMessages gets a reflected version of the transaction's messages
 		// that can be used by dynamic APIs. These messages should not be used for actual

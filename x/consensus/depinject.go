@@ -38,10 +38,13 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
+	Authority     Authority
 	Keeper        keeper.Keeper
 	Module        appmodule.AppModule
 	BaseAppOption runtime.BaseAppOption
 }
+
+type Authority string
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// default to governance authority if not provided
@@ -64,6 +67,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	return ModuleOutputs{
 		Keeper:        k,
 		Module:        m,
+		Authority:     Authority(authority.String()),
 		BaseAppOption: baseappOpt,
 	}
 }

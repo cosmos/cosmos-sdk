@@ -5,10 +5,11 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 )
 
-func (msg MsgUpdateParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, error) {
-	if msg.Evidence == nil || msg.Block == nil || msg.Validator == nil {
+func (msg ConsensusMsgParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, error) {
+	if msg.Evidence == nil || msg.Block == nil || msg.Validator == nil || msg.Version == nil {
 		return cmtproto.ConsensusParams{}, errors.New("all parameters must be present")
 	}
 
@@ -25,19 +26,18 @@ func (msg MsgUpdateParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, e
 		Validator: &cmtproto.ValidatorParams{
 			PubKeyTypes: msg.Validator.PubKeyTypes,
 		},
+
 		Version: cmttypes.DefaultConsensusParams().ToProto().Version, // Version is stored in x/upgrade
 	}
-	if msg.Feature != nil && msg.Feature.VoteExtensionsEnableHeight != nil && msg.Feature.PbtsEnableHeight != nil {
+
+	if msg.Abci != nil {
 		cp.Feature = &cmtproto.FeatureParams{
-			VoteExtensionsEnableHeight: msg.Feature.VoteExtensionsEnableHeight,
-			PbtsEnableHeight:           msg.Feature.PbtsEnableHeight,
+			VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: msg.Abci.VoteExtensionsEnableHeight},
 		}
 	}
-	if msg.Synchrony != nil {
-		cp.Synchrony = &cmtproto.SynchronyParams{
-			Precision:    msg.Synchrony.Precision,
-			MessageDelay: msg.Synchrony.MessageDelay,
-		}
+
+	if msg.Version != nil {
+		cp.Version.App = msg.Version.App
 	}
 
 	return cp, nil

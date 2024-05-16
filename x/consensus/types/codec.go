@@ -3,16 +3,17 @@ package types
 import (
 	corelegacy "cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
-	coretransaction "cosmossdk.io/core/transaction"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
 func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 	registrar.RegisterImplementations(
-		(*coretransaction.Msg)(nil),
+		(*sdk.Msg)(nil),
 		&MsgUpdateParams{},
+		&MsgUpdateCometInfo{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registrar, &_Msg_serviceDesc)
@@ -22,4 +23,5 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
 func RegisterLegacyAminoCodec(cdc corelegacy.Amino) {
 	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/x/consensus/MsgUpdateParams")
+	legacy.RegisterAminoMsg(cdc, &MsgUpdateCometInfo{}, "cosmos-sdk/x/consensus/MsgCometInfo")
 }

@@ -255,9 +255,7 @@ func multisigSign(clientCtx client.Context, txBuilder client.TxBuilder, txFactor
 	}
 
 	var found bool
-	members := [][]byte{}
 	for _, pubkey := range multisigLegacyPub.GetPubKeys() {
-		members = append(members, pubkey.Address().Bytes())
 		if pubkey.Equals(fromPubKey) {
 			found = true
 		}
@@ -270,7 +268,6 @@ func multisigSign(clientCtx client.Context, txBuilder client.TxBuilder, txFactor
 		txFactory,
 		clientCtx,
 		multisigAddr,
-		members,
 		clientCtx.GetFromName(),
 		txBuilder,
 		clientCtx.Offline,
@@ -419,9 +416,7 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txF tx.Factory, newTx 
 		}
 
 		var found bool
-		members := [][]byte{}
 		for _, pubkey := range multisigLegacyPub.GetPubKeys() {
-			members = append(members, pubkey.Address().Bytes())
 			if pubkey.Equals(fromPubKey) {
 				found = true
 			}
@@ -430,7 +425,7 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txF tx.Factory, newTx 
 			return fmt.Errorf("signing key is not a part of multisig key")
 		}
 		err = authclient.SignTxWithSignerAddress(
-			txF, clientCtx, multisigAddr, members, fromName, txBuilder, clientCtx.Offline, overwrite)
+			txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite)
 		if err != nil {
 			return err
 		}

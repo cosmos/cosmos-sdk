@@ -24,6 +24,10 @@ const (
 	suffixConsAddr = "valcons"
 )
 
+var (
+	errEmptyAddress = errors.New("empty address string is not allowed")
+)
+
 // cache variables
 var (
 	accAddrMu     sync.Mutex
@@ -94,7 +98,7 @@ func NewBech32Codec(prefix string) address.Codec {
 // StringToBytes encodes text to bytes
 func (bc Bech32Codec) StringToBytes(text string) ([]byte, error) {
 	if len(strings.TrimSpace(text)) == 0 {
-		return []byte{}, errors.New("empty address string is not allowed")
+		return []byte{}, errEmptyAddress
 	}
 
 	hrp, bz, err := bech32.DecodeAndConvert(text)
@@ -132,6 +136,10 @@ func (bc Bech32Codec) BytesToString(bz []byte) (string, error) {
 }
 
 func (cbc cachedBech32Codec) BytesToString(bz []byte) (string, error) {
+	if len(bz) == 0 {
+		return "", nil
+	}
+
 	// caches prefix is added to the key to make sure keys are unique in case codecs with different bech32 prefix are defined.
 	key := cbc.codec.Bech32Prefix + conv.UnsafeBytesToStr(bz)
 	cbc.mu.Lock()

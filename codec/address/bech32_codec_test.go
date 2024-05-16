@@ -14,6 +14,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 )
 
+func generateAddresses(totalKeys int) [][]byte {
+	keys := make([][]byte, totalKeys)
+	for i := 0; i < totalKeys; i++ {
+		keys[i] = secp256k1.GenPrivKey().PubKey().Address()
+	}
+
+	return keys
+}
+
 func TestNewBech32Codec(t *testing.T) {
 	tests := []struct {
 		name    string

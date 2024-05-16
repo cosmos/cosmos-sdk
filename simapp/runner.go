@@ -95,13 +95,20 @@ func RunWithSeeds[T SimulationApp](
 			tCfg.Seed = seed
 			tCfg.FuzzSeed = fuzzSeed
 			testInstance := NewSimulationAppInstance(t, tCfg, appFactory)
+			var runLogger log.Logger
+			if cli.FlagVerboseValue {
+				runLogger = log.NewTestLogger(t)
+			} else {
+				runLogger = log.NewTestLoggerInfo(t)
+			}
+			runLogger = runLogger.With("seed", tCfg.Seed)
 
 			app := testInstance.App
 			stateFactory := setupStateFactory(app)
 			simParams, err := simulation.SimulateFromSeed(
 				t,
-				testInstance.Logger,
-				WriteToDebugLog(testInstance.Logger),
+				runLogger,
+				WriteToDebugLog(runLogger),
 				app.GetBaseApp(),
 				stateFactory.AppStateFn,
 				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
@@ -141,10 +148,11 @@ func NewSimulationAppInstance[T SimulationApp](
 	dbDir := filepath.Join(workDir, "leveldb-app-sim")
 	var logger log.Logger
 	if cli.FlagVerboseValue {
-		logger = log.NewTestLoggerInfo(t).With("seed", tCfg.Seed)
+		logger = log.NewTestLogger(t)
 	} else {
-		logger = log.NewNopLogger()
+		logger = log.NewTestLoggerError(t)
 	}
+	logger = logger.With("seed", tCfg.Seed)
 
 	db, err := dbm.NewDB("Simulation", dbm.BackendType(tCfg.DBBackend), dbDir)
 	require.NoError(t, err)

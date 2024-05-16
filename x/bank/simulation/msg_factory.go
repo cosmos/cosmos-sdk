@@ -18,7 +18,7 @@ func MsgSendFactory(bk keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgSend] {
 		from := testData.AnyAccount(reporter, simsx.WithSpendableBalance())
 		to := testData.AnyAccount(reporter, simsx.ExcludeAccounts(from))
 		coins := from.LiquidBalance().RandSubsetCoins(reporter, simsx.WithSendEnabledCoins(ctx, bk))
-		return []simsx.SimAccount{from}, types.NewMsgSend(from.AddressStr, to.AddressStr, coins)
+		return []simsx.SimAccount{from}, types.NewMsgSend(from.AddressBech32, to.AddressBech32, coins)
 	}
 }
 
@@ -27,7 +27,7 @@ func MsgSendToModuleAccountFactory(bk keeper.Keeper) simsx.SimMsgFactoryFn[*type
 		from := testData.AnyAccount(reporter, simsx.WithSpendableBalance())
 		toStr := testData.ModuleAccountAddress(reporter, "distribution")
 		coins := from.LiquidBalance().RandSubsetCoins(reporter, simsx.WithSendEnabledCoins(ctx, bk))
-		return []simsx.SimAccount{from}, types.NewMsgSend(from.AddressStr, toStr, coins)
+		return []simsx.SimAccount{from}, types.NewMsgSend(from.AddressBech32, toStr, coins)
 	}
 }
 
@@ -49,7 +49,7 @@ func MsgMultiSendFactory(bk keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgMulti
 				return nil, nil
 			}
 			coins := from.LiquidBalance().RandSubsetCoins(reporter)
-			fromAddr := from.AddressStr
+			fromAddr := from.AddressBech32
 
 			// set input address in used address map
 			usedAddrs[fromAddr] = struct{}{}
@@ -70,7 +70,7 @@ func MsgMultiSendFactory(bk keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgMulti
 
 		for i := range outputs {
 			out := testData.AnyAccount(reporter)
-			outAddr := out.AddressStr
+			outAddr := out.AddressBech32
 			if reporter.IsSkipped() {
 				return nil, nil
 			}

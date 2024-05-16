@@ -83,7 +83,7 @@ func MsgDelegateFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgDelega
 		}
 		sender := testData.AnyAccount(reporter)
 		delegation := sender.LiquidBalance().RandSubsetCoin(reporter, bondDenom)
-		return []simsx.SimAccount{sender}, types.NewMsgDelegate(sender.AddressStr, val.GetOperator(), delegation)
+		return []simsx.SimAccount{sender}, types.NewMsgDelegate(sender.AddressBech32, val.GetOperator(), delegation)
 	}
 }
 

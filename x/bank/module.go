@@ -180,7 +180,5 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	weight := simsx.ParamWeightSource(simState.AppParams)
 	reg.Add(weight.Get("msg_send", 100), simulation.MsgSendFactory(bk))
 	reg.Add(weight.Get("msg_multisend", 10), simulation.MsgMultiSendFactory(bk))
-	// reg.Add(10, simulation.MsgSendToModuleAccountFactory(bk)) // todo: not allowed
-	// todo: should we make the weights configurable from outside as before with AppParams ?
 	return reg.ToLegacyWeightedOperations()
 }

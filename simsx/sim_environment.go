@@ -25,7 +25,7 @@ type SimAccount struct {
 	simulation.Account
 	r             *rand.Rand
 	liquidBalance *SimsAccountBalance
-	AddressStr    string
+	AddressBech32 string
 	bank          SpendableCoinser
 }
 
@@ -117,7 +117,7 @@ func ExcludeAccounts(others ...SimAccount) SimAccountFilter {
 
 func ExcludeAddresses(addrs ...string) SimAccountFilter {
 	return func(a SimAccount) bool {
-		return !slices.Contains(addrs, a.AddressStr)
+		return !slices.Contains(addrs, a.AddressBech32)
 	}
 }
 
@@ -175,10 +175,10 @@ func NewChainDataSource(r *rand.Rand, ak ModuleAccountSource, bk SpendableCoinse
 			panic(err.Error())
 		}
 		acc[i] = SimAccount{
-			Account:    a,
-			r:          r,
-			AddressStr: addrStr,
-			bank:       bk,
+			Account:       a,
+			r:             r,
+			AddressBech32: addrStr,
+			bank:          bk,
 		}
 		index[addrStr] = i
 	}

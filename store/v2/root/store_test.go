@@ -379,13 +379,10 @@ func (s *RootStoreTestSuite) TestPrune() {
 
 		// write keys over multiple versions
 		for i := int64(0); i < tc.numVersions; i++ {
-			// execute WorkingHash and Commit
-			wHash, err := s.rootStore.WorkingHash(cs)
-			s.Require().NoError(err)
-
+			// execute Commit
 			cHash, err := s.rootStore.Commit(cs)
 			s.Require().NoError(err)
-			s.Require().Equal(wHash, cHash)
+			s.Require().NotNil(cHash)
 		}
 
 		for _, v := range tc.saved {
@@ -429,13 +426,10 @@ func (s *RootStoreTestSuite) TestMultiStore_Pruning_SameHeightsTwice() {
 	s.Require().NoError(s.rootStore.LoadLatestVersion())
 
 	for i := uint64(0); i < numVersions; i++ {
-		// execute WorkingHash and Commit
-		wHash, err := s.rootStore.WorkingHash(cs)
-		s.Require().NoError(err)
-
+		// execute Commit
 		cHash, err := s.rootStore.Commit(cs)
 		s.Require().NoError(err)
-		s.Require().Equal(wHash, cHash)
+		s.Require().NotNil(cHash)
 	}
 
 	latestVer, err := s.rootStore.GetLatestVersion()
@@ -457,14 +451,10 @@ func (s *RootStoreTestSuite) TestMultiStore_Pruning_SameHeightsTwice() {
 	s.Require().NoError(err)
 
 	// Test pruning the same heights again
-	_, err = s.rootStore.WorkingHash(cs)
-	s.Require().NoError(err)
 	_, err = s.rootStore.Commit(cs)
 	s.Require().NoError(err)
 
 	// Ensure that can commit one more height with no panic
-	_, err = s.rootStore.WorkingHash(cs)
-	s.Require().NoError(err)
 	_, err = s.rootStore.Commit(cs)
 	s.Require().NoError(err)
 }
@@ -497,13 +487,10 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	// Commit enough to build up heights to prune, where on the next block we should
 	// batch delete.
 	for i := uint64(0); i < 10; i++ {
-		// execute WorkingHash and Commit
-		wHash, err := s.rootStore.WorkingHash(cs)
-		s.Require().NoError(err)
-
+		// execute Commit
 		cHash, err := s.rootStore.Commit(cs)
 		s.Require().NoError(err)
-		s.Require().Equal(wHash, cHash)
+		s.Require().NotNil(cHash)
 	}
 
 	latestVer, err := s.rootStore.GetLatestVersion()
@@ -526,13 +513,10 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	s.Require().Equal(uint64(0), actualHeightToPrune)
 
 	// commit one more block and ensure the heights have been pruned
-	// execute WorkingHash and Commit
-	wHash, err := s.rootStore.WorkingHash(cs)
-	s.Require().NoError(err)
-
+	// execute Commit
 	cHash, err := s.rootStore.Commit(cs)
 	s.Require().NoError(err)
-	s.Require().Equal(wHash, cHash)
+	s.Require().NotNil(cHash)
 
 	latestVer, err = s.rootStore.GetLatestVersion()
 	s.Require().NoError(err)
@@ -583,13 +567,10 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 
 		cs.Add(testStoreKey3Bytes, []byte(key), []byte(val), false)
 
-		// execute WorkingHash and Commit
-		wHash, err := s.rootStore.WorkingHash(cs)
-		s.Require().NoError(err)
-
+		// execute Commit
 		cHash, err := s.rootStore.Commit(cs)
 		s.Require().NoError(err)
-		s.Require().Equal(wHash, cHash)
+		s.Require().NotNil(cHash)
 
 		latestVer, err := s.rootStore.GetLatestVersion()
 		s.Require().NoError(err)
@@ -608,13 +589,10 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 
 	cs1.Add(testStoreKey2Bytes, []byte(key), []byte(val), false)
 
-	// execute WorkingHash and Commit
-	wHash, err := s.rootStore.WorkingHash(cs1)
-	s.Require().NoError(err)
-
+	// execute Commit
 	cHash, err := s.rootStore.Commit(cs1)
 	s.Require().NoError(err)
-	s.Require().Equal(wHash, cHash)
+	s.Require().NotNil(cHash)
 
 	latestVer, err := s.rootStore.GetLatestVersion()
 	s.Require().NoError(err)
@@ -626,13 +604,10 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 
 	cs2.Add(testStoreKey3Bytes, []byte(key), []byte(val), false)
 
-	// execute WorkingHash and Commit
-	wHash, err = s.rootStore.WorkingHash(cs2)
-	s.Require().NoError(err)
-
+	// execute Commit
 	cHash, err = s.rootStore.Commit(cs2)
 	s.Require().NoError(err)
-	s.Require().Equal(wHash, cHash)
+	s.Require().NotNil(cHash)
 
 	latestVer, err = s.rootStore.GetLatestVersion()
 	s.Require().NoError(err)

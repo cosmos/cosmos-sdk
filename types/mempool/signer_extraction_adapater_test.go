@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -20,7 +20,7 @@ func (n nonVerifiableTx) GetMsgs() []sdk.Msg {
 	panic("not implemented")
 }
 
-func (n nonVerifiableTx) GetMsgsV2() ([]proto.Message, error) {
+func (n nonVerifiableTx) GetReflectMessages() ([]protoreflect.Message, error) {
 	panic("not implemented")
 }
 

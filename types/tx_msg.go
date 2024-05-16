@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	coretransaction "cosmossdk.io/core/transaction"

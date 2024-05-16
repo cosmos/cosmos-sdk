@@ -44,7 +44,7 @@ message Module {
   repeated string export_genesis = 7;
 
   // order_migrations defines the order in which module migrations are performed.
-  // If this is left empty, it uses the default migration order (alphabeticaly).
+  // If this is left empty, it uses the default migration order (alphabetically).
   repeated string order_migrations = 8;
 
   // GasConfig is the config object for gas limits.

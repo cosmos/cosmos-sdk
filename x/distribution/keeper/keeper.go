@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/distribution/types"
@@ -26,6 +27,8 @@ type Keeper struct {
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
 	poolKeeper    types.PoolKeeper
+
+	cometService comet.Service
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
@@ -59,6 +62,7 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec, env appmodule.Environment,
 	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, pk types.PoolKeeper,
+	cometService comet.Service,
 	feeCollectorName, authority string,
 ) Keeper {
 	// ensure distribution module account is set
@@ -74,6 +78,7 @@ func NewKeeper(
 		bankKeeper:       bk,
 		stakingKeeper:    sk,
 		poolKeeper:       pk,
+		cometService:     cometService,
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),

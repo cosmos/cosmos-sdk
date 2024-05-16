@@ -19,7 +19,7 @@
       "mode": "debug",
       "program": "simapp/v2/simdv2",
       // "args": ["init", "--chain-id", "aurn-chain", "aurn-node"],
-      "args": ["keys", "list"],
+      "args": ["start"],
       // "args": ["genesis", "add-genesis-account", "cosmos130ch823d2pwh9wpfm335plg6ktatzw7j427qgs", "1000000000stake"],
     },
   ]

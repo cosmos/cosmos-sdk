@@ -70,6 +70,7 @@ func initFixture(t *testing.T) (sdk.Context, []sdk.AccAddress, keeper.Keeper, de
 		bankKeeper,
 		stakingKeeper,
 		poolKeeper,
+		testCometService,
 		"fee_collector",
 		authorityAddr,
 	)

@@ -108,10 +108,15 @@ func (s STF[T]) DeliverBlock(
 
 	// reset events
 	exCtx.events = make([]event.Event, 0)
+
 	// begin block
-	beginBlockEvents, err := s.beginBlock(exCtx)
-	if err != nil {
-		return nil, nil, err
+	var beginBlockEvents []event.Event
+	if !block.IsGenesis {
+		// begin block
+		beginBlockEvents, err = s.beginBlock(exCtx)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	// check if we need to return early
@@ -401,11 +406,12 @@ func (s STF[T]) validatorUpdates(
 	return ctx.events, valSetUpdates, nil
 }
 
-const headerInfoPrefix = 0x0
+// TODO reserved in consensus OR need a keeper here
+const headerInfoPrefix = 0x37
 
 // setHeaderInfo sets the header info in the state to be used by queries in the future.
 func (s STF[T]) setHeaderInfo(state store.WriterMap, headerInfo header.Info) error {
-	runtimeStore, err := state.GetWriter(appmanager.RuntimeIdentity)
+	runtimeStore, err := state.GetWriter(appmanager.ConsensusIdentity)
 	if err != nil {
 		return err
 	}

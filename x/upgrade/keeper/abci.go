@@ -49,7 +49,7 @@ func (k Keeper) PreBlocker(ctx context.Context) error {
 				var appVersion uint64
 
 				var res consensusv1.QueryParamsResponse
-				if err := k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
+				if err := k.QueryRouterService.InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
 					return errors.New("failed to query consensus params")
 				}
 				if res.Params.Version != nil {

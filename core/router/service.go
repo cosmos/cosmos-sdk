@@ -6,15 +6,9 @@ import (
 	"google.golang.org/protobuf/runtime/protoiface"
 )
 
-// Service embeds a QueryRouterService and MessageRouterService.
-// Each router allows to invoke messages and queries via the corresponding router.
+// Service is the interface that wraps the basic methods for a router.
+// A router can be a query router or a message router.
 type Service interface {
-	QueryRouterService() Router
-	MessageRouterService() Router
-}
-
-// Router is the interface that wraps the basic methods for a router.
-type Router interface {
 	// CanInvoke returns an error if the given request cannot be invoked.
 	CanInvoke(ctx context.Context, typeURL string) error
 	// InvokeTyped execute a message or query. It should be used when the called knows the type of the response.

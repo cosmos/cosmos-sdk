@@ -87,7 +87,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	consensustypes.RegisterQueryServer(queryHelper, ck)
 
 	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(queryHelper.GRPCQueryRouter, s.baseApp.MsgServiceRouter()))
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryHelper.GRPCQueryRouter), runtime.EnvWithMsgRouterService(s.baseApp.MsgServiceRouter()))
 	authority, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(stakingtypes.GovModuleName))
 	s.Require().NoError(err)
 	keeper := stakingkeeper.NewKeeper(

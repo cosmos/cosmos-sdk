@@ -15,39 +15,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
-// NewRouterService creates a router.Service which allows to invoke messages and queries using the msg router.
-// TODO: Eventually a permission system will be added based on the caller.
-func NewRouterService(queryRouter baseapp.QueryRouter, msgRouter baseapp.MessageRouter) router.Service {
-	return &routerService{
-		queryRouterService: &queryRouterService{
-			router: queryRouter,
-		},
-		msgRouterService: &msgRouterService{
-			router: msgRouter,
-		},
+// NewMsgRouterService implements router.Service.
+func NewMsgRouterService(msgRouter baseapp.MessageRouter) router.Service {
+	return &msgRouterService{
+		router: msgRouter,
 	}
 }
 
-var _ router.Service = (*routerService)(nil)
-
-type routerService struct {
-	queryRouterService router.Router
-	msgRouterService   router.Router
-}
-
-// MessageRouterService implements router.Service.
-func (r *routerService) MessageRouterService() router.Router {
-	return r.msgRouterService
-}
-
-// QueryRouterService implements router.Service.
-func (r *routerService) QueryRouterService() router.Router {
-	return r.queryRouterService
-}
-
-var _ router.Router = (*msgRouterService)(nil)
+var _ router.Service = (*msgRouterService)(nil)
 
 type msgRouterService struct {
+	// TODO: eventually authenticate modules to use the message router
 	router baseapp.MessageRouter
 }
 
@@ -101,7 +79,14 @@ func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg protoiface.Mes
 	return msgResp, m.InvokeTyped(ctx, msg, msgResp)
 }
 
-var _ router.Router = (*queryRouterService)(nil)
+// NewQueryRouterService implements router.Service.
+func NewQueryRouterService(queryRouter baseapp.QueryRouter) router.Service {
+	return &queryRouterService{
+		router: queryRouter,
+	}
+}
+
+var _ router.Service = (*queryRouterService)(nil)
 
 type queryRouterService struct {
 	router baseapp.QueryRouter

@@ -31,7 +31,8 @@ func NewEnvironment(
 		GasService:         GasService{},
 		TransactionService: TransactionService{},
 		KVStoreService:     kvService,
-		RouterService:      NewRouterService(&failingQueryRouter{}, &failingMsgRouter{}),
+		MsgRouterService:   NewMsgRouterService(failingMsgRouter{}),
+		QueryRouterService: NewQueryRouterService(failingQueryRouter{}),
 		MemStoreService:    failingMemStore{},
 	}
 
@@ -44,12 +45,15 @@ func NewEnvironment(
 
 type EnvOption func(*appmodule.Environment)
 
-func EnvWithRouterService(
-	queryServiceRouter *baseapp.GRPCQueryRouter,
-	msgServiceRouter *baseapp.MsgServiceRouter,
-) EnvOption {
+func EnvWithMsgRouterService(msgServiceRouter *baseapp.MsgServiceRouter) EnvOption {
 	return func(env *appmodule.Environment) {
-		env.RouterService = NewRouterService(queryServiceRouter, msgServiceRouter)
+		env.MsgRouterService = NewMsgRouterService(msgServiceRouter)
+	}
+}
+
+func EnvWithQueryRouterService(queryServiceRouter *baseapp.GRPCQueryRouter) EnvOption {
+	return func(env *appmodule.Environment) {
+		env.QueryRouterService = NewQueryRouterService(queryServiceRouter)
 	}
 }
 

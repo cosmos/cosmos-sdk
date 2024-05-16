@@ -243,7 +243,8 @@ func ProvideEnvironment(
 	return kvService, memStoreService, NewEnvironment(
 		kvService,
 		logger.With(log.ModuleKey, fmt.Sprintf("x/%s", key.Name())),
-		EnvWithRouterService(queryServiceRouter, msgServiceRouter),
+		EnvWithMsgRouterService(msgServiceRouter),
+		EnvWithQueryRouterService(queryServiceRouter),
 		EnvWithMemStoreService(memStoreService),
 	)
 }

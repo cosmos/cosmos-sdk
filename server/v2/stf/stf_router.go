@@ -91,6 +91,12 @@ func (b *MsgRouterBuilder) Build() (appmodulev2.Handler, error) {
 		handlers[msgType] = buildHandler(handler, preHandlers, globalPreHandler, postHandlers, globalPostHandler)
 	}
 
+	if len(handlers) == 0 {
+		fmt.Println("WARN: no handlers registered")
+	} else {
+		fmt.Printf("INFO: registered %d handlers\n", len(handlers))
+	}
+
 	// return handler as function
 	return func(ctx context.Context, msg appmodulev2.Message) (appmodulev2.Message, error) {
 		typeName := msgTypeURL(msg)

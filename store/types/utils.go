@@ -92,7 +92,3 @@ func SliceContains[T comparable](elements []T, v T) bool {
 
 	return false
 }
-
-func IsMemoryStoreKey(key string) bool {
-	return strings.HasPrefix(key, "memory:")
-}

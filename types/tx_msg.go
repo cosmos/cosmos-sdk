@@ -8,6 +8,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	coretransaction "cosmossdk.io/core/transaction"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -15,7 +17,7 @@ import (
 
 type (
 	// Msg defines the interface a transaction message needed to fulfill.
-	Msg = proto.Message
+	Msg = coretransaction.Msg
 
 	// LegacyMsg defines the interface a transaction message needed to fulfill up through
 	// v0.47.

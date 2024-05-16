@@ -6,6 +6,7 @@ import (
 
 	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/core/address"
@@ -93,13 +94,8 @@ func NewIntegrationApp(
 		bApp.SetParamStore(consensusParamsKeeper.ParamsStore)
 		consensusparamtypes.RegisterQueryServer(grpcRouter, consensusParamsKeeper)
 
-		_, err := consensusParamsKeeper.SetParams(sdkCtx, &consensusparamtypes.ConsensusMsgParams{
-			Version:   simtestutil.DefaultConsensusParams.Version,
-			Block:     simtestutil.DefaultConsensusParams.Block,
-			Evidence:  simtestutil.DefaultConsensusParams.Evidence,
-			Validator: simtestutil.DefaultConsensusParams.Validator,
-			Abci:      simtestutil.DefaultConsensusParams.Abci,
-		})
+		params := cmttypes.ConsensusParamsFromProto(*simtestutil.DefaultConsensusParams) // This fills up missing param sections
+		err := consensusParamsKeeper.ParamsStore.Set(sdkCtx, params.ToProto())
 		if err != nil {
 			panic(fmt.Errorf("failed to set consensus params: %w", err))
 		}

@@ -6,11 +6,10 @@ require (
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.3.1
-	github.com/cockroachdb/errors v1.11.1
 	github.com/cockroachdb/pebble v1.1.0
 	github.com/cometbft/cometbft v0.38.7
 	github.com/cosmos/gogoproto v1.4.12
-	github.com/cosmos/iavl v1.1.1
+	github.com/cosmos/iavl v1.1.4
 	github.com/cosmos/ics23/go v0.10.0
 	github.com/google/btree v1.1.2
 	github.com/hashicorp/go-metrics v0.5.3
@@ -27,6 +26,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/cockroachdb/errors v1.11.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
@@ -60,11 +60,11 @@ require (
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	golang.org/x/crypto v0.23.0 // indirect
 	golang.org/x/exp v0.0.0-20240314144324-c7f7c6466f7f // indirect
-	golang.org/x/net v0.24.0 // indirect
+	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/text v0.15.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240401170217-c3f982113cda // indirect
-	google.golang.org/grpc v1.63.2 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240513163218-0867130af1f8 // indirect
+	google.golang.org/grpc v1.64.0 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

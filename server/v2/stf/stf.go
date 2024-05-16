@@ -20,8 +20,8 @@ import (
 // STF is a struct that manages the state transition component of the app.
 type STF[T transaction.Tx] struct {
 	logger      log.Logger
-	handleMsg   func(ctx context.Context, msg transaction.Type) (transaction.Type, error)
-	handleQuery func(ctx context.Context, req transaction.Type) (transaction.Type, error)
+	handleMsg   func(ctx context.Context, msg transaction.Msg) (transaction.Msg, error)
+	handleQuery func(ctx context.Context, req transaction.Msg) (transaction.Msg, error)
 
 	doPreBlock        func(ctx context.Context, txs []T) error
 	doBeginBlock      func(ctx context.Context) error
@@ -38,8 +38,8 @@ type STF[T transaction.Tx] struct {
 
 // NewSTF returns a new STF instance.
 func NewSTF[T transaction.Tx](
-	handleMsg func(ctx context.Context, msg transaction.Type) (transaction.Type, error),
-	handleQuery func(ctx context.Context, req transaction.Type) (transaction.Type, error),
+	handleMsg func(ctx context.Context, msg transaction.Msg) (transaction.Msg, error),
+	handleQuery func(ctx context.Context, req transaction.Msg) (transaction.Msg, error),
 	doPreBlock func(ctx context.Context, txs []T) error,
 	doBeginBlock func(ctx context.Context) error,
 	doEndBlock func(ctx context.Context) error,
@@ -229,7 +229,7 @@ func (s STF[T]) execTx(
 	tx T,
 	execMode corecontext.ExecMode,
 	hi header.Info,
-) ([]transaction.Type, uint64, []event.Event, error) {
+) ([]transaction.Msg, uint64, []event.Event, error) {
 	execState := s.branchFn(state)
 
 	msgsResp, gasUsed, runTxMsgsEvents, txErr := s.runTxMsgs(ctx, execState, gasLimit, tx, execMode, hi)
@@ -285,7 +285,7 @@ func (s STF[T]) runTxMsgs(
 	tx T,
 	execMode corecontext.ExecMode,
 	hi header.Info,
-) ([]transaction.Type, uint64, []event.Event, error) {
+) ([]transaction.Msg, uint64, []event.Event, error) {
 	txSenders, err := tx.GetSenders()
 	if err != nil {
 		return nil, 0, nil, err
@@ -294,7 +294,7 @@ func (s STF[T]) runTxMsgs(
 	if err != nil {
 		return nil, 0, nil, err
 	}
-	msgResps := make([]transaction.Type, len(msgs))
+	msgResps := make([]transaction.Msg, len(msgs))
 
 	execCtx := s.makeContext(ctx, nil, state, execMode)
 	execCtx.setHeaderInfo(hi)
@@ -333,9 +333,9 @@ func (s STF[T]) preBlock(
 
 func (s STF[T]) runConsensusMessages(
 	ctx *executionContext,
-	messages []transaction.Type,
-) ([]transaction.Type, error) {
-	responses := make([]transaction.Type, len(messages))
+	messages []transaction.Msg,
+) ([]transaction.Msg, error) {
+	responses := make([]transaction.Msg, len(messages))
 	for i := range messages {
 		resp, err := s.handleMsg(ctx, messages[i])
 		if err != nil {
@@ -477,8 +477,8 @@ func (s STF[T]) Query(
 	ctx context.Context,
 	state store.ReaderMap,
 	gasLimit uint64,
-	req transaction.Type,
-) (transaction.Type, error) {
+	req transaction.Msg,
+) (transaction.Msg, error) {
 	queryState := s.branchFn(state)
 	hi, err := s.getHeaderInfo(queryState)
 	if err != nil {
@@ -490,7 +490,7 @@ func (s STF[T]) Query(
 	return s.handleQuery(queryCtx, req)
 }
 
-func (s STF[T]) Message(ctx context.Context, msg transaction.Type) (response transaction.Type, err error) {
+func (s STF[T]) Message(ctx context.Context, msg transaction.Msg) (response transaction.Msg, err error) {
 	return s.handleMsg(ctx, msg)
 }
 
@@ -503,7 +503,6 @@ func (s STF[T]) RunWithCtx(
 	closure func(ctx context.Context) error,
 ) (store.WriterMap, error) {
 	branchedState := s.branchFn(state)
-	// TODO  do we need headerinfo for genesis?
 	stfCtx := s.makeContext(ctx, nil, branchedState, corecontext.ExecModeFinalize)
 	return branchedState, closure(stfCtx)
 }

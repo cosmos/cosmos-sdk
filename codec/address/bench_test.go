@@ -1,8 +1,9 @@
 package address
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"cosmossdk.io/core/address"
 )
@@ -18,6 +19,7 @@ func BenchmarkCodecWithoutCache(b *testing.B) {
 }
 
 func bytesToString(b *testing.B, cdc address.Codec) {
+	b.Helper()
 	addresses := generateAddresses(10)
 
 	b.Helper()

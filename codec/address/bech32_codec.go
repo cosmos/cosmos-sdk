@@ -24,9 +24,7 @@ const (
 	suffixConsAddr = "valcons"
 )
 
-var (
-	errEmptyAddress = errors.New("empty address string is not allowed")
-)
+var errEmptyAddress = errors.New("empty address string is not allowed")
 
 // cache variables
 var (

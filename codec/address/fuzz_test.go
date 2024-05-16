@@ -1,11 +1,12 @@
 package address
 
 import (
-	"cosmossdk.io/core/address"
 	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/core/address"
 
 	sdkAddress "github.com/cosmos/cosmos-sdk/types/address"
 )
@@ -24,7 +25,6 @@ func FuzzCachedAddressCodec(f *testing.F) {
 	f.Fuzz(func(t *testing.T, addr []byte) {
 		checkAddress(t, addr, cdc)
 	})
-
 }
 
 func FuzzAddressCodec(f *testing.F) {
@@ -41,7 +41,6 @@ func FuzzAddressCodec(f *testing.F) {
 	f.Fuzz(func(t *testing.T, addr []byte) {
 		checkAddress(t, addr, cdc)
 	})
-
 }
 
 func checkAddress(t *testing.T, addr []byte, cdc address.Codec) {

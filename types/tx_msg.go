@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/gogoproto/proto"
+	coretransaction "cosmossdk.io/core/transaction"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,7 +15,7 @@ import (
 
 type (
 	// Msg defines the interface a transaction message needed to fulfill.
-	Msg = proto.Message
+	Msg = coretransaction.Msg
 
 	// LegacyMsg defines the interface a transaction message needed to fulfill up through
 	// v0.47.

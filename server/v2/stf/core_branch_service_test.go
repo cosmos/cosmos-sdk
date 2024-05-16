@@ -16,7 +16,7 @@ import (
 
 func TestBranchService(t *testing.T) {
 	s := &STF[mock.Tx]{
-		handleMsg: func(ctx context.Context, msg transaction.Type) (msgResp transaction.Type, err error) {
+		handleMsg: func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
 			kvSet(t, ctx, "exec")
 			return nil, nil
 		},

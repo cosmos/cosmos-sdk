@@ -6,11 +6,11 @@ import (
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
@@ -88,20 +88,15 @@ type bankQueryServer struct {
 	bankv1beta1.UnimplementedQueryServer
 }
 
-var _ SignerProvider = (*mockSigner)(nil)
-
-type mockSigner func(msg implementation.ProtoMsg) ([]byte, error)
-
-func (m mockSigner) GetMsgSigners(msg gogoproto.Message) ([][]byte, protoreflect.Message, error) {
-	s, err := m(msg)
-	if err != nil {
-		return nil, nil, err
-	}
-	return [][]byte{s}, nil, nil
-}
-
 type bankMsgServer struct {
 	bankv1beta1.UnimplementedMsgServer
+}
+
+func (b bankQueryServer) Balance(context.Context, *bankv1beta1.QueryBalanceRequest) (*bankv1beta1.QueryBalanceResponse, error) {
+	return &bankv1beta1.QueryBalanceResponse{Balance: &basev1beta1.Coin{
+		Denom:  "atom",
+		Amount: "1000",
+	}}, nil
 }
 
 func (b bankMsgServer) Send(context.Context, *bankv1beta1.MsgSend) (*bankv1beta1.MsgSendResponse, error) {

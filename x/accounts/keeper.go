@@ -8,8 +8,6 @@ import (
 	"errors"
 	"fmt"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections"
@@ -36,25 +34,6 @@ var (
 	// AccountByNumber is the key for the accounts by number.
 	AccountByNumber = collections.NewPrefix(2)
 )
-
-// QueryRouter represents a router which can be used to route queries to the correct module.
-// It returns the handler given the message name, if multiple handlers are returned, then
-// it is up to the caller to choose which one to call.
-type QueryRouter interface {
-	HybridHandlerByRequestName(name string) []func(ctx context.Context, req, resp implementation.ProtoMsg) error
-}
-
-// MsgRouter represents a router which can be used to route messages to the correct module.
-type MsgRouter interface {
-	HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp implementation.ProtoMsg) error
-	ResponseNameByMsgName(name string) string
-}
-
-// SignerProvider defines an interface used to get the expected sender from a message.
-type SignerProvider interface {
-	// GetMsgSigners returns the signers of the message.
-	GetMsgSigners(msg gogoproto.Message) ([][]byte, protoreflect.Message, error)
-}
 
 type InterfaceRegistry interface {
 	RegisterInterface(name string, iface any, impls ...protoiface.MessageV1)

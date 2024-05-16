@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math" 
+	"math"
 	"sort"
 	"strings"
 	"sync"
@@ -459,9 +459,11 @@ func (rs *Store) LastCommitID() types.CommitID {
 }
 
 // SetCommitting implements Committer/CommitStore.
-func (rs *Store) SetCommitting(committing bool) {
+func (rs *Store) PausePruning(pause bool) {
 	for _, store := range rs.stores {
-		store.SetCommitting(committing)
+		if pauseable, ok := store.(types.PausablePruner); ok {
+			pauseable.PausePruning(pause)
+		}
 	}
 }
 
@@ -487,10 +489,10 @@ func (rs *Store) Commit() types.CommitID {
 	}
 
 	// set the committing flag on all stores to block the pruning
-	rs.SetCommitting(true)
+	rs.PausePruning(true)
 	rs.lastCommitInfo = commitStores(version, rs.stores, rs.removalMap)
 	// unset the committing flag on all stores to continue the pruning
-	rs.SetCommitting(false)
+	rs.PausePruning(false)
 	rs.lastCommitInfo.Timestamp = rs.commitHeader.Time
 	defer rs.flushMetadata(rs.db, version, rs.lastCommitInfo)
 
@@ -841,7 +843,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	keys := keysFromStoreKeyMap(rs.stores)
 	for _, key := range keys {
 		switch store := rs.GetCommitKVStore(key).(type) {
-		case *iavl.Store: 
+		case *iavl.Store:
 			stores = append(stores, namedStore{name: key.Name(), Store: store})
 		case *transient.Store, *mem.Store:
 			// Non-persisted stores shouldn't be snapshotted
@@ -861,7 +863,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	// are demarcated by new SnapshotStore items.
 	for _, store := range stores {
 		rs.logger.Debug("starting snapshot", "store", store.name, "height", height)
-		exporter, err := store.Export(int64(height)) 
+		exporter, err := store.Export(int64(height))
 		if err != nil {
 			rs.logger.Error("snapshot failed; exporter error", "store", store.name, "err", err)
 			return err

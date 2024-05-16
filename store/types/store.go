@@ -25,12 +25,14 @@ type Committer interface {
 	// WorkingHash returns the hash of the KVStore's state before commit.
 	WorkingHash() []byte
 
-	// SetCommitting let the pruning handler know that the store is being committed
-	// or not, so the handler can decide to prune or not the store.
-	SetCommitting(isCommit bool)
-
 	SetPruning(pruningtypes.PruningOptions)
 	GetPruning() pruningtypes.PruningOptions
+}
+
+type PausablePruner interface {
+	// PausePruning let the pruning handler know that the store is being committed
+	// or not, so the handler can decide to prune or not the store.
+	PausePruning(bool)
 }
 
 // Stores of MultiStore must implement CommitStore.

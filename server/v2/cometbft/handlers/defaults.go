@@ -9,10 +9,9 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
+	appmanager "cosmossdk.io/core/app"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
-
-	appmanager "cosmossdk.io/core/app"
 	"cosmossdk.io/server/v2/cometbft/mempool"
 )
 

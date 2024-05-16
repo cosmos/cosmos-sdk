@@ -7,8 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/core/transaction"
-
+	abciv1 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/abci/v1"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -16,14 +15,13 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	abciv1 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/abci/v1"
 	v1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
-
 	consensus "cosmossdk.io/x/consensus/types"
 )
 

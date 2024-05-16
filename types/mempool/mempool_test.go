@@ -1,6 +1,7 @@
 package mempool_test
 
 import (
+	"cosmossdk.io/core/transaction"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -87,7 +88,7 @@ func (tx testTx) GetGasLimit() (uint64, error) {
 	return 0, nil
 }
 
-func (tx testTx) GetMessages() ([]protov2.Message, error) {
+func (tx testTx) GetMessages() ([]transaction.Msg, error) {
 	return nil, nil
 }
 
@@ -121,7 +122,7 @@ func (sigErrTx) GetGasLimit() (uint64, error) {
 	return 0, nil
 }
 
-func (sigErrTx) GetMessages() ([]protov2.Message, error) {
+func (sigErrTx) GetMessages() ([]transaction.Msg, error) {
 	return nil, nil
 }
 

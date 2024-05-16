@@ -6,15 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/log"
-	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/server/v2/appmanager"
-	"cosmossdk.io/server/v2/cometbft/handlers"
-	cometlog "cosmossdk.io/server/v2/cometbft/log"
-	"cosmossdk.io/server/v2/cometbft/mempool"
-	"cosmossdk.io/server/v2/cometbft/types"
-	"cosmossdk.io/store/v2/snapshots"
 	abciserver "github.com/cometbft/cometbft/abci/server"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
@@ -25,6 +16,16 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+
+	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
+	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/appmanager"
+	"cosmossdk.io/server/v2/cometbft/handlers"
+	cometlog "cosmossdk.io/server/v2/cometbft/log"
+	"cosmossdk.io/server/v2/cometbft/mempool"
+	"cosmossdk.io/server/v2/cometbft/types"
+	"cosmossdk.io/store/v2/snapshots"
 
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
@@ -84,7 +85,7 @@ func NewCometBFTServer[T transaction.Tx](
 	// TODO: set these; what is the appropriate presence of the Store interface here?
 	var ss snapshots.StorageSnapshotter
 	var sc snapshots.CommitSnapshotter
-	//ss, ok := app.GetStore().GetStateStorage().(snapshots.StorageSnapshotter)
+	// ss, ok := app.GetStore().GetStateStorage().(snapshots.StorageSnapshotter)
 	//if !ok {
 	//	panic("snapshots are not supported for this store")
 	//}

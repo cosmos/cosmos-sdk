@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	v11 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/types/v1"
+
 	abciv1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 )
 

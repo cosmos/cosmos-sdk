@@ -15,17 +15,17 @@ import (
 	"github.com/cometbft/cometbft/rpc/client/local"
 	cmtversion "github.com/cometbft/cometbft/version"
 	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/encoding/protojson"
 	"sigs.k8s.io/yaml"
-
-	auth "cosmossdk.io/x/auth/client/cli"
 
 	"cosmossdk.io/server/v2/cometbft/client/rpc"
 	"cosmossdk.io/server/v2/cometbft/flags"
+	auth "cosmossdk.io/x/auth/client/cli"
+
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func (s *CometBFTServer[T]) rpcClient() (rpc.CometRPC, error) {

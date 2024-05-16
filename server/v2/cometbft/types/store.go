@@ -14,8 +14,6 @@ type Store interface {
 	// associated with it.
 	StateLatest() (uint64, store.ReaderMap, error)
 
-	WorkingHash(*store.Changeset) ([]byte, error)
-
 	// StateCommit commits the provided changeset and returns
 	// the new state root of the state.
 	Commit(*store.Changeset) (store.Hash, error)

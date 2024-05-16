@@ -1,5 +1,7 @@
 package cometbft
 
+/*
+
 import (
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
@@ -77,3 +79,4 @@ func (s *MockStore) LastCommitID() (proof.CommitID, error) {
 		Hash:    []byte{},
 	}, err
 }
+*/

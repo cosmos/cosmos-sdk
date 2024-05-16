@@ -7,9 +7,10 @@ import (
 	"os"
 	"path/filepath"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+
 	"cosmossdk.io/store/v2/snapshots"
 	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
-	abci "github.com/cometbft/cometbft/abci/types"
 )
 
 // GetSnapshotStore returns a snapshot store for the given application options.

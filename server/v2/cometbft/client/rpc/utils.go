@@ -4,10 +4,11 @@ import (
 	"fmt"
 
 	v11 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/types/v1"
-	abciv1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
+
+	abciv1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 )
 
 // formatBlockResults parses the indexed blocks into a slice of BlockResponse objects.

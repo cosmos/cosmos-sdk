@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	consensustypes "cosmossdk.io/x/consensus/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	coreappmgr "cosmossdk.io/core/app"
 	"cosmossdk.io/core/event"
@@ -21,7 +21,7 @@ import (
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
-	abci "github.com/cometbft/cometbft/abci/types"
+	consensustypes "cosmossdk.io/x/consensus/types"
 )
 
 const (
@@ -284,10 +284,6 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.InitChainRequest
 	}
 	cs := &store.Changeset{
 		Changes: stateChanges,
-	}
-	_, err = c.store.WorkingHash(cs)
-	if err != nil {
-		return nil, fmt.Errorf("unable to commit the changeset: %w", err)
 	}
 	stateRoot, err := c.store.Commit(cs)
 	if err != nil {

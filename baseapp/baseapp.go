@@ -2,13 +2,13 @@ package baseapp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"sort"
 	"strconv"
 	"sync"
 
-	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cometbft/cometbft/crypto/tmhash"
@@ -722,7 +722,7 @@ func (app *BaseApp) preBlock(req *abci.FinalizeBlockRequest) error {
 	return nil
 }
 
-func (app *BaseApp) beginBlock(req *abci.FinalizeBlockRequest) (sdk.BeginBlock, error) {
+func (app *BaseApp) beginBlock(_ *abci.FinalizeBlockRequest) (sdk.BeginBlock, error) {
 	var (
 		resp sdk.BeginBlock
 		err  error

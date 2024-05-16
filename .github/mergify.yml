@@ -47,3 +47,12 @@ pull_request_rules:
       backport:
         branches:
           - osmo-v24/v0.47.5
+  - name: backport patches to v25 branch
+    conditions:
+      - base=osmo/v0.47.5
+      - label=A:backport/v25
+    actions:
+      backport:
+        branches:
+          - osmo-v25/v0.47.5
+

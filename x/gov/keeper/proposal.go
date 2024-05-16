@@ -87,7 +87,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 			return v1.Proposal{}, errorsmod.Wrapf(types.ErrInvalidSigner, addr)
 		}
 
-		if err := k.RouterService.MessageRouterService().CanInvoke(ctx, sdk.MsgTypeURL(msg)); err != nil {
+		if err := k.MsgRouterService.CanInvoke(ctx, sdk.MsgTypeURL(msg)); err != nil {
 			return v1.Proposal{}, errorsmod.Wrap(types.ErrUnroutableProposalMsg, err.Error())
 		}
 

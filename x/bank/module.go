@@ -177,9 +177,10 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	ak, bk := am.accountKeeper, am.keeper
 	reg := simsx.NewSimsRegistryAdapter(&simsx.BasicSimulationReporter{}, ak, bk, simState.TxConfig)
-	reg.Add(100, simulation.MsgSendFactory(bk))
+	weight := simsx.ParamWeightSource(simState.AppParams)
+	reg.Add(weight.Get("msg_send", 100), simulation.MsgSendFactory(bk))
+	reg.Add(weight.Get("msg_multisend", 10), simulation.MsgMultiSendFactory(bk))
 	// reg.Add(10, simulation.MsgSendToModuleAccountFactory(bk)) // todo: not allowed
-	reg.Add(10, simulation.MsgMultiSendFactory(bk))
 	// todo: should we make the weights configurable from outside as before with AppParams ?
 	return reg.ToLegacyWeightedOperations()
 }

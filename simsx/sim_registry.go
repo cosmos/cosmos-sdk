@@ -14,6 +14,8 @@ import (
 
 type FactoryMethod func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg)
 
+var _ SimMsgFactoryX = SimMsgFactoryFn[sdk.Msg](nil)
+
 type SimMsgFactoryFn[T sdk.Msg] FactoryMethod
 
 func (f SimMsgFactoryFn[T]) MsgType() sdk.Msg {
@@ -49,12 +51,7 @@ type SimsRegistryAdapter struct {
 	txConfig  client.TxConfig
 }
 
-func NewSimsRegistryAdapter(
-	reporter SimulationReporter,
-	ak xAccountSource,
-	bk BalanceSource,
-	txConfig client.TxConfig,
-) *SimsRegistryAdapter {
+func NewSimsRegistryAdapter(reporter SimulationReporter, ak xAccountSource, bk BalanceSource, txConfig client.TxConfig) *SimsRegistryAdapter {
 	return &SimsRegistryAdapter{
 		reporter: reporter,
 		ak:       ak,
@@ -71,13 +68,13 @@ func (l *SimsRegistryAdapter) Add(weight uint32, f SimMsgFactoryX) {
 	l.legacyOps = append(l.legacyOps, simulation.NewWeightedOperation(int(weight), opAdapter))
 }
 
-func (l SimsRegistryAdapter) newLegacyOperationAdapter(reporter SimulationReporter, example sdk.Msg, f FactoryMethod) simtypes.Operation {
+func (l SimsRegistryAdapter) newLegacyOperationAdapter(rootReporter SimulationReporter, example sdk.Msg, f FactoryMethod) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		testData := NewChainDataSource(r, l.ak, NewBalanceSource(ctx, l.bk), l.ak.AddressCodec(), accs...)
-		reporter = reporter.WithScope(example)
+		reporter := rootReporter.WithScope(example)
 
 		from, msg := f(ctx, testData, reporter)
 		return DeliverSimsMsg(

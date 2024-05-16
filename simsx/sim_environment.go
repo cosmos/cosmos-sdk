@@ -25,7 +25,7 @@ type SimAccount struct {
 	simulation.Account
 	r             *rand.Rand
 	liquidBalance *SimsAccountBalance
-	addressCodec  address.Codec
+	AddressStr    string
 	bank          SpendableCoinser
 }
 
@@ -34,14 +34,6 @@ func (a *SimAccount) LiquidBalance() *SimsAccountBalance {
 		a.liquidBalance = NewSimsAccountBalance(a.r, a.bank.SpendableCoins(a.Address))
 	}
 	return a.liquidBalance
-}
-
-func (a SimAccount) AddressString() string {
-	addr, err := a.addressCodec.BytesToString(a.Account.Address)
-	if err != nil {
-		panic(err.Error()) // todo: should be handled better
-	} // todo: what are the scenarios that this can fail?
-	return addr
 }
 
 type SimsAccountBalance struct {
@@ -64,24 +56,42 @@ func WithSendEnabledCoins(ctx context.Context, bk interface {
 	}
 }
 
-// RandSubsetCoins return a random amount from the current balance. This can be empty.
-// The amount is removed from the liquid balance.
+// RandSubsetCoins return random amounts from the current balance. When the coins are empty, skip is called on the reporter.
+// The amounts are removed from the liquid balance.
 func (b *SimsAccountBalance) RandSubsetCoins(reporter SimulationReporter, filters ...CoinsFilter) sdk.Coins {
-	amount := b.randomAmount(5, reporter, filters...)
+	amount := b.randomAmount(5, reporter, b.Coins, filters...)
 
 	b.Coins = b.Coins.Sub(amount...)
+	if !amount.Empty() {
+		reporter.Skip("got empty amounts")
+	}
 	return amount
 }
 
-func (b *SimsAccountBalance) randomAmount(retryCount int, reporter SimulationReporter, filters ...CoinsFilter) sdk.Coins {
+func (b *SimsAccountBalance) RandSubsetCoin(reporter SimulationReporter, denom string, filters ...CoinsFilter) sdk.Coin {
+	ok, coin := b.Find(denom)
+	if !ok {
+		reporter.Skipf("no such coin: %s", denom)
+		return sdk.Coin{}
+	}
+	amount := b.randomAmount(5, reporter, sdk.NewCoins(coin), filters...)
+	b.Coins = b.Coins.Sub(amount...)
+	_, coin = amount.Find(denom)
+	if !coin.IsPositive() {
+		reporter.Skip("empty coin")
+	}
+	return coin
+}
+
+func (b *SimsAccountBalance) randomAmount(retryCount int, reporter SimulationReporter, coins sdk.Coins, filters ...CoinsFilter) sdk.Coins {
 	if retryCount < 0 {
 		reporter.Skip("failed to find matching amount")
 		return sdk.Coins{}
 	}
-	amount := simtypes.RandSubsetCoins(b.r, b.Coins)
+	amount := simtypes.RandSubsetCoins(b.r, coins)
 	for _, filter := range filters {
 		if !filter(amount) {
-			return b.randomAmount(retryCount-1, reporter, filters...)
+			return b.randomAmount(retryCount-1, reporter, coins, filters...)
 		}
 	}
 	return amount
@@ -107,7 +117,13 @@ func ExcludeAccounts(others ...SimAccount) SimAccountFilter {
 
 func ExcludeAddresses(addrs ...string) SimAccountFilter {
 	return func(a SimAccount) bool {
-		return !slices.Contains(addrs, a.AddressString())
+		return !slices.Contains(addrs, a.AddressStr)
+	}
+}
+
+func WithDenomBalance(denom string) SimAccountFilter {
+	return func(a SimAccount) bool {
+		return a.LiquidBalance().AmountOf(denom).IsPositive()
 	}
 }
 
@@ -143,32 +159,46 @@ func NewBalanceSource(ctx sdk.Context, bk BalanceSource,
 }
 
 type ChainDataSource struct {
-	r             *rand.Rand
-	accounts      []SimAccount
-	accountSource ModuleAccountSource
-	addressCodec  address.Codec
+	r                         *rand.Rand
+	addressToAccountsPosIndex map[string]int
+	accounts                  []SimAccount
+	accountSource             ModuleAccountSource
+	addressCodec              address.Codec
 }
 
 func NewChainDataSource(r *rand.Rand, ak ModuleAccountSource, bk SpendableCoinser, codec address.Codec, oldSimAcc ...simtypes.Account) *ChainDataSource {
 	acc := make([]SimAccount, len(oldSimAcc))
+	index := make(map[string]int, len(oldSimAcc))
 	for i, a := range oldSimAcc {
-		acc[i] = SimAccount{
-			Account:      a,
-			r:            r,
-			addressCodec: codec,
-			bank:         bk,
+		addrStr, err := codec.BytesToString(a.Address)
+		if err != nil {
+			panic(err.Error())
 		}
+		acc[i] = SimAccount{
+			Account:    a,
+			r:          r,
+			AddressStr: addrStr,
+			bank:       bk,
+		}
+		index[addrStr] = i
 	}
 	return &ChainDataSource{r: r, accountSource: ak, addressCodec: codec, accounts: acc}
 }
 
-// not module account
+// no module accounts
 func (c *ChainDataSource) AnyAccount(r SimulationReporter, filters ...SimAccountFilter) SimAccount {
 	acc := c.randomAccount(r, 5, filters...)
 	return acc
 }
 
-//
+func (c ChainDataSource) GetAccount(reporter SimulationReporter, addr string) SimAccount {
+	pos, ok := c.addressToAccountsPosIndex[addr]
+	if !ok {
+		reporter.Skipf("no such account: %s", addr)
+		return SimAccount{}
+	}
+	return c.accounts[pos]
+}
 
 func (c *ChainDataSource) randomAccount(reporter SimulationReporter, retryCount int, filters ...SimAccountFilter) SimAccount {
 	if retryCount < 0 {
@@ -179,7 +209,7 @@ func (c *ChainDataSource) randomAccount(reporter SimulationReporter, retryCount 
 	acc := c.accounts[idx]
 	for _, filter := range filters {
 		if !filter(acc) {
-			return c.randomAccount(nil, retryCount-1, filters...)
+			return c.randomAccount(reporter, retryCount-1, filters...)
 		}
 	}
 	return acc

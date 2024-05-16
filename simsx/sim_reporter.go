@@ -70,7 +70,7 @@ func (x *BasicSimulationReporter) Skipf(comment string, args ...any) {
 }
 
 func (x BasicSimulationReporter) IsSkipped() bool {
-	return x.status == skipped
+	return x.status > undefined
 }
 
 func (x *BasicSimulationReporter) ToLegacyOperationMsg() simtypes.OperationMsg {

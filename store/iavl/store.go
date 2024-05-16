@@ -147,9 +147,9 @@ func (st *Store) LastCommitID() types.CommitID {
 	}
 }
 
-// SetCommitting implements CommitKVStore interface.
-func (st *Store) SetCommitting(isCommit bool) {
-	if isCommit {
+// PausePruning implements CommitKVStore interface.
+func (st *Store) PausePruning(pause bool) {
+	if pause {
 		st.tree.SetCommitting()
 	} else {
 		st.tree.UnsetCommitting()

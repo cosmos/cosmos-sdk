@@ -49,9 +49,6 @@ func (s Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Cach
 // Commit performs a no-op as entries are persistent between commitments.
 func (s *Store) Commit() (id types.CommitID) { return }
 
-// SetCommitting is a no-op as entries.
-func (s *Store) SetCommitting(_ bool) {}
-
 func (s *Store) SetPruning(pruning pruningtypes.PruningOptions) {}
 
 // GetPruning is a no-op as pruning options cannot be directly set on this store.

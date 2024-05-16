@@ -68,7 +68,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 
 	msr := suite.baseApp.MsgServiceRouter()
 	msr.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(nil, msr))
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithMsgRouterService(msr))
 
 	suite.keeper = keeper.NewKeeper(env, suite.encCfg.Codec, suite.accountKeeper)
 }

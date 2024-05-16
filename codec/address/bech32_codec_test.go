@@ -1,6 +1,7 @@
 package address
 
 import (
+	"crypto/rand"
 	"encoding/binary"
 	"testing"
 	"time"
@@ -10,14 +11,15 @@ import (
 
 	"cosmossdk.io/core/address"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 )
 
-func generateAddresses(totalKeys int) [][]byte {
-	keys := make([][]byte, totalKeys)
-	for i := 0; i < totalKeys; i++ {
-		keys[i] = secp256k1.GenPrivKey().PubKey().Address()
+func generateAddresses(totalAddresses int) [][]byte {
+	keys := make([][]byte, totalAddresses)
+	addr := make([]byte, 32)
+	for i := 0; i < totalAddresses; i++ {
+		rand.Read(addr)
+		keys[i] = addr
 	}
 
 	return keys
@@ -83,7 +85,10 @@ func TestMultipleBech32Codec(t *testing.T) {
 	assert.Assert(t, ok)
 	assert.Equal(t, cosmosAc.cache, stakeAc.cache)
 
-	addr := secp256k1.GenPrivKey().PubKey().Address()
+	addr := make([]byte, 32)
+	_, err := rand.Read(addr)
+	assert.NilError(t, err)
+
 	cosmosAddr, err := cosmosAc.BytesToString(addr)
 	assert.NilError(t, err)
 	stakeAddr, err := stakeAc.BytesToString(addr)

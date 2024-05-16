@@ -2,9 +2,8 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
-
-	"github.com/cockroachdb/errors"
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"

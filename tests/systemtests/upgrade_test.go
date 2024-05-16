@@ -17,6 +17,7 @@ import (
 )
 
 func TestChainUpgrade(t *testing.T) {
+	t.Skip("Deactivated until there is a migration path for comet. See https://github.com/cosmos/cosmos-sdk/issues/20318")
 	// Scenario:
 	// start a legacy chain with some state
 	// when a chain upgrade proposal is executed

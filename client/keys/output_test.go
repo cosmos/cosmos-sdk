@@ -50,20 +50,23 @@ func TestBech32KeysOutputNestedMsig(t *testing.T) {
 	sk := secp256k1.PrivKey{Key: []byte{154, 49, 3, 117, 55, 232, 249, 20, 205, 216, 102, 7, 136, 72, 177, 2, 131, 202, 234, 81, 31, 208, 46, 244, 179, 192, 167, 163, 142, 117, 246, 13}}
 	tmpKey := sk.PubKey()
 	nestedMultiSig := kmultisig.NewLegacyAminoPubKey(1, []types.PubKey{tmpKey})
-	multisigPk := kmultisig.NewLegacyAminoPubKey(1, []types.PubKey{nestedMultiSig})
+	multisigPk := kmultisig.NewLegacyAminoPubKey(2, []types.PubKey{tmpKey, nestedMultiSig})
 	k, err := keyring.NewMultiRecord("multisig", multisigPk)
 	require.NotNil(t, k)
 	require.NoError(t, err)
+
 	pubKey, err := k.GetPubKey()
 	require.NoError(t, err)
+
 	accAddr := sdk.AccAddress(pubKey.Address())
 	expectedOutput, err := NewKeyOutput(k.Name, k.GetType(), accAddr, multisigPk, addresscodec.NewBech32Codec("cosmos"))
 	require.NoError(t, err)
 
 	out, err := MkAccKeyOutput(k, addresscodec.NewBech32Codec("cosmos"))
 	require.NoError(t, err)
+
 	require.Equal(t, expectedOutput, out)
-	require.Equal(t, "{Name:multisig Type:multi Address:cosmos16snhe32gdcfhzsk62xdtuhnwextdm939e5snax PubKey:{\"@type\":\"/cosmos.crypto.multisig.LegacyAminoPubKey\",\"threshold\":1,\"public_keys\":[{\"@type\":\"/cosmos.crypto.multisig.LegacyAminoPubKey\",\"threshold\":1,\"public_keys\":[{\"@type\":\"/cosmos.crypto.secp256k1.PubKey\",\"key\":\"AurroA7jvfPd1AadmmOvWM2rJSwipXfRf8yD6pLbA2DJ\"}]}]} Mnemonic:}", fmt.Sprintf("%+v", out))
+	require.Equal(t, "{Name:multisig Type:multi Address:cosmos13ytvp7lwj947gpa5gz0zmlr9drvkdcykk4lmcj PubKey:{\"@type\":\"/cosmos.crypto.multisig.LegacyAminoPubKey\",\"threshold\":2,\"public_keys\":[{\"@type\":\"/cosmos.crypto.secp256k1.PubKey\",\"key\":\"AurroA7jvfPd1AadmmOvWM2rJSwipXfRf8yD6pLbA2DJ\"},{\"@type\":\"/cosmos.crypto.multisig.LegacyAminoPubKey\",\"threshold\":1,\"public_keys\":[{\"@type\":\"/cosmos.crypto.secp256k1.PubKey\",\"key\":\"AurroA7jvfPd1AadmmOvWM2rJSwipXfRf8yD6pLbA2DJ\"}]}]} Mnemonic:}", fmt.Sprintf("%+v", out))
 }
 
 func TestProtoMarshalJSON(t *testing.T) {

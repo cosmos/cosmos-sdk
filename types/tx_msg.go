@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	coretransaction "cosmossdk.io/core/transaction"
 
@@ -53,8 +53,13 @@ type (
 	Tx interface {
 		HasMsgs
 
-		// GetMsgsV2 gets the transaction's messages as google.golang.org/protobuf/proto.Message's.
-		GetMsgsV2() ([]protov2.Message, error)
+		// GetReflectMessages gets a reflected version of the transaction's messages
+		// that can be used by dynamic APIs. These messages should not be used for actual
+		// processing as they cannot be guaranteed to be what handlers are expecting, but
+		// they can be used for dynamically reading specific fields from the message such
+		// as signers or validation data. Message processors should ALWAYS use the messages
+		// returned by GetMsgs.
+		GetReflectMessages() ([]protoreflect.Message, error)
 	}
 
 	// FeeTx defines the interface to be implemented by Tx to use the FeeDecorators

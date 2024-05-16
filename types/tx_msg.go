@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	coretransaction "cosmossdk.io/core/transaction"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	coretransaction "cosmossdk.io/core/transaction"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

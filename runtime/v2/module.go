@@ -13,6 +13,7 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	"cosmossdk.io/core/app"
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
@@ -99,6 +100,7 @@ func init() {
 			ProvideModuleManager,
 			ProvideGenesisTxHandler,
 			ProvideCometService,
+			ProvideAppVersionModifier,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -235,4 +237,8 @@ func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
 
 func ProvideCometService() comet.Service {
 	return &services.ContextAwareCometInfoService{}
+}
+
+func ProvideAppVersionModifier(app *AppBuilder) app.VersionModifier {
+	return app.app
 }

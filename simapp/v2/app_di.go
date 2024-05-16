@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
@@ -46,7 +47,7 @@ var DefaultNodeHome string
 // capabilities aren't needed for testing.
 type SimApp struct {
 	*runtime.App
-	legacyAmino        *codec.LegacyAmino
+	legacyAmino        legacy.Amino
 	appCodec           codec.Codec
 	txConfig           client.TxConfig
 	interfaceRegistry  codectypes.InterfaceRegistry
@@ -164,6 +165,12 @@ func NewSimApp(
 				// custom function that implements the minttypes.InflationCalculationFn
 				// interface.
 			),
+			depinject.Provide(
+				codec.ProvideInterfaceRegistry,
+				codec.ProvideAddressCodec,
+				codec.ProvideProtoCodec,
+				codec.ProvideLegacyAmino,
+			),
 		)
 	)
 
@@ -215,14 +222,6 @@ func NewSimApp(
 	}
 
 	return app
-}
-
-// LegacyAmino returns SimApp's amino codec.
-//
-// NOTE: This is solely to be used for testing purposes as it may be desirable
-// for modules to register their own custom testing types.
-func (app *SimApp) LegacyAmino() *codec.LegacyAmino {
-	return app.legacyAmino
 }
 
 // AppCodec returns SimApp's app codec.

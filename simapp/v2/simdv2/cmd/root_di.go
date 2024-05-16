@@ -9,6 +9,7 @@ import (
 	clientv2keyring "cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
@@ -37,13 +38,20 @@ func NewRootCmd() *cobra.Command {
 	)
 
 	if err := depinject.Inject(
-		depinject.Configs(simapp.AppConfig(),
+		depinject.Configs(
+			simapp.AppConfig(),
 			depinject.Supply(
 				log.NewNopLogger(),
 				simtestutil.NewAppOptionsWithFlagHome(tempDir()),
 			),
 			depinject.Provide(
-				ProvideClientContext, ProvideKeyring, ProvideV1ModuleManager,
+				codec.ProvideInterfaceRegistry,
+				codec.ProvideAddressCodec,
+				codec.ProvideProtoCodec,
+				codec.ProvideLegacyAmino,
+				ProvideClientContext,
+				ProvideKeyring,
+				ProvideV1ModuleManager,
 			),
 		),
 		&autoCliOpts,
@@ -105,17 +113,22 @@ func ProvideClientContext(
 	appCodec codec.Codec,
 	interfaceRegistry codectypes.InterfaceRegistry,
 	txConfigOpts tx.ConfigOptions,
-	legacyAmino *codec.LegacyAmino,
+	legacyAmino legacy.Amino,
 	addressCodec address.Codec,
 	validatorAddressCodec address.ValidatorAddressCodec,
 	consensusAddressCodec address.ConsensusAddressCodec,
 ) client.Context {
 	var err error
 
+	amino, ok := legacyAmino.(*codec.LegacyAmino)
+	if !ok {
+		panic("legacy.Amino must be an *codec.LegacyAmino instance for legacy ClientContext")
+	}
+
 	clientCtx := client.Context{}.
 		WithCodec(appCodec).
 		WithInterfaceRegistry(interfaceRegistry).
-		WithLegacyAmino(legacyAmino).
+		WithLegacyAmino(amino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithAddressCodec(addressCodec).

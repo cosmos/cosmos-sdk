@@ -9,6 +9,7 @@ import (
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/x/tx/signing"
 
@@ -20,7 +21,7 @@ func ProvideInterfaceRegistry(
 	addressCodec address.Codec,
 	validatorAddressCodec address.ValidatorAddressCodec,
 	customGetSigners []signing.CustomGetSigner,
-) (types.InterfaceRegistry, error) {
+) (types.InterfaceRegistry, registry.InterfaceRegistrar) {
 	signingOptions := signing.Options{
 		AddressCodec:          addressCodec,
 		ValidatorAddressCodec: validatorAddressCodec,
@@ -34,14 +35,14 @@ func ProvideInterfaceRegistry(
 		SigningOptions: signingOptions,
 	})
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	if err := interfaceRegistry.SigningContext().Validate(); err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return interfaceRegistry, nil
+	return interfaceRegistry, interfaceRegistry
 }
 
 func ProvideLegacyAmino() legacy.Amino {

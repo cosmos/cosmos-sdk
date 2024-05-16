@@ -75,15 +75,13 @@ func initFixture(t *testing.T) *fixture {
 	newCtx := sdk.NewContext(cms, true, logger)
 
 	router := baseapp.NewMsgServiceRouter()
-	router.SetInterfaceRegistry(cdc.InterfaceRegistry())
 	queryRouter := baseapp.NewGRPCQueryRouter()
-	queryRouter.SetInterfaceRegistry(cdc.InterfaceRegistry())
 
 	handler := directHandler{}
 	account := baseaccount.NewAccount("base", signing.NewHandlerMap(handler))
 	accountsKeeper, err := accounts.NewKeeper(
 		cdc,
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(queryRouter, router)),
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(router)),
 		addresscodec.NewBech32Codec("cosmos"),
 		cdc.InterfaceRegistry(),
 		account,
@@ -128,7 +126,7 @@ func initFixture(t *testing.T) *fixture {
 			accounts.ModuleName:  accountsModule,
 			authtypes.ModuleName: authModule,
 			banktypes.ModuleName: bankModule,
-		})
+		}, router, queryRouter)
 
 	authtypes.RegisterInterfaces(cdc.InterfaceRegistry())
 	banktypes.RegisterInterfaces(cdc.InterfaceRegistry())

@@ -158,6 +158,18 @@ func SimulateMsgWithdrawDelegatorReward(txConfig client.TxConfig, ak types.Accou
 
 		msg := types.NewMsgWithdrawDelegatorReward(addr, validator.GetOperator())
 
+		// get outstanding rewards so we can first check if the withdrawable coins are sendable
+		outstanding, err := k.GetValidatorOutstandingRewardsCoins(ctx, sdk.ValAddress(delAddr))
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "error getting outstanding rewards"), nil, err
+		}
+
+		for _, v := range outstanding {
+			if !bk.IsSendEnabledDenom(ctx, v.Denom) {
+				return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "denom send not enabled: "+v.Denom), nil, nil
+			}
+		}
+
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,

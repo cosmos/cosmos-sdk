@@ -10,6 +10,8 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	eviclient "cosmossdk.io/x/evidence/client"
 	"cosmossdk.io/x/evidence/client/cli"
@@ -42,14 +44,16 @@ type AppModule struct {
 	cdc              codec.Codec
 	evidenceHandlers []eviclient.EvidenceHandler
 	keeper           keeper.Keeper
+	cometService     comet.Service
 }
 
 // NewAppModule creates a new AppModule object.
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, evidenceHandlers ...eviclient.EvidenceHandler) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, cometService comet.Service, evidenceHandlers ...eviclient.EvidenceHandler) AppModule {
 	return AppModule{
 		keeper:           keeper,
 		evidenceHandlers: evidenceHandlers,
 		cdc:              cdc,
+		cometService:     cometService,
 	}
 }
 
@@ -62,7 +66,7 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the evidence module's types to the LegacyAmino codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
@@ -135,7 +139,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the evidence module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	return am.keeper.BeginBlocker(ctx)
+	return am.keeper.BeginBlocker(ctx, am.cometService)
 }
 
 // AppModuleSimulation functions

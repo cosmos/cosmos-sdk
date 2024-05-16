@@ -17,6 +17,7 @@ import (
 	"cosmossdk.io/x/auth/vesting"
 	authzmodule "cosmossdk.io/x/authz/module"
 	"cosmossdk.io/x/bank"
+	"cosmossdk.io/x/consensus"
 	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
@@ -38,7 +39,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/consensus"
 )
 
 // TestDecode tests that the tx decoder can decode all the txs in the test suite.

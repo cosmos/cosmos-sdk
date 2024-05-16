@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/mint/keeper"
 	"cosmossdk.io/x/mint/simulation"
@@ -21,7 +22,7 @@ import (
 )
 
 // ConsensusVersion defines the current x/mint module consensus version.
-const ConsensusVersion = 2
+const ConsensusVersion = 3
 
 var (
 	_ module.HasName             = AppModule{}
@@ -77,7 +78,7 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the mint module's types on the given LegacyAmino codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
@@ -107,6 +108,10 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 
 	if err := mr.Register(types.ModuleName, 1, m.Migrate1to2); err != nil {
 		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %w", types.ModuleName, err)
+	}
+
+	if err := mr.Register(types.ModuleName, 2, m.Migrate2to3); err != nil {
+		return fmt.Errorf("failed to migrate x/%s from version 2 to 3: %w", types.ModuleName, err)
 	}
 
 	return nil

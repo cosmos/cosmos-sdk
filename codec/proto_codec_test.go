@@ -19,8 +19,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	countertypes "github.com/cosmos/cosmos-sdk/x/counter/types"
 )
 
 func createTestInterfaceRegistry() types.InterfaceRegistry {
@@ -191,12 +191,12 @@ func TestGetSigners(t *testing.T) {
 	msgSendV1 := &countertypes.MsgIncreaseCounter{Signer: testAddrStr, Count: 1}
 	msgSendV2 := &counterv1.MsgIncreaseCounter{Signer: testAddrStr, Count: 1}
 
-	signers, msgSendV2Copy, err := cdc.GetMsgV1Signers(msgSendV1)
+	signers, msgSendV2Copy, err := cdc.GetMsgSigners(msgSendV1)
 	require.NoError(t, err)
 	require.Equal(t, [][]byte{testAddr}, signers)
-	require.True(t, protov2.Equal(msgSendV2, msgSendV2Copy))
+	require.True(t, protov2.Equal(msgSendV2, msgSendV2Copy.Interface()))
 
-	signers, err = cdc.GetMsgV2Signers(msgSendV2)
+	signers, err = cdc.GetReflectMsgSigners(msgSendV2.ProtoReflect())
 	require.NoError(t, err)
 	require.Equal(t, [][]byte{testAddr}, signers)
 
@@ -205,7 +205,7 @@ func TestGetSigners(t *testing.T) {
 	signers, msgSendV2Copy, err = cdc.GetMsgAnySigners(msgSendAny)
 	require.NoError(t, err)
 	require.Equal(t, [][]byte{testAddr}, signers)
-	require.True(t, protov2.Equal(msgSendV2, msgSendV2Copy))
+	require.True(t, protov2.Equal(msgSendV2, msgSendV2Copy.Interface()))
 }
 
 type testAddressCodec struct{}

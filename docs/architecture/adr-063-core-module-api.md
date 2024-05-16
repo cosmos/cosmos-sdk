@@ -199,7 +199,7 @@ func NewKeeper(logger log.Logger) Keeper {
 
 Modules will provide their core services to the runtime module via extension interfaces built on top of the
 `cosmossdk.io/core/appmodule.AppModule` tag interface. This tag interface requires only two empty methods which
-allow `depinject` to identify implementors as `depinject.OnePerModule` types and as app module implementations:
+allow `depinject` to identify implementers as `depinject.OnePerModule` types and as app module implementations:
 
 ```go
 type AppModule interface {

@@ -2,58 +2,36 @@ syntax = "proto3";
 
 package cosmos.store.streaming.abci;
 
-import "tendermint/abci/types.proto";
+import "cometbft/abci/v1/types.proto";
 import "cosmos/store/v1beta1/listening.proto";
 
 option go_package = "cosmossdk.io/store/streaming/abci";
 
 // ListenEndBlockRequest is the request type for the ListenEndBlock RPC method
-//
-// Deprecated: Store v1 is deprecated as of v0.50.x, please use Store v2 types
-// instead.
 message ListenFinalizeBlockRequest {
-  option deprecated = true;
 
-  tendermint.abci.RequestFinalizeBlock  req = 1;
-  tendermint.abci.ResponseFinalizeBlock res = 2;
+  cometbft.abci.v1.FinalizeBlockRequest  req = 1;
+  cometbft.abci.v1.FinalizeBlockResponse res = 2;
 }
 
 // ListenEndBlockResponse is the response type for the ListenEndBlock RPC method
-//
-// Deprecated: Store v1 is deprecated as of v0.50.x, please use Store v2 types
-// instead.
-message ListenFinalizeBlockResponse {
-  option deprecated = true;
-}
+message ListenFinalizeBlockResponse {}
 
 // ListenCommitRequest is the request type for the ListenCommit RPC method
-//
-// Deprecated: Store v1 is deprecated as of v0.50.x, please use Store v2 types
-// instead.
 message ListenCommitRequest {
-  option deprecated = true;
 
   // explicitly pass in block height as ResponseCommit does not contain this
   // info
-  int64                          block_height          = 1;
-  tendermint.abci.ResponseCommit res                   = 2;
+  int64                           block_height         = 1;
+  cometbft.abci.v1.CommitResponse res                  = 2;
   repeated cosmos.store.v1beta1.StoreKVPair change_set = 3;
 }
 
 // ListenCommitResponse is the response type for the ListenCommit RPC method
-//
-// Deprecated: Store v1 is deprecated as of v0.50.x, please use Store v2 types
-// instead.
-message ListenCommitResponse {
-  option deprecated = true;
-}
+message ListenCommitResponse {}
 
 // ABCIListenerService is the service for the BaseApp ABCIListener interface
-//
-// Deprecated: Store v1 is deprecated as of v0.50.x, please use Store v2 types
-// instead.
 service ABCIListenerService {
-  option deprecated = true;
 
   // ListenFinalizeBlock is the corresponding endpoint for
   // ABCIListener.ListenEndBlock

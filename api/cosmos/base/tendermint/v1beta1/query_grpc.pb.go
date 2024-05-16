@@ -47,8 +47,6 @@ type ServiceClient interface {
 	// ABCIQuery defines a query handler that supports ABCI queries directly to the
 	// application, bypassing Tendermint completely. The ABCI query must contain
 	// a valid and supported path, including app, custom, p2p, and store.
-	//
-	// Since: cosmos-sdk 0.46
 	ABCIQuery(ctx context.Context, in *ABCIQueryRequest, opts ...grpc.CallOption) (*ABCIQueryResponse, error)
 }
 
@@ -142,8 +140,6 @@ type ServiceServer interface {
 	// ABCIQuery defines a query handler that supports ABCI queries directly to the
 	// application, bypassing Tendermint completely. The ABCI query must contain
 	// a valid and supported path, including app, custom, p2p, and store.
-	//
-	// Since: cosmos-sdk 0.46
 	ABCIQuery(context.Context, *ABCIQueryRequest) (*ABCIQueryResponse, error)
 	mustEmbedUnimplementedServiceServer()
 }

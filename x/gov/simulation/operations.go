@@ -342,7 +342,9 @@ func SimulateMsgDeposit(
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "unable to get proposal"), nil, err
 		}
 
-		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, false, p.Expedited)
+		isExpedited := p.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED
+
+		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, false, isExpedited)
 		switch {
 		case skip:
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "skip deposit"), nil, nil

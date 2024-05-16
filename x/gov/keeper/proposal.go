@@ -39,7 +39,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		}
 	}
 
-	msgs := []string{} // will hold a string slice of all Msg type URLs.
+	msgs := make([]string, 0, len(messages)) // will hold a string slice of all Msg type URLs.
 
 	// Loop through all messages and confirm that each has a handler and the gov module account as the only signer
 	for _, msg := range messages {
@@ -70,7 +70,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 			}
 		}
 
-		signers, _, err := k.cdc.GetMsgV1Signers(msg)
+		signers, _, err := k.cdc.GetMsgSigners(msg)
 		if err != nil {
 			return v1.Proposal{}, err
 		}
@@ -87,7 +87,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 			return v1.Proposal{}, errorsmod.Wrapf(types.ErrInvalidSigner, addr)
 		}
 
-		if err := k.RouterService.MessageRouterService().CanInvoke(ctx, sdk.MsgTypeURL(msg)); err != nil {
+		if err := k.MsgRouterService.CanInvoke(ctx, sdk.MsgTypeURL(msg)); err != nil {
 			return v1.Proposal{}, errorsmod.Wrap(types.ErrUnroutableProposalMsg, err.Error())
 		}
 

@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -181,7 +181,7 @@ func TestAppImportExport(t *testing.T) {
 		t.Logf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), appKeyA, appKeyB)
 		if !assert.Equal(t, 0, len(failedKVAs), simtestutil.GetSimulationLog(keyName, app.SimulationManager().StoreDecoders, failedKVAs, failedKVBs)) {
 			for _, v := range failedKVAs {
-				t.Logf("store missmatch: %q\n", v)
+				t.Logf("store mismatch: %q\n", v)
 			}
 			t.FailNow()
 		}
@@ -240,7 +240,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	}
 	require.Equal(t, "SimApp", newApp.Name())
 
-	_, err = newApp.InitChain(&abci.RequestInitChain{
+	_, err = newApp.InitChain(&abci.InitChainRequest{
 		AppStateBytes: exported.AppState,
 		ChainId:       SimAppChainID,
 	})
@@ -261,6 +261,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 }
 
 func setupSimulationApp(t *testing.T, msg string) (simtypes.Config, dbm.DB, simtestutil.AppOptionsMap, *SimApp) {
+	t.Helper()
 	config := simcli.NewConfigFromFlags()
 	config.ChainID = SimAppChainID
 

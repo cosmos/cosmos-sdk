@@ -24,6 +24,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/std"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
@@ -52,6 +53,10 @@ func NewRootCmd() *cobra.Command {
 				ProvideClientContext,
 				ProvideKeyring,
 				ProvideV1ModuleManager,
+			),
+			depinject.Invoke(
+				std.RegisterInterfaces,
+				std.RegisterLegacyAminoCodec,
 			),
 		),
 		&autoCliOpts,

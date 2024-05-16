@@ -126,10 +126,6 @@ func ProvideAppBuilder(
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 	}
 
-	// TODO register as Invoker from simapp v2; remove if not needed
-	// std.RegisterInterfaces(interfaceRegistrar)
-	// std.RegisterLegacyAminoCodec(amino)
-
 	msgRouterBuilder := stf.NewMsgRouterBuilder()
 	app := &App{
 		storeKeys:          nil,

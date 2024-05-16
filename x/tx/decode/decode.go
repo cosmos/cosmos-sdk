@@ -10,6 +10,7 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/dynamicpb"
 
 	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/core/transaction"
@@ -120,8 +121,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	}
 
 	var (
-		signers [][]byte
-		// dynamicMsgs []proto.Message
+		signers     [][]byte
 		reflectMsgs []protoreflect.Message
 		msgs        []gogoproto.Message
 	)
@@ -130,18 +130,16 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 		typeURL := strings.TrimPrefix(anyMsg.TypeUrl, "/")
 
 		// unmarshal into dynamic message
-		// msgDesc, err := fileResolver.FindDescriptorByName(protoreflect.FullName(typeURL))
-		// if err != nil {
-		// 	return nil, fmt.Errorf("protoFiles does not have descriptor %s: %w", anyMsg.TypeUrl, err)
-		// }
-		// dynamicMsg := dynamicpb.NewMessageType(msgDesc.(protoreflect.MessageDescriptor)).New().Interface()
-		// err = anyMsg.UnmarshalTo(dynamicMsg)
-		// if err != nil {
-		// 	return nil, err
-		// }
-		// dynamicMsgs = append(dynamicMsgs, dynamicMsg)
-
-		reflectMsgs = append(reflectMsgs, anyMsg.ProtoReflect())
+		msgDesc, err := fileResolver.FindDescriptorByName(protoreflect.FullName(typeURL))
+		if err != nil {
+			return nil, fmt.Errorf("protoFiles does not have descriptor %s: %w", anyMsg.TypeUrl, err)
+		}
+		dynamicMsg := dynamicpb.NewMessageType(msgDesc.(protoreflect.MessageDescriptor)).New().Interface()
+		err = anyMsg.UnmarshalTo(dynamicMsg)
+		if err != nil {
+			return nil, err
+		}
+		reflectMsgs = append(reflectMsgs, dynamicMsg.ProtoReflect())
 
 		// unmarshal into gogoproto message
 		gogoType := gogoproto.MessageType(typeURL)
@@ -156,7 +154,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 		msgs = append(msgs, msg)
 
 		// fetch signers with dynamic message
-		ss, signerErr := d.signingCtx.GetSigners(anyMsg)
+		ss, signerErr := d.signingCtx.GetSigners(dynamicMsg)
 		if signerErr != nil {
 			return nil, errorsmod.Wrap(ErrTxDecode, signerErr.Error())
 		}

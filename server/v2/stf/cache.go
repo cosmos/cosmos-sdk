@@ -18,7 +18,7 @@ func (c Container) Set(prefix []byte, value any) {
 	if exists {
 		c.m[unsafeString(prefix)] = value
 	}
-	c.m[string(prefix)] = value
+	c.m[unsafeString(prefix)] = value
 }
 
 func (c Container) Get(prefix []byte) (value any, ok bool) {

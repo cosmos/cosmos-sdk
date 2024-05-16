@@ -20,7 +20,7 @@ var (
 )
 
 func TestMockCacheCtx(t *testing.T) {
-	storeService := NewStoreService(actorNameStr)
+	storeService := NewKVStoreService([]byte(actorNameStr))
 	ctx := NewExecutionContext()
 	item := mock.NewMockItem(storeService, []byte("item"), "item")
 
@@ -118,7 +118,7 @@ func TestSTFCache(t *testing.T) {
 func cacheSet(t *testing.T, ctx context.Context, prefix []byte, v string) error {
 	t.Helper()
 
-	storeService := NewStoreService(actorNameStr)
+	storeService := NewKVStoreService([]byte(actorNameStr))
 	item := mock.NewMockItem(storeService, prefix, "item")
 
 	err := item.Set(ctx, []byte(v))
@@ -134,5 +134,5 @@ func cacheHas(t *testing.T, cache ModuleContainer, prefix []byte, expected strin
 	t.Helper()
 	v, ok := cache.GetContainer([]byte(actorNameStr)).Get(prefix)
 	require.True(t, ok)
-	require.Equal(t, expected, v.(string))
+	require.Equal(t, []byte(expected), v.([]byte))
 }

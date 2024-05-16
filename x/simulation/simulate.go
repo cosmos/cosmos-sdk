@@ -160,7 +160,7 @@ func SimulateFromSeed(
 		// recover logs in case of panic
 		defer func() {
 			if r := recover(); r != nil {
-				logger.Error("simulation halted due to panic", "block", blockHeight)
+				logger.Error("simulation halted due to panic", "height", blockHeight)
 				logWriter.PrintLogs()
 				panic(r)
 			}
@@ -236,7 +236,7 @@ func SimulateFromSeed(
 		}
 
 		if proposerAddress == nil {
-			logger.Info("Simulation stopped early as all validators have been unbonded; nobody left to propose a block")
+			logger.Info("Simulation stopped early as all validators have been unbonded; nobody left to propose a block", "height", blockHeight)
 			break
 		}
 

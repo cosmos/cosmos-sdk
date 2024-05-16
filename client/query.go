@@ -2,10 +2,10 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	"google.golang.org/grpc/codes"

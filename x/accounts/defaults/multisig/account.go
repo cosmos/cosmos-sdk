@@ -16,6 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
+var MULTISIG_ACCOUNT = "multisig-account"
+
 var (
 	MembersPrefix   = collections.NewPrefix(0)
 	SequencePrefix  = collections.NewPrefix(1)
@@ -43,19 +45,17 @@ type Account struct {
 }
 
 // NewAccount returns a new multisig account creator function.
-func NewAccount(name string) accountstd.AccountCreatorFunc {
-	return func(deps accountstd.Dependencies) (string, accountstd.Interface, error) {
-		return name, &Account{
-			Members:       collections.NewMap(deps.SchemaBuilder, MembersPrefix, "members", collections.BytesKey, collections.Uint64Value),
-			Sequence:      collections.NewSequence(deps.SchemaBuilder, SequencePrefix, "sequence"),
-			Config:        collections.NewItem(deps.SchemaBuilder, ConfigPrefix, "config", codec.CollValue[v1.Config](deps.LegacyStateCodec)),
-			Proposals:     collections.NewMap(deps.SchemaBuilder, ProposalsPrefix, "proposals", collections.Uint64Key, codec.CollValue[v1.Proposal](deps.LegacyStateCodec)),
-			Votes:         collections.NewMap(deps.SchemaBuilder, VotesPrefix, "votes", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), collections.Int32Value),
-			addrCodec:     deps.AddressCodec,
-			headerService: deps.Environment.HeaderService,
-			eventService:  deps.Environment.EventService,
-		}, nil
-	}
+func NewAccount(deps accountstd.Dependencies) (*Account, error) {
+	return &Account{
+		Members:       collections.NewMap(deps.SchemaBuilder, MembersPrefix, "members", collections.BytesKey, collections.Uint64Value),
+		Sequence:      collections.NewSequence(deps.SchemaBuilder, SequencePrefix, "sequence"),
+		Config:        collections.NewItem(deps.SchemaBuilder, ConfigPrefix, "config", codec.CollValue[v1.Config](deps.LegacyStateCodec)),
+		Proposals:     collections.NewMap(deps.SchemaBuilder, ProposalsPrefix, "proposals", collections.Uint64Key, codec.CollValue[v1.Proposal](deps.LegacyStateCodec)),
+		Votes:         collections.NewMap(deps.SchemaBuilder, VotesPrefix, "votes", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), collections.Int32Value),
+		addrCodec:     deps.AddressCodec,
+		headerService: deps.Environment.HeaderService,
+		eventService:  deps.Environment.EventService,
+	}, nil
 }
 
 // Init initializes the multisig account with the given configuration and members.

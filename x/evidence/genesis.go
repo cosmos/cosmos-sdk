@@ -16,7 +16,7 @@ import (
 // state.
 func InitGenesis(ctx context.Context, k keeper.Keeper, gs *types.GenesisState) error {
 	if err := gs.Validate(); err != nil {
-		return fmt.Errorf("failed to validate %s genesis state: %s", types.ModuleName, err)
+		return fmt.Errorf("failed to validate %s genesis state: %w", types.ModuleName, err)
 	}
 
 	for _, e := range gs.Evidence {

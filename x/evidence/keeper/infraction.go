@@ -74,7 +74,7 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 	// if the difference in time and number of blocks is greater than the allowed
 	// parameters defined.
 	var res consensusv1.QueryParamsResponse
-	if err := k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
+	if err := k.QueryRouterService.InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
 		return fmt.Errorf("failed to query consensus params: %w", err)
 	}
 	if res.Params.Evidence != nil {

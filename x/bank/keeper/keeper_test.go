@@ -154,6 +154,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 		authority,
 	)
 
+	suite.Require().NoError(suite.bankKeeper.SetParams(ctx, banktypes.Params{
+		DefaultSendEnabled: banktypes.DefaultDefaultSendEnabled,
+	}))
+
 	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
@@ -175,7 +179,7 @@ func (suite *KeeperTestSuite) mockMintCoins(moduleAcc *authtypes.ModuleAccount) 
 	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, moduleAcc.Name).Return(moduleAcc)
 }
 
-func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(moduleAcc *authtypes.ModuleAccount, accAddr sdk.AccAddress) {
+func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(moduleAcc *authtypes.ModuleAccount, _ sdk.AccAddress) {
 	suite.authKeeper.EXPECT().GetModuleAddress(moduleAcc.Name).Return(moduleAcc.GetAddress())
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc)
 }
@@ -195,7 +199,7 @@ func (suite *KeeperTestSuite) mockSendCoinsFromAccountToModule(acc *authtypes.Ba
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, acc.GetAddress()).Return(acc)
 }
 
-func (suite *KeeperTestSuite) mockSendCoins(ctx context.Context, sender sdk.AccountI, receiver sdk.AccAddress) {
+func (suite *KeeperTestSuite) mockSendCoins(ctx context.Context, sender sdk.AccountI, _ sdk.AccAddress) {
 	suite.authKeeper.EXPECT().GetAccount(ctx, sender.GetAddress()).Return(sender)
 }
 
@@ -204,7 +208,7 @@ func (suite *KeeperTestSuite) mockFundAccount(receiver sdk.AccAddress) {
 	suite.mockSendCoinsFromModuleToAccount(mintAcc, receiver)
 }
 
-func (suite *KeeperTestSuite) mockInputOutputCoins(inputs []sdk.AccountI, outputs []sdk.AccAddress) {
+func (suite *KeeperTestSuite) mockInputOutputCoins(inputs []sdk.AccountI, _ []sdk.AccAddress) {
 	for _, input := range inputs {
 		suite.authKeeper.EXPECT().GetAccount(suite.ctx, input.GetAddress()).Return(input)
 	}
@@ -383,6 +387,24 @@ func (suite *KeeperTestSuite) TestSendCoinsFromModuleToAccount_Blocklist() {
 	require.Error(keeper.SendCoinsFromModuleToAccount(
 		ctx, banktypes.MintModuleName, accAddrs[4], initCoins,
 	))
+}
+
+func (suite *KeeperTestSuite) TestSendCoinsFromModuleToAccount_CoinSendDisabled() {
+	ctx := suite.ctx
+	require := suite.Require()
+	keeper := suite.bankKeeper
+
+	suite.mockMintCoins(mintAcc)
+	require.NoError(keeper.MintCoins(ctx, banktypes.MintModuleName, initCoins))
+
+	keeper.SetSendEnabled(ctx, sdk.DefaultBondDenom, false)
+
+	suite.authKeeper.EXPECT().GetModuleAddress(mintAcc.Name).Return(mintAcc.GetAddress())
+	err := keeper.SendCoinsFromModuleToAccount(
+		ctx, banktypes.MintModuleName, accAddrs[2], initCoins,
+	)
+	require.Contains(err.Error(), "stake, is prohibited from being sent at this time")
+	keeper.SetSendEnabled(ctx, sdk.DefaultBondDenom, true)
 }
 
 func (suite *KeeperTestSuite) TestSupply_DelegateUndelegateCoins() {
@@ -1863,6 +1885,7 @@ func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 			multiPermAcc.Name,
 			sdk.NewCoins(sdk.NewCoin("utxo", math.NewInt(100000)))),
 	)
+
 	// send coins to address
 	suite.mockSendCoinsFromModuleToAccount(multiPermAcc, accAddrs[0])
 	require.NoError(

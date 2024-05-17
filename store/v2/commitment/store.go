@@ -45,7 +45,12 @@ type CommitStore struct {
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, pruneOpts *store.PruneOptions, logger log.Logger) (*CommitStore, error) {
+func NewCommitStore(
+	trees map[string]Tree,
+	db corestore.KVStoreWithBatch,
+	pruneOpts *store.PruneOptions,
+	logger log.Logger,
+) (*CommitStore, error) {
 	if pruneOpts == nil {
 		pruneOpts = store.DefaultPruneOptions()
 	}
@@ -208,8 +213,11 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 		// If a commit event execution is interrupted, a new iavl store's version
 		// will be larger than the RMS's metadata, when the block is replayed, we
 		// should avoid committing that iavl store again.
-		var commitID proof.CommitID
-		if tree.GetLatestVersion() >= version {
+		var (
+			commitID      proof.CommitID
+			latestVersion = tree.GetLatestVersion()
+		)
+		if latestVersion != 0 && latestVersion >= version {
 			commitID.Version = version
 			commitID.Hash = tree.Hash()
 		} else {

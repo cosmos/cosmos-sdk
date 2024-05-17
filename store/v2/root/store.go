@@ -67,7 +67,7 @@ func New(
 ) (store.RootStore, error) {
 	return &Store{
 		logger:           logger.With("module", "root_store"),
-		initialVersion:   1,
+		initialVersion:   0,
 		stateStorage:     ss,
 		stateCommitment:  sc,
 		migrationManager: mm,
@@ -389,7 +389,7 @@ func (s *Store) writeSC(cs *corestore.Changeset) error {
 	}
 
 	var previousHeight, version uint64
-	if s.lastCommitInfo.GetVersion() == 0 && s.initialVersion > 1 {
+	if s.lastCommitInfo.GetVersion() == 0 {
 		// This case means that no commit has been made in the store, we
 		// start from initialVersion.
 		version = s.initialVersion

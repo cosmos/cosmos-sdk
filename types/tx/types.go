@@ -3,8 +3,9 @@ package tx
 import (
 	"fmt"
 
-	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
+	"cosmossdk.io/core/registry"
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -97,18 +98,18 @@ func (t *Tx) ValidateBasic() error {
 // GetSigners retrieves all the signers of a tx.
 // This includes all unique signers of the messages (in order),
 // as well as the FeePayer (if specified and not already included).
-func (t *Tx) GetSigners(cdc codec.Codec) ([][]byte, []protov2.Message, error) {
+func (t *Tx) GetSigners(cdc codec.Codec) ([][]byte, []protoreflect.Message, error) {
 	var signers [][]byte
 	seen := map[string]bool{}
 
-	var msgsv2 []protov2.Message
+	var reflectMsgs []protoreflect.Message
 	for _, msg := range t.Body.Messages {
-		xs, msgv2, err := cdc.GetMsgAnySigners(msg)
+		xs, reflectMsg, err := cdc.GetMsgAnySigners(msg)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		msgsv2 = append(msgsv2, msgv2)
+		reflectMsgs = append(reflectMsgs, reflectMsg)
 
 		for _, signer := range xs {
 			if !seen[string(signer)] {
@@ -133,7 +134,7 @@ func (t *Tx) GetSigners(cdc codec.Codec) ([][]byte, []protov2.Message, error) {
 		seen[string(feePayerAddr)] = true
 	}
 
-	return signers, msgsv2, nil
+	return signers, reflectMsgs, nil
 }
 
 func (t *Tx) GetGas() uint64 {
@@ -226,7 +227,7 @@ func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 // RegisterInterfaces registers the sdk.Tx and MsgResponse interfaces.
 // Note: the registration of sdk.Msg is done in sdk.RegisterInterfaces, but it
 // could be moved inside this function.
-func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func RegisterInterfaces(registry registry.InterfaceRegistrar) {
 	registry.RegisterInterface(msgResponseInterfaceProtoName, (*MsgResponse)(nil))
 
 	registry.RegisterInterface("cosmos.tx.v1beta1.Tx", (*sdk.HasMsgs)(nil))

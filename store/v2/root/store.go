@@ -2,11 +2,11 @@ package root
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
 
-	"github.com/cockroachdb/errors"
 	"golang.org/x/sync/errgroup"
 
 	coreheader "cosmossdk.io/core/header"

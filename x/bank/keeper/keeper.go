@@ -270,7 +270,8 @@ func (k BaseKeeper) SendCoinsFromModuleToAccount(
 	}
 
 	for _, coin := range amt {
-		if ok := k.IsSendEnabledDenom(ctx, coin.Denom); !ok {
+		sendEnabled, found := k.getSendEnabled(ctx, coin.Denom)
+		if found && !sendEnabled {
 			return fmt.Errorf("denom: %s, is prohibited from being sent at this time", coin.Denom)
 		}
 	}

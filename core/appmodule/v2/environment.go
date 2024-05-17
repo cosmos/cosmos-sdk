@@ -19,7 +19,8 @@ type Environment struct {
 	EventService       event.Service
 	GasService         gas.Service
 	HeaderService      header.Service
-	RouterService      router.Service
+	QueryRouterService router.Service
+	MsgRouterService   router.Service
 	TransactionService transaction.Service
 
 	KVStoreService  store.KVStoreService

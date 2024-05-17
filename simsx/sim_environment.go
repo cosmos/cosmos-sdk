@@ -4,6 +4,7 @@ import (
 	"context"
 	"math/rand"
 	"slices"
+	"time"
 
 	"cosmossdk.io/math"
 
@@ -280,6 +281,11 @@ func (r *XRand) PositiveInt(max math.Int) (math.Int, error) {
 	return simtypes.RandPositiveInt(r.Rand, max)
 }
 
-//func (r *XRand) OneOf[T any](vals []T) (T, bool) {
-//	return testutil.RandSliceElem(r.Rand, vals)
-//}
+// Timestamp returns a timestamp between  Jan 1, 2062 and Jan 1, 2262
+func (r *XRand) Timestamp() time.Time {
+	return simtypes.RandTimestamp(r.Rand)
+}
+
+func (r *XRand) Bool() bool {
+	return r.Intn(100) > 50
+}

@@ -12,6 +12,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/client/v2/offchain"
 	"cosmossdk.io/core/transaction"
@@ -106,7 +107,8 @@ func startCommand(txCodec transaction.Codec[transaction.Tx]) *cobra.Command {
 			)
 			ctx := cmd.Context()
 			ctx, cancelFn := context.WithCancel(ctx)
-			go func() {
+			g, _ := errgroup.WithContext(ctx)
+			g.Go(func() error {
 				sigCh := make(chan os.Signal, 1)
 				signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 				sig := <-sigCh
@@ -116,12 +118,13 @@ func startCommand(txCodec transaction.Codec[transaction.Tx]) *cobra.Command {
 				if err := cometServer.Stop(ctx); err != nil {
 					cmd.PrintErrln("failed to stop servers:", err)
 				}
-			}()
+				return nil
+			})
 
 			if err := cometServer.Start(ctx); err != nil {
 				return fmt.Errorf("failed to start servers: %w", err)
 			}
-			return nil
+			return g.Wait()
 		},
 	}
 	return cmd

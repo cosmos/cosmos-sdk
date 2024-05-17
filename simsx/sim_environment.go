@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"slices"
 
+	"cosmossdk.io/math"
+
 	"cosmossdk.io/core/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -229,8 +231,8 @@ func (c *ChainDataSource) ModuleAccountAddress(reporter SimulationReporter, modu
 	return res
 }
 
-func (c *ChainDataSource) Rand() *rand.Rand {
-	return c.r
+func (c *ChainDataSource) Rand() *XRand {
+	return &XRand{c.r}
 }
 
 // Collect applies the function f to each element in the source slice,
@@ -253,3 +255,31 @@ func Collect[T, E any](source []T, f func(a T) E) []E {
 	}
 	return r
 }
+
+type XRand struct {
+	*rand.Rand
+}
+
+func (r *XRand) StringN(max int) string {
+	return simtypes.RandStringOfLength(r.Rand, max)
+}
+
+func (r *XRand) SubsetCoins(src sdk.Coins) sdk.Coins {
+	return simulation.RandSubsetCoins(r.Rand, src)
+}
+
+func (r *XRand) DecN(max math.LegacyDec) math.LegacyDec {
+	return simtypes.RandomDecAmount(r.Rand, max)
+}
+
+func (r *XRand) IntInRange(min, max int) int {
+	return r.Rand.Intn(max-min) + min
+}
+
+func (r *XRand) PositiveInt(max math.Int) (math.Int, error) {
+	return simtypes.RandPositiveInt(r.Rand, max)
+}
+
+//func (r *XRand) OneOf[T any](vals []T) (T, bool) {
+//	return testutil.RandSliceElem(r.Rand, vals)
+//}

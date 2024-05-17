@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"context"
-	"math/rand"
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/keeper"
@@ -10,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simsx"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 func MsgCreateValidatorFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgCreateValidator] {
@@ -36,18 +34,18 @@ func MsgCreateValidatorFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.Ms
 		}
 		selfDelegation := simAccount.LiquidBalance().RandSubsetCoin(reporter, bondDenom)
 		description := types.NewDescription(
-			simtypes.RandStringOfLength(r, 10),
-			simtypes.RandStringOfLength(r, 10),
-			simtypes.RandStringOfLength(r, 10),
-			simtypes.RandStringOfLength(r, 10),
-			simtypes.RandStringOfLength(r, 10),
+			r.StringN(10),
+			r.StringN(10),
+			r.StringN(10),
+			r.StringN(10),
+			r.StringN(10),
 		)
 
-		maxCommission := math.LegacyNewDecWithPrec(int64(simtypes.RandIntBetween(r, 0, 100)), 2)
+		maxCommission := math.LegacyNewDecWithPrec(int64(r.IntInRange(0, 100)), 2)
 		commission := types.NewCommissionRates(
-			simtypes.RandomDecAmount(r, maxCommission),
+			r.DecN(maxCommission),
 			maxCommission,
-			simtypes.RandomDecAmount(r, maxCommission),
+			r.DecN(maxCommission),
 		)
 
 		addr, err := k.ValidatorAddressCodec().BytesToString(simAccount.Address)
@@ -135,8 +133,8 @@ func MsgUndelegateFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgUnde
 			return nil, nil
 		}
 
-		unbondAmt, err := simtypes.RandPositiveInt(r, totalBond)
-		if err != nil || !unbondAmt.IsPositive() {
+		unbondAmt, err := r.PositiveInt(totalBond)
+		if err != nil {
 			reporter.Skip("invalid unbond amount")
 			return nil, nil
 		}
@@ -146,14 +144,13 @@ func MsgUndelegateFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgUnde
 	}
 }
 
-func randomValidator(reporter simsx.SimulationReporter, ctx context.Context, k *keeper.Keeper, r *rand.Rand) types.Validator {
+func randomValidator(reporter simsx.SimulationReporter, ctx context.Context, k *keeper.Keeper, r *simsx.XRand) types.Validator {
 	vals, err := k.GetAllValidators(ctx)
 	if err != nil || len(vals) == 0 {
 		reporter.Skipf("unable to get validators or empty list: %s", err)
 		return types.Validator{}
 	}
-
-	val, ok := testutil.RandSliceElem(r, vals)
+	val, ok := testutil.RandSliceElem(r.Rand, vals)
 	if !ok {
 		reporter.Skip("validator is not ok")
 		return types.Validator{}

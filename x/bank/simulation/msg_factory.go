@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"golang.org/x/exp/maps"
 )
 
@@ -82,7 +81,7 @@ func MsgMultiSendFactory(bk keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgMulti
 			} else {
 				// take random subset of remaining coins for output
 				// and update remaining coins
-				outCoins = simulation.RandSubsetCoins(r, totalSentCoins)
+				outCoins = r.SubsetCoins(totalSentCoins)
 				totalSentCoins = totalSentCoins.Sub(outCoins...)
 			}
 

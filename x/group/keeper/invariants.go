@@ -74,7 +74,7 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, storeService storetypes.KV
 		err = func() error {
 			memIt, err := groupMemberByGroupIndex.Get(kvStore, groupInfo.Id)
 			if err != nil {
-				return fmt.Errorf("error while returning group member iterator for group with ID %d\n%v", groupInfo.Id, err)
+				return fmt.Errorf("error while returning group member iterator for group with ID %d\n%w", groupInfo.Id, err)
 			}
 			defer memIt.Close()
 
@@ -85,17 +85,17 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, storeService storetypes.KV
 					break
 				}
 				if err != nil {
-					return fmt.Errorf("LoadNext failure on member table iterator\n%v", err)
+					return fmt.Errorf("LoadNext failure on member table iterator\n%w", err)
 				}
 
 				curMemWeight, err := groupmath.NewPositiveDecFromString(groupMember.GetMember().GetWeight())
 				if err != nil {
-					return fmt.Errorf("error while parsing non-nengative decimal for group member %s\n%v", groupMember.Member.Address, err)
+					return fmt.Errorf("error while parsing non-nengative decimal for group member %s\n%w", groupMember.Member.Address, err)
 				}
 
 				membersWeight, err = groupmath.Add(membersWeight, curMemWeight)
 				if err != nil {
-					return fmt.Errorf("decimal addition error while adding group member voting weight to total voting weight\n%v", err)
+					return fmt.Errorf("decimal addition error while adding group member voting weight to total voting weight\n%w", err)
 				}
 			}
 			return nil

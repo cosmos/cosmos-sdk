@@ -428,7 +428,7 @@ func (s STF[T]) setHeaderInfo(state store.WriterMap, headerInfo header.Info) err
 
 // getHeaderInfo gets the header info from the state. It should only be used for queries
 func (s STF[T]) getHeaderInfo(state store.WriterMap) (i header.Info, err error) {
-	runtimeStore, err := state.GetWriter(appmanager.RuntimeIdentity)
+	runtimeStore, err := state.GetWriter(appmanager.ConsensusIdentity)
 	if err != nil {
 		return header.Info{}, err
 	}

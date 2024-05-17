@@ -278,6 +278,13 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.InitChainRequest
 
 	validatorUpdates := intoABCIValidatorUpdates(blockresponse.ValidatorUpdates)
 
+	// TODO necessary? where should this WARN live if it all. helpful for testing
+	for _, txRes := range blockresponse.TxResults {
+		if txRes.Error != nil {
+			c.logger.Warn("genesis tx failed", "code", txRes.Code, "log", txRes.Log, "error", txRes.Error)
+		}
+	}
+
 	stateChanges, err := genesisState.GetStateChanges()
 	if err != nil {
 		return nil, err

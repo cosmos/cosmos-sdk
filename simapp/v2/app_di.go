@@ -37,6 +37,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/std"
 )
 
 // DefaultNodeHome default home directories for the application daemon
@@ -170,6 +171,10 @@ func NewSimApp(
 				codec.ProvideAddressCodec,
 				codec.ProvideProtoCodec,
 				codec.ProvideLegacyAmino,
+			),
+			depinject.Invoke(
+				std.RegisterInterfaces,
+				std.RegisterLegacyAminoCodec,
 			),
 		)
 	)

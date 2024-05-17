@@ -148,12 +148,6 @@ func (m *MM) InitGenesisJSON(
 
 		mod := m.modules[moduleName]
 
-		// skip genutil as it's a special module that handles gentxs
-		// TODO: should this be an empty extension interface on genutil for server v2?
-		if moduleName == "genutil" {
-			continue
-		}
-
 		// we might get an adapted module, a native core API module or a legacy module
 		switch module := mod.(type) {
 		case appmodule.HasGenesisAuto:

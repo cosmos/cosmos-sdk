@@ -29,12 +29,9 @@ func NewIavlTree(db corestore.KVStoreWithBatch, logger log.Logger, cfg *Config) 
 
 // Remove removes the given key from the tree.
 func (t *IavlTree) Remove(key []byte) error {
-	_, res, err := t.tree.Remove(key)
+	_, _, err := t.tree.Remove(key)
 	if err != nil {
 		return err
-	}
-	if !res {
-		return fmt.Errorf("key %x not found", key)
 	}
 	return nil
 }

@@ -290,7 +290,7 @@ func (s STF[T]) runTxMsgs(
 	if err != nil {
 		return nil, 0, nil, err
 	}
-	msgs := tx.GetMessages()
+	msgs, err := tx.GetMessages()
 	if err != nil {
 		return nil, 0, nil, err
 	}

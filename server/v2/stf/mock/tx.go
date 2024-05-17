@@ -22,8 +22,8 @@ func (t Tx) Hash() [32]byte {
 	return sha256.Sum256(t.Bytes())
 }
 
-func (t Tx) GetMessages() []transaction.Msg {
-	return []transaction.Msg{t.Msg}
+func (t Tx) GetMessages() ([]transaction.Msg, error) {
+	return []transaction.Msg{t.Msg}, nil
 }
 
 func (t Tx) GetSenders() ([]transaction.Identity, error) {

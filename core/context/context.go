@@ -14,3 +14,8 @@ const (
 	ExecModeVerifyVoteExtension
 	ExecModeFinalize
 )
+
+const (
+	ExecModeKey = iota
+	CometInfoKey
+)

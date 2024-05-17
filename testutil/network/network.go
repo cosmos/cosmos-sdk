@@ -22,6 +22,7 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -185,7 +186,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	var (
 		appBuilder            *runtime.AppBuilder
 		txConfig              client.TxConfig
-		legacyAmino           *codec.LegacyAmino
+		legacyAmino           legacy.Amino
 		cdc                   codec.Codec
 		interfaceRegistry     codectypes.InterfaceRegistry
 		addressCodec          address.Codec
@@ -215,7 +216,11 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	})
 	cfg.Codec = cdc
 	cfg.TxConfig = txConfig
-	cfg.LegacyAmino = legacyAmino
+	amino, ok := legacyAmino.(*codec.LegacyAmino)
+	if !ok {
+		return Config{}, errors.New("legacyAmino must be a *codec.LegacyAmino")
+	}
+	cfg.LegacyAmino = amino
 	cfg.InterfaceRegistry = interfaceRegistry
 	cfg.GenesisState = appBuilder.DefaultGenesis()
 	cfg.AppConstructor = func(val ValidatorI) servertypes.Application {

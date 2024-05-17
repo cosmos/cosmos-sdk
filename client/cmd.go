@@ -3,12 +3,12 @@ package client
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"os"
 	"slices"
 	"strings"
 
-	"github.com/cockroachdb/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
@@ -364,15 +364,18 @@ func GetClientContextFromCmd(cmd *cobra.Command) Context {
 // SetCmdClientContext sets a command's Context value to the provided argument.
 // If the context has not been set, set the given context as the default.
 func SetCmdClientContext(cmd *cobra.Command, clientCtx Context) error {
-	var cmdCtx context.Context
-
-	if cmd.Context() == nil {
+	cmdCtx := cmd.Context()
+	if cmdCtx == nil {
 		cmdCtx = context.Background()
-	} else {
-		cmdCtx = cmd.Context()
 	}
 
-	cmd.SetContext(context.WithValue(cmdCtx, ClientContextKey, &clientCtx))
+	v := cmd.Context().Value(ClientContextKey)
+	if clientCtxPtr, ok := v.(*Context); ok {
+		*clientCtxPtr = clientCtx
+	} else {
+		cmd.SetContext(context.WithValue(cmdCtx, ClientContextKey, &clientCtx))
+	}
+
 	return nil
 }
 

@@ -42,7 +42,7 @@ func (a *AuxSignerData) ValidateBasic() error {
 	return a.GetSignDoc().ValidateBasic()
 }
 
-// GetSignaturesV2 gets the SignatureV2 of the aux signer.
+// GetSignatureV2 gets the SignatureV2 of the aux signer.
 func (a *AuxSignerData) GetSignatureV2() (signing.SignatureV2, error) {
 	pk, ok := a.SignDoc.PublicKey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {

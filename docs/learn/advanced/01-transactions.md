@@ -228,7 +228,7 @@ json.Unmarshal([]byte(jsonString), &jsonTx)
 ```
 
 2. Use `txFactory` to Construct and Serialise the Transaction:
-Replace the manual setup of `TxBuilder` with `txFactory` to configure and sign the transaction.
+Use `txFactory` to configure and sign the transaction.
 
 ```go
 // initialise `txFactory` with configuration
@@ -251,7 +251,6 @@ txBuilder.SetMemo(jsonTx.Memo)
 txBuilder.SetFeeAmount(jsonTx.Amount)
 txBuilder.SetGasLimit(200000)
 
-// automatically configures `SignerInfo` and signs the transaction
 err := authclient.SignTx(txFactory, clientCtx, "moniker", txBuilder, false, true)
 if err != nil {
     panic(err)
@@ -268,7 +267,7 @@ txBase64 := base64.StdEncoding.EncodeToString(txBytes)
 ```
 
 3. Provide the Base64 Encoded Transaction:
-The tx_bytes should be the base64 encoded string of txBytes.
+The `tx_bytesz should be the base64 encoded string of txBytes.
 
 ```json
 {

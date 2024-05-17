@@ -21,6 +21,8 @@ message Minter {
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
+
+  map<string, string> arbitrary_params = 3;
 }
 
 // Params defines the parameters for the x/mint module.

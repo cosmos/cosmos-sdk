@@ -18,12 +18,7 @@ func (k Keeper) BeginBlocker(ctx context.Context, ic types.MintFn) error {
 		return err
 	}
 
-	params, err := k.Params.Get(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = ic(ctx, k.Environment, &minter, params)
+	err = ic(ctx, k.Environment, &minter)
 	if err != nil {
 		return err
 	}

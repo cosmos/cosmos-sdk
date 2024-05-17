@@ -104,13 +104,18 @@ func (k Keeper) AddCollectedFees(ctx context.Context, fees sdk.Coins) error {
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
 }
 
-func (k Keeper) DefaultMintFn(ctx context.Context, env appmodule.Environment, minter *types.Minter, params types.Params) error {
+func (k Keeper) DefaultMintFn(ctx context.Context, env appmodule.Environment, minter *types.Minter) error {
 	stakingTokenSupply, err := k.StakingTokenSupply(ctx)
 	if err != nil {
 		return err
 	}
 
 	bondedRatio, err := k.BondedRatio(ctx)
+	if err != nil {
+		return err
+	}
+
+	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return err
 	}

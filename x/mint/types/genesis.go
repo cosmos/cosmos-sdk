@@ -7,7 +7,7 @@ import (
 	"cosmossdk.io/math"
 )
 
-type MintFn func(ctx context.Context, env appmodule.Environment, minter *Minter, params Params) error
+type MintFn func(ctx context.Context, env appmodule.Environment, minter *Minter) error
 
 // DefaultInflationCalculationFn is the default function used to calculate inflation.
 func DefaultInflationCalculationFn(_ context.Context, minter Minter, params Params, bondedRatio math.LegacyDec) math.LegacyDec {

@@ -201,8 +201,6 @@ Each gRPC method has its corresponding REST endpoint, generated using [gRPC-gate
 
 An example can be seen [here](https://docs.cosmos.network/main/user/run-node/txs#using-rest)
 
-While you might start with transaction data in JSON format, the Cosmos SDK requires this data to be in Protobuf format for transmission. This means you must convert your JSON data into the corresponding Protobuf structure before sending it to the endpoint.
-
 ##### Data Conversion Flow for `/cosmos/tx/v1beta1/txs` Endpoint
 
 To handle the JSON to Protobuf conversion for the `/cosmos/tx/v1beta1/txs` endpoint. Here are the steps to follow:

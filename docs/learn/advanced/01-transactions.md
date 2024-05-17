@@ -205,7 +205,7 @@ While you might start with transaction data in JSON format, the Cosmos SDK requi
 
 ##### Data Conversion Flow for `/cosmos/tx/v1beta1/txs` Endpoint
 
-To address the transition from the /txs endpoint to the `/cosmos/tx/v1beta1/txs` endpoint effectively, and to provide clarity on the structure of `tx_bytes` before encoding to base64, the documentation needs to include details on constructing the transaction with Protobuf and preparing it for serialization. Here's the revised approach:
+To handle the JSON to Protobuf conversion for the `/cosmos/tx/v1beta1/txs` endpoint. Here are the steps to follow:
 
 1. Parse the JSON to Structs:
 Continue parsing the JSON string into Go structs as previously done.

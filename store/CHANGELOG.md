@@ -23,6 +23,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [Unreleased]
+
+### Bug Fixes
+
+* (store) [#]() Fix nil pointer panic when query historical state where a new store don't exist.
+
 ## v1.1.0 (March 20, 2024)
 
 ### Improvements

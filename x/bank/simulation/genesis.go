@@ -81,8 +81,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 	var defaultSendEnabledParam bool
 	simState.AppParams.GetOrGenerate(string(KeyDefaultSendEnabled), &defaultSendEnabledParam, simState.Rand, func(r *rand.Rand) { defaultSendEnabledParam = RandomGenesisDefaultSendEnabledParam(r) })
 
-	sendEnabled := RandomGenesisSendEnabled(simState.Rand, simState.BondDenom)
-
 	numAccs := int64(len(simState.Accounts))
 	totalSupply := simState.InitialStake.Mul(sdkmath.NewInt((numAccs + simState.NumBonded)))
 	supply := sdk.NewCoins(sdk.NewCoin(simState.BondDenom, totalSupply))
@@ -96,7 +94,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		Params:      types.NewParams(defaultSendEnabledParam),
 		Balances:    balances,
 		Supply:      supply,
-		SendEnabled: sendEnabled,
+		SendEnabled: []types.SendEnabled{},
 	}
 
 	paramsBytes, err := json.MarshalIndent(&bankGenesis.Params, "", " ")

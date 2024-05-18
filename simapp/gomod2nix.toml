@@ -2,11 +2,11 @@ schema = 3
 
 [mod]
   [mod."buf.build/gen/go/cometbft/cometbft/protocolbuffers/go"]
-    version = "v1.34.0-20240312114316-c0d3497e35d6.1"
-    hash = "sha256-Uoo+Gfx/mnzKRoBvmTJC7oUKMrxOT20ibdY6ArGKHLQ="
+    version = "v1.34.1-20240312114316-c0d3497e35d6.1"
+    hash = "sha256-0zQ7x05+UOSAexuSQMFmt8kcY3023CBEOaulmRklnPA="
   [mod."buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go"]
-    version = "v1.34.0-20240130113600-88ef6483f90f.1"
-    hash = "sha256-EpsIiMf8GKK56FgjSS3tCZtVCz4apPcJiaqsbhtF3kM="
+    version = "v1.34.1-20240130113600-88ef6483f90f.1"
+    hash = "sha256-xCjFaSPtlyMmDhzBDAdgUStU8TYFOril/goGfGOGAWo="
   [mod."cloud.google.com/go"]
     version = "v0.112.2"
     hash = "sha256-Bk5MD40eefJlyUk96arLU/X1+EHItM7MjRPJtV0CU58="
@@ -553,11 +553,11 @@ schema = 3
     version = "v0.0.0-20240415180920-8c6c420018be"
     hash = "sha256-0Bc66Utj1rydwYngQxTQoTyg1Td2D+nIxukc0zz7XFc="
   [mod."google.golang.org/genproto/googleapis/rpc"]
-    version = "v0.0.0-20240509183442-62759503f434"
-    hash = "sha256-w2SGX12NeDO33wjxEpHi+OMcpp9SioPtdBuZKUIun+U="
+    version = "v0.0.0-20240513163218-0867130af1f8"
+    hash = "sha256-c+VNAAU3HTu/ZGfpiPnjnzgszcPhU4JOhTTcIdo/PPI="
   [mod."google.golang.org/grpc"]
-    version = "v1.63.2"
-    hash = "sha256-RmtVjYLam97k7IHTHU7Gn16xNX+GvA9AiLKlQwOiZXU="
+    version = "v1.64.0"
+    hash = "sha256-04Noi8lrzr+4ac2BA7KNXUXN/xZL/A2SsEpC2Hern84="
   [mod."google.golang.org/protobuf"]
     version = "v1.34.1"
     hash = "sha256-qnHqY6KLZiZDbTVTN6uzF4jedxROYlPCYHoiv6XI0sc="

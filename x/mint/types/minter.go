@@ -52,9 +52,23 @@ func ValidateMinter(minter Minter) error {
 	return nil
 }
 
-// NextEpochProvisions returns the epoch provisions.
-func (m Minter) NextEpochProvisions(params Params) math.LegacyDec {
-	return m.EpochProvisions.Mul(params.ReductionFactor)
+// NextAnnualProvisions returns the annual provisions based on current total
+// supply and inflation rate.
+func (m Minter) NextAnnualProvisions(_ Params, totalSupply math.Int) math.LegacyDec {
+	return m.Inflation.MulInt(totalSupply)
+}
+
+// BlockProvision returns the provisions for a block based on the annual
+// provisions rate.
+func (m Minter) BlockProvision(params Params) sdk.Coin {
+	provisionAmt := m.AnnualProvisions.QuoInt(math.NewInt(int64(params.BlocksPerYear)))
+	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
+}
+
+// NextEpochProvisions returns the epoch provisions based on reduction factor and total supply.
+func (m Minter) NextEpochProvisions(params Params, totalSupply math.Int) math.LegacyDec {
+	// return m.EpochProvisions.Mul(params.ReductionFactor)
+	return params.ReductionFactor.MulInt(totalSupply)
 }
 
 // EpochProvision returns the provisions for a block based on the epoch

@@ -26,6 +26,9 @@ func (k Keeper) BeforeEpochStart(ctx context.Context, epochIdentifier string, ep
 // - given epochIdentifier must be equal to the mint epoch identifier set via parameters.
 // - given epochNumber must be greater than or equal to the mint start epoch set via parameters.
 func (k Keeper) AfterEpochEnd(ctx context.Context, epochIdentifier string, epochNumber int64) error {
+	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
+
+	// fetch stored params
 	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return err
@@ -41,7 +44,7 @@ func (k Keeper) AfterEpochEnd(ctx context.Context, epochIdentifier string, epoch
 				return err
 			}
 		}
-		// fetch stored minter & params
+		// fetch stored minter
 		minter, err := k.Minter.Get(ctx)
 		if err != nil {
 			return err
@@ -56,9 +59,23 @@ func (k Keeper) AfterEpochEnd(ctx context.Context, epochIdentifier string, epoch
 		if err != nil {
 			return err
 		}
+
+		totalStakingSupply, err := k.StakingTokenSupply(ctx)
+		if err != nil {
+			return err
+		}
+
+		// bondedRatio, err := k.BondedRatio(ctx)
+		// if err != nil {
+		// 	return err
+		// }
+
 		if epochNumber >= params.ReductionPeriodInEpochs+lastReductionEpochNum {
-			// Reduce the reward per reduction period
-			minter.EpochProvisions = minter.NextEpochProvisions(params)
+			// update minter's inflation and annual provisions
+			// minter.Inflation = ic(ctx, minter, params, bondedRatio)
+
+			// Reduce the reward per reduction period: TODO REMOVE COMMENT
+			minter.EpochProvisions = minter.NextEpochProvisions(params, totalStakingSupply)
 			err := k.Minter.Set(ctx, minter)
 			if err != nil {
 				return err
@@ -67,37 +84,58 @@ func (k Keeper) AfterEpochEnd(ctx context.Context, epochIdentifier string, epoch
 			if err != nil {
 				return err
 			}
-		}
 
-		// mint coins, update supply
-		mintedCoin := minter.EpochProvision(params)
-		mintedCoins := sdk.NewCoins(mintedCoin)
+			// calculate minted coins
+			// mintedCoin := minter.BlockProvision(params)
+			mintedCoin := minter.EpochProvision(params)
+			mintedCoins := sdk.NewCoins(mintedCoin)
 
-		err = k.MintCoins(ctx, mintedCoins)
-		if err != nil {
-			return err
-		}
+			maxSupply := params.MaxSupply
+			totalSupply := k.bankKeeper.GetSupply(ctx, params.MintDenom).Amount // fetch total supply from the bank module
 
-		headerInfo := k.HeaderService.HeaderInfo(ctx)
-		k.logger.Info("AfterEpochEnd, minted coins", types.ModuleName, "mintedCoins", mintedCoins, "height", headerInfo.Height)
+			// if maxSupply is not infinite, check against max_supply parameter
+			if !maxSupply.IsZero() {
+				if totalSupply.Add(mintedCoins.AmountOf(params.MintDenom)).GT(maxSupply) {
+					// calculate the difference between maxSupply and totalSupply
+					diff := maxSupply.Sub(totalSupply)
+					// mint the difference
+					diffCoin := sdk.NewCoin(params.MintDenom, diff)
+					diffCoins := sdk.NewCoins(diffCoin)
 
-		// send the minted coins to the fee collector account
-		err = k.AddCollectedFees(ctx, mintedCoins)
-		if err != nil {
-			return err
-		}
+					// mint coins
+					if err := k.MintCoins(ctx, diffCoins); err != nil {
+						return err
+					}
+					mintedCoins = diffCoins
+				}
+			}
 
-		if mintedCoin.Amount.IsInt64() {
-			defer telemetry.ModuleSetGauge(types.ModuleName, float32(mintedCoin.Amount.Int64()), "minted_tokens")
-		}
+			// mint coins if maxSupply is infinite or total staking supply is less than maxSupply
+			if maxSupply.IsZero() || totalSupply.Add(mintedCoins.AmountOf(params.MintDenom)).LT(maxSupply) {
+				// mint coins
+				if err := k.MintCoins(ctx, mintedCoins); err != nil {
+					return err
+				}
+			}
 
-		if err := k.EventService.EventManager(ctx).EmitKV(
-			types.EventTypeMint,
-			event.NewAttribute(types.AttributeEpochNumber, fmt.Sprintf("%d", epochNumber)),
-			event.NewAttribute(types.AttributeKeyEpochProvisions, minter.EpochProvisions.String()),
-			event.NewAttribute(sdk.AttributeKeyAmount, mintedCoin.Amount.String()),
-		); err != nil {
-			return err
+			// send the minted coins to the fee collector account
+			err = k.AddCollectedFees(ctx, mintedCoins)
+			if err != nil {
+				return err
+			}
+
+			if mintedCoin.Amount.IsInt64() {
+				defer telemetry.ModuleSetGauge(types.ModuleName, float32(mintedCoin.Amount.Int64()), "minted_tokens")
+			}
+
+			if err := k.EventService.EventManager(ctx).EmitKV(
+				types.EventTypeMint,
+				event.NewAttribute(types.AttributeEpochNumber, fmt.Sprintf("%d", epochNumber)),
+				event.NewAttribute(types.AttributeKeyEpochProvisions, minter.EpochProvisions.String()),
+				event.NewAttribute(sdk.AttributeKeyAmount, mintedCoin.Amount.String()),
+			); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

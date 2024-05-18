@@ -27,10 +27,11 @@ const govModuleNameStr = "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	mintKeeper keeper.Keeper
-	ctx        sdk.Context
-	msgServer  types.MsgServer
-	bankKeeper *minttestutil.MockBankKeeper
+	mintKeeper    keeper.Keeper
+	ctx           sdk.Context
+	msgServer     types.MsgServer
+	stakingKeeper *minttestutil.MockStakingKeeper
+	bankKeeper    *minttestutil.MockBankKeeper
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -49,17 +50,20 @@ func (s *IntegrationTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
 	accountKeeper := minttestutil.NewMockAccountKeeper(ctrl)
 	bankKeeper := minttestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := minttestutil.NewMockStakingKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(sdk.AccAddress{})
 
 	s.mintKeeper = keeper.NewKeeper(
 		encCfg.Codec,
 		env,
+		stakingKeeper,
 		accountKeeper,
 		bankKeeper,
 		authtypes.FeeCollectorName,
 		govModuleNameStr,
 	)
+	s.stakingKeeper = stakingKeeper
 	s.bankKeeper = bankKeeper
 
 	err := s.mintKeeper.Params.Set(s.ctx, types.DefaultParams())

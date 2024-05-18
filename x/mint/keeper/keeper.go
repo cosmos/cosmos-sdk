@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -18,6 +19,7 @@ type Keeper struct {
 	appmodule.Environment
 
 	cdc              codec.BinaryCodec
+	stakingKeeper    types.StakingKeeper
 	bankKeeper       types.BankKeeper
 	logger           log.Logger
 	feeCollectorName string
@@ -35,6 +37,7 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	env appmodule.Environment,
+	sk types.StakingKeeper,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	feeCollectorName string,
@@ -49,6 +52,7 @@ func NewKeeper(
 	k := Keeper{
 		Environment:        env,
 		cdc:                cdc,
+		stakingKeeper:      sk,
 		bankKeeper:         bk,
 		logger:             env.Logger,
 		feeCollectorName:   feeCollectorName,
@@ -64,6 +68,18 @@ func NewKeeper(
 	}
 	k.Schema = schema
 	return k
+}
+
+// StakingTokenSupply implements an alias call to the underlying staking keeper's
+// StakingTokenSupply to be used in BeginBlocker.
+func (k Keeper) StakingTokenSupply(ctx context.Context) (math.Int, error) {
+	return k.stakingKeeper.StakingTokenSupply(ctx)
+}
+
+// BondedRatio implements an alias call to the underlying staking keeper's
+// BondedRatio to be used in BeginBlocker.
+func (k Keeper) BondedRatio(ctx context.Context) (math.LegacyDec, error) {
+	return k.stakingKeeper.BondedRatio(ctx)
 }
 
 // GetAuthority returns the x/mint module's authority.

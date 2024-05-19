@@ -67,6 +67,8 @@ type Committer interface {
 	// returned upon failure.
 	Prune(version uint64) error
 
+	IsEmpty() (bool, error)
+
 	// Close releases associated resources. It should NOT be idempotent. It must
 	// only be called once and any call after may panic.
 	io.Closer

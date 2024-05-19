@@ -7,14 +7,14 @@ import (
 )
 
 type Store interface {
-	// LatestVersion returns the latest version that consensus has been made on
+	// GetLatestVersion returns the latest version that consensus has been made on
 	GetLatestVersion() (uint64, error)
 	// StateLatest returns a readonly view over the latest
 	// committed state of the store. Alongside the version
 	// associated with it.
 	StateLatest() (uint64, store.ReaderMap, error)
 
-	// StateCommit commits the provided changeset and returns
+	// Commit commits the provided changeset and returns
 	// the new state root of the state.
 	Commit(*store.Changeset) (store.Hash, error)
 

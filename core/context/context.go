@@ -15,9 +15,7 @@ const (
 	ExecModeFinalize
 )
 
-type Key int
-
-const (
-	ExecModeKey  Key = 0
-	CometInfoKey Key = 1
+var (
+	ExecModeKey  = struct{}{}
+	CometInfoKey = struct{}{}
 )

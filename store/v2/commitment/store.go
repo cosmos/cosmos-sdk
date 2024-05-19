@@ -65,7 +65,6 @@ func NewCommitStore(
 
 func (c *CommitStore) WriteBatch(cs *corestore.Changeset) error {
 	for _, pairs := range cs.Changes {
-
 		key := conv.UnsafeBytesToStr(pairs.Actor)
 
 		tree, ok := c.multiTrees[key]
@@ -125,6 +124,18 @@ func (c *CommitStore) GetLatestVersion() (uint64, error) {
 	return version, nil
 }
 
+func (c *CommitStore) IsEmpty() (bool, error) {
+	value, err := c.db.Get([]byte(latestVersionKey))
+	if err != nil {
+		return false, err
+	}
+	if value == nil {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
 func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 	// Rollback the metadata to the target version.
 	latestVersion, err := c.GetLatestVersion()
@@ -179,16 +190,18 @@ func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
 }
 
 func (c *CommitStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo) error {
+	// do nothing if commit info is nil, as will be the case for an empty, initializing store
+	if cInfo == nil {
+		return nil
+	}
 	batch := c.db.NewBatch()
-	if cInfo != nil {
-		cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
-		value, err := cInfo.Marshal()
-		if err != nil {
-			return err
-		}
-		if err := batch.Set(cInfoKey, value); err != nil {
-			return err
-		}
+	cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
+	value, err := cInfo.Marshal()
+	if err != nil {
+		return err
+	}
+	if err := batch.Set(cInfoKey, value); err != nil {
+		return err
 	}
 
 	var buf bytes.Buffer

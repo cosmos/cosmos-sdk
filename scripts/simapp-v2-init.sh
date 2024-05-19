@@ -21,6 +21,9 @@ jq '.app_state.gov.voting_params.voting_period = "600s"' genesis.json > temp.jso
 # to change the inflation
 jq '.app_state.mint.minter.inflation = "0.300000000000000000"' genesis.json > temp.json && mv temp.json genesis.json
 
+# change the initial height to 2 to work around store/v2 and iavl limitations with a genesis block
+jq '.initial_height = 2' genesis.json > temp.json && mv temp.json genesis.json
+
 cd "$ROOT"
 $SIMD keys add test_validator --keyring-backend test
 VALIDATOR_ADDRESS=$($SIMD keys show test_validator -a --keyring-backend test)

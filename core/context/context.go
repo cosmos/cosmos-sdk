@@ -15,7 +15,9 @@ const (
 	ExecModeFinalize
 )
 
+type Key int
+
 const (
-	ExecModeKey = iota
-	CometInfoKey
+	ExecModeKey  Key = 0
+	CometInfoKey Key = 1
 )

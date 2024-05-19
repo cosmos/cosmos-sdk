@@ -293,8 +293,10 @@ func (c *Consensus[T]) validateFinalizeBlockHeight(req *abci.FinalizeBlockReques
 // GetConsensusParams makes a query to the consensus module in order to get the latest consensus
 // parameters from committed state
 func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.ConsensusParams, error) {
-	cs := &cmtproto.ConsensusParams{}
 	latestVersion, err := c.store.GetLatestVersion()
+	if err != nil {
+		return nil, err
+	}
 
 	res, err := c.app.Query(ctx, latestVersion, &consensus.QueryParamsRequest{})
 	if err != nil {
@@ -306,7 +308,7 @@ func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.Consen
 	} else {
 		// convert our params to cometbft params
 		evidenceMaxDuration := r.Params.Evidence.MaxAgeDuration
-		cs = &cmtproto.ConsensusParams{
+		cs := &cmtproto.ConsensusParams{
 			Block: &cmtproto.BlockParams{
 				MaxBytes: r.Params.Block.MaxBytes,
 				MaxGas:   r.Params.Block.MaxGas,
@@ -321,12 +323,14 @@ func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.Consen
 			Version: &cmtproto.VersionParams{
 				App: r.Params.Version.App,
 			},
-			Abci: &cmtproto.ABCIParams{
-				VoteExtensionsEnableHeight: r.Params.Abci.VoteExtensionsEnableHeight,
-			},
 		}
+		if r.Params.Abci != nil {
+			cs.Abci = &cmtproto.ABCIParams{
+				VoteExtensionsEnableHeight: r.Params.Abci.VoteExtensionsEnableHeight,
+			}
+		}
+		return cs, nil
 	}
-	return cs, nil
 }
 
 func (c *Consensus[T]) GetBlockRetentionHeight(cp *cmtproto.ConsensusParams, commitHeight int64) int64 {

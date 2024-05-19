@@ -9,6 +9,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	coreappmgr "cosmossdk.io/core/app"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -318,7 +319,14 @@ func (c *Consensus[T]) PrepareProposal(
 		decodedTxs = append(decodedTxs, decTx)
 	}
 
-	txs, err := c.prepareProposalHandler(ctx, c.app, decodedTxs, req)
+	ciCtx := contextWithCometInfo(ctx, comet.Info{
+		Evidence:        toCoreEvidence(req.Misbehavior),
+		ValidatorsHash:  req.NextValidatorsHash,
+		ProposerAddress: req.ProposerAddress,
+		LastCommit:      toCoreExtendedCommitInfo(req.LocalLastCommit),
+	})
+
+	txs, err := c.prepareProposalHandler(ciCtx, c.app, decodedTxs, req)
 	if err != nil {
 		return nil, err
 	}
@@ -350,7 +358,14 @@ func (c *Consensus[T]) ProcessProposal(
 		decodedTxs = append(decodedTxs, decTx)
 	}
 
-	err := c.processProposalHandler(ctx, c.app, decodedTxs, req)
+	ciCtx := contextWithCometInfo(ctx, comet.Info{
+		Evidence:        toCoreEvidence(req.Misbehavior),
+		ValidatorsHash:  req.NextValidatorsHash,
+		ProposerAddress: req.ProposerAddress,
+		LastCommit:      toCoreCommitInfo(req.ProposedLastCommit),
+	})
+
+	err := c.processProposalHandler(ciCtx, c.app, decodedTxs, req)
 	if err != nil {
 		c.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abci.ProcessProposalResponse{
@@ -377,17 +392,17 @@ func (c *Consensus[T]) FinalizeBlock(
 		return nil, err
 	}
 
-	cometInfo := &consensustypes.MsgUpdateCometInfo{
-		Authority: c.cfg.ConsensusAuthority,
-		CometInfo: &consensustypes.CometInfo{
-			Evidence:        req.Misbehavior,
-			ValidatorsHash:  req.NextValidatorsHash,
-			ProposerAddress: req.ProposerAddress,
-			LastCommit:      req.DecidedLastCommit,
-		},
-	}
-
-	// TODO remove this once we have a better way to pass consensus info
+	// TODO evaluate this approach vs. service using context.
+	//cometInfo := &consensustypes.MsgUpdateCometInfo{
+	//	Authority: c.cfg.ConsensusAuthority,
+	//	CometInfo: &consensustypes.CometInfo{
+	//		Evidence:        req.Misbehavior,
+	//		ValidatorsHash:  req.NextValidatorsHash,
+	//		ProposerAddress: req.ProposerAddress,
+	//		LastCommit:      req.DecidedLastCommit,
+	//	},
+	//}
+	//
 	// ctx = context.WithValue(ctx, corecontext.CometInfoKey, &comet.Info{
 	// 	Evidence:        sdktypes.ToSDKEvidence(req.Misbehavior),
 	// 	ValidatorsHash:  req.NextValidatorsHash,
@@ -409,16 +424,23 @@ func (c *Consensus[T]) FinalizeBlock(
 	}
 
 	blockReq := &coreappmgr.BlockRequest[T]{
-		Height:            uint64(req.Height),
-		Time:              req.Time,
-		Hash:              req.Hash,
-		AppHash:           cid.Hash,
-		ChainId:           c.chainID,
-		Txs:               decodedTxs,
-		ConsensusMessages: []transaction.Msg{cometInfo},
+		Height:  uint64(req.Height),
+		Time:    req.Time,
+		Hash:    req.Hash,
+		AppHash: cid.Hash,
+		ChainId: c.chainID,
+		Txs:     decodedTxs,
+		// ConsensusMessages: []transaction.Msg{cometInfo},
 	}
 
-	resp, newState, err := c.app.DeliverBlock(ctx, blockReq)
+	ciCtx := contextWithCometInfo(ctx, comet.Info{
+		Evidence:        toCoreEvidence(req.Misbehavior),
+		ValidatorsHash:  req.NextValidatorsHash,
+		ProposerAddress: req.ProposerAddress,
+		LastCommit:      toCoreCommitInfo(req.DecidedLastCommit),
+	})
+
+	resp, newState, err := c.app.DeliverBlock(ciCtx, blockReq)
 	if err != nil {
 		return nil, err
 	}
@@ -429,12 +451,12 @@ func (c *Consensus[T]) FinalizeBlock(
 	if err != nil {
 		return nil, err
 	}
-	appHash, err := c.store.Commit(nil)
+	appHash, err := c.store.Commit(&store.Changeset{Changes: stateChanges})
 	if err != nil {
 		return nil, fmt.Errorf("unable to commit the changeset: %w", err)
 	}
 
-	events := []event.Event{}
+	var events []event.Event
 	events = append(events, resp.PreBlockEvents...)
 	events = append(events, resp.BeginBlockEvents...)
 	for _, tx := range resp.TxResults {

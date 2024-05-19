@@ -54,18 +54,38 @@ func (b WriterMap) ApplyStateChanges(stateChanges []store.StateChanges) error {
 }
 
 func (b WriterMap) GetStateChanges() ([]store.StateChanges, error) {
-	var sc []store.StateChanges
-	for account, stateChange := range b.branchedWriterState {
-		kvChanges, err := stateChange.ChangeSets()
-		if err != nil {
-			return nil, err
-		}
+	var (
+		changes = make(map[string][]store.KVPair)
+		sc      []store.StateChanges
+	)
+	if err := b.recurseStateChanges(changes); err != nil {
+		return nil, err
+	}
+
+	for account, kvPairs := range changes {
 		sc = append(sc, store.StateChanges{
 			Actor:        []byte(account),
-			StateChanges: kvChanges,
+			StateChanges: kvPairs,
 		})
 	}
 	return sc, nil
+}
+
+func (b WriterMap) recurseStateChanges(changes map[string][]store.KVPair) error {
+	// depth first
+	if wr, ok := b.state.(WriterMap); ok {
+		if err := wr.recurseStateChanges(changes); err != nil {
+			return err
+		}
+	}
+	for account, stateChange := range b.branchedWriterState {
+		kvChanges, err := stateChange.ChangeSets()
+		if err != nil {
+			return err
+		}
+		changes[account] = append(changes[account], kvChanges...)
+	}
+	return nil
 }
 
 func (b WriterMap) applyStateChange(sc store.StateChanges) error {

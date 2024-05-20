@@ -2,7 +2,6 @@ package tx
 
 import (
 	"crypto/sha256"
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -30,10 +29,13 @@ import (
 )
 
 func newWrapperFromDecodedTx(
-	addrCodec address.Codec,
-	cdc codec.BinaryCodec,
-	decodedTx *decode.DecodedTx,
+	addrCodec address.Codec, cdc codec.BinaryCodec, decodedTx *decode.DecodedTx,
 ) (w *gogoTxWrapper, err error) {
+	// set msgsv1
+	msgs, err := decodeMsgsV1(cdc, decodedTx.Tx.Body.Messages)
+	if err != nil {
+		return nil, fmt.Errorf("unable to convert messagev2 to messagev1: %w", err)
+	}
 	// set fees
 	fees := make(sdk.Coins, len(decodedTx.Tx.AuthInfo.Fee.Amount))
 	for i, fee := range decodedTx.Tx.AuthInfo.Fee.Amount {
@@ -72,12 +74,21 @@ func newWrapperFromDecodedTx(
 			return nil, err
 		}
 	}
+
+	// reflectMsgs
+	reflectMsgs := make([]protoreflect.Message, len(msgs))
+	for i, msg := range decodedTx.Messages {
+		reflectMsgs[i] = msg.ProtoReflect()
+	}
+
 	return &gogoTxWrapper{
-		cdc:        cdc,
-		decodedTx:  decodedTx,
-		fees:       fees,
-		feePayer:   feePayer,
-		feeGranter: feeGranter,
+		cdc:         cdc,
+		decodedTx:   decodedTx,
+		reflectMsgs: reflectMsgs,
+		msgs:        msgs,
+		fees:        fees,
+		feePayer:    feePayer,
+		feeGranter:  feeGranter,
 	}, nil
 }
 
@@ -87,9 +98,11 @@ type gogoTxWrapper struct {
 	decodedTx *decode.DecodedTx
 	cdc       codec.BinaryCodec
 
-	fees       sdk.Coins
-	feePayer   []byte
-	feeGranter []byte
+	msgs        []proto.Message
+	reflectMsgs []protoreflect.Message
+	fees        sdk.Coins
+	feePayer    []byte
+	feeGranter  []byte
 
 	// Cache for hash and full bytes
 	cachedHash   [32]byte
@@ -98,63 +111,6 @@ type gogoTxWrapper struct {
 }
 
 func (w *gogoTxWrapper) String() string { return w.decodedTx.Tx.String() }
-
-func (w *gogoTxWrapper) Bytes() []byte {
-	if !w.cachedHashed {
-		w.computeHashAndBytes()
-	}
-	return w.cachedBytes
-}
-
-func (w *gogoTxWrapper) Hash() [32]byte {
-	if !w.cachedHashed {
-		w.computeHashAndBytes()
-	}
-	return w.cachedHash
-}
-
-func (w *gogoTxWrapper) computeHashAndBytes() {
-	bz, err := proto.Marshal(w.decodedTx.TxRaw)
-	if err != nil {
-		panic(err)
-	}
-
-	w.cachedBytes = bz
-	w.cachedHash = sha256.Sum256(bz)
-	w.cachedHashed = true
-}
-
-func (w *gogoTxWrapper) GetGasLimit() (uint64, error) {
-	if w.decodedTx == nil || w.decodedTx.Tx == nil || w.decodedTx.Tx.AuthInfo == nil || w.decodedTx.Tx.AuthInfo.Fee == nil {
-		return 0, errors.New("gas limit not available, one or more required fields are nil")
-	}
-	return w.decodedTx.Tx.AuthInfo.Fee.GasLimit, nil
-}
-
-func (w *gogoTxWrapper) GetMessages() ([]proto.Message, error) {
-	if w.decodedTx == nil || w.decodedTx.Messages == nil {
-		return nil, errors.New("messages not available or are nil")
-	}
-	return w.decodedTx.Messages, nil
-}
-
-func (w *gogoTxWrapper) GetMsgs() []sdk.Msg {
-	return w.decodedTx.Messages
-}
-
-func (w *gogoTxWrapper) GetReflectMessages() ([]protoreflect.Message, error) {
-	if w.decodedTx == nil || w.decodedTx.ReflectMessages == nil {
-		return nil, errors.New("messages not available or are nil")
-	}
-	return w.decodedTx.ReflectMessages, nil
-}
-
-func (w *gogoTxWrapper) GetSenders() ([][]byte, error) {
-	if w.decodedTx == nil || w.decodedTx.Signers == nil {
-		return nil, errors.New("senders not available or are nil")
-	}
-	return w.decodedTx.Signers, nil
-}
 
 var (
 	_ authsigning.Tx             = &gogoTxWrapper{}
@@ -167,6 +123,14 @@ type ExtensionOptionsTxBuilder interface {
 
 	SetExtensionOptions(...*codectypes.Any)
 	SetNonCriticalExtensionOptions(...*codectypes.Any)
+}
+
+func (w *gogoTxWrapper) GetMsgs() []sdk.Msg {
+	return w.msgs
+}
+
+func (w *gogoTxWrapper) GetReflectMessages() ([]protoreflect.Message, error) {
+	return w.reflectMsgs, nil
 }
 
 func (w *gogoTxWrapper) ValidateBasic() error {
@@ -349,4 +313,47 @@ func decodeFromAny(cdc codec.BinaryCodec, anyPB *anypb.Any) (proto.Message, erro
 		return nil, err
 	}
 	return v1, nil
+}
+
+func (w *gogoTxWrapper) Bytes() []byte {
+	if !w.cachedHashed {
+		w.computeHashAndBytes()
+	}
+	return w.cachedBytes
+}
+
+func (w *gogoTxWrapper) Hash() [32]byte {
+	if !w.cachedHashed {
+		w.computeHashAndBytes()
+	}
+	return w.cachedHash
+}
+
+func (w *gogoTxWrapper) computeHashAndBytes() {
+	bz, err := proto.Marshal(w.decodedTx.TxRaw)
+	if err != nil {
+		panic(err)
+	}
+
+	w.cachedBytes = bz
+	w.cachedHash = sha256.Sum256(bz)
+	w.cachedHashed = true
+}
+
+func (w *gogoTxWrapper) GetGasLimit() (uint64, error) {
+	if w.decodedTx == nil || w.decodedTx.Tx == nil || w.decodedTx.Tx.AuthInfo == nil || w.decodedTx.Tx.AuthInfo.Fee == nil {
+		return 0, fmt.Errorf("gas limit not available, one or more required fields are nil")
+	}
+	return w.decodedTx.Tx.AuthInfo.Fee.GasLimit, nil
+}
+
+func (w *gogoTxWrapper) GetMessages() ([]proto.Message, error) {
+	return w.msgs, nil
+}
+
+func (w *gogoTxWrapper) GetSenders() ([][]byte, error) {
+	if w.decodedTx == nil || w.decodedTx.Signers == nil {
+		return nil, fmt.Errorf("senders not available or are nil")
+	}
+	return w.decodedTx.Signers, nil
 }

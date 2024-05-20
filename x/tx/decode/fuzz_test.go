@@ -12,12 +12,11 @@ import (
 	"google.golang.org/protobuf/protoadapt"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"cosmossdk.io/x/tx/internal/testpb"
-
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	"cosmossdk.io/x/tx/internal/testpb"
 	"cosmossdk.io/x/tx/signing"
 )
 
@@ -92,8 +91,10 @@ func FuzzInternal_rejectNonADR027TxRaw(f *testing.F) {
 	})
 }
 
-type testGogoCodec struct{}
-type resolver struct{}
+type (
+	testGogoCodec struct{}
+	resolver      struct{}
+)
 
 func (r *resolver) Resolve(typeURL string) (gogoproto.Message, error) {
 	switch typeURL {

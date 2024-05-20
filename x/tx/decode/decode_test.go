@@ -3,15 +3,16 @@ package decode_test
 import (
 	"encoding/hex"
 	"fmt"
-	"google.golang.org/protobuf/protoadapt"
 	"strings"
 	"testing"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/protoadapt"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/protoadapt"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
@@ -23,8 +24,10 @@ import (
 	"cosmossdk.io/x/tx/signing"
 )
 
-type testGogoCodec struct{}
-type resolver struct{}
+type (
+	testGogoCodec struct{}
+	resolver      struct{}
+)
 
 func (r *resolver) Resolve(typeURL string) (gogoproto.Message, error) {
 	switch typeURL {

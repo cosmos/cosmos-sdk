@@ -1,19 +1,19 @@
 [
     {
         "proto": {
-            "@type": "/Foo"
+            "@type": "/testpb.Foo"
         },
         "screens": [
-            {"content": "/Foo"}
+            {"content": "/testpb.Foo"}
         ]
     },
     {
         "proto": {
-            "@type": "/Foo",
+            "@type": "/testpb.Foo",
             "full_name": "testing"
         },
         "screens": [
-            {"content": "/Foo"},
+            {"content": "/testpb.Foo"},
             {"title": "Full name", "content": "testing", "indent": 1}
         ]
     },
@@ -31,39 +31,39 @@
         "proto": {
             "@type": "/google.protobuf.Any",
             "value": {
-                "@type": "/Foo"
+                "@type": "/testpb.Foo"
             }
         },
         "screens": [
             {"content": "/google.protobuf.Any"},
-            {"content": "/Foo", "indent": 1}
+            {"content": "/testpb.Foo", "indent": 1}
         ]
     },
     {
        "proto": {
             "@type": "/google.protobuf.Any",
             "value": {
-                "@type": "/Foo",
+                "@type": "/testpb.Foo",
                 "full_name": "testing"
             }
         },
         "screens": [
             {"content": "/google.protobuf.Any"},
-            {"content": "/Foo", "indent": 1},
+            {"content": "/testpb.Foo", "indent": 1},
             {"title": "Full name", "content": "testing", "indent": 2}
         ]
     },
     {
        "proto": {
-            "@type": "/A",
+            "@type": "/testpb.A",
             "ANY": {
-                "@type": "/Foo",
+                "@type": "/testpb.Foo",
                 "full_name": "testing"
             }
         },
         "screens": [
-            {"content": "/A"},
-            {"title": "ANY", "content": "/Foo", "indent": 1},
+            {"content": "/testpb.A"},
+            {"title": "ANY", "content": "/testpb.Foo", "indent": 1},
             {"title": "Full name", "content": "testing", "indent": 2}
         ]
     }

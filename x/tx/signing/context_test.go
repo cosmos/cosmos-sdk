@@ -11,7 +11,7 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	groupv1 "cosmossdk.io/api/cosmos/group/v1"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/x/tx/internal/testpb"
+	"cosmossdk.io/x/tx/internal/pulsar/testpb"
 )
 
 var deeplyNestedRepeatedSigner = &testpb.DeeplyNestedRepeatedSigner{
@@ -252,7 +252,7 @@ func TestDefineCustomGetSigners(t *testing.T) {
 	})
 	context, err = NewContext(options)
 	require.NoError(t, err)
-	require.ErrorContains(t, context.Validate(), "a custom signer function as been defined for message SimpleSigner")
+	require.ErrorContains(t, context.Validate(), "a custom signer function as been defined for message testpb.SimpleSigner")
 }
 
 type dummyAddressCodec struct{}

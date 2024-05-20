@@ -13,7 +13,7 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	"cosmossdk.io/x/tx/internal/testpb"
+	"cosmossdk.io/x/tx/internal/pulsar/testpb"
 	"cosmossdk.io/x/tx/signing/textual"
 )
 

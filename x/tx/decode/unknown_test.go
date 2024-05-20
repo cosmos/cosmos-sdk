@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/x/tx/decode"
-	"cosmossdk.io/x/tx/internal/testpb"
+	"cosmossdk.io/x/tx/internal/pulsar/testpb"
 )
 
 func errUnknownField(typ string, tagNum int, wireType protowire.Type) error {

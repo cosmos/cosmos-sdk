@@ -22,7 +22,7 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	"cosmossdk.io/x/tx/internal/testpb"
+	"cosmossdk.io/x/tx/internal/pulsar/testpb"
 	"cosmossdk.io/x/tx/signing/textual"
 )
 

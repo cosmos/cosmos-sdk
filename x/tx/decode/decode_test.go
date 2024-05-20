@@ -3,23 +3,22 @@ package decode_test
 import (
 	"encoding/hex"
 	"fmt"
-	gogoproto "github.com/cosmos/gogoproto/proto"
 	"strings"
 	"testing"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	_ "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/tx/decode"
-	"cosmossdk.io/x/tx/internal/testpb"
+	_ "cosmossdk.io/x/tx/internal/gogo/testpb"
+	"cosmossdk.io/x/tx/internal/pulsar/testpb"
 	"cosmossdk.io/x/tx/signing"
 )
 
@@ -65,12 +64,12 @@ func TestDecode(t *testing.T) {
 	}{
 		{
 			name: "happy path",
-			msg:  &bankv1beta1.MsgSend{},
+			msg:  &testpb.SimpleSigner{},
 		},
 		{
 			name:  "empty signer option",
 			msg:   &testpb.A{},
-			error: "no cosmos.msg.v1.signer option found for message A; use DefineCustomGetSigners to specify a custom getter: tx parse error",
+			error: "no cosmos.msg.v1.signer option found for message testpb.A; use DefineCustomGetSigners to specify a custom getter: tx parse error",
 		},
 	}
 

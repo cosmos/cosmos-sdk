@@ -80,10 +80,7 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
-
 			config := client.GetConfigFromCmd(cmd)
-
-
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
 			switch {
 			case chainID != "":

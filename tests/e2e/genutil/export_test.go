@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -24,7 +25,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 
-	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/types"
@@ -175,7 +175,8 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	assert.NilError(t, err)
 
 	viper := viper.New()
-	gentestutil.WriteAndTrackConfig(viper, tempDir, cmtcfg.DefaultConfig())
+	err = gentestutil.WriteAndTrackConfig(viper, tempDir, cmtcfg.DefaultConfig())
+	assert.NilError(t, err)
 
 	clientCtx := client.Context{}.WithCodec(app.AppCodec())
 	appGenesis := genutiltypes.AppGenesis{

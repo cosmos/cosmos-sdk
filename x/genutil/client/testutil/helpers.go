@@ -24,7 +24,10 @@ func ExecInitCmd(mm *module.Manager, home string, cdc codec.Codec) error {
 	viper := viper.New()
 	cmd := genutilcli.InitCmd(mm)
 	cfg, _ := CreateDefaultCometConfig(home)
-	WriteAndTrackConfig(viper, home, cfg)
+	err := WriteAndTrackConfig(viper, home, cfg)
+	if err != nil {
+		return err
+	}
 	clientCtx := client.Context{}.WithCodec(cdc).WithHomeDir(home)
 
 	_, out := testutil.ApplyMockIO(cmd)
@@ -37,9 +40,7 @@ func ExecInitCmd(mm *module.Manager, home string, cdc codec.Codec) error {
 
 	cmd.SetArgs([]string{"appnode-test"})
 
-	err := cmd.ExecuteContext(ctx)
-
-	return err
+	return cmd.ExecuteContext(ctx)
 }
 
 func CreateDefaultCometConfig(rootDir string) (*cmtcfg.Config, error) {

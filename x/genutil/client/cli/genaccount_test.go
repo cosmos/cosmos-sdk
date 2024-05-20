@@ -77,7 +77,8 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 
-			writeAndTrackDefaultConfig(viper, home)
+			err := writeAndTrackDefaultConfig(viper, home)
+			require.NoError(t, err)
 			clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(home).WithAddressCodec(ac)
 
 			if tc.withKeyring {

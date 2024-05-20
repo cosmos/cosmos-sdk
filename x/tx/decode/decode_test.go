@@ -159,6 +159,7 @@ func TestDecodeTxBodyPanic(t *testing.T) {
 	dec, err := decode.NewDecoder(decode.Options{
 		SigningContext: signingCtx,
 		ProtoCodec:     &testGogoCodec{},
+		AnyResolver:    &resolver{},
 	})
 	if err != nil {
 		t.Fatal(err)

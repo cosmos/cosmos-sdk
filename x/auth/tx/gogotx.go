@@ -27,9 +27,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
-func newWrapperFromDecodedTx(
-	addrCodec address.Codec, cdc codec.BinaryCodec, decodedTx *decode.DecodedTx,
-) (w *gogoTxWrapper, err error) {
+func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, decodedTx *decode.DecodedTx) (w *gogoTxWrapper, err error) {
+	// set msgsv1
+	msgs, err := decodeMsgsV1(cdc, decodedTx.Tx.Body.Messages)
+	if err != nil {
+		return nil, fmt.Errorf("unable to convert messagev2 to messagev1: %w", err)
+	}
 	// set fees
 	fees := make(sdk.Coins, len(decodedTx.Tx.AuthInfo.Fee.Amount))
 	for i, fee := range decodedTx.Tx.AuthInfo.Fee.Amount {
@@ -69,23 +72,34 @@ func newWrapperFromDecodedTx(
 		}
 	}
 
+	// reflectMsgs
+	reflectMsgs := make([]protoreflect.Message, len(msgs))
+	for i, msg := range decodedTx.Messages {
+		reflectMsgs[i] = msg.ProtoReflect()
+	}
+
 	return &gogoTxWrapper{
-		cdc:        cdc,
-		decodedTx:  decodedTx,
-		fees:       fees,
-		feePayer:   feePayer,
-		feeGranter: feeGranter,
+		cdc:         cdc,
+		decodedTx:   decodedTx,
+		reflectMsgs: reflectMsgs,
+		msgs:        msgs,
+		fees:        fees,
+		feePayer:    feePayer,
+		feeGranter:  feeGranter,
 	}, nil
 }
 
 // gogoTxWrapper is a gogoTxWrapper around the tx.Tx proto.Message which retain the raw
 // body and auth_info bytes.
 type gogoTxWrapper struct {
-	decodedTx  *decode.DecodedTx
-	cdc        codec.BinaryCodec
-	fees       sdk.Coins
-	feePayer   []byte
-	feeGranter []byte
+	decodedTx *decode.DecodedTx
+	cdc       codec.BinaryCodec
+
+	msgs        []proto.Message
+	reflectMsgs []protoreflect.Message
+	fees        sdk.Coins
+	feePayer    []byte
+	feeGranter  []byte
 }
 
 func (w *gogoTxWrapper) String() string { return w.decodedTx.Tx.String() }
@@ -104,11 +118,14 @@ type ExtensionOptionsTxBuilder interface {
 }
 
 func (w *gogoTxWrapper) GetMsgs() []sdk.Msg {
-	return w.decodedTx.Messages
+	if w.msgs == nil {
+		panic("fill in msgs")
+	}
+	return w.msgs
 }
 
 func (w *gogoTxWrapper) GetReflectMessages() ([]protoreflect.Message, error) {
-	return w.decodedTx.ReflectMessages, nil
+	return w.reflectMsgs, nil
 }
 
 func (w *gogoTxWrapper) ValidateBasic() error {
@@ -260,6 +277,20 @@ func intoAnyV1(v2s []*anypb.Any) []*codectypes.Any {
 		}
 	}
 	return v1s
+}
+
+// decodeMsgsV1 will decode the given messages into
+func decodeMsgsV1(cdc codec.BinaryCodec, anyPBs []*anypb.Any) ([]proto.Message, error) {
+	v1s := make([]proto.Message, len(anyPBs))
+
+	for i, anyPB := range anyPBs {
+		v1, err := decodeFromAny(cdc, anyPB)
+		if err != nil {
+			return nil, err
+		}
+		v1s[i] = v1
+	}
+	return v1s, nil
 }
 
 func decodeFromAny(cdc codec.BinaryCodec, anyPB *anypb.Any) (proto.Message, error) {

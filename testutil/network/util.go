@@ -28,6 +28,7 @@ import (
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -134,14 +135,14 @@ func startInProcess(cfg Config, val *Validator) error {
 	return nil
 }
 
-func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
+func collectGenFiles(cfg Config, vals []*Validator, cmtConfigs []*cmtcfg.Config, outputDir string) error {
 	genTime := cfg.GenesisTime
 	if genTime.IsZero() {
 		genTime = cmttime.Now()
 	}
 
 	for i := 0; i < cfg.NumValidators; i++ {
-		cmtCfg := client.GetConfigFromViper(vals[i].GetViper())
+		cmtCfg := cmtConfigs[i]
 
 		nodeDir := filepath.Join(outputDir, vals[i].moniker, "simd")
 		gentxsDir := filepath.Join(outputDir, "gentxs")
@@ -168,6 +169,9 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 		if err := genutil.ExportGenesisFileWithTime(genFile, cfg.ChainID, nil, appState, genTime); err != nil {
 			return err
 		}
+
+		v := vals[i].GetViper()
+		genutiltest.TrackConfig(v, nodeDir)
 	}
 
 	return nil

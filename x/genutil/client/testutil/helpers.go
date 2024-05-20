@@ -63,3 +63,11 @@ func WriteAndTrackConfig(v *viper.Viper, home string, cfg *cmtcfg.Config) error 
 	v.AddConfigPath(filepath.Join(home, "config"))
 	return v.ReadInConfig()
 }
+
+func TrackConfig(v *viper.Viper, home string) error {
+	v.Set(flags.FlagHome, home)
+	v.SetConfigType("toml")
+	v.SetConfigName("config")
+	v.AddConfigPath(filepath.Join(home, "config"))
+	return v.ReadInConfig()
+}

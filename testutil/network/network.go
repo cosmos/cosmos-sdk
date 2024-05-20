@@ -38,6 +38,7 @@ import (
 	_ "cosmossdk.io/x/staking"   // import staking as a blank
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -58,7 +59,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	gentestutil "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 )
 
 // package-wide network lock to only allow one test network at a time
@@ -328,6 +328,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 	monikers := make([]string, cfg.NumValidators)
 	nodeIDs := make([]string, cfg.NumValidators)
 	valPubKeys := make([]cryptotypes.PubKey, cfg.NumValidators)
+	cmtConfigs := make([]*cmtcfg.Config, cfg.NumValidators)
 
 	var (
 		genAccounts []authtypes.GenesisAccount
@@ -438,8 +439,8 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		cmtCfg.P2P.AddrBookStrict = false
 		cmtCfg.P2P.AllowDuplicateIP = true
 
-		// write comet config file and track by viper
-		gentestutil.WriteAndTrackConfig(viper, nodeDir, cmtCfg)
+		cmtConfigs[i] = cmtCfg
+
 		var mnemonic string
 		if i < len(cfg.Mnemonics) {
 			mnemonic = cfg.Mnemonics[i]
@@ -593,7 +594,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = collectGenFiles(cfg, network.Validators, network.BaseDir)
+	err = collectGenFiles(cfg, network.Validators, cmtConfigs, network.BaseDir)
 	if err != nil {
 		return nil, err
 	}

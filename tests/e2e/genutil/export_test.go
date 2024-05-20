@@ -16,22 +16,23 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
+	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
-	corectx "cosmossdk.io/core/context"
 
+	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	gentestutil "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	gentestutil "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	cmtcfg "github.com/cometbft/cometbft/config"
 )
 
 func TestExportCmd_ConsensusParams(t *testing.T) {
@@ -58,8 +59,10 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 func TestExportCmd_HomeDir(t *testing.T) {
 	_, ctx, _, cmd := setupApp(t, t.TempDir())
 
-	serverCtxPtr := ctx.Value(corectx.ServerContextKey)
-	serverCtxPtr.(corectx.ServerContext).GetConfig().SetRoot("foobar")
+	v := ctx.Value(corectx.ViperContextKey)
+	viper, ok := v.(*viper.Viper)
+	require.True(t, ok)
+	viper.Set(flags.FlagHome, "foobar")
 
 	err := cmd.ExecuteContext(ctx)
 	assert.ErrorContains(t, err, "stat foobar/config/genesis.json: no such file or directory")
@@ -171,8 +174,8 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	assert.NilError(t, err)
 
-	serverCtx := server.NewDefaultContext()
-	gentestutil.WriteAndTrackConfig(serverCtx.GetViper(), tempDir, cmtcfg.DefaultConfig())
+	viper := viper.New()
+	gentestutil.WriteAndTrackConfig(viper, tempDir, cmtcfg.DefaultConfig())
 
 	clientCtx := client.Context{}.WithCodec(app.AppCodec())
 	appGenesis := genutiltypes.AppGenesis{
@@ -184,7 +187,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	}
 
 	// save genesis file
-	err = genutil.ExportGenesisFile(&appGenesis, serverCtx.GetConfig().GenesisFile())
+	err = genutil.ExportGenesisFile(&appGenesis, client.GetConfigFromViper(viper).GenesisFile())
 	assert.NilError(t, err)
 
 	_, err = app.InitChain(&abci.InitChainRequest{
@@ -216,7 +219,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
 
 	return app, ctx, appGenesis, cmd
 }

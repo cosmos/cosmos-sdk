@@ -3,6 +3,7 @@ package decode_test
 import (
 	"encoding/hex"
 	"fmt"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"strings"
 	"testing"
 
@@ -16,10 +17,17 @@ import (
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	_ "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/tx/decode"
 	"cosmossdk.io/x/tx/internal/testpb"
 	"cosmossdk.io/x/tx/signing"
 )
+
+type testGogoCodec struct{}
+
+func (*testGogoCodec) Unmarshal(bz []byte, msg gogoproto.Message) error {
+	return gogoproto.Unmarshal(bz, msg)
+}
 
 func TestDecode(t *testing.T) {
 	accSeq := uint64(2)
@@ -46,6 +54,7 @@ func TestDecode(t *testing.T) {
 	require.NoError(t, err)
 	decoder, err := decode.NewDecoder(decode.Options{
 		SigningContext: signingCtx,
+		ProtoCodec:     &testGogoCodec{},
 	})
 	require.NoError(t, err)
 
@@ -131,6 +140,7 @@ func TestDecodeTxBodyPanic(t *testing.T) {
 	}
 	dec, err := decode.NewDecoder(decode.Options{
 		SigningContext: signingCtx,
+		ProtoCodec:     &testGogoCodec{},
 	})
 	if err != nil {
 		t.Fatal(err)

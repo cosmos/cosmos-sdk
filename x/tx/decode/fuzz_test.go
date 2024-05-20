@@ -2,6 +2,7 @@ package decode
 
 import (
 	"encoding/hex"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"testing"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
@@ -88,6 +89,12 @@ func FuzzInternal_rejectNonADR027TxRaw(f *testing.F) {
 	})
 }
 
+type testGogoCodec struct{}
+
+func (*testGogoCodec) Unmarshal(bz []byte, msg gogoproto.Message) error {
+	return gogoproto.Unmarshal(bz, msg)
+}
+
 func FuzzDecode(f *testing.F) {
 	if testing.Short() {
 		f.Skip("Skipping in -short mode")
@@ -107,6 +114,7 @@ func FuzzDecode(f *testing.F) {
 	}
 	dec, err := NewDecoder(Options{
 		SigningContext: signingCtx,
+		ProtoCodec:     &testGogoCodec{},
 	})
 	if err != nil {
 		return

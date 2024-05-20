@@ -13,7 +13,6 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 
 	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/tx/signing"
 )
@@ -36,8 +35,6 @@ type DecodedTx struct {
 type gogoProtoCodec interface {
 	Unmarshal([]byte, gogoproto.Message) error
 }
-
-var _ transaction.Tx = (*DecodedTx)(nil)
 
 // Decoder contains the dependencies required for decoding transactions.
 type Decoder struct {
@@ -178,7 +175,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	}, nil
 }
 
-// Hash implements the interface for the Tx interface.
+// Hash implements the interface for core/transaction.Tx.
 func (dtx *DecodedTx) Hash() [32]byte {
 	if !dtx.cachedHashed {
 		dtx.computeHashAndBytes()
@@ -186,6 +183,7 @@ func (dtx *DecodedTx) Hash() [32]byte {
 	return dtx.cachedHash
 }
 
+// GetGasLimit implements the interface for core/transaction.Tx.
 func (dtx *DecodedTx) GetGasLimit() (uint64, error) {
 	if dtx == nil || dtx.Tx == nil || dtx.Tx.AuthInfo == nil || dtx.Tx.AuthInfo.Fee == nil {
 		return 0, errors.New("gas limit not available or one or more required fields are nil")
@@ -193,6 +191,7 @@ func (dtx *DecodedTx) GetGasLimit() (uint64, error) {
 	return dtx.Tx.AuthInfo.Fee.GasLimit, nil
 }
 
+// GetMessages implements the interface for core/transaction.Tx.
 func (dtx *DecodedTx) GetMessages() ([]gogoproto.Message, error) {
 	if dtx == nil || dtx.Messages == nil {
 		return nil, errors.New("messages not available or are nil")
@@ -200,6 +199,7 @@ func (dtx *DecodedTx) GetMessages() ([]gogoproto.Message, error) {
 	return dtx.Messages, nil
 }
 
+// GetSenders implements the interface for core/transaction.Tx.
 func (dtx *DecodedTx) GetSenders() ([][]byte, error) {
 	if dtx == nil || dtx.Signers == nil {
 		return nil, errors.New("senders not available or are nil")
@@ -207,6 +207,7 @@ func (dtx *DecodedTx) GetSenders() ([][]byte, error) {
 	return dtx.Signers, nil
 }
 
+// Bytes implements the interface for core/transaction.Tx.
 func (dtx *DecodedTx) Bytes() []byte {
 	if !dtx.cachedHashed {
 		dtx.computeHashAndBytes()

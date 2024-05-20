@@ -13,8 +13,10 @@ import (
 	dbm "cosmossdk.io/store/v2/db"
 )
 
-var _ commitment.Tree = (*IavlTree)(nil)
-var _ store.PausablePruner = (*IavlTree)(nil)
+var (
+	_ commitment.Tree      = (*IavlTree)(nil)
+	_ store.PausablePruner = (*IavlTree)(nil)
+)
 
 // IavlTree is a wrapper around iavl.MutableTree.
 type IavlTree struct {

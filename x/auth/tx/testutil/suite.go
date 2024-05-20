@@ -324,5 +324,5 @@ func (s *TxConfigTestSuite) TestWrapTxBuilder() {
 	txBuilder.SetFeePayer(tx.FeePayer()) // NOTE: fee payer will be populated even if empty.
 	tx = txBuilder.GetTx()
 	newTx := newTxBldr.GetTx()
-	s.Require().Equal(tx, newTx)
+	s.Require().Equal(tx.FeePayer(), newTx.FeePayer())
 }

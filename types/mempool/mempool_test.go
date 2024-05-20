@@ -1,7 +1,6 @@
 package mempool_test
 
 import (
-	"cosmossdk.io/core/transaction"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -12,6 +11,7 @@ import (
 
 	_ "cosmossdk.io/api/cosmos/counter/v1"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/auth/signing"
 

@@ -244,9 +244,11 @@ require (
 replace (
 	cosmossdk.io/client/v2 => ../../client/v2
 	cosmossdk.io/core => ../../core
+	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/tools/confix => ../../tools/confix
 	cosmossdk.io/x/accounts => ../../x/accounts
+	cosmossdk.io/x/accounts/defaults/lockup => ../../x/accounts/defaults/lockup
 	cosmossdk.io/x/auth => ../../x/auth
 	cosmossdk.io/x/authz => ../../x/authz
 	cosmossdk.io/x/bank => ../../x/bank

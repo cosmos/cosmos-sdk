@@ -67,7 +67,10 @@ func NewExportSystem(t *testing.T, exporter types.AppExporter) *ExportSystem {
 
 	viper := viper.New()
 	logger := log.NewCustomLogger(zerolog.New(tw))
-	writeAndTrackDefaultConfig(viper, homeDir)
+	err := writeAndTrackDefaultConfig(viper, homeDir)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	cCtx := (client.Context{}).WithHomeDir(homeDir)
 

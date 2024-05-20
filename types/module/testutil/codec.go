@@ -2,6 +2,8 @@ package testutil
 
 import (
 	"cosmossdk.io/x/auth/tx"
+	types2 "cosmossdk.io/x/bank/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -46,6 +48,7 @@ func MakeTestEncodingConfig(codecOpt testutil.CodecOptions, modules ...module.Ap
 
 func MakeTestTxConfig(codecOpt testutil.CodecOptions) client.TxConfig {
 	interfaceRegistry := codecOpt.NewInterfaceRegistry()
+	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &types2.MsgSend{})
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	signingCtx := interfaceRegistry.SigningContext()
 	return tx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), tx.DefaultSignModes)

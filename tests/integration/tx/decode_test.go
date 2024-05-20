@@ -136,7 +136,11 @@ func TestDecode(t *testing.T) {
 					ValidatorAddressCodec: dummyAddressCodec{},
 				})
 				require.NoError(t, err)
-				decodeCtx, err := decode.NewDecoder(decode.Options{SigningContext: signContext})
+				decodeCtx, err := decode.NewDecoder(decode.Options{
+					SigningContext: signContext,
+					ProtoCodec:     encCfg.Codec,
+					AnyResolver:    encCfg.InterfaceRegistry,
+				})
 				require.NoError(t, err)
 				decodedTx, err := decodeCtx.Decode(txBytes)
 				require.NoError(t, err)

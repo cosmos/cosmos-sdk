@@ -30,6 +30,10 @@ import (
 
 func newTestTxConfig() (client.TxConfig, codec.Codec) {
 	encodingConfig := moduletestutil.MakeTestEncodingConfig(testutil.CodecOptions{})
+	encodingConfig.InterfaceRegistry.RegisterImplementations(
+		(*sdk.Msg)(nil),
+		&countertypes.MsgIncreaseCounter{},
+	)
 	cdc := codec.NewProtoCodec(encodingConfig.InterfaceRegistry)
 	signingCtx := encodingConfig.InterfaceRegistry.SigningContext()
 	return authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes), encodingConfig.Codec

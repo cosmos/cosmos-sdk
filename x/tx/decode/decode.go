@@ -4,12 +4,11 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"strings"
-
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
+	"strings"
 
 	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	errorsmod "cosmossdk.io/errors"
@@ -134,10 +133,8 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	)
 	seenSigners := map[string]struct{}{}
 	for _, anyMsg := range body.Messages {
-		typeURL := strings.TrimPrefix(anyMsg.TypeUrl, "/")
-
 		// unmarshal into dynamic message
-		msgDesc, err := fileResolver.FindDescriptorByName(protoreflect.FullName(typeURL))
+		msgDesc, err := fileResolver.FindDescriptorByName(protoreflect.FullName(strings.TrimPrefix(anyMsg.TypeUrl, "/")))
 		if err != nil {
 			return nil, fmt.Errorf("protoFiles does not have descriptor %s: %w", anyMsg.TypeUrl, err)
 		}
@@ -148,7 +145,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 		}
 		reflectMsgs = append(reflectMsgs, dynamicMsg.ProtoReflect())
 
-		msg, err := d.resolver.Resolve(typeURL)
+		msg, err := d.resolver.Resolve(anyMsg.TypeUrl)
 		if err != nil {
 			return nil, err
 		}

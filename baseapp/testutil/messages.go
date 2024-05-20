@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/codec"
+	types2 "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -16,6 +17,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgCounter{},
 		&MsgCounter2{},
 		&MsgKeyValue{},
+		&types2.MsgIncreaseCounter{},
 	)
 	msgservice.RegisterMsgServiceDesc(registry, &_Counter_serviceDesc)
 	msgservice.RegisterMsgServiceDesc(registry, &_Counter2_serviceDesc)

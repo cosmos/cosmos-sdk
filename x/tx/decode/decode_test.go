@@ -3,9 +3,10 @@ package decode_test
 import (
 	"encoding/hex"
 	"fmt"
-	"google.golang.org/protobuf/protoadapt"
 	"strings"
 	"testing"
+
+	"google.golang.org/protobuf/protoadapt"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
@@ -28,9 +29,9 @@ type resolver struct{}
 
 func (r *resolver) Resolve(typeURL string) (gogoproto.Message, error) {
 	switch typeURL {
-	case "SimpleSigner":
+	case "/SimpleSigner":
 		return &testpb.SimpleSigner{}, nil
-	case "A":
+	case "/A":
 		return &testpb.A{}, nil
 	default:
 		return nil, fmt.Errorf("unrecognized type URL: %s", typeURL)
@@ -159,6 +160,7 @@ func TestDecodeTxBodyPanic(t *testing.T) {
 	dec, err := decode.NewDecoder(decode.Options{
 		SigningContext: signingCtx,
 		ProtoCodec:     &testGogoCodec{},
+		AnyResolver:    &resolver{},
 	})
 	if err != nil {
 		t.Fatal(err)

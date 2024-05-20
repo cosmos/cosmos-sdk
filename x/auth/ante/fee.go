@@ -80,7 +80,7 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 	}
 
 	addr := dfd.accountKeeper.GetModuleAddress(types.FeeCollectorName)
-	if addr == nil || len(addr) == 0 {
+	if len(addr) == 0 {
 		return fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
 	}
 

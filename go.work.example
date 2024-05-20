@@ -15,11 +15,13 @@ use (
 	./orm
 	./simapp
 	./tests
-	./server/v2/stf
-	./server/v2/appmanager
+	./tests/systemtests
+	./runtime/v2
 	./store
 	./store/v2
-	./runtime/v2
+	./server/v2
+	./server/v2/appmanager
+	./server/v2/stf
 	./tools/cosmovisor
 	./tools/confix
 	./tools/hubl

@@ -91,6 +91,11 @@ func FuzzInternal_rejectNonADR027TxRaw(f *testing.F) {
 
 type testGogoCodec struct{}
 
+func (c *testGogoCodec) Resolve(s string) (gogoproto.Message, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (*testGogoCodec) Unmarshal(bz []byte, msg gogoproto.Message) error {
 	return gogoproto.Unmarshal(bz, msg)
 }

@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"reflect"
 	"strings"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -32,8 +31,10 @@ type DecodedTx struct {
 	cachedHashed bool
 }
 
+// gogoProtoCodec is an interface that defines the behavior for decoding bytes into a gogoproto.Message.
 type gogoProtoCodec interface {
 	Unmarshal([]byte, gogoproto.Message) error
+	Resolve(string) (gogoproto.Message, error)
 }
 
 // Decoder contains the dependencies required for decoding transactions.
@@ -138,12 +139,10 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 		}
 		reflectMsgs = append(reflectMsgs, dynamicMsg.ProtoReflect())
 
-		// unmarshal into gogoproto message
-		gogoType := gogoproto.MessageType(typeURL)
-		if gogoType == nil {
-			return nil, fmt.Errorf("cannot find type: %s", anyMsg.TypeUrl)
+		msg, err := d.codec.Resolve(typeURL)
+		if err != nil {
+			return nil, err
 		}
-		msg := reflect.New(gogoType.Elem()).Interface().(gogoproto.Message)
 		err = d.codec.Unmarshal(anyMsg.Value, msg)
 		if err != nil {
 			return nil, err

@@ -3,16 +3,17 @@ package decode_test
 import (
 	"encoding/hex"
 	"fmt"
-	gogoproto "github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/protoadapt"
 	"strings"
 	"testing"
+
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
@@ -25,8 +26,24 @@ import (
 
 type testGogoCodec struct{}
 
+func (c *testGogoCodec) Resolve(typeURL string) (gogoproto.Message, error) {
+	switch typeURL {
+	case "SimpleSigner":
+		return &testpb.SimpleSigner{}, nil
+	case "A":
+		return &testpb.A{}, nil
+	default:
+		return nil, fmt.Errorf("unrecognized type URL: %s", typeURL)
+	}
+}
+
 func (*testGogoCodec) Unmarshal(bz []byte, msg gogoproto.Message) error {
-	return gogoproto.Unmarshal(bz, msg)
+	msgV2 := protoadapt.MessageV2Of(msg)
+	if err := proto.Unmarshal(bz, msgV2); err != nil {
+		return err
+	}
+	msg = protoadapt.MessageV1Of(msgV2)
+	return nil
 }
 
 func TestDecode(t *testing.T) {
@@ -65,7 +82,7 @@ func TestDecode(t *testing.T) {
 	}{
 		{
 			name: "happy path",
-			msg:  &bankv1beta1.MsgSend{},
+			msg:  &testpb.SimpleSigner{},
 		},
 		{
 			name:  "empty signer option",

@@ -30,9 +30,6 @@ import (
 func newWrapperFromDecodedTx(
 	addrCodec address.Codec, cdc codec.BinaryCodec, decodedTx *decode.DecodedTx,
 ) (w *gogoTxWrapper, err error) {
-	if err != nil {
-		return nil, fmt.Errorf("unable to convert messagev2 to messagev1: %w", err)
-	}
 	// set fees
 	fees := make(sdk.Coins, len(decodedTx.Tx.AuthInfo.Fee.Amount))
 	for i, fee := range decodedTx.Tx.AuthInfo.Fee.Amount {

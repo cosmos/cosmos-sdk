@@ -34,19 +34,24 @@ type DecodedTx struct {
 // gogoProtoCodec is an interface that defines the behavior for decoding bytes into a gogoproto.Message.
 type gogoProtoCodec interface {
 	Unmarshal([]byte, gogoproto.Message) error
-	Resolve(string) (gogoproto.Message, error)
+}
+
+type anyResolver interface {
+	Resolve(typeURL string) (gogoproto.Message, error)
 }
 
 // Decoder contains the dependencies required for decoding transactions.
 type Decoder struct {
 	signingCtx *signing.Context
 	codec      gogoProtoCodec
+	resolver   anyResolver
 }
 
 // Options are options for creating a Decoder.
 type Options struct {
 	SigningContext *signing.Context
 	ProtoCodec     gogoProtoCodec
+	AnyResolver    anyResolver
 }
 
 // NewDecoder creates a new Decoder for decoding transactions.
@@ -57,10 +62,14 @@ func NewDecoder(options Options) (*Decoder, error) {
 	if options.ProtoCodec == nil {
 		return nil, errors.New("proto codec is required for unmarshalling gogoproto messages")
 	}
+	if options.AnyResolver == nil {
+		return nil, errors.New("any resolver is required for resolving Any messages")
+	}
 
 	return &Decoder{
 		signingCtx: options.SigningContext,
 		codec:      options.ProtoCodec,
+		resolver:   options.AnyResolver,
 	}, nil
 }
 
@@ -139,7 +148,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 		}
 		reflectMsgs = append(reflectMsgs, dynamicMsg.ProtoReflect())
 
-		msg, err := d.codec.Resolve(typeURL)
+		msg, err := d.resolver.Resolve(typeURL)
 		if err != nil {
 			return nil, err
 		}

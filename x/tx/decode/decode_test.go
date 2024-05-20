@@ -24,8 +24,9 @@ import (
 )
 
 type testGogoCodec struct{}
+type resolver struct{}
 
-func (c *testGogoCodec) Resolve(typeURL string) (gogoproto.Message, error) {
+func (r *resolver) Resolve(typeURL string) (gogoproto.Message, error) {
 	switch typeURL {
 	case "SimpleSigner":
 		return &testpb.SimpleSigner{}, nil
@@ -71,6 +72,7 @@ func TestDecode(t *testing.T) {
 	decoder, err := decode.NewDecoder(decode.Options{
 		SigningContext: signingCtx,
 		ProtoCodec:     &testGogoCodec{},
+		AnyResolver:    &resolver{},
 	})
 	require.NoError(t, err)
 

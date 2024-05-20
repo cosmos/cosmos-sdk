@@ -33,6 +33,10 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 ## [Unreleased]
 
+### API Breaking
+
+* [#20424](https://github.com/cosmos/cosmos-sdk/pull/20424) `decode.Options` now requires a proto codec capable of unmarshalling and resolving types.
+
 ## [v0.13.3](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.3) - 2024-04-22
 
 ### Improvements

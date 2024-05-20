@@ -3,12 +3,14 @@ package network
 import (
 	"time"
 
+	"github.com/spf13/viper"
+
 	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/spf13/viper"
 )
 
 // NetworkI is an interface for a network of validators.

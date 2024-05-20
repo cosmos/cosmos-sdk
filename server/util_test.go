@@ -16,6 +16,9 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	corectx "cosmossdk.io/core/context"
+	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -26,8 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	corectx "cosmossdk.io/core/context"
-	"cosmossdk.io/log"
 )
 
 var errCanceledInPreRun = errors.New("canceled in prerun")
@@ -61,7 +62,6 @@ func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T
 
 	cmd.PreRunE = preRunETestImpl
 
-	serverCtx := &server.Context{}
 	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewLogger(os.Stdout))
 	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
 	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
@@ -106,7 +106,10 @@ func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T
 	}
 
 	// Test that the config for use in server/start.go is created
-	if serverCtx.Viper == nil {
+	v := ctx.Value(corectx.ViperContextKey)
+	viper, _ := v.(*viper.Viper)
+
+	if viper == nil {
 		t.Error("app config Viper instance not created")
 	}
 }
@@ -446,8 +449,8 @@ func TestInterceptConfigsWithBadPermissions(t *testing.T) {
 	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewNopLogger())
 	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
 
-	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
-		t.Fatalf("function failed with [%T] %v", err, err)
+	if err := cmd.ExecuteContext(ctx); !os.IsPermission(err) {
+		t.Fatalf("Failed to catch permissions error, got: [%T] %v", err, err)
 	}
 }
 

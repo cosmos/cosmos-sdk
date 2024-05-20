@@ -7,10 +7,10 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/auth"
 
-	corectx "cosmossdk.io/core/context"
 	"github.com/cosmos/cosmos-sdk/client"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"

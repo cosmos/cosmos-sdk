@@ -17,6 +17,7 @@ import (
 	"testing"
 	"time"
 
+	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -38,7 +39,6 @@ import (
 	_ "cosmossdk.io/x/staking"   // import staking as a blank
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

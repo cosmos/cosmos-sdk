@@ -17,9 +17,9 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/log"
 
-	corectx "cosmossdk.io/core/context"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/cmdtest"

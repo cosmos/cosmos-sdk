@@ -24,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	corectx "cosmossdk.io/core/context"
 )
 
 const (
@@ -81,11 +80,9 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
-			fmt.Println("Init viper", cmd.Context().Value(corectx.ViperContextKey))
 
 			config := client.GetConfigFromCmd(cmd)
 
-			fmt.Println("Init Root", config.RootDir)
 
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
 			switch {

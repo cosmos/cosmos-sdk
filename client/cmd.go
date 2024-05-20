@@ -9,21 +9,21 @@ import (
 	"slices"
 	"strings"
 
+	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-
 	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/log"
-	cmtcfg "github.com/cometbft/cometbft/config"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/spf13/viper"
 )
 
 // ClientContextKey defines the context key used to retrieve a client.Context from
@@ -390,10 +390,8 @@ func GetViperFromCmd(cmd *cobra.Command) *viper.Viper {
 
 func GetConfigFromCmd(cmd *cobra.Command) *cmtcfg.Config {
 	v := cmd.Context().Value(corectx.ViperContextKey)
-	fmt.Println("viper", v)
 	viper, ok := v.(*viper.Viper)
 	if !ok {
-		fmt.Println("viper rong")
 		return cmtcfg.DefaultConfig()
 	}
 	return GetConfigFromViper(viper)

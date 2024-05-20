@@ -1,8 +1,11 @@
 package decode
 
 import (
+	"cosmossdk.io/x/tx/internal/testpb"
 	"encoding/hex"
+	"fmt"
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/protoadapt"
 	"testing"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
@@ -10,7 +13,6 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
@@ -35,7 +37,7 @@ var (
 		},
 	}
 
-	anyMsg, _ = anyutil.New(&bankv1beta1.MsgSend{})
+	anyMsg, _ = anyutil.New(&testpb.SimpleSigner{})
 
 	pkAny, _ = anyutil.New(&secp256k1.PubKey{Key: []byte("foo")})
 )
@@ -91,13 +93,22 @@ func FuzzInternal_rejectNonADR027TxRaw(f *testing.F) {
 
 type testGogoCodec struct{}
 
-func (c *testGogoCodec) Resolve(s string) (gogoproto.Message, error) {
-	//TODO implement me
-	panic("implement me")
+func (c *testGogoCodec) Resolve(typeURL string) (gogoproto.Message, error) {
+	switch typeURL {
+	case "SimpleSigner":
+		return &testpb.SimpleSigner{}, nil
+	default:
+		return nil, fmt.Errorf("unrecognized type URL: %s", typeURL)
+	}
 }
 
 func (*testGogoCodec) Unmarshal(bz []byte, msg gogoproto.Message) error {
-	return gogoproto.Unmarshal(bz, msg)
+	msgV2 := protoadapt.MessageV2Of(msg)
+	if err := proto.Unmarshal(bz, msgV2); err != nil {
+		return err
+	}
+	msg = protoadapt.MessageV1Of(msgV2)
+	return nil
 }
 
 func FuzzDecode(f *testing.F) {

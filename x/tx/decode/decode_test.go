@@ -18,7 +18,6 @@ import (
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	_ "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/tx/decode"
 	"cosmossdk.io/x/tx/internal/testpb"
 	"cosmossdk.io/x/tx/signing"
@@ -42,7 +41,7 @@ func (*testGogoCodec) Unmarshal(bz []byte, msg gogoproto.Message) error {
 	if err := proto.Unmarshal(bz, msgV2); err != nil {
 		return err
 	}
-	msg = protoadapt.MessageV1Of(msgV2)
+	protoadapt.MessageV1Of(msgV2)
 	return nil
 }
 

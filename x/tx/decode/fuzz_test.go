@@ -1,17 +1,18 @@
 package decode
 
 import (
-	"cosmossdk.io/x/tx/internal/testpb"
 	"encoding/hex"
 	"fmt"
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/protoadapt"
 	"testing"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	fuzz "github.com/google/gofuzz"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/protoadapt"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	"cosmossdk.io/x/tx/internal/testpb"
 
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
@@ -107,7 +108,7 @@ func (*testGogoCodec) Unmarshal(bz []byte, msg gogoproto.Message) error {
 	if err := proto.Unmarshal(bz, msgV2); err != nil {
 		return err
 	}
-	msg = protoadapt.MessageV1Of(msgV2)
+	protoadapt.MessageV1Of(msgV2)
 	return nil
 }
 

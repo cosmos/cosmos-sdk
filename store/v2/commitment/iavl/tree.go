@@ -8,11 +8,13 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	dbm "cosmossdk.io/store/v2/db"
 )
 
 var _ commitment.Tree = (*IavlTree)(nil)
+var _ store.PausablePruner = (*IavlTree)(nil)
 
 // IavlTree is a wrapper around iavl.MutableTree.
 type IavlTree struct {
@@ -96,6 +98,15 @@ func (t *IavlTree) SetInitialVersion(version uint64) error {
 // Prune prunes all versions up to and including the provided version.
 func (t *IavlTree) Prune(version uint64) error {
 	return t.tree.DeleteVersionsTo(int64(version))
+}
+
+// PausePruning pauses the pruning process.
+func (t *IavlTree) PausePruning(pause bool) {
+	if pause {
+		t.tree.SetCommitting()
+	} else {
+		t.tree.UnsetCommitting()
+	}
 }
 
 // Export exports the tree exporter at the given version.

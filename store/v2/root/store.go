@@ -16,6 +16,7 @@ import (
 	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/migration"
 	"cosmossdk.io/store/v2/proof"
+	"cosmossdk.io/store/v2/pruning"
 )
 
 var _ store.RootStore = (*Store)(nil)
@@ -43,6 +44,9 @@ type Store struct {
 	// telemetry reflects a telemetry agent responsible for emitting metrics (if any)
 	telemetry metrics.StoreMetrics
 
+	// pruningManager reflects the pruning manager used to prune state of the SS and SC backends
+	pruningManager *pruning.Manager
+
 	// Migration related fields
 	// migrationManager reflects the migration manager used to migrate state from v1 to v2
 	migrationManager *migration.Manager
@@ -62,6 +66,7 @@ func New(
 	logger log.Logger,
 	ss store.VersionedDatabase,
 	sc store.Committer,
+	pm *pruning.Manager,
 	mm *migration.Manager,
 	m metrics.StoreMetrics,
 ) (store.RootStore, error) {
@@ -70,6 +75,7 @@ func New(
 		initialVersion:   1,
 		stateStorage:     ss,
 		stateCommitment:  sc,
+		pruningManager:   pm,
 		migrationManager: mm,
 		telemetry:        m,
 		isMigrating:      mm != nil,
@@ -272,6 +278,11 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 		s.logger.Debug("commit header and version mismatch", "header_height", s.commitHeader.Height, "version", version)
 	}
 
+	// signal to the pruning manager that a new version has been committed
+	if err := s.pruningManager.SignalCommit(true, version); err != nil {
+		s.logger.Error("failed to signal commit to pruning manager", "err", err)
+	}
+
 	eg := new(errgroup.Group)
 
 	// if we're migrating, we don't want to commit to the state storage to avoid
@@ -298,6 +309,11 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 
 	if err := eg.Wait(); err != nil {
 		return nil, err
+	}
+
+	// signal to the pruning manager that the commit is done
+	if err := s.pruningManager.SignalCommit(false, version); err != nil {
+		s.logger.Error("failed to signal commit done to pruning manager", "err", err)
 	}
 
 	if s.commitHeader != nil {

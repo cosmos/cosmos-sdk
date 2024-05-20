@@ -28,7 +28,7 @@ func setupMigrationManager(t *testing.T, noCommitStore bool) (*Manager, *commitm
 		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, log.NewNopLogger(), iavl.DefaultConfig())
 	}
 
-	commitStore, err := commitment.NewCommitStore(multiTrees, db, nil, log.NewNopLogger())
+	commitStore, err := commitment.NewCommitStore(multiTrees, db, log.NewNopLogger())
 	require.NoError(t, err)
 
 	snapshotsStore, err := snapshots.NewStore(t.TempDir())
@@ -38,7 +38,7 @@ func setupMigrationManager(t *testing.T, noCommitStore bool) (*Manager, *commitm
 
 	storageDB, err := pebbledb.New(t.TempDir())
 	require.NoError(t, err)
-	newStorageStore := storage.NewStorageStore(storageDB, nil, log.NewNopLogger()) // for store/v2
+	newStorageStore := storage.NewStorageStore(storageDB, log.NewNopLogger()) // for store/v2
 
 	db1 := dbm.NewMemDB()
 	multiTrees1 := make(map[string]commitment.Tree)
@@ -47,7 +47,7 @@ func setupMigrationManager(t *testing.T, noCommitStore bool) (*Manager, *commitm
 		multiTrees1[storeKey] = iavl.NewIavlTree(prefixDB, log.NewNopLogger(), iavl.DefaultConfig())
 	}
 
-	newCommitStore, err := commitment.NewCommitStore(multiTrees1, db1, nil, log.NewNopLogger()) // for store/v2
+	newCommitStore, err := commitment.NewCommitStore(multiTrees1, db1, log.NewNopLogger()) // for store/v2
 	require.NoError(t, err)
 	if noCommitStore {
 		newCommitStore = nil

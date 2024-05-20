@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/store/v2/commitment/iavl"
 	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/migration"
+	"cosmossdk.io/store/v2/pruning"
 	"cosmossdk.io/store/v2/snapshots"
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/sqlite"
@@ -41,7 +42,7 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 		prefixDB := dbm.NewPrefixDB(mdb, []byte(storeKey))
 		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, nopLog, iavl.DefaultConfig())
 	}
-	orgSC, err := commitment.NewCommitStore(multiTrees, mdb, nil, testLog)
+	orgSC, err := commitment.NewCommitStore(multiTrees, mdb, testLog)
 	s.Require().NoError(err)
 
 	// apply changeset against the original store
@@ -62,22 +63,23 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 	// create a new storage and commitment stores
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
-	ss := storage.NewStorageStore(sqliteDB, nil, testLog)
+	ss := storage.NewStorageStore(sqliteDB, testLog)
 
 	multiTrees1 := make(map[string]commitment.Tree)
 	for _, storeKey := range storeKeys {
 		multiTrees1[storeKey] = iavl.NewIavlTree(dbm.NewMemDB(), nopLog, iavl.DefaultConfig())
 	}
-	sc, err := commitment.NewCommitStore(multiTrees1, dbm.NewMemDB(), nil, testLog)
+	sc, err := commitment.NewCommitStore(multiTrees1, dbm.NewMemDB(), testLog)
 	s.Require().NoError(err)
 
 	snapshotsStore, err := snapshots.NewStore(s.T().TempDir())
 	s.Require().NoError(err)
 	snapshotManager := snapshots.NewManager(snapshotsStore, snapshots.NewSnapshotOptions(1500, 2), orgSC, nil, nil, testLog)
 	migrationManager := migration.NewManager(dbm.NewMemDB(), snapshotManager, ss, sc, testLog)
+	pm := pruning.NewManager(sc, ss, nil, nil)
 
 	// assume no storage store, simulate the migration process
-	s.rootStore, err = New(testLog, ss, orgSC, migrationManager, nil)
+	s.rootStore, err = New(testLog, ss, orgSC, pm, migrationManager, nil)
 	s.Require().NoError(err)
 }
 
@@ -141,10 +143,6 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 			}
 		}
 	}
-
-	// prune the old versions
-	err = s.rootStore.Prune(latestVersion - 1)
-	s.Require().NoError(err)
 
 	// apply changeset against the migrated store
 	for version := latestVersion + 1; version <= latestVersion+10; version++ {

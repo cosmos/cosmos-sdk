@@ -8,21 +8,20 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	dbm "cosmossdk.io/store/v2/db"
 )
 
 func TestCommitterSuite(t *testing.T) {
 	s := &commitment.CommitStoreTestSuite{
-		NewStore: func(db corestore.KVStoreWithBatch, storeKeys []string, pruneOpts *store.PruneOptions, logger log.Logger) (*commitment.CommitStore, error) {
+		NewStore: func(db corestore.KVStoreWithBatch, storeKeys []string, logger log.Logger) (*commitment.CommitStore, error) {
 			multiTrees := make(map[string]commitment.Tree)
 			cfg := DefaultConfig()
 			for _, storeKey := range storeKeys {
 				prefixDB := dbm.NewPrefixDB(db, []byte(storeKey))
 				multiTrees[storeKey] = NewIavlTree(prefixDB, logger, cfg)
 			}
-			return commitment.NewCommitStore(multiTrees, db, pruneOpts, logger)
+			return commitment.NewCommitStore(multiTrees, db, logger)
 		},
 	}
 

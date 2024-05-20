@@ -6,8 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"google.golang.org/protobuf/protoadapt"
-
 	"github.com/cosmos/cosmos-proto/anyutil"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"

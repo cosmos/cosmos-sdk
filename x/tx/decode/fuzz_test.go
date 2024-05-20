@@ -93,8 +93,9 @@ func FuzzInternal_rejectNonADR027TxRaw(f *testing.F) {
 }
 
 type testGogoCodec struct{}
+type resolver struct{}
 
-func (c *testGogoCodec) Resolve(typeURL string) (gogoproto.Message, error) {
+func (r *resolver) Resolve(typeURL string) (gogoproto.Message, error) {
 	switch typeURL {
 	case "SimpleSigner":
 		return &testpb.SimpleSigner{}, nil
@@ -132,6 +133,7 @@ func FuzzDecode(f *testing.F) {
 	dec, err := NewDecoder(Options{
 		SigningContext: signingCtx,
 		ProtoCodec:     &testGogoCodec{},
+		AnyResolver:    &resolver{},
 	})
 	if err != nil {
 		return

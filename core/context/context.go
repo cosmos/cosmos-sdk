@@ -1,4 +1,4 @@
-package appmodule
+package context
 
 // ExecMode defines the execution mode which can be set on a Context.
 type ExecMode uint8
@@ -13,4 +13,9 @@ const (
 	ExecModeVoteExtension
 	ExecModeVerifyVoteExtension
 	ExecModeFinalize
+)
+
+const (
+	ExecModeKey = iota
+	CometInfoKey
 )

@@ -432,19 +432,19 @@ func (suite *KeeperTestSuite) TestComputeRemainingRedelegatedSharesAfterUnbondin
 		Entries: []types.UnbondingDelegationEntry{
 			{
 				CompletionTime: timeNow.Add(3 * time.Hour),
-				InitialBalance: math.NewInt(5), // 5 - 5 => 0
+				Balance:        math.NewInt(5), // 5 - 5 => 0
 			},
 			{
 				CompletionTime: timeNow.Add(8 * time.Hour),
-				InitialBalance: math.NewInt(1), // 5 - 1 => 4
+				Balance:        math.NewInt(1), // 5 - 1 => 4
 			},
 			{
 				CompletionTime: timeNow.Add(12 * time.Hour),
-				InitialBalance: math.NewInt(10), // 4 + 2 - 10 => 0
+				Balance:        math.NewInt(10), // 4 + 2 - 10 => 0
 			},
 			{
 				CompletionTime: timeNow.Add(25 * time.Hour),
-				InitialBalance: math.NewInt(5), // 5 + 1 - 5 + 2 => 3
+				Balance:        math.NewInt(5), // 5 + 1 - 5 + 2 => 3
 			},
 		},
 	}

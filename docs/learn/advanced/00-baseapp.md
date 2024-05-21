@@ -354,7 +354,7 @@ The response contains:
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/ante/basic.go#L102
 ```
 
-* `Events ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account). See [`event`s](./08-events.md) for more.
+* `Events ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account). See [`events`](./08-events.md) for more.
 * `Codespace (string)`: Namespace for the Code.
 
 #### RecheckTx
@@ -495,7 +495,7 @@ Each transaction returns a response to the underlying consensus engine of type [
 * `Info (string):` Additional information. May be non-deterministic.
 * `GasWanted (int64)`: Amount of gas requested for transaction. It is provided by users when they generate the transaction.
 * `GasUsed (int64)`: Amount of gas consumed by transaction. During transaction execution, this value is computed by multiplying the standard cost of a transaction byte by the size of the raw transaction, and by adding gas each time a read/write to the store occurs.
-* `Events ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account). See [`event`s](./08-events.md) for more.
+* `Events ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account). See [`events`](./08-events.md) for more.
 * `Codespace (string)`: Namespace for the Code.
 
 #### EndBlock 

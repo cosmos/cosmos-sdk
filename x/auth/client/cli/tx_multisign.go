@@ -57,6 +57,7 @@ The SIGN_MODE_DIRECT sign mode is not supported.'
 		Args: cobra.MinimumNArgs(3),
 	}
 
+	cmd.Flags().Bool(flagSkipSignatureVerification, false, "Skip signature verification")
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document is written to the given file instead of STDOUT")
 	flags.AddTxFlagsToCmd(cmd)
@@ -109,6 +110,10 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 
+		// avoid signature verification if the sender of the tx is different than
+		// the multisig key (useful for nested multisigs).
+		skipSigVerify, _ := cmd.Flags().GetBool(flagSkipSignatureVerification)
+
 		multisigPub := pubKey.(*kmultisig.LegacyAminoPubKey)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 		if !clientCtx.Offline {
@@ -153,11 +158,13 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 				}
 				txData := adaptableTx.GetSigningTxData()
 
-				err = signing.VerifySignature(cmd.Context(), sig.PubKey, txSignerData, sig.Data,
-					txCfg.SignModeHandler(), txData)
-				if err != nil {
-					addr, _ := sdk.AccAddressFromHexUnsafe(sig.PubKey.Address().String())
-					return fmt.Errorf("couldn't verify signature for address %s", addr)
+				if !skipSigVerify {
+					err = signing.VerifySignature(cmd.Context(), sig.PubKey, txSignerData, sig.Data,
+						txCfg.SignModeHandler(), txData)
+					if err != nil {
+						addr, _ := sdk.AccAddressFromHexUnsafe(sig.PubKey.Address().String())
+						return fmt.Errorf("couldn't verify signature for address %s %w", addr, err)
+					}
 				}
 
 				if err := multisig.AddSignatureV2(multisigSig, sig, multisigPub.GetPubKeys()); err != nil {

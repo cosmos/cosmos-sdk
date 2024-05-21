@@ -221,9 +221,12 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 	)
 }
 
-// subUnlockedCoins removes the unlocked amt coins of the given account. An error is
-// returned if the resulting balance is negative.
-// A coin_spent event is emitted after.
+// subUnlockedCoins removes the unlocked amt coins of the given account.
+// An error is returned if the resulting balance is negative.
+//
+// CONTRACT: The provided amount (amt) must be valid, non-negative coins.
+//
+// A coin_spent event is emitted after the operation.
 func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) error {
 	lockedCoins := k.LockedCoins(ctx, addr)
 
@@ -270,8 +273,11 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddres
 	)
 }
 
-// addCoins increase the addr balance by the given amt. amt should be valid.
-// It emits a coin received event.
+// addCoins increases the balance of the given address by the specified amount.
+//
+// CONTRACT: The provided amount (amt) must be valid, non-negative coins.
+//
+// It emits a coin_received event after the operation.
 func (k BaseSendKeeper) addCoins(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) error {
 	for _, coin := range amt {
 		balance := k.GetBalance(ctx, addr, coin.Denom)

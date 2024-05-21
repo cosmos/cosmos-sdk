@@ -4,6 +4,7 @@ const ModuleKey = "module"
 
 // Logger is the Cosmos SDK logger interface.
 // It maintains as much backward compatibility with the CometBFT logger as possible.
+// cosmossdk.io/log is the implementation provided by the Cosmos SDK
 // All functionalities of the logger are available through the Impl() method.
 type Logger interface {
 	// Info takes a message and a set of key/value pairs and logs with level INFO.

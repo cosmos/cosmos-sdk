@@ -325,7 +325,7 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 // It should be used when the response type is not known by the caller.
 func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
 	// do sender assertions.
-	wantSenders, _, err := k.codec.GetMsgV1Signers(msg)
+	wantSenders, _, err := k.codec.GetMsgSigners(msg)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get signers: %w", err)
 	}
@@ -348,7 +348,7 @@ func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg
 // is not trying to impersonate another account.
 func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgResp implementation.ProtoMsg) error {
 	// do sender assertions.
-	wantSenders, _, err := k.codec.GetMsgV1Signers(msg)
+	wantSenders, _, err := k.codec.GetMsgSigners(msg)
 	if err != nil {
 		return fmt.Errorf("cannot get signers: %w", err)
 	}

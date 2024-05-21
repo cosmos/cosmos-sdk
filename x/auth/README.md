@@ -442,7 +442,7 @@ More information about the `sign-batch` command can be found running `simd tx si
 The `multi-sign` command allows users to sign transactions that was generated offline by a multisig account.
 
 ```bash
-simd tx multisign transaction.json k1k2k3 k1sig.json k2sig.json k3sig.json
+simd tx multi-sign transaction.json k1k2k3 k1sig.json k2sig.json k3sig.json
 ```
 
 Where `k1k2k3` is the multisig account address, `k1sig.json` is the signature of the first signer, `k2sig.json` is the signature of the second signer, and `k3sig.json` is the signature of the third signer.

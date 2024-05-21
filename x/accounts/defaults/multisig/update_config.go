@@ -44,7 +44,11 @@ func (a Account) UpdateConfig(ctx context.Context, msg *v1.MsgUpdateConfig) (*v1
 	// get the weight from the stored members
 	totalWeight := uint64(0)
 	err := a.Members.Walk(ctx, nil, func(_ []byte, value uint64) (stop bool, err error) {
-		totalWeight += value
+		var adderr error
+		totalWeight, adderr = safeAdd(totalWeight, value)
+		if adderr != nil {
+			return true, adderr
+		}
 		return false, nil
 	})
 	if err != nil {

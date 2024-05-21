@@ -156,6 +156,7 @@ func initFixture(t *testing.T) *fixture {
 				},
 			},
 		},
+		ProposerAddress: valConsAddr,
 	})
 
 	integrationApp := integration.NewIntegrationApp(ctx, logger, keys, cdc,

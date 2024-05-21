@@ -290,7 +290,7 @@ func (s STF[T]) runTxMsgs(
 	if err != nil {
 		return nil, 0, nil, err
 	}
-	msgs := tx.GetMessages()
+	msgs, err := tx.GetMessages()
 	if err != nil {
 		return nil, 0, nil, err
 	}
@@ -503,7 +503,6 @@ func (s STF[T]) RunWithCtx(
 	closure func(ctx context.Context) error,
 ) (store.WriterMap, error) {
 	branchedState := s.branchFn(state)
-	// TODO  do we need headerinfo for genesis?
 	stfCtx := s.makeContext(ctx, nil, branchedState, corecontext.ExecModeFinalize)
 	return branchedState, closure(stfCtx)
 }

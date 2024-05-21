@@ -204,7 +204,7 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 			_, err = k.BranchService.ExecuteWithGasLimit(ctx, uint64(res.Params.Block.MaxGas), func(ctx context.Context) error {
 				// execute all messages
 				for idx, msg = range messages {
-					if _, err := safeExecuteHandler(ctx, msg, k.RouterService.MessageRouterService()); err != nil {
+					if _, err := safeExecuteHandler(ctx, msg, k.MsgRouterService); err != nil {
 						// `idx` and `err` are populated with the msg index and error.
 						proposal.Status = v1.StatusFailed
 						proposal.FailedReason = err.Error()
@@ -292,7 +292,7 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 }
 
 // executes route(msg) and recovers from panic.
-func safeExecuteHandler(ctx context.Context, msg sdk.Msg, router router.Router) (res protoiface.MessageV1, err error) {
+func safeExecuteHandler(ctx context.Context, msg sdk.Msg, router router.Service) (res protoiface.MessageV1, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("handling x/gov proposal msg [%s] PANICKED: %v", msg, r)

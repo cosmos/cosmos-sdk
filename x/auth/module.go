@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/auth/keeper"
 	"cosmossdk.io/x/auth/simulation"
@@ -48,7 +49,12 @@ type AppModule struct {
 func (am AppModule) IsAppModule() {}
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, ak types.AccountsModKeeper, randGenAccountsFn types.RandomGenesisAccountsFn) AppModule {
+func NewAppModule(
+	cdc codec.Codec,
+	accountKeeper keeper.AccountKeeper,
+	ak types.AccountsModKeeper,
+	randGenAccountsFn types.RandomGenesisAccountsFn,
+) AppModule {
 	return AppModule{
 		accountKeeper:     accountKeeper,
 		randGenAccountsFn: randGenAccountsFn,
@@ -63,7 +69,7 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the auth module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 

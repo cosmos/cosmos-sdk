@@ -127,7 +127,7 @@ func (m *mockSnapshotter) Restore(
 	for {
 		item.Reset()
 		err := protoReader.ReadMsg(&item)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
 			return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "invalid protobuf message")
@@ -312,7 +312,7 @@ func (s *extSnapshotter) SnapshotExtension(height uint64, payloadWriter snapshot
 func (s *extSnapshotter) RestoreExtension(height uint64, format uint32, payloadReader snapshottypes.ExtensionPayloadReader) error {
 	for {
 		payload, err := payloadReader()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
 			return err

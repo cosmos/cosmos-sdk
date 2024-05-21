@@ -148,6 +148,16 @@ func (m *LegacyAminoPubKey) Type() string {
 	return "PubKeyMultisigThreshold"
 }
 
+// MarshalAmino overrides amino binary marshaling.
+func (m LegacyAminoPubKey) MarshalAmino() ([]byte, error) {
+	return m.Marshal()
+}
+
+// UnmarshalAmino overrides amino binary marshaling.
+func (m *LegacyAminoPubKey) UnmarshalAmino(bz []byte) error {
+	return m.Unmarshal(bz)
+}
+
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m *LegacyAminoPubKey) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, any := range m.PubKeys {

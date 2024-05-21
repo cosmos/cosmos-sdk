@@ -15,10 +15,6 @@ import (
 func (k Keeper) BeginBlocker(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
 	header := k.HeaderService.HeaderInfo(ctx)
-	if header.Height == 0 {
-		return nil
-	}
-
 	ci := k.cometService.CometInfo(ctx)
 
 	// determine the total power signing the block

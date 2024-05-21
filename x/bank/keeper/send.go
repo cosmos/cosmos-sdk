@@ -229,7 +229,10 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddres
 
 	for _, coin := range amt {
 		balance := k.GetBalance(ctx, addr, coin.Denom)
-		locked := sdk.NewCoin(coin.Denom, lockedCoins.AmountOf(coin.Denom))
+		ok, locked := lockedCoins.Find(coin.Denom)
+		if !ok {
+			locked = sdk.Coin{Denom: coin.Denom, Amount: math.ZeroInt()}
+		}
 
 		spendable, hasNeg := sdk.Coins{balance}.SafeSub(locked)
 		if hasNeg {
@@ -239,7 +242,7 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddres
 
 		if _, hasNeg := spendable.SafeSub(coin); hasNeg {
 			if len(spendable) == 0 {
-				spendable = sdk.Coins{sdk.NewCoin(coin.Denom, math.ZeroInt())}
+				spendable = sdk.Coins{sdk.Coin{Denom: coin.Denom, Amount: math.ZeroInt()}}
 			}
 			return errorsmod.Wrapf(
 				sdkerrors.ErrInsufficientFunds,

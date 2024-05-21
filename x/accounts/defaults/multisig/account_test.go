@@ -313,6 +313,29 @@ func TestUpdateConfig(t *testing.T) {
 				},
 			},
 		},
+		{
+			"change members, invalid weights",
+			&v1.MsgUpdateConfig{
+				UpdateMembers: []*v1.Member{
+					{
+						Address: "addr1",
+						Weight:  math.MaxUint64,
+					},
+					{
+						Address: "addr2",
+						Weight:  1,
+					},
+				},
+				Config: &v1.Config{
+					Threshold:    666,
+					Quorum:       400,
+					VotingPeriod: 60,
+				},
+			},
+			"overflow",
+			nil,
+			nil,
+		},
 	}
 
 	for _, tc := range testcases {

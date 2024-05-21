@@ -269,20 +269,11 @@ func (a Account) ExecuteProposal(ctx context.Context, msg *v1.MsgExecuteProposal
 
 		switch v1.VoteOption(vote) {
 		case v1.VoteOption_VOTE_OPTION_YES:
-			yesVotes, err = safeAdd(yesVotes, weight)
-			if err != nil {
-				return true, err
-			}
+			yesVotes += weight
 		case v1.VoteOption_VOTE_OPTION_NO:
-			noVotes, err = safeAdd(noVotes, weight)
-			if err != nil {
-				return true, err
-			}
+			noVotes += weight
 		case v1.VoteOption_VOTE_OPTION_ABSTAIN:
-			abstainVotes, err = safeAdd(abstainVotes, weight)
-			if err != nil {
-				return true, err
-			}
+			abstainVotes += weight
 		}
 		return false, nil
 	})
@@ -290,10 +281,7 @@ func (a Account) ExecuteProposal(ctx context.Context, msg *v1.MsgExecuteProposal
 		return nil, err
 	}
 
-	totalWeight, err := safeAdd(yesVotes, noVotes, abstainVotes)
-	if err != nil {
-		return nil, err
-	}
+	totalWeight := yesVotes + noVotes + abstainVotes
 
 	var (
 		rejectErr error

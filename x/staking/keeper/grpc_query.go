@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -14,6 +13,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/staking/types"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"

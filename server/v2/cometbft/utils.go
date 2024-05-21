@@ -325,7 +325,7 @@ func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.Consen
 			},
 		}
 		if r.Params.Abci != nil {
-			cs.Abci = &cmtproto.ABCIParams{ // nolint:staticcheck
+			cs.Abci = &cmtproto.ABCIParams{ // nolint:staticcheck // deprecated type still supported for now
 				VoteExtensionsEnableHeight: r.Params.Abci.VoteExtensionsEnableHeight,
 			}
 		}

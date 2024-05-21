@@ -85,14 +85,6 @@ func NewCometBFTServer[T transaction.Tx](
 	// TODO: set these; what is the appropriate presence of the Store interface here?
 	var ss snapshots.StorageSnapshotter
 	var sc snapshots.CommitSnapshotter
-	// ss, ok := app.GetStore().GetStateStorage().(snapshots.StorageSnapshotter)
-	// if !ok {
-	//	panic("snapshots are not supported for this store")
-	//}
-	//sc, ok := app.GetStore().GetStateCommitment().(snapshots.CommitSnapshotter)
-	//if !ok {
-	//	panic("snapshots are not supported for this store")
-	//}
 
 	snapshotStore, err := GetSnapshotStore(cfg.CmtConfig.RootDir)
 	if err != nil {

@@ -58,18 +58,19 @@ func TestDefineCustomGetSigners(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, [][]byte{[]byte("bar")}, signers)
 
-	// Reset and provider no CustomGetSigners. Consequently, validation will fail and depinject will return an error
-	_, err = simtestutil.SetupAtGenesis(
-		depinject.Configs(
-			configurator.NewAppConfig(
-				configurator.AuthModule(),
-				configurator.StakingModule(),
-				configurator.BankModule(),
-				configurator.ConsensusModule(),
+	// Provide no CustomGetSigners. Consequently, validation will fail and depinject will return an error
+	require.PanicsWithError(t, "no cosmos.msg.v1.signer option found for message testpb.TestRepeatedFields; use DefineCustomGetSigners to specify a custom getter", func() {
+		_, _ = simtestutil.SetupAtGenesis(
+			depinject.Configs(
+				configurator.NewAppConfig(
+					configurator.AuthModule(),
+					configurator.StakingModule(),
+					configurator.BankModule(),
+					configurator.ConsensusModule(),
+				),
+				depinject.Supply(log.NewNopLogger()),
 			),
-			depinject.Supply(log.NewNopLogger()),
-		),
-		&interfaceRegistry,
-	)
-	require.ErrorContains(t, err, "use DefineCustomGetSigners")
+			&interfaceRegistry,
+		)
+	})
 }

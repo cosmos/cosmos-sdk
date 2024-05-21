@@ -20,7 +20,7 @@ import (
 // If any error occurs during the process, it is returned along with a nil snapshot store.
 func GetSnapshotStore(rootDir string) (*snapshots.Store, error) {
 	snapshotDir := filepath.Join(rootDir, "data", "snapshots")
-	if err := os.MkdirAll(snapshotDir, 0o744); err != nil {
+	if err := os.MkdirAll(snapshotDir, 0o750); err != nil {
 		return nil, fmt.Errorf("failed to create snapshots directory: %w", err)
 	}
 

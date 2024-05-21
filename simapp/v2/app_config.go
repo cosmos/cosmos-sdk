@@ -41,6 +41,8 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/circuit" // import for side-effects
 	circuittypes "cosmossdk.io/x/circuit/types"
+	_ "cosmossdk.io/x/consensus" // import for side-effects
+	consensustypes "cosmossdk.io/x/consensus/types"
 	_ "cosmossdk.io/x/distribution" // import for side-effects
 	distrtypes "cosmossdk.io/x/distribution/types"
 	_ "cosmossdk.io/x/evidence" // import for side-effects
@@ -64,8 +66,6 @@ import (
 	_ "cosmossdk.io/x/upgrade" // import for side-effects
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
-	_ "cosmossdk.io/x/consensus" // import for side-effects
-	consensustypes "cosmossdk.io/x/consensus/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )

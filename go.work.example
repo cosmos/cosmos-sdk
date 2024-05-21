@@ -25,6 +25,7 @@ use (
 	./tools/confix
 	./tools/hubl
 	./x/accounts
+	./x/accounts/defaults/lockup
 	./x/auth
 	./x/authz
 	./x/bank
@@ -44,5 +45,4 @@ use (
 	./x/tx
 	./x/upgrade
 	./x/epochs
-	./x/accounts/defaults/lockup
 )

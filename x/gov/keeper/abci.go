@@ -198,7 +198,7 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
-			_, err = k.BranchService.ExecuteWithGasLimit(ctx, uint64(params.ProposalExecutionGas), func(ctx context.Context) error {
+			_, err = k.BranchService.ExecuteWithGasLimit(ctx, params.ProposalExecutionGas, func(ctx context.Context) error {
 				// execute all messages
 				for idx, msg = range messages {
 					if _, err := safeExecuteHandler(ctx, msg, k.MsgRouterService); err != nil {

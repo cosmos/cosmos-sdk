@@ -474,6 +474,7 @@ func (suite *KeeperTestSuite) TestComputeRemainingRedelegatedSharesAfterUnbondin
 		reds,
 		validatorDstAddress,
 	)
+	suite.Require().Error(err)
 
 	// expect an error when the passed validator address doesn't match the one in the redelegations
 	_, err = stakingKeeper.ComputeRemainingRedelegatedSharesAfterUnbondings(
@@ -482,6 +483,7 @@ func (suite *KeeperTestSuite) TestComputeRemainingRedelegatedSharesAfterUnbondin
 		reds,
 		sdk.ValAddress([]byte("wrongValDstAddr")),
 	)
+	suite.Require().Error(err)
 
 	// expect no error when no redelegations is passed
 	res, err := stakingKeeper.ComputeRemainingRedelegatedSharesAfterUnbondings(

@@ -45,7 +45,7 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 				kvPairs[storeKey] = append(kvPairs[storeKey], corestore.KVPair{Key: key, Value: value})
 			}
 		}
-		s.Require().NoError(commitStore.WriteBatch(corestore.NewChangesetWithPairs(kvPairs)))
+		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(kvPairs)))
 
 		_, err = commitStore.Commit(i)
 		s.Require().NoError(err)
@@ -144,7 +144,7 @@ func (s *CommitStoreTestSuite) TestStore_Pruning() {
 				kvPairs[storeKey] = append(kvPairs[storeKey], corestore.KVPair{Key: key, Value: value})
 			}
 		}
-		s.Require().NoError(commitStore.WriteBatch(corestore.NewChangesetWithPairs(kvPairs)))
+		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(kvPairs)))
 
 		_, err = commitStore.Commit(i)
 		s.Require().NoError(err)

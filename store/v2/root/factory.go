@@ -50,8 +50,8 @@ type FactoryOptions struct {
 func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 	var (
 		ssDb      storage.Database
-		ss        store.VersionedDatabase
-		sc        store.Committer
+		ss        *storage.StorageStore
+		sc        *commitment.CommitStore
 		err       error
 		ensureDir = func(dir string) error {
 			if err := os.MkdirAll(dir, 0x0755); err != nil {

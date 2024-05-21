@@ -55,7 +55,7 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
 			}
 		}
-		s.Require().NoError(orgSC.WriteBatch(cs))
+		s.Require().NoError(orgSC.WriteChangeset(cs))
 		_, err = orgSC.Commit(version)
 		s.Require().NoError(err)
 	}

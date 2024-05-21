@@ -114,7 +114,7 @@ func (s *RootStoreTestSuite) TestGetFallback() {
 	cs := corestore.NewChangeset()
 	cs.Add(testStoreKeyBytes, []byte("foo"), []byte("bar"), false)
 
-	err := sc.WriteBatch(cs)
+	err := sc.WriteChangeset(cs)
 	s.Require().NoError(err)
 
 	ci := sc.WorkingCommitInfo(1)

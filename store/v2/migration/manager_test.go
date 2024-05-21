@@ -71,7 +71,7 @@ func TestMigrateState(t *testing.T) {
 						cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
 					}
 				}
-				require.NoError(t, orgCommitStore.WriteBatch(cs))
+				require.NoError(t, orgCommitStore.WriteChangeset(cs))
 				_, err := orgCommitStore.Commit(version)
 				require.NoError(t, err)
 			}

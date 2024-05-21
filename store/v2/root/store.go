@@ -323,24 +323,6 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	return s.lastCommitInfo.Hash(), nil
 }
 
-// Prune prunes the root store to the provided version.
-func (s *Store) Prune(version uint64) error {
-	if s.telemetry != nil {
-		now := time.Now()
-		defer s.telemetry.MeasureSince(now, "root_store", "prune")
-	}
-
-	if err := s.stateStorage.Prune(version); err != nil {
-		return fmt.Errorf("failed to prune SS store: %w", err)
-	}
-
-	if err := s.stateCommitment.Prune(version); err != nil {
-		return fmt.Errorf("failed to prune SC store: %w", err)
-	}
-
-	return nil
-}
-
 // startMigration starts a migration process to migrate the RootStore/v1 to the
 // SS and SC backends of store/v2 and initializes the channels.
 // It runs in a separate goroutine and replaces the current RootStore with the
@@ -400,7 +382,7 @@ func (s *Store) writeSC(cs *corestore.Changeset) error {
 		}
 	}
 
-	if err := s.stateCommitment.WriteBatch(cs); err != nil {
+	if err := s.stateCommitment.WriteChangeset(cs); err != nil {
 		return fmt.Errorf("failed to write batch to SC store: %w", err)
 	}
 

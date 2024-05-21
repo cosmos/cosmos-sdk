@@ -22,7 +22,7 @@ var storeKey1Bytes = []byte(storeKey1)
 type StorageTestSuite struct {
 	suite.Suite
 
-	NewDB          func(dir string) (store.VersionedDatabase, error)
+	NewDB          func(dir string) (*StorageStore, error)
 	EmptyBatchSize int
 	SkipTests      []string
 }

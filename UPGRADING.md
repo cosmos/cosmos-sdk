@@ -9,7 +9,7 @@ Note, always read the **SimApp** section for more information on application wir
 
 In this section we describe the changes made in Cosmos SDK' SimApp.
 **These changes are directly applicable to your application wiring.**
-Please read this section first, but for an exaustive list of changes, refer to the [CHANGELOG](./simapp/CHANGELOG.md).
+Please read this section first, but for an exhaustive list of changes, refer to the [CHANGELOG](./simapp/CHANGELOG.md).
 
 #### Client (`root.go`)
 

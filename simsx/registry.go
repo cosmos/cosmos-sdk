@@ -27,6 +27,10 @@ func (f SimMsgFactoryFn[T]) Create() FactoryMethod {
 	return FactoryMethod(f)
 }
 
+func (f SimMsgFactoryFn[T]) Cast(msg sdk.Msg) T {
+	return msg.(T)
+}
+
 type SimMsgFactoryX interface {
 	MsgType() sdk.Msg
 	Create() FactoryMethod

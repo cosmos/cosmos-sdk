@@ -78,7 +78,7 @@ type suite struct {
 	TxConfig           client.TxConfig
 }
 
-func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) suite {
+func createTestSuite(t testing.TB, genesisAccounts []authtypes.GenesisAccount) suite {
 	t.Helper()
 	res := suite{}
 

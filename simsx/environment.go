@@ -261,6 +261,10 @@ type XRand struct {
 	*rand.Rand
 }
 
+func NewXRand(rand *rand.Rand) *XRand {
+	return &XRand{Rand: rand}
+}
+
 func (r *XRand) StringN(max int) string {
 	return simtypes.RandStringOfLength(r.Rand, max)
 }

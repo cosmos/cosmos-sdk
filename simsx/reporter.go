@@ -28,6 +28,7 @@ type SimulationReporter interface {
 	Success(msg sdk.Msg, comments ...string)
 	// error captured on fail
 	ExecutionResult() ReportResult
+	Comment() string
 }
 
 var _ SimulationReporter = &BasicSimulationReporter{}
@@ -76,12 +77,12 @@ func (x BasicSimulationReporter) IsSkipped() bool {
 func (x *BasicSimulationReporter) ToLegacyOperationMsg() simtypes.OperationMsg {
 	switch x.status {
 	case skipped:
-		return simtypes.NoOpMsg(x.module, x.msgTypeURL, strings.Join(x.comments, ", "))
+		return simtypes.NoOpMsg(x.module, x.msgTypeURL, x.Comment())
 	case completed:
 		if x.error == nil {
-			return simtypes.NoOpMsg(x.module, x.msgTypeURL, strings.Join(x.comments, ", "))
+			return simtypes.NoOpMsg(x.module, x.msgTypeURL, x.Comment())
 		} else {
-			return simtypes.NewOperationMsgBasic(x.module, x.msgTypeURL, strings.Join(x.comments, ", "), true, x.msgProtoBz)
+			return simtypes.NewOperationMsgBasic(x.module, x.msgTypeURL, x.Comment(), true, x.msgProtoBz)
 		}
 	default:
 		x.Fail(errors.New("operation aborted before msg was executed"))
@@ -113,4 +114,8 @@ func (x *BasicSimulationReporter) toStatus(next ReporterStatus, comments ...stri
 	}
 	x.status = next
 	x.comments = append(x.comments, comments...)
+}
+
+func (x BasicSimulationReporter) Comment() string {
+	return strings.Join(x.comments, ", ")
 }

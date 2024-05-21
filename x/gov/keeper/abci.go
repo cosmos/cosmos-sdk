@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/router"
-	consensustypes "cosmossdk.io/x/consensus/types"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 
@@ -191,17 +190,15 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 				break
 			}
 
-			var res consensustypes.QueryParamsResponse
-
-			if err := k.RouterService.QueryRouterService().InvokeTyped(ctx, &consensustypes.QueryParamsRequest{}, &res); err != nil {
-				return err
-			}
-
 			// attempt to execute all messages within the passed proposal
 			// Messages may mutate state thus we use a cached context. If one of
 			// the handlers fails, no state mutation is written and the error
 			// message is logged.
-			_, err = k.BranchService.ExecuteWithGasLimit(ctx, uint64(res.Params.Block.MaxGas), func(ctx context.Context) error {
+			params, err := k.Params.Get(ctx)
+			if err != nil {
+				return err
+			}
+			_, err = k.BranchService.ExecuteWithGasLimit(ctx, uint64(params.ProposalExecutionGas), func(ctx context.Context) error {
 				// execute all messages
 				for idx, msg = range messages {
 					if _, err := safeExecuteHandler(ctx, msg, k.MsgRouterService); err != nil {

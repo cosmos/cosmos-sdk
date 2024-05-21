@@ -2547,7 +2547,7 @@ type Module struct {
 	// if it is specified.
 	ExportGenesis []string `protobuf:"bytes,7,rep,name=export_genesis,json=exportGenesis,proto3" json:"export_genesis,omitempty"`
 	// order_migrations defines the order in which module migrations are performed.
-	// If this is left empty, it uses the default migration order (alphabeticaly).
+	// If this is left empty, it uses the default migration order (alphabetically).
 	OrderMigrations []string `protobuf:"bytes,8,rep,name=order_migrations,json=orderMigrations,proto3" json:"order_migrations,omitempty"`
 	// GasConfig is the config object for gas limits.
 	GasConfig *GasConfig `protobuf:"bytes,9,opt,name=gas_config,json=gasConfig,proto3" json:"gas_config,omitempty"`

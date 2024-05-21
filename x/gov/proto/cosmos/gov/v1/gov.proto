@@ -343,6 +343,8 @@ message Params {
   // Minimum percentage of total stake needed to vote for a result to be
   // considered valid for an expedited proposal.
   string expedited_quorum = 21 [(cosmos_proto.scalar) = "cosmos.Dec", (cosmos_proto.field_added_in) = "x/gov v1.0.0"];
+
+  uint64 proposal_execution_gas = 22 [(cosmos_proto.field_added_in) = "x/gov v1.0.0"];
 }
 
 // MessageBasedParams defines the parameters of specific messages in a proposal.

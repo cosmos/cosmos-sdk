@@ -27,10 +27,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-*
-
 ### API Breaking Changes
 
+* [#20412](https://github.com/cosmos/cosmos-sdk/pull/20412) `NewKeeper` now requires a `core/comet.Service` to fetch comet info from state.
 * [#19868](https://github.com/cosmos/cosmos-sdk/pull/19868) Removes Accounts String method
     * `NewMsgSetWithdrawAddress` now takes strings as argument instead of `sdk.AccAddress`.
     * `NewGenesisState` now takes a string as argument instead of `sdk.ConsAddress`.

@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -48,6 +49,7 @@ func (k Querier) Validators(ctx context.Context, req *types.QueryValidatorsReque
 			return nil, nil
 		}
 
+		setConsensusAddress(val)
 		return val, nil
 	}, func() *types.Validator {
 		return &types.Validator{}
@@ -84,6 +86,7 @@ func (k Querier) Validator(ctx context.Context, req *types.QueryValidatorRequest
 		return nil, status.Errorf(codes.NotFound, "validator %s not found", req.ValidatorAddr)
 	}
 
+	setConsensusAddress(&validator)
 	return &types.QueryValidatorResponse{Validator: validator}, nil
 }
 
@@ -648,4 +651,18 @@ func redelegationsToRedelegationResponses(ctx context.Context, k *Keeper, redels
 	}
 
 	return resp, nil
+}
+
+// setConsensusAddress sets the ConsensusAddress field for the given validator
+func setConsensusAddress(validator *types.Validator) {
+	if validator == nil {
+		return
+	}
+
+	cpk, ok := validator.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
+	// Best-effort way
+	if ok {
+		consAddr := sdk.ConsAddress(cpk.Address())
+		validator.ConsensusAddress = consAddr.String()
+	}
 }

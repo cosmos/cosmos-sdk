@@ -46,6 +46,7 @@ func NewValidator(operator string, pubKey cryptotypes.PubKey, description Descri
 
 	return Validator{
 		OperatorAddress:         operator,
+		ConsensusAddress:        sdk.ConsAddress(pubKey.Address()).String(),
 		ConsensusPubkey:         pkAny,
 		Jailed:                  false,
 		Status:                  Unbonded,

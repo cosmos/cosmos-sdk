@@ -319,6 +319,11 @@ func TestBondStatus(t *testing.T) {
 	require.Equal(t, types.BondStatusUnbonding, types.Unbonding.String())
 }
 
+func TestValidatorSetConsensusAddress(t *testing.T) {
+	validator := newValidator(t, valAddr1, pk1)
+	require.Equal(t, sdk.ConsAddress(pk1.Address()).String(), validator.ConsensusAddress)
+}
+
 func mkValidator(tokens int64, shares math.LegacyDec) types.Validator {
 	vAddr1, _ := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(valAddr1)
 	return types.Validator{

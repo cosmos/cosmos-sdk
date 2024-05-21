@@ -145,6 +145,9 @@ message Validator {
 
   // list of unbonding ids, each uniquely identifying an unbonding of this validator
   repeated uint64 unbonding_ids = 13;
+
+  // consensus_address defines the address of the validator's consensus
+  string consensus_address = 14 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // BondStatus is the status of a validator.

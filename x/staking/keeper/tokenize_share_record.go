@@ -358,7 +358,7 @@ func updateRedelegationEntriesByAmount(amount sdk.Dec, entries []types.Redelegat
 	return aLeft, res1, res2
 }
 
-// ComputeRemainingRedelegatedShares takes a delegator address, validator address, and a list of redelegations
+// ComputeRemainingRedelegatedSharesAfterUnbondings takes a delegator address, validator address, and a list of redelegations
 // that should all be BY the delegator TO the given validator (we do not care about the source validators here).
 // It computes the shares of redelegations that are *not* matched by a subsequent unbonding.
 // For example, consider this scenario for delegator D and validator V, assuming that no redelegations or unbondings

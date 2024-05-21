@@ -418,7 +418,7 @@ func (k Keeper) ComputeRemainingRedelegatedSharesAfterUnbondings(
 	if found {
 		for _, ubdEntry := range ubd.Entries {
 			// get the tokens this unbonding delegation entry represents right now
-			// we care about the *current balance* beacuse that is ultimately the
+			// we care about the *current balance* because that is ultimately the
 			// shares that will be removed at the completion time
 			ubdEntryShares, err := validator.SharesFromTokens(ubdEntry.Balance)
 			if err != nil {

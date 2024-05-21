@@ -86,7 +86,7 @@ func NewCometBFTServer[T transaction.Tx](
 	var ss snapshots.StorageSnapshotter
 	var sc snapshots.CommitSnapshotter
 	// ss, ok := app.GetStore().GetStateStorage().(snapshots.StorageSnapshotter)
-	//if !ok {
+	// if !ok {
 	//	panic("snapshots are not supported for this store")
 	//}
 	//sc, ok := app.GetStore().GetStateCommitment().(snapshots.CommitSnapshotter)
@@ -168,7 +168,9 @@ func (s *CometBFTServer[T]) Config() (any, *viper.Viper) {
 	v.SetConfigFile("???") // TODO: where do we set this
 	v.SetConfigName("config")
 	v.SetConfigType("toml")
-	v.ReadInConfig()
+	if err := v.ReadInConfig(); err != nil {
+		panic(fmt.Errorf("failed to read cometbft config file: %w", err))
+	}
 	return nil, nil
 }
 

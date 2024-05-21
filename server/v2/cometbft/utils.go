@@ -325,7 +325,7 @@ func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.Consen
 			},
 		}
 		if r.Params.Abci != nil {
-			cs.Abci = &cmtproto.ABCIParams{
+			cs.Abci = &cmtproto.ABCIParams{ // nolint:staticcheck
 				VoteExtensionsEnableHeight: r.Params.Abci.VoteExtensionsEnableHeight,
 			}
 		}
@@ -403,14 +403,6 @@ func (c *Consensus[T]) checkHalt(height int64, time time.Time) error {
 	}
 
 	return nil
-}
-
-// int64ToUint64 converts an int64 to a uint64, returning 0 if the int64 is negative.
-func int64ToUint64(i int64) uint64 {
-	if i < 0 {
-		return 0
-	}
-	return uint64(i)
 }
 
 // uint64ToInt64 converts a uint64 to an int64, returning math.MaxInt64 if the uint64 is too large.

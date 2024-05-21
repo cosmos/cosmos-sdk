@@ -93,7 +93,9 @@ func (c *Consensus[T]) SetSnapshotManager(sm *snapshots.Manager) {
 // RegisterExtensions registers the given extensions with the consensus module's snapshot manager.
 // It allows additional snapshotter implementations to be used for creating and restoring snapshots.
 func (c *Consensus[T]) RegisterExtensions(extensions ...snapshots.ExtensionSnapshotter) {
-	c.snapshotManager.RegisterExtensions(extensions...)
+	if err := c.snapshotManager.RegisterExtensions(extensions...); err != nil {
+		panic(fmt.Errorf("failed to register snapshot extensions: %w", err))
+	}
 }
 
 func (c *Consensus[T]) SetPrepareProposalHandler(handler handlers.PrepareHandler[T]) {
@@ -393,7 +395,7 @@ func (c *Consensus[T]) FinalizeBlock(
 	}
 
 	// TODO evaluate this approach vs. service using context.
-	//cometInfo := &consensustypes.MsgUpdateCometInfo{
+	// cometInfo := &consensustypes.MsgUpdateCometInfo{
 	//	Authority: c.cfg.ConsensusAuthority,
 	//	CometInfo: &consensustypes.CometInfo{
 	//		Evidence:        req.Misbehavior,

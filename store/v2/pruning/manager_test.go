@@ -169,5 +169,4 @@ func TestPruneOptions(t *testing.T) {
 			require.Equal(t, tc.pruneVersion, pruneVersion)
 		})
 	}
-
 }

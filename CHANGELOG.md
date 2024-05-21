@@ -35,6 +35,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## v0.47.14-ics-lsm
+
+This is a special cosmos-sdk release with support for both ICS and LSM.
+
+### State Machine Breaking
+
+* (x/staking) [#20433](https://github.com/cosmos/cosmos-sdk/pull/#20433) Refactor.
+
 ## v0.47.13-ics-lsm
 
 This is a special cosmos-sdk release with support for both ICS and LSM.

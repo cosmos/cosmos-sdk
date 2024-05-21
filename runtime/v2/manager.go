@@ -278,7 +278,10 @@ type hasABCIEndBlock interface {
 }
 
 // EndBlock runs the end-block logic of all modules and tx validator updates
-func (m *MM) EndBlock() (endBlockFunc func(ctx context.Context) error, valUpdateFunc func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error)) {
+func (m *MM) EndBlock() (
+	endBlockFunc func(ctx context.Context) error,
+	valUpdateFunc func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error),
+) {
 	var validatorUpdates []appmodulev2.ValidatorUpdate
 	endBlockFunc = func(ctx context.Context) error {
 		for _, moduleName := range m.config.EndBlockers {
@@ -415,11 +418,7 @@ func (m *MM) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap) (
 
 // RegisterServices registers all module services.
 func (m *MM) RegisterServices(app *App) error {
-	for mk, module := range m.modules {
-		fmt.Printf("register services module: %v\n", mk)
-		if mk == "runtime" {
-			fmt.Println("above to crash!")
-		}
+	for _, module := range m.modules {
 		// register msg + query
 		if services, ok := module.(appmodule.HasServices); ok {
 			if err := registerServices(services, app, protoregistry.GlobalFiles); err != nil {

@@ -32,6 +32,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/server/types"
@@ -39,6 +40,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
+
+// Keep Context type as LegacyContext
+type LegacyContext struct {
+	Viper  *viper.Viper
+	Logger log.Logger
+	Config *cmtcfg.Config
+}
 
 func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) {
 	defer func() {
@@ -173,6 +181,29 @@ func CreateSDKLogger(v *viper.Viper, out io.Writer) (log.Logger, error) {
 	}
 
 	return log.NewLogger(out, opts...), nil
+}
+
+// GetServerContextFromCmd returns a Context from a command or an empty Context
+// if it has not been set.
+func GetServerContextFromCmd(cmd *cobra.Command) *LegacyContext {
+	serverCtx := &LegacyContext{}
+	if v := cmd.Context().Value(corectx.ViperContextKey); v != nil {
+		viper := v.(*viper.Viper)
+		serverCtx.Viper = viper
+		serverCtx.Config = client.GetConfigFromViper(viper)
+	} else {
+		serverCtx.Viper = viper.New()
+		serverCtx.Config = cmtcfg.DefaultConfig()
+	}
+
+	if v := cmd.Context().Value(corectx.LoggerContextKey); v != nil {
+		logger := v.(log.Logger)
+		serverCtx.Logger = logger
+	} else {
+		serverCtx.Logger = log.NewLogger(os.Stdout)
+	}
+	
+	return serverCtx
 }
 
 // SetCmdServerContext sets a command's Context value to the provided argument.

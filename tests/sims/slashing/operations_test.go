@@ -47,7 +47,6 @@ type SimTestSuite struct {
 	accounts []simtypes.Account
 
 	app               *runtime.App
-	legacyAmino       *codec.LegacyAmino
 	codec             codec.Codec
 	interfaceRegistry codectypes.InterfaceRegistry
 	txConfig          client.TxConfig
@@ -86,7 +85,6 @@ func (suite *SimTestSuite) SetupTest() {
 			depinject.Supply(log.NewNopLogger()),
 		),
 		startupCfg,
-		&suite.legacyAmino,
 		&suite.codec,
 		&suite.interfaceRegistry,
 		&suite.txConfig,

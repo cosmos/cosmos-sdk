@@ -450,6 +450,10 @@ func SimulateMsgUndelegate(
 			delAddr, val.GetOperator(), sdk.NewCoin(bondDenom, unbondAmt),
 		)
 
+		if !bk.IsSendEnabledDenom(ctx, bondDenom) {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "bond denom send not enabled"), nil, nil
+		}
+
 		// need to retrieve the simulation account associated with delegation to retrieve PrivKey
 		var simAccount simtypes.Account
 
@@ -710,6 +714,10 @@ func SimulateMsgBeginRedelegate(
 		bondDenom, err := k.BondDenom(ctx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "bond denom not found"), nil, err
+		}
+
+		if !bk.IsSendEnabledDenom(ctx, bondDenom) {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "bond denom send not enabled"), nil, nil
 		}
 
 		msg := types.NewMsgBeginRedelegate(

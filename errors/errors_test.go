@@ -7,8 +7,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
-	"google.golang.org/grpc/codes"
-	grpcstatus "google.golang.org/grpc/status"
 )
 
 type errorsTestSuite struct {
@@ -209,23 +207,6 @@ func (s *errorsTestSuite) TestABCIError() {
 	s.Require().Equal("custom: unknown", ABCIError("unknown", 1, "custom").Error())
 }
 
-func (s *errorsTestSuite) TestGRPCStatus() {
-	s.Require().Equal(codes.Unknown, grpcstatus.Code(errInternal))
-	s.Require().Equal(codes.NotFound, grpcstatus.Code(ErrNotFound))
-
-	status, ok := grpcstatus.FromError(ErrNotFound)
-	s.Require().True(ok)
-	s.Require().Equal("codespace testtesttest code 38: not found", status.Message())
-
-	// test wrapping
-	s.Require().Equal(codes.Unimplemented, grpcstatus.Code(ErrNotSupported.Wrap("test")))
-	s.Require().Equal(codes.FailedPrecondition, grpcstatus.Code(ErrConflict.Wrapf("test %s", "foo")))
-
-	status, ok = grpcstatus.FromError(ErrNotFound.Wrap("test"))
-	s.Require().True(ok)
-	s.Require().Equal("codespace testtesttest code 38: not found: test", status.Message())
-}
-
 const testCodespace = "testtesttest"
 
 var (
@@ -254,8 +235,5 @@ var (
 	ErrUnknownExtensionOptions = Register(testCodespace, 31, "unknown extension options")
 	ErrPackAny                 = Register(testCodespace, 33, "failed packing protobuf message to Any")
 	ErrLogic                   = Register(testCodespace, 35, "internal logic error")
-	ErrConflict                = RegisterWithGRPCCode(testCodespace, 36, codes.FailedPrecondition, "conflict")
-	ErrNotSupported            = RegisterWithGRPCCode(testCodespace, 37, codes.Unimplemented, "feature not supported")
-	ErrNotFound                = RegisterWithGRPCCode(testCodespace, 38, codes.NotFound, "not found")
 	ErrIO                      = Register(testCodespace, 39, "Internal IO error")
 )

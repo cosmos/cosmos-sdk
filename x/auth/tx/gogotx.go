@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/cosmos/gogoproto/proto"
-	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/core/address"
@@ -29,7 +29,7 @@ import (
 
 func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, decodedTx *decode.DecodedTx) (w *gogoTxWrapper, err error) {
 	// set msgsv1
-	msgv1, err := decodeMsgsV1(cdc, decodedTx.Tx.Body.Messages)
+	msgs, err := decodeMsgsV1(cdc, decodedTx.Tx.Body.Messages)
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert messagev2 to messagev1: %w", err)
 	}
@@ -71,13 +71,21 @@ func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, dec
 			return nil, err
 		}
 	}
+
+	// reflectMsgs
+	reflectMsgs := make([]protoreflect.Message, len(msgs))
+	for i, msg := range decodedTx.Messages {
+		reflectMsgs[i] = msg.ProtoReflect()
+	}
+
 	return &gogoTxWrapper{
-		cdc:        cdc,
-		decodedTx:  decodedTx,
-		msgsV1:     msgv1,
-		fees:       fees,
-		feePayer:   feePayer,
-		feeGranter: feeGranter,
+		cdc:         cdc,
+		decodedTx:   decodedTx,
+		reflectMsgs: reflectMsgs,
+		msgs:        msgs,
+		fees:        fees,
+		feePayer:    feePayer,
+		feeGranter:  feeGranter,
 	}, nil
 }
 
@@ -87,10 +95,11 @@ type gogoTxWrapper struct {
 	decodedTx *decode.DecodedTx
 	cdc       codec.BinaryCodec
 
-	msgsV1     []proto.Message
-	fees       sdk.Coins
-	feePayer   []byte
-	feeGranter []byte
+	msgs        []proto.Message
+	reflectMsgs []protoreflect.Message
+	fees        sdk.Coins
+	feePayer    []byte
+	feeGranter  []byte
 }
 
 func (w *gogoTxWrapper) String() string { return w.decodedTx.Tx.String() }
@@ -109,14 +118,14 @@ type ExtensionOptionsTxBuilder interface {
 }
 
 func (w *gogoTxWrapper) GetMsgs() []sdk.Msg {
-	if w.msgsV1 == nil {
+	if w.msgs == nil {
 		panic("fill in msgs")
 	}
-	return w.msgsV1
+	return w.msgs
 }
 
-func (w *gogoTxWrapper) GetMsgsV2() ([]protov2.Message, error) {
-	return w.decodedTx.Messages, nil
+func (w *gogoTxWrapper) GetReflectMessages() ([]protoreflect.Message, error) {
+	return w.reflectMsgs, nil
 }
 
 func (w *gogoTxWrapper) ValidateBasic() error {

@@ -87,7 +87,7 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 	now := sdkCtx.HeaderInfo().Time
 
 	for i, msg := range msgs {
-		signers, _, err := k.cdc.GetMsgV1Signers(msg)
+		signers, _, err := k.cdc.GetMsgSigners(msg)
 		if err != nil {
 			return nil, err
 		}
@@ -142,7 +142,7 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 		}
 
 		// no need to use the branch service here, as if the transaction fails, the transaction will be reverted
-		_, err = k.RouterService.MessageRouterService().InvokeUntyped(ctx, msg)
+		_, err = k.MsgRouterService.InvokeUntyped(ctx, msg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to execute message %d; message %v: %w", i, msg, err)
 		}
@@ -435,7 +435,9 @@ func (k Keeper) removeFromGrantQueue(ctx context.Context, grantKey []byte, grant
 	queueItems := queueItem.MsgTypeUrls
 
 	for index, typeURL := range queueItems {
-		k.GasService.GasMeter(ctx).Consume(gasCostPerIteration, "grant queue")
+		if err := k.GasService.GasMeter(ctx).Consume(gasCostPerIteration, "grant queue"); err != nil {
+			return err
+		}
 
 		if typeURL == msgType {
 			end := len(queueItem.MsgTypeUrls) - 1

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"math/rand"
+	"testing"
 
 	"github.com/cosmos/cosmos-sdk/simsx"
 
@@ -41,6 +42,7 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
+	t testing.TB,
 	appParams simtypes.AppParams,
 	cdc codec.JSONCodec,
 	txGen client.TxConfig,
@@ -86,7 +88,7 @@ func WeightedOperations(
 		weightMsgRotateConsPubKey = DefaultWeightMsgRotateConsPubKey
 	})
 
-	reg := simsx.NewSimsRegistryAdapter(&simsx.BasicSimulationReporter{}, ak, bk, txGen)
+	reg := simsx.NewSimsRegistryAdapter(simsx.NewBasicSimulationReporter(t), ak, bk, txGen)
 	weight := simsx.ParamWeightSource(appParams)
 	reg.Add(weight.Get("msg_create_validator", 100), MsgCreateValidatorFactory(k))
 	reg.Add(weight.Get("msg_delegate", 100), MsgDelegateFactory(k))

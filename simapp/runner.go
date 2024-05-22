@@ -94,6 +94,7 @@ func RunWithSeeds[T SimulationApp](
 			tCfg := cfg.Clone()
 			tCfg.Seed = seed
 			tCfg.FuzzSeed = fuzzSeed
+			tCfg.T = t
 			testInstance := NewSimulationAppInstance(t, tCfg, appFactory)
 			var runLogger log.Logger
 			if cli.FlagVerboseValue {

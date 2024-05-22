@@ -35,7 +35,6 @@ func FuzzBankSend(f *testing.F) {
 	bankWithContext := simsx.SpendableCoinserFn(func(addr sdk.AccAddress) sdk.Coins {
 		return bk.SpendableCoins(pCtx, addr)
 	})
-	pReporter := &simsx.BasicSimulationReporter{}
 	factory := banksims.MsgSendFactory(bk)
 	f.Add([]byte{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01})
 	f.Fuzz(func(t *testing.T, rawSeed []byte) {
@@ -45,7 +44,7 @@ func FuzzBankSend(f *testing.F) {
 		}
 		start := sdk.BigEndianToUint64(rawSeed[0:8])
 		testData := simsx.NewChainDataSource(rand.New(simulation.NewByteSource(rawSeed[8:], int64(start))), ak, bankWithContext, ak.AddressCodec(), simAccs...)
-		reporter := pReporter.WithScope(factory.MsgType()).WithT(t)
+		reporter := simsx.NewBasicSimulationReporter(t).WithScope(factory.MsgType())
 		ctx, _ := pCtx.CacheContext()
 		_, msg := factory(ctx, testData, reporter)
 		_, err := bankkeeper.NewMsgServerImpl(bk).Send(ctx, factory.Cast(msg))

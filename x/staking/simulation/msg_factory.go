@@ -29,9 +29,6 @@ func MsgCreateValidatorFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.Ms
 			return nil, nil
 		}
 		simAccount := testData.AnyAccount(reporter, withoutValidators, withoutConsAddrUsed, simsx.WithDenomBalance(bondDenom))
-		if reporter.IsSkipped() {
-			return nil, nil
-		}
 		selfDelegation := simAccount.LiquidBalance().RandSubsetCoin(reporter, bondDenom)
 		description := types.NewDescription(
 			r.StringN(10),
@@ -117,9 +114,6 @@ func MsgUndelegateFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgUnde
 		delegation := delegations[r.Intn(len(delegations))]
 		delAddr := delegation.GetDelegatorAddr()
 		delegator := testData.GetAccount(reporter, delAddr)
-		if reporter.IsSkipped() {
-			return nil, nil
-		}
 
 		hasMaxUD, err := k.HasMaxUnbondingDelegationEntries(ctx, delegator.Address, valAddr)
 		if err != nil || hasMaxUD {

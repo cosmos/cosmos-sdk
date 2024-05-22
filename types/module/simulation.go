@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"math/rand"
 	"sort"
+	"testing"
 	"time"
 
 	"cosmossdk.io/core/address"
@@ -161,4 +162,5 @@ type SimulationState struct {
 	//nolint:staticcheck //	legacy used for testing
 	LegacyProposalContents []simulation.WeightedProposalContent // proposal content generator functions with their default weight and app sim key
 	ProposalMsgs           []simulation.WeightedProposalMsg     // proposal msg generator functions with their default weight and app sim key
+	T                      testing.TB
 }

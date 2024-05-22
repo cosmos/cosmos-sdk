@@ -1,5 +1,7 @@
 package simulation
 
+import "testing"
+
 // Config contains the necessary configuration flags for the simulator
 type Config struct {
 	GenesisFile string // custom simulation genesis file; cannot be used with params file
@@ -23,6 +25,7 @@ type Config struct {
 	DBBackend   string // custom db backend type
 	BlockMaxGas int64  // custom max gas for block
 	FuzzSeed    []byte
+	T           testing.TB
 }
 
 func (c Config) Clone() Config {

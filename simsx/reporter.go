@@ -19,7 +19,6 @@ type ReportResult struct {
 
 type SimulationReporter interface {
 	WithScope(msg sdk.Msg) SimulationReporter
-	WithT(t testing.TB) SimulationReporter
 	Skip(comment string)
 	Skipf(comment string, args ...any)
 	IsSkipped() bool
@@ -66,18 +65,6 @@ func (x BasicSimulationReporter) WithScope(msg sdk.Msg) SimulationReporter {
 		msgProtoBz: x.msgProtoBz,
 		msgTypeURL: typeURL,
 		module:     sdk.GetModuleNameFromTypeURL(typeURL),
-		comments:   slices.Clone(x.comments),
-	}
-}
-
-func (x BasicSimulationReporter) WithT(t testing.TB) SimulationReporter {
-	return &BasicSimulationReporter{
-		t:          t,
-		error:      x.error,
-		status:     x.status,
-		msgProtoBz: x.msgProtoBz,
-		msgTypeURL: x.msgTypeURL,
-		module:     x.module,
 		comments:   slices.Clone(x.comments),
 	}
 }

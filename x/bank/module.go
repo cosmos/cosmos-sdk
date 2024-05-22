@@ -176,7 +176,7 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	ak, bk := am.accountKeeper, am.keeper
-	reg := simsx.NewSimsRegistryAdapter(&simsx.BasicSimulationReporter{}, ak, bk, simState.TxConfig)
+	reg := simsx.NewSimsRegistryAdapter(simsx.NewBasicSimulationReporter(simState.T), ak, bk, simState.TxConfig)
 	weight := simsx.ParamWeightSource(simState.AppParams)
 	reg.Add(weight.Get("msg_send", 100), simulation.MsgSendFactory(bk))
 	reg.Add(weight.Get("msg_multisend", 10), simulation.MsgMultiSendFactory(bk))

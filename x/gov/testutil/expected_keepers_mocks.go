@@ -220,6 +220,12 @@ func (m *MockBankKeeper) ClearSendRestriction() {
 	m.ctrl.Call(m, "ClearSendRestriction")
 }
 
+// ClearSendRestriction mocks base method.
+func (m *MockBankKeeper) EmitAllTransientBalances(ctx types.Context) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "EmitAllTransientBalances")
+}
+
 // ClearSendRestriction indicates an expected call of ClearSendRestriction.
 func (mr *MockBankKeeperMockRecorder) ClearSendRestriction() *gomock.Call {
 	mr.mock.ctrl.T.Helper()

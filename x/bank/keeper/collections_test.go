@@ -29,8 +29,9 @@ func TestBankStateCompatibility(t *testing.T) {
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
-
 	storeService := runtime.NewKVStoreService(key)
+	tkey := storetypes.NewTransientStoreKey(banktypes.TStoreKey)
+	tStoreService := runtime.NewTransientKVStoreService(tkey)
 
 	// gomock initializations
 	ctrl := gomock.NewController(t)
@@ -40,6 +41,7 @@ func TestBankStateCompatibility(t *testing.T) {
 	k := keeper.NewBaseKeeper(
 		encCfg.Codec,
 		storeService,
+		tStoreService,
 		authKeeper,
 		map[string]bool{accAddrs[4].String(): true},
 		authtypes.NewModuleAddress("gov").String(),

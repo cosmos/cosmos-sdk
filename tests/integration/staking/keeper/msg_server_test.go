@@ -1781,7 +1781,7 @@ func TestRedelegationTokenization(t *testing.T) {
 	// end block
 	staking.EndBlocker(ctx, stakingKeeper)
 
-	// check that there the redelegation is removed
+	// check that the redelegation is removed
 	redelegation = stakingKeeper.GetRedelegations(ctx, alice, uint16(10))
 	require.Len(t, redelegation, 0, "expect no redelegations")
 

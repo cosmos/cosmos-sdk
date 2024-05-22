@@ -176,6 +176,8 @@ replace (
 	cosmossdk.io/x/feegrant => github.com/InjectiveLabs/cosmos-sdk/x/feegrant v0.50.6-inj-0.0.20250403091126-e5e0e3cf5f5e
 	cosmossdk.io/x/upgrade => github.com/InjectiveLabs/cosmos-sdk/x/upgrade v0.50.6-inj-0.0.20250403091126-e5e0e3cf5f5e
 
+	github.com/cometbft/cometbft => github.com/InjectiveLabs/cometbft v0.38.7-0.20240522134609-352fee3bb1db
+
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.

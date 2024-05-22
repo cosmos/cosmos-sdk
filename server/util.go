@@ -187,7 +187,7 @@ func CreateSDKLogger(v *viper.Viper, out io.Writer) (log.Logger, error) {
 // if it has not been set.
 func GetServerContextFromCmd(cmd *cobra.Command) *LegacyContext {
 	serverCtx := &LegacyContext{}
-	if v := cmd.Context().Value(corectx.ViperContextKey); v != nil {
+	if v := cmd.Context().Value(corectx.ViperContextKey{}); v != nil {
 		viper := v.(*viper.Viper)
 		serverCtx.Viper = viper
 		serverCtx.Config = client.GetConfigFromViper(viper)
@@ -196,13 +196,13 @@ func GetServerContextFromCmd(cmd *cobra.Command) *LegacyContext {
 		serverCtx.Config = cmtcfg.DefaultConfig()
 	}
 
-	if v := cmd.Context().Value(corectx.LoggerContextKey); v != nil {
+	if v := cmd.Context().Value(corectx.LoggerContextKey{}); v != nil {
 		logger := v.(log.Logger)
 		serverCtx.Logger = logger
 	} else {
 		serverCtx.Logger = log.NewLogger(cmd.OutOrStdout())
 	}
-	
+
 	return serverCtx
 }
 
@@ -217,8 +217,8 @@ func SetCmdServerContext(cmd *cobra.Command, viper *viper.Viper, logger log.Logg
 		cmdCtx = cmd.Context()
 	}
 
-	cmd.SetContext(context.WithValue(cmdCtx, corectx.LoggerContextKey, logger))
-	cmd.SetContext(context.WithValue(cmdCtx, corectx.ViperContextKey, viper))
+	cmd.SetContext(context.WithValue(cmdCtx, corectx.LoggerContextKey{}, logger))
+	cmd.SetContext(context.WithValue(cmdCtx, corectx.ViperContextKey{}, viper))
 
 	return nil
 }

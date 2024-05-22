@@ -62,8 +62,8 @@ func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T
 
 	cmd.PreRunE = preRunETestImpl
 
-	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewLogger(os.Stdout))
-	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
+	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey{}, log.NewLogger(os.Stdout))
+	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper.New())
 	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
@@ -106,7 +106,7 @@ func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T
 	}
 
 	// Test that the config for use in server/start.go is created
-	v := ctx.Value(corectx.ViperContextKey)
+	v := ctx.Value(corectx.ViperContextKey{})
 	viper, _ := v.(*viper.Viper)
 
 	if viper == nil {
@@ -144,8 +144,8 @@ func TestInterceptConfigsPreRunHandlerReadsConfigToml(t *testing.T) {
 
 	cmd.PreRunE = preRunETestImpl
 
-	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewLogger(os.Stdout))
-	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
+	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey{}, log.NewLogger(os.Stdout))
+	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper.New())
 
 	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
@@ -184,8 +184,8 @@ func TestInterceptConfigsPreRunHandlerReadsAppToml(t *testing.T) {
 
 	cmd.PreRunE = preRunETestImpl
 
-	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewLogger(os.Stdout))
-	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
+	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey{}, log.NewLogger(os.Stdout))
+	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper.New())
 
 	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
@@ -214,8 +214,8 @@ func TestInterceptConfigsPreRunHandlerReadsFlags(t *testing.T) {
 
 	cmd.PreRunE = preRunETestImpl
 
-	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewLogger(os.Stdout))
-	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
+	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey{}, log.NewLogger(os.Stdout))
+	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper.New())
 
 	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
@@ -252,8 +252,8 @@ func TestInterceptConfigsPreRunHandlerReadsEnvVars(t *testing.T) {
 
 	cmd.PreRunE = preRunETestImpl
 
-	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewLogger(os.Stdout))
-	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
+	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey{}, log.NewLogger(os.Stdout))
+	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper.New())
 
 	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
@@ -361,8 +361,8 @@ func TestInterceptConfigsPreRunHandlerPrecedenceFlag(t *testing.T) {
 	testCommon := newPrecedenceCommon(t)
 	testCommon.setAll(t, &TestAddrExpected, &TestAddrNotExpected, &TestAddrNotExpected)
 
-	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewLogger(os.Stdout))
-	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
+	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey{}, log.NewLogger(os.Stdout))
+	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper.New())
 
 	if err := testCommon.cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
@@ -379,8 +379,8 @@ func TestInterceptConfigsPreRunHandlerPrecedenceEnvVar(t *testing.T) {
 	testCommon := newPrecedenceCommon(t)
 	testCommon.setAll(t, nil, &TestAddrExpected, &TestAddrNotExpected)
 
-	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewLogger(os.Stdout))
-	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
+	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey{}, log.NewLogger(os.Stdout))
+	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper.New())
 
 	if err := testCommon.cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
@@ -397,8 +397,8 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigFile(t *testing.T) {
 	testCommon := newPrecedenceCommon(t)
 	testCommon.setAll(t, nil, nil, &TestAddrExpected)
 
-	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewLogger(os.Stdout))
-	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
+	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey{}, log.NewLogger(os.Stdout))
+	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper.New())
 
 	if err := testCommon.cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
@@ -415,8 +415,8 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigDefault(t *testing.T) {
 	testCommon := newPrecedenceCommon(t)
 	// Do not set anything
 
-	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewLogger(os.Stdout))
-	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
+	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey{}, log.NewLogger(os.Stdout))
+	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper.New())
 
 	if err := testCommon.cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
@@ -446,8 +446,8 @@ func TestInterceptConfigsWithBadPermissions(t *testing.T) {
 
 	cmd.PreRunE = preRunETestImpl
 
-	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey, log.NewNopLogger())
-	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
+	ctx := context.WithValue(context.Background(), corectx.LoggerContextKey{}, log.NewNopLogger())
+	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper.New())
 
 	if err := cmd.ExecuteContext(ctx); !os.IsPermission(err) {
 		t.Fatalf("Failed to catch permissions error, got: [%T] %v", err, err)
@@ -464,8 +464,8 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	clientCtx := client.Context{}.WithHomeDir(tempDir).WithCodec(encCfg.Codec)
 	viper := viper.New()
 	viper.Set(flags.FlagHome, tempDir)
-	ctx := context.WithValue(context.Background(), corectx.ViperContextKey, viper)
-	ctx = context.WithValue(ctx, corectx.LoggerContextKey, log.NewLogger(os.Stdout))
+	ctx := context.WithValue(context.Background(), corectx.ViperContextKey{}, viper)
+	ctx = context.WithValue(ctx, corectx.LoggerContextKey{}, log.NewLogger(os.Stdout))
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	cmd := genutilcli.InitCmd(module.NewManager())
 	cmd.SetArgs([]string{"appnode-test"})

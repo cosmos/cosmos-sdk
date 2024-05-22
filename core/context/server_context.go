@@ -1,6 +1,6 @@
 package context
 
-var (
+type (
 	LoggerContextKey struct{}
-	ViperContextKey  struct{}
+	ViperContextKey struct{}
 )

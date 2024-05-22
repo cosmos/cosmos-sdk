@@ -43,8 +43,8 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 func CreateExecuteContext(ctx context.Context) context.Context {
 	// srvCtx := server.NewDefaultContext()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &client.Context{})
-	ctx = context.WithValue(ctx, corectx.LoggerContextKey, log.NewLogger(os.Stdout))
-	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper.New())
+	ctx = context.WithValue(ctx, corectx.LoggerContextKey{}, log.NewLogger(os.Stdout))
+	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper.New())
 
 	return ctx
 }

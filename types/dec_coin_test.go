@@ -1166,3 +1166,50 @@ func (s *decCoinTestSuite) TestDecCoin_ParseDecCoin() {
 		})
 	}
 }
+
+func (s *decCoinTestSuite) TestDecCoin_ParseDecAmount() {
+	testCases := map[string]struct {
+		input          string
+		expectedAmount string
+		expectedDenom  string
+		expectedErr    bool
+	}{
+		"Parse empty string": {"", "", "", false},
+		"Parse string which start with character different from digit, space, and letter": {"✨🌟⭐", "", "", true},
+		"Parse string started with letter":                                                {"h10", "", "h10", false},
+		"Parse string started with dot":                                                   {".atom", ".", "atom", false},
+
+		"Parse string that contain only numbers": {"10", "10", "", false},
+		"Use number for denom":                   {"10 11", "", "", true},
+		"Use invalid character '&' for denom ":   {"10f&", "", "", true},
+		"Use space between amount and denom":     {"10 atom", "10", "atom", false},
+		"Use two space between amount and denom": {"10  atom", "10", "atom", false},
+
+		"Denom start with digit": {"1 1atom", "", "", true},
+		"Denom start with '/'":   {"1 /atom", "", "", true},
+		"Denom start with ':'":   {"1 :atom", "", "", true},
+		"Denom start with '.'":   {"1 .atom", "", "", true},
+		"Denom start with '_'":   {"1 _atom", "", "", true},
+		"Denom start with '-'":   {"1 -atom", "", "", true},
+
+		"Denom contains '/'":   {"1 at/om", "1", "at/om", false},
+		"Denom contains ':'":   {"2atom:", "2", "atom:", false},
+		"Denom contains '.'":   {"3ato.m", "3", "ato.m", false},
+		"Denom contains '_'":   {"4 a_tom", "4", "a_tom", false},
+		"Denom contains '-'":   {"5 at-om", "5", "at-om", false},
+		"Denom contains space": {"5 at om", "", "", true},
+	}
+
+	for name, tc := range testCases {
+		s.T().Run(name, func(t *testing.T) {
+			actualAmount, actualDenom, err := sdk.ParseDecAmount(tc.input)
+			if tc.expectedErr {
+				s.Require().Error(err, "expected error for test case %s, input: %v", name, tc.input)
+			} else {
+				s.Require().NoError(err, "unexpected error for test case %s, input: %v", name, tc.input)
+				s.Require().Equal(tc.expectedAmount, actualAmount)
+				s.Require().Equal(tc.expectedDenom, actualDenom)
+			}
+		})
+	}
+}

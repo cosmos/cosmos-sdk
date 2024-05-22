@@ -19,6 +19,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -161,9 +162,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 
 func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 	_, app, ctx := createTestInput(t)
-	var (
-		stakingKeeper = app.StakingKeeper
-	)
+	stakingKeeper := app.StakingKeeper
 
 	liquidStakingCapStrict := sdk.ZeroDec()
 	liquidStakingCapConservative := sdk.MustNewDecFromStr("0.8")
@@ -1711,4 +1710,94 @@ func createICAAccount(ctx sdk.Context, ak accountkeeper.AccountKeeper) sdk.AccAd
 	ak.SetAccount(ctx, account)
 
 	return icaAddress
+}
+
+func TestRedelegationTokenization(t *testing.T) {
+	// Test that a delegator with ongoing redelegation cannot
+	// tokenize any shares until the redelegation is complete.
+	_, app, ctx := createTestInput(t)
+	var (
+		stakingKeeper = app.StakingKeeper
+		bankKeeper    = app.BankKeeper
+	)
+	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
+	validatorA := stakingKeeper.GetAllValidators(ctx)[0]
+	validatorAAddress := validatorA.GetOperator()
+	_, validatorBAddress := setupTestTokenizeAndRedeemConversion(t, *stakingKeeper, bankKeeper, ctx)
+
+	addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, stakingKeeper.TokensFromConsensusPower(ctx, 10000))
+	alice := addrs[0]
+
+	delegateAmount := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
+	delegateCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), delegateAmount)
+
+	// Alice delegates to validatorA
+	_, err := msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
+		DelegatorAddress: alice.String(),
+		ValidatorAddress: validatorAAddress.String(),
+		Amount:           delegateCoin,
+	})
+
+	// Alice redelegates to validatorB
+	redelegateAmount := sdk.TokensFromConsensusPower(5, sdk.DefaultPowerReduction)
+	redelegateCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), redelegateAmount)
+	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
+		DelegatorAddress:    alice.String(),
+		ValidatorSrcAddress: validatorAAddress.String(),
+		ValidatorDstAddress: validatorBAddress.String(),
+		Amount:              redelegateCoin,
+	})
+	require.NoError(t, err)
+
+	redelegation := stakingKeeper.GetRedelegations(ctx, alice, uint16(10))
+	require.Len(t, redelegation, 1, "expect one redelegation")
+	require.Len(t, redelegation[0].Entries, 1, "expect one redelegation entry")
+
+	// Alice attempts to tokenize the redelegation, but this fails because the redelegation is ongoing
+	tokenizedAmount := sdk.TokensFromConsensusPower(5, sdk.DefaultPowerReduction)
+	tokenizedCoin := sdk.NewCoin(stakingKeeper.BondDenom(ctx), tokenizedAmount)
+	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
+		DelegatorAddress:    alice.String(),
+		ValidatorAddress:    validatorBAddress.String(),
+		Amount:              tokenizedCoin,
+		TokenizedShareOwner: alice.String(),
+	})
+	require.Error(t, err)
+	require.Equal(t, types.ErrRedelegationInProgress, err)
+
+	// Check that the redelegation is still present
+	redelegation = stakingKeeper.GetRedelegations(ctx, alice, uint16(10))
+	require.Len(t, redelegation, 1, "expect one redelegation")
+	require.Len(t, redelegation[0].Entries, 1, "expect one redelegation entry")
+
+	// advance time until the redelegations should mature
+	// end block
+	staking.EndBlocker(ctx, stakingKeeper)
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	// advance by 22 days
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(22 * 24 * time.Hour))
+	// begin block
+	staking.BeginBlocker(ctx, stakingKeeper)
+	// end block
+	staking.EndBlocker(ctx, stakingKeeper)
+
+	// check that there the redelegation is removed
+	redelegation = stakingKeeper.GetRedelegations(ctx, alice, uint16(10))
+	require.Len(t, redelegation, 0, "expect no redelegations")
+
+	// Alice attempts to tokenize the redelegation again, and this time it should succeed
+	// because there is no ongoing redelegation
+	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
+		DelegatorAddress:    alice.String(),
+		ValidatorAddress:    validatorBAddress.String(),
+		Amount:              tokenizedCoin,
+		TokenizedShareOwner: alice.String(),
+	})
+	require.NoError(t, err)
+
+	// Check that the tokenization was successful
+	shareRecord, err := stakingKeeper.GetTokenizeShareRecord(ctx, stakingKeeper.GetLastTokenizeShareRecordID(ctx))
+	require.NoError(t, err, "expect to find token share record")
+	require.Equal(t, alice.String(), shareRecord.Owner)
+	require.Equal(t, validatorBAddress.String(), shareRecord.Validator)
 }

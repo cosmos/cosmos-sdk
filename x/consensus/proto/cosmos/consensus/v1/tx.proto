@@ -20,12 +20,6 @@ service Msg {
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse) {
     option (cosmos_proto.method_added_in) = "cosmos-sdk 0.47";
   }
-
-  // UpdateCometInfo defines a governance operation for updating the x/consensus module's comet info.
-  // The authority is defined in the keeper.
-  rpc UpdateCometInfo(MsgUpdateCometInfo) returns (MsgUpdateCometInfoResponse) {
-    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.52";
-  }
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -62,18 +56,3 @@ message CometInfo {
   bytes                                 proposer_address = 3;
   cometbft.abci.v1.CommitInfo           last_commit      = 4 [(gogoproto.nullable) = false];
 }
-
-// MsgUpdateCometInfo is the Msg/UpdateCometInfo request type.
-message MsgUpdateCometInfo {
-  option (cosmos.msg.v1.signer) = "authority";
-  option (amino.name)           = "cosmos-sdk/x/consensus/MsgCometInfo";
-
-  // authority is the address that controls the module (defaults to x/gov unless overwritten).
-  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-
-  CometInfo comet_info = 2;
-}
-
-// MsgUpdateCometInfoResponse defines the response structure for executing a
-// MsgUpdateCometInfo message.
-message MsgUpdateCometInfoResponse {}

@@ -110,17 +110,6 @@ func (k Keeper) SetParams(ctx context.Context, req *types.ConsensusMsgParams) (*
 	return &types.ConsensusMsgParamsResponse{}, nil
 }
 
-// UpdateCometInfo implements types.MsgServer.
-func (k Keeper) UpdateCometInfo(ctx context.Context, req *types.MsgUpdateCometInfo) (*types.MsgUpdateCometInfoResponse, error) {
-	if k.GetAuthority() != req.Authority {
-		return nil, fmt.Errorf("invalid signer; expected %s, got %s", k.GetAuthority(), req.Authority)
-	}
-
-	err := k.cometInfo.Set(ctx, *req.CometInfo)
-
-	return &types.MsgUpdateCometInfoResponse{}, err
-}
-
 func (k Keeper) GetCometInfo(ctx context.Context) (*comet.Info, error) {
 	ci, err := k.cometInfo.Get(ctx)
 	if err != nil {

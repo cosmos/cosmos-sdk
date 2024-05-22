@@ -79,13 +79,16 @@ type suite struct {
 }
 
 func createTestSuite(t testing.TB, genesisAccounts []authtypes.GenesisAccount) suite {
-	t.Helper()
-	res := suite{}
-
 	var genAccounts []simtestutil.GenesisAccount
 	for _, acc := range genesisAccounts {
 		genAccounts = append(genAccounts, simtestutil.GenesisAccount{GenesisAccount: acc})
 	}
+	return createTestSuiteX(t, genAccounts)
+}
+
+func createTestSuiteX(t testing.TB, genAccounts []simtestutil.GenesisAccount) suite {
+	t.Helper()
+	res := suite{}
 
 	startupCfg := simtestutil.DefaultStartUpConfig()
 	startupCfg.GenesisAccounts = genAccounts

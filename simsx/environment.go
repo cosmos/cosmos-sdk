@@ -65,7 +65,7 @@ func (b *SimsAccountBalance) RandSubsetCoins(reporter SimulationReporter, filter
 	amount := b.randomAmount(5, reporter, b.Coins, filters...)
 
 	b.Coins = b.Coins.Sub(amount...)
-	if !amount.Empty() {
+	if amount.Empty() {
 		reporter.Skip("got empty amounts")
 	}
 	return amount
@@ -75,13 +75,14 @@ func (b *SimsAccountBalance) RandSubsetCoin(reporter SimulationReporter, denom s
 	ok, coin := b.Find(denom)
 	if !ok {
 		reporter.Skipf("no such coin: %s", denom)
-		return sdk.Coin{}
+		return sdk.NewCoin(denom, math.ZeroInt())
 	}
-	amount := b.randomAmount(5, reporter, sdk.NewCoins(coin), filters...)
+	amount := b.randomAmount(5, reporter, sdk.Coins{coin}, filters...)
 	b.Coins = b.Coins.Sub(amount...)
-	_, coin = amount.Find(denom)
-	if !coin.IsPositive() {
+	ok, coin = amount.Find(denom)
+	if !ok || !coin.IsPositive() {
 		reporter.Skip("empty coin")
+		return sdk.NewCoin(denom, math.ZeroInt())
 	}
 	return coin
 }

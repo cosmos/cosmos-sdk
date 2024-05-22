@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -18,6 +19,7 @@ type ReportResult struct {
 
 type SimulationReporter interface {
 	WithScope(msg sdk.Msg) SimulationReporter
+	WithT(t testing.TB) SimulationReporter
 	Skip(comment string)
 	Skipf(comment string, args ...any)
 	IsSkipped() bool
@@ -42,6 +44,7 @@ const (
 )
 
 type BasicSimulationReporter struct {
+	t          testing.TB
 	module     string
 	msgTypeURL string
 	error      error
@@ -50,14 +53,31 @@ type BasicSimulationReporter struct {
 	msgProtoBz []byte
 }
 
+func NewBasicSimulationReporter(t testing.TB) *BasicSimulationReporter {
+	return &BasicSimulationReporter{t: t}
+}
+
 func (x BasicSimulationReporter) WithScope(msg sdk.Msg) SimulationReporter {
 	typeURL := sdk.MsgTypeURL(msg)
 	return &BasicSimulationReporter{
-		module:     sdk.GetModuleNameFromTypeURL(typeURL),
+		t:          x.t,
 		error:      x.error,
 		status:     x.status,
 		msgProtoBz: x.msgProtoBz,
 		msgTypeURL: typeURL,
+		module:     sdk.GetModuleNameFromTypeURL(typeURL),
+		comments:   slices.Clone(x.comments),
+	}
+}
+
+func (x BasicSimulationReporter) WithT(t testing.TB) SimulationReporter {
+	return &BasicSimulationReporter{
+		t:          t,
+		error:      x.error,
+		status:     x.status,
+		msgProtoBz: x.msgProtoBz,
+		msgTypeURL: x.msgTypeURL,
+		module:     x.module,
 		comments:   slices.Clone(x.comments),
 	}
 }
@@ -114,6 +134,9 @@ func (x *BasicSimulationReporter) toStatus(next ReporterStatus, comments ...stri
 	}
 	x.status = next
 	x.comments = append(x.comments, comments...)
+	if x.t != nil && x.status == skipped {
+		x.t.Skip(x.Comment())
+	}
 }
 
 func (x BasicSimulationReporter) Comment() string {

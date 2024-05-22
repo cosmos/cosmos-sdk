@@ -1,7 +1,6 @@
 package simulation_test
 
 import (
-	"fmt"
 	"math/big"
 	"math/rand"
 	"testing"
@@ -127,13 +126,12 @@ func (s *SimTestSuite) SetupTest() {
 // TestWeightedOperations tests the weights of the operations.
 func (s *SimTestSuite) TestWeightedOperations() {
 	require := s.Require()
-
 	s.ctx.WithChainID("test-chain")
 
 	cdc := s.encCfg.Codec
 	appParams := make(simtypes.AppParams)
 
-	weightedOps := simulation.WeightedOperations(appParams, cdc, s.txConfig, s.accountKeeper,
+	weightedOps := simulation.WeightedOperations(nil, appParams, cdc, s.txConfig, s.accountKeeper,
 		s.bankKeeper, s.stakingKeeper,
 	)
 
@@ -152,17 +150,15 @@ func (s *SimTestSuite) TestWeightedOperations() {
 	}
 
 	for i, w := range weightedOps {
-		s.T().Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
-			operationMsg, _, _ := w.Op()(s.r, s.app.BaseApp, s.ctx, s.accounts, s.ctx.ChainID())
-			// require.NoError(t, err) // TODO check if it should be NoError
+		operationMsg, _, _ := w.Op()(s.r, s.app.BaseApp, s.ctx, s.accounts, s.ctx.ChainID())
+		// require.NoError(t, err) // TODO check if it should be NoError
 
-			// the following checks are very much dependent from the ordering of the output given
-			// by WeightedOperations. if the ordering in WeightedOperations changes some tests
-			// will fail
-			require.Equal(expected[i].weight, w.Weight(), "weight should be the same")
-			require.Equal(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
-			require.Equal(expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
-		})
+		// the following checks are very much dependent from the ordering of the output given
+		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
+		// will fail
+		require.Equal(expected[i].weight, w.Weight(), "weight should be the same")
+		require.Equal(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
+		require.Equal(expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
 	}
 }
 

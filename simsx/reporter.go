@@ -119,9 +119,9 @@ func (x *BasicSimulationReporter) toStatus(next ReporterStatus, comments ...stri
 	if x.status > next {
 		panic(fmt.Sprintf("can not switch from status %d to %d", x.status, next))
 	}
-	x.status = next
 	x.comments = append(x.comments, comments...)
-	if x.t != nil && x.status == skipped {
+	x.status = next
+	if x.t != nil && !x.t.Skipped() && x.status == skipped {
 		x.t.Skip(x.Comment())
 	}
 }

@@ -116,7 +116,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		t.Log("importing genesis...\n")
 		newTestInstance := NewSimulationAppInstance(t, ti.Cfg, NewSimApp)
 		newApp := newTestInstance.App
-		_, err = newApp.InitChain(&abci.RequestInitChain{
+		_, err = newApp.InitChain(&abci.InitChainRequest{
 			AppStateBytes: exported.AppState,
 			ChainId:       SimAppChainID,
 		})

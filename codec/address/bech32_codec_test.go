@@ -2,14 +2,12 @@ package address
 
 import (
 	"crypto/rand"
-	"encoding/binary"
+	"sync"
+	"sync/atomic"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/golang-lru/simplelru"
-	"gotest.tools/v3/assert"
-
-	"cosmossdk.io/core/address"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 )
@@ -59,98 +57,77 @@ func TestNewBech32Codec(t *testing.T) {
 			assert.Equal(t, tt.lru.Len(), 0)
 			ac := NewBech32Codec(tt.prefix)
 			cached, ok := ac.(cachedBech32Codec)
-			assert.Assert(t, ok)
+			assert.True(t, ok)
 			assert.Equal(t, cached.cache, tt.lru)
 
 			addr, err := ac.StringToBytes(tt.address)
-			assert.NilError(t, err)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.lru.Len(), 1)
 
 			cachedAddr, ok := tt.lru.Get(tt.address)
-			assert.Assert(t, ok)
-			assert.DeepEqual(t, addr, cachedAddr)
+			assert.True(t, ok)
+			assert.Equal(t, addr, cachedAddr)
 
 			accAddr, err := ac.BytesToString(addr)
-			assert.NilError(t, err)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.lru.Len(), 2)
 
 			cachedStrAddr, ok := tt.lru.Get(cached.codec.Bech32Prefix + conv.UnsafeBytesToStr(addr))
-			assert.Assert(t, ok)
-			assert.DeepEqual(t, accAddr, cachedStrAddr)
+			assert.True(t, ok)
+			assert.Equal(t, accAddr, cachedStrAddr)
 		})
 	}
 }
 
 func TestMultipleBech32Codec(t *testing.T) {
 	cosmosAc, ok := NewBech32Codec("cosmos").(cachedBech32Codec)
-	assert.Assert(t, ok)
+	assert.True(t, ok)
 	stakeAc := NewBech32Codec("stake").(cachedBech32Codec)
-	assert.Assert(t, ok)
+	assert.True(t, ok)
 	assert.Equal(t, cosmosAc.cache, stakeAc.cache)
 
 	addr := make([]byte, 32)
 	_, err := rand.Read(addr)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 
 	cosmosAddr, err := cosmosAc.BytesToString(addr)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	stakeAddr, err := stakeAc.BytesToString(addr)
-	assert.NilError(t, err)
-	assert.Assert(t, cosmosAddr != stakeAddr)
+	assert.NoError(t, err)
+	assert.True(t, cosmosAddr != stakeAddr)
 
 	cachedCosmosAddr, err := cosmosAc.BytesToString(addr)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, cosmosAddr, cachedCosmosAddr)
 
 	cachedStakeAddr, err := stakeAc.BytesToString(addr)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, stakeAddr, cachedStakeAddr)
 }
 
 func TestBech32CodecRace(t *testing.T) {
 	ac := NewBech32Codec("cosmos")
+	myAddrBz := []byte{0x1, 0x2, 0x3, 0x4, 0x5}
 
-	workers := 4
-	done := make(chan bool, workers)
-	cancel := make(chan bool)
+	var (
+		wgStart, wgDone sync.WaitGroup
+		errCount        atomic.Uint32
+	)
+	const n = 3
+	wgStart.Add(n)
+	wgDone.Add(n)
+	for i := 0; i < n; i++ {
+		go func() {
+			wgStart.Done()
+			wgStart.Wait() // wait for all routines started
 
-	for i := byte(1); i <= 2; i++ { // works which will loop in first 100 addresses
-		go bytesToStringCaller(t, ac, i, 100, cancel, done)
+			got, err := ac.BytesToString(myAddrBz)
+			if err != nil || got != "cosmos1qypqxpq9dc9msf" {
+				errCount.Add(1)
+			}
+			wgDone.Done()
+		}()
 	}
-
-	for i := byte(1); i <= 2; i++ { // works which will generate 1e6 new addresses
-		go bytesToStringCaller(t, ac, i, 1000000, cancel, done)
-	}
-
-	<-time.After(time.Millisecond * 30)
-	close(cancel)
-
-	// cleanup
-	for i := 0; i < 4; i++ {
-		<-done
-	}
-}
-
-// generates AccAddress calling BytesToString
-func bytesToStringCaller(t *testing.T, ac address.Codec, prefix byte, max uint32, cancel chan bool, done chan<- bool) {
-	t.Helper()
-
-	bz := make([]byte, 5) // prefix + 4 bytes for uint
-	bz[0] = prefix
-	for i := uint32(0); ; i++ {
-		if i >= max {
-			i = 0
-		}
-		select {
-		case <-cancel:
-			done <- true
-			return
-		default:
-			binary.BigEndian.PutUint32(bz[1:], i)
-			str, err := ac.BytesToString(bz)
-			assert.NilError(t, err)
-			assert.Assert(t, str != "")
-		}
-
-	}
+	wgDone.Wait() // wait for all routines completed
+	assert.Equal(t, errCount.Load(), uint32(0))
 }

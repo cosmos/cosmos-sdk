@@ -71,5 +71,5 @@ var (
 	ErrValidatorLiquidSharesUnderflow           = sdkerrors.Register(ModuleName, 117, "validator liquid shares underflow")
 	ErrTotalLiquidStakedUnderflow               = sdkerrors.Register(ModuleName, 118, "total liquid staked underflow")
 	ErrTinyRedemptionAmount                     = sdkerrors.Register(ModuleName, 119, "too few tokens to redeem (truncates to zero tokens)")
-	ErrRedelegationInProgress                   = sdkerrors.Register(ModuleName, 120, "delegator is not allowed to tokenize shares from validator with ongoing redelegation")
+	ErrRedelegationInProgress                   = sdkerrors.Register(ModuleName, 120, "delegator is not allowed to tokenize shares from validator with a redelegation in progress")
 )

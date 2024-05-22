@@ -111,7 +111,7 @@ func init() {
 func AppConfig() depinject.Config {
 	return depinject.Configs(
 		appConfig, // Alternatively use appconfig.LoadYAML(AppConfigYAML)
-		depinject.Provide(ProvideMintFn),
+		depinject.Provide(ProvideExampleMintFn),
 	)
 }
 
@@ -174,8 +174,7 @@ func NewSimApp(
 				//
 
 				// For providing a custom inflation function for x/mint add here your
-				// custom function that implements the minttypes.InflationCalculationFn
-				// interface.
+				// custom function that implements the minttypes.MintFn interface.
 			),
 		)
 	)

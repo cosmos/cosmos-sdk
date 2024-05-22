@@ -104,7 +104,7 @@ func (k Keeper) AddCollectedFees(ctx context.Context, fees sdk.Coins) error {
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
 }
 
-func (k Keeper) DefaultMintFn(ctx context.Context, env appmodule.Environment, minter *types.Minter) error {
+func (k Keeper) DefaultMintFn(ctx context.Context, env appmodule.Environment, minter *types.Minter, epochNumber int64) error {
 	stakingTokenSupply, err := k.StakingTokenSupply(ctx)
 	if err != nil {
 		return err

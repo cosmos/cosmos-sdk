@@ -15,10 +15,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// ProvideMintFn returns the function used in x/mint's endblocker to mint new tokens.
+// ProvideExampleMintFn returns the function used in x/mint's endblocker to mint new tokens.
 // Note that this function can not have the mint keeper as a parameter because it would create a cyclic dependency.
-func ProvideMintFn(bankKeeper bankkeeper.Keeper) minttypes.MintFn {
-	return func(ctx context.Context, env appmodule.Environment, minter *minttypes.Minter) error {
+func ProvideExampleMintFn(bankKeeper bankkeeper.Keeper) minttypes.MintFn {
+	return func(ctx context.Context, env appmodule.Environment, minter *minttypes.Minter, epochNumber int64) error {
+		// in this example we ignore epochNumber as we don't care what epoch we are in, we just assume we are being called every hour.
+
 		var stakingParams stakingtypes.QueryParamsResponse
 		err := env.RouterService.QueryRouterService().InvokeTyped(ctx, &stakingtypes.QueryParamsRequest{}, &stakingParams)
 		if err != nil {
@@ -48,9 +50,10 @@ func ProvideMintFn(bankKeeper bankkeeper.Keeper) minttypes.MintFn {
 		bondedRatio := math.LegacyNewDecFromInt(stakingPool.Pool.BondedTokens).QuoInt(stakingTokenSupply.Amount)
 		minter.Inflation = minter.NextInflationRate(mintParams.Params, bondedRatio)
 		minter.AnnualProvisions = minter.NextAnnualProvisions(mintParams.Params, stakingTokenSupply.Amount)
-		// TODO: store minter afterwards
 
-		mintedCoin := minter.BlockProvision(mintParams.Params)
+		// because we are minting every hour, we need to divide the annual provisions by 365/24 (approx 15.2083)
+		provisionAmt := minter.AnnualProvisions.QuoTruncate(math.LegacyNewDecWithPrec(152083, 4))
+		mintedCoin := sdk.NewCoin(mintParams.Params.MintDenom, provisionAmt.TruncateInt())
 		mintedCoins := sdk.NewCoins(mintedCoin)
 		maxSupply := mintParams.Params.MaxSupply
 		totalSupply := stakingTokenSupply.Amount

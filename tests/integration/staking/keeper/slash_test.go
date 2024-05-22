@@ -59,8 +59,9 @@ func bootstrapSlashTest(t *testing.T, power int64) (*fixture, []sdk.AccAddress, 
 func TestSlashUnbondingDelegation(t *testing.T) {
 	f, addrDels, addrVals := bootstrapSlashTest(t, 10)
 
-	fraction := math.LegacyNewDecWithPrec(5, 1)
+	fraction := math.LegacyNewDecWithPrec(152083, 4)
 
+	panic(fraction.String())
 	// set an unbonding delegation with expiration timestamp (beyond which the
 	// unbonding delegation shouldn't be slashed)
 	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 0,

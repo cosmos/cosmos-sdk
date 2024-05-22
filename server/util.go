@@ -200,7 +200,7 @@ func GetServerContextFromCmd(cmd *cobra.Command) *LegacyContext {
 		logger := v.(log.Logger)
 		serverCtx.Logger = logger
 	} else {
-		serverCtx.Logger = log.NewLogger(os.Stdout)
+		serverCtx.Logger = log.NewLogger(cmd.OutOrStdout())
 	}
 	
 	return serverCtx

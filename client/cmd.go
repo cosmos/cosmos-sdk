@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"os"
 	"slices"
 	"strings"
 
@@ -401,7 +400,7 @@ func GetLoggerFromCmd(cmd *cobra.Command) log.Logger {
 	v := cmd.Context().Value(corectx.LoggerContextKey)
 	logger, ok := v.(log.Logger)
 	if !ok {
-		return log.NewLogger(os.Stdout)
+		return log.NewLogger(cmd.OutOrStdout())
 	}
 	return logger
 }

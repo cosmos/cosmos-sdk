@@ -130,11 +130,13 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(banktypes.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
+	tkey := storetypes.NewTransientStoreKey(banktypes.TStoreKey)
+	testCtx := testutil.DefaultContextWithDB(suite.T(), key, tkey)
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
 	storeService := runtime.NewKVStoreService(key)
+	tStoreService := runtime.NewTransientKVStoreService(tkey)
 
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
@@ -145,6 +147,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.bankKeeper = keeper.NewBaseKeeper(
 		encCfg.Codec,
 		storeService,
+		tStoreService,
 		suite.authKeeper,
 		map[string]bool{accAddrs[4].String(): true},
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -312,10 +315,13 @@ func (suite *KeeperTestSuite) TestPrependSendRestriction() {
 
 func (suite *KeeperTestSuite) TestGetAuthority() {
 	storeService := runtime.NewKVStoreService(storetypes.NewKVStoreKey(banktypes.StoreKey))
+	tkey := storetypes.NewTransientStoreKey(banktypes.TStoreKey)
+	tStoreService := runtime.NewTransientKVStoreService(tkey)
 	NewKeeperWithAuthority := func(authority string) keeper.BaseKeeper {
 		return keeper.NewBaseKeeper(
 			moduletestutil.MakeTestEncodingConfig().Codec,
 			storeService,
+			tStoreService,
 			suite.authKeeper,
 			nil,
 			authority,

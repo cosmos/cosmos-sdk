@@ -786,7 +786,7 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 		return resp
 	}
 
-	ctx := app.checkState.Context()
+	ctx := app.finalizeBlockState.Context()
 	app.AddStreamEvents(ctx.BlockHeight(), ctx.BlockTime(), result.Events, false)
 
 	resp = &abci.ExecTxResult{

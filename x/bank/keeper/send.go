@@ -153,14 +153,14 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		return err
 	}
 
-	var outAddress sdk.AccAddress
-	for _, out := range outputs {
-		outAddress, err = k.ak.AddressCodec().StringToBytes(out.Address)
+	outAddresses := make([]sdk.AccAddress, len(outputs))
+	for i, out := range outputs {
+		outAddress, err := k.ak.AddressCodec().StringToBytes(out.Address)
 		if err != nil {
 			return err
 		}
 
-		outAddress, err = k.sendRestriction.apply(ctx, inAddress, outAddress, out.Coins)
+		outAddresses[i], err = k.sendRestriction.apply(ctx, inAddress, outAddress, out.Coins)
 		if err != nil {
 			return err
 		}
@@ -179,20 +179,15 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		),
 	)
 
-	for _, out := range outputs {
-		outAddress, err = k.ak.AddressCodec().StringToBytes(out.Address)
-		if err != nil {
-			return err
-		}
-
-		if err := k.addCoins(ctx, outAddress, out.Coins); err != nil {
+	for i, out := range outputs {
+		if err := k.addCoins(ctx, outAddresses[i], out.Coins); err != nil {
 			return err
 		}
 
 		sdkCtx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeTransfer,
-				sdk.NewAttribute(types.AttributeKeyRecipient, outAddress.String()),
+				sdk.NewAttribute(types.AttributeKeyRecipient, outAddresses[i].String()),
 				sdk.NewAttribute(types.AttributeKeySender, input.Address),
 				sdk.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
 			),
@@ -202,10 +197,10 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		//
 		// NOTE: This should ultimately be removed in favor a more flexible approach
 		// such as delegated fee messages.
-		accExists := k.ak.HasAccount(ctx, outAddress)
+		accExists := k.ak.HasAccount(ctx, outAddresses[i])
 		if !accExists {
 			defer telemetry.IncrCounter(1, "new", "account")
-			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, outAddress))
+			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, outAddresses[i]))
 		}
 	}
 

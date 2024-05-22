@@ -304,7 +304,7 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sd
 	if sig.Sequence != acc.GetSequence() {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrWrongSequence,
-			"account sequence mismatch, expected %d, got %d for pubkey %s acc address %s ", acc.GetSequence(), sig.Sequence, sig.PubKey.String(), acc.GetAddress().String(),
+			"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
 		)
 	}
 

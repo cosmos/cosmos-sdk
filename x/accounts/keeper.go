@@ -118,6 +118,12 @@ func (k Keeper) NextAccountNumber(
 	return accNum, nil
 }
 
+// only use to migrate account number
+func (k Keeper) SetAccountNumber(ctx context.Context, accNum uint64) error {
+	err := k.AccountNumber.Set(ctx, accNum)
+	return err
+}
+
 // Init creates a new account of the given type.
 func (k Keeper) Init(
 	ctx context.Context,

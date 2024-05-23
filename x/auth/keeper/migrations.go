@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	v5 "cosmossdk.io/x/auth/migrations/v5"
 	v6 "cosmossdk.io/x/auth/migrations/v6"
@@ -54,27 +53,12 @@ func (m Migrator) Migrate5To6(ctx context.Context) error {
 }
 
 func (m Migrator) v56SetAccounts(ctx context.Context) error {
-	err := m.keeper.Accounts.Walk(ctx, nil, func(key sdk.AccAddress, value sdk.AccountI) (stop bool, err error) {
-		baseAccount, ok := value.(*types.BaseAccount)
-		if !ok {
-			return true, fmt.Errorf("failed to get base account from value with key %s", key)
-		}
+	currentAccNum, err := m.keeper.AccountNumber.Peek(ctx)
+	if err != nil {
+		return err
+	}
 
-		nextAccNum, err := m.keeper.AccountsModKeeper.NextAccountNumber(ctx)
-		if err != nil {
-			return true, err
-		}
-
-		err = baseAccount.SetAccountNumber(nextAccNum)
-		if err != nil {
-			return true, err
-		}
-		m.keeper.SetAccount(ctx, baseAccount)
-
-		return false, nil
-	})
-
-	return err
+	return m.keeper.AccountsModKeeper.SetAccountNumber(ctx, currentAccNum)
 }
 
 // V45SetAccount implements V45_SetAccount

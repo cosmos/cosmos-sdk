@@ -99,8 +99,7 @@ type AccountKeeper struct {
 	// State
 	Schema collections.Schema
 	Params collections.Item[types.Params]
-	// Deprecated: switching to x/accounts account number instead
-	//
+
 	// Only use for migration
 	AccountNumber collections.Sequence
 	// Accounts key: AccAddr | value: AccountI | index: AccountsIndex

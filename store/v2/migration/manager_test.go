@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"golang.org/x/sync/errgroup"
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
@@ -110,5 +111,125 @@ func TestMigrateState(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestMigrateStateAndSnapshot(t *testing.T) {
+	m, orgCommitStore := setupMigrationManager(t, false)
+
+	// apply changeset
+	toVersion := uint64(100)
+	keyCount := 10
+	for version := uint64(1); version <= toVersion; version++ {
+		cs := corestore.NewChangeset()
+		for _, storeKey := range storeKeys {
+			for i := 0; i < keyCount; i++ {
+				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
+			}
+		}
+		require.NoError(t, orgCommitStore.WriteBatch(cs))
+		_, err := orgCommitStore.Commit(version)
+		require.NoError(t, err)
+	}
+
+	// create a snapshot
+	_, err := m.snapshotsManager.Create(toVersion - 1)
+	require.NoError(t, err)
+
+	err = m.Migrate(toVersion - 1)
+	require.NoError(t, err)
+
+	// check the migrated state
+	for version := uint64(1); version < toVersion; version++ {
+		for _, storeKey := range storeKeys {
+			for i := 0; i < keyCount; i++ {
+				val, err := m.stateCommitment.Get([]byte(storeKey), toVersion-1, []byte(fmt.Sprintf("key-%d-%d", version, i)))
+				require.NoError(t, err)
+				require.Equal(t, []byte(fmt.Sprintf("value-%d-%d", version, i)), val)
+			}
+		}
+	}
+	// check the latest state
+	val, err := m.stateCommitment.Get([]byte("store1"), toVersion-1, []byte("key-100-1"))
+	require.NoError(t, err)
+	require.Nil(t, val)
+	val, err = m.stateCommitment.Get([]byte("store2"), toVersion-1, []byte("key-100-0"))
+	require.NoError(t, err)
+	require.Nil(t, val)
+
+	// check the storage
+	for version := uint64(1); version < toVersion; version++ {
+		for _, storeKey := range storeKeys {
+			for i := 0; i < keyCount; i++ {
+				val, err := m.stateStorage.Get([]byte(storeKey), toVersion-1, []byte(fmt.Sprintf("key-%d-%d", version, i)))
+				require.NoError(t, err)
+				require.Equal(t, []byte(fmt.Sprintf("value-%d-%d", version, i)), val)
+			}
+		}
+	}
+}
+
+func TestMigrateStateAndSnapshot_Parallel(t *testing.T) {
+	m, orgCommitStore := setupMigrationManager(t, false)
+
+	// apply changeset
+	toVersion := uint64(100)
+	keyCount := 10
+	for version := uint64(1); version <= toVersion; version++ {
+		cs := corestore.NewChangeset()
+		for _, storeKey := range storeKeys {
+			for i := 0; i < keyCount; i++ {
+				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
+			}
+		}
+		require.NoError(t, orgCommitStore.WriteBatch(cs))
+		_, err := orgCommitStore.Commit(version)
+		require.NoError(t, err)
+	}
+
+	eg := new(errgroup.Group)
+	eg.Go(func() error {
+		// create a snapshot
+		_, err := m.snapshotsManager.Create(toVersion - 1)
+		return err
+	})
+
+	eg.Go(func() error {
+		// create a migration
+		err := m.Migrate(toVersion - 1)
+		return err
+	})
+
+	// error when there is a conflict between operations
+	err := eg.Wait()
+	require.Error(t, err)
+
+	// check the migrated state
+	for version := uint64(1); version < toVersion; version++ {
+		for _, storeKey := range storeKeys {
+			for i := 0; i < keyCount; i++ {
+				val, err := m.stateCommitment.Get([]byte(storeKey), toVersion-1, []byte(fmt.Sprintf("key-%d-%d", version, i)))
+				require.NoError(t, err)
+				require.Equal(t, []byte(fmt.Sprintf("value-%d-%d", version, i)), val)
+			}
+		}
+	}
+	// check the latest state
+	val, err := m.stateCommitment.Get([]byte("store1"), toVersion-1, []byte("key-100-1"))
+	require.NoError(t, err)
+	require.Nil(t, val)
+	val, err = m.stateCommitment.Get([]byte("store2"), toVersion-1, []byte("key-100-0"))
+	require.NoError(t, err)
+	require.Nil(t, val)
+
+	// check the storage
+	for version := uint64(1); version < toVersion; version++ {
+		for _, storeKey := range storeKeys {
+			for i := 0; i < keyCount; i++ {
+				val, err := m.stateStorage.Get([]byte(storeKey), toVersion-1, []byte(fmt.Sprintf("key-%d-%d", version, i)))
+				require.NoError(t, err)
+				require.Equal(t, []byte(fmt.Sprintf("value-%d-%d", version, i)), val)
+			}
+		}
 	}
 }

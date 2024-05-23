@@ -254,3 +254,43 @@ func TestManager_TakeError(t *testing.T) {
 	_, err = manager.Create(1)
 	require.Error(t, err)
 }
+
+func TestSnapshot_Take_Restore(t *testing.T) {
+	store := setupStore(t)
+	items := [][]byte{
+		{1, 2, 3},
+		{4, 5, 6},
+		{7, 8, 9},
+	}
+	commitSnapshotter := &mockCommitSnapshotter{
+		items: items,
+	}
+	extSnapshotter := newExtSnapshotter(10)
+
+	expectChunks := snapshotItems(items, extSnapshotter)
+	manager := snapshots.NewManager(store, opts, commitSnapshotter, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
+	err := manager.RegisterExtensions(extSnapshotter)
+	require.NoError(t, err)
+
+	// creating a snapshot at a higher height should be fine, and should return it
+	snapshot, err := manager.Create(5)
+	require.NoError(t, err)
+
+	assert.Equal(t, &types.Snapshot{
+		Height: 5,
+		Format: commitSnapshotter.SnapshotFormat(),
+		Chunks: 1,
+		Hash:   []uint8{0xc5, 0xf7, 0xfe, 0xea, 0xd3, 0x4d, 0x3e, 0x87, 0xff, 0x41, 0xa2, 0x27, 0xfa, 0xcb, 0x38, 0x17, 0xa, 0x5, 0xeb, 0x27, 0x4e, 0x16, 0x5e, 0xf3, 0xb2, 0x8b, 0x47, 0xd1, 0xe6, 0x94, 0x7e, 0x8b},
+		Metadata: types.Metadata{
+			ChunkHashes: checksums(expectChunks),
+		},
+	}, snapshot)
+
+	storeSnapshot, chunks, err := store.Load(snapshot.Height, snapshot.Format)
+	require.NoError(t, err)
+	assert.Equal(t, snapshot, storeSnapshot)
+	assert.Equal(t, expectChunks, readChunks(chunks))
+
+	err = manager.Restore(*snapshot)
+	require.NoError(t, err)
+}

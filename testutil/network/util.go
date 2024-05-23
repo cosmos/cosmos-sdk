@@ -171,7 +171,7 @@ func collectGenFiles(cfg Config, vals []*Validator, cmtConfigs []*cmtcfg.Config,
 		}
 
 		v := vals[i].GetViper()
-		err = genutiltest.TrackConfig(v, nodeDir)
+		err = genutiltest.TrackCometConfig(v, nodeDir)
 		if err != nil {
 			return err
 		}

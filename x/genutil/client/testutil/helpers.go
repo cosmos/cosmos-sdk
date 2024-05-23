@@ -24,7 +24,7 @@ func ExecInitCmd(mm *module.Manager, home string, cdc codec.Codec) error {
 	viper := viper.New()
 	cmd := genutilcli.InitCmd(mm)
 	cfg, _ := CreateDefaultCometConfig(home)
-	err := WriteAndTrackConfig(viper, home, cfg)
+	err := WriteAndTrackCometConfig(viper, home, cfg)
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func CreateDefaultCometConfig(rootDir string) (*cmtcfg.Config, error) {
 	return conf, nil
 }
 
-func WriteAndTrackConfig(v *viper.Viper, home string, cfg *cmtcfg.Config) error {
+func WriteAndTrackCometConfig(v *viper.Viper, home string, cfg *cmtcfg.Config) error {
 	cmtcfg.WriteConfigFile(filepath.Join(home, "config", "config.toml"), cfg)
 
 	v.Set(flags.FlagHome, home)
@@ -65,7 +65,7 @@ func WriteAndTrackConfig(v *viper.Viper, home string, cfg *cmtcfg.Config) error 
 	return v.ReadInConfig()
 }
 
-func TrackConfig(v *viper.Viper, home string) error {
+func TrackCometConfig(v *viper.Viper, home string) error {
 	v.Set(flags.FlagHome, home)
 	v.SetConfigType("toml")
 	v.SetConfigName("config")

@@ -58,7 +58,7 @@ func Test_TestnetCmd(t *testing.T) {
 	err = genutiltest.ExecInitCmd(moduleManager, home, encodingConfig.Codec)
 	require.NoError(t, err)
 
-	err = genutiltest.WriteAndTrackConfig(viper, home, cfg)
+	err = genutiltest.WriteAndTrackCometConfig(viper, home, cfg)
 	require.NoError(t, err)
 	clientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).

@@ -175,7 +175,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	assert.NilError(t, err)
 
 	viper := viper.New()
-	err = gentestutil.WriteAndTrackConfig(viper, tempDir, cmtcfg.DefaultConfig())
+	err = gentestutil.WriteAndTrackCometConfig(viper, tempDir, cmtcfg.DefaultConfig())
 	assert.NilError(t, err)
 
 	clientCtx := client.Context{}.WithCodec(app.AppCodec())

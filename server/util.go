@@ -231,8 +231,6 @@ func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
 
 	cmd.SetContext(cmdCtx)
 
-	fmt.Println("After set", serverCtx.Viper.GetString(flags.FlagHome))
-
 	return nil
 }
 
@@ -243,7 +241,6 @@ func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
 // viperCfg object.
 func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customConfig interface{}, cmtConfig *cmtcfg.Config) (*cmtcfg.Config, error) {
 	rootDir := rootViper.GetString(flags.FlagHome)
-	fmt.Println("Init root", rootDir)
 	configPath := filepath.Join(rootDir, "config")
 	cmtCfgFile := filepath.Join(configPath, "config.toml")
 

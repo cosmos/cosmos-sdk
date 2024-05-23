@@ -388,5 +388,5 @@ func writeAndTrackDefaultConfig(v *viper.Viper, home string) error {
 	if err != nil {
 		return err
 	}
-	return genutiltest.WriteAndTrackConfig(v, home, cfg)
+	return genutiltest.WriteAndTrackCometConfig(v, home, cfg)
 }

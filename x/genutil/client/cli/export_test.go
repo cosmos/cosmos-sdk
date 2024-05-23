@@ -38,7 +38,6 @@ type ExportSystem struct {
 
 	Viper  *viper.Viper
 	Logger log.Logger
-	Cctx   client.Context
 
 	HomeDir string
 }
@@ -84,7 +83,6 @@ func NewExportSystem(t *testing.T, exporter types.AppExporter) *ExportSystem {
 		Ctx:     ctx,
 		Viper:   viper,
 		Logger:  logger,
-		Cctx:    cCtx,
 		HomeDir: homeDir,
 	}
 }

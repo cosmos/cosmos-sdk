@@ -41,8 +41,8 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-// Keep Context type as LegacyContext
-type LegacyContext struct {
+// Deprecated: Do not use, we use viper to track all config
+type Context struct {
 	Viper  *viper.Viper
 	Logger log.Logger
 	Config *cmtcfg.Config
@@ -185,8 +185,8 @@ func CreateSDKLogger(v *viper.Viper, out io.Writer) (log.Logger, error) {
 
 // GetServerContextFromCmd returns a Context from a command or an empty Context
 // if it has not been set.
-func GetServerContextFromCmd(cmd *cobra.Command) *LegacyContext {
-	serverCtx := &LegacyContext{}
+func GetServerContextFromCmd(cmd *cobra.Command) *Context {
+	serverCtx := &Context{}
 	if v := cmd.Context().Value(corectx.ViperContextKey{}); v != nil {
 		viper := v.(*viper.Viper)
 		serverCtx.Viper = viper

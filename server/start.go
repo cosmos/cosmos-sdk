@@ -114,12 +114,6 @@ const (
 	KeyTriggerTestnetUpgrade = "trigger-testnet-upgrade"
 )
 
-// Keep Context type
-type Context struct {
-	Viper  *viper.Viper
-	Logger log.Logger
-}
-
 // StartCmdOptions defines options that can be customized in `StartCmdWithOptions`,
 type StartCmdOptions[T types.Application] struct {
 	// DBOpener can be used to customize db opening, for example customize db options or support different db backends,
@@ -706,12 +700,8 @@ you want to test the upgrade handler itself.
 		RunE: func(cmd *cobra.Command, args []string) error {
 			viper := client.GetViperFromCmd(cmd)
 			logger := client.GetLoggerFromCmd(cmd)
-			serverCtx := &Context{
-				Viper:  viper,
-				Logger: logger,
-			}
 
-			_, err := GetPruningOptionsFromFlags(serverCtx.Viper)
+			_, err := GetPruningOptionsFromFlags(viper)
 			if err != nil {
 				return err
 			}
@@ -723,7 +713,7 @@ you want to test the upgrade handler itself.
 
 			withCMT, _ := cmd.Flags().GetBool(flagWithComet)
 			if !withCMT {
-				serverCtx.Logger.Info("starting ABCI without CometBFT")
+				logger.Info("starting ABCI without CometBFT")
 			}
 
 			newChainID := args[0]
@@ -745,20 +735,20 @@ you want to test the upgrade handler itself.
 
 			// Set testnet keys to be used by the application.
 			// This is done to prevent changes to existing start API.
-			serverCtx.Viper.Set(KeyIsTestnet, true)
-			serverCtx.Viper.Set(KeyNewChainID, newChainID)
-			serverCtx.Viper.Set(KeyNewOpAddr, newOperatorAddress)
+			viper.Set(KeyIsTestnet, true)
+			viper.Set(KeyNewChainID, newChainID)
+			viper.Set(KeyNewOpAddr, newOperatorAddress)
 
 			err = wrapCPUProfile(viper, logger, func() error {
 				return opts.StartCommandHandler(viper, logger, clientCtx, testnetAppCreator, withCMT, opts)
 			})
 
-			serverCtx.Logger.Debug("received quit signal")
+			logger.Debug("received quit signal")
 			graceDuration, _ := cmd.Flags().GetDuration(FlagShutdownGrace)
 			if graceDuration > 0 {
-				serverCtx.Logger.Info("graceful shutdown start", FlagShutdownGrace, graceDuration)
+				logger.Info("graceful shutdown start", FlagShutdownGrace, graceDuration)
 				<-time.After(graceDuration)
-				serverCtx.Logger.Info("graceful shutdown complete")
+				logger.Info("graceful shutdown complete")
 			}
 
 			return err

@@ -9,11 +9,11 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -198,9 +198,9 @@ func (c coreAppModuleAdaptor) RegisterInterfaces(reg registry.InterfaceRegistrar
 }
 
 // RegisterLegacyAminoCodec implements HasAminoCodec
-func (c coreAppModuleAdaptor) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
+func (c coreAppModuleAdaptor) RegisterLegacyAminoCodec(amino legacy.Amino) {
 	if mod, ok := c.module.(interface {
-		RegisterLegacyAminoCodec(amino *codec.LegacyAmino)
+		RegisterLegacyAminoCodec(amino legacy.Amino)
 	}); ok {
 		mod.RegisterLegacyAminoCodec(amino)
 	}

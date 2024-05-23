@@ -28,6 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/client"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -93,9 +94,11 @@ func NewABCIUtilsTestSuite(t *testing.T) *ABCIUtilsTestSuite {
 	s.valStore = valStore
 
 	// set up mock
-	s.valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), s.vals[0].consAddr.Bytes()).Return(s.vals[0].tmPk, nil).AnyTimes()
-	s.valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), s.vals[1].consAddr.Bytes()).Return(s.vals[1].tmPk, nil).AnyTimes()
-	s.valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), s.vals[2].consAddr.Bytes()).Return(s.vals[2].tmPk, nil).AnyTimes()
+	for _, val := range s.vals {
+		pk, err := cryptocodec.FromCmtProtoPublicKey(val.tmPk)
+		require.NoError(t, err)
+		valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), val.consAddr.Bytes()).Return(pk, nil).AnyTimes()
+	}
 
 	// create context
 	s.ctx = sdk.Context{}.WithConsensusParams(cmtproto.ConsensusParams{

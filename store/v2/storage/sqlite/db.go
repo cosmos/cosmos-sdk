@@ -18,7 +18,7 @@ import (
 
 const (
 	driverName       = "sqlite3"
-	dbName           = "file:ss.db?cache=shared&mode=rwc&_journal_mode=WAL"
+	dbName           = "ss.db?cache=shared&mode=rwc&_journal_mode=WAL"
 	reservedStoreKey = "_RESERVED_"
 	keyLatestHeight  = "latest_height"
 	keyPruneHeight   = "prune_height"
@@ -84,7 +84,7 @@ func New(dataDir string) (*Database, error) {
 
 	return &Database{
 		storage:         storage,
-		earliestVersion: pruneHeight + 1,
+		earliestVersion: pruneHeight,
 	}, nil
 }
 
@@ -139,7 +139,7 @@ func (db *Database) Has(storeKey []byte, version uint64, key []byte) (bool, erro
 
 func (db *Database) Get(storeKey []byte, targetVersion uint64, key []byte) ([]byte, error) {
 	if targetVersion < db.earliestVersion {
-		return nil, storeerrors.ErrVersionPruned{EarliestVersion: db.earliestVersion}
+		return nil, storeerrors.ErrVersionPruned{EarliestVersion: db.earliestVersion, RequestedVersion: targetVersion}
 	}
 
 	stmt, err := db.storage.Prepare(`

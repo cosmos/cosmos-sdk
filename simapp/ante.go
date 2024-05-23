@@ -33,10 +33,6 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, errors.New("sign mode handler is required for ante builder")
 	}
 
-	if options.Environment.RouterService == nil {
-		return nil, errors.New("router service is required for ante builder")
-	}
-
 	anteDecorators := []sdk.AnteDecorator{
 		ante.NewSetUpContextDecorator(options.Environment), // outermost AnteDecorator. SetUpContext must be called first
 		circuitante.NewCircuitBreakerDecorator(options.CircuitKeeper),

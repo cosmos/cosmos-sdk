@@ -3,27 +3,25 @@ package db
 import (
 	"fmt"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 )
 
-type RawDBType string
+type DBType string
 
 const (
-	DBTypeGoLevelDB RawDBType = "goleveldb"
-	DBTypeRocksDB   RawDBType = "rocksdb"
-	DBTypePebbleDB  RawDBType = "pebbledb"
-	DBTypePrefixDB  RawDBType = "prefixdb"
+	DBTypeGoLevelDB DBType = "goleveldb"
+	DBTypeRocksDB   DBType = "rocksdb"
+	DBTypePebbleDB  DBType = "pebbledb"
+	DBTypePrefixDB  DBType = "prefixdb"
 
 	DBFileSuffix string = ".db"
 )
 
-func NewRawDB(dbType RawDBType, name, dataDir string, opts store.DBOptions) (store.RawDB, error) {
+func NewDB(dbType DBType, name, dataDir string, opts store.DBOptions) (corestore.KVStoreWithBatch, error) {
 	switch dbType {
 	case DBTypeGoLevelDB:
 		return NewGoLevelDB(name, dataDir, opts)
-
-	case DBTypeRocksDB:
-		return NewRocksDB(name, dataDir)
 
 	case DBTypePebbleDB:
 		return NewPebbleDB(name, dataDir)

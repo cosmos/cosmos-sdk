@@ -49,7 +49,7 @@ func (k Querier) Validators(ctx context.Context, req *types.QueryValidatorsReque
 			return nil, nil
 		}
 
-		setConsensusAddress(val)
+		k.setConsensusAddress(val)
 		return val, nil
 	}, func() *types.Validator {
 		return &types.Validator{}
@@ -86,7 +86,7 @@ func (k Querier) Validator(ctx context.Context, req *types.QueryValidatorRequest
 		return nil, status.Errorf(codes.NotFound, "validator %s not found", req.ValidatorAddr)
 	}
 
-	setConsensusAddress(&validator)
+	k.setConsensusAddress(&validator)
 	return &types.QueryValidatorResponse{Validator: validator}, nil
 }
 
@@ -654,7 +654,7 @@ func redelegationsToRedelegationResponses(ctx context.Context, k *Keeper, redels
 }
 
 // setConsensusAddress sets the ConsensusAddress field for the given validator
-func setConsensusAddress(validator *types.Validator) {
+func (k Querier) setConsensusAddress(validator *types.Validator) {
 	if validator == nil {
 		return
 	}
@@ -663,6 +663,6 @@ func setConsensusAddress(validator *types.Validator) {
 	// Best-effort way
 	if ok {
 		consAddr := sdk.ConsAddress(cpk.Address())
-		validator.ConsensusAddress = consAddr.String()
+		validator.ConsensusAddress, _ = k.consensusAddressCodec.BytesToString(consAddr)
 	}
 }

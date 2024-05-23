@@ -294,7 +294,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	valAddr2 := sdk.ValAddress(valConsAddr2)
 	valAddr2Str, err := cdcOpts.GetValidatorCodec().BytesToString(valAddr2)
 	require.NoError(t, err)
-	val2, err := stakingtypes.NewValidator(valAddr2Str, valConsPk1, stakingtypes.Description{})
+	val2, err := stakingtypes.NewValidator(valAddr2Str, valConsPk1, stakingtypes.Description{}, address.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 	require.NoError(t, err)
 	val2.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDec(0))
 	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk2)).Return(val2, nil).AnyTimes()

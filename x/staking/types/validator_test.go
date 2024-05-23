@@ -340,7 +340,7 @@ func newValidator(t *testing.T, operator sdk.ValAddress, pubKey cryptotypes.PubK
 	t.Helper()
 	addr, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(operator)
 	require.NoError(t, err)
-	v, err := types.NewValidator(addr, pubKey, types.Description{})
+	v, err := types.NewValidator(addr, pubKey, types.Description{}, address.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 	require.NoError(t, err)
 	return v
 }

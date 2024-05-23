@@ -62,7 +62,6 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (crypto/keyring) [#20212](https://github.com/cosmos/cosmos-sdk/pull/20212) Expose the db keyring used in the keystore.
 * (genutil) [#19971](https://github.com/cosmos/cosmos-sdk/pull/19971) Allow manually setting the consensus key type in genesis
 * (debug) [#20328](https://github.com/cosmos/cosmos-sdk/pull/20328) Add consensus address for debug cmd.
-* (x/staking) [#20434](https://github.com/cosmos/cosmos-sdk/pull/20434) Add consensus address to validator query response
 
 ### Improvements
 

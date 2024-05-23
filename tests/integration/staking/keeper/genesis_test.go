@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/x/staking"
 	"cosmossdk.io/x/staking/types"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -196,6 +197,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 			sdk.ValAddress(addrs[i]).String(),
 			PKs[i],
 			types.NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""),
+			addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
 		)
 		assert.NilError(t, err)
 		validators[i].Status = types.Bonded

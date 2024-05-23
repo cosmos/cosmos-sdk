@@ -207,13 +207,6 @@ func NewSimApp(
 		panic(err)
 	}
 
-	// app.EpochsKeeper.SetHooks(
-	// 	epochstypes.NewMultiEpochHooks(
-	// 		app.ModuleManager.Modules[minttypes.ModuleName].(epochstypes.EpochHooks),
-	// 	// insert epoch hooks receivers here
-	// 	),
-	// )
-
 	// Below we could construct and set an application specific mempool and
 	// ABCI 1.0 PrepareProposal and ProcessProposal handlers. These defaults are
 	// already set in the SDK's BaseApp, this shows an example of how to override

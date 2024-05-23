@@ -342,7 +342,7 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 // It should be used when the response type is not known by the caller.
 func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
 	// do sender assertions.
-	wantSenders, _, err := k.codec.GetMsgV1Signers(msg)
+	wantSenders, _, err := k.codec.GetMsgSigners(msg)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get signers: %w", err)
 	}
@@ -352,7 +352,7 @@ func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg
 	if !bytes.Equal(sender, wantSenders[0]) {
 		return nil, fmt.Errorf("%w: sender does not match expected sender", ErrUnauthorized)
 	}
-	resp, err := k.RouterService.MessageRouterService().InvokeUntyped(ctx, msg)
+	resp, err := k.MsgRouterService.InvokeUntyped(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -365,7 +365,7 @@ func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg
 // is not trying to impersonate another account.
 func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgResp implementation.ProtoMsg) error {
 	// do sender assertions.
-	wantSenders, _, err := k.codec.GetMsgV1Signers(msg)
+	wantSenders, _, err := k.codec.GetMsgSigners(msg)
 	if err != nil {
 		return fmt.Errorf("cannot get signers: %w", err)
 	}
@@ -375,14 +375,14 @@ func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgRe
 	if !bytes.Equal(sender, wantSenders[0]) {
 		return fmt.Errorf("%w: sender does not match expected sender", ErrUnauthorized)
 	}
-	return k.RouterService.MessageRouterService().InvokeTyped(ctx, msg, msgResp)
+	return k.MsgRouterService.InvokeTyped(ctx, msg, msgResp)
 }
 
 // queryModule is the entrypoint for an account to query a module.
 // It will try to find the query handler for the given query and execute it.
 // If multiple query handlers are found, it will return an error.
 func (k Keeper) queryModule(ctx context.Context, queryReq, queryResp implementation.ProtoMsg) error {
-	return k.RouterService.QueryRouterService().InvokeTyped(ctx, queryReq, queryResp)
+	return k.QueryRouterService.InvokeTyped(ctx, queryReq, queryResp)
 }
 
 // maybeSendFunds will send the provided coins between the provided addresses, if amt

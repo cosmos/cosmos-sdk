@@ -47,7 +47,7 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, 
 
 	// TODO: possibly cache the result of this query for other antehandlers to use
 	var res consensusv1.QueryParamsResponse
-	if err := sud.env.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
+	if err := sud.env.QueryRouterService.InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
 		return newCtx, err
 	}
 

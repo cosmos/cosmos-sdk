@@ -36,17 +36,17 @@ type mockStateCodec struct {
 }
 
 // GetMsgAnySigners implements codec.Codec.
-func (mockStateCodec) GetMsgAnySigners(msg *types.Any) ([][]byte, protoreflect.ProtoMessage, error) {
+func (mockStateCodec) GetMsgAnySigners(msg *types.Any) ([][]byte, protoreflect.Message, error) {
 	panic("unimplemented")
 }
 
 // GetMsgV1Signers implements codec.Codec.
-func (mockStateCodec) GetMsgV1Signers(msg gogoproto.Message) ([][]byte, protoreflect.ProtoMessage, error) {
+func (mockStateCodec) GetMsgSigners(msg gogoproto.Message) ([][]byte, protoreflect.Message, error) {
 	panic("unimplemented")
 }
 
 // GetMsgV2Signers implements codec.Codec.
-func (mockStateCodec) GetMsgV2Signers(msg protoreflect.ProtoMessage) ([][]byte, error) {
+func (mockStateCodec) GetReflectMsgSigners(msg protoreflect.Message) ([][]byte, error) {
 	panic("unimplemented")
 }
 

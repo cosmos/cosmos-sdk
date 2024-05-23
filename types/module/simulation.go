@@ -1,11 +1,14 @@
 package module
 
 import (
+	"context"
 	"encoding/json"
 	"math/rand"
 	"sort"
 	"testing"
 	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -41,9 +44,19 @@ type HasProposalContents interface {
 	ProposalContents(simState SimulationState) []simulation.WeightedProposalContent //nolint:staticcheck // legacy v1beta1 governance
 }
 
+type BalanceSource interface {
+	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+}
+type AccountSourceX interface {
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+	GetModuleAddress(moduleName string) sdk.AccAddress
+}
+
 // SimulationManager defines a simulation manager that provides the high level utility
 // for managing and executing simulation functionalities for a group of modules
 type SimulationManager struct {
+	BK            BalanceSource
+	AK            AccountSourceX
 	Modules       []AppModuleSimulation           // array of app modules; we use an array for deterministic simulation tests
 	StoreDecoders simulation.StoreDecoderRegistry // functions to decode the key-value pairs from each module's store
 }
@@ -51,8 +64,10 @@ type SimulationManager struct {
 // NewSimulationManager creates a new SimulationManager object
 //
 // CONTRACT: All the modules provided must be also registered on the module Manager
-func NewSimulationManager(modules ...AppModuleSimulation) *SimulationManager {
+func NewSimulationManager(ak AccountSourceX, bk BalanceSource, modules ...AppModuleSimulation) *SimulationManager {
 	return &SimulationManager{
+		AK:            ak,
+		BK:            bk,
 		Modules:       modules,
 		StoreDecoders: make(simulation.StoreDecoderRegistry),
 	}
@@ -64,7 +79,7 @@ func NewSimulationManager(modules ...AppModuleSimulation) *SimulationManager {
 // with the same moduleName.
 // Then it attempts to cast every provided AppModule into an AppModuleSimulation.
 // If the cast succeeds, its included, otherwise it is excluded.
-func NewSimulationManagerFromAppModules(modules map[string]appmodule.AppModule, overrideModules map[string]AppModuleSimulation) *SimulationManager {
+func NewSimulationManagerFromAppModules(ak AccountSourceX, bk BalanceSource, modules map[string]appmodule.AppModule, overrideModules map[string]AppModuleSimulation) *SimulationManager {
 	simModules := []AppModuleSimulation{}
 	appModuleNamesSorted := make([]string, 0, len(modules))
 	for moduleName := range modules {
@@ -87,7 +102,7 @@ func NewSimulationManagerFromAppModules(modules map[string]appmodule.AppModule, 
 			// cannot cast, so we continue
 		}
 	}
-	return NewSimulationManager(simModules...)
+	return NewSimulationManager(ak, bk, simModules...)
 }
 
 // Deprecated: Use GetProposalMsgs instead.

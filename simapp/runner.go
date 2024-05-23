@@ -1,10 +1,16 @@
 package simapp
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/simsx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 
 	"github.com/cosmos/cosmos-sdk/client"
 
@@ -113,7 +119,7 @@ func RunWithSeeds[T SimulationApp](
 				app.GetBaseApp(),
 				stateFactory.AppStateFn,
 				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-				simtestutil.SimulationOperations(app, stateFactory.Codec, tCfg, testInstance.App.TxConfig()),
+				getWeightedOps(t, app.SimulationManager(), stateFactory.Codec, tCfg, testInstance.App.TxConfig()),
 				stateFactory.BlockedAddr,
 				tCfg,
 				stateFactory.Codec,
@@ -130,6 +136,54 @@ func RunWithSeeds[T SimulationApp](
 			}
 		})
 	}
+}
+
+// included to avoid cyclic dependency in testutils/sims
+func getWeightedOps(t testing.TB, sm *module.SimulationManager, cdc codec.Codec, config simtypes.Config, txConfig client.TxConfig) simulation.WeightedOperations {
+	signingCtx := cdc.InterfaceRegistry().SigningContext()
+	simState := module.SimulationState{
+		T:              config.T,
+		AppParams:      make(simtypes.AppParams),
+		Cdc:            cdc,
+		AddressCodec:   signingCtx.AddressCodec(),
+		ValidatorCodec: signingCtx.ValidatorAddressCodec(),
+		TxConfig:       txConfig,
+		BondDenom:      sdk.DefaultBondDenom,
+	}
+
+	if config.ParamsFile != "" {
+		bz, err := os.ReadFile(config.ParamsFile)
+		if err != nil {
+			panic(err)
+		}
+
+		err = json.Unmarshal(bz, &simState.AppParams)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	simState.LegacyProposalContents = sm.GetProposalContents(simState) //nolint:staticcheck // we're testing the old way here
+	simState.ProposalMsgs = sm.GetProposalMsgs(simState)
+
+	wOps := make([]simtypes.WeightedOperation, 0, len(sm.Modules))
+	weights := simsx.ParamWeightSource(simState.AppParams)
+	reporter := simsx.NewBasicSimulationReporter(t)
+	reg := simsx.NewSimsRegistryAdapter(reporter, sm.AK, sm.BK, txConfig)
+
+	for _, m := range sm.Modules {
+		if xm, ok := m.(weightedOperationsX); ok {
+			xm.WeightedOperationsX(weights, reg)
+		} else {
+			// support legacy entry factory method
+			wOps = append(wOps, m.WeightedOperations(simState)...)
+		}
+	}
+	return wOps
+}
+
+type weightedOperationsX interface {
+	WeightedOperationsX(weight simsx.WeightSource, reg simsx.Registry)
 }
 
 type TestInstance[T SimulationApp] struct {

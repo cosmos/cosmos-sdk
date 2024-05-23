@@ -42,25 +42,26 @@ type Registry interface {
 
 var _ Registry = &SimsRegistryAdapter{}
 
-type xAccountSource interface {
+type AccountSourceX interface {
 	AccountSource
 	ModuleAccountSource
-	AddressCodec() address.Codec
 }
 type SimsRegistryAdapter struct {
-	reporter  SimulationReporter
-	legacyOps simulation.WeightedOperations
-	ak        xAccountSource
-	bk        BalanceSource
-	txConfig  client.TxConfig
+	reporter     SimulationReporter
+	legacyOps    simulation.WeightedOperations
+	ak           AccountSourceX
+	bk           BalanceSource
+	txConfig     client.TxConfig
+	addressCodec address.Codec
 }
 
-func NewSimsRegistryAdapter(reporter SimulationReporter, ak xAccountSource, bk BalanceSource, txConfig client.TxConfig) *SimsRegistryAdapter {
+func NewSimsRegistryAdapter(reporter SimulationReporter, ak AccountSourceX, bk BalanceSource, txConfig client.TxConfig) *SimsRegistryAdapter {
 	return &SimsRegistryAdapter{
-		reporter: reporter,
-		ak:       ak,
-		bk:       bk,
-		txConfig: txConfig,
+		reporter:     reporter,
+		ak:           ak,
+		bk:           bk,
+		txConfig:     txConfig,
+		addressCodec: txConfig.SigningContext().AddressCodec(),
 	}
 }
 
@@ -77,7 +78,7 @@ func (l SimsRegistryAdapter) newLegacyOperationAdapter(rootReporter SimulationRe
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		testData := NewChainDataSource(r, l.ak, NewBalanceSource(ctx, l.bk), l.ak.AddressCodec(), accs...)
+		testData := NewChainDataSource(r, l.ak, NewBalanceSource(ctx, l.bk), l.addressCodec, accs...)
 		reporter := rootReporter.WithScope(example)
 
 		from, msg := f(ctx, testData, reporter)

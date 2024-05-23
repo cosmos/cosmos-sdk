@@ -6,10 +6,10 @@ import (
 	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
+	consensusv1 "cosmossdk.io/x/consensus/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	consensusv1 "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 // GasTx defines a Tx with a GetGas() method which is needed to use SetUpContextDecorator
@@ -47,7 +47,7 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, 
 
 	// TODO: possibly cache the result of this query for other antehandlers to use
 	var res consensusv1.QueryParamsResponse
-	if err := sud.env.RouterService.QueryRouterService().InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
+	if err := sud.env.QueryRouterService.InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
 		return newCtx, err
 	}
 

@@ -26,6 +26,7 @@ import (
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
+	consensusparamtypes "cosmossdk.io/x/consensus/types"
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
@@ -52,7 +53,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 var (
@@ -69,8 +69,9 @@ var (
 	}
 
 	// The default power validators are initialized to have within tests
-	initAmt   = sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
-	initCoins = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
+	initAmt          = sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
+	initCoins        = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
+	cometInfoService = runtime.NewContextAwareCometInfoService()
 )
 
 type fixture struct {
@@ -136,13 +137,15 @@ func initFixture(tb testing.TB) *fixture {
 		authority.String(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(grpcQueryRouter, msgRouter)), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	assert.NilError(tb, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
+
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter)), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
 
 	slashingKeeper := slashingkeeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), log.NewNopLogger()), cdc, codec.NewLegacyAmino(), stakingKeeper, authority.String())
 
 	stakingKeeper.SetHooks(stakingtypes.NewMultiStakingHooks(slashingKeeper.Hooks()))
 
-	evidenceKeeper := keeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[evidencetypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(grpcQueryRouter, msgRouter)), stakingKeeper, slashingKeeper, addresscodec.NewBech32Codec(sdk.Bech32PrefixAccAddr))
+	evidenceKeeper := keeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[evidencetypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter)), stakingKeeper, slashingKeeper, addresscodec.NewBech32Codec(sdk.Bech32PrefixAccAddr))
 	router := evidencetypes.NewRouter()
 	router = router.AddRoute(evidencetypes.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
@@ -150,8 +153,8 @@ func initFixture(tb testing.TB) *fixture {
 	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
-	slashingModule := slashing.NewAppModule(cdc, slashingKeeper, accountKeeper, bankKeeper, stakingKeeper, cdc.InterfaceRegistry())
-	evidenceModule := evidence.NewAppModule(cdc, *evidenceKeeper)
+	slashingModule := slashing.NewAppModule(cdc, slashingKeeper, accountKeeper, bankKeeper, stakingKeeper, cdc.InterfaceRegistry(), cometInfoService)
+	evidenceModule := evidence.NewAppModule(cdc, *evidenceKeeper, cometInfoService)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
 		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
@@ -241,7 +244,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	}
 
 	ctx = ctx.WithCometInfo(nci)
-	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci)))
+	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci), cometInfoService))
 
 	// should be jailed and tombstoned
 	val, err = f.stakingKeeper.Validator(ctx, operatorAddr)
@@ -254,7 +257,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	assert.Assert(t, newTokens.LT(oldTokens))
 
 	// submit duplicate evidence
-	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx))
+	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx, cometInfoService))
 
 	// tokens should be the same (capped slash)
 	val, err = f.stakingKeeper.Validator(ctx, operatorAddr)
@@ -317,7 +320,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 
 	nci := comet.Info{Evidence: []comet.Evidence{{
 		Validator: comet.Validator{Address: valpubkey.Address(), Power: power},
-		Type:      comet.MisbehaviorType(abci.MisbehaviorType_DUPLICATE_VOTE),
+		Type:      comet.MisbehaviorType(abci.MISBEHAVIOR_TYPE_DUPLICATE_VOTE),
 		Time:      ctx.HeaderInfo().Time,
 		Height:    0,
 	}}}
@@ -329,7 +332,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	ctx = ctx.WithConsensusParams(cp)
 	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.BlockHeight() + cp.Evidence.MaxAgeNumBlocks + 1, Time: ctx.HeaderInfo().Time.Add(cp.Evidence.MaxAgeDuration + 1)})
 
-	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx))
+	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx, cometInfoService))
 
 	val, err = f.stakingKeeper.Validator(ctx, operatorAddr)
 	assert.NilError(t, err)
@@ -398,13 +401,13 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 	nci := comet.Info{
 		Evidence: []comet.Evidence{{
 			Validator: comet.Validator{Address: valpubkey.Address(), Power: power},
-			Type:      comet.MisbehaviorType(abci.MisbehaviorType_DUPLICATE_VOTE),
+			Type:      comet.MisbehaviorType(abci.MISBEHAVIOR_TYPE_DUPLICATE_VOTE),
 			Time:      time.Unix(0, 0),
 			Height:    0,
 		}},
 	}
 
-	err = f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci))
+	err = f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci), cometInfoService)
 	assert.NilError(t, err)
 
 	// should be jailed and tombstoned
@@ -420,7 +423,7 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 	assert.Assert(t, newTokens.LT(oldTokens))
 
 	// submit duplicate evidence
-	err = f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci))
+	err = f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci), cometInfoService)
 	assert.NilError(t, err)
 
 	// tokens should be the same (capped slash)
@@ -449,7 +452,10 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 
 	// query evidence from store
 	var evidences []exported.Evidence
-	assert.NilError(t, f.evidenceKeeper.Evidences.Walk(ctx, nil, func(key []byte, value exported.Evidence) (stop bool, err error) {
+	assert.NilError(t, f.evidenceKeeper.Evidences.Walk(ctx, nil, func(
+		key []byte,
+		value exported.Evidence,
+	) (stop bool, err error) {
 		evidences = append(evidences, value)
 		return false, nil
 	}))

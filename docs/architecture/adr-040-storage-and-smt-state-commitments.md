@@ -92,7 +92,7 @@ A new database snapshot will be created in every `EndBlocker` and identified by 
 NOTE: `Commit` must be called exactly once per block. Otherwise we risk going out of sync for the version number and block height.
 NOTE: For the Cosmos SDK storage, we may consider splitting that interface into `Committer` and `PruningCommitter` - only the multiroot should implement `PruningCommitter` (cache and prefix store don't need pruning).
 
-Number of historical versions for `abci.RequestQuery` and state sync snapshots is part of a node configuration, not a chain configuration (configuration implied by the blockchain consensus). A configuration should allow to specify number of past blocks and number of past blocks modulo some number (eg: 100 past blocks and one snapshot every 100 blocks for past 2000 blocks). Archival nodes can keep all past versions.
+Number of historical versions for `abci.QueryRequest` and state sync snapshots is part of a node configuration, not a chain configuration (configuration implied by the blockchain consensus). A configuration should allow to specify number of past blocks and number of past blocks modulo some number (eg: 100 past blocks and one snapshot every 100 blocks for past 2000 blocks). Archival nodes can keep all past versions.
 
 Pruning old snapshots is effectively done by a database. Whenever we update a record in `SC`, SMT won't update nodes - instead it creates new nodes on the update path, without removing the old one. Since we are snapshotting each block, we need to change that mechanism to immediately remove orphaned nodes from the database. This is a safe operation - snapshots will keep track of the records and make it available when accessing past versions.
 
@@ -100,8 +100,8 @@ To manage the active snapshots we will either use a DB _max number of snapshots_
 
 #### Accessing old state versions
 
-One of the functional requirements is to access old state. This is done through `abci.RequestQuery` structure.  The version is specified by a block height (so we query for an object by a key `K` at block height `H`). The number of old versions supported for `abci.RequestQuery` is configurable. Accessing an old state is done by using available snapshots.
-`abci.RequestQuery` doesn't need old state of `SC` unless the `prove=true` parameter is set. The SMT merkle proof must be included in the `abci.ResponseQuery` only if both `SC` and `SS` have a snapshot for requested version.
+One of the functional requirements is to access old state. This is done through `abci.QueryRequest` structure.  The version is specified by a block height (so we query for an object by a key `K` at block height `H`). The number of old versions supported for `abci.QueryRequest` is configurable. Accessing an old state is done by using available snapshots.
+`abci.QueryRequest` doesn't need old state of `SC` unless the `prove=true` parameter is set. The SMT merkle proof must be included in the `abci.QueryResponse` only if both `SC` and `SS` have a snapshot for requested version.
 
 Moreover, Cosmos SDK could provide a way to directly access a historical state. However, a state machine shouldn't do that - since the number of snapshots is configurable, it would lead to nondeterministic execution.
 

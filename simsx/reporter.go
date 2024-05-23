@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"slices"
 	"strings"
-	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -42,8 +41,11 @@ const (
 	completed ReporterStatus = iota
 )
 
+type SkipHook interface {
+	Skip(args ...any)
+}
 type BasicSimulationReporter struct {
-	t          testing.TB
+	skipHook   SkipHook
 	module     string
 	msgTypeURL string
 	error      error
@@ -52,14 +54,16 @@ type BasicSimulationReporter struct {
 	msgProtoBz []byte
 }
 
-func NewBasicSimulationReporter(t testing.TB) *BasicSimulationReporter {
-	return &BasicSimulationReporter{t: t}
+// NewBasicSimulationReporter constructor that accepts an optional callback hook that is called on state transition to skipped status
+// A typical implementation for this hook is testing.T
+func NewBasicSimulationReporter(optionalSkipHook SkipHook) *BasicSimulationReporter {
+	return &BasicSimulationReporter{skipHook: optionalSkipHook}
 }
 
 func (x BasicSimulationReporter) WithScope(msg sdk.Msg) SimulationReporter {
 	typeURL := sdk.MsgTypeURL(msg)
 	return &BasicSimulationReporter{
-		t:          x.t,
+		skipHook:   x.skipHook,
 		error:      x.error,
 		status:     x.status,
 		msgProtoBz: x.msgProtoBz,
@@ -120,10 +124,10 @@ func (x *BasicSimulationReporter) toStatus(next ReporterStatus, comments ...stri
 		panic(fmt.Sprintf("can not switch from status %d to %d", x.status, next))
 	}
 	x.comments = append(x.comments, comments...)
-	x.status = next
-	if x.t != nil && !x.t.Skipped() && x.status == skipped {
-		x.t.Skip(x.Comment())
+	if x.skipHook != nil && x.status != skipped && next == skipped {
+		x.skipHook.Skip(x.Comment())
 	}
+	x.status = next
 }
 
 func (x BasicSimulationReporter) Comment() string {

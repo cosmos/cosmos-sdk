@@ -4,7 +4,6 @@ import (
 	"context"
 
 	v5 "cosmossdk.io/x/auth/migrations/v5"
-	v6 "cosmossdk.io/x/auth/migrations/v6"
 	"cosmossdk.io/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,21 +43,6 @@ func (m Migrator) Migrate3to4(ctx context.Context) error {
 // big-endian encoded uint64, it also migrates it to use a more canonical prefix.
 func (m Migrator) Migrate4To5(ctx context.Context) error {
 	return v5.Migrate(ctx, m.keeper.KVStoreService, m.keeper.AccountNumber)
-}
-
-// Migrate5To6 migrates the x/auth module state from the consensus version 5 to 6.
-// It migrates the GlobalAccountNumber from x/auth to x/accounts .
-func (m Migrator) Migrate5To6(ctx context.Context) error {
-	return v6.Migrate(ctx, m.v56SetAccounts)
-}
-
-func (m Migrator) v56SetAccounts(ctx context.Context) error {
-	currentAccNum, err := m.keeper.AccountNumber.Peek(ctx)
-	if err != nil {
-		return err
-	}
-
-	return m.keeper.AccountsModKeeper.SetAccountNumber(ctx, currentAccNum)
 }
 
 // V45SetAccount implements V45_SetAccount

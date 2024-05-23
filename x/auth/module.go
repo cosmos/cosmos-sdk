@@ -103,9 +103,6 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	if err := mr.Register(types.ModuleName, 4, m.Migrate4To5); err != nil {
 		return fmt.Errorf("failed to migrate x/%s from version 4 to 5: %w", types.ModuleName, err)
 	}
-	if err := mr.Register(types.ModuleName, 5, m.Migrate5To6); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 5 to 6: %w", types.ModuleName, err)
-	}
 
 	return nil
 }

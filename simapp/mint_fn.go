@@ -26,26 +26,26 @@ func ProvideExampleMintFn(bankKeeper bankkeeper.Keeper) minttypes.MintFn {
 		}
 
 		var stakingParams stakingtypes.QueryParamsResponse
-		err := env.RouterService.QueryRouterService().InvokeTyped(ctx, &stakingtypes.QueryParamsRequest{}, &stakingParams)
+		err := env.QueryRouterService.InvokeTyped(ctx, &stakingtypes.QueryParamsRequest{}, &stakingParams)
 		if err != nil {
 			return err
 		}
 
 		var bankSupply banktypes.QuerySupplyOfResponse
-		err = env.RouterService.QueryRouterService().InvokeTyped(ctx, &banktypes.QuerySupplyOfRequest{Denom: stakingParams.Params.BondDenom}, &bankSupply)
+		err = env.QueryRouterService.InvokeTyped(ctx, &banktypes.QuerySupplyOfRequest{Denom: stakingParams.Params.BondDenom}, &bankSupply)
 		if err != nil {
 			return err
 		}
 		stakingTokenSupply := bankSupply.Amount
 
 		var mintParams minttypes.QueryParamsResponse
-		err = env.RouterService.QueryRouterService().InvokeTyped(ctx, &minttypes.QueryParamsRequest{}, &mintParams)
+		err = env.QueryRouterService.InvokeTyped(ctx, &minttypes.QueryParamsRequest{}, &mintParams)
 		if err != nil {
 			return err
 		}
 
 		var stakingPool stakingtypes.QueryPoolResponse
-		err = env.RouterService.QueryRouterService().InvokeTyped(ctx, &stakingtypes.QueryPoolRequest{}, &stakingPool)
+		err = env.QueryRouterService.InvokeTyped(ctx, &stakingtypes.QueryPoolRequest{}, &stakingPool)
 		if err != nil {
 			return err
 		}

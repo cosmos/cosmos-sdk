@@ -6,7 +6,6 @@ import (
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/types"
 )
 
@@ -26,17 +25,15 @@ restarting CometBFT the transactions in block n will be re-executed against the
 application.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config := client.GetConfigFromCmd(cmd)
-			logger := client.GetLoggerFromCmd(cmd)
-			viper := client.GetViperFromCmd(cmd)
+			ctx := GetServerContextFromCmd(cmd)
 
-			db, err := OpenDB(config.RootDir, GetAppDBBackend(viper))
+			db, err := OpenDB(ctx.Config.RootDir, GetAppDBBackend(ctx.Viper))
 			if err != nil {
 				return err
 			}
-			app := appCreator(logger, db, nil, viper)
+			app := appCreator(ctx.Logger, db, nil, ctx.Viper)
 			// rollback CometBFT state
-			height, hash, err := cmtcmd.RollbackState(config, removeBlock)
+			height, hash, err := cmtcmd.RollbackState(ctx.Config, removeBlock)
 			if err != nil {
 				return fmt.Errorf("failed to rollback CometBFT state: %w", err)
 			}

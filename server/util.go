@@ -24,28 +24,45 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 
-	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/log"
+	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/server/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/version"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-// Deprecated: Do not use, we use viper to track all config
+// ServerContextKey defines the context key used to retrieve a server.Context from
+// a command's Context.
+const ServerContextKey = sdk.ContextKey("server.context")
+
+// Context server context
+// Deprecated: Do not use since we use viper to track all config
 type Context struct {
 	Viper  *viper.Viper
-	Logger log.Logger
 	Config *cmtcfg.Config
+	Logger log.Logger
+}
+
+func NewDefaultContext() *Context {
+	return NewContext(
+		viper.New(),
+		cmtcfg.DefaultConfig(),
+		log.NewLogger(os.Stdout),
+	)
+}
+
+func NewContext(v *viper.Viper, config *cmtcfg.Config, logger log.Logger) *Context {
+	return &Context{v, config, logger}
 }
 
 func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) {
@@ -85,19 +102,20 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 // InterceptConfigsPreRunHandler is identical to InterceptConfigsAndCreateContext
 // except it also sets the server context on the command and the server logger.
 func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, cmtConfig *cmtcfg.Config) error {
-	viper, err := InterceptConfigsAndCreateContext(cmd, customAppConfigTemplate, customAppConfig, cmtConfig)
+	serverCtx, err := InterceptConfigsAndCreateContext(cmd, customAppConfigTemplate, customAppConfig, cmtConfig)
 	if err != nil {
 		return err
 	}
 
 	// overwrite default server logger
-	logger, err := CreateSDKLogger(viper, cmd.OutOrStdout())
+	logger, err := CreateSDKLogger(serverCtx, cmd.OutOrStdout())
 	if err != nil {
 		return err
 	}
+	serverCtx.Logger = logger.With(log.ModuleKey, "server")
 
 	// set server context
-	return SetCmdServerContext(cmd, viper, logger)
+	return SetCmdServerContext(cmd, serverCtx)
 }
 
 // InterceptConfigsAndCreateContext performs a pre-run function for the root daemon
@@ -110,8 +128,8 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 // is used to read and parse the application configuration. Command handlers can
 // fetch the server Context to get the CometBFT configuration or to get access
 // to Viper.
-func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, cmtConfig *cmtcfg.Config) (*viper.Viper, error) {
-	v := viper.New()
+func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, cmtConfig *cmtcfg.Config) (*Context, error) {
+	serverCtx := NewDefaultContext()
 
 	// Get the executable name and configure the viper instance so that environmental
 	// variables are checked based off that name. The underscore character is used
@@ -124,44 +142,46 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 	basename := path.Base(executableName)
 
 	// configure the viper instance
-	if err := v.BindPFlags(cmd.Flags()); err != nil {
+	if err := serverCtx.Viper.BindPFlags(cmd.Flags()); err != nil {
 		return nil, err
 	}
-	if err := v.BindPFlags(cmd.PersistentFlags()); err != nil {
+	if err := serverCtx.Viper.BindPFlags(cmd.PersistentFlags()); err != nil {
 		return nil, err
 	}
 
-	v.SetEnvPrefix(basename)
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
-	v.AutomaticEnv()
+	serverCtx.Viper.SetEnvPrefix(basename)
+	serverCtx.Viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
+	serverCtx.Viper.AutomaticEnv()
 
 	// intercept configuration files, using both Viper instances separately
-	err = interceptConfigs(v, customAppConfigTemplate, customAppConfig, cmtConfig)
+	config, err := interceptConfigs(serverCtx.Viper, customAppConfigTemplate, customAppConfig, cmtConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = bindFlags(basename, cmd, v); err != nil {
+	// return value is a CometBFT configuration object
+	serverCtx.Config = config
+	if err = bindFlags(basename, cmd, serverCtx.Viper); err != nil {
 		return nil, err
 	}
 
-	return v, nil
+	return serverCtx, nil
 }
 
 // CreateSDKLogger creates a the default SDK logger.
 // It reads the log level and format from the server context.
-func CreateSDKLogger(v *viper.Viper, out io.Writer) (log.Logger, error) {
+func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	var opts []log.Option
-	if v.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {
+	if ctx.Viper.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {
 		opts = append(opts, log.OutputJSONOption())
 	}
 	opts = append(opts,
-		log.ColorOption(!v.GetBool(flags.FlagLogNoColor)),
+		log.ColorOption(!ctx.Viper.GetBool(flags.FlagLogNoColor)),
 		// We use CometBFT flag (cmtcli.TraceFlag) for trace logging.
-		log.TraceOption(v.GetBool(FlagTrace)))
+		log.TraceOption(ctx.Viper.GetBool(FlagTrace)))
 
 	// check and set filter level or keys for the logger if any
-	logLvlStr := v.GetString(flags.FlagLogLevel)
+	logLvlStr := ctx.Viper.GetString(flags.FlagLogLevel)
 	if logLvlStr == "" {
 		return log.NewLogger(out, opts...), nil
 	}
@@ -186,29 +206,17 @@ func CreateSDKLogger(v *viper.Viper, out io.Writer) (log.Logger, error) {
 // GetServerContextFromCmd returns a Context from a command or an empty Context
 // if it has not been set.
 func GetServerContextFromCmd(cmd *cobra.Command) *Context {
-	serverCtx := &Context{}
-	if v := cmd.Context().Value(corectx.ViperContextKey{}); v != nil {
-		viper := v.(*viper.Viper)
-		serverCtx.Viper = viper
-		serverCtx.Config = client.GetConfigFromViper(viper)
-	} else {
-		serverCtx.Viper = viper.New()
-		serverCtx.Config = cmtcfg.DefaultConfig()
+	if v := cmd.Context().Value(ServerContextKey); v != nil {
+		serverCtxPtr := v.(*Context)
+		return serverCtxPtr
 	}
 
-	if v := cmd.Context().Value(corectx.LoggerContextKey{}); v != nil {
-		logger := v.(log.Logger)
-		serverCtx.Logger = logger
-	} else {
-		serverCtx.Logger = log.NewLogger(cmd.OutOrStdout())
-	}
-
-	return serverCtx
+	return NewDefaultContext()
 }
 
 // SetCmdServerContext sets a command's Context value to the provided argument.
 // If the context has not been set, set the given context as the default.
-func SetCmdServerContext(cmd *cobra.Command, viper *viper.Viper, logger log.Logger) error {
+func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
 	var cmdCtx context.Context
 
 	if cmd.Context() == nil {
@@ -217,8 +225,13 @@ func SetCmdServerContext(cmd *cobra.Command, viper *viper.Viper, logger log.Logg
 		cmdCtx = cmd.Context()
 	}
 
-	cmd.SetContext(context.WithValue(cmdCtx, corectx.LoggerContextKey{}, logger))
-	cmd.SetContext(context.WithValue(cmdCtx, corectx.ViperContextKey{}, viper))
+	cmdCtx = context.WithValue(cmdCtx, ServerContextKey, serverCtx)
+	cmdCtx = context.WithValue(cmdCtx, corectx.ViperContextKey{}, serverCtx.Viper)
+	cmdCtx = context.WithValue(cmdCtx, corectx.LoggerContextKey{}, serverCtx.Logger)
+
+	cmd.SetContext(cmdCtx)
+
+	fmt.Println("After set", serverCtx.Viper.GetString(flags.FlagHome))
 
 	return nil
 }
@@ -228,8 +241,9 @@ func SetCmdServerContext(cmd *cobra.Command, viper *viper.Viper, logger log.Logg
 // configuration file. The CometBFT configuration file is parsed given a root
 // Viper object, whereas the application is parsed with the private package-aware
 // viperCfg object.
-func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customConfig interface{}, cmtConfig *cmtcfg.Config) error {
+func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customConfig interface{}, cmtConfig *cmtcfg.Config) (*cmtcfg.Config, error) {
 	rootDir := rootViper.GetString(flags.FlagHome)
+	fmt.Println("Init root", rootDir)
 	configPath := filepath.Join(rootDir, "config")
 	cmtCfgFile := filepath.Join(configPath, "config.toml")
 
@@ -240,7 +254,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 		cmtcfg.EnsureRoot(rootDir)
 
 		if err = conf.ValidateBasic(); err != nil {
-			return fmt.Errorf("error in config file: %w", err)
+			return nil, fmt.Errorf("error in config file: %w", err)
 		}
 
 		defaultCometCfg := cmtcfg.DefaultConfig()
@@ -256,7 +270,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 		cmtcfg.WriteConfigFile(cmtCfgFile, conf)
 
 	case err != nil:
-		return err
+		return nil, err
 
 	default:
 		rootViper.SetConfigType("toml")
@@ -264,7 +278,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 		rootViper.AddConfigPath(configPath)
 
 		if err := rootViper.ReadInConfig(); err != nil {
-			return fmt.Errorf("failed to read in %s: %w", cmtCfgFile, err)
+			return nil, fmt.Errorf("failed to read in %s: %w", cmtCfgFile, err)
 		}
 	}
 
@@ -272,35 +286,37 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 	// This may come from the configuration file above but also any of the other
 	// sources viper uses.
 	if err := rootViper.Unmarshal(conf); err != nil {
-		return err
+		return nil, err
 	}
+
+	conf.SetRoot(rootDir)
 
 	appCfgFilePath := filepath.Join(configPath, "app.toml")
 	if _, err := os.Stat(appCfgFilePath); os.IsNotExist(err) {
 		if (customAppTemplate != "" && customConfig == nil) || (customAppTemplate == "" && customConfig != nil) {
-			return fmt.Errorf("customAppTemplate and customConfig should be both nil or not nil")
+			return nil, fmt.Errorf("customAppTemplate and customConfig should be both nil or not nil")
 		}
 
 		if customAppTemplate != "" {
 			if err := config.SetConfigTemplate(customAppTemplate); err != nil {
-				return fmt.Errorf("failed to set config template: %w", err)
+				return nil, fmt.Errorf("failed to set config template: %w", err)
 			}
 
 			if err = rootViper.Unmarshal(&customConfig); err != nil {
-				return fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
+				return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
 			}
 
 			if err := config.WriteConfigFile(appCfgFilePath, customConfig); err != nil {
-				return fmt.Errorf("failed to write %s: %w", appCfgFilePath, err)
+				return nil, fmt.Errorf("failed to write %s: %w", appCfgFilePath, err)
 			}
 		} else {
 			appConf, err := config.ParseConfig(rootViper)
 			if err != nil {
-				return fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
+				return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
 			}
 
 			if err := config.WriteConfigFile(appCfgFilePath, appConf); err != nil {
-				return fmt.Errorf("failed to write %s: %w", appCfgFilePath, err)
+				return nil, fmt.Errorf("failed to write %s: %w", appCfgFilePath, err)
 			}
 		}
 	}
@@ -310,10 +326,10 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 	rootViper.AddConfigPath(configPath)
 
 	if err := rootViper.MergeInConfig(); err != nil {
-		return fmt.Errorf("failed to merge configuration: %w", err)
+		return nil, fmt.Errorf("failed to merge configuration: %w", err)
 	}
 
-	return nil
+	return conf, nil
 }
 
 // AddCommands add server commands

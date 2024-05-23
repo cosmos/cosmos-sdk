@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 
+	"cosmossdk.io/log"
 	auth "cosmossdk.io/x/auth/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -72,7 +73,8 @@ func ShowNodeIDCmd() *cobra.Command {
 		Use:   "show-node-id",
 		Short: "Show this node's ID",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := client.GetConfigFromCmd(cmd)
+			serverCtx := GetServerContextFromCmd(cmd)
+			cfg := serverCtx.Config
 
 			nodeKey, err := p2p.LoadNodeKey(cfg.NodeKeyFile())
 			if err != nil {
@@ -91,7 +93,8 @@ func ShowValidatorCmd() *cobra.Command {
 		Use:   "show-validator",
 		Short: "Show this node's CometBFT validator info",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := client.GetConfigFromCmd(cmd)
+			serverCtx := GetServerContextFromCmd(cmd)
+			cfg := serverCtx.Config
 
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			pk, err := privValidator.GetPubKey()
@@ -124,7 +127,8 @@ func ShowAddressCmd() *cobra.Command {
 		Use:   "show-address",
 		Short: "Shows this node's CometBFT validator consensus address",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := client.GetConfigFromCmd(cmd)
+			serverCtx := GetServerContextFromCmd(cmd)
+			cfg := serverCtx.Config
 
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 
@@ -358,22 +362,22 @@ func BootstrapStateCmd[T types.Application](appCreator types.AppCreator[T]) *cob
 		Short: "Bootstrap CometBFT state at an arbitrary block height using a light client",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := client.GetConfigFromCmd(cmd)
-			logger := client.GetLoggerFromCmd(cmd)
-			viper := client.GetViperFromCmd(cmd)
+			serverCtx := GetServerContextFromCmd(cmd)
+			logger := log.NewLogger(cmd.OutOrStdout())
+			cfg := serverCtx.Config
 
 			height, err := cmd.Flags().GetInt64("height")
 			if err != nil {
 				return err
 			}
 			if height == 0 {
-				home := viper.GetString(flags.FlagHome)
-				db, err := OpenDB(home, GetAppDBBackend(viper))
+				home := serverCtx.Viper.GetString(flags.FlagHome)
+				db, err := OpenDB(home, GetAppDBBackend(serverCtx.Viper))
 				if err != nil {
 					return err
 				}
 
-				app := appCreator(logger, db, nil, viper)
+				app := appCreator(logger, db, nil, serverCtx.Viper)
 				height = app.CommitMultiStore().LastCommitID().Version
 			}
 

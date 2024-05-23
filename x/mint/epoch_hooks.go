@@ -15,10 +15,6 @@ func (am AppModule) GetModuleName() string {
 
 // BeforeEpochStart is a noop
 func (am AppModule) BeforeEpochStart(ctx context.Context, epochIdentifier string, epochNumber int64) error {
-	return nil
-}
-
-func (am AppModule) AfterEpochEnd(ctx context.Context, epochIdentifier string, epochNumber int64) error {
 	minter, err := am.keeper.Minter.Get(ctx)
 	if err != nil {
 		return err
@@ -30,4 +26,8 @@ func (am AppModule) AfterEpochEnd(ctx context.Context, epochIdentifier string, e
 	}
 
 	return am.keeper.Minter.Set(ctx, minter)
+}
+
+func (am AppModule) AfterEpochEnd(ctx context.Context, epochIdentifier string, epochNumber int64) error {
+	return nil
 }

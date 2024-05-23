@@ -92,7 +92,7 @@ type SimApp struct {
 	ConsensusParamsKeeper consensuskeeper.Keeper
 	CircuitBreakerKeeper  circuitkeeper.Keeper
 	PoolKeeper            poolkeeper.Keeper
-	EpochsKeeper          epochskeeper.Keeper
+	EpochsKeeper          *epochskeeper.Keeper
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -206,6 +206,13 @@ func NewSimApp(
 	); err != nil {
 		panic(err)
 	}
+
+	// app.EpochsKeeper.SetHooks(
+	// 	epochstypes.NewMultiEpochHooks(
+	// 		app.ModuleManager.Modules[minttypes.ModuleName].(epochstypes.EpochHooks),
+	// 	// insert epoch hooks receivers here
+	// 	),
+	// )
 
 	// Below we could construct and set an application specific mempool and
 	// ABCI 1.0 PrepareProposal and ProcessProposal handlers. These defaults are

@@ -35,11 +35,11 @@ const ConsensusVersion = 1
 // AppModule implements the AppModule interface for the epochs module.
 type AppModule struct {
 	cdc    codec.Codec
-	keeper keeper.Keeper
+	keeper *keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object.
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper *keeper.Keeper) AppModule {
 	return AppModule{
 		cdc:    cdc,
 		keeper: keeper,

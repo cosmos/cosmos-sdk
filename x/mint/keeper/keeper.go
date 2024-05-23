@@ -104,7 +104,13 @@ func (k Keeper) AddCollectedFees(ctx context.Context, fees sdk.Coins) error {
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
 }
 
-func (k Keeper) DefaultMintFn(ctx context.Context, env appmodule.Environment, minter *types.Minter, epochNumber int64) error {
+func (k Keeper) DefaultMintFn(ctx context.Context, env appmodule.Environment, minter *types.Minter, epochId string, epochNumber int64) error {
+	// the default mint function is called every block, so we only check if epochId is "block" which is
+	// a special value to indicate that this is not an epoch minting, but a regular block minting.
+	if epochId != "block" {
+		return nil
+	}
+
 	stakingTokenSupply, err := k.StakingTokenSupply(ctx)
 	if err != nil {
 		return err

@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	authtypes "cosmossdk.io/x/auth/types"
+	epochstypes "cosmossdk.io/x/epochs/types"
 	"cosmossdk.io/x/mint/keeper"
 	"cosmossdk.io/x/mint/types"
 
@@ -42,6 +43,7 @@ type ModuleOutputs struct {
 
 	MintKeeper keeper.Keeper
 	Module     appmodule.AppModule
+	EpochHooks epochstypes.EpochHooksWrapper
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -74,5 +76,5 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// when no mint function is provided it will use the default keeper.DefaultMintFn
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.MintFn)
 
-	return ModuleOutputs{MintKeeper: k, Module: m}
+	return ModuleOutputs{MintKeeper: k, Module: m, EpochHooks: epochstypes.EpochHooksWrapper{EpochHooks: m}}
 }

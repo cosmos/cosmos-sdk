@@ -18,8 +18,11 @@ import (
 // ProvideExampleMintFn returns the function used in x/mint's endblocker to mint new tokens.
 // Note that this function can not have the mint keeper as a parameter because it would create a cyclic dependency.
 func ProvideExampleMintFn(bankKeeper bankkeeper.Keeper) minttypes.MintFn {
-	return func(ctx context.Context, env appmodule.Environment, minter *minttypes.Minter, epochNumber int64) error {
-		// in this example we ignore epochNumber as we don't care what epoch we are in, we just assume we are being called every hour.
+	return func(ctx context.Context, env appmodule.Environment, minter *minttypes.Minter, epochId string, epochNumber int64) error {
+		// in this example we ignore epochNumber as we don't care what epoch we are in, we just assume we are being called every minute.
+		if epochId != "minute" {
+			return nil
+		}
 
 		var stakingParams stakingtypes.QueryParamsResponse
 		err := env.RouterService.QueryRouterService().InvokeTyped(ctx, &stakingtypes.QueryParamsRequest{}, &stakingParams)
@@ -51,8 +54,8 @@ func ProvideExampleMintFn(bankKeeper bankkeeper.Keeper) minttypes.MintFn {
 		minter.Inflation = minter.NextInflationRate(mintParams.Params, bondedRatio)
 		minter.AnnualProvisions = minter.NextAnnualProvisions(mintParams.Params, stakingTokenSupply.Amount)
 
-		// because we are minting every hour, we need to divide the annual provisions by 365/24 (approx 15.2083)
-		provisionAmt := minter.AnnualProvisions.QuoTruncate(math.LegacyNewDecWithPrec(152083, 4))
+		// because we are minting every minute, we need to divide the annual provisions by minutes in a year (525600)
+		provisionAmt := minter.AnnualProvisions.QuoInt64(525600)
 		mintedCoin := sdk.NewCoin(mintParams.Params.MintDenom, provisionAmt.TruncateInt())
 		mintedCoins := sdk.NewCoins(mintedCoin)
 		maxSupply := mintParams.Params.MaxSupply

@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
-// GetEncodeCommand returns the encode command to take a JSONified transaction and turn it into
+// GetEncodeCommand returns the encode command to take a JSON field transaction and turn it into
 // Amino-serialized bytes
 func GetEncodeCommand() *cobra.Command {
 	cmd := &cobra.Command{

@@ -716,7 +716,11 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
+<<<<<<< HEAD
 	// Check that the delegator doesn't have an ongoing redelegation to the validator
+=======
+	// Check that the delegator has no ongoing redelegation to the validator
+>>>>>>> 37001ff9f (add changelog entry)
 	if k.HasReceivingRedelegation(ctx, delegatorAddress, valAddr) {
 		return nil, types.ErrRedelegationInProgress
 	}

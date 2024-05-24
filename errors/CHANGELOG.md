@@ -31,6 +31,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### API Breaking
+
+* [#20402](https://github.com/cosmos/cosmos-sdk/pull/20402) Remove Grpc error codes from the error package. This is done in order to keep the dependency graph of errors minimal
+
 ## [v1.0.1](https://github.com/cosmos/cosmos-sdk/releases/tag/errors%2Fv1.0.1)
 
 ### Improvements

@@ -54,7 +54,6 @@ func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, 
 func SimulationOperations(app runtime.AppSimI, cdc codec.Codec, config simtypes.Config, txConfig client.TxConfig) []simtypes.WeightedOperation {
 	signingCtx := cdc.InterfaceRegistry().SigningContext()
 	simState := module.SimulationState{
-		T:              config.T,
 		AppParams:      make(simtypes.AppParams),
 		Cdc:            cdc,
 		AddressCodec:   signingCtx.AddressCodec(),

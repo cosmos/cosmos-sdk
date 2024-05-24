@@ -69,11 +69,12 @@ func (l *SimsRegistryAdapter) Add(weight uint32, f SimMsgFactoryX) {
 	if f == nil {
 		panic("message factory is nil")
 	}
-	opAdapter := l.newLegacyOperationAdapter(l.reporter, f.MsgType(), f.Create())
+	opAdapter := l.legacyOperationAdapter(l.reporter, f.MsgType(), f.Create())
 	l.legacyOps = append(l.legacyOps, simulation.NewWeightedOperation(int(weight), opAdapter))
 }
 
-func (l SimsRegistryAdapter) newLegacyOperationAdapter(rootReporter SimulationReporter, example sdk.Msg, f FactoryMethod) simtypes.Operation {
+// adapter to convert the new msg factory into the weighted operations
+func (l SimsRegistryAdapter) legacyOperationAdapter(rootReporter SimulationReporter, example sdk.Msg, f FactoryMethod) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -92,7 +93,7 @@ func (l SimsRegistryAdapter) newLegacyOperationAdapter(rootReporter SimulationRe
 			ctx,
 			chainID,
 			from...,
-		), nil, reporter.ExecutionResult().Error
+		), nil, reporter.Close()
 	}
 }
 

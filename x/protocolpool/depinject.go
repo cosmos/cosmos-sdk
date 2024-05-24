@@ -87,9 +87,14 @@ func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Weight
 
 // WeightedOperations returns the all the protocolpool module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	panic("old code")
 	ak, bk := am.accountKeeper, am.bankKeeper
-	reg := simsx.NewSimsRegistryAdapter(simsx.NewBasicSimulationReporter(simState.T), ak, bk, simState.TxConfig)
+	reg := simsx.NewSimsRegistryAdapter(simsx.NewBasicSimulationReporter(), ak, bk, simState.TxConfig)
 	weight := simsx.ParamWeightSource(simState.AppParams)
 	reg.Add(weight.Get("msg_fund_community_pool", 50), simulation.MsgCreateValidatorFactory())
 	return reg.ToLegacyWeightedOperations()
+}
+
+func (am AppModule) WeightedOperationsX(weight simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weight.Get("msg_fund_community_pool", 50), simulation.MsgCreateValidatorFactory())
 }

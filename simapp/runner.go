@@ -112,6 +112,7 @@ func RunWithSeeds[T SimulationApp](
 
 			app := testInstance.App
 			stateFactory := setupStateFactory(app)
+			ops, reporter := prepareWeightedOps(app.SimulationManager(), stateFactory.Codec, tCfg, testInstance.App.TxConfig())
 			simParams, err := simulation.SimulateFromSeed(
 				t,
 				runLogger,
@@ -119,7 +120,7 @@ func RunWithSeeds[T SimulationApp](
 				app.GetBaseApp(),
 				stateFactory.AppStateFn,
 				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-				getWeightedOps(t, app.SimulationManager(), stateFactory.Codec, tCfg, testInstance.App.TxConfig()),
+				ops,
 				stateFactory.BlockedAddr,
 				tCfg,
 				stateFactory.Codec,
@@ -131,6 +132,7 @@ func RunWithSeeds[T SimulationApp](
 			if tCfg.Commit {
 				simtestutil.PrintStats(testInstance.DB)
 			}
+			t.Log("+++ DONE: \n" + reporter.Summary().String())
 			for _, step := range postRunActions {
 				step(t, testInstance)
 			}
@@ -139,10 +141,9 @@ func RunWithSeeds[T SimulationApp](
 }
 
 // included to avoid cyclic dependency in testutils/sims
-func getWeightedOps(t testing.TB, sm *module.SimulationManager, cdc codec.Codec, config simtypes.Config, txConfig client.TxConfig) simulation.WeightedOperations {
+func prepareWeightedOps(sm *module.SimulationManager, cdc codec.Codec, config simtypes.Config, txConfig client.TxConfig) (simulation.WeightedOperations, *simsx.BasicSimulationReporter) {
 	signingCtx := cdc.InterfaceRegistry().SigningContext()
 	simState := module.SimulationState{
-		T:              config.T,
 		AppParams:      make(simtypes.AppParams),
 		Cdc:            cdc,
 		AddressCodec:   signingCtx.AddressCodec(),
@@ -168,8 +169,12 @@ func getWeightedOps(t testing.TB, sm *module.SimulationManager, cdc codec.Codec,
 
 	wOps := make([]simtypes.WeightedOperation, 0, len(sm.Modules))
 	weights := simsx.ParamWeightSource(simState.AppParams)
-	reporter := simsx.NewBasicSimulationReporter(t)
+	reporter := simsx.NewBasicSimulationReporter()
 	reg := simsx.NewSimsRegistryAdapter(reporter, sm.AK, sm.BK, txConfig)
+
+	type weightedOperationsX interface {
+		WeightedOperationsX(weight simsx.WeightSource, reg simsx.Registry)
+	}
 
 	for _, m := range sm.Modules {
 		if xm, ok := m.(weightedOperationsX); ok {
@@ -179,11 +184,7 @@ func getWeightedOps(t testing.TB, sm *module.SimulationManager, cdc codec.Codec,
 			wOps = append(wOps, m.WeightedOperations(simState)...)
 		}
 	}
-	return wOps
-}
-
-type weightedOperationsX interface {
-	WeightedOperationsX(weight simsx.WeightSource, reg simsx.Registry)
+	return append(wOps, reg.ToLegacyWeightedOperations()...), reporter
 }
 
 type TestInstance[T SimulationApp] struct {

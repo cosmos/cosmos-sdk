@@ -29,6 +29,9 @@ func MsgCreateValidatorFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.Ms
 			return nil, nil
 		}
 		simAccount := testData.AnyAccount(reporter, withoutValidators, withoutConsAddrUsed, simsx.WithDenomBalance(bondDenom))
+		if reporter.IsSkipped() {
+			return nil, nil
+		}
 		selfDelegation := simAccount.LiquidBalance().RandSubsetCoin(reporter, bondDenom)
 		description := types.NewDescription(
 			r.StringN(10),

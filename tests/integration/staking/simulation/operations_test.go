@@ -131,9 +131,7 @@ func (s *SimTestSuite) TestWeightedOperations() {
 	cdc := s.encCfg.Codec
 	appParams := make(simtypes.AppParams)
 
-	weightedOps := simulation.WeightedOperations(nil, appParams, cdc, s.txConfig, s.accountKeeper,
-		s.bankKeeper, s.stakingKeeper,
-	)
+	weightedOps := simulation.WeightedOperations(appParams, cdc, s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
 
 	expected := []struct {
 		weight     int

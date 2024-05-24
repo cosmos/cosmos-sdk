@@ -35,6 +35,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [Unreleased]
+
+### Improvements
+
+* (staking) [#20444](https://github.com/cosmos/cosmos-sdk/pull/20444) Disable tokenization of shares from redelegations.
+
 ## v0.47.13-ics-lsm
 
 This is a special cosmos-sdk release with support for both ICS and LSM.
@@ -48,7 +54,6 @@ This is a special cosmos-sdk release with support for both ICS and LSM.
 ### Bugfixes
 
 * (crypto) [#20073](https://github.com/cosmos/cosmos-sdk/pull/20073) Add secp256r1 parsing support (backport from main)
-
 
 ## v0.47.11-ics-lsm
 

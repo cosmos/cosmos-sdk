@@ -773,6 +773,11 @@ func SimulateMsgTokenizeShares(ak types.AccountKeeper, bk types.BankKeeper, k *k
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "tokenize shares disabled"), nil, nil
 		}
 
+		// Make sure that the delegator has no ongoing redelegations to the validator
+		if k.HasReceivingRedelegation(ctx, delAddr, srcAddr) {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgTokenizeShares, "delegator has redelegations in progress"), nil, nil
+		}
+
 		// get random destination validator
 		totalBond := validator.TokensFromShares(delegation.GetShares()).TruncateInt()
 		if !totalBond.IsPositive() {

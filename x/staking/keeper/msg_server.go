@@ -716,6 +716,11 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
+	// Check that the delegator has no ongoing redelegations to the validator
+	if k.HasReceivingRedelegation(ctx, delegatorAddress, valAddr) {
+		return nil, types.ErrRedelegationInProgress
+	}
+
 	// If this tokenization is NOT from a liquid staking provider,
 	//   confirm it does not exceed the global and validator liquid staking cap
 	// If the tokenization is from a liquid staking provider,

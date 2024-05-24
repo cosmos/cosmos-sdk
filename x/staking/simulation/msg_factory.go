@@ -14,15 +14,15 @@ import (
 func MsgCreateValidatorFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgCreateValidator] {
 	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, sdk.Msg) {
 		r := testData.Rand()
-		withoutValidators := func(a simsx.SimAccount) bool {
+		withoutValidators := simsx.SimAccountFilterFn(func(a simsx.SimAccount) bool {
 			_, err := k.GetValidator(ctx, sdk.ValAddress(a.Address))
 			return err != nil
-		}
-		withoutConsAddrUsed := func(a simsx.SimAccount) bool {
+		})
+		withoutConsAddrUsed := simsx.SimAccountFilterFn(func(a simsx.SimAccount) bool {
 			consPubKey := sdk.GetConsAddress(a.ConsKey.PubKey())
 			_, err := k.GetValidatorByConsAddr(ctx, consPubKey)
 			return err != nil
-		}
+		})
 		bondDenom, err := k.BondDenom(ctx)
 		if err != nil {
 			reporter.Skip("unable to determine bond denomination")

@@ -35,7 +35,7 @@ func FuzzBankSend(f *testing.F) {
 	bankWithContext := simsx.SpendableCoinserFn(func(addr sdk.AccAddress) sdk.Coins {
 		return bk.SpendableCoins(pCtx, addr)
 	})
-	factory := banksims.MsgSendFactory(bk)
+	factory := banksims.MsgSendFactory()
 	f.Add([]byte{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01})
 	f.Fuzz(func(t *testing.T, rawSeed []byte) {
 		if len(rawSeed) < 8 {

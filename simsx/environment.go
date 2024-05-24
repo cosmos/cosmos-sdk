@@ -14,49 +14,88 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
-// weight  (in context of the module)
-// msg
+type contextAwareBalanceSource struct {
+	ctx  context.Context
+	bank BalanceSource
+}
 
-// need:
-// * account factory: existing account
-// * banlance.SpendableCoins
+func (s contextAwareBalanceSource) SpendableCoins(accAddress sdk.AccAddress) sdk.Coins {
+	return s.bank.SpendableCoins(s.ctx, accAddress)
+}
 
-// useful helpers:
-// RandSubsetCoins
+func (s contextAwareBalanceSource) IsSendEnabledDenom(denom string) bool {
+	return s.bank.IsSendEnabledDenom(s.ctx, denom)
+}
 
 type SimAccount struct {
 	simulation.Account
 	r             *rand.Rand
 	liquidBalance *SimsAccountBalance
 	AddressBech32 string
-	bank          SpendableCoinser
+	bank          contextAwareBalanceSource
 }
 
 func (a *SimAccount) LiquidBalance() *SimsAccountBalance {
 	if a.liquidBalance == nil {
-		a.liquidBalance = NewSimsAccountBalance(a.r, a.bank.SpendableCoins(a.Address))
+		a.liquidBalance = NewSimsAccountBalance(a, a.r, a.bank.SpendableCoins(a.Address))
 	}
 	return a.liquidBalance
 }
 
 type SimsAccountBalance struct {
+	owner *SimAccount
 	sdk.Coins
 	r *rand.Rand
 }
 
-func NewSimsAccountBalance(r *rand.Rand, coins sdk.Coins) *SimsAccountBalance {
-	return &SimsAccountBalance{Coins: coins, r: r}
+func NewSimsAccountBalance(o *SimAccount, r *rand.Rand, coins sdk.Coins) *SimsAccountBalance {
+	return &SimsAccountBalance{Coins: coins, r: r, owner: o}
 }
 
-type CoinsFilter func(c sdk.Coins) bool // returns false to reject
+type CoinsFilter interface {
+	Accept(c sdk.Coins) bool // returns false to reject
+}
+type CoinsFilterFn func(c sdk.Coins) bool
 
-func WithSendEnabledCoins(ctx context.Context, bk interface {
-	IsSendEnabledCoins(ctx context.Context, coins ...sdk.Coin) error
-},
-) CoinsFilter {
-	return func(coins sdk.Coins) bool {
-		return bk.IsSendEnabledCoins(ctx, coins...) == nil
+func (f CoinsFilterFn) Accept(c sdk.Coins) bool {
+	return f(c)
+}
+
+func WithSendEnabledCoins() CoinsFilter {
+	return statefulCoinsFilterFn(func(s *SimAccount, coins sdk.Coins) bool {
+		for _, coin := range coins {
+			if !s.bank.IsSendEnabledDenom(coin.Denom) {
+				return false
+			}
+		}
+		return true
+	})
+}
+
+type statefulCoinsFilter struct {
+	s  *SimAccount
+	do func(s *SimAccount, c sdk.Coins) bool
+}
+
+func statefulCoinsFilterFn(f func(s *SimAccount, c sdk.Coins) bool) CoinsFilter {
+	return &statefulCoinsFilter{do: f}
+}
+
+func (f statefulCoinsFilter) Accept(c sdk.Coins) bool {
+	if f.s == nil {
+		panic("account not set")
 	}
+	return f.do(f.s, c)
+}
+
+func (f *statefulCoinsFilter) visit(s *SimAccount) {
+	f.s = s
+}
+
+var _ visitable = &statefulCoinsFilter{}
+
+type visitable interface {
+	visit(s *SimAccount)
 }
 
 // RandSubsetCoins return random amounts from the current balance. When the coins are empty, skip is called on the reporter.
@@ -94,7 +133,10 @@ func (b *SimsAccountBalance) randomAmount(retryCount int, reporter SimulationRep
 	}
 	amount := simtypes.RandSubsetCoins(b.r, coins)
 	for _, filter := range filters {
-		if !filter(amount) {
+		if f, ok := filter.(visitable); ok {
+			f.visit(b.owner)
+		}
+		if !filter.Accept(amount) {
 			return b.randomAmount(retryCount-1, reporter, coins, filters...)
 		}
 	}
@@ -109,33 +151,41 @@ func (b *SimsAccountBalance) RandFees() sdk.Coins {
 	return amount
 }
 
-type SimAccountFilter func(a SimAccount) bool // returns false to reject
+type SimAccountFilter interface {
+	// Accept returns true to accept the account or false to reject
+	Accept(a SimAccount) bool
+}
+type SimAccountFilterFn func(a SimAccount) bool
+
+func (s SimAccountFilterFn) Accept(a SimAccount) bool {
+	return s(a)
+}
 
 func ExcludeAccounts(others ...SimAccount) SimAccountFilter {
-	return func(a SimAccount) bool {
+	return SimAccountFilterFn(func(a SimAccount) bool {
 		return !slices.ContainsFunc(others, func(o SimAccount) bool {
 			return a.Address.Equals(o.Address)
 		})
-	}
+	})
 }
 
 func ExcludeAddresses(addrs ...string) SimAccountFilter {
-	return func(a SimAccount) bool {
+	return SimAccountFilterFn(func(a SimAccount) bool {
 		return !slices.Contains(addrs, a.AddressBech32)
-	}
+	})
 }
 
 func WithDenomBalance(denom string) SimAccountFilter {
-	return func(a SimAccount) bool {
+	return SimAccountFilterFn(func(a SimAccount) bool {
 		return a.LiquidBalance().AmountOf(denom).IsPositive()
-	}
+	})
 }
 
 // todo: liquid token but sent may not be enabled for all or any
 func WithSpendableBalance() SimAccountFilter {
-	return func(a SimAccount) bool {
+	return SimAccountFilterFn(func(a SimAccount) bool {
 		return !a.LiquidBalance().Empty()
-	}
+	})
 }
 
 type ModuleAccountSource interface {
@@ -153,6 +203,7 @@ func (b SpendableCoinserFn) SpendableCoins(addr sdk.AccAddress) sdk.Coins {
 
 type BalanceSource interface {
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	IsSendEnabledDenom(ctx context.Context, denom string) bool
 }
 
 func NewBalanceSource(ctx sdk.Context, bk BalanceSource,
@@ -170,7 +221,7 @@ type ChainDataSource struct {
 	addressCodec              address.Codec
 }
 
-func NewChainDataSource(r *rand.Rand, ak ModuleAccountSource, bk SpendableCoinser, codec address.Codec, oldSimAcc ...simtypes.Account) *ChainDataSource {
+func NewChainDataSource(ctx context.Context, r *rand.Rand, ak ModuleAccountSource, bk BalanceSource, codec address.Codec, oldSimAcc ...simtypes.Account) *ChainDataSource {
 	acc := make([]SimAccount, len(oldSimAcc))
 	index := make(map[string]int, len(oldSimAcc))
 	for i, a := range oldSimAcc {
@@ -182,7 +233,7 @@ func NewChainDataSource(r *rand.Rand, ak ModuleAccountSource, bk SpendableCoinse
 			Account:       a,
 			r:             r,
 			AddressBech32: addrStr,
-			bank:          bk,
+			bank:          contextAwareBalanceSource{ctx: ctx, bank: bk},
 		}
 		index[addrStr] = i
 	}
@@ -212,7 +263,7 @@ func (c *ChainDataSource) randomAccount(reporter SimulationReporter, retryCount 
 	idx := c.r.Intn(len(c.accounts))
 	acc := c.accounts[idx]
 	for _, filter := range filters {
-		if !filter(acc) {
+		if !filter.Accept(acc) {
 			return c.randomAccount(reporter, retryCount-1, filters...)
 		}
 	}

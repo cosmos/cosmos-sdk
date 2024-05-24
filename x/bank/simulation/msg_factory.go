@@ -6,31 +6,30 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simsx"
 
-	"cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"golang.org/x/exp/maps"
 )
 
-func MsgSendFactory(bk keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgSend] {
+func MsgSendFactory() simsx.SimMsgFactoryFn[*types.MsgSend] {
 	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, sdk.Msg) {
 		from := testData.AnyAccount(reporter, simsx.WithSpendableBalance())
 		to := testData.AnyAccount(reporter, simsx.ExcludeAccounts(from))
-		coins := from.LiquidBalance().RandSubsetCoins(reporter, simsx.WithSendEnabledCoins(ctx, bk))
+		coins := from.LiquidBalance().RandSubsetCoins(reporter, simsx.WithSendEnabledCoins())
 		return []simsx.SimAccount{from}, types.NewMsgSend(from.AddressBech32, to.AddressBech32, coins)
 	}
 }
 
-func MsgSendToModuleAccountFactory(bk keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgSend] {
+func MsgSendToModuleAccountFactory() simsx.SimMsgFactoryFn[*types.MsgSend] {
 	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, sdk.Msg) {
 		from := testData.AnyAccount(reporter, simsx.WithSpendableBalance())
 		toStr := testData.ModuleAccountAddress(reporter, "distribution")
-		coins := from.LiquidBalance().RandSubsetCoins(reporter, simsx.WithSendEnabledCoins(ctx, bk))
+		coins := from.LiquidBalance().RandSubsetCoins(reporter, simsx.WithSendEnabledCoins())
 		return []simsx.SimAccount{from}, types.NewMsgSend(from.AddressBech32, toStr, coins)
 	}
 }
 
-func MsgMultiSendFactory(bk keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgMultiSend] {
+func MsgMultiSendFactory() simsx.SimMsgFactoryFn[*types.MsgMultiSend] {
 	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, sdk.Msg) {
 		r := testData.Rand()
 		// random number of inputs/outputs between [1, 3]
@@ -47,7 +46,7 @@ func MsgMultiSendFactory(bk keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgMulti
 			if reporter.IsSkipped() {
 				return nil, nil
 			}
-			coins := from.LiquidBalance().RandSubsetCoins(reporter)
+			coins := from.LiquidBalance().RandSubsetCoins(reporter, simsx.WithSendEnabledCoins())
 			fromAddr := from.AddressBech32
 
 			// set input address in used address map
@@ -59,12 +58,6 @@ func MsgMultiSendFactory(bk keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgMulti
 			// set next input and accumulate total sent coins
 			inputs[i] = types.NewInput(fromAddr, coins)
 			totalSentCoins = totalSentCoins.Add(coins...)
-		}
-
-		// Check send_enabled status of each sent coin denom
-		if err := bk.IsSendEnabledCoins(ctx, totalSentCoins...); err != nil {
-			reporter.Skipf("not sendable coins: %s", totalSentCoins.Denoms())
-			return nil, nil
 		}
 
 		for i := range outputs {

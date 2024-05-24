@@ -140,7 +140,7 @@ func RunWithSeeds[T SimulationApp](
 	}
 }
 
-// included to avoid cyclic dependency in testutils/sims
+// fetch weighted operation for all registered modules. included to avoid cyclic dependency in testutils/sims
 func prepareWeightedOps(sm *module.SimulationManager, cdc codec.Codec, config simtypes.Config, txConfig client.TxConfig) (simulation.WeightedOperations, *simsx.BasicSimulationReporter) {
 	signingCtx := cdc.InterfaceRegistry().SigningContext()
 	simState := module.SimulationState{

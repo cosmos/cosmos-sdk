@@ -43,8 +43,10 @@ type HasProposalContents interface {
 	ProposalContents(simState SimulationState) []simulation.WeightedProposalContent //nolint:staticcheck // legacy v1beta1 governance
 }
 
+// BalanceSource is a duplicate of sims.BalanceSource to break ciclic dependencies
 type BalanceSource interface {
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	IsSendEnabledDenom(ctx context.Context, denom string) bool
 }
 type AccountSourceX interface {
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI

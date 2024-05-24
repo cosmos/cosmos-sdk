@@ -186,7 +186,6 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 }
 
 func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry) {
-	bk := am.keeper
-	reg.Add(weights.Get("msg_send", 100), simulation.MsgSendFactory(bk))
-	reg.Add(weights.Get("msg_multisend", 10), simulation.MsgMultiSendFactory(bk))
+	reg.Add(weights.Get("msg_send", 100), simulation.MsgSendFactory())
+	reg.Add(weights.Get("msg_multisend", 10), simulation.MsgMultiSendFactory())
 }

@@ -79,7 +79,7 @@ func (l SimsRegistryAdapter) legacyOperationAdapter(rootReporter SimulationRepor
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		testData := NewChainDataSource(r, l.ak, NewBalanceSource(ctx, l.bk), l.addressCodec, accs...)
+		testData := NewChainDataSource(ctx, r, l.ak, l.bk, l.addressCodec, accs...)
 		reporter := rootReporter.WithScope(example)
 
 		from, msg := f(ctx, testData, reporter)

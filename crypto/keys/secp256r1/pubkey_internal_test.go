@@ -126,3 +126,14 @@ func (suite *PKSuite) TestSize() {
 	var nilPk *ecdsaPK
 	require.Equal(0, nilPk.Size(), "nil value must have zero size")
 }
+
+func (suite *PKSuite) TestJson() {
+	require := suite.Require()
+
+	bz, err := suite.pk.Key.MarshalJSON()
+	require.NoError(err)
+
+	pk := &ecdsaPK{}
+	require.NoError(pk.UnmarshalJSON(bz))
+	require.Equal(suite.pk.Key, pk)
+}

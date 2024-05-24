@@ -90,7 +90,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			simulation.RandomDecAmount(simState.Rand, maxCommission),
 		)
 
-		validator, err := types.NewValidator(ValStrAddress, simState.Accounts[i].ConsKey.PubKey(), types.Description{}, addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+		validator, err := types.NewValidator(ValStrAddress, simState.Accounts[i].ConsKey.PubKey(), types.Description{}, addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()))
 		if err != nil {
 			panic(err)
 		}

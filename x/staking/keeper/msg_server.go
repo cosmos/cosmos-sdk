@@ -109,7 +109,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, err
 	}
 
-	validator, err := types.NewValidator(msg.ValidatorAddress, pk, msg.Description, addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	validator, err := types.NewValidator(msg.ValidatorAddress, pk, msg.Description, addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()))
 	if err != nil {
 		return nil, err
 	}

@@ -18,7 +18,7 @@ func NewValidator(tb testing.TB, operator sdk.ValAddress, pubKey cryptotypes.Pub
 	tb.Helper()
 	operatorAddr, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(operator)
 	require.NoError(tb, err)
-	v, err := types.NewValidator(operatorAddr, pubKey, types.Description{}, addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	v, err := types.NewValidator(operatorAddr, pubKey, types.Description{}, addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()))
 	require.NoError(tb, err)
 	return v
 }

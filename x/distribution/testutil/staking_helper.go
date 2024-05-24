@@ -14,7 +14,7 @@ import (
 )
 
 func CreateValidator(pk cryptotypes.PubKey, operator string, stake math.Int) (stakingtypes.Validator, error) {
-	val, err := stakingtypes.NewValidator(operator, pk, stakingtypes.Description{Moniker: "TestValidator"}, addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	val, err := stakingtypes.NewValidator(operator, pk, stakingtypes.Description{Moniker: "TestValidator"}, addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()))
 	val.Tokens = stake
 	val.DelegatorShares = math.LegacyNewDecFromInt(val.Tokens)
 	return val, err

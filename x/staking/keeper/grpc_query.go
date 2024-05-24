@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
+	addresscodec "cosmossdk.io/core/address"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/staking/types"
@@ -49,7 +50,7 @@ func (k Querier) Validators(ctx context.Context, req *types.QueryValidatorsReque
 			return nil, nil
 		}
 
-		k.setConsensusAddress(val)
+		setConsensusAddress(val, k.consensusAddressCodec)
 		return val, nil
 	}, func() *types.Validator {
 		return &types.Validator{}
@@ -86,7 +87,7 @@ func (k Querier) Validator(ctx context.Context, req *types.QueryValidatorRequest
 		return nil, status.Errorf(codes.NotFound, "validator %s not found", req.ValidatorAddr)
 	}
 
-	k.setConsensusAddress(&validator)
+	setConsensusAddress(&validator, k.consensusAddressCodec)
 	return &types.QueryValidatorResponse{Validator: validator}, nil
 }
 
@@ -654,7 +655,7 @@ func redelegationsToRedelegationResponses(ctx context.Context, k *Keeper, redels
 }
 
 // setConsensusAddress sets the ConsensusAddress field for the given validator
-func (k Querier) setConsensusAddress(validator *types.Validator) {
+func setConsensusAddress(validator *types.Validator, consensusAddressCodec addresscodec.Codec) {
 	if validator == nil {
 		return
 	}
@@ -663,6 +664,6 @@ func (k Querier) setConsensusAddress(validator *types.Validator) {
 	// Best-effort way
 	if ok {
 		consAddr := sdk.ConsAddress(cpk.Address())
-		validator.ConsensusAddress, _ = k.consensusAddressCodec.BytesToString(consAddr)
+		validator.ConsensusAddress, _ = consensusAddressCodec.BytesToString(consAddr)
 	}
 }

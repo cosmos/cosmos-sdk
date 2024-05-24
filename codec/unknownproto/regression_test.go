@@ -2,12 +2,12 @@ package unknownproto_test
 
 import (
 	"encoding/hex"
-	"io"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
@@ -19,8 +19,6 @@ func TestBadBytesPassedIntoDecoder(t *testing.T) {
 	decoder := cfg.TxConfig.TxDecoder()
 	tx, err := decoder(data)
 
-	// TODO: When issue https://github.com/cosmos/cosmos-sdk/issues/7846
-	// is addressed, we'll remove this .Contains check.
-	require.Contains(t, err.Error(), io.ErrUnexpectedEOF.Error())
+	require.Contains(t, err.Error(), sdkerrors.ErrTxDecode.Error())
 	require.Nil(t, tx)
 }

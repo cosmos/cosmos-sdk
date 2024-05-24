@@ -137,7 +137,7 @@ func ValidateGenAccounts(accounts GenesisAccounts) error {
 
 		// check account specific validation
 		if err := acc.Validate(); err != nil {
-			return fmt.Errorf("invalid account found in genesis state; address: %s, error: %w", addrStr, err)
+			return fmt.Errorf("invalid account found in genesis state; address: %s, error: %v", addrStr, err)
 		}
 	}
 	return nil

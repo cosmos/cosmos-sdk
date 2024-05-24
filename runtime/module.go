@@ -10,11 +10,8 @@ import (
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
-	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/app"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
@@ -28,7 +25,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -98,6 +94,7 @@ func init() {
 			codec.ProvideInterfaceRegistry,
 			codec.ProvideLegacyAmino,
 			codec.ProvideProtoCodec,
+			codec.ProvideAddressCodec,
 			ProvideKVStoreKey,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
@@ -106,7 +103,6 @@ func init() {
 			ProvideTransientStoreService,
 			ProvideModuleManager,
 			ProvideAppVersionModifier,
-			ProvideAddressCodec,
 			ProvideCometService,
 		),
 		appconfig.Invoke(SetupAppBuilder),
@@ -247,7 +243,8 @@ func ProvideEnvironment(
 	return kvService, memStoreService, NewEnvironment(
 		kvService,
 		logger.With(log.ModuleKey, fmt.Sprintf("x/%s", key.Name())),
-		EnvWithRouterService(queryServiceRouter, msgServiceRouter),
+		EnvWithMsgRouterService(msgServiceRouter),
+		EnvWithQueryRouterService(queryServiceRouter),
 		EnvWithMemStoreService(memStoreService),
 	)
 }
@@ -263,43 +260,4 @@ func ProvideAppVersionModifier(app *AppBuilder) app.VersionModifier {
 
 func ProvideCometService() comet.Service {
 	return NewContextAwareCometInfoService()
-}
-
-type AddressCodecInputs struct {
-	depinject.In
-
-	AuthConfig    *authmodulev1.Module    `optional:"true"`
-	StakingConfig *stakingmodulev1.Module `optional:"true"`
-
-	AddressCodecFactory          func() address.Codec                 `optional:"true"`
-	ValidatorAddressCodecFactory func() address.ValidatorAddressCodec `optional:"true"`
-	ConsensusAddressCodecFactory func() address.ConsensusAddressCodec `optional:"true"`
-}
-
-// ProvideAddressCodec provides an address.Codec to the container for any
-// modules that want to do address string <> bytes conversion.
-func ProvideAddressCodec(in AddressCodecInputs) (address.Codec, address.ValidatorAddressCodec, address.ConsensusAddressCodec) {
-	if in.AddressCodecFactory != nil && in.ValidatorAddressCodecFactory != nil && in.ConsensusAddressCodecFactory != nil {
-		return in.AddressCodecFactory(), in.ValidatorAddressCodecFactory(), in.ConsensusAddressCodecFactory()
-	}
-
-	if in.AuthConfig == nil || in.AuthConfig.Bech32Prefix == "" {
-		panic("auth config bech32 prefix cannot be empty if no custom address codec is provided")
-	}
-
-	if in.StakingConfig == nil {
-		in.StakingConfig = &stakingmodulev1.Module{}
-	}
-
-	if in.StakingConfig.Bech32PrefixValidator == "" {
-		in.StakingConfig.Bech32PrefixValidator = fmt.Sprintf("%svaloper", in.AuthConfig.Bech32Prefix)
-	}
-
-	if in.StakingConfig.Bech32PrefixConsensus == "" {
-		in.StakingConfig.Bech32PrefixConsensus = fmt.Sprintf("%svalcons", in.AuthConfig.Bech32Prefix)
-	}
-
-	return addresscodec.NewBech32Codec(in.AuthConfig.Bech32Prefix),
-		addresscodec.NewBech32Codec(in.StakingConfig.Bech32PrefixValidator),
-		addresscodec.NewBech32Codec(in.StakingConfig.Bech32PrefixConsensus)
 }

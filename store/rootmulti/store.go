@@ -458,7 +458,8 @@ func (rs *Store) LastCommitID() types.CommitID {
 	return rs.lastCommitInfo.CommitID()
 }
 
-// SetCommitting implements Committer/CommitStore.
+// PausePruning temporarily pauses the pruning of all individual stores which implement
+// the PausablePruner interface.
 func (rs *Store) PausePruning(pause bool) {
 	for _, store := range rs.stores {
 		if pauseable, ok := store.(types.PausablePruner); ok {

@@ -531,19 +531,20 @@ func TestMultiStore_Pruning(t *testing.T) {
 				ms.Commit()
 			}
 
-			// Ensure async pruning is done
-			time.Sleep(500 * time.Millisecond)
-			ms.Commit()
+			for _, v := range tc.deleted {
+				// Ensure async pruning is done
+				checkErr := func() bool {
+					_, err := ms.CacheMultiStoreWithVersion(v)
+					return err != nil
+				}
+				require.Eventually(t, checkErr, 1*time.Second, 10*time.Millisecond, "expected error when loading height: %d", v)
+			}
 
 			for _, v := range tc.saved {
 				_, err := ms.CacheMultiStoreWithVersion(v)
 				require.NoError(t, err, "expected no error when loading height: %d", v)
 			}
 
-			for _, v := range tc.deleted {
-				_, err := ms.CacheMultiStoreWithVersion(v)
-				require.Error(t, err, "expected error when loading height: %d", v)
-			}
 		})
 	}
 }

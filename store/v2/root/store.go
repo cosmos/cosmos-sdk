@@ -278,7 +278,9 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 		s.logger.Debug("commit header and version mismatch", "header_height", s.commitHeader.Height, "version", version)
 	}
 
-	// signal to the pruning manager that a new version has been committed
+	// signal to the pruning manager that a new version is about to be committed
+	// this may be required if the SS and SC backends implementation have the
+	// background pruning process which must be paused during the commit
 	if err := s.pruningManager.SignalCommit(true, version); err != nil {
 		s.logger.Error("failed to signal commit to pruning manager", "err", err)
 	}

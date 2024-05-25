@@ -50,7 +50,9 @@ func (m *Manager) Prune(version uint64) error {
 }
 
 // SignalCommit signals to the manager that a commit has started or finished.
-// This is used to avoid concurrent writes while pruning.
+// It is used to trigger the pruning of the SC and SS.
+// It pauses or resumes the pruning of the SC and SS if the pruner implements
+// the PausablePruner interface.
 func (m *Manager) SignalCommit(start bool, version uint64) error {
 	if scPausablePruner, ok := m.scPruner.(store.PausablePruner); ok {
 		scPausablePruner.PausePruning(start)

@@ -283,7 +283,7 @@ func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, 
 	return bz, nil
 }
 
-// Prune implements store.PausablePruner.
+// Prune implements store.Pruner.
 func (c *CommitStore) Prune(version uint64) (ferr error) {
 	// prune the metadata
 	batch := c.db.NewBatch()

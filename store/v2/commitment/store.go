@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"sort"
 
 	protoio "github.com/cosmos/gogoproto/io"
 
@@ -120,7 +121,7 @@ func (c *CommitStore) GetLatestVersion() (uint64, error) {
 	return version, nil
 }
 
-func (c *CommitStore) LoadVersion(targetVersion uint64) error {
+func (c *CommitStore) LoadVersion(targetVersion uint64, upgrades *corestore.StoreUpgrades) error {
 	// Rollback the metadata to the target version.
 	latestVersion, err := c.GetLatestVersion()
 	if err != nil {
@@ -139,7 +140,30 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 		}
 	}
 
-	for _, tree := range c.multiTrees {
+	storesKeys := make([]string, 0, len(c.multiTrees))
+	for storeKey := range c.multiTrees {
+		storesKeys = append(storesKeys, storeKey)
+	}
+
+	if upgrades != nil {
+		// deterministic iteration order for upgrades
+		// (as the underlying store may change and
+		// upgrades make store changes where the execution order may matter)
+		sort.Slice(storesKeys, func(i, j int) bool {
+			return storesKeys[i] < storesKeys[j]
+		})
+	}
+
+	for _, storeKey := range storesKeys {
+		tree := c.multiTrees[storeKey]
+
+		// If it has been added, set the initial version.
+		if upgrades.IsAdded(storeKey) || upgrades.RenamedFrom(storeKey) != "" {
+			if err := tree.SetInitialVersion(targetVersion + 1); err != nil {
+				return err
+			}
+		}
+
 		if err := tree.LoadVersion(targetVersion); err != nil {
 			return err
 		}
@@ -147,12 +171,12 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 
 	// If the target version is greater than the latest version, it is the snapshot
 	// restore case, we should create a new commit info for the target version.
-	var cInfo *proof.CommitInfo
 	if targetVersion > latestVersion {
-		cInfo = c.WorkingCommitInfo(targetVersion)
+		cInfo := c.WorkingCommitInfo(targetVersion)
+		return c.flushCommitInfo(targetVersion, cInfo)
 	}
 
-	return c.flushCommitInfo(targetVersion, cInfo)
+	return nil
 }
 
 func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
@@ -470,7 +494,7 @@ loop:
 		}
 	}
 
-	return snapshotItem, c.LoadVersion(version)
+	return snapshotItem, c.LoadVersion(version, nil)
 }
 
 func (c *CommitStore) Close() (ferr error) {

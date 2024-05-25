@@ -42,7 +42,7 @@ type Committer interface {
 	GetLatestVersion() (uint64, error)
 
 	// LoadVersion loads the tree at the given version.
-	LoadVersion(targetVersion uint64) error
+	LoadVersion(targetVersion uint64, upgrades *corestore.StoreUpgrades) error
 
 	// Commit commits the working tree to the database.
 	Commit(version uint64) (*proof.CommitInfo, error)
@@ -56,7 +56,7 @@ type Committer interface {
 	// Once migration is complete, this method should be removed and/or not used.
 	Get(storeKey []byte, version uint64, key []byte) ([]byte, error)
 
-	// SetInitialVersion sets the initial version of the tree.
+	// SetInitialVersion sets the initial version of the committer.
 	SetInitialVersion(version uint64) error
 
 	// GetCommitInfo returns the CommitInfo for the given version.

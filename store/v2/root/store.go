@@ -215,7 +215,7 @@ func (s *Store) LoadLatestVersion() error {
 		return err
 	}
 
-	return s.loadVersion(lv)
+	return s.loadVersion(lv, nil)
 }
 
 func (s *Store) LoadVersion(version uint64) error {
@@ -224,13 +224,31 @@ func (s *Store) LoadVersion(version uint64) error {
 		defer s.telemetry.MeasureSince(now, "root_store", "load_version")
 	}
 
-	return s.loadVersion(version)
+	return s.loadVersion(version, nil)
 }
 
-func (s *Store) loadVersion(v uint64) error {
+// LoadVersionAndUpgrade implements the UpgradeableRootStore interface.
+//
+// NOTE: It cannot be called while the store is migrating.
+func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreUpgrades) error {
+	if s.telemetry != nil {
+		now := time.Now()
+		defer s.telemetry.MeasureSince(now, "root_store", "load_version_and_upgrade")
+	}
+
+	if s.isMigrating {
+		return fmt.Errorf("cannot upgrade while migrating")
+	}
+
+	// TODO: Implement the pruning logic for the renamed/deleted store keys.
+
+	return s.loadVersion(version, upgrades)
+}
+
+func (s *Store) loadVersion(v uint64, upgrades *corestore.StoreUpgrades) error {
 	s.logger.Debug("loading version", "version", v)
 
-	if err := s.stateCommitment.LoadVersion(v); err != nil {
+	if err := s.stateCommitment.LoadVersion(v, upgrades); err != nil {
 		return fmt.Errorf("failed to load SC version %d: %w", v, err)
 	}
 

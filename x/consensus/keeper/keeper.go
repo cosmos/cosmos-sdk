@@ -88,7 +88,7 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	if err := params.ValidateUpdate(&consensusParams, sdkCtx.HeaderInfo().Height); err != nil {
+	if err := params.ValidateUpdate(&consensusParams, sdkCtx.BlockHeader().Height); err != nil {
 		return nil, err
 	}
 

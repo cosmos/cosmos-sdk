@@ -6,6 +6,10 @@
     * [Testing](#testing)
     * [Pull Requests](#pull-requests)
     * [Pull Request Templates](#pull-request-templates)
+    * [Pull Request Accountability](#pull-request-accountability)
+        * [PR Owner](#pr-owner)
+        * [Reviewer](#reviewer)
+        * [External Contributors](#external-contributors)
     * [Requesting Reviews](#requesting-reviews)
     * [Updating Documentation](#updating-documentation)
     * [RFC & ADR](#rfc--adr)
@@ -185,7 +189,7 @@ The reviewer is responsible for ensuring that the PR meets the following criteri
 
 ### External Contributors
 
-External contributors can not manage getting reviewers and assigning reviewers to PRs. When an external contribution requires reviewers, they will be assigned in the team meeting or adhoc based on current workloads. One of the reviewers will be assigned the owner of the PR and will be responsible for ensuring the PR is ready for review and merging after reviews are delivered.
+External contributors can not manage getting reviewers and assigning reviewers to PRs. When an external contribution requires reviewers, they will be assigned in the team meeting or adhoc based on current workloads. One of the reviewers will be assigned the owner of the PR and will be responsible for ensuring the PR is ready for review and merging after reviews are delivered. The owner has the right to overtake the contribution if the external contributor is not responsive or the PR is not moving forward.
 
 ### Requesting Reviews
 

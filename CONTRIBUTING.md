@@ -20,9 +20,6 @@
     * [Strategy Discovery](#strategy-discovery)
     * [Concept Approval](#concept-approval)
         * [Time Bound Period](#time-bound-period)
-        * [Approval Committee & Decision Making](#approval-committee--decision-making)
-        * [Committee Members](#committee-members)
-        * [Committee Criteria](#committee-criteria)
     * [Implementation & Release Approval](#implementation--release-approval)
 
 Thank you for considering making contributions to the Cosmos SDK and related repositories!
@@ -186,6 +183,9 @@ The reviewer is responsible for ensuring that the PR meets the following criteri
 * *Efficiency*: Ensure the code performs efficiently and does not introduce performance bottlenecks.
 * *Resource Usage*: Check for appropriate use of resources, such as memory and CPU. Ensure there are no memory leaks or excessive resource consumption.
 
+### External Contributors
+
+External contributors can not manage getting reviewers and assigning reviewers to PRs. When an external contribution requires reviewers, they will be assigned in the team meeting or adhoc based on current workloads. One of the reviewers will be assigned the owner of the PR and will be responsible for ensuring the PR is ready for review and merging after reviews are delivered.
 
 ### Requesting Reviews
 

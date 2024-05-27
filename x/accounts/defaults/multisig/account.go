@@ -91,7 +91,10 @@ func (a *Account) Init(ctx context.Context, msg *v1.MsgInit) (*v1.MsgInitRespons
 			return nil, err
 		}
 
-		totalWeight += msg.Members[i].Weight
+		totalWeight, err = safeAdd(totalWeight, msg.Members[i].Weight)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if err := validateConfig(*msg.Config, totalWeight); err != nil {
@@ -279,6 +282,7 @@ func (a Account) ExecuteProposal(ctx context.Context, msg *v1.MsgExecuteProposal
 	}
 
 	totalWeight := yesVotes + noVotes + abstainVotes
+
 	var (
 		rejectErr error
 		execErr   error
@@ -386,4 +390,15 @@ func (a *Account) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, a.QuerySequence)
 	accountstd.RegisterQueryHandler(builder, a.QueryProposal)
 	accountstd.RegisterQueryHandler(builder, a.QueryConfig)
+}
+
+func safeAdd(nums ...uint64) (uint64, error) {
+	var sum uint64
+	for _, num := range nums {
+		if sum+num < sum {
+			return 0, errors.New("overflow")
+		}
+		sum += num
+	}
+	return sum, nil
 }

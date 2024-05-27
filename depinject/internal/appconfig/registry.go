@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"reflect"
 
-	"google.golang.org/protobuf/proto"
+	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"google.golang.org/protobuf/protoadapt"
-	gogoproto "github.com/cosmos/gogoproto/proto"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 // ModuleRegistry is the registry of module initializers indexed by their golang
@@ -19,7 +19,7 @@ var ModuleRegistry = map[reflect.Type]*ModuleInitializer{}
 // ModuleInitializer describes how to initialize a module.
 type ModuleInitializer struct {
 	ConfigGoType       reflect.Type
-	ConfigProtoMessage any
+	ConfigProtoMessage proto.Message
 	Error              error
 	Providers          []interface{}
 	Invokers           []interface{}
@@ -33,11 +33,11 @@ func ModulesByProtoMessageName() (map[protoreflect.FullName]*ModuleInitializer, 
 
 	for _, initializer := range ModuleRegistry {
 		var descriptor protoreflect.MessageDescriptor
-		v2Msg, ok := initializer.ConfigProtoMessage.(proto.Message)
+		v2Msg, ok := initializer.ConfigProtoMessage.(protov2.Message)
 		if ok {
 			descriptor = v2Msg.ProtoReflect().Descriptor()
 		} else {
-			v1Msg, _ := initializer.ConfigProtoMessage.(gogoproto.Message)
+			v1Msg, _ := initializer.ConfigProtoMessage.(proto.Message)
 			v2Msg := protoadapt.MessageV2Of(v1Msg)
 			descriptor = v2Msg.ProtoReflect().Descriptor()
 		}
@@ -47,7 +47,7 @@ func ModulesByProtoMessageName() (map[protoreflect.FullName]*ModuleInitializer, 
 			return nil, fmt.Errorf("duplicate module registration for %s", fullName)
 		}
 
-		modDesc := proto.GetExtension(descriptor.Options(), appv1alpha1.E_Module).(*appv1alpha1.ModuleDescriptor)
+		modDesc := protov2.GetExtension(descriptor.Options(), appv1alpha1.E_Module).(*appv1alpha1.ModuleDescriptor)
 		if modDesc == nil {
 			return nil, fmt.Errorf(
 				"protobuf type %s registered as a module should have the option %s",

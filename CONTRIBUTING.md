@@ -121,7 +121,7 @@ PRs must have a category prefix that is based on the type of changes being made 
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
 Additionally, each PR should only address a single issue.
 
-Pull requests are merged automatically using [`A:automerge` action](https://mergify.io/features/auto-merge).
+Pull requests are merged automatically using the automerge functionality of Github.
 
 NOTE: when merging, GitHub will squash commits and rebase on top of the main.
 
@@ -156,6 +156,23 @@ items. In addition, use the following review explanations:
     * If you approve the PR, you are responsible for any issues mentioned here and any issues that should have been addressed after thoroughly reviewing the reviewer checklist items in the pull request template.
 * If you sat down with the PR submitter and did a pairing review, add this information in the `Approval` or your PR comments.
 * If you are only making "surface level" reviews, submit notes as a `comment` review.
+
+### Pull Request Accountability
+
+The PR owner is responsible for ensuring that the PR is ready for review and merging after reviews are delivered. This includes:
+
+* Ensuring that the PR is up to date with the latest changes in the main branch.
+* Ensuring that the PR passes all checks.
+* Ensuring that the PR has a clear description of the changes.
+* Ensuring that the PR has a clear description of the testing strategy.
+* Ensuring that the PR has a clear description of the impact of the changes.
+* Ensuring that the PR has a clear description of the risks associated with the changes.
+* Ensuring that the PR has a clear description of the next steps.
+* Ensuring that the PR has a clear description of the dependencies.
+
+The pull request owner is responsible for assigning reviewers on the team, responding to feedback, and ensuring that the PR is merged in a timely manner. If a PR is reviewed, but an approval is not given by the reviewer the pull request owner is responsible for addressing the feedback, ensuring that the PR is ready for review again and notifying the reviewers that the PR is ready for review. 
+
+Once approvals have been given by the reviewer(s) it is the responsibility of the pull request owner to merge the PR.
 
 ### Updating Documentation
 

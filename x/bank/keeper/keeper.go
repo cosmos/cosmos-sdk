@@ -269,13 +269,6 @@ func (k BaseKeeper) SendCoinsFromModuleToAccount(
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule)
 	}
 
-	for _, coin := range amt {
-		sendEnabled, found := k.getSendEnabled(ctx, coin.Denom)
-		if found && !sendEnabled {
-			return fmt.Errorf("denom: %s, is prohibited from being sent at this time", coin.Denom)
-		}
-	}
-
 	if k.BlockedAddr(recipientAddr) {
 		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", recipientAddr)
 	}

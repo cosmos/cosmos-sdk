@@ -35,7 +35,7 @@ modules:
   config:
     "@type": testpb.ModuleFoo
 `))
-	expectContainerErrorContains(t, opt, `unable to resolve`)
+	expectContainerErrorContains(t, opt, `unknown message type`)
 
 	opt = appconfig.LoadYAML([]byte(`
 modules:
@@ -132,15 +132,15 @@ func TestComposeGogoTypes(t *testing.T) {
 modules:
 - name: a
   config:
-    "@type": testpb.ModuleFoo
+    "@type": type.googleapis.com/testpb.ModuleFoo
 `))
-	expectContainerErrorContains(t, opt, `unable to resolve`)
+	expectContainerErrorContains(t, opt, `unknown message type`)
 
 	opt = appconfig.LoadYAML([]byte(`
 modules:
 - name: a
   config:
-    "@type": cosmos.app.v1alpha1.Config # this is not actually a module config type!
+    "@type": type.googleapis.com/cosmos.app.v1alpha1.Config # this is not actually a module config type!
 `))
 	expectContainerErrorContains(t, opt, "does not have the option cosmos.app.v1alpha1.module")
 	expectContainerErrorContains(t, opt, "registered modules are")
@@ -150,7 +150,7 @@ modules:
 modules:
 - name: a
   config:
-    "@type": testpb.TestGogoUnregisteredModule
+    "@type": type.googleapis.com/testpb.TestGogoUnregisteredModule
 `))
 	expectContainerErrorContains(t, opt, "did you forget to import cosmossdk.io/core/internal/testpb")
 	expectContainerErrorContains(t, opt, "registered modules are")
@@ -161,13 +161,13 @@ modules:
 modules:
 - name: runtime
   config:
-   "@type": testpb.TestGogoRuntimeModule
+   "@type": type.googleapis.com/testpb.TestGogoRuntimeModule
 - name: a
   config:
-   "@type": testpb.TestGogoModuleA
+   "@type": type.googleapis.com/testpb.TestGogoModuleA
 - name: b
   config:
-   "@type": testpb.TestGogoModuleB
+   "@type": type.googleapis.com/testpb.TestGogoModuleB
 `))
 	assert.NilError(t, depinject.Inject(opt, &app))
 	buf := &bytes.Buffer{}
@@ -190,7 +190,7 @@ golang_bindings:
 modules:
   - name: a
     config:
-      "@type": testpb.TestGogoModuleA
+      "@type": type.googleapis.com/testpb.TestGogoModuleA
     golang_bindings:
       - interfaceType: interfaceType/package.name 
         implementation: implementationType/package.name
@@ -205,7 +205,7 @@ modules:
 modules:
 - name: a
   config:
-   "@type": testpb.TestNoGoImportModule
+   "@type": type.googleapis.com/testpb.TestNoGoImportModule
 `))
 	expectContainerErrorContains(t, opt, "module should have the option cosmos.app.v1alpha1.module")
 
@@ -215,7 +215,7 @@ modules:
 modules:
 - name: a
   config:
-   "@type": testpb.TestNoGoImportModule
+   "@type": type.googleapis.com/testpb.TestNoGoImportModule
 `))
 	expectContainerErrorContains(t, opt, "module should have ModuleDescriptor.go_import specified")
 }

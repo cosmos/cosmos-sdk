@@ -131,6 +131,62 @@ There are three PR templates. The [default template](./.github/PULL_REQUEST_TEMP
 
 * `template=docs.md`
 
+### Pull Request Accountability
+
+#### PR Owner
+
+The PR owner is responsible for ensuring that the PR is ready for review and merging after reviews are delivered. This includes:
+
+* Ensuring that the PR is up to date with the latest changes in the main branch.
+* Ensuring that the PR passes all checks.
+* Ensuring that the PR has a clear description of the changes.
+* Ensuring that the PR has a clear description of the testing strategy.
+* Ensuring that the PR has a clear description of the impact of the changes.
+* Ensuring that the PR has a clear description of the risks associated with the changes.
+* Ensuring that the PR has a clear description of the next steps.
+* Ensuring that the PR has a clear description of the dependencies.
+
+The pull request owner is responsible for assigning reviewers on the team, responding to feedback, and ensuring that the PR is merged in a timely manner. If a PR is reviewed, but an approval is not given by the reviewer the pull request owner is responsible for addressing the feedback, ensuring that the PR is ready for review again and notifying the reviewers that the PR is ready for review. 
+
+Once approvals have been given by the reviewer(s) it is the responsibility of the pull request owner to merge the PR.
+
+#### Reviewer
+
+Reviewers or other contributors should not merge main into the PR unless discussed with the pull request owner and ownership has been transferred.
+
+The reviewer is responsible for ensuring that the PR meets the following criteria:
+
+##### Code Quality
+
+* *Readability*: Ensure the code is easy to read and understand. Check for clear and concise variable names, appropriate comments, and overall readability.
+* *Coding Standards*: Verify adherence to the team’s coding standards and style guides. This includes indentation, spacing, naming conventions, and file organization.
+* *Code Structure*: Check for proper use of functions, classes, and modules. Ensure the code is organized logically and is modular.
+* *Complexity*: Look for complex code that could be simplified. Ensure there are no nested loops.
+
+##### Functionality
+
+* *Correctness*: Verify that the code performs the intended function correctly. Check the logic and ensure that edge cases are handled.
+* *Bug Fixes*: Ensure any reported bugs are adequately addressed. Verify that the fixes resolve the issues without introducing new bugs.
+* *Feature Implementation*: Confirm that new features are implemented as specified in the requirements or user stories.
+
+##### Testing
+
+* *Test Coverage*: Check that there are sufficient unit tests, integration tests and E2E tests for the new code. Ensure tests cover both normal and edge cases.
+* *Test Quality*: Review the quality of the tests. Ensure they are meaningful and not just checking trivial cases.
+* *Passing Tests*: Verify that all tests pass, including any new tests added with the PR.
+
+##### Documentation
+
+* *Code* Comments: Ensure there are comments explaining non-obvious parts of the code.
+* *API Documentation*: Verify that any new or modified public methods, classes, or modules are properly documented.
+* *User Documentation*: Check for updates to user documentation, if the PR includes changes that affect the user experience.
+
+##### Performance
+
+* *Efficiency*: Ensure the code performs efficiently and does not introduce performance bottlenecks.
+* *Resource Usage*: Check for appropriate use of resources, such as memory and CPU. Ensure there are no memory leaks or excessive resource consumption.
+
+
 ### Requesting Reviews
 
 In order to accommodate the review process, the author of the PR must complete the author checklist
@@ -157,22 +213,6 @@ items. In addition, use the following review explanations:
 * If you sat down with the PR submitter and did a pairing review, add this information in the `Approval` or your PR comments.
 * If you are only making "surface level" reviews, submit notes as a `comment` review.
 
-### Pull Request Accountability
-
-The PR owner is responsible for ensuring that the PR is ready for review and merging after reviews are delivered. This includes:
-
-* Ensuring that the PR is up to date with the latest changes in the main branch.
-* Ensuring that the PR passes all checks.
-* Ensuring that the PR has a clear description of the changes.
-* Ensuring that the PR has a clear description of the testing strategy.
-* Ensuring that the PR has a clear description of the impact of the changes.
-* Ensuring that the PR has a clear description of the risks associated with the changes.
-* Ensuring that the PR has a clear description of the next steps.
-* Ensuring that the PR has a clear description of the dependencies.
-
-The pull request owner is responsible for assigning reviewers on the team, responding to feedback, and ensuring that the PR is merged in a timely manner. If a PR is reviewed, but an approval is not given by the reviewer the pull request owner is responsible for addressing the feedback, ensuring that the PR is ready for review again and notifying the reviewers that the PR is ready for review. 
-
-Once approvals have been given by the reviewer(s) it is the responsibility of the pull request owner to merge the PR.
 
 ### Updating Documentation
 
@@ -336,42 +376,11 @@ If an individual Pull Request for an ADR needs more time than 2 weeks to reach r
 in current state (`Draft` or `Proposed`), with its contents updated to summarize
 the current state of its discussion.
 
-If an ADR is taking longer than 4 weeks to reach a final conclusion, the **Concept Approval Committee**
-should convene to rectify the situation by either:
+If an ADR is taking longer than 4 weeks to reach a final conclusion, there should be a synchronous meeting with reviewers and all stake holders
 
 * unanimously setting a new time bound period for this ADR
 * making changes to the Concept Approval Process (as outlined here)
 * making changes to the members of the Concept Approval Committee
-
-#### Approval Committee & Decision Making
-
-In absence of general consensus, decision making requires 1/2 vote from the two members
-of the **Concept Approval Committee**.
-
-#### Committee Members
-
-* Core Members: **Aaron** (Regen), **Bez** (IG)
-
-#### Committee Criteria
-
-Members must:
-
-* Participate in all or almost all ADR discussions, both on GitHub as well as in bi-weekly Architecture Review
-  meetings
-* Be active contributors to the Cosmos SDK, and furthermore should be continuously making substantial contributions
-  to the project's codebase, review process, documentation and ADRs
-* Have stake in the Cosmos SDK project, represented by:
-    * Being a client / user of the Cosmos SDK
-    * "[giving back](https://www.debian.org/social_contract)" to the software
-* Delegate representation in case of vacation or absence
-
-Code owners need to maintain participation in the process, ideally as members of **Concept Approval Committee**
-members, but at the very least as active participants in ADR discussions
-
-Removal criteria:
-
-* Missing 3 meetings results in ICF evaluating whether the member should be removed / replaced
-* Violation of Code of Conduct
 
 ### Implementation & Release Approval
 

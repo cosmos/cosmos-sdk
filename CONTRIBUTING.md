@@ -58,7 +58,7 @@ spell checks all files and will automatically open PRs for any spelling errors.
 
 ## Teams Dev Calls
 
-The Cosmos SDK has many stakeholders contributing and shaping the project. The Core SDK team is composed of Interchain GmbH and Regen Network Development developers. Any long-term contributors and additional maintainers from other projects are welcome. We use self-organizing principles to coordinate and collaborate across organizations in structured "EPIC" that focus on specific problem domains or architectural components of the Cosmos SDK.
+The Cosmos SDK has many stakeholders contributing and shaping the project. The Core SDK team is composed of Binary Builders & Zondax. Any long-term contributors and additional maintainers from other projects are welcome. We use self-organizing principles to coordinate and collaborate across organizations in structured "EPIC" that focus on specific problem domains or architectural components of the Cosmos SDK.
 
 The developers work in sprints, which are available in a [GitHub Project](https://github.com/orgs/cosmos/projects/26/views/22). The current EPICs are pinned at the top of the [issues list](https://github.com/cosmos/cosmos-sdk/issues).
 
@@ -66,10 +66,10 @@ The important development announcements are shared on [Discord](https://discord.
 
 To synchronize we have few major meetings:
 
-* Cosmos SDK Sprint Review on Monday and Thursday at 14:00 UTC (limited participation to core devs).
-* Cosmos SDK Community Call on Thursday at 16:00 UTC.
+* Cosmos SDK Standup on Monday and Thursday at 14:00 UTC (limited participation to core devs).
+* Cosmos SDK Community Call on the second Thursday of the month at 13:00 UTC.
 
-If you would like to join one of the community call, then please contact us on [Discord](https://discord.gg/interchain) or reach out directly to Marko (@tac0turtle).
+If you would like to join one of the community call, then please request to join the [Cosmos SDK Google Group](https://groups.google.com/g/cosmos-sdk-community).
 
 ## Architecture Decision Records (ADR)
 

@@ -185,6 +185,7 @@ replace (
 	cosmossdk.io/x/accounts/defaults/lockup => ../accounts/defaults/lockup
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
-	cosmossdk.io/x/consensus => ../consensus
+	cosmossdk.io/x/consensus => ../consensus	
+	cosmossdk.io/x/distribution => ../distribution
 	cosmossdk.io/x/staking => ../staking
 )

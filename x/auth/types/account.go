@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cometbft/cometbft/crypto"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -222,7 +220,7 @@ func (ma ModuleAccount) Validate() error {
 		return errors.New("uninitialized ModuleAccount: BaseAccount is nil")
 	}
 
-	if ma.Address != sdk.AccAddress(crypto.AddressHash([]byte(ma.Name))).String() {
+	if ma.Address != sdk.AccAddress(AddressHash([]byte(ma.Name))).String() {
 		return fmt.Errorf("address %s cannot be derived from the module name '%s'", ma.Address, ma.Name)
 	}
 

@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
@@ -13,15 +14,18 @@ import (
 	"cosmossdk.io/x/auth"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authsims "cosmossdk.io/x/auth/simulation"
+	authtestutil "cosmossdk.io/x/auth/testutil"
 	_ "cosmossdk.io/x/auth/tx/config"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	"cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/consensus"
 	minttypes "cosmossdk.io/x/mint/types"
 	_ "cosmossdk.io/x/staking"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -29,7 +33,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 )
 
 var (
@@ -78,22 +81,25 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		minttypes.ModuleName: {authtypes.Minter},
 	}
 
+	// gomock initializations
+	ctrl := gomock.NewController(t)
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+
 	accountKeeper := authkeeper.NewAccountKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		cdc,
 		authtypes.ProtoBaseAccount,
+		acctsModKeeper,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
 		authority.String(),
-		nil,
 	)
 
 	blockedAddresses := map[string]bool{
 		accountKeeper.GetAuthority(): false,
 	}
 	bankKeeper := keeper.NewBaseKeeper(
-
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
 		cdc,
 		accountKeeper,
@@ -101,7 +107,9 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		authority.String(),
 	)
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
+	assert.NilError(t, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
+
+	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
@@ -110,7 +118,10 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		map[string]appmodule.AppModule{
 			authtypes.ModuleName: authModule,
 			banktypes.ModuleName: bankModule,
-		})
+		},
+		baseapp.NewMsgServiceRouter(),
+		baseapp.NewGRPCQueryRouter(),
+	)
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 

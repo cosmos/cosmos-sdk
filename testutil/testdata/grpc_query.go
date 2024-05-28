@@ -3,11 +3,12 @@ package testdata
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/gogoproto/types/any/test"
 	"testing"
 
+	"github.com/cosmos/gogoproto/types/any/test"
+
 	"github.com/cosmos/gogoproto/proto"
-	grpc "google.golang.org/grpc"
+	"google.golang.org/grpc"
 	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"

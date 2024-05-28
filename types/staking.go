@@ -1,8 +1,6 @@
 package types
 
 import (
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-
 	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -87,7 +85,6 @@ type ValidatorI interface {
 	IsUnbonding() bool                                              // check if has status unbonding
 	GetOperator() string                                            // operator address to receive/return validators coins
 	ConsPubKey() (cryptotypes.PubKey, error)                        // validation consensus pubkey (cryptotypes.PubKey)
-	TmConsPublicKey() (cmtprotocrypto.PublicKey, error)             // validation consensus pubkey (CometBFT)
 	GetConsAddr() ([]byte, error)                                   // validation consensus address
 	GetTokens() math.Int                                            // validation tokens
 	GetBondedTokens() math.Int                                      // validator bonded tokens

@@ -9,6 +9,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -17,6 +18,7 @@ import (
 
 func TestPrimaryKeyTable(t *testing.T) {
 	rapid.Check(t, func(rt *rapid.T) {
+		ac := address.NewBech32Codec("cosmos")
 		// Init creates a new instance of the state machine model by building the real
 		// table and making the empty model map
 		// Create context
@@ -31,6 +33,7 @@ func TestPrimaryKeyTable(t *testing.T) {
 			[2]byte{0x1},
 			&testdata.TableModel{},
 			cdc,
+			ac,
 		)
 		require.NoError(t, err)
 
@@ -42,7 +45,7 @@ func TestPrimaryKeyTable(t *testing.T) {
 			// an error if it already exists.
 			"Create": func(t *rapid.T) {
 				g := genTableModel.Draw(t, "g")
-				pk := string(PrimaryKey(g))
+				pk := string(PrimaryKey(g, ac))
 
 				t.Logf("pk: %v", pk)
 				t.Logf("state: %v", state)
@@ -68,7 +71,7 @@ func TestPrimaryKeyTable(t *testing.T) {
 				// Perform the real Update
 				err := table.Update(store, tm)
 
-				if state[string(PrimaryKey(tm))] == nil {
+				if state[string(PrimaryKey(tm, ac))] == nil {
 					// If there's no value in the model, we expect an error
 					require.Error(t, err)
 				} else {
@@ -76,7 +79,7 @@ func TestPrimaryKeyTable(t *testing.T) {
 					require.NoError(t, err)
 
 					// Update the model with the new value
-					state[string(PrimaryKey(tm))] = tm
+					state[string(PrimaryKey(tm, ac))] = tm
 				}
 			},
 
@@ -84,7 +87,7 @@ func TestPrimaryKeyTable(t *testing.T) {
 			// whether it exists or not.
 			"Set": func(t *rapid.T) {
 				g := genTableModel.Draw(t, "g")
-				pk := string(PrimaryKey(g))
+				pk := string(PrimaryKey(g, ac))
 
 				err := table.Set(store, g)
 
@@ -101,7 +104,7 @@ func TestPrimaryKeyTable(t *testing.T) {
 				// Perform the real Delete
 				err := table.Delete(store, tm)
 
-				if state[string(PrimaryKey(tm))] == nil {
+				if state[string(PrimaryKey(tm, ac))] == nil {
 					// If there's no value in the model, we expect an error
 					require.Error(t, err)
 				} else {
@@ -109,14 +112,14 @@ func TestPrimaryKeyTable(t *testing.T) {
 					require.NoError(t, err)
 
 					// Delete the value from the model
-					delete(state, string(PrimaryKey(tm)))
+					delete(state, string(PrimaryKey(tm, ac)))
 				}
 			},
 
 			// Has is one of the model commands. It checks whether a key already exists in
 			// the table.
 			"Has": func(t *rapid.T) {
-				pk := PrimaryKey(generateTableModel(state).Draw(t, "g"))
+				pk := PrimaryKey(generateTableModel(state).Draw(t, "g"), ac)
 
 				realHas := table.Has(store, pk)
 				modelHas := state[string(pk)] != nil
@@ -127,7 +130,7 @@ func TestPrimaryKeyTable(t *testing.T) {
 			// GetOne is one of the model commands. It fetches an object from the table by
 			// its primary key and returns an error if that primary key isn't in the table.
 			"GetOne": func(t *rapid.T) {
-				pk := PrimaryKey(generateTableModel(state).Draw(t, "tm"))
+				pk := PrimaryKey(generateTableModel(state).Draw(t, "tm"), ac)
 
 				var tm testdata.TableModel
 

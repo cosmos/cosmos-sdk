@@ -25,7 +25,7 @@ func TestUnorderedTxDecorator_OrderedTx(t *testing.T) {
 
 	suite := SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, txm, suite.accountKeeper.Environment()))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, txm, suite.accountKeeper.GetEnvironment()))
 
 	tx, txBz := genUnorderedTx(t, false, 0)
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithBlockHeight(100)
@@ -44,7 +44,7 @@ func TestUnorderedTxDecorator_UnorderedTx_NoTTL(t *testing.T) {
 
 	suite := SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, txm, suite.accountKeeper.Environment()))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, txm, suite.accountKeeper.GetEnvironment()))
 
 	tx, txBz := genUnorderedTx(t, true, 0)
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithBlockHeight(100)
@@ -63,7 +63,7 @@ func TestUnorderedTxDecorator_UnorderedTx_InvalidTTL(t *testing.T) {
 
 	suite := SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, txm, suite.accountKeeper.Environment()))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, txm, suite.accountKeeper.GetEnvironment()))
 
 	tx, txBz := genUnorderedTx(t, true, 100+unorderedtx.DefaultMaxUnOrderedTTL+1)
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithBlockHeight(100)
@@ -82,7 +82,7 @@ func TestUnorderedTxDecorator_UnorderedTx_AlreadyExists(t *testing.T) {
 
 	suite := SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, txm, suite.accountKeeper.Environment()))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, txm, suite.accountKeeper.GetEnvironment()))
 
 	tx, txBz := genUnorderedTx(t, true, 150)
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithBlockHeight(100)
@@ -104,7 +104,7 @@ func TestUnorderedTxDecorator_UnorderedTx_ValidCheckTx(t *testing.T) {
 
 	suite := SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, txm, suite.accountKeeper.Environment()))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, txm, suite.accountKeeper.GetEnvironment()))
 
 	tx, txBz := genUnorderedTx(t, true, 150)
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithBlockHeight(100).WithExecMode(sdk.ExecModeCheck)
@@ -123,7 +123,7 @@ func TestUnorderedTxDecorator_UnorderedTx_ValidDeliverTx(t *testing.T) {
 
 	suite := SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, txm, suite.accountKeeper.Environment()))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, txm, suite.accountKeeper.GetEnvironment()))
 
 	tx, txBz := genUnorderedTx(t, true, 150)
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithBlockHeight(100).WithExecMode(sdk.ExecModeFinalize)

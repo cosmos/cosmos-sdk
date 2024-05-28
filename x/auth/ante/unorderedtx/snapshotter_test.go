@@ -43,7 +43,7 @@ func TestSnapshotter(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, txm2.Size())
 
-	// restore with with height < ttl which should result in all unordered txs synced
+	// restore with height < ttl which should result in all unordered txs synced
 	txm3 := unorderedtx.NewManager(dataDir)
 	s3 := unorderedtx.NewSnapshotter(txm3)
 	err = s3.RestoreExtension(50, unorderedtx.SnapshotFormat, pr)

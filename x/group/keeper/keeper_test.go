@@ -9,7 +9,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -49,7 +48,6 @@ type TestSuite struct {
 	blockTime          time.Time
 	bankKeeper         *grouptestutil.MockBankKeeper
 	accountKeeper      *grouptestutil.MockAccountKeeper
-	environment        appmodule.Environment
 }
 
 func (s *TestSuite) SetupTest() {
@@ -84,13 +82,11 @@ func (s *TestSuite) SetupTest() {
 	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	banktypes.RegisterMsgServer(bApp.MsgServiceRouter(), s.bankKeeper)
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger(), runtime.EnvWithRouterService(bApp.GRPCQueryRouter(), bApp.MsgServiceRouter()))
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger(), runtime.EnvWithQueryRouterService(bApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(bApp.MsgServiceRouter()))
 	config := group.DefaultConfig()
 	s.groupKeeper = keeper.NewKeeper(env, encCfg.Codec, s.accountKeeper, config)
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: s.blockTime})
 	s.sdkCtx = sdk.UnwrapSDKContext(s.ctx)
-
-	s.environment = env
 
 	// Initial group, group policy and balance setup
 	members := []group.MemberRequest{
@@ -341,7 +337,7 @@ func (s *TestSuite) TestPruneProposals() {
 	s.sdkCtx = s.sdkCtx.WithHeaderInfo(header.Info{Time: s.sdkCtx.HeaderInfo().Time.Add(expirationTime)})
 
 	// Prune Expired Proposals
-	err = s.groupKeeper.PruneProposals(s.sdkCtx, s.environment)
+	err = s.groupKeeper.PruneProposals(s.sdkCtx)
 	s.Require().NoError(err)
 	postPrune, err := s.groupKeeper.Proposal(s.ctx, &queryProposal)
 	s.Require().Nil(postPrune)
@@ -464,7 +460,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 	s.Require().Equal("1", result.Tally.YesCount)
 	s.Require().NoError(err)
 
-	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx, s.environment))
+	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
 	s.NotPanics(func() {
 		err := s.groupKeeper.EndBlocker(ctx)
 		if err != nil {
@@ -527,7 +523,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	ctx := s.sdkCtx.WithHeaderInfo(header.Info{Time: s.sdkCtx.HeaderInfo().Time.Add(votingPeriod + 1)})
 
 	// Tally the result. This saves the tally result to state.
-	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx, s.environment))
+	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
 	s.NotPanics(func() {
 		err := s.groupKeeper.EndBlocker(ctx)
 		if err != nil {
@@ -542,7 +538,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	})
 	s.Require().NoError(err)
 
-	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx, s.environment))
+	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
 	s.NotPanics(func() {
 		err := s.groupKeeper.EndBlocker(ctx)
 		if err != nil {

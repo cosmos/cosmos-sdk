@@ -40,7 +40,7 @@ func (m Migrator) Migrate2to3(ctx context.Context) error {
 // version 3 to version 4. Specifically, it migrates the validator missed block
 // bitmap.
 func (m Migrator) Migrate3to4(ctx context.Context) error {
-	store := runtime.KVStoreAdapter(m.keeper.environment.KVStoreService.OpenKVStore(ctx))
+	store := runtime.KVStoreAdapter(m.keeper.KVStoreService.OpenKVStore(ctx))
 	params, err := m.keeper.Params.Get(ctx)
 	if err != nil {
 		return err

@@ -5,11 +5,11 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
 	"cosmossdk.io/store/gaskv"
 	storetypes "cosmossdk.io/store/types"
 )
@@ -102,6 +102,8 @@ func (c Context) HeaderHash() []byte {
 	return hash
 }
 
+// Deprecated: getting consensus params from the context is deprecated and will be removed after 0.51
+// Querying the consensus module for the parameters is required in server/v2
 func (c Context) ConsensusParams() cmtproto.ConsensusParams {
 	return c.consParams
 }
@@ -409,7 +411,7 @@ func ToSDKEvidence(ev []abci.Misbehavior) []comet.Evidence {
 	return evidence
 }
 
-// ToSDKDecidedCommitInfo takes comet commit info and returns sdk commit info
+// ToSDKCommitInfo takes comet commit info and returns sdk commit info
 func ToSDKCommitInfo(commit abci.CommitInfo) comet.CommitInfo {
 	ci := comet.CommitInfo{
 		Round: commit.Round,

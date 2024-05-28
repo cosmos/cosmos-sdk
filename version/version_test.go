@@ -1,7 +1,7 @@
 package version_test
 
 import (
-	context "context"
+	"context"
 	"encoding/json"
 	"fmt"
 	"runtime"

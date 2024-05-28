@@ -641,7 +641,7 @@ func TestApplyAndReturnValidatorSetUpdatesInserted(t *testing.T) {
 	validators[1] = keeper.TestingUpdateValidator(f.stakingKeeper, f.sdkCtx, validators[1], false)
 	applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, 2)
 
-	// test validtor added at the beginning
+	// test validator added at the beginning
 	//  tendermintUpdate set: {} -> {c0}
 	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, validators[2]))
 	assert.NilError(t, f.stakingKeeper.SetValidatorByPowerIndex(f.sdkCtx, validators[2]))
@@ -651,7 +651,7 @@ func TestApplyAndReturnValidatorSetUpdatesInserted(t *testing.T) {
 	validators[2], _ = f.stakingKeeper.GetValidator(f.sdkCtx, val2bz)
 	assert.DeepEqual(t, validators[2].ModuleValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx)), updates[0])
 
-	// test validtor added at the beginning
+	// test validator added at the beginning
 	//  tendermintUpdate set: {} -> {c0}
 	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, validators[3]))
 	assert.NilError(t, f.stakingKeeper.SetValidatorByPowerIndex(f.sdkCtx, validators[3]))
@@ -661,7 +661,7 @@ func TestApplyAndReturnValidatorSetUpdatesInserted(t *testing.T) {
 	validators[3], _ = f.stakingKeeper.GetValidator(f.sdkCtx, val3bz)
 	assert.DeepEqual(t, validators[3].ModuleValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx)), updates[0])
 
-	// test validtor added at the end
+	// test validator added at the end
 	//  tendermintUpdate set: {} -> {c0}
 	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, validators[4]))
 	assert.NilError(t, f.stakingKeeper.SetValidatorByPowerIndex(f.sdkCtx, validators[4]))

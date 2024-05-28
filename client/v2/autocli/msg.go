@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cockroachdb/errors"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/proto"
@@ -47,7 +46,11 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 	for cmdName, subCmdDescriptor := range cmdDescriptor.SubCommands {
 		subCmd := findSubCommand(cmd, cmdName)
 		if subCmd == nil {
-			subCmd = topLevelCmd(cmd.Context(), cmdName, fmt.Sprintf("Tx commands for the %s service", subCmdDescriptor.Service))
+			short := subCmdDescriptor.Short
+			if short == "" {
+				short = fmt.Sprintf("Tx commands for the %s service", subCmdDescriptor.Service)
+			}
+			subCmd = topLevelCmd(cmd.Context(), cmdName, short)
 		}
 
 		// Add recursive sub-commands if there are any. This is used for nested services.
@@ -65,7 +68,7 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 
 	descriptor, err := b.FileResolver.FindDescriptorByName(protoreflect.FullName(cmdDescriptor.Service))
 	if err != nil {
-		return errors.Errorf("can't find service %s: %v", cmdDescriptor.Service, err)
+		return fmt.Errorf("can't find service %s: %w", cmdDescriptor.Service, err)
 	}
 	service := descriptor.(protoreflect.ServiceDescriptor)
 	methods := service.Methods()
@@ -92,7 +95,7 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 			continue
 		}
 
-		if !util.IsSupportedVersion(util.DescriptorDocs(methodDescriptor)) {
+		if !util.IsSupportedVersion(methodDescriptor) {
 			continue
 		}
 

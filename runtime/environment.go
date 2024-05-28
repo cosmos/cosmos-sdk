@@ -2,8 +2,8 @@ package runtime
 
 import (
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/store"
-	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
@@ -35,9 +35,15 @@ func NewEnvironment(
 
 type EnvOption func(*appmodule.Environment)
 
-func EnvWithRouterService(queryServiceRouter *baseapp.GRPCQueryRouter, msgServiceRouter *baseapp.MsgServiceRouter) EnvOption {
+func EnvWithMsgRouterService(msgServiceRouter *baseapp.MsgServiceRouter) EnvOption {
 	return func(env *appmodule.Environment) {
-		env.RouterService = NewRouterService(env.KVStoreService, queryServiceRouter, msgServiceRouter)
+		env.MsgRouterService = NewMsgRouterService(msgServiceRouter)
+	}
+}
+
+func EnvWithQueryRouterService(queryServiceRouter *baseapp.GRPCQueryRouter) EnvOption {
+	return func(env *appmodule.Environment) {
+		env.QueryRouterService = NewQueryRouterService(queryServiceRouter)
 	}
 }
 

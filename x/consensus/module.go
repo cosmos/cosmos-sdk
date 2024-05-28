@@ -7,13 +7,14 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/x/consensus/keeper"
+	"cosmossdk.io/x/consensus/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/consensus/keeper"
-	"github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 // ConsensusVersion defines the current x/consensus module consensus version.
@@ -49,7 +50,7 @@ func (AppModule) IsAppModule() {}
 func (AppModule) Name() string { return types.ModuleName }
 
 // RegisterLegacyAminoCodec registers the consensus module's types on the LegacyAmino codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 

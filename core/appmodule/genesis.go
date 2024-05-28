@@ -2,9 +2,10 @@ package appmodule
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 
-	appmodule "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/appmodule/v2"
 )
 
 // HasGenesis defines a custom genesis handling API implementation.
@@ -27,6 +28,14 @@ type HasGenesisAuto interface {
 
 	// ExportGenesis exports module state to the genesis target.
 	ExportGenesis(context.Context, GenesisTarget) error
+}
+
+// HasGenesisBasics is the legacy interface for stateless genesis methods.
+type HasGenesisBasics interface {
+	HasName
+
+	DefaultGenesis() json.RawMessage
+	ValidateGenesis(json.RawMessage) error
 }
 
 // GenesisSource is a source for genesis data in JSON format. It may abstract over a

@@ -139,6 +139,11 @@ func (k Keeper) DefaultMintFn(ctx context.Context, env appmodule.Environment, mi
 		if totalSupply.Add(mintedCoins.AmountOf(params.MintDenom)).GT(maxSupply) {
 			// calculate the difference between maxSupply and totalSupply
 			diff := maxSupply.Sub(totalSupply)
+			if diff.LTE(math.ZeroInt()) {
+				k.logger.Warn("max supply reached, no new tokens will be minted")
+				return nil
+			}
+
 			// mint the difference
 			diffCoin := sdk.NewCoin(params.MintDenom, diff)
 			diffCoins := sdk.NewCoins(diffCoin)

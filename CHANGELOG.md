@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * (runtime) [#20264](https://github.com/cosmos/cosmos-sdk/pull/20264) Expose grpc query router via depinject.
+* (x/consensus) [#20381](https://github.com/cosmos/cosmos-sdk/pull/20381) Use Comet utility for consensus module consensus param updates.
 
 ### Bug Fixes
 

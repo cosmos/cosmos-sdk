@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/core/router"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NewMsgRouterService implements router.Service.
@@ -37,7 +38,7 @@ func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error 
 
 	typeURL = strings.TrimPrefix(typeURL, "/")
 
-	handler := m.router.HybridHandlerByMsgName(typeURL)
+	handler := m.router.HandlerByTypeURL(typeURL)
 	if handler == nil {
 		return fmt.Errorf("unknown message: %s", typeURL)
 	}
@@ -50,12 +51,18 @@ func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error 
 // Use InvokeUntyped if the response type is not known.
 func (m *msgRouterService) InvokeTyped(ctx context.Context, msg, resp protoiface.MessageV1) error {
 	messageName := msgTypeURL(msg)
-	handler := m.router.HybridHandlerByMsgName(messageName)
+	handler := m.router.HandlerByTypeURL(messageName)
 	if handler == nil {
 		return fmt.Errorf("unknown message: %s", messageName)
 	}
 
-	return handler(ctx, msg, resp)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	resp, err := handler(sdkCtx, msg)
+
+	resp = resp
+
+	return err
 }
 
 // InvokeUntyped execute a message and returns a response.
@@ -100,11 +107,9 @@ func (m *queryRouterService) CanInvoke(ctx context.Context, typeURL string) erro
 
 	typeURL = strings.TrimPrefix(typeURL, "/")
 
-	handlers := m.router.HybridHandlerByRequestName(typeURL)
-	if len(handlers) == 0 {
+	handlers := m.router.Route(typeURL)
+	if handlers == nil {
 		return fmt.Errorf("unknown request: %s", typeURL)
-	} else if len(handlers) > 1 {
-		return fmt.Errorf("ambiguous request, query have multiple handlers: %s", typeURL)
 	}
 
 	return nil
@@ -115,14 +120,16 @@ func (m *queryRouterService) CanInvoke(ctx context.Context, typeURL string) erro
 // Use InvokeUntyped if the response type is not known.
 func (m *queryRouterService) InvokeTyped(ctx context.Context, req, resp protoiface.MessageV1) error {
 	reqName := msgTypeURL(req)
-	handlers := m.router.HybridHandlerByRequestName(reqName)
-	if len(handlers) == 0 {
+	handlers := m.router.Route(reqName)
+	if handlers == nil {
 		return fmt.Errorf("unknown request: %s", reqName)
-	} else if len(handlers) > 1 {
-		return fmt.Errorf("ambiguous request, query have multiple handlers: %s", reqName)
 	}
 
-	return handlers[0](ctx, req, resp)
+	var err error
+
+	resp, err = handlers(sdk.UnwrapSDKContext(ctx), req)
+
+	return err
 }
 
 // InvokeUntyped execute a message and returns a response.

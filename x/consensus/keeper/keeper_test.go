@@ -8,7 +8,7 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"

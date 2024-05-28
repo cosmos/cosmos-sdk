@@ -140,8 +140,7 @@ Example:
 				return err
 			}
 
-			serverCtx := server.GetServerContextFromCmd(cmd)
-			config := serverCtx.Config
+			config := client.GetConfigFromCmd(cmd)
 
 			args := initArgs{}
 			args.outputDir, _ = cmd.Flags().GetString(flagOutputDir)
@@ -406,6 +405,9 @@ func initTestnetFiles(
 	if err != nil {
 		return err
 	}
+
+	// Update viper root since root dir become rootdir/node/simd
+	client.GetViperFromCmd(cmd).Set(flags.FlagHome, nodeConfig.RootDir)
 
 	cmd.PrintErrf("Successfully initialized %d node directories\n", args.numValidators)
 	return nil

@@ -6,8 +6,8 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/log"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank/types"
@@ -267,13 +267,6 @@ func (k BaseKeeper) SendCoinsFromModuleToAccount(
 	senderAddr := k.ak.GetModuleAddress(senderModule)
 	if senderAddr == nil {
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule)
-	}
-
-	for _, coin := range amt {
-		sendEnabled, found := k.getSendEnabled(ctx, coin.Denom)
-		if found && !sendEnabled {
-			return fmt.Errorf("denom: %s, is prohibited from being sent at this time", coin.Denom)
-		}
 	}
 
 	if k.BlockedAddr(recipientAddr) {

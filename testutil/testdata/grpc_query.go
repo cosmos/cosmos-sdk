@@ -3,8 +3,9 @@ package testdata
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/gogoproto/types/any/test"
 	"testing"
+
+	"github.com/cosmos/gogoproto/types/any/test"
 
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"

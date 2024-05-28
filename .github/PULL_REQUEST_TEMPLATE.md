@@ -15,7 +15,7 @@ please add links to any relevant follow up issues.*
 I have...
 
 * [ ] included the correct [type prefix](https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.json) in the PR title, you can find examples of the prefixes below:
-    * `feat`: A new feature
+    <!-- * `feat`: A new feature
     * `fix`: A bug fix
     * `docs`: Documentation only changes
     * `style`: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
@@ -25,7 +25,7 @@ I have...
     * `build`: Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)
     * `ci`: Changes to our CI configuration files and scripts (example scopes: Travis, Circle, BrowserStack, SauceLabs)
     * `chore`: Other changes that don't modify src or test files
-    * `revert`: Reverts a previous commit
+    * `revert`: Reverts a previous commit -->
 * [ ] confirmed `!` in the type prefix if API or client breaking change
 * [ ] targeted the correct branch (see [PR Targeting](https://github.com/cosmos/cosmos-sdk/blob/main/CONTRIBUTING.md#pr-targeting))
 * [ ] provided a link to the relevant issue or specification

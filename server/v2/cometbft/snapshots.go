@@ -65,9 +65,9 @@ func (c *Consensus[T]) ApplySnapshotChunk(_ context.Context, req *abci.ApplySnap
 }
 
 // ListSnapshots implements types.Application.
-func (c *Consensus[T]) ListSnapshots(_ context.Context, ctx *abci.ListSnapshotsRequest) (resp *abci.ListSnapshotsResponse, err error) {
+func (c *Consensus[T]) ListSnapshots(_ context.Context, ctx *abci.ListSnapshotsRequest) (*abci.ListSnapshotsResponse, error) {
 	if c.snapshotManager == nil {
-		return resp, nil
+		return nil, nil
 	}
 
 	snapshots, err := c.snapshotManager.List()
@@ -76,6 +76,7 @@ func (c *Consensus[T]) ListSnapshots(_ context.Context, ctx *abci.ListSnapshotsR
 		return nil, err
 	}
 
+	resp := &abci.ListSnapshotsResponse{}
 	for _, snapshot := range snapshots {
 		abciSnapshot, err := snapshotToABCI(snapshot)
 		if err != nil {

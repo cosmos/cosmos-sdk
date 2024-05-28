@@ -15,3 +15,12 @@ type HasGenesis interface {
 	InitGenesis(ctx context.Context, data json.RawMessage) error
 	ExportGenesis(ctx context.Context) (json.RawMessage, error)
 }
+
+type HasABCIGenesis interface {
+	DefaultGenesis() json.RawMessage
+	InitGenesis(ctx context.Context, data json.RawMessage) ([]ValidatorUpdate, error)
+}
+
+type GenesisDecoder interface {
+	DecodeGenesisJSON(data json.RawMessage) ([]json.RawMessage, error)
+}

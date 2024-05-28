@@ -10,9 +10,8 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
+	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
-	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/snapshots"
@@ -43,7 +42,7 @@ type Manager struct {
 	stateStorage    *storage.StorageStore
 	stateCommitment *commitment.CommitStore
 
-	db              store.RawDB
+	db              corestore.KVStoreWithBatch
 	mtx             sync.Mutex // mutex for migratedVersion
 	migratedVersion uint64
 
@@ -54,7 +53,7 @@ type Manager struct {
 // NewManager returns a new Manager.
 //
 // NOTE: `sc` can be `nil` if don't want to migrate the commitment.
-func NewManager(db store.RawDB, sm *snapshots.Manager, ss *storage.StorageStore, sc *commitment.CommitStore, logger log.Logger) *Manager {
+func NewManager(db corestore.KVStoreWithBatch, sm *snapshots.Manager, ss *storage.StorageStore, sc *commitment.CommitStore, logger log.Logger) *Manager {
 	return &Manager{
 		logger:           logger,
 		snapshotsManager: sm,
@@ -182,14 +181,13 @@ func (m *Manager) writeChangeset() error {
 		}
 
 		batch := m.db.NewBatch()
-		defer batch.Close()
-
 		if err := batch.Set(csKey, csBytes); err != nil {
 			return fmt.Errorf("failed to write changeset to db.Batch: %w", err)
 		}
 		if err := batch.Write(); err != nil {
 			return fmt.Errorf("failed to write changeset to db: %w", err)
 		}
+		batch.Close()
 	}
 
 	return nil

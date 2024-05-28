@@ -24,6 +24,8 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 
+	corectx "cosmossdk.io/core/context"
+	corelog "cosmossdk.io/core/log"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
@@ -45,10 +47,11 @@ import (
 const ServerContextKey = sdk.ContextKey("server.context")
 
 // Context server context
+// Deprecated: Do not use since we use viper to track all config
 type Context struct {
 	Viper  *viper.Viper
 	Config *cmtcfg.Config
-	Logger log.Logger
+	Logger corelog.Logger
 }
 
 func NewDefaultContext() *Context {
@@ -223,7 +226,11 @@ func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
 		cmdCtx = cmd.Context()
 	}
 
-	cmd.SetContext(context.WithValue(cmdCtx, ServerContextKey, serverCtx))
+	cmdCtx = context.WithValue(cmdCtx, ServerContextKey, serverCtx)
+	cmdCtx = context.WithValue(cmdCtx, corectx.ViperContextKey{}, serverCtx.Viper)
+	cmdCtx = context.WithValue(cmdCtx, corectx.LoggerContextKey{}, serverCtx.Logger)
+
+	cmd.SetContext(cmdCtx)
 
 	return nil
 }

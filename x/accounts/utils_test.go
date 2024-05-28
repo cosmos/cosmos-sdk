@@ -14,8 +14,8 @@ import (
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/log"
 	coretransaction "cosmossdk.io/core/transaction"
-	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	"cosmossdk.io/x/tx/signing"
 
@@ -74,10 +74,7 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 	msgRouter.RegisterService(&bankv1beta1.Msg_ServiceDesc, &bankMsgServer{})
 
 	ss, ctx := colltest.MockStore()
-	env := runtime.NewEnvironment(ss, log.NewNopLogger(), runtime.EnvWithRouterService(
-		queryRouter,
-		msgRouter,
-	))
+	env := runtime.NewEnvironment(ss, log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter))
 	env.EventService = eventService{}
 	m, err := NewKeeper(codec.NewProtoCodec(ir), env, addressCodec, ir, accounts...)
 	require.NoError(t, err)
@@ -88,15 +85,15 @@ type bankQueryServer struct {
 	bankv1beta1.UnimplementedQueryServer
 }
 
+type bankMsgServer struct {
+	bankv1beta1.UnimplementedMsgServer
+}
+
 func (b bankQueryServer) Balance(context.Context, *bankv1beta1.QueryBalanceRequest) (*bankv1beta1.QueryBalanceResponse, error) {
 	return &bankv1beta1.QueryBalanceResponse{Balance: &basev1beta1.Coin{
 		Denom:  "atom",
 		Amount: "1000",
 	}}, nil
-}
-
-type bankMsgServer struct {
-	bankv1beta1.UnimplementedMsgServer
 }
 
 func (b bankMsgServer) Send(context.Context, *bankv1beta1.MsgSend) (*bankv1beta1.MsgSendResponse, error) {

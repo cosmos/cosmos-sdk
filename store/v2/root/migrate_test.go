@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
@@ -33,7 +34,7 @@ func TestMigrateStoreTestSuite(t *testing.T) {
 
 func (s *MigrateStoreTestSuite) SetupTest() {
 	testLog := log.NewTestLogger(s.T())
-	nopLog := log.NewNopLogger()
+	nopLog := corelog.NewNopLogger()
 
 	mdb := dbm.NewMemDB()
 	multiTrees := make(map[string]commitment.Tree)
@@ -87,8 +88,16 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 	originalLatestVersion, err := s.rootStore.GetLatestVersion()
 	s.Require().NoError(err)
 
-	// start the migration process
-	s.Require().NoError(s.rootStore.StartMigration())
+	// check if the Query fallback to the original SC
+	for version := uint64(1); version <= originalLatestVersion; version++ {
+		for _, storeKey := range storeKeys {
+			for i := 0; i < 10; i++ {
+				res, err := s.rootStore.Query([]byte(storeKey), version, []byte(fmt.Sprintf("key-%d-%d", version, i)), true)
+				s.Require().NoError(err)
+				s.Require().Equal([]byte(fmt.Sprintf("value-%d-%d", version, i)), res.Value)
+			}
+		}
+	}
 
 	// continue to apply changeset against the original store
 	latestVersion := originalLatestVersion + 1
@@ -100,8 +109,6 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", latestVersion, i)), []byte(fmt.Sprintf("value-%d-%d", latestVersion, i)), false)
 			}
 		}
-		_, err := s.rootStore.WorkingHash(cs)
-		s.Require().NoError(err)
 		_, err = s.rootStore.Commit(cs)
 		s.Require().NoError(err)
 
@@ -148,8 +155,6 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
 			}
 		}
-		_, err := s.rootStore.WorkingHash(cs)
-		s.Require().NoError(err)
 		_, err = s.rootStore.Commit(cs)
 		s.Require().NoError(err)
 	}

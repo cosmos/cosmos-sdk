@@ -7,11 +7,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	_ "cosmossdk.io/api/cosmos/counter/v1"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
 	"cosmossdk.io/x/auth/signing"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -77,7 +77,7 @@ var (
 
 func (tx testTx) GetMsgs() []sdk.Msg { return nil }
 
-func (tx testTx) GetMsgsV2() ([]protov2.Message, error) { return nil, nil }
+func (tx testTx) GetReflectMessages() ([]protoreflect.Message, error) { return nil, nil }
 
 func (tx testTx) ValidateBasic() error { return nil }
 
@@ -93,7 +93,7 @@ func (sigErrTx) Size() int64 { return 0 }
 
 func (sigErrTx) GetMsgs() []sdk.Msg { return nil }
 
-func (sigErrTx) GetMsgsV2() ([]protov2.Message, error) { return nil, nil }
+func (sigErrTx) GetReflectMessages() ([]protoreflect.Message, error) { return nil, nil }
 
 func (sigErrTx) ValidateBasic() error { return nil }
 

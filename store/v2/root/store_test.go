@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	coreheader "cosmossdk.io/core/header"
+	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
@@ -94,14 +94,9 @@ func (s *RootStoreTestSuite) TestQuery() {
 	cs := corestore.NewChangeset()
 	cs.Add(testStoreKeyBytes, []byte("foo"), []byte("bar"), false)
 
-	workingHash, err := s.rootStore.WorkingHash(cs)
-	s.Require().NoError(err)
-	s.Require().NotNil(workingHash)
-
 	commitHash, err := s.rootStore.Commit(cs)
 	s.Require().NoError(err)
 	s.Require().NotNil(commitHash)
-	s.Require().Equal(workingHash, commitHash)
 
 	// ensure the proof is non-nil for the corresponding version
 	result, err := s.rootStore.Query([]byte(testStoreKey), 1, []byte("foo"), true)
@@ -146,9 +141,7 @@ func (s *RootStoreTestSuite) TestQueryProof() {
 	cs.Add(testStoreKey3Bytes, []byte("key4"), []byte("value4"), false)
 
 	// commit
-	_, err := s.rootStore.WorkingHash(cs)
-	s.Require().NoError(err)
-	_, err = s.rootStore.Commit(cs)
+	_, err := s.rootStore.Commit(cs)
 	s.Require().NoError(err)
 
 	// query proof for testStoreKey
@@ -174,14 +167,9 @@ func (s *RootStoreTestSuite) TestLoadVersion() {
 		cs := corestore.NewChangeset()
 		cs.Add(testStoreKeyBytes, []byte("key"), []byte(val), false)
 
-		workingHash, err := s.rootStore.WorkingHash(cs)
-		s.Require().NoError(err)
-		s.Require().NotNil(workingHash)
-
 		commitHash, err := s.rootStore.Commit(cs)
 		s.Require().NoError(err)
 		s.Require().NotNil(commitHash)
-		s.Require().Equal(workingHash, commitHash)
 	}
 
 	// ensure the latest version is correct
@@ -219,14 +207,9 @@ func (s *RootStoreTestSuite) TestLoadVersion() {
 		cs := corestore.NewChangeset()
 		cs.Add(testStoreKeyBytes, []byte("key"), []byte(val), false)
 
-		workingHash, err := s.rootStore.WorkingHash(cs)
-		s.Require().NoError(err)
-		s.Require().NotNil(workingHash)
-
 		commitHash, err := s.rootStore.Commit(cs)
 		s.Require().NoError(err)
 		s.Require().NotNil(commitHash)
-		s.Require().Equal(workingHash, commitHash)
 	}
 
 	// ensure the latest version is correct
@@ -259,17 +242,9 @@ func (s *RootStoreTestSuite) TestCommit() {
 		cs.Add(testStoreKeyBytes, []byte(key), []byte(val), false)
 	}
 
-	// committing w/o calling WorkingHash should error
-	_, err = s.rootStore.Commit(cs)
-	s.Require().Error(err)
-
-	// execute WorkingHash and Commit
-	wHash, err := s.rootStore.WorkingHash(cs)
-	s.Require().NoError(err)
-
 	cHash, err := s.rootStore.Commit(cs)
 	s.Require().NoError(err)
-	s.Require().Equal(wHash, cHash)
+	s.Require().NotNil(cHash)
 
 	// ensure latest version is updated
 	lv, err = s.rootStore.GetLatestVersion()
@@ -305,13 +280,10 @@ func (s *RootStoreTestSuite) TestStateAt() {
 			cs.Add(testStoreKeyBytes, []byte(key), []byte(val), false)
 		}
 
-		// execute WorkingHash and Commit
-		wHash, err := s.rootStore.WorkingHash(cs)
-		s.Require().NoError(err)
-
+		// execute Commit
 		cHash, err := s.rootStore.Commit(cs)
 		s.Require().NoError(err)
-		s.Require().Equal(wHash, cHash)
+		s.Require().NotNil(cHash)
 	}
 
 	lv, err := s.rootStore.GetLatestVersion()

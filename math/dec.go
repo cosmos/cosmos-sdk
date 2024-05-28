@@ -397,9 +397,9 @@ func (d LegacyDec) QuoTruncate(d2 LegacyDec) LegacyDec {
 	return d.ImmutOp(LegacyDec.QuoTruncateMut, d2)
 }
 
-// QuoTruncateMut mutable quotient truncate
+// QuoTruncateMut divides the current LegacyDec value by the provided LegacyDec value, truncating the result.
 func (d LegacyDec) QuoTruncateMut(d2 LegacyDec) LegacyDec {
-	// multiply precision once
+	// multiply precision once before performing division
 	d.i.Mul(d.i, precisionReuse)
 	d.i.Quo(d.i, d2.i)
 
@@ -419,7 +419,8 @@ func (d LegacyDec) QuoRoundupMut(d2 LegacyDec) LegacyDec {
 	// multiply precision twice
 	d.i.Mul(d.i, precisionReuse)
 	_, rem := d.i.QuoRem(d.i, d2.i, big.NewInt(0))
-	if rem.Sign() != 0 {
+	if rem.Sign() > 0 && d.IsNegative() == d2.IsNegative() ||
+		rem.Sign() < 0 && d.IsNegative() != d2.IsNegative() {
 		d.i.Add(d.i, oneInt)
 	}
 

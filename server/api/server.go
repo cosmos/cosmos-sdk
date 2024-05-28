@@ -122,6 +122,11 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 				grpcweb.WithOriginFunc(func(origin string) bool {
 					return true
 				}),
+				/*grpcweb.WithCorsForRegisteredEndpointsOnly(false),
+				grpcweb.WithWebsocketOriginFunc(func(req *http.Request) bool {
+					return true
+				}),
+				grpcweb.WithAllowNonRootResource(true),*/
 			)
 		}
 
@@ -149,7 +154,7 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 		s.logger.Info("starting API server...", "address", cfg.API.Address)
 
 		if enableUnsafeCORS {
-			allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
+			allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type", "X-Grpc-Web"}))
 			errCh <- tmrpcserver.Serve(s.listener, allowAllCORS(s.Router), servercmtlog.CometLoggerWrapper{Logger: s.logger}, cmtCfg)
 		} else {
 			errCh <- tmrpcserver.Serve(s.listener, s.Router, servercmtlog.CometLoggerWrapper{Logger: s.logger}, cmtCfg)

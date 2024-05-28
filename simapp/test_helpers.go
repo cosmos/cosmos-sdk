@@ -20,6 +20,7 @@ import (
 	minttypes "cosmossdk.io/x/mint/types"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -228,11 +229,11 @@ func NewTestNetworkFixture() network.TestFixture {
 
 	appCtr := func(val network.ValidatorI) servertypes.Application {
 		return NewSimApp(
-			val.GetCtx().Logger, dbm.NewMemDB(), nil, true,
-			simtestutil.NewAppOptionsWithFlagHome(val.GetCtx().Config.RootDir),
+			val.GetLogger(), dbm.NewMemDB(), nil, true,
+			simtestutil.NewAppOptionsWithFlagHome(client.GetConfigFromViper(val.GetViper()).RootDir),
 			bam.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			bam.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
-			bam.SetChainID(val.GetCtx().Viper.GetString(flags.FlagChainID)),
+			bam.SetChainID(val.GetViper().GetString(flags.FlagChainID)),
 		)
 	}
 

@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
@@ -34,7 +35,7 @@ func TestMigrateStoreTestSuite(t *testing.T) {
 
 func (s *MigrateStoreTestSuite) SetupTest() {
 	testLog := log.NewTestLogger(s.T())
-	nopLog := log.NewNopLogger()
+	nopLog := corelog.NewNopLogger()
 
 	mdb := dbm.NewMemDB()
 	multiTrees := make(map[string]commitment.Tree)

@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	coreheader "cosmossdk.io/core/header"
+	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"

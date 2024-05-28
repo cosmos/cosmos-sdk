@@ -149,3 +149,17 @@ func (mr *MockAccountsModKeeperMockRecorder) SendModuleMessageUntyped(ctx, sende
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendModuleMessageUntyped", reflect.TypeOf((*MockAccountsModKeeper)(nil).SendModuleMessageUntyped), ctx, sender, msg)
 }
+
+// SetAccountNumber mocks base method.
+func (m *MockAccountsModKeeper) SetAccountNumber(ctx context.Context, currentAccNum uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetAccountNumber", ctx, currentAccNum)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetAccountNumber indicates an expected call of SetAccountNumber.
+func (mr *MockAccountsModKeeperMockRecorder) SetAccountNumber(ctx, currentAccNum interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAccountNumber", reflect.TypeOf((*MockAccountsModKeeper)(nil).SetAccountNumber), ctx, currentAccNum)
+}

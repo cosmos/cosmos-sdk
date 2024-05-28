@@ -20,4 +20,5 @@ type AccountsModKeeper interface {
 	SendModuleMessageUntyped(ctx context.Context, sender []byte, msg protoiface.MessageV1) (protoiface.MessageV1, error)
 	IsAccountsModuleAccount(ctx context.Context, accountAddr []byte) bool
 	NextAccountNumber(ctx context.Context) (accNum uint64, err error)
+	SetAccountNumber(ctx context.Context, currentAccNum uint64) error
 }

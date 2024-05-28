@@ -119,7 +119,7 @@ func (k Keeper) NextAccountNumber(
 }
 
 // only use to migrate account number
-func (k Keeper) SetAccountNumber(ctx context.Context, accNum uint64) error {
+func (k Keeper) setAccountNumber(ctx context.Context, accNum uint64) error {
 	err := k.AccountNumber.Set(ctx, accNum)
 	return err
 }

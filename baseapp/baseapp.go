@@ -675,6 +675,7 @@ func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 
 	if mode == execModeSimulate {
 		ctx, _ = ctx.CacheContext()
+		ctx = ctx.WithExecMode(sdk.ExecMode(execModeSimulate))
 	}
 
 	return ctx
@@ -719,7 +720,7 @@ func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) error {
 	return nil
 }
 
-func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, error) {
+func (app *BaseApp) beginBlock(_ *abci.RequestFinalizeBlock) (sdk.BeginBlock, error) {
 	var (
 		resp sdk.BeginBlock
 		err  error
@@ -784,7 +785,7 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 
 // endBlock is an application-defined function that is called after transactions
 // have been processed in FinalizeBlock.
-func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
+func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
 	var endblock sdk.EndBlock
 
 	if app.endBlocker != nil {

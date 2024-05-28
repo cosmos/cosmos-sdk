@@ -32,6 +32,10 @@ func (m memStoreService) OpenMemoryStore(ctx context.Context) store.KVStore {
 	return newKVStore(sdk.UnwrapSDKContext(ctx).KVStore(m.key))
 }
 
+func NewTransientStoreService(storeKey *storetypes.TransientStoreKey) store.TransientStoreService {
+	return &transientStoreService{key: storeKey}
+}
+
 type transientStoreService struct {
 	key *storetypes.TransientStoreKey
 }

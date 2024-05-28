@@ -158,9 +158,6 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
-)
-
-require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.1-20240312114316-c0d3497e35d6.1 // indirect
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 	github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240429102542-490e9bc3de65 // indirect
@@ -179,6 +176,8 @@ replace github.com/cosmos/cosmos-sdk => ./../../
 
 replace (
 	cosmossdk.io/api => ./../../api
+	cosmossdk.io/store => ./../../store
+	cosmossdk.io/log => ./../../log
 	cosmossdk.io/core => ./../../core
 	cosmossdk.io/depinject => ./../../depinject
 	cosmossdk.io/x/accounts => ./../../x/accounts

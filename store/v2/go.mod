@@ -70,3 +70,5 @@ require (
 )
 
 replace cosmossdk.io/core => ../../core
+
+replace cosmossdk.io/log => ../../log

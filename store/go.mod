@@ -29,6 +29,8 @@ require (
 
 replace cosmossdk.io/core => ../core
 
+replace cosmossdk.io/log => ../log
+
 require (
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect

@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 
+	v1 "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
@@ -127,7 +128,11 @@ func (m *queryRouterService) InvokeTyped(ctx context.Context, req, resp protoifa
 
 	var err error
 
-	resp, err = handlers(sdk.UnwrapSDKContext(ctx), req)
+	qreq := v1.QueryRequest{
+		Data: req,
+	}
+
+	resp, err = handlers(sdk.UnwrapSDKContext(ctx), &qreq)
 
 	return err
 }

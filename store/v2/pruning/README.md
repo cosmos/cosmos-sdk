@@ -9,12 +9,12 @@ and is passed to the `PruningManager` during initialization.
 
 The `PruneOptions` struct includes the following fields:
 
-- `KeepRecent` (uint64): The number of recent heights to keep in the state.
-- `Interval` (uint64): The interval of how often to prune the state. 0 means no pruning.
+* `KeepRecent` (uint64): The number of recent heights to keep in the state.
+* `Interval` (uint64): The interval of how often to prune the state. 0 means no pruning.
 
 ## Pausable Pruner
 
-The `PausablePruner` interface defines the `PausePruning` method which is used to pause
+The `PausablePruner` interface defines the `PausePruning` method, which is used to pause
 the pruning process. The `PruningManager` will check if the pruner is a `PausablePruner`
 and call the `PausePruning` method before and after `Commit` to pause and resume pruning.
 This is useful for when the pruning process is asynchronous and needs to be paused during

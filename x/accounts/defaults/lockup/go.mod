@@ -174,6 +174,7 @@ replace (
 	cosmossdk.io/api => ../../../../api
 	cosmossdk.io/collections => ../../../../collections // TODO tag new collections ASAP
 	cosmossdk.io/core => ../../../../core
+	cosmossdk.io/log => ../../../../log
 	cosmossdk.io/depinject => ../../../../depinject
 	cosmossdk.io/x/accounts => ../../.
 	cosmossdk.io/x/auth => ../../../auth

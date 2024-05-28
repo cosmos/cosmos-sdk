@@ -550,8 +550,8 @@ schema = 3
     version = "v0.0.0-20240415180920-8c6c420018be"
     hash = "sha256-0Bc66Utj1rydwYngQxTQoTyg1Td2D+nIxukc0zz7XFc="
   [mod."google.golang.org/genproto/googleapis/rpc"]
-    version = "v0.0.0-20240513163218-0867130af1f8"
-    hash = "sha256-c+VNAAU3HTu/ZGfpiPnjnzgszcPhU4JOhTTcIdo/PPI="
+    version = "v0.0.0-20240515191416-fc5f0ca64291"
+    hash = "sha256-hQjIHJdIBBAthdXMB19Xr3A2Wy6GV6Gjv4w4MZl7qy4="
   [mod."google.golang.org/grpc"]
     version = "v1.64.0"
     hash = "sha256-04Noi8lrzr+4ac2BA7KNXUXN/xZL/A2SsEpC2Hern84="

@@ -669,7 +669,6 @@ func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 	ctx := modeState.Context().
 		WithTxBytes(txBytes).
 		WithGasMeter(storetypes.NewInfiniteGasMeter())
-	// WithVoteInfos(app.voteInfos) // TODO: identify if this is needed
 
 	ctx = ctx.WithIsSigverifyTx(app.sigverifyTx)
 

@@ -3,6 +3,7 @@ package runtime
 import (
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
@@ -185,19 +186,28 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 	store.KVStoreService,
 	store.MemoryStoreService,
 ) {
-	var kvStoreKey string
-	storeKeyOverride := storeKeyOverride(config, key.Name())
-	if storeKeyOverride != nil {
-		kvStoreKey = storeKeyOverride.KvStoreKey
-	} else {
-		kvStoreKey = key.Name()
-	}
-	registerStoreKey(appBuilder, kvStoreKey)
-	kvService := stf.NewKVStoreService([]byte(kvStoreKey))
+	var (
+		kvService    store.KVStoreService     = failingStoreService{}
+		memKvService store.MemoryStoreService = failingStoreService{}
+	)
 
-	memStoreKey := fmt.Sprintf("memory:%s", key.Name())
-	registerStoreKey(appBuilder, memStoreKey)
-	memService := stf.NewMemoryStoreService([]byte(memStoreKey))
+	// skips modules that have no store
+	if !slices.Contains(config.SkipStoreKeys, key.Name()) {
+		var kvStoreKey string
+		storeKeyOverride := storeKeyOverride(config, key.Name())
+		if storeKeyOverride != nil {
+			kvStoreKey = storeKeyOverride.KvStoreKey
+		} else {
+			kvStoreKey = key.Name()
+		}
+
+		registerStoreKey(appBuilder, kvStoreKey)
+		kvService = stf.NewKVStoreService([]byte(kvStoreKey))
+
+		memStoreKey := fmt.Sprintf("memory:%s", key.Name())
+		registerStoreKey(appBuilder, memStoreKey)
+		memKvService = stf.NewMemoryStoreService([]byte(memStoreKey))
+	}
 
 	env := appmodulev2.Environment{
 		Logger:             logger,
@@ -209,10 +219,10 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 		MsgRouterService:   stf.NewMsgRouterService(appBuilder.app.msgRouterBuilder),
 		TransactionService: services.NewContextAwareTransactionService(),
 		KVStoreService:     kvService,
-		MemStoreService:    memService,
+		MemStoreService:    memKvService,
 	}
 
-	return env, kvService, memService
+	return env, kvService, memKvService
 }
 
 func registerStoreKey(wrapper *AppBuilder, key string) {

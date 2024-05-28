@@ -7,7 +7,7 @@
     * [Pull Requests](#pull-requests)
     * [Pull Request Templates](#pull-request-templates)
     * [Pull Request Accountability](#pull-request-accountability)
-        * [PR Owner](#pr-owner)
+        * [Owner](#owner)
         * [Reviewer](#reviewer)
         * [External Contributors](#external-contributors)
     * [Requesting Reviews](#requesting-reviews)
@@ -134,9 +134,9 @@ There are three PR templates. The [default template](./.github/PULL_REQUEST_TEMP
 
 ### Pull Request Accountability
 
-#### PR Owner
+#### Owner
 
-The PR owner is responsible for ensuring that the PR is ready for review and merging after reviews are delivered. This includes:
+The pull request owner is responsible for ensuring that the PR is ready for review and merging after reviews are delivered. This includes:
 
 * Ensuring that the PR is up to date with the latest changes in the main branch.
 * Ensuring that the PR passes all checks.

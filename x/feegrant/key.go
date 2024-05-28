@@ -2,6 +2,7 @@ package feegrant
 
 import (
 	"cosmossdk.io/collections"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -10,6 +11,8 @@ const (
 
 	// StoreKey is the store key string for supply
 	StoreKey = ModuleName
+
+	ContextKey = sdk.ContextKey("client.context")
 )
 
 var (

@@ -87,5 +87,6 @@ func (s *IntegrationTestSuite) TestEpochHooks() {
 	err := s.appmodule.BeforeEpochStart(s.ctx, "block", -1)
 	s.NoError(err)
 
-	s.appmodule.AfterEpochEnd(s.ctx, "epochIdentifier", 1) // just to get coverage up
+	err = s.appmodule.AfterEpochEnd(s.ctx, "epochIdentifier", 1) // just to get coverage up
+	s.NoError(err)
 }

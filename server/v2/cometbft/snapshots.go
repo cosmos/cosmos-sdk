@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/store/v2/snapshots"
 	snapshottypes "cosmossdk.io/store/v2/snapshots/types"
@@ -76,7 +77,7 @@ func (c *Consensus[T]) ListSnapshots(_ context.Context, ctx *abci.ListSnapshotsR
 	}
 
 	for _, snapshot := range snapshots {
-		abciSnapshot, err := snapshot.ToABCI()
+		abciSnapshot, err := snapshotToABCI(snapshot)
 		if err != nil {
 			c.logger.Error("failed to convert ABCI snapshots", "err", err)
 			return nil, err
@@ -121,7 +122,7 @@ func (c *Consensus[T]) OfferSnapshot(_ context.Context, req *abci.OfferSnapshotR
 		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT}, nil
 	}
 
-	snapshot, err := snapshottypes.SnapshotFromABCI(req.Snapshot)
+	snapshot, err := snapshotFromABCI(req.Snapshot)
 	if err != nil {
 		c.logger.Error("failed to decode snapshot metadata", "err", err)
 		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT}, nil
@@ -156,4 +157,35 @@ func (c *Consensus[T]) OfferSnapshot(_ context.Context, req *abci.OfferSnapshotR
 		// different snapshot, so we ask CometBFT to abort all snapshot restoration.
 		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_ABORT}, nil
 	}
+}
+
+// Converts an ABCI snapshot to a snapshot. Mainly to decode the SDK metadata.
+func snapshotFromABCI(in *abci.Snapshot) (snapshottypes.Snapshot, error) {
+	snapshot := snapshottypes.Snapshot{
+		Height: in.Height,
+		Format: in.Format,
+		Chunks: in.Chunks,
+		Hash:   in.Hash,
+	}
+	err := proto.Unmarshal(in.Metadata, &snapshot.Metadata)
+	if err != nil {
+		return snapshottypes.Snapshot{}, fmt.Errorf("failed to unmarshal snapshot metadata: %w", err)
+	}
+	return snapshot, nil
+}
+
+// Converts a Snapshot to its ABCI representation. Mainly to encode the SDK metadata.
+func snapshotToABCI(s *snapshottypes.Snapshot) (abci.Snapshot, error) {
+	out := abci.Snapshot{
+		Height: s.Height,
+		Format: s.Format,
+		Chunks: s.Chunks,
+		Hash:   s.Hash,
+	}
+	var err error
+	out.Metadata, err = proto.Marshal(&s.Metadata)
+	if err != nil {
+		return abci.Snapshot{}, fmt.Errorf("failed to marshal snapshot metadata: %w", err)
+	}
+	return out, nil
 }

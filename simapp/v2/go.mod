@@ -284,6 +284,7 @@ replace (
 
 // server v2 integration
 replace (
+	cosmossdk.io/log => ../../log
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/runtime/v2 => ../../runtime/v2
 	cosmossdk.io/server/v2 => ../../server/v2

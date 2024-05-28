@@ -15,8 +15,8 @@ import (
 
 	coreevent "cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/core/log"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"

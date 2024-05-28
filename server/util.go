@@ -25,6 +25,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	corectx "cosmossdk.io/core/context"
+	corelog "cosmossdk.io/core/log"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
@@ -50,7 +51,7 @@ const ServerContextKey = sdk.ContextKey("server.context")
 type Context struct {
 	Viper  *viper.Viper
 	Config *cmtcfg.Config
-	Logger log.Logger
+	Logger corelog.Logger
 }
 
 func NewDefaultContext() *Context {

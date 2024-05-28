@@ -41,6 +41,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (staking) [#20444](https://github.com/cosmos/cosmos-sdk/pull/20444) Disable tokenization of shares from redelegations.
 
+### Bugfixes
+
+* (distribution) [#20463](https://github.com/cosmos/cosmos-sdk/pull/20463) Fix wrong
+  codec used for `MsgWithdrawTokenizeShareRecordReward.GetSignBytes()`.
+
 ## v0.47.13-ics-lsm
 
 This is a special cosmos-sdk release with support for both ICS and LSM.

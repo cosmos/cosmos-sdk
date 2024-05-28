@@ -198,7 +198,7 @@ func NewBaseApp(
 		logger:           logger.With(log.ModuleKey, "baseapp"),
 		name:             name,
 		db:               db,
-		cms:              store.NewCommitMultiStore(db, sdklog.LogWrapper{logger}, storemetrics.NewNoOpMetrics()), // by default we use a no-op metric gather in store
+		cms:              store.NewCommitMultiStore(db, sdklog.LogWrapper{Logger: logger}, storemetrics.NewNoOpMetrics()), // by default we use a no-op metric gather in store
 		storeLoader:      DefaultStoreLoader,
 		grpcQueryRouter:  NewGRPCQueryRouter(),
 		msgServiceRouter: NewMsgServiceRouter(),

@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/store/v2/commitment/mem"
 	"cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/internal"
+	"cosmossdk.io/store/v2/pruning"
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/pebbledb"
 	"cosmossdk.io/store/v2/storage/sqlite"
@@ -31,14 +32,15 @@ const (
 )
 
 type FactoryOptions struct {
-	Logger       log.Logger
-	RootDir      string
-	SSType       SSType
-	SCType       SCType
-	PruneOptions *store.PruneOptions
-	IavlConfig   *iavl.Config
-	StoreKeys    []string
-	SCRawDB      corestore.KVStoreWithBatch
+	Logger         log.Logger
+	RootDir        string
+	SSType         SSType
+	SCType         SCType
+	SSPruneOptions *store.PruneOptions
+	SCPruneOptions *store.PruneOptions
+	IavlConfig     *iavl.Config
+	StoreKeys      []string
+	SCRawDB        corestore.KVStoreWithBatch
 }
 
 // CreateRootStore is a convenience function to create a root store based on the
@@ -48,8 +50,8 @@ type FactoryOptions struct {
 func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 	var (
 		ssDb      storage.Database
-		ss        store.VersionedDatabase
-		sc        store.Committer
+		ss        *storage.StorageStore
+		sc        *commitment.CommitStore
 		err       error
 		ensureDir = func(dir string) error {
 			if err := os.MkdirAll(dir, 0x0755); err != nil {
@@ -71,7 +73,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		if err = ensureDir(dir); err != nil {
 			return nil, err
 		}
-		ssDb, err = pebbledb.New(fmt.Sprintf("%s/data/ss/pebble", opts.RootDir))
+		ssDb, err = pebbledb.New(dir)
 	case SSTypeRocks:
 		// TODO: rocksdb requires build tags so is not supported here by default
 		return nil, fmt.Errorf("rocksdb not supported")
@@ -79,7 +81,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 	if err != nil {
 		return nil, err
 	}
-	ss = storage.NewStorageStore(ssDb, opts.PruneOptions, opts.Logger)
+	ss = storage.NewStorageStore(ssDb, opts.Logger)
 
 	trees := make(map[string]commitment.Tree)
 	for _, key := range opts.StoreKeys {
@@ -93,12 +95,13 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 				return nil, fmt.Errorf("iavl v2 not supported")
 			}
 		}
-		sc, err = commitment.NewCommitStore(trees, opts.SCRawDB, opts.PruneOptions, opts.Logger)
 	}
-
+	sc, err = commitment.NewCommitStore(trees, opts.SCRawDB, opts.Logger)
 	if err != nil {
 		return nil, err
 	}
 
-	return New(opts.Logger, ss, sc, nil, nil)
+	pm := pruning.NewManager(sc, ss, opts.SCPruneOptions, opts.SSPruneOptions)
+
+	return New(opts.Logger, ss, sc, pm, nil, nil)
 }

@@ -9,8 +9,8 @@ import (
 
 	protoio "github.com/cosmos/gogoproto/io"
 
+	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/internal"
 	"cosmossdk.io/store/v2/internal/conv"
@@ -411,7 +411,9 @@ loop:
 				if err := importer.Commit(); err != nil {
 					return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to commit importer: %w", err)
 				}
-				importer.Close()
+				if err := importer.Close(); err != nil {
+					return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to close importer: %w", err)
+				}
 			}
 
 			storeKey = []byte(item.Store.Name)

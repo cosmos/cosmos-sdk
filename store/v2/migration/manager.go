@@ -10,8 +10,8 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
+	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/snapshots"
@@ -181,11 +181,21 @@ func (m *Manager) writeChangeset() error {
 		}
 
 		batch := m.db.NewBatch()
-		if err := batch.Set(csKey, csBytes); err != nil {
-			return fmt.Errorf("failed to write changeset to db.Batch: %w", err)
-		}
-		if err := batch.Write(); err != nil {
-			return fmt.Errorf("failed to write changeset to db: %w", err)
+		// Invoking this code in a closure so that defer is called immediately on return
+		// yet not in the for-loop which can leave resource lingering.
+		err = func() error {
+			defer batch.Close()
+
+			if err := batch.Set(csKey, csBytes); err != nil {
+				return fmt.Errorf("failed to write changeset to db.Batch: %w", err)
+			}
+			if err := batch.Write(); err != nil {
+				return fmt.Errorf("failed to write changeset to db: %w", err)
+			}
+			return nil
+		}()
+		if err != nil {
+			return err
 		}
 		batch.Close()
 	}

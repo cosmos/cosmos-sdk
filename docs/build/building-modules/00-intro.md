@@ -23,49 +23,21 @@ On top of this core, the Cosmos SDK enables developers to build modules that imp
 
 Cosmos SDK modules can be seen as little state-machines within the state-machine. They generally define a subset of the state using one or more `KVStore`s in the [main multistore](../../learn/advanced/04-store.md), as well as a subset of [message types](./02-messages-and-queries.md#messages). These messages are routed by one of the main components of Cosmos SDK core, [`BaseApp`](../../learn/advanced/00-baseapp.md), to a module Protobuf [`Msg` service](./03-msg-services.md) that defines them.
 
-```text
-                                      +
-                                      |
-                                      |  Transaction relayed from the full-node's consensus engine
-                                      |  to the node's application via DeliverTx
-                                      |
-                                      |
-                                      |
-                +---------------------v--------------------------+
-                |                 APPLICATION                    |
-                |                                                |
-                |     Using baseapp's methods: Decode the Tx,    |
-                |     extract and route the message(s)           |
-                |                                                |
-                +---------------------+--------------------------+
-                                      |
-                                      |
-                                      |
-                                      +---------------------------+
-                                                                  |
-                                                                  |
-                                                                  |
-                                                                  |  Message routed to the correct
-                                                                  |  module to be processed
-                                                                  |
-                                                                  |
-+----------------+  +---------------+  +----------------+  +------v----------+
-|                |  |               |  |                |  |                 |
-|  AUTH MODULE   |  |  BANK MODULE  |  | STAKING MODULE |  |   GOV MODULE    |
-|                |  |               |  |                |  |                 |
-|                |  |               |  |                |  | Handles message,|
-|                |  |               |  |                |  | Updates state   |
-|                |  |               |  |                |  |                 |
-+----------------+  +---------------+  +----------------+  +------+----------+
-                                                                  |
-                                                                  |
-                                                                  |
-                                                                  |
-                                       +--------------------------+
-                                       |
-                                       | Return result to the underlying consensus engine (e.g. CometBFT)
-                                       | (0=Ok, 1=Err)
-                                       v
+```mermaid
+flowchart TD
+    A[Transaction relayed from the full-node's consensus engine to the node's application via DeliverTx]
+    A --> B[APPLICATION]
+    B --> C["Using baseapp's methods: Decode the Tx, extract and route the message(s)"]
+    C --> D[Message routed to the correct module to be processed]
+    D --> E[AUTH MODULE]
+    D --> F[BANK MODULE]
+    D --> G[STAKING MODULE]
+    D --> H[GOV MODULE]
+    H --> I[Handles message, Updates state]
+    E --> I
+    F --> I
+    G --> I
+    I --> J["Return result to the underlying consensus engine (e.g. CometBFT) (0=Ok, 1=Err)"]
 ```
 
 As a result of this architecture, building a Cosmos SDK application usually revolves around writing modules to implement the specialized logic of the application and composing them with existing modules to complete the application. Developers will generally work on modules that implement logic needed for their specific use case that do not exist yet, and will use existing modules for more generic functionalities like staking, accounts, or token management.

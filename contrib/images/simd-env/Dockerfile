@@ -6,6 +6,7 @@ WORKDIR /work
 COPY go.mod go.sum /work/
 COPY math/go.mod math/go.sum /work/math/
 COPY api/go.mod api/go.sum /work/api/
+COPY log/go.mod log/go.sum /work/log/
 COPY core/go.mod core/go.sum /work/core/
 COPY collections/go.mod collections/go.sum /work/collections/
 COPY store/go.mod store/go.sum /work/store/

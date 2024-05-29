@@ -15,6 +15,7 @@ import (
 
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
@@ -27,8 +28,8 @@ func LoadArchiveCmd() *cobra.Command {
 		Short: "Load a snapshot archive file (.tar.gz) into snapshot store",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := server.GetServerContextFromCmd(cmd)
-			snapshotStore, err := server.GetSnapshotStore(ctx.Viper)
+			viper := client.GetViperFromCmd(cmd)
+			snapshotStore, err := server.GetSnapshotStore(viper)
 			if err != nil {
 				return err
 			}

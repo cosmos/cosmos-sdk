@@ -8,10 +8,8 @@ require (
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/log v1.3.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
-	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91 // indirect
 	github.com/cometbft/cometbft v1.0.0-alpha.2.0.20240429102542-490e9bc3de65
 	github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240429102542-490e9bc3de65
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -174,6 +172,11 @@ require (
 
 require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 
+require (
+	cosmossdk.io/log v1.3.1 // indirect
+	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91 // indirect
+)
+
 replace github.com/cosmos/cosmos-sdk => ../../.
 
 // TODO remove post spinning out all modules
@@ -182,6 +185,7 @@ replace (
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/depinject => ../../depinject
+	cosmossdk.io/log => ../../log
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/accounts/defaults/lockup => ../accounts/defaults/lockup
 	cosmossdk.io/x/auth => ../auth

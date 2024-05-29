@@ -7,7 +7,6 @@ require (
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/depinject v1.0.0-alpha.4
-	cosmossdk.io/log v1.3.1
 	cosmossdk.io/x/tx v0.13.3
 	github.com/cosmos/cosmos-sdk v0.51.0
 	github.com/cosmos/gogoproto v1.4.12
@@ -21,6 +20,7 @@ require (
 require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 
 require (
+	cosmossdk.io/log v1.3.1 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	go.opencensus.io v0.24.0 // indirect
 )
@@ -181,6 +181,7 @@ replace (
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/depinject => ../../depinject
+	cosmossdk.io/log => ../../log
 	cosmossdk.io/x/accounts/defaults/lockup => ./defaults/lockup
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank

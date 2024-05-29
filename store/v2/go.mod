@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/log v1.3.1
 	github.com/cockroachdb/pebble v1.1.0
 	github.com/cosmos/gogoproto v1.4.12
-	github.com/cosmos/iavl v1.1.4
+	github.com/cosmos/iavl v1.2.0
 	github.com/cosmos/ics23/go v0.10.0
 	github.com/google/btree v1.1.2
 	github.com/hashicorp/go-metrics v0.5.3

@@ -36,7 +36,7 @@ require (
 	github.com/cucumber/gherkin/go/v27 v27.0.0 // indirect
 	github.com/cucumber/messages/go/v22 v22.0.0 // indirect
 	github.com/cucumber/tag-expressions/go/v6 v6.1.0 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/getsentry/sentry-go v0.27.0 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect

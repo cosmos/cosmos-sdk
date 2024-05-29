@@ -106,6 +106,7 @@ func createGroupPolicies(ctx sdk.Context, storeService corestore.KVStoreService,
 
 // createOldPolicyAccount re-creates the group policy account using a module account
 func createOldPolicyAccount(t *testing.T, ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Codec, policies []sdk.AccAddress) ([]*authtypes.ModuleAccount, group.AccountKeeper, error) {
+	t.Helper()
 	addressCodec := addresscodec.NewBech32Codec(sdk.Bech32MainPrefix)
 	authorityStrAddr, err := addressCodec.BytesToString(authorityAddr)
 	if err != nil {

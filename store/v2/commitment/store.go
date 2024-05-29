@@ -28,6 +28,7 @@ const (
 var (
 	_ store.Committer             = (*CommitStore)(nil)
 	_ snapshots.CommitSnapshotter = (*CommitStore)(nil)
+	_ store.PausablePruner        = (*CommitStore)(nil)
 )
 
 // CommitStore is a wrapper around multiple Tree objects mapped by a unique store
@@ -39,31 +40,18 @@ type CommitStore struct {
 	logger     log.Logger
 	db         corestore.KVStoreWithBatch
 	multiTrees map[string]Tree
-
-	// pruneOptions is the pruning configuration.
-	pruneOptions *store.PruneOptions // TODO are there no default prune options?
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(
-	trees map[string]Tree,
-	db corestore.KVStoreWithBatch,
-	pruneOpts *store.PruneOptions,
-	logger log.Logger,
-) (*CommitStore, error) {
-	if pruneOpts == nil {
-		pruneOpts = store.DefaultPruneOptions()
-	}
-
+func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, logger log.Logger) (*CommitStore, error) {
 	return &CommitStore{
-		logger:       logger,
-		db:           db,
-		multiTrees:   trees,
-		pruneOptions: pruneOpts,
+		logger:     logger,
+		db:         db,
+		multiTrees: trees,
 	}, nil
 }
 
-func (c *CommitStore) WriteBatch(cs *corestore.Changeset) error {
+func (c *CommitStore) WriteChangeset(cs *corestore.Changeset) error {
 	for _, pairs := range cs.Changes {
 		key := conv.UnsafeBytesToStr(pairs.Actor)
 
@@ -258,13 +246,6 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 		return nil, err
 	}
 
-	// Prune the old versions.
-	if prune, pruneVersion := c.pruneOptions.ShouldPrune(version); prune {
-		if err := c.Prune(pruneVersion); err != nil {
-			c.logger.Info("failed to prune SC", "prune_version", pruneVersion, "err", err)
-		}
-	}
-
 	return cInfo, nil
 }
 
@@ -318,6 +299,7 @@ func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, 
 	return bz, nil
 }
 
+// Prune implements store.Pruner.
 func (c *CommitStore) Prune(version uint64) (ferr error) {
 	// prune the metadata
 	batch := c.db.NewBatch()
@@ -341,6 +323,15 @@ func (c *CommitStore) Prune(version uint64) (ferr error) {
 	}
 
 	return ferr
+}
+
+// PausePruning implements store.PausablePruner.
+func (c *CommitStore) PausePruning(pause bool) {
+	for _, tree := range c.multiTrees {
+		if pruner, ok := tree.(store.PausablePruner); ok {
+			pruner.PausePruning(pause)
+		}
+	}
 }
 
 // Snapshot implements snapshotstypes.CommitSnapshotter.
@@ -432,7 +423,9 @@ loop:
 				if err := importer.Commit(); err != nil {
 					return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to commit importer: %w", err)
 				}
-				importer.Close()
+				if err := importer.Close(); err != nil {
+					return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to close importer: %w", err)
+				}
 			}
 
 			storeKey = []byte(item.Store.Name)

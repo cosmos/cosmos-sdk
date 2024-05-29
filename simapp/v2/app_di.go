@@ -114,7 +114,7 @@ func NewSimApp(
 					RootDir: homeDir,
 					SSType:  0,
 					SCType:  0,
-					PruneOptions: &store.PruneOptions{
+					SCPruneOptions: &store.PruneOptions{
 						KeepRecent: 0,
 						Interval:   0,
 					},

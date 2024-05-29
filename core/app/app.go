@@ -28,6 +28,7 @@ type BlockRequest[T any] struct {
 	AppHash           []byte
 	Txs               []T
 	ConsensusMessages []transaction.Msg
+	IsGenesis         bool
 }
 
 type BlockResponse struct {

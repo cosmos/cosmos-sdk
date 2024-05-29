@@ -28,6 +28,7 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/server/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000
+	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
@@ -41,6 +42,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.18.2
+	github.com/stretchr/testify v1.9.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240318140521-94a12d6c2237
 	google.golang.org/grpc v1.64.0
 	google.golang.org/protobuf v1.34.1
@@ -79,7 +81,7 @@ require (
 	github.com/cosmos/crypto v0.0.0-20240309083813-82ed2537802e // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/iavl v1.1.4 // indirect
+	github.com/cosmos/iavl v1.2.0 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect
@@ -135,6 +137,7 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
@@ -160,7 +163,6 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
-	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/supranational/blst v0.3.11 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect

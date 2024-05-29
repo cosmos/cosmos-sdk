@@ -8,7 +8,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/assert"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
 )
 
 func testFinalizeBlock(_ context.Context, _ *abci.FinalizeBlockRequest) (*abci.FinalizeBlockResponse, error) {

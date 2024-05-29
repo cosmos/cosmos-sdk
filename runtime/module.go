@@ -3,6 +3,7 @@ package runtime
 import (
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -17,10 +18,10 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -192,6 +193,10 @@ func ProvideKVStoreKey(
 	key depinject.ModuleKey,
 	app *AppBuilder,
 ) *storetypes.KVStoreKey {
+	if slices.Contains(config.SkipStoreKeys, key.Name()) {
+		return nil
+	}
+
 	override := storeKeyOverride(config, key.Name())
 
 	var storeKeyName string
@@ -206,13 +211,29 @@ func ProvideKVStoreKey(
 	return storeKey
 }
 
-func ProvideTransientStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes.TransientStoreKey {
+func ProvideTransientStoreKey(
+	config *runtimev1alpha1.Module,
+	key depinject.ModuleKey,
+	app *AppBuilder,
+) *storetypes.TransientStoreKey {
+	if slices.Contains(config.SkipStoreKeys, key.Name()) {
+		return nil
+	}
+
 	storeKey := storetypes.NewTransientStoreKey(fmt.Sprintf("transient:%s", key.Name()))
 	registerStoreKey(app, storeKey)
 	return storeKey
 }
 
-func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes.MemoryStoreKey {
+func ProvideMemoryStoreKey(
+	config *runtimev1alpha1.Module,
+	key depinject.ModuleKey,
+	app *AppBuilder,
+) *storetypes.MemoryStoreKey {
+	if slices.Contains(config.SkipStoreKeys, key.Name()) {
+		return nil
+	}
+
 	storeKey := storetypes.NewMemoryStoreKey(fmt.Sprintf("memory:%s", key.Name()))
 	registerStoreKey(app, storeKey)
 	return storeKey
@@ -234,23 +255,39 @@ func ProvideEnvironment(
 	msgServiceRouter *baseapp.MsgServiceRouter,
 	queryServiceRouter *baseapp.GRPCQueryRouter,
 ) (store.KVStoreService, store.MemoryStoreService, appmodule.Environment) {
-	storeKey := ProvideKVStoreKey(config, key, app)
-	kvService := kvStoreService{key: storeKey}
+	var (
+		kvService    store.KVStoreService     = failingStoreService{}
+		memKvService store.MemoryStoreService = failingStoreService{}
+	)
 
-	memStoreKey := ProvideMemoryStoreKey(key, app)
-	memStoreService := memStoreService{key: memStoreKey}
+	// skips modules that have no store
+	if !slices.Contains(config.SkipStoreKeys, key.Name()) {
+		storeKey := ProvideKVStoreKey(config, key, app)
+		kvService = kvStoreService{key: storeKey}
 
-	return kvService, memStoreService, NewEnvironment(
+		memStoreKey := ProvideMemoryStoreKey(config, key, app)
+		memKvService = memStoreService{key: memStoreKey}
+	}
+
+	return kvService, memKvService, NewEnvironment(
 		kvService,
 		logger.With(log.ModuleKey, fmt.Sprintf("x/%s", key.Name())),
 		EnvWithMsgRouterService(msgServiceRouter),
 		EnvWithQueryRouterService(queryServiceRouter),
-		EnvWithMemStoreService(memStoreService),
+		EnvWithMemStoreService(memKvService),
 	)
 }
 
-func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) store.TransientStoreService {
-	storeKey := ProvideTransientStoreKey(key, app)
+func ProvideTransientStoreService(
+	config *runtimev1alpha1.Module,
+	key depinject.ModuleKey,
+	app *AppBuilder,
+) store.TransientStoreService {
+	storeKey := ProvideTransientStoreKey(config, key, app)
+	if storeKey == nil {
+		return failingStoreService{}
+	}
+
 	return transientStoreService{key: storeKey}
 }
 

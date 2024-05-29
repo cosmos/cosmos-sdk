@@ -3,9 +3,12 @@ package network
 import (
 	"time"
 
+	"github.com/spf13/viper"
+
+	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -32,7 +35,8 @@ type NetworkI interface {
 
 // ValidatorI expose a validator's context and configuration
 type ValidatorI interface {
-	GetCtx() *server.Context
+	GetViper() *viper.Viper
+	GetLogger() log.Logger
 	GetAppConfig() *srvconfig.Config
 	GetAddress() sdk.AccAddress
 	GetValAddress() sdk.ValAddress

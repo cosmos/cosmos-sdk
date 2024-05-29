@@ -21,18 +21,20 @@ import (
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 func startInProcess(cfg Config, val *Validator) error {
-	logger := val.ctx.Logger
-	cmtCfg := val.ctx.Config
+	logger := val.GetLogger()
+	cmtCfg := client.GetConfigFromViper(val.GetViper())
 	cmtCfg.Instrumentation.Prometheus = false
 
 	if err := val.AppConfig.ValidateBasic(); err != nil {
@@ -133,14 +135,14 @@ func startInProcess(cfg Config, val *Validator) error {
 	return nil
 }
 
-func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
+func collectGenFiles(cfg Config, vals []*Validator, cmtConfigs []*cmtcfg.Config, outputDir string) error {
 	genTime := cfg.GenesisTime
 	if genTime.IsZero() {
 		genTime = cmttime.Now()
 	}
 
 	for i := 0; i < cfg.NumValidators; i++ {
-		cmtCfg := vals[i].ctx.Config
+		cmtCfg := cmtConfigs[i]
 
 		nodeDir := filepath.Join(outputDir, vals[i].moniker, "simd")
 		gentxsDir := filepath.Join(outputDir, "gentxs")
@@ -165,6 +167,12 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 
 		// overwrite each validator's genesis file to have a canonical genesis time
 		if err := genutil.ExportGenesisFileWithTime(genFile, cfg.ChainID, nil, appState, genTime); err != nil {
+			return err
+		}
+
+		v := vals[i].GetViper()
+		err = genutiltest.TrackCometConfig(v, nodeDir)
+		if err != nil {
 			return err
 		}
 	}

@@ -49,4 +49,3 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Consensus Breaking Changes
 
 * [#19188](https://github.com/cosmos/cosmos-sdk/pull/19188) Remove creation of `BaseAccount` when sending a message to an account that does not exist
-* [#20343](https://github.com/cosmos/cosmos-sdk/pull/20343) Add a check in send moduleaccount to account to prevent module accounts from sending disabled tokens to accounts

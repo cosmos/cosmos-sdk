@@ -118,10 +118,17 @@ func (k Keeper) NextAccountNumber(
 	return accNum, nil
 }
 
-// only use to migrate account number
-func (k Keeper) SetAccountNumber(ctx context.Context, accNum uint64) error {
-	err := k.AccountNumber.Set(ctx, accNum)
-	return err
+// InitAccountNumberSeq use to set accounts account number tracking.
+// Only use for account number migration.
+func (k Keeper) InitAccountNumberSeq(ctx context.Context, accNum uint64) error {
+	currentNum, err := k.AccountNumber.Peek(ctx)
+	if err != nil {
+		return err
+	}
+	if currentNum >= accNum {
+		return fmt.Errorf("cannot set number lower than current account number got %v while current account number is %v", accNum, currentNum)
+	}
+	return k.AccountNumber.Set(ctx, accNum)
 }
 
 // Init creates a new account of the given type.

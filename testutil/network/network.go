@@ -446,7 +446,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			mnemonic = cfg.Mnemonics[i]
 		}
 
-		nodeID, pubKey, err := genutil.InitializeNodeValidatorFilesFromMnemonic(cmtCfg, mnemonic)
+		nodeID, pubKey, err := genutil.InitializeNodeValidatorFilesFromMnemonic(cmtCfg, mnemonic, "")
 		if err != nil {
 			return nil, err
 		}

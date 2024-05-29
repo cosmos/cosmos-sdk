@@ -183,7 +183,7 @@ type (
 	TxTimeoutHeightDecorator struct{}
 
 	// TxWithTimeoutHeight defines the interface a tx must implement in order for
-	// TxHeightTimeoutDecorator to process the tx.
+	// TxTimeoutHeightDecorator to process the tx.
 	TxWithTimeoutHeight interface {
 		sdk.Tx
 
@@ -197,7 +197,7 @@ func NewTxTimeoutHeightDecorator() TxTimeoutHeightDecorator {
 	return TxTimeoutHeightDecorator{}
 }
 
-// AnteHandle implements an AnteHandler decorator for the TxHeightTimeoutDecorator
+// AnteHandle implements an AnteHandler decorator for the TxTimeoutHeightDecorator
 // type where the current block height is checked against the tx's height timeout.
 // If a height timeout is provided (non-zero) and is less than the current block
 // height, then an error is returned.

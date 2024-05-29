@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
 	"cosmossdk.io/x/auth/signing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -18,19 +18,15 @@ import (
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/stf"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 type MM struct {
 	logger             log.Logger
-	cdc                codec.Codec
 	config             *runtimev2.Module
 	modules            map[string]appmodulev2.AppModule
 	migrationRegistrar *migrationRegistrar
@@ -40,7 +36,6 @@ type MM struct {
 // It handles all the interactions between the modules and the application
 func NewModuleManager(
 	logger log.Logger,
-	cdc codec.Codec,
 	config *runtimev2.Module,
 	modules map[string]appmodulev2.AppModule,
 ) *MM {
@@ -65,12 +60,11 @@ func NewModuleManager(
 		config.ExportGenesis = modulesName
 	}
 	if len(config.OrderMigrations) == 0 {
-		config.OrderMigrations = sdkmodule.DefaultMigrationsOrder(modulesName)
+		config.OrderMigrations = defaultMigrationsOrder(modulesName)
 	}
 
 	mm := &MM{
 		logger:             logger,
-		cdc:                cdc,
 		config:             config,
 		modules:            modules,
 		migrationRegistrar: newMigrationRegistrar(),
@@ -89,9 +83,9 @@ func (m *MM) Modules() map[string]appmodulev2.AppModule {
 }
 
 // RegisterLegacyAminoCodec registers all module codecs
-func (m *MM) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (m *MM) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 	for _, b := range m.modules {
-		if mod, ok := b.(sdkmodule.HasAminoCodec); ok {
+		if mod, ok := b.(appmodule.HasAminoCodec); ok {
 			mod.RegisterLegacyAminoCodec(cdc)
 		}
 	}
@@ -110,7 +104,7 @@ func (m *MM) RegisterInterfaces(registry registry.InterfaceRegistrar) {
 func (m *MM) DefaultGenesis() map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
 	for name, b := range m.modules {
-		if mod, ok := b.(sdkmodule.HasGenesisBasics); ok {
+		if mod, ok := b.(appmodule.HasGenesisBasics); ok {
 			genesisData[mod.Name()] = mod.DefaultGenesis()
 		} else if mod, ok := b.(appmodulev2.HasGenesis); ok {
 			genesisData[name] = mod.DefaultGenesis()
@@ -125,7 +119,7 @@ func (m *MM) DefaultGenesis() map[string]json.RawMessage {
 // ValidateGenesis performs genesis state validation for all modules
 func (m *MM) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 	for name, b := range m.modules {
-		if mod, ok := b.(sdkmodule.HasGenesisBasics); ok {
+		if mod, ok := b.(appmodule.HasGenesisBasics); ok {
 			if err := mod.ValidateGenesis(genesisData[mod.Name()]); err != nil {
 				return err
 			}
@@ -140,7 +134,11 @@ func (m *MM) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 }
 
 // InitGenesisJSON performs init genesis functionality for modules from genesis data in JSON format
-func (m *MM) InitGenesisJSON(ctx context.Context, genesisData map[string]json.RawMessage, txHandler func(json.RawMessage) error) error {
+func (m *MM) InitGenesisJSON(
+	ctx context.Context,
+	genesisData map[string]json.RawMessage,
+	txHandler func(json.RawMessage) error,
+) error {
 	m.logger.Info("initializing blockchain state from genesis.json", "order", m.config.InitGenesis)
 	var seenValUpdates bool
 	for _, moduleName := range m.config.InitGenesis {
@@ -153,28 +151,29 @@ func (m *MM) InitGenesisJSON(ctx context.Context, genesisData map[string]json.Ra
 		// skip genutil as it's a special module that handles gentxs
 		// TODO: should this be an empty extension interface on genutil for server v2?
 		if moduleName == "genutil" {
-			var genesisState types.GenesisState
-			err := m.cdc.UnmarshalJSON(genesisData[moduleName], &genesisState)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal %s genesis state: %w", moduleName, err)
-			}
-			for _, jsonTx := range genesisState.GenTxs {
-				if err := txHandler(jsonTx); err != nil {
-					return fmt.Errorf("failed to handle genesis transaction: %w", err)
-				}
-			}
 			continue
 		}
 
 		// we might get an adapted module, a native core API module or a legacy module
-		if _, ok := mod.(appmodule.HasGenesisAuto); ok {
+		switch module := mod.(type) {
+		case appmodule.HasGenesisAuto:
 			panic(fmt.Sprintf("module %s isn't server/v2 compatible", moduleName))
-		} else if module, ok := mod.(appmodulev2.HasGenesis); ok {
+		case appmodulev2.GenesisDecoder:
+			genTxs, err := module.DecodeGenesisJSON(genesisData[moduleName])
+			if err != nil {
+				return err
+			}
+			for _, jsonTx := range genTxs {
+				if err := txHandler(jsonTx); err != nil {
+					return fmt.Errorf("failed to handle genesis transaction: %w", err)
+				}
+			}
+		case appmodulev2.HasGenesis:
 			m.logger.Debug("running initialization for module", "module", moduleName)
 			if err := module.InitGenesis(ctx, genesisData[moduleName]); err != nil {
 				return err
 			}
-		} else if module, ok := mod.(appmodulev2.HasABCIGenesis); ok {
+		case appmodulev2.HasABCIGenesis:
 			m.logger.Debug("running initialization for module", "module", moduleName)
 			moduleValUpdates, err := module.InitGenesis(ctx, genesisData[moduleName])
 			if err != nil {
@@ -191,12 +190,16 @@ func (m *MM) InitGenesisJSON(ctx context.Context, genesisData map[string]json.Ra
 				}
 			}
 		}
+
 	}
 	return nil
 }
 
 // ExportGenesisForModules performs export genesis functionality for modules
-func (m *MM) ExportGenesisForModules(ctx context.Context, modulesToExport ...string) (map[string]json.RawMessage, error) {
+func (m *MM) ExportGenesisForModules(
+	ctx context.Context,
+	modulesToExport ...string,
+) (map[string]json.RawMessage, error) {
 	if len(modulesToExport) == 0 {
 		modulesToExport = m.config.ExportGenesis
 	}
@@ -275,9 +278,14 @@ func (m *MM) BeginBlock() func(ctx context.Context) error {
 	}
 }
 
+// hasABCIEndBlock is the legacy EndBlocker implemented by x/staking in the CosmosSDK
+type hasABCIEndBlock interface {
+	EndBlock(context.Context) ([]appmodulev2.ValidatorUpdate, error)
+}
+
 // EndBlock runs the end-block logic of all modules and tx validator updates
 func (m *MM) EndBlock() (endBlockFunc func(ctx context.Context) error, valUpdateFunc func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error)) {
-	validatorUpdates := []appmodulev2.ValidatorUpdate{}
+	var validatorUpdates []appmodulev2.ValidatorUpdate
 	endBlockFunc = func(ctx context.Context) error {
 		for _, moduleName := range m.config.EndBlockers {
 			if module, ok := m.modules[moduleName].(appmodulev2.HasEndBlocker); ok {
@@ -285,7 +293,7 @@ func (m *MM) EndBlock() (endBlockFunc func(ctx context.Context) error, valUpdate
 				if err != nil {
 					return fmt.Errorf("failed to run endblock for %s: %w", moduleName, err)
 				}
-			} else if module, ok := m.modules[moduleName].(sdkmodule.HasABCIEndBlock); ok { // we need to keep this for our module compatibility promise
+			} else if module, ok := m.modules[moduleName].(hasABCIEndBlock); ok { // we need to keep this for our module compatibility promise
 				moduleValUpdates, err := module.EndBlock(ctx)
 				if err != nil {
 					return fmt.Errorf("failed to run enblock for %s: %w", moduleName, err)
@@ -392,7 +400,7 @@ func (m *MM) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap) (
 					return nil, fmt.Errorf("failed to run InitGenesis for %s: %w", moduleName, err)
 				}
 			}
-			if mod, ok := m.modules[moduleName].(sdkmodule.HasABCIGenesis); ok {
+			if mod, ok := m.modules[moduleName].(appmodulev2.HasABCIGenesis); ok {
 				moduleValUpdates, err := mod.InitGenesis(ctx, mod.DefaultGenesis())
 				if err != nil {
 					return nil, err
@@ -459,7 +467,7 @@ func (m *MM) validateConfig() error {
 			return !hasEndBlock
 		}
 
-		_, hasABCIEndBlock := module.(sdkmodule.HasABCIEndBlock)
+		_, hasABCIEndBlock := module.(hasABCIEndBlock)
 		return !hasABCIEndBlock
 	}); err != nil {
 		return err
@@ -483,7 +491,7 @@ func (m *MM) validateConfig() error {
 			return !hasGenesis
 		}
 
-		_, hasABCIGenesis := module.(sdkmodule.HasABCIGenesis)
+		_, hasABCIGenesis := module.(appmodulev2.HasABCIGenesis)
 		return !hasABCIGenesis
 	}); err != nil {
 		return err
@@ -499,7 +507,7 @@ func (m *MM) validateConfig() error {
 			return !hasGenesis
 		}
 
-		_, hasABCIGenesis := module.(sdkmodule.HasABCIGenesis)
+		_, hasABCIGenesis := module.(appmodulev2.HasABCIGenesis)
 		return !hasABCIGenesis
 	}); err != nil {
 		return err
@@ -546,7 +554,6 @@ func (m *MM) assertNoForgottenModules(
 
 func registerServices(s appmodule.HasServices, app *App, registry *protoregistry.Files) error {
 	c := &configurator{
-		cdc:            app.cdc,
 		stfQueryRouter: app.queryRouterBuilder,
 		stfMsgRouter:   app.msgRouterBuilder,
 		registry:       registry,
@@ -558,7 +565,6 @@ func registerServices(s appmodule.HasServices, app *App, registry *protoregistry
 var _ grpc.ServiceRegistrar = (*configurator)(nil)
 
 type configurator struct {
-	cdc            codec.BinaryCodec
 	stfQueryRouter *stf.MsgRouterBuilder
 	stfMsgRouter   *stf.MsgRouterBuilder
 	registry       *protoregistry.Files
@@ -655,4 +661,25 @@ func messagePassingInterceptor(msg appmodulev2.Message) grpc.UnaryServerIntercep
 	) (interface{}, error) {
 		return handler(ctx, msg)
 	}
+}
+
+// defaultMigrationsOrder returns a default migrations order: ascending alphabetical by module name,
+// except x/auth which will run last, see:
+// https://github.com/cosmos/cosmos-sdk/issues/10591
+func defaultMigrationsOrder(modules []string) []string {
+	const authName = "auth"
+	out := make([]string, 0, len(modules))
+	hasAuth := false
+	for _, m := range modules {
+		if m == authName {
+			hasAuth = true
+		} else {
+			out = append(out, m)
+		}
+	}
+	sort.Strings(out)
+	if hasAuth {
+		out = append(out, authName)
+	}
+	return out
 }

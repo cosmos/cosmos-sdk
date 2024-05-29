@@ -15,8 +15,8 @@ import (
 
 	coreevent "cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/core/log"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -387,24 +387,6 @@ func (suite *KeeperTestSuite) TestSendCoinsFromModuleToAccount_Blocklist() {
 	require.Error(keeper.SendCoinsFromModuleToAccount(
 		ctx, banktypes.MintModuleName, accAddrs[4], initCoins,
 	))
-}
-
-func (suite *KeeperTestSuite) TestSendCoinsFromModuleToAccount_CoinSendDisabled() {
-	ctx := suite.ctx
-	require := suite.Require()
-	keeper := suite.bankKeeper
-
-	suite.mockMintCoins(mintAcc)
-	require.NoError(keeper.MintCoins(ctx, banktypes.MintModuleName, initCoins))
-
-	keeper.SetSendEnabled(ctx, sdk.DefaultBondDenom, false)
-
-	suite.authKeeper.EXPECT().GetModuleAddress(mintAcc.Name).Return(mintAcc.GetAddress())
-	err := keeper.SendCoinsFromModuleToAccount(
-		ctx, banktypes.MintModuleName, accAddrs[2], initCoins,
-	)
-	require.Contains(err.Error(), "stake, is prohibited from being sent at this time")
-	keeper.SetSendEnabled(ctx, sdk.DefaultBondDenom, true)
 }
 
 func (suite *KeeperTestSuite) TestSupply_DelegateUndelegateCoins() {

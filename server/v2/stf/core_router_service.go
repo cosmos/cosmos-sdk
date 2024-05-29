@@ -12,48 +12,20 @@ import (
 	"cosmossdk.io/core/router"
 )
 
-// NewRouterService creates a router.Service which allows to invoke messages and queries using the msg router.
-func NewRouterService(queryRouterBuilder, msgRouterBuilder *MsgRouterBuilder) router.Service {
-	queryRouter, err := queryRouterBuilder.Build()
-	if err != nil {
-		panic("cannot create queryRouter")
-	}
-
+// NewMsgRouterService implements router.Service.
+func NewMsgRouterService(msgRouterBuilder *MsgRouterBuilder) router.Service {
 	msgRouter, err := msgRouterBuilder.Build()
 	if err != nil {
-		panic("cannot create msgRouter")
+		panic(fmt.Errorf("cannot create msgRouter: %w", err))
 	}
 
-	return &routerService{
-		queryRouterService: &queryRouterService{
-			builder: queryRouterBuilder,
-			handler: queryRouter,
-		},
-		msgRouterService: &msgRouterService{
-			builder: msgRouterBuilder,
-			handler: msgRouter,
-		},
+	return &msgRouterService{
+		builder: msgRouterBuilder,
+		handler: msgRouter,
 	}
 }
 
-var _ router.Service = (*routerService)(nil)
-
-type routerService struct {
-	queryRouterService router.Router
-	msgRouterService   router.Router
-}
-
-// MessageRouterService implements router.Service.
-func (r *routerService) MessageRouterService() router.Router {
-	return r.msgRouterService
-}
-
-// QueryRouterService implements router.Service.
-func (r *routerService) QueryRouterService() router.Router {
-	return r.queryRouterService
-}
-
-var _ router.Router = (*msgRouterService)(nil)
+var _ router.Service = (*msgRouterService)(nil)
 
 type msgRouterService struct {
 	builder *MsgRouterBuilder
@@ -87,7 +59,20 @@ func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg protoiface.Mes
 	return m.handler(ctx, msg)
 }
 
-var _ router.Router = (*queryRouterService)(nil)
+// NewQueryRouterService implements router.Service.
+func NewQueryRouterService(queryRouterBuilder *MsgRouterBuilder) router.Service {
+	queryRouter, err := queryRouterBuilder.Build()
+	if err != nil {
+		panic(fmt.Errorf("cannot create queryRouter: %w", err))
+	}
+
+	return &queryRouterService{
+		builder: queryRouterBuilder,
+		handler: queryRouter,
+	}
+}
+
+var _ router.Service = (*queryRouterService)(nil)
 
 type queryRouterService struct {
 	builder *MsgRouterBuilder

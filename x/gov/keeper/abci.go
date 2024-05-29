@@ -77,10 +77,9 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 
 		// called when proposal become inactive
 		// call hook when proposal become inactive
-		err = k.BranchService.Execute(ctx, func(ctx context.Context) error {
+		if err = k.BranchService.Execute(ctx, func(ctx context.Context) error {
 			return k.Hooks().AfterProposalFailedMinDeposit(ctx, proposal.Id)
-		})
-		if err != nil {
+		}); err != nil {
 			// purposely ignoring the error here not to halt the chain if the hook fails
 			k.Logger.Error("failed to execute AfterProposalFailedMinDeposit hook", "error", err)
 		}

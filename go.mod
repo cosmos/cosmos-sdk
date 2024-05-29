@@ -48,7 +48,7 @@ require (
 	github.com/muesli/termenv v0.15.2
 	github.com/prometheus/client_golang v1.19.1
 	github.com/prometheus/common v0.53.0
-	github.com/rs/zerolog v1.32.0
+	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
@@ -189,6 +189,8 @@ replace (
 	cosmossdk.io/collections => ./collections
 	cosmossdk.io/core => ./core
 	cosmossdk.io/depinject => ./depinject
+	cosmossdk.io/log => ./log
+	cosmossdk.io/store => ./store
 	cosmossdk.io/x/accounts => ./x/accounts
 	cosmossdk.io/x/auth => ./x/auth
 	cosmossdk.io/x/bank => ./x/bank

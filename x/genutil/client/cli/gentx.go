@@ -55,13 +55,12 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 `, defaultsDesc, version.AppName,
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			serverCtx := server.GetServerContextFromCmd(cmd)
+			config := client.GetConfigFromCmd(cmd)
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 			cdc := clientCtx.Codec
-			config := serverCtx.Config
 
 			consensusKey, err := cmd.Flags().GetString(FlagConsensusKeyAlgo)
 			if err != nil {

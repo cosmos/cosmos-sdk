@@ -8,13 +8,17 @@ import (
 	"slices"
 	"strings"
 
+	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	corectx "cosmossdk.io/core/context"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -372,4 +376,41 @@ func SetCmdClientContext(cmd *cobra.Command, clientCtx Context) error {
 	}
 
 	return nil
+}
+
+func GetViperFromCmd(cmd *cobra.Command) *viper.Viper {
+	value := cmd.Context().Value(corectx.ViperContextKey{})
+	v, ok := value.(*viper.Viper)
+	if !ok {
+		return viper.New()
+	}
+	return v
+}
+
+func GetConfigFromCmd(cmd *cobra.Command) *cmtcfg.Config {
+	v := cmd.Context().Value(corectx.ViperContextKey{})
+	viper, ok := v.(*viper.Viper)
+	if !ok {
+		return cmtcfg.DefaultConfig()
+	}
+	return GetConfigFromViper(viper)
+}
+
+func GetLoggerFromCmd(cmd *cobra.Command) log.Logger {
+	v := cmd.Context().Value(corectx.LoggerContextKey{})
+	logger, ok := v.(log.Logger)
+	if !ok {
+		return log.NewLogger(cmd.OutOrStdout())
+	}
+	return logger
+}
+
+func GetConfigFromViper(v *viper.Viper) *cmtcfg.Config {
+	conf := cmtcfg.DefaultConfig()
+	err := v.Unmarshal(conf)
+	rootDir := v.GetString(flags.FlagHome)
+	if err != nil {
+		return cmtcfg.DefaultConfig().SetRoot(rootDir)
+	}
+	return conf.SetRoot(rootDir)
 }

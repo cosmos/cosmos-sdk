@@ -7,7 +7,6 @@ require (
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/depinject v1.0.0-alpha.4
-	cosmossdk.io/log v1.3.1
 	cosmossdk.io/x/tx v0.13.3
 	github.com/cosmos/cosmos-sdk v0.51.0
 	github.com/cosmos/gogoproto v1.4.12
@@ -21,6 +20,7 @@ require (
 require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 
 require (
+	cosmossdk.io/log v1.3.1 // indirect
 	github.com/itsdevbear/comet-bls12-381 v0.0.0-20240413212931-2ae2f204cde7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
 	go.opencensus.io v0.24.0 // indirect
@@ -134,7 +134,7 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/rs/cors v1.11.0 // indirect
-	github.com/rs/zerolog v1.32.0 // indirect
+	github.com/rs/zerolog v1.33.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
@@ -180,6 +180,7 @@ replace (
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/depinject => ../../depinject
+	cosmossdk.io/log => ../../log
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/consensus => ../consensus

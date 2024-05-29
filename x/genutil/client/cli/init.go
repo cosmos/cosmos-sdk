@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -79,9 +78,7 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
-			serverCtx := server.GetServerContextFromCmd(cmd)
-			config := serverCtx.Config
-
+			config := client.GetConfigFromCmd(cmd)
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
 			switch {
 			case chainID != "":

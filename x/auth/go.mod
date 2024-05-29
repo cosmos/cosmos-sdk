@@ -37,7 +37,7 @@ require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.1-20240312114316-c0d3497e35d6.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.1-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/log v1.3.1 // indirect
-	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
+	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240516114011-e03476679912 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/distribution v0.0.0-20240429083151-cb50b4caa218 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect

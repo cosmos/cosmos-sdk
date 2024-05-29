@@ -31,6 +31,7 @@ var (
 	_ types.CommitKVStore           = (*Store)(nil)
 	_ types.Queryable               = (*Store)(nil)
 	_ types.StoreWithInitialVersion = (*Store)(nil)
+	_ types.PausablePruner          = (*Store)(nil)
 )
 
 // Store Implements types.KVStore and CommitKVStore.

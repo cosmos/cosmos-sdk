@@ -580,20 +580,20 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 	require.Equal(t, numVersions, lastCommitInfo.Version)
 
 	// Ensure that can commit one more height with no panic
-	// and the async pruning is done
-	time.Sleep(500 * time.Millisecond)
 	lastCommitInfo = ms.Commit()
 	require.Equal(t, numVersions+1, lastCommitInfo.Version)
 
-	for v := int64(1); v < numVersions-int64(keepRecent); v++ {
-		err := ms.LoadVersion(v)
-		require.Error(t, err, "expected error when loading pruned height: %d", v)
+	isPruned := func() bool {
+		ls := ms.Commit() // to flush the batch with the pruned heights
+		for v := int64(1); v < numVersions-int64(keepRecent); v++ {
+			if err := ms.LoadVersion(v); err == nil {
+				require.NoError(t, ms.LoadVersion(ls.Version)) // load latest
+				return false
+			}
+		}
+		return true
 	}
-
-	for v := (numVersions - int64(keepRecent)); v < numVersions; v++ {
-		err := ms.LoadVersion(v)
-		require.NoError(t, err, "expected no error when loading height: %d", v)
-	}
+	require.Eventually(t, isPruned, 1000*time.Second, 10*time.Millisecond, "expected error when loading pruned heights")
 }
 
 func TestMultiStore_PruningRestart(t *testing.T) {
@@ -625,13 +625,42 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 	require.Equal(t, int64(8), actualHeightToPrune)
 
 	// Ensure async pruning is done
-	time.Sleep(500 * time.Millisecond)
-	ms.Commit()
-
-	for v := int64(1); v <= actualHeightToPrune; v++ {
-		_, err := ms.CacheMultiStoreWithVersion(v)
-		require.Error(t, err, "expected error when loading height: %d", v)
+	isPruned := func() bool {
+		ms.Commit() // to flush the batch with the pruned heights
+		for v := int64(1); v <= actualHeightToPrune; v++ {
+			if _, err := ms.CacheMultiStoreWithVersion(v); err == nil {
+				return false
+			}
+		}
+		return true
 	}
+
+	require.Eventually(t, isPruned, 1*time.Second, 10*time.Millisecond, "expected error when loading pruned heights")
+}
+
+var _ types.PausablePruner = &pauseableCommitKVStoreStub{}
+
+type pauseableCommitKVStoreStub struct {
+	types.CommitKVStore
+	pauseCalled []bool
+}
+
+func (p *pauseableCommitKVStoreStub) PausePruning(b bool) {
+	p.pauseCalled = append(p.pauseCalled, b)
+}
+
+func TestPausePruningOnCommit(t *testing.T) {
+	store := NewStore(dbm.NewMemDB(), log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store.SetPruning(pruningtypes.NewCustomPruningOptions(2, 11))
+	store.MountStoreWithDB(testStoreKey1, types.StoreTypeIAVL, nil)
+	require.NoError(t, store.LoadLatestVersion())
+
+	myStub := &pauseableCommitKVStoreStub{CommitKVStore: store.stores[testStoreKey1]}
+	store.stores[testStoreKey1] = myStub
+	// when
+	store.Commit()
+	// then
+	require.Equal(t, []bool{true, false}, myStub.pauseCalled)
 }
 
 // TestUnevenStoresHeightCheck tests if loading root store correctly errors when

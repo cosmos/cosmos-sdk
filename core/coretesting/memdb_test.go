@@ -17,9 +17,9 @@ func TestMemDB(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, value, val)
 	require.NoError(t, db.Delete(key))
-	val, err = db.Get(key)
+	has, err := db.Has(key)
 	require.NoError(t, err)
-	require.Nil(t, val)
+	require.False(t, has)
 
 	// test iter
 	makeKey := func(i int) []byte {

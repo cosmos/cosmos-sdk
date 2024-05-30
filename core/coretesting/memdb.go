@@ -47,7 +47,7 @@ func (bt memDB) get(key []byte) (value []byte, found bool) {
 // delete removes the value associated with the given key from the change set.
 // If the key does not exist in the change set, this method does nothing.
 func (bt memDB) delete(key []byte) {
-	bt.set(key, nil)
+	bt.tree.Delete(item{key: key})
 }
 
 // iterator returns a new iterator over the key-value pairs in the memDB

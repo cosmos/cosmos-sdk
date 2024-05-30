@@ -3,6 +3,7 @@ package collections_test
 import (
 	"testing"
 
+	"cosmossdk.io/core/coretesting"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
@@ -44,7 +45,9 @@ func newTestIndexedMap(schema *collections.SchemaBuilder) *collections.IndexedMa
 }
 
 func TestIndexedMap(t *testing.T) {
-	sk, ctx := colltest.MockStore()
+	ctx := coretesting.Context()
+	sk := coretesting.KVStoreService(ctx, "test")
+
 	schema := collections.NewSchemaBuilder(sk)
 
 	im := newTestIndexedMap(schema)
@@ -122,7 +125,7 @@ func newInferIndex(schema *collections.SchemaBuilder) *inferIndex {
 }
 
 func TestIndexedMapInfer(t *testing.T) {
-	sk, _ := colltest.MockStore()
+	sk := coretesting.KVStoreService(coretesting.Context(), "test")
 	schema := collections.NewSchemaBuilder(sk)
 
 	_, err := collections.NewIndexedMapSafe(schema, collections.NewPrefix(0), "im", collections.StringKey, colltest.MockValueCodec[company](), newInferIndex(schema))

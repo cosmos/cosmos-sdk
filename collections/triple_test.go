@@ -3,6 +3,7 @@ package collections_test
 import (
 	"testing"
 
+	"cosmossdk.io/core/coretesting"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
@@ -18,7 +19,8 @@ func TestTriple(t *testing.T) {
 }
 
 func TestTripleRange(t *testing.T) {
-	sk, ctx := colltest.MockStore()
+	ctx := coretesting.Context()
+	sk := coretesting.KVStoreService(ctx, "test")
 	schema := collections.NewSchemaBuilder(sk)
 	// this is a key composed of 3 parts: uint64, string, []byte
 	kc := collections.TripleKeyCodec(collections.Uint64Key, collections.StringKey, collections.BytesKey)

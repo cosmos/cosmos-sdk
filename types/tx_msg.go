@@ -7,6 +7,7 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	"cosmossdk.io/core/transaction"
 	coretransaction "cosmossdk.io/core/transaction"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -51,6 +52,8 @@ type (
 
 	// Tx defines an interface a transaction must fulfill.
 	Tx interface {
+		transaction.Tx
+
 		HasMsgs
 
 		// GetReflectMessages gets a reflected version of the transaction's messages

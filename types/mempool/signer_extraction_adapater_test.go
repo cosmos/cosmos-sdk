@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"cosmossdk.io/core/transaction"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -36,7 +37,7 @@ func (n nonVerifiableTx) GetGasLimit() (uint64, error) {
 	return 0, nil
 }
 
-func (n nonVerifiableTx) GetMessages() ([]proto.Message, error) {
+func (n nonVerifiableTx) GetMessages() ([]transaction.Msg, error) {
 	return nil, nil
 }
 

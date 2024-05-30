@@ -12,6 +12,7 @@ import (
 	_ "cosmossdk.io/api/cosmos/counter/v1"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/core/log"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/auth/signing"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -87,7 +88,7 @@ func (tx testTx) GetGasLimit() (uint64, error) {
 	return 0, nil
 }
 
-func (tx testTx) GetMessages() ([]protov2.Message, error) {
+func (tx testTx) GetMessages() ([]transaction.Msg, error) {
 	return nil, nil
 }
 
@@ -121,7 +122,7 @@ func (sigErrTx) GetGasLimit() (uint64, error) {
 	return 0, nil
 }
 
-func (sigErrTx) GetMessages() ([]protov2.Message, error) {
+func (sigErrTx) GetMessages() ([]transaction.Msg, error) {
 	return nil, nil
 }
 

@@ -8,10 +8,12 @@ import (
 	"strings"
 
 	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/protoadapt"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/auth/ante"
@@ -143,11 +145,17 @@ func (w *gogoTxWrapper) GetGasLimit() (uint64, error) {
 	return w.decodedTx.Tx.AuthInfo.Fee.GasLimit, nil
 }
 
-func (w *gogoTxWrapper) GetMessages() ([]protov2.Message, error) {
+func (w *gogoTxWrapper) GetMessages() ([]transaction.Msg, error) {
 	if w.decodedTx == nil || w.decodedTx.Messages == nil {
 		return nil, errors.New("messages not available or are nil")
 	}
-	return w.decodedTx.Messages, nil
+
+	msgs := make([]transaction.Msg, len(w.decodedTx.Messages))
+	for i, msg := range w.decodedTx.Messages {
+		msgs[i] = protoadapt.MessageV1Of(msg)
+	}
+
+	return msgs, nil
 }
 
 func (w *gogoTxWrapper) GetSenders() ([][]byte, error) {

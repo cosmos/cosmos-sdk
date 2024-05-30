@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"fmt"
 
-	"google.golang.org/protobuf/proto"
-
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/auth/signing"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -103,7 +103,7 @@ func (msg *KVStoreTx) GetGasLimit() (uint64, error) {
 	return 0, nil
 }
 
-func (msg *KVStoreTx) GetMessages() ([]proto.Message, error) {
+func (msg *KVStoreTx) GetMessages() ([]transaction.Msg, error) {
 	return nil, nil
 }
 
@@ -119,8 +119,8 @@ func (msg *KVStoreTx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{msg}
 }
 
-func (msg *KVStoreTx) GetMsgsV2() ([]proto.Message, error) {
-	return []proto.Message{&bankv1beta1.MsgSend{FromAddress: msg.address.String()}}, nil // this is a hack for tests
+func (msg *KVStoreTx) GetReflectMessages() ([]protoreflect.Message, error) {
+	return []protoreflect.Message{(&bankv1beta1.MsgSend{FromAddress: msg.address.String()}).ProtoReflect()}, nil // this is a hack for tests
 }
 
 func (msg *KVStoreTx) GetSignBytes() []byte {

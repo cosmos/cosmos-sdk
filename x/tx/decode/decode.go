@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-proto/anyutil"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/protoadapt"
 
 	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/core/transaction"
@@ -151,11 +152,17 @@ func (dtx *DecodedTx) GetGasLimit() (uint64, error) {
 	return dtx.Tx.AuthInfo.Fee.GasLimit, nil
 }
 
-func (dtx *DecodedTx) GetMessages() ([]proto.Message, error) {
+func (dtx *DecodedTx) GetMessages() ([]transaction.Msg, error) {
 	if dtx == nil || dtx.Messages == nil {
 		return nil, errors.New("messages not available or are nil")
 	}
-	return dtx.Messages, nil
+
+	msgs := make([]transaction.Msg, len(dtx.Messages))
+	for i, msg := range dtx.Messages {
+		msgs[i] = protoadapt.MessageV1Of(msg)
+	}
+
+	return msgs, nil
 }
 
 func (dtx *DecodedTx) GetSenders() ([][]byte, error) {

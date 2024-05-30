@@ -469,7 +469,7 @@ func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ b
 }
 
 func (vscd ValidateSigCountDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
-	sigTx, ok := tx.(authsigning.SigVerifiableTx) // TODO: what do we do with this.
+	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")
 	}

@@ -22,11 +22,11 @@ func (t Tx) Hash() [32]byte {
 	return sha256.Sum256(t.Bytes())
 }
 
-func (t Tx) GetMessages() ([]transaction.Type, error) {
+func (t Tx) GetMessages() ([]transaction.Msg, error) {
 	if t.Msg == nil {
 		return nil, errors.New("messages not available or are nil")
 	}
-	return []transaction.Type{t.Msg}, nil
+	return []transaction.Msg{t.Msg}, nil
 }
 
 func (t Tx) GetSenders() ([]transaction.Identity, error) {

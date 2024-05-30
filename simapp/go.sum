@@ -291,12 +291,12 @@ github.com/cockroachdb/redact v1.1.5 h1:u1PMllDkdFfPWaNGMyLD1+so+aq3uUItthCFqzwP
 github.com/cockroachdb/redact v1.1.5/go.mod h1:BVNblN9mBWFyMyqK1k3AAiSxhvhfK2oOZZ2lK+dpvRg=
 github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 h1:zuQyyAKVxetITBuuhv3BI9cMrmStnpT18zmgmTxunpo=
 github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06/go.mod h1:7nc4anLGjupUW/PeY5qiNYsdNXj7zopG+eqsS7To5IQ=
-github.com/cometbft/cometbft v0.0.0-20240515101559-5745407e89a8 h1:4soaTXsAnMeB+OfFr0YfacTsfTf87BB5rLHjFqOILIo=
-github.com/cometbft/cometbft v0.0.0-20240515101559-5745407e89a8/go.mod h1:uk3NWAl4SUh0DV05gm8/Dmktp5HnPCRHmnHN7eYuG7I=
+github.com/cometbft/cometbft v1.0.0-alpha.2.0.20240530055211-ae27f7eb3c08 h1:xW0les/5Lr+4qVsOYDDwl5Utj8uouvv69hEtiavHJ2M=
+github.com/cometbft/cometbft v1.0.0-alpha.2.0.20240530055211-ae27f7eb3c08/go.mod h1:8uXGKqp5yPmNSbU81K/669E3rfO3H+juGkYKCPTnAtY=
 github.com/cometbft/cometbft-db v0.12.0 h1:v77/z0VyfSU7k682IzZeZPFZrQAKiQwkqGN0QzAjMi0=
 github.com/cometbft/cometbft-db v0.12.0/go.mod h1:aX2NbCrjNVd2ZajYxt1BsiFf/Z+TQ2MN0VxdicheYuw=
-github.com/cometbft/cometbft/api v0.0.0-20240515101559-5745407e89a8 h1:G57VSuEQmfWLZ8j1jJs+TwdFMXDlyMVXVV6jk8maesA=
-github.com/cometbft/cometbft/api v0.0.0-20240515101559-5745407e89a8/go.mod h1:NDFKiBBD8HJC6QQLAoUI99YhsiRZtg2+FJWfk6A6m6o=
+github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240530055211-ae27f7eb3c08 h1:BNUwBnVEBiRUGfLIqbKPKHEiR6VCOjWarDgy2dcbys4=
+github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240530055211-ae27f7eb3c08/go.mod h1:NDFKiBBD8HJC6QQLAoUI99YhsiRZtg2+FJWfk6A6m6o=
 github.com/containerd/continuity v0.3.0 h1:nisirsYROK15TAMVukJOUyGJjz4BNQJBVsNvAXZJ/eg=
 github.com/containerd/continuity v0.3.0/go.mod h1:wJEAIwKOm/pBZuBd0JmeTvnLquTB1Ag8espWhkykbPM=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=

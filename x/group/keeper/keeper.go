@@ -292,7 +292,6 @@ func (k Keeper) abortProposals(ctx context.Context, groupPolicyAddr sdk.AccAddre
 		return err
 	}
 
-	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointer on &proposalInfo)"
 	for _, proposalInfo := range proposals {
 		// Mark all proposals still in the voting phase as aborted.
 		if proposalInfo.Status == group.PROPOSAL_STATUS_SUBMITTED {
@@ -337,7 +336,6 @@ func (k Keeper) pruneVotes(ctx context.Context, proposalID uint64) error {
 		return err
 	}
 
-	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointer on &v)"
 	for _, v := range votes {
 		err = k.voteTable.Delete(k.KVStoreService.OpenKVStore(ctx), &v)
 		if err != nil {
@@ -410,7 +408,6 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx context.Context) error {
 	if err != nil {
 		return nil
 	}
-	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointers in the loop)"
 	for _, proposal := range proposals {
 		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress)
 		if err != nil {

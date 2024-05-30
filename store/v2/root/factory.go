@@ -27,7 +27,6 @@ const (
 	SSTypeSQLite SSType = 0
 	SSTypePebble SSType = 1
 	SSTypeRocks  SSType = 2
-	SSTypeMemory SSType = 3
 	SCTypeIavl   SCType = 0
 	SCTypeIavlV2 SCType = 1
 )

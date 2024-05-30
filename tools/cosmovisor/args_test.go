@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pelletier/go-toml/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -412,7 +413,7 @@ func (s *argsTestSuite) TestDetailString() {
 		PollInterval:             pollInterval,
 		UnsafeSkipBackup:         unsafeSkipBackup,
 		DataBackupPath:           dataBackupPath,
-		PreupgradeMaxRetries:     preupgradeMaxRetries,
+		PreUpgradeMaxRetries:     preupgradeMaxRetries,
 	}
 
 	expectedPieces := []string{
@@ -444,6 +445,41 @@ func (s *argsTestSuite) TestDetailString() {
 	}
 }
 
+var newConfig = func(
+	home, name string,
+	downloadBin bool,
+	downloadMustHaveChecksum bool,
+	restartUpgrade bool,
+	restartDelay int,
+	skipBackup bool,
+	dataBackupPath string,
+	interval, preupgradeMaxRetries int,
+	disableLogs, colorLogs bool,
+	timeFormatLogs string,
+	customPreUpgrade string,
+	disableRecase bool,
+	shutdownGrace int,
+) *Config {
+	return &Config{
+		Home:                     home,
+		Name:                     name,
+		AllowDownloadBinaries:    downloadBin,
+		DownloadMustHaveChecksum: downloadMustHaveChecksum,
+		RestartAfterUpgrade:      restartUpgrade,
+		RestartDelay:             time.Millisecond * time.Duration(restartDelay),
+		PollInterval:             time.Millisecond * time.Duration(interval),
+		UnsafeSkipBackup:         skipBackup,
+		DataBackupPath:           dataBackupPath,
+		PreUpgradeMaxRetries:     preupgradeMaxRetries,
+		DisableLogs:              disableLogs,
+		ColorLogs:                colorLogs,
+		TimeFormatLogs:           timeFormatLogs,
+		CustomPreUpgrade:         customPreUpgrade,
+		DisableRecase:            disableRecase,
+		ShutdownGrace:            time.Duration(shutdownGrace),
+	}
+}
+
 func (s *argsTestSuite) TestGetConfigFromEnv() {
 	initialEnv := s.clearEnv()
 	defer s.setEnv(nil, initialEnv)
@@ -451,41 +487,6 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 	relPath := filepath.Join("testdata", "validate")
 	absPath, perr := filepath.Abs(relPath)
 	s.Require().NoError(perr)
-
-	newConfig := func(
-		home, name string,
-		downloadBin bool,
-		downloadMustHaveChecksum bool,
-		restartUpgrade bool,
-		restartDelay int,
-		skipBackup bool,
-		dataBackupPath string,
-		interval, preupgradeMaxRetries int,
-		disableLogs, colorLogs bool,
-		timeFormatLogs string,
-		customPreUpgrade string,
-		disableRecase bool,
-		shutdownGrace int,
-	) *Config {
-		return &Config{
-			Home:                     home,
-			Name:                     name,
-			AllowDownloadBinaries:    downloadBin,
-			DownloadMustHaveChecksum: downloadMustHaveChecksum,
-			RestartAfterUpgrade:      restartUpgrade,
-			RestartDelay:             time.Millisecond * time.Duration(restartDelay),
-			PollInterval:             time.Millisecond * time.Duration(interval),
-			UnsafeSkipBackup:         skipBackup,
-			DataBackupPath:           dataBackupPath,
-			PreupgradeMaxRetries:     preupgradeMaxRetries,
-			DisableLogs:              disableLogs,
-			ColorLogs:                colorLogs,
-			TimeFormatLogs:           timeFormatLogs,
-			CustomPreupgrade:         customPreUpgrade,
-			DisableRecase:            disableRecase,
-			ShutdownGrace:            time.Duration(shutdownGrace),
-		}
-	}
 
 	tests := []struct {
 		name             string
@@ -783,6 +784,95 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 	}
 }
 
+func (s *argsTestSuite) setUpDir() string {
+	s.T().Helper()
+
+	home := s.T().TempDir()
+	err := os.MkdirAll(filepath.Join(home, rootName), 0o755)
+	s.Require().NoError(err)
+	return home
+}
+
+func (s *argsTestSuite) setupConfig(home string) string {
+	s.T().Helper()
+
+	cfg := newConfig(home, "test", true, true, true, 406, false, home, 8, 0, false, true, "kitchen", "", true, 10000000000)
+	path := filepath.Join(home, rootName, "config.toml")
+	f, err := os.Create(path)
+	s.Require().NoError(err)
+
+	enc := toml.NewEncoder(f)
+	s.Require().NoError(enc.Encode(&cfg))
+
+	err = f.Close()
+	s.Require().NoError(err)
+
+	return path
+}
+
+func (s *argsTestSuite) TestConfigFromFile() {
+	home := s.setUpDir()
+	// create a config file
+	cfgFilePath := s.setupConfig(home)
+
+	testCases := []struct {
+		name          string
+		config        *Config
+		expectedCfg   func() *Config
+		filePath      string
+		expectedError string
+		malleate      func()
+	}{
+		{
+			name: "valid config",
+			expectedCfg: func() *Config {
+				return newConfig(home, "test", true, true, true, 406, false, home, 8, 0, false, true, time.Kitchen, "", true, 10000000000)
+			},
+			filePath:      cfgFilePath,
+			expectedError: "",
+			malleate:      func() {},
+		},
+		{
+			name:          "env variable will override config file fields",
+			filePath:      cfgFilePath,
+			expectedError: "",
+			malleate: func() {
+				// set env variable different from the config file
+				os.Setenv(EnvName, "env-name")
+			},
+			expectedCfg: func() *Config {
+				return newConfig(home, "env-name", true, true, true, 406, false, home, 8, 0, false, true, time.Kitchen, "", true, 10000000000)
+			},
+		},
+		{
+			name: "empty config file path will load config from ENV variables",
+			expectedCfg: func() *Config {
+				return newConfig(home, "test", true, true, true, 406, false, home, 8, 0, false, true, time.Kitchen, "", true, 10000000000)
+			},
+			filePath:      "",
+			expectedError: "",
+			malleate: func() {
+				s.setEnv(s.T(), &cosmovisorEnv{home, "test", "true", "true", "true", "406ms", "false", home, "8ms", "0", "false", "true", "kitchen", "", "true", "10s"})
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			tc.malleate()
+			actualCfg, err := GetConfigFromFile(tc.filePath)
+			if tc.expectedError != "" {
+				s.Require().NoError(err)
+				s.Require().Contains(err.Error(), tc.expectedError)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().EqualValues(tc.expectedCfg(), actualCfg)
+		})
+	}
+}
+
 var sink interface{}
 
 func BenchmarkDetailString(b *testing.B) {
@@ -791,7 +881,7 @@ func BenchmarkDetailString(b *testing.B) {
 		AllowDownloadBinaries: true,
 		UnsafeSkipBackup:      true,
 		PollInterval:          450 * time.Second,
-		PreupgradeMaxRetries:  1e7,
+		PreUpgradeMaxRetries:  1e7,
 	}
 
 	b.ReportAllocs()

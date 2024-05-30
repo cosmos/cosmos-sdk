@@ -6,12 +6,14 @@ import (
 
 	"github.com/cometbft/cometbft/node"
 	cmtclient "github.com/cometbft/cometbft/rpc/client"
+	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -24,7 +26,8 @@ import (
 type Validator struct {
 	AppConfig  *srvconfig.Config
 	clientCtx  client.Context
-	ctx        *server.Context
+	viper      *viper.Viper
+	logger     log.Logger
 	dir        string
 	nodeID     string
 	pubKey     cryptotypes.PubKey
@@ -47,8 +50,12 @@ type Validator struct {
 
 var _ ValidatorI = &Validator{}
 
-func (v *Validator) GetCtx() *server.Context {
-	return v.ctx
+func (v *Validator) GetViper() *viper.Viper {
+	return v.viper
+}
+
+func (v *Validator) GetLogger() log.Logger {
+	return v.logger
 }
 
 func (v *Validator) GetClientCtx() client.Context {

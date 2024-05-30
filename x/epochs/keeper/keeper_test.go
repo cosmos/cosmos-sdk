@@ -9,7 +9,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
 	storetypes "cosmossdk.io/store/types"
 	epochskeeper "cosmossdk.io/x/epochs/keeper"
 	"cosmossdk.io/x/epochs/types"

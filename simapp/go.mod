@@ -31,7 +31,7 @@ require (
 	cosmossdk.io/x/staking v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/tx v0.13.3
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
-	github.com/cometbft/cometbft v1.0.0-alpha.2.0.20240429102542-490e9bc3de65
+	github.com/cometbft/cometbft v1.0.0-alpha.2.0.20240530055211-ae27f7eb3c08
 	github.com/cosmos/cosmos-db v1.0.2
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.51.0
@@ -45,7 +45,7 @@ require (
 	google.golang.org/protobuf v1.34.1
 )
 
-require github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240429102542-490e9bc3de65
+require github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240530055211-ae27f7eb3c08
 
 require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 
@@ -139,6 +139,7 @@ require (
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/hdevalence/ed25519consensus v0.2.0 // indirect
@@ -148,7 +149,6 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.8 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
@@ -162,7 +162,6 @@ require (
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mdp/qrterminal/v3 v3.2.0 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
-	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -182,7 +181,7 @@ require (
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/rs/cors v1.11.0 // indirect
-	github.com/rs/zerolog v1.32.0 // indirect
+	github.com/rs/zerolog v1.33.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
@@ -243,6 +242,7 @@ replace (
 	cosmossdk.io/collections => ../collections
 	cosmossdk.io/core => ../core
 	cosmossdk.io/depinject => ../depinject
+	cosmossdk.io/log => ../log
 	cosmossdk.io/store => ../store
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/accounts => ../x/accounts

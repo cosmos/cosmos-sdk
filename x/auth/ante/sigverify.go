@@ -460,6 +460,7 @@ func NewValidateSigCountDecorator(ak AccountKeeper) ValidateSigCountDecorator {
 	}
 }
 
+// AnteHandler implements an ante decorator for ValidateSigCountDecorator
 func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	if err := vscd.ValidateTx(ctx, tx); err != nil {
 		return ctx, err
@@ -468,6 +469,7 @@ func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ b
 	return next(ctx, tx, false)
 }
 
+// ValidateTx implements an TxValidator for ValidateSigCountDecorator
 func (vscd ValidateSigCountDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {

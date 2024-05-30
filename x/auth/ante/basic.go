@@ -32,6 +32,7 @@ func NewValidateBasicDecorator(env appmodule.Environment) ValidateBasicDecorator
 	}
 }
 
+// AnteHandle implements an AnteHandler decorator for the ValidateBasicDecorator.
 func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	if err := vbd.ValidateTx(ctx, tx); err != nil {
 		return ctx, err
@@ -40,6 +41,7 @@ func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool,
 	return next(ctx, tx, false)
 }
 
+// ValidateTx implements an TxValidator for ValidateBasicDecorator
 func (vbd ValidateBasicDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
 	// no need to validate basic on recheck tx, call next antehandler
 	txService := vbd.env.TransactionService
@@ -69,6 +71,7 @@ func NewValidateMemoDecorator(ak AccountKeeper) ValidateMemoDecorator {
 	}
 }
 
+// AnteHandle implements an AnteHandler decorator for the ValidateMemoDecorator.
 func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	if err := vmd.ValidateTx(ctx, tx); err != nil {
 		return ctx, err
@@ -77,6 +80,7 @@ func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, 
 	return next(ctx, tx, false)
 }
 
+// ValidateTx implements an TxValidator for ValidateMemoDecorator
 func (vmd ValidateMemoDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
 	memoTx, ok := tx.(sdk.TxWithMemo)
 	if !ok {
@@ -116,6 +120,7 @@ func NewConsumeGasForTxSizeDecorator(ak AccountKeeper) ConsumeTxSizeGasDecorator
 	}
 }
 
+// AnteHandle implements an AnteHandler decorator for the ConsumeTxSizeGasDecorator.
 func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	if err := cgts.ValidateTx(ctx, tx); err != nil {
 		return ctx, err
@@ -124,6 +129,7 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ b
 	return next(ctx, tx, false)
 }
 
+// ValidateTx implements an TxValidator for ConsumeTxSizeGasDecorator
 func (cgts ConsumeTxSizeGasDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
@@ -241,7 +247,7 @@ func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ boo
 	return next(ctx, tx, false)
 }
 
-// ValidateTx implements an TxValidator decorator for the TxHeightTimeoutDecorator
+// ValidateTx implements an TxValidator for the TxHeightTimeoutDecorator
 // type where the current block height is checked against the tx's height timeout.
 // If a height timeout is provided (non-zero) and is less than the current block
 // height, then an error is returned.

@@ -7,9 +7,14 @@ import (
 	"testing"
 
 	"github.com/hashicorp/golang-lru/simplelru"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/internal/conv"
+)
+
+var (
+	lru, _ = simplelru.NewLRU(500, nil)
+	mu     = &sync.Mutex{}
 )
 
 func generateAddresses(totalAddresses int) ([][]byte, error) {
@@ -36,77 +41,76 @@ func TestNewBech32Codec(t *testing.T) {
 		{
 			name:    "create accounts cached bech32 codec",
 			prefix:  "cosmos",
-			lru:     accAddrCache,
+			lru:     lru,
 			address: "cosmos1p8s0p6gqc6c9gt77lgr2qqujz49huhu6a80smx",
 		},
 		{
 			name:    "create validator cached bech32 codec",
 			prefix:  "cosmosvaloper",
-			lru:     valAddrCache,
+			lru:     lru,
 			address: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0",
 		},
 		{
 			name:    "create consensus cached bech32 codec",
 			prefix:  "cosmosvalcons",
-			lru:     consAddrCache,
+			lru:     lru,
 			address: "cosmosvalcons1ntk8eualewuprz0gamh8hnvcem2nrcdsgz563h",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.lru.Len(), 0)
-			ac := NewBech32Codec(tt.prefix)
+			ac := NewBech32Codec(tt.prefix, WithLRU(lru), WithMutex(mu))
 			cached, ok := ac.(cachedBech32Codec)
-			assert.True(t, ok)
-			assert.Equal(t, cached.cache, tt.lru)
+			require.True(t, ok)
+			require.Equal(t, cached.cache, tt.lru)
 
 			addr, err := ac.StringToBytes(tt.address)
-			assert.NoError(t, err)
-			assert.Equal(t, tt.lru.Len(), 1)
+			require.NoError(t, err)
 
 			cachedAddr, ok := tt.lru.Get(tt.address)
-			assert.True(t, ok)
-			assert.Equal(t, addr, cachedAddr)
+			require.True(t, ok)
+			require.Equal(t, addr, cachedAddr)
 
 			accAddr, err := ac.BytesToString(addr)
-			assert.NoError(t, err)
-			assert.Equal(t, tt.lru.Len(), 2)
+			require.NoError(t, err)
 
-			cachedStrAddr, ok := tt.lru.Get(cached.codec.Bech32Prefix + conv.UnsafeBytesToStr(addr))
-			assert.True(t, ok)
-			assert.Equal(t, accAddr, cachedStrAddr)
+			cachedStrAddr, ok := tt.lru.Get(conv.UnsafeBytesToStr(addr))
+			require.True(t, ok)
+			cachedStrAddrMap, ok := cachedStrAddr.(map[string]string)
+			require.True(t, ok)
+			require.Equal(t, accAddr, cachedStrAddrMap[tt.prefix])
 		})
 	}
 }
 
 func TestMultipleBech32Codec(t *testing.T) {
-	cosmosAc, ok := NewBech32Codec("cosmos").(cachedBech32Codec)
-	assert.True(t, ok)
-	stakeAc := NewBech32Codec("stake").(cachedBech32Codec)
-	assert.True(t, ok)
-	assert.Equal(t, cosmosAc.cache, stakeAc.cache)
+	cosmosAc, ok := NewBech32Codec("cosmos", WithLRU(lru), WithMutex(mu)).(cachedBech32Codec)
+	require.True(t, ok)
+	stakeAc := NewBech32Codec("stake", WithLRU(lru), WithMutex(mu)).(cachedBech32Codec)
+	require.True(t, ok)
+	require.Equal(t, cosmosAc.cache, stakeAc.cache)
 
 	addr := make([]byte, 32)
 	_, err := rand.Read(addr)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	cosmosAddr, err := cosmosAc.BytesToString(addr)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	stakeAddr, err := stakeAc.BytesToString(addr)
-	assert.NoError(t, err)
-	assert.True(t, cosmosAddr != stakeAddr)
+	require.NoError(t, err)
+	require.True(t, cosmosAddr != stakeAddr)
 
 	cachedCosmosAddr, err := cosmosAc.BytesToString(addr)
-	assert.NoError(t, err)
-	assert.Equal(t, cosmosAddr, cachedCosmosAddr)
+	require.NoError(t, err)
+	require.Equal(t, cosmosAddr, cachedCosmosAddr)
 
 	cachedStakeAddr, err := stakeAc.BytesToString(addr)
-	assert.NoError(t, err)
-	assert.Equal(t, stakeAddr, cachedStakeAddr)
+	require.NoError(t, err)
+	require.Equal(t, stakeAddr, cachedStakeAddr)
 }
 
 func TestBech32CodecRace(t *testing.T) {
-	ac := NewBech32Codec("cosmos")
+	ac := NewBech32Codec("cosmos", WithLRU(lru), WithMutex(mu))
 	myAddrBz := []byte{0x1, 0x2, 0x3, 0x4, 0x5}
 
 	var (
@@ -129,5 +133,5 @@ func TestBech32CodecRace(t *testing.T) {
 		}()
 	}
 	wgDone.Wait() // wait for all routines completed
-	assert.Equal(t, errCount.Load(), uint32(0))
+	require.Equal(t, errCount.Load(), uint32(0))
 }

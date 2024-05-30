@@ -2,9 +2,9 @@ package address
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"sync"
-	"sync/atomic"
 
 	"github.com/hashicorp/golang-lru/simplelru"
 
@@ -17,41 +17,24 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-const (
-	// TODO: ideally sdk.GetBech32PrefixValAddr("") should be used but currently there's a cyclical import.
-	// 	Once globals are deleted the cyclical import won't happen.
-	suffixValAddr  = "valoper"
-	suffixConsAddr = "valcons"
-)
-
 var errEmptyAddress = errors.New("empty address string is not allowed")
 
-// cache variables
-var (
-	accAddrMu     sync.Mutex
-	accAddrCache  *simplelru.LRU
-	consAddrMu    sync.Mutex
-	consAddrCache *simplelru.LRU
-	valAddrMu     sync.Mutex
-	valAddrCache  *simplelru.LRU
+type Option func(*Options)
 
-	isCachingEnabled atomic.Bool
-)
+type Options struct {
+	mu    *sync.Mutex
+	cache *simplelru.LRU
+}
 
-func init() {
-	var err error
-	isCachingEnabled.Store(true)
-
-	// in total the cache size is 61k entries. Key is 32 bytes and value is around 50-70 bytes.
-	// That will make around 92 * 61k * 2 (LRU) bytes ~ 11 MB
-	if accAddrCache, err = simplelru.NewLRU(60000, nil); err != nil {
-		panic(err)
+func WithLRU(cache *simplelru.LRU) Option {
+	return func(o *Options) {
+		o.cache = cache
 	}
-	if consAddrCache, err = simplelru.NewLRU(500, nil); err != nil {
-		panic(err)
-	}
-	if valAddrCache, err = simplelru.NewLRU(500, nil); err != nil {
-		panic(err)
+}
+
+func WithMutex(mu *sync.Mutex) Option {
+	return func(o *Options) {
+		o.mu = mu
 	}
 }
 
@@ -70,26 +53,21 @@ var (
 	_ address.Codec = &cachedBech32Codec{}
 )
 
-func NewBech32Codec(prefix string) address.Codec {
-	ac := Bech32Codec{prefix}
-	if !isCachingEnabled.Load() {
-		return ac
+func NewBech32Codec(prefix string, opts ...Option) address.Codec {
+	options := Options{}
+	for _, optionFn := range opts {
+		optionFn(&options)
 	}
 
-	lru := accAddrCache
-	mu := &accAddrMu
-	if strings.HasSuffix(prefix, suffixValAddr) {
-		lru = valAddrCache
-		mu = &valAddrMu
-	} else if strings.HasSuffix(prefix, suffixConsAddr) {
-		lru = consAddrCache
-		mu = &consAddrMu
+	ac := Bech32Codec{prefix}
+	if options.mu == nil || options.cache == nil {
+		return ac
 	}
 
 	return cachedBech32Codec{
 		codec: ac,
-		cache: lru,
-		mu:    mu,
+		cache: options.cache,
+		mu:    options.mu,
 	}
 }
 
@@ -138,20 +116,30 @@ func (cbc cachedBech32Codec) BytesToString(bz []byte) (string, error) {
 		return "", nil
 	}
 
-	// caches prefix is added to the key to make sure keys are unique in case codecs with different bech32 prefix are defined.
-	key := cbc.codec.Bech32Prefix + conv.UnsafeBytesToStr(bz)
+	key := conv.UnsafeBytesToStr(bz)
 	cbc.mu.Lock()
 	defer cbc.mu.Unlock()
 
-	if addr, ok := cbc.cache.Get(key); ok {
-		return addr.(string), nil
+	addrs, ok := cbc.cache.Get(key)
+	if !ok {
+		addrs = make(map[string]string)
+		cbc.cache.Add(key, addrs)
 	}
 
-	addr, err := cbc.codec.BytesToString(bz)
-	if err != nil {
-		return "", err
+	addrMap, ok := addrs.(map[string]string)
+	if !ok {
+		return "", fmt.Errorf("cache contains non-map[string]string value for key %s", key)
 	}
-	cbc.cache.Add(key, addr)
+
+	addr, ok := addrMap[cbc.codec.Bech32Prefix]
+	if !ok {
+		var err error
+		addr, err = cbc.codec.BytesToString(bz)
+		if err != nil {
+			return "", err
+		}
+		addrMap[cbc.codec.Bech32Prefix] = addr
+	}
 
 	return addr, nil
 }

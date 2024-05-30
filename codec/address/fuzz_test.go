@@ -22,7 +22,7 @@ func FuzzCachedAddressCodec(f *testing.F) {
 	for _, addr := range addresses {
 		f.Add(addr)
 	}
-	cdc := NewBech32Codec("cosmos")
+	cdc := NewBech32Codec("cosmos", WithLRU(lru), WithMutex(mu))
 
 	f.Fuzz(func(t *testing.T, addr []byte) {
 		checkAddress(t, addr, cdc)

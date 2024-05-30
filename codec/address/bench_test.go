@@ -3,14 +3,13 @@ package address
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/address"
 )
 
 func BenchmarkCodecWithCache(b *testing.B) {
-	cdc := NewBech32Codec("cosmos")
+	cdc := NewBech32Codec("cosmos", WithLRU(lru), WithMutex(mu))
 	bytesToString(b, cdc)
 }
 
@@ -30,6 +29,6 @@ func bytesToString(b *testing.B, cdc address.Codec) {
 
 	for i := 0; i < b.N; i++ {
 		_, err := cdc.BytesToString(addresses[i%len(addresses)])
-		assert.NoError(b, err)
+		require.NoError(b, err)
 	}
 }

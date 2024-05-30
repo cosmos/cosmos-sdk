@@ -65,7 +65,10 @@ func GetBlockByHeight(ctx context.Context, rpcClient CometRPC, height *int64) (*
 		return nil, err
 	}
 
-	out := NewResponseResultBlock(resBlock)
+	out, err := NewResponseResultBlock(resBlock)
+	if err != nil {
+		return nil, err
+	}
 	if out == nil {
 		return nil, fmt.Errorf("unable to create response block from comet result block: %v", resBlock)
 	}
@@ -88,7 +91,10 @@ func GetBlockByHash(ctx context.Context, rpcClient CometRPC, hashHexString strin
 	}
 
 	// TODO: Also move NewResponseResultBlock somewhere around this package
-	out := NewResponseResultBlock(resBlock)
+	out, err := NewResponseResultBlock(resBlock)
+	if err != nil {
+		return nil, err
+	}
 	if out == nil {
 		return nil, fmt.Errorf("unable to create response block from comet result block: %v", resBlock)
 	}

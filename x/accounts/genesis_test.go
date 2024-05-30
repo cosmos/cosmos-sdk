@@ -3,7 +3,6 @@ package accounts
 import (
 	"testing"
 
-	"cosmossdk.io/core/coretesting"
 	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
@@ -35,7 +34,10 @@ func TestGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	// reset state
-	ctx = coretesting.Context()
+	k, ctx = newKeeper(t, func(deps implementation.Dependencies) (string, implementation.Account, error) {
+		acc, err := NewTestAccount(deps)
+		return "test", acc, err
+	})
 	err = k.ImportState(ctx, state)
 	require.NoError(t, err)
 

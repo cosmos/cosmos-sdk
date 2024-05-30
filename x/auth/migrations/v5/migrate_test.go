@@ -3,11 +3,11 @@ package v5
 import (
 	"testing"
 
-	"cosmossdk.io/core/coretesting"
 	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/coretesting"
 )
 
 func TestMigrate(t *testing.T) {

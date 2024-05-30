@@ -3,10 +3,11 @@ package simulation
 import (
 	"testing"
 
-	"cosmossdk.io/core/coretesting"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/coretesting"
+
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 

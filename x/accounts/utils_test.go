@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"cosmossdk.io/core/coretesting"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -13,6 +12,7 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/coretesting"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/log"
 	coretransaction "cosmossdk.io/core/transaction"

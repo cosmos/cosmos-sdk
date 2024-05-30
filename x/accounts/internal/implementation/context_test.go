@@ -5,11 +5,11 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"cosmossdk.io/core/coretesting"
 	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/coretesting"
 )
 
 func TestMakeAccountContext(t *testing.T) {

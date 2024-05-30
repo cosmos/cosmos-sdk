@@ -73,7 +73,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
+		c := clitestutil.NewMockCometRPC(abci.QueryResponse{
 			Value: bz,
 		})
 		return s.baseCtx.WithClient(c)
@@ -207,7 +207,6 @@ func (s *CLITestSuite) TestCLISignBatchTotalFees() {
 					sdk.NewCoins(sendTokens), clitestutil.TestTxConfig{GenOnly: true})
 				s.Require().NoError(err)
 				txFile := testutil.WriteToNewTempFile(s.T(), tx.String()+"\n")
-				defer txFile.Close()
 				txFiles[i] = txFile.Name()
 
 				unsignedTx, err := txCfg.TxJSONDecoder()(tx.Bytes())
@@ -215,6 +214,8 @@ func (s *CLITestSuite) TestCLISignBatchTotalFees() {
 				txBuilder, err := txCfg.WrapTxBuilder(unsignedTx)
 				s.Require().NoError(err)
 				expectedBatchedTotalFee += txBuilder.GetTx().GetFee().AmountOf(tc.denom).Int64()
+				err = txFile.Close()
+				s.NoError(err)
 			}
 
 			// Test batch sign

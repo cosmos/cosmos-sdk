@@ -9,6 +9,8 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/simulation"
@@ -40,8 +42,9 @@ var (
 
 // AppModule implements an application module for the slashing module.
 type AppModule struct {
-	cdc      codec.Codec
-	registry cdctypes.InterfaceRegistry
+	cdc          codec.Codec
+	registry     cdctypes.InterfaceRegistry
+	cometService comet.Service
 
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
@@ -57,6 +60,7 @@ func NewAppModule(
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
 	registry cdctypes.InterfaceRegistry,
+	cs comet.Service,
 ) AppModule {
 	return AppModule{
 		cdc:           cdc,
@@ -65,6 +69,7 @@ func NewAppModule(
 		accountKeeper: ak,
 		bankKeeper:    bk,
 		stakingKeeper: sk,
+		cometService:  cs,
 	}
 }
 
@@ -77,7 +82,7 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the slashing module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
@@ -158,7 +163,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the slashing module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	return BeginBlocker(ctx, am.keeper)
+	return BeginBlocker(ctx, am.keeper, am.cometService)
 }
 
 // AppModuleSimulation functions

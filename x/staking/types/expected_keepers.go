@@ -3,15 +3,13 @@ package types
 import (
 	"context"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
+	consensustypes "cosmossdk.io/x/consensus/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 // AccountKeeper defines the expected account keeper (noalias)
@@ -42,6 +40,7 @@ type BankKeeper interface {
 	DelegateCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 
 	BurnCoins(context.Context, []byte, sdk.Coins) error
+	IsSendEnabledDenom(ctx context.Context, denom string) bool
 }
 
 // ValidatorSet expected properties for the set of all validators (noalias)
@@ -74,7 +73,7 @@ type ValidatorSet interface {
 
 	// GetPubKeyByConsAddr returns the consensus public key for a validator. Used in vote
 	// extension validation.
-	GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
+	GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cryptotypes.PubKey, error)
 }
 
 // DelegationSet expected properties for the set of all delegations for a particular (noalias)

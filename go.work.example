@@ -1,6 +1,4 @@
-go 1.22
-
-toolchain go1.22
+go 1.22.2
 
 use (
 	.
@@ -15,7 +13,11 @@ use (
 	./orm
 	./simapp
 	./tests
+	./server/v2/stf
+	./server/v2/appmanager
 	./store
+	./store/v2
+	./runtime/v2
 	./tools/cosmovisor
 	./tools/confix
 	./tools/hubl
@@ -24,6 +26,7 @@ use (
 	./x/authz
 	./x/bank
 	./x/circuit
+	./x/consensus
 	./x/distribution
 	./x/evidence
 	./x/feegrant

@@ -97,10 +97,12 @@ func (k msgServer) SubmitProposal(ctx context.Context, msg *v1.MsgSubmitProposal
 	}
 
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/9683
-	k.GasService.GasMeter(ctx).Consume(
+	if err := k.GasService.GasMeter(ctx).Consume(
 		3*k.GasService.GasConfig(ctx).WriteCostPerByte*uint64(len(bytes)),
 		"submit proposal",
-	)
+	); err != nil {
+		return nil, err
+	}
 
 	votingStarted, err := k.Keeper.AddDeposit(ctx, proposal.Id, proposer, msg.GetInitialDeposit())
 	if err != nil {
@@ -376,11 +378,11 @@ func (k msgServer) SudoExec(ctx context.Context, msg *v1.MsgSudoExec) (*v1.MsgSu
 	var msgResp protoiface.MessageV1
 	if err := k.BranchService.Execute(ctx, func(ctx context.Context) error {
 		// TODO add route check here
-		if err := k.RouterService.MessageRouterService().CanInvoke(ctx, sdk.MsgTypeURL(sudoedMsg)); err != nil {
+		if err := k.MsgRouterService.CanInvoke(ctx, sdk.MsgTypeURL(sudoedMsg)); err != nil {
 			return errors.Wrapf(govtypes.ErrInvalidProposal, err.Error())
 		}
 
-		msgResp, err = k.RouterService.MessageRouterService().InvokeUntyped(ctx, sudoedMsg)
+		msgResp, err = k.MsgRouterService.InvokeUntyped(ctx, sudoedMsg)
 		if err != nil {
 			return errors.Wrapf(err, "failed to execute sudo-ed message; message %v", sudoedMsg)
 		}

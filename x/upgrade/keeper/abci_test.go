@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/upgrade"
@@ -129,7 +129,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 	)
 
 	storeService := runtime.NewKVStoreService(key)
-	s.env = runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(s.baseApp.GRPCQueryRouter(), s.baseApp.MsgServiceRouter()))
+	s.env = runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithMsgRouterService(s.baseApp.MsgServiceRouter()), runtime.EnvWithQueryRouterService(s.baseApp.GRPCQueryRouter()))
 
 	s.baseApp.SetParamStore(&paramStore{params: cmtproto.ConsensusParams{Version: &cmtproto.VersionParams{App: 1}}})
 

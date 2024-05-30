@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/genesis"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -18,7 +19,8 @@ var (
 	_ module.HasName        = AppModule{}
 	_ module.HasABCIGenesis = AppModule{}
 
-	_ appmodule.AppModule = AppModule{}
+	_ appmodule.AppModule        = AppModule{}
+	_ appmodulev2.GenesisDecoder = AppModule{}
 )
 
 // AppModule implements an application module for the genutil module.
@@ -92,3 +94,11 @@ func (am AppModule) GenTxValidator() types.MessageValidator {
 
 // ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+func (am AppModule) DecodeGenesisJSON(data json.RawMessage) ([]json.RawMessage, error) {
+	var genesisState types.GenesisState
+	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
+		return nil, err
+	}
+	return genesisState.GenTxs, nil
+}

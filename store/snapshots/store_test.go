@@ -4,20 +4,20 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"sync"
 	"testing"
 	"time"
 
+	db "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/store/v2/snapshots"
-	"cosmossdk.io/store/v2/snapshots/types"
+	"cosmossdk.io/store/snapshots"
+	"cosmossdk.io/store/snapshots/types"
 )
 
 func setupStore(t *testing.T) *snapshots.Store {
 	t.Helper()
-	store, err := snapshots.NewStore(t.TempDir())
+	store, err := snapshots.NewStore(db.NewMemDB(), GetTempDir(t))
 	require.NoError(t, err)
 
 	_, err = store.Save(1, 1, makeChunks([][]byte{
@@ -41,13 +41,14 @@ func setupStore(t *testing.T) *snapshots.Store {
 }
 
 func TestNewStore(t *testing.T) {
-	_, err := snapshots.NewStore(t.TempDir())
+	tempdir := GetTempDir(t)
+	_, err := snapshots.NewStore(db.NewMemDB(), tempdir)
 
 	require.NoError(t, err)
 }
 
 func TestNewStore_ErrNoDir(t *testing.T) {
-	_, err := snapshots.NewStore("")
+	_, err := snapshots.NewStore(db.NewMemDB(), "")
 	require.Error(t, err)
 }
 
@@ -262,7 +263,6 @@ func TestStore_Prune(t *testing.T) {
 }
 
 func TestStore_Save(t *testing.T) {
-	t.Parallel()
 	store := setupStore(t)
 	// Saving a snapshot should work
 	snapshot, err := store.Save(4, 1, makeChunks([][]byte{{1}, {2}}))
@@ -319,40 +319,15 @@ func TestStore_Save(t *testing.T) {
 
 	// Saving a snapshot should error if a snapshot is already in progress for the same height,
 	// regardless of format. However, a different height should succeed.
-	var (
-		wgStart, wgDone sync.WaitGroup
-		mu              sync.Mutex
-		gotErrHeights   []uint64
-	)
-	srcHeights := []uint64{7, 7, 7, 8, 9}
-	wgStart.Add(len(srcHeights))
-	wgDone.Add(len(srcHeights))
-	for _, h := range srcHeights {
-		ch = make(chan io.ReadCloser, 1)
-		ch <- &ReadCloserMock{} // does not block on a buffered channel
-		close(ch)
-		go func(height uint64) {
-			wgStart.Done()
-			wgStart.Wait() // wait for all routines started
-			if _, err = store.Save(height, 1, ch); err != nil {
-				mu.Lock()
-				gotErrHeights = append(gotErrHeights, height)
-				mu.Unlock()
-			}
-			wgDone.Done()
-		}(h)
-	}
-	wgDone.Wait() // wait for all routines completed
-	assert.Equal(t, []uint64{7, 7}, gotErrHeights)
-}
-
-type ReadCloserMock struct {
-}
-
-func (r ReadCloserMock) Read(p []byte) (n int, err error) {
-	return len(p), io.EOF
-}
-
-func (r ReadCloserMock) Close() error {
-	return nil
+	ch = make(chan io.ReadCloser)
+	go func() {
+		_, err := store.Save(7, 1, ch)
+		require.NoError(t, err)
+	}()
+	time.Sleep(10 * time.Millisecond)
+	_, err = store.Save(7, 2, makeChunks(nil))
+	require.Error(t, err)
+	_, err = store.Save(8, 1, makeChunks(nil))
+	require.NoError(t, err)
+	close(ch)
 }

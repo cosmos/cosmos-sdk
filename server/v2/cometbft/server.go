@@ -15,7 +15,6 @@ import (
 	"github.com/cometbft/cometbft/proxy"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/transaction"
@@ -154,6 +153,7 @@ func (s *CometBFTServer[T]) Stop(_ context.Context) error {
 	}
 	return nil
 }
+
 // returns a function which returns the genesis doc from the genesis file.
 func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, error) {
 	return func() (node.ChecksummedGenesisDoc, error) {

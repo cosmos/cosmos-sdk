@@ -243,7 +243,7 @@ func (m *Manager) Sync() error {
 				return fmt.Errorf("failed to unmarshal changeset: %w", err)
 			}
 			if m.stateCommitment != nil {
-				if err := m.stateCommitment.WriteBatch(cs); err != nil {
+				if err := m.stateCommitment.WriteChangeset(cs); err != nil {
 					return fmt.Errorf("failed to write changeset to commitment: %w", err)
 				}
 				if _, err := m.stateCommitment.Commit(version); err != nil {

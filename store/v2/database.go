@@ -20,11 +20,6 @@ type VersionedDatabase interface {
 
 	ApplyChangeset(version uint64, cs *corestore.Changeset) error
 
-	// Prune attempts to prune all versions up to and including the provided
-	// version argument. The operation should be idempotent. An error should be
-	// returned upon failure.
-	Prune(version uint64) error
-
 	// Close releases associated resources. It should NOT be idempotent. It must
 	// only be called once and any call after may panic.
 	io.Closer
@@ -32,8 +27,8 @@ type VersionedDatabase interface {
 
 // Committer defines an API for committing state.
 type Committer interface {
-	// WriteBatch writes a batch of key-value pairs to the tree.
-	WriteBatch(cs *corestore.Changeset) error
+	// WriteChangeset writes the changeset to the commitment state.
+	WriteChangeset(cs *corestore.Changeset) error
 
 	// WorkingCommitInfo returns the CommitInfo for the working tree.
 	WorkingCommitInfo(version uint64) *proof.CommitInfo
@@ -61,11 +56,6 @@ type Committer interface {
 
 	// GetCommitInfo returns the CommitInfo for the given version.
 	GetCommitInfo(version uint64) (*proof.CommitInfo, error)
-
-	// Prune attempts to prune all versions up to and including the provided
-	// version argument. The operation should be idempotent. An error should be
-	// returned upon failure.
-	Prune(version uint64) error
 
 	// Close releases associated resources. It should NOT be idempotent. It must
 	// only be called once and any call after may panic.

@@ -1,0 +1,86 @@
+syntax = "proto3";
+package cosmos.staking.v1beta1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/staking/v1beta1/mstaking.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/query/v1/query.proto";
+import "amino/amino.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/testutil/x/staking/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Validators queries all validators that match the given status.
+  //
+  // When called from another module, this query might consume a high amount of
+  // gas if the pagination field is incorrectly set.
+  rpc Validators(QueryValidatorsRequest) returns (QueryValidatorsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/staking/v1beta1/validators";
+  }
+
+  // ValidatorDelegations queries delegate info for given validator.
+  //
+  // When called from another module, this query might consume a high amount of
+  // gas if the pagination field is incorrectly set.
+  rpc ValidatorDelegations(QueryValidatorDelegationsRequest) returns (QueryValidatorDelegationsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/staking/v1beta1/validators/{validator_addr}/delegations";
+  }
+
+  // Parameters queries the staking parameters.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/staking/v1beta1/params";
+  }
+}
+
+// QueryValidatorsRequest is request type for Query/Validators RPC method.
+message QueryValidatorsRequest {
+  // status enables to query for validators matching a given status.
+  string status = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryValidatorsResponse is response type for the Query/Validators RPC method
+message QueryValidatorsResponse {
+  // validators contains all the queried validators.
+  repeated Validator validators = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryValidatorDelegationsRequest is request type for the
+// Query/ValidatorDelegations RPC method
+message QueryValidatorDelegationsRequest {
+  // validator_addr defines the validator address to query for.
+  string validator_addr = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryValidatorDelegationsResponse is response type for the
+// Query/ValidatorDelegations RPC method
+message QueryValidatorDelegationsResponse {
+  repeated DelegationResponse delegation_responses = 1
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.castrepeated) = "DelegationResponses"];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}

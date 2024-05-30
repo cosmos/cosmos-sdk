@@ -1,0 +1,205 @@
+syntax = "proto3";
+package cosmos.staking.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "amino/amino.proto";
+import "cometbft/types/v1/types.proto";
+import "cometbft/abci/v1/types.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/testutil/x/staking/types";
+
+// CommissionRates defines the initial commission rates to be used for creating
+// a validator.
+message CommissionRates {
+  option (gogoproto.equal) = true;
+
+  // rate is the commission rate charged to delegators, as a fraction.
+  string rate = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+  // max_rate defines the maximum commission rate which validator can ever charge, as a fraction.
+  string max_rate = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+  // max_change_rate defines the maximum daily increase of the validator commission, as a fraction.
+  string max_change_rate = 3 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+}
+
+// Commission defines commission parameters for a given validator.
+message Commission {
+  option (gogoproto.equal) = true;
+
+  // commission_rates defines the initial commission rates to be used for creating a validator.
+  CommissionRates commission_rates = 1
+      [(gogoproto.embed) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // update_time is the last time the commission rate was changed.
+  google.protobuf.Timestamp update_time = 2
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
+}
+
+// Description defines a validator description.
+message Description {
+  option (gogoproto.equal) = true;
+
+  // moniker defines a human-readable name for the validator.
+  string moniker = 1;
+  // identity defines an optional identity signature (ex. UPort or Keybase).
+  string identity = 2;
+  // website defines an optional website link.
+  string website = 3;
+  // security_contact defines an optional email for security contact.
+  string security_contact = 4;
+  // details define other optional details.
+  string details = 5;
+}
+
+// Validator defines a validator, together with the total amount of the
+// Validator's bond shares and their exchange rate to coins. Slashing results in
+// a decrease in the exchange rate, allowing correct calculation of future
+// undelegations without iterating over delegators. When coins are delegated to
+// this validator, the validator is credited with a delegation whose number of
+// bond shares is based on the amount of coins delegated divided by the current
+// exchange rate. Voting power can be calculated as total bonded shares
+// multiplied by exchange rate.
+message Validator {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // operator_address defines the address of the validator's operator; bech encoded in JSON.
+  string operator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // consensus_pubkey is the consensus public key of the validator, as a Protobuf Any.
+  google.protobuf.Any consensus_pubkey = 2 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
+  // jailed defined whether the validator has been jailed from bonded status or not.
+  bool jailed = 3;
+  // status is the validator status (bonded/unbonding/unbonded).
+  BondStatus status = 4;
+  // tokens define the delegated tokens (incl. self-delegation).
+  string tokens = 5 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
+  // delegator_shares defines total shares issued to a validator's delegators.
+  string delegator_shares = 6 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
+  // description defines the description terms for the validator.
+  Description description = 7 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // unbonding_height defines, if unbonding, the height at which this validator has begun unbonding.
+  int64 unbonding_height = 8;
+  // unbonding_time defines, if unbonding, the min time for the validator to complete unbonding.
+  google.protobuf.Timestamp unbonding_time = 9
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
+  // commission defines the commission parameters.
+  Commission commission = 10 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // min_self_delegation is the validator's self declared minimum self delegation.
+  string min_self_delegation = 11 [
+    (cosmos_proto.scalar)         = "cosmos.Int",
+    (gogoproto.customtype)        = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)          = false,
+    (cosmos_proto.field_added_in) = "cosmos-sdk 0.47"
+  ];
+
+  // strictly positive if this validator's unbonding has been stopped by external modules
+  int64 unbonding_on_hold_ref_count = 12;
+
+  // list of unbonding ids, each uniquely identifying an unbonding of this validator
+  repeated uint64 unbonding_ids = 13;
+}
+
+// BondStatus is the status of a validator.
+enum BondStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // UNSPECIFIED defines an invalid validator status.
+  BOND_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "Unspecified"];
+  // UNBONDED defines a validator that is not bonded.
+  BOND_STATUS_UNBONDED = 1 [(gogoproto.enumvalue_customname) = "Unbonded"];
+  // UNBONDING defines a validator that is unbonding.
+  BOND_STATUS_UNBONDING = 2 [(gogoproto.enumvalue_customname) = "Unbonding"];
+  // BONDED defines a validator that is bonded.
+  BOND_STATUS_BONDED = 3 [(gogoproto.enumvalue_customname) = "Bonded"];
+}
+
+// ValAddresses defines a repeated set of validator addresses.
+message ValAddresses {
+  repeated string addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// Delegation represents the bond with tokens held by an account. It is
+// owned by one delegator, and is associated with the voting power of one
+// validator.
+message Delegation {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // delegator_address is the encoded address of the delegator.
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // validator_address is the encoded address of the validator.
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  // shares define the delegation shares received.
+  string shares = 3 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
+}
+
+// Params defines the parameters for the x/staking module.
+message Params {
+  option (amino.name)      = "cosmos-sdk/x/staking/Params";
+  option (gogoproto.equal) = true;
+
+  // unbonding_time is the time duration of unbonding.
+  google.protobuf.Duration unbonding_time = 1
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdduration) = true];
+  // max_validators is the maximum number of validators.
+  uint32 max_validators = 2;
+  // max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio).
+  uint32 max_entries = 3;
+  // historical_entries is the number of historical entries to persist.
+  uint32 historical_entries = 4;
+  // bond_denom defines the bondable coin denomination.
+  string bond_denom = 5;
+  // min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators
+  string min_commission_rate = 6 [
+    (gogoproto.moretags)   = "yaml:\"min_commission_rate\"",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true,
+    (cosmos_proto.scalar)  = "cosmos.Dec"
+  ];
+
+  // key_rotation_fee is fee to be spent when rotating validator's key
+  // (either consensus pubkey or operator key)
+  cosmos.base.v1beta1.Coin key_rotation_fee = 7 [(gogoproto.nullable) = false];
+}
+
+// DelegationResponse is equivalent to Delegation except that it contains a
+// balance in addition to shares which is more suitable for client responses.
+message DelegationResponse {
+  option (gogoproto.equal) = false;
+
+  Delegation delegation = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+
+  cosmos.base.v1beta1.Coin balance = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}

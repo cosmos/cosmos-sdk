@@ -390,6 +390,9 @@ func (s *RootStoreTestSuite) TestPrune() {
 			s.Require().NotNil(cHash)
 		}
 
+		// wait for async pruning process to finish
+		time.Sleep(100 * time.Millisecond)
+
 		for _, v := range tc.saved {
 			ro, err := s.rootStore.StateAt(v)
 			s.Require().NoError(err, "expected no error when loading height %d at test %s", v, tc.name)

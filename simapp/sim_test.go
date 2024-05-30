@@ -1,3 +1,5 @@
+//go:build sims
+
 package simapp
 
 import (

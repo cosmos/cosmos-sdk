@@ -1,3 +1,5 @@
+//go:build sims
+
 package simapp
 
 import (
@@ -49,15 +51,6 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	}()
 
 	appOptions := viper.New()
-	if FlagEnableStreamingValue {
-		m := make(map[string]interface{})
-		m["streaming.abci.keys"] = []string{"*"}
-		m["streaming.abci.plugin"] = "abci_v1"
-		m["streaming.abci.stop-node-on-err"] = true
-		for key, value := range m {
-			appOptions.SetDefault(key, value)
-		}
-	}
 	appOptions.SetDefault(flags.FlagHome, DefaultNodeHome)
 	appOptions.SetDefault(server.FlagInvCheckPeriod, simcli.FlagPeriodValue)
 

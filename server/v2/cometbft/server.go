@@ -154,18 +154,6 @@ func (s *CometBFTServer[T]) Stop(_ context.Context) error {
 	}
 	return nil
 }
-
-func (s *CometBFTServer[T]) Config() (any, *viper.Viper) {
-	v := viper.New()
-	v.SetConfigFile("???") // TODO: where do we set this
-	v.SetConfigName("config")
-	v.SetConfigType("toml")
-	if err := v.ReadInConfig(); err != nil {
-		panic(fmt.Errorf("failed to read cometbft config file: %w", err))
-	}
-	return nil, nil
-}
-
 // returns a function which returns the genesis doc from the genesis file.
 func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, error) {
 	return func() (node.ChecksummedGenesisDoc, error) {

@@ -54,5 +54,5 @@ func (m Migrator) Migrate5to6(ctx context.Context) error {
 // Migrate6to7 migrates x/staking state from consensus version 6 to 7.
 func (m Migrator) Migrate6to7(ctx context.Context) error {
 	store := runtime.KVStoreAdapter(m.keeper.KVStoreService.OpenKVStore(ctx))
-	return v7.MigrateStore(ctx, store, m.keeper.cdc, authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	return v7.MigrateStore(ctx, store, m.keeper.cdc, authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()))
 }

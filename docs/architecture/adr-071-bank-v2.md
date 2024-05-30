@@ -44,7 +44,7 @@ For example, currently if a team would like to extend the transfer method the ch
 
 These improvements are expected to enhance the flexibility of the bank module, allowing for the creation of custom tokens similar to ERC20 standards and assets backed by CosmWasm (CW) contracts. The integration efforts will also aim to unify CW20 with bank coins across the Cosmos chains.
 
-Example of denom interface:
+Example of asset interface:
 
 ```go
 type Asset interface {
@@ -55,6 +55,17 @@ type Asset interface {
     ...
 }
 ```
+
+A default `Asset` implemented will be provided by bank. Users can implement their own `Asset` interface and pass it to the bank module at its initialization.
+
+```go
+type BankKeeper struct {
+    AssetImpl map[string]Asset
+}
+```
+
+Each relevant bank call will switch on the denom and call the respective method on the `Asset` implementation.
+When no asset implementation is provided, the default implementation will be used.
 
 ## Migration Plans
 

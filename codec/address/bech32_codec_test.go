@@ -13,8 +13,11 @@ import (
 )
 
 var (
-	lru, _ = simplelru.NewLRU(500, nil)
-	mu     = &sync.Mutex{}
+	lru, _       = simplelru.NewLRU(500, nil)
+	cacheOptions = CachedCodecOptions{
+		Mu:  &sync.Mutex{},
+		Lru: lru,
+	}
 )
 
 func generateAddresses(totalAddresses int) ([][]byte, error) {
@@ -59,7 +62,9 @@ func TestNewBech32Codec(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ac := NewBech32Codec(tt.prefix, WithLRU(lru), WithMutex(mu))
+			ac, err := NewCachedBech32Codec(tt.prefix, cacheOptions)
+			require.NoError(t, err)
+
 			cached, ok := ac.(cachedBech32Codec)
 			require.True(t, ok)
 			require.Equal(t, cached.cache, tt.lru)
@@ -84,14 +89,18 @@ func TestNewBech32Codec(t *testing.T) {
 }
 
 func TestMultipleBech32Codec(t *testing.T) {
-	cosmosAc, ok := NewBech32Codec("cosmos", WithLRU(lru), WithMutex(mu)).(cachedBech32Codec)
+	cAc, err := NewCachedBech32Codec("cosmos", cacheOptions)
+	require.NoError(t, err)
+	cosmosAc, ok := cAc.(cachedBech32Codec)
 	require.True(t, ok)
-	stakeAc := NewBech32Codec("stake", WithLRU(lru), WithMutex(mu)).(cachedBech32Codec)
+	sAc, err := NewCachedBech32Codec("stake", cacheOptions)
+	require.NoError(t, err)
+	stakeAc, ok := sAc.(cachedBech32Codec)
 	require.True(t, ok)
 	require.Equal(t, cosmosAc.cache, stakeAc.cache)
 
 	addr := make([]byte, 32)
-	_, err := rand.Read(addr)
+	_, err = rand.Read(addr)
 	require.NoError(t, err)
 
 	cosmosAddr, err := cosmosAc.BytesToString(addr)
@@ -110,7 +119,8 @@ func TestMultipleBech32Codec(t *testing.T) {
 }
 
 func TestBech32CodecRace(t *testing.T) {
-	ac := NewBech32Codec("cosmos", WithLRU(lru), WithMutex(mu))
+	ac, err := NewCachedBech32Codec("cosmos", cacheOptions)
+	require.NoError(t, err)
 	myAddrBz := []byte{0x1, 0x2, 0x3, 0x4, 0x5}
 
 	var (

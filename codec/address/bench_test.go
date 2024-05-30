@@ -9,7 +9,8 @@ import (
 )
 
 func BenchmarkCodecWithCache(b *testing.B) {
-	cdc := NewBech32Codec("cosmos", WithLRU(lru), WithMutex(mu))
+	cdc, err := NewCachedBech32Codec("cosmos", cacheOptions)
+	require.NoError(b, err)
 	bytesToString(b, cdc)
 }
 

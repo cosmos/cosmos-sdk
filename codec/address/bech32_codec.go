@@ -19,24 +19,10 @@ import (
 
 var errEmptyAddress = errors.New("empty address string is not allowed")
 
-type Option func(*Options)
-
-type Options struct {
-	mu    *sync.Mutex
-	cache *simplelru.LRU
-}
-
-func WithLRU(cache *simplelru.LRU) Option {
-	return func(o *Options) {
-		o.cache = cache
-	}
-}
-
-func WithMutex(mu *sync.Mutex) Option {
-	return func(o *Options) {
-		o.mu = mu
-	}
-}
+var (
+	_ address.Codec = &Bech32Codec{}
+	_ address.Codec = &cachedBech32Codec{}
+)
 
 type Bech32Codec struct {
 	Bech32Prefix string
@@ -48,27 +34,29 @@ type cachedBech32Codec struct {
 	cache *simplelru.LRU
 }
 
-var (
-	_ address.Codec = &Bech32Codec{}
-	_ address.Codec = &cachedBech32Codec{}
-)
+type CachedCodecOptions struct {
+	Mu  *sync.Mutex
+	Lru *simplelru.LRU
+}
 
-func NewBech32Codec(prefix string, opts ...Option) address.Codec {
-	options := Options{}
-	for _, optionFn := range opts {
-		optionFn(&options)
-	}
+func NewBech32Codec(prefix string) address.Codec {
+	return &Bech32Codec{Bech32Prefix: prefix}
+}
 
+func NewCachedBech32Codec(prefix string, opts CachedCodecOptions) (address.Codec, error) {
 	ac := Bech32Codec{prefix}
-	if options.mu == nil || options.cache == nil {
-		return ac
+	if opts.Mu == nil {
+		return nil, errors.New("mutex cannot be nil")
+	}
+	if opts.Lru == nil {
+		return ac, errors.New("lru cannot be nil")
 	}
 
 	return cachedBech32Codec{
 		codec: ac,
-		cache: options.cache,
-		mu:    options.mu,
-	}
+		cache: opts.Lru,
+		mu:    opts.Mu,
+	}, nil
 }
 
 // StringToBytes encodes text to bytes

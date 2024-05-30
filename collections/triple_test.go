@@ -3,11 +3,11 @@ package collections_test
 import (
 	"testing"
 
-	"cosmossdk.io/core/coretesting"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
+	"cosmossdk.io/core/coretesting"
 )
 
 func TestTriple(t *testing.T) {

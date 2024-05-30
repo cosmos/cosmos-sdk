@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"cosmossdk.io/core/coretesting"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -11,7 +12,6 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/log"
@@ -73,7 +73,8 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 	queryRouter.RegisterService(&bankv1beta1.Query_ServiceDesc, &bankQueryServer{})
 	msgRouter.RegisterService(&bankv1beta1.Msg_ServiceDesc, &bankMsgServer{})
 
-	ss, ctx := colltest.MockStore()
+	ctx := coretesting.Context()
+	ss := coretesting.KVStoreService(ctx, "test")
 	env := runtime.NewEnvironment(ss, log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter))
 	env.EventService = eventService{}
 	m, err := NewKeeper(codec.NewProtoCodec(ir), env, addressCodec, ir, accounts...)

@@ -5,15 +5,16 @@ import (
 	"encoding/binary"
 	"testing"
 
+	"cosmossdk.io/core/coretesting"
 	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/collections/colltest"
 )
 
 func TestMakeAccountContext(t *testing.T) {
-	storeService, originalContext := colltest.MockStore()
+	originalContext := coretesting.Context()
+	storeService := coretesting.KVStoreService(originalContext, "test")
 	accountAddr := []byte("accountAddr")
 	sender := []byte("sender")
 	sb := collections.NewSchemaBuilderFromAccessor(openKVStore)

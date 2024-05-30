@@ -3,16 +3,16 @@ package simulation
 import (
 	"testing"
 
+	"cosmossdk.io/core/coretesting"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/collections/colltest"
-
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 func TestNewStoreDecoderFuncFromCollectionsSchema(t *testing.T) {
-	store, _ := colltest.MockStore()
+	ctx := coretesting.Context()
+	store := coretesting.KVStoreService(ctx, "test")
 	sb := collections.NewSchemaBuilder(store)
 
 	prefixM1 := collections.NewPrefix("map_1")

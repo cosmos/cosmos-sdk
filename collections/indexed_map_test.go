@@ -3,12 +3,12 @@ package collections_test
 import (
 	"testing"
 
-	"cosmossdk.io/core/coretesting"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/collections/indexes"
+	"cosmossdk.io/core/coretesting"
 )
 
 type company struct {

@@ -32,5 +32,4 @@ func TestKVStoreService(t *testing.T) {
 		_, ok := unwrap(ctx).stores["auth"]
 		require.True(t, ok)
 	})
-
 }

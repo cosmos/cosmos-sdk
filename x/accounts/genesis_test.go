@@ -3,10 +3,10 @@ package accounts
 import (
 	"testing"
 
+	"cosmossdk.io/core/coretesting"
 	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
 )
@@ -35,7 +35,7 @@ func TestGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	// reset state
-	_, ctx = colltest.MockStore()
+	ctx = coretesting.Context()
 	err = k.ImportState(ctx, state)
 	require.NoError(t, err)
 

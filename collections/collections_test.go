@@ -5,9 +5,9 @@ import (
 	"math"
 	"testing"
 
-	"cosmossdk.io/core/coretesting"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/coretesting"
 	"cosmossdk.io/core/store"
 )
 

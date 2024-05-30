@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"errors"
 
-	"cosmossdk.io/core/store"
 	"github.com/tidwall/btree"
+
+	"cosmossdk.io/core/store"
 )
 
 const (

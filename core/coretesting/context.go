@@ -2,16 +2,20 @@ package coretesting
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"cosmossdk.io/core/store"
 )
 
+type dummyKey struct{}
+
 func Context() context.Context {
-	return &dummyCtx{
+	dummy := &dummyCtx{
 		stores: map[string]store.KVStore{},
 	}
+
+	ctx := context.WithValue(context.Background(), dummyKey{}, dummy)
+	return ctx
 }
 
 type dummyCtx struct {
@@ -32,13 +36,13 @@ func (d dummyCtx) Err() error {
 
 func (d dummyCtx) Value(key any) any {
 	panic("Value on dummy context")
-
 }
 
 func unwrap(ctx context.Context) *dummyCtx {
-	dummy, ok := ctx.(*dummyCtx)
-	if !ok {
-		panic(fmt.Sprintf("invalid context.Context, wanted dummy got: %T", ctx))
+	dummy := ctx.Value(dummyKey{})
+	if dummy == nil {
+		panic("invalid ctx without dummy")
 	}
-	return dummy
+
+	return dummy.(*dummyCtx)
 }

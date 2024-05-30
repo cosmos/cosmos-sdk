@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/core/store"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/core/store"
 )
 
 func TestMemDB(t *testing.T) {
@@ -31,7 +32,6 @@ func TestMemDB(t *testing.T) {
 
 	iter, err := db.Iterator(nil, nil)
 	require.NoError(t, err)
-	iter.Next()
 	key = iter.Key()
 	value = iter.Value()
 	require.Equal(t, makeKey(0), key)

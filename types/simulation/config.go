@@ -1,5 +1,7 @@
 package simulation
 
+import "testing"
+
 // Config contains the necessary configuration flags for the simulator
 type Config struct {
 	GenesisFile string // custom simulation genesis file; cannot be used with params file
@@ -20,9 +22,29 @@ type Config struct {
 	Lean   bool // lean simulation log output
 	Commit bool // have the simulation commit
 
-	OnOperation   bool // run slow invariants every operation
-	AllInvariants bool // print all failed invariants if a broken invariant is found
-
 	DBBackend   string // custom db backend type
 	BlockMaxGas int64  // custom max gas for block
+	FuzzSeed    []byte
+	T           testing.TB
+}
+
+func (c Config) Clone() Config {
+	return Config{
+		GenesisFile:        c.GenesisFile,
+		ParamsFile:         c.ParamsFile,
+		ExportParamsPath:   c.ExportParamsPath,
+		ExportParamsHeight: c.ExportParamsHeight,
+		ExportStatePath:    c.ExportStatePath,
+		ExportStatsPath:    c.ExportStatsPath,
+		Seed:               c.Seed,
+		InitialBlockHeight: c.InitialBlockHeight,
+		GenesisTime:        c.GenesisTime,
+		NumBlocks:          c.NumBlocks,
+		BlockSize:          c.BlockSize,
+		ChainID:            c.ChainID,
+		Lean:               c.Lean,
+		Commit:             c.Commit,
+		DBBackend:          c.DBBackend,
+		BlockMaxGas:        c.BlockMaxGas,
+	}
 }

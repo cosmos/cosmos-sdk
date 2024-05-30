@@ -1,14 +1,16 @@
 package simulation
 
 import (
+	"bytes"
+	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"math/rand"
-	"os"
-	"os/signal"
-	"syscall"
 	"testing"
 	"time"
+
+	"cosmossdk.io/log"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
@@ -59,6 +61,7 @@ func initChain(
 // operations, testing the provided invariants, but using the provided config.Seed.
 func SimulateFromSeed(
 	tb testing.TB,
+	logger log.Logger,
 	w io.Writer,
 	app *baseapp.BaseApp,
 	appStateFn simulation.AppStateFn,
@@ -67,17 +70,18 @@ func SimulateFromSeed(
 	blockedAddrs map[string]bool,
 	config simulation.Config,
 	cdc codec.JSONCodec,
-	addresscodec address.Codec,
-) (stopEarly bool, exportedParams Params, err error) {
+	addressCodec address.Codec,
+) (exportedParams Params, err error) {
 	tb.Helper()
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, _, b := getTestingMode(tb)
 
-	r := rand.New(rand.NewSource(config.Seed))
+	r := rand.New(NewByteSource(config.FuzzSeed, config.Seed))
 	params := RandomParams(r)
 
-	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(config.Seed))
-	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", mustMarshalJSONIndent(params))
+	startTime := time.Now()
+	logger.Info("Starting SimulateFromSeed with randomness", "time", startTime)
+	logger.Debug("Randomized simulation setup", "params", mustMarshalJSONIndent(params))
 
 	timeDiff := maxTimePerBlock - minTimePerBlock
 	accs := randAccFn(r, params.NumKeys())
@@ -89,23 +93,18 @@ func SimulateFromSeed(
 	// At least 2 accounts must be added here, otherwise when executing SimulateMsgSend
 	// two accounts will be selected to meet the conditions from != to and it will fall into an infinite loop.
 	if len(accs) <= 1 {
-		return true, params, fmt.Errorf("at least two genesis accounts are required")
+		return params, fmt.Errorf("at least two genesis accounts are required")
 	}
 
 	config.ChainID = chainID
-
-	fmt.Printf(
-		"Starting the simulation from time %v (unixtime %v)\n",
-		blockTime.UTC().Format(time.UnixDate), blockTime.Unix(),
-	)
 
 	// remove module account address if they exist in accs
 	var tmpAccs []simulation.Account
 
 	for _, acc := range accs {
-		accAddr, err := addresscodec.BytesToString(acc.Address)
+		accAddr, err := addressCodec.BytesToString(acc.Address)
 		if err != nil {
-			return true, params, err
+			return params, err
 		}
 		if !blockedAddrs[accAddr] {
 			tmpAccs = append(tmpAccs, acc)
@@ -124,17 +123,6 @@ func SimulateFromSeed(
 		proposerAddress = validators.randomProposer(r)
 		opCount         = 0
 	)
-
-	// Setup code to catch SIGTERM's
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
-
-	go func() {
-		receivedSignal := <-c
-		fmt.Fprintf(w, "\nExiting early due to %s, on block %d, operation %d\n", receivedSignal, blockHeight, opCount)
-		err = fmt.Errorf("exited due to %s", receivedSignal)
-		stopEarly = true
-	}()
 
 	finalizeBlockReq := RandomRequestFinalizeBlock(
 		r,
@@ -171,7 +159,7 @@ func SimulateFromSeed(
 		// recover logs in case of panic
 		defer func() {
 			if r := recover(); r != nil {
-				_, _ = fmt.Fprintf(w, "simulation halted due to panic on block %d\n", blockHeight)
+				logger.Error("simulation halted due to panic", "height", blockHeight)
 				logWriter.PrintLogs()
 				panic(r)
 			}
@@ -183,7 +171,7 @@ func SimulateFromSeed(
 		exportedParams = params
 	}
 
-	for blockHeight < int64(config.NumBlocks+config.InitialBlockHeight) && !stopEarly {
+	for blockHeight < int64(config.NumBlocks+config.InitialBlockHeight) {
 		pastTimes = append(pastTimes, blockTime)
 		pastVoteInfos = append(pastVoteInfos, finalizeBlockReq.DecidedLastCommit.Votes)
 
@@ -192,7 +180,7 @@ func SimulateFromSeed(
 
 		res, err := app.FinalizeBlock(finalizeBlockReq)
 		if err != nil {
-			return true, params, err
+			return params, err
 		}
 
 		ctx := app.NewContextLegacy(false, cmtproto.Header{
@@ -241,14 +229,13 @@ func SimulateFromSeed(
 		if config.Commit {
 			_, err := app.Commit()
 			if err != nil {
-				return true, params, err
+				return params, err
 			}
 
 		}
 
 		if proposerAddress == nil {
-			fmt.Fprintf(w, "\nSimulation stopped early as all validators have been unbonded; nobody left to propose a block!\n")
-			stopEarly = true
+			logger.Info("Simulation stopped early as all validators have been unbonded; nobody left to propose a block", "height", blockHeight)
 			break
 		}
 
@@ -267,22 +254,8 @@ func SimulateFromSeed(
 		}
 	}
 
-	if stopEarly {
-		if config.ExportStatsPath != "" {
-			fmt.Println("Exporting simulation statistics...")
-			eventStats.ExportJSON(config.ExportStatsPath)
-		} else {
-			eventStats.Print(w)
-		}
-
-		return true, exportedParams, err
-	}
-
-	fmt.Fprintf(
-		w,
-		"\nSimulation complete; Final height (blocks): %d, final time (seconds): %v, operations ran: %d\n",
-		blockHeight, blockTime, opCount,
-	)
+	logger.Info("Simulation complete", "height", blockHeight, "block-time", blockTime, "opsCount", opCount,
+		"run-time", time.Since(startTime), "app-hash", hex.EncodeToString(app.LastCommitID().Hash))
 
 	if config.ExportStatsPath != "" {
 		fmt.Println("Exporting simulation statistics...")
@@ -290,8 +263,7 @@ func SimulateFromSeed(
 	} else {
 		eventStats.Print(w)
 	}
-
-	return false, exportedParams, nil
+	return exportedParams, err
 }
 
 type blockSimFn func(
@@ -361,7 +333,7 @@ Comment: %s`,
 			queueOperations(operationQueue, timeOperationQueue, futureOps)
 
 			if testingMode && opCount%50 == 0 {
-				fmt.Fprintf(w, "\rSimulating... block %d/%d, operation %d/%d. ",
+				_, _ = fmt.Fprintf(w, "\rSimulating... block %d/%d, operation %d/%d. ",
 					header.Height, config.NumBlocks, opCount, blocksize)
 			}
 
@@ -444,3 +416,63 @@ func runQueuedTimeOperations(tb testing.TB, queueOps []simulation.FutureOperatio
 
 	return numOpsRan, allFutureOps
 }
+
+const (
+	rngMax  = 1 << 63
+	rngMask = rngMax - 1
+)
+
+type ByteSource struct {
+	seed     *bytes.Reader
+	fallback *rand.Rand
+}
+
+func NewByteSource(fuzzSeed []byte, seed int64) *ByteSource {
+	return &ByteSource{
+		seed:     bytes.NewReader(fuzzSeed),
+		fallback: rand.New(rand.NewSource(seed)),
+	}
+}
+
+func (s *ByteSource) Uint64() uint64 {
+	if s.seed.Len() < 8 {
+		return s.fallback.Uint64()
+	}
+	var b [8]byte
+	if _, err := s.seed.Read(b[:]); err != nil && err != io.EOF {
+		panic(err) // Should not happen.
+	}
+	return binary.BigEndian.Uint64(b[:])
+}
+
+func (s *ByteSource) Int63() int64 {
+	return int64(s.Uint64() & rngMask)
+}
+func (s *ByteSource) Seed(seed int64) {}
+
+type arraySource struct {
+	pos int
+	arr []int64
+	src *rand.Rand
+}
+
+// Int63 returns a non-negative pseudo-random 63-bit integer as an int64.
+func (rng *arraySource) Int63() int64 {
+	return int64(rng.Uint64() & rngMask)
+}
+
+// Uint64 returns a non-negative pseudo-random 64-bit integer as an uint64.
+func (rng *arraySource) Uint64() uint64 {
+	if rng.pos >= len(rng.arr) {
+		return rng.src.Uint64()
+	}
+	val := rng.arr[rng.pos]
+	rng.pos = rng.pos + 1
+	if val < 0 {
+		return uint64(-val)
+	}
+
+	return uint64(val)
+}
+
+func (rng *arraySource) Seed(seed int64) {}

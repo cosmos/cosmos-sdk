@@ -103,9 +103,6 @@ endif
 #? all: Run tools build 
 all: build
 
-# The below include contains the tools and runsim targets.
-include contrib/devtools/Makefile
-
 ###############################################################################
 ###                                  Build                                  ###
 ###############################################################################
@@ -158,7 +155,7 @@ $(MOCKS_DIR):
 	mkdir -p $(MOCKS_DIR)
 
 #? distclean: Run `make clean` and `make tools-clean`
-distclean: clean tools-clean
+distclean: clean
 
 #? clean: Clean some auto generated directory
 clean:
@@ -280,8 +277,8 @@ endif
 #? test-sim-nondeterminism: Run non-determinism test for simapp
 test-sim-nondeterminism:
 	@echo "Running non-determinism test..."
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run TestAppStateDeterminism -Enabled=true \
-		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout=30m -run TestAppStateDeterminism \
+		-NumBlocks=100 -BlockSize=200 -Period=0
 
 # Requires an exported plugin. See store/streaming/README.md for documentation.
 #
@@ -294,35 +291,41 @@ test-sim-nondeterminism:
 #   make test-sim-nondeterminism-streaming
 test-sim-nondeterminism-streaming:
 	@echo "Running non-determinism-streaming test..."
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run TestAppStateDeterminism -Enabled=true \
-		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h -EnableStreaming=true
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout=30m -run TestAppStateDeterminism \
+		-NumBlocks=100 -BlockSize=200 -Period=0 -EnableStreaming=true
 
 test-sim-custom-genesis-fast:
 	@echo "Running custom genesis simulation..."
 	@echo "By default, ${HOME}/.simapp/config/genesis.json will be used."
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run TestFullAppSimulation -Genesis=${HOME}/.simapp/config/genesis.json \
-		-Enabled=true -NumBlocks=100 -BlockSize=200 -Commit=true -Seed=99 -Period=5 -SigverifyTx=false -v -timeout 24h
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout=30m -run TestFullAppSimulation -Genesis=${HOME}/.simapp/config/genesis.json \
+		-NumBlocks=100 -BlockSize=200 -Seed=99 -Period=5 -SigverifyTx=false
 
-test-sim-import-export: runsim
+test-sim-import-export:
 	@echo "Running application import/export simulation. This may take several minutes..."
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=4 -SimAppPkg=. -ExitOnFail 50 5 TestAppImportExport
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout 20m -run TestAppImportExport \
+		-NumBlocks=50 -Period=5
 
-test-sim-after-import: runsim
+test-sim-after-import:
 	@echo "Running application simulation-after-import. This may take several minutes..."
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=4 -SimAppPkg=. -ExitOnFail 50 5 TestAppSimulationAfterImport
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout 30m -run TestAppSimulationAfterImport \
+		-NumBlocks=50 -Period=5
 
-test-sim-custom-genesis-multi-seed: runsim
+
+test-sim-custom-genesis-multi-seed:
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.simapp/config/genesis.json will be used."
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Genesis=${HOME}/.simapp/config/genesis.json -SigverifyTx=false -SimAppPkg=. -ExitOnFail 400 5 TestFullAppSimulation
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout 30m  -run TestFullAppSimulation -Genesis=${HOME}/.simapp/config/genesis.json \
+		-NumBlocks=400 -Period=5
 
-test-sim-multi-seed-long: runsim
+test-sim-multi-seed-long:
 	@echo "Running long multi-seed application simulation. This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=4 -SimAppPkg=. -ExitOnFail 500 50 TestFullAppSimulation
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout=1h -run TestFullAppSimulation \
+		-NumBlocks=500 -Period=50
 
-test-sim-multi-seed-short: runsim
+test-sim-multi-seed-short:
 	@echo "Running short multi-seed application simulation. This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=4 -SimAppPkg=. -ExitOnFail 50 10 TestFullAppSimulation
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout 30m -run TestFullAppSimulation \
+		-NumBlocks=50 -Period=10
 
 test-sim-benchmark-invariants:
 	@echo "Running simulation invariant benchmarks..."
@@ -344,6 +347,12 @@ test-sim-benchmark-invariants
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
 SIM_COMMIT ?= true
+
+#? test-sim-fuzz: Run fuzz test for simapp
+test-sim-fuzz:
+	@echo "Running application fuzz for numBlocks=2, blockSize=20. This may take awhile!"
+#ld flags are a quick fix to make it work on current osx
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -json -ldflags="-extldflags=-Wl,-ld_classic" -timeout=60m -fuzztime=60m -run=^$$ -fuzz=FuzzFullAppSimulation -GenesisTime=1714720615 -NumBlocks=2 -BlockSize=20
 
 #? test-sim-benchmark: Run benchmark test for simapp
 test-sim-benchmark:
@@ -384,7 +393,7 @@ test-sim-profile-streaming:
 	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -benchmem -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$ \
 		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out -EnableStreaming=true
 
-.PHONY: test-sim-profile test-sim-benchmark
+.PHONY: test-sim-profile test-sim-benchmark test-sim-fuzz
 
 #? benchmark: Run benchmark tests
 benchmark:

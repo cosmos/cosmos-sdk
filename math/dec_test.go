@@ -792,7 +792,6 @@ func (s *decimalTestSuite) TestConvertToBigIntMutativeForLegacyDec() {
 }
 
 func TestQuoMut(t *testing.T) {
-	t.Parallel()
 	specs := map[string]struct {
 		dividend, divisor          math.LegacyDec
 		expTruncated, expRoundedUp string
@@ -1003,6 +1002,7 @@ func TestQuoMut(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			t.Run("round up", func(t *testing.T) {
+				t.Parallel()
 				if !spec.expPanic {
 					got := spec.dividend.Clone().QuoRoundupMut(spec.divisor.Clone())
 					require.Equal(t, spec.expRoundedUp, got.String())
@@ -1013,6 +1013,7 @@ func TestQuoMut(t *testing.T) {
 				})
 			})
 			t.Run("truncate", func(t *testing.T) {
+				t.Parallel()
 				if !spec.expPanic {
 					got := spec.dividend.Clone().QuoTruncateMut(spec.divisor.Clone())
 					require.Equal(t, spec.expTruncated, got.String())

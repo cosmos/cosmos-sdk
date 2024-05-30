@@ -181,11 +181,21 @@ func (m *Manager) writeChangeset() error {
 		}
 
 		batch := m.db.NewBatch()
-		if err := batch.Set(csKey, csBytes); err != nil {
-			return fmt.Errorf("failed to write changeset to db.Batch: %w", err)
-		}
-		if err := batch.Write(); err != nil {
-			return fmt.Errorf("failed to write changeset to db: %w", err)
+		// Invoking this code in a closure so that defer is called immediately on return
+		// yet not in the for-loop which can leave resource lingering.
+		err = func() error {
+			defer batch.Close()
+
+			if err := batch.Set(csKey, csBytes); err != nil {
+				return fmt.Errorf("failed to write changeset to db.Batch: %w", err)
+			}
+			if err := batch.Write(); err != nil {
+				return fmt.Errorf("failed to write changeset to db: %w", err)
+			}
+			return nil
+		}()
+		if err != nil {
+			return err
 		}
 		batch.Close()
 	}
@@ -233,7 +243,7 @@ func (m *Manager) Sync() error {
 				return fmt.Errorf("failed to unmarshal changeset: %w", err)
 			}
 			if m.stateCommitment != nil {
-				if err := m.stateCommitment.WriteBatch(cs); err != nil {
+				if err := m.stateCommitment.WriteChangeset(cs); err != nil {
 					return fmt.Errorf("failed to write changeset to commitment: %w", err)
 				}
 				if _, err := m.stateCommitment.Commit(version); err != nil {

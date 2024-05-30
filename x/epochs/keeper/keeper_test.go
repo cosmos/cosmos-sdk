@@ -39,7 +39,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.environment = environment
 	queryRouter := baseapp.NewGRPCQueryRouter()
 	cfg := module.NewConfigurator(nil, nil, queryRouter)
-	types.RegisterQueryServer(cfg.QueryServer(), epochskeeper.NewQuerier(s.EpochsKeeper))
+	types.RegisterQueryServer(cfg.QueryServer(), epochskeeper.NewQuerier(*s.EpochsKeeper))
 	grpcQueryService := &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: queryRouter,
 		Ctx:             s.Ctx,

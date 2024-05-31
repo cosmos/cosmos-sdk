@@ -184,10 +184,10 @@ jobs:
           name: "testnet-setup"
           path: ./systemtests/testnet/
           retention-days: 3
-      #      - name: system tests v2
-      #        if: env.GIT_DIFF
-      #        run: |
-      #          make test-system
+      - name: system tests v2
+        if: env.GIT_DIFF
+        run: |
+          make test-system
       - uses: actions/upload-artifact@v3
         if: failure()
         with:

@@ -352,7 +352,7 @@ SIM_COMMIT ?= true
 test-sim-fuzz:
 	@echo "Running application fuzz for numBlocks=2, blockSize=20. This may take awhile!"
 #ld flags are a quick fix to make it work on current osx
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -json -ldflags="-extldflags=-Wl,-ld_classic" -timeout=60m -fuzztime=60m -run=^$$ -fuzz=FuzzFullAppSimulation -GenesisTime=1714720615 -NumBlocks=2 -BlockSize=20
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -json -tags='sims' -ldflags="-extldflags=-Wl,-ld_classic" -timeout=60m -fuzztime=60m -run=^$$ -fuzz=FuzzFullAppSimulation -GenesisTime=1714720615 -NumBlocks=2 -BlockSize=20
 
 #? test-sim-benchmark: Run benchmark test for simapp
 test-sim-benchmark:

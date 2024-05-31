@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"fmt"
 
+	"google.golang.org/protobuf/reflect/protoreflect"
+
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/auth/signing"
-	"google.golang.org/protobuf/reflect/protoreflect"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

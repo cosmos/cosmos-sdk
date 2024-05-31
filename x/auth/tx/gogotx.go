@@ -160,7 +160,7 @@ func (w *gogoTxWrapper) GetMessages() ([]transaction.Msg, error) {
 
 func (w *gogoTxWrapper) GetSenders() ([][]byte, error) {
 	if w.decodedTx == nil || w.decodedTx.Signers == nil {
-		return nil, errors.New("Senders not available or are nil")
+		return nil, errors.New("senders not available or are nil")
 	}
 	return w.decodedTx.Signers, nil
 }

@@ -154,7 +154,6 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 // TxValidator implements appmodulev2.HasTxValidator.
 // It replaces auth ante handlers for server/v2
 func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
-
 	validators := []appmodulev2.TxValidator[sdk.Tx]{
 		ante.NewValidateBasicDecorator(am.accountKeeper.GetEnvironment()),
 		ante.NewTxTimeoutHeightDecorator(am.accountKeeper.GetEnvironment()),

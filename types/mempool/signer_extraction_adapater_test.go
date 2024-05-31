@@ -5,9 +5,10 @@ import (
 	"math/rand"
 	"testing"
 
-	"cosmossdk.io/core/transaction"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/core/transaction"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"

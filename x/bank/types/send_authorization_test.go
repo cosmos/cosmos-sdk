@@ -11,7 +11,6 @@ import (
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/gas"
 	coregas "cosmossdk.io/core/gas"
-	"cosmossdk.io/core/header"
 	coreheader "cosmossdk.io/core/header"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -55,7 +54,7 @@ func (m mockGasMeter) Consume(amount gas.Gas, descriptor string) error {
 
 func TestSendAuthorization(t *testing.T) {
 	ac := codectestutil.CodecOptions{}.GetAddressCodec()
-	sdkCtx := testutil.DefaultContextWithDB(t, storetypes.NewKVStoreKey(types.StoreKey), storetypes.NewTransientStoreKey("transient_test")).Ctx.WithHeaderInfo(header.Info{})
+	sdkCtx := testutil.DefaultContextWithDB(t, storetypes.NewKVStoreKey(types.StoreKey), storetypes.NewTransientStoreKey("transient_test")).Ctx.WithHeaderInfo(coreheader.Info{})
 	ctx := context.WithValue(sdkCtx.Context(), corecontext.EnvironmentContextKey, appmodule.Environment{
 		HeaderService: headerService{},
 		GasService:    mockGasService{},

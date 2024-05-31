@@ -1,4 +1,4 @@
-name: 'PR Go Mod Tidy and Mocks'
+name: 'Checks dependencies and mocks generation'
 on:
   pull_request:
     branches:
@@ -30,7 +30,7 @@ jobs:
           }
 
   generate-mocks:
-    name: Generate Mocks
+    name: Check up to date mocks
     runs-on: ubuntu-latest
     steps:
       - name: Check out code

@@ -1,12 +1,18 @@
 package types_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/appmodule/v2"
+	corecontext "cosmossdk.io/core/context"
+	"cosmossdk.io/core/gas"
+	coregas "cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
+	coreheader "cosmossdk.io/core/header"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/bank/types"
@@ -25,9 +31,36 @@ var (
 	unknownAddrStr = "cosmos1ta047h6lw4hxkmn0wah97h6lta0sml880l"
 )
 
+type headerService struct{}
+
+func (h headerService) HeaderInfo(ctx context.Context) coreheader.Info {
+	return sdk.UnwrapSDKContext(ctx).HeaderInfo()
+}
+
+type mockGasService struct {
+	coregas.Service
+}
+
+func (m mockGasService) GasMeter(ctx context.Context) coregas.Meter {
+	return mockGasMeter{}
+}
+
+type mockGasMeter struct {
+	gas.Meter
+}
+
+func (m mockGasMeter) Consume(amount gas.Gas, descriptor string) error {
+	return nil
+}
+
 func TestSendAuthorization(t *testing.T) {
 	ac := codectestutil.CodecOptions{}.GetAddressCodec()
-	ctx := testutil.DefaultContextWithDB(t, storetypes.NewKVStoreKey(types.StoreKey), storetypes.NewTransientStoreKey("transient_test")).Ctx.WithHeaderInfo(header.Info{})
+	sdkCtx := testutil.DefaultContextWithDB(t, storetypes.NewKVStoreKey(types.StoreKey), storetypes.NewTransientStoreKey("transient_test")).Ctx.WithHeaderInfo(header.Info{})
+	ctx := context.WithValue(sdkCtx.Context(), corecontext.EnvironmentContextKey, appmodule.Environment{
+		HeaderService: headerService{},
+		GasService:    mockGasService{},
+	})
+
 	allowList := make([]sdk.AccAddress, 1)
 	allowList[0] = toAddr
 	authorization := types.NewSendAuthorization(coins1000, nil, ac)

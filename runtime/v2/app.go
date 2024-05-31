@@ -134,3 +134,7 @@ func (a *App) SetAppVersion(context.Context, uint64) error {
 func (a *App) AppVersion(context.Context) (uint64, error) {
 	panic("not implemented")
 }
+
+func (a *App) GetAppManager() (*appmanager.AppManager[transaction.Tx]) {
+	return a.AppManager
+}

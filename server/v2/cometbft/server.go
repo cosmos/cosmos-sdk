@@ -31,7 +31,6 @@ import (
 
 	corectx "cosmossdk.io/core/context"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/pelletier/go-toml/v2"
 )
 
 const (
@@ -47,7 +46,7 @@ const (
 	FlagTrace         = "trace"
 )
 
-var _ serverv2.ServerModule = (*CometBFTServer[transaction.Tx])(nil)
+var _ serverv2.ServerModule[transaction.Tx] = (*CometBFTServer[transaction.Tx])(nil)
 
 type CometBFTServer[T transaction.Tx] struct {
 	Node   *node.Node
@@ -64,6 +63,63 @@ type App[T transaction.Tx] interface {
 	GetApp() *appmanager.AppManager[T]
 	GetLogger() log.Logger
 	GetStore() types.Store
+}
+
+func New[T transaction.Tx](home string, txCodec transaction.Codec[T]) *CometBFTServer[T] {
+	// Write default cmt config
+	err := os.MkdirAll(filepath.Join(home, "config"), 0777)
+	if err != nil {
+		return nil
+	}
+	cometConfig := cmtcfg.DefaultConfig()
+	cmtcfg.WriteConfigFile(filepath.Join(home, "config", "config.toml"), cometConfig)
+
+	consensus := &Consensus[T]{txCodec: txCodec}
+	return &CometBFTServer[T]{
+		App: consensus,
+	}
+}
+
+func (s *CometBFTServer[T]) Init(appI serverv2.App[T], v *viper.Viper, logger log.Logger) (serverv2.ServerModule[T], error) {
+	app := appI.Application
+	store := appI.Store.(types.Store)
+
+	cfg := Config{CmtConfig: serverv2.GetConfigFromViper(v), ConsensusAuthority: app.GetConsensusAuthority()}
+	logger = logger.With("module", "cometbft-server")
+
+	// create noop mempool
+	mempool := mempool.NoOpMempool[T]{}
+
+	// create consensus
+	// txCodec should be in server from New()
+	consensus := NewConsensus[T](app.GetAppManager(), mempool, store, cfg, s.App.txCodec, logger)
+
+	consensus.SetPrepareProposalHandler(handlers.NoOpPrepareProposal[T]())
+	consensus.SetProcessProposalHandler(handlers.NoOpProcessProposal[T]())
+	consensus.SetVerifyVoteExtension(handlers.NoOpVerifyVoteExtensionHandler())
+	consensus.SetExtendVoteExtension(handlers.NoOpExtendVote())
+
+	// TODO: set these; what is the appropriate presence of the Store interface here?
+	var ss snapshots.StorageSnapshotter
+	var sc snapshots.CommitSnapshotter
+
+	snapshotStore, err := GetSnapshotStore(cfg.CmtConfig.RootDir)
+	if err != nil {
+		panic(err)
+	}
+
+	sm := snapshots.NewManager(snapshotStore, snapshots.SnapshotOptions{}, sc, ss, nil, logger) // TODO: set options somehow
+	consensus.SetSnapshotManager(sm)
+
+	s.config = cfg
+	s.App = consensus
+	s.logger = logger
+
+	return &CometBFTServer[T]{
+		logger: logger,
+		App:    consensus,
+		config: cfg,
+	}, nil
 }
 
 func NewCometBFTServer[T transaction.Tx](
@@ -162,22 +218,22 @@ func (s *CometBFTServer[T]) Stop(_ context.Context) error {
 	return nil
 }
 
-func (s *CometBFTServer[T]) Config() any {
-	return cmtcfg.DefaultConfig()
-}
+// func (s *CometBFTServer[T]) Config() any {
+// 	return cmtcfg.DefaultConfig()
+// }
 
-func (s *CometBFTServer[T]) WriteConfig(configPath string) error {
-	cfg := s.Config()
-	b, err := toml.Marshal(cfg)
-	if err != nil {
-		return fmt.Errorf("failed to marshal config: %w", err)
-	}
+// func (s *CometBFTServer[T]) WriteConfig(configPath string) error {
+// 	cfg := s.Config()
+// 	b, err := toml.Marshal(cfg)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to marshal config: %w", err)
+// 	}
 
-	if err := os.WriteFile(filepath.Join(configPath, "config.toml"), b, 0o666); err != nil {
-		return fmt.Errorf("failed to write config: %w", err)
-	}
-	return nil
-}
+// 	if err := os.WriteFile(filepath.Join(configPath, "config.toml"), b, 0o666); err != nil {
+// 		return fmt.Errorf("failed to write config: %w", err)
+// 	}
+// 	return nil
+// }
 
 // returns a function which returns the genesis doc from the genesis file.
 func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, error) {

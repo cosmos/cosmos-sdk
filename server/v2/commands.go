@@ -16,9 +16,14 @@ import (
 	"github.com/spf13/viper"
 )
 
-type NewServerModulesFunc func(*viper.Viper, log.Logger, transaction.Codec[transaction.Tx]) []ServerModule
+type App[T transaction.Tx] struct {
+	Application Application[T]
+	Store any
+}
 
-func Commands(rootCmd *cobra.Command, appCreator NewServerModulesFunc, codec transaction.Codec[transaction.Tx], logger log.Logger, homePath string, modules ...ServerModule) (CLIConfig, error) {
+type AppCreator[T transaction.Tx] func(*viper.Viper, log.Logger) App[T]
+
+func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, homePath string, modules ...ServerModule[transaction.Tx]) (CLIConfig, error) {
 	if len(modules) == 0 {
 		// TODO figure if we should define default modules
 		// and if so it should be done here to avoid uncessary dependencies
@@ -29,8 +34,8 @@ func Commands(rootCmd *cobra.Command, appCreator NewServerModulesFunc, codec tra
 	// Write default config for each server module
 	flags := server.StartFlags()
 
-	if _, err := os.Stat(filepath.Join(homePath, "config")); os.IsNotExist(err) {
-		err = server.WriteConfig(filepath.Join(homePath, "config"))
+	if _, err := os.Stat(filepath.Join(homePath, "config", "app.toml")); os.IsNotExist(err) {
+		err = server.WriteConfig(filepath.Join(homePath, "config", "app.toml"))
 		if err != nil {
 			return CLIConfig{}, err
 		}
@@ -42,7 +47,10 @@ func Commands(rootCmd *cobra.Command, appCreator NewServerModulesFunc, codec tra
 			v := GetViperFromCmd(cmd)
 			l := GetLoggerFromCmd(cmd)
 
-			server.modules = appCreator(v, l, codec)
+			// server.modules = appCreator(v, l, codec)
+
+			app := newApp(v, l)
+			server.Init(app, v, l)
 
 			for _, startFlags := range flags {
 				v.BindPFlags(startFlags)
@@ -82,8 +90,8 @@ func Commands(rootCmd *cobra.Command, appCreator NewServerModulesFunc, codec tra
 	return cmds, nil
 }
 
-func AddCommands(rootCmd *cobra.Command, appCreator NewServerModulesFunc, codec transaction.Codec[transaction.Tx], logger log.Logger, homePath string, modules ...ServerModule) error {
-	cmds, err := Commands(rootCmd, appCreator, codec, logger, homePath, modules...)
+func AddCommands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, homePath string, modules ...ServerModule[transaction.Tx]) error {
+	cmds, err := Commands(rootCmd, newApp, logger, homePath, modules...)
 	if err != nil {
 		return err
 	}

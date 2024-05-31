@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"cosmossdk.io/client/v2/autocli"
 	clientv2keyring "cosmossdk.io/client/v2/autocli/keyring"
@@ -26,6 +28,8 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
+
+var homeFlag = "home"
 
 // NewRootCmd creates a new root command for simd. It is called once in the main function.
 func NewRootCmd() *cobra.Command {
@@ -79,12 +83,29 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 
-			customAppTemplate, customAppConfig := initAppConfig()
-			customCMTConfig := initCometBFTConfig()
+			viper, err := serverv2.ReadConfig(filepath.Join(cmd.Flag(homeFlag).Value.String(), "config"))
+			if err != nil {
+				return err
+			}
+			viper.Set(homeFlag, simapp.DefaultNodeHome)
 
-			return serverv2.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customCMTConfig)
+			log, err := serverv2.NewLogger(viper, cmd.OutOrStdout())
+			if err != nil {
+				return err
+			}
+
+			serverv2.SetCmdServerContext(cmd, viper, log)
+
+			return nil
 		},
 	}
+
+	// rootCmd.PersistentFlags().String(homeFlag, simapp.DefaultNodeHome, "set home directory")
+
+	viper := viper.New()
+	viper.Set(homeFlag, simapp.DefaultNodeHome)
+
+	serverv2.SetCmdServerContext(rootCmd, viper, nil)
 
 	initRootCmd(
 		rootCmd,

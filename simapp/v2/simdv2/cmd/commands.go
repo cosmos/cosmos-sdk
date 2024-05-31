@@ -1,13 +1,10 @@
 package cmd
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
 	"os"
-	"os/signal"
-	"syscall"
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
@@ -18,6 +15,7 @@ import (
 	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/cometbft"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
@@ -30,6 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	// TODO migrate all server dependencies to server/v2
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types" // there only ExportedApp consider here
@@ -54,16 +53,18 @@ func (t *temporaryTxDecoder) DecodeJSON(bz []byte) (transaction.Tx, error) {
 	return t.txConfig.TxJSONDecoder()(bz)
 }
 
-// newApp creates the application
-// Q: should we only init cometserver when start or earlier is ok?
-func newCometBFTServer(
+// // newApp creates the application
+// // Q: should we only init cometserver when start or earlier is ok?
+func newServerModules(
 	viper *viper.Viper,
 	logger log.Logger,
 	txCodec transaction.Codec[transaction.Tx],
-) serverv2.ServerModule {
+) []serverv2.ServerModule {
 	sa := simapp.NewSimApp(logger, viper)
 	am := sa.App.AppManager
 	serverCfg := cometbft.Config{CmtConfig: client.GetConfigFromViper(viper), ConsensusAuthority: sa.GetConsensusAuthority()}
+
+	var serverModules []serverv2.ServerModule
 
 	cometServer := cometbft.NewCometBFTServer[transaction.Tx](
 		am,
@@ -72,7 +73,18 @@ func newCometBFTServer(
 		serverCfg,
 		txCodec,
 	)
-	return cometServer
+
+	grpcServer, err := grpc.New(
+		logger,
+		viper,
+		sa.InterfaceRegistry(),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	serverModules = append(serverModules, cometServer, grpcServer)
+	return serverModules
 }
 
 func initRootCmd(
@@ -86,6 +98,9 @@ func initRootCmd(
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
+	// viper := client.GetViperFromCmd(rootCmd)
+	// logger := client.GetLoggerFromCmd(rootCmd)
+
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(moduleManager),
 		debug.Cmd(),
@@ -95,7 +110,23 @@ func initRootCmd(
 		// snapshot.Cmd(newApp),
 	)
 
-	err := serverv2.AddCommands(rootCmd, &temporaryTxDecoder{txConfig}, log.NewNopLogger(), tempDir(), newCometBFTServer) // TODO: How to cast from AppModule to ServerModule
+	// app := simapp.NewSimApp(logger, viper)
+
+	// cometServer := cometbft.NewCometBFTServer[transaction.Tx](
+	// 	app,
+	// 	app.GetStore(),
+	// 	client.GetLoggerFromCmd(rootCmd),
+	// 	client.GetViperFromCmd(rootCmd),
+	// 	&temporaryTxDecoder{},
+	// )
+
+	// grpcServer, err := grpc.New(
+	// 	client.GetLoggerFromCmd(rootCmd),
+	// 	client.GetViperFromCmd(rootCmd),
+	// 	app.InterfaceRegistry(),
+	// )
+
+	err := serverv2.AddCommands(rootCmd, newServerModules, &temporaryTxDecoder{txConfig}, log.NewNopLogger(), tempDir(), &cometbft.CometBFTServer[transaction.Tx]{}, grpc.GRPCServer{}) // TODO: How to cast from AppModule to ServerModule
 	if err != nil {
 		panic(fmt.Sprintf("Add cmd, %v", err))
 	}
@@ -109,46 +140,6 @@ func initRootCmd(
 		keys.Commands(),
 		offchain.OffChain(),
 	)
-}
-
-func startCommand(txCodec transaction.Codec[transaction.Tx]) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "start",
-		Short: "Start the application",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			serverCtx := server.GetServerContextFromCmd(cmd)
-			sa := simapp.NewSimApp(serverCtx.Logger, serverCtx.Viper)
-			am := sa.App.AppManager
-			serverCfg := cometbft.Config{CmtConfig: serverCtx.Config, ConsensusAuthority: sa.GetConsensusAuthority()}
-
-			cometServer := cometbft.NewCometBFTServer[transaction.Tx](
-				am,
-				sa.GetStore(),
-				sa.GetLogger(),
-				serverCfg,
-				txCodec,
-			)
-			ctx := cmd.Context()
-			ctx, cancelFn := context.WithCancel(ctx)
-			go func() {
-				sigCh := make(chan os.Signal, 1)
-				signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-				sig := <-sigCh
-				cancelFn()
-				cmd.Printf("caught %s signal\n", sig.String())
-
-				if err := cometServer.Stop(ctx); err != nil {
-					cmd.PrintErrln("failed to stop servers:", err)
-				}
-			}()
-
-			if err := cometServer.Start(ctx); err != nil {
-				return fmt.Errorf("failed to start servers: %w", err)
-			}
-			return nil
-		},
-	}
-	return cmd
 }
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter

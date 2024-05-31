@@ -46,7 +46,7 @@ func TestServer(t *testing.T) {
 		t.Log(err)
 		t.Fail()
 	}
-	configPath := filepath.Join(currentDir, "testdata", "app.toml")
+	configPath := filepath.Join(currentDir, "testdata")
 
 	v, err := serverv2.ReadConfig(configPath)
 	if err != nil {
@@ -54,7 +54,7 @@ func TestServer(t *testing.T) {
 	}
 
 	logger := log.NewLogger(os.Stdout)
-	grpcServer, err := grpc.New(logger, v, &mockInterfaceRegistry{}, &mockGRPCService{})
+	grpcServer, err := grpc.New(logger, v, &mockInterfaceRegistry{})
 	if err != nil {
 		t.Log(err)
 		t.Fail()

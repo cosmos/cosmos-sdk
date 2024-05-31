@@ -13,9 +13,15 @@ import (
 
 // formatBlockResults parses the indexed blocks into a slice of BlockResponse objects.
 func formatBlockResults(resBlocks []*coretypes.ResultBlock) ([]*v11.Block, error) {
-	out := make([]*v11.Block, len(resBlocks))
+	var (
+		err error
+		out = make([]*v11.Block, len(resBlocks))
+	)
 	for i := range resBlocks {
-		out[i] = NewResponseResultBlock(resBlocks[i])
+		out[i], err = NewResponseResultBlock(resBlocks[i])
+		if err != nil {
+			return nil, fmt.Errorf("unable to create response block from comet result block: %v: %w", resBlocks[i], err)
+		}
 		if out[i] == nil {
 			return nil, fmt.Errorf("unable to create response block from comet result block: %v", resBlocks[i])
 		}
@@ -37,25 +43,25 @@ func NewSearchBlocksResult(totalCount, count, page, limit int64, blocks []*v11.B
 }
 
 // NewResponseResultBlock returns a BlockResponse given a ResultBlock from CometBFT
-func NewResponseResultBlock(res *coretypes.ResultBlock) *v11.Block {
+func NewResponseResultBlock(res *coretypes.ResultBlock) (*v11.Block, error) {
 	blkProto, err := res.Block.ToProto()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	blkBz, err := gogoproto.Marshal(blkProto)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	blk := &v11.Block{}
 	err = protov2.Unmarshal(blkBz, blk)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return blk
+	return blk, nil
 }
 
-// calculate total pages in an overflow safe manner
+// calcTotalPages calculates total pages in an overflow safe manner
 func calcTotalPages(totalCount, limit int64) int64 {
 	totalPages := int64(0)
 	if totalCount != 0 && limit != 0 {

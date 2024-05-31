@@ -36,7 +36,7 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 	return func(ctx context.Context, app AppManager[T], txs []T, req proto.Message) ([]T, error) {
 		abciReq, ok := req.(*abci.PrepareProposalRequest)
 		if !ok {
-			return nil, fmt.Errorf("invalid request type: %T", req)
+			return nil, fmt.Errorf("expected abci.PrepareProposalRequest, invalid request type: %T,", req)
 		}
 
 		var maxBlockGas uint64

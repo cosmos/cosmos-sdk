@@ -5,6 +5,8 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	abciserver "github.com/cometbft/cometbft/abci/server"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
@@ -27,7 +29,9 @@ import (
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
 
+	corectx "cosmossdk.io/core/context"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/pelletier/go-toml/v2"
 )
 
 const (
@@ -106,6 +110,9 @@ func (s *CometBFTServer[T]) Name() string {
 }
 
 func (s *CometBFTServer[T]) Start(ctx context.Context) error {
+	viper := ctx.Value(corectx.ViperContextKey{}).(*viper.Viper)
+	cometConfig := serverv2.GetConfigFromViper(viper)
+
 	wrappedLogger := cometlog.CometLoggerWrapper{Logger: s.logger}
 	if s.config.Standalone {
 		svr, err := abciserver.NewServer(s.config.Addr, s.config.Transport, s.App)
@@ -118,20 +125,20 @@ func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 		return svr.Start()
 	}
 
-	nodeKey, err := p2p.LoadOrGenNodeKey(s.config.CmtConfig.NodeKeyFile())
+	nodeKey, err := p2p.LoadOrGenNodeKey(cometConfig.NodeKeyFile())
 	if err != nil {
 		return err
 	}
 
 	s.Node, err = node.NewNode(
 		ctx,
-		s.config.CmtConfig,
-		pvm.LoadOrGenFilePV(s.config.CmtConfig.PrivValidatorKeyFile(), s.config.CmtConfig.PrivValidatorStateFile()),
+		cometConfig,
+		pvm.LoadOrGenFilePV(cometConfig.PrivValidatorKeyFile(), cometConfig.PrivValidatorStateFile()),
 		nodeKey,
 		proxy.NewLocalClientCreator(s.App),
-		getGenDocProvider(s.config.CmtConfig),
+		getGenDocProvider(cometConfig),
 		cmtcfg.DefaultDBProvider,
-		node.DefaultMetricsProvider(s.config.CmtConfig.Instrumentation),
+		node.DefaultMetricsProvider(cometConfig.Instrumentation),
 		wrappedLogger,
 	)
 	if err != nil {
@@ -155,15 +162,21 @@ func (s *CometBFTServer[T]) Stop(_ context.Context) error {
 	return nil
 }
 
-func (s *CometBFTServer[T]) Config() (any, *viper.Viper) {
-	v := viper.New()
-	v.SetConfigFile("???") // TODO: where do we set this
-	v.SetConfigName("config")
-	v.SetConfigType("toml")
-	if err := v.ReadInConfig(); err != nil {
-		panic(fmt.Errorf("failed to read cometbft config file: %w", err))
+func (s *CometBFTServer[T]) Config() any {
+	return cmtcfg.DefaultConfig()
+}
+
+func (s *CometBFTServer[T]) WriteConfig(configPath string) error {
+	cfg := s.Config()
+	b, err := toml.Marshal(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
 	}
-	return nil, nil
+
+	if err := os.WriteFile(filepath.Join(configPath, "config.toml"), b, 0o666); err != nil {
+		return fmt.Errorf("failed to write config: %w", err)
+	}
+	return nil
 }
 
 // returns a function which returns the genesis doc from the genesis file.

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"os"
+	"path/filepath"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -17,6 +19,7 @@ import (
 	appmanager "cosmossdk.io/core/app"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
+	"github.com/pelletier/go-toml/v2"
 )
 
 const serverName = "grpc-server"
@@ -35,10 +38,10 @@ type GRPCService interface {
 
 // New returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server.
-func New(logger log.Logger, v *viper.Viper, interfaceRegistry appmanager.InterfaceRegistry, app GRPCService) (GRPCServer, error) {
+func New(logger log.Logger, v *viper.Viper, interfaceRegistry appmanager.InterfaceRegistry) (GRPCServer, error) {
 	cfg := DefaultConfig()
 	if v != nil {
-		if err := v.Sub(serverName).Unmarshal(&cfg); err != nil {
+		if err := v.Unmarshal(&cfg); err != nil {
 			return GRPCServer{}, fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
@@ -49,7 +52,7 @@ func New(logger log.Logger, v *viper.Viper, interfaceRegistry appmanager.Interfa
 		grpc.MaxRecvMsgSize(cfg.MaxRecvMsgSize),
 	)
 
-	app.RegisterGRPCServer(grpcSrv)
+	// app.RegisterGRPCServer(grpcSrv)
 
 	// Reflection allows external clients to see what services and methods
 	// the gRPC server exposes.
@@ -102,6 +105,19 @@ func (g GRPCServer) Config() any {
 	}
 
 	return g.config
+}
+
+func (s GRPCServer) WriteConfig(configPath string) error {
+	cfg := s.Config()
+	b, err := toml.Marshal(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+
+	if err := os.WriteFile(filepath.Join(configPath, "app.toml"), b, 0o666); err != nil {
+		return fmt.Errorf("failed to write config: %w", err)
+	}
+	return nil
 }
 
 type protoCodec struct {

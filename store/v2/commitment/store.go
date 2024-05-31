@@ -24,12 +24,15 @@ import (
 const (
 	commitInfoKeyFmt = "c/%d" // c/<version>
 	latestVersionKey = "c/latest"
+
+	batchFlushThreshold = 1 << 16 // 64KB
 )
 
 var (
 	_ store.Committer             = (*CommitStore)(nil)
 	_ snapshots.CommitSnapshotter = (*CommitStore)(nil)
 	_ store.PausablePruner        = (*CommitStore)(nil)
+	_ store.KVStoreGetter         = (*CommitStore)(nil)
 )
 
 // CommitStore is a wrapper around multiple Tree objects mapped by a unique store
@@ -151,8 +154,33 @@ func (c *CommitStore) LoadVersion(targetVersion uint64, upgrades *corestore.Stor
 		tree := c.multiTrees[storeKey]
 
 		// If it has been added, set the initial version.
-		if upgrades.IsAdded(storeKey) || upgrades.RenamedFrom(storeKey) != "" {
+		if upgrades.IsAdded(storeKey) {
 			if err := tree.SetInitialVersion(targetVersion + 1); err != nil {
+				return err
+			}
+		}
+
+		removeTree := func(storeKey string) error {
+			if err := tree.Close(); err != nil {
+				return err
+			}
+			delete(c.multiTrees, storeKey)
+			return nil
+		}
+
+		// If it has been renamed, migrate the data.
+		if oldKey := upgrades.RenamedFrom(storeKey); oldKey != "" {
+			if err := c.migrateKVStore(oldKey, storeKey); err != nil {
+				return err
+			}
+			if err := removeTree(oldKey); err != nil {
+				return err
+			}
+		}
+
+		// If it has been deleted, remove the tree.
+		if upgrades.IsDeleted(storeKey) {
+			if err := removeTree(storeKey); err != nil {
 				return err
 			}
 		}
@@ -167,6 +195,63 @@ func (c *CommitStore) LoadVersion(targetVersion uint64, upgrades *corestore.Stor
 	if targetVersion > latestVersion {
 		cInfo := c.WorkingCommitInfo(targetVersion)
 		return c.flushCommitInfo(targetVersion, cInfo)
+	}
+
+	return nil
+}
+
+func (c *CommitStore) migrateKVStore(oldKey, newKey string) error {
+	var (
+		oldKVStore corestore.KVStoreWithBatch
+		newKVStore corestore.KVStoreWithBatch
+	)
+
+	if oldTree, ok := c.multiTrees[oldKey]; ok {
+		if getter, ok := oldTree.(KVStoreGetter); ok {
+			oldKVStore = getter.GetKVStoreWithBatch()
+		}
+	}
+
+	if newTree, ok := c.multiTrees[newKey]; ok {
+		if getter, ok := newTree.(KVStoreGetter); ok {
+			newKVStore = getter.GetKVStoreWithBatch()
+		}
+	}
+
+	if oldKVStore != nil && newKVStore != nil {
+		iter, err := oldKVStore.Iterator(nil, nil)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			_ = iter.Close()
+		}()
+
+		batch := newKVStore.NewBatch()
+		for ; iter.Valid(); iter.Next() {
+			if err := batch.Set(iter.Key(), iter.Value()); err != nil {
+				return err
+			}
+			bs, err := batch.GetByteSize()
+			if err != nil {
+				return err
+			}
+			if bs > batchFlushThreshold {
+				if err := batch.Write(); err != nil {
+					return err
+				}
+				if err := batch.Close(); err != nil {
+					return err
+				}
+				batch = newKVStore.NewBatch()
+			}
+		}
+		if err := batch.Write(); err != nil {
+			return err
+		}
+		if err := batch.Close(); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -493,6 +578,17 @@ loop:
 	}
 
 	return snapshotItem, c.LoadVersion(version, nil)
+}
+
+// GetKVStoreWithBatch implements store.KVStoreGetter.
+func (c *CommitStore) GetKVStoreWithBatch(storeKey string) corestore.KVStoreWithBatch {
+	if tree, ok := c.multiTrees[storeKey]; ok {
+		if kvGetter, ok := tree.(KVStoreGetter); ok {
+			return kvGetter.GetKVStoreWithBatch()
+		}
+	}
+
+	return nil
 }
 
 func (c *CommitStore) Close() (ferr error) {

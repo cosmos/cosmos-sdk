@@ -246,7 +246,20 @@ func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreU
 		return fmt.Errorf("cannot upgrade while migrating")
 	}
 
-	// TODO: Implement the pruning logic for the renamed/deleted store keys.
+	// if upgrades is not nil, we need to add the pruned KVStores to the pruning manager
+	if upgrades != nil {
+		kvStoreGetter, ok := s.stateCommitment.(store.KVStoreGetter)
+		if !ok {
+			prunedKVStores := make([]corestore.KVStoreWithBatch, 0)
+			for _, storeKey := range upgrades.Deleted {
+				prunedKVStores = append(prunedKVStores, kvStoreGetter.GetKVStoreWithBatch(storeKey))
+			}
+			for _, renamedStore := range upgrades.Renamed {
+				prunedKVStores = append(prunedKVStores, kvStoreGetter.GetKVStoreWithBatch(renamedStore.OldKey))
+			}
+			s.pruningManager.SetPrunedKVStores(prunedKVStores)
+		}
+	}
 
 	return s.loadVersion(version, upgrades)
 }

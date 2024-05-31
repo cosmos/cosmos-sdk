@@ -61,3 +61,10 @@ type Committer interface {
 	// only be called once and any call after may panic.
 	io.Closer
 }
+
+// KVStoreGetter is an interface that allows getting the KVStoreWithBatch for
+// the underlying store key from the Committer.
+// It is used to migrate or remove data when upgrading the store key.
+type KVStoreGetter interface {
+	GetKVStoreWithBatch(storeKey string) corestore.KVStoreWithBatch
+}

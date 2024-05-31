@@ -95,7 +95,7 @@ func (m *queryRouterService) InvokeTyped(
 	ctx context.Context,
 	req, resp protoiface.MessageV1,
 ) error {
-	// TODO threadsafe?
+	// TODO lazy initialization is ugly and not thread safe. we don't want to check a mutex on every InvokeTyped either.
 	if m.handler == nil {
 		var err error
 		m.handler, err = m.builder.Build()

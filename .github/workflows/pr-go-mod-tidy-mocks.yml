@@ -18,7 +18,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 'stable'
+          go-version: 'latest'
       - name: Run go mod tidy
         run: ./scripts/go-mod-tidy-all.sh
       - name: Check for diffs
@@ -37,7 +37,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 'stable'
+          go-version: 'latest'
       - name: Generate mocks
         run: make mocks
       - name: Check for diffs

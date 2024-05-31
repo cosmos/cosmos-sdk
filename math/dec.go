@@ -99,18 +99,13 @@ func NewDecFromString(s string, c ...SetupConstraint) (Dec, error) {
 	}
 }
 
-// NewNonNegativeDecFromString constructor
-func NewNonNegativeDecFromString(s string, c ...SetupConstraint) (Dec, error) {
-	return NewDecFromString(s, append(c, AssertNotNegative())...)
-}
-
 func NewDecFromInt64(x int64) Dec {
 	var res Dec
 	res.dec.SetInt64(x)
 	return res
 }
 
-// NewDecFinite returns a decimal with a value of coeff * 10^exp.
+// NewDecFinite returns a decimal with a value of coeff * 10^exp precision.
 func NewDecFinite(coeff int64, exp int32) Dec {
 	var res Dec
 	res.dec.SetFinite(coeff, exp)
@@ -277,8 +272,7 @@ func (x Dec) NumDecimalPlaces() uint32 {
 	return uint32(-exp)
 }
 
-// Reduce returns a copy of x with all trailing zeros removed and the number
-// of trailing zeros removed.
+// Reduce returns a copy of x with all trailing zeros removed
 func (x Dec) Reduce() (Dec, int) {
 	y := Dec{}
 	_, n := y.dec.Reduce(&x.dec)

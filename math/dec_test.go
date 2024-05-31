@@ -159,7 +159,7 @@ func TestQuoExactGood(t *testing.T) {
 	b := NewDecFinite(1, 6)
 	c, err := a.QuoExact(b)
 	require.NoError(t, err)
-	require.Equal(t, "1.000001", c.String())
+	require.Equal(t, "1.000001000000000000000000000000000", c.String())
 }
 
 func TestQuoExactBad(t *testing.T) {

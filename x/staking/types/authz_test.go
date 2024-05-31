@@ -9,7 +9,6 @@ import (
 
 	"cosmossdk.io/core/appmodule/v2"
 	corecontext "cosmossdk.io/core/context"
-	"cosmossdk.io/core/gas"
 	coregas "cosmossdk.io/core/gas"
 	coreheader "cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
@@ -59,10 +58,10 @@ func (m mockGasService) GasMeter(ctx context.Context) coregas.Meter {
 }
 
 type mockGasMeter struct {
-	gas.Meter
+	coregas.Meter
 }
 
-func (m mockGasMeter) Consume(amount gas.Gas, descriptor string) error {
+func (m mockGasMeter) Consume(amount coregas.Gas, descriptor string) error {
 	return nil
 }
 

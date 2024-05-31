@@ -7,6 +7,8 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/any.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
+option go_package = "cosmossdk.io/api/app/cosmos/orm/query/v1alpha1";
+
 // Query is a generic gRPC service for querying ORM data.
 service Query {
 

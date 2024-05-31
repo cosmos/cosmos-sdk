@@ -30,9 +30,9 @@ flowchart TD
         end
     end
 
-    SM <-->|Interaction| ABCI
-    ABCI <-->|Interaction| Consensus
-    Consensus <--> |Interaction| Networking
+    SM <--> ABCI
+    ABCI <--> Consensus
+    Consensus <--> Networking
 
     Blockchain_Node -->|Includes| SM
     Blockchain_Node -->|Includes| Consensus

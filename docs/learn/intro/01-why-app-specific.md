@@ -27,8 +27,8 @@ flowchart TD
         end
     end
 
-    SM <-->|Interaction| Consensus
-    Consensus <-->|Interaction| Networking
+    SM <--> Consensus
+    Consensus <--> Networking
 
 
     Blockchain_Node -->|Includes| SM

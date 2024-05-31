@@ -25,7 +25,7 @@ In practice, the transactions are bundled in blocks to make the process more eff
 flowchart LR
     A[S]
     B[S']
-    A -->|"aFor each T in B: apply(T)"| B
+    A -->|"For each T in B: apply(T)"| B
 ```
 
 In a blockchain context, the state machine is deterministic. This means that if a node is started at a given state and replays the same sequence of transactions, it will always end up with the same final state.
@@ -50,7 +50,7 @@ flowchart TD
         end
     end
 
-    SM <-->|Interaction| CometBFT
+    SM <--> CometBFT
 
 
     Blockchain_Node -->|Includes| SM

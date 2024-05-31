@@ -395,7 +395,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v1.56.2
+golangci_version=v1.59.0
 
 #? setup-pre-commit: Set pre-commit git hook
 setup-pre-commit:

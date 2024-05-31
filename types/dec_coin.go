@@ -37,20 +37,6 @@ func NewDecCoinFromDec(denom string, amount math.LegacyDec) DecCoin {
 	}
 }
 
-// NewDecCoinFromDec creates a new DecCoin instance from a Dec.
-func NewDecNonLegacyCoinFromDec(denom string, amount math.Dec) DecCoin {
-	mustValidateDenom(denom)
-
-	if amount.IsNegative() {
-		panic(fmt.Sprintf("negative decimal coin amount: %v\n", amount))
-	}
-
-	return DecCoin{
-		Denom:  denom,
-		Amount: amount,
-	}
-}
-
 // NewDecCoinFromCoin creates a new DecCoin from a Coin.
 func NewDecCoinFromCoin(coin Coin) DecCoin {
 	if err := coin.Validate(); err != nil {

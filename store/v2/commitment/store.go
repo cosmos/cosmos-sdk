@@ -9,10 +9,11 @@ import (
 
 	protoio "github.com/cosmos/gogoproto/io"
 
+	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
-	internal "cosmossdk.io/store/v2/internal/conv"
+	"cosmossdk.io/store/v2/internal"
+	"cosmossdk.io/store/v2/internal/conv"
 	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/snapshots"
@@ -27,6 +28,7 @@ const (
 var (
 	_ store.Committer             = (*CommitStore)(nil)
 	_ snapshots.CommitSnapshotter = (*CommitStore)(nil)
+	_ store.PausablePruner        = (*CommitStore)(nil)
 )
 
 // CommitStore is a wrapper around multiple Tree objects mapped by a unique store
@@ -36,31 +38,23 @@ var (
 // and trees.
 type CommitStore struct {
 	logger     log.Logger
-	db         store.RawDB
+	db         corestore.KVStoreWithBatch
 	multiTrees map[string]Tree
-
-	// pruneOptions is the pruning configuration.
-	pruneOptions *store.PruneOptions
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(trees map[string]Tree, db store.RawDB, pruneOpts *store.PruneOptions, logger log.Logger) (*CommitStore, error) {
-	if pruneOpts == nil {
-		pruneOpts = store.DefaultPruneOptions()
-	}
-
+func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, logger log.Logger) (*CommitStore, error) {
 	return &CommitStore{
-		logger:       logger,
-		db:           db,
-		multiTrees:   trees,
-		pruneOptions: pruneOpts,
+		logger:     logger,
+		db:         db,
+		multiTrees: trees,
 	}, nil
 }
 
-func (c *CommitStore) WriteBatch(cs *corestore.Changeset) error {
+func (c *CommitStore) WriteChangeset(cs *corestore.Changeset) error {
 	for _, pairs := range cs.Changes {
 
-		key := internal.UnsafeBytesToStr(pairs.Actor)
+		key := conv.UnsafeBytesToStr(pairs.Actor)
 
 		tree, ok := c.multiTrees[key]
 		if !ok {
@@ -83,6 +77,9 @@ func (c *CommitStore) WriteBatch(cs *corestore.Changeset) error {
 func (c *CommitStore) WorkingCommitInfo(version uint64) *proof.CommitInfo {
 	storeInfos := make([]proof.StoreInfo, 0, len(c.multiTrees))
 	for storeKey, tree := range c.multiTrees {
+		if internal.IsMemoryStoreKey(storeKey) {
+			continue
+		}
 		bz := []byte(storeKey)
 		storeInfos = append(storeInfos, proof.StoreInfo{
 			Name: bz,
@@ -198,6 +195,9 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 	storeInfos := make([]proof.StoreInfo, 0, len(c.multiTrees))
 
 	for storeKey, tree := range c.multiTrees {
+		if internal.IsMemoryStoreKey(storeKey) {
+			continue
+		}
 		// If a commit event execution is interrupted, a new iavl store's version
 		// will be larger than the RMS's metadata, when the block is replayed, we
 		// should avoid committing that iavl store again.
@@ -230,13 +230,6 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 		return nil, err
 	}
 
-	// Prune the old versions.
-	if prune, pruneVersion := c.pruneOptions.ShouldPrune(version); prune {
-		if err := c.Prune(pruneVersion); err != nil {
-			c.logger.Info("failed to prune SC", "prune_version", pruneVersion, "err", err)
-		}
-	}
-
 	return cInfo, nil
 }
 
@@ -251,7 +244,7 @@ func (c *CommitStore) SetInitialVersion(version uint64) error {
 }
 
 func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]proof.CommitmentOp, error) {
-	tree, ok := c.multiTrees[internal.UnsafeBytesToStr(storeKey)]
+	tree, ok := c.multiTrees[conv.UnsafeBytesToStr(storeKey)]
 	if !ok {
 		return nil, fmt.Errorf("store %s not found", storeKey)
 	}
@@ -277,7 +270,7 @@ func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]p
 }
 
 func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, error) {
-	tree, ok := c.multiTrees[internal.UnsafeBytesToStr(storeKey)]
+	tree, ok := c.multiTrees[conv.UnsafeBytesToStr(storeKey)]
 	if !ok {
 		return nil, fmt.Errorf("store %s not found", storeKey)
 	}
@@ -290,6 +283,7 @@ func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, 
 	return bz, nil
 }
 
+// Prune implements store.Pruner.
 func (c *CommitStore) Prune(version uint64) (ferr error) {
 	// prune the metadata
 	batch := c.db.NewBatch()
@@ -313,6 +307,15 @@ func (c *CommitStore) Prune(version uint64) (ferr error) {
 	}
 
 	return ferr
+}
+
+// PausePruning implements store.PausablePruner.
+func (c *CommitStore) PausePruning(pause bool) {
+	for _, tree := range c.multiTrees {
+		if pruner, ok := tree.(store.PausablePruner); ok {
+			pruner.PausePruning(pause)
+		}
+	}
 }
 
 // Snapshot implements snapshotstypes.CommitSnapshotter.
@@ -376,7 +379,12 @@ func (c *CommitStore) Snapshot(version uint64, protoWriter protoio.Writer) error
 }
 
 // Restore implements snapshotstypes.CommitSnapshotter.
-func (c *CommitStore) Restore(version uint64, format uint32, protoReader protoio.Reader, chStorage chan<- *corestore.StateChanges) (snapshotstypes.SnapshotItem, error) {
+func (c *CommitStore) Restore(
+	version uint64,
+	format uint32,
+	protoReader protoio.Reader,
+	chStorage chan<- *corestore.StateChanges,
+) (snapshotstypes.SnapshotItem, error) {
 	var (
 		importer     Importer
 		snapshotItem snapshotstypes.SnapshotItem
@@ -399,7 +407,9 @@ loop:
 				if err := importer.Commit(); err != nil {
 					return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to commit importer: %w", err)
 				}
-				importer.Close()
+				if err := importer.Close(); err != nil {
+					return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to close importer: %w", err)
+				}
 			}
 
 			storeKey = []byte(item.Store.Name)

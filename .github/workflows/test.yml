@@ -184,10 +184,10 @@ jobs:
           name: "testnet-setup"
           path: ./systemtests/testnet/
           retention-days: 3
-      #      - name: system tests v2
-      #        if: env.GIT_DIFF
-      #        run: |
-      #          make test-system
+      - name: system tests v2
+        if: env.GIT_DIFF
+        run: |
+          make test-system
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
@@ -240,37 +240,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-  liveness-test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.22"
-          check-latest: true
-          cache: true
-          cache-dependency-path: go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            **/*.go
-            go.mod
-            go.sum
-            **/go.mod
-            **/go.sum
-            **/Makefile
-            Makefile
-      - name: start localnet
-        if: env.GIT_DIFF
-        run: |
-          make clean localnet-start
-      - name: test liveness
-        if: env.GIT_DIFF
-        run: |
-          ./contrib/localnet_liveness.sh 100 5 50 localhost
 
   test-sim-nondeterminism:
     runs-on: ubuntu-latest

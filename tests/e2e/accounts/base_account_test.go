@@ -80,5 +80,4 @@ func bechify(t *testing.T, app *simapp.SimApp, addr []byte) string {
 
 func fundAccount(t *testing.T, app *simapp.SimApp, ctx sdk.Context, addr sdk.AccAddress, amt string) {
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, addr, coins(t, amt)))
-
 }

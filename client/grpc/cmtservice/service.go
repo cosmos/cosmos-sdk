@@ -25,7 +25,7 @@ var (
 )
 
 type (
-	abciQueryFn = func(context.Context, *abci.RequestQuery) (*abci.ResponseQuery, error)
+	abciQueryFn = func(context.Context, *abci.QueryRequest) (*abci.QueryResponse, error)
 
 	queryServer struct {
 		clientCtx         client.Context
@@ -250,7 +250,17 @@ func (s queryServer) ABCIQuery(ctx context.Context, req *ABCIQueryRequest) (*ABC
 	if err != nil {
 		return nil, err
 	}
-	return FromABCIResponseQuery(res), nil
+	return &ABCIQueryResponse{
+		Code:      res.Code,
+		Log:       res.Log,
+		Info:      res.Info,
+		Index:     res.Index,
+		Key:       res.Key,
+		Value:     res.Value,
+		ProofOps:  res.ProofOps,
+		Height:    res.Height,
+		Codespace: res.Codespace,
+	}, nil
 }
 
 // RegisterTendermintService registers the CometBFT queries on the gRPC router.

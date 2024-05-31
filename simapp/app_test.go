@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/golang/mock/gomock"
@@ -70,7 +70,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	}
 
 	// finalize block so we have CheckTx state set
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: 1,
 	})
 	require.NoError(t, err)
@@ -119,7 +119,7 @@ func TestRunMigrations(t *testing.T) {
 	}
 
 	// Initialize the chain
-	_, err := app.InitChain(&abci.RequestInitChain{})
+	_, err := app.InitChain(&abci.InitChainRequest{})
 	require.NoError(t, err)
 	_, err = app.Commit()
 	require.NoError(t, err)
@@ -196,7 +196,7 @@ func TestRunMigrations(t *testing.T) {
 			// their latest ConsensusVersion.
 			_, err = app.ModuleManager.RunMigrations(
 				app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()}), configurator,
-				module.VersionMap{
+				appmodule.VersionMap{
 					"accounts":     accounts.AppModule{}.ConsensusVersion(),
 					"bank":         1,
 					"auth":         auth.AppModule{}.ConsensusVersion(),
@@ -247,7 +247,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	// Run migrations only for "mock" module. We exclude it from
 	// the VersionMap to simulate upgrading with a new module.
 	_, err := app.ModuleManager.RunMigrations(ctx, app.Configurator(),
-		module.VersionMap{
+		appmodule.VersionMap{
 			"bank":         bank.AppModule{}.ConsensusVersion(),
 			"auth":         auth.AppModule{}.ConsensusVersion(),
 			"authz":        authzmodule.AppModule{}.ConsensusVersion(),

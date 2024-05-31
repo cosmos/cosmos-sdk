@@ -3,11 +3,9 @@ package appmodule
 import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/runtime/protoiface"
 )
 
-// Message aliases protoiface.MessageV1 for convenience.
-type Message = protoiface.MessageV1
+type Message = gogoproto.Message
 
 func messageName[M Message]() string {
 	switch m := any(*new(M)).(type) {

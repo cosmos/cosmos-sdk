@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/staking"
@@ -30,7 +30,7 @@ func TestHistoricalKeysMigration(t *testing.T) {
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)
-	logger := log.NewTestLogger(t)
+	logger := log.NewNopLogger()
 
 	type testCase struct {
 		oldKey, newKey []byte
@@ -87,7 +87,7 @@ func TestDelegationsByValidatorMigrations(t *testing.T) {
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)
-	logger := log.NewTestLogger(t)
+	logger := log.NewNopLogger()
 
 	accAddrs := sims.CreateIncrementalAccounts(11)
 	valAddrs := sims.ConvertAddrsToValAddrs(accAddrs[0:1])

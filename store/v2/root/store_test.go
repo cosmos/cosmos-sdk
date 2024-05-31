@@ -251,7 +251,7 @@ func (s *RootStoreTestSuite) TestCommit() {
 	// ensure latest version is updated
 	lv, err = s.rootStore.GetLatestVersion()
 	s.Require().NoError(err)
-	s.Require().Equal(uint64(1), lv)
+	s.Require().Equal(uint64(0), lv)
 
 	// perform reads on the updated root store
 	_, ro, err := s.rootStore.StateLatest()

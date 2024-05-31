@@ -202,7 +202,7 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 		// will be larger than the RMS's metadata, when the block is replayed, we
 		// should avoid committing that iavl store again.
 		var commitID proof.CommitID
-		if tree.GetLatestVersion() >= version {
+		if tree.GetLatestVersion() >= version && version > 0 {
 			commitID.Version = version
 			commitID.Hash = tree.Hash()
 		} else {

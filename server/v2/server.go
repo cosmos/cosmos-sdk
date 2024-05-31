@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pelletier/go-toml/v2"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 
@@ -28,6 +28,12 @@ type HasCLICommands interface {
 // HasConfig is a server module that has a config.
 type HasConfig interface {
 	Config() any
+	WriteConfig(string) error
+}
+
+// HasStartFlags is a server module that has start flags.
+type HasStartFlags interface {
+	StartFlags() *pflag.FlagSet
 }
 
 var _ ServerModule = (*Server)(nil)
@@ -35,11 +41,21 @@ var _ ServerModule = (*Server)(nil)
 // Configs returns a viper instance of the config file
 func ReadConfig(configPath string) (*viper.Viper, error) {
 	v := viper.New()
-	v.SetConfigFile(configPath)
+
 	v.SetConfigType("toml")
+	v.SetConfigName("config")
+	v.AddConfigPath(configPath)
 	if err := v.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to read config: %s: %w", configPath, err)
 	}
+
+	v.SetConfigType("toml")
+	v.SetConfigName("app")
+	v.AddConfigPath(configPath)
+	if err := v.MergeInConfig(); err != nil {
+		return nil, fmt.Errorf("failed to merge configuration: %w", err)
+	}
+
 	v.WatchConfig()
 
 	return v, nil
@@ -130,15 +146,31 @@ func (s *Server) Configs() map[string]any {
 // WriteConfig writes the config to the given path.
 // Note: it does not use viper.WriteConfigAs because we do not want to store flag values in the config.
 func (s *Server) WriteConfig(configPath string) error {
-	cfgs := s.Configs()
-	b, err := toml.Marshal(cfgs)
+	err := os.MkdirAll(configPath, 0777)
 	if err != nil {
-		return fmt.Errorf("failed to marshal config: %w", err)
+		return err
 	}
 
-	if err := os.WriteFile(configPath, b, 0o600); err != nil {
-		return fmt.Errorf("failed to write config: %w", err)
+	for _, mod := range s.modules {
+		if configmod, ok := mod.(HasConfig); ok {
+			err := configmod.WriteConfig(configPath)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
+}
+
+// Flags returns all flags of all server modules.
+func (s *Server) StartFlags() []*pflag.FlagSet {
+	flags := []*pflag.FlagSet{}
+	for _, mod := range s.modules {
+		if startmod, ok := mod.(HasStartFlags); ok {
+			flags = append(flags, startmod.StartFlags())
+		}
+	}
+
+	return flags
 }

@@ -30,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	// TODO migrate all server dependencies to server/v2
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -70,11 +71,9 @@ func initRootCmd(
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
 		startCommand(&temporaryTxDecoder{txConfig}),
-		// pruning.Cmd(newApp),
-		// snapshot.Cmd(newApp),
+		// TODO pruning.Cmd(newApp),
+		// TODO snapshot.Cmd(newApp),
 	)
-
-	// server.AddCommands(rootCmd, log.NewNopLogger(), tempDir()) // TODO: How to cast from AppModule to ServerModule
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(

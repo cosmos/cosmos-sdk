@@ -1,6 +1,8 @@
 package context
 
+type contextKey uint8
+
 const (
-	ExecModeKey = iota
-	CometInfoKey
+	ExecModeKey  contextKey = iota
+	CometInfoKey contextKey = iota
 )

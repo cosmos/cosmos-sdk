@@ -55,7 +55,7 @@ func QueryBlocks(ctx context.Context, rpcClient CometRPC, page, limit int, query
 	return result, nil
 }
 
-// get block by height
+// GetBlockByHeight gets block by height
 func GetBlockByHeight(ctx context.Context, rpcClient CometRPC, height *int64) (*v11.Block, error) {
 	// header -> BlockchainInfo
 	// header, tx -> Block
@@ -65,7 +65,10 @@ func GetBlockByHeight(ctx context.Context, rpcClient CometRPC, height *int64) (*
 		return nil, err
 	}
 
-	out := NewResponseResultBlock(resBlock)
+	out, err := NewResponseResultBlock(resBlock)
+	if err != nil {
+		return nil, err
+	}
 	if out == nil {
 		return nil, fmt.Errorf("unable to create response block from comet result block: %v", resBlock)
 	}
@@ -73,6 +76,7 @@ func GetBlockByHeight(ctx context.Context, rpcClient CometRPC, height *int64) (*
 	return out, nil
 }
 
+// GetBlockByHash gets block by hash
 func GetBlockByHash(ctx context.Context, rpcClient CometRPC, hashHexString string) (*v11.Block, error) {
 	hash, err := hex.DecodeString(hashHexString)
 	if err != nil {
@@ -86,9 +90,10 @@ func GetBlockByHash(ctx context.Context, rpcClient CometRPC, hashHexString strin
 	} else if resBlock.Block == nil {
 		return nil, fmt.Errorf("block not found with hash: %s", hashHexString)
 	}
-
-	// TODO: Also move NewResponseResultBlock somewhere around this package
-	out := NewResponseResultBlock(resBlock)
+	out, err := NewResponseResultBlock(resBlock)
+	if err != nil {
+		return nil, err
+	}
 	if out == nil {
 		return nil, fmt.Errorf("unable to create response block from comet result block: %v", resBlock)
 	}

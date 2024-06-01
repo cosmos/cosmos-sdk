@@ -40,7 +40,6 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.18.2
 	google.golang.org/genproto/googleapis/api v0.0.0-20240318140521-94a12d6c2237
 	google.golang.org/grpc v1.64.0
 	google.golang.org/protobuf v1.34.1
@@ -159,6 +158,7 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
+	github.com/spf13/viper v1.18.2 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/supranational/blst v0.3.11 // indirect

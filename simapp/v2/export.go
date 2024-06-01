@@ -6,6 +6,9 @@ import (
 
 // ExportAppStateAndValidators exports the state of the application for a genesis file.
 func (app *SimApp) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs, modulesToExport []string) (servertypes.ExportedApp, error) {
+	panic("not implemented")
+	// server/v1 implementation is below:
+
 	// 	// as if they could withdraw from the start of the next block
 	// 	ctx := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 
@@ -240,6 +243,4 @@ func (app *SimApp) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAd
 	// 	if err != nil {
 	// 		panic(err)
 	// 	}
-
-	return servertypes.ExportedApp{}, nil
 }

@@ -26,12 +26,15 @@ import (
 
 // Suppress "imported and not used" errors
 var _ codes.Code
-var _ io.Reader
-var _ status.Status
-var _ = runtime.String
-var _ = utilities.NewDoubleArray
-var _ = descriptor.ForMessage
-var _ = metadata.Join
+
+var (
+	_ io.Reader
+	_ status.Status
+	_ = runtime.String
+	_ = utilities.NewDoubleArray
+	_ = descriptor.ForMessage
+	_ = metadata.Join
+)
 
 func request_Service_GetNodeInfo_0(ctx context.Context, marshaler runtime.Marshaler, client ServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetNodeInfoRequest
@@ -39,7 +42,6 @@ func request_Service_GetNodeInfo_0(ctx context.Context, marshaler runtime.Marsha
 
 	msg, err := client.GetNodeInfo(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
-
 }
 
 func local_request_Service_GetNodeInfo_0(ctx context.Context, marshaler runtime.Marshaler, server ServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -48,7 +50,6 @@ func local_request_Service_GetNodeInfo_0(ctx context.Context, marshaler runtime.
 
 	msg, err := server.GetNodeInfo(ctx, &protoReq)
 	return msg, metadata, err
-
 }
 
 func request_Service_GetSyncing_0(ctx context.Context, marshaler runtime.Marshaler, client ServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -57,7 +58,6 @@ func request_Service_GetSyncing_0(ctx context.Context, marshaler runtime.Marshal
 
 	msg, err := client.GetSyncing(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
-
 }
 
 func local_request_Service_GetSyncing_0(ctx context.Context, marshaler runtime.Marshaler, server ServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -66,7 +66,6 @@ func local_request_Service_GetSyncing_0(ctx context.Context, marshaler runtime.M
 
 	msg, err := server.GetSyncing(ctx, &protoReq)
 	return msg, metadata, err
-
 }
 
 func request_Service_GetLatestBlock_0(ctx context.Context, marshaler runtime.Marshaler, client ServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -75,7 +74,6 @@ func request_Service_GetLatestBlock_0(ctx context.Context, marshaler runtime.Mar
 
 	msg, err := client.GetLatestBlock(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
-
 }
 
 func local_request_Service_GetLatestBlock_0(ctx context.Context, marshaler runtime.Marshaler, server ServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -84,7 +82,6 @@ func local_request_Service_GetLatestBlock_0(ctx context.Context, marshaler runti
 
 	msg, err := server.GetLatestBlock(ctx, &protoReq)
 	return msg, metadata, err
-
 }
 
 func request_Service_GetBlockByHeight_0(ctx context.Context, marshaler runtime.Marshaler, client ServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -111,7 +108,6 @@ func request_Service_GetBlockByHeight_0(ctx context.Context, marshaler runtime.M
 
 	msg, err := client.GetBlockByHeight(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
-
 }
 
 func local_request_Service_GetBlockByHeight_0(ctx context.Context, marshaler runtime.Marshaler, server ServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -138,12 +134,9 @@ func local_request_Service_GetBlockByHeight_0(ctx context.Context, marshaler run
 
 	msg, err := server.GetBlockByHeight(ctx, &protoReq)
 	return msg, metadata, err
-
 }
 
-var (
-	filter_Service_GetLatestValidatorSet_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
+var filter_Service_GetLatestValidatorSet_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 
 func request_Service_GetLatestValidatorSet_0(ctx context.Context, marshaler runtime.Marshaler, client ServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetLatestValidatorSetRequest
@@ -158,7 +151,6 @@ func request_Service_GetLatestValidatorSet_0(ctx context.Context, marshaler runt
 
 	msg, err := client.GetLatestValidatorSet(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
-
 }
 
 func local_request_Service_GetLatestValidatorSet_0(ctx context.Context, marshaler runtime.Marshaler, server ServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -174,12 +166,9 @@ func local_request_Service_GetLatestValidatorSet_0(ctx context.Context, marshale
 
 	msg, err := server.GetLatestValidatorSet(ctx, &protoReq)
 	return msg, metadata, err
-
 }
 
-var (
-	filter_Service_GetValidatorSetByHeight_0 = &utilities.DoubleArray{Encoding: map[string]int{"height": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
-)
+var filter_Service_GetValidatorSetByHeight_0 = &utilities.DoubleArray{Encoding: map[string]int{"height": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 
 func request_Service_GetValidatorSetByHeight_0(ctx context.Context, marshaler runtime.Marshaler, client ServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetValidatorSetByHeightRequest
@@ -212,7 +201,6 @@ func request_Service_GetValidatorSetByHeight_0(ctx context.Context, marshaler ru
 
 	msg, err := client.GetValidatorSetByHeight(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
-
 }
 
 func local_request_Service_GetValidatorSetByHeight_0(ctx context.Context, marshaler runtime.Marshaler, server ServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -246,12 +234,9 @@ func local_request_Service_GetValidatorSetByHeight_0(ctx context.Context, marsha
 
 	msg, err := server.GetValidatorSetByHeight(ctx, &protoReq)
 	return msg, metadata, err
-
 }
 
-var (
-	filter_Service_ABCIQuery_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
+var filter_Service_ABCIQuery_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 
 func request_Service_ABCIQuery_0(ctx context.Context, marshaler runtime.Marshaler, client ServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ABCIQueryRequest
@@ -266,7 +251,6 @@ func request_Service_ABCIQuery_0(ctx context.Context, marshaler runtime.Marshale
 
 	msg, err := client.ABCIQuery(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
-
 }
 
 func local_request_Service_ABCIQuery_0(ctx context.Context, marshaler runtime.Marshaler, server ServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -282,7 +266,6 @@ func local_request_Service_ABCIQuery_0(ctx context.Context, marshaler runtime.Ma
 
 	msg, err := server.ABCIQuery(ctx, &protoReq)
 	return msg, metadata, err
-
 }
 
 // RegisterServiceHandlerServer registers the http handlers for service Service to "mux".
@@ -290,7 +273,6 @@ func local_request_Service_ABCIQuery_0(ctx context.Context, marshaler runtime.Ma
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
 // Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterServiceHandlerFromEndpoint instead.
 func RegisterServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, server ServiceServer) error {
-
 	mux.Handle("GET", pattern_Service_GetNodeInfo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -311,7 +293,6 @@ func RegisterServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 		}
 
 		forward_Service_GetNodeInfo_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
 	mux.Handle("GET", pattern_Service_GetSyncing_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -334,7 +315,6 @@ func RegisterServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 		}
 
 		forward_Service_GetSyncing_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
 	mux.Handle("GET", pattern_Service_GetLatestBlock_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -357,7 +337,6 @@ func RegisterServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 		}
 
 		forward_Service_GetLatestBlock_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
 	mux.Handle("GET", pattern_Service_GetBlockByHeight_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -380,7 +359,6 @@ func RegisterServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 		}
 
 		forward_Service_GetBlockByHeight_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
 	mux.Handle("GET", pattern_Service_GetLatestValidatorSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -403,7 +381,6 @@ func RegisterServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 		}
 
 		forward_Service_GetLatestValidatorSet_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
 	mux.Handle("GET", pattern_Service_GetValidatorSetByHeight_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -426,7 +403,6 @@ func RegisterServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 		}
 
 		forward_Service_GetValidatorSetByHeight_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
 	mux.Handle("GET", pattern_Service_ABCIQuery_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -449,7 +425,6 @@ func RegisterServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 		}
 
 		forward_Service_ABCIQuery_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
 	return nil
@@ -492,7 +467,6 @@ func RegisterServiceHandler(ctx context.Context, mux *runtime.ServeMux, conn *gr
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "ServiceClient" to call the correct interceptors.
 func RegisterServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, client ServiceClient) error {
-
 	mux.Handle("GET", pattern_Service_GetNodeInfo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -510,7 +484,6 @@ func RegisterServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 		}
 
 		forward_Service_GetNodeInfo_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
 	mux.Handle("GET", pattern_Service_GetSyncing_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -530,7 +503,6 @@ func RegisterServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 		}
 
 		forward_Service_GetSyncing_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
 	mux.Handle("GET", pattern_Service_GetLatestBlock_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -550,7 +522,6 @@ func RegisterServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 		}
 
 		forward_Service_GetLatestBlock_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
 	mux.Handle("GET", pattern_Service_GetBlockByHeight_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -570,7 +541,6 @@ func RegisterServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 		}
 
 		forward_Service_GetBlockByHeight_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
 	mux.Handle("GET", pattern_Service_GetLatestValidatorSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -590,7 +560,6 @@ func RegisterServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 		}
 
 		forward_Service_GetLatestValidatorSet_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
 	mux.Handle("GET", pattern_Service_GetValidatorSetByHeight_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -610,7 +579,6 @@ func RegisterServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 		}
 
 		forward_Service_GetValidatorSetByHeight_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
 	mux.Handle("GET", pattern_Service_ABCIQuery_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -630,7 +598,6 @@ func RegisterServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 		}
 
 		forward_Service_ABCIQuery_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
 	return nil

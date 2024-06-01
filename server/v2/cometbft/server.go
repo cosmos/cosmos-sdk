@@ -67,12 +67,17 @@ type App[T transaction.Tx] interface {
 
 func New[T transaction.Tx](home string, txCodec transaction.Codec[T]) *CometBFTServer[T] {
 	// Write default cmt config
-	err := os.MkdirAll(filepath.Join(home, "config"), 0777)
-	if err != nil {
-		return nil
+	configPath := filepath.Join(home, "config")
+	configFilePath := filepath.Join(configPath, "config.toml")
+
+	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
+		if err := os.MkdirAll(configPath, os.ModePerm); err != nil {
+			return nil
+		}
 	}
+
 	cometConfig := cmtcfg.DefaultConfig()
-	cmtcfg.WriteConfigFile(filepath.Join(home, "config", "config.toml"), cometConfig)
+	cmtcfg.WriteConfigFile(configFilePath, cometConfig)
 
 	consensus := &Consensus[T]{txCodec: txCodec}
 	return &CometBFTServer[T]{

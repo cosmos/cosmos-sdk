@@ -81,7 +81,14 @@ func initRootCmd(
 	)
 
 	// Add empty server struct here for writing default config
-	err := serverv2.AddCommands(rootCmd, newApp, log.NewNopLogger(), tempDir(), cometbft.New(tempDir(), &temporaryTxDecoder{txConfig}), grpc.NewGRPCServer())
+	err := serverv2.AddCommands(
+		rootCmd, 
+		newApp, 
+		log.NewNopLogger(), 
+		tempDir(), 
+		cometbft.New(tempDir(), &temporaryTxDecoder{txConfig}), 
+		grpc.NewGRPCServer(),
+	)
 	if err != nil {
 		panic(fmt.Sprintf("Add cmd, %v", err))
 	}

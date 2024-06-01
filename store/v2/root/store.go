@@ -72,7 +72,7 @@ func New(
 ) (store.RootStore, error) {
 	return &Store{
 		logger:           logger.With("module", "root_store"),
-		initialVersion:   0,
+		initialVersion:   1,
 		stateStorage:     ss,
 		stateCommitment:  sc,
 		pruningManager:   pm,
@@ -389,7 +389,7 @@ func (s *Store) writeSC(cs *corestore.Changeset) error {
 	}
 
 	var previousHeight, version uint64
-	if s.lastCommitInfo.GetVersion() == 0 && s.initialVersion > 0 {
+	if s.lastCommitInfo.GetVersion() == 0 && s.initialVersion > 1 {
 		// This case means that no commit has been made in the store, we
 		// start from initialVersion.
 		version = s.initialVersion
@@ -399,16 +399,11 @@ func (s *Store) writeSC(cs *corestore.Changeset) error {
 		// 1. There was already a previous commit in the store, in which case we
 		// 		increment the version from there.
 		// 2. There was no previous commit, and initial version was not set, in which
-		// 		case we start at version 0.
+		// 		case we start at version 1.
 		previousHeight = s.lastCommitInfo.GetVersion()
-		if previousHeight == 0 {
-			version = previousHeight
-		} else {
-			version = previousHeight + 1
-		}
+		version = previousHeight + 1
 	}
 
-	fmt.Println(version)
 	s.lastCommitInfo = s.stateCommitment.WorkingCommitInfo(version)
 
 	return nil

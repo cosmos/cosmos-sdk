@@ -33,6 +33,7 @@ It is an exautive list of changes that completes the SimApp section in the [UPGR
 Always refer to the [UPGRADING.md](https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md) to understand the changes.
 
 * [#20409](https://github.com/cosmos/cosmos-sdk/pull/20409) Add `tx` as `SkipStoreKeys` in `app_config.go`.
+* [#20485](https://github.com/cosmos/cosmos-sdk/pull/20485) The signature of `x/upgrade/types.UpgradeHandler` has changed to accept `appmodule.VersionMap` from `module.VersionMap`.  These types are interchangeable, but usages of `UpradeKeeper.SetUpgradeHandler` may need to adjust their usages to match the new signature.
 
 <!-- TODO: move changelog.md elements to here -->
 

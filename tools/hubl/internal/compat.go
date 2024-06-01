@@ -59,7 +59,7 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 
 			switch res := in.MessageResponse.(type) {
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_ErrorResponse:
-				panic(err)
+				panic(res.ErrorResponse.String())
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_ListServicesResponse:
 				waitListServiceRes <- res.ListServicesResponse //nolint:staticcheck // we want to use the deprecated field
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse:

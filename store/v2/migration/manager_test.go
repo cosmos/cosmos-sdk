@@ -62,9 +62,9 @@ func TestMigrateState(t *testing.T) {
 			m, orgCommitStore := setupMigrationManager(t, noCommitStore)
 
 			// apply changeset
-			toVersion := uint64(100)
+			toVersion := uint64(99)
 			keyCount := 10
-			for version := uint64(1); version <= toVersion; version++ {
+			for version := uint64(0); version <= toVersion; version++ {
 				cs := corestore.NewChangeset()
 				for _, storeKey := range storeKeys {
 					for i := 0; i < keyCount; i++ {
@@ -91,16 +91,16 @@ func TestMigrateState(t *testing.T) {
 					}
 				}
 				// check the latest state
-				val, err := m.stateCommitment.Get([]byte("store1"), toVersion-1, []byte("key-100-1"))
+				val, err := m.stateCommitment.Get([]byte("store1"), toVersion-1, []byte("key-99-1"))
 				require.NoError(t, err)
 				require.Nil(t, val)
-				val, err = m.stateCommitment.Get([]byte("store2"), toVersion-1, []byte("key-100-0"))
+				val, err = m.stateCommitment.Get([]byte("store2"), toVersion-1, []byte("key-99-0"))
 				require.NoError(t, err)
 				require.Nil(t, val)
 			}
 
 			// check the storage
-			for version := uint64(1); version < toVersion; version++ {
+			for version := uint64(0); version < toVersion; version++ {
 				for _, storeKey := range storeKeys {
 					for i := 0; i < keyCount; i++ {
 						val, err := m.stateStorage.Get([]byte(storeKey), toVersion-1, []byte(fmt.Sprintf("key-%d-%d", version, i)))

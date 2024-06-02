@@ -89,7 +89,7 @@ func (s *RootStoreTestSuite) TestSetCommitHeader() {
 }
 
 func (s *RootStoreTestSuite) TestQuery() {
-	_, err := s.rootStore.Query([]byte{}, 1, []byte("foo"), true)
+	_, err := s.rootStore.Query([]byte{}, 0, []byte("foo"), true)
 	s.Require().Error(err)
 
 	// write and commit a changeset
@@ -101,7 +101,7 @@ func (s *RootStoreTestSuite) TestQuery() {
 	s.Require().NotNil(commitHash)
 
 	// ensure the proof is non-nil for the corresponding version
-	result, err := s.rootStore.Query([]byte(testStoreKey), 1, []byte("foo"), true)
+	result, err := s.rootStore.Query([]byte(testStoreKey), 0, []byte("foo"), true)
 	s.Require().NoError(err)
 	s.Require().NotNil(result.ProofOps)
 	s.Require().Equal([]byte("foo"), result.ProofOps[0].Key)
@@ -117,17 +117,17 @@ func (s *RootStoreTestSuite) TestGetFallback() {
 	err := sc.WriteChangeset(cs)
 	s.Require().NoError(err)
 
-	ci := sc.WorkingCommitInfo(1)
+	ci := sc.WorkingCommitInfo(0)
 	_, err = sc.Commit(ci.Version)
 	s.Require().NoError(err)
 
 	// ensure we can query for the key, which should fallback to SC
-	qResult, err := s.rootStore.Query(testStoreKeyBytes, 1, []byte("foo"), false)
+	qResult, err := s.rootStore.Query(testStoreKeyBytes, 0, []byte("foo"), false)
 	s.Require().NoError(err)
 	s.Require().Equal([]byte("bar"), qResult.Value)
 
 	// non-existent key
-	qResult, err = s.rootStore.Query(testStoreKeyBytes, 1, []byte("non_existent_key"), false)
+	qResult, err = s.rootStore.Query(testStoreKeyBytes, 0, []byte("non_existent_key"), false)
 	s.Require().NoError(err)
 	s.Require().Nil(qResult.Value)
 }
@@ -147,10 +147,10 @@ func (s *RootStoreTestSuite) TestQueryProof() {
 	s.Require().NoError(err)
 
 	// query proof for testStoreKey
-	result, err := s.rootStore.Query(testStoreKeyBytes, 1, []byte("key1"), true)
+	result, err := s.rootStore.Query(testStoreKeyBytes, 0, []byte("key1"), true)
 	s.Require().NoError(err)
 	s.Require().NotNil(result.ProofOps)
-	cInfo, err := s.rootStore.GetStateCommitment().GetCommitInfo(1)
+	cInfo, err := s.rootStore.GetStateCommitment().GetCommitInfo(0)
 	s.Require().NoError(err)
 	storeHash := cInfo.GetStoreCommitID(testStoreKeyBytes).Hash
 	treeRoots, err := result.ProofOps[0].Run([][]byte{[]byte("value1")})
@@ -163,7 +163,7 @@ func (s *RootStoreTestSuite) TestQueryProof() {
 
 func (s *RootStoreTestSuite) TestLoadVersion() {
 	// write and commit a few changesets
-	for v := 1; v <= 5; v++ {
+	for v := 0; v <= 4; v++ {
 		val := fmt.Sprintf("val%03d", v) // val001, val002, ..., val005
 
 		cs := corestore.NewChangeset()
@@ -177,7 +177,7 @@ func (s *RootStoreTestSuite) TestLoadVersion() {
 	// ensure the latest version is correct
 	latest, err := s.rootStore.GetLatestVersion()
 	s.Require().NoError(err)
-	s.Require().Equal(uint64(5), latest)
+	s.Require().Equal(uint64(4), latest)
 
 	// attempt to load a non-existent version
 	err = s.rootStore.LoadVersion(6)
@@ -272,7 +272,7 @@ func (s *RootStoreTestSuite) TestCommit() {
 
 func (s *RootStoreTestSuite) TestStateAt() {
 	// write keys over multiple versions
-	for v := uint64(1); v <= 5; v++ {
+	for v := uint64(0); v <= 4; v++ {
 		// perform changes
 		cs := corestore.NewChangeset()
 		for i := 0; i < 100; i++ {
@@ -290,10 +290,10 @@ func (s *RootStoreTestSuite) TestStateAt() {
 
 	lv, err := s.rootStore.GetLatestVersion()
 	s.Require().NoError(err)
-	s.Require().Equal(uint64(5), lv)
+	s.Require().Equal(uint64(4), lv)
 
 	// ensure we can read state correctly at each version
-	for v := uint64(1); v <= 5; v++ {
+	for v := uint64(0); v <= 4; v++ {
 		ro, err := s.rootStore.StateAt(v)
 		s.Require().NoError(err)
 

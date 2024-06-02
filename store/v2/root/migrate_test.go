@@ -49,7 +49,7 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 	// apply changeset against the original store
 	toVersion := uint64(200)
 	keyCount := 10
-	for version := uint64(1); version <= toVersion; version++ {
+	for version := uint64(0); version < toVersion; version++ {
 		cs := corestore.NewChangeset()
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
@@ -91,7 +91,7 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 	s.Require().NoError(err)
 
 	// check if the Query fallback to the original SC
-	for version := uint64(1); version <= originalLatestVersion; version++ {
+	for version := uint64(0); version <= originalLatestVersion; version++ {
 		for _, storeKey := range storeKeys {
 			for i := 0; i < 10; i++ {
 				res, err := s.rootStore.Query([]byte(storeKey), version, []byte(fmt.Sprintf("key-%d-%d", version, i)), true)
@@ -131,7 +131,7 @@ func (s *MigrateStoreTestSuite) TestMigrateState() {
 	s.Require().Equal(latestVersion, version)
 
 	// query against the migrated store
-	for version := uint64(1); version <= latestVersion; version++ {
+	for version := uint64(0); version <= latestVersion; version++ {
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
 				targetVersion := version

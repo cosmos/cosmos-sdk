@@ -132,8 +132,11 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 		}
 	}
 
+	// since iavl start at version 1 instead of 0
+	treeVer := targetVersion + 1
+
 	for _, tree := range c.multiTrees {
-		if err := tree.LoadVersion(targetVersion); err != nil {
+		if err := tree.LoadVersion(treeVer); err != nil {
 			return err
 		}
 	}
@@ -202,7 +205,7 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 		// will be larger than the RMS's metadata, when the block is replayed, we
 		// should avoid committing that iavl store again.
 		var commitID proof.CommitID
-		if tree.GetLatestVersion() >= version && version > 0 {
+		if tree.GetLatestVersion() > version && version > 0 {
 			commitID.Version = version
 			commitID.Hash = tree.Hash()
 		} else {
@@ -249,7 +252,10 @@ func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]p
 		return nil, fmt.Errorf("store %s not found", storeKey)
 	}
 
-	iProof, err := tree.GetProof(version, key)
+	// since iavl still start version at 1
+	treeVer := version + 1
+
+	iProof, err := tree.GetProof(treeVer, key)
 	if err != nil {
 		return nil, err
 	}
@@ -275,7 +281,10 @@ func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, 
 		return nil, fmt.Errorf("store %s not found", storeKey)
 	}
 
-	bz, err := tree.Get(version, key)
+	// since iavl still start version at 1
+	treeVer := version + 1
+
+	bz, err := tree.Get(treeVer, key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get key %s from store %s: %w", key, storeKey, err)
 	}
@@ -300,8 +309,11 @@ func (c *CommitStore) Prune(version uint64) (ferr error) {
 		return err
 	}
 
+	// since iavl start at version 1 instead of 0
+	treeVer := version + 1
+
 	for _, tree := range c.multiTrees {
-		if err := tree.Prune(version); err != nil {
+		if err := tree.Prune(treeVer); err != nil {
 			ferr = errors.Join(ferr, err)
 		}
 	}
@@ -332,10 +344,13 @@ func (c *CommitStore) Snapshot(version uint64, protoWriter protoio.Writer) error
 		return fmt.Errorf("the snapshot version %d is greater than the latest version %d", version, latestVersion)
 	}
 
+	// since iavl start at version 1 instead of 0
+	treeVer := version + 1
+
 	for storeKey, tree := range c.multiTrees {
 		// TODO: check the parallelism of this loop
 		if err := func() error {
-			exporter, err := tree.Export(version)
+			exporter, err := tree.Export(treeVer)
 			if err != nil {
 				return fmt.Errorf("failed to export tree for version %d: %w", version, err)
 			}
@@ -417,7 +432,11 @@ loop:
 			if tree == nil {
 				return snapshotstypes.SnapshotItem{}, fmt.Errorf("store %s not found", item.Store.Name)
 			}
-			importer, err = tree.Import(version)
+
+			// since iavl still start version at 1
+			treeVer := version + 1
+
+			importer, err = tree.Import(treeVer)
 			if err != nil {
 				return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to import tree for version %d: %w", version, err)
 			}

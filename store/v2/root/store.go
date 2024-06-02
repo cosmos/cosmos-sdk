@@ -401,14 +401,14 @@ func (s *Store) writeSC(cs *corestore.Changeset) error {
 		// 2. There was no previous commit, and initial version was not set, in which
 		// 		case we start at version 0.
 		previousHeight = s.lastCommitInfo.GetVersion()
-		if previousHeight == 0 {
-			version = previousHeight
+		if s.lastCommitInfo == nil {
+			version = 0
 		} else {
 			version = previousHeight + 1
 		}
+
 	}
 
-	fmt.Println(version)
 	s.lastCommitInfo = s.stateCommitment.WorkingCommitInfo(version)
 
 	return nil

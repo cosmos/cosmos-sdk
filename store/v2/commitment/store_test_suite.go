@@ -33,9 +33,9 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, log.NewNopLogger())
 	s.Require().NoError(err)
 
-	latestVersion := uint64(10)
+	latestVersion := uint64(9)
 	kvCount := 10
-	for i := uint64(1); i <= latestVersion; i++ {
+	for i := uint64(0); i <= latestVersion; i++ {
 		kvPairs := make(map[string]corestore.KVPairs)
 		for _, storeKey := range storeKeys {
 			kvPairs[storeKey] = corestore.KVPairs{}
@@ -99,9 +99,9 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 
 	close(chStorage)
 	wg.Wait()
-	s.Require().Equal(len(storeKeys)*kvCount*int(latestVersion), len(leaves))
+	s.Require().Equal(len(storeKeys)*kvCount*int(latestVersion+1), len(leaves))
 	for _, storeKey := range storeKeys {
-		for i := 1; i <= int(latestVersion); i++ {
+		for i := 0; i <= int(latestVersion); i++ {
 			for j := 0; j < kvCount; j++ {
 				key := fmt.Sprintf("%s_key-%d-%d", storeKey, i, j)
 				s.Require().Equal(leaves[key], fmt.Sprintf("value-%d-%d", i, j))

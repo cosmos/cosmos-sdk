@@ -58,11 +58,11 @@ func ProvideExampleMintFn(bankKeeper bankkeeper.Keeper) minttypes.MintFn {
 
 		// to get a more accurate amount of tokens minted, we get, and later store, last minting time.
 
-		// if this is the first time minting, we initialize the minter.Data with the current time - 10s
-		// to mint a small amount of tokens at the beginning. Note: this is a custom behavior to avoid breaking tests.
+		// if this is the first time minting, we initialize the minter.Data with the current time - 60s
+		// to mint tokens at the beginning. Note: this is a custom behavior to avoid breaking tests.
 		if minter.Data == nil {
 			minter.Data = make([]byte, 8)
-			binary.BigEndian.PutUint64(minter.Data, (uint64)(env.HeaderService.HeaderInfo(ctx).Time.Unix()-10))
+			binary.BigEndian.PutUint64(minter.Data, (uint64)(env.HeaderService.HeaderInfo(ctx).Time.Unix()-60))
 		}
 
 		lastMint := binary.BigEndian.Uint64(minter.Data)

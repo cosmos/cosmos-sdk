@@ -6,6 +6,7 @@ option go_package = "cosmossdk.io/x/mint/types";
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
+import "google/protobuf/any.proto";
 
 // Minter represents the minting state.
 message Minter {
@@ -22,7 +23,9 @@ message Minter {
     (gogoproto.nullable)   = false
   ];
 
-  map<string, string> arbitrary_params = 3;
+  // data is any custom data that the user might want to put in the minter, to
+  // be used in the minting process.
+  bytes data = 3;
 }
 
 // Params defines the parameters for the x/mint module.

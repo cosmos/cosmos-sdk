@@ -2,6 +2,7 @@ package simapp
 
 import (
 	"context"
+	"encoding/binary"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
@@ -55,8 +56,21 @@ func ProvideExampleMintFn(bankKeeper bankkeeper.Keeper) minttypes.MintFn {
 		minter.Inflation = minter.NextInflationRate(mintParams.Params, bondedRatio)
 		minter.AnnualProvisions = minter.NextAnnualProvisions(mintParams.Params, stakingTokenSupply.Amount)
 
-		// because we are minting every minute, we need to divide the annual provisions by minutes in a year (525600)
-		provisionAmt := minter.AnnualProvisions.QuoInt64(525600)
+		// to get a more accurate amount of tokens minted, we get, and later store, last minting time.
+
+		// if this is the first time minting, we initialize the minter.Data with the current time - 10s
+		// to mint a small amount of tokens at the beginning. Note: this is a custom behavior to avoid breaking tests.
+		if minter.Data == nil {
+			minter.Data = make([]byte, 8)
+			binary.BigEndian.PutUint64(minter.Data, (uint64)(env.HeaderService.HeaderInfo(ctx).Time.Unix()-10))
+		}
+
+		lastMint := binary.BigEndian.Uint64(minter.Data)
+		binary.BigEndian.PutUint64(minter.Data, (uint64)(env.HeaderService.HeaderInfo(ctx).Time.Unix()))
+
+		// calculate the amount of tokens to mint, based on the time since the last mint
+		secsSinceLastMint := env.HeaderService.HeaderInfo(ctx).Time.Unix() - (int64)(lastMint)
+		provisionAmt := minter.AnnualProvisions.QuoInt64(31536000).MulInt64(secsSinceLastMint) // 31536000 = seconds in a year
 		mintedCoin := sdk.NewCoin(mintParams.Params.MintDenom, provisionAmt.TruncateInt())
 		mintedCoins := sdk.NewCoins(mintedCoin)
 		maxSupply := mintParams.Params.MaxSupply

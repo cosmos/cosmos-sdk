@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/math"
 	authtypes "cosmossdk.io/x/auth/types"
-	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
 	minttypes "cosmossdk.io/x/mint/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -17,12 +16,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+type bankKeeper interface {
+	MintCoins(ctx context.Context, moduleName string, coins sdk.Coins) error
+	SendCoinsFromModuleToModule(ctx context.Context, senderModule string, recipientModule string, amt sdk.Coins) error
+}
+
 // ProvideExampleMintFn returns the function used in x/mint's endblocker to mint new tokens.
 // Note that this function can not have the mint keeper as a parameter because it would create a cyclic dependency.
-func ProvideExampleMintFn(bankKeeper bankkeeper.Keeper) minttypes.MintFn {
-	return func(ctx context.Context, env appmodule.Environment, minter *minttypes.Minter, epochId string, epochNumber int64) error {
+func ProvideExampleMintFn(bankKeeper bankKeeper) minttypes.MintFn {
+	return func(ctx context.Context, env appmodule.Environment, minter *minttypes.Minter, epochID string, epochNumber int64) error {
 		// in this example we ignore epochNumber as we don't care what epoch we are in, we just assume we are being called every minute.
-		if epochId != "minute" {
+		if epochID != "minute" {
 			return nil
 		}
 

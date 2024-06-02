@@ -133,6 +133,7 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 	}
 
 	// since iavl start at version 1 instead of 0
+	// TODO: revert this after iavl support create state at version 0
 	treeVer := targetVersion + 1
 
 	for _, tree := range c.multiTrees {
@@ -253,6 +254,7 @@ func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]p
 	}
 
 	// since iavl still start version at 1
+	// TODO: revert this after iavl support create state at version 0
 	treeVer := version + 1
 
 	iProof, err := tree.GetProof(treeVer, key)
@@ -281,7 +283,8 @@ func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, 
 		return nil, fmt.Errorf("store %s not found", storeKey)
 	}
 
-	// since iavl still start version at 1
+	// since iavl still start at version 1 instead of 0
+	// TODO: revert this after iavl support create state at version 0
 	treeVer := version + 1
 
 	bz, err := tree.Get(treeVer, key)
@@ -310,6 +313,7 @@ func (c *CommitStore) Prune(version uint64) (ferr error) {
 	}
 
 	// since iavl start at version 1 instead of 0
+	// TODO: revert this after iavl support create state at version 0
 	treeVer := version + 1
 
 	for _, tree := range c.multiTrees {
@@ -433,7 +437,8 @@ loop:
 				return snapshotstypes.SnapshotItem{}, fmt.Errorf("store %s not found", item.Store.Name)
 			}
 
-			// since iavl still start version at 1
+			// since iavl still start at version 1 instead of 0
+			// TODO: revert this after iavl support create state at version 0
 			treeVer := version + 1
 
 			importer, err = tree.Import(treeVer)

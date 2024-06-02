@@ -3,8 +3,9 @@ package types
 import (
 	"testing"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/math"
 )
 
 func TestValidate(t *testing.T) {

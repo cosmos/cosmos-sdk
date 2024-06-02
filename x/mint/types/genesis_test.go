@@ -18,5 +18,4 @@ func TestGenesis(t *testing.T) {
 	err = ValidateGenesis(*defaultGs)
 	require.NoError(t, err)
 	require.Equal(t, gs, defaultGs)
-
 }

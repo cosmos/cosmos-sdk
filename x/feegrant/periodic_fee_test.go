@@ -10,11 +10,10 @@ import (
 
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
+	"cosmossdk.io/core/appmodule/v2"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -222,10 +221,12 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			}
 
 			ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: tc.blockTime})
-			env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 			// now try to deduct
 			// Set environment to ctx
-			remove, err := tc.allow.Accept(context.WithValue(ctx, corecontext.EnvironmentContextKey, env), tc.fee, []sdk.Msg{})
+			remove, err := tc.allow.Accept(context.WithValue(ctx, corecontext.EnvironmentContextKey, appmodule.Environment{
+				HeaderService: mockHeaderService{},
+				GasService:    mockGasService{},
+			}), tc.fee, []sdk.Msg{})
 			if !tc.accept {
 				require.Error(t, err)
 				return

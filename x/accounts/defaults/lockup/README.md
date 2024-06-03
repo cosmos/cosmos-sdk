@@ -76,9 +76,9 @@ type BaseClawback struct {
 
 ### Clawback enabled vs disabled
 
-Clawback enabled lockup account will be able to trigger a clawback execution by the admin to claw the remain locked token in the lockup account. Other execution still need to be triggered by the account owner.
+Clawback are an extension to normal lockup account, the differances between a clawback enabled account and normal account is the BaseAccount interface implementer passed during account creation.
 
-If a lockup account is clawback enabled, it will not be able to perform actions such as delegate, undelegate, or withdraw rewards.
+Clawback enabled lockup account will be able to trigger a clawback execution by the admin to claw the remain locked token in the lockup account. Other execution still need to be triggered by the account owner. It will not be able to perform actions such as delegate, undelegate, or withdraw rewards like the default lockup account.
 
 ```mermaid
 flowchart TD 
@@ -247,6 +247,51 @@ type PermanentLockingAccount struct {
 	*BaseAccount
 }
 ```
+
+## How lockup work
+
+### Clawback enable account
+
+Clawback: 
+    - Determined the locked amount of token. This differ for each lockup type GetLockedCoinsWithDenoms function.
+    - Check the sender of the execute message is the address of the admin (account owner cannot trigger this execution), the sender will be check for imposter through auth ante handler with the key that use to sign the transaction.
+    - If amount not empty, send a bank module SendCoin message through enviroment router service, FromAddress is the lockup account address and ToAddress is the admin address stored by BaseClawback.
+    - Clear all the current tracking of locked token
+
+### Clawback disable account
+
+Delegate: 
+    - Determined the locked amount of tokens. This differ for each lockup type GetLockedCoinsWithDenoms function.
+    - Calculate the amount of locked tokens that are not bonded yet. X = Max(lockedAmount - delegatedLockingAmount, 0).
+    - If X > 0 indicates that some locked token is still being used to delegate: add the X amount into the current DelegatedLocking amount.
+    - Compare the delegate amount with X:
+        + If larger: update the amount of the DelegatedFree equal to the delegate amount and add the subtract of delegate amount and X amount.
+
+Undelegate: 
+    - Determined the locked amount of tokens. This differ for each lockup type GetLockedCoinsWithDenoms function.
+    - Calculate X =Min(delegatedFreeAmount, delegateAmount); 
+                Y = Min(delegatedLockingAmountt, delegateAmount - X)
+    - If X > 0 indicates that there are not locked token being bonded hence delegatedFreeAmount is not empty: subtract delegatedFreeAmount with X.
+    - If Y > 0 indicates that there are still locked token being bonded hence delegateAmount > X in this case is the delegatedFreeAmount: subtract delegatedLockingAmount with Y.
+
+Withdraw Reward: 
+    - Send the distribution module's withdrawDelegationRewards message through enviroment router service.
+
+### Shared execute handlers
+
+SendCoins:
+    - Determined the locked amount of tokens. This differ for each lockup type GetLockedCoinsWithDenoms function.
+    - Get the lockup account balance for the sent denom through enviroment query service.
+    - Calculate the non-bonded locked token amount. notBondedLocked = lockedAmount - Min(delegateAmount, lockedAmount)
+    - Calculate the spendable token, spendable = balance - notBondedLocked
+    - Check if spendable amount is enough for the send amount.
+    - Send a bank module SendCoin message through enviroment router service.
+
+Withdraw Unlocked Tokens:
+    - Like SendCoins, calculate the spendable token.
+    - Get the withdraw amount = Min(total locked amount - withdrawed amount, spenable amount).
+    - Send a bank module SendCoin message through enviroment router service. With amount equal to withdraw amount.
+    - Add the withdraw amount to WithdrawedAmount tracking.
 
 ## Genesis Initialization
 

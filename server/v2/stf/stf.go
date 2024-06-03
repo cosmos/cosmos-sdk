@@ -7,6 +7,7 @@ import (
 
 	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
@@ -587,11 +588,12 @@ func (s STF[T]) makeContext(
 	store store.WriterMap,
 	execMode transaction.ExecMode,
 ) *executionContext {
+	valuedCtx := context.WithValue(ctx, corecontext.ExecModeKey, execMode)
 	return newExecutionContext(
 		s.makeGasMeter,
 		s.makeGasMeteredState,
 		s.branchFn,
-		ctx,
+		valuedCtx,
 		sender,
 		store,
 		execMode,

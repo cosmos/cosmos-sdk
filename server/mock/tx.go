@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"fmt"
 
-	proto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/auth/signing"
 
@@ -104,7 +104,7 @@ func (msg *KVStoreTx) GetGasLimit() (uint64, error) {
 	return 0, nil
 }
 
-func (msg *KVStoreTx) GetMessages() ([]proto.Message, error) {
+func (msg *KVStoreTx) GetMessages() ([]transaction.Msg, error) {
 	return nil, nil
 }
 

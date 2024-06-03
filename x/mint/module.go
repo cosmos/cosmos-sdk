@@ -58,10 +58,6 @@ func NewAppModule(
 	ak types.AccountKeeper,
 	mintFn types.MintFn,
 ) AppModule {
-	if mintFn == nil {
-		mintFn = keeper.DefaultMintFn
-	}
-
 	return AppModule{
 		cdc:        cdc,
 		keeper:     keeper,

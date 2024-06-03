@@ -27,11 +27,12 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	ModuleKey   depinject.OwnModuleKey
-	Config      *modulev1.Module
-	Environment appmodule.Environment
-	Cdc         codec.Codec
-	MintFn      types.MintFn `optional:"true"`
+	ModuleKey              depinject.OwnModuleKey
+	Config                 *modulev1.Module
+	Environment            appmodule.Environment
+	Cdc                    codec.Codec
+	MintFn                 types.MintFn                 `optional:"true"`
+	InflationCalculationFn types.InflationCalculationFn `optional:"true"` // deprecated
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -73,7 +74,20 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		as,
 	)
 
-	// when no mint function is provided it will use the default keeper.DefaultMintFn
+	// if no mintFn is provided, use the default minting function
+	if in.MintFn == nil {
+		// if no inflationCalculationFn is provided, use the default inflation calculation function
+		if in.InflationCalculationFn == nil {
+			in.InflationCalculationFn = types.DefaultInflationCalculationFn
+		}
+
+		in.MintFn = k.DefaultMintFn(in.InflationCalculationFn)
+	}
+
+	if in.MintFn != nil && in.InflationCalculationFn != nil {
+		panic("MintFn and InflationCalculationFn cannot both be set")
+	}
+
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.MintFn)
 
 	return ModuleOutputs{MintKeeper: k, Module: m, EpochHooks: epochstypes.EpochHooksWrapper{EpochHooks: m}}

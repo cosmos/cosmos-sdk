@@ -37,6 +37,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#20502](https://github.com/cosmos/cosmos-sdk/pull/20502) `Accept` on the `Authorization` interface now expects the authz environment in the `context.Context`. This is already done when `Accept` is called by `k.DispatchActions`, but should be done manually if `Accept` is called directly.
 * [#19954](https://github.com/cosmos/cosmos-sdk/pull/19954) Removal of the Address.String() method and related changes:
     * Changed `NewInput`, `NewOutput`, `NewQueryBalanceRequest`, `NewQueryAllBalancesRequest`, `NewQuerySpendableBalancesRequest` to accept a string instead of an `AccAddress`.
     * Added an address codec as an argument to `NewSendAuthorization`.

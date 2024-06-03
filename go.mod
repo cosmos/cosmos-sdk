@@ -55,7 +55,7 @@ require (
 	github.com/tendermint/go-amino v0.16.0
 	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b
 	golang.org/x/crypto v0.23.0
-	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
+	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc
 	golang.org/x/sync v0.7.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240318140521-94a12d6c2237
 	google.golang.org/grpc v1.64.0

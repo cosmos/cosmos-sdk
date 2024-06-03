@@ -688,6 +688,7 @@ To learn more see the [docs](https://docs.cosmos.network/main/learn/advanced/tra
 	* mention changes with sdk context removal
 	* mention changes with environment
 	* mention changes with environment in context in interfaces
+	* mention legacy proposal in gov when using server/v2 if using sdk context must be rewritten
 -->
 
 #### `**all**`

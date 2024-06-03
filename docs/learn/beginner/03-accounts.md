@@ -21,44 +21,21 @@ In the Cosmos SDK, an _account_ designates a pair of _public key_ `PubKey` and _
 
 For HD key derivation the Cosmos SDK uses a standard called [BIP32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki). The BIP32 allows users to create an HD wallet (as specified in [BIP44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki)) - a set of accounts derived from an initial secret seed. A seed is usually created from a 12- or 24-word mnemonic. A single seed can derive any number of `PrivKey`s using a one-way cryptographic function. Then, a `PubKey` can be derived from the `PrivKey`. Naturally, the mnemonic is the most sensitive information, as private keys can always be re-generated if the mnemonic is preserved.
 
-```text
-     Account 0                         Account 1                         Account 2
-
-+------------------+              +------------------+               +------------------+
-|                  |              |                  |               |                  |
-|    Address 0     |              |    Address 1     |               |    Address 2     |
-|        ^         |              |        ^         |               |        ^         |
-|        |         |              |        |         |               |        |         |
-|        |         |              |        |         |               |        |         |
-|        |         |              |        |         |               |        |         |
-|        +         |              |        +         |               |        +         |
-|  Public key 0    |              |  Public key 1    |               |  Public key 2    |
-|        ^         |              |        ^         |               |        ^         |
-|        |         |              |        |         |               |        |         |
-|        |         |              |        |         |               |        |         |
-|        |         |              |        |         |               |        |         |
-|        +         |              |        +         |               |        +         |
-|  Private key 0   |              |  Private key 1   |               |  Private key 2   |
-|        ^         |              |        ^         |               |        ^         |
-+------------------+              +------------------+               +------------------+
-         |                                 |                                  |
-         |                                 |                                  |
-         |                                 |                                  |
-         +--------------------------------------------------------------------+
-                                           |
-                                           |
-                                 +---------+---------+
-                                 |                   |
-                                 |  Master PrivKey   |
-                                 |                   |
-                                 +-------------------+
-                                           |
-                                           |
-                                 +---------+---------+
-                                 |                   |
-                                 |  Mnemonic (Seed)  |
-                                 |                   |
-                                 +-------------------+
+```mermaid
+graph BT
+    A0A[Address 0] --> A0[Account 0]
+    A0PK[Public key 0] --> A0A[Address 0]
+    A0SK[Private key 0] --> A0PK[Public key 0]
+    A1A[Address 1] --> A1[Account 1]
+    A1PK[Public key 1] --> A1A[Address 1]
+    A1SK[Private key 1] --> A1PK[Public key 1]
+    A2A[Address 2] --> A2[Account 2]
+    A2PK[Public key 2] --> A2A[Address 2]
+    A2SK[Private key 2] --> A2PK[Public key 2]
+    MasterPK[Master PrivKey] --> A0SK[Private key 0]
+    MasterPK[Master PrivKey] --> A1SK[Private key 1]
+    MasterPK[Master PrivKey] --> A2SK[Private key 2]
+    Mnemonic["Mnemonic (Seed)"] --> MasterPK[Master PrivKey]
 ```
 
 In the Cosmos SDK, keys are stored and managed by using an object called a [`Keyring`](#keyring).

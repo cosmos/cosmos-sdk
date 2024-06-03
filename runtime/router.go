@@ -59,11 +59,13 @@ func (m *msgRouterService) InvokeTyped(ctx context.Context, msg, resp protoiface
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	resp, err := handler(sdkCtx, msg)
+	var err error
+	resp, err = handler(sdkCtx, msg) // Assign value to resp
+	if err != nil {
+		return err
+	}
 
-	resp = resp
-
-	return err
+	return nil
 }
 
 // InvokeUntyped execute a message and returns a response.
@@ -128,13 +130,20 @@ func (m *queryRouterService) InvokeTyped(ctx context.Context, req, resp protoifa
 
 	var err error
 
+	bz, err := proto.Marshal(req)
+	if err != nil {
+		return err
+	}
 	qreq := v1.QueryRequest{
-		Data: req,
+		Data: bz,
 	}
 
-	resp, err = handlers(sdk.UnwrapSDKContext(ctx), &qreq)
+	abciResp, err := handlers(sdk.UnwrapSDKContext(ctx), &qreq)
+	if err != nil {
+		return err
+	}
 
-	return err
+	return proto.Unmarshal(abciResp.Value, resp)
 }
 
 // InvokeUntyped execute a message and returns a response.

@@ -106,18 +106,18 @@ func (m *MockAccountsModKeeper) EXPECT() *MockAccountsModKeeperMockRecorder {
 	return m.recorder
 }
 
-// InitAccountNumberSeq mocks base method.
-func (m *MockAccountsModKeeper) InitAccountNumberSeq(ctx context.Context, currentAccNum uint64) error {
+// InitAccountNumberSeqUnsafe mocks base method.
+func (m *MockAccountsModKeeper) InitAccountNumberSeqUnsafe(ctx context.Context, currentAccNum uint64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InitAccountNumberSeq", ctx, currentAccNum)
+	ret := m.ctrl.Call(m, "InitAccountNumberSeqUnsafe", ctx, currentAccNum)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// InitAccountNumberSeq indicates an expected call of InitAccountNumberSeq.
-func (mr *MockAccountsModKeeperMockRecorder) InitAccountNumberSeq(ctx, currentAccNum interface{}) *gomock.Call {
+// InitAccountNumberSeqUnsafe indicates an expected call of InitAccountNumberSeqUnsafe.
+func (mr *MockAccountsModKeeperMockRecorder) InitAccountNumberSeqUnsafe(ctx, currentAccNum interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitAccountNumberSeq", reflect.TypeOf((*MockAccountsModKeeper)(nil).InitAccountNumberSeq), ctx, currentAccNum)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitAccountNumberSeqUnsafe", reflect.TypeOf((*MockAccountsModKeeper)(nil).InitAccountNumberSeqUnsafe), ctx, currentAccNum)
 }
 
 // IsAccountsModuleAccount mocks base method.

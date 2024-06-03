@@ -21,7 +21,7 @@ type AccountsModKeeper interface {
 	IsAccountsModuleAccount(ctx context.Context, accountAddr []byte) bool
 	NextAccountNumber(ctx context.Context) (accNum uint64, err error)
 
-	// InitAccountNumberSeq is use to set accounts module account number with value
+	// InitAccountNumberSeqUnsafe is use to set accounts module account number with value
 	// of auth module current account number
-	InitAccountNumberSeq(ctx context.Context, currentAccNum uint64) error
+	InitAccountNumberSeqUnsafe(ctx context.Context, currentAccNum uint64) error
 }

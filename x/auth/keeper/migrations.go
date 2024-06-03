@@ -59,7 +59,7 @@ func (m Migrator) Migrate5To6(ctx context.Context) error {
 		return err
 	}
 
-	return m.keeper.AccountsModKeeper.InitAccountNumberSeq(ctx, currentAccNum)
+	return m.keeper.AccountsModKeeper.InitAccountNumberSeqUnsafe(ctx, currentAccNum)
 }
 
 // V45SetAccount implements V45_SetAccount

@@ -118,9 +118,9 @@ func (k Keeper) NextAccountNumber(
 	return accNum, nil
 }
 
-// InitAccountNumberSeq use to set accounts account number tracking.
+// InitAccountNumberSeqUnsafe use to set accounts account number tracking.
 // Only use for account number migration.
-func (k Keeper) InitAccountNumberSeq(ctx context.Context, accNum uint64) error {
+func (k Keeper) InitAccountNumberSeqUnsafe(ctx context.Context, accNum uint64) error {
 	currentNum, err := k.AccountNumber.Peek(ctx)
 	if err != nil {
 		return err

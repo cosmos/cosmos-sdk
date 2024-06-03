@@ -78,7 +78,7 @@ type BaseClawback struct {
 
 Clawback enabled lockup account will be able to trigger a clawback execution by the admin to claw the remain locked token in the lockup account. Other execution still need to be triggered by the account owner.
 
-If an lockup account is clawback enable, it will not be able to perform action such as: delegate, undelegate, withdrawReward. 
+If a lockup account is clawback enabled, it will not be able to perform actions such as delegate, undelegate, or withdraw rewards.
 
 ### How to enable clawback
 

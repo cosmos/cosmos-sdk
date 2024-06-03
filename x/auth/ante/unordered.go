@@ -1,7 +1,9 @@
 package ante
 
 import (
+	"bytes"
 	"crypto/sha256"
+	"sync"
 
 	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
@@ -11,6 +13,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
+
+// bufPool is a pool of bytes.Buffer objects to reduce memory allocations.
+var bufPool = sync.Pool{
+	New: func() interface{} {
+		return new(bytes.Buffer)
+	},
+}
 
 var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
 
@@ -62,7 +71,27 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unordered tx ttl exceeds %d", d.maxUnOrderedTTL)
 	}
 
-	txHash := sha256.Sum256(ctx.TxBytes())
+	// in order to create a deterministic hash based on the tx, we need to hash the contents of the tx with signature
+	// Get a Buffer from the pool
+	buf := bufPool.Get().(*bytes.Buffer)
+	// Make sure to reset the buffer
+	buf.Reset()
+
+	// Use the buffer
+	for _, msgs := range tx.GetMsgs() {
+		buf.Write([]byte(msgs.String()))
+	}
+
+	sigTx, ok := tx.(sdk.Signature)
+	if !ok {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "tx must implement Signature interface")
+	}
+	buf.Write(sigTx.GetSignature())
+
+	txHash := sha256.Sum256(buf.Bytes())
+
+	// Return the Buffer to the pool
+	bufPool.Put(buf)
 
 	// check for duplicates
 	if d.txManager.Contains(txHash) {

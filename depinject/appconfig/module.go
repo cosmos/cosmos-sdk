@@ -3,8 +3,9 @@ package appconfig
 import (
 	"reflect"
 
-	internal "cosmossdk.io/depinject/internal/appconfig"
 	"github.com/cosmos/gogoproto/proto"
+
+	internal "cosmossdk.io/depinject/internal/appconfig"
 )
 
 var Register = RegisterModule

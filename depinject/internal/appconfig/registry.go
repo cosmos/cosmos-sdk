@@ -5,10 +5,10 @@ import (
 	"reflect"
 
 	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/protoadapt"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	"google.golang.org/protobuf/protoadapt"
 	"github.com/cosmos/gogoproto/proto"
 )
 

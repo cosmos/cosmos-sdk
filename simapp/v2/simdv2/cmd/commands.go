@@ -4,10 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-<<<<<<< HEAD
-	"os"
-=======
->>>>>>> cadd5e13a37c475a55084ebd6add4dc2102fd1d3
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"

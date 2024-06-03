@@ -31,7 +31,6 @@ import (
 
 	corectx "cosmossdk.io/core/context"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/pelletier/go-toml/v2"
 )
 
 const (

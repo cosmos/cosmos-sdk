@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"os"
-	"path/filepath"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -21,7 +19,6 @@ import (
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
-	"github.com/pelletier/go-toml/v2"
 )
 
 const serverName = "grpc-server"
@@ -74,7 +71,7 @@ func (g GRPCServer) Init(appI serverv2.App[transaction.Tx], v *viper.Viper, logg
 func New(logger log.Logger, v *viper.Viper, interfaceRegistry appmanager.InterfaceRegistry) (GRPCServer, error) {
 	cfg := DefaultConfig()
 	if v != nil {
-		if err := v.Unmarshal(&cfg); err != nil {
+		if err := v.Sub(serverName).Unmarshal(&cfg); err != nil {
 			return GRPCServer{}, fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}

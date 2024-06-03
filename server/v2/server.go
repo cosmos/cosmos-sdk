@@ -32,7 +32,6 @@ type HasCLICommands interface {
 // HasConfig is a server module that has a config.
 type HasConfig interface {
 	Config() any
-	WriteConfig(string) error
 }
 
 // HasStartFlags is a server module that has start flags.

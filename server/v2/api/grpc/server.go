@@ -140,19 +140,6 @@ func (g GRPCServer) Config() any {
 	return g.config
 }
 
-func (s GRPCServer) WriteConfig(configPath string) error {
-	cfg := s.Config()
-	b, err := toml.Marshal(cfg)
-	if err != nil {
-		return fmt.Errorf("failed to marshal config: %w", err)
-	}
-
-	if err := os.WriteFile(filepath.Join(configPath, "app.toml"), b, 0o666); err != nil {
-		return fmt.Errorf("failed to write config: %w", err)
-	}
-	return nil
-}
-
 type protoCodec struct {
 	interfaceRegistry appmanager.InterfaceRegistry
 }

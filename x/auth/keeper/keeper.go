@@ -99,9 +99,9 @@ type AccountKeeper struct {
 	authority string
 
 	// State
-	Schema collections.Schema
-	Params collections.Item[types.Params]
-
+	Schema        collections.Schema
+	Params        collections.Item[types.Params]
+	AccountNumber collections.Sequence
 	// Accounts key: AccAddr | value: AccountI | index: AccountsIndex
 	Accounts *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
 }
@@ -135,6 +135,7 @@ func NewAccountKeeper(
 		permAddrs:         permAddrs,
 		authority:         authority,
 		Params:            collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		AccountNumber:     collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
 		Accounts:          collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
 	}
 	schema, err := sb.Build()

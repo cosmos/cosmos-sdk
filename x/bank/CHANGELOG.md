@@ -33,6 +33,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * [#18636](https://github.com/cosmos/cosmos-sdk/pull/18636) `SendCoinsFromModuleToAccount`, `SendCoinsFromModuleToModule`, `SendCoinsFromAccountToModule`, `DelegateCoinsFromAccountToModule`, `UndelegateCoinsFromModuleToAccount`, `MintCoins` and `BurnCoins` methods now returns an error instead of panicking if any module accounts does not exist or unauthorized.
+* [#20517](https://github.com/cosmos/cosmos-sdk/pull/20517) `SendCoins` now checks for `SendRestrictions` before instead of after deducting coins using `subUnlockedCoins`.
 
 ### API Breaking Changes
 

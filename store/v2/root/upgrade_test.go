@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
@@ -14,7 +16,6 @@ import (
 	"cosmossdk.io/store/v2/pruning"
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/sqlite"
-	"github.com/stretchr/testify/suite"
 )
 
 type UpgradeStoreTestSuite struct {

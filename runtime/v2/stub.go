@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/core/store"
 )
 
+// failingStoreService is a stub implementation of a store service that always fails.
 type failingStoreService struct{}
 
 func (failingStoreService) OpenKVStore(ctx context.Context) store.KVStore {

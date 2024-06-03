@@ -9,6 +9,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"cosmossdk.io/core/appmodule"
+	corecontext "cosmossdk.io/core/context"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -91,8 +92,10 @@ func (a *AllowedMsgAllowance) Accept(ctx context.Context, fee sdk.Coins, msgs []
 
 func (a *AllowedMsgAllowance) allowedMsgsToMap(ctx context.Context) map[string]bool {
 	msgsMap := make(map[string]bool, len(a.AllowedMessages))
-	e := ctx.Value(ContextKey)
-	environment := e.(appmodule.Environment)
+	environment, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodule.Environment)
+	if !ok {
+		return nil
+	}
 	gasMeter := environment.GasService.GasMeter(ctx)
 	for _, msg := range a.AllowedMessages {
 		gasMeter.Consume(gasCostPerIteration, "check msg")
@@ -104,8 +107,10 @@ func (a *AllowedMsgAllowance) allowedMsgsToMap(ctx context.Context) map[string]b
 
 func (a *AllowedMsgAllowance) allMsgTypesAllowed(ctx context.Context, msgs []sdk.Msg) bool {
 	msgsMap := a.allowedMsgsToMap(ctx)
-	e := ctx.Value(ContextKey)
-	environment := e.(appmodule.Environment)
+	environment, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodule.Environment)
+	if !ok {
+		return false
+	}
 	gasMeter := environment.GasService.GasMeter(ctx)
 	for _, msg := range msgs {
 		gasMeter.Consume(gasCostPerIteration, "check msg")

@@ -7,6 +7,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"cosmossdk.io/core/appmodule"
+	corecontext "cosmossdk.io/core/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -24,8 +25,10 @@ var _ FeeAllowanceI = (*BasicAllowance)(nil)
 // If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
 // (eg. when it is used up). (See call to RevokeAllowance in Keeper.UseGrantedFees)
 func (a *BasicAllowance) Accept(ctx context.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
-	e := ctx.Value(ContextKey)
-	environment := e.(appmodule.Environment)
+	environment, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodule.Environment)
+	if !ok {
+		return true, errorsmod.Wrap(ErrFeeLimitExpired, "environment not set")
+	}
 	headerInfo := environment.HeaderService.HeaderInfo(ctx)
 	if a.Expiration != nil && a.Expiration.Before(headerInfo.Time) {
 		return true, errorsmod.Wrap(ErrFeeLimitExpired, "basic allowance")

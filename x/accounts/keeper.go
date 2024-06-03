@@ -125,7 +125,7 @@ func (k Keeper) InitAccountNumberSeqUnsafe(ctx context.Context, accNum uint64) e
 	if err != nil {
 		return err
 	}
-	if currentNum >= accNum {
+	if currentNum > accNum {
 		return fmt.Errorf("cannot set number lower than current account number got %v while current account number is %v", accNum, currentNum)
 	}
 	return k.AccountNumber.Set(ctx, accNum)

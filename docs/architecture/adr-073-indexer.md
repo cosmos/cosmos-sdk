@@ -1,4 +1,4 @@
-# ADR 073: Built-in Off-chain In-process Indexer
+# ADR 073: Built-in In-process Indexer
 
 ## Changelog
 
@@ -10,9 +10,7 @@ PROPOSED Not Implemented
 
 ## Abstract
 
-> "If you can't explain it simply, you don't understand it well enough." Provide
-> a simplified and layman-accessible explanation of the ADR.
-> A short (~200 word) description of the issue being addressed.
+This ADR proposes the design of a built-in query indexer framework for Cosmos SDK applications that leverages `collections` and `orm` schemas to index on-chain state and events into a PostgreSQL database, or another database if applications prefer. This indexer should be designed to be run in-process with the Cosmos SDK node with guaranteed delivery and provide a full-featured query interface for clients.
 
 ## Context
 
@@ -66,7 +64,9 @@ This infrastructure should be built upon the existing [ADR 038: State Listening]
 
 ### State Decoder
 
-The state decoder framework should expose a way for modules using `collections` or `orm` to expose their state schemas so that the state decoder can take data exposed by state listening and decode it into logical packets which can consumed by an indexer. It should define an interface that an indexer implements to consume these packets. This framework should be designed to run in-process within a Cosmos SDK node with guaranteed delivery and consistency (satisfying `U5`). While concurrency should be used to optimize performance, there should be a guarantee that if a block is committed, that it was also indexed. This framework should also indexers to consume block, transaction, and event data and optionally index these.
+The state decoder framework should expose a way for modules using `collections` or `orm` to expose their state schemas so that the state decoder can take data exposed by state listening and decode it into logical packets which can consumed by an indexer. It should define an interface that an indexer implements to consume these packets. This framework should be designed to run in-process within a Cosmos SDK node with guaranteed delivery and consistency (satisfying `U5`). While concurrency should be used to optimize performance, there should be a guarantee that if a block is committed, that it was also indexed. This framework should also allow indexers to consume block, transaction, and event data and optionally index these.
+
+At its core, the state decoder framework shouldn't make any assumptions about what database the indexer is targeting. While a built-in indexer will be provided (discussed below), a developer may choose to write an indexer targeting another database and the state decoder framework should be flexible enough to support this.
 
 The state decoder should provide hooks for handling custom data types (to support `U2`), in particular addresses so that indexers can store these in their bech32 string format when they are actually stored as bytes in state.
 
@@ -78,7 +78,7 @@ In order to support indexing from any height (`N3`), the state decoder will need
 
 ### PostgreSQL Indexer
 
-PostgreSQL has been chosen as the target database for the built-in indexer component because it is widely used, has a rich feature set and is a favorite choice in the open-source community. In addition, the PostgreSQL community has a number of mature frameworks that expose a complete REST or GraphQL query interface for clients with zero code such as [PostgREST](https://postgrest.org/), [PostGraphile](https://www.graphile.org/postgraphile/), [Hasura](https://hasura.io) and [Supabase](https://supabase.com). By combining a PostgreSQL database with one of these "Backend as a Service" frameworks, Web 2.0 client applications can basically be built without any special backend code other than the database schema itself. We can take advantage of this functionality to provide a full-featured query interface for web clients with minimal effort as soon as we can get the data into PostgreSQL.
+PostgreSQL has been chosen as the target database for the built-in indexer component because it is widely used, has a rich feature set and is a favorite choice in the open-source community. It is easy to deploy and there are fully managed hosting services that can be used. In addition, the PostgreSQL community has a number of mature frameworks that expose a complete REST or GraphQL query interface for clients with zero code such as [PostgREST](https://postgrest.org/), [PostGraphile](https://www.graphile.org/postgraphile/), [Hasura](https://hasura.io) and [Supabase](https://supabase.com). By combining a PostgreSQL database with one of these "Backend as a Service" frameworks, Web 2.0 client applications can basically be built without any special backend code other than the database schema itself. We can take advantage of this functionality to provide a full-featured query interface for web clients with minimal effort as soon as we can get the data into PostgreSQL.
 
 The PostgreSQL indexer should provide sane default mappings of all `collections` and `orm` types to SQL tables. It should also allow for hooks in modules to write migrations in the SQL schema whenever there are migrations in a module's state so that these can stay in sync.  
 
@@ -88,49 +88,47 @@ For a full batteries included, client friendly query experience, a GraphQL endpo
 
 With this setup, a node operator would only need to 1) setup a PostgresSQL database with the `pg_graphql` extension and 2) enable the query indexer in the configuration in order to provide a full-featured query experience to clients. Because PostgreSQL is a full-featured database, node operators can enable any sort of custom indexes or views that are needed for their specific application with no need for this to affect the state machine or any other nodes.
 
-## Consequences
-
-Considering the user stories identified in the context section, we believe that the proposed design can meet all the user stories identified, except `U4`. Overall, the proposed design should provide a full query experience that is in most ways better than what is provided by the existing gRPC query infrastructure, is easy to deploy and manage, and easy to extend for custom needs. It also simplifies the job of writing a module because module developers mostly do not need to worry about writing query endpoints or other client concerns besides making sure that the design and naming of `collections` and `orm` schemas is client friendly.
-
-Regarding `U4`, if event indexing is enabled, then it could be argued that `U4.1` is met, but whether this is _actually_ met depends heavily on how well modules structure their events. `U4.2` and `U4.3` likely require a full archive node which is out of scope of this design. One alternative which satisfies `U4.2` and `U4.3` would be targeting a database with historical data, such as [Datomic](https://www.datomic.com). However, this requires some pretty custom infrastructure and exposes a query interface which is unfamiliar for most users. Also, if events aren't properly structured, `U4.1` still really isn't met. A simpler alternative would be for module developers to follow an event sourcing design more closely so that historical state for any entity could be derived from the history of events. This event sourcing could even be done in client applications themselves by querying all the events relevant to an entity (such as a balance). This topic may be covered in more detail in a separate document in the future and may come down to best practices combined, with maybe a bit of framework support. However, in general satisfying `U4` (other than support event indexing) is mostly concerned out of the scope of the design, because it is either much more complex from an infrastructure perspective (full archive node or custom database like Datomic) or easy to solve with good event design.
 
 ## Alternatives
 
+The following alternatives were considered:
+* support any SQL database not just PostgreSQL using a framework like [GORM](https://gorm.io/). While this would be more flexible, it would be slower, require heavy usage of golang reflection and might limit how much we can take advantage of PostgreSQL's unique features for little benefit (the assumption being that most users would choose PostgreSQL anyway and or be happy enough that we made that choice).
+* don't support any specific database, but just build the decoder framework. While this would simplify our efforts in the short-term, it still doesn't provide a full-featured solution and requires others to build out the key infrastructure similar to [ADR 038](adr-038-state-listening.md). This limbo state would not allow the SDK to definitely make key optimizations to state layout and simple the task of module development in a definitive way by providing a full replacement for gRPC client queries.
+* target a database with full historical query support like [Datomic](https://www.datomic.com). This requires a bunch of custom infrastructure and would expose a powerful, yet unfamiliar query language to users.
+* advocate an event sourcing design and build an event sourcing based indexer which would recompute state based on the event log. This is also discussed more below and is considered a complementary idea that can provide better support for historical change logs. Considering event sourcing as a full alternative to a state-based indexer, however, would require a lot of module refactoring, likely custom code, and wouldn't take advantage of the work we've already done in supporting state schemas through `collections` and `orm`.
+* build a full-featured out-of-process indexer based on ADR 038 and changelog files. This was another design initially considered, but it requires additional infrastructure and processes. In particular, it also requires a full decodable schema for `collections` which at the moment is fairly complex. It is easier to use the `collections` schemas already in the binary to do indexing rather than create a whole schema definition language for a separate process to consume. Also we want to provide a more batteries-included experience for users and in particular satisfy `N2`. If creating a full query index is easier, it makes everyone's life easier.
+* build a GraphQL client on top of the existing state store. This was considered, but it would be slow and not provide the full-featured query experience that a real database can provide. It would still require client only indexes in state, it would be hard to configure custom indexes and views, and would likely require building or reusing a full query planner. In the end, using a real database is easier to build and provides a better experience for clients.
 
+## Consequences
 
 ### Backwards Compatibility
 
-> All ADRs that introduce backwards incompatibilities must include a section
-> describing these incompatibilities and their severity. The ADR must explain
-> how the author proposes to deal with these incompatibilities. ADR submissions
-> without a sufficient backwards compatibility treatise may be rejected outright.
+We believe that these features can be built to target SDK versions v0.47, v0.50 and possibly earlier without breaking changes. 
 
 ### Positive
 
-> {positive consequences}
+Considering the user stories identified in the context section, we believe that the proposed design can meet all the user stories identified, except `U4`. Overall, the proposed design should provide a full query experience that is in most ways better than what is provided by the existing gRPC query infrastructure, is easy to deploy and manage, and easy to extend for custom needs. It also simplifies the job of writing a module because module developers mostly do not need to worry about writing query endpoints or other client concerns besides making sure that the design and naming of `collections` and `orm` schemas is client friendly.
+
+Also, because we are separating the design into decoder and indexer components, it should be possible to write indexers targeting other databases besides PostgreSQL using the decoder framework. While the built-in PostgreSQL indexer should provide a good battery-included experience for most users, this design also supports users wanting to target other databases.
 
 ### Negative
 
-> {negative consequences}
+If module developers choose to deprecate support for some or all gRPC queries then this will be a breaking change for clients. The resulting query experience should be better, but it will require significant changes. This ADR doesn't advocate deprecating these queries, but it could encourage developers to go in that direction. To mitigate this concern, we encourage module authors to consider the client developer impact as they make decisions about deleting existing indexes and queries.
+
+Also, this design does impose the requirement that module developers use `collections` and `orm` to get their data indexed. While we believe that these frameworks are the best way to structure state in the SDK, some developers may not want to refactor their code to use them. This design does not provide a way to index state that is not structured with `collections` or `orm`, although that support could be added in the future to the decoder framework.
+
+Furthermore, this design does require that node operators that want to support the new infrastructure run a PostgreSQL database. While we believe that this will actually be better from an infrastructure perspective - PostgreSQL should be able to serve queries significantly faster than the state machine can - it does require additional infrastructure and knowledge for node operators.
 
 ### Neutral
 
-> {neutral consequences}
+Regarding `U4`, if event indexing is enabled, then it could be argued that `U4.1` is met, but whether this is _actually_ met depends heavily on how well modules structure their events. `U4.2` and `U4.3` likely require a full archive node which is out of scope of this design. One alternative which satisfies `U4.2` and `U4.3` would be targeting a database with historical data, such as [Datomic](https://www.datomic.com). However, this requires some pretty custom infrastructure and exposes a query interface which is unfamiliar for most users. Also, if events aren't properly structured, `U4.1` still really isn't met. A simpler alternative would be for module developers to follow an event sourcing design more closely so that historical state for any entity could be derived from the history of events. This event sourcing could even be done in client applications themselves by querying all the events relevant to an entity (such as a balance). This topic may be covered in more detail in a separate document in the future and may come down to best practices combined, with maybe a bit of framework support. However, in general satisfying `U4` (other than support event indexing) is mostly concerned out of the scope of the design, because it is either much more complex from an infrastructure perspective (full archive node or custom database like Datomic) or easy to solve with good event design.
 
 ## Further Discussions
 
-> While an ADR is in the DRAFT or PROPOSED stage, this section should contain a
-> summary of issues to be solved in future iterations (usually referencing comments
-> from a pull-request discussion).
->
-> Later, this section can optionally list ideas or improvements the author or
-> reviewers found during the analysis of this ADR.
-
-## Test Cases [optional]
-
-Test cases for an implementation are mandatory for ADRs that are affecting consensus
-changes. Other ADRs can choose to include links to test cases if applicable.
+Further discussions can take place on GitHub as needed.
 
 ## References
 
-* {reference link}
+* [ADR 038: State Listening](./adr-038-state-listening.md)
+* [ADR 055: ORM](./adr-055-orm.md)
+* [ADR 062: Collections](./adr-062-collections-state-layer.md)

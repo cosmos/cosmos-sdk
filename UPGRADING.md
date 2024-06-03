@@ -682,6 +682,15 @@ To learn more see the [docs](https://docs.cosmos.network/main/learn/advanced/tra
 
 ### Modules
 
+<!-- create server/v2 changes docs and mention it here
+	* mention changes in tx validators
+	* mention changes with appmodulev2
+	* mention changes with sdk context removal
+	* mention changes with environment
+	* mention changes with environment in context in interfaces
+	* mention legacy proposal in gov when using server/v2 if using sdk context must be rewritten
+-->
+
 #### `**all**`
 
 * [RFC 001](https://docs.cosmos.network/main/rfc/rfc-001-tx-validation) has defined a simplification of the message validation process for modules.

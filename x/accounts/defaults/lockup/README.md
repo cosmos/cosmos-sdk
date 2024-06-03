@@ -19,7 +19,7 @@ The x/accounts/defaults/lockup module provides the implementation for lockup acc
 
 ### BaseAccount
 
-All current lockup account types must pass in a `BaseAccount` interface as their property. `BaseAccount` interface is defined as:
+All lockup account types implement the `BaseAccount` interface. `BaseAccount` interface is defined as:
 
 ```go
 type BaseAccount interface {

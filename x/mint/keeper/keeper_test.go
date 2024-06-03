@@ -106,7 +106,7 @@ func (s *IntegrationTestSuite) TestDefaultMintFn() {
 	minter, err := s.mintKeeper.Minter.Get(s.ctx)
 	s.NoError(err)
 
-	err = s.mintKeeper.DefaultMintFn(s.ctx, s.mintKeeper.Environment, &minter, "block", 0)
+	err = s.mintKeeper.DefaultMintFn(types.DefaultInflationCalculationFn)(s.ctx, s.mintKeeper.Environment, &minter, "block", 0)
 	s.NoError(err)
 
 	// set a maxsupply and call again
@@ -116,7 +116,7 @@ func (s *IntegrationTestSuite) TestDefaultMintFn() {
 	err = s.mintKeeper.Params.Set(s.ctx, params)
 	s.NoError(err)
 
-	err = s.mintKeeper.DefaultMintFn(s.ctx, s.mintKeeper.Environment, &minter, "block", 0)
+	err = s.mintKeeper.DefaultMintFn(types.DefaultInflationCalculationFn)(s.ctx, s.mintKeeper.Environment, &minter, "block", 0)
 	s.NoError(err)
 
 	// modify max supply to be almost reached
@@ -130,7 +130,7 @@ func (s *IntegrationTestSuite) TestDefaultMintFn() {
 	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(2000)))).Return(nil)
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, types.ModuleName, authtypes.FeeCollectorName, gomock.Any()).Return(nil)
 
-	err = s.mintKeeper.DefaultMintFn(s.ctx, s.mintKeeper.Environment, &minter, "block", 0)
+	err = s.mintKeeper.DefaultMintFn(types.DefaultInflationCalculationFn)(s.ctx, s.mintKeeper.Environment, &minter, "block", 0)
 	s.NoError(err)
 }
 
@@ -145,7 +145,7 @@ func (s *IntegrationTestSuite) TestBeginBlocker() {
 	minter, err := s.mintKeeper.Minter.Get(s.ctx)
 	s.NoError(err)
 
-	err = s.mintKeeper.BeginBlocker(s.ctx, s.mintKeeper.DefaultMintFn)
+	err = s.mintKeeper.BeginBlocker(s.ctx, s.mintKeeper.DefaultMintFn(types.DefaultInflationCalculationFn))
 	s.NoError(err)
 
 	// get minter again and compare

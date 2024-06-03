@@ -74,7 +74,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	s.NoError(s.mintKeeper.Minter.Set(s.ctx, types.DefaultInitialMinter()))
 	s.msgServer = keeper.NewMsgServerImpl(s.mintKeeper)
 
-	s.appmodule = mint.NewAppModule(encCfg.Codec, s.mintKeeper, accountKeeper, s.mintKeeper.DefaultMintFn)
+	s.appmodule = mint.NewAppModule(encCfg.Codec, s.mintKeeper, accountKeeper, s.mintKeeper.DefaultMintFn(types.DefaultInflationCalculationFn))
 }
 
 func (s *IntegrationTestSuite) TestEpochHooks() {

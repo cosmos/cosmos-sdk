@@ -1,6 +1,7 @@
 package feegrant_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -8,11 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	corecontext "cosmossdk.io/core/context"
 )
 
 func TestPeriodicFeeValidAllow(t *testing.T) {
@@ -218,8 +222,10 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			}
 
 			ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: tc.blockTime})
+			env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 			// now try to deduct
-			remove, err := tc.allow.Accept(ctx, tc.fee, []sdk.Msg{})
+			// Set environment to ctx
+			remove, err := tc.allow.Accept(context.WithValue(ctx, corecontext.EnvironmentContextKey, env), tc.fee, []sdk.Msg{})
 			if !tc.accept {
 				require.Error(t, err)
 				return

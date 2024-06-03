@@ -1,6 +1,7 @@
 package feegrant_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -8,13 +9,16 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/module"
 
+	corecontext "cosmossdk.io/core/context"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -145,6 +149,7 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 			require.NoError(t, err)
 
 			ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: tc.blockTime})
+			env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 
 			// create grant
 			var granter, grantee sdk.AccAddress
@@ -156,7 +161,7 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 			require.NoError(t, err)
 
 			// now try to deduct
-			removed, err := allowance.Accept(ctx, tc.fee, []sdk.Msg{&call})
+			removed, err := allowance.Accept(context.WithValue(ctx, corecontext.EnvironmentContextKey, env), tc.fee, []sdk.Msg{&call})
 			if !tc.accept {
 				require.Error(t, err)
 				return

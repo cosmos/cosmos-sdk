@@ -218,6 +218,13 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 				return nil
 			})
 			if err != nil {
+				// update proposal if error is out of gas
+				if errors.Is(err, sdkerrors.ErrOutOfGas) {
+					proposal.Status = v1.StatusFailed
+					proposal.FailedReason = err.Error()
+					tagValue = types.AttributeValueProposalFailed
+					logMsg = "passed proposal failed due to out of gas"
+				}
 				break // We do not anything with the error. Returning an error halts the chain, and proposal struct is already updated.
 			}
 		case !burnDeposits && (proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED ||

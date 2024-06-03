@@ -103,7 +103,9 @@ func (a *AllowedMsgAllowance) allowedMsgsToMap(ctx context.Context) (map[string]
 	}
 	gasMeter := environment.GasService.GasMeter(ctx)
 	for _, msg := range a.AllowedMessages {
-		gasMeter.Consume(gasCostPerIteration, "check msg")
+		if err := gasMeter.Consume(gasCostPerIteration, "check msg"); err != nil {
+			return nil, err
+		}
 		msgsMap[msg] = true
 	}
 
@@ -121,7 +123,9 @@ func (a *AllowedMsgAllowance) allMsgTypesAllowed(ctx context.Context, msgs []sdk
 	}
 	gasMeter := environment.GasService.GasMeter(ctx)
 	for _, msg := range msgs {
-		gasMeter.Consume(gasCostPerIteration, "check msg")
+		if err := gasMeter.Consume(gasCostPerIteration, "check msg"); err != nil {
+			return false, err
+		}
 		if !msgsMap[sdk.MsgTypeURL(msg)] {
 			return false, nil
 		}

@@ -1,6 +1,7 @@
 package v4_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -52,6 +53,13 @@ func TestFundsMigration(t *testing.T) {
 	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
+
+	accNum := uint64(0)
+	acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
+		currNum := accNum
+		accNum++
+		return currNum, nil
+	})
 
 	// create account keeper
 	accountKeeper := authkeeper.NewAccountKeeper(

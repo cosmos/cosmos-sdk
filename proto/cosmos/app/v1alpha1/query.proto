@@ -4,6 +4,8 @@ package cosmos.app.v1alpha1;
 
 import "cosmos/app/v1alpha1/config.proto";
 
+option go_package = "cosmossdk.io/api/app/v1alpha1";
+
 // Query is the app module query service.
 service Query {
 

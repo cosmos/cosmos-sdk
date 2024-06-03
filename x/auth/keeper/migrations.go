@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/collections"
 	v5 "cosmossdk.io/x/auth/migrations/v5"
 	"cosmossdk.io/x/auth/types"
 
@@ -12,11 +13,16 @@ import (
 // Migrator is a struct for handling in-place store migrations.
 type Migrator struct {
 	keeper AccountKeeper
+	// accNum is use in v4 to v5 and v5 to v6 migration
+	accNum collections.Sequence
 }
 
 // NewMigrator returns a new Migrator.
 func NewMigrator(keeper AccountKeeper) Migrator {
-	return Migrator{keeper: keeper}
+	sb := collections.NewSchemaBuilder(keeper.Environment.KVStoreService)
+	accNumSeq := collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number")
+
+	return Migrator{keeper: keeper, accNum: accNumSeq}
 }
 
 // Migrate1to2 migrates from version 1 to 2.
@@ -42,7 +48,18 @@ func (m Migrator) Migrate3to4(ctx context.Context) error {
 // It migrates the GlobalAccountNumber from being a protobuf defined value to a
 // big-endian encoded uint64, it also migrates it to use a more canonical prefix.
 func (m Migrator) Migrate4To5(ctx context.Context) error {
-	return v5.Migrate(ctx, m.keeper.KVStoreService, m.keeper.AccountNumber)
+	return v5.Migrate(ctx, m.keeper.KVStoreService, m.accNum)
+}
+
+// Migrate5To6 migrates the x/auth module state from the consensus version 5 to 6.
+// It migrates the GlobalAccountNumber from x/auth to x/accounts .
+func (m Migrator) Migrate5To6(ctx context.Context) error {
+	currentAccNum, err := m.accNum.Peek(ctx)
+	if err != nil {
+		return err
+	}
+
+	return m.keeper.AccountsModKeeper.InitAccountNumberSeqUnsafe(ctx, currentAccNum)
 }
 
 // V45SetAccount implements V45_SetAccount

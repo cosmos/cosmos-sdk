@@ -104,7 +104,7 @@ func (k Keeper) AddCollectedFees(ctx context.Context, fees sdk.Coins) error {
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
 }
 
-func (k Keeper) DefaultMintFn(types.InflationCalculationFn) types.MintFn {
+func (k Keeper) DefaultMintFn(ic types.InflationCalculationFn) types.MintFn {
 	return func(ctx context.Context, env appmodule.Environment, minter *types.Minter, epochId string, epochNumber int64) error {
 		// the default mint function is called every block, so we only check if epochId is "block" which is
 		// a special value to indicate that this is not an epoch minting, but a regular block minting.
@@ -127,7 +127,7 @@ func (k Keeper) DefaultMintFn(types.InflationCalculationFn) types.MintFn {
 			return err
 		}
 
-		minter.Inflation = minter.NextInflationRate(params, bondedRatio)
+		minter.Inflation = ic(ctx, *minter, params, bondedRatio)
 		minter.AnnualProvisions = minter.NextAnnualProvisions(params, stakingTokenSupply)
 
 		mintedCoin := minter.BlockProvision(params)
@@ -141,7 +141,7 @@ func (k Keeper) DefaultMintFn(types.InflationCalculationFn) types.MintFn {
 				// calculate the difference between maxSupply and totalSupply
 				diff := maxSupply.Sub(totalSupply)
 				if diff.LTE(math.ZeroInt()) {
-					k.logger.Warn("max supply reached, no new tokens will be minted")
+					k.logger.Info("max supply reached, no new tokens will be minted")
 					return nil
 				}
 

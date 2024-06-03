@@ -74,6 +74,10 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		as,
 	)
 
+	if in.MintFn != nil && in.InflationCalculationFn != nil {
+		panic("MintFn and InflationCalculationFn cannot both be set")
+	}
+
 	// if no mintFn is provided, use the default minting function
 	if in.MintFn == nil {
 		// if no inflationCalculationFn is provided, use the default inflation calculation function
@@ -82,10 +86,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		}
 
 		in.MintFn = k.DefaultMintFn(in.InflationCalculationFn)
-	}
-
-	if in.MintFn != nil && in.InflationCalculationFn != nil {
-		panic("MintFn and InflationCalculationFn cannot both be set")
 	}
 
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.MintFn)

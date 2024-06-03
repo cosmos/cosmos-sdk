@@ -2,6 +2,7 @@ package feegrant
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -72,7 +73,11 @@ func (a *AllowedMsgAllowance) SetAllowance(allowance FeeAllowanceI) error {
 
 // Accept method checks for the filtered messages has valid expiry
 func (a *AllowedMsgAllowance) Accept(ctx context.Context, fee sdk.Coins, msgs []sdk.Msg) (bool, error) {
-	if !a.allMsgTypesAllowed(ctx, msgs) {
+	allowed, err := a.allMsgTypesAllowed(ctx, msgs)
+	if err != nil {
+		return false, err
+	}
+	if !allowed {
 		return false, errorsmod.Wrap(ErrMessageNotAllowed, "message does not exist in allowed messages")
 	}
 
@@ -90,11 +95,11 @@ func (a *AllowedMsgAllowance) Accept(ctx context.Context, fee sdk.Coins, msgs []
 	return remove, err
 }
 
-func (a *AllowedMsgAllowance) allowedMsgsToMap(ctx context.Context) map[string]bool {
+func (a *AllowedMsgAllowance) allowedMsgsToMap(ctx context.Context) (map[string]bool, error) {
 	msgsMap := make(map[string]bool, len(a.AllowedMessages))
 	environment, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodule.Environment)
 	if !ok {
-		return nil
+		return nil, fmt.Errorf("environment not set")
 	}
 	gasMeter := environment.GasService.GasMeter(ctx)
 	for _, msg := range a.AllowedMessages {
@@ -102,24 +107,27 @@ func (a *AllowedMsgAllowance) allowedMsgsToMap(ctx context.Context) map[string]b
 		msgsMap[msg] = true
 	}
 
-	return msgsMap
+	return msgsMap, nil
 }
 
-func (a *AllowedMsgAllowance) allMsgTypesAllowed(ctx context.Context, msgs []sdk.Msg) bool {
-	msgsMap := a.allowedMsgsToMap(ctx)
+func (a *AllowedMsgAllowance) allMsgTypesAllowed(ctx context.Context, msgs []sdk.Msg) (bool, error) {
+	msgsMap, err := a.allowedMsgsToMap(ctx)
+	if err != nil {
+		return false, err
+	}
 	environment, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodule.Environment)
 	if !ok {
-		return false
+		return false, fmt.Errorf("environment not set")
 	}
 	gasMeter := environment.GasService.GasMeter(ctx)
 	for _, msg := range msgs {
 		gasMeter.Consume(gasCostPerIteration, "check msg")
 		if !msgsMap[sdk.MsgTypeURL(msg)] {
-			return false
+			return false, nil
 		}
 	}
 
-	return true
+	return true, nil
 }
 
 // ValidateBasic implements FeeAllowance and enforces basic sanity checks

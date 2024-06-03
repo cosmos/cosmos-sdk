@@ -2,6 +2,7 @@ package feegrant
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
@@ -27,7 +28,7 @@ var _ FeeAllowanceI = (*BasicAllowance)(nil)
 func (a *BasicAllowance) Accept(ctx context.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
 	environment, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodule.Environment)
 	if !ok {
-		return true, errorsmod.Wrap(ErrFeeLimitExpired, "environment not set")
+		return false, fmt.Errorf("environment not set")
 	}
 	headerInfo := environment.HeaderService.HeaderInfo(ctx)
 	if a.Expiration != nil && a.Expiration.Before(headerInfo.Time) {

@@ -5,6 +5,9 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
+	"github.com/cosmos/gogoproto/jsonpb"
+	"github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"google.golang.org/protobuf/encoding/protojson"
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -16,15 +19,10 @@ import (
 	appv2 "cosmossdk.io/api/cosmos/app/v2"
 	"cosmossdk.io/depinject"
 	internal "cosmossdk.io/depinject/internal/appconfig"
-
-	"github.com/cosmos/gogoproto/jsonpb"
-	"github.com/cosmos/gogoproto/proto"
-	gogotypes "github.com/cosmos/gogoproto/types"
 )
 
 // LoadJSON loads an app config in JSON format.
 func LoadJSON(bz []byte) depinject.Config {
-
 	config := &appv1alpha1.Config{}
 	err := protojson.Unmarshal(bz, config)
 	if err == nil {
@@ -69,7 +67,6 @@ type ModuleConfigI interface {
 // Compose composes a v1alpha1 app config into a container option by resolving
 // the required modules and composing their options.
 func Compose(appConfig proto.Message) depinject.Config {
-
 	opts := []depinject.Config{
 		depinject.Supply(appConfig),
 	}
@@ -85,7 +82,6 @@ func Compose(appConfig proto.Message) depinject.Config {
 	if isProtov2 {
 		for _, m := range appConfigV2.Modules {
 			configModules = append(configModules, m)
-
 		}
 	} else {
 		appConfigV1 := appConfig.(*appv2.Config)
@@ -145,7 +141,6 @@ func Compose(appConfig proto.Message) depinject.Config {
 			config := init.ConfigProtoMessage.(protov2.Message).ProtoReflect().Type().New().Interface()
 			err = anypb.UnmarshalTo(moduleV2.Config, config, protov2.UnmarshalOptions{})
 			if err != nil {
-
 				return depinject.Error(err)
 			}
 			opts = append(opts, depinject.Supply(config))
@@ -155,7 +150,18 @@ func Compose(appConfig proto.Message) depinject.Config {
 		} else {
 			config := init.ConfigProtoMessage.(proto.Message)
 
-			err = gogotypes.UnmarshalAny(moduleV1.Config, config)
+			anyCfg := &gogotypes.Any{
+				TypeUrl:              moduleV1.Config.TypeUrl,
+				Value:                moduleV1.Config.Value,
+				XXX_NoUnkeyedLiteral: moduleV1.Config.XXX_NoUnkeyedLiteral,
+				XXX_unrecognized:     moduleV1.Config.XXX_unrecognized,
+				XXX_sizecache:        moduleV1.Config.XXX_sizecache,
+			}
+			if err != nil {
+				return depinject.Error(err)
+			}
+
+			err = gogotypes.UnmarshalAny(anyCfg, config)
 			if err != nil {
 				return depinject.Error(err)
 			}
@@ -174,7 +180,7 @@ func Compose(appConfig proto.Message) depinject.Config {
 		}
 
 		interfaceTypes, implementations := module.GetGolangBindingsStrings()
-		for i, _ := range interfaceTypes {
+		for i := range interfaceTypes {
 			opts = append(opts, depinject.BindInterfaceInModule(module.GetName(), interfaceTypes[i], implementations[i]))
 		}
 	}

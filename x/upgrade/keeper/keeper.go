@@ -26,7 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 type Keeper struct {
@@ -39,7 +38,7 @@ type Keeper struct {
 	versionModifier    app.VersionModifier             // implements setting the protocol version field on BaseApp
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
 	authority          string                          // the address capable of executing and canceling an upgrade. Usually the gov module account
-	initVersionMap     module.VersionMap               // the module version map at init genesis
+	initVersionMap     appmodule.VersionMap            // the module version map at init genesis
 }
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
@@ -75,13 +74,13 @@ func NewKeeper(
 
 // SetInitVersionMap sets the initial version map.
 // This is only used in app wiring and should not be used in any other context.
-func (k *Keeper) SetInitVersionMap(vm module.VersionMap) {
+func (k *Keeper) SetInitVersionMap(vm appmodule.VersionMap) {
 	k.initVersionMap = vm
 }
 
 // GetInitVersionMap gets the initial version map
 // This is only used in upgrade InitGenesis and should not be used in any other context.
-func (k *Keeper) GetInitVersionMap() module.VersionMap {
+func (k *Keeper) GetInitVersionMap() appmodule.VersionMap {
 	return k.initVersionMap
 }
 
@@ -93,7 +92,7 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 }
 
 // SetModuleVersionMap saves a given version map to state
-func (k Keeper) SetModuleVersionMap(ctx context.Context, vm module.VersionMap) error {
+func (k Keeper) SetModuleVersionMap(ctx context.Context, vm appmodule.VersionMap) error {
 	if len(vm) > 0 {
 		store := runtime.KVStoreAdapter(k.KVStoreService.OpenKVStore(ctx))
 		versionStore := prefix.NewStore(store, []byte{types.VersionMapByte})
@@ -121,7 +120,7 @@ func (k Keeper) SetModuleVersionMap(ctx context.Context, vm module.VersionMap) e
 
 // GetModuleVersionMap returns a map of key module name and value module consensus version
 // as defined in ADR-041.
-func (k Keeper) GetModuleVersionMap(ctx context.Context) (module.VersionMap, error) {
+func (k Keeper) GetModuleVersionMap(ctx context.Context) (appmodule.VersionMap, error) {
 	store := k.KVStoreService.OpenKVStore(ctx)
 	prefix := []byte{types.VersionMapByte}
 	it, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
@@ -130,7 +129,7 @@ func (k Keeper) GetModuleVersionMap(ctx context.Context) (module.VersionMap, err
 	}
 	defer it.Close()
 
-	vm := make(module.VersionMap)
+	vm := make(appmodule.VersionMap)
 	for ; it.Valid(); it.Next() {
 		moduleBytes := it.Key()
 		// first byte is prefix key, so we remove it here

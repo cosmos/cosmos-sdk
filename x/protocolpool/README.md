@@ -82,7 +82,7 @@ This message sends coins directly from the sender to the community pool.
 
 :::tip
 If you know the protocolpool module account address, you can directly use bank `send` transaction instead.
-::::
+:::
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/97724493d792517ba2be8969078b5f92ad04d79c/proto/cosmos/protocolpool/v1/tx.proto#L32-L42

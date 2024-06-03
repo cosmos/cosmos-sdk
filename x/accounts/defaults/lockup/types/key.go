@@ -22,5 +22,5 @@ var (
 	DELAYED_LOCKING_ACCOUNT    = "delayed"
 	PERIODIC_LOCKING_ACCOUNT   = "periodic"
 	PERMANENT_LOCKING_ACCOUNT  = "permanent"
-	CLAWBACK_ENABLE_PREFIX     = "-clawback-enable"
+	CLAWBACK_ENABLE_SUFFIX     = "-clawback-enable"
 )

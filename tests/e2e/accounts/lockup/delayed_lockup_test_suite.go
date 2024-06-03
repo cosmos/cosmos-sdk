@@ -191,7 +191,7 @@ func (s *E2ETestSuite) TestDelayedLockingAccountClawbackEnable() {
 	randAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	withdrawAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
-	_, accountAddr, err := app.AccountsKeeper.Init(ctx, types.DELAYED_LOCKING_ACCOUNT+types.CLAWBACK_ENABLE_PREFIX, accOwner, &types.MsgInitLockupAccount{
+	_, accountAddr, err := app.AccountsKeeper.Init(ctx, types.DELAYED_LOCKING_ACCOUNT+types.CLAWBACK_ENABLE_SUFFIX, accOwner, &types.MsgInitLockupAccount{
 		Owner: ownerAddrStr,
 		// end time in 1 minutes
 		EndTime: currentTime.Add(time.Minute),

@@ -26,7 +26,7 @@ func NewPeriodicLockingAccount(clawbackEnable bool) accountstd.AccountCreatorFun
 		if clawbackEnable {
 			baseClawback := newBaseClawback(d)
 
-			return types.PERIODIC_LOCKING_ACCOUNT + types.CLAWBACK_ENABLE_PREFIX, PeriodicLockingAccount{
+			return types.PERIODIC_LOCKING_ACCOUNT + types.CLAWBACK_ENABLE_SUFFIX, PeriodicLockingAccount{
 				BaseAccount:    baseClawback,
 				StartTime:      collections.NewItem(d.SchemaBuilder, types.StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
 				LockingPeriods: collections.NewVec(d.SchemaBuilder, types.LockingPeriodsPrefix, "locking_periods", codec.CollValue[types.Period](d.LegacyStateCodec))}, nil

@@ -23,7 +23,7 @@ func NewPermanentLockingAccount(clawbackEnable bool) accountstd.AccountCreatorFu
 		if clawbackEnable {
 			baseClawback := newBaseClawback(d)
 
-			return types.PERMANENT_LOCKING_ACCOUNT + types.CLAWBACK_ENABLE_PREFIX, PermanentLockingAccount{
+			return types.PERMANENT_LOCKING_ACCOUNT + types.CLAWBACK_ENABLE_SUFFIX, PermanentLockingAccount{
 				BaseAccount: baseClawback,
 			}, nil
 		}

@@ -26,7 +26,7 @@ func NewContinuousLockingAccount(clawbackEnable bool) accountstd.AccountCreatorF
 		if clawbackEnable {
 			baseClawback := newBaseClawback(d)
 
-			return types.CONTINUOUS_LOCKING_ACCOUNT + types.CLAWBACK_ENABLE_PREFIX, ContinuousLockingAccount{
+			return types.CONTINUOUS_LOCKING_ACCOUNT + types.CLAWBACK_ENABLE_SUFFIX, ContinuousLockingAccount{
 				BaseAccount: baseClawback,
 				StartTime:   collections.NewItem(d.SchemaBuilder, types.StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
 			}, nil

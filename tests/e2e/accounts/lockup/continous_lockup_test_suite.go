@@ -222,7 +222,7 @@ func (s *E2ETestSuite) TestContinuousLockingAccountClawbackEnable() {
 	randAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	withdrawAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
-	_, accountAddr, err := app.AccountsKeeper.Init(ctx, types.CONTINUOUS_LOCKING_ACCOUNT+types.CLAWBACK_ENABLE_PREFIX, accOwner, &types.MsgInitLockupAccount{
+	_, accountAddr, err := app.AccountsKeeper.Init(ctx, types.CONTINUOUS_LOCKING_ACCOUNT+types.CLAWBACK_ENABLE_SUFFIX, accOwner, &types.MsgInitLockupAccount{
 		Owner:     ownerAddrStr,
 		StartTime: currentTime,
 		// end time in 1 minutes

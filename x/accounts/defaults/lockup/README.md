@@ -17,9 +17,26 @@ The x/accounts/defaults/lockup module provides the implementation for lockup acc
 
 ## Lockup Account Types
 
+### BaseAccount
+
+All current lockup account types must pass in a `BaseAccount` interface as their property. `BaseAccount` interface is defined as:
+
+```go
+type BaseAccount interface {
+	Init(ctx context.Context, msg *MsgInitLockupAccount, amount sdk.Coins) (*MsgInitLockupAccountResponse, error)
+	SendCoins(ctx context.Context, msg *MsgSend, getLockedCoinsFunc GetLockedCoinsFunc) (*MsgExecuteMessagesResponse, error)
+	WithdrawUnlockedCoins(ctx context.Context, msg *MsgWithdraw, getLockedCoinsFunc GetLockedCoinsFunc) (*MsgWithdrawResponse, error)
+	QueryAccountBaseInfo(ctx context.Context, req *QueryLockupAccountInfoRequest) (*QueryLockupAccountInfoResponse, error)
+
+	GetEndTime() collections.Item[time.Time]
+	GetHeaderService() header.Service
+	GetOriginalFunds() collections.Map[string, math.Int]
+}
+```
+
 ### BaseLockup
 
-The base lockup account is used by all default lockup accounts. It contains the basic information for a lockup account. The Base lockup account keeps knowledge of the staking delegations from the account.
+The base lockup account is used by all lockup accounts that are not clawback enabled. It contains the basic information for a lockup account. The Base lockup account keeps knowledge of the staking delegations from the account. The BaseLockup implemented BaseAccount interface. 
 
 ```go
 type BaseLockup struct {
@@ -35,6 +52,94 @@ type BaseLockup struct {
 	EndTime collections.Item[time.Time]
 }
 ```
+
+
+### BaseClawback
+
+The base clawback account is used by all lockup accounts that are clawback enable. Like base lockup it contains the basic information for a lockup account. The Base clawback account keeps knowledge of the admin of the account, the admin is the wallet that will be able to trigger a clawback execution to claw the remain locked token in the lockup account. The BaseLBaseClawbackockup implemented BaseAccount interface. 
+
+```go
+type BaseClawback struct {
+	// Owner is the address of the account owner.
+	Owner collections.Item[[]byte]
+	// Admin is the address who have ability to request lockup account
+	// to return the funds
+	Admin           collections.Item[[]byte]
+	OriginalVesting collections.Map[string, math.Int]
+	WithdrawedCoins collections.Map[string, math.Int]
+	addressCodec    address.Codec
+	headerService   header.Service
+	// lockup end time.
+	EndTime collections.Item[time.Time]
+}
+```
+
+### Clawback enabled vs disabled
+
+Clawback enabled lockup account will be able to trigger a clawback execution by the admin to claw the remain locked token in the lockup account. Other execution still need to be triggered by the account owner.
+
+If an lockup account is clawback enable, it will not be able to perform action such as: delegate, undelegate, withdrawReward. 
+
+### How to enable clawback
+
+accounts module keeper takes multiple AccountCreatorFunc as parameter, each represents an account type.
+
+```go
+func NewKeeper(
+	cdc codec.Codec,
+	env appmodule.Environment,
+	addressCodec address.Codec,
+	ir InterfaceRegistry,
+	accounts ...accountstd.AccountCreatorFunc,
+) (Keeper, error) {...}
+```
+
+All lockup account type AccountCreatorFunc accept a boolean typed flag named clawbackEnable, if true the BaseClawback will be passed as BaseAccount and account type name with additional CLAWBACK_ENABLE_SUFFIX else BaseLockup will be passed in instead and account type name will be kept as default.
+
+e.g: 
+
+```go
+func NewContinuousLockingAccount(clawbackEnable bool) accountstd.AccountCreatorFunc {
+	return func(d accountstd.Dependencies) (string, accountstd.Interface, error) {
+		if clawbackEnable {
+			baseClawback := newBaseClawback(d)
+
+			return types.CONTINUOUS_LOCKING_ACCOUNT + types.CLAWBACK_ENABLE_SUFFIX, ContinuousLockingAccount{
+				BaseAccount: baseClawback,
+				StartTime:   collections.NewItem(d.SchemaBuilder, types.StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
+			}, nil
+		}
+
+		baseLockup := newBaseLockup(d)
+		return types.CONTINUOUS_LOCKING_ACCOUNT, ContinuousLockingAccount{
+			BaseAccount: baseLockup,
+			StartTime:   collections.NewItem(d.SchemaBuilder, types.StartTimePrefix, "start_time", collcodec.KeyToValueCodec[time.Time](sdk.TimeKey)),
+		}, nil
+	}
+}
+
+```
+
+Thus, developer can introduce both clawback enabled and disabled for the same lockup type.
+
+```go
+accountsKeeper, err := accounts.NewKeeper(
+		...
+		// Lockup account
+		lockup.NewContinuousLockingAccount(false),
+		lockup.NewPeriodicLockingAccount(false),
+		lockup.NewDelayedLockingAccount(false),
+		lockup.NewPermanentLockingAccount(false),
+
+		// Lockup account clawback enable
+		lockup.NewContinuousLockingAccount(true),
+		lockup.NewPeriodicLockingAccount(true),
+		lockup.NewDelayedLockingAccount(true),
+		lockup.NewPermanentLockingAccount(true),
+		...
+	)
+```
+
 
 ### ContinuousLockup
 
@@ -53,7 +158,7 @@ is _lockup_.
 
 ```go
 type ContinuousLockingAccount struct {
-	*BaseLockup
+	*BaseAccount
 	StartTime collections.Item[time.Time]
 }
 ```
@@ -64,7 +169,7 @@ The delayed lockup account unlocks all tokens at a specific time. The account ca
 
 ```go
 type DelayedLockingAccount struct {
-	*BaseLockup
+	*BaseAccount
 }
 ```
 
@@ -88,7 +193,7 @@ For each Period P:
 
 ```go
 type PeriodicLockingAccount struct {
-	*BaseLockup
+	*BaseAccount
 	StartTime      collections.Item[time.Time]
 	LockingPeriods collections.Vec[lockuptypes.Period]
 }
@@ -100,7 +205,7 @@ The permanent lockup account permanently locks the coins in the account. The acc
 
 ```go
 type PermanentLockingAccount struct {
-	*BaseLockup
+	*BaseAccount
 }
 ```
 

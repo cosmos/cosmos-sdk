@@ -150,7 +150,7 @@ func (s *E2ETestSuite) TestPermanentLockingAccountClawbackEnable() {
 	s.fundAccount(app, ctx, accOwner, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
 	randAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
-	_, accountAddr, err := app.AccountsKeeper.Init(ctx, types.PERMANENT_LOCKING_ACCOUNT+types.CLAWBACK_ENABLE_PREFIX, accOwner, &types.MsgInitLockupAccount{
+	_, accountAddr, err := app.AccountsKeeper.Init(ctx, types.PERMANENT_LOCKING_ACCOUNT+types.CLAWBACK_ENABLE_SUFFIX, accOwner, &types.MsgInitLockupAccount{
 		Owner: ownerAddrStr,
 		Admin: ownerAddrStr,
 	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})

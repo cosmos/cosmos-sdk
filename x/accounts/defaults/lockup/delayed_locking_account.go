@@ -24,7 +24,7 @@ func NewDelayedLockingAccount(clawbackEnable bool) accountstd.AccountCreatorFunc
 		if clawbackEnable {
 			baseClawback := newBaseClawback(d)
 
-			return types.DELAYED_LOCKING_ACCOUNT + types.CLAWBACK_ENABLE_PREFIX, DelayedLockingAccount{
+			return types.DELAYED_LOCKING_ACCOUNT + types.CLAWBACK_ENABLE_SUFFIX, DelayedLockingAccount{
 				BaseAccount: baseClawback,
 			}, nil
 		}

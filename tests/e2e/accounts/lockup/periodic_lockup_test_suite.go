@@ -244,7 +244,7 @@ func (s *E2ETestSuite) TestPeriodicLockingAccountClawbackEnable() {
 	randAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	withdrawAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
-	_, accountAddr, err := app.AccountsKeeper.Init(ctx, types.PERIODIC_LOCKING_ACCOUNT+types.CLAWBACK_ENABLE_PREFIX, accOwner, &types.MsgInitPeriodicLockingAccount{
+	_, accountAddr, err := app.AccountsKeeper.Init(ctx, types.PERIODIC_LOCKING_ACCOUNT+types.CLAWBACK_ENABLE_SUFFIX, accOwner, &types.MsgInitPeriodicLockingAccount{
 		Owner:     ownerAddrStr,
 		StartTime: currentTime,
 		LockingPeriods: []types.Period{

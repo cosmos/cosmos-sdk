@@ -58,6 +58,12 @@ func NewAppModule(
 	ak types.AccountKeeper,
 	mintFn types.MintFn,
 ) AppModule {
+	// If mintFn is nil, use the default minting function.
+	// This check also happens in ProvideModule when used with depinject.
+	if mintFn == nil {
+		mintFn = keeper.DefaultMintFn(types.DefaultInflationCalculationFn)
+	}
+
 	return AppModule{
 		cdc:        cdc,
 		keeper:     keeper,

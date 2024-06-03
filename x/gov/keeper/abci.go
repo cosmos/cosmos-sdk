@@ -16,7 +16,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -33,6 +32,11 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 	}
 
 	inactiveProps, err := iter.KeyValues()
+	if err != nil {
+		return err
+	}
+
+	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return err
 	}
@@ -63,10 +67,6 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 			return err
 		}
 
-		params, err := k.Params.Get(ctx)
-		if err != nil {
-			return err
-		}
 		if !params.BurnProposalDepositPrevote {
 			err = k.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
 		} else {
@@ -195,10 +195,6 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 			// Messages may mutate state thus we use a cached context. If one of
 			// the handlers fails, no state mutation is written and the error
 			// message is logged.
-			params, err := k.Params.Get(ctx)
-			if err != nil {
-				return err
-			}
 			_, err = k.BranchService.ExecuteWithGasLimit(ctx, params.ProposalExecutionGas, func(ctx context.Context) error {
 				// execute all messages
 				for idx, msg = range messages {
@@ -236,10 +232,6 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 			// once the regular voting period expires again, the tally is repeated
 			// according to the regular proposal rules.
 			proposal.ProposalType = v1.ProposalType_PROPOSAL_TYPE_STANDARD
-			params, err := k.Params.Get(ctx)
-			if err != nil {
-				return err
-			}
 			endTime := proposal.VotingStartTime.Add(*params.VotingPeriod)
 			proposal.VotingEndTime = &endTime
 

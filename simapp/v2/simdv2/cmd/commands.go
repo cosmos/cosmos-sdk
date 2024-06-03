@@ -4,7 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+<<<<<<< HEAD
 	"os"
+=======
+>>>>>>> cadd5e13a37c475a55084ebd6add4dc2102fd1d3
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
@@ -53,35 +56,12 @@ func (t *temporaryTxDecoder) DecodeJSON(bz []byte) (transaction.Tx, error) {
 	return t.txConfig.TxJSONDecoder()(bz)
 }
 
-func newServerModules(
+func newApp(
 	viper *viper.Viper,
 	logger log.Logger,
-	txCodec transaction.Codec[transaction.Tx],
-) []serverv2.ServerModule {
+) serverv2.App[transaction.Tx] {
 	sa := simapp.NewSimApp(logger, viper)
-	am := sa.App.AppManager
-	var serverModules []serverv2.ServerModule
-
-	serverCfg := cometbft.Config{CmtConfig: client.GetConfigFromViper(viper), ConsensusAuthority: sa.GetConsensusAuthority()}
-	cometServer := cometbft.NewCometBFTServer[transaction.Tx](
-		am,
-		sa.GetStore(),
-		sa.GetLogger(),
-		serverCfg,
-		txCodec,
-	)
-
-	grpcServer, err := grpc.New(
-		logger,
-		viper,
-		sa.InterfaceRegistry(),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	serverModules = append(serverModules, cometServer, grpcServer)
-	return serverModules
+	return serverv2.App[transaction.Tx]{Application: sa, Store: sa.GetStore()}
 }
 
 func initRootCmd(
@@ -105,7 +85,14 @@ func initRootCmd(
 	)
 
 	// Add empty server struct here for writing default config
-	err := serverv2.AddCommands(rootCmd, newServerModules, &temporaryTxDecoder{txConfig}, log.NewNopLogger(), tempDir(), &cometbft.CometBFTServer[transaction.Tx]{}, grpc.GRPCServer{})
+	err := serverv2.AddCommands(
+		rootCmd, 
+		newApp, 
+		log.NewNopLogger(), 
+		tempDir(), 
+		cometbft.New(tempDir(), &temporaryTxDecoder{txConfig}), 
+		grpc.NewGRPCServer(),
+	)
 	if err != nil {
 		panic(fmt.Sprintf("Add cmd, %v", err))
 	}
@@ -224,11 +211,5 @@ func appExport(
 }
 
 var tempDir = func() string {
-	dir, err := os.MkdirTemp("", "simapp")
-	if err != nil {
-		dir = simapp.DefaultNodeHome
-	}
-	defer os.RemoveAll(dir)
-
-	return dir
+	return simapp.DefaultNodeHome
 }

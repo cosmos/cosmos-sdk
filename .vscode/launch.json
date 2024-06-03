@@ -13,14 +13,13 @@
       "buildFlags": "-tags e2e"
     },
     {
-      "name": "simapp v2",
+      "name": "Start: simapp/v2",
       "type": "go",
       "request": "launch",
       "mode": "debug",
-      "program": "simapp/v2/simdv2",
-      // "args": ["init", "--chain-id", "aurn-chain", "aurn-node"],
+      "program": "${workspaceFolder}/simapp/v2/simdv2",
       "args": ["start"],
-      // "args": ["genesis", "add-genesis-account", "cosmos130ch823d2pwh9wpfm335plg6ktatzw7j427qgs", "1000000000stake"],
-    },
+      "buildFlags": ""
+    }
   ]
 }

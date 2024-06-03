@@ -4,20 +4,24 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	"github.com/pelletier/go-toml/v2"
 )
 
 // ServerModule is a server module that can be started and stopped.
-type ServerModule interface {
+type ServerModule[T transaction.Tx] interface {
 	Name() string
 
 	Start(context.Context) error
 	Stop(context.Context) error
+	Init(App[T], *viper.Viper, log.Logger) (ServerModule[T], error)
 }
 
 // HasCLICommands is a server module that has CLI commands.
@@ -36,7 +40,7 @@ type HasStartFlags interface {
 	StartFlags() *pflag.FlagSet
 }
 
-var _ ServerModule = (*Server)(nil)
+var _ ServerModule[transaction.Tx] = (*Server)(nil)
 
 // Configs returns a viper instance of the config file
 func ReadConfig(configPath string) (*viper.Viper, error) {
@@ -63,10 +67,10 @@ func ReadConfig(configPath string) (*viper.Viper, error) {
 
 type Server struct {
 	logger  log.Logger
-	modules []ServerModule
+	modules []ServerModule[transaction.Tx]
 }
 
-func NewServer(logger log.Logger, modules ...ServerModule) *Server {
+func NewServer(logger log.Logger, modules ...ServerModule[transaction.Tx]) *Server {
 	return &Server{
 		logger:  logger,
 		modules: modules,
@@ -143,21 +147,33 @@ func (s *Server) Configs() map[string]any {
 	return cfgs
 }
 
+// Configs returns all configs of all server modules.
+func (s *Server) Init(appI App[transaction.Tx], v *viper.Viper, logger log.Logger) (ServerModule[transaction.Tx], error) {
+	var modules []ServerModule[transaction.Tx]
+	for _, mod := range s.modules {
+		mod := mod
+		module, err := mod.Init(appI, v, logger)
+		if err != nil {
+			return nil, err
+		}
+		modules = append(modules, module)
+	}
+	s.modules = modules
+
+	return s, nil
+}
+
 // WriteConfig writes the config to the given path.
 // Note: it does not use viper.WriteConfigAs because we do not want to store flag values in the config.
 func (s *Server) WriteConfig(configPath string) error {
-	err := os.MkdirAll(configPath, 0777)
+	cfgs := s.Configs()
+	b, err := toml.Marshal(cfgs)
 	if err != nil {
 		return err
 	}
 
-	for _, mod := range s.modules {
-		if configmod, ok := mod.(HasConfig); ok {
-			err := configmod.WriteConfig(configPath)
-			if err != nil {
-				return err
-			}
-		}
+	if err := os.WriteFile(filepath.Join(configPath), b, 0o600); err != nil {
+		return fmt.Errorf("failed to write config: %w", err)
 	}
 
 	return nil

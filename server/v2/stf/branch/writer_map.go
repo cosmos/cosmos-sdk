@@ -53,6 +53,12 @@ func (b WriterMap) ApplyStateChanges(stateChanges []store.StateChanges) error {
 	return nil
 }
 
+// GetStateChanges returns the state changes for all actors in the WriterMap, including all direct
+// ancesotors from which this WriterMap was derived.
+// See WriterMap.recurseStateChanges for more details.
+// Subject to possible renaming to ensure a developer can retrieve only changes in *this* branch
+// context (not ancestors) if that is desired.
+// see: https://github.com/cosmos/cosmos-sdk/pull/20412#discussion_r1618771230
 func (b WriterMap) GetStateChanges() ([]store.StateChanges, error) {
 	var (
 		changes = make(map[string][]store.KVPair)

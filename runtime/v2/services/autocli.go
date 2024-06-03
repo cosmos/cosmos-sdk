@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
@@ -104,11 +105,16 @@ type autocliRegistrar struct {
 func (a *autocliRegistrar) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
 	if a.registryCache == nil {
 		a.registryCache, a.err = proto.MergedRegistry()
+		if a.err != nil {
+			a.err = fmt.Errorf("failed to build registry cache: %w", a.err)
+			return
+		}
 	}
 
-	desc, err := a.registryCache.FindDescriptorByName(protoreflect.FullName(sd.ServiceName))
+	fullName := protoreflect.FullName(sd.ServiceName)
+	desc, err := a.registryCache.FindDescriptorByName(fullName)
 	if err != nil {
-		a.err = err
+		a.err = fmt.Errorf("failed to find descriptor for %q: %w", fullName, err)
 		return
 	}
 

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
@@ -422,11 +422,16 @@ const (
 	rngMask = rngMax - 1
 )
 
+// ByteSource offers deterministic pseudo-random numbers for math.Rand with fuzzer support.
+// The 'seed' data is read in big endian to uint64. When exhausted,
+// it falls back to a standard random number generator initialized with a specific 'seed' value.
 type ByteSource struct {
 	seed     *bytes.Reader
 	fallback *rand.Rand
 }
 
+// NewByteSource creates a new ByteSource with a specified byte slice and seed. This gives a fixed sequence of pseudo-random numbers.
+// Initially, it utilizes the byte slice. Once that's exhausted, it continues generating numbers using the provided seed.
 func NewByteSource(fuzzSeed []byte, seed int64) *ByteSource {
 	return &ByteSource{
 		seed:     bytes.NewReader(fuzzSeed),

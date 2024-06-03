@@ -6,7 +6,9 @@ import (
 	"os"
 	"testing"
 
-	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/testutils/sims"
+
+	"cosmossdk.io/core/log"
 
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -34,7 +36,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	b.ReportAllocs()
 
 	config := simcli.NewConfigFromFlags()
-	config.ChainID = SimAppChainID
+	config.ChainID = sims.SimAppChainID
 
 	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, "goleveldb-app-sim", "Simulation", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
 	if err != nil {
@@ -54,7 +56,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	appOptions.SetDefault(flags.FlagHome, DefaultNodeHome)
 	appOptions.SetDefault(server.FlagInvCheckPeriod, simcli.FlagPeriodValue)
 
-	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(sims.SimAppChainID))
 
 	// run randomized simulation
 	simParams, simErr := simulation.SimulateFromSeed(

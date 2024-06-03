@@ -1,4 +1,4 @@
-package simapp
+package sims
 
 import (
 	"fmt"

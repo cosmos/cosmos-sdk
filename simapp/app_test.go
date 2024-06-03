@@ -196,7 +196,7 @@ func TestRunMigrations(t *testing.T) {
 			// their latest ConsensusVersion.
 			_, err = app.ModuleManager.RunMigrations(
 				app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()}), configurator,
-				module.VersionMap{
+				appmodule.VersionMap{
 					"accounts":     accounts.AppModule{}.ConsensusVersion(),
 					"bank":         1,
 					"auth":         auth.AppModule{}.ConsensusVersion(),
@@ -247,7 +247,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	// Run migrations only for "mock" module. We exclude it from
 	// the VersionMap to simulate upgrading with a new module.
 	_, err := app.ModuleManager.RunMigrations(ctx, app.Configurator(),
-		module.VersionMap{
+		appmodule.VersionMap{
 			"bank":         bank.AppModule{}.ConsensusVersion(),
 			"auth":         auth.AppModule{}.ConsensusVersion(),
 			"authz":        authzmodule.AppModule{}.ConsensusVersion(),

@@ -8,8 +8,8 @@ require (
 	github.com/creachadair/tomledit v0.0.26
 	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/spf13/cobra v1.8.0
-	github.com/spf13/viper v1.18.2
-	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
+	github.com/spf13/viper v1.19.0
+	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc
 	gotest.tools/v3 v3.5.1
 )
 

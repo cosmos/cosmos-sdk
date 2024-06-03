@@ -12,7 +12,6 @@ import (
 	minttypes "cosmossdk.io/x/mint/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -111,13 +110,8 @@ func ProvideExampleMintFn(bankKeeper MintBankKeeper) minttypes.MintFn {
 		// 	return err
 		// }
 
-		// TODO: figure how to get FeeCollectorName from mint module without generating a cyclic dependency
 		if err = bankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, authtypes.FeeCollectorName, mintedCoins); err != nil {
 			return err
-		}
-
-		if mintedCoin.Amount.IsInt64() {
-			defer telemetry.ModuleSetGauge(minttypes.ModuleName, float32(mintedCoin.Amount.Int64()), "minted_tokens")
 		}
 
 		return env.EventService.EventManager(ctx).EmitKV(

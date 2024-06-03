@@ -21,9 +21,6 @@ import (
 // Implements ValidatorSet interface
 var _ types.ValidatorSet = Keeper{}
 
-// Implements DelegationSet interface
-var _ types.DelegationSet = Keeper{}
-
 // Keeper of the x/staking store
 type Keeper struct {
 	appmodule.Environment
@@ -31,6 +28,7 @@ type Keeper struct {
 	cdc                   codec.BinaryCodec
 	authKeeper            types.AccountKeeper
 	bankKeeper            types.BankKeeper
+	hooks                 types.StakingHooks
 	authority             string
 	validatorAddressCodec addresscodec.Codec
 	consensusAddressCodec addresscodec.Codec
@@ -40,8 +38,6 @@ type Keeper struct {
 
 	// LastTotalPower value: LastTotalPower
 	LastTotalPower collections.Item[math.Int]
-	// DelegationsByValidator key: valAddr+delAddr | value: none used (index key for delegations by validator index)
-	DelegationsByValidator collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte]
 	// ValidatorByConsensusAddress key: consAddr | value: valAddr
 	ValidatorByConsensusAddress collections.Map[sdk.ConsAddress, sdk.ValAddress]
 	// Delegations key: AccAddr+valAddr | value: Delegation
@@ -104,12 +100,6 @@ func NewKeeper(
 			),
 			codec.CollValue[types.Delegation](cdc),
 		),
-		DelegationsByValidator: collections.NewMap(
-			sb, types.DelegationByValIndexKey,
-			"delegations_by_validator",
-			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.AccAddressKey), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
-			collections.BytesValue,
-		),
 		ValidatorByConsensusAddress: collections.NewMap(
 			sb, types.ValidatorsByConsAddrKey,
 			"validator_by_cons_addr",
@@ -145,12 +135,22 @@ func NewKeeper(
 
 // Hooks gets the hooks for staking *Keeper {
 func (k *Keeper) Hooks() types.StakingHooks {
-	return nil
+	if k.hooks == nil {
+		// return a no-op implementation if no hooks are set
+		return types.MultiStakingHooks{}
+	}
+
+	return k.hooks
 }
 
 // SetHooks sets the validator hooks.  In contrast to other receivers, this method must take a pointer due to nature
 // of the hooks interface and SDK start up sequence.
 func (k *Keeper) SetHooks(sh types.StakingHooks) {
+	if k.hooks != nil {
+		panic("cannot set validator hooks twice")
+	}
+
+	k.hooks = sh
 }
 
 // GetAuthority returns the x/staking module's authority.

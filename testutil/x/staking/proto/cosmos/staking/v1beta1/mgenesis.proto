@@ -31,6 +31,10 @@ message GenesisState {
 
   // delegations defines the delegations active at genesis.
   repeated Delegation delegations = 5 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+
+  // exported defines a bool to identify whether the chain dealing with exported or initialized genesis.
+  bool exported = 6;
+  
 }
 
 // LastValidatorPower required for validator set update logic.

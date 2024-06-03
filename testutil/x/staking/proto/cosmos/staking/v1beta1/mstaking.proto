@@ -164,6 +164,27 @@ message Delegation {
   ];
 }
 
+// Pool is used for tracking bonded and not-bonded token supply of the bond
+// denomination.
+message Pool {
+  option (gogoproto.description) = true;
+  option (gogoproto.equal)       = true;
+  string not_bonded_tokens       = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "not_bonded_tokens",
+    (amino.dont_omitempty) = true
+  ];
+  string bonded_tokens = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "bonded_tokens",
+    (amino.dont_omitempty) = true
+  ];
+}
+
 // Params defines the parameters for the x/staking module.
 message Params {
   option (amino.name)      = "cosmos-sdk/x/staking/Params";
@@ -174,32 +195,14 @@ message Params {
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdduration) = true];
   // max_validators is the maximum number of validators.
   uint32 max_validators = 2;
-  // max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio).
-  uint32 max_entries = 3;
-  // historical_entries is the number of historical entries to persist.
-  uint32 historical_entries = 4;
   // bond_denom defines the bondable coin denomination.
-  string bond_denom = 5;
+  string bond_denom = 3;
   // min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators
-  string min_commission_rate = 6 [
+  string min_commission_rate = 4 [
     (gogoproto.moretags)   = "yaml:\"min_commission_rate\"",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true,
     (cosmos_proto.scalar)  = "cosmos.Dec"
   ];
-
-  // key_rotation_fee is fee to be spent when rotating validator's key
-  // (either consensus pubkey or operator key)
-  cosmos.base.v1beta1.Coin key_rotation_fee = 7 [(gogoproto.nullable) = false];
-}
-
-// DelegationResponse is equivalent to Delegation except that it contains a
-// balance in addition to shares which is more suitable for client responses.
-message DelegationResponse {
-  option (gogoproto.equal) = false;
-
-  Delegation delegation = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-
-  cosmos.base.v1beta1.Coin balance = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

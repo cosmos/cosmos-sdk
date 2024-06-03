@@ -21,38 +21,22 @@ const (
 
 	// Default maximum number of bonded validators
 	DefaultMaxValidators uint32 = 100
-
-	// Default maximum entries in a UBD/RED pair
-	DefaultMaxEntries uint32 = 7
-
-	// DefaultHistorical entries is 10000. Apps that don't use IBC can ignore this
-	// value by not adding the staking module to the application module manager's
-	// SetOrderBeginBlockers.
-	DefaultHistoricalEntries uint32 = 10000
 )
 
 var (
 	// DefaultMinCommissionRate is set to 0%
 	DefaultMinCommissionRate = math.LegacyZeroDec()
-
-	// DefaultKeyRotationFee is fees used to rotate the ConsPubkey or Operator key
-	DefaultKeyRotationFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)
 )
 
 // NewParams creates a new Params instance
 func NewParams(unbondingTime time.Duration,
-	maxValidators, maxEntries, historicalEntries uint32,
-	bondDenom string, minCommissionRate math.LegacyDec,
-	keyRotationFee sdk.Coin,
+	maxValidators uint32, bondDenom string, minCommissionRate math.LegacyDec,
 ) Params {
 	return Params{
 		UnbondingTime:     unbondingTime,
 		MaxValidators:     maxValidators,
-		MaxEntries:        maxEntries,
-		HistoricalEntries: historicalEntries,
 		BondDenom:         bondDenom,
 		MinCommissionRate: minCommissionRate,
-		KeyRotationFee:    keyRotationFee,
 	}
 }
 
@@ -61,11 +45,8 @@ func DefaultParams() Params {
 	return NewParams(
 		DefaultUnbondingTime,
 		DefaultMaxValidators,
-		DefaultMaxEntries,
-		DefaultHistoricalEntries,
 		sdk.DefaultBondDenom,
 		DefaultMinCommissionRate,
-		DefaultKeyRotationFee,
 	)
 }
 
@@ -99,23 +80,11 @@ func (p Params) Validate() error {
 		return err
 	}
 
-	if err := validateMaxEntries(p.MaxEntries); err != nil {
-		return err
-	}
-
 	if err := validateBondDenom(p.BondDenom); err != nil {
 		return err
 	}
 
 	if err := validateMinCommissionRate(p.MinCommissionRate); err != nil {
-		return err
-	}
-
-	if err := validateHistoricalEntries(p.HistoricalEntries); err != nil {
-		return err
-	}
-
-	if err := validateKeyRotationFee(p.KeyRotationFee); err != nil {
 		return err
 	}
 
@@ -143,28 +112,6 @@ func validateMaxValidators(i interface{}) error {
 
 	if v == 0 {
 		return fmt.Errorf("max validators must be positive: %d", v)
-	}
-
-	return nil
-}
-
-func validateMaxEntries(i interface{}) error {
-	v, ok := i.(uint32)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v == 0 {
-		return fmt.Errorf("max entries must be positive: %d", v)
-	}
-
-	return nil
-}
-
-func validateHistoricalEntries(i interface{}) error {
-	_, ok := i.(uint32)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
 	return nil
@@ -214,22 +161,6 @@ func validateMinCommissionRate(i interface{}) error {
 	}
 	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("minimum commission rate cannot be greater than 100%%: %s", v)
-	}
-
-	return nil
-}
-
-func validateKeyRotationFee(i interface{}) error {
-	v, ok := i.(sdk.Coin)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v.IsNil() {
-		return fmt.Errorf("cons pubkey rotation fee cannot be nil: %s", v)
-	}
-	if v.IsLTE(sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)) {
-		return fmt.Errorf("cons pubkey rotation fee cannot be negative or zero: %s", v)
 	}
 
 	return nil

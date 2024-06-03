@@ -3,7 +3,6 @@ package types
 import (
 	"context"
 
-	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 
@@ -57,12 +56,6 @@ type ValidatorSet interface {
 	TotalBondedTokens(context.Context) (math.Int, error)                          // total bonded tokens within the validator set
 	StakingTokenSupply(context.Context) (math.Int, error)                         // total staking token supply
 
-	// slash the validator and delegators of the validator, specifying offense height, offense power, and slash fraction
-	Slash(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec) (math.Int, error)
-	SlashWithInfractionReason(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec, st.Infraction) (math.Int, error)
-	Jail(context.Context, sdk.ConsAddress) error   // jail a validator
-	Unjail(context.Context, sdk.ConsAddress) error // unjail a validator
-
 	// Delegation allows for getting a particular delegation for a given validator
 	// and delegator outside the scope of the staking module.
 	Delegation(context.Context, sdk.AccAddress, sdk.ValAddress) (sdk.DelegationI, error)
@@ -84,3 +77,24 @@ type DelegationSet interface {
 	IterateDelegations(ctx context.Context, delegator sdk.AccAddress,
 		fn func(index int64, delegation sdk.DelegationI) (stop bool)) error
 }
+
+// Event Hooks
+// These can be utilized to communicate between a staking keeper and another
+// keeper which must take particular actions when validators/delegators change
+// state. The second keeper must implement this interface, which then the
+// staking keeper can call.
+
+// StakingHooks event hooks for staking validator object (noalias)
+type StakingHooks interface {
+	AfterValidatorCreated(ctx context.Context, valAddr sdk.ValAddress) error // Must be called when a validator is created
+
+	BeforeDelegationCreated(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error        // Must be called when a delegation is created
+	BeforeDelegationSharesModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error // Must be called when a delegation's shares are modified
+	AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error
+}
+
+// StakingHooksWrapper is a wrapper for modules to inject StakingHooks using depinject.
+type StakingHooksWrapper struct{ StakingHooks }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (StakingHooksWrapper) IsOnePerModuleType() {}

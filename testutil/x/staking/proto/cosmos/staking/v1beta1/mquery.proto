@@ -22,19 +22,10 @@ service Query {
     option (google.api.http).get               = "/cosmos/staking/v1beta1/validators";
   }
 
-  // ValidatorDelegations queries delegate info for given validator.
-  //
-  // When called from another module, this query might consume a high amount of
-  // gas if the pagination field is incorrectly set.
-  rpc ValidatorDelegations(QueryValidatorDelegationsRequest) returns (QueryValidatorDelegationsResponse) {
+  // Validator queries validator info for given validator address.
+  rpc Validator(QueryValidatorRequest) returns (QueryValidatorResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get               = "/cosmos/staking/v1beta1/validators/{validator_addr}/delegations";
-  }
-
-  // Parameters queries the staking parameters.
-  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get               = "/cosmos/staking/v1beta1/params";
+    option (google.api.http).get               = "/cosmos/staking/v1beta1/validators/{validator_addr}";
   }
 }
 
@@ -56,31 +47,14 @@ message QueryValidatorsResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryValidatorDelegationsRequest is request type for the
-// Query/ValidatorDelegations RPC method
-message QueryValidatorDelegationsRequest {
+// QueryValidatorRequest is response type for the Query/Validator RPC method
+message QueryValidatorRequest {
   // validator_addr defines the validator address to query for.
   string validator_addr = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
-
-  // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
-// QueryValidatorDelegationsResponse is response type for the
-// Query/ValidatorDelegations RPC method
-message QueryValidatorDelegationsResponse {
-  repeated DelegationResponse delegation_responses = 1
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.castrepeated) = "DelegationResponses"];
-
-  // pagination defines the pagination in the response.
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-// QueryParamsRequest is request type for the Query/Params RPC method.
-message QueryParamsRequest {}
-
-// QueryParamsResponse is response type for the Query/Params RPC method.
-message QueryParamsResponse {
-  // params holds all the parameters of this module.
-  Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+// QueryValidatorResponse is response type for the Query/Validator RPC method
+message QueryValidatorResponse {
+  // validator defines the validator info.
+  Validator validator = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

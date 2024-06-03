@@ -80,6 +80,25 @@ Clawback enabled lockup account will be able to trigger a clawback execution by 
 
 If an lockup account is clawback enable, it will not be able to perform action such as: delegate, undelegate, withdrawReward. 
 
+```mermaid
+flowchart TD 
+    A[lockup account's BaseAccount] -->|type casting| B{Is BaseClawback?}
+
+    B -->|TRUE| C([Clawback enabled account])
+
+    B -->|FALSE| D([Clawback not enabled account])
+
+    C --> 1[Withdraw Unlocked Tokens]
+    C --> 2[Send Coins]
+    C --> 3[Clawback tokens]
+
+    D --> 1[Withdraw Unlocked Tokens]
+    D --> 2[Send Coins]
+    D --> 4[Delegate]
+    D --> 5[Undelegate]
+    D --> 6[Withdraw Reward]
+```
+
 ### How to enable clawback
 
 accounts module keeper takes multiple AccountCreatorFunc as parameter, each represents an account type.
@@ -96,7 +115,7 @@ func NewKeeper(
 
 All lockup account type AccountCreatorFunc accept a boolean typed flag named clawbackEnable, if true the BaseClawback will be passed as BaseAccount and account type name with additional CLAWBACK_ENABLE_SUFFIX else BaseLockup will be passed in instead and account type name will be kept as default.
 
-e.g: 
+Example, in ContinuousLockingAccount:
 
 ```go
 func NewContinuousLockingAccount(clawbackEnable bool) accountstd.AccountCreatorFunc {
@@ -117,10 +136,30 @@ func NewContinuousLockingAccount(clawbackEnable bool) accountstd.AccountCreatorF
 		}, nil
 	}
 }
-
 ```
 
-Thus, developer can introduce both clawback enabled and disabled for the same lockup type.
+```mermaid
+flowchart TD 
+    subgraph accounts module keeper initialization
+    A[NewContinuousLockingAccount] -->|passed clawbackEnable as parameter| B{Is clawbackEnable?}
+
+    subgraph C [CONTINUOUS_LOCKING_ACCOUNT + CLAWBACK_ENABLE_SUFFIX]
+    E[Passed BaseClawback to ContinuousLockingAccount struct]
+    end
+
+    subgraph D [CONTINUOUS_LOCKING_ACCOUNT]
+    F[Passed BaseLockup to ContinuousLockingAccount struct]
+    end
+
+    B -->|TRUE| C
+    B -->|FALSE| D
+
+    end
+```
+
+Thus, developer can introduce both, clawback enabled and disabled for the same lockup type.
+
+Example, in app.go:
 
 ```go
 accountsKeeper, err := accounts.NewKeeper(

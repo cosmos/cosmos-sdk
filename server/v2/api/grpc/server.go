@@ -39,36 +39,9 @@ func NewGRPCServer() GRPCServer {
 	return GRPCServer{}
 }
 
-func (g GRPCServer) Init(appI serverv2.App[transaction.Tx], v *viper.Viper, logger log.Logger) (serverv2.ServerModule[transaction.Tx], error) {
-	cfg := DefaultConfig()
-	if v != nil {
-		if err := v.Unmarshal(&cfg); err != nil {
-			return GRPCServer{}, fmt.Errorf("failed to unmarshal config: %w", err)
-		}
-	}
-
-	grpcSrv := grpc.NewServer(
-		grpc.ForceServerCodec(newProtoCodec(appI.Application.InterfaceRegistry()).GRPCCodec()),
-		grpc.MaxSendMsgSize(cfg.MaxSendMsgSize),
-		grpc.MaxRecvMsgSize(cfg.MaxRecvMsgSize),
-	)
-
-	// app.RegisterGRPCServer(grpcSrv)
-
-	// Reflection allows external clients to see what services and methods
-	// the gRPC server exposes.
-	gogoreflection.Register(grpcSrv)
-
-	return GRPCServer{
-		grpcSrv: grpcSrv,
-		config:  cfg,
-		logger:  logger.With(log.ModuleKey, serverName),
-	}, nil
-}
-
-// New returns a correctly configured and initialized gRPC server.
+// Init returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server.
-func New(logger log.Logger, v *viper.Viper, interfaceRegistry appmanager.InterfaceRegistry) (GRPCServer, error) {
+func (g GRPCServer) Init(appI serverv2.App[transaction.Tx], v *viper.Viper, logger log.Logger) (serverv2.ServerModule[transaction.Tx], error) {
 	cfg := DefaultConfig()
 	if v != nil {
 		if err := v.Sub(serverName).Unmarshal(&cfg); err != nil {
@@ -77,7 +50,7 @@ func New(logger log.Logger, v *viper.Viper, interfaceRegistry appmanager.Interfa
 	}
 
 	grpcSrv := grpc.NewServer(
-		grpc.ForceServerCodec(newProtoCodec(interfaceRegistry).GRPCCodec()),
+		grpc.ForceServerCodec(newProtoCodec(appI.Application.InterfaceRegistry()).GRPCCodec()),
 		grpc.MaxSendMsgSize(cfg.MaxSendMsgSize),
 		grpc.MaxRecvMsgSize(cfg.MaxRecvMsgSize),
 	)

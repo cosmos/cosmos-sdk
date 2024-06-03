@@ -127,45 +127,6 @@ func (s *CometBFTServer[T]) Init(appI serverv2.App[T], v *viper.Viper, logger lo
 	}, nil
 }
 
-func NewCometBFTServer[T transaction.Tx](
-	app *appmanager.AppManager[T],
-	store types.Store,
-	logger log.Logger,
-	cfg Config,
-	txCodec transaction.Codec[T],
-) *CometBFTServer[T] {
-	logger = logger.With("module", "cometbft-server")
-
-	// create noop mempool
-	mempool := mempool.NoOpMempool[T]{}
-
-	// create consensus
-	consensus := NewConsensus[T](app, mempool, store, cfg, txCodec, logger)
-
-	consensus.SetPrepareProposalHandler(handlers.NoOpPrepareProposal[T]())
-	consensus.SetProcessProposalHandler(handlers.NoOpProcessProposal[T]())
-	consensus.SetVerifyVoteExtension(handlers.NoOpVerifyVoteExtensionHandler())
-	consensus.SetExtendVoteExtension(handlers.NoOpExtendVote())
-
-	// TODO: set these; what is the appropriate presence of the Store interface here?
-	var ss snapshots.StorageSnapshotter
-	var sc snapshots.CommitSnapshotter
-
-	snapshotStore, err := GetSnapshotStore(cfg.CmtConfig.RootDir)
-	if err != nil {
-		panic(err)
-	}
-
-	sm := snapshots.NewManager(snapshotStore, snapshots.SnapshotOptions{}, sc, ss, nil, logger) // TODO: set options somehow
-	consensus.SetSnapshotManager(sm)
-
-	return &CometBFTServer[T]{
-		logger: logger,
-		App:    consensus,
-		config: cfg,
-	}
-}
-
 func (s *CometBFTServer[T]) Name() string {
 	return "cometbft"
 }

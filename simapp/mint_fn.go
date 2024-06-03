@@ -76,43 +76,33 @@ func ProvideExampleMintFn(bankKeeper bankKeeper) minttypes.MintFn {
 		secsSinceLastMint := env.HeaderService.HeaderInfo(ctx).Time.Unix() - (int64)(lastMint)
 		provisionAmt := minter.AnnualProvisions.QuoInt64(31536000).MulInt64(secsSinceLastMint) // 31536000 = seconds in a year
 		mintedCoin := sdk.NewCoin(mintParams.Params.MintDenom, provisionAmt.TruncateInt())
-		mintedCoins := sdk.NewCoins(mintedCoin)
 		maxSupply := mintParams.Params.MaxSupply
 		totalSupply := stakingTokenSupply.Amount
 
-		// if maxSupply is not infinite, check against max_supply parameter
 		if !maxSupply.IsZero() {
-			if totalSupply.Add(mintedCoins.AmountOf(mintParams.Params.MintDenom)).GT(maxSupply) {
-				// calculate the difference between maxSupply and totalSupply
-				diff := maxSupply.Sub(totalSupply)
-				// mint the difference
-				diffCoin := sdk.NewCoin(mintParams.Params.MintDenom, diff)
-				diffCoins := sdk.NewCoins(diffCoin)
+			// supply is not infinite, check the amount to mint
+			remainingSupply := maxSupply.Sub(totalSupply)
 
-				// mint coins
-				if diffCoins.Empty() {
-					// skip as no coins need to be minted
-					return nil
-				}
-
-				if err := bankKeeper.MintCoins(ctx, minttypes.ModuleName, diffCoins); err != nil {
-					return err
-				}
-				mintedCoins = diffCoins
-			}
-		}
-
-		// mint coins if maxSupply is infinite or total staking supply is less than maxSupply
-		if maxSupply.IsZero() || totalSupply.Add(mintedCoins.AmountOf(mintParams.Params.MintDenom)).LT(maxSupply) {
-			// mint coins
-			if mintedCoins.Empty() {
-				// skip as no coins need to be minted
+			if remainingSupply.LTE(math.ZeroInt()) {
+				// max supply reached, no new tokens will be minted
+				// also handles the case where totalSupply > maxSupply
 				return nil
 			}
 
-			if err := bankKeeper.MintCoins(ctx, minttypes.ModuleName, mintedCoins); err != nil {
-				return err
+			// if the amount to mint is greater than the remaining supply, mint the remaining supply
+			if mintedCoin.Amount.GT(remainingSupply) {
+				mintedCoin.Amount = remainingSupply
 			}
+		}
+
+		if mintedCoin.Amount.IsZero() {
+			// skip as no coins need to be minted
+			return nil
+		}
+
+		mintedCoins := sdk.NewCoins(mintedCoin)
+		if err := bankKeeper.MintCoins(ctx, minttypes.ModuleName, mintedCoins); err != nil {
+			return err
 		}
 
 		// Example of custom send while minting

@@ -170,6 +170,11 @@ var (
 					// ExportGenesis: []string{},
 					// Uncomment if you want to set a custom migration order here.
 					// OrderMigrations: []string{},
+					// SkipStoreKeys is an optional list of store keys to skip when constructing the
+					// module's keeper. This is useful when a module does not have a store key.
+					SkipStoreKeys: []string{
+						"tx",
+					},
 				}),
 			},
 			{

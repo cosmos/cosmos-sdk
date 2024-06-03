@@ -21,6 +21,9 @@ type autoCLIKeyring interface {
 
 	// Sign signs the given bytes with the key with the given name.
 	Sign(name string, msg []byte, signMode signingv1beta1.SignMode) ([]byte, error)
+
+	// KeyType returns the type of the key.
+	KeyType(name string) (uint, error)
 }
 
 // NewAutoCLIKeyring wraps the SDK keyring and make it compatible with the AutoCLI keyring interfaces.
@@ -83,4 +86,13 @@ func (a *autoCLIKeyringAdapter) Sign(name string, msg []byte, signMode signingv1
 
 	signBytes, _, err := a.Keyring.Sign(record.Name, msg, sdkSignMode)
 	return signBytes, err
+}
+
+func (a *autoCLIKeyringAdapter) KeyType(name string) (uint, error) {
+	record, err := a.Keyring.Key(name)
+	if err != nil {
+		return 0, err
+	}
+
+	return uint(record.GetType()), nil
 }

@@ -82,6 +82,17 @@ https://github.com/cosmos/cosmos-sdk/blob/7068d0da52d954430054768b2c56aff4466693
 
 In the latest release of x/mint, the minting logic has been refactored to allow for more flexibility in the minting process. The `InflationCalculationFn` has been deprecated in favor of `MintFn`. The `MintFn` function is passed to the `NewAppModule` function and is used to mint tokens on the configured epoch beginning. This change allows users to define their own minting logic and removes any assumptions on how tokens are minted.
 
+```mermaid
+flowchart LR
+    A[BeforeEpochStart] --> B[MintFn]
+
+    subgraph B["MintFn (user defined)"]
+        direction LR
+        C[Get x/staking info] --> D[Calculate Inflation]
+        D --> E[Mint Tokens]
+    end
+```
+
 ### MintFn
 
 The `MintFn` function is called at the beginning of each epoch and is responsible for minting tokens. The function signature is as follows:

@@ -117,7 +117,7 @@ If module developers choose to deprecate support for some or all gRPC queries th
 
 Also, this design does impose the requirement that module developers use `collections` and `orm` to get their data indexed. While we believe that these frameworks are the best way to structure state in the SDK, some developers may not want to refactor their code to use them. This design does not provide a way to index state that is not structured with `collections` or `orm`, although that support could be added in the future to the decoder framework.
 
-Furthermore, this design does require that node operators that want to support the new infrastructure run a PostgreSQL database. While we believe that this will actually be better from an infrastructure perspective - PostgreSQL should be able to serve queries significantly faster than the state machine can - it does require additional infrastructure and knowledge for node operators.
+Furthermore, this design does require that node operators that want to support the new infrastructure run a PostgreSQL database. While we believe that this will actually be better from an infrastructure perspective - PostgreSQL should be able to serve queries significantly faster than the state machine can - it does require additional infrastructure and knowledge for query node operators.
 
 ### Neutral
 

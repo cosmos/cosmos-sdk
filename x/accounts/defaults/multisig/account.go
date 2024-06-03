@@ -395,10 +395,11 @@ func (a *Account) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 func safeAdd(nums ...uint64) (uint64, error) {
 	var sum uint64
 	for _, num := range nums {
-		if sum+num < sum {
+		if newSum := sum + num; newSum < sum {
 			return 0, errors.New("overflow")
+		} else {
+			sum = newSum
 		}
-		sum += num
 	}
 	return sum, nil
 }

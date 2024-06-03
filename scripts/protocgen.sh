@@ -24,6 +24,9 @@ for dir in $proto_dirs; do
     if [ -d "../cosmos" -a "$dir" != "./proto" ]; then
       cp -r ../cosmos $home/api
       rm -rf ../cosmos
+
+      # remove /api/cosmos/app/v2 folder since v2 not support pulsar
+      rm -rf $home/api/cosmos/app/v2/*.pulsar.go
     fi
   fi
 

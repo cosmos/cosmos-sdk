@@ -24,7 +24,7 @@ import (
 
 const govModuleNameStr = "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
 
-type IntegrationTestSuite struct {
+type ModuleTestSuite struct {
 	suite.Suite
 
 	mintKeeper    keeper.Keeper
@@ -37,10 +37,10 @@ type IntegrationTestSuite struct {
 }
 
 func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+	suite.Run(t, new(ModuleTestSuite))
 }
 
-func (s *IntegrationTestSuite) SetupTest() {
+func (s *ModuleTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, mint.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
@@ -77,7 +77,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	s.appmodule = mint.NewAppModule(encCfg.Codec, s.mintKeeper, accountKeeper, s.mintKeeper.DefaultMintFn(types.DefaultInflationCalculationFn))
 }
 
-func (s *IntegrationTestSuite) TestEpochHooks() {
+func (s *ModuleTestSuite) TestEpochHooks() {
 	s.stakingKeeper.EXPECT().StakingTokenSupply(s.ctx).Return(math.NewIntFromUint64(100000000000), nil).AnyTimes()
 	bondedRatio := math.LegacyNewDecWithPrec(15, 2)
 	s.stakingKeeper.EXPECT().BondedRatio(s.ctx).Return(bondedRatio, nil).AnyTimes()

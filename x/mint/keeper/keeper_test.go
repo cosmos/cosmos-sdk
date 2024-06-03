@@ -24,7 +24,7 @@ import (
 
 const govModuleNameStr = "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
 
-type IntegrationTestSuite struct {
+type KeeperTestSuite struct {
 	suite.Suite
 
 	mintKeeper    keeper.Keeper
@@ -35,10 +35,10 @@ type IntegrationTestSuite struct {
 }
 
 func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (s *IntegrationTestSuite) SetupTest() {
+func (s *KeeperTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, mint.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
@@ -73,7 +73,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	s.msgServer = keeper.NewMsgServerImpl(s.mintKeeper)
 }
 
-func (s *IntegrationTestSuite) TestAliasFunctions() {
+func (s *KeeperTestSuite) TestAliasFunctions() {
 	stakingTokenSupply := math.NewIntFromUint64(100000000000)
 	s.stakingKeeper.EXPECT().StakingTokenSupply(s.ctx).Return(stakingTokenSupply, nil)
 	tokenSupply, err := s.mintKeeper.StakingTokenSupply(s.ctx)
@@ -96,7 +96,7 @@ func (s *IntegrationTestSuite) TestAliasFunctions() {
 	s.Nil(s.mintKeeper.AddCollectedFees(s.ctx, fees))
 }
 
-func (s *IntegrationTestSuite) TestDefaultMintFn() {
+func (s *KeeperTestSuite) TestDefaultMintFn() {
 	s.stakingKeeper.EXPECT().StakingTokenSupply(s.ctx).Return(math.NewIntFromUint64(100000000000), nil).AnyTimes()
 	bondedRatio := math.LegacyNewDecWithPrec(15, 2)
 	s.stakingKeeper.EXPECT().BondedRatio(s.ctx).Return(bondedRatio, nil).AnyTimes()
@@ -134,7 +134,7 @@ func (s *IntegrationTestSuite) TestDefaultMintFn() {
 	s.NoError(err)
 }
 
-func (s *IntegrationTestSuite) TestBeginBlocker() {
+func (s *KeeperTestSuite) TestBeginBlocker() {
 	s.stakingKeeper.EXPECT().StakingTokenSupply(s.ctx).Return(math.NewIntFromUint64(100000000000), nil).AnyTimes()
 	bondedRatio := math.LegacyNewDecWithPrec(15, 2)
 	s.stakingKeeper.EXPECT().BondedRatio(s.ctx).Return(bondedRatio, nil).AnyTimes()
@@ -154,7 +154,7 @@ func (s *IntegrationTestSuite) TestBeginBlocker() {
 	s.NotEqual(minter, newMinter)
 }
 
-func (s *IntegrationTestSuite) TestMigrator() {
+func (s *KeeperTestSuite) TestMigrator() {
 	m := keeper.NewMigrator(s.mintKeeper)
 	s.NoError(m.Migrate1to2(s.ctx)) // just to get the coverage up
 

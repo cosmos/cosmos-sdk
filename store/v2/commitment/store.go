@@ -136,6 +136,20 @@ func (c *CommitStore) LoadVersion(targetVersion uint64, upgrades *corestore.Stor
 		}
 	}
 
+	// If the target version is greater than the latest version, it is the snapshot
+	// restore case, we should create a new commit info for the target version.
+	if targetVersion > latestVersion {
+		cInfo := c.WorkingCommitInfo(targetVersion)
+
+		for _, tree := range c.multiTrees {
+			if err := tree.LoadVersion(targetVersion); err != nil {
+				return err
+			}
+		}
+
+		return c.flushCommitInfo(targetVersion, cInfo)
+	}
+
 	storesKeys := make([]string, 0, len(c.multiTrees))
 	for storeKey := range c.multiTrees {
 		storesKeys = append(storesKeys, storeKey)
@@ -150,8 +164,36 @@ func (c *CommitStore) LoadVersion(targetVersion uint64, upgrades *corestore.Stor
 		})
 	}
 
+	commitInfo, err := c.GetCommitInfo(targetVersion)
+	if err != nil {
+		return err
+	}
+
 	for _, storeKey := range storesKeys {
+		// If it has been renamed, continue to the next store key.
+		if upgrades.IsRenamed(storeKey) {
+			continue
+		}
+
 		tree := c.multiTrees[storeKey]
+
+		removeTree := func(storeKey string) error {
+			if oldTree, ok := c.multiTrees[storeKey]; ok {
+				if err := oldTree.Close(); err != nil {
+					return err
+				}
+				delete(c.multiTrees, storeKey)
+			}
+			return nil
+		}
+
+		// If it has been deleted, remove the tree.
+		if upgrades.IsDeleted(storeKey) {
+			if err := removeTree(storeKey); err != nil {
+				return err
+			}
+			continue
+		}
 
 		// If it has been added, set the initial version.
 		if upgrades.IsAdded(storeKey) {
@@ -160,14 +202,7 @@ func (c *CommitStore) LoadVersion(targetVersion uint64, upgrades *corestore.Stor
 			}
 		}
 
-		removeTree := func(storeKey string) error {
-			if err := tree.Close(); err != nil {
-				return err
-			}
-			delete(c.multiTrees, storeKey)
-			return nil
-		}
-
+		commitID := commitInfo.GetStoreCommitID([]byte(storeKey))
 		// If it has been renamed, migrate the data.
 		if oldKey := upgrades.RenamedFrom(storeKey); oldKey != "" {
 			if err := c.migrateKVStore(oldKey, storeKey); err != nil {
@@ -176,30 +211,20 @@ func (c *CommitStore) LoadVersion(targetVersion uint64, upgrades *corestore.Stor
 			if err := removeTree(oldKey); err != nil {
 				return err
 			}
+			commitID = commitInfo.GetStoreCommitID([]byte(oldKey))
 		}
 
-		// If it has been deleted, remove the tree.
-		if upgrades.IsDeleted(storeKey) {
-			if err := removeTree(storeKey); err != nil {
-				return err
-			}
-		}
-
-		if err := tree.LoadVersion(targetVersion); err != nil {
+		if err := tree.LoadVersion(commitID.Version); err != nil {
 			return err
 		}
-	}
-
-	// If the target version is greater than the latest version, it is the snapshot
-	// restore case, we should create a new commit info for the target version.
-	if targetVersion > latestVersion {
-		cInfo := c.WorkingCommitInfo(targetVersion)
-		return c.flushCommitInfo(targetVersion, cInfo)
 	}
 
 	return nil
 }
 
+// migrateKVStore migrates the data from the old key to the new key.
+// It should be synchronous to ensure that the data is migrated before the
+// old store is pruned.
 func (c *CommitStore) migrateKVStore(oldKey, newKey string) error {
 	var (
 		oldKVStore corestore.KVStoreWithBatch

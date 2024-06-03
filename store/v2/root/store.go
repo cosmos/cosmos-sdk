@@ -246,22 +246,28 @@ func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreU
 		return fmt.Errorf("cannot upgrade while migrating")
 	}
 
+	if err := s.loadVersion(version, upgrades); err != nil {
+		return err
+	}
+
 	// if upgrades is not nil, we need to add the pruned KVStores to the pruning manager
 	if upgrades != nil {
 		kvStoreGetter, ok := s.stateCommitment.(store.KVStoreGetter)
 		if !ok {
-			prunedKVStores := make([]corestore.KVStoreWithBatch, 0)
+			removedKVStores := make([]corestore.KVStoreWithBatch, 0)
 			for _, storeKey := range upgrades.Deleted {
-				prunedKVStores = append(prunedKVStores, kvStoreGetter.GetKVStoreWithBatch(storeKey))
+				removedKVStores = append(removedKVStores, kvStoreGetter.GetKVStoreWithBatch(storeKey))
 			}
 			for _, renamedStore := range upgrades.Renamed {
-				prunedKVStores = append(prunedKVStores, kvStoreGetter.GetKVStoreWithBatch(renamedStore.OldKey))
+				removedKVStores = append(removedKVStores, kvStoreGetter.GetKVStoreWithBatch(renamedStore.OldKey))
 			}
-			s.pruningManager.SetPrunedKVStores(prunedKVStores)
+			if err := s.pruningManager.PruneKVStores(removedKVStores); err != nil {
+				return fmt.Errorf("failed to set pruned KVStores: %w", err)
+			}
 		}
 	}
 
-	return s.loadVersion(version, upgrades)
+	return nil
 }
 
 func (s *Store) loadVersion(v uint64, upgrades *corestore.StoreUpgrades) error {
@@ -290,8 +296,8 @@ func (s *Store) SetCommitHeader(h *coreheader.Info) {
 
 // Commit commits all state changes to the underlying SS and SC backends. It
 // writes a batch of the changeset to the SC tree, and retrieves the CommitInfo
-// from the SC tree. Finally, it commits the SC tree and returns the hash of the
-// CommitInfo.
+// from the SC tree. Finally, it commits the SC tree and returns the hash of
+// the CommitInfo.
 func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	if s.telemetry != nil {
 		now := time.Now()

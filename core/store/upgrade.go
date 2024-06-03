@@ -41,6 +41,19 @@ func (s *StoreUpgrades) IsDeleted(key string) bool {
 	return false
 }
 
+// IsRenamed returns true if the given key should be renamed
+func (s *StoreUpgrades) IsRenamed(key string) bool {
+	if s == nil {
+		return false
+	}
+	for _, re := range s.Renamed {
+		if re.OldKey == key {
+			return true
+		}
+	}
+	return false
+}
+
 // RenamedFrom returns the oldKey if it was renamed
 // Returns "" if it was not renamed
 func (s *StoreUpgrades) RenamedFrom(key string) string {

@@ -73,9 +73,9 @@ func (m *Manager) SignalCommit(start bool, version uint64) error {
 	return nil
 }
 
-// SetPrunedKVStores sets KVStores which are needed to be pruned by upgrading
-// the store key.
-func (m *Manager) SetPrunedKVStores(kvStores []corestore.KVStoreWithBatch) error {
+// PruneKVStores prunes KVStores which are needed to be pruned by upgrading the
+// store key.
+func (m *Manager) PruneKVStores(kvStores []corestore.KVStoreWithBatch) error {
 	if len(kvStores) == 0 {
 		return nil
 	}

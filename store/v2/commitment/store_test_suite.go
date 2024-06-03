@@ -19,6 +19,7 @@ import (
 const (
 	storeKey1 = "store1"
 	storeKey2 = "store2"
+	storeKey3 = "store3"
 )
 
 // CommitStoreTestSuite is a test suite to be used for all tree backends.
@@ -163,6 +164,66 @@ func (s *CommitStoreTestSuite) TestStore_Pruning() {
 			s.Require().Nil(commitInfo)
 		} else {
 			s.Require().NotNil(commitInfo)
+		}
+	}
+}
+
+func (s *CommitStoreTestSuite) TestStore_Upgrades() {
+	storeKeys := []string{storeKey1, storeKey2, storeKey3}
+	commitDB := dbm.NewMemDB()
+	commitStore, err := s.NewStore(commitDB, storeKeys, log.NewNopLogger())
+	s.Require().NoError(err)
+
+	latestVersion := uint64(10)
+	kvCount := 10
+	for i := uint64(1); i <= latestVersion; i++ {
+		kvPairs := make(map[string]corestore.KVPairs)
+		for _, storeKey := range storeKeys {
+			kvPairs[storeKey] = corestore.KVPairs{}
+			for j := 0; j < kvCount; j++ {
+				key := []byte(fmt.Sprintf("key-%d-%d", i, j))
+				value := []byte(fmt.Sprintf("value-%d-%d", i, j))
+				kvPairs[storeKey] = append(kvPairs[storeKey], corestore.KVPair{Key: key, Value: value})
+			}
+		}
+		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(kvPairs)))
+		_, err = commitStore.Commit(i)
+		s.Require().NoError(err)
+	}
+
+	// create a new commitment store with upgrades
+	upgrades := &corestore.StoreUpgrades{
+		Added: []string{"newStore1", "newStore2"},
+		Renamed: []corestore.StoreRename{
+			{OldKey: storeKey1, NewKey: "renamedStore1"},
+		},
+		Deleted: []string{storeKey3},
+	}
+	newStoreKeys := []string{"store1", "store2", "store3", "renamedStore1", "newStore1", "newStore2"}
+	realStoreKeys := []string{"renamedStore1", "store2", "newStore1", "newStore2"}
+	commitStore, err = s.NewStore(commitDB, newStoreKeys, log.NewNopLogger())
+	s.Require().NoError(err)
+	err = commitStore.LoadVersion(latestVersion, upgrades)
+	s.Require().NoError(err)
+
+	// apply the changeset again
+	for i := latestVersion; i < latestVersion*2; i++ {
+		kvPairs := make(map[string]corestore.KVPairs)
+		for _, storeKey := range realStoreKeys {
+			kvPairs[storeKey] = corestore.KVPairs{}
+			for j := 0; j < kvCount; j++ {
+				key := []byte(fmt.Sprintf("key-%d-%d", i, j))
+				value := []byte(fmt.Sprintf("value-%d-%d", i, j))
+				kvPairs[storeKey] = append(kvPairs[storeKey], corestore.KVPair{Key: key, Value: value})
+			}
+		}
+		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(kvPairs)))
+		commitInfo, err := commitStore.Commit(i)
+		s.Require().NoError(err)
+		s.Require().NotNil(commitInfo)
+		s.Require().Equal(len(realStoreKeys), len(commitInfo.StoreInfos))
+		for _, storeKey := range realStoreKeys {
+			s.Require().NotNil(commitInfo.GetStoreCommitID([]byte(storeKey)))
 		}
 	}
 }

@@ -1,4 +1,4 @@
-# ADR 071: Built-in Off-chain In-process Indexer
+# ADR 073: Built-in Off-chain In-process Indexer
 
 ## Changelog
 

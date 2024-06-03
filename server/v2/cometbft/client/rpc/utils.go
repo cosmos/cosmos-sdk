@@ -61,7 +61,7 @@ func NewResponseResultBlock(res *coretypes.ResultBlock) (*v11.Block, error) {
 	return blk, nil
 }
 
-// calculate total pages in an overflow safe manner
+// calcTotalPages calculates total pages in an overflow safe manner
 func calcTotalPages(totalCount, limit int64) int64 {
 	totalPages := int64(0)
 	if totalCount != 0 && limit != 0 {

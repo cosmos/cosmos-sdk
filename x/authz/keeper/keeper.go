@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/appmodule"
+	corecontext "cosmossdk.io/core/context"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/authz"
@@ -83,8 +84,7 @@ func (k Keeper) update(ctx context.Context, grantee, granter sdk.AccAddress, upd
 // grants from the message signer to the grantee.
 func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msgs []sdk.Msg) ([][]byte, error) {
 	results := make([][]byte, len(msgs))
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	now := sdkCtx.HeaderInfo().Time
+	now := k.Environment.HeaderService.HeaderInfo(ctx).Time
 
 	for i, msg := range msgs {
 		signers, _, err := k.cdc.GetMsgSigners(msg)
@@ -118,7 +118,10 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 				return nil, err
 			}
 
-			resp, err := authorization.Accept(sdkCtx, msg)
+			// pass the environment in the context
+			// users on server/v2 are expected to unwrap the environment from the context
+			// users on baseapp can still unwrap the sdk context
+			resp, err := authorization.Accept(context.WithValue(ctx, corecontext.EnvironmentContextKey, k.Environment), msg)
 			if err != nil {
 				return nil, err
 			}

@@ -12,20 +12,28 @@ This document explains what application-specific blockchains are, and why develo
 
 Application-specific blockchains are blockchains customized to operate a single application. Instead of building a decentralized application on top of an underlying blockchain like Ethereum, developers build their own blockchain from the ground up. This means building a full-node client, a light-client, and all the necessary interfaces (CLI, REST, ...) to interact with the nodes.
 
-```text
-                ^  +-------------------------------+  ^
-                |  |                               |  |   Built with Cosmos SDK
-                |  |  State-machine = Application  |  |
-                |  |                               |  v
-                |  +-------------------------------+
-                |  |                               |  ^
-Blockchain node |  |           Consensus           |  |
-                |  |                               |  |
-                |  +-------------------------------+  |   CometBFT
-                |  |                               |  |
-                |  |           Networking          |  |
-                |  |                               |  |
-                v  +-------------------------------+  v
+```mermaid
+flowchart TD
+    subgraph Blockchain_Node[Blockchain Node]
+        subgraph SM[State-machine]
+            direction TB
+            SM1[Cosmos SDK]
+        end
+        subgraph Consensus[Consensus]
+            direction TB
+        end
+        subgraph Networking[Networking]
+            direction TB
+        end
+    end
+
+    SM <--> Consensus
+    Consensus <--> Networking
+
+
+    Blockchain_Node -->|Includes| SM
+    Blockchain_Node -->|Includes| Consensus
+    Blockchain_Node -->|Includes| Networking
 ```
 
 ## What are the shortcomings of Smart Contracts

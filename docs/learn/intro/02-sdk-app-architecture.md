@@ -12,22 +12,20 @@ A state machine is a computer science concept whereby a machine can have multipl
 
 Given a state S and a transaction T, the state machine will return a new state S'.
 
-```text
-+--------+                 +--------+
-|        |                 |        |
-|   S    +---------------->+   S'   |
-|        |    apply(T)     |        |
-+--------+                 +--------+
+```mermaid
+flowchart LR
+    A[S]
+    B[S']
+    A -->|"apply(T)"| B
 ```
 
 In practice, the transactions are bundled in blocks to make the process more efficient. Given a state S and a block of transactions B, the state machine will return a new state S'.
 
-```text
-+--------+                              +--------+
-|        |                              |        |
-|   S    +----------------------------> |   S'   |
-|        |   For each T in B: apply(T)  |        |
-+--------+                              +--------+
+```mermaid
+flowchart LR
+    A[S]
+    B[S']
+    A -->|"For each T in B: apply(T)"| B
 ```
 
 In a blockchain context, the state machine is deterministic. This means that if a node is started at a given state and replays the same sequence of transactions, it will always end up with the same final state.
@@ -38,20 +36,25 @@ The Cosmos SDK gives developers maximum flexibility to define the state of their
 
 Thanks to the Cosmos SDK, developers just have to define the state machine, and [*CometBFT*](https://docs.cometbft.com/v1.0/explanation/introduction/) will handle replication over the network for them.
 
-```text
-                ^  +-------------------------------+  ^
-                |  |                               |  |   Built with Cosmos SDK
-                |  |  State-machine = Application  |  |
-                |  |                               |  v
-                |  +-------------------------------+
-                |  |                               |  ^
-Blockchain node |  |           Consensus           |  |
-                |  |                               |  |
-                |  +-------------------------------+  |   CometBFT
-                |  |                               |  |
-                |  |           Networking          |  |
-                |  |                               |  |
-                v  +-------------------------------+  v
+```mermaid
+flowchart TD
+    subgraph Blockchain_Node[Blockchain Node]
+        subgraph SM[State-machine]
+            direction TB
+            SM1[Cosmos SDK]
+        end
+        subgraph CometBFT[CometBFT]
+            direction TB
+            Consensus
+            Networking
+        end
+    end
+
+    SM <--> CometBFT
+
+
+    Blockchain_Node -->|Includes| SM
+    Blockchain_Node -->|Includes| CometBFT
 ```
 
 [CometBFT](https://docs.cometbft.com/v1.0/explanation/introduction/) is an application-agnostic engine that is responsible for handling the *networking* and *consensus* layers of a blockchain. In practice, this means that CometBFT is responsible for propagating and ordering transaction bytes. CometBFT relies on an eponymous Byzantine-Fault-Tolerant (BFT) algorithm to reach consensus on the order of transactions.

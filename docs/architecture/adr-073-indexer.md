@@ -10,7 +10,7 @@ PROPOSED Not Implemented
 
 ## Abstract
 
-This ADR proposes the design of a built-in query indexer framework for Cosmos SDK applications that leverages `collections` and `orm` schemas to index on-chain state and events into a PostgreSQL database, or another database if applications prefer. This indexer should be designed to be run in-process with the Cosmos SDK node with guaranteed delivery and provide a full-featured query interface for clients.
+This ADR proposes developing a built-in query indexer framework for Cosmos SDK applications that leverages `collections` and `orm` schemas to index on-chain state and events into a PostgreSQL database, or another database if applications prefer. This indexer should be designed to be run in-process with the Cosmos SDK node with guaranteed delivery and provide a full-featured query interface for clients.
 
 ## Context
 

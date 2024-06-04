@@ -17,6 +17,7 @@ require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.1-20240312114316-c0d3497e35d6.1 // indirect
+	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240429102542-490e9bc3de65 // indirect
 	github.com/cosmos/crypto v0.0.0-20240309083813-82ed2537802e // indirect
@@ -174,6 +175,7 @@ replace (
 	cosmossdk.io/api => ../../../../api
 	cosmossdk.io/collections => ../../../../collections // TODO tag new collections ASAP
 	cosmossdk.io/core => ../../../../core
+	cosmossdk.io/core/testing => ../../../../core/testing
 	cosmossdk.io/depinject => ../../../../depinject
 	cosmossdk.io/log => ../../../../log
 	cosmossdk.io/x/accounts => ../../.

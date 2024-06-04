@@ -173,6 +173,7 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core => ../../core
+	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/log => ../../log
 	cosmossdk.io/x/accounts => ../accounts

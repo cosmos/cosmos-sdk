@@ -173,6 +173,7 @@ require (
 )
 
 require (
+	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/log v1.3.1 // indirect
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 )
@@ -183,6 +184,7 @@ replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
+	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/log => ../../log
 	cosmossdk.io/x/accounts => ../accounts

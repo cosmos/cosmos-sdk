@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	protov2 "google.golang.org/protobuf/proto"
 )
 
 // ModuleRegistry is the registry of module initializers indexed by their golang
@@ -27,7 +28,12 @@ func ModulesByModuleTypeName() (map[string]*ModuleInitializer, error) {
 	res := map[string]*ModuleInitializer{}
 
 	for _, initializer := range ModuleRegistry {
-		fullName := gogoproto.MessageName(initializer.ConfigProtoMessage)
+		var fullName string
+		if msgv2, ok := initializer.ConfigProtoMessage.(protov2.Message); ok {
+			fullName = string(msgv2.ProtoReflect().Descriptor().FullName())
+		} else {
+			fullName = gogoproto.MessageName(initializer.ConfigProtoMessage)
+		}
 
 		if _, ok := res[fullName]; ok {
 			return nil, fmt.Errorf("duplicate module registration for %s", fullName)

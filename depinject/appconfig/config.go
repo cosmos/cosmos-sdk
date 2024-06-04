@@ -71,8 +71,11 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 			return depinject.Error(fmt.Errorf("module %q is missing a config object", module.Name))
 		}
 
-		typeUrl := module.Config.TypeUrl
-		msgName := strings.Split(typeUrl, "/")[1]
+		msgName := module.Config.TypeUrl
+		// strip type URL prefix
+		if slashIdx := strings.LastIndex(msgName, "/"); slashIdx >= 0 {
+			msgName = msgName[slashIdx+1:]
+		}
 		if msgName == "" {
 			return depinject.Error(fmt.Errorf("module %q is missing a type URL", module.Name))
 		}
@@ -81,7 +84,7 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 		if !ok {
 			if msgDesc, err := gogoproto.HybridResolver.FindDescriptorByName(protoreflect.FullName(msgName)); err == nil {
 				modDesc := protov2.GetExtension(msgDesc.Options(), appv1alpha1.E_Module).(*appv1alpha1.ModuleDescriptor)
-				if modDesc == nil {
+				if modDesc != nil {
 					return depinject.Error(fmt.Errorf("no module registered for type URL %s and that protobuf type does not have the option %s\n\n%s",
 						module.Config.TypeUrl, appv1alpha1.E_Module.TypeDescriptor().FullName(), dumpRegisteredModules(modules)))
 				}

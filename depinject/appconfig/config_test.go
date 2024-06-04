@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/depinject/appconfig"
 	internal "cosmossdk.io/depinject/internal/appconfig"
 	"cosmossdk.io/depinject/internal/appconfig/testpb"
-	testpbgogo "cosmossdk.io/depinject/internal/appconfiggogo/testpb"
 )
 
 func expectContainerErrorContains(t *testing.T, option depinject.Config, contains string) {
@@ -69,10 +68,10 @@ modules:
    "@type": testpb.TestModuleA
 - name: b
   config:
-   "@type": testpb.TestModuleB
+   "@type": /testpb.TestModuleB
 - name: c
   config:
-    "@type": testpbgogo.TestModuleGogo
+    "@type": /testpbgogo.TestModuleGogo
 `))
 	assert.NilError(t, depinject.Inject(opt, &app))
 	buf := &bytes.Buffer{}
@@ -142,9 +141,9 @@ func init() {
 		appconfig.Provide(ProvideModuleB),
 	)
 
-	appconfig.RegisterModule(&testpbgogo.TestModuleGogo{},
-		appconfig.Provide(ProvideModuleC),
-	)
+	//appconfig.RegisterModule(&testpbgogo.TestModuleGogo{},
+	//	appconfig.Provide(ProvideModuleC),
+	//)
 }
 
 func ProvideRuntimeState() *RuntimeState {

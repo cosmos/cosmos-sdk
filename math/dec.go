@@ -105,8 +105,8 @@ func NewDecFromInt64(x int64) Dec {
 	return res
 }
 
-// NewDecFinite returns a decimal with a value of coeff * 10^exp precision.
-func NewDecFinite(coeff int64, exp int32) Dec {
+// NewDecWithPrec returns a decimal with a value of coeff * 10^exp precision.
+func NewDecWithPrec(coeff int64, exp int32) Dec {
 	var res Dec
 	res.dec.SetFinite(coeff, exp)
 	return res

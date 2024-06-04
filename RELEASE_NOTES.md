@@ -8,8 +8,10 @@ For this month patch release of the v0.50.x line, a few improvements were added 
 
 Notably, we added and fixed the following:
 
-* 
-*
+* Add extra checks in x/consensus `MsgUpdateParams` to prevent footguns when updating the consensus parameters.
+    * Forgetting a field in a x/consensus parameter change gov proposal could lead to a chain halt.
+    * The fix is in theory consensus breaking, but in practice, it is only a footgun prevention (the path only triggers if the proposal was executed and was invalid). Please ensure that all validators are on v0.50.7 before the execution of a `x/consensus` params update proposal.
+* Remove txs from the mempool when they fail in RecheckTX
 
 ## 📝 Changelog
 

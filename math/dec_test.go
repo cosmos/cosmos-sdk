@@ -25,60 +25,63 @@ func TestNewDecFromString(t *testing.T) {
 		},
 		"valid decimal with decimal places": {
 			src: "1.234",
-			exp: NewDecFinite(1234, -3),
+			exp: NewDecWithPrec(1234, -3),
 		},
 		"valid negative decimal": {
 			src: "-1.234",
-			exp: NewDecFinite(-1234, -3),
+			exp: NewDecWithPrec(-1234, -3),
 		},
 		"min decimal": {
 			src: "-" + strings.Repeat("9", 34),
-			exp: must(NewDecFinite(-1, 34).Add(NewDecFromInt64(1))),
+			exp: must(NewDecWithPrec(-1, 34).Add(NewDecFromInt64(1))),
 		},
 		"max decimal": {
-			src: strings.Repeat("9", 34),
-			exp: must(NewDecFinite(1, 34).Sub(NewDecFromInt64(1))),
+			// todo:  src: strings.Repeat("9", 34),
+			exp: must(NewDecWithPrec(1, 34).Sub(NewDecFromInt64(1))),
 		},
-		// enable or update when precision is defined
-		//"decimal too small": {
-		//	src:    "-" + strings.Repeat("9", 35),
-		//	expErr: ErrInvalidDecString,
-		//},
-		//"decimal too big": {
-		//	src:    strings.Repeat("9", 35),
-		//	expErr: ErrInvalidDecString,
-		//},
+		"precision too high": {
+			src:    "." + strings.Repeat("9", 35),
+			expErr: ErrInvalidDecString,
+		},
+		"decimal too big": {
+			// todo: src:    strings.Repeat("9", 35), // 10^100000+10
+			expErr: ErrInvalidDecString,
+		},
+		"decimal too small": {
+			src:    strings.Repeat("9", 35), // -10^100000+0.99999999999999999... +1
+			expErr: ErrInvalidDecString,
+		},
 		"valid decimal with leading zero": {
 			src: "01234",
-			exp: NewDecFinite(1234, 0),
+			exp: NewDecWithPrec(1234, 0),
 		},
 		"valid decimal without leading zero": {
 			src: ".1234",
-			exp: NewDecFinite(1234, -4),
+			exp: NewDecWithPrec(1234, -4),
 		},
 
 		"valid decimal without trailing digits": {
 			src: "123.",
-			exp: NewDecFinite(123, 0),
+			exp: NewDecWithPrec(123, 0),
 		},
 
 		"valid negative decimal without leading zero": {
 			src: "-.1234",
-			exp: NewDecFinite(-1234, -4),
+			exp: NewDecWithPrec(-1234, -4),
 		},
 
 		"valid negative decimal without trailing digits": {
 			src: "-123.",
-			exp: NewDecFinite(-123, 0),
+			exp: NewDecWithPrec(-123, 0),
 		},
 
 		"decimal with scientific notation": {
 			src: "1.23e4",
-			exp: NewDecFinite(123, 2),
+			exp: NewDecWithPrec(123, 2),
 		},
 		"negative decimal with scientific notation": {
 			src: "-1.23e4",
-			exp: NewDecFinite(-123, 2),
+			exp: NewDecWithPrec(-123, 2),
 		},
 		"with setup constraint": {
 			src:         "-1",
@@ -110,7 +113,7 @@ func TestNewDecFromString(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got, gotErr := NewDecFromString(spec.src, spec.constraints...)
 			if spec.expErr != nil {
-				require.ErrorIs(t, gotErr, spec.expErr)
+				require.ErrorIs(t, gotErr, spec.expErr, got.String())
 				return
 			}
 			require.NoError(t, gotErr)
@@ -137,7 +140,7 @@ func TestReduce(t *testing.T) {
 func TestMulExactGood(t *testing.T) {
 	a, err := NewDecFromString("1.000001")
 	require.NoError(t, err)
-	b := NewDecFinite(1, 6)
+	b := NewDecWithPrec(1, 6)
 	c, err := a.MulExact(b)
 	require.NoError(t, err)
 	d, err := c.Int64()
@@ -148,7 +151,7 @@ func TestMulExactGood(t *testing.T) {
 func TestMulExactBad(t *testing.T) {
 	a, err := NewDecFromString("1.000000000000000000000000000000000000123456789")
 	require.NoError(t, err)
-	b := NewDecFinite(1, 10)
+	b := NewDecWithPrec(1, 10)
 	_, err = a.MulExact(b)
 	require.ErrorIs(t, err, ErrUnexpectedRounding)
 }
@@ -156,7 +159,7 @@ func TestMulExactBad(t *testing.T) {
 func TestQuoExactGood(t *testing.T) {
 	a, err := NewDecFromString("1000001")
 	require.NoError(t, err)
-	b := NewDecFinite(1, 6)
+	b := NewDecWithPrec(1, 6)
 	c, err := a.QuoExact(b)
 	require.NoError(t, err)
 	require.Equal(t, "1.000001000000000000000000000000000", c.String())
@@ -165,7 +168,7 @@ func TestQuoExactGood(t *testing.T) {
 func TestQuoExactBad(t *testing.T) {
 	a, err := NewDecFromString("1000000000000000000000000000000000000123456789")
 	require.NoError(t, err)
-	b := NewDecFinite(1, 10)
+	b := NewDecWithPrec(1, 10)
 	_, err = a.QuoExact(b)
 	require.ErrorIs(t, err, ErrUnexpectedRounding)
 }

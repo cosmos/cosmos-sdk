@@ -184,7 +184,7 @@ func (ak AccountKeeper) GetSequence(ctx context.Context, addr sdk.AccAddress) (u
 // NextAccountNumber returns and increments the global account number counter.
 // If the global account number is not set, it initializes it with value 0.
 func (ak AccountKeeper) NextAccountNumber(ctx context.Context) uint64 {
-	n, err := ak.AccountNumber.Next(ctx)
+	n, err := ak.AccountsModKeeper.NextAccountNumber(ctx)
 	if err != nil {
 		panic(err)
 	}

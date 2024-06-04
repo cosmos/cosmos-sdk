@@ -209,7 +209,8 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	suite.Require().Equal(6, int(feeCollector.GetAccountNumber()))
 
 	// The 3rd account has account number 5, but because the FeeCollector account gets initialized last, the next should be 7.
-	nextNum := suite.accountKeeper.NextAccountNumber(ctx)
+	nextNum, err := suite.accountKeeper.AccountsModKeeper.NextAccountNumber(ctx)
+	suite.Require().NoError(err)
 	suite.Require().Equal(7, int(nextNum))
 
 	suite.SetupTest() // reset
@@ -244,7 +245,8 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	feeCollector = suite.accountKeeper.GetModuleAccount(ctx, "fee_collector")
 	suite.Require().Equal(1, int(feeCollector.GetAccountNumber()))
 
-	nextNum = suite.accountKeeper.NextAccountNumber(ctx)
+	nextNum, err = suite.accountKeeper.AccountsModKeeper.NextAccountNumber(ctx)
+	suite.Require().NoError(err)
 	// we expect nextNum to be 2 because we initialize fee_collector as account number 1
 	suite.Require().Equal(2, int(nextNum))
 }

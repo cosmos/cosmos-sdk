@@ -184,4 +184,5 @@ replace (
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/staking => ../staking
+	cosmossdk.io/x/tx => ../tx
 )

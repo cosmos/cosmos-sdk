@@ -116,7 +116,7 @@ func createOldPolicyAccount(t *testing.T, ctx sdk.Context, storeKey storetypes.S
 	ctrl := gomock.NewController(t)
 	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
 	// mock account number
-	// accNum := uint64(0)
+	accNum := uint64(0)
 
 	accountKeeper := authkeeper.NewAccountKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey)), log.NewNopLogger()), cdc, authtypes.ProtoBaseAccount, acctsModKeeper, nil, addressCodec, sdk.Bech32MainPrefix, authorityStrAddr)
 
@@ -126,8 +126,8 @@ func createOldPolicyAccount(t *testing.T, ctx sdk.Context, storeKey storetypes.S
 		if err != nil {
 			return nil, nil, err
 		}
-		// acctsModKeeper.EXPECT().NextAccountNumber(ctx).Return(accNum, nil)
-		// accNum++
+		acctsModKeeper.EXPECT().NextAccountNumber(ctx).Return(accNum, nil)
+		accNum++
 
 		acc := accountKeeper.NewAccount(ctx, &authtypes.ModuleAccount{
 			BaseAccount: &authtypes.BaseAccount{

@@ -202,8 +202,6 @@ cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 h1:eb
 cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5/go.mod h1:drzY4oVisyWvSgpsM7ccQ7IX3efMuVIvd9Eij1Gm/6o=
 cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190 h1:XQJj9Dv9Gtze0l2TF79BU5lkP6MkUveTUuKICmxoz+o=
 cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190/go.mod h1:7WUGupOvmlHJoIMBz1JbObQxeo6/TDiuDBxmtod8HRg=
-cosmossdk.io/x/tx v0.13.3 h1:Ha4mNaHmxBc6RMun9aKuqul8yHiL78EKJQ8g23Zf73g=
-cosmossdk.io/x/tx v0.13.3/go.mod h1:I8xaHv0rhUdIvIdptKIqzYy27+n2+zBVaxO6fscFhys=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=

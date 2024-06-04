@@ -35,6 +35,7 @@ require (
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -95,6 +96,7 @@ require (
 	github.com/hashicorp/go-metrics v0.5.3 // indirect
 	github.com/hashicorp/go-plugin v1.6.1 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/hdevalence/ed25519consensus v0.2.0 // indirect
@@ -167,11 +169,6 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-require (
-	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
-	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
-)
-
 replace github.com/cosmos/cosmos-sdk => ../../.
 
 // TODO remove post spinning out all modules
@@ -186,4 +183,5 @@ replace (
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/staking => ../staking
+	cosmossdk.io/x/tx => ../tx
 )

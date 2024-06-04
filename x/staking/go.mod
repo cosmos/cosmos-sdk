@@ -157,22 +157,18 @@ require (
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.1-20240312114316-c0d3497e35d6.1 // indirect
+	cosmossdk.io/log v1.3.1 // indirect
+	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91 // indirect
+	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
+	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cosmos/crypto v0.0.0-20240309083813-82ed2537802e // indirect
 	github.com/dgraph-io/badger/v4 v4.2.0 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/flatbuffers v2.0.8+incompatible // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/supranational/blst v0.3.11 // indirect
 	go.opencensus.io v0.24.0 // indirect
-)
-
-require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
-
-require (
-	cosmossdk.io/log v1.3.1 // indirect
-	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91 // indirect
-	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
-	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 )
 
 replace github.com/cosmos/cosmos-sdk => ../../.
@@ -188,4 +184,5 @@ replace (
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/consensus => ../consensus
+	cosmossdk.io/x/tx => ../tx
 )

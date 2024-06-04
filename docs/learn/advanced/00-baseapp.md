@@ -484,6 +484,7 @@ When the underlying consensus engine receives a block proposal, each transaction
 
 Since `FinalizeBlock` is an ABCI call, `Tx` is received in the encoded `[]byte` form. Nodes first unmarshal the transaction, using the [`TxConfig`](./00-app-anatomy.md#register-codec) defined in the app, then call `runTx` in `execModeFinalize`, which is very similar to `CheckTx` but also executes and writes state changes.
 
+```mermaid
 flowchart TD
     A[Receive Block Proposal] --> B[FinalizeBlock]
     B -->|BeginBlock| C{Execute Transactions}
@@ -493,6 +494,7 @@ flowchart TD
     C --> G["ExecuteTx(tx3)"]
     C -->|EndBlock| H[Consensus]
     H --> I[Commit]
+```
 
 Before the first transaction of a given block is processed, a [volatile state](#state-updates) called `finalizeBlockState` is initialized during FinalizeBlock. This state is updated each time a transaction is processed via `FinalizeBlock`, and committed to the [main state](#state-updates) when the block is [committed](#commit), after what it is set to `nil`.
 

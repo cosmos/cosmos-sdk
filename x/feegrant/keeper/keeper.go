@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/log"
 	errorsmod "cosmossdk.io/errors"
@@ -232,7 +233,7 @@ func (k Keeper) UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddr
 		return err
 	}
 
-	remove, err := grant.Accept(ctx, fee, msgs)
+	remove, err := grant.Accept(context.WithValue(ctx, corecontext.EnvironmentContextKey, k.Environment), fee, msgs)
 	if remove && err == nil {
 		// Ignoring the `revokeFeeAllowance` error, because the user has enough grants to perform this transaction.
 		_ = k.revokeAllowance(ctx, granter, grantee)

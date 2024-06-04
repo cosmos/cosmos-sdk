@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	"cosmossdk.io/core/transaction"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -22,6 +24,26 @@ func (n nonVerifiableTx) GetMsgs() []sdk.Msg {
 
 func (n nonVerifiableTx) GetReflectMessages() ([]protoreflect.Message, error) {
 	panic("not implemented")
+}
+
+func (n nonVerifiableTx) Bytes() []byte {
+	return []byte{}
+}
+
+func (n nonVerifiableTx) Hash() [32]byte {
+	return [32]byte{}
+}
+
+func (n nonVerifiableTx) GetGasLimit() (uint64, error) {
+	return 0, nil
+}
+
+func (n nonVerifiableTx) GetMessages() ([]transaction.Msg, error) {
+	return nil, nil
+}
+
+func (n nonVerifiableTx) GetSenders() ([][]byte, error) {
+	return nil, nil
 }
 
 func TestDefaultSignerExtractor(t *testing.T) {

@@ -16,5 +16,5 @@ const (
 	// MaxMsgLen defines the maximum length of the message bytes as passed to Sign.
 	MaxMsgLen = 32
 
-	keyType = "bls12381"
+	KeyType = "bls12381"
 )

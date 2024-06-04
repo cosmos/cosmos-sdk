@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/collections/indexes"
-	"cosmossdk.io/core/coretesting"
+	"cosmossdk.io/core/testing"
 )
 
 type company struct {

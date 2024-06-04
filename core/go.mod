@@ -5,7 +5,6 @@ go 1.20
 require (
 	github.com/cosmos/gogoproto v1.4.12
 	github.com/stretchr/testify v1.9.0
-	github.com/tidwall/btree v1.7.0
 	google.golang.org/grpc v1.64.0
 	google.golang.org/protobuf v1.34.1
 )

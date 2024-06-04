@@ -3,8 +3,8 @@ package accountstd
 import (
 	"context"
 
-	"cosmossdk.io/core/coretesting"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/testing"
 	"cosmossdk.io/x/accounts/internal/implementation"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

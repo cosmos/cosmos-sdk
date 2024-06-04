@@ -3,8 +3,8 @@ package indexes
 import (
 	"context"
 
-	"cosmossdk.io/core/coretesting"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/testing"
 )
 
 func deps() (store.KVStoreService, context.Context) {

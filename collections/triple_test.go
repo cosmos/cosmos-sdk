@@ -7,7 +7,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
-	"cosmossdk.io/core/coretesting"
+	"cosmossdk.io/core/testing"
 )
 
 func TestTriple(t *testing.T) {

@@ -12,7 +12,7 @@ type Indexer interface {
 	IndexEvent(*EventData) error
 	IndexEntityUpdate(EntityUpdate) error
 	IndexEntityDelete(EntityDelete) error
-	CommitBlock() error
+	Commit() error
 }
 
 type MigrationData struct {

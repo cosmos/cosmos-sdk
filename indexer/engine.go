@@ -1,17 +1,17 @@
 package indexer
 
-type Processor struct {
+type Engine struct {
 	moduleDecoders map[string][]ModuleStateDecoder
 	indexers       []Indexer
 }
 
-type ProcessorOptions[ModuleT any] struct {
+type EngineOptions[ModuleT any] struct {
 	ModuleSet map[string]ModuleT
 	Decoders  []Decoder
 	Indexers  []Indexer
 }
 
-func NewProcessor[T any](opts ProcessorOptions[T]) *Processor {
+func NewEngine[T any](opts EngineOptions[T]) *Engine {
 	moduleDecoders := make(map[string][]ModuleStateDecoder)
 	for moduleName, module := range opts.ModuleSet {
 		for _, decoder := range opts.Decoders {
@@ -27,13 +27,13 @@ func NewProcessor[T any](opts ProcessorOptions[T]) *Processor {
 		}
 
 	}
-	return &Processor{
+	return &Engine{
 		moduleDecoders: moduleDecoders,
 		indexers:       opts.Indexers,
 	}
 }
 
-func (p *Processor) StartBlock(data *BlockHeaderData) error {
+func (p *Engine) StartBlock(data *BlockHeaderData) error {
 	for _, indexer := range p.indexers {
 		if err := indexer.StartBlock(data.Height); err != nil {
 			return err
@@ -45,7 +45,7 @@ func (p *Processor) StartBlock(data *BlockHeaderData) error {
 	return nil
 }
 
-func (p *Processor) ReceiveTx(data *TxData) error {
+func (p *Engine) ReceiveTx(data *TxData) error {
 	for _, indexer := range p.indexers {
 		if err := indexer.IndexTx(data); err != nil {
 			return err
@@ -54,7 +54,7 @@ func (p *Processor) ReceiveTx(data *TxData) error {
 	return nil
 }
 
-func (p *Processor) ReceiveEvent(data *EventData) error {
+func (p *Engine) ReceiveEvent(data *EventData) error {
 	for _, indexer := range p.indexers {
 		if err := indexer.IndexEvent(data); err != nil {
 			return err
@@ -63,7 +63,7 @@ func (p *Processor) ReceiveEvent(data *EventData) error {
 	return nil
 }
 
-func (p *Processor) ReceiveStateSet(storeKey string, key, value []byte) error {
+func (p *Engine) ReceiveStateSet(storeKey string, key, value []byte) error {
 	decoders := p.moduleDecoders[storeKey]
 	if decoders == nil {
 		return nil
@@ -85,7 +85,7 @@ func (p *Processor) ReceiveStateSet(storeKey string, key, value []byte) error {
 	return nil
 }
 
-func (p *Processor) ReceiveStateDelete(storeKey string, key []byte, prune bool) error {
+func (p *Engine) ReceiveStateDelete(storeKey string, key []byte, prune bool) error {
 	decoders := p.moduleDecoders[storeKey]
 	if decoders == nil {
 		return nil
@@ -107,9 +107,9 @@ func (p *Processor) ReceiveStateDelete(storeKey string, key []byte, prune bool) 
 	return nil
 }
 
-func (p *Processor) CommitBlock() error {
+func (p *Engine) Commit() error {
 	for _, indexer := range p.indexers {
-		if err := indexer.CommitBlock(); err != nil {
+		if err := indexer.Commit(); err != nil {
 			return err
 		}
 	}

@@ -224,10 +224,15 @@ func NewSimApp(
 
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 
-	// register streaming services
-	if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
-		panic(err)
-	}
+	// TODO: switch between this code and the one below based on configuration
+	//// register streaming services
+	//if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
+	//	panic(err)
+	//}
+
+	app.SetStreamingManager(storetypes.StreamingManager{
+		StopNodeOnErr: true,
+	})
 
 	/****  Module Options ****/
 

@@ -1,4 +1,4 @@
-//go:build system_test
+//go:build system_test && linux
 
 package systemtests
 

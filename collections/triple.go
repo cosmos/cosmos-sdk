@@ -64,7 +64,7 @@ func TripleKeyCodec[K1, K2, K3 any](keyCodec1 codec.KeyCodec[K1], keyCodec2 code
 	}
 }
 
-func NamedTripleKeyCodec[K1, K2, K3 any](key1Name string, keyCodec1 codec.KeyCodec[K1], key2Name string, keyCodec2 codec.KeyCodec[K2], key3Name string, keyCodec3 codec.KeyCodec[K3]) codec.KeyCodec[Triple[K1, K2, K3]] {
+func NamedTripleKeyCodec[K1, K2, K3 any](key1Name string, keyCodec1 codec.KeyCodec[K1], key2Name string, keyCodec2 codec.KeyCodec[K2], key3Name string, keyCodec3 codec.KeyCodec[K3]) codec.NamedKeyCodec[Triple[K1, K2, K3]] {
 	return tripleKeyCodec[K1, K2, K3]{
 		key1Name:  key1Name,
 		key2Name:  key2Name,

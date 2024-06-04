@@ -37,7 +37,7 @@ func ModulesByModuleTypeName() (map[string]*ModuleInitializer, error) {
 			fullName = gogoproto.MessageName(initializer.ConfigProtoMessage)
 		}
 
-		if desc, err := gogoproto.HybridResolver.FindDescriptorByName(protoreflect.FullName(fullName)); err != nil {
+		if desc, err := gogoproto.HybridResolver.FindDescriptorByName(protoreflect.FullName(fullName)); err == nil {
 			modDesc := protov2.GetExtension(desc.Options(), appv1alpha1.E_Module).(*appv1alpha1.ModuleDescriptor)
 			if modDesc == nil {
 				return nil, fmt.Errorf(

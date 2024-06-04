@@ -25,6 +25,16 @@ func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,
 		func(ctx context.Context, _ upgradetypes.Plan, fromVM appmodule.VersionMap) (appmodule.VersionMap, error) {
+			currentAccNum, err := app.AuthKeeper.AccountNumber.Peek(ctx)
+			if err != nil {
+				return nil, err
+			}
+
+			err = app.AccountsKeeper.InitAccountNumberSeqUnsafe(ctx, currentAccNum)
+			if err != nil {
+				return nil, err
+			}
+
 			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
 		},
 	)

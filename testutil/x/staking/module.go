@@ -129,5 +129,5 @@ func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
 
 // EndBlock returns the end blocker for the staking module.
 func (am AppModule) EndBlock(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {
-	return am.keeper.EndBlocker(ctx)
+	return []appmodule.ValidatorUpdate{}, nil
 }

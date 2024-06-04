@@ -19,7 +19,7 @@ import (
 )
 
 // Implements ValidatorSet interface
-var _ types.ValidatorSet = Keeper{}
+// var _ types.ValidatorSet = Keeper{}
 
 // Keeper of the x/staking store
 type Keeper struct {

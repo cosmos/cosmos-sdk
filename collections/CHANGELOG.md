@@ -38,6 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#17656](https://github.com/cosmos/cosmos-sdk/pull/17656)  Introduces `Vec`, a collection type that allows to represent a growable array on top of a KVStore.
 * [#19861](https://github.com/cosmos/cosmos-sdk/pull/19861) Add `NewJSONValueCodec` value codec as an alternative for `codec.CollValue` from the SDK for non protobuf types.
 * [#20537](https://github.com/cosmos/cosmos-sdk/pull/20537) Add `HasCollections` interface for indexing modules.
+* [#20538](https://github.com/cosmos/cosmos-sdk/pull/20538) Add `Nameable` and `Named` variations to `KeyCodec` and `ValueCodec` to allow for better indexing of collections types.
 
 ## [v0.4.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv0.4.0)
 

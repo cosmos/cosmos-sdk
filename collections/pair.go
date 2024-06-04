@@ -54,9 +54,22 @@ func PairKeyCodec[K1, K2 any](keyCodec1 codec.KeyCodec[K1], keyCodec2 codec.KeyC
 	}
 }
 
+// NamedPairKeyCodec instantiates a new KeyCodec instance that can encode the Pair, given the KeyCodec of the
+// first part of the key and the KeyCodec of the second part of the key, with names assigned to each part
+// which will only be used for indexing and informational purposes.
+func NamedPairKeyCodec[K1, K2 any](key1Name string, keyCodec1 codec.KeyCodec[K1], key2Name string, keyCodec2 codec.KeyCodec[K2]) codec.NamedKeyCodec[Pair[K1, K2]] {
+	return pairKeyCodec[K1, K2]{
+		key1Name:  key1Name,
+		key2Name:  key2Name,
+		keyCodec1: keyCodec1,
+		keyCodec2: keyCodec2,
+	}
+}
+
 type pairKeyCodec[K1, K2 any] struct {
-	keyCodec1 codec.KeyCodec[K1]
-	keyCodec2 codec.KeyCodec[K2]
+	key1Name, key2Name string
+	keyCodec1          codec.KeyCodec[K1]
+	keyCodec2          codec.KeyCodec[K2]
 }
 
 func (p pairKeyCodec[K1, K2]) KeyCodec1() codec.KeyCodec[K1] { return p.keyCodec1 }
@@ -214,6 +227,10 @@ func (p pairKeyCodec[K1, K2]) DecodeJSON(b []byte) (Pair[K1, K2], error) {
 	}
 
 	return Join(k1, k2), nil
+}
+
+func (p pairKeyCodec[K1, K2]) Name() string {
+	return fmt.Sprintf("%s,%s", p.key1Name, p.key2Name)
 }
 
 // NewPrefixUntilPairRange defines a collection query which ranges until the provided Pair prefix.

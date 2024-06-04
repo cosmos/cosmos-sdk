@@ -5,6 +5,7 @@ go 1.22.2
 replace (
 	cosmossdk.io/api => ../../../api
 	cosmossdk.io/core => ../../../core
+	cosmossdk.io/core/testing => ../../../core/testing
 	cosmossdk.io/depinject => ../../../depinject
 	cosmossdk.io/log => ../../../log
 	cosmossdk.io/runtime/v2 => ../../../runtime/v2

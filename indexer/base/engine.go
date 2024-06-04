@@ -1,4 +1,4 @@
-package indexer
+package indexerbase
 
 type Engine struct {
 	moduleDecoders map[string][]ModuleStateDecoder

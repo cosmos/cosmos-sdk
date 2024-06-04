@@ -1,4 +1,4 @@
-package indexer
+package indexerbase
 
 type Table interface {
 	TypeName() string

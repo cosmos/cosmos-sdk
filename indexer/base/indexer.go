@@ -1,4 +1,4 @@
-package indexer
+package indexerbase
 
 import (
 	"encoding/json"

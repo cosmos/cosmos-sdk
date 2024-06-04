@@ -1,4 +1,4 @@
-package indexer
+package indexerbase
 
 type EntityUpdate interface {
 	TypeName() string

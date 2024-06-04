@@ -5,7 +5,7 @@ go 1.22.2
 toolchain go1.22.3
 
 require (
-	cosmossdk.io/indexer v0.0.0-00010101000000-000000000000
+	cosmossdk.io/indexer/base v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store v1.1.0
 	github.com/cometbft/cometbft v0.38.7
 )
@@ -64,4 +64,4 @@ require (
 	google.golang.org/protobuf v1.33.0 // indirect
 )
 
-replace cosmossdk.io/indexer => ../..
+replace cosmossdk.io/indexer/base => ../../base

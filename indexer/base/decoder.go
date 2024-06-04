@@ -1,4 +1,4 @@
-package indexer
+package indexerbase
 
 type Decoder interface {
 	ExtractModuleDecoder(moduleName string, module any) ModuleStateDecoder

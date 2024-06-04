@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"reflect"
 
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // ModuleRegistry is the registry of module initializers indexed by their golang
@@ -33,6 +35,23 @@ func ModulesByModuleTypeName() (map[string]*ModuleInitializer, error) {
 			fullName = string(msgv2.ProtoReflect().Descriptor().FullName())
 		} else {
 			fullName = gogoproto.MessageName(initializer.ConfigProtoMessage)
+		}
+
+		if desc, err := gogoproto.HybridResolver.FindDescriptorByName(protoreflect.FullName(fullName)); err != nil {
+			modDesc := protov2.GetExtension(desc.Options(), appv1alpha1.E_Module).(*appv1alpha1.ModuleDescriptor)
+			if modDesc == nil {
+				return nil, fmt.Errorf(
+					"protobuf type %s registered as a module should have the option %s",
+					fullName,
+					appv1alpha1.E_Module.TypeDescriptor().FullName())
+			}
+
+			if modDesc.GoImport == "" {
+				return nil, fmt.Errorf(
+					"protobuf type %s registered as a module should have ModuleDescriptor.go_import specified",
+					fullName,
+				)
+			}
 		}
 
 		if _, ok := res[fullName]; ok {

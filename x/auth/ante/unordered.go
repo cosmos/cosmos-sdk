@@ -3,6 +3,7 @@ package ante
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/binary"
 	"sync"
 
 	"cosmossdk.io/core/appmodule/v2"
@@ -12,6 +13,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/golang/protobuf/proto"
 )
 
 // bufPool is a pool of bytes.Buffer objects to reduce memory allocations.
@@ -78,15 +80,21 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 	buf.Reset()
 
 	// Use the buffer
-	for _, msgs := range tx.GetMsgs() {
-		buf.Write([]byte(msgs.String()))
+	for _, msg := range tx.GetMsgs() {
+		// loop through the messages and write them to the buffer
+		// encoding the msg to bytes makes it deterministic within the state machine.
+		// Malleability is not a concern here because the state machine will encode the transaction deterministically.
+		bz, err := proto.Marshal(msg)
+		if err != nil {
+			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshal message")
+		}
+
+		buf.Write(bz)
 	}
 
-	sigTx, ok := tx.(sdk.Signature)
-	if !ok {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "tx must implement Signature interface")
+	if err := binary.Write(buf, binary.LittleEndian, unorderedTx.GetTimeoutHeight()); err != nil {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to write timeout_height to buffer")
 	}
-	buf.Write(sigTx.GetSignature())
 
 	txHash := sha256.Sum256(buf.Bytes())
 

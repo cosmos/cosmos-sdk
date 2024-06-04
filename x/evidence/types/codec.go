@@ -1,21 +1,21 @@
 package types
 
 import (
+	corelegacy "cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	coretransaction "cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/evidence/exported"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
 // RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
 // evidence module.
-func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func RegisterLegacyAminoCodec(cdc corelegacy.Amino) {
 	cdc.RegisterInterface((*exported.Evidence)(nil), nil)
 	legacy.RegisterAminoMsg(cdc, &MsgSubmitEvidence{}, "cosmos-sdk/MsgSubmitEvidence")
-	cdc.RegisterConcrete(&Equivocation{}, "cosmos-sdk/Equivocation", nil)
+	cdc.RegisterConcrete(&Equivocation{}, "cosmos-sdk/Equivocation")
 }
 
 // RegisterInterfaces registers the interfaces types with the interface registry.

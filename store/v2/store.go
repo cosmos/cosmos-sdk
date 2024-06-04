@@ -49,28 +49,15 @@ type RootStore interface {
 	// queries based on block time need to be supported.
 	SetCommitHeader(h *coreheader.Info)
 
-	// WorkingHash returns the current WIP commitment hash by applying the Changeset
-	// to the SC backend. Typically, WorkingHash() is called prior to Commit() and
-	// must be applied with the exact same Changeset. This is because WorkingHash()
-	// is responsible for writing the Changeset to the SC backend and returning the
-	// resulting root hash. Then, Commit() would return this hash and flush writes
-	// to disk.
-	WorkingHash(cs *corestore.Changeset) ([]byte, error)
-
 	// Commit should be responsible for taking the provided changeset and flushing
 	// it to disk. Note, depending on the implementation, the changeset, at this
 	// point, may already be written to the SC backends. Commit() should ensure
 	// the changeset is committed to all SC and SC backends and flushed to disk.
-	// It must return a hash of the merkle-ized committed state. This hash should
-	// be the same as the hash returned by WorkingHash() prior to calling Commit().
+	// It must return a hash of the merkle-ized committed state.
 	Commit(cs *corestore.Changeset) ([]byte, error)
 
 	// LastCommitID returns a CommitID pertaining to the last commitment.
 	LastCommitID() (proof.CommitID, error)
-
-	// Prune prunes the RootStore to the provided version. It is used to remove
-	// old versions of the RootStore by the CLI.
-	Prune(version uint64) error
 
 	// SetMetrics sets the telemetry handler on the RootStore.
 	SetMetrics(m metrics.Metrics)
@@ -90,6 +77,22 @@ type UpgradeableRootStore interface {
 	// Note, handling StoreUpgrades is optional depending on the underlying RootStore
 	// implementation.
 	LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreUpgrades) error
+}
+
+// Pruner defines the interface for pruning old versions of the store or database.
+type Pruner interface {
+	// Prune prunes the store to the provided version.
+	Prune(version uint64) error
+}
+
+// PausablePruner extends the Pruner interface to include the API for pausing
+// the pruning process.
+type PausablePruner interface {
+	Pruner
+
+	// PausePruning pauses or resumes the pruning process to avoid the parallel writes
+	// while committing the state.
+	PausePruning(pause bool)
 }
 
 // QueryResult defines the response type to performing a query on a RootStore.

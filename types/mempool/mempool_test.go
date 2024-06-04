@@ -7,11 +7,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	_ "cosmossdk.io/api/cosmos/counter/v1"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/auth/signing"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -75,9 +76,29 @@ var (
 	_ cryptotypes.PubKey      = (*testPubKey)(nil)
 )
 
+func (tx testTx) Bytes() []byte {
+	return []byte{}
+}
+
+func (tx testTx) Hash() [32]byte {
+	return [32]byte{}
+}
+
+func (tx testTx) GetGasLimit() (uint64, error) {
+	return 0, nil
+}
+
+func (tx testTx) GetMessages() ([]transaction.Msg, error) {
+	return nil, nil
+}
+
+func (tx testTx) GetSenders() ([][]byte, error) {
+	return nil, nil
+}
+
 func (tx testTx) GetMsgs() []sdk.Msg { return nil }
 
-func (tx testTx) GetMsgsV2() ([]protov2.Message, error) { return nil, nil }
+func (tx testTx) GetReflectMessages() ([]protoreflect.Message, error) { return nil, nil }
 
 func (tx testTx) ValidateBasic() error { return nil }
 
@@ -89,11 +110,31 @@ type sigErrTx struct {
 	getSigs func() ([]txsigning.SignatureV2, error)
 }
 
+func (sigErrTx) Bytes() []byte {
+	return []byte{}
+}
+
+func (sigErrTx) Hash() [32]byte {
+	return [32]byte{}
+}
+
+func (sigErrTx) GetGasLimit() (uint64, error) {
+	return 0, nil
+}
+
+func (sigErrTx) GetMessages() ([]transaction.Msg, error) {
+	return nil, nil
+}
+
+func (sigErrTx) GetSenders() ([][]byte, error) {
+	return nil, nil
+}
+
 func (sigErrTx) Size() int64 { return 0 }
 
 func (sigErrTx) GetMsgs() []sdk.Msg { return nil }
 
-func (sigErrTx) GetMsgsV2() ([]protov2.Message, error) { return nil, nil }
+func (sigErrTx) GetReflectMessages() ([]protoreflect.Message, error) { return nil, nil }
 
 func (sigErrTx) ValidateBasic() error { return nil }
 

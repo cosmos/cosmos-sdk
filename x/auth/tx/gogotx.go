@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/cosmos/gogoproto/proto"
-	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/core/address"
@@ -27,9 +27,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
-func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, decodedTx *decode.DecodedTx) (w *gogoTxWrapper, err error) {
+func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, decodedTx *decode.DecodedTx) (*gogoTxWrapper, error) {
 	// set msgsv1
-	msgv1, err := decodeMsgsV1(cdc, decodedTx.Tx.Body.Messages)
+	msgs, err := decodeMsgsV1(cdc, decodedTx.Tx.Body.Messages)
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert messagev2 to messagev1: %w", err)
 	}
@@ -71,29 +71,39 @@ func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, dec
 			return nil, err
 		}
 	}
+
+	// reflectMsgs
+	reflectMsgs := make([]protoreflect.Message, len(msgs))
+	for i, msg := range decodedTx.Messages {
+		reflectMsgs[i] = msg.ProtoReflect()
+	}
+
 	return &gogoTxWrapper{
-		cdc:        cdc,
-		decodedTx:  decodedTx,
-		msgsV1:     msgv1,
-		fees:       fees,
-		feePayer:   feePayer,
-		feeGranter: feeGranter,
+		DecodedTx:   decodedTx,
+		cdc:         cdc,
+		reflectMsgs: reflectMsgs,
+		msgs:        msgs,
+		fees:        fees,
+		feePayer:    feePayer,
+		feeGranter:  feeGranter,
 	}, nil
 }
 
 // gogoTxWrapper is a gogoTxWrapper around the tx.Tx proto.Message which retain the raw
 // body and auth_info bytes.
 type gogoTxWrapper struct {
-	decodedTx *decode.DecodedTx
-	cdc       codec.BinaryCodec
+	*decode.DecodedTx
 
-	msgsV1     []proto.Message
-	fees       sdk.Coins
-	feePayer   []byte
-	feeGranter []byte
+	cdc codec.BinaryCodec
+
+	msgs        []proto.Message
+	reflectMsgs []protoreflect.Message
+	fees        sdk.Coins
+	feePayer    []byte
+	feeGranter  []byte
 }
 
-func (w *gogoTxWrapper) String() string { return w.decodedTx.Tx.String() }
+func (w *gogoTxWrapper) String() string { return w.Tx.String() }
 
 var (
 	_ authsigning.Tx             = &gogoTxWrapper{}
@@ -109,32 +119,32 @@ type ExtensionOptionsTxBuilder interface {
 }
 
 func (w *gogoTxWrapper) GetMsgs() []sdk.Msg {
-	if w.msgsV1 == nil {
+	if w.msgs == nil {
 		panic("fill in msgs")
 	}
-	return w.msgsV1
+	return w.msgs
 }
 
-func (w *gogoTxWrapper) GetMsgsV2() ([]protov2.Message, error) {
-	return w.decodedTx.Messages, nil
+func (w *gogoTxWrapper) GetReflectMessages() ([]protoreflect.Message, error) {
+	return w.reflectMsgs, nil
 }
 
 func (w *gogoTxWrapper) ValidateBasic() error {
-	if len(w.decodedTx.Tx.Signatures) == 0 {
+	if len(w.Tx.Signatures) == 0 {
 		return sdkerrors.ErrNoSignatures.Wrapf("empty signatures")
 	}
-	if len(w.decodedTx.Signers) != len(w.decodedTx.Tx.Signatures) {
-		return sdkerrors.ErrUnauthorized.Wrapf("invalid number of signatures: got %d signatures and %d signers", len(w.decodedTx.Tx.Signatures), len(w.decodedTx.Signers))
+	if len(w.Signers) != len(w.Tx.Signatures) {
+		return sdkerrors.ErrUnauthorized.Wrapf("invalid number of signatures: got %d signatures and %d signers", len(w.Tx.Signatures), len(w.Signers))
 	}
 	return nil
 }
 
 func (w *gogoTxWrapper) GetSigners() ([][]byte, error) {
-	return w.decodedTx.Signers, nil
+	return w.Signers, nil
 }
 
 func (w *gogoTxWrapper) GetPubKeys() ([]cryptotypes.PubKey, error) {
-	signerInfos := w.decodedTx.Tx.AuthInfo.SignerInfos
+	signerInfos := w.Tx.AuthInfo.SignerInfos
 	pks := make([]cryptotypes.PubKey, len(signerInfos))
 
 	for i, si := range signerInfos {
@@ -159,7 +169,7 @@ func (w *gogoTxWrapper) GetPubKeys() ([]cryptotypes.PubKey, error) {
 }
 
 func (w *gogoTxWrapper) GetGas() uint64 {
-	return w.decodedTx.Tx.AuthInfo.Fee.GasLimit
+	return w.Tx.AuthInfo.Fee.GasLimit
 }
 
 func (w *gogoTxWrapper) GetFee() sdk.Coins { return w.fees }
@@ -168,18 +178,18 @@ func (w *gogoTxWrapper) FeePayer() []byte { return w.feePayer }
 
 func (w *gogoTxWrapper) FeeGranter() []byte { return w.feeGranter }
 
-func (w *gogoTxWrapper) GetMemo() string { return w.decodedTx.Tx.Body.Memo }
+func (w *gogoTxWrapper) GetMemo() string { return w.Tx.Body.Memo }
 
 // GetTimeoutHeight returns the transaction's timeout height (if set).
-func (w *gogoTxWrapper) GetTimeoutHeight() uint64 { return w.decodedTx.Tx.Body.TimeoutHeight }
+func (w *gogoTxWrapper) GetTimeoutHeight() uint64 { return w.Tx.Body.TimeoutHeight }
 
 // GetUnordered returns the transaction's unordered field (if set).
-func (w *gogoTxWrapper) GetUnordered() bool { return w.decodedTx.Tx.Body.Unordered }
+func (w *gogoTxWrapper) GetUnordered() bool { return w.Tx.Body.Unordered }
 
 // GetSignaturesV2 returns the signatures of the Tx.
 func (w *gogoTxWrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
-	signerInfos := w.decodedTx.Tx.AuthInfo.SignerInfos
-	sigs := w.decodedTx.Tx.Signatures
+	signerInfos := w.Tx.AuthInfo.SignerInfos
+	sigs := w.Tx.Signatures
 	pubKeys, err := w.GetPubKeys()
 	if err != nil {
 		return nil, err
@@ -216,46 +226,46 @@ func (w *gogoTxWrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 // TODO: evaluate if this is even needed considering we have decoded tx.
 func (w *gogoTxWrapper) GetSigningTxData() txsigning.TxData {
 	return txsigning.TxData{
-		Body:                       w.decodedTx.Tx.Body,
-		AuthInfo:                   w.decodedTx.Tx.AuthInfo,
-		BodyBytes:                  w.decodedTx.TxRaw.BodyBytes,
-		AuthInfoBytes:              w.decodedTx.TxRaw.AuthInfoBytes,
-		BodyHasUnknownNonCriticals: w.decodedTx.TxBodyHasUnknownNonCriticals,
+		Body:                       w.Tx.Body,
+		AuthInfo:                   w.Tx.AuthInfo,
+		BodyBytes:                  w.TxRaw.BodyBytes,
+		AuthInfoBytes:              w.TxRaw.AuthInfoBytes,
+		BodyHasUnknownNonCriticals: w.TxBodyHasUnknownNonCriticals,
 	}
 }
 
 func (w *gogoTxWrapper) GetExtensionOptions() []*codectypes.Any {
-	return intoAnyV1(w.decodedTx.Tx.Body.ExtensionOptions)
+	return intoAnyV1(w.Tx.Body.ExtensionOptions)
 }
 
 func (w *gogoTxWrapper) GetNonCriticalExtensionOptions() []*codectypes.Any {
-	return intoAnyV1(w.decodedTx.Tx.Body.NonCriticalExtensionOptions)
+	return intoAnyV1(w.Tx.Body.NonCriticalExtensionOptions)
 }
 
 func (w *gogoTxWrapper) AsTx() (*txtypes.Tx, error) {
 	body := new(txtypes.TxBody)
 	authInfo := new(txtypes.AuthInfo)
 
-	err := w.cdc.Unmarshal(w.decodedTx.TxRaw.BodyBytes, body)
+	err := w.cdc.Unmarshal(w.TxRaw.BodyBytes, body)
 	if err != nil {
 		return nil, err
 	}
-	err = w.cdc.Unmarshal(w.decodedTx.TxRaw.AuthInfoBytes, authInfo)
+	err = w.cdc.Unmarshal(w.TxRaw.AuthInfoBytes, authInfo)
 	if err != nil {
 		return nil, err
 	}
 	return &txtypes.Tx{
 		Body:       body,
 		AuthInfo:   authInfo,
-		Signatures: w.decodedTx.TxRaw.Signatures,
+		Signatures: w.TxRaw.Signatures,
 	}, nil
 }
 
 func (w *gogoTxWrapper) AsTxRaw() (*txtypes.TxRaw, error) {
 	return &txtypes.TxRaw{
-		BodyBytes:     w.decodedTx.TxRaw.BodyBytes,
-		AuthInfoBytes: w.decodedTx.TxRaw.AuthInfoBytes,
-		Signatures:    w.decodedTx.TxRaw.Signatures,
+		BodyBytes:     w.TxRaw.BodyBytes,
+		AuthInfoBytes: w.TxRaw.AuthInfoBytes,
+		Signatures:    w.TxRaw.Signatures,
 	}, nil
 }
 

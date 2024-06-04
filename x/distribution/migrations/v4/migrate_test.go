@@ -7,7 +7,7 @@ import (
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/distribution"
 	v4 "cosmossdk.io/x/distribution/migrations/v4"

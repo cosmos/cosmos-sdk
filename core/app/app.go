@@ -28,6 +28,9 @@ type BlockRequest[T any] struct {
 	AppHash           []byte
 	Txs               []T
 	ConsensusMessages []transaction.Msg
+
+	// IsGenesis indicates if this block is the first block of the chain.
+	IsGenesis bool
 }
 
 type BlockResponse struct {

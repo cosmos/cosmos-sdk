@@ -9,10 +9,7 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/encoding/protojson"
 	protov2 "google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
-	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
 	"sigs.k8s.io/yaml"
 
@@ -26,7 +23,7 @@ import (
 func LoadJSON(bz []byte) depinject.Config {
 	config := &appv1alpha1.Config{}
 	err := protojson.UnmarshalOptions{
-		Resolver: dynamicResolver{resolver: gogoproto.HybridResolver},
+		Resolver: dynamicTypeResolver{resolver: gogoproto.HybridResolver},
 	}.Unmarshal(bz, config)
 	if err != nil {
 		return depinject.Error(err)
@@ -34,55 +31,6 @@ func LoadJSON(bz []byte) depinject.Config {
 
 	return Compose(config)
 }
-
-// dynamic resolver allows marshaling gogo proto messages from the gogoproto.HybridResolver as long as those
-// files have been imported before calling LoadJSON.
-type dynamicResolver struct {
-	resolver protodesc.Resolver
-}
-
-func (r dynamicResolver) FindExtensionByName(field protoreflect.FullName) (protoreflect.ExtensionType, error) {
-	ext, err := protoregistry.GlobalTypes.FindExtensionByName(field)
-	if err == nil {
-		return ext, nil
-	}
-
-	desc, err := r.resolver.FindDescriptorByName(field)
-	if err != nil {
-		return nil, err
-	}
-
-	return dynamicpb.NewExtensionType(desc.(protoreflect.ExtensionTypeDescriptor)), nil
-}
-
-func (r dynamicResolver) FindExtensionByNumber(message protoreflect.FullName, field protoreflect.FieldNumber) (protoreflect.ExtensionType, error) {
-	return protoregistry.GlobalTypes.FindExtensionByNumber(message, field)
-}
-
-func (r dynamicResolver) FindMessageByName(message protoreflect.FullName) (protoreflect.MessageType, error) {
-	typ, err := protoregistry.GlobalTypes.FindMessageByName(message)
-	if err == nil {
-		return typ, nil
-	}
-
-	desc, err := r.resolver.FindDescriptorByName(message)
-	if err != nil {
-		return nil, err
-	}
-
-	return dynamicpb.NewMessageType(desc.(protoreflect.MessageDescriptor)), nil
-}
-
-func (r dynamicResolver) FindMessageByURL(url string) (protoreflect.MessageType, error) {
-	if i := strings.LastIndexByte(url, '/'); i >= 0 {
-		url = url[i+1:]
-	}
-
-	return r.FindMessageByName(protoreflect.FullName(url))
-}
-
-var _ protoregistry.MessageTypeResolver = dynamicResolver{}
-var _ protoregistry.ExtensionTypeResolver = dynamicResolver{}
 
 // LoadYAML loads an app config in YAML format.
 func LoadYAML(bz []byte) depinject.Config {

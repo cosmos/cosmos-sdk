@@ -6,12 +6,14 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client"
-
-	"cosmossdk.io/log"
-
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/core/log"
+	tlog "cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -21,7 +23,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
-	"github.com/stretchr/testify/require"
 )
 
 const SimAppChainID = "simulation-app"
@@ -68,6 +69,7 @@ func Run[T SimulationApp](
 	setupStateFactory func(app T) SimStateFactory,
 	postRunActions ...func(t *testing.T, app TestInstance[T]),
 ) {
+	t.Helper()
 	RunWithSeeds(t, appFactory, setupStateFactory, defaultSeeds, nil, postRunActions...)
 }
 
@@ -95,6 +97,7 @@ func RunWithSeeds[T SimulationApp](
 	fuzzSeed []byte,
 	postRunActions ...func(t *testing.T, app TestInstance[T]),
 ) {
+	t.Helper()
 	cfg := cli.NewConfigFromFlags()
 	cfg.ChainID = SimAppChainID
 	for i := range seeds {
@@ -109,9 +112,9 @@ func RunWithSeeds[T SimulationApp](
 			testInstance := NewSimulationAppInstance(t, tCfg, appFactory)
 			var runLogger log.Logger
 			if cli.FlagVerboseValue {
-				runLogger = log.NewTestLogger(t)
+				runLogger = tlog.NewTestLogger(t)
 			} else {
-				runLogger = log.NewTestLoggerInfo(t)
+				runLogger = tlog.NewTestLoggerInfo(t)
 			}
 			runLogger = runLogger.With("seed", tCfg.Seed)
 
@@ -168,13 +171,14 @@ func NewSimulationAppInstance[T SimulationApp](
 	tCfg simtypes.Config,
 	appFactory func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
 ) TestInstance[T] {
+	t.Helper()
 	workDir := t.TempDir()
 	dbDir := filepath.Join(workDir, "leveldb-app-sim")
 	var logger log.Logger
 	if cli.FlagVerboseValue {
-		logger = log.NewTestLogger(t)
+		logger = tlog.NewTestLogger(t)
 	} else {
-		logger = log.NewTestLoggerError(t)
+		logger = tlog.NewTestLoggerError(t)
 	}
 	logger = logger.With("seed", tCfg.Seed)
 

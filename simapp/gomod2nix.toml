@@ -28,9 +28,6 @@ schema = 3
   [mod."cosmossdk.io/errors"]
     version = "v1.0.1"
     hash = "sha256-MgTocXkBzri9FKkNtkARJXPmxRrRO/diQJS5ZzvYrJY="
-  [mod."cosmossdk.io/log"]
-    version = "v1.3.1"
-    hash = "sha256-otkUvsz35VuuUWXoTmWBwR61+o6YzvWETGdLfwWDvwY="
   [mod."cosmossdk.io/math"]
     version = "v1.3.0"
     hash = "sha256-EEFK43Cr0g0ndhQhkIKher0FqV3mvkmE9z0sP7uVSHg="
@@ -423,8 +420,8 @@ schema = 3
     version = "v1.11.0"
     hash = "sha256-hF25bVehtWCQsxiOfLuL4Hv8NKVunEqLPk/Vcuheha0="
   [mod."github.com/rs/zerolog"]
-    version = "v1.32.0"
-    hash = "sha256-9dZjtsES+wLp1cFiSVMuEUbdeXVFcgT0dgg5ACZkILk="
+    version = "v1.33.0"
+    hash = "sha256-jT/Y/izhZiCdrDbC/ty83FGs8UQavTU+OW03O4vKFkY="
   [mod."github.com/sagikazarmark/locafero"]
     version = "v0.4.0"
     hash = "sha256-7I1Oatc7GAaHgAqBFO6Tv4IbzFiYeU9bJAfJhXuWaXk="
@@ -553,8 +550,8 @@ schema = 3
     version = "v0.0.0-20240415180920-8c6c420018be"
     hash = "sha256-0Bc66Utj1rydwYngQxTQoTyg1Td2D+nIxukc0zz7XFc="
   [mod."google.golang.org/genproto/googleapis/rpc"]
-    version = "v0.0.0-20240513163218-0867130af1f8"
-    hash = "sha256-c+VNAAU3HTu/ZGfpiPnjnzgszcPhU4JOhTTcIdo/PPI="
+    version = "v0.0.0-20240515191416-fc5f0ca64291"
+    hash = "sha256-hQjIHJdIBBAthdXMB19Xr3A2Wy6GV6Gjv4w4MZl7qy4="
   [mod."google.golang.org/grpc"]
     version = "v1.64.0"
     hash = "sha256-04Noi8lrzr+4ac2BA7KNXUXN/xZL/A2SsEpC2Hern84="

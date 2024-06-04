@@ -5,23 +5,9 @@ import (
 	"io"
 	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/suite"
 )
 
-type abciTestSuite struct {
-	suite.Suite
-}
-
-func TestABCITestSuite(t *testing.T) {
-	suite.Run(t, new(abciTestSuite))
-}
-
-func (s *abciTestSuite) SetupSuite() {
-	s.T().Parallel()
-}
-
-func (s *abciTestSuite) TestABCInfo() {
+func TestABCInfo(t *testing.T) {
 	cases := map[string]struct {
 		err       error
 		debug     bool
@@ -89,16 +75,22 @@ func (s *abciTestSuite) TestABCInfo() {
 	}
 
 	for testName, tc := range cases {
-		s.T().Run(testName, func(t *testing.T) {
+		t.Run(testName, func(t *testing.T) {
 			space, code, log := ABCIInfo(tc.err, tc.debug)
-			s.Require().Equal(tc.wantSpace, space, testName)
-			s.Require().Equal(tc.wantCode, code, testName)
-			s.Require().Equal(tc.wantLog, log, testName)
+			if space != tc.wantSpace {
+				t.Errorf("%s: expected space %s, got %s", testName, tc.wantSpace, space)
+			}
+			if code != tc.wantCode {
+				t.Errorf("%s: expected code %d, got %d", testName, tc.wantCode, code)
+			}
+			if log != tc.wantLog {
+				t.Errorf("%s: expected log %s, got %s", testName, tc.wantLog, log)
+			}
 		})
 	}
 }
 
-func (s *abciTestSuite) TestABCIInfoStacktrace() {
+func TestABCIInfoStacktrace(t *testing.T) {
 	cases := map[string]struct {
 		err            error
 		debug          bool
@@ -128,25 +120,33 @@ func (s *abciTestSuite) TestABCIInfoStacktrace() {
 	const thisTestSrc = "cosmossdk.io/errors.(*abciTestSuite).TestABCIInfoStacktrace"
 
 	for testName, tc := range cases {
-		s.T().Run(testName, func(t *testing.T) {
+		t.Run(testName, func(t *testing.T) {
 			_, _, log := ABCIInfo(tc.err, tc.debug)
 			if !tc.wantStacktrace {
-				s.Require().Equal(tc.wantErrMsg, log, testName)
+				if log != tc.wantErrMsg {
+					t.Errorf("%s: expected log %s, got %s", testName, tc.wantErrMsg, log)
+				}
 			} else {
-				s.Require().True(strings.Contains(log, thisTestSrc), testName)
-				s.Require().True(strings.Contains(log, tc.wantErrMsg), testName)
+				if !strings.Contains(log, thisTestSrc) {
+					t.Errorf("%s: expected log to contain %s", testName, thisTestSrc)
+				}
+				if !strings.Contains(log, tc.wantErrMsg) {
+					t.Errorf("%s: expected log to contain %s", testName, tc.wantErrMsg)
+				}
 			}
 		})
 	}
 }
 
-func (s *abciTestSuite) TestABCIInfoHidesStacktrace() {
+func TestABCIInfoHidesStacktrace(t *testing.T) {
 	err := Wrap(ErrUnauthorized, "wrapped")
 	_, _, log := ABCIInfo(err, false)
-	s.Require().Equal("wrapped: unauthorized", log)
+	if log != "wrapped: unauthorized" {
+		t.Errorf("expected log %s, got %s", "wrapped: unauthorized", log)
+	}
 }
 
-func (s *abciTestSuite) TestABCIInfoSerializeErr() {
+func TestABCIInfoSerializeErr(t *testing.T) {
 	var (
 		// Create errors with stacktrace for equal comparison.
 		myErrDecode = Wrap(ErrTxDecode, "test")
@@ -183,7 +183,9 @@ func (s *abciTestSuite) TestABCIInfoSerializeErr() {
 	for msg, spec := range specs {
 		spec := spec
 		_, _, log := ABCIInfo(spec.src, spec.debug)
-		s.Require().Equal(spec.exp, log, msg)
+		if log != spec.exp {
+			t.Errorf("%s: expected log %s, got %s", msg, spec.exp, log)
+		}
 	}
 }
 

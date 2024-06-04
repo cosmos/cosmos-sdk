@@ -1,10 +1,8 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
-	"reflect"
-
-	"github.com/pkg/errors"
 )
 
 // UndefinedCodespace when we explicitly declare no codespace
@@ -102,38 +100,6 @@ func (e Error) Codespace() string {
 	return e.codespace
 }
 
-// Is check if given error instance is of a given kind/type. This involves
-// unwrapping given error using the Cause method if available.
-func (e *Error) Is(err error) bool {
-	// Reflect usage is necessary to correctly compare with
-	// a nil implementation of an error.
-	if e == nil {
-		return isNilErr(err)
-	}
-
-	for {
-		if err == e {
-			return true
-		}
-
-		// If this is a collection of errors, this function must return
-		// true if at least one from the group match.
-		if u, ok := err.(unpacker); ok {
-			for _, er := range u.Unpack() {
-				if e.Is(er) {
-					return true
-				}
-			}
-		}
-
-		if c, ok := err.(causer); ok {
-			err = c.Cause()
-		} else {
-			return false
-		}
-	}
-}
-
 // Wrap extends this error with an additional information.
 // It's a handy function to call Wrap with sdk errors.
 func (e *Error) Wrap(desc string) error { return Wrap(e, desc) }
@@ -141,18 +107,6 @@ func (e *Error) Wrap(desc string) error { return Wrap(e, desc) }
 // Wrapf extends this error with an additional information.
 // It's a handy function to call Wrapf with sdk errors.
 func (e *Error) Wrapf(desc string, args ...interface{}) error { return Wrapf(e, desc, args...) }
-
-func isNilErr(err error) bool {
-	// Reflect usage is necessary to correctly compare with
-	// a nil implementation of an error.
-	if err == nil {
-		return true
-	}
-	if reflect.ValueOf(err).Kind() == reflect.Struct {
-		return false
-	}
-	return reflect.ValueOf(err).IsNil()
-}
 
 // Wrap extends given error with an additional information.
 //
@@ -164,13 +118,6 @@ func isNilErr(err error) bool {
 func Wrap(err error, description string) error {
 	if err == nil {
 		return nil
-	}
-
-	// If this error does not carry the stacktrace information yet, attach
-	// one. This should be done only once per error at the lowest frame
-	// possible (most inner wrap).
-	if stackTrace(err) == nil {
-		err = errors.WithStack(err)
 	}
 
 	return &wrappedError{
@@ -201,28 +148,6 @@ func (e *wrappedError) Error() string {
 
 func (e *wrappedError) Cause() error {
 	return e.parent
-}
-
-// Is reports whether any error in e's chain matches a target.
-func (e *wrappedError) Is(target error) bool {
-	if e == target {
-		return true
-	}
-
-	w := e.Cause()
-	for {
-		if w == target {
-			return true
-		}
-
-		x, ok := w.(causer)
-		if ok {
-			w = x.Cause()
-		}
-		if x == nil {
-			return false
-		}
-	}
 }
 
 // Unwrap implements the built-in errors.Unwrap
@@ -262,8 +187,4 @@ func IsOf(received error, targets ...error) bool {
 // it to test if an error wraps another error instance.
 type causer interface {
 	Cause() error
-}
-
-type unpacker interface {
-	Unpack() []error
 }

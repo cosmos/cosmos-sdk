@@ -487,17 +487,16 @@ Since `FinalizeBlock` is an ABCI call, `Tx` is received in the encoded `[]byte` 
 flowchart TD
     A[Receive Block Proposal] --> B[FinalizeBlock]
     B -->|BeginBlock| C{Execute Transactions}
-    C --> D[ExecuteTx(tx0)]
-    C --> E[ExecuteTx(tx1)]
-    C --> F[ExecuteTx(tx2)]
-    C --> G[ExecuteTx(tx3)]
+    C --> D["ExecuteTx(tx0)"]
+    C --> E["ExecuteTx(tx1)"]
+    C --> F["ExecuteTx(tx2)"]
+    C --> G["ExecuteTx(tx3)"]
     C -->|EndBlock| H[Consensus]
     H --> I[Commit]
 
-
 Before the first transaction of a given block is processed, a [volatile state](#state-updates) called `finalizeBlockState` is initialized during FinalizeBlock. This state is updated each time a transaction is processed via `FinalizeBlock`, and committed to the [main state](#state-updates) when the block is [committed](#commit), after what it is set to `nil`.
 
-The `FinalizeBlock` ABCI function defined in `BaseApp` and does the bulk of the state transitions: it is run for each transaction in the block in sequential order as committed to during consensus. Under the hood, transaction execution is almost identical to `CheckTx` but calls the [`runTx`](#runtx) function in deliver mode instead of check mode.
+The `FinalizeBlock` ABCI function defined in `BaseApp` does the bulk of the state transitions: it is run for each transaction in the block in sequential order as committed to during consensus. Under the hood, transaction execution is almost identical to `CheckTx` but calls the [`runTx`](#runtx) function in deliver mode instead of check mode.
 
 Instead of using their `checkState`, full-nodes use `finalizeblock`:
 

@@ -1,10 +1,10 @@
 package appconfig
 
 import (
+	"fmt"
 	"reflect"
-	"strings"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	internal "cosmossdk.io/depinject/internal/appconfig"
 )
@@ -21,33 +21,16 @@ var Register = RegisterModule
 // cosmos.app.v1alpha.module option and must explicitly specify go_package
 // to make debugging easier for users.
 func RegisterModule(config any, options ...Option) {
+	protoConfig, ok := config.(proto.Message)
+	if !ok {
+		panic(fmt.Errorf("expected config to be a proto.Message, got %T", config))
+	}
+
 	ty := reflect.TypeOf(config)
 	init := &internal.ModuleInitializer{
-		ConfigGoType: ty,
+		ConfigProtoMessage: protoConfig,
+		ConfigGoType:       ty,
 	}
-
-	var structTy reflect.Type
-	if msg := config.(gogoproto.Message); msg == nil {
-		init.ConfigProtoMessage = msg
-	} else {
-		if ty.Kind() != reflect.Struct {
-			panic("config must be a struct")
-		}
-
-		structTy = ty
-	}
-
-	numMethods := structTy.NumMethod()
-	for i := 0; i < numMethods; i++ {
-		method := structTy.Method(i)
-		f := method.Func.Interface()
-		if strings.HasPrefix(method.Name, "Provide") {
-			options = append(options, Provide(f))
-		} else if strings.HasPrefix(method.Name, "Invoke") {
-			options = append(options, Invoke(f))
-		}
-	}
-
 	internal.ModuleRegistry[ty] = init
 
 	for _, option := range options {

@@ -45,8 +45,6 @@ message ModuleConfig {
   // depinject uses to resolve interface inputs to provider functions.  The scope of this
   // field's configuration is module specific.
   repeated GolangBinding golang_bindings = 3;
-
-  string type_url = 4;
 }
 
 // GolangBinding is an explicit interface type to implementing type binding for dependency injection.

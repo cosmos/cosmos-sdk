@@ -27,26 +27,7 @@ func ModulesByModuleTypeName() (map[string]*ModuleInitializer, error) {
 	res := map[string]*ModuleInitializer{}
 
 	for _, initializer := range ModuleRegistry {
-		var fullName string
-		if initializer.ConfigProtoMessage != nil {
-			fullName = gogoproto.MessageName(initializer.ConfigProtoMessage)
-			//modDesc := proto.GetExtension(descriptor.Options(), appv1alpha1.E_Module).(*appv1alpha1.ModuleDescriptor)
-			//if modDesc == nil {
-			//	return nil, fmt.Errorf(
-			//		"protobuf type %s registered as a module should have the option %s",
-			//		fullName,
-			//		appv1alpha1.E_Module.TypeDescriptor().FullName())
-			//}
-			//
-			//if modDesc.GoImport == "" {
-			//	return nil, fmt.Errorf(
-			//		"protobuf type %s registered as a module should have ModuleDescriptor.go_import specified",
-			//		fullName,
-			//	)
-			//}
-		} else {
-			fullName = fmt.Sprintf("%s.%s", initializer.ConfigGoType.PkgPath(), initializer.ConfigGoType.Name())
-		}
+		fullName := gogoproto.MessageName(initializer.ConfigProtoMessage)
 
 		if _, ok := res[fullName]; ok {
 			return nil, fmt.Errorf("duplicate module registration for %s", fullName)

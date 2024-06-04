@@ -64,10 +64,22 @@ func TripleKeyCodec[K1, K2, K3 any](keyCodec1 codec.KeyCodec[K1], keyCodec2 code
 	}
 }
 
+func NamedTripleKeyCodec[K1, K2, K3 any](key1Name string, keyCodec1 codec.KeyCodec[K1], key2Name string, keyCodec2 codec.KeyCodec[K2], key3Name string, keyCodec3 codec.KeyCodec[K3]) codec.KeyCodec[Triple[K1, K2, K3]] {
+	return tripleKeyCodec[K1, K2, K3]{
+		key1Name:  key1Name,
+		key2Name:  key2Name,
+		key3Name:  key3Name,
+		keyCodec1: keyCodec1,
+		keyCodec2: keyCodec2,
+		keyCodec3: keyCodec3,
+	}
+}
+
 type tripleKeyCodec[K1, K2, K3 any] struct {
-	keyCodec1 codec.KeyCodec[K1]
-	keyCodec2 codec.KeyCodec[K2]
-	keyCodec3 codec.KeyCodec[K3]
+	key1Name, key2Name, key3Name string
+	keyCodec1                    codec.KeyCodec[K1]
+	keyCodec2                    codec.KeyCodec[K2]
+	keyCodec3                    codec.KeyCodec[K3]
 }
 
 type jsonTripleKey [3]json.RawMessage
@@ -271,6 +283,10 @@ func (t tripleKeyCodec[K1, K2, K3]) SizeNonTerminal(key Triple[K1, K2, K3]) int 
 		size += t.keyCodec3.SizeNonTerminal(*key.k3)
 	}
 	return size
+}
+
+func (t tripleKeyCodec[K1, K2, K3]) Name() string {
+	return fmt.Sprintf("%s,%s,%s", t.key1Name, t.key2Name, t.key3Name)
 }
 
 // NewPrefixUntilTripleRange defines a collection query which ranges until the provided Pair prefix.

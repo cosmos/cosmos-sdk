@@ -9,7 +9,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -38,12 +38,18 @@ func TestBankStateCompatibility(t *testing.T) {
 	authKeeper := banktestutil.NewMockAccountKeeper(ctrl)
 	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
+	addr, err := ac.BytesToString(accAddrs[4])
+	require.NoError(t, err)
+	authority, err := ac.BytesToString(authtypes.NewModuleAddress(banktypes.GovModuleName))
+	require.NoError(t, err)
+
 	k := keeper.NewBaseKeeper(
 		env,
 		encCfg.Codec,
 		authKeeper,
-		map[string]bool{accAddrs[4].String(): true},
-		authtypes.NewModuleAddress(banktypes.GovModuleName).String(),
+		map[string]bool{addr: true},
+		authority,
 	)
 
 	// test we can decode balances without problems

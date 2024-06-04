@@ -46,12 +46,7 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
     * create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
     * Create a GitHub release.
 
-Following _semver_ philosophy, point releases after `v1.0`:
-
-* must not break API
-* can break consensus
-
-Before `v1.0`, point release can break both point API and consensus.
+See the [Releases document](./RELEASES.md) for more information on the versioning scheme.
 
 ## Patch Release Procedure
 
@@ -82,8 +77,8 @@ Major Release series is maintained in compliance with the **Stable Release Polic
 
 Only the following major release series have a stable release status:
 
-* **0.47** is the previous major release and is supported until the release of **0.51.0**. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a not latest stable point-release.
-* **0.50** is the last major release and is supported until the release of **0.52.0**.
+* **0.47** is the previous major release and is supported until the release of **0.52.0**. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a not latest stable point-release.
+* **0.50** is the last major release and is supported until the release of **0.54.0**.
 
 The SDK team maintains the last two major releases, any other major release is considered to have reached end of life.
 The SDK team will not backport any bug fixes to releases that are not supported.
@@ -241,7 +236,3 @@ Those modules can be considered as part of the Cosmos SDK, but features and impr
 ### Modules that do not depend on the Cosmos SDK
 
 Modules that do not depend on the Cosmos SDK can be released at any time from the `main` branch of the Cosmos SDK repository.
-
-#### Exception to the rule
-
-* Store v1 is released from `release/v0.50.x` branch.

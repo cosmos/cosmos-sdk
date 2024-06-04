@@ -55,15 +55,14 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 `, defaultsDesc, version.AppName,
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			serverCtx := server.GetServerContextFromCmd(cmd)
+			config := client.GetConfigFromCmd(cmd)
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 			cdc := clientCtx.Codec
-			config := serverCtx.Config
 
-			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(serverCtx.Config)
+			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(config)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize node validator files")
 			}
@@ -122,7 +121,11 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			if err != nil {
 				return err
 			}
-			err = genutil.ValidateAccountInGenesis(genesisState, genBalIterator, addr, coins, cdc)
+			strAddr, err := clientCtx.AddressCodec.BytesToString(addr)
+			if err != nil {
+				return err
+			}
+			err = genutil.ValidateAccountInGenesis(genesisState, genBalIterator, strAddr, coins, cdc)
 			if err != nil {
 				return errors.Wrap(err, "failed to validate account in genesis")
 			}

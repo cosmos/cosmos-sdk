@@ -7,9 +7,10 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/log"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/feegrant"
 
@@ -21,10 +22,11 @@ import (
 // Keeper manages state of all fee grants, as well as calculating approval.
 // It must have a codec with all available allowances registered.
 type Keeper struct {
-	cdc         codec.BinaryCodec
-	environment appmodule.Environment
-	authKeeper  feegrant.AccountKeeper
-	Schema      collections.Schema
+	appmodule.Environment
+
+	cdc        codec.BinaryCodec
+	authKeeper feegrant.AccountKeeper
+	Schema     collections.Schema
 	// FeeAllowance key: grantee+granter | value: Grant
 	FeeAllowance collections.Map[collections.Pair[sdk.AccAddress, sdk.AccAddress], feegrant.Grant]
 	// FeeAllowanceQueue key: expiration time+grantee+granter | value: bool
@@ -38,8 +40,8 @@ func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak feegrant.Acc
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	return Keeper{
+		Environment: env,
 		cdc:         cdc,
-		environment: env,
 		authKeeper:  ak,
 		FeeAllowance: collections.NewMap(
 			sb,
@@ -77,7 +79,7 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 
 	// expiration shouldn't be in the past.
 
-	now := k.environment.HeaderService.GetHeaderInfo(ctx).Time
+	now := k.HeaderService.HeaderInfo(ctx).Time
 	if exp != nil && exp.Before(now) {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "expiration is before current block time")
 	}
@@ -117,7 +119,7 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 		return err
 	}
 
-	return k.environment.EventService.EventManager(ctx).EmitKV(
+	return k.EventService.EventManager(ctx).EmitKV(
 		feegrant.EventTypeSetFeeGrant,
 		event.NewAttribute(feegrant.AttributeKeyGranter, grant.Granter),
 		event.NewAttribute(feegrant.AttributeKeyGrantee, grant.Grantee),
@@ -149,7 +151,7 @@ func (k Keeper) UpdateAllowance(ctx context.Context, granter, grantee sdk.AccAdd
 		return err
 	}
 
-	return k.environment.EventService.EventManager(ctx).EmitKV(
+	return k.EventService.EventManager(ctx).EmitKV(
 		feegrant.EventTypeUpdateFeeGrant,
 		event.NewAttribute(feegrant.AttributeKeyGranter, grant.Granter),
 		event.NewAttribute(feegrant.AttributeKeyGrantee, grant.Grantee),
@@ -187,7 +189,7 @@ func (k Keeper) revokeAllowance(ctx context.Context, granter, grantee sdk.AccAdd
 		return err
 	}
 
-	return k.environment.EventService.EventManager(ctx).EmitKV(
+	return k.EventService.EventManager(ctx).EmitKV(
 		feegrant.EventTypeRevokeFeeGrant,
 		event.NewAttribute(feegrant.AttributeKeyGranter, granterStr),
 		event.NewAttribute(feegrant.AttributeKeyGrantee, granteeStr),
@@ -231,7 +233,7 @@ func (k Keeper) UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddr
 		return err
 	}
 
-	remove, err := grant.Accept(ctx, fee, msgs)
+	remove, err := grant.Accept(context.WithValue(ctx, corecontext.EnvironmentContextKey, k.Environment), fee, msgs)
 	if remove && err == nil {
 		// Ignoring the `revokeFeeAllowance` error, because the user has enough grants to perform this transaction.
 		_ = k.revokeAllowance(ctx, granter, grantee)
@@ -250,7 +252,7 @@ func (k Keeper) UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddr
 }
 
 func (k *Keeper) emitUseGrantEvent(ctx context.Context, granter, grantee string) error {
-	return k.environment.EventService.EventManager(ctx).EmitKV(
+	return k.EventService.EventManager(ctx).EmitKV(
 		feegrant.EventTypeUseFeeGrant,
 		event.NewAttribute(feegrant.AttributeKeyGranter, granter),
 		event.NewAttribute(feegrant.AttributeKeyGrantee, grantee),
@@ -298,7 +300,7 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*feegrant.GenesisState, erro
 
 // RemoveExpiredAllowances iterates grantsByExpiryQueue and deletes the expired grants.
 func (k Keeper) RemoveExpiredAllowances(ctx context.Context, limit int) error {
-	exp := k.environment.HeaderService.GetHeaderInfo(ctx).Time
+	exp := k.HeaderService.HeaderInfo(ctx).Time
 	rng := collections.NewPrefixUntilTripleRange[time.Time, sdk.AccAddress, sdk.AccAddress](exp)
 	count := 0
 

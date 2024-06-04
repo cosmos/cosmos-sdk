@@ -54,7 +54,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	expiration := ctx.HeaderInfo().Time.AddDate(0, 1, 0)
 	expiration2 := expiration.AddDate(1, 0, 0)
 	smallCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
-	sendAuthz := banktypes.NewSendAuthorization(smallCoins, nil)
+	sendAuthz := banktypes.NewSendAuthorization(smallCoins, nil, codectestutil.CodecOptions{}.GetAddressCodec())
 
 	ctrl := gomock.NewController(t)
 	accountKeeper := authztestutil.NewMockAccountKeeper(ctrl)
@@ -66,7 +66,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(baseApp.GRPCQueryRouter(), baseApp.MsgServiceRouter()))
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithQueryRouterService(baseApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(baseApp.MsgServiceRouter()))
 	authzKeeper := keeper.NewKeeper(env, encCfg.Codec, accountKeeper)
 
 	save := func(grantee sdk.AccAddress, exp *time.Time) {

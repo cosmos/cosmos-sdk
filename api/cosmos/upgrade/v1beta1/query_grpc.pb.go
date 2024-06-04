@@ -43,12 +43,8 @@ type QueryClient interface {
 	// (https://github.com/cosmos/ibc-go/blob/2c880a22e9f9cc75f62b527ca94aa75ce1106001/proto/ibc/core/client/v1/query.proto#L54)
 	UpgradedConsensusState(ctx context.Context, in *QueryUpgradedConsensusStateRequest, opts ...grpc.CallOption) (*QueryUpgradedConsensusStateResponse, error)
 	// ModuleVersions queries the list of module versions from state.
-	//
-	// Since: cosmos-sdk 0.43
 	ModuleVersions(ctx context.Context, in *QueryModuleVersionsRequest, opts ...grpc.CallOption) (*QueryModuleVersionsResponse, error)
 	// Returns the account with authority to conduct upgrades
-	//
-	// Since: cosmos-sdk 0.46
 	Authority(ctx context.Context, in *QueryAuthorityRequest, opts ...grpc.CallOption) (*QueryAuthorityResponse, error)
 }
 
@@ -123,12 +119,8 @@ type QueryServer interface {
 	// (https://github.com/cosmos/ibc-go/blob/2c880a22e9f9cc75f62b527ca94aa75ce1106001/proto/ibc/core/client/v1/query.proto#L54)
 	UpgradedConsensusState(context.Context, *QueryUpgradedConsensusStateRequest) (*QueryUpgradedConsensusStateResponse, error)
 	// ModuleVersions queries the list of module versions from state.
-	//
-	// Since: cosmos-sdk 0.43
 	ModuleVersions(context.Context, *QueryModuleVersionsRequest) (*QueryModuleVersionsResponse, error)
 	// Returns the account with authority to conduct upgrades
-	//
-	// Since: cosmos-sdk 0.46
 	Authority(context.Context, *QueryAuthorityRequest) (*QueryAuthorityResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }

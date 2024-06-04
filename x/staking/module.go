@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/x/staking/client/cli"
@@ -23,7 +24,7 @@ import (
 )
 
 const (
-	consensusVersion uint64 = 5
+	consensusVersion uint64 = 6
 )
 
 var (
@@ -76,7 +77,7 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the staking module's types on the given LegacyAmino codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
@@ -114,16 +115,19 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
 	if err := mr.Register(types.ModuleName, 1, m.Migrate1to2); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err)
+		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %w", types.ModuleName, err)
 	}
 	if err := mr.Register(types.ModuleName, 2, m.Migrate2to3); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err)
+		return fmt.Errorf("failed to migrate x/%s from version 2 to 3: %w", types.ModuleName, err)
 	}
 	if err := mr.Register(types.ModuleName, 3, m.Migrate3to4); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err)
+		return fmt.Errorf("failed to migrate x/%s from version 3 to 4: %w", types.ModuleName, err)
 	}
 	if err := mr.Register(types.ModuleName, 4, m.Migrate4to5); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 4 to 5: %v", types.ModuleName, err)
+		return fmt.Errorf("failed to migrate x/%s from version 4 to 5: %w", types.ModuleName, err)
+	}
+	if err := mr.Register(types.ModuleName, 5, m.Migrate5to6); err != nil {
+		return fmt.Errorf("failed to migrate x/%s from version 5 to 6: %w", types.ModuleName, err)
 	}
 
 	return nil
@@ -145,7 +149,7 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 }
 
 // InitGenesis performs genesis initialization for the staking module.
-func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) ([]module.ValidatorUpdate, error) {
+func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) ([]appmodule.ValidatorUpdate, error) {
 	var genesisState types.GenesisState
 	am.cdc.MustUnmarshalJSON(data, &genesisState)
 	return am.keeper.InitGenesis(ctx, &genesisState)
@@ -173,6 +177,6 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 }
 
 // EndBlock returns the end blocker for the staking module.
-func (am AppModule) EndBlock(ctx context.Context) ([]module.ValidatorUpdate, error) {
+func (am AppModule) EndBlock(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {
 	return am.keeper.EndBlocker(ctx)
 }

@@ -1,6 +1,7 @@
 package v4_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -10,6 +11,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	authkeeper "cosmossdk.io/x/auth/keeper"
+	authtestutil "cosmossdk.io/x/auth/testutil"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
@@ -46,11 +48,25 @@ func TestFundsMigration(t *testing.T) {
 	authority, err := addressCodec.BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
 
+	// gomock initializations
+	ctrl := gomock.NewController(t)
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
+
+	accNum := uint64(0)
+	acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
+		currNum := accNum
+		accNum++
+		return currNum, nil
+	})
+
 	// create account keeper
 	accountKeeper := authkeeper.NewAccountKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		encCfg.Codec,
 		authtypes.ProtoBaseAccount,
+		acctsModKeeper,
 		maccPerms,
 		addressCodec,
 		sdk.Bech32MainPrefix,
@@ -65,11 +81,6 @@ func TestFundsMigration(t *testing.T) {
 		map[string]bool{},
 		authority,
 	)
-
-	// gomock initializations
-	ctrl := gomock.NewController(t)
-	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
-	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	// create distribution keeper
 	distrKeeper := keeper.NewKeeper(

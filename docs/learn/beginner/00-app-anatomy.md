@@ -12,22 +12,31 @@ This document describes the core parts of a Cosmos SDK application, represented 
 
 The Daemon, or [Full-Node Client](../advanced/03-node.md), is the core process of a Cosmos SDK-based blockchain. Participants in the network run this process to initialize their state-machine, connect with other full-nodes, and update their state-machine as new blocks come in.
 
-```text
-                ^  +-------------------------------+  ^
-                |  |                               |  |
-                |  |  State-machine = Application  |  |
-                |  |                               |  |   Built with Cosmos SDK
-                |  |            ^      +           |  |
-                |  +----------- | ABCI | ----------+  v
-                |  |            +      v           |  ^
-                |  |                               |  |
-Blockchain Node |  |           Consensus           |  |
-                |  |                               |  |
-                |  +-------------------------------+  |   CometBFT
-                |  |                               |  |
-                |  |           Networking          |  |
-                |  |                               |  |
-                v  +-------------------------------+  v
+```mermaid
+flowchart TD
+    subgraph Blockchain_Node[Blockchain Node]
+        subgraph SM[State-machine = Application]
+            direction TB
+            SM1[Cosmos SDK]
+        end
+        subgraph ABCI[ABCI]
+            direction TB
+        end
+        subgraph Consensus[Consensus]
+            direction TB
+        end
+        subgraph Networking[Networking]
+            direction TB
+        end
+    end
+
+    SM <--> ABCI
+    ABCI <--> Consensus
+    Consensus <--> Networking
+
+    Blockchain_Node -->|Includes| SM
+    Blockchain_Node -->|Includes| Consensus
+    Blockchain_Node -->|Includes| Networking
 ```
 
 The blockchain full-node presents itself as a binary, generally suffixed by `-d` for "daemon" (e.g. `appd` for `app` or `gaiad` for `gaia`). This binary is built by running a simple [`main.go`](../advanced/03-node.md#main-function) function placed in `./cmd/appd/`. This operation usually happens through the [Makefile](#dependencies-and-makefile).
@@ -50,7 +59,7 @@ In general, the core of the state-machine is defined in a file called `app.go`. 
 
 The first thing defined in `app.go` is the `type` of the application. It is generally comprised of the following parts:
 
-* **A reference to [`baseapp`](../advanced/00-baseapp.md).** The custom application defined in `app.go` is an extension of `baseapp`. When a transaction is relayed by CometBFT to the application, `app` uses `baseapp`'s methods to route them to the appropriate module. `baseapp` implements most of the core logic for the application, including all the [ABCI methods](https://docs.cometbft.com/v0.37/spec/abci/) and the [routing logic](../advanced/00-baseapp.md#routing).
+* **A reference to [`baseapp`](../advanced/00-baseapp.md).** The custom application defined in `app.go` is an extension of `baseapp`. When a transaction is relayed by CometBFT to the application, `app` uses `baseapp`'s methods to route them to the appropriate module. `baseapp` implements most of the core logic for the application, including all the [ABCI methods](https://docs.cometbft.com/v1.0/spec/abci/) and the [routing logic](../advanced/00-baseapp.md#routing).
 * **A list of store keys**. The [store](../advanced/04-store.md), which contains the entire state, is implemented as a [`multistore`](../advanced/04-store.md#multistore) (i.e. a store of stores) in the Cosmos SDK. Each module uses one or multiple stores in the multistore to persist their part of the state. These stores can be accessed with specific keys that are declared in the `app` type. These keys, along with the `keepers`, are at the heart of the [object-capabilities model](../advanced/10-ocap.md) of the Cosmos SDK.
 * **A list of module's `keeper`s.** Each module defines an abstraction called [`keeper`](../../build/building-modules/06-keeper.md), which handles reads and writes for this module's store(s). The `keeper`'s methods of one module can be called from other modules (if authorized), which is why they are declared in the application's type and exported as interfaces to other modules so that the latter can only access the authorized functions.
 * **A reference to an [`appCodec`](../advanced/05-encoding.md).** The application's `appCodec` is used to serialize and deserialize data structures in order to store them, as stores can only persist `[]bytes`. The default codec is [Protocol Buffers](../advanced/05-encoding.md).
@@ -112,13 +121,15 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app.go#L626-L63
 
 There are two semantics around the new lifecycle method:
 
-- It runs before the `BeginBlocker` of all modules
-- It can modify consensus parameters in storage, and signal the caller through the return value.
+* It runs before the `BeginBlocker` of all modules
+* It can modify consensus parameters in storage, and signal the caller through the return value.
 
 When it returns `ConsensusParamsChanged=true`, the caller must refresh the consensus parameter in the finalize context:
+
 ```
 app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithConsensusParams(app.GetConsensusParams())
 ```
+
 The new ctx must be passed to all the other lifecycle methods.
 
 ### BeginBlocker and EndBlocker
@@ -146,8 +157,8 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/params/encoding
 Here are descriptions of what each of the four fields means:
 
 * `InterfaceRegistry`: The `InterfaceRegistry` is used by the Protobuf codec to handle interfaces that are encoded and decoded (we also say "unpacked") using [`google.protobuf.Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto). `Any` could be thought as a struct that contains a `type_url` (name of a concrete type implementing the interface) and a `value` (its encoded bytes). `InterfaceRegistry` provides a mechanism for registering interfaces and implementations that can be safely unpacked from `Any`. Each application module implements the `RegisterInterfaces` method that can be used to register the module's own interfaces and implementations.
-    * You can read more about `Any` in [ADR-019](../../build/architecture/adr-019-protobuf-state-encoding.md).
-    * To go more into details, the Cosmos SDK uses an implementation of the Protobuf specification called [`gogoprotobuf`](https://github.com/cosmos/gogoproto). By default, the [gogo protobuf implementation of `Any`](https://pkg.go.dev/github.com/cosmos/gogoproto/types) uses [global type registration](https://github.com/cosmos/gogoproto/blob/master/proto/properties.go#L540) to decode values packed in `Any` into concrete Go types. This introduces a vulnerability where any malicious module in the dependency tree could register a type with the global protobuf registry and cause it to be loaded and unmarshaled by a transaction that referenced it in the `type_url` field. For more information, please refer to [ADR-019](../../build/architecture/adr-019-protobuf-state-encoding.md).
+    * You can read more about `Any` in [ADR-019](../../architecture/adr-019-protobuf-state-encoding.md).
+    * To go more into details, the Cosmos SDK uses an implementation of the Protobuf specification called [`gogoprotobuf`](https://github.com/cosmos/gogoproto). By default, the [gogo protobuf implementation of `Any`](https://pkg.go.dev/github.com/cosmos/gogoproto/types) uses [global type registration](https://github.com/cosmos/gogoproto/blob/master/proto/properties.go#L540) to decode values packed in `Any` into concrete Go types. This introduces a vulnerability where any malicious module in the dependency tree could register a type with the global protobuf registry and cause it to be loaded and unmarshaled by a transaction that referenced it in the `type_url` field. For more information, please refer to [ADR-019](../../architecture/adr-019-protobuf-state-encoding.md).
 * `Codec`: The default codec used throughout the Cosmos SDK. It is composed of a `BinaryCodec` used to encode and decode state, and a `JSONCodec` used to output data to the users (for example, in the [CLI](#cli)). By default, the SDK uses Protobuf as `Codec`.
 * `TxConfig`: `TxConfig` defines an interface a client can utilize to generate an application-defined concrete transaction type. Currently, the SDK handles two transaction types: `SIGN_MODE_DIRECT` (which uses Protobuf binary as over-the-wire encoding) and `SIGN_MODE_LEGACY_AMINO_JSON` (which depends on Amino). Read more about transactions [here](../advanced/01-transactions.md).
 * `Amino`: Some legacy parts of the Cosmos SDK still use Amino for backwards-compatibility. Each module exposes a `RegisterLegacyAmino` method to register the module's specific types within Amino. This `Amino` codec should not be used by app developers anymore, and will be removed in future releases.
@@ -272,6 +283,6 @@ The following is the `go.mod` of the [Cosmos Hub](https://github.com/cosmos/gaia
 https://github.com/cosmos/gaia/blob/26ae7c2/go.mod#L1-L28
 ```
 
-For building the application, a [Makefile](https://en.wikipedia.org/wiki/Makefile) is generally used. The Makefile primarily ensures that the `go.mod` is run before building the two entrypoints to the application, [`appd`](#node-client) and [`appd`](#application-interface).
+For building the application, a [Makefile](https://en.wikipedia.org/wiki/Makefile) is generally used. The Makefile primarily ensures that the `go.mod` is run before building the two entrypoints to the application, [`Node Client`](#node-client) and [`Application Interface`](#application-interface).
 
 Here is an example of the [Cosmos Hub Makefile](https://github.com/cosmos/gaia/blob/main/Makefile).

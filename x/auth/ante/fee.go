@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/auth/types"
 
@@ -11,14 +12,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// TxFeeChecker check if the provided fee is enough and returns the effective fee and tx priority,
-// the effective fee should be deducted later, and the priority should be returned in abci response.
+// TxFeeChecker checks if the provided fee is enough and returns the effective fee and tx priority.
+// The effective fee should be deducted later, and the priority should be returned in the ABCI response.
 type TxFeeChecker func(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error)
 
 // DeductFeeDecorator deducts fees from the fee payer. The fee payer is the fee granter (if specified) or first signer of the tx.
 // If the fee payer does not have the funds to pay for the fees, return an InsufficientFunds error.
-// Call next AnteHandler if fees successfully deducted.
-// CONTRACT: Tx must implement FeeTx interface to use DeductFeeDecorator
+// Call next AnteHandler if fees are successfully deducted.
+// CONTRACT: The Tx must implement the FeeTx interface to use DeductFeeDecorator.
 type DeductFeeDecorator struct {
 	accountKeeper  AccountKeeper
 	bankKeeper     types.BankKeeper
@@ -42,10 +43,12 @@ func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKee
 func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (sdk.Context, error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must implement the FeeTx interface")
 	}
 
-	if ctx.ExecMode() != sdk.ExecModeSimulate && ctx.BlockHeight() > 0 && feeTx.GetGas() == 0 {
+	txService := dfd.accountKeeper.GetEnvironment().TransactionService
+	execMode := txService.ExecMode(ctx)
+	if execMode != transaction.ExecModeSimulate && ctx.BlockHeight() > 0 && feeTx.GetGas() == 0 {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide positive gas")
 	}
 
@@ -55,7 +58,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, nex
 	)
 
 	fee := feeTx.GetFee()
-	if ctx.ExecMode() != sdk.ExecModeSimulate {
+	if execMode != transaction.ExecModeSimulate {
 		fee, priority, err = dfd.txFeeChecker(ctx, tx)
 		if err != nil {
 			return ctx, err
@@ -67,16 +70,17 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, nex
 
 	newCtx := ctx.WithPriority(priority)
 
-	return next(newCtx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
+	return next(newCtx, tx, false)
 }
 
 func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee sdk.Coins) error {
 	feeTx, ok := sdkTx.(sdk.FeeTx)
 	if !ok {
-		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must implement the FeeTx interface")
 	}
 
-	if addr := dfd.accountKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
+	addr := dfd.accountKeeper.GetModuleAddress(types.FeeCollectorName)
+	if len(addr) == 0 {
 		return fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
 	}
 
@@ -84,8 +88,8 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 	feeGranter := feeTx.FeeGranter()
 	deductFeesFrom := feePayer
 
-	// if feegranter set deduct fee from feegranter account.
-	// this works with only when feegrant enabled.
+	// if feegranter set, deduct fee from feegranter account.
+	// this works only when feegrant is enabled.
 	if feeGranter != nil {
 		feeGranterAddr := sdk.AccAddress(feeGranter)
 
@@ -129,7 +133,7 @@ func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc []byte, fees s
 
 	err := bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(acc), types.FeeCollectorName, fees)
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+		return fmt.Errorf("failed to deduct fees: %w", err)
 	}
 
 	return nil

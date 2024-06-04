@@ -40,7 +40,7 @@ func (k Keeper) Grant(ctx context.Context, msg *authz.MsgGrant) (*authz.MsgGrant
 	}
 
 	t := authorization.MsgTypeURL()
-	if err := k.environment.RouterService.MessageRouterService().CanInvoke(ctx, t); err != nil {
+	if err := k.MsgRouterService.CanInvoke(ctx, t); err != nil {
 		return nil, sdkerrors.ErrInvalidType.Wrapf("%s doesn't exist", t)
 	}
 
@@ -77,6 +77,20 @@ func (k Keeper) Revoke(ctx context.Context, msg *authz.MsgRevoke) (*authz.MsgRev
 	}
 
 	return &authz.MsgRevokeResponse{}, nil
+}
+
+// RevokeAll implements the MsgServer.RevokeAll method.
+func (k Keeper) RevokeAll(ctx context.Context, msg *authz.MsgRevokeAll) (*authz.MsgRevokeAllResponse, error) {
+	granter, err := k.authKeeper.AddressCodec().StringToBytes(msg.Granter)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid granter address: %s", err)
+	}
+
+	if err := k.DeleteAllGrants(ctx, granter); err != nil {
+		return nil, err
+	}
+
+	return &authz.MsgRevokeAllResponse{}, nil
 }
 
 // Exec implements the MsgServer.Exec method.
@@ -117,7 +131,7 @@ func (k Keeper) PruneExpiredGrants(ctx context.Context, msg *authz.MsgPruneExpir
 		return nil, err
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).Emit(&authz.EventPruneExpiredGrants{Pruner: msg.Pruner}); err != nil {
+	if err := k.EventService.EventManager(ctx).Emit(&authz.EventPruneExpiredGrants{Pruner: msg.Pruner}); err != nil {
 		return nil, err
 	}
 

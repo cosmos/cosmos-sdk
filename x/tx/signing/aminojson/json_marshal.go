@@ -72,8 +72,8 @@ func NewEncoder(options EncoderOptions) Encoder {
 			"threshold_string": thresholdStringEncoder,
 		},
 		aminoFieldEncoders: map[string]FieldEncoder{
-			"legacy_coins":    nullSliceAsEmptyEncoder,
-			"bytes_as_string": cosmosBytesAsString,
+			"legacy_coins": nullSliceAsEmptyEncoder,
+			"inline_json":  cosmosInlineJSON,
 		},
 		protoTypeEncoders: map[string]MessageEncoder{
 			"google.protobuf.Timestamp": marshalTimestamp,
@@ -164,6 +164,9 @@ func (enc Encoder) DefineTypeEncoding(typeURL string, encoder MessageEncoder) En
 func (enc Encoder) Marshal(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	err := enc.beginMarshal(message.ProtoReflect(), buf, false)
+	if err != nil {
+		return nil, err
+	}
 
 	if enc.indent != "" {
 		indentBuf := &bytes.Buffer{}
@@ -171,10 +174,10 @@ func (enc Encoder) Marshal(message proto.Message) ([]byte, error) {
 			return nil, err
 		}
 
-		return indentBuf.Bytes(), err
+		return indentBuf.Bytes(), nil
 	}
 
-	return buf.Bytes(), err
+	return buf.Bytes(), nil
 }
 
 func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer, isAny bool) error {

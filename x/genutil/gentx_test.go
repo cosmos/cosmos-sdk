@@ -53,6 +53,7 @@ type GenTxTestSuite struct {
 }
 
 func (suite *GenTxTestSuite) SetupTest() {
+	valAc := codectestutil.CodecOptions{}.GetValidatorCodec()
 	suite.encodingConfig = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, genutil.AppModule{})
 	key := storetypes.NewKVStoreKey("a_Store_Key")
 	tkey := storetypes.NewTransientStoreKey("a_transient_store")
@@ -67,11 +68,13 @@ func (suite *GenTxTestSuite) SetupTest() {
 	var err error
 	amount := sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)
 	one := math.OneInt()
-	suite.msg1, err = stakingtypes.NewMsgCreateValidator(
-		sdk.ValAddress(pk1.Address()).String(), pk1, amount, desc, comm, one)
+	pk1Addr, err := valAc.BytesToString(pk1.Address())
 	suite.NoError(err)
-	suite.msg2, err = stakingtypes.NewMsgCreateValidator(
-		sdk.ValAddress(pk2.Address()).String(), pk1, amount, desc, comm, one)
+	suite.msg1, err = stakingtypes.NewMsgCreateValidator(pk1Addr, pk1, amount, desc, comm, one)
+	suite.NoError(err)
+	pk2Addr, err := valAc.BytesToString(pk2.Address())
+	suite.NoError(err)
+	suite.msg2, err = stakingtypes.NewMsgCreateValidator(pk2Addr, pk1, amount, desc, comm, one)
 	suite.NoError(err)
 }
 
@@ -161,7 +164,13 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 	var (
 		appGenesisState = make(map[string]json.RawMessage)
 		coins           sdk.Coins
+		ac              = codectestutil.CodecOptions{}.GetAddressCodec()
 	)
+
+	addr1Str, err := ac.BytesToString(addr1)
+	suite.Require().NoError(err)
+	addr2Str, err := ac.BytesToString(addr2)
+	suite.Require().NoError(err)
 
 	testCases := []struct {
 		msg      string
@@ -180,7 +189,7 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 			func() {
 				coins = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)}
 				balances := banktypes.Balance{
-					Address: addr2.String(),
+					Address: addr2Str,
 					Coins:   sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)},
 				}
 				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance([]banktypes.Balance{balances})
@@ -192,7 +201,7 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 			func() {
 				coins = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}
 				balances := banktypes.Balance{
-					Address: addr1.String(),
+					Address: addr1Str,
 					Coins:   sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 25)},
 				}
 				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance([]banktypes.Balance{balances})
@@ -204,7 +213,7 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 			func() {
 				coins = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)}
 				balances := banktypes.Balance{
-					Address: addr1.String(),
+					Address: addr1Str,
 					Coins:   sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 25)},
 				}
 				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance([]banktypes.Balance{balances})
@@ -221,10 +230,13 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 			suite.Require().NoError(err)
 			appGenesisState[stakingtypes.ModuleName] = stakingGenesis
 
+			addr, err := addresscodec.NewBech32Codec("cosmos").BytesToString(addr1)
+			suite.Require().NoError(err)
+
 			tc.malleate()
 			err = genutil.ValidateAccountInGenesis(
 				appGenesisState, banktypes.GenesisBalancesIterator{},
-				addr1, coins, cdc,
+				addr, coins, cdc,
 			)
 
 			if tc.expPass {

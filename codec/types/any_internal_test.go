@@ -48,7 +48,7 @@ func TestAnyPackUnpack(t *testing.T) {
 	require.Equal(t, spot, animal)
 
 	// without cache
-	any.cachedValue = nil
+	any.ResetCachedValue()
 	err = registry.UnpackAny(any, &animal)
 	require.NoError(t, err)
 	require.Equal(t, spot, animal)

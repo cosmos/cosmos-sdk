@@ -2,10 +2,13 @@ package feegrant
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
 
+	"cosmossdk.io/core/appmodule"
+	corecontext "cosmossdk.io/core/context"
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -13,7 +16,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// TODO: Revisit this once we have propoer gas fee framework.
+// TODO: Revisit this once we have proper gas fee framework.
 // Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072
 const (
 	gasCostPerIteration = uint64(10)
@@ -70,7 +73,11 @@ func (a *AllowedMsgAllowance) SetAllowance(allowance FeeAllowanceI) error {
 
 // Accept method checks for the filtered messages has valid expiry
 func (a *AllowedMsgAllowance) Accept(ctx context.Context, fee sdk.Coins, msgs []sdk.Msg) (bool, error) {
-	if !a.allMsgTypesAllowed(ctx, msgs) {
+	allowed, err := a.allMsgTypesAllowed(ctx, msgs)
+	if err != nil {
+		return false, err
+	}
+	if !allowed {
 		return false, errorsmod.Wrap(ErrMessageNotAllowed, "message does not exist in allowed messages")
 	}
 
@@ -88,28 +95,43 @@ func (a *AllowedMsgAllowance) Accept(ctx context.Context, fee sdk.Coins, msgs []
 	return remove, err
 }
 
-func (a *AllowedMsgAllowance) allowedMsgsToMap(ctx context.Context) map[string]bool {
+func (a *AllowedMsgAllowance) allowedMsgsToMap(ctx context.Context) (map[string]bool, error) {
 	msgsMap := make(map[string]bool, len(a.AllowedMessages))
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	environment, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodule.Environment)
+	if !ok {
+		return nil, fmt.Errorf("environment not set")
+	}
+	gasMeter := environment.GasService.GasMeter(ctx)
 	for _, msg := range a.AllowedMessages {
-		sdkCtx.GasMeter().ConsumeGas(gasCostPerIteration, "check msg")
+		if err := gasMeter.Consume(gasCostPerIteration, "check msg"); err != nil {
+			return nil, err
+		}
 		msgsMap[msg] = true
 	}
 
-	return msgsMap
+	return msgsMap, nil
 }
 
-func (a *AllowedMsgAllowance) allMsgTypesAllowed(ctx context.Context, msgs []sdk.Msg) bool {
-	msgsMap := a.allowedMsgsToMap(ctx)
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+func (a *AllowedMsgAllowance) allMsgTypesAllowed(ctx context.Context, msgs []sdk.Msg) (bool, error) {
+	msgsMap, err := a.allowedMsgsToMap(ctx)
+	if err != nil {
+		return false, err
+	}
+	environment, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodule.Environment)
+	if !ok {
+		return false, fmt.Errorf("environment not set")
+	}
+	gasMeter := environment.GasService.GasMeter(ctx)
 	for _, msg := range msgs {
-		sdkCtx.GasMeter().ConsumeGas(gasCostPerIteration, "check msg")
+		if err := gasMeter.Consume(gasCostPerIteration, "check msg"); err != nil {
+			return false, err
+		}
 		if !msgsMap[sdk.MsgTypeURL(msg)] {
-			return false
+			return false, nil
 		}
 	}
 
-	return true
+	return true, nil
 }
 
 // ValidateBasic implements FeeAllowance and enforces basic sanity checks

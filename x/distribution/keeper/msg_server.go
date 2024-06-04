@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	metrics "github.com/hashicorp/go-metrics"
+	"github.com/hashicorp/go-metrics"
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/distribution/types"
@@ -162,8 +162,7 @@ func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 		return nil, err
 	}
 
-	logger := k.Logger(ctx)
-	logger.Info("transferred from the community pool to recipient", "amount", msg.Amount.String(), "recipient", msg.Recipient)
+	k.Logger.Info("transferred from the community pool to recipient", "amount", msg.Amount.String(), "recipient", msg.Recipient)
 
 	return &types.MsgCommunityPoolSpendResponse{}, nil
 }
@@ -200,8 +199,7 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 		return nil, err
 	}
 
-	logger := k.Logger(ctx)
-	logger.Info(
+	k.Logger.Info(
 		"transferred from rewards to validator rewards pool",
 		"depositor", msg.Depositor,
 		"amount", msg.Amount.String(),

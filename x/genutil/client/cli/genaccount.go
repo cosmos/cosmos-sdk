@@ -6,12 +6,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	address "cosmossdk.io/core/address"
+	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
@@ -38,8 +37,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			serverCtx := server.GetServerContextFromCmd(cmd)
-			config := serverCtx.Config
+			config := client.GetConfigFromCmd(cmd)
 
 			var kr keyring.Keyring
 			addr, err := addressCodec.StringToBytes(args[0])
@@ -74,7 +72,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			vestingAmtStr, _ := cmd.Flags().GetString(flagVestingAmt)
 			moduleNameStr, _ := cmd.Flags().GetString(flagModuleName)
 
-			return genutil.AddGenesisAccount(clientCtx.Codec, addr, appendflag, config.GenesisFile(), args[1], vestingAmtStr, vestingStart, vestingEnd, moduleNameStr)
+			return genutil.AddGenesisAccount(clientCtx.Codec, clientCtx.AddressCodec, addr, appendflag, config.GenesisFile(), args[1], vestingAmtStr, vestingStart, vestingEnd, moduleNameStr)
 		},
 	}
 

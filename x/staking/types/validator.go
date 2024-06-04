@@ -7,20 +7,16 @@ import (
 	"strings"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 const (
@@ -257,58 +253,32 @@ func (d Description) EnsureLength() (Description, error) {
 	return d, nil
 }
 
-// ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staking validator type
-// with the full validator power
-func (v Validator) ABCIValidatorUpdate(r math.Int) abci.ValidatorUpdate {
-	tmProtoPk, err := v.CmtConsPublicKey()
-	if err != nil {
-		panic(err)
-	}
-
-	return abci.ValidatorUpdate{
-		PubKey: tmProtoPk,
-		Power:  v.ConsensusPower(r),
-	}
-}
-
-// ModuleValidatorUpdate returns a module.ValidatorUpdate from a staking validator type
-// with the full validator power
-func (v Validator) ModuleValidatorUpdate(r math.Int) module.ValidatorUpdate {
+// ModuleValidatorUpdate returns a appmodule.ValidatorUpdate from a staking validator type
+// with the full validator power.
+// It replaces the previous ABCIValidatorUpdate function.
+func (v Validator) ModuleValidatorUpdate(r math.Int) appmodule.ValidatorUpdate {
 	consPk, err := v.ConsPubKey()
 	if err != nil {
 		panic(err)
 	}
 
-	return module.ValidatorUpdate{
+	return appmodule.ValidatorUpdate{
 		PubKey:     consPk.Bytes(),
 		PubKeyType: consPk.Type(),
 		Power:      v.ConsensusPower(r),
 	}
 }
 
-// ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staking validator type
+// ModuleValidatorUpdateZero returns a appmodule.ValidatorUpdate from a staking validator type
 // with zero power used for validator updates.
-func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
-	tmProtoPk, err := v.CmtConsPublicKey()
-	if err != nil {
-		panic(err)
-	}
-
-	return abci.ValidatorUpdate{
-		PubKey: tmProtoPk,
-		Power:  0,
-	}
-}
-
-// ModuleValidatorUpdateZero returns a module.ValidatorUpdate from a staking validator type
-// with zero power used for validator updates.
-func (v Validator) ModuleValidatorUpdateZero() module.ValidatorUpdate {
+// It replaces the previous ABCIValidatorUpdateZero function.
+func (v Validator) ModuleValidatorUpdateZero() appmodule.ValidatorUpdate {
 	consPk, err := v.ConsPubKey()
 	if err != nil {
 		panic(err)
 	}
 
-	return module.ValidatorUpdate{
+	return appmodule.ValidatorUpdate{
 		PubKey:     consPk.Bytes(),
 		PubKeyType: consPk.Type(),
 		Power:      0,
@@ -502,27 +472,6 @@ func (v Validator) ConsPubKey() (cryptotypes.PubKey, error) {
 	}
 
 	return pk, nil
-}
-
-// CmtConsPublicKey casts Validator.ConsensusPubkey to cmtprotocrypto.PubKey.
-func (v Validator) CmtConsPublicKey() (cmtprotocrypto.PublicKey, error) {
-	pk, err := v.ConsPubKey()
-	if err != nil {
-		return cmtprotocrypto.PublicKey{}, err
-	}
-
-	tmPk, err := cryptocodec.ToCmtProtoPublicKey(pk)
-	if err != nil {
-		return cmtprotocrypto.PublicKey{}, err
-	}
-
-	return tmPk, nil
-}
-
-// Deprecated: use CmtConsPublicKey instead
-// We do not delete this function as it is part of the ValidatorI interface
-func (v Validator) TmConsPublicKey() (cmtprotocrypto.PublicKey, error) {
-	return v.CmtConsPublicKey()
 }
 
 // GetConsAddr extracts Consensus key address

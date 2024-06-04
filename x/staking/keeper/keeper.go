@@ -11,7 +11,7 @@ import (
 	"cosmossdk.io/collections/indexes"
 	addresscodec "cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/types"
 
@@ -68,7 +68,8 @@ func NewRotationHistoryIndexes(sb *collections.SchemaBuilder) rotationHistoryInd
 
 // Keeper of the x/staking store
 type Keeper struct {
-	environment           appmodule.Environment
+	appmodule.Environment
+
 	cdc                   codec.BinaryCodec
 	authKeeper            types.AccountKeeper
 	bankKeeper            types.BankKeeper
@@ -76,6 +77,7 @@ type Keeper struct {
 	authority             string
 	validatorAddressCodec addresscodec.Codec
 	consensusAddressCodec addresscodec.Codec
+	cometInfoService      comet.Service
 
 	Schema collections.Schema
 
@@ -83,8 +85,6 @@ type Keeper struct {
 	HistoricalInfo collections.Map[uint64, types.HistoricalRecord]
 	// LastTotalPower value: LastTotalPower
 	LastTotalPower collections.Item[math.Int]
-	// ValidatorUpdates value: ValidatorUpdates
-	ValidatorUpdates collections.Item[types.ValidatorUpdates]
 	// DelegationsByValidator key: valAddr+delAddr | value: none used (index key for delegations by validator index)
 	DelegationsByValidator collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], []byte]
 	UnbondingID            collections.Sequence
@@ -140,6 +140,7 @@ func NewKeeper(
 	authority string,
 	validatorAddressCodec addresscodec.Codec,
 	consensusAddressCodec addresscodec.Codec,
+	cometInfoService comet.Service,
 ) *Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	// ensure bonded and not bonded module accounts are set
@@ -161,7 +162,7 @@ func NewKeeper(
 	}
 
 	k := &Keeper{
-		environment:           env,
+		Environment:           env,
 		cdc:                   cdc,
 		authKeeper:            ak,
 		bankKeeper:            bk,
@@ -169,9 +170,9 @@ func NewKeeper(
 		authority:             authority,
 		validatorAddressCodec: validatorAddressCodec,
 		consensusAddressCodec: consensusAddressCodec,
+		cometInfoService:      cometInfoService,
 		LastTotalPower:        collections.NewItem(sb, types.LastTotalPowerKey, "last_total_power", sdk.IntValue),
 		HistoricalInfo:        collections.NewMap(sb, types.HistoricalInfoKey, "historical_info", collections.Uint64Key, HistoricalInfoCodec(cdc)),
-		ValidatorUpdates:      collections.NewItem(sb, types.ValidatorUpdatesKey, "validator_updates", codec.CollValue[types.ValidatorUpdates](cdc)),
 		Delegations: collections.NewMap(
 			sb, types.DelegationKey, "delegations",
 			collections.PairKeyCodec(
@@ -312,11 +313,6 @@ func NewKeeper(
 	}
 	k.Schema = schema
 	return k
-}
-
-// Logger returns a module-specific logger.
-func (k Keeper) Logger() log.Logger {
-	return k.environment.Logger.With("module", "x/"+types.ModuleName)
 }
 
 // Hooks gets the hooks for staking *Keeper {

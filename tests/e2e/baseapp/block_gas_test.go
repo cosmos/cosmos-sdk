@@ -17,6 +17,7 @@ import (
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	store "cosmossdk.io/store/types"
+	_ "cosmossdk.io/x/accounts"
 	xauthsigning "cosmossdk.io/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -85,6 +86,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 		err = depinject.Inject(
 			depinject.Configs(
 				configurator.NewAppConfig(
+					configurator.AccountsModule(),
 					configurator.AuthModule(),
 					configurator.TxModule(),
 					configurator.ConsensusModule(),
@@ -116,7 +118,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			genState := baseapputil.GenesisStateWithSingleValidator(t, cdc, appBuilder)
 			stateBytes, err := cmtjson.MarshalIndent(genState, "", " ")
 			require.NoError(t, err)
-			_, err = bapp.InitChain(&abci.RequestInitChain{
+			_, err = bapp.InitChain(&abci.InitChainRequest{
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: simtestutil.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
@@ -154,7 +156,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			_, txBytes, err := createTestTx(txConfig, txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 			require.NoError(t, err)
 
-			rsp, err := bapp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+			rsp, err := bapp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
 			require.NoError(t, err)
 
 			// check result

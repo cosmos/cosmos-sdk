@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/router"
-	"cosmossdk.io/log"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 
@@ -21,12 +20,11 @@ import (
 
 // EndBlocker is called every block.
 func (k Keeper) EndBlocker(ctx context.Context) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
+	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
 
-	logger := k.Logger()
 	// delete dead proposals from store and returns theirs deposits.
 	// A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
-	rng := collections.NewPrefixUntilPairRange[time.Time, uint64](k.environment.HeaderService.GetHeaderInfo(ctx).Time)
+	rng := collections.NewPrefixUntilPairRange[time.Time, uint64](k.HeaderService.HeaderInfo(ctx).Time)
 	iter, err := k.InactiveProposalsQueue.Iterate(ctx, rng)
 	if err != nil {
 		return err
@@ -45,7 +43,7 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 			// instead of returning an error (i.e, halting the chain), we fail the proposal
 			if errors.Is(err, collections.ErrEncoding) {
 				proposal.Id = prop.Key.K2()
-				if err := failUnsupportedProposal(logger, ctx, k, proposal, err.Error(), false); err != nil {
+				if err := failUnsupportedProposal(ctx, k, proposal, err.Error(), false); err != nil {
 					return err
 				}
 
@@ -79,21 +77,21 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 
 		// called when proposal become inactive
 		// call hook when proposal become inactive
-		if err := k.environment.BranchService.Execute(ctx, func(ctx context.Context) error {
+		if err := k.BranchService.Execute(ctx, func(ctx context.Context) error {
 			return k.Hooks().AfterProposalFailedMinDeposit(ctx, proposal.Id)
 		}); err != nil {
 			// purposely ignoring the error here not to halt the chain if the hook fails
-			logger.Error("failed to execute AfterProposalFailedMinDeposit hook", "error", err)
+			k.Logger.Error("failed to execute AfterProposalFailedMinDeposit hook", "error", err)
 		}
 
-		if err := k.environment.EventService.EventManager(ctx).EmitKV(types.EventTypeInactiveProposal,
+		if err := k.EventService.EventManager(ctx).EmitKV(types.EventTypeInactiveProposal,
 			event.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.Id)),
 			event.NewAttribute(types.AttributeKeyProposalResult, types.AttributeValueProposalDropped),
 		); err != nil {
-			logger.Error("failed to emit event", "error", err)
+			k.Logger.Error("failed to emit event", "error", err)
 		}
 
-		logger.Info(
+		k.Logger.Info(
 			"proposal did not meet minimum deposit; deleted",
 			"proposal", proposal.Id,
 			"proposal_type", proposal.ProposalType,
@@ -104,7 +102,7 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 	}
 
 	// fetch active proposals whose voting periods have ended (are passed the block time)
-	rng = collections.NewPrefixUntilPairRange[time.Time, uint64](k.environment.HeaderService.GetHeaderInfo(ctx).Time)
+	rng = collections.NewPrefixUntilPairRange[time.Time, uint64](k.HeaderService.HeaderInfo(ctx).Time)
 
 	iter, err = k.ActiveProposalsQueue.Iterate(ctx, rng)
 	if err != nil {
@@ -125,7 +123,7 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 			// instead of returning an error (i.e, halting the chain), we fail the proposal
 			if errors.Is(err, collections.ErrEncoding) {
 				proposal.Id = prop.Key.K2()
-				if err := failUnsupportedProposal(logger, ctx, k, proposal, err.Error(), true); err != nil {
+				if err := failUnsupportedProposal(ctx, k, proposal, err.Error(), true); err != nil {
 					return err
 				}
 
@@ -159,14 +157,14 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 			// in case of an error, log it and emit an event
 			// we do not want to halt the chain if the refund/burn fails
 			// as it could happen due to a governance mistake (governance has let a proposal pass that sends gov funds that were from proposal deposits)
-			k.Logger().Error("failed to refund or burn deposits", "error", err)
+			k.Logger.Error("failed to refund or burn deposits", "error", err)
 
-			if err := k.environment.EventService.EventManager(ctx).EmitKV(types.EventTypeProposalDeposit,
+			if err := k.EventService.EventManager(ctx).EmitKV(types.EventTypeProposalDeposit,
 				event.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.Id)),
 				event.NewAttribute(types.AttributeKeyProposalDepositError, "failed to refund or burn deposits"),
 				event.NewAttribute("error", err.Error()),
 			); err != nil {
-				k.Logger().Error("failed to emit event", "error", err)
+				k.Logger.Error("failed to emit event", "error", err)
 			}
 		}
 
@@ -195,10 +193,10 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 			// Messages may mutate state thus we use a cached context. If one of
 			// the handlers fails, no state mutation is written and the error
 			// message is logged.
-			if err := k.environment.BranchService.Execute(ctx, func(ctx context.Context) error {
+			if err := k.BranchService.Execute(ctx, func(ctx context.Context) error {
 				// execute all messages
 				for idx, msg = range messages {
-					if _, err := safeExecuteHandler(ctx, msg, k.environment.RouterService.MessageRouterService()); err != nil {
+					if _, err := safeExecuteHandler(ctx, msg, k.MsgRouterService); err != nil {
 						// `idx` and `err` are populated with the msg index and error.
 						proposal.Status = v1.StatusFailed
 						proposal.FailedReason = err.Error()
@@ -224,7 +222,6 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 			// once the regular voting period expires again, the tally is repeated
 			// according to the regular proposal rules.
 			proposal.ProposalType = v1.ProposalType_PROPOSAL_TYPE_STANDARD
-			proposal.Expedited = false // can be removed as never read but kept for state coherence
 			params, err := k.Params.Get(ctx)
 			if err != nil {
 				return err
@@ -258,14 +255,14 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 		}
 
 		// call hook when proposal become active
-		if err := k.environment.BranchService.Execute(ctx, func(ctx context.Context) error {
+		if err := k.BranchService.Execute(ctx, func(ctx context.Context) error {
 			return k.Hooks().AfterProposalVotingPeriodEnded(ctx, proposal.Id)
 		}); err != nil {
 			// purposely ignoring the error here not to halt the chain if the hook fails
-			logger.Error("failed to execute AfterProposalVotingPeriodEnded hook", "error", err)
+			k.Logger.Error("failed to execute AfterProposalVotingPeriodEnded hook", "error", err)
 		}
 
-		logger.Info(
+		k.Logger.Info(
 			"proposal tallied",
 			"proposal", proposal.Id,
 			"proposal_type", proposal.ProposalType,
@@ -274,19 +271,19 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 			"results", logMsg,
 		)
 
-		if err := k.environment.EventService.EventManager(ctx).EmitKV(types.EventTypeActiveProposal,
+		if err := k.EventService.EventManager(ctx).EmitKV(types.EventTypeActiveProposal,
 			event.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.Id)),
 			event.NewAttribute(types.AttributeKeyProposalResult, tagValue),
 			event.NewAttribute(types.AttributeKeyProposalLog, logMsg),
 		); err != nil {
-			logger.Error("failed to emit event", "error", err)
+			k.Logger.Error("failed to emit event", "error", err)
 		}
 	}
 	return nil
 }
 
 // executes route(msg) and recovers from panic.
-func safeExecuteHandler(ctx context.Context, msg sdk.Msg, router router.Router) (res protoiface.MessageV1, err error) {
+func safeExecuteHandler(ctx context.Context, msg sdk.Msg, router router.Service) (res protoiface.MessageV1, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("handling x/gov proposal msg [%s] PANICKED: %v", msg, r)
@@ -299,7 +296,6 @@ func safeExecuteHandler(ctx context.Context, msg sdk.Msg, router router.Router) 
 
 // failUnsupportedProposal fails a proposal that cannot be processed by gov
 func failUnsupportedProposal(
-	logger log.Logger,
 	ctx context.Context,
 	k Keeper,
 	proposal v1.Proposal,
@@ -323,14 +319,14 @@ func failUnsupportedProposal(
 		eventType = types.EventTypeActiveProposal
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(eventType,
+	if err := k.EventService.EventManager(ctx).EmitKV(eventType,
 		event.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.Id)),
 		event.NewAttribute(types.AttributeKeyProposalResult, types.AttributeValueProposalFailed),
 	); err != nil {
-		logger.Error("failed to emit event", "error", err)
+		k.Logger.Error("failed to emit event", "error", err)
 	}
 
-	logger.Info(
+	k.Logger.Info(
 		"proposal failed to decode; deleted",
 		"proposal", proposal.Id,
 		"proposal_type", proposal.ProposalType,

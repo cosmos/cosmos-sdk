@@ -5,11 +5,11 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 // InitGenesis sets the pool and parameters for the provided keeper.  For each
@@ -17,7 +17,7 @@ import (
 // setting the indexes. In addition, it also sets any delegations found in
 // data. Finally, it updates the bonded validators.
 // Returns final validator set after applying all declaration and delegations
-func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]module.ValidatorUpdate, error) {
+func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]appmodule.ValidatorUpdate, error) {
 	bondedTokens := math.ZeroInt()
 	notBondedTokens := math.ZeroInt()
 
@@ -85,7 +85,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]mo
 	for _, delegation := range data.Delegations {
 		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(delegation.DelegatorAddress)
 		if err != nil {
-			return nil, fmt.Errorf("invalid delegator address: %s", err)
+			return nil, fmt.Errorf("invalid delegator address: %w", err)
 		}
 
 		valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
@@ -175,7 +175,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]mo
 	}
 
 	// don't need to run CometBFT updates if we exported
-	var moduleValidatorUpdates []module.ValidatorUpdate
+	var moduleValidatorUpdates []appmodule.ValidatorUpdate
 	if data.Exported {
 		for _, lv := range data.LastValidatorPowers {
 			valAddr, err := k.validatorAddressCodec.StringToBytes(lv.Address)

@@ -11,8 +11,9 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -39,7 +40,7 @@ func initChain(
 	}
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
 	consensusParams := randomConsensusParams(r, appState, cdc, blockMaxGas)
-	req := abci.RequestInitChain{
+	req := abci.InitChainRequest{
 		AppStateBytes:   appState,
 		ChainId:         chainID,
 		ConsensusParams: consensusParams,
@@ -66,6 +67,7 @@ func SimulateFromSeed(
 	blockedAddrs map[string]bool,
 	config simulation.Config,
 	cdc codec.JSONCodec,
+	addresscodec address.Codec,
 ) (stopEarly bool, exportedParams Params, err error) {
 	tb.Helper()
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
@@ -101,7 +103,11 @@ func SimulateFromSeed(
 	var tmpAccs []simulation.Account
 
 	for _, acc := range accs {
-		if !blockedAddrs[acc.Address.String()] {
+		accAddr, err := addresscodec.BytesToString(acc.Address)
+		if err != nil {
+			return true, params, err
+		}
+		if !blockedAddrs[accAddr] {
 			tmpAccs = append(tmpAccs, acc)
 		}
 	}

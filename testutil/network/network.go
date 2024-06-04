@@ -12,25 +12,31 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"testing"
 	"time"
 
+	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	pruningtypes "cosmossdk.io/store/pruning/types"
+	_ "cosmossdk.io/x/accounts"
 	_ "cosmossdk.io/x/auth"           // import auth as a blank
 	_ "cosmossdk.io/x/auth/tx/config" // import auth tx config as a blank
 	authtypes "cosmossdk.io/x/auth/types"
 	_ "cosmossdk.io/x/bank" // import bank as a blank
 	banktypes "cosmossdk.io/x/bank/types"
-	_ "cosmossdk.io/x/staking" // import staking as a blank
+	_ "cosmossdk.io/x/consensus" // import consensus as a blank
+	_ "cosmossdk.io/x/staking"   // import staking as a blank
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -45,7 +51,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -53,7 +58,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import consensus as a blank
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
@@ -168,6 +172,7 @@ func DefaultConfig(factory TestFixtureFactory) Config {
 // MinimumAppConfig defines the minimum of modules required for a call to New to succeed
 func MinimumAppConfig() depinject.Config {
 	return configurator.NewAppConfig(
+		configurator.AccountsModule(),
 		configurator.AuthModule(),
 		configurator.BankModule(),
 		configurator.GenutilModule(),
@@ -181,7 +186,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	var (
 		appBuilder            *runtime.AppBuilder
 		txConfig              client.TxConfig
-		legacyAmino           *codec.LegacyAmino
+		legacyAmino           legacy.Amino
 		cdc                   codec.Codec
 		interfaceRegistry     codectypes.InterfaceRegistry
 		addressCodec          address.Codec
@@ -211,7 +216,11 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	})
 	cfg.Codec = cdc
 	cfg.TxConfig = txConfig
-	cfg.LegacyAmino = legacyAmino
+	amino, ok := legacyAmino.(*codec.LegacyAmino)
+	if !ok {
+		return Config{}, errors.New("legacyAmino must be a *codec.LegacyAmino")
+	}
+	cfg.LegacyAmino = amino
 	cfg.InterfaceRegistry = interfaceRegistry
 	cfg.GenesisState = appBuilder.DefaultGenesis()
 	cfg.AppConstructor = func(val ValidatorI) servertypes.Application {
@@ -220,7 +229,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 		if err := depinject.Inject(
 			depinject.Configs(
 				appConfig,
-				depinject.Supply(val.GetCtx().Logger),
+				depinject.Supply(val.GetLogger()),
 			),
 			&appBuilder); err != nil {
 			panic(err)
@@ -319,6 +328,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 	monikers := make([]string, cfg.NumValidators)
 	nodeIDs := make([]string, cfg.NumValidators)
 	valPubKeys := make([]cryptotypes.PubKey, cfg.NumValidators)
+	cmtConfigs := make([]*cmtcfg.Config, cfg.NumValidators)
 
 	var (
 		genAccounts []authtypes.GenesisAccount
@@ -337,8 +347,10 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		appCfg.API.Swagger = false
 		appCfg.Telemetry.Enabled = false
 
-		ctx := server.NewDefaultContext()
-		cmtCfg := ctx.Config
+		viper := viper.New()
+		// Create default cometbft config for each validator
+		cmtCfg := client.GetConfigFromViper(viper)
+
 		cmtCfg.Consensus.TimeoutCommit = cfg.TimeoutCommit
 
 		// Only allow the first validator to expose an RPC, API and gRPC
@@ -346,7 +358,6 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		apiAddr := ""
 		cmtCfg.RPC.ListenAddress = ""
 		appCfg.GRPC.Enable = false
-		appCfg.GRPCWeb.Enable = false
 		apiListenAddr := ""
 		if i == 0 {
 			if cfg.APIAddress != "" {
@@ -386,15 +397,12 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 				appCfg.GRPC.Address = fmt.Sprintf("127.0.0.1:%s", port)
 			}
 			appCfg.GRPC.Enable = true
-			appCfg.GRPCWeb.Enable = true
 		}
 
 		logger := log.NewNopLogger()
 		if cfg.EnableLogging {
 			logger = log.NewLogger(os.Stdout) // TODO(mr): enable selection of log destination.
 		}
-
-		ctx.Logger = logger
 
 		nodeDirName := fmt.Sprintf("node%d", i)
 		nodeDir := filepath.Join(network.BaseDir, nodeDirName, "simd")
@@ -430,6 +438,8 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		cmtCfg.P2P.ListenAddress = p2pAddr
 		cmtCfg.P2P.AddrBookStrict = false
 		cmtCfg.P2P.AllowDuplicateIP = true
+
+		cmtConfigs[i] = cmtCfg
 
 		var mnemonic string
 		if i < len(cfg.Mnemonics) {
@@ -561,12 +571,13 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			WithNodeURI(cmtCfg.RPC.ListenAddress)
 
 		// Provide ChainID here since we can't modify it in the Comet config.
-		ctx.Viper.Set(flags.FlagChainID, cfg.ChainID)
+		viper.Set(flags.FlagChainID, cfg.ChainID)
 
 		network.Validators[i] = &Validator{
 			AppConfig:  appCfg,
 			clientCtx:  clientCtx,
-			ctx:        ctx,
+			viper:      viper,
+			logger:     logger,
 			dir:        filepath.Join(network.BaseDir, nodeDirName),
 			nodeID:     nodeID,
 			pubKey:     pubKey,
@@ -583,7 +594,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = collectGenFiles(cfg, network.Validators, network.BaseDir)
+	err = collectGenFiles(cfg, network.Validators, cmtConfigs, network.BaseDir)
 	if err != nil {
 		return nil, err
 	}
@@ -647,29 +658,29 @@ func (n *Network) LatestHeight() (int64, error) {
 	timeout := time.NewTimer(time.Second * 5)
 	defer timeout.Stop()
 
-	var latestHeight int64
+	var latestHeight atomic.Int64
 	val := n.Validators[0]
 	queryClient := cmtservice.NewServiceClient(val.clientCtx)
 
 	for {
 		select {
 		case <-timeout.C:
-			return latestHeight, errors.New("timeout exceeded waiting for block")
+			return latestHeight.Load(), errors.New("timeout exceeded waiting for block")
 		case <-ticker.C:
 			done := make(chan struct{})
 			go func() {
 				res, err := queryClient.GetLatestBlock(context.Background(), &cmtservice.GetLatestBlockRequest{})
 				if err == nil && res != nil {
-					latestHeight = res.SdkBlock.Header.Height
+					latestHeight.Store(res.SdkBlock.Header.Height)
 				}
 				done <- struct{}{}
 			}()
 			select {
 			case <-timeout.C:
-				return latestHeight, errors.New("timeout exceeded waiting for block")
+				return latestHeight.Load(), errors.New("timeout exceeded waiting for block")
 			case <-done:
-				if latestHeight != 0 {
-					return latestHeight, nil
+				if latestHeight.Load() != 0 {
+					return latestHeight.Load(), nil
 				}
 			}
 		}

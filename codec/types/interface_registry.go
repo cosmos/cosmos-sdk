@@ -15,8 +15,6 @@ import (
 	"cosmossdk.io/x/tx/signing"
 )
 
-var protoMessageType = reflect.TypeOf((*proto.Message)(nil)).Elem()
-
 // AnyUnpacker is an interface which allows safely unpacking types packed
 // in Any's against a whitelist of registered types
 type AnyUnpacker interface {
@@ -29,6 +27,41 @@ type AnyUnpacker interface {
 	//    ...
 	UnpackAny(any *Any, iface interface{}) error
 }
+
+// UnpackInterfacesMessage is meant to extend protobuf types (which implement
+// proto.Message) to support a post-deserialization phase which unpacks
+// types packed within Any's using the whitelist provided by AnyUnpacker
+type UnpackInterfacesMessage interface {
+	// UnpackInterfaces is implemented in order to unpack values packed within
+	// Any's using the AnyUnpacker. It should generally be implemented as
+	// follows:
+	//   func (s *MyStruct) UnpackInterfaces(unpacker AnyUnpacker) error {
+	//		var x AnyInterface
+	//		// where X is an Any field on MyStruct
+	//		err := unpacker.UnpackAny(s.X, &x)
+	//		if err != nil {
+	//			return nil
+	//		}
+	//		// where Y is a field on MyStruct that implements UnpackInterfacesMessage itself
+	//		err = s.Y.UnpackInterfaces(unpacker)
+	//		if err != nil {
+	//			return nil
+	//		}
+	//		return nil
+	//	 }
+	UnpackInterfaces(unpacker AnyUnpacker) error
+}
+
+// UnpackInterfaces is a convenience function that calls UnpackInterfaces
+// on x if x implements UnpackInterfacesMessage
+func UnpackInterfaces(x interface{}, unpacker AnyUnpacker) error {
+	if msg, ok := x.(UnpackInterfacesMessage); ok {
+		return msg.UnpackInterfaces(unpacker)
+	}
+	return nil
+}
+
+var protoMessageType = reflect.TypeOf((*proto.Message)(nil)).Elem()
 
 // InterfaceRegistry provides a mechanism for registering interfaces and
 // implementations that can be safely unpacked from Any
@@ -60,30 +93,6 @@ type InterfaceRegistry interface {
 	// from this package. This allows new methods to be added to the InterfaceRegistry interface without breaking
 	// backwards compatibility.
 	mustEmbedInterfaceRegistry()
-}
-
-// UnpackInterfacesMessage is meant to extend protobuf types (which implement
-// proto.Message) to support a post-deserialization phase which unpacks
-// types packed within Any's using the whitelist provided by AnyUnpacker
-type UnpackInterfacesMessage interface {
-	// UnpackInterfaces is implemented in order to unpack values packed within
-	// Any's using the AnyUnpacker. It should generally be implemented as
-	// follows:
-	//   func (s *MyStruct) UnpackInterfaces(unpacker AnyUnpacker) error {
-	//		var x AnyInterface
-	//		// where X is an Any field on MyStruct
-	//		err := unpacker.UnpackAny(s.X, &x)
-	//		if err != nil {
-	//			return nil
-	//		}
-	//		// where Y is a field on MyStruct that implements UnpackInterfacesMessage itself
-	//		err = s.Y.UnpackInterfaces(unpacker)
-	//		if err != nil {
-	//			return nil
-	//		}
-	//		return nil
-	//	 }
-	UnpackInterfaces(unpacker AnyUnpacker) error
 }
 
 type interfaceRegistry struct {
@@ -275,7 +284,7 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 
 	rt := rv.Elem().Type()
 
-	cachedValue := any.cachedValue
+	cachedValue := any.GetCachedValue()
 	if cachedValue != nil {
 		if reflect.TypeOf(cachedValue).AssignableTo(rt) {
 			rv.Elem().Set(reflect.ValueOf(cachedValue))
@@ -312,8 +321,12 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 
 	rv.Elem().Set(reflect.ValueOf(msg))
 
-	any.cachedValue = msg
+	newAnyWithCache, err := NewAnyWithValue(msg)
+	if err != nil {
+		return err
+	}
 
+	*any = *newAnyWithCache
 	return nil
 }
 
@@ -339,15 +352,6 @@ func (registry *interfaceRegistry) SigningContext() *signing.Context {
 }
 
 func (registry *interfaceRegistry) mustEmbedInterfaceRegistry() {}
-
-// UnpackInterfaces is a convenience function that calls UnpackInterfaces
-// on x if x implements UnpackInterfacesMessage
-func UnpackInterfaces(x interface{}, unpacker AnyUnpacker) error {
-	if msg, ok := x.(UnpackInterfacesMessage); ok {
-		return msg.UnpackInterfaces(unpacker)
-	}
-	return nil
-}
 
 type failingAddressCodec struct{}
 

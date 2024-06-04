@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/math"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/staking"
@@ -128,8 +128,7 @@ func TestInitGenesis(t *testing.T) {
 	assert.Assert(t, found)
 	assert.Equal(t, types.Bonded, resVal.Status)
 
-	abcivals := make([]abci.ValidatorUpdate, len(vals))
-	validatorUpdates := make([]module.ValidatorUpdate, len(abcivals))
+	validatorUpdates := make([]appmodule.ValidatorUpdate, len(vals))
 	for i, val := range validators {
 		validatorUpdates[i] = val.ModuleValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx))
 	}

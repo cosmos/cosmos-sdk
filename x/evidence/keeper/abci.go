@@ -3,21 +3,19 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // BeginBlocker iterates through and handles any newly discovered evidence of
 // misbehavior submitted by CometBFT. Currently, only equivocation is handled.
-func (k Keeper) BeginBlocker(ctx context.Context) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+func (k Keeper) BeginBlocker(ctx context.Context, cometService comet.Service) error {
+	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
 
-	bi := sdk.UnwrapSDKContext(ctx).CometInfo()
+	bi := cometService.CometInfo(ctx)
 
 	evidences := bi.Evidence
 	for _, evidence := range evidences {
@@ -31,7 +29,7 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 				return err
 			}
 		default:
-			k.Logger().Error(fmt.Sprintf("ignored unknown evidence type: %x", evidence.Type))
+			k.Logger.Error(fmt.Sprintf("ignored unknown evidence type: %x", evidence.Type))
 		}
 	}
 	return nil

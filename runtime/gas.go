@@ -14,29 +14,40 @@ var _ gas.Service = GasService{}
 
 type GasService struct{}
 
-func (g GasService) GetGasMeter(ctx context.Context) gas.Meter {
+func (g GasService) GasMeter(ctx context.Context) gas.Meter {
 	return CoreGasmeter{gm: sdk.UnwrapSDKContext(ctx).GasMeter()}
 }
 
-func (g GasService) GetBlockGasMeter(ctx context.Context) gas.Meter {
+func (g GasService) BlockGasMeter(ctx context.Context) gas.Meter {
 	return CoreGasmeter{gm: sdk.UnwrapSDKContext(ctx).BlockGasMeter()}
 }
 
-func (g GasService) WithGasMeter(ctx context.Context, meter gas.Meter) context.Context {
-	return sdk.UnwrapSDKContext(ctx).WithGasMeter(SDKGasMeter{gm: meter})
-}
-
-func (g GasService) WithBlockGasMeter(ctx context.Context, meter gas.Meter) context.Context {
-	return sdk.UnwrapSDKContext(ctx).WithGasMeter(SDKGasMeter{gm: meter})
-}
-
-func (g GasService) GetGasConfig(ctx context.Context) gas.GasConfig {
+func (g GasService) GasConfig(ctx context.Context) gas.GasConfig {
 	return gas.GasConfig(sdk.UnwrapSDKContext(ctx).KVGasConfig())
 }
 
-// ______________________________________________________________________________________________
-// Gas Meter Wrappers
-// ______________________________________________________________________________________________
+// CoreGasmeter is a wrapper around the SDK's GasMeter that implements the GasMeter interface.
+type CoreGasmeter struct {
+	gm storetypes.GasMeter
+}
+
+func (cgm CoreGasmeter) Consume(amount gas.Gas, descriptor string) error {
+	cgm.gm.ConsumeGas(amount, descriptor)
+	return nil
+}
+
+func (cgm CoreGasmeter) Refund(amount gas.Gas, descriptor string) error {
+	cgm.gm.RefundGas(amount, descriptor)
+	return nil
+}
+
+func (cgm CoreGasmeter) Remaining() gas.Gas {
+	return cgm.gm.GasRemaining()
+}
+
+func (cgm CoreGasmeter) Limit() gas.Gas {
+	return cgm.gm.Limit()
+}
 
 // SDKGasMeter is a wrapper around the SDK's GasMeter that implements the GasMeter interface.
 type SDKGasMeter struct {
@@ -63,11 +74,15 @@ func (gm SDKGasMeter) Limit() storetypes.Gas {
 }
 
 func (gm SDKGasMeter) ConsumeGas(amount storetypes.Gas, descriptor string) {
-	gm.gm.Consume(amount, descriptor)
+	if err := gm.gm.Consume(amount, descriptor); err != nil {
+		panic(err)
+	}
 }
 
 func (gm SDKGasMeter) RefundGas(amount storetypes.Gas, descriptor string) {
-	gm.gm.Refund(amount, descriptor)
+	if err := gm.gm.Refund(amount, descriptor); err != nil {
+		panic(err)
+	}
 }
 
 func (gm SDKGasMeter) IsPastLimit() bool {
@@ -80,27 +95,6 @@ func (gm SDKGasMeter) IsOutOfGas() bool {
 
 func (gm SDKGasMeter) String() string {
 	return fmt.Sprintf("BasicGasMeter:\n  limit: %d\n  consumed: %d", gm.gm.Limit(), gm.gm.Remaining())
-}
-
-// CoreGasmeter is a wrapper around the SDK's GasMeter that implements the GasMeter interface.
-type CoreGasmeter struct {
-	gm storetypes.GasMeter
-}
-
-func (cgm CoreGasmeter) Consume(amount gas.Gas, descriptor string) {
-	cgm.gm.ConsumeGas(amount, descriptor)
-}
-
-func (cgm CoreGasmeter) Refund(amount gas.Gas, descriptor string) {
-	cgm.gm.RefundGas(amount, descriptor)
-}
-
-func (cgm CoreGasmeter) Remaining() gas.Gas {
-	return cgm.gm.GasRemaining()
-}
-
-func (cgm CoreGasmeter) Limit() gas.Gas {
-	return cgm.gm.Limit()
 }
 
 type GasConfig struct {

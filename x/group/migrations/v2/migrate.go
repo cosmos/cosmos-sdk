@@ -39,7 +39,11 @@ func Migrate(
 		derivationKey := make([]byte, 8)
 		binary.BigEndian.PutUint64(derivationKey, i)
 		groupPolicyAcc := sdk.AccAddress(address.Module(group.ModuleName, policyKey, derivationKey))
-		groupPolicyAccountDerivationKey[groupPolicyAcc.String()] = derivationKey
+		groupPolicyAddr, err := accountKeeper.AddressCodec().BytesToString(groupPolicyAcc)
+		if err != nil {
+			return err
+		}
+		groupPolicyAccountDerivationKey[groupPolicyAddr] = derivationKey
 	}
 
 	// get all group policies

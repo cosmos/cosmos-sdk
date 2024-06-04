@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule"
+	corecontext "cosmossdk.io/core/context"
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,7 +14,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// TODO: Revisit this once we have propoer gas fee framework.
+// TODO: Revisit this once we have proper gas fee framework.
 // Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072
 const gasCostPerIteration = uint64(10)
 
@@ -100,11 +102,17 @@ func (a StakeAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.Acce
 		return authz.AcceptResponse{}, sdkerrors.ErrInvalidRequest.Wrap("unknown msg type")
 	}
 
+	authzEnv, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodule.Environment)
+	if !ok {
+		return authz.AcceptResponse{}, sdkerrors.ErrUnauthorized.Wrap("environment not set")
+	}
 	isValidatorExists := false
 	allowedList := a.GetAllowList().GetAddress()
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for _, validator := range allowedList {
-		sdkCtx.GasMeter().ConsumeGas(gasCostPerIteration, "stake authorization")
+		if err := authzEnv.GasService.GasMeter(ctx).Consume(gasCostPerIteration, "stake authorization"); err != nil {
+			return authz.AcceptResponse{}, err
+		}
+
 		if validator == validatorAddress {
 			isValidatorExists = true
 			break
@@ -113,7 +121,10 @@ func (a StakeAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.Acce
 
 	denyList := a.GetDenyList().GetAddress()
 	for _, validator := range denyList {
-		sdkCtx.GasMeter().ConsumeGas(gasCostPerIteration, "stake authorization")
+		if err := authzEnv.GasService.GasMeter(ctx).Consume(gasCostPerIteration, "stake authorization"); err != nil {
+			return authz.AcceptResponse{}, err
+		}
+
 		if validator == validatorAddress {
 			return authz.AcceptResponse{}, sdkerrors.ErrUnauthorized.Wrapf("cannot delegate/undelegate to %s validator", validator)
 		}

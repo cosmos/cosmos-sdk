@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -12,16 +12,16 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/x/consensus/exported"
+	"cosmossdk.io/x/consensus/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/consensus/exported"
-	"github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 var StoreKey = "Consensus"
 
 type Keeper struct {
-	environment appmodule.Environment
+	appmodule.Environment
 
 	authority   string
 	ParamsStore collections.Item[cmtproto.ConsensusParams]
@@ -32,7 +32,7 @@ var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
 func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, authority string) Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	return Keeper{
-		environment: env,
+		Environment: env,
 		authority:   authority,
 		ParamsStore: collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
 	}
@@ -69,15 +69,28 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 	if err != nil {
 		return nil, err
 	}
-	if err := cmttypes.ConsensusParamsFromProto(consensusParams).ValidateBasic(); err != nil {
+
+	paramsProto, err := k.ParamsStore.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	params := cmttypes.ConsensusParamsFromProto(paramsProto)
+
+	nextParams := params.Update(&consensusParams)
+
+	if err := nextParams.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
-	if err := k.ParamsStore.Set(ctx, consensusParams); err != nil {
+	if err := params.ValidateUpdate(&consensusParams, k.HeaderService.HeaderInfo(ctx).Height); err != nil {
 		return nil, err
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.ParamsStore.Set(ctx, nextParams.ToProto()); err != nil {
+		return nil, err
+	}
+
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		"update_consensus_params",
 		event.NewAttribute("authority", msg.Authority),
 		event.NewAttribute("parameters", consensusParams.String())); err != nil {
@@ -85,22 +98,4 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
-}
-
-// SetParams sets the consensus parameters on init of a chain. This is a consensus message. It can only be called by the consensus server
-// This is used in the consensus message handler set in module.go.
-func (k Keeper) SetParams(ctx context.Context, req *types.ConsensusMsgParams) (*types.ConsensusMsgParamsResponse, error) {
-	consensusParams, err := req.ToProtoConsensusParams()
-	if err != nil {
-		return nil, err
-	}
-	if err := cmttypes.ConsensusParamsFromProto(consensusParams).ValidateBasic(); err != nil {
-		return nil, err
-	}
-
-	if err := k.ParamsStore.Set(ctx, consensusParams); err != nil {
-		return nil, err
-	}
-
-	return &types.ConsensusMsgParamsResponse{}, nil
 }

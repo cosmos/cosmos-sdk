@@ -1,9 +1,12 @@
+//go:build ((linux && amd64) || (linux && arm64) || (darwin && amd64) || (darwin && arm64) || (windows && amd64)) && bls12381
+
 package bls12_381
 
 import (
 	"bytes"
 	"crypto/sha256"
-	fmt "fmt"
+	"errors"
+	"fmt"
 
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/tmhash"
@@ -12,23 +15,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-)
-
-const (
-	PrivKeyName = "tendermint/PrivKeyEd25519"
-	PubKeyName  = "tendermint/PubKeyEd25519"
-	// PubKeySize is the size, in bytes, of public keys as used in this package.
-	PubKeySize = 32
-	// PrivKeySize is the size, in bytes, of private keys as used in this package.
-	PrivKeySize = 64
-	// SignatureSize the size of an Edwards25519 signature. Namely the size of a compressed
-	// Edwards25519 point, and a field element. Both of which are 32 bytes.
-	SignatureSize = 64
-	// SeedSize is the size, in bytes, of private key seeds. These are the
-	// private key representations used by RFC 8032.
-	SeedSize = 32
-
-	keyType = "bls12381"
 )
 
 // ===============================================================================================
@@ -48,7 +34,7 @@ var (
 func NewPrivateKeyFromBytes(bz []byte) (PrivKey, error) {
 	secretKey, err := bls12381.SecretKeyFromBytes(bz)
 	if err != nil {
-		return nil, err
+		return PrivKey{}, err
 	}
 	return secretKey.Marshal(), nil
 }
@@ -61,13 +47,13 @@ func GenPrivKey() (PrivKey, error) {
 
 // Bytes returns the byte representation of the Key.
 func (privKey PrivKey) Bytes() []byte {
-	return privKey
+	return privKey.Key
 }
 
 // PubKey returns the private key's public key. If the privkey is not valid
 // it returns a nil value.
 func (privKey PrivKey) PubKey() cryptotypes.PubKey {
-	secretKey, err := bls12381.SecretKeyFromBytes(privKey)
+	secretKey, err := bls12381.SecretKeyFromBytes(privKey.Key)
 	if err != nil {
 		return nil
 	}
@@ -82,13 +68,13 @@ func (privKey PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
 
 // Type returns the type.
 func (PrivKey) Type() string {
-	return KeyType
+	return keyType
 }
 
 // Sign signs the given byte array. If msg is larger than
 // MaxMsgLen, SHA256 sum will be signed instead of the raw bytes.
 func (privKey PrivKey) Sign(msg []byte) ([]byte, error) {
-	secretKey, err := bls12381.SecretKeyFromBytes(privKey)
+	secretKey, err := bls12381.SecretKeyFromBytes(privKey.Key)
 	if err != nil {
 		return nil, err
 	}
@@ -100,6 +86,33 @@ func (privKey PrivKey) Sign(msg []byte) ([]byte, error) {
 	}
 	sig := secretKey.Sign(msg)
 	return sig.Marshal(), nil
+}
+
+// MarshalAmino overrides Amino binary marshaling.
+func (privKey PrivKey) MarshalAmino() ([]byte, error) {
+	return privKey.Key, nil
+}
+
+// UnmarshalAmino overrides Amino binary marshaling.
+func (privKey *PrivKey) UnmarshalAmino(bz []byte) error {
+	if len(bz) != PrivKeySize {
+		return errors.New("invalid privkey size")
+	}
+	privKey.Key = bz
+
+	return nil
+}
+
+// MarshalAminoJSON overrides Amino JSON marshaling.
+func (privKey PrivKey) MarshalAminoJSON() ([]byte, error) {
+	// When we marshal to Amino JSON, we don't marshal the "key" field itself,
+	// just its contents (i.e. the key bytes).
+	return privKey.MarshalAmino()
+}
+
+// UnmarshalAminoJSON overrides Amino JSON marshaling.
+func (privKey *PrivKey) UnmarshalAminoJSON(bz []byte) error {
+	return privKey.UnmarshalAmino(bz)
 }
 
 // ===============================================================================================
@@ -116,11 +129,11 @@ var _ cryptotypes.PubKey = &PubKey{}
 //
 // The function will panic if the public key is invalid.
 func (pubKey PubKey) Address() crypto.Address {
-	pk, _ := bls12381.PublicKeyFromBytes(pubKey)
+	pk, _ := bls12381.PublicKeyFromBytes(pubKey.Key)
 	if len(pk.Marshal()) != PubKeySize {
 		panic("pubkey is incorrect size")
 	}
-	return crypto.Address(tmhash.SumTruncated(pubKey))
+	return crypto.Address(tmhash.SumTruncated(pubKey.Key))
 }
 
 // VerifySignature verifies the given signature.
@@ -129,7 +142,7 @@ func (pubKey PubKey) VerifySignature(msg, sig []byte) bool {
 		return false
 	}
 
-	pubK, err := bls12381.PublicKeyFromBytes(pubKey)
+	pubK, err := bls12381.PublicKeyFromBytes(pubKey.Key)
 	if err != nil { // invalid pubkey
 		return false
 	}
@@ -149,12 +162,12 @@ func (pubKey PubKey) VerifySignature(msg, sig []byte) bool {
 
 // Bytes returns the byte format.
 func (pubKey PubKey) Bytes() []byte {
-	return pubKey
+	return pubKey.Key
 }
 
 // Type returns the key's type.
 func (PubKey) Type() string {
-	return KeyType
+	return keyType
 }
 
 // Equals returns true if the other's type is the same and their bytes are deeply equal.

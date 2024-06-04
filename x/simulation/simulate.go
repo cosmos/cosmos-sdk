@@ -10,13 +10,12 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/core/log"
-
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/core/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -454,30 +453,3 @@ func (s *ByteSource) Int63() int64 {
 	return int64(s.Uint64() & rngMask)
 }
 func (s *ByteSource) Seed(seed int64) {}
-
-type arraySource struct {
-	pos int
-	arr []int64
-	src *rand.Rand
-}
-
-// Int63 returns a non-negative pseudo-random 63-bit integer as an int64.
-func (rng *arraySource) Int63() int64 {
-	return int64(rng.Uint64() & rngMask)
-}
-
-// Uint64 returns a non-negative pseudo-random 64-bit integer as an uint64.
-func (rng *arraySource) Uint64() uint64 {
-	if rng.pos >= len(rng.arr) {
-		return rng.src.Uint64()
-	}
-	val := rng.arr[rng.pos]
-	rng.pos = rng.pos + 1
-	if val < 0 {
-		return uint64(-val)
-	}
-
-	return uint64(val)
-}
-
-func (rng *arraySource) Seed(seed int64) {}

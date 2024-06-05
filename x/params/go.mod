@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
 	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
-	github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240530055211-ae27f7eb3c08
+	github.com/cometbft/cometbft/api v1.0.0-rc.1
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.51.0

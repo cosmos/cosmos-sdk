@@ -117,14 +117,27 @@ func NewDecWithPrec(coeff int64, exp int32) Dec {
 func (x Dec) Add(y Dec, c ...SetupConstraint) (Dec, error) {
 	var z Dec
 	_, err := apd.BaseContext.Add(&z.dec, &x.dec, &y.dec)
-	return z, errors.Wrap(err, "decimal addition error")
+	if err != nil {
+		return Dec{}, ErrInvalidDecString.Wrap(err.Error())
+	}
+	for _, constraint := range c {
+		if err := constraint(z); err != nil {
+			return Dec{}, err
+		}
+	}
+	return z, nil
 }
 
 // Sub returns a new Dec with value `x-y` without mutating any argument and error if
 // there is an overflow.
-func (x Dec) Sub(y Dec) (Dec, error) {
+func (x Dec) Sub(y Dec, c ...SetupConstraint) (Dec, error) {
 	var z Dec
 	_, err := apd.BaseContext.Sub(&z.dec, &x.dec, &y.dec)
+	for _, constraint := range c {
+		if err := constraint(z); err != nil {
+			return Dec{}, err
+		}
+	}
 	return z, errors.Wrap(err, "decimal subtraction error")
 }
 

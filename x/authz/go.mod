@@ -169,6 +169,8 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
+require cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
+
 replace github.com/cosmos/cosmos-sdk => ../../.
 
 // TODO remove post spinning out all modules
@@ -176,6 +178,7 @@ replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
+	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/log => ../../log
 	cosmossdk.io/x/accounts => ../accounts

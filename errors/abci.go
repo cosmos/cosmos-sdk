@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 )
@@ -46,10 +47,6 @@ func defaultErrEncoder(err error) string {
 	return err.Error()
 }
 
-type coder interface {
-	ABCICode() uint32
-}
-
 // abciCode tests if given error contains an ABCI code and returns the value of
 // it if available. This function is testing for the causer interface as well
 // and unwraps the error.
@@ -59,20 +56,13 @@ func abciCode(err error) uint32 {
 	}
 
 	for {
-		if c, ok := err.(coder); ok {
-			return c.ABCICode()
-		}
-
-		if c, ok := err.(causer); ok {
-			err = c.Cause()
+		var customErr *Error
+		if errors.As(err, &customErr) {
+			return customErr.ABCICode()
 		} else {
 			return internalABCICode
 		}
 	}
-}
-
-type codespacer interface {
-	Codespace() string
 }
 
 // abciCodespace tests if given error contains a codespace and returns the value of
@@ -84,12 +74,9 @@ func abciCodespace(err error) string {
 	}
 
 	for {
-		if c, ok := err.(codespacer); ok {
-			return c.Codespace()
-		}
-
-		if c, ok := err.(causer); ok {
-			err = c.Cause()
+		var customErr *Error
+		if errors.As(err, &customErr) {
+			return customErr.Codespace()
 		} else {
 			return internalABCICodespace
 		}

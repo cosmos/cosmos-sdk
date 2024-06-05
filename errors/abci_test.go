@@ -49,13 +49,11 @@ func TestABCInfo(t *testing.T) {
 			wantCode:  1,
 			wantSpace: UndefinedCodespace,
 		},
-		// This is hard to test because of attached stacktrace. This
-		// case is tested in an another test.
 		// "wrapped stdlib is a full message in debug mode": {
-		//	err:      Wrap(io.EOF, "cannot read file"),
-		//	debug:    true,
-		//	wantLog:  "cannot read file: EOF",
-		//	wantCode: 1,
+		// 	err:      fmt.Errorf("cannot read file: %w", io.EOF),
+		// 	debug:    true,
+		// 	wantLog:  "cannot read file: EOF",
+		// 	wantCode: 1,
 		// },
 		"custom error": {
 			err:       customErr{},

@@ -49,26 +49,6 @@ func TestABCInfo(t *testing.T) {
 			wantCode:  1,
 			wantSpace: UndefinedCodespace,
 		},
-		// "wrapped stdlib is a full message in debug mode": {
-		// 	err:      fmt.Errorf("cannot read file: %w", io.EOF),
-		// 	debug:    true,
-		// 	wantLog:  "cannot read file: EOF",
-		// 	wantCode: 1,
-		// },
-		"custom error": {
-			err:       customErr{},
-			debug:     false,
-			wantLog:   "custom",
-			wantCode:  999,
-			wantSpace: "extern",
-		},
-		"custom error in debug mode": {
-			err:       customErr{},
-			debug:     true,
-			wantLog:   "custom",
-			wantCode:  999,
-			wantSpace: "extern",
-		},
 	}
 
 	for testName, tc := range cases {

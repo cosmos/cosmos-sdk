@@ -3,35 +3,56 @@ package tx
 import (
 	"bufio"
 	"context"
-	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
-	tx2 "cosmossdk.io/client/v2/internal"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/input"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	gogogrpc "github.com/cosmos/gogoproto/grpc"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/spf13/pflag"
 	"os"
+
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
+	"github.com/spf13/pflag"
+
+	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
+	"cosmossdk.io/core/transaction"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
-func GenerateOrBroadcastTxCLI(clientCtx tx2.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
-	txf, err := NewFactoryCLI(clientCtx, flagSet)
+// TODO: remove the client.Context
+func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.Msg) error {
+	k, err := keyring.NewAutoCLIKeyring(ctx.Keyring)
+	if err != nil {
+		return err
+	}
+	// TODO: fulfill with flagSet
+	params := TxParameters{
+		timeoutHeight:    0,
+		chainID:          "",
+		memo:             "",
+		signMode:         0,
+		AccountConfig:    AccountConfig{},
+		GasConfig:        GasConfig{},
+		FeeConfig:        FeeConfig{},
+		ExecutionOptions: ExecutionOptions{},
+		ExtensionOptions: ExtensionOptions{},
+	}
+	txf, err := NewFactory(k, ctx.AddressCodec, ctx, params)
 	if err != nil {
 		return err
 	}
 
-	return GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
+	return GenerateOrBroadcastTxWithFactory(ctx, txf, msgs...)
 }
 
 // GenerateOrBroadcastTxWithFactory will either generate and print an unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
-func GenerateOrBroadcastTxWithFactory(clientCtx tx2.Context, txf Factory, msgs ...sdk.Msg) error {
+func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msgs ...transaction.Msg) error {
 	// Validate all msgs before generating or broadcasting the tx.
 	// We were calling ValidateBasic separately in each CLI handler before.
 	// Right now, we're factorizing that call inside this function.
@@ -54,11 +75,15 @@ func GenerateOrBroadcastTxWithFactory(clientCtx tx2.Context, txf Factory, msgs .
 			return err
 		}
 
-		return clientCtx.PrintProto(&auxSignerData)
+		return clientCtx.PrintString(auxSignerData.String()) // TODO: check this
 	}
 
 	if clientCtx.GenerateOnly {
-		return txf.PrintUnsignedTx(clientCtx, msgs...)
+		uTx, err := txf.PrintUnsignedTx(msgs...)
+		if err != nil {
+			return err
+		}
+		return clientCtx.PrintString(uTx)
 	}
 
 	return BroadcastTx(clientCtx, txf, msgs...)
@@ -67,8 +92,8 @@ func GenerateOrBroadcastTxWithFactory(clientCtx tx2.Context, txf Factory, msgs .
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the
 // given set of messages. It will also simulate gas requirements if necessary.
 // It will return an error upon failure.
-func BroadcastTx(clientCtx tx2.Context, txf Factory, msgs ...sdk.Msg) error {
-	txf, err := txf.Prepare(clientCtx)
+func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
+	txf, err := txf.Prepare()
 	if err != nil {
 		return err
 	}
@@ -91,7 +116,7 @@ func BroadcastTx(clientCtx tx2.Context, txf Factory, msgs ...sdk.Msg) error {
 		return nil
 	}
 
-	tx, err := txf.BuildUnsignedTx(msgs...)
+	builder, err := txf.BuildUnsignedTx(msgs...)
 	if err != nil {
 		return err
 	}
@@ -102,7 +127,11 @@ func BroadcastTx(clientCtx tx2.Context, txf Factory, msgs ...sdk.Msg) error {
 			return errors.New("failed to encode transaction: tx json encoder is nil")
 		}
 
-		txBytes, err := encoder(tx.GetTx())
+		unsigTx, err := builder.GetTx()
+		if err != nil {
+			return err
+		}
+		txBytes, err := encoder(unsigTx)
 		if err != nil {
 			return fmt.Errorf("failed to encode transaction: %w", err)
 		}
@@ -123,11 +152,16 @@ func BroadcastTx(clientCtx tx2.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 	}
 
-	if err = txf.Sign(clientCtx.CmdContext, clientCtx.FromName, tx, true); err != nil {
+	if err = txf.Sign(clientCtx.CmdContext, clientCtx.FromName, builder, true); err != nil {
 		return err
 	}
 
-	txBytes, err := clientCtx.TxConfig.TxEncoder()(tx.GetTx())
+	signedTx, err := builder.GetTx()
+	if err != nil {
+		return err
+	}
+
+	txBytes, err := txf.txConfig.TxEncoder()(signedTx)
 	if err != nil {
 		return err
 	}
@@ -163,9 +197,9 @@ func CalculateGas(
 }
 
 // makeAuxSignerData generates an AuxSignerData from the client inputs.
-func makeAuxSignerData(clientCtx tx2.Context, f Factory, msgs ...sdk.Msg) (*apitx.AuxSignerData, error) {
+func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (*apitx.AuxSignerData, error) {
 	b := NewAuxTxBuilder()
-	fromAddress, name, _, err := tx2.GetFromFields(clientCtx, clientCtx.Keyring, clientCtx.From)
+	fromAddress, name, _, err := client.GetFromFields(clientCtx, clientCtx.Keyring, clientCtx.From)
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +209,7 @@ func makeAuxSignerData(clientCtx tx2.Context, f Factory, msgs ...sdk.Msg) (*apit
 		b.SetAccountNumber(f.AccountNumber())
 		b.SetSequence(f.Sequence())
 	} else {
-		accNum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, fromAddress)
+		accNum, seq, err := f.accountRetriever.GetAccountNumberSequence(fromAddress)
 		if err != nil {
 			return nil, err
 		}
@@ -193,7 +227,7 @@ func makeAuxSignerData(clientCtx tx2.Context, f Factory, msgs ...sdk.Msg) (*apit
 		return nil, err
 	}
 
-	pubKey, err := clientCtx.Keyring.GetPubKey(name)
+	pubKey, err := f.keybase.GetPubKey(name)
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +243,7 @@ func makeAuxSignerData(clientCtx tx2.Context, f Factory, msgs ...sdk.Msg) (*apit
 		return nil, err
 	}
 
-	sig, err := clientCtx.Keyring.Sign(name, signBz, f.SignMode())
+	sig, err := f.keybase.Sign(name, signBz, f.SignMode())
 	if err != nil {
 		return nil, err
 	}

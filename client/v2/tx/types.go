@@ -3,9 +3,11 @@ package tx
 import (
 	"fmt"
 
+	apicrypto "cosmossdk.io/api/cosmos/crypto/multisig/v1beta1"
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	typestx "cosmossdk.io/api/cosmos/tx/v1beta1"
+	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/core/transaction"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -13,10 +15,10 @@ import (
 type PreprocessTxFn func(chainID string, key uint, tx TxBuilder) error
 
 // TxApiDecoder unmarshals transaction bytes into API Tx type
-type TxApiDecoder func(txBytes []byte) (typestx.Tx, error)
+type TxApiDecoder func(txBytes []byte) (apitx.Tx, error)
 
 // TxApiEncoder marshals transaction to bytes
-type TxApiEncoder func(tx typestx.Tx) ([]byte, error)
+type TxApiEncoder func(tx *apitx.Tx) ([]byte, error)
 
 // GasEstimateResponse defines a response definition for tx gas estimation.
 type GasEstimateResponse struct {
@@ -28,7 +30,7 @@ func (gr GasEstimateResponse) String() string {
 }
 
 type TxWrapper struct {
-	Tx *typestx.Tx
+	Tx *apitx.Tx
 }
 
 func (tx TxWrapper) GetMsgs() ([]transaction.Msg, error) {
@@ -71,7 +73,7 @@ type SingleSignatureData struct {
 type MultiSignatureData struct {
 	// BitArray is a compact way of indicating which signers from the multisig key
 	// have signed
-	BitArray *cryptotypes.CompactBitArray
+	BitArray *apicrypto.CompactBitArray
 
 	// Signatures is the nested SignatureData's for each signer
 	Signatures []SignatureData

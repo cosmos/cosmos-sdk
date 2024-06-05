@@ -2,6 +2,8 @@ package tx
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -170,6 +172,34 @@ func (b *AuxTxBuilder) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any
 	b.auxSignerData.SignDoc.BodyBytes = nil
 }
 
+// TODO: better place
+func validateSignDoc(sd *apitx.SignDocDirectAux) error {
+	if len(sd.BodyBytes) == 0 {
+		return errors.New("body bytes is empty")
+	}
+	if sd.PublicKey == nil {
+		return errors.New("public key is empty")
+	}
+	return nil
+}
+
+// TODO: better place
+func validateAuxSignerData(a *apitx.AuxSignerData) error {
+	if a.Address == "" {
+		return errors.New("address is empty")
+	}
+
+	if a.Mode != apisigning.SignMode_SIGN_MODE_DIRECT_AUX && a.Mode != apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
+		return fmt.Errorf("AuxTxBuilder can only sign with %s or %s", apisigning.SignMode_SIGN_MODE_DIRECT_AUX, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	}
+
+	if len(a.Sig) == 0 {
+		return errors.New("signature is empty")
+	}
+
+	return validateSignDoc(a.GetSignDoc())
+}
+
 // GetSignBytes returns the builder's sign bytes.
 func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 	auxTx := b.auxSignerData
@@ -193,7 +223,7 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 	}
 
 	sd.BodyBytes = bodyBz
-	if err = sd.ValidateBasic(); err != nil { // TODO
+	if err = validateSignDoc(sd); err != nil { // TODO
 		return nil, err
 	}
 
@@ -256,7 +286,7 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 
 // GetAuxSignerData returns the builder's AuxSignerData.
 func (b *AuxTxBuilder) GetAuxSignerData() (*apitx.AuxSignerData, error) {
-	if err := b.auxSignerData.ValidateBasic(); err != nil { // TODO
+	if err := validateAuxSignerData(b.auxSignerData); err != nil { // TODO
 		return nil, err
 	}
 

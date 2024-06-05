@@ -7,7 +7,6 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // TxConfig defines an interface a client can utilize to generate an
@@ -31,8 +30,8 @@ type TxEncodingConfig interface {
 type TxSigningConfig interface {
 	SignModeHandler() *signing.HandlerMap
 	SigningContext() *signing.Context
-	MarshalSignatureJSON([]signingtypes.SignatureV2) ([]byte, error)
-	UnmarshalSignatureJSON([]byte) ([]signingtypes.SignatureV2, error)
+	MarshalSignatureJSON([]Signature) ([]byte, error)
+	UnmarshalSignatureJSON([]byte) ([]Signature, error)
 }
 
 type TxParameters struct {

@@ -6,18 +6,14 @@ replace (
 	cosmossdk.io/api => ../../../api
 	cosmossdk.io/core => ../../../core
 	cosmossdk.io/depinject => ../../../depinject
-	cosmossdk.io/log => ../../../log
-	cosmossdk.io/runtime/v2 => ../../../runtime/v2
 	cosmossdk.io/server/v2 => ../
 	cosmossdk.io/server/v2/appmanager => ../appmanager
-	cosmossdk.io/server/v2/stf => ../stf
 	cosmossdk.io/store/v2 => ../../../store/v2
 	cosmossdk.io/x/accounts => ../../../x/accounts
 	cosmossdk.io/x/auth => ../../../x/auth
 	cosmossdk.io/x/bank => ../../../x/bank
 	cosmossdk.io/x/consensus => ../../../x/consensus
 	cosmossdk.io/x/staking => ../../../x/staking
-	cosmossdk.io/x/tx => ../../../x/tx
 	github.com/cosmos/cosmos-sdk => ../../../
 )
 

@@ -98,8 +98,8 @@ func TestABCIInfoHidesStacktrace(t *testing.T) {
 func TestABCIInfoSerializeErr(t *testing.T) {
 	var (
 		// Create errors with stacktrace for equal comparison.
-		myErrDecode = fmt.Errorf("test, %w", ErrTxDecode)
-		myErrAddr   = fmt.Errorf("tester, %w", ErrInvalidAddress)
+		myErrDecode = fmt.Errorf("test: %w", ErrTxDecode)
+		myErrAddr   = fmt.Errorf("tester: %w", ErrInvalidAddress)
 		myPanic     = ErrPanic
 	)
 

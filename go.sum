@@ -1,3 +1,4 @@
+
 buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 h1:90/4O5QkHb8EZdA2SAhueRzYw6u5ZHCPKtReFqshnTY=
 buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2/go.mod h1:1+3gJj2NvZ1mTLAtHu+lMhOjGgQPiCKCeo+9MBww0Eo=
 buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 h1:b7EEYTUHmWSBEyISHlHvXbJPqtKiHRuUignL1tsHnNQ=

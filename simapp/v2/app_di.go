@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	coreapp "cosmossdk.io/core/app"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/log"
 	"cosmossdk.io/depinject"
@@ -237,7 +238,7 @@ func (app *SimApp) AppCodec() codec.Codec {
 }
 
 // InterfaceRegistry returns SimApp's InterfaceRegistry.
-func (app *SimApp) InterfaceRegistry() codectypes.InterfaceRegistry {
+func (app *SimApp) InterfaceRegistry() coreapp.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 

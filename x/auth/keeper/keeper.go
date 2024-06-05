@@ -99,9 +99,11 @@ type AccountKeeper struct {
 	authority string
 
 	// State
-	Schema        collections.Schema
-	Params        collections.Item[types.Params]
-	AccountNumber collections.Sequence
+	Schema collections.Schema
+	Params collections.Item[types.Params]
+
+	// only use for upgrade handler
+	accountNumber collections.Sequence
 	// Accounts key: AccAddr | value: AccountI | index: AccountsIndex
 	Accounts *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
 }
@@ -135,7 +137,7 @@ func NewAccountKeeper(
 		permAddrs:         permAddrs,
 		authority:         authority,
 		Params:            collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		AccountNumber:     collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
+		accountNumber:     collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
 		Accounts:          collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
 	}
 	schema, err := sb.Build()
@@ -144,6 +146,11 @@ func NewAccountKeeper(
 	}
 	ak.Schema = schema
 	return ak
+}
+
+// GetAccountNumber returns the x/auth module's current account number.
+func (ak AccountKeeper) GetAccountNumber(ctx context.Context) (uint64, error) {
+	return ak.accountNumber.Peek(ctx)
 }
 
 // GetAuthority returns the x/auth module's authority.

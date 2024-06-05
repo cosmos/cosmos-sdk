@@ -64,20 +64,28 @@ func (k Keeper) exportAccount(ctx context.Context, addr []byte, accType string, 
 }
 
 func (k Keeper) ImportState(ctx context.Context, genState *v1.GenesisState) error {
+	var largestNum *uint64
+	var err error
 	// import accounts
 	for _, acc := range genState.Accounts {
-		// increase the account number
-		_, err := k.AccountNumber.Next(ctx)
-		if err != nil {
-			return fmt.Errorf("%w: %s", err, acc.Address)
-		}
-
 		err = k.importAccount(ctx, acc)
 		if err != nil {
 			return fmt.Errorf("%w: %s", err, acc.Address)
 		}
+
+		accNum := acc.AccountNumber
+
+		if largestNum == nil || *largestNum < accNum {
+			largestNum = &accNum
+		}
 	}
-	return nil
+
+	if largestNum != nil {
+		// set the account number to the highest account number to avoid duplicate account number
+		err = k.AccountNumber.Set(ctx, *largestNum)
+	}
+
+	return err
 }
 
 func (k Keeper) importAccount(ctx context.Context, acc *v1.GenesisAccount) error {

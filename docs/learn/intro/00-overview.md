@@ -27,14 +27,14 @@ Learn more about [application-specific blockchains](./01-why-app-specific.md).
 
 ## What is Modularity
 
-Today there is a lot of talk around modularity and discussions between monolithic and modular
-
+Today there is a lot of talk around modularity and discussions between monolithic and modular. Originally the Cosmos SDK was built with a vision of modularity in mind. This means that developers can plug and play, making their blockchain customisable. Modularity is dirived from splitting a blockchain into customisable layers of execution, consensus, settlement and data availability, which is what the Cosmos SDK enables. For example you can choose to build a vanilla chain and use the Cosmos SDK with CometBFT. CometBFT will be your consensus layer and the chain itself would be the settlement and execution layer. Another route could be to use the SDK with Rollkit and Celestia as your consensus and data availability layer. The benefit of modularity is that you can customise your chain to your specific use case.
 
 ## Why the Cosmos SDK
 
-The Cosmos SDK is the most advanced framework for building custom application-specific blockchains today. Here are a few reasons why you might want to consider building your decentralized application with the Cosmos SDK:
+The Cosmos SDK is the most advanced framework for building custom modular application-specific blockchains today. Here are a few reasons why you might want to consider building your decentralized application with the Cosmos SDK:
 
-* The default consensus engine available within the Cosmos SDK is [CometBFT](https://github.com/cometbft/cometbft). CometBFT is the most (and only) mature BFT consensus engine in existence. It is widely used across the industry and is considered the gold standard consensus engine for building Proof-of-Stake systems.
+* It allows you to plug and play your consensus layer. As above you can use rollkit and celestia as your consensus and data availability layer. This offers a lot of flexibility and customisation. 
+* Previously the default consensus engine available within the Cosmos SDK is [CometBFT](https://github.com/cometbft/cometbft). CometBFT is the most (and only) mature BFT consensus engine in existence. It is widely used across the industry and is considered the gold standard consensus engine for building Proof-of-Stake systems.
 * The Cosmos SDK is open-source and designed to make it easy to build blockchains out of composable [modules](../../build/modules). As the ecosystem of open-source Cosmos SDK modules grows, it will become increasingly easier to build complex decentralized platforms with it.
 * The Cosmos SDK is inspired by capabilities-based security, and informed by years of wrestling with blockchain state-machines. This makes the Cosmos SDK a very secure environment to build blockchains.
 * Most importantly, the Cosmos SDK has already been used to build many application-specific blockchains that are already in production. Among others, we can cite [Cosmos Hub](https://hub.cosmos.network), [IRIS Hub](https://irisnet.org), [Binance Chain](https://docs.binance.org/), [Terra](https://terra.money/) or [Kava](https://www.kava.io/). [Many more](https://cosmos.network/ecosystem) are building on the Cosmos SDK.

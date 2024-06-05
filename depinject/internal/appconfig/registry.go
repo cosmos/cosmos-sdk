@@ -30,12 +30,8 @@ func ModulesByModuleTypeName() (map[string]*ModuleInitializer, error) {
 	res := map[string]*ModuleInitializer{}
 
 	for _, initializer := range ModuleRegistry {
-		var fullName string
-		if msgv2, ok := initializer.ConfigProtoMessage.(protov2.Message); ok {
-			fullName = string(msgv2.ProtoReflect().Descriptor().FullName())
-		} else {
-			fullName = gogoproto.MessageName(initializer.ConfigProtoMessage)
-		}
+		// as of gogoproto v1.5.0 this should work with either gogoproto or golang v2 proto
+		fullName := gogoproto.MessageName(initializer.ConfigProtoMessage)
 
 		if desc, err := gogoproto.HybridResolver.FindDescriptorByName(protoreflect.FullName(fullName)); err == nil {
 			modDesc := protov2.GetExtension(desc.Options(), appv1alpha1.E_Module).(*appv1alpha1.ModuleDescriptor)

@@ -97,21 +97,16 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 
 		}
 
-		var config any
+		var config gogoproto.Message
 		if configInit, ok := init.ConfigProtoMessage.(protov2.Message); ok {
-			configProto := configInit.ProtoReflect().Type().New().Interface()
-			err = anypb.UnmarshalTo(module.Config, configProto, protov2.UnmarshalOptions{})
-			if err != nil {
-				return depinject.Error(err)
-			}
-			config = configProto
+			config = configInit.ProtoReflect().Type().New().Interface().(gogoproto.Message)
 		} else {
-			configProto := reflect.New(init.ConfigGoType.Elem()).Interface().(gogoproto.Message)
-			err = gogoproto.Unmarshal(module.Config.Value, configProto)
-			if err != nil {
-				return depinject.Error(err)
-			}
-			config = configProto
+			config = reflect.New(init.ConfigGoType.Elem()).Interface().(gogoproto.Message)
+		}
+		// as of gogo v1.5.0 this should work with either gogoproto or golang v2 proto
+		err = gogoproto.Unmarshal(module.Config.Value, config)
+		if err != nil {
+			return depinject.Error(err)
 		}
 
 		opts = append(opts, depinject.Supply(config))

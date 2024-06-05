@@ -5,12 +5,20 @@ type Schema struct {
 }
 
 type Table struct {
-	Name        string
-	KeyFields   []Field
-	ValueFields []Field
+	Name         string
+	KeyColumns   []Column
+	ValueColumns []Column
 }
 
-type Field struct {
-	Name string
-	Type Type
+type Column struct {
+	Name           string
+	Type           Type
+	Nullable       bool
+	AddressPrefix  string
+	EnumDefinition EnumDefinition
+}
+
+type EnumDefinition struct {
+	Name   string
+	Values []string
 }

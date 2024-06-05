@@ -69,11 +69,11 @@ func (p *Engine) ReceiveStateSet(storeKey string, key, value []byte) error {
 		return nil
 	}
 	for _, decoder := range decoders {
-		update, err := decoder.DecodeSet(key, value)
+		update, handled, err := decoder.DecodeSet(key, value)
 		if err != nil {
 			return err
 		}
-		if update == nil {
+		if !handled {
 			continue
 		}
 		for _, indexer := range p.indexers {
@@ -91,11 +91,11 @@ func (p *Engine) ReceiveStateDelete(storeKey string, key []byte, prune bool) err
 		return nil
 	}
 	for _, decoder := range decoders {
-		del, err := decoder.DecodeDelete(key)
+		del, handled, err := decoder.DecodeDelete(key)
 		if err != nil {
 			return err
 		}
-		if del == nil {
+		if !handled {
 			continue
 		}
 		for _, indexer := range p.indexers {

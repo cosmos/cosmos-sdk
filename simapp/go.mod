@@ -47,7 +47,12 @@ require (
 
 require github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240530055211-ae27f7eb3c08
 
-require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
+require (
+	cosmossdk.io/indexer/base v0.0.0-00010101000000-000000000000
+	cosmossdk.io/indexer/source/store v0.0.0-00010101000000-000000000000
+	cosmossdk.io/indexer/target/postgres v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
+)
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.1-20240312114316-c0d3497e35d6.1 // indirect
@@ -146,6 +151,9 @@ require (
 	github.com/huandu/skiplist v1.2.0 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
+	github.com/jackc/pgx/v5 v5.6.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.8 // indirect
@@ -242,6 +250,9 @@ replace (
 	cosmossdk.io/collections => ../collections
 	cosmossdk.io/core => ../core
 	cosmossdk.io/depinject => ../depinject
+	cosmossdk.io/indexer/base => ../indexer/base
+	cosmossdk.io/indexer/source/store => ../indexer/source/store
+	cosmossdk.io/indexer/target/postgres => ../indexer/target/postgres
 	cosmossdk.io/log => ../log
 	cosmossdk.io/store => ../store
 	cosmossdk.io/tools/confix => ../tools/confix

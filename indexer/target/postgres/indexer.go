@@ -1,8 +1,36 @@
 package postgres
 
-import indexerbase "cosmossdk.io/indexer/base"
+import (
+	"context"
+	"os"
 
-type indexer struct{}
+	"github.com/jackc/pgx/v5"
+
+	indexerbase "cosmossdk.io/indexer/base"
+)
+
+type indexer struct {
+	conn *pgx.Conn
+}
+
+type Options struct{}
+
+func NewIndexer(opts Options) indexerbase.Indexer {
+	// get env var DATABASE_URL
+	dbUrl, ok := os.LookupEnv("DATABASE_URL")
+	if !ok {
+		panic("DATABASE_URL not set")
+	}
+
+	conn, err := pgx.Connect(context.Background(), dbUrl)
+	if err != nil {
+		panic(err)
+	}
+
+	return indexer{
+		conn: conn,
+	}
+}
 
 func (i indexer) StartBlock(u uint64) error {
 	//TODO implement me

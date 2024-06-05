@@ -94,9 +94,9 @@ type Collection interface {
 
 	getTableSchema() indexerbase.Table
 
-	decodeSet(key, value []byte) (indexerbase.EntityUpdate, error)
+	decodeSet(key, value []byte) (indexerbase.EntityUpdate, bool, error)
 
-	decodeDelete(key []byte) (indexerbase.EntityDelete, error)
+	decodeDelete(key []byte) (indexerbase.EntityDelete, bool, error)
 }
 
 // Prefix defines a segregation bytes namespace for specific collections objects.

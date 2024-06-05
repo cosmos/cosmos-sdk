@@ -12,6 +12,13 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cast"
 
+	"cosmossdk.io/indexer/target/postgres"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/core/appmodule"
+	indexerbase "cosmossdk.io/indexer/base"
+	storesource "cosmossdk.io/indexer/source/store"
+
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -180,8 +187,10 @@ func NewSimApp(
 		)
 	)
 
+	var appModules map[string]appmodule.AppModule
 	if err := depinject.Inject(appConfig,
 		&appBuilder,
+		&appModules,
 		&app.appCodec,
 		&app.legacyAmino,
 		&app.txConfig,
@@ -243,10 +252,27 @@ func NewSimApp(
 
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 
-	// register streaming services
-	if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
-		panic(err)
-	}
+	// TODO: enable this depending on configuration
+	//// register streaming services
+	//if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
+	//	panic(err)
+	//}
+	app.SetStreamingManager(storetypes.StreamingManager{
+		ABCIListeners: []storetypes.ABCIListener{
+			storesource.NewSource(storesource.Options{
+				EngineOptions: indexerbase.EngineOptions[appmodule.AppModule]{
+					ModuleSet: appModules,
+					Decoders: []indexerbase.Decoder{
+						collections.NewDecoder(collections.DecoderOptions{}),
+					},
+					Indexers: []indexerbase.Indexer{
+						postgres.NewIndexer(postgres.Options{}),
+					},
+				},
+			}),
+		},
+		StopNodeOnErr: true,
+	})
 
 	/****  Module Options ****/
 

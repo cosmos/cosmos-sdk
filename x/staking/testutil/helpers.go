@@ -80,7 +80,7 @@ func (sh *Helper) createValidator(addr sdk.ValAddress, pk cryptotypes.PubKey, co
 	}
 }
 
-// Delegate calls staking module staking module `MsgServer/Delegate` to delegate stake for a validator
+// Delegate calls staking module `MsgServer/Delegate` to delegate stake for a validator
 func (sh *Helper) Delegate(delegator, val string, amount math.Int) {
 	coin := sdk.NewCoin(sh.Denom, amount)
 	msg := stakingtypes.NewMsgDelegate(delegator, val, coin)

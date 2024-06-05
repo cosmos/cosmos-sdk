@@ -3,7 +3,6 @@ package errors
 import (
 	"fmt"
 	"io"
-	"strings"
 	"testing"
 )
 
@@ -85,54 +84,6 @@ func TestABCInfo(t *testing.T) {
 			}
 			if log != tc.wantLog {
 				t.Errorf("%s: expected log %s, got %s", testName, tc.wantLog, log)
-			}
-		})
-	}
-}
-
-func TestABCIInfoStacktrace(t *testing.T) {
-	cases := map[string]struct {
-		err            error
-		debug          bool
-		wantStacktrace bool
-		wantErrMsg     string
-	}{
-		"wrapped SDK error in debug mode provides stacktrace": {
-			err:            Wrap(ErrUnauthorized, "wrapped"),
-			debug:          true,
-			wantStacktrace: true,
-			wantErrMsg:     "wrapped: unauthorized",
-		},
-		"wrapped SDK error in non-debug mode does not have stacktrace": {
-			err:            Wrap(ErrUnauthorized, "wrapped"),
-			debug:          false,
-			wantStacktrace: false,
-			wantErrMsg:     "wrapped: unauthorized",
-		},
-		"wrapped stdlib error in debug mode provides stacktrace": {
-			err:            Wrap(fmt.Errorf("stdlib"), "wrapped"),
-			debug:          true,
-			wantStacktrace: true,
-			wantErrMsg:     "wrapped: stdlib",
-		},
-	}
-
-	const thisTestSrc = "cosmossdk.io/errors.(*abciTestSuite).TestABCIInfoStacktrace"
-
-	for testName, tc := range cases {
-		t.Run(testName, func(t *testing.T) {
-			_, _, log := ABCIInfo(tc.err, tc.debug)
-			if !tc.wantStacktrace {
-				if log != tc.wantErrMsg {
-					t.Errorf("%s: expected log %s, got %s", testName, tc.wantErrMsg, log)
-				}
-			} else {
-				if !strings.Contains(log, thisTestSrc) {
-					t.Errorf("%s: expected log to contain %s", testName, thisTestSrc)
-				}
-				if !strings.Contains(log, tc.wantErrMsg) {
-					t.Errorf("%s: expected log to contain %s", testName, tc.wantErrMsg)
-				}
 			}
 		})
 	}

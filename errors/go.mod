@@ -1,3 +1,3 @@
-module cosmossdk.io/errors
+module cosmossdk.io/errors/v2
 
 go 1.20

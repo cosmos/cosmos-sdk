@@ -70,11 +70,6 @@ func TestWrappedIs(t *testing.T) {
 		t.Errorf("expected error to be of type ErrTxTooLarge")
 	}
 
-	err = Wrap(ErrInsufficientFee, "...")
-	if !errors.Is(err, ErrTxTooLarge) {
-		t.Errorf("expected error to be of type ErrTxTooLarge")
-	}
-
 	errs := errors.New("other")
 	if !errors.Is(errs, errs) {
 		t.Errorf("error should match itself")

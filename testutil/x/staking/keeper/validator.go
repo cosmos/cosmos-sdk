@@ -7,8 +7,8 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/testutil/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/testutil/x/staking/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

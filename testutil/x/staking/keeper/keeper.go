@@ -9,9 +9,9 @@ import (
 	addresscodec "cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
-	"github.com/cosmos/cosmos-sdk/testutil/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/testutil/x/staking/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -26,7 +26,6 @@ type Keeper struct {
 	authKeeper            types.AccountKeeper
 	bankKeeper            types.BankKeeper
 	hooks                 types.StakingHooks
-	authority             string
 	validatorAddressCodec addresscodec.Codec
 	consensusAddressCodec addresscodec.Codec
 	cometInfoService      comet.Service
@@ -51,7 +50,6 @@ func NewKeeper(
 	env appmodule.Environment,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
-	authority string,
 	validatorAddressCodec addresscodec.Codec,
 	consensusAddressCodec addresscodec.Codec,
 	cometInfoService comet.Service,
@@ -66,11 +64,6 @@ func NewKeeper(
 		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
 	}
 
-	// ensure that authority is a valid AccAddress
-	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
-		panic("authority is not a valid acc address")
-	}
-
 	if validatorAddressCodec == nil || consensusAddressCodec == nil {
 		panic("validator and/or consensus address codec are nil")
 	}
@@ -80,7 +73,6 @@ func NewKeeper(
 		cdc:                   cdc,
 		authKeeper:            ak,
 		bankKeeper:            bk,
-		authority:             authority,
 		validatorAddressCodec: validatorAddressCodec,
 		consensusAddressCodec: consensusAddressCodec,
 		cometInfoService:      cometInfoService,
@@ -141,11 +133,6 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) {
 	}
 
 	k.hooks = sh
-}
-
-// GetAuthority returns the x/staking module's authority.
-func (k Keeper) GetAuthority() string {
-	return k.authority
 }
 
 // ValidatorAddressCodec returns the app validator address codec.

@@ -17,10 +17,8 @@ const (
 	DefaultMaxValidators uint32 = 100
 )
 
-var (
-	// DefaultMinCommissionRate is set to 0%
-	DefaultMinCommissionRate = math.LegacyZeroDec()
-)
+// DefaultMinCommissionRate is set to 0%
+var DefaultMinCommissionRate = math.LegacyZeroDec()
 
 // NewParams creates a new Params instance
 func NewParams(maxValidators uint32, bondDenom string,

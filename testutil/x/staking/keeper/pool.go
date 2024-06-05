@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/testutil/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/testutil/x/staking/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

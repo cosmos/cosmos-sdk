@@ -12,11 +12,10 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	authtypes "cosmossdk.io/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/testutil/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/testutil/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/testutil/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/testutil/x/staking/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -54,23 +53,11 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(types.GovModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
-	as, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
-	if err != nil {
-		panic(err)
-	}
-
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.Environment,
 		in.AccountKeeper,
 		in.BankKeeper,
-		as,
 		in.ValidatorAddressCodec,
 		in.ConsensusAddressCodec,
 		in.CometInfoService,

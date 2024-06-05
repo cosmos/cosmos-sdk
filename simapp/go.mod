@@ -45,7 +45,7 @@ require (
 	google.golang.org/protobuf v1.34.1
 )
 
-require github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240530055211-ae27f7eb3c08
+require github.com/cometbft/cometbft/api v1.0.0-rc.1
 
 require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 

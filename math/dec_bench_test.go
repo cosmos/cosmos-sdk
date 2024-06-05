@@ -2,6 +2,8 @@ package math
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func BenchmarkCompareLegacyDecAndNewDecQuotient(b *testing.B) {

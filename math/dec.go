@@ -99,7 +99,7 @@ func NewDecFromString(s string, c ...SetupConstraint) (Dec, error) {
 	}
 }
 
-func NewDecFromInt64(x int64) Dec {
+func NewDecFromInt64(x int64, c ...SetupConstraint) Dec {
 	var res Dec
 	res.dec.SetInt64(x)
 	return res
@@ -114,7 +114,7 @@ func NewDecWithPrec(coeff int64, exp int32) Dec {
 
 // Add returns a new Dec with value `x+y` without mutating any argument and error if
 // there is an overflow.
-func (x Dec) Add(y Dec) (Dec, error) {
+func (x Dec) Add(y Dec, c ...SetupConstraint) (Dec, error) {
 	var z Dec
 	_, err := apd.BaseContext.Add(&z.dec, &x.dec, &y.dec)
 	return z, errors.Wrap(err, "decimal addition error")

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"cosmossdk.io/math"
 
@@ -14,11 +13,6 @@ import (
 
 // Staking params default values
 const (
-	// DefaultUnbondingTime reflects three weeks in seconds as the default
-	// unbonding time.
-	// TODO: Justify our choice of default here.
-	DefaultUnbondingTime time.Duration = time.Hour * 24 * 7 * 3
-
 	// Default maximum number of bonded validators
 	DefaultMaxValidators uint32 = 100
 )
@@ -29,11 +23,10 @@ var (
 )
 
 // NewParams creates a new Params instance
-func NewParams(unbondingTime time.Duration,
-	maxValidators uint32, bondDenom string, minCommissionRate math.LegacyDec,
+func NewParams(maxValidators uint32, bondDenom string,
+	minCommissionRate math.LegacyDec,
 ) Params {
 	return Params{
-		UnbondingTime:     unbondingTime,
 		MaxValidators:     maxValidators,
 		BondDenom:         bondDenom,
 		MinCommissionRate: minCommissionRate,
@@ -43,7 +36,6 @@ func NewParams(unbondingTime time.Duration,
 // DefaultParams returns a default set of parameters.
 func DefaultParams() Params {
 	return NewParams(
-		DefaultUnbondingTime,
 		DefaultMaxValidators,
 		sdk.DefaultBondDenom,
 		DefaultMinCommissionRate,
@@ -72,10 +64,6 @@ func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err e
 
 // validate a set of params
 func (p Params) Validate() error {
-	if err := validateUnbondingTime(p.UnbondingTime); err != nil {
-		return err
-	}
-
 	if err := validateMaxValidators(p.MaxValidators); err != nil {
 		return err
 	}
@@ -86,19 +74,6 @@ func (p Params) Validate() error {
 
 	if err := validateMinCommissionRate(p.MinCommissionRate); err != nil {
 		return err
-	}
-
-	return nil
-}
-
-func validateUnbondingTime(i interface{}) error {
-	v, ok := i.(time.Duration)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v < 0 {
-		return fmt.Errorf("unbonding time must not be negative: %d", v)
 	}
 
 	return nil

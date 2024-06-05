@@ -8,8 +8,6 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
-	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 const (
@@ -28,10 +26,6 @@ const (
 
 var (
 	// Keys for store prefixes
-	// Last* values are constant during a block.
-	LastValidatorPowerKey = collections.NewPrefix(17) // prefix for each key to a validator index, for bonded validators
-	LastTotalPowerKey     = collections.NewPrefix(18) // prefix for the total power
-
 	ValidatorsKey             = collections.NewPrefix(33) // prefix for each key to a validator
 	ValidatorsByConsAddrKey   = collections.NewPrefix(34) // prefix for each key to a validator index, by pubkey
 	ValidatorsByPowerIndexKey = []byte{0x23}              // prefix for each key to a validator index, sorted by power
@@ -47,24 +41,6 @@ var (
 var (
 	_ = collections.NewPrefix(97)
 )
-
-// GetValidatorKey creates the key for the validator with address
-// VALUE: staking/Validator
-func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {
-	return append(ValidatorsKey, address.MustLengthPrefix(operatorAddr)...)
-}
-
-// AddressFromValidatorsKey creates the validator operator address from ValidatorsKey
-func AddressFromValidatorsKey(key []byte) []byte {
-	kv.AssertKeyAtLeastLength(key, 3)
-	return key[2:] // remove prefix bytes and address length
-}
-
-// AddressFromLastValidatorPowerKey creates the validator operator address from LastValidatorPowerKey
-func AddressFromLastValidatorPowerKey(key []byte) []byte {
-	kv.AssertKeyAtLeastLength(key, 3)
-	return key[2:] // remove prefix bytes and address length
-}
 
 // GetValidatorsByPowerIndexKey creates the validator by power index.
 // Power index is the key used in the power-store, and represents the relative

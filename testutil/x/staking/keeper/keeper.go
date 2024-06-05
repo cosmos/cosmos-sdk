@@ -4,14 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	gogotypes "github.com/cosmos/gogoproto/types"
-
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
 	addresscodec "cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/testutil/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,7 +16,7 @@ import (
 )
 
 // Implements ValidatorSet interface
-// var _ types.ValidatorSet = Keeper{}
+var _ types.ValidatorSet = Keeper{}
 
 // Keeper of the x/staking store
 type Keeper struct {
@@ -36,8 +33,6 @@ type Keeper struct {
 
 	Schema collections.Schema
 
-	// LastTotalPower value: LastTotalPower
-	LastTotalPower collections.Item[math.Int]
 	// ValidatorByConsensusAddress key: consAddr | value: valAddr
 	ValidatorByConsensusAddress collections.Map[sdk.ConsAddress, sdk.ValAddress]
 	// Delegations key: AccAddr+valAddr | value: Delegation
@@ -46,8 +41,6 @@ type Keeper struct {
 	Validators collections.Map[[]byte, types.Validator]
 	// ValidatorQueue key: len(timestamp bytes)+timestamp+height | value: ValAddresses
 	ValidatorQueue collections.Map[collections.Triple[uint64, time.Time, uint64], types.ValAddresses]
-	// LastValidatorPower key: valAddr | value: power(gogotypes.Int64Value())
-	LastValidatorPower collections.Map[[]byte, gogotypes.Int64Value]
 	// Params key: ParamsKeyPrefix | value: Params
 	Params collections.Item[types.Params]
 }
@@ -91,7 +84,6 @@ func NewKeeper(
 		validatorAddressCodec: validatorAddressCodec,
 		consensusAddressCodec: consensusAddressCodec,
 		cometInfoService:      cometInfoService,
-		LastTotalPower:        collections.NewItem(sb, types.LastTotalPowerKey, "last_total_power", sdk.IntValue),
 		Delegations: collections.NewMap(
 			sb, types.DelegationKey, "delegations",
 			collections.PairKeyCodec(
@@ -106,9 +98,7 @@ func NewKeeper(
 			sdk.LengthPrefixedAddressKey(sdk.ConsAddressKey), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			collcodec.KeyToValueCodec(sdk.ValAddressKey),
 		),
-		// key format is: 17 | lengthPrefixedBytes(valAddr) | power
-		LastValidatorPower: collections.NewMap(sb, types.LastValidatorPowerKey, "last_validator_power", sdk.LengthPrefixedBytesKey, codec.CollValue[gogotypes.Int64Value](cdc)), // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
-		Validators:         collections.NewMap(sb, types.ValidatorsKey, "validators", sdk.LengthPrefixedBytesKey, codec.CollValue[types.Validator](cdc)),                        // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
+		Validators: collections.NewMap(sb, types.ValidatorsKey, "validators", sdk.LengthPrefixedBytesKey, codec.CollValue[types.Validator](cdc)), // sdk.LengthPrefixedBytesKey is needed to retain state compatibility
 		// key format is: 67 | length(timestamp Bytes) | timestamp | height
 		// Note: We use 3 keys here because we prefixed time bytes with its length previously and to retain state compatibility we remain to use the same
 		ValidatorQueue: collections.NewMap(

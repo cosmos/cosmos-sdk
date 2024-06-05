@@ -2,8 +2,6 @@ package staking
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -27,10 +25,9 @@ const (
 )
 
 var (
-	_ module.HasName         = AppModule{}
-	_ module.HasAminoCodec   = AppModule{}
-	_ module.HasGRPCGateway  = AppModule{}
-	_ module.HasABCIEndBlock = AppModule{}
+	_ module.HasName        = AppModule{}
+	_ module.HasAminoCodec  = AppModule{}
+	_ module.HasGRPCGateway = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasServices           = AppModule{}
@@ -109,25 +106,5 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	return nil
 }
 
-// DefaultGenesis returns default genesis state as raw bytes for the staking module.
-func (am AppModule) DefaultGenesis() json.RawMessage {
-	return am.cdc.MustMarshalJSON(types.DefaultGenesisState())
-}
-
-// ValidateGenesis performs genesis state validation for the staking module.
-func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
-	var data types.GenesisState
-	if err := am.cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
-	}
-
-	return ValidateGenesis(&data)
-}
-
 // ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
-
-// EndBlock returns the end blocker for the staking module.
-func (am AppModule) EndBlock(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {
-	return []appmodule.ValidatorUpdate{}, nil
-}

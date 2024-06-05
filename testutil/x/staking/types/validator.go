@@ -1,14 +1,11 @@
 package types
 
 import (
-	"bytes"
 	"fmt"
-	"sort"
 	"strings"
 	"time"
 
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
@@ -74,69 +71,6 @@ func (v Validators) String() (out string) {
 	return strings.TrimSpace(out)
 }
 
-// ToSDKValidators -  convenience function convert []Validator to []sdk.ValidatorI
-func (v Validators) ToSDKValidators() (validators []sdk.ValidatorI) {
-	for _, val := range v.Validators {
-		validators = append(validators, val)
-	}
-
-	return validators
-}
-
-// Sort Validators sorts validator array in ascending operator address order
-func (v Validators) Sort() {
-	sort.Sort(v)
-}
-
-// Implements sort interface
-func (v Validators) Len() int {
-	return len(v.Validators)
-}
-
-// Implements sort interface
-func (v Validators) Less(i, j int) bool {
-	vi, err := v.ValidatorCodec.StringToBytes(v.Validators[i].GetOperator())
-	if err != nil {
-		panic(err)
-	}
-	vj, err := v.ValidatorCodec.StringToBytes(v.Validators[j].GetOperator())
-	if err != nil {
-		panic(err)
-	}
-
-	return bytes.Compare(vi, vj) == -1
-}
-
-// Implements sort interface
-func (v Validators) Swap(i, j int) {
-	v.Validators[i], v.Validators[j] = v.Validators[j], v.Validators[i]
-}
-
-// ValidatorsByVotingPower implements sort.Interface for []Validator based on
-// the VotingPower and Address fields.
-// The validators are sorted first by their voting power (descending). Secondary index - Address (ascending).
-// Copied from tendermint/types/validator_set.go
-type ValidatorsByVotingPower []Validator
-
-func (valz ValidatorsByVotingPower) Len() int { return len(valz) }
-
-func (valz ValidatorsByVotingPower) Less(i, j int, r math.Int) bool {
-	if valz[i].ConsensusPower(r) == valz[j].ConsensusPower(r) {
-		addrI, errI := valz[i].GetConsAddr()
-		addrJ, errJ := valz[j].GetConsAddr()
-		// If either returns error, then return false
-		if errI != nil || errJ != nil {
-			return false
-		}
-		return bytes.Compare(addrI, addrJ) == -1
-	}
-	return valz[i].ConsensusPower(r) > valz[j].ConsensusPower(r)
-}
-
-func (valz ValidatorsByVotingPower) Swap(i, j int) {
-	valz[i], valz[j] = valz[j], valz[i]
-}
-
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (v Validators) UnpackInterfaces(c codectypes.AnyUnpacker) error {
 	for i := range v.Validators {
@@ -183,9 +117,6 @@ func (v Validator) IsUnbonding() bool {
 	return v.GetStatus() == sdk.Unbonding
 }
 
-// constant used in flags to indicate that description field should not be updated
-const DoNotModifyDesc = "[do-not-modify]"
-
 func NewDescription(moniker, identity, website, securityContact, details string) Description {
 	return Description{
 		Moniker:         moniker,
@@ -194,38 +125,6 @@ func NewDescription(moniker, identity, website, securityContact, details string)
 		SecurityContact: securityContact,
 		Details:         details,
 	}
-}
-
-// UpdateDescription updates the fields of a given description. An error is
-// returned if the resulting description contains an invalid length.
-func (d Description) UpdateDescription(d2 Description) (Description, error) {
-	if d2.Moniker == DoNotModifyDesc {
-		d2.Moniker = d.Moniker
-	}
-
-	if d2.Identity == DoNotModifyDesc {
-		d2.Identity = d.Identity
-	}
-
-	if d2.Website == DoNotModifyDesc {
-		d2.Website = d.Website
-	}
-
-	if d2.SecurityContact == DoNotModifyDesc {
-		d2.SecurityContact = d.SecurityContact
-	}
-
-	if d2.Details == DoNotModifyDesc {
-		d2.Details = d.Details
-	}
-
-	return NewDescription(
-		d2.Moniker,
-		d2.Identity,
-		d2.Website,
-		d2.SecurityContact,
-		d2.Details,
-	).EnsureLength()
 }
 
 // EnsureLength ensures the length of a validator's description.
@@ -251,38 +150,6 @@ func (d Description) EnsureLength() (Description, error) {
 	}
 
 	return d, nil
-}
-
-// ModuleValidatorUpdate returns a appmodule.ValidatorUpdate from a staking validator type
-// with the full validator power.
-// It replaces the previous ABCIValidatorUpdate function.
-func (v Validator) ModuleValidatorUpdate(r math.Int) appmodule.ValidatorUpdate {
-	consPk, err := v.ConsPubKey()
-	if err != nil {
-		panic(err)
-	}
-
-	return appmodule.ValidatorUpdate{
-		PubKey:     consPk.Bytes(),
-		PubKeyType: consPk.Type(),
-		Power:      v.ConsensusPower(r),
-	}
-}
-
-// ModuleValidatorUpdateZero returns a appmodule.ValidatorUpdate from a staking validator type
-// with zero power used for validator updates.
-// It replaces the previous ABCIValidatorUpdateZero function.
-func (v Validator) ModuleValidatorUpdateZero() appmodule.ValidatorUpdate {
-	consPk, err := v.ConsPubKey()
-	if err != nil {
-		panic(err)
-	}
-
-	return appmodule.ValidatorUpdate{
-		PubKey:     consPk.Bytes(),
-		PubKeyType: consPk.Type(),
-		Power:      0,
-	}
 }
 
 // SetInitialCommission attempts to set a validator's initial commission. An
@@ -406,55 +273,6 @@ func (v Validator) RemoveTokens(tokens math.Int) Validator {
 	v.Tokens = v.Tokens.Sub(tokens)
 
 	return v
-}
-
-// RemoveDelShares removes delegator shares from a validator.
-// NOTE: because token fractions are left in the valiadator,
-//
-//	the exchange rate of future shares of this validator can increase.
-func (v Validator) RemoveDelShares(delShares math.LegacyDec) (Validator, math.Int) {
-	remainingShares := v.DelegatorShares.Sub(delShares)
-
-	var issuedTokens math.Int
-	if remainingShares.IsZero() {
-		// last delegation share gets any trimmings
-		issuedTokens = v.Tokens
-		v.Tokens = math.ZeroInt()
-	} else {
-		// leave excess tokens in the validator
-		// however fully use all the delegator shares
-		issuedTokens = v.TokensFromShares(delShares).TruncateInt()
-		v.Tokens = v.Tokens.Sub(issuedTokens)
-
-		if v.Tokens.IsNegative() {
-			panic("attempting to remove more tokens than available in validator")
-		}
-	}
-
-	v.DelegatorShares = remainingShares
-
-	return v, issuedTokens
-}
-
-// MinEqual defines a more minimum set of equality conditions when comparing two
-// validators.
-func (v *Validator) MinEqual(other *Validator) bool {
-	return v.OperatorAddress == other.OperatorAddress &&
-		v.Status == other.Status &&
-		v.Tokens.Equal(other.Tokens) &&
-		v.DelegatorShares.Equal(other.DelegatorShares) &&
-		v.Description.Equal(other.Description) &&
-		v.Commission.Equal(other.Commission) &&
-		v.Jailed == other.Jailed &&
-		v.MinSelfDelegation.Equal(other.MinSelfDelegation) &&
-		v.ConsensusPubkey.Equal(other.ConsensusPubkey)
-}
-
-// Equal checks if the receiver equals the parameter
-func (v *Validator) Equal(v2 *Validator) bool {
-	return v.MinEqual(v2) &&
-		v.UnbondingHeight == v2.UnbondingHeight &&
-		v.UnbondingTime.Equal(v2.UnbondingTime)
 }
 
 func (v Validator) IsJailed() bool            { return v.Jailed }

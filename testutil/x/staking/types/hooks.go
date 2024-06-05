@@ -3,6 +3,8 @@ package types
 import (
 	"context"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -22,6 +24,15 @@ func (h MultiStakingHooks) AfterValidatorCreated(ctx context.Context, valAddr sd
 		}
 	}
 
+	return nil
+}
+
+func (h MultiStakingHooks) BeforeValidatorModified(ctx context.Context, valAddr sdk.ValAddress) error {
+	for i := range h {
+		if err := h[i].BeforeValidatorModified(ctx, valAddr); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -46,6 +57,15 @@ func (h MultiStakingHooks) BeforeDelegationSharesModified(ctx context.Context, d
 func (h MultiStakingHooks) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
 	for i := range h {
 		if err := h[i].AfterDelegationModified(ctx, delAddr, valAddr); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (h MultiStakingHooks) BeforeValidatorSlashed(ctx context.Context, valAddr sdk.ValAddress, fraction sdkmath.LegacyDec) error {
+	for i := range h {
+		if err := h[i].BeforeValidatorSlashed(ctx, valAddr, fraction); err != nil {
 			return err
 		}
 	}

@@ -2,12 +2,12 @@ package indexerbase
 
 type EntityUpdate interface {
 	TypeName() string
-	PrimaryKey() []any
-	IterateChanges(func(name string, value any) bool)
+	Key() []any
+	Value() []any // ideally want a way to filter out unchanged fields
 }
 
 type EntityDelete interface {
 	TypeName() string
-	PrimaryKey() []any
+	Key() []any
 	Prune() bool
 }

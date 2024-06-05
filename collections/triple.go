@@ -286,6 +286,9 @@ func (t tripleKeyCodec[K1, K2, K3]) SizeNonTerminal(key Triple[K1, K2, K3]) int 
 }
 
 func (t tripleKeyCodec[K1, K2, K3]) Name() string {
+	if t.key1Name == "" || t.key2Name == "" || t.key3Name == "" {
+		return "key1,key2,key3"
+	}
 	return fmt.Sprintf("%s,%s,%s", t.key1Name, t.key2Name, t.key3Name)
 }
 

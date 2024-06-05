@@ -5,6 +5,7 @@ type Decoder interface {
 }
 
 type ModuleStateDecoder interface {
+	GetSchema() Schema
 	DecodeSet(key, value []byte) (EntityUpdate, error)
 	DecodeDelete(key []byte) (EntityDelete, error)
 }

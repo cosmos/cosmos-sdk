@@ -230,6 +230,9 @@ func (p pairKeyCodec[K1, K2]) DecodeJSON(b []byte) (Pair[K1, K2], error) {
 }
 
 func (p pairKeyCodec[K1, K2]) Name() string {
+	if p.key1Name == "" || p.key2Name == "" {
+		return "key1,key2"
+	}
 	return fmt.Sprintf("%s,%s", p.key1Name, p.key2Name)
 }
 

@@ -4,8 +4,10 @@ go 1.21
 
 require (
 	cosmossdk.io/core v0.11.0
+	cosmossdk.io/indexer/base v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/stretchr/testify v1.9.0
+	github.com/tidwall/btree v1.7.0
 	pgregory.net/rapid v1.1.0
 )
 
@@ -50,3 +52,5 @@ require (
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace cosmossdk.io/indexer/base => ../indexer/base

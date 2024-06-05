@@ -195,6 +195,7 @@ replace (
 	cosmossdk.io/x/consensus => ./x/consensus
 	cosmossdk.io/x/staking => ./x/staking
 	cosmossdk.io/x/tx => ./x/tx
+	cosmossdk.io/indexer/base => ./indexer/base
 )
 
 // Below are the long-lived replace of the Cosmos SDK

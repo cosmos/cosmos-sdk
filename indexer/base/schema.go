@@ -1,16 +1,16 @@
 package indexerbase
 
-type Table interface {
-	TypeName() string
-	Fields() []Field
-	PrimaryKey() []string
+type Schema struct {
+	Tables []Table
+}
+
+type Table struct {
+	Name        string
+	KeyFields   []Field
+	ValueFields []Field
 }
 
 type Field struct {
 	Name string
-	Type string
-}
-
-type Schema interface {
-	Tables() []Table
+	Type Type
 }

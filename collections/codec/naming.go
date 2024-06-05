@@ -1,5 +1,11 @@
 package codec
 
+type HasName interface {
+	// Name returns the name of key in the schema if one is defined or the empty string.
+	// Multipart keys should separate names with commas, i.e. "name1,name2".
+	Name() string
+}
+
 // NameableKeyCodec is a KeyCodec that can be named.
 type NameableKeyCodec[T any] interface {
 	KeyCodec[T]
@@ -11,10 +17,7 @@ type NameableKeyCodec[T any] interface {
 // NamedKeyCodec is a KeyCodec that has a name.
 type NamedKeyCodec[T any] interface {
 	KeyCodec[T]
-
-	// Name returns the name of key in the schema if one is defined or the empty string.
-	// Multipart keys should separate names with commas, i.e. "name1,name2".
-	Name() string
+	HasName
 }
 
 // NameableValueCodec is a ValueCodec that can be named.
@@ -28,8 +31,5 @@ type NameableValueCodec[T any] interface {
 // NamedValueCodec is a ValueCodec that has a name.
 type NamedValueCodec[T any] interface {
 	ValueCodec[T]
-
-	// Name returns the name of key in the schema if one is defined or the empty string.
-	// Multipart keys should separate names with commas, i.e. "name1,name2".
-	Name() string
+	HasName
 }

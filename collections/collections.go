@@ -7,6 +7,7 @@ import (
 	"math"
 
 	"cosmossdk.io/collections/codec"
+	indexerbase "cosmossdk.io/indexer/base"
 )
 
 var (
@@ -90,6 +91,12 @@ type Collection interface {
 	ValueCodec() codec.UntypedValueCodec
 
 	genesisHandler
+
+	getTableSchema() indexerbase.Table
+
+	decodeSet(key, value []byte) (indexerbase.EntityUpdate, error)
+
+	decodeDelete(key []byte) (indexerbase.EntityDelete, error)
 }
 
 // Prefix defines a segregation bytes namespace for specific collections objects.

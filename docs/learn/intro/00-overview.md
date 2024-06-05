@@ -15,7 +15,7 @@ SDK-based blockchains have the choice to use the predefined modules or to build 
 
 What's more, the Cosmos SDK is a capabilities-based system that allows developers to better reason about the security of interactions between modules. For a deeper look at capabilities, jump to [Object-Capability Model](../advanced/10-ocap.md).
 
-How you can look at this is if we imagine that the SDK is like a lego kit. You can choose to build the basic house from the instructions or you can choose to modify your house and add more floors, more doors, more windows, more furniture, more plants, more people, more animals, more money, more everything. The choice is yours.
+How you can look at this is if we imagine that the SDK is like a lego kit. You can choose to build the basic house from the instructions or you can choose to modify your house and add more floors, more doors, more windows. The choice is yours.
 
 ## What are Application-Specific Blockchains
 
@@ -27,13 +27,13 @@ Learn more about [application-specific blockchains](./01-why-app-specific.md).
 
 ## What is Modularity
 
-Today there is a lot of talk around modularity and discussions between monolithic and modular. Originally the Cosmos SDK was built with a vision of modularity in mind. This means that developers can plug and play, making their blockchain customisable. Modularity is dirived from splitting a blockchain into customisable layers of execution, consensus, settlement and data availability, which is what the Cosmos SDK enables. For example you can choose to build a vanilla chain and use the Cosmos SDK with CometBFT. CometBFT will be your consensus layer and the chain itself would be the settlement and execution layer. Another route could be to use the SDK with Rollkit and Celestia as your consensus and data availability layer. The benefit of modularity is that you can customise your chain to your specific use case.
+Today there is a lot of talk around modularity and discussions between monolithic and modular. Originally the Cosmos SDK was built with a vision of modularity in mind. Modularity is dirived from splitting a blockchain into customisable layers of execution, consensus, settlement and data availability, which is what the Cosmos SDK enables. This means that developers can plug and play, making their blockchain customisable by using different software for different layers. For example you can choose to build a vanilla chain and use the Cosmos SDK with CometBFT. CometBFT will be your consensus layer and the chain itself would be the settlement and execution layer. Another route could be to use the SDK with Rollkit and Celestia as your consensus and data availability layer. The benefit of modularity is that you can customise your chain to your specific use case.
 
 ## Why the Cosmos SDK
 
 The Cosmos SDK is the most advanced framework for building custom modular application-specific blockchains today. Here are a few reasons why you might want to consider building your decentralized application with the Cosmos SDK:
 
-* It allows you to plug and play your consensus layer. As above you can use rollkit and celestia as your consensus and data availability layer. This offers a lot of flexibility and customisation. 
+* It allows you to plug and play and customise your consensus layer. As above you can use Rollkit and Celestia as your consensus and data availability layer. This offers a lot of flexibility and customisation. 
 * Previously the default consensus engine available within the Cosmos SDK is [CometBFT](https://github.com/cometbft/cometbft). CometBFT is the most (and only) mature BFT consensus engine in existence. It is widely used across the industry and is considered the gold standard consensus engine for building Proof-of-Stake systems.
 * The Cosmos SDK is open-source and designed to make it easy to build blockchains out of composable [modules](../../build/modules). As the ecosystem of open-source Cosmos SDK modules grows, it will become increasingly easier to build complex decentralized platforms with it.
 * The Cosmos SDK is inspired by capabilities-based security, and informed by years of wrestling with blockchain state-machines. This makes the Cosmos SDK a very secure environment to build blockchains.

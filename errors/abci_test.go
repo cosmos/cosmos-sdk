@@ -22,7 +22,7 @@ func TestABCInfo(t *testing.T) {
 			wantSpace: testCodespace,
 		},
 		"wrapped SDK error": {
-			err:       Wrap(Wrap(ErrUnauthorized, "foo"), "bar"),
+			err:       fmt.Errorf("bar: %w", fmt.Errorf("foo: %w", ErrUnauthorized)),
 			debug:     false,
 			wantLog:   "bar: foo: unauthorized",
 			wantCode:  ErrUnauthorized.code,
@@ -90,7 +90,7 @@ func TestABCInfo(t *testing.T) {
 }
 
 func TestABCIInfoHidesStacktrace(t *testing.T) {
-	err := Wrap(ErrUnauthorized, "wrapped")
+	err := fmt.Errorf("wrapped: %w", ErrUnauthorized)
 	_, _, log := ABCIInfo(err, false)
 	if log != "wrapped: unauthorized" {
 		t.Errorf("expected log %s, got %s", "wrapped: unauthorized", log)
@@ -100,8 +100,8 @@ func TestABCIInfoHidesStacktrace(t *testing.T) {
 func TestABCIInfoSerializeErr(t *testing.T) {
 	var (
 		// Create errors with stacktrace for equal comparison.
-		myErrDecode = Wrap(ErrTxDecode, "test")
-		myErrAddr   = Wrap(ErrInvalidAddress, "tester")
+		myErrDecode = fmt.Errorf("test, %w", ErrTxDecode)
+		myErrAddr   = fmt.Errorf("tester, %w", ErrInvalidAddress)
 		myPanic     = ErrPanic
 	)
 

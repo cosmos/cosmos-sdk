@@ -1,7 +1,6 @@
 package errors
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -61,11 +60,11 @@ func setUsed(err *Error) {
 // The server (abci app / blockchain) should only refer to registered errors
 func ABCIError(codespace string, code uint32, log string) error {
 	if e := getUsed(codespace, code); e != nil {
-		return Wrap(e, log)
+		return fmt.Errorf("%s: %w", log, e)
 	}
 	// This is a unique error, will never match on .Is()
 	// Use Wrap here to get a stack trace
-	return Wrap(&Error{codespace: codespace, code: code, desc: "unknown"}, log)
+	return fmt.Errorf("%s: %w", log, &Error{codespace: codespace, code: code, desc: "unknown"})
 }
 
 // Error represents a root error.
@@ -98,93 +97,4 @@ func (e Error) ABCICode() uint32 {
 
 func (e Error) Codespace() string {
 	return e.codespace
-}
-
-// Wrap extends this error with an additional information.
-// It's a handy function to call Wrap with sdk errors.
-func (e *Error) Wrap(desc string) error { return Wrap(e, desc) }
-
-// Wrapf extends this error with an additional information.
-// It's a handy function to call Wrapf with sdk errors.
-func (e *Error) Wrapf(desc string, args ...interface{}) error { return Wrapf(e, desc, args...) }
-
-// Wrap extends given error with an additional information.
-//
-// If the wrapped error does not provide ABCICode method (ie. stdlib errors),
-// it will be labeled as internal error.
-//
-// If err is nil, this returns nil, avoiding the need for an if statement when
-// wrapping a error returned at the end of a function
-func Wrap(err error, description string) error {
-	if err == nil {
-		return nil
-	}
-
-	return &wrappedError{
-		parent: err,
-		msg:    description,
-	}
-}
-
-// Wrapf extends given error with an additional information.
-//
-// This function works like Wrap function with additional functionality of
-// formatting the input as specified.
-func Wrapf(err error, format string, args ...interface{}) error {
-	desc := fmt.Sprintf(format, args...)
-	return Wrap(err, desc)
-}
-
-type wrappedError struct {
-	// This error layer description.
-	msg string
-	// The underlying error that triggered this one.
-	parent error
-}
-
-func (e *wrappedError) Error() string {
-	return fmt.Sprintf("%s: %s", e.msg, e.parent.Error())
-}
-
-func (e *wrappedError) Cause() error {
-	return e.parent
-}
-
-// Unwrap implements the built-in errors.Unwrap
-func (e *wrappedError) Unwrap() error {
-	return e.parent
-}
-
-// Recover captures a panic and stop its propagation. If panic happens it is
-// transformed into a ErrPanic instance and assigned to given error. Call this
-// function using defer in order to work as expected.
-func Recover(err *error) {
-	if r := recover(); r != nil {
-		*err = Wrapf(ErrPanic, "%v", r)
-	}
-}
-
-// WithType is a helper to augment an error with a corresponding type message
-func WithType(err error, obj interface{}) error {
-	return Wrap(err, fmt.Sprintf("%T", obj))
-}
-
-// IsOf checks if a received error is caused by one of the target errors.
-// It extends the errors.Is functionality to a list of errors.
-func IsOf(received error, targets ...error) bool {
-	if received == nil {
-		return false
-	}
-	for _, t := range targets {
-		if errors.Is(received, t) {
-			return true
-		}
-	}
-	return false
-}
-
-// causer is an interface implemented by an error that supports wrapping. Use
-// it to test if an error wraps another error instance.
-type causer interface {
-	Cause() error
 }

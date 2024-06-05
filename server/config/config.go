@@ -145,6 +145,9 @@ type GRPCConfig struct {
 	// MaxSendMsgSize defines the max message size in bytes the server can send.
 	// The default value is math.MaxInt32.
 	MaxSendMsgSize int `mapstructure:"max-send-msg-size"`
+
+	// DisableOracleGrpcAuth defines if the gRPC server for oracle votes communication should be ssl authenticated.
+	DisableOracleGrpcAuth bool `mapstructure:"disable-oracle-grpc-auth"`
 }
 
 // GRPCWebConfig defines configuration for the gRPC-web server.
@@ -252,10 +255,11 @@ func DefaultConfig() *Config {
 			RPCMaxBodyBytes:    1000000,
 		},
 		GRPC: GRPCConfig{
-			Enable:         true,
-			Address:        DefaultGRPCAddress,
-			MaxRecvMsgSize: DefaultGRPCMaxRecvMsgSize,
-			MaxSendMsgSize: DefaultGRPCMaxSendMsgSize,
+			Enable:                true,
+			Address:               DefaultGRPCAddress,
+			MaxRecvMsgSize:        DefaultGRPCMaxRecvMsgSize,
+			MaxSendMsgSize:        DefaultGRPCMaxSendMsgSize,
+			DisableOracleGrpcAuth: false,
 		},
 		GRPCWeb: GRPCWebConfig{
 			Enable: true,

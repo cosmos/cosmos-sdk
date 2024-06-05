@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	cosmossdk.io/log v1.3.1
-	cosmossdk.io/x/upgrade v0.1.2
+	cosmossdk.io/x/upgrade v0.1.3
 	github.com/otiai10/copy v1.14.0
 	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/spf13/cobra v1.8.0

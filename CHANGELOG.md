@@ -35,6 +35,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## v0.47.15-ics-lsm
+
+This is a special cosmos-sdk release with support for both ICS and LSM.
+
+### Bugfixes
+
+* (staking) [#20548](https://github.com/cosmos/cosmos-sdk/pull/20548) Remove panic from GetLastValidators. 
+
 ## v0.47.14-ics-lsm
 
 This is a special cosmos-sdk release with support for both ICS and LSM.

@@ -46,7 +46,7 @@ const (
 	FlagTrace         = "trace"
 )
 
-var _ serverv2.ServerModule[transaction.Tx] = (*CometBFTServer[transaction.Tx])(nil)
+var _ serverv2.ServerComponent[transaction.Tx] = (*CometBFTServer[transaction.Tx])(nil)
 
 type CometBFTServer[T transaction.Tx] struct {
 	Node   *node.Node
@@ -72,7 +72,7 @@ func New[T transaction.Tx](home string, txCodec transaction.Codec[T]) *CometBFTS
 
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		if err := os.MkdirAll(configPath, os.ModePerm); err != nil {
-			return nil
+			panic(err)
 		}
 	}
 
@@ -85,7 +85,7 @@ func New[T transaction.Tx](home string, txCodec transaction.Codec[T]) *CometBFTS
 	}
 }
 
-func (s *CometBFTServer[T]) Init(appI serverv2.App[T], v *viper.Viper, logger log.Logger) (serverv2.ServerModule[T], error) {
+func (s *CometBFTServer[T]) Init(appI serverv2.App[T], v *viper.Viper, logger log.Logger) (serverv2.ServerComponent[T], error) {
 	app := appI.Application
 	store := appI.Store.(types.Store)
 

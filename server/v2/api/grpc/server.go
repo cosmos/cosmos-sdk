@@ -41,7 +41,7 @@ func NewGRPCServer() GRPCServer {
 
 // Init returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server.
-func (g GRPCServer) Init(appI serverv2.App[transaction.Tx], v *viper.Viper, logger log.Logger) (serverv2.ServerModule[transaction.Tx], error) {
+func (g GRPCServer) Init(appI serverv2.App[transaction.Tx], v *viper.Viper, logger log.Logger) (serverv2.ServerComponent[transaction.Tx], error) {
 	cfg := DefaultConfig()
 	if v != nil {
 		if err := v.Sub(serverName).Unmarshal(&cfg); err != nil {

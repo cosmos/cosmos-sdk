@@ -15,13 +15,13 @@ import (
 	"github.com/pelletier/go-toml/v2"
 )
 
-// ServerModule is a server module that can be started and stopped.
-type ServerModule[T transaction.Tx] interface {
+// ServerComponent is a server module that can be started and stopped.
+type ServerComponent[T transaction.Tx] interface {
 	Name() string
 
 	Start(context.Context) error
 	Stop(context.Context) error
-	Init(App[T], *viper.Viper, log.Logger) (ServerModule[T], error)
+	Init(App[T], *viper.Viper, log.Logger) (ServerComponent[T], error)
 }
 
 // HasCLICommands is a server module that has CLI commands.
@@ -39,7 +39,7 @@ type HasStartFlags interface {
 	StartFlags() *pflag.FlagSet
 }
 
-var _ ServerModule[transaction.Tx] = (*Server)(nil)
+var _ ServerComponent[transaction.Tx] = (*Server)(nil)
 
 // Configs returns a viper instance of the config file
 func ReadConfig(configPath string) (*viper.Viper, error) {
@@ -52,9 +52,7 @@ func ReadConfig(configPath string) (*viper.Viper, error) {
 		return nil, fmt.Errorf("failed to read config: %s: %w", configPath, err)
 	}
 
-	v.SetConfigType("toml")
 	v.SetConfigName("app")
-	v.AddConfigPath(configPath)
 	if err := v.MergeInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to merge configuration: %w", err)
 	}
@@ -66,10 +64,10 @@ func ReadConfig(configPath string) (*viper.Viper, error) {
 
 type Server struct {
 	logger  log.Logger
-	modules []ServerModule[transaction.Tx]
+	modules []ServerComponent[transaction.Tx]
 }
 
-func NewServer(logger log.Logger, modules ...ServerModule[transaction.Tx]) *Server {
+func NewServer(logger log.Logger, modules ...ServerComponent[transaction.Tx]) *Server {
 	return &Server{
 		logger:  logger,
 		modules: modules,
@@ -147,8 +145,8 @@ func (s *Server) Configs() map[string]any {
 }
 
 // Configs returns all configs of all server modules.
-func (s *Server) Init(appI App[transaction.Tx], v *viper.Viper, logger log.Logger) (ServerModule[transaction.Tx], error) {
-	var modules []ServerModule[transaction.Tx]
+func (s *Server) Init(appI App[transaction.Tx], v *viper.Viper, logger log.Logger) (ServerComponent[transaction.Tx], error) {
+	var modules []ServerComponent[transaction.Tx]
 	for _, mod := range s.modules {
 		mod := mod
 		module, err := mod.Init(appI, v, logger)

@@ -18,12 +18,12 @@ import (
 
 type App[T transaction.Tx] struct {
 	Application Application[T]
-	Store any
+	Store       any
 }
 
 type AppCreator[T transaction.Tx] func(*viper.Viper, log.Logger) App[T]
 
-func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, homePath string, modules ...ServerModule[transaction.Tx]) (CLIConfig, error) {
+func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, homePath string, modules ...ServerComponent[transaction.Tx]) (CLIConfig, error) {
 	if len(modules) == 0 {
 		// TODO figure if we should define default modules
 		// and if so it should be done here to avoid uncessary dependencies
@@ -88,7 +88,7 @@ func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger 
 	return cmds, nil
 }
 
-func AddCommands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, homePath string, modules ...ServerModule[transaction.Tx]) error {
+func AddCommands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, homePath string, modules ...ServerComponent[transaction.Tx]) error {
 	cmds, err := Commands(rootCmd, newApp, logger, homePath, modules...)
 	if err != nil {
 		return err

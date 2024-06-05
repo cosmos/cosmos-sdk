@@ -54,6 +54,6 @@ func (s *mockServer) Config() any {
 	return MockServerDefaultConfig()
 }
 
-func (s *mockServer) Init(appI serverv2.App[transaction.Tx], v *viper.Viper, logger log.Logger) (serverv2.ServerModule[transaction.Tx], error) {
+func (s *mockServer) Init(appI serverv2.App[transaction.Tx], v *viper.Viper, logger log.Logger) (serverv2.ServerComponent[transaction.Tx], error) {
 	return nil, nil
 }

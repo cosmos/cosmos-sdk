@@ -47,7 +47,7 @@ type TxBuilder interface {
 	SetFeePayer(string) error
 	SetGasLimit(uint64)
 	SetTimeoutHeight(uint64)
-	SetFeeGranter(string)
+	SetFeeGranter(string) error
 	SetUnordered(bool)
 	SetSignatures(...Signature) error
 	SetAuxSignerData(*apitx.AuxSignerData) error
@@ -71,6 +71,7 @@ func NewBuilderProvider(addressCodec address.Codec, decoder *txdecode.Decoder, c
 		codec:        codec,
 	}
 }
+
 func (b BuilderProvider) NewTxBuilder() TxBuilder {
 	return newTxBuilder(b.addressCodec, b.decoder, b.codec)
 }
@@ -104,7 +105,7 @@ type txBuilder struct {
 	nonCriticalExtensionOptions []*anypb.Any
 }
 
-func newTxBuilder(addressCodec address.Codec, decoder *txdecode.Decoder, codec codec.BinaryCodec) TxBuilder {
+func newTxBuilder(addressCodec address.Codec, decoder *txdecode.Decoder, codec codec.BinaryCodec) *txBuilder {
 	return &txBuilder{
 		addressCodec: addressCodec,
 		decoder:      decoder,
@@ -118,7 +119,6 @@ func (b *txBuilder) GetTx() (*apitx.Tx, error) {
 		return nil, err
 	}
 
-	// TODO: maybe just another func?
 	body := &apitx.TxBody{
 		Messages:                    msgs,
 		Memo:                        b.memo,
@@ -141,7 +141,7 @@ func (b *txBuilder) GetTx() (*apitx.Tx, error) {
 	return &apitx.Tx{
 		Body:       body,
 		AuthInfo:   authInfo,
-		Signatures: b.signatures, // TODO: I don't like this
+		Signatures: b.signatures,
 	}, nil
 }
 
@@ -185,6 +185,9 @@ func (b *txBuilder) getFee() (fee *apitx.Fee, err error) {
 			return nil, err
 		}
 	}
+
+	// TODO: what if not fee payer nor granted are empty?
+
 	fee = &apitx.Fee{
 		Amount:   b.fees,
 		GasLimit: b.gasLimit,
@@ -263,8 +266,14 @@ func (b *txBuilder) SetTimeoutHeight(timeoutHeight uint64) {
 	b.timeoutHeight = timeoutHeight
 }
 
-func (b *txBuilder) SetFeeGranter(feeGranter string) {
-	b.granter = []byte(feeGranter)
+func (b *txBuilder) SetFeeGranter(feeGranter string) error {
+	addr, err := b.addressCodec.StringToBytes(feeGranter)
+	if err != nil {
+		return err
+	}
+	b.granter = addr
+
+	return nil
 }
 
 func (b *txBuilder) SetUnordered(unordered bool) {

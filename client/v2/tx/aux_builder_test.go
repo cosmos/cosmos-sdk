@@ -1,6 +1,8 @@
 package tx_test
 
 import (
+	"cosmossdk.io/core/transaction"
+	"google.golang.org/protobuf/types/known/anypb"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -16,10 +18,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter"
 	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	typestx "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 const (
@@ -69,7 +69,7 @@ func TestAuxTxBuilder(t *testing.T) {
 		{
 			"cannot set invalid Msg",
 			func() error {
-				return b.SetMsgs(sdk.Msg(nil))
+				return b.SetMsgs(transaction.Msg(nil))
 			},
 			true, "failed packing protobuf message to Any",
 		},
@@ -166,7 +166,7 @@ func TestAuxTxBuilder(t *testing.T) {
 				auxSignerData, err := b.GetAuxSignerData()
 
 				// Make sure auxSignerData is correctly populated
-				checkCorrectData(t, cdc, auxSignerData, signing.SignMode_SIGN_MODE_DIRECT_AUX)
+				checkCorrectData(t, cdc, auxSignerData, apisigning.SignMode_SIGN_MODE_DIRECT_AUX)
 
 				return err
 			},
@@ -207,7 +207,7 @@ func TestAuxTxBuilder(t *testing.T) {
 				auxSignerData, err := b.GetAuxSignerData()
 
 				// Make sure auxSignerData is correctly populated
-				checkCorrectData(t, cdc, auxSignerData, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+				checkCorrectData(t, cdc, auxSignerData, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 
 				return err
 			},
@@ -232,10 +232,14 @@ func TestAuxTxBuilder(t *testing.T) {
 }
 
 // checkCorrectData that the auxSignerData's content matches the inputs we gave.
-func checkCorrectData(t *testing.T, cdc codec.Codec, auxSignerData *apitx.AuxSignerData, signMode signing.SignMode) {
+func checkCorrectData(t *testing.T, cdc codec.Codec, auxSignerData *apitx.AuxSignerData, signMode apisigning.SignMode) {
 	t.Helper()
-	pkAny, err := codectypes.NewAnyWithValue(pub1)
+	pk, err := codectypes.NewAnyWithValue(pub1)
 	require.NoError(t, err)
+	pkAny := &anypb.Any{
+		TypeUrl: pk.TypeUrl,
+		Value:   pk.Value,
+	}
 	msgAny, err := codectypes.NewAnyWithValue(msg1)
 	require.NoError(t, err)
 

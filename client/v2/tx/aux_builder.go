@@ -178,7 +178,7 @@ func validateSignDoc(sd *apitx.SignDocDirectAux) error {
 		return errors.New("body bytes is empty")
 	}
 	if sd.PublicKey == nil {
-		return errors.New("public key is empty")
+		return errors.New("public key cannot be empty: invalid pubkey")
 	}
 	return nil
 }
@@ -186,7 +186,7 @@ func validateSignDoc(sd *apitx.SignDocDirectAux) error {
 // TODO: better place
 func validateAuxSignerData(a *apitx.AuxSignerData) error {
 	if a.Address == "" {
-		return errors.New("address is empty")
+		return errors.New("address cannot be empty: invalid request")
 	}
 
 	if a.Mode != apisigning.SignMode_SIGN_MODE_DIRECT_AUX && a.Mode != apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
@@ -194,7 +194,7 @@ func validateAuxSignerData(a *apitx.AuxSignerData) error {
 	}
 
 	if len(a.Sig) == 0 {
-		return errors.New("signature is empty")
+		return errors.New("signature cannot be empty: no signatures supplied")
 	}
 
 	return validateSignDoc(a.GetSignDoc())

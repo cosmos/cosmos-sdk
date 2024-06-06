@@ -3,6 +3,7 @@
 ## Change log
 
 * May 7th 2024: Initial Draft (Zondax AG: @raynaudoe @juliantoledano @jleni @educlerici-zondax @lucaslopezf)
+* June 4th 2024: Add CometBFT implementation proposal (Zondax AG: @raynaudoe @juliantoledano @jleni @educlerici-zondax @lucaslopezf)
 
 ## Status
 
@@ -14,8 +15,10 @@ This ADR proposes the refactoring of the existing Keyring module to support mult
 
 This ADR also introduces the capability to support remote signers. This feature will enable the nodes to interact with cryptographic signers that are not locally present on the system where the main app is running. This is particularly useful for scenarios where keys are managed in secure, remote environments or when leveraging cloud-based cryptographic services.
 
+Additionally, the appendix will describe the implementation of this ADR within the [cometBFT](https://github.com/cometbft/cometbft) codebase, specifically focusing on the interactions with the [PrivateValidator](https://github.com/cometbft/cometbft/blob/68e5e1b4e3bd342a653a73091a1af7cc5e88b86b/types/priv_validator.go#L15) interface.
 
 ## Introduction
+
 
 The introduction of multi-curve support in the cosmos-sdk cryptographic module offers significant advantages. By not being restricted to a single cryptographic curve, developers can choose the most appropriate curve based on security, performance, and compatibility requirements. This flexibility enhances the application's ability to adapt to evolving security standards and optimizes performance for specific use cases, helping to future-proofing the sdk's cryptographic capabilities.
 
@@ -149,14 +152,16 @@ In all of the interface's methods, we add an *options* input parameter designed 
 
 ###### Signer
 
-Interface responsible for signing a message and returning the generated signature.
-
+Interface responsible for signing a message and returning the generated signature. 
+The `SignerOptions` map allows for flexible and dynamic configuration of the signing process.
+This can include algorithm-specific parameters, security levels, or other contextual information
+that might be necessary for the signing operation.
 
 ```go
 // Signer represents a general interface for signing messages.
 type Signer interface {
-    // Sign takes a private key and a message as input and returns the digital signature.
-    Sign(pk PrivateKey, fullMsg []byte, options SignerOptions) (Signature, error)
+    // Sign takes a message as input and returns the digital signature.
+    Sign(fullMsg []byte, options SignerOptions) (Signature, error)
 }
 
 type SignerOpts = map[string]any
@@ -572,6 +577,190 @@ _A more detailed migration path is provided in the corresponding document._
 * https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
 
 ## Appendix
+
+
+### Implementation on CometBFT Codebase
+
+The implementation of this ADR to CometBFT will require a medium refactor in the codebase. Below we describe the proposed strategy to perform this implementation, this is:
+
+* Add a new `PrivValidator` implementation that uses `CryptoProvider` underneath.
+
+* Adding [Keyring](https://github.com/cosmos/cosmos-sdk/blob/main/crypto/keyring/keyring.go) and [Record](https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/crypto/keyring/v1/record.proto) for storing and loading providers.
+
+* New directories reorganization.
+
+* Use Keyring to load and instantiate validators when booting up a node.
+
+
+#### Create a single implementation for `PrivValidator` 
+
+
+The current CometBFT codebase includes the following implementations of `PrivValidator`:
+
+* `FilePV`: Handles file-based private validators.
+* `SignerClient`: Manages remote signing.
+* `RetrySignerClient`: Provides retry mechanisms for remote signing.
+* `MockPV`: Used exclusively for testing purposes.
+
+We propose introducing a new implementation, `CryptoProviderPV`, which will unify and replace all the above implementations. This single implementation will act as an abstraction layer for the `PrivValidator` implementations mentioned above.
+
+**Current:**
+
+```mermaid
+classDiagram
+    class PrivValidator {
+        <<interface>>
+    }
+
+    class FilePV {
+    }
+
+    class SignerClientPV {
+    }
+
+    class RetrySignerClientPV {
+    }
+
+    class MockPV {
+    }
+
+    PrivValidator <|.. FilePV
+    PrivValidator <|.. SignerClientPV
+    PrivValidator <|.. RetrySignerClientPV
+    PrivValidator <|.. MockPV
+```
+
+
+**Proposed:**
+
+```mermaid
+classDiagram
+    class PrivValidator {
+        <<interface>>
+    }
+
+    class CryptoProvider {
+        <<interface>>
+    }
+
+    class CryptoProviderPV {
+    }
+
+    class FileCP {
+    }
+
+    class SocketSignerCP {
+    }
+
+    class RetrySocketSignerCP {
+    }
+
+    class MockCP {
+    }
+
+    PrivValidator <|.. CryptoProviderPV
+    CryptoProviderPV --> CryptoProvider
+    CryptoProvider <|.. FileCP
+    CryptoProvider <|.. SocketSignerCP
+    CryptoProvider <|.. RetrySocketSignerCP
+    CryptoProvider <|.. MockCP
+```
+
+For these new implementations, the current code for `File`, `SocketClient`, and `RetrySocketClient` will have to implement the `CryptoProvider` interface instead of the `PrivValidator` one.
+
+##### Code snippet for `CryptoProviderPV`
+
+As mentioned above, instead of having several implementations of `PrivValidator`, the proposal is to have only one that, by dependency injection, loads the corresponding `CryptoProvider` that offers the same functionality as the previous implementations of `PrivValidator`.
+
+Below is an example of how `CryptoProviderPV` would look like. Note that in this particular case, since the PrivateKey is managed inside the corresponding implementation, we're not passing that value to the signer. This is to avoid having to significantly change the code for `FilePV`. This is also valid for all implementations that manage their private keys in their own logic.
+
+```go
+// CryptoProviderPV is the implementation of PrivValidator using CryptoProvider's methods
+type CryptoProviderPV struct {
+    provider CryptoProvider
+    pubKey   PubKey
+}
+
+// NewCryptoProviderPV creates a new instance of CryptoProviderPV
+func NewCryptoProviderPV(provider CryptoProvider, pk PubKey) (*CryptoProviderPV, error) {
+    return &CryptoProviderPV{provider: provider, pubKey: pubKey}, nil
+}
+
+// GetPubKey returns the public key of the validator
+func (pv *CryptoProviderPV) GetPubKey() (PubKey, error) {
+    return pv.pubKey, nil
+}
+
+// SignVote signs a canonical representation of the vote. If signExtension is true, it also signs the vote extension.
+func (pv *CryptoProviderPV) SignVote(chainID string, vote *Vote, signExtension bool) error {
+    signer := pv.provider.GetSigner()
+
+    // code for getting voteBytes goes here
+    // voteBytes := ...
+
+    // The underlying signer needs these parameters so we pass them through SignerOptions
+    options := SignerOptions{
+        "chainID": chainID,
+        "vote":    vote,
+    }
+ 
+    sig, _ := signer.Sign(voteBytes, options)
+    vote.Signature = sig
+    return nil
+}
+
+// SignProposal signs a canonical representation of the proposal
+func (pv *CryptoProviderPV) SignProposal(chainID string, proposal *Proposal) error {
+    signer := pv.provider.GetSigner()
+
+    // code for getting proposalBytes goes here
+    // proposalBytes := ...
+
+    // The underlying signer needs these parameters so we pass them through SignerOptions
+    options := SignerOptions{
+        "chainID":  chainID,
+        "proposal": proposal,
+    }
+ 
+    sig, _ := signer.Sign(proposalBytes, options)
+    proposal.Signature = sig
+    return nil
+}
+
+// SignBytes signs an arbitrary array of bytes
+func (pv *CryptoProviderPV) SignBytes(bytes []byte) ([]byte, error) {
+    signer := pv.provider.GetSigner()
+    return signer.Sign(bytes, SignerOptions{})
+}
+
+```
+
+
+#### Proposed directory structure
+
+Implementations of crypto providers (previously Privval implementations) should be in their own directory.
+
+```
+cometbft/
+├── privval/
+│   ├── providers/
+│   │   ├── file_provider.go
+│   │   ├── signer_provider.go
+│   │   ├── retry_signer_provider.go
+│   │   ├── mock_provider.go
+├── types/
+│   ├── priv_validator.go
+```
+
+
+#### Loading and storing implementations
+(CryptoProviderFactory, Keyring, Record)
+
+
+#### Other considerations
+
+Need of using Keyring to store records which store providers info and config
+Need to adjust the way a node loads the desired validator. Instead of replacing validators according to config, the proper cryptoValidator will be loaded by its id
 
 ### Tentative Primitive Building Blocks
 

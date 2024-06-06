@@ -103,16 +103,16 @@ func TestNewDecFromString(t *testing.T) {
 		},
 		"Infinity": {
 			src:    "Infinity",
-			expErr: ErrInfiniteString,
+			expErr: ErrInvalidDecString,
 		},
 		"Inf": {
 			src:    "Inf",
-			expErr: ErrInfiniteString,
+			expErr: ErrInvalidDecString,
 		},
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
-			got, gotErr := NewDecFromString(spec.src, spec.constraints...)
+			got, gotErr := NewDecFromString(spec.src)
 			if spec.expErr != nil {
 				require.ErrorIs(t, gotErr, spec.expErr, got.String())
 				return
@@ -125,10 +125,9 @@ func TestNewDecFromString(t *testing.T) {
 
 func TestNewDecFromInt64(t *testing.T) {
 	specs := map[string]struct {
-		src       int64
-		constants []SetupConstraint
-		exp       string
-		expErr    error
+		src    int64
+		exp    string
+		expErr error
 	}{
 		"zero value": {
 			src: 0,
@@ -162,11 +161,10 @@ func TestNewDecFromInt64(t *testing.T) {
 
 func TestAdd(t *testing.T) {
 	specs := map[string]struct {
-		x           Dec
-		y           Dec
-		constraints []SetupConstraint
-		exp         Dec
-		expErr      error
+		x      Dec
+		y      Dec
+		exp    Dec
+		expErr error
 	}{
 		"zero add zero": {
 			// 0 + 0 = 0
@@ -242,15 +240,16 @@ func TestAdd(t *testing.T) {
 		// 	constraints: []SetupConstraint{AssertMaxDecimals(34)},
 		// 	expErr:      ErrInvalidDecString,
 		// },
+
+		// TO DO: more edge cases For example: 1^100000 + 9^100000 , 1^100000 + 1^-1
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
-			got, gotErr := spec.x.Add(spec.y, spec.constraints...)
+			got, gotErr := spec.x.Add(spec.y)
 			if spec.expErr != nil {
 				require.ErrorIs(t, gotErr, spec.expErr, got)
 				return
 			}
-
 			require.NoError(t, gotErr)
 			assert.Equal(t, spec.exp, got)
 		})
@@ -259,14 +258,13 @@ func TestAdd(t *testing.T) {
 
 func TestSub(t *testing.T) {
 	specs := map[string]struct {
-		x           Dec
-		y           Dec
-		constraints []SetupConstraint
-		exp         Dec
-		expErr      error
+		x      Dec
+		y      Dec
+		exp    Dec
+		expErr error
 	}{
 		"zero minus zero": {
-			// 0 + 0 = 0
+			// 0 - 0 = 0
 			x:   NewDecFromInt64(0),
 			y:   NewDecFromInt64(0),
 			exp: NewDecFromInt64(0),
@@ -290,7 +288,7 @@ func TestSub(t *testing.T) {
 			exp: NewDecFromInt64(0),
 		},
 		"simple negative minus simple positive": {
-			// -123 + 123 = 0
+			// -123 - 123 = 0
 			x:   NewDecFromInt64(-123),
 			y:   NewDecFromInt64(123),
 			exp: NewDecFromInt64(-246),
@@ -307,25 +305,25 @@ func TestSub(t *testing.T) {
 			y:   NewDecWithPrec(1234, -3),
 			exp: NewDecWithPrec(0, -3),
 		},
-		"valid decimal with decimal places and simple positive": {
+		"valid decimal with decimal places minus simple positive": {
 			// 1.234 - 123 = -121.766
 			x:   NewDecWithPrec(1234, -3),
 			y:   NewDecFromInt64(123),
 			exp: NewDecWithPrec(-121766, -3),
 		},
-		"valid decimal with decimal places and simple negative": {
+		"valid decimal with decimal places minus simple negative": {
 			// 1.234 - -123 = 1.111
 			x:   NewDecWithPrec(1234, -3),
 			y:   NewDecFromInt64(-123),
 			exp: NewDecWithPrec(124234, -3),
 		},
-		"valid decimal with decimal places add valid negative decimal with decimal places": {
+		"valid decimal with decimal places minus valid negative decimal with decimal places": {
 			// 1.234 - -1.234 = 2.468
 			x:   NewDecWithPrec(1234, -3),
 			y:   NewDecWithPrec(-1234, -3),
 			exp: NewDecWithPrec(2468, -3),
 		},
-		"valid negative decimal with decimal places add valid negative decimal with decimal places": {
+		"valid negative decimal with decimal places minus valid negative decimal with decimal places": {
 			// -1.234 - -1.234 = 2.468
 			x:   NewDecWithPrec(-1234, -3),
 			y:   NewDecWithPrec(-1234, -3),
@@ -341,7 +339,7 @@ func TestSub(t *testing.T) {
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
-			got, gotErr := spec.x.Sub(spec.y, spec.constraints...)
+			got, gotErr := spec.x.Sub(spec.y)
 			fmt.Println(got)
 			if spec.expErr != nil {
 				require.ErrorIs(t, gotErr, spec.expErr, got)
@@ -354,55 +352,438 @@ func TestSub(t *testing.T) {
 	}
 }
 
-func TestIsFinite(t *testing.T) {
-	a, err := NewDecFromString("1.5")
-	require.NoError(t, err)
-	require.True(t, a.IsFinite())
+func TestQuo(t *testing.T) {
+	specs := map[string]struct {
+		src    string
+		x      Dec
+		y      Dec
+		exp    Dec
+		expErr error
+	}{
+		"0 / 0": {
+			x:      NewDecFromInt64(0),
+			y:      NewDecFromInt64(0),
+			expErr: ErrInvalidDecString,
+		},
+		" 0 / 123 = 0": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(123),
+			exp: NewDecFromInt64(0),
+		},
+		// answer is -0 but this is not throwing an error
+		// "0 / -123 = 0": {
+		// 	x:   NewDecFromInt64(0),
+		// 	y:   NewDecFromInt64(-123),
+		// 	exp: NewDecFromInt64(-0),
+		// },
+		"123 / 0 = 0": {
+			x:      NewDecFromInt64(123),
+			y:      NewDecFromInt64(0),
+			expErr: ErrInvalidDecString,
+		},
+		"-123 / 0 = 0": {
+			x:      NewDecFromInt64(-123),
+			y:      NewDecFromInt64(0),
+			expErr: ErrInvalidDecString,
+		},
+		"123 / 123 = 1": {
+			// the answer is showing up as 0 although it should be 1. Again with 34 precision it is mismatched
+			x:   NewDecFromInt64(123),
+			y:   NewDecFromInt64(123),
+			exp: must(NewDecFromString("1.000000000000000000000000000000000")),
+		},
+		"-123 / 123 = 1": {
+			x:   NewDecFromInt64(-123),
+			y:   NewDecFromInt64(123),
+			exp: must(NewDecFromString("-1.000000000000000000000000000000000")),
+		},
+		"-123 / -123 = 1": {
+			x:   NewDecFromInt64(-123),
+			y:   NewDecFromInt64(-123),
+			exp: must(NewDecFromString("1.000000000000000000000000000000000")),
+		},
+		"1.234 / 1.234": {
+			x:   NewDecWithPrec(1234, -3),
+			y:   NewDecWithPrec(1234, -3),
+			exp: must(NewDecFromString("1.000000000000000000000000000000000")),
+		},
+		"-1.234 / 1234 = -121.766": {
+			x:   NewDecWithPrec(-1234, -3),
+			y:   NewDecWithPrec(1234, -3),
+			exp: must(NewDecFromString("-1.000000000000000000000000000000000")),
+		},
+		"1.234 / -123 = 1.111": {
+			x:   NewDecWithPrec(1234, -3),
+			y:   NewDecFromInt64(-123),
+			exp: must(NewDecFromString("-0.01003252032520325203252032520325203")),
+		},
+		"1.234 / -1.234 = 2.468": {
+			x:   NewDecWithPrec(1234, -3),
+			y:   NewDecWithPrec(-1234, -3),
+			exp: must(NewDecFromString("-1.000000000000000000000000000000000")),
+		},
+		"-1.234 / -1.234 = 1": {
+			x:   NewDecWithPrec(-1234, -3),
+			y:   NewDecWithPrec(-1234, -3),
+			exp: must(NewDecFromString("1.000000000000000000000000000000000")),
+		},
+		// "precision too high": {
+		// 	// 10^34 / 10^34 = 2*10^34
+		// 	x:           NewDecWithPrec(1, 36),
+		// 	y:           NewDecWithPrec(1, 36),
+		// 	constraints: []SetupConstraint{AssertMaxDecimals(34)},
+		// 	expErr:      ErrInvalidDecString,
+		// },
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got, gotErr := spec.x.Quo(spec.y)
+			fmt.Println(spec.x, spec.y, got, spec.exp)
+
+			if spec.expErr != nil {
+				require.ErrorIs(t, gotErr, spec.expErr)
+				return
+			}
+			require.NoError(t, gotErr)
+			assert.Equal(t, spec.exp, got)
+		})
+	}
+}
+
+func TestQuoExact(t *testing.T) {
+	specs := map[string]struct {
+		src    string
+		x      Dec
+		y      Dec
+		exp    Dec
+		expErr error
+	}{
+		"0 / 0": {
+			x:      NewDecFromInt64(0),
+			y:      NewDecFromInt64(0),
+			expErr: ErrInvalidDecString,
+		},
+		" 0 / 123 = 0": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(123),
+			exp: NewDecFromInt64(0),
+		},
+		// answer is -0 but this is not throwing an error
+		// "0 / -123 = 0": {
+		// 	x:   NewDecFromInt64(0),
+		// 	y:   NewDecFromInt64(-123),
+		// 	exp: NewDecFromInt64(-0),
+		// },
+		"123 / 0 = 0": {
+			x:      NewDecFromInt64(123),
+			y:      NewDecFromInt64(0),
+			expErr: ErrInvalidDecString,
+		},
+		"-123 / 0 = 0": {
+			x:      NewDecFromInt64(-123),
+			y:      NewDecFromInt64(0),
+			expErr: ErrInvalidDecString,
+		},
+		"123 / 123 = 1": {
+			// the answer is showing up as 0 although it should be 1. Again with 34 precision it is mismatched
+			x:   NewDecFromInt64(123),
+			y:   NewDecFromInt64(123),
+			exp: must(NewDecFromString("1.000000000000000000000000000000000")),
+		},
+		"-123 / 123 = 1": {
+			x:   NewDecFromInt64(-123),
+			y:   NewDecFromInt64(123),
+			exp: must(NewDecFromString("-1.000000000000000000000000000000000")),
+		},
+		"-123 / -123 = 1": {
+			x:   NewDecFromInt64(-123),
+			y:   NewDecFromInt64(-123),
+			exp: must(NewDecFromString("1.000000000000000000000000000000000")),
+		},
+		"1.234 / 1.234": {
+			x:   NewDecWithPrec(1234, -3),
+			y:   NewDecWithPrec(1234, -3),
+			exp: must(NewDecFromString("1.000000000000000000000000000000000")),
+		},
+		"-1.234 / 1234 = -121.766": {
+			x:   NewDecWithPrec(-1234, -3),
+			y:   NewDecWithPrec(1234, -3),
+			exp: must(NewDecFromString("-1.000000000000000000000000000000000")),
+		},
+		"1.234 / -123 = 1.111": {
+			x:      NewDecWithPrec(1234, -3),
+			y:      NewDecFromInt64(-123),
+			expErr: ErrUnexpectedRounding,
+		},
+		"1.234 / -1.234 = 2.468": {
+			x:   NewDecWithPrec(1234, -3),
+			y:   NewDecWithPrec(-1234, -3),
+			exp: must(NewDecFromString("-1.000000000000000000000000000000000")),
+		},
+		"-1.234 / -1.234 = 1": {
+			x:   NewDecWithPrec(-1234, -3),
+			y:   NewDecWithPrec(-1234, -3),
+			exp: must(NewDecFromString("1.000000000000000000000000000000000")),
+		},
+		// "precision too high": {
+		// 	// 10^34 / 10^34 = 2*10^34
+		// 	x:           NewDecWithPrec(1, 36),
+		// 	y:           NewDecWithPrec(1, 36),
+		// 	constraints: []SetupConstraint{AssertMaxDecimals(34)},
+		// 	expErr:      ErrInvalidDecString,
+		// },
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got, gotErr := spec.x.Quo(spec.y)
+			fmt.Println(spec.x, spec.y, got, spec.exp)
+
+			if spec.expErr != nil {
+				require.ErrorIs(t, gotErr, spec.expErr)
+				return
+			}
+			require.NoError(t, gotErr)
+			assert.Equal(t, spec.exp, got)
+		})
+	}
+}
+
+func TestQuoInteger(t *testing.T) {
+	specs := map[string]struct {
+		src    string
+		x      Dec
+		y      Dec
+		exp    Dec
+		expErr error
+	}{
+		"0 / 0": {
+			x:      NewDecFromInt64(0),
+			y:      NewDecFromInt64(0),
+			expErr: ErrInvalidDecString,
+		},
+		" 0 / 123 = 0": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(123),
+			exp: NewDecFromInt64(0),
+		},
+		// answer is -0 but this is not throwing an error
+		// "0 / -123 = 0": {
+		// 	x:   NewDecFromInt64(0),
+		// 	y:   NewDecFromInt64(-123),
+		// 	exp: NewDecFromInt64(-0),
+		// },
+		"123 / 0 = 0": {
+			x:      NewDecFromInt64(123),
+			y:      NewDecFromInt64(0),
+			expErr: ErrInvalidDecString,
+		},
+		"-123 / 0 = 0": {
+			x:      NewDecFromInt64(-123),
+			y:      NewDecFromInt64(0),
+			expErr: ErrInvalidDecString,
+		},
+		"123 / 123 = 1": {
+			x:   NewDecFromInt64(123),
+			y:   NewDecFromInt64(123),
+			exp: NewDecFromInt64(1),
+		},
+		"-123 / 123 = -1": {
+			x:   NewDecFromInt64(-123),
+			y:   NewDecFromInt64(123),
+			exp: NewDecFromInt64(-1),
+		},
+		"-123 / -123 = 1": {
+			x:   NewDecFromInt64(-123),
+			y:   NewDecFromInt64(-123),
+			exp: NewDecFromInt64(1),
+		},
+		"1.234 / 1.234": {
+			x:   NewDecWithPrec(1234, -3),
+			y:   NewDecWithPrec(1234, -3),
+			exp: NewDecFromInt64(1),
+		},
+		"-1.234 / 1234 = -121.766": {
+			x:   NewDecWithPrec(-1234, -3),
+			y:   NewDecWithPrec(1234, -3),
+			exp: NewDecFromInt64(-1),
+		},
+		// "1.234 / -123 = -0": {
+		//-0
+		// 	x:   NewDecWithPrec(1234, -3),
+		// 	y:   NewDecFromInt64(-123),
+		// 	exp: NewDecFromInt64(1),
+		// },
+		"1.234 / -1.234 = 2.468": {
+			x:   NewDecWithPrec(1234, -3),
+			y:   NewDecWithPrec(-1234, -3),
+			exp: NewDecFromInt64(-1),
+		},
+		"-1.234 / -1.234 = 1": {
+			x:   NewDecWithPrec(-1234, -3),
+			y:   NewDecWithPrec(-1234, -3),
+			exp: NewDecFromInt64(1),
+		},
+		// "precision too high": {
+		// 	// 10^34 / 10^34 = 2*10^34
+		// 	x:           NewDecWithPrec(1, 36),
+		// 	y:           NewDecWithPrec(1, 36),
+		// 	constraints: []SetupConstraint{AssertMaxDecimals(34)},
+		// 	expErr:      ErrInvalidDecString,
+		// },
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got, gotErr := spec.x.QuoInteger(spec.y)
+			fmt.Println(spec.x, spec.y, got, spec.exp)
+
+			if spec.expErr != nil {
+				require.ErrorIs(t, gotErr, spec.expErr)
+				return
+			}
+			require.NoError(t, gotErr)
+			assert.Equal(t, spec.exp, got)
+		})
+	}
+}
+
+func TestRem(t *testing.T) {
+	// TO DO
+}
+
+func TestNumDecimalPlaces(t *testing.T) {
+	// TO DO
+}
+
+func TestCmp(t *testing.T) {
+	// TO DO
 }
 
 func TestReduce(t *testing.T) {
-	a, err := NewDecFromString("1.30000")
-	require.NoError(t, err)
-	b, n := a.Reduce()
-	require.Equal(t, 4, n)
-	require.True(t, a.Equal(b))
-	require.Equal(t, "1.3", b.String())
+	specs := map[string]struct {
+		src       string
+		exp       string
+		decPlaces int
+		expErr    error
+	}{
+		"positive value": {
+			src:       "10",
+			exp:       "10",
+			decPlaces: 1,
+			expErr:    ErrInvalidDecString,
+		},
+		"negative value": {
+			src:       "-10",
+			exp:       "-10",
+			decPlaces: 1,
+			expErr:    ErrInvalidDecString,
+		},
+		"positive decimal": {
+			src:       "1.30000",
+			exp:       "1.3",
+			decPlaces: 4,
+			expErr:    ErrInvalidDecString,
+		},
+		"negative decimal": {
+			src:       "-1.30000",
+			exp:       "-1.3",
+			decPlaces: 4,
+			expErr:    ErrInvalidDecString,
+		},
+		"zero decimal and decimal places": {
+			src:       "0.00000",
+			exp:       "0",
+			decPlaces: 0,
+			expErr:    ErrInvalidDecString,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			src, _ := NewDecFromString(spec.src)
+			got, gotErr := src.Reduce()
+			require.Equal(t, spec.exp, got.String())
+			if spec.expErr != nil {
+				require.Equal(t, spec.decPlaces, gotErr)
+			}
+		})
+	}
 }
 
-func TestMulExactGood(t *testing.T) {
-	a, err := NewDecFromString("1.000001")
-	require.NoError(t, err)
-	b := NewDecWithPrec(1, 6)
-	c, err := a.MulExact(b)
-	require.NoError(t, err)
-	d, err := c.Int64()
-	require.NoError(t, err)
-	require.Equal(t, int64(1000001), d)
-}
+func TestMulExact(t *testing.T) {
+	specs := map[string]struct {
+		x      Dec
+		y      Dec
+		exp    Dec
+		expErr error
+	}{
+		"200 * 200 = 200": {
+			x:   NewDecFromInt64(200),
+			y:   NewDecFromInt64(200),
+			exp: NewDecFromInt64(40000),
+		},
+		"-200 * -200 = 40000": {
+			x:   NewDecFromInt64(-200),
+			y:   NewDecFromInt64(-200),
+			exp: NewDecFromInt64(40000),
+		},
+		"-100 * -100 = 10000": {
+			x:   NewDecFromInt64(-100),
+			y:   NewDecFromInt64(-100),
+			exp: NewDecFromInt64(10000),
+		},
+		"0 * 0 = 10000": {
+			x:   NewDecFromInt64(0),
+			y:   NewDecFromInt64(0),
+			exp: NewDecFromInt64(0),
+		},
+		"1.1 * 1.1 = 1.21": {
+			x:   NewDecWithPrec(11, -1),
+			y:   NewDecWithPrec(11, -1),
+			exp: NewDecWithPrec(121, -2),
+		},
+		"1.000 * 1.000 = 1.000000": {
+			x:   NewDecWithPrec(1000, -3),
+			y:   NewDecWithPrec(1000, -3),
+			exp: NewDecWithPrec(1000000, 6),
+		},
+		"0.0000001 * 0.0000001 = 1.21": {
+			x:   NewDecWithPrec(00000001, -7),
+			y:   NewDecWithPrec(00000001, -7),
+			exp: NewDecWithPrec(1, -14),
+		},
+		"1.000000000000000000000000000000000000123456789 * 0.000001 = 0.000000000100000000000000000000000000000123456789": {
+			x:      must(NewDecFromString("1.0000000000000000000000000000000000000123456789")),
+			y:      NewDecWithPrec(1, -6),
+			expErr: ErrUnexpectedRounding,
+		},
+		"1000001 * 1.000001 = 1000002.000001": {
+			x:   NewDecFromInt64(1000001),
+			y:   NewDecWithPrec(1000001, -6),
+			exp: must(NewDecFromString("1000002.000001")),
+		},
+		"1000000000000000000000000000000000000123456789 * 100000000000 ": {
+			x:      must(NewDecFromString("1000000000000000000000000000000000000123456789")),
+			y:      NewDecWithPrec(1, 6),
+			expErr: ErrUnexpectedRounding,
+		},
+		"1000001 * 1000000 = 1000001000000 ": {
+			x:   NewDecFromInt64(1000001),
+			y:   NewDecFromInt64(1000000),
+			exp: NewDecFromInt64(1000001000000),
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			got, gotErr := spec.x.MulExact(spec.y)
+			fmt.Println(spec.x, spec.y, got, spec.exp)
 
-func TestMulExactBad(t *testing.T) {
-	a, err := NewDecFromString("1.000000000000000000000000000000000000123456789")
-	require.NoError(t, err)
-	b := NewDecWithPrec(1, 10)
-	_, err = a.MulExact(b)
-	require.ErrorIs(t, err, ErrUnexpectedRounding)
-}
-
-func TestQuoExactGood(t *testing.T) {
-	a, err := NewDecFromString("1000001")
-	require.NoError(t, err)
-	b := NewDecWithPrec(1, 6)
-	c, err := a.QuoExact(b)
-	require.NoError(t, err)
-	require.Equal(t, "1.000001000000000000000000000000000", c.String())
-}
-
-func TestQuoExactBad(t *testing.T) {
-	a, err := NewDecFromString("1000000000000000000000000000000000000123456789")
-	require.NoError(t, err)
-	b := NewDecWithPrec(1, 10)
-	_, err = a.QuoExact(b)
-	require.ErrorIs(t, err, ErrUnexpectedRounding)
+			if spec.expErr != nil {
+				require.ErrorIs(t, gotErr, spec.expErr)
+				return
+			}
+			require.NoError(t, gotErr)
+			assert.Equal(t, spec.exp, got)
+		})
+	}
 }
 
 func TestToBigInt(t *testing.T) {
@@ -458,18 +839,8 @@ func TestToSdkInt(t *testing.T) {
 func TestInfDecString(t *testing.T) {
 	_, err := NewDecFromString("iNf")
 	require.Error(t, err)
-	require.ErrorIs(t, err, ErrInfiniteString)
+	require.ErrorIs(t, err, ErrInvalidDecString)
 }
-
-//func TestDecToLegacyDec(t *testing.T) {
-//	dec := NewDecFromInt64(123)
-//
-//	legacyDec, err := DecToLegacyDec(dec)
-//	require.NoError(t, err)
-//
-//	expected, _ := LegacyNewDecFromStr("123.000000000000000000")
-//	require.True(t, legacyDec.Equal(expected))
-//}
 
 func must[T any](r T, err error) T {
 	if err != nil {

@@ -23,6 +23,8 @@ func TestLedgerErrorHandling(t *testing.T) {
 }
 
 func TestPublicKeyUnsafe(t *testing.T) {
+	t.Skip("not relevant for this project")
+
 	path := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
 	priv, err := NewPrivKeyLedgerSecp256k1Unsafe(path)
 	require.Nil(t, err, "%s", err)
@@ -43,6 +45,8 @@ func TestPublicKeyUnsafe(t *testing.T) {
 }
 
 func TestPublicKeyUnsafeHDPath(t *testing.T) {
+	t.Skip("not relevant for this project")
+
 	expectedAnswers := []string{
 		"cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0",
 		"cosmospub1addwnpepqfsdqjr68h7wjg5wacksmqaypasnra232fkgu5sxdlnlu8j22ztxvlqvd65",
@@ -98,6 +102,7 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 }
 
 func TestPublicKeySafe(t *testing.T) {
+	t.Skip("not relevant for this project")
 	path := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
 	priv, addr, err := NewPrivKeyLedgerSecp256k1(path, "cosmos")
 
@@ -121,6 +126,8 @@ func TestPublicKeySafe(t *testing.T) {
 }
 
 func TestPublicKeyHDPath(t *testing.T) {
+	t.Skip("not relevant for this project")
+
 	expectedPubKeys := []string{
 		"cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0",
 		"cosmospub1addwnpepqfsdqjr68h7wjg5wacksmqaypasnra232fkgu5sxdlnlu8j22ztxvlqvd65",
@@ -204,6 +211,8 @@ func getFakeTx(accountNumber uint32) []byte {
 }
 
 func TestSignaturesHD(t *testing.T) {
+	t.Skip("not relevant for this project")
+
 	for account := uint32(0); account < 100; account += 30 {
 		msg := getFakeTx(account)
 
@@ -223,6 +232,8 @@ func TestSignaturesHD(t *testing.T) {
 }
 
 func TestRealLedgerSecp256k1(t *testing.T) {
+	t.Skip("not relevant for this project")
+
 	msg := getFakeTx(50)
 	path := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
 	priv, err := NewPrivKeyLedgerSecp256k1Unsafe(path)

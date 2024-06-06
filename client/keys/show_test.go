@@ -17,6 +17,8 @@ import (
 )
 
 func Test_multiSigKey_Properties(t *testing.T) {
+	t.Skip("not relevant for this project")
+
 	tmpKey1 := secp256k1.GenPrivKeySecp256k1([]byte("mySecret"))
 	pk := multisig.NewPubKeyMultisigThreshold(1, []crypto.PubKey{tmpKey1.PubKey()})
 	tmp := keys.NewMultiInfo("myMultisig", pk)

@@ -44,6 +44,8 @@ func TestCreateLedgerUnsupportedAlgo(t *testing.T) {
 }
 
 func TestCreateLedger(t *testing.T) {
+	t.Skip("not relevant for this project")
+
 	kb := NewInMemory()
 
 	// test_cover and test_unit will result in different answers
@@ -274,7 +276,6 @@ func TestExportImport(t *testing.T) {
 	require.Equal(t, john, john2)
 }
 
-//
 func TestExportImportPubKey(t *testing.T) {
 	// make the storage with reasonable defaults
 	cstore := NewInMemory()

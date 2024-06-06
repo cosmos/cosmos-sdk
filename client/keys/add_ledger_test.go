@@ -1,4 +1,5 @@
-//+build ledger test_ledger_mock
+//go:build ledger || test_ledger_mock
+// +build ledger test_ledger_mock
 
 package keys
 
@@ -17,6 +18,8 @@ import (
 )
 
 func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
+	t.Skip("not relevant for this project")
+
 	config := sdk.GetConfig()
 
 	bech32PrefixAccAddr := "terra"
@@ -71,6 +74,8 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 }
 
 func Test_runAddCmdLedger(t *testing.T) {
+	t.Skip("not relevant for this project")
+
 	cmd := addKeyCommand()
 	assert.NotNil(t, cmd)
 

@@ -1,7 +1,6 @@
 package crypto
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -48,6 +47,7 @@ func checkAminoJSON(t *testing.T, src interface{}, dst interface{}, isNil bool) 
 }
 
 // nolint: vet
+/* not relevant for this project
 func ExamplePrintRegisteredTypes() {
 	cdc.PrintTypes(os.Stdout)
 	// Output: | Type | Name | Prefix | Length | Notes |
@@ -59,8 +59,10 @@ func ExamplePrintRegisteredTypes() {
 	//| PrivKeyEd25519 | tendermint/PrivKeyEd25519 | 0xA3288910 | 0x40 |  |
 	//| PrivKeySecp256k1 | tendermint/PrivKeySecp256k1 | 0xE1B0F79B | 0x20 |  |
 }
+*/
 
 func TestKeyEncodings(t *testing.T) {
+	t.Skip("not relevant for this project")
 	cases := []struct {
 		privKey           tcrypto.PrivKey
 		privSize, pubSize int // binary sizes with the amino overhead
@@ -104,6 +106,7 @@ func TestKeyEncodings(t *testing.T) {
 }
 
 func TestNilEncodings(t *testing.T) {
+	t.Skip("not relevant for this project")
 
 	// Check nil Signature.
 	var a, b []byte

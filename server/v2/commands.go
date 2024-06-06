@@ -25,14 +25,14 @@ type App[T transaction.Tx] struct {
 
 type AppCreator[T transaction.Tx] func(*viper.Viper, log.Logger) App[T]
 
-func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, modules ...ServerComponent[transaction.Tx]) (CLIConfig, error) {
-	if len(modules) == 0 {
-		// TODO figure if we should define default modules
+func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, components ...ServerComponent[transaction.Tx]) (CLIConfig, error) {
+	if len(components) == 0 {
+		// TODO figure if we should define default components
 		// and if so it should be done here to avoid uncessary dependencies
-		return CLIConfig{}, errors.New("no modules provided")
+		return CLIConfig{}, errors.New("no components provided")
 	}
 
-	server := NewServer(logger, modules...)
+	server := NewServer(logger, components...)
 	// Write default config for each server module
 	flags := server.StartFlags()
 
@@ -50,7 +50,7 @@ func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger 
 				v.BindPFlags(startFlags)
 			}
 
-			if err := v.BindPFlags(cmd.Flags()); err != nil { // the server modules are already instantiated here, so binding the flags is useless.
+			if err := v.BindPFlags(cmd.Flags()); err != nil { // the server components are already instantiated here, so binding the flags is useless.
 				return err
 			}
 
@@ -84,13 +84,13 @@ func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger 
 	return cmds, nil
 }
 
-func AddCommands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, modules ...ServerComponent[transaction.Tx]) error {
-	cmds, err := Commands(rootCmd, newApp, logger, modules...)
+func AddCommands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, components ...ServerComponent[transaction.Tx]) error {
+	cmds, err := Commands(rootCmd, newApp, logger, components...)
 	if err != nil {
 		return err
 	}
 
-	server := NewServer(logger, modules...)
+	server := NewServer(logger, components...)
 	originalPersistentPreRunE := rootCmd.PersistentPreRunE
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		home, err := cmd.Flags().GetString(flagHome)

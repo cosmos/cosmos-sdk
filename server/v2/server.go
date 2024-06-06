@@ -68,14 +68,14 @@ func ReadConfig(configPath string) (*viper.Viper, error) {
 }
 
 type Server struct {
-	logger  log.Logger
-	modules []ServerComponent[transaction.Tx]
+	logger     log.Logger
+	components []ServerComponent[transaction.Tx]
 }
 
-func NewServer(logger log.Logger, modules ...ServerComponent[transaction.Tx]) *Server {
+func NewServer(logger log.Logger, components ...ServerComponent[transaction.Tx]) *Server {
 	return &Server{
 		logger:  logger,
-		modules: modules,
+		components: components,
 	}
 }
 
@@ -83,12 +83,12 @@ func (s *Server) Name() string {
 	return "server"
 }
 
-// Start starts all modules concurrently.
+// Start starts all components concurrently.
 func (s *Server) Start(ctx context.Context) error {
 	s.logger.Info("starting servers...")
 
 	g, ctx := errgroup.WithContext(ctx)
-	for _, mod := range s.modules {
+	for _, mod := range s.components {
 		mod := mod
 		g.Go(func() error {
 			return mod.Start(ctx)
@@ -107,12 +107,12 @@ func (s *Server) Start(ctx context.Context) error {
 	return nil
 }
 
-// Stop stops all modules concurrently.
+// Stop stops all components concurrently.
 func (s *Server) Stop(ctx context.Context) error {
 	s.logger.Info("stopping servers...")
 
 	g, ctx := errgroup.WithContext(ctx)
-	for _, mod := range s.modules {
+	for _, mod := range s.components {
 		mod := mod
 		g.Go(func() error {
 			return mod.Stop(ctx)
@@ -122,10 +122,10 @@ func (s *Server) Stop(ctx context.Context) error {
 	return g.Wait()
 }
 
-// CLICommands returns all CLI commands of all modules.
+// CLICommands returns all CLI commands of all components.
 func (s *Server) CLICommands() CLIConfig {
 	commands := CLIConfig{}
-	for _, mod := range s.modules {
+	for _, mod := range s.components {
 		if climod, ok := mod.(HasCLICommands); ok {
 			commands.Commands = append(commands.Commands, climod.CLICommands().Commands...)
 			commands.Queries = append(commands.Queries, climod.CLICommands().Queries...)
@@ -136,10 +136,10 @@ func (s *Server) CLICommands() CLIConfig {
 	return commands
 }
 
-// Configs returns all configs of all server modules.
+// Configs returns all configs of all server components.
 func (s *Server) Configs() map[string]any {
 	cfgs := make(map[string]any)
-	for _, mod := range s.modules {
+	for _, mod := range s.components {
 		if configmod, ok := mod.(HasConfig); ok {
 			cfg := configmod.Config()
 			cfgs[mod.Name()] = cfg
@@ -149,18 +149,18 @@ func (s *Server) Configs() map[string]any {
 	return cfgs
 }
 
-// Configs returns all configs of all server modules.
+// Configs returns all configs of all server components.
 func (s *Server) Init(appI App[transaction.Tx], v *viper.Viper, logger log.Logger) (ServerComponent[transaction.Tx], error) {
-	var modules []ServerComponent[transaction.Tx]
-	for _, mod := range s.modules {
+	var components []ServerComponent[transaction.Tx]
+	for _, mod := range s.components {
 		mod := mod
 		module, err := mod.Init(appI, v, logger)
 		if err != nil {
 			return nil, err
 		}
-		modules = append(modules, module)
+		components = append(components, module)
 	}
-	s.modules = modules
+	s.components = components
 
 	return s, nil
 }
@@ -184,7 +184,7 @@ func (s *Server) WriteConfig(configPath string) error {
 		panic(fmt.Errorf("failed to write config: %w", err))
 	}
 
-	for _, component := range s.modules {
+	for _, component := range s.components {
 		if mod, ok := component.(HasConfigWriting); ok {
 			if err := mod.WriteConfig(configPath); err != nil {
 				panic(err)
@@ -195,10 +195,10 @@ func (s *Server) WriteConfig(configPath string) error {
 	return nil
 }
 
-// Flags returns all flags of all server modules.
+// Flags returns all flags of all server components.
 func (s *Server) StartFlags() []*pflag.FlagSet {
 	flags := []*pflag.FlagSet{}
-	for _, mod := range s.modules {
+	for _, mod := range s.components {
 		if startmod, ok := mod.(HasStartFlags); ok {
 			flags = append(flags, startmod.StartCmdFlags())
 		}

@@ -1,5 +1,7 @@
 package context
 
+type contextKey uint8
+
 type (
 	execModeKey    struct{}
 	cometInfoKey   struct{}

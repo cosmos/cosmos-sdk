@@ -112,6 +112,7 @@ func (c *CommitStore) GetLatestVersion() (uint64, error) {
 	return version, nil
 }
 
+// IsEmpty returns true if the CommitStore is empty.
 func (c *CommitStore) IsEmpty() (bool, error) {
 	value, err := c.db.Get([]byte(latestVersionKey))
 	if err != nil {
@@ -182,6 +183,7 @@ func (c *CommitStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo) e
 	if cInfo == nil {
 		return nil
 	}
+
 	batch := c.db.NewBatch()
 	cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
 	value, err := cInfo.Marshal()

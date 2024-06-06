@@ -11,9 +11,9 @@ import (
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/log"
 	stfgas "cosmossdk.io/server/v2/stf/gas"
 	"cosmossdk.io/server/v2/stf/internal"
 )

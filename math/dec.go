@@ -30,7 +30,6 @@ var (
 	ErrInvalidDecString   = errors.Register(mathCodespace, 1, "invalid decimal string")
 	ErrUnexpectedRounding = errors.Register(mathCodespace, 2, "unexpected rounding")
 	ErrNonIntegeral       = errors.Register(mathCodespace, 3, "value is non-integral")
-	ErrInfiniteString     = errors.Register(mathCodespace, 4, "value is infinite")
 )
 
 // In cosmos-sdk#7773, decimal128 (with 34 digits of precision) was suggested for performing
@@ -87,7 +86,7 @@ func NewDecFromString(s string, c ...SetupConstraint) (Dec, error) {
 	case apd.NaN, apd.NaNSignaling:
 		return Dec{}, ErrInvalidDecString.Wrap("not a number")
 	case apd.Infinite:
-		return Dec{}, ErrInfiniteString.Wrapf(s)
+		return Dec{}, ErrInvalidDecString.Wrapf(s)
 	default:
 		result := Dec{*d}
 		for _, v := range c {
@@ -114,30 +113,25 @@ func NewDecWithPrec(coeff int64, exp int32) Dec {
 
 // Add returns a new Dec with value `x+y` without mutating any argument and error if
 // there is an overflow.
-func (x Dec) Add(y Dec, c ...SetupConstraint) (Dec, error) {
+func (x Dec) Add(y Dec) (Dec, error) {
 	var z Dec
 	_, err := apd.BaseContext.Add(&z.dec, &x.dec, &y.dec)
 	if err != nil {
 		return Dec{}, ErrInvalidDecString.Wrap(err.Error())
 	}
-	for _, constraint := range c {
-		if err := constraint(z); err != nil {
-			return Dec{}, err
-		}
-	}
+
 	return z, nil
 }
 
 // Sub returns a new Dec with value `x-y` without mutating any argument and error if
 // there is an overflow.
-func (x Dec) Sub(y Dec, c ...SetupConstraint) (Dec, error) {
+func (x Dec) Sub(y Dec) (Dec, error) {
 	var z Dec
 	_, err := apd.BaseContext.Sub(&z.dec, &x.dec, &y.dec)
-	for _, constraint := range c {
-		if err := constraint(z); err != nil {
-			return Dec{}, err
-		}
+	if err != nil {
+		return Dec{}, ErrInvalidDecString
 	}
+
 	return z, errors.Wrap(err, "decimal subtraction error")
 }
 
@@ -146,6 +140,10 @@ func (x Dec) Sub(y Dec, c ...SetupConstraint) (Dec, error) {
 func (x Dec) Quo(y Dec) (Dec, error) {
 	var z Dec
 	_, err := dec128Context.Quo(&z.dec, &x.dec, &y.dec)
+	if err != nil {
+		return Dec{}, ErrInvalidDecString
+	}
+
 	return z, errors.Wrap(err, "decimal quotient error")
 }
 
@@ -160,6 +158,7 @@ func (x Dec) MulExact(y Dec) (Dec, error) {
 	if condition.Rounded() {
 		return z, ErrUnexpectedRounding
 	}
+
 	return z, nil
 }
 
@@ -168,7 +167,7 @@ func (x Dec) QuoExact(y Dec) (Dec, error) {
 	var z Dec
 	condition, err := dec128Context.Quo(&z.dec, &x.dec, &y.dec)
 	if err != nil {
-		return z, err
+		return z, ErrInvalidDecString
 	}
 	if condition.Rounded() {
 		return z, ErrUnexpectedRounding
@@ -181,7 +180,10 @@ func (x Dec) QuoExact(y Dec) (Dec, error) {
 func (x Dec) QuoInteger(y Dec) (Dec, error) {
 	var z Dec
 	_, err := dec128Context.QuoInteger(&z.dec, &x.dec, &y.dec)
-	return z, errors.Wrap(err, "decimal quotient error")
+	if err != nil {
+		return z, ErrInvalidDecString
+	}
+	return z, nil
 }
 
 // Rem returns the integral remainder from `x/y` (formatted as decimal128, with 34 digit precision) without

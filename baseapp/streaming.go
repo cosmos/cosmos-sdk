@@ -22,6 +22,16 @@ const (
 	StreamingABCIStopNodeOnErrTomlKey = "stop-node-on-err"
 )
 
+func (app *BaseApp) RegisterIndexer(keys map[string]*storetypes.KVStoreKey, listener storetypes.ABCIListener) error {
+	exposedKeys := exposeStoreKeysSorted([]string{"*"}, keys)
+	app.cms.AddListeners(exposedKeys)
+	app.streamingManager = storetypes.StreamingManager{
+		ABCIListeners: []storetypes.ABCIListener{listener},
+		StopNodeOnErr: true,
+	}
+	return nil
+}
+
 // RegisterStreamingServices registers streaming services with the BaseApp.
 func (app *BaseApp) RegisterStreamingServices(appOpts servertypes.AppOptions, keys map[string]*storetypes.KVStoreKey) error {
 	// register streaming services

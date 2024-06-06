@@ -274,16 +274,15 @@ func NewSimApp(
 		LogicalListeners: []indexerbase.LogicalListener{
 			pgIndexer,
 		},
+		Logger: logger.With("module", "indexer"),
 	})
 	if err != nil {
 		panic(err)
 	}
-	app.SetStreamingManager(storetypes.StreamingManager{
-		ABCIListeners: []storetypes.ABCIListener{
-			storetypes.FromPhysicalListener(engine.PhysicalListener()),
-		},
-		StopNodeOnErr: true,
-	})
+	err = app.RegisterIndexer(app.kvStoreKeys(), storetypes.FromPhysicalListener(engine.PhysicalListener()))
+	if err != nil {
+		panic(err)
+	}
 
 	/****  Module Options ****/
 

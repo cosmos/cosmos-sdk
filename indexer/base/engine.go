@@ -19,6 +19,10 @@ type EngineOptions struct {
 }
 
 func NewEngine(opts EngineOptions) (*Engine, error) {
+	if opts.Logger != nil {
+		opts.Logger.Info("Initializing indexer engine")
+	}
+
 	schema := Schema{}
 	tables := map[string]Table{}
 	decoders := map[string]KVDecoder{}
@@ -172,6 +176,10 @@ func (p *Engine) onEvent(data EventData) error {
 }
 
 func (p *Engine) commit() error {
+	if p.logger != nil {
+		p.logger.Debug("commit")
+	}
+
 	for _, listener := range p.physicalListeners {
 		if err := listener.Commit(); err != nil {
 			return err
@@ -181,6 +189,10 @@ func (p *Engine) commit() error {
 }
 
 func (p *Engine) onKVPair(storeKey string, key, value []byte, delete bool) error {
+	if p.logger != nil {
+		p.logger.Debug("kv pair", "storeKey", storeKey, "delete", delete)
+	}
+
 	for _, listener := range p.physicalListeners {
 		if listener.OnKVPair == nil {
 			continue
@@ -194,27 +206,28 @@ func (p *Engine) onKVPair(storeKey string, key, value []byte, delete bool) error
 		return nil
 	}
 
-	decoder, ok := p.decoders[storeKey]
-	if !ok {
-		return nil
-	}
-
-	update, handled, err := decoder(key, value)
-	if err != nil {
-		return err
-	}
-	if !handled {
-		return nil
-	}
-
-	for _, indexer := range p.logicalListeners {
-		if indexer.OnEntityUpdate == nil {
-			continue
-		}
-		if err := indexer.OnEntityUpdate(update); err != nil {
-			return err
-		}
-	}
+	// TODO:
+	//decoder, ok := p.decoders[storeKey]
+	//if !ok {
+	//	return nil
+	//}
+	//
+	//update, handled, err := decoder(key, value)
+	//if err != nil {
+	//	return err
+	//}
+	//if !handled {
+	//	return nil
+	//}
+	//
+	//for _, indexer := range p.logicalListeners {
+	//	if indexer.OnEntityUpdate == nil {
+	//		continue
+	//	}
+	//	if err := indexer.OnEntityUpdate(update); err != nil {
+	//		return err
+	//	}
+	//}
 
 	return nil
 }

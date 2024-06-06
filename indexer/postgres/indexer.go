@@ -36,8 +36,12 @@ func NewIndexer(ctx context.Context, opts Options) (indexerbase.LogicalListener,
 
 func (i *indexer) logicalListener() (indexerbase.LogicalListener, error) {
 	return indexerbase.LogicalListener{
-		PhysicalListener: indexerbase.PhysicalListener{},
-		EnsureSetup:      i.ensureSetup,
+		PhysicalListener: indexerbase.PhysicalListener{
+			StartBlock: i.startBlock,
+			Commit:     i.commit,
+		},
+		EnsureSetup:    i.ensureSetup,
+		OnEntityUpdate: i.onEntityUpdate,
 	}, nil
 }
 
@@ -52,39 +56,29 @@ func (i *indexer) ensureSetup(data indexerbase.LogicalSetupData) error {
 	return nil
 }
 
-//func (i indexer) StartBlock(u uint64) error {
-//	//TODO implement me
-//	panic("implement me")
-//}
+func (i *indexer) startBlock(u uint64) error {
+	return nil
+}
+
+//	func (i indexer) IndexBlockHeader(data *indexerbase.BlockHeaderData) error {
+//		//TODO implement me
+//		panic("implement me")
+//	}
 //
-//func (i indexer) IndexBlockHeader(data *indexerbase.BlockHeaderData) error {
-//	//TODO implement me
-//	panic("implement me")
-//}
+//	func (i indexer) IndexTx(data *indexerbase.TxData) error {
+//		//TODO implement me
+//		panic("implement me")
+//	}
 //
-//func (i indexer) IndexTx(data *indexerbase.TxData) error {
-//	//TODO implement me
-//	panic("implement me")
-//}
-//
-//func (i indexer) IndexEvent(data *indexerbase.EventData) error {
-//	//TODO implement me
-//	panic("implement me")
-//}
-//
-//func (i indexer) IndexEntityUpdate(update indexerbase.EntityUpdate) error {
-//	//TODO implement me
-//	panic("implement me")
-//}
-//
-//func (i indexer) IndexEntityDelete(entityDelete indexerbase.EntityDelete) error {
-//	//TODO implement me
-//	panic("implement me")
-//}
-//
-//func (i indexer) Commit() error {
-//	//TODO implement me
-//	panic("implement me")
-//}
-//
-//var _ indexerbase.Indexer = &indexer{}
+//	func (i indexer) IndexEvent(data *indexerbase.EventData) error {
+//		//TODO implement me
+//		panic("implement me")
+//	}
+
+func (i *indexer) onEntityUpdate(update indexerbase.EntityUpdate) error {
+	return nil
+}
+
+func (i *indexer) commit() error {
+	return nil
+}

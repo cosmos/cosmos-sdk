@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/math"
+
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
-	"cosmossdk.io/math"
 )
 
 var (

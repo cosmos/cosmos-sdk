@@ -2,8 +2,8 @@ package collections
 
 import (
 	"fmt"
+	"strings"
 
-	"cosmossdk.io/collections/codec"
 	indexerbase "cosmossdk.io/indexer/base"
 )
 
@@ -55,27 +55,21 @@ func (c collectionImpl[K, V]) getTableSchema() indexerbase.Table {
 	var keyFields []indexerbase.Column
 	var valueFields []indexerbase.Column
 
-	if hasSchema, ok := c.m.kc.(codec.HasSchema); ok {
-		keyFields = hasSchema.Fields()
+	if hasSchema, ok := c.m.kc.(HasSchema); ok {
+		keyFields = hasSchema.SchemaColumns()
 	} else {
-		name := "key"
-		if named, ok := c.m.kc.(codec.HasName); ok {
-			name = named.Name()
-		}
 		var k K
-		keyFields, _ = extractFields(k, name)
+		keyFields, _ = extractFields(k)
 	}
+	ensureNames(c.m.kc, "key", keyFields)
 
-	if hasSchema, ok := c.m.vc.(codec.HasSchema); ok {
-		valueFields = hasSchema.Fields()
+	if hasSchema, ok := c.m.vc.(HasSchema); ok {
+		valueFields = hasSchema.SchemaColumns()
 	} else {
-		name := "key"
-		if named, ok := c.m.vc.(codec.HasName); ok {
-			name = named.Name()
-		}
 		var v V
-		valueFields, _ = extractFields(v, name)
+		valueFields, _ = extractFields(v)
 	}
+	ensureNames(c.m.vc, "value", valueFields)
 
 	return indexerbase.Table{
 		Name:         c.GetName(),
@@ -84,19 +78,25 @@ func (c collectionImpl[K, V]) getTableSchema() indexerbase.Table {
 	}
 }
 
-func extractFields(x any, name string) ([]indexerbase.Column, func(any) any) {
-	switch x.(type) {
-	case int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64, string:
-		ty, f := simpleType(x)
+func extractFields(x any) ([]indexerbase.Column, func(any) any) {
+	if hasSchema, ok := x.(HasSchema); ok {
+		return hasSchema.SchemaColumns(), nil
+	}
+
+	ty, f := simpleType(x)
+	if ty >= 0 {
+		return []indexerbase.Column{{Type: ty}}, f
+	}
+
+	if _, ok := x.(interface{ String() string }); ok {
 		return []indexerbase.Column{
 			{
-				Name: name,
-				Type: ty,
+				Type: indexerbase.TypeString,
 			},
-		}, f
-	default:
-		panic(fmt.Errorf("unsupported type: %T", x))
+		}, func(x any) any { return x.(interface{ String() string }).String() }
 	}
+
+	panic(fmt.Errorf("unsupported type %T", x))
 }
 
 func simpleType(x any) (indexerbase.Type, func(any) any) {
@@ -128,7 +128,31 @@ func simpleType(x any) (indexerbase.Type, func(any) any) {
 	case uint64:
 		return indexerbase.TypeDecimal, func(x any) any { panic("TODO") }
 	default:
-		panic(fmt.Errorf("unsupported type: %T", x))
+		return -1, nil
+	}
+}
+
+func ensureNames(x any, defaultName string, cols []indexerbase.Column) {
+	var names []string = nil
+	if hasName, ok := x.(interface{ Name() string }); ok {
+		name := hasName.Name()
+		if name != "" {
+			names = strings.Split(hasName.Name(), ",")
+		}
+	}
+	for i, col := range cols {
+		if names != nil && i < len(names) {
+			col.Name = names[i]
+		} else {
+			if col.Name == "" {
+				if i == 0 && len(cols) == 1 {
+					col.Name = defaultName
+				} else {
+					col.Name = fmt.Sprintf("%s%d", defaultName, i+1)
+				}
+			}
+		}
+		cols[i] = col
 	}
 }
 
@@ -151,3 +175,8 @@ func (c collectionImpl[K, V]) decodeKVPair(key, value []byte, delete bool) (inde
 //func (c collectionImpl[K, V]) decodeDelete(key []byte) (indexerbase.EntityDelete, bool, error) {
 //	panic("TODO")
 //}
+
+type HasSchema interface {
+	SchemaColumns() []indexerbase.Column
+	//DecodeAdaptor() func(any) any
+}

@@ -8,9 +8,11 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"google.golang.org/protobuf/encoding/protojson"
 	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
+	indexerbase "cosmossdk.io/indexer/base"
 )
 
 // BoolValue implements a ValueCodec that saves the bool value
@@ -91,6 +93,16 @@ func (c collValue[T, PT]) ValueType() string {
 	return "github.com/cosmos/gogoproto/" + c.messageName
 }
 
+func (c collValue[T, PT]) SchemaColumns() []indexerbase.Column {
+	var pt PT
+	msgName := proto.MessageName(pt)
+	desc, err := proto.HybridResolver.FindDescriptorByName(protoreflect.FullName(msgName))
+	if err != nil {
+		panic(fmt.Errorf("could not find descriptor for %s: %w", msgName, err))
+	}
+	return protoCols(desc.(protoreflect.MessageDescriptor))
+}
+
 type protoMessageV2[T any] interface {
 	*T
 	protov2.Message
@@ -136,6 +148,11 @@ func (c collValue2[T, PT]) ValueType() string {
 	return "google.golang.org/protobuf/" + c.messageName
 }
 
+func (c collValue2[T, PT]) SchemaColumns() []indexerbase.Column {
+	var pt PT
+	return protoCols(pt.ProtoReflect().Descriptor())
+}
+
 // CollInterfaceValue instantiates a new collections.ValueCodec for a generic
 // interface value. The codec must be able to marshal and unmarshal the
 // interface.
@@ -178,4 +195,71 @@ func (c collInterfaceValue[T]) Stringify(value T) string {
 func (c collInterfaceValue[T]) ValueType() string {
 	var t T
 	return fmt.Sprintf("%T", t)
+}
+
+func protoCols(desc protoreflect.MessageDescriptor) []indexerbase.Column {
+	nFields := desc.Fields()
+	cols := make([]indexerbase.Column, 0, nFields.Len())
+	for i := 0; i < nFields.Len(); i++ {
+		f := nFields.Get(i)
+		cols = append(cols, protoCol(f))
+	}
+	return cols
+}
+
+func protoCol(f protoreflect.FieldDescriptor) indexerbase.Column {
+	col := indexerbase.Column{Name: string(f.Name())}
+
+	if f.IsMap() || f.IsList() {
+		col.Type = indexerbase.TypeJSON
+		col.Nullable = true
+	} else {
+		switch f.Kind() {
+		case protoreflect.BoolKind:
+			col.Type = indexerbase.TypeBool
+		case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
+			col.Type = indexerbase.TypeInt32
+		case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
+			col.Type = indexerbase.TypeInt64
+		case protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
+			col.Type = indexerbase.TypeInt64
+		case protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
+			col.Type = indexerbase.TypeDecimal
+		case protoreflect.FloatKind:
+			col.Type = indexerbase.TypeFloat32
+		case protoreflect.DoubleKind:
+			col.Type = indexerbase.TypeFloat64
+		case protoreflect.StringKind:
+			col.Type = indexerbase.TypeString
+		case protoreflect.BytesKind:
+			col.Type = indexerbase.TypeBytes
+		case protoreflect.EnumKind:
+			col.Type = indexerbase.TypeEnum
+			enumDesc := f.Enum()
+			var vals []string
+			n := enumDesc.Values().Len()
+			for i := 0; i < n; i++ {
+				vals = append(vals, string(enumDesc.Values().Get(i).Name()))
+			}
+			col.EnumDefinition = indexerbase.EnumDefinition{
+				Name:   string(enumDesc.Name()),
+				Values: vals,
+			}
+		case protoreflect.MessageKind:
+			col.Nullable = true
+			fullName := f.Message().FullName()
+			if fullName == "google.protobuf.Timestamp" {
+				col.Type = indexerbase.TypeTime
+			} else if fullName == "google.protobuf.Duration" {
+				col.Type = indexerbase.TypeDuration
+			} else {
+				col.Type = indexerbase.TypeJSON
+			}
+		}
+		if f.HasPresence() {
+			col.Nullable = true
+		}
+	}
+
+	return col
 }

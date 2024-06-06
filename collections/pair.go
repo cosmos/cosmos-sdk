@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/collections/codec"
+	indexerbase "cosmossdk.io/indexer/base"
 )
 
 // Pair defines a key composed of two keys.
@@ -234,6 +235,20 @@ func (p pairKeyCodec[K1, K2]) Name() string {
 		return "key1,key2"
 	}
 	return fmt.Sprintf("%s,%s", p.key1Name, p.key2Name)
+}
+
+func (p pairKeyCodec[K1, K2]) SchemaColumns() []indexerbase.Column {
+	var k1 K1
+	col1, _ := extractFields(k1)
+	if len(col1) == 1 {
+		col1[0].Name = p.key1Name
+	}
+	var k2 K2
+	col2, _ := extractFields(k2)
+	if len(col2) == 1 {
+		col2[0].Name = p.key2Name
+	}
+	return append(col1, col2...)
 }
 
 // NewPrefixUntilPairRange defines a collection query which ranges until the provided Pair prefix.

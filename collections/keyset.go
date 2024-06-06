@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections/codec"
+	indexerbase "cosmossdk.io/indexer/base"
 )
 
 // WithKeySetUncheckedValue changes the behavior of the KeySet when it encounters
@@ -140,3 +141,5 @@ func (NoValue) Stringify(_ NoValue) string {
 func (n NoValue) ValueType() string {
 	return noValueValueType
 }
+
+func (NoValue) SchemaColumns() []indexerbase.Column { return nil }

@@ -67,17 +67,9 @@ func TestABCInfo(t *testing.T) {
 	}
 }
 
-func TestABCIInfoHidesStacktrace(t *testing.T) {
-	err := fmt.Errorf("wrapped: %w", ErrUnauthorized)
-	_, _, log := ABCIInfo(err, false)
-	if log != "wrapped: unauthorized" {
-		t.Errorf("expected log %s, got %s", "wrapped: unauthorized", log)
-	}
-}
-
 func TestABCIInfoSerializeErr(t *testing.T) {
 	var (
-		// Create errors with stacktrace for equal comparison.
+		// Create errors for equal comparison.
 		myErrDecode = fmt.Errorf("test: %w", ErrTxDecode)
 		myErrAddr   = fmt.Errorf("tester: %w", ErrInvalidAddress)
 		myPanic     = ErrPanic

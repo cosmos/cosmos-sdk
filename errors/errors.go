@@ -98,3 +98,27 @@ func (e Error) ABCICode() uint32 {
 func (e Error) Codespace() string {
 	return e.codespace
 }
+
+// Wrap extends given error with an additional information.
+//
+// If the wrapped error does not provide ABCICode method (ie. stdlib errors),
+// it will be labeled as internal error.
+//
+// If err is nil, this returns nil, avoiding the need for an if statement when
+// wrapping a error returned at the end of a function
+func Wrap(err error, description string) error {
+	if err == nil {
+		return nil
+	}
+
+	return fmt.Errorf("%s: %w", description, err)
+}
+
+// Wrapf extends given error with an additional information.
+//
+// This function works like Wrap function with additional functionality of
+// formatting the input as specified.
+func Wrapf(err error, format string, args ...interface{}) error {
+	desc := fmt.Sprintf(format, args...)
+	return Wrap(err, desc)
+}

@@ -11,7 +11,7 @@ import (
 
 func (i *indexer) createTableStatement(tableSchema indexerbase.Table) (string, error) {
 	w := &bytes.Buffer{}
-	_, err := fmt.Fprintf(w, "CREATE TABLE %s (\n\t", tableSchema.Name)
+	_, err := fmt.Fprintf(w, "CREATE TABLE IF NOT EXISTS %s (\n\t", tableSchema.Name)
 	if err != nil {
 		return "", err
 	}
@@ -19,7 +19,7 @@ func (i *indexer) createTableStatement(tableSchema indexerbase.Table) (string, e
 	isSingleton := false
 	if len(tableSchema.KeyColumns) == 0 {
 		isSingleton = true
-		_, err = fmt.Fprintf(w, "_id INTEGER NOT NULL PRIMARY KEY CHECK (_id = 1),\n\t")
+		_, err = fmt.Fprintf(w, "_id INTEGER NOT NULL CHECK (_id = 1),\n\t")
 	} else {
 		for _, col := range tableSchema.KeyColumns {
 			err = i.createColumnDef(w, col)
@@ -36,15 +36,18 @@ func (i *indexer) createTableStatement(tableSchema indexerbase.Table) (string, e
 		}
 	}
 
+	var pKeys []string
 	if !isSingleton {
-		var pKeys []string
 		for _, col := range tableSchema.KeyColumns {
 			pKeys = append(pKeys, col.Name)
 		}
-		_, err = fmt.Fprintf(w, "PRIMARY KEY (%s)\n", strings.Join(pKeys, ", "))
-		if err != nil {
-			return "", err
-		}
+	} else {
+		pKeys = []string{"_id"}
+	}
+
+	_, err = fmt.Fprintf(w, "PRIMARY KEY (%s)\n", strings.Join(pKeys, ", "))
+	if err != nil {
+		return "", err
 	}
 
 	_, err = fmt.Fprintf(w, ");")

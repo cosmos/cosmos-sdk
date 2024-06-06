@@ -11,6 +11,7 @@ import (
 )
 
 type indexer struct {
+	ctx    context.Context
 	conn   *pgx.Conn
 	tables map[string]*tableInfo
 }
@@ -30,6 +31,7 @@ func NewIndexer(ctx context.Context, opts Options) (indexerbase.LogicalListener,
 	}
 
 	i := &indexer{
+		ctx:    ctx,
 		conn:   conn,
 		tables: map[string]*tableInfo{},
 	}
@@ -54,6 +56,10 @@ func (i *indexer) ensureSetup(data indexerbase.LogicalSetupData) error {
 			return err
 		}
 		fmt.Printf("%s\n", createTable)
+		_, err = i.conn.Exec(context.Background(), createTable)
+		if err != nil {
+			return err
+		}
 		i.tables[table.Name] = &tableInfo{table: table}
 	}
 	return nil

@@ -76,7 +76,9 @@ var DefaultSignModes = []signingtypes.SignMode{
 // We prefer to use depinject to provide client.TxConfig, but we permit this constructor usage. Within the SDK,
 // this constructor is primarily used in tests, but also sees usage in app chains like:
 // https://github.com/evmos/evmos/blob/719363fbb92ff3ea9649694bd088e4c6fe9c195f/encoding/config.go#L37
-func NewTxConfig(protoCodec codec.Codec, addressCodec, validatorAddressCodec address.Codec, enabledSignModes []signingtypes.SignMode, customSignModes ...txsigning.SignModeHandler,
+func NewTxConfig(
+	protoCodec codec.Codec, addressCodec, validatorAddressCodec address.Codec, enabledSignModes []signingtypes.SignMode,
+	customSignModes ...txsigning.SignModeHandler,
 ) client.TxConfig {
 	txConfig, err := NewTxConfigWithOptions(protoCodec, ConfigOptions{
 		EnabledSignModes: enabledSignModes,
@@ -190,7 +192,7 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 	}
 
 	if configOptions.ProtoDecoder == nil {
-		dec, err := txdecode.NewDecoder(txdecode.Options{SigningContext: configOptions.SigningContext})
+		dec, err := txdecode.NewDecoder(txdecode.Options{SigningContext: configOptions.SigningContext, ProtoCodec: protoCodec})
 		if err != nil {
 			return nil, err
 		}
@@ -260,7 +262,9 @@ func (g config) SigningContext() *txsigning.Context {
 	return g.signingContext
 }
 
-func txV2toInterface(addrCodec address.Codec, cdc codec.BinaryCodec, decoder *txdecode.Decoder) func([]byte) (sdk.Tx, error) {
+func txV2toInterface(addrCodec address.Codec, cdc codec.BinaryCodec, decoder *txdecode.Decoder) func([]byte) (
+	sdk.Tx, error,
+) {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		decodedTx, err := decoder.Decode(txBytes)
 		if err != nil {

@@ -735,6 +735,14 @@ func (pv *CryptoProviderPV) SignBytes(bytes []byte) ([]byte, error) {
 
 ```
 
+*Note:* Each provider (File, Socket, SignerClient, RetrySignerClient) will need to be modified to satisfy the `CryptoProvider` interface.
+
+
+#### Loading and storing implementations
+
+Storing crypto providers and all data related to them (keys, special configurations) will be addressed in the same way as expressed for the cosmos-sdk, that is, by using the [Keyring](https://github.com/cosmos/cosmos-sdk/blob/439f2f9d5b5884bc9df4b58d702555330549a898/crypto/keyring/keyring.go#L58-L109) interface to abstract the storage backends.
+
+*Note:* this is subject to change since this approach will require decoupling the Keyring package from the cosmos-sdk to avoid having CometBFT import artifacts from that repository.
 
 #### Proposed directory structure
 
@@ -752,15 +760,17 @@ cometbft/
 │   ├── priv_validator.go
 ```
 
-
-#### Loading and storing implementations
-(CryptoProviderFactory, Keyring, Record)
-
-
 #### Other considerations
 
-Need of using Keyring to store records which store providers info and config
-Need to adjust the way a node loads the desired validator. Instead of replacing validators according to config, the proper cryptoValidator will be loaded by its id
+##### Config
+
+//TODO
+(config struct needs to store the CryptoProvider ID which the app will load)
+
+##### Node startup
+
+//TODO
+(mention that the startup logic will need to change for the better: validator would only be matter of getting its ID from the config and then load it from the Keyring)
 
 ### Tentative Primitive Building Blocks
 

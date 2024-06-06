@@ -306,7 +306,7 @@ func createBlockSimulator(tb testing.TB, testingMode bool, w io.Writer, params P
 		for i := 0; i < blocksize; i++ {
 			opAndRz = append(opAndRz, opAndR{
 				op:   selectOp(r),
-				rand: simulation.DeriveRand(r),
+				rand: r,
 			})
 		}
 

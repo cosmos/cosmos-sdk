@@ -7,6 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
@@ -30,6 +31,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
+
+type emptyCometService struct{}
+
+// CometInfo implements comet.Service.
+func (e *emptyCometService) CometInfo(context.Context) comet.Info {
+	return comet.Info{}
+}
 
 func TestFundsMigration(t *testing.T) {
 	keys := storetypes.NewKVStoreKeys(
@@ -90,6 +98,7 @@ func TestFundsMigration(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		poolKeeper,
+		&emptyCometService{},
 		disttypes.ModuleName,
 		authority,
 	)

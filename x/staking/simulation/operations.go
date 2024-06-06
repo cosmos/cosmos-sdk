@@ -951,6 +951,15 @@ func SimulateMsgTokenizeShares(txGen client.TxConfig, ak types.AccountKeeper, bk
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "tokenize shares disabled"), nil, nil
 		}
 
+		// Make sure that the delegator has no ongoing redelegations to the validator
+		found, err := k.HasReceivingRedelegation(ctx, delAddrBz, valAddr)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "error checking receiving redelegation"), nil, err
+		}
+		if found {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "delegator has redelegations in progress"), nil, nil
+		}
+
 		// get random destination validator
 		totalBond := validator.TokensFromShares(delegation.GetShares()).TruncateInt()
 		if !totalBond.IsPositive() {

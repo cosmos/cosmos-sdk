@@ -67,4 +67,5 @@ var (
 	ErrValidatorLiquidSharesUnderflow           = errors.Register(ModuleName, 117, "validator liquid shares underflow")
 	ErrTotalLiquidStakedUnderflow               = errors.Register(ModuleName, 118, "total liquid staked underflow")
 	ErrTinyRedemptionAmount                     = errors.Register(ModuleName, 119, "too few tokens to redeem (truncates to zero tokens)")
+	ErrRedelegationInProgress                   = errors.Register(ModuleName, 120, "delegator is not allowed to tokenize shares from validator with a redelegation in progress")
 )

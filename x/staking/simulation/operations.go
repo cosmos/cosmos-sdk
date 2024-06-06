@@ -1003,7 +1003,7 @@ func SimulateMsgTokenizeShares(txGen client.TxConfig, ak types.AccountKeeper, bk
 		if totalStaked.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "cannot happened - no validators bonded if stake is 0.0"), nil, nil // skip
 		}
-		totalLiquidStaked := math.LegacyNewDecFromInt(k.GetTotalLiquidStakedTokens(ctx))
+		totalLiquidStaked := math.LegacyNewDecFromInt(k.GetTotalLiquidStakedTokens(ctx).Add(tokenizeShareAmt))
 		liquidStakedPercent := totalLiquidStaked.Quo(totalStaked)
 		if liquidStakedPercent.GT(params.GlobalLiquidStakingCap) {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "global liquid staking cap exceeded"), nil, nil

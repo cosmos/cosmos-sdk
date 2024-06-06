@@ -16,6 +16,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+const flagHome = "home"
+
 type App[T transaction.Tx] struct {
 	Application Application[T]
 	Store       any
@@ -23,7 +25,7 @@ type App[T transaction.Tx] struct {
 
 type AppCreator[T transaction.Tx] func(*viper.Viper, log.Logger) App[T]
 
-func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, homePath string, modules ...ServerComponent[transaction.Tx]) (CLIConfig, error) {
+func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, modules ...ServerComponent[transaction.Tx]) (CLIConfig, error) {
 	if len(modules) == 0 {
 		// TODO figure if we should define default modules
 		// and if so it should be done here to avoid uncessary dependencies
@@ -34,12 +36,6 @@ func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger 
 	// Write default config for each server module
 	flags := server.StartFlags()
 
-	if _, err := os.Stat(filepath.Join(homePath, "config", "app.toml")); os.IsNotExist(err) {
-		err = server.WriteConfig(filepath.Join(homePath, "config", "app.toml"))
-		if err != nil {
-			return CLIConfig{}, err
-		}
-	}
 	startCmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the application",
@@ -88,12 +84,55 @@ func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger 
 	return cmds, nil
 }
 
-func AddCommands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, homePath string, modules ...ServerComponent[transaction.Tx]) error {
-	cmds, err := Commands(rootCmd, newApp, logger, homePath, modules...)
+func AddCommands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, modules ...ServerComponent[transaction.Tx]) error {
+	cmds, err := Commands(rootCmd, newApp, logger, modules...)
 	if err != nil {
 		return err
 	}
 
+	server := NewServer(logger, modules...)
+	originalPersistentPreRunE := rootCmd.PersistentPreRunE
+	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		home, err := cmd.Flags().GetString(flagHome)
+		if err != nil {
+			return err
+		}
+
+		err = configHandle(server, home, cmd)
+		if err != nil {
+			return err
+		}
+
+		if originalPersistentPreRunE != nil {
+			originalPersistentPreRunE(cmd, args)
+			return nil
+		}
+
+		return nil
+	}
+
 	rootCmd.AddCommand(cmds.Commands...)
 	return nil
+}
+
+func configHandle(s *Server, home string, cmd *cobra.Command) error {
+	if _, err := os.Stat(filepath.Join(home, "config")); os.IsNotExist(err) {
+		err = s.WriteConfig(filepath.Join(home, "config"))
+		if err != nil {
+			return err
+		}
+	}
+
+	viper, err := ReadConfig(filepath.Join(home, "config"))
+	if err != nil {
+		return err
+	}
+	viper.Set(flagHome, home)
+
+	log, err := NewLogger(viper, cmd.OutOrStdout())
+	if err != nil {
+		return err
+	}
+
+	return SetCmdServerContext(cmd, viper, log)
 }

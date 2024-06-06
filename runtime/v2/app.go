@@ -124,5 +124,13 @@ func (a *App) GetLogger() log.Logger {
 }
 
 func (a *App) ExecuteGenesisTx(_ []byte) error {
-	panic("not implemented")
+	panic("App.ExecuteGenesisTx not supported in runtime/v2")
+}
+
+func (a *App) SetAppVersion(context.Context, uint64) error {
+	return nil
+}
+
+func (a *App) AppVersion(context.Context) (uint64, error) {
+	return 0, nil
 }

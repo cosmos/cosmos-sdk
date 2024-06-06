@@ -117,13 +117,3 @@ func TestABCIInfoSerializeErr(t *testing.T) {
 		}
 	}
 }
-
-// customErr is a custom implementation of an error that provides an ABCICode
-// method.
-type customErr struct{}
-
-func (customErr) Codespace() string { return "extern" }
-
-func (customErr) ABCICode() uint32 { return 999 }
-
-func (customErr) Error() string { return "custom" }

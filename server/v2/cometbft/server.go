@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	abciserver "github.com/cometbft/cometbft/abci/server"
@@ -65,20 +64,7 @@ type App[T transaction.Tx] interface {
 	GetStore() types.Store
 }
 
-func New[T transaction.Tx](home string, txCodec transaction.Codec[T]) *CometBFTServer[T] {
-	// Write default cmt config
-	configPath := filepath.Join(home, "config")
-	configFilePath := filepath.Join(configPath, "config.toml")
-
-	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
-		if err := os.MkdirAll(configPath, os.ModePerm); err != nil {
-			panic(err)
-		}
-	}
-
-	cometConfig := cmtcfg.DefaultConfig()
-	cmtcfg.WriteConfigFile(configFilePath, cometConfig)
-
+func New[T transaction.Tx](txCodec transaction.Codec[T]) *CometBFTServer[T] {
 	consensus := &Consensus[T]{txCodec: txCodec}
 	return &CometBFTServer[T]{
 		App: consensus,
@@ -252,4 +238,10 @@ func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
 			cmtcmd.ResetStateCmd,
 		},
 	}
+}
+
+func (s *CometBFTServer[T]) WriteConfig(configPath string) error {
+	cometConfig := cmtcfg.DefaultConfig()
+	cmtcfg.WriteConfigFile(filepath.Join(configPath, "config.toml"), cometConfig)
+	return nil
 }

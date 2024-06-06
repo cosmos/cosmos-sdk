@@ -34,9 +34,14 @@ type HasConfig interface {
 	Config() any
 }
 
+// for cometbft writing config itself
+type HasConfigWriting interface {
+	WriteConfig(string) error
+}
+
 // HasStartFlags is a server module that has start flags.
 type HasStartFlags interface {
-	StartFlags() *pflag.FlagSet
+	StartCmdFlags() *pflag.FlagSet
 }
 
 var _ ServerComponent[transaction.Tx] = (*Server)(nil)
@@ -169,8 +174,22 @@ func (s *Server) WriteConfig(configPath string) error {
 		return err
 	}
 
-	if err := os.WriteFile(filepath.Join(configPath), b, 0o600); err != nil {
-		return fmt.Errorf("failed to write config: %w", err)
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		if err := os.MkdirAll(configPath, os.ModePerm); err != nil {
+			panic(err)
+		}
+	}
+
+	if err := os.WriteFile(filepath.Join(configPath, "app.toml"), b, 0o600); err != nil {
+		panic(fmt.Errorf("failed to write config: %w", err))
+	}
+
+	for _, component := range s.modules {
+		if mod, ok := component.(HasConfigWriting); ok {
+			if err := mod.WriteConfig(configPath); err != nil {
+				panic(err)
+			}
+		}
 	}
 
 	return nil
@@ -181,7 +200,7 @@ func (s *Server) StartFlags() []*pflag.FlagSet {
 	flags := []*pflag.FlagSet{}
 	for _, mod := range s.modules {
 		if startmod, ok := mod.(HasStartFlags); ok {
-			flags = append(flags, startmod.StartFlags())
+			flags = append(flags, startmod.StartCmdFlags())
 		}
 	}
 

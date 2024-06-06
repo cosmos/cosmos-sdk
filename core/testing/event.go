@@ -3,8 +3,9 @@ package coretesting
 import (
 	"context"
 
-	"cosmossdk.io/core/event"
 	"google.golang.org/protobuf/runtime/protoiface"
+
+	"cosmossdk.io/core/event"
 )
 
 var _ event.Service = (*MemEventsService)(nil)
@@ -28,6 +29,7 @@ func (e MemEventsService) EventManager(ctx context.Context) event.Manager {
 func (e MemEventsService) GetEvents(ctx context.Context) []event.Event {
 	return unwrap(ctx).events[e.moduleName]
 }
+
 func (e MemEventsService) GetProtoEvents(ctx context.Context) []protoiface.MessageV1 {
 	return unwrap(ctx).protoEvents[e.moduleName]
 }

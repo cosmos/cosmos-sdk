@@ -3,10 +3,11 @@ package coretesting
 import (
 	"testing"
 
-	"cosmossdk.io/core/event"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/runtime/protoiface"
 	"google.golang.org/protobuf/types/known/wrapperspb"
+
+	"cosmossdk.io/core/event"
 )
 
 func TestEventsService(t *testing.T) {

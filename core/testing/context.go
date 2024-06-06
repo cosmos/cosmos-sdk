@@ -3,9 +3,10 @@ package coretesting
 import (
 	"context"
 
+	"google.golang.org/protobuf/runtime/protoiface"
+
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
-	"google.golang.org/protobuf/runtime/protoiface"
 )
 
 type dummyKey struct{}

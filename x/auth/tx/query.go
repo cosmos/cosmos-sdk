@@ -95,12 +95,12 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 
 // formatTxResults parses the indexed txs into a slice of TxResponse objects.
 func formatTxResults(txConfig client.TxConfig, resTxs []*coretypes.ResultTx, resBlocks map[int64]*coretypes.ResultBlock) ([]*sdk.TxResponse, error) {
-	var err error
-	out := make([]*sdk.TxResponse, len(resTxs))
+	out := []*sdk.TxResponse{}
 	for i := range resTxs {
-		out[i], err = mkTxResult(txConfig, resTxs[i], resBlocks[resTxs[i].Height])
-		if err != nil {
-			return nil, err
+		txResult, err := mkTxResult(txConfig, resTxs[i], resBlocks[resTxs[i].Height])
+		// Skip transactions that cannot be decoded for now
+		if err == nil {
+			out = append(out, txResult)
 		}
 	}
 

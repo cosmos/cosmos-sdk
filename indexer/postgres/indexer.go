@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/jackc/pgx/v5"
@@ -32,12 +33,18 @@ func NewIndexer(opts Options) indexerbase.Indexer {
 	}
 }
 
-func (i indexer) StartBlock(u uint64) error {
-	//TODO implement me
-	panic("implement me")
+func (i indexer) EnsureSetup(data *indexerbase.SetupData) error {
+	for _, table := range data.Schema.Tables {
+		createTable, err := i.createTableStatement(table)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("%s\n", createTable)
+	}
+	return nil
 }
 
-func (i indexer) MigrateSchema(data *indexerbase.MigrationData) error {
+func (i indexer) StartBlock(u uint64) error {
 	//TODO implement me
 	panic("implement me")
 }

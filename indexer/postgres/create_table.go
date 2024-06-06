@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"strings"
@@ -8,24 +9,24 @@ import (
 	indexerbase "cosmossdk.io/indexer/base"
 )
 
-func (i indexer) createTableStatement(w io.Writer, tablePrefix string, tableSchema indexerbase.Table) error {
-	_, err := fmt.Fprintf(w, "CREATE TABLE %s_%s (", tablePrefix, tableSchema.Name)
+func (i indexer) createTableStatement(tableSchema indexerbase.Table) (string, error) {
+	w := &bytes.Buffer{}
+	_, err := fmt.Fprintf(w, "CREATE TABLE %s (\n\t", tableSchema.Name)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	first := true
 	for _, col := range tableSchema.KeyColumns {
-		err = i.createColumnDef(w, col, &first)
+		err = i.createColumnDef(w, col)
 		if err != nil {
-			return err
+			return "", err
 		}
 	}
 
 	for _, col := range tableSchema.ValueColumns {
-		err = i.createColumnDef(w, col, &first)
+		err = i.createColumnDef(w, col)
 		if err != nil {
-			return err
+			return "", err
 		}
 	}
 
@@ -33,31 +34,26 @@ func (i indexer) createTableStatement(w io.Writer, tablePrefix string, tableSche
 	for _, col := range tableSchema.KeyColumns {
 		pKeys = append(pKeys, col.Name)
 	}
-	_, err = fmt.Fprintf(w, "PRIMARY KEY (%s)", strings.Join(pKeys, ", "))
+	_, err = fmt.Fprintf(w, "PRIMARY KEY (%s)\n", strings.Join(pKeys, ", "))
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	_, err = fmt.Fprintf(w, ");")
-	return err
+	if err != nil {
+		return "", err
+	}
+
+	return w.String(), nil
 }
 
-func (i indexer) createColumnDef(w io.Writer, col indexerbase.Column, first *bool) error {
+func (i indexer) createColumnDef(w io.Writer, col indexerbase.Column) error {
 	typeStr, err := i.colType(col)
 	if err != nil {
 		return err
 	}
 
-	if !*first {
-		_, err = fmt.Fprintf(w, ",\n")
-		if err != nil {
-			return err
-		}
-
-		*first = false
-	}
-
-	_, err = fmt.Fprintf(w, "%s %s", col.Name, typeStr)
+	_, err = fmt.Fprintf(w, "%s %s,\n\t", col.Name, typeStr)
 	return err
 }
 

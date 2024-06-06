@@ -49,8 +49,8 @@ require github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240530055211-ae27f7e
 
 require (
 	cosmossdk.io/indexer/base v0.0.0-00010101000000-000000000000
+	cosmossdk.io/indexer/postgres v0.0.0-00010101000000-000000000000
 	cosmossdk.io/indexer/source/store v0.0.0-00010101000000-000000000000
-	cosmossdk.io/indexer/target/postgres v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 )
 
@@ -251,8 +251,8 @@ replace (
 	cosmossdk.io/core => ../core
 	cosmossdk.io/depinject => ../depinject
 	cosmossdk.io/indexer/base => ../indexer/base
+	cosmossdk.io/indexer/postgres => ../indexer/postgres
 	cosmossdk.io/indexer/source/store => ../indexer/source/store
-	cosmossdk.io/indexer/target/postgres => ../indexer/target/postgres
 	cosmossdk.io/log => ../log
 	cosmossdk.io/store => ../store
 	cosmossdk.io/tools/confix => ../tools/confix

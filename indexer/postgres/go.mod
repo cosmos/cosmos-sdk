@@ -1,4 +1,4 @@
-module cosmossdk.io/indexer/target/postgres
+module cosmossdk.io/indexer/postgres
 
 require (
 	cosmossdk.io/indexer/base v0.0.0-00010101000000-000000000000
@@ -14,4 +14,4 @@ require (
 
 go 1.22
 
-replace cosmossdk.io/indexer/base => ../../base
+replace cosmossdk.io/indexer/base => ../base

@@ -97,6 +97,8 @@ type Collection interface {
 	decodeSet(key, value []byte) (indexerbase.EntityUpdate, bool, error)
 
 	decodeDelete(key []byte) (indexerbase.EntityDelete, bool, error)
+
+	isIndex() bool
 }
 
 // Prefix defines a segregation bytes namespace for specific collections objects.
@@ -164,3 +166,7 @@ func (c collectionImpl[K, V]) exportGenesis(ctx context.Context, w io.Writer) er
 }
 
 func (c collectionImpl[K, V]) defaultGenesis(w io.Writer) error { return c.m.defaultGenesis(w) }
+
+func (c collectionImpl[K, V]) isIndex() bool {
+	return c.m.isIndex
+}

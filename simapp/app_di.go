@@ -12,7 +12,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cast"
 
-	"cosmossdk.io/indexer/target/postgres"
+	"cosmossdk.io/indexer/postgres"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"

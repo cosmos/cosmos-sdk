@@ -1,5 +1,7 @@
 package indexerbase
 
+import "fmt"
+
 type Engine struct {
 	moduleDecoders map[string][]ModuleStateDecoder
 	indexers       []Indexer
@@ -12,6 +14,8 @@ type EngineOptions[ModuleT any] struct {
 }
 
 func NewEngine[T any](opts EngineOptions[T]) *Engine {
+	schema := Schema{}
+	tables := map[string]bool{}
 	moduleDecoders := make(map[string][]ModuleStateDecoder)
 	for moduleName, module := range opts.ModuleSet {
 		for _, decoder := range opts.Decoders {
@@ -23,10 +27,26 @@ func NewEngine[T any](opts EngineOptions[T]) *Engine {
 				} else {
 					moduleDecoders[moduleName] = append(existing, modDecoder)
 				}
+
+				modSchema := modDecoder.GetSchema()
+				for _, table := range modSchema.Tables {
+					table.Name = moduleName + "_" + table.Name
+					if tables[table.Name] {
+						panic(fmt.Errorf("duplicate table name: %s", table.Name))
+					}
+					tables[table.Name] = true
+					schema.Tables = append(schema.Tables, table)
+				}
 			}
 		}
-
 	}
+
+	for _, indexer := range opts.Indexers {
+		if err := indexer.EnsureSetup(&SetupData{Schema: schema}); err != nil {
+			panic(err)
+		}
+	}
+
 	return &Engine{
 		moduleDecoders: moduleDecoders,
 		indexers:       opts.Indexers,

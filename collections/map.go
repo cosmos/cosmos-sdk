@@ -5,8 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/store"
+
+	"cosmossdk.io/collections/codec"
 )
 
 // Map represents the basic collections object.
@@ -17,9 +18,10 @@ type Map[K, V any] struct {
 	vc codec.ValueCodec[V]
 
 	// store accessor
-	sa     func(context.Context) store.KVStore
-	prefix []byte
-	name   string
+	sa      func(context.Context) store.KVStore
+	prefix  []byte
+	name    string
+	isIndex bool
 }
 
 // NewMap returns a Map given a StoreKey, a Prefix, human-readable name and the relative value and key encoders.
@@ -32,12 +34,24 @@ func NewMap[K, V any](
 	keyCodec codec.KeyCodec[K],
 	valueCodec codec.ValueCodec[V],
 ) Map[K, V] {
+	return newMap(schemaBuilder, prefix, name, keyCodec, valueCodec, false)
+}
+
+func newMap[K, V any](
+	schemaBuilder *SchemaBuilder,
+	prefix Prefix,
+	name string,
+	keyCodec codec.KeyCodec[K],
+	valueCodec codec.ValueCodec[V],
+	isIndex bool,
+) Map[K, V] {
 	m := Map[K, V]{
-		kc:     keyCodec,
-		vc:     valueCodec,
-		sa:     schemaBuilder.schema.storeAccessor,
-		prefix: prefix.Bytes(),
-		name:   name,
+		kc:      keyCodec,
+		vc:      valueCodec,
+		sa:      schemaBuilder.schema.storeAccessor,
+		prefix:  prefix.Bytes(),
+		name:    name,
+		isIndex: isIndex,
 	}
 	schemaBuilder.addCollection(collectionImpl[K, V]{m})
 	return m

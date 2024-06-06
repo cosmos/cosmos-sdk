@@ -5,8 +5,8 @@ import (
 )
 
 type Indexer interface {
+	EnsureSetup(*SetupData) error
 	StartBlock(uint64) error
-	MigrateSchema(*MigrationData) error
 	IndexBlockHeader(*BlockHeaderData) error
 	IndexTx(*TxData) error
 	IndexEvent(*EventData) error
@@ -15,19 +15,19 @@ type Indexer interface {
 	Commit() error
 }
 
-type MigrationData struct {
+type SetupData struct {
 	Schema Schema
 }
 
 type BlockHeaderData struct {
 	Height uint64
-	Header json.RawMessage
+	Header ToJSON
 }
 
 type TxData struct {
 	TxIndex uint64
 	Bytes   []byte
-	JSON    json.RawMessage
+	JSON    ToJSON
 }
 
 type EventData struct {
@@ -35,5 +35,9 @@ type EventData struct {
 	MsgIndex   uint64
 	EventIndex uint64
 	Type       string
-	Data       json.RawMessage
+	Data       ToJSON
+}
+
+type ToJSON interface {
+	ToJSON() json.RawMessage
 }

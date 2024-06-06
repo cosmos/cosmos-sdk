@@ -83,9 +83,9 @@ func extractFields(x any) ([]indexerbase.Column, func(any) any) {
 		return hasSchema.SchemaColumns(), nil
 	}
 
-	ty, f := simpleType(x)
+	ty := indexerbase.TypeForGoValue(x)
 	if ty >= 0 {
-		return []indexerbase.Column{{Type: ty}}, f
+		return []indexerbase.Column{{Type: ty}}, nil
 	}
 
 	if _, ok := x.(interface{ String() string }); ok {
@@ -97,39 +97,6 @@ func extractFields(x any) ([]indexerbase.Column, func(any) any) {
 	}
 
 	panic(fmt.Errorf("unsupported type %T", x))
-}
-
-func simpleType(x any) (indexerbase.Type, func(any) any) {
-	switch x.(type) {
-	case int8:
-		return indexerbase.TypeInt8, func(x any) any { return x.(int8) }
-	case int16:
-		return indexerbase.TypeInt16, func(x any) any { return x.(int16) }
-	case int32:
-		return indexerbase.TypeInt32, func(x any) any { return x.(int32) }
-	case int64:
-		return indexerbase.TypeInt64, func(x any) any { return x.(int64) }
-	case string:
-		return indexerbase.TypeString, func(x any) any { return x.(string) }
-	case []byte:
-		return indexerbase.TypeBytes, func(x any) any { return x.([]byte) }
-	case bool:
-		return indexerbase.TypeBool, func(x any) any { return x.(bool) }
-	case float32:
-		return indexerbase.TypeFloat32, func(x any) any { return x.(float32) }
-	case float64:
-		return indexerbase.TypeFloat64, func(x any) any { return x.(float64) }
-	case uint8:
-		return indexerbase.TypeInt16, func(x any) any { return int16(x.(uint8)) }
-	case uint16:
-		return indexerbase.TypeInt32, func(x any) any { return int32(x.(uint16)) }
-	case uint32:
-		return indexerbase.TypeInt64, func(x any) any { return int64(x.(uint32)) }
-	case uint64:
-		return indexerbase.TypeDecimal, func(x any) any { panic("TODO") }
-	default:
-		return -1, nil
-	}
 }
 
 func ensureNames(x any, defaultName string, cols []indexerbase.Column) {

@@ -8,7 +8,7 @@ import (
 	indexerbase "cosmossdk.io/indexer/base"
 )
 
-func (indexer) insertOrUpdater(table indexerbase.Table) {
+func (i *indexer) insertOrUpdater(table indexerbase.Table) {
 
 }
 

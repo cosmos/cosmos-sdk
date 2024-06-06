@@ -65,7 +65,7 @@ func (i *indexer) createColumnDef(w io.Writer, col indexerbase.Column) error {
 	return err
 }
 
-func (i indexer) colType(col indexerbase.Column) (string, error) {
+func (i *indexer) colType(col indexerbase.Column) (string, error) {
 	switch col.Type {
 	case indexerbase.TypeString:
 		return "TEXT", nil
@@ -91,6 +91,8 @@ func (i indexer) colType(col indexerbase.Column) (string, error) {
 		return "TEXT", fmt.Errorf("enums not supported yet")
 	case indexerbase.TypeJSON:
 		return "JSONB", nil
+	case indexerbase.TypeBech32Address:
+		return "TEXT", nil
 	default:
 		return "", fmt.Errorf("unsupported type %v", col.Type)
 	}

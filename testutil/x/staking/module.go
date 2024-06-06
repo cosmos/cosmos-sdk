@@ -2,6 +2,8 @@ package staking
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -28,6 +30,7 @@ var (
 	_ module.HasName        = AppModule{}
 	_ module.HasAminoCodec  = AppModule{}
 	_ module.HasGRPCGateway = AppModule{}
+	_ module.HasABCIGenesis = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasServices           = AppModule{}
@@ -104,6 +107,35 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 // RegisterMigrations registers module migrations
 func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	return nil
+}
+
+// DefaultGenesis returns default genesis state as raw bytes for the staking module.
+func (am AppModule) DefaultGenesis() json.RawMessage {
+	return am.cdc.MustMarshalJSON(types.DefaultGenesisState())
+}
+
+// ValidateGenesis performs genesis state validation for the staking module.
+func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
+	var data types.GenesisState
+	if err := am.cdc.UnmarshalJSON(bz, &data); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+	}
+
+	return ValidateGenesis(&data)
+}
+
+// InitGenesis performs genesis initialization for the staking module.
+func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) ([]appmodule.ValidatorUpdate, error) {
+	return []appmodule.ValidatorUpdate{}, nil
+}
+
+// ExportGenesis returns the exported genesis state as raw bytes for the staking module.
+func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
+	marshalJSON, err := am.cdc.MarshalJSON(types.DefaultGenesisState())
+	if err != nil {
+		return nil, err
+	}
+	return marshalJSON, nil
 }
 
 // ConsensusVersion implements HasConsensusVersion

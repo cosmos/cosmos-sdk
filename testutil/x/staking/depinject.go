@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/exp/maps"
 
-	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
+	modulev1 "cosmossdk.io/api/cosmos/mstaking/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"

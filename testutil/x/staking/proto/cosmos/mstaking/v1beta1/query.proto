@@ -1,10 +1,10 @@
 syntax = "proto3";
-package cosmos.staking.v1beta1;
+package cosmos.mstaking.v1beta1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "cosmos/staking/v1beta1/mstaking.proto";
+import "cosmos/mstaking/v1beta1/staking.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/query/v1/query.proto";
 import "amino/amino.proto";

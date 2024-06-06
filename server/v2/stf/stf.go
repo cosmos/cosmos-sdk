@@ -18,6 +18,9 @@ import (
 	"cosmossdk.io/server/v2/stf/internal"
 )
 
+// Identity defines STF's bytes identity and it's used by STF to store things in its own state.
+var Identity = []byte("stf")
+
 // STF is a struct that manages the state transition component of the app.
 type STF[T transaction.Tx] struct {
 	logger      log.Logger
@@ -407,14 +410,13 @@ func (s STF[T]) validatorUpdates(
 	return ctx.events, valSetUpdates, nil
 }
 
-// TODO reserved in consensus OR need a keeper here
 const headerInfoPrefix = 0x37
 
 // setHeaderInfo sets the header info in the state to be used by queries in the future.
 func (s STF[T]) setHeaderInfo(state store.WriterMap, headerInfo header.Info) error {
 	// TODO storing header info is too low level here, stf should be stateless.
 	// We should have a keeper that does this.
-	runtimeStore, err := state.GetWriter(appmanager.ConsensusIdentity)
+	runtimeStore, err := state.GetWriter(Identity)
 	if err != nil {
 		return err
 	}
@@ -431,7 +433,7 @@ func (s STF[T]) setHeaderInfo(state store.WriterMap, headerInfo header.Info) err
 
 // getHeaderInfo gets the header info from the state. It should only be used for queries
 func (s STF[T]) getHeaderInfo(state store.WriterMap) (i header.Info, err error) {
-	runtimeStore, err := state.GetWriter(appmanager.ConsensusIdentity)
+	runtimeStore, err := state.GetWriter(Identity)
 	if err != nil {
 		return header.Info{}, err
 	}

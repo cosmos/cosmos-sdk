@@ -230,12 +230,9 @@ type PermanentLockingAccount struct {
 
 ## How lockup work
 
-### Clawback enable account
-
-
 ### Shared execute handlers
 
-SendCoins:
+Send Coins:
     - Calculate the current locked tokens amount. This different for each lockup type.
     - Get the lockup account balance for the sent denom through enviroment query service.
     - Calculate the non-bonded locked token amount. notBondedLocked = lockedAmount - Min(delegateAmount, lockedAmount)
@@ -248,6 +245,8 @@ Withdraw Unlocked Tokens:
     - Get the withdraw amount. widrawAmount = Min(total locked amount - withdrawed amount, spenable amount).
     - If withdraw amount is not empty send the withdraw amount from lockup account to withdraw address.
     - Add the withdraw amount to WithdrawedAmount tracking.
+    
+### Clawback enable account
 
 Clawback: 
     - Calculate the current locked tokens amount. This different for each lockup type.

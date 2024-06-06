@@ -10,10 +10,12 @@ import (
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	grpc "cosmossdk.io/server/v2/api/grpc"
+	cmtcfg "github.com/cometbft/cometbft/config"
 )
 
 type mockGRPCService struct {
@@ -113,4 +115,24 @@ func TestServer(t *testing.T) {
 		t.Log(err)
 		t.Fail()
 	}
+}
+
+func TestReadConfig(t *testing.T) {
+	currentDir, err := os.Getwd()
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+	configPath := filepath.Join(currentDir, "testdata")
+
+	v, err := serverv2.ReadConfig(configPath)
+	require.NoError(t, err)
+
+	grpcConfig := grpc.DefaultConfig()
+	err = v.Sub("grpc-server").Unmarshal(&grpcConfig)
+	require.NoError(t, err)
+
+	cmtConfig := cmtcfg.DefaultConfig()
+	err = v.Unmarshal(&cmtConfig)
+	require.NoError(t, err)
 }

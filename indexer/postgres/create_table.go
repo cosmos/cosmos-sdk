@@ -9,7 +9,7 @@ import (
 	indexerbase "cosmossdk.io/indexer/base"
 )
 
-func (i indexer) createTableStatement(tableSchema indexerbase.Table) (string, error) {
+func (i *indexer) createTableStatement(tableSchema indexerbase.Table) (string, error) {
 	w := &bytes.Buffer{}
 	_, err := fmt.Fprintf(w, "CREATE TABLE %s (\n\t", tableSchema.Name)
 	if err != nil {
@@ -47,7 +47,7 @@ func (i indexer) createTableStatement(tableSchema indexerbase.Table) (string, er
 	return w.String(), nil
 }
 
-func (i indexer) createColumnDef(w io.Writer, col indexerbase.Column) error {
+func (i *indexer) createColumnDef(w io.Writer, col indexerbase.Column) error {
 	typeStr, err := i.colType(col)
 	if err != nil {
 		return err

@@ -19,17 +19,10 @@ type EntityUpdate struct {
 	// Value returns the non-primary key columns of the entity and can either conform to the same constraints
 	// as EntityUpdate.Key or it may be and instance of ValueUpdates. ValueUpdates can be used as a performance
 	// optimization to avoid copying the values of the entity into the update and to omit unchanged columns.
+	// If this is a delete operation, then this value is ignored and can be nil.
 	Value any
-}
 
-// EntityDelete represents a delete operation on an entity in the schema.
-type EntityDelete struct {
-	// TableName is the name of the table that the entity belongs to in the schema.
-	TableName string
-
-	// Key returns the value of the primary key of the entity and must conform to the same constraints as
-	// EntityUpdate.Key.
-	Key any
+	Delete bool
 }
 
 // ValueUpdates is an interface that represents the value columns of an entity update. Columns that

@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	indexerbase "cosmossdk.io/indexer/base"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -181,6 +182,6 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 }
 
-func (am AppModule) CollectionsSchema() collections.Schema {
-	return am.keeper.(keeper.BaseKeeper).Schema
+func (am AppModule) ModuleDecoder() (indexerbase.ModuleDecoder, error) {
+	return am.keeper.(keeper.BaseKeeper).Schema.ModuleDecoder(collections.IndexingOptions{})
 }

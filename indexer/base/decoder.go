@@ -1,11 +1,12 @@
 package indexerbase
 
-type Decoder interface {
-	ExtractModuleDecoder(moduleName string, module any) ModuleStateDecoder
+type ModuleDecoder struct {
+	Schema    Schema
+	KVDecoder KVDecoder
 }
 
-type ModuleStateDecoder interface {
-	GetSchema() Schema
-	DecodeSet(key, value []byte) (EntityUpdate, bool, error)
-	DecodeDelete(key []byte) (EntityDelete, bool, error)
+type IndexableModule interface {
+	ModuleDecoder() (ModuleDecoder, error)
 }
+
+type KVDecoder = func(key, value []byte) (EntityUpdate, bool, error)

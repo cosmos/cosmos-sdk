@@ -16,24 +16,32 @@ type indexer struct {
 
 type Options struct{}
 
-func NewIndexer(opts Options) indexerbase.Indexer {
+func NewIndexer(ctx context.Context, opts Options) (indexerbase.LogicalListener, error) {
 	// get env var DATABASE_URL
 	dbUrl, ok := os.LookupEnv("DATABASE_URL")
 	if !ok {
 		panic("DATABASE_URL not set")
 	}
 
-	conn, err := pgx.Connect(context.Background(), dbUrl)
+	conn, err := pgx.Connect(ctx, dbUrl)
 	if err != nil {
 		panic(err)
 	}
 
-	return indexer{
+	i := &indexer{
 		conn: conn,
 	}
+	return i.logicalListener()
 }
 
-func (i indexer) EnsureSetup(data *indexerbase.SetupData) error {
+func (i *indexer) logicalListener() (indexerbase.LogicalListener, error) {
+	return indexerbase.LogicalListener{
+		PhysicalListener: indexerbase.PhysicalListener{},
+		EnsureSetup:      i.ensureSetup,
+	}, nil
+}
+
+func (i *indexer) ensureSetup(data indexerbase.LogicalSetupData) error {
 	for _, table := range data.Schema.Tables {
 		createTable, err := i.createTableStatement(table)
 		if err != nil {
@@ -44,39 +52,39 @@ func (i indexer) EnsureSetup(data *indexerbase.SetupData) error {
 	return nil
 }
 
-func (i indexer) StartBlock(u uint64) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (i indexer) IndexBlockHeader(data *indexerbase.BlockHeaderData) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (i indexer) IndexTx(data *indexerbase.TxData) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (i indexer) IndexEvent(data *indexerbase.EventData) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (i indexer) IndexEntityUpdate(update indexerbase.EntityUpdate) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (i indexer) IndexEntityDelete(entityDelete indexerbase.EntityDelete) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (i indexer) Commit() error {
-	//TODO implement me
-	panic("implement me")
-}
-
-var _ indexerbase.Indexer = &indexer{}
+//func (i indexer) StartBlock(u uint64) error {
+//	//TODO implement me
+//	panic("implement me")
+//}
+//
+//func (i indexer) IndexBlockHeader(data *indexerbase.BlockHeaderData) error {
+//	//TODO implement me
+//	panic("implement me")
+//}
+//
+//func (i indexer) IndexTx(data *indexerbase.TxData) error {
+//	//TODO implement me
+//	panic("implement me")
+//}
+//
+//func (i indexer) IndexEvent(data *indexerbase.EventData) error {
+//	//TODO implement me
+//	panic("implement me")
+//}
+//
+//func (i indexer) IndexEntityUpdate(update indexerbase.EntityUpdate) error {
+//	//TODO implement me
+//	panic("implement me")
+//}
+//
+//func (i indexer) IndexEntityDelete(entityDelete indexerbase.EntityDelete) error {
+//	//TODO implement me
+//	panic("implement me")
+//}
+//
+//func (i indexer) Commit() error {
+//	//TODO implement me
+//	panic("implement me")
+//}
+//
+//var _ indexerbase.Indexer = &indexer{}

@@ -94,9 +94,7 @@ type Collection interface {
 
 	getTableSchema() indexerbase.Table
 
-	decodeSet(key, value []byte) (indexerbase.EntityUpdate, bool, error)
-
-	decodeDelete(key []byte) (indexerbase.EntityDelete, bool, error)
+	decodeKVPair(key, value []byte, delete bool) (indexerbase.EntityUpdate, bool, error)
 
 	isIndex() bool
 }

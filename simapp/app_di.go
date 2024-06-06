@@ -3,6 +3,7 @@
 package simapp
 
 import (
+	"context"
 	_ "embed"
 	"fmt"
 	"io"
@@ -12,12 +13,9 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cast"
 
-	"cosmossdk.io/indexer/postgres"
-
-	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	indexerbase "cosmossdk.io/indexer/base"
-	storesource "cosmossdk.io/indexer/source/store"
+	"cosmossdk.io/indexer/postgres"
 
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/depinject"
@@ -257,19 +255,32 @@ func NewSimApp(
 	//if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
 	//	panic(err)
 	//}
+	moduleDecoders := map[string]indexerbase.ModuleDecoder{}
+	for moduleName, module := range appModules {
+		if indexable, ok := module.(indexerbase.IndexableModule); ok {
+			decoder, err := indexable.ModuleDecoder()
+			if err != nil {
+				panic(err)
+			}
+			moduleDecoders[moduleName] = decoder
+		}
+	}
+	pgIndexer, err := postgres.NewIndexer(context.Background(), postgres.Options{})
+	if err != nil {
+		panic(err)
+	}
+	engine, err := indexerbase.NewEngine(indexerbase.EngineOptions{
+		ModuleDecoders: moduleDecoders,
+		LogicalListeners: []indexerbase.LogicalListener{
+			pgIndexer,
+		},
+	})
+	if err != nil {
+		panic(err)
+	}
 	app.SetStreamingManager(storetypes.StreamingManager{
 		ABCIListeners: []storetypes.ABCIListener{
-			storesource.NewSource(storesource.Options{
-				EngineOptions: indexerbase.EngineOptions[appmodule.AppModule]{
-					ModuleSet: appModules,
-					Decoders: []indexerbase.Decoder{
-						collections.NewDecoder(collections.DecoderOptions{}),
-					},
-					Indexers: []indexerbase.Indexer{
-						postgres.NewIndexer(postgres.Options{}),
-					},
-				},
-			}),
+			storetypes.FromPhysicalListener(engine.PhysicalListener()),
 		},
 		StopNodeOnErr: true,
 	})

@@ -1,8 +1,11 @@
 package collections
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
+
+	"github.com/tidwall/btree"
 
 	indexerbase "cosmossdk.io/indexer/base"
 )
@@ -11,6 +14,10 @@ type IndexingOptions struct {
 }
 
 func (s Schema) ModuleDecoder(opts IndexingOptions) (indexerbase.ModuleDecoder, error) {
+	decoder := moduleDecoder{
+		lookup: &btree.Map[string, *collDecoder]{},
+	}
+
 	var tables []indexerbase.Table
 	for _, collName := range s.collectionsOrdered {
 		coll := s.collectionsByName[collName]
@@ -20,12 +27,40 @@ func (s Schema) ModuleDecoder(opts IndexingOptions) (indexerbase.ModuleDecoder, 
 
 		schema := coll.getTableSchema()
 		tables = append(tables, schema)
+		decoder.lookup.Set(string(coll.GetPrefix()), &collDecoder{Collection: coll})
 	}
 	return indexerbase.ModuleDecoder{
 		Schema: indexerbase.Schema{
 			Tables: tables,
 		},
+		KVDecoder: decoder.decodeKV,
 	}, nil
+}
+
+type moduleDecoder struct {
+	lookup *btree.Map[string, *collDecoder]
+}
+
+func (m moduleDecoder) decodeKV(key, value []byte) (indexerbase.EntityUpdate, bool, error) {
+	ks := string(key)
+	var cd *collDecoder
+	m.lookup.Descend(ks, func(prefix string, cur *collDecoder) bool {
+		bytesPrefix := cur.GetPrefix()
+		if bytes.HasPrefix(key, bytesPrefix) {
+			cd = cur
+			return true
+		}
+		return false
+	})
+	if cd == nil {
+		return indexerbase.EntityUpdate{}, false, nil
+	}
+
+	return cd.decodeKVPair(key, value, false)
+}
+
+type collDecoder struct {
+	Collection
 }
 
 //type moduleStateDecoder struct {
@@ -124,24 +159,34 @@ func ensureNames(x any, defaultName string, cols []indexerbase.Column) {
 }
 
 func (c collectionImpl[K, V]) decodeKVPair(key, value []byte, delete bool) (indexerbase.EntityUpdate, bool, error) {
-	_, _, err := c.m.kc.Decode(key)
+	// strip prefix
+	key = key[len(c.GetPrefix()):]
+	_, k, err := c.m.kc.Decode(key)
 	if err != nil {
 		return indexerbase.EntityUpdate{}, false, err
 	}
 
-	if !delete {
-		_, err = c.m.vc.Decode(value)
-		if err != nil {
-			return indexerbase.EntityUpdate{}, false, err
-		}
+	if delete {
+		return indexerbase.EntityUpdate{
+			TableName: c.GetName(),
+			Key:       k,
+			Delete:    true,
+		}, true, nil
 	}
 
-	panic("TODO")
-}
+	v, err := c.m.vc.Decode(value)
+	if err != nil {
+		return indexerbase.EntityUpdate{
+			TableName: c.GetName(),
+		}, false, err
+	}
 
-//func (c collectionImpl[K, V]) decodeDelete(key []byte) (indexerbase.EntityDelete, bool, error) {
-//	panic("TODO")
-//}
+	return indexerbase.EntityUpdate{
+		TableName: c.GetName(),
+		Key:       v,
+		Delete:    true,
+	}, true, nil
+}
 
 type HasSchema interface {
 	SchemaColumns() []indexerbase.Column

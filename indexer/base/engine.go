@@ -206,28 +206,39 @@ func (p *Engine) onKVPair(storeKey string, key, value []byte, delete bool) error
 		return nil
 	}
 
-	// TODO:
-	//decoder, ok := p.decoders[storeKey]
-	//if !ok {
-	//	return nil
-	//}
-	//
-	//update, handled, err := decoder(key, value)
-	//if err != nil {
-	//	return err
-	//}
-	//if !handled {
-	//	return nil
-	//}
-	//
-	//for _, indexer := range p.logicalListeners {
-	//	if indexer.OnEntityUpdate == nil {
-	//		continue
-	//	}
-	//	if err := indexer.OnEntityUpdate(update); err != nil {
-	//		return err
-	//	}
-	//}
+	decoder, ok := p.decoders[storeKey]
+	if !ok {
+		return nil
+	}
+
+	update, handled, err := decoder(key, value)
+	if err != nil {
+		return err
+	}
+	if !handled {
+		p.logger.Info("not decoded", "storeKey", storeKey, "tableName", update.TableName)
+		return nil
+	}
+
+	p.logger.Info("decoded",
+		"storeKey", storeKey,
+		"tableName", update.TableName,
+		"key", update.Key,
+		"values", update.Value,
+		"delete", update.Delete,
+	)
+
+	// prepend module name to table name
+	update.TableName = fmt.Sprintf("%s_%s", storeKey, update.TableName)
+
+	for _, indexer := range p.logicalListeners {
+		if indexer.OnEntityUpdate == nil {
+			continue
+		}
+		if err := indexer.OnEntityUpdate(update); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

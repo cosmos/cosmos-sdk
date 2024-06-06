@@ -62,7 +62,7 @@ func (p physicalListener) ListenFinalizeBlock(_ context.Context, req abci.Finali
 func (p physicalListener) ListenCommit(ctx context.Context, res abci.CommitResponse, changeSet []*StoreKVPair) error {
 	if p.listener.OnKVPair != nil {
 		for _, kv := range changeSet {
-			err := p.listener.OnKVPair(kv.StoreKey, kv.Key, kv.Key, kv.Delete)
+			err := p.listener.OnKVPair(kv.StoreKey, kv.Key, kv.Value, kv.Delete)
 			if err != nil {
 				return err
 			}

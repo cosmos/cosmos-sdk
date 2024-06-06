@@ -84,10 +84,16 @@ func ValidateKey(cols []Column, value any) error {
 	if len(cols) == 0 {
 		return nil
 	}
+
 	if len(cols) == 1 {
 		return cols[0].ValidateValue(value)
 	}
-	values := value.([]any)
+
+	values, ok := value.([]any)
+	if !ok {
+		return fmt.Errorf("expected slice of values for key columns, got %T", value)
+	}
+
 	if len(cols) != len(values) {
 		return fmt.Errorf("expected %d key columns, got %d values", len(cols), len(value.([]any)))
 	}

@@ -112,6 +112,14 @@ func (p pairKeyCodec[K1, K2]) Decode(buffer []byte) (int, Pair[K1, K2], error) {
 	return readTotal, Join(key1, key2), nil
 }
 
+func (p pairKeyCodec[K1, K2]) DecodeIndexable(buffer []byte) (any, error) {
+	_, x, err := p.Decode(buffer)
+	if err != nil {
+		return nil, err
+	}
+	return []any{x.K1(), x.K2()}, nil
+}
+
 func (p pairKeyCodec[K1, K2]) Size(key Pair[K1, K2]) int {
 	size := 0
 	if key.key1 != nil {

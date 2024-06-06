@@ -161,9 +161,17 @@ func ensureNames(x any, defaultName string, cols []indexerbase.Column) {
 func (c collectionImpl[K, V]) decodeKVPair(key, value []byte, delete bool) (indexerbase.EntityUpdate, bool, error) {
 	// strip prefix
 	key = key[len(c.GetPrefix()):]
-	_, k, err := c.m.kc.Decode(key)
+	var k any
+	var err error
+	if decodeAny, ok := c.m.kc.(DecodeIndexable); ok {
+		k, err = decodeAny.DecodeIndexable(key)
+	} else {
+		_, k, err = c.m.kc.Decode(key)
+	}
 	if err != nil {
-		return indexerbase.EntityUpdate{}, false, err
+		return indexerbase.EntityUpdate{
+			TableName: c.GetName(),
+		}, false, err
 	}
 
 	if delete {
@@ -174,7 +182,12 @@ func (c collectionImpl[K, V]) decodeKVPair(key, value []byte, delete bool) (inde
 		}, true, nil
 	}
 
-	v, err := c.m.vc.Decode(value)
+	var v any
+	if decodeAny, ok := c.m.vc.(DecodeIndexable); ok {
+		v, err = decodeAny.DecodeIndexable(value)
+	} else {
+		v, err = c.m.vc.Decode(value)
+	}
 	if err != nil {
 		return indexerbase.EntityUpdate{
 			TableName: c.GetName(),
@@ -183,8 +196,8 @@ func (c collectionImpl[K, V]) decodeKVPair(key, value []byte, delete bool) (inde
 
 	return indexerbase.EntityUpdate{
 		TableName: c.GetName(),
-		Key:       v,
-		Delete:    true,
+		Key:       k,
+		Value:     v,
 	}, true, nil
 }
 
@@ -192,6 +205,6 @@ type HasSchema interface {
 	SchemaColumns() []indexerbase.Column
 }
 
-type DecodeAny interface {
-	DecodeAny([]byte) (any, error)
+type DecodeIndexable interface {
+	DecodeIndexable([]byte) (any, error)
 }

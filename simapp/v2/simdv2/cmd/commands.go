@@ -85,8 +85,7 @@ func initRootCmd(
 		rootCmd, 
 		newApp, 
 		log.NewNopLogger(), 
-		tempDir(), 
-		cometbft.New(tempDir(), &temporaryTxDecoder{txConfig}), 
+		cometbft.New(&temporaryTxDecoder{txConfig}), 
 		grpc.NewGRPCServer(),
 	)
 	if err != nil {
@@ -206,6 +205,3 @@ func appExport(
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
 }
 
-var tempDir = func() string {
-	return simapp.DefaultNodeHome
-}

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"testing"
 	"time"
 
 	"cosmossdk.io/math"
@@ -10,7 +11,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/require"
 )
 
 // Tests Set/Get TotalLiquidStakedTokens
@@ -821,4 +825,101 @@ func (s *KeeperTestSuite) TestDelegatorIsLiquidStaker() {
 	// Only the ICA module account should be considered a liquid staking provider
 	require.False(keeper.DelegatorIsLiquidStaker(baseAccountAddress), "base account")
 	require.True(keeper.DelegatorIsLiquidStaker(icaAccountAddress), "ICA module account")
+}
+
+func TestCheckVestedDelegationInVestingAccount(t *testing.T) {
+
+	var (
+		vestingAcct     *vestingtypes.ContinuousVestingAccount
+		startTime       = time.Now()
+		endTime         = startTime.Add(24 * time.Hour)
+		originalVesting = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100_000)))
+	)
+
+	testCases := []struct {
+		name         string
+		setupAcct    func()
+		blockTime    time.Time
+		coinRequired sdk.Coin
+		expRes       bool
+	}{
+		{
+			name:         "vesting account has zero delegations",
+			setupAcct:    func() {},
+			blockTime:    endTime,
+			coinRequired: sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt()),
+			expRes:       false,
+		},
+		{
+			name: "vested delegations exist but for a different coin",
+			setupAcct: func() {
+				vestingAcct.DelegatedFree = sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(100_000)))
+			},
+			blockTime:    endTime,
+			coinRequired: sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt()),
+			expRes:       false,
+		},
+		{
+			name: "all delegations are vesting",
+			setupAcct: func() {
+				vestingAcct.DelegatedVesting = vestingAcct.OriginalVesting
+			},
+			blockTime:    startTime,
+			coinRequired: sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt()),
+			expRes:       false,
+		},
+		{
+			name: "not enough vested coin",
+			setupAcct: func() {
+				vestingAcct.DelegatedFree = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(80_000)))
+			},
+			blockTime:    endTime,
+			coinRequired: sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100_000)),
+			expRes:       false,
+		},
+		{
+			name: "account is vested and have vested delegations",
+			setupAcct: func() {
+				vestingAcct.DelegatedFree = vestingAcct.OriginalVesting
+			},
+			blockTime:    endTime,
+			coinRequired: sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100_000)),
+			expRes:       true,
+		},
+		{
+			name: "vesting account partially vested and have vesting and vested delegations",
+			setupAcct: func() {
+				vestingAcct.DelegatedFree = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(50_000)))
+				vestingAcct.DelegatedVesting = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(50_000)))
+			},
+			blockTime:    startTime.Add(18 * time.Hour), // vest 3/4 vesting period
+			coinRequired: sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(75_000)),
+
+			expRes: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			baseAcc := authtypes.NewBaseAccount(sdk.AccAddress([]byte("addr")), secp256k1.GenPrivKey().PubKey(), 0, 0)
+			vestingAcct, err := vestingtypes.NewContinuousVestingAccount(
+				baseAcc,
+				originalVesting,
+				startTime.Unix(),
+				endTime.Unix(),
+			)
+			require.NoError(t, err)
+
+			tc.setupAcct()
+
+			require.Equal(
+				t,
+				tc.expRes, keeper.CheckVestedDelegationInVestingAccount(
+					vestingAcct,
+					tc.blockTime,
+					tc.coinRequired,
+				),
+			)
+		})
+	}
 }

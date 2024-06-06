@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
@@ -27,6 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestCancelUnbondingDelegation(t *testing.T) {
@@ -1657,6 +1659,123 @@ func TestICADelegateUndelegate(t *testing.T) {
 	validator, err = stakingKeeper.GetValidator(ctx, validatorAddress)
 	require.NoError(t, err, "validator should have been found")
 	require.Equal(t, math.LegacyZeroDec(), validator.LiquidShares, "validator liquid shares after undelegation")
+}
+
+func TestTokenizeAndRedeemVestedDelegation(t *testing.T) {
+	f := initFixture(t)
+
+	ctx := f.sdkCtx
+	var (
+		stakingKeeper = f.stakingKeeper
+		bankKeeper    = f.bankKeeper
+		accountKeeper = f.accountKeeper
+	)
+
+	addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 1, stakingKeeper.TokensFromConsensusPower(ctx, 10000))
+	addrAcc1 := addrs[0]
+	addrVal1 := sdk.ValAddress(addrAcc1)
+
+	// Original vesting mount (OV)
+	originalVesting := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100_000)))
+	startTime := time.Now()
+	endTime := time.Now().Add(24 * time.Hour)
+
+	// Create vesting account
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	baseAcc := authtypes.NewBaseAccount(addrAcc1, pubkey, 0, 0)
+	continuousVestingAccount, err := vestingtypes.NewContinuousVestingAccount(
+		baseAcc,
+		originalVesting,
+		startTime.Unix(),
+		endTime.Unix(),
+	)
+	require.NoError(t, err)
+	accountKeeper.SetAccount(ctx, continuousVestingAccount)
+
+	pubKeys := simtestutil.CreateTestPubKeys(1)
+	pk1 := pubKeys[0]
+
+	// Create Validators and Delegation
+	val1 := testutil.NewValidator(t, addrVal1, pk1)
+	val1.Status = stakingtypes.Bonded
+	stakingKeeper.SetValidator(ctx, val1)
+	stakingKeeper.SetValidatorByPowerIndex(ctx, val1)
+	err = stakingKeeper.SetValidatorByConsAddr(ctx, val1)
+	require.NoError(t, err)
+
+	// Delegate all the vesting coins
+	originalVestingAmount := originalVesting.AmountOf(sdk.DefaultBondDenom)
+	err = delegateCoinsFromAccount(ctx, *stakingKeeper, addrAcc1, originalVestingAmount, val1)
+	require.NoError(t, err)
+
+	// Apply TM updates
+	applyValidatorSetUpdates(t, ctx, stakingKeeper, -1)
+
+	_, err = stakingKeeper.GetDelegation(ctx, addrAcc1, addrVal1)
+	require.NoError(t, err)
+
+	// Check vesting account data
+	// V=100, V'=0, DV=100, DF=0
+	acc := accountKeeper.GetAccount(ctx, addrAcc1).(*vestingtypes.ContinuousVestingAccount)
+	require.Equal(t, originalVesting, acc.GetVestingCoins(ctx.BlockTime()))
+	require.Empty(t, acc.GetVestedCoins(ctx.BlockTime()))
+	require.Equal(t, originalVesting, acc.GetDelegatedVesting())
+	require.Empty(t, acc.GetDelegatedFree())
+
+	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
+
+	// Vest half the original vesting coins
+	vestHalfTime := startTime.Add(time.Duration(float64(endTime.Sub(startTime).Nanoseconds()) / float64(2)))
+	ctx = ctx.WithBlockTime(vestHalfTime)
+
+	// expect that half of the orignal vesting coins are vested
+	expVestedCoins := originalVesting.QuoInt(math.NewInt(2))
+
+	// Check vesting account data
+	// V=50, V'=50, DV=100, DF=0
+	acc = accountKeeper.GetAccount(ctx, addrAcc1).(*vestingtypes.ContinuousVestingAccount)
+	require.Equal(t, expVestedCoins, acc.GetVestingCoins(ctx.BlockTime()))
+	require.Equal(t, expVestedCoins, acc.GetVestedCoins(ctx.BlockTime()))
+	require.Equal(t, originalVesting, acc.GetDelegatedVesting())
+	require.Empty(t, acc.GetDelegatedFree())
+
+	// Expect that tokenizing all the delegated coins fails
+	// since only the half are vested
+	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
+		DelegatorAddress:    addrAcc1.String(),
+		ValidatorAddress:    addrVal1.String(),
+		Amount:              originalVesting[0],
+		TokenizedShareOwner: addrAcc1.String(),
+	})
+	require.Error(t, err)
+
+	// Tokenize the delegated vested coins
+	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
+		DelegatorAddress:    addrAcc1.String(),
+		ValidatorAddress:    addrVal1.String(),
+		Amount:              sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: originalVestingAmount.Quo(math.NewInt(2))},
+		TokenizedShareOwner: addrAcc1.String(),
+	})
+	require.NoError(t, err)
+
+	shareDenom := addrVal1.String() + "/1"
+
+	// Redeem the tokens
+	_, err = msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx),
+		&types.MsgRedeemTokensForShares{
+			DelegatorAddress: addrAcc1.String(),
+			Amount:           sdk.Coin{Denom: shareDenom, Amount: originalVestingAmount.Quo(math.NewInt(2))},
+		},
+	)
+	require.NoError(t, err)
+
+	// After the redemption of the tokens, the vesting delegations should be evenly distributed
+	// V=50, V'=50, DV=100, DF=50
+	acc = accountKeeper.GetAccount(ctx, addrAcc1).(*vestingtypes.ContinuousVestingAccount)
+	require.Equal(t, expVestedCoins, acc.GetVestingCoins(ctx.BlockTime()))
+	require.Equal(t, expVestedCoins, acc.GetVestedCoins(ctx.BlockTime()))
+	require.Equal(t, expVestedCoins, acc.GetDelegatedVesting())
+	require.Equal(t, expVestedCoins, acc.GetDelegatedFree())
 }
 
 // Helper function to create 32-length account

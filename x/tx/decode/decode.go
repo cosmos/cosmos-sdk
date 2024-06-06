@@ -4,17 +4,18 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/dynamicpb"
 	"reflect"
 	"strings"
+
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/dynamicpb"
 
 	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/tx/signing"
-	"google.golang.org/protobuf/proto"
 )
 
 // DecodedTx contains the decoded transaction, its signers, and other flags.

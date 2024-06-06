@@ -13,6 +13,9 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
+	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/api/grpc"
+	"cosmossdk.io/server/v2/cometbft"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 	authcmd "cosmossdk.io/x/auth/client/cli"
@@ -24,11 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-
-	// TODO migrate all server dependencies to server/v2
-	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/server/v2/api/grpc"
-	"cosmossdk.io/server/v2/cometbft"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -82,10 +80,10 @@ func initRootCmd(
 
 	// Add empty server struct here for writing default config
 	err := serverv2.AddCommands(
-		rootCmd, 
-		newApp, 
-		log.NewNopLogger(), 
-		cometbft.New(&temporaryTxDecoder{txConfig}), 
+		rootCmd,
+		newApp,
+		log.NewNopLogger(),
+		cometbft.New(&temporaryTxDecoder{txConfig}),
 		grpc.NewGRPCServer(),
 	)
 	if err != nil {
@@ -204,4 +202,3 @@ func appExport(
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
 }
-

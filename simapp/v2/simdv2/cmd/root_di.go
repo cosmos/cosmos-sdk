@@ -42,7 +42,7 @@ func NewRootCmd() *cobra.Command {
 			simapp.AppConfig(),
 			depinject.Supply(
 				log.NewNopLogger(),
-				simtestutil.NewAppOptionsWithFlagHome(""), //TODO: work with empty home
+				simtestutil.NewAppOptionsWithFlagHome(""), // TODO: currently work with empty home
 			),
 			depinject.Provide(
 				codec.ProvideInterfaceRegistry,

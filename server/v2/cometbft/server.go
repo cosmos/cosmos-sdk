@@ -18,6 +18,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
+	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/transaction"
 	serverv2 "cosmossdk.io/server/v2"
@@ -28,7 +29,6 @@ import (
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
 
-	corectx "cosmossdk.io/core/context"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 

@@ -3,6 +3,7 @@ package indexerbase
 import "fmt"
 
 type Engine struct {
+	logger              Logger
 	tables              map[string]Table
 	decoders            map[string]KVDecoder
 	logicalListeners    []LogicalListener
@@ -14,6 +15,7 @@ type EngineOptions struct {
 	ModuleDecoders    map[string]ModuleDecoder
 	LogicalListeners  []LogicalListener
 	PhysicalListeners []PhysicalListener
+	Logger            Logger
 }
 
 func NewEngine(opts EngineOptions) (*Engine, error) {
@@ -48,6 +50,7 @@ func NewEngine(opts EngineOptions) (*Engine, error) {
 	}
 
 	return &Engine{
+		logger:            opts.Logger,
 		tables:            tables,
 		decoders:          decoders,
 		physicalListeners: physicalListeners,
@@ -116,6 +119,10 @@ func (p *Engine) PhysicalListener() PhysicalListener {
 }
 
 func (p *Engine) startBlock(height uint64) error {
+	if p.logger != nil {
+		p.logger.Debug("start block", "height", height)
+	}
+
 	for _, listener := range p.physicalListeners {
 		if listener.StartBlock == nil {
 			continue
@@ -128,6 +135,10 @@ func (p *Engine) startBlock(height uint64) error {
 }
 
 func (p *Engine) onBlockHeader(data BlockHeaderData) error {
+	if p.logger != nil {
+		p.logger.Debug("block header", "height", data.Height)
+	}
+
 	for _, listener := range p.physicalListeners {
 		if listener.OnBlockHeader == nil {
 			continue

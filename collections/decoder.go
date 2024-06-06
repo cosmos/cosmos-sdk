@@ -145,5 +145,8 @@ func (c collectionImpl[K, V]) decodeKVPair(key, value []byte, delete bool) (inde
 
 type HasSchema interface {
 	SchemaColumns() []indexerbase.Column
-	//DecodeAdaptor() func(any) any
+}
+
+type DecodeAny interface {
+	DecodeAny([]byte) (any, error)
 }

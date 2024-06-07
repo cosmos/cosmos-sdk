@@ -33,7 +33,6 @@ func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger 
 	}
 
 	server := NewServer(logger, components...)
-	// Write default config for each server module
 	flags := server.StartFlags()
 
 	startCmd := &cobra.Command{
@@ -43,16 +42,16 @@ func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger 
 			v := GetViperFromCmd(cmd)
 			l := GetLoggerFromCmd(cmd)
 
-			app := newApp(v, l)
-			server.Init(app, v, l)
-
 			for _, startFlags := range flags {
 				v.BindPFlags(startFlags)
 			}
 
-			if err := v.BindPFlags(cmd.Flags()); err != nil { // the server components are already instantiated here, so binding the flags is useless.
+			if err := v.BindPFlags(cmd.Flags()); err != nil {
 				return err
 			}
+
+			app := newApp(v, l)
+			server.Init(app, v, l)
 
 			srvConfig := Config{StartBlock: true}
 			ctx := cmd.Context()
@@ -103,12 +102,12 @@ func AddCommands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logg
 			return err
 		}
 
-		if originalPersistentPreRunE != nil {
-			originalPersistentPreRunE(cmd, args)
+		if rootCmd.PersistentPreRun != nil {
+			rootCmd.PersistentPreRun(cmd, args)
 			return nil
 		}
 
-		return nil
+		return originalPersistentPreRunE(cmd, args)
 	}
 
 	rootCmd.AddCommand(cmds.Commands...)

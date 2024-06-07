@@ -73,7 +73,6 @@ func initRootCmd(
 		genutilcli.InitCmd(moduleManager),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
-		// startCommand(&temporaryTxDecoder{txConfig}),
 		// pruning.Cmd(newApp),
 		// snapshot.Cmd(newApp),
 	)

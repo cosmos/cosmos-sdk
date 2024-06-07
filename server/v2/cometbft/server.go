@@ -240,7 +240,7 @@ func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
 	}
 }
 
-func (s *CometBFTServer[T]) WriteConfig(configPath string) error {
+func (s *CometBFTServer[T]) WriteDefaultConfigAt(configPath string) error {
 	cometConfig := cmtcfg.DefaultConfig()
 	cmtcfg.WriteConfigFile(filepath.Join(configPath, "config.toml"), cometConfig)
 	return nil

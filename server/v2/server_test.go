@@ -15,7 +15,6 @@ import (
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	grpc "cosmossdk.io/server/v2/api/grpc"
-	cmtcfg "github.com/cometbft/cometbft/config"
 )
 
 type mockGRPCService struct {
@@ -130,9 +129,5 @@ func TestReadConfig(t *testing.T) {
 
 	grpcConfig := grpc.DefaultConfig()
 	err = v.Sub("grpc-server").Unmarshal(&grpcConfig)
-	require.NoError(t, err)
-
-	cmtConfig := cmtcfg.DefaultConfig()
-	err = v.Unmarshal(&cmtConfig)
 	require.NoError(t, err)
 }

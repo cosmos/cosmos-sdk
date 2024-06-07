@@ -34,11 +34,6 @@ type HasConfig interface {
 	Config() any
 }
 
-// for cometbft writing config itself
-type HasConfigWriting interface {
-	WriteConfig(string) error
-}
-
 // HasStartFlags is a server module that has start flags.
 type HasStartFlags interface {
 	StartCmdFlags() *pflag.FlagSet
@@ -176,18 +171,18 @@ func (s *Server) WriteConfig(configPath string) error {
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		if err := os.MkdirAll(configPath, os.ModePerm); err != nil {
-			panic(err)
+			return err
 		}
 	}
 
 	if err := os.WriteFile(filepath.Join(configPath, "app.toml"), b, 0o600); err != nil {
-		panic(fmt.Errorf("failed to write config: %w", err))
+		return fmt.Errorf("failed to write config: %w", err)
 	}
 
 	for _, component := range s.components {
-		if mod, ok := component.(HasConfigWriting); ok {
-			if err := mod.WriteConfig(configPath); err != nil {
-				panic(err)
+		if mod, ok := component.(interface{ WriteDefaultConfigAt(string) error }); ok {
+			if err := mod.WriteDefaultConfigAt(configPath); err != nil {
+				return err
 			}
 		}
 	}

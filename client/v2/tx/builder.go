@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	base "cosmossdk.io/api/cosmos/base/v1beta1"
@@ -27,10 +26,6 @@ var (
 
 type ExtendedTxBuilder interface {
 	SetExtensionOptions(...*gogoany.Any) // TODO: sdk.Any?
-}
-
-var marshalOption = protov2.MarshalOptions{
-	Deterministic: true,
 }
 
 // TxBuilder defines an interface which an application-defined concrete transaction

@@ -3,22 +3,65 @@ package tx
 import (
 	"fmt"
 
-	apicrypto "cosmossdk.io/api/cosmos/crypto/multisig/v1beta1"
+	base "cosmossdk.io/api/cosmos/base/v1beta1"
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/core/transaction"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // PreprocessTxFn defines a hook by which chains can preprocess transactions before broadcasting
 type PreprocessTxFn func(chainID string, key uint, tx TxBuilder) error
 
-// TxApiDecoder unmarshals transaction bytes into API Tx type
-type TxApiDecoder func(txBytes []byte) (apitx.Tx, error)
+type TxParameters struct {
+	timeoutHeight uint64
+	chainID       string
+	memo          string
+	signMode      apitxsigning.SignMode
 
-// TxApiEncoder marshals transaction to bytes
-type TxApiEncoder func(tx *apitx.Tx) ([]byte, error)
+	AccountConfig
+	GasConfig
+	FeeConfig
+	ExecutionOptions
+	ExtensionOptions
+}
+
+// AccountConfig defines the 'account' related fields in a transaction.
+type AccountConfig struct {
+	accountNumber uint64
+	sequence      uint64
+	fromName      string
+	fromAddress   sdk.AccAddress
+}
+
+// GasConfig defines the 'gas' related fields in a transaction.
+type GasConfig struct {
+	gas           uint64
+	gasAdjustment float64
+	gasPrices     []*base.DecCoin
+}
+
+// FeeConfig defines the 'fee' related fields in a transaction.
+type FeeConfig struct {
+	fees       []*base.Coin
+	feeGranter sdk.AccAddress
+	feePayer   sdk.AccAddress
+}
+
+// ExecutionOptions defines the transaction execution options ran by the client
+type ExecutionOptions struct {
+	unordered          bool
+	offline            bool
+	generateOnly       bool
+	simulateAndExecute bool
+	preprocessTxHook   PreprocessTxFn
+}
+
+type ExtensionOptions struct {
+	ExtOptions []*codectypes.Any
+}
 
 // GasEstimateResponse defines a response definition for tx gas estimation.
 type GasEstimateResponse struct {
@@ -42,42 +85,3 @@ func (tx TxWrapper) GetSignatures() ([]Signature, error) {
 	//TODO implement me
 	panic("implement me")
 }
-
-type Signature struct {
-	// PubKey is the public key to use for verifying the signature
-	PubKey cryptotypes.PubKey
-
-	// Data is the actual data of the signature which includes SignMode's and
-	// the signatures themselves for either single or multi-signatures.
-	Data SignatureData
-
-	// Sequence is the sequence of this account. Only populated in
-	// SIGN_MODE_DIRECT.
-	Sequence uint64
-}
-
-type SignatureData interface {
-	isSignatureData()
-}
-
-// SingleSignatureData represents the signature and SignMode of a single (non-multisig) signer
-type SingleSignatureData struct {
-	// SignMode represents the SignMode of the signature
-	SignMode apitxsigning.SignMode
-
-	// Signature is the raw signature.
-	Signature []byte
-}
-
-// MultiSignatureData represents the nested SignatureData of a multisig signature
-type MultiSignatureData struct {
-	// BitArray is a compact way of indicating which signers from the multisig key
-	// have signed
-	BitArray *apicrypto.CompactBitArray
-
-	// Signatures is the nested SignatureData's for each signer
-	Signatures []SignatureData
-}
-
-func (m *SingleSignatureData) isSignatureData() {}
-func (m *MultiSignatureData) isSignatureData()  {}

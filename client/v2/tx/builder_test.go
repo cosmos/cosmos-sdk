@@ -1,9 +1,10 @@
 package tx
 
 import (
-	"google.golang.org/protobuf/types/known/anypb"
 	"reflect"
 	"testing"
+
+	"google.golang.org/protobuf/types/known/anypb"
 
 	base "cosmossdk.io/api/cosmos/base/v1beta1"
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
@@ -24,7 +25,6 @@ import (
 )
 
 var (
-	key            = secp256k1.GenPrivKey()
 	cdc            = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 	ac             = addrcodec.NewBech32Codec("cosmos")
 	signingOptions = signing.Options{
@@ -34,11 +34,6 @@ var (
 	signingContext, _ = signing.NewContext(signingOptions)
 	decodeOptions     = txdecode.Options{SigningContext: signingContext}
 	decoder, _        = txdecode.NewDecoder(decodeOptions)
-
-	counterMsg = &countertypes.MsgIncreaseCounter{
-		Signer: "cosmos1zglwfu6xjzvzagqcmvzewyzjp9xwqw5qwrr8n9",
-		Count:  0,
-	}
 )
 
 func TestNewBuilderProvider(t *testing.T) {

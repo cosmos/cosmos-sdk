@@ -179,7 +179,7 @@ func SimulateFromSeed(
 
 		res, err := app.FinalizeBlock(finalizeBlockReq)
 		if err != nil {
-			return params, err
+			return params, fmt.Errorf("block finalization failed at height %d: %w", blockHeight, err)
 		}
 
 		ctx := app.NewContextLegacy(false, cmtproto.Header{
@@ -226,11 +226,9 @@ func SimulateFromSeed(
 		logWriter.AddEntry(EndBlockEntry(blockHeight))
 
 		if config.Commit {
-			_, err := app.Commit()
-			if err != nil {
-				return params, err
+			if _, err := app.Commit(); err != nil {
+				return params, fmt.Errorf("commit failed at height %d: %w", blockHeight, err)
 			}
-
 		}
 
 		if proposerAddress == nil {

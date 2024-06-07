@@ -119,7 +119,7 @@ func extractFields(x any) ([]indexerbase.Column, func(any) any) {
 	}
 
 	ty := indexerbase.TypeForGoValue(x)
-	if ty >= 0 {
+	if ty > 0 {
 		return []indexerbase.Column{{Type: ty}}, nil
 	}
 

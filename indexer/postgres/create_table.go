@@ -84,6 +84,14 @@ func (i *indexer) colType(col indexerbase.Column) (string, error) {
 		return "INTEGER", nil
 	case indexerbase.TypeInt64:
 		return "BIGINT", nil
+	case indexerbase.TypeUint8:
+		return "SMALLINT", nil
+	case indexerbase.TypeUint16:
+		return "INTEGER", nil
+	case indexerbase.TypeUint32:
+		return "BIGINT", nil
+	case indexerbase.TypeUint64:
+		return "NUMERIC", nil
 	case indexerbase.TypeDecimal:
 		return "NUMERIC", nil
 	case indexerbase.TypeFloat32:

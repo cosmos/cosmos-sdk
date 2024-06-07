@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"cosmossdk.io/collections"
+	indexerbase "cosmossdk.io/indexer/base"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -13,6 +15,7 @@ import (
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/depinject"
+
 	"cosmossdk.io/x/staking/client/cli"
 	"cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/types"
@@ -179,4 +182,8 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 // EndBlock returns the end blocker for the staking module.
 func (am AppModule) EndBlock(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {
 	return am.keeper.EndBlocker(ctx)
+}
+
+func (am AppModule) ModuleDecoder() (indexerbase.ModuleDecoder, error) {
+	return am.keeper.Schema.ModuleDecoder(collections.IndexingOptions{})
 }

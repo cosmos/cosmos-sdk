@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"strconv"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func migrateDelegationsByValidatorIndex(store storetypes.KVStore) error {
@@ -46,7 +45,7 @@ func migrateHistoricalInfoKeys(store storetypes.KVStore, logger log.Logger) erro
 	oldStore := prefix.NewStore(store, HistoricalInfoKey)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
-	defer sdk.LogDeferred(logger, func() error { return oldStoreIter.Close() })
+	defer logDeferred(logger, func() error { return oldStoreIter.Close() })
 
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
 		strHeight := oldStoreIter.Key()
@@ -64,4 +63,11 @@ func migrateHistoricalInfoKeys(store storetypes.KVStore, logger log.Logger) erro
 	}
 
 	return nil
+}
+
+// logDeferred logs an error in a deferred function call if the returned error is non-nil.
+func logDeferred(logger log.Logger, f func() error) {
+	if err := f(); err != nil {
+		logger.Error(err.Error())
+	}
 }

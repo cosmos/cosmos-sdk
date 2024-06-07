@@ -3,6 +3,7 @@ package runtime
 import (
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
@@ -13,16 +14,17 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	"cosmossdk.io/core/app"
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
 	rootstorev2 "cosmossdk.io/store/v2/root"
@@ -124,10 +126,6 @@ func ProvideAppBuilder(
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 	}
 
-	// TODO register as Invoker from simapp v2; remove if not needed
-	// std.RegisterInterfaces(interfaceRegistrar)
-	// std.RegisterLegacyAminoCodec(amino)
-
 	msgRouterBuilder := stf.NewMsgRouterBuilder()
 	app := &App{
 		storeKeys:          nil,
@@ -185,19 +183,28 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 	store.KVStoreService,
 	store.MemoryStoreService,
 ) {
-	var kvStoreKey string
-	storeKeyOverride := storeKeyOverride(config, key.Name())
-	if storeKeyOverride != nil {
-		kvStoreKey = storeKeyOverride.KvStoreKey
-	} else {
-		kvStoreKey = key.Name()
-	}
-	registerStoreKey(appBuilder, kvStoreKey)
-	kvService := stf.NewKVStoreService([]byte(kvStoreKey))
+	var (
+		kvService    store.KVStoreService     = failingStoreService{}
+		memKvService store.MemoryStoreService = failingStoreService{}
+	)
 
-	memStoreKey := fmt.Sprintf("memory:%s", key.Name())
-	registerStoreKey(appBuilder, memStoreKey)
-	memService := stf.NewMemoryStoreService([]byte(memStoreKey))
+	// skips modules that have no store
+	if !slices.Contains(config.SkipStoreKeys, key.Name()) {
+		var kvStoreKey string
+		storeKeyOverride := storeKeyOverride(config, key.Name())
+		if storeKeyOverride != nil {
+			kvStoreKey = storeKeyOverride.KvStoreKey
+		} else {
+			kvStoreKey = key.Name()
+		}
+
+		registerStoreKey(appBuilder, kvStoreKey)
+		kvService = stf.NewKVStoreService([]byte(kvStoreKey))
+
+		memStoreKey := fmt.Sprintf("memory:%s", key.Name())
+		registerStoreKey(appBuilder, memStoreKey)
+		memKvService = stf.NewMemoryStoreService([]byte(memStoreKey))
+	}
 
 	env := appmodulev2.Environment{
 		Logger:             logger,
@@ -209,10 +216,10 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 		MsgRouterService:   stf.NewMsgRouterService(appBuilder.app.msgRouterBuilder),
 		TransactionService: services.NewContextAwareTransactionService(),
 		KVStoreService:     kvService,
-		MemStoreService:    memService,
+		MemStoreService:    memKvService,
 	}
 
-	return env, kvService, memService
+	return env, kvService, memKvService
 }
 
 func registerStoreKey(wrapper *AppBuilder, key string) {
@@ -235,4 +242,10 @@ func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
 
 func ProvideCometService() comet.Service {
 	return &services.ContextAwareCometInfoService{}
+}
+
+// ProvideAppVersionModifier returns nil, `app.VersionModifier` is a feature of BaseApp and neither used nor required for runtim/v2.
+// nil is acceptable, see: https://github.com/cosmos/cosmos-sdk/blob/0a6ee406a02477ae8ccbfcbe1b51fc3930087f4c/x/upgrade/keeper/keeper.go#L438
+func ProvideAppVersionModifier(app *AppBuilder) app.VersionModifier {
+	return nil
 }

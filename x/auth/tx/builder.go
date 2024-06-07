@@ -33,11 +33,11 @@ func newBuilder(addressCodec address.Codec, decoder *decode.Decoder, codec codec
 }
 
 func newBuilderFromDecodedTx(addrCodec address.Codec, decoder *decode.Decoder, codec codec.BinaryCodec, decoded *gogoTxWrapper) (*builder, error) {
-	signatures := make([][]byte, len(decoded.decodedTx.Tx.Signatures))
-	copy(signatures, decoded.decodedTx.Tx.Signatures)
+	signatures := make([][]byte, len(decoded.Tx.Signatures))
+	copy(signatures, decoded.Tx.Signatures)
 
-	sigInfos := make([]*tx.SignerInfo, len(decoded.decodedTx.Tx.AuthInfo.SignerInfos))
-	for i, sigInfo := range decoded.decodedTx.Tx.AuthInfo.SignerInfos {
+	sigInfos := make([]*tx.SignerInfo, len(decoded.Tx.AuthInfo.SignerInfos))
+	for i, sigInfo := range decoded.Tx.AuthInfo.SignerInfos {
 		modeInfoV1 := new(tx.ModeInfo)
 		fromV2ModeInfo(sigInfo.ModeInfo, modeInfoV1)
 		sigInfos[i] = &tx.SignerInfo{

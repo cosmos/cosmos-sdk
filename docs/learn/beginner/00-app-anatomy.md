@@ -12,22 +12,31 @@ This document describes the core parts of a Cosmos SDK application, represented 
 
 The Daemon, or [Full-Node Client](../advanced/03-node.md), is the core process of a Cosmos SDK-based blockchain. Participants in the network run this process to initialize their state-machine, connect with other full-nodes, and update their state-machine as new blocks come in.
 
-```text
-                ^  +-------------------------------+  ^
-                |  |                               |  |
-                |  |  State-machine = Application  |  |
-                |  |                               |  |   Built with Cosmos SDK
-                |  |            ^      +           |  |
-                |  +----------- | ABCI | ----------+  v
-                |  |            +      v           |  ^
-                |  |                               |  |
-Blockchain Node |  |           Consensus           |  |
-                |  |                               |  |
-                |  +-------------------------------+  |   CometBFT
-                |  |                               |  |
-                |  |           Networking          |  |
-                |  |                               |  |
-                v  +-------------------------------+  v
+```mermaid
+flowchart TD
+    subgraph Blockchain_Node[Blockchain Node]
+        subgraph SM[State-machine = Application]
+            direction TB
+            SM1[Cosmos SDK]
+        end
+        subgraph ABCI[ABCI]
+            direction TB
+        end
+        subgraph Consensus[Consensus]
+            direction TB
+        end
+        subgraph Networking[Networking]
+            direction TB
+        end
+    end
+
+    SM <--> ABCI
+    ABCI <--> Consensus
+    Consensus <--> Networking
+
+    Blockchain_Node -->|Includes| SM
+    Blockchain_Node -->|Includes| Consensus
+    Blockchain_Node -->|Includes| Networking
 ```
 
 The blockchain full-node presents itself as a binary, generally suffixed by `-d` for "daemon" (e.g. `appd` for `app` or `gaiad` for `gaia`). This binary is built by running a simple [`main.go`](../advanced/03-node.md#main-function) function placed in `./cmd/appd/`. This operation usually happens through the [Makefile](#dependencies-and-makefile).
@@ -112,13 +121,15 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app.go#L626-L63
 
 There are two semantics around the new lifecycle method:
 
-- It runs before the `BeginBlocker` of all modules
-- It can modify consensus parameters in storage, and signal the caller through the return value.
+* It runs before the `BeginBlocker` of all modules
+* It can modify consensus parameters in storage, and signal the caller through the return value.
 
 When it returns `ConsensusParamsChanged=true`, the caller must refresh the consensus parameter in the finalize context:
+
 ```
 app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithConsensusParams(app.GetConsensusParams())
 ```
+
 The new ctx must be passed to all the other lifecycle methods.
 
 ### BeginBlocker and EndBlocker
@@ -272,6 +283,6 @@ The following is the `go.mod` of the [Cosmos Hub](https://github.com/cosmos/gaia
 https://github.com/cosmos/gaia/blob/26ae7c2/go.mod#L1-L28
 ```
 
-For building the application, a [Makefile](https://en.wikipedia.org/wiki/Makefile) is generally used. The Makefile primarily ensures that the `go.mod` is run before building the two entrypoints to the application, [`appd`](#node-client) and [`appd`](#application-interface).
+For building the application, a [Makefile](https://en.wikipedia.org/wiki/Makefile) is generally used. The Makefile primarily ensures that the `go.mod` is run before building the two entrypoints to the application, [`Node Client`](#node-client) and [`Application Interface`](#application-interface).
 
 Here is an example of the [Cosmos Hub Makefile](https://github.com/cosmos/gaia/blob/main/Makefile).

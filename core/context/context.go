@@ -1,21 +1,19 @@
 package context
 
-// ExecMode defines the execution mode which can be set on a Context.
-type ExecMode uint8
+type contextKey uint8
 
-// All possible execution modes.
-const (
-	ExecModeCheck ExecMode = iota
-	ExecModeReCheck
-	ExecModeSimulate
-	ExecModePrepareProposal
-	ExecModeProcessProposal
-	ExecModeVoteExtension
-	ExecModeVerifyVoteExtension
-	ExecModeFinalize
+type (
+	execModeKey    struct{}
+	cometInfoKey   struct{}
+	environmentKey struct{}
 )
 
-const (
-	ExecModeKey = iota
-	CometInfoKey
+var (
+	ExecModeKey  = execModeKey{}
+	CometInfoKey = cometInfoKey{}
+
+	// EnvironmentContextKey is the context key for the environment.
+	// A caller should not assume the environment is available in each context.
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/19640
+	EnvironmentContextKey = environmentKey{}
 )

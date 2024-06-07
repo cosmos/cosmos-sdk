@@ -47,7 +47,7 @@ func printVersion(cmd *cobra.Command, args []string, noAppVersion bool) error {
 		return nil
 	}
 
-	if err := run(append([]string{"version"}, args...)); err != nil {
+	if err := run("", append([]string{"version"}, args...)); err != nil {
 		return fmt.Errorf("failed to run version command: %w", err)
 	}
 
@@ -62,6 +62,7 @@ func printVersionJSON(cmd *cobra.Command, args []string, noAppVersion bool) erro
 
 	buf := new(strings.Builder)
 	if err := run(
+		"",
 		[]string{"version", "--long", "--output", "json"},
 		StdOutRunOption(buf),
 	); err != nil {

@@ -1,11 +1,15 @@
 package types_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/appmodule/v2"
+	corecontext "cosmossdk.io/core/context"
+	coregas "cosmossdk.io/core/gas"
 	coreheader "cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -39,10 +43,37 @@ func accAddressToString(t *testing.T, addr sdk.AccAddress) string {
 	return r
 }
 
+type headerService struct{}
+
+func (h headerService) HeaderInfo(ctx context.Context) coreheader.Info {
+	return sdk.UnwrapSDKContext(ctx).HeaderInfo()
+}
+
+type mockGasService struct {
+	coregas.Service
+}
+
+func (m mockGasService) GasMeter(ctx context.Context) coregas.Meter {
+	return mockGasMeter{}
+}
+
+type mockGasMeter struct {
+	coregas.Meter
+}
+
+func (m mockGasMeter) Consume(amount coregas.Gas, descriptor string) error {
+	return nil
+}
+
 func TestAuthzAuthorizations(t *testing.T) {
 	key := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithHeaderInfo(coreheader.Info{})
+	sdkCtx := testCtx.Ctx.WithHeaderInfo(coreheader.Info{})
+	ctx := context.WithValue(sdkCtx.Context(), corecontext.EnvironmentContextKey, appmodule.Environment{
+		HeaderService: headerService{},
+		GasService:    mockGasService{},
+	})
+
 	valAddressCodec := codectestutil.CodecOptions{}.GetValidatorCodec()
 	// verify ValidateBasic returns error for the AUTHORIZATION_TYPE_UNSPECIFIED authorization type
 	delAuth, err := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNSPECIFIED, &coin100, valAddressCodec)
@@ -313,7 +344,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
 			&coin100,
-			stakingtypes.NewMsgCancelUnbondingDelegation(accAddressToString(t, delAddr), valAddressToString(t, val1), ctx.HeaderInfo().Height, coin100),
+			stakingtypes.NewMsgCancelUnbondingDelegation(accAddressToString(t, delAddr), valAddressToString(t, val1), sdkCtx.HeaderInfo().Height, coin100),
 			false,
 			true,
 			nil,
@@ -324,7 +355,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
 			&coin100,
-			stakingtypes.NewMsgCancelUnbondingDelegation(accAddressToString(t, delAddr), valAddressToString(t, val1), ctx.HeaderInfo().Height, coin50),
+			stakingtypes.NewMsgCancelUnbondingDelegation(accAddressToString(t, delAddr), valAddressToString(t, val1), sdkCtx.HeaderInfo().Height, coin50),
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
@@ -341,7 +372,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
 			&coin100,
-			stakingtypes.NewMsgCancelUnbondingDelegation(accAddressToString(t, delAddr), valAddressToString(t, val3), ctx.HeaderInfo().Height, coin50),
+			stakingtypes.NewMsgCancelUnbondingDelegation(accAddressToString(t, delAddr), valAddressToString(t, val3), sdkCtx.HeaderInfo().Height, coin50),
 			true,
 			false,
 			nil,
@@ -352,7 +383,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
 			nil,
-			stakingtypes.NewMsgCancelUnbondingDelegation(accAddressToString(t, delAddr), valAddressToString(t, val2), ctx.HeaderInfo().Height, coin100),
+			stakingtypes.NewMsgCancelUnbondingDelegation(accAddressToString(t, delAddr), valAddressToString(t, val2), sdkCtx.HeaderInfo().Height, coin100),
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
@@ -369,7 +400,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{val1},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION,
 			&coin100,
-			stakingtypes.NewMsgCancelUnbondingDelegation(accAddressToString(t, delAddr), valAddressToString(t, val1), ctx.HeaderInfo().Height, coin100),
+			stakingtypes.NewMsgCancelUnbondingDelegation(accAddressToString(t, delAddr), valAddressToString(t, val1), sdkCtx.HeaderInfo().Height, coin100),
 			true,
 			false,
 			nil,

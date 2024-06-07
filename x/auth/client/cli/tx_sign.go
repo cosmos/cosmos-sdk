@@ -257,7 +257,7 @@ func multisigSign(clientCtx client.Context, txBuilder client.TxBuilder, txFactor
 	}
 
 	if !isSigner {
-		return fmt.Errorf("signing key is not a part of multisig")
+		return fmt.Errorf("signing key is not a part of multisig key")
 	}
 
 	if err = authclient.SignTxWithSignerAddress(
@@ -278,7 +278,6 @@ func multisigSign(clientCtx client.Context, txBuilder client.TxBuilder, txFactor
 // isMultisigSigner checks if the given pubkey is a signer in the multisig or in
 // any of the nested multisig signers.
 func isMultisigSigner(clientCtx client.Context, multisigPubKey, fromPubKey cryptotypes.PubKey) (bool, error) {
-
 	multisigLegacyPub := multisigPubKey.(*kmultisig.LegacyAminoPubKey)
 
 	var found bool
@@ -450,7 +449,7 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txFactory tx.Factory, 
 			return err
 		}
 		if !isSigner {
-			return fmt.Errorf("signing key is not a part of multisig")
+			return fmt.Errorf("signing key is not a part of multisig key")
 		}
 
 		err = authclient.SignTxWithSignerAddress(

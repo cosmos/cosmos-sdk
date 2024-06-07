@@ -116,6 +116,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * [#19851](https://github.com/cosmos/cosmos-sdk/pull/19851) Fix some places in which we call Remove inside a Walk (x/staking and x/gov).
 * (cli) [#20020](https://github.com/cosmos/cosmos-sdk/pull/20020) Make bootstrap-state command support both new and legacy genesis format.
 * (baseapp) [#20107](https://github.com/cosmos/cosmos-sdk/pull/20107) Allow height overwrite BlockHeight in header.
+* (genutil) [#20596](https://github.com/cosmos/cosmos-sdk/pull/20596) Fix marshalling service used.
 
 ### API Breaking Changes
 

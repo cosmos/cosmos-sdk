@@ -192,7 +192,7 @@ type AuthzOutputs struct {
 func ProvideModule(in AuthzInputs) AuthzOutputs {
 	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
-	return AuthzOutputs{AuthzKeeper: k, Module: m}
+	return AuthzOutputs{AuthzKeeper: k.SetBankKeeper(in.BankKeeper) /* depinject ux improvement */, Module: m}
 }
 
 // ____________________________________________________________________________

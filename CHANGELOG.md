@@ -37,7 +37,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v0.47.12](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.12) - 2024-06-07
+## [v0.47.12](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.12) - 2024-06-10
+
+## Improvements
+
+* (x/authz,x/feegrant) [#20590](https://github.com/cosmos/cosmos-sdk/pull/20590) Provide updated keeper in depinject for authz and feegrant modules.
 
 ### Bug Fixes
 

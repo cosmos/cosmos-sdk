@@ -120,7 +120,7 @@ type AppModule struct {
 func NewAppModule(cdc codec.Codec, ak feegrant.AccountKeeper, bk feegrant.BankKeeper, keeper keeper.Keeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
-		keeper:         keeper.SetBankKeeper(bk),
+		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
 		registry:       registry,
@@ -182,7 +182,8 @@ type FeegrantInputs struct {
 }
 
 func ProvideModule(in FeegrantInputs) (keeper.Keeper, appmodule.AppModule) {
-	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.AccountKeeper)
+	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.AccountKeeper).
+		SetBankKeeper(in.BankKeeper) // Super ugly hack to not be api breaking in v0.50 and v0.47
 	m := NewAppModule(in.Cdc, in.AccountKeeper, in.BankKeeper, k, in.Registry)
 	return k, m
 }

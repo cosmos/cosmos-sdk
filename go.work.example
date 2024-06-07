@@ -6,6 +6,7 @@ use (
 	./client/v2
 	./collections
 	./core
+	./core/testing
 	./depinject
 	./errors
 	./log

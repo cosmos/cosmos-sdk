@@ -4,10 +4,10 @@
 
 ## 🚀 Highlights
 
-For this month patch release of the v0.47.x line, a few bug were fixed in the SDK.
+For this month's patch release of the v0.47.x line, a few bug were fixed in the SDK.
 Notably:
 
-* 
+* Remove txs from the mempool when they fail in `RecheckTX`
 
 Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.47.12/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.47.11...v0.47.12) from last release.
 

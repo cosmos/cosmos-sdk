@@ -271,6 +271,11 @@ func TypeForGoValue(value any) Type {
 	case json.RawMessage:
 		return TypeJSON
 	default:
-		return TypeUnknown
 	}
+
+	if _, ok := value.(fmt.Stringer); ok {
+		return TypeString
+	}
+
+	return TypeUnknown
 }

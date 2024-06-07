@@ -123,14 +123,6 @@ func extractFields(x any) ([]indexerbase.Column, func(any) any) {
 		return []indexerbase.Column{{Type: ty}}, nil
 	}
 
-	if _, ok := x.(interface{ String() string }); ok {
-		return []indexerbase.Column{
-			{
-				Type: indexerbase.TypeString,
-			},
-		}, func(x any) any { return x.(interface{ String() string }).String() }
-	}
-
 	panic(fmt.Errorf("unsupported type %T", x))
 }
 

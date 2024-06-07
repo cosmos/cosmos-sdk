@@ -9,14 +9,15 @@ type PhysicalListener struct {
 	OnBlockHeader func(BlockHeaderData) error
 	OnTx          func(TxData) error
 	OnEvent       func(EventData) error
-	OnKVPair      func(storeKey string, key, value []byte, delete bool) error
+	OnKVPair      func(module string, key, value []byte, delete bool) error
 	Commit        func() error
 }
 
+// TODO: combine physical and logical listeners into Listener, how would ensure setup work there?
 type LogicalListener struct {
 	PhysicalListener
 	EnsureSetup    func(LogicalSetupData) error
-	OnEntityUpdate func(EntityUpdate) error
+	OnEntityUpdate func(module string, update EntityUpdate) error
 }
 
 type LogicalSetupData struct {

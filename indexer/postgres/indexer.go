@@ -60,6 +60,12 @@ func (i *indexer) ensureSetup(data indexerbase.LogicalSetupData) error {
 		if err != nil {
 			return err
 		}
+
+		_, err = i.conn.Exec(context.Background(), fmt.Sprintf("GRANT SELECT ON %s TO public;", table.Name))
+		if err != nil {
+			return err
+		}
+
 		i.tables[table.Name] = &tableInfo{table: table}
 	}
 	return nil

@@ -4,6 +4,7 @@ import "fmt"
 
 type Engine struct {
 	logger              Logger
+	decoderResolver     DecoderResolver
 	tables              map[string]Table
 	decoders            map[string]KVDecoder
 	logicalListeners    []LogicalListener
@@ -12,7 +13,7 @@ type Engine struct {
 }
 
 type EngineOptions struct {
-	ModuleDecoders    map[string]ModuleDecoder
+	ModuleDecoders    DecoderResolver
 	LogicalListeners  []LogicalListener
 	PhysicalListeners []PhysicalListener
 	Logger            Logger

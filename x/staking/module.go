@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"cosmossdk.io/collections"
-	indexerbase "cosmossdk.io/indexer/base"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -184,6 +182,6 @@ func (am AppModule) EndBlock(ctx context.Context) ([]appmodule.ValidatorUpdate, 
 	return am.keeper.EndBlocker(ctx)
 }
 
-func (am AppModule) ModuleDecoder() (indexerbase.ModuleDecoder, error) {
-	return am.keeper.Schema.ModuleDecoder(collections.IndexingOptions{})
-}
+//func (am AppModule) ModuleDecoder() (indexerbase.ModuleDecoder, error) {
+//	return am.keeper.Schema.ModuleDecoder(collections.IndexingOptions{})
+//}

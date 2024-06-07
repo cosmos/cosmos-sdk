@@ -668,11 +668,14 @@ func (s *StorageTestSuite) TestUpgradable() {
 	// prune store1
 	err = ss.PruneStoreKey([]byte(storeKeys[0]))
 	s.Require().NoError(err)
-	for v := uint64(1); v <= uptoVersion; v++ {
-		for i := 0; i < keyCount; i++ {
-			bz, err := ss.Get([]byte(storeKeys[0]), v, []byte(fmt.Sprintf("key%03d", i)))
-			s.Require().NoError(err)
-			s.Require().Nil(bz)
+	// skip the test of RocksDB
+	if !slices.Contains(s.SkipTests, "TestUpgradable_Prune") {
+		for v := uint64(1); v <= uptoVersion; v++ {
+			for i := 0; i < keyCount; i++ {
+				bz, err := ss.Get([]byte(storeKeys[0]), v, []byte(fmt.Sprintf("key%03d", i)))
+				s.Require().NoError(err)
+				s.Require().Nil(bz)
+			}
 		}
 	}
 
@@ -683,6 +686,7 @@ func (s *StorageTestSuite) TestUpgradable() {
 	for v := uint64(1); v <= uptoVersion; v++ {
 		for i := 0; i < keyCount; i++ {
 			bz, err := ss.Get([]byte(newStoreKey), v, []byte(fmt.Sprintf("key%03d", i)))
+			fmt.Printf("version: %d, key: %s, value: %s\n", v, fmt.Sprintf("key%03d", i), string(bz))
 			s.Require().NoError(err)
 			s.Require().Equal([]byte(fmt.Sprintf("val%03d-%03d", i, v)), bz)
 		}

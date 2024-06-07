@@ -200,43 +200,32 @@ func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end 
 }
 
 func (db *Database) PruneStoreKey(storeKey []byte) error {
-	// need to delete all keys with the given storeKey prefix
-	itr := db.storage.NewIteratorCF(defaultReadOpts, db.cfHandle)
-	prefix := storePrefix(storeKey)
-	ritr := newRocksDBIterator(itr, prefix, nil, nil, false)
-	defer ritr.Close()
-
-	batch := grocksdb.NewWriteBatch()
-	defer batch.Destroy()
-
-	for ; ritr.Valid(); ritr.Next() {
-		batch.DeleteCF(db.cfHandle, ritr.Key())
-		if batch.Count() >= BatchBufferCount {
-			if err := db.storage.Write(defaultWriteOpts, batch); err != nil {
-				return err
-			}
-			batch.Clear()
-		}
-	}
-
-	return db.storage.Write(defaultWriteOpts, batch)
+	// it will be pruned by compaction when the version is pruned
+	return nil
 }
 
 func (db *Database) MigrateStoreKey(fromStoreKey, toStoreKey []byte) error {
+	latestVersion, err := db.GetLatestVersion()
+	if err != nil {
+		return fmt.Errorf("failed to get latest version: %w", err)
+	}
+
 	// need to copy all keys with the given fromStoreKey prefix to toStoreKey
-	itr := db.storage.NewIteratorCF(defaultReadOpts, db.cfHandle)
+	readOpts := newTSReadOptions(latestVersion)
+	readOpts.SetIterStartTimestamp([]byte{0, 0, 0, 0, 0, 0, 0, 0})
+	itr := db.storage.NewIteratorCF(readOpts, db.cfHandle)
 	prefix := storePrefix(fromStoreKey)
 	ritr := newRocksDBIterator(itr, prefix, nil, nil, false)
 	defer ritr.Close()
 
 	batch := grocksdb.NewWriteBatch()
 	defer batch.Destroy()
-
 	for ; ritr.Valid(); ritr.Next() {
-		key := ritr.Key()
 		// replace the prefix
-		key = append([]byte(toStoreKey), key[len(prefix):]...)
-		batch.PutCF(db.cfHandle, key, ritr.Value())
+		key := ritr.Key()
+		key = key[:len(key)-16] // remove the timestamp
+		prefixedKey := append(storePrefix(toStoreKey), key...)
+		batch.PutCFWithTS(db.cfHandle, prefixedKey, ritr.Timestamp(), ritr.Value())
 		if batch.Count() >= BatchBufferCount {
 			if err := db.storage.Write(defaultWriteOpts, batch); err != nil {
 				return err

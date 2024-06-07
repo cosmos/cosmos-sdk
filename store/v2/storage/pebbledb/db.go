@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/store/v2"
 	storeerrors "cosmossdk.io/store/v2/errors"
 	"cosmossdk.io/store/v2/storage"
+	"cosmossdk.io/store/v2/storage/util"
 )
 
 const (
@@ -21,6 +22,7 @@ const (
 	// PruneCommitBatchSize defines the size, in number of key/value pairs, to prune
 	// in a single batch.
 	PruneCommitBatchSize = 50
+	BatchBufferSize      = 100000
 
 	StorePrefixTpl   = "s/k:%s/"         // s/k:<storeKey>
 	latestVersionKey = "s/_latest"       // NB: latestVersionKey key must be lexically smaller than StorePrefixTpl
@@ -28,7 +30,10 @@ const (
 	tombstoneVal     = "TOMBSTONE"
 )
 
-var _ storage.Database = (*Database)(nil)
+var (
+	_ storage.Database         = (*Database)(nil)
+	_ store.UpgradableDatabase = (*Database)(nil)
+)
 
 type Database struct {
 	storage *pebble.DB
@@ -313,6 +318,58 @@ func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end 
 	}
 
 	return newPebbleDBIterator(itr, storePrefix(storeKey), start, end, version, db.earliestVersion, true), nil
+}
+
+func (db *Database) PruneStoreKey(storeKey []byte) error {
+	batch := db.storage.NewBatch()
+	defer batch.Close()
+
+	itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: storePrefix(storeKey), UpperBound: storePrefix(util.CopyIncr(storeKey))})
+	if err != nil {
+		return err
+	}
+	defer itr.Close()
+
+	for itr.First(); itr.Valid(); itr.Next() {
+		if err := batch.Delete(itr.Key(), nil); err != nil {
+			return err
+		}
+		if batch.Len() >= BatchBufferSize {
+			if err := batch.Commit(&pebble.WriteOptions{Sync: db.sync}); err != nil {
+				return err
+			}
+			batch.Reset()
+		}
+	}
+
+	return batch.Commit(&pebble.WriteOptions{Sync: db.sync})
+}
+
+func (db *Database) MigrateStoreKey(fromStoreKey, toStoreKey []byte) error {
+	batch := db.storage.NewBatch()
+	defer batch.Close()
+
+	itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: storePrefix(fromStoreKey), UpperBound: storePrefix(util.CopyIncr(fromStoreKey))})
+	if err != nil {
+		return err
+	}
+	defer itr.Close()
+
+	for itr.First(); itr.Valid(); itr.Next() {
+		key := itr.Key()[len(storePrefix(fromStoreKey)):]
+		key = append(storePrefix(toStoreKey), key...)
+		if err := batch.Set(key, itr.Value(), nil); err != nil {
+			return err
+		}
+		if batch.Len() >= BatchBufferSize {
+			if err := batch.Commit(&pebble.WriteOptions{Sync: db.sync}); err != nil {
+				return err
+			}
+			batch.Reset()
+		}
+	}
+
+	return batch.Commit(&pebble.WriteOptions{Sync: db.sync})
 }
 
 func storePrefix(storeKey []byte) []byte {

@@ -43,7 +43,10 @@ const (
 	`
 )
 
-var _ storage.Database = (*Database)(nil)
+var (
+	_ storage.Database         = (*Database)(nil)
+	_ store.UpgradableDatabase = (*Database)(nil)
+)
 
 type Database struct {
 	storage *sql.DB
@@ -238,6 +241,45 @@ func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end 
 	}
 
 	return newIterator(db, storeKey, version, start, end, true)
+}
+
+func (db *Database) PruneStoreKey(storeKey []byte) error {
+	tx, err := db.storage.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to create SQL transaction: %w", err)
+	}
+
+	_, err = tx.Exec(`DELETE FROM state_storage WHERE store_key = ?`, storeKey)
+	if err != nil {
+		return fmt.Errorf("failed to exec SQL statement: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to write SQL transaction: %w", err)
+	}
+
+	return nil
+}
+
+func (db *Database) MigrateStoreKey(fromStoreKey, toStoreKey []byte) error {
+	tx, err := db.storage.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to create SQL transaction: %w", err)
+	}
+
+	_, err = tx.Exec(`
+	UPDATE state_storage SET store_key = ?
+	WHERE store_key = ?;
+	`, toStoreKey, fromStoreKey)
+	if err != nil {
+		return fmt.Errorf("failed to exec SQL statement: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to write SQL transaction: %w", err)
+	}
+
+	return nil
 }
 
 func (db *Database) PrintRowsDebug() {

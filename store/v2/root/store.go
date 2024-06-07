@@ -238,8 +238,7 @@ func (s *Store) LoadVersion(version uint64) error {
 // NOTE: It cannot be called while the store is migrating.
 func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreUpgrades) error {
 	if s.telemetry != nil {
-		now := time.Now()
-		defer s.telemetry.MeasureSince(now, "root_store", "load_version_and_upgrade")
+		defer s.telemetry.MeasureSince(time.Now(), "root_store", "load_version_and_upgrade")
 	}
 
 	if s.isMigrating {
@@ -250,19 +249,37 @@ func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreU
 		return err
 	}
 
-	// if upgrades is not nil, we need to add the pruned KVStores to the pruning manager
+	// if upgrades is not nil, we need to prune the old store keys from SS and SC
 	if upgrades != nil {
+		removedStoreKeys := make([]string, 0)
+		removedStoreKeys = append(removedStoreKeys, upgrades.Deleted...)
+		for _, renamedStore := range upgrades.Renamed {
+			removedStoreKeys = append(removedStoreKeys, renamedStore.OldKey)
+		}
+		// if the state commitment implements the KVStoreGetter interface, prune the
+		// old KVStores
 		kvStoreGetter, ok := s.stateCommitment.(store.KVStoreGetter)
 		if !ok {
+			s.logger.Warn("state commitment does not implement KVStoreGetter interface")
+		} else {
 			removedKVStores := make([]corestore.KVStoreWithBatch, 0)
-			for _, storeKey := range upgrades.Deleted {
+			for _, storeKey := range removedStoreKeys {
 				removedKVStores = append(removedKVStores, kvStoreGetter.GetKVStoreWithBatch(storeKey))
-			}
-			for _, renamedStore := range upgrades.Renamed {
-				removedKVStores = append(removedKVStores, kvStoreGetter.GetKVStoreWithBatch(renamedStore.OldKey))
 			}
 			if err := s.pruningManager.PruneKVStores(removedKVStores); err != nil {
 				return fmt.Errorf("failed to set pruned KVStores: %w", err)
+			}
+		}
+		// if the state storage implements the UpgradableDatabase interface, prune the
+		// old store keys
+		upgradableDatabase, ok := s.stateStorage.(store.UpgradableDatabase)
+		if !ok {
+			s.logger.Warn("state storage does not implement UpgradableDatabase interface")
+		} else {
+			for _, storeKey := range removedStoreKeys {
+				if err := upgradableDatabase.PruneStoreKey([]byte(storeKey)); err != nil {
+					return fmt.Errorf("failed to prune store key %s: %w", storeKey, err)
+				}
 			}
 		}
 	}

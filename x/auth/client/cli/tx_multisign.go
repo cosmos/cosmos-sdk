@@ -47,6 +47,10 @@ If the --offline flag is on, the client will not reach out to an external node.
 Account number or sequence number lookups are not performed so you must
 set these parameters manually.
 
+If the --skip-signature-verification flag is on, the command will not verify the
+signatures in the provided signature files. This is useful when the multisig
+account is a signer in a nested multisig scenario.
+
 The current multisig implementation defaults to amino-json sign mode.
 The SIGN_MODE_DIRECT sign mode is not supported.'
 `,

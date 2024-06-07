@@ -33,6 +33,7 @@ Now that the [collections](./adr-062-collections-state-layer.md) and [orm](./adr
 In considering the design of built-in support, in discussions we have considered the needs of UI application developers, node operators and application and module developers. The following user stories have been identified as _ideal_ features, with the understanding that the SDK can likely only provide a subset of these features, but should aim for the best balance.
 
 When considering the needs of developers building UI applications, the following desirable features have been identified:
+
 * U1: quickly querying the current on-chain state with any sort of filtering, sorting and pagination the client desires with the ability to optimize queries with custom indexes.
 * U2: data should be available in client friendly formats, for instance even if addresses are stored as bytes in state, clients should be available to view and query bech32 encoded addresses.
 * U3: state that was pruned from on-chain state to save space but is still otherwise valid (such as completed proposals and votes) should be queryable.
@@ -43,11 +44,13 @@ When considering the needs of developers building UI applications, the following
 * U5: the query index should be consistent, meaning that UI applications should not need to be concerned with the possibility that the index has missed indexing some blocks or events
 
 When considering the needs of node operators, the following desirable features have been identified:
-* N1: nodes shouldn't *need* to store indexes or events that are only needed for client queries, i.e. it should be possible to run a lean node
+
+* N1: nodes shouldn't _need_ to store indexes or events that are only needed for client queries, i.e. it should be possible to run a lean node
 * N2: it should be possible to quickly spin up a node with the query index without tons of custom infrastructure and coding, i.e. this should be strictly configuration change and a bit of devops. It should be possible to configure the index to contain just state, just events, or both.
 * N3: it should be possible to build up an almost complete query index starting from any point in time without necessarily needing to replay a full chain's history (with the understanding that some historical data may be missing)
 
 Finally, when considering the needs of application and module developers, the following desirable features have been identified:
+
 * A1: enabling support for query indexing should require minimal tweaking to app boilerplate and configurable by node operators (off by default).
 * A2: it should be possible to index applications built with older versions of the SDK (including v0.47 and v0.50, possibly earlier) without major changes.
 * A3: module developers should mostly just need to use the collections and orm frameworks to get their data indexed, with minimal additional work.
@@ -57,6 +60,7 @@ Finally, when considering the needs of application and module developers, the fo
 ## Decision
 
 We have decided to build a built-in query indexer for Cosmos SDK applications that is structured as two components:
+
 1. a state decoder that takes data from `collections` and `orm` and provides an indexable version of that data to an actual indexer
 2. a PostgreSQL-based indexer implementation that can be run in-process with the Cosmos SDK node
 
@@ -86,12 +90,13 @@ Blocks, transactions and events should be stored as rows in PostgreSQL tables wh
 
 For a full batteries included, client friendly query experience, a GraphQL endpoint should be exposed in the HTTP server for any PostgreSQL database that has the [Supabase pg_graphql](https://github.com/supabase/pg_graphql) extension enabled. `pg_graphql` will expose rich GraphQL queries for all PostgreSQL tables with zero code that support filtering, pagination, sorting and traversing foreign key references. (Support for defining foreign keys with `collections` and `orm` could be added in the future to take advantage of this). In addition, a [GraphiQL](https://github.com/graphql/graphiql) query explorer endpoint can be exposed to simplify client development.
 
-With this setup, a node operator would only need to 1) setup a PostgresSQL database with the `pg_graphql` extension and 2) enable the query indexer in the configuration in order to provide a full-featured query experience to clients. Because PostgreSQL is a full-featured database, node operators can enable any sort of custom indexes or views that are needed for their specific application with no need for this to affect the state machine or any other nodes.
+With this setup, a node operator would only need to 1) setup a PostgreSQL database with the `pg_graphql` extension and 2) enable the query indexer in the configuration in order to provide a full-featured query experience to clients. Because PostgreSQL is a full-featured database, node operators can enable any sort of custom indexes or views that are needed for their specific application with no need for this to affect the state machine or any other nodes.
 
 
 ## Alternatives
 
 The following alternatives were considered:
+
 * support any SQL database not just PostgreSQL using a framework like [GORM](https://gorm.io/). While this would be more flexible, it would be slower, require heavy usage of golang reflection and might limit how much we can take advantage of PostgreSQL's unique features for little benefit (the assumption being that most users would choose PostgreSQL anyway and or be happy enough that we made that choice).
 * don't support any specific database, but just build the decoder framework. While this would simplify our efforts in the short-term, it still doesn't provide a full-featured solution and requires others to build out the key infrastructure similar to [ADR 038](adr-038-state-listening.md). This limbo state would not allow the SDK to definitely make key optimizations to state layout and simple the task of module development in a definitive way by providing a full replacement for gRPC client queries.
 * target a database with full historical query support like [Datomic](https://www.datomic.com). This requires a bunch of custom infrastructure and would expose a powerful, yet unfamiliar query language to users.

@@ -192,7 +192,11 @@ type AuthzOutputs struct {
 func ProvideModule(in AuthzInputs) AuthzOutputs {
 	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
+<<<<<<< HEAD
 	return AuthzOutputs{AuthzKeeper: k, Module: m}
+=======
+	return ModuleOutputs{AuthzKeeper: k.SetBankKeeper(in.BankKeeper) /* depinject ux improvement */, Module: m}
+>>>>>>> aeb1e8f46 (refactor(x/authz,x/feegrant): provide updated keeper in depinject (#20590))
 }
 
 // ____________________________________________________________________________

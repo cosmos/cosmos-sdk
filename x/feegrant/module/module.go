@@ -120,8 +120,13 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, ak feegrant.AccountKeeper, bk feegrant.BankKeeper, keeper keeper.Keeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
+<<<<<<< HEAD
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper.SetBankKeeper(bk), // Super ugly hack to not be api breaking in v0.50 and v0.47,
+=======
+		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
+		keeper:         keeper.SetBankKeeper(bk), // Super ugly hack to not be api breaking in v0.50 and v0.47
+>>>>>>> aeb1e8f46 (refactor(x/authz,x/feegrant): provide updated keeper in depinject (#20590))
 		accountKeeper:  ak,
 		bankKeeper:     bk,
 		registry:       registry,
@@ -197,7 +202,7 @@ type FeegrantInputs struct {
 func ProvideModule(in FeegrantInputs) (keeper.Keeper, appmodule.AppModule) {
 	k := keeper.NewKeeper(in.Cdc, in.Key, in.AccountKeeper)
 	m := NewAppModule(in.Cdc, in.AccountKeeper, in.BankKeeper, k, in.Registry)
-	return k, m
+	return k.SetBankKeeper(in.BankKeeper) /* depinject ux improvement */, m
 }
 
 // AppModuleSimulation functions

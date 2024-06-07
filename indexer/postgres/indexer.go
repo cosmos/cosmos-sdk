@@ -106,7 +106,7 @@ func (i *indexer) onEntityUpdate(update indexerbase.EntityUpdate) error {
 		}
 	}
 
-	return nil
+	return ti.exec(i.ctx, i.conn, update)
 }
 
 func (i *indexer) commit() error {

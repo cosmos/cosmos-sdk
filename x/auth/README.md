@@ -68,7 +68,7 @@ minimum gas prices set, such a mechanism could be implemented by node operators.
 
 Because the market value for tokens will fluctuate, validators are expected to
 dynamically adjust their minimum gas prices to a level that would encourage the
-use of the network.		
+use of the network.
 
 ## State
 
@@ -429,7 +429,7 @@ simd tx sign txs.json --from $ALICE > tx.signed.json
 
 or
 
-```bash 
+```bash
 simd tx sign tx1.json tx2.json tx3.json --from $ALICE > tx.signed.json
 ```
 
@@ -690,10 +690,19 @@ The `account` endpoint allow users to query for an account by it's address.
 
 #### Accounts
 
-The `accounts` endpoint allow users to query all the available accounts.
+The `accounts` endpoint allow users to query all available accounts, or by address.
 
 ```bash
 /cosmos/auth/v1beta1/accounts
+/cosmos/auth/v1beta1/accounts/{address}
+```
+
+#### Address by ID
+
+The `address_by_id` endpoint allow users for an account by its numerical id.
+
+```bash
+/cosmos/auth/v1beta1/address_by_id/{account_id}
 ```
 
 #### Params

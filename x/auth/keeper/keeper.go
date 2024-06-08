@@ -277,3 +277,8 @@ func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
 	}
 	return params
 }
+
+// GetAccountByNumber returns an account by its account number.
+func (ak AccountKeeper) GetAccountByNumber(ctx context.Context, number uint64) (sdk.AccountI, error) {
+	return ak.Accounts.Indexes.Number.Get(ctx, number)
+}

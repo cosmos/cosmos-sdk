@@ -103,6 +103,8 @@ type AccountKeeper struct {
 	Params collections.Item[types.Params]
 
 	// only use for upgrade handler
+	//
+	// Deprecated: move to accounts module accountNumber
 	accountNumber collections.Sequence
 	// Accounts key: AccAddr | value: AccountI | index: AccountsIndex
 	Accounts *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]

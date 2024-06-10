@@ -3,9 +3,8 @@ package baseapp
 import (
 	"errors"
 
-	"github.com/cometbft/cometbft/abci/types"
-
 	"cosmossdk.io/core/genesis"
+	"github.com/cometbft/cometbft/abci/types"
 )
 
 var _ genesis.TxHandler = (*BaseApp)(nil)

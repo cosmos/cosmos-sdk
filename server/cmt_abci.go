@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 )

@@ -272,8 +272,6 @@ if err != nil {
 
 Auth was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/auth`
 
-Auth accountNumber is deprecated, use 
-
 #### `x/authz`
 
 Authz was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/authz`

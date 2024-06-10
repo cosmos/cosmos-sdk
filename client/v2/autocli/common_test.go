@@ -28,8 +28,9 @@ import (
 )
 
 type fixture struct {
-	conn *testClientConn
-	b    *Builder
+	conn      *testClientConn
+	b         *Builder
+	clientCtx client.Context
 }
 
 func initFixture(t *testing.T) *fixture {
@@ -60,8 +61,7 @@ func initFixture(t *testing.T) *fixture {
 	interfaceRegistry := encodingConfig.Codec.InterfaceRegistry()
 	banktypes.RegisterInterfaces(interfaceRegistry)
 
-	var initClientCtx client.Context
-	initClientCtx = initClientCtx.
+	clientCtx := client.Context{}.
 		WithKeyring(kr).
 		WithKeyringDir(home).
 		WithHomeDir(home).
@@ -86,19 +86,19 @@ func initFixture(t *testing.T) *fixture {
 		},
 		AddQueryConnFlags: flags.AddQueryFlagsToCmd,
 		AddTxConnFlags:    flags.AddTxFlagsToCmd,
-		ClientCtx:         initClientCtx,
 	}
 	assert.NilError(t, b.ValidateAndComplete())
 
 	return &fixture{
-		conn: conn,
-		b:    b,
+		conn:      conn,
+		b:         b,
+		clientCtx: clientCtx,
 	}
 }
 
-func runCmd(conn *testClientConn, b *Builder, command func(moduleName string, b *Builder) (*cobra.Command, error), args ...string) (*bytes.Buffer, error) {
+func runCmd(fixture *fixture, command func(moduleName string, f *fixture) (*cobra.Command, error), args ...string) (*bytes.Buffer, error) {
 	out := &bytes.Buffer{}
-	cmd, err := command("test", b)
+	cmd, err := command("test", fixture)
 	if err != nil {
 		return out, err
 	}
@@ -212,14 +212,13 @@ func TestErrorBuildCommand(t *testing.T) {
 				Tx:    commandDescriptor,
 			},
 		},
-		ClientCtx: b.ClientCtx,
 	}
 
-	_, err := b.BuildMsgCommand(appOptions, nil)
+	_, err := b.BuildMsgCommand(context.Background(), appOptions, nil)
 	assert.ErrorContains(t, err, "can't find field un-existent-proto-field")
 
 	appOptions.ModuleOptions["test"].Tx = &autocliv1.ServiceCommandDescriptor{Service: "un-existent-service"}
 	appOptions.ModuleOptions["test"].Query = &autocliv1.ServiceCommandDescriptor{Service: "un-existent-service"}
-	_, err = b.BuildMsgCommand(appOptions, nil)
+	_, err = b.BuildMsgCommand(context.Background(), appOptions, nil)
 	assert.ErrorContains(t, err, "can't find service un-existent-service")
 }

@@ -29,4 +29,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [v0.1.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/nft/v0.1.1) - 2024-04-22
+
+### Improvements
+
+* (deps) [#19810](https://github.com/cosmos/cosmos-sdk/pull/19810) Upgrade SDK version due to prometheus breaking change.
+* (deps) [#19810](https://github.com/cosmos/cosmos-sdk/pull/19810) Bump `cosmossdk.io/store` to v1.1.0.
+
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/nft/v0.1.0) - 2023-11-07
+
+* Initial release of the standalone NFT module.

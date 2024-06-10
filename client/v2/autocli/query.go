@@ -4,24 +4,27 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/tx/signing/aminojson"
 	"github.com/cockroachdb/errors"
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // BuildQueryCommand builds the query commands for all the provided modules. If a custom command is provided for a
 // module, this is used instead of any automatically generated CLI commands. This allows apps to a fully dynamic client
 // with a more customized experience if a binary with custom commands is downloaded.
-func (b *Builder) BuildQueryCommand(appOptions AppOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
-	queryCmd := topLevelCmd("query", "Querying subcommands")
+func (b *Builder) BuildQueryCommand(ctx context.Context, appOptions AppOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
+	queryCmd := topLevelCmd(ctx, "query", "Querying subcommands")
 	queryCmd.Aliases = []string{"q"}
 
 	if err := b.enhanceCommandCommon(queryCmd, queryCmdType, appOptions, customCmds); err != nil {
@@ -38,7 +41,11 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 	for cmdName, subCmdDesc := range cmdDescriptor.SubCommands {
 		subCmd := findSubCommand(cmd, cmdName)
 		if subCmd == nil {
-			subCmd = topLevelCmd(cmdName, fmt.Sprintf("Querying commands for the %s service", subCmdDesc.Service))
+			short := subCmdDesc.Short
+			if short == "" {
+				short = fmt.Sprintf("Querying commands for the %s service", subCmdDesc.Service)
+			}
+			subCmd = topLevelCmd(cmd.Context(), cmdName, short)
 		}
 
 		if err := b.AddQueryServiceCommands(subCmd, subCmdDesc); err != nil {
@@ -82,11 +89,11 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 			continue
 		}
 
-		if !util.IsSupportedVersion(util.DescriptorDocs(methodDescriptor)) {
+		if !util.IsSupportedVersion(methodDescriptor) {
 			continue
 		}
 
-		methodCmd, err := b.BuildQueryMethodCommand(methodDescriptor, methodOpts)
+		methodCmd, err := b.BuildQueryMethodCommand(cmd.Context(), methodDescriptor, methodOpts)
 		if err != nil {
 			return err
 		}
@@ -105,21 +112,20 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 
 // BuildQueryMethodCommand creates a gRPC query command for the given service method. This can be used to auto-generate
 // just a single command for a single service rpc method.
-func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
+func (b *Builder) BuildQueryMethodCommand(ctx context.Context, descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
 	getClientConn := b.GetClientConn
 	serviceDescriptor := descriptor.Parent().(protoreflect.ServiceDescriptor)
 	methodName := fmt.Sprintf("/%s/%s", serviceDescriptor.FullName(), descriptor.Name())
 	outputType := util.ResolveMessageType(b.TypeResolver, descriptor.Output())
 	encoderOptions := aminojson.EncoderOptions{
 		Indent:          "  ",
+		EnumAsString:    true,
 		DoNotSortFields: true,
 		TypeResolver:    b.TypeResolver,
 		FileResolver:    b.FileResolver,
 	}
 
 	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
-		cmd.SetContext(context.WithValue(context.Background(), client.ClientContextKey, &b.ClientCtx))
-
 		clientConn, err := getClientConn(cmd)
 		if err != nil {
 			return err
@@ -184,6 +190,42 @@ func encoder(encoder aminojson.Encoder) aminojson.Encoder {
 		nanos := msg.Get(nanosField).Int()
 
 		_, err := fmt.Fprintf(w, `"%s"`, (time.Duration(seconds)*time.Second + (time.Duration(nanos) * time.Nanosecond)).String())
+		return err
+	}).DefineTypeEncoding("cosmos.base.v1beta1.DecCoin", func(_ *aminojson.Encoder, msg protoreflect.Message, w io.Writer) error {
+		var (
+			denomName  protoreflect.Name = "denom"
+			amountName protoreflect.Name = "amount"
+		)
+
+		fields := msg.Descriptor().Fields()
+		denomField := fields.ByName(denomName)
+		if denomField == nil {
+			return fmt.Errorf("expected denom field")
+		}
+
+		denom := msg.Get(denomField).String()
+
+		amountField := fields.ByName(amountName)
+		if amountField == nil {
+			return fmt.Errorf("expected amount field")
+		}
+
+		amount := msg.Get(amountField).String()
+		decimalPlace := len(amount) - math.LegacyPrecision
+		if decimalPlace > 0 {
+			amount = amount[:decimalPlace] + "." + amount[decimalPlace:]
+		} else if decimalPlace == 0 {
+			amount = "0." + amount
+		} else {
+			amount = "0." + strings.Repeat("0", -decimalPlace) + amount
+		}
+
+		amountDec, err := math.LegacyNewDecFromStr(amount)
+		if err != nil {
+			return fmt.Errorf("invalid amount: %s: %w", amount, err)
+		}
+
+		_, err = fmt.Fprintf(w, `"%s"`, sdk.NewDecCoinFromDec(denom, amountDec)) // TODO(@julienrbrt): Eventually remove this SDK dependency
 		return err
 	})
 }

@@ -1391,7 +1391,7 @@ func TestPrecommiterCalledWithDeliverState(t *testing.T) {
 
 func TestABCI_Proposal_HappyPath(t *testing.T) {
 	anteKey := []byte("ante-key")
-	pool := mempool.NewSenderNonceMempool()
+	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
@@ -1569,7 +1569,7 @@ func TestABCI_Proposals_WithVE(t *testing.T) {
 
 func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 	anteKey := []byte("ante-key")
-	pool := mempool.NewSenderNonceMempool()
+	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
@@ -1599,7 +1599,7 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 
 func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 	anteKey := []byte("ante-key")
-	pool := mempool.NewSenderNonceMempool()
+	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
@@ -1626,7 +1626,7 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 }
 
 func TestABCI_PrepareProposal_OverGasUnderBytes(t *testing.T) {
-	pool := mempool.NewSenderNonceMempool()
+	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 	suite := NewBaseAppSuite(t, baseapp.SetMempool(pool))
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
@@ -1667,7 +1667,7 @@ func TestABCI_PrepareProposal_OverGasUnderBytes(t *testing.T) {
 }
 
 func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
-	pool := mempool.NewSenderNonceMempool()
+	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 	suite := NewBaseAppSuite(t, baseapp.SetMempool(pool))
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
@@ -1705,7 +1705,7 @@ func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
 
 func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	anteKey := []byte("ante-key")
-	pool := mempool.NewSenderNonceMempool()
+	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
@@ -1790,7 +1790,10 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	// set up baseapp
 	prepareOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
-			err := baseapp.ValidateVoteExtensions(ctx, valStore, req.Height, bapp.ChainID(), req.LocalLastCommit)
+			ctx = ctx.WithBlockHeight(req.Height).WithChainID(bapp.ChainID())
+			_, info := extendedCommitToLastCommit(req.LocalLastCommit)
+			ctx = ctx.WithCometInfo(info)
+			err := baseapp.ValidateVoteExtensions(ctx, valStore, 0, "", req.LocalLastCommit)
 			if err != nil {
 				return nil, err
 			}
@@ -2097,7 +2100,10 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 
 		app.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 			txs := [][]byte{}
-			if err := baseapp.ValidateVoteExtensions(ctx, valStore, req.Height, app.ChainID(), req.LocalLastCommit); err != nil {
+			ctx = ctx.WithBlockHeight(req.Height).WithChainID(app.ChainID())
+			_, info := extendedCommitToLastCommit(req.LocalLastCommit)
+			ctx = ctx.WithCometInfo(info)
+			if err := baseapp.ValidateVoteExtensions(ctx, valStore, 0, "", req.LocalLastCommit); err != nil {
 				return nil, err
 			}
 			// add all VE as txs (in a real scenario we would need to check signatures too)
@@ -2197,11 +2203,25 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	}
 	require.Equal(t, 10, successful)
 
+	extVotes := []abci.ExtendedVoteInfo{}
+	for _, val := range vals {
+		extVotes = append(extVotes, abci.ExtendedVoteInfo{
+			VoteExtension:      allVEs[0],
+			BlockIdFlag:        cmtproto.BlockIDFlagCommit,
+			ExtensionSignature: []byte{},
+			Validator: abci.Validator{
+				Address: val.Bytes(),
+				Power:   666,
+			},
+		},
+		)
+	}
+
 	prepPropReq := &abci.RequestPrepareProposal{
 		Height: 1,
 		LocalLastCommit: abci.ExtendedCommitInfo{
 			Round: 0,
-			Votes: []abci.ExtendedVoteInfo{},
+			Votes: extVotes,
 		},
 	}
 
@@ -2260,6 +2280,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 			ExtensionSignature: extSig,
 			Validator: abci.Validator{
 				Address: vals[i].Bytes(),
+				Power:   666,
 			},
 		})
 	}
@@ -2366,4 +2387,105 @@ func TestOptimisticExecution(t *testing.T) {
 	}
 
 	require.Equal(t, int64(50), suite.baseApp.LastBlockHeight())
+}
+
+func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
+	pool := mempool.NewPriorityMempool[int64](mempool.PriorityNonceMempoolConfig[int64]{
+		TxPriority:      mempool.NewDefaultTxPriority(),
+		MaxTx:           0,
+		SignerExtractor: mempool.NewDefaultSignerExtractionAdapter(),
+	})
+
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
+			// always fail on recheck, just to test the recheck logic
+			if ctx.IsReCheckTx() {
+				return ctx, errors.New("recheck failed in ante handler")
+			}
+
+			return ctx, nil
+		})
+	}
+
+	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
+	baseapptestutil.RegisterKeyValueServer(suite.baseApp.MsgServiceRouter(), MsgKeyValueImpl{})
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+	require.NoError(t, err)
+
+	tx := newTxCounter(t, suite.txConfig, 0, 1)
+	txBytes, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	reqCheckTx := abci.RequestCheckTx{
+		Tx:   txBytes,
+		Type: abci.CheckTxType_New,
+	}
+	_, err = suite.baseApp.CheckTx(&reqCheckTx)
+	require.NoError(t, err)
+
+	tx2 := newTxCounter(t, suite.txConfig, 1, 1)
+
+	tx2Bytes, err := suite.txConfig.TxEncoder()(tx2)
+	require.NoError(t, err)
+
+	err = pool.Insert(sdk.Context{}, tx2)
+	require.NoError(t, err)
+
+	require.Equal(t, 2, pool.CountTx())
+
+	// call prepareProposal before calling recheck tx, just as a sanity check
+	reqPrepareProposal := abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+		Height:     1,
+	}
+	resPrepareProposal, err := suite.baseApp.PrepareProposal(&reqPrepareProposal)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(resPrepareProposal.Txs))
+
+	// call recheck on the first tx, it MUST return an error
+	reqReCheckTx := abci.RequestCheckTx{
+		Tx:   txBytes,
+		Type: abci.CheckTxType_Recheck,
+	}
+	resp, err := suite.baseApp.CheckTx(&reqReCheckTx)
+	require.NoError(t, err)
+	require.True(t, resp.IsErr())
+	require.Equal(t, "recheck failed in ante handler", resp.Log)
+
+	// call prepareProposal again, should return only the second tx
+	resPrepareProposal, err = suite.baseApp.PrepareProposal(&reqPrepareProposal)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(resPrepareProposal.Txs))
+	require.Equal(t, tx2Bytes, resPrepareProposal.Txs[0])
+
+	// check the mempool, it should have only the second tx
+	require.Equal(t, 1, pool.CountTx())
+
+	reqProposalTxBytes := [][]byte{
+		tx2Bytes,
+	}
+	reqProcessProposal := abci.RequestProcessProposal{
+		Txs:    reqProposalTxBytes,
+		Height: reqPrepareProposal.Height,
+	}
+
+	resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
+	require.NoError(t, err)
+	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
+
+	// the same txs as in PrepareProposal
+	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: suite.baseApp.LastBlockHeight() + 1,
+		Txs:    reqProposalTxBytes,
+	})
+	require.NoError(t, err)
+
+	require.Equal(t, 0, pool.CountTx())
+
+	require.NotEmpty(t, res.TxResults[0].Events)
+	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 }

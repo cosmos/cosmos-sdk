@@ -1560,6 +1560,38 @@ func (suite *KeeperTestSuite) TestGRPCQueryTallyResult() {
 			},
 			true,
 		},
+		{
+			"proposal status failed",
+			func() {
+				propTime := time.Now()
+				proposal := v1.Proposal{
+					Id:     1,
+					Status: v1.StatusFailed,
+					FinalTallyResult: &v1.TallyResult{
+						YesCount:        "4",
+						AbstainCount:    "1",
+						NoCount:         "0",
+						NoWithVetoCount: "0",
+					},
+					SubmitTime:      &propTime,
+					VotingStartTime: &propTime,
+					VotingEndTime:   &propTime,
+					Metadata:        "proposal metadata",
+				}
+				err := suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
+				suite.Require().NoError(err)
+
+				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
+
+				expTally = &v1.TallyResult{
+					YesCount:        "4",
+					AbstainCount:    "1",
+					NoCount:         "0",
+					NoWithVetoCount: "0",
+				}
+			},
+			true,
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -1690,6 +1722,38 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTallyResult() {
 				expTally = &v1beta1.TallyResult{
 					Yes:        math.NewInt(0),
 					Abstain:    math.NewInt(0),
+					No:         math.NewInt(0),
+					NoWithVeto: math.NewInt(0),
+				}
+			},
+			true,
+		},
+		{
+			"proposal status failed",
+			func() {
+				propTime := time.Now()
+				proposal := v1.Proposal{
+					Id:     1,
+					Status: v1.StatusFailed,
+					FinalTallyResult: &v1.TallyResult{
+						YesCount:        "4",
+						AbstainCount:    "1",
+						NoCount:         "0",
+						NoWithVetoCount: "0",
+					},
+					SubmitTime:      &propTime,
+					VotingStartTime: &propTime,
+					VotingEndTime:   &propTime,
+					Metadata:        "proposal metadata",
+				}
+				err := suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
+				suite.Require().NoError(err)
+
+				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}
+
+				expTally = &v1beta1.TallyResult{
+					Yes:        math.NewInt(4),
+					Abstain:    math.NewInt(1),
 					No:         math.NewInt(0),
 					NoWithVeto: math.NewInt(0),
 				}

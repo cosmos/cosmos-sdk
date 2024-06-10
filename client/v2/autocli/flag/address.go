@@ -62,11 +62,9 @@ func (a *addressValue) Set(s string) error {
 		return nil
 	}
 
-	_, err = a.addressCodec.StringToBytes(s)
-	if err != nil {
-		return fmt.Errorf("invalid account address or key name: %w", err)
-	}
-
+	// failed all validation, just accept the input.
+	// TODO(@julienrbrt), for final client/v2 2.0.0 revert the logic and
+	// do a better keyring instantiation.
 	a.value = s
 
 	return nil
@@ -129,7 +127,11 @@ func (a *consensusAddressValue) Set(s string) error {
 	var pk cryptotypes.PubKey
 	err2 := cdc.UnmarshalInterfaceJSON([]byte(s), &pk)
 	if err2 != nil {
-		return fmt.Errorf("input isn't a pubkey %w or is an invalid account address: %w", err, err2)
+		// failed all validation, just accept the input.
+		// TODO(@julienrbrt), for final client/v2 2.0.0 revert the logic and
+		// do a better keyring instantiation.
+		a.value = s
+		return nil
 	}
 
 	a.value, err = a.addressCodec.BytesToString(pk.Address())

@@ -9,7 +9,7 @@ import (
 	"io"
 	"math/big"
 
-	"github.com/cometbft/cometbft/crypto"
+	cosmoscrypto "github.com/cosmos/crypto/types"
 	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"gitlab.com/yawning/secp256k1-voi/secec"
 	"golang.org/x/crypto/ripemd160" //nolint: staticcheck // keep around for backwards compatibility
@@ -40,7 +40,7 @@ func (privKey *PrivKey) Bytes() []byte {
 
 // PubKey performs the point-scalar multiplication from the privKey on the
 // generator point to get the pubkey.
-func (privKey *PrivKey) PubKey() cryptotypes.PubKey {
+func (privKey *PrivKey) PubKey() cosmoscrypto.PubKey {
 	privateKeyObject, err := secec.NewPrivateKey(privKey.Key)
 	if err != nil {
 		panic(err)
@@ -167,7 +167,7 @@ var (
 const PubKeySize = 33
 
 // Address returns a Bitcoin style addresses: RIPEMD160(SHA256(pubkey))
-func (pubKey *PubKey) Address() crypto.Address {
+func (pubKey *PubKey) Address() cosmoscrypto.Address {
 	if len(pubKey.Key) != PubKeySize {
 		panic("length of pubkey is incorrect")
 	}
@@ -175,7 +175,7 @@ func (pubKey *PubKey) Address() crypto.Address {
 	sha := sha256.Sum256(pubKey.Key)
 	hasherRIPEMD160 := ripemd160.New()
 	hasherRIPEMD160.Write(sha[:]) // does not error
-	return crypto.Address(hasherRIPEMD160.Sum(nil))
+	return cosmoscrypto.Address(hasherRIPEMD160.Sum(nil))
 }
 
 // Bytes returns the pubkey byte format.
@@ -191,7 +191,7 @@ func (pubKey *PubKey) Type() string {
 	return keyType
 }
 
-func (pubKey *PubKey) Equals(other cryptotypes.PubKey) bool {
+func (pubKey *PubKey) Equals(other cosmoscrypto.PubKey) bool {
 	return pubKey.Type() == other.Type() && bytes.Equal(pubKey.Bytes(), other.Bytes())
 }
 

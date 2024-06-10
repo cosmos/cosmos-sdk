@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cosmos/crypto/hash/sha256"
 	"math"
 	"sort"
 	"strconv"
@@ -11,7 +12,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	"github.com/cometbft/cometbft/crypto/tmhash"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/maps"
@@ -696,7 +696,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 		msCache = msCache.SetTracingContext(
 			storetypes.TraceContext(
 				map[string]interface{}{
-					"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
+					"txHash": fmt.Sprintf("%X", sha256.Sum(txBytes)),
 				},
 			),
 		).(storetypes.CacheMultiStore)

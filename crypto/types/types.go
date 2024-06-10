@@ -1,19 +1,14 @@
 package types
 
 import (
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cosmoscrypto "github.com/cosmos/crypto/types"
 	"github.com/cosmos/gogoproto/proto"
 )
 
 // PubKey defines a public key and extends proto.Message.
 type PubKey interface {
 	proto.Message
-
-	Address() Address
-	Bytes() []byte
-	VerifySignature(msg, sig []byte) bool
-	Equals(PubKey) bool
-	Type() string
+	cosmoscrypto.PubKey
 }
 
 // LedgerPrivKey defines a private key that is not a proto message. For now,
@@ -21,13 +16,7 @@ type PubKey interface {
 // they use LedgerPrivKey instead of PrivKey. All other keys must use PrivKey
 // instead of LedgerPrivKey.
 // TODO https://github.com/cosmos/cosmos-sdk/issues/7357.
-type LedgerPrivKey interface {
-	Bytes() []byte
-	Sign(msg []byte) ([]byte, error)
-	PubKey() PubKey
-	Equals(LedgerPrivKey) bool
-	Type() string
-}
+type LedgerPrivKey = cosmoscrypto.PrivKey
 
 // LedgerPrivKeyAminoJSON is a Ledger PrivKey type that supports signing with
 // SIGN_MODE_LEGACY_AMINO_JSON. It is added as a non-breaking change, instead of directly
@@ -50,5 +39,5 @@ type PrivKey interface {
 }
 
 type (
-	Address = cmtcrypto.Address
+	Address = cosmoscrypto.Address
 )

@@ -5,8 +5,8 @@ import (
 	"encoding/base64"
 	"testing"
 
-	"github.com/cometbft/cometbft/crypto"
-	tmed25519 "github.com/cometbft/cometbft/crypto/ed25519"
+	tmed25519 "github.com/cosmos/crypto/curves/ed25519"
+	"github.com/cosmos/crypto/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -22,7 +22,7 @@ func TestSignAndValidateEd25519(t *testing.T) {
 	privKey := ed25519.GenPrivKey()
 	pubKey := privKey.PubKey()
 
-	msg := crypto.CRandBytes(1000)
+	msg := random.CRandBytes(1000)
 	sig, err := privKey.Sign(msg)
 	require.Nil(t, err)
 

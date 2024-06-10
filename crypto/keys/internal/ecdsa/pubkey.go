@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"math/big"
 
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	"github.com/cosmos/crypto/types"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -34,13 +34,13 @@ type PubKey struct {
 	ecdsa.PublicKey
 
 	// cache
-	address cmtcrypto.Address
+	address types.Address
 }
 
 // Address gets the address associated with a pubkey. If no address exists, it returns a newly created ADR-28 address
 // for ECDSA keys.
 // protoName is a concrete proto structure id.
-func (pk *PubKey) Address(protoName string) cmtcrypto.Address {
+func (pk *PubKey) Address(protoName string) types.Address {
 	if pk.address == nil {
 		pk.address = address.Hash(protoName, pk.Bytes())
 	}

@@ -2,8 +2,8 @@ package codec
 
 import (
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/encoding"
+	cosmoscrypto "github.com/cosmos/crypto/types"
 
 	"cosmossdk.io/errors"
 
@@ -50,7 +50,7 @@ func ToCmtProtoPublicKey(pk cryptotypes.PubKey) (cmtprotocrypto.PublicKey, error
 }
 
 // FromCmtPubKeyInterface converts CMT's cmtcrypto.PubKey to our own PubKey.
-func FromCmtPubKeyInterface(tmPk cmtcrypto.PubKey) (cryptotypes.PubKey, error) {
+func FromCmtPubKeyInterface(tmPk cosmoscrypto.PubKey) (cryptotypes.PubKey, error) {
 	tmProtoPk, err := encoding.PubKeyToProto(tmPk)
 	if err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func FromCmtPubKeyInterface(tmPk cmtcrypto.PubKey) (cryptotypes.PubKey, error) {
 }
 
 // ToCmtPubKeyInterface converts our own PubKey to CMT's cmtcrypto.PubKey.
-func ToCmtPubKeyInterface(pk cryptotypes.PubKey) (cmtcrypto.PubKey, error) {
+func ToCmtPubKeyInterface(pk cryptotypes.PubKey) (cosmoscrypto.PubKey, error) {
 	tmProtoPk, err := ToCmtProtoPublicKey(pk)
 	if err != nil {
 		return nil, err

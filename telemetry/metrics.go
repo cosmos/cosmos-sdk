@@ -3,6 +3,7 @@ package telemetry
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -10,7 +11,6 @@ import (
 	"github.com/hashicorp/go-metrics"
 	"github.com/hashicorp/go-metrics/datadog"
 	metricsprom "github.com/hashicorp/go-metrics/prometheus"
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/expfmt"
 )

@@ -21,7 +21,7 @@ type Table struct {
 
 type Column struct {
 	Name           string
-	Type           Type
+	Type           Kind
 	Nullable       bool
 	AddressPrefix  string
 	EnumDefinition EnumDefinition
@@ -39,10 +39,10 @@ func (c Column) Validate() error {
 	if err := c.Type.Validate(); err != nil {
 		return fmt.Errorf("invalid column type for %q: %w", c.Name, err)
 	}
-	if c.Type == TypeBech32Address && c.AddressPrefix == "" {
+	if c.Type == Bech32AddressKind && c.AddressPrefix == "" {
 		return fmt.Errorf("missing address prefix for column %q", c.Name)
 	}
-	if c.Type == TypeEnum {
+	if c.Type == EnumKind {
 		if err := c.EnumDefinition.Validate(); err != nil {
 			return fmt.Errorf("invalid enum definition for column %q: %w", c.Name, err)
 		}

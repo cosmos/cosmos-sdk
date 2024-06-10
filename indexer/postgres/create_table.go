@@ -70,39 +70,39 @@ func (i *indexer) createColumnDef(w io.Writer, col indexerbase.Column) error {
 
 func (i *indexer) colType(col indexerbase.Column) (string, error) {
 	switch col.Type {
-	case indexerbase.TypeString:
+	case indexerbase.StringKind:
 		return "TEXT", nil
-	case indexerbase.TypeBool:
+	case indexerbase.BoolKind:
 		return "BOOLEAN", nil
-	case indexerbase.TypeBytes:
+	case indexerbase.BytesKind:
 		return "BYTEA", nil
-	case indexerbase.TypeInt8:
+	case indexerbase.Int8Kind:
 		return "SMALLINT", nil
-	case indexerbase.TypeInt16:
+	case indexerbase.Int16Kind:
 		return "SMALLINT", nil
-	case indexerbase.TypeInt32:
+	case indexerbase.Int32Kind:
 		return "INTEGER", nil
-	case indexerbase.TypeInt64:
+	case indexerbase.Int64Kind:
 		return "BIGINT", nil
-	case indexerbase.TypeUint8:
+	case indexerbase.Uint8Kind:
 		return "SMALLINT", nil
-	case indexerbase.TypeUint16:
+	case indexerbase.Uint16Kind:
 		return "INTEGER", nil
-	case indexerbase.TypeUint32:
+	case indexerbase.Uint32Kind:
 		return "BIGINT", nil
-	case indexerbase.TypeUint64:
+	case indexerbase.Uint64Kind:
 		return "NUMERIC", nil
-	case indexerbase.TypeDecimal:
+	case indexerbase.DecimalKind:
 		return "NUMERIC", nil
-	case indexerbase.TypeFloat32:
+	case indexerbase.Float32Kind:
 		return "REAL", nil
-	case indexerbase.TypeFloat64:
+	case indexerbase.Float64Kind:
 		return "DOUBLE PRECISION", nil
-	case indexerbase.TypeEnum:
+	case indexerbase.EnumKind:
 		return "TEXT", fmt.Errorf("enums not supported yet")
-	case indexerbase.TypeJSON:
+	case indexerbase.JSONKind:
 		return "JSONB", nil
-	case indexerbase.TypeBech32Address:
+	case indexerbase.Bech32AddressKind:
 		return "TEXT", nil
 	default:
 		return "", fmt.Errorf("unsupported type %v", col.Type)

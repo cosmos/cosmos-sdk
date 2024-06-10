@@ -211,30 +211,30 @@ func protoCol(f protoreflect.FieldDescriptor) indexerbase.Column {
 	col := indexerbase.Column{Name: string(f.Name())}
 
 	if f.IsMap() || f.IsList() {
-		col.Type = indexerbase.TypeJSON
+		col.Type = indexerbase.JSONKind
 		col.Nullable = true
 	} else {
 		switch f.Kind() {
 		case protoreflect.BoolKind:
-			col.Type = indexerbase.TypeBool
+			col.Type = indexerbase.BoolKind
 		case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
-			col.Type = indexerbase.TypeInt32
+			col.Type = indexerbase.Int32Kind
 		case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
-			col.Type = indexerbase.TypeInt64
+			col.Type = indexerbase.Int64Kind
 		case protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
-			col.Type = indexerbase.TypeInt64
+			col.Type = indexerbase.Int64Kind
 		case protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
-			col.Type = indexerbase.TypeDecimal
+			col.Type = indexerbase.DecimalKind
 		case protoreflect.FloatKind:
-			col.Type = indexerbase.TypeFloat32
+			col.Type = indexerbase.Float32Kind
 		case protoreflect.DoubleKind:
-			col.Type = indexerbase.TypeFloat64
+			col.Type = indexerbase.Float64Kind
 		case protoreflect.StringKind:
-			col.Type = indexerbase.TypeString
+			col.Type = indexerbase.StringKind
 		case protoreflect.BytesKind:
-			col.Type = indexerbase.TypeBytes
+			col.Type = indexerbase.BytesKind
 		case protoreflect.EnumKind:
-			col.Type = indexerbase.TypeEnum
+			col.Type = indexerbase.EnumKind
 			enumDesc := f.Enum()
 			var vals []string
 			n := enumDesc.Values().Len()
@@ -249,11 +249,11 @@ func protoCol(f protoreflect.FieldDescriptor) indexerbase.Column {
 			col.Nullable = true
 			fullName := f.Message().FullName()
 			if fullName == "google.protobuf.Timestamp" {
-				col.Type = indexerbase.TypeTime
+				col.Type = indexerbase.TimeKind
 			} else if fullName == "google.protobuf.Duration" {
-				col.Type = indexerbase.TypeDuration
+				col.Type = indexerbase.DurationKind
 			} else {
-				col.Type = indexerbase.TypeJSON
+				col.Type = indexerbase.JSONKind
 			}
 		}
 		if f.HasPresence() {

@@ -6,184 +6,184 @@ import (
 	"time"
 )
 
-type Type int
+type Kind int
 
 const (
-	TypeUnknown Type = iota
+	InvalidKind Kind = iota
 
-	// TypeString is a string type and values of this type must be of the go type string
+	// StringKind is a string type and values of this type must be of the go type string
 	// or implement fmt.Stringer().
-	TypeString
+	StringKind
 
-	// TypeBytes is a bytes type and values of this type must be of the go type []byte.
-	TypeBytes
+	// BytesKind is a bytes type and values of this type must be of the go type []byte.
+	BytesKind
 
-	// TypeInt8 is an int8 type and values of this type must be of the go type int8.
-	TypeInt8
+	// Int8Kind is an int8 type and values of this type must be of the go type int8.
+	Int8Kind
 
-	// TypeUint8 is a uint8 type and values of this type must be of the go type uint8.
-	TypeUint8
+	// Uint8Kind is a uint8 type and values of this type must be of the go type uint8.
+	Uint8Kind
 
-	// TypeInt16 is an int16 type and values of this type must be of the go type int16.
-	TypeInt16
+	// Int16Kind is an int16 type and values of this type must be of the go type int16.
+	Int16Kind
 
-	// TypeUint16 is a uint16 type and values of this type must be of the go type uint16.
-	TypeUint16
+	// Uint16Kind is a uint16 type and values of this type must be of the go type uint16.
+	Uint16Kind
 
-	// TypeInt32 is an int32 type and values of this type must be of the go type int32.
-	TypeInt32
+	// Int32Kind is an int32 type and values of this type must be of the go type int32.
+	Int32Kind
 
-	// TypeUint32 is a uint32 type and values of this type must be of the go type uint32.
-	TypeUint32
+	// Uint32Kind is a uint32 type and values of this type must be of the go type uint32.
+	Uint32Kind
 
-	// TypeInt64 is an int64 type and values of this type must be of the go type int64.
-	TypeInt64
+	// Int64Kind is an int64 type and values of this type must be of the go type int64.
+	Int64Kind
 
-	// TypeUint64 is a uint64 type and values of this type must be of the go type uint64.
-	TypeUint64
+	// Uint64Kind is a uint64 type and values of this type must be of the go type uint64.
+	Uint64Kind
 
-	// TypeDecimal represents an arbitrary precision decimal or integer number. Values of this type
+	// DecimalKind represents an arbitrary precision decimal or integer number. Values of this type
 	// must be of the go type string or a type that implements fmt.Stringer with the resulting string
 	// formatted as decimal numbers with an optional fractional part. Exponential E-notation
 	// is supported but NaN and Infinity are not.
-	TypeDecimal
+	DecimalKind
 
-	// TypeBool is a boolean type and values of this type must be of the go type bool.
-	TypeBool
+	// BoolKind is a boolean type and values of this type must be of the go type bool.
+	BoolKind
 
-	// TypeTime is a time type and values of this type must be of the go type time.Time.
-	TypeTime
+	// TimeKind is a time type and values of this type must be of the go type time.Time.
+	TimeKind
 
-	// TypeDuration is a duration type and values of this type must be of the go type time.Duration.
-	TypeDuration
+	// DurationKind is a duration type and values of this type must be of the go type time.Duration.
+	DurationKind
 
-	// TypeFloat32 is a float32 type and values of this type must be of the go type float32.
-	TypeFloat32
+	// Float32Kind is a float32 type and values of this type must be of the go type float32.
+	Float32Kind
 
-	// TypeFloat64 is a float64 type and values of this type must be of the go type float64.
-	TypeFloat64
+	// Float64Kind is a float64 type and values of this type must be of the go type float64.
+	Float64Kind
 
-	// TypeBech32Address is a bech32 address type and values of this type must be of the go type string or []byte.
+	// Bech32AddressKind is a bech32 address type and values of this type must be of the go type string or []byte.
 	// Columns of this type are expected to set the AddressPrefix field in the column definition to the bech32
 	// address prefix.
-	TypeBech32Address
+	Bech32AddressKind
 
-	// TypeEnum is an enum type and values of this type must be of the go type string or implement fmt.Stringer.
+	// EnumKind is an enum type and values of this type must be of the go type string or implement fmt.Stringer.
 	// Columns of this type are expected to set the EnumDefinition field in the column definition to the enum definition.
-	TypeEnum
+	EnumKind
 
-	// TypeJSON is a JSON type and values of this type can either be of go type json.RawMessage
+	// JSONKind is a JSON type and values of this type can either be of go type json.RawMessage
 	// or any type that can be marshaled to JSON using json.Marshal.
-	TypeJSON
+	JSONKind
 )
 
-func (t Type) Validate() error {
-	if t <= TypeUnknown {
+func (t Kind) Validate() error {
+	if t <= InvalidKind {
 		return fmt.Errorf("unknown type: %d", t)
 	}
-	if t > TypeJSON {
+	if t > JSONKind {
 		return fmt.Errorf("invalid type: %d", t)
 	}
 	return nil
 }
 
-func (t Type) ValidateValue(value any) error {
+func (t Kind) ValidateValue(value any) error {
 	switch t {
-	case TypeString:
+	case StringKind:
 		_, ok := value.(string)
 		_, ok2 := value.(fmt.Stringer)
 		if !ok && !ok2 {
 			return fmt.Errorf("expected string or type that implements fmt.Stringer, got %T", value)
 		}
-	case TypeBytes:
+	case BytesKind:
 		_, ok := value.([]byte)
 		if !ok {
 			return fmt.Errorf("expected []byte, got %T", value)
 		}
-	case TypeInt8:
+	case Int8Kind:
 		_, ok := value.(int8)
 		if !ok {
 			return fmt.Errorf("expected int8, got %T", value)
 		}
-	case TypeUint8:
+	case Uint8Kind:
 		_, ok := value.(uint8)
 		if !ok {
 			return fmt.Errorf("expected uint8, got %T", value)
 		}
-	case TypeInt16:
+	case Int16Kind:
 		_, ok := value.(int16)
 		if !ok {
 			return fmt.Errorf("expected int16, got %T", value)
 		}
-	case TypeUint16:
+	case Uint16Kind:
 		_, ok := value.(uint16)
 		if !ok {
 			return fmt.Errorf("expected uint16, got %T", value)
 		}
-	case TypeInt32:
+	case Int32Kind:
 		_, ok := value.(int32)
 		if !ok {
 			return fmt.Errorf("expected int32, got %T", value)
 		}
-	case TypeUint32:
+	case Uint32Kind:
 		_, ok := value.(uint32)
 		if !ok {
 			return fmt.Errorf("expected uint32, got %T", value)
 		}
-	case TypeInt64:
+	case Int64Kind:
 		_, ok := value.(int64)
 		if !ok {
 			return fmt.Errorf("expected int64, got %T", value)
 		}
-	case TypeUint64:
+	case Uint64Kind:
 		_, ok := value.(uint64)
 		if !ok {
 			return fmt.Errorf("expected uint64, got %T", value)
 		}
-	case TypeDecimal:
+	case DecimalKind:
 		_, ok := value.(string)
 		_, ok2 := value.(fmt.Stringer)
 		if !ok && !ok2 {
 			return fmt.Errorf("expected string or type that implements fmt.Stringer, got %T", value)
 		}
-	case TypeBool:
+	case BoolKind:
 		_, ok := value.(bool)
 		if !ok {
 			return fmt.Errorf("expected bool, got %T", value)
 		}
-	case TypeTime:
+	case TimeKind:
 		_, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("expected time.Time, got %T", value)
 		}
-	case TypeDuration:
+	case DurationKind:
 		_, ok := value.(time.Duration)
 		if !ok {
 			return fmt.Errorf("expected time.Duration, got %T", value)
 		}
-	case TypeFloat32:
+	case Float32Kind:
 		_, ok := value.(float32)
 		if !ok {
 			return fmt.Errorf("expected float32, got %T", value)
 		}
-	case TypeFloat64:
+	case Float64Kind:
 		_, ok := value.(float64)
 		if !ok {
 			return fmt.Errorf("expected float64, got %T", value)
 		}
-	case TypeBech32Address:
+	case Bech32AddressKind:
 		_, ok := value.(string)
 		_, ok2 := value.([]byte)
 		if !ok && !ok2 {
 			return fmt.Errorf("expected string or []byte, got %T", value)
 		}
-	case TypeEnum:
+	case EnumKind:
 		_, ok := value.(string)
 		_, ok2 := value.(fmt.Stringer)
 		if !ok && !ok2 {
 			return fmt.Errorf("expected string or type that implements fmt.Stringer, got %T", value)
 		}
-	case TypeJSON:
+	case JSONKind:
 		return nil
 	default:
 		return fmt.Errorf("invalid type: %d", t)
@@ -191,91 +191,91 @@ func (t Type) ValidateValue(value any) error {
 	return nil
 }
 
-func (t Type) String() string {
+func (t Kind) String() string {
 	switch t {
-	case TypeString:
+	case StringKind:
 		return "string"
-	case TypeBytes:
+	case BytesKind:
 		return "bytes"
-	case TypeInt8:
+	case Int8Kind:
 		return "int8"
-	case TypeUint8:
+	case Uint8Kind:
 		return "uint8"
-	case TypeInt16:
+	case Int16Kind:
 		return "int16"
-	case TypeUint16:
+	case Uint16Kind:
 		return "uint16"
-	case TypeInt32:
+	case Int32Kind:
 		return "int32"
-	case TypeUint32:
+	case Uint32Kind:
 		return "uint32"
-	case TypeInt64:
+	case Int64Kind:
 		return "int64"
-	case TypeUint64:
+	case Uint64Kind:
 		return "uint64"
-	case TypeDecimal:
+	case DecimalKind:
 		return "decimal"
-	case TypeBool:
+	case BoolKind:
 		return "bool"
-	case TypeTime:
+	case TimeKind:
 		return "time"
-	case TypeDuration:
+	case DurationKind:
 		return "duration"
-	case TypeFloat32:
+	case Float32Kind:
 		return "float32"
-	case TypeFloat64:
+	case Float64Kind:
 		return "float64"
-	case TypeBech32Address:
+	case Bech32AddressKind:
 		return "bech32address"
-	case TypeEnum:
+	case EnumKind:
 		return "enum"
-	case TypeJSON:
+	case JSONKind:
 		return "json"
 	default:
 		return ""
 	}
 }
 
-func TypeForGoValue(value any) Type {
+func TypeForGoValue(value any) Kind {
 	switch value.(type) {
 	case string, fmt.Stringer:
-		return TypeString
+		return StringKind
 	case []byte:
-		return TypeBytes
+		return BytesKind
 	case int8:
-		return TypeInt8
+		return Int8Kind
 	case uint8:
-		return TypeUint8
+		return Uint8Kind
 	case int16:
-		return TypeInt16
+		return Int16Kind
 	case uint16:
-		return TypeUint16
+		return Uint16Kind
 	case int32:
-		return TypeInt32
+		return Int32Kind
 	case uint32:
-		return TypeUint32
+		return Uint32Kind
 	case int64:
-		return TypeInt64
+		return Int64Kind
 	case uint64:
-		return TypeUint64
+		return Uint64Kind
 	case float32:
-		return TypeFloat32
+		return Float32Kind
 	case float64:
-		return TypeFloat64
+		return Float64Kind
 	case bool:
-		return TypeBool
+		return BoolKind
 	case time.Time:
-		return TypeTime
+		return TimeKind
 	case time.Duration:
-		return TypeDuration
+		return DurationKind
 	case json.RawMessage:
-		return TypeJSON
+		return JSONKind
 	default:
 	}
 
 	if _, ok := value.(fmt.Stringer); ok {
-		return TypeString
+		return StringKind
 	}
 
-	return TypeUnknown
+	return InvalidKind
 }

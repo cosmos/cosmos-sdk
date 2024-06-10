@@ -901,8 +901,11 @@ func TestCheckVestedDelegationInVestingAccount(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			baseAcc := authtypes.NewBaseAccount(sdk.AccAddress([]byte("addr")), secp256k1.GenPrivKey().PubKey(), 0, 0)
-			vestingAcct, err := vestingtypes.NewContinuousVestingAccount(
+			pubKey := secp256k1.GenPrivKey().PubKey()
+			baseAcc := authtypes.NewBaseAccount(sdk.AccAddress(pubKey.Address()), pubKey, 0, 0)
+
+			var err error
+			vestingAcct, err = vestingtypes.NewContinuousVestingAccount(
 				baseAcc,
 				originalVesting,
 				startTime.Unix(),

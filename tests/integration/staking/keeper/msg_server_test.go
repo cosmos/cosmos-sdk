@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"errors"
 	"fmt"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -14,7 +15,6 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
@@ -786,14 +786,22 @@ func TestRedelegationTokenization(t *testing.T) {
 		bankKeeper    = f.bankKeeper
 	)
 	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
-	validators, err := stakingKeeper.GetAllValidators(ctx)
-	require.NoError(t, err)
-	validatorA := validators[0]
-	validatorAAddress := validatorA.GetOperator()
-	_, validatorBAddress := setupTestTokenizeAndRedeemConversion(t, *stakingKeeper, bankKeeper, ctx)
+	pubKeys := simtestutil.CreateTestPubKeys(1)
+	pk1 := pubKeys[0]
 
+	// Create Validators and Delegation
 	addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, stakingKeeper.TokensFromConsensusPower(ctx, 10000))
 	alice := addrs[0]
+
+	validatorAAddress := sdk.ValAddress(addrs[1])
+	val1 := testutil.NewValidator(t, validatorAAddress, pk1)
+	val1.Status = types.Bonded
+	stakingKeeper.SetValidator(ctx, val1)
+	stakingKeeper.SetValidatorByPowerIndex(ctx, val1)
+	err := stakingKeeper.SetValidatorByConsAddr(ctx, val1)
+	require.NoError(t, err)
+
+	_, validatorBAddress := setupTestTokenizeAndRedeemConversion(t, *stakingKeeper, bankKeeper, ctx)
 
 	delegateAmount := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
 	bondedDenom, err := stakingKeeper.BondDenom(ctx)
@@ -801,18 +809,19 @@ func TestRedelegationTokenization(t *testing.T) {
 	delegateCoin := sdk.NewCoin(bondedDenom, delegateAmount)
 
 	// Alice delegates to validatorA
-	_, err = msgServer.Delegate(sdk.WrapSDKContext(ctx), &types.MsgDelegate{
+	_, err = msgServer.Delegate(ctx, &types.MsgDelegate{
 		DelegatorAddress: alice.String(),
-		ValidatorAddress: validatorAAddress,
+		ValidatorAddress: validatorAAddress.String(),
 		Amount:           delegateCoin,
 	})
+	require.NoError(t, err)
 
 	// Alice redelegates to validatorB
 	redelegateAmount := sdk.TokensFromConsensusPower(5, sdk.DefaultPowerReduction)
 	redelegateCoin := sdk.NewCoin(bondedDenom, redelegateAmount)
-	_, err = msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), &types.MsgBeginRedelegate{
+	_, err = msgServer.BeginRedelegate(ctx, &types.MsgBeginRedelegate{
 		DelegatorAddress:    alice.String(),
-		ValidatorSrcAddress: validatorAAddress,
+		ValidatorSrcAddress: validatorAAddress.String(),
 		ValidatorDstAddress: validatorBAddress.String(),
 		Amount:              redelegateCoin,
 	})
@@ -826,7 +835,7 @@ func TestRedelegationTokenization(t *testing.T) {
 	// Alice attempts to tokenize the redelegation, but this fails because the redelegation is ongoing
 	tokenizedAmount := sdk.TokensFromConsensusPower(5, sdk.DefaultPowerReduction)
 	tokenizedCoin := sdk.NewCoin(bondedDenom, tokenizedAmount)
-	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
+	_, err = msgServer.TokenizeShares(ctx, &types.MsgTokenizeShares{
 		DelegatorAddress:    alice.String(),
 		ValidatorAddress:    validatorBAddress.String(),
 		Amount:              tokenizedCoin,
@@ -843,14 +852,18 @@ func TestRedelegationTokenization(t *testing.T) {
 
 	// advance time until the redelegations should mature
 	// end block
-	f.stakingKeeper.EndBlocker(f.sdkCtx)
+	f.stakingKeeper.EndBlocker(ctx)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	// advance by 22 days
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(22 * 24 * time.Hour))
+	headerInfo := ctx.HeaderInfo()
+	headerInfo.Time = ctx.BlockHeader().Time
+	headerInfo.Height = ctx.BlockHeader().Height
+	ctx = ctx.WithHeaderInfo(headerInfo)
 	// begin block
-	f.stakingKeeper.BeginBlocker(f.sdkCtx)
+	f.stakingKeeper.BeginBlocker(ctx)
 	// end block
-	f.stakingKeeper.EndBlocker(f.sdkCtx)
+	f.stakingKeeper.EndBlocker(ctx)
 
 	// check that the redelegation is removed
 	redelegation, err = stakingKeeper.GetRedelegations(ctx, alice, uint16(10))
@@ -859,7 +872,7 @@ func TestRedelegationTokenization(t *testing.T) {
 
 	// Alice attempts to tokenize the redelegation again, and this time it should succeed
 	// because there is no ongoing redelegation
-	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
+	_, err = msgServer.TokenizeShares(ctx, &types.MsgTokenizeShares{
 		DelegatorAddress:    alice.String(),
 		ValidatorAddress:    validatorBAddress.String(),
 		Amount:              tokenizedCoin,
@@ -1780,8 +1793,10 @@ func TestTokenizeAndRedeemVestedDelegation(t *testing.T) {
 	endTime := time.Now().Add(24 * time.Hour)
 
 	// Create vesting account
-	pubkey := secp256k1.GenPrivKey().PubKey()
-	baseAcc := authtypes.NewBaseAccount(addrAcc1, pubkey, 0, 0)
+	lastAccNum := uint64(1000)
+	baseAcc := authtypes.NewBaseAccountWithAddress(addrAcc1)
+	require.NoError(t, baseAcc.SetAccountNumber(atomic.AddUint64(&lastAccNum, 1)))
+
 	continuousVestingAccount, err := vestingtypes.NewContinuousVestingAccount(
 		baseAcc,
 		originalVesting,

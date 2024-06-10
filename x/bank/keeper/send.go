@@ -218,46 +218,73 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 		return err
 	}
 
-	toAddr, err := k.sendRestriction.apply(ctx, fromAddr, toAddr, amt)
-	if err != nil {
-		return err
-	}
-
-	err = k.subUnlockedCoins(ctx, fromAddr, amt, true)
-	if err != nil {
-		return err
-	}
-
-	err = k.addCoins(ctx, toAddr, amt)
-	if err != nil {
-		return err
-	}
-
-	// Create account if recipient does not exist.
-	//
-	// NOTE: This should ultimately be removed in favor a more flexible approach
-	// such as delegated fee messages.
-	accExists := k.ak.HasAccount(ctx, toAddr)
-	if !accExists {
-		defer telemetry.IncrCounter(1, "new", "account")
-		k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
-	}
-
+	var (
+		err         error
+		isSuccess   bool // if at least one send succeedes, we proceed
+		toAddresses = make([]sdk.AccAddress, len(amt))
+	)
 	// bech32 encoding is expensive! Only do it once for fromAddr
 	fromAddrString := fromAddr.String()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
+	events := sdk.Events{}
+
+	for i, coin := range amt {
+		toAddr, err = k.sendRestriction.apply(ctx, fromAddr, toAddr, coin)
+
+		if err != nil {
+			continue
+		}
+
+		toAddresses[i] = toAddr
+
+		isSuccess = true
+	}
+
+	if !isSuccess {
+		return err // returning last err from sendRestrictionFn (does it matter which one?)
+	}
+
+	for i, coin := range amt {
+		// skip restricted coin
+		if toAddresses[i] == nil {
+			continue
+		}
+
+		coinAmt := sdk.NewCoins(coin)
+		toAddr = toAddresses[i]
+
+		err = k.subUnlockedCoins(ctx, fromAddr, coinAmt, true) // only sub this coin
+		if err != nil {
+			return err
+		}
+
+		err = k.addCoins(ctx, toAddr, coinAmt)
+		if err != nil {
+			return err
+		}
+
+		// Create account if recipient does not exist.
+		//
+		// NOTE: This should ultimately be removed in favor a more flexible approach
+		// such as delegated fee messages.
+		accExists := k.ak.HasAccount(ctx, toAddr)
+		if !accExists {
+			defer telemetry.IncrCounter(1, "new", "account")
+			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
+		}
+
+		events = events.AppendEvent(sdk.NewEvent(
 			types.EventTypeTransfer,
 			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
 			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
-		),
-	})
+			sdk.NewAttribute(sdk.AttributeKeyAmount, coinAmt.String()),
+		))
+	}
+	events = events.AppendEvent(sdk.NewEvent(
+		sdk.EventTypeMessage,
+		sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
+	))
+	sdkCtx.EventManager().EmitEvents(events)
 
 	return nil
 }
@@ -530,7 +557,7 @@ func (r *sendRestriction) clear() {
 var _ types.SendRestrictionFn = (*sendRestriction)(nil).apply
 
 // apply applies the send restriction if there is one. If not, it's a no-op.
-func (r *sendRestriction) apply(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
+func (r *sendRestriction) apply(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coin) (sdk.AccAddress, error) {
 	if r == nil || r.fn == nil {
 		return toAddr, nil
 	}

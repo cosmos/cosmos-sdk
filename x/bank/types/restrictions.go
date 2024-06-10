@@ -52,7 +52,7 @@ func ComposeMintingRestrictions(restrictions ...MintingRestrictionFn) MintingRes
 }
 
 // A SendRestrictionFn can restrict sends and/or provide a new receiver address.
-type SendRestrictionFn func(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (newToAddr sdk.AccAddress, err error)
+type SendRestrictionFn func(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coin) (newToAddr sdk.AccAddress, err error)
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (SendRestrictionFn) IsOnePerModuleType() {}
@@ -60,7 +60,7 @@ func (SendRestrictionFn) IsOnePerModuleType() {}
 var _ SendRestrictionFn = NoOpSendRestrictionFn
 
 // NoOpSendRestrictionFn is a no-op SendRestrictionFn.
-func NoOpSendRestrictionFn(_ context.Context, _, toAddr sdk.AccAddress, _ sdk.Coins) (sdk.AccAddress, error) {
+func NoOpSendRestrictionFn(_ context.Context, _, toAddr sdk.AccAddress, _ sdk.Coin) (sdk.AccAddress, error) {
 	return toAddr, nil
 }
 
@@ -89,7 +89,7 @@ func ComposeSendRestrictions(restrictions ...SendRestrictionFn) SendRestrictionF
 	case 1:
 		return toRun[0]
 	}
-	return func(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
+	return func(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coin) (sdk.AccAddress, error) {
 		var err error
 		for _, r := range toRun {
 			toAddr, err = r(ctx, fromAddr, toAddr, amt)

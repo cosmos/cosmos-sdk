@@ -37,7 +37,7 @@ func TestSyncAccountNumber(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, uint64(10), num)
 
-	app.syncAccoutnNumber(ctx)
+	app.syncAccountNumber(ctx)
 
 	// make sure the DB entry for this key is deleted
 	v, err = store.Get(bytesKey)

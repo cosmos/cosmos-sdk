@@ -10,18 +10,11 @@ PROPOSED Not Implemented
 
 ## Abstract
 
-> "If you can't explain it simply, you don't understand it well enough." Provide
-> a simplified and layman-accessible explanation of the ADR.
-> A short (~200 word) description of the issue being addressed.
+This ADR introduces a new `MsgV2` standard where the signer of the message is implied by the
+credentials of the party sending it, and unlike the current design not part of the message body.
+This can be used for both simple inter-module message passing and simpler messages in transactions.
 
 ## Context
-
-> This section describes the forces at play, including technological, political,
-> social, and project local. These forces are probably in tension, and should be
-> called out as such. The language in this section is value-neutral. It is simply
-> describing facts. It should clearly explain the problem and motivation that the
-> proposal aims to resolve.
-> {context body}
 
 Historically operations in the SDK have been modelled with the `sdk.Msg` interface and
 the account signing the message has to be explicitly extracted from the body of `Msg`s.

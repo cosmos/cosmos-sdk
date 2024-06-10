@@ -58,7 +58,6 @@ func (app SimApp) RegisterUpgradeHandlers() {
 }
 
 func (app SimApp) syncAccoutnNumber(ctx context.Context) error {
-	// sync accounts and auth module account number
 	currentAccNum, err := app.AuthKeeper.RemoveLegacyAccountNumber(ctx)
 	if err != nil {
 		return err

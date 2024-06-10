@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -27,6 +28,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
+
+var _ comet.Service = (*emptyCometService)(nil)
+
+type emptyCometService struct{}
+
+// CometInfo implements comet.Service.
+func (e *emptyCometService) CometInfo(context.Context) comet.Info {
+	return comet.Info{}
+}
+
+var testCometService = &emptyCometService{}
 
 func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -58,6 +70,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		poolKeeper,
+		testCometService,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -124,6 +137,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		poolKeeper,
+		testCometService,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -264,6 +278,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		poolKeeper,
+		testCometService,
 		"fee_collector",
 		authorityAddr,
 	)

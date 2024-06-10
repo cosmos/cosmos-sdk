@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
@@ -25,7 +26,7 @@ func DefaultGenesisState() *GenesisState {
 // ValidateGenesis - validate crisis genesis data
 func ValidateGenesis(data *GenesisState) error {
 	if !data.ConstantFee.IsValid() {
-		return fmt.Errorf("constant fee is invalid")
+		return errors.New("constant fee is invalid")
 	}
 	if !data.ConstantFee.IsPositive() {
 		return fmt.Errorf("constant fee must be positive: %s", data.ConstantFee)

@@ -1,7 +1,7 @@
 package testutil
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -47,12 +47,12 @@ func GenerateSaveCoinKey(
 
 	// ensure no overwrite
 	if !overwrite && exists {
-		return sdk.AccAddress{}, "", fmt.Errorf("key already exists, overwrite is disabled")
+		return sdk.AccAddress{}, "", errors.New("key already exists, overwrite is disabled")
 	}
 
 	if exists {
 		if err := keybase.Delete(keyName); err != nil {
-			return sdk.AccAddress{}, "", fmt.Errorf("failed to overwrite key")
+			return sdk.AccAddress{}, "", errors.New("failed to overwrite key")
 		}
 	}
 

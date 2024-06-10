@@ -4,13 +4,14 @@ import (
 	"os"
 	"testing"
 
+	"cosmossdk.io/log"
+
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -63,17 +64,18 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 
 	// run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	simParams, simErr := simulation.SimulateFromSeed(
 		b,
+		log.NewNopLogger(),
 		os.Stdout,
 		app.BaseApp,
 		simtestutil.AppStateFn(app.AppCodec(), app.AuthKeeper.AddressCodec(), app.StakingKeeper.ValidatorAddressCodec(), app.SimulationManager(), app.DefaultGenesis()),
-		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simtestutil.SimulationOperations(app, app.AppCodec(), config),
+		simtypes.RandomAccounts,
+		simtestutil.SimulationOperations(app, app.AppCodec(), config, app.txConfig),
 		BlockedAddresses(),
 		config,
 		app.AppCodec(),
-		codectestutil.CodecOptions{}.GetAddressCodec(),
+		app.txConfig.SigningContext().AddressCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked

@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/simsx"
+
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -174,7 +176,16 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, simState.TxConfig, am.accountKeeper, am.keeper,
-	)
+	panic("old")
+
+	ak, bk := am.accountKeeper, am.keeper
+	reg := simsx.NewSimsRegistryAdapter(simsx.NewBasicSimulationReporter(), ak, bk, simState.TxConfig)
+	weight := simsx.ParamWeightSource(simState.AppParams)
+	am.WeightedOperationsX(weight, reg)
+	return reg.ToLegacyWeightedOperations()
+}
+
+func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weights.Get("msg_send", 100), simulation.MsgSendFactory())
+	reg.Add(weights.Get("msg_multisend", 10), simulation.MsgMultiSendFactory())
 }

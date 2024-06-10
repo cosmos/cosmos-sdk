@@ -1165,3 +1165,7 @@ func (app *BaseApp) Close() error {
 
 	return errors.Join(errs...)
 }
+
+func (app *BaseApp) GetBaseApp() *BaseApp {
+	return app
+}

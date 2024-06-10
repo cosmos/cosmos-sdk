@@ -537,7 +537,7 @@ func NewSimApp(
 	overrideModules := map[string]module.AppModuleSimulation{
 		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AuthKeeper, app.AccountsKeeper, authsims.RandomGenesisAccounts),
 	}
-	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
+	app.sm = module.NewSimulationManagerFromAppModules(app.AuthKeeper, app.BankKeeper, app.ModuleManager.Modules, overrideModules)
 
 	// create, start, and load the unordered tx manager
 	utxDataDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
@@ -649,7 +649,7 @@ func (app *SimApp) Close() error {
 }
 
 // Name returns the name of the App
-func (app *SimApp) Name() string { return app.BaseApp.Name() }
+func (app SimApp) Name() string { return app.BaseApp.Name() }
 
 // PreBlocker application updates every pre block
 func (app *SimApp) PreBlocker(ctx sdk.Context, _ *abci.FinalizeBlockRequest) error {

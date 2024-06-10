@@ -23,8 +23,6 @@ var (
 	FlagBlockSizeValue          int
 	FlagLeanValue               bool
 	FlagCommitValue             bool
-	FlagOnOperationValue        bool // TODO: Remove in favor of binary search for invariant violation
-	FlagAllInvariantsValue      bool
 	FlagDBBackendValue          string
 
 	FlagEnabledValue     bool
@@ -42,15 +40,12 @@ func GetSimulatorFlags() {
 	flag.StringVar(&FlagExportParamsPathValue, "ExportParamsPath", "", "custom file path to save the exported params JSON")
 	flag.IntVar(&FlagExportParamsHeightValue, "ExportParamsHeight", 0, "height to which export the randomly generated params")
 	flag.StringVar(&FlagExportStatePathValue, "ExportStatePath", "", "custom file path to save the exported app state JSON")
-	flag.StringVar(&FlagExportStatsPathValue, "ExportStatsPath", "", "custom file path to save the exported simulation statistics JSON")
 	flag.Int64Var(&FlagSeedValue, "Seed", DefaultSeedValue, "simulation random seed")
 	flag.IntVar(&FlagInitialBlockHeightValue, "InitialBlockHeight", 1, "initial block to start the simulation")
 	flag.IntVar(&FlagNumBlocksValue, "NumBlocks", 500, "number of new blocks to simulate from the initial block height")
 	flag.IntVar(&FlagBlockSizeValue, "BlockSize", 200, "operations per block")
 	flag.BoolVar(&FlagLeanValue, "Lean", false, "lean simulation log output")
-	flag.BoolVar(&FlagCommitValue, "Commit", false, "have the simulation commit")
-	flag.BoolVar(&FlagOnOperationValue, "SimulateEveryOperation", false, "run slow invariants every operation")
-	flag.BoolVar(&FlagAllInvariantsValue, "PrintAllInvariants", false, "print all invariants if a broken invariant is found")
+	flag.BoolVar(&FlagCommitValue, "Commit", true, "have the simulation commit")
 	flag.StringVar(&FlagDBBackendValue, "DBBackend", "goleveldb", "custom db backend type")
 
 	// simulation flags
@@ -77,8 +72,6 @@ func NewConfigFromFlags() simulation.Config {
 		BlockSize:          FlagBlockSizeValue,
 		Lean:               FlagLeanValue,
 		Commit:             FlagCommitValue,
-		OnOperation:        FlagOnOperationValue,
-		AllInvariants:      FlagAllInvariantsValue,
 		DBBackend:          FlagDBBackendValue,
 	}
 }

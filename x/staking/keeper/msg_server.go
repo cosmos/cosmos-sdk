@@ -331,7 +331,7 @@ func (k msgServer) BeginRedelegate(ctx context.Context, msg *types.MsgBeginRedel
 	}
 	valDstAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorDstAddress)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid destination validator address: %s", err)
 	}
 
 	_, err = k.GetValidator(ctx, valSrcAddr)

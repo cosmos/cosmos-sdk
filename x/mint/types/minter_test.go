@@ -23,31 +23,31 @@ func TestNextInflation(t *testing.T) {
 		bondedRatio, setInflation, expChange math.LegacyDec
 	}{
 		// with 0% bonded atom supply the inflation should increase by InflationRateChange
-		{math.LegacyZeroDec(), math.LegacyNewDecWithPrec(7, 2), params.InflationRateChange.Quo(blocksPerYr)},
+		{math.LegacyZeroDec(), math.LegacyNewDecWithPrec(0, 2), params.InflationRateChange.Quo(blocksPerYr)},
 
 		// 100% bonded, starting at 20% inflation and being reduced
 		// (1 - (1/0.67))*(0.13/8667)
 		{
-			math.LegacyOneDec(), math.LegacyNewDecWithPrec(20, 2),
+			math.LegacyOneDec(), math.LegacyNewDecWithPrec(5, 2),
 			math.LegacyOneDec().Sub(math.LegacyOneDec().Quo(params.GoalBonded)).Mul(params.InflationRateChange).Quo(blocksPerYr),
 		},
 
 		// 50% bonded, starting at 10% inflation and being increased
 		{
-			math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(10, 2),
+			math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(2, 2),
 			math.LegacyOneDec().Sub(math.LegacyNewDecWithPrec(5, 1).Quo(params.GoalBonded)).Mul(params.InflationRateChange).Quo(blocksPerYr),
 		},
 
-		// test 7% minimum stop (testing with 100% bonded)
-		{math.LegacyOneDec(), math.LegacyNewDecWithPrec(7, 2), math.LegacyZeroDec()},
-		{math.LegacyOneDec(), math.LegacyNewDecWithPrec(700000001, 10), math.LegacyNewDecWithPrec(-1, 10)},
+		// test 0% minimum stop (testing with 100% bonded)
+		{math.LegacyOneDec(), math.LegacyNewDecWithPrec(0, 2), math.LegacyZeroDec()},
+		{math.LegacyOneDec(), math.LegacyNewDecWithPrec(0o00000001, 10), math.LegacyNewDecWithPrec(-1, 10)},
 
-		// test 20% maximum stop (testing with 0% bonded)
-		{math.LegacyZeroDec(), math.LegacyNewDecWithPrec(20, 2), math.LegacyZeroDec()},
-		{math.LegacyZeroDec(), math.LegacyNewDecWithPrec(1999999999, 10), math.LegacyNewDecWithPrec(1, 10)},
+		// test 5% maximum stop (testing with 0% bonded)
+		{math.LegacyZeroDec(), math.LegacyNewDecWithPrec(5, 2), math.LegacyZeroDec()},
+		{math.LegacyZeroDec(), math.LegacyNewDecWithPrec(499999999, 10), math.LegacyNewDecWithPrec(1, 10)},
 
 		// perfect balance shouldn't change inflation
-		{math.LegacyNewDecWithPrec(67, 2), math.LegacyNewDecWithPrec(15, 2), math.LegacyZeroDec()},
+		{math.LegacyNewDecWithPrec(67, 2), math.LegacyNewDecWithPrec(5, 2), math.LegacyZeroDec()},
 	}
 	for i, tc := range tests {
 		minter.Inflation = tc.setInflation

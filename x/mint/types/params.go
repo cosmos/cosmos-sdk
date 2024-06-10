@@ -28,8 +28,8 @@ func DefaultParams() Params {
 	return Params{
 		MintDenom:           sdk.DefaultBondDenom,
 		InflationRateChange: math.LegacyNewDecWithPrec(13, 2),
-		InflationMax:        math.LegacyNewDecWithPrec(20, 2),
-		InflationMin:        math.LegacyNewDecWithPrec(7, 2),
+		InflationMax:        math.LegacyNewDecWithPrec(5, 2),
+		InflationMin:        math.LegacyNewDecWithPrec(0, 2),
 		GoalBonded:          math.LegacyNewDecWithPrec(67, 2),
 		BlocksPerYear:       uint64(60 * 60 * 8766 / 5), // assuming 5 second block times
 		MaxSupply:           math.ZeroInt(),             // assuming zero is infinite

@@ -96,7 +96,7 @@ The target annual inflation rate is recalculated each block.
 The inflation is also subject to a rate change (positive or negative)
 depending on the distance from the desired ratio (67%). The maximum rate change
 possible is defined to be 13% per year, however, the annual inflation is capped
-as between 7% and 20%.
+as between 0% and 5%.
 
 ```go
 NextInflationRate(params Params, bondedRatio math.LegacyDec) (inflation math.LegacyDec) {

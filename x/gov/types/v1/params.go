@@ -270,6 +270,10 @@ func (p Params) ValidateBasic(addressCodec address.Codec) error {
 		}
 	}
 
+	if p.ProposalExecutionGas == 0 {
+		return fmt.Errorf("proposal execution gas must be positive: %d", p.ProposalExecutionGas)
+	}
+
 	return nil
 }
 

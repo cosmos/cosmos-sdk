@@ -40,7 +40,7 @@ func TestNextInflation(t *testing.T) {
 
 		// test 0% minimum stop (testing with 100% bonded)
 		{math.LegacyOneDec(), math.LegacyNewDecWithPrec(0, 2), math.LegacyZeroDec()},
-		{math.LegacyOneDec(), math.LegacyNewDecWithPrec(0o00000001, 10), math.LegacyNewDecWithPrec(-1, 10)},
+		{math.LegacyOneDec(), math.LegacyNewDecWithPrec(1, 10), math.LegacyNewDecWithPrec(-1, 10)},
 
 		// test 5% maximum stop (testing with 0% bonded)
 		{math.LegacyZeroDec(), math.LegacyNewDecWithPrec(5, 2), math.LegacyZeroDec()},

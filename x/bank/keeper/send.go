@@ -153,6 +153,10 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		return err
 	}
 
+	if err := k.validateCoinsBeforeSend(ctx, inAddress, input.Coins); err != nil {
+		return err
+	}
+
 	outAddresses := make([]sdk.AccAddress, len(outputs))
 	for i, out := range outputs {
 		outAddress, err := k.ak.AddressCodec().StringToBytes(out.Address)
@@ -210,6 +214,10 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 // SendCoins transfers amt coins from a sending account to a receiving account.
 // An error is returned upon failure.
 func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
+	if err := k.validateCoinsBeforeSend(ctx, fromAddr, amt); err != nil {
+		return err
+	}
+
 	toAddr, err := k.sendRestriction.apply(ctx, fromAddr, toAddr, amt)
 	if err != nil {
 		return err
@@ -254,10 +262,8 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 	return nil
 }
 
-// subUnlockedCoins removes the unlocked amt coins of the given account. An error is
-// returned if the resulting balance is negative or the initial amount is invalid.
-// A coin_spent event is emitted after.
-func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+// validateCoinsBeforeSend is checks extracted from subUnlockedCoins to be run before sendRestrictionFn inside SendCoins
+func (k BaseSendKeeper) validateCoinsBeforeSend(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) error {
 	if !amt.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
@@ -284,6 +290,21 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddres
 				spendable, coin,
 			)
 		}
+	}
+
+	return nil
+}
+
+// subUnlockedCoins removes the unlocked amt coins of the given account. An error is
+// returned if the resulting balance is negative or the initial amount is invalid.
+// A coin_spent event is emitted after.
+func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+	if err := k.validateCoinsBeforeSend(ctx, addr, amt); err != nil {
+		return err
+	}
+
+	for _, coin := range amt {
+		balance := k.GetBalance(ctx, addr, coin.Denom)
 
 		newBalance := balance.Sub(coin)
 

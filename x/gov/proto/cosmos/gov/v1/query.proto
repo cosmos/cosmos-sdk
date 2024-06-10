@@ -59,13 +59,13 @@ service Query {
   // ProposalVoteOptions queries the valid voting options for a proposal.
   rpc ProposalVoteOptions(QueryProposalVoteOptionsRequest) returns (QueryProposalVoteOptionsResponse) {
     option (google.api.http).get          = "/cosmos/gov/v1/proposals/{proposal_id}/vote_options";
-    option (cosmos_proto.method_added_in) = "x/gov v1.0.0";
+    option (cosmos_proto.method_added_in) = "x/gov v0.2.0";
   }
 
   // MessageBasedParams queries the message specific governance params based on a msg url.
   rpc MessageBasedParams(QueryMessageBasedParamsRequest) returns (QueryMessageBasedParamsResponse) {
     option (google.api.http).get          = "/cosmos/gov/v1/params/{msg_url}";
-    option (cosmos_proto.method_added_in) = "x/gov v1.0.0";
+    option (cosmos_proto.method_added_in) = "x/gov v0.2.0";
   }
 }
 

@@ -106,6 +106,20 @@ func (m *MockAccountsModKeeper) EXPECT() *MockAccountsModKeeperMockRecorder {
 	return m.recorder
 }
 
+// InitAccountNumberSeqUnsafe mocks base method.
+func (m *MockAccountsModKeeper) InitAccountNumberSeqUnsafe(ctx context.Context, currentAccNum uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InitAccountNumberSeqUnsafe", ctx, currentAccNum)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InitAccountNumberSeqUnsafe indicates an expected call of InitAccountNumberSeqUnsafe.
+func (mr *MockAccountsModKeeperMockRecorder) InitAccountNumberSeqUnsafe(ctx, currentAccNum interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitAccountNumberSeqUnsafe", reflect.TypeOf((*MockAccountsModKeeper)(nil).InitAccountNumberSeqUnsafe), ctx, currentAccNum)
+}
+
 // IsAccountsModuleAccount mocks base method.
 func (m *MockAccountsModKeeper) IsAccountsModuleAccount(ctx context.Context, accountAddr []byte) bool {
 	m.ctrl.T.Helper()
@@ -118,6 +132,21 @@ func (m *MockAccountsModKeeper) IsAccountsModuleAccount(ctx context.Context, acc
 func (mr *MockAccountsModKeeperMockRecorder) IsAccountsModuleAccount(ctx, accountAddr interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAccountsModuleAccount", reflect.TypeOf((*MockAccountsModKeeper)(nil).IsAccountsModuleAccount), ctx, accountAddr)
+}
+
+// NextAccountNumber mocks base method.
+func (m *MockAccountsModKeeper) NextAccountNumber(ctx context.Context) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NextAccountNumber", ctx)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NextAccountNumber indicates an expected call of NextAccountNumber.
+func (mr *MockAccountsModKeeperMockRecorder) NextAccountNumber(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextAccountNumber", reflect.TypeOf((*MockAccountsModKeeper)(nil).NextAccountNumber), ctx)
 }
 
 // SendModuleMessageUntyped mocks base method.

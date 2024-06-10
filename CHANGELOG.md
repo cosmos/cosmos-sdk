@@ -64,6 +64,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (debug) [#20328](https://github.com/cosmos/cosmos-sdk/pull/20328) Add consensus address for debug cmd.
 
 ### Improvements
+* (x/staking | x/protocolpool) [#19918](https://github.com/cosmos/cosmos-sdk/pull/19918) Reduce key rotation iterate in `RotateConsPubKey`, use instead one rotation for the unbonding period. Use `TotalFundPercentage` to track total recipient fund percentage of `protocolpool` instead of looping through `RecipientFundPercentage` then summing up 
 * (bank) [#20354](https://github.com/cosmos/cosmos-sdk/pull/20354) Reduce the number of `ValidateDenom` calls in `bank.SendCoins`.
 * (types) [#19869](https://github.com/cosmos/cosmos-sdk/pull/19869) Removed `Any` type from `codec/types` and replaced it with an alias for `cosmos/gogoproto/types/any`.
 * (server) [#19854](https://github.com/cosmos/cosmos-sdk/pull/19854) Add customizability to start command.

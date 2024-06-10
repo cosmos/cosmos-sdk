@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	abci "github.com/cometbft/cometbft/abci/types"
+	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 
 	coreappmgr "cosmossdk.io/core/app"
 	"cosmossdk.io/core/comet"
@@ -125,7 +126,7 @@ type BlockData struct {
 
 // CheckTx implements types.Application.
 // It is called by cometbft to verify transaction validity
-func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.CheckTxRequest) (*abci.CheckTxResponse, error) {
+func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxRequest) (*abciproto.CheckTxResponse, error) {
 	decodedTx, err := c.txCodec.Decode(req.Tx)
 	if err != nil {
 		return nil, err
@@ -154,7 +155,7 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abci.CheckTxRequest) (*
 }
 
 // Info implements types.Application.
-func (c *Consensus[T]) Info(ctx context.Context, _ *abci.InfoRequest) (*abci.InfoResponse, error) {
+func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abciproto.InfoResponse, error) {
 	version, _, err := c.store.StateLatest()
 	if err != nil {
 		return nil, err
@@ -182,7 +183,7 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abci.InfoRequest) (*abci.Inf
 
 // Query implements types.Application.
 // It is called by cometbft to query application state.
-func (c *Consensus[T]) Query(ctx context.Context, req *abci.QueryRequest) (*abci.QueryResponse, error) {
+func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (*abciproto.QueryResponse, error) {
 	// follow the query path from here
 	decodedMsg, err := c.txCodec.Decode(req.Data)
 	protoMsg, ok := any(decodedMsg).(transaction.Msg)
@@ -208,7 +209,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.QueryRequest) (*abci
 		return QueryResult(errorsmod.Wrap(cometerrors.ErrUnknownRequest, "no query path provided"), c.cfg.Trace), nil
 	}
 
-	var resp *abci.QueryResponse
+	var resp *abciproto.QueryResponse
 
 	switch path[0] {
 	case QueryPathApp:
@@ -232,7 +233,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abci.QueryRequest) (*abci
 }
 
 // InitChain implements types.Application.
-func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.InitChainRequest) (*abci.InitChainResponse, error) {
+func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRequest) (*abciproto.InitChainResponse, error) {
 	c.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
 
 	// store chainID to be used later on in execution
@@ -304,8 +305,8 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abci.InitChainRequest
 // It is called by cometbft to prepare a proposal block.
 func (c *Consensus[T]) PrepareProposal(
 	ctx context.Context,
-	req *abci.PrepareProposalRequest,
-) (resp *abci.PrepareProposalResponse, err error) {
+	req *abciproto.PrepareProposalRequest,
+) (resp *abciproto.PrepareProposalResponse, err error) {
 	if req.Height < 1 {
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
@@ -347,8 +348,8 @@ func (c *Consensus[T]) PrepareProposal(
 // It is called by cometbft to process/verify a proposal block.
 func (c *Consensus[T]) ProcessProposal(
 	ctx context.Context,
-	req *abci.ProcessProposalRequest,
-) (*abci.ProcessProposalResponse, error) {
+	req *abciproto.ProcessProposalRequest,
+) (*abciproto.ProcessProposalResponse, error) {
 	decodedTxs := make([]T, len(req.Txs))
 	for _, tx := range req.Txs {
 		decTx, err := c.txCodec.Decode(tx)
@@ -384,8 +385,8 @@ func (c *Consensus[T]) ProcessProposal(
 // It is called by cometbft to finalize a block.
 func (c *Consensus[T]) FinalizeBlock(
 	ctx context.Context,
-	req *abci.FinalizeBlockRequest,
-) (*abci.FinalizeBlockResponse, error) {
+	req *abciproto.FinalizeBlockRequest,
+) (*abciproto.FinalizeBlockResponse, error) {
 	if err := c.validateFinalizeBlockHeight(req); err != nil {
 		return nil, err
 	}
@@ -494,7 +495,7 @@ func (c *Consensus[T]) FinalizeBlock(
 
 // Commit implements types.Application.
 // It is called by cometbft to notify the application that a block was committed.
-func (c *Consensus[T]) Commit(ctx context.Context, _ *abci.CommitRequest) (*abci.CommitResponse, error) {
+func (c *Consensus[T]) Commit(ctx context.Context, _ *abciproto.CommitRequest) (*abciproto.CommitResponse, error) {
 	lastCommittedBlock := c.lastCommittedBlock.Load()
 
 	c.snapshotManager.SnapshotIfApplicable(lastCommittedBlock.Height)
@@ -513,8 +514,8 @@ func (c *Consensus[T]) Commit(ctx context.Context, _ *abci.CommitRequest) (*abci
 // VerifyVoteExtension implements types.Application.
 func (c *Consensus[T]) VerifyVoteExtension(
 	ctx context.Context,
-	req *abci.VerifyVoteExtensionRequest,
-) (*abci.VerifyVoteExtensionResponse, error) {
+	req *abciproto.VerifyVoteExtensionRequest,
+) (*abciproto.VerifyVoteExtensionResponse, error) {
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
 	cp, err := c.GetConsensusParams(ctx)
@@ -548,7 +549,7 @@ func (c *Consensus[T]) VerifyVoteExtension(
 }
 
 // ExtendVote implements types.Application.
-func (c *Consensus[T]) ExtendVote(ctx context.Context, req *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error) {
+func (c *Consensus[T]) ExtendVote(ctx context.Context, req *abciproto.ExtendVoteRequest) (*abciproto.ExtendVoteResponse, error) {
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
 	cp, err := c.GetConsensusParams(ctx)

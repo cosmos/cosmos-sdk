@@ -150,9 +150,20 @@ func NewAccountKeeper(
 	return ak
 }
 
-// GetAccountNumber returns the x/auth module's current account number.
-func (ak AccountKeeper) GetAccountNumber(ctx context.Context) (uint64, error) {
-	return ak.accountNumber.Peek(ctx)
+// RemoveLegacyAccountNumber is used for migration purpose only. It deletes the sequence in the DB
+// and returns the last value used on success.
+// Deprecated
+func (ak AccountKeeper) RemoveLegacyAccountNumber(ctx context.Context) (uint64, error) {
+	accNum, err := ak.accountNumber.Peek(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	// Delete DB entry for legacy account number
+	store := ak.KVStoreService.OpenKVStore(ctx)
+	err = store.Delete(types.GlobalAccountNumberKey.Bytes())
+
+	return accNum, err
 }
 
 // GetAuthority returns the x/auth module's authority.

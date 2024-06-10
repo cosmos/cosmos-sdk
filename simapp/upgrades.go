@@ -26,7 +26,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 		UpgradeName,
 		func(ctx context.Context, _ upgradetypes.Plan, fromVM appmodule.VersionMap) (appmodule.VersionMap, error) {
 			// sync accounts and auth module account number
-			currentAccNum, err := app.AuthKeeper.GetAccountNumber(ctx)
+			currentAccNum, err := app.AuthKeeper.RemoveLegacyAccountNumber(ctx)
 			if err != nil {
 				return nil, err
 			}

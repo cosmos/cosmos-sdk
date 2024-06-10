@@ -1,8 +1,9 @@
-// Since: cosmos-sdk 0.51
+// Since: cosmos-sdk 0.52
 syntax = "proto3";
 package cosmos.consensus.v1;
 
 import "cometbft/types/v1/params.proto";
+import "cometbft/abci/v1/types.proto";
 
 option go_package = "cosmossdk.io/x/consensus/types";
 
@@ -23,3 +24,11 @@ message ConsensusMsgParams {
 // ConsensusMsgParamsResponse defines the response structure for executing a
 // ConsensusMsgParams message.
 message ConsensusMsgParamsResponse {}
+
+// CometInfo defines the structure of the x/consensus module's comet info.
+message CometInfo {
+  repeated cometbft.abci.v1.Misbehavior evidence         = 1;
+  bytes                                 validators_hash  = 2;
+  bytes                                 proposer_address = 3;
+  cometbft.abci.v1.CommitInfo           last_commit      = 4;
+}

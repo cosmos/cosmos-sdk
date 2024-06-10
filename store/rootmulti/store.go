@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math" // nolint:typecheck // this is used, false positive
+	"math"
 	"sort"
 	"strings"
 	"sync"
@@ -16,8 +16,8 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 	iavltree "github.com/cosmos/iavl"
 
+	"cosmossdk.io/core/log"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/iavl"
@@ -607,6 +607,10 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 				if storeInfos[key.Name()] {
 					return nil, err
 				}
+
+				// If the store donesn't exist at this version, create a dummy one to prevent
+				// nil pointer panic in newer query APIs.
+				cacheStore = dbadapter.Store{DB: dbm.NewMemDB()}
 			}
 
 		default:
@@ -830,7 +834,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	keys := keysFromStoreKeyMap(rs.stores)
 	for _, key := range keys {
 		switch store := rs.GetCommitKVStore(key).(type) {
-		case *iavl.Store: // nolint:typecheck // ignore linting issues in v1
+		case *iavl.Store:
 			stores = append(stores, namedStore{name: key.Name(), Store: store})
 		case *transient.Store, *mem.Store:
 			// Non-persisted stores shouldn't be snapshotted
@@ -850,7 +854,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	// are demarcated by new SnapshotStore items.
 	for _, store := range stores {
 		rs.logger.Debug("starting snapshot", "store", store.name, "height", height)
-		exporter, err := store.Export(int64(height)) // nolint:typecheck // ignore linting issues in v1
+		exporter, err := store.Export(int64(height))
 		if err != nil {
 			rs.logger.Error("snapshot failed; exporter error", "store", store.name, "err", err)
 			return err
@@ -874,7 +878,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 			nodeCount := 0
 			for {
 				node, err := exporter.Next()
-				if err == iavltree.ErrorExportDone {
+				if errors.Is(err, iavltree.ErrorExportDone) {
 					rs.logger.Debug("snapshot Done", "store", store.name, "nodeCount", nodeCount)
 					break
 				} else if err != nil {
@@ -920,7 +924,7 @@ loop:
 	for {
 		snapshotItem = snapshottypes.SnapshotItem{}
 		err := protoReader.ReadMsg(&snapshotItem)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
 			return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "invalid protobuf message")

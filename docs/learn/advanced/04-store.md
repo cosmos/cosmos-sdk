@@ -18,44 +18,17 @@ A store is a data structure that holds the state of the application.
 
 The Cosmos SDK comes with a large set of stores to persist the state of applications. By default, the main store of Cosmos SDK applications is a `multistore`, i.e. a store of stores. Developers can add any number of key-value stores to the multistore, depending on their application needs. The multistore exists to support the modularity of the Cosmos SDK, as it lets each module declare and manage their own subset of the state. Key-value stores in the multistore can only be accessed with a specific capability `key`, which is typically held in the [`keeper`](../../build/building-modules/06-keeper.md) of the module that declared the store.
 
-```text
-+-----------------------------------------------------+
-|                                                     |
-|    +--------------------------------------------+   |
-|    |                                            |   |
-|    |  KVStore 1 - Manage by keeper of Module 1  |
-|    |                                            |   |
-|    +--------------------------------------------+   |
-|                                                     |
-|    +--------------------------------------------+   |
-|    |                                            |   |
-|    |  KVStore 2 - Manage by keeper of Module 2  |   |
-|    |                                            |   |
-|    +--------------------------------------------+   |
-|                                                     |
-|    +--------------------------------------------+   |
-|    |                                            |   |
-|    |  KVStore 3 - Manage by keeper of Module 2  |   |
-|    |                                            |   |
-|    +--------------------------------------------+   |
-|                                                     |
-|    +--------------------------------------------+   |
-|    |                                            |   |
-|    |  KVStore 4 - Manage by keeper of Module 3  |   |
-|    |                                            |   |
-|    +--------------------------------------------+   |
-|                                                     |
-|    +--------------------------------------------+   |
-|    |                                            |   |
-|    |  KVStore 5 - Manage by keeper of Module 4  |   |
-|    |                                            |   |
-|    +--------------------------------------------+   |
-|                                                     |
-|                    Main Multistore                  |
-|                                                     |
-+-----------------------------------------------------+
+```mermaid
+flowchart TB
+    subgraph MainMultistore["Main Multistore"]
+        KVStore1["KVStore 1 - Managed by keeper of Module 1"]
+        KVStore2["KVStore 2 - Managed by keeper of Module 2"]
+        KVStore3["KVStore 3 - Managed by keeper of Module 2"]
+        KVStore4["KVStore 4 - Managed by keeper of Module 3"]
+        KVStore5["KVStore 5 - Managed by keeper of Module 4"]
+    end
 
-                   Application's State
+    MainMultistore --> ApplicationState["Application's State"]
 ```
 
 ### Store Interface

@@ -10,7 +10,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/tx/signing/aminojson"
-	"github.com/cockroachdb/errors"
+
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -41,7 +41,7 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 	for cmdName, subCmdDesc := range cmdDescriptor.SubCommands {
 		subCmd := findSubCommand(cmd, cmdName)
 		if subCmd == nil {
-			short := cmdDescriptor.Short
+			short := subCmdDesc.Short
 			if short == "" {
 				short = fmt.Sprintf("Querying commands for the %s service", subCmdDesc.Service)
 			}
@@ -62,7 +62,7 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 
 	descriptor, err := b.FileResolver.FindDescriptorByName(protoreflect.FullName(cmdDescriptor.Service))
 	if err != nil {
-		return errors.Errorf("can't find service %s: %v", cmdDescriptor.Service, err)
+		return fmt.Errorf("can't find service %s: %w", cmdDescriptor.Service, err)
 	}
 
 	service := descriptor.(protoreflect.ServiceDescriptor)

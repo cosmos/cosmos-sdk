@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/legacy"
 )
 
 // AppModule is a tag interface for app module implementations to use as a basis
@@ -63,4 +64,15 @@ type HasPrepareCheckState interface {
 type HasPrecommit interface {
 	appmodule.AppModule
 	Precommit(context.Context) error
+}
+
+// HasName is an extension interface that must return the appmodule.AppModule's Name.
+type HasName interface {
+	Name() string
+}
+
+// HasAminoCodec is an extension interface that module must implement to support JSON encoding and decoding of its types
+// through amino.  This is used in genesis & the CLI client.
+type HasAminoCodec interface {
+	RegisterLegacyAminoCodec(legacy.Amino)
 }

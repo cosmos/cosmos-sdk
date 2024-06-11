@@ -954,12 +954,13 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 			} else {
 				suite.Require().NoError(err)
 				suite.Require().Equal(tc.withdrawnFunds, resp.WithdrawnAllocatedFund)
+				// All items below should return error as they are removed from the store
 				_, err := suite.poolKeeper.RecipientFundPercentage.Get(suite.ctx, tc.recipientAddr)
-				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), "collections: not found")
 				_, err = suite.poolKeeper.ContinuousFund.Get(suite.ctx, tc.recipientAddr)
-				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), "collections: not found")
 				_, err = suite.poolKeeper.RecipientFundDistribution.Get(suite.ctx, tc.recipientAddr)
-				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), "collections: not found")
 			}
 			if tc.postRun != nil {
 				tc.postRun()

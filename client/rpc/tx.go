@@ -102,10 +102,10 @@ func WaitTxCmd() *cobra.Command {
 		Short:   "Wait for a transaction to be included in a block",
 		Long:    `Subscribes to a CometBFT WebSocket connection and waits for a transaction event with the given hash.`,
 		Example: fmt.Sprintf(`By providing the transaction hash:
-$ %[1]sd q wait-tx [hash]
+$ %[1]s q wait-tx [hash]
 
 Or, by piping a "tx" command:
-$ %[1]sd tx [flags] | %[1]sd q wait-tx
+$ %[1]s tx [flags] | %[1]s q wait-tx
 `, version.AppName),
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

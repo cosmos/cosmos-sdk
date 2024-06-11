@@ -22,13 +22,13 @@ import (
 type Keeper struct {
 	appmodule.Environment
 
+	cometService comet.Service
+
 	cdc           codec.BinaryCodec
 	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
 	poolKeeper    types.PoolKeeper
-
-	cometService comet.Service
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.

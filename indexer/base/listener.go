@@ -24,7 +24,7 @@ type Listener struct {
 	OnEvent func(EventData) error
 
 	// OnKVPair is called when a key-value has been written to the store for a given module.
-	OnKVPair func(module string, key, value []byte, delete bool) error
+	OnKVPair func(moduleName string, key, value []byte, delete bool) error
 
 	// Commit is called when state is commited, usually at the end of a block. Any
 	// indexers should commit their data when this is called and return an error if

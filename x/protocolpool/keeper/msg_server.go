@@ -201,6 +201,10 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 		return nil, fmt.Errorf("failed to remove continuous fund for recipient %s: %w", msg.RecipientAddress, err)
 	}
 
+	if err := k.RecipientFundPercentage.Remove(ctx, recipient); err != nil {
+		return nil, fmt.Errorf("failed to remove recipient fund percentage for recipient %s: %w", msg.RecipientAddress, err)
+	}
+
 	return &types.MsgCancelContinuousFundResponse{
 		CanceledTime:           canceledTime,
 		CanceledHeight:         uint64(canceledHeight),

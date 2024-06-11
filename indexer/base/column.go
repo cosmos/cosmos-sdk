@@ -82,6 +82,8 @@ func (e EnumDefinition) Validate() error {
 }
 
 // ValidateValue validates that the value conforms to the column's kind and nullability.
+// It currently does not do any validation that IntegerKind, DecimalKind, Bech32AddressKind, or EnumKind
+// values are valid for their respective types behind conforming to the correct go type.
 func (c Column) ValidateValue(value any) error {
 	if value == nil {
 		if !c.Nullable {
@@ -89,7 +91,7 @@ func (c Column) ValidateValue(value any) error {
 		}
 		return nil
 	}
-	return c.Kind.ValidateValue(value)
+	return c.Kind.ValidateValueType(value)
 }
 
 // ValidateKey validates that the value conforms to the set of columns as a Key in an EntityUpdate.

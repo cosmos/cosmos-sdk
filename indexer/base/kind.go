@@ -47,7 +47,7 @@ const (
 	Uint64Kind
 
 	// IntegerKind represents an arbitrary precision integer number. Values of this type must
-	// be of the go type string or a type that implements fmt.Stringer with the resulted string
+	// be of the go type int64, string or a type that implements fmt.Stringer with the resulted string
 	// formatted as an integer number.
 	IntegerKind
 
@@ -98,10 +98,12 @@ func (t Kind) Validate() error {
 	return nil
 }
 
-// ValidateValue returns an error if the value does not the type go type specified by the kind.
+// ValidateValueType returns an error if the value does not the type go type specified by the kind.
 // Some columns may accept nil values, however, this method does not have any notion of
 // nullability. It only checks that the value is of the correct type.
-func (t Kind) ValidateValue(value any) error {
+// It also doesn't perform any validation that IntegerKind, DecimalKind, Bech32AddressKind, or EnumKind
+// values are valid for their respective types.
+func (t Kind) ValidateValueType(value any) error {
 	switch t {
 	case StringKind:
 		_, ok := value.(string)
@@ -157,7 +159,8 @@ func (t Kind) ValidateValue(value any) error {
 	case IntegerKind:
 		_, ok := value.(string)
 		_, ok2 := value.(fmt.Stringer)
-		if !ok && !ok2 {
+		_, ok3 := value.(int64)
+		if !ok && !ok2 && !ok3 {
 			return fmt.Errorf("expected string or type that implements fmt.Stringer, got %T", value)
 		}
 	case DecimalKind:
@@ -262,7 +265,10 @@ func (t Kind) String() string {
 
 // KindForGoValue finds the simplest kind that can represent the given go value. It will not, however,
 // return kinds such as IntegerKind, DecimalKind, Bech32AddressKind, or EnumKind which all can be
-// represented as strings. It will return InvalidKind if the value is not a simple type.
+// represented as strings. Generally all values which do not have a more specific type will
+// return JSONKind because the framework cannot decide at this point whether the value
+// can or cannot be marshaled to JSON. This method should generally only be used as a fallback
+// when the kind of a column is not specified more specifically.
 func KindForGoValue(value any) Kind {
 	switch value.(type) {
 	case string, fmt.Stringer:
@@ -298,7 +304,6 @@ func KindForGoValue(value any) Kind {
 	case json.RawMessage:
 		return JSONKind
 	default:
+		return JSONKind
 	}
-
-	return InvalidKind
 }

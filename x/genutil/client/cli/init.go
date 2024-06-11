@@ -9,14 +9,10 @@ import (
 	"os"
 	"path/filepath"
 
-	cfg "github.com/cometbft/cometbft/config"
-	cmttypes "github.com/cometbft/cometbft/types"
-	"github.com/cosmos/go-bip39"
-	"github.com/spf13/cobra"
-
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math/unsafe"
-
+	cfg "github.com/cometbft/cometbft/config"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
@@ -25,6 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/go-bip39"
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -113,7 +111,12 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 				initHeight = 1
 			}
 
-			nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(config, mnemonic)
+			consensusKey, err := cmd.Flags().GetString(FlagConsensusKeyAlgo)
+			if err != nil {
+				return errorsmod.Wrap(err, "Failed to get consensus key algo")
+			}
+
+			nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(config, mnemonic, consensusKey)
 			if err != nil {
 				return err
 			}
@@ -163,10 +166,6 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 				Params:     cmttypes.DefaultConsensusParams(),
 			}
 
-			consensusKey, err := cmd.Flags().GetString(FlagConsensusKeyAlgo)
-			if err != nil {
-				return errorsmod.Wrap(err, "Failed to get consensus key algo")
-			}
 			appGenesis.Consensus.Params.Validator.PubKeyTypes = []string{consensusKey}
 
 			if err = genutil.ExportGenesisFile(appGenesis, genFile); err != nil {

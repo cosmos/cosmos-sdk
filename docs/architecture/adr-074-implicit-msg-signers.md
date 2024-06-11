@@ -71,6 +71,24 @@ message MsgV2 {
 Because the `cosmos.msg.v1.signer` annotation is required currently, `MsgV2` types should set the message option
 `cosmos.msg.v2.is_msg` to `true` instead.
 
+Here is an example comparing a v1 an v2 message:
+```protobuf
+// v1
+message MsgSendV1 {
+  string from_address = 1 [(cosmos.msg.v1.signer) = true];
+  string to_address = 2;
+  repeated Coin amount = 3;
+}
+
+// v2
+message MsgSendV2 {
+  option (cosmos.msg.v2.is_msg) = true;
+  // from address is implied by the signer
+  string to_address = 1;
+  repeated Coin amount = 2;
+}
+```
+
 Modules defining handlers for `MsgV2` instances will need to extract the sender from the `context.Context` that is
 passed in. An interface in `core` which will be present on the `appmodule.Environment` will be defined for this purpose:
 ```go

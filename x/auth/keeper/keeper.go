@@ -150,10 +150,10 @@ func NewAccountKeeper(
 	return ak
 }
 
-// RemoveLegacyAccountNumber is used for migration purpose only. It deletes the sequence in the DB
+// removeLegacyAccountNumberUnsafe is used for migration purpose only. It deletes the sequence in the DB
 // and returns the last value used on success.
 // Deprecated
-func (ak AccountKeeper) RemoveLegacyAccountNumber(ctx context.Context) (uint64, error) {
+func (ak AccountKeeper) removeLegacyAccountNumberUnsafe(ctx context.Context) (uint64, error) {
 	accNum, err := ak.accountNumber.Peek(ctx)
 	if err != nil {
 		return 0, err
@@ -343,8 +343,8 @@ func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAdd
 // and delete store entry for auth legacy GlobalAccountNumberKey.
 //
 // Should only use in an upgrade handler for migrating account number.
-func (ak AccountKeeper) MigrateAccountNumberUnsafe(ctx context.Context) error {
-	currentAccNum, err := ak.RemoveLegacyAccountNumber(ctx)
+func MigrateAccountNumberUnsafe(ctx context.Context, ak *AccountKeeper) error {
+	currentAccNum, err := ak.removeLegacyAccountNumberUnsafe(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to migrate account number: %w", err)
 	}

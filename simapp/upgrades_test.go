@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/collections"
+	authkeeper "cosmossdk.io/x/auth/keeper"
 	authtypes "cosmossdk.io/x/auth/types"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/require"
@@ -37,7 +38,8 @@ func TestSyncAccountNumber(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, uint64(10), num)
 
-	app.AuthKeeper.MigrateAccountNumberUnsafe(ctx)
+	err = authkeeper.MigrateAccountNumberUnsafe(ctx, &app.AuthKeeper)
+	require.NoError(t, err)
 
 	// make sure the DB entry for this key is deleted
 	v, err = store.Get(bytesKey)

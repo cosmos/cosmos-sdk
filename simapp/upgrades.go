@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/accounts"
+	authkeeper "cosmossdk.io/x/auth/keeper"
 	epochstypes "cosmossdk.io/x/epochs/types"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -26,7 +27,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 		UpgradeName,
 		func(ctx context.Context, _ upgradetypes.Plan, fromVM appmodule.VersionMap) (appmodule.VersionMap, error) {
 			// sync accounts and auth module account number
-			err := app.AuthKeeper.MigrateAccountNumberUnsafe(ctx)
+			err := authkeeper.MigrateAccountNumberUnsafe(ctx, &app.AuthKeeper)
 			if err != nil {
 				return nil, err
 			}

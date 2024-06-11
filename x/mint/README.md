@@ -103,6 +103,10 @@ type MintFn func(ctx context.Context, env appmodule.Environment, minter *Minter,
 
 How this function mints tokens is defined by the app developers, meaning they can query state and perform any calculations they deem necessary. [This implementation](https://github.com/cosmos/cosmos-sdk/blob/ace7bca105a8d5363782cfd19c6f169b286cd3b2/simapp/mint_fn.go#L25) in SimApp contains examples of how to use `QueryRouterService` and the Minter's `data`.
 
+:::warning
+Note that BeginBlock will keep calling the MintFn for every block, so it is important to ensure that MintFn returns early if the epoch ID does not match the expected one.
+:::
+
 
 ## Block based minting
 

@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (s *IntegrationTestSuite) TestUpdateParams() {
+func (s *KeeperTestSuite) TestUpdateParams() {
 	testCases := []struct {
 		name      string
 		request   *types.MsgUpdateParams

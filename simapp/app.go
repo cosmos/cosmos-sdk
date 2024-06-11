@@ -171,7 +171,7 @@ type SimApp struct {
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 	CircuitKeeper         circuitkeeper.Keeper
 	PoolKeeper            poolkeeper.Keeper
-	EpochsKeeper          epochskeeper.Keeper
+	EpochsKeeper          *epochskeeper.Keeper
 
 	// managers
 	ModuleManager      *module.Manager

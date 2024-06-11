@@ -6,10 +6,15 @@ sidebar_position: 1
 
 ## Contents
 
+* [Concepts](#concepts)
+    * [The Minting Mechanism](#the-minting-mechanism)
 * [State](#state)
     * [Minter](#minter)
     * [Params](#params)
-* [Begin-Block](#begin-block)
+* [Epoch minting](#epoch-minting)
+    * [MintFn](#mintfn)
+* [Block based minting](#block-based-minting)
+    * [Default configuration](#default-configuration)
     * [NextInflationRate](#nextinflationrate)
     * [NextAnnualProvisions](#nextannualprovisions)
     * [BlockProvision](#blockprovision)
@@ -51,12 +56,13 @@ It can be broken down in the following way:
 
 ### Minter
 
-The minter is a space for holding current inflation information.
+The minter is a space for holding current inflation information and any other data
+related to minting (in the `data` field)
 
 * Minter: `0x00 -> ProtocolBuffer(minter)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/mint/v1beta1/mint.proto#L10-L24
+https://github.com/cosmos/cosmos-sdk/blob/ace7bca105a8d5363782cfd19c6f169b286cd3b2/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L11-L29
 ```
 
 ### Params
@@ -72,11 +78,43 @@ A value of `0` indicates an unlimited supply.
 https://github.com/cosmos/cosmos-sdk/blob/7068d0da52d954430054768b2c56aff44666933b/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L26-L68
 ```
 
-## Begin-Block
+## Epoch minting
 
-Minting parameters are recalculated and inflation paid at the beginning of each block.
+In the latest release of x/mint, the minting logic has been refactored to allow for more flexibility in the minting process. The `InflationCalculationFn` has been deprecated in favor of `MintFn`. The `MintFn` function is passed to the `NewAppModule` function and is used to mint tokens on the configured epoch beginning. This change allows users to define their own minting logic and removes any assumptions on how tokens are minted.
 
-The minting logic in the `BeginBlocker` function provides an optional feature for controlling token minting based on the maximum allowable supply (MaxSupply). This feature allows users to adjust the minting process according to their specific requirements and use cases. However, it's important to note that the MaxSupply parameter is independent of the minting process and assumes that any adjustments to the total supply, including burning tokens, are handled by external modules.
+```mermaid
+flowchart LR
+    A[BeforeEpochStart] --> B[MintFn]
+
+    subgraph B["MintFn (user defined)"]
+        direction LR
+        C[Get x/staking info] --> D[Calculate Inflation]
+        D --> E[Mint Tokens]
+    end
+```
+
+### MintFn
+
+The `MintFn` function is called at the beginning of each epoch and is responsible for minting tokens. The function signature is as follows:
+
+```go
+type MintFn func(ctx context.Context, env appmodule.Environment, minter *Minter, epochId string, epochNumber int64) error
+```
+
+How this function mints tokens is defined by the app developers, meaning they can query state and perform any calculations they deem necessary. [This implementation](https://github.com/cosmos/cosmos-sdk/blob/ace7bca105a8d5363782cfd19c6f169b286cd3b2/simapp/mint_fn.go#L25) in SimApp contains examples of how to use `QueryRouterService` and the Minter's `data`.
+
+:::warning
+Note that BeginBlock will keep calling the MintFn for every block, so it is important to ensure that MintFn returns early if the epoch ID does not match the expected one.
+:::
+
+
+## Block based minting
+
+In addition to minting based on epoch, minting based on block is also possible. This is achieved through calling the `MintFn` in `BeginBlock` with an epochID and epochNumber of `"block"` and `-1`, respectively.
+
+### Default configuration
+
+If no `MintFn` is passed to the `NewAppModule` function, the minting logic defaults to block-based minting, corresponding to `mintKeeper.DefaultMintFn(types.DefaultInflationCalculationFn)`. 
 
 ### Inflation rate calculation
 
@@ -95,8 +133,7 @@ type InflationCalculationFn func(ctx sdk.Context, minter Minter, params Params, 
 The target annual inflation rate is recalculated each block.
 The inflation is also subject to a rate change (positive or negative)
 depending on the distance from the desired ratio (67%). The maximum rate change
-possible is defined to be 13% per year, however, the annual inflation is capped
-as between 7% and 20%.
+possible is defined to be 5% per year, however, the annual inflation is capped between 0% and 5%.
 
 ```go
 NextInflationRate(params Params, bondedRatio math.LegacyDec) (inflation math.LegacyDec) {

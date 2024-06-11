@@ -19,7 +19,7 @@ type Keeper struct {
 }
 
 // NewKeeper returns a new keeper by codec and storeKey inputs.
-func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec) Keeper {
+func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec) *Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := Keeper{
 		Environment: env,
@@ -32,11 +32,11 @@ func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec) Keeper {
 		panic(err)
 	}
 	k.Schema = schema
-	return k
+	return &k
 }
 
 // Set the gamm hooks.
-func (k Keeper) SetHooks(eh types.EpochHooks) Keeper {
+func (k *Keeper) SetHooks(eh types.EpochHooks) *Keeper {
 	if k.hooks != nil {
 		panic("cannot set epochs hooks twice")
 	}

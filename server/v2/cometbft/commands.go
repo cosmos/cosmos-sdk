@@ -21,6 +21,7 @@ import (
 	"cosmossdk.io/server/v2/cometbft/client/rpc"
 	"cosmossdk.io/server/v2/cometbft/flags"
 	auth "cosmossdk.io/x/auth/client/cli"
+	"github.com/cosmos/cosmos-sdk/client"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -80,7 +81,8 @@ func (s *CometBFTServer[T]) ShowNodeIDCmd() *cobra.Command {
 		Use:   "show-node-id",
 		Short: "Show this node's ID",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			nodeKey, err := p2p.LoadNodeKey(s.config.CmtConfig.NodeKeyFile())
+			cmtConfig := client.GetConfigFromCmd(cmd)
+			nodeKey, err := p2p.LoadNodeKey(cmtConfig.NodeKeyFile())
 			if err != nil {
 				return err
 			}
@@ -97,7 +99,7 @@ func (s *CometBFTServer[T]) ShowValidatorCmd() *cobra.Command {
 		Use:   "show-validator",
 		Short: "Show this node's CometBFT validator info",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := s.config.CmtConfig
+			cfg := client.GetConfigFromCmd(cmd)
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			pk, err := privValidator.GetPubKey()
 			if err != nil {
@@ -131,7 +133,7 @@ func (s *CometBFTServer[T]) ShowAddressCmd() *cobra.Command {
 		Use:   "show-address",
 		Short: "Shows this node's CometBFT validator consensus address",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := s.config.CmtConfig
+			cfg := client.GetConfigFromCmd(cmd)
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			// TODO: use address codec?
 			valConsAddr := (sdk.ConsAddress)(privValidator.GetAddress())
@@ -392,6 +394,7 @@ func (s *CometBFTServer[T]) BootstrapStateCmd() *cobra.Command {
 		Short: "Bootstrap CometBFT state at an arbitrary block height using a light client",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg := client.GetConfigFromCmd(cmd)
 			height, err := cmd.Flags().GetUint64("height")
 			if err != nil {
 				return err
@@ -404,7 +407,7 @@ func (s *CometBFTServer[T]) BootstrapStateCmd() *cobra.Command {
 			}
 
 			// TODO genensis doc provider and apphash
-			return node.BootstrapState(cmd.Context(), s.config.CmtConfig, cmtcfg.DefaultDBProvider, nil, height, nil)
+			return node.BootstrapState(cmd.Context(), cfg, cmtcfg.DefaultDBProvider, nil, height, nil)
 		},
 	}
 

@@ -36,6 +36,8 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [Unreleased]
 
+* [#20034](https://github.com/cosmos/cosmos-sdk/pull/20034) Significantly speedup LegacyDec.QuoTruncate and LegacyDec.QuoRoundUp.
+
 ## [math/v1.3.0](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.3.0) - 2024-02-22
 
 ### Features

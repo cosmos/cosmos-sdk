@@ -104,7 +104,7 @@ func (s *decimalTestSuite) TestNewDecFromStr() {
 			s.Require().NotNil(err, "error expected, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
 		} else {
 			s.Require().Nil(err, "unexpected error, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
-			s.Require().True(res.Equal(tc.exp), "equality was incorrect, res %v, exp %v, tc %v", res, tc.exp, tcIndex)
+			s.Require().True(res.Equal(tc.exp), "equality was incorrect, res %v, expTruncated %v, tc %v", res, tc.exp, tcIndex)
 		}
 
 		// negative tc
@@ -114,7 +114,7 @@ func (s *decimalTestSuite) TestNewDecFromStr() {
 		} else {
 			s.Require().Nil(err, "unexpected error, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
 			exp := tc.exp.Mul(math.LegacyNewDec(-1))
-			s.Require().True(res.Equal(exp), "equality was incorrect, res %v, exp %v, tc %v", res, exp, tcIndex)
+			s.Require().True(res.Equal(exp), "equality was incorrect, res %v, expTruncated %v, tc %v", res, exp, tcIndex)
 		}
 	}
 }
@@ -267,24 +267,24 @@ func (s *decimalTestSuite) TestArithmetic() {
 		resMul := tc.d1.Mul(tc.d2)
 		resMulTruncate := tc.d1.MulTruncate(tc.d2)
 		resMulRoundUp := tc.d1.MulRoundUp(tc.d2)
-		s.Require().True(tc.expAdd.Equal(resAdd), "exp %v, res %v, tc %d", tc.expAdd, resAdd, tcIndex)
-		s.Require().True(tc.expSub.Equal(resSub), "exp %v, res %v, tc %d", tc.expSub, resSub, tcIndex)
-		s.Require().True(tc.expMul.Equal(resMul), "exp %v, res %v, tc %d", tc.expMul, resMul, tcIndex)
-		s.Require().True(tc.expMulTruncate.Equal(resMulTruncate), "exp %v, res %v, tc %d", tc.expMulTruncate, resMulTruncate, tcIndex)
-		s.Require().True(tc.expMulRoundUp.Equal(resMulRoundUp), "exp %v, res %v, tc %d", tc.expMulRoundUp, resMulRoundUp, tcIndex)
+		s.Require().True(tc.expAdd.Equal(resAdd), "expTruncated %v, res %v, tc %d", tc.expAdd, resAdd, tcIndex)
+		s.Require().True(tc.expSub.Equal(resSub), "expTruncated %v, res %v, tc %d", tc.expSub, resSub, tcIndex)
+		s.Require().True(tc.expMul.Equal(resMul), "expTruncated %v, res %v, tc %d", tc.expMul, resMul, tcIndex)
+		s.Require().True(tc.expMulTruncate.Equal(resMulTruncate), "expTruncated %v, res %v, tc %d", tc.expMulTruncate, resMulTruncate, tcIndex)
+		s.Require().True(tc.expMulRoundUp.Equal(resMulRoundUp), "expTruncated %v, res %v, tc %d", tc.expMulRoundUp, resMulRoundUp, tcIndex)
 
 		if tc.d2.IsZero() { // panic for divide by zero
 			s.Require().Panics(func() { tc.d1.Quo(tc.d2) })
 		} else {
 			resQuo := tc.d1.Quo(tc.d2)
-			s.Require().True(tc.expQuo.Equal(resQuo), "exp %v, res %v, tc %d", tc.expQuo.String(), resQuo.String(), tcIndex)
+			s.Require().True(tc.expQuo.Equal(resQuo), "expTruncated %v, res %v, tc %d", tc.expQuo.String(), resQuo.String(), tcIndex)
 
 			resQuoRoundUp := tc.d1.QuoRoundUp(tc.d2)
-			s.Require().True(tc.expQuoRoundUp.Equal(resQuoRoundUp), "exp %v, res %v, tc %d",
+			s.Require().True(tc.expQuoRoundUp.Equal(resQuoRoundUp), "expTruncated %v, res %v, tc %d",
 				tc.expQuoRoundUp.String(), resQuoRoundUp.String(), tcIndex)
 
 			resQuoTruncate := tc.d1.QuoTruncate(tc.d2)
-			s.Require().True(tc.expQuoTruncate.Equal(resQuoTruncate), "exp %v, res %v, tc %d",
+			s.Require().True(tc.expQuoTruncate.Equal(resQuoTruncate), "expTruncated %v, res %v, tc %d",
 				tc.expQuoTruncate.String(), resQuoTruncate.String(), tcIndex)
 		}
 	}
@@ -299,10 +299,10 @@ func (s *decimalTestSuite) TestMulRoundUp_RoundingAtPrecisionEnd() {
 	)
 
 	actualRoundUp := a.MulRoundUp(b)
-	s.Require().Equal(expectedRoundUp.String(), actualRoundUp.String(), "exp %v, res %v", expectedRoundUp, actualRoundUp)
+	s.Require().Equal(expectedRoundUp.String(), actualRoundUp.String(), "expTruncated %v, res %v", expectedRoundUp, actualRoundUp)
 
 	actualTruncate := a.MulTruncate(b)
-	s.Require().Equal(expectedTruncate.String(), actualTruncate.String(), "exp %v, res %v", expectedRoundUp, actualTruncate)
+	s.Require().Equal(expectedTruncate.String(), actualTruncate.String(), "expTruncated %v, res %v", expectedRoundUp, actualTruncate)
 }
 
 func (s *decimalTestSuite) TestBankerRoundChop() {
@@ -668,11 +668,15 @@ func BenchmarkLegacyQuoMut(b *testing.B) {
 
 func BenchmarkLegacyQuoTruncateMut(b *testing.B) {
 	b1 := math.LegacyNewDec(17e2 + 8371)
+	baseArr := make([]math.LegacyDec, b.N)
+	for i := 0; i < b.N; i++ {
+		baseArr[i] = b1.Clone()
+	}
 	b2 := math.LegacyNewDec(4371)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		sink = b1.QuoTruncateMut(b2)
+		sink = baseArr[i].QuoTruncateMut(b2)
 	}
 
 	if sink == nil {
@@ -697,11 +701,15 @@ func BenchmarkLegacySqrtOnMersennePrime(b *testing.B) {
 
 func BenchmarkLegacyQuoRoundupMut(b *testing.B) {
 	b1 := math.LegacyNewDec(17e2 + 8371)
+	baseArr := make([]math.LegacyDec, b.N)
+	for i := 0; i < b.N; i++ {
+		baseArr[i] = b1.Clone()
+	}
 	b2 := math.LegacyNewDec(4371)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		sink = b1.QuoRoundupMut(b2)
+		sink = baseArr[i].QuoRoundupMut(b2)
 	}
 
 	if sink == nil {
@@ -781,4 +789,240 @@ func (s *decimalTestSuite) TestConvertToBigIntMutativeForLegacyDec() {
 	p2.SetInt64(50)
 	s.Require().NotEqual(big.NewInt(50), i.BigIntMut())
 	s.Require().NotEqual(big.NewInt(50), i.BigInt())
+}
+
+func TestQuoMut(t *testing.T) {
+	specs := map[string]struct {
+		dividend, divisor          math.LegacyDec
+		expTruncated, expRoundedUp string
+		expPanic                   bool
+	}{
+		"0.0000000000000000001": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18),
+			divisor:      math.LegacyMustNewDecFromStr("10"),
+			expRoundedUp: "0.000000000000000001",
+			expTruncated: "0.000000000000000000",
+		},
+		"0.0000000000000000002": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18),
+			divisor:      math.LegacyMustNewDecFromStr("5"),
+			expRoundedUp: "0.000000000000000001",
+			expTruncated: "0.000000000000000000",
+		},
+		"0.0000000000000000003": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18),
+			divisor:      math.LegacyMustNewDecFromStr("3.333333333333333"),
+			expRoundedUp: "0.000000000000000001",
+			expTruncated: "0.000000000000000000",
+		},
+		"0.0000000000000000004": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18),
+			divisor:      math.LegacyMustNewDecFromStr("2.5"),
+			expRoundedUp: "0.000000000000000001",
+			expTruncated: "0.000000000000000000",
+		},
+		"0.0000000000000000005": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18),
+			divisor:      math.LegacyMustNewDecFromStr("2"),
+			expRoundedUp: "0.000000000000000001",
+
+			expTruncated: "0.000000000000000000",
+		},
+		"0.0000000000000000006": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18),
+			divisor:      math.LegacyMustNewDecFromStr("1.666666666666666666"),
+			expRoundedUp: "0.000000000000000001",
+
+			expTruncated: "0.000000000000000000",
+		},
+		"0.0000000000000000007": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18),
+			divisor:      math.LegacyMustNewDecFromStr("1.428571428571429"),
+			expRoundedUp: "0.000000000000000001",
+
+			expTruncated: "0.000000000000000000",
+		},
+		"0.0000000000000000008": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18),
+			divisor:      math.LegacyMustNewDecFromStr("1.25"),
+			expRoundedUp: "0.000000000000000001",
+
+			expTruncated: "0.000000000000000000",
+		},
+		"0.0000000000000000009": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18),
+			divisor:      math.LegacyMustNewDecFromStr("1.111111111111111"),
+			expRoundedUp: "0.000000000000000001",
+
+			expTruncated: "0.000000000000000000",
+		},
+		"-0.0000000000000000001": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18).Neg(),
+			divisor:      math.LegacyMustNewDecFromStr("10"),
+			expRoundedUp: "0.000000000000000000",
+			expTruncated: "0.000000000000000000",
+		},
+		"-0.0000000000000000002": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18).Neg(),
+			divisor:      math.LegacyMustNewDecFromStr("5"),
+			expRoundedUp: "0.000000000000000000",
+			expTruncated: "0.000000000000000000",
+		},
+		"-0.0000000000000000003": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18).Neg(),
+			divisor:      math.LegacyMustNewDecFromStr("3.333333333333333"),
+			expRoundedUp: "0.000000000000000000",
+			expTruncated: "0.000000000000000000",
+		},
+		"-0.0000000000000000004": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18).Neg(),
+			divisor:      math.LegacyMustNewDecFromStr("2.5"),
+			expRoundedUp: "0.000000000000000000",
+			expTruncated: "0.000000000000000000",
+		},
+		"-0.0000000000000000005": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18).Neg(),
+			divisor:      math.LegacyMustNewDecFromStr("2"),
+			expRoundedUp: "0.000000000000000000",
+			expTruncated: "0.000000000000000000",
+		},
+		"-0.0000000000000000006": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18).Neg(),
+			divisor:      math.LegacyMustNewDecFromStr("1.666666666666666666"),
+			expRoundedUp: "0.000000000000000000",
+			expTruncated: "0.000000000000000000",
+		},
+		"-0.0000000000000000007": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18).Neg(),
+			divisor:      math.LegacyMustNewDecFromStr("1.428571428571429"),
+			expRoundedUp: "0.000000000000000000",
+			expTruncated: "0.000000000000000000",
+		},
+		"-0.0000000000000000008": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18).Neg(),
+			divisor:      math.LegacyMustNewDecFromStr("1.25"),
+			expRoundedUp: "0.000000000000000000",
+			expTruncated: "0.000000000000000000",
+		},
+		"-0.0000000000000000009": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18).Neg(),
+			divisor:      math.LegacyMustNewDecFromStr("1.111111111111111"),
+			expRoundedUp: "0.000000000000000000",
+			expTruncated: "0.000000000000000000",
+		},
+		"--0.0000000000000000001": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18).Neg(),
+			divisor:      math.LegacyMustNewDecFromStr("-10"),
+			expRoundedUp: "0.000000000000000001",
+			expTruncated: "0.000000000000000000",
+		},
+		"--0.0000000000000000002": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18).Neg(),
+			divisor:      math.LegacyMustNewDecFromStr("-5"),
+			expRoundedUp: "0.000000000000000001",
+			expTruncated: "0.000000000000000000",
+		},
+		"--0.0000000000000000003": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18).Neg(),
+			divisor:      math.LegacyMustNewDecFromStr("-3.333333333333333"),
+			expRoundedUp: "0.000000000000000001",
+			expTruncated: "0.000000000000000000",
+		},
+		"--0.0000000000000000004": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18).Neg(),
+			divisor:      math.LegacyMustNewDecFromStr("-2.5"),
+			expRoundedUp: "0.000000000000000001",
+			expTruncated: "0.000000000000000000",
+		},
+		"--0.0000000000000000005": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18).Neg(),
+			divisor:      math.LegacyMustNewDecFromStr("-2"),
+			expRoundedUp: "0.000000000000000001",
+			expTruncated: "0.000000000000000000",
+		},
+		"--0.0000000000000000006": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18).Neg(),
+			divisor:      math.LegacyMustNewDecFromStr("-1.666666666666666666"),
+			expRoundedUp: "0.000000000000000001",
+			expTruncated: "0.000000000000000000",
+		},
+		"--0.0000000000000000007": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18).Neg(),
+			divisor:      math.LegacyMustNewDecFromStr("-1.428571428571429"),
+			expRoundedUp: "0.000000000000000001",
+			expTruncated: "0.000000000000000000",
+		},
+		"--0.0000000000000000008": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18).Neg(),
+			divisor:      math.LegacyMustNewDecFromStr("-1.25"),
+			expRoundedUp: "0.000000000000000001",
+			expTruncated: "0.000000000000000000",
+		},
+		"--0.0000000000000000009": {
+			dividend:     math.LegacyNewDecWithPrec(1, 18).Neg(),
+			divisor:      math.LegacyMustNewDecFromStr("-1.111111111111111"),
+			expRoundedUp: "0.000000000000000001",
+			expTruncated: "0.000000000000000000",
+		},
+		"big / small": {
+			dividend:     math.LegacyMustNewDecFromStr("999999999999999999"),
+			divisor:      math.LegacyNewDecWithPrec(1, 18),
+			expRoundedUp: "999999999999999999000000000000000000.000000000000000000",
+			expTruncated: "999999999999999999000000000000000000.000000000000000000",
+		},
+		"divide by dividend": {
+			dividend:     math.LegacyNewDecWithPrec(123, 0),
+			divisor:      math.LegacyMustNewDecFromStr("123"),
+			expRoundedUp: "1.000000000000000000",
+			expTruncated: "1.000000000000000000",
+		},
+		"zero divided": {
+			dividend:     math.LegacyNewDecWithPrec(0, 0),
+			divisor:      math.LegacyMustNewDecFromStr("1"),
+			expRoundedUp: "0.000000000000000000",
+			expTruncated: "0.000000000000000000",
+		},
+		"zero divided by negative value": {
+			dividend:     math.LegacyNewDecWithPrec(0, 0),
+			divisor:      math.LegacyMustNewDecFromStr("-1"),
+			expRoundedUp: "0.000000000000000000",
+			expTruncated: "0.000000000000000000",
+		},
+		"zero divided by zero": {
+			dividend: math.LegacyNewDecWithPrec(0, 0),
+			divisor:  math.LegacyMustNewDecFromStr("0"),
+			expPanic: true,
+		},
+		"divide by zero": {
+			dividend: math.LegacyNewDecWithPrec(1, 0),
+			divisor:  math.LegacyMustNewDecFromStr("0"),
+			expPanic: true,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			t.Run("round up", func(t *testing.T) {
+				t.Parallel()
+				if !spec.expPanic {
+					got := spec.dividend.Clone().QuoRoundupMut(spec.divisor.Clone())
+					require.Equal(t, spec.expRoundedUp, got.String())
+					return
+				}
+				require.Panics(t, func() {
+					_ = spec.dividend.Clone().QuoRoundupMut(spec.divisor.Clone())
+				})
+			})
+			t.Run("truncate", func(t *testing.T) {
+				t.Parallel()
+				if !spec.expPanic {
+					got := spec.dividend.Clone().QuoTruncateMut(spec.divisor.Clone())
+					require.Equal(t, spec.expTruncated, got.String())
+					return
+				}
+				require.Panics(t, func() {
+					_ = spec.dividend.Clone().QuoTruncateMut(spec.divisor.Clone())
+				})
+			})
+		})
+	}
 }

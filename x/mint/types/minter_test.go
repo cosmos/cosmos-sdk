@@ -55,6 +55,9 @@ func TestNextInflation(t *testing.T) {
 		inflation := minter.NextInflationRate(params, tc.bondedRatio)
 		diffInflation := inflation.Sub(tc.setInflation)
 
+		annualProvisions := minter.NextAnnualProvisions(params, math.NewInt(100000000000000))
+		require.Equal(t, minter.Inflation.MulInt(math.NewInt(100000000000000)), annualProvisions)
+
 		require.True(t, diffInflation.Equal(tc.expChange),
 			"Test Index: %v\nDiff:  %v\nExpected: %v\n", i, diffInflation, tc.expChange)
 	}
@@ -85,6 +88,25 @@ func TestBlockProvision(t *testing.T) {
 		require.True(t, expProvisions.IsEqual(provisions),
 			"test: %v\n\tExp: %v\n\tGot: %v\n",
 			i, tc.expProvisions, provisions)
+	}
+}
+
+func TestValidateMinter(t *testing.T) {
+	tests := []struct {
+		minter Minter
+		expErr bool
+	}{
+		{InitialMinter(math.LegacyNewDecWithPrec(1, 1)), false},
+		{InitialMinter(math.LegacyNewDecWithPrec(-1, 1)), true},
+		{InitialMinter(math.LegacyZeroDec()), false},
+	}
+	for i, tc := range tests {
+		err := ValidateMinter(tc.minter)
+		if tc.expErr {
+			require.Error(t, err, "test: %v", i)
+		} else {
+			require.NoError(t, err, "test: %v", i)
+		}
 	}
 }
 

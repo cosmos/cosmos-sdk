@@ -22,8 +22,6 @@ import (
 type Keeper struct {
 	appmodule.Environment
 
-	cometService comet.Service
-
 	cdc           codec.BinaryCodec
 	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
@@ -85,7 +83,6 @@ func NewKeeper(
 		bankKeeper:       bk,
 		stakingKeeper:    sk,
 		poolKeeper:       pk,
-		cometService:     cometService,
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),

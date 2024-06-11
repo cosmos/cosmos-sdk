@@ -89,7 +89,7 @@ func TestDecWithRapid(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, res.Equal(two))
 
-	res, err = five.Sub(two)
+	res, err = five.Sub(two, AssertMaxDecimals(34))
 	require.NoError(t, err)
 	require.True(t, res.Equal(three))
 
@@ -129,11 +129,11 @@ func TestDecWithRapid(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, res.Equal(threePointFourNine))
 
-	res, err = threePointFourNine.Sub(two)
+	res, err = threePointFourNine.Sub(two, AssertMaxDecimals(34))
 	require.NoError(t, err)
 	require.True(t, res.Equal(onePointFourNine))
 
-	res, err = minusOne.Sub(four)
+	res, err = minusOne.Sub(four, AssertMaxDecimals(34))
 	require.NoError(t, err)
 	require.True(t, res.Equal(minusFivePointZero))
 
@@ -307,7 +307,7 @@ func testSubRightIdentity(t *rapid.T) {
 	a := genDec.Draw(t, "a")
 	zero := NewDecFromInt64(0)
 
-	b, err := a.Sub(zero)
+	b, err := a.Sub(zero, AssertMaxDecimals(34))
 	require.NoError(t, err)
 
 	require.True(t, a.Equal(b))
@@ -318,7 +318,7 @@ func testSubZero(t *rapid.T) {
 	a := genDec.Draw(t, "a")
 	zero := NewDecFromInt64(0)
 
-	b, err := a.Sub(a)
+	b, err := a.Sub(a, AssertMaxDecimals(34))
 	require.NoError(t, err)
 
 	require.True(t, b.Equal(zero))
@@ -388,7 +388,7 @@ func testSubAdd(t *rapid.T) {
 	a := genDec.Draw(t, "a")
 	b := genDec.Draw(t, "b")
 
-	c, err := a.Sub(b)
+	c, err := a.Sub(b, AssertMaxDecimals(34))
 	require.NoError(t, err)
 
 	d, err := c.Add(b)
@@ -405,7 +405,7 @@ func testAddSub(t *rapid.T) {
 	c, err := a.Add(b)
 	require.NoError(t, err)
 
-	d, err := c.Sub(b)
+	d, err := c.Sub(b, AssertMaxDecimals(34))
 	require.NoError(t, err)
 
 	require.True(t, a.Equal(d))

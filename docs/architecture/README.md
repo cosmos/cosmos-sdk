@@ -62,6 +62,7 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 061: Liquid Staking](./adr-061-liquid-staking.md)
 * [ADR 070: Un-Ordered Transaction Inclusion](./adr-070-unordered-transactions.md)
 * [ADR 065: Store v2](./adr-065-store-v2.md)
+* [ADR 073: Built-in In-process Indexer](./adr-073-indexer.md)
 
 ### Proposed
 

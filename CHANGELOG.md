@@ -186,6 +186,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (server) [#20140](https://github.com/cosmos/cosmos-sdk/pull/20140) Remove embedded grpc-web proxy in favor of standalone grpc-web proxy. [Envoy Proxy](https://www.envoyproxy.io/docs/envoy/latest/start/start)
 * (client) [#20255](https://github.com/cosmos/cosmos-sdk/pull/20255) Use comet proofOp proto type instead of sdk version to avoid needing to translate to later be proven in the merkle proof runtime. 
 * (all) [#19726](https://github.com/cosmos/cosmos-sdk/pull/19726) Integrate comet v1
+* (client) [#20616](https://github.com/cosmos/cosmos-sdk/pull/20616) gentx subcommand output goes to `cmd.ErrOrStderr()` instead of being hardcoded to `os.Stderr`
 
 ### Client Breaking Changes
 

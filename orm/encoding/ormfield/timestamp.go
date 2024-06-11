@@ -9,12 +9,12 @@ import (
 
 // TimestampCodec encodes google.protobuf.Timestamp values with the following
 // encoding:
-// - nil is encoded as []byte{0xFF}
-// - seconds (which can range from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z) is encoded as 5 fixed bytes
-// - nanos (which can range from 0 to 999,999,999 or -999,999,999 to 0 if seconds is negative) are encoded such
-//   that 999,999,999 is always added to nanos. This ensures that the encoded nanos are always >= 0. Additionally,
-//   by adding 999,999,999 to both positive and negative nanos, we guarantee that the lexicographical order is
-//   preserved when comparing the encoded values of two Timestamps.
+//   - nil is encoded as []byte{0xFF}
+//   - seconds (which can range from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z) is encoded as 5 fixed bytes
+//   - nanos (which can range from 0 to 999,999,999 or -999,999,999 to 0 if seconds is negative) are encoded such
+//     that 999,999,999 is always added to nanos. This ensures that the encoded nanos are always >= 0. Additionally,
+//     by adding 999,999,999 to both positive and negative nanos, we guarantee that the lexicographical order is
+//     preserved when comparing the encoded values of two Timestamps.
 //
 // When iterating over timestamp indexes, nil values will always be ordered last.
 //

@@ -686,7 +686,7 @@ func (s *StorageTestSuite) TestUpgradable() {
 	for v := uint64(1); v <= uptoVersion; v++ {
 		for i := 0; i < keyCount; i++ {
 			bz, err := ss.Get([]byte(newStoreKey), v, []byte(fmt.Sprintf("key%03d", i)))
-			fmt.Printf("version: %d, key: %s, value: %s\n", v, fmt.Sprintf("key%03d", i), string(bz))
+			s.T().Logf("version: %d, key: %s, value: %s\n", v, fmt.Sprintf("key%03d", i), string(bz))
 			s.Require().NoError(err)
 			s.Require().Equal([]byte(fmt.Sprintf("val%03d-%03d", i, v)), bz)
 		}

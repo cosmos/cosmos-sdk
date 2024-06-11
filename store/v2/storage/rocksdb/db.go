@@ -21,7 +21,7 @@ import (
 const (
 	TimestampSize = 8
 
-	BatchBufferCount = 1000
+	batchBufferCount = 1000
 
 	StorePrefixTpl   = "s/k:%s/"
 	latestVersionKey = "s/latest"
@@ -199,8 +199,9 @@ func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end 
 	return newRocksDBIterator(itr, prefix, start, end, true), nil
 }
 
+// PruneStoreKey will do nothing for RocksDB, it will be pruned by compaction
+// when the version is pruned
 func (db *Database) PruneStoreKey(storeKey []byte) error {
-	// it will be pruned by compaction when the version is pruned
 	return nil
 }
 
@@ -226,7 +227,7 @@ func (db *Database) MigrateStoreKey(fromStoreKey, toStoreKey []byte) error {
 		key = key[:len(key)-16] // remove the timestamp
 		prefixedKey := append(storePrefix(toStoreKey), key...)
 		batch.PutCFWithTS(db.cfHandle, prefixedKey, ritr.Timestamp(), ritr.Value())
-		if batch.Count() >= BatchBufferCount {
+		if batch.Count() >= batchBufferCount {
 			if err := db.storage.Write(defaultWriteOpts, batch); err != nil {
 				return err
 			}

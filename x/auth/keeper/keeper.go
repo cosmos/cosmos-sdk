@@ -342,11 +342,11 @@ func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAdd
 // MigrateAccountNumberUnsafe migrates auth's account number to accounts's account number
 // and delete store entry for auth legacy GlobalAccountNumberKey.
 //
-// Should only use in an upgrade handler for migrate process.
+// Should only use in an upgrade handler for migrating account number.
 func (ak AccountKeeper) MigrateAccountNumberUnsafe(ctx context.Context) error {
 	currentAccNum, err := ak.RemoveLegacyAccountNumber(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to migrate account number: %w", err)
 	}
 
 	err = ak.AccountsModKeeper.InitAccountNumberSeqUnsafe(ctx, currentAccNum)

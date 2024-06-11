@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -14,7 +16,6 @@ import (
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
 )
 
 // Tests Set/Get TotalLiquidStakedTokens
@@ -828,7 +829,6 @@ func (s *KeeperTestSuite) TestDelegatorIsLiquidStaker() {
 }
 
 func TestCheckVestedDelegationInVestingAccount(t *testing.T) {
-
 	var (
 		vestingAcct     *vestingtypes.ContinuousVestingAccount
 		startTime       = time.Now()

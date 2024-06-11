@@ -28,7 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestCancelUnbondingDelegation(t *testing.T) {
@@ -1811,7 +1810,7 @@ func TestTokenizeAndRedeemVestedDelegation(t *testing.T) {
 
 	// Create Validators and Delegation
 	val1 := testutil.NewValidator(t, addrVal1, pk1)
-	val1.Status = stakingtypes.Bonded
+	val1.Status = types.Bonded
 	stakingKeeper.SetValidator(ctx, val1)
 	stakingKeeper.SetValidatorByPowerIndex(ctx, val1)
 	err = stakingKeeper.SetValidatorByConsAddr(ctx, val1)
@@ -1855,7 +1854,7 @@ func TestTokenizeAndRedeemVestedDelegation(t *testing.T) {
 
 	// Expect that tokenizing all the delegated coins fails
 	// since only the half are vested
-	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
+	_, err = msgServer.TokenizeShares(ctx, &types.MsgTokenizeShares{
 		DelegatorAddress:    addrAcc1.String(),
 		ValidatorAddress:    addrVal1.String(),
 		Amount:              originalVesting[0],
@@ -1864,7 +1863,7 @@ func TestTokenizeAndRedeemVestedDelegation(t *testing.T) {
 	require.Error(t, err)
 
 	// Tokenize the delegated vested coins
-	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
+	_, err = msgServer.TokenizeShares(ctx, &types.MsgTokenizeShares{
 		DelegatorAddress:    addrAcc1.String(),
 		ValidatorAddress:    addrVal1.String(),
 		Amount:              sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: originalVestingAmount.Quo(math.NewInt(2))},
@@ -1875,7 +1874,7 @@ func TestTokenizeAndRedeemVestedDelegation(t *testing.T) {
 	shareDenom := addrVal1.String() + "/1"
 
 	// Redeem the tokens
-	_, err = msgServer.RedeemTokensForShares(sdk.WrapSDKContext(ctx),
+	_, err = msgServer.RedeemTokensForShares(ctx,
 		&types.MsgRedeemTokensForShares{
 			DelegatorAddress: addrAcc1.String(),
 			Amount:           sdk.Coin{Denom: shareDenom, Amount: originalVestingAmount.Quo(math.NewInt(2))},

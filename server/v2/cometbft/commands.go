@@ -29,13 +29,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
-func (s *CometBFTServer[T]) rpcClient() (rpc.CometRPC, error) {
+func (s *CometBFTServer[T]) rpcClient(cmd *cobra.Command) (rpc.CometRPC, error) {
 	if s.config.Standalone {
-		client, err := rpchttp.New(s.config.CmtConfig.RPC.ListenAddress)
+		client, err := rpchttp.New(client.GetConfigFromCmd(cmd).RPC.ListenAddress)
 		if err != nil {
 			return nil, err
 		}
 		return client, nil
+	}
+
+	if s.Node == nil || cmd.Flags().Changed(flags.FlagNode) {
+		rpcURI, _ := cmd.Flags().GetString(flags.FlagNode)
+		if rpcURI != "" {
+			return rpchttp.New(rpcURI)
+		}
 	}
 
 	return local.New(s.Node), nil
@@ -47,7 +54,7 @@ func (s *CometBFTServer[T]) StatusCommand() *cobra.Command {
 		Use:   "status",
 		Short: "Query remote node for status",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			rpcclient, err := s.rpcClient()
+			rpcclient, err := s.rpcClient(cmd)
 			if err != nil {
 				return err
 			}
@@ -190,7 +197,7 @@ for. Each module documents its respective events under 'xx_events.md'.
 			version.AppName,
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			rpcclient, err := s.rpcClient()
+			rpcclient, err := s.rpcClient(cmd)
 			if err != nil {
 				return err
 			}
@@ -243,7 +250,7 @@ $ %s query block --%s=%s <hash>
 		RunE: func(cmd *cobra.Command, args []string) error {
 			typ, _ := cmd.Flags().GetString(auth.FlagType)
 
-			rpcclient, err := s.rpcClient()
+			rpcclient, err := s.rpcClient(cmd)
 			if err != nil {
 				return err
 			}
@@ -334,7 +341,7 @@ func (s *CometBFTServer[T]) QueryBlockResultsCmd() *cobra.Command {
 
 			// TODO: we should be able to do this without using client context
 
-			node, err := s.rpcClient()
+			node, err := s.rpcClient(cmd)
 			if err != nil {
 				return err
 			}

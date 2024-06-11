@@ -171,7 +171,9 @@ func packPubKeys(pubKeys []cryptotypes.PubKey) ([]*types.Any, error) {
 		anyPubKeys[i] = any
 
 		// sets the compat.aminoBz value
-		anyPubKeys[i].UnmarshalAmino(pubKeys[i].Bytes())
+		if err := anyPubKeys[i].UnmarshalAmino(pubKeys[i].Bytes()); err != nil {
+			return nil, err
+		}
 	}
 	return anyPubKeys, nil
 }

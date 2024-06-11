@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"google.golang.org/protobuf/runtime/protoiface"
@@ -61,14 +62,8 @@ func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg protoiface.Mes
 
 // NewQueryRouterService implements router.Service.
 func NewQueryRouterService(queryRouterBuilder *MsgRouterBuilder) router.Service {
-	queryRouter, err := queryRouterBuilder.Build()
-	if err != nil {
-		panic(fmt.Errorf("cannot create queryRouter: %w", err))
-	}
-
 	return &queryRouterService{
 		builder: queryRouterBuilder,
-		handler: queryRouter,
 	}
 }
 
@@ -100,8 +95,21 @@ func (m *queryRouterService) InvokeTyped(
 	ctx context.Context,
 	req, resp protoiface.MessageV1,
 ) error {
-	// see https://github.com/cosmos/cosmos-sdk/pull/20349
-	panic("not implemented")
+	// TODO lazy initialization is ugly and not thread safe. we don't want to check a mutex on every InvokeTyped either.
+	if m.handler == nil {
+		var err error
+		m.handler, err = m.builder.Build()
+		if err != nil {
+			return fmt.Errorf("cannot create queryRouter: %w", err)
+		}
+	}
+	// reflection is required, see https://github.com/cosmos/cosmos-sdk/pull/20349
+	res, err := m.handler(ctx, req)
+	if err != nil {
+		return err
+	}
+	reflect.Indirect(reflect.ValueOf(resp)).Set(reflect.Indirect(reflect.ValueOf(res)))
+	return nil
 }
 
 // InvokeUntyped execute a message and returns a response.

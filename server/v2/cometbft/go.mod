@@ -5,19 +5,16 @@ go 1.22.2
 replace (
 	cosmossdk.io/api => ../../../api
 	cosmossdk.io/core => ../../../core
+	cosmossdk.io/core/testing => ../../../core/testing
 	cosmossdk.io/depinject => ../../../depinject
-	cosmossdk.io/log => ../../../log
-	cosmossdk.io/runtime/v2 => ../../../runtime/v2
 	cosmossdk.io/server/v2 => ../
 	cosmossdk.io/server/v2/appmanager => ../appmanager
-	cosmossdk.io/server/v2/stf => ../stf
 	cosmossdk.io/store/v2 => ../../../store/v2
 	cosmossdk.io/x/accounts => ../../../x/accounts
 	cosmossdk.io/x/auth => ../../../x/auth
 	cosmossdk.io/x/bank => ../../../x/bank
 	cosmossdk.io/x/consensus => ../../../x/consensus
 	cosmossdk.io/x/staking => ../../../x/staking
-	cosmossdk.io/x/tx => ../../../x/tx
 	github.com/cosmos/cosmos-sdk => ../../../
 )
 
@@ -32,10 +29,10 @@ require (
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-alpha.2.0.20240530055211-ae27f7eb3c08
-	github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240530055211-ae27f7eb3c08
+	github.com/cometbft/cometbft/api v1.0.0-rc.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.51.0
-	github.com/cosmos/gogoproto v1.4.12
+	github.com/cosmos/gogoproto v1.5.0
 	github.com/golang/protobuf v1.5.4
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/spf13/cobra v1.8.0

@@ -12,9 +12,10 @@ import (
 
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
+	keyring2 "cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/transaction"
-
 	"github.com/cosmos/cosmos-sdk/client"
+	flags2 "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,27 +23,88 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
+func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring) (params TxParameters, err error) {
+	timeout, _ := flags.GetUint64(flags2.FlagTimeoutHeight)
+	chainID, _ := flags.GetString(flags2.FlagChainID)
+	memo, _ := flags.GetString(flags2.FlagNote)
+	signMode, _ := flags.GetString(flags2.FlagSignMode)
+	accNumber, _ := flags.GetUint64(flags2.FlagAccountNumber)
+	sequence, _ := flags.GetUint64(flags2.FlagSequence)
+	fromName, _ := flags.GetString(flags2.FlagFrom)
+	gas, _ := flags.GetUint64(flags2.FlagGas)
+	gasAdjustment, _ := flags.GetFloat64(flags2.FlagGasAdjustment)
+	gasPrices, _ := flags.GetString(flags2.FlagGasPrices)
+	fmt.Println(gasPrices)
+
+	feePayer, _ := flags.GetString(flags2.FlagFeePayer)
+	feeGrater, _ := flags.GetString(flags2.FlagFeeGranter)
+
+	unordered, _ := flags.GetBool(flags2.FlagUnordered)
+	offline, _ := flags.GetBool(flags2.FlagOffline)
+	generateOnly, _ := flags.GetBool(flags2.FlagGenerateOnly)
+
+	fees := flags2.FlagFees
+	fmt.Println(fees)
+
+	acc, err := keybase.GetPubKey(fromName)
+	if err != nil {
+		return params, err
+	}
+
+	return TxParameters{
+		timeoutHeight: timeout,
+		chainID:       chainID,
+		memo:          memo,
+		signMode:      getSignMode(signMode),
+		AccountConfig: AccountConfig{
+			accountNumber: accNumber,
+			sequence:      sequence,
+			fromName:      fromName,
+			fromAddress:   acc.Address().Bytes(),
+		},
+		GasConfig: NewGasConfig(gas, gasAdjustment, nil),
+		FeeConfig: FeeConfig{ // TODO: needs special parsing
+			fees:       nil,
+			feeGranter: feePayer,
+			feePayer:   feeGrater,
+		},
+		ExecutionOptions: ExecutionOptions{
+			unordered:          unordered,
+			offline:            offline,
+			offChain:           false,
+			generateOnly:       generateOnly,
+			simulateAndExecute: false, // TODO: in context
+			preprocessTxHook:   nil,   // TODO: in context
+		},
+		ExtensionOptions: ExtensionOptions{},
+	}, nil
+}
+
 // GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
 // TODO: remove the client.Context
 func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.Msg) error {
-	k, err := keyring.NewAutoCLIKeyring(ctx.Keyring)
+	k, err := keyring.NewAutoCLIKeyring(ctx.Keyring, ctx.AddressCodec)
 	if err != nil {
 		return err
 	}
-	// TODO: fulfill with flagSet
-	params := TxParameters{
-		timeoutHeight:    0,
-		chainID:          "",
-		memo:             "",
-		signMode:         0,
-		AccountConfig:    AccountConfig{},
-		GasConfig:        GasConfig{},
-		FeeConfig:        FeeConfig{},
-		ExecutionOptions: ExecutionOptions{},
-		ExtensionOptions: ExtensionOptions{},
+
+	params, err := txParamsFromFlagSet(flagSet, k)
+	if err != nil {
+		return err
 	}
-	txf, err := NewFactory(k, ctx.AddressCodec, ctx, params)
+
+	txConfig, err := NewTxConfig(ConfigOptions{
+		AddressCodec:          ctx.AddressCodec,
+		Cdc:                   ctx.Codec,
+		ValidatorAddressCodec: ctx.ValidatorAddressCodec,
+	})
+	if err != nil {
+		return err
+	}
+
+	accRetriever := newAccountRetriever(ctx.AddressCodec, ctx, ctx.InterfaceRegistry)
+	txf, err := NewFactory(k, ctx.Codec, accRetriever, txConfig, ctx.AddressCodec, ctx, params)
 	if err != nil {
 		return err
 	}
@@ -92,7 +154,7 @@ func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msg
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the
 // given set of messages. It will also simulate gas requirements if necessary.
 // It will return an error upon failure.
-func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
+func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...transaction.Msg) error {
 	txf, err := txf.Prepare()
 	if err != nil {
 		return err
@@ -178,7 +240,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 // CalculateGas simulates the execution of a transaction and returns the
 // simulation response obtained by the query and the adjusted gas amount.
 func CalculateGas(
-	clientCtx gogogrpc.ClientConn, txf Factory, msgs ...sdk.Msg,
+	clientCtx gogogrpc.ClientConn, txf Factory, msgs ...transaction.Msg,
 ) (*tx.SimulateResponse, uint64, error) {
 	txBytes, err := txf.BuildSimTx(msgs...)
 	if err != nil {
@@ -197,7 +259,7 @@ func CalculateGas(
 }
 
 // makeAuxSignerData generates an AuxSignerData from the client inputs.
-func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (*apitx.AuxSignerData, error) {
+func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...transaction.Msg) (*apitx.AuxSignerData, error) {
 	b := NewAuxTxBuilder()
 	fromAddress, name, _, err := client.GetFromFields(clientCtx, clientCtx.Keyring, clientCtx.From)
 	if err != nil {
@@ -209,7 +271,7 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (*a
 		b.SetAccountNumber(f.AccountNumber())
 		b.SetSequence(f.Sequence())
 	} else {
-		accNum, seq, err := f.accountRetriever.GetAccountNumberSequence(fromAddress)
+		accNum, seq, err := f.accountRetriever.GetAccountNumberSequence(context.Background(), fromAddress)
 		if err != nil {
 			return nil, err
 		}
@@ -254,7 +316,7 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (*a
 
 // checkMultipleSigners checks that there can be maximum one DIRECT signer in
 // a tx.
-func checkMultipleSigners(tx TxWrapper) error {
+func checkMultipleSigners(tx Tx) error {
 	directSigners := 0
 	sigsV2, err := tx.GetSignatures()
 	if err != nil {
@@ -289,4 +351,18 @@ func countDirectSigners(sigData SignatureData) int {
 	default:
 		panic("unreachable case")
 	}
+}
+
+func getSignMode(mode string) apitxsigning.SignMode {
+	switch mode {
+	case "direct":
+		return apitxsigning.SignMode_SIGN_MODE_DIRECT
+	case "direct-aux":
+		return apitxsigning.SignMode_SIGN_MODE_DIRECT_AUX
+	case "amino-json":
+		return apitxsigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+	case "textual":
+		return apitxsigning.SignMode_SIGN_MODE_TEXTUAL
+	}
+	return apitxsigning.SignMode_SIGN_MODE_UNSPECIFIED
 }

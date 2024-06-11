@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
+	gogoany "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
@@ -17,7 +18,6 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -62,7 +62,7 @@ func (b *AuxTxBuilder) SetTimeoutHeight(height uint64) {
 }
 
 // SetMsgs sets an array of Msgs in the tx.
-func (b *AuxTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
+func (b *AuxTxBuilder) SetMsgs(msgs ...transaction.Msg) error {
 	anys := make([]*anypb.Any, len(msgs))
 	for i, msg := range msgs {
 		legacyAny, err := codectypes.NewAnyWithValue(msg)
@@ -143,7 +143,7 @@ func (b *AuxTxBuilder) SetSignature(sig []byte) {
 }
 
 // SetExtensionOptions sets the aux signer's extension options.
-func (b *AuxTxBuilder) SetExtensionOptions(extOpts ...*codectypes.Any) {
+func (b *AuxTxBuilder) SetExtensionOptions(extOpts ...*gogoany.Any) {
 	b.checkEmptyFields()
 
 	anyExtOpts := make([]*anypb.Any, len(extOpts))
@@ -158,7 +158,7 @@ func (b *AuxTxBuilder) SetExtensionOptions(extOpts ...*codectypes.Any) {
 }
 
 // SetNonCriticalExtensionOptions sets the aux signer's non-critical extension options.
-func (b *AuxTxBuilder) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
+func (b *AuxTxBuilder) SetNonCriticalExtensionOptions(extOpts ...*gogoany.Any) {
 	b.checkEmptyFields()
 
 	anyNonCritExtOpts := make([]*anypb.Any, len(extOpts))

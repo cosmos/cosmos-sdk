@@ -1,0 +1,95 @@
+package tx
+
+import (
+	"reflect"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
+)
+
+func TestSignatureDataToModeInfoAndSig(t *testing.T) {
+	tests := []struct {
+		name      string
+		data      SignatureData
+		mIResult  *apitx.ModeInfo
+		sigResult []byte
+	}{
+		{
+			name: "single signature",
+			data: &SingleSignatureData{
+				SignMode:  apisigning.SignMode_SIGN_MODE_DIRECT,
+				Signature: []byte("signature"),
+			},
+			mIResult: &apitx.ModeInfo{
+				Sum: &apitx.ModeInfo_Single_{
+					Single: &apitx.ModeInfo_Single{Mode: apisigning.SignMode_SIGN_MODE_DIRECT},
+				},
+			},
+			sigResult: []byte("signature"),
+		},
+		{
+			name: "multi signature",
+			data: &MultiSignatureData{
+				BitArray: nil,
+				Signatures: []SignatureData{
+					&SingleSignatureData{
+						SignMode:  apisigning.SignMode_SIGN_MODE_DIRECT,
+						Signature: []byte("signature"),
+					},
+				},
+			},
+			mIResult: &apitx.ModeInfo{
+				Sum: &apitx.ModeInfo_Multi_{
+					Multi: &apitx.ModeInfo_Multi{
+						Bitarray: nil,
+						ModeInfos: []*apitx.ModeInfo{
+							{
+								Sum: &apitx.ModeInfo_Single_{
+									Single: &apitx.ModeInfo_Single{Mode: apisigning.SignMode_SIGN_MODE_DIRECT},
+								},
+							},
+						},
+					},
+				},
+			},
+			sigResult: []byte("\n\tsignature"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			modeInfo, signature := SignatureDataToModeInfoAndSig(tt.data)
+			require.Equal(t, tt.mIResult, modeInfo)
+			require.Equal(t, tt.sigResult, signature)
+		})
+	}
+}
+
+func TestModeInfoAndSigToSignatureData(t *testing.T) {
+	type args struct {
+		modeInfo *apitx.ModeInfo
+		sig      []byte
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    SignatureData
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ModeInfoAndSigToSignatureData(tt.args.modeInfo, tt.args.sig)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ModeInfoAndSigToSignatureData() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ModeInfoAndSigToSignatureData() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -1,9 +1,7 @@
 package tx
 
 import (
-	"errors"
-	"fmt"
-
+	gogoany "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	base "cosmossdk.io/api/cosmos/base/v1beta1"
@@ -15,8 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	gogoany "github.com/cosmos/gogoproto/types/any"
 )
 
 var (
@@ -39,13 +35,12 @@ type TxBuilder interface {
 	SetMsgs(...transaction.Msg) error
 	SetMemo(string)
 	SetFeeAmount([]*base.Coin)
-	SetFeePayer(string) error
 	SetGasLimit(uint64)
 	SetTimeoutHeight(uint64)
+	SetFeePayer(string) error
 	SetFeeGranter(string) error
 	SetUnordered(bool)
 	SetSignatures(...Signature) error
-	SetAuxSignerData(*apitx.AuxSignerData) error
 }
 
 type TxBuilderProvider interface {
@@ -140,30 +135,6 @@ func (b *txBuilder) GetTx() (*apitx.Tx, error) {
 	}, nil
 }
 
-func msgsV1toAnyV2(msgs []transaction.Msg) ([]*anypb.Any, error) {
-	anys := make([]*codectypes.Any, len(msgs))
-	for i, msg := range msgs {
-		anyMsg, err := codectypes.NewAnyWithValue(msg)
-		if err != nil {
-			return nil, err
-		}
-		anys[i] = anyMsg
-	}
-
-	return intoAnyV2(anys), nil
-}
-
-func intoAnyV2(v1s []*codectypes.Any) []*anypb.Any {
-	v2s := make([]*anypb.Any, len(v1s))
-	for i, v1 := range v1s {
-		v2s[i] = &anypb.Any{
-			TypeUrl: v1.TypeUrl,
-			Value:   v1.Value,
-		}
-	}
-	return v2s
-}
-
 func (b *txBuilder) getFee() (fee *apitx.Fee, err error) {
 	granterStr := ""
 	if b.granter != nil {
@@ -244,15 +215,6 @@ func (b *txBuilder) SetFeeAmount(coins []*base.Coin) {
 	b.fees = coins
 }
 
-func (b *txBuilder) SetFeePayer(feePayer string) error {
-	addr, err := b.addressCodec.StringToBytes(feePayer)
-	if err != nil {
-		return err
-	}
-	b.payer = addr
-	return nil
-}
-
 func (b *txBuilder) SetGasLimit(gasLimit uint64) {
 	b.gasLimit = gasLimit
 }
@@ -261,7 +223,24 @@ func (b *txBuilder) SetTimeoutHeight(timeoutHeight uint64) {
 	b.timeoutHeight = timeoutHeight
 }
 
+func (b *txBuilder) SetFeePayer(feePayer string) error {
+	if feePayer == "" {
+		return nil
+	}
+
+	addr, err := b.addressCodec.StringToBytes(feePayer)
+	if err != nil {
+		return err
+	}
+	b.payer = addr
+	return nil
+}
+
 func (b *txBuilder) SetFeeGranter(feeGranter string) error {
+	if feeGranter == "" {
+		return nil
+	}
+
 	addr, err := b.addressCodec.StringToBytes(feeGranter)
 	if err != nil {
 		return err
@@ -313,61 +292,26 @@ func (b *txBuilder) SetSignatures(signatures ...Signature) error {
 	return nil
 }
 
-// TODO: check this
-func (b *txBuilder) SetAuxSignerData(data *apitx.AuxSignerData) error {
-	/*
-		if data == nil {
-			return errors.New("aux signer data cannot be nil")
-		}
-		any, err := codectypes.NewAnyWithValue(data)
+func msgsV1toAnyV2(msgs []transaction.Msg) ([]*anypb.Any, error) {
+	anys := make([]*codectypes.Any, len(msgs))
+	for i, msg := range msgs {
+		anyMsg, err := codectypes.NewAnyWithValue(msg)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		b.extensionOptions = append(b.extensionOptions, any)
-		return nil
-	*/
-	return errors.New("not supported")
+		anys[i] = anyMsg
+	}
+
+	return intoAnyV2(anys), nil
 }
 
-// SignatureDataToModeInfoAndSig converts a SignatureData to a ModeInfo and raw bytes signature
-func SignatureDataToModeInfoAndSig(data SignatureData) (*apitx.ModeInfo, []byte) {
-	if data == nil {
-		return nil, nil
+func intoAnyV2(v1s []*codectypes.Any) []*anypb.Any {
+	v2s := make([]*anypb.Any, len(v1s))
+	for i, v1 := range v1s {
+		v2s[i] = &anypb.Any{
+			TypeUrl: v1.TypeUrl,
+			Value:   v1.Value,
+		}
 	}
-
-	switch data := data.(type) {
-	case *SingleSignatureData:
-		return &apitx.ModeInfo{
-			Sum: &apitx.ModeInfo_Single_{
-				Single: &apitx.ModeInfo_Single{Mode: data.SignMode},
-			},
-		}, data.Signature
-	case *MultiSignatureData:
-		n := len(data.Signatures)
-		modeInfos := make([]*apitx.ModeInfo, n)
-		sigs := make([][]byte, n)
-
-		for i, d := range data.Signatures {
-			modeInfos[i], sigs[i] = SignatureDataToModeInfoAndSig(d)
-		}
-
-		multisig := cryptotypes.MultiSignature{
-			Signatures: sigs,
-		}
-		sig, err := multisig.Marshal()
-		if err != nil {
-			panic(err)
-		}
-
-		return &apitx.ModeInfo{
-			Sum: &apitx.ModeInfo_Multi_{
-				Multi: &apitx.ModeInfo_Multi{
-					Bitarray:  data.BitArray,
-					ModeInfos: modeInfos,
-				},
-			},
-		}, sig
-	default:
-		panic(fmt.Sprintf("unexpected signature data type %T", data))
-	}
+	return v2s
 }

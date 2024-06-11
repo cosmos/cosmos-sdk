@@ -1,10 +1,14 @@
 package keyring
 
 import (
+	"cosmossdk.io/core/address"
+	"errors"
+
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	authsigning "cosmossdk.io/x/auth/signing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // autoCLIKeyring represents the keyring interface used by the AutoCLI.
@@ -27,12 +31,13 @@ type autoCLIKeyring interface {
 }
 
 // NewAutoCLIKeyring wraps the SDK keyring and make it compatible with the AutoCLI keyring interfaces.
-func NewAutoCLIKeyring(kr Keyring) (autoCLIKeyring, error) {
-	return &autoCLIKeyringAdapter{kr}, nil
+func NewAutoCLIKeyring(kr Keyring, ac address.Codec) (autoCLIKeyring, error) {
+	return &autoCLIKeyringAdapter{kr, ac}, nil
 }
 
 type autoCLIKeyringAdapter struct {
 	Keyring
+	ac address.Codec
 }
 
 func (a *autoCLIKeyringAdapter) List() ([]string, error) {
@@ -67,6 +72,16 @@ func (a *autoCLIKeyringAdapter) LookupAddressByKeyName(name string) ([]byte, err
 func (a *autoCLIKeyringAdapter) GetPubKey(name string) (cryptotypes.PubKey, error) {
 	record, err := a.Keyring.Key(name)
 	if err != nil {
+		if errors.Is(err, sdkerrors.ErrKeyNotFound) {
+			addr, err := a.ac.StringToBytes(name)
+			if err != nil {
+				return nil, err
+			}
+			record, err = a.Keyring.KeyByAddress(addr)
+			if err == nil {
+				return record.GetPubKey()
+			}
+		}
 		return nil, err
 	}
 

@@ -72,9 +72,6 @@ func (c *ConfigOptions) validate() error {
 	if c.AddressCodec == nil {
 		return errors.New("address codec cannot be nil")
 	}
-	if c.Decoder == nil {
-		return errors.New("decoder cannot be nil")
-	}
 	if c.Cdc == nil {
 		return errors.New("codec cannot be nil")
 	}
@@ -104,6 +101,13 @@ func NewTxConfig(options ConfigOptions) (TxConfig, error) {
 	signingCtx, err := newDefaultTxSigningConfig(options)
 	if err != nil {
 		return nil, err
+	}
+
+	if options.Decoder == nil {
+		options.Decoder, err = txdecode.NewDecoder(txdecode.Options{SigningContext: signingCtx.SigningContext()})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &txConfig{

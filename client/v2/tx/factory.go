@@ -20,6 +20,7 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/tx/signing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -41,6 +42,7 @@ type FactoryI interface {
 // signing an application-specific transaction.
 type Factory struct {
 	keybase          keyring.Keyring
+	cdc              codec.BinaryCodec
 	accountRetriever AccountRetriever
 	ac               address.Codec
 	conn             gogogrpc.ClientConn
@@ -49,7 +51,7 @@ type Factory struct {
 }
 
 // NewFactory returns a factory
-func NewFactory(keybase keyring.Keyring, ac address.Codec, conn gogogrpc.ClientConn, parameters TxParameters) (Factory, error) {
+func NewFactory(keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever AccountRetriever, txConfig TxConfig, ac address.Codec, conn gogogrpc.ClientConn, parameters TxParameters) (Factory, error) {
 	//if clientCtx.Viper == nil {
 	//	clientCtx = clientCtx.WithViper("")
 	//}
@@ -87,14 +89,14 @@ func NewFactory(keybase keyring.Keyring, ac address.Codec, conn gogogrpc.ClientC
 	//gasPricesStr := clientCtx.Viper.GetString(flags.FlagGasPrices)
 	//
 	//feesStr := clientCtx.Viper.GetString(flags.FlagFees)
-
 	f := Factory{
-		keybase: keybase,
-		//accountRetriever: accRetriever, // TODO: pass as argument or call constructor
-		ac:   ac,
-		conn: conn,
-		//txConfig:         txConfig, // TODO: pass as argument or call constructor
-		txParams: parameters,
+		keybase:          keybase,
+		cdc:              cdc,
+		accountRetriever: accRetriever,
+		ac:               ac,
+		conn:             conn,
+		txConfig:         txConfig,
+		txParams:         parameters,
 	}
 
 	// Properties that need special parsing
@@ -108,7 +110,7 @@ func NewFactory(keybase keyring.Keyring, ac address.Codec, conn gogogrpc.ClientC
 // A new Factory with the updated fields will be returned.
 // Note: When in offline mode, the Prepare does nothing and returns the original factory.
 func (f Factory) Prepare() (Factory, error) {
-	if f.txParams.ExecutionOptions.offline {
+	if f.txParams.ExecutionOptions.offline || f.txParams.ExecutionOptions.offChain {
 		return f, nil
 	}
 
@@ -116,13 +118,13 @@ func (f Factory) Prepare() (Factory, error) {
 		return f, errors.New("missing 'from address' field")
 	}
 
-	if err := f.accountRetriever.EnsureExists(f.txParams.fromAddress); err != nil {
+	if err := f.accountRetriever.EnsureExists(context.Background(), f.txParams.fromAddress); err != nil {
 		return f, err
 	}
 
 	if f.txParams.accountNumber == 0 || f.txParams.sequence == 0 {
 		fc := f
-		num, seq, err := fc.accountRetriever.GetAccountNumberSequence(f.txParams.fromAddress)
+		num, seq, err := fc.accountRetriever.GetAccountNumberSequence(context.Background(), f.txParams.fromAddress)
 		if err != nil {
 			return f, err
 		}
@@ -141,6 +143,7 @@ func (f Factory) Prepare() (Factory, error) {
 	return f, nil
 }
 
+// TODO: move to internal/coins?
 var (
 	_ withAmount = &base.Coin{}
 	_ withAmount = &base.DecCoin{}
@@ -207,7 +210,7 @@ func (f Factory) BuildUnsignedTx(msgs ...transaction.Msg) (TxBuilder, error) {
 		}
 	}
 
-	if err := ValidateMemo(f.txParams.memo); err != nil {
+	if err := validateMemo(f.txParams.memo); err != nil {
 		return nil, err
 	}
 
@@ -219,8 +222,14 @@ func (f Factory) BuildUnsignedTx(msgs ...transaction.Msg) (TxBuilder, error) {
 	txBuilder.SetMemo(f.txParams.memo)
 	txBuilder.SetFeeAmount(fees)
 	txBuilder.SetGasLimit(f.txParams.gas)
-	txBuilder.SetFeeGranter(f.txParams.feeGranter.String())
-	txBuilder.SetFeePayer(f.txParams.feePayer.String())
+	err = txBuilder.SetFeeGranter(f.txParams.feeGranter)
+	if err != nil {
+		return nil, err
+	}
+	err = txBuilder.SetFeePayer(f.txParams.feePayer)
+	if err != nil {
+		return nil, err
+	}
 	txBuilder.SetTimeoutHeight(f.txParams.timeoutHeight)
 
 	if etx, ok := txBuilder.(ExtendedTxBuilder); ok {
@@ -266,7 +275,7 @@ func (f Factory) PrintUnsignedTx(msgs ...transaction.Msg) (string, error) {
 	if encoder == nil {
 		return "", errors.New("cannot print unsigned tx: tx json encoder is nil")
 	}
-	
+
 	tx, err := builder.GetTx()
 	if err != nil {
 		return "", err
@@ -329,9 +338,8 @@ func (f Factory) Sign(ctx context.Context, name string, txBuilder TxBuilder, ove
 	}
 
 	var err error
-	signMode := f.txParams.signMode
-	if signMode == apitxsigning.SignMode_SIGN_MODE_UNSPECIFIED {
-		signMode = f.txConfig.SignModeHandler().DefaultMode()
+	if f.txParams.signMode == apitxsigning.SignMode_SIGN_MODE_UNSPECIFIED {
+		f.txParams.signMode = f.txConfig.SignModeHandler().DefaultMode()
 	}
 
 	pubKey, err := f.keybase.GetPubKey(name)
@@ -349,17 +357,11 @@ func (f Factory) Sign(ctx context.Context, name string, txBuilder TxBuilder, ove
 		AccountNumber: f.txParams.accountNumber,
 		Sequence:      f.txParams.sequence,
 		PubKey: &anypb.Any{
-			TypeUrl: pubKey.Type(), // TODO: check correctness
+			TypeUrl: codectypes.MsgTypeURL(pubKey),
 			Value:   pubKey.Bytes(),
 		},
 		Address: addr,
 	}
-
-	tx, err := txBuilder.GetTx()
-	if err != nil {
-		return err
-	}
-	txWrap := TxWrapper{Tx: tx}
 
 	// For SIGN_MODE_DIRECT, calling SetSignatures calls setSignerInfos on
 	// TxBuilder under the hood, and SignerInfos is needed to be generated the
@@ -370,7 +372,7 @@ func (f Factory) Sign(ctx context.Context, name string, txBuilder TxBuilder, ove
 	// also doesn't affect its generated sign bytes, so for code's simplicity
 	// sake, we put it here.
 	sigData := SingleSignatureData{
-		SignMode:  signMode,
+		SignMode:  f.txParams.signMode,
 		Signature: nil,
 	}
 	sig := Signature{
@@ -381,6 +383,15 @@ func (f Factory) Sign(ctx context.Context, name string, txBuilder TxBuilder, ove
 
 	var prevSignatures []Signature
 	if !overwriteSig {
+		tx, err := txBuilder.GetTx()
+		if err != nil {
+			return err
+		}
+
+		txWrap := wrappedTx{
+			tx:  tx,
+			cdc: f.cdc,
+		}
 		prevSignatures, err = txWrap.GetSignatures()
 		if err != nil {
 			return err
@@ -398,6 +409,15 @@ func (f Factory) Sign(ctx context.Context, name string, txBuilder TxBuilder, ove
 		return err
 	}
 
+	tx, err := txBuilder.GetTx()
+	if err != nil {
+		return err
+	}
+	txWrap := wrappedTx{
+		tx:  tx,
+		cdc: f.cdc,
+	}
+
 	if err := checkMultipleSigners(txWrap); err != nil {
 		return err
 	}
@@ -408,14 +428,14 @@ func (f Factory) Sign(ctx context.Context, name string, txBuilder TxBuilder, ove
 	}
 
 	// Sign those bytes
-	sigBytes, err := f.keybase.Sign(name, bytesToSign, signMode)
+	sigBytes, err := f.keybase.Sign(name, bytesToSign, f.txParams.signMode)
 	if err != nil {
 		return err
 	}
 
 	// Construct the SignatureV2 struct
 	sigData = SingleSignatureData{
-		SignMode:  signMode,
+		SignMode:  f.SignMode(),
 		Signature: sigBytes,
 	}
 	sig = Signature{
@@ -460,7 +480,7 @@ func (f Factory) GetSignBytesAdapter(ctx context.Context, signerData signing.Sig
 	return f.txConfig.SignModeHandler().GetSignBytes(ctx, f.SignMode(), txSignerData, *txData)
 }
 
-func ValidateMemo(memo string) error {
+func validateMemo(memo string) error {
 	// Prevent simple inclusion of a valid mnemonic in the memo field
 	if memo != "" && bip39.IsMnemonicValid(strings.ToLower(memo)) {
 		return errors.New("cannot provide a valid mnemonic seed in the memo field")
@@ -582,13 +602,13 @@ func (f Factory) WithTimeoutHeight(height uint64) Factory {
 }
 
 // WithFeeGranter returns a copy of the Factory with an updated fee granter.
-func (f Factory) WithFeeGranter(fg sdk.AccAddress) Factory {
+func (f Factory) WithFeeGranter(fg string) Factory {
 	f.txParams.feeGranter = fg
 	return f
 }
 
 // WithFeePayer returns a copy of the Factory with an updated fee granter.
-func (f Factory) WithFeePayer(fp sdk.AccAddress) Factory {
+func (f Factory) WithFeePayer(fp string) Factory {
 	f.txParams.feePayer = fp
 	return f
 }

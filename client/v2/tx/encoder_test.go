@@ -13,7 +13,7 @@ func Test_txEncoder_txDecoder(t *testing.T) {
 		tx   *apitx.Tx
 	}{
 		{
-			name: "decode tx",
+			name: "encode and tx",
 			tx: &apitx.Tx{
 				Body: &apitx.TxBody{
 					Messages: []*anypb.Any{{
@@ -66,7 +66,7 @@ func Test_txJsonEncoder_txJsonDecoder(t *testing.T) {
 		tx   *apitx.Tx
 	}{
 		{
-			name: "json decode tx",
+			name: "json encode and decode tx",
 			tx: &apitx.Tx{
 				Body: &apitx.TxBody{
 					Messages:                    []*anypb.Any{},

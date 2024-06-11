@@ -153,5 +153,5 @@ func ProvideKeyring(clientCtx client.Context, addressCodec address.Codec) (clien
 		return nil, err
 	}
 
-	return keyring.NewAutoCLIKeyring(kb)
+	return keyring.NewAutoCLIKeyring(kb, addressCodec)
 }

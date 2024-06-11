@@ -1,9 +1,10 @@
 package tx
 
 import (
-	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
 	protov2 "google.golang.org/protobuf/proto"
+
+	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 )
 
 var (
@@ -23,8 +24,6 @@ type txApiEncoder func(tx *apitx.Tx) ([]byte, error)
 
 func txDecoder(txBytes []byte) (*apitx.Tx, error) {
 	var tx apitx.Tx
-	//err := protov2.Unmarshal(txBytes, &tx)
-	//return &tx, err
 	return &tx, protov2.Unmarshal(txBytes, &tx)
 }
 

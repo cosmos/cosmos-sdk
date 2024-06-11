@@ -31,6 +31,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+
+* [#20588](https://github.com/cosmos/cosmos-sdk/pull/20588) `x/distribution` now takes cometService in order to get consensus related information.
 * [#19868](https://github.com/cosmos/cosmos-sdk/pull/19868) Removes Accounts String method
     * `NewMsgSetWithdrawAddress` now takes strings as argument instead of `sdk.AccAddress`.
     * `NewGenesisState` now takes a string as argument instead of `sdk.ConsAddress`.

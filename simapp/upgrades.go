@@ -26,7 +26,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 		UpgradeName,
 		func(ctx context.Context, _ upgradetypes.Plan, fromVM appmodule.VersionMap) (appmodule.VersionMap, error) {
 			// sync accounts and auth module account number
-			err := app.syncAccountNumber(ctx)
+			err := app.AuthKeeper.MigrateAccountNumberUnsafe(ctx)
 			if err != nil {
 				return nil, err
 			}
@@ -55,15 +55,4 @@ func (app SimApp) RegisterUpgradeHandlers() {
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
-}
-
-func (app SimApp) syncAccountNumber(ctx context.Context) error {
-	currentAccNum, err := app.AuthKeeper.RemoveLegacyAccountNumber(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = app.AccountsKeeper.InitAccountNumberSeqUnsafe(ctx, currentAccNum)
-
-	return err
 }

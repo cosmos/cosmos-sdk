@@ -254,15 +254,10 @@ For modules that have migrated, verify you are checking against `collections.Err
 
 #### `x/accounts`
 
-Accounts's AccountNumber will be used as a global account number tracking replacing Auth legacy AccountNumber. Must set accounts's AccountNumber with auth's AccountNumber value in upgrade handler:
+Accounts's AccountNumber will be used as a global account number tracking replacing Auth legacy AccountNumber. Must set accounts's AccountNumber with auth's AccountNumber value in upgrade handler. This is done through auth keeper MigrateAccountNumber function.
 
 ```go
-currentAccNum, err := app.AuthKeeper.RemoveLegacyAccountNumber(ctx)
-if err != nil {
-	return nil, err
-}
-
-err = app.AccountsKeeper.InitAccountNumberSeqUnsafe(ctx, currentAccNum)
+err := app.AuthKeeper.MigrateAccountNumber(ctx)
 if err != nil {
 	return nil, err
 }

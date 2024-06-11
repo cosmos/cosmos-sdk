@@ -21,12 +21,15 @@ import (
 const (
 	TimestampSize = 8
 
+	batchBufferCount = 1000
+
 	StorePrefixTpl   = "s/k:%s/"
 	latestVersionKey = "s/latest"
 )
 
 var (
-	_ storage.Database = (*Database)(nil)
+	_ storage.Database         = (*Database)(nil)
+	_ store.UpgradableDatabase = (*Database)(nil)
 
 	defaultWriteOpts = grocksdb.NewDefaultWriteOptions()
 	defaultReadOpts  = grocksdb.NewDefaultReadOptions()
@@ -194,6 +197,45 @@ func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end 
 
 	itr := db.storage.NewIteratorCF(newTSReadOptions(version), db.cfHandle)
 	return newRocksDBIterator(itr, prefix, start, end, true), nil
+}
+
+// PruneStoreKey will do nothing for RocksDB, it will be pruned by compaction
+// when the version is pruned
+func (db *Database) PruneStoreKey(storeKey []byte) error {
+	return nil
+}
+
+func (db *Database) MigrateStoreKey(fromStoreKey, toStoreKey []byte) error {
+	latestVersion, err := db.GetLatestVersion()
+	if err != nil {
+		return fmt.Errorf("failed to get latest version: %w", err)
+	}
+
+	// need to copy all keys with the given fromStoreKey prefix to toStoreKey
+	readOpts := newTSReadOptions(latestVersion)
+	readOpts.SetIterStartTimestamp([]byte{0, 0, 0, 0, 0, 0, 0, 0})
+	itr := db.storage.NewIteratorCF(readOpts, db.cfHandle)
+	prefix := storePrefix(fromStoreKey)
+	ritr := newRocksDBIterator(itr, prefix, nil, nil, false)
+	defer ritr.Close()
+
+	batch := grocksdb.NewWriteBatch()
+	defer batch.Destroy()
+	for ; ritr.Valid(); ritr.Next() {
+		// replace the prefix
+		key := ritr.Key()
+		key = key[:len(key)-16] // remove the timestamp
+		prefixedKey := append(storePrefix(toStoreKey), key...)
+		batch.PutCFWithTS(db.cfHandle, prefixedKey, ritr.Timestamp(), ritr.Value())
+		if batch.Count() >= batchBufferCount {
+			if err := db.storage.Write(defaultWriteOpts, batch); err != nil {
+				return err
+			}
+			batch.Clear()
+		}
+	}
+
+	return db.storage.Write(defaultWriteOpts, batch)
 }
 
 // newTSReadOptions returns ReadOptions used in the RocksDB column family read.

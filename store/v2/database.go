@@ -25,6 +25,15 @@ type VersionedDatabase interface {
 	io.Closer
 }
 
+// UpgradableDatabase defines an API for a versioned database that allows storeKey
+// upgrades.
+type UpgradableDatabase interface {
+	// PruneStoreKey prunes all data associated with the given storeKey.
+	PruneStoreKey(storeKey []byte) error
+	// MigrateStoreKey upgrades the storeKey from the old to the new storeKey.
+	MigrateStoreKey(oldStoreKey, newStoreKey []byte) error
+}
+
 // Committer defines an API for committing state.
 type Committer interface {
 	// WriteChangeset writes the changeset to the commitment state.

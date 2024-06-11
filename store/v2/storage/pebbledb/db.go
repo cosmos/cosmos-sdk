@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/store/v2"
 	storeerrors "cosmossdk.io/store/v2/errors"
 	"cosmossdk.io/store/v2/storage"
+	"cosmossdk.io/store/v2/storage/util"
 )
 
 const (
@@ -21,6 +22,8 @@ const (
 	// PruneCommitBatchSize defines the size, in number of key/value pairs, to prune
 	// in a single batch.
 	PruneCommitBatchSize = 50
+	// batchBufferSize defines the maximum size of a batch before it is committed.
+	batchBufferSize = 100_000
 
 	StorePrefixTpl   = "s/k:%s/"         // s/k:<storeKey>
 	latestVersionKey = "s/_latest"       // NB: latestVersionKey key must be lexically smaller than StorePrefixTpl
@@ -28,7 +31,10 @@ const (
 	tombstoneVal     = "TOMBSTONE"
 )
 
-var _ storage.Database = (*Database)(nil)
+var (
+	_ storage.Database         = (*Database)(nil)
+	_ store.UpgradableDatabase = (*Database)(nil)
+)
 
 type Database struct {
 	storage *pebble.DB
@@ -252,7 +258,11 @@ func (db *Database) Prune(version uint64) error {
 		prevKey = keyBz
 		prevKeyVersion = keyVersion
 		prevKeyPrefixed = prefixedKey
-		prevPrefixedVal = slices.Clone(itr.Value())
+		value, err := itr.ValueAndErr()
+		if err != nil {
+			return err
+		}
+		prevPrefixedVal = slices.Clone(value)
 
 		itr.Next()
 	}
@@ -313,6 +323,62 @@ func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end 
 	}
 
 	return newPebbleDBIterator(itr, storePrefix(storeKey), start, end, version, db.earliestVersion, true), nil
+}
+
+func (db *Database) PruneStoreKey(storeKey []byte) error {
+	batch := db.storage.NewBatch()
+	defer batch.Close()
+
+	itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: storePrefix(storeKey), UpperBound: storePrefix(util.CopyIncr(storeKey))})
+	if err != nil {
+		return err
+	}
+	defer itr.Close()
+
+	for itr.First(); itr.Valid(); itr.Next() {
+		if err := batch.Delete(itr.Key(), nil); err != nil {
+			return err
+		}
+		if batch.Len() >= batchBufferSize {
+			if err := batch.Commit(&pebble.WriteOptions{Sync: db.sync}); err != nil {
+				return err
+			}
+			batch.Reset()
+		}
+	}
+
+	return batch.Commit(&pebble.WriteOptions{Sync: db.sync})
+}
+
+func (db *Database) MigrateStoreKey(fromStoreKey, toStoreKey []byte) error {
+	batch := db.storage.NewBatch()
+	defer batch.Close()
+
+	itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: storePrefix(fromStoreKey), UpperBound: storePrefix(util.CopyIncr(fromStoreKey))})
+	if err != nil {
+		return err
+	}
+	defer itr.Close()
+
+	for itr.First(); itr.Valid(); itr.Next() {
+		key := itr.Key()[len(storePrefix(fromStoreKey)):]
+		key = append(storePrefix(toStoreKey), key...)
+		value, err := itr.ValueAndErr()
+		if err != nil {
+			return err
+		}
+		if err := batch.Set(key, value, nil); err != nil {
+			return err
+		}
+		if batch.Len() >= batchBufferSize {
+			if err := batch.Commit(&pebble.WriteOptions{Sync: db.sync}); err != nil {
+				return err
+			}
+			batch.Reset()
+		}
+	}
+
+	return batch.Commit(&pebble.WriteOptions{Sync: db.sync})
 }
 
 func storePrefix(storeKey []byte) []byte {
@@ -395,5 +461,6 @@ func getMVCCSlice(db *pebble.DB, storeKey, key []byte, version uint64) ([]byte, 
 		return nil, fmt.Errorf("key version too large: %d", keyVersion)
 	}
 
-	return slices.Clone(itr.Value()), nil
+	value, err := itr.ValueAndErr()
+	return slices.Clone(value), err
 }

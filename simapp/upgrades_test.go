@@ -3,11 +3,12 @@ package simapp
 import (
 	"testing"
 
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/collections"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authtypes "cosmossdk.io/x/auth/types"
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	"github.com/stretchr/testify/require"
 )
 
 // TestSyncAccountNumber tests if accounts module account number is set correctly with the value get from auth.

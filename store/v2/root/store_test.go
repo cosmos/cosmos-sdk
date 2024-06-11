@@ -25,6 +25,8 @@ const (
 	testStoreKey3 = "test_store_key3"
 )
 
+var testStoreKeys = []string{testStoreKey, testStoreKey2, testStoreKey3}
+
 var (
 	testStoreKeyBytes  = []byte(testStoreKey)
 	testStoreKey2Bytes = []byte(testStoreKey2)
@@ -68,10 +70,14 @@ func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruneOptions)
 	s.Require().NoError(err)
 	ss := storage.NewStorageStore(sqliteDB, noopLog)
 
-	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
-	tree2 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
-	tree3 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
-	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree, testStoreKey2: tree2, testStoreKey3: tree3}, dbm.NewMemDB(), noopLog)
+	mdb := dbm.NewMemDB()
+	multiTrees := make(map[string]commitment.Tree)
+	for _, storeKey := range testStoreKeys {
+		prefixDB := dbm.NewPrefixDB(mdb, []byte(storeKey))
+		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, noopLog, iavl.DefaultConfig())
+	}
+
+	sc, err := commitment.NewCommitStore(multiTrees, dbm.NewMemDB(), noopLog)
 	s.Require().NoError(err)
 
 	pm := pruning.NewManager(sc, ss, config, config)
@@ -484,11 +490,9 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
-
 	ss := storage.NewStorageStore(sqliteDB, noopLog)
 
 	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
-
 	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, dbm.NewMemDB(), noopLog)
 	s.Require().NoError(err)
 
@@ -558,11 +562,14 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 
 	ss := storage.NewStorageStore(sqliteDB, noopLog)
 
-	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
-	tree2 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
-	tree3 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
+	mdb := dbm.NewMemDB()
+	multiTrees := make(map[string]commitment.Tree)
+	for _, storeKey := range testStoreKeys {
+		prefixDB := dbm.NewPrefixDB(mdb, []byte(storeKey))
+		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, noopLog, iavl.DefaultConfig())
+	}
 
-	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree, testStoreKey2: tree2, testStoreKey3: tree3}, dbm.NewMemDB(), noopLog)
+	sc, err := commitment.NewCommitStore(multiTrees, dbm.NewMemDB(), noopLog)
 	s.Require().NoError(err)
 
 	pm := pruning.NewManager(sc, ss, nil, nil)

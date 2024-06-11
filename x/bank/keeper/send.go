@@ -157,22 +157,49 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		return err
 	}
 
-	outAddresses := make([]sdk.AccAddress, len(outputs))
+	outAddresses := make([][]sdk.AccAddress, len(outputs))
+	isSuccess := false
+
 	for i, out := range outputs {
-		outAddress, err := k.ak.AddressCodec().StringToBytes(out.Address)
+		var (
+			outAddress, newOutAddress sdk.AccAddress
+		)
+		outAddress, err = k.ak.AddressCodec().StringToBytes(out.Address)
 		if err != nil {
 			return err
 		}
+		outAddresses[i] = make([]sdk.AccAddress, len(out.Coins)) // out address per denom
 
-		outAddresses[i], err = k.sendRestriction.apply(ctx, inAddress, outAddress, out.Coins)
-		if err != nil {
-			return err
+		for j, coin := range out.Coins {
+			newOutAddress, err = k.sendRestriction.apply(ctx, inAddress, outAddress, coin)
+			if err != nil {
+				continue
+			}
+
+			outAddresses[i][j] = newOutAddress
+
+			isSuccess = true
 		}
 	}
 
-	err = k.subUnlockedCoins(ctx, inAddress, input.Coins, true)
-	if err != nil {
-		return err
+	if !isSuccess {
+		return err // returning last err from sendRestrictionFn (does it matter which one?)
+	}
+
+	for i, out := range outputs {
+		for j, coin := range out.Coins {
+			// skip restricted coin
+			if outAddresses[i][j] == nil {
+				continue
+			}
+
+			toAddr := outAddresses[i][j]
+
+			err := k.sendCoin(ctx, inAddress, toAddr, coin)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -182,31 +209,6 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 			sdk.NewAttribute(types.AttributeKeySender, input.Address),
 		),
 	)
-
-	for i, out := range outputs {
-		if err := k.addCoins(ctx, outAddresses[i], out.Coins); err != nil {
-			return err
-		}
-
-		sdkCtx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeTransfer,
-				sdk.NewAttribute(types.AttributeKeyRecipient, outAddresses[i].String()),
-				sdk.NewAttribute(types.AttributeKeySender, input.Address),
-				sdk.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
-			),
-		)
-
-		// Create account if recipient does not exist.
-		//
-		// NOTE: This should ultimately be removed in favor a more flexible approach
-		// such as delegated fee messages.
-		accExists := k.ak.HasAccount(ctx, outAddresses[i])
-		if !accExists {
-			defer telemetry.IncrCounter(1, "new", "account")
-			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, outAddresses[i]))
-		}
-	}
 
 	return nil
 }
@@ -220,13 +222,11 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 
 	var (
 		err         error
-		isSuccess   bool // if at least one send succeedes, we proceed
-		toAddresses = make([]sdk.AccAddress, len(amt))
+		isSuccess   bool                               // if at least one send succeedes, we proceed
+		toAddresses = make([]sdk.AccAddress, len(amt)) // out address per denom
 	)
 	// bech32 encoding is expensive! Only do it once for fromAddr
 	fromAddrString := fromAddr.String()
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	events := sdk.Events{}
 
 	for i, coin := range amt {
 		toAddr, err = k.sendRestriction.apply(ctx, fromAddr, toAddr, coin)
@@ -250,42 +250,53 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 			continue
 		}
 
-		coinAmt := sdk.NewCoins(coin)
 		toAddr = toAddresses[i]
 
-		err = k.subUnlockedCoins(ctx, fromAddr, coinAmt, true) // only sub this coin
+		err := k.sendCoin(ctx, fromAddr, toAddr, coin)
 		if err != nil {
 			return err
 		}
-
-		err = k.addCoins(ctx, toAddr, coinAmt)
-		if err != nil {
-			return err
-		}
-
-		// Create account if recipient does not exist.
-		//
-		// NOTE: This should ultimately be removed in favor a more flexible approach
-		// such as delegated fee messages.
-		accExists := k.ak.HasAccount(ctx, toAddr)
-		if !accExists {
-			defer telemetry.IncrCounter(1, "new", "account")
-			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
-		}
-
-		events = events.AppendEvent(sdk.NewEvent(
-			types.EventTypeTransfer,
-			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
-			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, coinAmt.String()),
-		))
 	}
-	events = events.AppendEvent(sdk.NewEvent(
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvent(sdk.NewEvent(
 		sdk.EventTypeMessage,
 		sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
 	))
-	sdkCtx.EventManager().EmitEvents(events)
 
+	return nil
+}
+
+func (k BaseSendKeeper) sendCoin(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coin) error {
+	err := k.subUnlockedCoins(ctx, fromAddr, sdk.NewCoins(amt), true) // only sub this coin
+	if err != nil {
+		return err
+	}
+
+	err = k.addCoins(ctx, toAddr, sdk.NewCoins(amt))
+	if err != nil {
+		return err
+	}
+
+	// Create account if recipient does not exist.
+	//
+	// NOTE: This should ultimately be removed in favor a more flexible approach
+	// such as delegated fee messages.
+	accExists := k.ak.HasAccount(ctx, toAddr)
+	if !accExists {
+		defer telemetry.IncrCounter(1, "new", "account")
+		k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeTransfer,
+			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
+			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+		),
+	)
 	return nil
 }
 

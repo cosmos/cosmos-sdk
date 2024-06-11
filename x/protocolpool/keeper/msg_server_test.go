@@ -810,6 +810,10 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 	recipient2 := sdk.AccAddress([]byte("recipientAddr2___________________"))
 	recipient2StrAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(recipient2)
 	suite.Require().NoError(err)
+	recipient3 := sdk.AccAddress([]byte("recipientAddr3___________________"))
+	recipient3StrAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(recipient3)
+	suite.Require().NoError(err)
+
 	testCases := map[string]struct {
 		preRun         func()
 		recipientAddr  sdk.AccAddress
@@ -908,20 +912,26 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				oneMonthInSeconds := int64(30 * 24 * 60 * 60) // Approximate number of seconds in 1 month
 				expiry := suite.environment.HeaderService.HeaderInfo(suite.ctx).Time.Add(time.Duration(oneMonthInSeconds) * time.Second)
 				cf := types.ContinuousFund{
-					Recipient:  recipientStrAddr,
+					Recipient:  recipient3StrAddr,
 					Percentage: percentage,
 					Expiry:     &expiry,
 				}
-				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipientAddr, cf)
+				suite.mockWithdrawContinuousFund()
+				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient3, cf)
+				suite.Require().NoError(err)
+				err = suite.poolKeeper.RecipientFundPercentage.Set(suite.ctx, recipient3, math.ZeroInt())
+				suite.Require().NoError(err)
+				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient3, math.ZeroInt())
 				suite.Require().NoError(err)
 			},
-			recipientAddr: recipientAddr,
+			recipientAddr: recipient3,
 			expErr:        false,
 			postRun: func() {
-				_, err := suite.poolKeeper.ContinuousFund.Get(suite.ctx, recipientAddr)
+				_, err := suite.poolKeeper.ContinuousFund.Get(suite.ctx, recipient3)
 				suite.Require().Error(err)
 				suite.Require().ErrorIs(err, collections.ErrNotFound)
 			},
+			withdrawnFunds: sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0)),
 		},
 	}
 
@@ -943,7 +953,13 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				suite.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				suite.Require().NoError(err)
-				suite.Require().Equal(resp.WithdrawnAllocatedFund, tc.withdrawnFunds)
+				suite.Require().Equal(tc.withdrawnFunds, resp.WithdrawnAllocatedFund)
+				_, err := suite.poolKeeper.RecipientFundPercentage.Get(suite.ctx, tc.recipientAddr)
+				suite.Require().Error(err)
+				_, err = suite.poolKeeper.ContinuousFund.Get(suite.ctx, tc.recipientAddr)
+				suite.Require().Error(err)
+				_, err = suite.poolKeeper.RecipientFundDistribution.Get(suite.ctx, tc.recipientAddr)
+				suite.Require().Error(err)
 			}
 			if tc.postRun != nil {
 				tc.postRun()

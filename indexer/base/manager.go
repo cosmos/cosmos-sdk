@@ -181,16 +181,16 @@ func (p *Manager) commit() error {
 	return nil
 }
 
-func (p *Manager) onKVPair(storeKey string, key, value []byte, delete bool) error {
+func (p *Manager) onKVPair(moduleName string, key, value []byte, delete bool) error {
 	if p.logger != nil {
-		p.logger.Debug("kv pair", "storeKey", storeKey, "delete", delete)
+		p.logger.Debug("kv pair", "moduleName", moduleName, "delete", delete)
 	}
 
 	for _, listener := range p.listeners {
 		if listener.OnKVPair == nil {
 			continue
 		}
-		if err := listener.OnKVPair(storeKey, key, value, delete); err != nil {
+		if err := listener.OnKVPair(moduleName, key, value, delete); err != nil {
 			return err
 		}
 	}
@@ -199,8 +199,22 @@ func (p *Manager) onKVPair(storeKey string, key, value []byte, delete bool) erro
 		return nil
 	}
 
-	decoder, ok := p.decoders[storeKey]
+	decoder, ok := p.decoders[moduleName]
 	if !ok {
+		// check for decoder when first seeing a module
+		md, found, err := p.decoderResolver.LookupDecoder(moduleName)
+		if err != nil {
+			return err
+		}
+		if found {
+			p.decoders[moduleName] = md.KVDecoder
+			decoder = md.KVDecoder
+		} else {
+			p.decoders[moduleName] = nil
+		}
+	}
+
+	if decoder == nil {
 		return nil
 	}
 
@@ -209,12 +223,12 @@ func (p *Manager) onKVPair(storeKey string, key, value []byte, delete bool) erro
 		return err
 	}
 	if !handled {
-		p.logger.Info("not decoded", "storeKey", storeKey, "tableName", update.TableName)
+		p.logger.Info("not decoded", "moduleName", moduleName, "tableName", update.TableName)
 		return nil
 	}
 
 	p.logger.Info("decoded",
-		"storeKey", storeKey,
+		"moduleName", moduleName,
 		"tableName", update.TableName,
 		"key", update.Key,
 		"values", update.Value,
@@ -225,7 +239,7 @@ func (p *Manager) onKVPair(storeKey string, key, value []byte, delete bool) erro
 		if indexer.OnEntityUpdate == nil {
 			continue
 		}
-		if err := indexer.OnEntityUpdate(storeKey, update); err != nil {
+		if err := indexer.OnEntityUpdate(moduleName, update); err != nil {
 			return err
 		}
 	}

@@ -6,26 +6,26 @@ import (
 	"github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
 )
 
 func TestGenesis(t *testing.T) {
+	const testAccountType = "test"
 	k, ctx := newKeeper(t, func(deps implementation.Dependencies) (string, implementation.Account, error) {
 		acc, err := NewTestAccount(deps)
-		return "test", acc, err
+		return testAccountType, acc, err
 	})
 	// we init two accounts of the same type
 
 	// we set counter to 10
-	_, addr1, err := k.Init(ctx, "test", []byte("sender"), &types.Empty{}, nil)
+	_, addr1, err := k.Init(ctx, testAccountType, []byte("sender"), &types.Empty{}, nil)
 	require.NoError(t, err)
 	_, err = k.Execute(ctx, addr1, []byte("sender"), &types.UInt64Value{Value: 10}, nil)
 	require.NoError(t, err)
 
 	// we set counter to 20
-	_, addr2, err := k.Init(ctx, "test", []byte("sender"), &types.Empty{}, nil)
+	_, addr2, err := k.Init(ctx, testAccountType, []byte("sender"), &types.Empty{}, nil)
 	require.NoError(t, err)
 	_, err = k.Execute(ctx, addr2, []byte("sender"), &types.UInt64Value{Value: 20}, nil)
 	require.NoError(t, err)
@@ -35,7 +35,10 @@ func TestGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	// reset state
-	_, ctx = colltest.MockStore()
+	k, ctx = newKeeper(t, func(deps implementation.Dependencies) (string, implementation.Account, error) {
+		acc, err := NewTestAccount(deps)
+		return testAccountType, acc, err
+	})
 	err = k.ImportState(ctx, state)
 	require.NoError(t, err)
 

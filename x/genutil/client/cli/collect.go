@@ -57,7 +57,7 @@ func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, validator ty
 
 			toPrint.AppMessage = appMessage
 
-			return displayInfo(toPrint)
+			return displayInfo(cmd.ErrOrStderr(), toPrint)
 		},
 	}
 	cmd.Flags().String(FlagConsensusKeyAlgo, "ed25519", "algorithm to use for the consensus key")

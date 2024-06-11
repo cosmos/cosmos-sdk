@@ -54,7 +54,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		sc        *commitment.CommitStore
 		err       error
 		ensureDir = func(dir string) error {
-			if err := os.MkdirAll(dir, 0x0755); err != nil {
+			if err := os.MkdirAll(dir, 0o0755); err != nil {
 				return fmt.Errorf("failed to create directory %s: %w", dir, err)
 			}
 			return nil

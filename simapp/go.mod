@@ -35,7 +35,7 @@ require (
 	github.com/cosmos/cosmos-db v1.0.2
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.51.0
-	github.com/cosmos/gogoproto v1.4.12
+	github.com/cosmos/gogoproto v1.5.0
 	github.com/golang/mock v1.6.0
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
@@ -45,7 +45,7 @@ require (
 	google.golang.org/protobuf v1.34.1
 )
 
-require github.com/cometbft/cometbft/api v1.0.0-alpha.2.0.20240530055211-ae27f7eb3c08
+require github.com/cometbft/cometbft/api v1.0.0-rc.1
 
 require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 
@@ -58,6 +58,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	cloud.google.com/go/iam v1.1.7 // indirect
 	cloud.google.com/go/storage v1.40.0 // indirect
+	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -241,6 +242,7 @@ replace (
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/collections => ../collections
 	cosmossdk.io/core => ../core
+	cosmossdk.io/core/testing => ../core/testing
 	cosmossdk.io/depinject => ../depinject
 	cosmossdk.io/log => ../log
 	cosmossdk.io/store => ../store

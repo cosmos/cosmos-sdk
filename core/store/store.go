@@ -133,7 +133,7 @@ var _ KVStore = (Writer)(nil)
 
 // ReaderMap represents a readonly view over all the accounts state.
 type ReaderMap interface {
-	// ReaderMap must return the state for the provided actor.
+	// GetReader must return the state for the provided actor.
 	// Storage implements might treat this as a prefix store over an actor.
 	// Prefix safety is on the implementer.
 	GetReader(actor []byte) (Reader, error)
@@ -142,7 +142,7 @@ type ReaderMap interface {
 // WriterMap represents a writable actor state.
 type WriterMap interface {
 	ReaderMap
-	// WriterMap must the return a WritableState
+	// GetWriter must the return a WritableState
 	// for the provided actor namespace.
 	GetWriter(actor []byte) (Writer, error)
 	// ApplyStateChanges applies all the state changes

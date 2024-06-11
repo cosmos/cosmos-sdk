@@ -199,12 +199,6 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 				// execute all messages
 				for idx, msg = range messages {
 					if _, err := safeExecuteHandler(ctx, msg, k.MsgRouterService); err != nil {
-						// `idx` and `err` are populated with the msg index and error.
-						proposal.Status = v1.StatusFailed
-						proposal.FailedReason = err.Error()
-						tagValue = types.AttributeValueProposalFailed
-						logMsg = fmt.Sprintf("passed, but msg %d (%s) failed on execution: %s", idx, sdk.MsgTypeURL(msg), err)
-
 						return err
 					}
 				}
@@ -223,6 +217,12 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 					tagValue = types.AttributeValueProposalFailed
 					logMsg = "passed proposal failed due to out of gas"
 				}
+				// `idx` and `err` are populated with the msg index and error.
+				proposal.Status = v1.StatusFailed
+				proposal.FailedReason = err.Error()
+				tagValue = types.AttributeValueProposalFailed
+				logMsg = fmt.Sprintf("passed, but msg %d (%s) failed on execution: %s", idx, sdk.MsgTypeURL(msg), err)
+
 				break // We do not anything with the error. Returning an error halts the chain, and proposal struct is already updated.
 			}
 		case !burnDeposits && (proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED ||

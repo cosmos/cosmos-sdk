@@ -244,6 +244,30 @@ func (app *BaseApp) SetAfterCommitter(afterCommitter sdk.AfterCommitter) {
 	app.afterCommitter = afterCommitter
 }
 
+func (app *BaseApp) SetCreateOracleResultTx(createOracleResultTx sdk.CreateOracleResultTxHandler) {
+	if app.sealed {
+		panic("SetCreateOracleResultTx() on sealed BaseApp")
+	}
+
+	app.createOracleResultTx = createOracleResultTx
+}
+
+func (app *BaseApp) SetFetchOracleVotes(fetchOracleVotes sdk.FetchOracleVotesHandler) {
+	if app.sealed {
+		panic("SetFetchOracleVotes() on sealed BaseApp")
+	}
+
+	app.fetchOracleVotes = fetchOracleVotes
+}
+
+func (app *BaseApp) SetValidateOracleVotes(validateOracleVotes sdk.ValidateOracleVotesHandler) {
+	if app.sealed {
+		panic("SetValidateOracleVotes() on sealed BaseApp")
+	}
+
+	app.validateOracleVotes = validateOracleVotes
+}
+
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	if app.sealed {
 		panic("SetAnteHandler() on sealed BaseApp")

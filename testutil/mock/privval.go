@@ -2,6 +2,7 @@ package mock
 
 import (
 	"github.com/cometbft/cometbft/crypto"
+	oracleproto "github.com/cometbft/cometbft/proto/tendermint/oracle"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 
@@ -46,5 +47,16 @@ func (pv PV) SignProposal(chainID string, proposal *cmtproto.Proposal) error {
 		return err
 	}
 	proposal.Signature = sig
+	return nil
+}
+
+// SignOracleVote implements PrivValidator interface
+func (pv PV) SignOracleVote(_ string, oracleVote *oracleproto.GossipedVotes) error {
+	signBytes := cmttypes.OracleVoteSignBytes(oracleVote)
+	sig, err := pv.PrivKey.Sign(signBytes)
+	if err != nil {
+		return err
+	}
+	oracleVote.Signature = sig
 	return nil
 }

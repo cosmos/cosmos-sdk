@@ -34,4 +34,9 @@ type ABCI interface {
 	OfferSnapshot(*abci.RequestOfferSnapshot) (*abci.ResponseOfferSnapshot, error)                // Offer a snapshot to the application
 	LoadSnapshotChunk(*abci.RequestLoadSnapshotChunk) (*abci.ResponseLoadSnapshotChunk, error)    // Load a snapshot chunk
 	ApplySnapshotChunk(*abci.RequestApplySnapshotChunk) (*abci.ResponseApplySnapshotChunk, error) // Apply a shapshot chunk
+
+	// Hooks
+	CreateOracleResultTx(*abci.RequestCreateOracleResultTx) (*abci.ResponseCreateOracleResultTx, error)
+	FetchOracleVotes(*abci.RequestFetchOracleVotes) (*abci.ResponseFetchOracleVotes, error)
+	ValidateOracleVotes(*abci.RequestValidateOracleVotes) (*abci.ResponseValidateOracleVotes, error)
 }

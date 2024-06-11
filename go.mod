@@ -14,7 +14,7 @@ require (
 	cosmossdk.io/x/tx v0.13.1
 	github.com/99designs/keyring v1.2.1
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816
-	github.com/bits-and-blooms/bitset v1.8.0
+	github.com/bits-and-blooms/bitset v1.10.0
 	github.com/chzyer/readline v1.5.1
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cockroachdb/errors v1.11.1
@@ -79,7 +79,7 @@ require (
 	github.com/cockroachdb/pebble v1.1.0 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cometbft/cometbft-db v0.9.1 // indirect
+	github.com/cometbft/cometbft-db v0.10.0 // indirect
 	github.com/cosmos/iavl v1.0.1 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
@@ -102,7 +102,7 @@ require (
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/glog v1.2.0 // indirect
-	github.com/golang/snappy v0.0.4 // indirect
+	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
@@ -141,6 +141,7 @@ require (
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
+	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
@@ -172,6 +173,7 @@ replace (
 	// cosmossdk.io/math => github.com/Switcheo/cosmos-sdk/math v0.0.0-20231002062306-8360748679d2
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
+	github.com/cometbft/cometbft => github.com/Switcheo/cometbft v0.38.6-0.20240610155832-d947aabd1250
 	// github.com/cosmos/iavl => github.com/Switcheo/iavl v0.20.1-0.20230907092650-a292b5c6f6ae
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134

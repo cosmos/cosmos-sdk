@@ -44,6 +44,18 @@ func (w cometABCIWrapper) FinalizeBlock(_ context.Context, req *abci.RequestFina
 	return w.app.FinalizeBlock(req)
 }
 
+func (w cometABCIWrapper) CreateOracleResultTx(_ context.Context, req *abci.RequestCreateOracleResultTx) (*abci.ResponseCreateOracleResultTx, error) {
+	return w.app.CreateOracleResultTx(req)
+}
+
+func (w cometABCIWrapper) FetchOracleVotes(_ context.Context, req *abci.RequestFetchOracleVotes) (*abci.ResponseFetchOracleVotes, error) {
+	return w.app.FetchOracleVotes(req)
+}
+
+func (w cometABCIWrapper) ValidateOracleVotes(_ context.Context, req *abci.RequestValidateOracleVotes) (*abci.ResponseValidateOracleVotes, error) {
+	return w.app.ValidateOracleVotes(req)
+}
+
 func (w cometABCIWrapper) ExtendVote(ctx context.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
 	return w.app.ExtendVote(ctx, req)
 }

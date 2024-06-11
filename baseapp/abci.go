@@ -517,6 +517,20 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		}
 	}()
 
+	// validate injected oracle votes, reject block proposal if validation fails
+	if len(req.Txs) > 0 {
+		res, err := app.ValidateOracleVotes(&abci.RequestValidateOracleVotes{OracleTx: req.Txs[0]})
+
+		if err != nil && res.Status == abci.ResponseValidateOracleVotes_ABSENT {
+			// oracleTx is not present, continue normal processProposal flow
+			app.logger.Error("error validating oracle votes:", "err", err)
+		} else if err != nil && res.Status == abci.ResponseValidateOracleVotes_PRESENT {
+			// oracleTx is present but it is invalid, reject block proposal
+			app.logger.Error("error validating oracle votes:", "err", err)
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
+	}
+
 	resp, err = app.processProposal(app.processProposalState.Context(), req)
 	if err != nil {
 		app.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
@@ -975,6 +989,27 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	app.snapshotManager.SnapshotIfApplicable(header.Height)
 
 	return resp, nil
+}
+
+func (app *BaseApp) CreateOracleResultTx(req *abci.RequestCreateOracleResultTx) (*abci.ResponseCreateOracleResultTx, error) {
+	if app.createOracleResultTx != nil && app.prepareProposalState != nil {
+		return app.createOracleResultTx(app.prepareProposalState.Context(), req)
+	}
+	return &abci.ResponseCreateOracleResultTx{}, fmt.Errorf("createOracleResultTx hook or prepareProposalState is not set")
+}
+
+func (app *BaseApp) FetchOracleVotes(req *abci.RequestFetchOracleVotes) (*abci.ResponseFetchOracleVotes, error) {
+	if app.fetchOracleVotes != nil {
+		return app.fetchOracleVotes(context.Background(), req)
+	}
+	return &abci.ResponseFetchOracleVotes{}, fmt.Errorf("fetchOracleVotes hook or prepareProposalState is not set")
+}
+
+func (app *BaseApp) ValidateOracleVotes(req *abci.RequestValidateOracleVotes) (*abci.ResponseValidateOracleVotes, error) {
+	if app.validateOracleVotes != nil && app.processProposalState != nil {
+		return app.validateOracleVotes(app.processProposalState.Context(), req)
+	}
+	return &abci.ResponseValidateOracleVotes{}, fmt.Errorf("validateOracleVotes hook or processProposalState is not set")
 }
 
 // workingHash gets the apphash that will be finalized in commit.

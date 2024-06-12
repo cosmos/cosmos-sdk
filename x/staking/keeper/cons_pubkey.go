@@ -34,7 +34,19 @@ func (k Keeper) setConsPubKeyRotationHistory(
 		Height:          height,
 		Fee:             fee,
 	}
-	err := k.RotationHistory.Set(ctx, collections.Join(valAddr.Bytes(), height), history)
+
+	// check if there's another key rotation for this same key in the same block
+	allRotations, err := k.GetBlockConsPubKeyRotationHistory(ctx)
+	if err != nil {
+		return err
+	}
+	for _, r := range allRotations {
+		if r.NewConsPubkey.Compare(newPubKey) == 0 {
+			return types.ErrConsensusPubKeyAlreadyUsedForValidator
+		}
+	}
+
+	err = k.RotationHistory.Set(ctx, collections.Join(valAddr.Bytes(), height), history)
 	if err != nil {
 		return err
 	}

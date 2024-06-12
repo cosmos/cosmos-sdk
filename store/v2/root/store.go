@@ -72,7 +72,7 @@ func New(
 ) (store.RootStore, error) {
 	return &Store{
 		logger:           logger.With("module", "root_store"),
-		initialVersion:   0,
+		initialVersion:   1,
 		stateStorage:     ss,
 		stateCommitment:  sc,
 		pruningManager:   pm,
@@ -388,8 +388,13 @@ func (s *Store) writeSC(cs *corestore.Changeset) error {
 		return fmt.Errorf("failed to write batch to SC store: %w", err)
 	}
 
+	isEmpty, err := s.stateCommitment.IsEmpty()
+	if err != nil {
+		return fmt.Errorf("failed to check if SC store is empty: %w", err)
+	}
+
 	var previousHeight, version uint64
-	if s.lastCommitInfo.GetVersion() == 0 && s.initialVersion > 0 {
+	if isEmpty {
 		// This case means that no commit has been made in the store, we
 		// start from initialVersion.
 		version = s.initialVersion
@@ -399,7 +404,7 @@ func (s *Store) writeSC(cs *corestore.Changeset) error {
 		// 1. There was already a previous commit in the store, in which case we
 		// 		increment the version from there.
 		// 2. There was no previous commit, and initial version was not set, in which
-		// 		case we start at version 0.
+		// 		case we start at version 1.
 		previousHeight = s.lastCommitInfo.GetVersion()
 		if s.lastCommitInfo == nil {
 			version = 0

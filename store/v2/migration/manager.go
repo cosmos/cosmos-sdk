@@ -197,7 +197,6 @@ func (m *Manager) writeChangeset() error {
 		if err != nil {
 			return err
 		}
-		batch.Close()
 	}
 
 	return nil

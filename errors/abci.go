@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 )
@@ -34,7 +35,8 @@ func ABCIInfo(err error, debug bool) (codespace string, code uint32, log string)
 		encode = debugErrEncoder
 	}
 
-	return abciCodespace(err), abciCode(err), encode(err)
+	code, space := abciInfo(err)
+	return space, code, encode(err)
 }
 
 // The debugErrEncoder encodes the error with a stacktrace.
@@ -46,54 +48,25 @@ func defaultErrEncoder(err error) string {
 	return err.Error()
 }
 
-type coder interface {
-	ABCICode() uint32
-}
-
-// abciCode tests if given error contains an ABCI code and returns the value of
+// abciInfo tests if given error contains an ABCI code and returns the value of
 // it if available. This function is testing for the causer interface as well
 // and unwraps the error.
-func abciCode(err error) uint32 {
+func abciInfo(err error) (code uint32, codespace string) {
 	if errIsNil(err) {
-		return SuccessABCICode
+		return SuccessABCICode, ""
 	}
 
-	for {
-		if c, ok := err.(coder); ok {
-			return c.ABCICode()
-		}
+	var customErr *Error
 
-		if c, ok := err.(causer); ok {
-			err = c.Cause()
-		} else {
-			return internalABCICode
-		}
-	}
-}
-
-type codespacer interface {
-	Codespace() string
-}
-
-// abciCodespace tests if given error contains a codespace and returns the value of
-// it if available. This function is testing for the causer interface as well
-// and unwraps the error.
-func abciCodespace(err error) string {
-	if errIsNil(err) {
-		return ""
+	if errors.As(err, &customErr) {
+		code = customErr.ABCICode()
+		codespace = customErr.Codespace()
+	} else {
+		code = internalABCICode
+		codespace = internalABCICodespace
 	}
 
-	for {
-		if c, ok := err.(codespacer); ok {
-			return c.Codespace()
-		}
-
-		if c, ok := err.(causer); ok {
-			err = c.Cause()
-		} else {
-			return internalABCICodespace
-		}
-	}
+	return
 }
 
 // errIsNil returns true if value represented by the given error is nil.

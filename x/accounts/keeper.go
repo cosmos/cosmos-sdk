@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 
-	v1 "cosmossdk.io/x/accounts/v1"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections"
@@ -16,6 +15,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
+	v1 "cosmossdk.io/x/accounts/v1"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

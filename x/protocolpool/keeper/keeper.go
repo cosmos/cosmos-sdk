@@ -270,6 +270,7 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistrib
 		if err != nil {
 			return true, err
 		}
+		totalPercentageToBeDistributed = totalPercentageToBeDistributed.Add(value)
 		recipientFundList = append(recipientFundList, recipientFund{
 			RecipientAddr: addr,
 			Percentage:    value,

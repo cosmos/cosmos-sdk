@@ -99,7 +99,7 @@ func TestGenesis(t *testing.T) {
 	currentAccNum, err = k.AccountNumber.Peek(ctx)
 	require.NoError(t, err)
 	// AccountNumber should be 10 + 1
-	// (one is the sequence offset)
+	// (one is the genesis account being added through init msg)
 	require.Equal(t, uint64(11), currentAccNum)
 }
 

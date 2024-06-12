@@ -227,7 +227,7 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 			commitID      proof.CommitID
 			latestVersion = tree.GetLatestVersion()
 		)
-		if latestVersion != 0 && latestVersion >= version+1 {
+		if latestVersion != 0 && latestVersion > version {
 			commitID.Version = version
 			commitID.Hash = tree.Hash()
 		} else {

@@ -72,7 +72,7 @@ func New(
 ) (store.RootStore, error) {
 	return &Store{
 		logger:           logger.With("module", "root_store"),
-		initialVersion:   1,
+		initialVersion:   0,
 		stateStorage:     ss,
 		stateCommitment:  sc,
 		pruningManager:   pm,

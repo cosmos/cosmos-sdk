@@ -3,7 +3,7 @@ package codec
 import (
 	"github.com/cometbft/cometbft/crypto/sr25519"
 
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/legacy" //nolint:staticcheck
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"

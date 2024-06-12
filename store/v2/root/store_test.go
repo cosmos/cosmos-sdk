@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	dbm "cosmossdk.io/store/v2/db"
+	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/pruning"
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/sqlite"
@@ -674,4 +675,35 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 	result, err = reader.Get([]byte(fmt.Sprintf("key%03d", 4)))
 	s.Require().NoError(err)
 	s.Require().Equal([]byte(fmt.Sprintf("val%03d_%03d", 4, 3)), result, "value should be equal")
+}
+
+func (s *RootStoreTestSuite) TestHashStableWithEmptyCommit() {
+	err := s.rootStore.LoadLatestVersion()
+	s.Require().Nil(err)
+
+	commitID := proof.CommitID{}
+	lastCommitID, err := s.rootStore.LastCommitID()
+	s.Require().Nil(err)
+
+	s.Require().Equal(commitID, lastCommitID)
+
+	cs := corestore.NewChangeset()
+	cs.Add(testStoreKeyBytes, []byte("key"), []byte("val"), false)
+
+	cHash, err := s.rootStore.Commit(cs)
+	s.Require().Nil(err)
+	s.Require().NotNil(cHash)
+	latestVersion, err := s.rootStore.GetLatestVersion()
+	hash := cHash
+	s.Require().Nil(err)
+	s.Require().Equal(uint64(1), latestVersion)
+
+	// make an empty commit, it should update version, but not affect hash
+	cHash, err = s.rootStore.Commit(corestore.NewChangeset())
+	s.Require().Nil(err)
+	s.Require().NotNil(cHash)
+	latestVersion, err = s.rootStore.GetLatestVersion()
+	s.Require().Nil(err)
+	s.Require().Equal(uint64(2), latestVersion)
+	s.Require().Equal(hash, cHash)
 }

@@ -453,7 +453,7 @@ type MsgServer interface {
 	// TripCircuitBreaker pauses processing of Msg's in the state machine.
 	TripCircuitBreaker(context.Context, *MsgTripCircuitBreaker) (*MsgTripCircuitBreakerResponse, error)
 	// ResetCircuitBreaker resumes processing of Msg's in the state machine that
-	// have been been paused using TripCircuitBreaker.
+	// have been paused using TripCircuitBreaker.
 	ResetCircuitBreaker(context.Context, *MsgResetCircuitBreaker) (*MsgResetCircuitBreakerResponse, error)
 }
 

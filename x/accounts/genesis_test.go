@@ -84,6 +84,23 @@ func TestGenesis(t *testing.T) {
 	// AccountNumber should be set to the highest account number in the genesis state + 2
 	// (one is the sequence offset, the other is the genesis account being added through init msg)
 	require.Equal(t, state.Accounts[0].AccountNumber+2, currentAccNum)
+
+	// Test when init with empty accounts list, account number is not modified
+	// make genesis state accounts empty
+	state.Accounts = []*v1.GenesisAccount{}
+
+	// set another value for account number
+	err = k.AccountNumber.Set(ctx, uint64(10))
+	require.NoError(t, err)
+
+	err = k.ImportState(ctx, state)
+	require.NoError(t, err)
+
+	currentAccNum, err = k.AccountNumber.Peek(ctx)
+	require.NoError(t, err)
+	// AccountNumber should be 10 + 1
+	// (one is the genesis account being added through init msg)
+	require.Equal(t, uint64(11), currentAccNum)
 }
 
 func TestImportAccountError(t *testing.T) {

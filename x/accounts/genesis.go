@@ -74,7 +74,7 @@ func (k Keeper) ImportState(ctx context.Context, genState *v1.GenesisState) erro
 
 	// we set the latest account number only if there were any genesis accounts, otherwise
 	// we leave it unset.
-	if genState.Accounts != nil {
+	if len(genState.Accounts) != 0 {
 		// due to sequence semantics, we store the next account number.
 		err = k.AccountNumber.Set(ctx, lastAccountNumber+1)
 		if err != nil {

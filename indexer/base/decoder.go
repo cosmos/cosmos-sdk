@@ -9,9 +9,10 @@ type DecoderResolver interface {
 	// LookupDecoder allows for resolving decoders dynamically. For instance, some module-like
 	// things may come into existence dynamically (like x/accounts or EVM or WASM contracts).
 	// The first time the manager sees one of these appearing in KV-store writes, it will
-	// lookup a decoder for it and cache it for future use. This check will only happen the first
-	// time a module is seen. In order to start decoding an existing module, the indexing manager
-	// needs to be restarted, usually with a node restart and indexer catch-up needs to be run.
+	// lookup a decoder for it and cache it for future use. The manager will also perform
+	// a catch-up sync before passing any new writes to ensure that all historical state has
+	// been synced if there is any This check will only happen the first time a module is seen
+	// by the manager in a given process (a process restart will cause this check to happen again).
 	LookupDecoder(moduleName string) (decoder ModuleDecoder, found bool, err error)
 }
 

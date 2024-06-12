@@ -76,6 +76,14 @@ func (k Keeper) ImportState(ctx context.Context, genState *v1.GenesisState) erro
 			return fmt.Errorf("%w: %s", err, acc.Address)
 		}
 	}
+
+	// after this execute account creation msgs.
+	for index, msgInit := range genState.InitAccountMsgs {
+		_, _, err = k.initFromMsg(ctx, msgInit)
+		if err != nil {
+			return fmt.Errorf("invalid genesis account msg init at index %d, msg %s: %w", index, msgInit, err)
+		}
+	}
 	return nil
 }
 

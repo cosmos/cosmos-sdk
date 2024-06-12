@@ -67,6 +67,12 @@ ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
   build_tags += boltdb
 endif
 
+# handle blst
+ifeq (blst,$(findstring blst,$(COSMOS_BUILD_OPTIONS)))
+  CGO_ENABLED=1
+  build_tags += blst
+endif
+
 whitespace :=
 whitespace += $(whitespace)
 comma := ,
@@ -395,7 +401,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v1.56.2
+golangci_version=v1.59.0
 
 #? setup-pre-commit: Set pre-commit git hook
 setup-pre-commit:

@@ -57,7 +57,7 @@ const (
 	execModeVerifyVoteExtension                 // Verify a vote extension
 	execModeFinalize                            // Finalize a block proposal
 
-	DoNotFailFastContextKey contextKeyT = "DoNotFailFast"
+	DoNotFailFastSendContextKey contextKeyT = "DoNotFailFast"
 )
 
 var _ servertypes.ABCI = (*BaseApp)(nil)
@@ -712,7 +712,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 
 func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) error {
 	if app.preBlocker != nil {
-		ctx := app.finalizeBlockState.Context().WithValue(DoNotFailFastContextKey, struct{}{})
+		ctx := app.finalizeBlockState.Context().WithValue(DoNotFailFastSendContextKey, struct{}{})
 		rsp, err := app.preBlocker(ctx, req)
 		if err != nil {
 			return err
@@ -737,7 +737,7 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, 
 	)
 
 	if app.beginBlocker != nil {
-		ctx := app.finalizeBlockState.Context().WithValue(DoNotFailFastContextKey, struct{}{})
+		ctx := app.finalizeBlockState.Context().WithValue(DoNotFailFastSendContextKey, struct{}{})
 		resp, err = app.beginBlocker(ctx)
 		if err != nil {
 			return resp, err
@@ -805,7 +805,7 @@ func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
 	var endblock sdk.EndBlock
 
 	if app.endBlocker != nil {
-		ctx := app.finalizeBlockState.Context().WithValue(DoNotFailFastContextKey, struct{}{})
+		ctx := app.finalizeBlockState.Context().WithValue(DoNotFailFastSendContextKey, struct{}{})
 		eb, err := app.endBlocker(ctx)
 		if err != nil {
 			return endblock, err

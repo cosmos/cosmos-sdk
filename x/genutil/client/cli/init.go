@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -58,13 +59,13 @@ func newPrintInfo(moniker, chainID, nodeID, genTxsDir string, appMessage json.Ra
 	}
 }
 
-func displayInfo(info printInfo) error {
+func displayInfo(dst io.Writer, info printInfo) error {
 	out, err := json.MarshalIndent(info, "", " ")
 	if err != nil {
 		return err
 	}
 
-	_, err = fmt.Fprintf(os.Stderr, "%s\n", out)
+	_, err = fmt.Fprintf(dst, "%s\n", out)
 
 	return err
 }
@@ -112,7 +113,12 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 				initHeight = 1
 			}
 
-			nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(config, mnemonic)
+			consensusKey, err := cmd.Flags().GetString(FlagConsensusKeyAlgo)
+			if err != nil {
+				return errorsmod.Wrap(err, "Failed to get consensus key algo")
+			}
+
+			nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(config, mnemonic, consensusKey)
 			if err != nil {
 				return err
 			}
@@ -162,10 +168,6 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 				Params:     cmttypes.DefaultConsensusParams(),
 			}
 
-			consensusKey, err := cmd.Flags().GetString(FlagConsensusKeyAlgo)
-			if err != nil {
-				return errorsmod.Wrap(err, "Failed to get consensus key algo")
-			}
 			appGenesis.Consensus.Params.Validator.PubKeyTypes = []string{consensusKey}
 
 			if err = genutil.ExportGenesisFile(appGenesis, genFile); err != nil {
@@ -175,7 +177,7 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)
 
 			cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
-			return displayInfo(toPrint)
+			return displayInfo(cmd.ErrOrStderr(), toPrint)
 		},
 	}
 

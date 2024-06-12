@@ -10,7 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cast"
@@ -171,7 +171,7 @@ type SimApp struct {
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 	CircuitKeeper         circuitkeeper.Keeper
 	PoolKeeper            poolkeeper.Keeper
-	EpochsKeeper          epochskeeper.Keeper
+	EpochsKeeper          *epochskeeper.Keeper
 
 	// managers
 	ModuleManager      *module.Manager

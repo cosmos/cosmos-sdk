@@ -295,7 +295,12 @@ func (s *Store) loadVersion(v uint64, upgrades *corestore.StoreUpgrades) error {
 			return fmt.Errorf("failed to load SC version %d: %w", v, err)
 		}
 	} else {
-		if err := s.stateCommitment.(store.UpgradeableStore).LoadVersionAndUpgrade(v, upgrades); err != nil {
+		// if upgrades are provided, we need to load the version and apply the upgrades
+		upgradeableStore, ok := s.stateCommitment.(store.UpgradeableStore)
+		if !ok {
+			return fmt.Errorf("SC store does not support upgrades")
+		}
+		if err := upgradeableStore.LoadVersionAndUpgrade(v, upgrades); err != nil {
 			return fmt.Errorf("failed to load SS version with upgrades %d: %w", v, err)
 		}
 	}

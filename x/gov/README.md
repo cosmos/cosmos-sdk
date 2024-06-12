@@ -24,7 +24,7 @@ they don't vote themselves.
 deposits if the proposal was accepted or rejected. If the proposal was vetoed, or never entered voting period (minimum deposit not reached within deposit period), the deposit is burned.
 
 This module is in use on the Cosmos Hub (a.k.a [gaia](https://github.com/cosmos/gaia)).
-Features that may be added in the future are described in [Future Improvements](#future-improvements).
+
 
 ## Contents
 

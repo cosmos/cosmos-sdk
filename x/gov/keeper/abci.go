@@ -16,7 +16,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // EndBlocker is called every block.
@@ -210,13 +209,6 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 				return nil
 			})
 			if err != nil {
-				// update proposal if error is out of gas
-				if errors.Is(err, sdkerrors.ErrOutOfGas) {
-					proposal.Status = v1.StatusFailed
-					proposal.FailedReason = err.Error()
-					tagValue = types.AttributeValueProposalFailed
-					logMsg = "passed proposal failed due to out of gas"
-				}
 				// `idx` and `err` are populated with the msg index and error.
 				proposal.Status = v1.StatusFailed
 				proposal.FailedReason = err.Error()

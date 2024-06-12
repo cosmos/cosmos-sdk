@@ -110,6 +110,14 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 		return nil, err
 	}
 
+	has, err := k.ContinuousFund.Has(ctx, recipient)
+	if err != nil {
+		return nil, err
+	}
+	if has {
+		return nil, fmt.Errorf("continuous fund already exists for recipient %s", msg.Recipient)
+	}
+
 	// Validate the message fields
 	err = k.validateContinuousFund(ctx, *msg)
 	if err != nil {

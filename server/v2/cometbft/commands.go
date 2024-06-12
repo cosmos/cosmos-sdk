@@ -39,7 +39,10 @@ func (s *CometBFTServer[T]) rpcClient(cmd *cobra.Command) (rpc.CometRPC, error) 
 	}
 
 	if s.Node == nil || cmd.Flags().Changed(flags.FlagNode) {
-		rpcURI, _ := cmd.Flags().GetString(flags.FlagNode)
+		rpcURI, err := cmd.Flags().GetString(flags.FlagNode)
+		if err != nil {
+			return nil, err
+		}
 		if rpcURI != "" {
 			return rpchttp.New(rpcURI)
 		}

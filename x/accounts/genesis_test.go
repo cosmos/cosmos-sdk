@@ -67,6 +67,22 @@ func TestGenesis(t *testing.T) {
 	resp, err = k.Query(ctx, addr3, &types.DoubleValue{})
 	require.NoError(t, err)
 	require.Equal(t, &types.UInt64Value{Value: 0}, resp)
+	// reset state
+	k, ctx = newKeeper(t, func(deps implementation.Dependencies) (string, implementation.Account, error) {
+		acc, err := NewTestAccount(deps)
+		return testAccountType, acc, err
+	})
+
+	// modify the accounts account number
+	state.Accounts[0].AccountNumber = 99
+
+	err = k.ImportState(ctx, state)
+	require.NoError(t, err)
+
+	currentAccNum, err := k.AccountNumber.Peek(ctx)
+	require.NoError(t, err)
+	// AccountNumber should be set to the highest account number in the genesis state
+	require.Equal(t, uint64(99), currentAccNum)
 }
 
 func TestImportAccountError(t *testing.T) {

@@ -64,18 +64,30 @@ func (k Keeper) exportAccount(ctx context.Context, addr []byte, accType string, 
 }
 
 func (k Keeper) ImportState(ctx context.Context, genState *v1.GenesisState) error {
-	err := k.AccountNumber.Set(ctx, genState.AccountNumber)
-	if err != nil {
-		return err
-	}
-
+	var largestNum *uint64
+	var err error
 	// import accounts
 	for _, acc := range genState.Accounts {
 		err = k.importAccount(ctx, acc)
 		if err != nil {
 			return fmt.Errorf("%w: %s", err, acc.Address)
 		}
+
+		accNum := acc.AccountNumber
+
+		if largestNum == nil || *largestNum < accNum {
+			largestNum = &accNum
+		}
 	}
+
+	if largestNum != nil {
+		// set the account number to the highest account number to avoid duplicate account number
+		err = k.AccountNumber.Set(ctx, *largestNum)
+		if err != nil {
+			return err
+		}
+	}
+
 
 	// after this execute account creation msgs.
 	for index, msgInit := range genState.InitAccountMsgs {

@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
+	v1 "cosmossdk.io/x/accounts/v1"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -154,6 +155,23 @@ func (k Keeper) Init(
 		return nil, nil, err
 	}
 	return initResp, accountAddr, nil
+}
+
+// initFromMsg is a helper which inits an account given a v1.MsgInit.
+func (k Keeper) initFromMsg(ctx context.Context, initMsg *v1.MsgInit) (implementation.ProtoMsg, []byte, error) {
+	creator, err := k.addressCodec.StringToBytes(initMsg.Sender)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// decode message bytes into the concrete boxed message type
+	msg, err := implementation.UnpackAnyRaw(initMsg.Message)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// run account creation logic
+	return k.Init(ctx, initMsg.AccountType, creator, msg, initMsg.Funds)
 }
 
 // init initializes the account, given the type, the creator the newly created account number, its address and the

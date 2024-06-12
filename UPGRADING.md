@@ -252,6 +252,19 @@ Most of Cosmos SDK modules have migrated to [collections](https://docs.cosmos.ne
 Many functions have been removed due to this changes as the API can be smaller thanks to collections.
 For modules that have migrated, verify you are checking against `collections.ErrNotFound` when applicable.
 
+#### `x/accounts`
+
+Accounts's AccountNumber will be used as a global account number tracking replacing Auth legacy AccountNumber. Must set accounts's AccountNumber with auth's AccountNumber value in upgrade handler. This is done through auth keeper MigrateAccountNumber function.
+
+```go
+import authkeeper "cosmossdk.io/x/auth/keeper" 
+...
+err := authkeeper.MigrateAccountNumberUnsafe(ctx, &app.AuthKeeper)
+if err != nil {
+	return nil, err
+}
+```
+
 #### `x/auth`
 
 Auth was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/auth`

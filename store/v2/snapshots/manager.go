@@ -438,7 +438,7 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 		}
 
 		if nextItem.GetExtensionPayload() != nil {
-			return errorsmod.Wrapf(err, "extension %s don't exhausted payload stream", metadata.Name)
+			return fmt.Errorf("extension %s don't exhausted payload stream", metadata.Name)
 		}
 	}
 

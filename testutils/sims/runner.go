@@ -120,7 +120,7 @@ func RunWithSeeds[T SimulationApp](
 
 			app := testInstance.App
 			stateFactory := setupStateFactory(app)
-			simParams, err := simulation.SimulateFromSeed(
+			simParams, err := simulation.SimulateFromSeedX(
 				t,
 				runLogger,
 				WriteToDebugLog(runLogger),
@@ -132,6 +132,7 @@ func RunWithSeeds[T SimulationApp](
 				tCfg,
 				stateFactory.Codec,
 				app.TxConfig().SigningContext().AddressCodec(),
+				testInstance.ExecLogWriter,
 			)
 			require.NoError(t, err)
 			err = simtestutil.CheckExportSimulation(app, tCfg, simParams)
@@ -152,13 +153,15 @@ func RunWithSeeds[T SimulationApp](
 //   - DB: The LevelDB database for the simulation app.
 //   - WorkDir: The temporary working directory for the simulation app.
 //   - Cfg: The configuration flags for the simulator.
-//   - Logger: The logger used for logging in the app during the simulation, with seed value attached.
+//   - AppLogger: The logger used for logging in the app during the simulation, with seed value attached.
+//   - ExecLogWriter: Captures block and operation data coming from the simulation
 type TestInstance[T SimulationApp] struct {
-	App     T
-	DB      dbm.DB
-	WorkDir string
-	Cfg     simtypes.Config
-	Logger  log.Logger
+	App           T
+	DB            dbm.DB
+	WorkDir       string
+	Cfg           simtypes.Config
+	AppLogger     log.Logger
+	ExecLogWriter simulation.LogWriter
 }
 
 // NewSimulationAppInstance initializes and returns a TestInstance of a SimulationApp.
@@ -190,16 +193,18 @@ func NewSimulationAppInstance[T SimulationApp](
 	appOptions := make(simtestutil.AppOptionsMap)
 	appOptions[flags.FlagHome] = workDir
 	appOptions[server.FlagInvCheckPeriod] = cli.FlagPeriodValue
+
 	app := appFactory(logger, db, nil, true, appOptions, baseapp.SetChainID(SimAppChainID))
 	if !cli.FlagSigverifyTxValue {
 		app.SetNotSigverifyTx()
 	}
 	return TestInstance[T]{
-		App:     app,
-		DB:      db,
-		WorkDir: workDir,
-		Cfg:     tCfg,
-		Logger:  logger,
+		App:           app,
+		DB:            db,
+		WorkDir:       workDir,
+		Cfg:           tCfg,
+		AppLogger:     logger,
+		ExecLogWriter: &simulation.StandardLogWriter{Seed: tCfg.Seed},
 	}
 }
 

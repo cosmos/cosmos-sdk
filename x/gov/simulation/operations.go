@@ -3,6 +3,7 @@ package simulation
 import (
 	"math"
 	"math/rand"
+	"sync/atomic"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
@@ -18,7 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-var initialProposalID = uint64(100000000000000)
+const unsetProposalID = 100000000000000
 
 // Governance message types and routes
 var (
@@ -42,6 +43,18 @@ const (
 	DefaultWeightTextProposal      = 5
 	DefaultWeightMsgCancelProposal = 5
 )
+
+type sharedState struct {
+	minProposalID atomic.Uint64
+}
+
+func (s *sharedState) getMinProposalID() uint64 {
+	return s.minProposalID.Load()
+}
+
+func (s *sharedState) setMinProposalID(id uint64) {
+	s.minProposalID.Store(id)
+}
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
@@ -119,19 +132,20 @@ func WeightedOperations(
 			),
 		)
 	}
-
+	state := &sharedState{}
+	state.setMinProposalID(unsetProposalID)
 	wGovOps := simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgDeposit,
-			SimulateMsgDeposit(txGen, ak, bk, k),
+			SimulateMsgDeposit(txGen, ak, bk, k, state),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgVote,
-			SimulateMsgVote(txGen, ak, bk, k),
+			SimulateMsgVote(txGen, ak, bk, k, state),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgVoteWeighted,
-			SimulateMsgVoteWeighted(txGen, ak, bk, k),
+			SimulateMsgVoteWeighted(txGen, ak, bk, k, state),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgCancelProposal,
@@ -312,7 +326,7 @@ func simulateMsgSubmitProposal(
 			whenVote := ctx.HeaderInfo().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
 			fops[i] = simtypes.FutureOperation{
 				BlockTime: whenVote,
-				Op:        operationSimulateMsgVote(txGen, ak, bk, k, accs[whoVotes[i]], int64(proposalID)),
+				Op:        operationSimulateMsgVote(txGen, ak, bk, k, accs[whoVotes[i]], int64(proposalID), nil),
 			}
 		}
 
@@ -326,13 +340,14 @@ func SimulateMsgDeposit(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k *keeper.Keeper,
+	s *sharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
-		proposalID, ok := randomProposalID(r, k, ctx, v1.StatusDepositPeriod)
+		proposalID, ok := randomProposalID(r, k, ctx, v1.StatusDepositPeriod, s)
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "unable to generate proposalID"), nil, nil
 		}
@@ -392,8 +407,9 @@ func SimulateMsgVote(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k *keeper.Keeper,
+	s *sharedState,
 ) simtypes.Operation {
-	return operationSimulateMsgVote(txGen, ak, bk, k, simtypes.Account{}, -1)
+	return operationSimulateMsgVote(txGen, ak, bk, k, simtypes.Account{}, -1, s)
 }
 
 func operationSimulateMsgVote(
@@ -403,6 +419,7 @@ func operationSimulateMsgVote(
 	k *keeper.Keeper,
 	simAccount simtypes.Account,
 	proposalIDInt int64,
+	s *sharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -417,7 +434,7 @@ func operationSimulateMsgVote(
 		switch {
 		case proposalIDInt < 0:
 			var ok bool
-			proposalID, ok = randomProposalID(r, k, ctx, v1.StatusVotingPeriod)
+			proposalID, ok = randomProposalID(r, k, ctx, v1.StatusVotingPeriod, s)
 			if !ok {
 				return simtypes.NoOpMsg(types.ModuleName, TypeMsgVote, "unable to generate proposalID"), nil, nil
 			}
@@ -459,8 +476,9 @@ func SimulateMsgVoteWeighted(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k *keeper.Keeper,
+	s *sharedState,
 ) simtypes.Operation {
-	return operationSimulateMsgVoteWeighted(txGen, ak, bk, k, simtypes.Account{}, -1)
+	return operationSimulateMsgVoteWeighted(txGen, ak, bk, k, simtypes.Account{}, -1, s)
 }
 
 func operationSimulateMsgVoteWeighted(
@@ -470,6 +488,7 @@ func operationSimulateMsgVoteWeighted(
 	k *keeper.Keeper,
 	simAccount simtypes.Account,
 	proposalIDInt int64,
+	s *sharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -484,7 +503,7 @@ func operationSimulateMsgVoteWeighted(
 		switch {
 		case proposalIDInt < 0:
 			var ok bool
-			proposalID, ok = randomProposalID(r, k, ctx, v1.StatusVotingPeriod)
+			proposalID, ok = randomProposalID(r, k, ctx, v1.StatusVotingPeriod, s)
 			if !ok {
 				return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteWeighted, "unable to generate proposalID"), nil, nil
 			}
@@ -521,12 +540,7 @@ func operationSimulateMsgVoteWeighted(
 }
 
 // SimulateMsgCancelProposal generates a MsgCancelProposal.
-func SimulateMsgCancelProposal(
-	txGen client.TxConfig,
-	ak types.AccountKeeper,
-	bk types.BankKeeper,
-	k *keeper.Keeper,
-) simtypes.Operation {
+func SimulateMsgCancelProposal(txGen client.TxConfig, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -663,20 +677,13 @@ func randomProposal(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context) *v1.Proposa
 // (defined in gov GenesisState) and the latest proposal ID
 // that matches a given Status.
 // It does not provide a default ID.
-func randomProposalID(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context, status v1.ProposalStatus) (proposalID uint64, found bool) {
+func randomProposalID(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context, status v1.ProposalStatus, s *sharedState) (proposalID uint64, found bool) {
 	proposalID, _ = k.ProposalID.Peek(ctx)
-
-	switch {
-	case proposalID > initialProposalID:
-		// select a random ID between [initialProposalID, proposalID]
+	if initialProposalID := s.getMinProposalID(); initialProposalID == unsetProposalID {
+		s.setMinProposalID(proposalID)
+	} else if initialProposalID < proposalID {
 		proposalID = uint64(simtypes.RandIntBetween(r, int(initialProposalID), int(proposalID)))
-
-	default:
-		// This is called on the first call to this function
-		// in order to update the global variable
-		initialProposalID = proposalID
 	}
-
 	proposal, err := k.Proposals.Get(ctx, proposalID)
 	if err != nil || proposal.Status != status {
 		return proposalID, false

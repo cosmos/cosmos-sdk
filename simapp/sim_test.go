@@ -125,10 +125,10 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		}
 		require.NoError(t, err)
 		newStateFactory := setupStateFactory(newApp)
-		_, err = simulation.SimulateFromSeed(
+		_, err = simulation.SimulateFromSeedX(
 			t,
-			newTestInstance.Logger,
-			sims.WriteToDebugLog(newTestInstance.Logger),
+			newTestInstance.AppLogger,
+			sims.WriteToDebugLog(newTestInstance.AppLogger),
 			newApp.BaseApp,
 			newStateFactory.AppStateFn,
 			simtypes.RandomAccounts,
@@ -137,6 +137,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 			newTestInstance.Cfg,
 			newStateFactory.Codec,
 			newApp.TxConfig().SigningContext().AddressCodec(),
+			ti.ExecLogWriter,
 		)
 		require.NoError(t, err)
 	})
@@ -183,16 +184,30 @@ func TestAppStateDeterminism(t *testing.T) {
 	}
 	var mx sync.Mutex
 	appHashResults := make(map[int64][][]byte)
+	appSimLogger := make(map[int64][]simulation.LogWriter)
 	captureAndCheckHash := func(t *testing.T, ti sims.TestInstance[*SimApp]) {
 		seed, appHash := ti.Cfg.Seed, ti.App.LastCommitID().Hash
 		mx.Lock()
-		otherHashes := appHashResults[seed]
-		appHashResults[seed] = append(otherHashes, appHash)
-		t.Logf("+++ hashes: %#X\n", appHashResults)
+		otherHashes, execWriters := appHashResults[seed], appSimLogger[seed]
+		if len(otherHashes) < numTimesToRunPerSeed-1 {
+			appHashResults[seed], appSimLogger[seed] = append(otherHashes, appHash), append(execWriters, ti.ExecLogWriter)
+		} else { // cleanup
+			delete(appHashResults, seed)
+			delete(appSimLogger, seed)
+		}
 		mx.Unlock()
+
+		var failNow bool
 		// and check that all app hashes per seed are equal for each iteration
 		for i := 0; i < len(otherHashes); i++ {
-			require.Equal(t, otherHashes[i], appHash, "non-determinism in seed %d: %v\n", seed, otherHashes)
+			if !assert.Equal(t, otherHashes[i], appHash) {
+				execWriters[i].PrintLogs()
+				failNow = true
+			}
+		}
+		if failNow {
+			ti.ExecLogWriter.PrintLogs()
+			t.Fatalf("non-determinism in seed %d", seed)
 		}
 	}
 	// run simulations

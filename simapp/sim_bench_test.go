@@ -59,7 +59,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(sims.SimAppChainID))
 
 	// run randomized simulation
-	simParams, simErr := simulation.SimulateFromSeed(
+	simParams, simErr := simulation.SimulateFromSeedX(
 		b,
 		log.NewNopLogger(),
 		os.Stdout,
@@ -71,6 +71,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		config,
 		app.AppCodec(),
 		app.txConfig.SigningContext().AddressCodec(),
+		&simulation.DummyLogWriter{},
 	)
 
 	// export state and simParams before the simulation error is checked

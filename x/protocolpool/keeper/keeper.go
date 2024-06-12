@@ -262,10 +262,7 @@ type recipientFund struct {
 func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistributeAmount math.Int) error {
 	totalPercentageToBeDistributed := math.ZeroInt()
 
-	recipientFundList := []recipientFund{{
-		RecipientAddr: "",
-		Percentage:    math.ZeroInt(),
-	}}
+	recipientFundList := []recipientFund{}
 
 	// Calculate totalPercentageToBeDistributed and store values
 	err := k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {

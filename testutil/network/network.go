@@ -49,6 +49,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
@@ -446,7 +447,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			mnemonic = cfg.Mnemonics[i]
 		}
 
-		nodeID, pubKey, err := genutil.InitializeNodeValidatorFilesFromMnemonic(cmtCfg, mnemonic)
+		nodeID, pubKey, err := genutil.InitializeNodeValidatorFilesFromMnemonic(cmtCfg, mnemonic, ed25519.PrivKeyName)
 		if err != nil {
 			return nil, err
 		}

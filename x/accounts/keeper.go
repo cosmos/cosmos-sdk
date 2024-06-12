@@ -107,6 +107,30 @@ func (k Keeper) IsAccountsModuleAccount(
 	return hasAcc
 }
 
+func (k Keeper) NextAccountNumber(
+	ctx context.Context,
+) (accNum uint64, err error) {
+	accNum, err = k.AccountNumber.Next(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	return accNum, nil
+}
+
+// InitAccountNumberSeqUnsafe use to set accounts account number tracking.
+// Only use for account number migration.
+func (k Keeper) InitAccountNumberSeqUnsafe(ctx context.Context, accNum uint64) error {
+	currentNum, err := k.AccountNumber.Peek(ctx)
+	if err != nil {
+		return err
+	}
+	if currentNum > accNum {
+		return fmt.Errorf("cannot set number lower than current account number got %v while current account number is %v", accNum, currentNum)
+	}
+	return k.AccountNumber.Set(ctx, accNum)
+}
+
 // Init creates a new account of the given type.
 func (k Keeper) Init(
 	ctx context.Context,

@@ -81,8 +81,9 @@ func TestGenesis(t *testing.T) {
 
 	currentAccNum, err := k.AccountNumber.Peek(ctx)
 	require.NoError(t, err)
-	// AccountNumber should be set to the highest account number in the genesis state
-	require.Equal(t, uint64(99), currentAccNum)
+	// AccountNumber should be set to the highest account number in the genesis state + 2
+	// (one is the sequence offset, the other is the genesis account being added through init msg)
+	require.Equal(t, state.Accounts[0].AccountNumber+2, currentAccNum)
 }
 
 func TestImportAccountError(t *testing.T) {

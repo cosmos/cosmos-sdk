@@ -7,7 +7,6 @@ import (
 
 	"cosmossdk.io/x/staking/types"
 
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +17,7 @@ func NewValidator(tb testing.TB, operator sdk.ValAddress, pubKey cryptotypes.Pub
 	tb.Helper()
 	operatorAddr, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(operator)
 	require.NoError(tb, err)
-	v, err := types.NewValidator(operatorAddr, pubKey, types.Description{}, addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()))
+	v, err := types.NewValidator(operatorAddr, pubKey, types.Description{})
 	require.NoError(tb, err)
 	return v
 }

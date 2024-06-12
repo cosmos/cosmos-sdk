@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	consensusVersion uint64 = 7
+	consensusVersion uint64 = 6
 )
 
 var (
@@ -128,9 +128,6 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	}
 	if err := mr.Register(types.ModuleName, 5, m.Migrate5to6); err != nil {
 		return fmt.Errorf("failed to migrate x/%s from version 5 to 6: %w", types.ModuleName, err)
-	}
-	if err := mr.Register(types.ModuleName, 6, m.Migrate6to7); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 6 to 7: %w", types.ModuleName, err)
 	}
 
 	return nil

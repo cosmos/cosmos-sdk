@@ -2960,7 +2960,6 @@ var (
 	fd_Validator_min_self_delegation         protoreflect.FieldDescriptor
 	fd_Validator_unbonding_on_hold_ref_count protoreflect.FieldDescriptor
 	fd_Validator_unbonding_ids               protoreflect.FieldDescriptor
-	fd_Validator_consensus_address           protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -2979,7 +2978,6 @@ func init() {
 	fd_Validator_min_self_delegation = md_Validator.Fields().ByName("min_self_delegation")
 	fd_Validator_unbonding_on_hold_ref_count = md_Validator.Fields().ByName("unbonding_on_hold_ref_count")
 	fd_Validator_unbonding_ids = md_Validator.Fields().ByName("unbonding_ids")
-	fd_Validator_consensus_address = md_Validator.Fields().ByName("consensus_address")
 }
 
 var _ protoreflect.Message = (*fastReflection_Validator)(nil)
@@ -3125,12 +3123,6 @@ func (x *fastReflection_Validator) Range(f func(protoreflect.FieldDescriptor, pr
 			return
 		}
 	}
-	if x.ConsensusAddress != "" {
-		value := protoreflect.ValueOfString(x.ConsensusAddress)
-		if !f(fd_Validator_consensus_address, value) {
-			return
-		}
-	}
 }
 
 // Has reports whether a field is populated.
@@ -3172,8 +3164,6 @@ func (x *fastReflection_Validator) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.UnbondingOnHoldRefCount != int64(0)
 	case "cosmos.staking.v1beta1.Validator.unbonding_ids":
 		return len(x.UnbondingIds) != 0
-	case "cosmos.staking.v1beta1.Validator.consensus_address":
-		return x.ConsensusAddress != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.Validator"))
@@ -3216,8 +3206,6 @@ func (x *fastReflection_Validator) Clear(fd protoreflect.FieldDescriptor) {
 		x.UnbondingOnHoldRefCount = int64(0)
 	case "cosmos.staking.v1beta1.Validator.unbonding_ids":
 		x.UnbondingIds = nil
-	case "cosmos.staking.v1beta1.Validator.consensus_address":
-		x.ConsensusAddress = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.Validator"))
@@ -3276,9 +3264,6 @@ func (x *fastReflection_Validator) Get(descriptor protoreflect.FieldDescriptor) 
 		}
 		listValue := &_Validator_13_list{list: &x.UnbondingIds}
 		return protoreflect.ValueOfList(listValue)
-	case "cosmos.staking.v1beta1.Validator.consensus_address":
-		value := x.ConsensusAddress
-		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.Validator"))
@@ -3327,8 +3312,6 @@ func (x *fastReflection_Validator) Set(fd protoreflect.FieldDescriptor, value pr
 		lv := value.List()
 		clv := lv.(*_Validator_13_list)
 		x.UnbondingIds = *clv.list
-	case "cosmos.staking.v1beta1.Validator.consensus_address":
-		x.ConsensusAddress = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.Validator"))
@@ -3391,8 +3374,6 @@ func (x *fastReflection_Validator) Mutable(fd protoreflect.FieldDescriptor) prot
 		panic(fmt.Errorf("field min_self_delegation of message cosmos.staking.v1beta1.Validator is not mutable"))
 	case "cosmos.staking.v1beta1.Validator.unbonding_on_hold_ref_count":
 		panic(fmt.Errorf("field unbonding_on_hold_ref_count of message cosmos.staking.v1beta1.Validator is not mutable"))
-	case "cosmos.staking.v1beta1.Validator.consensus_address":
-		panic(fmt.Errorf("field consensus_address of message cosmos.staking.v1beta1.Validator is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.Validator"))
@@ -3437,8 +3418,6 @@ func (x *fastReflection_Validator) NewField(fd protoreflect.FieldDescriptor) pro
 	case "cosmos.staking.v1beta1.Validator.unbonding_ids":
 		list := []uint64{}
 		return protoreflect.ValueOfList(&_Validator_13_list{list: &list})
-	case "cosmos.staking.v1beta1.Validator.consensus_address":
-		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.Validator"))
@@ -3559,10 +3538,6 @@ func (x *fastReflection_Validator) ProtoMethods() *protoiface.Methods {
 			}
 			n += 1 + runtime.Sov(uint64(l)) + l
 		}
-		l = len(x.ConsensusAddress)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -3591,13 +3566,6 @@ func (x *fastReflection_Validator) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.ConsensusAddress) > 0 {
-			i -= len(x.ConsensusAddress)
-			copy(dAtA[i:], x.ConsensusAddress)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ConsensusAddress)))
-			i--
-			dAtA[i] = 0x72
 		}
 		if len(x.UnbondingIds) > 0 {
 			var pksize2 int
@@ -4202,38 +4170,6 @@ func (x *fastReflection_Validator) ProtoMethods() *protoiface.Methods {
 				} else {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field UnbondingIds", wireType)
 				}
-			case 14:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ConsensusAddress", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.ConsensusAddress = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -15017,8 +14953,6 @@ type Validator struct {
 	UnbondingOnHoldRefCount int64 `protobuf:"varint,12,opt,name=unbonding_on_hold_ref_count,json=unbondingOnHoldRefCount,proto3" json:"unbonding_on_hold_ref_count,omitempty"`
 	// list of unbonding ids, each uniquely identifying an unbonding of this validator
 	UnbondingIds []uint64 `protobuf:"varint,13,rep,packed,name=unbonding_ids,json=unbondingIds,proto3" json:"unbonding_ids,omitempty"`
-	// consensus_address defines the address of the validator's consensus
-	ConsensusAddress string `protobuf:"bytes,14,opt,name=consensus_address,json=consensusAddress,proto3" json:"consensus_address,omitempty"`
 }
 
 func (x *Validator) Reset() {
@@ -15130,13 +15064,6 @@ func (x *Validator) GetUnbondingIds() []uint64 {
 		return x.UnbondingIds
 	}
 	return nil
-}
-
-func (x *Validator) GetConsensusAddress() string {
-	if x != nil {
-		return x.ConsensusAddress
-	}
-	return ""
 }
 
 // ValAddresses defines a repeated set of validator addresses.
@@ -16194,7 +16121,7 @@ var file_cosmos_staking_v1beta1_staking_proto_rawDesc = []byte{
 	0x6e, 0x74, 0x61, 0x63, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x73, 0x65, 0x63,
 	0x75, 0x72, 0x69, 0x74, 0x79, 0x43, 0x6f, 0x6e, 0x74, 0x61, 0x63, 0x74, 0x12, 0x18, 0x0a, 0x07,
 	0x64, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x64,
-	0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x3a, 0x04, 0xe8, 0xa0, 0x1f, 0x01, 0x22, 0xed, 0x07, 0x0a,
+	0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x3a, 0x04, 0xe8, 0xa0, 0x1f, 0x01, 0x22, 0x9d, 0x07, 0x0a,
 	0x09, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x43, 0x0a, 0x10, 0x6f, 0x70,
 	0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01,
 	0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
@@ -16252,12 +16179,7 @@ var file_cosmos_staking_v1beta1_staking_proto_rawDesc = []byte{
 	0x6e, 0x48, 0x6f, 0x6c, 0x64, 0x52, 0x65, 0x66, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x23, 0x0a,
 	0x0d, 0x75, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x5f, 0x69, 0x64, 0x73, 0x18, 0x0d,
 	0x20, 0x03, 0x28, 0x04, 0x52, 0x0c, 0x75, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x49,
-	0x64, 0x73, 0x12, 0x4e, 0x0a, 0x11, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x5f,
-	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x0e, 0x20, 0x01, 0x28, 0x09, 0x42, 0x21, 0xd2,
-	0xb4, 0x2d, 0x1d, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e,
-	0x73, 0x75, 0x73, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
-	0x52, 0x10, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x3a, 0x08, 0x88, 0xa0, 0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x00, 0x22, 0x46, 0x0a, 0x0c,
+	0x64, 0x73, 0x3a, 0x08, 0x88, 0xa0, 0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x00, 0x22, 0x46, 0x0a, 0x0c,
 	0x56, 0x61, 0x6c, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x65, 0x73, 0x12, 0x36, 0x0a, 0x09,
 	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x42,
 	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,

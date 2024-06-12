@@ -38,20 +38,14 @@ var (
 var _ sdk.ValidatorI = Validator{}
 
 // NewValidator constructs a new Validator
-func NewValidator(operator string, pubKey cryptotypes.PubKey, description Description, consensusAddressCodec address.Codec) (Validator, error) {
+func NewValidator(operator string, pubKey cryptotypes.PubKey, description Description) (Validator, error) {
 	pkAny, err := codectypes.NewAnyWithValue(pubKey)
-	if err != nil {
-		return Validator{}, err
-	}
-	consAddress := sdk.ConsAddress(pubKey.Address())
-	consAddressStr, err := consensusAddressCodec.BytesToString(consAddress)
 	if err != nil {
 		return Validator{}, err
 	}
 
 	return Validator{
 		OperatorAddress:         operator,
-		ConsensusAddress:        consAddressStr,
 		ConsensusPubkey:         pkAny,
 		Jailed:                  false,
 		Status:                  Unbonded,

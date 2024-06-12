@@ -11,6 +11,12 @@ import (
 // decoding of data out of the box, so the EnsureLogicalSetup and OnEntityUpdate methods will not be called.
 // These methods will only be called when listening logical decoding is setup.
 type Listener struct {
+	// Initialize is called when the listener is initialized before any other methods are called.
+	// The lastBlock return value should be the last block height the listener persisted if it is
+	// persisting block data, 0 if it is not interested in persisting block data, or -1 if it is
+	// persisting block data but has not persisted any data yet.
+	Initialize func(InitializationData) (lastBlock int64, err error)
+
 	// StartBlock is called at the beginning of processing a block.
 	StartBlock func(uint64) error
 
@@ -58,6 +64,25 @@ type Listener struct {
 	// this point and also save the block number as the last block that has been processed so
 	// that processing of regular block data can resume from this point in the future.
 	CommitCatchupSync func(module string, block uint64) error
+
+	// SubscribedModules is a map of modules that the listener is interested in receiving events for in OnKVPair and
+	// logical decoding listeners (if these are registered). If this is left nil but listeners are registered,
+	// it is assumed that the listener is interested in all modules.
+	SubscribedModules map[string]bool
+}
+
+// InitializationData represents initialization data that is passed to a listener.
+type InitializationData struct {
+
+	// HasEventAlignedWrites indicates that the blockchain data source will emit KV-pair events
+	// in an order aligned with transaction, message and event callbacks. If this is true
+	// then indexers can assume that KV-pair data is associated with these specific transactions, messages
+	// and events. This may be useful for indexers which store a log of all operations (such as immutable
+	// or version controlled databases) so that the history log can include fine grain correlation between
+	// state updates and transactions, messages and events. If this value is false, then indexers should
+	// assume that KV-pair data occurs out of order with respect to transaction, message and event callbacks -
+	// the only safe assumption being that KV-pair data is associated with the block in which it was emitted.
+	HasEventAlignedWrites bool
 }
 
 // BlockHeaderData represents the raw block header data that is passed to a listener.

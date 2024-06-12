@@ -41,16 +41,3 @@ message ContinuousFund {
   // Optional, if expiry is set, removes the state object when expired.
   google.protobuf.Timestamp expiry = 3 [(gogoproto.stdtime) = true];
 }
-
-// RecipientFundPercentageStatus defines the status & percentage of recipient.
-message RecipientFundPercentageStatus {
-  // If receiver withdraw continous fund in block
-  // This value will be reset at end block
-  bool received = 1;
-  // Percentage is the percentage of funds to be allocated from Community pool.
-  string percentage = 2 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
-  ];
-}

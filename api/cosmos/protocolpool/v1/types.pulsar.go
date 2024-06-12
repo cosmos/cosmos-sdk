@@ -1364,480 +1364,6 @@ func (x *fastReflection_ContinuousFund) ProtoMethods() *protoiface.Methods {
 	}
 }
 
-var (
-	md_RecipientFundPercentageStatus            protoreflect.MessageDescriptor
-	fd_RecipientFundPercentageStatus_received   protoreflect.FieldDescriptor
-	fd_RecipientFundPercentageStatus_percentage protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_cosmos_protocolpool_v1_types_proto_init()
-	md_RecipientFundPercentageStatus = File_cosmos_protocolpool_v1_types_proto.Messages().ByName("RecipientFundPercentageStatus")
-	fd_RecipientFundPercentageStatus_received = md_RecipientFundPercentageStatus.Fields().ByName("received")
-	fd_RecipientFundPercentageStatus_percentage = md_RecipientFundPercentageStatus.Fields().ByName("percentage")
-}
-
-var _ protoreflect.Message = (*fastReflection_RecipientFundPercentageStatus)(nil)
-
-type fastReflection_RecipientFundPercentageStatus RecipientFundPercentageStatus
-
-func (x *RecipientFundPercentageStatus) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_RecipientFundPercentageStatus)(x)
-}
-
-func (x *RecipientFundPercentageStatus) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_protocolpool_v1_types_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_RecipientFundPercentageStatus_messageType fastReflection_RecipientFundPercentageStatus_messageType
-var _ protoreflect.MessageType = fastReflection_RecipientFundPercentageStatus_messageType{}
-
-type fastReflection_RecipientFundPercentageStatus_messageType struct{}
-
-func (x fastReflection_RecipientFundPercentageStatus_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_RecipientFundPercentageStatus)(nil)
-}
-func (x fastReflection_RecipientFundPercentageStatus_messageType) New() protoreflect.Message {
-	return new(fastReflection_RecipientFundPercentageStatus)
-}
-func (x fastReflection_RecipientFundPercentageStatus_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_RecipientFundPercentageStatus
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_RecipientFundPercentageStatus) Descriptor() protoreflect.MessageDescriptor {
-	return md_RecipientFundPercentageStatus
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_RecipientFundPercentageStatus) Type() protoreflect.MessageType {
-	return _fastReflection_RecipientFundPercentageStatus_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_RecipientFundPercentageStatus) New() protoreflect.Message {
-	return new(fastReflection_RecipientFundPercentageStatus)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_RecipientFundPercentageStatus) Interface() protoreflect.ProtoMessage {
-	return (*RecipientFundPercentageStatus)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_RecipientFundPercentageStatus) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Received != false {
-		value := protoreflect.ValueOfBool(x.Received)
-		if !f(fd_RecipientFundPercentageStatus_received, value) {
-			return
-		}
-	}
-	if x.Percentage != "" {
-		value := protoreflect.ValueOfString(x.Percentage)
-		if !f(fd_RecipientFundPercentageStatus_percentage, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_RecipientFundPercentageStatus) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.RecipientFundPercentageStatus.received":
-		return x.Received != false
-	case "cosmos.protocolpool.v1.RecipientFundPercentageStatus.percentage":
-		return x.Percentage != ""
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.RecipientFundPercentageStatus"))
-		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.RecipientFundPercentageStatus does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_RecipientFundPercentageStatus) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.RecipientFundPercentageStatus.received":
-		x.Received = false
-	case "cosmos.protocolpool.v1.RecipientFundPercentageStatus.percentage":
-		x.Percentage = ""
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.RecipientFundPercentageStatus"))
-		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.RecipientFundPercentageStatus does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_RecipientFundPercentageStatus) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "cosmos.protocolpool.v1.RecipientFundPercentageStatus.received":
-		value := x.Received
-		return protoreflect.ValueOfBool(value)
-	case "cosmos.protocolpool.v1.RecipientFundPercentageStatus.percentage":
-		value := x.Percentage
-		return protoreflect.ValueOfString(value)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.RecipientFundPercentageStatus"))
-		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.RecipientFundPercentageStatus does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_RecipientFundPercentageStatus) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.RecipientFundPercentageStatus.received":
-		x.Received = value.Bool()
-	case "cosmos.protocolpool.v1.RecipientFundPercentageStatus.percentage":
-		x.Percentage = value.Interface().(string)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.RecipientFundPercentageStatus"))
-		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.RecipientFundPercentageStatus does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_RecipientFundPercentageStatus) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.RecipientFundPercentageStatus.received":
-		panic(fmt.Errorf("field received of message cosmos.protocolpool.v1.RecipientFundPercentageStatus is not mutable"))
-	case "cosmos.protocolpool.v1.RecipientFundPercentageStatus.percentage":
-		panic(fmt.Errorf("field percentage of message cosmos.protocolpool.v1.RecipientFundPercentageStatus is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.RecipientFundPercentageStatus"))
-		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.RecipientFundPercentageStatus does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_RecipientFundPercentageStatus) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.RecipientFundPercentageStatus.received":
-		return protoreflect.ValueOfBool(false)
-	case "cosmos.protocolpool.v1.RecipientFundPercentageStatus.percentage":
-		return protoreflect.ValueOfString("")
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.RecipientFundPercentageStatus"))
-		}
-		panic(fmt.Errorf("message cosmos.protocolpool.v1.RecipientFundPercentageStatus does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_RecipientFundPercentageStatus) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.protocolpool.v1.RecipientFundPercentageStatus", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_RecipientFundPercentageStatus) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_RecipientFundPercentageStatus) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_RecipientFundPercentageStatus) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_RecipientFundPercentageStatus) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*RecipientFundPercentageStatus)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		if x.Received {
-			n += 2
-		}
-		l = len(x.Percentage)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*RecipientFundPercentageStatus)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.Percentage) > 0 {
-			i -= len(x.Percentage)
-			copy(dAtA[i:], x.Percentage)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Percentage)))
-			i--
-			dAtA[i] = 0x12
-		}
-		if x.Received {
-			i--
-			if x.Received {
-				dAtA[i] = 1
-			} else {
-				dAtA[i] = 0
-			}
-			i--
-			dAtA[i] = 0x8
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*RecipientFundPercentageStatus)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: RecipientFundPercentageStatus: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: RecipientFundPercentageStatus: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Received", wireType)
-				}
-				var v int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				x.Received = bool(v != 0)
-			case 2:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Percentage", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Percentage = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -1991,53 +1517,6 @@ func (x *ContinuousFund) GetExpiry() *timestamppb.Timestamp {
 	return nil
 }
 
-// RecipientFundPercentageStatus defines the status & percentage of recipient.
-type RecipientFundPercentageStatus struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// If receiver withdraw continous fund in block
-	// This value will be reset at end block
-	Received bool `protobuf:"varint,1,opt,name=received,proto3" json:"received,omitempty"`
-	// Percentage is the percentage of funds to be allocated from Community pool.
-	Percentage string `protobuf:"bytes,2,opt,name=percentage,proto3" json:"percentage,omitempty"`
-}
-
-func (x *RecipientFundPercentageStatus) Reset() {
-	*x = RecipientFundPercentageStatus{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_protocolpool_v1_types_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *RecipientFundPercentageStatus) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*RecipientFundPercentageStatus) ProtoMessage() {}
-
-// Deprecated: Use RecipientFundPercentageStatus.ProtoReflect.Descriptor instead.
-func (*RecipientFundPercentageStatus) Descriptor() ([]byte, []int) {
-	return file_cosmos_protocolpool_v1_types_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *RecipientFundPercentageStatus) GetReceived() bool {
-	if x != nil {
-		return x.Received
-	}
-	return false
-}
-
-func (x *RecipientFundPercentageStatus) GetPercentage() string {
-	if x != nil {
-		return x.Percentage
-	}
-	return ""
-}
-
 var File_cosmos_protocolpool_v1_types_proto protoreflect.FileDescriptor
 
 var file_cosmos_protocolpool_v1_types_proto_rawDesc = []byte{
@@ -2091,30 +1570,21 @@ var file_cosmos_protocolpool_v1_types_proto_rawDesc = []byte{
 	0x65, 0x12, 0x38, 0x0a, 0x06, 0x65, 0x78, 0x70, 0x69, 0x72, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28,
 	0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x04, 0x90,
-	0xdf, 0x1f, 0x01, 0x52, 0x06, 0x65, 0x78, 0x70, 0x69, 0x72, 0x79, 0x22, 0x88, 0x01, 0x0a, 0x1d,
-	0x52, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x50, 0x65, 0x72,
-	0x63, 0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x1a, 0x0a,
-	0x08, 0x72, 0x65, 0x63, 0x65, 0x69, 0x76, 0x65, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52,
-	0x08, 0x72, 0x65, 0x63, 0x65, 0x69, 0x76, 0x65, 0x64, 0x12, 0x4b, 0x0a, 0x0a, 0x70, 0x65, 0x72,
-	0x63, 0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8,
-	0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b,
-	0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xd2, 0xb4, 0x2d, 0x0a,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x0a, 0x70, 0x65, 0x72, 0x63,
-	0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x42, 0xda, 0x01, 0x0a, 0x1a, 0x63, 0x6f, 0x6d, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f,
-	0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x54, 0x79, 0x70, 0x65, 0x73, 0x50, 0x72, 0x6f, 0x74,
-	0x6f, 0x50, 0x01, 0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69,
-	0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2f, 0x76, 0x31, 0x3b, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x50,
-	0x58, 0xaa, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x50, 0x72, 0x6f, 0x74, 0x6f,
-	0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x16, 0x43, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c,
-	0x5c, 0x56, 0x31, 0xe2, 0x02, 0x22, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x50, 0x72, 0x6f,
-	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42,
-	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x3a, 0x3a, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x3a,
-	0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0xdf, 0x1f, 0x01, 0x52, 0x06, 0x65, 0x78, 0x70, 0x69, 0x72, 0x79, 0x42, 0xda, 0x01, 0x0a, 0x1a,
+	0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x54, 0x79, 0x70, 0x65,
+	0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2f, 0x76,
+	0x31, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x76, 0x31,
+	0xa2, 0x02, 0x03, 0x43, 0x50, 0x58, 0xaa, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x56, 0x31, 0xca,
+	0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f,
+	0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x22, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x5c, 0x56,
+	0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x18,
+	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
+	0x70, 0x6f, 0x6f, 0x6c, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2129,21 +1599,20 @@ func file_cosmos_protocolpool_v1_types_proto_rawDescGZIP() []byte {
 	return file_cosmos_protocolpool_v1_types_proto_rawDescData
 }
 
-var file_cosmos_protocolpool_v1_types_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_cosmos_protocolpool_v1_types_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_cosmos_protocolpool_v1_types_proto_goTypes = []interface{}{
-	(*Budget)(nil),                        // 0: cosmos.protocolpool.v1.Budget
-	(*ContinuousFund)(nil),                // 1: cosmos.protocolpool.v1.ContinuousFund
-	(*RecipientFundPercentageStatus)(nil), // 2: cosmos.protocolpool.v1.RecipientFundPercentageStatus
-	(*v1beta1.Coin)(nil),                  // 3: cosmos.base.v1beta1.Coin
-	(*timestamppb.Timestamp)(nil),         // 4: google.protobuf.Timestamp
-	(*durationpb.Duration)(nil),           // 5: google.protobuf.Duration
+	(*Budget)(nil),                // 0: cosmos.protocolpool.v1.Budget
+	(*ContinuousFund)(nil),        // 1: cosmos.protocolpool.v1.ContinuousFund
+	(*v1beta1.Coin)(nil),          // 2: cosmos.base.v1beta1.Coin
+	(*timestamppb.Timestamp)(nil), // 3: google.protobuf.Timestamp
+	(*durationpb.Duration)(nil),   // 4: google.protobuf.Duration
 }
 var file_cosmos_protocolpool_v1_types_proto_depIdxs = []int32{
-	3, // 0: cosmos.protocolpool.v1.Budget.claimed_amount:type_name -> cosmos.base.v1beta1.Coin
-	4, // 1: cosmos.protocolpool.v1.Budget.last_claimed_at:type_name -> google.protobuf.Timestamp
-	3, // 2: cosmos.protocolpool.v1.Budget.budget_per_tranche:type_name -> cosmos.base.v1beta1.Coin
-	5, // 3: cosmos.protocolpool.v1.Budget.period:type_name -> google.protobuf.Duration
-	4, // 4: cosmos.protocolpool.v1.ContinuousFund.expiry:type_name -> google.protobuf.Timestamp
+	2, // 0: cosmos.protocolpool.v1.Budget.claimed_amount:type_name -> cosmos.base.v1beta1.Coin
+	3, // 1: cosmos.protocolpool.v1.Budget.last_claimed_at:type_name -> google.protobuf.Timestamp
+	2, // 2: cosmos.protocolpool.v1.Budget.budget_per_tranche:type_name -> cosmos.base.v1beta1.Coin
+	4, // 3: cosmos.protocolpool.v1.Budget.period:type_name -> google.protobuf.Duration
+	3, // 4: cosmos.protocolpool.v1.ContinuousFund.expiry:type_name -> google.protobuf.Timestamp
 	5, // [5:5] is the sub-list for method output_type
 	5, // [5:5] is the sub-list for method input_type
 	5, // [5:5] is the sub-list for extension type_name
@@ -2181,18 +1650,6 @@ func file_cosmos_protocolpool_v1_types_proto_init() {
 				return nil
 			}
 		}
-		file_cosmos_protocolpool_v1_types_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RecipientFundPercentageStatus); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -2200,7 +1657,7 @@ func file_cosmos_protocolpool_v1_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_protocolpool_v1_types_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

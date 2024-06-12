@@ -147,7 +147,7 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	if err != nil {
 		return nil, err
 	}
-	
+
 	err = k.TotalFundPercentage.Set(ctx, totalStreamFundsPercentage)
 	if err != nil {
 		return nil, err

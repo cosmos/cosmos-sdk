@@ -426,7 +426,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				suite.Require().NoError(err)
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
 				suite.Require().NoError(err)
-				
+
 				// Set fund 2
 				percentage, err = math.LegacyNewDecFromStr("0.9")
 				suite.Require().NoError(err)
@@ -584,8 +584,6 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				suite.Require().NoError(err)
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
 				suite.Require().NoError(err)
-
-
 				// Set continuous fund 2
 				percentage2, err := math.LegacyNewDecFromStr("0.2")
 				suite.Require().NoError(err)
@@ -897,7 +895,7 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient2, math.ZeroInt())
 				suite.Require().NoError(err)
 
-				//Set total fund percentage
+
 				err = suite.poolKeeper.TotalFundPercentage.Set(suite.ctx, math.Int(math.LegacyMustNewDecFromStr("0.5").MulInt64(100).TruncateInt()))
 				suite.Require().NoError(err)
 

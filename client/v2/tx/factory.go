@@ -15,6 +15,7 @@ import (
 	base "cosmossdk.io/api/cosmos/base/v1beta1"
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/client/v2/autocli/keyring"
+	"cosmossdk.io/client/v2/internal/coins"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/math"
@@ -25,7 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TODO:
@@ -52,44 +52,7 @@ type Factory struct {
 
 // NewFactory returns a factory
 func NewFactory(keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever AccountRetriever, txConfig TxConfig, ac address.Codec, conn gogogrpc.ClientConn, parameters TxParameters) (Factory, error) {
-	//if clientCtx.Viper == nil {
-	//	clientCtx = clientCtx.WithViper("")
-	//}
-	//
-	//if err := clientCtx.Viper.BindPFlags(flagSet); err != nil {
-	//	return Factory{}, fmt.Errorf("failed to bind flags to viper: %w", err)
-	//}
-	//
-	//var accNum, accSeq uint64
-	//if clientCtx.Offline {
-	//	if flagSet.Changed(flags.FlagAccountNumber) && flagSet.Changed(flags.FlagSequence) {
-	//		accNum = clientCtx.Viper.GetUint64(flags.FlagAccountNumber)
-	//		accSeq = clientCtx.Viper.GetUint64(flags.FlagSequence)
-	//	} else {
-	//		return Factory{}, fmt.Errorf("account-number and sequence must be set in offline mode")
-	//	}
-	//}
-	//
-	//if clientCtx.Offline && clientCtx.GenerateOnly {
-	//	if clientCtx.ChainID != "" {
-	//		return Factory{}, errors.New("chain ID cannot be used when offline and generate-only flags are set")
-	//	}
-	//} else if clientCtx.ChainID == "" {
-	//	return Factory{}, errors.New("chain ID required but not specified")
-	//}
-	//
-	//signMode := flags.ParseSignModeStr(clientCtx.SignModeStr)
-	//memo := clientCtx.Viper.GetString(flags.FlagNote)
-	//timeoutHeight := clientCtx.Viper.GetUint64(flags.FlagTimeoutHeight)
-	//unordered := clientCtx.Viper.GetBool(flags.FlagUnordered)
-	//
-	//gasAdj := clientCtx.Viper.GetFloat64(flags.FlagGasAdjustment)
-	//gasStr := clientCtx.Viper.GetString(flags.FlagGas)
-	//gasSetting, _ := flags.ParseGasSetting(gasStr)
-	//gasPricesStr := clientCtx.Viper.GetString(flags.FlagGasPrices)
-	//
-	//feesStr := clientCtx.Viper.GetString(flags.FlagFees)
-	f := Factory{
+	return Factory{
 		keybase:          keybase,
 		cdc:              cdc,
 		accountRetriever: accRetriever,
@@ -97,11 +60,7 @@ func NewFactory(keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever Acc
 		conn:             conn,
 		txConfig:         txConfig,
 		txParams:         parameters,
-	}
-
-	// Properties that need special parsing
-	//f = f.WithFees(feesStr).WithGasPrices(gasPricesStr)
-	return f, nil
+	}, nil
 }
 
 // Prepare ensures the account defined by ctx.GetFromAddress() exists and
@@ -143,29 +102,6 @@ func (f Factory) Prepare() (Factory, error) {
 	return f, nil
 }
 
-// TODO: move to internal/coins?
-var (
-	_ withAmount = &base.Coin{}
-	_ withAmount = &base.DecCoin{}
-)
-
-type withAmount interface {
-	GetAmount() string
-}
-
-func isZero[T withAmount](coins []T) (bool, error) {
-	for _, coin := range coins {
-		amount, ok := math.NewIntFromString(coin.GetAmount())
-		if !ok {
-			return false, errors.New("invalid coin amount")
-		}
-		if !amount.IsZero() {
-			return false, nil
-		}
-	}
-	return true, nil
-}
-
 // BuildUnsignedTx builds a transaction to be signed given a set of messages.
 // Once created, the fee, memo, and messages are set.
 func (f Factory) BuildUnsignedTx(msgs ...transaction.Msg) (TxBuilder, error) {
@@ -179,12 +115,12 @@ func (f Factory) BuildUnsignedTx(msgs ...transaction.Msg) (TxBuilder, error) {
 
 	fees := f.txParams.fees
 
-	isGasPriceZero, err := isZero(f.txParams.gasPrices)
+	isGasPriceZero, err := coins.IsZero(f.txParams.gasPrices)
 	if err != nil {
 		return nil, err
 	}
 	if !isGasPriceZero {
-		areFeesZero, err := isZero(fees)
+		areFeesZero, err := coins.IsZero(fees)
 		if err != nil {
 			return nil, err
 		}
@@ -489,72 +425,9 @@ func validateMemo(memo string) error {
 	return nil
 }
 
-// WithAccountRetriever returns a copy of the Factory with an updated AccountRetriever.
-func (f Factory) WithAccountRetriever(ar AccountRetriever) Factory {
-	f.accountRetriever = ar
-	return f
-}
-
-// WithChainID returns a copy of the Factory with an updated chainID.
-func (f Factory) WithChainID(chainID string) Factory {
-	f.txParams.chainID = chainID
-	return f
-}
-
 // WithGas returns a copy of the Factory with an updated gas value.
 func (f Factory) WithGas(gas uint64) Factory {
 	f.txParams.gas = gas
-	return f
-}
-
-// WithFees returns a copy of the Factory with an updated fee.
-func (f Factory) WithFees(fees string) Factory {
-	parsedFees, err := sdk.ParseCoinsNormalized(fees) // TODO: do it here to avoid sdk dependency
-	if err != nil {
-		panic(err)
-	}
-
-	finalFees := make([]*base.Coin, len(parsedFees))
-	for i, coin := range parsedFees {
-		finalFees[i] = &base.Coin{
-			Denom:  coin.Denom,
-			Amount: coin.Amount.String(),
-		}
-	}
-
-	f.txParams.fees = finalFees
-	return f
-}
-
-// WithGasPrices returns a copy of the Factory with updated gas prices.
-func (f Factory) WithGasPrices(gasPrices string) Factory {
-	parsedGasPrices, err := sdk.ParseDecCoins(gasPrices) // TODO: do it here to avoid sdk dependency
-	if err != nil {
-		panic(err)
-	}
-
-	finalGasPrices := make([]*base.DecCoin, len(parsedGasPrices))
-	for i, coin := range parsedGasPrices {
-		finalGasPrices[i] = &base.DecCoin{
-			Denom:  coin.Denom,
-			Amount: coin.Amount.String(),
-		}
-	}
-
-	f.txParams.gasPrices = finalGasPrices
-	return f
-}
-
-// WithKeybase returns a copy of the Factory with updated Keybase.
-func (f Factory) WithKeybase(keybase keyring.Keyring) Factory {
-	f.keybase = keybase
-	return f
-}
-
-// WithFromName returns a copy of the Factory with updated fromName
-// fromName will be use for building a simulation tx.
-func (f Factory) WithFromName(fromName string) Factory {
-	f.txParams.fromName = fromName
 	return f
 }
 
@@ -564,64 +437,9 @@ func (f Factory) WithSequence(sequence uint64) Factory {
 	return f
 }
 
-// WithMemo returns a copy of the Factory with an updated memo.
-func (f Factory) WithMemo(memo string) Factory {
-	f.txParams.memo = memo
-	return f
-}
-
 // WithAccountNumber returns a copy of the Factory with an updated account number.
 func (f Factory) WithAccountNumber(accnum uint64) Factory {
 	f.txParams.accountNumber = accnum
-	return f
-}
-
-// WithGasAdjustment returns a copy of the Factory with an updated gas adjustment.
-func (f Factory) WithGasAdjustment(gasAdj float64) Factory {
-	f.txParams.gasAdjustment = gasAdj
-	return f
-}
-
-// WithSimulateAndExecute returns a copy of the Factory with an updated gas
-// simulation value.
-func (f Factory) WithSimulateAndExecute(sim bool) Factory {
-	f.txParams.simulateAndExecute = sim
-	return f
-}
-
-// WithSignMode returns a copy of the Factory with an updated sign mode value.
-func (f Factory) WithSignMode(mode apitxsigning.SignMode) Factory {
-	f.txParams.signMode = mode
-	return f
-}
-
-// WithTimeoutHeight returns a copy of the Factory with an updated timeout height.
-func (f Factory) WithTimeoutHeight(height uint64) Factory {
-	f.txParams.timeoutHeight = height
-	return f
-}
-
-// WithFeeGranter returns a copy of the Factory with an updated fee granter.
-func (f Factory) WithFeeGranter(fg string) Factory {
-	f.txParams.feeGranter = fg
-	return f
-}
-
-// WithFeePayer returns a copy of the Factory with an updated fee granter.
-func (f Factory) WithFeePayer(fp string) Factory {
-	f.txParams.feePayer = fp
-	return f
-}
-
-// WithPreprocessTxHook returns a copy of the Factory with an updated preprocess tx function,
-// allows for preprocessing of transaction data using the TxBuilder.
-func (f Factory) WithPreprocessTxHook(preprocessFn PreprocessTxFn) Factory {
-	f.txParams.preprocessTxHook = preprocessFn
-	return f
-}
-
-func (f Factory) WithExtensionOptions(extOpts ...*codectypes.Any) Factory {
-	f.txParams.ExtOptions = extOpts
 	return f
 }
 

@@ -5,6 +5,7 @@ import (
 	protov2 "google.golang.org/protobuf/proto"
 
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
+	txdecode "cosmossdk.io/x/tx/decode"
 )
 
 var (
@@ -15,6 +16,11 @@ var (
 		UseEnumNumbers: false,
 	}
 )
+
+// Decoder decodes bytes into x/tx DecodedTx
+type Decoder interface {
+	Decode(txBytes []byte) (*txdecode.DecodedTx, error)
+}
 
 // txApiDecoder unmarshals transaction bytes into API Tx type
 type txApiDecoder func(txBytes []byte) (*apitx.Tx, error)

@@ -8,7 +8,6 @@ import (
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/transaction"
-	txdecode "cosmossdk.io/x/tx/decode"
 	"cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/codec"
 
@@ -50,11 +49,11 @@ type TxBuilderProvider interface {
 
 type BuilderProvider struct {
 	addressCodec address.Codec
-	decoder      *txdecode.Decoder
+	decoder      Decoder
 	codec        codec.BinaryCodec
 }
 
-func NewBuilderProvider(addressCodec address.Codec, decoder *txdecode.Decoder, codec codec.BinaryCodec) *BuilderProvider {
+func NewBuilderProvider(addressCodec address.Codec, decoder Decoder, codec codec.BinaryCodec) *BuilderProvider {
 	return &BuilderProvider{
 		addressCodec: addressCodec,
 		decoder:      decoder,
@@ -77,7 +76,7 @@ func (b BuilderProvider) WrapTxBuilder(tx *apitx.Tx) (TxBuilder, error) {
 
 type txBuilder struct {
 	addressCodec address.Codec
-	decoder      *txdecode.Decoder
+	decoder      Decoder
 	codec        codec.BinaryCodec
 
 	msgs          []transaction.Msg
@@ -95,7 +94,7 @@ type txBuilder struct {
 	nonCriticalExtensionOptions []*anypb.Any
 }
 
-func newTxBuilder(addressCodec address.Codec, decoder *txdecode.Decoder, codec codec.BinaryCodec) *txBuilder {
+func newTxBuilder(addressCodec address.Codec, decoder Decoder, codec codec.BinaryCodec) *txBuilder {
 	return &txBuilder{
 		addressCodec: addressCodec,
 		decoder:      decoder,

@@ -54,7 +54,7 @@ type TxSigningConfig interface {
 
 type ConfigOptions struct {
 	AddressCodec address.Codec
-	Decoder      *txdecode.Decoder
+	Decoder      Decoder
 	Cdc          codec.BinaryCodec
 
 	ValidatorAddressCodec address.Codec

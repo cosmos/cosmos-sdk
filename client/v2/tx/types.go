@@ -2,6 +2,7 @@ package tx
 
 import (
 	"cosmossdk.io/core/transaction"
+	"errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/gogoproto/proto"
@@ -18,6 +19,8 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+const defaultGas = 200000
 
 // PreprocessTxFn defines a hook by which chains can preprocess transactions before broadcasting
 type PreprocessTxFn func(chainID string, key uint, tx TxBuilder) error
@@ -50,22 +53,57 @@ type GasConfig struct {
 	gasPrices     []*base.DecCoin
 }
 
-func NewGasConfig(gas uint64, gasAdjustment float64, gasPrices []*base.DecCoin) GasConfig {
+func NewGasConfig(gas uint64, gasAdjustment float64, gasPrices string) (GasConfig, error) {
 	if gas == 0 {
-		gas = 200000
+		gas = defaultGas
 	}
+
+	parsedGasPrices, err := sdk.ParseDecCoins(gasPrices) // TODO: do it here to avoid sdk dependency
+	if err != nil {
+		return GasConfig{}, err
+	}
+
+	finalGasPrices := make([]*base.DecCoin, len(parsedGasPrices))
+	for i, coin := range parsedGasPrices {
+		finalGasPrices[i] = &base.DecCoin{
+			Denom:  coin.Denom,
+			Amount: coin.Amount.String(),
+		}
+	}
+
 	return GasConfig{
 		gas:           gas,
 		gasAdjustment: gasAdjustment,
-		gasPrices:     gasPrices,
-	}
+		gasPrices:     finalGasPrices,
+	}, nil
 }
 
 // FeeConfig defines the 'fee' related fields in a transaction.
 type FeeConfig struct {
 	fees       []*base.Coin
-	feeGranter string
 	feePayer   string
+	feeGranter string
+}
+
+func NewFeeConfig(fees, feePayer, feeGranter string) (FeeConfig, error) {
+	parsedFees, err := sdk.ParseCoinsNormalized(fees) // TODO: do it here to avoid sdk dependency
+	if err != nil {
+		return FeeConfig{}, err
+	}
+
+	finalFees := make([]*base.Coin, len(parsedFees))
+	for i, coin := range parsedFees {
+		finalFees[i] = &base.Coin{
+			Denom:  coin.Denom,
+			Amount: coin.Amount.String(),
+		}
+	}
+
+	return FeeConfig{
+		fees:       finalFees,
+		feePayer:   feePayer,
+		feeGranter: feeGranter,
+	}, nil
 }
 
 // ExecutionOptions defines the transaction execution options ran by the client
@@ -104,11 +142,11 @@ type wrappedTx struct {
 }
 
 func (w wrappedTx) GetMsgs() ([]transaction.Msg, error) {
-	panic("implement me")
+	return nil, errors.New("not implemented")
 }
 
 func (w wrappedTx) GetSigners() ([][]byte, error) {
-	panic("implement me")
+	return nil, errors.New("not implemented")
 }
 
 func (w wrappedTx) GetPubKeys() ([]cryptotypes.PubKey, error) {

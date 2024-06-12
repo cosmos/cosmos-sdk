@@ -6,11 +6,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/collections/colltest"
+	"cosmossdk.io/core/testing"
 )
 
 func TestLookupMap(t *testing.T) {
-	sk, ctx := colltest.MockStore()
+	ctx := coretesting.Context()
+	sk := coretesting.KVStoreService(ctx, "test")
 	schema := collections.NewSchemaBuilder(sk)
 
 	lm := collections.NewLookupMap(schema, collections.NewPrefix("hi"), "lm", collections.Uint64Key, collections.Uint64Value)

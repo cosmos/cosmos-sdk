@@ -18,7 +18,6 @@ type EntityUpdate struct {
 
 	// Value returns the non-primary key columns of the entity and can either conform to the same constraints
 	// as EntityUpdate.Key or it may be and instance of ValueUpdates. ValueUpdates can be used as a performance
-	// optimization to avoid copying the values of the entity into the update and to omit unchanged columns.
 	// If this is a delete operation, then this value is ignored and can be nil.
 	Value any
 
@@ -30,6 +29,7 @@ type EntityUpdate struct {
 // may not filter out columns that were unchanged. However, if a column is omitted from the update
 // it should be considered unchanged.
 type ValueUpdates interface {
+
 	// Iterate iterates over the columns and values in the entity update. The function should return
 	// true to continue iteration or false to stop iteration. Each column value should conform
 	// to the requirements of that column's type in the schema.

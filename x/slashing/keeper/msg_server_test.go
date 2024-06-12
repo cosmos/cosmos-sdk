@@ -173,7 +173,7 @@ func (s *KeeperTestSuite) TestUnjail() {
 				valStr, err := s.stakingKeeper.ValidatorAddressCodec().BytesToString(addr)
 				s.Require().NoError(err)
 
-				val, err := types.NewValidator(valStr, pubKey, types.Description{Moniker: "test"}, addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+				val, err := types.NewValidator(valStr, pubKey, types.Description{Moniker: "test"})
 				s.Require().NoError(err)
 
 				s.stakingKeeper.EXPECT().Validator(s.ctx, valAddr).Return(val, nil)
@@ -214,7 +214,7 @@ func (s *KeeperTestSuite) TestUnjail() {
 				consStr, err := s.stakingKeeper.ConsensusAddressCodec().BytesToString(addr)
 				s.Require().NoError(err)
 
-				val, err := types.NewValidator(valStr, pubKey, types.Description{Moniker: "test"}, addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+				val, err := types.NewValidator(valStr, pubKey, types.Description{Moniker: "test"})
 				val.Tokens = sdkmath.NewInt(1000)
 				val.DelegatorShares = sdkmath.LegacyNewDec(1)
 				val.Jailed = false
@@ -249,7 +249,7 @@ func (s *KeeperTestSuite) TestUnjail() {
 				consStr, err := s.stakingKeeper.ConsensusAddressCodec().BytesToString(addr)
 				s.Require().NoError(err)
 
-				val, err := types.NewValidator(valStr, pubKey, types.Description{Moniker: "test"}, addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+				val, err := types.NewValidator(valStr, pubKey, types.Description{Moniker: "test"})
 				val.Tokens = sdkmath.NewInt(1000)
 				val.DelegatorShares = sdkmath.LegacyNewDec(1)
 				val.Jailed = true
@@ -284,7 +284,7 @@ func (s *KeeperTestSuite) TestUnjail() {
 				addrStr, err := ac.BytesToString(addr)
 				s.Require().NoError(err)
 
-				val, err := types.NewValidator(valStr, pubKey, types.Description{Moniker: "test"}, addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+				val, err := types.NewValidator(valStr, pubKey, types.Description{Moniker: "test"})
 				val.Tokens = sdkmath.NewInt(1000)
 				val.DelegatorShares = sdkmath.LegacyNewDec(1)
 				val.Jailed = true
@@ -319,7 +319,7 @@ func (s *KeeperTestSuite) TestUnjail() {
 				consStr, err := s.stakingKeeper.ConsensusAddressCodec().BytesToString(addr)
 				s.Require().NoError(err)
 
-				val, err := types.NewValidator(valStr, pubKey, types.Description{Moniker: "test"}, addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+				val, err := types.NewValidator(valStr, pubKey, types.Description{Moniker: "test"})
 				val.Tokens = sdkmath.NewInt(1000)
 				val.DelegatorShares = sdkmath.LegacyNewDec(1)
 

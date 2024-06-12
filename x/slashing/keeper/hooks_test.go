@@ -3,7 +3,6 @@ package keeper_test
 import (
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -28,7 +27,7 @@ func (s *KeeperTestSuite) TestAfterValidatorCreatedOrRemoved() {
 
 	addStr, err := s.stakingKeeper.ValidatorAddressCodec().BytesToString(addr)
 	require.NoError(err)
-	validator, err := stakingtypes.NewValidator(addStr, pubKey, stakingtypes.Description{}, addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	validator, err := stakingtypes.NewValidator(addStr, pubKey, stakingtypes.Description{})
 	require.NoError(err)
 
 	s.stakingKeeper.EXPECT().Validator(ctx, valAddr).Return(validator, nil)

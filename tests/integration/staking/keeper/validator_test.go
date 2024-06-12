@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/x/staking/testutil"
 	"cosmossdk.io/x/staking/types"
 
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,7 +20,7 @@ import (
 
 func newMonikerValidator(tb testing.TB, operator sdk.ValAddress, pubKey cryptotypes.PubKey, moniker string) types.Validator {
 	tb.Helper()
-	v, err := types.NewValidator(operator.String(), pubKey, types.Description{Moniker: moniker}, addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	v, err := types.NewValidator(operator.String(), pubKey, types.Description{Moniker: moniker})
 	assert.NilError(tb, err)
 	return v
 }

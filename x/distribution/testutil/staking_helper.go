@@ -8,13 +8,12 @@ import (
 	"cosmossdk.io/x/distribution/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func CreateValidator(pk cryptotypes.PubKey, operator string, stake math.Int) (stakingtypes.Validator, error) {
-	val, err := stakingtypes.NewValidator(operator, pk, stakingtypes.Description{Moniker: "TestValidator"}, addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()))
+	val, err := stakingtypes.NewValidator(operator, pk, stakingtypes.Description{Moniker: "TestValidator"})
 	val.Tokens = stake
 	val.DelegatorShares = math.LegacyNewDecFromInt(val.Tokens)
 	return val, err

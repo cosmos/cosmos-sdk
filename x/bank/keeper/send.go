@@ -157,45 +157,19 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		return err
 	}
 
-	outAddresses := make([][]sdk.AccAddress, len(outputs))
-	isSuccess := false
-
-	for i, out := range outputs {
-		var (
-			outAddress, newOutAddress sdk.AccAddress
-		)
-		outAddress, err = k.ak.AddressCodec().StringToBytes(out.Address)
+	for _, out := range outputs {
+		outAddress, err := k.ak.AddressCodec().StringToBytes(out.Address)
 		if err != nil {
 			return err
 		}
-		outAddresses[i] = make([]sdk.AccAddress, len(out.Coins)) // out address per denom
 
-		for j, coin := range out.Coins {
-			newOutAddress, err = k.sendRestriction.apply(ctx, inAddress, outAddress, coin)
+		for _, coin := range out.Coins {
+			newOutAddress, err := k.sendRestriction.apply(ctx, inAddress, outAddress, coin)
 			if err != nil {
-				continue
+				return err
 			}
 
-			outAddresses[i][j] = newOutAddress
-
-			isSuccess = true
-		}
-	}
-
-	if !isSuccess {
-		return err // returning last err from sendRestrictionFn (does it matter which one?)
-	}
-
-	for i, out := range outputs {
-		for j, coin := range out.Coins {
-			// skip restricted coin
-			if outAddresses[i][j] == nil {
-				continue
-			}
-
-			toAddr := outAddresses[i][j]
-
-			err := k.sendCoin(ctx, inAddress, toAddr, coin)
+			err = k.sendCoin(ctx, inAddress, newOutAddress, coin)
 			if err != nil {
 				return err
 			}
@@ -220,45 +194,21 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 		return err
 	}
 
-	var (
-		err         error
-		isSuccess   bool                               // if at least one send succeedes, we proceed
-		toAddresses = make([]sdk.AccAddress, len(amt)) // out address per denom
-	)
-	// bech32 encoding is expensive! Only do it once for fromAddr
-	fromAddrString := fromAddr.String()
-
-	for i, coin := range amt {
-		toAddr, err = k.sendRestriction.apply(ctx, fromAddr, toAddr, coin)
-
+	for _, coin := range amt {
+		newToAddr, err := k.sendRestriction.apply(ctx, fromAddr, toAddr, coin)
 		if err != nil {
-			continue
+			return err
 		}
 
-		toAddresses[i] = toAddr
-
-		isSuccess = true
-	}
-
-	if !isSuccess {
-		return err // returning last err from sendRestrictionFn (does it matter which one?)
-	}
-
-	for i, coin := range amt {
-		// skip restricted coin
-		if toAddresses[i] == nil {
-			continue
-		}
-
-		toAddr = toAddresses[i]
-
-		err := k.sendCoin(ctx, fromAddr, toAddr, coin)
+		err = k.sendCoin(ctx, fromAddr, newToAddr, coin)
 		if err != nil {
 			return err
 		}
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	// bech32 encoding is expensive! Only do it once for fromAddr
+	fromAddrString := fromAddr.String()
 	sdkCtx.EventManager().EmitEvent(sdk.NewEvent(
 		sdk.EventTypeMessage,
 		sdk.NewAttribute(types.AttributeKeySender, fromAddrString),

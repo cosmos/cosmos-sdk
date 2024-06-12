@@ -18,11 +18,11 @@ import (
 	govmodulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	groupmodulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
-	stakingmodulev1 "cosmossdk.io/api/cosmos/mstaking/module/v1"
 	nftmodulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	poolmodulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
+	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/depinject"
@@ -223,12 +223,6 @@ func DistributionModule() ModuleOption {
 		config.ModuleConfigs[testutil.DistributionModuleName] = &appv1alpha1.ModuleConfig{
 			Name:   testutil.DistributionModuleName,
 			Config: appconfig.WrapAny(&distrmodulev1.Module{}),
-			GolangBindings: []*appv1alpha1.GolangBinding{
-				{
-					InterfaceType:  "cosmossdk.io/x/distribution/types/types.StakingKeeper",
-					Implementation: "github.com/cosmos/cosmos-sdk/testutil/x/staking/keeper/*keeper.Keeper",
-				},
-			},
 		}
 	}
 }
@@ -277,7 +271,7 @@ func MintModule() ModuleOption {
 			GolangBindings: []*appv1alpha1.GolangBinding{
 				{
 					InterfaceType:  "cosmossdk.io/x/mint/types/types.StakingKeeper",
-					Implementation: "github.com/cosmos/cosmos-sdk/testutil/x/staking/keeper/*keeper.Keeper",
+					Implementation: "cosmossdk.io/x/staking/keeper/*keeper.Keeper",
 				},
 			},
 		}

@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             (unknown)
-// source: cosmos/mstaking/v1beta1/tx.proto
+// source: cosmos/testutil/staking/v1beta1/tx.proto
 
-package mstakingv1beta1
+package stakingv1beta1
 
 import (
 	context "context"
@@ -19,7 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_CreateValidator_FullMethodName = "/cosmos.mstaking.v1beta1.Msg/CreateValidator"
+	Msg_CreateValidator_FullMethodName = "/cosmos.testutil.staking.v1beta1.Msg/CreateValidator"
 )
 
 // MsgClient is the client API for Msg service.
@@ -98,7 +98,7 @@ func _Msg_CreateValidator_Handler(srv interface{}, ctx context.Context, dec func
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Msg_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "cosmos.mstaking.v1beta1.Msg",
+	ServiceName: "cosmos.testutil.staking.v1beta1.Msg",
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -107,5 +107,5 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "cosmos/mstaking/v1beta1/tx.proto",
+	Metadata: "cosmos/testutil/staking/v1beta1/tx.proto",
 }

@@ -24,7 +24,7 @@ import (
 	_ "cosmossdk.io/x/gov"
 	govv1 "cosmossdk.io/x/gov/types/v1"
 	_ "cosmossdk.io/x/protocolpool"
-	_ "github.com/cosmos/cosmos-sdk/testutil/x/staking"
+	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"

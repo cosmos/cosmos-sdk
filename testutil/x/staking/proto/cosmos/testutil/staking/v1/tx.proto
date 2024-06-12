@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.mstaking.v1beta1;
+package cosmos.testutil.staking.v1;
 
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
@@ -7,7 +7,7 @@ import "gogoproto/gogo.proto";
 
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "cosmos/mstaking/v1beta1/staking.proto";
+import "cosmos/testutil/staking/v1/staking.proto";
 import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
 

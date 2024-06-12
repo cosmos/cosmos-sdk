@@ -35,8 +35,9 @@ import (
 	authtypes "cosmossdk.io/x/auth/types"
 	_ "cosmossdk.io/x/bank" // import bank as a blank
 	banktypes "cosmossdk.io/x/bank/types"
-	_ "cosmossdk.io/x/consensus"                        // import consensus as a blank
-	_ "github.com/cosmos/cosmos-sdk/testutil/x/staking" // import staking as a blank
+	_ "cosmossdk.io/x/consensus" // import consensus as a blank
+
+	// _ "github.com/cosmos/cosmos-sdk/testutil/x/staking" // import staking as a blank
 	stakingtypes "github.com/cosmos/cosmos-sdk/testutil/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -542,10 +543,15 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			return nil, err
 		}
 
+		fmt.Println("Types..............", cfg.InterfaceRegistry.ListImplementations("cosmos.base.v1beta1.Msg"))
+
+		fmt.Println("Builder.............", txBuilder.GetTx())
+
 		txBz, err := cfg.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
 		if err != nil {
 			return nil, err
 		}
+		fmt.Println("After.................")
 		err = writeFile(fmt.Sprintf("%v.json", nodeDirName), gentxsDir, txBz)
 		if err != nil {
 			return nil, err

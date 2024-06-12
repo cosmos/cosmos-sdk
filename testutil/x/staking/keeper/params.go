@@ -2,16 +2,30 @@ package keeper
 
 import (
 	"context"
+	"time"
 
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// UnbondingTime - The time duration for unbonding
+func (k Keeper) UnbondingTime(ctx context.Context) (time.Duration, error) {
+	params, err := k.Params.Get(ctx)
+	return params.UnbondingTime, err
+}
+
 // MaxValidators - Maximum number of validators
 func (k Keeper) MaxValidators(ctx context.Context) (uint32, error) {
 	params, err := k.Params.Get(ctx)
 	return params.MaxValidators, err
+}
+
+// HistoricalEntries = number of historical info entries
+// to persist in store
+func (k Keeper) HistoricalEntries(ctx context.Context) (uint32, error) {
+	params, err := k.Params.Get(ctx)
+	return params.HistoricalEntries, err
 }
 
 // BondDenom - Bondable coin denomination

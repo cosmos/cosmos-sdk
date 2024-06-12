@@ -12,7 +12,7 @@ import (
 
 const (
 	// ModuleName is the name of the staking module
-	ModuleName = "mstaking"
+	ModuleName = "staking"
 
 	// StoreKey is the string store representation
 	StoreKey = ModuleName

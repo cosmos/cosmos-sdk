@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             (unknown)
-// source: cosmos/mstaking/v1beta1/query.proto
+// source: cosmos/testutil/staking/v1beta1/query.proto
 
-package mstakingv1beta1
+package stakingv1beta1
 
 import (
 	context "context"
@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Query_Validators_FullMethodName = "/cosmos.mstaking.v1beta1.Query/Validators"
-	Query_Validator_FullMethodName  = "/cosmos.mstaking.v1beta1.Query/Validator"
+	Query_Validators_FullMethodName = "/cosmos.testutil.staking.v1beta1.Query/Validators"
+	Query_Validator_FullMethodName  = "/cosmos.testutil.staking.v1beta1.Query/Validator"
 )
 
 // QueryClient is the client API for Query service.
@@ -139,7 +139,7 @@ func _Query_Validator_Handler(srv interface{}, ctx context.Context, dec func(int
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Query_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "cosmos.mstaking.v1beta1.Query",
+	ServiceName: "cosmos.testutil.staking.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -152,5 +152,5 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "cosmos/mstaking/v1beta1/query.proto",
+	Metadata: "cosmos/testutil/staking/v1beta1/query.proto",
 }

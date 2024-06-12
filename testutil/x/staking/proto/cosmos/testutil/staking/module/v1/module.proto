@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package cosmos.mstaking.module.v1;
+package cosmos.testutil.staking.module.v1;
 
 import "cosmos/app/v1alpha1/module.proto";
 

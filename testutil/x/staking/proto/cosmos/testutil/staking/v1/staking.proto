@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.mstaking.v1beta1;
+package cosmos.testutil.staking.v1;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
@@ -185,17 +185,112 @@ message Pool {
   ];
 }
 
+// UnbondingDelegation stores all of a single delegator's unbonding bonds
+// for a single validator in an time-ordered list.
+message UnbondingDelegation {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // delegator_address is the encoded address of the delegator.
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // validator_address is the encoded address of the validator.
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  // entries are the unbonding delegation entries.
+  repeated UnbondingDelegationEntry entries = 3
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true]; // unbonding delegation entries
+}
+
+// UnbondingDelegationEntry defines an unbonding object with relevant metadata.
+message UnbondingDelegationEntry {
+  option (gogoproto.equal) = true;
+
+  // creation_height is the height which the unbonding took place.
+  int64 creation_height = 1;
+  // completion_time is the unix time for unbonding completion.
+  google.protobuf.Timestamp completion_time = 2
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
+  // initial_balance defines the tokens initially scheduled to receive at completion.
+  string initial_balance = 3 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
+  // balance defines the tokens to receive at completion.
+  string balance = 4 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
+  // Incrementing id that uniquely identifies this entry
+  uint64 unbonding_id = 5;
+
+  // Strictly positive if this entry's unbonding has been stopped by external modules
+  int64 unbonding_on_hold_ref_count = 6;
+}
+
+// RedelegationEntry defines a redelegation object with relevant metadata.
+message RedelegationEntry {
+  option (gogoproto.equal) = true;
+
+  // creation_height  defines the height which the redelegation took place.
+  int64 creation_height = 1;
+  // completion_time defines the unix time for redelegation completion.
+  google.protobuf.Timestamp completion_time = 2
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
+  // initial_balance defines the initial balance when redelegation started.
+  string initial_balance = 3 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
+  // shares_dst is the amount of destination-validator shares created by redelegation.
+  string shares_dst = 4 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
+  // Incrementing id that uniquely identifies this entry
+  uint64 unbonding_id = 5;
+
+  // Strictly positive if this entry's unbonding has been stopped by external modules
+  int64 unbonding_on_hold_ref_count = 6;
+}
+
+// Redelegation contains the list of a particular delegator's redelegating bonds
+// from a particular source validator to a particular destination validator.
+message Redelegation {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // delegator_address is the bech32-encoded address of the delegator.
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // validator_src_address is the validator redelegation source operator address.
+  string validator_src_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  // validator_dst_address is the validator redelegation destination operator address.
+  string validator_dst_address = 3 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  // entries are the redelegation entries.
+  repeated RedelegationEntry entries = 4
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true]; // redelegation entries
+}
+
 // Params defines the parameters for the x/staking module.
 message Params {
   option (amino.name)      = "cosmos-sdk/x/staking/Params";
   option (gogoproto.equal) = true;
 
+  // unbonding_time is the time duration of unbonding.
+  google.protobuf.Duration unbonding_time = 1
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdduration) = true];
   // max_validators is the maximum number of validators.
-  uint32 max_validators = 1;
+  uint32 max_validators = 2;
+  // max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio).
+  uint32 max_entries = 3;
+  // historical_entries is the number of historical entries to persist.
+  uint32 historical_entries = 4;
   // bond_denom defines the bondable coin denomination.
-  string bond_denom = 2;
+  string bond_denom = 5;
   // min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators
-  string min_commission_rate = 3 [
+  string min_commission_rate = 6 [
     (gogoproto.moretags)   = "yaml:\"min_commission_rate\"",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,

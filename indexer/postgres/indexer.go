@@ -11,106 +11,60 @@ import (
 )
 
 type indexer struct {
-	ctx    context.Context
-	conn   *pgx.Conn
-	tables map[string]*tableInfo
+	ctx  context.Context
+	conn *pgx.Conn
 }
 
-type Options struct{}
+type Options struct {
+	ConnectionURL string
+}
 
 func NewIndexer(ctx context.Context, opts Options) (indexerbase.Listener, error) {
-	// get env var DATABASE_URL
-	dbUrl, ok := os.LookupEnv("DATABASE_URL")
-	if !ok {
-		panic("DATABASE_URL not set")
+	// get DATABASE_URL from environment
+	dbUrl := opts.ConnectionURL
+	if dbUrl == "" {
+		var ok bool
+		dbUrl, ok = os.LookupEnv("DATABASE_URL")
+		if !ok {
+			return indexerbase.Listener{}, fmt.Errorf("connection URL not set")
+		}
 	}
 
 	conn, err := pgx.Connect(ctx, dbUrl)
 	if err != nil {
-		panic(err)
+		return indexerbase.Listener{}, err
 	}
 
 	i := &indexer{
-		ctx:    ctx,
-		conn:   conn,
-		tables: map[string]*tableInfo{},
+		ctx:  ctx,
+		conn: conn,
 	}
+
 	return i.logicalListener()
 }
 
 func (i *indexer) logicalListener() (indexerbase.Listener, error) {
 	return indexerbase.Listener{
-		StartBlock: i.startBlock,
-		Commit:     i.commit,
-		//EnsureSetup:    i.ensureSetup,
-		//OnEntityUpdate: i.onEntityUpdate,
+		Initialize:             i.initialize,
+		InitializeModuleSchema: i.initModuleSchema,
+		StartBlock:             i.startBlock,
+		Commit:                 i.commit,
 	}, nil
 }
 
-func (i *indexer) ensureSetup(data indexerbase.LogicalSetupData) error {
-	for _, table := range data.Schema.Tables {
-		createTable, err := i.createTableStatement(table)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("%s\n", createTable)
-		_, err = i.conn.Exec(context.Background(), createTable)
-		if err != nil {
-			return err
-		}
-
-		_, err = i.conn.Exec(context.Background(), fmt.Sprintf("GRANT SELECT ON %s TO public;", table.Name))
-		if err != nil {
-			return err
-		}
-
-		i.tables[table.Name] = &tableInfo{table: table}
-	}
-	return nil
+func (i *indexer) initialize(indexerbase.InitializationData) (int64, error) {
+	// we don't care about persisting block data yet so just return 0
+	return 0, nil
 }
 
-type tableInfo struct {
-	table indexerbase.Table
+func (i *indexer) initModuleSchema(moduleName string, schema indexerbase.ModuleSchema) (int64, error) {
+	//for _, _ := range schema.Tables {
+	//}
+	return -1, nil
 }
 
 func (i *indexer) startBlock(u uint64) error {
 	return nil
-}
-
-//	func (i indexer) IndexBlockHeader(data *indexerbase.BlockHeaderData) error {
-//		//TODO implement me
-//		panic("implement me")
-//	}
-//
-//	func (i indexer) IndexTx(data *indexerbase.TxData) error {
-//		//TODO implement me
-//		panic("implement me")
-//	}
-//
-//	func (i indexer) IndexEvent(data *indexerbase.EventData) error {
-//		//TODO implement me
-//		panic("implement me")
-//	}
-
-func (i *indexer) onEntityUpdate(update indexerbase.EntityUpdate) error {
-	ti, ok := i.tables[update.TableName]
-	if !ok {
-		return fmt.Errorf("table %s not found", update.TableName)
-	}
-
-	err := indexerbase.ValidateKey(ti.table.KeyColumns, update.Key)
-	if err != nil {
-		fmt.Printf("error validating key: %s\n", err)
-	}
-
-	if !update.Delete {
-		err = indexerbase.ValidateValue(ti.table.ValueColumns, update.Value)
-		if err != nil {
-			fmt.Printf("error validating value: %s\n", err)
-		}
-	}
-
-	return ti.exec(i.ctx, i.conn, update)
 }
 
 func (i *indexer) commit() error {

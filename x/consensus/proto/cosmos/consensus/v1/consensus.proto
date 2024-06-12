@@ -6,10 +6,6 @@ import "cometbft/abci/v1/types.proto";
 
 option go_package = "cosmossdk.io/x/consensus/types";
 
-// ConsensusMsgParamsResponse defines the response structure for executing a
-// ConsensusMsgParams message.
-message ConsensusMsgParamsResponse {}
-
 // CometInfo defines the structure of the x/consensus module's comet info.
 message CometInfo {
   repeated cometbft.abci.v1.Misbehavior evidence         = 1;

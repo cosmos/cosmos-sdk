@@ -46,7 +46,7 @@ type Committer interface {
 	GetLatestVersion() (uint64, error)
 
 	// LoadVersion loads the tree at the given version.
-	LoadVersion(targetVersion uint64, upgrades *corestore.StoreUpgrades) error
+	LoadVersion(targetVersion uint64) error
 
 	// Commit commits the working tree to the database.
 	Commit(version uint64) (*proof.CommitInfo, error)

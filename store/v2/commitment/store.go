@@ -30,6 +30,7 @@ const (
 
 var (
 	_ store.Committer             = (*CommitStore)(nil)
+	_ store.UpgradeableStore      = (*CommitStore)(nil)
 	_ snapshots.CommitSnapshotter = (*CommitStore)(nil)
 	_ store.PausablePruner        = (*CommitStore)(nil)
 	_ store.KVStoreGetter         = (*CommitStore)(nil)
@@ -57,7 +58,6 @@ func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, logger
 
 func (c *CommitStore) WriteChangeset(cs *corestore.Changeset) error {
 	for _, pairs := range cs.Changes {
-
 		key := conv.UnsafeBytesToStr(pairs.Actor)
 
 		tree, ok := c.multiTrees[key]
@@ -130,7 +130,7 @@ func (c *CommitStore) IsEmpty() (bool, error) {
 	}
 }
 
-func (c *CommitStore) LoadVersion(targetVersion uint64, upgrades *corestore.StoreUpgrades) error {
+func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 	// Rollback the metadata to the target version.
 	latestVersion, err := c.GetLatestVersion()
 	if err != nil {
@@ -145,7 +145,18 @@ func (c *CommitStore) LoadVersion(targetVersion uint64, upgrades *corestore.Stor
 				return err
 			}
 		}
+		var buf bytes.Buffer
+		buf.Grow(encoding.EncodeUvarintSize(targetVersion))
+		if err := batch.Set([]byte(latestVersionKey), buf.Bytes()); err != nil {
+			return err
+		}
 		if err := batch.WriteSync(); err != nil {
+			return err
+		}
+	}
+
+	for _, tree := range c.multiTrees {
+		if err := tree.LoadVersion(targetVersion); err != nil {
 			return err
 		}
 	}
@@ -154,28 +165,33 @@ func (c *CommitStore) LoadVersion(targetVersion uint64, upgrades *corestore.Stor
 	// restore case, we should create a new commit info for the target version.
 	if targetVersion > latestVersion {
 		cInfo := c.WorkingCommitInfo(targetVersion)
-
-		for _, tree := range c.multiTrees {
-			if err := tree.LoadVersion(targetVersion); err != nil {
-				return err
-			}
-		}
-
 		return c.flushCommitInfo(targetVersion, cInfo)
 	}
 
+	return nil
+}
+
+// LoadVersionAndUpgrade implements store.UpgradeableStore.
+func (c *CommitStore) LoadVersionAndUpgrade(targetVersion uint64, upgrades *corestore.StoreUpgrades) error {
 	storesKeys := make([]string, 0, len(c.multiTrees))
 	for storeKey := range c.multiTrees {
 		storesKeys = append(storesKeys, storeKey)
 	}
+	// deterministic iteration order for upgrades
+	// (as the underlying store may change and
+	// upgrades make store changes where the execution order may matter)
+	sort.Slice(storesKeys, func(i, j int) bool {
+		return storesKeys[i] < storesKeys[j]
+	})
 
-	if upgrades != nil {
-		// deterministic iteration order for upgrades
-		// (as the underlying store may change and
-		// upgrades make store changes where the execution order may matter)
-		sort.Slice(storesKeys, func(i, j int) bool {
-			return storesKeys[i] < storesKeys[j]
-		})
+	removeTree := func(storeKey string) error {
+		if oldTree, ok := c.multiTrees[storeKey]; ok {
+			if err := oldTree.Close(); err != nil {
+				return err
+			}
+			delete(c.multiTrees, storeKey)
+		}
+		return nil
 	}
 
 	commitInfo, err := c.GetCommitInfo(targetVersion)
@@ -190,16 +206,6 @@ func (c *CommitStore) LoadVersion(targetVersion uint64, upgrades *corestore.Stor
 		}
 
 		tree := c.multiTrees[storeKey]
-
-		removeTree := func(storeKey string) error {
-			if oldTree, ok := c.multiTrees[storeKey]; ok {
-				if err := oldTree.Close(); err != nil {
-					return err
-				}
-				delete(c.multiTrees, storeKey)
-			}
-			return nil
-		}
 
 		// If it has been deleted, remove the tree.
 		if upgrades.IsDeleted(storeKey) {
@@ -257,43 +263,43 @@ func (c *CommitStore) migrateKVStore(oldKey, newKey string) error {
 		}
 	}
 
-	if oldKVStore != nil && newKVStore != nil {
-		iter, err := oldKVStore.Iterator(nil, nil)
+	if oldKVStore == nil {
+		return fmt.Errorf("old store %s not found", oldKey)
+	}
+	if newKVStore == nil {
+		return fmt.Errorf("new store %s not found", newKey)
+	}
+
+	batch := newKVStore.NewBatch()
+	iter, err := oldKVStore.Iterator(nil, nil)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = iter.Close()
+		_ = batch.Close()
+	}()
+
+	for ; iter.Valid(); iter.Next() {
+		if err := batch.Set(iter.Key(), iter.Value()); err != nil {
+			return err
+		}
+		bs, err := batch.GetByteSize()
 		if err != nil {
 			return err
 		}
-		defer func() {
-			_ = iter.Close()
-		}()
-
-		batch := newKVStore.NewBatch()
-		for ; iter.Valid(); iter.Next() {
-			if err := batch.Set(iter.Key(), iter.Value()); err != nil {
+		if bs > batchFlushThreshold {
+			if err := batch.Write(); err != nil {
 				return err
 			}
-			bs, err := batch.GetByteSize()
-			if err != nil {
+			if err := batch.Close(); err != nil {
 				return err
 			}
-			if bs > batchFlushThreshold {
-				if err := batch.Write(); err != nil {
-					return err
-				}
-				if err := batch.Close(); err != nil {
-					return err
-				}
-				batch = newKVStore.NewBatch()
-			}
-		}
-		if err := batch.Write(); err != nil {
-			return err
-		}
-		if err := batch.Close(); err != nil {
-			return err
+			batch = newKVStore.NewBatch()
 		}
 	}
 
-	return nil
+	return batch.Write()
 }
 
 func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
@@ -624,7 +630,7 @@ loop:
 		}
 	}
 
-	return snapshotItem, c.LoadVersion(version, nil)
+	return snapshotItem, c.LoadVersion(version)
 }
 
 // GetKVStoreWithBatch implements store.KVStoreGetter.

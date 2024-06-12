@@ -26,7 +26,7 @@ type UpgradeStoreTestSuite struct {
 }
 
 func TestUpgradeStoreTestSuite(t *testing.T) {
-	suite.Run(t, &MigrateStoreTestSuite{})
+	suite.Run(t, &UpgradeStoreTestSuite{})
 }
 
 func (s *UpgradeStoreTestSuite) SetupTest() {
@@ -80,7 +80,7 @@ func (s *UpgradeStoreTestSuite) loadWithUpgrades(upgrades *corestore.StoreUpgrad
 		multiTrees[added] = iavl.NewIavlTree(prefixDB, nopLog, iavl.DefaultConfig())
 	}
 	for _, rename := range upgrades.Renamed {
-		prefixDB := dbm.NewPrefixDB(s.commitDB, []byte(rename.OldKey))
+		prefixDB := dbm.NewPrefixDB(s.commitDB, []byte(rename.NewKey))
 		multiTrees[rename.NewKey] = iavl.NewIavlTree(prefixDB, nopLog, iavl.DefaultConfig())
 	}
 
@@ -106,7 +106,7 @@ func (s *UpgradeStoreTestSuite) TestLoadVersionAndUpgrade() {
 	// load the store with the upgrades
 	v, err := s.rootStore.GetLatestVersion()
 	s.Require().NoError(err)
-	err = s.rootStore.(store.UpgradeableRootStore).LoadVersionAndUpgrade(v, upgrades)
+	err = s.rootStore.(store.UpgradeableStore).LoadVersionAndUpgrade(v, upgrades)
 	s.Require().NoError(err)
 
 	// commit changeset
@@ -122,5 +122,34 @@ func (s *UpgradeStoreTestSuite) TestLoadVersionAndUpgrade() {
 		}
 		_, err = s.rootStore.Commit(cs)
 		s.Require().NoError(err)
+	}
+
+	// check old store keys are pruned
+	oldStoreKeys := []string{"store1", "store2", "store3"}
+	for _, storeKey := range oldStoreKeys {
+		for version := uint64(1); version <= toVersion; version++ {
+			for i := 0; i < keyCount; i++ {
+				_, err := s.rootStore.Query([]byte(storeKey), version, []byte(fmt.Sprintf("key-%d-%d", version, i)), true)
+				s.Require().Error(err)
+			}
+		}
+	}
+
+	// check commitDB is empty for old store keys
+	for _, storeKey := range oldStoreKeys {
+		oldKeyStore := dbm.NewPrefixDB(s.commitDB, []byte(storeKey))
+		itr, err := oldKeyStore.Iterator(nil, nil)
+		s.Require().NoError(err)
+		s.Require().False(itr.Valid())
+	}
+
+	// check new store keys are queryable
+	for _, storeKey := range newStoreKeys {
+		for version := v + 1; version <= toVersion; version++ {
+			for i := 0; i < keyCount; i++ {
+				_, err := s.rootStore.Query([]byte(storeKey), version, []byte(fmt.Sprintf("key-%d-%d", version, i)), true)
+				s.Require().NoError(err)
+			}
+		}
 	}
 }

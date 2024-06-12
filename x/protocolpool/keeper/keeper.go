@@ -34,7 +34,7 @@ type Keeper struct {
 	BudgetProposal collections.Map[sdk.AccAddress, types.Budget]
 	ContinuousFund collections.Map[sdk.AccAddress, types.ContinuousFund]
 	// RecipientFundPercentage key: RecipientAddr | value: Percentage in math.Int
-	RecipientFundPercentage collections.Map[sdk.AccAddress, types.RecipientFundPercentageStatus]
+	RecipientFundPercentage collections.Map[sdk.AccAddress, math.Int]
 	// RecipientFundDistribution key: RecipientAddr | value: Claimable amount
 	RecipientFundDistribution collections.Map[sdk.AccAddress, math.Int]
 	// ToDistribute is to keep track of funds distributed
@@ -66,7 +66,7 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.Accoun
 		authority:                 authority,
 		BudgetProposal:            collections.NewMap(sb, types.BudgetKey, "budget", sdk.AccAddressKey, codec.CollValue[types.Budget](cdc)),
 		ContinuousFund:            collections.NewMap(sb, types.ContinuousFundKey, "continuous_fund", sdk.AccAddressKey, codec.CollValue[types.ContinuousFund](cdc)),
-		RecipientFundPercentage:   collections.NewMap(sb, types.RecipientFundPercentageKey, "recipient_fund_percentage", sdk.AccAddressKey, codec.CollValue[types.RecipientFundPercentageStatus](cdc)),
+		RecipientFundPercentage:   collections.NewMap(sb, types.RecipientFundPercentageKey, "recipient_fund_percentage", sdk.AccAddressKey, sdk.IntValue),
 		RecipientFundDistribution: collections.NewMap(sb, types.RecipientFundDistributionKey, "recipient_fund_distribution", sdk.AccAddressKey, sdk.IntValue),
 		ToDistribute:              collections.NewItem(sb, types.ToDistributeKey, "to_distribute", sdk.IntValue),
 		TotalFundPercentage:       collections.NewItem(sb, types.TotalFundPercentageKey, "total_fund_percentage", sdk.IntValue),
@@ -135,7 +135,7 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipientAddr string
 	}
 
 	if !toDistributeAmount.Equal(math.ZeroInt()) {
-		err = k.updateFundsDistribution(ctx, recipientAddr, toDistributeAmount)
+		err = k.iterateAndUpdateFundsDistribution(ctx, toDistributeAmount)
 		if err != nil {
 			return sdk.Coin{}, fmt.Errorf("error while iterating all the continuous funds: %w", err)
 		}
@@ -257,37 +257,28 @@ func (k Keeper) hasPermission(addr []byte) (bool, error) {
 	return bytes.Equal(authAcc, addr), nil
 }
 
-func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) error {
-	// Create a map to store keys & values from RecipientFundPercentage during the first iteration
-	recipientFundMap := make(map[string]math.Int)
-
-	totalPercentage := math.ZeroInt()
-
-	toDistributeAmount, err := k.ToDistribute.Get(ctx)
+func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistributeAmount math.Int) error {
+	totalPercentageToBeDistributed, err := k.TotalFundPercentage.Get(ctx)
 	if err != nil {
 		return err
 	}
 
+	// Create a map to store keys & values from RecipientFundPercentage during the first iteration
+	recipientFundMap := make(map[string]math.Int)
+
 	// Calculate totalPercentageToBeDistributed and store values
-	err = k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, status types.RecipientFundPercentageStatus) (stop bool, err error) {
-		if status.Received {
-			// reset status for new block
-			status.Received = false
-			err := k.RecipientFundPercentage.Set(ctx, key, status)
-			return false, err
-		}
+	err = k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
 		addr, err := k.authKeeper.AddressCodec().BytesToString(key)
 		if err != nil {
 			return true, err
 		}
-		recipientFundMap[addr] = status.Percentage
-		totalPercentage = totalPercentage.Add(status.Percentage)
+		recipientFundMap[addr] = value
 		return false, nil
 	})
 	if err != nil {
 		return err
 	}
-	if totalPercentage.GT(math.NewInt(100)) {
+	if totalPercentageToBeDistributed.GT(math.NewInt(100)) {
 		return fmt.Errorf("total funds percentage cannot exceed 100")
 	}
 
@@ -298,13 +289,13 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) error {
 	toDistributeDec := sdk.NewDecCoins(sdk.NewDecCoin(denom, toDistributeAmount))
 
 	// Calculate the funds to be distributed based on the total percentage to be distributed
-	totalAmountToBeDistributed := toDistributeDec.MulDec(math.LegacyNewDecFromIntWithPrec(totalPercentage, 2))
+	totalAmountToBeDistributed := toDistributeDec.MulDec(math.LegacyNewDecFromIntWithPrec(totalPercentageToBeDistributed, 2))
 	totalDistrAmount := totalAmountToBeDistributed.AmountOf(denom)
 
 	for keyStr, value := range recipientFundMap {
 		// Calculate the funds to be distributed based on the percentage
 		decValue := math.LegacyNewDecFromIntWithPrec(value, 2)
-		percentage := math.LegacyNewDecFromIntWithPrec(totalPercentage, 2)
+		percentage := math.LegacyNewDecFromIntWithPrec(totalPercentageToBeDistributed, 2)
 		recipientAmount := totalDistrAmount.Mul(decValue).Quo(percentage)
 		recipientCoins := recipientAmount.TruncateInt()
 
@@ -327,63 +318,6 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) error {
 
 	// Set the coins to be distributed from toDistribute to 0
 	return k.ToDistribute.Set(ctx, math.ZeroInt())
-}
-
-func (k Keeper) updateFundsDistribution(ctx context.Context, recipientAddr string, toDistributeAmount math.Int) error {
-	recipient, err := k.authKeeper.AddressCodec().StringToBytes(recipientAddr)
-	if err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
-	}
-
-	totalPercentageToBeDistributed, err := k.TotalFundPercentage.Get(ctx)
-	if err != nil {
-		return err
-	}
-	if totalPercentageToBeDistributed.GT(math.NewInt(100)) {
-		return fmt.Errorf("total funds percentage cannot exceed 100")
-	}
-
-	recipientFundStatus, err := k.RecipientFundPercentage.Get(ctx, recipient)
-	if err != nil {
-		return err
-	}
-
-	if recipientFundStatus.Received {
-		return fmt.Errorf("validator already withdrawn fund")
-	}
-
-	recipientFundStatusPercentage := recipientFundStatus.Percentage
-
-	denom, err := k.stakingKeeper.BondDenom(ctx)
-	if err != nil {
-		return err
-	}
-	toDistributeDec := sdk.NewDecCoins(sdk.NewDecCoin(denom, toDistributeAmount))
-
-	// Calculate the funds to be distributed based on the total percentage to be distributed
-	totalAmountToBeDistributed := toDistributeDec.MulDec(math.LegacyNewDecFromIntWithPrec(totalPercentageToBeDistributed, 2))
-	totalDistrAmount := totalAmountToBeDistributed.AmountOf(denom)
-
-	decPercent := math.LegacyNewDecFromIntWithPrec(recipientFundStatusPercentage, 2)
-	percentage := math.LegacyNewDecFromIntWithPrec(totalPercentageToBeDistributed, 2)
-	recipientAmount := totalDistrAmount.Mul(decPercent).Quo(percentage)
-	recipientCoins := recipientAmount.TruncateInt()
-
-	fmt.Println("recipientCoins", recipientCoins)
-	// Set funds to be claimed
-	toClaim, err := k.RecipientFundDistribution.Get(ctx, recipient)
-	if err != nil {
-		return err
-	}
-	amount := toClaim.Add(recipientCoins)
-	err = k.RecipientFundDistribution.Set(ctx, recipient, amount)
-	if err != nil {
-		return err
-	}
-
-	// Update status of recipientFundS
-	recipientFundStatus.Received = true
-	return k.RecipientFundPercentage.Set(ctx, recipient, recipientFundStatus)
 }
 
 func (k Keeper) claimFunds(ctx context.Context, recipientAddr string) (amount sdk.Coin, err error) {

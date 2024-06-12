@@ -120,7 +120,8 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	// If exceeds, we should not setup continuous fund proposal.
 	totalStreamFundsPercentage, err := k.TotalFundPercentage.Get(ctx)
 	if err != nil {
-		return nil, err
+		// If TotalFundPercentage not set, set it to zero
+		totalStreamFundsPercentage = math.ZeroInt()
 	}
 	percentage := msg.Percentage.MulInt64(100)
 	totalStreamFundsPercentage = totalStreamFundsPercentage.Add(percentage.TruncateInt())
@@ -142,17 +143,12 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	}
 
 	// Set recipient fund percentage & distribution
-	err = k.RecipientFundPercentage.Set(ctx, recipient, types.RecipientFundPercentageStatus{Percentage: percentage.TruncateInt()})
+	err = k.RecipientFundPercentage.Set(ctx, recipient, percentage.TruncateInt())
 	if err != nil {
 		return nil, err
 	}
-	// Sum up total fund percentage
-	totalFundPercentage, err := k.TotalFundPercentage.Get(ctx)
-	if err != nil {
-		return nil, err
-	}
-	totalFundPercentage = totalFundPercentage.Add(percentage.TruncateInt())
-	err = k.TotalFundPercentage.Set(ctx, totalFundPercentage)
+	
+	err = k.TotalFundPercentage.Set(ctx, totalStreamFundsPercentage)
 	if err != nil {
 		return nil, err
 	}

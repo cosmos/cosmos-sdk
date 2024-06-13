@@ -6,9 +6,12 @@ type Table struct {
 	Name string
 
 	// KeyFields is a list of fields that make up the primary key of the table.
+	// It can be empty in which case indexers should assume that this table is
+	// a singleton and ony has one value.
 	KeyFields []Field
 
 	// ValueFields is a list of fields that are not part of the primary key of the table.
+	// It can be empty in the case where all fields are part of the primary key.
 	ValueFields []Field
 
 	// RetainDeletions is a flag that indicates whether the indexer should retain

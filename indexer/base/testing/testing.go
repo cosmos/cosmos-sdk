@@ -10,7 +10,7 @@ import (
 )
 
 // ListenerTestFixture is a test fixture for testing listener implementations with a pre-defined data set
-// that attempts to cover all known types of tables and columns. The test data currently includes data for
+// that attempts to cover all known types of tables and fields. The test data currently includes data for
 // two fake modules over three blocks of data. The data set should remain relatively stable between releases
 // and generally only be changed when new features are added, so it should be suitable for regression or golden tests.
 type ListenerTestFixture struct {
@@ -51,8 +51,8 @@ var moduleSchemaA = indexerbase.ModuleSchema{
 	Tables: []indexerbase.Table{
 		{
 			"Singleton",
-			[]indexerbase.Column{},
-			[]indexerbase.Column{
+			[]indexerbase.Field{},
+			[]indexerbase.Field{
 				{
 					Name: "Value",
 					Kind: indexerbase.StringKind,
@@ -62,13 +62,13 @@ var moduleSchemaA = indexerbase.ModuleSchema{
 		},
 		{
 			Name: "Simple",
-			KeyColumns: []indexerbase.Column{
+			KeyFields: []indexerbase.Field{
 				{
 					Name: "Key",
 					Kind: indexerbase.StringKind,
 				},
 			},
-			ValueColumns: []indexerbase.Column{
+			ValueFields: []indexerbase.Field{
 				{
 					Name: "Value1",
 					Kind: indexerbase.Int32Kind,
@@ -81,7 +81,7 @@ var moduleSchemaA = indexerbase.ModuleSchema{
 		},
 		{
 			Name: "Two Keys",
-			KeyColumns: []indexerbase.Column{
+			KeyFields: []indexerbase.Field{
 				{
 					Name: "Key1",
 					Kind: indexerbase.StringKind,
@@ -115,34 +115,34 @@ func mkTestModule() (indexerbase.ModuleSchema, func(seed int) []indexerbase.Enti
 }
 
 func mkTestTable(kind indexerbase.Kind) indexerbase.Table {
-	col := indexerbase.Column{
+	field := indexerbase.Field{
 		Name: fmt.Sprintf("test_%s", kind),
 		Kind: kind,
 	}
 
 	if kind == indexerbase.EnumKind {
-		col.EnumDefinition = testEnum
+		field.EnumDefinition = testEnum
 	}
 
 	if kind == indexerbase.Bech32AddressKind {
-		col.AddressPrefix = "cosmos"
+		field.AddressPrefix = "cosmos"
 	}
 
-	key1Col := col
-	key1Col.Name = "keyNotNull"
-	key2Col := col
-	key2Col.Name = "keyNullable"
-	key2Col.Nullable = true
-	val1Col := col
-	val1Col.Name = "valNotNull"
-	val2Col := col
-	val2Col.Name = "valNullable"
-	val2Col.Nullable = true
+	key1Field := field
+	key1Field.Name = "keyNotNull"
+	key2Field := field
+	key2Field.Name = "keyNullable"
+	key2Field.Nullable = true
+	val1Field := field
+	val1Field.Name = "valNotNull"
+	val2Field := field
+	val2Field.Name = "valNullable"
+	val2Field.Nullable = true
 
 	return indexerbase.Table{
-		Name:         "KindTable",
-		KeyColumns:   []indexerbase.Column{key1Col, key2Col},
-		ValueColumns: []indexerbase.Column{val1Col, val2Col},
+		Name:        "KindTable",
+		KeyFields:   []indexerbase.Field{key1Field, key2Field},
+		ValueFields: []indexerbase.Field{val1Field, val2Field},
 	}
 }
 

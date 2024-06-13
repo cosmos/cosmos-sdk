@@ -1,6 +1,7 @@
 package indexertesting
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"time"
@@ -13,6 +14,8 @@ import (
 // two fake modules over three blocks of data. The data set should remain relatively stable between releases
 // and generally only be changed when new features are added, so it should be suitable for regression or golden tests.
 type ListenerTestFixture struct {
+	rnd          *rand.Rand
+	block        uint64
 	listener     indexerbase.Listener
 	allKeyModule testModule
 }
@@ -23,23 +26,44 @@ type ListenerTestFixtureOptions struct {
 
 func NewListenerTestFixture(listener indexerbase.Listener, options ListenerTestFixtureOptions) *ListenerTestFixture {
 	return &ListenerTestFixture{
-		listener: listener,
+		rnd:          rand.New(rand.NewSource(0)),
+		listener:     listener,
+		allKeyModule: mkAllKeysModule(),
 	}
 }
 
 func (f *ListenerTestFixture) Initialize() error {
+	if f.listener.InitializeModuleSchema != nil {
+		err := f.listener.InitializeModuleSchema(f.allKeyModule.name, f.allKeyModule.schema)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
-func (f *ListenerTestFixture) NextBlock() (bool, error) {
-	return false, nil
-}
+func (f *ListenerTestFixture) NextBlock() error {
+	f.block++
 
-func (f *ListenerTestFixture) block1() error {
-	return nil
-}
+	if f.listener.StartBlock != nil {
+		err := f.listener.StartBlock(uint64(f.block))
+		if err != nil {
+			return err
+		}
+	}
 
-func (f *ListenerTestFixture) block2() error {
+	err := f.allKeyModule.updater(f.rnd, &f.listener)
+	if err != nil {
+		return err
+	}
+
+	if f.listener.Commit != nil {
+		err := f.listener.Commit()
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -104,6 +128,7 @@ var moduleSchemaA = indexerbase.ModuleSchema{
 var maxKind = indexerbase.JSONKind
 
 type testModule struct {
+	name    string
 	schema  indexerbase.ModuleSchema
 	updater func(*rand.Rand, *indexerbase.Listener) error
 }
@@ -114,7 +139,9 @@ func mkAllKeysModule() testModule {
 		schema.Objects = append(schema.Objects, mkTestObjectType(indexerbase.Kind(i)))
 	}
 
+	const name = "all_keys"
 	return testModule{
+		name:   name,
 		schema: schema,
 		updater: func(rnd *rand.Rand, listener *indexerbase.Listener) error {
 			if listener.OnObjectUpdate != nil {
@@ -122,7 +149,7 @@ func mkAllKeysModule() testModule {
 					// 0-10 updates per kind
 					n := int(rnd.Int31n(11))
 					for j := 0; j < n; j++ {
-						err := listener.OnObjectUpdate("all_keys", mkTestUpdate(rnd, indexerbase.Kind(i)))
+						err := listener.OnObjectUpdate(name, mkTestUpdate(rnd, indexerbase.Kind(i)))
 						if err != nil {
 							return err
 						}
@@ -136,7 +163,7 @@ func mkAllKeysModule() testModule {
 
 func mkTestObjectType(kind indexerbase.Kind) indexerbase.ObjectDescriptor {
 	field := indexerbase.Field{
-		Name: fmt.Sprintf("test_%s", kind),
+		Name: fmt.Sprintf("test_%v", kind),
 		Kind: kind,
 	}
 
@@ -160,7 +187,7 @@ func mkTestObjectType(kind indexerbase.Kind) indexerbase.ObjectDescriptor {
 	val2Field.Nullable = true
 
 	return indexerbase.ObjectDescriptor{
-		Name:        fmt.Sprintf("test_%s", kind),
+		Name:        fmt.Sprintf("test_%v", kind),
 		KeyFields:   []indexerbase.Field{key1Field, key2Field},
 		ValueFields: []indexerbase.Field{val1Field, val2Field},
 	}
@@ -232,13 +259,13 @@ func mkTestValue(rnd *rand.Rand, kind indexerbase.Kind, nullable bool) any {
 	case indexerbase.Float64Kind:
 		return rnd.Float64()
 	case indexerbase.Bech32AddressKind:
-		panic("TODO: select from some actually valid known bech32 address strings and bytes")
+		// TODO: select from some actually valid known bech32 address strings and bytes"
+		return "cosmos1abcdefgh1234567890"
 	case indexerbase.EnumKind:
 		return testEnum.Values[rnd.Int31n(int32(len(testEnum.Values)))]
 	case indexerbase.JSONKind:
-		//// TODO other types
-		//return json.RawMessage(`{"seed": ` + strconv.FormatUint(seed, 10) + `}`)
-		panic("TODO")
+		// TODO: other types
+		return json.RawMessage(`{}`)
 	default:
 	}
 	panic(fmt.Errorf("unexpected kind: %v", kind))

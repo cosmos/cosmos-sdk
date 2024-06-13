@@ -4,6 +4,9 @@ import (
 	"testing"
 	"time"
 
+	v1 "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmttypes "github.com/cometbft/cometbft/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/suite"
 
@@ -14,9 +17,6 @@ import (
 	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
 	"cosmossdk.io/x/consensus/types"
 
-	v1 "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"

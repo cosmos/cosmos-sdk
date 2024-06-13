@@ -15,6 +15,7 @@ service Query {
     option (google.api.http).get = "/cosmos/consensus/v1/params";
   }
 
+  // CometInfo queries the comet info of x/consensus module.
   rpc CometInfo(QueryCometInfoRequest) returns (QueryCometInfoResponse);
 }
 

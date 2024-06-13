@@ -207,6 +207,8 @@ require (
 
 // Below are the long-lived replace of the SimApp
 replace (
+	// Use version with lsm changes
+	cosmossdk.io/api => github.com/informalsystems/cosmos-sdk/api v0.7.5-lsm
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk

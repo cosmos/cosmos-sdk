@@ -1,11 +1,13 @@
 package v4_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
@@ -30,6 +32,13 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
+type emptyCometService struct{}
+
+// CometInfo implements comet.Service.
+func (e *emptyCometService) CometInfo(context.Context) comet.Info {
+	return comet.Info{}
+}
+
 func TestFundsMigration(t *testing.T) {
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, disttypes.StoreKey,
@@ -52,6 +61,13 @@ func TestFundsMigration(t *testing.T) {
 	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
+
+	accNum := uint64(0)
+	acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
+		currNum := accNum
+		accNum++
+		return currNum, nil
+	})
 
 	// create account keeper
 	accountKeeper := authkeeper.NewAccountKeeper(
@@ -82,6 +98,7 @@ func TestFundsMigration(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		poolKeeper,
+		&emptyCometService{},
 		disttypes.ModuleName,
 		authority,
 	)

@@ -6,8 +6,8 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/log"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank/types"
@@ -269,12 +269,6 @@ func (k BaseKeeper) SendCoinsFromModuleToAccount(
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule)
 	}
 
-	for _, coin := range amt {
-		if ok := k.IsSendEnabledDenom(ctx, coin.Denom); !ok {
-			return fmt.Errorf("denom: %s, is prohibited from being sent at this time", coin.Denom)
-		}
-	}
-
 	if k.BlockedAddr(recipientAddr) {
 		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", recipientAddr)
 	}
@@ -366,6 +360,10 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to mint tokens", moduleName)
 	}
 
+	if !amounts.IsValid() {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amounts.String())
+	}
+
 	err = k.addCoins(ctx, acc.GetAddress(), amounts)
 	if err != nil {
 		return err
@@ -404,6 +402,9 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.C
 		if !macc.HasPermission(authtypes.Burner) {
 			return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "account %x does not have permissions to burn tokens", address)
 		}
+	}
+	if !amounts.IsValid() {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amounts.String())
 	}
 
 	err := k.subUnlockedCoins(ctx, acc.GetAddress(), amounts)

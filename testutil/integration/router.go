@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
+	cmtabcitypes "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -90,7 +90,7 @@ func NewIntegrationApp(
 
 	if keys[consensusparamtypes.StoreKey] != nil {
 		// set baseApp param store
-		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(grpcRouter, msgRouter)), authtypes.NewModuleAddress("gov").String())
+		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcRouter), runtime.EnvWithMsgRouterService(msgRouter)), authtypes.NewModuleAddress("gov").String())
 		bApp.SetParamStore(consensusParamsKeeper.ParamsStore)
 		consensusparamtypes.RegisterQueryServer(grpcRouter, consensusParamsKeeper)
 

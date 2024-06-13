@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/snapshots"
@@ -25,12 +25,12 @@ const (
 type CommitStoreTestSuite struct {
 	suite.Suite
 
-	NewStore func(db corestore.KVStoreWithBatch, storeKeys []string, pruneOpts *store.PruneOptions, logger log.Logger) (*CommitStore, error)
+	NewStore func(db corestore.KVStoreWithBatch, storeKeys []string, logger log.Logger) (*CommitStore, error)
 }
 
 func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 	storeKeys := []string{storeKey1, storeKey2}
-	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, nil, log.NewNopLogger())
+	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, log.NewNopLogger())
 	s.Require().NoError(err)
 
 	latestVersion := uint64(10)
@@ -45,7 +45,7 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 				kvPairs[storeKey] = append(kvPairs[storeKey], corestore.KVPair{Key: key, Value: value})
 			}
 		}
-		s.Require().NoError(commitStore.WriteBatch(corestore.NewChangesetWithPairs(kvPairs)))
+		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(kvPairs)))
 
 		_, err = commitStore.Commit(i)
 		s.Require().NoError(err)
@@ -64,7 +64,7 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 		},
 	}
 
-	targetStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, nil, log.NewNopLogger())
+	targetStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, log.NewNopLogger())
 	s.Require().NoError(err)
 
 	chunks := make(chan io.ReadCloser, kvCount*int(latestVersion))
@@ -129,7 +129,7 @@ func (s *CommitStoreTestSuite) TestStore_Pruning() {
 		KeepRecent: 10,
 		Interval:   5,
 	}
-	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, pruneOpts, log.NewNopLogger())
+	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, log.NewNopLogger())
 	s.Require().NoError(err)
 
 	latestVersion := uint64(100)
@@ -144,10 +144,15 @@ func (s *CommitStoreTestSuite) TestStore_Pruning() {
 				kvPairs[storeKey] = append(kvPairs[storeKey], corestore.KVPair{Key: key, Value: value})
 			}
 		}
-		s.Require().NoError(commitStore.WriteBatch(corestore.NewChangesetWithPairs(kvPairs)))
+		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(kvPairs)))
 
 		_, err = commitStore.Commit(i)
 		s.Require().NoError(err)
+
+		if prune, pruneVersion := pruneOpts.ShouldPrune(i); prune {
+			s.Require().NoError(commitStore.Prune(pruneVersion))
+		}
+
 	}
 
 	pruneVersion := latestVersion - pruneOpts.KeepRecent - 1

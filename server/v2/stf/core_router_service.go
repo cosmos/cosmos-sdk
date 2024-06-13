@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"google.golang.org/protobuf/runtime/protoiface"
@@ -12,48 +13,20 @@ import (
 	"cosmossdk.io/core/router"
 )
 
-// NewRouterService creates a router.Service which allows to invoke messages and queries using the msg router.
-func NewRouterService(queryRouterBuilder, msgRouterBuilder *MsgRouterBuilder) router.Service {
-	queryRouter, err := queryRouterBuilder.Build()
-	if err != nil {
-		panic("cannot create queryRouter")
-	}
-
+// NewMsgRouterService implements router.Service.
+func NewMsgRouterService(msgRouterBuilder *MsgRouterBuilder) router.Service {
 	msgRouter, err := msgRouterBuilder.Build()
 	if err != nil {
-		panic("cannot create msgRouter")
+		panic(fmt.Errorf("cannot create msgRouter: %w", err))
 	}
 
-	return &routerService{
-		queryRouterService: &queryRouterService{
-			builder: queryRouterBuilder,
-			handler: queryRouter,
-		},
-		msgRouterService: &msgRouterService{
-			builder: msgRouterBuilder,
-			handler: msgRouter,
-		},
+	return &msgRouterService{
+		builder: msgRouterBuilder,
+		handler: msgRouter,
 	}
 }
 
-var _ router.Service = (*routerService)(nil)
-
-type routerService struct {
-	queryRouterService router.Router
-	msgRouterService   router.Router
-}
-
-// MessageRouterService implements router.Service.
-func (r *routerService) MessageRouterService() router.Router {
-	return r.msgRouterService
-}
-
-// QueryRouterService implements router.Service.
-func (r *routerService) QueryRouterService() router.Router {
-	return r.queryRouterService
-}
-
-var _ router.Router = (*msgRouterService)(nil)
+var _ router.Service = (*msgRouterService)(nil)
 
 type msgRouterService struct {
 	builder *MsgRouterBuilder
@@ -87,7 +60,14 @@ func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg protoiface.Mes
 	return m.handler(ctx, msg)
 }
 
-var _ router.Router = (*queryRouterService)(nil)
+// NewQueryRouterService implements router.Service.
+func NewQueryRouterService(queryRouterBuilder *MsgRouterBuilder) router.Service {
+	return &queryRouterService{
+		builder: queryRouterBuilder,
+	}
+}
+
+var _ router.Service = (*queryRouterService)(nil)
 
 type queryRouterService struct {
 	builder *MsgRouterBuilder
@@ -115,8 +95,21 @@ func (m *queryRouterService) InvokeTyped(
 	ctx context.Context,
 	req, resp protoiface.MessageV1,
 ) error {
-	// see https://github.com/cosmos/cosmos-sdk/pull/20349
-	panic("not implemented")
+	// TODO lazy initialization is ugly and not thread safe. we don't want to check a mutex on every InvokeTyped either.
+	if m.handler == nil {
+		var err error
+		m.handler, err = m.builder.Build()
+		if err != nil {
+			return fmt.Errorf("cannot create queryRouter: %w", err)
+		}
+	}
+	// reflection is required, see https://github.com/cosmos/cosmos-sdk/pull/20349
+	res, err := m.handler(ctx, req)
+	if err != nil {
+		return err
+	}
+	reflect.Indirect(reflect.ValueOf(resp)).Set(reflect.Indirect(reflect.ValueOf(res)))
+	return nil
 }
 
 // InvokeUntyped execute a message and returns a response.

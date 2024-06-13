@@ -18,7 +18,7 @@ func TestEpochsExportGenesis(t *testing.T) {
 
 	genesis, err := epochsKeeper.ExportGenesis(ctx)
 	require.NoError(t, err)
-	require.Len(t, genesis.Epochs, 3)
+	require.Len(t, genesis.Epochs, 4)
 
 	expectedEpochs := types.DefaultGenesis().Epochs
 	for i := 0; i < len(expectedEpochs); i++ {

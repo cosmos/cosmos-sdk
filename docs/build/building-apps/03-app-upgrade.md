@@ -52,9 +52,9 @@ be a matter of minutes and not even require them to be awake at that time.
 
 ## Integrating With An App
 
-::tip
+:::tip
 The following is not required for users using `depinject` / app v2, this is abstracted for them.
-::
+:::
 
 In addition to basic module wiring, setup the upgrade Keeper for the app and then define a `PreBlocker` that calls the upgrade
 keeper's PreBlocker method:
@@ -63,7 +63,7 @@ keeper's PreBlocker method:
 func (app *myApp) PreBlocker(ctx sdk.Context, req req.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
       // For demonstration sake, the app PreBlocker only returns the upgrade module pre-blocker.
       // In a real app, the module manager should call all pre-blockers
-      // return return app.ModuleManager.PreBlock(ctx, req)
+      // return app.ModuleManager.PreBlock(ctx, req)
       return app.upgradeKeeper.PreBlocker(ctx, req)
 }
 ```

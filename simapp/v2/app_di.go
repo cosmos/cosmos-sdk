@@ -18,7 +18,6 @@ import (
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
-	consensustypes "cosmossdk.io/x/consensus"
 	consensuskeeper "cosmossdk.io/x/consensus/keeper"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
@@ -48,11 +47,10 @@ var DefaultNodeHome string
 // capabilities aren't needed for testing.
 type SimApp struct {
 	*runtime.App
-	legacyAmino        legacy.Amino
-	appCodec           codec.Codec
-	txConfig           client.TxConfig
-	interfaceRegistry  codectypes.InterfaceRegistry
-	consensusAuthority consensustypes.Authority
+	legacyAmino       legacy.Amino
+	appCodec          codec.Codec
+	txConfig          client.TxConfig
+	interfaceRegistry codectypes.InterfaceRegistry
 
 	// keepers
 	AccountsKeeper        accounts.Keeper
@@ -201,7 +199,6 @@ func NewSimApp(
 		&app.ConsensusParamsKeeper,
 		&app.CircuitBreakerKeeper,
 		&app.PoolKeeper,
-		&app.consensusAuthority,
 	); err != nil {
 		panic(err)
 	}
@@ -247,5 +244,5 @@ func (app *SimApp) TxConfig() client.TxConfig {
 }
 
 func (app *SimApp) GetConsensusAuthority() string {
-	return string(app.consensusAuthority)
+	return string(app.ConsensusParamsKeeper.GetAuthority())
 }

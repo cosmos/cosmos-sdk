@@ -12,7 +12,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/spf13/cobra v1.8.0
 	google.golang.org/grpc v1.64.0
-	google.golang.org/protobuf v1.34.1
+	google.golang.org/protobuf v1.34.2
 )
 
 require (

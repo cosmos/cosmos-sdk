@@ -5,12 +5,14 @@ set -o nounset
 set -x
 
 ROOT=$PWD
-SIMD="${SIMD:-go run ./simapp/v2/simdv2/main.go}"
+SIMAPP_DIR="$ROOT/simapp/v2"
+SIMD="${SIMD:-go run simdv2/main.go}"
 CONFIG="${CONFIG:-$HOME/.simappv2/config}"
 
+cd "$SIMAPP_DIR"
 $SIMD init simapp-v2-node --chain-id simapp-v2-chain
 
-cd $CONFIG
+cd "$CONFIG"
 
 # to enable the api server
 sed -i '.bak' '/\[api\]/,+3 s/enable = false/enable = true/' app.toml
@@ -24,7 +26,7 @@ jq '.app_state.mint.minter.inflation = "0.300000000000000000"' genesis.json > te
 # change the initial height to 2 to work around store/v2 and iavl limitations with a genesis block
 jq '.initial_height = 2' genesis.json > temp.json && mv temp.json genesis.json
 
-cd "$ROOT"
+cd "$SIMAPP_DIR"
 $SIMD keys add test_validator --keyring-backend test
 VALIDATOR_ADDRESS=$($SIMD keys show test_validator -a --keyring-backend test)
 

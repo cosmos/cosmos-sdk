@@ -1,6 +1,6 @@
 package indexerbase
 
-// Field represents a field in a table schema.
+// Field represents a field in an object descriptor.
 type Field struct {
 	// Name is the name of the field.
 	Name string
@@ -16,13 +16,4 @@ type Field struct {
 
 	// EnumDefinition is the definition of the enum type and is only valid when Kind is EnumKind.
 	EnumDefinition EnumDefinition
-}
-
-// EnumDefinition represents the definition of an enum type.
-type EnumDefinition struct {
-	// Name is the name of the enum type.
-	Name string
-
-	// Values is a list of distinct values that are part of the enum type.
-	Values []string
 }

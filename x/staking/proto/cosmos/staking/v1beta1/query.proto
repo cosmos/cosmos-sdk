@@ -139,14 +139,10 @@ message QueryValidatorsRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
-message ValidatorAdditionalInfo {
-  // consensus_address is the consensus address of the validator.
-  string consensus_address = 1;
-}
-
 message ValidatorInfo {
-  Validator               validator       = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  ValidatorAdditionalInfo additional_info = 2;
+  Validator validator = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // consensus_address is the consensus address of the validator.
+  string consensus_address = 2;
 }
 
 // QueryValidatorsResponse is response type for the Query/Validators RPC method

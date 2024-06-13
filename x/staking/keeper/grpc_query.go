@@ -67,9 +67,7 @@ func (k Querier) Validators(ctx context.Context, req *types.QueryValidatorsReque
 		// Best-effort way
 		if ok {
 			consAddr, _ := k.consensusAddressCodec.BytesToString(cpk.Address())
-			valInfo.AdditionalInfo = &types.ValidatorAdditionalInfo{
-				ConsensusAddress: consAddr,
-			}
+			valInfo.ConsensusAddress = consAddr
 		}
 
 		vals = append(vals, valInfo)

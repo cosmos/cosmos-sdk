@@ -207,13 +207,11 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 
 	totalStreamFundsPercentage, err := k.TotalFundPercentage.Get(ctx)
 	if err != nil {
-		return err
+		// If TotalFundPercentage not set, set it to zero
+		totalStreamFundsPercentage = math.ZeroInt()
 	}
 	if totalStreamFundsPercentage.GT(math.NewInt(100)) {
 		return fmt.Errorf("total funds percentage cannot exceed 100")
-	}
-	if err != nil {
-		return err
 	}
 
 	// send streaming funds to the stream module account
@@ -259,6 +257,7 @@ func (k Keeper) hasPermission(addr []byte) (bool, error) {
 
 func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistributeAmount math.Int) error {
 	totalPercentageToBeDistributed, err := k.TotalFundPercentage.Get(ctx)
+	fmt.Println("iterateAndUpdateFundsDistribution", totalPercentageToBeDistributed, err)
 	if err != nil {
 		return err
 	}

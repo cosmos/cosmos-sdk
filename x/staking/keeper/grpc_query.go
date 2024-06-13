@@ -66,7 +66,7 @@ func (k Querier) Validators(ctx context.Context, req *types.QueryValidatorsReque
 		cpk, ok := val.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
 		// Best-effort way
 		if ok {
-			consAddr, _ := k.consensusAddressCodec.BytesToString(sdk.ConsAddress(cpk.Address()))
+			consAddr, _ := k.consensusAddressCodec.BytesToString(cpk.Address())
 			valInfo.AdditionalInfo = &types.ValidatorAdditionalInfo{
 				ConsensusAddress: consAddr,
 			}

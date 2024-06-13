@@ -16,6 +16,8 @@
   - store/**/*
 "C:collections":
   - collections/**/*
+"C:core/testing":
+  - core/testing/**/*
 "C:log":
   - log/*
 "C:orm":

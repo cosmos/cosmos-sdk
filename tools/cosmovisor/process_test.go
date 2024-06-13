@@ -272,7 +272,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloadsAndMissingPreupgrade() 
 		AllowDownloadBinaries: true,
 		PollInterval:          100,
 		UnsafeSkipBackup:      true,
-		CustomPreupgrade:      "missing.sh",
+		CustomPreUpgrade:      "missing.sh",
 	}
 	logger := log.NewTestLogger(s.T()).With(log.ModuleKey, "cosmovisor")
 	upgradeFilename := cfg.UpgradeInfoFilePath()
@@ -308,7 +308,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloadsAndPreupgrade() {
 		AllowDownloadBinaries: true,
 		PollInterval:          100,
 		UnsafeSkipBackup:      true,
-		CustomPreupgrade:      "preupgrade.sh",
+		CustomPreUpgrade:      "preupgrade.sh",
 	}
 	buf := newBuffer() // inspect output using buf.String()
 	logger := log.NewLogger(buf).With(log.ModuleKey, "cosmovisor")

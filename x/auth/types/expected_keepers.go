@@ -19,4 +19,9 @@ type BankKeeper interface {
 type AccountsModKeeper interface {
 	SendModuleMessageUntyped(ctx context.Context, sender []byte, msg protoiface.MessageV1) (protoiface.MessageV1, error)
 	IsAccountsModuleAccount(ctx context.Context, accountAddr []byte) bool
+	NextAccountNumber(ctx context.Context) (accNum uint64, err error)
+
+	// InitAccountNumberSeqUnsafe is use to set accounts module account number with value
+	// of auth module current account number
+	InitAccountNumberSeqUnsafe(ctx context.Context, currentAccNum uint64) error
 }

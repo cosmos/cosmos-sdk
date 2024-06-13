@@ -11,10 +11,10 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	coreappmanager "cosmossdk.io/core/app"
 	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 )
@@ -124,5 +124,13 @@ func (a *App) GetLogger() log.Logger {
 }
 
 func (a *App) ExecuteGenesisTx(_ []byte) error {
-	panic("not implemented")
+	panic("App.ExecuteGenesisTx not supported in runtime/v2")
+}
+
+func (a *App) SetAppVersion(context.Context, uint64) error {
+	return nil
+}
+
+func (a *App) AppVersion(context.Context) (uint64, error) {
+	return 0, nil
 }

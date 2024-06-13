@@ -64,7 +64,7 @@ type AccountAbstractionKeeper interface {
 // gas for signature verification.
 //
 // In cases where unordered or parallel transactions are desired, it is recommended
-// to to set unordered=true with a reasonable timeout_height value, in which case
+// to set unordered=true with a reasonable timeout_height value, in which case
 // this nonce verification and increment will be skipped.
 //
 // CONTRACT: Tx must implement SigVerifiableTx interface
@@ -460,27 +460,37 @@ func NewValidateSigCountDecorator(ak AccountKeeper) ValidateSigCountDecorator {
 	}
 }
 
-func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (sdk.Context, error) {
+// AnteHandler implements an ante decorator for ValidateSigCountDecorator
+func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	if err := vscd.ValidateTx(ctx, tx); err != nil {
+		return ctx, err
+	}
+
+	return next(ctx, tx, false)
+}
+
+// ValidateTx implements an TxValidator for ValidateSigCountDecorator
+func (vscd ValidateSigCountDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")
+		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")
 	}
 
 	params := vscd.ak.GetParams(ctx)
 	pubKeys, err := sigTx.GetPubKeys()
 	if err != nil {
-		return ctx, err
+		return err
 	}
 
 	sigCount := 0
 	for _, pk := range pubKeys {
 		sigCount += CountSubKeys(pk)
 		if uint64(sigCount) > params.TxSigLimit {
-			return ctx, errorsmod.Wrapf(sdkerrors.ErrTooManySignatures, "signatures: %d, limit: %d", sigCount, params.TxSigLimit)
+			return errorsmod.Wrapf(sdkerrors.ErrTooManySignatures, "signatures: %d, limit: %d", sigCount, params.TxSigLimit)
 		}
 	}
 
-	return next(ctx, tx, false)
+	return nil
 }
 
 // DefaultSigVerificationGasConsumer is the default implementation of SignatureVerificationGasConsumer. It consumes gas

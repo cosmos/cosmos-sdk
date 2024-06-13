@@ -8,7 +8,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -54,6 +54,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		poolKeeper,
+		testCometService,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -167,6 +168,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		poolKeeper,
+		testCometService,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -283,6 +285,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		poolKeeper,
+		testCometService,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -420,6 +423,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		poolKeeper,
+		testCometService,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -530,6 +534,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		poolKeeper,
+		testCometService,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -618,6 +623,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		poolKeeper,
+		testCometService,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -747,6 +753,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		poolKeeper,
+		testCometService,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -900,6 +907,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		poolKeeper,
+		testCometService,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -1114,6 +1122,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		poolKeeper,
+		testCometService,
 		"fee_collector",
 		authorityAddr,
 	)

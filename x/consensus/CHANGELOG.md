@@ -30,3 +30,5 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
+
+* [#20615](https://github.com/cosmos/cosmos-sdk/pull/20615) Add consensus messages to add cometinfo to consensus modules

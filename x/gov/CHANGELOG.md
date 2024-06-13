@@ -56,6 +56,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18762](https://github.com/cosmos/cosmos-sdk/pull/18762) Add multiple choice proposals.
 * [#18856](https://github.com/cosmos/cosmos-sdk/pull/18856) Add `ProposalCancelMaxPeriod` parameters.
 * [#19167](https://github.com/cosmos/cosmos-sdk/pull/19167) Add `YesQuorum` parameter.
+* [#20348](https://github.com/cosmos/cosmos-sdk/pull/20348) Limit gov execution of proposals to a max gas limit. The limit was added to parameters and can be modified. With this version the default is set to 10 million gas. Before it was infinite gas.
 
 ### Client Breaking Changes
 

@@ -899,7 +899,6 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient2, math.ZeroInt())
 				suite.Require().NoError(err)
 
-
 				err = suite.poolKeeper.TotalFundPercentage.Set(suite.ctx, math.Int(math.LegacyMustNewDecFromStr("0.5").MulInt64(100).TruncateInt()))
 				suite.Require().NoError(err)
 

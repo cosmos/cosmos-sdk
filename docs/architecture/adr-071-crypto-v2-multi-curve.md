@@ -267,6 +267,8 @@ The storage proposal involves using a modified version of the [Record](https://g
 
 Below is the proposed protobuf message to be included in the modified `Record.proto` file
 
+###### Protobuf message structure
+
 ```protobuf
 
 // cryptoprovider.proto
@@ -591,15 +593,15 @@ _A more detailed migration path is provided in the corresponding document._
 
 ### Implementation on CometBFT Codebase
 
-The implementation of this ADR to CometBFT will require a medium refactor in the codebase. Below we describe the proposed strategy to perform this implementation, this is:
+The implementation of this ADR in CometBFT will require a medium-level refactor of the codebase. Below we describe the proposed strategy to perform this implementation, which is:
 
-* Add a new `PrivValidator` implementation that uses `CryptoProvider` underneath.
+* Add a new `PrivValidator` implementation that uses the `CryptoProvider` interface underneath.
 
 * Adding [Keyring](https://github.com/cosmos/cosmos-sdk/blob/main/crypto/keyring/keyring.go) and [Record](https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/crypto/keyring/v1/record.proto) for storing and loading providers.
 
 * New directories reorganization.
 
-* Use Keyring to load and instantiate validators when booting up a node.
+* Use **Keyring** to load and instantiate validators when booting up a node.
 
 
 #### Create a single implementation for `PrivValidator` 
@@ -750,13 +752,14 @@ func (pv *CryptoProviderPV) SignBytes(bytes []byte) ([]byte, error) {
 
 #### Loading and storing implementations
 
-Storing crypto providers and all data related to them (keys, special configurations) will be addressed in the same way as expressed for the cosmos-sdk, that is, by using the [Keyring](https://github.com/cosmos/cosmos-sdk/blob/439f2f9d5b5884bc9df4b58d702555330549a898/crypto/keyring/keyring.go#L58-L109) interface to abstract the storage backends.
+Alternatives:
 
-*Note:* this is subject to change since this approach will require decoupling the Keyring package from the cosmos-sdk to avoid having CometBFT import artifacts from that repository.
+* Low impact / minimal dependencies: The corresponding CryptoProvider [Protobuf message](#protobuf-message-structure) can be directly stored on disk in a dedicated directory in an encoding format of choice (text, JSON).
 
-#### Proposed directory structure
+* Greater impact / better security: Use cosmos-sdk's [Keyring](https://github.com/cosmos/cosmos-sdk/blob/439f2f9d5b5884bc9df4b58d702555330549a898/crypto/keyring/keyring). to manage CryptoProviders along with its private keys. This specifically applies to the `FilePV` implementation, which could store its private keys in Keyring instead of a file in the filesystem. This approach will require decoupling the Keyring package from the cosmos-sdk to avoid having CometBFT import artifacts from that repository.
 
-Implementations of crypto providers (previously Privval implementations) should be in their own directory.
+
+Implementations of crypto providers (previously `Privval` implementations) should be in their own directory:
 
 ```
 cometbft/
@@ -772,15 +775,10 @@ cometbft/
 
 #### Other considerations
 
-##### Config
-
-//TODO
-(config struct needs to store the CryptoProvider ID which the app will load)
-
 ##### Node startup
 
-//TODO
-(mention that the startup logic will need to change for the better: validator would only be matter of getting its ID from the config and then load it from the Keyring)
+Node's configuration file should include the name of the `CryptoProvider` to be loaded at startup. Also, the startup logic will need to be changed from creating a validator to loading a `CryptoProvider`
+
 
 ### Tentative Primitive Building Blocks
 

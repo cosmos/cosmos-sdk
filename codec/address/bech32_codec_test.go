@@ -36,6 +36,64 @@ func generateAddresses(totalAddresses int) ([][]byte, error) {
 
 func TestNewBech32Codec(t *testing.T) {
 	tests := []struct {
+		name  string
+		mu    *sync.Mutex
+		lru   func(t *testing.T) *simplelru.LRU
+		error bool
+	}{
+		{
+			name: "lru and mutex provided",
+			mu:   &sync.Mutex{},
+			lru: func(t *testing.T) *simplelru.LRU {
+				newLru, err := simplelru.NewLRU(500, nil)
+				require.NoError(t, err)
+				return newLru
+			},
+		},
+		{
+			name: "both empty",
+			mu:   nil,
+			lru: func(t *testing.T) *simplelru.LRU {
+				return nil
+			},
+		},
+		{
+			name: "only lru provided",
+			mu:   nil,
+			lru: func(t *testing.T) *simplelru.LRU {
+				newLru, err := simplelru.NewLRU(500, nil)
+				require.NoError(t, err)
+				return newLru
+			},
+			error: true,
+		},
+		{
+			name: "only mutex provided",
+			mu:   &sync.Mutex{},
+			lru: func(t *testing.T) *simplelru.LRU {
+				return nil
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			newLru := tt.lru(t)
+			got, err := NewCachedBech32Codec("cosmos", CachedCodecOptions{
+				Mu:  tt.mu,
+				Lru: newLru,
+			})
+			if tt.error {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, got)
+			}
+		})
+	}
+}
+
+func TestBech32Codec(t *testing.T) {
+	tests := []struct {
 		name    string
 		prefix  string
 		lru     *simplelru.LRU

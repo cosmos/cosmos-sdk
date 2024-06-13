@@ -44,12 +44,23 @@ func NewBech32Codec(prefix string) address.Codec {
 }
 
 func NewCachedBech32Codec(prefix string, opts CachedCodecOptions) (address.Codec, error) {
+	var err error
 	ac := Bech32Codec{prefix}
-	if opts.Mu == nil {
-		return nil, errors.New("mutex cannot be nil")
-	}
-	if opts.Lru == nil {
-		return ac, errors.New("lru cannot be nil")
+	if opts.Mu == nil && opts.Lru == nil {
+		opts.Mu = new(sync.Mutex)
+		opts.Lru, err = simplelru.NewLRU(256, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create LRU cache: %v", err)
+		}
+	} else if opts.Mu == nil && opts.Lru != nil {
+		// The LRU cache uses a map internally. Without a mutex, concurrent access to this map can lead to race conditions.
+		// Therefore, a mutex is required to ensure thread-safe operations on the LRU cache.
+		return nil, errors.New("mutex must be provided alongside the LRU cache")
+	} else if opts.Mu != nil && opts.Lru == nil {
+		opts.Lru, err = simplelru.NewLRU(256, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create LRU cache: %v", err)
+		}
 	}
 
 	return cachedBech32Codec{

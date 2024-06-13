@@ -9,7 +9,7 @@ import (
 )
 
 // ListenerTestFixture is a test fixture for testing listener implementations with a pre-defined data set
-// that attempts to cover all known types of tables and fields. The test data currently includes data for
+// that attempts to cover all known types of objects and fields. The test data currently includes data for
 // two fake modules over three blocks of data. The data set should remain relatively stable between releases
 // and generally only be changed when new features are added, so it should be suitable for regression or golden tests.
 type ListenerTestFixture struct {
@@ -48,7 +48,7 @@ func (f *ListenerTestFixture) block3() error {
 }
 
 var moduleSchemaA = indexerbase.ModuleSchema{
-	Tables: []indexerbase.Table{
+	Objects: []indexerbase.ObjectDescriptor{
 		{
 			"Singleton",
 			[]indexerbase.Field{},
@@ -111,18 +111,18 @@ type testModule struct {
 func mkAllKeysModule() testModule {
 	schema := indexerbase.ModuleSchema{}
 	for i := 1; i < int(maxKind); i++ {
-		schema.Tables = append(schema.Tables, mkTestTable(indexerbase.Kind(i)))
+		schema.Objects = append(schema.Objects, mkTestObjectType(indexerbase.Kind(i)))
 	}
 
 	return testModule{
 		schema: schema,
 		updater: func(rnd *rand.Rand, listener *indexerbase.Listener) error {
-			if listener.OnEntityUpdate != nil {
+			if listener.OnObjectUpdate != nil {
 				for i := 1; i < int(maxKind); i++ {
 					// 0-10 updates per kind
 					n := int(rnd.Int31n(11))
 					for j := 0; j < n; j++ {
-						err := listener.OnEntityUpdate("all_keys", mkTestUpdate(rnd, indexerbase.Kind(i)))
+						err := listener.OnObjectUpdate("all_keys", mkTestUpdate(rnd, indexerbase.Kind(i)))
 						if err != nil {
 							return err
 						}
@@ -134,7 +134,7 @@ func mkAllKeysModule() testModule {
 	}
 }
 
-func mkTestTable(kind indexerbase.Kind) indexerbase.Table {
+func mkTestObjectType(kind indexerbase.Kind) indexerbase.ObjectDescriptor {
 	field := indexerbase.Field{
 		Name: fmt.Sprintf("test_%s", kind),
 		Kind: kind,
@@ -159,15 +159,15 @@ func mkTestTable(kind indexerbase.Kind) indexerbase.Table {
 	val2Field.Name = "valNullable"
 	val2Field.Nullable = true
 
-	return indexerbase.Table{
-		Name:        "KindTable",
+	return indexerbase.ObjectDescriptor{
+		Name:        fmt.Sprintf("test_%s", kind),
 		KeyFields:   []indexerbase.Field{key1Field, key2Field},
 		ValueFields: []indexerbase.Field{val1Field, val2Field},
 	}
 }
 
-func mkTestUpdate(rnd *rand.Rand, kind indexerbase.Kind) indexerbase.EntityUpdate {
-	update := indexerbase.EntityUpdate{}
+func mkTestUpdate(rnd *rand.Rand, kind indexerbase.Kind) indexerbase.ObjectUpdate {
+	update := indexerbase.ObjectUpdate{}
 
 	k1 := mkTestValue(rnd, kind, false)
 	k2 := mkTestValue(rnd, kind, true)

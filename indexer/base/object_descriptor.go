@@ -1,16 +1,16 @@
 package indexerbase
 
-// Table represents a table in the schema of a module.
-type Table struct {
-	// Name is the name of the table.
+// ObjectDescriptor describes an object in the schema of a module.
+type ObjectDescriptor struct {
+	// Name is the name of the object.
 	Name string
 
-	// KeyFields is a list of fields that make up the primary key of the table.
-	// It can be empty in which case indexers should assume that this table is
+	// KeyFields is a list of fields that make up the primary key of the object.
+	// It can be empty in which case indexers should assume that this object is
 	// a singleton and ony has one value.
 	KeyFields []Field
 
-	// ValueFields is a list of fields that are not part of the primary key of the table.
+	// ValueFields is a list of fields that are not part of the primary key of the object.
 	// It can be empty in the case where all fields are part of the primary key.
 	ValueFields []Field
 

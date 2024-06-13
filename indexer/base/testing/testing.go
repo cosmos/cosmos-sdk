@@ -13,7 +13,8 @@ import (
 // two fake modules over three blocks of data. The data set should remain relatively stable between releases
 // and generally only be changed when new features are added, so it should be suitable for regression or golden tests.
 type ListenerTestFixture struct {
-	listener indexerbase.Listener
+	listener     indexerbase.Listener
+	allKeyModule testModule
 }
 
 type ListenerTestFixtureOptions struct {
@@ -102,22 +103,34 @@ var moduleSchemaA = indexerbase.ModuleSchema{
 
 var maxKind = indexerbase.JSONKind
 
-func mkTestModule() (indexerbase.ModuleSchema, func(*rand.Rand) []indexerbase.EntityUpdate) {
+type testModule struct {
+	schema  indexerbase.ModuleSchema
+	updater func(*rand.Rand, *indexerbase.Listener) error
+}
+
+func mkAllKeysModule() testModule {
 	schema := indexerbase.ModuleSchema{}
 	for i := 1; i < int(maxKind); i++ {
 		schema.Tables = append(schema.Tables, mkTestTable(indexerbase.Kind(i)))
 	}
 
-	return schema, func(rnd *rand.Rand) []indexerbase.EntityUpdate {
-		var updates []indexerbase.EntityUpdate
-		for i := 1; i < int(maxKind); i++ {
-			// 0-10 updates per kind
-			n := int(rnd.Int31n(11))
-			for j := 0; j < n; j++ {
-				updates = append(updates, mkTestUpdate(rnd, indexerbase.Kind(i)))
+	return testModule{
+		schema: schema,
+		updater: func(rnd *rand.Rand, listener *indexerbase.Listener) error {
+			if listener.OnEntityUpdate != nil {
+				for i := 1; i < int(maxKind); i++ {
+					// 0-10 updates per kind
+					n := int(rnd.Int31n(11))
+					for j := 0; j < n; j++ {
+						err := listener.OnEntityUpdate("all_keys", mkTestUpdate(rnd, indexerbase.Kind(i)))
+						if err != nil {
+							return err
+						}
+					}
+				}
 			}
-		}
-		return updates
+			return nil
+		},
 	}
 }
 

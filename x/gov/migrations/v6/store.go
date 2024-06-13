@@ -11,7 +11,7 @@ import (
 
 var votingPeriodProposalKeyPrefix = collections.NewPrefix(4) // VotingPeriodProposalKeyPrefix stores which proposals are on voting period.
 
-// MigrateStore performs in-place store migrations from v5 (v0.50) to v6 (v0.51). The
+// MigrateStore performs in-place store migrations from v5 (v0.50) to v6 (v0.52). The
 // migration includes:
 //
 // Addition of new field in params to store types of proposals that can be submitted.
@@ -56,6 +56,7 @@ func MigrateStore(ctx context.Context, storeService corestoretypes.KVStoreServic
 	govParams.OptimisticAuthorizedAddresses = defaultParams.OptimisticAuthorizedAddresses
 	govParams.OptimisticRejectedThreshold = defaultParams.OptimisticRejectedThreshold
 	govParams.ProposalCancelMaxPeriod = defaultParams.ProposalCancelMaxPeriod
+	govParams.ProposalExecutionGas = defaultParams.ProposalExecutionGas
 
 	return paramsCollection.Set(ctx, govParams)
 }

@@ -62,6 +62,15 @@ updates:
       - "A:automerge"
       - dependencies
   - package-ecosystem: gomod
+    directory: "/core/testing"
+    schedule:
+      interval: weekly
+      day: thursday
+      time: "01:30"
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
     directory: "/depinject"
     schedule:
       interval: weekly

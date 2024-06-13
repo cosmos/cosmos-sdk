@@ -179,7 +179,7 @@ func TestDepositAmount(t *testing.T) {
 			require.NoError(t, err)
 
 			tp := TestProposal
-			proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", testAddrs[0])
+			proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", testAddrs[0], false)
 			require.NoError(t, err)
 			proposalID := proposal.Id
 

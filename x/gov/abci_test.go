@@ -302,7 +302,11 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			gov.EndBlocker(ctx, suite.GovKeeper)
 
 			activeQueue = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
-			require.False(t, activeQueue.Valid())
+			if tc.expedited {
+				require.True(t, activeQueue.Valid())
+			} else {
+				require.False(t, activeQueue.Valid())
+			}
 			activeQueue.Close()
 		})
 	}
@@ -331,7 +335,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	require.NotNil(t, macc)
 	initialModuleAccCoins := suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
 
-	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "title", "summary", proposer, false)
+	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "title", "summary", addrs[0], false)
 	require.NoError(t, err)
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10))}

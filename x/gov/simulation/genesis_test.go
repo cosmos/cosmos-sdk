@@ -41,17 +41,20 @@ func TestRandomizedGenState(t *testing.T) {
 	var govGenesis v1.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &govGenesis)
 
+	// values below are hardcoded
+	// changing s := rand.NewSource(<int>) will change the values
 	const (
 		tallyQuorum             = "0.400000000000000000"
-		tallyThreshold          = "0.539000000000000000"
+		tallyThreshold          = "0.458000000000000000"
 		tallyVetoThreshold      = "0.314000000000000000"
-		tallyExpeditedThreshold = "0.545000000000000000"
+		tallyExpeditedThreshold = "0.511000000000000000"
 		minInitialDepositDec    = "0.590000000000000000"
 	)
 
-	require.Equal(t, "905stake", govGenesis.Params.MinDeposit[0].String())
+	require.Equal(t, "272stake", govGenesis.Params.MinDeposit[0].String())
+	require.Equal(t, "774stake", govGenesis.Params.ExpeditedMinDeposit[0].String())
 	require.Equal(t, "77h26m10s", govGenesis.Params.MaxDepositPeriod.String())
-	require.Equal(t, float64(275567), govGenesis.Params.VotingPeriod.Seconds())
+	require.Equal(t, float64(270511), govGenesis.Params.VotingPeriod.Seconds())
 	require.Equal(t, tallyQuorum, govGenesis.Params.Quorum)
 	require.Equal(t, tallyThreshold, govGenesis.Params.Threshold)
 	require.Equal(t, tallyVetoThreshold, govGenesis.Params.VetoThreshold)
@@ -59,8 +62,7 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, []*v1.Deposit{}, govGenesis.Deposits)
 	require.Equal(t, []*v1.Vote{}, govGenesis.Votes)
 	require.Equal(t, []*v1.Proposal{}, govGenesis.Proposals)
-	require.Equal(t, "800stake", govGenesis.Params.ExpeditedMinDeposit[0].String())
-	require.Equal(t, float64(123081), govGenesis.Params.ExpeditedVotingPeriod.Seconds())
+	require.Equal(t, float64(97488), govGenesis.Params.ExpeditedVotingPeriod.Seconds())
 	require.Equal(t, tallyExpeditedThreshold, govGenesis.Params.ExpeditedThreshold)
 }
 

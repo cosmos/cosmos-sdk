@@ -101,6 +101,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 			},
 			expErr:    true,
@@ -115,6 +116,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 			},
 			expErr:    true,

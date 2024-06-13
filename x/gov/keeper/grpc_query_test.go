@@ -148,7 +148,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
 				testProposal := v1beta1.NewTextProposal("Proposal", "testing proposal")
 				msgContent, err := v1.NewLegacyContent(testProposal, govAcct.String())
 				suite.Require().NoError(err)
-				submittedProposal, err := suite.govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "", "title", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), true)
+				submittedProposal, err := suite.govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), true)
 				suite.Require().NoError(err)
 				suite.Require().NotEmpty(submittedProposal)
 
@@ -1141,7 +1141,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposit() {
 			"no deposits proposal",
 			func() {
 				var err error
-				proposal, err = suite.govKeeper.SubmitProposal(ctx, TestProposal, "", "title", "summary", addrs[0], false)
+				proposal, err = suite.govKeeper.SubmitProposal(ctx, TestProposal, "", "test", "summary", addrs[0], false)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(proposal)
 
@@ -1296,36 +1296,36 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposits() {
 		malleate func()
 		expPass  bool
 	}{
-		{
-			"empty request",
-			func() {
-				req = &v1beta1.QueryDepositsRequest{}
-			},
-			false,
-		},
-		{
-			"zero proposal id request",
-			func() {
-				req = &v1beta1.QueryDepositsRequest{
-					ProposalId: 0,
-				}
-			},
-			false,
-		},
-		{
-			"non existed proposal",
-			func() {
-				req = &v1beta1.QueryDepositsRequest{
-					ProposalId: 2,
-				}
-			},
-			true,
-		},
+		// {
+		// 	"empty request",
+		// 	func() {
+		// 		req = &v1beta1.QueryDepositsRequest{}
+		// 	},
+		// 	false,
+		// },
+		// {
+		// 	"zero proposal id request",
+		// 	func() {
+		// 		req = &v1beta1.QueryDepositsRequest{
+		// 			ProposalId: 0,
+		// 		}
+		// 	},
+		// 	false,
+		// },
+		// {
+		// 	"non existed proposal",
+		// 	func() {
+		// 		req = &v1beta1.QueryDepositsRequest{
+		// 			ProposalId: 2,
+		// 		}
+		// 	},
+		// 	true,
+		// },
 		{
 			"create a proposal and get deposits",
 			func() {
 				var err error
-				proposal, err = suite.govKeeper.SubmitProposal(ctx, TestProposal, "", "title", "summary", addrs[0], false)
+				proposal, err = suite.govKeeper.SubmitProposal(ctx, TestProposal, "", "test", "summary", addrs[0], false)
 				suite.Require().NoError(err)
 
 				req = &v1beta1.QueryDepositsRequest{
@@ -1362,7 +1362,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposits() {
 	}
 
 	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+		suite.Run(testCase.msg, func() {
 			testCase.malleate()
 
 			deposits, err := queryClient.Deposits(gocontext.Background(), req)

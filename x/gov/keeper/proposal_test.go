@@ -89,12 +89,17 @@ func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 		proposal, ok := suite.govKeeper.GetProposal(suite.ctx, proposal.Id)
 		suite.Require().True(ok)
 		suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
+
 		activeIterator := suite.govKeeper.ActiveProposalQueueIterator(suite.ctx, *proposal.VotingEndTime)
 		suite.Require().True(activeIterator.Valid())
 
 		proposalID := types.GetProposalIDFromBytes(activeIterator.Value())
 		suite.Require().Equal(proposalID, proposal.Id)
 		activeIterator.Close()
+		// delete the proposal to avoid issues with other tests
+		suite.Require().NotPanics(func() {
+			suite.govKeeper.DeleteProposal(suite.ctx, proposalID)
+		}, "")
 	}
 }
 

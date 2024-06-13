@@ -32,6 +32,7 @@ type ValueUpdates interface {
 
 	// Iterate iterates over the columns and values in the entity update. The function should return
 	// true to continue iteration or false to stop iteration. Each column value should conform
-	// to the requirements of that column's type in the schema.
-	Iterate(func(col string, value any) bool)
+	// to the requirements of that column's type in the schema. Iterate returns an error if
+	// it was unable to decode the values properly (which could be the case in lazy evaluation).
+	Iterate(func(col string, value any) bool) error
 }

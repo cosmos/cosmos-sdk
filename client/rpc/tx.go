@@ -102,10 +102,10 @@ func WaitTxCmd() *cobra.Command {
 		Short:   "Wait for a transaction to be included in a block",
 		Long:    `Subscribes to a CometBFT WebSocket connection and waits for a transaction event with the given hash.`,
 		Example: fmt.Sprintf(`By providing the transaction hash:
-$ %[1]sd q wait-tx [hash]
+$ %[1]s q wait-tx [hash]
 
 Or, by piping a "tx" command:
-$ %[1]sd tx [flags] | %[1]sd q wait-tx
+$ %[1]s tx [flags] | %[1]s q wait-tx
 `, version.AppName),
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -200,13 +200,21 @@ $ %[1]sd tx [flags] | %[1]sd q wait-tx
 }
 
 func parseHashFromInput(in []byte) ([]byte, error) {
-	var resultTx coretypes.ResultTx
-	if err := json.Unmarshal(in, &resultTx); err == nil {
+	// The content of in is expected to be the result of a tx command which should be using GenerateOrBroadcastTxCLI.
+	// That outputs a sdk.TxResponse as either the json or yaml. As json, we can't unmarshal it back into that struct,
+	// though, because the height field ends up quoted which confuses json.Unmarshal (because it's for an int64 field).
+
+	// Try to find the txhash from json ouptut.
+	resultTx := make(map[string]json.RawMessage)
+	if err := json.Unmarshal(in, &resultTx); err == nil && len(resultTx["txhash"]) > 0 {
 		// input was JSON, return the hash
-		return resultTx.Hash, nil
+		hash := strings.Trim(strings.TrimSpace(string(resultTx["txhash"])), `"`)
+		if len(hash) > 0 {
+			return hex.DecodeString(hash)
+		}
 	}
 
-	// try to parse the hash from the output of a tx command
+	// Try to find the txhash from yaml output.
 	lines := strings.Split(string(in), "\n")
 	for _, line := range lines {
 		if strings.HasPrefix(line, "txhash:") {

@@ -51,6 +51,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 			"proposal did not meet minimum deposit; deleted",
 			"proposal", proposal.Id,
 			"expedited", proposal.Expedited,
+			"title", proposal.Title,
 			"min_deposit", sdk.NewCoins(keeper.GetParams(ctx).MinDeposit...).String(),
 			"total_deposit", sdk.NewCoins(proposal.TotalDeposit...).String(),
 		)
@@ -78,7 +79,8 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 
 		keeper.RemoveFromActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
 
-		if passes {
+		switch {
+		case passes:
 			var (
 				idx    int
 				events sdk.Events
@@ -91,17 +93,22 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 			// message is logged.
 			cacheCtx, writeCache := ctx.CacheContext()
 			messages, err := proposal.GetMsgs()
-			if err == nil {
-				for idx, msg = range messages {
-					handler := keeper.Router().Handler(msg)
-					var res *sdk.Result
-					res, err = safeExecuteHandler(cacheCtx, msg, handler)
-					if err != nil {
-						break
-					}
+			if err != nil {
+				proposal.Status = v1.StatusFailed
+				tagValue = types.AttributeValueProposalFailed
+				logMsg = fmt.Sprintf("passed proposal (%v) failed to execute; msgs: %s", proposal, err)
 
-					events = append(events, res.GetEvents()...)
+				break
+			}
+			for idx, msg = range messages {
+				handler := keeper.Router().Handler(msg)
+				var res *sdk.Result
+				res, err = safeExecuteHandler(cacheCtx, msg, handler)
+				if err != nil {
+					break
 				}
+
+				events = append(events, res.GetEvents()...)
 			}
 
 			// `err == nil` when all handlers passed.
@@ -121,7 +128,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 				tagValue = types.AttributeValueProposalFailed
 				logMsg = fmt.Sprintf("passed, but msg %d (%s) failed on execution: %s", idx, sdk.MsgTypeURL(msg), err)
 			}
-		} else if proposal.Expedited {
+		case proposal.Expedited:
 			// When expedited proposal fails, it is converted
 			// to a regular proposal. As a result, the voting period is extended, and,
 			// once the regular voting period expires again, the tally is repeated
@@ -135,7 +142,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 
 			tagValue = types.AttributeValueExpeditedProposalRejected
 			logMsg = "expedited proposal converted to regular"
-		} else {
+		default:
 			proposal.Status = v1.StatusRejected
 			tagValue = types.AttributeValueProposalRejected
 			logMsg = "rejected"
@@ -157,6 +164,9 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 		logger.Info(
 			"proposal tallied",
 			"proposal", proposal.Id,
+			"status", proposal.Status.String(),
+			"expedited", proposal.Expedited,
+			"title", proposal.Title,
 			"results", logMsg,
 		)
 
@@ -165,6 +175,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 				types.EventTypeActiveProposal,
 				sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.Id)),
 				sdk.NewAttribute(types.AttributeKeyProposalResult, tagValue),
+				sdk.NewAttribute(types.AttributeKeyProposalLog, logMsg),
 			),
 		)
 		return false

@@ -1,9 +1,8 @@
 package indexertesting
 
 import (
-	"encoding/json"
 	"fmt"
-	"strconv"
+	"math/rand"
 	"time"
 
 	indexerbase "cosmossdk.io/indexer/base"
@@ -103,14 +102,22 @@ var moduleSchemaA = indexerbase.ModuleSchema{
 
 var maxKind = indexerbase.JSONKind
 
-func mkTestModule() (indexerbase.ModuleSchema, func(seed int) []indexerbase.EntityUpdate) {
+func mkTestModule() (indexerbase.ModuleSchema, func(*rand.Rand) []indexerbase.EntityUpdate) {
 	schema := indexerbase.ModuleSchema{}
 	for i := 1; i < int(maxKind); i++ {
 		schema.Tables = append(schema.Tables, mkTestTable(indexerbase.Kind(i)))
 	}
 
-	return schema, func(seed int) []indexerbase.EntityUpdate {
-		panic("TODO")
+	return schema, func(rnd *rand.Rand) []indexerbase.EntityUpdate {
+		var updates []indexerbase.EntityUpdate
+		for i := 1; i < int(maxKind); i++ {
+			// 0-10 updates per kind
+			n := int(rnd.Int31n(11))
+			for j := 0; j < n; j++ {
+				updates = append(updates, mkTestUpdate(rnd, indexerbase.Kind(i)))
+			}
+		}
+		return updates
 	}
 }
 
@@ -146,81 +153,92 @@ func mkTestTable(kind indexerbase.Kind) indexerbase.Table {
 	}
 }
 
-func mkTestUpdate(seed uint64, kind indexerbase.Kind) indexerbase.EntityUpdate {
+func mkTestUpdate(rnd *rand.Rand, kind indexerbase.Kind) indexerbase.EntityUpdate {
 	update := indexerbase.EntityUpdate{}
 
-	k1 := mkTestValue(seed, kind, false)
-	k2 := mkTestValue(seed+1, kind, true)
+	k1 := mkTestValue(rnd, kind, false)
+	k2 := mkTestValue(rnd, kind, true)
 	update.Key = []any{k1, k2}
 
 	// delete 10% of the time
-	if seed%10 == 0 {
+	if rnd.Int31n(10) == 1 {
 		update.Delete = true
 		return update
 	}
 
-	v1 := mkTestValue(seed+2, kind, false)
-	v2 := mkTestValue(seed+3, kind, true)
+	v1 := mkTestValue(rnd, kind, false)
+	v2 := mkTestValue(rnd, kind, true)
 	update.Value = []any{v1, v2}
 
 	return update
 }
 
-func mkTestValue(seed uint64, kind indexerbase.Kind, nullable bool) any {
+func mkTestValue(rnd *rand.Rand, kind indexerbase.Kind, nullable bool) any {
 	// if it's nullable, return nil 10% of the time
-	if nullable && seed%10 == 1 {
+	if nullable && rnd.Int31n(10) == 1 {
 		return nil
 	}
 
 	switch kind {
 	case indexerbase.StringKind:
 		// TODO fmt.Stringer
-		return "seed" + strconv.FormatUint(seed, 10)
+		return string(randBz(rnd))
 	case indexerbase.BytesKind:
-		return []byte("seed" + strconv.FormatUint(seed, 10))
+		return randBz(rnd)
 	case indexerbase.Int8Kind:
-		return int8(seed)
+		return int8(rnd.Int31n(256) - 128)
 	case indexerbase.Int16Kind:
-		return int16(seed)
+		return int16(rnd.Int31n(65536) - 32768)
 	case indexerbase.Uint8Kind:
-		return uint8(seed)
+		return uint8(rnd.Int31n(256))
 	case indexerbase.Uint16Kind:
-		return uint16(seed)
+		return uint16(rnd.Int31n(65536))
 	case indexerbase.Int32Kind:
-		return int32(seed)
+		return int32(rnd.Int63n(4294967296) - 2147483648)
 	case indexerbase.Uint32Kind:
-		return uint32(seed)
+		return uint32(rnd.Int63n(4294967296))
 	case indexerbase.Int64Kind:
-		return int64(seed)
+		return rnd.Int63()
 	case indexerbase.Uint64Kind:
-		return uint64(seed)
+		return rnd.Uint64()
 	case indexerbase.IntegerKind:
-		// TODO fmt.Stringer, int64
-		return fmt.Sprintf("%d", seed)
+		x := rnd.Int63()
+		return fmt.Sprintf("%d", x)
 	case indexerbase.DecimalKind:
-		// TODO fmt.Stringer
-		return fmt.Sprintf("%d.%d", seed, seed)
+		x := rnd.Int63()
+		y := rnd.Int63n(1000000000)
+		return fmt.Sprintf("%d.%d", x, y)
 	case indexerbase.BoolKind:
-		return seed%2 == 0
+		return rnd.Int31n(2) == 1
 	case indexerbase.TimeKind:
-		return time.Unix(int64(seed), 0)
+		return time.Unix(rnd.Int63(), rnd.Int63n(1000000000))
 	case indexerbase.DurationKind:
-		return time.Duration(seed) * time.Second
+		return time.Duration(rnd.Int63())
 	case indexerbase.Float32Kind:
-		return float32(seed)
+		return float32(rnd.Float64())
 	case indexerbase.Float64Kind:
-		return float64(seed)
+		return rnd.Float64()
 	case indexerbase.Bech32AddressKind:
-		// TODO bytes
-		return "cosmos1address" + strconv.FormatUint(seed, 10)
+		panic("TODO: select from some actually valid known bech32 address strings and bytes")
 	case indexerbase.EnumKind:
-		return testEnum.Values[int(seed)%len(testEnum.Values)]
+		return testEnum.Values[rnd.Int31n(int32(len(testEnum.Values)))]
 	case indexerbase.JSONKind:
-		// TODO other types
-		return json.RawMessage(`{"seed": ` + strconv.FormatUint(seed, 10) + `}`)
+		//// TODO other types
+		//return json.RawMessage(`{"seed": ` + strconv.FormatUint(seed, 10) + `}`)
+		panic("TODO")
 	default:
 	}
 	panic(fmt.Errorf("unexpected kind: %v", kind))
+}
+
+func randBz(rnd *rand.Rand) []byte {
+	n := rnd.Int31n(1024)
+	bz := make([]byte, n)
+	_, err := rnd.Read(bz)
+	if err != nil {
+		panic(err)
+	}
+	return bz
 }
 
 var testEnum = indexerbase.EnumDefinition{

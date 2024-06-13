@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	corecontext "cosmossdk.io/core/context"
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/appmodule"
-	corecontext "cosmossdk.io/core/context"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/authz"
@@ -80,14 +80,25 @@ func (k Keeper) update(ctx context.Context, grantee, granter sdk.AccAddress, upd
 	return store.Set(skey, k.cdc.MustMarshal(&grant))
 }
 
+type MsgGrantGenericSpend struct {
+	Grantee     sdk.AccAddress
+	Granter     sdk.AccAddress
+	GranterAddr string
+	Msg         sdk.Msg
+	GenericAuth authz.GenericAuthorization
+	Coins       sdk.Coins
+}
+
 // DispatchActions attempts to execute the provided messages via authorization
 // grants from the message signer to the grantee.
 func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msgs []sdk.Msg) ([][]byte, error) {
 	results := make([][]byte, len(msgs))
 	now := k.Environment.HeaderService.HeaderInfo(ctx).Time
 
-	genericAuthMsgs := []authz.GenericAuthorization{}
-	granters := map[string]sdk.Coins{}
+	genericAuths := map[string]*MsgGrantGenericSpend{}
+	// granters := map[string]sdk.Coins{}
+	// granterToAcc := map[string]sdk.AccAddress{}
+	// genericAuthorizations := map[string]authz.GenericAuthorization{}
 
 	for i, msg := range msgs {
 		signers, _, err := k.cdc.GetMsgSigners(msg)
@@ -106,7 +117,13 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 			return nil, err
 		}
 
-		granters[granterAddress] = sdk.NewCoins()
+		genericAuth := &MsgGrantGenericSpend{
+			Grantee:     grantee,
+			Granter:     granter,
+			GranterAddr: granterAddress,
+			Msg:         msg,
+		}
+		genericAuths[granterAddress] = genericAuth
 
 		// If granter != grantee then check authorization.Accept, otherwise we
 		// implicitly accept.
@@ -128,31 +145,6 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 				return nil, err
 			}
 
-			// pass the environment in the context
-			// users on server/v2 are expected to unwrap the environment from the context
-			// users on baseapp can still unwrap the sdk context
-			resp, err := authorization.Accept(context.WithValue(ctx, corecontext.EnvironmentContextKey, k.Environment), msg)
-			if err != nil {
-				return nil, err
-			}
-
-			if resp.Delete {
-				err = k.DeleteGrant(ctx, grantee, granter, sdk.MsgTypeURL(msg))
-			} else if resp.Updated != nil {
-				updated, ok := resp.Updated.(authz.Authorization)
-				if !ok {
-					return nil, fmt.Errorf("expected authz.Authorization but got %T", resp.Updated)
-				}
-				err = k.update(ctx, grantee, granter, updated)
-			}
-			if err != nil {
-				return nil, err
-			}
-
-			if !resp.Accept {
-				return nil, sdkerrors.ErrUnauthorized
-			}
-
 			// no need to use the branch service here, as if the transaction fails, the transaction will be reverted
 			_, err = k.MsgRouterService.InvokeUntyped(ctx, msg)
 			if err != nil {
@@ -161,7 +153,7 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 
 			genericSpendAuthorization, isGenericSpendAuth := authorization.(*authz.GenericAuthorization)
 			if isGenericSpendAuth && len(genericSpendAuthorization.SpendLimit) > 0 {
-				genericAuthMsgs = append(genericAuthMsgs, *genericSpendAuthorization)
+				genericAuth.GenericAuth = *genericSpendAuthorization
 			}
 		} else {
 
@@ -174,10 +166,9 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 		}
 	}
 
-	if len(genericAuthMsgs) > 0 && len(genericAuthMsgs) != len(msgs) {
+	if len(genericAuths) > 0 && len(genericAuths) != len(msgs) {
 		return nil, fmt.Errorf("generic spend authorization must be provided for all messages or none")
-	} else if len(genericAuthMsgs) > 0 {
-
+	} else if len(genericAuths) > 0 {
 		// TODO: Implement the spend limit check
 		obj := ctx.Value(sdk.SdkContextKey)
 		val, ok := obj.(sdk.Context)
@@ -188,12 +179,39 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 		events := val.EventManager().Events()
 
 		// iterate over the granters map and set the coins spent
-		for granter, _ := range granters {
+		for granter, authInfo := range genericAuths {
 			spentCoins, err := CoinsSpentEvents(events, granter)
 			if err != nil {
 				return nil, err
 			}
-			granters[granter] = spentCoins
+			authInfo.Coins = spentCoins
+		}
+
+		for _, currAuthorization := range genericAuths {
+			// pass the environment in the context
+			// users on server/v2 are expected to unwrap the environment from the context
+			// users on baseapp can still unwrap the sdk context
+			resp, err := currAuthorization.GenericAuth.Accept(context.WithValue(ctx, corecontext.EnvironmentContextKey, k.Environment), currAuthorization.Msg)
+			if err != nil {
+				return nil, err
+			}
+
+			if resp.Delete {
+				err = k.DeleteGrant(ctx, grantee, currAuthorization.Granter, sdk.MsgTypeURL(currAuthorization.Msg))
+			} else if resp.Updated != nil {
+				updated, ok := resp.Updated.(authz.Authorization)
+				if !ok {
+					return nil, fmt.Errorf("expected authz.Authorization but got %T", resp.Updated)
+				}
+				err = k.update(ctx, grantee, currAuthorization.Granter, updated)
+			}
+			if err != nil {
+				return nil, err
+			}
+
+			if !resp.Accept {
+				return nil, sdkerrors.ErrUnauthorized
+			}
 		}
 	}
 

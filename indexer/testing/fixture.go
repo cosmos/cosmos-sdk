@@ -48,7 +48,7 @@ func (f *ListenerTestFixture) NextBlock() error {
 	f.block++
 
 	if f.listener.StartBlock != nil {
-		err := f.listener.StartBlock(uint64(f.block))
+		err := f.listener.StartBlock(f.block)
 		if err != nil {
 			return err
 		}
@@ -130,37 +130,68 @@ var moduleSchemaA = indexerbase.ModuleSchema{
 var maxKind = indexerbase.JSONKind
 
 type testModule struct {
-	name    string
-	schema  indexerbase.ModuleSchema
-	updater func(rand.Source, *indexerbase.Listener) error
+	name   string
+	schema indexerbase.ModuleSchema
+	state  map[string]*testObjectStore
 }
 
-func mkAllKeysModule() testModule {
-	schema := indexerbase.ModuleSchema{}
+type testObjectStore struct {
+	updater func(rand.Source, *indexerbase.Listener) error
+	state   map[any]any
+}
+
+type value struct {
+	value any
+	state valueState
+}
+
+type valueState int
+
+const (
+	valueStateNotInitialized valueState = iota
+	valueStateSet
+	valueStateDeleted
+)
+
+func mkAllKeysModule(src rand.Source) *testModule {
+	mod := &testModule{}
 	for i := 1; i < int(maxKind); i++ {
-		schema.ObjectTypes = append(schema.ObjectTypes, mkTestObjectType(indexerbase.Kind(i)))
+		kind := indexerbase.Kind(i)
+		typ := mkTestObjectType(kind)
+		mod.schema.ObjectTypes = append(mod.schema.ObjectTypes, typ)
+		state := map[any]any{}
+		// generate 5 keys
+		for j := 0; j < 5; j++ {
+			key1 := mkTestValue(src, kind, false)
+			key2 := mkTestValue(src, kind, true)
+			key := []any{key1, key2}
+			state[key] = nil // initialize as nil
+		}
+
+		objStore := &testObjectStore{
+			state: state,
+		}
+		mod.state[typ.Name] = objStore
 	}
 
-	const name = "all_keys"
+	const name = "all_kinds"
 	return testModule{
 		name:   name,
 		schema: schema,
-		updater: func(source rand.Source, listener *indexerbase.Listener) error {
-			if listener.OnObjectUpdate != nil {
-				for i := 1; i < int(maxKind); i++ {
-					rnd := rand.New(source)
-					// 0-10 updates per kind
-					n := int(rnd.Uint32N(11))
-					for j := 0; j < n; j++ {
-						err := listener.OnObjectUpdate(name, mkTestUpdate(source, indexerbase.Kind(i)))
-						if err != nil {
-							return err
-						}
-					}
-				}
-			}
-			return nil
-		},
+		//updater: func(source rand.Source, listener *indexerbase.Listener) error {
+		//	if listener.OnObjectUpdate != nil {
+		//		for i := 1; i < int(maxKind); i++ {
+		//			// two updates per kind
+		//			for j := 0; j < 2; j++ {
+		//				err := listener.OnObjectUpdate(name, mkTestUpdate(source, indexerbase.Kind(i)))
+		//				if err != nil {
+		//					return err
+		//				}
+		//			}
+		//		}
+		//	}
+		//	return nil
+		//},
 	}
 }
 

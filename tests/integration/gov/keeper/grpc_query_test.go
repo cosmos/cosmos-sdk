@@ -49,7 +49,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 		{
 			"create a proposal and get tally",
 			func() {
-				proposal, err := app.GovKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0], false)
+				var err error
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0], false)
 				suite.Require().NoError(err)
 				suite.Require().NotEqual(proposal.String(), "")
 

@@ -78,7 +78,7 @@ func TestImportExportQueues(t *testing.T) {
 	require.NoError(t, err)
 	proposalID1 := proposal1.Id
 
-	proposal2, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "test", "description", addrs[0], true)
+	proposal2, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "test", "description", addrs[0], false)
 	require.NoError(t, err)
 	proposalID2 := proposal2.Id
 

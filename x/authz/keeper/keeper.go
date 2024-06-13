@@ -86,6 +86,9 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 	results := make([][]byte, len(msgs))
 	now := k.Environment.HeaderService.HeaderInfo(ctx).Time
 
+	genericAuthMsgs := []authz.GenericAuthorization{}
+	granters := map[string]sdk.Coins{}
+
 	for i, msg := range msgs {
 		signers, _, err := k.cdc.GetMsgSigners(msg)
 		if err != nil {
@@ -97,6 +100,13 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 		}
 
 		granter := signers[0]
+
+		granterAddress, err := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), granter)
+		if err != nil {
+			return nil, err
+		}
+
+		granters[granterAddress] = sdk.NewCoins()
 
 		// If granter != grantee then check authorization.Accept, otherwise we
 		// implicitly accept.
@@ -142,12 +152,48 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 			if !resp.Accept {
 				return nil, sdkerrors.ErrUnauthorized
 			}
+
+			// no need to use the branch service here, as if the transaction fails, the transaction will be reverted
+			_, err = k.MsgRouterService.InvokeUntyped(ctx, msg)
+			if err != nil {
+				return nil, fmt.Errorf("failed to execute message %d; message %v: %w", i, msg, err)
+			}
+
+			genericSpendAuthorization, isGenericSpendAuth := authorization.(*authz.GenericAuthorization)
+			if isGenericSpendAuth && len(genericSpendAuthorization.SpendLimit) > 0 {
+				genericAuthMsgs = append(genericAuthMsgs, *genericSpendAuthorization)
+			}
+		} else {
+
+			// no need to use the branch service here, as if the transaction fails, the transaction will be reverted
+			_, err = k.MsgRouterService.InvokeUntyped(ctx, msg)
+			if err != nil {
+				return nil, fmt.Errorf("failed to execute message %d; message %v: %w", i, msg, err)
+			}
+
+		}
+	}
+
+	if len(genericAuthMsgs) > 0 && len(genericAuthMsgs) != len(msgs) {
+		return nil, fmt.Errorf("generic spend authorization must be provided for all messages or none")
+	} else if len(genericAuthMsgs) > 0 {
+
+		// TODO: Implement the spend limit check
+		obj := ctx.Value(sdk.SdkContextKey)
+		val, ok := obj.(sdk.Context)
+		if !ok {
+			return nil, fmt.Errorf("failed to get sdk.Context from context")
 		}
 
-		// no need to use the branch service here, as if the transaction fails, the transaction will be reverted
-		_, err = k.MsgRouterService.InvokeUntyped(ctx, msg)
-		if err != nil {
-			return nil, fmt.Errorf("failed to execute message %d; message %v: %w", i, msg, err)
+		events := val.EventManager().Events()
+
+		// iterate over the granters map and set the coins spent
+		for granter, _ := range granters {
+			spentCoins, err := CoinsSpentEvents(events, granter)
+			if err != nil {
+				return nil, err
+			}
+			granters[granter] = spentCoins
 		}
 	}
 

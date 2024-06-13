@@ -7,6 +7,7 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package                      = "cosmossdk.io/x/authz";
 option (gogoproto.goproto_getters_all) = false;
@@ -19,6 +20,13 @@ message GenericAuthorization {
 
   // Msg, identified by it's type URL, to grant unrestricted permissions to execute
   string msg = 1;
+
+  repeated cosmos.base.v1beta1.Coin spend_limit = 2 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 
 // Grant gives permissions to execute

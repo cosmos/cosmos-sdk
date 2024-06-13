@@ -255,15 +255,18 @@ func (k Keeper) hasPermission(addr []byte) (bool, error) {
 	return bytes.Equal(authAcc, addr), nil
 }
 
+type recipientFund struct {
+	RecipientAddr string
+	Percentage    math.Int
+}
+
 func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistributeAmount math.Int) error {
 	totalPercentageToBeDistributed, err := k.TotalFundPercentage.Get(ctx)
-	fmt.Println("iterateAndUpdateFundsDistribution", totalPercentageToBeDistributed, err)
 	if err != nil {
 		return err
 	}
 
-	// Create a map to store keys & values from RecipientFundPercentage during the first iteration
-	recipientFundMap := make(map[string]math.Int)
+	recipientFundList := []recipientFund{}
 
 	// Calculate totalPercentageToBeDistributed and store values
 	err = k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
@@ -271,7 +274,10 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistrib
 		if err != nil {
 			return true, err
 		}
-		recipientFundMap[addr] = value
+		recipientFundList = append(recipientFundList, recipientFund{
+			RecipientAddr: addr,
+			Percentage:    value,
+		})
 		return false, nil
 	})
 	if err != nil {
@@ -291,14 +297,14 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistrib
 	totalAmountToBeDistributed := toDistributeDec.MulDec(math.LegacyNewDecFromIntWithPrec(totalPercentageToBeDistributed, 2))
 	totalDistrAmount := totalAmountToBeDistributed.AmountOf(denom)
 
-	for keyStr, value := range recipientFundMap {
+	for _, value := range recipientFundList {
 		// Calculate the funds to be distributed based on the percentage
-		decValue := math.LegacyNewDecFromIntWithPrec(value, 2)
+		decValue := math.LegacyNewDecFromIntWithPrec(value.Percentage, 2)
 		percentage := math.LegacyNewDecFromIntWithPrec(totalPercentageToBeDistributed, 2)
 		recipientAmount := totalDistrAmount.Mul(decValue).Quo(percentage)
 		recipientCoins := recipientAmount.TruncateInt()
 
-		key, err := k.authKeeper.AddressCodec().StringToBytes(keyStr)
+		key, err := k.authKeeper.AddressCodec().StringToBytes(value.RecipientAddr)
 		if err != nil {
 			return err
 		}

@@ -110,6 +110,14 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 		return nil, err
 	}
 
+	has, err := k.ContinuousFund.Has(ctx, recipient)
+	if err != nil {
+		return nil, err
+	}
+	if has {
+		return nil, fmt.Errorf("continuous fund already exists for recipient %s", msg.Recipient)
+	}
+
 	// Validate the message fields
 	err = k.validateContinuousFund(ctx, *msg)
 	if err != nil {
@@ -202,6 +210,14 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 
 	if err := k.ContinuousFund.Remove(ctx, recipient); err != nil {
 		return nil, fmt.Errorf("failed to remove continuous fund for recipient %s: %w", msg.RecipientAddress, err)
+	}
+
+	if err := k.RecipientFundPercentage.Remove(ctx, recipient); err != nil {
+		return nil, fmt.Errorf("failed to remove recipient fund percentage for recipient %s: %w", msg.RecipientAddress, err)
+	}
+
+	if err := k.RecipientFundDistribution.Remove(ctx, recipient); err != nil {
+		return nil, fmt.Errorf("failed to remove recipient fund distribution for recipient %s: %w", msg.RecipientAddress, err)
 	}
 
 	return &types.MsgCancelContinuousFundResponse{

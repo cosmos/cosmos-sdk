@@ -423,7 +423,7 @@ func (f *LedgerCryptoProviderFactory) CreateFromRecord(record *Record) (CryptoPr
     }
 
     // Assuming the record contains necessary fields like devicePath
-    devicePath, ok := record.Config["devicePath"].(string)
+    devicePath, ok := record.CryptoProvider.Config["devicePath"].(string)
     if !ok {
         return nil, fmt.Errorf("device path not found in record")
     }
@@ -452,12 +452,15 @@ func main() {
     if err != nil {
         log.Fatalf("Error fetching record from keyring: %s", err)
     }
-    providerFromRecord, err := crypto.CreateCryptoProviderFromRecordOrConfig("LedgerCryptoProvider", record, nil)
+    ledgerProvider, err := crypto.CreateCryptoProviderFromRecordOrConfig("LedgerCryptoProvider", record, nil)
     if err != nil {
         log.Fatalf("Error creating crypto provider from record: %s", err)
     }
-    log.Printf("Provider from record created successfully: %+v", providerFromRecord.Metadata())
+    log.Printf("Provider from record created successfully: %+v", ledgerProvider.Metadata())
+
+    // ledgerProvider CryptoProvider ready to use 
 }
+
 ```
 
 
@@ -467,7 +470,7 @@ The new `Keyring` interface will serve as a central hub for managing and fetchin
 
 
 ```go
-type Keyring interface {
+type KeyringV2 interface {
   // methods from Keyring/v1
   
   // ListCryptoProviders returns a list of all the stored CryptoProvider metadata.
@@ -477,6 +480,8 @@ type Keyring interface {
   GetCryptoProvider(id string) (CryptoProvider, error)
 }
 ```
+
+*Note*: Methods to obtain a provider from a public key or other means that make it easier to load the desired provider can be added.
 
 ##### Especial use case: remote signers
 
@@ -501,6 +506,7 @@ We will:
 * Define types and interfaces as the code attached.
 * Refactor existing code into new structure and interfaces.
 * Implement Unit Tests to ensure no backward compatibility issues.
+* All code will be uploaded to the already existing [cosmos/crypto](https://github.com/cosmos/crypto) repo. Once a first stable release is ready, the projects that decide to adopt this package will be ready to clean up their internal crypto-related code to avoid code duplication and cluttering.
 
 ## Consequences
 
@@ -510,9 +516,8 @@ We can divide the impact of this ADR into two main categories: state machine cod
 
 #### Client
 
-The major impact will be on the client side, where the current `Keyring` interface will be replaced by the new `Keyring` interface.
-This means that any piece of code that makes use of the `Record` struct will need to be adapted to use the new `CryptoProvider` instead.
-This will also affect a large number of unit tests that will need to be adapted/replaced with new ones.
+The major impact will be on the client side, where the current `Keyring` interface will be replaced by the new `KeyringV2` interface. At first, the impact will be low since `CryptoProvider` is an optional field in the `Record` message, so there's no mandatory requirement for migrating to this new concept right away. This allows a progressive transition where the risks of breaking changes or regressions are minimized.
+
 
 #### State Machine
 
@@ -524,16 +529,16 @@ Worth mentioning that there's also the alternative of using `Verifier` instances
 The specific way to adapt these modules will be deeply analyzed and decided at implementation time of this ADR.
 
 
-*Note*: All cryptographic tools (hashers, verifiers, signers, etc.) will continue to be available as standalone packages that can be imported and utilized directly without the need for a `CryptoProvider` instance. However, the `CryptoProvider` is the recommended method for using these tools as it offers a more secure way to handle sensitive data, enhanced modularity, and the ability to store configurations and metadata within the CryptoProvider definition.
+*Note*: All cryptographic tools (hashers, verifiers, signers, etc.) will continue to be available as standalone packages that can be imported and utilized directly without the need for a `CryptoProvider` instance. However, the `CryptoProvider` is the recommended method for using these tools as it offers a more secure way to handle sensitive data, enhanced modularity, and the ability to store configurations and metadata within the `CryptoProvider` definition.
 
 
 ### Backwards Compatibility
 
 The proposed migration path is similar to what the cosmos-sdk has done in the past. To ensure a smooth transition, the following steps will be taken:
 
-* Create a new package `cryptoV2` and implement this ADR. Create unit tests, documentation and examples.
+* Develop all new code in [cosmos/crypto](https://github.com/cosmos/crypto) repo. Create unit tests, documentation and examples.
 * Deprecate the old crypto package. The old crypto package will still be usable, but it will be marked as deprecated and users can opt to use the new package.
-* Migrate the codebase to use the new `CryptoV2` package and remove the old crypto package.
+* Migrate the codebase to use the new cosmos/crypto package and remove the old crypto one.
 
 _A more detailed migration path is provided in the corresponding document._
 
@@ -560,8 +565,7 @@ _A more detailed migration path is provided in the corresponding document._
 ## Test Cases
 
 * The code will be unit tested to ensure a high code coverage
-* There should be integration tests around Wallet, Keyring and CryptoProviders.
-* There should be benchmark tests for hashing, keyring, encryption, decryption, signing and verifying functions.
+* There should be integration tests around Keyring and CryptoProviders.
 
 ## Further Discussions
 

@@ -170,7 +170,7 @@ func BenchmarkCompareLegacyDecAndNewDecSub(b *testing.B) {
 				b.ResetTimer()
 				for i := 0; i < b.N; i++ {
 					for _, s := range summands {
-						diff, _ = diff.Sub(s, AssertMaxDecimals(34))
+						diff, _ = diff.Sub(s)
 					}
 				}
 			})
@@ -347,7 +347,7 @@ func BenchmarkCompareLegacySubAndDecSub(b *testing.B) {
 
 	b.Run("NewDec", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			_, _ = newB1.Sub(newB2, AssertMaxDecimals(34))
+			_, _ = newB1.Sub(newB2)
 		}
 	})
 }

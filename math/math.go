@@ -25,7 +25,7 @@ func Add(x Dec, y Dec) (Dec, error) {
 // SubNonNegative subtracts the value of y from x and returns the result with
 // arbitrary precision. Returns an error if the result is negative.
 func SubNonNegative(x Dec, y Dec) (Dec, error) {
-	z, err := x.Sub(y, AssertMaxDecimals(34))
+	z, err := x.Sub(y)
 	if err != nil {
 		return Dec{}, err
 	}

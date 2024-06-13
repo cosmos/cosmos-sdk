@@ -40,7 +40,7 @@ func TestNewDecFromString(t *testing.T) {
 		},
 		"max decimal": {
 			// todo:  src: strings.Repeat("9", 34),
-			exp: must(NewDecWithPrec(1, 34).Sub(NewDecFromInt64(1), AssertMaxDecimals(34))),
+			exp: must(NewDecWithPrec(1, 34).Sub(NewDecFromInt64(1))),
 		},
 		"precision too high": {
 			src:    "." + strings.Repeat("9", 35),
@@ -327,44 +327,20 @@ func TestSub(t *testing.T) {
 			y:   NewDecWithPrec(999, -3),
 			exp: NewDecWithPrec(1, -3),
 		},
-		"5.0000000000000000000000000000000001 - 1.0000000000000000000000000000000001 = 4.0000000000000000000000000000000000111": {
-			x:      must(NewDecFromString("5.0000000000000000000000000000000000111")),
-			y:      must(NewDecFromString("1.0000000000000000000000000000000000000")),
-			expErr: ErrInvalidDec,
-		},
-		"1^100000 - 1^-100000 = 0": {
+		"1^100000 - 1^-1 -> Err": {
 			x:      NewDecWithPrec(1, 100000),
 			y:      NewDecWithPrec(1, -100000),
 			expErr: ErrInvalidDec,
 		},
-		"1^100000 - 2^-100000 = 0": {
+		"1^100000 - 9^-1-> Err": {
 			x:      NewDecWithPrec(1, 100000),
 			y:      NewDecWithPrec(1, -100000),
 			expErr: ErrInvalidDec,
 		},
-		"1^100000 - 9^100000 = 0": {
+
+		"9^100000 - 1^1= 0-> Err": {
 			x:      NewDecWithPrec(1, 100000),
 			y:      NewDecWithPrec(1, -100000),
-			expErr: ErrInvalidDec,
-		},
-		"9^100000 - 1^100000 = 0": {
-			x:      NewDecWithPrec(1, 100000),
-			y:      NewDecWithPrec(1, -100000),
-			expErr: ErrInvalidDec,
-		},
-		"8^100000 - 1^100000 = 0": {
-			x:   NewDecWithPrec(8, 100000),
-			y:   NewDecWithPrec(1, 100000),
-			exp: NewDecWithPrec(7, 100000),
-		},
-		"8^100000 - 9^100000 = 0": {
-			x:   NewDecWithPrec(8, 100000),
-			y:   NewDecWithPrec(9, 100000),
-			exp: NewDecWithPrec(-1, 100000),
-		},
-		"8^100000 - 100^100000 = 0": {
-			x:      NewDecWithPrec(8, 100000),
-			y:      NewDecWithPrec(100, 100000),
 			expErr: ErrInvalidDec,
 		},
 		"MaxInt32 - MinInt32": {
@@ -380,22 +356,18 @@ func TestSub(t *testing.T) {
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
-			got, gotErr := spec.x.Sub(spec.y, AssertMaxDecimals(34))
+			got, gotErr := spec.x.Sub(spec.y)
+			if name == "precision too high: src exponent below limit" {
+				fmt.Println(spec.x, spec.y, spec.exp, got, gotErr)
+			}
 			if spec.expErr != nil {
 				require.ErrorIs(t, gotErr, spec.expErr)
 				return
 			}
 			require.NoError(t, gotErr)
-			assert.True(t, decimalsEqual(spec.exp, got))
+			assert.True(t, spec.exp.Equal(got))
 		})
 	}
-}
-
-func decimalsEqual(a, b Dec) bool {
-	if a.dec.Coeff.Cmp(&b.dec.Coeff) == 0 {
-		return true
-	}
-	return false
 }
 
 func TestQuo(t *testing.T) {

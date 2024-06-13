@@ -125,15 +125,12 @@ func (x Dec) Add(y Dec) (Dec, error) {
 
 // Sub returns a new Dec with value `x-y` without mutating any argument and error if
 // there is an overflow.
-func (x Dec) Sub(y Dec, constraint SetupConstraint) (Dec, error) {
+func (x Dec) Sub(y Dec) (Dec, error) {
 	var z Dec
 	_, err := apd.BaseContext.Sub(&z.dec, &x.dec, &y.dec)
-	if err != nil {
-		return Dec{}, ErrInvalidDec
-	}
 
-	if err := constraint(z); err != nil {
-		return Dec{}, ErrInvalidDec
+	if err != nil {
+		return Dec{}, ErrInvalidDec.Wrap("exponent out of range: " + err.Error())
 	}
 
 	return z, errors.Wrap(err, "decimal subtraction error")

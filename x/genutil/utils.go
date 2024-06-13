@@ -8,6 +8,8 @@ import (
 	"time"
 
 	cfg "github.com/cometbft/cometbft/config"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cmtbls12381 "github.com/cometbft/cometbft/crypto/bls12381"
 	tmed25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cometbft/cometbft/p2p"
 	"github.com/cometbft/cometbft/privval"
@@ -44,13 +46,13 @@ func ExportGenesisFileWithTime(genFile, chainID string, validators []cmttypes.Ge
 }
 
 // InitializeNodeValidatorFiles creates private validator and p2p configuration files.
-func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
-	return InitializeNodeValidatorFilesFromMnemonic(config, "")
+func InitializeNodeValidatorFiles(config *cfg.Config, keyType string) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
+	return InitializeNodeValidatorFilesFromMnemonic(config, "", keyType)
 }
 
 // InitializeNodeValidatorFilesFromMnemonic creates private validator and p2p configuration files using the given mnemonic.
 // If no valid mnemonic is given, a random one will be used instead.
-func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic string) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
+func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic, keyType string) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
 	if len(mnemonic) > 0 && !bip39.IsMnemonicValid(mnemonic) {
 		return "", nil, fmt.Errorf("invalid mnemonic")
 	}
@@ -71,14 +73,37 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic strin
 		return "", nil, fmt.Errorf("could not create directory %q: %w", filepath.Dir(pvStateFile), err)
 	}
 
-	var filePV *privval.FilePV
+	var (
+		filePV  *privval.FilePV
+		privKey cmtcrypto.PrivKey
+	)
+
 	if len(mnemonic) == 0 {
-		filePV = privval.LoadOrGenFilePV(pvKeyFile, pvStateFile)
+		switch keyType {
+		case "ed25519":
+			privKey = tmed25519.GenPrivKey()
+		case "bls12_381":
+			privKey, err = cmtbls12381.GenPrivKey()
+			if err != nil {
+				return "", nil, err
+			}
+		default:
+			privKey = tmed25519.GenPrivKey()
+		}
 	} else {
-		privKey := tmed25519.GenPrivKeyFromSecret([]byte(mnemonic))
-		filePV = privval.NewFilePV(privKey, pvKeyFile, pvStateFile)
-		filePV.Save()
+		switch keyType {
+		case "ed25519":
+			privKey = tmed25519.GenPrivKeyFromSecret([]byte(mnemonic))
+		case "bls12_381":
+			// TODO: need to add support for getting from mnemonic in Comet.
+			return "", nil, fmt.Errorf("BLS key type does not support mnemonic")
+		default:
+			privKey = tmed25519.GenPrivKeyFromSecret([]byte(mnemonic))
+		}
 	}
+
+	filePV = privval.NewFilePV(privKey, pvKeyFile, pvStateFile)
+	filePV.Save()
 
 	tmValPubKey, err := filePV.GetPubKey()
 	if err != nil {

@@ -1378,3 +1378,30 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 		})
 	}
 }
+
+// TestConsKeyRotationInSameBlock tests the scenario where multiple validators try to
+// rotate to the **same** consensus key in the same block.
+func (s *KeeperTestSuite) TestConsKeyRotationInSameBlock() {
+	stakingKeeper, ctx := s.stakingKeeper, s.ctx
+
+	msgServer := stakingkeeper.NewMsgServerImpl(stakingKeeper)
+	s.setValidators(2)
+	validators, err := stakingKeeper.GetAllValidators(ctx)
+	s.Require().NoError(err)
+
+	s.Require().Len(validators, 2)
+
+	req, err := types.NewMsgRotateConsPubKey(validators[0].GetOperator(), PKs[444])
+	s.Require().NoError(err)
+
+	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	_, err = msgServer.RotateConsPubKey(ctx, req)
+	s.Require().NoError(err)
+
+	req, err = types.NewMsgRotateConsPubKey(validators[1].GetOperator(), PKs[444])
+	s.Require().NoError(err)
+
+	_, err = msgServer.RotateConsPubKey(ctx, req)
+	s.Require().ErrorContains(err, "consensus pubkey is already used for a validator")
+}

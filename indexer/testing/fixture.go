@@ -3,8 +3,10 @@ package indexertesting
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
+	rand "math/rand/v2"
 	"time"
+
+	"github.com/brianvoe/gofakeit/v7"
 
 	indexerbase "cosmossdk.io/indexer/base"
 )
@@ -14,7 +16,7 @@ import (
 // two fake modules over three blocks of data. The data set should remain relatively stable between releases
 // and generally only be changed when new features are added, so it should be suitable for regression or golden tests.
 type ListenerTestFixture struct {
-	rnd          *rand.Rand
+	rndSource    rand.Source
 	block        uint64
 	listener     indexerbase.Listener
 	allKeyModule testModule
@@ -26,7 +28,7 @@ type ListenerTestFixtureOptions struct {
 
 func NewListenerTestFixture(listener indexerbase.Listener, options ListenerTestFixtureOptions) *ListenerTestFixture {
 	return &ListenerTestFixture{
-		rnd:          rand.New(rand.NewSource(1)),
+		rndSource:    rand.NewPCG(1, 2),
 		listener:     listener,
 		allKeyModule: mkAllKeysModule(),
 	}
@@ -52,7 +54,7 @@ func (f *ListenerTestFixture) NextBlock() error {
 		}
 	}
 
-	err := f.allKeyModule.updater(f.rnd, &f.listener)
+	err := f.allKeyModule.updater(f.rndSource, &f.listener)
 	if err != nil {
 		return err
 	}
@@ -130,7 +132,7 @@ var maxKind = indexerbase.JSONKind
 type testModule struct {
 	name    string
 	schema  indexerbase.ModuleSchema
-	updater func(*rand.Rand, *indexerbase.Listener) error
+	updater func(rand.Source, *indexerbase.Listener) error
 }
 
 func mkAllKeysModule() testModule {
@@ -143,13 +145,14 @@ func mkAllKeysModule() testModule {
 	return testModule{
 		name:   name,
 		schema: schema,
-		updater: func(rnd *rand.Rand, listener *indexerbase.Listener) error {
+		updater: func(source rand.Source, listener *indexerbase.Listener) error {
 			if listener.OnObjectUpdate != nil {
 				for i := 1; i < int(maxKind); i++ {
+					rnd := rand.New(source)
 					// 0-10 updates per kind
-					n := int(rnd.Int31n(11))
+					n := int(rnd.Uint32N(11))
 					for j := 0; j < n; j++ {
-						err := listener.OnObjectUpdate(name, mkTestUpdate(rnd, indexerbase.Kind(i)))
+						err := listener.OnObjectUpdate(name, mkTestUpdate(source, indexerbase.Kind(i)))
 						if err != nil {
 							return err
 						}
@@ -193,15 +196,15 @@ func mkTestObjectType(kind indexerbase.Kind) indexerbase.ObjectType {
 	}
 }
 
-func mkTestUpdate(rnd *rand.Rand, kind indexerbase.Kind) indexerbase.ObjectUpdate {
+func mkTestUpdate(rnd rand.Source, kind indexerbase.Kind) indexerbase.ObjectUpdate {
 	update := indexerbase.ObjectUpdate{}
 
 	k1 := mkTestValue(rnd, kind, false)
 	k2 := mkTestValue(rnd, kind, true)
 	update.Key = []any{k1, k2}
 
-	// delete 10% of the time
-	if rnd.Int31n(10) == 1 {
+	// delete 50% of the time
+	if rnd.Uint64()%2 == 0 {
 		update.Delete = true
 		return update
 	}
@@ -213,70 +216,75 @@ func mkTestUpdate(rnd *rand.Rand, kind indexerbase.Kind) indexerbase.ObjectUpdat
 	return update
 }
 
-func mkTestValue(rnd *rand.Rand, kind indexerbase.Kind, nullable bool) any {
-	// if it's nullable, return nil 10% of the time
-	if nullable && rnd.Int31n(10) == 1 {
+func mkTestValue(src rand.Source, kind indexerbase.Kind, nullable bool) any {
+	faker := gofakeit.NewFaker(src, false)
+	// if it's nullable, return nil 50% of the time
+	if nullable && faker.Bool() {
 		return nil
 	}
 
 	switch kind {
 	case indexerbase.StringKind:
 		// TODO fmt.Stringer
-		return string(randBz(rnd))
+		return faker.LoremIpsumSentence(faker.IntN(100))
 	case indexerbase.BytesKind:
-		return randBz(rnd)
+		return randBytes(src)
 	case indexerbase.Int8Kind:
-		return int8(rnd.Int31n(256) - 128)
+		return faker.Int8()
 	case indexerbase.Int16Kind:
-		return int16(rnd.Int31n(65536) - 32768)
+		return faker.Int16()
 	case indexerbase.Uint8Kind:
-		return uint8(rnd.Int31n(256))
+		return faker.Uint16()
 	case indexerbase.Uint16Kind:
-		return uint16(rnd.Int31n(65536))
+		return faker.Uint16()
 	case indexerbase.Int32Kind:
-		return int32(rnd.Int63n(4294967296) - 2147483648)
+		return faker.Int32()
 	case indexerbase.Uint32Kind:
-		return uint32(rnd.Int63n(4294967296))
+		return faker.Uint32()
 	case indexerbase.Int64Kind:
-		return rnd.Int63()
+		return faker.Int64()
 	case indexerbase.Uint64Kind:
-		return rnd.Uint64()
+		return faker.Uint64()
 	case indexerbase.IntegerKind:
-		x := rnd.Int63()
+		x := faker.Int64()
 		return fmt.Sprintf("%d", x)
 	case indexerbase.DecimalKind:
-		x := rnd.Int63()
-		y := rnd.Int63n(1000000000)
+		x := faker.Int64()
+		y := faker.UintN(1000000)
 		return fmt.Sprintf("%d.%d", x, y)
 	case indexerbase.BoolKind:
-		return rnd.Int31n(2) == 1
+		return faker.Bool()
 	case indexerbase.TimeKind:
-		return time.Unix(rnd.Int63(), rnd.Int63n(1000000000))
+		return time.Unix(faker.Int64(), int64(faker.UintN(1000000000)))
 	case indexerbase.DurationKind:
-		return time.Duration(rnd.Int63())
+		return time.Duration(faker.Int64())
 	case indexerbase.Float32Kind:
-		return float32(rnd.Float64())
+		return faker.Float32()
 	case indexerbase.Float64Kind:
-		return rnd.Float64()
+		return faker.Float64()
 	case indexerbase.Bech32AddressKind:
 		// TODO: select from some actually valid known bech32 address strings and bytes"
 		return "cosmos1abcdefgh1234567890"
 	case indexerbase.EnumKind:
-		return testEnum.Values[rnd.Int31n(int32(len(testEnum.Values)))]
+		return faker.RandomString(testEnum.Values)
 	case indexerbase.JSONKind:
 		// TODO: other types
-		return json.RawMessage(`{}`)
+		bz, err := faker.JSON(nil)
+		if err != nil {
+			panic(err)
+		}
+		return json.RawMessage(bz)
 	default:
 	}
 	panic(fmt.Errorf("unexpected kind: %v", kind))
 }
 
-func randBz(rnd *rand.Rand) []byte {
-	n := rnd.Int31n(1024)
+func randBytes(src rand.Source) []byte {
+	rnd := rand.New(src)
+	n := rnd.IntN(1024)
 	bz := make([]byte, n)
-	_, err := rnd.Read(bz)
-	if err != nil {
-		panic(err)
+	for i := 0; i < n; i++ {
+		bz[i] = byte(rnd.Uint32N(256))
 	}
 	return bz
 }

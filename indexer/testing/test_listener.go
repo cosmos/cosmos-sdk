@@ -38,9 +38,8 @@ func WriterListener(w io.Writer) indexerbase.Listener {
 			return err
 		},
 		OnObjectUpdate: func(moduleName string, data indexerbase.ObjectUpdate) error {
-			//_, err := fmt.Fprintf(w, "OnObjectUpdate: %s: %v\n", moduleName, data)
-			//return err
-			return nil
+			_, err := fmt.Fprintf(w, "OnObjectUpdate: %s: %v\n", moduleName, data)
+			return err
 		},
 		CommitCatchupSync: nil,
 	}

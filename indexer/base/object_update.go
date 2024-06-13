@@ -3,8 +3,8 @@ package indexerbase
 // ObjectUpdate represents an update operation on an object in a module's state.
 type ObjectUpdate struct {
 
-	// ObjectName is the name of the object type in the module's schema.
-	ObjectName string
+	// TypeName is the name of the object type in the module's schema.
+	TypeName string
 
 	// Key returns the value of the primary key of the object and must conform to these constraints with respect
 	// that the schema that is defined for the object:

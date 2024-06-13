@@ -1,7 +1,7 @@
 package indexerbase
 
-// ObjectDescriptor describes an object in the schema of a module.
-type ObjectDescriptor struct {
+// ObjectType describes an object type a module schema.
+type ObjectType struct {
 	// Name is the name of the object.
 	Name string
 

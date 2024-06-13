@@ -72,7 +72,7 @@ func (f *ListenerTestFixture) block3() error {
 }
 
 var moduleSchemaA = indexerbase.ModuleSchema{
-	Objects: []indexerbase.ObjectDescriptor{
+	ObjectTypes: []indexerbase.ObjectType{
 		{
 			"Singleton",
 			[]indexerbase.Field{},
@@ -136,7 +136,7 @@ type testModule struct {
 func mkAllKeysModule() testModule {
 	schema := indexerbase.ModuleSchema{}
 	for i := 1; i < int(maxKind); i++ {
-		schema.Objects = append(schema.Objects, mkTestObjectType(indexerbase.Kind(i)))
+		schema.ObjectTypes = append(schema.ObjectTypes, mkTestObjectType(indexerbase.Kind(i)))
 	}
 
 	const name = "all_keys"
@@ -161,7 +161,7 @@ func mkAllKeysModule() testModule {
 	}
 }
 
-func mkTestObjectType(kind indexerbase.Kind) indexerbase.ObjectDescriptor {
+func mkTestObjectType(kind indexerbase.Kind) indexerbase.ObjectType {
 	field := indexerbase.Field{
 		Name: fmt.Sprintf("test_%v", kind),
 		Kind: kind,
@@ -186,7 +186,7 @@ func mkTestObjectType(kind indexerbase.Kind) indexerbase.ObjectDescriptor {
 	val2Field.Name = "valNullable"
 	val2Field.Nullable = true
 
-	return indexerbase.ObjectDescriptor{
+	return indexerbase.ObjectType{
 		Name:        fmt.Sprintf("test_%v", kind),
 		KeyFields:   []indexerbase.Field{key1Field, key2Field},
 		ValueFields: []indexerbase.Field{val1Field, val2Field},

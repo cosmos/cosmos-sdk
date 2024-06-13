@@ -11,11 +11,11 @@ DRAFT
 
 ## Abstract
 
-This ADR proposes the refactoring of the existing Keyring module to support multiple cryptographic curves for signing and verification processes. With this update, we aim to facilitate the integration of new cryptographic curves through clean and simple interfaces. Additionally, support for Hardware Security Modules (HSM) is introduced as a complementary enhancement in this redesign.
+This ADR proposes the refactoring of the existing `Keyring` and `cosmos-sdk/crypto` code to support multiple cryptographic curves for signing and verification processes. With this update, we aim to facilitate the integration of new cryptographic curves through clean and simple interfaces. Additionally, support for Hardware Security Modules (HSM) is introduced as a complementary enhancement in this redesign.
 
 This ADR also introduces the capability to support remote signers. This feature will enable the nodes to interact with cryptographic signers that are not locally present on the system where the main app is running. This is particularly useful for scenarios where keys are managed in secure, remote environments or when leveraging cloud-based cryptographic services.
 
-Additionally, the appendix will describe the implementation of this ADR within the [cometBFT](https://github.com/cometbft/cometbft) codebase, specifically focusing on the interactions with the [PrivateValidator](https://github.com/cometbft/cometbft/blob/68e5e1b4e3bd342a653a73091a1af7cc5e88b86b/types/priv_validator.go#L15) interface.
+Additionally, the appendix will describe the implementation of this ADR within the [cometBFT](https://github.com/cometbft/cometbft) codebase, specifically focusing on the interactions with the [PrivateValidator](https://github.com/cometbft/cometbft/blob/68e5e1b4e3bd342a653a73091a1af7cc5e88b86b/types/priv_validator.go#L15) interface. See the [Appendix](#appendix) for more details on CometBFT integration.
 
 ## Introduction
 
@@ -31,7 +31,9 @@ Special focus has been placed on the following key aspects:
 * maintainability
 * developer experience
 
-The enhancements in this proposal not only render the ["Keyring ADR"](https://github.com/cosmos/cosmos-sdk/issues/14940) obsolete, but also encompass its key aspects, replacing it with a more flexible and comprehensive approach. Furthermore, the gRPC service proposed in the Keyring ADR can be easily implemented as a specialized HSM.
+The enhancements in this proposal not only render the ["Keyring ADR"](https://github.com/cosmos/cosmos-sdk/issues/14940) obsolete, but also encompass its key aspects, replacing it with a more flexible and comprehensive approach. Furthermore, the gRPC service proposed in the mentioned ADR can be easily implemented as a specialized `CryptoProvider`. 
+
+We'll introduce the concept of `CryptoProvider` in the following sections.
 
 
 ### Glossary
@@ -48,7 +50,7 @@ In order to fully understand the need for changes and the proposed improvements,
 
 * The Cosmos SDK currently lacks a comprehensive ADR for the cryptographic package.
 
-* If a blockchain project requires a cryptographic curve that is not supported by the current SDK, they are obligated to fork the SDK repository and make modifications. These modifications could potentially make the fork incompatible with future updates from the upstream SDK, complicating maintenance and integration.
+* If a blockchain project requires a cryptographic curve that is not supported by the current SDK, the most likely scenario is that they will need to fork the SDK repository and make modifications. These modifications could potentially make the fork incompatible with future updates from the upstream SDK, complicating maintenance and integration.
 
 * Type leakage of specific crypto data types expose backward compatibility and extensibility challenges.
 
@@ -108,23 +110,23 @@ Testing:
 
 New Keyring:
 
-* Design a new Keyring interface with modular backends injection system to support hardware devices and cloud-based HSMs.
+* Design a new Keyring interface with modular backends injection system to support hardware devices and cloud-based HSMs. This feature is optional and tied to complexity; if it proves too complex, it will be deferred to a future release as an enhancement.
 
 
 ## Proposed architecture
 
 ### Introduction
 
-In this section, we will first introduce the concept of a `CryptoProvider`, which serves as the main API of the new cryptographic architecture. Following this, we will present the detailed components that make up the `CryptoProvider`. Lastly, we will introduce the storage and persistence layer, providing code snippets for each component to illustrate their implementation.
+In this section, we will first introduce the concept of a `CryptoProvider`, which serves as the main API. Following this, we will present the detailed components that make up the `CryptoProvider`. Lastly, we will introduce the storage and persistence layer, providing code snippets for each component to illustrate their implementation.
 
 
 #### Crypto Provider
 
-Here we introduce the concept of `CryptoProvider`. This interface acts as a centralized controller, encapsulating the APIs for the **signing**, **verifying** and **hashing** functionalities. It acts as the main API with which the apps will interact with
+This **interface** acts as a centralized controller, encapsulating the APIs for the **signing**, **verifying** and **hashing** functionalities. It acts as the main API with which the apps will interact with
 
-By abstracting the underlying cryptographic functionality, `CryptoProvider` enables a modular and extensible architecture, aka 'pluggable cryptography'. It allows users to easily switch between different cryptographic implementations without impacting the rest of the system.
+By abstracting the underlying cryptographic functionalities, `CryptoProvider` enables a modular and extensible architecture, aka 'pluggable cryptography'. It allows users to easily switch between different cryptographic implementations without impacting the rest of the system.
 
-The `CryptoProvider` interface includes getters for essential cryptographic functionalities and metadata:
+The `CryptoProvider` interface includes getters for essential cryptographic functionalities and its metadata:
 
 
 ```go
@@ -146,9 +148,9 @@ type CryptoProvider interface {
 
 ##### Components
 
-The components defined here are designed to act as wrappers around the underlying proper functions. This architecture ensures that the actual cryptographic operations such as signing, hashing, and verifying are delegated to the specialized functions, that are implementation dependant. These wrapper components facilitate a clean and modular approach by abstracting the complexity of direct cryptographic function calls.
+The components defined here are designed to act as *wrappers* around the underlying proper functions. This architecture ensures that the actual cryptographic operations such as signing, hashing, and verifying are delegated to the specialized functions, that are implementation dependant. These wrapper components facilitate a clean and modular approach by abstracting the complexity of direct cryptographic function calls.
 
-In all of the interface's methods, we add an *options* input parameter designed to provide a flexible and dynamic way to pass various options and configurations to the `Sign`, `Verify`, and `Hash` functions. This approach allows developers to customize these processes by including any necessary parameters that might be required by specific algorithms or operational contexts. However, this requires that a type assertion for each option be performed inside the function's implementation.
+In all of the interface's methods, we add an *options* input parameter of type `map[string]any`, designed to provide a flexible and dynamic way to pass various options and configurations to the `Sign`, `Verify`, and `Hash` functions. This approach allows developers to customize these processes by including any necessary parameters that might be required by specific algorithms or operational contexts. However, this requires that a type assertion for each option be performed inside the function's implementation.
 
 ###### Signer
 
@@ -160,11 +162,24 @@ that might be necessary for the signing operation.
 ```go
 // Signer represents a general interface for signing messages.
 type Signer interface {
-    // Sign takes a message as input and returns the digital signature.
-    Sign(fullMsg []byte, options SignerOptions) (Signature, error)
+    // Sign takes a signDoc as input and returns the digital signature.
+    Sign(signDoc []byte, options SignerOptions) (Signature, error)
 }
 
 type SignerOpts = map[string]any
+```
+
+###### Signature
+
+```go
+// Signature represents a general interface for a digital signature.
+type Signature interface {
+    // Bytes returns the byte representation of the signature.
+    Bytes() []byte
+
+    // Equals checks if two signatures are identical.
+    Equals(other Signature) bool
+}
 ```
 
 ###### Verifier
@@ -175,7 +190,7 @@ Verifies if given a message belongs to a public key by validating against its re
 // Verifier represents a general interface for verifying signatures.
 type Verifier interface {
     // Verify checks the digital signature against the message and a public key to determine its validity.
-    Verify(signature Signature, msg []byte, pubKey PublicKey, options VerifierOptions) (bool, error)
+    Verify(signature Signature, signDoc []byte, pubKey PublicKey, options VerifierOptions) (bool, error)
 }
 
 type VerifierOpts = map[string]any
@@ -203,6 +218,7 @@ The metadata allows uniquely identifying a `CryptoProvider` and also stores its 
 // ProviderMetadata holds metadata about the crypto provider.
 type ProviderMetadata struct {
     Name    string
+    Type    string
     Version *semver.Version // Using semver type for versioning
     Config  map[string]any
 }
@@ -210,9 +226,10 @@ type ProviderMetadata struct {
 
 ###### Public Key
 
+*Note:* Here we decoupled the `Address` type from its corresponding `PubKey`. The corresponding codec step is proposed to be abstracted out from the CryptoProvider layer.
+
 ```go
 type PubKey interface {
-	Address() Address
 	Bytes() []byte
 	Equals(other PubKey) bool
 	Type() string
@@ -235,31 +252,18 @@ type PrivKey interface {
 }
 ```
 
-###### Signature
-
-```go
-// Signature represents a general interface for a digital signature.
-type Signature interface {
-    // Bytes returns the byte representation of the signature.
-    Bytes() []byte
-
-    // Equals checks if two signatures are identical.
-    Equals(other Signature) bool
-}
-```
-
 ##### Storage and persistence
 
-The storage and persistence layer is tasked with storing a `CryptoProvider`. Specifically, this layer must:
+The storage and persistence layer is tasked with storing a `CryptoProvider`s. Specifically, this layer must:
 
 * Securely store the crypto provider's associated private key (only if stored locally, otherwise a reference to the private key will be stored instead).
-* Store the `ProviderMetadata` struct.
+* Store the `ProviderMetadata` struct which contains the data that distinguishes that provider.
 
 The purpose of this layer is to ensure that upon retrieval of the persisted data, we can access the provider's type, version, and specific configuration (which varies based on the provider type). This information will subsequently be utilized to initialize the appropriate factory, as detailed in the following section on the factory pattern.
 
-The storage proposal involves using a modified version of the [Record](https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/crypto/keyring/v1/record.proto) struct, which is already defined in Keyring/v1. Additionally, we propose utilizing the existing keyring backends (keychain, filesystem, memory, etc.) to store these Records in the same manner as the current Keyring/v1.
+The storage proposal involves using a modified version of the [Record](https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/crypto/keyring/v1/record.proto) struct, which is already defined in **Keyring/v1**. Additionally, we propose utilizing the existing keyring backends (keychain, filesystem, memory, etc.) to store these `Record`s in the same manner as the current **Keyring/v1**.
 
-*This approach will facilitate a smoother migration path from the current Keyring/v1 to the proposed architecture.*
+*Note: This approach will facilitate a smoother migration path from the current Keyring/v1 to the proposed architecture.*
 
 Below is the proposed protobuf message to be included in the modified `Record.proto` file
 
@@ -275,21 +279,25 @@ import "google/protobuf/any.proto";
 
 // CryptoProvider holds all necessary information to instantiate and configure a CryptoProvider.
 message CryptoProvider {
-    string type = 1;       // Type of the crypto provider
-    string version = 2;    // Version of the crypto provider
-    map<string, bytes> config = 3;  // Configuration data with byte array values
-    google.protobuf.Any privKey = 4; // Optional if key is stored locally
+    string name = 1; // (unique) name of the crypto provider.
+    google.protobuf.Any pub_key = 2;
+    string type = 3;       // Type of the crypto provider
+    string version = 4;    // Version (semver format)
+    map<string, bytes> config = 5;  // Configuration data with byte array values
+    google.protobuf.Any privKey = 6; // Optional if key is stored locally
 }
 ```
+<b>name</b>:
+Specifies the unique name of the crypto provider. This name is used to identify and reference the specific crypto provider instance.
 
+<b>pub_key (google.protobuf.Any)</b>:
+Holds the public key associated with the crypto provider.
 
 <b>type</b>:
-Specifies the type of the crypto provider. This field is used to identify and differentiate between various crypto provider implementations.
-
+Specifies the type of the crypto provider. This field is used to identify and differentiate between various crypto provider implementations. Examples: `ledger`, `AWSCloudHSM`, `local-secp256k1`
 
 <b>version</b>:
 Indicates the version of the crypto provider using semantic versioning.
-
 
 <b>configuration (map<string, bytes>)</b>:
 Contains serialized configuration data as key-value pairs, where the key is a string and the value is a byte array.
@@ -313,7 +321,7 @@ message Record {
     Ledger ledger = 4;
     Multi multi = 5;
     Offline offline = 6;
-    CryptoProvider crypto_provider = 7;
+    CryptoProvider crypto_provider = 7; // <- New
   }
 
   message Local {
@@ -332,9 +340,7 @@ message Record {
 
 ##### Creating and loading a `CryptoProvider`
 
-One of the main advantages of having an encapsulated entity for the defined cryptographic operations and tools is that it allows the use of different key pairs, which could be stored in various sources and/or be of different types, within the same codebase without necessitating changes to the rest of the app's code.
-
-To provide this functionality, we propose a *factory pattern* for the `CryptoProvider` interface and a *registry* for these builders.
+For creating providers, we propose a *factory pattern* and a *registry* for these builders.
 
 Below, we present the proposed interfaces and code snippets to illustrate the proposed architecture.
 
@@ -347,9 +353,9 @@ type CryptoProviderFactory interface {
 }
 ```
 
-**Note**: The mechanisms for storing and loading `records` will utilize the existing infrastructure from keyring/v1.
+**Note**: The mechanisms for storing and loading `records` will utilize the existing infrastructure from **Keyring/v1**.
 
-**Example**: crypto provider factory and builder registry
+**Code snippet**: provider **factory** and builder **registry**
 
 ```go
 // crypto/v2/providerFactory.go
@@ -394,11 +400,11 @@ func CreateCryptoProviderFromRecordOrConfig(id string, record *Record, config *P
 // generateProviderID is a function that generates a unique identifier for a CryptoProvider based on its metadata.
 // This can be changed in the future to a more suitable function if needed.
 func generateProviderID(metadata ProviderMetadata) string {
-    return fmt.Sprintf("%s-%s", metadata.Name, metadata.Version)
+    return fmt.Sprintf("%s-%s", metadata.Type, metadata.Version)
 }
 ```
 
-Example: Ledger HW implementation 
+**Example**: Ledger HW implementation 
 
 Below is an example implementation of how a Ledger hardware wallet `CryptoProvider` might implement the registration of its factory and how instantiation would work.
 

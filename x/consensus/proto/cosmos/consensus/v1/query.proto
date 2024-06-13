@@ -4,6 +4,7 @@ package cosmos.consensus.v1;
 
 import "google/api/annotations.proto";
 import "cometbft/types/v1/params.proto";
+import "cosmos/consensus/v1/consensus.proto";
 
 option go_package = "cosmossdk.io/x/consensus/types";
 
@@ -14,7 +15,7 @@ service Query {
     option (google.api.http).get = "/cosmos/consensus/v1/params";
   }
 
-  rpc CometInfo(QueryCometInfoRequest) returns (QueryCometInfoResponse):
+  rpc CometInfo(QueryCometInfoRequest) returns (QueryCometInfoResponse);
 }
 
 // QueryCometInfoRequest defines the request type for querying x/consensus comet info.
@@ -24,14 +25,15 @@ message QueryCometInfoRequest {}
 message QueryCometInfoResponse {
   // comet_info is the comet info of the x/consensus module.
   CometInfo comet_info = 1;
+}
 
-  // QueryParamsRequest defines the request type for querying x/consensus parameters.
-  message QueryParamsRequest {}
+// QueryParamsRequest defines the request type for querying x/consensus parameters.
+message QueryParamsRequest {}
 
-  // QueryParamsResponse defines the response type for querying x/consensus parameters.
-  message QueryParamsResponse {
-    // params are the tendermint consensus params stored in the consensus module.
-    // Please note that `params.version` is not populated in this response, it is
-    // tracked separately in the x/upgrade module.
-    cometbft.types.v1.ConsensusParams params = 1;
-  }
+// QueryParamsResponse defines the response type for querying x/consensus parameters.
+message QueryParamsResponse {
+  // params are the tendermint consensus params stored in the consensus module.
+  // Please note that `params.version` is not populated in this response, it is
+  // tracked separately in the x/upgrade module.
+  cometbft.types.v1.ConsensusParams params = 1;
+}

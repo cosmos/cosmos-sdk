@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
@@ -104,9 +105,9 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
-func (k Keeper) CometInfo(ctx context.Context, msg *types.MsgCometInfo) (*types.MsgCometInfoResponse, error) {
-	if coreapp.ConsensusIdentity != msg.Authority {
-		return nil, fmt.Errorf("invalid authority; expected %s, got %s", k.GetAuthority(), msg.Authority)
+func (k Keeper) SetCometInfo(ctx context.Context, msg *types.MsgSetCometInfo) (*types.MsgSetCometInfoResponse, error) {
+	if !bytes.Equal(coreapp.ConsensusIdentity, []byte(msg.Authority)) {
+		return nil, fmt.Errorf("invalid authority; expected %s, got %s", coreapp.ConsensusIdentity, msg.Authority)
 	}
 
 	cometInfo := types.CometInfo{
@@ -120,5 +121,14 @@ func (k Keeper) CometInfo(ctx context.Context, msg *types.MsgCometInfo) (*types.
 		return nil, err
 	}
 
-	return &types.MsgCometInfoResponse{}, nil
+	return &types.MsgSetCometInfoResponse{}, nil
+}
+
+func (k Keeper) CometInfo(ctx context.Context, _ *types.QueryCometInfoRequest) (*types.QueryCometInfoResponse, error) {
+	cometInfo, err := k.cometInfo.Get(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryCometInfoResponse{CometInfo: &cometInfo}, nil
 }

@@ -20,7 +20,8 @@ service Msg {
     option (cosmos_proto.method_added_in) = "cosmos-sdk 0.47";
   }
 
-  rpc CometInfo(MsgCometInfo) returns (MsgCometInfoResponse);
+  // SetCometInfo defines how to set the comet info for the x/consensus module.
+  rpc SetCometInfo(MsgSetCometInfo) returns (MsgSetCometInfoResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -51,7 +52,7 @@ message MsgUpdateParams {
 message MsgUpdateParamsResponse {}
 
 // MsgCometInfo is the Msg/CometInfo request type.
-message MsgCometInfo {
+message MsgSetCometInfo {
   option (cosmos.msg.v1.signer) = "authority";
   option (amino.name)           = "cosmos-sdk/x/consensus/MsgCometInfo";
 
@@ -72,4 +73,4 @@ message MsgCometInfo {
 }
 
 // MsgCometInfoResponse defines the response
-message MsgCometInfoResponse {}
+message MsgSetCometInfoResponse {}

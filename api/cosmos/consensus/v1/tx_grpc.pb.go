@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	Msg_UpdateParams_FullMethodName = "/cosmos.consensus.v1.Msg/UpdateParams"
-	Msg_CometInfo_FullMethodName    = "/cosmos.consensus.v1.Msg/CometInfo"
+	Msg_SetCometInfo_FullMethodName = "/cosmos.consensus.v1.Msg/SetCometInfo"
 )
 
 // MsgClient is the client API for Msg service.
@@ -32,7 +32,8 @@ type MsgClient interface {
 	// UpdateParams defines a governance operation for updating the x/consensus module parameters.
 	// The authority is defined in the keeper.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
-	CometInfo(ctx context.Context, in *MsgCometInfo, opts ...grpc.CallOption) (*MsgCometInfoResponse, error)
+	// SetCometInfo defines how to set the comet info for the x/consensus module.
+	SetCometInfo(ctx context.Context, in *MsgSetCometInfo, opts ...grpc.CallOption) (*MsgSetCometInfoResponse, error)
 }
 
 type msgClient struct {
@@ -52,9 +53,9 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 	return out, nil
 }
 
-func (c *msgClient) CometInfo(ctx context.Context, in *MsgCometInfo, opts ...grpc.CallOption) (*MsgCometInfoResponse, error) {
-	out := new(MsgCometInfoResponse)
-	err := c.cc.Invoke(ctx, Msg_CometInfo_FullMethodName, in, out, opts...)
+func (c *msgClient) SetCometInfo(ctx context.Context, in *MsgSetCometInfo, opts ...grpc.CallOption) (*MsgSetCometInfoResponse, error) {
+	out := new(MsgSetCometInfoResponse)
+	err := c.cc.Invoke(ctx, Msg_SetCometInfo_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +69,8 @@ type MsgServer interface {
 	// UpdateParams defines a governance operation for updating the x/consensus module parameters.
 	// The authority is defined in the keeper.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
-	CometInfo(context.Context, *MsgCometInfo) (*MsgCometInfoResponse, error)
+	// SetCometInfo defines how to set the comet info for the x/consensus module.
+	SetCometInfo(context.Context, *MsgSetCometInfo) (*MsgSetCometInfoResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -79,8 +81,8 @@ type UnimplementedMsgServer struct {
 func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
 }
-func (UnimplementedMsgServer) CometInfo(context.Context, *MsgCometInfo) (*MsgCometInfoResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CometInfo not implemented")
+func (UnimplementedMsgServer) SetCometInfo(context.Context, *MsgSetCometInfo) (*MsgSetCometInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetCometInfo not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -113,20 +115,20 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_CometInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCometInfo)
+func _Msg_SetCometInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetCometInfo)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).CometInfo(ctx, in)
+		return srv.(MsgServer).SetCometInfo(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Msg_CometInfo_FullMethodName,
+		FullMethod: Msg_SetCometInfo_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CometInfo(ctx, req.(*MsgCometInfo))
+		return srv.(MsgServer).SetCometInfo(ctx, req.(*MsgSetCometInfo))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -143,8 +145,8 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_UpdateParams_Handler,
 		},
 		{
-			MethodName: "CometInfo",
-			Handler:    _Msg_CometInfo_Handler,
+			MethodName: "SetCometInfo",
+			Handler:    _Msg_SetCometInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

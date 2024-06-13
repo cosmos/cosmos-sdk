@@ -124,11 +124,11 @@ func (k Keeper) SetCometInfo(ctx context.Context, msg *types.MsgSetCometInfo) (*
 	return &types.MsgSetCometInfoResponse{}, nil
 }
 
-func (k Keeper) CometInfo(ctx context.Context, _ *types.QueryCometInfoRequest) (*types.QueryCometInfoResponse, error) {
+func (k Keeper) GetCometInfo(ctx context.Context, _ *types.QueryGetCometInfoRequest) (*types.QueryGetCometInfoResponse, error) {
 	cometInfo, err := k.cometInfo.Get(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryCometInfoResponse{CometInfo: &cometInfo}, nil
+	return &types.QueryGetCometInfoResponse{CometInfo: &cometInfo}, nil
 }

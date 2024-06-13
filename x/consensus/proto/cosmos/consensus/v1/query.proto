@@ -16,14 +16,14 @@ service Query {
   }
 
   // CometInfo queries the comet info of x/consensus module.
-  rpc CometInfo(QueryCometInfoRequest) returns (QueryCometInfoResponse);
+  rpc GetCometInfo(QueryGetCometInfoRequest) returns (QueryGetCometInfoResponse);
 }
 
 // QueryCometInfoRequest defines the request type for querying x/consensus comet info.
-message QueryCometInfoRequest {}
+message QueryGetCometInfoRequest {}
 
 // QueryCometInfoResponse defines the response type for querying x/consensus comet info.
-message QueryCometInfoResponse {
+message QueryGetCometInfoResponse {
   // comet_info is the comet info of the x/consensus module.
   CometInfo comet_info = 1;
 }

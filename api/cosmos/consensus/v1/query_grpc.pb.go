@@ -21,8 +21,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Query_Params_FullMethodName    = "/cosmos.consensus.v1.Query/Params"
-	Query_CometInfo_FullMethodName = "/cosmos.consensus.v1.Query/CometInfo"
+	Query_Params_FullMethodName       = "/cosmos.consensus.v1.Query/Params"
+	Query_GetCometInfo_FullMethodName = "/cosmos.consensus.v1.Query/GetCometInfo"
 )
 
 // QueryClient is the client API for Query service.
@@ -31,7 +31,8 @@ const (
 type QueryClient interface {
 	// Params queries the parameters of x/consensus module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	CometInfo(ctx context.Context, in *QueryCometInfoRequest, opts ...grpc.CallOption) (*QueryCometInfoResponse, error)
+	// CometInfo queries the comet info of x/consensus module.
+	GetCometInfo(ctx context.Context, in *QueryGetCometInfoRequest, opts ...grpc.CallOption) (*QueryGetCometInfoResponse, error)
 }
 
 type queryClient struct {
@@ -51,9 +52,9 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
-func (c *queryClient) CometInfo(ctx context.Context, in *QueryCometInfoRequest, opts ...grpc.CallOption) (*QueryCometInfoResponse, error) {
-	out := new(QueryCometInfoResponse)
-	err := c.cc.Invoke(ctx, Query_CometInfo_FullMethodName, in, out, opts...)
+func (c *queryClient) GetCometInfo(ctx context.Context, in *QueryGetCometInfoRequest, opts ...grpc.CallOption) (*QueryGetCometInfoResponse, error) {
+	out := new(QueryGetCometInfoResponse)
+	err := c.cc.Invoke(ctx, Query_GetCometInfo_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +67,8 @@ func (c *queryClient) CometInfo(ctx context.Context, in *QueryCometInfoRequest, 
 type QueryServer interface {
 	// Params queries the parameters of x/consensus module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	CometInfo(context.Context, *QueryCometInfoRequest) (*QueryCometInfoResponse, error)
+	// CometInfo queries the comet info of x/consensus module.
+	GetCometInfo(context.Context, *QueryGetCometInfoRequest) (*QueryGetCometInfoResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -77,8 +79,8 @@ type UnimplementedQueryServer struct {
 func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
 }
-func (UnimplementedQueryServer) CometInfo(context.Context, *QueryCometInfoRequest) (*QueryCometInfoResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CometInfo not implemented")
+func (UnimplementedQueryServer) GetCometInfo(context.Context, *QueryGetCometInfoRequest) (*QueryGetCometInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCometInfo not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -111,20 +113,20 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_CometInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryCometInfoRequest)
+func _Query_GetCometInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetCometInfoRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).CometInfo(ctx, in)
+		return srv.(QueryServer).GetCometInfo(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Query_CometInfo_FullMethodName,
+		FullMethod: Query_GetCometInfo_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).CometInfo(ctx, req.(*QueryCometInfoRequest))
+		return srv.(QueryServer).GetCometInfo(ctx, req.(*QueryGetCometInfoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -141,8 +143,8 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Query_Params_Handler,
 		},
 		{
-			MethodName: "CometInfo",
-			Handler:    _Query_CometInfo_Handler,
+			MethodName: "GetCometInfo",
+			Handler:    _Query_GetCometInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

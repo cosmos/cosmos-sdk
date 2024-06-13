@@ -87,10 +87,24 @@ func newResponseFormatBroadcastTxCommit(res *coretypes.ResultBroadcastTxCommit) 
 // QueryEventForTxCmd returns a CLI command that subscribes to a WebSocket connection and waits for a transaction event with the given hash.
 func QueryEventForTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
+<<<<<<< HEAD
 		Use:   "event-query-tx-for [hash]",
 		Short: "Query for a transaction by hash",
 		Long:  `Subscribes to a CometBFT WebSocket connection and waits for a transaction event with the given hash.`,
 		Args:  cobra.ExactArgs(1),
+=======
+		Use:     "wait-tx [hash]",
+		Aliases: []string{"event-query-tx-for"},
+		Short:   "Wait for a transaction to be included in a block",
+		Long:    `Subscribes to a CometBFT WebSocket connection and waits for a transaction event with the given hash.`,
+		Example: fmt.Sprintf(`By providing the transaction hash:
+$ %[1]s q wait-tx [hash]
+
+Or, by piping a "tx" command:
+$ %[1]s tx [flags] | %[1]s q wait-tx
+`, version.AppName),
+		Args: cobra.MaximumNArgs(1),
+>>>>>>> 55b00938b (fix: Properly parse json in the wait-tx command. (#20631))
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -138,3 +152,32 @@ func QueryEventForTxCmd() *cobra.Command {
 
 	return cmd
 }
+<<<<<<< HEAD
+=======
+
+func parseHashFromInput(in []byte) ([]byte, error) {
+	// The content of in is expected to be the result of a tx command which should be using GenerateOrBroadcastTxCLI.
+	// That outputs a sdk.TxResponse as either the json or yaml. As json, we can't unmarshal it back into that struct,
+	// though, because the height field ends up quoted which confuses json.Unmarshal (because it's for an int64 field).
+
+	// Try to find the txhash from json ouptut.
+	resultTx := make(map[string]json.RawMessage)
+	if err := json.Unmarshal(in, &resultTx); err == nil && len(resultTx["txhash"]) > 0 {
+		// input was JSON, return the hash
+		hash := strings.Trim(strings.TrimSpace(string(resultTx["txhash"])), `"`)
+		if len(hash) > 0 {
+			return hex.DecodeString(hash)
+		}
+	}
+
+	// Try to find the txhash from yaml output.
+	lines := strings.Split(string(in), "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "txhash:") {
+			hash := strings.TrimSpace(line[len("txhash:"):])
+			return hex.DecodeString(hash)
+		}
+	}
+	return nil, fmt.Errorf("txhash not found")
+}
+>>>>>>> 55b00938b (fix: Properly parse json in the wait-tx command. (#20631))

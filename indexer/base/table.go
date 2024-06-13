@@ -5,11 +5,11 @@ type Table struct {
 	// Name is the name of the table.
 	Name string
 
-	// KeyColumns is a list of columns that make up the primary key of the table.
-	KeyColumns []Column
+	// KeyFields is a list of fields that make up the primary key of the table.
+	KeyFields []Field
 
-	// ValueColumns is a list of columns that are not part of the primary key of the table.
-	ValueColumns []Column
+	// ValueFields is a list of fields that are not part of the primary key of the table.
+	ValueFields []Field
 
 	// RetainDeletions is a flag that indicates whether the indexer should retain
 	// deleted rows in the database and flag them as deleted rather than actually

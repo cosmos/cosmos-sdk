@@ -2,18 +2,18 @@ package indexerbase
 
 import "fmt"
 
-// Column represents a column in a table schema.
-type Column struct {
-	// Name is the name of the column.
+// Field represents a field in a table schema.
+type Field struct {
+	// Name is the name of the field.
 	Name string
 
-	// Kind is the basic type of the column.
+	// Kind is the basic type of the field.
 	Kind Kind
 
-	// Nullable indicates whether null values are accepted for the column.
+	// Nullable indicates whether null values are accepted for the field.
 	Nullable bool
 
-	// AddressPrefix is the address prefix of the column's kind, currently only used for Bech32AddressKind.
+	// AddressPrefix is the address prefix of the field's kind, currently only used for Bech32AddressKind.
 	AddressPrefix string
 
 	// EnumDefinition is the definition of the enum type and is only valid when Kind is EnumKind.
@@ -29,32 +29,32 @@ type EnumDefinition struct {
 	Values []string
 }
 
-// Validate validates the column.
-func (c Column) Validate() error {
+// Validate validates the field.
+func (c Field) Validate() error {
 	// non-empty name
 	if c.Name == "" {
-		return fmt.Errorf("column name cannot be empty")
+		return fmt.Errorf("field name cannot be empty")
 	}
 
 	// valid kind
 	if err := c.Kind.Validate(); err != nil {
-		return fmt.Errorf("invalid column type for %q: %w", c.Name, err)
+		return fmt.Errorf("invalid field type for %q: %w", c.Name, err)
 	}
 
 	// address prefix only valid with Bech32AddressKind
 	if c.Kind == Bech32AddressKind && c.AddressPrefix == "" {
-		return fmt.Errorf("missing address prefix for column %q", c.Name)
+		return fmt.Errorf("missing address prefix for field %q", c.Name)
 	} else if c.Kind != Bech32AddressKind && c.AddressPrefix != "" {
-		return fmt.Errorf("address prefix is only valid for column %q with type Bech32AddressKind", c.Name)
+		return fmt.Errorf("address prefix is only valid for field %q with type Bech32AddressKind", c.Name)
 	}
 
 	// enum definition only valid with EnumKind
 	if c.Kind == EnumKind {
 		if err := c.EnumDefinition.Validate(); err != nil {
-			return fmt.Errorf("invalid enum definition for column %q: %w", c.Name, err)
+			return fmt.Errorf("invalid enum definition for field %q: %w", c.Name, err)
 		}
 	} else if c.Kind != EnumKind && c.EnumDefinition.Name != "" && c.EnumDefinition.Values != nil {
-		return fmt.Errorf("enum definition is only valid for column %q with type EnumKind", c.Name)
+		return fmt.Errorf("enum definition is only valid for field %q with type EnumKind", c.Name)
 	}
 
 	return nil
@@ -81,63 +81,63 @@ func (e EnumDefinition) Validate() error {
 	return nil
 }
 
-// ValidateValue validates that the value conforms to the column's kind and nullability.
+// ValidateValue validates that the value conforms to the field's kind and nullability.
 // It currently does not do any validation that IntegerKind, DecimalKind, Bech32AddressKind, or EnumKind
 // values are valid for their respective types behind conforming to the correct go type.
-func (c Column) ValidateValue(value any) error {
+func (c Field) ValidateValue(value any) error {
 	if value == nil {
 		if !c.Nullable {
-			return fmt.Errorf("column %q cannot be null", c.Name)
+			return fmt.Errorf("field %q cannot be null", c.Name)
 		}
 		return nil
 	}
 	return c.Kind.ValidateValueType(value)
 }
 
-// ValidateKey validates that the value conforms to the set of columns as a Key in an EntityUpdate.
+// ValidateKey validates that the value conforms to the set of fields as a Key in an EntityUpdate.
 // See EntityUpdate.Key for documentation on the requirements of such values.
-func ValidateKey(cols []Column, value any) error {
-	if len(cols) == 0 {
+func ValidateKey(fields []Field, value any) error {
+	if len(fields) == 0 {
 		return nil
 	}
 
-	if len(cols) == 1 {
-		return cols[0].ValidateValue(value)
+	if len(fields) == 1 {
+		return fields[0].ValidateValue(value)
 	}
 
 	values, ok := value.([]any)
 	if !ok {
-		return fmt.Errorf("expected slice of values for key columns, got %T", value)
+		return fmt.Errorf("expected slice of values for key fields, got %T", value)
 	}
 
-	if len(cols) != len(values) {
-		return fmt.Errorf("expected %d key columns, got %d values", len(cols), len(value.([]any)))
+	if len(fields) != len(values) {
+		return fmt.Errorf("expected %d key fields, got %d values", len(fields), len(value.([]any)))
 	}
-	for i, col := range cols {
-		if err := col.ValidateValue(values[i]); err != nil {
-			return fmt.Errorf("invalid value for key column %q: %w", col.Name, err)
+	for i, field := range fields {
+		if err := field.ValidateValue(values[i]); err != nil {
+			return fmt.Errorf("invalid value for key field %q: %w", field.Name, err)
 		}
 	}
 	return nil
 }
 
-// ValidateValue validates that the value conforms to the set of columns as a Value in an EntityUpdate.
+// ValidateValue validates that the value conforms to the set of fields as a Value in an EntityUpdate.
 // See EntityUpdate.Value for documentation on the requirements of such values.
-func ValidateValue(cols []Column, value any) error {
+func ValidateValue(fields []Field, value any) error {
 	valueUpdates, ok := value.(ValueUpdates)
 	if ok {
-		colMap := map[string]Column{}
-		for _, col := range cols {
-			colMap[col.Name] = col
+		fieldMap := map[string]Field{}
+		for _, field := range fields {
+			fieldMap[field.Name] = field
 		}
 		var errs []error
-		valueUpdates.Iterate(func(colName string, value any) bool {
-			col, ok := colMap[colName]
+		valueUpdates.Iterate(func(fieldName string, value any) bool {
+			field, ok := fieldMap[fieldName]
 			if !ok {
-				errs = append(errs, fmt.Errorf("unknown column %q in value updates", colName))
+				errs = append(errs, fmt.Errorf("unknown field %q in value updates", fieldName))
 			}
-			if err := col.ValidateValue(value); err != nil {
-				errs = append(errs, fmt.Errorf("invalid value for column %q: %w", colName, err))
+			if err := field.ValidateValue(value); err != nil {
+				errs = append(errs, fmt.Errorf("invalid value for field %q: %w", fieldName, err))
 			}
 			return true
 		})
@@ -146,6 +146,6 @@ func ValidateValue(cols []Column, value any) error {
 		}
 		return nil
 	} else {
-		return ValidateKey(cols, value)
+		return ValidateKey(fields, value)
 	}
 }

@@ -2,6 +2,6 @@ package indexerbase
 
 import "testing"
 
-func TestColumnValidate(t *testing.T) {
+func TestField_Validate(t *testing.T) {
 
 }

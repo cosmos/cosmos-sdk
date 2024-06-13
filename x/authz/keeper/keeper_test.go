@@ -378,7 +378,8 @@ func (s *TestSuite) TestDequeueAllGrantsQueue() {
 	require.NoError(err)
 
 	newCtx := s.ctx.WithBlockTime(exp.AddDate(1, 0, 0))
-	err = s.authzKeeper.DequeueAndDeleteExpiredGrants(newCtx)
+	// setting a high limit so all grants are dequeued
+	err = s.authzKeeper.DequeueAndDeleteExpiredGrants(newCtx, 200)
 	require.NoError(err)
 
 	s.T().Log("verify expired grants are pruned from the state")
@@ -393,6 +394,74 @@ func (s *TestSuite) TestDequeueAllGrantsQueue() {
 	authzs, err = s.authzKeeper.GetAuthorizations(newCtx, grantee1, granter)
 	require.NoError(err)
 	require.Len(authzs, 0)
+
+	authzs, err = s.authzKeeper.GetAuthorizations(newCtx, granter, grantee)
+	require.NoError(err)
+	require.Len(authzs, 1)
+}
+
+func (s *TestSuite) TestDequeueGrantsQueueEdgecases() {
+	require := s.Require()
+	addrs := s.addrs
+	granter := addrs[0]
+	grantee := addrs[1]
+	grantee1 := addrs[2]
+	exp := s.ctx.BlockTime().AddDate(0, 0, 1)
+	a := banktypes.SendAuthorization{SpendLimit: coins100}
+
+	// create few authorizations
+	err := s.authzKeeper.SaveGrant(s.ctx, grantee, granter, &a, &exp)
+	require.NoError(err)
+
+	err = s.authzKeeper.SaveGrant(s.ctx, grantee1, granter, &a, &exp)
+	require.NoError(err)
+
+	exp2 := exp.AddDate(0, 1, 0)
+	err = s.authzKeeper.SaveGrant(s.ctx, granter, grantee1, &a, &exp2)
+	require.NoError(err)
+
+	exp2 = exp.AddDate(2, 0, 0)
+	err = s.authzKeeper.SaveGrant(s.ctx, granter, grantee, &a, &exp2)
+	require.NoError(err)
+
+	newCtx := s.ctx.WithBlockTime(exp.AddDate(1, 0, 0))
+	err = s.authzKeeper.DequeueAndDeleteExpiredGrants(newCtx, 0)
+	require.NoError(err)
+
+	s.T().Log("verify no pruning happens when limit is 0")
+	authzs, err := s.authzKeeper.GetAuthorizations(newCtx, grantee, granter)
+	require.NoError(err)
+	require.Len(authzs, 1)
+
+	authzs, err = s.authzKeeper.GetAuthorizations(newCtx, granter, grantee1)
+	require.NoError(err)
+	require.Len(authzs, 1)
+
+	authzs, err = s.authzKeeper.GetAuthorizations(newCtx, grantee1, granter)
+	require.NoError(err)
+	require.Len(authzs, 1)
+
+	authzs, err = s.authzKeeper.GetAuthorizations(newCtx, granter, grantee)
+	require.NoError(err)
+	require.Len(authzs, 1)
+
+	// expecting to prune 1 record when limit is 1
+	newCtx = s.ctx.WithBlockTime(exp.AddDate(1, 0, 0))
+	err = s.authzKeeper.DequeueAndDeleteExpiredGrants(newCtx, 1)
+	require.NoError(err)
+
+	s.T().Log("verify 1 record is prunded when limit is 1")
+	authzs, err = s.authzKeeper.GetAuthorizations(newCtx, grantee, granter)
+	require.NoError(err)
+	require.Len(authzs, 0)
+
+	authzs, err = s.authzKeeper.GetAuthorizations(newCtx, granter, grantee1)
+	require.NoError(err)
+	require.Len(authzs, 1)
+
+	authzs, err = s.authzKeeper.GetAuthorizations(newCtx, grantee1, granter)
+	require.NoError(err)
+	require.Len(authzs, 1)
 
 	authzs, err = s.authzKeeper.GetAuthorizations(newCtx, granter, grantee)
 	require.NoError(err)

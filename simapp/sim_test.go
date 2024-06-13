@@ -62,11 +62,16 @@ func setupStateFactory(app *SimApp) sims.SimStateFactory {
 	}
 }
 
+var (
+	exportAllModules       = []string{}
+	exportWithValidatorSet = []string{}
+)
+
 func TestAppImportExport(t *testing.T) {
 	sims.Run(t, NewSimApp, setupStateFactory, func(t *testing.T, ti sims.TestInstance[*SimApp]) {
 		app := ti.App
 		t.Log("exporting genesis...\n")
-		exported, err := app.ExportAppStateAndValidators(false, []string{}, []string{})
+		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
 		require.NoError(t, err)
 
 		t.Log("importing genesis...\n")
@@ -109,7 +114,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	sims.Run(t, NewSimApp, setupStateFactory, func(t *testing.T, ti sims.TestInstance[*SimApp]) {
 		app := ti.App
 		t.Log("exporting genesis...\n")
-		exported, err := app.ExportAppStateAndValidators(false, []string{}, []string{})
+		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
 		require.NoError(t, err)
 
 		t.Log("importing genesis...\n")

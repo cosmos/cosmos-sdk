@@ -71,6 +71,7 @@ func SimulateFromSeed( // exists for backwards compatibility only
 	cdc codec.JSONCodec,
 	addressCodec address.Codec,
 ) (exportedParams Params, err error) {
+	tb.Helper()
 	mode, _, _ := getTestingMode(tb)
 	return SimulateFromSeedX(tb, logger, w, app, appStateFn, randAccFn, ops, blockedAddrs, config, cdc, addressCodec, NewLogWriter(mode))
 }

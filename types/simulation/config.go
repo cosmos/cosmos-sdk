@@ -28,23 +28,14 @@ type Config struct {
 	T           testing.TB
 }
 
-func (c Config) Clone() Config {
-	return Config{
-		GenesisFile:        c.GenesisFile,
-		ParamsFile:         c.ParamsFile,
-		ExportParamsPath:   c.ExportParamsPath,
-		ExportParamsHeight: c.ExportParamsHeight,
-		ExportStatePath:    c.ExportStatePath,
-		ExportStatsPath:    c.ExportStatsPath,
-		Seed:               c.Seed,
-		InitialBlockHeight: c.InitialBlockHeight,
-		GenesisTime:        c.GenesisTime,
-		NumBlocks:          c.NumBlocks,
-		BlockSize:          c.BlockSize,
-		ChainID:            c.ChainID,
-		Lean:               c.Lean,
-		Commit:             c.Commit,
-		DBBackend:          c.DBBackend,
-		BlockMaxGas:        c.BlockMaxGas,
-	}
+func (c Config) shallowCopy() Config {
+	return c
+}
+
+func (c Config) With(t *testing.T, seed int64, fuzzSeed []byte) Config {
+	r := c.shallowCopy()
+	r.T = t
+	r.Seed = seed
+	r.FuzzSeed = fuzzSeed
+	return r
 }

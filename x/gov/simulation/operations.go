@@ -44,15 +44,23 @@ const (
 	DefaultWeightMsgCancelProposal = 5
 )
 
-type sharedState struct {
+// SharedState shared state between message invocations
+type SharedState struct {
 	minProposalID atomic.Uint64
 }
 
-func (s *sharedState) getMinProposalID() uint64 {
+// NewSharedState constructor
+func NewSharedState() *SharedState {
+	r := &SharedState{}
+	r.setMinProposalID(unsetProposalID)
+	return r
+}
+
+func (s *SharedState) getMinProposalID() uint64 {
 	return s.minProposalID.Load()
 }
 
-func (s *sharedState) setMinProposalID(id uint64) {
+func (s *SharedState) setMinProposalID(id uint64) {
 	s.minProposalID.Store(id)
 }
 
@@ -132,8 +140,7 @@ func WeightedOperations(
 			),
 		)
 	}
-	state := &sharedState{}
-	state.setMinProposalID(unsetProposalID)
+	state := NewSharedState()
 	wGovOps := simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgDeposit,
@@ -340,7 +347,7 @@ func SimulateMsgDeposit(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k *keeper.Keeper,
-	s *sharedState,
+	s *SharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -407,7 +414,7 @@ func SimulateMsgVote(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k *keeper.Keeper,
-	s *sharedState,
+	s *SharedState,
 ) simtypes.Operation {
 	return operationSimulateMsgVote(txGen, ak, bk, k, simtypes.Account{}, -1, s)
 }
@@ -419,7 +426,7 @@ func operationSimulateMsgVote(
 	k *keeper.Keeper,
 	simAccount simtypes.Account,
 	proposalIDInt int64,
-	s *sharedState,
+	s *SharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -476,7 +483,7 @@ func SimulateMsgVoteWeighted(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k *keeper.Keeper,
-	s *sharedState,
+	s *SharedState,
 ) simtypes.Operation {
 	return operationSimulateMsgVoteWeighted(txGen, ak, bk, k, simtypes.Account{}, -1, s)
 }
@@ -488,7 +495,7 @@ func operationSimulateMsgVoteWeighted(
 	k *keeper.Keeper,
 	simAccount simtypes.Account,
 	proposalIDInt int64,
-	s *sharedState,
+	s *SharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -677,7 +684,7 @@ func randomProposal(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context) *v1.Proposa
 // (defined in gov GenesisState) and the latest proposal ID
 // that matches a given Status.
 // It does not provide a default ID.
-func randomProposalID(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context, status v1.ProposalStatus, s *sharedState) (proposalID uint64, found bool) {
+func randomProposalID(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context, status v1.ProposalStatus, s *SharedState) (proposalID uint64, found bool) {
 	proposalID, _ = k.ProposalID.Peek(ctx)
 	if initialProposalID := s.getMinProposalID(); initialProposalID == unsetProposalID {
 		s.setMinProposalID(proposalID)

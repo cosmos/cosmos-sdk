@@ -79,15 +79,23 @@ const (
 	WeightMsgCreateGroupWithPolicy           = 50
 )
 
-type sharedState struct {
+// SharedState shared state between message invocations
+type SharedState struct {
 	minGroupID atomic.Uint64
 }
 
-func (s *sharedState) getMinGroupID() uint64 {
+// NewSharedState constructor
+func NewSharedState() *SharedState {
+	r := &SharedState{}
+	r.setMinGroupID(unsetGroupID)
+	return r
+}
+
+func (s *SharedState) getMinGroupID() uint64 {
 	return s.minGroupID.Load()
 }
 
-func (s *sharedState) setMinGroupID(id uint64) {
+func (s *SharedState) setMinGroupID(id uint64) {
 	s.minGroupID.Store(id)
 }
 
@@ -160,8 +168,7 @@ func WeightedOperations(
 
 	pCdc := codec.NewProtoCodec(registry)
 
-	state := &sharedState{}
-	state.setMinGroupID(unsetGroupID)
+	state := NewSharedState()
 
 	// create two proposals for weightedOperations
 	var createProposalOps simulation.WeightedOperations
@@ -363,7 +370,7 @@ func SimulateMsgCreateGroupPolicy(
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *sharedState,
+	s *SharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -435,7 +442,7 @@ func SimulateMsgSubmitProposal(
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *sharedState,
+	s *SharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -522,7 +529,7 @@ func SimulateMsgUpdateGroupAdmin(
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *sharedState,
+	s *SharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -596,7 +603,7 @@ func SimulateMsgUpdateGroupMetadata(
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *sharedState,
+	s *SharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -657,7 +664,7 @@ func SimulateMsgUpdateGroupMembers(
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *sharedState,
+	s *SharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -748,7 +755,7 @@ func SimulateMsgUpdateGroupPolicyAdmin(
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *sharedState,
+	s *SharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -822,7 +829,7 @@ func SimulateMsgUpdateGroupPolicyDecisionPolicy(
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *sharedState,
+	s *SharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -896,7 +903,7 @@ func SimulateMsgUpdateGroupPolicyMetadata(
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *sharedState,
+	s *SharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -957,7 +964,7 @@ func SimulateMsgWithdrawProposal(
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *sharedState,
+	s *SharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -1073,7 +1080,7 @@ func SimulateMsgVote(
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *sharedState,
+	s *SharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -1186,7 +1193,7 @@ func SimulateMsgExec(
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
 	k keeper.Keeper,
-	s *sharedState,
+	s *SharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -1271,7 +1278,7 @@ func SimulateMsgLeaveGroup(
 	k keeper.Keeper,
 	ak group.AccountKeeper,
 	bk group.BankKeeper,
-	s *sharedState,
+	s *SharedState,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
@@ -1334,7 +1341,7 @@ func SimulateMsgLeaveGroup(
 }
 
 func randomGroup(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
-	ctx sdk.Context, accounts []simtypes.Account, s *sharedState,
+	ctx sdk.Context, accounts []simtypes.Account, s *SharedState,
 ) (groupInfo *group.GroupInfo, acc simtypes.Account, account sdk.AccountI, err error) {
 	groupID := k.GetGroupSequence(ctx)
 
@@ -1376,7 +1383,7 @@ func randomGroup(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 }
 
 func randomGroupPolicy(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
-	ctx sdk.Context, accounts []simtypes.Account, s *sharedState,
+	ctx sdk.Context, accounts []simtypes.Account, s *SharedState,
 ) (groupInfo *group.GroupInfo, groupPolicyInfo *group.GroupPolicyInfo, acc simtypes.Account, account sdk.AccountI, err error) {
 	groupInfo, _, _, err = randomGroup(r, k, ak, ctx, accounts, s)
 	if err != nil {

@@ -105,10 +105,7 @@ func RunWithSeeds[T SimulationApp](
 		t.Run(fmt.Sprintf("seed: %d", seed), func(t *testing.T) {
 			t.Parallel()
 			// setup environment
-			tCfg := cfg.Clone()
-			tCfg.Seed = seed
-			tCfg.FuzzSeed = fuzzSeed
-			tCfg.T = t
+			tCfg := cfg.With(t, seed, fuzzSeed)
 			testInstance := NewSimulationAppInstance(t, tCfg, appFactory)
 			var runLogger log.Logger
 			if cli.FlagVerboseValue {

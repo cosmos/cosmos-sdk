@@ -13,15 +13,25 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/cosmos/consensus/v1/params";
   }
+
+  rpc CometInfo(QueryCometInfoRequest) returns (QueryCometInfoResponse):
 }
 
-// QueryParamsRequest defines the request type for querying x/consensus parameters.
-message QueryParamsRequest {}
+// QueryCometInfoRequest defines the request type for querying x/consensus comet info.
+message QueryCometInfoRequest {}
 
-// QueryParamsResponse defines the response type for querying x/consensus parameters.
-message QueryParamsResponse {
-  // params are the tendermint consensus params stored in the consensus module.
-  // Please note that `params.version` is not populated in this response, it is
-  // tracked separately in the x/upgrade module.
-  cometbft.types.v1.ConsensusParams params = 1;
-}
+// QueryCometInfoResponse defines the response type for querying x/consensus comet info.
+message QueryCometInfoResponse {
+  // comet_info is the comet info of the x/consensus module.
+  CometInfo comet_info = 1;
+
+  // QueryParamsRequest defines the request type for querying x/consensus parameters.
+  message QueryParamsRequest {}
+
+  // QueryParamsResponse defines the response type for querying x/consensus parameters.
+  message QueryParamsResponse {
+    // params are the tendermint consensus params stored in the consensus module.
+    // Please note that `params.version` is not populated in this response, it is
+    // tracked separately in the x/upgrade module.
+    cometbft.types.v1.ConsensusParams params = 1;
+  }

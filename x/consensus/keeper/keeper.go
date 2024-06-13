@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
+	coreapp "cosmossdk.io/core/app"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/consensus/exported"
@@ -101,4 +102,23 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
+}
+
+func (k Keeper) CometInfo(ctx context.Context, msg *types.MsgCometInfo) (*types.MsgCometInfoResponse, error) {
+	if coreapp.ConsensusIdentity != msg.Authority {
+		return nil, fmt.Errorf("invalid authority; expected %s, got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	cometInfo := types.CometInfo{
+		Evidence:        msg.Evidence,
+		ValidatorsHash:  msg.ValidatorsHash,
+		ProposerAddress: msg.ProposerAddress,
+		LastCommit:      msg.LastCommit,
+	}
+
+	if err := k.cometInfo.Set(ctx, cometInfo); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCometInfoResponse{}, nil
 }

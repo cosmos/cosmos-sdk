@@ -1087,6 +1087,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 }
 
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposit() {
+	suite.reset()
 	ctx, queryClient, addrs := suite.ctx, suite.legacyQueryClient, suite.addrs
 
 	var (
@@ -1325,7 +1326,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposits() {
 			"create a proposal and get deposits",
 			func() {
 				var err error
-				proposal, err = suite.govKeeper.SubmitProposal(ctx, TestProposal, "", "test", "summary", addrs[0], true)
+				proposal, err = suite.govKeeper.SubmitProposal(ctx, TestProposal, "", "test", "summary", addrs[0], false)
 				suite.Require().NoError(err)
 
 				req = &v1beta1.QueryDepositsRequest{
@@ -1365,7 +1366,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposits() {
 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
 			testCase.malleate()
 
-			deposits, err := queryClient.Deposits(ctx, req)
+			deposits, err := queryClient.Deposits(gocontext.Background(), req)
 
 			if testCase.expPass {
 				suite.Require().NoError(err)

@@ -1231,7 +1231,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposits() {
 			"create a proposal and get deposits",
 			func() {
 				var err error
-				proposal, err = suite.govKeeper.SubmitProposal(ctx, TestProposal, "", "title", "summary", addrs[0], true)
+				proposal, err = suite.govKeeper.SubmitProposal(ctx, TestProposal, "", "title", "summary", addrs[0], false)
 				suite.Require().NoError(err)
 
 				req = &v1.QueryDepositsRequest{
@@ -1296,36 +1296,36 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposits() {
 		malleate func()
 		expPass  bool
 	}{
-		// {
-		// 	"empty request",
-		// 	func() {
-		// 		req = &v1beta1.QueryDepositsRequest{}
-		// 	},
-		// 	false,
-		// },
-		// {
-		// 	"zero proposal id request",
-		// 	func() {
-		// 		req = &v1beta1.QueryDepositsRequest{
-		// 			ProposalId: 0,
-		// 		}
-		// 	},
-		// 	false,
-		// },
-		// {
-		// 	"non existed proposal",
-		// 	func() {
-		// 		req = &v1beta1.QueryDepositsRequest{
-		// 			ProposalId: 2,
-		// 		}
-		// 	},
-		// 	true,
-		// },
+		{
+			"empty request",
+			func() {
+				req = &v1beta1.QueryDepositsRequest{}
+			},
+			false,
+		},
+		{
+			"zero proposal id request",
+			func() {
+				req = &v1beta1.QueryDepositsRequest{
+					ProposalId: 0,
+				}
+			},
+			false,
+		},
+		{
+			"non existed proposal",
+			func() {
+				req = &v1beta1.QueryDepositsRequest{
+					ProposalId: 2,
+				}
+			},
+			true,
+		},
 		{
 			"create a proposal and get deposits",
 			func() {
 				var err error
-				proposal, err = suite.govKeeper.SubmitProposal(ctx, TestProposal, "", "test", "summary", addrs[0], false)
+				proposal, err = suite.govKeeper.SubmitProposal(ctx, TestProposal, "", "test", "summary", addrs[0], true)
 				suite.Require().NoError(err)
 
 				req = &v1beta1.QueryDepositsRequest{
@@ -1362,10 +1362,10 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposits() {
 	}
 
 	for _, testCase := range testCases {
-		suite.Run(testCase.msg, func() {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
 			testCase.malleate()
 
-			deposits, err := queryClient.Deposits(gocontext.Background(), req)
+			deposits, err := queryClient.Deposits(ctx, req)
 
 			if testCase.expPass {
 				suite.Require().NoError(err)

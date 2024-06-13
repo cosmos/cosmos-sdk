@@ -26,7 +26,7 @@ type ListenerTestFixtureOptions struct {
 
 func NewListenerTestFixture(listener indexerbase.Listener, options ListenerTestFixtureOptions) *ListenerTestFixture {
 	return &ListenerTestFixture{
-		rnd:          rand.New(rand.NewSource(0)),
+		rnd:          rand.New(rand.NewSource(1)),
 		listener:     listener,
 		allKeyModule: mkAllKeysModule(),
 	}

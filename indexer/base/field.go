@@ -1,6 +1,6 @@
 package indexerbase
 
-// Field represents a field in an object descriptor.
+// Field represents a field in an object type.
 type Field struct {
 	// Name is the name of the field.
 	Name string

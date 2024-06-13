@@ -63,7 +63,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (genutil) [#19971](https://github.com/cosmos/cosmos-sdk/pull/19971) Allow manually setting the consensus key type in genesis
 
 ### Improvements
-* (x/staking | x/protocolpool) [#19918](https://github.com/cosmos/cosmos-sdk/pull/19918) Reduce key rotation iterate in `RotateConsPubKey`, use instead one rotation for the unbonding period. Use `TotalFundPercentage` to track total recipient fund percentage of `protocolpool` instead of looping through `RecipientFundPercentage` then summing up 
+* (x/staking | x/protocolpool) [#19918](https://github.com/cosmos/cosmos-sdk/pull/19918) Reduce key rotation iterate in `RotateConsPubKey`, use instead one rotation for the unbonding period. Use `TotalFundPercentage` to track total recipient fund percentage of `protocolpool` instead of looping through `RecipientFundPercentage` then summing up.
+* (codec) [#20122](https://github.com/cosmos/cosmos-sdk/pull/20122) Added a cache to address codec.
 * (bank) [#20354](https://github.com/cosmos/cosmos-sdk/pull/20354) Reduce the number of `ValidateDenom` calls in `bank.SendCoins`.
 * (types) [#19869](https://github.com/cosmos/cosmos-sdk/pull/19869) Removed `Any` type from `codec/types` and replaced it with an alias for `cosmos/gogoproto/types/any`.
 * (server) [#19854](https://github.com/cosmos/cosmos-sdk/pull/19854) Add customizability to start command.

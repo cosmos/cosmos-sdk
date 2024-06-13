@@ -12,10 +12,11 @@ import (
 // These methods will only be called when listening logical decoding is setup.
 type Listener struct {
 	// Initialize is called when the listener is initialized before any other methods are called.
-	// The lastBlock return value should be the last block height the listener persisted if it is
+	// The lastBlockPersisted return value should be the last block height the listener persisted if it is
 	// persisting block data, 0 if it is not interested in persisting block data, or -1 if it is
-	// persisting block data but has not persisted any data yet.
-	Initialize func(InitializationData) (lastBlock int64, err error)
+	// persisting block data but has not persisted any data yet. This check allows the indexer
+	// framework to ensure that the listener has not missed blocks.
+	Initialize func(InitializationData) (lastBlockPersisted int64, err error)
 
 	// StartBlock is called at the beginning of processing a block.
 	StartBlock func(uint64) error
@@ -43,16 +44,7 @@ type Listener struct {
 	// migrations) required to receive OnEntityUpdate events for the given module. If the
 	// indexer's schema is incompatible with the module's on-chain schema, the listener should return
 	// an error.
-	// If the listener is persisting state for the module, it should return the last block
-	// that was saved for the module so that the framework can determine whether it is safe
-	// to resume indexing from the current height or whether there is a gap (usually an error).
-	// If the listener does not persist any state for the module, it should return 0 for lastBlock
-	// and nil for error.
-	// If the listener has initialized properly and would like to persist state for the module,
-	// but does not have any persisted state yet, it should return -1 for lastBlock and nil for error.
-	// In this case, the framework will perform a "catch-up sync" calling OnEntityUpdate for every
-	// entity already in the module followed by CommitCatchupSync before processing new block data.
-	InitializeModuleSchema func(module string, schema ModuleSchema) (lastBlock int64, err error)
+	InitializeModuleSchema func(module string, schema ModuleSchema) error
 
 	// OnEntityUpdate is called whenever an entity is updated in the module. This is only called
 	// when logical data is available. It should be assumed that the same data in raw form
@@ -65,11 +57,6 @@ type Listener struct {
 	// this point and also save the block number as the last block that has been processed so
 	// that processing of regular block data can resume from this point in the future.
 	CommitCatchupSync func(module string, block uint64) error
-
-	// SubscribedModules is a map of modules that the listener is interested in receiving events for in OnKVPair and
-	// logical decoding listeners (if these are registered). If this is left nil but listeners are registered,
-	// it is assumed that the listener is interested in all modules.
-	SubscribedModules map[string]bool
 }
 
 // InitializationData represents initialization data that is passed to a listener.

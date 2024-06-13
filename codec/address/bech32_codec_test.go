@@ -45,6 +45,7 @@ func TestNewBech32Codec(t *testing.T) {
 			name: "lru and mutex provided",
 			mu:   &sync.Mutex{},
 			lru: func(t *testing.T) *simplelru.LRU {
+				t.Helper()
 				newLru, err := simplelru.NewLRU(500, nil)
 				require.NoError(t, err)
 				return newLru
@@ -54,6 +55,7 @@ func TestNewBech32Codec(t *testing.T) {
 			name: "both empty",
 			mu:   nil,
 			lru: func(t *testing.T) *simplelru.LRU {
+				t.Helper()
 				return nil
 			},
 		},
@@ -61,6 +63,7 @@ func TestNewBech32Codec(t *testing.T) {
 			name: "only lru provided",
 			mu:   nil,
 			lru: func(t *testing.T) *simplelru.LRU {
+				t.Helper()
 				newLru, err := simplelru.NewLRU(500, nil)
 				require.NoError(t, err)
 				return newLru
@@ -71,6 +74,7 @@ func TestNewBech32Codec(t *testing.T) {
 			name: "only mutex provided",
 			mu:   &sync.Mutex{},
 			lru: func(t *testing.T) *simplelru.LRU {
+				t.Helper()
 				return nil
 			},
 		},

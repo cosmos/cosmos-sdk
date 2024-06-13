@@ -50,7 +50,7 @@ func NewCachedBech32Codec(prefix string, opts CachedCodecOptions) (address.Codec
 		opts.Mu = new(sync.Mutex)
 		opts.Lru, err = simplelru.NewLRU(256, nil)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create LRU cache: %v", err)
+			return nil, fmt.Errorf("failed to create LRU cache: %w", err)
 		}
 	} else if opts.Mu == nil && opts.Lru != nil {
 		// The LRU cache uses a map internally. Without a mutex, concurrent access to this map can lead to race conditions.
@@ -59,7 +59,7 @@ func NewCachedBech32Codec(prefix string, opts CachedCodecOptions) (address.Codec
 	} else if opts.Mu != nil && opts.Lru == nil {
 		opts.Lru, err = simplelru.NewLRU(256, nil)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create LRU cache: %v", err)
+			return nil, fmt.Errorf("failed to create LRU cache: %w", err)
 		}
 	}
 

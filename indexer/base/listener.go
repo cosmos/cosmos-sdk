@@ -57,11 +57,6 @@ type Listener struct {
 	// this point and also save the block number as the last block that has been processed so
 	// that processing of regular block data can resume from this point in the future.
 	CommitCatchupSync func(module string, block uint64) error
-
-	// SubscribedModules is a map of modules that the listener is interested in receiving events for in OnKVPair and
-	// logical decoding listeners (if these are registered). If this is left nil but listeners are registered,
-	// it is assumed that the listener is interested in all modules.
-	SubscribedModules map[string]bool
 }
 
 // InitializationData represents initialization data that is passed to a listener.

@@ -15,6 +15,14 @@ func NewGenericAuthorization(msgTypeURL string) *GenericAuthorization {
 	}
 }
 
+// NewGenericAuthorization creates a new GenericAuthorization object.
+func NewGenericAuthorizationWithSpendLimit(msgTypeURL string, spendLimit sdk.Coins) *GenericAuthorization {
+	return &GenericAuthorization{
+		Msg:        msgTypeURL,
+		SpendLimit: spendLimit,
+	}
+}
+
 // MsgTypeURL implements Authorization.MsgTypeURL.
 func (a GenericAuthorization) MsgTypeURL() string {
 	return a.Msg

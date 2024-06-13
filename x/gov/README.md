@@ -24,7 +24,7 @@ they don't vote themselves.
 deposits if the proposal was accepted or rejected. If the proposal was vetoed, or never entered voting period (minimum deposit not reached within deposit period), the deposit is burned.
 
 This module is in use on the Cosmos Hub (a.k.a [gaia](https://github.com/cosmos/gaia)).
-Features that may be added in the future are described in [Future Improvements](#future-improvements).
+
 
 ## Contents
 
@@ -277,6 +277,12 @@ There are three parameters that define if the deposit of a proposal should be bu
 * `BurnProposalDepositPrevote` burns the proposal deposit if it does not enter the voting phase.
 
 > Note: These parameters are modifiable via governance.
+
+#### Execution
+
+Execution is the process of executing the messages contained in a proposal. The execution phase will commence after the proposal has been accepted by the network. The messages contained in the proposal will be executed in the order they were submitted.
+
+Execution has a upper limit on how much gas can be consumed in a single block. This limit is defined by the `ProposalExecutionGas` parameter.
 
 ## State
 

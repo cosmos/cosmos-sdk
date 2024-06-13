@@ -39,6 +39,15 @@ func TestGenesis(t *testing.T) {
 		acc, err := NewTestAccount(deps)
 		return testAccountType, acc, err
 	})
+	// add to state a genesis account init msg.
+	initMsg, err := implementation.PackAny(&types.Empty{})
+	require.NoError(t, err)
+	state.InitAccountMsgs = append(state.InitAccountMsgs, &v1.MsgInit{
+		Sender:      "sender-2",
+		AccountType: testAccountType,
+		Message:     initMsg,
+		Funds:       nil,
+	})
 	err = k.ImportState(ctx, state)
 	require.NoError(t, err)
 
@@ -52,6 +61,12 @@ func TestGenesis(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &types.UInt64Value{Value: 20}, resp)
 
+	// check initted on genesis account
+	addr3, err := k.makeAddress(2)
+	require.NoError(t, err)
+	resp, err = k.Query(ctx, addr3, &types.DoubleValue{})
+	require.NoError(t, err)
+	require.Equal(t, &types.UInt64Value{Value: 0}, resp)
 	// reset state
 	k, ctx = newKeeper(t, func(deps implementation.Dependencies) (string, implementation.Account, error) {
 		acc, err := NewTestAccount(deps)
@@ -66,8 +81,26 @@ func TestGenesis(t *testing.T) {
 
 	currentAccNum, err := k.AccountNumber.Peek(ctx)
 	require.NoError(t, err)
-	// AccountNumber should be set to the highest account number in the genesis state
-	require.Equal(t, uint64(99), currentAccNum)
+	// AccountNumber should be set to the highest account number in the genesis state + 2
+	// (one is the sequence offset, the other is the genesis account being added through init msg)
+	require.Equal(t, state.Accounts[0].AccountNumber+2, currentAccNum)
+
+	// Test when init with empty accounts list, account number is not modified
+	// make genesis state accounts empty
+	state.Accounts = []*v1.GenesisAccount{}
+
+	// set another value for account number
+	err = k.AccountNumber.Set(ctx, uint64(10))
+	require.NoError(t, err)
+
+	err = k.ImportState(ctx, state)
+	require.NoError(t, err)
+
+	currentAccNum, err = k.AccountNumber.Peek(ctx)
+	require.NoError(t, err)
+	// AccountNumber should be 10 + 1
+	// (one is the genesis account being added through init msg)
+	require.Equal(t, uint64(11), currentAccNum)
 }
 
 func TestImportAccountError(t *testing.T) {

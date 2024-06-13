@@ -194,6 +194,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			minDepositRatio.String(),
 			optimisticRejectedThreshold.String(),
 			[]string{},
+			10_000_000,
 		),
 	)
 

@@ -26,7 +26,7 @@ const (
 	DefaultWeightMsgUndelegate                int = 100
 	DefaultWeightMsgBeginRedelegate           int = 100
 	DefaultWeightMsgCancelUnbondingDelegation int = 100
-	DefaultWeightMsgRotateConsPubKey          int = 100
+	DefaultWeightMsgRotateConsPubKey          int = 25
 
 	OpWeightMsgCreateValidator           = "op_weight_msg_create_validator"
 	OpWeightMsgEditValidator             = "op_weight_msg_edit_validator"
@@ -773,40 +773,17 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting validator address bytes"), nil, err
 		}
 
-		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(valBytes))
+		valAcc, found := simtypes.FindAccount(accs, sdk.AccAddress(valBytes))
 		if !found {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find account"), nil, fmt.Errorf("validator %s not found", val.GetOperator())
 		}
 
-		cons, err := val.GetConsAddr()
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "cannot get conskey"), nil, err
-		}
-		consAddress, err := k.ConsensusAddressCodec().BytesToString(cons)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting consensus address"), nil, err
-		}
-
-		acc, _ := simtypes.RandomAcc(r, accs)
-		accAddress, err := k.ConsensusAddressCodec().BytesToString(acc.ConsKey.PubKey().Address())
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting consensus address"), nil, err
-		}
-		if consAddress == accAddress {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "new pubkey and current pubkey should be different"), nil, nil
-		}
-
-		account := ak.GetAccount(ctx, simAccount.Address)
-		if account == nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find account"), nil, nil
-		}
-
-		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 		params, err := k.Params.Get(ctx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "cannot get params"), nil, err
 		}
 
+		spendable := bk.SpendableCoins(ctx, valAcc.Address)
 		if !spendable.IsAllGTE(sdk.NewCoins(params.KeyRotationFee)) {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "not enough balance to pay fee"), nil, nil
 		}
@@ -815,32 +792,10 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "rotations limit reached within unbonding period"), nil, nil
 		}
 
-		_, err = k.GetValidatorByConsAddr(ctx, cons)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "cannot get validator"), nil, err
-		}
-
-		// check whether the new cons key associated with another validator
-		newConsAddr := sdk.ConsAddress(acc.ConsKey.PubKey().Address())
-		_, err = k.GetValidatorByConsAddr(ctx, newConsAddr)
-		if err == nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "cons key already used"), nil, nil
-		}
-
-		msg, err := types.NewMsgRotateConsPubKey(valAddr, acc.ConsKey.PubKey())
+		newConsKey := simtypes.RandomAccounts(r, 1)[0].ConsKey
+		msg, err := types.NewMsgRotateConsPubKey(valAddr, newConsKey.PubKey())
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to build msg"), nil, err
-		}
-
-		// check if there's another key rotation for this same key in the same block
-		allRotations, err := k.GetBlockConsPubKeyRotationHistory(ctx)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "cannot get block cons key rotation history"), nil, err
-		}
-		for _, r := range allRotations {
-			if r.NewConsPubkey.Compare(msg.NewPubkey) == 0 {
-				return simtypes.NoOpMsg(types.ModuleName, msgType, "cons key already used in this block"), nil, nil
-			}
 		}
 
 		txCtx := simulation.OperationInput{
@@ -850,7 +805,7 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 			Cdc:             nil,
 			Msg:             msg,
 			Context:         ctx,
-			SimAccount:      simAccount,
+			SimAccount:      valAcc,
 			AccountKeeper:   ak,
 			Bankkeeper:      bk,
 			ModuleName:      types.ModuleName,

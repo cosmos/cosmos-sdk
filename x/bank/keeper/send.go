@@ -157,22 +157,23 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		return err
 	}
 
-	outAddresses := make([]sdk.AccAddress, len(outputs))
-	for i, out := range outputs {
+	for _, out := range outputs {
 		outAddress, err := k.ak.AddressCodec().StringToBytes(out.Address)
 		if err != nil {
 			return err
 		}
 
-		outAddresses[i], err = k.sendRestriction.apply(ctx, inAddress, outAddress, out.Coins)
-		if err != nil {
-			return err
-		}
-	}
+		for _, coin := range out.Coins {
+			newOutAddress, err := k.sendRestriction.apply(ctx, inAddress, outAddress, coin)
+			if err != nil {
+				return err
+			}
 
-	err = k.subUnlockedCoins(ctx, inAddress, input.Coins, true)
-	if err != nil {
-		return err
+			err = k.sendCoin(ctx, inAddress, newOutAddress, coin)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -182,30 +183,6 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 			sdk.NewAttribute(types.AttributeKeySender, input.Address),
 		),
 	)
-
-	for i, out := range outputs {
-		if err := k.addCoins(ctx, outAddresses[i], out.Coins); err != nil {
-			return err
-		}
-
-		sdkCtx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeTransfer,
-				sdk.NewAttribute(types.AttributeKeyRecipient, outAddresses[i].String()),
-				sdk.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
-			),
-		)
-
-		// Create account if recipient does not exist.
-		//
-		// NOTE: This should ultimately be removed in favor a more flexible approach
-		// such as delegated fee messages.
-		accExists := k.ak.HasAccount(ctx, outAddresses[i])
-		if !accExists {
-			defer telemetry.IncrCounter(1, "new", "account")
-			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, outAddresses[i]))
-		}
-	}
 
 	return nil
 }
@@ -217,17 +194,36 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 		return err
 	}
 
-	toAddr, err := k.sendRestriction.apply(ctx, fromAddr, toAddr, amt)
+	for _, coin := range amt {
+		newToAddr, err := k.sendRestriction.apply(ctx, fromAddr, toAddr, coin)
+		if err != nil {
+			return err
+		}
+
+		err = k.sendCoin(ctx, fromAddr, newToAddr, coin)
+		if err != nil {
+			return err
+		}
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	// bech32 encoding is expensive! Only do it once for fromAddr
+	fromAddrString := fromAddr.String()
+	sdkCtx.EventManager().EmitEvent(sdk.NewEvent(
+		sdk.EventTypeMessage,
+		sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
+	))
+
+	return nil
+}
+
+func (k BaseSendKeeper) sendCoin(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coin) error {
+	err := k.subUnlockedCoins(ctx, fromAddr, sdk.NewCoins(amt), true) // only sub this coin
 	if err != nil {
 		return err
 	}
 
-	err = k.subUnlockedCoins(ctx, fromAddr, amt, true)
-	if err != nil {
-		return err
-	}
-
-	err = k.addCoins(ctx, toAddr, amt)
+	err = k.addCoins(ctx, toAddr, sdk.NewCoins(amt))
 	if err != nil {
 		return err
 	}
@@ -242,22 +238,15 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 		k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
 	}
 
-	// bech32 encoding is expensive! Only do it once for fromAddr
-	fromAddrString := fromAddr.String()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvents(sdk.Events{
+	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeTransfer,
 			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
-			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
+			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
 		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
-		),
-	})
-
+	)
 	return nil
 }
 
@@ -529,7 +518,7 @@ func (r *sendRestriction) clear() {
 var _ types.SendRestrictionFn = (*sendRestriction)(nil).apply
 
 // apply applies the send restriction if there is one. If not, it's a no-op.
-func (r *sendRestriction) apply(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
+func (r *sendRestriction) apply(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coin) (sdk.AccAddress, error) {
 	if r == nil || r.fn == nil {
 		return toAddr, nil
 	}

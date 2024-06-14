@@ -43,6 +43,8 @@ type (
 	// particular, if a module changed the substore key name (or removed a substore)
 	// between two versions of the software.
 	StoreLoader func(ms storetypes.CommitMultiStore) error
+
+	contextKeyT string
 )
 
 const (
@@ -54,6 +56,8 @@ const (
 	execModeVoteExtension                       // Extend or verify a pre-commit vote
 	execModeVerifyVoteExtension                 // Verify a vote extension
 	execModeFinalize                            // Finalize a block proposal
+
+	DoNotFailFastSendContextKey contextKeyT = "DoNotFailFast"
 )
 
 var _ servertypes.ABCI = (*BaseApp)(nil)
@@ -708,7 +712,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 
 func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) error {
 	if app.preBlocker != nil {
-		ctx := app.finalizeBlockState.Context()
+		ctx := app.finalizeBlockState.Context().WithValue(DoNotFailFastSendContextKey, struct{}{})
 		rsp, err := app.preBlocker(ctx, req)
 		if err != nil {
 			return err
@@ -733,7 +737,8 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, 
 	)
 
 	if app.beginBlocker != nil {
-		resp, err = app.beginBlocker(app.finalizeBlockState.Context())
+		ctx := app.finalizeBlockState.Context().WithValue(DoNotFailFastSendContextKey, struct{}{})
+		resp, err = app.beginBlocker(ctx)
 		if err != nil {
 			return resp, err
 		}
@@ -746,7 +751,6 @@ func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, 
 			)
 		}
 
-		ctx := app.finalizeBlockState.ctx
 		app.AddStreamEvents(ctx.BlockHeight(), ctx.BlockTime(), resp.Events, true)
 
 		resp.Events = sdk.MarkEventsToIndex(resp.Events, app.indexEvents)
@@ -797,11 +801,12 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 
 // endBlock is an application-defined function that is called after transactions
 // have been processed in FinalizeBlock.
-func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
+func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
 	var endblock sdk.EndBlock
 
 	if app.endBlocker != nil {
-		eb, err := app.endBlocker(app.finalizeBlockState.Context())
+		ctx := app.finalizeBlockState.Context().WithValue(DoNotFailFastSendContextKey, struct{}{})
+		eb, err := app.endBlocker(ctx)
 		if err != nil {
 			return endblock, err
 		}
@@ -814,7 +819,6 @@ func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
 			)
 		}
 
-		ctx := app.finalizeBlockState.ctx
 		app.AddStreamEvents(ctx.BlockHeight(), ctx.BlockTime(), eb.Events, true)
 
 		eb.Events = sdk.MarkEventsToIndex(eb.Events, app.indexEvents)

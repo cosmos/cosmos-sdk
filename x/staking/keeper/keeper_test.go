@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -84,7 +85,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		Params: simtestutil.DefaultConsensusParams,
 	}, nil).AnyTimes()
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
-	consensustypes.RegisterQueryServer(queryHelper, ck)
+	consensustypes.RegisterQueryServer(queryHelper, queryAdapter(ck))
 
 	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)
 	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryHelper.GRPCQueryRouter), runtime.EnvWithMsgRouterService(s.baseApp.MsgServiceRouter()))
@@ -604,4 +605,16 @@ func (s *KeeperTestSuite) TestRedelegationQueueMigrationToColls() {
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
+}
+
+type testQueryServer struct {
+	stakingtypes.ConsensusKeeper
+}
+
+func queryAdapter(ck *stakingtestutil.MockConsensusKeeper) *testQueryServer {
+	return &testQueryServer{ConsensusKeeper: ck}
+}
+
+func (m *testQueryServer) GetCometInfo(context.Context, *consensustypes.QueryGetCometInfoRequest) (*consensustypes.QueryGetCometInfoResponse, error) {
+	panic("not implemented")
 }

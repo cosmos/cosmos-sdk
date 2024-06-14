@@ -271,7 +271,7 @@ func TestMultiSigMigration(t *testing.T) {
 	require.NoError(t, multisig.AddSignatureFromPubKey(multisignature, sigs[0], pkSet[0], pkSet))
 
 	// create a StdSignature for msg, and convert it to sigV2
-	sig := legacytx.StdSignature{PubKey: pkSet[1], Signature: sigs[1].(*signing.SingleSignatureData).Signature} //nolint:staticcheck // SA1019: legacytx.StdSignature is deprecated: use Tx.Msgs, Signatures and Memo instead.
+	sig := legacytx.StdSignature{PubKey: pkSet[1], Signature: sigs[1].(*signing.SingleSignatureData).Signature} //nolint:staticcheck // requires legacy signature for testing
 	sigV2, err := legacytx.StdSignatureToSignatureV2(cdc, sig)
 	require.NoError(t, multisig.AddSignatureV2(multisignature, sigV2, pkSet))
 

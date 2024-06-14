@@ -103,7 +103,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	suite.consensusKeeper.EXPECT().Params(gomock.Any(), gomock.Any()).Return(&consensustypes.QueryParamsResponse{
 		Params: simtestutil.DefaultConsensusParams,
 	}, nil).AnyTimes()
-	consensustypes.RegisterQueryServer(grpcQueryRouter, suite.consensusKeeper)
+	consensustypes.RegisterQueryServer(grpcQueryRouter, queryAdapter(suite.consensusKeeper))
 
 	suite.env = runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter))
 	suite.accountKeeper = keeper.NewAccountKeeper(
@@ -291,4 +291,16 @@ func (suite *AnteTestSuite) CreateTestTx(
 	}
 
 	return suite.txBuilder.GetTx(), nil
+}
+
+type testQueryServer struct {
+	ante.ConsensusKeeper
+}
+
+func queryAdapter(ck ante.ConsensusKeeper) *testQueryServer {
+	return &testQueryServer{ConsensusKeeper: ck}
+}
+
+func (m *testQueryServer) GetCometInfo(context.Context, *consensustypes.QueryGetCometInfoRequest) (*consensustypes.QueryGetCometInfoResponse, error) {
+	panic("not implemented")
 }

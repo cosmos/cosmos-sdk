@@ -93,7 +93,7 @@ Modules defining handlers for `MsgV2` instances will need to extract the sender 
 passed in. An interface in `core` which will be present on the `appmodule.Environment` will be defined for this purpose:
 ```go
 type GetSenderService interface {
-  GetSender(ctx sdk.Context) []byte
+  GetSender(ctx context.Context) []byte
 }
 ```
 

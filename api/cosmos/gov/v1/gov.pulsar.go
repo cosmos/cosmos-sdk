@@ -7071,7 +7071,7 @@ type Proposal struct {
 	Proposer string `protobuf:"bytes,13,opt,name=proposer,proto3" json:"proposer,omitempty"`
 	// expedited defines if the proposal is expedited
 	//
-	// Since: cosmos-sdk 0.48
+	// NOTE: backported from v50 (https://github.com/cosmos/cosmos-sdk/pull/14720)
 	Expedited bool `protobuf:"varint,14,opt,name=expedited,proto3" json:"expedited,omitempty"`
 }
 

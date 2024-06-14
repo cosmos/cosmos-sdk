@@ -69,7 +69,7 @@ message MsgSubmitProposal {
 
   // expedided defines if the proposal is expedited or not
   //
-  // Since: cosmos-sdk 0.48
+  // NOTE: backported from v50 (https://github.com/cosmos/cosmos-sdk/pull/14720)
   bool expedited = 7;
 }
 

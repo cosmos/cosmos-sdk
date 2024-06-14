@@ -1,5 +1,3 @@
-// TODO update this file
-
 package gov_test
 
 import (

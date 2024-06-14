@@ -6038,7 +6038,7 @@ type MsgSubmitProposal struct {
 	Summary string `protobuf:"bytes,6,opt,name=summary,proto3" json:"summary,omitempty"`
 	// expedided defines if the proposal is expedited or not
 	//
-	// Since: cosmos-sdk 0.48
+	// NOTE: backported from v50 (https://github.com/cosmos/cosmos-sdk/pull/14720)
 	Expedited bool `protobuf:"varint,7,opt,name=expedited,proto3" json:"expedited,omitempty"`
 }
 

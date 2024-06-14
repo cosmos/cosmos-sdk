@@ -329,36 +329,65 @@ func TestSub(t *testing.T) {
 		},
 		"1^100000 - 1^-1 -> Err": {
 			x:      NewDecWithPrec(1, 100000),
-			y:      NewDecWithPrec(1, -100000),
+			y:      NewDecWithPrec(1, -1),
 			expErr: ErrInvalidDec,
 		},
-		"1^100000 - 9^-1-> Err": {
+		"1^100000 - 1^1-> Err": {
 			x:      NewDecWithPrec(1, 100000),
-			y:      NewDecWithPrec(1, -100000),
+			y:      NewDecWithPrec(1, -1),
 			expErr: ErrInvalidDec,
 		},
-
-		"9^100000 - 1^1= 0-> Err": {
-			x:      NewDecWithPrec(1, 100000),
-			y:      NewDecWithPrec(1, -100000),
+		"upper exp limit exceeded": {
+			x:      NewDecWithPrec(1, 100_001),
+			y:      NewDecWithPrec(1, 100_001),
 			expErr: ErrInvalidDec,
 		},
-		"MaxInt32 - MinInt32": {
-			x:      NewDecWithPrec(1, math.MaxInt32),
-			y:      NewDecWithPrec(1, math.MinInt32),
+		"lower exp limit exceeded": {
+			x:      NewDecWithPrec(1, -100_001),
+			y:      NewDecWithPrec(1, -100_001),
 			expErr: ErrInvalidDec,
 		},
-		"MinInt32 - MaxInt32": {
-			x:      NewDecWithPrec(1, math.MinInt32),
-			y:      NewDecWithPrec(1, math.MaxInt32),
+		"1e100000 - 1 = 999..9": {
+			x:   NewDecWithPrec(1, 100_000),
+			y:   NewDecWithPrec(1, 0),
+			exp: must(NewDecFromString(strings.Repeat("9", 100_000))),
+		},
+		"1e100000 - 0 = 1e100000": {
+			x:   NewDecWithPrec(1, 100_000),
+			y:   NewDecFromInt64(0),
+			exp: must(NewDecFromString("1e100000")),
+		},
+		"1e100001 - 0 -> err": {
+			x:      NewDecWithPrec(1, 100_001),
+			y:      NewDecFromInt64(0),
 			expErr: ErrInvalidDec,
+		},
+		"1^100000 - -1 -> 100..1": {
+			x:   NewDecWithPrec(1, 100_000),
+			y:   NewDecWithPrec(-1, 0),
+			exp: must(NewDecFromString("1" + strings.Repeat("0", 99_999) + "1")),
+		},
+		"1e-100000 - 0 = 1e-100000": {
+			x:   NewDecWithPrec(1, -100000),
+			y:   NewDecFromInt64(0),
+			exp: must(NewDecFromString("1e-100000")),
+		},
+		"1e-100001 - 0 -> err": {
+			x:      NewDecWithPrec(1, -100001),
+			y:      NewDecFromInt64(0),
+			expErr: ErrInvalidDec,
+		},
+		"1^-100000 - -1 -> 0.000..01": {
+			x:   NewDecWithPrec(1, -100000),
+			y:   NewDecWithPrec(-1, 0),
+			exp: must(NewDecFromString("1." + strings.Repeat("0", 99999) + "1")),
 		},
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			got, gotErr := spec.x.Sub(spec.y)
-			if name == "precision too high: src exponent below limit" {
-				fmt.Println(spec.x, spec.y, spec.exp, got, gotErr)
+			if name == "1^-100000 - -1 -> 0.000..01" {
+				fmt.Println("x", spec.x, "y", spec.y, "spec.exp", spec.exp, "got", got)
 			}
 			if spec.expErr != nil {
 				require.ErrorIs(t, gotErr, spec.expErr)

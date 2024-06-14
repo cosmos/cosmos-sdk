@@ -130,7 +130,7 @@ func (x Dec) Sub(y Dec) (Dec, error) {
 	_, err := apd.BaseContext.Sub(&z.dec, &x.dec, &y.dec)
 
 	if err != nil {
-		return Dec{}, ErrInvalidDec.Wrap("exponent out of range: " + err.Error())
+		return Dec{}, ErrInvalidDec.Wrap(err.Error())
 	}
 
 	return z, errors.Wrap(err, "decimal subtraction error")

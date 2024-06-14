@@ -93,4 +93,4 @@ Upon starting, the node will bootstrap its RPC and P2P server and start dialing 
 
 ## Other commands
 <!-- markdown-link-check-disable-next-line -->
-To discover how to concretely run a node and interact with it, please refer to our [Running a Node, API and CLI](../../user/run-node/01-run-node.md#configuring-the-node-using-apptoml-and-configtoml) guide.
+To discover how to concretely run a node and interact with it, please refer to our [Running a Node, API and CLI](https://github.com/cosmos/developer-portal/blob/main/tutorials/3-run-node/index.md) guide.

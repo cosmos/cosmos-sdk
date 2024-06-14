@@ -323,17 +323,17 @@ func TestSub(t *testing.T) {
 			exp: NewDecWithPrec(0, -3),
 		},
 		"1 - 0.999 = 0.001 - rounding after comma": {
-			x:   NewDecWithPrec(1, 0),
+			x:   NewDecFromInt64(1),
 			y:   NewDecWithPrec(999, -3),
 			exp: NewDecWithPrec(1, -3),
 		},
-		"1^100000 - 1^-1 -> Err": {
-			x:      NewDecWithPrec(1, 100000),
+		"1e100000 - 1^-1 -> Err": {
+			x:      NewDecWithPrec(1, 100_000),
 			y:      NewDecWithPrec(1, -1),
 			expErr: ErrInvalidDec,
 		},
-		"1^100000 - 1^1-> Err": {
-			x:      NewDecWithPrec(1, 100000),
+		"1e100000 - 1^1-> Err": {
+			x:      NewDecWithPrec(1, 100_000),
 			y:      NewDecWithPrec(1, -1),
 			expErr: ErrInvalidDec,
 		},
@@ -349,7 +349,7 @@ func TestSub(t *testing.T) {
 		},
 		"1e100000 - 1 = 999..9": {
 			x:   NewDecWithPrec(1, 100_000),
-			y:   NewDecWithPrec(1, 0),
+			y:   NewDecFromInt64(1),
 			exp: must(NewDecFromString(strings.Repeat("9", 100_000))),
 		},
 		"1e100000 - 0 = 1e100000": {
@@ -362,24 +362,24 @@ func TestSub(t *testing.T) {
 			y:      NewDecFromInt64(0),
 			expErr: ErrInvalidDec,
 		},
-		"1^100000 - -1 -> 100..1": {
+		"1e100000 - -1 -> 100..1": {
 			x:   NewDecWithPrec(1, 100_000),
-			y:   NewDecWithPrec(-1, 0),
+			y:   NewDecFromInt64(-1),
 			exp: must(NewDecFromString("1" + strings.Repeat("0", 99_999) + "1")),
 		},
 		"1e-100000 - 0 = 1e-100000": {
-			x:   NewDecWithPrec(1, -100000),
+			x:   NewDecWithPrec(1, -100_000),
 			y:   NewDecFromInt64(0),
 			exp: must(NewDecFromString("1e-100000")),
 		},
 		"1e-100001 - 0 -> err": {
-			x:      NewDecWithPrec(1, -100001),
+			x:      NewDecWithPrec(1, -100_001),
 			y:      NewDecFromInt64(0),
 			expErr: ErrInvalidDec,
 		},
-		"1^-100000 - -1 -> 0.000..01": {
-			x:   NewDecWithPrec(1, -100000),
-			y:   NewDecWithPrec(-1, 0),
+		"1e-100000 - -1 -> 0.000..01": {
+			x:   NewDecWithPrec(1, -100_000),
+			y:   NewDecFromInt64(-1),
 			exp: must(NewDecFromString("1." + strings.Repeat("0", 99999) + "1")),
 		},
 	}

@@ -244,5 +244,5 @@ func (app *SimApp) TxConfig() client.TxConfig {
 }
 
 func (app *SimApp) GetConsensusAuthority() string {
-	return string(app.ConsensusParamsKeeper.GetAuthority())
+	return app.ConsensusParamsKeeper.GetAuthority()
 }

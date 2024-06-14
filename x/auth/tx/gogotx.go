@@ -280,20 +280,6 @@ func intoAnyV1(v2s []*anypb.Any) []*codectypes.Any {
 	return v1s
 }
 
-// decodeMsgsV1 will decode the given messages into
-func decodeMsgsV1(cdc codec.BinaryCodec, anyPBs []*anypb.Any) ([]proto.Message, error) {
-	v1s := make([]proto.Message, len(anyPBs))
-
-	for i, anyPB := range anyPBs {
-		v1, err := decodeFromAny(cdc, anyPB)
-		if err != nil {
-			return nil, err
-		}
-		v1s[i] = v1
-	}
-	return v1s, nil
-}
-
 func decodeFromAny(cdc codec.BinaryCodec, anyPB *anypb.Any) (proto.Message, error) {
 	messageName := anyPB.TypeUrl
 	if i := strings.LastIndexByte(anyPB.TypeUrl, '/'); i >= 0 {

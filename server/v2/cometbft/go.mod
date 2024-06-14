@@ -10,6 +10,7 @@ replace (
 	cosmossdk.io/server/v2 => ../
 	cosmossdk.io/server/v2/appmanager => ../appmanager
 	cosmossdk.io/store/v2 => ../../../store/v2
+	cosmossdk.io/store => ../../../store
 	cosmossdk.io/x/accounts => ../../../x/accounts
 	cosmossdk.io/x/auth => ../../../x/auth
 	cosmossdk.io/x/bank => ../../../x/bank

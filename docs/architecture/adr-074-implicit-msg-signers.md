@@ -75,7 +75,8 @@ Here is an example comparing a v1 an v2 message:
 ```protobuf
 // v1
 message MsgSendV1 {
-  string from_address = 1 [(cosmos.msg.v1.signer) = true];
+  option (cosmos.msg.v1.signer) = "from_address";
+  string from_address = 1 ;
   string to_address = 2;
   repeated Coin amount = 3;
 }

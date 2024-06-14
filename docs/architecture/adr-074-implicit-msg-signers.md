@@ -120,7 +120,11 @@ This design does not depreciate the existing method of embedded signers in `Msg`
 
 ## Further Discussions
 
-Further discussions should take place on GitHub.
+Two possible directions that have been proposed are:
+1. allowing for the omission of the `cosmos.msg.v2.is_msg` option and assuming any `Msg`s registered that do not includes `cosmos.msg.v1.signer` are `MsgV2` instances.
+2. allow `Msg` v1 instances to be wrapped in a `MsgV2` envelope as well to simplify things client-side. In this scenario we would need to either a) check that the signer in the envelope and the signer in the message are the same or b) allow the signer in the message to be empty and then set it inside the state machine before it reaches the module.
+
+Both of these are seem as quality of life improvements for some users, but not strictly necessary and could have some pitfalls so further discussion is needed.
 
 ## References
 

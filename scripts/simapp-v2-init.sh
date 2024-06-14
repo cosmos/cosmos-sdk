@@ -6,10 +6,13 @@ set -x
 
 ROOT=$PWD
 SIMAPP_DIR="$ROOT/simapp/v2"
-SIMD="${SIMD:-go run simdv2/main.go}"
+
+SIMD="$ROOT/build/simappv2"
 CONFIG="${CONFIG:-$HOME/.simappv2/config}"
 
 cd "$SIMAPP_DIR"
+go build -o "$ROOT/build/simappv2" simdv2/main.go
+
 $SIMD init simapp-v2-node --chain-id simapp-v2-chain
 
 cd "$CONFIG"
@@ -26,10 +29,11 @@ jq '.app_state.mint.minter.inflation = "0.300000000000000000"' genesis.json > te
 # change the initial height to 2 to work around store/v2 and iavl limitations with a genesis block
 jq '.initial_height = 2' genesis.json > temp.json && mv temp.json genesis.json
 
-cd "$SIMAPP_DIR"
 $SIMD keys add test_validator --keyring-backend test
 VALIDATOR_ADDRESS=$($SIMD keys show test_validator -a --keyring-backend test)
 
 $SIMD genesis add-genesis-account "$VALIDATOR_ADDRESS" 1000000000stake
 $SIMD genesis gentx test_validator 1000000000stake --keyring-backend test
 $SIMD genesis collect-gentxs
+
+$SIMD start

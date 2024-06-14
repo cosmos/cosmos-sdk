@@ -60,6 +60,11 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 		return next(ctx, tx, false)
 	}
 
+	feetx := tx.(sdk.FeeTx)
+	if feetx.GetFee().IsZero() {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction must have a fee")
+	}
+
 	// TTL is defined as a specific block height at which this tx is no longer valid
 	ttl := unorderedTx.GetTimeoutHeight()
 
@@ -92,8 +97,14 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 		buf.Write(bz)
 	}
 
+	// write the timeout height to the buffer
 	if err := binary.Write(buf, binary.LittleEndian, unorderedTx.GetTimeoutHeight()); err != nil {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to write timeout_height to buffer")
+	}
+
+	// write gas to the buffer
+	if err := binary.Write(buf, binary.LittleEndian, feetx.GetGas()); err != nil {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to write unordered to buffer")
 	}
 
 	txHash := sha256.Sum256(buf.Bytes())

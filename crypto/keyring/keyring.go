@@ -681,6 +681,7 @@ func newOSBackendKeyringConfig(appName, dir string, buf io.Reader) keyring.Confi
 		KeychainTrustApplication: true,
 		KeychainName:             appName,
 		KeychainPasswordFunc:     newRealPrompt(dir, buf),
+		FilePasswordFunc:         newRealPrompt(dir, buf),
 	}
 }
 

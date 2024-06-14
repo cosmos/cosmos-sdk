@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"math/big"
 	"testing"
 
@@ -134,7 +135,7 @@ func initFixture(tb testing.TB) *fixture {
 	}
 
 	// gomock initializations
-	ctrl := gomock.NewController(&testing.T{})
+	ctrl := gomock.NewController(tb)
 	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
 
 	accountKeeper := authkeeper.NewAccountKeeper(
@@ -187,6 +188,12 @@ func initFixture(tb testing.TB) *fixture {
 
 	// set default staking params
 	assert.NilError(tb, stakingKeeper.Params.Set(sdkCtx, types.DefaultParams()))
+	accNum := uint64(0)
+	acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
+		currentNum := accNum
+		accNum++
+		return currentNum, nil
+	})
 
 	f := fixture{
 		app:           integrationApp,

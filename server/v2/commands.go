@@ -17,7 +17,7 @@ import (
 func Commands(logger log.Logger, homePath string, modules ...ServerModule) (CLIConfig, error) {
 	if len(modules) == 0 {
 		// TODO figure if we should define default modules
-		// and if so it should be done here to avoid uncessary dependencies
+		// and if so it should be done here to avoid unnecessary dependencies
 		return CLIConfig{}, errors.New("no modules provided")
 	}
 

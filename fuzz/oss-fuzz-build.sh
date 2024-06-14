@@ -25,6 +25,7 @@ go get github.com/AdamKorcz/go-118-fuzz-build/testing
 # because of the separate query_test package.
 # compile_native_go_fuzzer "$FUZZ_ROOT"/types/query FuzzPagination fuzz_types_query_pagination
 compile_native_go_fuzzer "$FUZZ_ROOT"/types FuzzCoinUnmarshalJSON fuzz_types_coin_unmarshal_json
+compile_native_go_fuzzer "$FUZZ_ROOT"/types FuzzBech32AccAddrConsistencyYAML fuzz_types_bech32_acc_addr_consistency_yaml
 
 build_go_fuzzer FuzzCryptoHDDerivePrivateKeyForPath fuzz_crypto_hd_deriveprivatekeyforpath
 build_go_fuzzer FuzzCryptoHDNewParamsFromPath fuzz_crypto_hd_newparamsfrompath

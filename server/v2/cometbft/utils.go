@@ -210,7 +210,7 @@ func ToSDKEvidence(ev []abci.Misbehavior) []*comet.Evidence {
 	return evidence
 }
 
-// ToSDKDecidedCommitInfo takes comet commit info and returns sdk commit info
+// ToSDKCommitInfo takes comet commit info and returns sdk commit info
 func ToSDKCommitInfo(commit abci.CommitInfo) *comet.CommitInfo {
 	ci := comet.CommitInfo{
 		Round: commit.Round,

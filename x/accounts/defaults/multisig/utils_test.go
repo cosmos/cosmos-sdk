@@ -40,12 +40,12 @@ func (mockStateCodec) GetMsgAnySigners(msg *types.Any) ([][]byte, protoreflect.M
 	panic("unimplemented")
 }
 
-// GetMsgV1Signers implements codec.Codec.
+// GetMsgSigners implements codec.Codec.
 func (mockStateCodec) GetMsgSigners(msg gogoproto.Message) ([][]byte, protoreflect.Message, error) {
 	panic("unimplemented")
 }
 
-// GetMsgV2Signers implements codec.Codec.
+// GetReflectMsgSigners implements codec.Codec.
 func (mockStateCodec) GetReflectMsgSigners(msg protoreflect.Message) ([][]byte, error) {
 	panic("unimplemented")
 }

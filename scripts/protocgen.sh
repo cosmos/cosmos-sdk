@@ -39,7 +39,7 @@ for dir in $proto_dirs; do
     done
 
     # move generated files to the right places
-    if [ -d "../cosmossdk.io" -a "$dir" != "./proto" ]; then
+    if [ -d "../cosmossdk.io" ]; then
       cp -r ../cosmossdk.io/* $home
       rm -rf ../cosmossdk.io
     fi

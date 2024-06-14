@@ -4,6 +4,7 @@ package cosmos.consensus.v1;
 
 import "google/api/annotations.proto";
 import "cometbft/types/v1/params.proto";
+import "cosmos/consensus/v1/consensus.proto";
 
 option go_package = "cosmossdk.io/x/consensus/types";
 
@@ -13,6 +14,18 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/cosmos/consensus/v1/params";
   }
+
+  // CometInfo queries the comet info of x/consensus module.
+  rpc GetCometInfo(QueryGetCometInfoRequest) returns (QueryGetCometInfoResponse);
+}
+
+// QueryCometInfoRequest defines the request type for querying x/consensus comet info.
+message QueryGetCometInfoRequest {}
+
+// QueryCometInfoResponse defines the response type for querying x/consensus comet info.
+message QueryGetCometInfoResponse {
+  // comet_info is the comet info of the x/consensus module.
+  CometInfo comet_info = 1;
 }
 
 // QueryParamsRequest defines the request type for querying x/consensus parameters.

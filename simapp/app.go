@@ -203,12 +203,8 @@ func NewSimApp(
 	interfaceRegistry, _ := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
 		ProtoFiles: proto.HybridResolver,
 		SigningOptions: signing.Options{
-			AddressCodec: address.Bech32Codec{
-				Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
-			},
-			ValidatorAddressCodec: address.Bech32Codec{
-				Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
-			},
+			AddressCodec:          address.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+			ValidatorAddressCodec: address.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
 		},
 	})
 	appCodec := codec.NewProtoCodec(interfaceRegistry)

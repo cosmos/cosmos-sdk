@@ -28,7 +28,7 @@ func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, validator ty
 
 			consensusKey, err := cmd.Flags().GetString(FlagConsensusKeyAlgo)
 			if err != nil {
-				return errors.Wrap(err, "Failed to get consensus key algo")
+				return errors.Wrap(err, "failed to get consensus key algo")
 			}
 
 			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(config, consensusKey)

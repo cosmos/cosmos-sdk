@@ -117,13 +117,13 @@ func (cbc cachedBech32Codec) BytesToString(bz []byte) (string, error) {
 
 	key := conv.UnsafeBytesToStr(bz)
 	cbc.mu.Lock()
-	defer cbc.mu.Unlock()
 
 	addrs, ok := cbc.cache.Get(key)
 	if !ok {
 		addrs = make(map[string]string)
 		cbc.cache.Add(key, addrs)
 	}
+	cbc.mu.Unlock()
 
 	addrMap, ok := addrs.(map[string]string)
 	if !ok {

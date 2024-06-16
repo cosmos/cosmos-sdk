@@ -127,17 +127,18 @@ func TestMigrateStateAndSnapshot(t *testing.T) {
 				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
 			}
 		}
-		require.NoError(t, orgCommitStore.WriteBatch(cs))
+		require.NoError(t, orgCommitStore.WriteChangeset(cs))
 		_, err := orgCommitStore.Commit(version)
 		require.NoError(t, err)
 	}
 
-	// create a snapshot
-	_, err := m.snapshotsManager.Create(toVersion - 1)
+	err := m.Migrate(toVersion - 1)
 	require.NoError(t, err)
 
-	err = m.Migrate(toVersion - 1)
-	require.NoError(t, err)
+	// expecting error for conflicting process, since Migrate trigger snapshotter create migration,
+	// which start a snapshot process already.
+	_, err = m.snapshotsManager.Create(toVersion - 1)
+	require.Error(t, err)
 
 	// check the migrated state
 	for version := uint64(1); version < toVersion; version++ {
@@ -182,7 +183,7 @@ func TestMigrateStateAndSnapshot_Parallel(t *testing.T) {
 				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
 			}
 		}
-		require.NoError(t, orgCommitStore.WriteBatch(cs))
+		require.NoError(t, orgCommitStore.WriteChangeset(cs))
 		_, err := orgCommitStore.Commit(version)
 		require.NoError(t, err)
 	}

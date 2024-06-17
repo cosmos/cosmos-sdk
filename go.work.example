@@ -13,8 +13,8 @@ use (
 	./math
 	./orm
 	./simapp
-	./simapp/v2
 	./tests
+	./tests/systemtests
 	./server/v2/stf
 	./server/v2/appmanager
 	./store

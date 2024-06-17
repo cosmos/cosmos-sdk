@@ -650,7 +650,7 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	}
 
 	// check cons key is already present in the key rotation history.
-	rotatedTo, err := k.NewToOldConsKeyMap.Get(ctx, pk.Address())
+	rotatedTo, err := k.ConsKeyToValidatorIdentifierMap.Get(ctx, pk.Address())
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, err
 	}

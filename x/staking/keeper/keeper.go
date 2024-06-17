@@ -122,9 +122,9 @@ type Keeper struct {
 	ValidatorConsensusKeyRotationRecordIndexKey collections.KeySet[collections.Pair[[]byte, time.Time]]
 	// ValidatorConsensusKeyRotationRecordQueue: this key is used to set the unbonding period time on each rotation
 	ValidatorConsensusKeyRotationRecordQueue collections.Map[time.Time, types.ValAddrsOfRotatedConsKeys]
-	// NewToOldConsKeyMap: prefix for rotated old cons address to new cons address
-	NewToOldConsKeyMap collections.Map[[]byte, []byte]
-	// OldToNewConsKeyMap: prefix for rotated new cons address to old cons address
+	// ConsKeyToValidatorIdentifierMap: maps the new cons key to the initial cons key
+	ConsKeyToValidatorIdentifierMap collections.Map[[]byte, []byte]
+	// OldToNewConsKeyMap: maps the old cons key to the new cons key
 	OldToNewConsKeyMap collections.Map[[]byte, []byte]
 	// ValidatorConsPubKeyRotationHistory: consPubkey rotation history by validator
 	// A index is being added with key `BlockConsPubKeyRotationHistory`: consPubkey rotation history by height
@@ -280,8 +280,8 @@ func NewKeeper(
 		),
 
 		// key format is: 105 | consAddr
-		NewToOldConsKeyMap: collections.NewMap(
-			sb, types.NewToOldConsKeyMap,
+		ConsKeyToValidatorIdentifierMap: collections.NewMap(
+			sb, types.ConsKeyToValidatorIdentifierMapPrefix,
 			"new_to_old_cons_key_map",
 			collections.BytesKey,
 			collections.BytesValue,

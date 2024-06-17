@@ -74,7 +74,7 @@ func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, dec
 
 	// reflectMsgs
 	reflectMsgs := make([]protoreflect.Message, len(msgs))
-	for i, msg := range decodedTx.Messages {
+	for i, msg := range decodedTx.DynamicMessages {
 		reflectMsgs[i] = msg.ProtoReflect()
 	}
 

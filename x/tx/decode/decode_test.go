@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -20,6 +21,12 @@ import (
 	"cosmossdk.io/x/tx/internal/testpb"
 	"cosmossdk.io/x/tx/signing"
 )
+
+type mockCodec struct{}
+
+func (m mockCodec) Unmarshal(bytes []byte, message gogoproto.Message) error {
+	return gogoproto.Unmarshal(bytes, message)
+}
 
 func TestDecode(t *testing.T) {
 	accSeq := uint64(2)
@@ -46,8 +53,12 @@ func TestDecode(t *testing.T) {
 	require.NoError(t, err)
 	decoder, err := decode.NewDecoder(decode.Options{
 		SigningContext: signingCtx,
+		ProtoCodec:     mockCodec{},
 	})
 	require.NoError(t, err)
+
+	gogoproto.RegisterType(&bankv1beta1.MsgSend{}, string((&bankv1beta1.MsgSend{}).ProtoReflect().Descriptor().FullName()))
+	gogoproto.RegisterType(&testpb.A{}, string((&testpb.A{}).ProtoReflect().Descriptor().FullName()))
 
 	testCases := []struct {
 		name  string
@@ -131,6 +142,7 @@ func TestDecodeTxBodyPanic(t *testing.T) {
 	}
 	dec, err := decode.NewDecoder(decode.Options{
 		SigningContext: signingCtx,
+		ProtoCodec:     mockCodec{},
 	})
 	if err != nil {
 		t.Fatal(err)

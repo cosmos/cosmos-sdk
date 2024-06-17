@@ -17,7 +17,7 @@ import (
 
 type MintBankKeeper interface {
 	MintCoins(ctx context.Context, moduleName string, coins sdk.Coins) error
-	SendCoinsFromModuleToModule(ctx context.Context, senderModule string, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
 }
 
 // ProvideExampleMintFn returns the function used in x/mint's endblocker to mint new tokens.

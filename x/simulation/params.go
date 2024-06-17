@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/rand"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
@@ -198,12 +197,5 @@ func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSO
 			MaxAgeDuration:  stakingGenesisState.Params.UnbondingTime,
 		},
 	}
-
-	bz, err := json.MarshalIndent(&consensusParams, "", " ")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Selected randomly generated consensus parameters:\n%s\n", bz)
-
 	return consensusParams
 }

@@ -1,5 +1,7 @@
 package simulation
 
+import "testing"
+
 // Config contains the necessary configuration flags for the simulator
 type Config struct {
 	GenesisFile string // custom simulation genesis file; cannot be used with params file
@@ -20,9 +22,22 @@ type Config struct {
 	Lean   bool // lean simulation log output
 	Commit bool // have the simulation commit
 
-	OnOperation   bool // run slow invariants every operation
-	AllInvariants bool // print all failed invariants if a broken invariant is found
-
 	DBBackend   string // custom db backend type
 	BlockMaxGas int64  // custom max gas for block
+	FuzzSeed    []byte
+	T           testing.TB
+}
+
+func (c Config) shallowCopy() Config {
+	return c
+}
+
+// With sets the values of t, seed, and fuzzSeed in a copy of the Config and returns the copy.
+func (c Config) With(t *testing.T, seed int64, fuzzSeed []byte) Config {
+	t.Helper()
+	r := c.shallowCopy()
+	r.T = t
+	r.Seed = seed
+	r.FuzzSeed = fuzzSeed
+	return r
 }

@@ -1170,3 +1170,8 @@ func (app *BaseApp) Close() error {
 
 	return errors.Join(errs...)
 }
+
+// GetBaseApp returns the pointer to itself.
+func (app *BaseApp) GetBaseApp() *BaseApp {
+	return app
+}

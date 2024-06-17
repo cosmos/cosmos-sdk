@@ -15,7 +15,7 @@ jobs:
   build:
     permissions:
       contents: read # for actions/checkout to fetch code
-    runs-on: depot-ubuntu-22.04-16
+    runs-on: large-sdk-runner
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +26,7 @@ jobs:
       - run: make build
 
   test-sim-import-export:
-    runs-on: depot-ubuntu-22.04-16
+    runs-on: large-sdk-runner
     needs: [build]
     timeout-minutes: 60
     steps:
@@ -40,7 +40,7 @@ jobs:
           make test-sim-import-export
 
   test-sim-after-import:
-    runs-on: depot-ubuntu-22.04-16
+    runs-on: large-sdk-runner
     needs: [build]
     timeout-minutes: 60
     steps:
@@ -54,7 +54,7 @@ jobs:
           make test-sim-after-import
 
   test-sim-deterministic:
-    runs-on: depot-ubuntu-22.04-16
+    runs-on: large-sdk-runner
     needs: [build]
     timeout-minutes: 60
     steps:
@@ -63,12 +63,12 @@ jobs:
         with:
           go-version: "1.23"
           check-latest: true
-      - name: test-sim-nondeterminism
+      - name: test-sim-nondeterminism-streaming
         run: |
-          make test-sim-nondeterminism
+          make test-sim-nondeterminism-streaming
 
   test-sim-multi-seed-short:
-    runs-on: depot-ubuntu-22.04-16
+    runs-on: large-sdk-runner
     needs: [build]
     timeout-minutes: 60
     steps:

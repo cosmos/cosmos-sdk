@@ -12,11 +12,12 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -34,30 +35,37 @@ const (
 )
 
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
-// It calls AppStateFnWithExtendedCb with nil rawStateCb.
-func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager, genesisState map[string]json.RawMessage) simtypes.AppStateFn {
-	return AppStateFnWithExtendedCb(cdc, simManager, genesisState, nil)
+// It calls appStateFnWithExtendedCb with nil rawStateCb.
+func AppStateFn(
+	cdc codec.JSONCodec,
+	addresCodec, validatorCodec address.Codec,
+	simManager *module.SimulationManager,
+	genesisState map[string]json.RawMessage,
+) simtypes.AppStateFn {
+	return appStateFnWithExtendedCb(cdc, addresCodec, validatorCodec, simManager, genesisState, nil)
 }
 
-// AppStateFnWithExtendedCb returns the initial application state using a genesis or the simulation parameters.
-// It calls AppStateFnWithExtendedCbs with nil moduleStateCb.
-func AppStateFnWithExtendedCb(
+// appStateFnWithExtendedCb returns the initial application state using a genesis or the simulation parameters.
+// It calls appStateFnWithExtendedCbs with nil moduleStateCb.
+func appStateFnWithExtendedCb(
 	cdc codec.JSONCodec,
+	addresCodec, validatorCodec address.Codec,
 	simManager *module.SimulationManager,
 	genesisState map[string]json.RawMessage,
 	rawStateCb func(rawState map[string]json.RawMessage),
 ) simtypes.AppStateFn {
-	return AppStateFnWithExtendedCbs(cdc, simManager, genesisState, nil, rawStateCb)
+	return appStateFnWithExtendedCbs(cdc, addresCodec, validatorCodec, simManager, genesisState, nil, rawStateCb)
 }
 
-// AppStateFnWithExtendedCbs returns the initial application state using a genesis or the simulation parameters.
+// appStateFnWithExtendedCbs returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
 // genesisState is the default genesis state of the whole app.
 // moduleStateCb is the callback function to access moduleState.
 // rawStateCb is the callback function to extend rawState.
-func AppStateFnWithExtendedCbs(
+func appStateFnWithExtendedCbs(
 	cdc codec.JSONCodec,
+	addressCodec, validatorCodec address.Codec,
 	simManager *module.SimulationManager,
 	genesisState map[string]json.RawMessage,
 	moduleStateCb func(moduleName string, genesisState interface{}),
@@ -68,13 +76,9 @@ func AppStateFnWithExtendedCbs(
 		accs []simtypes.Account,
 		config simtypes.Config,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
-		if simcli.FlagGenesisTimeValue == 0 {
-			genesisTimestamp = simtypes.RandTimestamp(r)
-		} else {
-			genesisTimestamp = time.Unix(simcli.FlagGenesisTimeValue, 0)
-		}
-
+		genesisTimestamp = time.Unix(config.GenesisTime, 0)
 		chainID = config.ChainID
+
 		switch {
 		case config.ParamsFile != "" && config.GenesisFile != "":
 			panic("cannot provide both a genesis file and a params file")
@@ -106,11 +110,11 @@ func AppStateFnWithExtendedCbs(
 			if err != nil {
 				panic(err)
 			}
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
+			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState, addressCodec, validatorCodec)
 
 		default:
 			appParams := make(simtypes.AppParams)
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
+			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState, addressCodec, validatorCodec)
 		}
 
 		rawState := make(map[string]json.RawMessage)
@@ -138,8 +142,7 @@ func AppStateFnWithExtendedCbs(
 		}
 		notBondedCoins := sdk.NewCoin(stakingState.Params.BondDenom, notBondedTokens)
 		// edit bank state to make it have the not bonded pool tokens
-		bankStateBz, ok := rawState[banktypes.ModuleName]
-		// TODO(fdymylja/jonathan): should we panic in this case
+		bankStateBz, ok := rawState[testutil.BankModuleName]
 		if !ok {
 			panic("bank genesis state is missing")
 		}
@@ -166,7 +169,7 @@ func AppStateFnWithExtendedCbs(
 		// change appState back
 		for name, state := range map[string]proto.Message{
 			stakingtypes.ModuleName: stakingState,
-			banktypes.ModuleName:    bankState,
+			testutil.BankModuleName: bankState,
 		} {
 			if moduleStateCb != nil {
 				moduleStateCb(name, state)
@@ -198,6 +201,7 @@ func AppStateRandomizedFn(
 	genesisTimestamp time.Time,
 	appParams simtypes.AppParams,
 	genesisState map[string]json.RawMessage,
+	addressCodec, validatorCodec address.Codec,
 ) (json.RawMessage, []simtypes.Account) {
 	numAccs := int64(len(accs))
 	// generate a random amount of initial stake coins and a random initial
@@ -218,15 +222,6 @@ func AppStateRandomizedFn(
 	if numInitiallyBonded > numAccs {
 		numInitiallyBonded = numAccs
 	}
-
-	fmt.Printf(
-		`Selected randomly generated parameters for simulated genesis:
-{
-  stake_per_account: "%d",
-  initially_bonded_validators: "%d"
-}
-`, initialStake.Uint64(), numInitiallyBonded,
-	)
 
 	simState := &module.SimulationState{
 		AppParams:    appParams,
@@ -273,8 +268,8 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile str
 	}
 
 	var authGenesis authtypes.GenesisState
-	if appState[authtypes.ModuleName] != nil {
-		cdc.MustUnmarshalJSON(appState[authtypes.ModuleName], &authGenesis)
+	if appState[testutil.AuthModuleName] != nil {
+		cdc.MustUnmarshalJSON(appState[testutil.AuthModuleName], &authGenesis)
 	}
 
 	newAccs := make([]simtypes.Account, len(authGenesis.Accounts))

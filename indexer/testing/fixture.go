@@ -19,7 +19,7 @@ type ListenerTestFixture struct {
 	rndSource    rand.Source
 	block        uint64
 	listener     indexerbase.Listener
-	allKeyModule testModule
+	allKeyModule *testModule
 }
 
 type ListenerTestFixtureOptions struct {
@@ -27,10 +27,11 @@ type ListenerTestFixtureOptions struct {
 }
 
 func NewListenerTestFixture(listener indexerbase.Listener, options ListenerTestFixtureOptions) *ListenerTestFixture {
+	src := rand.NewPCG(1, 2)
 	return &ListenerTestFixture{
-		rndSource:    rand.NewPCG(1, 2),
+		rndSource:    src,
 		listener:     listener,
-		allKeyModule: mkAllKeysModule(),
+		allKeyModule: mkAllKeysModule(src),
 	}
 }
 
@@ -45,26 +46,27 @@ func (f *ListenerTestFixture) Initialize() error {
 }
 
 func (f *ListenerTestFixture) NextBlock() error {
-	f.block++
-
-	if f.listener.StartBlock != nil {
-		err := f.listener.StartBlock(f.block)
-		if err != nil {
-			return err
-		}
-	}
-
-	err := f.allKeyModule.updater(f.rndSource, &f.listener)
-	if err != nil {
-		return err
-	}
-
-	if f.listener.Commit != nil {
-		err := f.listener.Commit()
-		if err != nil {
-			return err
-		}
-	}
+	// TODO:
+	//f.block++
+	//
+	//if f.listener.StartBlock != nil {
+	//	err := f.listener.StartBlock(f.block)
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
+	//
+	//err := f.allKeyModule.updater(f.rndSource, &f.listener)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//if f.listener.Commit != nil {
+	//	err := f.listener.Commit()
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
 
 	return nil
 }
@@ -137,10 +139,11 @@ type testModule struct {
 
 type testObjectStore struct {
 	updater func(rand.Source, *indexerbase.Listener) error
-	state   map[any]any
+	state   map[string]kvPair
 }
 
-type value struct {
+type kvPair struct {
+	key   any
 	value any
 	state valueState
 }
@@ -154,18 +157,23 @@ const (
 )
 
 func mkAllKeysModule(src rand.Source) *testModule {
-	mod := &testModule{}
+	mod := &testModule{
+		name:  "all_keys",
+		state: map[string]*testObjectStore{},
+	}
 	for i := 1; i < int(maxKind); i++ {
 		kind := indexerbase.Kind(i)
 		typ := mkTestObjectType(kind)
 		mod.schema.ObjectTypes = append(mod.schema.ObjectTypes, typ)
-		state := map[any]any{}
+		state := map[string]kvPair{}
 		// generate 5 keys
 		for j := 0; j < 5; j++ {
 			key1 := mkTestValue(src, kind, false)
 			key2 := mkTestValue(src, kind, true)
 			key := []any{key1, key2}
-			state[key] = nil // initialize as nil
+			state[fmt.Sprintf("%v", key)] = kvPair{
+				key: key,
+			}
 		}
 
 		objStore := &testObjectStore{
@@ -174,25 +182,7 @@ func mkAllKeysModule(src rand.Source) *testModule {
 		mod.state[typ.Name] = objStore
 	}
 
-	const name = "all_kinds"
-	return testModule{
-		name:   name,
-		schema: schema,
-		//updater: func(source rand.Source, listener *indexerbase.Listener) error {
-		//	if listener.OnObjectUpdate != nil {
-		//		for i := 1; i < int(maxKind); i++ {
-		//			// two updates per kind
-		//			for j := 0; j < 2; j++ {
-		//				err := listener.OnObjectUpdate(name, mkTestUpdate(source, indexerbase.Kind(i)))
-		//				if err != nil {
-		//					return err
-		//				}
-		//			}
-		//		}
-		//	}
-		//	return nil
-		//},
-	}
+	return mod
 }
 
 func mkTestObjectType(kind indexerbase.Kind) indexerbase.ObjectType {

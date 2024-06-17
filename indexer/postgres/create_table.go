@@ -1,6 +1,8 @@
 package postgres
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"io"
 	"strings"
@@ -8,9 +10,20 @@ import (
 	indexerbase "cosmossdk.io/indexer/base"
 )
 
-// CreateTable generates a CREATE TABLE statement for the object type.
-func (s *SQLGenerator) CreateTable(writer io.Writer) error {
-	_, err := fmt.Fprintf(writer, "CREATE TABLE IF NOT EXISTS %s (\n\t", s.typ.Name)
+func (s *TableManager) CreateTable(ctx context.Context, tx *sql.Tx) error {
+	buf := new(strings.Builder)
+	err := s.GenCreateTable(buf)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.ExecContext(ctx, buf.String())
+	return err
+}
+
+// GenCreateTable generates a CREATE TABLE statement for the object type.
+func (s *TableManager) GenCreateTable(writer io.Writer) error {
+	_, err := fmt.Fprintf(writer, "CREATE TABLE IF NOT EXISTS %s (", s.TableName())
 	if err != nil {
 		return err
 	}
@@ -48,7 +61,10 @@ func (s *SQLGenerator) CreateTable(writer io.Writer) error {
 		return err
 	}
 
-	_, err = fmt.Fprintf(writer, ");")
+	_, err = fmt.Fprintf(writer, `);
+
+GRANT SELECT ON TABLE %s TO PUBLIC;
+`, s.TableName())
 	if err != nil {
 		return err
 	}
@@ -56,7 +72,7 @@ func (s *SQLGenerator) CreateTable(writer io.Writer) error {
 	return nil
 }
 
-func (s *SQLGenerator) createColumnDef(writer io.Writer, field indexerbase.Field) error {
+func (s *TableManager) createColumnDef(writer io.Writer, field indexerbase.Field) error {
 	typeStr, err := columnType(field)
 	if err != nil {
 		return err
@@ -74,6 +90,6 @@ func (s *SQLGenerator) createColumnDef(writer io.Writer, field indexerbase.Field
 		}
 	}
 
-	_, err = fmt.Fprint(writer, " NULL,\\n\\t")
+	_, err = fmt.Fprint(writer, " NULL,\n\t")
 	return err
 }

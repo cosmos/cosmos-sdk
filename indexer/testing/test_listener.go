@@ -41,6 +41,5 @@ func WriterListener(w io.Writer) indexerbase.Listener {
 			_, err := fmt.Fprintf(w, "OnObjectUpdate: %s: %v\n", moduleName, data)
 			return err
 		},
-		CommitCatchupSync: nil,
 	}
 }

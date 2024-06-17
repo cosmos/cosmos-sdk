@@ -677,6 +677,12 @@ func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 	}
 
 	if mode == execModeSimulate {
+		// cache multistore seems throwing panic when we try to cache already cached multistore
+		cmsWithVersion, err := app.cms.CacheMultiStoreWithVersion(ctx.BlockHeight())
+		if err == nil {
+			ctx = ctx.WithMultiStore(cmsWithVersion)
+		}
+
 		ctx, _ = ctx.CacheContext()
 	}
 

@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"os"
 	"sort"
 	"strings"
 
@@ -38,6 +40,7 @@ const (
 	flagHDPath       = "hd-path"
 	flagPubKeyBase64 = "pubkey-base64"
 	flagIndiscreet   = "indiscreet"
+	flagMnemonicSrc  = "source"
 
 	// DefaultKeyPass contains the default key password for genesis transactions
 	DefaultKeyPass = "12345678"
@@ -87,6 +90,7 @@ Example:
 	f.Uint32(flagIndex, 0, "Address index number for HD derivation (less than equal 2147483647)")
 	f.String(flags.FlagKeyType, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 	f.Bool(flagIndiscreet, false, "Print seed phrase directly on current terminal (only valid when --no-backup is false)")
+	f.String(flagMnemonicSrc, "", "lets users pass in the passphrase via a file (only used when flagRecover or flagInteractive was passed)")
 
 	// support old flags name for backwards compatibility
 	f.SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
@@ -282,19 +286,34 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	var mnemonic, bip39Passphrase string
 
 	recoverFlag, _ := cmd.Flags().GetBool(flagRecover)
+	mnemonicSrc, _ := cmd.Flags().GetString(flagMnemonicSrc)
 	if recoverFlag {
-		mnemonic, err = input.GetString("Enter your bip39 mnemonic", inBuf)
-		if err != nil {
-			return err
+		if mnemonicSrc != "" {
+			mnemonic, err = readMnemonicFromFile(mnemonicSrc)
+			if err != nil {
+				return err
+			}
+		} else {
+			mnemonic, err = input.GetString("Enter your bip39 mnemonic", inBuf)
+			if err != nil {
+				return err
+			}
 		}
 
 		if !bip39.IsMnemonicValid(mnemonic) {
 			return errors.New("invalid mnemonic")
 		}
 	} else if interactive {
-		mnemonic, err = input.GetString("Enter your bip39 mnemonic, or hit enter to generate one.", inBuf)
-		if err != nil {
-			return err
+		if mnemonicSrc != "" {
+			mnemonic, err = readMnemonicFromFile(mnemonicSrc)
+			if err != nil {
+				return err
+			}
+		} else {
+			mnemonic, err = input.GetString("Enter your bip39 mnemonic, or hit enter to generate one.", inBuf)
+			if err != nil {
+				return err
+			}
 		}
 
 		if !bip39.IsMnemonicValid(mnemonic) && mnemonic != "" {
@@ -403,4 +422,18 @@ func printCreate(ctx client.Context, cmd *cobra.Command, k *keyring.Record, show
 	}
 
 	return nil
+}
+
+func readMnemonicFromFile(filePath string) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	bz, err := io.ReadAll(file)
+	if err != nil {
+		return "", err
+	}
+	return string(bz), nil
 }

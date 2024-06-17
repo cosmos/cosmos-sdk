@@ -27,7 +27,7 @@ const (
 const mathCodespace = "math"
 
 var (
-	ErrInvalidDecString   = errors.Register(mathCodespace, 1, "invalid decimal string")
+	ErrInvalidDec         = errors.Register(mathCodespace, 1, "invalid decimal string")
 	ErrUnexpectedRounding = errors.Register(mathCodespace, 2, "unexpected rounding")
 	ErrNonIntegeral       = errors.Register(mathCodespace, 3, "value is non-integral")
 )
@@ -49,7 +49,7 @@ type SetupConstraint func(Dec) error
 func AssertNotNegative() SetupConstraint {
 	return func(d Dec) error {
 		if d.IsNegative() {
-			return ErrInvalidDecString.Wrap("is negative")
+			return ErrInvalidDec.Wrap("is negative")
 		}
 		return nil
 	}
@@ -59,7 +59,7 @@ func AssertNotNegative() SetupConstraint {
 func AssertGreaterThanZero() SetupConstraint {
 	return func(d Dec) error {
 		if !d.IsPositive() {
-			return ErrInvalidDecString.Wrap("is negative")
+			return ErrInvalidDec.Wrap("is negative")
 		}
 		return nil
 	}
@@ -69,7 +69,7 @@ func AssertGreaterThanZero() SetupConstraint {
 func AssertMaxDecimals(max uint32) SetupConstraint {
 	return func(d Dec) error {
 		if d.NumDecimalPlaces() > max {
-			return ErrInvalidDecString.Wrapf("exceeds maximum decimal places: %d", max)
+			return ErrInvalidDec.Wrapf("exceeds maximum decimal places: %d", max)
 		}
 		return nil
 	}
@@ -79,14 +79,14 @@ func AssertMaxDecimals(max uint32) SetupConstraint {
 func NewDecFromString(s string, c ...SetupConstraint) (Dec, error) {
 	d, _, err := apd.NewFromString(s)
 	if err != nil {
-		return Dec{}, ErrInvalidDecString.Wrap(err.Error())
+		return Dec{}, ErrInvalidDec.Wrap(err.Error())
 	}
 
 	switch d.Form {
 	case apd.NaN, apd.NaNSignaling:
-		return Dec{}, ErrInvalidDecString.Wrap("not a number")
+		return Dec{}, ErrInvalidDec.Wrap("not a number")
 	case apd.Infinite:
-		return Dec{}, ErrInvalidDecString.Wrapf(s)
+		return Dec{}, ErrInvalidDec.Wrapf(s)
 	default:
 		result := Dec{*d}
 		for _, v := range c {
@@ -117,7 +117,7 @@ func (x Dec) Add(y Dec) (Dec, error) {
 	var z Dec
 	_, err := apd.BaseContext.Add(&z.dec, &x.dec, &y.dec)
 	if err != nil {
-		return Dec{}, ErrInvalidDecString.Wrap(err.Error())
+		return Dec{}, ErrInvalidDec.Wrap(err.Error())
 	}
 
 	return z, nil
@@ -128,8 +128,9 @@ func (x Dec) Add(y Dec) (Dec, error) {
 func (x Dec) Sub(y Dec) (Dec, error) {
 	var z Dec
 	_, err := apd.BaseContext.Sub(&z.dec, &x.dec, &y.dec)
+
 	if err != nil {
-		return Dec{}, ErrInvalidDecString
+		return Dec{}, ErrInvalidDec.Wrap(err.Error())
 	}
 
 	return z, errors.Wrap(err, "decimal subtraction error")
@@ -141,7 +142,7 @@ func (x Dec) Quo(y Dec) (Dec, error) {
 	var z Dec
 	_, err := dec128Context.Quo(&z.dec, &x.dec, &y.dec)
 	if err != nil {
-		return Dec{}, ErrInvalidDecString
+		return Dec{}, ErrInvalidDec
 	}
 
 	return z, errors.Wrap(err, "decimal quotient error")
@@ -167,7 +168,7 @@ func (x Dec) QuoExact(y Dec) (Dec, error) {
 	var z Dec
 	condition, err := dec128Context.Quo(&z.dec, &x.dec, &y.dec)
 	if err != nil {
-		return z, ErrInvalidDecString
+		return z, ErrInvalidDec
 	}
 	if condition.Rounded() {
 		return z, ErrUnexpectedRounding
@@ -181,7 +182,7 @@ func (x Dec) QuoInteger(y Dec) (Dec, error) {
 	var z Dec
 	_, err := dec128Context.QuoInteger(&z.dec, &x.dec, &y.dec)
 	if err != nil {
-		return z, ErrInvalidDecString
+		return z, ErrInvalidDec
 	}
 	return z, nil
 }

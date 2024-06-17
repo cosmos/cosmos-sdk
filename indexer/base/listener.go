@@ -54,7 +54,6 @@ type Listener struct {
 
 // InitializationData represents initialization data that is passed to a listener.
 type InitializationData struct {
-
 	// HasEventAlignedWrites indicates that the blockchain data source will emit KV-pair events
 	// in an order aligned with transaction, message and event callbacks. If this is true
 	// then indexers can assume that KV-pair data is associated with these specific transactions, messages

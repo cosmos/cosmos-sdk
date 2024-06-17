@@ -4,7 +4,6 @@ package indexerbase
 // Usually these modules would also implement appmodule.AppModule, but that is not included
 // to keep this package free of any dependencies.
 type DecodableModule interface {
-
 	// ModuleDecoder returns a ModuleDecoder for the module.
 	ModuleDecoder() (ModuleDecoder, error)
 }

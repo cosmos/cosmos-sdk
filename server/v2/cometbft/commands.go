@@ -72,10 +72,7 @@ func (s *CometBFTServer[T]) StatusCommand() *cobra.Command {
 				return err
 			}
 
-			cmd.Println(string(output))
-
-			// TODO: figure out yaml and json output
-			return nil
+			return printOutput(cmd, output)
 		},
 	}
 
@@ -215,15 +212,12 @@ for. Each module documents its respective events under 'xx_events.md'.
 				return err
 			}
 
-			// return clientCtx.PrintProto(blocks) // TODO: previously we had this, but I think it can be replaced with a simple json marshal.
-			// We are missing YAML output tho.
 			bz, err := protojson.Marshal(blocks)
 			if err != nil {
 				return err
 			}
 
-			_, err = cmd.OutOrStdout().Write(bz)
-			return err
+			return printOutput(cmd, bz)
 		},
 	}
 
@@ -282,15 +276,12 @@ $ %s query block --%s=%s <hash>
 					return fmt.Errorf("no block found with height %s", args[0])
 				}
 
-				// return clientCtx.PrintProto(output)
-
 				bz, err := json.Marshal(output)
 				if err != nil {
 					return err
 				}
 
-				_, err = cmd.OutOrStdout().Write(bz)
-				return err
+				return printOutput(cmd, bz)
 
 			case auth.TypeHash:
 
@@ -308,14 +299,12 @@ $ %s query block --%s=%s <hash>
 					return fmt.Errorf("no block found with hash %s", args[0])
 				}
 
-				// return clientCtx.PrintProto(output)
 				bz, err := json.Marshal(output)
 				if err != nil {
 					return err
 				}
 
-				_, err = cmd.OutOrStdout().Write(bz)
-				return err
+				return printOutput(cmd, bz)
 
 			default:
 				return fmt.Errorf("unknown --%s value %s", auth.FlagType, typ)
@@ -371,10 +360,7 @@ func (s *CometBFTServer[T]) QueryBlockResultsCmd() *cobra.Command {
 				return err
 			}
 
-			cmd.Println(string(blockResStr))
-
-			// TODO: figure out yaml and json output
-			return nil
+			return printOutput(cmd, blockResStr)
 		},
 	}
 
@@ -424,4 +410,34 @@ func (s *CometBFTServer[T]) BootstrapStateCmd() *cobra.Command {
 	cmd.Flags().Int64("height", 0, "Block height to bootstrap state at, if not provided it uses the latest block height in app state")
 
 	return cmd
+}
+
+func printOutput(cmd *cobra.Command, out []byte) error {
+	// Get flags output
+	outFlag, err := cmd.Flags().GetString(flags.FlagOutput) 
+	if err != nil {
+		return err
+	}
+
+	if outFlag == "text" {
+		out, err = yaml.JSONToYAML(out)
+		if err != nil {
+			return err
+		}
+	}
+
+	writer := cmd.OutOrStdout()
+	_, err = writer.Write(out)
+	if err != nil {
+		return err
+	}
+
+	if outFlag != "text" {
+		// append new-line for formats besides YAML
+		_, err = writer.Write([]byte("\n"))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

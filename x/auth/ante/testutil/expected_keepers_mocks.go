@@ -178,11 +178,6 @@ type MockConsensusKeeper struct {
 	recorder *MockConsensusKeeperMockRecorder
 }
 
-// GetCometInfo implements types.QueryServer.
-func (m *MockConsensusKeeper) GetCometInfo(context.Context, *types0.QueryGetCometInfoRequest) (*types0.QueryGetCometInfoResponse, error) {
-	return nil, nil
-}
-
 // MockConsensusKeeperMockRecorder is the mock recorder for MockConsensusKeeper.
 type MockConsensusKeeperMockRecorder struct {
 	mock *MockConsensusKeeper

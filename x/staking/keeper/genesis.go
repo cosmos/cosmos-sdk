@@ -26,10 +26,11 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]ap
 	// initialized for the validator set e.g. with a one-block offset - the
 	// first TM block is at height 1, so state updates applied from
 	// genesis.json are in block 0.
-
-	// sdkCtx := sdk.UnwrapSDKContext(ctx)
-	// sdkCtx = sdkCtx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay) // TODO: remove this need for WithBlockHeight
-	// ctx = sdkCtx
+	if sdkCtx, ok := sdk.MaybeUnwrapSDKContext(ctx); ok {
+		// this munging of the context is not necessary for server/v2 code paths, `ok` will be false
+		sdkCtx = sdkCtx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay) // TODO: remove this need for WithBlockHeight
+		ctx = sdkCtx
+	}
 
 	if err := k.Params.Set(ctx, data.Params); err != nil {
 		return nil, err

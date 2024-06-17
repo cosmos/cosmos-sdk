@@ -38,7 +38,7 @@ Additionally, there is an overlap in functionality with a Token Factory module, 
 
 **Legacy Support**: A legacy wrapper will be implemented to ensure compatibility with about 90% of existing functions. This measure will facilitate a smooth transition while keeping older systems functional.
 
-**Callback Functions**: We propose to integrate callback functions directly to the x/bank module, allowing for customisable behaviour during minting, burning and transferring operations without complicating statemanagement. It provides a streamlined approach to asset management and allows for the customisation of asset behaviors while maintaining a unified state management system.
+**Callback Functions**: We propose to integrate callback functions directly to the x/bank module, allowing for customisable behaviour during minting, burning and transferring operations without complicating statemanagement. It also helps overwrite the default accounting mechanism by allowing to overwrite the balance method (this is particularly useful for rebasing tokens).
 
 Implementation of Callback Functions:
 
@@ -87,7 +87,8 @@ func (k *BankKeeper) GetBalance(ctx context.Context, addr []byte, denom string) 
 ```
 
 Messages for Admin Operations:
-To facilitate admin operations like `Mint`, `Burn`, and `Move`, we can define specific messages that can be invoked by the admin account of each denom. These operations will be internal and not exposed to end clients directly.
+
+To facilitate admin operations like `Mint`, `Burn`, and `Transfer`, we can define specific messages that can be invoked by the admin account of each denom. These operations will be internal and not exposed to end clients directly.
 
 ```protobuf
 message Mint {
@@ -102,7 +103,7 @@ message Burn {
   string amount = 3;
 }
 
-message Move {
+message Transfer {
   string denom = 1;
   string from = 2;
   string to = 3;

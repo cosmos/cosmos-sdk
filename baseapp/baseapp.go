@@ -6,6 +6,7 @@ import (
 	"math"
 	"sort"
 	"strconv"
+	"sync"
 
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -193,6 +194,12 @@ type BaseApp struct {
 	//
 	// SAFETY: it's safe to do if validators validate the total gas wanted in the `ProcessProposal`, which is the case in the default handler.
 	disableBlockGasMeter bool
+
+	// Mutex for simulating transactions
+	// This mutex is used to prevent the checkState corruption during the app.Simulate.
+	//
+	// checkTx holds a write lock, while simulate holds a read lock.
+	simulateMutex sync.RWMutex
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

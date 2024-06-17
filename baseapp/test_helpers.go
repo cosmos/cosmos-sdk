@@ -25,6 +25,9 @@ func (app *BaseApp) SimCheck(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *
 
 // Simulate executes a tx in simulate mode to get result and gas info.
 func (app *BaseApp) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
+	app.simulateMutex.RLock()
+	defer app.simulateMutex.RUnlock()
+
 	gasInfo, result, _, err := app.runTx(execModeSimulate, txBytes)
 	return gasInfo, result, err
 }

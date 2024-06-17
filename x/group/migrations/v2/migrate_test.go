@@ -52,7 +52,7 @@ func TestMigrate(t *testing.T) {
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 
-	oldAccs, accountKeeper, err := createOldPolicyAccount(ctx, storeKey, cdc, policies)
+	oldAccs, accountKeeper, err := createOldPolicyAccount(t, ctx, storeKey, cdc, policies)
 	require.NoError(t, err)
 	groupPolicyTable, groupPolicySeq, err := createGroupPolicies(ctx, storeService, cdc, policies, codectestutil.CodecOptions{}.GetAddressCodec())
 	require.NoError(t, err)
@@ -105,15 +105,18 @@ func createGroupPolicies(ctx sdk.Context, storeService corestore.KVStoreService,
 }
 
 // createOldPolicyAccount re-creates the group policy account using a module account
-func createOldPolicyAccount(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Codec, policies []sdk.AccAddress) ([]*authtypes.ModuleAccount, group.AccountKeeper, error) {
+func createOldPolicyAccount(t *testing.T, ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Codec, policies []sdk.AccAddress) ([]*authtypes.ModuleAccount, group.AccountKeeper, error) {
+	t.Helper()
 	addressCodec := addresscodec.NewBech32Codec(sdk.Bech32MainPrefix)
 	authorityStrAddr, err := addressCodec.BytesToString(authorityAddr)
 	if err != nil {
 		return nil, nil, err
 	}
 	// gomock initializations
-	ctrl := gomock.NewController(&testing.T{})
+	ctrl := gomock.NewController(t)
 	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+	// mock account number
+	accNum := uint64(0)
 
 	accountKeeper := authkeeper.NewAccountKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey)), log.NewNopLogger()), cdc, authtypes.ProtoBaseAccount, acctsModKeeper, nil, addressCodec, sdk.Bech32MainPrefix, authorityStrAddr)
 
@@ -123,6 +126,9 @@ func createOldPolicyAccount(ctx sdk.Context, storeKey storetypes.StoreKey, cdc c
 		if err != nil {
 			return nil, nil, err
 		}
+		acctsModKeeper.EXPECT().NextAccountNumber(ctx).Return(accNum, nil)
+		accNum++
+
 		acc := accountKeeper.NewAccount(ctx, &authtypes.ModuleAccount{
 			BaseAccount: &authtypes.BaseAccount{
 				Address: policyStrAddr,

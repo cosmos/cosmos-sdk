@@ -1,6 +1,8 @@
-name: 'Checks dependencies and mocks generation'
+name: "Checks dependencies and mocks generation"
 on:
+  merge_group:
   pull_request:
+  push:
     branches:
       - main
 

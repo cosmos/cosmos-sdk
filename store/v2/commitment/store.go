@@ -113,6 +113,19 @@ func (c *CommitStore) GetLatestVersion() (uint64, error) {
 	return version, nil
 }
 
+// IsEmpty returns true if the CommitStore is empty.
+func (c *CommitStore) IsEmpty() (bool, error) {
+	value, err := c.db.Get([]byte(latestVersionKey))
+	if err != nil {
+		return false, err
+	}
+	if value == nil {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
 func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 	// Rollback the metadata to the target version.
 	latestVersion, err := c.GetLatestVersion()
@@ -121,6 +134,7 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 	}
 	if targetVersion < latestVersion {
 		batch := c.db.NewBatch()
+		defer batch.Close()
 		for version := latestVersion; version > targetVersion; version-- {
 			cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
 			if err := batch.Delete(cInfoKey); err != nil {
@@ -167,16 +181,20 @@ func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
 }
 
 func (c *CommitStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo) error {
+	// do nothing if commit info is nil, as will be the case for an empty, initializing store
+	if cInfo == nil {
+		return nil
+	}
+
 	batch := c.db.NewBatch()
-	if cInfo != nil {
-		cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
-		value, err := cInfo.Marshal()
-		if err != nil {
-			return err
-		}
-		if err := batch.Set(cInfoKey, value); err != nil {
-			return err
-		}
+	defer batch.Close()
+	cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
+	value, err := cInfo.Marshal()
+	if err != nil {
+		return err
+	}
+	if err := batch.Set(cInfoKey, value); err != nil {
+		return err
 	}
 
 	var buf bytes.Buffer
@@ -201,8 +219,11 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 		// If a commit event execution is interrupted, a new iavl store's version
 		// will be larger than the RMS's metadata, when the block is replayed, we
 		// should avoid committing that iavl store again.
-		var commitID proof.CommitID
-		if tree.GetLatestVersion() >= version {
+		var (
+			commitID      proof.CommitID
+			latestVersion = tree.GetLatestVersion()
+		)
+		if latestVersion != 0 && latestVersion >= version {
 			commitID.Version = version
 			commitID.Hash = tree.Hash()
 		} else {
@@ -287,6 +308,7 @@ func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, 
 func (c *CommitStore) Prune(version uint64) (ferr error) {
 	// prune the metadata
 	batch := c.db.NewBatch()
+	defer batch.Close()
 	for v := version; v > 0; v-- {
 		cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, v))
 		if exist, _ := c.db.Has(cInfoKey); !exist {

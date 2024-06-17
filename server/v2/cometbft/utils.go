@@ -8,7 +8,7 @@ import (
 	"time"
 
 	abciv1 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/abci/v1"
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogoany "github.com/cosmos/gogoproto/types/any"
@@ -210,7 +210,7 @@ func ToSDKEvidence(ev []abci.Misbehavior) []*comet.Evidence {
 	return evidence
 }
 
-// ToSDKDecidedCommitInfo takes comet commit info and returns sdk commit info
+// ToSDKCommitInfo takes comet commit info and returns sdk commit info
 func ToSDKCommitInfo(commit abci.CommitInfo) *comet.CommitInfo {
 	ci := comet.CommitInfo{
 		Round: commit.Round,

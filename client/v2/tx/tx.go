@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	gogogrpc "github.com/cosmos/gogoproto/grpc"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
 
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
@@ -21,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring) (params TxParameters, err error) {
@@ -29,10 +28,13 @@ func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring) (params
 	chainID, _ := flags.GetString(flags2.FlagChainID)
 	memo, _ := flags.GetString(flags2.FlagNote)
 	signMode, _ := flags.GetString(flags2.FlagSignMode)
+
 	accNumber, _ := flags.GetUint64(flags2.FlagAccountNumber)
 	sequence, _ := flags.GetUint64(flags2.FlagSequence)
 	fromName, _ := flags.GetString(flags2.FlagFrom)
-	gas, _ := flags.GetUint64(flags2.FlagGas)
+
+	gas, _ := flags.GetString(flags2.FlagGas)
+	gasSetting, _ := flags2.ParseGasSetting(gas)
 	gasAdjustment, _ := flags.GetFloat64(flags2.FlagGasAdjustment)
 	gasPrices, _ := flags.GetString(flags2.FlagGasPrices)
 
@@ -44,12 +46,17 @@ func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring) (params
 	offline, _ := flags.GetBool(flags2.FlagOffline)
 	generateOnly, _ := flags.GetBool(flags2.FlagGenerateOnly)
 
-	acc, err := keybase.GetPubKey(fromName)
-	if err != nil {
-		return params, err
+	var fromAddr []byte
+	dryRun, _ := flags.GetBool(flags2.FlagDryRun)
+	if !dryRun {
+		acc, err := keybase.GetPubKey(fromName)
+		if err != nil {
+			return params, err
+		}
+		fromAddr = acc.Address().Bytes()
 	}
 
-	gasConfig, err := NewGasConfig(gas, gasAdjustment, gasPrices)
+	gasConfig, err := NewGasConfig(gasSetting.Gas, gasAdjustment, gasPrices)
 	if err != nil {
 		return params, err
 	}
@@ -67,7 +74,7 @@ func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring) (params
 			accountNumber: accNumber,
 			sequence:      sequence,
 			fromName:      fromName,
-			fromAddress:   acc.Address().Bytes(),
+			fromAddress:   fromAddr,
 		},
 		GasConfig: gasConfig,
 		FeeConfig: feeConfig,
@@ -76,8 +83,8 @@ func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring) (params
 			offline:            offline,
 			offChain:           false,
 			generateOnly:       generateOnly,
-			simulateAndExecute: false, // TODO: in context
-			preprocessTxHook:   nil,   // TODO: in context
+			simulateAndExecute: gasSetting.Simulate,
+			preprocessTxHook:   nil, // TODO: in context
 		},
 		ExtensionOptions: ExtensionOptions{}, // TODO
 	}
@@ -115,7 +122,12 @@ func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs .
 		return err
 	}
 
-	txf, err := newFactory(ctx, flagSet, msgs...)
+	err := validateMessages(msgs...)
+	if err != nil {
+		return err
+	}
+
+	txf, err := newFactory(ctx, flagSet)
 	if err != nil {
 		return err
 	}
@@ -125,19 +137,26 @@ func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs .
 		return generateAuxSignerData(ctx, txf, msgs...)
 	}
 
-	// Only generate
 	genOnly, _ := flagSet.GetBool(flags2.FlagGenerateOnly)
 	if genOnly {
 		return generateOnly(ctx, txf, msgs...)
 	}
 
 	// Simulate
-	// Broadcast
+	dryRun, _ := flagSet.GetBool(flags2.FlagDryRun)
+	if dryRun {
+		simulation, _, err := txf.Simulate(msgs...)
+		if err != nil {
+			return err
+		}
+		return ctx.PrintProto(simulation)
+	}
 
-	return GenerateOrBroadcastTxWithFactory(ctx, txf, msgs...)
+	// Broadcast
+	return BroadcastTx(ctx, txf, msgs...)
 }
 
-func newFactory(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.Msg) (Factory, error) {
+func newFactory(ctx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
 	k, err := keyring.NewAutoCLIKeyring(ctx.Keyring, ctx.AddressCodec)
 	if err != nil {
 		return Factory{}, err
@@ -196,61 +215,47 @@ func generateAuxSignerData(ctx client.Context, txf Factory, msgs ...transaction.
 }
 
 func generateOnly(ctx client.Context, txf Factory, msgs ...transaction.Msg) error {
-	uTx, err := txf.PrintUnsignedTx(msgs...)
+	err := txf.Prepare()
 	if err != nil {
 		return err
 	}
+
+	uTx, err := txf.UnsignedTxString(msgs...)
+	if err != nil {
+		return err
+	}
+
 	return ctx.PrintString(uTx)
 }
 
-// GenerateOrBroadcastTxWithFactory will either generate and print an unsigned transaction
-// or sign it and broadcast it returning an error upon failure.
-func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msgs ...transaction.Msg) error {
-	// Validate all msgs before generating or broadcasting the tx.
-	// We were calling ValidateBasic separately in each CLI handler before.
-	// Right now, we're factorizing that call inside this function.
-	// ref: https://github.com/cosmos/cosmos-sdk/pull/9236#discussion_r623803504
-	err := validateMessages(msgs...)
+func SimulateTx(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.Msg) (proto.Message, error) {
+	txf, err := newFactory(ctx, flagSet)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if clientCtx.GenerateOnly {
-		uTx, err := txf.PrintUnsignedTx(msgs...)
-		if err != nil {
-			return err
-		}
-		return clientCtx.PrintString(uTx)
+	simulation, _, err := txf.Simulate(msgs...)
+	if err != nil {
+		return nil, err
 	}
 
-	return BroadcastTx(clientCtx, txf, msgs...)
+	return simulation, nil
 }
 
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the
 // given set of messages. It will also simulate gas requirements if necessary.
 // It will return an error upon failure.
 func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...transaction.Msg) error {
-	txf, err := txf.Prepare()
+	err := txf.Prepare()
 	if err != nil {
 		return err
 	}
 
-	if txf.SimulateAndExecute() || clientCtx.Simulate {
-		if clientCtx.Offline {
-			return errors.New("cannot estimate gas in offline mode")
-		}
-
-		_, adjusted, err := CalculateGas(clientCtx, txf, msgs...)
+	if txf.SimulateAndExecute() {
+		err = txf.CalculateGas(msgs...)
 		if err != nil {
 			return err
 		}
-
-		txf = txf.WithGas(adjusted)
-		_, _ = fmt.Fprintf(os.Stderr, "%s\n", GasEstimateResponse{GasEstimate: txf.Gas()})
-	}
-
-	if clientCtx.Simulate {
-		return nil
 	}
 
 	builder, err := txf.BuildUnsignedTx(msgs...)
@@ -310,27 +315,6 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...transaction.Msg)
 	}
 
 	return clientCtx.PrintProto(res)
-}
-
-// CalculateGas simulates the execution of a transaction and returns the
-// simulation response obtained by the query and the adjusted gas amount.
-func CalculateGas(
-	clientCtx gogogrpc.ClientConn, txf Factory, msgs ...transaction.Msg,
-) (*tx.SimulateResponse, uint64, error) {
-	txBytes, err := txf.BuildSimTx(msgs...)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	txSvcClient := tx.NewServiceClient(clientCtx)
-	simRes, err := txSvcClient.Simulate(context.Background(), &tx.SimulateRequest{
-		TxBytes: txBytes,
-	})
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return simRes, uint64(txf.GasAdjustment() * float64(simRes.GasInfo.GasUsed)), nil
 }
 
 // makeAuxSignerData generates an AuxSignerData from the client inputs.

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"math/big"
 	"os"
 	"strings"
@@ -68,43 +69,41 @@ func NewFactory(keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever Acc
 // they will be queried for and set on the provided Factory.
 // A new Factory with the updated fields will be returned.
 // Note: When in offline mode, the Prepare does nothing and returns the original factory.
-func (f Factory) Prepare() (Factory, error) {
+func (f *Factory) Prepare() error {
 	if f.txParams.ExecutionOptions.offline || f.txParams.ExecutionOptions.offChain {
-		return f, nil
+		return nil
 	}
 
 	if f.txParams.fromAddress.Empty() {
-		return f, errors.New("missing 'from address' field")
+		return errors.New("missing 'from address' field")
 	}
 
 	if err := f.accountRetriever.EnsureExists(context.Background(), f.txParams.fromAddress); err != nil {
-		return f, err
+		return err
 	}
 
 	if f.txParams.accountNumber == 0 || f.txParams.sequence == 0 {
 		fc := f
 		num, seq, err := fc.accountRetriever.GetAccountNumberSequence(context.Background(), f.txParams.fromAddress)
 		if err != nil {
-			return f, err
+			return err
 		}
 
 		if f.txParams.accountNumber == 0 {
-			fc = fc.WithAccountNumber(num)
+			fc.WithAccountNumber(num)
 		}
 
 		if f.txParams.sequence == 0 {
-			fc = fc.WithSequence(seq)
+			fc.WithSequence(seq)
 		}
-
-		return fc, nil
 	}
 
-	return f, nil
+	return nil
 }
 
 // BuildUnsignedTx builds a transaction to be signed given a set of messages.
 // Once created, the fee, memo, and messages are set.
-func (f Factory) BuildUnsignedTx(msgs ...transaction.Msg) (TxBuilder, error) {
+func (f *Factory) BuildUnsignedTx(msgs ...transaction.Msg) (TxBuilder, error) {
 	if f.txParams.offline && f.txParams.generateOnly {
 		if f.txParams.chainID != "" {
 			return nil, errors.New("chain ID cannot be used when offline and generate-only flags are set")
@@ -175,30 +174,51 @@ func (f Factory) BuildUnsignedTx(msgs ...transaction.Msg) (TxBuilder, error) {
 	return txBuilder, nil
 }
 
-// PrintUnsignedTx will generate an unsigned transaction and print it to the writer
+func (f *Factory) CalculateGas(msgs ...transaction.Msg) error {
+	if f.txParams.offline {
+		return errors.New("cannot simulate in offline mode")
+	}
+	_, adjusted, err := f.Simulate(msgs...)
+	if err != nil {
+		return err
+	}
+
+	f.WithGas(adjusted)
+
+	return nil
+}
+
+// Simulate simulates the execution of a transaction and returns the
+// simulation response obtained by the query and the adjusted gas amount.
+func (f *Factory) Simulate(msgs ...transaction.Msg) (*tx.SimulateResponse, uint64, error) {
+	txBytes, err := f.BuildSimTx(msgs...)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	txSvcClient := tx.NewServiceClient(f.conn)
+	simRes, err := txSvcClient.Simulate(context.Background(), &tx.SimulateRequest{
+		TxBytes: txBytes,
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return simRes, uint64(f.GasAdjustment() * float64(simRes.GasInfo.GasUsed)), nil
+}
+
+// UnsignedTxString will generate an unsigned transaction and print it to the writer
 // specified by ctx.Output. If simulation was requested, the gas will be
 // simulated and also printed to the same writer before the transaction is
 // printed.
 // TODO: this should not be part of factory or at least just return the json encoded string.
-func (f Factory) PrintUnsignedTx(msgs ...transaction.Msg) (string, error) {
+func (f *Factory) UnsignedTxString(msgs ...transaction.Msg) (string, error) {
 	if f.SimulateAndExecute() {
-		if f.txParams.offline {
-			return "", errors.New("cannot estimate gas in offline mode")
-		}
-
-		// Prepare TxFactory with acc & seq numbers as CalculateGas requires
-		// account and sequence numbers to be set
-		preparedTxf, err := f.Prepare()
+		err := f.CalculateGas(msgs...)
 		if err != nil {
 			return "", err
 		}
 
-		_, adjusted, err := CalculateGas(f.conn, preparedTxf, msgs...)
-		if err != nil {
-			return "", err
-		}
-
-		f.WithGas(adjusted)
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n", GasEstimateResponse{GasEstimate: f.Gas()})
 	}
 
@@ -228,7 +248,7 @@ func (f Factory) PrintUnsignedTx(msgs ...transaction.Msg) (string, error) {
 // BuildSimTx creates an unsigned tx with an empty single signature and returns
 // the encoded transaction or an error if the unsigned transaction cannot be
 // built.
-func (f Factory) BuildSimTx(msgs ...transaction.Msg) ([]byte, error) {
+func (f *Factory) BuildSimTx(msgs ...transaction.Msg) ([]byte, error) {
 	txb, err := f.BuildUnsignedTx(msgs...)
 	if err != nil {
 		return nil, err
@@ -268,7 +288,7 @@ func (f Factory) BuildSimTx(msgs ...transaction.Msg) ([]byte, error) {
 // Signing a transaction with multiple signers in the DIRECT mode is not supported and will
 // return an error.
 // An error is returned upon failure.
-func (f Factory) Sign(ctx context.Context, name string, txBuilder TxBuilder, overwriteSig bool) error {
+func (f *Factory) Sign(ctx context.Context, name string, txBuilder TxBuilder, overwriteSig bool) error {
 	if f.keybase == nil {
 		return errors.New("keybase must be set prior to signing a transaction")
 	}
@@ -397,7 +417,7 @@ func (f Factory) Sign(ctx context.Context, name string, txBuilder TxBuilder, ove
 }
 
 // GetSignBytesAdapter returns the sign bytes for a given transaction and sign mode.
-func (f Factory) GetSignBytesAdapter(ctx context.Context, signerData signing.SignerData, builder TxBuilder) ([]byte, error) {
+func (f *Factory) GetSignBytesAdapter(ctx context.Context, signerData signing.SignerData, builder TxBuilder) ([]byte, error) {
 	// TODO
 	txSignerData := signing.SignerData{
 		ChainID:       signerData.ChainID,
@@ -426,26 +446,23 @@ func validateMemo(memo string) error {
 }
 
 // WithGas returns a copy of the Factory with an updated gas value.
-func (f Factory) WithGas(gas uint64) Factory {
+func (f *Factory) WithGas(gas uint64) {
 	f.txParams.gas = gas
-	return f
 }
 
 // WithSequence returns a copy of the Factory with an updated sequence number.
-func (f Factory) WithSequence(sequence uint64) Factory {
+func (f *Factory) WithSequence(sequence uint64) {
 	f.txParams.sequence = sequence
-	return f
 }
 
 // WithAccountNumber returns a copy of the Factory with an updated account number.
-func (f Factory) WithAccountNumber(accnum uint64) Factory {
+func (f *Factory) WithAccountNumber(accnum uint64) {
 	f.txParams.accountNumber = accnum
-	return f
 }
 
 // PreprocessTx calls the preprocessing hook with the factory parameters and
 // returns the result.
-func (f Factory) PreprocessTx(keyname string, builder TxBuilder) error {
+func (f *Factory) PreprocessTx(keyname string, builder TxBuilder) error {
 	if f.txParams.preprocessTxHook == nil {
 		// Allow pass-through
 		return nil
@@ -458,27 +475,27 @@ func (f Factory) PreprocessTx(keyname string, builder TxBuilder) error {
 	return f.txParams.preprocessTxHook(f.txParams.chainID, keyType, builder)
 }
 
-func (f Factory) AccountNumber() uint64              { return f.txParams.accountNumber }
-func (f Factory) Sequence() uint64                   { return f.txParams.sequence }
-func (f Factory) Gas() uint64                        { return f.txParams.gas }
-func (f Factory) GasAdjustment() float64             { return f.txParams.gasAdjustment }
-func (f Factory) Keybase() keyring.Keyring           { return f.keybase }
-func (f Factory) ChainID() string                    { return f.txParams.chainID }
-func (f Factory) Memo() string                       { return f.txParams.memo }
-func (f Factory) Fees() []*base.Coin                 { return f.txParams.fees }
-func (f Factory) GasPrices() []*base.DecCoin         { return f.txParams.gasPrices }
-func (f Factory) AccountRetriever() AccountRetriever { return f.accountRetriever }
-func (f Factory) TimeoutHeight() uint64              { return f.txParams.timeoutHeight }
-func (f Factory) FromName() string                   { return f.txParams.fromName }
-func (f Factory) SimulateAndExecute() bool           { return f.txParams.simulateAndExecute }
-func (f Factory) SignMode() apitxsigning.SignMode    { return f.txParams.signMode }
+func (f *Factory) AccountNumber() uint64              { return f.txParams.accountNumber }
+func (f *Factory) Sequence() uint64                   { return f.txParams.sequence }
+func (f *Factory) Gas() uint64                        { return f.txParams.gas }
+func (f *Factory) GasAdjustment() float64             { return f.txParams.gasAdjustment }
+func (f *Factory) Keybase() keyring.Keyring           { return f.keybase }
+func (f *Factory) ChainID() string                    { return f.txParams.chainID }
+func (f *Factory) Memo() string                       { return f.txParams.memo }
+func (f *Factory) Fees() []*base.Coin                 { return f.txParams.fees }
+func (f *Factory) GasPrices() []*base.DecCoin         { return f.txParams.gasPrices }
+func (f *Factory) AccountRetriever() AccountRetriever { return f.accountRetriever }
+func (f *Factory) TimeoutHeight() uint64              { return f.txParams.timeoutHeight }
+func (f *Factory) FromName() string                   { return f.txParams.fromName }
+func (f *Factory) SimulateAndExecute() bool           { return f.txParams.simulateAndExecute }
+func (f *Factory) SignMode() apitxsigning.SignMode    { return f.txParams.signMode }
 
 // getSimPK gets the public key to use for building a simulation tx.
 // Note, we should only check for keys in the keybase if we are in simulate and execute mode,
 // e.g. when using --gas=auto.
 // When using --dry-run, we are is simulation mode only and should not check the keybase.
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/11283
-func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
+func (f *Factory) getSimPK() (cryptotypes.PubKey, error) {
 	var (
 		err error
 		pk  cryptotypes.PubKey = &secp256k1.PubKey{}
@@ -496,7 +513,7 @@ func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 
 // getSimSignatureData based on the pubKey type gets the correct SignatureData type
 // to use for building a simulation tx.
-func (f Factory) getSimSignatureData(pk cryptotypes.PubKey) SignatureData {
+func (f *Factory) getSimSignatureData(pk cryptotypes.PubKey) SignatureData {
 	multisigPubKey, ok := pk.(*multisig.LegacyAminoPubKey)
 	if !ok {
 		return &SingleSignatureData{SignMode: f.txParams.signMode}

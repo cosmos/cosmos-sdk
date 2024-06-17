@@ -1,6 +1,7 @@
 module cosmossdk.io/indexer/base
 
-// NOTE: this go.mod should have zero dependencies and remain on an older version of Go
-// to be compatible with legacy codebases.
+// NOTE: this go.mod should have zero dependencies and remain on go 1.12 to stay compatible
+// with all known production releases of the Cosmos SDK. This is to ensure that all historical
+// apps could be patched to support indexing if desired.
 
-go 1.19
+go 1.12

@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	mathrand "math/rand"
 	"strings"
 	"testing"
+	"unsafe"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -16,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32" //nolint:staticcheck // we're using this to support the legacy way of dealing with bech32
 )
 
@@ -53,9 +56,18 @@ var invalidStrs = []string{
 
 func (s *addressTestSuite) testMarshal(original, res interface{}, marshal func() ([]byte, error), unmarshal func([]byte) error) {
 	bz, err := marshal()
-	s.Require().Nil(err)
-	s.Require().Nil(unmarshal(bz))
+	s.Require().NoError(err)
+	s.Require().NoError(unmarshal(bz))
 	s.Require().Equal(original, res)
+}
+
+func testMarshalYAML(t *testing.T, original, res interface{}, marshal func() (interface{}, error), unmarshal func([]byte) error) {
+	t.Helper()
+	bz, err := marshal()
+
+	require.NoError(t, err)
+	require.NoError(t, unmarshal([]byte(bz.(string))))
+	require.Equal(t, original, res)
 }
 
 func (s *addressTestSuite) TestEmptyAddresses() {
@@ -109,24 +121,40 @@ func (s *addressTestSuite) TestRandBech32AccAddrConsistency() {
 
 		str := acc.String()
 		res, err = types.AccAddressFromBech32(str)
-		s.Require().Nil(err)
+		s.Require().NoError(err)
 		s.Require().Equal(acc, res)
 
 		str = hex.EncodeToString(acc)
 		res, err = types.AccAddressFromHexUnsafe(str)
-		s.Require().Nil(err)
+		s.Require().NoError(err)
 		s.Require().Equal(acc, res)
 	}
 
 	for _, str := range invalidStrs {
 		_, err := types.AccAddressFromHexUnsafe(str)
-		s.Require().NotNil(err)
+		s.Require().Error(err)
 
 		_, err = types.AccAddressFromBech32(str)
-		s.Require().NotNil(err)
+		s.Require().Error(err)
 
 		err = (*types.AccAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
-		s.Require().NotNil(err)
+		s.Require().Error(err)
+	}
+
+	_, err := types.AccAddressFromHexUnsafe("")
+	s.Require().Equal(types.ErrEmptyHexAddress, err)
+}
+
+func (s *addressTestSuite) TestUnmarshalYAMLWithInvalidInput() {
+	for _, str := range invalidStrs {
+		_, err := types.AccAddressFromHexUnsafe(str)
+		s.Require().Error(err)
+
+		_, err = types.AccAddressFromBech32(str)
+		s.Require().Error(err)
+
+		err = (*types.AccAddress)(nil).UnmarshalYAML([]byte("\"" + str + "\""))
+		s.Require().Error(err)
 	}
 
 	_, err := types.AccAddressFromHexUnsafe("")
@@ -219,25 +247,25 @@ func (s *addressTestSuite) TestValAddr() {
 
 		str := acc.String()
 		res, err = types.ValAddressFromBech32(str)
-		s.Require().Nil(err)
+		s.Require().NoError(err)
 		s.Require().Equal(acc, res)
 
 		str = hex.EncodeToString(acc)
 		res, err = types.ValAddressFromHex(str)
-		s.Require().Nil(err)
+		s.Require().NoError(err)
 		s.Require().Equal(acc, res)
 
 	}
 
 	for _, str := range invalidStrs {
 		_, err := types.ValAddressFromHex(str)
-		s.Require().NotNil(err)
+		s.Require().Error(err)
 
 		_, err = types.ValAddressFromBech32(str)
-		s.Require().NotNil(err)
+		s.Require().Error(err)
 
 		err = (*types.ValAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
-		s.Require().NotNil(err)
+		s.Require().Error(err)
 	}
 
 	// test empty string
@@ -260,24 +288,24 @@ func (s *addressTestSuite) TestConsAddress() {
 
 		str := acc.String()
 		res, err = types.ConsAddressFromBech32(str)
-		s.Require().Nil(err)
+		s.Require().NoError(err)
 		s.Require().Equal(acc, res)
 
 		str = hex.EncodeToString(acc)
 		res, err = types.ConsAddressFromHex(str)
-		s.Require().Nil(err)
+		s.Require().NoError(err)
 		s.Require().Equal(acc, res)
 	}
 
 	for _, str := range invalidStrs {
 		_, err := types.ConsAddressFromHex(str)
-		s.Require().NotNil(err)
+		s.Require().Error(err)
 
 		_, err = types.ConsAddressFromBech32(str)
-		s.Require().NotNil(err)
+		s.Require().Error(err)
 
 		err = (*types.ConsAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
-		s.Require().NotNil(err)
+		s.Require().Error(err)
 	}
 
 	// test empty string
@@ -367,13 +395,13 @@ func (s *addressTestSuite) TestAddressInterface() {
 		switch addr := addr.(type) {
 		case types.AccAddress:
 			_, err := types.AccAddressFromBech32(addr.String())
-			s.Require().Nil(err)
+			s.Require().NoError(err)
 		case types.ValAddress:
 			_, err := types.ValAddressFromBech32(addr.String())
-			s.Require().Nil(err)
+			s.Require().NoError(err)
 		case types.ConsAddress:
 			_, err := types.ConsAddressFromBech32(addr.String())
-			s.Require().Nil(err)
+			s.Require().NoError(err)
 		default:
 			s.T().Fail()
 		}
@@ -507,15 +535,234 @@ func (s *addressTestSuite) TestGetFromBech32() {
 	s.Require().Equal("invalid Bech32 prefix; expected x, got cosmos", err.Error())
 }
 
-func (s *addressTestSuite) TestMustAccAddressFromBech32() {
-	bech32PrefixValAddr := types.GetConfig().GetBech32ValidatorAddrPrefix()
-	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
-	address := types.MustBech32ifyAddressBytes(bech32PrefixValAddr, addr20byte)
-
-	valAddress1, err := types.ValAddressFromBech32(address)
-	s.Require().Nil(err)
-
-	valAddress2 := types.MustValAddressFromBech32(address)
+func (s *addressTestSuite) TestMustValAddressFromBech32() {
+	valAddress1 := types.ValAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
+	valAddress2 := types.MustValAddressFromBech32(valAddress1.String())
 
 	s.Require().Equal(valAddress1, valAddress2)
+}
+
+func (s *addressTestSuite) TestMustValAddressFromBech32Panic() {
+	s.Require().Panics(func() {
+		types.MustValAddressFromBech32("")
+	})
+}
+
+func (s *addressTestSuite) TestGetBech32PrefixAccPub() {
+	actual := types.GetBech32PrefixAccPub("")
+	s.Require().Equal("pub", actual)
+
+	actual = types.GetBech32PrefixAccPub("cosmos")
+	s.Require().Equal("cosmospub", actual)
+}
+
+func (s *addressTestSuite) TestGetBech32PrefixValAddress() {
+	actual := types.GetBech32PrefixValAddr("")
+	s.Require().Equal("valoper", actual)
+
+	actual = types.GetBech32PrefixValAddr("cosmos1")
+	s.Require().Equal("cosmos1valoper", actual)
+}
+
+func (s *addressTestSuite) TestGetBech32PrefixValPub() {
+	actual := types.GetBech32PrefixValPub("")
+	s.Require().Equal("valoperpub", actual)
+
+	actual = types.GetBech32PrefixValPub("cosmos2")
+	s.Require().Equal("cosmos2valoperpub", actual)
+}
+
+func (s *addressTestSuite) TestGetBech32PrefixConsAddr() {
+	actual := types.GetBech32PrefixConsAddr("")
+	s.Require().Equal("valcons", actual)
+
+	actual = types.GetBech32PrefixConsAddr("cosmos3")
+	s.Require().Equal("cosmos3valcons", actual)
+}
+
+func (s *addressTestSuite) TestGetBech32PrefixConsPub() {
+	actual := types.GetBech32PrefixConsPub("")
+	s.Require().Equal("valconspub", actual)
+
+	actual = types.GetBech32PrefixConsPub("cosmos4")
+	s.Require().Equal("cosmos4valconspub", actual)
+}
+
+func (s *addressTestSuite) TestMustAccAddressFromBech32() {
+	accAddress1 := types.AccAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
+	accAddress2 := types.MustAccAddressFromBech32(accAddress1.String())
+	s.Require().Equal(accAddress1, accAddress2)
+}
+
+func (s *addressTestSuite) TestMustAccAddressFromBech32Panic() {
+	s.Require().Panics(func() {
+		types.MustAccAddressFromBech32("no-valid")
+	})
+}
+
+func (s *addressTestSuite) TestUnmarshalJSONAccAddressFailed() {
+	addr := &types.AccAddress{}
+	err := addr.UnmarshalJSON(nil)
+	s.Require().Error(err)
+}
+
+func (s *addressTestSuite) TestUnmarshalJSONAccAddressWithEmptyString() {
+	addr := &types.AccAddress{}
+	err := addr.UnmarshalJSON([]byte{34, 34})
+	s.Require().NoError(err)
+	s.Require().Equal(&types.AccAddress{}, addr)
+}
+
+func (s *addressTestSuite) TestUnmarshalYAMLAccAddressFailed() {
+	malformedYAML := []byte("k:k:K:")
+	addr := &types.AccAddress{}
+	err := addr.UnmarshalYAML(malformedYAML)
+	s.Require().Error(err)
+}
+
+func (s *addressTestSuite) TestUnmarshalYAMLAccAddressWithEmptyString() {
+	addr := &types.AccAddress{}
+	err := addr.UnmarshalYAML([]byte{34, 34})
+	s.Require().NoError(err)
+	s.Require().Equal(&types.AccAddress{}, addr)
+}
+
+func (s *addressTestSuite) TestFormatAccAddressAsString() {
+	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
+	accAddr := types.AccAddress(addr20byte)
+
+	actual := fmt.Sprintf("%s", accAddr) // this will call internally  the method AccAddress.Format
+
+	hrp := types.GetConfig().GetBech32AccountAddrPrefix()
+	expected, err := bech32.ConvertAndEncode(hrp, addr20byte)
+	s.Require().NoError(err)
+	s.Require().Equal(expected, actual)
+}
+
+func (s *addressTestSuite) TestFormatAccAddressAsPointer() {
+	accAddr := types.AccAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
+	ptrAddr := &accAddr
+	actual := fmt.Sprintf("%p", ptrAddr) // this will call internally  the method AccAddress.Format
+	expected := fmt.Sprintf("0x%x", uintptr(unsafe.Pointer(&accAddr)))
+	s.Require().Equal(expected, actual)
+}
+
+func (s *addressTestSuite) TestFormatAccAddressWhenVerbIsDifferentFromSOrP() {
+	myAddr := types.AccAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20})
+	exp := "000102030405060708090A0B0C0D0E0F10111214"
+	spec := []string{"%v", "%#v", "%t", "%b", "%c", "%d", "%o", "%O", "%x", "%X", "%U", "%e", "%E", "%f", "%F", "%g", "%G"}
+	for _, v := range spec {
+		s.Require().Equal(exp, fmt.Sprintf(v, myAddr), v)
+	}
+}
+
+func (s *addressTestSuite) TestUnmarshalJSONValAddressFailed() {
+	addr := &types.ValAddress{}
+	err := addr.UnmarshalJSON(nil)
+	s.Require().Error(err)
+}
+
+func (s *addressTestSuite) TestUnmarshalJSONValAddressWithEmptyString() {
+	addr := &types.ValAddress{}
+	err := addr.UnmarshalJSON([]byte{34, 34})
+	s.Require().NoError(err)
+	s.Require().Equal(&types.ValAddress{}, addr)
+}
+
+func (s *addressTestSuite) TestUnmarshalYAMLValAddressFailed() {
+	malformedYAML := []byte("k:k:K:")
+	addr := &types.ValAddress{}
+	err := addr.UnmarshalYAML(malformedYAML)
+	s.Require().Error(err)
+}
+
+func (s *addressTestSuite) TestUnmarshalYAMLValAddressWithEmptyString() {
+	addr := &types.ValAddress{}
+	err := addr.UnmarshalYAML([]byte{34, 34})
+	s.Require().NoError(err)
+	s.Require().Equal(&types.ValAddress{}, addr)
+}
+
+func (s *addressTestSuite) TestFormatValAddressAsString() {
+	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
+	accAddr := types.ValAddress(addr20byte)
+
+	actual := fmt.Sprintf("%s", accAddr)
+
+	hrp := types.GetConfig().GetBech32ValidatorAddrPrefix()
+	expected, err := bech32.ConvertAndEncode(hrp, addr20byte)
+	s.Require().NoError(err)
+	s.Require().Equal(expected, actual)
+}
+
+func (s *addressTestSuite) TestFormatValAddressAsPointer() {
+	accAddr := types.AccAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
+	ptrAddr := &accAddr
+	actual := fmt.Sprintf("%p", ptrAddr)
+	expected := uintptr(unsafe.Pointer(&accAddr))
+	s.Require().Equal(fmt.Sprintf("0x%x", expected), actual)
+}
+
+func (s *addressTestSuite) TestFormatValAddressWhenVerbIsDifferentFromSOrP() {
+	myAddr := types.ValAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
+	exp := "000102030405060708090A0B0C0D0E0F10111213"
+	spec := []string{"%v", "%#v", "%t", "%b", "%c", "%d", "%o", "%O", "%x", "%X", "%U", "%e", "%E", "%f", "%F", "%g", "%G"}
+	for _, v := range spec {
+		s.Require().Equal(exp, fmt.Sprintf(v, myAddr), v)
+	}
+}
+
+func (s *addressTestSuite) TestUnmarshalJSONConsAddressFailed() {
+	addr := &types.ConsAddress{}
+	err := addr.UnmarshalJSON(nil)
+	s.Require().Error(err)
+}
+
+func (s *addressTestSuite) TestUnmarshalJSONConsAddressWithEmptyString() {
+	addr := &types.ConsAddress{}
+	err := addr.UnmarshalJSON([]byte{34, 34})
+	s.Require().NoError(err)
+	s.Require().Equal(&types.ConsAddress{}, addr)
+}
+
+func (s *addressTestSuite) TestUnmarshalYAMLConsAddressFailed() {
+	malformedYAML := []byte("k:k:K:")
+	addr := &types.ConsAddress{}
+	err := addr.UnmarshalYAML(malformedYAML)
+	s.Require().Error(err)
+}
+
+func (s *addressTestSuite) TestUnmarshalYAMLConsAddressWithEmptyString() {
+	addr := &types.ConsAddress{}
+	err := addr.UnmarshalYAML([]byte{34, 34})
+	s.Require().NoError(err)
+	s.Require().Equal(&types.ConsAddress{}, addr)
+}
+
+func (s *addressTestSuite) TestFormatConsAddressAsString() {
+	consAddr := types.ConsAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
+	actual := fmt.Sprintf("%s", consAddr)
+
+	hrp := types.GetConfig().GetBech32ConsensusAddrPrefix()
+	expected, err := bech32.ConvertAndEncode(hrp, consAddr)
+	s.Require().NoError(err)
+	s.Require().Equal(expected, actual)
+}
+
+func (s *addressTestSuite) TestFormatConsAddressAsPointer() {
+	consAddr := types.ConsAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
+
+	ptrAddr := &consAddr
+	actual := fmt.Sprintf("%p", ptrAddr)
+	expected := uintptr(unsafe.Pointer(&consAddr))
+	s.Require().Equal(fmt.Sprintf("0x%x", expected), actual)
+}
+
+func (s *addressTestSuite) TestFormatConsAddressWhenVerbIsDifferentFromSOrP() {
+	myAddr := types.ConsAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
+	exp := "000102030405060708090A0B0C0D0E0F10111213"
+	spec := []string{"%v", "%#v", "%t", "%b", "%c", "%d", "%o", "%O", "%x", "%X", "%U", "%e", "%E", "%f", "%F", "%g", "%G"}
+	for _, v := range spec {
+		s.Require().Equal(exp, fmt.Sprintf(v, myAddr), v)
+	}
 }

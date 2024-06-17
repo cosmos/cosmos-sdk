@@ -30,4 +30,5 @@ type FeegrantKeeper interface {
 
 type ConsensusKeeper interface {
 	Params(context.Context, *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error)
+	GetCometInfo(context.Context, *consensustypes.QueryGetCometInfoRequest) (*consensustypes.QueryGetCometInfoResponse, error)
 }

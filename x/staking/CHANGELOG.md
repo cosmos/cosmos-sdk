@@ -31,6 +31,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#19918](https://github.com/cosmos/cosmos-sdk/pull/19918) Reduce key rotation iterate in `RotateConsPubKey`, use instead one rotation for the unbonding period.
+
 * [#19779](https://github.com/cosmos/cosmos-sdk/pull/19779) Allows for setting `unbonding_time` to zero.
 
 * [#19277](https://github.com/cosmos/cosmos-sdk/pull/19277) Hooks calls on `SetUnbondingDelegationEntry`, `SetRedelegationEntry`, `Slash` and `RemoveValidator` returns errors instead of logging just like other hooks calls.

@@ -30,6 +30,8 @@ func columnType(field indexerbase.Field) (string, error) {
 		return "BIGINT", nil
 	case indexerbase.Uint64Kind:
 		return "NUMERIC", nil
+	case indexerbase.IntegerKind:
+		return "NUMERIC", nil
 	case indexerbase.DecimalKind:
 		return "NUMERIC", nil
 	case indexerbase.Float32Kind:

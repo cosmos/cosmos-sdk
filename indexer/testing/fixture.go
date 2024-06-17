@@ -187,7 +187,6 @@ func mkAllKeysModule(src rand.Source) *testModule {
 
 func mkTestObjectType(kind indexerbase.Kind) indexerbase.ObjectType {
 	field := indexerbase.Field{
-		Name: fmt.Sprintf("test_%v", kind),
 		Kind: kind,
 	}
 
@@ -211,7 +210,7 @@ func mkTestObjectType(kind indexerbase.Kind) indexerbase.ObjectType {
 	val2Field.Nullable = true
 
 	return indexerbase.ObjectType{
-		Name:        fmt.Sprintf("test_%v", kind),
+		Name:        fmt.Sprintf("test_%#v", kind),
 		KeyFields:   []indexerbase.Field{key1Field, key2Field},
 		ValueFields: []indexerbase.Field{val1Field, val2Field},
 	}

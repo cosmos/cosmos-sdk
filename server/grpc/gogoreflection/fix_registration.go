@@ -3,9 +3,10 @@ package gogoreflection
 import (
 	"reflect"
 
-	_ "github.com/cosmos/cosmos-proto"        // look above
 	_ "github.com/cosmos/gogoproto/gogoproto" // required so it does register the gogoproto file descriptor
 	gogoproto "github.com/cosmos/gogoproto/proto"
+
+	_ "github.com/cosmos/cosmos-proto" // look above
 	"github.com/golang/protobuf/proto" //nolint:staticcheck // migrate in a future pr
 )
 

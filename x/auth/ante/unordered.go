@@ -60,11 +60,6 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 		return next(ctx, tx, false)
 	}
 
-	feetx := tx.(sdk.FeeTx)
-	if feetx.GetFee().IsZero() {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction must have a fee")
-	}
-
 	// TTL is defined as a specific block height at which this tx is no longer valid
 	ttl := unorderedTx.GetTimeoutHeight()
 
@@ -78,39 +73,11 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unordered tx ttl exceeds %d", d.maxUnOrderedTTL)
 	}
 
-	// in order to create a deterministic hash based on the tx, we need to hash the contents of the tx with signature
-	// Get a Buffer from the pool
-	buf := bufPool.Get().(*bytes.Buffer)
-	// Make sure to reset the buffer
-	buf.Reset()
-
-	// Use the buffer
-	for _, msg := range tx.GetMsgs() {
-		// loop through the messages and write them to the buffer
-		// encoding the msg to bytes makes it deterministic within the state machine.
-		// Malleability is not a concern here because the state machine will encode the transaction deterministically.
-		bz, err := proto.Marshal(msg)
-		if err != nil {
-			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshal message")
-		}
-
-		buf.Write(bz)
+	// calculate the tx hash
+	txHash, err := txIdentifier(ttl, tx)
+	if err != nil {
+		return ctx, err
 	}
-
-	// write the timeout height to the buffer
-	if err := binary.Write(buf, binary.LittleEndian, unorderedTx.GetTimeoutHeight()); err != nil {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to write timeout_height to buffer")
-	}
-
-	// write gas to the buffer
-	if err := binary.Write(buf, binary.LittleEndian, feetx.GetGas()); err != nil {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to write unordered to buffer")
-	}
-
-	txHash := sha256.Sum256(buf.Bytes())
-
-	// Return the Buffer to the pool
-	bufPool.Put(buf)
 
 	// check for duplicates
 	if d.txManager.Contains(txHash) {
@@ -123,4 +90,45 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 	}
 
 	return next(ctx, tx, false)
+}
+
+// txIdentifier returns a unique identifier for a transaction that is intended to be unordered.
+func txIdentifier(timeout uint64, tx sdk.Tx) ([32]byte, error) {
+	feetx := tx.(sdk.FeeTx)
+	if feetx.GetFee().IsZero() {
+		return [32]byte{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction must have a fee")
+	}
+
+	buf := bufPool.Get().(*bytes.Buffer)
+	// Make sure to reset the buffer
+	buf.Reset()
+
+	// Use the buffer
+	for _, msg := range tx.GetMsgs() {
+		// loop through the messages and write them to the buffer
+		// encoding the msg to bytes makes it deterministic within the state machine.
+		// Malleability is not a concern here because the state machine will encode the transaction deterministically.
+		bz, err := proto.Marshal(msg)
+		if err != nil {
+			return [32]byte{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshal message")
+		}
+
+		buf.Write(bz)
+	}
+
+	// write the timeout height to the buffer
+	if err := binary.Write(buf, binary.LittleEndian, timeout); err != nil {
+		return [32]byte{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to write timeout_height to buffer")
+	}
+
+	// write gas to the buffer
+	if err := binary.Write(buf, binary.LittleEndian, feetx.GetGas()); err != nil {
+		return [32]byte{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to write unordered to buffer")
+	}
+
+	txHash := sha256.Sum256(buf.Bytes())
+
+	// Return the Buffer to the pool
+	bufPool.Put(buf)
+	return txHash, nil
 }

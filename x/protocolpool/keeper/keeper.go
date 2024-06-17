@@ -205,11 +205,20 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 		return err
 	}
 
-	totalStreamFundsPercentage, err := k.TotalFundPercentage.Get(ctx)
+	var totalStreamFundsPercentage math.Int
+	hasTotalFund, err := k.TotalFundPercentage.Has(ctx)
 	if err != nil {
-		// If TotalFundPercentage not set, set it to zero
-		totalStreamFundsPercentage = math.ZeroInt()
+		return err
 	}
+	if !hasTotalFund {
+		totalStreamFundsPercentage = math.ZeroInt()
+	} else {
+		totalStreamFundsPercentage, err = k.TotalFundPercentage.Get(ctx)
+		if err != nil {
+			return err
+		}
+	}
+
 	if totalStreamFundsPercentage.GT(math.NewInt(100)) {
 		return fmt.Errorf("total funds percentage cannot exceed 100")
 	}

@@ -124,13 +124,20 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 		return nil, err
 	}
 
-	// Check if total funds percentage exceeds 100%
-	// If exceeds, we should not setup continuous fund proposal.
-	totalStreamFundsPercentage, err := k.TotalFundPercentage.Get(ctx)
+	var totalStreamFundsPercentage math.Int
+	hasTotalFund, err := k.TotalFundPercentage.Has(ctx)
 	if err != nil {
-		// If TotalFundPercentage not set, set it to zero
-		totalStreamFundsPercentage = math.ZeroInt()
+		return nil, err
 	}
+	if !hasTotalFund {
+		totalStreamFundsPercentage = math.ZeroInt()
+	} else {
+		totalStreamFundsPercentage, err = k.TotalFundPercentage.Get(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	percentage := msg.Percentage.MulInt64(100)
 	totalStreamFundsPercentage = totalStreamFundsPercentage.Add(percentage.TruncateInt())
 	if totalStreamFundsPercentage.GT(math.NewInt(100)) {

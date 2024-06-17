@@ -493,7 +493,10 @@ func (app *BaseApp) setState(mode execMode, h cmtproto.Header) {
 
 	switch mode {
 	case execModeCheck:
-		baseState.SetContext(baseState.Context().WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices))
+		// should take a snapshot of the multistore and cache it
+		// to prevent state corruption during checktx or simulate.
+		baseState.ms, _ = app.cms.CacheMultiStoreWithVersion(app.cms.LatestVersion())
+		baseState.SetContext(baseState.Context().WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices).WithMultiStore(baseState.ms))
 		app.checkState = baseState
 
 	case execModePrepareProposal:
@@ -677,12 +680,6 @@ func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 	}
 
 	if mode == execModeSimulate {
-		// cache multistore seems throwing panic when we try to cache already cached multistore
-		cmsWithVersion, err := app.cms.CacheMultiStoreWithVersion(ctx.BlockHeight())
-		if err == nil {
-			ctx = ctx.WithMultiStore(cmsWithVersion)
-		}
-
 		ctx, _ = ctx.CacheContext()
 	}
 

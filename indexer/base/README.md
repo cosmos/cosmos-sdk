@@ -28,23 +28,3 @@ sequenceDiagram
 ```
 
 Sources will generally only call `InitializeModuleSchema` and `OnObjectUpdate` if they have native logical decoding capabilities. Usually, the indexer framework will provide this functionality based on `OnKVPair` data and `IndexableModule` implementations.
-
-## `ModuleSchema`, `ObjectType` and `ObjectUpdate`s
-
-```mermaid
-classDiagram
-    class ModuleSchema
-    ModuleSchema --* ObjectType
-
-    class ObjectType {
-        Name string
-        RetainDeletions bool
-    }
-    ObjectType --* Field: KeyFields
-    ObjectType --* Field: ValueFields
-
-    class Field {
-        Name string
-        Kind Kind
-    }
-```

@@ -44,12 +44,13 @@ Implementation of Callback Functions:
 
 ```go
 type BankKeeper struct {
-    OnMint func(ctx sdk.Context, addr sdk.AccAddress, amount sdk.Coin) error
-    OnBurn func(ctx sdk.Context, addr sdk.AccAddress, amount sdk.Coin) error
-    OnTransfer func(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amount sdk.Coin) error
+    OnMint func(ctx context.Context, addr []byte, amount sdk.Coin) error
+    OnBurn func(ctx context.Context, addr []byte, amount sdk.Coin) error
+    OnTransfer func(ctx context.Context, fromAddr, toAddr []byte, amount sdk.Coin) error
+    OnBalanceOf func(ctx context.Context, addr []byte, denom string) (sdk.Coins, error)
 }
 
-func (k *BankKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error {
+func (k *BankKeeper) MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error {
     if k.OnMint != nil {
         if err := k.OnMint(ctx, moduleName, amt); err != nil {
             return err
@@ -57,7 +58,7 @@ func (k *BankKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins
     }
 }
 
-func (k *BankKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error {
+func (k *BankKeeper) BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error {
     if k.OnBurn != nil {
         if err := k.OnBurn(ctx, moduleName, amt); err != nil {
             return err
@@ -65,11 +66,22 @@ func (k *BankKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins
     }
 }
 
-func (k *BankKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
+func (k *BankKeeper) SendCoins(ctx context.Context, fromAddr, toAddr []byte, amt sdk.Coins) error {
     if k.OnTransfer != nil {
         if err := k.OnTransfer(ctx, fromAddr, toAddr, amt); err != nil {
             return err
         }
+    }
+}
+
+func (k *BankKeeper) GetBalance(ctx context.Context, addr []byte, denom string) (sdk.Coins, error) {
+    if k.OnBalanceOf != nil {
+        coins, err := k.OnBalanceOf(ctx, addr, denom);
+        if err != nil {
+            return nil, err
+        }
+
+        return coins, err
     }
 }
 ```

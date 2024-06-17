@@ -11,6 +11,7 @@ import (
 )
 
 type IndexingOptions struct {
+	RetainDeletionsFor []string
 }
 
 func (s Schema) ModuleDecoder(opts IndexingOptions) (indexerbase.ModuleDecoder, error) {
@@ -118,7 +119,7 @@ func extractFields(x any) ([]indexerbase.Field, func(any) any) {
 		return hasSchema.SchemaFields(), nil
 	}
 
-	ty := indexerbase.TypeForGoValue(x)
+	ty := indexerbase.KindForGoValue(x)
 	if ty > 0 {
 		return []indexerbase.Field{{Kind: ty}}, nil
 	}
@@ -155,7 +156,7 @@ func (c collectionImpl[K, V]) decodeKVPair(key, value []byte, delete bool) (inde
 	key = key[len(c.GetPrefix()):]
 	var k any
 	var err error
-	if decodeAny, ok := c.m.kc.(DecodeIndexable); ok {
+	if decodeAny, ok := c.m.kc.(IndexableCodec); ok {
 		k, err = decodeAny.DecodeIndexable(key)
 	} else {
 		_, k, err = c.m.kc.Decode(key)
@@ -175,7 +176,7 @@ func (c collectionImpl[K, V]) decodeKVPair(key, value []byte, delete bool) (inde
 	}
 
 	var v any
-	if decodeAny, ok := c.m.vc.(DecodeIndexable); ok {
+	if decodeAny, ok := c.m.vc.(IndexableCodec); ok {
 		v, err = decodeAny.DecodeIndexable(value)
 	} else {
 		v, err = c.m.vc.Decode(value)

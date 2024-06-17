@@ -90,6 +90,12 @@ type Collection interface {
 	ValueCodec() codec.UntypedValueCodec
 
 	genesisHandler
+
+	getTableSchema() indexerbase.Table
+
+	decodeKVPair(key, value []byte, delete bool) (indexerbase.EntityUpdate, bool, error)
+
+	isIndex() bool
 }
 
 // Prefix defines a segregation bytes namespace for specific collections objects.

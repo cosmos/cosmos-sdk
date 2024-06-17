@@ -2,20 +2,6 @@ package indexerbase
 
 import "sort"
 
-type DecoderResolver interface {
-	// Iterate iterates over all module decoders which should be initialized at startup.
-	Iterate(func(string, ModuleDecoder) error) error
-
-	// LookupDecoder allows for resolving decoders dynamically. For instance, some module-like
-	// things may come into existence dynamically (like x/accounts or EVM or WASM contracts).
-	// The first time the manager sees one of these appearing in KV-store writes, it will
-	// lookup a decoder for it and cache it for future use. The manager will also perform
-	// a catch-up sync before passing any new writes to ensure that all historical state has
-	// been synced if there is any This check will only happen the first time a module is seen
-	// by the manager in a given process (a process restart will cause this check to happen again).
-	LookupDecoder(moduleName string) (decoder ModuleDecoder, found bool, err error)
-}
-
 // DecodableModule is an interface that modules can implement to provide a ModuleDecoder.
 // Usually these modules would also implement appmodule.AppModule, but that is not included
 type DecodableModule interface {
@@ -39,21 +25,35 @@ type ModuleDecoder struct {
 // If the KV-pair doesn't represent an object update, the function should return false
 // as the second return value. Error should only be non-nil when the decoder expected
 // to parse a valid update and was unable to.
-type KVDecoder = func(key, value []byte) (ObjectUpdate, bool, error)
+type KVDecoder = func(key, value []byte, deleted bool) (ObjectUpdate, bool, error)
 
-type appModuleDecoderResolver[ModuleT any] struct {
-	moduleSet map[string]ModuleT
+type DecoderResolver interface {
+	// Iterate iterates over all module decoders which should be initialized at startup.
+	Iterate(func(string, ModuleDecoder) error) error
+
+	// LookupDecoder allows for resolving decoders dynamically. For instance, some module-like
+	// things may come into existence dynamically (like x/accounts or EVM or WASM contracts).
+	// The first time the manager sees one of these appearing in KV-store writes, it will
+	// lookup a decoder for it and cache it for future use. The manager will also perform
+	// a catch-up sync before passing any new writes to ensure that all historical state has
+	// been synced if there is any This check will only happen the first time a module is seen
+	// by the manager in a given process (a process restart will cause this check to happen again).
+	LookupDecoder(moduleName string) (decoder ModuleDecoder, found bool, err error)
 }
 
-// NewAppModuleDecoderResolver returns DecoderResolver that will discover modules implementing
+type moduleSetDecoderResolver struct {
+	moduleSet map[string]interface{}
+}
+
+// ModuleSetDecoderResolver returns DecoderResolver that will discover modules implementing
 // DecodeableModule in the provided module set.
-func NewAppModuleDecoderResolver[ModuleT any](moduleSet map[string]ModuleT) DecoderResolver {
-	return &appModuleDecoderResolver[ModuleT]{
+func ModuleSetDecoderResolver(moduleSet map[string]interface{}) DecoderResolver {
+	return &moduleSetDecoderResolver{
 		moduleSet: moduleSet,
 	}
 }
 
-func (a appModuleDecoderResolver[ModuleT]) Iterate(f func(string, ModuleDecoder) error) error {
+func (a moduleSetDecoderResolver) Iterate(f func(string, ModuleDecoder) error) error {
 	keys := make([]string, 0, len(a.moduleSet))
 	for k := range a.moduleSet {
 		keys = append(keys, k)
@@ -76,7 +76,7 @@ func (a appModuleDecoderResolver[ModuleT]) Iterate(f func(string, ModuleDecoder)
 	return nil
 }
 
-func (a appModuleDecoderResolver[ModuleT]) LookupDecoder(moduleName string) (ModuleDecoder, bool, error) {
+func (a moduleSetDecoderResolver) LookupDecoder(moduleName string) (ModuleDecoder, bool, error) {
 	mod, ok := a.moduleSet[moduleName]
 	if !ok {
 		return ModuleDecoder{}, false, nil

@@ -4,9 +4,10 @@ type Manager struct {
 	logger              Logger
 	decoderResolver     DecoderResolver
 	decoders            map[string]KVDecoder
-	listeners           []Listener
 	needLogicalDecoding bool
 	listener            Listener
+	listenerProcesses   []*listenerProcess
+	done                chan struct{}
 }
 
 // ManagerOptions are the options for creating a new Manager.
@@ -17,13 +18,17 @@ type ManagerOptions struct {
 	// Listeners are the listeners that will be called when the manager receives events.
 	Listeners []Listener
 
-	// CatchUpSource is the source that will be used do initial indexing of modules with pre-existing
+	// SyncSource is the source that will be used do initial indexing of modules with pre-existing
 	// state. It is optional, but if it is not provided, indexing can only be starting when a node
 	// is synced from genesis.
-	CatchUpSource CatchUpSource
+	SyncSource SyncSource
 
 	// Logger is the logger that will be used by the manager. It is optional.
 	Logger Logger
+
+	BufferSize int
+
+	Done chan struct{}
 }
 
 // NewManager creates a new Manager with the provided options.
@@ -32,13 +37,23 @@ func NewManager(opts ManagerOptions) (*Manager, error) {
 		opts.Logger.Info("Initializing indexer manager")
 	}
 
+	done := opts.Done
+	if done == nil {
+		done = make(chan struct{})
+	}
+
 	mgr := &Manager{
 		logger:              opts.Logger,
 		decoderResolver:     opts.DecoderResolver,
 		decoders:            map[string]KVDecoder{},
-		listeners:           opts.Listeners,
 		needLogicalDecoding: false,
 		listener:            Listener{},
+		done:                done,
+	}
+
+	err := mgr.init(opts.Listeners)
+	if err != nil {
+		return nil, err
 	}
 
 	return mgr, nil
@@ -46,46 +61,46 @@ func NewManager(opts ManagerOptions) (*Manager, error) {
 
 // Listener returns that listener that should be passed directly to the blockchain for managing
 // all indexing.
-func (p *Manager) init() error {
+func (p *Manager) init(listeners []Listener) error {
 	// check each subscribed listener to see if we actually need to register the listener
 
-	for _, listener := range p.listeners {
+	for _, listener := range listeners {
 		if listener.StartBlock != nil {
 			p.listener.StartBlock = p.startBlock
 			break
 		}
 	}
 
-	for _, listener := range p.listeners {
+	for _, listener := range listeners {
 		if listener.OnBlockHeader != nil {
 			p.listener.OnBlockHeader = p.onBlockHeader
 			break
 		}
 	}
 
-	for _, listener := range p.listeners {
+	for _, listener := range listeners {
 		if listener.OnTx != nil {
 			p.listener.OnTx = p.onTx
 			break
 		}
 	}
 
-	for _, listener := range p.listeners {
+	for _, listener := range listeners {
 		if listener.OnEvent != nil {
 			p.listener.OnEvent = p.onEvent
 			break
 		}
 	}
 
-	for _, listener := range p.listeners {
+	for _, listener := range listeners {
 		if listener.Commit != nil {
 			p.listener.Commit = p.commit
 			break
 		}
 	}
 
-	for _, listener := range p.listeners {
-		if listener.OnEntityUpdate != nil {
+	for _, listener := range listeners {
+		if listener.OnObjectUpdate != nil {
 			p.needLogicalDecoding = true
 			p.listener.OnKVPair = p.onKVPair
 			break
@@ -93,7 +108,7 @@ func (p *Manager) init() error {
 	}
 
 	if p.listener.OnKVPair == nil {
-		for _, listener := range p.listeners {
+		for _, listener := range listeners {
 			if listener.OnKVPair != nil {
 				p.listener.OnKVPair = p.onKVPair
 				break
@@ -112,6 +127,21 @@ func (p *Manager) init() error {
 		}
 	}
 
+	// initialize go routines for each listener
+	for _, listener := range listeners {
+		proc := &listenerProcess{
+			listener:       listener,
+			packetChan:     make(chan packet),
+			commitDoneChan: make(chan error),
+		}
+		p.listenerProcesses = append(p.listenerProcesses, proc)
+
+		// TODO initialize
+		// TODO initialize module schema
+
+		go proc.run()
+	}
+
 	return nil
 }
 
@@ -120,12 +150,13 @@ func (p *Manager) startBlock(height uint64) error {
 		p.logger.Debug("start block", "height", height)
 	}
 
-	for _, listener := range p.listeners {
-		if listener.StartBlock == nil {
+	for _, proc := range p.listenerProcesses {
+		if proc.listener.StartBlock != nil {
 			continue
 		}
-		if err := listener.StartBlock(height); err != nil {
-			return err
+		proc.packetChan <- packet{
+			packetType: packetTypeStartBlock,
+			data:       height,
 		}
 	}
 	return nil
@@ -136,35 +167,50 @@ func (p *Manager) onBlockHeader(data BlockHeaderData) error {
 		p.logger.Debug("block header", "height", data.Height)
 	}
 
-	for _, listener := range p.listeners {
-		if listener.OnBlockHeader == nil {
+	for _, proc := range p.listenerProcesses {
+		if proc.listener.OnBlockHeader == nil {
 			continue
 		}
-		if err := listener.OnBlockHeader(data); err != nil {
-			return err
+		proc.packetChan <- packet{
+			packetType: packetTypeOnBlockHeader,
+			data:       data,
 		}
 	}
 	return nil
 }
 
 func (p *Manager) onTx(data TxData) error {
-	for _, listener := range p.listeners {
-		if listener.OnTx == nil {
+	if p.logger != nil {
+		p.logger.Debug("tx", "txIndex", data.TxIndex)
+	}
+
+	for _, proc := range p.listenerProcesses {
+		if proc.listener.OnTx == nil {
 			continue
 		}
-		if err := listener.OnTx(data); err != nil {
-			return err
+		proc.packetChan <- packet{
+			packetType: packetTypeOnTx,
+			data:       data,
 		}
 	}
 	return nil
 }
 
 func (p *Manager) onEvent(data EventData) error {
-	for _, listener := range p.listeners {
-		if err := listener.OnEvent(data); err != nil {
-			return err
+	if p.logger != nil {
+		p.logger.Debug("event", "txIndex", data.TxIndex, "msgIndex", data.MsgIndex, "eventIndex", data.EventIndex)
+	}
+
+	for _, proc := range p.listenerProcesses {
+		if proc.listener.OnEvent == nil {
+			continue
+		}
+		proc.packetChan <- packet{
+			packetType: packetTypeOnEvent,
+			data:       data,
 		}
 	}
+
 	return nil
 }
 
@@ -173,25 +219,39 @@ func (p *Manager) commit() error {
 		p.logger.Debug("commit")
 	}
 
-	for _, listener := range p.listeners {
-		if err := listener.Commit(); err != nil {
+	for _, proc := range p.listenerProcesses {
+		if proc.listener.Commit == nil {
+			continue
+		}
+		proc.packetChan <- packet{
+			packetType: packetTypeCommit,
+		}
+	}
+
+	// wait for all listeners to finish committing
+	for _, proc := range p.listenerProcesses {
+		err := <-proc.commitDoneChan
+		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
-func (p *Manager) onKVPair(moduleName string, key, value []byte, delete bool) error {
+func (p *Manager) onKVPair(data KVPairData) error {
+	moduleName := data.ModuleName
 	if p.logger != nil {
-		p.logger.Debug("kv pair", "moduleName", moduleName, "delete", delete)
+		p.logger.Debug("kv pair received", "moduleName", moduleName)
 	}
 
-	for _, listener := range p.listeners {
-		if listener.OnKVPair == nil {
+	for _, proc := range p.listenerProcesses {
+		if proc.listener.OnKVPair == nil {
 			continue
 		}
-		if err := listener.OnKVPair(moduleName, key, value, delete); err != nil {
-			return err
+		proc.packetChan <- packet{
+			packetType: packetTypeOnKVPair,
+			data:       data,
 		}
 	}
 
@@ -218,29 +278,30 @@ func (p *Manager) onKVPair(moduleName string, key, value []byte, delete bool) er
 		return nil
 	}
 
-	update, handled, err := decoder(key, value)
+	update, handled, err := decoder(data.Key, data.Value, data.Delete)
 	if err != nil {
 		return err
 	}
 	if !handled {
-		p.logger.Info("not decoded", "moduleName", moduleName, "tableName", update.TableName)
+		p.logger.Debug("not decoded", "moduleName", moduleName, "objectType", update.TypeName)
 		return nil
 	}
 
-	p.logger.Info("decoded",
+	p.logger.Debug("decoded",
 		"moduleName", moduleName,
-		"tableName", update.TableName,
+		"objectType", update.TypeName,
 		"key", update.Key,
 		"values", update.Value,
 		"delete", update.Delete,
 	)
 
-	for _, indexer := range p.listeners {
-		if indexer.OnEntityUpdate == nil {
+	for _, proc := range p.listenerProcesses {
+		if proc.listener.OnObjectUpdate == nil {
 			continue
 		}
-		if err := indexer.OnEntityUpdate(moduleName, update); err != nil {
-			return err
+		proc.packetChan <- packet{
+			packetType: packetTypeOnObjectUpdate,
+			data:       update,
 		}
 	}
 

@@ -72,7 +72,7 @@ What has been a default consensus engine in the Cosmos SDK has been CometBFT. In
 
 Here is an example of how the consensus layer works with CometBFT in the context of the Cosmos SDK:
 
-## CometBFT
+### CometBFT
 
 Thanks to the Cosmos SDK, developers just have to define the state machine, and [*CometBFT*](https://docs.cometbft.com/v1.0/explanation/introduction/) will handle replication over the network for them.
 
@@ -109,7 +109,7 @@ CometBFT passes transactions to the application through an interface called the 
 graph TD
     A[Application]
     B[CometBFT]
-    A -->|ABCI| B
+    A <-->|ABCI| B
 
 ```
 

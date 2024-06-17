@@ -14684,7 +14684,7 @@ func (x *HistoricalInfo) GetValset() []*Validator {
 	return nil
 }
 
-// Historical contains a set of minimum values needed for evaluating historical validator sets and blocks.
+// HistoricalRecord contains a set of minimum values needed for evaluating historical validator sets and blocks.
 // It is stored as part of staking module's state, which persists the `n` most
 // recent HistoricalInfo
 // (`n` is set by the staking module's `historical_entries` parameter).

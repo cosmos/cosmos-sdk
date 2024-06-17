@@ -1,5 +1,0 @@
-CREATE SCHEMA IF NOT EXISTS indexer;
-
-CREATE TABLE IF NOT EXISTS module_meta (
-    module_name TEXT PRIMARY KEY,
-);

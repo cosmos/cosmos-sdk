@@ -53,6 +53,7 @@ func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, logger
 
 func (c *CommitStore) WriteChangeset(cs *corestore.Changeset) error {
 	for _, pairs := range cs.Changes {
+
 		key := conv.UnsafeBytesToStr(pairs.Actor)
 
 		tree, ok := c.multiTrees[key]

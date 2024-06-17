@@ -18,7 +18,7 @@ $SIMD init simapp-v2-node --chain-id simapp-v2-chain
 cd "$CONFIG"
 
 # to enable the api server
-sed -i '.bak' '/\[api\]/,+3 s/enable = false/enable = true/' app.toml
+$SIMD config set app api.enable true
 
 # to change the voting_period
 jq '.app_state.gov.voting_params.voting_period = "600s"' genesis.json > temp.json && mv temp.json genesis.json

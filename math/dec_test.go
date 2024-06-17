@@ -386,9 +386,6 @@ func TestSub(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			got, gotErr := spec.x.Sub(spec.y)
-			if name == "1^-100000 - -1 -> 0.000..01" {
-				fmt.Println("x", spec.x, "y", spec.y, "spec.exp", spec.exp, "got", got)
-			}
 			if spec.expErr != nil {
 				require.ErrorIs(t, gotErr, spec.expErr)
 				return

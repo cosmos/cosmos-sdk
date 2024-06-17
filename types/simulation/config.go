@@ -34,6 +34,7 @@ func (c Config) shallowCopy() Config {
 
 // With sets the values of t, seed, and fuzzSeed in a copy of the Config and returns the copy.
 func (c Config) With(t *testing.T, seed int64, fuzzSeed []byte) Config {
+	t.Helper()
 	r := c.shallowCopy()
 	r.T = t
 	r.Seed = seed

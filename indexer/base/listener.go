@@ -50,13 +50,6 @@ type Listener struct {
 	// when logical data is available. It should be assumed that the same data in raw form
 	// is also passed to OnKVPair.
 	OnObjectUpdate func(module string, update ObjectUpdate) error
-
-	// CommitCatchupSync is called after all existing state for a module has been passed to
-	// OnObjectUpdate during a catch-up sync which has been initiated by return -1 for lastBlock
-	// in InitializeModuleSchema. The listener should commit all the data that has been received at
-	// this point and also save the block number as the last block that has been processed so
-	// that processing of regular block data can resume from this point in the future.
-	CommitCatchupSync func(module string, block uint64) error
 }
 
 // InitializationData represents initialization data that is passed to a listener.

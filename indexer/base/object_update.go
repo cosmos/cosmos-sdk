@@ -15,13 +15,13 @@ type ObjectUpdate struct {
 	//  for the corresponding field in the field list. For instance, if there are two fields in the key of
 	//  type String, String, then the value must be a slice of two strings.
 	// If the key has no fields, meaning that this is a singleton object, then this value is ignored and can be nil.
-	Key any
+	Key interface{}
 
 	// Value returns the non-primary key fields of the object and can either conform to the same constraints
 	// as ObjectUpdate.Key or it may be and instance of ValueUpdates. ValueUpdates can be used as a performance
 	// optimization to avoid copying the values of the object into the update and/or to omit unchanged fields.
 	// If this is a delete operation, then this value is ignored and can be nil.
-	Value any
+	Value interface{}
 
 	// Delete is a flag that indicates whether this update is a delete operation. If true, then the Value field
 	// is ignored and can be nil.
@@ -38,5 +38,5 @@ type ValueUpdates interface {
 	// true to continue iteration or false to stop iteration. Each field value should conform
 	// to the requirements of that field's type in the schema. Iterate returns an error if
 	// it was unable to decode the values properly (which could be the case in lazy evaluation).
-	Iterate(func(col string, value any) bool) error
+	Iterate(func(col string, value interface{}) bool) error
 }

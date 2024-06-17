@@ -23,13 +23,13 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc
 	google.golang.org/genproto/googleapis/api v0.0.0-20240318140521-94a12d6c2237
 	google.golang.org/grpc v1.64.0
-	google.golang.org/protobuf v1.34.1
+	google.golang.org/protobuf v1.34.2
 	gotest.tools/v3 v3.5.1
 	pgregory.net/rapid v1.1.0
 	sigs.k8s.io/yaml v1.4.0

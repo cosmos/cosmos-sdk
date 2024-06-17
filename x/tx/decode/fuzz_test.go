@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	fuzz "github.com/google/gofuzz"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -16,6 +17,12 @@ import (
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/x/tx/signing"
 )
+
+type mockCodec struct{}
+
+func (m mockCodec) Unmarshal(bytes []byte, message gogoproto.Message) error {
+	return gogoproto.Unmarshal(bytes, message)
+}
 
 var (
 	accSeq = uint64(2)
@@ -107,6 +114,7 @@ func FuzzDecode(f *testing.F) {
 	}
 	dec, err := NewDecoder(Options{
 		SigningContext: signingCtx,
+		ProtoCodec:     mockCodec{},
 	})
 	if err != nil {
 		return

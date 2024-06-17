@@ -38,34 +38,101 @@ Additionally, there is an overlap in functionality with a Token Factory module, 
 
 **Legacy Support**: A legacy wrapper will be implemented to ensure compatibility with about 90% of existing functions. This measure will facilitate a smooth transition while keeping older systems functional.
 
-**Denom Interface**: A Denom interface will be added to standardise interactions such as transfers, balance inquiries, minting, and burning across different tokens. This will allow the bank module to support arbitrary asset types, enabling developers to implement custom, ERC20-like denominations.
+**Callback Functions**: We propose to integrate callback functions directly to the x/bank module, allowing for customisable behaviour during minting, burning and transferring operations without complicating statemanagement. It provides a streamlined approach to asset management and allows for the customisation of asset behaviors while maintaining a unified state management system.
 
-For example, currently if a team would like to extend the transfer method the changes would apply universally, affecting all denom’s. With the proposed Asset Interface, it allows teams to customise or extend the transfer method specifically for their own tokens without impacting others.
-
-These improvements are expected to enhance the flexibility of the bank module, allowing for the creation of custom tokens similar to ERC20 standards and assets backed by CosmWasm (CW) contracts. The integration efforts will also aim to unify CW20 with bank coins across the Cosmos chains.
-
-Example of asset interface:
-
-```go
-type Asset interface {
-    Transfer(ctx, from, to, amount) error
-    BalanceOf(ctx, addr) (uint, error)
-    Mint(ctx, to, amount) error
-    Burn(ctx, from, amount) error
-    ...
-}
-```
-
-A default `Asset` implemented will be provided by bank. Users can implement their own `Asset` interface and pass it to the bank module at its initialization.
+Implementation of Callback Functions:
 
 ```go
 type BankKeeper struct {
-    AssetImpl map[string]Asset
+    OnMint func(ctx sdk.Context, addr sdk.AccAddress, amount sdk.Coin) error
+    OnBurn func(ctx sdk.Context, addr sdk.AccAddress, amount sdk.Coin) error
+    OnTransfer func(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amount sdk.Coin) error
+}
+
+func (k *BankKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error {
+    if k.OnMint != nil {
+        if err := k.OnMint(ctx, moduleName, amt); err != nil {
+            return err
+        }
+    }
+}
+
+func (k *BankKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error {
+    if k.OnBurn != nil {
+        if err := k.OnBurn(ctx, moduleName, amt); err != nil {
+            return err
+        }
+    }
+}
+
+func (k *BankKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
+    if k.OnTransfer != nil {
+        if err := k.OnTransfer(ctx, fromAddr, toAddr, amt); err != nil {
+            return err
+        }
+    }
 }
 ```
 
-Each relevant bank call will switch on the denom and call the respective method on the `Asset` implementation.
-When no asset implementation is provided, the default implementation will be used.
+Messages for Admin Operations:
+To facilitate admin operations like `Mint`, `Burn`, and `Move`, we can define specific messages that can be invoked by the admin account of each denom. These operations will be internal and not exposed to end clients directly.
+
+```protobuf
+message Mint {
+  string denom = 1;
+  string to = 2;
+  string amount = 3;
+}
+
+message Burn {
+  string denom = 1;
+  string from = 2;
+  string amount = 3;
+}
+
+message Move {
+  string denom = 1;
+  string from = 2;
+  string to = 3;
+  string amount = 4;
+}
+```
+
+If admin account defines these callbacks, `x/bank` will call `x/accounts` `MsgExecute` with the `OnTransfer`, `GetBalance` or `GetSupply` callbacks:
+
+```protobuf 
+// can error if transfer isn't allowed
+message OnTransfer {
+  string denom = 1;
+  string from = 2;
+  string to = 3;
+  string amount = 4;
+}
+
+// returns GetBalanceResponse
+// can override state management in x/bank
+// otherwise x/bank manages balance state
+// if GetBalance is defined, GetSupply also needs to be defined
+
+message GetBalance {
+  string denom = 1;
+  string account = 2;
+}
+
+message GetBalanceResponse {
+  string amount = 1;
+}
+
+message GetSupply {
+  string denom = 1;
+}
+
+message GetSupplyResponse {
+  string amount = 1;
+}
+```
+
+x/bank is responsible for emitting send, mint and burn events for consistency.
 
 ## Migration Plans
 

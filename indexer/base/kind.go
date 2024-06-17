@@ -103,7 +103,7 @@ func (t Kind) Validate() error {
 // nullability. It only checks that the value is of the correct type.
 // It also doesn't perform any validation that IntegerKind, DecimalKind, Bech32AddressKind, or EnumKind
 // values are valid for their respective types.
-func (t Kind) ValidateValueType(value any) error {
+func (t Kind) ValidateValueType(value interface{}) error {
 	switch t {
 	case StringKind:
 		_, ok := value.(string)
@@ -269,7 +269,7 @@ func (t Kind) String() string {
 // return JSONKind because the framework cannot decide at this point whether the value
 // can or cannot be marshaled to JSON. This method should generally only be used as a fallback
 // when the kind of a field is not specified more specifically.
-func KindForGoValue(value any) Kind {
+func KindForGoValue(value interface{}) Kind {
 	switch value.(type) {
 	case string, fmt.Stringer:
 		return StringKind

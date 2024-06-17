@@ -75,7 +75,7 @@ func (e EnumDefinition) Validate() error {
 // ValidateValue validates that the value conforms to the field's kind and nullability.
 // It currently does not do any validation that IntegerKind, DecimalKind, Bech32AddressKind, or EnumKind
 // values are valid for their respective types behind conforming to the correct go type.
-func (c Field) ValidateValue(value any) error {
+func (c Field) ValidateValue(value interface{}) error {
 	if value == nil {
 		if !c.Nullable {
 			return fmt.Errorf("field %q cannot be null", c.Name)
@@ -87,7 +87,7 @@ func (c Field) ValidateValue(value any) error {
 
 // ValidateKey validates that the value conforms to the set of fields as a Key in an EntityUpdate.
 // See EntityUpdate.Key for documentation on the requirements of such values.
-func ValidateKey(fields []Field, value any) error {
+func ValidateKey(fields []Field, value interface{}) error {
 	if len(fields) == 0 {
 		return nil
 	}
@@ -96,13 +96,13 @@ func ValidateKey(fields []Field, value any) error {
 		return fields[0].ValidateValue(value)
 	}
 
-	values, ok := value.([]any)
+	values, ok := value.([]interface{})
 	if !ok {
 		return fmt.Errorf("expected slice of values for key fields, got %T", value)
 	}
 
 	if len(fields) != len(values) {
-		return fmt.Errorf("expected %d key fields, got %d values", len(fields), len(value.([]any)))
+		return fmt.Errorf("expected %d key fields, got %d values", len(fields), len(value.([]interface{})))
 	}
 	for i, field := range fields {
 		if err := field.ValidateValue(values[i]); err != nil {
@@ -114,7 +114,7 @@ func ValidateKey(fields []Field, value any) error {
 
 // ValidateValue validates that the value conforms to the set of fields as a Value in an EntityUpdate.
 // See EntityUpdate.Value for documentation on the requirements of such values.
-func ValidateValue(fields []Field, value any) error {
+func ValidateValue(fields []Field, value interface{}) error {
 	valueUpdates, ok := value.(ValueUpdates)
 	if ok {
 		fieldMap := map[string]Field{}
@@ -122,7 +122,7 @@ func ValidateValue(fields []Field, value any) error {
 			fieldMap[field.Name] = field
 		}
 		var errs []error
-		valueUpdates.Iterate(func(fieldName string, value any) bool {
+		valueUpdates.Iterate(func(fieldName string, value interface{}) bool {
 			field, ok := fieldMap[fieldName]
 			if !ok {
 				errs = append(errs, fmt.Errorf("unknown field %q in value updates", fieldName))

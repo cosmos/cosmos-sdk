@@ -39,11 +39,15 @@ func columnType(field indexerbase.Field) (string, error) {
 	case indexerbase.Float64Kind:
 		return "DOUBLE PRECISION", nil
 	case indexerbase.EnumKind:
-		return "TEXT", fmt.Errorf("enums not supported yet")
+		return "TEXT", nil // TODO: create enum type
 	case indexerbase.JSONKind:
 		return "JSONB", nil
 	case indexerbase.Bech32AddressKind:
 		return "TEXT", nil
+	case indexerbase.TimeKind:
+		return "TIMESTAMPTZ", nil // TODO: preserve nanos, one idea store as integer and then have generated TIMESTAMPTZ column
+	case indexerbase.DurationKind:
+		return "INTERVAL", nil // TODO: preserve nanos, see above
 	default:
 		return "", fmt.Errorf("unsupported kind %v for field %s", field.Kind, field.Name)
 	}

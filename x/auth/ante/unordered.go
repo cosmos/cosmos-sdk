@@ -6,6 +6,8 @@ import (
 	"encoding/binary"
 	"sync"
 
+	"github.com/golang/protobuf/proto" // nolint: staticcheck // for proto.Message
+
 	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
@@ -13,7 +15,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/golang/protobuf/proto"
 )
 
 // bufPool is a pool of bytes.Buffer objects to reduce memory allocations.

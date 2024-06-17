@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/golang/mock/gomock"
 
 	"cosmossdk.io/collections"
@@ -17,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,11 +48,9 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 	pubkeyInvalidLen, err := codectypes.NewAnyWithValue(ed25519pk)
 	require.NoError(err)
 
-	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
-		Validator: &cmtproto.ValidatorParams{
-			PubKeyTypes: []string{sdk.PubKeyEd25519Type},
-		},
-	})
+	invalidPk, _ := secp256r1.GenPrivKey()
+	invalidPubkey, err := codectypes.NewAnyWithValue(invalidPk.PubKey())
+	require.NoError(err)
 
 	testCases := []struct {
 		name      string
@@ -237,6 +235,30 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 			},
 			expErr:    true,
 			expErrMsg: "validator's self delegation must be greater than their minimum self delegation",
+		},
+		{
+			name: "invalid pubkey type",
+			input: &types.MsgCreateValidator{
+				Description: types.Description{
+					Moniker:         "NewValidator",
+					Identity:        "xyz",
+					Website:         "xyz.com",
+					SecurityContact: "xyz@gmail.com",
+					Details:         "details",
+				},
+				Commission: types.CommissionRates{
+					Rate:          math.LegacyNewDecWithPrec(5, 1),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
+					MaxChangeRate: math.LegacyNewDec(0),
+				},
+				MinSelfDelegation: math.NewInt(1),
+				DelegatorAddress:  s.addressToString(Addr),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
+				Pubkey:            invalidPubkey,
+				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
+			},
+			expErr:    true,
+			expErrMsg: "got: secp256r1, expected: [ed25519 secp256k1]: validator pubkey type is not supported",
 		},
 		{
 			name: "valid msg",
@@ -1209,6 +1231,9 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.BondedPoolName).Return(bondedPool).AnyTimes()
 	bankKeeper.EXPECT().GetBalance(gomock.Any(), bondedPool.GetAddress(), sdk.DefaultBondDenom).Return(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)).AnyTimes()
 
+	invalidPK, _ := secp256r1.GenPrivKey()
+	invalidPubkey := invalidPK.PubKey()
+
 	testCases := []struct {
 		name      string
 		malleate  func() sdk.Context
@@ -1229,6 +1254,14 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 			isErr:     false,
 			errMsg:    "",
 			newPubKey: PKs[499],
+			validator: validators[0].GetOperator(),
+		},
+		{
+			name:      "invalid pubkey type",
+			malleate:  func() sdk.Context { return ctx },
+			isErr:     true,
+			errMsg:    "secp256r1, expected: [ed25519 secp256k1]: validator pubkey type is not supported",
+			newPubKey: invalidPubkey,
 			validator: validators[0].GetOperator(),
 		},
 		{

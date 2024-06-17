@@ -11,9 +11,9 @@ The basic types for specifying index sources, targets and decoders are provided 
 ```mermaid
 sequenceDiagram
     actor Source
-    participant Indexer    
-    Source ->> Indexer: Initialize
+    participant Indexer
     Source -->> Indexer: InitializeModuleSchema
+    Source ->> Indexer: Initialize
     loop Block
         Source ->> Indexer: StartBlock
         Source ->> Indexer: OnBlockHeader
@@ -25,7 +25,7 @@ sequenceDiagram
     end
 ```
 
-`Initialize` must be called before any other method and should only be invoked once. `InitializeModuleSchema` should be called at most once for every module with logical data.
+`InitializeModuleSchema` should be called at most once for every module with logical data and all calls to should happen even before `Initialize` is called. After that `Initialize` MUST be called before any other method and should only be invoked once. 
 
 Sources will generally only call `InitializeModuleSchema` and `OnObjectUpdate` if they have native logical decoding capabilities. Usually, the indexer framework will provide this functionality based on `OnKVPair` data and `IndexableModule` implementations.
 

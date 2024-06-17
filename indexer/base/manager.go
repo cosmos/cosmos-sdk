@@ -1,5 +1,7 @@
 package indexerbase
 
+import "fmt"
+
 type Manager struct {
 	logger              Logger
 	decoderResolver     DecoderResolver
@@ -7,6 +9,7 @@ type Manager struct {
 	needLogicalDecoding bool
 	listener            Listener
 	listenerProcesses   []*listenerProcess
+	initialized         bool
 	done                chan struct{}
 }
 
@@ -51,7 +54,7 @@ func NewManager(opts ManagerOptions) (*Manager, error) {
 		done:                done,
 	}
 
-	err := mgr.init(opts.Listeners)
+	err := mgr.setup(opts.Listeners)
 	if err != nil {
 		return nil, err
 	}
@@ -61,8 +64,10 @@ func NewManager(opts ManagerOptions) (*Manager, error) {
 
 // Listener returns that listener that should be passed directly to the blockchain for managing
 // all indexing.
-func (p *Manager) init(listeners []Listener) error {
+func (p *Manager) setup(listeners []Listener) error {
 	// check each subscribed listener to see if we actually need to register the listener
+
+	p.listener.Initialize = p.initialize
 
 	for _, listener := range listeners {
 		if listener.StartBlock != nil {
@@ -117,14 +122,8 @@ func (p *Manager) init(listeners []Listener) error {
 	}
 
 	if p.needLogicalDecoding {
-		err := p.decoderResolver.Iterate(func(moduleName string, module ModuleDecoder) error {
-			p.decoders[moduleName] = module.KVDecoder
-			// TODO
-			return nil
-		})
-		if err != nil {
-			return err
-		}
+		p.listener.InitializeModuleSchema = p.initializeModuleSchema
+		p.listener.OnObjectUpdate = p.onObjectUpdate
 	}
 
 	// initialize go routines for each listener
@@ -135,14 +134,63 @@ func (p *Manager) init(listeners []Listener) error {
 			commitDoneChan: make(chan error),
 		}
 		p.listenerProcesses = append(p.listenerProcesses, proc)
-
-		// TODO initialize
-		// TODO initialize module schema
-
-		go proc.run()
 	}
 
 	return nil
+}
+
+func (p *Manager) initialize(data InitializationData) (lastBlockPersisted int64, err error) {
+	if p.logger != nil {
+		p.logger.Debug("initialize")
+	}
+
+	// setup logical decoding
+	if p.needLogicalDecoding {
+		err = p.decoderResolver.Iterate(func(moduleName string, module ModuleDecoder) error {
+			// if the schema was already initialized by the data source by InitializeModuleSchema,
+			// then this is an error
+			if _, ok := p.decoders[moduleName]; ok {
+				return fmt.Errorf("module schema for %s already initialized", moduleName)
+			}
+
+			p.decoders[moduleName] = module.KVDecoder
+
+			for _, proc := range p.listenerProcesses {
+				if proc.listener.InitializeModuleSchema == nil {
+					continue
+				}
+				err := proc.listener.InitializeModuleSchema(moduleName, module.Schema)
+				if err != nil {
+					return err
+				}
+			}
+
+			return nil
+		})
+		if err != nil {
+			return
+		}
+	}
+
+	// call initialize
+	for _, proc := range p.listenerProcesses {
+		if proc.listener.Initialize == nil {
+			continue
+		}
+		lastBlockPersisted, err = proc.listener.Initialize(data)
+		if err != nil {
+			return
+		}
+	}
+
+	// start go routines
+	for _, proc := range p.listenerProcesses {
+		go proc.run()
+	}
+
+	p.initialized = true
+
+	return
 }
 
 func (p *Manager) startBlock(height uint64) error {
@@ -305,5 +353,41 @@ func (p *Manager) onKVPair(data KVPairData) error {
 		}
 	}
 
+	return nil
+}
+
+func (p *Manager) initializeModuleSchema(module string, schema ModuleSchema) error {
+	if p.initialized {
+		return fmt.Errorf("cannot initialize module schema after initialization")
+	}
+
+	for _, proc := range p.listenerProcesses {
+		// set the decoder for the module to so that we know that it is already initialized,
+		// but that also we are not handling decoding - in this case the data source
+		// should be doing the decoding and passing it to the manager in OnObjectUpdate
+		p.decoders[module] = nil
+
+		if proc.listener.InitializeModuleSchema == nil {
+			continue
+		}
+		err := proc.listener.InitializeModuleSchema(module, schema)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (p *Manager) onObjectUpdate(data ObjectUpdateData) error {
+	for _, proc := range p.listenerProcesses {
+		if proc.listener.OnObjectUpdate == nil {
+			continue
+		}
+		proc.packetChan <- packet{
+			packetType: packetTypeOnObjectUpdate,
+			data:       data,
+		}
+	}
 	return nil
 }

@@ -322,7 +322,7 @@ func NewWithdrawAllTokenizeShareRecordRewardCmd(ac address.Codec) *cobra.Command
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Withdraw reward for all owned TokenizeShareRecord
 Example:
-$ %s tx distribution withdraw-tokenize-share-rewards --from mykey
+$ %s tx distribution withdraw-all-tokenize-share-rewards --from mykey
 `,
 				version.AppName,
 			),

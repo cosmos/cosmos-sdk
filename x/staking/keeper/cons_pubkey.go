@@ -42,7 +42,7 @@ func (k Keeper) setConsPubKeyRotationHistory(
 	}
 	for _, r := range allRotations {
 		if r.NewConsPubkey.Compare(newPubKey) == 0 {
-			return types.ErrConsensusPubKeyAlreadyUsedForValidator
+			return types.ErrValidatorPubKeyExists
 		}
 	}
 
@@ -105,37 +105,36 @@ func (k Keeper) updateToNewPubkey(ctx context.Context, val types.Validator, oldP
 	}
 
 	// sets a map: oldConsKey -> newConsKey
-	if err := k.OldToNewConsKeyMap.Set(ctx, oldPk.Address(), newPk.Address()); err != nil {
+	if err := k.OldToNewConsAddrMap.Set(ctx, oldPk.Address(), newPk.Address()); err != nil {
 		return err
 	}
 
 	// sets a map: newConsKey -> initialConsKey
-	if err := k.setConsKeyToValidatorIdentifierMap(ctx, sdk.ConsAddress(oldPk.Address()), sdk.ConsAddress(newPk.Address())); err != nil {
+	if err := k.setConsAddrToValidatorIdentifierMap(ctx, sdk.ConsAddress(oldPk.Address()), sdk.ConsAddress(newPk.Address())); err != nil {
 		return err
 	}
 
 	return k.Hooks().AfterConsensusPubKeyUpdate(ctx, oldPk, newPk, fee)
 }
 
-// setConsKeyToValidatorIdentifierMap adds an entry in the state with the current consKey to the initial consKey of the validator.
+// setConsAddrToValidatorIdentifierMap adds an entry in the state with the current consKey to the initial consKey of the validator.
 // it tries to find the oldPk if there is a entry already present in the state
-func (k Keeper) setConsKeyToValidatorIdentifierMap(ctx context.Context, oldPk, newPk sdk.ConsAddress) error {
-	pk, err := k.ConsKeyToValidatorIdentifierMap.Get(ctx, oldPk)
+func (k Keeper) setConsAddrToValidatorIdentifierMap(ctx context.Context, oldConsAddr, newConsAddr sdk.ConsAddress) error {
+	pk, err := k.ConsAddrToValidatorIdentifierMap.Get(ctx, oldConsAddr)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 
 	if pk != nil {
-		oldPk = pk
+		oldConsAddr = pk
 	}
-
-	return k.ConsKeyToValidatorIdentifierMap.Set(ctx, newPk, oldPk)
+	return k.ConsAddrToValidatorIdentifierMap.Set(ctx, newConsAddr, oldConsAddr)
 }
 
 // ValidatorIdentifier maps the new cons key to previous cons key (which is the address before the rotation).
 // (that is: newConsKey -> oldConsKey)
 func (k Keeper) ValidatorIdentifier(ctx context.Context, newPk sdk.ConsAddress) (sdk.ConsAddress, error) {
-	pk, err := k.ConsKeyToValidatorIdentifierMap.Get(ctx, newPk)
+	pk, err := k.ConsAddrToValidatorIdentifierMap.Get(ctx, newPk)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, err
 	}

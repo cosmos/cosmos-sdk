@@ -1205,6 +1205,9 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 	existingPubkey, ok := validators[1].ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
 	s.Require().True(ok)
 
+	validator0PubKey, ok := validators[0].ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
+	s.Require().True(ok)
+
 	bondedPool := authtypes.NewEmptyModuleAccount(types.BondedPoolName)
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.BondedPoolName).Return(bondedPool).AnyTimes()
 	bankKeeper.EXPECT().GetBalance(gomock.Any(), bondedPool.GetAddress(), sdk.DefaultBondDenom).Return(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)).AnyTimes()
@@ -1235,7 +1238,7 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 			name:      "pubkey already associated with another validator",
 			malleate:  func() sdk.Context { return ctx },
 			isErr:     true,
-			errMsg:    "consensus pubkey is already used for a validator",
+			errMsg:    "validator already exist for this pubkey; must use new validator pubkey",
 			newPubKey: existingPubkey,
 			validator: validators[0].GetOperator(),
 		},
@@ -1350,6 +1353,20 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 			errMsg:    "exceeding maximum consensus pubkey rotations within unbonding period",
 			validator: validators[5].GetOperator(),
 		},
+		{
+			name: "try using the old pubkey of another validator that rotated",
+			malleate: func() sdk.Context {
+				val, err := stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[0].GetOperator())
+				s.Require().NoError(err)
+
+				bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(val), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				return ctx
+			},
+			isErr:     true,
+			errMsg:    "validator already exist for this pubkey; must use new validator pubkey",
+			newPubKey: validator0PubKey,
+			validator: validators[2].GetOperator(),
+		},
 	}
 
 	for _, tc := range testCases {
@@ -1403,5 +1420,5 @@ func (s *KeeperTestSuite) TestConsKeyRotationInSameBlock() {
 	s.Require().NoError(err)
 
 	_, err = msgServer.RotateConsPubKey(ctx, req)
-	s.Require().ErrorContains(err, "consensus pubkey is already used for a validator")
+	s.Require().ErrorContains(err, "the new public key is already present in rotation history, please try with a different one")
 }

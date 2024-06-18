@@ -30,11 +30,10 @@ import (
 func newWrapperFromDecodedTx(
 	addrCodec address.Codec, cdc codec.BinaryCodec, decodedTx *decode.DecodedTx,
 ) (*gogoTxWrapper, error) {
-	// set msgsv1
-	msgs := decodedTx.Messages
-	var err error
-	// set fees
-	fees := make(sdk.Coins, len(decodedTx.Tx.AuthInfo.Fee.Amount))
+	var (
+		fees = make(sdk.Coins, len(decodedTx.Tx.AuthInfo.Fee.Amount))
+		err  error
+	)
 	for i, fee := range decodedTx.Tx.AuthInfo.Fee.Amount {
 		amtInt, ok := math.NewIntFromString(fee.Amount)
 		if !ok {
@@ -73,7 +72,7 @@ func newWrapperFromDecodedTx(
 	}
 
 	// reflectMsgs
-	reflectMsgs := make([]protoreflect.Message, len(msgs))
+	reflectMsgs := make([]protoreflect.Message, len(decodedTx.DynamicMessages))
 	for i, msg := range decodedTx.DynamicMessages {
 		reflectMsgs[i] = msg.ProtoReflect()
 	}
@@ -82,7 +81,6 @@ func newWrapperFromDecodedTx(
 		DecodedTx:   decodedTx,
 		cdc:         cdc,
 		reflectMsgs: reflectMsgs,
-		msgs:        msgs,
 		fees:        fees,
 		feePayer:    feePayer,
 		feeGranter:  feeGranter,
@@ -96,7 +94,6 @@ type gogoTxWrapper struct {
 
 	cdc codec.BinaryCodec
 
-	msgs        []proto.Message
 	reflectMsgs []protoreflect.Message
 	fees        sdk.Coins
 	feePayer    []byte
@@ -119,10 +116,7 @@ type ExtensionOptionsTxBuilder interface {
 }
 
 func (w *gogoTxWrapper) GetMsgs() []sdk.Msg {
-	if w.msgs == nil {
-		panic("fill in msgs")
-	}
-	return w.msgs
+	return w.Messages
 }
 
 func (w *gogoTxWrapper) GetReflectMessages() ([]protoreflect.Message, error) {

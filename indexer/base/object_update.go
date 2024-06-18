@@ -2,7 +2,6 @@ package indexerbase
 
 // ObjectUpdate represents an update operation on an object in a module's state.
 type ObjectUpdate struct {
-
 	// TypeName is the name of the object type in the module's schema.
 	TypeName string
 
@@ -33,7 +32,6 @@ type ObjectUpdate struct {
 // may not filter out fields that were unchanged. However, if a field is omitted from the update
 // it should be considered unchanged.
 type ValueUpdates interface {
-
 	// Iterate iterates over the fields and values in the object update. The function should return
 	// true to continue iteration or false to stop iteration. Each field value should conform
 	// to the requirements of that field's type in the schema. Iterate returns an error if

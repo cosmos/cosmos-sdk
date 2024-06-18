@@ -17,9 +17,10 @@ type Map[K, V any] struct {
 	vc codec.ValueCodec[V]
 
 	// store accessor
-	sa     func(context.Context) store.KVStore
-	prefix []byte
-	name   string
+	sa               func(context.Context) store.KVStore
+	prefix           []byte
+	name             string
+	isSecondaryIndex bool
 }
 
 // NewMap returns a Map given a StoreKey, a Prefix, human-readable name and the relative value and key encoders.

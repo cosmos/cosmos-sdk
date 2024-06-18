@@ -7,6 +7,7 @@ import (
 
 	"github.com/tidwall/btree"
 
+	"cosmossdk.io/collections/codec"
 	indexerbase "cosmossdk.io/indexer/base"
 )
 
@@ -22,11 +23,11 @@ func (s Schema) ModuleDecoder(opts IndexingOptions) (indexerbase.ModuleDecoder, 
 	var objectTypes []indexerbase.ObjectType
 	for _, collName := range s.collectionsOrdered {
 		coll := s.collectionsByName[collName]
-		if coll.isIndex() {
+		if coll.isSecondaryIndex() {
 			continue
 		}
 
-		schema := coll.getTableSchema()
+		schema := coll.objectType()
 		objectTypes = append(objectTypes, schema)
 		decoder.lookup.Set(string(coll.GetPrefix()), &collDecoder{Collection: coll})
 	}
@@ -91,7 +92,7 @@ func (c collectionImpl[K, V]) getTableSchema() indexerbase.ObjectType {
 	var keyFields []indexerbase.Field
 	var valueFields []indexerbase.Field
 
-	if hasSchema, ok := c.m.kc.(IndexableCodec); ok {
+	if hasSchema, ok := c.m.kc.(codec.IndexableCodec); ok {
 		keyFields = hasSchema.SchemaFields()
 	} else {
 		var k K
@@ -99,7 +100,7 @@ func (c collectionImpl[K, V]) getTableSchema() indexerbase.ObjectType {
 	}
 	ensureNames(c.m.kc, "key", keyFields)
 
-	if hasSchema, ok := c.m.vc.(IndexableCodec); ok {
+	if hasSchema, ok := c.m.vc.(codec.IndexableCodec); ok {
 		valueFields = hasSchema.SchemaFields()
 	} else {
 		var v V
@@ -115,7 +116,7 @@ func (c collectionImpl[K, V]) getTableSchema() indexerbase.ObjectType {
 }
 
 func extractFields(x any) ([]indexerbase.Field, func(any) any) {
-	if hasSchema, ok := x.(IndexableCodec); ok {
+	if hasSchema, ok := x.(codec.IndexableCodec); ok {
 		return hasSchema.SchemaFields(), nil
 	}
 
@@ -151,12 +152,17 @@ func ensureNames(x any, defaultName string, cols []indexerbase.Field) {
 	}
 }
 
+func (c collectionImpl[K, V]) objectType() indexerbase.ObjectType {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (c collectionImpl[K, V]) decodeKVPair(key, value []byte, delete bool) (indexerbase.ObjectUpdate, bool, error) {
 	// strip prefix
 	key = key[len(c.GetPrefix()):]
 	var k any
 	var err error
-	if decodeAny, ok := c.m.kc.(IndexableCodec); ok {
+	if decodeAny, ok := c.m.kc.(codec.IndexableCodec); ok {
 		k, err = decodeAny.DecodeIndexable(key)
 	} else {
 		_, k, err = c.m.kc.Decode(key)
@@ -176,7 +182,7 @@ func (c collectionImpl[K, V]) decodeKVPair(key, value []byte, delete bool) (inde
 	}
 
 	var v any
-	if decodeAny, ok := c.m.vc.(IndexableCodec); ok {
+	if decodeAny, ok := c.m.vc.(codec.IndexableCodec); ok {
 		v, err = decodeAny.DecodeIndexable(value)
 	} else {
 		v, err = c.m.vc.Decode(value)
@@ -192,9 +198,4 @@ func (c collectionImpl[K, V]) decodeKVPair(key, value []byte, delete bool) (inde
 		Key:      k,
 		Value:    v,
 	}, true, nil
-}
-
-type IndexableCodec interface {
-	SchemaFields() []indexerbase.Field
-	DecodeIndexable([]byte) (any, error)
 }

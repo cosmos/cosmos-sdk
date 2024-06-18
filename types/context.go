@@ -393,6 +393,19 @@ func UnwrapSDKContext(ctx context.Context) Context {
 	return ctx.Value(SdkContextKey).(Context)
 }
 
+// TryUnwrapSDKContext attempts to retrieve a Context from a context.Context
+func TryUnwrapSDKContext(ctx context.Context) (Context, bool) {
+	if sdkCtx, ok := ctx.(Context); ok {
+		return sdkCtx, true
+	}
+	v := ctx.Value(SdkContextKey)
+	if v == nil {
+		return Context{}, false
+	}
+	c, ok := v.(Context)
+	return c, ok
+}
+
 // ToSDKEvidence takes comet evidence and returns sdk evidence
 func ToSDKEvidence(ev []abci.Misbehavior) []comet.Evidence {
 	evidence := make([]comet.Evidence, len(ev))

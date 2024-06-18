@@ -9,7 +9,7 @@ type ObjectType struct {
 
 	// KeyFields is a list of fields that make up the primary key of the object.
 	// It can be empty in which case indexers should assume that this object is
-	// a singleton and ony has one value.
+	// a singleton and only has one value.
 	KeyFields []Field
 
 	// ValueFields is a list of fields that are not part of the primary key of the object.

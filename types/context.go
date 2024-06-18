@@ -393,8 +393,8 @@ func UnwrapSDKContext(ctx context.Context) Context {
 	return ctx.Value(SdkContextKey).(Context)
 }
 
-// MaybeUnwrapSDKContext attempts to retrieve a Context from a context.Context
-func MaybeUnwrapSDKContext(ctx context.Context) (Context, bool) {
+// TryUnwrapSDKContext attempts to retrieve a Context from a context.Context
+func TryUnwrapSDKContext(ctx context.Context) (Context, bool) {
 	if sdkCtx, ok := ctx.(Context); ok {
 		return sdkCtx, true
 	}

@@ -12,10 +12,10 @@ Modules are encouraged to define and register their own errors to provide better
 context on failed message or handler execution. Typically, these errors should be
 common or general errors which can be further wrapped to provide additional specific execution context.
 
-There are two ways to return errors. You are able to register custom errors with a codespace that is meant to provide more information to clients and normal go errors. The Cosmos SDK uses a mixture of both. 
+There are two ways to return errors. You can register custom errors with a codespace that is meant to provide more information to clients and normal go errors. The Cosmos SDK uses a mixture of both. 
 
 :::Warning
-If errors are registered they are part of consensus and can not be changed in a minor release
+If errors are registered they are part of consensus and cannot be changed in a minor release
 :::
 
 ## Registration

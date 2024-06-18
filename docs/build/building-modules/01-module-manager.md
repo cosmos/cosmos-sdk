@@ -189,7 +189,7 @@ https://github.com/cosmos/cosmos-sdk/blob/28fa3b8dfcb3208d3b1cfbae08eda519e4cc15
 
 ### `HasEndBlocker`
 
-The `HasEndBlocker` is an extension interface from `appmodule.AppModule`. All modules that have an `EndBlock` method implement this interface. If a module need to return validator set updates (staking), they can use `HasABCIEndBlock`
+The `HasEndBlocker` is an extension interface from `appmodule.AppModule`. All modules that have an `EndBlock` method implement this interface. If a module needs to return validator set updates (staking), they can use `HasABCIEndBlock`
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/28fa3b8dfcb3208d3b1cfbae08eda519e4cc1560/core/appmodule/v2/module.go#L40-L48

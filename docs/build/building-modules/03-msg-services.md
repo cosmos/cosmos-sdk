@@ -21,7 +21,7 @@ Each module should define a Protobuf `Msg` service, which will be responsible fo
 
 As further described in [ADR 031](../../architecture/adr-031-msg-service.md), this approach has the advantage of clearly specifying return types and generating server and client code.
 
-Protobuf generates a `MsgServer` interface based on a definition of `Msg` service. It is the role of the module developer to implement this interface, by implementing the state transition logic that should happen upon receival of each `transaction.Msg`. As an example, here is the generated `MsgServer` interface for `x/bank`, which exposes two `transaction.Msg`s:
+Protobuf generates a `MsgServer` interface based on the definition of `Msg` service. It is the role of the module developer to implement this interface, by implementing the state transition logic that should happen upon receival of each `transaction.Msg`. As an example, here is the generated `MsgServer` interface for `x/bank`, which exposes two `transaction.Msg`s:
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/28fa3b8/x/bank/types/tx.pb.go#L564-L579
@@ -81,7 +81,7 @@ After the validation is successful, the `msgServer` method uses the [`keeper`](.
 
 Before returning, `msgServer` methods generally emit one or more [events](../../learn/advanced/08-events.md) by using the `EventManager` held in `environment`.
 
-There are two way to emit events, typed events using protobuf or arbitrary key & values.
+There are two ways to emit events, typed events using protobuf or arbitrary key & values.
 
 Typed Events:
 

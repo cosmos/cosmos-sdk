@@ -78,19 +78,6 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
-<<<<<<< HEAD
-	// check whether the address is a signer
-	signers, err := txBuilder.GetTx().GetSigners()
-	if err != nil {
-		return err
-	}
-
-	if !isTxSigner(addr, signers) {
-		return fmt.Errorf("%s: %s", errors.ErrorInvalidSigner, name)
-	}
-
-=======
->>>>>>> b9ca31812 (fix: nested multisig signatures using CLI (#20438))
 	if !offline {
 		txFactory, err = populateAccountFromState(txFactory, clientCtx, addr)
 		if err != nil {

@@ -87,6 +87,11 @@ const (
 	JSONKind
 )
 
+const (
+	IntegerFormat = `^-?[0-9]+$`
+	DecimalFormat = `^-?[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?$`
+)
+
 // Validate returns an errContains if the kind is invalid.
 func (t Kind) Validate() error {
 	if t <= InvalidKind {
@@ -287,11 +292,6 @@ func (t Kind) ValidateValue(value interface{}) error {
 	}
 	return nil
 }
-
-const (
-	IntegerFormat = `^-?[0-9]+$`
-	DecimalFormat = `^-?[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?$`
-)
 
 var integerRegex = regexp.MustCompile(IntegerFormat)
 var decimalRegex = regexp.MustCompile(DecimalFormat)

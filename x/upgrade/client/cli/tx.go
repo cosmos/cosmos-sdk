@@ -35,7 +35,6 @@ func GetTxCmd() *cobra.Command {
 }
 
 // NewCmdSubmitLegacyUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
-// Deprecated: please use NewCmdSubmitUpgradeProposal instead.
 func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "software-upgrade [name] (--upgrade-height [height]) (--upgrade-info [info]) [flags]",

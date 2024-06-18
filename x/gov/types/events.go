@@ -14,6 +14,7 @@ const (
 	AttributeKeyOption             = "option"
 	AttributeKeyProposalID         = "proposal_id"
 	AttributeKeyProposalMessages   = "proposal_messages" // Msg type_urls in the proposal
+	AttributeKeyProposalLog        = "proposal_log"      // log of proposal execution
 	AttributeKeyVotingPeriodStart  = "voting_period_start"
 	AttributeValueProposalDropped  = "proposal_dropped"  // didn't meet min deposit
 	AttributeValueProposalPassed   = "proposal_passed"   // met vote quorum
@@ -22,4 +23,7 @@ const (
 	AttributeKeyProposalType       = "proposal_type"
 	AttributeSignalTitle           = "signal_title"
 	AttributeSignalDescription     = "signal_description"
+
+	AttributeValueExpeditedProposalRejected = "expedited_proposal_rejected" // didn't meet expedited vote quorum
+
 )

@@ -15,10 +15,13 @@ func MigrateJSON(oldState *v1.GenesisState) (*v1.GenesisState, error) {
 
 	params := v1.NewParams(
 		oldState.DepositParams.MinDeposit,
+		defaultParams.ExpeditedMinDeposit,
 		*oldState.DepositParams.MaxDepositPeriod,
 		*oldState.VotingParams.VotingPeriod,
+		*defaultParams.ExpeditedVotingPeriod,
 		oldState.TallyParams.Quorum,
 		oldState.TallyParams.Threshold,
+		defaultParams.ExpeditedThreshold,
 		oldState.TallyParams.VetoThreshold,
 		defaultParams.MinInitialDepositRatio,
 		defaultParams.BurnProposalDepositPrevote,

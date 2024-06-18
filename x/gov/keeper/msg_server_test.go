@@ -41,6 +41,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					strings.Repeat("1", 300),
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 			},
 			expErr:    true,
@@ -55,6 +56,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 			},
 			expErr:    true,
@@ -69,6 +71,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 			},
 			expErr:    true,
@@ -83,6 +86,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 			},
 			expErr:    true,
@@ -97,6 +101,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 			},
 			expErr:    true,
@@ -111,6 +116,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 			},
 			expErr:    true,
@@ -125,6 +131,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 			},
 			expErr: false,
@@ -138,6 +145,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 			},
 			expErr: false,
@@ -181,6 +189,7 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 		"",
 		"Proposal",
 		"description of proposal",
+		false,
 	)
 	suite.Require().NoError(err)
 
@@ -206,6 +215,7 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -249,6 +259,7 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -300,6 +311,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 		"",
 		"Proposal",
 		"description of proposal",
+		false,
 	)
 	suite.Require().NoError(err)
 
@@ -326,6 +338,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -369,6 +382,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -419,6 +433,7 @@ func (suite *KeeperTestSuite) TestDepositReq() {
 		"",
 		"Proposal",
 		"description of proposal",
+		false,
 	)
 	suite.Require().NoError(err)
 
@@ -556,6 +571,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 		"",
 		"Proposal",
 		"description of proposal",
+		false,
 	)
 	suite.Require().NoError(err)
 
@@ -581,6 +597,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -614,6 +631,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -665,6 +683,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 		"",
 		"Proposal",
 		"description of proposal",
+		false,
 	)
 	suite.Require().NoError(err)
 
@@ -691,6 +710,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -724,6 +744,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -774,6 +795,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 		"",
 		"Proposal",
 		"description of proposal",
+		false,
 	)
 	suite.Require().NoError(err)
 
@@ -1152,7 +1174,7 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 			params.MinInitialDepositRatio = tc.minInitialDepositRatio.String()
 			govKeeper.SetParams(ctx, params)
 
-			msg, err := v1.NewMsgSubmitProposal(TestProposal, tc.initialDeposit, address.String(), "test", "Proposal", "description of proposal")
+			msg, err := v1.NewMsgSubmitProposal(TestProposal, tc.initialDeposit, address.String(), "test", "Proposal", "description of proposal", false)
 			suite.Require().NoError(err)
 
 			// System under test

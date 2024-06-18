@@ -43,6 +43,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 		"",
 		"Proposal",
 		"description of proposal",
+		false,
 	)
 	require.NoError(t, err)
 
@@ -99,6 +100,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 		"",
 		"Proposal",
 		"description of proposal",
+		false,
 	)
 	require.NoError(t, err)
 
@@ -125,6 +127,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 		"",
 		"Proposal",
 		"description of proposal",
+		false,
 	)
 	require.NoError(t, err)
 
@@ -186,6 +189,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 		"",
 		"Proposal",
 		"description of proposal",
+		false,
 	)
 	require.NoError(t, err)
 
@@ -219,70 +223,91 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 }
 
 func TestTickPassedVotingPeriod(t *testing.T) {
-	suite := createTestSuite(t)
-	app := suite.App
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
+	testcases := []struct {
+		name      string
+		expedited bool
+	}{
+		{
+			name: "regular - deleted",
+		},
+		{
+			name:      "expedited - converted to regular",
+			expedited: true,
+		},
+	}
 
-	SortAddresses(addrs)
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			suite := createTestSuite(t)
+			app := suite.App
+			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 
-	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+			SortAddresses(addrs)
 
-	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
+			header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+			app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	inactiveQueue := suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
-	require.False(t, inactiveQueue.Valid())
-	inactiveQueue.Close()
-	activeQueue := suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
-	require.False(t, activeQueue.Valid())
-	activeQueue.Close()
+			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 
-	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 5))}
-	newProposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{mkTestLegacyContent(t)}, proposalCoins, addrs[0].String(), "", "Proposal", "description of proposal")
-	require.NoError(t, err)
+			inactiveQueue := suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			require.False(t, inactiveQueue.Valid())
+			inactiveQueue.Close()
+			activeQueue := suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			require.False(t, activeQueue.Valid())
+			activeQueue.Close()
 
-	wrapCtx := sdk.WrapSDKContext(ctx)
+			wrapCtx := sdk.WrapSDKContext(ctx)
 
-	res, err := govMsgSvr.SubmitProposal(wrapCtx, newProposalMsg)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 5))}
+			newProposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{mkTestLegacyContent(t)}, proposalCoins, addrs[0].String(), "", "Proposal", "description of proposal", tc.expedited)
+			require.NoError(t, err)
 
-	proposalID := res.ProposalId
+			res, err := govMsgSvr.SubmitProposal(wrapCtx, newProposalMsg)
+			require.NoError(t, err)
+			require.NotNil(t, res)
 
-	newHeader := ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
-	ctx = ctx.WithBlockHeader(newHeader)
+			proposalID := res.ProposalId
 
-	newDepositMsg := v1.NewMsgDeposit(addrs[1], proposalID, proposalCoins)
+			newHeader := ctx.BlockHeader()
+			newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
+			ctx = ctx.WithBlockHeader(newHeader)
 
-	res1, err := govMsgSvr.Deposit(wrapCtx, newDepositMsg)
-	require.NoError(t, err)
-	require.NotNil(t, res1)
+			newDepositMsg := v1.NewMsgDeposit(addrs[1], proposalID, proposalCoins)
 
-	newHeader = ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(*suite.GovKeeper.GetParams(ctx).MaxDepositPeriod).Add(*suite.GovKeeper.GetParams(ctx).VotingPeriod)
-	ctx = ctx.WithBlockHeader(newHeader)
+			res1, err := govMsgSvr.Deposit(ctx, newDepositMsg)
+			require.NoError(t, err)
+			require.NotNil(t, res1)
 
-	inactiveQueue = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
-	require.False(t, inactiveQueue.Valid())
-	inactiveQueue.Close()
+			newHeader = ctx.BlockHeader()
+			newHeader.Time = ctx.BlockHeader().Time.Add(*suite.GovKeeper.GetParams(ctx).MaxDepositPeriod).Add(*suite.GovKeeper.GetParams(ctx).VotingPeriod)
+			ctx = ctx.WithBlockHeader(newHeader)
 
-	activeQueue = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
-	require.True(t, activeQueue.Valid())
+			inactiveQueue = suite.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			require.False(t, inactiveQueue.Valid())
+			inactiveQueue.Close()
 
-	activeProposalID := types.GetProposalIDFromBytes(activeQueue.Value())
-	proposal, ok := suite.GovKeeper.GetProposal(ctx, activeProposalID)
-	require.True(t, ok)
-	require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
+			activeQueue = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			require.True(t, activeQueue.Valid())
 
-	activeQueue.Close()
+			activeProposalID := types.GetProposalIDFromBytes(activeQueue.Value())
+			proposal, ok := suite.GovKeeper.GetProposal(ctx, activeProposalID)
+			require.True(t, ok)
+			require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
 
-	gov.EndBlocker(ctx, suite.GovKeeper)
+			activeQueue.Close()
 
-	activeQueue = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
-	require.False(t, activeQueue.Valid())
-	activeQueue.Close()
+			gov.EndBlocker(ctx, suite.GovKeeper)
+
+			activeQueue = suite.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			if tc.expedited {
+				require.True(t, activeQueue.Valid())
+			} else {
+				require.False(t, activeQueue.Valid())
+			}
+			activeQueue.Close()
+		})
+	}
 }
 
 func TestProposalPassedEndblocker(t *testing.T) {
@@ -308,7 +333,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	require.NotNil(t, macc)
 	initialModuleAccCoins := suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
 
-	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "title", "summary", addrs[0])
+	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "title", "summary", addrs[0], false)
 	require.NoError(t, err)
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10))}
@@ -357,7 +382,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	staking.EndBlocker(ctx, suite.StakingKeeper)
 
 	msg := banktypes.NewMsgSend(authtypes.NewModuleAddress(types.ModuleName), addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000))))
-	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "", "Bank Msg Send", "send message", addrs[0])
+	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "", "Bank Msg Send", "send message", addrs[0], false)
 	require.NoError(t, err)
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10)))

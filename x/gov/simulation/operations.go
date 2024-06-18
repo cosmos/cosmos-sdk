@@ -15,6 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var initialProposalID = uint64(100000000000000)
@@ -189,7 +191,8 @@ func simulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *k
 		chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
-		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, true)
+		expedited := r.Intn(2) == 0
+		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, true, expedited)
 		switch {
 		case skip:
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "skip deposit"), nil, nil
@@ -204,6 +207,7 @@ func simulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *k
 			simtypes.RandStringOfLength(r, 100),
 			simtypes.RandStringOfLength(r, 100),
 			simtypes.RandStringOfLength(r, 100),
+			expedited,
 		)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate a submit proposal msg"), nil, err
@@ -275,8 +279,11 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.K
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "unable to generate proposalID"), nil, nil
 		}
-
-		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, false)
+		p, found := k.GetProposal(ctx, proposalID)
+		if !found {
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "unable to get proposal"), nil, sdkerrors.ErrNotFound
+		}
+		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, false, p.Expedited)
 		switch {
 		case skip:
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "skip deposit"), nil, nil
@@ -431,6 +438,7 @@ func randomDeposit(
 	k *keeper.Keeper,
 	addr sdk.AccAddress,
 	useMinAmount bool,
+	expedited bool,
 ) (deposit sdk.Coins, skip bool, err error) {
 	account := ak.GetAccount(ctx, addr)
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
@@ -441,6 +449,9 @@ func randomDeposit(
 
 	params := k.GetParams(ctx)
 	minDeposit := params.MinDeposit
+	if expedited {
+		minDeposit = params.ExpeditedMinDeposit
+	}
 	denomIndex := r.Intn(len(minDeposit))
 	denom := minDeposit[denomIndex].Denom
 
@@ -474,8 +485,8 @@ func randomDeposit(
 	}
 	amount = amount.Add(minAmount)
 
-	// NOTE: backport from v50
-	amount = amount.MulRaw(3) // 3x what's required // TODO: this is a hack, we need to be able to calculate the correct amount using params
+	// // NOTE: backport from v50
+	// amount = amount.MulRaw(3) // 3x what's required // TODO: this is a hack, we need to be able to calculate the correct amount using params
 
 	if amount.GT(spendableBalance) || amount.LT(threshold) {
 		return nil, true, nil

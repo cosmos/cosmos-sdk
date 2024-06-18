@@ -50,9 +50,9 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 			"create a proposal and get tally",
 			func() {
 				var err error
-				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0])
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0], false)
 				suite.Require().NoError(err)
-				suite.Require().NotNil(proposal)
+				suite.Require().NotEqual(proposal.String(), "")
 
 				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
@@ -161,9 +161,9 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTally() {
 			"create a proposal and get tally",
 			func() {
 				var err error
-				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0])
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0], false)
 				suite.Require().NoError(err)
-				suite.Require().NotNil(proposal)
+				suite.Require().NotEqual(proposal.String(), "")
 
 				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}
 

@@ -134,6 +134,7 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 	}
 	if targetVersion < latestVersion {
 		batch := c.db.NewBatch()
+		defer batch.Close()
 		for version := latestVersion; version > targetVersion; version-- {
 			cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
 			if err := batch.Delete(cInfoKey); err != nil {
@@ -186,6 +187,7 @@ func (c *CommitStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo) e
 	}
 
 	batch := c.db.NewBatch()
+	defer batch.Close()
 	cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
 	value, err := cInfo.Marshal()
 	if err != nil {
@@ -306,6 +308,7 @@ func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, 
 func (c *CommitStore) Prune(version uint64) (ferr error) {
 	// prune the metadata
 	batch := c.db.NewBatch()
+	defer batch.Close()
 	for v := version; v > 0; v-- {
 		cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, v))
 		if exist, _ := c.db.Has(cInfoKey); !exist {

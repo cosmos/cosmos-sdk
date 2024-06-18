@@ -3,10 +3,10 @@ package stf
 import (
 	"context"
 
-	"cosmossdk.io/core/transaction"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/core/router"
+	"cosmossdk.io/core/transaction"
 )
 
 // NewMsgRouterService implements router.Service.

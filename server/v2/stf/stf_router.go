@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/core/router"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/router"
 )
 
 var ErrNoHandler = errors.New("no handler")

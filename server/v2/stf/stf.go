@@ -54,7 +54,6 @@ func NewSTF[T transaction.Tx](
 	postTxExec func(ctx context.Context, tx T, success bool) error,
 	branch func(store store.ReaderMap) store.WriterMap,
 ) (*STF[T], error) {
-
 	msgRouter, err := msgRouterBuilder.Build()
 	if err != nil {
 		return nil, fmt.Errorf("build msg router: %w", err)
@@ -612,6 +611,8 @@ func (s STF[T]) makeContext(
 		sender,
 		store,
 		execMode,
+		s.msgRouter,
+		s.queryRouter,
 	)
 }
 
@@ -623,6 +624,8 @@ func newExecutionContext(
 	sender transaction.Identity,
 	state store.WriterMap,
 	execMode transaction.ExecMode,
+	msgRouter Router,
+	queryRouter Router,
 ) *executionContext {
 	meter := makeGasMeterFn(gas.NoGasLimit)
 	meteredState := makeGasMeteredStoreFn(meter, state)
@@ -639,6 +642,8 @@ func newExecutionContext(
 		branchFn:            branchFn,
 		makeGasMeter:        makeGasMeterFn,
 		makeGasMeteredStore: makeGasMeteredStoreFn,
+		msgRouter:           msgRouter,
+		queryRouter:         queryRouter,
 	}
 }
 

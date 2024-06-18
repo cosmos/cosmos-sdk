@@ -37,11 +37,8 @@ const (
 	flagNoSort       = "nosort"
 	flagHDPath       = "hd-path"
 	flagPubKeyBase64 = "pubkey-base64"
-<<<<<<< HEAD
-=======
 	flagIndiscreet   = "indiscreet"
 	flagMnemonicSrc  = "source"
->>>>>>> eee5e21e1 (feat(client): Add flag & reading mnemonic from file (#20690))
 
 	// DefaultKeyPass contains the default key password for genesis transactions
 	DefaultKeyPass = "12345678"
@@ -95,11 +92,8 @@ Example:
 	f.Uint32(flagAccount, 0, "Account number for HD derivation (less than equal 2147483647)")
 	f.Uint32(flagIndex, 0, "Address index number for HD derivation (less than equal 2147483647)")
 	f.String(flags.FlagKeyType, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
-<<<<<<< HEAD
-=======
 	f.Bool(flagIndiscreet, false, "Print seed phrase directly on current terminal (only valid when --no-backup is false)")
 	f.String(flagMnemonicSrc, "", "Import mnemonic from a file (only usable when recover or interactive is passed)")
->>>>>>> eee5e21e1 (feat(client): Add flag & reading mnemonic from file (#20690))
 
 	// support old flags name for backwards compatibility
 	f.SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {

@@ -86,6 +86,10 @@ iavl-disable-fastnode = {{ .BaseConfig.IAVLDisableFastNode }}
 # The fallback is the db_backend value set in CometBFT's config.toml.
 app-db-backend = "{{ .BaseConfig.AppDBBackend }}"
 
+# Maximum event size in bytes that is stored in the block results. 0 means no limit
+# If an attribute of an event is larger than the max size, the attribute will be replaced with a placeholder.
+max-event-size = {{ .BaseConfig.MaxEventSize }}
+
 ###############################################################################
 ###                         Telemetry Configuration                         ###
 ###############################################################################

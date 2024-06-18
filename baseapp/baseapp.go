@@ -774,6 +774,18 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 		return resp
 	}
 
+	// If the application has set a maximum event size, check the size of each event attribute.
+	// If the size of any attribute exceeds the maximum, set the attribute value to a placeholder.
+	if sdk.MaxEventSize > 0 {
+		for i, event := range result.Events {
+			for j, attr := range event.Attributes {
+				if len([]byte(attr.Key))+len([]byte(attr.Value)) > sdk.MaxEventSize {
+					result.Events[i].Attributes[j].Value = "evt val too large, inc max-event-size in config.toml"
+				}
+			}
+		}
+	}
+
 	resp = &abci.ExecTxResult{
 		GasWanted: int64(gInfo.GasWanted),
 		GasUsed:   int64(gInfo.GasUsed),

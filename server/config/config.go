@@ -91,6 +91,10 @@ type BaseConfig struct {
 	// AppDBBackend defines the type of Database to use for the application and snapshots databases.
 	// An empty string indicates that the CometBFT config's DBBackend value should be used.
 	AppDBBackend string `mapstructure:"app-db-backend"`
+
+	// MaxEventSize defines the maximum size of an attribute (key + value) of an event that will be stored in the block results.
+	// If an attribute is larger than this size, it will be replaced with a placeholder in the block results.
+	MaxEventSize int `mapstructure:"max-event-size" json:"max-event-size"`
 }
 
 // APIConfig defines the API listener configuration.
@@ -223,6 +227,7 @@ func DefaultConfig() *Config {
 			IAVLCacheSize:       781250,
 			IAVLDisableFastNode: false,
 			AppDBBackend:        "",
+			MaxEventSize:        1000000, // 1MB
 		},
 		Telemetry: telemetry.Config{
 			Enabled:      false,
@@ -264,6 +269,7 @@ func GetConfig(v *viper.Viper) (Config, error) {
 	if err := v.Unmarshal(conf); err != nil {
 		return Config{}, fmt.Errorf("error extracting app config: %w", err)
 	}
+	sdk.MaxEventSize = conf.BaseConfig.MaxEventSize
 	return *conf, nil
 }
 

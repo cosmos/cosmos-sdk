@@ -15,6 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
+var MaxEventSize = 0
+
 type EventManagerI interface {
 	Events() Events
 	ABCIEvents() []abci.Event

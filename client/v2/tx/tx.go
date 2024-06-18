@@ -228,6 +228,7 @@ func generateOnly(ctx client.Context, txf Factory, msgs ...transaction.Msg) erro
 	return ctx.PrintString(uTx)
 }
 
+// SimulateTx simulates a tx and returns the simulation response obtained by the query.
 func SimulateTx(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.Msg) (proto.Message, error) {
 	txf, err := newFactory(ctx, flagSet)
 	if err != nil {
@@ -235,11 +236,7 @@ func SimulateTx(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.
 	}
 
 	simulation, _, err := txf.Simulate(msgs...)
-	if err != nil {
-		return nil, err
-	}
-
-	return simulation, nil
+	return simulation, err
 }
 
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the
@@ -252,7 +249,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...transaction.Msg)
 	}
 
 	if txf.SimulateAndExecute() {
-		err = txf.CalculateGas(msgs...)
+		err = txf.calculateGas(msgs...)
 		if err != nil {
 			return err
 		}
@@ -294,7 +291,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...transaction.Msg)
 		}
 	}
 
-	if err = txf.Sign(clientCtx.CmdContext, clientCtx.FromName, builder, true); err != nil {
+	if err = txf.Sign(clientCtx.CmdContext, builder, true); err != nil {
 		return err
 	}
 

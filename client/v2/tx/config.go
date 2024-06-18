@@ -104,7 +104,9 @@ func NewTxConfig(options ConfigOptions) (TxConfig, error) {
 	}
 
 	if options.Decoder == nil {
-		options.Decoder, err = txdecode.NewDecoder(txdecode.Options{SigningContext: signingCtx.SigningContext()})
+		options.Decoder, err = txdecode.NewDecoder(txdecode.Options{
+			SigningContext: signingCtx.SigningContext(),
+			ProtoCodec:     options.Cdc})
 		if err != nil {
 			return nil, err
 		}

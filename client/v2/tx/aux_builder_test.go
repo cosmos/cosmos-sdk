@@ -253,7 +253,8 @@ func checkCorrectData(t *testing.T, cdc codec.Codec, auxSignerData *apitx.AuxSig
 	require.Equal(t, memo, body.Memo)
 	require.Equal(t, chainID, auxSignerData.SignDoc.ChainId)
 	require.Equal(t, msgAny, body.GetMessages()[0])
-	require.Equal(t, pkAny, auxSignerData.SignDoc.PublicKey)
+	require.Equal(t, pkAny.TypeUrl, auxSignerData.SignDoc.PublicKey.TypeUrl)
+	require.Equal(t, pkAny.Value, auxSignerData.SignDoc.PublicKey.Value)
 	require.Equal(t, signMode, auxSignerData.Mode)
 	require.Equal(t, rawSig, auxSignerData.Sig)
 }

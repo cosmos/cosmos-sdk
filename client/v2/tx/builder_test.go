@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	base "cosmossdk.io/api/cosmos/base/v1beta1"
@@ -12,28 +13,13 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/transaction"
 	txdecode "cosmossdk.io/x/tx/decode"
-	"cosmossdk.io/x/tx/signing"
-	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	addrcodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
-)
-
-var (
-	cdc            = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
-	ac             = addrcodec.NewBech32Codec("cosmos")
-	signingOptions = signing.Options{
-		AddressCodec:          ac,
-		ValidatorAddressCodec: addrcodec.NewBech32Codec("cosmosval"),
-	}
-	signingContext, _ = signing.NewContext(signingOptions)
-	decodeOptions     = txdecode.Options{SigningContext: signingContext}
-	decoder, _        = txdecode.NewDecoder(decodeOptions)
 )
 
 func TestNewBuilderProvider(t *testing.T) {

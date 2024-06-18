@@ -12,13 +12,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/address"
 )
 
-type testModeHandler struct{}
+type mockModeHandler struct{}
 
-func (t testModeHandler) Mode() apitxsigning.SignMode {
+func (t mockModeHandler) Mode() apitxsigning.SignMode {
 	return apitxsigning.SignMode_SIGN_MODE_DIRECT
 }
 
-func (t testModeHandler) GetSignBytes(_ context.Context, _ signing.SignerData, _ signing.TxData) ([]byte, error) {
+func (t mockModeHandler) GetSignBytes(_ context.Context, _ signing.SignerData, _ signing.TxData) ([]byte, error) {
 	return []byte{}, nil
 }
 
@@ -53,7 +53,6 @@ func TestConfigOptions_validate(t *testing.T) {
 				Cdc:                   cdc,
 				ValidatorAddressCodec: address.NewBech32Codec("cosmosvaloper"),
 			},
-			wantErr: true,
 		},
 		{
 			name: "missing codec",
@@ -114,7 +113,7 @@ func Test_newHandlerMap(t *testing.T) {
 				Decoder:               decoder,
 				Cdc:                   cdc,
 				ValidatorAddressCodec: address.NewBech32Codec("cosmosvaloper"),
-				CustomSignModes:       []signing.SignModeHandler{testModeHandler{}},
+				CustomSignModes:       []signing.SignModeHandler{mockModeHandler{}},
 			},
 		},
 	}
@@ -130,6 +129,33 @@ func Test_newHandlerMap(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, handlerMap)
 			require.Equal(t, len(handlerMap.SupportedModes()), len(tt.opts.EnablesSignModes)+len(tt.opts.CustomSignModes))
+		})
+	}
+}
+
+func TestNewTxConfig(t *testing.T) {
+	tests := []struct {
+		name    string
+		options ConfigOptions
+		wantErr bool
+	}{
+		{
+			name: "valid options",
+			options: ConfigOptions{
+				AddressCodec:          ac,
+				Cdc:                   cdc,
+				ValidatorAddressCodec: valCodec,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := NewTxConfig(tt.options)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NewTxConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			require.NotNil(t, got)
 		})
 	}
 }

@@ -174,7 +174,7 @@ func (f *Factory) BuildUnsignedTx(msgs ...transaction.Msg) (TxBuilder, error) {
 	return txBuilder, nil
 }
 
-func (f *Factory) CalculateGas(msgs ...transaction.Msg) error {
+func (f *Factory) calculateGas(msgs ...transaction.Msg) error {
 	if f.txParams.offline {
 		return errors.New("cannot simulate in offline mode")
 	}
@@ -211,10 +211,9 @@ func (f *Factory) Simulate(msgs ...transaction.Msg) (*tx.SimulateResponse, uint6
 // specified by ctx.Output. If simulation was requested, the gas will be
 // simulated and also printed to the same writer before the transaction is
 // printed.
-// TODO: this should not be part of factory or at least just return the json encoded string.
 func (f *Factory) UnsignedTxString(msgs ...transaction.Msg) (string, error) {
 	if f.SimulateAndExecute() {
-		err := f.CalculateGas(msgs...)
+		err := f.calculateGas(msgs...)
 		if err != nil {
 			return "", err
 		}
@@ -288,7 +287,7 @@ func (f *Factory) BuildSimTx(msgs ...transaction.Msg) ([]byte, error) {
 // Signing a transaction with multiple signers in the DIRECT mode is not supported and will
 // return an error.
 // An error is returned upon failure.
-func (f *Factory) Sign(ctx context.Context, name string, txBuilder TxBuilder, overwriteSig bool) error {
+func (f *Factory) Sign(ctx context.Context, txBuilder TxBuilder, overwriteSig bool) error {
 	if f.keybase == nil {
 		return errors.New("keybase must be set prior to signing a transaction")
 	}
@@ -298,7 +297,7 @@ func (f *Factory) Sign(ctx context.Context, name string, txBuilder TxBuilder, ov
 		f.txParams.signMode = f.txConfig.SignModeHandler().DefaultMode()
 	}
 
-	pubKey, err := f.keybase.GetPubKey(name)
+	pubKey, err := f.keybase.GetPubKey(f.txParams.fromName)
 	if err != nil {
 		return err
 	}
@@ -378,13 +377,13 @@ func (f *Factory) Sign(ctx context.Context, name string, txBuilder TxBuilder, ov
 		return err
 	}
 
-	bytesToSign, err := f.GetSignBytesAdapter(ctx, signerData, txBuilder)
+	bytesToSign, err := f.getSignBytesAdapter(ctx, signerData, txBuilder)
 	if err != nil {
 		return err
 	}
 
 	// Sign those bytes
-	sigBytes, err := f.keybase.Sign(name, bytesToSign, f.txParams.signMode)
+	sigBytes, err := f.keybase.Sign(f.txParams.fromName, bytesToSign, f.txParams.signMode)
 	if err != nil {
 		return err
 	}
@@ -413,27 +412,18 @@ func (f *Factory) Sign(ctx context.Context, name string, txBuilder TxBuilder, ov
 
 	// Run optional preprocessing if specified. By default, this is unset
 	// and will return nil.
-	return f.PreprocessTx(name, txBuilder)
+	return f.PreprocessTx(f.txParams.fromName, txBuilder)
 }
 
-// GetSignBytesAdapter returns the sign bytes for a given transaction and sign mode.
-func (f *Factory) GetSignBytesAdapter(ctx context.Context, signerData signing.SignerData, builder TxBuilder) ([]byte, error) {
-	// TODO
-	txSignerData := signing.SignerData{
-		ChainID:       signerData.ChainID,
-		AccountNumber: signerData.AccountNumber,
-		Sequence:      signerData.Sequence,
-		Address:       signerData.Address,
-		PubKey:        signerData.PubKey,
-	}
-
+// getSignBytesAdapter returns the sign bytes for a given transaction and sign mode.
+func (f *Factory) getSignBytesAdapter(ctx context.Context, signerData signing.SignerData, builder TxBuilder) ([]byte, error) {
 	txData, err := builder.GetSigningTxData()
 	if err != nil {
 		return nil, err
 	}
 
 	// Generate the bytes to be signed.
-	return f.txConfig.SignModeHandler().GetSignBytes(ctx, f.SignMode(), txSignerData, *txData)
+	return f.txConfig.SignModeHandler().GetSignBytes(ctx, f.SignMode(), signerData, *txData)
 }
 
 func validateMemo(memo string) error {

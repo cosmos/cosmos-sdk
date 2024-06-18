@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/core/router"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/runtime/protoiface"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 )
@@ -60,7 +62,7 @@ func (b *MsgRouterBuilder) HandlerExists(msgType string) bool {
 	return ok
 }
 
-func (b *MsgRouterBuilder) Build() (appmodulev2.Handler, error) {
+func (b *MsgRouterBuilder) Build() (Router, error) {
 	handlers := make(map[string]appmodulev2.Handler)
 
 	globalPreHandler := func(ctx context.Context, msg appmodulev2.Message) error {
@@ -92,14 +94,8 @@ func (b *MsgRouterBuilder) Build() (appmodulev2.Handler, error) {
 		handlers[msgType] = buildHandler(handler, preHandlers, globalPreHandler, postHandlers, globalPostHandler)
 	}
 
-	// return handler as function
-	return func(ctx context.Context, msg appmodulev2.Message) (appmodulev2.Message, error) {
-		typeName := msgTypeURL(msg)
-		handler, exists := handlers[typeName]
-		if !exists {
-			return nil, fmt.Errorf("%w: %s", ErrNoHandler, typeName)
-		}
-		return handler(ctx, msg)
+	return Router{
+		handlers: handlers,
 	}, nil
 }
 
@@ -146,4 +142,37 @@ func msgTypeURL(msg gogoproto.Message) string {
 	}
 
 	return gogoproto.MessageName(msg)
+}
+
+var _ router.Service = (*Router)(nil)
+
+// Router implements the STF router for msg and query handlers.
+type Router struct {
+	handlers map[string]appmodulev2.Handler
+}
+
+func (r Router) CanInvoke(_ context.Context, typeURL string) error {
+	_, exists := r.handlers[typeURL]
+	if !exists {
+		return fmt.Errorf("%w: %s", ErrNoHandler, typeURL)
+	}
+	return nil
+}
+
+func (r Router) InvokeTyped(ctx context.Context, req, resp protoiface.MessageV1) error {
+	handlerResp, err := r.InvokeUntyped(ctx, req)
+	if err != nil {
+		return err
+	}
+	gogoproto.Merge(resp, handlerResp)
+	return nil
+}
+
+func (r Router) InvokeUntyped(ctx context.Context, req protoiface.MessageV1) (res protoiface.MessageV1, err error) {
+	typeName := msgTypeURL(req)
+	handler, exists := r.handlers[typeName]
+	if !exists {
+		return nil, fmt.Errorf("%w: %s", ErrNoHandler, typeName)
+	}
+	return handler(ctx, req)
 }

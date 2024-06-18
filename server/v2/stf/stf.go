@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/log"
+	"cosmossdk.io/core/router"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	stfgas "cosmossdk.io/server/v2/stf/gas"
@@ -23,9 +24,10 @@ var Identity = []byte("stf")
 
 // STF is a struct that manages the state transition component of the app.
 type STF[T transaction.Tx] struct {
-	logger      log.Logger
-	handleMsg   func(ctx context.Context, msg transaction.Msg) (transaction.Msg, error)
-	handleQuery func(ctx context.Context, req transaction.Msg) (transaction.Msg, error)
+	logger log.Logger
+
+	msgRouter   Router
+	queryRouter Router
 
 	doPreBlock        func(ctx context.Context, txs []T) error
 	doBeginBlock      func(ctx context.Context) error
@@ -42,8 +44,8 @@ type STF[T transaction.Tx] struct {
 
 // NewSTF returns a new STF instance.
 func NewSTF[T transaction.Tx](
-	handleMsg func(ctx context.Context, msg transaction.Msg) (transaction.Msg, error),
-	handleQuery func(ctx context.Context, req transaction.Msg) (transaction.Msg, error),
+	msgRouterBuilder *MsgRouterBuilder,
+	queryRouterBuilder *MsgRouterBuilder,
 	doPreBlock func(ctx context.Context, txs []T) error,
 	doBeginBlock func(ctx context.Context) error,
 	doEndBlock func(ctx context.Context) error,
@@ -51,20 +53,31 @@ func NewSTF[T transaction.Tx](
 	doValidatorUpdate func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error),
 	postTxExec func(ctx context.Context, tx T, success bool) error,
 	branch func(store store.ReaderMap) store.WriterMap,
-) *STF[T] {
+) (*STF[T], error) {
+
+	msgRouter, err := msgRouterBuilder.Build()
+	if err != nil {
+		return nil, fmt.Errorf("build msg router: %w", err)
+	}
+	queryRouter, err := queryRouterBuilder.Build()
+	if err != nil {
+		return nil, fmt.Errorf("build query router: %w", err)
+	}
+
 	return &STF[T]{
-		handleMsg:           handleMsg,
-		handleQuery:         handleQuery,
+		logger:              nil,
+		msgRouter:           msgRouter,
+		queryRouter:         queryRouter,
 		doPreBlock:          doPreBlock,
 		doBeginBlock:        doBeginBlock,
 		doEndBlock:          doEndBlock,
-		doTxValidation:      doTxValidation,
 		doValidatorUpdate:   doValidatorUpdate,
+		doTxValidation:      doTxValidation,
 		postTxExec:          postTxExec, // TODO
 		branchFn:            branch,
 		makeGasMeter:        stfgas.DefaultGasMeter,
 		makeGasMeteredState: stfgas.DefaultWrapWithGasMeter,
-	}
+	}, nil
 }
 
 // DeliverBlock is our state transition function.
@@ -310,7 +323,7 @@ func (s STF[T]) runTxMsgs(
 	execCtx.setGasLimit(gasLimit)
 	for i, msg := range msgs {
 		execCtx.sender = txSenders[i]
-		resp, err := s.handleMsg(execCtx, msg)
+		resp, err := s.msgRouter.InvokeUntyped(execCtx, msg)
 		if err != nil {
 			return nil, 0, nil, fmt.Errorf("message execution at index %d failed: %w", i, err)
 		}
@@ -346,7 +359,7 @@ func (s STF[T]) runConsensusMessages(
 ) ([]transaction.Msg, error) {
 	responses := make([]transaction.Msg, len(messages))
 	for i := range messages {
-		resp, err := s.handleMsg(ctx, messages[i])
+		resp, err := s.msgRouter.InvokeUntyped(ctx, messages[i])
 		if err != nil {
 			return nil, err
 		}
@@ -498,11 +511,7 @@ func (s STF[T]) Query(
 	queryCtx := s.makeContext(ctx, nil, queryState, internal.ExecModeSimulate)
 	queryCtx.setHeaderInfo(hi)
 	queryCtx.setGasLimit(gasLimit)
-	return s.handleQuery(queryCtx, req)
-}
-
-func (s STF[T]) Message(ctx context.Context, msg transaction.Msg) (response transaction.Msg, err error) {
-	return s.handleMsg(ctx, msg)
+	return s.queryRouter.InvokeUntyped(queryCtx, req)
 }
 
 // RunWithCtx is made to support genesis, if genesis was just the execution of messages instead
@@ -521,8 +530,9 @@ func (s STF[T]) RunWithCtx(
 // clone clones STF.
 func (s STF[T]) clone() STF[T] {
 	return STF[T]{
-		handleMsg:           s.handleMsg,
-		handleQuery:         s.handleQuery,
+		logger:              s.logger,
+		msgRouter:           s.msgRouter,
+		queryRouter:         s.queryRouter,
 		doPreBlock:          s.doPreBlock,
 		doBeginBlock:        s.doBeginBlock,
 		doEndBlock:          s.doEndBlock,
@@ -558,6 +568,9 @@ type executionContext struct {
 	branchFn            branchFn
 	makeGasMeter        makeGasMeterFn
 	makeGasMeteredStore makeGasMeteredStateFn
+
+	msgRouter   router.Service
+	queryRouter router.Service
 }
 
 // setHeaderInfo sets the header info in the state to be used by queries in the future.

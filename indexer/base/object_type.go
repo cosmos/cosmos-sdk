@@ -41,6 +41,10 @@ func (o ObjectType) Validate() error {
 		}
 	}
 
+	if len(o.KeyFields) == 0 && len(o.ValueFields) == 0 {
+		return fmt.Errorf("object type %q has no key or value fields", o.Name)
+	}
+
 	return nil
 
 }
@@ -96,7 +100,7 @@ func (o ObjectType) ValidateValue(value interface{}) error {
 	}
 
 	if len(values) > 0 {
-		return fmt.Errorf("unexpected fields in ValueUpdates: %v", values)
+		return fmt.Errorf("unexpected values in ValueUpdates: %v", values)
 	}
 
 	return nil

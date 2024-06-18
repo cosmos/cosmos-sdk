@@ -16,9 +16,11 @@ type Field struct {
 	// AddressPrefix is the address prefix of the field's kind, currently only used for Bech32AddressKind.
 	AddressPrefix string
 
-	// EnumType must refer to an enum definition in the module schema and must only be set when
-	// the field's kind is EnumKind.
-	EnumType string
+	// EnumDefinition is the definition of the enum type and is only valid when Kind is EnumKind.
+	// The same enum types can be reused in the same module schema, but they always must contain
+	// the same values for the same enum name. This possibly introduces some duplication of
+	// definitions but makes it easier to reason about correctness and validation in isolation.
+	EnumDefinition EnumDefinition
 }
 
 // Validate validates the field.
@@ -40,38 +42,21 @@ func (c Field) Validate() error {
 		return fmt.Errorf("address prefix is only valid for field %q with type Bech32AddressKind", c.Name)
 	}
 
-	// enum type only valid with EnumKind
+	// enum definition only valid with EnumKind
 	if c.Kind == EnumKind {
-		if c.EnumType == "" {
-			return fmt.Errorf("missing EnumType for field %q", c.Name)
+		if err := c.EnumDefinition.Validate(); err != nil {
+			return fmt.Errorf("invalid enum definition for field %q: %w", c.Name, err)
 		}
-	} else if c.Kind != EnumKind && c.EnumType != "" {
-		return fmt.Errorf("EnumType is only valid for field with type EnumKind, found it on %s", c.Name)
+	} else if c.Kind != EnumKind && c.EnumDefinition.Name != "" && c.EnumDefinition.Values != nil {
+		return fmt.Errorf("enum definition is only valid for field %q with type EnumKind", c.Name)
 	}
 
 	return nil
 }
 
-// Validate validates the enum definition.
-func (e EnumDefinition) Validate() error {
-	if len(e.Values) == 0 {
-		return fmt.Errorf("enum definition values cannot be empty")
-	}
-	seen := make(map[string]bool, len(e.Values))
-	for i, v := range e.Values {
-		if v == "" {
-			return fmt.Errorf("enum definition value at index %d cannot be empty", i)
-		}
-		if seen[v] {
-			return fmt.Errorf("duplicate enum definition value %q", v)
-		}
-		seen[v] = true
-	}
-	return nil
-}
-
-// ValidateValue validates that the value corresponds to the field's kind and nullability, but
-// cannot check for enum value correctness.
+// ValidateValue validates that the value conforms to the field's kind and nullability.
+// Unlike Kind.ValidateValue, it also checks that the value conforms to the EnumDefinition
+// if the field is an EnumKind.
 func (c Field) ValidateValue(value interface{}) error {
 	if value == nil {
 		if !c.Nullable {
@@ -79,6 +64,14 @@ func (c Field) ValidateValue(value interface{}) error {
 		}
 		return nil
 	}
+	err := c.Kind.ValidateValueType(value)
+	if err != nil {
+		return fmt.Errorf("invalid value for field %q: %w", c.Name, err)
+	}
 
-	return c.Kind.ValidateValue(value)
+	if c.Kind == EnumKind {
+		return c.EnumDefinition.ValidateValue(value.(string))
+	}
+
+	return nil
 }

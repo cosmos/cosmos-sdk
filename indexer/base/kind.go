@@ -78,8 +78,8 @@ const (
 	Bech32AddressKind
 
 	// EnumKind is an enum type and values of this type must be of the go type string.
-	// Fields of this type are expected to set the EnumType field to the name of a valid
-	// enum type within the module schema.
+	// Fields of this type are expected to set the EnumDefinition field in the field definition to the enum
+	// definition.
 	EnumKind
 
 	// JSONKind is a JSON type and values of this type should be of go type json.RawMessage and represent

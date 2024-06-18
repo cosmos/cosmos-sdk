@@ -7,25 +7,12 @@ import (
 	"time"
 )
 
-func TestKind_Validate(t *testing.T) {
-	validKinds := []Kind{
-		StringKind,
-		BytesKind,
-		Int8Kind,
-		Uint8Kind,
-		Int16Kind,
-		Uint16Kind,
-		Int32Kind,
-		Uint32Kind,
-		Int64Kind,
-		Uint64Kind,
-		IntegerKind,
-		DecimalKind,
-		BoolKind,
-		EnumKind,
-		Bech32AddressKind,
-	}
+var validKinds = []Kind{
+	StringKind, BytesKind, Int8Kind, Uint8Kind, Int16Kind, Uint16Kind, Int32Kind, Uint32Kind, Int64Kind,
+	Uint64Kind, IntegerKind, DecimalKind, BoolKind, EnumKind, Bech32AddressKind,
+}
 
+func TestKind_Validate(t *testing.T) {
 	for _, kind := range validKinds {
 		if err := kind.Validate(); err != nil {
 			t.Errorf("expected valid kind %s to pass validation, got: %v", kind, err)
@@ -51,237 +38,48 @@ func TestKind_ValidateValueType(t *testing.T) {
 		value interface{}
 		valid bool
 	}{
-		{
-			kind:  StringKind,
-			value: "hello",
-			valid: true,
-		},
-		{
-			kind:  StringKind,
-			value: []byte("hello"),
-			valid: false,
-		},
-		{
-			kind:  BytesKind,
-			value: []byte("hello"),
-			valid: true,
-		},
-		{
-			kind:  BytesKind,
-			value: "hello",
-			valid: false,
-		},
-		{
-			kind:  Int8Kind,
-			value: int8(1),
-			valid: true,
-		},
-		{
-			kind:  Int8Kind,
-			value: int16(1),
-			valid: false,
-		},
-		{
-			kind:  Uint8Kind,
-			value: uint8(1),
-			valid: true,
-		},
-		{
-			kind:  Uint8Kind,
-			value: uint16(1),
-			valid: false,
-		},
-		{
-			kind:  Int16Kind,
-			value: int16(1),
-			valid: true,
-		},
-		{
-			kind:  Int16Kind,
-			value: int32(1),
-			valid: false,
-		},
-		{
-			kind:  Uint16Kind,
-			value: uint16(1),
-			valid: true,
-		},
-		{
-			kind:  Uint16Kind,
-			value: uint32(1),
-			valid: false,
-		},
-		{
-			kind:  Int32Kind,
-			value: int32(1),
-			valid: true,
-		},
-		{
-			kind:  Int32Kind,
-			value: int64(1),
-			valid: false,
-		},
-		{
-			kind:  Uint32Kind,
-			value: uint32(1),
-			valid: true,
-		},
-		{
-			kind:  Uint32Kind,
-			value: uint64(1),
-			valid: false,
-		},
-		{
-			kind:  Int64Kind,
-			value: int64(1),
-			valid: true,
-		},
-		{
-			kind:  Int64Kind,
-			value: int32(1),
-			valid: false,
-		},
-		{
-			kind:  Uint64Kind,
-			value: uint64(1),
-			valid: true,
-		},
-		{
-			kind:  Uint64Kind,
-			value: uint32(1),
-			valid: false,
-		},
-		{
-			kind:  IntegerKind,
-			value: "1",
-			valid: true,
-		},
-		{
-			kind:  IntegerKind,
-			value: int32(1),
-			valid: false,
-		},
-		{
-			kind:  DecimalKind,
-			value: "1.0",
-			valid: true,
-		},
-		{
-			kind:  DecimalKind,
-			value: "1",
-			valid: true,
-		},
-		{
-			kind:  DecimalKind,
-			value: "1.1e4",
-			valid: true,
-		},
-		{
-			kind:  DecimalKind,
-			value: int32(1),
-			valid: false,
-		},
-		{
-			kind:  Bech32AddressKind,
-			value: []byte("hello"),
-			valid: true,
-		},
-		{
-			kind:  Bech32AddressKind,
-			value: 1,
-			valid: false,
-		},
-		{
-			kind:  BoolKind,
-			value: true,
-			valid: true,
-		},
-		{
-			kind:  BoolKind,
-			value: false,
-			valid: true,
-		},
-		{
-			kind:  BoolKind,
-			value: 1,
-			valid: false,
-		},
-		{
-			kind:  EnumKind,
-			value: "hello",
-			valid: true,
-		},
-		{
-			kind:  EnumKind,
-			value: 1,
-			valid: false,
-		},
-		{
-			kind:  TimeKind,
-			value: time.Now(),
-			valid: true,
-		},
-		{
-			kind:  TimeKind,
-			value: "hello",
-			valid: false,
-		},
-		{
-			kind:  DurationKind,
-			value: time.Second,
-			valid: true,
-		},
-		{
-			kind:  DurationKind,
-			value: "hello",
-			valid: false,
-		},
-		{
-			kind:  Float32Kind,
-			value: float32(1.0),
-			valid: true,
-		},
-		{
-			kind:  Float32Kind,
-			value: float64(1.0),
-			valid: false,
-		},
-		{
-			kind:  Float64Kind,
-			value: float64(1.0),
-			valid: true,
-		},
-		{
-			kind:  Float64Kind,
-			value: float32(1.0),
-			valid: false,
-		},
-		{
-			kind:  JSONKind,
-			value: json.RawMessage("{}"),
-			valid: true,
-		},
-		// nils get rejected
-		{
-			kind:  StringKind,
-			value: nil,
-			valid: false,
-		},
-		{
-			kind:  BytesKind,
-			value: nil,
-			valid: false,
-		},
-		{
-			kind:  Int32Kind,
-			value: nil,
-			valid: false,
-		},
-		{
-			kind:  JSONKind,
-			value: nil,
-			valid: false,
-		},
+		{kind: StringKind, value: "hello", valid: true},
+		{kind: StringKind, value: []byte("hello"), valid: false},
+		{kind: BytesKind, value: []byte("hello"), valid: true},
+		{kind: BytesKind, value: "hello", valid: false},
+		{kind: Int8Kind, value: int8(1), valid: true},
+		{kind: Int8Kind, value: int16(1), valid: false},
+		{kind: Uint8Kind, value: uint8(1), valid: true},
+		{kind: Uint8Kind, value: uint16(1), valid: false},
+		{kind: Int16Kind, value: int16(1), valid: true},
+		{kind: Int16Kind, value: int32(1), valid: false},
+		{kind: Uint16Kind, value: uint16(1), valid: true},
+		{kind: Uint16Kind, value: uint32(1), valid: false},
+		{kind: Int32Kind, value: int32(1), valid: true},
+		{kind: Int32Kind, value: int64(1), valid: false},
+		{kind: Uint32Kind, value: uint32(1), valid: true},
+		{kind: Uint32Kind, value: uint64(1), valid: false},
+		{kind: Int64Kind, value: int64(1), valid: true},
+		{kind: Int64Kind, value: int32(1), valid: false},
+		{kind: Uint64Kind, value: uint64(1), valid: true},
+		{kind: Uint64Kind, value: uint32(1), valid: false},
+		{kind: IntegerKind, value: "1", valid: true},
+		{kind: IntegerKind, value: int32(1), valid: false},
+		{kind: DecimalKind, value: "1.0", valid: true},
+		{kind: DecimalKind, value: "1", valid: true},
+		{kind: DecimalKind, value: "1.1e4", valid: true},
+		{kind: DecimalKind, value: int32(1), valid: false},
+		{kind: Bech32AddressKind, value: []byte("hello"), valid: true},
+		{kind: Bech32AddressKind, value: 1, valid: false},
+		{kind: BoolKind, value: true, valid: true},
+		{kind: BoolKind, value: false, valid: true},
+		{kind: BoolKind, value: 1, valid: false},
+		{kind: EnumKind, value: "hello", valid: true},
+		{kind: EnumKind, value: 1, valid: false},
+		{kind: TimeKind, value: time.Now(), valid: true},
+		{kind: TimeKind, value: "hello", valid: false},
+		{kind: DurationKind, value: time.Second, valid: true},
+		{kind: DurationKind, value: "hello", valid: false},
+		{kind: Float32Kind, value: float32(1.0), valid: true},
+		{kind: Float32Kind, value: float64(1.0), valid: false},
+		{kind: Float64Kind, value: float64(1.0), valid: true},
+		{kind: Float64Kind, value: float32(1.0), valid: false},
+		{kind: JSONKind, value: json.RawMessage("{}"), valid: true},
 	}
 
 	for i, tt := range tests {
@@ -294,6 +92,13 @@ func TestKind_ValidateValueType(t *testing.T) {
 				t.Errorf("test %d: expected invalid value %v for kind %s to fail validation, got: %v", i, tt.value, tt.kind, err)
 			}
 		})
+	}
+
+	// nils get rejected
+	for _, kind := range validKinds {
+		if err := kind.ValidateValueType(nil); err == nil {
+			t.Errorf("expected nil value to fail validation for kind %s", kind)
+		}
 	}
 }
 

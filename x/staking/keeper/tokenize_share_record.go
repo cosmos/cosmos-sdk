@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
+
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"

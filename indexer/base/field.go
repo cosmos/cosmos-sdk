@@ -72,6 +72,15 @@ func (e EnumDefinition) Validate() error {
 	return nil
 }
 
+func (e EnumDefinition) ValidateValue(value string) error {
+	for _, v := range e.Values {
+		if v == value {
+			return nil
+		}
+	}
+	return fmt.Errorf("value %q is not a valid enum value for %s", value, e.Name)
+}
+
 // ValidateValue validates that the value conforms to the field's kind and nullability.
 // It currently does not do any validation that IntegerKind, DecimalKind, Bech32AddressKind, or EnumKind
 // values are valid for their respective types behind conforming to the correct go type.
@@ -82,7 +91,16 @@ func (c Field) ValidateValue(value interface{}) error {
 		}
 		return nil
 	}
-	return c.Kind.ValidateValueType(value)
+	err := c.Kind.ValidateValueType(value)
+	if err != nil {
+		return fmt.Errorf("invalid value for field %q: %w", c.Name, err)
+	}
+
+	if c.Kind == EnumKind {
+		return c.EnumDefinition.ValidateValue(value.(string))
+	}
+
+	return nil
 }
 
 // ValidateKey validates that the value conforms to the set of fields as a Key in an EntityUpdate.

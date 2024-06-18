@@ -101,6 +101,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (proto) [#20098](https://github.com/cosmos/cosmos-sdk/pull/20098) Use cosmos_proto added_in annotation instead of // Since comments.
 * (baseapp) [#20208](https://github.com/cosmos/cosmos-sdk/pull/20208) Skip running validateBasic for rechecking txs.
 * (baseapp) [#20380](https://github.com/cosmos/cosmos-sdk/pull/20380) Enhanced OfferSnapshot documentation.
+* (bank) [#20716](https://github.com/cosmos/cosmos-sdk/pull/20716) Update MultiSendTxCmd logic send any amount token to any address.
 
 ### Bug Fixes
 

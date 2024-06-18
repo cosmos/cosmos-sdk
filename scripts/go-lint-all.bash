@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e -o pipefail
+set -e
 
 REPO_ROOT="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
 export REPO_ROOT

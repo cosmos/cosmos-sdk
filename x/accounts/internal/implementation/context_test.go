@@ -9,11 +9,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/collections/colltest"
+	"cosmossdk.io/core/testing"
 )
 
 func TestMakeAccountContext(t *testing.T) {
-	storeService, originalContext := colltest.MockStore()
+	originalContext := coretesting.Context()
+	storeService := coretesting.KVStoreService(originalContext, "test")
 	accountAddr := []byte("accountAddr")
 	sender := []byte("sender")
 	sb := collections.NewSchemaBuilderFromAccessor(openKVStore)

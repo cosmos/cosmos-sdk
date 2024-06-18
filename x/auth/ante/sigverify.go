@@ -64,7 +64,7 @@ type AccountAbstractionKeeper interface {
 // gas for signature verification.
 //
 // In cases where unordered or parallel transactions are desired, it is recommended
-// to to set unordered=true with a reasonable timeout_height value, in which case
+// to set unordered=true with a reasonable timeout_height value, in which case
 // this nonce verification and increment will be skipped.
 //
 // CONTRACT: Tx must implement SigVerifiableTx interface

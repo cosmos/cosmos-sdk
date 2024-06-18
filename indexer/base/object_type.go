@@ -2,9 +2,6 @@ package indexerbase
 
 // ObjectType describes an object type a module schema.
 type ObjectType struct {
-	// Name is the name of the object.
-	Name string
-
 	// KeyFields is a list of fields that make up the primary key of the object.
 	// It can be empty in which case indexers should assume that this object is
 	// a singleton and ony has one value.

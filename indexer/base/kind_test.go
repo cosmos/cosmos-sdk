@@ -261,6 +261,27 @@ func TestKind_ValidateValueType(t *testing.T) {
 			value: json.RawMessage("{}"),
 			valid: true,
 		},
+		// nils get rejected
+		{
+			kind:  StringKind,
+			value: nil,
+			valid: false,
+		},
+		{
+			kind:  BytesKind,
+			value: nil,
+			valid: false,
+		},
+		{
+			kind:  Int32Kind,
+			value: nil,
+			valid: false,
+		},
+		{
+			kind:  JSONKind,
+			value: nil,
+			valid: false,
+		},
 	}
 
 	for i, tt := range tests {

@@ -16,8 +16,9 @@ type Field struct {
 	// AddressPrefix is the address prefix of the field's kind, currently only used for Bech32AddressKind.
 	AddressPrefix string
 
-	// EnumDefinition is the definition of the enum type and is only valid when Kind is EnumKind.
-	EnumDefinition EnumDefinition
+	// EnumType must refer to an enum definition in the module schema and must only be set when
+	// the field's kind is EnumKind.
+	EnumType string
 }
 
 // Validate validates the field.
@@ -39,13 +40,13 @@ func (c Field) Validate() error {
 		return fmt.Errorf("address prefix is only valid for field %q with type Bech32AddressKind", c.Name)
 	}
 
-	// enum definition only valid with EnumKind
+	// enum type only valid with EnumKind
 	if c.Kind == EnumKind {
-		if err := c.EnumDefinition.Validate(); err != nil {
-			return fmt.Errorf("invalid enum definition for field %q: %w", c.Name, err)
+		if c.EnumType == "" {
+			return fmt.Errorf("missing EnumType for field %q", c.Name)
 		}
-	} else if c.Kind != EnumKind && c.EnumDefinition.Name != "" && c.EnumDefinition.Values != nil {
-		return fmt.Errorf("enum definition is only valid for field %q with type EnumKind", c.Name)
+	} else if c.Kind != EnumKind && c.EnumType != "" {
+		return fmt.Errorf("EnumType is only valid for field with type EnumKind, found it on %s", c.Name)
 	}
 
 	return nil
@@ -53,37 +54,24 @@ func (c Field) Validate() error {
 
 // Validate validates the enum definition.
 func (e EnumDefinition) Validate() error {
-	if e.Name == "" {
-		return fmt.Errorf("enum definition name cannot be empty")
-	}
 	if len(e.Values) == 0 {
 		return fmt.Errorf("enum definition values cannot be empty")
 	}
 	seen := make(map[string]bool, len(e.Values))
 	for i, v := range e.Values {
 		if v == "" {
-			return fmt.Errorf("enum definition value at index %d cannot be empty for enum %s", i, e.Name)
+			return fmt.Errorf("enum definition value at index %d cannot be empty", i)
 		}
 		if seen[v] {
-			return fmt.Errorf("duplicate enum definition value %q for enum %s", v, e.Name)
+			return fmt.Errorf("duplicate enum definition value %q", v)
 		}
 		seen[v] = true
 	}
 	return nil
 }
 
-func (e EnumDefinition) ValidateValue(value string) error {
-	for _, v := range e.Values {
-		if v == value {
-			return nil
-		}
-	}
-	return fmt.Errorf("value %q is not a valid enum value for %s", value, e.Name)
-}
-
-// ValidateValue validates that the value conforms to the field's kind and nullability.
-// It currently does not do any validation that IntegerKind, DecimalKind, Bech32AddressKind, or EnumKind
-// values are valid for their respective types behind conforming to the correct go type.
+// ValidateValue validates that the value corresponds to the field's kind and nullability, but
+// cannot check for enum value correctness.
 func (c Field) ValidateValue(value interface{}) error {
 	if value == nil {
 		if !c.Nullable {
@@ -91,73 +79,6 @@ func (c Field) ValidateValue(value interface{}) error {
 		}
 		return nil
 	}
-	err := c.Kind.ValidateValueType(value)
-	if err != nil {
-		return fmt.Errorf("invalid value for field %q: %w", c.Name, err)
-	}
 
-	if c.Kind == EnumKind {
-		return c.EnumDefinition.ValidateValue(value.(string))
-	}
-
-	return nil
-}
-
-// ValidateKey validates that the value conforms to the set of fields as a Key in an EntityUpdate.
-// See EntityUpdate.Key for documentation on the requirements of such values.
-func ValidateKey(fields []Field, value interface{}) error {
-	if len(fields) == 0 {
-		return nil
-	}
-
-	if len(fields) == 1 {
-		return fields[0].ValidateValue(value)
-	}
-
-	values, ok := value.([]interface{})
-	if !ok {
-		return fmt.Errorf("expected slice of values for key fields, got %T", value)
-	}
-
-	if len(fields) != len(values) {
-		return fmt.Errorf("expected %d key fields, got %d values", len(fields), len(value.([]interface{})))
-	}
-	for i, field := range fields {
-		if err := field.ValidateValue(values[i]); err != nil {
-			return fmt.Errorf("invalid value for key field %q: %w", field.Name, err)
-		}
-	}
-	return nil
-}
-
-// ValidateValue validates that the value conforms to the set of fields as a Value in an EntityUpdate.
-// See EntityUpdate.Value for documentation on the requirements of such values.
-func ValidateValue(fields []Field, value interface{}) error {
-	valueUpdates, ok := value.(ValueUpdates)
-	if ok {
-		fieldMap := map[string]Field{}
-		for _, field := range fields {
-			fieldMap[field.Name] = field
-		}
-		var errs []error
-		err := valueUpdates.Iterate(func(fieldName string, value interface{}) bool {
-			field, ok := fieldMap[fieldName]
-			if !ok {
-				errs = append(errs, fmt.Errorf("unknown field %q in value updates", fieldName))
-			}
-			if err := field.ValidateValue(value); err != nil {
-				errs = append(errs, fmt.Errorf("invalid value for field %q: %w", fieldName, err))
-			}
-			return true
-		})
-		if err != nil {
-			return err
-		}
-		if len(errs) > 0 {
-			return fmt.Errorf("validation errors: %v", errs)
-		}
-		return nil
-	} else {
-		return ValidateKey(fields, value)
-	}
+	return c.Kind.ValidateValue(value)
 }

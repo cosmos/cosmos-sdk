@@ -78,8 +78,8 @@ const (
 	Bech32AddressKind
 
 	// EnumKind is an enum type and values of this type must be of the go type string.
-	// Fields of this type are expected to set the EnumDefinition field in the field definition to the enum
-	// definition.
+	// Fields of this type are expected to set the EnumType field to the name of a valid
+	// enum type within the module schema.
 	EnumKind
 
 	// JSONKind is a JSON type and values of this type should be of go type json.RawMessage and represent
@@ -260,7 +260,7 @@ func (t Kind) ValidateValueType(value interface{}) error {
 	return nil
 }
 
-// ValidateValue returns an error if the value does not conform to the expected go type and format.
+// ValidateObjectValue returns an error if the value does not conform to the expected go type and format.
 // It is more thorough, but slower, than Kind.ValidateValueType and validates that Integer, Decimal and JSON
 // values are formatted correctly. It cannot validate enum values because Kind's do not have enum schemas.
 func (t Kind) ValidateValue(value interface{}) error {

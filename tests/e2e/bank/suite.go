@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
@@ -252,7 +253,7 @@ func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
 		name         string
 		from         sdk.AccAddress
 		to           []sdk.AccAddress
-		amount       sdk.Coins
+		amounts      []sdk.Coins
 		args         []string
 		expectErr    bool
 		expectedCode uint32
@@ -262,27 +263,17 @@ func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
 			"valid transaction",
 			val.GetAddress(),
 			[]sdk.AccAddress{val.GetAddress(), testAddr},
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), math.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
-			),
-			[]string{
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
+			[]sdk.Coins{
+				sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), math.NewInt(10)),
+					sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
+				),
+				sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), math.NewInt(60)),
+					sdk.NewCoin(s.cfg.BondDenom, math.NewInt(80)),
+				),
 			},
-			false, 0, &sdk.TxResponse{},
-		},
-		{
-			"valid split transaction",
-			val.GetAddress(),
-			[]sdk.AccAddress{val.GetAddress(), testAddr},
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), math.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
-			),
 			[]string{
-				fmt.Sprintf("--%s=true", cli.FlagSplit),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
@@ -293,10 +284,16 @@ func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
 			"not enough arguments",
 			val.GetAddress(),
 			[]sdk.AccAddress{val.GetAddress()},
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), math.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
-			),
+			[]sdk.Coins{
+				sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), math.NewInt(10)),
+					sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
+				),
+				sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), math.NewInt(60)),
+					sdk.NewCoin(s.cfg.BondDenom, math.NewInt(80)),
+				),
+			},
 			[]string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -308,10 +305,16 @@ func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
 			"chain-id shouldn't be used with offline and generate-only flags",
 			val.GetAddress(),
 			[]sdk.AccAddress{val.GetAddress(), testAddr},
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), math.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
-			),
+			[]sdk.Coins{
+				sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), math.NewInt(10)),
+					sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
+				),
+				sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), math.NewInt(60)),
+					sdk.NewCoin(s.cfg.BondDenom, math.NewInt(80)),
+				),
+			},
 			[]string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -325,10 +328,16 @@ func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
 			"not enough fees",
 			val.GetAddress(),
 			[]sdk.AccAddress{val.GetAddress(), testAddr},
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), math.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
-			),
+			[]sdk.Coins{
+				sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), math.NewInt(10)),
+					sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
+				),
+				sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), math.NewInt(60)),
+					sdk.NewCoin(s.cfg.BondDenom, math.NewInt(80)),
+				),
+			},
 			[]string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -342,10 +351,16 @@ func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
 			"not enough gas",
 			val.GetAddress(),
 			[]sdk.AccAddress{val.GetAddress(), testAddr},
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), math.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
-			),
+			[]sdk.Coins{
+				sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), math.NewInt(10)),
+					sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
+				),
+				sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), math.NewInt(60)),
+					sdk.NewCoin(s.cfg.BondDenom, math.NewInt(80)),
+				),
+			},
 			[]string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -365,7 +380,7 @@ func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
 		s.Run(tc.name, func() {
 			clientCtx := val.GetClientCtx()
 
-			bz, err := MsgMultiSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
+			bz, err := MsgMultiSendExec(clientCtx, tc.from, tc.to, tc.amounts, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -384,13 +399,23 @@ func NewCoin(denom string, amount math.Int) *sdk.Coin {
 	return &coin
 }
 
-func MsgMultiSendExec(clientCtx client.Context, from sdk.AccAddress, to []sdk.AccAddress, amount fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
+func MsgMultiSendExec(clientCtx client.Context, from sdk.AccAddress, to []sdk.AccAddress, amounts []sdk.Coins, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := []string{from.String()}
 	for _, addr := range to {
 		args = append(args, addr.String())
 	}
 
-	args = append(args, amount.String())
+	var outputs []string
+	amountsLen := len(amounts)
+	for i, address := range to {
+		if i < amountsLen {
+			outputs = append(outputs, fmt.Sprintf("%s:%s", address, amounts[i].String()))
+		} else {
+			outputs = append(outputs, fmt.Sprintf("%s:%s", address, ""))
+		}
+	}
+	args = append(args, strings.Join(outputs, ";"))
+
 	args = append(args, extraArgs...)
 
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.NewMultiSendTxCmd(), args)

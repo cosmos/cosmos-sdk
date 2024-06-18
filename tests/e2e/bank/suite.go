@@ -283,17 +283,8 @@ func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
 		{
 			"not enough arguments",
 			val.GetAddress(),
-			[]sdk.AccAddress{val.GetAddress()},
-			[]sdk.Coins{
-				sdk.NewCoins(
-					sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), math.NewInt(10)),
-					sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10)),
-				),
-				sdk.NewCoins(
-					sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), math.NewInt(60)),
-					sdk.NewCoin(s.cfg.BondDenom, math.NewInt(80)),
-				),
-			},
+			nil,
+			nil,
 			[]string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -401,9 +392,6 @@ func NewCoin(denom string, amount math.Int) *sdk.Coin {
 
 func MsgMultiSendExec(clientCtx client.Context, from sdk.AccAddress, to []sdk.AccAddress, amounts []sdk.Coins, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := []string{from.String()}
-	for _, addr := range to {
-		args = append(args, addr.String())
-	}
 
 	var outputs []string
 	amountsLen := len(amounts)
@@ -414,7 +402,9 @@ func MsgMultiSendExec(clientCtx client.Context, from sdk.AccAddress, to []sdk.Ac
 			outputs = append(outputs, fmt.Sprintf("%s:%s", address, ""))
 		}
 	}
-	args = append(args, strings.Join(outputs, ";"))
+	if len(outputs) > 0 {
+		args = append(args, strings.Join(outputs, ";"))
+	}
 
 	args = append(args, extraArgs...)
 

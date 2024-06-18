@@ -24,6 +24,7 @@ type ObjectType struct {
 	RetainDeletions bool
 }
 
+// Validate validates the object type.
 func (o ObjectType) Validate() error {
 	if o.Name == "" {
 		return fmt.Errorf("object type name cannot be empty")
@@ -49,6 +50,7 @@ func (o ObjectType) Validate() error {
 
 }
 
+// ValidateObjectUpdate validates that the update conforms to the object type.
 func (o ObjectType) ValidateObjectUpdate(update ObjectUpdate) error {
 	if o.Name != update.TypeName {
 		return fmt.Errorf("object type name %q does not match update type name %q", o.Name, update.TypeName)
@@ -65,6 +67,8 @@ func (o ObjectType) ValidateObjectUpdate(update ObjectUpdate) error {
 	return o.ValidateValue(update.Value)
 }
 
+// ValidateKey validates that the value conforms to the set of fields as a Key in an EntityUpdate.
+// See EntityUpdate.Key for documentation on the requirements of such keys.
 func (o ObjectType) ValidateKey(value interface{}) error {
 	return validateFieldsValue(o.KeyFields, value)
 }

@@ -148,7 +148,7 @@ sequenceDiagram
     end
     
     baseApp->>User: result, error code
-	```
+```
 
 ## Telemetry
 

@@ -57,5 +57,6 @@ Of course, it is possible to define different types of internal `keeper`s for th
 
 `Keeper`s primarily expose methods for business logic, as validity checks should have already been performed by the [`Msg` server](./03-msg-services.md) when `keeper`s' methods are called.
 
+<!-- markdown-link-check-disable -->
 State management is recommended to be done via [Collections](../packages/collections) 
 <!-- The above link is created via the script to generate docs  -->

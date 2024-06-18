@@ -298,10 +298,7 @@ var decimalRegex = regexp.MustCompile(DecimalFormat)
 
 // KindForGoValue finds the simplest kind that can represent the given go value. It will not, however,
 // return kinds such as IntegerKind, DecimalKind, Bech32AddressKind, or EnumKind which all can be
-// represented as strings. Generally all values which do not have a more specific type will
-// return JSONKind because the framework cannot decide at this point whether the value
-// can or cannot be marshaled to JSON. This method should generally only be used as a fallback
-// when the kind of a field is not specified more specifically.
+// represented as strings.
 func KindForGoValue(value interface{}) Kind {
 	switch value.(type) {
 	case string:
@@ -336,9 +333,7 @@ func KindForGoValue(value interface{}) Kind {
 		return DurationKind
 	case json.RawMessage:
 		return JSONKind
-	case fmt.Stringer:
-		return StringKind
 	default:
-		return JSONKind
+		return InvalidKind
 	}
 }

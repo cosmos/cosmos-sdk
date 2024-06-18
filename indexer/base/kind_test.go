@@ -80,6 +80,8 @@ func TestKind_ValidateValueType(t *testing.T) {
 		{kind: Float64Kind, value: float64(1.0), valid: true},
 		{kind: Float64Kind, value: float32(1.0), valid: false},
 		{kind: JSONKind, value: json.RawMessage("{}"), valid: true},
+		{kind: JSONKind, value: "hello", valid: false},
+		{kind: InvalidKind, value: "hello", valid: false},
 	}
 
 	for i, tt := range tests {
@@ -108,9 +110,11 @@ func TestKind_ValidateValue(t *testing.T) {
 		value interface{}
 		valid bool
 	}{
-		// check a few basic cases
+		// check a few basic cases that should get caught be ValidateValueType
 		{StringKind, "hello", true},
 		{Int64Kind, int64(1), true},
+		{Int32Kind, "abc", false},
+		{BytesKind, nil, false},
 		// check integer, decimal and json more thoroughly
 		{IntegerKind, "1", true},
 		{IntegerKind, "0", true},
@@ -222,16 +226,25 @@ func TestKindForGoValue(t *testing.T) {
 		{uint32(1), Uint32Kind},
 		{int64(1), Int64Kind},
 		{uint64(1), Uint64Kind},
+		{float32(1.0), Float32Kind},
+		{float64(1.0), Float64Kind},
 		{true, BoolKind},
 		{time.Now(), TimeKind},
 		{time.Second, DurationKind},
 		{json.RawMessage("{}"), JSONKind},
-		{map[string]interface{}{"a": 1}, JSONKind},
+		{map[string]interface{}{"a": 1}, InvalidKind},
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			if got := KindForGoValue(tt.value); got != tt.want {
 				t.Errorf("test %d: KindForGoValue(%v) = %v, want %v", i, tt.value, got, tt.want)
+			}
+
+			// for valid kinds check valid value
+			if tt.want.Validate() == nil {
+				if err := tt.want.ValidateValue(tt.value); err != nil {
+					t.Errorf("test %d: expected valid value %v for kind %s to pass validation, got: %v", i, tt.value, tt.want, err)
+				}
 			}
 		})
 	}

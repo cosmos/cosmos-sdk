@@ -11,17 +11,27 @@ The basic types for specifying index sources, targets and decoders are provided 
 ```mermaid
 sequenceDiagram
     actor Source
+    actor Manager
     participant Indexer
-    Source -->> Indexer: InitializeModuleSchema
-    Source ->> Indexer: Initialize
+    Source -->> Manager: InitializeModuleSchema
+    Manager ->> Indexer: InitializeModuleSchema
+    Source ->> Manager: Initialize
+    Manager ->> Indexer: Initialize
     loop Block
-        Source ->> Indexer: StartBlock
-        Source ->> Indexer: OnBlockHeader
-        Source -->> Indexer: OnTx
-        Source -->> Indexer: OnEvent
-        Source -->> Indexer: OnKVPair
-        Source -->> Indexer: OnObjectUpdate
-        Source ->> Indexer: Commit
+        Source ->> Manager: StartBlock
+        Manager ->> Indexer: StartBlock
+        Source -->> Manager: OnBlockHeader
+        Manager -->> Indexer: OnBlockHeader
+        Source -->> Manager: OnTx
+        Manager -->> Indexer: OnTx
+        Source -->> Manager: OnEvent
+        Manager -->> Indexer: OnEvent
+        Source -->> Manager: OnKVPair
+        Manager -->> Indexer: OnKVPair
+        Source -->> Manager: OnObjectUpdate
+        Manager -->> Indexer: OnObjectUpdate
+        Source ->> Manager: Commit
+        Manager ->> Indexer: Commit
     end
 ```
 

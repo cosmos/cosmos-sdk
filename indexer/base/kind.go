@@ -103,14 +103,10 @@ func (t Kind) Validate() error {
 // nullability. It only checks that the value is of the correct type.
 // It also doesn't perform any validation that IntegerKind, DecimalKind, Bech32AddressKind, or EnumKind
 // values are valid for their respective types.
-func (t Kind) ValidateValueType(value any) error {
+func (t Kind) ValidateValueType(value interface{}) error {
 	switch t {
 	case StringKind:
-		_, ok := value.(string)
-		_, ok2 := value.(fmt.Stringer)
-		if !ok && !ok2 {
-			return fmt.Errorf("expected string or type that implements fmt.Stringer, got %T", value)
-		}
+		return checkStringLike(value)
 	case BytesKind:
 		_, ok := value.([]byte)
 		if !ok {
@@ -157,18 +153,13 @@ func (t Kind) ValidateValueType(value any) error {
 			return fmt.Errorf("expected uint64, got %T", value)
 		}
 	case IntegerKind:
-		_, ok := value.(string)
-		_, ok2 := value.(fmt.Stringer)
-		_, ok3 := value.(int64)
-		if !ok && !ok2 && !ok3 {
-			return fmt.Errorf("expected string or type that implements fmt.Stringer, got %T", value)
+		_, ok := value.(int64)
+		if ok {
+			return nil
 		}
+		return checkStringLike(value)
 	case DecimalKind:
-		_, ok := value.(string)
-		_, ok2 := value.(fmt.Stringer)
-		if !ok && !ok2 {
-			return fmt.Errorf("expected string or type that implements fmt.Stringer, got %T", value)
-		}
+		return checkStringLike(value)
 	case BoolKind:
 		_, ok := value.(bool)
 		if !ok {
@@ -195,24 +186,33 @@ func (t Kind) ValidateValueType(value any) error {
 			return fmt.Errorf("expected float64, got %T", value)
 		}
 	case Bech32AddressKind:
-		_, ok := value.(string)
-		_, ok2 := value.([]byte)
-		_, ok3 := value.(fmt.Stringer)
-		if !ok && !ok2 && !ok3 {
-			return fmt.Errorf("expected string or []byte, got %T", value)
+		_, ok := value.([]byte)
+		if ok {
+			return nil
 		}
+		return checkStringLike(value)
 	case EnumKind:
-		_, ok := value.(string)
-		_, ok2 := value.(fmt.Stringer)
-		if !ok && !ok2 {
-			return fmt.Errorf("expected string or type that implements fmt.Stringer, got %T", value)
-		}
+		return checkStringLike(value)
 	case JSONKind:
 		return nil
 	default:
 		return fmt.Errorf("invalid type: %d", t)
 	}
 	return nil
+}
+
+func checkStringLike(value interface{}) error {
+	_, ok := value.(string)
+	if ok {
+		return nil
+	}
+
+	_, ok2 := value.(fmt.Stringer)
+	if ok2 {
+		return nil
+	}
+
+	return fmt.Errorf("expected string or type that implements fmt.Stringer, got %T", value)
 }
 
 // String returns a string representation of the kind.
@@ -269,7 +269,7 @@ func (t Kind) String() string {
 // return JSONKind because the framework cannot decide at this point whether the value
 // can or cannot be marshaled to JSON. This method should generally only be used as a fallback
 // when the kind of a field is not specified more specifically.
-func KindForGoValue(value any) Kind {
+func KindForGoValue(value interface{}) Kind {
 	switch value.(type) {
 	case string, fmt.Stringer:
 		return StringKind

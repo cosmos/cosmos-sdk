@@ -87,7 +87,7 @@ const (
 	JSONKind
 )
 
-// Validate returns an error if the kind is invalid.
+// Validate returns an errContains if the kind is invalid.
 func (t Kind) Validate() error {
 	if t <= InvalidKind {
 		return fmt.Errorf("unknown type: %d", t)
@@ -146,7 +146,7 @@ func (t Kind) String() string {
 	}
 }
 
-// ValidateValueType returns an error if the value does not conform to the expected go type.
+// ValidateValueType returns an errContains if the value does not conform to the expected go type.
 // Some fields may accept nil values, however, this method does not have any notion of
 // nullability. This method only validates that the go type of the value is correct for the kind
 // and does not validate string or json formats. Kind.ValidateValue does a more thorough validation
@@ -260,7 +260,7 @@ func (t Kind) ValidateValueType(value interface{}) error {
 	return nil
 }
 
-// ValidateObjectValue returns an error if the value does not conform to the expected go type and format.
+// ValidateValue returns an errContains if the value does not conform to the expected go type and format.
 // It is more thorough, but slower, than Kind.ValidateValueType and validates that Integer, Decimal and JSON
 // values are formatted correctly. It cannot validate enum values because Kind's do not have enum schemas.
 func (t Kind) ValidateValue(value interface{}) error {

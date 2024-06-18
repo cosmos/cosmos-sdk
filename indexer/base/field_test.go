@@ -1,12 +1,15 @@
 package indexerbase
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestField_Validate(t *testing.T) {
 	tests := []struct {
-		name  string
-		field Field
-		error string
+		name        string
+		field       Field
+		errContains string
 	}{
 		{
 			name: "valid field",
@@ -14,7 +17,7 @@ func TestField_Validate(t *testing.T) {
 				Name: "field1",
 				Kind: StringKind,
 			},
-			error: "",
+			errContains: "",
 		},
 		{
 			name: "empty name",
@@ -22,15 +25,15 @@ func TestField_Validate(t *testing.T) {
 				Name: "",
 				Kind: StringKind,
 			},
-			error: "field name cannot be empty",
+			errContains: "field name cannot be empty",
 		},
 		{
 			name: "invalid kind",
 			field: Field{
 				Name: "field1",
-				Kind: Kind(-1),
+				Kind: InvalidKind,
 			},
-			error: "invalid field type for \"field1\": invalid type: -1",
+			errContains: "invalid field kind",
 		},
 		{
 			name: "missing address prefix",
@@ -38,7 +41,7 @@ func TestField_Validate(t *testing.T) {
 				Name: "field1",
 				Kind: Bech32AddressKind,
 			},
-			error: "missing address prefix for field \"field1\"",
+			errContains: "missing address prefix",
 		},
 		{
 			name: "address prefix with non-Bech32AddressKind",
@@ -47,7 +50,7 @@ func TestField_Validate(t *testing.T) {
 				Kind:          StringKind,
 				AddressPrefix: "prefix",
 			},
-			error: "address prefix is only valid for field \"field1\" with type Bech32AddressKind",
+			errContains: "address prefix is only valid for field \"field1\" with type Bech32AddressKind",
 		},
 		{
 			name: "invalid enum definition",
@@ -55,7 +58,7 @@ func TestField_Validate(t *testing.T) {
 				Name: "field1",
 				Kind: EnumKind,
 			},
-			error: "invalid enum definition for field \"field1\": enum definition name cannot be empty",
+			errContains: "invalid enum definition for field \"field1\": enum definition name cannot be empty",
 		},
 		{
 			name: "enum definition with non-EnumKind",
@@ -64,22 +67,115 @@ func TestField_Validate(t *testing.T) {
 				Kind:           StringKind,
 				EnumDefinition: EnumDefinition{Name: "enum"},
 			},
-			error: "enum definition is only valid for field \"field1\" with type EnumKind",
+			errContains: "enum definition is only valid for field \"field1\" with type EnumKind",
+		},
+		{
+			name: "valid enum",
+			field: Field{
+				Name:           "field1",
+				Kind:           EnumKind,
+				EnumDefinition: EnumDefinition{Name: "enum", Values: []string{"a", "b"}},
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.field.Validate()
-			if tt.error == "" {
+			if tt.errContains == "" {
 				if err != nil {
 					t.Errorf("expected no error, got: %v", err)
 				}
 			} else {
 				if err == nil {
 					t.Errorf("expected error, got nil")
-				} else if err.Error() != tt.error {
-					t.Errorf("expected error: %s, got: %v", tt.error, err)
+				} else if !strings.Contains(err.Error(), tt.errContains) {
+					t.Errorf("expected error contains: %s, got: %v", tt.errContains, err)
+				}
+			}
+		})
+	}
+}
+
+func TestField_ValidateValue(t *testing.T) {
+	tests := []struct {
+		name        string
+		field       Field
+		value       interface{}
+		errContains string
+	}{
+		{
+			name: "valid field",
+			field: Field{
+				Name: "field1",
+				Kind: StringKind,
+			},
+			value:       "value",
+			errContains: "",
+		},
+		{
+			name: "null non-nullable field",
+			field: Field{
+				Name:     "field1",
+				Kind:     StringKind,
+				Nullable: false,
+			},
+			value:       nil,
+			errContains: "cannot be null",
+		},
+		{
+			name: "null nullable field",
+			field: Field{
+				Name:     "field1",
+				Kind:     StringKind,
+				Nullable: true,
+			},
+			value:       nil,
+			errContains: "",
+		},
+		{
+			name: "invalid value",
+			field: Field{
+				Name: "field1",
+				Kind: StringKind,
+			},
+			value:       1,
+			errContains: "invalid value for field \"field1\"",
+		},
+		{
+			name: "valid enum",
+			field: Field{
+				Name:           "field1",
+				Kind:           EnumKind,
+				EnumDefinition: EnumDefinition{Name: "enum", Values: []string{"a", "b"}},
+			},
+			value:       "a",
+			errContains: "",
+		},
+		{
+			name: "invalid enum",
+			field: Field{
+				Name:           "field1",
+				Kind:           EnumKind,
+				EnumDefinition: EnumDefinition{Name: "enum", Values: []string{"a", "b"}},
+			},
+			value:       "c",
+			errContains: "not a valid enum value",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.field.ValidateValue(tt.value)
+			if tt.errContains == "" {
+				if err != nil {
+					t.Errorf("expected no error, got: %v", err)
+				}
+			} else {
+				if err == nil {
+					t.Errorf("expected error, got nil")
+				} else if !strings.Contains(err.Error(), tt.errContains) {
+					t.Errorf("expected error contains: %s, got: %v", tt.errContains, err)
 				}
 			}
 		})

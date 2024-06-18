@@ -32,7 +32,7 @@ func (c Field) Validate() error {
 
 	// valid kind
 	if err := c.Kind.Validate(); err != nil {
-		return fmt.Errorf("invalid field type for %q: %w", c.Name, err)
+		return fmt.Errorf("invalid field kind for %q: %w", c.Name, err)
 	}
 
 	// address prefix only valid with Bech32AddressKind
@@ -47,7 +47,7 @@ func (c Field) Validate() error {
 		if err := c.EnumDefinition.Validate(); err != nil {
 			return fmt.Errorf("invalid enum definition for field %q: %w", c.Name, err)
 		}
-	} else if c.Kind != EnumKind && c.EnumDefinition.Name != "" && c.EnumDefinition.Values != nil {
+	} else if c.Kind != EnumKind && (c.EnumDefinition.Name != "" || c.EnumDefinition.Values != nil) {
 		return fmt.Errorf("enum definition is only valid for field %q with type EnumKind", c.Name)
 	}
 

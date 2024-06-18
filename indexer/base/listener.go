@@ -34,7 +34,7 @@ type Listener struct {
 	OnKVPair func(moduleName string, key, value []byte, delete bool) error
 
 	// Commit is called when state is committed, usually at the end of a block. Any
-	// indexers should commit their data when this is called and return an error if
+	// indexers should commit their data when this is called and return an errContains if
 	// they are unable to commit.
 	Commit func() error
 
@@ -43,7 +43,7 @@ type Listener struct {
 	// should ensure that they have performed whatever initialization steps (such as database
 	// migrations) required to receive OnObjectUpdate events for the given module. If the
 	// indexer's schema is incompatible with the module's on-chain schema, the listener should return
-	// an error.
+	// an errContains.
 	InitializeModuleSchema func(module string, schema ModuleSchema) error
 
 	// OnObjectUpdate is called whenever an object is updated in a module's state. This is only called

@@ -132,7 +132,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* (staking) [#20444](https://github.com/cosmos/cosmos-sdk/pull/20444) Disable tokenization of shares from redelegations.
+* (x/staking) [#20444](https://github.com/cosmos/cosmos-sdk/pull/20444) Disable tokenization of shares from redelegations.
 * (x/bank) [#18956](https://github.com/cosmos/cosmos-sdk/pull/18956) Introduced a new `DenomOwnersByQuery` query method for `DenomOwners`, which accepts the denom value as a query string parameter, resolving issues with denoms containing slashes.
 * (x/gov) [#18707](https://github.com/cosmos/cosmos-sdk/pull/18707) Improve genesis validation.
 * (x/auth/tx) [#18772](https://github.com/cosmos/cosmos-sdk/pull/18772) Remove misleading gas wanted from tx simulation failure log.

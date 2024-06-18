@@ -18,6 +18,7 @@ func (s ModuleSchema) Validate() error {
 	return nil
 }
 
+// ValidateObjectUpdate validates that the update conforms to the module schema.
 func (s ModuleSchema) ValidateObjectUpdate(update ObjectUpdate) error {
 	for _, objType := range s.ObjectTypes {
 		if objType.Name == update.TypeName {

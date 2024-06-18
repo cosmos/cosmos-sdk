@@ -92,11 +92,15 @@ type Collection interface {
 
 	genesisHandler
 
-	objectType() indexerbase.ObjectType
-
-	decodeKVPair(key, value []byte, delete bool) (indexerbase.ObjectUpdate, bool, error)
+	logicalDecoder() logicalDecoder
 
 	isSecondaryIndex() bool
+}
+
+type logicalDecoder struct {
+	objectType   indexerbase.ObjectType
+	keyDecoder   func([]byte) (any, error)
+	valueDecoder func([]byte) (any, error)
 }
 
 // Prefix defines a segregation bytes namespace for specific collections objects.

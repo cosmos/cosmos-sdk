@@ -2,6 +2,7 @@ package collections
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -17,20 +18,36 @@ type IndexingOptions struct {
 
 func (s Schema) ModuleDecoder(opts IndexingOptions) (indexerbase.ModuleDecoder, error) {
 	decoder := moduleDecoder{
-		lookup: &btree.Map[string, *collDecoder]{},
+		collectionLookup: &btree.Map[string, *collDecoder]{},
+	}
+
+	retainDeletions := make(map[string]bool)
+	for _, collName := range opts.RetainDeletionsFor {
+		retainDeletions[collName] = true
 	}
 
 	var objectTypes []indexerbase.ObjectType
 	for _, collName := range s.collectionsOrdered {
 		coll := s.collectionsByName[collName]
+
+		// skip secondary indexes
 		if coll.isSecondaryIndex() {
 			continue
 		}
 
-		schema := coll.objectType()
-		objectTypes = append(objectTypes, schema)
-		decoder.lookup.Set(string(coll.GetPrefix()), &collDecoder{Collection: coll})
+		ld := coll.logicalDecoder()
+
+		if !retainDeletions[coll.GetName()] {
+			ld.objectType.RetainDeletions = true
+		}
+
+		objectTypes = append(objectTypes, ld.objectType)
+		decoder.collectionLookup.Set(string(coll.GetPrefix()), &collDecoder{
+			Collection:     coll,
+			logicalDecoder: ld,
+		})
 	}
+
 	return indexerbase.ModuleDecoder{
 		Schema: indexerbase.ModuleSchema{
 			ObjectTypes: objectTypes,
@@ -40,13 +57,13 @@ func (s Schema) ModuleDecoder(opts IndexingOptions) (indexerbase.ModuleDecoder, 
 }
 
 type moduleDecoder struct {
-	lookup *btree.Map[string, *collDecoder]
+	collectionLookup *btree.Map[string, *collDecoder]
 }
 
 func (m moduleDecoder) decodeKV(key, value []byte) (indexerbase.ObjectUpdate, bool, error) {
 	ks := string(key)
 	var cd *collDecoder
-	m.lookup.Descend(ks, func(prefix string, cur *collDecoder) bool {
+	m.collectionLookup.Descend(ks, func(prefix string, cur *collDecoder) bool {
 		bytesPrefix := cur.GetPrefix()
 		if bytes.HasPrefix(key, bytesPrefix) {
 			cd = cur
@@ -63,72 +80,94 @@ func (m moduleDecoder) decodeKV(key, value []byte) (indexerbase.ObjectUpdate, bo
 
 type collDecoder struct {
 	Collection
+	logicalDecoder
 }
 
-//type moduleStateDecoder struct {
-//	schema           Schema
-//	collectionsIndex btree.BTree
-//}
-//
-//func (m moduleStateDecoder) getCollectionForKey(key []byte) Collection {
-//	panic("implement me")
-//}
-//
-//func (m moduleStateDecoder) DecodeSet(key, value []byte) (indexerbase.EntityUpdate, bool, error) {
-//	coll := m.getCollectionForKey(key)
-//	if coll == nil {
-//		return indexerbase.EntityUpdate{}, false, nil
-//	}
-//
-//	return coll.decodeKVPair(key, value)
-//}
-//
-//func (m moduleStateDecoder) DecodeDelete(key []byte) (indexerbase.EntityDelete, bool, error) {
-//	coll := m.getCollectionForKey(key)
-//	return coll.decodeDelete(key)
-//}
+func (c collDecoder) decodeKVPair(key, value []byte, delete bool) (indexerbase.ObjectUpdate, bool, error) {
+	// strip prefix
+	key = key[len(c.GetPrefix()):]
 
-func (c collectionImpl[K, V]) getTableSchema() indexerbase.ObjectType {
-	var keyFields []indexerbase.Field
-	var valueFields []indexerbase.Field
+	k, err := c.keyDecoder(key)
+	if err != nil {
+		return indexerbase.ObjectUpdate{
+			TypeName: c.GetName(),
+		}, true, err
 
-	if hasSchema, ok := c.m.kc.(codec.IndexableCodec); ok {
-		keyFields = hasSchema.SchemaFields()
+	}
+
+	if delete {
+		return indexerbase.ObjectUpdate{
+			TypeName: c.GetName(),
+			Key:      k,
+			Delete:   true,
+		}, true, nil
+	}
+
+	v, err := c.valueDecoder(key)
+	if err != nil {
+		return indexerbase.ObjectUpdate{
+			TypeName: c.GetName(),
+			Key:      k,
+		}, true, err
+
+	}
+
+	return indexerbase.ObjectUpdate{
+		TypeName: c.GetName(),
+		Key:      k,
+		Value:    v,
+	}, true, nil
+}
+
+func (c collectionImpl[K, V]) logicalDecoder() logicalDecoder {
+	res := logicalDecoder{}
+
+	if indexable, ok := c.m.kc.(codec.IndexableCodec); ok {
+		keyDecoder := indexable.LogicalDecoder()
+		res.objectType.KeyFields = keyDecoder.Fields
+		res.keyDecoder = keyDecoder.Decode
 	} else {
-		var k K
-		keyFields, _ = extractFields(k)
+		fields, decoder := fallbackDecoder[K](func(bz []byte) (any, error) {
+			_, k, err := c.m.kc.Decode(bz)
+			return k, err
+		})
+		res.objectType.KeyFields = fields
+		res.keyDecoder = decoder
 	}
-	ensureNames(c.m.kc, "key", keyFields)
+	ensureFieldNames(c.m.kc, "key", res.objectType.KeyFields)
 
-	if hasSchema, ok := c.m.vc.(codec.IndexableCodec); ok {
-		valueFields = hasSchema.SchemaFields()
+	if indexable, ok := c.m.vc.(codec.IndexableCodec); ok {
+		valueDecoder := indexable.LogicalDecoder()
+		res.objectType.KeyFields = valueDecoder.Fields
+		res.valueDecoder = valueDecoder.Decode
 	} else {
-		var v V
-		valueFields, _ = extractFields(v)
+		fields, decoder := fallbackDecoder[V](func(bz []byte) (any, error) {
+			v, err := c.m.vc.Decode(bz)
+			return v, err
+		})
+		res.objectType.ValueFields = fields
+		res.valueDecoder = decoder
 	}
-	ensureNames(c.m.vc, "value", valueFields)
+	ensureFieldNames(c.m.vc, "value", res.objectType.ValueFields)
 
-	return indexerbase.ObjectType{
-		Name:        c.GetName(),
-		KeyFields:   keyFields,
-		ValueFields: valueFields,
+	return res
+}
+
+func fallbackDecoder[T any](decode func([]byte) (any, error)) ([]indexerbase.Field, func([]byte) (any, error)) {
+	var t T
+	kind := indexerbase.KindForGoValue(t)
+	if err := kind.Validate(); err == nil {
+		return []indexerbase.Field{{Kind: kind}}, decode
+	} else {
+		return []indexerbase.Field{{Kind: indexerbase.JSONKind}}, func(b []byte) (any, error) {
+			t, err := decode(b)
+			bz, err := json.Marshal(t)
+			return json.RawMessage(bz), err
+		}
 	}
 }
 
-func extractFields(x any) ([]indexerbase.Field, func(any) any) {
-	if hasSchema, ok := x.(codec.IndexableCodec); ok {
-		return hasSchema.SchemaFields(), nil
-	}
-
-	ty := indexerbase.KindForGoValue(x)
-	if ty > 0 {
-		return []indexerbase.Field{{Kind: ty}}, nil
-	}
-
-	panic(fmt.Errorf("unsupported type %T", x))
-}
-
-func ensureNames(x any, defaultName string, cols []indexerbase.Field) {
+func ensureFieldNames(x any, defaultName string, cols []indexerbase.Field) {
 	var names []string = nil
 	if hasName, ok := x.(interface{ Name() string }); ok {
 		name := hasName.Name()
@@ -150,52 +189,4 @@ func ensureNames(x any, defaultName string, cols []indexerbase.Field) {
 		}
 		cols[i] = col
 	}
-}
-
-func (c collectionImpl[K, V]) objectType() indexerbase.ObjectType {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (c collectionImpl[K, V]) decodeKVPair(key, value []byte, delete bool) (indexerbase.ObjectUpdate, bool, error) {
-	// strip prefix
-	key = key[len(c.GetPrefix()):]
-	var k any
-	var err error
-	if decodeAny, ok := c.m.kc.(codec.IndexableCodec); ok {
-		k, err = decodeAny.DecodeIndexable(key)
-	} else {
-		_, k, err = c.m.kc.Decode(key)
-	}
-	if err != nil {
-		return indexerbase.ObjectUpdate{
-			TypeName: c.GetName(),
-		}, false, err
-	}
-
-	if delete {
-		return indexerbase.ObjectUpdate{
-			TypeName: c.GetName(),
-			Key:      k,
-			Delete:   true,
-		}, true, nil
-	}
-
-	var v any
-	if decodeAny, ok := c.m.vc.(codec.IndexableCodec); ok {
-		v, err = decodeAny.DecodeIndexable(value)
-	} else {
-		v, err = c.m.vc.Decode(value)
-	}
-	if err != nil {
-		return indexerbase.ObjectUpdate{
-			TypeName: c.GetName(),
-		}, false, err
-	}
-
-	return indexerbase.ObjectUpdate{
-		TypeName: c.GetName(),
-		Key:      k,
-		Value:    v,
-	}, true, nil
 }

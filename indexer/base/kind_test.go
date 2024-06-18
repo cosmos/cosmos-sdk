@@ -1,6 +1,7 @@
 package indexerbase
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 	"time"
@@ -47,7 +48,7 @@ func TestKind_Validate(t *testing.T) {
 func TestKind_ValidateValue(t *testing.T) {
 	tests := []struct {
 		kind  Kind
-		value any
+		value interface{}
 		valid bool
 	}{
 		{
@@ -57,7 +58,7 @@ func TestKind_ValidateValue(t *testing.T) {
 		},
 		{
 			kind:  StringKind,
-			value: &strings.Builder{},
+			value: stringBuilder("hello"),
 			valid: true,
 		},
 		{
@@ -160,11 +161,11 @@ func TestKind_ValidateValue(t *testing.T) {
 			value: "1",
 			valid: true,
 		},
-		//{
-		//	kind:  IntegerKind,
-		//	value: (&strings.Builder{}).WriteString("1"),
-		//	valid: true,
-		//},
+		{
+			kind:  IntegerKind,
+			value: stringBuilder("1"),
+			valid: true,
+		},
 		{
 			kind:  IntegerKind,
 			value: int32(1),
@@ -190,11 +191,11 @@ func TestKind_ValidateValue(t *testing.T) {
 			value: "1.1e4",
 			valid: true,
 		},
-		//{
-		//	kind:  DecimalKind,
-		//	value: (&strings.Builder{}).WriteString("1.0"),
-		//	valid: true,
-		//},
+		{
+			kind:  DecimalKind,
+			value: stringBuilder("1.0"),
+			valid: true,
+		},
 		{
 			kind:  DecimalKind,
 			value: int32(1),
@@ -205,11 +206,11 @@ func TestKind_ValidateValue(t *testing.T) {
 			value: "cosmos1hsk6jryyqjfhp5g7c0nh4n6dd45ygctnxglp5h",
 			valid: true,
 		},
-		//{
-		//	kind:  Bech32AddressKind,
-		//	value: (&strings.Builder{}).WriteString("cosmos1hsk6jryyqjfhp5g7c0nh4n6dd45ygctnxglp5h"),
-		//	valid: true,
-		//},
+		{
+			kind:  Bech32AddressKind,
+			value: stringBuilder("cosmos1hsk6jryyqjfhp5g7c0nh4n6dd45ygctnxglp5h"),
+			valid: true,
+		},
 		{
 			kind:  Bech32AddressKind,
 			value: 1,
@@ -235,11 +236,11 @@ func TestKind_ValidateValue(t *testing.T) {
 			value: "hello",
 			valid: true,
 		},
-		//{
-		//	kind:  EnumKind,
-		//	value: (&strings.Builder{}).WriteString("hello"),
-		//	valid: true,
-		//},
+		{
+			kind:  EnumKind,
+			value: stringBuilder("hello"),
+			valid: true,
+		},
 		{
 			kind:  EnumKind,
 			value: 1,
@@ -275,7 +276,26 @@ func TestKind_ValidateValue(t *testing.T) {
 			value: float64(1.0),
 			valid: false,
 		},
-		// TODO float64, json
+		{
+			kind:  Float64Kind,
+			value: float64(1.0),
+			valid: true,
+		},
+		{
+			kind:  Float64Kind,
+			value: float32(1.0),
+			valid: false,
+		},
+		{
+			kind:  JSONKind,
+			value: "hello",
+			valid: true,
+		},
+		{
+			kind:  JSONKind,
+			value: json.RawMessage("{}"),
+			valid: true,
+		},
 	}
 
 	for i, tt := range tests {
@@ -285,6 +305,49 @@ func TestKind_ValidateValue(t *testing.T) {
 		}
 		if !tt.valid && err == nil {
 			t.Errorf("test %d: expected invalid value %v for kind %s to fail validation, got: %v", i, tt.value, tt.kind, err)
+		}
+	}
+}
+
+func stringBuilder(x string) interface{} {
+	b := &strings.Builder{}
+	_, err := b.WriteString(x)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
+func TestKindString(t *testing.T) {
+	tests := []struct {
+		kind Kind
+		want string
+	}{
+		{StringKind, "string"},
+		{BytesKind, "bytes"},
+		{Int8Kind, "int8"},
+		{Uint8Kind, "uint8"},
+		{Int16Kind, "int16"},
+		{Uint16Kind, "uint16"},
+		{Int32Kind, "int32"},
+		{Uint32Kind, "uint32"},
+		{Int64Kind, "int64"},
+		{Uint64Kind, "uint64"},
+		{IntegerKind, "integer"},
+		{DecimalKind, "decimal"},
+		{BoolKind, "bool"},
+		{TimeKind, "time"},
+		{DurationKind, "duration"},
+		{Float32Kind, "float32"},
+		{Float64Kind, "float64"},
+		{JSONKind, "json"},
+		{EnumKind, "enum"},
+		{Bech32AddressKind, "bech32address"},
+		{InvalidKind, "invalid(0)"},
+	}
+	for i, tt := range tests {
+		if got := tt.kind.String(); got != tt.want {
+			t.Errorf("test %d: Kind.String() = %v, want %v", i, got, tt.want)
 		}
 	}
 }

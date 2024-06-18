@@ -259,7 +259,7 @@ func (t Kind) String() string {
 	case JSONKind:
 		return "json"
 	default:
-		return ""
+		return fmt.Sprintf("invalid(%d)", t)
 	}
 }
 

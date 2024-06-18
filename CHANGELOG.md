@@ -35,6 +35,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## v0.47.16-ics-lsm
+
+### Bugfixes
+
+* (staking) [#20691](https://github.com/cosmos/cosmos-sdk/pull/20691) Revert staking GetLastValidators - revert [#20548](https://github.com/cosmos/cosmos-sdk/pull/20548). 
+
 ## v0.47.15-ics-lsm
 
 This is a special cosmos-sdk release with support for both ICS and LSM.

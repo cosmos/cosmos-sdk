@@ -5,6 +5,59 @@ import (
 	"testing"
 )
 
+var object1Type = ObjectType{
+	Name: "object1",
+	KeyFields: []Field{
+		{
+			Name: "field1",
+			Kind: StringKind,
+		},
+	},
+}
+
+var object2Type = ObjectType{
+	KeyFields: []Field{
+		{
+			Name: "field1",
+			Kind: StringKind,
+		},
+		{
+			Name: "field2",
+			Kind: Int32Kind,
+		},
+	},
+}
+
+var object3Type = ObjectType{
+	Name: "object3",
+	ValueFields: []Field{
+		{
+			Name: "field1",
+			Kind: StringKind,
+		},
+		{
+			Name: "field2",
+			Kind: Int32Kind,
+		},
+	},
+}
+
+var object4Type = ObjectType{
+	Name: "object4",
+	KeyFields: []Field{
+		{
+			Name: "field1",
+			Kind: Int32Kind,
+		},
+	},
+	ValueFields: []Field{
+		{
+			Name: "field2",
+			Kind: StringKind,
+		},
+	},
+}
+
 func TestObjectType_Validate(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -12,16 +65,8 @@ func TestObjectType_Validate(t *testing.T) {
 		errContains string
 	}{
 		{
-			name: "valid object type",
-			objectType: ObjectType{
-				Name: "object1",
-				KeyFields: []Field{
-					{
-						Name: "field1",
-						Kind: StringKind,
-					},
-				},
-			},
+			name:        "valid object type",
+			objectType:  object1Type,
 			errContains: "",
 		},
 		{
@@ -63,10 +108,8 @@ func TestObjectType_Validate(t *testing.T) {
 			errContains: "field name cannot be empty",
 		},
 		{
-			name: "no fields",
-			objectType: ObjectType{
-				Name: "object1",
-			},
+			name:        "no fields",
+			objectType:  ObjectType{Name: "object0"},
 			errContains: "has no key or value fields",
 		},
 	}
@@ -102,95 +145,37 @@ func TestObjectType_ValidateKey(t *testing.T) {
 			key: nil,
 		},
 		{
-			name: "single key field, valid",
-			objectType: ObjectType{
-				KeyFields: []Field{
-					{
-						Name: "field1",
-						Kind: StringKind,
-					},
-				},
-			},
+			name:        "single key field, valid",
+			objectType:  object1Type,
 			key:         "hello",
 			errContains: "",
 		},
 		{
-			name: "single key field, invalid",
-			objectType: ObjectType{
-				KeyFields: []Field{
-					{
-						Name: "field1",
-						Kind: StringKind,
-					},
-				},
-			},
+			name:        "single key field, invalid",
+			objectType:  object1Type,
 			key:         []interface{}{"value"},
 			errContains: "invalid value",
 		},
 		{
-			name: "multiple key fields, valid",
-			objectType: ObjectType{
-				KeyFields: []Field{
-					{
-						Name: "field1",
-						Kind: StringKind,
-					},
-					{
-						Name: "field2",
-						Kind: Int32Kind,
-					},
-				},
-			},
-			key: []interface{}{"hello", int32(42)},
+			name:       "multiple key fields, valid",
+			objectType: object2Type,
+			key:        []interface{}{"hello", int32(42)},
 		},
 		{
-			name: "multiple key fields, not a slice",
-			objectType: ObjectType{
-				KeyFields: []Field{
-					{
-						Name: "field1",
-						Kind: StringKind,
-					},
-					{
-						Name: "field2",
-						Kind: Int32Kind,
-					},
-				},
-			},
+			name:        "multiple key fields, not a slice",
+			objectType:  object2Type,
 			key:         map[string]interface{}{"field1": "hello", "field2": "42"},
 			errContains: "expected slice of values",
 		},
 		{
-			name: "multiple key fields, wrong number of values",
-			objectType: ObjectType{
-				KeyFields: []Field{
-					{
-						Name: "field1",
-						Kind: StringKind,
-					},
-					{
-						Name: "field2",
-						Kind: Int32Kind,
-					},
-				},
-			},
+			name:        "multiple key fields, wrong number of values",
+			objectType:  object2Type,
 			key:         []interface{}{"hello"},
 			errContains: "expected 2 key fields",
 		},
 		{
-			name: "multiple key fields, invalid value",
-			objectType: ObjectType{
-				KeyFields: []Field{
-					{
-						Name: "field1",
-						Kind: StringKind,
-					},
-					{
-						Name: "field2",
-						Kind: Int32Kind,
-					},
-				},
-			},
+			name:        "multiple key fields, invalid value",
+			objectType:  object2Type,
 			key:         []interface{}{"hello", "abc"},
 			errContains: "invalid value",
 		},
@@ -220,11 +205,9 @@ func TestObjectType_ValidateValue(t *testing.T) {
 		errContains string
 	}{
 		{
-			name: "no value fields",
-			objectType: ObjectType{
-				Name: "object1",
-			},
-			value: nil,
+			name:       "no value fields",
+			objectType: ObjectType{Name: "object0"},
+			value:      nil,
 		},
 		{
 			name: "single value field, valid",
@@ -240,53 +223,20 @@ func TestObjectType_ValidateValue(t *testing.T) {
 			errContains: "",
 		},
 		{
-			name: "value updates, empty",
-			objectType: ObjectType{
-				ValueFields: []Field{
-					{
-						Name: "field1",
-						Kind: StringKind,
-					},
-					{
-						Name: "field2",
-						Kind: Int32Kind,
-					},
-				},
-			},
-			value: MapValueUpdates(map[string]interface{}{}),
+			name:       "value updates, empty",
+			objectType: object3Type,
+			value:      MapValueUpdates(map[string]interface{}{}),
 		},
 		{
-			name: "value updates, 1 field valid",
-			objectType: ObjectType{
-				ValueFields: []Field{
-					{
-						Name: "field1",
-						Kind: StringKind,
-					},
-					{
-						Name: "field2",
-						Kind: Int32Kind,
-					},
-				},
-			},
+			name:       "value updates, 1 field valid",
+			objectType: object3Type,
 			value: MapValueUpdates(map[string]interface{}{
 				"field1": "hello",
 			}),
 		},
 		{
-			name: "value updates, 2 fields, 1 invalid",
-			objectType: ObjectType{
-				ValueFields: []Field{
-					{
-						Name: "field1",
-						Kind: StringKind,
-					},
-					{
-						Name: "field2",
-						Kind: Int32Kind,
-					},
-				},
-			},
+			name:       "value updates, 2 fields, 1 invalid",
+			objectType: object3Type,
 			value: MapValueUpdates(map[string]interface{}{
 				"field1": "hello",
 				"field2": "abc",
@@ -294,19 +244,8 @@ func TestObjectType_ValidateValue(t *testing.T) {
 			errContains: "expected int32",
 		},
 		{
-			name: "value updates, extra value",
-			objectType: ObjectType{
-				ValueFields: []Field{
-					{
-						Name: "field1",
-						Kind: StringKind,
-					},
-					{
-						Name: "field2",
-						Kind: Int32Kind,
-					},
-				},
-			},
+			name:       "value updates, extra value",
+			objectType: object3Type,
 			value: MapValueUpdates(map[string]interface{}{
 				"field1": "hello",
 				"field2": int32(42),
@@ -340,16 +279,8 @@ func TestObjectType_ValidateObjectUpdate(t *testing.T) {
 		errContains string
 	}{
 		{
-			name: "wrong name",
-			objectType: ObjectType{
-				Name: "object1",
-				KeyFields: []Field{
-					{
-						Name: "field1",
-						Kind: StringKind,
-					},
-				},
-			},
+			name:       "wrong name",
+			objectType: object1Type,
 			object: ObjectUpdate{
 				TypeName: "object2",
 				Key:      "hello",
@@ -357,16 +288,8 @@ func TestObjectType_ValidateObjectUpdate(t *testing.T) {
 			errContains: "does not match update type name",
 		},
 		{
-			name: "invalid value",
-			objectType: ObjectType{
-				Name: "object1",
-				KeyFields: []Field{
-					{
-						Name: "field1",
-						Kind: StringKind,
-					},
-				},
-			},
+			name:       "invalid value",
+			objectType: object1Type,
 			object: ObjectUpdate{
 				TypeName: "object1",
 				Key:      123,
@@ -374,47 +297,19 @@ func TestObjectType_ValidateObjectUpdate(t *testing.T) {
 			errContains: "invalid value",
 		},
 		{
-			name: "valid update",
-			objectType: ObjectType{
-				Name: "object1",
-				KeyFields: []Field{
-					{
-						Name: "field1",
-						Kind: Int32Kind,
-					},
-				},
-				ValueFields: []Field{
-					{
-						Name: "field2",
-						Kind: StringKind,
-					},
-				},
-			},
+			name:       "valid update",
+			objectType: object4Type,
 			object: ObjectUpdate{
-				TypeName: "object1",
+				TypeName: "object4",
 				Key:      int32(123),
 				Value:    "hello",
 			},
 		},
 		{
-			name: "valid deletion",
-			objectType: ObjectType{
-				Name: "object1",
-				KeyFields: []Field{
-					{
-						Name: "field1",
-						Kind: Int32Kind,
-					},
-				},
-				ValueFields: []Field{
-					{
-						Name: "field2",
-						Kind: StringKind,
-					},
-				},
-			},
+			name:       "valid deletion",
+			objectType: object4Type,
 			object: ObjectUpdate{
-				TypeName: "object1",
+				TypeName: "object4",
 				Key:      int32(123),
 				Value:    "ignored!",
 				Delete:   true,

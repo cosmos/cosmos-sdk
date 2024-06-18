@@ -351,3 +351,32 @@ func TestKindString(t *testing.T) {
 		}
 	}
 }
+
+func TestKindForGoValue(t *testing.T) {
+	tests := []struct {
+		value interface{}
+		want  Kind
+	}{
+		{"hello", StringKind},
+		{stringBuilder("hello"), StringKind},
+		{[]byte("hello"), BytesKind},
+		{int8(1), Int8Kind},
+		{uint8(1), Uint8Kind},
+		{int16(1), Int16Kind},
+		{uint16(1), Uint16Kind},
+		{int32(1), Int32Kind},
+		{uint32(1), Uint32Kind},
+		{int64(1), Int64Kind},
+		{uint64(1), Uint64Kind},
+		{true, BoolKind},
+		{time.Now(), TimeKind},
+		{time.Second, DurationKind},
+		{json.RawMessage("{}"), JSONKind},
+		{map[string]interface{}{"a": 1}, JSONKind},
+	}
+	for i, tt := range tests {
+		if got := KindForGoValue(tt.value); got != tt.want {
+			t.Errorf("test %d: KindForGoValue(%v) = %v, want %v", i, tt.value, got, tt.want)
+		}
+	}
+}

@@ -271,7 +271,7 @@ func (t Kind) String() string {
 // when the kind of a field is not specified more specifically.
 func KindForGoValue(value interface{}) Kind {
 	switch value.(type) {
-	case string, fmt.Stringer:
+	case string:
 		return StringKind
 	case []byte:
 		return BytesKind
@@ -303,6 +303,8 @@ func KindForGoValue(value interface{}) Kind {
 		return DurationKind
 	case json.RawMessage:
 		return JSONKind
+	case fmt.Stringer:
+		return StringKind
 	default:
 		return JSONKind
 	}

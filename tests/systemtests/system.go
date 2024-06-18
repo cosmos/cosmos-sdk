@@ -48,7 +48,7 @@ type SystemUnderTest struct {
 	outputDir          string
 	testnetInitializer TestnetInitializer
 
-	// blockTime is the the expected/desired block time. This is not going to be very precise
+	// blockTime is the expected/desired block time. This is not going to be very precise
 	// since Tendermint consensus does not allow specifying it directly.
 	blockTime         time.Duration
 	rpcAddr           string

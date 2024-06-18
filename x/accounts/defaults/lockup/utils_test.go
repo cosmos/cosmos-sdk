@@ -6,10 +6,8 @@ import (
 	"testing"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	types "github.com/cosmos/gogoproto/types/any"
 	"github.com/golang/protobuf/proto" // nolint: staticcheck // needed because gogoproto.Merge does not work consistently. See NOTE: comments.
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections"
@@ -23,7 +21,6 @@ import (
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -37,101 +34,6 @@ type mockStateCodec struct {
 }
 
 var _ codec.Codec = mockStateCodec{}
-
-// GetMsgSigners implements codec.Codec.
-func (mockStateCodec) GetMsgSigners(msg gogoproto.Message) ([][]byte, protoreflect.Message, error) {
-	panic("unimplemented")
-}
-
-// GetReflectMsgSigners implements codec.Codec.
-func (mockStateCodec) GetReflectMsgSigners(msg protoreflect.Message) ([][]byte, error) {
-	panic("unimplemented")
-}
-
-// InterfaceRegistry implements codec.Codec.
-func (mockStateCodec) InterfaceRegistry() codectypes.InterfaceRegistry {
-	panic("unimplemented")
-}
-
-// MarshalInterface implements codec.Codec.
-func (mockStateCodec) MarshalInterface(i gogoproto.Message) ([]byte, error) {
-	panic("unimplemented")
-}
-
-// MarshalInterfaceJSON implements codec.Codec.
-func (mockStateCodec) MarshalInterfaceJSON(i gogoproto.Message) ([]byte, error) {
-	panic("unimplemented")
-}
-
-// MarshalJSON implements codec.Codec.
-func (mockStateCodec) MarshalJSON(o gogoproto.Message) ([]byte, error) {
-	panic("unimplemented")
-}
-
-// MarshalLengthPrefixed implements codec.Codec.
-func (mockStateCodec) MarshalLengthPrefixed(o gogoproto.Message) ([]byte, error) {
-	panic("unimplemented")
-}
-
-// MustMarshal implements codec.Codec.
-func (mockStateCodec) MustMarshal(o gogoproto.Message) []byte {
-	panic("unimplemented")
-}
-
-// MustMarshalJSON implements codec.Codec.
-func (mockStateCodec) MustMarshalJSON(o gogoproto.Message) []byte {
-	panic("unimplemented")
-}
-
-// MustMarshalLengthPrefixed implements codec.Codec.
-func (mockStateCodec) MustMarshalLengthPrefixed(o gogoproto.Message) []byte {
-	panic("unimplemented")
-}
-
-// MustUnmarshal implements codec.Codec.
-func (mockStateCodec) MustUnmarshal(bz []byte, ptr gogoproto.Message) {
-	panic("unimplemented")
-}
-
-// MustUnmarshalJSON implements codec.Codec.
-func (mockStateCodec) MustUnmarshalJSON(bz []byte, ptr gogoproto.Message) {
-	panic("unimplemented")
-}
-
-// MustUnmarshalLengthPrefixed implements codec.Codec.
-func (mockStateCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr gogoproto.Message) {
-	panic("unimplemented")
-}
-
-// UnmarshalInterface implements codec.Codec.
-func (mockStateCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
-	panic("unimplemented")
-}
-
-// UnmarshalInterfaceJSON implements codec.Codec.
-func (mockStateCodec) UnmarshalInterfaceJSON(bz []byte, ptr interface{}) error {
-	panic("unimplemented")
-}
-
-// UnmarshalJSON implements codec.Codec.
-func (mockStateCodec) UnmarshalJSON(bz []byte, ptr gogoproto.Message) error {
-	panic("unimplemented")
-}
-
-// UnmarshalLengthPrefixed implements codec.Codec.
-func (mockStateCodec) UnmarshalLengthPrefixed(bz []byte, ptr gogoproto.Message) error {
-	panic("unimplemented")
-}
-
-// UnpackAny implements codec.Codec.
-func (mockStateCodec) UnpackAny(any *types.Any, iface interface{}) error {
-	panic("unimplemented")
-}
-
-// GetMsgAnySigners implements codec.Codec.
-func (mockStateCodec) GetMsgAnySigners(msg *types.Any) ([][]byte, protoreflect.Message, error) {
-	panic("unimplemented")
-}
 
 func (c mockStateCodec) Marshal(m gogoproto.Message) ([]byte, error) {
 	// Size() check can catch the typed nil value.

@@ -36,7 +36,7 @@ type ObjectUpdate struct {
 type ValueUpdates interface {
 	// Iterate iterates over the fields and values in the object update. The function should return
 	// true to continue iteration or false to stop iteration. Each field value should conform
-	// to the requirements of that field's type in the schema. Iterate returns an errContains if
+	// to the requirements of that field's type in the schema. Iterate returns an error if
 	// it was unable to decode the values properly (which could be the case in lazy evaluation).
 	Iterate(func(col string, value interface{}) bool) error
 }

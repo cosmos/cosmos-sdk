@@ -2,7 +2,7 @@ package indexerbase
 
 import (
 	"encoding/json"
-	"strings"
+	"fmt"
 	"testing"
 	"time"
 )
@@ -45,7 +45,7 @@ func TestKind_Validate(t *testing.T) {
 	}
 }
 
-func TestKind_ValidateValue(t *testing.T) {
+func TestKind_ValidateValueType(t *testing.T) {
 	tests := []struct {
 		kind  Kind
 		value interface{}
@@ -54,11 +54,6 @@ func TestKind_ValidateValue(t *testing.T) {
 		{
 			kind:  StringKind,
 			value: "hello",
-			valid: true,
-		},
-		{
-			kind:  StringKind,
-			value: stringBuilder("hello"),
 			valid: true,
 		},
 		{
@@ -163,18 +158,8 @@ func TestKind_ValidateValue(t *testing.T) {
 		},
 		{
 			kind:  IntegerKind,
-			value: stringBuilder("1"),
-			valid: true,
-		},
-		{
-			kind:  IntegerKind,
 			value: int32(1),
 			valid: false,
-		},
-		{
-			kind:  IntegerKind,
-			value: int64(1),
-			valid: true,
 		},
 		{
 			kind:  DecimalKind,
@@ -193,22 +178,12 @@ func TestKind_ValidateValue(t *testing.T) {
 		},
 		{
 			kind:  DecimalKind,
-			value: stringBuilder("1.0"),
-			valid: true,
-		},
-		{
-			kind:  DecimalKind,
 			value: int32(1),
 			valid: false,
 		},
 		{
 			kind:  Bech32AddressKind,
-			value: "cosmos1hsk6jryyqjfhp5g7c0nh4n6dd45ygctnxglp5h",
-			valid: true,
-		},
-		{
-			kind:  Bech32AddressKind,
-			value: stringBuilder("cosmos1hsk6jryyqjfhp5g7c0nh4n6dd45ygctnxglp5h"),
+			value: []byte("hello"),
 			valid: true,
 		},
 		{
@@ -234,11 +209,6 @@ func TestKind_ValidateValue(t *testing.T) {
 		{
 			kind:  EnumKind,
 			value: "hello",
-			valid: true,
-		},
-		{
-			kind:  EnumKind,
-			value: stringBuilder("hello"),
 			valid: true,
 		},
 		{
@@ -288,37 +258,94 @@ func TestKind_ValidateValue(t *testing.T) {
 		},
 		{
 			kind:  JSONKind,
-			value: "hello",
-			valid: true,
-		},
-		{
-			kind:  JSONKind,
 			value: json.RawMessage("{}"),
 			valid: true,
 		},
 	}
 
 	for i, tt := range tests {
-		err := tt.kind.ValidateValueType(tt.value)
-		if tt.valid && err != nil {
-			t.Errorf("test %d: expected valid value %v for kind %s to pass validation, got: %v", i, tt.value, tt.kind, err)
-		}
-		if !tt.valid && err == nil {
-			t.Errorf("test %d: expected invalid value %v for kind %s to fail validation, got: %v", i, tt.value, tt.kind, err)
-		}
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			err := tt.kind.ValidateValueType(tt.value)
+			if tt.valid && err != nil {
+				t.Errorf("test %d: expected valid value %v for kind %s to pass validation, got: %v", i, tt.value, tt.kind, err)
+			}
+			if !tt.valid && err == nil {
+				t.Errorf("test %d: expected invalid value %v for kind %s to fail validation, got: %v", i, tt.value, tt.kind, err)
+			}
+		})
 	}
 }
 
-func stringBuilder(x string) interface{} {
-	b := &strings.Builder{}
-	_, err := b.WriteString(x)
-	if err != nil {
-		panic(err)
+func TestKind_ValidateValue(t *testing.T) {
+	tests := []struct {
+		kind  Kind
+		value interface{}
+		valid bool
+	}{
+		// check a few basic cases
+		{StringKind, "hello", true},
+		{Int64Kind, int64(1), true},
+		// check integer, decimal and json more thoroughly
+		{IntegerKind, "1", true},
+		{IntegerKind, "0", true},
+		{IntegerKind, "10", true},
+		{IntegerKind, "-100", true},
+		{IntegerKind, "1.0", false},
+		{IntegerKind, "00", true}, // leading zeros are allowed
+		{IntegerKind, "001", true},
+		{IntegerKind, "-01", true},
+		{IntegerKind, "", false},
+		{IntegerKind, "abc", false},
+		{IntegerKind, "abc100", false},
+		{DecimalKind, "1.0", true},
+		{DecimalKind, "0.0", true},
+		{DecimalKind, "-100.075", true},
+		{DecimalKind, "1002346.000", true},
+		{DecimalKind, "0", true},
+		{DecimalKind, "10", true},
+		{DecimalKind, "-100", true},
+		{DecimalKind, "1", true},
+		{DecimalKind, "1.0e4", true},
+		{DecimalKind, "1.0e-4", true},
+		{DecimalKind, "1.0e+4", true},
+		{DecimalKind, "1.0e", false},
+		{DecimalKind, "1.0e4.0", false},
+		{DecimalKind, "1.0e-4.0", false},
+		{DecimalKind, "1.0e+4.0", false},
+		{DecimalKind, "-1.0e-4", true},
+		{DecimalKind, "-1.0e+4", true},
+		{DecimalKind, "-1.0E4", true},
+		{DecimalKind, "1E-9", true},
+		{DecimalKind, "", false},
+		{DecimalKind, "abc", false},
+		{DecimalKind, "abc", false},
+		{JSONKind, json.RawMessage(`{"a":10}`), true},
+		{JSONKind, json.RawMessage("10"), true},
+		{JSONKind, json.RawMessage("10.0"), true},
+		{JSONKind, json.RawMessage("true"), true},
+		{JSONKind, json.RawMessage("null"), true},
+		{JSONKind, json.RawMessage(`"abc"`), true},
+		{JSONKind, json.RawMessage(`[1,true,0.1,"abc",{"b":3}]`), true},
+		{JSONKind, json.RawMessage(`"abc`), false},
+		{JSONKind, json.RawMessage(`tru`), false},
+		{JSONKind, json.RawMessage(`[`), false},
+		{JSONKind, json.RawMessage(`{`), false},
 	}
-	return b
+
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("test %v %s", tt.kind, tt.value), func(t *testing.T) {
+			err := tt.kind.ValidateValue(tt.value)
+			if tt.valid && err != nil {
+				t.Errorf("test %d: expected valid value %v for kind %s to pass validation, got: %v", i, tt.value, tt.kind, err)
+			}
+			if !tt.valid && err == nil {
+				t.Errorf("test %d: expected invalid value %v for kind %s to fail validation, got: %v", i, tt.value, tt.kind, err)
+			}
+		})
+	}
 }
 
-func TestKindString(t *testing.T) {
+func TestKind_String(t *testing.T) {
 	tests := []struct {
 		kind Kind
 		want string
@@ -346,9 +373,11 @@ func TestKindString(t *testing.T) {
 		{InvalidKind, "invalid(0)"},
 	}
 	for i, tt := range tests {
-		if got := tt.kind.String(); got != tt.want {
-			t.Errorf("test %d: Kind.String() = %v, want %v", i, got, tt.want)
-		}
+		t.Run(fmt.Sprintf("test %s", tt.kind), func(t *testing.T) {
+			if got := tt.kind.String(); got != tt.want {
+				t.Errorf("test %d: Kind.String() = %v, want %v", i, got, tt.want)
+			}
+		})
 	}
 }
 
@@ -358,7 +387,6 @@ func TestKindForGoValue(t *testing.T) {
 		want  Kind
 	}{
 		{"hello", StringKind},
-		{stringBuilder("hello"), StringKind},
 		{[]byte("hello"), BytesKind},
 		{int8(1), Int8Kind},
 		{uint8(1), Uint8Kind},
@@ -375,8 +403,10 @@ func TestKindForGoValue(t *testing.T) {
 		{map[string]interface{}{"a": 1}, JSONKind},
 	}
 	for i, tt := range tests {
-		if got := KindForGoValue(tt.value); got != tt.want {
-			t.Errorf("test %d: KindForGoValue(%v) = %v, want %v", i, tt.value, got, tt.want)
-		}
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			if got := KindForGoValue(tt.value); got != tt.want {
+				t.Errorf("test %d: KindForGoValue(%v) = %v, want %v", i, tt.value, got, tt.want)
+			}
+		})
 	}
 }

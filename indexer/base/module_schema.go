@@ -5,22 +5,24 @@ import "fmt"
 // ModuleSchema represents the logical schema of a module for purposes of indexing and querying.
 type ModuleSchema struct {
 	// ObjectTypes describe the types of objects that are part of the module's schema.
-	ObjectTypes map[string]ObjectType
+	ObjectTypes []ObjectType
 }
 
-func (m ModuleSchema) ValidateObjectUpdate(update ObjectUpdate) error {
-	objectType, ok := m.ObjectTypes[update.TypeName]
-	if !ok {
-		return fmt.Errorf("unknown object type %q", update.TypeName)
+// Validate validates the module schema.
+func (s ModuleSchema) Validate() error {
+	for _, objType := range s.ObjectTypes {
+		if err := objType.Validate(); err != nil {
+			return err
+		}
 	}
+	return nil
+}
 
-	if err := objectType.ValidateKey(update.Key); err != nil {
-		return fmt.Errorf("invalid key for object type %q: %w", update.TypeName, err)
+func (s ModuleSchema) ValidateObjectUpdate(update ObjectUpdate) error {
+	for _, objType := range s.ObjectTypes {
+		if objType.Name == update.TypeName {
+			return objType.ValidateObjectUpdate(update)
+		}
 	}
-
-	if update.Delete {
-		return nil
-	}
-
-	return objectType.ValidateValue(update.Value)
+	return fmt.Errorf("object type %q not found in module schema", update.TypeName)
 }

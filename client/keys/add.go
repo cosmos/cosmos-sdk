@@ -63,6 +63,11 @@ local keystore.
 Use the --pubkey flag to add arbitrary public keys to the keystore for constructing
 multisig transactions.
 
+Use the --source flag to import mnemonic from a file in recover or interactive mode. 
+Example:
+
+	keys add testing --recover --source ./mnemonic.txt
+
 You can create and store a multisig key by passing the list of key names stored in a keyring
 and the minimum number of signatures required through --multisig-threshold. The keys are
 sorted by address, unless the flag --nosort is set.

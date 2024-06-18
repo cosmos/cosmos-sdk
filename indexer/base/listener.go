@@ -33,7 +33,7 @@ type Listener struct {
 	// OnKVPair is called when a key-value has been written to the store for a given module.
 	OnKVPair func(moduleName string, key, value []byte, delete bool) error
 
-	// Commit is called when state is commited, usually at the end of a block. Any
+	// Commit is called when state is committed, usually at the end of a block. Any
 	// indexers should commit their data when this is called and return an error if
 	// they are unable to commit.
 	Commit func() error
@@ -54,7 +54,6 @@ type Listener struct {
 
 // InitializationData represents initialization data that is passed to a listener.
 type InitializationData struct {
-
 	// HasEventAlignedWrites indicates that the blockchain data source will emit KV-pair events
 	// in an order aligned with transaction, message and event callbacks. If this is true
 	// then indexers can assume that KV-pair data is associated with these specific transactions, messages

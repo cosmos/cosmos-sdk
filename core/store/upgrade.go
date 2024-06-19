@@ -54,9 +54,9 @@ func (s *StoreUpgrades) IsRenamed(key string) bool {
 	return false
 }
 
-// RenamedFrom returns the oldKey if it was renamed
+// GetOldKeyFromNew returns the oldKey if it was renamed
 // Returns "" if it was not renamed
-func (s *StoreUpgrades) RenamedFrom(key string) string {
+func (s *StoreUpgrades) GetOldKeyFromNew(key string) string {
 	if s == nil {
 		return ""
 	}

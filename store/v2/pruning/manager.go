@@ -77,6 +77,9 @@ func (m *Manager) SignalCommit(start bool, version uint64) error {
 // store key.
 func (m *Manager) PruneKVStores(kvStores []corestore.KVStoreWithBatch) error {
 	for _, kvStore := range kvStores {
+		if kvStore == nil {
+			continue
+		}
 		if err := func() error {
 			batch := kvStore.NewBatch()
 			iter, err := kvStore.Iterator(nil, nil)

@@ -131,6 +131,76 @@ func (c *CommitStore) IsEmpty() (bool, error) {
 }
 
 func (c *CommitStore) LoadVersion(targetVersion uint64) error {
+	storeKeys := make([]string, 0, len(c.multiTrees))
+	for storeKey := range c.multiTrees {
+		storeKeys = append(storeKeys, storeKey)
+	}
+	return c.loadVersion(targetVersion, storeKeys)
+}
+
+// LoadVersionAndUpgrade implements store.UpgradeableStore.
+func (c *CommitStore) LoadVersionAndUpgrade(targetVersion uint64, upgrades *corestore.StoreUpgrades) error {
+	storeKeys := make([]string, 0, len(c.multiTrees))
+	for storeKey := range c.multiTrees {
+		storeKeys = append(storeKeys, storeKey)
+	}
+	// deterministic iteration order for upgrades
+	// (as the underlying store may change and
+	// upgrades make store changes where the execution order may matter)
+	sort.Slice(storeKeys, func(i, j int) bool {
+		return storeKeys[i] < storeKeys[j]
+	})
+
+	removeTree := func(storeKey string) error {
+		if oldTree, ok := c.multiTrees[storeKey]; ok {
+			if err := oldTree.Close(); err != nil {
+				return err
+			}
+			delete(c.multiTrees, storeKey)
+		}
+		return nil
+	}
+
+	newStoreKeys := make([]string, 0, len(c.multiTrees))
+	for _, storeKey := range storeKeys {
+		// If it has been renamed, continue to the next store key.
+		if upgrades.IsRenamed(storeKey) {
+			continue
+		}
+
+		// If it has been deleted, remove the tree.
+		if upgrades.IsDeleted(storeKey) {
+			if err := removeTree(storeKey); err != nil {
+				return err
+			}
+			continue
+		}
+
+		// If it has been added, set the initial version.
+		if upgrades.IsAdded(storeKey) {
+			if err := c.multiTrees[storeKey].SetInitialVersion(targetVersion + 1); err != nil {
+				return err
+			}
+			// This is the empty tree, no need to load the version.
+			continue
+		}
+
+		// If it has been renamed, migrate the data.
+		if oldKey := upgrades.GetOldKeyFromNew(storeKey); oldKey != "" {
+			if err := c.migrateKVStore(oldKey, storeKey); err != nil {
+				return err
+			}
+			if err := removeTree(oldKey); err != nil {
+				return err
+			}
+		}
+		newStoreKeys = append(newStoreKeys, storeKey)
+	}
+
+	return c.loadVersion(targetVersion, newStoreKeys)
+}
+
+func (c *CommitStore) loadVersion(targetVersion uint64, storeKeys []string) error {
 	// Rollback the metadata to the target version.
 	latestVersion, err := c.GetLatestVersion()
 	if err != nil {
@@ -147,6 +217,9 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 		}
 		var buf bytes.Buffer
 		buf.Grow(encoding.EncodeUvarintSize(targetVersion))
+		if err := encoding.EncodeUvarint(&buf, targetVersion); err != nil {
+			return err
+		}
 		if err := batch.Set([]byte(latestVersionKey), buf.Bytes()); err != nil {
 			return err
 		}
@@ -155,8 +228,8 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 		}
 	}
 
-	for _, tree := range c.multiTrees {
-		if err := tree.LoadVersion(targetVersion); err != nil {
+	for _, storeKey := range storeKeys {
+		if err := c.multiTrees[storeKey].LoadVersion(targetVersion); err != nil {
 			return err
 		}
 	}
@@ -166,77 +239,6 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 	if targetVersion > latestVersion {
 		cInfo := c.WorkingCommitInfo(targetVersion)
 		return c.flushCommitInfo(targetVersion, cInfo)
-	}
-
-	return nil
-}
-
-// LoadVersionAndUpgrade implements store.UpgradeableStore.
-func (c *CommitStore) LoadVersionAndUpgrade(targetVersion uint64, upgrades *corestore.StoreUpgrades) error {
-	storesKeys := make([]string, 0, len(c.multiTrees))
-	for storeKey := range c.multiTrees {
-		storesKeys = append(storesKeys, storeKey)
-	}
-	// deterministic iteration order for upgrades
-	// (as the underlying store may change and
-	// upgrades make store changes where the execution order may matter)
-	sort.Slice(storesKeys, func(i, j int) bool {
-		return storesKeys[i] < storesKeys[j]
-	})
-
-	removeTree := func(storeKey string) error {
-		if oldTree, ok := c.multiTrees[storeKey]; ok {
-			if err := oldTree.Close(); err != nil {
-				return err
-			}
-			delete(c.multiTrees, storeKey)
-		}
-		return nil
-	}
-
-	commitInfo, err := c.GetCommitInfo(targetVersion)
-	if err != nil {
-		return err
-	}
-
-	for _, storeKey := range storesKeys {
-		// If it has been renamed, continue to the next store key.
-		if upgrades.IsRenamed(storeKey) {
-			continue
-		}
-
-		tree := c.multiTrees[storeKey]
-
-		// If it has been deleted, remove the tree.
-		if upgrades.IsDeleted(storeKey) {
-			if err := removeTree(storeKey); err != nil {
-				return err
-			}
-			continue
-		}
-
-		// If it has been added, set the initial version.
-		if upgrades.IsAdded(storeKey) {
-			if err := tree.SetInitialVersion(targetVersion + 1); err != nil {
-				return err
-			}
-		}
-
-		commitID := commitInfo.GetStoreCommitID([]byte(storeKey))
-		// If it has been renamed, migrate the data.
-		if oldKey := upgrades.RenamedFrom(storeKey); oldKey != "" {
-			if err := c.migrateKVStore(oldKey, storeKey); err != nil {
-				return err
-			}
-			if err := removeTree(oldKey); err != nil {
-				return err
-			}
-			commitID = commitInfo.GetStoreCommitID([]byte(oldKey))
-		}
-
-		if err := tree.LoadVersion(commitID.Version); err != nil {
-			return err
-		}
 	}
 
 	return nil

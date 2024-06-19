@@ -124,6 +124,60 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 	}
 }
 
+func (s *CommitStoreTestSuite) TestStore_LoadVersion() {
+	storeKeys := []string{storeKey1, storeKey2}
+	mdb := dbm.NewMemDB()
+	commitStore, err := s.NewStore(mdb, storeKeys, log.NewNopLogger())
+	s.Require().NoError(err)
+
+	latestVersion := uint64(10)
+	kvCount := 10
+	for i := uint64(1); i <= latestVersion; i++ {
+		kvPairs := make(map[string]corestore.KVPairs)
+		for _, storeKey := range storeKeys {
+			kvPairs[storeKey] = corestore.KVPairs{}
+			for j := 0; j < kvCount; j++ {
+				key := []byte(fmt.Sprintf("key-%d-%d", i, j))
+				value := []byte(fmt.Sprintf("value-%d-%d", i, j))
+				kvPairs[storeKey] = append(kvPairs[storeKey], corestore.KVPair{Key: key, Value: value})
+			}
+		}
+		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(kvPairs)))
+		_, err = commitStore.Commit(i)
+		s.Require().NoError(err)
+	}
+
+	// load the store with the latest version
+	targetStore, err := s.NewStore(mdb, storeKeys, log.NewNopLogger())
+	s.Require().NoError(err)
+	err = targetStore.LoadVersion(latestVersion)
+	s.Require().NoError(err)
+	// check the store
+	for i := uint64(1); i <= latestVersion; i++ {
+		commitInfo, _ := targetStore.GetCommitInfo(i)
+		s.Require().NotNil(commitInfo)
+	}
+
+	// rollback to a previous version
+	rollbackVersion := uint64(5)
+	rollbackStore, err := s.NewStore(mdb, storeKeys, log.NewNopLogger())
+	s.Require().NoError(err)
+	err = rollbackStore.LoadVersion(rollbackVersion)
+	s.Require().NoError(err)
+	// check the store
+	v, err := rollbackStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(rollbackVersion, v)
+	for i := uint64(1); i <= latestVersion; i++ {
+		commitInfo, _ := rollbackStore.GetCommitInfo(i)
+		if i > rollbackVersion {
+			s.Require().Nil(commitInfo)
+		} else {
+			s.Require().NotNil(commitInfo)
+		}
+	}
+}
+
 func (s *CommitStoreTestSuite) TestStore_Pruning() {
 	storeKeys := []string{storeKey1, storeKey2}
 	pruneOpts := &store.PruneOptions{

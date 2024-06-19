@@ -5,7 +5,6 @@ import (
 	"pgregory.net/rapid"
 
 	indexerbase "cosmossdk.io/indexer/base"
-	"cosmossdk.io/indexer/testing/state"
 )
 
 var fieldsGen = rapid.SliceOfNDistinct(Field, 1, 12, func(f indexerbase.Field) string {
@@ -74,7 +73,7 @@ func ObjectUpdate(objectType indexerbase.ObjectType) *rapid.Generator[indexerbas
 	})
 }
 
-func StatefulObjectUpdate(objectType indexerbase.ObjectType, state *btree.Map[string, *state.Entry]) *rapid.Generator[indexerbase.ObjectUpdate] {
+func StatefulObjectUpdate(objectType indexerbase.ObjectType, state *btree.Map[string, *Entry]) *rapid.Generator[indexerbase.ObjectUpdate] {
 	keyGen := KeyFieldsValue(objectType.KeyFields)
 	valueGen := ValueFieldsValue(objectType.ValueFields)
 	return rapid.Custom(func(t *rapid.T) indexerbase.ObjectUpdate {

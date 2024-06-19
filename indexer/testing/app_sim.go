@@ -23,9 +23,10 @@ type AppSimulator struct {
 	options  AppSimulatorOptions
 	modules  *btree.Map[string, *moduleState]
 	blockNum uint64
+	tb       require.TestingT
 }
 
-func NewAppSimulator(options AppSimulatorOptions) *AppSimulator {
+func NewAppSimulator(tb require.TestingT, options AppSimulatorOptions) *AppSimulator {
 	modules := &btree.Map[string, *moduleState]{}
 	for module, schema := range options.AppSchema {
 		modState := &moduleState{
@@ -34,7 +35,7 @@ func NewAppSimulator(options AppSimulatorOptions) *AppSimulator {
 		}
 		modules.Set(module, modState)
 		for _, objectType := range schema.ObjectTypes {
-			state := &btree.Map[string, *Entry]{}
+			state := &btree.Map[string, *schemagen.Entry]{}
 			objState := &objectState{
 				ObjectType: objectType,
 				Objects:    state,
@@ -47,58 +48,60 @@ func NewAppSimulator(options AppSimulatorOptions) *AppSimulator {
 	return &AppSimulator{
 		options: options,
 		modules: modules,
+		tb:      tb,
 	}
 }
 
-func (a *AppSimulator) Initialize() error {
+func (a *AppSimulator) Initialize() {
 	if f := a.options.Listener.InitializeModuleSchema; f != nil {
-		var err error
 		a.modules.Scan(func(moduleName string, mod *moduleState) bool {
-			err = f(moduleName, mod.ModuleSchema)
-			return err == nil
+			err := f(moduleName, mod.ModuleSchema)
+			require.NoError(a.tb, err)
+			return true
 		})
-		return err
 	}
-	return nil
+
+	if f := a.options.Listener.Initialize; f != nil {
+		_, err := f(indexerbase.InitializationData{
+			HasEventAlignedWrites: a.options.EventAlignedWrites,
+		})
+		require.NoError(a.tb, err)
+	}
 }
 
-func (a *AppSimulator) NextBlock() error {
+func (a *AppSimulator) NextBlock() {
+	a.newBlockFromSeed(a.options.Seed + int(a.blockNum))
+}
+
+func (a *AppSimulator) actionNewBlock(t *rapid.T) {
 	a.blockNum++
 
 	if f := a.options.Listener.StartBlock; f != nil {
 		err := f(a.blockNum)
 		if err != nil {
-			return err
+			require.NoError(t, err)
 		}
 	}
 
-	a.newBlockFromSeed(a.options.Seed + int(a.blockNum))
-
-	if f := a.options.Listener.Commit; f != nil {
-		err := f()
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (a *AppSimulator) actionNewBlock(t *rapid.T) {
 	maxUpdates := a.options.MaxUpdatesPerBlock
 	if maxUpdates <= 0 {
 		maxUpdates = 100
 	}
 	numUpdates := rapid.IntRange(1, maxUpdates).Draw(t, "numUpdates")
 	for i := 0; i < numUpdates; i++ {
-		moduleIdx := rapid.IntRange(0, a.modules.Len()).Draw(t, "moduleIdx")
+		moduleIdx := rapid.IntRange(0, a.modules.Len()-1).Draw(t, "moduleIdx")
 		keys, values := a.modules.KeyValues()
 		modState := values[moduleIdx]
-		objectIdx := rapid.IntRange(0, modState.Objects.Len()).Draw(t, "objectIdx")
+		objectIdx := rapid.IntRange(0, modState.Objects.Len()-1).Draw(t, "objectIdx")
 		objState := modState.Objects.Values()[objectIdx]
 		update := objState.UpdateGen.Draw(t, "update")
 		require.NoError(t, objState.ObjectType.ValidateObjectUpdate(update))
 		require.NoError(t, a.applyUpdate(keys[moduleIdx], update))
+	}
+
+	if f := a.options.Listener.Commit; f != nil {
+		err := f()
+		require.NoError(t, err)
 	}
 }
 
@@ -124,19 +127,17 @@ func (a *AppSimulator) applyUpdate(module string, update indexerbase.ObjectUpdat
 	if update.Delete {
 		objState.Objects.Delete(keyStr)
 	} else {
-		objState.Objects.Set(fmt.Sprintf("%v", update.Key), &Entry{Key: update.Key, Value: update.Value})
+		objState.Objects.Set(fmt.Sprintf("%v", update.Key), &schemagen.Entry{Key: update.Key, Value: update.Value})
 	}
 
 	if a.options.Listener.OnObjectUpdate != nil {
 		err := a.options.Listener.OnObjectUpdate(module, update)
-		return err
+		if err != nil {
+			return err
+		}
 	}
-	return nil
-}
 
-type Entry struct {
-	Key   any
-	Value any
+	return nil
 }
 
 type moduleState struct {
@@ -146,6 +147,6 @@ type moduleState struct {
 
 type objectState struct {
 	ObjectType indexerbase.ObjectType
-	Objects    *btree.Map[string, *Entry]
+	Objects    *btree.Map[string, *schemagen.Entry]
 	UpdateGen  *rapid.Generator[indexerbase.ObjectUpdate]
 }

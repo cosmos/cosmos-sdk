@@ -1,20 +1,17 @@
 package indexertesting
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 
 	indexerbase "cosmossdk.io/indexer/base"
 )
 
-func StdoutListener() indexerbase.Listener {
-	return WriterListener(os.Stdout)
-}
-
 func WriterListener(w io.Writer) indexerbase.Listener {
 	return indexerbase.Listener{
 		Initialize: func(data indexerbase.InitializationData) (lastBlockPersisted int64, err error) {
+
 			_, err = fmt.Fprintf(w, "Initialize: %v\n", data)
 			return 0, err
 		},
@@ -34,11 +31,19 @@ func WriterListener(w io.Writer) indexerbase.Listener {
 			return err
 		},
 		InitializeModuleSchema: func(moduleName string, schema indexerbase.ModuleSchema) error {
-			_, err := fmt.Fprintf(w, "InitializeModuleSchema: %s %v\n", moduleName, schema)
+			bz, err := json.Marshal(schema)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintf(w, "InitializeModuleSchema: %s %s\n", moduleName, bz)
 			return err
 		},
 		OnObjectUpdate: func(moduleName string, data indexerbase.ObjectUpdate) error {
-			_, err := fmt.Fprintf(w, "OnObjectUpdate: %s: %v\n", moduleName, data)
+			bz, err := json.Marshal(data)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintf(w, "OnObjectUpdate: %s: %s\n", moduleName, bz)
 			return err
 		},
 	}

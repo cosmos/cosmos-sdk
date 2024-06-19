@@ -4,17 +4,13 @@ go 1.22.2
 
 require (
 	cosmossdk.io/api v0.7.5
-	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/log v1.3.1
 	cosmossdk.io/math v1.3.0 // indirect
 	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000
-	cosmossdk.io/server/v2 v2.0.0-00010101000000-000000000000
-	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0
-	cosmossdk.io/tools/confix v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
@@ -46,6 +42,13 @@ require (
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/sync v0.7.0 // indirect
 	google.golang.org/protobuf v1.34.2
+)
+
+require (
+	cosmossdk.io/client/v2 v2.0.0-00010101000000-000000000000
+	cosmossdk.io/server/v2 v2.0.0-00010101000000-000000000000
+	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
+	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
 )
 
 require (

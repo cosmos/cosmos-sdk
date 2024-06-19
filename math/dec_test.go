@@ -168,7 +168,6 @@ func TestAdd(t *testing.T) {
 		exp    Dec
 		expErr error
 	}{
-		"zero add zero": {
 		"0 + 0 = 0": {
 			x:   NewDecFromInt64(0),
 			y:   NewDecFromInt64(0),

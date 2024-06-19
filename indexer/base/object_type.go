@@ -9,11 +9,13 @@ type ObjectType struct {
 
 	// KeyFields is a list of fields that make up the primary key of the object.
 	// It can be empty in which case indexers should assume that this object is
-	// a singleton and only has one value.
+	// a singleton and only has one value. Field names must be unique within the
+	// object between both key and value fields.
 	KeyFields []Field
 
 	// ValueFields is a list of fields that are not part of the primary key of the object.
 	// It can be empty in the case where all fields are part of the primary key.
+	// Field names must be unique within the object between both key and value fields.
 	ValueFields []Field
 
 	// RetainDeletions is a flag that indicates whether the indexer should retain
@@ -30,16 +32,27 @@ func (o ObjectType) Validate() error {
 		return fmt.Errorf("object type name cannot be empty")
 	}
 
+	fieldNames := map[string]bool{}
 	for _, field := range o.KeyFields {
 		if err := field.Validate(); err != nil {
 			return fmt.Errorf("invalid key field %q: %w", field.Name, err)
 		}
+
+		if fieldNames[field.Name] {
+			return fmt.Errorf("duplicate field name %q", field.Name)
+		}
+		fieldNames[field.Name] = true
 	}
 
 	for _, field := range o.ValueFields {
 		if err := field.Validate(); err != nil {
 			return fmt.Errorf("invalid value field %q: %w", field.Name, err)
 		}
+
+		if fieldNames[field.Name] {
+			return fmt.Errorf("duplicate field name %q", field.Name)
+		}
+		fieldNames[field.Name] = true
 	}
 
 	if len(o.KeyFields) == 0 && len(o.ValueFields) == 0 {

@@ -29,7 +29,7 @@ func TestModuleSchema_Validate(t *testing.T) {
 			errContains: "",
 		},
 		{
-			name: "invalid module schema",
+			name: "invalid object type",
 			moduleSchema: ModuleSchema{
 				ObjectTypes: []ObjectType{
 					{
@@ -44,6 +44,71 @@ func TestModuleSchema_Validate(t *testing.T) {
 				},
 			},
 			errContains: "object type name cannot be empty",
+		},
+		{
+			name: "same enum with missing values",
+			moduleSchema: ModuleSchema{
+				ObjectTypes: []ObjectType{
+					{
+						Name: "object1",
+						KeyFields: []Field{
+							{
+								Name: "k",
+								Kind: EnumKind,
+								EnumDefinition: EnumDefinition{
+									Name:   "enum1",
+									Values: []string{"a", "b"},
+								},
+							},
+						},
+						ValueFields: []Field{
+							{
+								Name: "v",
+								Kind: EnumKind,
+								EnumDefinition: EnumDefinition{
+									Name:   "enum1",
+									Values: []string{"a", "b", "c"},
+								},
+							},
+						},
+					},
+				},
+			},
+			errContains: "different number of values",
+		},
+		{
+			name: "same enum with different values",
+			moduleSchema: ModuleSchema{
+				ObjectTypes: []ObjectType{
+					{
+						Name: "object1",
+						KeyFields: []Field{
+							{
+								Name: "k",
+								Kind: EnumKind,
+								EnumDefinition: EnumDefinition{
+									Name:   "enum1",
+									Values: []string{"a", "b"},
+								},
+							},
+						},
+					},
+					{
+						Name: "object2",
+						KeyFields: []Field{
+							{
+								Name: "k",
+								Kind: EnumKind,
+								EnumDefinition: EnumDefinition{
+									Name:   "enum1",
+									Values: []string{"a", "c"},
+								},
+							},
+						},
+					},
+				},
+			},
+			errContains: "different values",
 		},
 	}
 

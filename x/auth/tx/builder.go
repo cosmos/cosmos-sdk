@@ -32,7 +32,9 @@ func newBuilder(addressCodec address.Codec, decoder *decode.Decoder, codec codec
 	return &builder{addressCodec: addressCodec, decoder: decoder, codec: codec}
 }
 
-func newBuilderFromDecodedTx(addrCodec address.Codec, decoder *decode.Decoder, codec codec.BinaryCodec, decoded *gogoTxWrapper) (*builder, error) {
+func newBuilderFromDecodedTx(
+	addrCodec address.Codec, decoder *decode.Decoder, codec codec.BinaryCodec, decoded *gogoTxWrapper,
+) (*builder, error) {
 	signatures := make([][]byte, len(decoded.Tx.Signatures))
 	copy(signatures, decoded.Tx.Signatures)
 
@@ -56,7 +58,7 @@ func newBuilderFromDecodedTx(addrCodec address.Codec, decoder *decode.Decoder, c
 		addressCodec:                addrCodec,
 		decoder:                     decoder,
 		codec:                       codec,
-		msgs:                        decoded.msgs,
+		msgs:                        decoded.Messages,
 		timeoutHeight:               decoded.GetTimeoutHeight(),
 		granter:                     decoded.FeeGranter(),
 		payer:                       payer,

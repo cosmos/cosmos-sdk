@@ -77,6 +77,8 @@ func (b WriterMap) GetStateChanges() ([]store.StateChanges, error) {
 	return sc, nil
 }
 
+// recurseStateChanges will recursively collect state changes from the tree of
+// WriterMap's and write them to the `changes` map.
 func (b WriterMap) recurseStateChanges(changes map[string][]store.KVPair) error {
 	// depth first
 	if wr, ok := b.state.(WriterMap); ok {

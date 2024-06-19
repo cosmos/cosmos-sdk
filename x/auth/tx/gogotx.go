@@ -27,14 +27,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
-func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, decodedTx *decode.DecodedTx) (*gogoTxWrapper, error) {
-	// set msgsv1
-	msgs, err := decodeMsgsV1(cdc, decodedTx.Tx.Body.Messages)
-	if err != nil {
-		return nil, fmt.Errorf("unable to convert messagev2 to messagev1: %w", err)
-	}
-	// set fees
-	fees := make(sdk.Coins, len(decodedTx.Tx.AuthInfo.Fee.Amount))
+func newWrapperFromDecodedTx(
+	addrCodec address.Codec, cdc codec.BinaryCodec, decodedTx *decode.DecodedTx,
+) (*gogoTxWrapper, error) {
+	var (
+		fees = make(sdk.Coins, len(decodedTx.Tx.AuthInfo.Fee.Amount))
+		err  error
+	)
 	for i, fee := range decodedTx.Tx.AuthInfo.Fee.Amount {
 		amtInt, ok := math.NewIntFromString(fee.Amount)
 		if !ok {
@@ -73,7 +72,7 @@ func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, dec
 	}
 
 	// reflectMsgs
-	reflectMsgs := make([]protoreflect.Message, len(msgs))
+	reflectMsgs := make([]protoreflect.Message, len(decodedTx.DynamicMessages))
 	for i, msg := range decodedTx.DynamicMessages {
 		reflectMsgs[i] = msg.ProtoReflect()
 	}
@@ -82,7 +81,6 @@ func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, dec
 		DecodedTx:   decodedTx,
 		cdc:         cdc,
 		reflectMsgs: reflectMsgs,
-		msgs:        msgs,
 		fees:        fees,
 		feePayer:    feePayer,
 		feeGranter:  feeGranter,
@@ -96,7 +94,6 @@ type gogoTxWrapper struct {
 
 	cdc codec.BinaryCodec
 
-	msgs        []proto.Message
 	reflectMsgs []protoreflect.Message
 	fees        sdk.Coins
 	feePayer    []byte
@@ -119,10 +116,7 @@ type ExtensionOptionsTxBuilder interface {
 }
 
 func (w *gogoTxWrapper) GetMsgs() []sdk.Msg {
-	if w.msgs == nil {
-		panic("fill in msgs")
-	}
-	return w.msgs
+	return w.Messages
 }
 
 func (w *gogoTxWrapper) GetReflectMessages() ([]protoreflect.Message, error) {
@@ -278,20 +272,6 @@ func intoAnyV1(v2s []*anypb.Any) []*codectypes.Any {
 		}
 	}
 	return v1s
-}
-
-// decodeMsgsV1 will decode the given messages into
-func decodeMsgsV1(cdc codec.BinaryCodec, anyPBs []*anypb.Any) ([]proto.Message, error) {
-	v1s := make([]proto.Message, len(anyPBs))
-
-	for i, anyPB := range anyPBs {
-		v1, err := decodeFromAny(cdc, anyPB)
-		if err != nil {
-			return nil, err
-		}
-		v1s[i] = v1
-	}
-	return v1s, nil
 }
 
 func decodeFromAny(cdc codec.BinaryCodec, anyPB *anypb.Any) (proto.Message, error) {

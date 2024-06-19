@@ -13,12 +13,11 @@ CONFIG="${CONFIG:-$HOME/.simappv2/config}"
 cd "$SIMAPP_DIR"
 go build -o "$ROOT/build/simdv2" simdv2/main.go
 
+if [ -d "$($SIMD config home)" ]; then rm -r $($SIMD config home); fi
+
 $SIMD init simapp-v2-node --chain-id simapp-v2-chain
 
 cd "$CONFIG"
-
-# to enable the api server
-$SIMD config set app api.enable true
 
 # to change the voting_period
 jq '.app_state.gov.voting_params.voting_period = "600s"' genesis.json > temp.json && mv temp.json genesis.json

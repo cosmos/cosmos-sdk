@@ -1,13 +1,5 @@
 package postgres
 
-import (
-	"fmt"
-
-	"github.com/jackc/pgx/v5"
-
-	indexerbase "cosmossdk.io/indexer/base"
-)
-
 //func (tu *tableInfo) bindParams(update indexerbase.EntityUpdate) (pgx.NamedArgs, error) {
 //	params := map[string]any{}
 //

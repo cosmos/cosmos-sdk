@@ -1,14 +1,5 @@
 package postgres
 
-import (
-	"context"
-	"fmt"
-
-	"github.com/jackc/pgx/v5"
-
-	indexerbase "cosmossdk.io/indexer/base"
-)
-
 //func (tu *tableInfo) exec(ctx context.Context, conn *pgx.Conn, update indexerbase.EntityUpdate) error {
 //	var sql string
 //	var err error

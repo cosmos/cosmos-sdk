@@ -35,7 +35,7 @@ func (tm *TableManager) createColumnDef(writer io.Writer, field indexerbase.Fiel
 			}
 
 		case indexerbase.TimeKind:
-			_, err = fmt.Fprintf(writer, "TIMESTAMPTZ GENERATED ALWAYS AS to_timestamp(%s_nanos) STORED,\n\t", field.Name)
+			_, err = fmt.Fprintf(writer, "TIMESTAMPTZ GENERATED ALWAYS AS (to_timestamp(%s_nanos)) STORED,\n\t", field.Name)
 			if err != nil {
 				return err
 			}

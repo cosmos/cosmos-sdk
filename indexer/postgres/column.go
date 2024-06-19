@@ -104,3 +104,15 @@ func simpleColumnType(kind indexerbase.Kind) string {
 		return ""
 	}
 }
+
+func colNames(cols []indexerbase.Field) []string {
+	names := make([]string, len(cols))
+	for i, col := range cols {
+		name := col.Name
+		if col.Kind == indexerbase.TimeKind {
+			name = fmt.Sprintf("%s_nanos", name)
+		}
+		names[i] = fmt.Sprintf("%q", name)
+	}
+	return names
+}

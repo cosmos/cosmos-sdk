@@ -10,7 +10,7 @@ import (
 
 func (tm *TableManager) CreateTable(ctx context.Context, tx *sql.Tx) error {
 	buf := new(strings.Builder)
-	err := tm.GenCreateTable(buf)
+	err := tm.CreateTableSql(buf)
 	if err != nil {
 		return err
 	}
@@ -19,8 +19,8 @@ func (tm *TableManager) CreateTable(ctx context.Context, tx *sql.Tx) error {
 	return err
 }
 
-// GenCreateTable generates a CREATE TABLE statement for the object type.
-func (tm *TableManager) GenCreateTable(writer io.Writer) error {
+// CreateTableSql generates a CREATE TABLE statement for the object type.
+func (tm *TableManager) CreateTableSql(writer io.Writer) error {
 	_, err := fmt.Fprintf(writer, "CREATE TABLE IF NOT EXISTS %q (", tm.TableName())
 	if err != nil {
 		return err

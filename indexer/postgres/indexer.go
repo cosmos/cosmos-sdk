@@ -63,6 +63,8 @@ func NewIndexer(ctx context.Context, opts Options) (*Indexer, error) {
 func (i *Indexer) Listener() indexerbase.Listener {
 	return indexerbase.Listener{
 		InitializeModuleSchema: i.initModuleSchema,
+		OnObjectUpdate:         i.onObjectUpdate,
+		Commit:                 i.commit,
 	}
 }
 
@@ -88,4 +90,33 @@ func (i *Indexer) initModuleSchema(moduleName string, schema indexerbase.ModuleS
 	}
 
 	return nil
+}
+
+func (i *Indexer) onObjectUpdate(module string, update indexerbase.ObjectUpdate) error {
+	mod, ok := i.modules[module]
+	if !ok {
+		return fmt.Errorf("module %s not initialized", module)
+	}
+
+	tm, ok := mod.tables[update.TypeName]
+	if !ok {
+		return fmt.Errorf("object type %s not found in schema for module %s", update.TypeName, module)
+	}
+
+	if update.Delete {
+		// TODO
+		return nil
+	} else {
+		return tm.InsertUpdate(i.ctx, i.tx, update.Key, update.Value)
+	}
+}
+
+func (i *Indexer) commit() error {
+	err := i.tx.Commit()
+	if err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	i.tx, err = i.db.BeginTx(i.ctx, nil)
+	return err
 }

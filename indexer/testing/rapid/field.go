@@ -10,9 +10,6 @@ import (
 )
 
 var (
-	nameGen = rapid.String().Filter(func(s string) bool {
-		return s != ""
-	})
 	kindGen = rapid.Map(rapid.IntRange(int(indexerbase.InvalidKind+1), int(indexerbase.MAX_VALID_KIND-1)),
 		func(i int) indexerbase.Kind {
 			return indexerbase.Kind(i)
@@ -23,7 +20,7 @@ var (
 var Field = rapid.Custom(func(t *rapid.T) indexerbase.Field {
 	kind := kindGen.Draw(t, "kind")
 	field := indexerbase.Field{
-		Name:     nameGen.Draw(t, "name"),
+		Name:     Name.Draw(t, "name"),
 		Kind:     kind,
 		Nullable: boolGen.Draw(t, "nullable"),
 	}
@@ -32,7 +29,7 @@ var Field = rapid.Custom(func(t *rapid.T) indexerbase.Field {
 	case indexerbase.EnumKind:
 		field.EnumDefinition = EnumDefinition.Draw(t, "enumDefinition")
 	case indexerbase.Bech32AddressKind:
-		field.AddressPrefix = nameGen.Draw(t, "addressPrefix")
+		field.AddressPrefix = Name.Draw(t, "addressPrefix")
 	default:
 	}
 

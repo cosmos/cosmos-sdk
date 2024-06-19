@@ -4,7 +4,7 @@ import "fmt"
 
 // Field represents a field in an object type.
 type Field struct {
-	// Name is the name of the field.
+	// Name is the name of the field. It must conform to the NameFormat regular expression.
 	Name string
 
 	// Kind is the basic type of the field.
@@ -25,9 +25,9 @@ type Field struct {
 
 // Validate validates the field.
 func (c Field) Validate() error {
-	// non-empty name
-	if c.Name == "" {
-		return fmt.Errorf("field name cannot be empty")
+	// valid name
+	if !ValidateName(c.Name) {
+		return fmt.Errorf("invalid field name %q", c.Name)
 	}
 
 	// valid kind

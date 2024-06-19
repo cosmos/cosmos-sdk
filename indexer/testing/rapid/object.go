@@ -14,7 +14,7 @@ var fieldsGen = rapid.SliceOfNDistinct(Field, 1, 12, func(f indexerbase.Field) s
 
 var ObjectType = rapid.Custom(func(t *rapid.T) indexerbase.ObjectType {
 	typ := indexerbase.ObjectType{
-		Name: nameGen.Draw(t, "name"),
+		Name: Name.Draw(t, "name"),
 	}
 
 	fields := fieldsGen.Draw(t, "fields")
@@ -87,14 +87,15 @@ func StatefulObjectUpdate(objectType indexerbase.ObjectType, state *btree.Map[st
 		if n > 0 && boolGen.Draw(t, "existingKey") {
 			i := rapid.IntRange(0, n-1).Draw(t, "index")
 			update.Key = state.Values()[i].Key
+
+			// delete 50% of the time
+			if boolGen.Draw(t, "delete") {
+				update.Delete = true
+			} else {
+				update.Value = valueGen.Draw(t, "value")
+			}
 		} else {
 			update.Key = keyGen.Draw(t, "key")
-		}
-
-		// delete 50% of the time
-		if boolGen.Draw(t, "delete") {
-			update.Delete = true
-		} else {
 			update.Value = valueGen.Draw(t, "value")
 		}
 

@@ -73,7 +73,7 @@ func ObjectUpdate(objectType indexerbase.ObjectType) *rapid.Generator[indexerbas
 	})
 }
 
-func StatefulObjectUpdate(objectType indexerbase.ObjectType, state *btree.Map[string, *Entry]) *rapid.Generator[indexerbase.ObjectUpdate] {
+func StatefulObjectUpdate(objectType indexerbase.ObjectType, state *btree.Map[string, indexerbase.ObjectUpdate]) *rapid.Generator[indexerbase.ObjectUpdate] {
 	keyGen := KeyFieldsValue(objectType.KeyFields)
 	valueGen := ValueFieldsValue(objectType.ValueFields)
 	return rapid.Custom(func(t *rapid.T) indexerbase.ObjectUpdate {

@@ -35,7 +35,7 @@ func NewAppSimulator(tb require.TestingT, options AppSimulatorOptions) *AppSimul
 		}
 		modules.Set(module, modState)
 		for _, objectType := range schema.ObjectTypes {
-			state := &btree.Map[string, *schemagen.Entry]{}
+			state := &btree.Map[string, indexerbase.ObjectUpdate]{}
 			objState := &objectState{
 				ObjectType: objectType,
 				Objects:    state,
@@ -96,7 +96,7 @@ func (a *AppSimulator) actionNewBlock(t *rapid.T) {
 		objState := modState.Objects.Values()[objectIdx]
 		update := objState.UpdateGen.Draw(t, "update")
 		require.NoError(t, objState.ObjectType.ValidateObjectUpdate(update))
-		require.NoError(t, a.applyUpdate(keys[moduleIdx], update))
+		require.NoError(t, a.applyUpdate(keys[moduleIdx], update, objState.ObjectType.RetainDeletions))
 	}
 
 	if f := a.options.Listener.Commit; f != nil {
@@ -112,7 +112,14 @@ func (a *AppSimulator) newBlockFromSeed(seed int) {
 	}).Example(seed)
 }
 
-func (a *AppSimulator) applyUpdate(module string, update indexerbase.ObjectUpdate) error {
+func (a *AppSimulator) applyUpdate(module string, update indexerbase.ObjectUpdate, retainDeletions bool) error {
+	if a.options.Listener.OnObjectUpdate != nil {
+		err := a.options.Listener.OnObjectUpdate(module, update)
+		if err != nil {
+			return err
+		}
+	}
+
 	modState, ok := a.modules.Get(module)
 	if !ok {
 		return fmt.Errorf("module %v not found", module)
@@ -125,16 +132,19 @@ func (a *AppSimulator) applyUpdate(module string, update indexerbase.ObjectUpdat
 
 	keyStr := fmt.Sprintf("%v", update.Key)
 	if update.Delete {
-		objState.Objects.Delete(keyStr)
-	} else {
-		objState.Objects.Set(fmt.Sprintf("%v", update.Key), &schemagen.Entry{Key: update.Key, Value: update.Value})
-	}
+		if retainDeletions {
+			cur, ok := objState.Objects.Get(keyStr)
+			if !ok {
+				return fmt.Errorf("object not found for deletion: %v", update.Key)
+			}
 
-	if a.options.Listener.OnObjectUpdate != nil {
-		err := a.options.Listener.OnObjectUpdate(module, update)
-		if err != nil {
-			return err
+			cur.Delete = true
+			objState.Objects.Set(keyStr, cur)
+		} else {
+			objState.Objects.Delete(keyStr)
 		}
+	} else {
+		objState.Objects.Set(keyStr, update)
 	}
 
 	return nil
@@ -147,6 +157,6 @@ type moduleState struct {
 
 type objectState struct {
 	ObjectType indexerbase.ObjectType
-	Objects    *btree.Map[string, *schemagen.Entry]
+	Objects    *btree.Map[string, indexerbase.ObjectUpdate]
 	UpdateGen  *rapid.Generator[indexerbase.ObjectUpdate]
 }

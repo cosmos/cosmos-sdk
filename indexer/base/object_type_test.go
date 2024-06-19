@@ -80,7 +80,7 @@ func TestObjectType_Validate(t *testing.T) {
 					},
 				},
 			},
-			errContains: "object type name cannot be empty",
+			errContains: "invalid object type name",
 		},
 		{
 			name: "invalid key field",
@@ -93,7 +93,7 @@ func TestObjectType_Validate(t *testing.T) {
 					},
 				},
 			},
-			errContains: "field name cannot be empty",
+			errContains: "invalid field name",
 		},
 		{
 			name: "invalid value field",
@@ -105,7 +105,7 @@ func TestObjectType_Validate(t *testing.T) {
 					},
 				},
 			},
-			errContains: "field name cannot be empty",
+			errContains: "invalid field name",
 		},
 		{
 			name:        "no fields",

@@ -25,7 +25,7 @@ func TestEnumDefinition_Validate(t *testing.T) {
 				Name:   "",
 				Values: []string{"a", "b", "c"},
 			},
-			errContains: "enum definition name cannot be empty",
+			errContains: "invalid enum definition name",
 		},
 		{
 			name: "empty values",

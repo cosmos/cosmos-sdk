@@ -25,7 +25,7 @@ func TestField_Validate(t *testing.T) {
 				Name: "",
 				Kind: StringKind,
 			},
-			errContains: "field name cannot be empty",
+			errContains: "invalid field name",
 		},
 		{
 			name: "invalid kind",
@@ -58,7 +58,7 @@ func TestField_Validate(t *testing.T) {
 				Name: "field1",
 				Kind: EnumKind,
 			},
-			errContains: "invalid enum definition for field \"field1\": enum definition name cannot be empty",
+			errContains: "invalid enum definition",
 		},
 		{
 			name: "enum definition with non-EnumKind",

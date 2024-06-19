@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -50,6 +51,10 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 
 	invalidPk, _ := secp256r1.GenPrivKey()
 	invalidPubkey, err := codectypes.NewAnyWithValue(invalidPk.PubKey())
+	require.NoError(err)
+
+	badKey := secp256k1.GenPrivKey()
+	badPubKey, err := codectypes.NewAnyWithValue(&secp256k1.PubKey{Key: badKey.PubKey().Bytes()[:len(badKey.PubKey().Bytes())-1]})
 	require.NoError(err)
 
 	testCases := []struct {
@@ -259,6 +264,28 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 			},
 			expErr:    true,
 			expErrMsg: "got: secp256r1, expected: [ed25519 secp256k1]: validator pubkey type is not supported",
+		},
+		{
+			name: "invalid pubkey length",
+			input: &types.MsgCreateValidator{
+				Description: types.Description{
+					Moniker:  "NewValidator",
+					Identity: "xyz",
+					Website:  "xyz.com",
+				},
+				Commission: types.CommissionRates{
+					Rate:          math.LegacyNewDecWithPrec(5, 1),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
+					MaxChangeRate: math.LegacyNewDec(0),
+				},
+				MinSelfDelegation: math.NewInt(1),
+				DelegatorAddress:  s.addressToString(Addr),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
+				Pubkey:            badPubKey,
+				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
+			},
+			expErr:    true,
+			expErrMsg: "length of pubkey is incorrect",
 		},
 		{
 			name: "valid msg",
@@ -1234,6 +1261,9 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 	invalidPK, _ := secp256r1.GenPrivKey()
 	invalidPubkey := invalidPK.PubKey()
 
+	badKey := secp256k1.GenPrivKey()
+	badPubKey := &secp256k1.PubKey{Key: badKey.PubKey().Bytes()[:len(badKey.PubKey().Bytes())-1]}
+
 	testCases := []struct {
 		name      string
 		malleate  func() sdk.Context
@@ -1262,6 +1292,14 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 			isErr:     true,
 			errMsg:    "secp256r1, expected: [ed25519 secp256k1]: validator pubkey type is not supported",
 			newPubKey: invalidPubkey,
+			validator: validators[0].GetOperator(),
+		},
+		{
+			name:      "invalid pubkey length",
+			malleate:  func() sdk.Context { return ctx },
+			isErr:     true,
+			errMsg:    "length of pubkey is incorrect",
+			newPubKey: badPubKey,
 			validator: validators[0].GetOperator(),
 		},
 		{

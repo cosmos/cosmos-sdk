@@ -19,7 +19,6 @@ import (
 	flags2 "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -191,7 +190,7 @@ func newFactory(ctx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
 // ref: https://github.com/cosmos/cosmos-sdk/pull/9236#discussion_r623803504
 func validateMessages(msgs ...transaction.Msg) error {
 	for _, msg := range msgs {
-		m, ok := msg.(sdk.HasValidateBasic) // TODO: sdk dependency
+		m, ok := msg.(HasValidateBasic)
 		if !ok {
 			continue
 		}

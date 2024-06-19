@@ -1,29 +1,36 @@
 package tx
 
 import (
-	"cosmossdk.io/core/transaction"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 	"reflect"
 	"strings"
 
+	"github.com/cosmos/gogoproto/proto"
 	gogoany "github.com/cosmos/gogoproto/types/any"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	base "cosmossdk.io/api/cosmos/base/v1beta1"
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
+	"cosmossdk.io/client/v2/internal/coins"
+	"cosmossdk.io/core/transaction"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const defaultGas = 200000
 
 // PreprocessTxFn defines a hook by which chains can preprocess transactions before broadcasting
 type PreprocessTxFn func(chainID string, key uint, tx TxBuilder) error
+
+// HasValidateBasic is a copy of types.HasValidateBasic to avoid sdk import.
+type HasValidateBasic interface {
+	// ValidateBasic does a simple validation check that
+	// doesn't require access to any other information.
+	ValidateBasic() error
+}
 
 type TxParameters struct {
 	timeoutHeight uint64
@@ -43,7 +50,7 @@ type AccountConfig struct {
 	accountNumber uint64
 	sequence      uint64
 	fromName      string
-	fromAddress   sdk.AccAddress
+	fromAddress   []byte
 }
 
 // GasConfig defines the 'gas' related fields in a transaction.
@@ -58,23 +65,15 @@ func NewGasConfig(gas uint64, gasAdjustment float64, gasPrices string) (GasConfi
 		gas = defaultGas
 	}
 
-	parsedGasPrices, err := sdk.ParseDecCoins(gasPrices) // TODO: do it here to avoid sdk dependency
+	parsedGasPrices, err := coins.ParseDecCoins(gasPrices)
 	if err != nil {
 		return GasConfig{}, err
-	}
-
-	finalGasPrices := make([]*base.DecCoin, len(parsedGasPrices))
-	for i, coin := range parsedGasPrices {
-		finalGasPrices[i] = &base.DecCoin{
-			Denom:  coin.Denom,
-			Amount: coin.Amount.String(),
-		}
 	}
 
 	return GasConfig{
 		gas:           gas,
 		gasAdjustment: gasAdjustment,
-		gasPrices:     finalGasPrices,
+		gasPrices:     parsedGasPrices,
 	}, nil
 }
 
@@ -86,21 +85,13 @@ type FeeConfig struct {
 }
 
 func NewFeeConfig(fees, feePayer, feeGranter string) (FeeConfig, error) {
-	parsedFees, err := sdk.ParseCoinsNormalized(fees) // TODO: do it here to avoid sdk dependency
+	parsedFees, err := coins.ParseCoinsNormalized(fees) // TODO: do it here to avoid sdk dependency
 	if err != nil {
 		return FeeConfig{}, err
 	}
 
-	finalFees := make([]*base.Coin, len(parsedFees))
-	for i, coin := range parsedFees {
-		finalFees[i] = &base.Coin{
-			Denom:  coin.Denom,
-			Amount: coin.Amount.String(),
-		}
-	}
-
 	return FeeConfig{
-		fees:       finalFees,
+		fees:       parsedFees,
 		feePayer:   feePayer,
 		feeGranter: feeGranter,
 	}, nil

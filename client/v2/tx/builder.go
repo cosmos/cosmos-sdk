@@ -9,8 +9,8 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/tx/signing"
-	"github.com/cosmos/cosmos-sdk/codec"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 

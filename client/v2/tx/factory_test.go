@@ -2,17 +2,19 @@ package tx
 
 import (
 	"context"
-	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	"cosmossdk.io/x/tx/signing"
 	"fmt"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"google.golang.org/protobuf/types/known/anypb"
 	"testing"
 
-	base "cosmossdk.io/api/cosmos/base/v1beta1"
-	"cosmossdk.io/core/transaction"
-	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/anypb"
+
+	base "cosmossdk.io/api/cosmos/base/v1beta1"
+	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/x/tx/signing"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 )
 
 func TestFactory_Prepare(t *testing.T) {

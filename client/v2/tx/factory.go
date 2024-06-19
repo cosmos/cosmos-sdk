@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"math/big"
 	"os"
 	"strings"
@@ -15,6 +14,7 @@ import (
 
 	base "cosmossdk.io/api/cosmos/base/v1beta1"
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/internal/coins"
 	"cosmossdk.io/core/address"
@@ -74,7 +74,7 @@ func (f *Factory) Prepare() error {
 		return nil
 	}
 
-	if f.txParams.fromAddress.Empty() {
+	if len(f.txParams.fromAddress) == 0 {
 		return errors.New("missing 'from address' field")
 	}
 
@@ -190,14 +190,14 @@ func (f *Factory) calculateGas(msgs ...transaction.Msg) error {
 
 // Simulate simulates the execution of a transaction and returns the
 // simulation response obtained by the query and the adjusted gas amount.
-func (f *Factory) Simulate(msgs ...transaction.Msg) (*tx.SimulateResponse, uint64, error) {
+func (f *Factory) Simulate(msgs ...transaction.Msg) (*apitx.SimulateResponse, uint64, error) {
 	txBytes, err := f.BuildSimTx(msgs...)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	txSvcClient := tx.NewServiceClient(f.conn)
-	simRes, err := txSvcClient.Simulate(context.Background(), &tx.SimulateRequest{
+	txSvcClient := apitx.NewServiceClient(f.conn)
+	simRes, err := txSvcClient.Simulate(context.Background(), &apitx.SimulateRequest{
 		TxBytes: txBytes,
 	})
 	if err != nil {

@@ -2,7 +2,9 @@ package tx
 
 import (
 	"context"
-	codec2 "github.com/cosmos/cosmos-sdk/crypto/codec"
+	abciv1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
+	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
+	"github.com/cosmos/cosmos-sdk/types"
 
 	"google.golang.org/grpc"
 
@@ -13,11 +15,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	addrcodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	codec2 "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	cryptoKeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 var (
@@ -58,10 +59,10 @@ func setKeyring() keyring.Keyring {
 }
 
 type mockAccount struct {
-	addr sdk.AccAddress
+	addr []byte
 }
 
-func (m mockAccount) GetAddress() sdk.AccAddress {
+func (m mockAccount) GetAddress() types.AccAddress {
 	return m.addr
 }
 
@@ -79,33 +80,33 @@ func (m mockAccount) GetSequence() uint64 {
 
 type mockAccountRetriever struct{}
 
-func (m mockAccountRetriever) GetAccount(_ context.Context, address sdk.AccAddress) (Account, error) {
+func (m mockAccountRetriever) GetAccount(_ context.Context, address []byte) (Account, error) {
 	return mockAccount{addr: address}, nil
 }
 
-func (m mockAccountRetriever) GetAccountWithHeight(_ context.Context, address sdk.AccAddress) (Account, int64, error) {
+func (m mockAccountRetriever) GetAccountWithHeight(_ context.Context, address []byte) (Account, int64, error) {
 	return mockAccount{addr: address}, 0, nil
 }
 
-func (m mockAccountRetriever) EnsureExists(_ context.Context, address sdk.AccAddress) error {
+func (m mockAccountRetriever) EnsureExists(_ context.Context, address []byte) error {
 	return nil
 }
 
-func (m mockAccountRetriever) GetAccountNumberSequence(_ context.Context, address sdk.AccAddress) (accNum, accSeq uint64, err error) {
+func (m mockAccountRetriever) GetAccountNumberSequence(_ context.Context, address []byte) (accNum, accSeq uint64, err error) {
 	return accNum, accSeq, nil
 }
 
 type mockClientConn struct{}
 
 func (m mockClientConn) Invoke(_ context.Context, _ string, args, reply interface{}, opts ...grpc.CallOption) error {
-	simResponse := tx.SimulateResponse{
-		GasInfo: &sdk.GasInfo{ // TODO: sdk dependency
+	simResponse := apitx.SimulateResponse{
+		GasInfo: &abciv1beta1.GasInfo{ // TODO: sdk dependency
 			GasWanted: 10000,
 			GasUsed:   7500,
 		},
 		Result: nil,
 	}
-	*reply.(*tx.SimulateResponse) = simResponse
+	*reply.(*apitx.SimulateResponse) = simResponse
 	return nil
 }
 

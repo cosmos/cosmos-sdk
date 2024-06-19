@@ -3,6 +3,7 @@ package tx
 import (
 	"context"
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"strconv"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
@@ -16,11 +17,14 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 
 // TODO: move to internal
+
+const (
+	// GRPCBlockHeightHeader is the gRPC header for block height.
+	GRPCBlockHeightHeader = "x-cosmos-block-height"
+)
 
 var _ AccountRetriever = accountRetriever{}
 
@@ -36,10 +40,10 @@ type Account interface {
 // ensure an account exists and to be able to query for account fields necessary
 // for signing.
 type AccountRetriever interface {
-	GetAccount(context.Context, sdk.AccAddress) (Account, error)
-	GetAccountWithHeight(context.Context, sdk.AccAddress) (Account, int64, error)
-	EnsureExists(context.Context, sdk.AccAddress) error
-	GetAccountNumberSequence(context.Context, sdk.AccAddress) (accNum, accSeq uint64, err error)
+	GetAccount(context.Context, []byte) (Account, error)
+	GetAccountWithHeight(context.Context, []byte) (Account, int64, error)
+	EnsureExists(context.Context, []byte) error
+	GetAccountNumberSequence(context.Context, []byte) (accNum, accSeq uint64, err error)
 }
 
 type accountRetriever struct {
@@ -56,24 +60,29 @@ func newAccountRetriever(ac address.Codec, conn gogogrpc.ClientConn, registry co
 	}
 }
 
-func (a accountRetriever) GetAccount(ctx context.Context, addr sdk.AccAddress) (Account, error) {
+func (a accountRetriever) GetAccount(ctx context.Context, addr []byte) (Account, error) {
 	acc, _, err := a.GetAccountWithHeight(ctx, addr)
 	return acc, err
 }
 
-func (a accountRetriever) GetAccountWithHeight(ctx context.Context, addr sdk.AccAddress) (Account, int64, error) {
+func (a accountRetriever) GetAccountWithHeight(ctx context.Context, addr []byte) (Account, int64, error) {
 	var header metadata.MD
 
 	qc := authtypes.NewQueryClient(a.conn)
 
-	res, err := qc.Account(ctx, &authtypes.QueryAccountRequest{Address: addr.String()}, grpc.Header(&header))
+	addrStr, err := a.ac.BytesToString(addr)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	blockHeight := header.Get(grpctypes.GRPCBlockHeightHeader)
+	res, err := qc.Account(ctx, &authtypes.QueryAccountRequest{Address: addrStr}, grpc.Header(&header))
+	if err != nil {
+		return nil, 0, err
+	}
+
+	blockHeight := header.Get(GRPCBlockHeightHeader)
 	if l := len(blockHeight); l != 1 {
-		return nil, 0, fmt.Errorf("unexpected '%s' header length; got %d, expected: %d", grpctypes.GRPCBlockHeightHeader, l, 1)
+		return nil, 0, fmt.Errorf("unexpected '%s' header length; got %d, expected: %d", GRPCBlockHeightHeader, l, 1)
 	}
 
 	nBlockHeight, err := strconv.Atoi(blockHeight[0])
@@ -90,14 +99,14 @@ func (a accountRetriever) GetAccountWithHeight(ctx context.Context, addr sdk.Acc
 
 }
 
-func (a accountRetriever) EnsureExists(ctx context.Context, addr sdk.AccAddress) error {
+func (a accountRetriever) EnsureExists(ctx context.Context, addr []byte) error {
 	if _, err := a.GetAccount(ctx, addr); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (a accountRetriever) GetAccountNumberSequence(ctx context.Context, addr sdk.AccAddress) (accNum, accSeq uint64, err error) {
+func (a accountRetriever) GetAccountNumberSequence(ctx context.Context, addr []byte) (accNum, accSeq uint64, err error) {
 	acc, err := a.GetAccount(ctx, addr)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {

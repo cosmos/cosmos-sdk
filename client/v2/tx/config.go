@@ -1,6 +1,10 @@
 package tx
 
 import (
+	"errors"
+
+	"google.golang.org/protobuf/reflect/protoreflect"
+
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/core/address"
 	txdecode "cosmossdk.io/x/tx/decode"
@@ -9,8 +13,6 @@ import (
 	"cosmossdk.io/x/tx/signing/direct"
 	"cosmossdk.io/x/tx/signing/directaux"
 	"cosmossdk.io/x/tx/signing/textual"
-	"errors"
-	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )

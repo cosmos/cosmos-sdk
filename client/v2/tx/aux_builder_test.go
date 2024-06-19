@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter"
 	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	typestx "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 const (
@@ -243,7 +242,7 @@ func checkCorrectData(t *testing.T, cdc codec.Codec, auxSignerData *apitx.AuxSig
 	msgAny, err := codectypes.NewAnyWithValue(msg1)
 	require.NoError(t, err)
 
-	var body typestx.TxBody
+	var body apitx.TxBody
 	err = cdc.Unmarshal(auxSignerData.SignDoc.BodyBytes, &body)
 	require.NoError(t, err)
 
@@ -252,7 +251,8 @@ func checkCorrectData(t *testing.T, cdc codec.Codec, auxSignerData *apitx.AuxSig
 	require.Equal(t, timeoutHeight, body.TimeoutHeight)
 	require.Equal(t, memo, body.Memo)
 	require.Equal(t, chainID, auxSignerData.SignDoc.ChainId)
-	require.Equal(t, msgAny, body.GetMessages()[0])
+	require.Equal(t, msgAny.TypeUrl, body.GetMessages()[0].TypeUrl)
+	require.Equal(t, msgAny.Value, body.GetMessages()[0].Value)
 	require.Equal(t, pkAny.TypeUrl, auxSignerData.SignDoc.PublicKey.TypeUrl)
 	require.Equal(t, pkAny.Value, auxSignerData.SignDoc.PublicKey.Value)
 	require.Equal(t, signMode, auxSignerData.Mode)

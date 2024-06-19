@@ -7,6 +7,8 @@ import (
 )
 
 func (tm *TableManager) InsertUpdateSql(w io.Writer) error {
+	// TODO: timestamp nanos column
+
 	keyCols := make([]string, 0, len(tm.typ.KeyFields))
 	if len(tm.typ.KeyFields) == 0 {
 		keyCols = append(keyCols, "_id")

@@ -36,7 +36,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v2.0.0-beta.2] - 2024-XX-XX
+## [v2.0.0-beta.2] - 2024-06-19
 
 ### Features
 

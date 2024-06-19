@@ -73,8 +73,8 @@ func initRootCmd(
 		genutilcli.InitCmd(moduleManager),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
-		// pruning.Cmd(newApp),
-		// snapshot.Cmd(newApp),
+		// pruning.Cmd(newApp), // TODO add to comet server
+		// snapshot.Cmd(newApp), // TODO add to comet server
 	)
 
 	// Add empty server struct here for writing default config

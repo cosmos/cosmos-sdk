@@ -15,8 +15,6 @@ import (
 	"cosmossdk.io/log"
 )
 
-const flagHome = "home"
-
 func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, components ...ServerComponent[transaction.Tx]) (CLIConfig, error) {
 	if len(components) == 0 {
 		return CLIConfig{}, errors.New("no components provided")
@@ -43,7 +41,10 @@ func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger 
 			}
 
 			app := newApp(l, v)
-			server.Init(app, v, l)
+
+			if _, err := server.Init(app, v, l); err != nil {
+				return err
+			}
 
 			srvConfig := Config{StartBlock: true}
 			ctx := cmd.Context()
@@ -84,7 +85,7 @@ func AddCommands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logg
 	server := NewServer(logger, components...)
 	originalPersistentPreRunE := rootCmd.PersistentPreRunE
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		home, err := cmd.Flags().GetString(flagHome)
+		home, err := cmd.Flags().GetString(FlagHome)
 		if err != nil {
 			return err
 		}
@@ -106,10 +107,10 @@ func AddCommands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logg
 	return nil
 }
 
+// configHandle writes the default config to the home directory if it does not exist and sets the server context
 func configHandle(s *Server, home string, cmd *cobra.Command) error {
 	if _, err := os.Stat(filepath.Join(home, "config")); os.IsNotExist(err) {
-		err = s.WriteConfig(filepath.Join(home, "config"))
-		if err != nil {
+		if err = s.WriteConfig(filepath.Join(home, "config")); err != nil {
 			return err
 		}
 	}
@@ -118,7 +119,10 @@ func configHandle(s *Server, home string, cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	viper.Set(flagHome, home)
+	viper.Set(FlagHome, home)
+	if err := viper.BindPFlags(cmd.Flags()); err != nil {
+		return err
+	}
 
 	log, err := NewLogger(viper, cmd.OutOrStdout())
 	if err != nil {

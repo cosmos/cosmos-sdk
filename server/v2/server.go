@@ -6,13 +6,13 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	"github.com/pelletier/go-toml/v2"
 )
 
 // ServerComponent is a server module that can be started and stopped.

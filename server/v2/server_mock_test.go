@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/spf13/viper"
+
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
-	"github.com/spf13/viper"
 )
 
 type mockServerConfig struct {

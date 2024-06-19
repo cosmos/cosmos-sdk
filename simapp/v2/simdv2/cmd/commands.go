@@ -73,16 +73,20 @@ func initRootCmd(
 		// snapshot.Cmd(newApp), // TODO add to comet server
 	)
 
+	logger, err := serverv2.NewLogger(viper.New(), rootCmd.OutOrStdout())
+	if err != nil {
+		panic(fmt.Sprintf("failed to create logger: %v", err))
+	}
+
 	// Add empty server struct here for writing default config
-	err := serverv2.AddCommands(
+	if err = serverv2.AddCommands(
 		rootCmd,
 		newApp,
-		log.NewNopLogger(),
+		logger,
 		cometbft.New(&temporaryTxDecoder{txConfig}),
 		grpc.New(),
-	)
-	if err != nil {
-		panic(fmt.Sprintf("Add cmd, %v", err))
+	); err != nil {
+		panic(err)
 	}
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands

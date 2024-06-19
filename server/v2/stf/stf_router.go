@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -137,10 +137,6 @@ func buildHandler(
 
 // msgTypeURL returns the TypeURL of a proto message.
 func msgTypeURL(msg gogoproto.Message) string {
-	if m, ok := msg.(proto.Message); ok {
-		return string(m.ProtoReflect().Descriptor().FullName())
-	}
-
 	return gogoproto.MessageName(msg)
 }
 
@@ -164,8 +160,12 @@ func (r Router) InvokeTyped(ctx context.Context, req, resp protoiface.MessageV1)
 	if err != nil {
 		return err
 	}
-	gogoproto.Merge(resp, handlerResp)
+	merge(resp, handlerResp)
 	return nil
+}
+
+func merge(src protoiface.MessageV1, dst protoiface.MessageV1) {
+	proto.Merge(src, dst)
 }
 
 func (r Router) InvokeUntyped(ctx context.Context, req protoiface.MessageV1) (res protoiface.MessageV1, err error) {

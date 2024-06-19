@@ -22,6 +22,12 @@ type ListenerTestFixture struct {
 	allKeyModule *testModule
 }
 
+type BaseFixture struct {
+	rndSource rand.Source
+	rnd       *rand.Rand
+	faker     *gofakeit.Faker
+}
+
 type ListenerTestFixtureOptions struct {
 	EventAlignedWrites bool
 }
@@ -297,16 +303,6 @@ func mkTestValue(src rand.Source, kind indexerbase.Kind, nullable bool) any {
 	default:
 	}
 	panic(fmt.Errorf("unexpected kind: %v", kind))
-}
-
-func randBytes(src rand.Source) []byte {
-	rnd := rand.New(src)
-	n := rnd.IntN(1024)
-	bz := make([]byte, n)
-	for i := 0; i < n; i++ {
-		bz[i] = byte(rnd.Uint32N(256))
-	}
-	return bz
 }
 
 var testEnum = indexerbase.EnumDefinition{

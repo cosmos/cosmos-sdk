@@ -87,6 +87,9 @@ const (
 	JSONKind
 )
 
+// MAX_VALID_KIND is the maximum valid kind value.
+const MAX_VALID_KIND = JSONKind
+
 const (
 	IntegerFormat = `^-?[0-9]+$`
 	DecimalFormat = `^-?[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?$`

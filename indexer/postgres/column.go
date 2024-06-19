@@ -8,7 +8,7 @@ import (
 )
 
 func (tm *TableManager) createColumnDef(writer io.Writer, field indexerbase.Field) error {
-	_, err := fmt.Fprintf(writer, "%s ", field.Name)
+	_, err := fmt.Fprintf(writer, "%q ", field.Name)
 	if err != nil {
 		return err
 	}
@@ -35,12 +35,13 @@ func (tm *TableManager) createColumnDef(writer io.Writer, field indexerbase.Fiel
 			}
 
 		case indexerbase.TimeKind:
-			_, err = fmt.Fprintf(writer, "TIMESTAMPTZ GENERATED ALWAYS AS (to_timestamp(%s_nanos)) STORED,\n\t", field.Name)
+			nanosCol := fmt.Sprintf("%s_nanos", field.Name)
+			_, err = fmt.Fprintf(writer, "TIMESTAMPTZ GENERATED ALWAYS AS (to_timestamp(%q)) STORED,\n\t", nanosCol)
 			if err != nil {
 				return err
 			}
 
-			_, err = fmt.Fprintf(writer, "%s_nanos BIGINT", field.Name)
+			_, err = fmt.Fprintf(writer, `%q BIGINT`, nanosCol)
 			if err != nil {
 				return err
 			}

@@ -17,3 +17,9 @@ func TestStateMachine(t *testing.T) {
 		AppSimulatorOptions{},
 		StateMachineTestOptions{}))
 }
+
+func FuzzStateMachine(f *testing.F) {
+	f.Fuzz(rapid.MakeFuzz(AppStateMachineTest(
+		AppSimulatorOptions{},
+		StateMachineTestOptions{})))
+}

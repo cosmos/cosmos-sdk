@@ -45,7 +45,7 @@ var ExampleAppSchema = map[string]indexerbase.ModuleSchema{
 				},
 			},
 			{
-				Name: "Two Keys",
+				Name: "TwoKeys",
 				KeyFields: []indexerbase.Field{
 					{
 						Name: "Key1",
@@ -58,7 +58,7 @@ var ExampleAppSchema = map[string]indexerbase.ModuleSchema{
 				},
 			},
 			{
-				Name: "Three Keys",
+				Name: "ThreeKeys",
 				KeyFields: []indexerbase.Field{
 					{
 						Name: "Key1",
@@ -81,7 +81,7 @@ var ExampleAppSchema = map[string]indexerbase.ModuleSchema{
 				},
 			},
 			{
-				Name: "Many Values",
+				Name: "ManyValues",
 				KeyFields: []indexerbase.Field{
 					{
 						Name: "Key",

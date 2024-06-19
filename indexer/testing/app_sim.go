@@ -29,6 +29,9 @@ type AppSimulator struct {
 func NewAppSimulator(tb require.TestingT, options AppSimulatorOptions) *AppSimulator {
 	modules := &btree.Map[string, *moduleState]{}
 	for module, schema := range options.AppSchema {
+		require.True(tb, indexerbase.ValidateName(module))
+		require.NoError(tb, schema.Validate())
+
 		modState := &moduleState{
 			ModuleSchema: schema,
 			Objects:      &btree.Map[string, *objectState]{},

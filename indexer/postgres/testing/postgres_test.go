@@ -35,6 +35,14 @@ func TestPostgresIndexer(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	fixture := indexertesting.NewListenerTestFixture(indexer.Listener(), indexertesting.ListenerTestFixtureOptions{})
-	require.NoError(t, fixture.Initialize())
+	fixture := indexertesting.NewAppSimulator(t, indexertesting.AppSimulatorOptions{
+		Listener:  indexer.Listener(),
+		AppSchema: indexertesting.ExampleAppSchema,
+	})
+
+	fixture.Initialize()
+
+	for i := 0; i < 10; i++ {
+		fixture.NextBlock()
+	}
 }

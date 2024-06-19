@@ -21,7 +21,7 @@ func (tm *TableManager) CreateTable(ctx context.Context, tx *sql.Tx) error {
 
 // GenCreateTable generates a CREATE TABLE statement for the object type.
 func (tm *TableManager) GenCreateTable(writer io.Writer) error {
-	_, err := fmt.Fprintf(writer, "CREATE TABLE IF NOT EXISTS %s (", tm.TableName())
+	_, err := fmt.Fprintf(writer, "CREATE TABLE IF NOT EXISTS %q (", tm.TableName())
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func (tm *TableManager) GenCreateTable(writer io.Writer) error {
 	var pKeys []string
 	if !isSingleton {
 		for _, field := range tm.typ.KeyFields {
-			pKeys = append(pKeys, field.Name)
+			pKeys = append(pKeys, `"`+field.Name+`"`)
 		}
 	} else {
 		pKeys = []string{"_id"}
@@ -61,7 +61,7 @@ func (tm *TableManager) GenCreateTable(writer io.Writer) error {
 
 	_, err = fmt.Fprintf(writer, `);
 
-GRANT SELECT ON TABLE %s TO PUBLIC;
+GRANT SELECT ON TABLE %q TO PUBLIC;
 `, tm.TableName())
 	if err != nil {
 		return err

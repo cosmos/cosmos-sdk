@@ -8,7 +8,9 @@ import (
 
 type StateMachineTestOptions struct {
 	MaxBlocks int
+	Init      func(*rapid.T)
 	Check     func(*rapid.T)
+	Cleanup   func(*rapid.T)
 }
 
 func AppStateMachineTest(appOpts AppSimulatorOptions, testOpts StateMachineTestOptions) func(*rapid.T) {
@@ -18,6 +20,10 @@ func AppStateMachineTest(appOpts AppSimulatorOptions, testOpts StateMachineTestO
 	}
 
 	return func(t *rapid.T) {
+		if testOpts.Init != nil {
+			testOpts.Init(t)
+		}
+
 		if appOpts.AppSchema == nil {
 			appOpts.AppSchema = schemagen.AppSchema.Draw(t, "AppSchema")
 		}
@@ -32,6 +38,10 @@ func AppStateMachineTest(appOpts AppSimulatorOptions, testOpts StateMachineTestO
 			if testOpts.Check != nil {
 				testOpts.Check(t)
 			}
+		}
+
+		if testOpts.Cleanup != nil {
+			testOpts.Cleanup(t)
 		}
 	}
 }

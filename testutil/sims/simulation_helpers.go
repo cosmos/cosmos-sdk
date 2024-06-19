@@ -11,8 +11,8 @@ import (
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	authtx "cosmossdk.io/x/auth/tx"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,7 +31,7 @@ func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, 
 
 	var logger log.Logger
 	if verbose {
-		logger = log.NewLogger(os.Stdout) // TODO(mr): enable selection of log destination.
+		logger = log.NewLogger(os.Stdout)
 	} else {
 		logger = log.NewNopLogger()
 	}
@@ -51,14 +51,14 @@ func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, 
 
 // SimulationOperations retrieves the simulation params from the provided file path
 // and returns all the modules weighted operations
-func SimulationOperations(app runtime.AppSimI, cdc codec.Codec, config simtypes.Config) []simtypes.WeightedOperation {
+func SimulationOperations(app runtime.AppSimI, cdc codec.Codec, config simtypes.Config, txConfig client.TxConfig) []simtypes.WeightedOperation {
 	signingCtx := cdc.InterfaceRegistry().SigningContext()
 	simState := module.SimulationState{
 		AppParams:      make(simtypes.AppParams),
 		Cdc:            cdc,
 		AddressCodec:   signingCtx.AddressCodec(),
 		ValidatorCodec: signingCtx.ValidatorAddressCodec(),
-		TxConfig:       authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes), // TODO(tip): we should extract this from app
+		TxConfig:       txConfig,
 		BondDenom:      sdk.DefaultBondDenom,
 	}
 

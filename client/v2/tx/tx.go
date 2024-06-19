@@ -37,20 +37,16 @@ func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring, ac addr
 	var fromName, fromAddress string
 	var addr []byte
 	isDryRun, _ := flags.GetBool(flags2.FlagDryRun)
-	if !isDryRun {
-		fromName, fromAddress, _, err = keybase.KeyInfo(from)
-		if err != nil {
-			return params, err
-		}
-		addr, err = ac.StringToBytes(fromAddress)
-		if err != nil {
-			return params, err
-		}
-	} else {
+	if isDryRun {
 		addr, err = ac.StringToBytes(from)
-		if err != nil {
-			return params, err
+	} else {
+		fromName, fromAddress, _, err = keybase.KeyInfo(from)
+		if err == nil {
+			addr, err = ac.StringToBytes(fromAddress)
 		}
+	}
+	if err != nil {
+		return params, err
 	}
 
 	gas, _ := flags.GetString(flags2.FlagGas)

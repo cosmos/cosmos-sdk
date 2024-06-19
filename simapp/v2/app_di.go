@@ -5,6 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/spf13/viper"
+
+	coreapp "cosmossdk.io/core/app"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/log"
 	"cosmossdk.io/depinject"
@@ -33,6 +36,7 @@ import (
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -91,9 +95,9 @@ func AppConfig() depinject.Config {
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(
 	logger log.Logger,
-	appOpts servertypes.AppOptions,
+	viper *viper.Viper,
 ) *SimApp {
-	homeDir := appOpts.Get("home").(string) // TODO
+	homeDir := viper.Get(flags.FlagHome).(string) // TODO
 	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(homeDir, "data"), nil)
 	if err != nil {
 		panic(err)
@@ -122,7 +126,7 @@ func NewSimApp(
 					},
 					SCRawDB: scRawDb,
 				},
-				// appOpts,
+				servertypes.AppOptions(viper),
 
 				// ADVANCED CONFIGURATION
 
@@ -234,15 +238,21 @@ func (app *SimApp) AppCodec() codec.Codec {
 }
 
 // InterfaceRegistry returns SimApp's InterfaceRegistry.
-func (app *SimApp) InterfaceRegistry() codectypes.InterfaceRegistry {
+func (app *SimApp) InterfaceRegistry() coreapp.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 
-// TxConfig returns SimApp's TxConfig
+// TxConfig returns SimApp's TxConfig.
 func (app *SimApp) TxConfig() client.TxConfig {
 	return app.txConfig
 }
 
+// GetConsensusAuthority gets the consensus authority.
 func (app *SimApp) GetConsensusAuthority() string {
 	return app.ConsensusParamsKeeper.GetAuthority()
+}
+
+// GetStore gets the app store.
+func (app *SimApp) GetStore() any {
+	return app.App.GetStore()
 }

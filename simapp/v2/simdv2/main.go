@@ -7,7 +7,7 @@ import (
 	"cosmossdk.io/simapp/v2"
 	"cosmossdk.io/simapp/v2/simdv2/cmd"
 
-	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
+	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd" // TODO(@julienrbrt), no need to abstract this.
 )
 
 func main() {

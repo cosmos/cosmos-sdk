@@ -25,12 +25,12 @@ type MessageBinder struct {
 
 	positionalFlagSet *pflag.FlagSet
 	positionalArgs    []fieldBinding
+	flagBindings      []fieldBinding
+	messageType       protoreflect.MessageType
+
 	hasVarargs        bool
 	hasOptional       bool
 	mandatoryArgUntil int
-
-	flagBindings []fieldBinding
-	messageType  protoreflect.MessageType
 }
 
 // BuildMessage builds and returns a new message for the bound flags.

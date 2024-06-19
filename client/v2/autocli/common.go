@@ -53,14 +53,18 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 		Version:      options.Version,
 	}
 
-	binder, err := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, options)
+	// we need to use a pointer to the context as the correct context is set in the RunE function
+	// however we need to set the flags before the RunE function is called
+	ctx := cmd.Context()
+	binder, err := b.AddMessageFlags(&ctx, cmd.Flags(), inputType, options)
 	if err != nil {
 		return nil, err
 	}
-
 	cmd.Args = binder.CobraArgs
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		ctx = cmd.Context()
+
 		input, err := binder.BuildMessage(args)
 		if err != nil {
 			return err

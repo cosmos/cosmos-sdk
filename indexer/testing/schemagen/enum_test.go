@@ -1,4 +1,4 @@
-package indexerrapid
+package schemagen
 
 import (
 	"testing"

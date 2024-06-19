@@ -52,6 +52,7 @@ func (s *AppStateMachine) ActionNewBlock(t *rapid.T) {
 		objectIdx := rapid.IntRange(0, modState.Objects.Len()).Draw(t, "objectIdx")
 		objState := modState.Objects.Values()[objectIdx]
 		update := objState.UpdateGen.Draw(t, "update")
+		require.NoError(t, objState.ObjectType.ValidateObjectUpdate(update))
 		require.NoError(t, s.ApplyUpdate(keys[moduleIdx], update))
 	}
 }

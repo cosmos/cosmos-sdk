@@ -117,7 +117,7 @@ func (k Keeper) updateToNewPubkey(ctx context.Context, val types.Validator, oldP
 	return k.Hooks().AfterConsensusPubKeyUpdate(ctx, oldPk, newPk, fee)
 }
 
-// setConsAddrToValidatorIdentifierMap adds an entry in the state with the current consKey to the initial consKey of the validator.
+// setConsAddrToValidatorIdentifierMap adds an entry in the state with the current consAddr to the initial consKey of the validator.
 // it tries to find the oldPk if there is a entry already present in the state
 func (k Keeper) setConsAddrToValidatorIdentifierMap(ctx context.Context, oldConsAddr, newConsAddr sdk.ConsAddress) error {
 	pk, err := k.ConsAddrToValidatorIdentifierMap.Get(ctx, oldConsAddr)

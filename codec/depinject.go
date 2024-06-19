@@ -35,7 +35,7 @@ func ProvideInterfaceRegistry(
 		SigningOptions: signingOptions,
 	})
 	if err != nil {
-		panic(err)
+		return nil, nil, fmt.Errorf("failed to create interface registry: %w", err)
 	}
 
 	if err := interfaceRegistry.SigningContext().Validate(); err != nil {

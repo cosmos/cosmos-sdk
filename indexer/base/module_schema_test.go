@@ -43,7 +43,7 @@ func TestModuleSchema_Validate(t *testing.T) {
 					},
 				},
 			},
-			errContains: "object type name cannot be empty",
+			errContains: "invalid object type name",
 		},
 		{
 			name: "same enum with missing values",

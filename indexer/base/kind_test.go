@@ -7,13 +7,8 @@ import (
 	"time"
 )
 
-var validKinds = []Kind{
-	StringKind, BytesKind, Int8Kind, Uint8Kind, Int16Kind, Uint16Kind, Int32Kind, Uint32Kind, Int64Kind,
-	Uint64Kind, IntegerKind, DecimalKind, BoolKind, EnumKind, Bech32AddressKind,
-}
-
 func TestKind_Validate(t *testing.T) {
-	for _, kind := range validKinds {
+	for kind := InvalidKind + 1; kind <= MAX_VALID_KIND; kind++ {
 		if err := kind.Validate(); err != nil {
 			t.Errorf("expected valid kind %s to pass validation, got: %v", kind, err)
 		}
@@ -97,7 +92,7 @@ func TestKind_ValidateValueType(t *testing.T) {
 	}
 
 	// nils get rejected
-	for _, kind := range validKinds {
+	for kind := InvalidKind + 1; kind <= MAX_VALID_KIND; kind++ {
 		if err := kind.ValidateValueType(nil); err == nil {
 			t.Errorf("expected nil value to fail validation for kind %s", kind)
 		}

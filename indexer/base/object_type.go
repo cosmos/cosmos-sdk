@@ -4,7 +4,8 @@ import "fmt"
 
 // ObjectType describes an object type a module schema.
 type ObjectType struct {
-	// Name is the name of the object.
+	// Name is the name of the object type. It must be unique within the module schema
+	// and conform to the NameFormat regular expression.
 	Name string
 
 	// KeyFields is a list of fields that make up the primary key of the object.
@@ -28,8 +29,8 @@ type ObjectType struct {
 
 // Validate validates the object type.
 func (o ObjectType) Validate() error {
-	if o.Name == "" {
-		return fmt.Errorf("object type name cannot be empty")
+	if !ValidateName(o.Name) {
+		return fmt.Errorf("invalid object type name %q", o.Name)
 	}
 
 	fieldNames := map[string]bool{}

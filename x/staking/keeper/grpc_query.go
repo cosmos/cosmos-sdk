@@ -57,10 +57,10 @@ func (k Querier) Validators(ctx context.Context, req *types.QueryValidatorsReque
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	var validatorList []types.Validator
+	vals := types.Validators{}
 	var validatorInfoList []types.ValidatorInfo
 	for _, val := range validators {
-		validatorList = append(validatorList, *val)
+		vals.Validators = append(vals.Validators, *val)
 		valInfo := types.ValidatorInfo{}
 
 		cpk, ok := val.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
@@ -75,7 +75,7 @@ func (k Querier) Validators(ctx context.Context, req *types.QueryValidatorsReque
 	}
 
 	return &types.QueryValidatorsResponse{
-		Validators:    validatorList,
+		Validators:    vals.Validators,
 		ValidatorInfo: validatorInfoList,
 		Pagination:    pageRes,
 	}, nil

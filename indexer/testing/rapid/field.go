@@ -2,6 +2,7 @@ package indexerrapid
 
 import (
 	"fmt"
+	"time"
 
 	"pgregory.net/rapid"
 
@@ -9,7 +10,9 @@ import (
 )
 
 var (
-	nameGen = rapid.String()
+	nameGen = rapid.String().Filter(func(s string) bool {
+		return s != ""
+	})
 	kindGen = rapid.Map(rapid.IntRange(int(indexerbase.InvalidKind+1), int(indexerbase.MAX_VALID_KIND-1)),
 		func(i int) indexerbase.Kind {
 			return indexerbase.Kind(i)
@@ -73,15 +76,19 @@ func baseFieldValue(field indexerbase.Field) *rapid.Generator[any] {
 	case indexerbase.Float64Kind:
 		return rapid.Float64().AsAny()
 	case indexerbase.IntegerKind:
-		panic("TODO")
+		return rapid.StringMatching(indexerbase.IntegerFormat).AsAny()
 	case indexerbase.DecimalKind:
-		panic("TODO")
+		return rapid.StringMatching(indexerbase.DecimalFormat).AsAny()
 	case indexerbase.BoolKind:
 		return rapid.Bool().AsAny()
 	case indexerbase.TimeKind:
-		panic("TODO")
+		return rapid.Map(rapid.Int64(), func(i int64) time.Time {
+			return time.Unix(0, i)
+		}).AsAny()
 	case indexerbase.DurationKind:
-		panic("TODO")
+		return rapid.Map(rapid.Int64(), func(i int64) time.Duration {
+			return time.Duration(i)
+		}).AsAny()
 	case indexerbase.Bech32AddressKind:
 		return rapid.SliceOfN(rapid.Byte(), 20, 64).AsAny()
 	case indexerbase.EnumKind:

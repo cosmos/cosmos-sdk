@@ -1,40 +1,32 @@
 package indexerrapid
 
 import (
-	"fmt"
-
 	"pgregory.net/rapid"
 
 	indexerbase "cosmossdk.io/indexer/base"
 )
 
-var numKeyFields = rapid.IntRange(0, 5)
-var numValueFields = rapid.IntRange(0, 10)
+var fieldsGen = rapid.SliceOfNDistinct(Field, 1, 12, func(f indexerbase.Field) string {
+	return f.Name
+})
 
 var ObjectType = rapid.Custom(func(t *rapid.T) indexerbase.ObjectType {
 	typ := indexerbase.ObjectType{
 		Name: nameGen.Draw(t, "name"),
 	}
 
-	numKey := numKeyFields.Draw(t, "numKeyFields")
-	typ.KeyFields = make([]indexerbase.Field, numKey)
-	for i := 0; i < numKey; i++ {
-		typ.KeyFields[i] = Field.Draw(t, fmt.Sprintf("keyField[%d]", i))
-	}
+	fields := fieldsGen.Draw(t, "fields")
+	numKeyFields := rapid.IntRange(0, len(fields)).Draw(t, "numKeyFields")
 
-	numValue := numValueFields.Draw(t, "numValueFields")
-	typ.ValueFields = make([]indexerbase.Field, numValue)
-	for i := 0; i < numValue; i++ {
-		typ.ValueFields[i] = Field.Draw(t, fmt.Sprintf("valueField[%d]", i))
-	}
+	typ.KeyFields = fields[:numKeyFields]
+	typ.ValueFields = fields[numKeyFields:]
 
 	typ.RetainDeletions = boolGen.Draw(t, "retainDeletions")
 
 	return typ
 }).Filter(func(typ indexerbase.ObjectType) bool {
-	// TODO: filter out empty key & value fields
-	// TODO: filter out duplicate field names
 	// TODO: filter out duplicate enum names
+
 	return true
 })
 

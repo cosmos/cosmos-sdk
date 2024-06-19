@@ -12,6 +12,9 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
+// TODO(serverv2): DO NOT DEPEND ON v1 module manager
+// TODO(serverv2): remove app exporter notion that is server v1 specific
+
 // Commands adds core sdk's sub-commands into genesis command.
 func Commands(txConfig client.TxConfig, mm *module.Manager, appExport servertypes.AppExporter) *cobra.Command {
 	return CommandsWithCustomMigrationMap(txConfig, mm, appExport, MigrationMap)

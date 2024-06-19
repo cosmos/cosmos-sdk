@@ -131,8 +131,6 @@ Modules not returning simulation operations:
 * `mint`
 * `params`
 
-A separate binary, [runsim](https://github.com/cosmos/tools/tree/master/cmd/runsim), is responsible for kicking off some of these tests and
-managing their life cycle.
 
 #### Limitations
 

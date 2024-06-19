@@ -36,12 +36,27 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+<<<<<<< HEAD
 ## [v2.0.0-beta.2] - 2024-XX-XX
 
 ### Improvements
 
 * (deps) [#19810](https://github.com/cosmos/cosmos-sdk/pull/19810) Upgrade SDK version due to prometheus breaking change.
 * (deps) [#19810](https://github.com/cosmos/cosmos-sdk/pull/19810) Bump `cosmossdk.io/store` to v1.1.0.
+=======
+<!-- ## [v2.1.0-rc.1] to be tagged after v0.51 final or in SDK agnostic version -->
+
+### Features
+
+* [#18626](https://github.com/cosmos/cosmos-sdk/pull/18626) Support for off-chain signing and verification of a file.
+* [#18461](https://github.com/cosmos/cosmos-sdk/pull/18461) Support governance proposals.
+* [#19039](https://github.com/cosmos/cosmos-sdk/pull/19039) Add support for pubkey in autocli.
+* [#20266](https://github.com/cosmos/cosmos-sdk/pull/20266) Ability to override the short description in AutoCLI-generated top-level commands.
+
+### Improvements
+
+* [#19646](https://github.com/cosmos/cosmos-sdk/pull/19646) Use keyring from command context.
+>>>>>>> ca195c152 (feat(client/v2): get keyring from context (#19646))
 * [#20083](https://github.com/cosmos/cosmos-sdk/pull/20083) Integrate latest version of cosmos-proto and improve version filtering.
 * [#19618](https://github.com/cosmos/cosmos-sdk/pull/19618) Marshal enum as string in queries.
 * [#19060](https://github.com/cosmos/cosmos-sdk/pull/19060) Use client context from root (or enhanced) command in autocli commands.
@@ -56,6 +71,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#19060](https://github.com/cosmos/cosmos-sdk/pull/19060) Simplify key flag parsing logic in flag handler.
 * [#20033](https://github.com/cosmos/cosmos-sdk/pull/20033) Respect output format from client ctx.
 
+<<<<<<< HEAD
+=======
+### API Breaking Changes
+
+* [#19646](https://github.com/cosmos/cosmos-sdk/pull/19646) Remove keyring from `autocli.AppOptions` and `flag.Builder` options.
+* [#17709](https://github.com/cosmos/cosmos-sdk/pull/17709) Address codecs have been removed from `autocli.AppOptions` and `flag.Builder`. Instead client/v2 uses the address codecs present in the context (introduced in [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503)).
+
+>>>>>>> ca195c152 (feat(client/v2): get keyring from context (#19646))
 ## [v2.0.0-beta.1] - 2023-11-07
 
 This is the first tagged version of client/v2.

@@ -102,9 +102,7 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 			continue
 		}
 
-		if methodCmd != nil {
-			cmd.AddCommand(methodCmd)
-		}
+		cmd.AddCommand(methodCmd)
 	}
 
 	return nil
@@ -121,6 +119,18 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		clientCtx = clientCtx.WithCmdContext(cmd.Context())
 		clientCtx = clientCtx.WithOutput(cmd.OutOrStdout())
 
+<<<<<<< HEAD
+=======
+		fd := input.Descriptor().Fields().ByName(protoreflect.Name(flag.GetSignerFieldName(input.Descriptor())))
+		addressCodec := b.Builder.AddressCodec
+
+		// handle gov proposals commands
+		skipProposal, _ := cmd.Flags().GetBool(flags.FlagNoProposal)
+		if options.GovProposal && !skipProposal {
+			return b.handleGovProposal(cmd, input, clientCtx, addressCodec, fd)
+		}
+
+>>>>>>> ca195c152 (feat(client/v2): get keyring from context (#19646))
 		// set signer to signer field if empty
 		fd := input.Descriptor().Fields().ByName(protoreflect.Name(flag.GetSignerFieldName(input.Descriptor())))
 		if addr := input.Get(fd).String(); addr == "" {
@@ -160,9 +170,56 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 	}
 
 	// silence usage only for inner txs & queries commands
-	if cmd != nil {
-		cmd.SilenceUsage = true
+	cmd.SilenceUsage = true
+
+<<<<<<< HEAD
+	return cmd, err
+=======
+	// set gov proposal flags if command is a gov proposal
+	if options.GovProposal {
+		govcli.AddGovPropFlagsToCmd(cmd)
+		cmd.Flags().Bool(flags.FlagNoProposal, false, "Skip gov proposal and submit a normal transaction")
 	}
 
-	return cmd, err
+	return cmd, nil
+}
+
+// handleGovProposal sets the authority field of the message to the gov module address and creates a gov proposal.
+func (b *Builder) handleGovProposal(
+	cmd *cobra.Command,
+	input protoreflect.Message,
+	clientCtx client.Context,
+	addressCodec addresscodec.Codec,
+	fd protoreflect.FieldDescriptor,
+) error {
+	govAuthority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	authority, err := addressCodec.BytesToString(govAuthority.Bytes())
+	if err != nil {
+		return fmt.Errorf("failed to convert gov authority: %w", err)
+	}
+	input.Set(fd, protoreflect.ValueOfString(authority))
+
+	signerFromFlag := clientCtx.GetFromAddress()
+	signer, err := addressCodec.BytesToString(signerFromFlag.Bytes())
+	if err != nil {
+		return fmt.Errorf("failed to set signer on message, got %q: %w", signerFromFlag, err)
+	}
+
+	proposal, err := govcli.ReadGovPropCmdFlags(signer, cmd.Flags())
+	if err != nil {
+		return err
+	}
+
+	// AutoCLI uses protov2 messages, while the SDK only supports proto v1 messages.
+	// Here we use dynamicpb, to create a proto v1 compatible message.
+	// The SDK codec will handle protov2 -> protov1 (marshal)
+	msg := dynamicpb.NewMessage(input.Descriptor())
+	proto.Merge(msg, input.Interface())
+
+	if err := proposal.SetMsgs([]gogoproto.Message{msg}); err != nil {
+		return fmt.Errorf("failed to set msg in proposal %w", err)
+	}
+
+	return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
+>>>>>>> ca195c152 (feat(client/v2): get keyring from context (#19646))
 }

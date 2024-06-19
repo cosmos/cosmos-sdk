@@ -7,8 +7,11 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
+<<<<<<< HEAD
 	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/address"
+=======
+>>>>>>> ca195c152 (feat(client/v2): get keyring from context (#19646))
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
@@ -37,6 +40,7 @@ type AppOptions struct {
 	// module or need to be improved.
 	ModuleOptions map[string]*autocliv1.ModuleOptions `optional:"true"`
 
+<<<<<<< HEAD
 	// AddressCodec is the address codec to use for the app.
 	AddressCodec          address.Codec
 	ValidatorAddressCodec runtime.ValidatorAddressCodec
@@ -45,6 +49,8 @@ type AppOptions struct {
 	// Keyring is the keyring to use for client/v2.
 	Keyring keyring.Keyring `optional:"true"`
 
+=======
+>>>>>>> ca195c152 (feat(client/v2): get keyring from context (#19646))
 	// ClientCtx contains the necessary information needed to execute the commands.
 	ClientCtx client.Context
 }
@@ -69,10 +75,16 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
 			FileResolver:          appOptions.ClientCtx.InterfaceRegistry,
+<<<<<<< HEAD
 			AddressCodec:          appOptions.AddressCodec,
 			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
 			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,
 			Keyring:               appOptions.Keyring,
+=======
+			AddressCodec:          appOptions.ClientCtx.AddressCodec,
+			ValidatorAddressCodec: appOptions.ClientCtx.ValidatorAddressCodec,
+			ConsensusAddressCodec: appOptions.ClientCtx.ConsensusAddressCodec,
+>>>>>>> ca195c152 (feat(client/v2): get keyring from context (#19646))
 		},
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 			return client.GetClientQueryContext(cmd)

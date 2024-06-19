@@ -72,7 +72,7 @@ func TestMsg(t *testing.T) {
 		"--output", "json",
 	)
 	assert.NilError(t, err)
-	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
+	golden.Assert(t, out.String(), "msg-output.golden")
 
 	out, err = runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
 		Service: bankv1beta1.Msg_ServiceDesc.ServiceName,

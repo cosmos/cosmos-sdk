@@ -1420,5 +1420,5 @@ func (s *KeeperTestSuite) TestConsKeyRotationInSameBlock() {
 	s.Require().NoError(err)
 
 	_, err = msgServer.RotateConsPubKey(ctx, req)
-	s.Require().ErrorContains(err, "the new public key is already present in rotation history, please try with a different one")
+	s.Require().ErrorContains(err, "public key was already used")
 }

@@ -708,17 +708,18 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	return res, nil
 }
 
-// consKeyAlreadyUsed returns true if the consensus public key is already used, both in the OldToNewConsAddrMap or in the
-// current block (RotationHistory).
-func (k msgServer) checkConsKeyAlreadyUsed(ctx context.Context, consPubKey cryptotypes.PubKey) error {
-	rotatedTo, err := k.ConsAddrToValidatorIdentifierMap.Get(ctx, consPubKey.Address())
+// checkConsKeyAlreadyUsed returns an error if the consensus public key is already used,
+// in ConsAddrToValidatorIdentifierMap, OldToNewConsAddrMap, or in the current block (RotationHistory).
+func (k msgServer) checkConsKeyAlreadyUsed(ctx context.Context, newConsPubKey cryptotypes.PubKey) error {
+	newConsAddr := sdk.ConsAddress(newConsPubKey.Address())
+	rotatedTo, err := k.ConsAddrToValidatorIdentifierMap.Get(ctx, newConsAddr)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 
 	if rotatedTo != nil {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress,
-			"the new public key is already present in rotation history, please try with a different one")
+		return sdkerrors.ErrInvalidAddress.Wrap(
+			"public key was already used")
 	}
 
 	// check in the current block
@@ -728,13 +729,17 @@ func (k msgServer) checkConsKeyAlreadyUsed(ctx context.Context, consPubKey crypt
 	}
 
 	for _, rotation := range rotationHistory {
-		if bytes.Equal(rotation.NewConsPubkey.GetCachedValue().(cryptotypes.PubKey).Address(), consPubKey.Address()) {
-			return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "the new public key is already present in rotation history, please try with a different one")
+		cachedValue := rotation.NewConsPubkey.GetCachedValue()
+		if cachedValue == nil {
+			return sdkerrors.ErrInvalidAddress.Wrap("new public key is nil")
+		}
+		if bytes.Equal(cachedValue.(cryptotypes.PubKey).Address(), newConsAddr) {
+			return sdkerrors.ErrInvalidAddress.Wrap("public key was already used")
 		}
 	}
 
 	// checks if NewPubKey is not duplicated on ValidatorsByConsAddr
-	_, err = k.Keeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(consPubKey.Address()))
+	_, err = k.Keeper.ValidatorByConsAddr(ctx, newConsAddr)
 	if err == nil {
 		return types.ErrValidatorPubKeyExists
 	}

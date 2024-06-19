@@ -53,14 +53,18 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 		Version:      options.Version,
 	}
 
-	binder, err := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, options)
+	// we need to use a pointer to the context as the correct context is set in the RunE function
+	// however we need to set the flags before the RunE function is called
+	ctx := cmd.Context()
+	binder, err := b.AddMessageFlags(&ctx, cmd.Flags(), inputType, options)
 	if err != nil {
 		return nil, err
 	}
-
 	cmd.Args = binder.CobraArgs
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		ctx = cmd.Context()
+
 		input, err := binder.BuildMessage(args)
 		if err != nil {
 			return err
@@ -72,17 +76,12 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 				// the client context uses the from flag to determine the signer.
 				// this sets the signer flags to the from flag value if a custom signer flag is set.
 				// marks the custom flag as required.
-				if binder.SignerInfo.FieldName != flags.FlagFrom {
-					if err := cmd.MarkFlagRequired(binder.SignerInfo.FieldName); err != nil {
+				if binder.SignerInfo.FlagName != flags.FlagFrom {
+					if err := cmd.MarkFlagRequired(binder.SignerInfo.FlagName); err != nil {
 						return err
 					}
 
-					signer, err := cmd.Flags().GetString(binder.SignerInfo.FieldName)
-					if err != nil {
-						return fmt.Errorf("failed to get signer flag: %w", err)
-					}
-
-					if err := cmd.Flags().Set(flags.FlagFrom, signer); err != nil {
+					if err := cmd.Flags().Set(flags.FlagFrom, cmd.Flag(binder.SignerInfo.FlagName).Value.String()); err != nil {
 						return err
 					}
 				}

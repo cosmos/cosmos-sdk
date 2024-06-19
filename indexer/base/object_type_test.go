@@ -112,6 +112,42 @@ func TestObjectType_Validate(t *testing.T) {
 			objectType:  ObjectType{Name: "object0"},
 			errContains: "has no key or value fields",
 		},
+		{
+			name: "duplicate field",
+			objectType: ObjectType{
+				Name: "object1",
+				KeyFields: []Field{
+					{
+						Name: "field1",
+						Kind: StringKind,
+					},
+				},
+				ValueFields: []Field{
+					{
+						Name: "field1",
+						Kind: StringKind,
+					},
+				},
+			},
+			errContains: "duplicate field name",
+		},
+		{
+			name: "duplicate field 22",
+			objectType: ObjectType{
+				Name: "object1",
+				KeyFields: []Field{
+					{
+						Name: "field1",
+						Kind: StringKind,
+					},
+					{
+						Name: "field1",
+						Kind: StringKind,
+					},
+				},
+			},
+			errContains: "duplicate field name",
+		},
 	}
 
 	for _, tt := range tests {

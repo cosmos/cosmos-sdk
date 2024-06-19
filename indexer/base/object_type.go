@@ -56,7 +56,7 @@ func (o ObjectType) ValidateObjectUpdate(update ObjectUpdate) error {
 		return fmt.Errorf("object type name %q does not match update type name %q", o.Name, update.TypeName)
 	}
 
-	if err := ValidateWithKeyFields(o.KeyFields, update.Key); err != nil {
+	if err := ValidateForKeyFields(o.KeyFields, update.Key); err != nil {
 		return fmt.Errorf("invalid key for object type %q: %w", update.TypeName, err)
 	}
 
@@ -64,5 +64,5 @@ func (o ObjectType) ValidateObjectUpdate(update ObjectUpdate) error {
 		return nil
 	}
 
-	return ValidateWithValueFields(o.ValueFields, update.Value)
+	return ValidateForValueFields(o.ValueFields, update.Value)
 }

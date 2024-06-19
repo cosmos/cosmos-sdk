@@ -216,6 +216,10 @@ func (p pairKeyCodec[K1, K2]) DecodeJSON(b []byte) (Pair[K1, K2], error) {
 	return Join(k1, k2), nil
 }
 
+func (p pairKeyCodec[K1, K2]) LogicalDecoder() codec.LogicalDecoder {
+	panic("TODO")
+}
+
 // NewPrefixUntilPairRange defines a collection query which ranges until the provided Pair prefix.
 // Unstable: this API might change in the future.
 func NewPrefixUntilPairRange[K1, K2 any](prefix K1) *PairRange[K1, K2] {

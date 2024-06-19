@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestValidateWithKeyFields(t *testing.T) {
+func TestValidateForKeyFields(t *testing.T) {
 	tests := []struct {
 		name        string
 		keyFields   []Field
@@ -56,7 +56,7 @@ func TestValidateWithKeyFields(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ValidateWithKeyFields(tt.keyFields, tt.key)
+			err := ValidateForKeyFields(tt.keyFields, tt.key)
 			if tt.errContains == "" {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
@@ -70,7 +70,7 @@ func TestValidateWithKeyFields(t *testing.T) {
 	}
 }
 
-func TestValidateWithValueFields(t *testing.T) {
+func TestValidateForValueFields(t *testing.T) {
 	tests := []struct {
 		name        string
 		valueFields []Field
@@ -128,7 +128,7 @@ func TestValidateWithValueFields(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ValidateWithValueFields(tt.valueFields, tt.value)
+			err := ValidateForValueFields(tt.valueFields, tt.value)
 			if tt.errContains == "" {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)

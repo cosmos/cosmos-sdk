@@ -596,7 +596,7 @@ simd tx vesting --help
 
 #### create-periodic-vesting-account
 
-The `create-periodic-vesting-account` command creates a new vesting account funded with an allocation of tokens, where a sequence of coins and period length in seconds. Periods are sequential, in that the duration of of a period only starts at the end of the previous period. The duration of the first period starts upon account creation.
+The `create-periodic-vesting-account` command creates a new vesting account funded with an allocation of tokens, where a sequence of coins and period length in seconds. Periods are sequential, in that the duration of a period only starts at the end of the previous period. The duration of the first period starts upon account creation.
 
 ```bash
 simd tx vesting create-periodic-vesting-account [to_address] [periods_json_file] [flags]

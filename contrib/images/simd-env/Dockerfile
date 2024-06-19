@@ -28,6 +28,7 @@ COPY server/v2/go.mod server/v2/go.sum /work/server/v2/
 COPY server/v2/appmanager/go.mod server/v2/appmanager/go.sum /work/server/v2/appmanager/
 COPY server/v2/stf/go.mod server/v2/stf/go.sum /work/server/v2/stf/
 COPY server/v2/cometbft/go.mod server/v2/cometbft/go.sum /work/server/v2/cometbft/
+COPY core/testing/go.mod core/testing/go.sum /work/core/testing/
 
 RUN go mod download
 

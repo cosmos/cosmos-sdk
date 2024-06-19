@@ -2,7 +2,7 @@
 package consensusv1
 
 import (
-	v1 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/types/v1"
+	v1 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/abci/v1"
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -13,38 +13,83 @@ import (
 	sync "sync"
 )
 
+var _ protoreflect.List = (*_CometInfo_1_list)(nil)
+
+type _CometInfo_1_list struct {
+	list *[]*v1.Misbehavior
+}
+
+func (x *_CometInfo_1_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_CometInfo_1_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_CometInfo_1_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1.Misbehavior)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_CometInfo_1_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1.Misbehavior)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_CometInfo_1_list) AppendMutable() protoreflect.Value {
+	v := new(v1.Misbehavior)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_CometInfo_1_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_CometInfo_1_list) NewElement() protoreflect.Value {
+	v := new(v1.Misbehavior)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_CometInfo_1_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
-	md_ConsensusMsgParams           protoreflect.MessageDescriptor
-	fd_ConsensusMsgParams_version   protoreflect.FieldDescriptor
-	fd_ConsensusMsgParams_block     protoreflect.FieldDescriptor
-	fd_ConsensusMsgParams_evidence  protoreflect.FieldDescriptor
-	fd_ConsensusMsgParams_validator protoreflect.FieldDescriptor
-	fd_ConsensusMsgParams_abci      protoreflect.FieldDescriptor
-	fd_ConsensusMsgParams_synchrony protoreflect.FieldDescriptor
-	fd_ConsensusMsgParams_feature   protoreflect.FieldDescriptor
+	md_CometInfo                  protoreflect.MessageDescriptor
+	fd_CometInfo_evidence         protoreflect.FieldDescriptor
+	fd_CometInfo_validators_hash  protoreflect.FieldDescriptor
+	fd_CometInfo_proposer_address protoreflect.FieldDescriptor
+	fd_CometInfo_last_commit      protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_consensus_v1_consensus_proto_init()
-	md_ConsensusMsgParams = File_cosmos_consensus_v1_consensus_proto.Messages().ByName("ConsensusMsgParams")
-	fd_ConsensusMsgParams_version = md_ConsensusMsgParams.Fields().ByName("version")
-	fd_ConsensusMsgParams_block = md_ConsensusMsgParams.Fields().ByName("block")
-	fd_ConsensusMsgParams_evidence = md_ConsensusMsgParams.Fields().ByName("evidence")
-	fd_ConsensusMsgParams_validator = md_ConsensusMsgParams.Fields().ByName("validator")
-	fd_ConsensusMsgParams_abci = md_ConsensusMsgParams.Fields().ByName("abci")
-	fd_ConsensusMsgParams_synchrony = md_ConsensusMsgParams.Fields().ByName("synchrony")
-	fd_ConsensusMsgParams_feature = md_ConsensusMsgParams.Fields().ByName("feature")
+	md_CometInfo = File_cosmos_consensus_v1_consensus_proto.Messages().ByName("CometInfo")
+	fd_CometInfo_evidence = md_CometInfo.Fields().ByName("evidence")
+	fd_CometInfo_validators_hash = md_CometInfo.Fields().ByName("validators_hash")
+	fd_CometInfo_proposer_address = md_CometInfo.Fields().ByName("proposer_address")
+	fd_CometInfo_last_commit = md_CometInfo.Fields().ByName("last_commit")
 }
 
-var _ protoreflect.Message = (*fastReflection_ConsensusMsgParams)(nil)
+var _ protoreflect.Message = (*fastReflection_CometInfo)(nil)
 
-type fastReflection_ConsensusMsgParams ConsensusMsgParams
+type fastReflection_CometInfo CometInfo
 
-func (x *ConsensusMsgParams) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_ConsensusMsgParams)(x)
+func (x *CometInfo) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_CometInfo)(x)
 }
 
-func (x *ConsensusMsgParams) slowProtoReflect() protoreflect.Message {
+func (x *CometInfo) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_consensus_v1_consensus_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -56,43 +101,43 @@ func (x *ConsensusMsgParams) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_ConsensusMsgParams_messageType fastReflection_ConsensusMsgParams_messageType
-var _ protoreflect.MessageType = fastReflection_ConsensusMsgParams_messageType{}
+var _fastReflection_CometInfo_messageType fastReflection_CometInfo_messageType
+var _ protoreflect.MessageType = fastReflection_CometInfo_messageType{}
 
-type fastReflection_ConsensusMsgParams_messageType struct{}
+type fastReflection_CometInfo_messageType struct{}
 
-func (x fastReflection_ConsensusMsgParams_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_ConsensusMsgParams)(nil)
+func (x fastReflection_CometInfo_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_CometInfo)(nil)
 }
-func (x fastReflection_ConsensusMsgParams_messageType) New() protoreflect.Message {
-	return new(fastReflection_ConsensusMsgParams)
+func (x fastReflection_CometInfo_messageType) New() protoreflect.Message {
+	return new(fastReflection_CometInfo)
 }
-func (x fastReflection_ConsensusMsgParams_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_ConsensusMsgParams
+func (x fastReflection_CometInfo_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_CometInfo
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_ConsensusMsgParams) Descriptor() protoreflect.MessageDescriptor {
-	return md_ConsensusMsgParams
+func (x *fastReflection_CometInfo) Descriptor() protoreflect.MessageDescriptor {
+	return md_CometInfo
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_ConsensusMsgParams) Type() protoreflect.MessageType {
-	return _fastReflection_ConsensusMsgParams_messageType
+func (x *fastReflection_CometInfo) Type() protoreflect.MessageType {
+	return _fastReflection_CometInfo_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_ConsensusMsgParams) New() protoreflect.Message {
-	return new(fastReflection_ConsensusMsgParams)
+func (x *fastReflection_CometInfo) New() protoreflect.Message {
+	return new(fastReflection_CometInfo)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_ConsensusMsgParams) Interface() protoreflect.ProtoMessage {
-	return (*ConsensusMsgParams)(x)
+func (x *fastReflection_CometInfo) Interface() protoreflect.ProtoMessage {
+	return (*CometInfo)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -100,46 +145,28 @@ func (x *fastReflection_ConsensusMsgParams) Interface() protoreflect.ProtoMessag
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_ConsensusMsgParams) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Version != nil {
-		value := protoreflect.ValueOfMessage(x.Version.ProtoReflect())
-		if !f(fd_ConsensusMsgParams_version, value) {
+func (x *fastReflection_CometInfo) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.Evidence) != 0 {
+		value := protoreflect.ValueOfList(&_CometInfo_1_list{list: &x.Evidence})
+		if !f(fd_CometInfo_evidence, value) {
 			return
 		}
 	}
-	if x.Block != nil {
-		value := protoreflect.ValueOfMessage(x.Block.ProtoReflect())
-		if !f(fd_ConsensusMsgParams_block, value) {
+	if len(x.ValidatorsHash) != 0 {
+		value := protoreflect.ValueOfBytes(x.ValidatorsHash)
+		if !f(fd_CometInfo_validators_hash, value) {
 			return
 		}
 	}
-	if x.Evidence != nil {
-		value := protoreflect.ValueOfMessage(x.Evidence.ProtoReflect())
-		if !f(fd_ConsensusMsgParams_evidence, value) {
+	if len(x.ProposerAddress) != 0 {
+		value := protoreflect.ValueOfBytes(x.ProposerAddress)
+		if !f(fd_CometInfo_proposer_address, value) {
 			return
 		}
 	}
-	if x.Validator != nil {
-		value := protoreflect.ValueOfMessage(x.Validator.ProtoReflect())
-		if !f(fd_ConsensusMsgParams_validator, value) {
-			return
-		}
-	}
-	if x.Abci != nil {
-		value := protoreflect.ValueOfMessage(x.Abci.ProtoReflect())
-		if !f(fd_ConsensusMsgParams_abci, value) {
-			return
-		}
-	}
-	if x.Synchrony != nil {
-		value := protoreflect.ValueOfMessage(x.Synchrony.ProtoReflect())
-		if !f(fd_ConsensusMsgParams_synchrony, value) {
-			return
-		}
-	}
-	if x.Feature != nil {
-		value := protoreflect.ValueOfMessage(x.Feature.ProtoReflect())
-		if !f(fd_ConsensusMsgParams_feature, value) {
+	if x.LastCommit != nil {
+		value := protoreflect.ValueOfMessage(x.LastCommit.ProtoReflect())
+		if !f(fd_CometInfo_last_commit, value) {
 			return
 		}
 	}
@@ -156,27 +183,21 @@ func (x *fastReflection_ConsensusMsgParams) Range(f func(protoreflect.FieldDescr
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_ConsensusMsgParams) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_CometInfo) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.consensus.v1.ConsensusMsgParams.version":
-		return x.Version != nil
-	case "cosmos.consensus.v1.ConsensusMsgParams.block":
-		return x.Block != nil
-	case "cosmos.consensus.v1.ConsensusMsgParams.evidence":
-		return x.Evidence != nil
-	case "cosmos.consensus.v1.ConsensusMsgParams.validator":
-		return x.Validator != nil
-	case "cosmos.consensus.v1.ConsensusMsgParams.abci":
-		return x.Abci != nil
-	case "cosmos.consensus.v1.ConsensusMsgParams.synchrony":
-		return x.Synchrony != nil
-	case "cosmos.consensus.v1.ConsensusMsgParams.feature":
-		return x.Feature != nil
+	case "cosmos.consensus.v1.CometInfo.evidence":
+		return len(x.Evidence) != 0
+	case "cosmos.consensus.v1.CometInfo.validators_hash":
+		return len(x.ValidatorsHash) != 0
+	case "cosmos.consensus.v1.CometInfo.proposer_address":
+		return len(x.ProposerAddress) != 0
+	case "cosmos.consensus.v1.CometInfo.last_commit":
+		return x.LastCommit != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgParams"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.CometInfo"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgParams does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.CometInfo does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -186,27 +207,21 @@ func (x *fastReflection_ConsensusMsgParams) Has(fd protoreflect.FieldDescriptor)
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_ConsensusMsgParams) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_CometInfo) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.consensus.v1.ConsensusMsgParams.version":
-		x.Version = nil
-	case "cosmos.consensus.v1.ConsensusMsgParams.block":
-		x.Block = nil
-	case "cosmos.consensus.v1.ConsensusMsgParams.evidence":
+	case "cosmos.consensus.v1.CometInfo.evidence":
 		x.Evidence = nil
-	case "cosmos.consensus.v1.ConsensusMsgParams.validator":
-		x.Validator = nil
-	case "cosmos.consensus.v1.ConsensusMsgParams.abci":
-		x.Abci = nil
-	case "cosmos.consensus.v1.ConsensusMsgParams.synchrony":
-		x.Synchrony = nil
-	case "cosmos.consensus.v1.ConsensusMsgParams.feature":
-		x.Feature = nil
+	case "cosmos.consensus.v1.CometInfo.validators_hash":
+		x.ValidatorsHash = nil
+	case "cosmos.consensus.v1.CometInfo.proposer_address":
+		x.ProposerAddress = nil
+	case "cosmos.consensus.v1.CometInfo.last_commit":
+		x.LastCommit = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgParams"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.CometInfo"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgParams does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.CometInfo does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -216,34 +231,28 @@ func (x *fastReflection_ConsensusMsgParams) Clear(fd protoreflect.FieldDescripto
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_ConsensusMsgParams) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_CometInfo) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.consensus.v1.ConsensusMsgParams.version":
-		value := x.Version
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.consensus.v1.ConsensusMsgParams.block":
-		value := x.Block
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.consensus.v1.ConsensusMsgParams.evidence":
-		value := x.Evidence
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.consensus.v1.ConsensusMsgParams.validator":
-		value := x.Validator
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.consensus.v1.ConsensusMsgParams.abci":
-		value := x.Abci
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.consensus.v1.ConsensusMsgParams.synchrony":
-		value := x.Synchrony
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.consensus.v1.ConsensusMsgParams.feature":
-		value := x.Feature
+	case "cosmos.consensus.v1.CometInfo.evidence":
+		if len(x.Evidence) == 0 {
+			return protoreflect.ValueOfList(&_CometInfo_1_list{})
+		}
+		listValue := &_CometInfo_1_list{list: &x.Evidence}
+		return protoreflect.ValueOfList(listValue)
+	case "cosmos.consensus.v1.CometInfo.validators_hash":
+		value := x.ValidatorsHash
+		return protoreflect.ValueOfBytes(value)
+	case "cosmos.consensus.v1.CometInfo.proposer_address":
+		value := x.ProposerAddress
+		return protoreflect.ValueOfBytes(value)
+	case "cosmos.consensus.v1.CometInfo.last_commit":
+		value := x.LastCommit
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgParams"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.CometInfo"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgParams does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.CometInfo does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -257,27 +266,23 @@ func (x *fastReflection_ConsensusMsgParams) Get(descriptor protoreflect.FieldDes
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_ConsensusMsgParams) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_CometInfo) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.consensus.v1.ConsensusMsgParams.version":
-		x.Version = value.Message().Interface().(*v1.VersionParams)
-	case "cosmos.consensus.v1.ConsensusMsgParams.block":
-		x.Block = value.Message().Interface().(*v1.BlockParams)
-	case "cosmos.consensus.v1.ConsensusMsgParams.evidence":
-		x.Evidence = value.Message().Interface().(*v1.EvidenceParams)
-	case "cosmos.consensus.v1.ConsensusMsgParams.validator":
-		x.Validator = value.Message().Interface().(*v1.ValidatorParams)
-	case "cosmos.consensus.v1.ConsensusMsgParams.abci":
-		x.Abci = value.Message().Interface().(*v1.ABCIParams)
-	case "cosmos.consensus.v1.ConsensusMsgParams.synchrony":
-		x.Synchrony = value.Message().Interface().(*v1.SynchronyParams)
-	case "cosmos.consensus.v1.ConsensusMsgParams.feature":
-		x.Feature = value.Message().Interface().(*v1.FeatureParams)
+	case "cosmos.consensus.v1.CometInfo.evidence":
+		lv := value.List()
+		clv := lv.(*_CometInfo_1_list)
+		x.Evidence = *clv.list
+	case "cosmos.consensus.v1.CometInfo.validators_hash":
+		x.ValidatorsHash = value.Bytes()
+	case "cosmos.consensus.v1.CometInfo.proposer_address":
+		x.ProposerAddress = value.Bytes()
+	case "cosmos.consensus.v1.CometInfo.last_commit":
+		x.LastCommit = value.Message().Interface().(*v1.CommitInfo)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgParams"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.CometInfo"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgParams does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.CometInfo does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -291,92 +296,61 @@ func (x *fastReflection_ConsensusMsgParams) Set(fd protoreflect.FieldDescriptor,
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_ConsensusMsgParams) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_CometInfo) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.consensus.v1.ConsensusMsgParams.version":
-		if x.Version == nil {
-			x.Version = new(v1.VersionParams)
-		}
-		return protoreflect.ValueOfMessage(x.Version.ProtoReflect())
-	case "cosmos.consensus.v1.ConsensusMsgParams.block":
-		if x.Block == nil {
-			x.Block = new(v1.BlockParams)
-		}
-		return protoreflect.ValueOfMessage(x.Block.ProtoReflect())
-	case "cosmos.consensus.v1.ConsensusMsgParams.evidence":
+	case "cosmos.consensus.v1.CometInfo.evidence":
 		if x.Evidence == nil {
-			x.Evidence = new(v1.EvidenceParams)
+			x.Evidence = []*v1.Misbehavior{}
 		}
-		return protoreflect.ValueOfMessage(x.Evidence.ProtoReflect())
-	case "cosmos.consensus.v1.ConsensusMsgParams.validator":
-		if x.Validator == nil {
-			x.Validator = new(v1.ValidatorParams)
+		value := &_CometInfo_1_list{list: &x.Evidence}
+		return protoreflect.ValueOfList(value)
+	case "cosmos.consensus.v1.CometInfo.last_commit":
+		if x.LastCommit == nil {
+			x.LastCommit = new(v1.CommitInfo)
 		}
-		return protoreflect.ValueOfMessage(x.Validator.ProtoReflect())
-	case "cosmos.consensus.v1.ConsensusMsgParams.abci":
-		if x.Abci == nil {
-			x.Abci = new(v1.ABCIParams)
-		}
-		return protoreflect.ValueOfMessage(x.Abci.ProtoReflect())
-	case "cosmos.consensus.v1.ConsensusMsgParams.synchrony":
-		if x.Synchrony == nil {
-			x.Synchrony = new(v1.SynchronyParams)
-		}
-		return protoreflect.ValueOfMessage(x.Synchrony.ProtoReflect())
-	case "cosmos.consensus.v1.ConsensusMsgParams.feature":
-		if x.Feature == nil {
-			x.Feature = new(v1.FeatureParams)
-		}
-		return protoreflect.ValueOfMessage(x.Feature.ProtoReflect())
+		return protoreflect.ValueOfMessage(x.LastCommit.ProtoReflect())
+	case "cosmos.consensus.v1.CometInfo.validators_hash":
+		panic(fmt.Errorf("field validators_hash of message cosmos.consensus.v1.CometInfo is not mutable"))
+	case "cosmos.consensus.v1.CometInfo.proposer_address":
+		panic(fmt.Errorf("field proposer_address of message cosmos.consensus.v1.CometInfo is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgParams"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.CometInfo"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgParams does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.CometInfo does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_ConsensusMsgParams) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_CometInfo) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.consensus.v1.ConsensusMsgParams.version":
-		m := new(v1.VersionParams)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.consensus.v1.ConsensusMsgParams.block":
-		m := new(v1.BlockParams)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.consensus.v1.ConsensusMsgParams.evidence":
-		m := new(v1.EvidenceParams)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.consensus.v1.ConsensusMsgParams.validator":
-		m := new(v1.ValidatorParams)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.consensus.v1.ConsensusMsgParams.abci":
-		m := new(v1.ABCIParams)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.consensus.v1.ConsensusMsgParams.synchrony":
-		m := new(v1.SynchronyParams)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.consensus.v1.ConsensusMsgParams.feature":
-		m := new(v1.FeatureParams)
+	case "cosmos.consensus.v1.CometInfo.evidence":
+		list := []*v1.Misbehavior{}
+		return protoreflect.ValueOfList(&_CometInfo_1_list{list: &list})
+	case "cosmos.consensus.v1.CometInfo.validators_hash":
+		return protoreflect.ValueOfBytes(nil)
+	case "cosmos.consensus.v1.CometInfo.proposer_address":
+		return protoreflect.ValueOfBytes(nil)
+	case "cosmos.consensus.v1.CometInfo.last_commit":
+		m := new(v1.CommitInfo)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgParams"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.CometInfo"))
 		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgParams does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.consensus.v1.CometInfo does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_ConsensusMsgParams) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_CometInfo) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.consensus.v1.ConsensusMsgParams", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.consensus.v1.CometInfo", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -384,7 +358,7 @@ func (x *fastReflection_ConsensusMsgParams) WhichOneof(d protoreflect.OneofDescr
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_ConsensusMsgParams) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_CometInfo) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -395,7 +369,7 @@ func (x *fastReflection_ConsensusMsgParams) GetUnknown() protoreflect.RawFields 
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_ConsensusMsgParams) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_CometInfo) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -407,7 +381,7 @@ func (x *fastReflection_ConsensusMsgParams) SetUnknown(fields protoreflect.RawFi
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_ConsensusMsgParams) IsValid() bool {
+func (x *fastReflection_CometInfo) IsValid() bool {
 	return x != nil
 }
 
@@ -417,9 +391,9 @@ func (x *fastReflection_ConsensusMsgParams) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_CometInfo) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*ConsensusMsgParams)
+		x := input.Message.Interface().(*CometInfo)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -431,32 +405,22 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		if x.Version != nil {
-			l = options.Size(x.Version)
+		if len(x.Evidence) > 0 {
+			for _, e := range x.Evidence {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		l = len(x.ValidatorsHash)
+		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.Block != nil {
-			l = options.Size(x.Block)
+		l = len(x.ProposerAddress)
+		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.Evidence != nil {
-			l = options.Size(x.Evidence)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.Validator != nil {
-			l = options.Size(x.Validator)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.Abci != nil {
-			l = options.Size(x.Abci)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.Synchrony != nil {
-			l = options.Size(x.Synchrony)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.Feature != nil {
-			l = options.Size(x.Feature)
+		if x.LastCommit != nil {
+			l = options.Size(x.LastCommit)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
@@ -469,7 +433,7 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*ConsensusMsgParams)
+		x := input.Message.Interface().(*CometInfo)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -488,50 +452,8 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.Feature != nil {
-			encoded, err := options.Marshal(x.Feature)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x3a
-		}
-		if x.Synchrony != nil {
-			encoded, err := options.Marshal(x.Synchrony)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x32
-		}
-		if x.Abci != nil {
-			encoded, err := options.Marshal(x.Abci)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x2a
-		}
-		if x.Validator != nil {
-			encoded, err := options.Marshal(x.Validator)
+		if x.LastCommit != nil {
+			encoded, err := options.Marshal(x.LastCommit)
 			if err != nil {
 				return protoiface.MarshalOutput{
 					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -544,47 +466,35 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x22
 		}
-		if x.Evidence != nil {
-			encoded, err := options.Marshal(x.Evidence)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+		if len(x.ProposerAddress) > 0 {
+			i -= len(x.ProposerAddress)
+			copy(dAtA[i:], x.ProposerAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ProposerAddress)))
 			i--
 			dAtA[i] = 0x1a
 		}
-		if x.Block != nil {
-			encoded, err := options.Marshal(x.Block)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+		if len(x.ValidatorsHash) > 0 {
+			i -= len(x.ValidatorsHash)
+			copy(dAtA[i:], x.ValidatorsHash)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ValidatorsHash)))
 			i--
 			dAtA[i] = 0x12
 		}
-		if x.Version != nil {
-			encoded, err := options.Marshal(x.Version)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
+		if len(x.Evidence) > 0 {
+			for iNdEx := len(x.Evidence) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Evidence[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0xa
 			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0xa
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -597,7 +507,7 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*ConsensusMsgParams)
+		x := input.Message.Interface().(*CometInfo)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -629,85 +539,13 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ConsensusMsgParams: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: CometInfo: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ConsensusMsgParams: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: CometInfo: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Version", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.Version == nil {
-					x.Version = &v1.VersionParams{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Version); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 2:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Block", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.Block == nil {
-					x.Block = &v1.BlockParams{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Block); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 3:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Evidence", wireType)
 				}
@@ -736,16 +574,82 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.Evidence == nil {
-					x.Evidence = &v1.EvidenceParams{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Evidence); err != nil {
+				x.Evidence = append(x.Evidence, &v1.Misbehavior{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Evidence[len(x.Evidence)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValidatorsHash", wireType)
+				}
+				var byteLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					byteLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if byteLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + byteLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ValidatorsHash = append(x.ValidatorsHash[:0], dAtA[iNdEx:postIndex]...)
+				if x.ValidatorsHash == nil {
+					x.ValidatorsHash = []byte{}
+				}
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ProposerAddress", wireType)
+				}
+				var byteLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					byteLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if byteLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + byteLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ProposerAddress = append(x.ProposerAddress[:0], dAtA[iNdEx:postIndex]...)
+				if x.ProposerAddress == nil {
+					x.ProposerAddress = []byte{}
 				}
 				iNdEx = postIndex
 			case 4:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Validator", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field LastCommit", wireType)
 				}
 				var msglen int
 				for shift := uint(0); ; shift += 7 {
@@ -772,118 +676,10 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.Validator == nil {
-					x.Validator = &v1.ValidatorParams{}
+				if x.LastCommit == nil {
+					x.LastCommit = &v1.CommitInfo{}
 				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Validator); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 5:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Abci", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.Abci == nil {
-					x.Abci = &v1.ABCIParams{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Abci); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 6:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Synchrony", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.Synchrony == nil {
-					x.Synchrony = &v1.SynchronyParams{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Synchrony); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 7:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Feature", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.Feature == nil {
-					x.Feature = &v1.FeatureParams{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Feature); err != nil {
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.LastCommit); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -922,363 +718,7 @@ func (x *fastReflection_ConsensusMsgParams) ProtoMethods() *protoiface.Methods {
 	}
 }
 
-var (
-	md_ConsensusMsgParamsResponse protoreflect.MessageDescriptor
-)
-
-func init() {
-	file_cosmos_consensus_v1_consensus_proto_init()
-	md_ConsensusMsgParamsResponse = File_cosmos_consensus_v1_consensus_proto.Messages().ByName("ConsensusMsgParamsResponse")
-}
-
-var _ protoreflect.Message = (*fastReflection_ConsensusMsgParamsResponse)(nil)
-
-type fastReflection_ConsensusMsgParamsResponse ConsensusMsgParamsResponse
-
-func (x *ConsensusMsgParamsResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_ConsensusMsgParamsResponse)(x)
-}
-
-func (x *ConsensusMsgParamsResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_consensus_v1_consensus_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_ConsensusMsgParamsResponse_messageType fastReflection_ConsensusMsgParamsResponse_messageType
-var _ protoreflect.MessageType = fastReflection_ConsensusMsgParamsResponse_messageType{}
-
-type fastReflection_ConsensusMsgParamsResponse_messageType struct{}
-
-func (x fastReflection_ConsensusMsgParamsResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_ConsensusMsgParamsResponse)(nil)
-}
-func (x fastReflection_ConsensusMsgParamsResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_ConsensusMsgParamsResponse)
-}
-func (x fastReflection_ConsensusMsgParamsResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_ConsensusMsgParamsResponse
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_ConsensusMsgParamsResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_ConsensusMsgParamsResponse
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_ConsensusMsgParamsResponse) Type() protoreflect.MessageType {
-	return _fastReflection_ConsensusMsgParamsResponse_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_ConsensusMsgParamsResponse) New() protoreflect.Message {
-	return new(fastReflection_ConsensusMsgParamsResponse)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_ConsensusMsgParamsResponse) Interface() protoreflect.ProtoMessage {
-	return (*ConsensusMsgParamsResponse)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_ConsensusMsgParamsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_ConsensusMsgParamsResponse) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgParamsResponse"))
-		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgParamsResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_ConsensusMsgParamsResponse) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgParamsResponse"))
-		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgParamsResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_ConsensusMsgParamsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgParamsResponse"))
-		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgParamsResponse does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_ConsensusMsgParamsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgParamsResponse"))
-		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgParamsResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_ConsensusMsgParamsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgParamsResponse"))
-		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgParamsResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_ConsensusMsgParamsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.ConsensusMsgParamsResponse"))
-		}
-		panic(fmt.Errorf("message cosmos.consensus.v1.ConsensusMsgParamsResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_ConsensusMsgParamsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.consensus.v1.ConsensusMsgParamsResponse", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_ConsensusMsgParamsResponse) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_ConsensusMsgParamsResponse) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_ConsensusMsgParamsResponse) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_ConsensusMsgParamsResponse) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*ConsensusMsgParamsResponse)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*ConsensusMsgParamsResponse)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*ConsensusMsgParamsResponse)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ConsensusMsgParamsResponse: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ConsensusMsgParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-// Since: cosmos-sdk 0.51
+// Since: cosmos-sdk 0.52
 
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
@@ -1293,27 +733,20 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// ConsensusMsgParams is the Msg/Params request type. This is a consensus message that is sent from cometbft.
-type ConsensusMsgParams struct {
+// CometInfo defines the structure of the x/consensus module's comet info.
+type CometInfo struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// params defines the x/consensus parameters to be passed from comet.
-	//
-	// NOTE: All parameters must be supplied.
-	Version   *v1.VersionParams   `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
-	Block     *v1.BlockParams     `protobuf:"bytes,2,opt,name=block,proto3" json:"block,omitempty"`
-	Evidence  *v1.EvidenceParams  `protobuf:"bytes,3,opt,name=evidence,proto3" json:"evidence,omitempty"`
-	Validator *v1.ValidatorParams `protobuf:"bytes,4,opt,name=validator,proto3" json:"validator,omitempty"`
-	// Deprecated: Do not use.
-	Abci      *v1.ABCIParams      `protobuf:"bytes,5,opt,name=abci,proto3" json:"abci,omitempty"`
-	Synchrony *v1.SynchronyParams `protobuf:"bytes,6,opt,name=synchrony,proto3" json:"synchrony,omitempty"`
-	Feature   *v1.FeatureParams   `protobuf:"bytes,7,opt,name=feature,proto3" json:"feature,omitempty"`
+	Evidence        []*v1.Misbehavior `protobuf:"bytes,1,rep,name=evidence,proto3" json:"evidence,omitempty"`
+	ValidatorsHash  []byte            `protobuf:"bytes,2,opt,name=validators_hash,json=validatorsHash,proto3" json:"validators_hash,omitempty"`
+	ProposerAddress []byte            `protobuf:"bytes,3,opt,name=proposer_address,json=proposerAddress,proto3" json:"proposer_address,omitempty"`
+	LastCommit      *v1.CommitInfo    `protobuf:"bytes,4,opt,name=last_commit,json=lastCommit,proto3" json:"last_commit,omitempty"`
 }
 
-func (x *ConsensusMsgParams) Reset() {
-	*x = ConsensusMsgParams{}
+func (x *CometInfo) Reset() {
+	*x = CometInfo{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_consensus_v1_consensus_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1321,93 +754,43 @@ func (x *ConsensusMsgParams) Reset() {
 	}
 }
 
-func (x *ConsensusMsgParams) String() string {
+func (x *CometInfo) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ConsensusMsgParams) ProtoMessage() {}
+func (*CometInfo) ProtoMessage() {}
 
-// Deprecated: Use ConsensusMsgParams.ProtoReflect.Descriptor instead.
-func (*ConsensusMsgParams) Descriptor() ([]byte, []int) {
+// Deprecated: Use CometInfo.ProtoReflect.Descriptor instead.
+func (*CometInfo) Descriptor() ([]byte, []int) {
 	return file_cosmos_consensus_v1_consensus_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *ConsensusMsgParams) GetVersion() *v1.VersionParams {
-	if x != nil {
-		return x.Version
-	}
-	return nil
-}
-
-func (x *ConsensusMsgParams) GetBlock() *v1.BlockParams {
-	if x != nil {
-		return x.Block
-	}
-	return nil
-}
-
-func (x *ConsensusMsgParams) GetEvidence() *v1.EvidenceParams {
+func (x *CometInfo) GetEvidence() []*v1.Misbehavior {
 	if x != nil {
 		return x.Evidence
 	}
 	return nil
 }
 
-func (x *ConsensusMsgParams) GetValidator() *v1.ValidatorParams {
+func (x *CometInfo) GetValidatorsHash() []byte {
 	if x != nil {
-		return x.Validator
+		return x.ValidatorsHash
 	}
 	return nil
 }
 
-// Deprecated: Do not use.
-func (x *ConsensusMsgParams) GetAbci() *v1.ABCIParams {
+func (x *CometInfo) GetProposerAddress() []byte {
 	if x != nil {
-		return x.Abci
+		return x.ProposerAddress
 	}
 	return nil
 }
 
-func (x *ConsensusMsgParams) GetSynchrony() *v1.SynchronyParams {
+func (x *CometInfo) GetLastCommit() *v1.CommitInfo {
 	if x != nil {
-		return x.Synchrony
+		return x.LastCommit
 	}
 	return nil
-}
-
-func (x *ConsensusMsgParams) GetFeature() *v1.FeatureParams {
-	if x != nil {
-		return x.Feature
-	}
-	return nil
-}
-
-// ConsensusMsgParamsResponse defines the response structure for executing a
-// ConsensusMsgParams message.
-type ConsensusMsgParamsResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-}
-
-func (x *ConsensusMsgParamsResponse) Reset() {
-	*x = ConsensusMsgParamsResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_consensus_v1_consensus_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ConsensusMsgParamsResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ConsensusMsgParamsResponse) ProtoMessage() {}
-
-// Deprecated: Use ConsensusMsgParamsResponse.ProtoReflect.Descriptor instead.
-func (*ConsensusMsgParamsResponse) Descriptor() ([]byte, []int) {
-	return file_cosmos_consensus_v1_consensus_proto_rawDescGZIP(), []int{1}
 }
 
 var File_cosmos_consensus_v1_consensus_proto protoreflect.FileDescriptor
@@ -1416,52 +799,36 @@ var file_cosmos_consensus_v1_consensus_proto_rawDesc = []byte{
 	0x0a, 0x23, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73,
 	0x75, 0x73, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x13, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f,
-	0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31, 0x1a, 0x1e, 0x63, 0x6f, 0x6d, 0x65,
-	0x74, 0x62, 0x66, 0x74, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2f, 0x76, 0x31, 0x2f, 0x70, 0x61,
-	0x72, 0x61, 0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xbc, 0x03, 0x0a, 0x12, 0x43,
-	0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x4d, 0x73, 0x67, 0x50, 0x61, 0x72, 0x61, 0x6d,
-	0x73, 0x12, 0x3a, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x20, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79,
-	0x70, 0x65, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x50, 0x61,
-	0x72, 0x61, 0x6d, 0x73, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x34, 0x0a,
-	0x05, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63,
-	0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x76, 0x31,
-	0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x05, 0x62, 0x6c,
-	0x6f, 0x63, 0x6b, 0x12, 0x3d, 0x0a, 0x08, 0x65, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x18,
-	0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74,
-	0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e,
-	0x63, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x08, 0x65, 0x76, 0x69, 0x64, 0x65, 0x6e,
-	0x63, 0x65, 0x12, 0x40, 0x0a, 0x09, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x18,
-	0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74,
-	0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x6f, 0x72, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x09, 0x76, 0x61, 0x6c, 0x69, 0x64,
-	0x61, 0x74, 0x6f, 0x72, 0x12, 0x35, 0x0a, 0x04, 0x61, 0x62, 0x63, 0x69, 0x18, 0x05, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79,
-	0x70, 0x65, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x41, 0x42, 0x43, 0x49, 0x50, 0x61, 0x72, 0x61, 0x6d,
-	0x73, 0x42, 0x02, 0x18, 0x01, 0x52, 0x04, 0x61, 0x62, 0x63, 0x69, 0x12, 0x40, 0x0a, 0x09, 0x73,
-	0x79, 0x6e, 0x63, 0x68, 0x72, 0x6f, 0x6e, 0x79, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22,
-	0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e,
-	0x76, 0x31, 0x2e, 0x53, 0x79, 0x6e, 0x63, 0x68, 0x72, 0x6f, 0x6e, 0x79, 0x50, 0x61, 0x72, 0x61,
-	0x6d, 0x73, 0x52, 0x09, 0x73, 0x79, 0x6e, 0x63, 0x68, 0x72, 0x6f, 0x6e, 0x79, 0x12, 0x3a, 0x0a,
-	0x07, 0x66, 0x65, 0x61, 0x74, 0x75, 0x72, 0x65, 0x18, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20,
-	0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e,
-	0x76, 0x31, 0x2e, 0x46, 0x65, 0x61, 0x74, 0x75, 0x72, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
-	0x52, 0x07, 0x66, 0x65, 0x61, 0x74, 0x75, 0x72, 0x65, 0x22, 0x1c, 0x0a, 0x1a, 0x43, 0x6f, 0x6e,
-	0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x4d, 0x73, 0x67, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0xc9, 0x01, 0x0a, 0x17, 0x63, 0x6f, 0x6d, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73,
-	0x2e, 0x76, 0x31, 0x42, 0x0e, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x50, 0x72,
-	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b,
-	0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63,
-	0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2f, 0x76, 0x31, 0x3b, 0x63, 0x6f, 0x6e, 0x73,
-	0x65, 0x6e, 0x73, 0x75, 0x73, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x43, 0x58, 0xaa, 0x02, 0x13,
-	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73,
-	0x2e, 0x56, 0x31, 0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x43, 0x6f, 0x6e,
-	0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x5c, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x5c, 0x56, 0x31, 0x5c,
-	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x3a,
-	0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31, 0x1a, 0x1c, 0x63, 0x6f, 0x6d, 0x65,
+	0x74, 0x62, 0x66, 0x74, 0x2f, 0x61, 0x62, 0x63, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x74, 0x79, 0x70,
+	0x65, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xd9, 0x01, 0x0a, 0x09, 0x43, 0x6f, 0x6d,
+	0x65, 0x74, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x39, 0x0a, 0x08, 0x65, 0x76, 0x69, 0x64, 0x65, 0x6e,
+	0x63, 0x65, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74,
+	0x62, 0x66, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x69, 0x73, 0x62,
+	0x65, 0x68, 0x61, 0x76, 0x69, 0x6f, 0x72, 0x52, 0x08, 0x65, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63,
+	0x65, 0x12, 0x27, 0x0a, 0x0f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x5f,
+	0x68, 0x61, 0x73, 0x68, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0e, 0x76, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x48, 0x61, 0x73, 0x68, 0x12, 0x29, 0x0a, 0x10, 0x70, 0x72,
+	0x6f, 0x70, 0x6f, 0x73, 0x65, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x0c, 0x52, 0x0f, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x72, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x3d, 0x0a, 0x0b, 0x6c, 0x61, 0x73, 0x74, 0x5f, 0x63, 0x6f,
+	0x6d, 0x6d, 0x69, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x6d,
+	0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f,
+	0x6d, 0x6d, 0x69, 0x74, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x0a, 0x6c, 0x61, 0x73, 0x74, 0x43, 0x6f,
+	0x6d, 0x6d, 0x69, 0x74, 0x42, 0xc9, 0x01, 0x0a, 0x17, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x76, 0x31,
+	0x42, 0x0e, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f,
+	0x50, 0x01, 0x5a, 0x30, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f,
+	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x6e, 0x73,
+	0x65, 0x6e, 0x73, 0x75, 0x73, 0x2f, 0x76, 0x31, 0x3b, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73,
+	0x75, 0x73, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x43, 0x58, 0xaa, 0x02, 0x13, 0x43, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x56, 0x31,
+	0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e,
+	0x73, 0x75, 0x73, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c,
+	0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42,
+	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x3a, 0x3a, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x3a, 0x3a, 0x56, 0x31,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1476,31 +843,20 @@ func file_cosmos_consensus_v1_consensus_proto_rawDescGZIP() []byte {
 	return file_cosmos_consensus_v1_consensus_proto_rawDescData
 }
 
-var file_cosmos_consensus_v1_consensus_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_cosmos_consensus_v1_consensus_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_cosmos_consensus_v1_consensus_proto_goTypes = []interface{}{
-	(*ConsensusMsgParams)(nil),         // 0: cosmos.consensus.v1.ConsensusMsgParams
-	(*ConsensusMsgParamsResponse)(nil), // 1: cosmos.consensus.v1.ConsensusMsgParamsResponse
-	(*v1.VersionParams)(nil),           // 2: cometbft.types.v1.VersionParams
-	(*v1.BlockParams)(nil),             // 3: cometbft.types.v1.BlockParams
-	(*v1.EvidenceParams)(nil),          // 4: cometbft.types.v1.EvidenceParams
-	(*v1.ValidatorParams)(nil),         // 5: cometbft.types.v1.ValidatorParams
-	(*v1.ABCIParams)(nil),              // 6: cometbft.types.v1.ABCIParams
-	(*v1.SynchronyParams)(nil),         // 7: cometbft.types.v1.SynchronyParams
-	(*v1.FeatureParams)(nil),           // 8: cometbft.types.v1.FeatureParams
+	(*CometInfo)(nil),      // 0: cosmos.consensus.v1.CometInfo
+	(*v1.Misbehavior)(nil), // 1: cometbft.abci.v1.Misbehavior
+	(*v1.CommitInfo)(nil),  // 2: cometbft.abci.v1.CommitInfo
 }
 var file_cosmos_consensus_v1_consensus_proto_depIdxs = []int32{
-	2, // 0: cosmos.consensus.v1.ConsensusMsgParams.version:type_name -> cometbft.types.v1.VersionParams
-	3, // 1: cosmos.consensus.v1.ConsensusMsgParams.block:type_name -> cometbft.types.v1.BlockParams
-	4, // 2: cosmos.consensus.v1.ConsensusMsgParams.evidence:type_name -> cometbft.types.v1.EvidenceParams
-	5, // 3: cosmos.consensus.v1.ConsensusMsgParams.validator:type_name -> cometbft.types.v1.ValidatorParams
-	6, // 4: cosmos.consensus.v1.ConsensusMsgParams.abci:type_name -> cometbft.types.v1.ABCIParams
-	7, // 5: cosmos.consensus.v1.ConsensusMsgParams.synchrony:type_name -> cometbft.types.v1.SynchronyParams
-	8, // 6: cosmos.consensus.v1.ConsensusMsgParams.feature:type_name -> cometbft.types.v1.FeatureParams
-	7, // [7:7] is the sub-list for method output_type
-	7, // [7:7] is the sub-list for method input_type
-	7, // [7:7] is the sub-list for extension type_name
-	7, // [7:7] is the sub-list for extension extendee
-	0, // [0:7] is the sub-list for field type_name
+	1, // 0: cosmos.consensus.v1.CometInfo.evidence:type_name -> cometbft.abci.v1.Misbehavior
+	2, // 1: cosmos.consensus.v1.CometInfo.last_commit:type_name -> cometbft.abci.v1.CommitInfo
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_consensus_v1_consensus_proto_init() }
@@ -1510,19 +866,7 @@ func file_cosmos_consensus_v1_consensus_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_cosmos_consensus_v1_consensus_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ConsensusMsgParams); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_cosmos_consensus_v1_consensus_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ConsensusMsgParamsResponse); i {
+			switch v := v.(*CometInfo); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1540,7 +884,7 @@ func file_cosmos_consensus_v1_consensus_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_consensus_v1_consensus_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

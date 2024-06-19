@@ -98,7 +98,7 @@ message MsgSubmitProposal {
 
   // proposal_type defines the type of proposal
   // When not set defaults to PROPOSAL_TYPE_STANDARD
-  ProposalType proposal_type = 8 [(cosmos_proto.field_added_in) = "x/gov v1.0.0"];
+  ProposalType proposal_type = 8 [(cosmos_proto.field_added_in) = "x/gov v0.2.0"];
 }
 
 // MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.

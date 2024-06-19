@@ -16,12 +16,12 @@ const (
 
 // DurationCodec encodes google.protobuf.Duration values with the following
 // encoding:
-// - nil is encoded as []byte{0xFF}
-// - seconds (which can range from -315,576,000,000 to +315,576,000,000) is encoded as 5 fixed bytes
-// - nanos (which can range from 0 to 999,999,999 or -999,999,999 to 0 if seconds is negative) are encoded such
-//   that 999,999,999 is always added to nanos. This ensures that the encoded nanos are always >= 0. Additionally,
-//   by adding 999,999,999 to both positive and negative nanos, we guarantee that the lexicographical order is
-//   preserved when comparing the encoded values of two Durations:
+//   - nil is encoded as []byte{0xFF}
+//   - seconds (which can range from -315,576,000,000 to +315,576,000,000) is encoded as 5 fixed bytes
+//   - nanos (which can range from 0 to 999,999,999 or -999,999,999 to 0 if seconds is negative) are encoded such
+//     that 999,999,999 is always added to nanos. This ensures that the encoded nanos are always >= 0. Additionally,
+//     by adding 999,999,999 to both positive and negative nanos, we guarantee that the lexicographical order is
+//     preserved when comparing the encoded values of two Durations:
 //   - []byte{0xBB, 0x9A, 0xC9, 0xFF} for zero nanos
 //   - 4 fixed bytes with the bit mask 0x80 applied to the first byte, with negative nanos scaled so that -999,999,999
 //     is encoded as 0 and -1 is encoded as 999,999,998

@@ -21,7 +21,7 @@ func ProvideInterfaceRegistry(
 	addressCodec address.Codec,
 	validatorAddressCodec address.ValidatorAddressCodec,
 	customGetSigners []signing.CustomGetSigner,
-) (types.InterfaceRegistry, registry.InterfaceRegistrar) {
+) (types.InterfaceRegistry, registry.InterfaceRegistrar, error) {
 	signingOptions := signing.Options{
 		AddressCodec:          addressCodec,
 		ValidatorAddressCodec: validatorAddressCodec,
@@ -35,14 +35,14 @@ func ProvideInterfaceRegistry(
 		SigningOptions: signingOptions,
 	})
 	if err != nil {
-		panic(err)
+		return nil, nil, fmt.Errorf("failed to create interface registry: %w", err)
 	}
 
 	if err := interfaceRegistry.SigningContext().Validate(); err != nil {
-		panic(err)
+		return nil, nil, fmt.Errorf("failed to validate signing context: %w", err)
 	}
 
-	return interfaceRegistry, interfaceRegistry
+	return interfaceRegistry, interfaceRegistry, nil
 }
 
 func ProvideLegacyAmino() legacy.Amino {

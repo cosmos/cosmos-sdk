@@ -14,11 +14,11 @@ import (
 // TODO: use context.Context after including the comet service
 func (k Keeper) BeginBlocker(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
-	header := k.HeaderService.HeaderInfo(ctx)
-	ci := k.cometService.CometInfo(ctx)
 
 	// determine the total power signing the block
 	var previousTotalPower int64
+	header := k.HeaderService.HeaderInfo(ctx)
+	ci := k.cometService.CometInfo(ctx)
 	for _, vote := range ci.LastCommit.Votes {
 		previousTotalPower += vote.Validator.Power
 	}

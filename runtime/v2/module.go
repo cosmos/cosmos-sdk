@@ -162,11 +162,10 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistrar)
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 
-	// TODO: this is a bit of a hack, but it's the only way to get the store keys into the app
-	// registerStoreKey could instead set this on StoreOptions directly
 	if inputs.StoreOptions != nil {
 		inputs.AppBuilder.storeOptions = inputs.StoreOptions
 		inputs.AppBuilder.storeOptions.StoreKeys = inputs.AppBuilder.app.storeKeys
+		inputs.AppBuilder.storeOptions.StoreKeys = append(inputs.AppBuilder.storeOptions.StoreKeys, "stf")
 	}
 }
 

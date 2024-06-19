@@ -387,10 +387,6 @@ func (s *Store) writeSC(cs *corestore.Changeset) error {
 	if err := s.stateCommitment.WriteChangeset(cs); err != nil {
 		return fmt.Errorf("failed to write batch to SC store: %w", err)
 	}
-	isEmpty, err := s.stateCommitment.IsEmpty()
-	if err != nil {
-		return fmt.Errorf("failed to check if SC store is empty: %w", err)
-	}
 
 	isEmpty, err := s.stateCommitment.IsEmpty()
 	if err != nil {

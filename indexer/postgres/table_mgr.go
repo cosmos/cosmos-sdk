@@ -20,6 +20,6 @@ func NewTableManager(moduleName string, typ indexerbase.ObjectType) *TableManage
 	}
 }
 
-func (t *TableManager) TableName() string {
-	return fmt.Sprintf("%s_%s", t.moduleName, t.typ.Name)
+func (tm *TableManager) TableName() string {
+	return fmt.Sprintf("%s_%s", tm.moduleName, tm.typ.Name)
 }

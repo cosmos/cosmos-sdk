@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -37,14 +38,13 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/consensus" // import consensus as a blank
 
-	// _ "github.com/cosmos/cosmos-sdk/testutil/x/staking" // import staking as a blank
+	slashingtypes "cosmossdk.io/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/testutil/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -333,12 +333,17 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 	cmtConfigs := make([]*cmtcfg.Config, cfg.NumValidators)
 
 	var (
-		genAccounts []authtypes.GenesisAccount
-		genBalances []banktypes.Balance
-		genFiles    []string
+		genAccounts  []authtypes.GenesisAccount
+		genBalances  []banktypes.Balance
+		genFiles     []string
+		addressesIPs []string
 	)
 
 	buf := bufio.NewReader(os.Stdin)
+
+	validators := make([]stakingtypes.Validator, 0, cfg.NumValidators)
+	delegations := make([]stakingtypes.Delegation, 0, cfg.NumValidators)
+	signingInfos := make([]slashingtypes.SigningInfo, 0, cfg.NumValidators)
 
 	// generate private keys, node IDs, and initial transactions
 	for i := 0; i < cfg.NumValidators; i++ {
@@ -409,7 +414,6 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		nodeDirName := fmt.Sprintf("node%d", i)
 		nodeDir := filepath.Join(network.BaseDir, nodeDirName, "simd")
 		clientDir := filepath.Join(network.BaseDir, nodeDirName, "simcli")
-		gentxsDir := filepath.Join(network.BaseDir, "gentxs")
 
 		err := os.MkdirAll(filepath.Join(nodeDir, "config"), 0o755)
 		if err != nil {
@@ -492,71 +496,13 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 
 		balances := sdk.NewCoins(
 			sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), cfg.AccountTokens),
-			sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+			sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens.Sub(cfg.BondedTokens)),
 		)
 
 		genFiles = append(genFiles, cmtCfg.GenesisFile())
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: balances.Sort()})
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
-		commission, err := sdkmath.LegacyNewDecFromStr("0.5")
-		if err != nil {
-			return nil, err
-		}
-
-		createValMsg, err := stakingtypes.NewMsgCreateValidator(
-			sdk.ValAddress(addr).String(),
-			valPubKeys[i],
-			sdk.NewCoin(cfg.BondDenom, cfg.BondedTokens),
-			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
-			stakingtypes.NewCommissionRates(commission, sdkmath.LegacyOneDec(), sdkmath.LegacyOneDec()),
-			sdkmath.OneInt(),
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		p2pURL, err := url.Parse(p2pAddr)
-		if err != nil {
-			return nil, err
-		}
-
-		memo := fmt.Sprintf("%s@%s:%s", nodeIDs[i], p2pURL.Hostname(), p2pURL.Port())
-		fee := sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), sdkmath.NewInt(0)))
-		txBuilder := cfg.TxConfig.NewTxBuilder()
-		err = txBuilder.SetMsgs(createValMsg)
-		if err != nil {
-			return nil, err
-		}
-		txBuilder.SetFeeAmount(fee)    // Arbitrary fee
-		txBuilder.SetGasLimit(1000000) // Need at least 100386
-		txBuilder.SetMemo(memo)
-
-		txFactory := tx.Factory{}
-		txFactory = txFactory.
-			WithChainID(cfg.ChainID).
-			WithMemo(memo).
-			WithKeybase(kb).
-			WithTxConfig(cfg.TxConfig)
-
-		err = tx.Sign(context.Background(), txFactory, nodeDirName, txBuilder, true)
-		if err != nil {
-			return nil, err
-		}
-
-		fmt.Println("Types..............", cfg.InterfaceRegistry.ListImplementations("cosmos.base.v1beta1.Msg"))
-
-		fmt.Println("Builder.............", txBuilder.GetTx())
-
-		txBz, err := cfg.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
-		if err != nil {
-			return nil, err
-		}
-		fmt.Println("After.................")
-		err = writeFile(fmt.Sprintf("%v.json", nodeDirName), gentxsDir, txBz)
-		if err != nil {
-			return nil, err
-		}
 		err = srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), appCfg)
 		if err != nil {
 			return nil, err
@@ -595,13 +541,54 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			address:    addr,
 			valAddress: sdk.ValAddress(addr),
 		}
+
+		consAddr := sdk.ConsAddress(pubKey.Address())
+		signInfo := slashingtypes.SigningInfo{
+			Address: consAddr.String(),
+			ValidatorSigningInfo: slashingtypes.ValidatorSigningInfo{
+				Address: consAddr.String(),
+			},
+		}
+		signingInfos = append(signingInfos, signInfo)
+
+		pkAny, err := codectypes.NewAnyWithValue(pubKey)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create new any: %w", err)
+		}
+		validator := stakingtypes.Validator{
+			OperatorAddress:   sdk.ValAddress(addr).String(),
+			ConsensusPubkey:   pkAny,
+			Jailed:            false,
+			Status:            stakingtypes.Bonded,
+			Tokens:            cfg.BondedTokens,
+			DelegatorShares:   cfg.BondedTokens.ToLegacyDec(),
+			Description:       stakingtypes.Description{},
+			UnbondingHeight:   int64(0),
+			UnbondingTime:     time.Unix(0, 0).UTC(),
+			Commission:        stakingtypes.NewCommission(sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec()),
+			MinSelfDelegation: sdkmath.ZeroInt(),
+		}
+		validators = append(validators, validator)
+		delegations = append(delegations, stakingtypes.NewDelegation(addr.String(), validator.OperatorAddress, cfg.BondedTokens.ToLegacyDec()))
+
+		// append node url to persistent peers
+		p2pURL, err := url.Parse(p2pAddr)
+		if err != nil {
+			return nil, err
+		}
+
+		nodeAddrIP := fmt.Sprintf("%s@%s:%s", nodeIDs[i], p2pURL.Hostname(), p2pURL.Port())
+		addressesIPs = append(addressesIPs, nodeAddrIP)
 	}
 
-	err := initGenFiles(cfg, genAccounts, genBalances, genFiles)
+	sort.Strings(addressesIPs)
+	persistentPeers := strings.Join(addressesIPs, ",")
+
+	err := initGenFiles(cfg, genAccounts, genBalances, genFiles, validators, delegations, signingInfos)
 	if err != nil {
 		return nil, err
 	}
-	err = collectGenFiles(cfg, network.Validators, cmtConfigs, network.BaseDir)
+	err = collectGenFiles(cfg, network.Validators, cmtConfigs, network.BaseDir, persistentPeers)
 	if err != nil {
 		return nil, err
 	}

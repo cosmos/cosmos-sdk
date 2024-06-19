@@ -18,8 +18,10 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
+	slashingtypes "cosmossdk.io/x/slashing/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -27,6 +29,8 @@ import (
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	stakingtypes "github.com/cosmos/cosmos-sdk/testutil/x/staking/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -135,7 +139,7 @@ func startInProcess(cfg Config, val *Validator) error {
 	return nil
 }
 
-func collectGenFiles(cfg Config, vals []*Validator, cmtConfigs []*cmtcfg.Config, outputDir string) error {
+func collectGenFiles(cfg Config, vals []*Validator, cmtConfigs []*cmtcfg.Config, outputDir, persistentPeers string) error {
 	genTime := cfg.GenesisTime
 	if genTime.IsZero() {
 		genTime = cmttime.Now()
@@ -145,12 +149,9 @@ func collectGenFiles(cfg Config, vals []*Validator, cmtConfigs []*cmtcfg.Config,
 		cmtCfg := cmtConfigs[i]
 
 		nodeDir := filepath.Join(outputDir, vals[i].moniker, "simd")
-		gentxsDir := filepath.Join(outputDir, "gentxs")
 
 		cmtCfg.Moniker = vals[i].moniker
 		cmtCfg.SetRoot(nodeDir)
-
-		initCfg := genutiltypes.NewInitConfig(cfg.ChainID, gentxsDir, vals[i].nodeID, vals[i].pubKey)
 
 		genFile := cmtCfg.GenesisFile()
 		appGenesis, err := genutiltypes.AppGenesisFromFile(genFile)
@@ -158,20 +159,14 @@ func collectGenFiles(cfg Config, vals []*Validator, cmtConfigs []*cmtcfg.Config,
 			return err
 		}
 
-		appState, err := genutil.GenAppStateFromConfig(cfg.Codec, cfg.TxConfig,
-			cmtCfg, initCfg, appGenesis, banktypes.GenesisBalancesIterator{}, genutiltypes.DefaultMessageValidator,
-			cfg.ValidatorAddressCodec, cfg.AddressCodec)
-		if err != nil {
-			return err
-		}
-
 		// overwrite each validator's genesis file to have a canonical genesis time
-		if err := genutil.ExportGenesisFileWithTime(genFile, cfg.ChainID, nil, appState, genTime); err != nil {
+		if err := genutil.ExportGenesisFileWithTime(genFile, cfg.ChainID, nil, appGenesis.AppState, genTime); err != nil {
 			return err
 		}
 
+		cmtCfg.P2P.PersistentPeers = persistentPeers
 		v := vals[i].GetViper()
-		err = genutiltest.TrackCometConfig(v, nodeDir)
+		err = genutiltest.WriteAndTrackCometConfig(v, nodeDir, cmtCfg)
 		if err != nil {
 			return err
 		}
@@ -180,7 +175,9 @@ func collectGenFiles(cfg Config, vals []*Validator, cmtConfigs []*cmtcfg.Config,
 	return nil
 }
 
-func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance, genFiles []string) error {
+func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
+	genFiles []string, validators []stakingtypes.Validator,
+	delegations []stakingtypes.Delegation, signInfos []slashingtypes.SigningInfo) error {
 	// set the accounts in the genesis state
 	var authGenState authtypes.GenesisState
 	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[testutil.AuthModuleName], &authGenState)
@@ -193,12 +190,47 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 	authGenState.Accounts = append(authGenState.Accounts, accounts...)
 	cfg.GenesisState[testutil.AuthModuleName] = cfg.Codec.MustMarshalJSON(&authGenState)
 
-	// set the balances in the genesis state
+	// set validators and delegations
+	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
+	cfg.GenesisState[stakingtypes.ModuleName] = cfg.Codec.MustMarshalJSON(stakingGenesis)
+
+	// get bank genesis state
 	var bankGenState banktypes.GenesisState
 	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[testutil.BankModuleName], &bankGenState)
 
+	totalSupply := bankGenState.Supply
+	for _, b := range genBalances {
+		// add genesis acc tokens to total supply
+		totalSupply = totalSupply.Add(b.Coins...)
+	}
+
+	totalBonded := math.NewInt(0)
+
+	for _, val := range validators {
+		// add delegated tokens to total supply
+		totalBonded = totalBonded.Add(val.Tokens)
+	}
+
+	totalSupply = totalSupply.Add(sdk.NewCoin(cfg.BondDenom, totalBonded))
+
+	// add bonded amount to bonded pool module account
+	genBalances = append(genBalances, banktypes.Balance{
+		Address: authtypes.NewModuleAddress(stakingtypes.BondedPoolName).String(),
+		Coins:   sdk.Coins{sdk.NewCoin(cfg.BondDenom, totalBonded)},
+	})
+
+	// set the balances in the genesis state
+
 	bankGenState.Balances = append(bankGenState.Balances, genBalances...)
+	bankGenState.Supply = totalSupply
 	cfg.GenesisState[testutil.BankModuleName] = cfg.Codec.MustMarshalJSON(&bankGenState)
+
+	// get and update slashing genesis state
+	var slashingGenState slashingtypes.GenesisState
+	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[testutil.SlashingModuleName], &slashingGenState)
+
+	slashingGenState.SigningInfos = signInfos
+	cfg.GenesisState[testutil.SlashingModuleName] = cfg.Codec.MustMarshalJSON(&slashingGenState)
 
 	appGenStateJSON, err := json.MarshalIndent(cfg.GenesisState, "", "  ")
 	if err != nil {

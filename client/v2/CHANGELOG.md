@@ -38,6 +38,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [v2.0.0-beta.2] - 2024-XX-XX
 
+### Features
+
+* [#19039](https://github.com/cosmos/cosmos-sdk/pull/19039) Add support for pubkey in autocli.
+
 ### Improvements
 
 * [#19646](https://github.com/cosmos/cosmos-sdk/pull/19646) Use keyring from command context.

@@ -12,7 +12,7 @@ require (
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/gogoproto v1.5.0
-	github.com/cosmos/iavl v1.1.4
+	github.com/cosmos/iavl v1.2.0
 	github.com/cosmos/ics23/go v0.10.0
 	github.com/golang/mock v1.6.0
 	github.com/hashicorp/go-hclog v1.6.3
@@ -23,7 +23,7 @@ require (
 	github.com/tidwall/btree v1.7.0
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
 	google.golang.org/grpc v1.64.0
-	google.golang.org/protobuf v1.34.1
+	google.golang.org/protobuf v1.34.2
 	gotest.tools/v3 v3.5.1
 )
 

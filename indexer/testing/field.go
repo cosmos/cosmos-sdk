@@ -53,10 +53,9 @@ func (f *BaseFixture) ValueForField(field indexerbase.Field) interface{} {
 	case indexerbase.Float64Kind:
 		return f.faker.Float64()
 	case indexerbase.Bech32AddressKind:
-		// TODO: select from some actually valid known bech32 address strings and bytes"
-		return "cosmos1abcdefgh1234567890"
+		return f.randBytes()
 	case indexerbase.EnumKind:
-		return f.faker.RandomString(testEnum.Values)
+		return f.faker.RandomString(field.EnumDefinition.Values)
 	case indexerbase.JSONKind:
 		// TODO: other types
 		bz, err := f.faker.JSON(nil)
@@ -95,7 +94,7 @@ func (f *BaseFixture) ValueForKeyFields(keyFields []indexerbase.Field) interface
 	return values
 }
 
-func (f *BaseFixture) ValueForValueField(valueFields []indexerbase.Field) interface{} {
+func (f *BaseFixture) ValueForValueFields(valueFields []indexerbase.Field) interface{} {
 	if len(valueFields) == 0 {
 		return nil
 	}

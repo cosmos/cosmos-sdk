@@ -102,10 +102,19 @@ func baseFieldValue(field indexerbase.Field) *rapid.Generator[any] {
 }
 
 func KeyFieldsValue(keyFields []indexerbase.Field) *rapid.Generator[any] {
+	if len(keyFields) == 0 {
+		return rapid.Just[any](nil)
+	}
+
+	if len(keyFields) == 1 {
+		return FieldValue(keyFields[0])
+	}
+
 	gens := make([]*rapid.Generator[any], len(keyFields))
 	for i, field := range keyFields {
 		gens[i] = FieldValue(field)
 	}
+
 	return rapid.Custom(func(t *rapid.T) any {
 		values := make([]any, len(keyFields))
 		for i, gen := range gens {
@@ -116,6 +125,10 @@ func KeyFieldsValue(keyFields []indexerbase.Field) *rapid.Generator[any] {
 }
 
 func ValueFieldsValue(valueFields []indexerbase.Field) *rapid.Generator[any] {
+	if len(valueFields) == 0 {
+		return rapid.Just[any](nil)
+	}
+
 	gens := make([]*rapid.Generator[any], len(valueFields))
 	for i, field := range valueFields {
 		gens[i] = FieldValue(field)
@@ -135,6 +148,9 @@ func ValueFieldsValue(valueFields []indexerbase.Field) *rapid.Generator[any] {
 
 			return indexerbase.MapValueUpdates(updates)
 		} else {
+			if len(valueFields) == 1 {
+				return gens[0].Draw(t, valueFields[0].Name)
+			}
 
 			values := make([]any, len(valueFields))
 			for i, gen := range gens {

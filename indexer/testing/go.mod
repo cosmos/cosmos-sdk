@@ -4,6 +4,7 @@ require (
 	cosmossdk.io/indexer/base v0.0.0
 	github.com/brianvoe/gofakeit/v7 v7.0.3
 	github.com/stretchr/testify v1.9.0
+	github.com/tidwall/btree v1.7.0
 	pgregory.net/rapid v1.1.0
 )
 

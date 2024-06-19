@@ -19,8 +19,6 @@ const flagHome = "home"
 
 func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, components ...ServerComponent[transaction.Tx]) (CLIConfig, error) {
 	if len(components) == 0 {
-		// TODO figure if we should define default components
-		// and if so it should be done here to avoid uncessary dependencies
 		return CLIConfig{}, errors.New("no components provided")
 	}
 
@@ -35,14 +33,16 @@ func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger 
 			l := GetLoggerFromCmd(cmd)
 
 			for _, startFlags := range flags {
-				v.BindPFlags(startFlags)
+				if err := v.BindPFlags(startFlags); err != nil {
+					return err
+				}
 			}
 
 			if err := v.BindPFlags(cmd.Flags()); err != nil {
 				return err
 			}
 
-			app := newApp(v, l)
+			app := newApp(l, v)
 			server.Init(app, v, l)
 
 			srvConfig := Config{StartBlock: true}

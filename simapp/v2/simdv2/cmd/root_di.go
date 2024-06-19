@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/client/v2/autocli"
-	clientv2keyring "cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/legacy"
@@ -22,9 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/std"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -40,17 +37,13 @@ func NewRootCmd() *cobra.Command {
 	if err := depinject.Inject(
 		depinject.Configs(
 			simapp.AppConfig(),
-			depinject.Supply(
-				log.NewNopLogger(),
-				simtestutil.NewAppOptionsWithFlagHome(""), // TODO: currently work with empty home
-			),
+			depinject.Supply(log.NewNopLogger()),
 			depinject.Provide(
 				codec.ProvideInterfaceRegistry,
 				codec.ProvideAddressCodec,
 				codec.ProvideProtoCodec,
 				codec.ProvideLegacyAmino,
 				ProvideClientContext,
-				ProvideKeyring,
 				ProvideV1ModuleManager,
 			),
 			depinject.Invoke(
@@ -98,11 +91,9 @@ func NewRootCmd() *cobra.Command {
 	initRootCmd(
 		rootCmd,
 		clientCtx.TxConfig,
-		clientCtx.InterfaceRegistry,
-		clientCtx.Codec,
 		moduleManager,
-		v1ModuleManager)
-
+		v1ModuleManager,
+	)
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
@@ -154,15 +145,6 @@ func ProvideClientContext(
 	clientCtx = clientCtx.WithTxConfig(txConfig)
 
 	return clientCtx
-}
-
-func ProvideKeyring(clientCtx client.Context, addressCodec address.Codec) (clientv2keyring.Keyring, error) {
-	kb, err := client.NewKeyringFromBackend(clientCtx, clientCtx.Keyring.Backend())
-	if err != nil {
-		return nil, err
-	}
-
-	return keyring.NewAutoCLIKeyring(kb)
 }
 
 func ProvideV1ModuleManager(modules map[string]appmodule.AppModule) *module.Manager {

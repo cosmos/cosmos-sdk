@@ -25,8 +25,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -51,8 +49,8 @@ func (t *temporaryTxDecoder) DecodeJSON(bz []byte) (transaction.Tx, error) {
 }
 
 func newApp(
-	viper *viper.Viper,
 	logger log.Logger,
+	viper *viper.Viper,
 ) serverv2.AppI[transaction.Tx] {
 	sa := simapp.NewSimApp(logger, viper)
 	return sa
@@ -61,8 +59,6 @@ func newApp(
 func initRootCmd(
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,
-	_ codectypes.InterfaceRegistry,
-	_ codec.Codec,
 	moduleManager *runtimev2.MM,
 	v1moduleManager *module.Manager,
 ) {
@@ -104,11 +100,25 @@ func initRootCmd(
 func genesisCommand(
 	txConfig client.TxConfig,
 	moduleManager *module.Manager,
-	appExport servertypes.AppExporter,
+	appExport func(logger log.Logger,
+		height int64,
+		forZeroHeight bool,
+		jailAllowedAddrs []string,
+		viper *viper.Viper,
+		modulesToExport []string,
+	) (servertypes.ExportedApp, error),
 	cmds ...*cobra.Command,
 ) *cobra.Command {
-	cmd := genutilcli.Commands(txConfig, moduleManager, appExport)
+	compatAppExporter := func(logger log.Logger, db dbm.DB, traceWriter io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOpts servertypes.AppOptions, modulesToExport []string) (servertypes.ExportedApp, error) {
+		viperAppOpts, ok := appOpts.(*viper.Viper)
+		if !ok {
+			return servertypes.ExportedApp{}, errors.New("appOpts is not viper.Viper")
+		}
 
+		return appExport(logger, height, forZeroHeight, jailAllowedAddrs, viperAppOpts, modulesToExport)
+	}
+
+	cmd := genutilcli.Commands(txConfig, moduleManager, compatAppExporter)
 	for _, subCmd := range cmds {
 		cmd.AddCommand(subCmd)
 	}
@@ -164,39 +174,30 @@ func txCommand() *cobra.Command {
 // appExport creates a new simapp (optionally at a given height) and exports state.
 func appExport(
 	logger log.Logger,
-	_ dbm.DB,
-	_ io.Writer,
 	height int64,
 	forZeroHeight bool,
 	jailAllowedAddrs []string,
-	appOpts servertypes.AppOptions,
+	viper *viper.Viper,
 	modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 	// this check is necessary as we use the flag in x/upgrade.
 	// we can exit more gracefully by checking the flag here.
-	homePath, ok := appOpts.Get(flags.FlagHome).(string)
+	homePath, ok := viper.Get(flags.FlagHome).(string)
 	if !ok || homePath == "" {
 		return servertypes.ExportedApp{}, errors.New("application home not set")
 	}
-
-	viperAppOpts, ok := appOpts.(*viper.Viper)
-	if !ok {
-		return servertypes.ExportedApp{}, errors.New("appOpts is not viper.Viper")
-	}
-
 	// overwrite the FlagInvCheckPeriod
-	viperAppOpts.Set(server.FlagInvCheckPeriod, 1)
-	appOpts = viperAppOpts
+	viper.Set(server.FlagInvCheckPeriod, 1)
 
 	var simApp *simapp.SimApp
 	if height != -1 {
-		simApp = simapp.NewSimApp(logger, appOpts)
+		simApp = simapp.NewSimApp(logger, viper)
 
 		if err := simApp.LoadHeight(uint64(height)); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		simApp = simapp.NewSimApp(logger, appOpts)
+		simApp = simapp.NewSimApp(logger, viper)
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)

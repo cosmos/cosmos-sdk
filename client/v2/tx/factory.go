@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"os"
 	"strings"
 
 	"github.com/cosmos/go-bip39"
@@ -28,16 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
-
-// TODO:
-// FactoryI
-type FactoryI interface {
-	BuildAuxSignerData()
-	BuildUnsignedTx(msg ...transaction.Msg) (TxBuilder, error) // TODO: should return a TxBuilder or a tx already?
-	SignUnsignedTx()
-	BuildSignedTx()
-	BuildSimulationTx()
-}
 
 // Factory defines a client transaction factory that facilitates generating and
 // signing an application-specific transaction.
@@ -74,17 +63,17 @@ func (f *Factory) Prepare() error {
 		return nil
 	}
 
-	if len(f.txParams.fromAddress) == 0 {
+	if len(f.txParams.address) == 0 {
 		return errors.New("missing 'from address' field")
 	}
 
-	if err := f.accountRetriever.EnsureExists(context.Background(), f.txParams.fromAddress); err != nil {
+	if err := f.accountRetriever.EnsureExists(context.Background(), f.txParams.address); err != nil {
 		return err
 	}
 
 	if f.txParams.accountNumber == 0 || f.txParams.sequence == 0 {
 		fc := f
-		num, seq, err := fc.accountRetriever.GetAccountNumberSequence(context.Background(), f.txParams.fromAddress)
+		num, seq, err := fc.accountRetriever.GetAccountNumberSequence(context.Background(), f.txParams.address)
 		if err != nil {
 			return err
 		}
@@ -217,8 +206,6 @@ func (f *Factory) UnsignedTxString(msgs ...transaction.Msg) (string, error) {
 		if err != nil {
 			return "", err
 		}
-
-		_, _ = fmt.Fprintf(os.Stderr, "%s\n", GasEstimateResponse{GasEstimate: f.Gas()})
 	}
 
 	builder, err := f.BuildUnsignedTx(msgs...)

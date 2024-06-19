@@ -23,4 +23,7 @@ type Keyring interface {
 
 	// KeyType returns the type of the key.
 	KeyType(name string) (uint, error)
+
+	// KeyInfo given a key name or address returns key name, key address and key type.
+	KeyInfo(nameOrAddr string) (string, string, uint, error)
 }

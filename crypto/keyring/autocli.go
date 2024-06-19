@@ -2,13 +2,11 @@ package keyring
 
 import (
 	"cosmossdk.io/core/address"
-	"errors"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	authsigning "cosmossdk.io/x/auth/signing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // autoCLIKeyring represents the keyring interface used by the AutoCLI.
@@ -28,6 +26,9 @@ type autoCLIKeyring interface {
 
 	// KeyType returns the type of the key.
 	KeyType(name string) (uint, error)
+
+	// KeyInfo given a key name or address returns key name, key address and key type.
+	KeyInfo(name string) (string, string, uint, error)
 }
 
 // NewAutoCLIKeyring wraps the SDK keyring and make it compatible with the AutoCLI keyring interfaces.
@@ -72,16 +73,6 @@ func (a *autoCLIKeyringAdapter) LookupAddressByKeyName(name string) ([]byte, err
 func (a *autoCLIKeyringAdapter) GetPubKey(name string) (cryptotypes.PubKey, error) {
 	record, err := a.Keyring.Key(name)
 	if err != nil {
-		if errors.Is(err, sdkerrors.ErrKeyNotFound) {
-			addr, err := a.ac.StringToBytes(name)
-			if err != nil {
-				return nil, err
-			}
-			record, err = a.Keyring.KeyByAddress(addr)
-			if err == nil {
-				return record.GetPubKey()
-			}
-		}
 		return nil, err
 	}
 
@@ -110,4 +101,32 @@ func (a *autoCLIKeyringAdapter) KeyType(name string) (uint, error) {
 	}
 
 	return uint(record.GetType()), nil
+}
+
+func (a *autoCLIKeyringAdapter) KeyInfo(nameOrAddr string) (string, string, uint, error) {
+	addr, err := a.ac.StringToBytes(nameOrAddr)
+	if err != nil {
+		// If conversion fails, it's likely a name, not an address
+		record, err := a.Keyring.Key(nameOrAddr)
+		if err != nil {
+			return "", "", 0, err
+		}
+		addr, err = record.GetAddress()
+		if err != nil {
+			return "", "", 0, err
+		}
+		addrStr, err := a.ac.BytesToString(addr)
+		if err != nil {
+			return "", "", 0, err
+		}
+		return record.Name, addrStr, uint(record.GetType()), nil
+	}
+
+	// If conversion succeeds, it's an address, get the key info by address
+	record, err := a.Keyring.KeyByAddress(addr)
+	if err != nil {
+		return "", "", 0, err
+	}
+
+	return record.Name, nameOrAddr, uint(record.GetType()), nil
 }

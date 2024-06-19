@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/core/address"
+
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
 
@@ -22,7 +24,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring) (params TxParameters, err error) {
+func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring, ac address.Codec) (params TxParameters, err error) {
 	timeout, _ := flags.GetUint64(flags2.FlagTimeoutHeight)
 	chainID, _ := flags.GetString(flags2.FlagChainID)
 	memo, _ := flags.GetString(flags2.FlagNote)
@@ -30,7 +32,26 @@ func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring) (params
 
 	accNumber, _ := flags.GetUint64(flags2.FlagAccountNumber)
 	sequence, _ := flags.GetUint64(flags2.FlagSequence)
-	fromName, _ := flags.GetString(flags2.FlagFrom)
+	from, _ := flags.GetString(flags2.FlagFrom)
+
+	var fromName, fromAddress string
+	var addr []byte
+	isDryRun, _ := flags.GetBool(flags2.FlagDryRun)
+	if !isDryRun {
+		fromName, fromAddress, _, err = keybase.KeyInfo(from)
+		if err != nil {
+			return params, err
+		}
+		addr, err = ac.StringToBytes(fromAddress)
+		if err != nil {
+			return params, err
+		}
+	} else {
+		addr, err = ac.StringToBytes(from)
+		if err != nil {
+			return params, err
+		}
+	}
 
 	gas, _ := flags.GetString(flags2.FlagGas)
 	gasSetting, _ := flags2.ParseGasSetting(gas)
@@ -44,16 +65,6 @@ func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring) (params
 	unordered, _ := flags.GetBool(flags2.FlagUnordered)
 	offline, _ := flags.GetBool(flags2.FlagOffline)
 	generateOnly, _ := flags.GetBool(flags2.FlagGenerateOnly)
-
-	var fromAddr []byte
-	dryRun, _ := flags.GetBool(flags2.FlagDryRun)
-	if !dryRun {
-		acc, err := keybase.GetPubKey(fromName)
-		if err != nil {
-			return params, err
-		}
-		fromAddr = acc.Address().Bytes()
-	}
 
 	gasConfig, err := NewGasConfig(gasSetting.Gas, gasAdjustment, gasPrices)
 	if err != nil {
@@ -73,7 +84,8 @@ func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring) (params
 			accountNumber: accNumber,
 			sequence:      sequence,
 			fromName:      fromName,
-			fromAddress:   fromAddr,
+			fromAddress:   fromAddress,
+			address:       addr,
 		},
 		GasConfig: gasConfig,
 		FeeConfig: feeConfig,
@@ -141,17 +153,11 @@ func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs .
 		return generateOnly(ctx, txf, msgs...)
 	}
 
-	// Simulate
-	dryRun, _ := flagSet.GetBool(flags2.FlagDryRun)
-	if dryRun {
-		simulation, _, err := txf.Simulate(msgs...)
-		if err != nil {
-			return err
-		}
-		return ctx.PrintProto(simulation)
+	isDryRun, _ := flagSet.GetBool(flags2.FlagDryRun)
+	if isDryRun {
+		return dryRun(ctx, txf, msgs...)
 	}
 
-	// Broadcast
 	return BroadcastTx(ctx, txf, msgs...)
 }
 
@@ -161,7 +167,7 @@ func newFactory(ctx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
 		return Factory{}, err
 	}
 
-	params, err := txParamsFromFlagSet(flagSet, k)
+	params, err := txParamsFromFlagSet(flagSet, k, ctx.AddressCodec)
 	if err != nil {
 		return Factory{}, err
 	}
@@ -225,6 +231,20 @@ func generateOnly(ctx client.Context, txf Factory, msgs ...transaction.Msg) erro
 	}
 
 	return ctx.PrintString(uTx)
+}
+
+func dryRun(ctx client.Context, txf Factory, msgs ...transaction.Msg) error {
+	err := txf.Prepare()
+	if err != nil {
+		return err
+	}
+
+	_, gas, err := txf.Simulate(msgs...)
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Fprintf(os.Stderr, "%s\n", GasEstimateResponse{GasEstimate: gas})
+	return err
 }
 
 // SimulateTx simulates a tx and returns the simulation response obtained by the query.

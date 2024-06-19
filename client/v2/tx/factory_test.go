@@ -27,7 +27,7 @@ func TestFactory_Prepare(t *testing.T) {
 			name: "no error",
 			txParams: TxParameters{
 				AccountConfig: AccountConfig{
-					fromAddress: []byte("hello"),
+					address: []byte("hello"),
 				},
 			},
 		},

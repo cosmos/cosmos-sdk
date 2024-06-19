@@ -50,7 +50,8 @@ type AccountConfig struct {
 	accountNumber uint64
 	sequence      uint64
 	fromName      string
-	fromAddress   []byte
+	fromAddress   string
+	address       []byte
 }
 
 // GasConfig defines the 'gas' related fields in a transaction.

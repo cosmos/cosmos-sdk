@@ -1,20 +1,25 @@
 package indexertesting
 
 import (
+	"encoding/json"
 	"fmt"
-	"math/rand"
+	rand "math/rand/v2"
 	"time"
+
+	"github.com/brianvoe/gofakeit/v7"
 
 	indexerbase "cosmossdk.io/indexer/base"
 )
 
 // ListenerTestFixture is a test fixture for testing listener implementations with a pre-defined data set
-// that attempts to cover all known types of tables and fields. The test data currently includes data for
+// that attempts to cover all known types of objects and fields. The test data currently includes data for
 // two fake modules over three blocks of data. The data set should remain relatively stable between releases
 // and generally only be changed when new features are added, so it should be suitable for regression or golden tests.
 type ListenerTestFixture struct {
+	rndSource    rand.Source
+	block        uint64
 	listener     indexerbase.Listener
-	allKeyModule testModule
+	allKeyModule *testModule
 }
 
 type ListenerTestFixtureOptions struct {
@@ -22,24 +27,47 @@ type ListenerTestFixtureOptions struct {
 }
 
 func NewListenerTestFixture(listener indexerbase.Listener, options ListenerTestFixtureOptions) *ListenerTestFixture {
+	src := rand.NewPCG(1, 2)
 	return &ListenerTestFixture{
-		listener: listener,
+		rndSource:    src,
+		listener:     listener,
+		allKeyModule: mkAllKeysModule(src),
 	}
 }
 
 func (f *ListenerTestFixture) Initialize() error {
+	if f.listener.InitializeModuleSchema != nil {
+		err := f.listener.InitializeModuleSchema(f.allKeyModule.name, f.allKeyModule.schema)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
-func (f *ListenerTestFixture) NextBlock() (bool, error) {
-	return false, nil
-}
+func (f *ListenerTestFixture) NextBlock() error {
+	// TODO:
+	//f.block++
+	//
+	//if f.listener.StartBlock != nil {
+	//	err := f.listener.StartBlock(f.block)
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
+	//
+	//err := f.allKeyModule.updater(f.rndSource, &f.listener)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//if f.listener.Commit != nil {
+	//	err := f.listener.Commit()
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
 
-func (f *ListenerTestFixture) block1() error {
-	return nil
-}
-
-func (f *ListenerTestFixture) block2() error {
 	return nil
 }
 
@@ -48,7 +76,7 @@ func (f *ListenerTestFixture) block3() error {
 }
 
 var moduleSchemaA = indexerbase.ModuleSchema{
-	Tables: []indexerbase.Table{
+	ObjectTypes: []indexerbase.ObjectType{
 		{
 			"Singleton",
 			[]indexerbase.Field{},
@@ -104,39 +132,61 @@ var moduleSchemaA = indexerbase.ModuleSchema{
 var maxKind = indexerbase.JSONKind
 
 type testModule struct {
-	schema  indexerbase.ModuleSchema
-	updater func(*rand.Rand, *indexerbase.Listener) error
+	name   string
+	schema indexerbase.ModuleSchema
+	state  map[string]*testObjectStore
 }
 
-func mkAllKeysModule() testModule {
-	schema := indexerbase.ModuleSchema{}
+type testObjectStore struct {
+	updater func(rand.Source, *indexerbase.Listener) error
+	state   map[string]kvPair
+}
+
+type kvPair struct {
+	key   any
+	value any
+	state valueState
+}
+
+type valueState int
+
+const (
+	valueStateNotInitialized valueState = iota
+	valueStateSet
+	valueStateDeleted
+)
+
+func mkAllKeysModule(src rand.Source) *testModule {
+	mod := &testModule{
+		name:  "all_keys",
+		state: map[string]*testObjectStore{},
+	}
 	for i := 1; i < int(maxKind); i++ {
-		schema.Tables = append(schema.Tables, mkTestTable(indexerbase.Kind(i)))
+		kind := indexerbase.Kind(i)
+		typ := mkTestObjectType(kind)
+		mod.schema.ObjectTypes = append(mod.schema.ObjectTypes, typ)
+		state := map[string]kvPair{}
+		// generate 5 keys
+		for j := 0; j < 5; j++ {
+			key1 := mkTestValue(src, kind, false)
+			key2 := mkTestValue(src, kind, true)
+			key := []any{key1, key2}
+			state[fmt.Sprintf("%v", key)] = kvPair{
+				key: key,
+			}
+		}
+
+		objStore := &testObjectStore{
+			state: state,
+		}
+		mod.state[typ.Name] = objStore
 	}
 
-	return testModule{
-		schema: schema,
-		updater: func(rnd *rand.Rand, listener *indexerbase.Listener) error {
-			if listener.OnEntityUpdate != nil {
-				for i := 1; i < int(maxKind); i++ {
-					// 0-10 updates per kind
-					n := int(rnd.Int31n(11))
-					for j := 0; j < n; j++ {
-						err := listener.OnEntityUpdate("all_keys", mkTestUpdate(rnd, indexerbase.Kind(i)))
-						if err != nil {
-							return err
-						}
-					}
-				}
-			}
-			return nil
-		},
-	}
+	return mod
 }
 
-func mkTestTable(kind indexerbase.Kind) indexerbase.Table {
+func mkTestObjectType(kind indexerbase.Kind) indexerbase.ObjectType {
 	field := indexerbase.Field{
-		Name: fmt.Sprintf("test_%s", kind),
 		Kind: kind,
 	}
 
@@ -159,22 +209,22 @@ func mkTestTable(kind indexerbase.Kind) indexerbase.Table {
 	val2Field.Name = "valNullable"
 	val2Field.Nullable = true
 
-	return indexerbase.Table{
-		Name:        "KindTable",
+	return indexerbase.ObjectType{
+		Name:        fmt.Sprintf("test_%v", kind),
 		KeyFields:   []indexerbase.Field{key1Field, key2Field},
 		ValueFields: []indexerbase.Field{val1Field, val2Field},
 	}
 }
 
-func mkTestUpdate(rnd *rand.Rand, kind indexerbase.Kind) indexerbase.EntityUpdate {
-	update := indexerbase.EntityUpdate{}
+func mkTestUpdate(rnd rand.Source, kind indexerbase.Kind) indexerbase.ObjectUpdate {
+	update := indexerbase.ObjectUpdate{}
 
 	k1 := mkTestValue(rnd, kind, false)
 	k2 := mkTestValue(rnd, kind, true)
 	update.Key = []any{k1, k2}
 
-	// delete 10% of the time
-	if rnd.Int31n(10) == 1 {
+	// delete 50% of the time
+	if rnd.Uint64()%2 == 0 {
 		update.Delete = true
 		return update
 	}
@@ -186,70 +236,75 @@ func mkTestUpdate(rnd *rand.Rand, kind indexerbase.Kind) indexerbase.EntityUpdat
 	return update
 }
 
-func mkTestValue(rnd *rand.Rand, kind indexerbase.Kind, nullable bool) any {
-	// if it's nullable, return nil 10% of the time
-	if nullable && rnd.Int31n(10) == 1 {
+func mkTestValue(src rand.Source, kind indexerbase.Kind, nullable bool) any {
+	faker := gofakeit.NewFaker(src, false)
+	// if it's nullable, return nil 50% of the time
+	if nullable && faker.Bool() {
 		return nil
 	}
 
 	switch kind {
 	case indexerbase.StringKind:
 		// TODO fmt.Stringer
-		return string(randBz(rnd))
+		return faker.LoremIpsumSentence(faker.IntN(100))
 	case indexerbase.BytesKind:
-		return randBz(rnd)
+		return randBytes(src)
 	case indexerbase.Int8Kind:
-		return int8(rnd.Int31n(256) - 128)
+		return faker.Int8()
 	case indexerbase.Int16Kind:
-		return int16(rnd.Int31n(65536) - 32768)
+		return faker.Int16()
 	case indexerbase.Uint8Kind:
-		return uint8(rnd.Int31n(256))
+		return faker.Uint16()
 	case indexerbase.Uint16Kind:
-		return uint16(rnd.Int31n(65536))
+		return faker.Uint16()
 	case indexerbase.Int32Kind:
-		return int32(rnd.Int63n(4294967296) - 2147483648)
+		return faker.Int32()
 	case indexerbase.Uint32Kind:
-		return uint32(rnd.Int63n(4294967296))
+		return faker.Uint32()
 	case indexerbase.Int64Kind:
-		return rnd.Int63()
+		return faker.Int64()
 	case indexerbase.Uint64Kind:
-		return rnd.Uint64()
+		return faker.Uint64()
 	case indexerbase.IntegerKind:
-		x := rnd.Int63()
+		x := faker.Int64()
 		return fmt.Sprintf("%d", x)
 	case indexerbase.DecimalKind:
-		x := rnd.Int63()
-		y := rnd.Int63n(1000000000)
+		x := faker.Int64()
+		y := faker.UintN(1000000)
 		return fmt.Sprintf("%d.%d", x, y)
 	case indexerbase.BoolKind:
-		return rnd.Int31n(2) == 1
+		return faker.Bool()
 	case indexerbase.TimeKind:
-		return time.Unix(rnd.Int63(), rnd.Int63n(1000000000))
+		return time.Unix(faker.Int64(), int64(faker.UintN(1000000000)))
 	case indexerbase.DurationKind:
-		return time.Duration(rnd.Int63())
+		return time.Duration(faker.Int64())
 	case indexerbase.Float32Kind:
-		return float32(rnd.Float64())
+		return faker.Float32()
 	case indexerbase.Float64Kind:
-		return rnd.Float64()
+		return faker.Float64()
 	case indexerbase.Bech32AddressKind:
-		panic("TODO: select from some actually valid known bech32 address strings and bytes")
+		// TODO: select from some actually valid known bech32 address strings and bytes"
+		return "cosmos1abcdefgh1234567890"
 	case indexerbase.EnumKind:
-		return testEnum.Values[rnd.Int31n(int32(len(testEnum.Values)))]
+		return faker.RandomString(testEnum.Values)
 	case indexerbase.JSONKind:
-		//// TODO other types
-		//return json.RawMessage(`{"seed": ` + strconv.FormatUint(seed, 10) + `}`)
-		panic("TODO")
+		// TODO: other types
+		bz, err := faker.JSON(nil)
+		if err != nil {
+			panic(err)
+		}
+		return json.RawMessage(bz)
 	default:
 	}
 	panic(fmt.Errorf("unexpected kind: %v", kind))
 }
 
-func randBz(rnd *rand.Rand) []byte {
-	n := rnd.Int31n(1024)
+func randBytes(src rand.Source) []byte {
+	rnd := rand.New(src)
+	n := rnd.IntN(1024)
 	bz := make([]byte, n)
-	_, err := rnd.Read(bz)
-	if err != nil {
-		panic(err)
+	for i := 0; i < n; i++ {
+		bz[i] = byte(rnd.Uint32N(256))
 	}
 	return bz
 }

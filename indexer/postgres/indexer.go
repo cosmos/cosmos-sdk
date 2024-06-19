@@ -2,119 +2,90 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
-	"os"
-
-	"github.com/jackc/pgx/v5"
 
 	indexerbase "cosmossdk.io/indexer/base"
 )
 
-type indexer struct {
-	ctx    context.Context
-	conn   *pgx.Conn
-	tables map[string]*tableInfo
+type Indexer struct {
+	ctx     context.Context
+	db      *sql.DB
+	tx      *sql.Tx
+	modules map[string]*moduleManager
 }
 
-type Options struct{}
+type moduleManager struct {
+	moduleName string
+	schema     indexerbase.ModuleSchema
+	tables     map[string]*TableManager
+}
 
-func NewIndexer(ctx context.Context, opts Options) (indexerbase.LogicalListener, error) {
-	// get env var DATABASE_URL
-	dbUrl, ok := os.LookupEnv("DATABASE_URL")
-	if !ok {
-		panic("DATABASE_URL not set")
+type Options struct {
+	Driver        string
+	ConnectionURL string
+}
+
+func NewIndexer(ctx context.Context, opts Options) (*Indexer, error) {
+	if opts.Driver == "" {
+		opts.Driver = "pgx"
 	}
 
-	conn, err := pgx.Connect(ctx, dbUrl)
+	if opts.ConnectionURL == "" {
+		return nil, fmt.Errorf("connection URL not set")
+	}
+
+	db, err := sql.Open(opts.Driver, opts.ConnectionURL)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to open database: %w", err)
+	}
+	go func() {
+		<-ctx.Done()
+		err := db.Close()
+		if err != nil {
+			panic(fmt.Sprintf("failed to close database: %v", err))
+		}
+	}()
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to start transaction: %w", err)
 	}
 
-	i := &indexer{
-		ctx:    ctx,
-		conn:   conn,
-		tables: map[string]*tableInfo{},
-	}
-	return i.logicalListener()
-}
-
-func (i *indexer) logicalListener() (indexerbase.LogicalListener, error) {
-	return indexerbase.LogicalListener{
-		PhysicalListener: indexerbase.PhysicalListener{
-			StartBlock: i.startBlock,
-			Commit:     i.commit,
-		},
-		EnsureSetup:    i.ensureSetup,
-		OnEntityUpdate: i.onEntityUpdate,
+	return &Indexer{
+		ctx:     ctx,
+		db:      db,
+		tx:      tx,
+		modules: map[string]*moduleManager{},
 	}, nil
 }
 
-func (i *indexer) ensureSetup(data indexerbase.LogicalSetupData) error {
-	for _, table := range data.Schema.Tables {
-		createTable, err := i.createTableStatement(table)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("%s\n", createTable)
-		_, err = i.conn.Exec(context.Background(), createTable)
-		if err != nil {
-			return err
-		}
-
-		_, err = i.conn.Exec(context.Background(), fmt.Sprintf("GRANT SELECT ON %s TO public;", table.Name))
-		if err != nil {
-			return err
-		}
-
-		i.tables[table.Name] = &tableInfo{table: table}
+func (i *Indexer) Listener() indexerbase.Listener {
+	return indexerbase.Listener{
+		InitializeModuleSchema: i.initModuleSchema,
 	}
-	return nil
 }
 
-type tableInfo struct {
-	table indexerbase.Table
-}
-
-func (i *indexer) startBlock(u uint64) error {
-	return nil
-}
-
-//	func (i indexer) IndexBlockHeader(data *indexerbase.BlockHeaderData) error {
-//		//TODO implement me
-//		panic("implement me")
-//	}
-//
-//	func (i indexer) IndexTx(data *indexerbase.TxData) error {
-//		//TODO implement me
-//		panic("implement me")
-//	}
-//
-//	func (i indexer) IndexEvent(data *indexerbase.EventData) error {
-//		//TODO implement me
-//		panic("implement me")
-//	}
-
-func (i *indexer) onEntityUpdate(update indexerbase.EntityUpdate) error {
-	ti, ok := i.tables[update.TableName]
-	if !ok {
-		return fmt.Errorf("table %s not found", update.TableName)
+func (i *Indexer) initModuleSchema(moduleName string, schema indexerbase.ModuleSchema) error {
+	_, ok := i.modules[moduleName]
+	if ok {
+		return fmt.Errorf("module %s already initialized", moduleName)
 	}
 
-	err := indexerbase.ValidateKey(ti.table.KeyColumns, update.Key)
-	if err != nil {
-		fmt.Printf("error validating key: %s\n", err)
+	mm := &moduleManager{
+		moduleName: moduleName,
+		schema:     schema,
+		tables:     map[string]*TableManager{},
 	}
 
-	if !update.Delete {
-		err = indexerbase.ValidateValue(ti.table.ValueColumns, update.Value)
+	for _, typ := range schema.ObjectTypes {
+		tm := NewTableManager(moduleName, typ)
+		mm.tables[typ.Name] = tm
+		err := tm.CreateTable(i.ctx, i.tx)
 		if err != nil {
-			fmt.Printf("error validating value: %s\n", err)
+			return fmt.Errorf("failed to create table for %s in module %s: %w", typ.Name, moduleName, err)
 		}
 	}
 
-	return ti.exec(i.ctx, i.conn, update)
-}
-
-func (i *indexer) commit() error {
 	return nil
 }

@@ -57,23 +57,28 @@ func (k Querier) Validators(ctx context.Context, req *types.QueryValidatorsReque
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	var vals []types.ValidatorInfo
+	var validatorList []types.Validator
+	var validatorInfoList []types.ValidatorInfo
 	for _, val := range validators {
-		valInfo := types.ValidatorInfo{
-			Validator: *val,
-		}
+		validatorList = append(validatorList, *val)
+		valInfo := types.ValidatorInfo{}
 
 		cpk, ok := val.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
-		// Best-effort way
 		if ok {
-			consAddr, _ := k.consensusAddressCodec.BytesToString(cpk.Address())
-			valInfo.ConsensusAddress = consAddr
+			consAddr, err := k.consensusAddressCodec.BytesToString(cpk.Address())
+			if err == nil {
+				valInfo.ConsensusAddress = consAddr
+			}
 		}
 
-		vals = append(vals, valInfo)
+		validatorInfoList = append(validatorInfoList, valInfo)
 	}
 
-	return &types.QueryValidatorsResponse{Validators: vals, Pagination: pageRes}, nil
+	return &types.QueryValidatorsResponse{
+		Validators:    validatorList,
+		ValidatorInfo: validatorInfoList,
+		Pagination:    pageRes,
+	}, nil
 }
 
 // Validator queries validator info for given validator address

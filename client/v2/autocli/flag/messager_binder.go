@@ -15,7 +15,9 @@ import (
 type SignerInfo struct {
 	PositionalArgIndex int
 	IsFlag             bool
-	FieldName          string
+
+	FieldName string
+	FlagName  string // flag name (always set if IsFlag is true)
 }
 
 // MessageBinder binds multiple flags in a flag set to a protobuf message.

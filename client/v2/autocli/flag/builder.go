@@ -194,7 +194,7 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 	}
 
 	// validate flag options
-	for name := range commandOptions.FlagOptions {
+	for name, opts := range commandOptions.FlagOptions {
 		if fields.ByName(protoreflect.Name(name)) == nil {
 			return nil, fmt.Errorf("can't find field %s on %s specified as a flag", name, messageType.Descriptor().FullName())
 		}
@@ -204,13 +204,14 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 			messageBinder.SignerInfo = SignerInfo{
 				FieldName: name,
 				IsFlag:    true,
+				FlagName:  opts.Name,
 			}
 		}
 	}
 
 	// if signer has not been specified as positional arguments,
 	// add it as `--from` flag (instead of --field-name flags)
-	if signerFieldName != "" && messageBinder.SignerInfo.FieldName == "" {
+	if signerFieldName != "" && messageBinder.SignerInfo == (SignerInfo{}) {
 		if commandOptions.FlagOptions == nil {
 			commandOptions.FlagOptions = make(map[string]*autocliv1.FlagOptions)
 		}
@@ -222,8 +223,9 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 		}
 
 		messageBinder.SignerInfo = SignerInfo{
-			FieldName: flags.FlagFrom,
+			FieldName: signerFieldName,
 			IsFlag:    true,
+			FlagName:  flags.FlagFrom,
 		}
 	}
 
@@ -235,7 +237,7 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 
 		// skips positional args and signer field if already set
 		if isPositional[fieldName] ||
-			(fieldName == signerFieldName && messageBinder.SignerInfo.FieldName == flags.FlagFrom) {
+			(fieldName == signerFieldName && messageBinder.SignerInfo.FlagName == flags.FlagFrom) {
 			continue
 		}
 

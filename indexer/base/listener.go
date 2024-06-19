@@ -8,7 +8,7 @@ import (
 // It is valid for any of the methods to be nil, in which case the listener will not be called for that event.
 // Listeners should understand the guarantees that are provided by the source they are listening to and
 // understand which methods will or will not be called. For instance, most blockchains will not do logical
-// decoding of data out of the box, so the InitializeModuleSchema and OnEntityUpdate methods will not be called.
+// decoding of data out of the box, so the InitializeModuleSchema and OnObjectUpdate methods will not be called.
 // These methods will only be called when listening logical decoding is setup.
 type Listener struct {
 	// Initialize is called when the listener is initialized before any other methods are called.
@@ -33,7 +33,7 @@ type Listener struct {
 	// OnKVPair is called when a key-value has been written to the store for a given module.
 	OnKVPair func(moduleName string, key, value []byte, delete bool) error
 
-	// Commit is called when state is commited, usually at the end of a block. Any
+	// Commit is called when state is committed, usually at the end of a block. Any
 	// indexers should commit their data when this is called and return an error if
 	// they are unable to commit.
 	Commit func() error
@@ -41,27 +41,19 @@ type Listener struct {
 	// InitializeModuleSchema should be called whenever the blockchain process starts OR whenever
 	// logical decoding of a module is initiated. An indexer listening to this event
 	// should ensure that they have performed whatever initialization steps (such as database
-	// migrations) required to receive OnEntityUpdate events for the given module. If the
+	// migrations) required to receive OnObjectUpdate events for the given module. If the
 	// indexer's schema is incompatible with the module's on-chain schema, the listener should return
 	// an error.
 	InitializeModuleSchema func(module string, schema ModuleSchema) error
 
-	// OnEntityUpdate is called whenever an entity is updated in the module. This is only called
+	// OnObjectUpdate is called whenever an object is updated in a module's state. This is only called
 	// when logical data is available. It should be assumed that the same data in raw form
 	// is also passed to OnKVPair.
-	OnEntityUpdate func(module string, update EntityUpdate) error
-
-	// CommitCatchupSync is called after all existing entities for a module have been passed to
-	// OnEntityUpdate during a catch-up sync which has been initiated by return -1 for lastBlock
-	// in InitializeModuleSchema. The listener should commit all the data that has been received at
-	// this point and also save the block number as the last block that has been processed so
-	// that processing of regular block data can resume from this point in the future.
-	CommitCatchupSync func(module string, block uint64) error
+	OnObjectUpdate func(module string, update ObjectUpdate) error
 }
 
 // InitializationData represents initialization data that is passed to a listener.
 type InitializationData struct {
-
 	// HasEventAlignedWrites indicates that the blockchain data source will emit KV-pair events
 	// in an order aligned with transaction, message and event callbacks. If this is true
 	// then indexers can assume that KV-pair data is associated with these specific transactions, messages

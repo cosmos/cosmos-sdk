@@ -13,17 +13,9 @@ import (
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	"github.com/spf13/viper"
 )
 
 const flagHome = "home"
-
-type App[T transaction.Tx] struct {
-	Application Application[T]
-	Store       any
-}
-
-type AppCreator[T transaction.Tx] func(*viper.Viper, log.Logger) App[T]
 
 func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, components ...ServerComponent[transaction.Tx]) (CLIConfig, error) {
 	if len(components) == 0 {

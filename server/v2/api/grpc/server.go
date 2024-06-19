@@ -25,9 +25,9 @@ const serverName = "grpc-server"
 
 type GRPCServer struct {
 	logger log.Logger
+	config *Config
 
 	grpcSrv *grpc.Server
-	config  *Config
 }
 
 type GRPCService interface {
@@ -35,13 +35,13 @@ type GRPCService interface {
 	RegisterGRPCServer(gogogrpc.Server)
 }
 
-func NewGRPCServer() GRPCServer {
+func New() GRPCServer {
 	return GRPCServer{}
 }
 
 // Init returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server.
-func (g GRPCServer) Init(appI serverv2.App[transaction.Tx], v *viper.Viper, logger log.Logger) (serverv2.ServerComponent[transaction.Tx], error) {
+func (g GRPCServer) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) (serverv2.ServerComponent[transaction.Tx], error) {
 	cfg := DefaultConfig()
 	if v != nil {
 		if err := v.Sub(serverName).Unmarshal(&cfg); err != nil {
@@ -50,12 +50,12 @@ func (g GRPCServer) Init(appI serverv2.App[transaction.Tx], v *viper.Viper, logg
 	}
 
 	grpcSrv := grpc.NewServer(
-		grpc.ForceServerCodec(newProtoCodec(appI.Application.InterfaceRegistry()).GRPCCodec()),
+		grpc.ForceServerCodec(newProtoCodec(appI.InterfaceRegistry()).GRPCCodec()),
 		grpc.MaxSendMsgSize(cfg.MaxSendMsgSize),
 		grpc.MaxRecvMsgSize(cfg.MaxRecvMsgSize),
 	)
 
-	// app.RegisterGRPCServer(grpcSrv)
+	// appI.RegisterGRPCServer(grpcSrv)
 
 	// Reflection allows external clients to see what services and methods
 	// the gRPC server exposes.

@@ -247,3 +247,7 @@ func (app *SimApp) TxConfig() client.TxConfig {
 func (app *SimApp) GetConsensusAuthority() string {
 	return app.ConsensusParamsKeeper.GetAuthority()
 }
+
+func (app *SimApp) GetStore() any {
+	return app.App.GetStore()
+}

@@ -1,14 +1,19 @@
 package serverv2
 
 import (
-	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/server/v2/appmanager"
+	"github.com/spf13/viper"
+
 	coreapp "cosmossdk.io/core/app"
+	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
+	"cosmossdk.io/server/v2/appmanager"
 )
 
-type Application[T transaction.Tx] interface {
+type AppCreator[T transaction.Tx] func(*viper.Viper, log.Logger) AppI[T]
+
+type AppI[T transaction.Tx] interface {
 	GetAppManager() *appmanager.AppManager[T]
 	GetConsensusAuthority() string
 	InterfaceRegistry() coreapp.InterfaceRegistry
-	// GetStore() any
+	GetStore() any
 }

@@ -7,21 +7,16 @@ import (
 	"testing"
 	"time"
 
-	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	coreapp "cosmossdk.io/core/app"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	grpc "cosmossdk.io/server/v2/api/grpc"
 )
-
-type mockGRPCService struct {
-	grpc.GRPCService
-}
-
-func (m *mockGRPCService) RegisterGRPCServer(gogogrpc.Server) {}
 
 type mockInterfaceRegistry struct{}
 
@@ -33,6 +28,14 @@ func (*mockInterfaceRegistry) ListImplementations(ifaceTypeURL string) []string 
 	panic("not implemented")
 }
 func (*mockInterfaceRegistry) ListAllInterfaces() []string { panic("not implemented") }
+
+type mockApp[T transaction.Tx] struct {
+	serverv2.AppI[T]
+}
+
+func (*mockApp[T]) InterfaceRegistry() coreapp.InterfaceRegistry {
+	return &mockInterfaceRegistry{}
+}
 
 // TODO split this test into multiple tests
 // test read config
@@ -55,7 +58,7 @@ func TestServer(t *testing.T) {
 	}
 
 	logger := log.NewLogger(os.Stdout)
-	grpcServer, err := grpc.New(logger, v, &mockInterfaceRegistry{})
+	grpcServer, err := grpc.New().Init(&mockApp[transaction.Tx]{}, v, logger)
 	if err != nil {
 		t.Log(err)
 		t.Fail()

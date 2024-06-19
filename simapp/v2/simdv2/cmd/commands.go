@@ -53,9 +53,9 @@ func (t *temporaryTxDecoder) DecodeJSON(bz []byte) (transaction.Tx, error) {
 func newApp(
 	viper *viper.Viper,
 	logger log.Logger,
-) serverv2.App[transaction.Tx] {
+) serverv2.AppI[transaction.Tx] {
 	sa := simapp.NewSimApp(logger, viper)
-	return serverv2.App[transaction.Tx]{Application: sa, Store: sa.GetStore()}
+	return sa
 }
 
 func initRootCmd(
@@ -83,7 +83,7 @@ func initRootCmd(
 		newApp,
 		log.NewNopLogger(),
 		cometbft.New(&temporaryTxDecoder{txConfig}),
-		grpc.NewGRPCServer(),
+		grpc.New(),
 	)
 	if err != nil {
 		panic(fmt.Sprintf("Add cmd, %v", err))

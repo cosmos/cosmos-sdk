@@ -52,8 +52,7 @@ type CometBFTServer[T transaction.Tx] struct {
 	App    *Consensus[T]
 	logger log.Logger
 
-	config    Config
-	cleanupFn func()
+	config Config
 }
 
 // App is an interface that represents an application in the CometBFT server.
@@ -71,11 +70,10 @@ func New[T transaction.Tx](txCodec transaction.Codec[T]) *CometBFTServer[T] {
 	}
 }
 
-func (s *CometBFTServer[T]) Init(appI serverv2.App[T], v *viper.Viper, logger log.Logger) (serverv2.ServerComponent[T], error) {
-	app := appI.Application
-	store := appI.Store.(types.Store)
+func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) (serverv2.ServerComponent[T], error) {
+	store := appI.GetStore().(types.Store)
 
-	cfg := Config{CmtConfig: serverv2.GetConfigFromViper(v), ConsensusAuthority: app.GetConsensusAuthority()}
+	cfg := Config{CmtConfig: serverv2.GetConfigFromViper(v), ConsensusAuthority: appI.GetConsensusAuthority()}
 	logger = logger.With("module", "cometbft-server")
 
 	// create noop mempool
@@ -83,7 +81,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.App[T], v *viper.Viper, logger lo
 
 	// create consensus
 	// txCodec should be in server from New()
-	consensus := NewConsensus[T](app.GetAppManager(), mempool, store, cfg, s.App.txCodec, logger)
+	consensus := NewConsensus[T](appI.GetAppManager(), mempool, store, cfg, s.App.txCodec, logger)
 
 	consensus.SetPrepareProposalHandler(handlers.NoOpPrepareProposal[T]())
 	consensus.SetProcessProposalHandler(handlers.NoOpProcessProposal[T]())
@@ -153,20 +151,14 @@ func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 		return err
 	}
 
-	s.cleanupFn = func() {
-		if s.Node != nil && s.Node.IsRunning() {
-			_ = s.Node.Stop()
-		}
-	}
-
 	return s.Node.Start()
 }
 
-func (s *CometBFTServer[T]) Stop(_ context.Context) error {
-	defer s.cleanupFn()
-	if s.Node != nil {
+func (s *CometBFTServer[T]) Stop(context.Context) error {
+	if s.Node != nil && s.Node.IsRunning() {
 		return s.Node.Stop()
 	}
+
 	return nil
 }
 

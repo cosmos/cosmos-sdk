@@ -73,7 +73,7 @@ func New[T transaction.Tx](txCodec transaction.Codec[T]) *CometBFTServer[T] {
 func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) (serverv2.ServerComponent[T], error) {
 	store := appI.GetStore().(types.Store)
 
-	cfg := Config{CmtConfig: serverv2.GetConfigFromViper(v), ConsensusAuthority: appI.GetConsensusAuthority()}
+	cfg := Config{CmtConfig: GetConfigFromViper(v), ConsensusAuthority: appI.GetConsensusAuthority()}
 	logger = logger.With("module", "cometbft-server")
 
 	// create noop mempool
@@ -117,7 +117,7 @@ func (s *CometBFTServer[T]) Name() string {
 
 func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 	viper := ctx.Value(corectx.ViperContextKey{}).(*viper.Viper)
-	cometConfig := serverv2.GetConfigFromViper(viper)
+	cometConfig := GetConfigFromViper(viper)
 
 	wrappedLogger := cometlog.CometLoggerWrapper{Logger: s.logger}
 	if s.config.Standalone {

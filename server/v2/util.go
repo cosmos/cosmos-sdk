@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 
-	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -16,7 +15,6 @@ import (
 // If the context has not been set, set the given context as the default.
 func SetCmdServerContext(cmd *cobra.Command, viper *viper.Viper, logger log.Logger) error {
 	var cmdCtx context.Context
-
 	if cmd.Context() == nil {
 		cmdCtx = context.Background()
 	} else {
@@ -36,16 +34,6 @@ func GetViperFromCmd(cmd *cobra.Command) *viper.Viper {
 		return viper.New()
 	}
 	return v
-}
-
-func GetConfigFromViper(v *viper.Viper) *cmtcfg.Config {
-	conf := cmtcfg.DefaultConfig()
-	err := v.Unmarshal(conf)
-	rootDir := v.GetString("home")
-	if err != nil {
-		return cmtcfg.DefaultConfig().SetRoot(rootDir)
-	}
-	return conf.SetRoot(rootDir)
 }
 
 func GetLoggerFromCmd(cmd *cobra.Command) log.Logger {

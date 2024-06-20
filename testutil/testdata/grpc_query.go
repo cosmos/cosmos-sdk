@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/gogoproto/types/any/test"
-
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/cosmos/gogoproto/types/any/test"
 	"google.golang.org/grpc"
 	"gotest.tools/v3/assert"
 

@@ -177,7 +177,8 @@ func collectGenFiles(cfg Config, vals []*Validator, cmtConfigs []*cmtcfg.Config,
 
 func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
 	genFiles []string, validators []stakingtypes.Validator,
-	delegations []stakingtypes.Delegation, signInfos []slashingtypes.SigningInfo) error {
+	delegations []stakingtypes.Delegation, signInfos []slashingtypes.SigningInfo,
+) error {
 	// set the accounts in the genesis state
 	var authGenState authtypes.GenesisState
 	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[testutil.AuthModuleName], &authGenState)

@@ -119,6 +119,10 @@ func TestKind_ValidateValue(t *testing.T) {
 		{IntegerKind, "00", true}, // leading zeros are allowed
 		{IntegerKind, "001", true},
 		{IntegerKind, "-01", true},
+		// 100 digits
+		{IntegerKind, "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", true},
+		// more than 100 digits
+		{IntegerKind, "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", false},
 		{IntegerKind, "", false},
 		{IntegerKind, "abc", false},
 		{IntegerKind, "abc100", false},
@@ -141,6 +145,17 @@ func TestKind_ValidateValue(t *testing.T) {
 		{DecimalKind, "-1.0e+4", true},
 		{DecimalKind, "-1.0E4", true},
 		{DecimalKind, "1E-9", true},
+		{DecimalKind, "1E-99", true},
+		{DecimalKind, "1E+9", true},
+		{DecimalKind, "1E+99", true},
+		// 50 digits before and after the decimal point
+		{DecimalKind, "10000000000000000000000000000000000000000000000000.10000000000000000000000000000000000000000000000001", true},
+		// too many digits before the decimal point
+		{DecimalKind, "10000000000000000000000000000000000000000000000000000000000000000000000000", false},
+		// too many digits after the decimal point
+		{DecimalKind, "1.0000000000000000000000000000000000000000000000000000000000000000000000001", false},
+		// exponent too big
+		{DecimalKind, "1E-999", false},
 		{DecimalKind, "", false},
 		{DecimalKind, "abc", false},
 		{DecimalKind, "abc", false},

@@ -7,6 +7,7 @@ require (
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.9.0
 	pgregory.net/rapid v1.1.0
+	cosmossdk.io/indexer/base v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -29,4 +30,5 @@ require (
 replace (
 	cosmossdk.io/core => ../core
 	cosmossdk.io/core/testing => ../core/testing
+	cosmossdk.io/indexer/base => ../indexer/base
 )

@@ -7,6 +7,7 @@ import (
 	"math"
 
 	"cosmossdk.io/collections/codec"
+	indexerbase "cosmossdk.io/indexer/base"
 )
 
 var (
@@ -90,6 +91,16 @@ type Collection interface {
 	ValueCodec() codec.UntypedValueCodec
 
 	genesisHandler
+
+	logicalDecoder() logicalDecoder
+
+	isSecondaryIndex() bool
+}
+
+type logicalDecoder struct {
+	objectType   indexerbase.ObjectType
+	keyDecoder   func([]byte) (any, error)
+	valueDecoder func([]byte) (any, error)
 }
 
 // Prefix defines a segregation bytes namespace for specific collections objects.
@@ -157,3 +168,5 @@ func (c collectionImpl[K, V]) exportGenesis(ctx context.Context, w io.Writer) er
 }
 
 func (c collectionImpl[K, V]) defaultGenesis(w io.Writer) error { return c.m.defaultGenesis(w) }
+
+func (c collectionImpl[K, V]) isSecondaryIndex() bool { return c.m.isSecondaryIndex }

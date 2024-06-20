@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/gas"
 	"cosmossdk.io/server/v2/stf/mock"
@@ -16,12 +16,7 @@ import (
 
 func TestBranchService(t *testing.T) {
 	s := &STF[mock.Tx]{
-		handleMsg: func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
-			kvSet(t, ctx, "exec")
-			return nil, nil
-		},
-		handleQuery: nil,
-		doPreBlock:  func(ctx context.Context, txs []mock.Tx) error { return nil },
+		doPreBlock: func(ctx context.Context, txs []mock.Tx) error { return nil },
 		doBeginBlock: func(ctx context.Context) error {
 			kvSet(t, ctx, "begin-block")
 			return nil
@@ -43,6 +38,10 @@ func TestBranchService(t *testing.T) {
 		makeGasMeter:        gas.DefaultGasMeter,
 		makeGasMeteredState: gas.DefaultWrapWithGasMeter,
 	}
+	addMsgHandlerToSTF(t, s, func(ctx context.Context, msg *wrapperspb.BoolValue) (*wrapperspb.BoolValue, error) {
+		kvSet(t, ctx, "exec")
+		return nil, nil
+	})
 
 	makeContext := func() *executionContext {
 		state := mock.DB()

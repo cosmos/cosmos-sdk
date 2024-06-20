@@ -58,7 +58,7 @@ func init() {
 	}
 }
 
-func getCommitStore(t *testing.B, db corestore.KVStoreWithBatch) *commitment.CommitStore {
+func getCommitStore(b *testing.B, db corestore.KVStoreWithBatch) *commitment.CommitStore {
 	multiTrees := make(map[string]commitment.Tree)
 	for _, storeKey := range storeKeys {
 		prefixDB := dbm.NewPrefixDB(db, []byte(storeKey))
@@ -66,7 +66,7 @@ func getCommitStore(t *testing.B, db corestore.KVStoreWithBatch) *commitment.Com
 	}
 
 	sc, err := commitment.NewCommitStore(multiTrees, db, log.NewNopLogger())
-	require.NoError(t, err)
+	require.NoError(b, err)
 
 	return sc
 }

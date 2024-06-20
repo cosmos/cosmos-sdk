@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"github.com/golang/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -165,7 +165,7 @@ func (r Router) InvokeTyped(ctx context.Context, req, resp protoiface.MessageV1)
 }
 
 func merge(src protoiface.MessageV1, dst protoiface.MessageV1) {
-	proto.Merge(src, dst)
+	reflect.Indirect(reflect.ValueOf(dst)).Set(reflect.Indirect(reflect.ValueOf(src)))
 }
 
 func (r Router) InvokeUntyped(ctx context.Context, req protoiface.MessageV1) (res protoiface.MessageV1, err error) {

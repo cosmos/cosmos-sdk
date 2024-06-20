@@ -156,8 +156,10 @@ func Test20685(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			for i := 0; i < 10; i++ { // run a couple of times to show this is not random behaviour
 				t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+					const accountNumberSeqAfterInit = uint64(8)
 					// setup chain, accounts, and 2 example TX for sender and other sender
 					s, _, _, _, _, origSeq, txsBytes := setupSUT(t, senderAddr, receiverAddr, senderKey, otherSenderKey)
+					require.Equal(t, accountNumberSeqAfterInit, must(s.AccountKeeper.AccountNumber.Peek(s.App.NewContext(true))))
 
 					// when
 					spec.do(t, s.App, txsBytes)
@@ -166,7 +168,7 @@ func Test20685(t *testing.T) {
 					assert.Equal(t, spec.expSeq[0], s.AccountKeeper.GetAccount(ctx, senderAddr).GetSequence())      // seq not bumped as no TX delivered
 					assert.Equal(t, spec.expSeq[1], s.AccountKeeper.GetAccount(ctx, otherSenderAddr).GetSequence()) // seq not bumped as no TX delivered
 					assert.Nil(t, s.AccountKeeper.GetAccount(ctx, receiverAddr))
-
+					require.Equal(t, accountNumberSeqAfterInit, must(s.AccountKeeper.AccountNumber.Peek(s.App.NewContext(true))))
 					// and when committed
 					nextBlock(t, s.App)
 
@@ -175,6 +177,7 @@ func Test20685(t *testing.T) {
 					assert.Equal(t, origSeq[0], s.AccountKeeper.GetAccount(ctx, senderAddr).GetSequence())      // seq not bumped as no TX delivered
 					assert.Equal(t, origSeq[1], s.AccountKeeper.GetAccount(ctx, otherSenderAddr).GetSequence()) // seq not bumped as no TX delivered
 					assert.Nil(t, s.AccountKeeper.GetAccount(ctx, receiverAddr))
+					require.Equal(t, accountNumberSeqAfterInit, must(s.AccountKeeper.AccountNumber.Peek(s.App.NewContext(true))))
 				})
 			}
 		})
@@ -286,4 +289,11 @@ type suite struct {
 	App           *runtime.App
 	AccountKeeper authkeeper.AccountKeeper
 	BankKeeper    bankkeeper.Keeper
+}
+
+func must[T any](r T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return r
 }

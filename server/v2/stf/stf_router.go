@@ -160,7 +160,7 @@ func (r Router) InvokeTyped(ctx context.Context, req, resp protoiface.MessageV1)
 	if err != nil {
 		return err
 	}
-	merge(resp, handlerResp)
+	merge(handlerResp, resp)
 	return nil
 }
 

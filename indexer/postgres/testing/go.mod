@@ -35,4 +35,6 @@ replace cosmossdk.io/indexer/testing => ../../testing
 
 replace cosmossdk.io/indexer/postgres => ..
 
+replace cosmossdk.io/schema => ../../../schema
+
 go 1.22

@@ -88,19 +88,19 @@ func (m mockAccountRetriever) GetAccountWithHeight(_ context.Context, address []
 	return mockAccount{addr: address}, 0, nil
 }
 
-func (m mockAccountRetriever) EnsureExists(_ context.Context, address []byte) error {
+func (m mockAccountRetriever) EnsureExists(_ context.Context, _ []byte) error {
 	return nil
 }
 
-func (m mockAccountRetriever) GetAccountNumberSequence(_ context.Context, address []byte) (accNum, accSeq uint64, err error) {
+func (m mockAccountRetriever) GetAccountNumberSequence(_ context.Context, _ []byte) (accNum, accSeq uint64, err error) {
 	return accNum, accSeq, nil
 }
 
 type mockClientConn struct{}
 
-func (m mockClientConn) Invoke(_ context.Context, _ string, args, reply interface{}, opts ...grpc.CallOption) error {
+func (m mockClientConn) Invoke(_ context.Context, _ string, _, reply interface{}, _ ...grpc.CallOption) error {
 	simResponse := apitx.SimulateResponse{
-		GasInfo: &abciv1beta1.GasInfo{ // TODO: sdk dependency
+		GasInfo: &abciv1beta1.GasInfo{
 			GasWanted: 10000,
 			GasUsed:   7500,
 		},

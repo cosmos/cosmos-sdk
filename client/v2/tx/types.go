@@ -86,7 +86,7 @@ type FeeConfig struct {
 }
 
 func NewFeeConfig(fees, feePayer, feeGranter string) (FeeConfig, error) {
-	parsedFees, err := coins.ParseCoinsNormalized(fees) // TODO: do it here to avoid sdk dependency
+	parsedFees, err := coins.ParseCoinsNormalized(fees)
 	if err != nil {
 		return FeeConfig{}, err
 	}

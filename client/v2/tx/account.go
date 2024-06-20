@@ -3,7 +3,6 @@ package tx
 import (
 	"context"
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"strconv"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
@@ -17,6 +16,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TODO: move to internal
@@ -96,7 +96,6 @@ func (a accountRetriever) GetAccountWithHeight(ctx context.Context, addr []byte)
 	}
 
 	return acc, int64(nBlockHeight), nil
-
 }
 
 func (a accountRetriever) EnsureExists(ctx context.Context, addr []byte) error {

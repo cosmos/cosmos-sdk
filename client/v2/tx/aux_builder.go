@@ -172,7 +172,6 @@ func (b *AuxTxBuilder) SetNonCriticalExtensionOptions(extOpts ...*gogoany.Any) {
 	b.auxSignerData.SignDoc.BodyBytes = nil
 }
 
-// TODO: better place
 func validateSignDoc(sd *apitx.SignDocDirectAux) error {
 	if len(sd.BodyBytes) == 0 {
 		return errors.New("body bytes is empty")
@@ -183,7 +182,6 @@ func validateSignDoc(sd *apitx.SignDocDirectAux) error {
 	return nil
 }
 
-// TODO: better place
 func validateAuxSignerData(a *apitx.AuxSignerData) error {
 	if a.Address == "" {
 		return errors.New("address cannot be empty: invalid request")
@@ -223,7 +221,7 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 	}
 
 	sd.BodyBytes = bodyBz
-	if err = validateSignDoc(sd); err != nil { // TODO
+	if err = validateSignDoc(sd); err != nil {
 		return nil, err
 	}
 

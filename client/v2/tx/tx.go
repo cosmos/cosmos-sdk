@@ -7,21 +7,19 @@ import (
 	"fmt"
 	"os"
 
-	"cosmossdk.io/core/address"
-
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
 
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	keyring2 "cosmossdk.io/client/v2/autocli/keyring"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/transaction"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	flags2 "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring, ac address.Codec) (params TxParameters, err error) {
@@ -123,14 +121,12 @@ func validate(flags *pflag.FlagSet) error {
 
 // GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
-// TODO: remove the client.Context
 func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.Msg) error {
 	if err := validate(flagSet); err != nil {
 		return err
 	}
 
-	err := validateMessages(msgs...)
-	if err != nil {
+	if err := validateMessages(msgs...); err != nil {
 		return err
 	}
 
@@ -151,7 +147,7 @@ func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs .
 
 	isDryRun, _ := flagSet.GetBool(flags2.FlagDryRun)
 	if isDryRun {
-		return dryRun(ctx, txf, msgs...)
+		return dryRun(txf, msgs...)
 	}
 
 	return BroadcastTx(ctx, txf, msgs...)
@@ -172,6 +168,7 @@ func newFactory(ctx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
 		AddressCodec:          ctx.AddressCodec,
 		Cdc:                   ctx.Codec,
 		ValidatorAddressCodec: ctx.ValidatorAddressCodec,
+		// EnablesSignModes:      ctx.TxConfig.SignModeHandler().SupportedModes(),
 	})
 	if err != nil {
 		return Factory{}, err
@@ -212,7 +209,7 @@ func generateAuxSignerData(ctx client.Context, txf Factory, msgs ...transaction.
 		return err
 	}
 
-	return ctx.PrintString(auxSignerData.String())
+	return ctx.PrintProto(auxSignerData)
 }
 
 func generateOnly(ctx client.Context, txf Factory, msgs ...transaction.Msg) error {
@@ -229,7 +226,11 @@ func generateOnly(ctx client.Context, txf Factory, msgs ...transaction.Msg) erro
 	return ctx.PrintString(uTx)
 }
 
-func dryRun(ctx client.Context, txf Factory, msgs ...transaction.Msg) error {
+func dryRun(txf Factory, msgs ...transaction.Msg) error {
+	if txf.txParams.offline {
+		return errors.New("dry-run: cannot use offline mode")
+	}
+
 	err := txf.Prepare()
 	if err != nil {
 		return err
@@ -239,6 +240,7 @@ func dryRun(ctx client.Context, txf Factory, msgs ...transaction.Msg) error {
 	if err != nil {
 		return err
 	}
+
 	_, err = fmt.Fprintf(os.Stderr, "%s\n", GasEstimateResponse{GasEstimate: gas})
 	return err
 }
@@ -332,17 +334,13 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...transaction.Msg)
 // makeAuxSignerData generates an AuxSignerData from the client inputs.
 func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...transaction.Msg) (*apitx.AuxSignerData, error) {
 	b := NewAuxTxBuilder()
-	fromAddress, name, _, err := client.GetFromFields(clientCtx, clientCtx.Keyring, clientCtx.From)
-	if err != nil {
-		return nil, err
-	}
 
-	b.SetAddress(fromAddress.String())
+	b.SetAddress(f.txParams.fromAddress)
 	if f.txParams.offline {
 		b.SetAccountNumber(f.AccountNumber())
 		b.SetSequence(f.Sequence())
 	} else {
-		accNum, seq, err := f.accountRetriever.GetAccountNumberSequence(context.Background(), fromAddress)
+		accNum, seq, err := f.accountRetriever.GetAccountNumberSequence(context.Background(), f.txParams.address)
 		if err != nil {
 			return nil, err
 		}
@@ -350,7 +348,7 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...transaction.
 		b.SetSequence(seq)
 	}
 
-	err = b.SetMsgs(msgs...)
+	err := b.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -360,7 +358,7 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...transaction.
 		return nil, err
 	}
 
-	pubKey, err := f.keybase.GetPubKey(name)
+	pubKey, err := f.keybase.GetPubKey(f.txParams.fromName)
 	if err != nil {
 		return nil, err
 	}
@@ -376,31 +374,13 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...transaction.
 		return nil, err
 	}
 
-	sig, err := f.keybase.Sign(name, signBz, f.SignMode())
+	sig, err := f.keybase.Sign(f.txParams.fromName, signBz, f.SignMode())
 	if err != nil {
 		return nil, err
 	}
 	b.SetSignature(sig)
 
 	return b.GetAuxSignerData()
-}
-
-// checkMultipleSigners checks that there can be maximum one DIRECT signer in
-// a tx.
-func checkMultipleSigners(tx Tx) error {
-	directSigners := 0
-	sigsV2, err := tx.GetSignatures()
-	if err != nil {
-		return err
-	}
-	for _, sig := range sigsV2 {
-		directSigners += countDirectSigners(sig.Data)
-		if directSigners > 1 {
-			return sdkerrors.ErrNotSupported.Wrap("txs signed with CLI can have maximum 1 DIRECT signer")
-		}
-	}
-
-	return nil
 }
 
 // countDirectSigners counts the number of DIRECT signers in a signature data.

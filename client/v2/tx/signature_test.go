@@ -69,7 +69,7 @@ func TestSignatureDataToModeInfoAndSig(t *testing.T) {
 
 func TestModeInfoAndSigToSignatureData(t *testing.T) {
 	type args struct {
-		modeInfo *apitx.ModeInfo
+		modeInfo func() *apitx.ModeInfo
 		sig      []byte
 	}
 	tests := []struct {
@@ -78,11 +78,27 @@ func TestModeInfoAndSigToSignatureData(t *testing.T) {
 		want    SignatureData
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "to SingleSignatureData",
+			args: args{
+				modeInfo: func() *apitx.ModeInfo {
+					return &apitx.ModeInfo{
+						Sum: &apitx.ModeInfo_Single_{
+							Single: &apitx.ModeInfo_Single{Mode: apisigning.SignMode_SIGN_MODE_DIRECT},
+						},
+					}
+				},
+				sig: []byte("signature"),
+			},
+			want: &SingleSignatureData{
+				SignMode:  apisigning.SignMode_SIGN_MODE_DIRECT,
+				Signature: []byte("signature"),
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ModeInfoAndSigToSignatureData(tt.args.modeInfo, tt.args.sig)
+			got, err := ModeInfoAndSigToSignatureData(tt.args.modeInfo(), tt.args.sig)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ModeInfoAndSigToSignatureData() error = %v, wantErr %v", err, tt.wantErr)
 				return

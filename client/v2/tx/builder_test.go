@@ -516,7 +516,7 @@ func Test_txBuilder_SetSignatures(t *testing.T) {
 			},
 		},
 		{
-			name: "set empty single signature",
+			name: "set single signature",
 			signatures: func() []Signature {
 				return []Signature{{
 					PubKey: secp256k1.GenPrivKey().PubKey(),

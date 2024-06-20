@@ -413,15 +413,6 @@ func (f *Factory) getSignBytesAdapter(ctx context.Context, signerData signing.Si
 	return f.txConfig.SignModeHandler().GetSignBytes(ctx, f.SignMode(), signerData, *txData)
 }
 
-func validateMemo(memo string) error {
-	// Prevent simple inclusion of a valid mnemonic in the memo field
-	if memo != "" && bip39.IsMnemonicValid(strings.ToLower(memo)) {
-		return errors.New("cannot provide a valid mnemonic seed in the memo field")
-	}
-
-	return nil
-}
-
 // WithGas returns a copy of the Factory with an updated gas value.
 func (f *Factory) WithGas(gas uint64) {
 	f.txParams.gas = gas
@@ -506,4 +497,31 @@ func (f *Factory) getSimSignatureData(pk cryptotypes.PubKey) SignatureData {
 	return &MultiSignatureData{
 		Signatures: multiSignatureData,
 	}
+}
+
+// checkMultipleSigners checks that there can be maximum one DIRECT signer in
+// a tx.
+func checkMultipleSigners(tx Tx) error {
+	directSigners := 0
+	sigsV2, err := tx.GetSignatures()
+	if err != nil {
+		return err
+	}
+	for _, sig := range sigsV2 {
+		directSigners += countDirectSigners(sig.Data)
+		if directSigners > 1 {
+			return errors.New("txs signed with CLI can have maximum 1 DIRECT signer")
+		}
+	}
+
+	return nil
+}
+
+func validateMemo(memo string) error {
+	// Prevent simple inclusion of a valid mnemonic in the memo field
+	if memo != "" && bip39.IsMnemonicValid(strings.ToLower(memo)) {
+		return errors.New("cannot provide a valid mnemonic seed in the memo field")
+	}
+
+	return nil
 }

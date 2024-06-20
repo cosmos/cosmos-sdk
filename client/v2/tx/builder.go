@@ -20,7 +20,7 @@ var (
 )
 
 type ExtendedTxBuilder interface {
-	SetExtensionOptions(...*gogoany.Any) // TODO: sdk.Any?
+	SetExtensionOptions(...*gogoany.Any)
 }
 
 // TxBuilder defines an interface which an application-defined concrete transaction
@@ -150,8 +150,6 @@ func (b *txBuilder) getFee() (fee *apitx.Fee, err error) {
 			return nil, err
 		}
 	}
-
-	// TODO: what if not fee payer nor granted are empty?
 
 	fee = &apitx.Fee{
 		Amount:   b.fees,

@@ -34,7 +34,7 @@ func Async(listener Listener, bufferSize int, commitChan chan<- error) Listener 
 						}
 					} else {
 						// process the packet
-						err = listener.ApplyPacket(packet)
+						err = listener.SendPacket(packet)
 						// if it's a commit
 						if _, ok := packet.(Commit); ok {
 							commitChan <- err
@@ -53,4 +53,32 @@ func Async(listener Listener, bufferSize int, commitChan chan<- error) Listener 
 	}
 
 	return res
+}
+
+func AsyncMultiplex(listeners []Listener, bufferSize int) Listener {
+	asyncListeners := make([]Listener, len(listeners))
+	commitChans := make([]chan error, len(listeners))
+	for i, l := range listeners {
+		commitChan := make(chan error)
+		commitChans[i] = commitChan
+		asyncListeners[i] = Async(l, bufferSize, commitChan)
+	}
+	mux := Multiplex(asyncListeners...)
+	muxCommit := mux.Commit
+	mux.Commit = func() error {
+		err := muxCommit()
+		if err != nil {
+			return err
+		}
+
+		for _, commitChan := range commitChans {
+			err := <-commitChan
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	return mux
 }

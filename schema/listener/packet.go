@@ -4,7 +4,7 @@ type Packet interface {
 	apply(*Listener) error
 }
 
-func (l Listener) ApplyPacket(p Packet) error {
+func (l Listener) SendPacket(p Packet) error {
 	return p.apply(&l)
 }
 

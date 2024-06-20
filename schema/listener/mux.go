@@ -8,7 +8,7 @@ import (
 
 // Multiplex returns a listener that multiplexes the given listeners and only
 // registers a listener if a non-nil function is present in at least one of the listeners.
-func Multiplex(listeners []Listener) Listener {
+func Multiplex(listeners ...Listener) Listener {
 	mux := Listener{}
 
 	for _, l := range listeners {

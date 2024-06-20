@@ -17,32 +17,33 @@ type StoreComponent struct {
 }
 
 func New() serverv2.ServerComponent[transaction.Tx] {
-	return StoreComponent{}
+	return &StoreComponent{}
 }
 
-func (s StoreComponent) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) (serverv2.ServerComponent[transaction.Tx], error) {
+func (s *StoreComponent) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) (serverv2.ServerComponent[transaction.Tx], error) {
 	cfg := DefaultConfig()
 	if v != nil {
 		if err := v.Sub(s.Name()).Unmarshal(&cfg); err != nil {
-			return StoreComponent{}, fmt.Errorf("failed to unmarshal config: %w", err)
+			return &StoreComponent{}, fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
-	return StoreComponent{config: cfg}, nil
+	s.config = cfg
+	return s, nil
 }
 
-func (s StoreComponent) Name() string {
+func (s *StoreComponent) Name() string {
 	return "store"
 }
 
-func (s StoreComponent) Start(ctx context.Context) error {
+func (s *StoreComponent) Start(ctx context.Context) error {
 	return nil
 }
 
-func (s StoreComponent) Stop(ctx context.Context) error {
+func (s *StoreComponent) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (s StoreComponent) CLICommands(appCreator serverv2.AppCreator[transaction.Tx]) serverv2.CLIConfig {
+func (s *StoreComponent) CLICommands(appCreator serverv2.AppCreator[transaction.Tx]) serverv2.CLIConfig {
 	return serverv2.CLIConfig{
 		Commands: []*cobra.Command{
 			s.PrunesCmd(appCreator),
@@ -50,7 +51,7 @@ func (s StoreComponent) CLICommands(appCreator serverv2.AppCreator[transaction.T
 	}
 }
 
-func (g StoreComponent) Config() any {
+func (g *StoreComponent) Config() any {
 	if g.config == nil || g.config == (&Config{}) {
 		return DefaultConfig()
 	}

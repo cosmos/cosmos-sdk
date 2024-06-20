@@ -59,3 +59,17 @@ func (o *ObjectCollection) ApplyUpdate(update schema.ObjectUpdate) error {
 func (o *ObjectCollection) UpdateGen() *rapid.Generator[schema.ObjectUpdate] {
 	return o.updateGen
 }
+
+func (o *ObjectCollection) ScanState(f func(schema.ObjectUpdate) bool) {
+	o.objects.Scan(func(_ string, v schema.ObjectUpdate) bool {
+		return f(v)
+	})
+}
+
+func (o *ObjectCollection) GetObject(key any) (schema.ObjectUpdate, bool) {
+	return o.objects.Get(fmt.Sprintf("%v", key))
+}
+
+func (o *ObjectCollection) Len() int {
+	return o.objects.Len()
+}

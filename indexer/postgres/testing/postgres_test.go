@@ -8,9 +8,10 @@ import (
 	"github.com/hashicorp/consul/sdk/freeport"
 	"github.com/stretchr/testify/require"
 
-	indexertesting "cosmossdk.io/indexer/testing"
+	indexertesting "cosmossdk.io/schema/testing"
 
 	"cosmossdk.io/indexer/postgres"
+	listenertest "cosmossdk.io/schema/testing/listener"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -35,14 +36,16 @@ func TestPostgresIndexer(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	fixture := indexertesting.NewAppSimulator(t, indexertesting.AppSimulatorOptions{
+	fixture := listenertest.NewAppSimulator(listenertest.AppSimulatorOptions{
 		Listener:  indexer.Listener(),
 		AppSchema: indexertesting.ExampleAppSchema,
 	})
 
-	fixture.Initialize()
+	require.NoError(t, fixture.Initialize())
 
+	blockDataGen := fixture.BlockDataGen()
 	for i := 0; i < 10; i++ {
-		fixture.NextBlock()
+		blockData := blockDataGen.Example(i + 1)
+		require.NoError(t, fixture.ProcessBlockData(blockData))
 	}
 }

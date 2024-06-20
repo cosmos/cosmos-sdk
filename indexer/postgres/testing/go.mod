@@ -2,7 +2,7 @@ module cosmossdk.io/indexer/postgres/testing
 
 require (
 	cosmossdk.io/indexer/postgres v0.0.0
-	cosmossdk.io/indexer/testing v0.0.0-00010101000000-000000000000
+	cosmossdk.io/schema/testing v0.0.0-00010101000000-000000000000
 	github.com/fergusstrange/embedded-postgres v1.27.0
 	github.com/hashicorp/consul/sdk v0.16.1
 	github.com/jackc/pgx/v5 v5.6.0
@@ -28,7 +28,7 @@ require (
 	pgregory.net/rapid v1.1.0 // indirect
 )
 
-replace cosmossdk.io/indexer/testing => ../../testing
+replace cosmossdk.io/schema/testing => ../../../schema/testing
 
 replace cosmossdk.io/indexer/postgres => ..
 

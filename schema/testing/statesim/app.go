@@ -67,3 +67,21 @@ func (a *App) ScanModuleSchemas(f func(string, schema.ModuleSchema) error) error
 	})
 	return err
 }
+
+func (o *App) GetModule(moduleName string) (*Module, bool) {
+	return o.moduleStates.Get(moduleName)
+}
+
+func (o *App) ScanState(f func(moduleName string, update schema.ObjectUpdate) bool) {
+	o.moduleStates.Scan(func(moduleName string, value *Module) bool {
+		keepGoing := true
+		value.ScanState(func(update schema.ObjectUpdate) bool {
+			if !f(moduleName, update) {
+				keepGoing = false
+				return false
+			}
+			return true
+		})
+		return keepGoing
+	})
+}

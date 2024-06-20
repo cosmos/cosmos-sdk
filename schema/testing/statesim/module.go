@@ -54,3 +54,21 @@ func (o *Module) ApplyUpdate(update schema.ObjectUpdate) error {
 func (o *Module) UpdateGen() *rapid.Generator[schema.ObjectUpdate] {
 	return o.updateGen
 }
+
+func (o *Module) GetObjectCollection(objectType string) (*ObjectCollection, bool) {
+	return o.objectCollections.Get(objectType)
+}
+
+func (o *Module) ScanState(f func(schema.ObjectUpdate) bool) {
+	o.objectCollections.Scan(func(key string, value *ObjectCollection) bool {
+		keepGoing := true
+		value.ScanState(func(update schema.ObjectUpdate) bool {
+			if !f(update) {
+				keepGoing = false
+				return false
+			}
+			return true
+		})
+		return keepGoing
+	})
+}

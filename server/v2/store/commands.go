@@ -36,7 +36,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 		Args:    cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// bind flags to the Context's Viper so we can get pruning options.
-			vp := viper.New()
+			vp := serverv2.GetViperFromCmd(cmd)
 			if err := vp.BindPFlags(cmd.Flags()); err != nil {
 				return err
 			}

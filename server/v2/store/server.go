@@ -11,7 +11,9 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 )
 
-type StoreComponent struct{}
+type StoreComponent struct{
+	config *Config
+}
 
 func New() serverv2.ServerComponent[transaction.Tx] {
 	return StoreComponent{}
@@ -39,4 +41,12 @@ func (s StoreComponent) CLICommands(appCreator serverv2.AppCreator[transaction.T
 			s.PrunesCmd(appCreator),
 		},
 	}
+}
+
+func (g StoreComponent) Config() any {
+	if g.config == nil || g.config == (&Config{}) {
+		return DefaultConfig()
+	}
+
+	return g.config
 }

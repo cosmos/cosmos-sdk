@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -36,7 +35,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 		Args:    cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// bind flags to the Context's Viper so we can get pruning options.
-			vp := serverv2.GetViperFromCmd(cmd)
+			vp := viper.New()
 			if err := vp.BindPFlags(cmd.Flags()); err != nil {
 				return err
 			}
@@ -44,13 +43,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				return err
 			}
 
-			// use the first argument if present to set the pruning method
-			if len(args) > 0 {
-				vp.Set(FlagPruning, args[0])
-			} else {
-				vp.Set(FlagPruning, pruningtypes.PruningOptionDefault)
-			}
-			pruningOptions, err := getPruningOptionsFromFlags(vp)
+			pruningOptions, err := getPruningOptionsFromCmd(cmd, args)
 			if err != nil {
 				return err
 			}
@@ -100,17 +93,54 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 	return cmd
 }
 
-func getPruningOptionsFromFlags(v *viper.Viper) (pruningtypes.PruningOptions, error) {
-	strategy := strings.ToLower(cast.ToString(v.Get(FlagPruning)))
+func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (pruningtypes.PruningOptions, error) {
+	rootViper := serverv2.GetViperFromCmd(cmd)
+
+	var pruning string
+	if len(args) > 0 {
+		// use the first argument if present to set the pruning method
+		pruning = args[0]
+	} else {
+		// If we not pass pruning option to the first argument,
+		// Get it from app.toml
+		// If we not do any modify to app.toml, should be default prune in there.
+		pruning = rootViper.GetString(FlagPruning)
+	}
+
+	strategy := strings.ToLower(pruning)
 
 	switch strategy {
 	case pruningtypes.PruningOptionDefault, pruningtypes.PruningOptionNothing, pruningtypes.PruningOptionEverything:
 		return pruningtypes.NewPruningOptionsFromString(strategy), nil
 
 	case pruningtypes.PruningOptionCustom:
+		var (
+			pruningKeepRecent uint64
+			pruningInterval   uint64
+			err               error
+		)
+
+		if cmd.Flags().Changed(FlagPruningKeepRecent) {
+			pruningKeepRecent, err = cmd.Flags().GetUint64(FlagPruningKeepRecent)
+			if err != nil {
+				return pruningtypes.PruningOptions{}, err
+			}
+		} else {
+			pruningKeepRecent = rootViper.GetUint64(FlagPruningKeepRecent)
+		}
+
+		if cmd.Flags().Changed(FlagPruningInterval) {
+			pruningInterval, err = cmd.Flags().GetUint64(FlagPruningInterval)
+			if err != nil {
+				return pruningtypes.PruningOptions{}, err
+			}
+		} else {
+			pruningInterval = rootViper.GetUint64(FlagPruningInterval)
+		}
+
 		opts := pruningtypes.NewCustomPruningOptions(
-			cast.ToUint64(v.Get(FlagPruningKeepRecent)),
-			cast.ToUint64(v.Get(FlagPruningInterval)),
+			pruningKeepRecent,
+			pruningInterval,
 		)
 
 		if err := opts.Validate(); err != nil {

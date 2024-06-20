@@ -74,22 +74,22 @@ func (p *Manager) setup(listeners []listener.Listener) error {
 
 	p.listener.Initialize = p.initialize
 
-	for _, listener := range listeners {
-		if listener.StartBlock != nil {
+	for _, l := range listeners {
+		if l.StartBlock != nil {
 			p.listener.StartBlock = p.startBlock
 			break
 		}
 	}
 
-	for _, listener := range listeners {
-		if listener.OnBlockHeader != nil {
+	for _, l := range listeners {
+		if l.OnBlockHeader != nil {
 			p.listener.OnBlockHeader = p.onBlockHeader
 			break
 		}
 	}
 
-	for _, listener := range listeners {
-		if listener.OnTx != nil {
+	for _, l := range listeners {
+		if l.OnTx != nil {
 			p.listener.OnTx = p.onTx
 			break
 		}
@@ -132,10 +132,10 @@ func (p *Manager) setup(listeners []listener.Listener) error {
 	}
 
 	// initialize go routines for each listener
-	for _, listener := range listeners {
+	for _, l := range listeners {
 		proc := &listenerProcess{
-			listener:       listener,
-			packetChan:     make(chan packet),
+			listener:       l,
+			packetChan:     make(chan listener.Packet),
 			commitDoneChan: make(chan error),
 		}
 		p.listenerProcesses = append(p.listenerProcesses, proc)
@@ -207,10 +207,7 @@ func (p *Manager) startBlock(height uint64) error {
 		if proc.listener.StartBlock != nil {
 			continue
 		}
-		proc.packetChan <- packet{
-			packetType: packetTypeStartBlock,
-			data:       height,
-		}
+		proc.packetChan <- listener.StartBlock(height)
 	}
 	return nil
 }
@@ -224,10 +221,7 @@ func (p *Manager) onBlockHeader(data listener.BlockHeaderData) error {
 		if proc.listener.OnBlockHeader == nil {
 			continue
 		}
-		proc.packetChan <- packet{
-			packetType: packetTypeOnBlockHeader,
-			data:       data,
-		}
+		proc.packetChan <- data
 	}
 	return nil
 }
@@ -241,10 +235,7 @@ func (p *Manager) onTx(data listener.TxData) error {
 		if proc.listener.OnTx == nil {
 			continue
 		}
-		proc.packetChan <- packet{
-			packetType: packetTypeOnTx,
-			data:       data,
-		}
+		proc.packetChan <- data
 	}
 	return nil
 }
@@ -258,10 +249,7 @@ func (p *Manager) onEvent(data listener.EventData) error {
 		if proc.listener.OnEvent == nil {
 			continue
 		}
-		proc.packetChan <- packet{
-			packetType: packetTypeOnEvent,
-			data:       data,
-		}
+		proc.packetChan <- data
 	}
 
 	return nil
@@ -276,9 +264,7 @@ func (p *Manager) commit() error {
 		if proc.listener.Commit == nil {
 			continue
 		}
-		proc.packetChan <- packet{
-			packetType: packetTypeCommit,
-		}
+		proc.packetChan <- listener.Commit{}
 	}
 
 	// wait for all listeners to finish committing
@@ -302,10 +288,7 @@ func (p *Manager) onKVPair(data listener.KVPairData) error {
 		if proc.listener.OnKVPair == nil {
 			continue
 		}
-		proc.packetChan <- packet{
-			packetType: packetTypeOnKVPair,
-			data:       data,
-		}
+		proc.packetChan <- data
 	}
 
 	if !p.needLogicalDecoding {
@@ -352,10 +335,7 @@ func (p *Manager) onKVPair(data listener.KVPairData) error {
 		if proc.listener.OnObjectUpdate == nil {
 			continue
 		}
-		proc.packetChan <- packet{
-			packetType: packetTypeOnObjectUpdate,
-			data:       update,
-		}
+		proc.packetChan <- data
 	}
 
 	return nil
@@ -389,10 +369,7 @@ func (p *Manager) onObjectUpdate(data listener.ObjectUpdateData) error {
 		if proc.listener.OnObjectUpdate == nil {
 			continue
 		}
-		proc.packetChan <- packet{
-			packetType: packetTypeOnObjectUpdate,
-			data:       data,
-		}
+		proc.packetChan <- data
 	}
 	return nil
 }

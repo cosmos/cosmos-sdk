@@ -12,7 +12,7 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 )
 
-type StoreComponent struct{
+type StoreComponent struct {
 	config *Config
 }
 

@@ -6,13 +6,12 @@ import (
 
 func DefaultConfig() *Config {
 	return &Config{
-		Pruning: pruningtypes.PruningOptionDefault,
-		AppDBBackend: "",
+		Pruning:           pruningtypes.PruningOptionDefault,
+		AppDBBackend:      "",
 		PruningKeepRecent: 0,
-		PruningInterval: 0,
+		PruningInterval:   0,
 	}
 }
-
 
 type Config struct {
 	Pruning           string `mapstructure:"pruning" toml:"pruning"`

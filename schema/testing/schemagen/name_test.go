@@ -3,9 +3,10 @@ package schemagen
 import (
 	"testing"
 
-	indexerbase "cosmossdk.io/schema"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
+
+	"cosmossdk.io/schema"
 )
 
 func TestName(t *testing.T) {

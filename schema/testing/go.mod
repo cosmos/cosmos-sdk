@@ -1,4 +1,4 @@
-module cosmossdk.io/indexer/testing
+module cosmossdk.io/schema/testing
 
 require (
 	cosmossdk.io/schema v0.0.0
@@ -15,6 +15,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace cosmossdk.io/schema => ../../schema
+replace cosmossdk.io/schema => ./..
 
 go 1.22

@@ -1,8 +1,9 @@
 package schemagen
 
 import (
-	indexerbase "cosmossdk.io/schema"
 	"pgregory.net/rapid"
+
+	"cosmossdk.io/schema"
 )
 
 var enumValuesGen = rapid.SliceOfNDistinct(Name, 1, 10, func(x string) string { return x })

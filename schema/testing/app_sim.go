@@ -4,18 +4,18 @@ import (
 	"fmt"
 
 	schema2 "cosmossdk.io/schema"
-	indexerbase "cosmossdk.io/schema/listener"
+	"cosmossdk.io/schema/listener"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/btree"
 	"pgregory.net/rapid"
 
-	"cosmossdk.io/indexer/testing/schemagen"
+	"cosmossdk.io/schema/testing/schemagen"
 )
 
 type AppSimulatorOptions struct {
 	AppSchema          map[string]schema2.ModuleSchema
-	Listener           indexerbase.Listener
+	Listener           listener.Listener
 	EventAlignedWrites bool
 	MaxUpdatesPerBlock int
 	Seed               int
@@ -97,7 +97,7 @@ func (a *AppSimulator) Initialize() {
 	}
 
 	if f := a.options.Listener.Initialize; f != nil {
-		_, err := f(indexerbase.InitializationData{
+		_, err := f(listener.InitializationData{
 			HasEventAlignedWrites: a.options.EventAlignedWrites,
 		})
 		require.NoError(a.tb, err)
@@ -128,7 +128,10 @@ func (a *AppSimulator) NextBlock() {
 
 func (a *AppSimulator) applyUpdate(module string, update schema2.ObjectUpdate, retainDeletions bool) error {
 	if a.options.Listener.OnObjectUpdate != nil {
-		err := a.options.Listener.OnObjectUpdate(module, update)
+		err := a.options.Listener.OnObjectUpdate(listener.ObjectUpdateData{
+			ModuleName: module,
+			Update:     update,
+		})
 		if err != nil {
 			return err
 		}

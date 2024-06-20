@@ -3,8 +3,9 @@ package schemagen
 import (
 	"fmt"
 
-	indexerbase "cosmossdk.io/schema"
 	"pgregory.net/rapid"
+
+	"cosmossdk.io/schema"
 )
 
 var AppSchema = rapid.Custom(func(t *rapid.T) map[string]schema.ModuleSchema {

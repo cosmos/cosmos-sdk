@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/schema"
 	"pgregory.net/rapid"
+
+	"cosmossdk.io/schema"
 )
 
 var (

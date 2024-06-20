@@ -1,9 +1,10 @@
 package schemagen
 
 import (
-	"cosmossdk.io/schema"
 	"github.com/tidwall/btree"
 	"pgregory.net/rapid"
+
+	"cosmossdk.io/schema"
 )
 
 var fieldsGen = rapid.SliceOfNDistinct(Field, 1, 12, func(f schema.Field) string {

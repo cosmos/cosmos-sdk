@@ -127,10 +127,6 @@ func (a *App) ExecuteGenesisTx(_ []byte) error {
 	panic("App.ExecuteGenesisTx not supported in runtime/v2")
 }
 
-func (a *App) SetAppVersion(context.Context, uint64) error {
-	return nil
-}
-
-func (a *App) AppVersion(context.Context) (uint64, error) {
-	return 0, nil
+func (a *App) GetAppManager() *appmanager.AppManager[transaction.Tx] {
+	return a.AppManager
 }

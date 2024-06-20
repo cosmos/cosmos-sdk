@@ -59,6 +59,7 @@ func init() {
 }
 
 func getCommitStore(b *testing.B, db corestore.KVStoreWithBatch) *commitment.CommitStore {
+	b.Helper()
 	multiTrees := make(map[string]commitment.Tree)
 	for _, storeKey := range storeKeys {
 		prefixDB := dbm.NewPrefixDB(db, []byte(storeKey))

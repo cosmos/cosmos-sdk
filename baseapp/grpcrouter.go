@@ -17,6 +17,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+type QueryRouter interface {
+	HybridHandlerByRequestName(name string) []func(ctx context.Context, req, resp protoiface.MessageV1) error
+	RegisterService(sd *grpc.ServiceDesc, handler interface{})
+	ResponseNameByRequestName(requestName string) string
+	Route(path string) GRPCQueryHandler
+	SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry)
+}
+
 // GRPCQueryRouter routes ABCI Query requests to GRPC handlers
 type GRPCQueryRouter struct {
 	// routes maps query handlers used in ABCIQuery.
@@ -40,7 +48,10 @@ type serviceData struct {
 	handler     interface{}
 }
 
-var _ gogogrpc.Server = &GRPCQueryRouter{}
+var (
+	_ gogogrpc.Server = &GRPCQueryRouter{}
+	_ QueryRouter     = &GRPCQueryRouter{}
+)
 
 // NewGRPCQueryRouter creates a new GRPCQueryRouter
 func NewGRPCQueryRouter() *GRPCQueryRouter {

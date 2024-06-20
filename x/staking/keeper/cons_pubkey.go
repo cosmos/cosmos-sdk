@@ -34,7 +34,19 @@ func (k Keeper) setConsPubKeyRotationHistory(
 		Height:          height,
 		Fee:             fee,
 	}
-	err := k.RotationHistory.Set(ctx, collections.Join(valAddr.Bytes(), height), history)
+
+	// check if there's another key rotation for this same key in the same block
+	allRotations, err := k.GetBlockConsPubKeyRotationHistory(ctx)
+	if err != nil {
+		return err
+	}
+	for _, r := range allRotations {
+		if r.NewConsPubkey.Compare(newPubKey) == 0 {
+			return types.ErrValidatorPubKeyExists
+		}
+	}
+
+	err = k.RotationHistory.Set(ctx, collections.Join(valAddr.Bytes(), height), history)
 	if err != nil {
 		return err
 	}
@@ -93,37 +105,36 @@ func (k Keeper) updateToNewPubkey(ctx context.Context, val types.Validator, oldP
 	}
 
 	// sets a map: oldConsKey -> newConsKey
-	if err := k.OldToNewConsKeyMap.Set(ctx, oldPk.Address(), newPk.Address()); err != nil {
+	if err := k.OldToNewConsAddrMap.Set(ctx, oldPk.Address(), newPk.Address()); err != nil {
 		return err
 	}
 
-	// sets a map: newConsKey -> oldConsKey
-	if err := k.setNewToOldConsKeyMap(ctx, sdk.ConsAddress(oldPk.Address()), sdk.ConsAddress(newPk.Address())); err != nil {
+	// sets a map: newConsKey -> initialConsKey
+	if err := k.setConsAddrToValidatorIdentifierMap(ctx, sdk.ConsAddress(oldPk.Address()), sdk.ConsAddress(newPk.Address())); err != nil {
 		return err
 	}
 
 	return k.Hooks().AfterConsensusPubKeyUpdate(ctx, oldPk, newPk, fee)
 }
 
-// setNewToOldConsKeyMap adds an entry in the state with the current consKey to the initial consKey of the validator.
-// it tries to find the oldPk if there is a entry already present in the state
-func (k Keeper) setNewToOldConsKeyMap(ctx context.Context, oldPk, newPk sdk.ConsAddress) error {
-	pk, err := k.NewToOldConsKeyMap.Get(ctx, oldPk)
+// setConsAddrToValidatorIdentifierMap adds an entry in the state with the current consAddr to the initial consAddr of the validator.
+// It first tries to find the validatorIdentifier if there is a entry already present in the state.
+func (k Keeper) setConsAddrToValidatorIdentifierMap(ctx context.Context, oldConsAddr, newConsAddr sdk.ConsAddress) error {
+	validatorIdentifier, err := k.ConsAddrToValidatorIdentifierMap.Get(ctx, oldConsAddr)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 
-	if pk != nil {
-		oldPk = pk
+	if validatorIdentifier != nil {
+		oldConsAddr = validatorIdentifier
 	}
-
-	return k.NewToOldConsKeyMap.Set(ctx, newPk, oldPk)
+	return k.ConsAddrToValidatorIdentifierMap.Set(ctx, newConsAddr, oldConsAddr)
 }
 
 // ValidatorIdentifier maps the new cons key to previous cons key (which is the address before the rotation).
-// (that is: newConsKey -> oldConsKey)
+// (that is: newConsAddr -> oldConsAddr)
 func (k Keeper) ValidatorIdentifier(ctx context.Context, newPk sdk.ConsAddress) (sdk.ConsAddress, error) {
-	pk, err := k.NewToOldConsKeyMap.Get(ctx, newPk)
+	pk, err := k.ConsAddrToValidatorIdentifierMap.Get(ctx, newPk)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, err
 	}

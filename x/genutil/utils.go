@@ -33,7 +33,9 @@ func ExportGenesisFile(genesis *types.AppGenesis, genFile string) error {
 
 // ExportGenesisFileWithTime creates and writes the genesis configuration to disk.
 // An error is returned if building or writing the configuration to file fails.
-func ExportGenesisFileWithTime(genFile, chainID string, validators []cmttypes.GenesisValidator, appState json.RawMessage, genTime time.Time) error {
+func ExportGenesisFileWithTime(
+	genFile, chainID string, validators []cmttypes.GenesisValidator, appState json.RawMessage, genTime time.Time,
+) error {
 	appGenesis := types.NewAppGenesisWithVersion(chainID, appState)
 	appGenesis.GenesisTime = genTime
 	appGenesis.Consensus.Validators = validators
@@ -116,4 +118,20 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic, keyT
 	}
 
 	return nodeID, valPubKey, nil
+}
+
+// loadOrGenFilePV loads a FilePV from the given filePaths
+// or else generates a new one and saves it to the filePaths.
+func loadOrGenFilePV(privKey cmtcrypto.PrivKey, keyFilePath, stateFilePath string) *privval.FilePV {
+	_, err := os.Stat(keyFilePath)
+	exists := !os.IsNotExist(err)
+
+	var pv *privval.FilePV
+	if exists {
+		pv = privval.LoadFilePV(keyFilePath, stateFilePath)
+	} else {
+		pv = privval.NewFilePV(privKey, keyFilePath, stateFilePath)
+		pv.Save()
+	}
+	return pv
 }

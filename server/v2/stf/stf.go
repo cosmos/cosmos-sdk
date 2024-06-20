@@ -44,6 +44,7 @@ type STF[T transaction.Tx] struct {
 
 // NewSTF returns a new STF instance.
 func NewSTF[T transaction.Tx](
+	logger log.Logger,
 	msgRouterBuilder *MsgRouterBuilder,
 	queryRouterBuilder *MsgRouterBuilder,
 	doPreBlock func(ctx context.Context, txs []T) error,
@@ -64,7 +65,7 @@ func NewSTF[T transaction.Tx](
 	}
 
 	return &STF[T]{
-		logger:              nil,
+		logger:              logger,
 		msgRouter:           msgRouter,
 		queryRouter:         queryRouter,
 		doPreBlock:          doPreBlock,

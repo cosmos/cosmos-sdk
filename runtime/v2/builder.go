@@ -99,6 +99,7 @@ func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 	endBlocker, valUpdate := a.app.moduleManager.EndBlock()
 
 	stf, err := stf.NewSTF[transaction.Tx](
+		a.app.logger.With("module", "stf"),
 		a.app.msgRouterBuilder,
 		a.app.queryRouterBuilder,
 		a.app.moduleManager.PreBlocker(),

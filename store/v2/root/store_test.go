@@ -397,9 +397,6 @@ func (s *RootStoreTestSuite) TestPrune() {
 			s.Require().NotNil(cHash)
 		}
 
-		// wait for async pruning process to finish
-		time.Sleep(100 * time.Millisecond)
-
 		for _, v := range tc.saved {
 			ro, err := s.rootStore.StateAt(v)
 			s.Require().NoError(err, "expected no error when loading height %d at test %s", v, tc.name)
@@ -417,7 +414,15 @@ func (s *RootStoreTestSuite) TestPrune() {
 		}
 
 		for _, v := range tc.deleted {
-			_, err := s.rootStore.StateAt(v)
+			var err error
+			checkErr := func() bool {
+				if _, err = s.rootStore.StateAt(v); err != nil {
+					return true
+				}
+				return false
+			}
+			// wait for async pruning process to finish
+			s.Require().Eventually(checkErr, 2*time.Second, 100*time.Millisecond)
 			s.Require().Error(err, "expected error when loading height %d at test %s", v, tc.name)
 		}
 	}
@@ -447,16 +452,20 @@ func (s *RootStoreTestSuite) TestMultiStore_Pruning_SameHeightsTwice() {
 		s.Require().NotNil(cHash)
 	}
 
-	// wait for async pruning process to finish
-	time.Sleep(100 * time.Millisecond)
-
 	latestVer, err := s.rootStore.GetLatestVersion()
 	s.Require().NoError(err)
 	s.Require().Equal(numVersions, latestVer)
 
 	for v := uint64(1); v < numVersions-keepRecent; v++ {
-		err := s.rootStore.LoadVersion(v)
-		s.Require().Error(err, "expected error when loading pruned height: %d", v)
+		var err error
+		checkErr := func() bool {
+			if err = s.rootStore.LoadVersion(v); err != nil {
+				return true
+			}
+			return false
+		}
+		// wait for async pruning process to finish
+		s.Require().Eventually(checkErr, 2*time.Second, 100*time.Millisecond, "expected no error when loading height: %d", v)
 	}
 
 	for v := (numVersions - keepRecent); v < numVersions; v++ {
@@ -489,12 +498,14 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 
 	noopLog := log.NewNopLogger()
 
+	mdb1 := dbm.NewMemDB()
+	mdb2 := dbm.NewMemDB()
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
 	ss := storage.NewStorageStore(sqliteDB, noopLog)
 
-	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
-	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, dbm.NewMemDB(), noopLog)
+	tree := iavl.NewIavlTree(mdb1, noopLog, iavl.DefaultConfig())
+	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, mdb2, noopLog)
 	s.Require().NoError(err)
 
 	pm := pruning.NewManager(sc, ss, pruneOpt, pruneOpt)
@@ -511,9 +522,6 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 		s.Require().NotNil(cHash)
 	}
 
-	// wait for async pruning process to finish
-	time.Sleep(100 * time.Millisecond)
-
 	latestVer, err := s.rootStore.GetLatestVersion()
 	s.Require().NoError(err)
 
@@ -522,6 +530,16 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	s.Require().Equal(uint64(0), actualHeightToPrune)
 
 	// "restart"
+	sqliteDB, err = sqlite.New(s.T().TempDir())
+	s.Require().NoError(err)
+	ss = storage.NewStorageStore(sqliteDB, noopLog)
+
+	tree = iavl.NewIavlTree(mdb1, noopLog, iavl.DefaultConfig())
+	sc, err = commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, mdb2, noopLog)
+	s.Require().NoError(err)
+
+	pm = pruning.NewManager(sc, ss, pruneOpt, pruneOpt)
+
 	s.newStoreWithBackendMount(ss, sc, pm)
 	err = s.rootStore.LoadLatestVersion()
 	s.Require().NoError(err)
@@ -539,9 +557,6 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	s.Require().NoError(err)
 	s.Require().NotNil(cHash)
 
-	// wait for async pruning process to finish
-	time.Sleep(100 * time.Millisecond)
-
 	latestVer, err = s.rootStore.GetLatestVersion()
 	s.Require().NoError(err)
 
@@ -550,8 +565,14 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	s.Require().Equal(uint64(8), actualHeightToPrune)
 
 	for v := uint64(1); v <= actualHeightToPrune; v++ {
-		err := s.rootStore.LoadVersion(v)
-		s.Require().Error(err, "expected error when loading height: %d", v)
+		checkErr := func() bool {
+			if err = s.rootStore.LoadVersion(v); err != nil {
+				return true
+			}
+			return false
+		}
+		// wait for async pruning process to finish
+		s.Require().Eventually(checkErr, 2*time.Second, 100*time.Millisecond, "expected error when loading height: %d", v)
 	}
 }
 
@@ -563,14 +584,15 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 
 	ss := storage.NewStorageStore(sqliteDB, noopLog)
 
-	mdb := dbm.NewMemDB()
+	mdb1 := dbm.NewMemDB()
+	mdb2 := dbm.NewMemDB()
 	multiTrees := make(map[string]commitment.Tree)
 	for _, storeKey := range testStoreKeys {
-		prefixDB := dbm.NewPrefixDB(mdb, []byte(storeKey))
+		prefixDB := dbm.NewPrefixDB(mdb1, []byte(storeKey))
 		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, noopLog, iavl.DefaultConfig())
 	}
 
-	sc, err := commitment.NewCommitStore(multiTrees, dbm.NewMemDB(), noopLog)
+	sc, err := commitment.NewCommitStore(multiTrees, mdb2, noopLog)
 	s.Require().NoError(err)
 
 	pm := pruning.NewManager(sc, ss, nil, nil)
@@ -651,6 +673,17 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 	s.Require().Equal([]byte(fmt.Sprintf("val%03d_%03d", 3, 1)), result1, "value should be equal")
 
 	// "restart"
+	multiTrees = make(map[string]commitment.Tree)
+	for _, storeKey := range testStoreKeys {
+		prefixDB := dbm.NewPrefixDB(mdb1, []byte(storeKey))
+		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, noopLog, iavl.DefaultConfig())
+	}
+
+	sc, err = commitment.NewCommitStore(multiTrees, mdb2, noopLog)
+	s.Require().NoError(err)
+
+	pm = pruning.NewManager(sc, ss, nil, nil)
+
 	s.newStoreWithBackendMount(ss, sc, pm)
 	err = s.rootStore.LoadLatestVersion()
 	s.Require().Nil(err)

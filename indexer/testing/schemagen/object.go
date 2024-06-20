@@ -81,6 +81,7 @@ func StatefulObjectUpdate(objectType indexerbase.ObjectType, state *btree.Map[st
 			TypeName: objectType.Name,
 		}
 
+		// TODO: when inserting a new object, all fields should be generated to avoid nil values
 		// 50% of the time use existing key (when there are keys)
 		n := state.Len()
 		if n > 0 && boolGen.Draw(t, "existingKey") {

@@ -20,10 +20,11 @@ type AppSimulatorOptions struct {
 }
 
 type AppSimulator struct {
-	options  AppSimulatorOptions
-	modules  *btree.Map[string, *moduleState]
-	blockNum uint64
-	tb       require.TestingT
+	options    AppSimulatorOptions
+	modules    *btree.Map[string, *moduleState]
+	blockNum   uint64
+	tb         require.TestingT
+	updatesGen *rapid.Generator[[]updateData]
 }
 
 func NewAppSimulator(tb require.TestingT, options AppSimulatorOptions) *AppSimulator {
@@ -48,11 +49,40 @@ func NewAppSimulator(tb require.TestingT, options AppSimulatorOptions) *AppSimul
 		}
 	}
 
-	return &AppSimulator{
+	sim := &AppSimulator{
 		options: options,
 		modules: modules,
 		tb:      tb,
 	}
+
+	maxUpdates := options.MaxUpdatesPerBlock
+	if maxUpdates <= 0 {
+		maxUpdates = 100
+	}
+	sim.updatesGen = rapid.Custom(func(t *rapid.T) []updateData {
+		numUpdates := rapid.IntRange(1, maxUpdates).Draw(t, "numUpdates")
+		updates := make([]updateData, numUpdates)
+		for i := 0; i < numUpdates; i++ {
+			moduleIdx := rapid.IntRange(0, sim.modules.Len()-1).Draw(t, "moduleIdx")
+			keys, values := sim.modules.KeyValues()
+			modState := values[moduleIdx]
+			objectIdx := rapid.IntRange(0, modState.Objects.Len()-1).Draw(t, "objectIdx")
+			objState := modState.Objects.Values()[objectIdx]
+			update := objState.UpdateGen.Draw(t, "update")
+			updates[i] = updateData{
+				module: keys[moduleIdx],
+				update: update,
+			}
+		}
+		return updates
+	})
+
+	return sim
+}
+
+type updateData struct {
+	module string
+	update indexerbase.ObjectUpdate
 }
 
 func (a *AppSimulator) Initialize() {
@@ -73,46 +103,25 @@ func (a *AppSimulator) Initialize() {
 }
 
 func (a *AppSimulator) NextBlock() {
-	a.newBlockFromSeed(a.options.Seed + int(a.blockNum))
-}
-
-func (a *AppSimulator) actionNewBlock(t *rapid.T) {
 	a.blockNum++
 
 	if f := a.options.Listener.StartBlock; f != nil {
 		err := f(a.blockNum)
 		if err != nil {
-			require.NoError(t, err)
+			require.NoError(a.tb, err)
 		}
 	}
 
-	maxUpdates := a.options.MaxUpdatesPerBlock
-	if maxUpdates <= 0 {
-		maxUpdates = 100
-	}
-	numUpdates := rapid.IntRange(1, maxUpdates).Draw(t, "numUpdates")
-	for i := 0; i < numUpdates; i++ {
-		moduleIdx := rapid.IntRange(0, a.modules.Len()-1).Draw(t, "moduleIdx")
-		keys, values := a.modules.KeyValues()
-		modState := values[moduleIdx]
-		objectIdx := rapid.IntRange(0, modState.Objects.Len()-1).Draw(t, "objectIdx")
-		objState := modState.Objects.Values()[objectIdx]
-		update := objState.UpdateGen.Draw(t, "update")
-		require.NoError(t, objState.ObjectType.ValidateObjectUpdate(update))
-		require.NoError(t, a.applyUpdate(keys[moduleIdx], update, objState.ObjectType.RetainDeletions))
+	updates := a.updatesGen.Example(int(a.blockNum) + a.options.Seed)
+	for _, data := range updates {
+		err := a.applyUpdate(data.module, data.update, false)
+		require.NoError(a.tb, err)
 	}
 
 	if f := a.options.Listener.Commit; f != nil {
 		err := f()
-		require.NoError(t, err)
+		require.NoError(a.tb, err)
 	}
-}
-
-func (a *AppSimulator) newBlockFromSeed(seed int) {
-	rapid.Custom[any](func(t *rapid.T) any {
-		a.actionNewBlock(t)
-		return nil
-	}).Example(seed)
 }
 
 func (a *AppSimulator) applyUpdate(module string, update indexerbase.ObjectUpdate, retainDeletions bool) error {
@@ -132,6 +141,8 @@ func (a *AppSimulator) applyUpdate(module string, update indexerbase.ObjectUpdat
 	if !ok {
 		return fmt.Errorf("object type %v not found in module %v", update.TypeName, module)
 	}
+
+	require.NoError(a.tb, objState.ObjectType.ValidateObjectUpdate(update))
 
 	keyStr := fmt.Sprintf("%v", update.Key)
 	if update.Delete {

@@ -89,6 +89,8 @@ func (i *Indexer) initModuleSchema(moduleName string, schema indexerbase.ModuleS
 		}
 	}
 
+	i.modules[moduleName] = mm
+
 	return nil
 }
 

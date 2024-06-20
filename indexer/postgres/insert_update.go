@@ -43,26 +43,16 @@ func (tm *TableManager) InsertUpdateSqlAndParams(w io.Writer, key, value interfa
 	allCols = append(allCols, keyCols...)
 	allCols = append(allCols, valueCols...)
 
-	_, err = fmt.Fprintf(w, "INSERT INTO %q (%s) VALUES (", tm.TableName(), strings.Join(allCols, ", "))
-	if err != nil {
-		return nil, err
+	var paramBindings []string
+	for i := 1; i <= len(allCols); i++ {
+		paramBindings = append(paramBindings, fmt.Sprintf("$%d", i))
 	}
 
-	for i, col := range allCols {
-		if i > 0 {
-			_, err = fmt.Fprintf(w, ", ")
-			if err != nil {
-				return nil, err
-			}
-		}
-		_, err = fmt.Fprintf(w, "@%s", col)
-		if err != nil {
-			return nil, err
-		}
-
-	}
-
-	_, err = fmt.Fprintf(w, ") ON CONFLICT (%s) DO ", strings.Join(keyCols, ", "))
+	_, err = fmt.Fprintf(w, "INSERT INTO %q (%s) VALUES (%s) ON CONFLICT (%s) DO ", tm.TableName(),
+		strings.Join(allCols, ", "),
+		strings.Join(paramBindings, ", "),
+		strings.Join(keyCols, ", "),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +77,7 @@ func (tm *TableManager) InsertUpdateSqlAndParams(w io.Writer, key, value interfa
 				return nil, err
 			}
 		}
-		_, err = fmt.Fprintf(w, "%s = @%s", col, col)
+		_, err = fmt.Fprintf(w, "%s = EXCLUDED.%s", col, col)
 		if err != nil {
 			return nil, err
 		}
@@ -95,9 +85,6 @@ func (tm *TableManager) InsertUpdateSqlAndParams(w io.Writer, key, value interfa
 
 	var allParams []interface{}
 	allParams = append(allParams, keyParams...)
-	allParams = append(allParams, valueParams...)
-	// we append value params twice because we need to update the value in the ON CONFLICT clause
-	// if the key already exists
 	allParams = append(allParams, valueParams...)
 	return allParams, nil
 }

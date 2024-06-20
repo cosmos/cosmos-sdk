@@ -1,6 +1,10 @@
-package indexerbase
+package indexer
 
-import "fmt"
+import (
+	"fmt"
+
+	"cosmossdk.io/schema/listener"
+)
 
 type packetType int
 
@@ -20,7 +24,7 @@ type packet struct {
 }
 
 type listenerProcess struct {
-	listener       Listener
+	listener       listener.Listener
 	packetChan     chan packet
 	err            error
 	commitDoneChan chan error
@@ -56,23 +60,23 @@ func (l *listenerProcess) processPacket(p packet) bool {
 		}
 	case packetTypeOnBlockHeader:
 		if l.listener.OnBlockHeader != nil {
-			l.err = l.listener.OnBlockHeader(p.data.(BlockHeaderData))
+			l.err = l.listener.OnBlockHeader(p.data.(listener.BlockHeaderData))
 		}
 	case packetTypeOnTx:
 		if l.listener.OnTx != nil {
-			l.err = l.listener.OnTx(p.data.(TxData))
+			l.err = l.listener.OnTx(p.data.(listener.TxData))
 		}
 	case packetTypeOnEvent:
 		if l.listener.OnEvent != nil {
-			l.err = l.listener.OnEvent(p.data.(EventData))
+			l.err = l.listener.OnEvent(p.data.(listener.EventData))
 		}
 	case packetTypeOnKVPair:
 		if l.listener.OnKVPair != nil {
-			l.err = l.listener.OnKVPair(p.data.(KVPairData))
+			l.err = l.listener.OnKVPair(p.data.(listener.KVPairData))
 		}
 	case packetTypeOnObjectUpdate:
 		if l.listener.OnObjectUpdate != nil {
-			l.err = l.listener.OnObjectUpdate(p.data.(ObjectUpdateData))
+			l.err = l.listener.OnObjectUpdate(p.data.(listener.ObjectUpdateData))
 		}
 	case packetTypeCommit:
 		if l.listener.Commit != nil {

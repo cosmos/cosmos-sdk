@@ -1,13 +1,18 @@
-package indexerbase
+package indexer
 
-import "fmt"
+import (
+	"fmt"
+
+	"cosmossdk.io/schema"
+	"cosmossdk.io/schema/listener"
+)
 
 type Manager struct {
 	logger              Logger
 	decoderResolver     DecoderResolver
-	decoders            map[string]KVDecoder
+	decoders            map[string]schema.KVDecoder
 	needLogicalDecoding bool
-	listener            Listener
+	listener            listener.Listener
 	listenerProcesses   []*listenerProcess
 	initialized         bool
 	done                chan struct{}
@@ -19,7 +24,7 @@ type ManagerOptions struct {
 	DecoderResolver DecoderResolver
 
 	// Listeners are the listeners that will be called when the manager receives events.
-	Listeners []Listener
+	Listeners []listener.Listener
 
 	// SyncSource is the source that will be used do initial indexing of modules with pre-existing
 	// state. It is optional, but if it is not provided, indexing can only be starting when a node
@@ -48,9 +53,9 @@ func NewManager(opts ManagerOptions) (*Manager, error) {
 	mgr := &Manager{
 		logger:              opts.Logger,
 		decoderResolver:     opts.DecoderResolver,
-		decoders:            map[string]KVDecoder{},
+		decoders:            map[string]schema.KVDecoder{},
 		needLogicalDecoding: false,
-		listener:            Listener{},
+		listener:            listener.Listener{},
 		done:                done,
 	}
 
@@ -64,7 +69,7 @@ func NewManager(opts ManagerOptions) (*Manager, error) {
 
 // Listener returns that listener that should be passed directly to the blockchain for managing
 // all indexing.
-func (p *Manager) setup(listeners []Listener) error {
+func (p *Manager) setup(listeners []listener.Listener) error {
 	// check each subscribed listener to see if we actually need to register the listener
 
 	p.listener.Initialize = p.initialize
@@ -139,14 +144,14 @@ func (p *Manager) setup(listeners []Listener) error {
 	return nil
 }
 
-func (p *Manager) initialize(data InitializationData) (lastBlockPersisted int64, err error) {
+func (p *Manager) initialize(data listener.InitializationData) (lastBlockPersisted int64, err error) {
 	if p.logger != nil {
 		p.logger.Debug("initialize")
 	}
 
 	// setup logical decoding
 	if p.needLogicalDecoding {
-		err = p.decoderResolver.Iterate(func(moduleName string, module ModuleDecoder) error {
+		err = p.decoderResolver.Iterate(func(moduleName string, module schema.ModuleCodec) error {
 			// if the schema was already initialized by the data source by InitializeModuleSchema,
 			// then this is an error
 			if _, ok := p.decoders[moduleName]; ok {
@@ -210,7 +215,7 @@ func (p *Manager) startBlock(height uint64) error {
 	return nil
 }
 
-func (p *Manager) onBlockHeader(data BlockHeaderData) error {
+func (p *Manager) onBlockHeader(data listener.BlockHeaderData) error {
 	if p.logger != nil {
 		p.logger.Debug("block header", "height", data.Height)
 	}
@@ -227,7 +232,7 @@ func (p *Manager) onBlockHeader(data BlockHeaderData) error {
 	return nil
 }
 
-func (p *Manager) onTx(data TxData) error {
+func (p *Manager) onTx(data listener.TxData) error {
 	if p.logger != nil {
 		p.logger.Debug("tx", "txIndex", data.TxIndex)
 	}
@@ -244,7 +249,7 @@ func (p *Manager) onTx(data TxData) error {
 	return nil
 }
 
-func (p *Manager) onEvent(data EventData) error {
+func (p *Manager) onEvent(data listener.EventData) error {
 	if p.logger != nil {
 		p.logger.Debug("event", "txIndex", data.TxIndex, "msgIndex", data.MsgIndex, "eventIndex", data.EventIndex)
 	}
@@ -287,7 +292,7 @@ func (p *Manager) commit() error {
 	return nil
 }
 
-func (p *Manager) onKVPair(data KVPairData) error {
+func (p *Manager) onKVPair(data listener.KVPairData) error {
 	moduleName := data.ModuleName
 	if p.logger != nil {
 		p.logger.Debug("kv pair received", "moduleName", moduleName)
@@ -356,7 +361,7 @@ func (p *Manager) onKVPair(data KVPairData) error {
 	return nil
 }
 
-func (p *Manager) initializeModuleSchema(module string, schema ModuleSchema) error {
+func (p *Manager) initializeModuleSchema(module string, schema schema.ModuleSchema) error {
 	if p.initialized {
 		return fmt.Errorf("cannot initialize module schema after initialization")
 	}
@@ -379,7 +384,7 @@ func (p *Manager) initializeModuleSchema(module string, schema ModuleSchema) err
 	return nil
 }
 
-func (p *Manager) onObjectUpdate(data ObjectUpdateData) error {
+func (p *Manager) onObjectUpdate(data listener.ObjectUpdateData) error {
 	for _, proc := range p.listenerProcesses {
 		if proc.listener.OnObjectUpdate == nil {
 			continue

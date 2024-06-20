@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -20,7 +21,13 @@ func New() serverv2.ServerComponent[transaction.Tx] {
 }
 
 func (s StoreComponent) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) (serverv2.ServerComponent[transaction.Tx], error) {
-	return s, nil
+	cfg := DefaultConfig()
+	if v != nil {
+		if err := v.Sub(s.Name()).Unmarshal(&cfg); err != nil {
+			return StoreComponent{}, fmt.Errorf("failed to unmarshal config: %w", err)
+		}
+	}
+	return StoreComponent{config: cfg}, nil
 }
 
 func (s StoreComponent) Name() string {

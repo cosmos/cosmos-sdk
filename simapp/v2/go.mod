@@ -12,6 +12,7 @@ require (
 	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
+	cosmossdk.io/server/v2/store v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
@@ -296,6 +297,7 @@ replace (
 	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager
 	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
+	cosmossdk.io/server/v2/store => ../../server/v2/store
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/store/v2 => ../../store/v2
 )

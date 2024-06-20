@@ -16,6 +16,7 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/cometbft"
+	"cosmossdk.io/server/v2/store"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 	authcmd "cosmossdk.io/x/auth/client/cli"
@@ -84,6 +85,7 @@ func initRootCmd(
 		logger,
 		cometbft.New(&temporaryTxDecoder{txConfig}),
 		grpc.New(),
+		store.StoreComponent{},
 	); err != nil {
 		panic(err)
 	}

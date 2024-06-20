@@ -215,7 +215,7 @@ func (s *CometBFTServer[T]) StartCmdFlags() pflag.FlagSet {
 	return flags
 }
 
-func (s *CometBFTServer[T]) CLICommands(appCreator serverv2.AppCreator[T]) serverv2.CLIConfig {
+func (s *CometBFTServer[T]) CLICommands(_ serverv2.AppCreator[T]) serverv2.CLIConfig {
 	return serverv2.CLIConfig{
 		Commands: []*cobra.Command{
 			s.StatusCommand(),
@@ -226,7 +226,6 @@ func (s *CometBFTServer[T]) CLICommands(appCreator serverv2.AppCreator[T]) serve
 			s.QueryBlockCmd(),
 			s.QueryBlocksCmd(),
 			s.QueryBlockResultsCmd(),
-			s.PrunesCmd(appCreator),
 			cmtcmd.ResetAllCmd,
 			cmtcmd.ResetStateCmd,
 		},

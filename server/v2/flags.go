@@ -10,5 +10,5 @@ const (
 	FlagLogNoColor = "log_no_color"
 	FlagTrace      = "trace"
 
-	OutputFormatJSON      = "json"
+	OutputFormatJSON = "json"
 )

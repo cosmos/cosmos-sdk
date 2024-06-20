@@ -37,7 +37,6 @@ import (
 	_ "cosmossdk.io/x/bank" // import bank as a blank
 	banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/consensus" // import consensus as a blank
-	_ "cosmossdk.io/x/slashing"  // import slashing as a blank
 	slashingtypes "cosmossdk.io/x/slashing/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -181,7 +180,6 @@ func MinimumAppConfig() depinject.Config {
 		configurator.StakingModule(),
 		configurator.ConsensusModule(),
 		configurator.TxModule(),
-		configurator.SlashingModule(),
 	)
 }
 

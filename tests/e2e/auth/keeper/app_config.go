@@ -22,5 +22,4 @@ var AppConfig = configurator.NewAppConfig(
 	configurator.TxModule(),
 	configurator.ConsensusModule(),
 	configurator.GenutilModule(),
-	configurator.SlashingModule(),
 )

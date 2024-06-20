@@ -221,17 +221,20 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 	})
 
 	// set the balances in the genesis state
-
 	bankGenState.Balances = append(bankGenState.Balances, genBalances...)
 	bankGenState.Supply = totalSupply
 	cfg.GenesisState[testutil.BankModuleName] = cfg.Codec.MustMarshalJSON(&bankGenState)
 
-	// get and update slashing genesis state
-	var slashingGenState slashingtypes.GenesisState
-	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[testutil.SlashingModuleName], &slashingGenState)
+	// check slashing module included
+	_, ok := cfg.GenesisState[testutil.SlashingModuleName]
+	if ok {
+		// get and update slashing genesis state
+		var slashingGenState slashingtypes.GenesisState
+		cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[testutil.SlashingModuleName], &slashingGenState)
 
-	slashingGenState.SigningInfos = signInfos
-	cfg.GenesisState[testutil.SlashingModuleName] = cfg.Codec.MustMarshalJSON(&slashingGenState)
+		slashingGenState.SigningInfos = signInfos
+		cfg.GenesisState[testutil.SlashingModuleName] = cfg.Codec.MustMarshalJSON(&slashingGenState)
+	}
 
 	appGenStateJSON, err := json.MarshalIndent(cfg.GenesisState, "", "  ")
 	if err != nil {

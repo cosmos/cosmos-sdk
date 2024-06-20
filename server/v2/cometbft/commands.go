@@ -414,7 +414,7 @@ func (s *CometBFTServer[T]) BootstrapStateCmd() *cobra.Command {
 
 func printOutput(cmd *cobra.Command, out []byte) error {
 	// Get flags output
-	outFlag, err := cmd.Flags().GetString(flags.FlagOutput)
+	outFlag, err := cmd.Flags().GetString(flags.FlagOutput) 
 	if err != nil {
 		return err
 	}

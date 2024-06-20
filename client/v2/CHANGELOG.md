@@ -36,7 +36,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-<!-- ## [v2.1.0-beta.1] to be tagged after v0.51 final or in SDK agnostic version -->
+<!-- ## [v2.1.0-rc.1] to be tagged after v0.51 final or in SDK agnostic version -->
 
 ### Features
 
@@ -47,6 +47,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#19646](https://github.com/cosmos/cosmos-sdk/pull/19646) Use keyring from command context.
 * [#20083](https://github.com/cosmos/cosmos-sdk/pull/20083) Integrate latest version of cosmos-proto and improve version filtering.
 * [#19618](https://github.com/cosmos/cosmos-sdk/pull/19618) Marshal enum as string in queries.
 * [#19060](https://github.com/cosmos/cosmos-sdk/pull/19060) Use client context from root (or enhanced) command in autocli commands.
@@ -62,6 +63,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#19646](https://github.com/cosmos/cosmos-sdk/pull/19646) Remove keyring from `autocli.AppOptions` and `flag.Builder` options.
 * [#17709](https://github.com/cosmos/cosmos-sdk/pull/17709) Address codecs have been removed from `autocli.AppOptions` and `flag.Builder`. Instead client/v2 uses the address codecs present in the context (introduced in [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503)).
 
 ## [v2.0.0-beta.1] - 2023-11-07

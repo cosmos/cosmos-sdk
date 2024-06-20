@@ -684,7 +684,7 @@ func TestNotFoundErrorsQuery(t *testing.T) {
 	b.AddQueryConnFlags = nil
 	b.AddTxConnFlags = nil
 
-	buildModuleQueryCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
+	buildModuleQueryCommand := func(_ string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
 		cmd := topLevelCmd(context.Background(), "query", "Querying subcommands")
 		err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
 		return cmd, err

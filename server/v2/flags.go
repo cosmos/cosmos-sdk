@@ -1,6 +1,9 @@
 package serverv2
 
 const (
+	// Home flags
+	FlagHome = "home"
+
 	// Logging flags
 	FlagLogLevel   = "log_level"
 	FlagLogFormat  = "log_format"

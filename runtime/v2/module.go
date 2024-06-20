@@ -101,6 +101,7 @@ func init() {
 			ProvideModuleManager,
 			ProvideGenesisTxHandler,
 			ProvideCometService,
+			ProvideAppVersionModifier,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)

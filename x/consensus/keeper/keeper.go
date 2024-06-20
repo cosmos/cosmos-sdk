@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
@@ -76,10 +77,17 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 	}
 
 	paramsProto, err := k.ParamsStore.Get(ctx)
+
+	var params cmttypes.ConsensusParams
 	if err != nil {
-		return nil, err
+		if errors.Is(err, collections.ErrNotFound) {
+			params = cmttypes.ConsensusParams{}
+		} else {
+			return nil, err
+		}
+	} else {
+		params = cmttypes.ConsensusParamsFromProto(paramsProto)
 	}
-	params := cmttypes.ConsensusParamsFromProto(paramsProto)
 
 	nextParams := params.Update(&consensusParams)
 

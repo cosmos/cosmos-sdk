@@ -17,7 +17,8 @@ type Listener struct {
 	// The lastBlockPersisted return value should be the last block height the listener persisted if it is
 	// persisting block data, 0 if it is not interested in persisting block data, or -1 if it is
 	// persisting block data but has not persisted any data yet. This check allows the indexer
-	// framework to ensure that the listener has not missed blocks.
+	// framework to ensure that the listener has not missed blocks. Data sources MUST call
+	// initialize before any other method is called, otherwise, no data will be processed.
 	Initialize func(InitializationData) (lastBlockPersisted int64, err error)
 
 	// StartBlock is called at the beginning of processing a block.
@@ -38,7 +39,8 @@ type Listener struct {
 
 	// Commit is called when state is committed, usually at the end of a block. Any
 	// indexers should commit their data when this is called and return an error if
-	// they are unable to commit.
+	// they are unable to commit. Data sources MUST call Commit when data is committed,
+	// otherwise it should be assumed that indexers have not persisted their state.
 	Commit func() error
 
 	// InitializeModuleSchema should be called whenever the blockchain process starts OR whenever

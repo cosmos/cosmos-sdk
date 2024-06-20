@@ -2,8 +2,6 @@ package schema
 
 import "sort"
 
-import "sort"
-
 // ObjectUpdate represents an update operation on an object in a module's state.
 type ObjectUpdate struct {
 	// TypeName is the name of the object type in the module's schema.

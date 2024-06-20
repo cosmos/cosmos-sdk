@@ -2,7 +2,7 @@
 
 The `cosmossdk.io/schema` base module is designed to provide a stable, **zero-dependency** base layer for specifying the **logical representation of module state schemas** and implementing **state indexing**. This is intended to be used primarily for indexing modules in external databases and providing a standard human-readable state representation for genesis import and export.
 
-The schema defined in this library does not aim to be general purpose and cover all types of schemas, such as those used for defining transactions. For instance, this schema is not include many types of composite objects as nested objects and arrays. Rather, the schema defined here aims to cover _state_ schemas only which are implemented as key-value pairs and usually have direct mappings to relational database tables or objects in a document store.
+The schema defined in this library does not aim to be general purpose and cover all types of schemas, such as those used for defining transactions. For instance, this schema does not include many types of composite objects such as nested objects and arrays. Rather, the schema defined here aims to cover _state_ schemas only which are implemented as key-value pairs and usually have direct mappings to relational database tables or objects in a document store.
 
 Also, this schema does not cover physical state layout and byte-level encoding, but simply describes a common logical format.
 

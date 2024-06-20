@@ -15,7 +15,9 @@ import (
 
 	_ "cosmossdk.io/api/amino" // Import amino.proto file for reflection
 	appmanager "cosmossdk.io/core/app"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 )
 
@@ -23,9 +25,9 @@ const serverName = "grpc-server"
 
 type GRPCServer struct {
 	logger log.Logger
+	config *Config
 
 	grpcSrv *grpc.Server
-	config  *Config
 }
 
 type GRPCService interface {
@@ -33,9 +35,13 @@ type GRPCService interface {
 	RegisterGRPCServer(gogogrpc.Server)
 }
 
-// New returns a correctly configured and initialized gRPC server.
+func New() GRPCServer {
+	return GRPCServer{}
+}
+
+// Init returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server.
-func New(logger log.Logger, v *viper.Viper, interfaceRegistry appmanager.InterfaceRegistry, app GRPCService) (GRPCServer, error) {
+func (g GRPCServer) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) (serverv2.ServerComponent[transaction.Tx], error) {
 	cfg := DefaultConfig()
 	if v != nil {
 		if err := v.Sub(serverName).Unmarshal(&cfg); err != nil {
@@ -44,12 +50,12 @@ func New(logger log.Logger, v *viper.Viper, interfaceRegistry appmanager.Interfa
 	}
 
 	grpcSrv := grpc.NewServer(
-		grpc.ForceServerCodec(newProtoCodec(interfaceRegistry).GRPCCodec()),
+		grpc.ForceServerCodec(newProtoCodec(appI.InterfaceRegistry()).GRPCCodec()),
 		grpc.MaxSendMsgSize(cfg.MaxSendMsgSize),
 		grpc.MaxRecvMsgSize(cfg.MaxRecvMsgSize),
 	)
 
-	app.RegisterGRPCServer(grpcSrv)
+	// appI.RegisterGRPCServer(grpcSrv)
 
 	// Reflection allows external clients to see what services and methods
 	// the gRPC server exposes.

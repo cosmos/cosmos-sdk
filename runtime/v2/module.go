@@ -101,6 +101,7 @@ func init() {
 			ProvideModuleManager,
 			ProvideGenesisTxHandler,
 			ProvideCometService,
+			ProvideAppVersionModifier,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -211,8 +212,8 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 		EventService:       stf.NewEventService(),
 		GasService:         stf.NewGasMeterService(),
 		HeaderService:      stf.HeaderService{},
-		QueryRouterService: stf.NewQueryRouterService(appBuilder.app.queryRouterBuilder),
-		MsgRouterService:   stf.NewMsgRouterService(appBuilder.app.msgRouterBuilder),
+		QueryRouterService: stf.NewQueryRouterService(),
+		MsgRouterService:   stf.NewMsgRouterService([]byte(key.Name())),
 		TransactionService: services.NewContextAwareTransactionService(),
 		KVStoreService:     kvService,
 		MemStoreService:    memKvService,

@@ -52,9 +52,7 @@ const (
 	IntegerKind
 
 	// DecimalKind represents an arbitrary precision decimal or integer number. Values of this type
-	// must be of the go type string or formatted as decimal numbers with an optional fractional part.
-	// Exponential e-notation is supported but NaN and Infinity are not. Values must match the
-	// DecimalFormat regex.
+	// must be of the go type string and match the DecimalFormat regex.
 	DecimalKind
 
 	// BoolKind is a boolean type and values of this type must be of the go type bool.
@@ -91,8 +89,15 @@ const (
 const MAX_VALID_KIND = JSONKind
 
 const (
-	IntegerFormat = `^-?[0-9]+$`
-	DecimalFormat = `^-?[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?$`
+	// IntegerFormat is a regex that describes the format integer number strings must match. It specifies
+	// that integers may have at most 100 digits.
+	IntegerFormat = `^-?[0-9]{1,100}$`
+
+	// DecimalFormat is a regex that describes the format decimal number strings must match. It specifies
+	// that decimals may have at most 50 digits before and after the decimal point and may have an optional
+	// exponent of up to 2 digits. These restrictions ensure that the decimal can be accurately represented
+	// by a wide variety of implementations.
+	DecimalFormat = `^-?[0-9]{1,50}(\.[0-9]{1,50})?([eE][-+]?[0-9]{1,2})?$`
 )
 
 // Validate returns an errContains if the kind is invalid.
@@ -296,8 +301,10 @@ func (t Kind) ValidateValue(value interface{}) error {
 	return nil
 }
 
-var integerRegex = regexp.MustCompile(IntegerFormat)
-var decimalRegex = regexp.MustCompile(DecimalFormat)
+var (
+	integerRegex = regexp.MustCompile(IntegerFormat)
+	decimalRegex = regexp.MustCompile(DecimalFormat)
+)
 
 // KindForGoValue finds the simplest kind that can represent the given go value. It will not, however,
 // return kinds such as IntegerKind, DecimalKind, Bech32AddressKind, or EnumKind which all can be

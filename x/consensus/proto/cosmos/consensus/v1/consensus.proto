@@ -1,25 +1,15 @@
-// Since: cosmos-sdk 0.51
+// Since: cosmos-sdk 0.52
 syntax = "proto3";
 package cosmos.consensus.v1;
 
-import "cometbft/types/v1/params.proto";
+import "cometbft/abci/v1/types.proto";
 
 option go_package = "cosmossdk.io/x/consensus/types";
 
-// ConsensusMsgParams is the Msg/Params request type. This is a consensus message that is sent from cometbft.
-message ConsensusMsgParams {
-  // params defines the x/consensus parameters to be passed from comet.
-  //
-  // NOTE: All parameters must be supplied.
-  cometbft.types.v1.VersionParams   version   = 1;
-  cometbft.types.v1.BlockParams     block     = 2;
-  cometbft.types.v1.EvidenceParams  evidence  = 3;
-  cometbft.types.v1.ValidatorParams validator = 4;
-  cometbft.types.v1.ABCIParams      abci      = 5 [deprecated = true];
-  cometbft.types.v1.SynchronyParams synchrony = 6;
-  cometbft.types.v1.FeatureParams   feature   = 7;
+// CometInfo defines the structure of the x/consensus module's comet info.
+message CometInfo {
+  repeated cometbft.abci.v1.Misbehavior evidence         = 1;
+  bytes                                 validators_hash  = 2;
+  bytes                                 proposer_address = 3;
+  cometbft.abci.v1.CommitInfo           last_commit      = 4;
 }
-
-// ConsensusMsgParamsResponse defines the response structure for executing a
-// ConsensusMsgParams message.
-message ConsensusMsgParamsResponse {}

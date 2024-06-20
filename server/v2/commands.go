@@ -11,27 +11,38 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 )
 
-func Commands(logger log.Logger, homePath string, modules ...ServerModule) (CLIConfig, error) {
-	if len(modules) == 0 {
-		// TODO figure if we should define default modules
-		// and if so it should be done here to avoid uncessary dependencies
-		return CLIConfig{}, errors.New("no modules provided")
+func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, components ...ServerComponent[transaction.Tx]) (CLIConfig, error) {
+	if len(components) == 0 {
+		return CLIConfig{}, errors.New("no components provided")
 	}
 
-	v, err := ReadConfig(filepath.Join(homePath, "config"))
-	if err != nil {
-		return CLIConfig{}, fmt.Errorf("failed to read config: %w", err)
-	}
+	server := NewServer(logger, components...)
+	flags := server.StartFlags()
 
-	server := NewServer(logger, modules...)
 	startCmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the application",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := v.BindPFlags(cmd.Flags()); err != nil { // the server modules are already instantiated here, so binding the flags is useless.
+			v := GetViperFromCmd(cmd)
+			l := GetLoggerFromCmd(cmd)
+
+			for _, startFlags := range flags {
+				if err := v.BindPFlags(startFlags); err != nil {
+					return err
+				}
+			}
+
+			if err := v.BindPFlags(cmd.Flags()); err != nil {
+				return err
+			}
+
+			app := newApp(l, v)
+
+			if _, err := server.Init(app, v, l); err != nil {
 				return err
 			}
 
@@ -65,12 +76,58 @@ func Commands(logger log.Logger, homePath string, modules ...ServerModule) (CLIC
 	return cmds, nil
 }
 
-func AddCommands(rootCmd *cobra.Command, logger log.Logger, homePath string, modules ...ServerModule) error {
-	cmds, err := Commands(logger, homePath, modules...)
+func AddCommands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, components ...ServerComponent[transaction.Tx]) error {
+	cmds, err := Commands(rootCmd, newApp, logger, components...)
 	if err != nil {
 		return err
 	}
 
+	server := NewServer(logger, components...)
+	originalPersistentPreRunE := rootCmd.PersistentPreRunE
+	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		home, err := cmd.Flags().GetString(FlagHome)
+		if err != nil {
+			return err
+		}
+
+		err = configHandle(server, home, cmd)
+		if err != nil {
+			return err
+		}
+
+		if rootCmd.PersistentPreRun != nil {
+			rootCmd.PersistentPreRun(cmd, args)
+			return nil
+		}
+
+		return originalPersistentPreRunE(cmd, args)
+	}
+
 	rootCmd.AddCommand(cmds.Commands...)
 	return nil
+}
+
+// configHandle writes the default config to the home directory if it does not exist and sets the server context
+func configHandle(s *Server, home string, cmd *cobra.Command) error {
+	if _, err := os.Stat(filepath.Join(home, "config")); os.IsNotExist(err) {
+		if err = s.WriteConfig(filepath.Join(home, "config")); err != nil {
+			return err
+		}
+	}
+
+	viper, err := ReadConfig(filepath.Join(home, "config"))
+	if err != nil {
+		return err
+	}
+	viper.Set(FlagHome, home)
+	if err := viper.BindPFlags(cmd.Flags()); err != nil {
+		return err
+	}
+
+	log, err := NewLogger(viper, cmd.OutOrStdout())
+	if err != nil {
+		return err
+	}
+
+	return SetCmdServerContext(cmd, viper, log)
 }

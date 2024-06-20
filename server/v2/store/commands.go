@@ -46,9 +46,9 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 
 			// use the first argument if present to set the pruning method
 			if len(args) > 0 {
-				vp.Set(serverv2.FlagPruning, args[0])
+				vp.Set(FlagPruning, args[0])
 			} else {
-				vp.Set(serverv2.FlagPruning, pruningtypes.PruningOptionDefault)
+				vp.Set(FlagPruning, pruningtypes.PruningOptionDefault)
 			}
 			pruningOptions, err := getPruningOptionsFromFlags(vp)
 			if err != nil {
@@ -91,9 +91,9 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 		},
 	}
 
-	cmd.Flags().String(serverv2.FlagAppDBBackend, "", "The type of database for application and snapshots databases")
-	cmd.Flags().Uint64(serverv2.FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
-	cmd.Flags().Uint64(serverv2.FlagPruningInterval, 10,
+	cmd.Flags().String(FlagAppDBBackend, "", "The type of database for application and snapshots databases")
+	cmd.Flags().Uint64(FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
+	cmd.Flags().Uint64(FlagPruningInterval, 10,
 		`Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom'), 
 		this is not used by this command but kept for compatibility with the complete pruning options`)
 
@@ -101,7 +101,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 }
 
 func getPruningOptionsFromFlags(v *viper.Viper) (pruningtypes.PruningOptions, error) {
-	strategy := strings.ToLower(cast.ToString(v.Get(serverv2.FlagPruning)))
+	strategy := strings.ToLower(cast.ToString(v.Get(FlagPruning)))
 
 	switch strategy {
 	case pruningtypes.PruningOptionDefault, pruningtypes.PruningOptionNothing, pruningtypes.PruningOptionEverything:
@@ -109,8 +109,8 @@ func getPruningOptionsFromFlags(v *viper.Viper) (pruningtypes.PruningOptions, er
 
 	case pruningtypes.PruningOptionCustom:
 		opts := pruningtypes.NewCustomPruningOptions(
-			cast.ToUint64(v.Get(serverv2.FlagPruningKeepRecent)),
-			cast.ToUint64(v.Get(serverv2.FlagPruningInterval)),
+			cast.ToUint64(v.Get(FlagPruningKeepRecent)),
+			cast.ToUint64(v.Get(FlagPruningInterval)),
 		)
 
 		if err := opts.Validate(); err != nil {

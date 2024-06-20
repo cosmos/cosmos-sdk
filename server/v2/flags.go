@@ -11,8 +11,4 @@ const (
 	FlagTrace      = "trace"
 
 	OutputFormatJSON      = "json"
-	FlagPruning           = "pruning"
-	FlagAppDBBackend      = "app-db-backend"
-	FlagPruningKeepRecent = "pruning-keep-recent"
-	FlagPruningInterval   = "pruning-interval"
 )

@@ -42,17 +42,20 @@ type TxBuilder interface {
 	SetSignatures(...Signature) error
 }
 
+// TxBuilderProvider provides a TxBuilder.
 type TxBuilderProvider interface {
 	NewTxBuilder() TxBuilder
 	WrapTxBuilder(*apitx.Tx) (TxBuilder, error)
 }
 
+// BuilderProvider implements TxBuilderProvider.
 type BuilderProvider struct {
 	addressCodec address.Codec
 	decoder      Decoder
 	codec        codec.BinaryCodec
 }
 
+// NewBuilderProvider BuilderProvider constructor.
 func NewBuilderProvider(addressCodec address.Codec, decoder Decoder, codec codec.BinaryCodec) *BuilderProvider {
 	return &BuilderProvider{
 		addressCodec: addressCodec,
@@ -61,6 +64,7 @@ func NewBuilderProvider(addressCodec address.Codec, decoder Decoder, codec codec
 	}
 }
 
+// NewTxBuilder TxBuilder constructor.
 func (b BuilderProvider) NewTxBuilder() TxBuilder {
 	return newTxBuilder(b.addressCodec, b.decoder, b.codec)
 }
@@ -102,6 +106,7 @@ func newTxBuilder(addressCodec address.Codec, decoder Decoder, codec codec.Binar
 	}
 }
 
+// GetTx converts txBuilder messages to V2 and returns a Tx.
 func (b *txBuilder) GetTx() (*apitx.Tx, error) {
 	msgs, err := msgsV1toAnyV2(b.msgs)
 	if err != nil {
@@ -134,6 +139,9 @@ func (b *txBuilder) GetTx() (*apitx.Tx, error) {
 	}, nil
 }
 
+// getFee computes the transaction fee information for the txBuilder.
+// It returns a pointer to an apitx.Fee struct containing the fee amount, gas limit, payer, and granter information.
+// If the granter or payer addresses are set, it converts them from bytes to string using the addressCodec.
 func (b *txBuilder) getFee() (fee *apitx.Fee, err error) {
 	granterStr := ""
 	if b.granter != nil {
@@ -161,6 +169,7 @@ func (b *txBuilder) getFee() (fee *apitx.Fee, err error) {
 	return fee, nil
 }
 
+// GetSigningTxData returns a TxData with the txBuilder info.
 func (b *txBuilder) GetSigningTxData() (*signing.TxData, error) {
 	tx, err := b.GetTx()
 	if err != nil {
@@ -199,27 +208,33 @@ func (b *txBuilder) GetSigningTxData() (*signing.TxData, error) {
 	}, nil
 }
 
+// SetMsgs sets the messages for the transaction.
 func (b *txBuilder) SetMsgs(msgs ...transaction.Msg) error {
 	b.msgs = msgs
 	return nil
 }
 
+// SetMemo sets the memo for the transaction.
 func (b *txBuilder) SetMemo(memo string) {
 	b.memo = memo
 }
 
+// SetFeeAmount sets the fee amount for the transaction.
 func (b *txBuilder) SetFeeAmount(coins []*base.Coin) {
 	b.fees = coins
 }
 
+// SetGasLimit sets the gas limit for the transaction.
 func (b *txBuilder) SetGasLimit(gasLimit uint64) {
 	b.gasLimit = gasLimit
 }
 
+// SetTimeoutHeight sets the timeout height for the transaction.
 func (b *txBuilder) SetTimeoutHeight(timeoutHeight uint64) {
 	b.timeoutHeight = timeoutHeight
 }
 
+// SetFeePayer sets the fee payer for the transaction.
 func (b *txBuilder) SetFeePayer(feePayer string) error {
 	if feePayer == "" {
 		return nil
@@ -233,6 +248,10 @@ func (b *txBuilder) SetFeePayer(feePayer string) error {
 	return nil
 }
 
+// SetFeeGranter sets the fee granter's address in the transaction builder.
+// If the feeGranter string is empty, the function returns nil without setting an address.
+// It converts the feeGranter string to bytes using the address codec and sets it as the granter address.
+// Returns an error if the conversion fails.
 func (b *txBuilder) SetFeeGranter(feeGranter string) error {
 	if feeGranter == "" {
 		return nil
@@ -247,10 +266,14 @@ func (b *txBuilder) SetFeeGranter(feeGranter string) error {
 	return nil
 }
 
+// SetUnordered sets the unordered flag of the transaction builder.
 func (b *txBuilder) SetUnordered(unordered bool) {
 	b.unordered = unordered
 }
 
+// SetSignatures sets the signatures for the transaction builder.
+// It takes a variable number of Signature arguments and processes each one to extract the mode information and raw signature.
+// It also converts the public key to the appropriate format and sets the signer information.
 func (b *txBuilder) SetSignatures(signatures ...Signature) error {
 	n := len(signatures)
 	signerInfos := make([]*apitx.SignerInfo, n)
@@ -289,6 +312,9 @@ func (b *txBuilder) SetSignatures(signatures ...Signature) error {
 	return nil
 }
 
+// msgsV1toAnyV2 converts a slice of transaction.Msg (v1) to a slice of anypb.Any (v2).
+// It first converts each transaction.Msg into a codectypes.Any and then converts
+// these into anypb.Any.
 func msgsV1toAnyV2(msgs []transaction.Msg) ([]*anypb.Any, error) {
 	anys := make([]*codectypes.Any, len(msgs))
 	for i, msg := range msgs {
@@ -302,6 +328,7 @@ func msgsV1toAnyV2(msgs []transaction.Msg) ([]*anypb.Any, error) {
 	return intoAnyV2(anys), nil
 }
 
+// intoAnyV2 converts a slice of codectypes.Any (v1) to a slice of anypb.Any (v2).
 func intoAnyV2(v1s []*codectypes.Any) []*anypb.Any {
 	v2s := make([]*anypb.Any, len(v1s))
 	for i, v1 := range v1s {

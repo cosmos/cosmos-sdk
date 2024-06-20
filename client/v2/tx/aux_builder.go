@@ -172,6 +172,7 @@ func (b *AuxTxBuilder) SetNonCriticalExtensionOptions(extOpts ...*gogoany.Any) {
 	b.auxSignerData.SignDoc.BodyBytes = nil
 }
 
+// validateSignDoc validates that SignDocDirectAux is correctly set.
 func validateSignDoc(sd *apitx.SignDocDirectAux) error {
 	if len(sd.BodyBytes) == 0 {
 		return errors.New("body bytes is empty")
@@ -182,6 +183,7 @@ func validateSignDoc(sd *apitx.SignDocDirectAux) error {
 	return nil
 }
 
+// validateAuxSignerData validates AuxSignerData is correctly set.
 func validateAuxSignerData(a *apitx.AuxSignerData) error {
 	if a.Address == "" {
 		return errors.New("address cannot be empty: invalid request")
@@ -291,6 +293,7 @@ func (b *AuxTxBuilder) GetAuxSignerData() (*apitx.AuxSignerData, error) {
 	return b.auxSignerData, nil
 }
 
+// checkEmptyFields checks that body and auxSignerData are not empty and initializes them if so.
 func (b *AuxTxBuilder) checkEmptyFields() {
 	if b.body == nil {
 		b.body = &apitx.TxBody{}

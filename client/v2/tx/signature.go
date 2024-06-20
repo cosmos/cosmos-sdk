@@ -11,46 +11,34 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
+// Signature holds the necessary components to verify transaction signatures.
 type Signature struct {
-	// PubKey is the public key to use for verifying the signature
-	PubKey cryptotypes.PubKey
-
-	// Data is the actual data of the signature which includes SignMode's and
-	// the signatures themselves for either single or multi-signatures.
-	Data SignatureData
-
-	// Sequence is the sequence of this account. Only populated in
-	// SIGN_MODE_DIRECT.
-	Sequence uint64
+	PubKey   cryptotypes.PubKey // Public key for signature verification.
+	Data     SignatureData      // Signature data containing the actual signatures.
+	Sequence uint64             // Account sequence, relevant for SIGN_MODE_DIRECT.
 }
 
+// SignatureData defines an interface for different signature data types.
 type SignatureData interface {
 	isSignatureData()
 }
 
-// SingleSignatureData represents the signature and SignMode of a single (non-multisig) signer
+// SingleSignatureData stores a single signer's signature and its mode.
 type SingleSignatureData struct {
-	// SignMode represents the SignMode of the signature
-	SignMode apitxsigning.SignMode
-
-	// Signature is the raw signature.
-	Signature []byte
+	SignMode  apitxsigning.SignMode // Mode of the signature.
+	Signature []byte                // Actual binary signature.
 }
 
-// MultiSignatureData represents the nested SignatureData of a multisig signature
+// MultiSignatureData encapsulates signatures from a multisig transaction.
 type MultiSignatureData struct {
-	// BitArray is a compact way of indicating which signers from the multisig key
-	// have signed
-	BitArray *apicrypto.CompactBitArray
-
-	// Signatures is the nested SignatureData's for each signer
-	Signatures []SignatureData
+	BitArray   *apicrypto.CompactBitArray // Bitmap of signers.
+	Signatures []SignatureData            // Individual signatures.
 }
 
 func (m *SingleSignatureData) isSignatureData() {}
 func (m *MultiSignatureData) isSignatureData()  {}
 
-// SignatureDataToModeInfoAndSig converts a SignatureData to a ModeInfo and raw bytes signature
+// SignatureDataToModeInfoAndSig converts SignatureData to ModeInfo and its corresponding raw signature.
 func SignatureDataToModeInfoAndSig(data SignatureData) (*apitx.ModeInfo, []byte) {
 	if data == nil {
 		return nil, nil
@@ -64,17 +52,14 @@ func SignatureDataToModeInfoAndSig(data SignatureData) (*apitx.ModeInfo, []byte)
 			},
 		}, data.Signature
 	case *MultiSignatureData:
-		n := len(data.Signatures)
-		modeInfos := make([]*apitx.ModeInfo, n)
-		sigs := make([][]byte, n)
+		modeInfos := make([]*apitx.ModeInfo, len(data.Signatures))
+		sigs := make([][]byte, len(data.Signatures))
 
 		for i, d := range data.Signatures {
 			modeInfos[i], sigs[i] = SignatureDataToModeInfoAndSig(d)
 		}
 
-		multisig := cryptotypes.MultiSignature{
-			Signatures: sigs,
-		}
+		multisig := cryptotypes.MultiSignature{Signatures: sigs}
 		sig, err := multisig.Marshal()
 		if err != nil {
 			panic(err)
@@ -93,6 +78,7 @@ func SignatureDataToModeInfoAndSig(data SignatureData) (*apitx.ModeInfo, []byte)
 	}
 }
 
+// ModeInfoAndSigToSignatureData converts ModeInfo and a raw signature to SignatureData.
 func ModeInfoAndSigToSignatureData(modeInfo *apitx.ModeInfo, sig []byte) (SignatureData, error) {
 	switch mi := modeInfo.Sum.(type) {
 	case *apitx.ModeInfo_Single_:
@@ -115,20 +101,17 @@ func ModeInfoAndSigToSignatureData(modeInfo *apitx.ModeInfo, sig []byte) (Signat
 			if err != nil {
 				return nil, err
 			}
-
-			return &MultiSignatureData{
-				BitArray: &apicrypto.CompactBitArray{
-					ExtraBitsStored: multi.Bitarray.GetExtraBitsStored(),
-					Elems:           multi.Bitarray.GetElems(),
-				},
-				Signatures: sigsV2,
-			}, nil
 		}
+		return &MultiSignatureData{
+			BitArray:   multi.Bitarray,
+			Signatures: sigsV2,
+		}, nil
 	}
 
 	return nil, fmt.Errorf("unsupported ModeInfo type %T", modeInfo)
 }
 
+// decodeMultiSignatures decodes a byte array into individual signatures.
 func decodeMultiSignatures(bz []byte) ([][]byte, error) {
 	multisig := cryptotypes.MultiSignature{}
 
@@ -138,7 +121,7 @@ func decodeMultiSignatures(bz []byte) ([][]byte, error) {
 	}
 
 	if len(multisig.XXX_unrecognized) > 0 {
-		return nil, errors.New("rejecting unrecognized fields found in MultiSignature")
+		return nil, errors.New("unrecognized fields in MultiSignature")
 	}
 	return multisig.Signatures, nil
 }

@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
+// txParamsFromFlagSet extracts the transaction parameters from the provided FlagSet.
 func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring, ac address.Codec) (params TxParameters, err error) {
 	timeout, _ := flags.GetUint64(flags2.FlagTimeoutHeight)
 	chainID, _ := flags.GetString(flags2.FlagChainID)
@@ -97,6 +98,7 @@ func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring, ac addr
 	return txParams, nil
 }
 
+// validate checks the provided flags for consistency and requirements based on the operation mode.
 func validate(flags *pflag.FlagSet) error {
 	offline, _ := flags.GetBool(flags2.FlagOffline)
 	if offline {
@@ -153,6 +155,9 @@ func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs .
 	return BroadcastTx(ctx, txf, msgs...)
 }
 
+// newFactory creates a new transaction Factory based on the provided context and flag set.
+// It initializes a new CLI keyring, extracts transaction parameters from the flag set,
+// configures transaction settings, and sets up an account retriever for the transaction Factory.
 func newFactory(ctx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
 	k, err := keyring.NewAutoCLIKeyring(ctx.Keyring, ctx.AddressCodec)
 	if err != nil {
@@ -175,6 +180,7 @@ func newFactory(ctx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
 	}
 
 	accRetriever := newAccountRetriever(ctx.AddressCodec, ctx, ctx.InterfaceRegistry)
+
 	txf, err := NewFactory(k, ctx.Codec, accRetriever, txConfig, ctx.AddressCodec, ctx, params)
 	if err != nil {
 		return Factory{}, err
@@ -212,6 +218,9 @@ func generateAuxSignerData(ctx client.Context, txf Factory, msgs ...transaction.
 	return ctx.PrintProto(auxSignerData)
 }
 
+// generateOnly prepares the transaction and prints the unsigned transaction string.
+// It first calls Prepare on the transaction factory to set up any necessary pre-conditions.
+// If preparation is successful, it generates an unsigned transaction string using the provided messages.
 func generateOnly(ctx client.Context, txf Factory, msgs ...transaction.Msg) error {
 	err := txf.Prepare()
 	if err != nil {
@@ -226,6 +235,8 @@ func generateOnly(ctx client.Context, txf Factory, msgs ...transaction.Msg) erro
 	return ctx.PrintString(uTx)
 }
 
+// dryRun performs a dry run of the transaction to estimate the gas required.
+// It prepares the transaction factory and simulates the transaction with the provided messages.
 func dryRun(txf Factory, msgs ...transaction.Msg) error {
 	if txf.txParams.offline {
 		return errors.New("dry-run: cannot use offline mode")
@@ -404,6 +415,7 @@ func countDirectSigners(sigData SignatureData) int {
 	}
 }
 
+// getSignMode returns the corresponding apitxsigning.SignMode based on the provided mode string.
 func getSignMode(mode string) apitxsigning.SignMode {
 	switch mode {
 	case "direct":

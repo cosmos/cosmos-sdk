@@ -40,7 +40,7 @@ type Factory struct {
 	txParams         TxParameters
 }
 
-// NewFactory returns a factory
+// NewFactory returns a new instance of Factory.
 func NewFactory(keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever AccountRetriever, txConfig TxConfig, ac address.Codec, conn gogogrpc.ClientConn, parameters TxParameters) (Factory, error) {
 	return Factory{
 		keybase:          keybase,
@@ -163,6 +163,7 @@ func (f *Factory) BuildUnsignedTx(msgs ...transaction.Msg) (TxBuilder, error) {
 	return txBuilder, nil
 }
 
+// calculateGas calculates the gas required for the given messages.
 func (f *Factory) calculateGas(msgs ...transaction.Msg) error {
 	if f.txParams.offline {
 		return errors.New("cannot simulate in offline mode")
@@ -443,20 +444,47 @@ func (f *Factory) PreprocessTx(keyname string, builder TxBuilder) error {
 	return f.txParams.preprocessTxHook(f.txParams.chainID, keyType, builder)
 }
 
-func (f *Factory) AccountNumber() uint64              { return f.txParams.accountNumber }
-func (f *Factory) Sequence() uint64                   { return f.txParams.sequence }
-func (f *Factory) Gas() uint64                        { return f.txParams.gas }
-func (f *Factory) GasAdjustment() float64             { return f.txParams.gasAdjustment }
-func (f *Factory) Keybase() keyring.Keyring           { return f.keybase }
-func (f *Factory) ChainID() string                    { return f.txParams.chainID }
-func (f *Factory) Memo() string                       { return f.txParams.memo }
-func (f *Factory) Fees() []*base.Coin                 { return f.txParams.fees }
-func (f *Factory) GasPrices() []*base.DecCoin         { return f.txParams.gasPrices }
+// AccountNumber returns the account number.
+func (f *Factory) AccountNumber() uint64 { return f.txParams.accountNumber }
+
+// Sequence returns the sequence number.
+func (f *Factory) Sequence() uint64 { return f.txParams.sequence }
+
+// Gas returns the gas value.
+func (f *Factory) Gas() uint64 { return f.txParams.gas }
+
+// GasAdjustment returns the gas adjustment value.
+func (f *Factory) GasAdjustment() float64 { return f.txParams.gasAdjustment }
+
+// Keybase returns the keyring.
+func (f *Factory) Keybase() keyring.Keyring { return f.keybase }
+
+// ChainID returns the chain ID.
+func (f *Factory) ChainID() string { return f.txParams.chainID }
+
+// Memo returns the memo.
+func (f *Factory) Memo() string { return f.txParams.memo }
+
+// Fees returns the fees.
+func (f *Factory) Fees() []*base.Coin { return f.txParams.fees }
+
+// GasPrices returns the gas prices.
+func (f *Factory) GasPrices() []*base.DecCoin { return f.txParams.gasPrices }
+
+// AccountRetriever returns the account retriever.
 func (f *Factory) AccountRetriever() AccountRetriever { return f.accountRetriever }
-func (f *Factory) TimeoutHeight() uint64              { return f.txParams.timeoutHeight }
-func (f *Factory) FromName() string                   { return f.txParams.fromName }
-func (f *Factory) SimulateAndExecute() bool           { return f.txParams.simulateAndExecute }
-func (f *Factory) SignMode() apitxsigning.SignMode    { return f.txParams.signMode }
+
+// TimeoutHeight returns the timeout height.
+func (f *Factory) TimeoutHeight() uint64 { return f.txParams.timeoutHeight }
+
+// FromName returns the from name.
+func (f *Factory) FromName() string { return f.txParams.fromName }
+
+// SimulateAndExecute returns whether to simulate and execute.
+func (f *Factory) SimulateAndExecute() bool { return f.txParams.simulateAndExecute }
+
+// SignMode returns the sign mode.
+func (f *Factory) SignMode() apitxsigning.SignMode { return f.txParams.signMode }
 
 // getSimPK gets the public key to use for building a simulation tx.
 // Note, we should only check for keys in the keybase if we are in simulate and execute mode,
@@ -517,6 +545,7 @@ func checkMultipleSigners(tx Tx) error {
 	return nil
 }
 
+// validateMemo validates the memo field.
 func validateMemo(memo string) error {
 	// Prevent simple inclusion of a valid mnemonic in the memo field
 	if memo != "" && bip39.IsMnemonicValid(strings.ToLower(memo)) {

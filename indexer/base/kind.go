@@ -301,8 +301,10 @@ func (t Kind) ValidateValue(value interface{}) error {
 	return nil
 }
 
-var integerRegex = regexp.MustCompile(IntegerFormat)
-var decimalRegex = regexp.MustCompile(DecimalFormat)
+var (
+	integerRegex = regexp.MustCompile(IntegerFormat)
+	decimalRegex = regexp.MustCompile(DecimalFormat)
+)
 
 // KindForGoValue finds the simplest kind that can represent the given go value. It will not, however,
 // return kinds such as IntegerKind, DecimalKind, Bech32AddressKind, or EnumKind which all can be

@@ -61,7 +61,6 @@ func (o ObjectType) Validate() error {
 	}
 
 	return nil
-
 }
 
 // ValidateObjectUpdate validates that the update conforms to the object type.

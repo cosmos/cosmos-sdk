@@ -1,4 +1,4 @@
-package schemagen
+package schematesting
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 
 func TestEnumDefinition(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
-		enumDefinition := EnumDefinition.Draw(t, "enum")
+		enumDefinition := EnumDefinitionGen.Draw(t, "enum")
 		require.NoError(t, enumDefinition.Validate())
 	})
 }

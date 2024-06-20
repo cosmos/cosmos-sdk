@@ -1,4 +1,4 @@
-package schemagen
+package schematesting
 
 import (
 	"testing"
@@ -11,7 +11,7 @@ import (
 
 func TestName(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
-		name := Name.Draw(t, "name")
+		name := NameGen.Draw(t, "name")
 		require.True(t, schema.ValidateName(name))
 	})
 }

@@ -40,7 +40,7 @@ func (a moduleSetDecoderResolver) Iterate(f func(string, schema.ModuleCodec) err
 	sort.Strings(keys)
 	for _, k := range keys {
 		module := a.moduleSet[k]
-		dm, ok := any(module).(schema.HasModuleCodec)
+		dm, ok := module.(schema.HasModuleCodec)
 		if ok {
 			decoder, err := dm.ModuleCodec()
 			if err != nil {
@@ -61,7 +61,7 @@ func (a moduleSetDecoderResolver) LookupDecoder(moduleName string) (schema.Modul
 		return schema.ModuleCodec{}, false, nil
 	}
 
-	dm, ok := any(mod).(schema.HasModuleCodec)
+	dm, ok := mod.(schema.HasModuleCodec)
 	if !ok {
 		return schema.ModuleCodec{}, false, nil
 	}

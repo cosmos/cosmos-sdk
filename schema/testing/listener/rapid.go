@@ -1,4 +1,4 @@
-package indexertesting
+package listenertest
 
 import (
 	"pgregory.net/rapid"

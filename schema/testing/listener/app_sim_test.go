@@ -1,16 +1,18 @@
-package indexertesting
+package listenertest
 
 import (
 	"bytes"
 	"testing"
 
 	"gotest.tools/v3/golden"
+
+	"cosmossdk.io/schema/testing"
 )
 
 func TestAppSimulator_ExampleSchema(t *testing.T) {
 	out := &bytes.Buffer{}
 	appSim := NewAppSimulator(t, AppSimulatorOptions{
-		AppSchema:          ExampleAppSchema,
+		AppSchema:          schematesting.ExampleAppSchema,
 		Listener:           WriterListener(out),
 		MaxUpdatesPerBlock: 20,
 	})

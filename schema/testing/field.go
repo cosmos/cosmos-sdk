@@ -1,4 +1,4 @@
-package schemagen
+package schematesting
 
 import (
 	"fmt"
@@ -17,26 +17,26 @@ var (
 	boolGen = rapid.Bool()
 )
 
-var Field = rapid.Custom(func(t *rapid.T) schema.Field {
+var FieldGen = rapid.Custom(func(t *rapid.T) schema.Field {
 	kind := kindGen.Draw(t, "kind")
 	field := schema.Field{
-		Name:     Name.Draw(t, "name"),
+		Name:     NameGen.Draw(t, "name"),
 		Kind:     kind,
 		Nullable: boolGen.Draw(t, "nullable"),
 	}
 
 	switch kind {
 	case schema.EnumKind:
-		field.EnumDefinition = EnumDefinition.Draw(t, "enumDefinition")
+		field.EnumDefinition = EnumDefinitionGen.Draw(t, "enumDefinition")
 	case schema.Bech32AddressKind:
-		field.AddressPrefix = Name.Draw(t, "addressPrefix")
+		field.AddressPrefix = NameGen.Draw(t, "addressPrefix")
 	default:
 	}
 
 	return field
 })
 
-func FieldValue(field schema.Field) *rapid.Generator[any] {
+func FieldValueGen(field schema.Field) *rapid.Generator[any] {
 	gen := baseFieldValue(field)
 
 	if field.Nullable {
@@ -98,18 +98,18 @@ func baseFieldValue(field schema.Field) *rapid.Generator[any] {
 	}
 }
 
-func KeyFieldsValue(keyFields []schema.Field) *rapid.Generator[any] {
+func KeyFieldsValueGen(keyFields []schema.Field) *rapid.Generator[any] {
 	if len(keyFields) == 0 {
 		return rapid.Just[any](nil)
 	}
 
 	if len(keyFields) == 1 {
-		return FieldValue(keyFields[0])
+		return FieldValueGen(keyFields[0])
 	}
 
 	gens := make([]*rapid.Generator[any], len(keyFields))
 	for i, field := range keyFields {
-		gens[i] = FieldValue(field)
+		gens[i] = FieldValueGen(field)
 	}
 
 	return rapid.Custom(func(t *rapid.T) any {
@@ -121,14 +121,14 @@ func KeyFieldsValue(keyFields []schema.Field) *rapid.Generator[any] {
 	})
 }
 
-func ValueFieldsValue(valueFields []schema.Field) *rapid.Generator[any] {
+func ValueFieldsValueGen(valueFields []schema.Field, forUpdate bool) *rapid.Generator[any] {
 	if len(valueFields) == 0 {
 		return rapid.Just[any](nil)
 	}
 
 	gens := make([]*rapid.Generator[any], len(valueFields))
 	for i, field := range valueFields {
-		gens[i] = FieldValue(field)
+		gens[i] = FieldValueGen(field)
 	}
 	return rapid.Custom(func(t *rapid.T) any {
 		// return ValueUpdates 50% of the time
@@ -136,8 +136,8 @@ func ValueFieldsValue(valueFields []schema.Field) *rapid.Generator[any] {
 			updates := map[string]any{}
 
 			for i, gen := range gens {
-				// skip 50% of the time
-				if boolGen.Draw(t, fmt.Sprintf("skip_%s", valueFields[i].Name)) {
+				// skip 50% of the time if this is an update
+				if forUpdate && boolGen.Draw(t, fmt.Sprintf("skip_%s", valueFields[i].Name)) {
 					continue
 				}
 				updates[valueFields[i].Name] = gen.Draw(t, valueFields[i].Name)

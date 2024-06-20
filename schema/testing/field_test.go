@@ -1,4 +1,4 @@
-package schemagen
+package schematesting
 
 import (
 	"testing"
@@ -9,16 +9,16 @@ import (
 
 func TestField(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
-		field := Field.Draw(t, "field")
+		field := FieldGen.Draw(t, "field")
 		require.NoError(t, field.Validate())
 	})
 }
 
 func TestFieldValue(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
-		field := Field.Draw(t, "field")
+		field := FieldGen.Draw(t, "field")
 		require.NoError(t, field.Validate())
-		fieldValue := FieldValue(field).Draw(t, "fieldValue")
+		fieldValue := FieldValueGen(field).Draw(t, "fieldValue")
 		require.NoError(t, field.ValidateValue(fieldValue))
 	})
 }

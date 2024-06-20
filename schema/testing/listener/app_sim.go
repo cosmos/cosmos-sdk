@@ -1,16 +1,15 @@
-package indexertesting
+package listenertest
 
 import (
 	"fmt"
 
 	schema2 "cosmossdk.io/schema"
 	"cosmossdk.io/schema/listener"
+	"cosmossdk.io/schema/testing"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/btree"
 	"pgregory.net/rapid"
-
-	"cosmossdk.io/schema/testing/schemagen"
 )
 
 type AppSimulatorOptions struct {
@@ -45,7 +44,7 @@ func NewAppSimulator(tb require.TestingT, options AppSimulatorOptions) *AppSimul
 			objState := &objectState{
 				ObjectType: objectType,
 				Objects:    state,
-				UpdateGen:  schemagen.StatefulObjectUpdate(objectType, state),
+				UpdateGen:  schematesting.ObjectUpdateGen(objectType, state),
 			}
 			modState.Objects.Set(objectType.Name, objState)
 		}

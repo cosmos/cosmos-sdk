@@ -1,4 +1,4 @@
-package schemagen
+package schematesting
 
 import (
 	"fmt"
@@ -8,11 +8,11 @@ import (
 	"cosmossdk.io/schema"
 )
 
-var ModuleSchema = rapid.Custom(func(t *rapid.T) schema.ModuleSchema {
+var ModuleSchemaGen = rapid.Custom(func(t *rapid.T) schema.ModuleSchema {
 	schema := schema.ModuleSchema{}
 	numObjectTypes := rapid.IntRange(1, 10).Draw(t, "numObjectTypes")
 	for i := 0; i < numObjectTypes; i++ {
-		objectType := ObjectType.Draw(t, fmt.Sprintf("objectType[%d]", i))
+		objectType := ObjectTypeGen.Draw(t, fmt.Sprintf("objectType[%d]", i))
 		schema.ObjectTypes = append(schema.ObjectTypes, objectType)
 	}
 	return schema

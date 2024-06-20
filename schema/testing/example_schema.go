@@ -1,4 +1,4 @@
-package indexertesting
+package schematesting
 
 import (
 	"fmt"

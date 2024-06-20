@@ -554,6 +554,12 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to create new any: %w", err)
 		}
+
+		commission, err := sdkmath.LegacyNewDecFromStr("0.5")
+		if err != nil {
+			return nil, err
+		}
+
 		validator := stakingtypes.Validator{
 			OperatorAddress:   sdk.ValAddress(addr).String(),
 			ConsensusPubkey:   pkAny,
@@ -561,12 +567,13 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			Status:            stakingtypes.Bonded,
 			Tokens:            cfg.BondedTokens,
 			DelegatorShares:   cfg.BondedTokens.ToLegacyDec(),
-			Description:       stakingtypes.Description{},
+			Description:       stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			UnbondingHeight:   int64(0),
 			UnbondingTime:     time.Unix(0, 0).UTC(),
-			Commission:        stakingtypes.NewCommission(sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec()),
-			MinSelfDelegation: sdkmath.ZeroInt(),
+			Commission:        stakingtypes.NewCommission(commission, sdkmath.LegacyOneDec(), sdkmath.LegacyOneDec()),
+			MinSelfDelegation: sdkmath.OneInt(),
 		}
+
 		validators = append(validators, validator)
 		delegations = append(delegations, stakingtypes.NewDelegation(addr.String(), validator.OperatorAddress, cfg.BondedTokens.ToLegacyDec()))
 

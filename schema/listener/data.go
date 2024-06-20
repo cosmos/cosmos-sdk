@@ -6,10 +6,6 @@ import (
 	"cosmossdk.io/schema"
 )
 
-type Packet interface {
-	apply(*Listener) error
-}
-
 // InitializationData represents initialization data that is passed to a listener.
 type InitializationData struct {
 	// HasEventAlignedWrites indicates that the blockchain data source will emit KV-pair events

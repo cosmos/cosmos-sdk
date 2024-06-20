@@ -297,4 +297,8 @@ message Params {
     (amino.dont_omitempty) = true,
     (cosmos_proto.scalar)  = "cosmos.Dec"
   ];
+
+  // key_rotation_fee is fee to be spent when rotating validator's key
+  // (either consensus pubkey or operator key)
+  cosmos.base.v1beta1.Coin key_rotation_fee = 7 [(gogoproto.nullable) = false];
 }

@@ -503,7 +503,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 
 		genFiles = append(genFiles, cmtCfg.GenesisFile())
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: balances.Sort()})
-		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
+		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 1))
 
 		err = srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), appCfg)
 		if err != nil {

@@ -289,7 +289,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	cs := &store.Changeset{
 		Changes: stateChanges,
 	}
-	stateRoot, err := c.store.Commit(cs)
+	stateRoot, err := c.store.WorkingHash(cs)
 	if err != nil {
 		return nil, fmt.Errorf("unable to commit the changeset: %w", err)
 	}

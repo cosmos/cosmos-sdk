@@ -15,7 +15,8 @@ type Listener struct {
 	// The lastBlockPersisted return value should be the last block height the listener persisted if it is
 	// persisting block data, 0 if it is not interested in persisting block data, or -1 if it is
 	// persisting block data but has not persisted any data yet. This check allows the indexer
-	// framework to ensure that the listener has not missed blocks.
+	// framework to ensure that the listener has not missed blocks. Data sources MUST call
+	// initialize before any other method is called, otherwise, no data will be processed.
 	Initialize func(InitializationData) (lastBlockPersisted int64, err error)
 
 	// StartBlock is called at the beginning of processing a block.
@@ -31,11 +32,12 @@ type Listener struct {
 	OnEvent func(EventData) error
 
 	// OnKVPair is called when a key-value has been written to the store for a given module.
-	OnKVPair func(moduleName string, key, value []byte, delete bool) error
+	OnKVPair func(KVPairData) error
 
 	// Commit is called when state is committed, usually at the end of a block. Any
 	// indexers should commit their data when this is called and return an error if
-	// they are unable to commit.
+	// they are unable to commit. Data sources MUST call Commit when data is committed,
+	// otherwise it should be assumed that indexers have not persisted their state.
 	Commit func() error
 
 	// InitializeModuleSchema should be called whenever the blockchain process starts OR whenever
@@ -49,7 +51,7 @@ type Listener struct {
 	// OnObjectUpdate is called whenever an object is updated in a module's state. This is only called
 	// when logical data is available. It should be assumed that the same data in raw form
 	// is also passed to OnKVPair.
-	OnObjectUpdate func(module string, update ObjectUpdate) error
+	OnObjectUpdate func(ObjectUpdateData) error
 }
 
 // InitializationData represents initialization data that is passed to a listener.
@@ -117,3 +119,24 @@ type ToBytes = func() ([]byte, error)
 
 // ToJSON is a function that lazily returns the JSON representation of data.
 type ToJSON = func() (json.RawMessage, error)
+
+// KVPairData represents key-value pair data that is passed to a listener.
+type KVPairData struct {
+	// ModuleName is the name of the module that the key-value pair belongs to.
+	ModuleName string
+
+	// Key is the key of the key-value pair.
+	Key []byte
+
+	// Value is the value of the key-value pair. It should be ignored when Delete is true.
+	Value []byte
+
+	// Delete is a flag that indicates that the key-value pair was deleted. If it is false,
+	// then it is assumed that this has been a set operation.
+	Delete bool
+}
+
+type ObjectUpdateData struct {
+	ModuleName string
+	Update     ObjectUpdate
+}

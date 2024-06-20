@@ -11,21 +11,31 @@ The basic types for specifying index sources, targets and decoders are provided 
 ```mermaid
 sequenceDiagram
     actor Source
-    participant Indexer    
-    Source ->> Indexer: Initialize
-    Source -->> Indexer: InitializeModuleSchema
+    actor Manager
+    participant Indexer
+    Source -->> Manager: InitializeModuleSchema
+    Manager ->> Indexer: InitializeModuleSchema
+    Source ->> Manager: Initialize
+    Manager ->> Indexer: Initialize
     loop Block
-        Source ->> Indexer: StartBlock
-        Source ->> Indexer: OnBlockHeader
-        Source -->> Indexer: OnTx
-        Source -->> Indexer: OnEvent
-        Source -->> Indexer: OnKVPair
-        Source -->> Indexer: OnObjectUpdate
-        Source ->> Indexer: Commit
+        Source ->> Manager: StartBlock
+        Manager ->> Indexer: StartBlock
+        Source -->> Manager: OnBlockHeader
+        Manager -->> Indexer: OnBlockHeader
+        Source -->> Manager: OnTx
+        Manager -->> Indexer: OnTx
+        Source -->> Manager: OnEvent
+        Manager -->> Indexer: OnEvent
+        Source -->> Manager: OnKVPair
+        Manager -->> Indexer: OnKVPair
+        Source -->> Manager: OnObjectUpdate
+        Manager -->> Indexer: OnObjectUpdate
+        Source ->> Manager: Commit
+        Manager ->> Indexer: Commit
     end
 ```
 
-`Initialize` must be called before any other method and should only be invoked once. `InitializeModuleSchema` should be called at most once for every module with logical data.
+`InitializeModuleSchema` should be called at most once for every module with logical data and all calls to should happen even before `Initialize` is called. After that `Initialize` MUST be called before any other method and should only be invoked once. 
 
 Sources will generally only call `InitializeModuleSchema` and `OnObjectUpdate` if they have native logical decoding capabilities. Usually, the indexer framework will provide this functionality based on `OnKVPair` data and `IndexableModule` implementations.
 

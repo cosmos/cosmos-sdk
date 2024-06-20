@@ -26,7 +26,7 @@ type ServerComponent[T transaction.Tx] interface {
 
 // HasCLICommands is a server module that has CLI commands.
 type HasCLICommands interface {
-	CLICommands() CLIConfig
+	CLICommands(AppCreator[transaction.Tx]) CLIConfig
 }
 
 // HasConfig is a server module that has a config.
@@ -118,13 +118,13 @@ func (s *Server) Stop(ctx context.Context) error {
 }
 
 // CLICommands returns all CLI commands of all components.
-func (s *Server) CLICommands() CLIConfig {
+func (s *Server) CLICommands(appCreator AppCreator[transaction.Tx]) CLIConfig {
 	commands := CLIConfig{}
 	for _, mod := range s.components {
 		if climod, ok := mod.(HasCLICommands); ok {
-			commands.Commands = append(commands.Commands, climod.CLICommands().Commands...)
-			commands.Queries = append(commands.Queries, climod.CLICommands().Queries...)
-			commands.Txs = append(commands.Txs, climod.CLICommands().Txs...)
+			commands.Commands = append(commands.Commands, climod.CLICommands(appCreator).Commands...)
+			commands.Queries = append(commands.Queries, climod.CLICommands(appCreator).Queries...)
+			commands.Txs = append(commands.Txs, climod.CLICommands(appCreator).Txs...)
 		}
 	}
 

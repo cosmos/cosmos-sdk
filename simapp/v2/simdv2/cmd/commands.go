@@ -69,7 +69,6 @@ func initRootCmd(
 		genutilcli.InitCmd(moduleManager),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
-		// pruning.Cmd(newApp), // TODO add to comet server
 		// snapshot.Cmd(newApp), // TODO add to comet server
 	)
 

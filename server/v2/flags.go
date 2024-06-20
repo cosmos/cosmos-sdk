@@ -10,5 +10,9 @@ const (
 	FlagLogNoColor = "log_no_color"
 	FlagTrace      = "trace"
 
-	OutputFormatJSON = "json"
+	OutputFormatJSON      = "json"
+	FlagPruning           = "pruning"
+	FlagAppDBBackend      = "app-db-backend"
+	FlagPruningKeepRecent = "pruning-keep-recent"
+	FlagPruningInterval   = "pruning-interval"
 )

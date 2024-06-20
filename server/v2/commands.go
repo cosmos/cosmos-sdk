@@ -70,7 +70,7 @@ func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger 
 		},
 	}
 
-	cmds := server.CLICommands()
+	cmds := server.CLICommands(newApp)
 	cmds.Commands = append(cmds.Commands, startCmd)
 
 	return cmds, nil

@@ -58,10 +58,12 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 	require.NoError(err)
 
 	testCases := []struct {
-		name      string
-		input     *types.MsgCreateValidator
-		expErr    bool
-		expErrMsg string
+		name        string
+		input       *types.MsgCreateValidator
+		expErr      bool
+		expErrMsg   string
+		expPanic    bool
+		expPanicMsg string
 	}{
 		{
 			name: "empty description",
@@ -284,8 +286,8 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 				Pubkey:            badPubKey,
 				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
 			},
-			expErr:    true,
-			expErrMsg: "length of pubkey is incorrect",
+			expPanic:    true,
+			expPanicMsg: "length of pubkey is incorrect",
 		},
 		{
 			name: "valid msg",
@@ -314,6 +316,14 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 	for _, tc := range testCases {
 		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
+
+			if tc.expPanic {
+				require.PanicsWithValue(tc.expPanicMsg, func() {
+					_, _ = msgServer.CreateValidator(ctx, tc.input)
+				})
+				return
+			}
+
 			_, err := msgServer.CreateValidator(ctx, tc.input)
 			if tc.expErr {
 				require.Error(err)
@@ -1274,6 +1284,8 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 		newPubKey cryptotypes.PubKey
 		isErr     bool
 		errMsg    string
+		isPanic   bool
+		panicMsg  string
 	}{
 		{
 			name: "1st iteration no error",
@@ -1300,8 +1312,8 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 		{
 			name:      "invalid pubkey length",
 			malleate:  func() sdk.Context { return ctx },
-			isErr:     true,
-			errMsg:    "length of pubkey is incorrect",
+			isPanic:   true,
+			panicMsg:  "length of pubkey is incorrect",
 			newPubKey: badPubKey,
 			validator: validators[0].GetOperator(),
 		},
@@ -1447,7 +1459,15 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 			req, err := types.NewMsgRotateConsPubKey(tc.validator, tc.newPubKey)
 			s.Require().NoError(err)
 
-			_, err = msgServer.RotateConsPubKey(newCtx, req)
+			if tc.isPanic {
+				s.Require().PanicsWithValue(tc.panicMsg, func() {
+					_, err = msgServer.RotateConsPubKey(ctx, req)
+				}, tc.isPanic)
+				return
+			} else {
+				_, err = msgServer.RotateConsPubKey(newCtx, req)
+			}
+
 			if tc.isErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), tc.errMsg)

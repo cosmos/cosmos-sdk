@@ -160,12 +160,12 @@ func (r Router) InvokeTyped(ctx context.Context, req, resp protoiface.MessageV1)
 	if err != nil {
 		return err
 	}
-	merge(resp, handlerResp)
+	merge(handlerResp, resp)
 	return nil
 }
 
 func merge(src, dst protoiface.MessageV1) {
-	reflect.Indirect(reflect.ValueOf(src)).Set(reflect.Indirect(reflect.ValueOf(dst)))
+	reflect.Indirect(reflect.ValueOf(dst)).Set(reflect.Indirect(reflect.ValueOf(src)))
 }
 
 func (r Router) InvokeUntyped(ctx context.Context, req protoiface.MessageV1) (res protoiface.MessageV1, err error) {

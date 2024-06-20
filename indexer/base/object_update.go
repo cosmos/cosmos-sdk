@@ -1,5 +1,7 @@
 package indexerbase
 
+import "sort"
+
 // ObjectUpdate represents an update operation on an object in a module's state.
 type ObjectUpdate struct {
 	// TypeName is the name of the object type in the module's schema.
@@ -37,4 +39,23 @@ type ValueUpdates interface {
 	// to the requirements of that field's type in the schema. Iterate returns an error if
 	// it was unable to decode the values properly (which could be the case in lazy evaluation).
 	Iterate(func(col string, value interface{}) bool) error
+}
+
+// MapValueUpdates is a map-based implementation of ValueUpdates which always iterates
+// over keys in sorted order.
+type MapValueUpdates map[string]interface{}
+
+// Iterate implements the ValueUpdates interface.
+func (m MapValueUpdates) Iterate(fn func(col string, value interface{}) bool) error {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		if !fn(k, m[k]) {
+			return nil
+		}
+	}
+	return nil
 }

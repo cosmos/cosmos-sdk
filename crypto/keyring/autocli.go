@@ -1,9 +1,8 @@
 package keyring
 
 import (
-	"cosmossdk.io/core/address"
-
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	"cosmossdk.io/core/address"
 	authsigning "cosmossdk.io/x/auth/signing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

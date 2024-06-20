@@ -122,7 +122,8 @@ func NewTxConfig(options ConfigOptions) (TxConfig, error) {
 	if options.Decoder == nil {
 		options.Decoder, err = txdecode.NewDecoder(txdecode.Options{
 			SigningContext: signingCtx.SigningContext(),
-			ProtoCodec:     options.Cdc})
+			ProtoCodec:     options.Cdc,
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -196,14 +197,14 @@ func (t defaultTxSigningConfig) SigningContext() *signing.Context {
 // MarshalSignatureJSON takes a slice of Signature objects and returns their JSON encoding.
 // This method is not yet implemented and will panic if called.
 func (t defaultTxSigningConfig) MarshalSignatureJSON(signatures []Signature) ([]byte, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 // UnmarshalSignatureJSON takes a JSON byte slice and returns a slice of Signature objects.
 // This method is not yet implemented and will panic if called.
 func (t defaultTxSigningConfig) UnmarshalSignatureJSON(bytes []byte) ([]Signature, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 

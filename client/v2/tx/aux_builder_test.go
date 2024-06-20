@@ -1,15 +1,15 @@
 package tx_test
 
 import (
-	"cosmossdk.io/core/transaction"
-	"google.golang.org/protobuf/types/known/anypb"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/client/v2/tx"
+	"cosmossdk.io/core/transaction"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/testutil"

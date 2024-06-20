@@ -129,7 +129,8 @@ func Test_txBuilder_GetTx(t *testing.T) {
 					TimeoutHeight:               0,
 					Unordered:                   false,
 					ExtensionOptions:            nil,
-					NonCriticalExtensionOptions: nil}) {
+					NonCriticalExtensionOptions: nil,
+				}) {
 					return false
 				}
 				if !reflect.DeepEqual(tx.AuthInfo, &apitx.AuthInfo{
@@ -138,7 +139,9 @@ func Test_txBuilder_GetTx(t *testing.T) {
 						Amount:   nil,
 						GasLimit: 0,
 						Payer:    "",
-						Granter:  ""}}) {
+						Granter:  "",
+					},
+				}) {
 					return false
 				}
 				if tx.Signatures != nil {

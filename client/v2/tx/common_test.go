@@ -2,12 +2,11 @@ package tx
 
 import (
 	"context"
-	abciv1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
-	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"github.com/cosmos/cosmos-sdk/types"
 
 	"google.golang.org/grpc"
 
+	abciv1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
+	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/client/v2/autocli/keyring"
 	txdecode "cosmossdk.io/x/tx/decode"
 	"cosmossdk.io/x/tx/signing"
@@ -19,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	cryptoKeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 var (

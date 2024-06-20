@@ -1,10 +1,12 @@
 package tx
 
 import (
-	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
-	"testing"
+
+	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 )
 
 func Test_txEncoder_txDecoder(t *testing.T) {

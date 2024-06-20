@@ -13,7 +13,6 @@ var _ gogogrpc.ClientConn = ClientConn{}
 type ClientConn struct{}
 
 func (c ClientConn) Invoke(ctx context.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error {
-	//TODO implement me
 	panic("implement me")
 }
 

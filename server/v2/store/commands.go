@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
-
-	"cosmossdk.io/core/transaction"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	storev2 "cosmossdk.io/store/v2"
+
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/spf13/cast"
 )
 
 // QueryBlockResultsCmd implements the default command for a BlockResults query.

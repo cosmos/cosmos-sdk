@@ -3,14 +3,15 @@ package store
 import (
 	"context"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
-type StoreComponent struct {}
+type StoreComponent struct{}
 
 func (s StoreComponent) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) (serverv2.ServerComponent[transaction.Tx], error) {
 	return s, nil
@@ -35,5 +36,3 @@ func (s StoreComponent) CLICommands(appCreator serverv2.AppCreator[transaction.T
 		},
 	}
 }
-
-

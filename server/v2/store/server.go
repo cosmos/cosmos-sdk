@@ -10,25 +10,25 @@ import (
 	"github.com/spf13/viper"
 )
 
-type StoreServer struct {}
+type StoreComponent struct {}
 
-func (s StoreServer) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) (serverv2.ServerComponent[transaction.Tx], error) {
+func (s StoreComponent) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) (serverv2.ServerComponent[transaction.Tx], error) {
 	return s, nil
 }
 
-func (s StoreServer) Name() string {
+func (s StoreComponent) Name() string {
 	return "store"
 }
 
-func (s StoreServer) Start(ctx context.Context) error {
+func (s StoreComponent) Start(ctx context.Context) error {
 	return nil
 }
 
-func (s StoreServer) Stop(ctx context.Context) error {
+func (s StoreComponent) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (s StoreServer) CLICommands(appCreator serverv2.AppCreator[transaction.Tx]) serverv2.CLIConfig {
+func (s StoreComponent) CLICommands(appCreator serverv2.AppCreator[transaction.Tx]) serverv2.CLIConfig {
 	return serverv2.CLIConfig{
 		Commands: []*cobra.Command{
 			s.PrunesCmd(appCreator),

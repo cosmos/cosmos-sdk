@@ -18,7 +18,7 @@ import (
 )
 
 // QueryBlockResultsCmd implements the default command for a BlockResults query.
-func (s StoreServer) PrunesCmd(appCreator serverv2.AppCreator[transaction.Tx]) *cobra.Command {
+func (s StoreComponent) PrunesCmd(appCreator serverv2.AppCreator[transaction.Tx]) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prune [pruning-method]",
 		Short: "Prune app history states by keeping the recent heights and deleting old heights",

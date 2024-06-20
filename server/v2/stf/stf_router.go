@@ -165,7 +165,7 @@ func (r Router) InvokeTyped(ctx context.Context, req, resp protoiface.MessageV1)
 }
 
 func merge(src, dst protoiface.MessageV1) {
-	reflect.Indirect(reflect.ValueOf(dst)).Set(reflect.Indirect(reflect.ValueOf(src)))
+	reflect.Indirect(reflect.ValueOf(src)).Set(reflect.Indirect(reflect.ValueOf(dst)))
 }
 
 func (r Router) InvokeUntyped(ctx context.Context, req protoiface.MessageV1) (res protoiface.MessageV1, err error) {

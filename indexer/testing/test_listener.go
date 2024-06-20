@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 
+	"cosmossdk.io/schema"
+
 	indexerbase "cosmossdk.io/indexer/base"
 )
 
@@ -30,7 +32,7 @@ func WriterListener(w io.Writer) indexerbase.Listener {
 			_, err := fmt.Fprintf(w, "Commit\n")
 			return err
 		},
-		InitializeModuleSchema: func(moduleName string, schema indexerbase.ModuleSchema) error {
+		InitializeModuleSchema: func(moduleName string, schema schema.ModuleSchema) error {
 			bz, err := json.Marshal(schema)
 			if err != nil {
 				return err
@@ -38,7 +40,7 @@ func WriterListener(w io.Writer) indexerbase.Listener {
 			_, err = fmt.Fprintf(w, "InitializeModuleSchema: %s %s\n", moduleName, bz)
 			return err
 		},
-		OnObjectUpdate: func(moduleName string, data indexerbase.ObjectUpdate) error {
+		OnObjectUpdate: func(moduleName string, data schema.ObjectUpdate) error {
 			bz, err := json.Marshal(data)
 			if err != nil {
 				return err

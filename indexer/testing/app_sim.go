@@ -3,6 +3,7 @@ package indexertesting
 import (
 	"fmt"
 
+	schema2 "cosmossdk.io/schema"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/btree"
 	"pgregory.net/rapid"
@@ -12,7 +13,7 @@ import (
 )
 
 type AppSimulatorOptions struct {
-	AppSchema          map[string]indexerbase.ModuleSchema
+	AppSchema          map[string]schema2.ModuleSchema
 	Listener           indexerbase.Listener
 	EventAlignedWrites bool
 	MaxUpdatesPerBlock int
@@ -30,7 +31,7 @@ type AppSimulator struct {
 func NewAppSimulator(tb require.TestingT, options AppSimulatorOptions) *AppSimulator {
 	modules := &btree.Map[string, *moduleState]{}
 	for module, schema := range options.AppSchema {
-		require.True(tb, indexerbase.ValidateName(module))
+		require.True(tb, schema2.ValidateName(module))
 		require.NoError(tb, schema.Validate())
 
 		modState := &moduleState{
@@ -39,7 +40,7 @@ func NewAppSimulator(tb require.TestingT, options AppSimulatorOptions) *AppSimul
 		}
 		modules.Set(module, modState)
 		for _, objectType := range schema.ObjectTypes {
-			state := &btree.Map[string, indexerbase.ObjectUpdate]{}
+			state := &btree.Map[string, schema2.ObjectUpdate]{}
 			objState := &objectState{
 				ObjectType: objectType,
 				Objects:    state,
@@ -82,7 +83,7 @@ func NewAppSimulator(tb require.TestingT, options AppSimulatorOptions) *AppSimul
 
 type updateData struct {
 	module string
-	update indexerbase.ObjectUpdate
+	update schema2.ObjectUpdate
 }
 
 func (a *AppSimulator) Initialize() {
@@ -124,7 +125,7 @@ func (a *AppSimulator) NextBlock() {
 	}
 }
 
-func (a *AppSimulator) applyUpdate(module string, update indexerbase.ObjectUpdate, retainDeletions bool) error {
+func (a *AppSimulator) applyUpdate(module string, update schema2.ObjectUpdate, retainDeletions bool) error {
 	if a.options.Listener.OnObjectUpdate != nil {
 		err := a.options.Listener.OnObjectUpdate(module, update)
 		if err != nil {
@@ -165,12 +166,12 @@ func (a *AppSimulator) applyUpdate(module string, update indexerbase.ObjectUpdat
 }
 
 type moduleState struct {
-	ModuleSchema indexerbase.ModuleSchema
+	ModuleSchema schema2.ModuleSchema
 	Objects      *btree.Map[string, *objectState]
 }
 
 type objectState struct {
-	ObjectType indexerbase.ObjectType
-	Objects    *btree.Map[string, indexerbase.ObjectUpdate]
-	UpdateGen  *rapid.Generator[indexerbase.ObjectUpdate]
+	ObjectType schema2.ObjectType
+	Objects    *btree.Map[string, schema2.ObjectUpdate]
+	UpdateGen  *rapid.Generator[schema2.ObjectUpdate]
 }

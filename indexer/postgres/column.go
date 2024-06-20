@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"io"
 
-	indexerbase "cosmossdk.io/indexer/base"
+	"cosmossdk.io/schema"
 )
 
-func (tm *TableManager) createColumnDef(writer io.Writer, field indexerbase.Field) error {
+func (tm *TableManager) createColumnDef(writer io.Writer, field schema.Field) error {
 	_, err := fmt.Fprintf(writer, "%q ", field.Name)
 	if err != nil {
 		return err
@@ -23,18 +23,18 @@ func (tm *TableManager) createColumnDef(writer io.Writer, field indexerbase.Fiel
 		return writeNullability(writer, field.Nullable)
 	} else {
 		switch field.Kind {
-		case indexerbase.EnumKind:
+		case schema.EnumKind:
 			_, err = fmt.Fprintf(writer, "TEXT") // TODO: enum type
 			if err != nil {
 				return err
 			}
-		case indexerbase.Bech32AddressKind:
+		case schema.Bech32AddressKind:
 			_, err = fmt.Fprintf(writer, "BYTEA") // TODO: string conversion
 			if err != nil {
 				return err
 			}
 
-		case indexerbase.TimeKind:
+		case schema.TimeKind:
 			nanosCol := fmt.Sprintf("%s_nanos", field.Name)
 			_, err = fmt.Fprintf(writer, "TIMESTAMPTZ GENERATED ALWAYS AS (to_timestamp(%q)) STORED,\n\t", nanosCol)
 			if err != nil {
@@ -63,41 +63,41 @@ func writeNullability(writer io.Writer, nullable bool) error {
 	}
 }
 
-func simpleColumnType(kind indexerbase.Kind) string {
+func simpleColumnType(kind schema.Kind) string {
 	switch kind {
-	case indexerbase.StringKind:
+	case schema.StringKind:
 		return "TEXT"
-	case indexerbase.BoolKind:
+	case schema.BoolKind:
 		return "BOOLEAN"
-	case indexerbase.BytesKind:
+	case schema.BytesKind:
 		return "BYTEA"
-	case indexerbase.Int8Kind:
+	case schema.Int8Kind:
 		return "SMALLINT"
-	case indexerbase.Int16Kind:
+	case schema.Int16Kind:
 		return "SMALLINT"
-	case indexerbase.Int32Kind:
+	case schema.Int32Kind:
 		return "INTEGER"
-	case indexerbase.Int64Kind:
+	case schema.Int64Kind:
 		return "BIGINT"
-	case indexerbase.Uint8Kind:
+	case schema.Uint8Kind:
 		return "SMALLINT"
-	case indexerbase.Uint16Kind:
+	case schema.Uint16Kind:
 		return "INTEGER"
-	case indexerbase.Uint32Kind:
+	case schema.Uint32Kind:
 		return "BIGINT"
-	case indexerbase.Uint64Kind:
+	case schema.Uint64Kind:
 		return "NUMERIC"
-	case indexerbase.IntegerKind:
+	case schema.IntegerKind:
 		return "NUMERIC"
-	case indexerbase.DecimalKind:
+	case schema.DecimalKind:
 		return "NUMERIC"
-	case indexerbase.Float32Kind:
+	case schema.Float32Kind:
 		return "REAL"
-	case indexerbase.Float64Kind:
+	case schema.Float64Kind:
 		return "DOUBLE PRECISION"
-	case indexerbase.JSONKind:
+	case schema.JSONKind:
 		return "JSONB"
-	case indexerbase.DurationKind:
+	case schema.DurationKind:
 		// TODO: set COMMENT on field indicating nanoseconds unit
 		return "BIGINT"
 	default:
@@ -105,11 +105,11 @@ func simpleColumnType(kind indexerbase.Kind) string {
 	}
 }
 
-func colNames(cols []indexerbase.Field) []string {
+func colNames(cols []schema.Field) []string {
 	names := make([]string, len(cols))
 	for i, col := range cols {
 		name := col.Name
-		if col.Kind == indexerbase.TimeKind {
+		if col.Kind == schema.TimeKind {
 			name = fmt.Sprintf("%s_nanos", name)
 		}
 		names[i] = fmt.Sprintf("%q", name)

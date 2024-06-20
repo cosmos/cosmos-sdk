@@ -182,6 +182,6 @@ func (am AppModule) EndBlock(ctx context.Context) ([]appmodule.ValidatorUpdate, 
 	return am.keeper.EndBlocker(ctx)
 }
 
-//func (am AppModule) ModuleDecoder() (indexerbase.ModuleDecoder, error) {
-//	return am.keeper.Schema.ModuleDecoder(collections.IndexingOptions{})
+//func (am AppModule) ModuleCodec() (indexerbase.ModuleCodec, error) {
+//	return am.keeper.Schema.ModuleCodec(collections.IndexingOptions{})
 //}

@@ -7,7 +7,7 @@ import (
 	"io"
 	"strings"
 
-	indexerbase "cosmossdk.io/indexer/base"
+	"cosmossdk.io/schema"
 )
 
 func (tm *TableManager) InsertUpdate(ctx context.Context, tx *sql.Tx, key, value interface{}) error {
@@ -110,9 +110,9 @@ func (tm *TableManager) bindValueParams(value interface{}) (params []interface{}
 	n := len(tm.typ.ValueFields)
 	if n == 0 {
 		return nil, nil, nil
-	} else if valueUpdates, ok := value.(indexerbase.ValueUpdates); ok {
+	} else if valueUpdates, ok := value.(schema.ValueUpdates); ok {
 		var e error
-		var fields []indexerbase.Field
+		var fields []schema.Field
 		var params []interface{}
 		if err := valueUpdates.Iterate(func(name string, value interface{}) bool {
 			field, ok := tm.valueFields[name]

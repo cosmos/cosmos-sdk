@@ -3,20 +3,19 @@ package schemagen
 import (
 	"fmt"
 
+	indexerbase "cosmossdk.io/schema"
 	"pgregory.net/rapid"
-
-	indexerbase "cosmossdk.io/indexer/base"
 )
 
-var ModuleSchema = rapid.Custom(func(t *rapid.T) indexerbase.ModuleSchema {
-	schema := indexerbase.ModuleSchema{}
+var ModuleSchema = rapid.Custom(func(t *rapid.T) schema.ModuleSchema {
+	schema := schema.ModuleSchema{}
 	numObjectTypes := rapid.IntRange(1, 10).Draw(t, "numObjectTypes")
 	for i := 0; i < numObjectTypes; i++ {
 		objectType := ObjectType.Draw(t, fmt.Sprintf("objectType[%d]", i))
 		schema.ObjectTypes = append(schema.ObjectTypes, objectType)
 	}
 	return schema
-}).Filter(func(schema indexerbase.ModuleSchema) bool {
+}).Filter(func(schema schema.ModuleSchema) bool {
 	// filter out enums with duplicate names
 	enumTypeNames := map[string]bool{}
 	for _, objectType := range schema.ObjectTypes {

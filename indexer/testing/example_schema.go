@@ -3,126 +3,126 @@ package indexertesting
 import (
 	"fmt"
 
-	indexerbase "cosmossdk.io/indexer/base"
+	"cosmossdk.io/schema"
 )
 
-var ExampleAppSchema = map[string]indexerbase.ModuleSchema{
+var ExampleAppSchema = map[string]schema.ModuleSchema{
 	"all_kinds": mkAllKindsModule(),
 	"test_cases": {
-		ObjectTypes: []indexerbase.ObjectType{
+		ObjectTypes: []schema.ObjectType{
 			{
 				"Singleton",
-				[]indexerbase.Field{},
-				[]indexerbase.Field{
+				[]schema.Field{},
+				[]schema.Field{
 					{
 						Name: "Value",
-						Kind: indexerbase.StringKind,
+						Kind: schema.StringKind,
 					},
 					{
 						Name: "Value2",
-						Kind: indexerbase.BytesKind,
+						Kind: schema.BytesKind,
 					},
 				},
 				false,
 			},
 			{
 				Name: "Simple",
-				KeyFields: []indexerbase.Field{
+				KeyFields: []schema.Field{
 					{
 						Name: "Key",
-						Kind: indexerbase.StringKind,
+						Kind: schema.StringKind,
 					},
 				},
-				ValueFields: []indexerbase.Field{
+				ValueFields: []schema.Field{
 					{
 						Name: "Value1",
-						Kind: indexerbase.Int32Kind,
+						Kind: schema.Int32Kind,
 					},
 					{
 						Name: "Value2",
-						Kind: indexerbase.BytesKind,
+						Kind: schema.BytesKind,
 					},
 				},
 			},
 			{
 				Name: "TwoKeys",
-				KeyFields: []indexerbase.Field{
+				KeyFields: []schema.Field{
 					{
 						Name: "Key1",
-						Kind: indexerbase.StringKind,
+						Kind: schema.StringKind,
 					},
 					{
 						Name: "Key2",
-						Kind: indexerbase.Int32Kind,
+						Kind: schema.Int32Kind,
 					},
 				},
 			},
 			{
 				Name: "ThreeKeys",
-				KeyFields: []indexerbase.Field{
+				KeyFields: []schema.Field{
 					{
 						Name: "Key1",
-						Kind: indexerbase.StringKind,
+						Kind: schema.StringKind,
 					},
 					{
 						Name: "Key2",
-						Kind: indexerbase.Int32Kind,
+						Kind: schema.Int32Kind,
 					},
 					{
 						Name: "Key3",
-						Kind: indexerbase.Uint64Kind,
+						Kind: schema.Uint64Kind,
 					},
 				},
-				ValueFields: []indexerbase.Field{
+				ValueFields: []schema.Field{
 					{
 						Name: "Value1",
-						Kind: indexerbase.Int32Kind,
+						Kind: schema.Int32Kind,
 					},
 				},
 			},
 			{
 				Name: "ManyValues",
-				KeyFields: []indexerbase.Field{
+				KeyFields: []schema.Field{
 					{
 						Name: "Key",
-						Kind: indexerbase.StringKind,
+						Kind: schema.StringKind,
 					},
 				},
-				ValueFields: []indexerbase.Field{
+				ValueFields: []schema.Field{
 					{
 						Name: "Value1",
-						Kind: indexerbase.Int32Kind,
+						Kind: schema.Int32Kind,
 					},
 					{
 						Name: "Value2",
-						Kind: indexerbase.BytesKind,
+						Kind: schema.BytesKind,
 					},
 					{
 						Name: "Value3",
-						Kind: indexerbase.Float64Kind,
+						Kind: schema.Float64Kind,
 					},
 					{
 						Name: "Value4",
-						Kind: indexerbase.Uint64Kind,
+						Kind: schema.Uint64Kind,
 					},
 				},
 			},
 			{
 				Name: "RetainDeletions",
-				KeyFields: []indexerbase.Field{
+				KeyFields: []schema.Field{
 					{
 						Name: "Key",
-						Kind: indexerbase.StringKind,
+						Kind: schema.StringKind,
 					},
 				},
-				ValueFields: []indexerbase.Field{
+				ValueFields: []schema.Field{
 					{
 						Name: "Value1",
-						Kind: indexerbase.Int32Kind,
+						Kind: schema.Int32Kind,
 					},
 					{
 						Name: "Value2",
-						Kind: indexerbase.BytesKind,
+						Kind: schema.BytesKind,
 					},
 				},
 				RetainDeletions: true,
@@ -131,11 +131,11 @@ var ExampleAppSchema = map[string]indexerbase.ModuleSchema{
 	},
 }
 
-func mkAllKindsModule() indexerbase.ModuleSchema {
-	mod := indexerbase.ModuleSchema{}
+func mkAllKindsModule() schema.ModuleSchema {
+	mod := schema.ModuleSchema{}
 
-	for i := 1; i < int(indexerbase.MAX_VALID_KIND); i++ {
-		kind := indexerbase.Kind(i)
+	for i := 1; i < int(schema.MAX_VALID_KIND); i++ {
+		kind := schema.Kind(i)
 		typ := mkTestObjectType(kind)
 		mod.ObjectTypes = append(mod.ObjectTypes, typ)
 	}
@@ -143,16 +143,16 @@ func mkAllKindsModule() indexerbase.ModuleSchema {
 	return mod
 }
 
-func mkTestObjectType(kind indexerbase.Kind) indexerbase.ObjectType {
-	field := indexerbase.Field{
+func mkTestObjectType(kind schema.Kind) schema.ObjectType {
+	field := schema.Field{
 		Kind: kind,
 	}
 
-	if kind == indexerbase.EnumKind {
+	if kind == schema.EnumKind {
 		field.EnumDefinition = testEnum
 	}
 
-	if kind == indexerbase.Bech32AddressKind {
+	if kind == schema.Bech32AddressKind {
 		field.AddressPrefix = "cosmos"
 	}
 
@@ -167,14 +167,14 @@ func mkTestObjectType(kind indexerbase.Kind) indexerbase.ObjectType {
 	val2Field.Name = "valNullable"
 	val2Field.Nullable = true
 
-	return indexerbase.ObjectType{
+	return schema.ObjectType{
 		Name:        fmt.Sprintf("test_%v", kind),
-		KeyFields:   []indexerbase.Field{key1Field, key2Field},
-		ValueFields: []indexerbase.Field{val1Field, val2Field},
+		KeyFields:   []schema.Field{key1Field, key2Field},
+		ValueFields: []schema.Field{val1Field, val2Field},
 	}
 }
 
-var testEnum = indexerbase.EnumDefinition{
+var testEnum = schema.EnumDefinition{
 	Name:   "test_enum",
 	Values: []string{"foo", "bar", "baz"},
 }

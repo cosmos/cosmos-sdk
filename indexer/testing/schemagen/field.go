@@ -4,31 +4,30 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/schema"
 	"pgregory.net/rapid"
-
-	indexerbase "cosmossdk.io/indexer/base"
 )
 
 var (
-	kindGen = rapid.Map(rapid.IntRange(int(indexerbase.InvalidKind+1), int(indexerbase.MAX_VALID_KIND-1)),
-		func(i int) indexerbase.Kind {
-			return indexerbase.Kind(i)
+	kindGen = rapid.Map(rapid.IntRange(int(schema.InvalidKind+1), int(schema.MAX_VALID_KIND-1)),
+		func(i int) schema.Kind {
+			return schema.Kind(i)
 		})
 	boolGen = rapid.Bool()
 )
 
-var Field = rapid.Custom(func(t *rapid.T) indexerbase.Field {
+var Field = rapid.Custom(func(t *rapid.T) schema.Field {
 	kind := kindGen.Draw(t, "kind")
-	field := indexerbase.Field{
+	field := schema.Field{
 		Name:     Name.Draw(t, "name"),
 		Kind:     kind,
 		Nullable: boolGen.Draw(t, "nullable"),
 	}
 
 	switch kind {
-	case indexerbase.EnumKind:
+	case schema.EnumKind:
 		field.EnumDefinition = EnumDefinition.Draw(t, "enumDefinition")
-	case indexerbase.Bech32AddressKind:
+	case schema.Bech32AddressKind:
 		field.AddressPrefix = Name.Draw(t, "addressPrefix")
 	default:
 	}
@@ -36,7 +35,7 @@ var Field = rapid.Custom(func(t *rapid.T) indexerbase.Field {
 	return field
 })
 
-func FieldValue(field indexerbase.Field) *rapid.Generator[any] {
+func FieldValue(field schema.Field) *rapid.Generator[any] {
 	gen := baseFieldValue(field)
 
 	if field.Nullable {
@@ -46,49 +45,49 @@ func FieldValue(field indexerbase.Field) *rapid.Generator[any] {
 	return gen
 }
 
-func baseFieldValue(field indexerbase.Field) *rapid.Generator[any] {
+func baseFieldValue(field schema.Field) *rapid.Generator[any] {
 	switch field.Kind {
-	case indexerbase.StringKind:
+	case schema.StringKind:
 		return rapid.String().AsAny()
-	case indexerbase.BytesKind:
+	case schema.BytesKind:
 		return rapid.SliceOf(rapid.Byte()).AsAny()
-	case indexerbase.Int8Kind:
+	case schema.Int8Kind:
 		return rapid.Int8().AsAny()
-	case indexerbase.Int16Kind:
+	case schema.Int16Kind:
 		return rapid.Int16().AsAny()
-	case indexerbase.Uint8Kind:
+	case schema.Uint8Kind:
 		return rapid.Uint8().AsAny()
-	case indexerbase.Uint16Kind:
+	case schema.Uint16Kind:
 		return rapid.Uint16().AsAny()
-	case indexerbase.Int32Kind:
+	case schema.Int32Kind:
 		return rapid.Int32().AsAny()
-	case indexerbase.Uint32Kind:
+	case schema.Uint32Kind:
 		return rapid.Uint32().AsAny()
-	case indexerbase.Int64Kind:
+	case schema.Int64Kind:
 		return rapid.Int64().AsAny()
-	case indexerbase.Uint64Kind:
+	case schema.Uint64Kind:
 		return rapid.Uint64().AsAny()
-	case indexerbase.Float32Kind:
+	case schema.Float32Kind:
 		return rapid.Float32().AsAny()
-	case indexerbase.Float64Kind:
+	case schema.Float64Kind:
 		return rapid.Float64().AsAny()
-	case indexerbase.IntegerKind:
-		return rapid.StringMatching(indexerbase.IntegerFormat).AsAny()
-	case indexerbase.DecimalKind:
-		return rapid.StringMatching(indexerbase.DecimalFormat).AsAny()
-	case indexerbase.BoolKind:
+	case schema.IntegerKind:
+		return rapid.StringMatching(schema.IntegerFormat).AsAny()
+	case schema.DecimalKind:
+		return rapid.StringMatching(schema.DecimalFormat).AsAny()
+	case schema.BoolKind:
 		return rapid.Bool().AsAny()
-	case indexerbase.TimeKind:
+	case schema.TimeKind:
 		return rapid.Map(rapid.Int64(), func(i int64) time.Time {
 			return time.Unix(0, i)
 		}).AsAny()
-	case indexerbase.DurationKind:
+	case schema.DurationKind:
 		return rapid.Map(rapid.Int64(), func(i int64) time.Duration {
 			return time.Duration(i)
 		}).AsAny()
-	case indexerbase.Bech32AddressKind:
+	case schema.Bech32AddressKind:
 		return rapid.SliceOfN(rapid.Byte(), 20, 64).AsAny()
-	case indexerbase.EnumKind:
+	case schema.EnumKind:
 		gen := rapid.IntRange(0, len(field.EnumDefinition.Values)-1)
 		return rapid.Map(gen, func(i int) any {
 			return field.EnumDefinition.Values[i]
@@ -98,7 +97,7 @@ func baseFieldValue(field indexerbase.Field) *rapid.Generator[any] {
 	}
 }
 
-func KeyFieldsValue(keyFields []indexerbase.Field) *rapid.Generator[any] {
+func KeyFieldsValue(keyFields []schema.Field) *rapid.Generator[any] {
 	if len(keyFields) == 0 {
 		return rapid.Just[any](nil)
 	}
@@ -121,7 +120,7 @@ func KeyFieldsValue(keyFields []indexerbase.Field) *rapid.Generator[any] {
 	})
 }
 
-func ValueFieldsValue(valueFields []indexerbase.Field) *rapid.Generator[any] {
+func ValueFieldsValue(valueFields []schema.Field) *rapid.Generator[any] {
 	if len(valueFields) == 0 {
 		return rapid.Just[any](nil)
 	}
@@ -143,7 +142,7 @@ func ValueFieldsValue(valueFields []indexerbase.Field) *rapid.Generator[any] {
 				updates[valueFields[i].Name] = gen.Draw(t, valueFields[i].Name)
 			}
 
-			return indexerbase.MapValueUpdates(updates)
+			return schema.MapValueUpdates(updates)
 		} else {
 			if len(valueFields) == 1 {
 				return gens[0].Draw(t, valueFields[0].Name)

@@ -3,13 +3,12 @@ package schemagen
 import (
 	"fmt"
 
+	indexerbase "cosmossdk.io/schema"
 	"pgregory.net/rapid"
-
-	indexerbase "cosmossdk.io/indexer/base"
 )
 
-var AppSchema = rapid.Custom(func(t *rapid.T) map[string]indexerbase.ModuleSchema {
-	schema := make(map[string]indexerbase.ModuleSchema)
+var AppSchema = rapid.Custom(func(t *rapid.T) map[string]schema.ModuleSchema {
+	schema := make(map[string]schema.ModuleSchema)
 	numModules := rapid.IntRange(1, 10).Draw(t, "numModules")
 	for i := 0; i < numModules; i++ {
 		moduleName := Name.Draw(t, "moduleName")

@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
+	"cosmossdk.io/schema"
+
 	indexerbase "cosmossdk.io/indexer/base"
 )
 
@@ -17,7 +19,7 @@ type Indexer struct {
 
 type moduleManager struct {
 	moduleName string
-	schema     indexerbase.ModuleSchema
+	schema     schema.ModuleSchema
 	tables     map[string]*TableManager
 }
 
@@ -68,7 +70,7 @@ func (i *Indexer) Listener() indexerbase.Listener {
 	}
 }
 
-func (i *Indexer) initModuleSchema(moduleName string, schema indexerbase.ModuleSchema) error {
+func (i *Indexer) initModuleSchema(moduleName string, schema schema.ModuleSchema) error {
 	_, ok := i.modules[moduleName]
 	if ok {
 		return fmt.Errorf("module %s already initialized", moduleName)
@@ -94,7 +96,7 @@ func (i *Indexer) initModuleSchema(moduleName string, schema indexerbase.ModuleS
 	return nil
 }
 
-func (i *Indexer) onObjectUpdate(module string, update indexerbase.ObjectUpdate) error {
+func (i *Indexer) onObjectUpdate(module string, update schema.ObjectUpdate) error {
 	mod, ok := i.modules[module]
 	if !ok {
 		return fmt.Errorf("module %s not initialized", module)

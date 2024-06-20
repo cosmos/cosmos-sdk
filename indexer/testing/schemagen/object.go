@@ -1,18 +1,17 @@
 package schemagen
 
 import (
+	"cosmossdk.io/schema"
 	"github.com/tidwall/btree"
 	"pgregory.net/rapid"
-
-	indexerbase "cosmossdk.io/indexer/base"
 )
 
-var fieldsGen = rapid.SliceOfNDistinct(Field, 1, 12, func(f indexerbase.Field) string {
+var fieldsGen = rapid.SliceOfNDistinct(Field, 1, 12, func(f schema.Field) string {
 	return f.Name
 })
 
-var ObjectType = rapid.Custom(func(t *rapid.T) indexerbase.ObjectType {
-	typ := indexerbase.ObjectType{
+var ObjectType = rapid.Custom(func(t *rapid.T) schema.ObjectType {
+	typ := schema.ObjectType{
 		Name: Name.Draw(t, "name"),
 	}
 
@@ -25,7 +24,7 @@ var ObjectType = rapid.Custom(func(t *rapid.T) indexerbase.ObjectType {
 	typ.RetainDeletions = boolGen.Draw(t, "retainDeletions")
 
 	return typ
-}).Filter(func(typ indexerbase.ObjectType) bool {
+}).Filter(func(typ schema.ObjectType) bool {
 	// filter out duplicate enum names
 	enumTypeNames := map[string]bool{}
 	if !checkDuplicateEnumName(enumTypeNames, typ.KeyFields) {
@@ -37,9 +36,9 @@ var ObjectType = rapid.Custom(func(t *rapid.T) indexerbase.ObjectType {
 	return true
 })
 
-func checkDuplicateEnumName(enumTypeNames map[string]bool, fields []indexerbase.Field) bool {
+func checkDuplicateEnumName(enumTypeNames map[string]bool, fields []schema.Field) bool {
 	for _, field := range fields {
-		if field.Kind != indexerbase.EnumKind {
+		if field.Kind != schema.EnumKind {
 			continue
 		}
 
@@ -52,11 +51,11 @@ func checkDuplicateEnumName(enumTypeNames map[string]bool, fields []indexerbase.
 	return true
 }
 
-func ObjectUpdate(objectType indexerbase.ObjectType) *rapid.Generator[indexerbase.ObjectUpdate] {
+func ObjectUpdate(objectType schema.ObjectType) *rapid.Generator[schema.ObjectUpdate] {
 	keyGen := KeyFieldsValue(objectType.KeyFields)
 	valueGen := ValueFieldsValue(objectType.ValueFields)
-	return rapid.Custom(func(t *rapid.T) indexerbase.ObjectUpdate {
-		update := indexerbase.ObjectUpdate{
+	return rapid.Custom(func(t *rapid.T) schema.ObjectUpdate {
+		update := schema.ObjectUpdate{
 			TypeName: objectType.Name,
 		}
 
@@ -73,11 +72,11 @@ func ObjectUpdate(objectType indexerbase.ObjectType) *rapid.Generator[indexerbas
 	})
 }
 
-func StatefulObjectUpdate(objectType indexerbase.ObjectType, state *btree.Map[string, indexerbase.ObjectUpdate]) *rapid.Generator[indexerbase.ObjectUpdate] {
+func StatefulObjectUpdate(objectType schema.ObjectType, state *btree.Map[string, schema.ObjectUpdate]) *rapid.Generator[schema.ObjectUpdate] {
 	keyGen := KeyFieldsValue(objectType.KeyFields)
 	valueGen := ValueFieldsValue(objectType.ValueFields)
-	return rapid.Custom(func(t *rapid.T) indexerbase.ObjectUpdate {
-		update := indexerbase.ObjectUpdate{
+	return rapid.Custom(func(t *rapid.T) schema.ObjectUpdate {
+		update := schema.ObjectUpdate{
 			TypeName: objectType.Name,
 		}
 

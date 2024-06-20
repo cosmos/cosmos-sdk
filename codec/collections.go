@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"cosmossdk.io/schema"
 	"github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -211,37 +212,37 @@ func protoCol(f protoreflect.FieldDescriptor) indexerbase.Column {
 	col := indexerbase.Column{Name: string(f.Name())}
 
 	if f.IsMap() || f.IsList() {
-		col.Type = indexerbase.JSONKind
+		col.Type = schema.JSONKind
 		col.Nullable = true
 	} else {
 		switch f.Kind() {
 		case protoreflect.BoolKind:
-			col.Type = indexerbase.BoolKind
+			col.Type = schema.BoolKind
 		case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
-			col.Type = indexerbase.Int32Kind
+			col.Type = schema.Int32Kind
 		case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
-			col.Type = indexerbase.Int64Kind
+			col.Type = schema.Int64Kind
 		case protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
-			col.Type = indexerbase.Int64Kind
+			col.Type = schema.Int64Kind
 		case protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
-			col.Type = indexerbase.DecimalKind
+			col.Type = schema.DecimalKind
 		case protoreflect.FloatKind:
-			col.Type = indexerbase.Float32Kind
+			col.Type = schema.Float32Kind
 		case protoreflect.DoubleKind:
-			col.Type = indexerbase.Float64Kind
+			col.Type = schema.Float64Kind
 		case protoreflect.StringKind:
-			col.Type = indexerbase.StringKind
+			col.Type = schema.StringKind
 		case protoreflect.BytesKind:
-			col.Type = indexerbase.BytesKind
+			col.Type = schema.BytesKind
 		case protoreflect.EnumKind:
-			col.Type = indexerbase.EnumKind
+			col.Type = schema.EnumKind
 			enumDesc := f.Enum()
 			var vals []string
 			n := enumDesc.Values().Len()
 			for i := 0; i < n; i++ {
 				vals = append(vals, string(enumDesc.Values().Get(i).Name()))
 			}
-			col.EnumDefinition = indexerbase.EnumDefinition{
+			col.EnumDefinition = schema.EnumDefinition{
 				Name:   string(enumDesc.Name()),
 				Values: vals,
 			}
@@ -249,11 +250,11 @@ func protoCol(f protoreflect.FieldDescriptor) indexerbase.Column {
 			col.Nullable = true
 			fullName := f.Message().FullName()
 			if fullName == "google.protobuf.Timestamp" {
-				col.Type = indexerbase.TimeKind
+				col.Type = schema.TimeKind
 			} else if fullName == "google.protobuf.Duration" {
-				col.Type = indexerbase.DurationKind
+				col.Type = schema.DurationKind
 			} else {
-				col.Type = indexerbase.JSONKind
+				col.Type = schema.JSONKind
 			}
 		}
 		if f.HasPresence() {

@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/schema"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cast"
 
@@ -255,7 +256,7 @@ func NewSimApp(
 	//if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
 	//	panic(err)
 	//}
-	moduleDecoders := map[string]indexerbase.ModuleDecoder{}
+	moduleDecoders := map[string]schema.ModuleDecoder{}
 	for moduleName, module := range appModules {
 		if indexable, ok := module.(indexerbase.IndexableModule); ok {
 			decoder, err := indexable.ModuleDecoder()

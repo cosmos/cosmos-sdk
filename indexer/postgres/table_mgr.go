@@ -3,19 +3,19 @@ package postgres
 import (
 	"fmt"
 
-	indexerbase "cosmossdk.io/indexer/base"
+	"cosmossdk.io/schema"
 )
 
 // TableManager is a helper struct that generates SQL for a given object type.
 type TableManager struct {
 	moduleName  string
-	typ         indexerbase.ObjectType
-	valueFields map[string]indexerbase.Field
+	typ         schema.ObjectType
+	valueFields map[string]schema.Field
 }
 
 // NewTableManager creates a new TableManager for the given object type.
-func NewTableManager(moduleName string, typ indexerbase.ObjectType) *TableManager {
-	valueFields := make(map[string]indexerbase.Field)
+func NewTableManager(moduleName string, typ schema.ObjectType) *TableManager {
+	valueFields := make(map[string]schema.Field)
 	for _, field := range typ.ValueFields {
 		valueFields[field.Name] = field
 	}

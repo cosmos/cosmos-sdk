@@ -1,9 +1,8 @@
 package schemagen
 
 import (
+	indexerbase "cosmossdk.io/schema"
 	"pgregory.net/rapid"
-
-	indexerbase "cosmossdk.io/indexer/base"
 )
 
-var Name = rapid.StringMatching(indexerbase.NameFormat)
+var Name = rapid.StringMatching(schema.NameFormat)

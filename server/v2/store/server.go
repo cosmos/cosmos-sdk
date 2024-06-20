@@ -13,6 +13,10 @@ import (
 
 type StoreComponent struct{}
 
+func New() serverv2.ServerComponent[transaction.Tx] {
+	return StoreComponent{}
+}
+
 func (s StoreComponent) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) (serverv2.ServerComponent[transaction.Tx], error) {
 	return s, nil
 }

@@ -85,7 +85,7 @@ func initRootCmd(
 		logger,
 		cometbft.New(&temporaryTxDecoder{txConfig}),
 		grpc.New(),
-		store.StoreComponent{},
+		store.New(),
 	); err != nil {
 		panic(err)
 	}

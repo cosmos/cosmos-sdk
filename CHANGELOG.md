@@ -39,7 +39,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bugfixes
 
-* (staking) [#20691](https://github.com/cosmos/cosmos-sdk/pull/20691) Revert staking GetLastValidators - revert [#20548](https://github.com/cosmos/cosmos-sdk/pull/20548). 
+* (staking) [#20691](https://github.com/cosmos/cosmos-sdk/pull/20691) Revert staking GetLastValidators - revert [#20548](https://github.com/cosmos/cosmos-sdk/pull/20548).
+* (gov) [#20657](https://github.com/cosmos/cosmos-sdk/pull/20657) Backport expedited gov proposals from SDK v0.50
 
 ## v0.47.15-ics-lsm
 

@@ -6,8 +6,7 @@ import (
 	"io"
 
 	"cosmossdk.io/schema"
-
-	indexerbase "cosmossdk.io/indexer/base"
+	indexerbase "cosmossdk.io/schema/listener"
 )
 
 func WriterListener(w io.Writer) indexerbase.Listener {

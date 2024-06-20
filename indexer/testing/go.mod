@@ -2,7 +2,6 @@ module cosmossdk.io/indexer/testing
 
 require (
 	cosmossdk.io/schema v0.0.0
-	cosmossdk.io/indexer/base v0.0.0
 	github.com/stretchr/testify v1.9.0
 	github.com/tidwall/btree v1.7.0
 	gotest.tools/v3 v3.5.1
@@ -16,7 +15,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace cosmossdk.io/indexer/base => ../base
 replace cosmossdk.io/schema => ../../schema
 
 go 1.22

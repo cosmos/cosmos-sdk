@@ -1,4 +1,4 @@
-package indexerbase
+package indexer
 
 // Logger is the expected interface of loggers used in the indexer.
 type Logger interface {

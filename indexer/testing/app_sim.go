@@ -4,11 +4,12 @@ import (
 	"fmt"
 
 	schema2 "cosmossdk.io/schema"
+	indexerbase "cosmossdk.io/schema/listener"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/btree"
 	"pgregory.net/rapid"
 
-	indexerbase "cosmossdk.io/indexer/base"
 	"cosmossdk.io/indexer/testing/schemagen"
 )
 

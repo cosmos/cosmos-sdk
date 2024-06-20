@@ -3,6 +3,7 @@ package types
 import (
 	"context"
 
+	"cosmossdk.io/schema/listener"
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 
 	indexerbase "cosmossdk.io/indexer/base"
@@ -46,7 +47,7 @@ func (p physicalListener) ListenFinalizeBlock(_ context.Context, req abci.Finali
 	}
 
 	if p.listener.OnBlockHeader != nil {
-		err := p.listener.OnBlockHeader(indexerbase.BlockHeaderData{
+		err := p.listener.OnBlockHeader(listener.BlockHeaderData{
 			Height: uint64(req.Height),
 		})
 		if err != nil {

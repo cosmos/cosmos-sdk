@@ -6,8 +6,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/schema"
-
-	indexerbase "cosmossdk.io/indexer/base"
+	indexerbase "cosmossdk.io/schema/listener"
 )
 
 type Indexer struct {

@@ -1,4 +1,4 @@
-package indexerbase
+package listener
 
 import (
 	"encoding/json"
@@ -34,7 +34,7 @@ type Listener struct {
 
 	// OnKVPair is called when a key-value has been written to the store for a given module.
 	// Module names must conform to the NameFormat regular expression.
-	OnKVPair func(moduleName string, key, value []byte, delete bool) error
+	OnKVPair func(KVPairData) error
 
 	// Commit is called when state is committed, usually at the end of a block. Any
 	// indexers should commit their data when this is called and return an error if
@@ -47,12 +47,12 @@ type Listener struct {
 	// migrations) required to receive OnObjectUpdate events for the given module. If the
 	// indexer's schema is incompatible with the module's on-chain schema, the listener should return
 	// an error. Module names must conform to the NameFormat regular expression.
-	InitializeModuleSchema func(module string, schema schema.ModuleSchema) error
+	InitializeModuleSchema func(moduleName string, moduleSchema schema.ModuleSchema) error
 
 	// OnObjectUpdate is called whenever an object is updated in a module's state. This is only called
 	// when logical data is available. It should be assumed that the same data in raw form
 	// is also passed to OnKVPair. Module names must conform to the NameFormat regular expression.
-	OnObjectUpdate func(module string, update schema.ObjectUpdate) error
+	OnObjectUpdate func(ObjectUpdateData) error
 }
 
 // InitializationData represents initialization data that is passed to a listener.
@@ -120,3 +120,28 @@ type ToBytes = func() ([]byte, error)
 
 // ToJSON is a function that lazily returns the JSON representation of data.
 type ToJSON = func() (json.RawMessage, error)
+
+// KVPairData represents key-value pair data that is passed to a listener.
+type KVPairData struct {
+	// ModuleName is the name of the module that the key-value pair belongs to.
+	ModuleName string
+
+	// Key is the key of the key-value pair.
+	Key []byte
+
+	// Value is the value of the key-value pair. It should be ignored when Delete is true.
+	Value []byte
+
+	// Delete is a flag that indicates that the key-value pair was deleted. If it is false,
+	// then it is assumed that this has been a set operation.
+	Delete bool
+}
+
+// ObjectUpdateData represents object update data that is passed to a listener.
+type ObjectUpdateData struct {
+	// ModuleName is the name of the module that the update corresponds to.
+	ModuleName string
+
+	// Update is the object update.
+	Update schema.ObjectUpdate
+}

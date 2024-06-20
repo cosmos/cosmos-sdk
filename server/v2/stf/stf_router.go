@@ -164,7 +164,7 @@ func (r Router) InvokeTyped(ctx context.Context, req, resp protoiface.MessageV1)
 	return nil
 }
 
-func merge(src protoiface.MessageV1, dst protoiface.MessageV1) {
+func merge(src, dst protoiface.MessageV1) {
 	reflect.Indirect(reflect.ValueOf(dst)).Set(reflect.Indirect(reflect.ValueOf(src)))
 }
 

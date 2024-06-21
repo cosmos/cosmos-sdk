@@ -156,11 +156,8 @@ func mkTestObjectType(kind schema.Kind) schema.ObjectType {
 		field.AddressPrefix = "cosmos"
 	}
 
-	key1Field := field
-	key1Field.Name = "keyNotNull"
-	key2Field := field
-	key2Field.Name = "keyNullable"
-	key2Field.Nullable = true
+	keyField := field
+	keyField.Name = "key"
 	val1Field := field
 	val1Field.Name = "valNotNull"
 	val2Field := field
@@ -169,7 +166,7 @@ func mkTestObjectType(kind schema.Kind) schema.ObjectType {
 
 	return schema.ObjectType{
 		Name:        fmt.Sprintf("test_%v", kind),
-		KeyFields:   []schema.Field{key1Field, key2Field},
+		KeyFields:   []schema.Field{keyField},
 		ValueFields: []schema.Field{val1Field, val2Field},
 	}
 }

@@ -148,6 +148,20 @@ func TestObjectType_Validate(t *testing.T) {
 			},
 			errContains: "duplicate field name",
 		},
+		{
+			name: "nullable key field",
+			objectType: ObjectType{
+				Name: "objectNullKey",
+				KeyFields: []Field{
+					{
+						Name:     "field1",
+						Kind:     StringKind,
+						Nullable: true,
+					},
+				},
+			},
+			errContains: "key field \"field1\" cannot be nullable",
+		},
 	}
 
 	for _, tt := range tests {

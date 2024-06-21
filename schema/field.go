@@ -10,7 +10,7 @@ type Field struct {
 	// Kind is the basic type of the field.
 	Kind Kind
 
-	// Nullable indicates whether null values are accepted for the field.
+	// Nullable indicates whether null values are accepted for the field. Key fields CANNOT be nullable.
 	Nullable bool
 
 	// AddressPrefix is the address prefix of the field's kind, currently only used for Bech32AddressKind.

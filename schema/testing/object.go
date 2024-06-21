@@ -20,6 +20,12 @@ var ObjectTypeGen = rapid.Custom(func(t *rapid.T) schema.ObjectType {
 	numKeyFields := rapid.IntRange(0, len(fields)).Draw(t, "numKeyFields")
 
 	typ.KeyFields = fields[:numKeyFields]
+
+	for i := range typ.KeyFields {
+		// key fields can't be nullable
+		typ.KeyFields[i].Nullable = false
+	}
+
 	typ.ValueFields = fields[numKeyFields:]
 
 	typ.RetainDeletions = boolGen.Draw(t, "retainDeletions")

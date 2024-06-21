@@ -98,6 +98,7 @@ type ObjectUpdateData struct {
 	ModuleName string
 
 	// Update is the object update.
+	// TODO: allow multiple updates in a single call
 	Update schema.ObjectUpdate
 }
 

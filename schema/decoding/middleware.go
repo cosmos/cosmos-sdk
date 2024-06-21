@@ -24,6 +24,7 @@ func Middleware(target blockdata.Listener, opts Options) blockdata.Listener {
 	moduleCodecs := map[string]schema.ModuleCodec{}
 	target.Initialize = func(ctx context.Context, data blockdata.InitializationData) (lastBlock int64, err error) {
 		if initialize != nil {
+			// TODO: handle case where the indexer isn't update and returns an older lastBlock,should this be in a separate middleware layer?
 			lastBlock, err = initialize(ctx, data)
 			if err != nil {
 				return

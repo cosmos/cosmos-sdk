@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/schema"
-	indexerbase "cosmossdk.io/schema/listener"
+	"cosmossdk.io/schema/blockdata"
 )
 
 type Indexer struct {
@@ -61,15 +61,17 @@ func NewIndexer(ctx context.Context, opts Options) (*Indexer, error) {
 	}, nil
 }
 
-func (i *Indexer) Listener() indexerbase.Listener {
-	return indexerbase.Listener{
+func (i *Indexer) Listener() blockdata.Listener {
+	return blockdata.Listener{
 		InitializeModuleData: i.initModuleSchema,
 		OnObjectUpdate:       i.onObjectUpdate,
 		Commit:               i.commit,
 	}
 }
 
-func (i *Indexer) initModuleSchema(moduleName string, schema schema.ModuleSchema) error {
+func (i *Indexer) initModuleSchema(data blockdata.ModuleInitializationData) error {
+	moduleName := data.ModuleName
+	schema := data.Schema
 	_, ok := i.modules[moduleName]
 	if ok {
 		return fmt.Errorf("module %s already initialized", moduleName)
@@ -95,7 +97,9 @@ func (i *Indexer) initModuleSchema(moduleName string, schema schema.ModuleSchema
 	return nil
 }
 
-func (i *Indexer) onObjectUpdate(module string, update schema.ObjectUpdate) error {
+func (i *Indexer) onObjectUpdate(data blockdata.ObjectUpdateData) error {
+	module := data.ModuleName
+	update := data.Update
 	mod, ok := i.modules[module]
 	if !ok {
 		return fmt.Errorf("module %s not initialized", module)

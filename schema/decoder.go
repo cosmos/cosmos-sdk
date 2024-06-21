@@ -29,6 +29,7 @@ type ModuleCodec struct {
 // If the KV-pair doesn't represent an object update, the function should return false
 // as the second return value. Error should only be non-nil when the decoder expected
 // to parse a valid update and was unable to.
+// TODO: allow multiple updates in a single call, older schemas were sometimes pretty denormalized
 type KVDecoder = func(key, value []byte, delete bool) (ObjectUpdate, bool, error)
 
 // ApplyUpdate is a function that applies an ObjectUpdate to the module's state for the given context.

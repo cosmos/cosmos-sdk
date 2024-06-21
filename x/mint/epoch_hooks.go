@@ -1,6 +1,7 @@
 package mint
 
 import (
+	"bytes"
 	"context"
 
 	epochstypes "cosmossdk.io/x/epochs/types"
@@ -20,9 +21,16 @@ func (am AppModule) BeforeEpochStart(ctx context.Context, epochIdentifier string
 		return err
 	}
 
+	oldBz := am.cdc.MustMarshal(&minter)
+
 	err = am.mintFn(ctx, am.keeper.Environment, &minter, epochIdentifier, epochNumber)
 	if err != nil {
 		return err
+	}
+
+	newBz := am.cdc.MustMarshal(&minter)
+	if bytes.Equal(oldBz, newBz) {
+		return nil
 	}
 
 	return am.keeper.Minter.Set(ctx, minter)

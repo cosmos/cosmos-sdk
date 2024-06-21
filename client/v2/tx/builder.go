@@ -30,7 +30,7 @@ type ExtendedTxBuilder interface {
 // also know how to encode itself.
 type TxBuilder interface {
 	GetTx() (*apitx.Tx, error)
-	GetSigningTxData() (*signing.TxData, error) // TODO: check this
+	GetSigningTxData() (*signing.TxData, error)
 
 	SetMsgs(...transaction.Msg) error
 	SetMemo(string)
@@ -70,7 +70,8 @@ func (b BuilderProvider) NewTxBuilder() TxBuilder {
 	return newTxBuilder(b.addressCodec, b.decoder, b.codec)
 }
 
-// TODO: work on this
+// WrapTxBuilder
+// TODO: is this necessary
 func (b BuilderProvider) WrapTxBuilder(tx *apitx.Tx) (TxBuilder, error) {
 	return &txBuilder{
 		addressCodec: b.addressCodec,

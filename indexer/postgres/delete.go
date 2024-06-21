@@ -22,27 +22,14 @@ func (tm *TableManager) Delete(ctx context.Context, tx *sql.Tx, key interface{})
 }
 
 func (tm *TableManager) DeleteSqlAndParams(w io.Writer, key interface{}) ([]interface{}, error) {
-	keyParams, keyCols, err := tm.bindKeyParams(key)
+	_, err := fmt.Fprintf(w, "DELETE FROM %q", tm.TableName())
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = fmt.Fprintf(w, "DELETE FROM %q WHERE ", tm.TableName())
+	_, keyParams, err := tm.WhereSqlAndParams(w, key, 1)
 	if err != nil {
 		return nil, err
-	}
-
-	for i, col := range keyCols {
-		if i > 0 {
-			_, err = fmt.Fprintf(w, " AND ")
-			if err != nil {
-				return nil, err
-			}
-		}
-		_, err = fmt.Fprintf(w, "%s = $%d", col, i+1)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	_, err = fmt.Fprintf(w, ";")

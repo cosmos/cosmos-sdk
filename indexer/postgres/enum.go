@@ -40,7 +40,8 @@ func enumTypeName(moduleName string, enum schema.EnumDefinition) string {
 func (m *moduleManager) CreateEnumType(ctx context.Context, tx *sql.Tx, enum schema.EnumDefinition) error {
 	typeName := enumTypeName(m.moduleName, enum)
 	row := tx.QueryRowContext(ctx, "SELECT 1 FROM pg_type WHERE typname = $1", typeName)
-	if err := row.Scan(); err != nil {
+	var res interface{}
+	if err := row.Scan(&res); err != nil {
 		if err != sql.ErrNoRows {
 			return fmt.Errorf("failed to check if enum type %q exists: %w", typeName, err)
 		}

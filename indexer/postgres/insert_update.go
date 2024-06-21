@@ -9,10 +9,17 @@ import (
 )
 
 func (tm *TableManager) InsertUpdate(ctx context.Context, tx *sql.Tx, key, value interface{}) error {
-	buf := new(strings.Builder)
-	params, err := tm.InsertUpdateSqlAndParams(buf, key, value)
+	exists, err := tm.Exists(ctx, tx, key)
 	if err != nil {
 		return err
+	}
+
+	buf := new(strings.Builder)
+	var params []interface{}
+	if exists {
+		params, err = tm.UpdateSql(buf, key, value)
+	} else {
+		params, err = tm.InsertSql(buf, key, value)
 	}
 
 	// TODO: proper logging
@@ -21,7 +28,7 @@ func (tm *TableManager) InsertUpdate(ctx context.Context, tx *sql.Tx, key, value
 	return err
 }
 
-func (tm *TableManager) InsertUpdateSqlAndParams(w io.Writer, key, value interface{}) ([]interface{}, error) {
+func (tm *TableManager) InsertSql(w io.Writer, key, value interface{}) ([]interface{}, error) {
 	keyParams, keyCols, err := tm.bindKeyParams(key)
 	if err != nil {
 		return nil, err
@@ -32,6 +39,10 @@ func (tm *TableManager) InsertUpdateSqlAndParams(w io.Writer, key, value interfa
 		return nil, err
 	}
 
+	var allParams []interface{}
+	allParams = append(allParams, keyParams...)
+	allParams = append(allParams, valueParams...)
+
 	allCols := make([]string, 0, len(keyCols)+len(valueCols))
 	allCols = append(allCols, keyCols...)
 	allCols = append(allCols, valueCols...)
@@ -41,28 +52,22 @@ func (tm *TableManager) InsertUpdateSqlAndParams(w io.Writer, key, value interfa
 		paramBindings = append(paramBindings, fmt.Sprintf("$%d", i))
 	}
 
-	_, err = fmt.Fprintf(w, "INSERT INTO %q (%s) VALUES (%s) ON CONFLICT (%s) DO ", tm.TableName(),
+	_, err = fmt.Fprintf(w, "INSERT INTO %q (%s) VALUES (%s);", tm.TableName(),
 		strings.Join(allCols, ", "),
 		strings.Join(paramBindings, ", "),
-		strings.Join(keyCols, ", "),
 	)
+	return allParams, err
+}
+
+func (tm *TableManager) UpdateSql(w io.Writer, key, value interface{}) ([]interface{}, error) {
+	_, err := fmt.Fprintf(w, "UPDATE %q SET ", tm.TableName())
+
+	valueParams, valueCols, err := tm.bindValueParams(value)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(valueCols) == 0 {
-		_, err = fmt.Fprintf(w, "NOTHING")
-		if err != nil {
-			return nil, err
-		}
-		return keyParams, nil
-	}
-
-	_, err = fmt.Fprintf(w, "UPDATE SET ")
-	if err != nil {
-		return nil, err
-	}
-
+	paramIdx := 1
 	for i, col := range valueCols {
 		if i > 0 {
 			_, err = fmt.Fprintf(w, ", ")
@@ -70,16 +75,20 @@ func (tm *TableManager) InsertUpdateSqlAndParams(w io.Writer, key, value interfa
 				return nil, err
 			}
 		}
-		_, err = fmt.Fprintf(w, "%s = EXCLUDED.%s", col, col)
+		_, err = fmt.Fprintf(w, "%s = $%d", col, paramIdx)
 		if err != nil {
 			return nil, err
 		}
+
+		paramIdx++
 	}
 
-	var allParams []interface{}
-	allParams = append(allParams, keyParams...)
-	allParams = append(allParams, valueParams...)
+	_, keyParams, err := tm.WhereSqlAndParams(w, key, paramIdx)
+	if err != nil {
+		return nil, err
+	}
 
+	allParams := append(valueParams, keyParams...)
 	_, err = fmt.Fprintf(w, ";")
 	return allParams, err
 }

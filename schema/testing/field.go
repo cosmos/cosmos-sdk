@@ -124,6 +124,8 @@ func KeyFieldsValueGen(keyFields []schema.Field) *rapid.Generator[any] {
 }
 
 func ValueFieldsValueGen(valueFields []schema.Field, forUpdate bool) *rapid.Generator[any] {
+	// special case where there are no value fields
+	// we shouldn't end up here, but just in case
 	if len(valueFields) == 0 {
 		return rapid.Just[any](nil)
 	}
@@ -137,9 +139,16 @@ func ValueFieldsValueGen(valueFields []schema.Field, forUpdate bool) *rapid.Gene
 		if boolGen.Draw(t, "valueUpdates") {
 			updates := map[string]any{}
 
+			n := len(valueFields)
 			for i, gen := range gens {
+				lastField := i == n-1
+				haveUpdates := len(updates) > 0
 				// skip 50% of the time if this is an update
-				if forUpdate && boolGen.Draw(t, fmt.Sprintf("skip_%s", valueFields[i].Name)) {
+				// but check if we have updates by the time we reach the last field
+				// so we don't have an empty update
+				if forUpdate &&
+					(!lastField || haveUpdates) &&
+					boolGen.Draw(t, fmt.Sprintf("skip_%s", valueFields[i].Name)) {
 					continue
 				}
 				updates[valueFields[i].Name] = gen.Draw(t, valueFields[i].Name)

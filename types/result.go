@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 func (gi GasInfo) String() string {
@@ -159,15 +160,15 @@ func ParseABCILogs(logs string) (res ABCIMessageLogs, err error) {
 	return res, err
 }
 
-var _, _ codectypes.UnpackInterfacesMessage = SearchTxsResult{}, TxResponse{}
+var _, _ gogoprotoany.UnpackInterfacesMessage = SearchTxsResult{}, TxResponse{}
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 //
 // types.UnpackInterfaces needs to be called for each nested Tx because
 // there are generally interfaces to unpack in Tx's
-func (s SearchTxsResult) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (s SearchTxsResult) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	for _, tx := range s.Txs {
-		err := codectypes.UnpackInterfaces(tx, unpacker)
+		err := gogoprotoany.UnpackInterfaces(tx, unpacker)
 		if err != nil {
 			return err
 		}
@@ -176,7 +177,7 @@ func (s SearchTxsResult) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (r TxResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (r TxResponse) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	if r.Tx != nil {
 		var tx HasMsgs
 		return unpacker.UnpackAny(r.Tx, &tx)

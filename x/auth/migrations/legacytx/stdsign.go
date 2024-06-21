@@ -10,11 +10,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 // LegacyMsg defines the old interface a message must fulfill,
@@ -129,8 +129,8 @@ func (ss StdSignature) MarshalYAML() (interface{}, error) {
 	return string(bz), err
 }
 
-func (ss StdSignature) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	return codectypes.UnpackInterfaces(ss.PubKey, unpacker)
+func (ss StdSignature) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+	return gogoprotoany.UnpackInterfaces(ss.PubKey, unpacker)
 }
 
 // StdSignatureToSignatureV2 converts a StdSignature to a SignatureV2

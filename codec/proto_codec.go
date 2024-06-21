@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-proto/anyutil"
 	"github.com/cosmos/gogoproto/jsonpb"
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -98,7 +99,7 @@ func (pc *ProtoCodec) Unmarshal(bz []byte, ptr gogoproto.Message) error {
 	if err != nil {
 		return err
 	}
-	err = types.UnpackInterfaces(ptr, pc.interfaceRegistry)
+	err = gogoprotoany.UnpackInterfaces(ptr, pc.interfaceRegistry)
 	if err != nil {
 		return err
 	}
@@ -207,7 +208,7 @@ func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr gogoproto.Message) error {
 		return err
 	}
 
-	return types.UnpackInterfaces(ptr, pc.interfaceRegistry)
+	return gogoprotoany.UnpackInterfaces(ptr, pc.interfaceRegistry)
 }
 
 // MustUnmarshalJSON implements JSONCodec.MustUnmarshalJSON method,

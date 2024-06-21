@@ -6,6 +6,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 type (
@@ -76,7 +77,7 @@ type (
 		// is not registered in codec, or is not compatible with the serialized data
 		UnmarshalInterface(bz []byte, ptr interface{}) error
 
-		types.AnyUnpacker
+		gogoprotoany.AnyUnpacker
 	}
 
 	JSONCodec interface {

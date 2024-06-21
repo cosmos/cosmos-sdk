@@ -11,8 +11,8 @@ import (
 	"github.com/tendermint/go-amino"
 
 	"cosmossdk.io/core/legacy"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 // LegacyAmino defines a wrapper for an Amino codec that properly
@@ -65,19 +65,19 @@ func MustMarshalJSONIndent(cdc *LegacyAmino, obj interface{}) []byte {
 }
 
 func (cdc *LegacyAmino) marshalAnys(o interface{}) error {
-	return types.UnpackInterfaces(o, types.AminoPacker{Cdc: cdc.Amino})
+	return gogoprotoany.UnpackInterfaces(o, types.AminoPacker{Cdc: cdc.Amino})
 }
 
 func (cdc *LegacyAmino) unmarshalAnys(o interface{}) error {
-	return types.UnpackInterfaces(o, types.AminoUnpacker{Cdc: cdc.Amino})
+	return gogoprotoany.UnpackInterfaces(o, types.AminoUnpacker{Cdc: cdc.Amino})
 }
 
 func (cdc *LegacyAmino) jsonMarshalAnys(o interface{}) error {
-	return types.UnpackInterfaces(o, types.AminoJSONPacker{Cdc: cdc.Amino})
+	return gogoprotoany.UnpackInterfaces(o, types.AminoJSONPacker{Cdc: cdc.Amino})
 }
 
 func (cdc *LegacyAmino) jsonUnmarshalAnys(o interface{}) error {
-	return types.UnpackInterfaces(o, types.AminoJSONUnpacker{Cdc: cdc.Amino})
+	return gogoprotoany.UnpackInterfaces(o, types.AminoJSONUnpacker{Cdc: cdc.Amino})
 }
 
 func (cdc *LegacyAmino) Marshal(o interface{}) ([]byte, error) {

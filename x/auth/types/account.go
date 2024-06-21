@@ -7,18 +7,18 @@ import (
 	"fmt"
 	"strings"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 var (
-	_ sdk.AccountI                       = (*BaseAccount)(nil)
-	_ GenesisAccount                     = (*BaseAccount)(nil)
-	_ codectypes.UnpackInterfacesMessage = (*BaseAccount)(nil)
-	_ GenesisAccount                     = (*ModuleAccount)(nil)
-	_ sdk.ModuleAccountI                 = (*ModuleAccount)(nil)
+	_ sdk.AccountI                         = (*BaseAccount)(nil)
+	_ GenesisAccount                       = (*BaseAccount)(nil)
+	_ gogoprotoany.UnpackInterfacesMessage = (*BaseAccount)(nil)
+	_ GenesisAccount                       = (*ModuleAccount)(nil)
+	_ sdk.ModuleAccountI                   = (*ModuleAccount)(nil)
 )
 
 // NewBaseAccount creates a new BaseAccount object.
@@ -84,7 +84,7 @@ func (acc *BaseAccount) SetPubKey(pubKey cryptotypes.PubKey) error {
 		acc.PubKey = nil
 		return nil
 	}
-	any, err := codectypes.NewAnyWithValue(pubKey)
+	any, err := gogoprotoany.NewAnyWithCacheWithValue(pubKey)
 	if err == nil {
 		acc.PubKey = any
 	}
@@ -132,7 +132,7 @@ func (acc BaseAccount) Validate() error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (acc BaseAccount) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (acc BaseAccount) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	if acc.PubKey == nil {
 		return nil
 	}

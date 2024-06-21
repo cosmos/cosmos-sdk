@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 var defaultJM = &jsonpb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: nil}
@@ -20,7 +21,7 @@ func ProtoMarshalJSON(msg proto.Message, resolver jsonpb.AnyResolver) ([]byte, e
 	if resolver != nil {
 		jm = &jsonpb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: resolver}
 	}
-	err := types.UnpackInterfaces(msg, types.ProtoJSONPacker{JSONPBMarshaler: jm})
+	err := gogoprotoany.UnpackInterfaces(msg, types.ProtoJSONPacker{JSONPBMarshaler: jm})
 	if err != nil {
 		return nil, err
 	}

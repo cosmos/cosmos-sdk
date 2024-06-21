@@ -37,8 +37,9 @@ func NewModule(moduleSchema schema.ModuleSchema) *Module {
 	})
 
 	return &Module{
-		moduleSchema: moduleSchema,
-		updateGen:    updateGen,
+		moduleSchema:      moduleSchema,
+		updateGen:         updateGen,
+		objectCollections: objectCollections,
 	}
 }
 

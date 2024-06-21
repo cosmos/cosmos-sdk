@@ -39,6 +39,7 @@ func (m *moduleManager) Init(ctx context.Context, tx *sql.Tx) error {
 	}
 
 	// create tables for all object types
+	// NOTE: if we want to support foreign keys, we need to sort tables ind dependency order
 	for _, typ := range m.schema.ObjectTypes {
 		tm := NewTableManager(m.moduleName, typ)
 		m.tables[typ.Name] = tm
@@ -47,8 +48,6 @@ func (m *moduleManager) Init(ctx context.Context, tx *sql.Tx) error {
 			return fmt.Errorf("failed to create table for %s in module %s: %w", typ.Name, m.moduleName, err)
 		}
 	}
-
-	// create foreign key constraints
 
 	return nil
 

@@ -97,6 +97,13 @@ func (a *Simulator) ProcessBlockData(data BlockData) error {
 		if err != nil {
 			return err
 		}
+
+		if updateData, ok := packet.(appdata.ObjectUpdateData); ok {
+			err = a.state.ApplyUpdate(updateData.ModuleName, updateData.Update)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	if f := a.options.Listener.Commit; f != nil {

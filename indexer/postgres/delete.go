@@ -39,7 +39,7 @@ func (tm *TableManager) DeleteSqlAndParams(w io.Writer, key interface{}) ([]inte
 				return nil, err
 			}
 		}
-		_, err = fmt.Fprintf(w, "%s = $%d", col, i)
+		_, err = fmt.Fprintf(w, "%s = $%d", col, i+1)
 		if err != nil {
 			return nil, err
 		}

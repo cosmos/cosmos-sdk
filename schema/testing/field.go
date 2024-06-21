@@ -49,7 +49,9 @@ func FieldValueGen(field schema.Field) *rapid.Generator[any] {
 func baseFieldValue(field schema.Field) *rapid.Generator[any] {
 	switch field.Kind {
 	case schema.StringKind:
-		return rapid.String().AsAny()
+		return rapid.StringOf(rapid.Rune().Filter(func(r rune) bool {
+			return r != 0 // filter out NULL characters
+		})).AsAny()
 	case schema.BytesKind:
 		return rapid.SliceOf(rapid.Byte()).AsAny()
 	case schema.Int8Kind:

@@ -38,6 +38,17 @@ func enumTypeName(moduleName string, enum schema.EnumDefinition) string {
 }
 
 func (m *moduleManager) CreateEnumType(ctx context.Context, tx *sql.Tx, enum schema.EnumDefinition) error {
+	typeName := enumTypeName(m.moduleName, enum)
+	row := tx.QueryRowContext(ctx, "SELECT 1 FROM pg_type WHERE typname = $1", typeName)
+	if err := row.Scan(); err != nil {
+		if err != sql.ErrNoRows {
+			return fmt.Errorf("failed to check if enum type %q exists: %w", typeName, err)
+		}
+	} else {
+		// the enum type already exists
+		return nil
+	}
+
 	buf := new(strings.Builder)
 	err := m.CreateEnumTypeSql(buf, enum)
 	if err != nil {
@@ -51,7 +62,7 @@ func (m *moduleManager) CreateEnumType(ctx context.Context, tx *sql.Tx, enum sch
 }
 
 func (m *moduleManager) CreateEnumTypeSql(writer io.Writer, enum schema.EnumDefinition) error {
-	_, err := fmt.Fprintf(writer, "CREATE TYPE IF NOT EXISTS %q AS ENUM (", enumTypeName(m.moduleName, enum))
+	_, err := fmt.Fprintf(writer, "CREATE TYPE %q AS ENUM (", enumTypeName(m.moduleName, enum))
 	if err != nil {
 		return err
 	}

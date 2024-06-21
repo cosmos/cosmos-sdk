@@ -18,7 +18,8 @@ const (
 	InvalidKind Kind = iota
 
 	// StringKind is a string type and values of this type must be of the go type string
-	// containing valid UTF-8.
+	// containing valid UTF-8 and cannot contain null characters.
+	// TODO: add validation for null characters
 	StringKind
 
 	// BytesKind is a bytes type and values of this type must be of the go type []byte.

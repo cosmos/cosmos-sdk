@@ -8,25 +8,26 @@ import (
 	"cosmossdk.io/schema"
 )
 
-type moduleManager struct {
-	moduleName   string
-	schema       schema.ModuleSchema
-	tables       map[string]*TableManager
+type ModuleManager struct {
+	moduleName string
+	schema     schema.ModuleSchema
+	// TODO: make private or internal
+	Tables       map[string]*TableManager
 	definedEnums map[string]schema.EnumDefinition
 	options      Options
 }
 
-func newModuleManager(moduleName string, modSchema schema.ModuleSchema, options Options) *moduleManager {
-	return &moduleManager{
+func newModuleManager(moduleName string, modSchema schema.ModuleSchema, options Options) *ModuleManager {
+	return &ModuleManager{
 		moduleName:   moduleName,
 		schema:       modSchema,
-		tables:       map[string]*TableManager{},
+		Tables:       map[string]*TableManager{},
 		definedEnums: map[string]schema.EnumDefinition{},
 		options:      options,
 	}
 }
 
-func (m *moduleManager) Init(ctx context.Context, tx *sql.Tx) error {
+func (m *ModuleManager) Init(ctx context.Context, tx *sql.Tx) error {
 	// create enum types
 	for _, typ := range m.schema.ObjectTypes {
 		err := m.createEnumTypesForFields(ctx, tx, typ.KeyFields)
@@ -44,7 +45,7 @@ func (m *moduleManager) Init(ctx context.Context, tx *sql.Tx) error {
 	// NOTE: if we want to support foreign keys, we need to sort tables ind dependency order
 	for _, typ := range m.schema.ObjectTypes {
 		tm := NewTableManager(m.moduleName, typ, m.options)
-		m.tables[typ.Name] = tm
+		m.Tables[typ.Name] = tm
 		err := tm.CreateTable(ctx, tx)
 		if err != nil {
 			return fmt.Errorf("failed to create table for %s in module %s: %w", typ.Name, m.moduleName, err)

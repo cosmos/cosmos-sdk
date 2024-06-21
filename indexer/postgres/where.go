@@ -12,13 +12,18 @@ func (tm *TableManager) WhereSqlAndParams(w io.Writer, key interface{}, startPar
 		return
 	}
 
+	endParamIdx, err = tm.WhereSql(w, keyCols, startParamIdx)
+	return
+}
+
+func (tm *TableManager) WhereSql(w io.Writer, cols []string, startParamIdx int) (endParamIdx int, err error) {
 	_, err = fmt.Fprintf(w, " WHERE ")
 	if err != nil {
 		return
 	}
 
 	endParamIdx = startParamIdx
-	for i, col := range keyCols {
+	for i, col := range cols {
 		if i > 0 {
 			_, err = fmt.Fprintf(w, " AND ")
 			if err != nil {

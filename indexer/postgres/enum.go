@@ -10,7 +10,7 @@ import (
 	"cosmossdk.io/schema"
 )
 
-func (m *moduleManager) createEnumTypesForFields(ctx context.Context, tx *sql.Tx, fields []schema.Field) error {
+func (m *ModuleManager) createEnumTypesForFields(ctx context.Context, tx *sql.Tx, fields []schema.Field) error {
 	for _, field := range fields {
 		if field.Kind != schema.EnumKind {
 			continue
@@ -37,7 +37,7 @@ func enumTypeName(moduleName string, enum schema.EnumDefinition) string {
 	return fmt.Sprintf("%s_%s", moduleName, enum.Name)
 }
 
-func (m *moduleManager) CreateEnumType(ctx context.Context, tx *sql.Tx, enum schema.EnumDefinition) error {
+func (m *ModuleManager) CreateEnumType(ctx context.Context, tx *sql.Tx, enum schema.EnumDefinition) error {
 	typeName := enumTypeName(m.moduleName, enum)
 	row := tx.QueryRowContext(ctx, "SELECT 1 FROM pg_type WHERE typname = $1", typeName)
 	var res interface{}
@@ -62,7 +62,7 @@ func (m *moduleManager) CreateEnumType(ctx context.Context, tx *sql.Tx, enum sch
 	return err
 }
 
-func (m *moduleManager) CreateEnumTypeSql(writer io.Writer, enum schema.EnumDefinition) error {
+func (m *ModuleManager) CreateEnumTypeSql(writer io.Writer, enum schema.EnumDefinition) error {
 	_, err := fmt.Fprintf(writer, "CREATE TYPE %q AS ENUM (", enumTypeName(m.moduleName, enum))
 	if err != nil {
 		return err

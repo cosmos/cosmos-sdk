@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/indexer/postgres"
+	"cosmossdk.io/schema"
 	"cosmossdk.io/schema/appdata"
 	indexertesting "cosmossdk.io/schema/testing"
 	appdatatest "cosmossdk.io/schema/testing/appdata"
@@ -72,5 +73,26 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 	for i := 0; i < 1000; i++ {
 		blockData := blockDataGen.Example(i)
 		require.NoError(t, fixture.ProcessBlockData(blockData))
+		require.NoError(t, fixture.AppState().ScanModuleSchemas(func(modName string, modSchema schema.ModuleSchema) error {
+			modState, ok := fixture.AppState().GetModule(modName)
+			require.True(t, ok)
+			modMgr, ok := indexer.Modules[modName]
+			require.True(t, ok)
+			for _, objType := range modSchema.ObjectTypes {
+				objColl, ok := modState.GetObjectCollection(objType.Name)
+				require.True(t, ok)
+				tblMgr, ok := modMgr.Tables[objType.Name]
+				require.True(t, ok)
+				objColl.ScanState(func(update schema.ObjectUpdate) bool {
+					found, err := tblMgr.Equals(
+						context.Background(),
+						indexer.Tx, update.Key, update.Value)
+					require.NoError(t, err)
+					require.Truef(t, found, "object not found in table %s %s %v %v", modName, objType.Name, update.Key, update.Value)
+					return true
+				})
+			}
+			return nil
+		}))
 	}
 }

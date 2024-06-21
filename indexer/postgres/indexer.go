@@ -9,10 +9,11 @@ import (
 )
 
 type Indexer struct {
-	ctx     context.Context
-	db      *sql.DB
-	tx      *sql.Tx
-	modules map[string]*moduleManager
+	ctx context.Context
+	// TODO: make private or internal
+	Db      *sql.DB
+	Tx      *sql.Tx
+	Modules map[string]*ModuleManager
 	options Options
 }
 
@@ -49,10 +50,11 @@ func NewIndexer(ctx context.Context, opts Options) (*Indexer, error) {
 	}
 
 	return &Indexer{
-		ctx:     ctx,
-		db:      db,
-		tx:      tx,
-		modules: map[string]*moduleManager{},
+		ctx: ctx,
+		Db:  db,
+		Tx:  tx,
+		// TODO: make private or internal
+		Modules: map[string]*ModuleManager{},
 		options: opts,
 	}, nil
 }
@@ -68,43 +70,43 @@ func (i *Indexer) Listener() appdata.Listener {
 func (i *Indexer) initModuleSchema(data appdata.ModuleInitializationData) error {
 	moduleName := data.ModuleName
 	modSchema := data.Schema
-	_, ok := i.modules[moduleName]
+	_, ok := i.Modules[moduleName]
 	if ok {
 		return fmt.Errorf("module %s already initialized", moduleName)
 	}
 
 	mm := newModuleManager(moduleName, modSchema, i.options)
-	i.modules[moduleName] = mm
+	i.Modules[moduleName] = mm
 
-	return mm.Init(i.ctx, i.tx)
+	return mm.Init(i.ctx, i.Tx)
 }
 
 func (i *Indexer) onObjectUpdate(data appdata.ObjectUpdateData) error {
 	module := data.ModuleName
 	update := data.Update
-	mod, ok := i.modules[module]
+	mod, ok := i.Modules[module]
 	if !ok {
 		return fmt.Errorf("module %s not initialized", module)
 	}
 
-	tm, ok := mod.tables[update.TypeName]
+	tm, ok := mod.Tables[update.TypeName]
 	if !ok {
 		return fmt.Errorf("object type %s not found in schema for module %s", update.TypeName, module)
 	}
 
 	if update.Delete {
-		return tm.Delete(i.ctx, i.tx, update.Key)
+		return tm.Delete(i.ctx, i.Tx, update.Key)
 	} else {
-		return tm.InsertUpdate(i.ctx, i.tx, update.Key, update.Value)
+		return tm.InsertUpdate(i.ctx, i.Tx, update.Key, update.Value)
 	}
 }
 
 func (i *Indexer) commit() error {
-	err := i.tx.Commit()
+	err := i.Tx.Commit()
 	if err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	i.tx, err = i.db.BeginTx(i.ctx, nil)
+	i.Tx, err = i.Db.BeginTx(i.ctx, nil)
 	return err
 }

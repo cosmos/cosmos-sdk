@@ -123,3 +123,7 @@ func (a *Simulator) ProcessBlockData(data BlockData) error {
 
 	return nil
 }
+
+func (a *Simulator) AppState() *statesim.App {
+	return a.state
+}

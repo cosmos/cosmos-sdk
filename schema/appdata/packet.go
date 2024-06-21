@@ -1,4 +1,4 @@
-package blockdata
+package appdata
 
 type Packet interface {
 	apply(*Listener) error

@@ -1,4 +1,4 @@
-package listenertest
+package appdatatest
 
 import (
 	"context"
@@ -7,14 +7,14 @@ import (
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/schema"
-	"cosmossdk.io/schema/blockdata"
+	"cosmossdk.io/schema/appdata"
 	schematesting "cosmossdk.io/schema/testing"
 	"cosmossdk.io/schema/testing/statesim"
 )
 
 type AppSimulatorOptions struct {
 	AppSchema          map[string]schema.ModuleSchema
-	Listener           blockdata.Listener
+	Listener           appdata.Listener
 	EventAlignedWrites bool
 }
 
@@ -25,7 +25,7 @@ type AppDataSimulator struct {
 	blockDataGen *rapid.Generator[BlockData]
 }
 
-type BlockData = []blockdata.Packet
+type BlockData = []appdata.Packet
 
 func NewAppSimulator(options AppSimulatorOptions) *AppDataSimulator {
 	if options.AppSchema == nil {
@@ -42,7 +42,7 @@ func NewAppSimulator(options AppSimulatorOptions) *AppDataSimulator {
 
 func (a *AppDataSimulator) Initialize() error {
 	if f := a.options.Listener.Initialize; f != nil {
-		_, err := f(context.Background(), blockdata.InitializationData{
+		_, err := f(context.Background(), appdata.InitializationData{
 			HasEventAlignedWrites: a.options.EventAlignedWrites,
 		})
 		if err != nil {
@@ -52,7 +52,7 @@ func (a *AppDataSimulator) Initialize() error {
 
 	if f := a.options.Listener.InitializeModuleData; f != nil {
 		err := a.state.ScanModuleSchemas(func(moduleName string, moduleSchema schema.ModuleSchema) error {
-			return f(blockdata.ModuleInitializationData{ModuleName: moduleName, Schema: moduleSchema})
+			return f(appdata.ModuleInitializationData{ModuleName: moduleName, Schema: moduleSchema})
 		})
 		if err != nil {
 			return err
@@ -86,7 +86,7 @@ func (a *AppDataSimulator) ProcessBlockData(data BlockData) error {
 	a.blockNum++
 
 	if f := a.options.Listener.StartBlock; f != nil {
-		err := f(blockdata.StartBlockData{Height: a.blockNum})
+		err := f(appdata.StartBlockData{Height: a.blockNum})
 		if err != nil {
 			return err
 		}

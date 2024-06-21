@@ -8,12 +8,12 @@ import (
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/schema"
-	"cosmossdk.io/schema/blockdata"
+	"cosmossdk.io/schema/appdata"
 )
 
 type App struct {
 	moduleStates *btree.Map[string, *Module]
-	updateGen    *rapid.Generator[blockdata.ObjectUpdateData]
+	updateGen    *rapid.Generator[appdata.ObjectUpdateData]
 }
 
 func NewApp(appSchema map[string]schema.ModuleSchema) *App {
@@ -30,11 +30,11 @@ func NewApp(appSchema map[string]schema.ModuleSchema) *App {
 		return moduleNames[u]
 	})
 
-	updateGen := rapid.Custom(func(t *rapid.T) blockdata.ObjectUpdateData {
+	updateGen := rapid.Custom(func(t *rapid.T) appdata.ObjectUpdateData {
 		moduleName := moduleNameSelector.Draw(t, "moduleName")
 		moduleState, ok := moduleStates.Get(moduleName)
 		require.True(t, ok)
-		return blockdata.ObjectUpdateData{
+		return appdata.ObjectUpdateData{
 			ModuleName: moduleName,
 			Update:     moduleState.UpdateGen().Draw(t, "update"),
 		}
@@ -55,7 +55,7 @@ func (a *App) ApplyUpdate(moduleName string, update schema.ObjectUpdate) error {
 	return moduleState.ApplyUpdate(update)
 }
 
-func (a *App) UpdateGen() *rapid.Generator[blockdata.ObjectUpdateData] {
+func (a *App) UpdateGen() *rapid.Generator[appdata.ObjectUpdateData] {
 	return a.updateGen
 }
 

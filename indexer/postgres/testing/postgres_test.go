@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	indexertesting "cosmossdk.io/schema/testing"
-
-	"cosmossdk.io/indexer/postgres"
-	listenertest "cosmossdk.io/schema/testing/listener"
+	appdatatest "cosmossdk.io/schema/testing/appdata"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
+
+	"cosmossdk.io/indexer/postgres"
 )
 
 func TestPostgresIndexer(t *testing.T) {
@@ -36,7 +36,7 @@ func TestPostgresIndexer(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	fixture := listenertest.NewAppSimulator(listenertest.AppSimulatorOptions{
+	fixture := appdatatest.NewAppSimulator(appdatatest.AppSimulatorOptions{
 		Listener:  indexer.Listener(),
 		AppSchema: indexertesting.ExampleAppSchema,
 	})

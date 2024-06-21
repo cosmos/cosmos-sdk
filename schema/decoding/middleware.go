@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"cosmossdk.io/schema"
-	"cosmossdk.io/schema/blockdata"
+	"cosmossdk.io/schema/appdata"
 )
 
 type Options struct {
@@ -16,13 +16,13 @@ type Options struct {
 	SyncSource SyncSource
 }
 
-func Middleware(target blockdata.Listener, opts Options) blockdata.Listener {
+func Middleware(target appdata.Listener, opts Options) appdata.Listener {
 	initialize := target.Initialize
 	initializeModuleData := target.InitializeModuleData
 	onKVPair := target.OnKVPair
 
 	moduleCodecs := map[string]schema.ModuleCodec{}
-	target.Initialize = func(ctx context.Context, data blockdata.InitializationData) (lastBlock int64, err error) {
+	target.Initialize = func(ctx context.Context, data appdata.InitializationData) (lastBlock int64, err error) {
 		if initialize != nil {
 			// TODO: handle case where the indexer isn't update and returns an older lastBlock,should this be in a separate middleware layer?
 			lastBlock, err = initialize(ctx, data)
@@ -35,7 +35,7 @@ func Middleware(target blockdata.Listener, opts Options) blockdata.Listener {
 			err = opts.DecoderResolver.Iterate(func(moduleName string, codec schema.ModuleCodec) error {
 				moduleCodecs[moduleName] = codec
 				if initializeModuleData != nil {
-					return initializeModuleData(blockdata.ModuleInitializationData{
+					return initializeModuleData(appdata.ModuleInitializationData{
 						ModuleName: moduleName,
 						Schema:     codec.Schema,
 					})
@@ -52,7 +52,7 @@ func Middleware(target blockdata.Listener, opts Options) blockdata.Listener {
 		return
 	}
 
-	target.OnKVPair = func(data blockdata.KVPairData) error {
+	target.OnKVPair = func(data appdata.KVPairData) error {
 		if onKVPair != nil {
 			return onKVPair(data)
 		}
@@ -73,7 +73,7 @@ func Middleware(target blockdata.Listener, opts Options) blockdata.Listener {
 				return nil
 			}
 
-			return target.OnObjectUpdate(blockdata.ObjectUpdateData{
+			return target.OnObjectUpdate(appdata.ObjectUpdateData{
 				ModuleName: data.ModuleName,
 				Update:     update,
 			})

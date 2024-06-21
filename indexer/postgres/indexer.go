@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/schema"
-	"cosmossdk.io/schema/blockdata"
+	"cosmossdk.io/schema/appdata"
 )
 
 type Indexer struct {
@@ -61,17 +61,17 @@ func NewIndexer(ctx context.Context, opts Options) (*Indexer, error) {
 	}, nil
 }
 
-func (i *Indexer) Listener() blockdata.Listener {
-	return blockdata.Listener{
+func (i *Indexer) Listener() appdata.Listener {
+	return appdata.Listener{
 		InitializeModuleData: i.initModuleSchema,
 		OnObjectUpdate:       i.onObjectUpdate,
 		Commit:               i.commit,
 	}
 }
 
-func (i *Indexer) initModuleSchema(data blockdata.ModuleInitializationData) error {
+func (i *Indexer) initModuleSchema(data appdata.ModuleInitializationData) error {
 	moduleName := data.ModuleName
-	schema := data.Schema
+	modSchema := data.Schema
 	_, ok := i.modules[moduleName]
 	if ok {
 		return fmt.Errorf("module %s already initialized", moduleName)
@@ -79,11 +79,11 @@ func (i *Indexer) initModuleSchema(data blockdata.ModuleInitializationData) erro
 
 	mm := &moduleManager{
 		moduleName: moduleName,
-		schema:     schema,
+		schema:     modSchema,
 		tables:     map[string]*TableManager{},
 	}
 
-	for _, typ := range schema.ObjectTypes {
+	for _, typ := range modSchema.ObjectTypes {
 		tm := NewTableManager(moduleName, typ)
 		mm.tables[typ.Name] = tm
 		err := tm.CreateTable(i.ctx, i.tx)
@@ -97,7 +97,7 @@ func (i *Indexer) initModuleSchema(data blockdata.ModuleInitializationData) erro
 	return nil
 }
 
-func (i *Indexer) onObjectUpdate(data blockdata.ObjectUpdateData) error {
+func (i *Indexer) onObjectUpdate(data appdata.ObjectUpdateData) error {
 	module := data.ModuleName
 	update := data.Update
 	mod, ok := i.modules[module]

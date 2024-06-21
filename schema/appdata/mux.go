@@ -1,4 +1,4 @@
-package blockdata
+package appdata
 
 import (
 	"context"

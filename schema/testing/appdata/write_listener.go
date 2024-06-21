@@ -1,4 +1,4 @@
-package listenertest
+package appdatatest
 
 import (
 	"context"
@@ -6,17 +6,17 @@ import (
 	"fmt"
 	"io"
 
-	"cosmossdk.io/schema/blockdata"
+	"cosmossdk.io/schema/appdata"
 )
 
-func WriterListener(w io.Writer) blockdata.Listener {
-	return blockdata.Listener{
-		Initialize: func(ctx context.Context, data blockdata.InitializationData) (lastBlockPersisted int64, err error) {
+func WriterListener(w io.Writer) appdata.Listener {
+	return appdata.Listener{
+		Initialize: func(ctx context.Context, data appdata.InitializationData) (lastBlockPersisted int64, err error) {
 
 			_, err = fmt.Fprintf(w, "Initialize: %v\n", data)
 			return 0, err
 		},
-		StartBlock: func(data blockdata.StartBlockData) error {
+		StartBlock: func(data appdata.StartBlockData) error {
 			_, err := fmt.Fprintf(w, "StartBlock: %v\n", data)
 			return err
 		},
@@ -27,7 +27,7 @@ func WriterListener(w io.Writer) blockdata.Listener {
 			_, err := fmt.Fprintf(w, "Commit\n")
 			return err
 		},
-		InitializeModuleData: func(data blockdata.ModuleInitializationData) error {
+		InitializeModuleData: func(data appdata.ModuleInitializationData) error {
 			bz, err := json.Marshal(data)
 			if err != nil {
 				return err
@@ -35,7 +35,7 @@ func WriterListener(w io.Writer) blockdata.Listener {
 			_, err = fmt.Fprintf(w, "InitializeModuleData: %s\n", bz)
 			return err
 		},
-		OnObjectUpdate: func(data blockdata.ObjectUpdateData) error {
+		OnObjectUpdate: func(data appdata.ObjectUpdateData) error {
 			bz, err := json.Marshal(data)
 			if err != nil {
 				return err

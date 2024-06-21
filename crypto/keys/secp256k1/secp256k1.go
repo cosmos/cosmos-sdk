@@ -17,12 +17,12 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var (
-	_ cryptotypes.PrivKey  = &PrivKey{}
+	_ sdkcrypto.PrivKey    = &PrivKey{}
 	_ codec.AminoMarshaler = &PrivKey{}
 )
 
@@ -40,7 +40,7 @@ func (privKey *PrivKey) Bytes() []byte {
 
 // PubKey performs the point-scalar multiplication from the privKey on the
 // generator point to get the pubkey.
-func (privKey *PrivKey) PubKey() cosmoscrypto.PubKey {
+func (privKey *PrivKey) PubKey() sdkcrypto.PubKey {
 	privateKeyObject, err := secec.NewPrivateKey(privKey.Key)
 	if err != nil {
 		panic(err)
@@ -51,7 +51,7 @@ func (privKey *PrivKey) PubKey() cosmoscrypto.PubKey {
 
 // Equals - you probably don't need to use this.
 // Runs in constant time based on length of the
-func (privKey *PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
+func (privKey *PrivKey) Equals(other sdkcrypto.SdkPrivKey) bool {
 	return privKey.Type() == other.Type() && subtle.ConstantTimeCompare(privKey.Bytes(), other.Bytes()) == 1
 }
 
@@ -158,7 +158,7 @@ func GenPrivKeyFromSecret(secret []byte) *PrivKey {
 //-------------------------------------
 
 var (
-	_ cryptotypes.PubKey   = &PubKey{}
+	_ sdkcrypto.PubKey     = &PubKey{}
 	_ codec.AminoMarshaler = &PubKey{}
 )
 

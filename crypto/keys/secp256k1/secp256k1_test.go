@@ -7,9 +7,11 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/cometbft/cometbft/crypto"
 	tmsecp256k1 "github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cosmos/btcutil/base58"
+	"github.com/cosmos/crypto/hash/sha256"
+	"github.com/cosmos/crypto/random"
+	"github.com/cosmos/crypto/types"
 	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	btcecdsa "github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 	"github.com/stretchr/testify/assert"
@@ -165,7 +167,7 @@ func TestPubKeySecp256k1Address(t *testing.T) {
 		privB, _ := hex.DecodeString(d.priv)
 		pubB, _ := hex.DecodeString(d.pub)
 		addrBbz, _, _ := base58.CheckDecode(d.addr)
-		addrB := crypto.Address(addrBbz)
+		addrB := types.Address(addrBbz)
 
 		priv := secp256k1.PrivKey{Key: privB}
 
@@ -182,14 +184,14 @@ func TestSignAndValidateSecp256k1(t *testing.T) {
 	privKey := secp256k1.GenPrivKey()
 	pubKey := privKey.PubKey()
 
-	msg := crypto.CRandBytes(1000)
+	msg := random.CRandBytes(1000)
 	sig, err := privKey.Sign(msg)
 	require.Nil(t, err)
 	assert.True(t, pubKey.VerifySignature(msg, sig))
 
 	// ----
 	// Test cross packages verification
-	msgHash := crypto.Sha256(msg)
+	msgHash := sha256.Sum(msg)
 	btcPrivKey := secp.PrivKeyFromBytes(privKey.Key)
 	btcPubKey := btcPrivKey.PubKey()
 	// This fails: malformed signature: no header magic
@@ -223,7 +225,7 @@ func TestSecp256k1LoadPrivkeyAndSerializeIsIdentity(t *testing.T) {
 	for i := 0; i < numberOfTests; i++ {
 		// Seed the test case with some random bytes
 		privKeyBytes := [32]byte{}
-		copy(privKeyBytes[:], crypto.CRandBytes(32))
+		copy(privKeyBytes[:], random.CRandBytes(32))
 
 		// This function creates a private and public key in the underlying libraries format.
 		// The private key is basically calling new(big.Int).SetBytes(pk), which removes leading zero bytes

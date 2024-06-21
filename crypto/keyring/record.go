@@ -7,7 +7,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -17,10 +17,10 @@ var (
 	// ErrPrivKeyNotAvailable is used when a Record_Local.PrivKey is nil.
 	ErrPrivKeyNotAvailable = errors.New("private key is not available")
 	// ErrCastAny is used to output an error if cast from types.Any fails.
-	ErrCastAny = errors.New("unable to cast to cryptotypes")
+	ErrCastAny = errors.New("unable to cast to sdkcrypto")
 )
 
-func newRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record, error) {
+func newRecord(name string, pk sdkcrypto.PubKey, item isRecord_Item) (*Record, error) {
 	any, err := codectypes.NewAnyWithValue(pk)
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func newRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record,
 }
 
 // NewLocalRecord creates a new Record with local key item
-func NewLocalRecord(name string, priv cryptotypes.PrivKey, pk cryptotypes.PubKey) (*Record, error) {
+func NewLocalRecord(name string, priv sdkcrypto.PrivKey, pk sdkcrypto.PubKey) (*Record, error) {
 	any, err := codectypes.NewAnyWithValue(priv)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func NewLocalRecord(name string, priv cryptotypes.PrivKey, pk cryptotypes.PubKey
 }
 
 // NewLedgerRecord creates a new Record with ledger item
-func NewLedgerRecord(name string, pk cryptotypes.PubKey, path *hd.BIP44Params) (*Record, error) {
+func NewLedgerRecord(name string, pk sdkcrypto.PubKey, path *hd.BIP44Params) (*Record, error) {
 	recordLedger := &Record_Ledger{path}
 	recordLedgerItem := &Record_Ledger_{recordLedger}
 	return newRecord(name, pk, recordLedgerItem)
@@ -54,22 +54,22 @@ func (rl *Record_Ledger) GetPath() *hd.BIP44Params {
 }
 
 // NewOfflineRecord creates a new Record with offline item
-func NewOfflineRecord(name string, pk cryptotypes.PubKey) (*Record, error) {
+func NewOfflineRecord(name string, pk sdkcrypto.PubKey) (*Record, error) {
 	recordOffline := &Record_Offline{}
 	recordOfflineItem := &Record_Offline_{recordOffline}
 	return newRecord(name, pk, recordOfflineItem)
 }
 
 // NewMultiRecord creates a new Record with multi item
-func NewMultiRecord(name string, pk cryptotypes.PubKey) (*Record, error) {
+func NewMultiRecord(name string, pk sdkcrypto.PubKey) (*Record, error) {
 	recordMulti := &Record_Multi{}
 	recordMultiItem := &Record_Multi_{recordMulti}
 	return newRecord(name, pk, recordMultiItem)
 }
 
 // GetPubKey fetches a public key of the record
-func (k *Record) GetPubKey() (cryptotypes.PubKey, error) {
-	pk, ok := k.PubKey.GetCachedValue().(cryptotypes.PubKey)
+func (k *Record) GetPubKey() (sdkcrypto.PubKey, error) {
+	pk, ok := k.PubKey.GetCachedValue().(sdkcrypto.PubKey)
 	if !ok {
 		return nil, errorsmod.Wrap(ErrCastAny, "PubKey")
 	}
@@ -104,20 +104,20 @@ func (k Record) GetType() KeyType {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (k *Record) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var pk cryptotypes.PubKey
+	var pk sdkcrypto.PubKey
 	if err := unpacker.UnpackAny(k.PubKey, &pk); err != nil {
 		return err
 	}
 
 	if l := k.GetLocal(); l != nil {
-		var priv cryptotypes.PrivKey
+		var priv sdkcrypto.PrivKey
 		return unpacker.UnpackAny(l.PrivKey, &priv)
 	}
 
 	return nil
 }
 
-func extractPrivKeyFromRecord(k *Record) (cryptotypes.PrivKey, error) {
+func extractPrivKeyFromRecord(k *Record) (sdkcrypto.PrivKey, error) {
 	rl := k.GetLocal()
 	if rl == nil {
 		return nil, ErrPrivKeyExtr
@@ -126,12 +126,12 @@ func extractPrivKeyFromRecord(k *Record) (cryptotypes.PrivKey, error) {
 	return extractPrivKeyFromLocal(rl)
 }
 
-func extractPrivKeyFromLocal(rl *Record_Local) (cryptotypes.PrivKey, error) {
+func extractPrivKeyFromLocal(rl *Record_Local) (sdkcrypto.PrivKey, error) {
 	if rl.PrivKey == nil {
 		return nil, ErrPrivKeyNotAvailable
 	}
 
-	priv, ok := rl.PrivKey.GetCachedValue().(cryptotypes.PrivKey)
+	priv, ok := rl.PrivKey.GetCachedValue().(sdkcrypto.PrivKey)
 	if !ok {
 		return nil, errorsmod.Wrap(ErrCastAny, "PrivKey")
 	}

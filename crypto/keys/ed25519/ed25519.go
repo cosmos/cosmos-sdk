@@ -15,7 +15,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -39,7 +39,7 @@ const (
 )
 
 var (
-	_ cryptotypes.PrivKey  = &PrivKey{}
+	_ sdkcrypto.PrivKey    = &PrivKey{}
 	_ codec.AminoMarshaler = &PrivKey{}
 )
 
@@ -62,7 +62,7 @@ func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 // PubKey gets the corresponding public key from the private key.
 //
 // Panics if the private key is not initialized.
-func (privKey *PrivKey) PubKey() cosmoscrypto.PubKey {
+func (privKey *PrivKey) PubKey() sdkcrypto.PubKey {
 	// If the latter 32 bytes of the privkey are all zero, privkey is not
 	// initialized.
 	initialized := false
@@ -84,7 +84,7 @@ func (privKey *PrivKey) PubKey() cosmoscrypto.PubKey {
 
 // Equals - you probably don't need to use this.
 // Runs in constant time based on length of the keys.
-func (privKey *PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
+func (privKey *PrivKey) Equals(other sdkcrypto.SdkPrivKey) bool {
 	if privKey.Type() != other.Type() {
 		return false
 	}
@@ -157,7 +157,7 @@ func GenPrivKeyFromSecret(secret []byte) *PrivKey {
 //-------------------------------------
 
 var (
-	_ cryptotypes.PubKey   = &PubKey{}
+	_ sdkcrypto.PubKey     = &PubKey{}
 	_ codec.AminoMarshaler = &PubKey{}
 )
 

@@ -5,8 +5,7 @@ package secp256k1
 
 import (
 	"errors"
-
-	"github.com/cometbft/cometbft/crypto"
+	"github.com/cosmos/crypto/hash/sha256"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 )
@@ -15,7 +14,7 @@ import (
 // The returned signature will be of the form R || S (in lower-S form).
 func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 	priv := secp256k1.PrivKeyFromBytes(privKey.Key)
-	sig := ecdsa.SignCompact(priv, crypto.Sha256(msg), false)
+	sig := ecdsa.SignCompact(priv, sha256.Sum(msg), false)
 
 	// remove the first byte which is compactSigRecoveryCode
 	return sig[1:], nil
@@ -36,7 +35,7 @@ func (pubKey *PubKey) VerifySignature(msg, sigStr []byte) bool {
 	if err != nil {
 		return false
 	}
-	return signature.Verify(crypto.Sha256(msg), pub)
+	return signature.Verify(sha256.Sum(msg), pub)
 }
 
 // Read Signature struct from R || S. Caller needs to ensure

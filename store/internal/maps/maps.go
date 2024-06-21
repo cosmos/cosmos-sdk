@@ -1,14 +1,12 @@
 package maps
 
 import (
-	"encoding/binary"
-
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
-	"github.com/cometbft/cometbft/crypto/merkle"
-	"github.com/cometbft/cometbft/crypto/tmhash"
-
 	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/internal/tree"
+	"encoding/binary"
+	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+	"github.com/cometbft/cometbft/crypto/merkle"
+	"github.com/cosmos/crypto/hash/sha256"
 )
 
 // merkleMap defines a merkle-ized tree from a map. Leave values are treated as
@@ -36,7 +34,7 @@ func (sm *merkleMap) set(key string, value []byte) {
 
 	// The value is hashed, so you can check for equality with a cached value (say)
 	// and make a determination to fetch or not.
-	vhash := tmhash.Sum(value)
+	vhash := sha256.Sum(value)
 
 	sm.kvs.Pairs = append(sm.kvs.Pairs, kv.Pair{
 		Key:   byteKey,
@@ -97,7 +95,7 @@ func (sm *simpleMap) Set(key string, value []byte) {
 	// The value is hashed, so you can
 	// check for equality with a cached value (say)
 	// and make a determination to fetch or not.
-	vhash := tmhash.Sum(value)
+	vhash := sha256.Sum(value)
 
 	sm.Kvs.Pairs = append(sm.Kvs.Pairs, kv.Pair{
 		Key:   byteKey,

@@ -2,7 +2,7 @@ package mock
 
 import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	"github.com/cometbft/cometbft/crypto"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	cmttypes "github.com/cometbft/cometbft/types"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -23,7 +23,7 @@ func NewPV() PV {
 }
 
 // GetPubKey implements PrivValidator interface
-func (pv PV) GetPubKey() (crypto.PubKey, error) {
+func (pv PV) GetPubKey() (cmtcrypto.PubKey, error) {
 	return cryptocodec.ToCmtPubKeyInterface(pv.PrivKey.PubKey())
 }
 

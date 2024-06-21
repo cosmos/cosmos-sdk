@@ -2,12 +2,15 @@ package secp256r1
 
 import (
 	"encoding/base64"
+	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/internal/ecdsa"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
-var _ customProtobufType = (*ecdsaSK)(nil)
+var (
+	_ customProtobufType = (*ecdsaSK)(nil)
+	_ sdkcrypto.PrivKey  = &PrivKey{}
+)
 
 // GenPrivKey generates a new secp256r1 private key. It uses operating system randomness.
 func GenPrivKey() (*PrivKey, error) {
@@ -16,7 +19,7 @@ func GenPrivKey() (*PrivKey, error) {
 }
 
 // PubKey implements SDK PrivKey interface.
-func (m *PrivKey) PubKey() cryptotypes.PubKey {
+func (m *PrivKey) PubKey() sdkcrypto.PubKey {
 	return &PubKey{&ecdsaPK{m.Secret.PubKey()}}
 }
 
@@ -44,7 +47,7 @@ func (m *PrivKey) Bytes() []byte {
 }
 
 // Equals implements SDK PrivKey interface.
-func (m *PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
+func (m *PrivKey) Equals(other sdkcrypto.SdkPrivKey) bool {
 	sk2, ok := other.(*PrivKey)
 	if !ok {
 		return false

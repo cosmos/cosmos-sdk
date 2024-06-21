@@ -2,6 +2,7 @@ package mempool_test
 
 import (
 	"fmt"
+	cosmoscrypto "github.com/cosmos/crypto/types"
 	"math/rand"
 	"testing"
 
@@ -42,7 +43,7 @@ func (t testPubKey) Bytes() []byte { panic("not implemented") }
 
 func (t testPubKey) VerifySignature(msg, sig []byte) bool { panic("not implemented") }
 
-func (t testPubKey) Equals(key cryptotypes.PubKey) bool { panic("not implemented") }
+func (t testPubKey) Equals(key cosmoscrypto.PubKey) bool { panic("not implemented") }
 
 func (t testPubKey) Type() string { panic("not implemented") }
 

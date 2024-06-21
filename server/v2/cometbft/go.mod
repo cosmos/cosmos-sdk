@@ -72,7 +72,7 @@ require (
 	github.com/cometbft/cometbft-db v0.12.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.2 // indirect
-	github.com/cosmos/crypto v0.0.0-20240309083813-82ed2537802e // indirect
+	github.com/cosmos/crypto v0.0.0-20240620174915-3a98519717c2 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.2.0 // indirect
@@ -158,7 +158,7 @@ require (
 	github.com/spf13/viper v1.19.0 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/supranational/blst v0.3.11 // indirect
+	github.com/supranational/blst v0.3.12 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
 	github.com/tidwall/btree v1.7.0 // indirect

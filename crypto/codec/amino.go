@@ -1,9 +1,8 @@
 package codec
 
 import (
-	"github.com/cosmos/crypto/curves/sr25519"
-
 	"cosmossdk.io/core/legacy"
+	"github.com/cometbft/cometbft/crypto/sr25519"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"

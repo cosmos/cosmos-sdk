@@ -4,13 +4,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/crypto"
+	cryptotypes "github.com/cosmos/crypto/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/simapp"
 	authtypes "cosmossdk.io/x/auth/types"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -45,7 +45,7 @@ func TestSimGenesisAccountValidate(t *testing.T) {
 		{
 			"valid basic account with module name",
 			simapp.SimGenesisAccount{
-				BaseAccount: authtypes.NewBaseAccount(sdk.AccAddress(crypto.AddressHash([]byte("testmod"))), nil, 0, 0),
+				BaseAccount: authtypes.NewBaseAccount(sdk.AccAddress(cryptotypes.AddressHash([]byte("testmod"))), nil, 0, 0),
 				ModuleName:  "testmod",
 			},
 			false,

@@ -5,39 +5,32 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 )
 
+type (
+	// SdkPrivKey is a private key type parameterized by PubKey, which includes proto functions.
+	SdkPrivKey = cosmoscrypto.PrivKey[PubKey]
+	// Address is an alias of cosmoscrypto.Address
+	Address = cosmoscrypto.Address
+)
+
 // PubKey defines a public key and extends proto.Message.
 type PubKey interface {
 	proto.Message
 	cosmoscrypto.PubKey
 }
 
-// LedgerPrivKey defines a private key that is not a proto message. For now,
-// LedgerSecp256k1 keys are not converted to proto.Message yet, this is why
-// they use LedgerPrivKey instead of PrivKey. All other keys must use PrivKey
-// instead of LedgerPrivKey.
-// TODO https://github.com/cosmos/cosmos-sdk/issues/7357.
-type LedgerPrivKey = cosmoscrypto.PrivKey
+// PrivKey defines a private key and extends proto.Message
+type PrivKey interface {
+	proto.Message
+	SdkPrivKey
+}
 
-// LedgerPrivKeyAminoJSON is a Ledger PrivKey type that supports signing with
+// LedgerPrivKeyAminoJSON is a PrivKey type that supports signing with
 // SIGN_MODE_LEGACY_AMINO_JSON. It is added as a non-breaking change, instead of directly
-// on the LedgerPrivKey interface (whose Sign method will sign with TEXTUAL),
+// on the PrivKey interface (whose Sign method will sign with TEXTUAL),
 // and will be deprecated/removed once LEGACY_AMINO_JSON is removed.
 type LedgerPrivKeyAminoJSON interface {
-	LedgerPrivKey
+	SdkPrivKey
 	// SignLedgerAminoJSON signs a messages on the Ledger device using
 	// SIGN_MODE_LEGACY_AMINO_JSON.
 	SignLedgerAminoJSON(msg []byte) ([]byte, error)
 }
-
-// PrivKey defines a private key and extends proto.Message. For now, it extends
-// LedgerPrivKey (see godoc for LedgerPrivKey). Ultimately, we should remove
-// LedgerPrivKey and add its methods here directly.
-// TODO https://github.com/cosmos/cosmos-sdk/issues/7357.
-type PrivKey interface {
-	proto.Message
-	LedgerPrivKey
-}
-
-type (
-	Address = cosmoscrypto.Address
-)

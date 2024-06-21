@@ -8,10 +8,11 @@ import (
 	"time"
 
 	cfg "github.com/cometbft/cometbft/config"
+	tmed25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cometbft/cometbft/p2p"
 	"github.com/cometbft/cometbft/privval"
 	cmttypes "github.com/cometbft/cometbft/types"
-	tmed25519 "github.com/cosmos/crypto/curves/ed25519"
+
 	"github.com/cosmos/go-bip39"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"

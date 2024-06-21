@@ -62,6 +62,14 @@ var BcryptSecurityParameter uint32 = 12
 //-----------------------------------------------------------------
 // add armor
 
+func EncodeArmor(blockType string, headers map[string]string, data []byte) (string, error) {
+	return armor.EncodeArmor(blockType, headers, data)
+}
+
+func DecodeArmor(armorStr string) (blockType string, headers map[string]string, data []byte, err error) {
+	return armor.DecodeArmor(armorStr)
+}
+
 // ArmorInfoBytes armor the InfoBytes
 func ArmorInfoBytes(bz []byte) string {
 	header := map[string]string{
@@ -82,7 +90,7 @@ func ArmorPubKeyBytes(bz []byte, algo string) string {
 		header[headerType] = algo
 	}
 
-	s, _ := armor.EncodeArmor(blockTypeKeyInfo, header, bz)
+	s, _ := armor.EncodeArmor(blockTypePubKey, header, bz)
 	return s
 }
 

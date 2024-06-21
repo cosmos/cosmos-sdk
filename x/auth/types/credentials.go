@@ -3,14 +3,15 @@ package types
 import (
 	"bytes"
 	"fmt"
+	cosmoscrypto "github.com/cosmos/crypto/types"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
-// NewBaseAccountWithPubKey creates an account with an a pubkey.
-func NewBaseAccountWithPubKey(pubkey cryptotypes.PubKey) (*BaseAccount, error) {
+// NewBaseAccountWithPubKey creates an account with a pubkey.
+func NewBaseAccountWithPubKey(pubkey sdkcrypto.PubKey) (*BaseAccount, error) {
 	if pubkey == nil {
 		return nil, fmt.Errorf("pubkey cannot be nil")
 	}
@@ -29,7 +30,7 @@ func NewBaseAccountWithPubKey(pubkey cryptotypes.PubKey) (*BaseAccount, error) {
 
 const ModuleCredentialType = "ModuleCredential"
 
-var _ cryptotypes.PubKey = &ModuleCredential{}
+var _ sdkcrypto.PubKey = &ModuleCredential{}
 
 // NewModuleCredential creates new module credential key.
 // All derivation keys must be non-empty.
@@ -45,7 +46,7 @@ func NewModuleCredential(moduleName string, derivationKeys ...[]byte) (*ModuleCr
 	}, nil
 }
 
-func (m *ModuleCredential) Address() cryptotypes.Address {
+func (m *ModuleCredential) Address() sdkcrypto.Address {
 	return address.Module(m.ModuleName, m.DerivationKeys...)
 }
 
@@ -58,7 +59,7 @@ func (m *ModuleCredential) VerifySignature(_, _ []byte) bool {
 	return false
 }
 
-func (m *ModuleCredential) Equals(other cryptotypes.PubKey) bool {
+func (m *ModuleCredential) Equals(other cosmoscrypto.PubKey) bool {
 	om, ok := other.(*ModuleCredential)
 	if !ok {
 		return false

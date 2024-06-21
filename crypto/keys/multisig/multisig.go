@@ -3,7 +3,7 @@ package multisig
 import (
 	"fmt"
 
-	cryptotypes "github.com/cosmos/crypto/types"
+	cosmoscrypto "github.com/cosmos/crypto/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdkcryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -34,9 +34,9 @@ func NewLegacyAminoPubKey(threshold int, pubKeys []sdkcryptotypes.PubKey) *Legac
 	return &LegacyAminoPubKey{Threshold: uint32(threshold), PubKeys: anyPubKeys}
 }
 
-// Address implements cryptotypes.PubKey Address method
+// Address implements cosmoscrypto.PubKey Address method
 func (m *LegacyAminoPubKey) Address() sdkcryptotypes.Address {
-	return cryptotypes.AddressHash(m.Bytes())
+	return cosmoscrypto.AddressHash(m.Bytes())
 }
 
 // Bytes returns the proto encoded version of the LegacyAminoPubKey
@@ -97,7 +97,7 @@ func (m *LegacyAminoPubKey) VerifyMultisignature(getSignBytes multisigtypes.GetS
 	return nil
 }
 
-// VerifySignature implements cryptotypes.PubKey VerifySignature method,
+// VerifySignature implements cosmoscrypto.PubKey VerifySignature method,
 // it panics because it can't handle MultiSignatureData
 // cf. https://github.com/cosmos/cosmos-sdk/issues/7109#issuecomment-686329936
 func (m *LegacyAminoPubKey) VerifySignature(msg, sig []byte) bool {
@@ -119,7 +119,7 @@ func (m *LegacyAminoPubKey) GetPubKeys() []sdkcryptotypes.PubKey {
 
 // Equals returns true if m and other both have the same number of keys, and
 // all constituent keys are the same, and in the same order.
-func (m *LegacyAminoPubKey) Equals(key sdkcryptotypes.PubKey) bool {
+func (m *LegacyAminoPubKey) Equals(key cosmoscrypto.PubKey) bool {
 	otherKey, ok := key.(multisigtypes.PubKey)
 	if !ok {
 		return false

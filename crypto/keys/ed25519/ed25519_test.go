@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"testing"
 
-	tmed25519 "github.com/cosmos/crypto/curves/ed25519"
+	tmed25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cosmos/crypto/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

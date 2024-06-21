@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -37,7 +37,7 @@ func PaginationGenerator(t *rapid.T, maxLimit uint64) *rapid.Generator[*query.Pa
 }
 
 // KeyTestPubAddr generates a new secp256k1 keypair.
-func KeyTestPubAddr() (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) {
+func KeyTestPubAddr() (sdkcrypto.PrivKey, sdkcrypto.PubKey, sdk.AccAddress) {
 	key := secp256k1.GenPrivKey()
 	pub := key.PubKey()
 	addr := sdk.AccAddress(pub.Address())
@@ -45,7 +45,7 @@ func KeyTestPubAddr() (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) 
 }
 
 // KeyTestPubAddrSecp256R1 generates a new secp256r1 keypair.
-func KeyTestPubAddrSecp256R1(t *testing.T) (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) {
+func KeyTestPubAddrSecp256R1(t *testing.T) (sdkcrypto.PrivKey, sdkcrypto.PubKey, sdk.AccAddress) {
 	t.Helper()
 	key, err := secp256r1.GenPrivKey()
 	assert.NilError(t, err)
@@ -55,7 +55,7 @@ func KeyTestPubAddrSecp256R1(t *testing.T) (cryptotypes.PrivKey, cryptotypes.Pub
 }
 
 // KeyTestPubAddrED25519 generates a new ed25519 keypair.
-func KeyTestPubAddrED25519() (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) {
+func KeyTestPubAddrED25519() (sdkcrypto.PrivKey, sdkcrypto.PubKey, sdk.AccAddress) {
 	key := ed25519.GenPrivKey()
 	pub := key.PubKey()
 	addr := sdk.AccAddress(pub.Address())

@@ -1,10 +1,9 @@
 package address
 
 import (
-	"crypto/sha256"
 	"testing"
 
-	"github.com/cometbft/cometbft/crypto/tmhash"
+	"github.com/cosmos/crypto/hash/sha256"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -19,8 +18,8 @@ func (suite *AddressSuite) TestHash() {
 	assert := suite.Assert()
 	typ := "1"
 	key := []byte{1}
-	part1 := sha256.Sum256([]byte(typ))
-	expected := sha256.Sum256(append(part1[:], key...))
+	part1 := sha256.Sum([]byte(typ))
+	expected := sha256.Sum(append(part1[:], key...))
 	received := Hash(typ, key)
 	assert.Equal(expected[:], received, "must create a correct address")
 
@@ -67,7 +66,7 @@ func (suite *AddressSuite) TestModule() {
 	modName, key := "myModule", []byte{1, 2}
 
 	addrLegacy := Module(modName)
-	assert.Equal(tmhash.SumTruncated([]byte(modName)), addrLegacy,
+	assert.Equal(sha256.SumTruncated([]byte(modName)), addrLegacy,
 		"when no derivation keys, we fall back to the legacy module address using sha256 of the module name")
 
 	addr := Module(modName, key)

@@ -20,15 +20,15 @@ func New() serverv2.ServerComponent[transaction.Tx] {
 	return &StoreComponent{}
 }
 
-func (s *StoreComponent) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) (serverv2.ServerComponent[transaction.Tx], error) {
+func (s *StoreComponent) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
 	cfg := DefaultConfig()
 	if v != nil {
 		if err := v.Sub(s.Name()).Unmarshal(&cfg); err != nil {
-			return &StoreComponent{}, fmt.Errorf("failed to unmarshal config: %w", err)
+			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
 	s.config = cfg
-	return s, nil
+	return nil
 }
 
 func (s *StoreComponent) Name() string {

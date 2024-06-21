@@ -51,7 +51,7 @@ func (m *moduleManager) CreateEnumType(ctx context.Context, tx *sql.Tx, enum sch
 }
 
 func (m *moduleManager) CreateEnumTypeSql(writer io.Writer, enum schema.EnumDefinition) error {
-	_, err := fmt.Fprintf(writer, "CREATE TYPE %q AS ENUM (", enumTypeName(m.moduleName, enum))
+	_, err := fmt.Fprintf(writer, "CREATE TYPE IF NOT EXISTS %q AS ENUM (", enumTypeName(m.moduleName, enum))
 	if err != nil {
 		return err
 	}

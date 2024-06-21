@@ -13,6 +13,7 @@ import (
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	keyring2 "cosmossdk.io/client/v2/autocli/keyring"
+	"cosmossdk.io/client/v2/internal/account"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/transaction"
 
@@ -179,7 +180,7 @@ func newFactory(ctx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
 		return Factory{}, err
 	}
 
-	accRetriever := newAccountRetriever(ctx.AddressCodec, ctx, ctx.InterfaceRegistry)
+	accRetriever := account.NewAccountRetriever(ctx.AddressCodec, ctx, ctx.InterfaceRegistry)
 
 	txf, err := NewFactory(k, ctx.Codec, accRetriever, txConfig, ctx.AddressCodec, ctx, params)
 	if err != nil {

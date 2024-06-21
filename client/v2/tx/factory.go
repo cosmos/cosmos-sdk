@@ -16,6 +16,7 @@ import (
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/client/v2/autocli/keyring"
+	"cosmossdk.io/client/v2/internal/account"
 	"cosmossdk.io/client/v2/internal/coins"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/transaction"
@@ -34,7 +35,7 @@ import (
 type Factory struct {
 	keybase          keyring.Keyring
 	cdc              codec.BinaryCodec
-	accountRetriever AccountRetriever
+	accountRetriever account.AccountRetriever
 	ac               address.Codec
 	conn             gogogrpc.ClientConn
 	txConfig         TxConfig
@@ -42,7 +43,7 @@ type Factory struct {
 }
 
 // NewFactory returns a new instance of Factory.
-func NewFactory(keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever AccountRetriever, txConfig TxConfig, ac address.Codec, conn gogogrpc.ClientConn, parameters TxParameters) (Factory, error) {
+func NewFactory(keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever account.AccountRetriever, txConfig TxConfig, ac address.Codec, conn gogogrpc.ClientConn, parameters TxParameters) (Factory, error) {
 	return Factory{
 		keybase:          keybase,
 		cdc:              cdc,
@@ -469,7 +470,7 @@ func (f *Factory) Fees() []*base.Coin { return f.txParams.fees }
 func (f *Factory) GasPrices() []*base.DecCoin { return f.txParams.gasPrices }
 
 // AccountRetriever returns the account retriever.
-func (f *Factory) AccountRetriever() AccountRetriever { return f.accountRetriever }
+func (f *Factory) AccountRetriever() account.AccountRetriever { return f.accountRetriever }
 
 // TimeoutHeight returns the timeout height.
 func (f *Factory) TimeoutHeight() uint64 { return f.txParams.timeoutHeight }

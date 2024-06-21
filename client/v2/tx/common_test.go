@@ -8,6 +8,7 @@ import (
 	abciv1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/client/v2/autocli/keyring"
+	"cosmossdk.io/client/v2/internal/account"
 	txdecode "cosmossdk.io/x/tx/decode"
 	"cosmossdk.io/x/tx/signing"
 
@@ -80,11 +81,11 @@ func (m mockAccount) GetSequence() uint64 {
 
 type mockAccountRetriever struct{}
 
-func (m mockAccountRetriever) GetAccount(_ context.Context, address []byte) (Account, error) {
+func (m mockAccountRetriever) GetAccount(_ context.Context, address []byte) (account.Account, error) {
 	return mockAccount{addr: address}, nil
 }
 
-func (m mockAccountRetriever) GetAccountWithHeight(_ context.Context, address []byte) (Account, int64, error) {
+func (m mockAccountRetriever) GetAccountWithHeight(_ context.Context, address []byte) (account.Account, int64, error) {
 	return mockAccount{addr: address}, 0, nil
 }
 

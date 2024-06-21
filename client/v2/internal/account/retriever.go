@@ -1,4 +1,4 @@
-package tx
+package account
 
 import (
 	"context"
@@ -46,8 +46,8 @@ type accountRetriever struct {
 	registry codectypes.InterfaceRegistry
 }
 
-// newAccountRetriever creates a new instance of accountRetriever.
-func newAccountRetriever(ac address.Codec, conn gogogrpc.ClientConn, registry codectypes.InterfaceRegistry) *accountRetriever {
+// NewAccountRetriever creates a new instance of accountRetriever.
+func NewAccountRetriever(ac address.Codec, conn gogogrpc.ClientConn, registry codectypes.InterfaceRegistry) *accountRetriever {
 	return &accountRetriever{
 		ac:       ac,
 		conn:     conn,

@@ -39,6 +39,7 @@ func (o *ObjectCollection) ApplyUpdate(update schema.ObjectUpdate) error {
 	}
 
 	keyStr := fmt.Sprintf("%v", update.Key)
+	// TODO merge state when we get ValueUpdates
 	if update.Delete {
 		if o.objectType.RetainDeletions && o.options.CanRetainDeletions {
 			cur, ok := o.objects.Get(keyStr)

@@ -67,7 +67,7 @@ func (tm *TableManager) EqualsSqlAndParams(w io.Writer, key, val interface{}) ([
 	allCols = append(allCols, keyCols...)
 	allCols = append(allCols, valueCols...)
 
-	_, err = tm.WhereSql(w, allCols, 1)
+	_, allParams, err = tm.WhereSql(w, allParams, allCols, 1)
 	if err != nil {
 		return nil, err
 	}

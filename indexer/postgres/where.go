@@ -12,11 +12,11 @@ func (tm *TableManager) WhereSqlAndParams(w io.Writer, key interface{}, startPar
 		return
 	}
 
-	endParamIdx, err = tm.WhereSql(w, keyCols, startParamIdx)
+	endParamIdx, keyParams, err = tm.WhereSql(w, keyParams, keyCols, startParamIdx)
 	return
 }
 
-func (tm *TableManager) WhereSql(w io.Writer, cols []string, startParamIdx int) (endParamIdx int, err error) {
+func (tm *TableManager) WhereSql(w io.Writer, params []interface{}, cols []string, startParamIdx int) (endParamIdx int, resParams []interface{}, err error) {
 	_, err = fmt.Fprintf(w, " WHERE ")
 	if err != nil {
 		return
@@ -30,12 +30,28 @@ func (tm *TableManager) WhereSql(w io.Writer, cols []string, startParamIdx int) 
 				return
 			}
 		}
-		_, err = fmt.Fprintf(w, "%s = $%d", col, endParamIdx)
+
+		_, err = fmt.Fprintf(w, "%s ", col)
 		if err != nil {
 			return
 		}
 
-		endParamIdx++
+		if params[i] == nil {
+			_, err = fmt.Fprintf(w, "IS NULL")
+			if err != nil {
+				return
+			}
+
+		} else {
+			_, err = fmt.Fprintf(w, "= $%d", endParamIdx)
+			if err != nil {
+				return
+			}
+
+			resParams = append(resParams, params[i])
+
+			endParamIdx++
+		}
 	}
 
 	return

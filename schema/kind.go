@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"time"
+	"unicode/utf8"
 )
 
 // Kind represents the basic type of a field in an object.
@@ -16,7 +17,8 @@ const (
 	// InvalidKind indicates that an invalid type.
 	InvalidKind Kind = iota
 
-	// StringKind is a string type and values of this type must be of the go type string.
+	// StringKind is a string type and values of this type must be of the go type string
+	// containing valid UTF-8.
 	StringKind
 
 	// BytesKind is a bytes type and values of this type must be of the go type []byte.
@@ -283,6 +285,10 @@ func (t Kind) ValidateValue(value interface{}) error {
 	}
 
 	switch t {
+	case StringKind:
+		if !utf8.ValidString(value.(string)) {
+			return fmt.Errorf("expected valid utf-8 string, got %s", value)
+		}
 	case IntegerKind:
 		if !integerRegex.Match([]byte(value.(string))) {
 			return fmt.Errorf("expected base10 integer, got %s", value)

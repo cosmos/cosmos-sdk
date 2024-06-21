@@ -111,8 +111,7 @@ func (i *Indexer) onObjectUpdate(data appdata.ObjectUpdateData) error {
 	}
 
 	if update.Delete {
-		// TODO
-		return nil
+		return tm.Delete(i.ctx, i.tx, update.Key)
 	} else {
 		return tm.InsertUpdate(i.ctx, i.tx, update.Key, update.Value)
 	}

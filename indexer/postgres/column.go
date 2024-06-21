@@ -36,7 +36,8 @@ func (tm *TableManager) createColumnDef(writer io.Writer, field schema.Field) er
 
 		case schema.TimeKind:
 			nanosCol := fmt.Sprintf("%s_nanos", field.Name)
-			_, err = fmt.Fprintf(writer, "TIMESTAMPTZ GENERATED ALWAYS AS (to_timestamp(%q)) STORED,\n\t", nanosCol)
+			// TODO: retain at least microseconds in the timestamp
+			_, err = fmt.Fprintf(writer, "TIMESTAMPTZ GENERATED ALWAYS AS (to_timestamp(%q / 1000000000)) STORED,\n\t", nanosCol)
 			if err != nil {
 				return err
 			}

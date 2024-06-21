@@ -95,14 +95,21 @@ func (o *ObjectCollection) UpdateGen() *rapid.Generator[schema.ObjectUpdate] {
 	return o.updateGen
 }
 
-func (o *ObjectCollection) ScanState(f func(schema.ObjectUpdate) bool) {
+func (o *ObjectCollection) ScanState(f func(schema.ObjectUpdate) error) error {
+	var err error
 	o.objects.Scan(func(_ string, v schema.ObjectUpdate) bool {
-		return f(v)
+		err = f(v)
+		return err == nil
 	})
+	return err
 }
 
 func (o *ObjectCollection) GetObject(key any) (schema.ObjectUpdate, bool) {
 	return o.objects.Get(fmt.Sprintf("%v", key))
+}
+
+func (o *ObjectCollection) ObjectType() schema.ObjectType {
+	return o.objectType
 }
 
 func (o *ObjectCollection) Len() int {

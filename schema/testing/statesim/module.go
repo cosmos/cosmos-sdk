@@ -60,16 +60,13 @@ func (o *Module) GetObjectCollection(objectType string) (*ObjectCollection, bool
 	return o.objectCollections.Get(objectType)
 }
 
-func (o *Module) ScanState(f func(schema.ObjectUpdate) bool) {
+func (o *Module) ScanState(f func(schema.ObjectUpdate) error) error {
+	var err error
 	o.objectCollections.Scan(func(key string, value *ObjectCollection) bool {
-		keepGoing := true
-		value.ScanState(func(update schema.ObjectUpdate) bool {
-			if !f(update) {
-				keepGoing = false
-				return false
-			}
-			return true
+		err = value.ScanState(func(update schema.ObjectUpdate) error {
+			return f(update)
 		})
-		return keepGoing
+		return err == nil
 	})
+	return err
 }

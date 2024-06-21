@@ -72,16 +72,25 @@ func (a *App) GetModule(moduleName string) (*Module, bool) {
 	return a.moduleStates.Get(moduleName)
 }
 
-func (a *App) ScanState(f func(moduleName string, update schema.ObjectUpdate) bool) {
+func (a *App) ScanState(f func(moduleName string, update schema.ObjectUpdate) error) error {
+	var err error
 	a.moduleStates.Scan(func(moduleName string, value *Module) bool {
-		keepGoing := true
-		value.ScanState(func(update schema.ObjectUpdate) bool {
-			if !f(moduleName, update) {
-				keepGoing = false
-				return false
-			}
-			return true
+		err = value.ScanState(func(update schema.ObjectUpdate) error {
+			return f(moduleName, update)
 		})
-		return keepGoing
+		return err == nil
 	})
+	return err
+}
+
+func (a *App) ScanObjectCollections(f func(moduleName string, collection *ObjectCollection) error) error {
+	var err error
+	a.moduleStates.Scan(func(moduleName string, value *Module) bool {
+		value.objectCollections.Scan(func(key string, value *ObjectCollection) bool {
+			err = f(moduleName, value)
+			return err == nil
+		})
+		return err == nil
+	})
+	return err
 }

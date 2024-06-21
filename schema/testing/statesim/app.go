@@ -16,12 +16,12 @@ type App struct {
 	updateGen    *rapid.Generator[appdata.ObjectUpdateData]
 }
 
-func NewApp(appSchema map[string]schema.ModuleSchema) *App {
+func NewApp(appSchema map[string]schema.ModuleSchema, options Options) *App {
 	moduleStates := &btree.Map[string, *Module]{}
 	var moduleNames []string
 
 	for moduleName, moduleSchema := range appSchema {
-		moduleState := NewModule(moduleSchema)
+		moduleState := NewModule(moduleSchema, options)
 		moduleStates.Set(moduleName, moduleState)
 		moduleNames = append(moduleNames, moduleName)
 	}

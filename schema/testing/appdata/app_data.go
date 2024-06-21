@@ -16,6 +16,7 @@ type SimulatorOptions struct {
 	AppSchema          map[string]schema.ModuleSchema
 	Listener           appdata.Listener
 	EventAlignedWrites bool
+	StateSimOptions    statesim.Options
 }
 
 type Simulator struct {
@@ -33,7 +34,7 @@ func NewSimulator(options SimulatorOptions) *Simulator {
 	}
 
 	sim := &Simulator{
-		state:   statesim.NewApp(options.AppSchema),
+		state:   statesim.NewApp(options.AppSchema, options.StateSimOptions),
 		options: options,
 	}
 

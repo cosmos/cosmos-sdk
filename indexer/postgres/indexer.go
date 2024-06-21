@@ -13,11 +13,13 @@ type Indexer struct {
 	db      *sql.DB
 	tx      *sql.Tx
 	modules map[string]*moduleManager
+	options Options
 }
 
 type Options struct {
-	Driver        string
-	ConnectionURL string
+	Driver          string
+	ConnectionURL   string
+	RetainDeletions bool
 }
 
 func NewIndexer(ctx context.Context, opts Options) (*Indexer, error) {
@@ -51,6 +53,7 @@ func NewIndexer(ctx context.Context, opts Options) (*Indexer, error) {
 		db:      db,
 		tx:      tx,
 		modules: map[string]*moduleManager{},
+		options: opts,
 	}, nil
 }
 
@@ -70,7 +73,7 @@ func (i *Indexer) initModuleSchema(data appdata.ModuleInitializationData) error 
 		return fmt.Errorf("module %s already initialized", moduleName)
 	}
 
-	mm := newModuleManager(moduleName, modSchema)
+	mm := newModuleManager(moduleName, modSchema, i.options)
 	i.modules[moduleName] = mm
 
 	return mm.Init(i.ctx, i.tx)

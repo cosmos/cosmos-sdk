@@ -16,11 +16,11 @@ type Module struct {
 	updateGen         *rapid.Generator[schema.ObjectUpdate]
 }
 
-func NewModule(moduleSchema schema.ModuleSchema) *Module {
+func NewModule(moduleSchema schema.ModuleSchema, options Options) *Module {
 	objectCollections := &btree.Map[string, *ObjectCollection]{}
 	var objectTypeNames []string
 	for _, objectType := range moduleSchema.ObjectTypes {
-		objectCollection := NewObjectCollection(objectType)
+		objectCollection := NewObjectCollection(objectType, options)
 		objectCollections.Set(objectType.Name, objectCollection)
 		objectTypeNames = append(objectTypeNames, objectType.Name)
 	}

@@ -47,6 +47,14 @@ func (tm *TableManager) CreateTableSql(writer io.Writer) error {
 		}
 	}
 
+	// add _deleted column when we have RetainDeletions set and enabled
+	if tm.options.RetainDeletions && tm.typ.RetainDeletions {
+		_, err = fmt.Fprintf(writer, "_deleted BOOLEAN NOT NULL DEFAULT FALSE,\n\t")
+		if err != nil {
+			return err
+		}
+	}
+
 	var pKeys []string
 	if !isSingleton {
 		for _, field := range tm.typ.KeyFields {
@@ -66,6 +74,7 @@ func (tm *TableManager) CreateTableSql(writer io.Writer) error {
 		return err
 	}
 
+	// TODO: we need test data to not generate constraint failures to safely enable this
 	//for _, uniq := range tm.typ.UniqueConstraints {
 	//	cols := make([]string, len(uniq.FieldNames))
 	//	for i, name := range uniq.FieldNames {

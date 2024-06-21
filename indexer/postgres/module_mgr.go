@@ -13,14 +13,16 @@ type moduleManager struct {
 	schema       schema.ModuleSchema
 	tables       map[string]*TableManager
 	definedEnums map[string]schema.EnumDefinition
+	options      Options
 }
 
-func newModuleManager(moduleName string, modSchema schema.ModuleSchema) *moduleManager {
+func newModuleManager(moduleName string, modSchema schema.ModuleSchema, options Options) *moduleManager {
 	return &moduleManager{
 		moduleName:   moduleName,
 		schema:       modSchema,
 		tables:       map[string]*TableManager{},
 		definedEnums: map[string]schema.EnumDefinition{},
+		options:      options,
 	}
 }
 
@@ -41,7 +43,7 @@ func (m *moduleManager) Init(ctx context.Context, tx *sql.Tx) error {
 	// create tables for all object types
 	// NOTE: if we want to support foreign keys, we need to sort tables ind dependency order
 	for _, typ := range m.schema.ObjectTypes {
-		tm := NewTableManager(m.moduleName, typ)
+		tm := NewTableManager(m.moduleName, typ, m.options)
 		m.tables[typ.Name] = tm
 		err := tm.CreateTable(ctx, tx)
 		if err != nil {

@@ -83,6 +83,13 @@ func (tm *TableManager) UpdateSql(w io.Writer, key, value interface{}) ([]interf
 		paramIdx++
 	}
 
+	if tm.options.RetainDeletions && tm.typ.RetainDeletions {
+		_, err = fmt.Fprintf(w, ", _deleted = FALSE")
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	_, keyParams, err := tm.WhereSqlAndParams(w, key, paramIdx)
 	if err != nil {
 		return nil, err

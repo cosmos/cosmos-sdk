@@ -11,15 +11,17 @@ import (
 )
 
 type ObjectCollection struct {
+	options    Options
 	objectType schema.ObjectType
 	objects    *btree.Map[string, schema.ObjectUpdate]
 	updateGen  *rapid.Generator[schema.ObjectUpdate]
 }
 
-func NewObjectCollection(objectType schema.ObjectType) *ObjectCollection {
+func NewObjectCollection(objectType schema.ObjectType, options Options) *ObjectCollection {
 	objects := &btree.Map[string, schema.ObjectUpdate]{}
 	updateGen := schematesting.ObjectUpdateGen(objectType, objects)
 	return &ObjectCollection{
+		options:    options,
 		objectType: objectType,
 		objects:    objects,
 		updateGen:  updateGen,
@@ -38,7 +40,7 @@ func (o *ObjectCollection) ApplyUpdate(update schema.ObjectUpdate) error {
 
 	keyStr := fmt.Sprintf("%v", update.Key)
 	if update.Delete {
-		if o.objectType.RetainDeletions {
+		if o.objectType.RetainDeletions && o.options.CanRetainDeletions {
 			cur, ok := o.objects.Get(keyStr)
 			if !ok {
 				return fmt.Errorf("object not found for deletion: %v", update.Key)

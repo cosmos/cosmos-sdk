@@ -11,20 +11,27 @@ import (
 )
 
 type ObjectCollection struct {
-	options    Options
-	objectType schema.ObjectType
-	objects    *btree.Map[string, schema.ObjectUpdate]
-	updateGen  *rapid.Generator[schema.ObjectUpdate]
+	options           Options
+	objectType        schema.ObjectType
+	objects           *btree.Map[string, schema.ObjectUpdate]
+	updateGen         *rapid.Generator[schema.ObjectUpdate]
+	valueFieldIndices map[string]int
 }
 
 func NewObjectCollection(objectType schema.ObjectType, options Options) *ObjectCollection {
 	objects := &btree.Map[string, schema.ObjectUpdate]{}
 	updateGen := schematesting.ObjectUpdateGen(objectType, objects)
+	valueFieldIndices := make(map[string]int, len(objectType.ValueFields))
+	for i, field := range objectType.ValueFields {
+		valueFieldIndices[field.Name] = i
+	}
+
 	return &ObjectCollection{
-		options:    options,
-		objectType: objectType,
-		objects:    objects,
-		updateGen:  updateGen,
+		options:           options,
+		objectType:        objectType,
+		objects:           objects,
+		updateGen:         updateGen,
+		valueFieldIndices: valueFieldIndices,
 	}
 }
 
@@ -39,11 +46,10 @@ func (o *ObjectCollection) ApplyUpdate(update schema.ObjectUpdate) error {
 	}
 
 	keyStr := fmt.Sprintf("%v", update.Key)
-	// TODO merge state when we get ValueUpdates
+	cur, exists := o.objects.Get(keyStr)
 	if update.Delete {
 		if o.objectType.RetainDeletions && o.options.CanRetainDeletions {
-			cur, ok := o.objects.Get(keyStr)
-			if !ok {
+			if !exists {
 				return fmt.Errorf("object not found for deletion: %v", update.Key)
 			}
 
@@ -53,6 +59,32 @@ func (o *ObjectCollection) ApplyUpdate(update schema.ObjectUpdate) error {
 			o.objects.Delete(keyStr)
 		}
 	} else {
+		// merge value updates only if we have more than one value field
+		//if valueUpdates, ok := update.Value.(schema.ValueUpdates); ok &&
+		//	len(o.objectType.ValueFields) > 1 {
+		//	var values []interface{}
+		//	if exists {
+		//		values = []interface{}{cur.Value}
+		//	} else {
+		//		values = make([]interface{}, len(o.objectType.ValueFields))
+		//	}
+		//
+		//	err = valueUpdates.Iterate(func(fieldName string, value interface{}) bool {
+		//		fieldIndex, ok := o.valueFieldIndices[fieldName]
+		//		if !ok {
+		//			panic(fmt.Sprintf("field %q not found in object type %q", fieldName, o.objectType.Name))
+		//		}
+		//
+		//		values[fieldIndex] = value
+		//		return true
+		//	})
+		//	if err != nil {
+		//		return err
+		//	}
+		//
+		//	update.Value = values
+		//}
+
 		o.objects.Set(keyStr, update)
 	}
 

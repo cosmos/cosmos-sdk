@@ -52,7 +52,7 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 	indexer, err := postgres.NewIndexer(ctx, postgres.Options{
 		Driver:          "pgx",
 		ConnectionURL:   dbUrl,
-		RetainDeletions: true,
+		RetainDeletions: retainDeletions,
 	})
 	require.NoError(t, err)
 
@@ -63,7 +63,7 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 		),
 		AppSchema: indexertesting.ExampleAppSchema,
 		StateSimOptions: statesim.Options{
-			CanRetainDeletions: true,
+			CanRetainDeletions: retainDeletions,
 		},
 	})
 
@@ -83,6 +83,12 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 				require.True(t, ok)
 				tblMgr, ok := modMgr.Tables[objType.Name]
 				require.True(t, ok)
+
+				expectedCount := objColl.Len()
+				actualCount, err := tblMgr.Count(context.Background(), indexer.Tx)
+				require.NoError(t, err)
+				require.Equalf(t, expectedCount, actualCount, "table %s %s count mismatch", modName, objType.Name)
+
 				objColl.ScanState(func(update schema.ObjectUpdate) bool {
 					found, err := tblMgr.Equals(
 						context.Background(),

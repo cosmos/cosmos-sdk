@@ -7,6 +7,8 @@ import (
 	"math/big"
 	"strings"
 
+	apicrypto "cosmossdk.io/api/cosmos/crypto/multisig/v1beta1"
+
 	"github.com/cosmos/go-bip39"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -65,10 +67,6 @@ func (f *Factory) Prepare() error {
 
 	if len(f.txParams.address) == 0 {
 		return errors.New("missing 'from address' field")
-	}
-
-	if err := f.accountRetriever.EnsureExists(context.Background(), f.txParams.address); err != nil {
-		return err
 	}
 
 	if f.txParams.accountNumber == 0 || f.txParams.sequence == 0 {
@@ -502,6 +500,16 @@ func (f *Factory) getSimPK() (cryptotypes.PubKey, error) {
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		// When in dry-run mode, attempt to retrieve the account using the provided address.
+		// If the account retrieval fails, the default public key is used.
+		acc, err := f.accountRetriever.GetAccount(context.Background(), f.txParams.address)
+		if err != nil {
+			// If there is an error retrieving the account, return the default public key.
+			return pk, nil
+		}
+		// If the account is successfully retrieved, use its public key.
+		pk = acc.GetPubKey()
 	}
 
 	return pk, nil
@@ -523,6 +531,7 @@ func (f *Factory) getSimSignatureData(pk cryptotypes.PubKey) SignatureData {
 	}
 
 	return &MultiSignatureData{
+		BitArray:   &apicrypto.CompactBitArray{},
 		Signatures: multiSignatureData,
 	}
 }

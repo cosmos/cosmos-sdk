@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	apimultisig "cosmossdk.io/api/cosmos/crypto/multisig/v1beta1"
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 )
@@ -93,6 +94,37 @@ func TestModeInfoAndSigToSignatureData(t *testing.T) {
 			want: &SingleSignatureData{
 				SignMode:  apisigning.SignMode_SIGN_MODE_DIRECT,
 				Signature: []byte("signature"),
+			},
+		},
+		{
+			name: "to MultiSignatureData",
+			args: args{
+				modeInfo: func() *apitx.ModeInfo {
+					return &apitx.ModeInfo{
+						Sum: &apitx.ModeInfo_Multi_{
+							Multi: &apitx.ModeInfo_Multi{
+								Bitarray: &apimultisig.CompactBitArray{},
+								ModeInfos: []*apitx.ModeInfo{
+									{
+										Sum: &apitx.ModeInfo_Single_{
+											Single: &apitx.ModeInfo_Single{Mode: apisigning.SignMode_SIGN_MODE_DIRECT},
+										},
+									},
+								},
+							},
+						},
+					}
+				},
+				sig: []byte("\n\tsignature"),
+			},
+			want: &MultiSignatureData{ // Changed from SingleSignatureData to MultiSignatureData
+				BitArray: &apimultisig.CompactBitArray{},
+				Signatures: []SignatureData{
+					&SingleSignatureData{
+						SignMode:  apisigning.SignMode_SIGN_MODE_DIRECT,
+						Signature: []byte("signature"),
+					},
+				},
 			},
 		},
 	}

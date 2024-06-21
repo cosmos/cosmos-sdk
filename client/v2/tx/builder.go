@@ -19,6 +19,7 @@ var (
 	_ TxBuilderProvider = BuilderProvider{}
 )
 
+// ExtendedTxBuilder defines an interface for setting extension options in a transaction.
 type ExtendedTxBuilder interface {
 	SetExtensionOptions(...*gogoany.Any)
 }

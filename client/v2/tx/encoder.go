@@ -1,11 +1,10 @@
 package tx
 
 import (
-	"google.golang.org/protobuf/encoding/protojson"
-	protov2 "google.golang.org/protobuf/proto"
-
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	txdecode "cosmossdk.io/x/tx/decode"
+	"google.golang.org/protobuf/encoding/protojson"
+	protov2 "google.golang.org/protobuf/proto"
 )
 
 var (

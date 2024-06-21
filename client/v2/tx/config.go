@@ -1,10 +1,6 @@
 package tx
 
 import (
-	"errors"
-
-	"google.golang.org/protobuf/reflect/protoreflect"
-
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/core/address"
 	txdecode "cosmossdk.io/x/tx/decode"
@@ -13,6 +9,12 @@ import (
 	"cosmossdk.io/x/tx/signing/direct"
 	"cosmossdk.io/x/tx/signing/directaux"
 	"cosmossdk.io/x/tx/signing/textual"
+	"errors"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )
@@ -163,6 +165,7 @@ func (t defaultEncodingConfig) TxJSONDecoder() txApiDecoder {
 type defaultTxSigningConfig struct {
 	signingCtx *signing.Context
 	handlerMap *signing.HandlerMap
+	cdc        codec.BinaryCodec
 }
 
 // newDefaultTxSigningConfig creates a new defaultTxSigningConfig instance using the provided ConfigOptions.
@@ -181,6 +184,7 @@ func newDefaultTxSigningConfig(opts ConfigOptions) (*defaultTxSigningConfig, err
 	return &defaultTxSigningConfig{
 		signingCtx: signingCtx,
 		handlerMap: handlerMap,
+		cdc:        opts.Cdc,
 	}, nil
 }
 
@@ -197,15 +201,69 @@ func (t defaultTxSigningConfig) SigningContext() *signing.Context {
 // MarshalSignatureJSON takes a slice of Signature objects and returns their JSON encoding.
 // This method is not yet implemented and will panic if called.
 func (t defaultTxSigningConfig) MarshalSignatureJSON(signatures []Signature) ([]byte, error) {
-	// TODO implement me
-	panic("implement me")
+	descriptor := make([]*apitxsigning.SignatureDescriptor, len(signatures))
+
+	for i, sig := range signatures {
+		descData, err := SignatureDataToProto(sig.Data)
+		if err != nil {
+			return nil, err
+		}
+
+		anyPk, err := codectypes.NewAnyWithValue(sig.PubKey)
+		if err != nil {
+			return nil, err
+		}
+
+		descriptor[i] = &apitxsigning.SignatureDescriptor{
+			PublicKey: &anypb.Any{
+				TypeUrl: codectypes.MsgTypeURL(sig.PubKey),
+				Value:   anyPk.Value,
+			},
+			Data:     descData,
+			Sequence: sig.Sequence,
+		}
+	}
+
+	return jsonMarshalOptions.Marshal(&apitxsigning.SignatureDescriptors{Signatures: descriptor})
 }
 
 // UnmarshalSignatureJSON takes a JSON byte slice and returns a slice of Signature objects.
 // This method is not yet implemented and will panic if called.
-func (t defaultTxSigningConfig) UnmarshalSignatureJSON(bytes []byte) ([]Signature, error) {
-	// TODO implement me
-	panic("implement me")
+func (t defaultTxSigningConfig) UnmarshalSignatureJSON(bz []byte) ([]Signature, error) {
+	var descriptor apitxsigning.SignatureDescriptors
+
+	err := protojson.UnmarshalOptions{}.Unmarshal(bz, &descriptor)
+	if err != nil {
+		return nil, err
+	}
+
+	sigs := make([]Signature, len(descriptor.Signatures))
+	for i, desc := range descriptor.Signatures {
+		var pubkey cryptotypes.PubKey
+
+		anyPk := &codectypes.Any{
+			TypeUrl: desc.PublicKey.TypeUrl,
+			Value:   desc.PublicKey.Value,
+		}
+
+		err = t.cdc.UnpackAny(anyPk, &pubkey)
+		if err != nil {
+			return nil, err
+		}
+
+		data, err := SignatureDataFromProto(desc.Data)
+		if err != nil {
+			return nil, err
+		}
+
+		sigs[i] = Signature{
+			PubKey:   pubkey,
+			Data:     data,
+			Sequence: desc.Sequence,
+		}
+	}
+
+	return sigs, nil
 }
 
 // newSigningContext creates a new signing context using the provided ConfigOptions.

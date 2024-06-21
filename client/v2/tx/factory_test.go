@@ -2,7 +2,6 @@ package tx
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -359,7 +358,6 @@ func TestFactory_getSignBytesAdapter(t *testing.T) {
 			}
 
 			got, err := f.getSignBytesAdapter(context.Background(), signerData, txb)
-			fmt.Println(got)
 			if tt.error {
 				require.Error(t, err)
 			} else {

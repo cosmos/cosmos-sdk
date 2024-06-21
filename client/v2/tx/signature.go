@@ -125,3 +125,73 @@ func decodeMultiSignatures(bz []byte) ([][]byte, error) {
 	}
 	return multisig.Signatures, nil
 }
+
+// SignatureDataToProto converts a SignatureData interface to a protobuf SignatureDescriptor_Data.
+// This function supports both SingleSignatureData and MultiSignatureData types.
+// For SingleSignatureData, it directly maps the signature mode and signature bytes to the protobuf structure.
+// For MultiSignatureData, it recursively converts each signature in the collection to the corresponding protobuf structure.
+func SignatureDataToProto(data SignatureData) (*apitxsigning.SignatureDescriptor_Data, error) {
+	switch data := data.(type) {
+	case *SingleSignatureData:
+		// Handle single signature data conversion.
+		return &apitxsigning.SignatureDescriptor_Data{
+			Sum: &apitxsigning.SignatureDescriptor_Data_Single_{
+				Single: &apitxsigning.SignatureDescriptor_Data_Single{
+					Mode:      data.SignMode,
+					Signature: data.Signature,
+				},
+			},
+		}, nil
+	case *MultiSignatureData:
+		var err error
+		descDatas := make([]*apitxsigning.SignatureDescriptor_Data, len(data.Signatures))
+
+		for i, j := range data.Signatures {
+			descDatas[i], err = SignatureDataToProto(j)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return &apitxsigning.SignatureDescriptor_Data{
+			Sum: &apitxsigning.SignatureDescriptor_Data_Multi_{
+				Multi: &apitxsigning.SignatureDescriptor_Data_Multi{
+					Bitarray:   data.BitArray,
+					Signatures: descDatas,
+				},
+			},
+		}, nil
+	}
+
+	// Return an error if the data type is not supported.
+	return nil, fmt.Errorf("unexpected signature data type %T", data)
+}
+
+// SignatureDataFromProto converts a protobuf SignatureDescriptor_Data to a SignatureData interface.
+// This function supports both Single and Multi signature data types.
+func SignatureDataFromProto(descData *apitxsigning.SignatureDescriptor_Data) (SignatureData, error) {
+	switch descData := descData.Sum.(type) {
+	case *apitxsigning.SignatureDescriptor_Data_Single_:
+		return &SingleSignatureData{
+			SignMode:  descData.Single.Mode,
+			Signature: descData.Single.Signature,
+		}, nil
+	case *apitxsigning.SignatureDescriptor_Data_Multi_:
+		var err error
+		multi := descData.Multi
+		data := make([]SignatureData, len(multi.Signatures))
+
+		for i, j := range multi.Signatures {
+			data[i], err = SignatureDataFromProto(j)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return &MultiSignatureData{
+			BitArray:   multi.Bitarray,
+			Signatures: data,
+		}, nil
+	}
+
+	return nil, fmt.Errorf("unexpected signature data type %T", descData)
+}

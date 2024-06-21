@@ -1,41 +1,110 @@
 package postgres
 
-//func (tu *tableInfo) bindParams(update indexerbase.EntityUpdate) (pgx.NamedArgs, error) {
-//	params := map[string]any{}
-//
-//	if len(tu.table.KeyColumns) == 0 {
-//		params["_id"] = 1
-//	} else if len(tu.table.KeyColumns) == 1 {
-//		params[tu.table.KeyColumns[0].Name] = update.Key
-//	} else {
-//		ks, ok := update.Key.([]any)
-//		if !ok {
-//			return nil, fmt.Errorf("expected array key, got %T", update.Key)
-//		}
-//		if len(ks) != len(tu.table.KeyColumns) {
-//			return nil, fmt.Errorf("expected %d key columns, got %d", len(tu.table.KeyColumns), len(ks))
-//		}
-//		for i, col := range tu.table.KeyColumns {
-//			params[col.Name] = ks[i]
-//		}
-//	}
-//
-//	if !update.Delete {
-//		if len(tu.table.ValueColumns) == 1 {
-//			params[tu.table.ValueColumns[0].Name] = update.Value
-//		} else {
-//			vs, ok := update.Value.([]any)
-//			if !ok {
-//				return nil, fmt.Errorf("expected array key, got %T", update.Key)
-//			}
-//			if len(vs) != len(tu.table.ValueColumns) {
-//				return nil, fmt.Errorf("expected %d value columns, got %d", len(tu.table.ValueColumns), len(vs))
-//			}
-//			for i, col := range tu.table.ValueColumns {
-//				params[col.Name] = vs[i]
-//			}
-//		}
-//	}
-//
-//	return params, nil
-//}
+import (
+	"fmt"
+	"time"
+
+	"cosmossdk.io/schema"
+)
+
+func (tm *TableManager) bindKeyParams(key interface{}) ([]interface{}, []string, error) {
+	n := len(tm.typ.KeyFields)
+	if n == 0 {
+		// singleton, set _id = 1
+		return []interface{}{1}, []string{"_id"}, nil
+	} else if n == 1 {
+		return tm.bindParams(tm.typ.KeyFields, []interface{}{key})
+	} else {
+		key, ok := key.([]interface{})
+		if !ok {
+			return nil, nil, fmt.Errorf("expected key to be a slice")
+		}
+
+		return tm.bindParams(tm.typ.KeyFields, key)
+	}
+}
+
+func (tm *TableManager) bindValueParams(value interface{}) (params []interface{}, valueCols []string, err error) {
+	n := len(tm.typ.ValueFields)
+	if n == 0 {
+		return nil, nil, nil
+	} else if valueUpdates, ok := value.(schema.ValueUpdates); ok {
+		var e error
+		var fields []schema.Field
+		var params []interface{}
+		if err := valueUpdates.Iterate(func(name string, value interface{}) bool {
+			field, ok := tm.valueFields[name]
+			if !ok {
+				e = fmt.Errorf("unknown column %q", name)
+				return false
+			}
+			fields = append(fields, field)
+			params = append(params, value)
+			return true
+		}); err != nil {
+			return nil, nil, err
+		}
+		if e != nil {
+			return nil, nil, e
+		}
+
+		return tm.bindParams(fields, params)
+	} else if n == 1 {
+		return tm.bindParams(tm.typ.ValueFields, []interface{}{value})
+	} else {
+		values, ok := value.([]interface{})
+		if !ok {
+			return nil, nil, fmt.Errorf("expected values to be a slice")
+		}
+
+		return tm.bindParams(tm.typ.ValueFields, values)
+	}
+}
+
+func (tm *TableManager) bindParams(fields []schema.Field, values []interface{}) ([]interface{}, []string, error) {
+	names := make([]string, 0, len(fields))
+	params := make([]interface{}, 0, len(fields))
+	for i, field := range fields {
+		if i >= len(values) {
+			return nil, nil, fmt.Errorf("missing value for field %q", field.Name)
+		}
+
+		param, err := tm.bindParam(field, values[i])
+		if err != nil {
+			return nil, nil, err
+		}
+
+		name, err := tm.updatableColumnName(field)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		names = append(names, name)
+		params = append(params, param)
+	}
+	return params, names, nil
+}
+
+func (tm *TableManager) bindParam(field schema.Field, value interface{}) (param interface{}, err error) {
+	param = value
+	if value == nil {
+		if !field.Nullable {
+			return nil, fmt.Errorf("expected non-null value for field %q", field.Name)
+		}
+	} else if field.Kind == schema.TimeKind {
+		t, ok := value.(time.Time)
+		if !ok {
+			return nil, fmt.Errorf("expected time.Time value for field %q, got %T", field.Name, value)
+		}
+
+		param = t.UnixNano()
+	} else if field.Kind == schema.DurationKind {
+		t, ok := value.(time.Duration)
+		if !ok {
+			return nil, fmt.Errorf("expected time.Duration value for field %q, got %T", field.Name, value)
+		}
+
+		param = int64(t)
+	}
+	return
+}

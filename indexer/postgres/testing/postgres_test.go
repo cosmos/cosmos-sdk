@@ -2,6 +2,7 @@ package testing
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
@@ -17,8 +18,14 @@ import (
 )
 
 func TestPostgresIndexer(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "postgres-indexer-test")
+	require.NoError(t, err)
+
 	dbPort := freeport.GetOne(t)
-	pgConfig := embeddedpostgres.DefaultConfig().Port(uint32(dbPort))
+	pgConfig := embeddedpostgres.DefaultConfig().
+		Port(uint32(dbPort)).
+		DataPath(tempDir)
+
 	dbUrl := pgConfig.GetConnectionURL()
 	pg := embeddedpostgres.NewDatabase(pgConfig)
 	require.NoError(t, pg.Start())
@@ -28,6 +35,8 @@ func TestPostgresIndexer(t *testing.T) {
 	t.Cleanup(func() {
 		cancel()
 		require.NoError(t, pg.Stop())
+		err := os.RemoveAll(tempDir)
+		require.NoError(t, err)
 	})
 
 	indexer, err := postgres.NewIndexer(ctx, postgres.Options{
@@ -44,7 +53,7 @@ func TestPostgresIndexer(t *testing.T) {
 	require.NoError(t, fixture.Initialize())
 
 	blockDataGen := fixture.BlockDataGen()
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 100; i++ {
 		blockData := blockDataGen.Example(i)
 		require.NoError(t, fixture.ProcessBlockData(blockData))
 	}

@@ -50,7 +50,12 @@ func (tm *TableManager) CreateTableSql(writer io.Writer) error {
 	var pKeys []string
 	if !isSingleton {
 		for _, field := range tm.typ.KeyFields {
-			pKeys = append(pKeys, `"`+field.Name+`"`)
+			name, err := tm.updatableColumnName(field)
+			if err != nil {
+				return err
+			}
+
+			pKeys = append(pKeys, name)
 		}
 	} else {
 		pKeys = []string{"_id"}

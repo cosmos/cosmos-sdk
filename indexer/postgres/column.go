@@ -105,14 +105,11 @@ func simpleColumnType(kind schema.Kind) string {
 	}
 }
 
-func colNames(cols []schema.Field) []string {
-	names := make([]string, len(cols))
-	for i, col := range cols {
-		name := col.Name
-		if col.Kind == schema.TimeKind {
-			name = fmt.Sprintf("%s_nanos", name)
-		}
-		names[i] = fmt.Sprintf("%q", name)
+func (tm *TableManager) updatableColumnName(field schema.Field) (name string, err error) {
+	name = field.Name
+	if field.Kind == schema.TimeKind {
+		name = fmt.Sprintf("%s_nanos", name)
 	}
-	return names
+	name = fmt.Sprintf("%q", name)
+	return
 }

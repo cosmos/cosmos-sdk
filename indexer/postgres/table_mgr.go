@@ -21,8 +21,9 @@ func NewTableManager(moduleName string, typ schema.ObjectType) *TableManager {
 	}
 
 	return &TableManager{
-		moduleName: moduleName,
-		typ:        typ,
+		moduleName:  moduleName,
+		typ:         typ,
+		valueFields: valueFields,
 	}
 }
 

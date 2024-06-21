@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"io"
 	"strings"
-
-	"cosmossdk.io/schema"
 )
 
 func (tm *TableManager) InsertUpdate(ctx context.Context, tx *sql.Tx, key, value interface{}) error {
@@ -18,13 +16,13 @@ func (tm *TableManager) InsertUpdate(ctx context.Context, tx *sql.Tx, key, value
 	}
 
 	// TODO: proper logging
-	fmt.Printf("SQL: %s %v\n", buf.String(), params)
+	fmt.Printf("%s %v\n", buf.String(), params)
 	_, err = tx.ExecContext(ctx, buf.String(), params...)
 	return err
 }
 
 func (tm *TableManager) InsertUpdateSqlAndParams(w io.Writer, key, value interface{}) ([]interface{}, error) {
-	keyParams, err := tm.bindKeyParams(key)
+	keyParams, keyCols, err := tm.bindKeyParams(key)
 	if err != nil {
 		return nil, err
 	}
@@ -32,13 +30,6 @@ func (tm *TableManager) InsertUpdateSqlAndParams(w io.Writer, key, value interfa
 	valueParams, valueCols, err := tm.bindValueParams(value)
 	if err != nil {
 		return nil, err
-	}
-
-	var keyCols []string
-	if len(tm.typ.KeyFields) == 0 {
-		keyCols = append(keyCols, "_id")
-	} else {
-		keyCols = colNames(tm.typ.KeyFields)
 	}
 
 	allCols := make([]string, 0, len(keyCols)+len(valueCols))
@@ -89,58 +80,4 @@ func (tm *TableManager) InsertUpdateSqlAndParams(w io.Writer, key, value interfa
 	allParams = append(allParams, keyParams...)
 	allParams = append(allParams, valueParams...)
 	return allParams, nil
-}
-
-func (tm *TableManager) bindKeyParams(key interface{}) ([]interface{}, error) {
-	n := len(tm.typ.KeyFields)
-	if n == 0 {
-		// singleton, set _id = 1
-		return []interface{}{1}, nil
-	} else if n == 1 {
-		return []interface{}{key}, nil
-	} else {
-		key, ok := key.([]interface{})
-		if !ok {
-			return nil, fmt.Errorf("expected key to be a slice")
-		}
-
-		return key, nil
-	}
-}
-
-func (tm *TableManager) bindValueParams(value interface{}) (params []interface{}, valueCols []string, err error) {
-	n := len(tm.typ.ValueFields)
-	if n == 0 {
-		return nil, nil, nil
-	} else if valueUpdates, ok := value.(schema.ValueUpdates); ok {
-		var e error
-		var fields []schema.Field
-		var params []interface{}
-		if err := valueUpdates.Iterate(func(name string, value interface{}) bool {
-			field, ok := tm.valueFields[name]
-			if !ok {
-				e = fmt.Errorf("unknown column %q", name)
-				return false
-			}
-			fields = append(fields, field)
-			params = append(params, value)
-			return true
-		}); err != nil {
-			return nil, nil, err
-		}
-		if e != nil {
-			return nil, nil, e
-		}
-
-		return params, colNames(fields), nil
-	} else if n == 1 {
-		return []interface{}{value}, []string{tm.typ.ValueFields[0].Name}, nil
-	} else {
-		value, ok := value.([]interface{})
-		if !ok {
-			return nil, nil, fmt.Errorf("expected value to be a slice")
-		}
-
-		return value, colNames(tm.typ.ValueFields), nil
-	}
 }

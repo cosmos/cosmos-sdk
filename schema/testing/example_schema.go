@@ -11,9 +11,9 @@ var ExampleAppSchema = map[string]schema.ModuleSchema{
 	"test_cases": {
 		ObjectTypes: []schema.ObjectType{
 			{
-				"Singleton",
-				[]schema.Field{},
-				[]schema.Field{
+				Name:      "Singleton",
+				KeyFields: []schema.Field{},
+				ValueFields: []schema.Field{
 					{
 						Name: "Value",
 						Kind: schema.StringKind,
@@ -23,7 +23,6 @@ var ExampleAppSchema = map[string]schema.ModuleSchema{
 						Kind: schema.BytesKind,
 					},
 				},
-				false,
 			},
 			{
 				Name: "Simple",
@@ -127,6 +126,28 @@ var ExampleAppSchema = map[string]schema.ModuleSchema{
 				},
 				RetainDeletions: true,
 			},
+			{
+				Name: "UniqueConstraint",
+				KeyFields: []schema.Field{
+					{
+						Name: "Key",
+						Kind: schema.StringKind,
+					},
+				},
+				ValueFields: []schema.Field{
+					{
+						Name: "Value1",
+						Kind: schema.Int32Kind,
+					},
+					{
+						Name: "Value2",
+						Kind: schema.BytesKind,
+					},
+				},
+				UniqueConstraints: []schema.UniqueConstraint{
+					{[]string{"Value1"}},
+				},
+			},
 		},
 	},
 }
@@ -172,6 +193,6 @@ func mkTestObjectType(kind schema.Kind) schema.ObjectType {
 }
 
 var testEnum = schema.EnumDefinition{
-	Name:   "test_enum",
+	Name:   "test_enum_type",
 	Values: []string{"foo", "bar", "baz"},
 }

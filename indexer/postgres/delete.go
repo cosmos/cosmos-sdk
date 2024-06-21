@@ -45,5 +45,6 @@ func (tm *TableManager) DeleteSqlAndParams(w io.Writer, key interface{}) ([]inte
 		}
 	}
 
-	return keyParams, nil
+	_, err = fmt.Fprintf(w, ";")
+	return keyParams, err
 }

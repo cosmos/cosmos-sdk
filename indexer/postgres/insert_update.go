@@ -79,5 +79,7 @@ func (tm *TableManager) InsertUpdateSqlAndParams(w io.Writer, key, value interfa
 	var allParams []interface{}
 	allParams = append(allParams, keyParams...)
 	allParams = append(allParams, valueParams...)
-	return allParams, nil
+
+	_, err = fmt.Fprintf(w, ";")
+	return allParams, err
 }

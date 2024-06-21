@@ -25,6 +25,8 @@ type ObjectType struct {
 	// though it is still valid in order to save space. Indexers will want to have
 	// the option of retaining such data and distinguishing from other "true" deletions.
 	RetainDeletions bool
+
+	UniqueConstraints []UniqueConstraint
 }
 
 // Validate validates the object type.

@@ -11,18 +11,27 @@ type TableManager struct {
 	moduleName  string
 	typ         schema.ObjectType
 	valueFields map[string]schema.Field
+	allFields   map[string]schema.Field
 }
 
 // NewTableManager creates a new TableManager for the given object type.
 func NewTableManager(moduleName string, typ schema.ObjectType) *TableManager {
+	allFields := make(map[string]schema.Field)
 	valueFields := make(map[string]schema.Field)
+
+	for _, field := range typ.KeyFields {
+		allFields[field.Name] = field
+	}
+
 	for _, field := range typ.ValueFields {
 		valueFields[field.Name] = field
+		allFields[field.Name] = field
 	}
 
 	return &TableManager{
 		moduleName:  moduleName,
 		typ:         typ,
+		allFields:   allFields,
 		valueFields: valueFields,
 	}
 }

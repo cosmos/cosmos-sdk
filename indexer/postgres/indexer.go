@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 
-	"cosmossdk.io/schema"
 	"cosmossdk.io/schema/appdata"
 )
 
@@ -14,12 +13,6 @@ type Indexer struct {
 	db      *sql.DB
 	tx      *sql.Tx
 	modules map[string]*moduleManager
-}
-
-type moduleManager struct {
-	moduleName string
-	schema     schema.ModuleSchema
-	tables     map[string]*TableManager
 }
 
 type Options struct {
@@ -77,24 +70,10 @@ func (i *Indexer) initModuleSchema(data appdata.ModuleInitializationData) error 
 		return fmt.Errorf("module %s already initialized", moduleName)
 	}
 
-	mm := &moduleManager{
-		moduleName: moduleName,
-		schema:     modSchema,
-		tables:     map[string]*TableManager{},
-	}
-
-	for _, typ := range modSchema.ObjectTypes {
-		tm := NewTableManager(moduleName, typ)
-		mm.tables[typ.Name] = tm
-		err := tm.CreateTable(i.ctx, i.tx)
-		if err != nil {
-			return fmt.Errorf("failed to create table for %s in module %s: %w", typ.Name, moduleName, err)
-		}
-	}
-
+	mm := newModuleManager(moduleName, modSchema)
 	i.modules[moduleName] = mm
 
-	return nil
+	return mm.Init(i.ctx, i.tx)
 }
 
 func (i *Indexer) onObjectUpdate(data appdata.ObjectUpdateData) error {

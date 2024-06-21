@@ -24,7 +24,7 @@ func (tm *TableManager) createColumnDef(writer io.Writer, field schema.Field) er
 	} else {
 		switch field.Kind {
 		case schema.EnumKind:
-			_, err = fmt.Fprintf(writer, "TEXT") // TODO: enum type
+			_, err = fmt.Fprintf(writer, "%q", enumTypeName(tm.moduleName, field.EnumDefinition))
 			if err != nil {
 				return err
 			}

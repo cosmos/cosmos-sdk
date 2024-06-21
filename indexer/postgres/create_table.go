@@ -61,12 +61,30 @@ func (tm *TableManager) CreateTableSql(writer io.Writer) error {
 		pKeys = []string{"_id"}
 	}
 
-	_, err = fmt.Fprintf(writer, "PRIMARY KEY (%s)\n", strings.Join(pKeys, ", "))
+	_, err = fmt.Fprintf(writer, "PRIMARY KEY (%s)", strings.Join(pKeys, ", "))
 	if err != nil {
 		return err
 	}
 
-	_, err = fmt.Fprintf(writer, `);
+	for _, uniq := range tm.typ.UniqueConstraints {
+		cols := make([]string, len(uniq.FieldNames))
+		for i, name := range uniq.FieldNames {
+			field, ok := tm.allFields[name]
+			if !ok {
+				return fmt.Errorf("unknown field %q in unique constraint", name)
+			}
+
+			cols[i], err = tm.updatableColumnName(field)
+			if err != nil {
+				return err
+			}
+		}
+
+		_, err = fmt.Fprintf(writer, ",\n\tUNIQUE NULLS NOT DISTINCT (%s)", strings.Join(cols, ", "))
+	}
+
+	_, err = fmt.Fprintf(writer, `
+);
 
 GRANT SELECT ON TABLE %q TO PUBLIC;
 `, tm.TableName())

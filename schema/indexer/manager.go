@@ -1,58 +1,50 @@
 package indexer
 
-import (
-	"cosmossdk.io/schema"
-	"cosmossdk.io/schema/listener"
-)
-
-type Manager struct {
-	logger              Logger
-	decoderResolver     DecoderResolver
-	decoders            map[string]schema.KVDecoder
-	needLogicalDecoding bool
-	listener            listener.Listener
-	initialized         bool
-	commitChan          chan error
-}
-
-// ManagerOptions are the options for creating a new Manager.
-type ManagerOptions struct {
-	// DecoderResolver is the resolver for module decoders. It is required.
-	DecoderResolver DecoderResolver
-
-	// Listeners are the listeners that will be called when the manager receives events.
-	Listeners []listener.Listener
-
-	// SyncSource is the source that will be used do initial indexing of modules with pre-existing
-	// state. It is optional, but if it is not provided, indexing can only be starting when a node
-	// is synced from genesis.
-	SyncSource SyncSource
-
-	// Logger is the logger that will be used by the manager. It is optional.
-	Logger Logger
-
-	BufferSize int
-
-	Done chan struct{}
-}
-
-// NewManager creates a new Manager with the provided options.
-func NewManager(opts ManagerOptions) (*Manager, error) {
-	if opts.Logger != nil {
-		opts.Logger.Info("Initializing indexer manager")
-	}
-
-	mgr := &Manager{
-		logger:              opts.Logger,
-		decoderResolver:     opts.DecoderResolver,
-		decoders:            map[string]schema.KVDecoder{},
-		needLogicalDecoding: false,
-		listener:            listener.AsyncMultiplex(opts.Listeners, opts.BufferSize),
-		commitChan:          make(chan error),
-	}
-
-	return mgr, nil
-}
+//type Manager struct {
+//	logger              Logger
+//	decoderResolver     DecoderResolver
+//	decoders            map[string]schema.KVDecoder
+//	needLogicalDecoding bool
+//	listener            listener.Listener
+//	initialized         bool
+//}
+//
+//// ManagerOptions are the options for creating a new Manager.
+//type ManagerOptions struct {
+//	// DecoderResolver is the resolver for module decoders. It is required.
+//	DecoderResolver DecoderResolver
+//
+//	// Listeners is the listener the manager calls when it receives events.
+//	Listeners []listener.Listener
+//
+//	// SyncSource is the source that will be used do initial indexing of modules with pre-existing
+//	// state. It is optional, but if it is not provided, indexing can only be starting when a node
+//	// is synced from genesis.
+//	SyncSource SyncSource
+//
+//	// Logger is the logger that will be used by the manager. It is optional.
+//	Logger Logger
+//
+//	BufferSize int
+//}
+//
+//// NewManager creates a new Manager with the provided options.
+//func NewManager(opts ManagerOptions) (*Manager, error) {
+//	if opts.Logger != nil {
+//		opts.Logger.Info("Initializing indexer manager")
+//	}
+//
+//	mgr := &Manager{
+//		logger:              opts.Logger,
+//		decoderResolver:     opts.DecoderResolver,
+//		decoders:            map[string]schema.KVDecoder{},
+//		needLogicalDecoding: false,
+//		listener:            listener.AsyncMultiplex(opts.Listeners, opts.BufferSize),
+//		commitChan:          make(chan error),
+//	}
+//
+//	return mgr, nil
+//}
 
 //// Listener returns that listener that should be passed directly to the blockchain for managing
 //// all indexing.

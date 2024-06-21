@@ -9,6 +9,9 @@ func Async(listener Listener, bufferSize int, commitChan chan<- error) Listener 
 	res.Initialize = func(ctx context.Context, data InitializationData) (lastBlockPersisted int64, err error) {
 		if listener.Initialize != nil {
 			lastBlockPersisted, err = listener.Initialize(ctx, data)
+			if err != nil {
+				return
+			}
 		}
 
 		cancel := ctx.Done()

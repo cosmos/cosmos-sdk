@@ -232,9 +232,6 @@ func Test_msgsV1toAnyV2(t *testing.T) {
 }
 
 func Test_intoAnyV2(t *testing.T) {
-	type args struct {
-		v1s []*codectypes.Any
-	}
 	tests := []struct {
 		name string
 		msgs []*codectypes.Any
@@ -307,8 +304,10 @@ func Test_txBuilder_getFee(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			b := newTxBuilder(ac, decoder, cdc)
 			b.SetFeeAmount(tt.feeAmount)
-			b.SetFeeGranter(tt.feeGranter)
-			b.SetFeePayer(tt.feePayer)
+			err := b.SetFeeGranter(tt.feeGranter)
+			require.NoError(t, err)
+			err = b.SetFeePayer(tt.feePayer)
+			require.NoError(t, err)
 
 			fee, err := b.getFee()
 			require.NoError(t, err)

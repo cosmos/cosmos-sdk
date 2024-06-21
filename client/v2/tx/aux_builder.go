@@ -9,7 +9,6 @@ import (
 	gogoany "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/core/transaction"
@@ -128,7 +127,7 @@ func (b *AuxTxBuilder) SetSignMode(mode apitxsigning.SignMode) error {
 	case apitxsigning.SignMode_SIGN_MODE_DIRECT_AUX, apitxsigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 	default:
 		return sdkerrors.ErrInvalidRequest.Wrapf("AuxTxBuilder can only sign with %s or %s",
-			apisigning.SignMode_SIGN_MODE_DIRECT_AUX, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+			apitxsigning.SignMode_SIGN_MODE_DIRECT_AUX, apitxsigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
 	b.auxSignerData.Mode = mode
@@ -189,8 +188,8 @@ func validateAuxSignerData(a *apitx.AuxSignerData) error {
 		return errors.New("address cannot be empty: invalid request")
 	}
 
-	if a.Mode != apisigning.SignMode_SIGN_MODE_DIRECT_AUX && a.Mode != apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
-		return fmt.Errorf("AuxTxBuilder can only sign with %s or %s", apisigning.SignMode_SIGN_MODE_DIRECT_AUX, apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	if a.Mode != apitxsigning.SignMode_SIGN_MODE_DIRECT_AUX && a.Mode != apitxsigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
+		return fmt.Errorf("AuxTxBuilder can only sign with %s or %s", apitxsigning.SignMode_SIGN_MODE_DIRECT_AUX, apitxsigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
 	if len(a.Sig) == 0 {
@@ -229,14 +228,14 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 
 	var signBz []byte
 	switch b.auxSignerData.Mode {
-	case apisigning.SignMode_SIGN_MODE_DIRECT_AUX:
+	case apitxsigning.SignMode_SIGN_MODE_DIRECT_AUX:
 		{
 			signBz, err = proto.Marshal(b.auxSignerData.SignDoc)
 			if err != nil {
 				return nil, err
 			}
 		}
-	case apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
+	case apitxsigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 		{
 			handler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
 				FileResolver: proto.HybridResolver,

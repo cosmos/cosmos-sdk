@@ -2,23 +2,22 @@ package tx
 
 import (
 	"context"
-	apicrypto "cosmossdk.io/api/cosmos/crypto/multisig/v1beta1"
-	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	codec2 "github.com/cosmos/cosmos-sdk/crypto/codec"
-	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	_ "github.com/cosmos/cosmos-sdk/crypto/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	apicrypto "cosmossdk.io/api/cosmos/crypto/multisig/v1beta1"
+	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/x/tx/signing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	codec2 "github.com/cosmos/cosmos-sdk/crypto/codec"
+	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 type mockModeHandler struct{}
@@ -187,6 +186,7 @@ func Test_defaultTxSigningConfig_MarshalSignatureJSON(t *testing.T) {
 
 				k := setKeyring()
 				pk, err := k.GetPubKey("alice")
+				require.NoError(t, err)
 				signature, err := k.Sign("alice", make([]byte, 10), apitxsigning.SignMode_SIGN_MODE_DIRECT)
 				require.NoError(t, err)
 				return []Signature{
@@ -237,7 +237,6 @@ func Test_defaultTxSigningConfig_MarshalSignatureJSON(t *testing.T) {
 						},
 					},
 				}
-
 			},
 		},
 	}

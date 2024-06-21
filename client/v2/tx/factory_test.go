@@ -337,6 +337,7 @@ func TestFactory_getSignBytesAdapter(t *testing.T) {
 					Count:  0,
 				},
 			}...)
+			require.NoError(t, err)
 
 			pk, err := f.keybase.GetPubKey("alice")
 			require.NoError(t, err)

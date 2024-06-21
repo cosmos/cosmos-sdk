@@ -7,13 +7,12 @@ import (
 	"math/big"
 	"strings"
 
-	apicrypto "cosmossdk.io/api/cosmos/crypto/multisig/v1beta1"
-
 	"github.com/cosmos/go-bip39"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	base "cosmossdk.io/api/cosmos/base/v1beta1"
+	apicrypto "cosmossdk.io/api/cosmos/crypto/multisig/v1beta1"
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/client/v2/autocli/keyring"

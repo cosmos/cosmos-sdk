@@ -106,7 +106,7 @@ func (m mockClientConn) Invoke(_ context.Context, _ string, _, reply interface{}
 		},
 		Result: nil,
 	}
-	*reply.(*apitx.SimulateResponse) = simResponse
+	*reply.(*apitx.SimulateResponse) = simResponse // nolint:govet // ignore linting error
 	return nil
 }
 

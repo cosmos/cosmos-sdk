@@ -114,7 +114,7 @@ func NewManager(opts ManagerOptions) (*Manager, error) {
 //	}
 //
 //	if p.needLogicalDecoding {
-//		p.listener.InitializeModuleSchema = p.initializeModuleSchema
+//		p.listener.InitializeModuleData = p.initializeModuleSchema
 //		p.listener.OnObjectUpdate = p.onObjectUpdate
 //	}
 //
@@ -139,7 +139,7 @@ func NewManager(opts ManagerOptions) (*Manager, error) {
 //	// setup logical decoding
 //	if p.needLogicalDecoding {
 //		err = p.decoderResolver.Iterate(func(moduleName string, module schema.ModuleCodec) error {
-//			// if the schema was already initialized by the data source by InitializeModuleSchema,
+//			// if the schema was already initialized by the data source by InitializeModuleData,
 //			// then this is an error
 //			if _, ok := p.decoders[moduleName]; ok {
 //				return fmt.Errorf("module schema for %s already initialized", moduleName)
@@ -148,10 +148,10 @@ func NewManager(opts ManagerOptions) (*Manager, error) {
 //			p.decoders[moduleName] = module.KVDecoder
 //
 //			for _, proc := range p.listenerProcesses {
-//				if proc.listener.InitializeModuleSchema == nil {
+//				if proc.listener.InitializeModuleData == nil {
 //					continue
 //				}
-//				err := proc.listener.InitializeModuleSchema(moduleName, module.Schema)
+//				err := proc.listener.InitializeModuleData(moduleName, module.Schema)
 //				if err != nil {
 //					return err
 //				}
@@ -339,10 +339,10 @@ func NewManager(opts ManagerOptions) (*Manager, error) {
 //		// should be doing the decoding and passing it to the manager in OnObjectUpdate
 //		p.decoders[module] = nil
 //
-//		if proc.listener.InitializeModuleSchema == nil {
+//		if proc.listener.InitializeModuleData == nil {
 //			continue
 //		}
-//		err := proc.listener.InitializeModuleSchema(module, schema)
+//		err := proc.listener.InitializeModuleData(module, schema)
 //		if err != nil {
 //			return err
 //		}

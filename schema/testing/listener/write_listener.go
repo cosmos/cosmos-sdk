@@ -31,12 +31,12 @@ func WriterListener(w io.Writer) listener.Listener {
 			_, err := fmt.Fprintf(w, "Commit\n")
 			return err
 		},
-		InitializeModuleSchema: func(moduleName string, schema schema.ModuleSchema) error {
+		InitializeModuleData: func(moduleName string, schema schema.ModuleSchema) error {
 			bz, err := json.Marshal(schema)
 			if err != nil {
 				return err
 			}
-			_, err = fmt.Fprintf(w, "InitializeModuleSchema: %s %s\n", moduleName, bz)
+			_, err = fmt.Fprintf(w, "InitializeModuleData: %s %s\n", moduleName, bz)
 			return err
 		},
 		OnObjectUpdate: func(data listener.ObjectUpdateData) error {

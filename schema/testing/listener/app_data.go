@@ -40,7 +40,7 @@ func NewAppSimulator(options AppSimulatorOptions) *AppDataSimulator {
 }
 
 func (a *AppDataSimulator) Initialize() error {
-	if f := a.options.Listener.InitializeModuleSchema; f != nil {
+	if f := a.options.Listener.InitializeModuleData; f != nil {
 		err := a.state.ScanModuleSchemas(func(moduleName string, moduleSchema schema.ModuleSchema) error {
 			return f(moduleName, moduleSchema)
 		})

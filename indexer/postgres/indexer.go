@@ -63,9 +63,9 @@ func NewIndexer(ctx context.Context, opts Options) (*Indexer, error) {
 
 func (i *Indexer) Listener() indexerbase.Listener {
 	return indexerbase.Listener{
-		InitializeModuleSchema: i.initModuleSchema,
-		OnObjectUpdate:         i.onObjectUpdate,
-		Commit:                 i.commit,
+		InitializeModuleData: i.initModuleSchema,
+		OnObjectUpdate:       i.onObjectUpdate,
+		Commit:               i.commit,
 	}
 }
 

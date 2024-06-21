@@ -19,32 +19,20 @@ type InitializationData struct {
 	HasEventAlignedWrites bool
 }
 
-type StartBlock uint64
-
-func (s StartBlock) apply(l *Listener) error {
-	if l.StartBlock == nil {
-		return nil
-	}
-	return l.StartBlock(uint64(s))
+type ModuleInitializationData struct {
+	ModuleName string
+	Schema     schema.ModuleSchema
 }
 
-// BlockHeaderData represents the raw block header data that is passed to a listener.
-type BlockHeaderData struct {
+type StartBlockData struct {
 	// Height is the height of the block.
 	Height uint64
 
 	// Bytes is the raw byte representation of the block header.
-	Bytes ToBytes
+	HeaderBytes ToBytes
 
 	// JSON is the JSON representation of the block header. It should generally be a JSON object.
-	JSON ToJSON
-}
-
-func (b BlockHeaderData) apply(l *Listener) error {
-	if l.OnBlockHeader == nil {
-		return nil
-	}
-	return l.OnBlockHeader(b)
+	HeaderJSON ToJSON
 }
 
 // TxData represents the raw transaction data that is passed to a listener.
@@ -57,13 +45,6 @@ type TxData struct {
 
 	// JSON is the JSON representation of the transaction. It should generally be a JSON object.
 	JSON ToJSON
-}
-
-func (t TxData) apply(l *Listener) error {
-	if l.OnTx == nil {
-		return nil
-	}
-	return l.OnTx(t)
 }
 
 // EventData represents event data that is passed to a listener.
@@ -89,13 +70,6 @@ type EventData struct {
 	Data ToJSON
 }
 
-func (e EventData) apply(l *Listener) error {
-	if l.OnEvent == nil {
-		return nil
-	}
-	return l.OnEvent(e)
-}
-
 // ToBytes is a function that lazily returns the raw byte representation of data.
 type ToBytes = func() ([]byte, error)
 
@@ -118,13 +92,6 @@ type KVPairData struct {
 	Delete bool
 }
 
-func (k KVPairData) apply(l *Listener) error {
-	if l.OnKVPair == nil {
-		return nil
-	}
-	return l.OnKVPair(k)
-}
-
 // ObjectUpdateData represents object update data that is passed to a listener.
 type ObjectUpdateData struct {
 	// ModuleName is the name of the module that the update corresponds to.
@@ -134,18 +101,4 @@ type ObjectUpdateData struct {
 	Update schema.ObjectUpdate
 }
 
-func (o ObjectUpdateData) apply(l *Listener) error {
-	if l.OnObjectUpdate == nil {
-		return nil
-	}
-	return l.OnObjectUpdate(o)
-}
-
 type Commit struct{}
-
-func (c Commit) apply(l *Listener) error {
-	if l.Commit == nil {
-		return nil
-	}
-	return l.Commit()
-}

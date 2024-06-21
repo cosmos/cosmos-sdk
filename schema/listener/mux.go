@@ -26,11 +26,11 @@ func Multiplex(listeners ...Listener) Listener {
 	}
 
 	for _, l := range listeners {
-		if l.InitializeModuleSchema != nil {
-			mux.InitializeModuleSchema = func(moduleName string, moduleSchema schema.ModuleSchema) error {
+		if l.InitializeModuleData != nil {
+			mux.InitializeModuleData = func(moduleName string, moduleSchema schema.ModuleSchema) error {
 				for _, l := range listeners {
-					if l.InitializeModuleSchema != nil {
-						if err := l.InitializeModuleSchema(moduleName, moduleSchema); err != nil {
+					if l.InitializeModuleData != nil {
+						if err := l.InitializeModuleData(moduleName, moduleSchema); err != nil {
 							return err
 						}
 					}

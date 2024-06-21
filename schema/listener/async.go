@@ -4,24 +4,16 @@ import "context"
 
 func Async(listener Listener, bufferSize int, commitChan chan<- error) Listener {
 	packetChan := make(chan Packet, bufferSize)
-	res := PacketCollector(func(p Packet) error {
-		packetChan <- p
-		return nil
-	})
+	res := Listener{}
 
-	var cancel <-chan struct{}
 	res.Initialize = func(ctx context.Context, data InitializationData) (lastBlockPersisted int64, err error) {
-		cancel = ctx.Done()
 		if listener.Initialize != nil {
-			return listener.Initialize(ctx, data)
+			lastBlockPersisted, err = listener.Initialize(ctx, data)
 		}
-		return 0, nil
-	}
-	res.InitializeModuleSchema = listener.InitializeModuleSchema
 
-	var err error
-	res.CompleteInitialization = func() error {
+		cancel := ctx.Done()
 		go func() {
+			var err error
 			for {
 				select {
 				case packet := <-packetChan:
@@ -49,7 +41,50 @@ func Async(listener Listener, bufferSize int, commitChan chan<- error) Listener 
 				}
 			}
 		}()
-		return nil
+
+		return
+	}
+
+	if listener.InitializeModuleData != nil {
+		res.InitializeModuleData = func(data ModuleInitializationData) error {
+			packetChan <- data
+			return nil
+		}
+	}
+
+	if listener.StartBlock != nil {
+		res.StartBlock = func(data StartBlockData) error {
+			packetChan <- data
+			return nil
+		}
+	}
+
+	if listener.OnTx != nil {
+		res.OnTx = func(data TxData) error {
+			packetChan <- data
+			return nil
+		}
+	}
+
+	if listener.OnEvent != nil {
+		res.OnEvent = func(data EventData) error {
+			packetChan <- data
+			return nil
+		}
+	}
+
+	if listener.OnKVPair != nil {
+		res.OnKVPair = func(data KVPairData) error {
+			packetChan <- data
+			return nil
+		}
+	}
+
+	if listener.OnObjectUpdate != nil {
+		res.OnObjectUpdate = func(data ObjectUpdateData) error {
+			packetChan <- data
+			return nil
+		}
 	}
 
 	return res

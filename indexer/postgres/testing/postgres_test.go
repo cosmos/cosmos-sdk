@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/schema/appdata"
 	indexertesting "cosmossdk.io/schema/testing"
 	appdatatest "cosmossdk.io/schema/testing/appdata"
+	"cosmossdk.io/schema/testing/statesim"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
@@ -41,8 +42,9 @@ func TestPostgresIndexer(t *testing.T) {
 	})
 
 	indexer, err := postgres.NewIndexer(ctx, postgres.Options{
-		Driver:        "pgx",
-		ConnectionURL: dbUrl,
+		Driver:          "pgx",
+		ConnectionURL:   dbUrl,
+		RetainDeletions: true,
 	})
 	require.NoError(t, err)
 
@@ -52,6 +54,9 @@ func TestPostgresIndexer(t *testing.T) {
 			indexer.Listener(),
 		),
 		AppSchema: indexertesting.ExampleAppSchema,
+		StateSimOptions: statesim.Options{
+			CanRetainDeletions: true,
+		},
 	})
 
 	require.NoError(t, fixture.Initialize())

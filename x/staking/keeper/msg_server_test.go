@@ -316,7 +316,6 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 	for _, tc := range testCases {
 		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
-
 			if tc.expPanic {
 				require.PanicsWithValue(tc.expPanicMsg, func() {
 					_, _ = msgServer.CreateValidator(ctx, tc.input)

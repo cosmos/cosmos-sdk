@@ -38,114 +38,33 @@ Additionally, there is an overlap in functionality with a Token Factory module, 
 
 **Legacy Support**: A legacy wrapper will be implemented to ensure compatibility with about 90% of existing functions. This measure will facilitate a smooth transition while keeping older systems functional.
 
-**Callback Functions**: We propose to integrate callback functions directly to the x/bank module, allowing for customisable behaviour during minting, burning and transferring operations without complicating statemanagement. It also helps overwrite the default accounting mechanism by allowing to overwrite the balance method (this is particularly useful for rebasing tokens).
+**Callback Functions**: We propose to to integrate callbacks which are handled by an`x/account` and will handle the callback message type. This allows for  for customisable behaviour during minting, burning and transferring operations without complicating statemanagement.It also helps overwrite the default accounting mechanism by allowing to overwrite the balance method (this is particularly useful for rebasing tokens).
 
-Implementation of Callback Functions:
+Each denom will be an `x/account` and will implement `OnTransfer`, `OnBurn`, `OnMint` and `OnBalanceOf` hooks. The bank module will check if the denom is an x/account and implement the respective hook. Depending on the hook, th bank module will send a message to the denom account. From there the denom account will return the new balances of the accounts.
+
+We would have the following messages `MsgMint`, `MsgBurn`, `MsgOnTransfer`, `QueryBalance` that would be sent to the denom account. 
+
+How the `x/account` denom implementation would look is as per below:
 
 ```go
-type BankKeeper struct {
-    OnMint func(ctx context.Context, addr []byte, amount sdk.Coin) error
-    OnBurn func(ctx context.Context, addr []byte, amount sdk.Coin) error
-    OnTransfer func(ctx context.Context, fromAddr, toAddr []byte, amount sdk.Coin) error
-    OnBalanceOf func(ctx context.Context, addr []byte, denom string) (sdk.Coins, error)
+func (a Account) RegisterExecuteHandlers(r accountsd.Router) {
+accountsd.RegisterHandler(r, a.OnTransfer)
+accountsd.RegisterHAndler(r. a.Burn)
 }
 
-func (k *BankKeeper) MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error {
-    if k.OnMint != nil {
-        if err := k.OnMint(ctx, moduleName, amt); err != nil {
-            return err
-        }
-    }
-}
-
-func (k *BankKeeper) BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error {
-    if k.OnBurn != nil {
-        if err := k.OnBurn(ctx, moduleName, amt); err != nil {
-            return err
-        }
-    }
-}
-
-func (k *BankKeeper) SendCoins(ctx context.Context, fromAddr, toAddr []byte, amt sdk.Coins) error {
-    if k.OnTransfer != nil {
-        if err := k.OnTransfer(ctx, fromAddr, toAddr, amt); err != nil {
-            return err
-        }
-    }
-}
-
-func (k *BankKeeper) GetBalance(ctx context.Context, addr []byte, denom string) (sdk.Coins, error) {
-    if k.OnBalanceOf != nil {
-        coins, err := k.OnBalanceOf(ctx, addr, denom);
-        if err != nil {
-            return nil, err
-        }
-
-        return coins, err
-    }
+func (a Account) OnTransfer(ctx context.Context, msg MsgOnTransfer) (MsgOnTransferResponse, error) {
+    ... check if account KYCd...
 }
 ```
 
-Messages for Admin Operations:
+For example if alice sends `MsgSend{to: bob, amount: 100ATOM}` to bank, bank checks if `ATOM` is an `x/account` implementing the `OnTransfer` hook.
 
-To facilitate admin operations like `Mint`, `Burn`, and `Transfer`, we can define specific messages that can be invoked by the admin account of each denom. These operations will be internal and not exposed to end clients directly.
+If `ATOM` is an `x/account` implementing the `OnTransfer` hook then bank sends a `MsgTransfer` to the `ATOM` denom account. The `ATOM` denom account returns the new balances of alice and bob.
 
-```protobuf
-message Mint {
-  string denom = 1;
-  string to = 2;
-  string amount = 3;
-}
+If `ATOM` is not an `x/account` implementing the `OnTransfer` hook then bank will simply substract amount from alice and add it to bob.
 
-message Burn {
-  string denom = 1;
-  string from = 2;
-  string amount = 3;
-}
+[flow diagram of the above process](flow.png)
 
-message Transfer {
-  string denom = 1;
-  string from = 2;
-  string to = 3;
-  string amount = 4;
-}
-```
-
-If admin account defines these callbacks, `x/bank` will call `x/accounts` `MsgExecute` with the `OnTransfer`, `GetBalance` or `GetSupply` callbacks:
-
-```protobuf 
-// can error if transfer isn't allowed
-message OnTransfer {
-  string denom = 1;
-  string from = 2;
-  string to = 3;
-  string amount = 4;
-}
-
-// returns GetBalanceResponse
-// can override state management in x/bank
-// otherwise x/bank manages balance state
-// if GetBalance is defined, GetSupply also needs to be defined
-
-message GetBalance {
-  string denom = 1;
-  string account = 2;
-}
-
-message GetBalanceResponse {
-  string amount = 1;
-}
-
-message GetSupply {
-  string denom = 1;
-}
-
-message GetSupplyResponse {
-  string amount = 1;
-}
-```
-
-x/bank is responsible for emitting send, mint and burn events for consistency.
 
 ## Migration Plans
 

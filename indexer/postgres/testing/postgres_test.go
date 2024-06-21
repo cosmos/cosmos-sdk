@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/consul/sdk/freeport"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/schema/appdata"
 	indexertesting "cosmossdk.io/schema/testing"
 	appdatatest "cosmossdk.io/schema/testing/appdata"
 
@@ -46,7 +47,10 @@ func TestPostgresIndexer(t *testing.T) {
 	require.NoError(t, err)
 
 	fixture := appdatatest.NewSimulator(appdatatest.SimulatorOptions{
-		Listener:  indexer.Listener(),
+		Listener: appdata.ListenerMux(
+			appdata.DebugListener(os.Stdout),
+			indexer.Listener(),
+		),
 		AppSchema: indexertesting.ExampleAppSchema,
 	})
 

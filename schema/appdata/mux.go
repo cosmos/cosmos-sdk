@@ -17,6 +17,7 @@ func ListenerMux(listeners ...Listener) Listener {
 						return l.Initialize(ctx, data)
 					}
 				}
+				// TODO: deal with return values!
 				return 0, nil
 			}
 			break

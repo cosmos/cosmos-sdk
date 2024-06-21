@@ -11,6 +11,7 @@ import (
 // decoding of data out of the box, so the InitializeModuleData and OnObjectUpdate methods will not be called.
 // These methods will only be called when listening logical decoding is setup.
 type Listener struct {
+	// TODO: this is the only method that can't be packetized so muxing is a bit more complex - maybe we should pull this out and create a separate initialization mechanism
 	// Initialize is called when the listener is initialized before any other methods are called.
 	// The lastBlockPersisted return value should be the last block height the listener persisted if it is
 	// persisting block data, 0 if it is not interested in persisting block data, or -1 if it is

@@ -7,19 +7,26 @@ import (
 
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	"github.com/hashicorp/consul/sdk/freeport"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/indexer/postgres"
 	"cosmossdk.io/schema/appdata"
 	indexertesting "cosmossdk.io/schema/testing"
 	appdatatest "cosmossdk.io/schema/testing/appdata"
 	"cosmossdk.io/schema/testing/statesim"
-
-	_ "github.com/jackc/pgx/v5/stdlib"
-
-	"cosmossdk.io/indexer/postgres"
 )
 
 func TestPostgresIndexer(t *testing.T) {
+	t.Run("RetainDeletions", func(t *testing.T) {
+		testPostgresIndexer(t, true)
+	})
+	t.Run("NoRetainDeletions", func(t *testing.T) {
+		testPostgresIndexer(t, false)
+	})
+}
+
+func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 	tempDir, err := os.MkdirTemp("", "postgres-indexer-test")
 	require.NoError(t, err)
 

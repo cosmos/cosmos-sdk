@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/core/legacy"
 	"github.com/cometbft/cometbft/crypto/sr25519"
 
+	bls12_381 "github.com/cosmos/cosmos-sdk/crypto/keys/bls12_381"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -20,6 +21,7 @@ func RegisterCrypto(cdc legacy.Amino) {
 		ed25519.PubKeyName)
 	cdc.RegisterConcrete(&secp256k1.PubKey{},
 		secp256k1.PubKeyName)
+	cdc.RegisterConcrete(&bls12_381.PubKey{}, bls12_381.PubKeyName)
 	cdc.RegisterConcrete(&kmultisig.LegacyAminoPubKey{},
 		kmultisig.PubKeyAminoRoute)
 
@@ -30,4 +32,5 @@ func RegisterCrypto(cdc legacy.Amino) {
 		ed25519.PrivKeyName)
 	cdc.RegisterConcrete(&secp256k1.PrivKey{},
 		secp256k1.PrivKeyName)
+	cdc.RegisterConcrete(&bls12_381.PrivKey{}, bls12_381.PrivKeyName)
 }

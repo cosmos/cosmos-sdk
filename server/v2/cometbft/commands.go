@@ -21,6 +21,7 @@ import (
 	"cosmossdk.io/server/v2/cometbft/client/rpc"
 	"cosmossdk.io/server/v2/cometbft/flags"
 	auth "cosmossdk.io/x/auth/client/cli"
+	"github.com/cosmos/cosmos-sdk/client"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,13 +29,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
-func (s *CometBFTServer[T]) rpcClient() (rpc.CometRPC, error) {
+func (s *CometBFTServer[T]) rpcClient(cmd *cobra.Command) (rpc.CometRPC, error) {
 	if s.config.Standalone {
-		client, err := rpchttp.New(s.config.CmtConfig.RPC.ListenAddress)
+		client, err := rpchttp.New(client.GetConfigFromCmd(cmd).RPC.ListenAddress)
 		if err != nil {
 			return nil, err
 		}
 		return client, nil
+	}
+
+	if s.Node == nil || cmd.Flags().Changed(flags.FlagNode) {
+		rpcURI, err := cmd.Flags().GetString(flags.FlagNode)
+		if err != nil {
+			return nil, err
+		}
+		if rpcURI != "" {
+			return rpchttp.New(rpcURI)
+		}
 	}
 
 	return local.New(s.Node), nil
@@ -46,7 +57,7 @@ func (s *CometBFTServer[T]) StatusCommand() *cobra.Command {
 		Use:   "status",
 		Short: "Query remote node for status",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			rpcclient, err := s.rpcClient()
+			rpcclient, err := s.rpcClient(cmd)
 			if err != nil {
 				return err
 			}
@@ -61,10 +72,7 @@ func (s *CometBFTServer[T]) StatusCommand() *cobra.Command {
 				return err
 			}
 
-			cmd.Println(string(output))
-
-			// TODO: figure out yaml and json output
-			return nil
+			return printOutput(cmd, output)
 		},
 	}
 
@@ -80,7 +88,8 @@ func (s *CometBFTServer[T]) ShowNodeIDCmd() *cobra.Command {
 		Use:   "show-node-id",
 		Short: "Show this node's ID",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			nodeKey, err := p2p.LoadNodeKey(s.config.CmtConfig.NodeKeyFile())
+			cmtConfig := client.GetConfigFromCmd(cmd)
+			nodeKey, err := p2p.LoadNodeKey(cmtConfig.NodeKeyFile())
 			if err != nil {
 				return err
 			}
@@ -97,7 +106,7 @@ func (s *CometBFTServer[T]) ShowValidatorCmd() *cobra.Command {
 		Use:   "show-validator",
 		Short: "Show this node's CometBFT validator info",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := s.config.CmtConfig
+			cfg := client.GetConfigFromCmd(cmd)
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			pk, err := privValidator.GetPubKey()
 			if err != nil {
@@ -131,7 +140,7 @@ func (s *CometBFTServer[T]) ShowAddressCmd() *cobra.Command {
 		Use:   "show-address",
 		Short: "Shows this node's CometBFT validator consensus address",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := s.config.CmtConfig
+			cfg := client.GetConfigFromCmd(cmd)
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			// TODO: use address codec?
 			valConsAddr := (sdk.ConsAddress)(privValidator.GetAddress())
@@ -188,7 +197,7 @@ for. Each module documents its respective events under 'xx_events.md'.
 			version.AppName,
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			rpcclient, err := s.rpcClient()
+			rpcclient, err := s.rpcClient(cmd)
 			if err != nil {
 				return err
 			}
@@ -203,15 +212,12 @@ for. Each module documents its respective events under 'xx_events.md'.
 				return err
 			}
 
-			// return clientCtx.PrintProto(blocks) // TODO: previously we had this, but I think it can be replaced with a simple json marshal.
-			// We are missing YAML output tho.
 			bz, err := protojson.Marshal(blocks)
 			if err != nil {
 				return err
 			}
 
-			_, err = cmd.OutOrStdout().Write(bz)
-			return err
+			return printOutput(cmd, bz)
 		},
 	}
 
@@ -241,7 +247,7 @@ $ %s query block --%s=%s <hash>
 		RunE: func(cmd *cobra.Command, args []string) error {
 			typ, _ := cmd.Flags().GetString(auth.FlagType)
 
-			rpcclient, err := s.rpcClient()
+			rpcclient, err := s.rpcClient(cmd)
 			if err != nil {
 				return err
 			}
@@ -270,15 +276,12 @@ $ %s query block --%s=%s <hash>
 					return fmt.Errorf("no block found with height %s", args[0])
 				}
 
-				// return clientCtx.PrintProto(output)
-
 				bz, err := json.Marshal(output)
 				if err != nil {
 					return err
 				}
 
-				_, err = cmd.OutOrStdout().Write(bz)
-				return err
+				return printOutput(cmd, bz)
 
 			case auth.TypeHash:
 
@@ -296,14 +299,12 @@ $ %s query block --%s=%s <hash>
 					return fmt.Errorf("no block found with hash %s", args[0])
 				}
 
-				// return clientCtx.PrintProto(output)
 				bz, err := json.Marshal(output)
 				if err != nil {
 					return err
 				}
 
-				_, err = cmd.OutOrStdout().Write(bz)
-				return err
+				return printOutput(cmd, bz)
 
 			default:
 				return fmt.Errorf("unknown --%s value %s", auth.FlagType, typ)
@@ -332,7 +333,7 @@ func (s *CometBFTServer[T]) QueryBlockResultsCmd() *cobra.Command {
 
 			// TODO: we should be able to do this without using client context
 
-			node, err := s.rpcClient()
+			node, err := s.rpcClient(cmd)
 			if err != nil {
 				return err
 			}
@@ -359,10 +360,7 @@ func (s *CometBFTServer[T]) QueryBlockResultsCmd() *cobra.Command {
 				return err
 			}
 
-			cmd.Println(string(blockResStr))
-
-			// TODO: figure out yaml and json output
-			return nil
+			return printOutput(cmd, blockResStr)
 		},
 	}
 
@@ -392,6 +390,7 @@ func (s *CometBFTServer[T]) BootstrapStateCmd() *cobra.Command {
 		Short: "Bootstrap CometBFT state at an arbitrary block height using a light client",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg := client.GetConfigFromCmd(cmd)
 			height, err := cmd.Flags().GetUint64("height")
 			if err != nil {
 				return err
@@ -404,11 +403,41 @@ func (s *CometBFTServer[T]) BootstrapStateCmd() *cobra.Command {
 			}
 
 			// TODO genensis doc provider and apphash
-			return node.BootstrapState(cmd.Context(), s.config.CmtConfig, cmtcfg.DefaultDBProvider, nil, height, nil)
+			return node.BootstrapState(cmd.Context(), cfg, cmtcfg.DefaultDBProvider, nil, height, nil)
 		},
 	}
 
 	cmd.Flags().Int64("height", 0, "Block height to bootstrap state at, if not provided it uses the latest block height in app state")
 
 	return cmd
+}
+
+func printOutput(cmd *cobra.Command, out []byte) error {
+	// Get flags output
+	outFlag, err := cmd.Flags().GetString(flags.FlagOutput) 
+	if err != nil {
+		return err
+	}
+
+	if outFlag == "text" {
+		out, err = yaml.JSONToYAML(out)
+		if err != nil {
+			return err
+		}
+	}
+
+	writer := cmd.OutOrStdout()
+	_, err = writer.Write(out)
+	if err != nil {
+		return err
+	}
+
+	if outFlag != "text" {
+		// append new-line for formats besides YAML
+		_, err = writer.Write([]byte("\n"))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

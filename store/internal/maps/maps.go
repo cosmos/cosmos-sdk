@@ -38,7 +38,7 @@ func (sm *merkleMap) set(key string, value []byte) {
 
 	sm.kvs.Pairs = append(sm.kvs.Pairs, kv.Pair{
 		Key:   byteKey,
-		Value: vhash,
+		Value: vhash[:],
 	})
 }
 
@@ -99,7 +99,7 @@ func (sm *simpleMap) Set(key string, value []byte) {
 
 	sm.Kvs.Pairs = append(sm.Kvs.Pairs, kv.Pair{
 		Key:   byteKey,
-		Value: vhash,
+		Value: vhash[:],
 	})
 }
 

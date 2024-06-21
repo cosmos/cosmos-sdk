@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -20,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -58,20 +58,24 @@ func newPrintInfo(moniker, chainID, nodeID, genTxsDir string, appMessage json.Ra
 	}
 }
 
-func displayInfo(info printInfo) error {
+func displayInfo(dst io.Writer, info printInfo) error {
 	out, err := json.MarshalIndent(info, "", " ")
 	if err != nil {
 		return err
 	}
 
-	_, err = fmt.Fprintf(os.Stderr, "%s\n", out)
+	_, err = fmt.Fprintf(dst, "%s\n", out)
 
 	return err
 }
 
+type hasDefaultGenesis interface {
+	DefaultGenesis() map[string]json.RawMessage
+}
+
 // InitCmd returns a command that initializes all files needed for Tendermint
 // and the respective application.
-func InitCmd(mm *module.Manager) *cobra.Command {
+func InitCmd(mm hasDefaultGenesis) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init [moniker]",
 		Short: "Initialize private validator, p2p, genesis, and application configuration files",
@@ -112,7 +116,12 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 				initHeight = 1
 			}
 
-			nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(config, mnemonic)
+			consensusKey, err := cmd.Flags().GetString(FlagConsensusKeyAlgo)
+			if err != nil {
+				return errorsmod.Wrap(err, "Failed to get consensus key algo")
+			}
+
+			nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(config, mnemonic, consensusKey)
 			if err != nil {
 				return err
 			}
@@ -162,10 +171,6 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 				Params:     cmttypes.DefaultConsensusParams(),
 			}
 
-			consensusKey, err := cmd.Flags().GetString(FlagConsensusKeyAlgo)
-			if err != nil {
-				return errorsmod.Wrap(err, "Failed to get consensus key algo")
-			}
 			appGenesis.Consensus.Params.Validator.PubKeyTypes = []string{consensusKey}
 
 			if err = genutil.ExportGenesisFile(appGenesis, genFile); err != nil {
@@ -175,7 +180,7 @@ func InitCmd(mm *module.Manager) *cobra.Command {
 			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)
 
 			cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
-			return displayInfo(toPrint)
+			return displayInfo(cmd.ErrOrStderr(), toPrint)
 		},
 	}
 

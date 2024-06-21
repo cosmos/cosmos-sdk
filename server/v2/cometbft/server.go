@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 
 	abciserver "github.com/cometbft/cometbft/abci/server"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
@@ -15,7 +16,9 @@ import (
 	"github.com/cometbft/cometbft/proxy"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 
+	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/transaction"
 	serverv2 "cosmossdk.io/server/v2"
@@ -42,15 +45,14 @@ const (
 	FlagTrace         = "trace"
 )
 
-var _ serverv2.ServerModule = (*CometBFTServer[transaction.Tx])(nil)
+var _ serverv2.ServerComponent[transaction.Tx] = (*CometBFTServer[transaction.Tx])(nil)
 
 type CometBFTServer[T transaction.Tx] struct {
 	Node   *node.Node
 	App    *Consensus[T]
 	logger log.Logger
 
-	config    Config
-	cleanupFn func()
+	config Config
 }
 
 // App is an interface that represents an application in the CometBFT server.
@@ -61,20 +63,25 @@ type App[T transaction.Tx] interface {
 	GetStore() types.Store
 }
 
-func NewCometBFTServer[T transaction.Tx](
-	app *appmanager.AppManager[T],
-	store types.Store,
-	logger log.Logger,
-	cfg Config,
-	txCodec transaction.Codec[T],
-) *CometBFTServer[T] {
+func New[T transaction.Tx](txCodec transaction.Codec[T]) *CometBFTServer[T] {
+	consensus := &Consensus[T]{txCodec: txCodec}
+	return &CometBFTServer[T]{
+		App: consensus,
+	}
+}
+
+func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
+	store := appI.GetStore().(types.Store)
+
+	cfg := Config{CmtConfig: GetConfigFromViper(v), ConsensusAuthority: appI.GetConsensusAuthority()}
 	logger = logger.With("module", "cometbft-server")
 
 	// create noop mempool
 	mempool := mempool.NoOpMempool[T]{}
 
 	// create consensus
-	consensus := NewConsensus[T](app, mempool, store, cfg, txCodec, logger)
+	// txCodec should be in server from New()
+	consensus := NewConsensus[T](appI.GetAppManager(), mempool, store, cfg, s.App.txCodec, logger)
 
 	consensus.SetPrepareProposalHandler(handlers.NoOpPrepareProposal[T]())
 	consensus.SetProcessProposalHandler(handlers.NoOpProcessProposal[T]())
@@ -93,11 +100,11 @@ func NewCometBFTServer[T transaction.Tx](
 	sm := snapshots.NewManager(snapshotStore, snapshots.SnapshotOptions{}, sc, ss, nil, logger) // TODO: set options somehow
 	consensus.SetSnapshotManager(sm)
 
-	return &CometBFTServer[T]{
-		logger: logger,
-		App:    consensus,
-		config: cfg,
-	}
+	s.config = cfg
+	s.App = consensus
+	s.logger = logger
+
+	return nil
 }
 
 func (s *CometBFTServer[T]) Name() string {
@@ -105,6 +112,9 @@ func (s *CometBFTServer[T]) Name() string {
 }
 
 func (s *CometBFTServer[T]) Start(ctx context.Context) error {
+	viper := ctx.Value(corectx.ViperContextKey{}).(*viper.Viper)
+	cometConfig := GetConfigFromViper(viper)
+
 	wrappedLogger := cometlog.CometLoggerWrapper{Logger: s.logger}
 	if s.config.Standalone {
 		svr, err := abciserver.NewServer(s.config.Addr, s.config.Transport, s.App)
@@ -117,40 +127,34 @@ func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 		return svr.Start()
 	}
 
-	nodeKey, err := p2p.LoadOrGenNodeKey(s.config.CmtConfig.NodeKeyFile())
+	nodeKey, err := p2p.LoadOrGenNodeKey(cometConfig.NodeKeyFile())
 	if err != nil {
 		return err
 	}
 
 	s.Node, err = node.NewNode(
 		ctx,
-		s.config.CmtConfig,
-		pvm.LoadOrGenFilePV(s.config.CmtConfig.PrivValidatorKeyFile(), s.config.CmtConfig.PrivValidatorStateFile()),
+		cometConfig,
+		pvm.LoadOrGenFilePV(cometConfig.PrivValidatorKeyFile(), cometConfig.PrivValidatorStateFile()),
 		nodeKey,
 		proxy.NewLocalClientCreator(s.App),
-		getGenDocProvider(s.config.CmtConfig),
+		getGenDocProvider(cometConfig),
 		cmtcfg.DefaultDBProvider,
-		node.DefaultMetricsProvider(s.config.CmtConfig.Instrumentation),
+		node.DefaultMetricsProvider(cometConfig.Instrumentation),
 		wrappedLogger,
 	)
 	if err != nil {
 		return err
 	}
 
-	s.cleanupFn = func() {
-		if s.Node != nil && s.Node.IsRunning() {
-			_ = s.Node.Stop()
-		}
-	}
-
 	return s.Node.Start()
 }
 
-func (s *CometBFTServer[T]) Stop(_ context.Context) error {
-	defer s.cleanupFn()
-	if s.Node != nil {
+func (s *CometBFTServer[T]) Stop(context.Context) error {
+	if s.Node != nil && s.Node.IsRunning() {
 		return s.Node.Stop()
 	}
+
 	return nil
 }
 
@@ -222,4 +226,10 @@ func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
 			cmtcmd.ResetStateCmd,
 		},
 	}
+}
+
+func (s *CometBFTServer[T]) WriteDefaultConfigAt(configPath string) error {
+	cometConfig := cmtcfg.DefaultConfig()
+	cmtcfg.WriteConfigFile(filepath.Join(configPath, "config.toml"), cometConfig)
+	return nil
 }

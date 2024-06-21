@@ -93,7 +93,7 @@ type SimApp struct {
 	ConsensusParamsKeeper consensuskeeper.Keeper
 	CircuitBreakerKeeper  circuitkeeper.Keeper
 	PoolKeeper            poolkeeper.Keeper
-	EpochsKeeper          epochskeeper.Keeper
+	EpochsKeeper          *epochskeeper.Keeper
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -111,7 +111,8 @@ func init() {
 // AppConfig returns the default app config.
 func AppConfig() depinject.Config {
 	return depinject.Configs(
-		appConfig, // Alternatively use appconfig.LoadYAML(AppConfigYAML)
+		appConfig,                               // Alternatively use appconfig.LoadYAML(AppConfigYAML)
+		depinject.Provide(ProvideExampleMintFn), // optional: override the mint module's mint function with epoched minting
 	)
 }
 
@@ -174,8 +175,7 @@ func NewSimApp(
 				//
 
 				// For providing a custom inflation function for x/mint add here your
-				// custom function that implements the minttypes.InflationCalculationFn
-				// interface.
+				// custom function that implements the minttypes.MintFn interface.
 			),
 		)
 	)

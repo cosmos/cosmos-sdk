@@ -36,7 +36,7 @@ func TestPostgresIndexer(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	fixture := appdatatest.NewAppSimulator(appdatatest.AppSimulatorOptions{
+	fixture := appdatatest.NewSimulator(appdatatest.SimulatorOptions{
 		Listener:  indexer.Listener(),
 		AppSchema: indexertesting.ExampleAppSchema,
 	})

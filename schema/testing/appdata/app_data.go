@@ -12,27 +12,27 @@ import (
 	"cosmossdk.io/schema/testing/statesim"
 )
 
-type AppSimulatorOptions struct {
+type SimulatorOptions struct {
 	AppSchema          map[string]schema.ModuleSchema
 	Listener           appdata.Listener
 	EventAlignedWrites bool
 }
 
-type AppDataSimulator struct {
+type Simulator struct {
 	state        *statesim.App
-	options      AppSimulatorOptions
+	options      SimulatorOptions
 	blockNum     uint64
 	blockDataGen *rapid.Generator[BlockData]
 }
 
 type BlockData = []appdata.Packet
 
-func NewAppSimulator(options AppSimulatorOptions) *AppDataSimulator {
+func NewSimulator(options SimulatorOptions) *Simulator {
 	if options.AppSchema == nil {
 		options.AppSchema = schematesting.ExampleAppSchema
 	}
 
-	sim := &AppDataSimulator{
+	sim := &Simulator{
 		state:   statesim.NewApp(options.AppSchema),
 		options: options,
 	}
@@ -40,7 +40,7 @@ func NewAppSimulator(options AppSimulatorOptions) *AppDataSimulator {
 	return sim
 }
 
-func (a *AppDataSimulator) Initialize() error {
+func (a *Simulator) Initialize() error {
 	if f := a.options.Listener.Initialize; f != nil {
 		_, err := f(context.Background(), appdata.InitializationData{
 			HasEventAlignedWrites: a.options.EventAlignedWrites,
@@ -62,11 +62,11 @@ func (a *AppDataSimulator) Initialize() error {
 	return nil
 }
 
-func (a *AppDataSimulator) BlockDataGen() *rapid.Generator[BlockData] {
+func (a *Simulator) BlockDataGen() *rapid.Generator[BlockData] {
 	return a.BlockDataGenN(100)
 }
 
-func (a *AppDataSimulator) BlockDataGenN(maxUpdatesPerBlock int) *rapid.Generator[BlockData] {
+func (a *Simulator) BlockDataGenN(maxUpdatesPerBlock int) *rapid.Generator[BlockData] {
 	numUpdatesGen := rapid.IntRange(1, maxUpdatesPerBlock)
 
 	return rapid.Custom(func(t *rapid.T) BlockData {
@@ -82,7 +82,7 @@ func (a *AppDataSimulator) BlockDataGenN(maxUpdatesPerBlock int) *rapid.Generato
 	})
 }
 
-func (a *AppDataSimulator) ProcessBlockData(data BlockData) error {
+func (a *Simulator) ProcessBlockData(data BlockData) error {
 	a.blockNum++
 
 	if f := a.options.Listener.StartBlock; f != nil {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/golden"
 
 	"cosmossdk.io/schema/testing"
@@ -11,16 +12,18 @@ import (
 
 func TestAppSimulator_ExampleSchema(t *testing.T) {
 	out := &bytes.Buffer{}
-	appSim := NewAppSimulator(t, AppSimulatorOptions{
-		AppSchema:          schematesting.ExampleAppSchema,
-		Listener:           WriterListener(out),
-		MaxUpdatesPerBlock: 20,
+	appSim := NewSimulator(SimulatorOptions{
+		AppSchema: schematesting.ExampleAppSchema,
+		Listener:  WriterListener(out),
 	})
 
-	appSim.Initialize()
+	require.NoError(t, appSim.Initialize())
+
+	blockDataGen := appSim.BlockDataGen()
 
 	for i := 0; i < 10; i++ {
-		appSim.NextBlock()
+		data := blockDataGen.Example(i + 1)
+		require.NoError(t, appSim.ProcessBlockData(data))
 	}
 
 	golden.Assert(t, out.String(), "app_sim_example_schema.txt")

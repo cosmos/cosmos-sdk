@@ -1,4 +1,4 @@
-package indexer
+package decoding
 
 // SyncSource is an interface that allows indexers to start indexing modules with pre-existing state.
 type SyncSource interface {

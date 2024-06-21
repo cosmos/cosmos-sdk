@@ -7,14 +7,13 @@ import (
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/schema"
-	"cosmossdk.io/schema/listener"
 	schematesting "cosmossdk.io/schema/testing"
 	"cosmossdk.io/schema/testing/statesim"
 )
 
 type AppSimulatorOptions struct {
 	AppSchema          map[string]schema.ModuleSchema
-	Listener           listener.Listener
+	Listener           blockdata.Listener
 	EventAlignedWrites bool
 }
 
@@ -25,7 +24,7 @@ type AppDataSimulator struct {
 	blockDataGen *rapid.Generator[BlockData]
 }
 
-type BlockData = []listener.Packet
+type BlockData = []blockdata.Packet
 
 func NewAppSimulator(options AppSimulatorOptions) *AppDataSimulator {
 	if options.AppSchema == nil {
@@ -50,7 +49,7 @@ func (a *AppDataSimulator) Initialize() error {
 	}
 
 	if f := a.options.Listener.Initialize; f != nil {
-		_, err := f(context.Background(), listener.InitializationData{
+		_, err := f(context.Background(), blockdata.InitializationData{
 			HasEventAlignedWrites: a.options.EventAlignedWrites,
 		})
 		if err != nil {

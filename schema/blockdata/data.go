@@ -1,4 +1,4 @@
-package listener
+package blockdata
 
 import (
 	"encoding/json"

@@ -1,14 +1,12 @@
-package listener
+package blockdata
 
 import (
 	"context"
-
-	"cosmossdk.io/schema"
 )
 
-// Multiplex returns a listener that multiplexes the given listeners and only
-// registers a listener if a non-nil function is present in at least one of the listeners.
-func Multiplex(listeners ...Listener) Listener {
+// ListenerMux returns a listener that forwards received events to all the provided listeners and only
+// registers a callback if a non-nil callback is present in at least one of the listeners.
+func ListenerMux(listeners ...Listener) Listener {
 	mux := Listener{}
 
 	for _, l := range listeners {
@@ -27,26 +25,10 @@ func Multiplex(listeners ...Listener) Listener {
 
 	for _, l := range listeners {
 		if l.InitializeModuleData != nil {
-			mux.InitializeModuleData = func(moduleName string, moduleSchema schema.ModuleSchema) error {
+			mux.InitializeModuleData = func(data ModuleInitializationData) error {
 				for _, l := range listeners {
 					if l.InitializeModuleData != nil {
-						if err := l.InitializeModuleData(moduleName, moduleSchema); err != nil {
-							return err
-						}
-					}
-				}
-				return nil
-			}
-			break
-		}
-	}
-
-	for _, l := range listeners {
-		if l.CompleteInitialization != nil {
-			mux.CompleteInitialization = func() error {
-				for _, l := range listeners {
-					if l.CompleteInitialization != nil {
-						if err := l.CompleteInitialization(); err != nil {
+						if err := l.InitializeModuleData(data); err != nil {
 							return err
 						}
 					}
@@ -59,26 +41,10 @@ func Multiplex(listeners ...Listener) Listener {
 
 	for _, l := range listeners {
 		if l.StartBlock != nil {
-			mux.StartBlock = func(u uint64) error {
+			mux.StartBlock = func(data StartBlockData) error {
 				for _, l := range listeners {
 					if l.StartBlock != nil {
-						if err := l.StartBlock(u); err != nil {
-							return err
-						}
-					}
-				}
-				return nil
-			}
-			break
-		}
-	}
-
-	for _, l := range listeners {
-		if l.OnBlockHeader != nil {
-			mux.OnBlockHeader = func(data BlockHeaderData) error {
-				for _, l := range listeners {
-					if l.OnBlockHeader != nil {
-						if err := l.OnBlockHeader(data); err != nil {
+						if err := l.StartBlock(data); err != nil {
 							return err
 						}
 					}

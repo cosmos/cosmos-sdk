@@ -6,12 +6,11 @@ import (
 	"io"
 
 	"cosmossdk.io/schema"
-	"cosmossdk.io/schema/listener"
 )
 
-func WriterListener(w io.Writer) listener.Listener {
-	return listener.Listener{
-		Initialize: func(data listener.InitializationData) (lastBlockPersisted int64, err error) {
+func WriterListener(w io.Writer) blockdata.Listener {
+	return blockdata.Listener{
+		Initialize: func(data blockdata.InitializationData) (lastBlockPersisted int64, err error) {
 
 			_, err = fmt.Fprintf(w, "Initialize: %v\n", data)
 			return 0, err
@@ -20,7 +19,7 @@ func WriterListener(w io.Writer) listener.Listener {
 			_, err := fmt.Fprintf(w, "StartBlock: %d\n", u)
 			return err
 		},
-		OnBlockHeader: func(data listener.BlockHeaderData) error {
+		OnBlockHeader: func(data blockdata.BlockHeaderData) error {
 			_, err := fmt.Fprintf(w, "OnBlockHeader: %v\n", data)
 			return err
 		},
@@ -39,7 +38,7 @@ func WriterListener(w io.Writer) listener.Listener {
 			_, err = fmt.Fprintf(w, "InitializeModuleData: %s %s\n", moduleName, bz)
 			return err
 		},
-		OnObjectUpdate: func(data listener.ObjectUpdateData) error {
+		OnObjectUpdate: func(data blockdata.ObjectUpdateData) error {
 			bz, err := json.Marshal(data)
 			if err != nil {
 				return err

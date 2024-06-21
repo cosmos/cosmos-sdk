@@ -1,13 +1,13 @@
-package indexer
+package decoding
 
 import (
 	"context"
 
 	"cosmossdk.io/schema"
-	"cosmossdk.io/schema/listener"
+	"cosmossdk.io/schema/blockdata"
 )
 
-type DecodingOptions struct {
+type Options struct {
 	DecoderResolver DecoderResolver
 
 	// SyncSource is the source that will be used do initial indexing of modules with pre-existing
@@ -16,13 +16,13 @@ type DecodingOptions struct {
 	SyncSource SyncSource
 }
 
-func LogicalDecoder(target listener.Listener, opts DecodingOptions) listener.Listener {
+func Middleware(target blockdata.Listener, opts Options) blockdata.Listener {
 	initialize := target.Initialize
 	initializeModuleData := target.InitializeModuleData
 	onKVPair := target.OnKVPair
 
 	moduleCodecs := map[string]schema.ModuleCodec{}
-	target.Initialize = func(ctx context.Context, data listener.InitializationData) (lastBlock int64, err error) {
+	target.Initialize = func(ctx context.Context, data blockdata.InitializationData) (lastBlock int64, err error) {
 		if initialize != nil {
 			lastBlock, err = initialize(ctx, data)
 			if err != nil {
@@ -34,7 +34,7 @@ func LogicalDecoder(target listener.Listener, opts DecodingOptions) listener.Lis
 			err = opts.DecoderResolver.Iterate(func(moduleName string, codec schema.ModuleCodec) error {
 				moduleCodecs[moduleName] = codec
 				if initializeModuleData != nil {
-					return initializeModuleData(listener.ModuleInitializationData{
+					return initializeModuleData(blockdata.ModuleInitializationData{
 						ModuleName: moduleName,
 						Schema:     codec.Schema,
 					})
@@ -51,7 +51,7 @@ func LogicalDecoder(target listener.Listener, opts DecodingOptions) listener.Lis
 		return
 	}
 
-	target.OnKVPair = func(data listener.KVPairData) error {
+	target.OnKVPair = func(data blockdata.KVPairData) error {
 		if onKVPair != nil {
 			return onKVPair(data)
 		}
@@ -72,7 +72,7 @@ func LogicalDecoder(target listener.Listener, opts DecodingOptions) listener.Lis
 				return nil
 			}
 
-			return target.OnObjectUpdate(listener.ObjectUpdateData{
+			return target.OnObjectUpdate(blockdata.ObjectUpdateData{
 				ModuleName: data.ModuleName,
 				Update:     update,
 			})

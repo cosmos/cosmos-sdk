@@ -1,8 +1,8 @@
-package listener
+package blockdata
 
 import "context"
 
-func Async(listener Listener, bufferSize int, commitChan chan<- error) Listener {
+func AsyncListener(listener Listener, bufferSize int, commitChan chan<- error) Listener {
 	packetChan := make(chan Packet, bufferSize)
 	res := Listener{}
 
@@ -93,15 +93,15 @@ func Async(listener Listener, bufferSize int, commitChan chan<- error) Listener 
 	return res
 }
 
-func AsyncMultiplex(listeners []Listener, bufferSize int) Listener {
+func AsyncListenerMux(listeners []Listener, bufferSize int) Listener {
 	asyncListeners := make([]Listener, len(listeners))
 	commitChans := make([]chan error, len(listeners))
 	for i, l := range listeners {
 		commitChan := make(chan error)
 		commitChans[i] = commitChan
-		asyncListeners[i] = Async(l, bufferSize, commitChan)
+		asyncListeners[i] = AsyncListener(l, bufferSize, commitChan)
 	}
-	mux := Multiplex(asyncListeners...)
+	mux := ListenerMux(asyncListeners...)
 	muxCommit := mux.Commit
 	mux.Commit = func() error {
 		err := muxCommit()

@@ -17,6 +17,8 @@ func (tm *TableManager) InsertUpdate(ctx context.Context, tx *sql.Tx, key, value
 		return err
 	}
 
+	// TODO: proper logging
+	fmt.Printf("SQL: %s %v\n", buf.String(), params)
 	_, err = tx.ExecContext(ctx, buf.String(), params...)
 	return err
 }

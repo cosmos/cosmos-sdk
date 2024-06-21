@@ -43,9 +43,9 @@ func TestPostgresIndexer(t *testing.T) {
 
 	require.NoError(t, fixture.Initialize())
 
-	//blockDataGen := fixture.BlockDataGen()
-	//for i := 0; i < 10; i++ {
-	//	blockData := blockDataGen.Example(i + 1)
-	//	require.NoError(t, fixture.ProcessBlockData(blockData))
-	//}
+	blockDataGen := fixture.BlockDataGen()
+	for i := 0; i < 10; i++ {
+		blockData := blockDataGen.Example(i)
+		require.NoError(t, fixture.ProcessBlockData(blockData))
+	}
 }

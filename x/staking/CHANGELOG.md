@@ -28,6 +28,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * [#19537](https://github.com/cosmos/cosmos-sdk/pull/19537) Changing `MinCommissionRate` in `MsgUpdateParams` now updates the minimum commission rate for all validators.
+* [#20434](https://github.com/cosmos/cosmos-sdk/pull/20434) Add consensus address to validator query response
 
 ### Improvements
 

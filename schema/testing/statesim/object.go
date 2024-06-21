@@ -60,30 +60,30 @@ func (o *ObjectCollection) ApplyUpdate(update schema.ObjectUpdate) error {
 		}
 	} else {
 		// merge value updates only if we have more than one value field
-		//if valueUpdates, ok := update.Value.(schema.ValueUpdates); ok &&
-		//	len(o.objectType.ValueFields) > 1 {
-		//	var values []interface{}
-		//	if exists {
-		//		values = []interface{}{cur.Value}
-		//	} else {
-		//		values = make([]interface{}, len(o.objectType.ValueFields))
-		//	}
-		//
-		//	err = valueUpdates.Iterate(func(fieldName string, value interface{}) bool {
-		//		fieldIndex, ok := o.valueFieldIndices[fieldName]
-		//		if !ok {
-		//			panic(fmt.Sprintf("field %q not found in object type %q", fieldName, o.objectType.Name))
-		//		}
-		//
-		//		values[fieldIndex] = value
-		//		return true
-		//	})
-		//	if err != nil {
-		//		return err
-		//	}
-		//
-		//	update.Value = values
-		//}
+		if valueUpdates, ok := update.Value.(schema.ValueUpdates); ok &&
+			len(o.objectType.ValueFields) > 1 {
+			var values []interface{}
+			if exists {
+				values = cur.Value.([]interface{})
+			} else {
+				values = make([]interface{}, len(o.objectType.ValueFields))
+			}
+
+			err = valueUpdates.Iterate(func(fieldName string, value interface{}) bool {
+				fieldIndex, ok := o.valueFieldIndices[fieldName]
+				if !ok {
+					panic(fmt.Sprintf("field %q not found in object type %q", fieldName, o.objectType.Name))
+				}
+
+				values[fieldIndex] = value
+				return true
+			})
+			if err != nil {
+				return err
+			}
+
+			update.Value = values
+		}
 
 		o.objects.Set(keyStr, update)
 	}

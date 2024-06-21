@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/schema"
@@ -72,27 +71,51 @@ func (a *Simulator) BlockDataGenN(maxUpdatesPerBlock int) *rapid.Generator[Block
 	numUpdatesGen := rapid.IntRange(1, maxUpdatesPerBlock)
 
 	return rapid.Custom(func(t *rapid.T) BlockData {
-		a.blockNum++
 		var packets BlockData
 
-		packets = append(packets, appdata.StartBlockData{Height: a.blockNum})
-
+		updateSet := map[string]bool{}
+		// filter out any updates to the same key from this block, otherwise we can end up with weird errors
+		updateGen := a.state.UpdateGen().Filter(func(update appdata.ObjectUpdateData) bool {
+			_, existing := updateSet[fmt.Sprintf("%s:%v", update.ModuleName, update.Update.Key)]
+			return !existing
+		})
 		numUpdates := numUpdatesGen.Draw(t, "numUpdates")
 		for i := 0; i < numUpdates; i++ {
-			update := a.state.UpdateGen().Draw(t, fmt.Sprintf("update[%d]", i))
-			require.NoError(t, a.state.ApplyUpdate(update.ModuleName, update.Update))
+			update := updateGen.Draw(t, fmt.Sprintf("update[%d]", i))
+			updateSet[fmt.Sprintf("%s:%v", update.ModuleName, update.Update.Key)] = true
 			packets = append(packets, update)
 		}
-
-		packets = append(packets, appdata.Commit{})
 
 		return packets
 	})
 }
 
 func (a *Simulator) ProcessBlockData(data BlockData) error {
+	a.blockNum++
+
+	if f := a.options.Listener.StartBlock; f != nil {
+		err := f(appdata.StartBlockData{Height: a.blockNum})
+		if err != nil {
+			return err
+		}
+	}
+
 	for _, packet := range data {
 		err := a.options.Listener.SendPacket(packet)
+		if err != nil {
+			return err
+		}
+
+		if updateData, ok := packet.(appdata.ObjectUpdateData); ok {
+			err = a.state.ApplyUpdate(updateData.ModuleName, updateData.Update)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if f := a.options.Listener.Commit; f != nil {
+		err := f()
 		if err != nil {
 			return err
 		}

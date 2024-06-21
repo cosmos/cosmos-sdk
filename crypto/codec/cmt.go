@@ -1,7 +1,6 @@
 package codec
 
 import (
-	"cosmossdk.io/errors"
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/encoding"

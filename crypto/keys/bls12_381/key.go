@@ -4,8 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-
-	"github.com/cometbft/cometbft/crypto"
+	cosmoscrypto "github.com/cosmos/crypto/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -46,7 +45,7 @@ func (privKey PrivKey) PubKey() cryptotypes.PubKey {
 }
 
 // Equals returns true if two keys are equal and false otherwise.
-func (privKey PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
+func (privKey PrivKey) Equals(other cryptotypes.SdkPrivKey) bool {
 	panic("not implemented, build flags are required to use bls12_381 keys")
 }
 
@@ -101,7 +100,7 @@ var _ cryptotypes.PubKey = &PubKey{}
 // Address returns the address of the key.
 //
 // The function will panic if the public key is invalid.
-func (pubKey PubKey) Address() crypto.Address {
+func (pubKey PubKey) Address() cryptotypes.Address {
 	panic("not implemented, build flags are required to use bls12_381 keys")
 }
 
@@ -121,7 +120,7 @@ func (PubKey) Type() string {
 }
 
 // Equals returns true if the other's type is the same and their bytes are deeply equal.
-func (pubKey PubKey) Equals(other cryptotypes.PubKey) bool {
+func (pubKey PubKey) Equals(other cosmoscrypto.PubKey) bool {
 	return pubKey.Type() == other.Type() && bytes.Equal(pubKey.Bytes(), other.Bytes())
 }
 

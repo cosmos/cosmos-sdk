@@ -61,7 +61,7 @@ func (g graphqlHandler) handleGet(writer http.ResponseWriter, request *http.Requ
 func (g graphqlHandler) handle(writer http.ResponseWriter, request *http.Request, gqlReq *graphqlRequest) {
 	rows, err := g.conn.QueryContext(
 		request.Context(),
-		`select graphql.resolve(?, ?, ?)`,
+		`select graphql.resolve($1, $2, $3);`,
 		gqlReq.Query,
 		gqlReq.OperationName,
 		gqlReq.Variables,

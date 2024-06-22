@@ -10,8 +10,8 @@ import (
 	authv1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	stakingv1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/client/v2/autocli"
-	clientv2keyring "cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
@@ -23,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -45,7 +44,6 @@ func NewRootCmd() *cobra.Command {
 			),
 			depinject.Provide(
 				ProvideClientContext,
-				ProvideKeyring,
 			),
 		),
 		&autoCliOpts,
@@ -100,7 +98,7 @@ func ProvideClientContext(
 	appCodec codec.Codec,
 	interfaceRegistry codectypes.InterfaceRegistry,
 	txConfigOpts tx.ConfigOptions,
-	legacyAmino *codec.LegacyAmino,
+	legacyAmino legacy.Amino,
 	addressCodec address.Codec,
 	validatorAddressCodec address.ValidatorAddressCodec,
 	consensusAddressCodec address.ConsensusAddressCodec,
@@ -109,10 +107,15 @@ func ProvideClientContext(
 ) client.Context {
 	var err error
 
+	amino, ok := legacyAmino.(*codec.LegacyAmino)
+	if !ok {
+		panic("ProvideClientContext requires a *codec.LegacyAmino instance")
+	}
+
 	clientCtx := client.Context{}.
 		WithCodec(appCodec).
 		WithInterfaceRegistry(interfaceRegistry).
-		WithLegacyAmino(legacyAmino).
+		WithLegacyAmino(amino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithAddressCodec(addressCodec).
@@ -139,13 +142,4 @@ func ProvideClientContext(
 	clientCtx = clientCtx.WithTxConfig(txConfig)
 
 	return clientCtx
-}
-
-func ProvideKeyring(clientCtx client.Context, addressCodec address.Codec) (clientv2keyring.Keyring, error) {
-	kb, err := client.NewKeyringFromBackend(clientCtx, clientCtx.Keyring.Backend())
-	if err != nil {
-		return nil, err
-	}
-
-	return keyring.NewAutoCLIKeyring(kb)
 }

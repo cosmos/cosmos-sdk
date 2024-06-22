@@ -6,13 +6,17 @@ import (
 	"github.com/cosmos/iavl"
 	ics23 "github.com/cosmos/ics23/go"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	dbm "cosmossdk.io/store/v2/db"
 )
 
-var _ commitment.Tree = (*IavlTree)(nil)
+var (
+	_ commitment.Tree      = (*IavlTree)(nil)
+	_ store.PausablePruner = (*IavlTree)(nil)
+)
 
 // IavlTree is a wrapper around iavl.MutableTree.
 type IavlTree struct {
@@ -20,8 +24,8 @@ type IavlTree struct {
 }
 
 // NewIavlTree creates a new IavlTree instance.
-func NewIavlTree(db store.RawDB, logger log.Logger, cfg *Config) *IavlTree {
-	tree := iavl.NewMutableTree(dbm.NewWrapper(db), cfg.CacheSize, cfg.SkipFastStorageUpgrade, logger)
+func NewIavlTree(db corestore.KVStoreWithBatch, logger log.Logger, cfg *Config) *IavlTree {
+	tree := iavl.NewMutableTree(dbm.NewWrapper(db), cfg.CacheSize, cfg.SkipFastStorageUpgrade, logger, iavl.AsyncPruningOption(true))
 	return &IavlTree{
 		tree: tree,
 	}
@@ -29,12 +33,9 @@ func NewIavlTree(db store.RawDB, logger log.Logger, cfg *Config) *IavlTree {
 
 // Remove removes the given key from the tree.
 func (t *IavlTree) Remove(key []byte) error {
-	_, res, err := t.tree.Remove(key)
+	_, _, err := t.tree.Remove(key)
 	if err != nil {
 		return err
-	}
-	if !res {
-		return fmt.Errorf("key %x not found", key)
 	}
 	return nil
 }
@@ -99,6 +100,15 @@ func (t *IavlTree) SetInitialVersion(version uint64) error {
 // Prune prunes all versions up to and including the provided version.
 func (t *IavlTree) Prune(version uint64) error {
 	return t.tree.DeleteVersionsTo(int64(version))
+}
+
+// PausePruning pauses the pruning process.
+func (t *IavlTree) PausePruning(pause bool) {
+	if pause {
+		t.tree.SetCommitting()
+	} else {
+		t.tree.UnsetCommitting()
+	}
 }
 
 // Export exports the tree exporter at the given version.

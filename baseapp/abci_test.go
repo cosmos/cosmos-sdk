@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
@@ -41,6 +42,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1960,8 +1962,11 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 		},
 	}
 
+	pk, err := cryptocodec.FromCmtProtoPublicKey(tmPk)
+	require.NoError(t, err)
+
 	consAddr := sdk.ConsAddress(addr.String())
-	valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(tmPk, nil)
+	valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(pk, nil)
 
 	// set up baseapp
 	prepareOpt := func(bapp *baseapp.BaseApp) {
@@ -1989,7 +1994,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 
 	suite := NewBaseAppSuite(t, prepareOpt)
 
-	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
+	_, err = suite.baseApp.InitChain(&abci.InitChainRequest{
 		InitialHeight: 1,
 		ConsensusParams: &cmtproto.ConsensusParams{
 			Feature: &cmtproto.FeatureParams{
@@ -2253,7 +2258,10 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 				Secp256K1: pubKey.Bytes(),
 			},
 		}
-		valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), val).Return(tmPk, nil)
+
+		pk, err := cryptocodec.FromCmtProtoPublicKey(tmPk)
+		require.NoError(t, err)
+		valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), val).Return(pk, nil)
 	}
 
 	baseappOpts := func(app *baseapp.BaseApp) {

@@ -12,7 +12,7 @@ import (
 	"cosmossdk.io/collections"
 	coreaddress "cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/evidence/exported"

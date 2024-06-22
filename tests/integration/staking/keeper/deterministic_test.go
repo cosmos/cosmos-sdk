@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -92,6 +93,12 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	// gomock initializations
 	ctrl := gomock.NewController(t)
 	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+	accNum := uint64(0)
+	acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
+		currentNum := accNum
+		accNum++
+		return currentNum, nil
+	})
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
@@ -114,6 +121,8 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		blockedAddresses,
 		authority.String(),
 	)
+
+	assert.NilError(t, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
 
@@ -199,7 +208,7 @@ func bondTypeGenerator() *rapid.Generator[stakingtypes.BondStatus] {
 }
 
 // createValidator creates a validator with random values.
-func createValidator(t *testing.T, rt *rapid.T, f *deterministicFixture) stakingtypes.Validator {
+func createValidator(t *testing.T, rt *rapid.T, _ *deterministicFixture) stakingtypes.Validator {
 	t.Helper()
 	pubkey := pubKeyGenerator().Draw(rt, "pubkey")
 	pubkeyAny, err := codectypes.NewAnyWithValue(&pubkey)

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"cosmossdk.io/collections"
@@ -17,6 +16,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/staking/types"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -38,12 +38,12 @@ func (k Keeper) GetValidator(ctx context.Context, addr sdk.ValAddress) (validato
 func (k Keeper) GetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAddress) (validator types.Validator, err error) {
 	opAddr, err := k.ValidatorByConsensusAddress.Get(ctx, consAddr)
 	if err != nil {
-		// if the validator not found try to find it in the map of `OldToNewConsKeyMap` because validator may've rotated it's key.
+		// if the validator not found try to find it in the map of `OldToNewConsAddrMap` because validator may've rotated it's key.
 		if !errors.Is(err, collections.ErrNotFound) {
 			return types.Validator{}, err
 		}
 
-		newConsAddr, err := k.OldToNewConsKeyMap.Get(ctx, consAddr.Bytes())
+		newConsAddr, err := k.OldToNewConsAddrMap.Get(ctx, consAddr.Bytes())
 		if err != nil {
 			if errors.Is(err, collections.ErrNotFound) {
 				return types.Validator{}, types.ErrNoValidatorFound
@@ -594,15 +594,16 @@ func (k Keeper) IsValidatorJailed(ctx context.Context, addr sdk.ConsAddress) (bo
 }
 
 // GetPubKeyByConsAddr returns the consensus public key by consensus address.
-func (k Keeper) GetPubKeyByConsAddr(ctx context.Context, addr sdk.ConsAddress) (cmtprotocrypto.PublicKey, error) {
+// Caller receives a Cosmos SDK Pubkey type and must cast it to a comet type
+func (k Keeper) GetPubKeyByConsAddr(ctx context.Context, addr sdk.ConsAddress) (cryptotypes.PubKey, error) {
 	v, err := k.GetValidatorByConsAddr(ctx, addr)
 	if err != nil {
-		return cmtprotocrypto.PublicKey{}, err
+		return nil, err
 	}
 
-	pubkey, err := v.CmtConsPublicKey()
+	pubkey, err := v.ConsPubKey()
 	if err != nil {
-		return cmtprotocrypto.PublicKey{}, err
+		return nil, err
 	}
 
 	return pubkey, nil

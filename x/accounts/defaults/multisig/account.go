@@ -16,6 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
+var MULTISIG_ACCOUNT = "multisig-account"
+
 var (
 	MembersPrefix   = collections.NewPrefix(0)
 	SequencePrefix  = collections.NewPrefix(1)
@@ -43,19 +45,17 @@ type Account struct {
 }
 
 // NewAccount returns a new multisig account creator function.
-func NewAccount(name string) accountstd.AccountCreatorFunc {
-	return func(deps accountstd.Dependencies) (string, accountstd.Interface, error) {
-		return name, &Account{
-			Members:       collections.NewMap(deps.SchemaBuilder, MembersPrefix, "members", collections.BytesKey, collections.Uint64Value),
-			Sequence:      collections.NewSequence(deps.SchemaBuilder, SequencePrefix, "sequence"),
-			Config:        collections.NewItem(deps.SchemaBuilder, ConfigPrefix, "config", codec.CollValue[v1.Config](deps.LegacyStateCodec)),
-			Proposals:     collections.NewMap(deps.SchemaBuilder, ProposalsPrefix, "proposals", collections.Uint64Key, codec.CollValue[v1.Proposal](deps.LegacyStateCodec)),
-			Votes:         collections.NewMap(deps.SchemaBuilder, VotesPrefix, "votes", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), collections.Int32Value),
-			addrCodec:     deps.AddressCodec,
-			headerService: deps.Environment.HeaderService,
-			eventService:  deps.Environment.EventService,
-		}, nil
-	}
+func NewAccount(deps accountstd.Dependencies) (*Account, error) {
+	return &Account{
+		Members:       collections.NewMap(deps.SchemaBuilder, MembersPrefix, "members", collections.BytesKey, collections.Uint64Value),
+		Sequence:      collections.NewSequence(deps.SchemaBuilder, SequencePrefix, "sequence"),
+		Config:        collections.NewItem(deps.SchemaBuilder, ConfigPrefix, "config", codec.CollValue[v1.Config](deps.LegacyStateCodec)),
+		Proposals:     collections.NewMap(deps.SchemaBuilder, ProposalsPrefix, "proposals", collections.Uint64Key, codec.CollValue[v1.Proposal](deps.LegacyStateCodec)),
+		Votes:         collections.NewMap(deps.SchemaBuilder, VotesPrefix, "votes", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), collections.Int32Value),
+		addrCodec:     deps.AddressCodec,
+		headerService: deps.Environment.HeaderService,
+		eventService:  deps.Environment.EventService,
+	}, nil
 }
 
 // Init initializes the multisig account with the given configuration and members.
@@ -91,7 +91,10 @@ func (a *Account) Init(ctx context.Context, msg *v1.MsgInit) (*v1.MsgInitRespons
 			return nil, err
 		}
 
-		totalWeight += msg.Members[i].Weight
+		totalWeight, err = safeAdd(totalWeight, msg.Members[i].Weight)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if err := validateConfig(*msg.Config, totalWeight); err != nil {
@@ -279,6 +282,7 @@ func (a Account) ExecuteProposal(ctx context.Context, msg *v1.MsgExecuteProposal
 	}
 
 	totalWeight := yesVotes + noVotes + abstainVotes
+
 	var (
 		rejectErr error
 		execErr   error
@@ -386,4 +390,16 @@ func (a *Account) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, a.QuerySequence)
 	accountstd.RegisterQueryHandler(builder, a.QueryProposal)
 	accountstd.RegisterQueryHandler(builder, a.QueryConfig)
+}
+
+func safeAdd(nums ...uint64) (uint64, error) {
+	var sum uint64
+	for _, num := range nums {
+		if newSum := sum + num; newSum < sum {
+			return 0, errors.New("overflow")
+		} else {
+			sum = newSum
+		}
+	}
+	return sum, nil
 }

@@ -13,9 +13,9 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2/snapshots"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
@@ -123,7 +123,7 @@ func (m *mockCommitSnapshotter) Restore(
 	for {
 		item.Reset()
 		err := protoReader.ReadMsg(&item)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
 			return snapshotstypes.SnapshotItem{}, errorsmod.Wrap(err, "invalid protobuf message")
@@ -277,7 +277,7 @@ func (s *extSnapshotter) SnapshotExtension(height uint64, payloadWriter snapshot
 func (s *extSnapshotter) RestoreExtension(height uint64, format uint32, payloadReader snapshots.ExtensionPayloadReader) error {
 	for {
 		payload, err := payloadReader()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
 			return err

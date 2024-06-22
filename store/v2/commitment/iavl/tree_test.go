@@ -2,26 +2,27 @@ package iavl
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/log"
-	"cosmossdk.io/store/v2"
+	"cosmossdk.io/core/log"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2/commitment"
 	dbm "cosmossdk.io/store/v2/db"
 )
 
 func TestCommitterSuite(t *testing.T) {
 	s := &commitment.CommitStoreTestSuite{
-		NewStore: func(db store.RawDB, storeKeys []string, pruneOpts *store.PruneOptions, logger log.Logger) (*commitment.CommitStore, error) {
+		NewStore: func(db corestore.KVStoreWithBatch, storeKeys []string, logger log.Logger) (*commitment.CommitStore, error) {
 			multiTrees := make(map[string]commitment.Tree)
 			cfg := DefaultConfig()
 			for _, storeKey := range storeKeys {
 				prefixDB := dbm.NewPrefixDB(db, []byte(storeKey))
 				multiTrees[storeKey] = NewIavlTree(prefixDB, logger, cfg)
 			}
-			return commitment.NewCommitStore(multiTrees, db, pruneOpts, logger)
+			return commitment.NewCommitStore(multiTrees, db, logger)
 		},
 	}
 
@@ -99,8 +100,14 @@ func TestIavlTree(t *testing.T) {
 	err = tree.Prune(1)
 	require.NoError(t, err)
 	require.Equal(t, uint64(3), tree.GetLatestVersion())
-	err = tree.LoadVersion(1)
-	require.Error(t, err)
+	// async pruning check
+	checkErr := func() bool {
+		if _, err := tree.tree.LoadVersion(1); err != nil {
+			return true
+		}
+		return false
+	}
+	require.Eventually(t, checkErr, 2*time.Second, 100*time.Millisecond)
 
 	// load version 2
 	err = tree.LoadVersion(2)

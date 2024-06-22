@@ -2,13 +2,13 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
-
-	"github.com/cockroachdb/errors"
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/distribution/types"
@@ -21,6 +21,8 @@ import (
 // Keeper of the distribution store
 type Keeper struct {
 	appmodule.Environment
+
+	cometService comet.Service
 
 	cdc           codec.BinaryCodec
 	authKeeper    types.AccountKeeper
@@ -58,8 +60,13 @@ type Keeper struct {
 
 // NewKeeper creates a new distribution Keeper instance
 func NewKeeper(
-	cdc codec.BinaryCodec, env appmodule.Environment,
-	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, pk types.PoolKeeper,
+	cdc codec.BinaryCodec,
+	env appmodule.Environment,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
+	sk types.StakingKeeper,
+	pk types.PoolKeeper,
+	cometService comet.Service,
 	feeCollectorName, authority string,
 ) Keeper {
 	// ensure distribution module account is set
@@ -70,6 +77,7 @@ func NewKeeper(
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := Keeper{
 		Environment:      env,
+		cometService:     cometService,
 		cdc:              cdc,
 		authKeeper:       ak,
 		bankKeeper:       bk,

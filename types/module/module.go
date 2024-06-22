@@ -26,7 +26,7 @@ import (
 	"fmt"
 	"sort"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
@@ -34,12 +34,12 @@ import (
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/genesis"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -78,7 +78,7 @@ type HasGenesisBasics interface {
 // HasAminoCodec is the interface for modules that have amino codec registration.
 // Deprecated: modules should not need to register their own amino codecs.
 type HasAminoCodec interface {
-	RegisterLegacyAminoCodec(*codec.LegacyAmino)
+	RegisterLegacyAminoCodec(legacy.Amino)
 }
 
 // HasGRPCGateway is the interface for modules to register their gRPC gateway routes.
@@ -299,7 +299,7 @@ func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 }
 
 // RegisterLegacyAminoCodec registers all module codecs
-func (m *Manager) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (m *Manager) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 	for _, b := range m.Modules {
 		if mod, ok := b.(HasAminoCodec); ok {
 			mod.RegisterLegacyAminoCodec(cdc)
@@ -657,7 +657,7 @@ func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []
 //	})
 //
 // Please also refer to https://docs.cosmos.network/main/core/upgrade for more information.
-func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM VersionMap) (VersionMap, error) {
+func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM appmodule.VersionMap) (appmodule.VersionMap, error) {
 	c, ok := cfg.(*configurator)
 	if !ok {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", &configurator{}, cfg)
@@ -668,7 +668,7 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	updatedVM := VersionMap{}
+	updatedVM := appmodule.VersionMap{}
 	for _, moduleName := range modules {
 		module := m.Modules[moduleName]
 		fromVersion, exists := fromVM[moduleName]
@@ -824,8 +824,8 @@ func (m *Manager) PrepareCheckState(ctx sdk.Context) error {
 }
 
 // GetVersionMap gets consensus version from all modules
-func (m *Manager) GetVersionMap() VersionMap {
-	vermap := make(VersionMap)
+func (m *Manager) GetVersionMap() appmodule.VersionMap {
+	vermap := make(appmodule.VersionMap)
 	for name, v := range m.Modules {
 		version := uint64(0)
 		if v, ok := v.(appmodule.HasConsensusVersion); ok {

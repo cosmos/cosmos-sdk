@@ -11,10 +11,11 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
+	"cosmossdk.io/core/testing"
+	coretransaction "cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	"cosmossdk.io/x/tx/signing"
 
@@ -22,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ address.Codec = (*addressCodec)(nil)
@@ -63,7 +63,7 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 	queryRouter := baseapp.NewGRPCQueryRouter()
 	queryRouter.SetInterfaceRegistry(ir)
 
-	ir.RegisterImplementations((*sdk.Msg)(nil),
+	ir.RegisterImplementations((*coretransaction.Msg)(nil),
 		&bankv1beta1.MsgSend{},
 		&bankv1beta1.MsgBurn{},
 		&bankv1beta1.MsgSetSendEnabled{},
@@ -73,11 +73,9 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 	queryRouter.RegisterService(&bankv1beta1.Query_ServiceDesc, &bankQueryServer{})
 	msgRouter.RegisterService(&bankv1beta1.Msg_ServiceDesc, &bankMsgServer{})
 
-	ss, ctx := colltest.MockStore()
-	env := runtime.NewEnvironment(ss, log.NewNopLogger(), runtime.EnvWithRouterService(
-		queryRouter,
-		msgRouter,
-	))
+	ctx := coretesting.Context()
+	ss := coretesting.KVStoreService(ctx, "test")
+	env := runtime.NewEnvironment(ss, log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter))
 	env.EventService = eventService{}
 	m, err := NewKeeper(codec.NewProtoCodec(ir), env, addressCodec, ir, accounts...)
 	require.NoError(t, err)
@@ -88,15 +86,15 @@ type bankQueryServer struct {
 	bankv1beta1.UnimplementedQueryServer
 }
 
+type bankMsgServer struct {
+	bankv1beta1.UnimplementedMsgServer
+}
+
 func (b bankQueryServer) Balance(context.Context, *bankv1beta1.QueryBalanceRequest) (*bankv1beta1.QueryBalanceResponse, error) {
 	return &bankv1beta1.QueryBalanceResponse{Balance: &basev1beta1.Coin{
 		Denom:  "atom",
 		Amount: "1000",
 	}}, nil
-}
-
-type bankMsgServer struct {
-	bankv1beta1.UnimplementedMsgServer
 }
 
 func (b bankMsgServer) Send(context.Context, *bankv1beta1.MsgSend) (*bankv1beta1.MsgSendResponse, error) {

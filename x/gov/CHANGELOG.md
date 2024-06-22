@@ -38,6 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#20521](https://github.com/cosmos/cosmos-sdk/pull/20521) Legacy proposals can now access the `appmodule.Environment` present in the `context.Context` of the handler. This is useful when migrating to server/v2 and removing the sdk context dependency.
 * [#19741](https://github.com/cosmos/cosmos-sdk/pull/19741) Add `ExpeditedQuorum` parameter specifying a minimum quorum for expedited proposals, that can differ from the regular quorum.
 * [#19352](https://github.com/cosmos/cosmos-sdk/pull/19352) `TallyResult` include vote options counts. Those counts replicates the now deprecated (but not removed) yes, no, abstain and veto count fields.
 * [#18976](https://github.com/cosmos/cosmos-sdk/pull/18976) Log and send an event when a proposal deposit refund or burn has failed.
@@ -55,6 +56,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18762](https://github.com/cosmos/cosmos-sdk/pull/18762) Add multiple choice proposals.
 * [#18856](https://github.com/cosmos/cosmos-sdk/pull/18856) Add `ProposalCancelMaxPeriod` parameters.
 * [#19167](https://github.com/cosmos/cosmos-sdk/pull/19167) Add `YesQuorum` parameter.
+* [#20348](https://github.com/cosmos/cosmos-sdk/pull/20348) Limit gov execution of proposals to a max gas limit. The limit was added to parameters and can be modified. With this version the default is set to 10 million gas. Before it was infinite gas.
 
 ### Client Breaking Changes
 

@@ -1,7 +1,9 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"fmt"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
@@ -10,6 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
+	coreapp "cosmossdk.io/core/app"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/consensus/exported"
@@ -25,6 +28,8 @@ type Keeper struct {
 
 	authority   string
 	ParamsStore collections.Item[cmtproto.ConsensusParams]
+	// storage of the last comet info
+	cometInfo collections.Item[types.CometInfo]
 }
 
 var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
@@ -35,6 +40,7 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, authority strin
 		Environment: env,
 		authority:   authority,
 		ParamsStore: collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
+		cometInfo:   collections.NewItem(sb, collections.NewPrefix("CometInfo"), "comet_info", codec.CollValue[types.CometInfo](cdc)),
 	}
 }
 
@@ -69,11 +75,31 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 	if err != nil {
 		return nil, err
 	}
-	if err := cmttypes.ConsensusParamsFromProto(consensusParams).ValidateBasic(); err != nil {
+
+	paramsProto, err := k.ParamsStore.Get(ctx)
+
+	var params cmttypes.ConsensusParams
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			params = cmttypes.ConsensusParams{}
+		} else {
+			return nil, err
+		}
+	} else {
+		params = cmttypes.ConsensusParamsFromProto(paramsProto)
+	}
+
+	nextParams := params.Update(&consensusParams)
+
+	if err := nextParams.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
-	if err := k.ParamsStore.Set(ctx, consensusParams); err != nil {
+	if err := params.ValidateUpdate(&consensusParams, k.HeaderService.HeaderInfo(ctx).Height); err != nil {
+		return nil, err
+	}
+
+	if err := k.ParamsStore.Set(ctx, nextParams.ToProto()); err != nil {
 		return nil, err
 	}
 
@@ -87,20 +113,30 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
-// SetParams sets the consensus parameters on init of a chain. This is a consensus message. It can only be called by the consensus server
-// This is used in the consensus message handler set in module.go.
-func (k Keeper) SetParams(ctx context.Context, req *types.ConsensusMsgParams) (*types.ConsensusMsgParamsResponse, error) {
-	consensusParams, err := req.ToProtoConsensusParams()
+func (k Keeper) SetCometInfo(ctx context.Context, msg *types.MsgSetCometInfo) (*types.MsgSetCometInfoResponse, error) {
+	if !bytes.Equal(coreapp.ConsensusIdentity, []byte(msg.Authority)) {
+		return nil, fmt.Errorf("invalid authority; expected %s, got %s", coreapp.ConsensusIdentity, msg.Authority)
+	}
+
+	cometInfo := types.CometInfo{
+		Evidence:        msg.Evidence,
+		ValidatorsHash:  msg.ValidatorsHash,
+		ProposerAddress: msg.ProposerAddress,
+		LastCommit:      msg.LastCommit,
+	}
+
+	if err := k.cometInfo.Set(ctx, cometInfo); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSetCometInfoResponse{}, nil
+}
+
+func (k Keeper) GetCometInfo(ctx context.Context, _ *types.QueryGetCometInfoRequest) (*types.QueryGetCometInfoResponse, error) {
+	cometInfo, err := k.cometInfo.Get(ctx)
 	if err != nil {
-		return nil, err
-	}
-	if err := cmttypes.ConsensusParamsFromProto(consensusParams).ValidateBasic(); err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	if err := k.ParamsStore.Set(ctx, consensusParams); err != nil {
-		return nil, err
-	}
-
-	return &types.ConsensusMsgParamsResponse{}, nil
+	return &types.QueryGetCometInfoResponse{CometInfo: &cometInfo}, nil
 }

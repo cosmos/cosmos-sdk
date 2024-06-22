@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/distribution/client/cli"
 	"cosmossdk.io/x/distribution/keeper"
@@ -75,7 +76,7 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the distribution module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
@@ -166,8 +167,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the distribution module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx) // TODO: remove and use context.Context after including the comet service
-	return am.keeper.BeginBlocker(c)
+	return am.keeper.BeginBlocker(ctx)
 }
 
 // AppModuleSimulation functions

@@ -43,6 +43,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Features
 
 * (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
+* (client) [#20690](https://github.com/cosmos/cosmos-sdk/pull/20690) Import mnemonic from file
 * (tests) [#20013](https://github.com/cosmos/cosmos-sdk/pull/20013) Introduce system tests to run multi node local testnet in CI
 * (runtime) [#19953](https://github.com/cosmos/cosmos-sdk/pull/19953) Implement `core/transaction.Service` in runtime.
 * (client) [#19905](https://github.com/cosmos/cosmos-sdk/pull/19905) Add grpc client config to `client.toml`.
@@ -60,10 +61,13 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (x/consensus) [#19483](https://github.com/cosmos/cosmos-sdk/pull/19483) Add consensus messages registration to consensus module.
 * (types) [#19759](https://github.com/cosmos/cosmos-sdk/pull/19759) Align SignerExtractionAdapter in PriorityNonceMempool Remove.
 * (client) [#19870](https://github.com/cosmos/cosmos-sdk/pull/19870) Add new query command `wait-tx`. Alias `event-query-tx-for` to `wait-tx` for backward compatibility.
+* (crypto/keyring) [#20212](https://github.com/cosmos/cosmos-sdk/pull/20212) Expose the db keyring used in the keystore.
 * (genutil) [#19971](https://github.com/cosmos/cosmos-sdk/pull/19971) Allow manually setting the consensus key type in genesis
 
 ### Improvements
 
+* (codec) [#20122](https://github.com/cosmos/cosmos-sdk/pull/20122) Added a cache to address codec.
+* (bank) [#20354](https://github.com/cosmos/cosmos-sdk/pull/20354) Reduce the number of `ValidateDenom` calls in `bank.SendCoins`.
 * (types) [#19869](https://github.com/cosmos/cosmos-sdk/pull/19869) Removed `Any` type from `codec/types` and replaced it with an alias for `cosmos/gogoproto/types/any`.
 * (server) [#19854](https://github.com/cosmos/cosmos-sdk/pull/19854) Add customizability to start command.
     * Add `StartCmdOptions` in `server.AddCommands` instead of `servertypes.ModuleInitFlags`. To set custom flags set them in the `StartCmdOptions` struct on the `AddFlags` field.
@@ -98,6 +102,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (server) [#19966](https://github.com/cosmos/cosmos-sdk/pull/19966) Return BlockHeader by shallow copy in server Context.
 * (proto) [#20098](https://github.com/cosmos/cosmos-sdk/pull/20098) Use cosmos_proto added_in annotation instead of // Since comments.
 * (baseapp) [#20208](https://github.com/cosmos/cosmos-sdk/pull/20208) Skip running validateBasic for rechecking txs.
+* (baseapp) [#20380](https://github.com/cosmos/cosmos-sdk/pull/20380) Enhanced OfferSnapshot documentation.
 
 ### Bug Fixes
 
@@ -112,11 +117,12 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (server) [#18994](https://github.com/cosmos/cosmos-sdk/pull/18994) Update server context directly rather than a reference to a sub-object
 * [#19833](https://github.com/cosmos/cosmos-sdk/pull/19833) Fix some places in which we call Remove inside a Walk.
 * [#19851](https://github.com/cosmos/cosmos-sdk/pull/19851) Fix some places in which we call Remove inside a Walk (x/staking and x/gov).
-* (cli) [#20020](https://github.com/cosmos/cosmos-sdk/pull/20020) Make bootstrap-state command support both new and legacy genesis format.
-* (baseapp) [#20107](https://github.com/cosmos/cosmos-sdk/pull/20107) Allow height overwrite BlockHeight in header.
+* [#20631](https://github.com/cosmos/cosmos-sdk/pull/20631) Fix json parsing in the wait-tx command.
 
 ### API Breaking Changes
 
+* (server) [#20422](https://github.com/cosmos/cosmos-sdk/pull/20422) Deprecated `ServerContext`. To get `cmtcfg.Config` from cmd, use `client.GetCometConfigFromCmd(cmd)` instead of `server.GetServerContextFromCmd(cmd).Config`
+* (types)[#20369](https://github.com/cosmos/cosmos-sdk/pull/20369) The signature of `HasAminoCodec` has changed to accept a `core/legacy.Amino` interface instead of `codec.LegacyAmino`.
 * (x/simulation)[#20056](https://github.com/cosmos/cosmos-sdk/pull/20056) `SimulateFromSeed` now takes an address codec as argument.
 * (x/crisis) [#20043](https://github.com/cosmos/cosmos-sdk/pull/20043) Changed `NewMsgVerifyInvariant` to accept a string as argument instead of an `AccAddress`.
 * (x/genutil) [#19926](https://github.com/cosmos/cosmos-sdk/pull/19926) Removal of the Address.String() method and related changes:
@@ -178,10 +184,13 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
     * Every module has the codec already, passing it created an unneeded dependency.
     * Additionally, to reflect this change, the module manager does not take a codec either.
 * (runtime) [#19747](https://github.com/cosmos/cosmos-sdk/pull/19747) `runtime.ValidatorAddressCodec` and `runtime.ConsensusAddressCodec` have been moved to `core`.
+* [#19839](https://github.com/cosmos/cosmos-sdk/pull/19839) `Tx.GetMsgsV2` has been replaced with `Tx.GetReflectMessages`, and `Codec.GetMsgV1Signers` and `Codec.GetMsgV2Signers` have been replaced with `GetMsgSigners` and `GetReflectMsgSigners` respectively. These API changes clear up confusion as to the use and purpose of these methods.
 * (baseapp) [#19993](https://github.com/cosmos/cosmos-sdk/pull/19993) Indicate pruning with error code "not found" rather than "invalid request".
 * (x/consensus) [#20010](https://github.com/cosmos/cosmos-sdk/pull/20010) Move consensus module to be its own go.mod
 * (server) [#20140](https://github.com/cosmos/cosmos-sdk/pull/20140) Remove embedded grpc-web proxy in favor of standalone grpc-web proxy. [Envoy Proxy](https://www.envoyproxy.io/docs/envoy/latest/start/start)
+* (client) [#20255](https://github.com/cosmos/cosmos-sdk/pull/20255) Use comet proofOp proto type instead of sdk version to avoid needing to translate to later be proven in the merkle proof runtime. 
 * (all) [#19726](https://github.com/cosmos/cosmos-sdk/pull/19726) Integrate comet v1
+* (client) [#20616](https://github.com/cosmos/cosmos-sdk/pull/20616) gentx subcommand output goes to `cmd.ErrOrStderr()` instead of being hardcoded to `os.Stderr`
 
 ### Client Breaking Changes
 
@@ -189,12 +198,31 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### CLI Breaking Changes
 
+* (perf)[#20490](https://github.com/cosmos/cosmos-sdk/pull/20490) Sims: Replace runsim command with Go stdlib testing. CLI: `Commit` default true, `Lean`, `SimulateEveryOperation`, `PrintAllInvariants`, `DBBackend` params removed
 * (server) [#18303](https://github.com/cosmos/cosmos-sdk/pull/18303) `appd export` has moved with other genesis commands, use `appd genesis export` instead.
 
 ### Deprecated
 
 * (simapp) [#19146](https://github.com/cosmos/cosmos-sdk/pull/19146) Replace `--v` CLI option with `--validator-count`/`-n`.
 * (module) [#19370](https://github.com/cosmos/cosmos-sdk/pull/19370) Deprecate `module.Configurator`, use `appmodule.HasMigrations` and `appmodule.HasServices` instead from Core API.
+* (x/auth) [#20531](https://github.com/cosmos/cosmos-sdk/pull/20531) Deprecate auth keeper `NextAccountNumber`, use `keeper.AccountsModKeeper.NextAccountNumber` instead.
+
+## [v0.50.7](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.7) - 2024-06-04
+
+### Improvements
+
+* (debug) [#20328](https://github.com/cosmos/cosmos-sdk/pull/20328) Add consensus address for debug cmd.
+* (runtime) [#20264](https://github.com/cosmos/cosmos-sdk/pull/20264) Expose grpc query router via depinject.
+* (x/consensus) [#20381](https://github.com/cosmos/cosmos-sdk/pull/20381) Use Comet utility for consensus module consensus param updates.
+* (client) [#20356](https://github.com/cosmos/cosmos-sdk/pull/20356) Overwrite client context when available in `SetCmdClientContext`.
+
+### Bug Fixes
+
+* (baseapp) [#20346](https://github.com/cosmos/cosmos-sdk/pull/20346) Correctly assign `execModeSimulate` to context for `simulateTx`.
+* (baseapp) [#20144](https://github.com/cosmos/cosmos-sdk/pull/20144) Remove txs from mempool when AnteHandler fails in recheck.
+* (baseapp) [#20107](https://github.com/cosmos/cosmos-sdk/pull/20107) Avoid header height overwrite block height.
+* (cli) [#20020](https://github.com/cosmos/cosmos-sdk/pull/20020) Make bootstrap-state command support both new and legacy genesis format.
+* (testutil/sims) [#20151](https://github.com/cosmos/cosmos-sdk/pull/20151) Set all signatures and don't overwrite the previous one in `GenSignedMockTx`.
 
 ## [v0.50.6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.6) - 2024-04-22
 
@@ -659,6 +687,17 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (types) [#16980](https://github.com/cosmos/cosmos-sdk/pull/16980) Deprecate `IntProto` and `DecProto`. Instead, `math.Int` and `math.LegacyDec` should be used respectively. Both types support `Marshal` and `Unmarshal` for binary serialization.
 * (x/staking) [#14567](https://github.com/cosmos/cosmos-sdk/pull/14567) The `delegator_address` field of `MsgCreateValidator` has been deprecated.
    The validator address bytes and delegator address bytes refer to the same account while creating validator (defer only in bech32 notation).
+
+## [v0.47.12](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.12) - 2024-06-10
+
+## Improvements
+
+* (x/authz,x/feegrant) [#20590](https://github.com/cosmos/cosmos-sdk/pull/20590) Provide updated keeper in depinject for authz and feegrant modules.
+
+### Bug Fixes
+
+* (baseapp) [#20144](https://github.com/cosmos/cosmos-sdk/pull/20144) Remove txs from mempool when AnteHandler fails in recheck.
+* (testutil/sims) [#20151](https://github.com/cosmos/cosmos-sdk/pull/20151) Set all signatures and don't overwrite the previous one in `GenSignedMockTx`.
 
 ## [v0.47.11](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.11) - 2024-04-22
 

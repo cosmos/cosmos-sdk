@@ -3,7 +3,7 @@ package cmtservice
 import (
 	"context"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
@@ -250,7 +250,17 @@ func (s queryServer) ABCIQuery(ctx context.Context, req *ABCIQueryRequest) (*ABC
 	if err != nil {
 		return nil, err
 	}
-	return FromABCIResponseQuery(res), nil
+	return &ABCIQueryResponse{
+		Code:      res.Code,
+		Log:       res.Log,
+		Info:      res.Info,
+		Index:     res.Index,
+		Key:       res.Key,
+		Value:     res.Value,
+		ProofOps:  res.ProofOps,
+		Height:    res.Height,
+		Codespace: res.Codespace,
+	}, nil
 }
 
 // RegisterTendermintService registers the CometBFT queries on the gRPC router.

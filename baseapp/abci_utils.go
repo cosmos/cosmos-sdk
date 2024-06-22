@@ -3,12 +3,11 @@ package baseapp
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 
-	"github.com/cockroachdb/errors"
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
 	cmttypes "github.com/cometbft/cometbft/types"
@@ -17,6 +16,8 @@ import (
 
 	"cosmossdk.io/core/comet"
 
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
@@ -26,7 +27,7 @@ type (
 	// extension signatures. Typically, this will be implemented by the x/staking
 	// module, which has knowledge of the CometBFT public key.
 	ValidatorStore interface {
-		GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
+		GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cryptotypes.PubKey, error)
 	}
 
 	// GasTx defines the contract that a transaction with a gas limit must implement.
@@ -110,7 +111,12 @@ func ValidateVoteExtensions(
 			return fmt.Errorf("failed to get validator %X public key: %w", valConsAddr, err)
 		}
 
-		cmtPubKey, err := cryptoenc.PubKeyFromProto(pubKeyProto)
+		cmtpk, err := cryptocodec.ToCmtProtoPublicKey(pubKeyProto)
+		if err != nil {
+			return fmt.Errorf("failed to convert validator %X public key: %w", valConsAddr, err)
+		}
+
+		cmtPubKey, err := cryptoenc.PubKeyFromProto(cmtpk)
 		if err != nil {
 			return fmt.Errorf("failed to convert validator %X public key: %w", valConsAddr, err)
 		}

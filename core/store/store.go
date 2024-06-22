@@ -30,6 +30,56 @@ type KVStore interface {
 	ReverseIterator(start, end []byte) (Iterator, error)
 }
 
+// Batch represents a group of writes. They may or may not be written atomically depending on the
+// backend. Callers must call Close on the batch when done.
+//
+// As with KVStore, given keys and values should be considered read-only, and must not be modified after
+// passing them to the batch.
+type Batch interface {
+	// Set sets a key/value pair.
+	// CONTRACT: key, value readonly []byte
+	Set(key, value []byte) error
+
+	// Delete deletes a key/value pair.
+	// CONTRACT: key readonly []byte
+	Delete(key []byte) error
+
+	// Write writes the batch, possibly without flushing to disk. Only Close() can be called after,
+	// other methods will error.
+	Write() error
+
+	// WriteSync writes the batch and flushes it to disk. Only Close() can be called after, other
+	// methods will error.
+	WriteSync() error
+
+	// Close closes the batch. It is idempotent, but calls to other methods afterwards will error.
+	Close() error
+
+	// GetByteSize that returns the current size of the batch in bytes. Depending on the implementation,
+	// this may return the size of the underlying LSM batch, including the size of additional metadata
+	// on top of the expected key and value total byte count.
+	GetByteSize() (int, error)
+}
+
+// BatchCreator defines an interface for creating a new batch.
+type BatchCreator interface {
+	// NewBatch creates a new batch for atomic updates. The caller must call Batch.Close.
+	NewBatch() Batch
+
+	// NewBatchWithSize create a new batch for atomic updates, but with pre-allocated size.
+	// This will does the same thing as NewBatch if the batch implementation doesn't support pre-allocation.
+	NewBatchWithSize(int) Batch
+}
+
+// KVStoreWithBatch is an extension of KVStore that allows for batch writes.
+type KVStoreWithBatch interface {
+	KVStore
+	BatchCreator
+
+	// Close closes the KVStoreWithBatch, releasing any resources held.
+	Close() error
+}
+
 // Iterator represents an iterator over a domain of keys. Callers must call
 // Close when done. No writes can happen to a domain while there exists an
 // iterator over it. Some backends may take out database locks to ensure this
@@ -83,7 +133,7 @@ var _ KVStore = (Writer)(nil)
 
 // ReaderMap represents a readonly view over all the accounts state.
 type ReaderMap interface {
-	// ReaderMap must return the state for the provided actor.
+	// GetReader must return the state for the provided actor.
 	// Storage implements might treat this as a prefix store over an actor.
 	// Prefix safety is on the implementer.
 	GetReader(actor []byte) (Reader, error)
@@ -92,7 +142,7 @@ type ReaderMap interface {
 // WriterMap represents a writable actor state.
 type WriterMap interface {
 	ReaderMap
-	// WriterMap must the return a WritableState
+	// GetWriter must the return a WritableState
 	// for the provided actor namespace.
 	GetWriter(actor []byte) (Writer, error)
 	// ApplyStateChanges applies all the state changes

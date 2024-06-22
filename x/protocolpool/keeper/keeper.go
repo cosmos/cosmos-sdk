@@ -170,7 +170,7 @@ func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipientAddr string
 	withdrawnAmount := sdk.NewCoin(denom, fundsAllocated)
 	err = k.DistributeFromStreamFunds(ctx, sdk.NewCoins(withdrawnAmount), recipient)
 	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("error while distributing funds to the recipient %s: %v", recipientAddr, err)
+		return sdk.Coin{}, fmt.Errorf("error while distributing funds to the recipient %s: %w", recipientAddr, err)
 	}
 
 	// reset fund distribution
@@ -220,7 +220,7 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 
 	err = k.ToDistribute.Set(ctx, amount.AmountOf(denom))
 	if err != nil {
-		return fmt.Errorf("error while setting ToDistribute: %v", err)
+		return fmt.Errorf("error while setting ToDistribute: %w", err)
 	}
 	return nil
 }
@@ -254,11 +254,15 @@ func (k Keeper) hasPermission(addr []byte) (bool, error) {
 	return bytes.Equal(authAcc, addr), nil
 }
 
+type recipientFund struct {
+	RecipientAddr string
+	Percentage    math.Int
+}
+
 func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistributeAmount math.Int) error {
 	totalPercentageToBeDistributed := math.ZeroInt()
 
-	// Create a map to store keys & values from RecipientFundPercentage during the first iteration
-	recipientFundMap := make(map[string]math.Int)
+	recipientFundList := []recipientFund{}
 
 	// Calculate totalPercentageToBeDistributed and store values
 	err := k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
@@ -267,7 +271,10 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistrib
 			return true, err
 		}
 		totalPercentageToBeDistributed = totalPercentageToBeDistributed.Add(value)
-		recipientFundMap[addr] = value
+		recipientFundList = append(recipientFundList, recipientFund{
+			RecipientAddr: addr,
+			Percentage:    value,
+		})
 		return false, nil
 	})
 	if err != nil {
@@ -287,14 +294,14 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistrib
 	totalAmountToBeDistributed := toDistributeDec.MulDec(math.LegacyNewDecFromIntWithPrec(totalPercentageToBeDistributed, 2))
 	totalDistrAmount := totalAmountToBeDistributed.AmountOf(denom)
 
-	for keyStr, value := range recipientFundMap {
+	for _, value := range recipientFundList {
 		// Calculate the funds to be distributed based on the percentage
-		decValue := math.LegacyNewDecFromIntWithPrec(value, 2)
+		decValue := math.LegacyNewDecFromIntWithPrec(value.Percentage, 2)
 		percentage := math.LegacyNewDecFromIntWithPrec(totalPercentageToBeDistributed, 2)
 		recipientAmount := totalDistrAmount.Mul(decValue).Quo(percentage)
 		recipientCoins := recipientAmount.TruncateInt()
 
-		key, err := k.authKeeper.AddressCodec().StringToBytes(keyStr)
+		key, err := k.authKeeper.AddressCodec().StringToBytes(value.RecipientAddr)
 		if err != nil {
 			return err
 		}
@@ -350,10 +357,14 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipientAddr string) (am
 		return sdk.Coin{}, err
 	}
 
+	totalBudgetAmountLeftToDistribute := budget.BudgetPerTranche.Amount.Mul(math.NewIntFromUint64(budget.TranchesLeft))
+	totalBudgetAmountLeft := sdk.NewCoin(budget.BudgetPerTranche.Denom, totalBudgetAmountLeftToDistribute)
+	zeroAmount := sdk.NewCoin(totalBudgetAmountLeft.Denom, math.ZeroInt())
+
 	// check if the distribution is completed
 	if budget.TranchesLeft == 0 && budget.ClaimedAmount != nil {
-		// check that claimed amount is equal to total budget
-		if budget.ClaimedAmount.Equal(budget.TotalBudget) {
+		// check that total budget amount left to distribute equals zero
+		if totalBudgetAmountLeft.Equal(zeroAmount) {
 			// remove the entry of budget ended recipient
 			if err := k.BudgetProposal.Remove(ctx, recipient); err != nil {
 				return sdk.Coin{}, err
@@ -364,20 +375,16 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipientAddr string) (am
 	}
 
 	currentTime := k.HeaderService.HeaderInfo(ctx).Time
-	startTime := budget.StartTime
 
-	// Check if the start time is reached
-	if currentTime.Before(*startTime) {
-		return sdk.Coin{}, fmt.Errorf("distribution has not started yet")
+	// Check if the distribution time has not reached
+	if budget.LastClaimedAt != nil {
+		if currentTime.Before(*budget.LastClaimedAt) {
+			return sdk.Coin{}, fmt.Errorf("distribution has not started yet")
+		}
 	}
 
-	if budget.NextClaimFrom == nil || budget.NextClaimFrom.IsZero() {
-		budget.NextClaimFrom = budget.StartTime
-	}
-
-	if budget.TranchesLeft == 0 && budget.ClaimedAmount == nil {
-		budget.TranchesLeft = budget.Tranches
-		zeroCoin := sdk.NewCoin(budget.TotalBudget.Denom, math.ZeroInt())
+	if budget.TranchesLeft != 0 && budget.ClaimedAmount == nil {
+		zeroCoin := sdk.NewCoin(budget.BudgetPerTranche.Denom, math.ZeroInt())
 		budget.ClaimedAmount = &zeroCoin
 	}
 
@@ -386,7 +393,7 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipientAddr string) (am
 
 func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAddress, budget types.Budget, currentTime time.Time) (amount sdk.Coin, err error) {
 	// Calculate the time elapsed since the last claim time
-	timeElapsed := currentTime.Sub(*budget.NextClaimFrom)
+	timeElapsed := currentTime.Sub(*budget.LastClaimedAt)
 
 	// Check the time elapsed has passed period length
 	if timeElapsed < *budget.Period {
@@ -396,20 +403,28 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 	// Calculate how many periods have passed
 	periodsPassed := int64(timeElapsed) / int64(*budget.Period)
 
+	if periodsPassed > int64(budget.TranchesLeft) {
+		periodsPassed = int64(budget.TranchesLeft)
+	}
+
 	// Calculate the amount to distribute for all passed periods
-	coinsToDistribute := math.NewInt(periodsPassed).Mul(budget.TotalBudget.Amount.QuoRaw(int64(budget.Tranches)))
-	amount = sdk.NewCoin(budget.TotalBudget.Denom, coinsToDistribute)
+	coinsToDistribute := math.NewInt(periodsPassed).Mul(budget.BudgetPerTranche.Amount)
+	amount = sdk.NewCoin(budget.BudgetPerTranche.Denom, coinsToDistribute)
 
 	// update the budget's remaining tranches
-	budget.TranchesLeft -= uint64(periodsPassed)
+	if budget.TranchesLeft > uint64(periodsPassed) {
+		budget.TranchesLeft -= uint64(periodsPassed)
+	} else {
+		budget.TranchesLeft = 0
+	}
 
 	// update the ClaimedAmount
 	claimedAmount := budget.ClaimedAmount.Add(amount)
 	budget.ClaimedAmount = &claimedAmount
 
 	// Update the last claim time for the budget
-	nextClaimFrom := budget.NextClaimFrom.Add(*budget.Period)
-	budget.NextClaimFrom = &nextClaimFrom
+	nextClaimFrom := budget.LastClaimedAt.Add(*budget.Period * time.Duration(periodsPassed))
+	budget.LastClaimedAt = &nextClaimFrom
 
 	k.Logger.Debug(fmt.Sprintf("Processing budget for recipient: %s. Amount: %s", budget.RecipientAddress, coinsToDistribute.String()))
 
@@ -422,11 +437,11 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 }
 
 func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.MsgSubmitBudgetProposal) (*types.Budget, error) {
-	if bp.TotalBudget.IsZero() {
-		return nil, fmt.Errorf("invalid budget proposal: total budget cannot be zero")
+	if bp.BudgetPerTranche.IsZero() {
+		return nil, fmt.Errorf("invalid budget proposal: budget per tranche cannot be zero")
 	}
 
-	if err := validateAmount(sdk.NewCoins(*bp.TotalBudget)); err != nil {
+	if err := validateAmount(sdk.NewCoins(*bp.BudgetPerTranche)); err != nil {
 		return nil, fmt.Errorf("invalid budget proposal: %w", err)
 	}
 
@@ -450,9 +465,9 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.Ms
 	// Create and return an updated budget proposal
 	updatedBudget := types.Budget{
 		RecipientAddress: bp.RecipientAddress,
-		TotalBudget:      bp.TotalBudget,
-		StartTime:        bp.StartTime,
-		Tranches:         bp.Tranches,
+		BudgetPerTranche: bp.BudgetPerTranche,
+		LastClaimedAt:    bp.StartTime,
+		TranchesLeft:     bp.Tranches,
 		Period:           bp.Period,
 	}
 

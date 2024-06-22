@@ -9,6 +9,7 @@ Note, always read the **SimApp** section for more information on application wir
 
 In this section we describe the changes made in Cosmos SDK' SimApp.
 **These changes are directly applicable to your application wiring.**
+Please read this section first, but for an exhaustive list of changes, refer to the [CHANGELOG](./simapp/CHANGELOG.md).
 
 #### Client (`root.go`)
 
@@ -145,6 +146,23 @@ used as a TTL for the transaction and is used to provide replay protection. See
 [ADR-070](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-070-unordered-transactions.md)
 for more details.
 
+### Depinject `app_config.go` / `app.yml`
+
+With the introduction of [environment in modules](#core-api), depinject automatically creates the environment for all modules.
+Learn more about environment [here](https://example.com) <!-- TODO -->. Given the fields of environment, this means runtime creates a kv store service for all modules by default.
+It can happen that some modules do not have a store necessary (such as `x/auth/tx` for instance). In this case, the store creation should be skipped in `app_config.go`:
+
+```diff
+InitGenesis: []string{
+	"..."
+},
++ // SkipStoreKeys is an optional list of store keys to skip when constructing the
++ // module's keeper. This is useful when a module does not have a store key.
++ SkipStoreKeys: []string{
++ 	"tx",
++ },
+```
+
 ### Protobuf
 
 The `cosmossdk.io/api/tendermint` package has been removed as CometBFT now publishes its protos to `buf.build/tendermint` and `buf.build/cometbft`.
@@ -176,7 +194,7 @@ If your module requires a message server or query server, it should be passed in
 
 ```diff
 -govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[govtypes.StoreKey]), app.AuthKeeper, app.BankKeeper,app.StakingKeeper, app.PoolKeeper, app.MsgServiceRouter(), govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-+govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[govtypes.StoreKey]), logger.With(log.ModuleKey, "x/circuit"), runtime.EnvWithRouterService(app.GRPCQueryRouter(), app.MsgServiceRouter())), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper, govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
++govKeeper := govkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[govtypes.StoreKey]), logger.With(log.ModuleKey, "x/circuit"), runtime.EnvWithMsgRouterService(app.MsgServiceRouter()), runtime.EnvWithQueryRouterService(app.GRPCQueryRouter())), app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper, govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 ```
 
 The signature of the extension interface `HasRegisterInterfaces` has been changed to accept a `cosmossdk.io/core/registry.InterfaceRegistrar` instead of a `codec.InterfaceRegistry`.   `HasRegisterInterfaces` is now a part of `cosmossdk.io/core/appmodule`.  Modules should update their `HasRegisterInterfaces` implementation to accept a `cosmossdk.io/core/registry.InterfaceRegistrar` interface.
@@ -184,6 +202,13 @@ The signature of the extension interface `HasRegisterInterfaces` has been change
 ```diff
 -func (AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 +func (AppModule) RegisterInterfaces(registry registry.InterfaceRegistrar) {
+```
+
+The signature of the extension interface `HasAminoCodec` has been changed to accept a `cosmossdk.io/core/legacy.Amino` instead of a `codec.LegacyAmino`. Modules should update their `HasAminoCodec` implementation to accept a `cosmossdk.io/core/legacy.Amino` interface.
+
+```diff
+-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
++func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 ```
 
 ##### Simulation
@@ -196,7 +221,7 @@ been added to avoid the use of the Accounts.String() method.
 +type MsgSimulatorFn func(r *rand.Rand, accs []Account, cdc address.Codec) (sdk.Msg, error)
 ```
 
-##### Dependency Injection
+##### Depinject
 
 Previously `cosmossdk.io/core` held functions `Invoke`, `Provide` and `Register` were moved to `cosmossdk.io/depinject/appconfig`.
 All modules using dependency injection must update their imports.
@@ -226,6 +251,19 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 Most of Cosmos SDK modules have migrated to [collections](https://docs.cosmos.network/main/build/packages/collections).
 Many functions have been removed due to this changes as the API can be smaller thanks to collections.
 For modules that have migrated, verify you are checking against `collections.ErrNotFound` when applicable.
+
+#### `x/accounts`
+
+Accounts's AccountNumber will be used as a global account number tracking replacing Auth legacy AccountNumber. Must set accounts's AccountNumber with auth's AccountNumber value in upgrade handler. This is done through auth keeper MigrateAccountNumber function.
+
+```go
+import authkeeper "cosmossdk.io/x/auth/keeper" 
+...
+err := authkeeper.MigrateAccountNumberUnsafe(ctx, &app.AuthKeeper)
+if err != nil {
+	return nil, err
+}
+```
 
 #### `x/auth`
 
@@ -438,7 +476,7 @@ Use `confix` to clean-up your `app.toml`. A nginx (or alike) reverse-proxy can b
 
 #### Database Support
 
-ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use a database migration tool.
+ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from an unsupported database to a supported database please use a database migration tool.
 
 ### Protobuf
 
@@ -656,6 +694,15 @@ When using `depinject` / `app v2`, the a tx config should be recreated from the 
 To learn more see the [docs](https://docs.cosmos.network/main/learn/advanced/transactions#sign_mode_textual) and the [ADR-050](https://docs.cosmos.network/main/build/architecture/adr-050-sign-mode-textual).
 
 ### Modules
+
+<!-- create server/v2 changes docs and mention it here
+	* mention changes in tx validators
+	* mention changes with appmodulev2
+	* mention changes with sdk context removal
+	* mention changes with environment
+	* mention changes with environment in context in interfaces
+	* mention legacy proposal in gov when using server/v2 if using sdk context must be rewritten
+-->
 
 #### `**all**`
 
@@ -1172,7 +1219,7 @@ mistakes.
 
 #### `x/params`
 
-* The `x/params` module has been deprecated in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changeable during runtime have an authority, the authority can be a module or user account. The Cosmos SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363).
+* The `x/params` module has been deprecated in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changeable during runtime has an authority, the authority can be a module or user account. The Cosmos SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363).
 * The Param module will be maintained until April 18, 2023. At this point the module will reach end of life and be removed from the Cosmos SDK.
 
 #### `x/gov`
@@ -1185,11 +1232,11 @@ More information can be found in the gov module [client documentation](https://d
 
 #### `x/staking`
 
-The `staking module` added a new message type to cancel unbonding delegations. Users that have unbonded by accident or wish to cancel a undelegation can now specify the amount and valdiator they would like to cancel the unbond from
+The `staking module` added a new message type to cancel unbonding delegations. Users that have unbonded by accident or wish to cancel an undelegation can now specify the amount and validator they would like to cancel the unbond from
 
 ### Protobuf
 
-The `third_party/proto` folder that existed in [previous version](https://github.com/cosmos/cosmos-sdk/tree/v0.45.3/third_party/proto) now does not contains directly the [proto files](https://github.com/cosmos/cosmos-sdk/tree/release/v0.46.x/third_party/proto).
+The `third_party/proto` folder that existed in [previous version](https://github.com/cosmos/cosmos-sdk/tree/v0.45.3/third_party/proto) now does not contain directly the [proto files](https://github.com/cosmos/cosmos-sdk/tree/release/v0.46.x/third_party/proto).
 
 Instead, the SDK uses [`buf`](https://buf.build). Clients should have their own [`buf.yaml`](https://docs.buf.build/configuration/v1/buf-yaml) with `buf.build/cosmos/cosmos-sdk` as dependency, in order to avoid having to copy paste these files.
 

@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"io"
 
+	crypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
-	crypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 )
 
 type Store interface {
@@ -27,6 +27,14 @@ type Committer interface {
 
 	SetPruning(pruningtypes.PruningOptions)
 	GetPruning() pruningtypes.PruningOptions
+}
+
+type PausablePruner interface {
+	// PausePruning let the pruning handler know that the store is being committed
+	// or not, so the handler can decide to prune or not the store.
+	//
+	// NOTE: PausePruning(true) should be called before Commit() and PausePruning(false)
+	PausePruning(bool)
 }
 
 // Stores of MultiStore must implement CommitStore.

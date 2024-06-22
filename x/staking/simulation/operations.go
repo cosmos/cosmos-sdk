@@ -192,9 +192,21 @@ func SimulateMsgCreateValidator(
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to generate validator address"), nil, err
 		}
+
 		msg, err := types.NewMsgCreateValidator(addr, simAccount.ConsKey.PubKey(), selfDelegation, description, commission, math.OneInt())
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to create CreateValidator message"), nil, err
+		}
+
+		// check if there's another key rotation for this same key in the same block
+		allRotations, err := k.GetBlockConsPubKeyRotationHistory(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "cannot get block cons key rotation history"), nil, err
+		}
+		for _, r := range allRotations {
+			if r.NewConsPubkey.Compare(msg.Pubkey) == 0 {
+				return simtypes.NoOpMsg(types.ModuleName, msgType, "cons key already used in this block"), nil, nil
+			}
 		}
 
 		txCtx := simulation.OperationInput{
@@ -449,6 +461,10 @@ func SimulateMsgUndelegate(
 		msg := types.NewMsgUndelegate(
 			delAddr, val.GetOperator(), sdk.NewCoin(bondDenom, unbondAmt),
 		)
+
+		if !bk.IsSendEnabledDenom(ctx, bondDenom) {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "bond denom send not enabled"), nil, nil
+		}
 
 		// need to retrieve the simulation account associated with delegation to retrieve PrivKey
 		var simAccount simtypes.Account
@@ -712,6 +728,10 @@ func SimulateMsgBeginRedelegate(
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "bond denom not found"), nil, err
 		}
 
+		if !bk.IsSendEnabledDenom(ctx, bondDenom) {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "bond denom send not enabled"), nil, nil
+		}
+
 		msg := types.NewMsgBeginRedelegate(
 			delAddr, srcVal.GetOperator(), destVal.GetOperator(),
 			sdk.NewCoin(bondDenom, redAmt),
@@ -822,6 +842,17 @@ func SimulateMsgRotateConsPubKey(txGen client.TxConfig, ak types.AccountKeeper, 
 		msg, err := types.NewMsgRotateConsPubKey(valAddr, acc.ConsKey.PubKey())
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to build msg"), nil, err
+		}
+
+		// check if there's another key rotation for this same key in the same block
+		allRotations, err := k.GetBlockConsPubKeyRotationHistory(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "cannot get block cons key rotation history"), nil, err
+		}
+		for _, r := range allRotations {
+			if r.NewConsPubkey.Compare(msg.NewPubkey) == 0 {
+				return simtypes.NoOpMsg(types.ModuleName, msgType, "cons key already used in this block"), nil, nil
+			}
 		}
 
 		txCtx := simulation.OperationInput{

@@ -48,7 +48,7 @@ type SystemUnderTest struct {
 	outputDir          string
 	testnetInitializer TestnetInitializer
 
-	// blockTime is the the expected/desired block time. This is not going to be very precise
+	// blockTime is the expected/desired block time. This is not going to be very precise
 	// since Tendermint consensus does not allow specifying it directly.
 	blockTime         time.Duration
 	rpcAddr           string
@@ -935,18 +935,18 @@ func copyFile(src, dest string) (*os.File, error) {
 func copyFilesInDir(src, dest string) error {
 	err := os.MkdirAll(dest, 0o750)
 	if err != nil {
-		return fmt.Errorf("mkdirs: %s", err)
+		return fmt.Errorf("mkdirs: %w", err)
 	}
 	fs, err := os.ReadDir(src)
 	if err != nil {
-		return fmt.Errorf("read dir: %s", err)
+		return fmt.Errorf("read dir: %w", err)
 	}
 	for _, f := range fs {
 		if f.IsDir() {
 			continue
 		}
 		if _, err := copyFile(filepath.Join(src, f.Name()), filepath.Join(dest, f.Name())); err != nil {
-			return fmt.Errorf("copy file: %q: %s", f.Name(), err)
+			return fmt.Errorf("copy file: %q: %w", f.Name(), err)
 		}
 	}
 	return nil

@@ -17,10 +17,13 @@ import (
 	"testing"
 	"time"
 
+	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -46,9 +49,9 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -184,7 +187,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	var (
 		appBuilder            *runtime.AppBuilder
 		txConfig              client.TxConfig
-		legacyAmino           *codec.LegacyAmino
+		legacyAmino           legacy.Amino
 		cdc                   codec.Codec
 		interfaceRegistry     codectypes.InterfaceRegistry
 		addressCodec          address.Codec
@@ -214,7 +217,11 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	})
 	cfg.Codec = cdc
 	cfg.TxConfig = txConfig
-	cfg.LegacyAmino = legacyAmino
+	amino, ok := legacyAmino.(*codec.LegacyAmino)
+	if !ok {
+		return Config{}, errors.New("legacyAmino must be a *codec.LegacyAmino")
+	}
+	cfg.LegacyAmino = amino
 	cfg.InterfaceRegistry = interfaceRegistry
 	cfg.GenesisState = appBuilder.DefaultGenesis()
 	cfg.AppConstructor = func(val ValidatorI) servertypes.Application {
@@ -223,7 +230,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 		if err := depinject.Inject(
 			depinject.Configs(
 				appConfig,
-				depinject.Supply(val.GetCtx().Logger),
+				depinject.Supply(val.GetLogger()),
 			),
 			&appBuilder); err != nil {
 			panic(err)
@@ -322,6 +329,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 	monikers := make([]string, cfg.NumValidators)
 	nodeIDs := make([]string, cfg.NumValidators)
 	valPubKeys := make([]cryptotypes.PubKey, cfg.NumValidators)
+	cmtConfigs := make([]*cmtcfg.Config, cfg.NumValidators)
 
 	var (
 		genAccounts []authtypes.GenesisAccount
@@ -340,8 +348,10 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		appCfg.API.Swagger = false
 		appCfg.Telemetry.Enabled = false
 
-		ctx := server.NewDefaultContext()
-		cmtCfg := ctx.Config
+		viper := viper.New()
+		// Create default cometbft config for each validator
+		cmtCfg := client.GetConfigFromViper(viper)
+
 		cmtCfg.Consensus.TimeoutCommit = cfg.TimeoutCommit
 
 		// Only allow the first validator to expose an RPC, API and gRPC
@@ -395,8 +405,6 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			logger = log.NewLogger(os.Stdout) // TODO(mr): enable selection of log destination.
 		}
 
-		ctx.Logger = logger
-
 		nodeDirName := fmt.Sprintf("node%d", i)
 		nodeDir := filepath.Join(network.BaseDir, nodeDirName, "simd")
 		clientDir := filepath.Join(network.BaseDir, nodeDirName, "simcli")
@@ -432,12 +440,14 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		cmtCfg.P2P.AddrBookStrict = false
 		cmtCfg.P2P.AllowDuplicateIP = true
 
+		cmtConfigs[i] = cmtCfg
+
 		var mnemonic string
 		if i < len(cfg.Mnemonics) {
 			mnemonic = cfg.Mnemonics[i]
 		}
 
-		nodeID, pubKey, err := genutil.InitializeNodeValidatorFilesFromMnemonic(cmtCfg, mnemonic)
+		nodeID, pubKey, err := genutil.InitializeNodeValidatorFilesFromMnemonic(cmtCfg, mnemonic, ed25519.PrivKeyName)
 		if err != nil {
 			return nil, err
 		}
@@ -562,12 +572,13 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			WithNodeURI(cmtCfg.RPC.ListenAddress)
 
 		// Provide ChainID here since we can't modify it in the Comet config.
-		ctx.Viper.Set(flags.FlagChainID, cfg.ChainID)
+		viper.Set(flags.FlagChainID, cfg.ChainID)
 
 		network.Validators[i] = &Validator{
 			AppConfig:  appCfg,
 			clientCtx:  clientCtx,
-			ctx:        ctx,
+			viper:      viper,
+			logger:     logger,
 			dir:        filepath.Join(network.BaseDir, nodeDirName),
 			nodeID:     nodeID,
 			pubKey:     pubKey,
@@ -584,7 +595,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = collectGenFiles(cfg, network.Validators, network.BaseDir)
+	err = collectGenFiles(cfg, network.Validators, cmtConfigs, network.BaseDir)
 	if err != nil {
 		return nil, err
 	}

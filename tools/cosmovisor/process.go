@@ -2,6 +2,7 @@ package cosmovisor
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -200,7 +201,7 @@ func (l Launcher) doBackup() error {
 
 // doCustomPreUpgrade executes the custom preupgrade script if provided.
 func (l Launcher) doCustomPreUpgrade() error {
-	if l.cfg.CustomPreupgrade == "" {
+	if l.cfg.CustomPreUpgrade == "" {
 		return nil
 	}
 
@@ -220,7 +221,7 @@ func (l Launcher) doCustomPreUpgrade() error {
 	}
 
 	// check if preupgradeFile is executable file
-	preupgradeFile := filepath.Join(l.cfg.Home, "cosmovisor", l.cfg.CustomPreupgrade)
+	preupgradeFile := filepath.Join(l.cfg.Home, "cosmovisor", l.cfg.CustomPreUpgrade)
 	l.logger.Info("looking for COSMOVISOR_CUSTOM_PREUPGRADE file", "file", preupgradeFile)
 	info, err := os.Stat(preupgradeFile)
 	if err != nil {
@@ -263,22 +264,25 @@ func (l Launcher) doCustomPreUpgrade() error {
 func (l *Launcher) doPreUpgrade() error {
 	counter := 0
 	for {
-		if counter > l.cfg.PreupgradeMaxRetries {
-			return fmt.Errorf("pre-upgrade command failed. reached max attempt of retries - %d", l.cfg.PreupgradeMaxRetries)
+		if counter > l.cfg.PreUpgradeMaxRetries {
+			return fmt.Errorf("pre-upgrade command failed. reached max attempt of retries - %d", l.cfg.PreUpgradeMaxRetries)
 		}
 
 		if err := l.executePreUpgradeCmd(); err != nil {
 			counter++
 
-			switch err.(*exec.ExitError).ProcessState.ExitCode() {
-			case 1:
-				l.logger.Info("pre-upgrade command does not exist. continuing the upgrade.")
-				return nil
-			case 30:
-				return fmt.Errorf("pre-upgrade command failed : %w", err)
-			case 31:
-				l.logger.Error("pre-upgrade command failed. retrying", "error", err, "attempt", counter)
-				continue
+			var exitErr *exec.ExitError
+			if errors.As(err, &exitErr) {
+				switch exitErr.ProcessState.ExitCode() {
+				case 1:
+					l.logger.Info("pre-upgrade command does not exist. continuing the upgrade.")
+					return nil
+				case 30:
+					return fmt.Errorf("pre-upgrade command failed : %w", err)
+				case 31:
+					l.logger.Error("pre-upgrade command failed. retrying", "error", err, "attempt", counter)
+					continue
+				}
 			}
 		}
 

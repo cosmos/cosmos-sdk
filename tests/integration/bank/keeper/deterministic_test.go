@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -84,6 +85,12 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	// gomock initializations
 	ctrl := gomock.NewController(t)
 	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+	accNum := uint64(0)
+	acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
+		currentNum := accNum
+		accNum++
+		return currentNum, nil
+	})
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
@@ -106,6 +113,8 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		blockedAddresses,
 		authority.String(),
 	)
+
+	assert.NilError(t, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)

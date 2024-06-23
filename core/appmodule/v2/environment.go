@@ -5,13 +5,14 @@ import (
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/router"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/log"
 )
 
 // Environment is used to get all services to their respective module
+// Contract: All fields of environment are always populated.
 type Environment struct {
 	Logger log.Logger
 

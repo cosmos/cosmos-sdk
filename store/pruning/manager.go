@@ -8,7 +8,7 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
 	"cosmossdk.io/store/pruning/types"
 )
 
@@ -21,7 +21,7 @@ type Manager struct {
 	opts             types.PruningOptions
 	snapshotInterval uint64
 	// Snapshots are taken in a separate goroutine from the regular execution
-	// and can be delivered asynchrounously via HandleSnapshotHeight.
+	// and can be delivered asynchronously via HandleSnapshotHeight.
 	// Therefore, we sync access to pruneSnapshotHeights with this mutex.
 	pruneSnapshotHeightsMx sync.RWMutex
 	// These are the heights that are multiples of snapshotInterval and kept for state sync snapshots.

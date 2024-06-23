@@ -1,13 +1,12 @@
 go 1.22.2
 
-toolchain go1.22.2
-
 use (
 	.
 	./api
 	./client/v2
 	./collections
 	./core
+	./core/testing
 	./depinject
 	./errors
 	./log
@@ -15,6 +14,7 @@ use (
 	./orm
 	./simapp
 	./tests
+	./tests/systemtests
 	./server/v2/stf
 	./server/v2/appmanager
 	./store
@@ -24,6 +24,7 @@ use (
 	./tools/confix
 	./tools/hubl
 	./x/accounts
+	./x/accounts/defaults/lockup
 	./x/auth
 	./x/authz
 	./x/bank
@@ -43,5 +44,4 @@ use (
 	./x/tx
 	./x/upgrade
 	./x/epochs
-	./x/accounts/defaults/lockup
 )

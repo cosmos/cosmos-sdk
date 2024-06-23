@@ -4,13 +4,14 @@ import (
 	"testing"
 	"time"
 
+	v1 "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
@@ -599,6 +600,56 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 							res.Params.Synchrony.Precision)
 					}
 				}
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestSetCometInfo() {
+	consensusIdentiy := "consensus"
+	testCases := []struct {
+		name            string
+		enabledFeatures bool
+		input           *types.MsgSetCometInfo
+		expErr          bool
+		expErrMsg       string
+	}{
+		{
+			name: "valid comet info",
+			input: &types.MsgSetCometInfo{
+				Authority:       consensusIdentiy,
+				Evidence:        []*v1.Misbehavior{},
+				ValidatorsHash:  []byte("validatorhash"),
+				ProposerAddress: []byte("proposeraddress"),
+				LastCommit:      &v1.CommitInfo{},
+			},
+			expErr:    false,
+			expErrMsg: "",
+		},
+		{
+			name: "invalid authority",
+			input: &types.MsgSetCometInfo{
+				Authority:       "invalid",
+				Evidence:        []*v1.Misbehavior{},
+				ValidatorsHash:  []byte("validatorhash"),
+				ProposerAddress: []byte("proposeraddress"),
+				LastCommit:      &v1.CommitInfo{},
+			},
+			expErr:    true,
+			expErrMsg: "invalid authority",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			s.SetupTest(tc.enabledFeatures)
+			_, err := s.consensusParamsKeeper.SetCometInfo(s.ctx, tc.input)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
 			}
 		})
 	}

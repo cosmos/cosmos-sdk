@@ -6,6 +6,7 @@ replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/depinject => ../../depinject
+	cosmossdk.io/log => ../../log
 	cosmossdk.io/server/v2 => .
 	cosmossdk.io/server/v2/appmanager => ./appmanager
 	cosmossdk.io/server/v2/stf => ./stf
@@ -16,25 +17,27 @@ require (
 	cosmossdk.io/api v0.7.5
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/log v1.3.1
+	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/gogogateway v1.2.0
-	github.com/cosmos/gogoproto v1.4.12
+	github.com/cosmos/gogoproto v1.5.0
 	github.com/golang/protobuf v1.5.4
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/hashicorp/go-hclog v1.6.2
 	github.com/hashicorp/go-metrics v0.5.3
 	github.com/hashicorp/go-plugin v1.6.0
-	github.com/pelletier/go-toml/v2 v2.1.1
+	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/prometheus/client_golang v1.19.0
-	github.com/prometheus/common v0.52.2
-	github.com/rs/zerolog v1.32.0
-	github.com/spf13/cobra v1.8.0
-	github.com/spf13/viper v1.18.2
+	github.com/prometheus/common v0.54.0
+	github.com/rs/zerolog v1.33.0
+	github.com/spf13/cobra v1.8.1
+	github.com/spf13/pflag v1.0.5
+	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/sync v0.7.0
 	google.golang.org/grpc v1.64.0
-	google.golang.org/protobuf v1.34.1
+	google.golang.org/protobuf v1.34.2
 )
 
 require (
@@ -70,10 +73,9 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	go.uber.org/multierr v1.10.0 // indirect
-	golang.org/x/exp v0.0.0-20240404231335-c0f41cb1a7a0 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
+	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc // indirect
 	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/text v0.15.0 // indirect

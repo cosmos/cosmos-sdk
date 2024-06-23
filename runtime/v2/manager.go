@@ -148,12 +148,6 @@ func (m *MM) InitGenesisJSON(
 
 		mod := m.modules[moduleName]
 
-		// skip genutil as it's a special module that handles gentxs
-		// TODO: should this be an empty extension interface on genutil for server v2?
-		if moduleName == "genutil" {
-			continue
-		}
-
 		// we might get an adapted module, a native core API module or a legacy module
 		switch module := mod.(type) {
 		case appmodule.HasGenesisAuto:
@@ -184,7 +178,7 @@ func (m *MM) InitGenesisJSON(
 			// only one module will update the validator set
 			if len(moduleValUpdates) > 0 {
 				if seenValUpdates {
-					return errors.New("validator InitGenesis updates already set by a previous module")
+					return fmt.Errorf("validator InitGenesis updates already set by a previous module: current module %s", moduleName)
 				} else {
 					seenValUpdates = true
 				}
@@ -284,7 +278,10 @@ type hasABCIEndBlock interface {
 }
 
 // EndBlock runs the end-block logic of all modules and tx validator updates
-func (m *MM) EndBlock() (endBlockFunc func(ctx context.Context) error, valUpdateFunc func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error)) {
+func (m *MM) EndBlock() (
+	endBlockFunc func(ctx context.Context) error,
+	valUpdateFunc func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error),
+) {
 	var validatorUpdates []appmodulev2.ValidatorUpdate
 	endBlockFunc = func(ctx context.Context) error {
 		for _, moduleName := range m.config.EndBlockers {

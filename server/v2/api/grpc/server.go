@@ -15,7 +15,9 @@ import (
 
 	_ "cosmossdk.io/api/amino" // Import amino.proto file for reflection
 	appmanager "cosmossdk.io/core/app"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 )
 
@@ -23,9 +25,9 @@ const serverName = "grpc-server"
 
 type GRPCServer struct {
 	logger log.Logger
+	config *Config
 
 	grpcSrv *grpc.Server
-	config  *Config
 }
 
 type GRPCService interface {
@@ -33,40 +35,44 @@ type GRPCService interface {
 	RegisterGRPCServer(gogogrpc.Server)
 }
 
-// New returns a correctly configured and initialized gRPC server.
+func New() *GRPCServer {
+	return &GRPCServer{}
+}
+
+// Init returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server.
-func New(logger log.Logger, v *viper.Viper, interfaceRegistry appmanager.InterfaceRegistry, app GRPCService) (GRPCServer, error) {
+func (g *GRPCServer) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
 	cfg := DefaultConfig()
 	if v != nil {
 		if err := v.Sub(serverName).Unmarshal(&cfg); err != nil {
-			return GRPCServer{}, fmt.Errorf("failed to unmarshal config: %w", err)
+			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
 
 	grpcSrv := grpc.NewServer(
-		grpc.ForceServerCodec(newProtoCodec(interfaceRegistry).GRPCCodec()),
+		grpc.ForceServerCodec(newProtoCodec(appI.InterfaceRegistry()).GRPCCodec()),
 		grpc.MaxSendMsgSize(cfg.MaxSendMsgSize),
 		grpc.MaxRecvMsgSize(cfg.MaxRecvMsgSize),
 	)
 
-	app.RegisterGRPCServer(grpcSrv)
+	// appI.RegisterGRPCServer(grpcSrv)
 
 	// Reflection allows external clients to see what services and methods
 	// the gRPC server exposes.
 	gogoreflection.Register(grpcSrv)
 
-	return GRPCServer{
-		grpcSrv: grpcSrv,
-		config:  cfg,
-		logger:  logger.With(log.ModuleKey, serverName),
-	}, nil
+	g.grpcSrv = grpcSrv
+	g.config = cfg
+	g.logger = logger.With(log.ModuleKey, serverName)
+
+	return nil
 }
 
-func (g GRPCServer) Name() string {
+func (g *GRPCServer) Name() string {
 	return serverName
 }
 
-func (g GRPCServer) Start(ctx context.Context) error {
+func (g *GRPCServer) Start(ctx context.Context) error {
 	listener, err := net.Listen("tcp", g.config.Address)
 	if err != nil {
 		return fmt.Errorf("failed to listen on address %s: %w", g.config.Address, err)
@@ -89,14 +95,14 @@ func (g GRPCServer) Start(ctx context.Context) error {
 	return err
 }
 
-func (g GRPCServer) Stop(ctx context.Context) error {
+func (g *GRPCServer) Stop(ctx context.Context) error {
 	g.logger.Info("stopping gRPC server...", "address", g.config.Address)
 	g.grpcSrv.GracefulStop()
 
 	return nil
 }
 
-func (g GRPCServer) Config() any {
+func (g *GRPCServer) Config() any {
 	if g.config == nil || g.config == (&Config{}) {
 		return DefaultConfig()
 	}

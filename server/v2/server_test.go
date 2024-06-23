@@ -7,20 +7,16 @@ import (
 	"testing"
 	"time"
 
-	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/require"
 
+	coreapp "cosmossdk.io/core/app"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	grpc "cosmossdk.io/server/v2/api/grpc"
 )
-
-type mockGRPCService struct {
-	grpc.GRPCService
-}
-
-func (m *mockGRPCService) RegisterGRPCServer(gogogrpc.Server) {}
 
 type mockInterfaceRegistry struct{}
 
@@ -32,6 +28,14 @@ func (*mockInterfaceRegistry) ListImplementations(ifaceTypeURL string) []string 
 	panic("not implemented")
 }
 func (*mockInterfaceRegistry) ListAllInterfaces() []string { panic("not implemented") }
+
+type mockApp[T transaction.Tx] struct {
+	serverv2.AppI[T]
+}
+
+func (*mockApp[T]) InterfaceRegistry() coreapp.InterfaceRegistry {
+	return &mockInterfaceRegistry{}
+}
 
 // TODO split this test into multiple tests
 // test read config
@@ -46,7 +50,7 @@ func TestServer(t *testing.T) {
 		t.Log(err)
 		t.Fail()
 	}
-	configPath := filepath.Join(currentDir, "testdata", "app.toml")
+	configPath := filepath.Join(currentDir, "testdata")
 
 	v, err := serverv2.ReadConfig(configPath)
 	if err != nil {
@@ -54,8 +58,8 @@ func TestServer(t *testing.T) {
 	}
 
 	logger := log.NewLogger(os.Stdout)
-	grpcServer, err := grpc.New(logger, v, &mockInterfaceRegistry{}, &mockGRPCService{})
-	if err != nil {
+	grpcServer := grpc.New()
+	if err := grpcServer.Init(&mockApp[transaction.Tx]{}, v, logger); err != nil {
 		t.Log(err)
 		t.Fail()
 	}
@@ -113,4 +117,20 @@ func TestServer(t *testing.T) {
 		t.Log(err)
 		t.Fail()
 	}
+}
+
+func TestReadConfig(t *testing.T) {
+	currentDir, err := os.Getwd()
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+	configPath := filepath.Join(currentDir, "testdata")
+
+	v, err := serverv2.ReadConfig(configPath)
+	require.NoError(t, err)
+
+	grpcConfig := grpc.DefaultConfig()
+	err = v.Sub("grpc-server").Unmarshal(&grpcConfig)
+	require.NoError(t, err)
 }

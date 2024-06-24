@@ -254,10 +254,15 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		})
 	}
 
+	ci, err := c.store.LastCommitID()
+	if err != nil {
+		return nil, err
+	}
+
 	br := &coreappmgr.BlockRequest[T]{
 		Height:            uint64(req.InitialHeight - 1),
 		Time:              req.Time,
-		Hash:              nil,
+		Hash:              ci.Hash,
 		AppHash:           nil,
 		ChainId:           req.ChainId,
 		ConsensusMessages: consMessages,

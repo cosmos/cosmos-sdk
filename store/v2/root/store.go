@@ -2,6 +2,7 @@ package root
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"sync"
@@ -148,7 +149,10 @@ func (s *Store) LastCommitID() (proof.CommitID, error) {
 		return proof.CommitID{}, err
 	}
 
-	return proof.CommitID{Version: latestVersion}, nil
+	// if the latest version is 0, we return a CommitID with version 0 and a hash of an empty byte slice
+	bz := sha256.Sum256([]byte{})
+
+	return proof.CommitID{Version: latestVersion, Hash: bz[:]}, nil
 }
 
 // GetLatestVersion returns the latest version based on the latest internal

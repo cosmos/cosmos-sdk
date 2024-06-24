@@ -137,7 +137,7 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 		return nil, err
 	}
 
-	cometResp := &abci.CheckTxResponse{
+	cometResp := &abciproto.CheckTxResponse{
 		Code:      resp.Code,
 		GasWanted: uint64ToInt64(resp.GasWanted),
 		GasUsed:   uint64ToInt64(resp.GasUsed),
@@ -171,7 +171,7 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 		return nil, err
 	}
 
-	return &abci.InfoResponse{
+	return &abciproto.InfoResponse{
 		Data:    c.cfg.Name,
 		Version: c.cfg.Version,
 		// AppVersion:       cp.GetVersion().App,
@@ -294,7 +294,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		return nil, fmt.Errorf("unable to commit the changeset: %w", err)
 	}
 
-	return &abci.InitChainResponse{
+	return &abciproto.InitChainResponse{
 		ConsensusParams: req.ConsensusParams,
 		Validators:      validatorUpdates,
 		AppHash:         stateRoot,
@@ -339,7 +339,7 @@ func (c *Consensus[T]) PrepareProposal(
 		encodedTxs[i] = tx.Bytes()
 	}
 
-	return &abci.PrepareProposalResponse{
+	return &abciproto.PrepareProposalResponse{
 		Txs: encodedTxs,
 	}, nil
 }
@@ -371,13 +371,13 @@ func (c *Consensus[T]) ProcessProposal(
 	err := c.processProposalHandler(ciCtx, c.app, decodedTxs, req)
 	if err != nil {
 		c.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
-		return &abci.ProcessProposalResponse{
-			Status: abci.PROCESS_PROPOSAL_STATUS_REJECT,
+		return &abciproto.ProcessProposalResponse{
+			Status: abciproto.PROCESS_PROPOSAL_STATUS_REJECT,
 		}, nil
 	}
 
-	return &abci.ProcessProposalResponse{
-		Status: abci.PROCESS_PROPOSAL_STATUS_ACCEPT,
+	return &abciproto.ProcessProposalResponse{
+		Status: abciproto.PROCESS_PROPOSAL_STATUS_ACCEPT,
 	}, nil
 }
 
@@ -505,7 +505,7 @@ func (c *Consensus[T]) Commit(ctx context.Context, _ *abciproto.CommitRequest) (
 		return nil, err
 	}
 
-	return &abci.CommitResponse{
+	return &abciproto.CommitResponse{
 		RetainHeight: c.GetBlockRetentionHeight(cp, lastCommittedBlock.Height),
 	}, nil
 }
@@ -542,7 +542,7 @@ func (c *Consensus[T]) VerifyVoteExtension(
 	resp, err := c.verifyVoteExt(ctx, latestStore, req)
 	if err != nil {
 		c.logger.Error("failed to verify vote extension", "height", req.Height, "err", err)
-		return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_REJECT}, nil
+		return &abciproto.VerifyVoteExtensionResponse{Status: abciproto.VERIFY_VOTE_EXTENSION_STATUS_REJECT}, nil
 	}
 
 	return resp, err
@@ -578,7 +578,7 @@ func (c *Consensus[T]) ExtendVote(ctx context.Context, req *abciproto.ExtendVote
 	resp, err := c.extendVote(ctx, latestStore, req)
 	if err != nil {
 		c.logger.Error("failed to verify vote extension", "height", req.Height, "err", err)
-		return &abci.ExtendVoteResponse{}, nil
+		return &abciproto.ExtendVoteResponse{}, nil
 	}
 
 	return resp, err

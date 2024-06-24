@@ -190,7 +190,7 @@ Verifies if given a message belongs to a public key by validating against its re
 // Verifier represents a general interface for verifying signatures.
 type Verifier interface {
     // Verify checks the digital signature against the message and a public key to determine its validity.
-    Verify(signature Signature, signDoc []byte, pubKey PublicKey, options VerifierOpts) (bool, error)
+    Verify(signature Signature, signDoc []byte, pubKey PubKey, options VerifierOpts) (bool, error)
 }
 
 type VerifierOpts = map[string]any

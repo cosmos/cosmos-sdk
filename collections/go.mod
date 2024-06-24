@@ -29,4 +29,5 @@ require (
 replace (
 	cosmossdk.io/core => ../core
 	cosmossdk.io/core/testing => ../core/testing
+	cosmossdk.io/schema => ../schema
 )

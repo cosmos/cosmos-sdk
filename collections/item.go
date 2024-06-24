@@ -5,8 +5,9 @@ import (
 	"context"
 	"fmt"
 
+	indexerbase "cosmossdk.io/schema"
+
 	"cosmossdk.io/collections/codec"
-	indexerbase "cosmossdk.io/indexer/base"
 )
 
 // Item is a type declaration based on Map

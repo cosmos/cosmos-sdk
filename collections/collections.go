@@ -6,8 +6,9 @@ import (
 	"io"
 	"math"
 
+	indexerbase "cosmossdk.io/schema"
+
 	"cosmossdk.io/collections/codec"
-	indexerbase "cosmossdk.io/indexer/base"
 )
 
 var (

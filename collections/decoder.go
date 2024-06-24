@@ -7,7 +7,7 @@ import (
 
 	"github.com/tidwall/btree"
 
-	indexerbase "cosmossdk.io/indexer/base"
+	indexerbase "cosmossdk.io/schema"
 )
 
 type IndexingOptions struct {

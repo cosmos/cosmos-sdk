@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"reflect"
 
-	"cosmossdk.io/schema"
 	"github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"google.golang.org/protobuf/encoding/protojson"
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/schema"
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
@@ -93,7 +94,7 @@ func (c collValue[T, PT]) ValueType() string {
 	return "github.com/cosmos/gogoproto/" + c.messageName
 }
 
-func (c collValue[T, PT]) SchemaColumns() []schema.Column {
+func (c collValue[T, PT]) SchemaColumns() []schema.Field {
 	var pt PT
 	msgName := proto.MessageName(pt)
 	desc, err := proto.HybridResolver.FindDescriptorByName(protoreflect.FullName(msgName))
@@ -148,7 +149,7 @@ func (c collValue2[T, PT]) ValueType() string {
 	return "google.golang.org/protobuf/" + c.messageName
 }
 
-func (c collValue2[T, PT]) SchemaColumns() []schema.Column {
+func (c collValue2[T, PT]) SchemaColumns() []schema.Field {
 	var pt PT
 	return protoCols(pt.ProtoReflect().Descriptor())
 }
@@ -211,30 +212,30 @@ func protoCol(f protoreflect.FieldDescriptor) schema.Field {
 	col := schema.Field{Name: string(f.Name())}
 
 	if f.IsMap() || f.IsList() {
-		col.Type = schema.JSONKind
+		col.Kind = schema.JSONKind
 		col.Nullable = true
 	} else {
 		switch f.Kind() {
 		case protoreflect.BoolKind:
-			col.Type = schema.BoolKind
+			col.Kind = schema.BoolKind
 		case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
-			col.Type = schema.Int32Kind
+			col.Kind = schema.Int32Kind
 		case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
-			col.Type = schema.Int64Kind
+			col.Kind = schema.Int64Kind
 		case protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
-			col.Type = schema.Int64Kind
+			col.Kind = schema.Int64Kind
 		case protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
-			col.Type = schema.DecimalKind
+			col.Kind = schema.IntegerStringKind
 		case protoreflect.FloatKind:
-			col.Type = schema.Float32Kind
+			col.Kind = schema.Float32Kind
 		case protoreflect.DoubleKind:
-			col.Type = schema.Float64Kind
+			col.Kind = schema.Float64Kind
 		case protoreflect.StringKind:
-			col.Type = schema.StringKind
+			col.Kind = schema.StringKind
 		case protoreflect.BytesKind:
-			col.Type = schema.BytesKind
+			col.Kind = schema.BytesKind
 		case protoreflect.EnumKind:
-			col.Type = schema.EnumKind
+			col.Kind = schema.EnumKind
 			enumDesc := f.Enum()
 			var vals []string
 			n := enumDesc.Values().Len()
@@ -249,11 +250,11 @@ func protoCol(f protoreflect.FieldDescriptor) schema.Field {
 			col.Nullable = true
 			fullName := f.Message().FullName()
 			if fullName == "google.protobuf.Timestamp" {
-				col.Type = schema.TimeKind
+				col.Kind = schema.TimeKind
 			} else if fullName == "google.protobuf.Duration" {
-				col.Type = schema.DurationKind
+				col.Kind = schema.DurationKind
 			} else {
-				col.Type = schema.JSONKind
+				col.Kind = schema.JSONKind
 			}
 		}
 		if f.HasPresence() {

@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"cosmossdk.io/collections"
-	indexerbase "cosmossdk.io/indexer/base"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/schema"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/legacy"
@@ -198,6 +199,6 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 }
 
-func (am AppModule) ModuleDecoder() (indexerbase.ModuleDecoder, error) {
-	return am.keeper.Schema.ModuleDecoder(collections.IndexingOptions{})
+func (am AppModule) ModuleDecoder() (schema.ModuleCodec, error) {
+	return am.keeper.Schema.ModuleCodec(collections.IndexingOptions{})
 }

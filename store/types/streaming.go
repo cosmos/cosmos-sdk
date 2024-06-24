@@ -5,7 +5,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 
-	indexerbase "cosmossdk.io/schema"
+	"cosmossdk.io/schema/appdata"
 )
 
 // ABCIListener is the interface that we're exposing as a streaming service.
@@ -29,51 +29,51 @@ type StreamingManager struct {
 	StopNodeOnErr bool
 }
 
-func FromPhysicalListener(listener indexerbase.PhysicalListener) ABCIListener {
+func FromSchemaListener(listener appdata.Listener) ABCIListener {
 	return &physicalListener{listener: listener}
 }
 
 type physicalListener struct {
-	listener indexerbase.PhysicalListener
+	listener appdata.Listener
 }
 
 func (p physicalListener) ListenFinalizeBlock(_ context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error {
-	if p.listener.StartBlock != nil {
-		err := p.listener.StartBlock(uint64(req.Height))
-		if err != nil {
-			return err
-		}
-	}
-
-	if p.listener.OnBlockHeader != nil {
-		err := p.listener.OnBlockHeader(listener.BlockHeaderData{
-			Height: uint64(req.Height),
-		})
-		if err != nil {
-			return err
-		}
-	}
-
-	// TODO txs, events
+	//if p.listener.StartBlock != nil {
+	//	err := p.listener.StartBlock(uint64(req.Height))
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
+	//
+	//if p.listener.OnBlockHeader != nil {
+	//	err := p.listener.OnBlockHeader(listener.BlockHeaderData{
+	//		Height: uint64(req.Height),
+	//	})
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
+	//
+	//// TODO txs, events
 
 	return nil
 }
 
 func (p physicalListener) ListenCommit(ctx context.Context, res abci.CommitResponse, changeSet []*StoreKVPair) error {
-	if p.listener.OnKVPair != nil {
-		for _, kv := range changeSet {
-			err := p.listener.OnKVPair(kv.StoreKey, kv.Key, kv.Value, kv.Delete)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	if p.listener.Commit != nil {
-		err := p.listener.Commit()
-		if err != nil {
-			return err
-		}
-	}
+	//if p.listener.OnKVPair != nil {
+	//	for _, kv := range changeSet {
+	//		err := p.listener.OnKVPair(kv.StoreKey, kv.Key, kv.Value, kv.Delete)
+	//		if err != nil {
+	//			return err
+	//		}
+	//	}
+	//}
+	//
+	//if p.listener.Commit != nil {
+	//	err := p.listener.Commit()
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
 	return nil
 }

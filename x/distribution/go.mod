@@ -182,6 +182,7 @@ replace (
 	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/log => ../../log
+	cosmossdk.io/schema => ../../schema
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank

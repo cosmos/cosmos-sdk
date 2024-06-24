@@ -43,7 +43,7 @@ contributors, the general procedure for contributing has been established:
    1. Ensure that the proposal has been accepted.
    2. Ensure that nobody else has already begun working on this issue. If they have,
       make sure to contact them to collaborate.
-   3. If nobody has been assigned for the issue and you would like to work on it,
+   3. If nobody has been assigned to the issue and you would like to work on it,
       make a comment on the issue to inform the community of your intentions
       to begin work.
 5. To submit your work as a contribution to the repository follow standard GitHub best practices. See [pull request guideline](#pull-requests) below.
@@ -322,11 +322,11 @@ to developers who show an aptitude towards developing with this code base.
 
 Several different kinds of privileges may be granted however most common
 privileges to be granted are merge rights to either part of, or the entirety of the
-code base (through the GitHub `CODEOWNERS` file). The on-boarding process for
+code base (through the GitHub `CODEOWNERS` file). The onboarding process for
 new code owners is as follows: On a bi-monthly basis (or more frequently if
 agreeable) all the existing code owners will privately convene to discuss
 potential new candidates as well as the potential for existing code-owners to
-exit or "pass on the torch". This private meeting is to be a held as a
+exit or "pass on the torch". This private meeting is to be held as a
 phone/video meeting.
 
 Subsequently after the meeting, and pending final approval from the ICF,

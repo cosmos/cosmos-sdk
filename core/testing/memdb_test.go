@@ -10,7 +10,7 @@ import (
 )
 
 func TestMemDB(t *testing.T) {
-	var db store.KVStore = newMemDB()
+	var db store.KVStore = NewMemKV()
 
 	key, value := []byte("key"), []byte("value")
 	require.NoError(t, db.Set(key, value))

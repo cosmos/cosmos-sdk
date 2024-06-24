@@ -42,7 +42,7 @@ func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger 
 
 			app := newApp(l, v)
 
-			if _, err := server.Init(app, v, l); err != nil {
+			if err := server.Init(app, v, l); err != nil {
 				return err
 			}
 

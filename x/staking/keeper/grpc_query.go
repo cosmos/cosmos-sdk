@@ -13,6 +13,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/staking/types"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -57,11 +58,27 @@ func (k Querier) Validators(ctx context.Context, req *types.QueryValidatorsReque
 	}
 
 	vals := types.Validators{}
+	var validatorInfoList []types.ValidatorInfo
 	for _, val := range validators {
 		vals.Validators = append(vals.Validators, *val)
+		valInfo := types.ValidatorInfo{}
+
+		cpk, ok := val.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
+		if ok {
+			consAddr, err := k.consensusAddressCodec.BytesToString(cpk.Address())
+			if err == nil {
+				valInfo.ConsensusAddress = consAddr
+			}
+		}
+
+		validatorInfoList = append(validatorInfoList, valInfo)
 	}
 
-	return &types.QueryValidatorsResponse{Validators: vals.Validators, Pagination: pageRes}, nil
+	return &types.QueryValidatorsResponse{
+		Validators:    vals.Validators,
+		ValidatorInfo: validatorInfoList,
+		Pagination:    pageRes,
+	}, nil
 }
 
 // Validator queries validator info for given validator address

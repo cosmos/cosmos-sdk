@@ -22,14 +22,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 // GenTxCmd builds the application's gentx command.
-func GenTxCmd(mm *module.Manager, txEncCfg client.TxEncodingConfig, genBalIterator types.GenesisBalancesIterator, valAdddressCodec address.Codec) *cobra.Command {
+func GenTxCmd(genMM genesisMM, txEncCfg client.TxEncodingConfig, genBalIterator types.GenesisBalancesIterator, valAdddressCodec address.Codec) *cobra.Command {
 	ipDefault, _ := server.ExternalIP()
 	fsCreateValidator, defaultsDesc := cli.CreateValidatorMsgFlagSet(ipDefault)
 
@@ -94,7 +93,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 				return errors.Wrap(err, "failed to unmarshal genesis state")
 			}
 
-			if err = mm.ValidateGenesis(genesisState); err != nil {
+			if err = genMM.ValidateGenesis(genesisState); err != nil {
 				return errors.Wrap(err, "failed to validate genesis state")
 			}
 

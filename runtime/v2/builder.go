@@ -96,21 +96,12 @@ func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 		return nil, err
 	}
 
-	stfMsgHandler, err := a.app.msgRouterBuilder.Build()
-	if err != nil {
-		return nil, fmt.Errorf("failed to build STF message handler: %w", err)
-	}
-
-	stfQueryHandler, err := a.app.queryRouterBuilder.Build()
-	if err != nil {
-		return nil, fmt.Errorf("failed to build query handler: %w", err)
-	}
-
 	endBlocker, valUpdate := a.app.moduleManager.EndBlock()
 
-	a.app.stf = stf.NewSTF[transaction.Tx](
-		stfMsgHandler,
-		stfQueryHandler,
+	stf, err := stf.NewSTF[transaction.Tx](
+		a.app.logger.With("module", "stf"),
+		a.app.msgRouterBuilder,
+		a.app.queryRouterBuilder,
 		a.app.moduleManager.PreBlocker(),
 		a.app.moduleManager.BeginBlock(),
 		endBlocker,
@@ -119,6 +110,11 @@ func (a *AppBuilder) Build(opts ...AppBuilderOption) (*App, error) {
 		a.postTxExec,
 		a.branch,
 	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create STF: %w", err)
+	}
+
+	a.app.stf = stf
 
 	rs, err := rootstore.CreateRootStore(a.storeOptions)
 	if err != nil {

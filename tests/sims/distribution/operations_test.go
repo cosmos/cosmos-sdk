@@ -261,8 +261,7 @@ func (suite *SimTestSuite) getTestingValidator(accounts []simtypes.Account, comm
 	account := accounts[n]
 	valPubKey := account.PubKey
 	valAddr := sdk.ValAddress(account.PubKey.Address().Bytes())
-	validator, err := stakingtypes.NewValidator(valAddr.String(), valPubKey, stakingtypes.
-		Description{})
+	validator, err := stakingtypes.NewValidator(valAddr.String(), valPubKey, stakingtypes.Description{})
 	require.NoError(err)
 	validator, err = validator.SetInitialCommission(commission)
 	require.NoError(err)

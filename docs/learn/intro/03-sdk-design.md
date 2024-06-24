@@ -13,6 +13,8 @@ Here is a simplified view of how transactions are handled by an application buil
 3. Route each message to the appropriate module so that it can be processed.
 4. Commit state changes.
 
+![main-components](main-components.png)
+
 ## `baseapp`
 
 `baseapp` is the boilerplate implementation of a Cosmos SDK application. It comes with an implementation of the ABCI to handle the connection with the underlying consensus engine. Typically, a Cosmos SDK application extends `baseapp` by embedding it in [`app.go`](../beginner/00-app-anatomy.md#core-application-file).

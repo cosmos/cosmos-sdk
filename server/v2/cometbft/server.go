@@ -70,7 +70,7 @@ func New[T transaction.Tx](txCodec transaction.Codec[T]) *CometBFTServer[T] {
 	}
 }
 
-func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) (serverv2.ServerComponent[T], error) {
+func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
 	store := appI.GetStore().(types.Store)
 
 	cfg := Config{CmtConfig: GetConfigFromViper(v), ConsensusAuthority: appI.GetConsensusAuthority()}
@@ -104,11 +104,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 	s.App = consensus
 	s.logger = logger
 
-	return &CometBFTServer[T]{
-		logger: logger,
-		App:    consensus,
-		config: cfg,
-	}, nil
+	return nil
 }
 
 func (s *CometBFTServer[T]) Name() string {

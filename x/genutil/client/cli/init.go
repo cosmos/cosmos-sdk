@@ -69,13 +69,9 @@ func displayInfo(dst io.Writer, info printInfo) error {
 	return err
 }
 
-type hasDefaultGenesis interface {
-	DefaultGenesis() map[string]json.RawMessage
-}
-
 // InitCmd returns a command that initializes all files needed for Tendermint
 // and the respective application.
-func InitCmd(mm hasDefaultGenesis) *cobra.Command {
+func InitCmd(mm genesisMM) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init [moniker]",
 		Short: "Initialize private validator, p2p, genesis, and application configuration files",

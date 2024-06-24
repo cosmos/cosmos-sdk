@@ -1,4 +1,8 @@
-# Epochs
+---
+sidebar_position: 1
+---
+
+# `x/epochs`
 
 ## Abstract
 

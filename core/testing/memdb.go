@@ -17,16 +17,16 @@ const (
 
 var errKeyEmpty = errors.New("key cannot be empty")
 
-var _ store.KVStore = (*memDB)(nil)
+var _ store.KVStore = (*MemKV)(nil)
 
-// memDB a lightweight memory db
-type memDB struct {
+// MemKV a lightweight memory db
+type MemKV struct {
 	tree *btree.BTreeG[item]
 }
 
-// newMemDB creates a wrapper around `btree.BTreeG`.
-func newMemDB() memDB {
-	return memDB{
+// NewMemKV creates a wrapper around `btree.BTreeG`.
+func NewMemKV() MemKV {
+	return MemKV{
 		tree: btree.NewBTreeGOptions(byKeys, btree.Options{
 			Degree:  bTreeDegree,
 			NoLocks: true,
@@ -35,25 +35,25 @@ func newMemDB() memDB {
 }
 
 // set adds a new key-value pair to the change set's tree.
-func (bt memDB) set(key, value []byte) {
+func (bt MemKV) set(key, value []byte) {
 	bt.tree.Set(newItem(key, value))
 }
 
-// get retrieves the value associated with the given key from the memDB's tree.
-func (bt memDB) get(key []byte) (value []byte, found bool) {
+// get retrieves the value associated with the given key from the MemKV's tree.
+func (bt MemKV) get(key []byte) (value []byte, found bool) {
 	it, found := bt.tree.Get(item{key: key})
 	return it.value, found
 }
 
 // delete removes the value associated with the given key from the change set.
 // If the key does not exist in the change set, this method does nothing.
-func (bt memDB) delete(key []byte) {
+func (bt MemKV) delete(key []byte) {
 	bt.tree.Delete(item{key: key})
 }
 
-// iterator returns a new iterator over the key-value pairs in the memDB
+// iterator returns a new iterator over the key-value pairs in the MemKV
 // that have keys greater than or equal to the start key and less than the end key.
-func (bt memDB) iterator(start, end []byte) (store.Iterator, error) {
+func (bt MemKV) iterator(start, end []byte) (store.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errKeyEmpty
 	}
@@ -61,9 +61,9 @@ func (bt memDB) iterator(start, end []byte) (store.Iterator, error) {
 }
 
 // reverseIterator returns a new iterator that iterates over the key-value pairs in reverse order
-// within the specified range [start, end) in the memDB's tree.
+// within the specified range [start, end) in the MemKV's tree.
 // If start or end is an empty byte slice, it returns an error indicating that the key is empty.
-func (bt memDB) reverseIterator(start, end []byte) (store.Iterator, error) {
+func (bt MemKV) reverseIterator(start, end []byte) (store.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errKeyEmpty
 	}
@@ -72,31 +72,31 @@ func (bt memDB) reverseIterator(start, end []byte) (store.Iterator, error) {
 
 // KV impl
 
-func (bt memDB) Get(key []byte) ([]byte, error) {
+func (bt MemKV) Get(key []byte) ([]byte, error) {
 	value, _ := bt.get(key)
 	return value, nil
 }
 
-func (bt memDB) Has(key []byte) (bool, error) {
+func (bt MemKV) Has(key []byte) (bool, error) {
 	_, found := bt.get(key)
 	return found, nil
 }
 
-func (bt memDB) Set(key, value []byte) error {
+func (bt MemKV) Set(key, value []byte) error {
 	bt.set(key, value)
 	return nil
 }
 
-func (bt memDB) Delete(key []byte) error {
+func (bt MemKV) Delete(key []byte) error {
 	bt.delete(key)
 	return nil
 }
 
-func (bt memDB) Iterator(start, end []byte) (store.Iterator, error) {
+func (bt MemKV) Iterator(start, end []byte) (store.Iterator, error) {
 	return bt.iterator(start, end)
 }
 
-func (bt memDB) ReverseIterator(start, end []byte) (store.Iterator, error) {
+func (bt MemKV) ReverseIterator(start, end []byte) (store.Iterator, error) {
 	return bt.reverseIterator(start, end)
 }
 

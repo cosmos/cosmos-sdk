@@ -7,8 +7,10 @@ import (
 	"cosmossdk.io/core/store"
 )
 
+var _ store.KVStoreService = (*kvStoreService)(nil)
+
 func KVStoreService(ctx context.Context, moduleName string) store.KVStoreService {
-	unwrap(ctx).stores[moduleName] = newMemDB()
+	unwrap(ctx).stores[moduleName] = NewMemKV()
 	return kvStoreService{
 		moduleName: moduleName,
 	}

@@ -21,7 +21,7 @@ type ServerComponent[T transaction.Tx] interface {
 
 	Start(context.Context) error
 	Stop(context.Context) error
-	Init(AppI[T], *viper.Viper, log.Logger) (ServerComponent[T], error)
+	Init(AppI[T], *viper.Viper, log.Logger) error
 }
 
 // HasCLICommands is a server module that has CLI commands.
@@ -145,19 +145,19 @@ func (s *Server) Configs() map[string]any {
 }
 
 // Configs returns all configs of all server components.
-func (s *Server) Init(appI AppI[transaction.Tx], v *viper.Viper, logger log.Logger) (ServerComponent[transaction.Tx], error) {
+func (s *Server) Init(appI AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
 	var components []ServerComponent[transaction.Tx]
 	for _, mod := range s.components {
 		mod := mod
-		module, err := mod.Init(appI, v, logger)
-		if err != nil {
-			return nil, err
+		if err := mod.Init(appI, v, logger); err != nil {
+			return err
 		}
-		components = append(components, module)
-	}
-	s.components = components
 
-	return s, nil
+		components = append(components, mod)
+	}
+
+	s.components = components
+	return nil
 }
 
 // WriteConfig writes the config to the given path.

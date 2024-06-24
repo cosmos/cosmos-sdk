@@ -33,7 +33,7 @@ When possible, the existing module's [`Keeper`](./06-keeper.md) should implement
 https://github.com/cosmos/cosmos-sdk/blob/28fa3b8/x/bank/keeper/msg_server.go#L16-L19
 ```
 
-`msgServer` methods can retrieve the auxillary information or services using the environment variable, it is always located in the keeper:
+`msgServer` methods can retrieve the auxiliary information or services using the environment variable, it is always located in the keeper:
 
 Environment: 
 

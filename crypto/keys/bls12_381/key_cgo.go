@@ -32,7 +32,7 @@ var (
 
 // NewPrivateKeyFromBytes build a new key from the given bytes.
 func NewPrivateKeyFromBytes(bz []byte) (PrivKey, error) {
-	secretKey, err := bls12381.SecretKey(bz)
+	secretKey, err := bls12381.SecretKeyFromBytes(bz)
 	if err != nil {
 		return PrivKey{}, err
 	}

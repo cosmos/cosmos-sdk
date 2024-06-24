@@ -154,7 +154,7 @@ func (x Dec) MulExact(y Dec) (Dec, error) {
 	var z Dec
 	condition, err := dec128Context.Mul(&z.dec, &x.dec, &y.dec)
 	if err != nil {
-		return z, err
+		return z, ErrInvalidDec
 	}
 	if condition.Rounded() {
 		return z, ErrUnexpectedRounding
@@ -192,6 +192,9 @@ func (x Dec) QuoInteger(y Dec) (Dec, error) {
 func (x Dec) Rem(y Dec) (Dec, error) {
 	var z Dec
 	_, err := dec128Context.Rem(&z.dec, &x.dec, &y.dec)
+	if err != nil {
+		return z, ErrInvalidDec
+	}
 	return z, errors.Wrap(err, "decimal remainder error")
 }
 

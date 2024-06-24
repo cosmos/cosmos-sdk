@@ -52,7 +52,7 @@ func NewPruneOptions(pruningOption string) *PruneOptions {
 			Interval:   0,
 		}
 	default:
-		return &PruneOptions{} 
+		return &PruneOptions{}
 	}
 }
 

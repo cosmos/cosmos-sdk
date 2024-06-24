@@ -3,6 +3,8 @@ package codec
 import (
 	"errors"
 	"fmt"
+
+	"cosmossdk.io/schema"
 )
 
 var ErrEncoding = errors.New("collections: encoding error")
@@ -74,6 +76,22 @@ type ValueCodec[T any] interface {
 	ValueType() string
 }
 
+// IndexableCodec is an interface that all codec's should implement in order to properly support indexing.
+// It is not required by KeyCodec or ValueCodec in order to preserve backwards compatibility, but
+// a future version of collections may make it required and all codec's should aim to implement it.
+// If it is not implemented, fallback defaults will be used for indexing that may be sub-optimal.
+//
+// Implementations of IndexableCodec should test that they are conformant using the schema.ValidateWithKeyFields
+// and schema.ValidateWithValueFields depending on whether the codec is a KeyCodec or ValueCodec respectively.
+type IndexableCodec interface {
+	LogicalDecoder() LogicalDecoder
+}
+
+type LogicalDecoder struct {
+	Fields []schema.Field
+	Decode func([]byte) (any, error)
+}
+
 // NewUntypedValueCodec returns an UntypedValueCodec for the provided ValueCodec.
 func NewUntypedValueCodec[V any](v ValueCodec[V]) UntypedValueCodec {
 	typeName := fmt.Sprintf("%T", *new(V))
@@ -125,14 +143,11 @@ type UntypedValueCodec struct {
 }
 
 // KeyToValueCodec converts a KeyCodec into a ValueCodec.
-func KeyToValueCodec[K any](keyCodec KeyCodec[K]) NameableValueCodec[K] {
-	return keyToValueCodec[K]{kc: keyCodec}
-}
+func KeyToValueCodec[K any](keyCodec KeyCodec[K]) ValueCodec[K] { return keyToValueCodec[K]{keyCodec} }
 
 // keyToValueCodec is a ValueCodec that wraps a KeyCodec to make it behave like a ValueCodec.
 type keyToValueCodec[K any] struct {
-	name string
-	kc   KeyCodec[K]
+	kc KeyCodec[K]
 }
 
 func (k keyToValueCodec[K]) EncodeJSON(value K) ([]byte, error) {
@@ -169,13 +184,4 @@ func (k keyToValueCodec[K]) Stringify(value K) string {
 
 func (k keyToValueCodec[K]) ValueType() string {
 	return k.kc.KeyType()
-}
-
-func (k keyToValueCodec[K]) WithName(name string) NamedValueCodec[K] {
-	k.name = name
-	return k
-}
-
-func (k keyToValueCodec[K]) Name() string {
-	return k.name
 }

@@ -13,7 +13,6 @@ import (
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
-	indexerbase "cosmossdk.io/indexer/base"
 )
 
 // BoolValue implements a ValueCodec that saves the bool value
@@ -94,7 +93,7 @@ func (c collValue[T, PT]) ValueType() string {
 	return "github.com/cosmos/gogoproto/" + c.messageName
 }
 
-func (c collValue[T, PT]) SchemaColumns() []indexerbase.Column {
+func (c collValue[T, PT]) SchemaColumns() []schema.Column {
 	var pt PT
 	msgName := proto.MessageName(pt)
 	desc, err := proto.HybridResolver.FindDescriptorByName(protoreflect.FullName(msgName))
@@ -149,7 +148,7 @@ func (c collValue2[T, PT]) ValueType() string {
 	return "google.golang.org/protobuf/" + c.messageName
 }
 
-func (c collValue2[T, PT]) SchemaColumns() []indexerbase.Column {
+func (c collValue2[T, PT]) SchemaColumns() []schema.Column {
 	var pt PT
 	return protoCols(pt.ProtoReflect().Descriptor())
 }
@@ -198,9 +197,9 @@ func (c collInterfaceValue[T]) ValueType() string {
 	return fmt.Sprintf("%T", t)
 }
 
-func protoCols(desc protoreflect.MessageDescriptor) []indexerbase.Column {
+func protoCols(desc protoreflect.MessageDescriptor) []schema.Field {
 	nFields := desc.Fields()
-	cols := make([]indexerbase.Column, 0, nFields.Len())
+	cols := make([]schema.Field, 0, nFields.Len())
 	for i := 0; i < nFields.Len(); i++ {
 		f := nFields.Get(i)
 		cols = append(cols, protoCol(f))
@@ -208,8 +207,8 @@ func protoCols(desc protoreflect.MessageDescriptor) []indexerbase.Column {
 	return cols
 }
 
-func protoCol(f protoreflect.FieldDescriptor) indexerbase.Column {
-	col := indexerbase.Column{Name: string(f.Name())}
+func protoCol(f protoreflect.FieldDescriptor) schema.Field {
+	col := schema.Field{Name: string(f.Name())}
 
 	if f.IsMap() || f.IsList() {
 		col.Type = schema.JSONKind

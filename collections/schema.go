@@ -299,13 +299,3 @@ func (s Schema) ListCollections() []Collection {
 	}
 	return colls
 }
-
-// HasCollections is an interface that should be implemented by modules that
-// use collections so that their state can be indexed.
-//
-// Normally any module type implementing this should also implement appmodule.AppModule
-// or an earlier version of the AppModule interface.
-type HasCollections interface {
-	// CollectionsSchema returns the schema for the collections used by the module.
-	CollectionsSchema() Schema
-}

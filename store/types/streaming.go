@@ -3,10 +3,9 @@ package types
 import (
 	"context"
 
-	"cosmossdk.io/schema/listener"
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 
-	indexerbase "cosmossdk.io/indexer/base"
+	indexerbase "cosmossdk.io/schema"
 )
 
 // ABCIListener is the interface that we're exposing as a streaming service.

@@ -5,8 +5,6 @@ import (
 	"context"
 	"fmt"
 
-	indexerbase "cosmossdk.io/schema"
-
 	"cosmossdk.io/collections/codec"
 )
 
@@ -67,5 +65,3 @@ func (noKey) DecodeJSON(b []byte) (noKey, error) {
 func (k noKey) EncodeNonTerminal(_ []byte, _ noKey) (int, error) { panic("must not be called") }
 func (k noKey) DecodeNonTerminal(_ []byte) (int, noKey, error)   { panic("must not be called") }
 func (k noKey) SizeNonTerminal(_ noKey) int                      { panic("must not be called") }
-
-func (noKey) SchemaColumns() []indexerbase.Column { return nil }

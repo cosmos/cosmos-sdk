@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"cosmossdk.io/collections/codec"
-	indexerbase "cosmossdk.io/indexer/base"
 )
 
 // Triple defines a multipart key composed of three keys.
@@ -65,22 +64,10 @@ func TripleKeyCodec[K1, K2, K3 any](keyCodec1 codec.KeyCodec[K1], keyCodec2 code
 	}
 }
 
-func NamedTripleKeyCodec[K1, K2, K3 any](key1Name string, keyCodec1 codec.KeyCodec[K1], key2Name string, keyCodec2 codec.KeyCodec[K2], key3Name string, keyCodec3 codec.KeyCodec[K3]) codec.NamedKeyCodec[Triple[K1, K2, K3]] {
-	return tripleKeyCodec[K1, K2, K3]{
-		key1Name:  key1Name,
-		key2Name:  key2Name,
-		key3Name:  key3Name,
-		keyCodec1: keyCodec1,
-		keyCodec2: keyCodec2,
-		keyCodec3: keyCodec3,
-	}
-}
-
 type tripleKeyCodec[K1, K2, K3 any] struct {
-	key1Name, key2Name, key3Name string
-	keyCodec1                    codec.KeyCodec[K1]
-	keyCodec2                    codec.KeyCodec[K2]
-	keyCodec3                    codec.KeyCodec[K3]
+	keyCodec1 codec.KeyCodec[K1]
+	keyCodec2 codec.KeyCodec[K2]
+	keyCodec3 codec.KeyCodec[K3]
 }
 
 type jsonTripleKey [3]json.RawMessage
@@ -284,43 +271,6 @@ func (t tripleKeyCodec[K1, K2, K3]) SizeNonTerminal(key Triple[K1, K2, K3]) int 
 		size += t.keyCodec3.SizeNonTerminal(*key.k3)
 	}
 	return size
-}
-
-func (t tripleKeyCodec[K1, K2, K3]) Name() string {
-	if t.key1Name == "" || t.key2Name == "" || t.key3Name == "" {
-		return "key1,key2,key3"
-	}
-	return fmt.Sprintf("%s,%s,%s", t.key1Name, t.key2Name, t.key3Name)
-}
-
-func (p tripleKeyCodec[K1, K2, K3]) SchemaColumns() []indexerbase.Column {
-	var k1 K1
-	col1, _ := extractFields(k1)
-	if len(col1) == 1 {
-		col1[0].Name = p.key1Name
-	}
-	var k2 K2
-	col2, _ := extractFields(k2)
-	if len(col2) == 1 {
-		col2[0].Name = p.key2Name
-	}
-	var k3 K3
-	col3, _ := extractFields(k3)
-	if len(col3) == 1 {
-		col3[0].Name = p.key3Name
-
-	}
-	cols := append(col1, col2...)
-	cols = append(cols, col3...)
-	return cols
-}
-
-func (p tripleKeyCodec[K1, K2, K3]) DecodeIndexable(buffer []byte) (any, error) {
-	_, x, err := p.Decode(buffer)
-	if err != nil {
-		return nil, err
-	}
-	return []any{x.K1(), x.K2(), x.K3()}, nil
 }
 
 // NewPrefixUntilTripleRange defines a collection query which ranges until the provided Pair prefix.

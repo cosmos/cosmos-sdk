@@ -3,21 +3,16 @@
 package simapp
 
 import (
-	"context"
 	_ "embed"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/schema"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cast"
 
 	"cosmossdk.io/core/appmodule"
-	indexerbase "cosmossdk.io/indexer/base"
-	"cosmossdk.io/indexer/postgres"
-
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -256,34 +251,29 @@ func NewSimApp(
 	//if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
 	//	panic(err)
 	//}
-	moduleDecoders := map[string]schema.ModuleDecoder{}
+	modules := map[string]interface{}{}
 	for moduleName, module := range appModules {
-		if indexable, ok := module.(indexerbase.IndexableModule); ok {
-			decoder, err := indexable.ModuleDecoder()
-			if err != nil {
-				panic(err)
-			}
-			moduleDecoders[moduleName] = decoder
-		}
+		modules[moduleName] = module
 	}
-	pgIndexer, err := postgres.NewIndexer(context.Background(), postgres.Options{})
-	if err != nil {
-		panic(err)
-	}
-	engine, err := indexerbase.NewEngine(indexerbase.EngineOptions{
-		ModuleDecoders: moduleDecoders,
-		LogicalListeners: []indexerbase.LogicalListener{
-			pgIndexer,
-		},
-		Logger: logger.With("module", "indexer"),
-	})
-	if err != nil {
-		panic(err)
-	}
-	err = app.RegisterIndexer(app.kvStoreKeys(), storetypes.FromPhysicalListener(engine.PhysicalListener()))
-	if err != nil {
-		panic(err)
-	}
+
+	//pgIndexer, err := postgres.NewIndexer(context.Background(), postgres.Options{})
+	//if err != nil {
+	//	panic(err)
+	//}
+	//engine, err := indexerbase.NewEngine(indexerbase.EngineOptions{
+	//	ModuleDecoders: moduleDecoders,
+	//	LogicalListeners: []indexerbase.LogicalListener{
+	//		pgIndexer,
+	//	},
+	//	Logger: logger.With("module", "indexer"),
+	//})
+	//if err != nil {
+	//	panic(err)
+	//}
+	//err = app.RegisterIndexer(app.kvStoreKeys(), storetypes.FromPhysicalListener(engine.PhysicalListener()))
+	//if err != nil {
+	//	panic(err)
+	//}
 
 	/****  Module Options ****/
 

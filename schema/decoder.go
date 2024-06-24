@@ -30,7 +30,13 @@ type ModuleCodec struct {
 // as the second return value. Error should only be non-nil when the decoder expected
 // to parse a valid update and was unable to.
 // TODO: allow multiple updates in a single call, older schemas were sometimes pretty denormalized
-type KVDecoder = func(key, value []byte, delete bool) (ObjectUpdate, bool, error)
+type KVDecoder = func(KVPairUpdate) (ObjectUpdate, bool, error)
+
+type KVPairUpdate struct {
+	Key    []byte
+	Value  []byte
+	Delete bool
+}
 
 // ApplyUpdate is a function that applies an ObjectUpdate to the module's state for the given context.
 type ApplyUpdate = func(context.Context, ObjectUpdate) error

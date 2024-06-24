@@ -7,11 +7,9 @@ import (
 	"strconv"
 )
 
-func NewInt64Key[T ~int64]() NameableKeyCodec[T] { return int64Key[T]{} }
+func NewInt64Key[T ~int64]() KeyCodec[T] { return int64Key[T]{} }
 
-type int64Key[T ~int64] struct {
-	name string
-}
+type int64Key[T ~int64] struct{}
 
 func (i int64Key[T]) Encode(buffer []byte, key T) (int, error) {
 	binary.BigEndian.PutUint64(buffer, (uint64)(key))
@@ -66,22 +64,11 @@ func (i int64Key[T]) SizeNonTerminal(_ T) int {
 	return 8
 }
 
-func (i int64Key[T]) WithName(name string) NamedKeyCodec[T] {
-	i.name = name
-	return i
-}
-
-func (i int64Key[T]) Name() string {
-	return i.name
-}
-
-func NewInt32Key[T ~int32]() NameableKeyCodec[T] {
+func NewInt32Key[T ~int32]() KeyCodec[T] {
 	return int32Key[T]{}
 }
 
-type int32Key[T ~int32] struct {
-	name string
-}
+type int32Key[T ~int32] struct{}
 
 func (i int32Key[T]) Encode(buffer []byte, key T) (int, error) {
 	binary.BigEndian.PutUint32(buffer, (uint32)(key))
@@ -133,13 +120,4 @@ func (i int32Key[T]) DecodeNonTerminal(buffer []byte) (int, T, error) {
 
 func (i int32Key[T]) SizeNonTerminal(_ T) int {
 	return 4
-}
-
-func (i int32Key[T]) WithName(name string) NamedKeyCodec[T] {
-	i.name = name
-	return i
-}
-
-func (i int32Key[T]) Name() string {
-	return i.name
 }

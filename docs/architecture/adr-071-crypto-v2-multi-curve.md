@@ -525,7 +525,7 @@ The major impact will be on the client side, where the current `Keyring` interfa
 #### State Machine
 
 The impact on the state machine code will be minimal, the modules affected (at the time of writing this ADR)
-are the `x/accounts` module, specifically the `Authenticate` function and the `x/auth/ante` module. These function will need to be adapted to use a `CryptoProvider` service to make use of the `Verifier` instance.
+are the `x/accounts` module, specifically the `Authenticate` function and the `x/auth/ante` module. This function will need to be adapted to use a `CryptoProvider` service to make use of the `Verifier` instance.
 
 Worth mentioning that there's also the alternative of using `Verifier` instances in a standalone fashion (see note below).
 

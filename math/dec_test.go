@@ -168,83 +168,96 @@ func TestAdd(t *testing.T) {
 		exp    Dec
 		expErr error
 	}{
-		"zero add zero": {
-			// 0 + 0 = 0
+		"0 + 0 = 0": {
 			x:   NewDecFromInt64(0),
 			y:   NewDecFromInt64(0),
 			exp: NewDecFromInt64(0),
 		},
-		"zero add simple positive": {
-			// 0 + 123 = 123
+		"0 + 123 = 123": {
 			x:   NewDecFromInt64(0),
 			y:   NewDecFromInt64(123),
 			exp: NewDecFromInt64(123),
 		},
-		"zero and simple negative": {
-			// 0 + -123 = -123
+		"0 + -123 = -123": {
 			x:   NewDecFromInt64(0),
 			y:   NewDecFromInt64(-123),
 			exp: NewDecFromInt64(-123),
 		},
-		"simple positive add simple positive": {
-			// 123 + 123 = 246
+		"123 + 123 = 246": {
 			x:   NewDecFromInt64(123),
 			y:   NewDecFromInt64(123),
 			exp: NewDecFromInt64(246),
 		},
-		"simple negative add simple positive": {
-			// -123 + 123 = 0
+		"-123 + 123 = 0": {
 			x:   NewDecFromInt64(-123),
 			y:   NewDecFromInt64(123),
 			exp: NewDecFromInt64(0),
 		},
-		"simple negative add simple negative": {
-			// -123 + -123 = -246
+		"-123 + -123 = -246": {
 			x:   NewDecFromInt64(-123),
 			y:   NewDecFromInt64(-123),
 			exp: NewDecFromInt64(-246),
 		},
-		"valid decimal with decimal places add valid decimal with decimal places": {
-			// 1.234 + 1.234 = 2.468
+		"1.234 + 1.234 = 2.468": {
 			x:   NewDecWithPrec(1234, -3),
 			y:   NewDecWithPrec(1234, -3),
 			exp: NewDecWithPrec(2468, -3),
 		},
-		"valid decimal with decimal places and simple positive": {
-			// 1.234 + 123 = 124.234
+		"1.234 + 123 = 124.234": {
 			x:   NewDecWithPrec(1234, -3),
 			y:   NewDecFromInt64(123),
 			exp: NewDecWithPrec(124234, -3),
 		},
-		"valid decimal with decimal places and simple negative": {
-			// 1.234 + -123 = 1.111
+		"1.234 + -123 = -121.766": {
 			x:   NewDecWithPrec(1234, -3),
 			y:   NewDecFromInt64(-123),
-			exp: NewDecWithPrec(111, -3),
+			exp: must(NewDecFromString("-121.766")),
 		},
-
-		"valid decimal with decimal places add valid negative decimal with decimal places": {
-			// 1.234 + -1.234 = 0
+		"1.234 + -1.234 = 0": {
 			x:   NewDecWithPrec(1234, -3),
 			y:   NewDecWithPrec(-1234, -3),
 			exp: NewDecWithPrec(0, -3),
 		},
-		"valid negative decimal with decimal places add valid negative decimal with decimal places": {
-			// -1.234 + -1.234 = -2.468
+		"-1.234 + -1.234 = -2.468": {
 			x:   NewDecWithPrec(-1234, -3),
 			y:   NewDecWithPrec(-1234, -3),
 			exp: NewDecWithPrec(-2468, -3),
 		},
-		// "precision too high": {
-		// 	// 10^34 + 10^34 = 2*10^34
-		// 	x:           NewDecWithPrec(1, 36),
-		// 	y:           NewDecWithPrec(1, 36),
-		// 	constraints: []SetupConstraint{AssertMaxDecimals(34)},
-		// 	expErr:      ErrInvalidDec,
-		// },
-
-		// TO DO: more edge cases For example: 1^100000 + 9^100000 , 1^100000 + 1^-1
-
+		"1e100000 + 9e900000 -> Err": {
+			x:      NewDecWithPrec(1, 100_000),
+			y:      NewDecWithPrec(9, 900_000),
+			expErr: ErrInvalidDec,
+		},
+		"1e100000 + -9e900000 -> Err": {
+			x:      NewDecWithPrec(1, 100_000),
+			y:      NewDecWithPrec(9, 900_000),
+			expErr: ErrInvalidDec,
+		},
+		"1e100000 + 1e^-1 -> err": {
+			x:      NewDecWithPrec(1, 100_000),
+			y:      NewDecWithPrec(1, -1),
+			expErr: ErrInvalidDec,
+		},
+		"1e100000 + -1e^-1 -> err": {
+			x:      NewDecWithPrec(1, 100_000),
+			y:      NewDecWithPrec(-1, -1),
+			expErr: ErrInvalidDec,
+		},
+		"1e100000 + 1 -> 100..1": {
+			x:   NewDecWithPrec(1, 100_000),
+			y:   NewDecFromInt64(1),
+			exp: must(NewDecWithPrec(1, 100_000).Add(NewDecFromInt64(1))),
+		},
+		"1e100000 + 0 -> err": {
+			x:      NewDecWithPrec(1, 100_001),
+			y:      NewDecFromInt64(0),
+			expErr: ErrInvalidDec,
+		},
+		"-1e100000 + 0 -> err": {
+			x:      NewDecWithPrec(-1, 100_001),
+			y:      NewDecFromInt64(0),
+			expErr: ErrInvalidDec,
+		},
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {

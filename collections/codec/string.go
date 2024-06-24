@@ -6,14 +6,16 @@ import (
 	"fmt"
 )
 
-func NewStringKeyCodec[T ~string]() KeyCodec[T] { return stringKey[T]{} }
+func NewStringKeyCodec[T ~string]() NameableKeyCodec[T] { return stringKey[T]{} }
 
 const (
 	// StringDelimiter defines the delimiter of a string key when used in non-terminal encodings.
 	StringDelimiter uint8 = 0x0
 )
 
-type stringKey[T ~string] struct{}
+type stringKey[T ~string] struct {
+	name string
+}
 
 func (stringKey[T]) Encode(buffer []byte, key T) (int, error) {
 	return copy(buffer, key), nil
@@ -65,4 +67,13 @@ func (stringKey[T]) Stringify(key T) string {
 
 func (stringKey[T]) KeyType() string {
 	return "string"
+}
+
+func (s stringKey[T]) WithName(name string) NamedKeyCodec[T] {
+	s.name = name
+	return s
+}
+
+func (s stringKey[T]) Name() string {
+	return s.name
 }

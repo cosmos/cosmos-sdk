@@ -547,7 +547,6 @@ func TestMultiStore_Pruning(t *testing.T) {
 				_, err := ms.CacheMultiStoreWithVersion(v)
 				require.NoError(t, err, "expected no error when loading height: %d", v)
 			}
-
 		})
 	}
 }

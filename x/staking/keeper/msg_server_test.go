@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/golang/mock/gomock"
 
 	"cosmossdk.io/collections"
@@ -17,6 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,17 +49,21 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 	pubkeyInvalidLen, err := codectypes.NewAnyWithValue(ed25519pk)
 	require.NoError(err)
 
-	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
-		Validator: &cmtproto.ValidatorParams{
-			PubKeyTypes: []string{sdk.PubKeyEd25519Type},
-		},
-	})
+	invalidPk, _ := secp256r1.GenPrivKey()
+	invalidPubkey, err := codectypes.NewAnyWithValue(invalidPk.PubKey())
+	require.NoError(err)
+
+	badKey := secp256k1.GenPrivKey()
+	badPubKey, err := codectypes.NewAnyWithValue(&secp256k1.PubKey{Key: badKey.PubKey().Bytes()[:len(badKey.PubKey().Bytes())-1]})
+	require.NoError(err)
 
 	testCases := []struct {
-		name      string
-		input     *types.MsgCreateValidator
-		expErr    bool
-		expErrMsg string
+		name        string
+		input       *types.MsgCreateValidator
+		expErr      bool
+		expErrMsg   string
+		expPanic    bool
+		expPanicMsg string
 	}{
 		{
 			name: "empty description",
@@ -239,6 +244,52 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 			expErrMsg: "validator's self delegation must be greater than their minimum self delegation",
 		},
 		{
+			name: "invalid pubkey type",
+			input: &types.MsgCreateValidator{
+				Description: types.Description{
+					Moniker:         "NewValidator",
+					Identity:        "xyz",
+					Website:         "xyz.com",
+					SecurityContact: "xyz@gmail.com",
+					Details:         "details",
+				},
+				Commission: types.CommissionRates{
+					Rate:          math.LegacyNewDecWithPrec(5, 1),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
+					MaxChangeRate: math.LegacyNewDec(0),
+				},
+				MinSelfDelegation: math.NewInt(1),
+				DelegatorAddress:  s.addressToString(Addr),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
+				Pubkey:            invalidPubkey,
+				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
+			},
+			expErr:    true,
+			expErrMsg: "got: secp256r1, expected: [ed25519 secp256k1]: validator pubkey type is not supported",
+		},
+		{
+			name: "invalid pubkey length",
+			input: &types.MsgCreateValidator{
+				Description: types.Description{
+					Moniker:  "NewValidator",
+					Identity: "xyz",
+					Website:  "xyz.com",
+				},
+				Commission: types.CommissionRates{
+					Rate:          math.LegacyNewDecWithPrec(5, 1),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
+					MaxChangeRate: math.LegacyNewDec(0),
+				},
+				MinSelfDelegation: math.NewInt(1),
+				DelegatorAddress:  s.addressToString(Addr),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
+				Pubkey:            badPubKey,
+				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
+			},
+			expPanic:    true,
+			expPanicMsg: "length of pubkey is incorrect",
+		},
+		{
 			name: "valid msg",
 			input: &types.MsgCreateValidator{
 				Description: types.Description{
@@ -265,6 +316,13 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 	for _, tc := range testCases {
 		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
+			if tc.expPanic {
+				require.PanicsWithValue(tc.expPanicMsg, func() {
+					_, _ = msgServer.CreateValidator(ctx, tc.input)
+				})
+				return
+			}
+
 			_, err := msgServer.CreateValidator(ctx, tc.input)
 			if tc.expErr {
 				require.Error(err)
@@ -1205,9 +1263,18 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 	existingPubkey, ok := validators[1].ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
 	s.Require().True(ok)
 
+	validator0PubKey, ok := validators[0].ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
+	s.Require().True(ok)
+
 	bondedPool := authtypes.NewEmptyModuleAccount(types.BondedPoolName)
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.BondedPoolName).Return(bondedPool).AnyTimes()
 	bankKeeper.EXPECT().GetBalance(gomock.Any(), bondedPool.GetAddress(), sdk.DefaultBondDenom).Return(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)).AnyTimes()
+
+	invalidPK, _ := secp256r1.GenPrivKey()
+	invalidPubkey := invalidPK.PubKey()
+
+	badKey := secp256k1.GenPrivKey()
+	badPubKey := &secp256k1.PubKey{Key: badKey.PubKey().Bytes()[:len(badKey.PubKey().Bytes())-1]}
 
 	testCases := []struct {
 		name      string
@@ -1216,6 +1283,8 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 		newPubKey cryptotypes.PubKey
 		isErr     bool
 		errMsg    string
+		isPanic   bool
+		panicMsg  string
 	}{
 		{
 			name: "1st iteration no error",
@@ -1232,10 +1301,26 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 			validator: validators[0].GetOperator(),
 		},
 		{
+			name:      "invalid pubkey type",
+			malleate:  func() sdk.Context { return ctx },
+			isErr:     true,
+			errMsg:    "secp256r1, expected: [ed25519 secp256k1]: validator pubkey type is not supported",
+			newPubKey: invalidPubkey,
+			validator: validators[0].GetOperator(),
+		},
+		{
+			name:      "invalid pubkey length",
+			malleate:  func() sdk.Context { return ctx },
+			isPanic:   true,
+			panicMsg:  "length of pubkey is incorrect",
+			newPubKey: badPubKey,
+			validator: validators[0].GetOperator(),
+		},
+		{
 			name:      "pubkey already associated with another validator",
 			malleate:  func() sdk.Context { return ctx },
 			isErr:     true,
-			errMsg:    "consensus pubkey is already used for a validator",
+			errMsg:    "validator already exist for this pubkey; must use new validator pubkey",
 			newPubKey: existingPubkey,
 			validator: validators[0].GetOperator(),
 		},
@@ -1350,6 +1435,20 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 			errMsg:    "exceeding maximum consensus pubkey rotations within unbonding period",
 			validator: validators[5].GetOperator(),
 		},
+		{
+			name: "try using the old pubkey of another validator that rotated",
+			malleate: func() sdk.Context {
+				val, err := stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[0].GetOperator())
+				s.Require().NoError(err)
+
+				bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(val), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				return ctx
+			},
+			isErr:     true,
+			errMsg:    "validator already exist for this pubkey; must use new validator pubkey",
+			newPubKey: validator0PubKey,
+			validator: validators[2].GetOperator(),
+		},
 	}
 
 	for _, tc := range testCases {
@@ -1359,7 +1458,15 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 			req, err := types.NewMsgRotateConsPubKey(tc.validator, tc.newPubKey)
 			s.Require().NoError(err)
 
-			_, err = msgServer.RotateConsPubKey(newCtx, req)
+			if tc.isPanic {
+				s.Require().PanicsWithValue(tc.panicMsg, func() {
+					_, err = msgServer.RotateConsPubKey(ctx, req)
+				}, tc.isPanic)
+				return
+			} else {
+				_, err = msgServer.RotateConsPubKey(newCtx, req)
+			}
+
 			if tc.isErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), tc.errMsg)
@@ -1403,5 +1510,5 @@ func (s *KeeperTestSuite) TestConsKeyRotationInSameBlock() {
 	s.Require().NoError(err)
 
 	_, err = msgServer.RotateConsPubKey(ctx, req)
-	s.Require().ErrorContains(err, "consensus pubkey is already used for a validator")
+	s.Require().ErrorContains(err, "public key was already used")
 }

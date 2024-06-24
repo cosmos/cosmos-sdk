@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
-	pruningtypes "cosmossdk.io/store/pruning/types"
 	storev2 "cosmossdk.io/store/v2"
 )
 
@@ -47,7 +46,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 			}
 
 			cmd.Printf("get pruning options from command flags, strategy: %v, keep-recent: %v\n",
-				pruningOptions.Strategy,
+				args[0],
 				pruningOptions.KeepRecent,
 			)
 
@@ -91,7 +90,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 	return cmd
 }
 
-func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (pruningtypes.PruningOptions, error) {
+func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (*storev2.PruneOptions, error) {
 	rootViper := serverv2.GetViperFromCmd(cmd)
 
 	var pruning string
@@ -108,10 +107,10 @@ func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (pruningtypes.P
 	strategy := strings.ToLower(pruning)
 
 	switch strategy {
-	case pruningtypes.PruningOptionDefault, pruningtypes.PruningOptionNothing, pruningtypes.PruningOptionEverything:
-		return pruningtypes.NewPruningOptionsFromString(strategy), nil
+	case storev2.PruningOptionDefault, storev2.PruningOptionNothing, storev2.PruningOptionEverything:
+		return storev2.NewPruneOptions(strategy), nil
 
-	case pruningtypes.PruningOptionCustom:
+	case storev2.PruningOptionCustom:
 		var (
 			pruningKeepRecent uint64
 			pruningInterval   uint64
@@ -121,7 +120,7 @@ func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (pruningtypes.P
 		if cmd.Flags().Changed(FlagPruningKeepRecent) {
 			pruningKeepRecent, err = cmd.Flags().GetUint64(FlagPruningKeepRecent)
 			if err != nil {
-				return pruningtypes.PruningOptions{}, err
+				return &storev2.PruneOptions{}, err
 			}
 		} else {
 			pruningKeepRecent = rootViper.GetUint64(FlagPruningKeepRecent)
@@ -130,13 +129,13 @@ func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (pruningtypes.P
 		if cmd.Flags().Changed(FlagPruningInterval) {
 			pruningInterval, err = cmd.Flags().GetUint64(FlagPruningInterval)
 			if err != nil {
-				return pruningtypes.PruningOptions{}, err
+				return &storev2.PruneOptions{}, err
 			}
 		} else {
 			pruningInterval = rootViper.GetUint64(FlagPruningInterval)
 		}
 
-		opts := pruningtypes.NewCustomPruningOptions(
+		opts := storev2.NewCustomPruneOptions(
 			pruningKeepRecent,
 			pruningInterval,
 		)
@@ -148,6 +147,6 @@ func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (pruningtypes.P
 		return opts, nil
 
 	default:
-		return pruningtypes.PruningOptions{}, fmt.Errorf("unknown pruning strategy %s", strategy)
+		return &storev2.PruneOptions{}, fmt.Errorf("unknown pruning strategy %s", strategy)
 	}
 }

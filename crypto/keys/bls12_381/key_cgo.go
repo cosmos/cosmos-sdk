@@ -68,7 +68,7 @@ func (privKey PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
 
 // Type returns the type.
 func (PrivKey) Type() string {
-	return keyType
+	return KeyType
 }
 
 // Sign signs the given byte array. If msg is larger than
@@ -167,7 +167,7 @@ func (pubKey PubKey) Bytes() []byte {
 
 // Type returns the key's type.
 func (PubKey) Type() string {
-	return keyType
+	return KeyType
 }
 
 // Equals returns true if the other's type is the same and their bytes are deeply equal.

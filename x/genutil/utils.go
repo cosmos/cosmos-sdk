@@ -48,13 +48,17 @@ func ExportGenesisFileWithTime(
 }
 
 // InitializeNodeValidatorFiles creates private validator and p2p configuration files.
-func InitializeNodeValidatorFiles(config *cfg.Config, keyType string) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
+func InitializeNodeValidatorFiles(config *cfg.Config, keyType string) (
+	nodeID string, valPubKey cryptotypes.PubKey, err error,
+) {
 	return InitializeNodeValidatorFilesFromMnemonic(config, "", keyType)
 }
 
 // InitializeNodeValidatorFilesFromMnemonic creates private validator and p2p configuration files using the given mnemonic.
 // If no valid mnemonic is given, a random one will be used instead.
-func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic, keyType string) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
+func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic, keyType string) (
+	nodeID string, valPubKey cryptotypes.PubKey, err error,
+) {
 	if len(mnemonic) > 0 && !bip39.IsMnemonicValid(mnemonic) {
 		return "", nil, fmt.Errorf("invalid mnemonic")
 	}
@@ -83,14 +87,15 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic, keyT
 	if len(mnemonic) == 0 {
 		switch keyType {
 		case "ed25519":
-			privKey = tmed25519.GenPrivKey()
+			filePV = loadOrGenFilePV(tmed25519.GenPrivKey(), pvKeyFile, pvStateFile)
 		case "bls12_381":
 			privKey, err = cmtbls12381.GenPrivKey()
 			if err != nil {
 				return "", nil, err
 			}
+			filePV = loadOrGenFilePV(privKey, pvKeyFile, pvStateFile)
 		default:
-			privKey = tmed25519.GenPrivKey()
+			filePV = loadOrGenFilePV(tmed25519.GenPrivKey(), pvKeyFile, pvStateFile)
 		}
 	} else {
 		switch keyType {
@@ -102,10 +107,9 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic, keyT
 		default:
 			privKey = tmed25519.GenPrivKeyFromSecret([]byte(mnemonic))
 		}
+		filePV = privval.NewFilePV(privKey, pvKeyFile, pvStateFile)
+		filePV.Save()
 	}
-
-	filePV = privval.NewFilePV(privKey, pvKeyFile, pvStateFile)
-	filePV.Save()
 
 	tmValPubKey, err := filePV.GetPubKey()
 	if err != nil {

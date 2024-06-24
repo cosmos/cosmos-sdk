@@ -248,9 +248,14 @@ func TestAdd(t *testing.T) {
 			y:   NewDecFromInt64(1),
 			exp: must(NewDecWithPrec(1, 100_000).Add(NewDecFromInt64(1))),
 		},
-		"upper exp limit exceeded": {
+		"1e100000 + 0 -> err": {
 			x:      NewDecWithPrec(1, 100_001),
-			y:      NewDecWithPrec(1, 100_001),
+			y:      NewDecFromInt64(0),
+			expErr: ErrInvalidDec,
+		},
+		"-1e100000 + 0 -> err": {
+			x:      NewDecWithPrec(-1, 100_001),
+			y:      NewDecFromInt64(0),
 			expErr: ErrInvalidDec,
 		},
 	}

@@ -1,6 +1,6 @@
-# Listener
+# App Data
 
-The `listener` package defines the basic types for streaming blockchain event and state data to external listeners, with a specific focus on supporting logical decoding and indexing of state.
+The `appdata` package defines the basic types for streaming blockchain event and state data to external listeners, with a specific focus on supporting logical decoding and indexing of state.
 
 A blockchain data source should accept a `Listener` instance and invoke the provided callbacks in the correct order. A downstream listener should provide a `Listener` instance and perform  operations based on the data passed to its callbacks.
 

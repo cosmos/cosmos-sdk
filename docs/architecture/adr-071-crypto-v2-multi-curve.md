@@ -598,11 +598,11 @@ The implementation of this ADR in CometBFT will require a medium-level refactor 
 
 * Add a new `PrivValidator` implementation that uses the `CryptoProvider` interface underneath.
 
-* Adding [Keyring](https://github.com/cosmos/cosmos-sdk/blob/main/crypto/keyring/keyring.go) and [Record](https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/crypto/keyring/v1/record.proto) for storing and loading providers.
+* **[Optional]** Adding [Keyring](https://github.com/cosmos/cosmos-sdk/blob/main/crypto/keyring/keyring.go) and [Record](https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/crypto/keyring/v1/record.proto) for storing and loading providers.
 
 * New directories reorganization.
 
-* Use **Keyring** to load and instantiate validators when booting up a node.
+* **[Optional]** Use `Keyring` to load and instantiate validators when booting up a node.
 
 
 #### Create a single implementation for `PrivValidator` 

@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pelletier/go-toml/v2"
+	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
@@ -21,7 +23,7 @@ type ServerComponent[T transaction.Tx] interface {
 
 	Start(context.Context) error
 	Stop(context.Context) error
-	Init(AppI[T], *viper.Viper, log.Logger) (ServerComponent[T], error)
+	Init(AppI[T], *viper.Viper, log.Logger) error
 }
 
 // HasCLICommands is a server module that has CLI commands.
@@ -119,12 +121,26 @@ func (s *Server) Stop(ctx context.Context) error {
 
 // CLICommands returns all CLI commands of all components.
 func (s *Server) CLICommands() CLIConfig {
+	compart := func(name string, cmds ...*cobra.Command) *cobra.Command {
+		if len(cmds) == 1 && strings.HasPrefix(cmds[0].Use, name) {
+			return cmds[0]
+		}
+
+		rootCmd := &cobra.Command{
+			Use:   name,
+			Short: fmt.Sprintf("Commands from the %s server component", name),
+		}
+		rootCmd.AddCommand(cmds...)
+
+		return rootCmd
+	}
+
 	commands := CLIConfig{}
 	for _, mod := range s.components {
 		if climod, ok := mod.(HasCLICommands); ok {
-			commands.Commands = append(commands.Commands, climod.CLICommands().Commands...)
-			commands.Queries = append(commands.Queries, climod.CLICommands().Queries...)
-			commands.Txs = append(commands.Txs, climod.CLICommands().Txs...)
+			commands.Commands = append(commands.Commands, compart(mod.Name(), climod.CLICommands().Commands...))
+			commands.Txs = append(commands.Txs, compart(mod.Name(), climod.CLICommands().Txs...))
+			commands.Queries = append(commands.Queries, compart(mod.Name(), climod.CLICommands().Queries...))
 		}
 	}
 
@@ -145,19 +161,19 @@ func (s *Server) Configs() map[string]any {
 }
 
 // Configs returns all configs of all server components.
-func (s *Server) Init(appI AppI[transaction.Tx], v *viper.Viper, logger log.Logger) (ServerComponent[transaction.Tx], error) {
+func (s *Server) Init(appI AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
 	var components []ServerComponent[transaction.Tx]
 	for _, mod := range s.components {
 		mod := mod
-		module, err := mod.Init(appI, v, logger)
-		if err != nil {
-			return nil, err
+		if err := mod.Init(appI, v, logger); err != nil {
+			return err
 		}
-		components = append(components, module)
-	}
-	s.components = components
 
-	return s, nil
+		components = append(components, mod)
+	}
+
+	s.components = components
+	return nil
 }
 
 // WriteConfig writes the config to the given path.

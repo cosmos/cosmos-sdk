@@ -17,6 +17,9 @@ type SimulatorOptions struct {
 	Listener           appdata.Listener
 	EventAlignedWrites bool
 	StateSimOptions    statesim.Options
+	StartBlockDataGen  *rapid.Generator[appdata.StartBlockData]
+	TxDataGen          *rapid.Generator[appdata.TxData]
+	EventDataGen       *rapid.Generator[appdata.EventData]
 }
 
 type Simulator struct {

@@ -91,10 +91,7 @@ func baseFieldValue(field schema.Field) *rapid.Generator[any] {
 	case schema.Bech32AddressKind:
 		return rapid.SliceOfN(rapid.Byte(), 20, 64).AsAny()
 	case schema.EnumKind:
-		gen := rapid.IntRange(0, len(field.EnumDefinition.Values)-1)
-		return rapid.Map(gen, func(i int) any {
-			return field.EnumDefinition.Values[i]
-		})
+		return rapid.SampledFrom(field.EnumDefinition.Values).AsAny()
 	default:
 		panic(fmt.Errorf("unexpected kind: %v", field.Kind))
 	}

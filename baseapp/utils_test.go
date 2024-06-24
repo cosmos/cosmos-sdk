@@ -401,7 +401,7 @@ func (n NestedMessgesServerImpl) Check(_ context.Context, message *baseapptestut
 	cdc := codectestutil.CodecOptions{}.NewCodec()
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 
-	signer, _, err := cdc.GetMsgV1Signers(message)
+	signer, _, err := cdc.GetMsgSigners(message)
 	if err != nil {
 		return nil, err
 	}
@@ -415,7 +415,7 @@ func (n NestedMessgesServerImpl) Check(_ context.Context, message *baseapptestut
 	}
 
 	for _, msg := range msgs {
-		s, _, err := cdc.GetMsgV1Signers(msg)
+		s, _, err := cdc.GetMsgSigners(msg)
 		if err != nil {
 			return nil, err
 		}

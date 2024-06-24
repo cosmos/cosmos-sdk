@@ -17,8 +17,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/maps"
 	protov2 "google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/log"
@@ -1101,12 +1101,16 @@ func (app *BaseApp) simulateNestedMessages(ctx sdk.Context, msg sdk.Msg) error {
 		return err
 	}
 
-	msgsV2, err := app.msgsV1ToMsgsV2(msgs)
-	if err != nil {
-		return err
+	protoMessages := make([]protoreflect.Message, len(msgs))
+	for i, msg := range msgs {
+		_, protoMsg, err := app.cdc.GetMsgSigners(msg)
+		if err != nil {
+			return err
+		}
+		protoMessages[i] = protoMsg
 	}
 
-	_, err = app.runMsgs(ctx, msgs, msgsV2, execModeSimulate)
+	_, err = app.runMsgs(ctx, msgs, protoMessages, execModeSimulate)
 	return err
 }
 

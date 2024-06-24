@@ -16,7 +16,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"

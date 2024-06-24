@@ -50,11 +50,6 @@ require github.com/cometbft/cometbft/api v1.0.0-rc.1
 require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 
 require (
-	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
-	github.com/minio/sha256-simd v1.0.1 // indirect
-)
-
-require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.1-20240312114316-c0d3497e35d6.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.1-20240130113600-88ef6483f90f.1 // indirect
 	cloud.google.com/go v0.112.2 // indirect
@@ -152,7 +147,6 @@ require (
 	github.com/huandu/skiplist v1.2.0 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/itsdevbear/comet-bls12-381 v0.0.0-20240413212931-2ae2f204cde7 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.8 // indirect

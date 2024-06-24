@@ -32,9 +32,6 @@ require (
 require (
 	github.com/cockroachdb/errors v1.11.1 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
-	github.com/itsdevbear/comet-bls12-381 v0.0.0-20240413212931-2ae2f204cde7 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
-	github.com/minio/sha256-simd v1.0.1 // indirect
 )
 
 require (

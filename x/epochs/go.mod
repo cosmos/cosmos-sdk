@@ -168,9 +168,6 @@ require (
 	cosmossdk.io/log v1.3.1 // indirect
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
-	github.com/itsdevbear/comet-bls12-381 v0.0.0-20240413212931-2ae2f204cde7 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
-	github.com/minio/sha256-simd v1.0.1 // indirect
 )
 
 replace github.com/cosmos/cosmos-sdk => ../../.

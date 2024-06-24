@@ -171,12 +171,6 @@ require (
 	pgregory.net/rapid v1.1.0 // indirect
 )
 
-require (
-	github.com/itsdevbear/comet-bls12-381 v0.0.0-20240413212931-2ae2f204cde7 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
-	github.com/minio/sha256-simd v1.0.1 // indirect
-)
-
 replace github.com/cosmos/cosmos-sdk => ./../../
 
 // TODO remove post spinning out all modules

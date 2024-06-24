@@ -36,7 +36,9 @@ func NewPrivateKeyFromBytes(bz []byte) (PrivKey, error) {
 	if err != nil {
 		return PrivKey{}, err
 	}
-	return secretKey.Marshal(), nil
+	return PrivKey{
+		Key: secretKey.Marshal(),
+	}, nil
 }
 
 // GenPrivKey generates a new key.

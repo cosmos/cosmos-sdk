@@ -869,7 +869,7 @@ func (m *QueryConfig) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryConfig proto.InternalMessageInfo
 
-// QuerySequenceResponse returns the sequence of the account.
+// QueryConfigResponse returns the config of the account.
 type QueryConfigResponse struct {
 	Members []*Member `protobuf:"bytes,1,rep,name=members,proto3" json:"members,omitempty"`
 	Config  *Config   `protobuf:"bytes,2,opt,name=Config,proto3" json:"Config,omitempty"`

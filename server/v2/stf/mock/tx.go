@@ -23,6 +23,9 @@ func (t Tx) Hash() [32]byte {
 }
 
 func (t Tx) GetMessages() ([]transaction.Msg, error) {
+	if t.Msg == nil {
+		return nil, errors.New("messages not available or are nil")
+	}
 	return []transaction.Msg{t.Msg}, nil
 }
 

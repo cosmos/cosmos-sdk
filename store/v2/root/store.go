@@ -16,6 +16,7 @@ import (
 	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/migration"
 	"cosmossdk.io/store/v2/proof"
+	"cosmossdk.io/store/v2/pruning"
 )
 
 var _ store.RootStore = (*Store)(nil)
@@ -43,6 +44,9 @@ type Store struct {
 	// telemetry reflects a telemetry agent responsible for emitting metrics (if any)
 	telemetry metrics.StoreMetrics
 
+	// pruningManager reflects the pruning manager used to prune state of the SS and SC backends
+	pruningManager *pruning.Manager
+
 	// Migration related fields
 	// migrationManager reflects the migration manager used to migrate state from v1 to v2
 	migrationManager *migration.Manager
@@ -62,6 +66,7 @@ func New(
 	logger log.Logger,
 	ss store.VersionedDatabase,
 	sc store.Committer,
+	pm *pruning.Manager,
 	mm *migration.Manager,
 	m metrics.StoreMetrics,
 ) (store.RootStore, error) {
@@ -70,6 +75,7 @@ func New(
 		initialVersion:   1,
 		stateStorage:     ss,
 		stateCommitment:  sc,
+		pruningManager:   pm,
 		migrationManager: mm,
 		telemetry:        m,
 		isMigrating:      mm != nil,
@@ -272,6 +278,13 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 		s.logger.Debug("commit header and version mismatch", "header_height", s.commitHeader.Height, "version", version)
 	}
 
+	// signal to the pruning manager that a new version is about to be committed
+	// this may be required if the SS and SC backends implementation have the
+	// background pruning process which must be paused during the commit
+	if err := s.pruningManager.SignalCommit(true, version); err != nil {
+		s.logger.Error("failed to signal commit to pruning manager", "err", err)
+	}
+
 	eg := new(errgroup.Group)
 
 	// if we're migrating, we don't want to commit to the state storage to avoid
@@ -300,29 +313,16 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 		return nil, err
 	}
 
+	// signal to the pruning manager that the commit is done
+	if err := s.pruningManager.SignalCommit(false, version); err != nil {
+		s.logger.Error("failed to signal commit done to pruning manager", "err", err)
+	}
+
 	if s.commitHeader != nil {
 		s.lastCommitInfo.Timestamp = s.commitHeader.Time
 	}
 
 	return s.lastCommitInfo.Hash(), nil
-}
-
-// Prune prunes the root store to the provided version.
-func (s *Store) Prune(version uint64) error {
-	if s.telemetry != nil {
-		now := time.Now()
-		defer s.telemetry.MeasureSince(now, "root_store", "prune")
-	}
-
-	if err := s.stateStorage.Prune(version); err != nil {
-		return fmt.Errorf("failed to prune SS store: %w", err)
-	}
-
-	if err := s.stateCommitment.Prune(version); err != nil {
-		return fmt.Errorf("failed to prune SC store: %w", err)
-	}
-
-	return nil
 }
 
 // startMigration starts a migration process to migrate the RootStore/v1 to the
@@ -384,12 +384,17 @@ func (s *Store) writeSC(cs *corestore.Changeset) error {
 		}
 	}
 
-	if err := s.stateCommitment.WriteBatch(cs); err != nil {
+	if err := s.stateCommitment.WriteChangeset(cs); err != nil {
 		return fmt.Errorf("failed to write batch to SC store: %w", err)
 	}
 
+	isEmpty, err := s.stateCommitment.IsEmpty()
+	if err != nil {
+		return fmt.Errorf("failed to check if SC store is empty: %w", err)
+	}
+
 	var previousHeight, version uint64
-	if s.lastCommitInfo.GetVersion() == 0 && s.initialVersion > 1 {
+	if isEmpty {
 		// This case means that no commit has been made in the store, we
 		// start from initialVersion.
 		version = s.initialVersion

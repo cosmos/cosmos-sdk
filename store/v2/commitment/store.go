@@ -28,6 +28,7 @@ const (
 var (
 	_ store.Committer             = (*CommitStore)(nil)
 	_ snapshots.CommitSnapshotter = (*CommitStore)(nil)
+	_ store.PausablePruner        = (*CommitStore)(nil)
 )
 
 // CommitStore is a wrapper around multiple Tree objects mapped by a unique store
@@ -39,26 +40,18 @@ type CommitStore struct {
 	logger     log.Logger
 	db         corestore.KVStoreWithBatch
 	multiTrees map[string]Tree
-
-	// pruneOptions is the pruning configuration.
-	pruneOptions *store.PruneOptions // TODO are there no default prune options?
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, pruneOpts *store.PruneOptions, logger log.Logger) (*CommitStore, error) {
-	if pruneOpts == nil {
-		pruneOpts = store.DefaultPruneOptions()
-	}
-
+func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, logger log.Logger) (*CommitStore, error) {
 	return &CommitStore{
-		logger:       logger,
-		db:           db,
-		multiTrees:   trees,
-		pruneOptions: pruneOpts,
+		logger:     logger,
+		db:         db,
+		multiTrees: trees,
 	}, nil
 }
 
-func (c *CommitStore) WriteBatch(cs *corestore.Changeset) error {
+func (c *CommitStore) WriteChangeset(cs *corestore.Changeset) error {
 	for _, pairs := range cs.Changes {
 
 		key := conv.UnsafeBytesToStr(pairs.Actor)
@@ -120,6 +113,19 @@ func (c *CommitStore) GetLatestVersion() (uint64, error) {
 	return version, nil
 }
 
+// IsEmpty returns true if the CommitStore is empty.
+func (c *CommitStore) IsEmpty() (bool, error) {
+	value, err := c.db.Get([]byte(latestVersionKey))
+	if err != nil {
+		return false, err
+	}
+	if value == nil {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
 func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 	// Rollback the metadata to the target version.
 	latestVersion, err := c.GetLatestVersion()
@@ -128,6 +134,7 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 	}
 	if targetVersion < latestVersion {
 		batch := c.db.NewBatch()
+		defer batch.Close()
 		for version := latestVersion; version > targetVersion; version-- {
 			cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
 			if err := batch.Delete(cInfoKey); err != nil {
@@ -174,16 +181,20 @@ func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
 }
 
 func (c *CommitStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo) error {
+	// do nothing if commit info is nil, as will be the case for an empty, initializing store
+	if cInfo == nil {
+		return nil
+	}
+
 	batch := c.db.NewBatch()
-	if cInfo != nil {
-		cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
-		value, err := cInfo.Marshal()
-		if err != nil {
-			return err
-		}
-		if err := batch.Set(cInfoKey, value); err != nil {
-			return err
-		}
+	defer batch.Close()
+	cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
+	value, err := cInfo.Marshal()
+	if err != nil {
+		return err
+	}
+	if err := batch.Set(cInfoKey, value); err != nil {
+		return err
 	}
 
 	var buf bytes.Buffer
@@ -208,8 +219,11 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 		// If a commit event execution is interrupted, a new iavl store's version
 		// will be larger than the RMS's metadata, when the block is replayed, we
 		// should avoid committing that iavl store again.
-		var commitID proof.CommitID
-		if tree.GetLatestVersion() >= version {
+		var (
+			commitID      proof.CommitID
+			latestVersion = tree.GetLatestVersion()
+		)
+		if latestVersion != 0 && latestVersion >= version {
 			commitID.Version = version
 			commitID.Hash = tree.Hash()
 		} else {
@@ -235,13 +249,6 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 
 	if err := c.flushCommitInfo(version, cInfo); err != nil {
 		return nil, err
-	}
-
-	// Prune the old versions.
-	if prune, pruneVersion := c.pruneOptions.ShouldPrune(version); prune {
-		if err := c.Prune(pruneVersion); err != nil {
-			c.logger.Info("failed to prune SC", "prune_version", pruneVersion, "err", err)
-		}
 	}
 
 	return cInfo, nil
@@ -297,9 +304,11 @@ func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, 
 	return bz, nil
 }
 
+// Prune implements store.Pruner.
 func (c *CommitStore) Prune(version uint64) (ferr error) {
 	// prune the metadata
 	batch := c.db.NewBatch()
+	defer batch.Close()
 	for v := version; v > 0; v-- {
 		cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, v))
 		if exist, _ := c.db.Has(cInfoKey); !exist {
@@ -320,6 +329,15 @@ func (c *CommitStore) Prune(version uint64) (ferr error) {
 	}
 
 	return ferr
+}
+
+// PausePruning implements store.PausablePruner.
+func (c *CommitStore) PausePruning(pause bool) {
+	for _, tree := range c.multiTrees {
+		if pruner, ok := tree.(store.PausablePruner); ok {
+			pruner.PausePruning(pause)
+		}
+	}
 }
 
 // Snapshot implements snapshotstypes.CommitSnapshotter.
@@ -411,7 +429,9 @@ loop:
 				if err := importer.Commit(); err != nil {
 					return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to commit importer: %w", err)
 				}
-				importer.Close()
+				if err := importer.Close(); err != nil {
+					return snapshotstypes.SnapshotItem{}, fmt.Errorf("failed to close importer: %w", err)
+				}
 			}
 
 			storeKey = []byte(item.Store.Name)

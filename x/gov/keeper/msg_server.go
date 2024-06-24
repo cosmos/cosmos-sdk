@@ -7,6 +7,7 @@ import (
 
 	"google.golang.org/protobuf/runtime/protoiface"
 
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -209,7 +210,10 @@ func (k msgServer) ExecLegacyContent(ctx context.Context, msg *v1.MsgExecLegacyC
 	}
 
 	handler := k.Keeper.legacyRouter.GetRoute(content.ProposalRoute())
-	if err := handler(ctx, content); err != nil {
+
+	// NOTE: the support of legacy gov proposal in server/v2 is different than for baseapp.
+	// Legacy proposal in server/v2 can only access services provided by the gov module environment.
+	if err := handler(context.WithValue(ctx, corecontext.EnvironmentContextKey, k.Environment), content); err != nil {
 		return nil, errors.Wrapf(govtypes.ErrInvalidProposalContent, "failed to run legacy handler %s, %+v", content.ProposalRoute(), err)
 	}
 

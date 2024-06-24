@@ -14,6 +14,7 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	"cosmossdk.io/core/app"
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
@@ -100,6 +101,7 @@ func init() {
 			ProvideModuleManager,
 			ProvideGenesisTxHandler,
 			ProvideCometService,
+			ProvideAppVersionModifier,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -124,10 +126,6 @@ func ProvideAppBuilder(
 		// want to panic here instead of logging a warning.
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 	}
-
-	// TODO register as Invoker from simapp v2; remove if not needed
-	// std.RegisterInterfaces(interfaceRegistrar)
-	// std.RegisterLegacyAminoCodec(amino)
 
 	msgRouterBuilder := stf.NewMsgRouterBuilder()
 	app := &App{
@@ -164,11 +162,10 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistrar)
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 
-	// TODO: this is a bit of a hack, but it's the only way to get the store keys into the app
-	// registerStoreKey could instead set this on StoreOptions directly
 	if inputs.StoreOptions != nil {
 		inputs.AppBuilder.storeOptions = inputs.StoreOptions
 		inputs.AppBuilder.storeOptions.StoreKeys = inputs.AppBuilder.app.storeKeys
+		inputs.AppBuilder.storeOptions.StoreKeys = append(inputs.AppBuilder.storeOptions.StoreKeys, "stf")
 	}
 }
 
@@ -215,8 +212,8 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 		EventService:       stf.NewEventService(),
 		GasService:         stf.NewGasMeterService(),
 		HeaderService:      stf.HeaderService{},
-		QueryRouterService: stf.NewQueryRouterService(appBuilder.app.queryRouterBuilder),
-		MsgRouterService:   stf.NewMsgRouterService(appBuilder.app.msgRouterBuilder),
+		QueryRouterService: stf.NewQueryRouterService(),
+		MsgRouterService:   stf.NewMsgRouterService([]byte(key.Name())),
 		TransactionService: services.NewContextAwareTransactionService(),
 		KVStoreService:     kvService,
 		MemStoreService:    memKvService,
@@ -245,4 +242,10 @@ func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
 
 func ProvideCometService() comet.Service {
 	return &services.ContextAwareCometInfoService{}
+}
+
+// ProvideAppVersionModifier returns nil, `app.VersionModifier` is a feature of BaseApp and neither used nor required for runtim/v2.
+// nil is acceptable, see: https://github.com/cosmos/cosmos-sdk/blob/0a6ee406a02477ae8ccbfcbe1b51fc3930087f4c/x/upgrade/keeper/keeper.go#L438
+func ProvideAppVersionModifier(app *AppBuilder) app.VersionModifier {
+	return nil
 }

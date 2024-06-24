@@ -45,7 +45,7 @@ Welcome to the Cosmos SDK's team roadmap.
         *  Migrating 3 modules to use collections would help in show users how to migrate users
 * [ ] [Release ORM v1](https://github.com/cosmos/cosmos-sdk/issues/11088)
 * [x] [Sign mode textual](https://github.com/cosmos/cosmos-sdk/issues/11970) 
-    * Sign mode textual has been under construction for 2 quarters now, this quarter the goal is to move towards v1 and potentially line up a audit before final release.
+    * Sign mode textual has been under construction for 2 quarters now, this quarter the goal is to move towards v1 and potentially line up an audit before final release.
 * [x] Core API
     * [Merge ADR for Core API](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-063-core-module-api.md) 
     * Migrate three modules to use core api
@@ -66,7 +66,7 @@ Welcome to the Cosmos SDK's team roadmap.
 ### Testing
 
 * [x] [integration testing framework](https://github.com/cosmos/cosmos-sdk/issues/14145) 
-    * design and merge a integration testing framework. 
+    * design and merge an integration testing framework. 
     * The goals of the framework would that a module only needs to depend on modules that it depends on outside of testing, not all modules in the sdk like today.
 
 
@@ -200,7 +200,7 @@ Issue: https://github.com/cosmos/iavl/issues/548
 
 * [ ] [Invariant Checking](https://github.com/cosmos/cosmos-sdk/issues/15706)
     * Objective:
-        * Design a new system for checking invairants
+        * Design a new system for checking invariants
         * Implement changes
         * Audit current invariants
     * Progress: 

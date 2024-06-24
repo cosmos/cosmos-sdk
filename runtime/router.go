@@ -90,7 +90,7 @@ func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg protoiface.Mes
 }
 
 // NewQueryRouterService implements router.Service.
-func NewQueryRouterService(queryRouter *baseapp.GRPCQueryRouter) router.Service {
+func NewQueryRouterService(queryRouter baseapp.QueryRouter) router.Service {
 	return &queryRouterService{
 		router: queryRouter,
 	}
@@ -99,7 +99,7 @@ func NewQueryRouterService(queryRouter *baseapp.GRPCQueryRouter) router.Service 
 var _ router.Service = (*queryRouterService)(nil)
 
 type queryRouterService struct {
-	router *baseapp.GRPCQueryRouter
+	router baseapp.QueryRouter
 }
 
 // CanInvoke returns an error if the given request cannot be invoked.

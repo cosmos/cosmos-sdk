@@ -59,10 +59,6 @@ type RootStore interface {
 	// LastCommitID returns a CommitID pertaining to the last commitment.
 	LastCommitID() (proof.CommitID, error)
 
-	// Prune prunes the RootStore to the provided version. It is used to remove
-	// old versions of the RootStore by the CLI.
-	Prune(version uint64) error
-
 	// SetMetrics sets the telemetry handler on the RootStore.
 	SetMetrics(m metrics.Metrics)
 
@@ -81,6 +77,22 @@ type UpgradeableRootStore interface {
 	// Note, handling StoreUpgrades is optional depending on the underlying RootStore
 	// implementation.
 	LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreUpgrades) error
+}
+
+// Pruner defines the interface for pruning old versions of the store or database.
+type Pruner interface {
+	// Prune prunes the store to the provided version.
+	Prune(version uint64) error
+}
+
+// PausablePruner extends the Pruner interface to include the API for pausing
+// the pruning process.
+type PausablePruner interface {
+	Pruner
+
+	// PausePruning pauses or resumes the pruning process to avoid the parallel writes
+	// while committing the state.
+	PausePruning(pause bool)
 }
 
 // QueryResult defines the response type to performing a query on a RootStore.

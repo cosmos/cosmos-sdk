@@ -1,9 +1,10 @@
 package ante_test
 
 import (
+	"context"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
@@ -79,6 +80,12 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	suite.ctx = testCtx.Ctx.WithIsCheckTx(isCheckTx).WithBlockHeight(1)
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
 
+	accNum := uint64(0)
+	suite.acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
+		currNum := accNum
+		accNum++
+		return currNum, nil
+	})
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,
 		"mint":                   {"minter"},

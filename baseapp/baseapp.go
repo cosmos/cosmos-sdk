@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"sync"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	dbm "github.com/cosmos/cosmos-db"
@@ -1164,4 +1164,9 @@ func (app *BaseApp) Close() error {
 	}
 
 	return errors.Join(errs...)
+}
+
+// GetBaseApp returns the pointer to itself.
+func (app *BaseApp) GetBaseApp() *BaseApp {
+	return app
 }

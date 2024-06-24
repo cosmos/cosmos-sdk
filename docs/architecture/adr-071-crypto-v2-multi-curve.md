@@ -352,6 +352,7 @@ Below, we present the proposed interfaces and code snippets to illustrate the pr
 type CryptoProviderFactory interface {
     CreateFromRecord(*Record) (CryptoProvider, error)
     CreateFromConfig(ProviderMetadata) (CryptoProvider, error)
+    Type() string
 }
 ```
 
@@ -362,24 +363,28 @@ type CryptoProviderFactory interface {
 ```go
 // crypto/v2/providerFactory.go
 
-var providerFactories map[string]CryptoProviderFactory
-
-// RegisterCryptoProviderFactory is a function that registers a CryptoProviderFactory for a CryptoProvider.
-func RegisterCryptoProviderFactory(provider CryptoProvider, factory CryptoProviderFactory) string {
-    metadata := provider.Metadata()
-    id := generateProviderID(metadata)
-    providerFactories[id] = factory
-    return id
+type Factory struct {
+    providerFactories map[string]CryptoProviderFactory
 }
 
-// CreateCryptoProviderFromRecordOrConfig creates a CryptoProvider based on the provided Record or ProviderMetadata.
-// It enforces that exactly one of Record or ProviderMetadata must be provided.
-func CreateCryptoProviderFromRecordOrConfig(id string, record *Record, config *ProviderMetadata) (CryptoProvider, error) {
-    factory, exists := providerFactories[id]
-    if !exists {
-        return nil, fmt.Errorf("no factory registered for id %s", id)
+// NewFactory creates a new Factory instance and initializes the providerFactories map.
+func NewFactory() *Factory {
+    return &Factory{
+        providerFactories: make(map[string]CryptoProviderFactory),
     }
+}
 
+
+// RegisterCryptoProviderFactory is a function that registers a CryptoProviderFactory for its corresponding type.
+func (f *Factory) RegisterCryptoProviderFactory(factory CryptoProviderFactory) string {    
+    providerType := factory.Type()
+    f.providerFactories[providerType] = factory
+    return providerType
+}
+
+
+// CreateCryptoProviderFromRecordOrConfig creates a CryptoProvider based on the provided Record or ProviderMetadata.
+func (f *Factory) CreateCryptoProviderFromRecordOrConfig(record *Record, config *ProviderMetadata) (CryptoProvider, error) {
     // Validate input parameters
     if record == nil && config == nil {
         return nil, fmt.Errorf("both record and config cannot be nil")
@@ -390,20 +395,24 @@ func CreateCryptoProviderFromRecordOrConfig(id string, record *Record, config *P
 
     // Determine which factory method to call based on the input
     if record != nil {
+        factory, exists := f.providerFactories[record.CryptoProvider.Type()]
+        if !exists {
+            return nil, fmt.Errorf("no factory registered for provider type %s", record.CryptoProvider.Type())
+        }
+
         return factory.CreateFromRecord(record)
     }
+
     if config != nil {
+        factory, exists := f.providerFactories[config.Type]
+        if !exists {
+            return nil, fmt.Errorf("no factory registered for provider type %s", config.Type)
+        }
         return factory.CreateFromConfig(*config)
     }
 
     // This line should never be reached due to the checks above
     return nil, fmt.Errorf("unexpected error in CreateCryptoProviderFromRecordOrConfig")
-}
-
-// generateProviderID is a function that generates a unique identifier for a CryptoProvider based on its metadata.
-// This can be changed in the future to a more suitable function if needed.
-func generateProviderID(metadata ProviderMetadata) string {
-    return fmt.Sprintf("%s-%s", metadata.Type, metadata.Version)
 }
 ```
 
@@ -413,6 +422,8 @@ Below is an example implementation of how a Ledger hardware wallet `CryptoProvid
 
 ```go
 // crypto/v2/providers/ledger/factory.go
+
+const FACTORY_TYPE = "Ledger"
 
 type LedgerCryptoProviderFactory struct {
     DevicePath string
@@ -435,6 +446,11 @@ func (f *LedgerCryptoProviderFactory) CreateFromRecord(record *Record) (CryptoPr
     return &LedgerCryptoProvider{DevicePath: devicePath}, nil
 }
 
+func (f *LedgerCryptoProviderFactory) Type() string {
+    return FACTORY_TYPE
+}
+
+
 // crypto/v2/examples/registerProvider.go
 
 
@@ -444,21 +460,27 @@ import (
 )
 
 func main() {
-    // Create an instance of the factory
-    ledgerFactory := &crypto.LedgerCryptoProviderFactory{}
+    // Initialize a new factory instance
+    factory := NewFactory()
+    
+
+    // Create an instance of the ledger factory
+    ledgerFactory := &ledger.LedgerCryptoProviderFactory{}
 
     // Register the factory
-    id := crypto.RegisterCryptoProviderFactory("LedgerCryptoProvider", ledgerFactory)
+    factory.RegisterCryptoProviderFactory(ledgerFactory)
 
     // Example of using a Record
     record, err := keyring.GetRecord("ledgerDevice-0")
     if err != nil {
         log.Fatalf("Error fetching record from keyring: %s", err)
     }
-    ledgerProvider, err := crypto.CreateCryptoProviderFromRecordOrConfig(id, record, nil)
+
+    ledgerProvider, err := factory.CreateCryptoProviderFromRecordOrConfig(record, nil)
     if err != nil {
         log.Fatalf("Error creating crypto provider from record: %s", err)
     }
+    
     log.Printf("Provider from record created successfully: %+v", ledgerProvider.Metadata())
 
     // ledgerProvider CryptoProvider ready to use 

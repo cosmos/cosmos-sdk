@@ -52,6 +52,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
+	mstakingkeeper "github.com/cosmos/cosmos-sdk/testutil/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -80,6 +81,7 @@ type SimApp struct {
 	AuthKeeper            authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
 	StakingKeeper         *stakingkeeper.Keeper
+	MockStakingKeeper     *mstakingkeeper.Keeper
 	SlashingKeeper        slashingkeeper.Keeper
 	MintKeeper            mintkeeper.Keeper
 	DistrKeeper           distrkeeper.Keeper
@@ -190,6 +192,7 @@ func NewSimApp(
 		&app.AccountsKeeper,
 		&app.BankKeeper,
 		&app.StakingKeeper,
+		&app.MockStakingKeeper,
 		&app.SlashingKeeper,
 		&app.MintKeeper,
 		&app.DistrKeeper,

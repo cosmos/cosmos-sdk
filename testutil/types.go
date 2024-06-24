@@ -20,6 +20,7 @@ const (
 	ProtocolPoolModuleName = "protocolpool"
 	SlashingModuleName     = "slashing"
 	StakingModuleName      = "staking"
+	MockStakingModuleName  = "mstaking"
 	TxModuleName           = "tx"
 	UpgradeModuleName      = "upgrade"
 	EpochsModuleName       = "epochs"

@@ -26,6 +26,7 @@ import (
 	poolmodulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
+	mstakingmodulev1 "cosmossdk.io/api/cosmos/testutil/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	upgrademodulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
@@ -67,6 +68,8 @@ import (
 	stakingtypes "cosmossdk.io/x/staking/types"
 	_ "cosmossdk.io/x/upgrade" // import for side-effects
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	_ "github.com/cosmos/cosmos-sdk/testutil/x/staking" // import for side-effects
+	mstakingtypes "github.com/cosmos/cosmos-sdk/testutil/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -200,6 +203,15 @@ var (
 			{
 				Name: stakingtypes.ModuleName,
 				Config: appconfig.WrapAny(&stakingmodulev1.Module{
+					// NOTE: specifying a prefix is only necessary when using bech32 addresses
+					// If not specified, the auth Bech32Prefix appended with "valoper" and "valcons" is used by default
+					Bech32PrefixValidator: "cosmosvaloper",
+					Bech32PrefixConsensus: "cosmosvalcons",
+				}),
+			},
+			{
+				Name: mstakingtypes.ModuleName,
+				Config: appconfig.WrapAny(&mstakingmodulev1.Module{
 					// NOTE: specifying a prefix is only necessary when using bech32 addresses
 					// If not specified, the auth Bech32Prefix appended with "valoper" and "valcons" is used by default
 					Bech32PrefixValidator: "cosmosvaloper",

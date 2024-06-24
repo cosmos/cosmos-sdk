@@ -259,7 +259,7 @@ func GenesisStateWithValSet(
 
 	// set validators and delegations
 	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
-	genesisState[stakingtypes.ModuleName] = codec.MustMarshalJSON(stakingGenesis)
+	genesisState[stakingModuleName] = codec.MustMarshalJSON(stakingGenesis)
 
 	totalSupply := sdk.NewCoins()
 	for _, b := range balances {

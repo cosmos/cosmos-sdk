@@ -124,7 +124,7 @@ func appStateFnWithExtendedCbs(
 			panic(err)
 		}
 
-		stakingStateBz, ok := rawState[stakingtypes.ModuleName]
+		stakingStateBz, ok := rawState[stakingModuleName]
 		if !ok {
 			panic("staking genesis state is missing")
 		}
@@ -169,7 +169,7 @@ func appStateFnWithExtendedCbs(
 
 		// change appState back
 		for name, state := range map[string]proto.Message{
-			stakingtypes.ModuleName: stakingState,
+			stakingModuleName:       stakingState,
 			testutil.BankModuleName: bankState,
 		} {
 			if moduleStateCb != nil {

@@ -155,7 +155,7 @@ In all of the interface's methods, we add an *options* input parameter of type `
 ###### Signer
 
 Interface responsible for signing a message and returning the generated signature. 
-The `SignerOptions` map allows for flexible and dynamic configuration of the signing process.
+The `SignerOpts` map allows for flexible and dynamic configuration of the signing process.
 This can include algorithm-specific parameters, security levels, or other contextual information
 that might be necessary for the signing operation.
 
@@ -163,7 +163,7 @@ that might be necessary for the signing operation.
 // Signer represents a general interface for signing messages.
 type Signer interface {
     // Sign takes a signDoc as input and returns the digital signature.
-    Sign(signDoc []byte, options SignerOptions) (Signature, error)
+    Sign(signDoc []byte, options SignerOpts) (Signature, error)
 }
 
 type SignerOpts = map[string]any
@@ -190,7 +190,7 @@ Verifies if given a message belongs to a public key by validating against its re
 // Verifier represents a general interface for verifying signatures.
 type Verifier interface {
     // Verify checks the digital signature against the message and a public key to determine its validity.
-    Verify(signature Signature, signDoc []byte, pubKey PublicKey, options VerifierOptions) (bool, error)
+    Verify(signature Signature, signDoc []byte, pubKey PublicKey, options VerifierOpts) (bool, error)
 }
 
 type VerifierOpts = map[string]any
@@ -365,10 +365,11 @@ type CryptoProviderFactory interface {
 var providerFactories map[string]CryptoProviderFactory
 
 // RegisterCryptoProviderFactory is a function that registers a CryptoProviderFactory for a CryptoProvider.
-func RegisterCryptoProviderFactory(provider CryptoProvider, factory CryptoProviderFactory) {
+func RegisterCryptoProviderFactory(provider CryptoProvider, factory CryptoProviderFactory) string {
     metadata := provider.Metadata()
     id := generateProviderID(metadata)
     providerFactories[id] = factory
+    return id
 }
 
 // CreateCryptoProviderFromRecordOrConfig creates a CryptoProvider based on the provided Record or ProviderMetadata.
@@ -447,14 +448,14 @@ func main() {
     ledgerFactory := &crypto.LedgerCryptoProviderFactory{}
 
     // Register the factory
-    crypto.RegisterCryptoProviderFactory("LedgerCryptoProvider", ledgerFactory)
+    id := crypto.RegisterCryptoProviderFactory("LedgerCryptoProvider", ledgerFactory)
 
     // Example of using a Record
     record, err := keyring.GetRecord("ledgerDevice-0")
     if err != nil {
         log.Fatalf("Error fetching record from keyring: %s", err)
     }
-    ledgerProvider, err := crypto.CreateCryptoProviderFromRecordOrConfig("LedgerCryptoProvider", record, nil)
+    ledgerProvider, err := crypto.CreateCryptoProviderFromRecordOrConfig(id, record, nil)
     if err != nil {
         log.Fatalf("Error creating crypto provider from record: %s", err)
     }
@@ -710,8 +711,8 @@ func (pv *CryptoProviderPV) SignVote(chainID string, vote *Vote, signExtension b
     // code for getting voteBytes goes here
     // voteBytes := ...
 
-    // The underlying signer needs these parameters so we pass them through SignerOptions
-    options := SignerOptions{
+    // The underlying signer needs these parameters so we pass them through SignerOpts
+    options := SignerOpts{
         "chainID": chainID,
         "vote":    vote,
     }
@@ -728,8 +729,8 @@ func (pv *CryptoProviderPV) SignProposal(chainID string, proposal *Proposal) err
     // code for getting proposalBytes goes here
     // proposalBytes := ...
 
-    // The underlying signer needs these parameters so we pass them through SignerOptions
-    options := SignerOptions{
+    // The underlying signer needs these parameters so we pass them through SignerOpts
+    options := SignerOpts{
         "chainID":  chainID,
         "proposal": proposal,
     }
@@ -742,7 +743,7 @@ func (pv *CryptoProviderPV) SignProposal(chainID string, proposal *Proposal) err
 // SignBytes signs an arbitrary array of bytes
 func (pv *CryptoProviderPV) SignBytes(bytes []byte) ([]byte, error) {
     signer := pv.provider.GetSigner()
-    return signer.Sign(bytes, SignerOptions{})
+    return signer.Sign(bytes, SignerOpts{})
 }
 
 ```

@@ -1,28 +1,33 @@
 package cli
 
 import (
+	"encoding/json"
+
 	"github.com/spf13/cobra"
 
 	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-// TODO(serverv2): DO NOT DEPEND ON v1 module manager
 // TODO(serverv2): remove app exporter notion that is server v1 specific
 
+type genesisMM interface {
+	DefaultGenesis() map[string]json.RawMessage
+	ValidateGenesis(genesisData map[string]json.RawMessage) error
+}
+
 // Commands adds core sdk's sub-commands into genesis command.
-func Commands(txConfig client.TxConfig, mm *module.Manager, appExport servertypes.AppExporter) *cobra.Command {
-	return CommandsWithCustomMigrationMap(txConfig, mm, appExport, MigrationMap)
+func Commands(txConfig client.TxConfig, genutilModule genutil.AppModule, genMM genesisMM, appExport servertypes.AppExporter) *cobra.Command {
+	return CommandsWithCustomMigrationMap(txConfig, genutilModule, genMM, appExport, MigrationMap)
 }
 
 // CommandsWithCustomMigrationMap adds core sdk's sub-commands into genesis command with custom migration map.
 // This custom migration map can be used by the application to add its own migration map.
-func CommandsWithCustomMigrationMap(txConfig client.TxConfig, mm *module.Manager, appExport servertypes.AppExporter, migrationMap genutiltypes.MigrationMap) *cobra.Command {
+func CommandsWithCustomMigrationMap(txConfig client.TxConfig, genutilModule genutil.AppModule, genMM genesisMM, appExport servertypes.AppExporter, migrationMap genutiltypes.MigrationMap) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "genesis",
 		Short:                      "Application's genesis-related subcommands",
@@ -30,13 +35,11 @@ func CommandsWithCustomMigrationMap(txConfig client.TxConfig, mm *module.Manager
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-	gentxModule := mm.Modules[genutiltypes.ModuleName].(genutil.AppModule)
-
 	cmd.AddCommand(
-		GenTxCmd(mm, txConfig, banktypes.GenesisBalancesIterator{}, txConfig.SigningContext().ValidatorAddressCodec()),
+		GenTxCmd(genMM, txConfig, banktypes.GenesisBalancesIterator{}, txConfig.SigningContext().ValidatorAddressCodec()),
 		MigrateGenesisCmd(migrationMap),
-		CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, gentxModule.GenTxValidator()),
-		ValidateGenesisCmd(mm),
+		CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, genutilModule.GenTxValidator()),
+		ValidateGenesisCmd(genMM),
 		AddGenesisAccountCmd(txConfig.SigningContext().AddressCodec()),
 		ExportCmd(appExport),
 	)

@@ -42,7 +42,9 @@ func NewPrivateKeyFromBytes(bz []byte) (PrivKey, error) {
 // GenPrivKey generates a new key.
 func GenPrivKey() (PrivKey, error) {
 	secretKey, err := bls12381.RandKey()
-	return PrivKey(secretKey.Marshal()), err
+	return PrivKey{
+		Key: secretKey.Marshal(),
+	}, err
 }
 
 // Bytes returns the byte representation of the Key.

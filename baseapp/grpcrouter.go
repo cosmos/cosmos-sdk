@@ -15,7 +15,6 @@ import (
 )
 
 type QueryRouter interface {
-	HybridHandlerByRequestName(name string) []func(ctx context.Context, req, resp protoiface.MessageV1) error
 	RegisterService(sd *grpc.ServiceDesc, handler interface{})
 	ResponseNameByRequestName(requestName string) string
 	Route(path string) GRPCQueryHandler

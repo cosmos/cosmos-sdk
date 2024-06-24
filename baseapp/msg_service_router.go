@@ -76,7 +76,6 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		if err := msr.registerMsgServiceHandler(sd, method, handler); err != nil {
 			panic(err)
 		}
-
 	}
 }
 

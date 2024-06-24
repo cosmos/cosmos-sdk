@@ -7,7 +7,7 @@ for D in ../x/*; do
     
     # Skip specific directories
     if [[ "$DIR_NAME" != "counter" ]]; then
-      MODULE_DIRECTORY=build/modules/$DIR_NAME
+      MODULE_DIRECTORY=docs/build/modules/$DIR_NAME
       rm -rf "$MODULE_DIRECTORY"
       mkdir -p "$MODULE_DIRECTORY" 
       if [ -f "$D"/README.md ]; then

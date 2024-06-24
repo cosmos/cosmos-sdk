@@ -14,7 +14,7 @@ import (
 
 type pubkeyType struct{}
 
-func (a pubkeyType) NewValue(_ context.Context, _ *Builder) Value {
+func (a pubkeyType) NewValue(_ *context.Context, _ *Builder) Value {
 	return &pubkeyValue{}
 }
 

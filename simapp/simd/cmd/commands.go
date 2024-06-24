@@ -27,7 +27,9 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 func initRootCmd(
@@ -62,8 +64,7 @@ func initRootCmd(
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
 func genesisCommand(txConfig client.TxConfig, moduleManager *module.Manager, appExport servertypes.AppExporter, cmds ...*cobra.Command) *cobra.Command {
-	cmd := genutilcli.Commands(txConfig, moduleManager, appExport)
-
+	cmd := genutilcli.Commands(txConfig, moduleManager.Modules[genutiltypes.ModuleName].(genutil.AppModule), moduleManager, appExport)
 	for _, subCmd := range cmds {
 		cmd.AddCommand(subCmd)
 	}

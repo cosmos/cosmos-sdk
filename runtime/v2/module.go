@@ -101,6 +101,7 @@ func init() {
 			ProvideModuleManager,
 			ProvideGenesisTxHandler,
 			ProvideCometService,
+			ProvideAppVersionModifier,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -161,11 +162,10 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistrar)
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 
-	// TODO: this is a bit of a hack, but it's the only way to get the store keys into the app
-	// registerStoreKey could instead set this on StoreOptions directly
 	if inputs.StoreOptions != nil {
 		inputs.AppBuilder.storeOptions = inputs.StoreOptions
 		inputs.AppBuilder.storeOptions.StoreKeys = inputs.AppBuilder.app.storeKeys
+		inputs.AppBuilder.storeOptions.StoreKeys = append(inputs.AppBuilder.storeOptions.StoreKeys, "stf")
 	}
 }
 
@@ -212,8 +212,8 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 		EventService:       stf.NewEventService(),
 		GasService:         stf.NewGasMeterService(),
 		HeaderService:      stf.HeaderService{},
-		QueryRouterService: stf.NewQueryRouterService(appBuilder.app.queryRouterBuilder),
-		MsgRouterService:   stf.NewMsgRouterService(appBuilder.app.msgRouterBuilder),
+		QueryRouterService: stf.NewQueryRouterService(),
+		MsgRouterService:   stf.NewMsgRouterService([]byte(key.Name())),
 		TransactionService: services.NewContextAwareTransactionService(),
 		KVStoreService:     kvService,
 		MemStoreService:    memKvService,

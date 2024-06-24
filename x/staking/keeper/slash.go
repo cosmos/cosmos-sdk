@@ -365,8 +365,20 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 
 		// Slash the moved delegation
 		// Unbond from target validator
-		sharesToUnbond := slashFactor.Mul(entry.SharesDst)
-		if sharesToUnbond.IsZero() || slashAmount.IsZero() {
+		if slashAmount.IsZero() {
+			continue
+		}
+
+		dstVal, err := k.GetValidator(ctx, valDstAddr)
+		if err != nil {
+			return math.ZeroInt(), err
+		}
+		sharesToUnbond, err := dstVal.SharesFromTokensTruncated(slashAmount)
+		if err != nil {
+			return math.ZeroInt(), err
+		}
+
+		if sharesToUnbond.IsZero() {
 			continue
 		}
 

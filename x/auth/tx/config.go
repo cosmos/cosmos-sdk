@@ -230,6 +230,8 @@ func (g config) NewTxBuilder() client.TxBuilder {
 	return newBuilder(g.signingContext.AddressCodec(), g.txDecoder, g.protoCodec)
 }
 
+var _ sdk.Tx = &gogoTxWrapper{}
+
 // WrapTxBuilder returns a builder from provided transaction
 func (g config) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
 	gogoTx, ok := newTx.(*gogoTxWrapper)

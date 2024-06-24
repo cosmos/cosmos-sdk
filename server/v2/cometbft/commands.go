@@ -29,7 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
-func (s *CometBFTServer[T]) rpcClient(cmd *cobra.Command) (rpc.CometRPC, error) {
+func (s *CometBFTServer[AppT, T]) rpcClient(cmd *cobra.Command) (rpc.CometRPC, error) {
 	if s.config.Standalone {
 		client, err := rpchttp.New(client.GetConfigFromCmd(cmd).RPC.ListenAddress)
 		if err != nil {
@@ -52,7 +52,7 @@ func (s *CometBFTServer[T]) rpcClient(cmd *cobra.Command) (rpc.CometRPC, error) 
 }
 
 // StatusCommand returns the command to return the status of the network.
-func (s *CometBFTServer[T]) StatusCommand() *cobra.Command {
+func (s *CometBFTServer[AppT, T]) StatusCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status",
 		Short: "Query remote node for status",
@@ -83,7 +83,7 @@ func (s *CometBFTServer[T]) StatusCommand() *cobra.Command {
 }
 
 // ShowNodeIDCmd - ported from CometBFT, dump node ID to stdout
-func (s *CometBFTServer[T]) ShowNodeIDCmd() *cobra.Command {
+func (s *CometBFTServer[AppT, T]) ShowNodeIDCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "show-node-id",
 		Short: "Show this node's ID",
@@ -101,7 +101,7 @@ func (s *CometBFTServer[T]) ShowNodeIDCmd() *cobra.Command {
 }
 
 // ShowValidatorCmd - ported from CometBFT, show this node's validator info
-func (s *CometBFTServer[T]) ShowValidatorCmd() *cobra.Command {
+func (s *CometBFTServer[AppT, T]) ShowValidatorCmd() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "show-validator",
 		Short: "Show this node's CometBFT validator info",
@@ -135,7 +135,7 @@ func (s *CometBFTServer[T]) ShowValidatorCmd() *cobra.Command {
 }
 
 // ShowAddressCmd - show this node's validator address
-func (s *CometBFTServer[T]) ShowAddressCmd() *cobra.Command {
+func (s *CometBFTServer[AppT, T]) ShowAddressCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show-address",
 		Short: "Shows this node's CometBFT validator consensus address",
@@ -154,7 +154,7 @@ func (s *CometBFTServer[T]) ShowAddressCmd() *cobra.Command {
 }
 
 // VersionCmd prints CometBFT and ABCI version numbers.
-func (s *CometBFTServer[T]) VersionCmd() *cobra.Command {
+func (s *CometBFTServer[AppT, T]) VersionCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
 		Short: "Print CometBFT libraries' version",
@@ -182,7 +182,7 @@ func (s *CometBFTServer[T]) VersionCmd() *cobra.Command {
 }
 
 // QueryBlocksCmd returns a command to search through blocks by events.
-func (s *CometBFTServer[T]) QueryBlocksCmd() *cobra.Command {
+func (s *CometBFTServer[AppT, T]) QueryBlocksCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "blocks",
 		Short: "Query for paginated blocks that match a set of events",
@@ -232,7 +232,7 @@ for. Each module documents its respective events under 'xx_events.md'.
 }
 
 // QueryBlockCmd implements the default command for a Block query.
-func (s *CometBFTServer[T]) QueryBlockCmd() *cobra.Command {
+func (s *CometBFTServer[AppT, T]) QueryBlockCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "block --type=[height|hash] [height|hash]",
 		Short: "Query for a committed block by height, hash, or event(s)",
@@ -319,7 +319,7 @@ $ %s query block --%s=%s <hash>
 }
 
 // QueryBlockResultsCmd implements the default command for a BlockResults query.
-func (s *CometBFTServer[T]) QueryBlockResultsCmd() *cobra.Command {
+func (s *CometBFTServer[AppT, T]) QueryBlockResultsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "block-results [height]",
 		Short: "Query for a committed block's results by height",
@@ -384,7 +384,7 @@ func parseOptionalHeight(heightStr string) (*int64, error) {
 	return &tmp, nil
 }
 
-func (s *CometBFTServer[T]) BootstrapStateCmd() *cobra.Command {
+func (s *CometBFTServer[AppT, T]) BootstrapStateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bootstrap-state",
 		Short: "Bootstrap CometBFT state at an arbitrary block height using a light client",
@@ -414,7 +414,7 @@ func (s *CometBFTServer[T]) BootstrapStateCmd() *cobra.Command {
 
 func printOutput(cmd *cobra.Command, out []byte) error {
 	// Get flags output
-	outFlag, err := cmd.Flags().GetString(flags.FlagOutput) 
+	outFlag, err := cmd.Flags().GetString(flags.FlagOutput)
 	if err != nil {
 		return err
 	}

@@ -10,6 +10,7 @@ import (
 	coreapp "cosmossdk.io/core/app"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/log"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/store/v2"
@@ -49,8 +50,8 @@ var DefaultNodeHome string
 // SimApp extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
-type SimApp struct {
-	*runtime.App
+type SimApp[T transaction.Tx] struct {
+	*runtime.App[T]
 	legacyAmino       legacy.Amino
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
@@ -93,18 +94,18 @@ func AppConfig() depinject.Config {
 }
 
 // NewSimApp returns a reference to an initialized SimApp.
-func NewSimApp(
+func NewSimApp[T transaction.Tx](
 	logger log.Logger,
 	viper *viper.Viper,
-) *SimApp {
+) *SimApp[T] {
 	homeDir := viper.Get(flags.FlagHome).(string) // TODO
 	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(homeDir, "data"), nil)
 	if err != nil {
 		panic(err)
 	}
 	var (
-		app        = &SimApp{}
-		appBuilder *runtime.AppBuilder
+		app        = &SimApp[T]{}
+		appBuilder *runtime.AppBuilder[T]
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
@@ -233,26 +234,26 @@ func NewSimApp(
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *SimApp) AppCodec() codec.Codec {
+func (app *SimApp[T]) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
 // InterfaceRegistry returns SimApp's InterfaceRegistry.
-func (app *SimApp) InterfaceRegistry() coreapp.InterfaceRegistry {
+func (app *SimApp[T]) InterfaceRegistry() coreapp.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 
 // TxConfig returns SimApp's TxConfig.
-func (app *SimApp) TxConfig() client.TxConfig {
+func (app *SimApp[T]) TxConfig() client.TxConfig {
 	return app.txConfig
 }
 
 // GetConsensusAuthority gets the consensus authority.
-func (app *SimApp) GetConsensusAuthority() string {
+func (app *SimApp[T]) GetConsensusAuthority() string {
 	return app.ConsensusParamsKeeper.GetAuthority()
 }
 
 // GetStore gets the app store.
-func (app *SimApp) GetStore() any {
+func (app *SimApp[T]) GetStore() any {
 	return app.App.GetStore()
 }

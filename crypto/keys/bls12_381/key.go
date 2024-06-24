@@ -1,4 +1,4 @@
-//go:build !bls12381
+//go:build bls12381
 
 package bls12_381
 

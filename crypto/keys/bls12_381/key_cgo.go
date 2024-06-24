@@ -32,7 +32,7 @@ var (
 
 // NewPrivateKeyFromBytes build a new key from the given bytes.
 func NewPrivateKeyFromBytes(bz []byte) (PrivKey, error) {
-	secretKey, err := bls12381.SecretKeyFromBytes(bz)
+	secretKey, err := bls12381.SecretKey(bz)
 	if err != nil {
 		return PrivKey{}, err
 	}
@@ -58,7 +58,9 @@ func (privKey PrivKey) PubKey() cryptotypes.PubKey {
 		return nil
 	}
 
-	return PubKey(secretKey.PublicKey().Marshal())
+	return &PubKey{
+		Key: secretKey.PublicKey().Marshal(),
+	}
 }
 
 // Equals returns true if two keys are equal and false otherwise.

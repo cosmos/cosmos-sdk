@@ -166,14 +166,12 @@ require (
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/flatbuffers v2.0.8+incompatible // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/supranational/blst v0.3.11 // indirect
 	go.opencensus.io v0.24.0 // indirect
 )
 
-require (
-	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
-	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
-)
+require cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
 
 replace github.com/cosmos/cosmos-sdk => ../../.
 

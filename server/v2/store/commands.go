@@ -12,8 +12,6 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	storev2 "cosmossdk.io/store/v2"
-
-	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // QueryBlockResultsCmd implements the default command for a BlockResults query.
@@ -31,7 +29,7 @@ The pruning option is provided via the 'pruning' argument or alternatively with 
 
 Note: When the --app-db-backend flag is not specified, the default backend type is 'goleveldb'.
 Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
-		Example: fmt.Sprintf("%s prune custom --pruning-keep-recent 100 --app-db-backend 'goleveldb'", version.AppName),
+		Example: fmt.Sprintf("%s prune custom --pruning-keep-recent 100 --app-db-backend 'goleveldb'", "<appd>"),
 		Args:    cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// bind flags to the Context's Viper so we can get pruning options.

@@ -600,7 +600,9 @@ The implementation of this ADR in CometBFT will require a medium-level refactor 
 
 * **[Optional]** Adding [Keyring](https://github.com/cosmos/cosmos-sdk/blob/main/crypto/keyring/keyring.go) and [Record](https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/crypto/keyring/v1/record.proto) for storing and loading providers.
 
-* New directories reorganization.
+* New directories reorganization:
+Implementations of crypto providers (previously `Privval` implementations) should be in their own directory. See the [Directories reorganization](#directories-reorganization) section for more details.
+
 
 * **[Optional]** Use `Keyring` to load and instantiate validators when booting up a node.
 
@@ -759,6 +761,8 @@ Alternatives:
 
 * Greater impact / better security: Use cosmos-sdk's [Keyring](https://github.com/cosmos/cosmos-sdk/blob/439f2f9d5b5884bc9df4b58d702555330549a898/crypto/keyring/keyring). to manage CryptoProviders along with its private keys. This specifically applies to the `FilePV` implementation, which could store its private keys in Keyring instead of a file in the filesystem. This approach will require decoupling the Keyring package from the cosmos-sdk to avoid having CometBFT import artifacts from that repository.
 
+
+#### Directories reorganization  
 
 Implementations of crypto providers (previously `Privval` implementations) should be in their own directory:
 

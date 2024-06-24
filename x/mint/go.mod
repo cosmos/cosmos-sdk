@@ -167,12 +167,14 @@ require (
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/flatbuffers v2.0.8+incompatible // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/supranational/blst v0.3.11 // indirect
 	go.opencensus.io v0.24.0 // indirect
 )
 
-require github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
+replace github.com/cosmos/cosmos-sdk => ../../.
 
+// TODO remove post spinning out all modules
 replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core => ../../core
@@ -185,5 +187,4 @@ replace (
 	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/staking => ../staking
 	cosmossdk.io/x/tx => ../tx
-	github.com/cosmos/cosmos-sdk => ../../
 )

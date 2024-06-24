@@ -278,9 +278,9 @@ ValidatorConsensusKeyRotationRecordQueueKey: `103 | format(time) -> ProtocolBuff
 
 ValidatorConsensusKeyRotationRecordIndexKey:`104 | valAddr | format(time) -> ProtocolBuffer([]Byte{})`
 
-OldToNewConsKeyMap:`105 | byte(oldConsKey) -> byte(newConsKey)`
+OldToNewConsAddrMap:`105 | byte(oldConsAddr) -> byte(newConsAddr)`
 
-ConsKeyToValidatorIdentifierMap:`106 | byte(newConsKey) -> byte(initialConsKey)`
+ConsAddrToValidatorIdentifierMap:`106 | byte(newConsAddr) -> byte(initialConsAddr)`
 
 `ConsPubKeyRotationHistory` is used for querying the rotations of a validator
 
@@ -290,9 +290,9 @@ ConsKeyToValidatorIdentifierMap:`106 | byte(newConsKey) -> byte(initialConsKey)`
 
 A `ConsPubKeyRotationHistory` object is created every time a consensus pubkey rotation occurs.
 
-An entry is added in `OldToNewConsKeyMap` collection for every rotation (Note: this is to handle the evidences when submitted with old cons key).
+An entry is added in `OldToNewConsAddrMap` collection for every rotation (Note: this is to handle the evidences when submitted with old cons key).
 
-An entry is added in `ConsKeyToValidatorIdentifierMap` collection for every rotation, this entry is to block the rotation if the validator is rotating to the cons key which is involved in the history.
+An entry is added in `ConsAddrToValidatorIdentifierMap` collection for every rotation, this entry is to block the rotation if the validator is rotating to the cons key which is involved in the history.
 
 To prevent the spam: 
 

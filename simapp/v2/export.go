@@ -9,12 +9,10 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 
 	"cosmossdk.io/collections"
-	storetypes "cosmossdk.io/store/types"
 	slashingtypes "cosmossdk.io/x/slashing/types"
 	"cosmossdk.io/x/staking"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -135,13 +133,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx context.Context, jailAllowedAddr
 		panic(err)
 	}
 
-	// set context height to zero
-	height, err := app.LoadLatestHeight()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	ctx = ctx.WithBlockHeight(0)
+	//TODO: set height to 0
 
 	// reinitialize all validators
 	err = app.StakingKeeper.IterateValidators(ctx, func(_ int64, val sdk.ValidatorI) (stop bool) {
@@ -226,16 +218,19 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx context.Context, jailAllowedAddr
 	if err != nil {
 		panic(err)
 	}
-	// Iterate through validators by power descending, reset bond heights, and
-	// update bond intra-tx counters.
-	store := runtime.NewKVStoreService(storetypes.NewKVStoreKey(stakingtypes.StoreKey)).OpenKVStore(ctx)
-	iter := storetypes.KVStoreReversePrefixIterator(store, stakingtypes.ValidatorsKey)
-	counter := int16(0)
 
-	app.StakingKeeper.Validators.IterateRaw(ctx, []byte{}, []byte{}, collections.OrderDescending)
+	counter := 0
+	iter, err := app.StakingKeeper.Validators.IterateRaw(ctx, []byte{}, []byte{}, collections.OrderDescending)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	for ; iter.Valid(); iter.Next() {
-		addr := sdk.ValAddress(stakingtypes.AddressFromValidatorsKey(iter.Key()))
+		key, err := iter.KeyValue()
+		if err != nil {
+			log.Fatal(err)
+		}
+		addr := sdk.ValAddress(stakingtypes.AddressFromValidatorsKey(key.Key))
 		validator, err := app.StakingKeeper.GetValidator(ctx, addr)
 		if err != nil {
 			panic("expected validator, not found")

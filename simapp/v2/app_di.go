@@ -253,6 +253,6 @@ func (app *SimApp) GetConsensusAuthority() string {
 }
 
 // GetStore gets the app store.
-func (app *SimApp) GetStore() any {
+func (app *SimApp) GetStore() runtime.Store {
 	return app.App.GetStore()
 }

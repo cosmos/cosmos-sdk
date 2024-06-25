@@ -17,6 +17,7 @@ import (
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/server/v2/appmanager"
+	"cosmossdk.io/server/v2/cometbft/client/grpc/cmtservice"
 	"cosmossdk.io/server/v2/cometbft/handlers"
 	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/cometbft/types"
@@ -24,12 +25,6 @@ import (
 	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
 	consensustypes "cosmossdk.io/x/consensus/types"
-)
-
-const (
-	QueryPathApp   = "app"
-	QueryPathP2P   = "p2p"
-	QueryPathStore = "store"
 )
 
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
@@ -212,13 +207,13 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 	var resp *abciproto.QueryResponse
 
 	switch path[0] {
-	case QueryPathApp:
+	case cmtservice.QueryPathApp:
 		resp, err = c.handlerQueryApp(ctx, path, req)
 
-	case QueryPathStore:
+	case cmtservice.QueryPathStore:
 		resp, err = c.handleQueryStore(path, c.store, req)
 
-	case QueryPathP2P:
+	case cmtservice.QueryPathP2P:
 		resp, err = c.handleQueryP2P(path)
 
 	default:

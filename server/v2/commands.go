@@ -128,7 +128,8 @@ func AddCommands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logg
 func configHandle(s *Server, home string, cmd *cobra.Command) error {
 	configDir := filepath.Join(home, "config")
 
-	if _, err := os.Stat(configDir); os.IsNotExist(err) {
+	// we need to check app.toml as the config folder can already exist for the client.toml
+	if _, err := os.Stat(filepath.Join(configDir, "app.toml")); os.IsNotExist(err) {
 		if err = s.WriteConfig(configDir); err != nil {
 			return err
 		}

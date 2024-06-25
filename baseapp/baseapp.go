@@ -13,12 +13,9 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/cosmos-proto/anyutil"
 	"github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/maps"
-	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/log"
@@ -1120,28 +1117,6 @@ func (app *BaseApp) simulateNestedMessages(ctx sdk.Context, msg sdk.Msg) error {
 
 	_, err = app.runMsgs(ctx, msgs, protoMessages, execModeSimulate)
 	return err
-}
-
-// msgsV1ToMsgsV2 transforms v1 messages into v2.
-func (app *BaseApp) msgsV1ToMsgsV2(msgs []sdk.Msg) ([]protov2.Message, error) {
-	msgsV2 := make([]protov2.Message, len(msgs))
-	for i, msg := range msgs {
-		gogoAny, err := codectypes.NewAnyWithValue(msg)
-		if err != nil {
-			return nil, err
-		}
-		anyMsg := &anypb.Any{
-			TypeUrl: gogoAny.TypeUrl,
-			Value:   gogoAny.Value,
-		}
-		msgV2, err := anyutil.Unpack(anyMsg, app.cdc.InterfaceRegistry().SigningContext().FileResolver(), app.cdc.InterfaceRegistry().SigningContext().TypeResolver())
-		if err != nil {
-			return nil, err
-		}
-		msgsV2[i] = msgV2
-	}
-
-	return msgsV2, nil
 }
 
 // makeABCIData generates the Data field to be sent to ABCI Check/DeliverTx.

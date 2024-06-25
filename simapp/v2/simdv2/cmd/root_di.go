@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -82,6 +83,7 @@ func NewRootCmd() *cobra.Command {
 			return nil
 		},
 	}
+	rootCmd.SetContext(context.WithValue(rootCmd.Context(), client.ClientContextKey, &clientCtx))
 
 	initRootCmd(rootCmd, clientCtx.TxConfig, moduleManager)
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {

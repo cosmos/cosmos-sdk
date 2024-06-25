@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/core/log"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/runtime/v2"
+	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	"cosmossdk.io/store/v2/db"
@@ -94,7 +95,7 @@ func NewSimApp(
 	logger log.Logger,
 	viper *viper.Viper,
 ) *SimApp {
-	viper.Set("home", DefaultNodeHome) // TODO possibly set earlier when viper is created
+	viper.Set(serverv2.FlagHome, DefaultNodeHome) // TODO possibly set earlier when viper is created
 	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(DefaultNodeHome, "data"), nil)
 	if err != nil {
 		panic(err)

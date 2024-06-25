@@ -63,10 +63,6 @@ func NewKeeper(skipUpgradeHeights map[int64]bool, storeService corestore.KVStore
 		authority:          authority,
 	}
 
-	if homePath == "" {
-		k.Logger.Warn("homePath is empty; upgrade info will be written to the current directory")
-	}
-
 	return k
 }
 

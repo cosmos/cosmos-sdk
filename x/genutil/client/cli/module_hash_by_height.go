@@ -8,11 +8,11 @@ import (
 	"strconv"
 	"strings"
 
-	"cosmossdk.io/store/rootmulti"
-	storetypes "cosmossdk.io/store/types"
-
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/store/rootmulti"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"

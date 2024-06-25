@@ -46,7 +46,6 @@ func (c *ClientConfig) SetBroadcastMode(broadcastMode string) {
 	c.BroadcastMode = broadcastMode
 }
 
-<<<<<<< HEAD
 // ReadDefaultValuesFromDefaultClientConfig reads default values from default client.toml file and updates them in client.Context
 // The client.toml is then discarded.
 func ReadDefaultValuesFromDefaultClientConfig(ctx client.Context) (client.Context, error) {
@@ -69,13 +68,6 @@ func ReadDefaultValuesFromDefaultClientConfig(ctx client.Context) (client.Contex
 
 // ReadFromClientConfig reads values from client.toml file and updates them in client Context
 func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
-=======
-// CreateClientConfig reads the client.toml file and returns a new populated client.Context
-// If the client.toml file does not exist, it creates one with default values.
-// It takes a customClientTemplate and customConfig as input that can be used to overwrite the default config and enhance the client.toml file.
-// The custom template/config must be both provided or be "" and nil.
-func CreateClientConfig(ctx client.Context, customClientTemplate string, customConfig interface{}) (client.Context, error) {
->>>>>>> 5aaff2109 (feat: parse home flag earlier (#20771))
 	configPath := filepath.Join(ctx.HomeDir, "config")
 	configFilePath := filepath.Join(configPath, "client.toml")
 	conf := DefaultConfig()

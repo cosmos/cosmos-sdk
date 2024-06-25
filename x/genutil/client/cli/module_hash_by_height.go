@@ -3,21 +3,19 @@ package cli
 import (
 	"encoding/hex"
 	"fmt"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 
-	"github.com/spf13/cobra"
-
-	"path/filepath"
+	"cosmossdk.io/store/rootmulti"
+	storetypes "cosmossdk.io/store/types"
 
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-
-	"cosmossdk.io/store/rootmulti"
-	storetypes "cosmossdk.io/store/types"
 )
 
 // ModuleHashByHeightQuery retrieves the module hashes at a given height.

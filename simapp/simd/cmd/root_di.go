@@ -40,7 +40,7 @@ func NewRootCmd() *cobra.Command {
 		depinject.Configs(simapp.AppConfig(),
 			depinject.Supply(
 				log.NewNopLogger(),
-				simtestutil.NewAppOptionsWithFlagHome(tempDir()),
+				simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome),
 			),
 			depinject.Provide(
 				ProvideClientContext,
@@ -128,7 +128,7 @@ func ProvideClientContext(
 
 	// Read the config to overwrite the default values with the values from the config file
 	customClientTemplate, customClientConfig := initClientConfig()
-	clientCtx, err = config.ReadDefaultValuesFromDefaultClientConfig(clientCtx, customClientTemplate, customClientConfig)
+	clientCtx, err = config.CreateClientConfig(clientCtx, customClientTemplate, customClientConfig)
 	if err != nil {
 		panic(err)
 	}

@@ -4,15 +4,10 @@ package simapp
 
 import (
 	"io"
-	"path/filepath"
 
 	dbm "github.com/cosmos/cosmos-db"
 
-<<<<<<< HEAD:simapp/app_v2.go
-=======
 	clienthelpers "cosmossdk.io/client/v2/helpers"
-	"cosmossdk.io/core/legacy"
->>>>>>> 5aaff2109 (feat: parse home flag earlier (#20771)):simapp/app_di.go
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"

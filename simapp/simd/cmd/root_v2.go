@@ -32,16 +32,10 @@ func NewRootCmd() *cobra.Command {
 	)
 
 	if err := depinject.Inject(
-<<<<<<< HEAD:simapp/simd/cmd/root_v2.go
 		depinject.Configs(simapp.AppConfig,
 			depinject.Supply(
 				log.NewNopLogger(),
-				simtestutil.NewAppOptionsWithFlagHome(tempDir()),
 			),
-=======
-		depinject.Configs(simapp.AppConfig(),
-			depinject.Supply(log.NewNopLogger()),
->>>>>>> 5aaff2109 (feat: parse home flag earlier (#20771)):simapp/simd/cmd/root_di.go
 			depinject.Provide(
 				ProvideClientContext,
 			),
@@ -108,17 +102,7 @@ func ProvideClientContext(
 		WithHomeDir(simapp.DefaultNodeHome).
 		WithViper("") // In simapp, we don't use any prefix for env variables.
 
-<<<<<<< HEAD:simapp/simd/cmd/root_v2.go
-	// Read the config again to overwrite the default values with the values from the config file
-	clientCtx, _ = config.ReadDefaultValuesFromDefaultClientConfig(clientCtx)
-=======
-	// Read the config to overwrite the default values with the values from the config file
-	customClientTemplate, customClientConfig := initClientConfig()
-	clientCtx, err = config.CreateClientConfig(clientCtx, customClientTemplate, customClientConfig)
-	if err != nil {
-		panic(err)
-	}
->>>>>>> 5aaff2109 (feat: parse home flag earlier (#20771)):simapp/simd/cmd/root_di.go
+	clientCtx, _ = config.ReadFromClientConfig(clientCtx)
 
 	// textual is enabled by default, we need to re-create the tx config grpc instead of bank keeper.
 	txConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)

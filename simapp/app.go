@@ -7,18 +7,13 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/client/v2/autocli"
-<<<<<<< HEAD
+	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
-=======
-	clienthelpers "cosmossdk.io/client/v2/helpers"
-	"cosmossdk.io/core/log"
->>>>>>> 5aaff2109 (feat: parse home flag earlier (#20771))
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/circuit"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
@@ -515,28 +510,6 @@ func NewSimApp(
 	}
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 
-<<<<<<< HEAD
-=======
-	// create, start, and load the unordered tx manager
-	utxDataDir := filepath.Join(homePath, "data")
-	app.UnorderedTxManager = unorderedtx.NewManager(utxDataDir)
-	app.UnorderedTxManager.Start()
-
-	if err := app.UnorderedTxManager.OnInit(); err != nil {
-		panic(fmt.Errorf("failed to initialize unordered tx manager: %w", err))
-	}
-
-	// register custom snapshot extensions (if any)
-	if manager := app.SnapshotManager(); manager != nil {
-		err := manager.RegisterExtensions(
-			unorderedtx.NewSnapshotter(app.UnorderedTxManager),
-		)
-		if err != nil {
-			panic(fmt.Errorf("failed to register snapshot extension: %w", err))
-		}
-	}
-
->>>>>>> 5aaff2109 (feat: parse home flag earlier (#20771))
 	app.sm.RegisterStoreDecoders()
 
 	// initialize stores

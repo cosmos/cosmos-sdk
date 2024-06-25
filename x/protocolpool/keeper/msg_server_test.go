@@ -969,6 +969,9 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 	}
 }
 
+// TestWithdrawExpiredFunds checks that a continuous fund cannot be withdrawn if it has expired.
+// There was a case in which an expired continuous fund would keep getting funds allocated when
+// other funds were withdrawn. These funds would then get withdrawn if CancelContinuousFund was called.
 func (suite *KeeperTestSuite) TestWithdrawExpiredFunds() {
 	suite.SetupTest()
 	recipientStrAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(recipientAddr)

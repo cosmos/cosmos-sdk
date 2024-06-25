@@ -121,7 +121,6 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipientAddr string
 		}
 		return sdk.Coin{}, fmt.Errorf("get continuous fund failed for recipient: %s", recipientAddr)
 	}
-
 	if cf.Expiry != nil && cf.Expiry.Before(k.HeaderService.HeaderInfo(ctx).Time) {
 		return sdk.Coin{}, fmt.Errorf("cannot withdraw continuous funds: continuous fund expired for recipient: %s", recipientAddr)
 	}

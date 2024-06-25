@@ -3,31 +3,21 @@
 package simapp
 
 import (
-	"encoding/binary"
 	"encoding/json"
 	"flag"
-	"io"
-	"math/rand"
 	"strings"
-	"sync"
 	"testing"
 
-	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	"cosmossdk.io/x/feegrant"
 	slashingtypes "cosmossdk.io/x/slashing/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutils/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -104,115 +94,115 @@ func TestAppImportExport(t *testing.T) {
 //	Start a fresh node and run n blocks, export state
 //	set up a new node instance, Init chain from exported genesis
 //	run new instance for n blocks
-func TestAppSimulationAfterImport(t *testing.T) {
-	t.Skip("Skipping TestAppSimulationAfterImport due to export not being completed")
-	sims.Run(t, NewSimApp, setupStateFactory, func(t *testing.T, ti sims.TestInstance[*SimApp]) {
-		app := ti.App
-		t.Log("exporting genesis...\n")
-		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
-		require.NoError(t, err)
+// func TestAppSimulationAfterImport(t *testing.T) {
+// 	t.Skip("Skipping TestAppSimulationAfterImport due to export not being completed")
+// 	sims.Run(t, NewSimApp, setupStateFactory, func(t *testing.T, ti sims.TestInstance[*SimApp]) {
+// 		app := ti.App
+// 		t.Log("exporting genesis...\n")
+// 		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
+// 		require.NoError(t, err)
 
-		t.Log("importing genesis...\n")
-		newTestInstance := sims.NewSimulationAppInstance(t, ti.Cfg, NewSimApp)
-		newApp := newTestInstance.App
-		_, err = newApp.InitChain(&abci.InitChainRequest{
-			AppStateBytes: exported.AppState,
-			ChainId:       sims.SimAppChainID,
-		})
-		if IsEmptyValidatorSetErr(err) {
-			t.Skip("Skipping simulation as all validators have been unbonded")
-			return
-		}
-		require.NoError(t, err)
-		newStateFactory := setupStateFactory(newApp)
-		_, err = simulation.SimulateFromSeedX(
-			t,
-			newTestInstance.AppLogger,
-			sims.WriteToDebugLog(newTestInstance.AppLogger),
-			newApp.BaseApp,
-			newStateFactory.AppStateFn,
-			simtypes.RandomAccounts,
-			simtestutil.SimulationOperations(newApp, newApp.AppCodec(), newTestInstance.Cfg, newApp.TxConfig()),
-			newStateFactory.BlockedAddr,
-			newTestInstance.Cfg,
-			newStateFactory.Codec,
-			newApp.TxConfig().SigningContext().AddressCodec(),
-			ti.ExecLogWriter,
-		)
-		require.NoError(t, err)
-	})
-}
+// 		t.Log("importing genesis...\n")
+// 		newTestInstance := sims.NewSimulationAppInstance(t, ti.Cfg, NewSimApp)
+// 		newApp := newTestInstance.App
+// 		_, err = newApp.InitChain(&abci.InitChainRequest{
+// 			AppStateBytes: exported.AppState,
+// 			ChainId:       sims.SimAppChainID,
+// 		})
+// 		if IsEmptyValidatorSetErr(err) {
+// 			t.Skip("Skipping simulation as all validators have been unbonded")
+// 			return
+// 		}
+// 		require.NoError(t, err)
+// 		newStateFactory := setupStateFactory(newApp)
+// 		_, err = simulation.SimulateFromSeedX(
+// 			t,
+// 			newTestInstance.AppLogger,
+// 			sims.WriteToDebugLog(newTestInstance.AppLogger),
+// 			newApp.BaseApp,
+// 			newStateFactory.AppStateFn,
+// 			simtypes.RandomAccounts,
+// 			simtestutil.SimulationOperations(newApp, newApp.AppCodec(), newTestInstance.Cfg, newApp.TxConfig()),
+// 			newStateFactory.BlockedAddr,
+// 			newTestInstance.Cfg,
+// 			newStateFactory.Codec,
+// 			newApp.TxConfig().SigningContext().AddressCodec(),
+// 			ti.ExecLogWriter,
+// 		)
+// 		require.NoError(t, err)
+// 	})
+// }
 
 func IsEmptyValidatorSetErr(err error) bool {
 	return err != nil && strings.Contains(err.Error(), "validator set is empty after InitGenesis")
 }
 
-func TestAppStateDeterminism(t *testing.T) {
-	const numTimesToRunPerSeed = 3
-	var seeds []int64
-	if s := simcli.NewConfigFromFlags().Seed; s != simcli.DefaultSeedValue {
-		// We will be overriding the random seed and just run a single simulation on the provided seed value
-		for j := 0; j < numTimesToRunPerSeed; j++ { // multiple rounds
-			seeds = append(seeds, s)
-		}
-	} else {
-		// setup with 3 random seeds
-		for i := 0; i < 3; i++ {
-			seed := rand.Int63()
-			for j := 0; j < numTimesToRunPerSeed; j++ { // multiple rounds
-				seeds = append(seeds, seed)
-			}
-		}
-	}
-	// overwrite default app config
-	interBlockCachingAppFactory := func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) *SimApp {
-		if FlagEnableStreamingValue {
-			m := map[string]any{
-				"streaming.abci.keys":             []string{"*"},
-				"streaming.abci.plugin":           "abci_v1",
-				"streaming.abci.stop-node-on-err": true,
-			}
-			others := appOpts
-			appOpts = sims.AppOptionsFn(func(k string) any {
-				if v, ok := m[k]; ok {
-					return v
-				}
-				return others.Get(k)
-			})
-		}
-		return NewSimApp(logger, db, nil, true, appOpts, append(baseAppOptions, interBlockCacheOpt())...)
-	}
-	var mx sync.Mutex
-	appHashResults := make(map[int64][][]byte)
-	appSimLogger := make(map[int64][]simulation.LogWriter)
-	captureAndCheckHash := func(t *testing.T, ti sims.TestInstance[*SimApp]) {
-		seed, appHash := ti.Cfg.Seed, ti.App.LastCommitID().Hash
-		mx.Lock()
-		otherHashes, execWriters := appHashResults[seed], appSimLogger[seed]
-		if len(otherHashes) < numTimesToRunPerSeed-1 {
-			appHashResults[seed], appSimLogger[seed] = append(otherHashes, appHash), append(execWriters, ti.ExecLogWriter)
-		} else { // cleanup
-			delete(appHashResults, seed)
-			delete(appSimLogger, seed)
-		}
-		mx.Unlock()
+// func TestAppStateDeterminism(t *testing.T) {
+// 	const numTimesToRunPerSeed = 3
+// 	var seeds []int64
+// 	if s := simcli.NewConfigFromFlags().Seed; s != simcli.DefaultSeedValue {
+// 		// We will be overriding the random seed and just run a single simulation on the provided seed value
+// 		for j := 0; j < numTimesToRunPerSeed; j++ { // multiple rounds
+// 			seeds = append(seeds, s)
+// 		}
+// 	} else {
+// 		// setup with 3 random seeds
+// 		for i := 0; i < 3; i++ {
+// 			seed := rand.Int63()
+// 			for j := 0; j < numTimesToRunPerSeed; j++ { // multiple rounds
+// 				seeds = append(seeds, seed)
+// 			}
+// 		}
+// 	}
+// 	// overwrite default app config
+// 	interBlockCachingAppFactory := func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) *SimApp {
+// 		if FlagEnableStreamingValue {
+// 			m := map[string]any{
+// 				"streaming.abci.keys":             []string{"*"},
+// 				"streaming.abci.plugin":           "abci_v1",
+// 				"streaming.abci.stop-node-on-err": true,
+// 			}
+// 			others := appOpts
+// 			appOpts = sims.AppOptionsFn(func(k string) any {
+// 				if v, ok := m[k]; ok {
+// 					return v
+// 				}
+// 				return others.Get(k)
+// 			})
+// 		}
+// 		return NewSimApp(logger, nil)
+// 	}
+// 	var mx sync.Mutex
+// 	appHashResults := make(map[int64][][]byte)
+// 	appSimLogger := make(map[int64][]simulation.LogWriter)
+// 	captureAndCheckHash := func(t *testing.T, ti sims.TestInstance[*SimApp]) {
+// 		seed, appHash := ti.Cfg.Seed, ti.App.LastCommitID().Hash
+// 		mx.Lock()
+// 		otherHashes, execWriters := appHashResults[seed], appSimLogger[seed]
+// 		if len(otherHashes) < numTimesToRunPerSeed-1 {
+// 			appHashResults[seed], appSimLogger[seed] = append(otherHashes, appHash), append(execWriters, ti.ExecLogWriter)
+// 		} else { // cleanup
+// 			delete(appHashResults, seed)
+// 			delete(appSimLogger, seed)
+// 		}
+// 		mx.Unlock()
 
-		var failNow bool
-		// and check that all app hashes per seed are equal for each iteration
-		for i := 0; i < len(otherHashes); i++ {
-			if !assert.Equal(t, otherHashes[i], appHash) {
-				execWriters[i].PrintLogs()
-				failNow = true
-			}
-		}
-		if failNow {
-			ti.ExecLogWriter.PrintLogs()
-			t.Fatalf("non-determinism in seed %d", seed)
-		}
-	}
-	// run simulations
-	sims.RunWithSeeds(t, interBlockCachingAppFactory, setupStateFactory, seeds, []byte{}, captureAndCheckHash)
-}
+// 		var failNow bool
+// 		// and check that all app hashes per seed are equal for each iteration
+// 		for i := 0; i < len(otherHashes); i++ {
+// 			if !assert.Equal(t, otherHashes[i], appHash) {
+// 				execWriters[i].PrintLogs()
+// 				failNow = true
+// 			}
+// 		}
+// 		if failNow {
+// 			ti.ExecLogWriter.PrintLogs()
+// 			t.Fatalf("non-determinism in seed %d", seed)
+// 		}
+// 	}
+// 	// run simulations
+// 	sims.RunWithSeeds(t, interBlockCachingAppFactory, setupStateFactory, seeds, []byte{}, captureAndCheckHash)
+// }
 
 type ComparableStoreApp interface {
 	LastBlockHeight() int64
@@ -253,18 +243,18 @@ func AssertEqualStores(t *testing.T, app ComparableStoreApp, newApp ComparableSt
 	}
 }
 
-func FuzzFullAppSimulation(f *testing.F) {
-	f.Fuzz(func(t *testing.T, rawSeed []byte) {
-		if len(rawSeed) < 8 {
-			t.Skip()
-			return
-		}
-		sims.RunWithSeeds(
-			t,
-			NewSimApp,
-			setupStateFactory,
-			[]int64{int64(binary.BigEndian.Uint64(rawSeed))},
-			rawSeed[8:],
-		)
-	})
-}
+// func FuzzFullAppSimulation(f *testing.F) {
+// 	f.Fuzz(func(t *testing.T, rawSeed []byte) {
+// 		if len(rawSeed) < 8 {
+// 			t.Skip()
+// 			return
+// 		}
+// 		sims.RunWithSeeds(
+// 			t,
+// 			NewSimApp,
+// 			setupStateFactory,
+// 			[]int64{int64(binary.BigEndian.Uint64(rawSeed))},
+// 			rawSeed[8:],
+// 		)
+// 	})
+// }

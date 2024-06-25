@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/log"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -54,7 +53,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	appOptions.SetDefault(flags.FlagHome, DefaultNodeHome)
 	appOptions.SetDefault(server.FlagInvCheckPeriod, simcli.FlagPeriodValue)
 
-	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(sims.SimAppChainID))
+	app := NewSimApp(logger, nil)
 
 	// run randomized simulation
 	simParams, simErr := simulation.SimulateFromSeedX(

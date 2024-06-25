@@ -302,10 +302,7 @@ encoding is not malleable. If a given transaction, which is otherwise valid, can
 be encoded to produce different hashes, which reflect the same valid transaction,
 then a duplicate unordered transaction can be submitted and included in a block.
 
-In order to prevent this, transactions should be encoded in a deterministic manner.
-[ADR-027](./adr-027-deterministic-protobuf-serialization.md) provides such a mechanism.
-However, it is important to note that the way a transaction is signed should ensure
-ADR-027 is followed. E.g. we want to avoid Amino signing.
+In order to prevent this, the decoded transaction contents is taken. Starting with the content of the transaction we marshal the transaction in order to prevent a client reordering the transaction. Next we include the gas and timeout height as part of the identifier. All these fields are signed over in the transaction payload. If one of them changes the signature will not match the transaction. 
 
 ### State Management
 

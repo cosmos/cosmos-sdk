@@ -114,7 +114,9 @@ func txIdentifier(timeout uint64, tx sdk.Tx) ([32]byte, error) {
 			return [32]byte{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshal message")
 		}
 
-		buf.Write(bz)
+		if _, err := buf.Write(bz); err != nil {
+			return [32]byte{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to write message to buffer")
+		}
 	}
 
 	// write the timeout height to the buffer

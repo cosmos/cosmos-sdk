@@ -25,6 +25,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* [#20771](https://github.com/cosmos/cosmos-sdk/pull/20771) Create upgrade directory only when necessary (upgrade flow and not init flow).
+
 ## [v0.1.3](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.1.3) - 2024-06-04
 
 * (deps) [#20530](https://github.com/cosmos/cosmos-sdk/pull/20530) Bump vulnerable `github.com/hashicorp/go-getter` to v1.7.4.

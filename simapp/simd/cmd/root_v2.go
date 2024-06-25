@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
@@ -36,7 +35,6 @@ func NewRootCmd() *cobra.Command {
 		depinject.Configs(simapp.AppConfig,
 			depinject.Supply(
 				log.NewNopLogger(),
-				simtestutil.NewAppOptionsWithFlagHome(tempDir()),
 			),
 			depinject.Provide(
 				ProvideClientContext,
@@ -104,8 +102,7 @@ func ProvideClientContext(
 		WithHomeDir(simapp.DefaultNodeHome).
 		WithViper("") // In simapp, we don't use any prefix for env variables.
 
-	// Read the config again to overwrite the default values with the values from the config file
-	clientCtx, _ = config.ReadDefaultValuesFromDefaultClientConfig(clientCtx)
+	clientCtx, _ = config.ReadFromClientConfig(clientCtx)
 
 	// textual is enabled by default, we need to re-create the tx config grpc instead of bank keeper.
 	txConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)

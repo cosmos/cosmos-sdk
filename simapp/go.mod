@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	cosmossdk.io/api v0.7.5
-	cosmossdk.io/client/v2 v2.0.0-beta.2.0.20240625194149-ed947865050f // TODO(@julienrbrt): tag client/v2
+	cosmossdk.io/client/v2 v2.0.0-beta.2.0.20240625194835-17173894fea9 // TODO(@julienrbrt): tag client/v2
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
@@ -17,7 +17,7 @@ require (
 	cosmossdk.io/x/feegrant v0.1.1
 	cosmossdk.io/x/nft v0.1.1
 	cosmossdk.io/x/tx v0.13.3
-	cosmossdk.io/x/upgrade v0.1.4-0.20240625194149-ed947865050f // TODO(@julienrbrt): tag upgrade
+	cosmossdk.io/x/upgrade v0.1.4-0.20240625194835-17173894fea9 // TODO(@julienrbrt): tag upgrade
 	github.com/cometbft/cometbft v0.38.7
 	github.com/cosmos/cosmos-db v1.0.2
 	// this version is not used as it is always replaced by the latest Cosmos SDK version

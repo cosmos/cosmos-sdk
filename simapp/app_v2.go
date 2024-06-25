@@ -4,11 +4,15 @@ package simapp
 
 import (
 	"io"
-	"os"
 	"path/filepath"
 
 	dbm "github.com/cosmos/cosmos-db"
 
+<<<<<<< HEAD:simapp/app_v2.go
+=======
+	clienthelpers "cosmossdk.io/client/v2/helpers"
+	"cosmossdk.io/core/legacy"
+>>>>>>> 5aaff2109 (feat: parse home flag earlier (#20771)):simapp/app_di.go
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -89,12 +93,11 @@ type SimApp struct {
 }
 
 func init() {
-	userHomeDir, err := os.UserHomeDir()
+	var err error
+	DefaultNodeHome, err = clienthelpers.GetNodeHomeDirectory(".simapp")
 	if err != nil {
 		panic(err)
 	}
-
-	DefaultNodeHome = filepath.Join(userHomeDir, ".simapp")
 }
 
 // NewSimApp returns a reference to an initialized SimApp.

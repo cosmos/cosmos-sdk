@@ -6,8 +6,6 @@ package secp256k1
 import (
 	"errors"
 
-	"golang.org/x/crypto/sha3"
-
 	"github.com/cometbft/cometbft/crypto"
 	secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
@@ -41,24 +39,6 @@ func (pubKey *PubKey) VerifySignature(msg, sigStr []byte) bool {
 	return signature.Verify(crypto.Sha256(msg), pub)
 }
 
-// VerifySignatureEIP191 verifies a signature of the form R || S.
-// It rejects signatures which are not in lower-S form.
-func (pubKey *PubKey) VerifySignatureEIP191(msg []byte, sigStr []byte) bool {
-	if len(sigStr) != 64 {
-		return false
-	}
-	pub, err := secp256k1.ParsePubKey(pubKey.Key)
-	if err != nil {
-		return false
-	}
-	// parse the signature, will return error if it is not in lower-S form
-	signature, err := signatureFromBytes(sigStr)
-	if err != nil {
-		return false
-	}
-	return signature.Verify(keccak256(msg), pub)
-}
-
 // Read Signature struct from R || S. Caller needs to ensure
 // that len(sigStr) == 64.
 // Rejects malleable signatures (if S value if it is over half order).
@@ -72,10 +52,4 @@ func signatureFromBytes(sigStr []byte) (*ecdsa.Signature, error) {
 	}
 
 	return ecdsa.NewSignature(&r, &s), nil
-}
-
-func keccak256(bytes []byte) []byte {
-	hasher := sha3.NewLegacyKeccak256()
-	hasher.Write(bytes)
-	return hasher.Sum(nil)
 }

@@ -2,12 +2,10 @@ package signing
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txsigning "cosmossdk.io/x/tx/signing"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
@@ -79,20 +77,9 @@ func VerifySignature(
 		if err != nil {
 			return err
 		}
-
-		if data.SignMode == signing.SignMode_SIGN_MODE_EIP_191 {
-			secp256k1PubKey, ok := pubKey.(*secp256k1.PubKey)
-			if !ok {
-				return fmt.Errorf("eip191 sign mode requires pubkey to be of type cosmos.crypto.secp256k1.PubKey")
-			}
-
-			if !secp256k1PubKey.VerifySignatureEIP191(signBytes, data.Signature) {
-				return fmt.Errorf("unable to verify single signer eip191 signature %s for signBytes %s", hex.EncodeToString(data.Signature), hex.EncodeToString(signBytes))
-			}
-		} else if !pubKey.VerifySignature(signBytes, data.Signature) {
+		if !pubKey.VerifySignature(signBytes, data.Signature) {
 			return fmt.Errorf("unable to verify single signer signature")
 		}
-
 		return nil
 
 	case *signing.MultiSignatureData:

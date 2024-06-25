@@ -61,7 +61,6 @@ var DefaultSignModes = []signingtypes.SignMode{
 	signingtypes.SignMode_SIGN_MODE_DIRECT,
 	signingtypes.SignMode_SIGN_MODE_DIRECT_AUX,
 	signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-	signingtypes.SignMode_SIGN_MODE_EIP_191,
 	// signingtypes.SignMode_SIGN_MODE_TEXTUAL is not enabled by default, as it requires a x/bank keeper or gRPC connection.
 }
 
@@ -153,11 +152,6 @@ func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, erro
 			if err != nil {
 				return nil, err
 			}
-		case signingtypes.SignMode_SIGN_MODE_EIP_191:
-			handlers[i] = NewSignModeEIP191Handler(aminojson.SignModeHandlerOptions{
-				FileResolver: signingOpts.FileResolver,
-				TypeResolver: signingOpts.TypeResolver,
-			})
 		}
 	}
 	for i, m := range configOpts.CustomSignModes {

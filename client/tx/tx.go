@@ -261,8 +261,6 @@ func Sign(ctx context.Context, txf Factory, name string, txBuilder client.TxBuil
 		if err != nil {
 			return err
 		}
-	} else if signMode == signing.SignMode_SIGN_MODE_EIP_191 {
-		return fmt.Errorf("EIP191 signing is not supported in cli")
 	}
 
 	k, err := txf.keybase.Key(name)

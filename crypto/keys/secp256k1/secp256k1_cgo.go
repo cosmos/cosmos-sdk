@@ -5,7 +5,6 @@ package secp256k1
 
 import (
 	"github.com/cometbft/cometbft/crypto"
-	"golang.org/x/crypto/sha3"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1/internal/secp256k1"
 )
@@ -25,16 +24,4 @@ func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 // The msg will be hashed prior to signature verification.
 func (pubKey *PubKey) VerifySignature(msg, sigStr []byte) bool {
 	return secp256k1.VerifySignature(pubKey.Bytes(), crypto.Sha256(msg), sigStr)
-}
-
-// VerifySignatureEIP191 validates the signature.
-// The msg will be hashed prior to signature verification.
-func (pubKey *PubKey) VerifySignatureEIP191(msg []byte, sigStr []byte) bool {
-	return secp256k1.VerifySignature(pubKey.Bytes(), keccak256(msg), sigStr)
-}
-
-func keccak256(bytes []byte) []byte {
-	hasher := sha3.NewLegacyKeccak256()
-	hasher.Write(bytes)
-	return hasher.Sum(nil)
 }

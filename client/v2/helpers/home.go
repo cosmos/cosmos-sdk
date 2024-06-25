@@ -7,7 +7,7 @@ import (
 )
 
 // GetNodeHomeDirectory gets the home directory of the node (where the config is located).
-// It parses the home flag if set or an environment variable if set (and ignores name).
+// It parses the home flag if set if the `NODE_HOME` environment variable if set (and ignores name).
 // Otherwise, it returns the default home directory given its name.
 func GetNodeHomeDirectory(name string) (string, error) {
 	// get the home directory from the flag
@@ -21,9 +21,9 @@ func GetNodeHomeDirectory(name string) (string, error) {
 	}
 
 	// get the home directory from the environment variable
-	homeDir := os.Getenv("HOME")
+	homeDir := os.Getenv("NODE_HOME")
 	if homeDir != "" {
-		return filepath.Join(homeDir), nil
+		return filepath.Join(homeDir, name), nil
 	}
 
 	// return the default home directory

@@ -14,16 +14,16 @@ func GetNodeHomeDirectory(name string) (string, error) {
 	args := os.Args
 	for i := 0; i < len(args); i++ {
 		if args[i] == "--home" && i+1 < len(args) {
-			return filepath.Join(args[i+1]), nil
+			return filepath.Clean(args[i+1]), nil
 		} else if strings.HasPrefix(args[i], "--home=") {
-			return filepath.Join(args[i][7:]), nil
+			return filepath.Clean(args[i][7:]), nil
 		}
 	}
 
 	// get the home directory from the environment variable
 	homeDir := os.Getenv("NODE_HOME")
 	if homeDir != "" {
-		return filepath.Join(homeDir, name), nil
+		return filepath.Clean(homeDir), nil
 	}
 
 	// return the default home directory

@@ -96,7 +96,7 @@ message QuerySequenceResponse {
 
 message QueryConfig {}
 
-// QuerySequenceResponse returns the sequence of the account.
+// QueryConfigResponse returns the config of the account.
 message QueryConfigResponse {
   repeated Member members = 1;
 

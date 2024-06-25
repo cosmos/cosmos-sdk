@@ -10,8 +10,13 @@ This document outlines the recommended usage and APIs for error handling in Cosm
 
 Modules are encouraged to define and register their own errors to provide better
 context on failed message or handler execution. Typically, these errors should be
-common or general errors which can be further wrapped to provide additional specific
-execution context.
+common or general errors which can be further wrapped to provide additional specific execution context.
+
+There are two ways to return errors. You can register custom errors with a codespace that is meant to provide more information to clients and normal go errors. The Cosmos SDK uses a mixture of both. 
+
+:::Warning
+If errors are registered they are part of consensus and cannot be changed in a minor release
+:::
 
 ## Registration
 
@@ -32,22 +37,16 @@ necessarily have to be. The only restrictions on error codes are the following:
 * Must be greater than one, as a code value of one is reserved for internal errors.
 * Must be unique within the module.
 
-Note, the Cosmos SDK provides a core set of *common* errors. These errors are defined in [`types/errors/errors.go`](https://github.com/cosmos/cosmos-sdk/blob/main/types/errors/errors.go).
-
 ## Wrapping
 
 The custom module errors can be returned as their concrete type as they already fulfill the `error`
-interface. However, module errors can be wrapped to provide further context and meaning to failed
-execution.
+interface. However, module errors can be wrapped to provide further context and meaning to failed execution.
 
 Example:
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/keeper/keeper.go#L141-L182
 ```
-
-Regardless if an error is wrapped or not, the Cosmos SDK's `errors` package provides a function to determine if
-an error is of a particular kind via `Is`.
 
 ## ABCI
 

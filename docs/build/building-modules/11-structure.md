@@ -2,10 +2,12 @@
 sidebar_position: 1
 ---
 
-# Recommended Folder Structure
+# Folder Structure
 
 :::note Synopsis
-This document outlines the recommended structure of Cosmos SDK modules. These ideas are meant to be applied as suggestions. Application developers are encouraged to improve upon and contribute to module structure and development design.
+This document outlines the structure of Cosmos SDK modules. These ideas are meant to be applied as suggestions. Application developers are encouraged to improve upon and contribute to module structure and development design.
+
+The required interface for a module is located in the module.go. Everything beyond this is suggestive.
 :::
 
 ## Structure
@@ -18,14 +20,12 @@ proto
     └── {module_name}
         └── {proto_version}
             ├── {module_name}.proto
-            ├── event.proto
             ├── genesis.proto
             ├── query.proto
             └── tx.proto
 ```
 
 * `{module_name}.proto`: The module's common message type definitions.
-* `event.proto`: The module's message type definitions related to events.
 * `genesis.proto`: The module's message type definitions related to genesis state.
 * `query.proto`: The module's Query service and related message type definitions.
 * `tx.proto`: The module's Msg service and related message type definitions.
@@ -79,8 +79,8 @@ x/{module_name}
 * `client/`: The module's CLI client functionality implementation and the module's CLI testing suite.
 * `exported/`: The module's exported types - typically interface types. If a module relies on keepers from another module, it is expected to receive the keepers as interface contracts through the `expected_keepers.go` file (see below) in order to avoid a direct dependency on the module implementing the keepers. However, these interface contracts can define methods that operate on and/or return types that are specific to the module that is implementing the keepers and this is where `exported/` comes into play. The interface types that are defined in `exported/` use canonical types, allowing for the module to receive the keepers as interface contracts through the `expected_keepers.go` file. This pattern allows for code to remain DRY and also alleviates import cycle chaos.
 * `keeper/`: The module's `Keeper` and `MsgServer` implementation.
-* `module/`: The module's `AppModule` implementation.
     * `abci.go`: The module's `BeginBlocker` and `EndBlocker` implementations (this file is only required if `BeginBlocker` and/or `EndBlocker` need to be defined).
+* `module/`: The module's `AppModule` implementation.
     * `autocli.go`: The module [autocli](https://docs.cosmos.network/main/core/autocli) options.
 * `simulation/`: The module's [simulation](./14-simulator.md) package defines functions used by the blockchain simulator application (`simapp`).
 * `README.md`: The module's specification documents outlining important concepts, state storage structure, and message and event type definitions. Learn more how to write module specs in the [spec guidelines](../../spec/SPEC_MODULE.md).

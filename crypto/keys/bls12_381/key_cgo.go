@@ -36,13 +36,17 @@ func NewPrivateKeyFromBytes(bz []byte) (PrivKey, error) {
 	if err != nil {
 		return PrivKey{}, err
 	}
-	return secretKey.Marshal(), nil
+	return PrivKey{
+		Key: secretKey.Marshal(),
+	}, nil
 }
 
 // GenPrivKey generates a new key.
 func GenPrivKey() (PrivKey, error) {
 	secretKey, err := bls12381.RandKey()
-	return PrivKey(secretKey.Marshal()), err
+	return PrivKey{
+		Key: secretKey.Marshal(),
+	}, err
 }
 
 // Bytes returns the byte representation of the Key.
@@ -58,7 +62,9 @@ func (privKey PrivKey) PubKey() cryptotypes.PubKey {
 		return nil
 	}
 
-	return PubKey(secretKey.PublicKey().Marshal())
+	return &PubKey{
+		Key: secretKey.PublicKey().Marshal(),
+	}
 }
 
 // Equals returns true if two keys are equal and false otherwise.
@@ -68,7 +74,7 @@ func (privKey PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
 
 // Type returns the type.
 func (PrivKey) Type() string {
-	return keyType
+	return KeyType
 }
 
 // Sign signs the given byte array. If msg is larger than
@@ -167,7 +173,7 @@ func (pubKey PubKey) Bytes() []byte {
 
 // Type returns the key's type.
 func (PubKey) Type() string {
-	return keyType
+	return KeyType
 }
 
 // Equals returns true if the other's type is the same and their bytes are deeply equal.

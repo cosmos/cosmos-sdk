@@ -1,3 +1,5 @@
+//go:build !bls12381
+
 package bls12_381
 
 import (

@@ -25,6 +25,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Bug Fixes
+
+* [#20688](https://github.com/cosmos/cosmos-sdk/pull/20688) Avoid overslashing unbonding delegations after a redelegation.
+
 ### Features
 
 * [#19537](https://github.com/cosmos/cosmos-sdk/pull/19537) Changing `MinCommissionRate` in `MsgUpdateParams` now updates the minimum commission rate for all validators.

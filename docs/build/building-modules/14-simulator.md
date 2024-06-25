@@ -71,6 +71,7 @@ Here is how one can override the above package `simappparams`.
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/release/v0.51.x/Makefile#L292-L334
 ```
+
 The SDK simulations can be executed like normal tests in Go from the shell or within an IDE.
 Make sure that you pass the `-tags='sims` parameter to enable them and other params that make sense for your scenario.
 

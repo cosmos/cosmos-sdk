@@ -18,14 +18,7 @@ sidebar_position: 1
 
 There are two semantics around the new lifecycle method:
 
-- It runs before the `BeginBlocker` of all modules
-- It can modify consensus parameters in storage, and signal the caller through the return value.
+* It runs before the `BeginBlocker` of all modules
+* It can modify consensus parameters in storage, and signal the caller through the return value.
 
-When it returns `ConsensusParamsChanged=true`, the caller must refresh the consensus parameter in the deliver context:
-```
-app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithConsensusParams(app.GetConsensusParams())
-```
-
-The new ctx must be passed to all the other lifecycle methods.
-
-<!-- TODO: leaving this here to update docs with core api changes  -->
+Modules are required to get the consensus params from the consensus module. Consensus params located in `sdk.Context` were deprecated and should be treated as unsafe. `sdk.Context` is deprecated due to it being a global state within the entire state machine, it has been replaced with `appmodule.Environment`.

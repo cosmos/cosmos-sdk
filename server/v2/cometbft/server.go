@@ -137,7 +137,7 @@ func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 		cometConfig,
 		pvm.LoadOrGenFilePV(cometConfig.PrivValidatorKeyFile(), cometConfig.PrivValidatorStateFile()),
 		nodeKey,
-		proxy.NewLocalClientCreator(s.App),
+		proxy.NewConsensusSyncLocalClientCreator(s.App),
 		getGenDocProvider(cometConfig),
 		cmtcfg.DefaultDBProvider,
 		node.DefaultMetricsProvider(cometConfig.Instrumentation),

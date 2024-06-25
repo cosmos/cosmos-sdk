@@ -47,7 +47,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/staking/keeper/keepe
 Let us go through the different parameters:
 
 * An expected `keeper` is a `keeper` external to a module that is required by the internal `keeper` of said module. External `keeper`s are listed in the internal `keeper`'s type definition as interfaces. These interfaces are themselves defined in an `expected_keepers.go` file in the root of the module's folder. In this context, interfaces are used to reduce the number of dependencies, as well as to facilitate the maintenance of the module itself.
-* `storeKey`s grant access to the store(s) of the [multistore](../../learn/advanced/04-store.md) managed by the module. They should always remain unexposed to external modules.
+* `KVStoreService`s grant access to the store(s) of the [multistore](../../learn/advanced/04-store.md) managed by the module. They should always remain unexposed to external modules.
 * `cdc` is the [codec](../../learn/advanced/05-encoding.md) used to marshall and unmarshall structs to/from `[]byte`. The `cdc` can be any of `codec.BinaryCodec`, `codec.JSONCodec` or `codec.Codec` based on your requirements. It can be either a proto or amino codec as long as they implement these interfaces.
 * The authority listed is a module account or user account that has the right to change module level parameters. Previously this was handled by the param module, which has been deprecated.
 
@@ -55,38 +55,8 @@ Of course, it is possible to define different types of internal `keeper`s for th
 
 ## Implementing Methods
 
-`Keeper`s primarily expose getter and setter methods for the store(s) managed by their module. These methods should remain as simple as possible and strictly be limited to getting or setting the requested value, as validity checks should have already been performed by the [`Msg` server](./03-msg-services.md) when `keeper`s' methods are called.
+`Keeper`s primarily expose methods for business logic, as validity checks should have already been performed by the [`Msg` server](./03-msg-services.md) when `keeper`s' methods are called.
 
-Typically, a *getter* method will have the following signature
-
-```go
-func (k Keeper) Get(ctx context.Context, key string) returnType
-```
-
-and the method will go through the following steps:
-
-1. Retrieve the appropriate store from the `ctx` using the `storeKey`. This is done through the `KVStore(storeKey sdk.StoreKey)` method of the `ctx`. Then it's preferred to use the `prefix.Store` to access only the desired limited subset of the store for convenience and safety.
-2. If it exists, get the `[]byte` value stored at location `[]byte(key)` using the `Get(key []byte)` method of the store.
-3. Unmarshall the retrieved value from `[]byte` to `returnType` using the codec `cdc`. Return the value.
-
-Similarly, a *setter* method will have the following signature
-
-```go
-func (k Keeper) Set(ctx context.Context, key string, value valueType)
-```
-
-and the method will go through the following steps:
-
-1. Retrieve the appropriate store from the `ctx` using the `storeKey`. This is done through the `KVStore(storeKey sdk.StoreKey)` method of the `ctx`. It's preferred to use the `prefix.Store` to access only the desired limited subset of the store for convenience and safety.
-2. Marshal `value` to `[]byte` using the codec `cdc`.
-3. Set the encoded value in the store at location `key` using the `Set(key []byte, value []byte)` method of the store.
-
-For more, see an example of `keeper`'s [methods implementation from the `staking` module](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/staking/keeper/keeper.go).
-
-The [module `KVStore`](../../learn/advanced/04-store.md#kvstore-and-commitkvstore-interfaces) also provides an `Iterator()` method which returns an `Iterator` object to iterate over a domain of keys.
-
-This is an example from the `auth` module to iterate accounts:
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/keeper/account.go
-```
+<!-- markdown-link-check-disable -->
+State management is recommended to be done via [Collections](../packages/collections) 
+<!-- The above link is created via the script to generate docs  -->

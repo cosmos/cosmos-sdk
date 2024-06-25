@@ -969,24 +969,13 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestWitdrawExpiredFunds() {
+func (suite *KeeperTestSuite) TestWithdrawExpiredFunds() {
 	suite.SetupTest()
 	recipientStrAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(recipientAddr)
 	suite.Require().NoError(err)
 	recipient2 := sdk.AccAddress([]byte("recipientAddr2___________________"))
 	recipient2StrAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(recipient2)
 	suite.Require().NoError(err)
-
-	/*
-			1. Call MsgCreateContinuousFund for Alice with expiry after one day.
-		2. Call MsgCreateContinuousFund for Bob with no expiry.
-		3. Increase rewards to be distributed with [SetToDistribute](https://github.com/cosmos/cosmos-sdk/blob/fa45e10f4daa3b653c8107efe43ac3c5de87f7eb/x/protocolpool/keeper/keeper.go#L186).
-		4. Before expiry, Alice calls MsgWithdrawContinuousFund to receive her rewards.
-		5. After expiry, Alice calls MsgWithdrawContinuousFund, but [fails](https://github.com/cosmos/cosmos-sdk/blob/fa45e10f4daa3b653c8107efe43ac3c5de87f7eb/x/protocolpool/keeper/keeper.go#L124-L126).
-		6. Increase rewards again with SetToDistribute.
-		7. Bob calls MsgWithdrawContinuousFund to withdraw his rewards. However, this action increases Alice’s reward balance too.
-		8. Call MsgCancelContinuousFund for Alice. This causes Alice to receive post-expiration rewards that originate from step 6, which is incorrect.
-	*/
 
 	expiration := suite.environment.HeaderService.HeaderInfo(suite.ctx).Time.Add(24 * time.Hour)
 	_, err = suite.msgServer.CreateContinuousFund(suite.ctx, &types.MsgCreateContinuousFund{

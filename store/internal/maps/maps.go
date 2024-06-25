@@ -2,7 +2,7 @@ package maps
 
 import (
 	"encoding/binary"
-	
+
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	"github.com/cometbft/cometbft/crypto/merkle"
 	"github.com/cosmos/crypto/hash/sha256"

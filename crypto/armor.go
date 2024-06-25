@@ -4,8 +4,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-
-
 	"github.com/cosmos/crypto/armor"
 	"github.com/cosmos/crypto/hash/sha256"
 	"github.com/cosmos/crypto/random"

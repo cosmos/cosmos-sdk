@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/core/log"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/runtime/v2"
-	"cosmossdk.io/server/v2/cometbft/flags"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	"cosmossdk.io/store/v2/db"
@@ -39,7 +38,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/std"
 )
 
@@ -96,7 +94,7 @@ func NewSimApp(
 	logger log.Logger,
 	viper *viper.Viper,
 ) *SimApp {
-	viper.Set(flags.FlagHome, DefaultNodeHome)
+	viper.Set("home", DefaultNodeHome) // TODO possibly set earlier when viper is created
 	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(DefaultNodeHome, "data"), nil)
 	if err != nil {
 		panic(err)
@@ -125,7 +123,7 @@ func NewSimApp(
 					},
 					SCRawDB: scRawDb,
 				},
-				servertypes.AppOptions(viper),
+				viper,
 
 				// ADVANCED CONFIGURATION
 

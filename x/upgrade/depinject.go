@@ -2,6 +2,7 @@ package upgrade
 
 import (
 	"github.com/spf13/cast"
+	"github.com/spf13/viper"
 
 	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	"cosmossdk.io/core/address"
@@ -41,7 +42,8 @@ type ModuleInputs struct {
 	AddressCodec       address.Codec
 	AppVersionModifier app.VersionModifier
 
-	AppOpts servertypes.AppOptions `optional:"true"`
+	AppOpts servertypes.AppOptions `optional:"true"` // server v0
+	Viper   *viper.Viper           `optional:"true"` // server v2
 }
 
 type ModuleOutputs struct {
@@ -57,12 +59,22 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		skipUpgradeHeights = make(map[int64]bool)
 	)
 
+	if in.AppOpts != nil && in.Viper != nil {
+		panic("cannot provide both server v0 and server v2 options (appOpts and viper)")
+	}
+
 	if in.AppOpts != nil {
 		for _, h := range cast.ToIntSlice(in.AppOpts.Get(server.FlagUnsafeSkipUpgrades)) {
 			skipUpgradeHeights[int64(h)] = true
 		}
 
 		homePath = cast.ToString(in.AppOpts.Get(flags.FlagHome))
+	} else if in.Viper != nil {
+		for _, h := range in.Viper.GetIntSlice(server.FlagUnsafeSkipUpgrades) {
+			skipUpgradeHeights[int64(h)] = true
+		}
+
+		homePath = in.Viper.GetString(flags.FlagHome)
 	}
 
 	// default to governance authority if not provided

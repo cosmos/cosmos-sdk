@@ -11,7 +11,7 @@ CONFIG="${CONFIG:-$HOME/.simappv2/config}"
 
 COSMOS_BUILD_OPTIONS=v2 make build     
 
-if [ -d "$($SIMD config home)" ]; then rm -r $($SIMD config home); fi
+if [ -d "$($SIMD config home)" ]; then rm -rv $($SIMD config home); fi
 
 $SIMD init simapp-v2-node --chain-id simapp-v2-chain
 
@@ -26,6 +26,7 @@ jq '.app_state.mint.minter.inflation = "0.300000000000000000"' genesis.json > te
 # change the initial height to 2 to work around store/v2 and iavl limitations with a genesis block
 jq '.initial_height = 2' genesis.json > temp.json && mv temp.json genesis.json
 
+$SIMD config set client chain-id simapp-v2-chain
 $SIMD keys add test_validator --indiscreet
 VALIDATOR_ADDRESS=$($SIMD keys show test_validator -a --keyring-backend test)
 

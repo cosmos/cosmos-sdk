@@ -17,10 +17,8 @@ import (
 	"cosmossdk.io/log"
 )
 
-// Execute executes the root command of an application. It handles creating a
-// server context object with the appropriate server and client objects injected
-// into the underlying stdlib Context. It also handles adding core CLI flags,
-// specifically the logging flags. It returns an error upon execution failure.
+// Execute executes the root command of an application.
+// It handles adding core CLI flags, specifically the logging flags.
 func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 	rootCmd.PersistentFlags().String(FlagLogLevel, "info", "The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:<level>,<key>:<level>')")
 	rootCmd.PersistentFlags().String(FlagLogFormat, "plain", "The logging format (json|plain)")

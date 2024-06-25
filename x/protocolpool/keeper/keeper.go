@@ -121,6 +121,8 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipientAddr string
 		}
 		return sdk.Coin{}, fmt.Errorf("get continuous fund failed for recipient: %s", recipientAddr)
 	}
+
+	fmt.Println(recipientAddr, "cf.Expiry", cf.Expiry, "header time", k.HeaderService.HeaderInfo(ctx).Time, sdk.UnwrapSDKContext(ctx).BlockTime())
 	if cf.Expiry != nil && cf.Expiry.Before(k.HeaderService.HeaderInfo(ctx).Time) {
 		return sdk.Coin{}, fmt.Errorf("cannot withdraw continuous funds: continuous fund expired for recipient: %s", recipientAddr)
 	}
@@ -270,6 +272,17 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistrib
 		if err != nil {
 			return true, err
 		}
+
+		cf, err := k.ContinuousFund.Get(ctx, key)
+		if err != nil {
+			return true, err
+		}
+
+		// Check if the continuous fund has expired
+		if cf.Expiry != nil && cf.Expiry.Before(k.HeaderService.HeaderInfo(ctx).Time) {
+			return false, nil
+		}
+
 		totalPercentageToBeDistributed = totalPercentageToBeDistributed.Add(value)
 		recipientFundList = append(recipientFundList, recipientFund{
 			RecipientAddr: addr,

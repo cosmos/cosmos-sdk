@@ -76,7 +76,7 @@ type SimApp struct {
 
 func init() {
 	var err error
-	DefaultNodeHome, err = clienthelpers.GetNodeHomeDirectory(".simapp")
+	DefaultNodeHome, err = clienthelpers.GetNodeHomeDirectory(".simappv2")
 	if err != nil {
 		panic(err)
 	}

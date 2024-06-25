@@ -59,22 +59,18 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		skipUpgradeHeights = make(map[int64]bool)
 	)
 
-	if in.AppOpts != nil && in.Viper != nil {
-		panic("cannot provide both server v0 and server v2 options (appOpts and viper)")
-	}
-
-	if in.AppOpts != nil {
-		for _, h := range cast.ToIntSlice(in.AppOpts.Get(server.FlagUnsafeSkipUpgrades)) {
-			skipUpgradeHeights[int64(h)] = true
-		}
-
-		homePath = cast.ToString(in.AppOpts.Get(flags.FlagHome))
-	} else if in.Viper != nil {
+	if in.Viper != nil { // viper takes precedence over app options
 		for _, h := range in.Viper.GetIntSlice(server.FlagUnsafeSkipUpgrades) {
 			skipUpgradeHeights[int64(h)] = true
 		}
 
 		homePath = in.Viper.GetString(flags.FlagHome)
+	} else if in.AppOpts != nil {
+		for _, h := range cast.ToIntSlice(in.AppOpts.Get(server.FlagUnsafeSkipUpgrades)) {
+			skipUpgradeHeights[int64(h)] = true
+		}
+
+		homePath = cast.ToString(in.AppOpts.Get(flags.FlagHome))
 	}
 
 	// default to governance authority if not provided

@@ -29,7 +29,7 @@ func init() {
 }
 
 // Profile with:
-// /usr/local/go/bin/go test -benchmem -run=^$ cosmossdk.io/simapp -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
+// /usr/local/go/bin/go test -benchmem -run=^$ cosmossdk.io/simapp/v2 -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func BenchmarkFullAppSimulation(b *testing.B) {
 	b.ReportAllocs()
 

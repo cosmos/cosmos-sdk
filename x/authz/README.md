@@ -143,6 +143,8 @@ In this section we describe the processing of messages for the authz module.
 An authorization grant is created using the `MsgGrant` message.
 If there is already a grant for the `(granter, grantee, Authorization)` triple, then the new grant overwrites the previous one. To update or extend an existing grant, a new grant with the same `(granter, grantee, Authorization)` triple should be created.
 
+An authorization grant for authz `MsgGrant` is not allowed and will return an error. This is for preventing user from accidentally authorizing their entire account to a different account.
+
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/authz/v1beta1/tx.proto#L35-L45
 ```

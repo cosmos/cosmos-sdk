@@ -2,17 +2,19 @@ package appconfig
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
+	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
 	"sigs.k8s.io/yaml"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+
 	"cosmossdk.io/depinject"
 	internal "cosmossdk.io/depinject/internal/appconfig"
 )
@@ -20,7 +22,9 @@ import (
 // LoadJSON loads an app config in JSON format.
 func LoadJSON(bz []byte) depinject.Config {
 	config := &appv1alpha1.Config{}
-	err := protojson.Unmarshal(bz, config)
+	err := protojson.UnmarshalOptions{
+		Resolver: dynamicTypeResolver{resolver: gogoproto.HybridResolver},
+	}.Unmarshal(bz, config)
 	if err != nil {
 		return depinject.Error(err)
 	}
@@ -55,6 +59,11 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 		depinject.Supply(appConfig),
 	}
 
+	modules, err := internal.ModulesByModuleTypeName()
+	if err != nil {
+		return depinject.Error(err)
+	}
+
 	for _, module := range appConfig.Modules {
 		if module.Name == "" {
 			return depinject.Error(fmt.Errorf("module is missing name"))
@@ -64,30 +73,38 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 			return depinject.Error(fmt.Errorf("module %q is missing a config object", module.Name))
 		}
 
-		msgType, err := protoregistry.GlobalTypes.FindMessageByURL(module.Config.TypeUrl)
-		if err != nil {
-			return depinject.Error(err)
+		msgName := module.Config.TypeUrl
+		// strip type URL prefix
+		if slashIdx := strings.LastIndex(msgName, "/"); slashIdx >= 0 {
+			msgName = msgName[slashIdx+1:]
+		}
+		if msgName == "" {
+			return depinject.Error(fmt.Errorf("module %q is missing a type URL", module.Name))
 		}
 
-		modules, err := internal.ModulesByProtoMessageName()
-		if err != nil {
-			return depinject.Error(err)
-		}
-
-		init, ok := modules[msgType.Descriptor().FullName()]
+		init, ok := modules[msgName]
 		if !ok {
-			modDesc := proto.GetExtension(msgType.Descriptor().Options(), appv1alpha1.E_Module).(*appv1alpha1.ModuleDescriptor)
-			if modDesc == nil {
-				return depinject.Error(fmt.Errorf("no module registered for type URL %s and that protobuf type does not have the option %s\n\n%s",
-					module.Config.TypeUrl, appv1alpha1.E_Module.TypeDescriptor().FullName(), dumpRegisteredModules(modules)))
+			if msgDesc, err := gogoproto.HybridResolver.FindDescriptorByName(protoreflect.FullName(msgName)); err == nil {
+				modDesc := protov2.GetExtension(msgDesc.Options(), appv1alpha1.E_Module).(*appv1alpha1.ModuleDescriptor)
+				if modDesc == nil {
+					return depinject.Error(fmt.Errorf("no module registered for type URL %s and that protobuf type does not have the option %s\n\n%s",
+						module.Config.TypeUrl, appv1alpha1.E_Module.TypeDescriptor().FullName(), dumpRegisteredModules(modules)))
+				}
+
+				return depinject.Error(fmt.Errorf("no module registered for type URL %s, did you forget to import %s: find more information on how to make a module ready for app wiring: https://docs.cosmos.network/main/building-modules/depinject\n\n%s",
+					module.Config.TypeUrl, modDesc.GoImport, dumpRegisteredModules(modules)))
 			}
 
-			return depinject.Error(fmt.Errorf("no module registered for type URL %s, did you forget to import %s: find more information on how to make a module ready for app wiring: https://docs.cosmos.network/main/building-modules/depinject\n\n%s",
-				module.Config.TypeUrl, modDesc.GoImport, dumpRegisteredModules(modules)))
 		}
 
-		config := init.ConfigProtoMessage.ProtoReflect().Type().New().Interface()
-		err = anypb.UnmarshalTo(module.Config, config, proto.UnmarshalOptions{})
+		var config gogoproto.Message
+		if configInit, ok := init.ConfigProtoMessage.(protov2.Message); ok {
+			config = configInit.ProtoReflect().Type().New().Interface().(gogoproto.Message)
+		} else {
+			config = reflect.New(init.ConfigGoType.Elem()).Interface().(gogoproto.Message)
+		}
+		// as of gogo v1.5.0 this should work with either gogoproto or golang v2 proto
+		err = gogoproto.Unmarshal(module.Config.Value, config)
 		if err != nil {
 			return depinject.Error(err)
 		}
@@ -114,10 +131,10 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 	return depinject.Configs(opts...)
 }
 
-func dumpRegisteredModules(modules map[protoreflect.FullName]*internal.ModuleInitializer) string {
+func dumpRegisteredModules(modules map[string]*internal.ModuleInitializer) string {
 	var mods []string
 	for name := range modules {
-		mods = append(mods, "  "+string(name))
+		mods = append(mods, "  "+name)
 	}
 	return fmt.Sprintf("registered modules are:\n%s", strings.Join(mods, "\n"))
 }

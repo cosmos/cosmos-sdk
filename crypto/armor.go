@@ -4,13 +4,14 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"golang.org/x/crypto/argon2"
-	"golang.org/x/crypto/chacha20poly1305"
-	//nolint:staticcheck //TODO: remove this dependency
+
 
 	"github.com/cosmos/crypto/armor"
 	"github.com/cosmos/crypto/hash/sha256"
 	"github.com/cosmos/crypto/random"
+	"golang.org/x/crypto/argon2"
+	"golang.org/x/crypto/chacha20poly1305"
+	//nolint:staticcheck //TODO: remove this dependency
 
 	errorsmod "cosmossdk.io/errors"
 

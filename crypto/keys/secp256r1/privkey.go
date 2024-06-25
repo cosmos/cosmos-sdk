@@ -2,9 +2,9 @@ package secp256r1
 
 import (
 	"encoding/base64"
-	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/internal/ecdsa"
+	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 var (

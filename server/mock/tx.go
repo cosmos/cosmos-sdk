@@ -3,8 +3,8 @@ package mock
 import (
 	"bytes"
 	"fmt"
-	cosmoscrypto "github.com/cosmos/crypto/types"
 
+	cosmoscrypto "github.com/cosmos/crypto/types"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"

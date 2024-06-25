@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"fmt"
+
 	cosmoscrypto "github.com/cosmos/crypto/types"
 
 	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto/types"

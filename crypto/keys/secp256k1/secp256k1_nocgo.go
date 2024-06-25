@@ -5,6 +5,7 @@ package secp256k1
 
 import (
 	"errors"
+
 	"github.com/cosmos/crypto/hash/sha256"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"

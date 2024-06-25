@@ -189,6 +189,9 @@ type BaseApp struct {
 	// including the goroutine handling.This is experimental and must be enabled
 	// by developers.
 	optimisticExec *oe.OptimisticExecution
+
+	// excludeNestedMsgsGas holds a set of message types for which gas costs for its nested messages are not calculated.
+	excludeNestedMsgsGas map[string]struct{}
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -236,7 +239,9 @@ func NewBaseApp(
 	if app.interBlockCache != nil {
 		app.cms.SetInterBlockCache(app.interBlockCache)
 	}
-
+	if app.excludeNestedMsgsGas == nil {
+		app.excludeNestedMsgsGas = make(map[string]struct{})
+	}
 	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()
 
 	// Initialize with an empty interface registry to avoid nil pointer dereference.
@@ -963,11 +968,14 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	}
 
 	if mode == execModeSimulate {
-		nestedMsgsContext, _ := app.cacheTxContext(ctx, txBytes)
+		gas := ctx.GasMeter().GasConsumed()
 		for _, msg := range msgs {
-			nestedErr := app.simulateNestedMessages(nestedMsgsContext, msg)
+			nestedErr := app.simulateNestedMessages(ctx, msg)
 			if nestedErr != nil {
 				return gInfo, nil, anteEvents, nestedErr
+			}
+			if _, ok := app.excludeNestedMsgsGas[sdk.MsgTypeURL(msg)]; ok {
+				ctx.GasMeter().RefundGas(ctx.GasMeter().GasConsumed()-gas, "simulation of nested messages")
 			}
 		}
 	}

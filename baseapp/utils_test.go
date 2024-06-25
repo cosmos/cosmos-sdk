@@ -377,9 +377,12 @@ func wonkyMsg(t *testing.T, cfg client.TxConfig, tx signing.Tx) signing.Tx {
 	return builder.GetTx()
 }
 
-type SendServerImpl struct{}
+type SendServerImpl struct {
+	gas uint64
+}
 
 func (s SendServerImpl) Send(ctx context.Context, send *baseapptestutil.MsgSend) (*baseapptestutil.MsgSendResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	if send.From == "" {
 		return nil, errors.New("from address cannot be empty")
 	}
@@ -391,13 +394,20 @@ func (s SendServerImpl) Send(ctx context.Context, send *baseapptestutil.MsgSend)
 	if err != nil {
 		return nil, err
 	}
-
+	gas := s.gas
+	if gas == 0 {
+		gas = 5
+	}
+	sdkCtx.GasMeter().ConsumeGas(gas, "send test")
 	return &baseapptestutil.MsgSendResponse{}, nil
 }
 
-type NestedMessgesServerImpl struct{}
+type NestedMessgesServerImpl struct {
+	gas uint64
+}
 
-func (n NestedMessgesServerImpl) Check(_ context.Context, message *baseapptestutil.MsgNestedMessages) (*baseapptestutil.MsgCreateNestedMessagesResponse, error) {
+func (n NestedMessgesServerImpl) Check(ctx context.Context, message *baseapptestutil.MsgNestedMessages) (*baseapptestutil.MsgCreateNestedMessagesResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	cdc := codectestutil.CodecOptions{}.NewCodec()
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 
@@ -427,5 +437,11 @@ func (n NestedMessgesServerImpl) Check(_ context.Context, message *baseapptestut
 		}
 
 	}
+
+	gas := n.gas
+	if gas == 0 {
+		gas = 5
+	}
+	sdkCtx.GasMeter().ConsumeGas(gas, "nested messages test")
 	return nil, nil
 }

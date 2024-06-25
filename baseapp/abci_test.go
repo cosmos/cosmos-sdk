@@ -774,10 +774,9 @@ func anyMessage(t *testing.T, cdc codec.Codec, msg *baseapptestutil.MsgSend) *an
 }
 
 func TestABCI_Query_SimulateNestedMessagesTx(t *testing.T) {
-	gasConsumed := uint64(5)
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasConsumed))
+			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(uint64(15)))
 			return
 		})
 	}
@@ -854,7 +853,6 @@ func TestABCI_Query_SimulateNestedMessagesTx(t *testing.T) {
 					}),
 				},
 			},
-			wantErr: false,
 		},
 		{
 			name: "with invalid nested messages",
@@ -917,6 +915,84 @@ func TestABCI_Query_SimulateNestedMessagesTx(t *testing.T) {
 				require.NoError(t, err)
 				require.NotNil(t, result)
 			}
+		})
+	}
+}
+
+func TestABCI_Query_SimulateNestedMessagesGas(t *testing.T) {
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(uint64(10)))
+			return
+		})
+	}
+
+	_, _, addr := testdata.KeyTestPubAddr()
+	_, _, toAddr := testdata.KeyTestPubAddr()
+
+	tests := []struct {
+		name        string
+		suite       *BaseAppSuite
+		message     sdk.Msg
+		consumedGas uint64
+	}{
+		{
+			name:  "add gas",
+			suite: NewBaseAppSuite(t, anteOpt),
+			message: &baseapptestutil.MsgSend{
+				From:   addr.String(),
+				To:     toAddr.String(),
+				Amount: "10000stake",
+			},
+			consumedGas: 10,
+		},
+		{
+			name:  "don't add gas",
+			suite: NewBaseAppSuite(t, anteOpt, baseapp.SetExcludeNestedMsgsGas([]sdk.Msg{&baseapptestutil.MsgNestedMessages{}})),
+			message: &baseapptestutil.MsgSend{
+				From:   addr.String(),
+				To:     toAddr.String(),
+				Amount: "10000stake",
+			},
+			consumedGas: 5,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := tt.suite.baseApp.InitChain(&abci.InitChainRequest{
+				ConsensusParams: &cmtproto.ConsensusParams{},
+			})
+			require.NoError(t, err)
+
+			baseapptestutil.RegisterNestedMessagesServer(tt.suite.baseApp.MsgServiceRouter(), NestedMessgesServerImpl{})
+			baseapptestutil.RegisterSendServer(tt.suite.baseApp.MsgServiceRouter(), SendServerImpl{})
+
+			nestedMessages := make([]*any.Any, 1)
+			b, err := tt.suite.cdc.Marshal(tt.message)
+			require.NoError(t, err)
+			nestedMessages[0] = &any.Any{
+				TypeUrl: sdk.MsgTypeURL(tt.message),
+				Value:   b,
+			}
+
+			msg := &baseapptestutil.MsgNestedMessages{
+				Messages: nestedMessages,
+				Signer:   addr.String(),
+			}
+
+			builder := tt.suite.txConfig.NewTxBuilder()
+			err = builder.SetMsgs(msg)
+			require.NoError(t, err)
+			setTxSignature(t, builder, 0)
+			tx := builder.GetTx()
+
+			txBytes, err := tt.suite.txConfig.TxEncoder()(tx)
+			require.Nil(t, err)
+
+			gas, result, err := tt.suite.baseApp.Simulate(txBytes)
+			require.NoError(t, err)
+			require.NotNil(t, result)
+			require.True(t, gas.GasUsed == tt.consumedGas)
 		})
 	}
 }

@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	"cosmossdk.io/x/feegrant"
@@ -42,12 +41,6 @@ var FlagEnableStreamingValue bool
 func init() {
 	simcli.GetSimulatorFlags()
 	flag.BoolVar(&FlagEnableStreamingValue, "EnableStreaming", false, "Enable streaming service")
-}
-
-// interBlockCacheOpt returns a BaseApp option function that sets the persistent
-// inter-block write-through cache.
-func interBlockCacheOpt() func(*baseapp.BaseApp) {
-	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
 
 func TestFullAppSimulation(t *testing.T) {

@@ -38,6 +38,8 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/protobuf v1.34.2
+	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
+	github.com/cometbft/cometbft/api v1.0.0-rc.1
 )
 
 require (
@@ -55,7 +57,6 @@ require (
 	cosmossdk.io/math v1.3.0 // indirect
 	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
 	cosmossdk.io/x/tx v0.13.3 // indirect
@@ -82,7 +83,6 @@ require (
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cometbft/cometbft v1.0.0-alpha.2.0.20240530055211-ae27f7eb3c08 // indirect
 	github.com/cometbft/cometbft-db v0.12.0 // indirect
-	github.com/cometbft/cometbft/api v1.0.0-rc.1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/crypto v0.0.0-20240309083813-82ed2537802e // indirect

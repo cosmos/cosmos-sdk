@@ -5,13 +5,11 @@ set -o nounset
 set -x
 
 ROOT=$PWD
-SIMAPP_DIR="$ROOT/simapp/v2"
 
 SIMD="$ROOT/build/simdv2"
 CONFIG="${CONFIG:-$HOME/.simappv2/config}"
 
-cd "$SIMAPP_DIR"
-go build -o "$ROOT/build/simdv2" simdv2/main.go
+COSMOS_BUILD_OPTIONS=v2 make build
 
 if [ -d "$($SIMD config home)" ]; then rm -r $($SIMD config home); fi
 

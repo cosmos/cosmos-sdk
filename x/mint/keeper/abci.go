@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 
 	"cosmossdk.io/x/mint/types"
@@ -19,7 +18,7 @@ func (k Keeper) BeginBlocker(ctx context.Context, mintFn types.MintFn) error {
 		return err
 	}
 
-	oldBz := k.cdc.MustMarshal(&minter)
+	oldMinter := minter
 
 	// we pass -1 as epoch number to indicate that this is not an epoch minting,
 	// but a regular block minting. Same with epoch id "block".
@@ -28,8 +27,7 @@ func (k Keeper) BeginBlocker(ctx context.Context, mintFn types.MintFn) error {
 		return err
 	}
 
-	newBz := k.cdc.MustMarshal(&minter)
-	if bytes.Equal(oldBz, newBz) {
+	if minter.IsEqual(oldMinter) {
 		return nil
 	}
 

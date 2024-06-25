@@ -76,20 +76,15 @@ type ToBytes = func() ([]byte, error)
 // ToJSON is a function that lazily returns the JSON representation of data.
 type ToJSON = func() (json.RawMessage, error)
 
-// KVPairData represents key-value pair data that is passed to a listener.
 type KVPairData struct {
+	Update []schema.KVPairUpdate
+}
+
+type ModuleKVPairUpdate struct {
 	// ModuleName is the name of the module that the key-value pair belongs to.
 	ModuleName string
 
-	// Key is the key of the key-value pair.
-	Key []byte
-
-	// Value is the value of the key-value pair. It should be ignored when Delete is true.
-	Value []byte
-
-	// Delete is a flag that indicates that the key-value pair was deleted. If it is false,
-	// then it is assumed that this has been a set operation.
-	Delete bool
+	Update schema.KVPairUpdate
 }
 
 // ObjectUpdateData represents object update data that is passed to a listener.
@@ -98,8 +93,7 @@ type ObjectUpdateData struct {
 	ModuleName string
 
 	// Update is the object update.
-	// TODO: allow multiple updates in a single call
-	Update schema.ObjectUpdate
+	Update []schema.ObjectUpdate
 }
 
-type Commit struct{}
+type CommitData struct{}

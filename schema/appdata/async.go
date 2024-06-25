@@ -23,7 +23,7 @@ func AsyncListener(listener Listener, bufferSize int, commitChan chan<- error) L
 					if err != nil {
 						// if we have an error, don't process any more packets
 						// and return the error and finish when it's time to commit
-						if _, ok := packet.(Commit); ok {
+						if _, ok := packet.(CommitData); ok {
 							commitChan <- err
 							return
 						}
@@ -31,7 +31,7 @@ func AsyncListener(listener Listener, bufferSize int, commitChan chan<- error) L
 						// process the packet
 						err = listener.SendPacket(packet)
 						// if it's a commit
-						if _, ok := packet.(Commit); ok {
+						if _, ok := packet.(CommitData); ok {
 							commitChan <- err
 							if err != nil {
 								return
@@ -103,8 +103,8 @@ func AsyncListenerMux(listeners []Listener, bufferSize int) Listener {
 	}
 	mux := ListenerMux(asyncListeners...)
 	muxCommit := mux.Commit
-	mux.Commit = func() error {
-		err := muxCommit()
+	mux.Commit = func(data CommitData) error {
+		err := muxCommit(data)
 		if err != nil {
 			return err
 		}

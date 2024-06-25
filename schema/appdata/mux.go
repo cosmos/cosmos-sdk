@@ -122,10 +122,10 @@ func ListenerMux(listeners ...Listener) Listener {
 
 	for _, listener := range listeners {
 		if listener.Commit != nil {
-			mux.Commit = func() error {
+			mux.Commit = func(data CommitData) error {
 				for _, l := range listeners {
 					if l.Commit != nil {
-						if err := l.Commit(); err != nil {
+						if err := l.Commit(data); err != nil {
 							return err
 						}
 					}

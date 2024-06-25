@@ -126,6 +126,9 @@ func NewSimApp(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
+	data := appOpts.Get("indexer").(map[string]interface{})["postgres"]
+	logger.Info("AppOptions", "data", data)
+
 	var (
 		app        = &SimApp{}
 		appBuilder *runtime.AppBuilder

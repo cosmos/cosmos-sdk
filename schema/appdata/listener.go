@@ -39,7 +39,7 @@ type Listener struct {
 
 	// OnKVPair is called when a key-value has been written to the store for a given module.
 	// Module names must conform to the NameFormat regular expression.
-	OnKVPair func(KVPairData) error
+	OnKVPair func(updates KVPairData) error
 
 	// OnObjectUpdate is called whenever an object is updated in a module's state. This is only called
 	// when logical data is available. It should be assumed that the same data in raw form
@@ -50,5 +50,5 @@ type Listener struct {
 	// indexers should commit their data when this is called and return an error if
 	// they are unable to commit. Data sources MUST call Commit when data is committed,
 	// otherwise it should be assumed that indexers have not persisted their state.
-	Commit func() error
+	Commit func(CommitData) error
 }

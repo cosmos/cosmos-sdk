@@ -30,44 +30,39 @@ type StreamingManager struct {
 }
 
 func FromSchemaListener(listener appdata.Listener) ABCIListener {
-	return &physicalListener{listener: listener}
+	return &listenerWrapper{listener: listener}
 }
 
-type physicalListener struct {
+type listenerWrapper struct {
 	listener appdata.Listener
 }
 
-func (p physicalListener) ListenFinalizeBlock(_ context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error {
-	//if p.listener.StartBlock != nil {
-	//	err := p.listener.StartBlock(uint64(req.Height))
-	//	if err != nil {
-	//		return err
-	//	}
-	//}
-	//
-	//if p.listener.OnBlockHeader != nil {
-	//	err := p.listener.OnBlockHeader(listener.BlockHeaderData{
-	//		Height: uint64(req.Height),
-	//	})
-	//	if err != nil {
-	//		return err
-	//	}
-	//}
-	//
+func (p listenerWrapper) ListenFinalizeBlock(_ context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error {
+	if p.listener.StartBlock != nil {
+		err := p.listener.StartBlock(appdata.StartBlockData{
+			Height: uint64(req.Height),
+		})
+		if err != nil {
+			return err
+		}
+	}
+
 	//// TODO txs, events
 
 	return nil
 }
 
-func (p physicalListener) ListenCommit(ctx context.Context, res abci.CommitResponse, changeSet []*StoreKVPair) error {
-	//if p.listener.OnKVPair != nil {
-	//	for _, kv := range changeSet {
-	//		err := p.listener.OnKVPair(kv.StoreKey, kv.Key, kv.Value, kv.Delete)
-	//		if err != nil {
-	//			return err
-	//		}
-	//	}
-	//}
+func (p listenerWrapper) ListenCommit(ctx context.Context, res abci.CommitResponse, changeSet []*StoreKVPair) error {
+	if p.listener.OnKVPair != nil {
+		for _, _ = range changeSet {
+			//err := p.listener.OnKVPair(
+			//	kv.StoreKey, kv.Key, kv.Value, kv.Delete)
+			//if err != nil {
+			//	return err
+			//}
+			panic("TODO")
+		}
+	}
 	//
 	//if p.listener.Commit != nil {
 	//	err := p.listener.Commit()

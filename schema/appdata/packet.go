@@ -50,9 +50,9 @@ func (o ObjectUpdateData) apply(l *Listener) error {
 	return l.OnObjectUpdate(o)
 }
 
-func (c Commit) apply(l *Listener) error {
+func (c CommitData) apply(l *Listener) error {
 	if l.Commit == nil {
 		return nil
 	}
-	return l.Commit()
+	return l.Commit(c)
 }

@@ -61,7 +61,7 @@ type moduleDecoder struct {
 	collectionLookup *btree.Map[string, *collDecoder]
 }
 
-func (m moduleDecoder) decodeKV(update schema.KVPairUpdate) (schema.ObjectUpdate, bool, error) {
+func (m moduleDecoder) decodeKV(update schema.KVPairUpdate) ([]schema.ObjectUpdate, error) {
 	key := update.Key
 	ks := string(key)
 	var cd *collDecoder
@@ -74,7 +74,7 @@ func (m moduleDecoder) decodeKV(update schema.KVPairUpdate) (schema.ObjectUpdate
 		return false
 	})
 	if cd == nil {
-		return schema.ObjectUpdate{}, false, nil
+		return nil, nil
 	}
 
 	return cd.decodeKVPair(update)
@@ -85,40 +85,35 @@ type collDecoder struct {
 	logicalDecoder
 }
 
-func (c collDecoder) decodeKVPair(update schema.KVPairUpdate) (schema.ObjectUpdate, bool, error) {
+func (c collDecoder) decodeKVPair(update schema.KVPairUpdate) ([]schema.ObjectUpdate, error) {
 	// strip prefix
 	key := update.Key
 	key = key[len(c.GetPrefix()):]
 
 	k, err := c.keyDecoder(key)
 	if err != nil {
-		return schema.ObjectUpdate{
-			TypeName: c.GetName(),
-		}, true, err
+		return []schema.ObjectUpdate{
+			{TypeName: c.GetName()},
+		}, err
 
 	}
 
 	if update.Delete {
-		return schema.ObjectUpdate{
-			TypeName: c.GetName(),
-			Key:      k,
-			Delete:   true,
-		}, true, nil
+		return []schema.ObjectUpdate{
+			{TypeName: c.GetName(), Key: k, Delete: true},
+		}, nil
 	}
 
 	v, err := c.valueDecoder(update.Value)
 	if err != nil {
-		return schema.ObjectUpdate{
-			TypeName: c.GetName(),
-			Key:      k,
-		}, true, err
+		return []schema.ObjectUpdate{
+			{TypeName: c.GetName(), Key: k},
+		}, err
 	}
 
-	return schema.ObjectUpdate{
-		TypeName: c.GetName(),
-		Key:      k,
-		Value:    v,
-	}, true, nil
+	return []schema.ObjectUpdate{
+		{TypeName: c.GetName(), Key: k, Value: v},
+	}, nil
 }
 
 func (c collectionImpl[K, V]) logicalDecoder() logicalDecoder {

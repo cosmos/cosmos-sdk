@@ -6,7 +6,7 @@ export COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
-SIMAPP = ./simapp
+SIMAPP = simapp
 MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
@@ -47,6 +47,10 @@ endif
 
 ifeq (legacy,$(findstring legacy,$(COSMOS_BUILD_OPTIONS)))
   build_tags += app_v1
+endif
+
+ifeq (v2,$(findstring v2,$(COSMOS_BUILD_OPTIONS)))
+  SIMAPP = simapp/v2
 endif
 
 # DB backend selection
@@ -123,7 +127,7 @@ build-linux-arm64:
 	GOOS=linux GOARCH=arm64 LEDGER_ENABLED=false $(MAKE) build
 
 $(BUILD_TARGETS): go.sum $(BUILDDIR)/
-	cd ${CURRENT_DIR}/simapp && go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
+	cd ${CURRENT_DIR}/${SIMAPP} && go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
 
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/

@@ -148,7 +148,6 @@ func (s *Store) LastCommitID() (proof.CommitID, error) {
 	if err != nil {
 		return proof.CommitID{}, err
 	}
-
 	// if the latest version is 0, we return a CommitID with version 0 and a hash of an empty byte slice
 	bz := sha256.Sum256([]byte{})
 

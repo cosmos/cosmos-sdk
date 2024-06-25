@@ -33,6 +33,14 @@ func (i *Info) Bytes() ([]byte, error) {
 	binary.LittleEndian.PutUint64(heightBytes, uint64(i.Height))
 	buf = append(buf, heightBytes...)
 
+	if len(i.Hash) == 0 {
+		i.Hash = make([]byte, hashSize)
+	}
+	// Encode Hash
+	if len(i.Hash) != hashSize {
+		return nil, errors.New("invalid hash size")
+	}
+
 	buf = append(buf, i.Hash...)
 
 	// Encode Time

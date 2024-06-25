@@ -4,7 +4,6 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/testutil/staking/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/comet"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 
@@ -30,12 +29,10 @@ type ModuleInputs struct {
 
 	Config                *modulev1.Module
 	ValidatorAddressCodec address.ValidatorAddressCodec
-	ConsensusAddressCodec address.ConsensusAddressCodec
 	AccountKeeper         types.AccountKeeper
 	BankKeeper            types.BankKeeper
 	Cdc                   codec.Codec
 	Environment           appmodule.Environment
-	CometInfoService      comet.Service
 }
 
 // Dependency Injection Outputs

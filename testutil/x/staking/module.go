@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	consensusVersion uint64 = 6
+	consensusVersion uint64 = 1
 )
 
 var (

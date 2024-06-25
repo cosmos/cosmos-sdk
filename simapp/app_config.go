@@ -143,6 +143,10 @@ var (
 							ModuleName: accounts.ModuleName,
 							KvStoreKey: accounts.StoreKey,
 						},
+						{
+							ModuleName: mstakingtypes.ModuleName,
+							KvStoreKey: mstakingtypes.StoreKey,
+						},
 					},
 					// NOTE: The genutils module must occur after staking so that pools are
 					// properly initialized with tokens from genesis accounts.

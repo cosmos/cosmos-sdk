@@ -74,20 +74,28 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unordered tx ttl exceeds %d", d.maxUnOrderedTTL)
 	}
 
-	// calculate the tx hash
-	txHash, err := txIdentifier(ttl, tx)
-	if err != nil {
-		return ctx, err
+	// consume gas in all exec modes to avoid gas estimation discrepancies
+	if err := d.env.GasService.GasMeter(ctx).Consume(25, "consume gas for calculating tx hash"); err != nil {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrOutOfGas, "out of gas")
 	}
 
-	// check for duplicates
-	if d.txManager.Contains(txHash) {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "tx %X is duplicated")
-	}
+	// Avoid checking for duplicates and creating the identifier in simulation mode
+	// This is done to avoid sha256 computation in simulation mode
+	if d.env.TransactionService.ExecMode(ctx) != transaction.ExecModeSimulate {
+		// calculate the tx hash
+		txHash, err := txIdentifier(ttl, tx)
+		if err != nil {
+			return ctx, err
+		}
 
-	if d.env.TransactionService.ExecMode(ctx) == transaction.ExecModeFinalize {
-		// a new tx included in the block, add the hash to the unordered tx manager
-		d.txManager.Add(txHash, ttl)
+		// check for duplicates
+		if d.txManager.Contains(txHash) {
+			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "tx %X is duplicated")
+		}
+		if d.env.TransactionService.ExecMode(ctx) == transaction.ExecModeFinalize {
+			// a new tx included in the block, add the hash to the unordered tx manager
+			d.txManager.Add(txHash, ttl)
+		}
 	}
 
 	return next(ctx, tx, false)

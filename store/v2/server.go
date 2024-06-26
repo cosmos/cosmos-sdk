@@ -7,20 +7,21 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	serverv2 "cosmossdk.io/server/v2"
+	// serverv2 "cosmossdk.io/server/v2"
 )
 
 type StoreComponent struct {
 	config *Config
 }
 
-func New() serverv2.ServerComponent[transaction.Tx] {
+func New() *StoreComponent {
 	return &StoreComponent{}
 }
 
-func (s *StoreComponent) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
+func (s *StoreComponent) Init(appI servercore.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
 	cfg := DefaultConfig()
 	if v != nil {
 		if err := v.Sub(s.Name()).Unmarshal(&cfg); err != nil {
@@ -43,8 +44,8 @@ func (s *StoreComponent) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (s *StoreComponent) CLICommands(appCreator serverv2.AppCreator[transaction.Tx]) serverv2.CLIConfig {
-	return serverv2.CLIConfig{
+func (s *StoreComponent) CLICommands(appCreator servercore.AppCreator[transaction.Tx]) servercore.CLIConfig {
+	return servercore.CLIConfig{
 		Commands: []*cobra.Command{
 			s.PrunesCmd(appCreator),
 		},

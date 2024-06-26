@@ -7,14 +7,15 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	serverv2 "cosmossdk.io/server/v2"
-	storev2 "cosmossdk.io/store/v2"
+	// storev2 "cosmossdk.io/store/v2"
+	corectx "cosmossdk.io/core/context"
 )
 
 // QueryBlockResultsCmd implements the default command for a BlockResults query.
-func (s *StoreComponent) PrunesCmd(appCreator serverv2.AppCreator[transaction.Tx]) *cobra.Command {
+func (s *StoreComponent) PrunesCmd(appCreator servercore.AppCreator[transaction.Tx]) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prune [pruning-method]",
 		Short: "Prune app history states by keeping the recent heights and deleting old heights",
@@ -54,7 +55,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 			app := appCreator(logger, vp)
 			store := app.GetStore()
 
-			rootStore, ok := store.(storev2.RootStore)
+			rootStore, ok := store.(RootStore)
 			if !ok {
 				return fmt.Errorf("currently only support the pruning of rootmulti.Store type")
 			}
@@ -90,8 +91,14 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 	return cmd
 }
 
-func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (*storev2.PruneOptions, error) {
-	rootViper := serverv2.GetViperFromCmd(cmd)
+func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (*PruneOptions, error) {
+	// Get viper from cmd context
+	var rootViper *viper.Viper
+	value := cmd.Context().Value(corectx.ViperContextKey{})
+	rootViper, ok := value.(*viper.Viper)
+	if !ok {
+		rootViper = viper.New()
+	}
 
 	var pruning string
 	if len(args) > 0 {
@@ -107,10 +114,10 @@ func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (*storev2.Prune
 	strategy := strings.ToLower(pruning)
 
 	switch strategy {
-	case storev2.PruningOptionDefault, storev2.PruningOptionNothing, storev2.PruningOptionEverything:
-		return storev2.NewPruneOptions(strategy), nil
+	case PruningOptionDefault, PruningOptionNothing, PruningOptionEverything:
+		return NewPruneOptions(strategy), nil
 
-	case storev2.PruningOptionCustom:
+	case PruningOptionCustom:
 		var (
 			pruningKeepRecent uint64
 			pruningInterval   uint64
@@ -120,7 +127,7 @@ func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (*storev2.Prune
 		if cmd.Flags().Changed(FlagPruningKeepRecent) {
 			pruningKeepRecent, err = cmd.Flags().GetUint64(FlagPruningKeepRecent)
 			if err != nil {
-				return &storev2.PruneOptions{}, err
+				return &PruneOptions{}, err
 			}
 		} else {
 			pruningKeepRecent = rootViper.GetUint64(FlagPruningKeepRecent)
@@ -129,13 +136,13 @@ func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (*storev2.Prune
 		if cmd.Flags().Changed(FlagPruningInterval) {
 			pruningInterval, err = cmd.Flags().GetUint64(FlagPruningInterval)
 			if err != nil {
-				return &storev2.PruneOptions{}, err
+				return &PruneOptions{}, err
 			}
 		} else {
 			pruningInterval = rootViper.GetUint64(FlagPruningInterval)
 		}
 
-		opts := storev2.NewCustomPruneOptions(
+		opts := NewCustomPruneOptions(
 			pruningKeepRecent,
 			pruningInterval,
 		)
@@ -147,6 +154,6 @@ func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (*storev2.Prune
 		return opts, nil
 
 	default:
-		return &storev2.PruneOptions{}, fmt.Errorf("unknown pruning strategy %s", strategy)
+		return &PruneOptions{}, fmt.Errorf("unknown pruning strategy %s", strategy)
 	}
 }

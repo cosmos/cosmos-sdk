@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/protocolpool/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

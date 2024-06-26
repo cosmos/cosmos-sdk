@@ -201,7 +201,6 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 
 		return false, nil
 	})
-
 	if err != nil {
 		return err
 	}

@@ -18,9 +18,9 @@ import (
 	protocolpoolkeeper "cosmossdk.io/x/protocolpool/keeper"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TestWithdrawAnytime tests if withdrawing funds many times vs withdrawing funds once

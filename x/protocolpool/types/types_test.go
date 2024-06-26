@@ -4,13 +4,15 @@ import (
 	"testing"
 	time "time"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/math"
+
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
 )
 
-var hour = time.Duration(time.Hour)
+var hour = time.Hour
 
 func TestRegisterInterfaces(t *testing.T) {
 	interfaceRegistry := codectestutil.NewCodecOptionsWithPrefixes("cosmos", "cosmosval").NewInterfaceRegistry()
@@ -159,7 +161,6 @@ func TestValidateBudget(t *testing.T) {
 			require.EqualError(t, err, tc.expErrMsg)
 		}
 	}
-
 }
 
 func TestValidateContinuousFund(t *testing.T) {

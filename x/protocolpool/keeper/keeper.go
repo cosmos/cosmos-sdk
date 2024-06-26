@@ -122,7 +122,7 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipientAddr string
 		return sdk.Coin{}, fmt.Errorf("cannot withdraw continuous funds: continuous fund expired for recipient: %s", recipientAddr)
 	}
 
-	err = k.iterateAndUpdateFundsDistribution(ctx)
+	err = k.IterateAndUpdateFundsDistribution(ctx)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("error while iterating all the continuous funds: %w", err)
 	}
@@ -211,7 +211,11 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 
 	amountToDistribute, err := k.ToDistribute.Get(ctx)
 	if err != nil {
-		return err
+		if errors.Is(err, collections.ErrNotFound) {
+			amountToDistribute = math.ZeroInt()
+		} else {
+			return err
+		}
 	}
 
 	err = k.ToDistribute.Set(ctx, amountToDistribute.Add(amount.AmountOf(denom)))
@@ -250,7 +254,7 @@ func (k Keeper) hasPermission(addr []byte) (bool, error) {
 	return bytes.Equal(authAcc, addr), nil
 }
 
-func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) error {
+func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 	toDistributeAmount, err := k.ToDistribute.Get(ctx)
 	if err != nil {
 		return err
@@ -262,7 +266,13 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) error {
 	}
 
 	totalPercentageToBeDistributed := math.LegacyZeroDec()
-	recipientFundList := []types.ContinuousFund{}
+	// recipientFundList := []types.ContinuousFund{}
+
+	denom, err := k.stakingKeeper.BondDenom(ctx)
+	if err != nil {
+		return err
+	}
+	toDistributeDec := sdk.NewDecCoin(denom, toDistributeAmount)
 
 	// Calculate totalPercentageToBeDistributed and store values
 	err = k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, cf types.ContinuousFund) (stop bool, err error) {
@@ -271,47 +281,30 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) error {
 			return false, nil
 		}
 
+		// sanity check for max percentage
 		totalPercentageToBeDistributed = totalPercentageToBeDistributed.Add(cf.Percentage)
-		recipientFundList = append(recipientFundList, cf)
-		return false, nil
-	})
-	if err != nil {
-		return err
-	}
-	if totalPercentageToBeDistributed.GT(math.LegacyOneDec()) {
-		return fmt.Errorf("total funds percentage cannot exceed 100")
-	}
-
-	denom, err := k.stakingKeeper.BondDenom(ctx)
-	if err != nil {
-		return err
-	}
-	toDistributeDec := sdk.NewDecCoins(sdk.NewDecCoin(denom, toDistributeAmount))
-
-	// Calculate the funds to be distributed based on the total percentage to be distributed
-	totalAmountToBeDistributed := toDistributeDec.MulDec(totalPercentageToBeDistributed)
-	totalDistrAmount := totalAmountToBeDistributed.AmountOf(denom)
-
-	for _, value := range recipientFundList {
-		// Calculate the funds to be distributed based on the percentage
-		recipientAmount := totalDistrAmount.Mul(value.Percentage).Quo(totalPercentageToBeDistributed)
-		recipientCoins := recipientAmount.TruncateInt()
-
-		key, err := k.authKeeper.AddressCodec().StringToBytes(value.Recipient)
-		if err != nil {
-			return err
+		if totalPercentageToBeDistributed.GT(math.LegacyOneDec()) {
+			return true, fmt.Errorf("total funds percentage cannot exceed 100")
 		}
+
+		// Calculate the funds to be distributed based on the percentage
+		recipientAmount := toDistributeDec.Amount.Mul(cf.Percentage).TruncateInt()
 
 		// Set funds to be claimed
 		toClaim, err := k.RecipientFundDistribution.Get(ctx, key)
 		if err != nil {
-			return err
+			return true, err
 		}
-		amount := toClaim.Add(recipientCoins)
+		amount := toClaim.Add(recipientAmount)
 		err = k.RecipientFundDistribution.Set(ctx, key, amount)
 		if err != nil {
-			return err
+			return true, err
 		}
+
+		return false, nil
+	})
+	if err != nil {
+		return err
 	}
 
 	// Set the coins to be distributed from toDistribute to 0

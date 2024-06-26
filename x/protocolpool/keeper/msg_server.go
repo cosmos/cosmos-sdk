@@ -136,7 +136,7 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 	}
 	totalStreamFundsPercentage = totalStreamFundsPercentage.Add(msg.Percentage)
 	if totalStreamFundsPercentage.GT(math.LegacyOneDec()) {
-		return nil, fmt.Errorf("cannot set continuous fund proposal\ntotal funds percentage exceeds 100\ncurrent total percentage: %v", totalStreamFundsPercentage.Sub(msg.Percentage))
+		return nil, fmt.Errorf("cannot set continuous fund proposal\ntotal funds percentage exceeds 100\ncurrent total percentage: %s", totalStreamFundsPercentage.Sub(msg.Percentage).MulInt64(100).TruncateInt().String())
 	}
 
 	// Create continuous fund proposal

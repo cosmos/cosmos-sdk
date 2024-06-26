@@ -54,7 +54,7 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(
 	cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper
+	bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper,
 ) AppModule {
 	return AppModule{
 		cdc:           cdc,

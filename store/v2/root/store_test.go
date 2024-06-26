@@ -459,7 +459,7 @@ func (s *RootStoreTestSuite) TestMultiStore_Pruning_SameHeightsTwice() {
 	for v := uint64(1); v < numVersions-keepRecent; v++ {
 		var err error
 		checkErr := func() bool {
-			if err = s.rootStore.LoadVersion(v); err != nil {
+			if _, err = s.rootStore.StateAt(v); err != nil {
 				return true
 			}
 			return false
@@ -469,7 +469,7 @@ func (s *RootStoreTestSuite) TestMultiStore_Pruning_SameHeightsTwice() {
 	}
 
 	for v := (numVersions - keepRecent); v < numVersions; v++ {
-		err := s.rootStore.LoadVersion(v)
+		_, err := s.rootStore.StateAt(v)
 		s.Require().NoError(err, "expected no error when loading height: %d", v)
 	}
 
@@ -710,7 +710,7 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 	s.Require().Equal([]byte(fmt.Sprintf("val%03d_%03d", 4, 3)), result, "value should be equal")
 }
 
-func (s *RootStoreTestSuite) TestHashStableWithEmptyCommit() {
+func (s *RootStoreTestSuite) TestHashStableWithEmptyCommitAndRestart() {
 	err := s.rootStore.LoadLatestVersion()
 	s.Require().Nil(err)
 
@@ -739,4 +739,10 @@ func (s *RootStoreTestSuite) TestHashStableWithEmptyCommit() {
 	s.Require().Nil(err)
 	s.Require().Equal(uint64(2), latestVersion)
 	s.Require().Equal(hash, cHash)
+
+	// reload the store
+	s.Require().NoError(s.rootStore.LoadLatestVersion())
+	lastCommitID, err = s.rootStore.LastCommitID()
+	s.Require().NoError(err)
+	s.Require().Equal(lastCommitID.Hash, hash)
 }

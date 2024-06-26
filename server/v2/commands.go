@@ -110,7 +110,8 @@ func AddCommands(rootCmd *cobra.Command, newApp servercore.AppCreator[transactio
 
 // configHandle writes the default config to the home directory if it does not exist and sets the server context
 func configHandle(s *Server, home string, cmd *cobra.Command) error {
-	if _, err := os.Stat(filepath.Join(home, "config")); os.IsNotExist(err) {
+	// we need to check app.toml as the config folder can already exist for the client.toml
+	if _, err := os.Stat(filepath.Join(home, "config", "app.toml")); os.IsNotExist(err) {
 		if err = s.WriteConfig(filepath.Join(home, "config")); err != nil {
 			return err
 		}

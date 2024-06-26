@@ -9,9 +9,6 @@ const (
 )
 
 const (
-	FlagHome             = "home"
-	FlagKeyringDir       = "keyring-dir"
-	FlagUseLedger        = "ledger"
 	FlagChainID          = "chain-id"
 	FlagNode             = "node"
 	FlagGRPC             = "grpc-addr"

@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -39,6 +38,8 @@ type Keeper struct {
 	RecipientFundDistribution collections.Map[sdk.AccAddress, math.Int]
 	// ToDistribute is to keep track of funds distributed
 	ToDistribute collections.Item[math.Int]
+	// PoolBalanceSnapshot is to keep know how much funds were added to the pool since the last distribution
+	PoolBalanceSnapshot collections.Item[math.Int]
 }
 
 func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, authority string,
@@ -66,6 +67,7 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.Accoun
 		RecipientFundPercentage:   collections.NewMap(sb, types.RecipientFundPercentageKey, "recipient_fund_percentage", sdk.AccAddressKey, sdk.IntValue),
 		RecipientFundDistribution: collections.NewMap(sb, types.RecipientFundDistributionKey, "recipient_fund_distribution", sdk.AccAddressKey, sdk.IntValue),
 		ToDistribute:              collections.NewItem(sb, types.ToDistributeKey, "to_distribute", sdk.IntValue),
+		PoolBalanceSnapshot:       collections.NewItem(sb, types.PoolBalanceSnapshotKey, "pool_balance_snapshot", sdk.IntValue),
 	}
 
 	schema, err := sb.Build()
@@ -103,7 +105,7 @@ func (k Keeper) DistributeFromStreamFunds(ctx context.Context, amount sdk.Coins,
 func (k Keeper) GetCommunityPool(ctx context.Context) (sdk.Coins, error) {
 	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 	if moduleAccount == nil {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleAccount)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", types.ModuleName)
 	}
 	return k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress()), nil
 }
@@ -182,23 +184,35 @@ func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipientAddr string
 }
 
 // SetToDistribute sets the amount to be distributed among recipients.
-// This could be only set by the authority address.
-func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr string) error {
-	authAddr, err := k.authKeeper.AddressCodec().StringToBytes(addr)
+func (k Keeper) SetToDistribute(ctx context.Context) error {
+	prevPoolBalance, err := k.PoolBalanceSnapshot.Get(ctx)
 	if err != nil {
-		return err
+		if errors.Is(err, collections.ErrNotFound) {
+			prevPoolBalance = math.ZeroInt()
+		} else {
+			return err
+		}
 	}
-	hasPermission, err := k.hasPermission(authAddr)
-	if err != nil {
-		return err
-	}
-	if !hasPermission {
-		return sdkerrors.ErrUnauthorized
+
+	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
+	if moduleAccount == nil {
+		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", types.ModuleName)
 	}
 
 	denom, err := k.stakingKeeper.BondDenom(ctx)
 	if err != nil {
 		return err
+	}
+
+	currentBalance := k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress())
+	toDistribute := currentBalance.AmountOf(denom).Sub(prevPoolBalance)
+
+	if err = k.PoolBalanceSnapshot.Set(ctx, currentBalance.AmountOf(denom)); err != nil {
+		return err
+	}
+
+	if toDistribute.IsZero() {
+		return nil
 	}
 
 	totalStreamFundsPercentage := math.ZeroInt()
@@ -218,7 +232,7 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 		return err
 	}
 
-	err = k.ToDistribute.Set(ctx, amount.AmountOf(denom))
+	err = k.ToDistribute.Set(ctx, toDistribute)
 	if err != nil {
 		return fmt.Errorf("error while setting ToDistribute: %w", err)
 	}
@@ -242,16 +256,6 @@ func (k Keeper) sendFundsToStreamModule(ctx context.Context, denom string, perce
 	}
 
 	return nil
-}
-
-func (k Keeper) hasPermission(addr []byte) (bool, error) {
-	authority := k.GetAuthority()
-	authAcc, err := k.authKeeper.AddressCodec().StringToBytes(authority)
-	if err != nil {
-		return false, err
-	}
-
-	return bytes.Equal(authAcc, addr), nil
 }
 
 type recipientFund struct {

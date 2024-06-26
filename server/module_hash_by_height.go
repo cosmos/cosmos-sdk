@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"sort"
@@ -14,6 +15,7 @@ import (
 	"cosmossdk.io/store/rootmulti"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 )
 
@@ -42,12 +44,31 @@ Example:
 				return err
 			}
 
-			// Print the CommitInfo to the console.
-			fmt.Println(commitInfoForHeight.String())
+			// Get the output format flag
+			outputFormat, err := cmd.Flags().GetString(flags.FlagOutput)
+			if err != nil {
+				return err
+			}
+
+			// Print the CommitInfo based on the output format
+			switch outputFormat {
+			case flags.OutputFormatJSON:
+				jsonOutput, err := json.MarshalIndent(commitInfoForHeight, "", "  ")
+				if err != nil {
+					return err
+				}
+				fmt.Println(string(jsonOutput))
+			case flags.OutputFormatText:
+				fallthrough
+			default:
+				fmt.Println(commitInfoForHeight.String())
+			}
 
 			return nil
 		},
 	}
+
+	cmd.Flags().StringP(flags.FlagOutput, "o", flags.OutputFormatText, "Output format (text|json)")
 
 	return cmd
 }

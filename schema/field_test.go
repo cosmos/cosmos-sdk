@@ -1,4 +1,4 @@
-package indexerbase
+package schema
 
 import (
 	"strings"

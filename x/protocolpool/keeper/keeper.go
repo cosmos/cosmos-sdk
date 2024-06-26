@@ -270,6 +270,17 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistrib
 		if err != nil {
 			return true, err
 		}
+
+		cf, err := k.ContinuousFund.Get(ctx, key)
+		if err != nil {
+			return true, err
+		}
+
+		// Check if the continuous fund has expired
+		if cf.Expiry != nil && cf.Expiry.Before(k.HeaderService.HeaderInfo(ctx).Time) {
+			return false, nil
+		}
+
 		totalPercentageToBeDistributed = totalPercentageToBeDistributed.Add(value)
 		recipientFundList = append(recipientFundList, recipientFund{
 			RecipientAddr: addr,

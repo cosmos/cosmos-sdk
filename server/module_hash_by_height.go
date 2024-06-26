@@ -1,4 +1,4 @@
-package cli
+package server
 
 import (
 	"encoding/hex"
@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/store/rootmulti"
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 )
 
@@ -31,7 +30,7 @@ Example:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			heightToRetrieveString := args[0]
 
-			serverCtx := server.GetServerContextFromCmd(cmd)
+			serverCtx := GetServerContextFromCmd(cmd)
 
 			height, err := strconv.ParseInt(heightToRetrieveString, 10, 64)
 			if err != nil {
@@ -53,9 +52,9 @@ Example:
 	return cmd
 }
 
-func getModuleHashesAtHeight[T servertypes.Application](svrCtx *server.Context, appCreator servertypes.AppCreator[T], height int64) (*storetypes.CommitInfo, error) {
+func getModuleHashesAtHeight[T servertypes.Application](svrCtx *Context, appCreator servertypes.AppCreator[T], height int64) (*storetypes.CommitInfo, error) {
 	home := svrCtx.Config.RootDir
-	db, err := openDB(home, server.GetAppDBBackend(svrCtx.Viper))
+	db, err := openDB(home, GetAppDBBackend(svrCtx.Viper))
 	if err != nil {
 		return nil, fmt.Errorf("error opening DB, make sure osmosisd is not running when calling this query: %w", err)
 	}

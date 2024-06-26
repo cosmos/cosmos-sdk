@@ -354,6 +354,7 @@ func AddCommands[T types.Application](rootCmd *cobra.Command, appCreator types.A
 		cometCmd,
 		version.NewVersionCommand(),
 		NewRollbackCmd(appCreator),
+		ModuleHashByHeightQuery(appCreator),
 	)
 }
 

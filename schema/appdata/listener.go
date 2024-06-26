@@ -1,7 +1,9 @@
-package indexerbase
+package appdata
 
 import (
 	"encoding/json"
+
+	"cosmossdk.io/schema"
 )
 
 // Listener is an interface that defines methods for listening to both raw and logical blockchain data.
@@ -45,12 +47,12 @@ type Listener struct {
 	// migrations) required to receive OnObjectUpdate events for the given module. If the
 	// indexer's schema is incompatible with the module's on-chain schema, the listener should return
 	// an error. Module names must conform to the NameFormat regular expression.
-	InitializeModuleSchema func(module string, schema ModuleSchema) error
+	InitializeModuleSchema func(moduleName string, moduleSchema schema.ModuleSchema) error
 
 	// OnObjectUpdate is called whenever an object is updated in a module's state. This is only called
 	// when logical data is available. It should be assumed that the same data in raw form
 	// is also passed to OnKVPair. Module names must conform to the NameFormat regular expression.
-	OnObjectUpdate func(module string, update ObjectUpdate) error
+	OnObjectUpdate func(moduleName string, update schema.ObjectUpdate) error
 }
 
 // InitializationData represents initialization data that is passed to a listener.

@@ -46,6 +46,8 @@ const (
 )
 
 var _ serverv2.ServerComponent[transaction.Tx] = (*CometBFTServer[transaction.Tx])(nil)
+var _ serverv2.HasCLICommands = (*CometBFTServer[transaction.Tx])(nil)
+var _ serverv2.HasStartFlags = (*CometBFTServer[transaction.Tx])(nil)
 
 type CometBFTServer[T transaction.Tx] struct {
 	Node   *node.Node

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	"github.com/cosmos/cosmos-sdk/baseapp/internal/protoutils"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
@@ -17,6 +18,7 @@ import (
 type QueryRouter interface {
 	RegisterService(sd *grpc.ServiceDesc, handler interface{})
 	ResponseNameByRequestName(requestName string) string
+	HandlerByRequestName(requestName string) GRPCQueryHandler
 	Route(path string) GRPCQueryHandler
 	SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry)
 }
@@ -25,6 +27,8 @@ type QueryRouter interface {
 type GRPCQueryRouter struct {
 	// routes maps query handlers used in ABCIQuery.
 	routes map[string]GRPCQueryHandler
+	// routesByRequestName maps routes based on the request name
+	routesByRequestName map[string]GRPCQueryHandler
 	// responseByRequestName maps the request name to the response name.
 	responseByRequestName map[string]string
 	// binaryCodec is used to encode/decode binary protobuf messages.
@@ -50,7 +54,11 @@ var (
 func NewGRPCQueryRouter() *GRPCQueryRouter {
 	return &GRPCQueryRouter{
 		routes:                map[string]GRPCQueryHandler{},
+		routesByRequestName:   map[string]GRPCQueryHandler{},
 		responseByRequestName: map[string]string{},
+		binaryCodec:           nil,
+		cdc:                   nil,
+		serviceData:           nil,
 	}
 }
 
@@ -127,11 +135,23 @@ func (qrt *GRPCQueryRouter) registerABCIQueryHandler(sd *grpc.ServiceDesc, metho
 			Value:  resBytes,
 		}, nil
 	}
+
+	// register response name by request name
+	reqName, respName, err := protoutils.RequestAndResponseFullNameFromMethodDesc(sd, method)
+	if err != nil {
+		return fmt.Errorf("grpc router unable to parse request and response name: %w", err)
+	}
+	qrt.responseByRequestName[string(reqName)] = string(respName)
+	qrt.routesByRequestName[string(reqName)] = qrt.routes[fqName]
 	return nil
 }
 
 func (qrt *GRPCQueryRouter) ResponseNameByRequestName(requestName string) string {
 	return qrt.responseByRequestName[requestName]
+}
+
+func (qrt *GRPCQueryRouter) HandlerByRequestName(requestName string) GRPCQueryHandler {
+	return qrt.routesByRequestName[requestName]
 }
 
 // SetInterfaceRegistry sets the interface registry for the router. This will

@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	"github.com/cosmos/cosmos-sdk/baseapp/internal/protoutils"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
@@ -191,6 +192,13 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 			MsgResponses: []*codectypes.Any{anyResp},
 		}, nil
 	}
+
+	// register response by request name
+	reqName, respName, err := protoutils.RequestAndResponseFullNameFromMethodDesc(sd, method)
+	if err != nil {
+		return fmt.Errorf("msg service router unable to compute request name and response name: %w", err)
+	}
+	msr.responseByMsgName[string(reqName)] = string(respName)
 	return nil
 }
 

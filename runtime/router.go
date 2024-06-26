@@ -52,7 +52,7 @@ func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error 
 // Use InvokeUntyped if the response type is not known.
 func (m *msgRouterService) InvokeTyped(ctx context.Context, msg, resp protoiface.MessageV1) error {
 	messageName := msgTypeURL(msg)
-	handler := m.router.HandlerByTypeURL(messageName)
+	handler := m.router.HandlerByTypeURL("/" + messageName)
 	if handler == nil {
 		return fmt.Errorf("unknown message: %s", messageName)
 	}
@@ -103,14 +103,11 @@ type queryRouterService struct {
 }
 
 // CanInvoke returns an error if the given request cannot be invoked.
-func (m *queryRouterService) CanInvoke(ctx context.Context, typeURL string) error {
+func (m *queryRouterService) CanInvoke(_ context.Context, typeURL string) error {
 	if typeURL == "" {
 		return fmt.Errorf("missing type url")
 	}
-
-	typeURL = strings.TrimPrefix(typeURL, "/")
-
-	handlers := m.router.Route(typeURL)
+	handlers := m.router.Route("/" + typeURL)
 	if handlers == nil {
 		return fmt.Errorf("unknown request: %s", typeURL)
 	}
@@ -123,7 +120,7 @@ func (m *queryRouterService) CanInvoke(ctx context.Context, typeURL string) erro
 // Use InvokeUntyped if the response type is not known.
 func (m *queryRouterService) InvokeTyped(ctx context.Context, req, resp protoiface.MessageV1) error {
 	reqName := msgTypeURL(req)
-	handlers := m.router.Route(reqName)
+	handlers := m.router.HandlerByRequestName(reqName)
 	if handlers == nil {
 		return fmt.Errorf("unknown request: %s", reqName)
 	}

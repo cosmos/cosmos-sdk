@@ -196,8 +196,8 @@ func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, e
 	}
 }
 
-func (s *CometBFTServer[T]) StartCmdFlags() pflag.FlagSet {
-	flags := *pflag.NewFlagSet("cometbft", pflag.ExitOnError)
+func (s *CometBFTServer[T]) StartCmdFlags() *pflag.FlagSet {
+	flags := pflag.NewFlagSet("cometbft", pflag.ExitOnError)
 	flags.Bool(flagWithComet, true, "Run abci app embedded in-process with CometBFT")
 	flags.String(flagAddress, "tcp://127.0.0.1:26658", "Listen address")
 	flags.String(flagTransport, "socket", "Transport protocol: socket, grpc")

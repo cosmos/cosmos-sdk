@@ -873,7 +873,7 @@ func (app *BaseApp) runTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx) (gInfo s
 
 	switch mode {
 	case execModeCheck:
-		err = app.mempool.Insert(ctx, tx)
+		err = app.mempool.InsertWithGasWanted(ctx, tx, gasWanted)
 		if err != nil {
 			return gInfo, nil, anteEvents, err
 		}
@@ -1067,18 +1067,18 @@ func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
 // ProcessProposal state internally will be discarded. <nil, err> will be
 // returned if the transaction cannot be decoded. <Tx, nil> will be returned if
 // the transaction is valid, otherwise <Tx, err> will be returned.
-func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
+func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, uint64, error) {
 	tx, err := app.txDecoder(txBz)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	_, _, _, err = app.runTx(execModeProcessProposal, txBz, tx)
+	gInfo, _, _, err := app.runTx(execModeProcessProposal, txBz, tx)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return tx, nil
+	return tx, gInfo.GasWanted, nil
 }
 
 func (app *BaseApp) TxDecode(txBytes []byte) (sdk.Tx, error) {

@@ -26,6 +26,9 @@ type Store interface {
 	// state. Must error when the version does not exist.
 	StateAt(version uint64) (store.ReaderMap, error)
 
+	// SetInitialVersion sets the initial version of the store.
+	SetInitialVersion(uint64) error
+
 	WorkingHash(changeset *store.Changeset) (store.Hash, error)
 	Commit(changeset *store.Changeset) (store.Hash, error)
 

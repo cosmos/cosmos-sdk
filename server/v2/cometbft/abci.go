@@ -238,6 +238,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 
 	// store chainID to be used later on in execution
 	c.chainID = req.ChainId
+	c.cfg.InitialHeight = uint64(req.InitialHeight) // TODO: cfg is loaded initially ???
 
 	// On a new chain, we consider the init chain block height as 0, even though
 	// req.InitialHeight is 1 by default.
@@ -282,6 +283,11 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 
 	validatorUpdates := intoABCIValidatorUpdates(blockresponse.ValidatorUpdates)
 
+	// set the initial version of the store
+	if err := c.store.SetInitialVersion(uint64(req.InitialHeight)); err != nil {
+		return nil, fmt.Errorf("failed to set initial version: %w", err)
+	}
+
 	stateChanges, err := genesisState.GetStateChanges()
 	if err != nil {
 		return nil, err
@@ -291,7 +297,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	}
 	stateRoot, err := c.store.WorkingHash(cs)
 	if err != nil {
-		return nil, fmt.Errorf("unable to commit the changeset: %w", err)
+		return nil, fmt.Errorf("unable to write the changeset: %w", err)
 	}
 
 	return &abci.InitChainResponse{
@@ -412,6 +418,21 @@ func (c *Consensus[T]) FinalizeBlock(
 	// 	ProposerAddress: req.ProposerAddress,
 	// 	LastCommit:      sdktypes.ToSDKCommitInfo(req.DecidedLastCommit),
 	// })
+
+	// we don't need to deliver the block in the genesis block
+	if req.Height == int64(c.cfg.InitialHeight) {
+		appHash, err := c.store.Commit(store.NewChangeset())
+		if err != nil {
+			return nil, fmt.Errorf("unable to commit the changeset: %w", err)
+		}
+		c.lastCommittedBlock.Store(&BlockData{
+			Height: req.Height,
+			Hash:   appHash,
+		})
+		return &abciproto.FinalizeBlockResponse{
+			AppHash: appHash,
+		}, nil
+	}
 
 	// TODO(tip): can we expect some txs to not decode? if so, what we do in this case? this does not seem to be the case,
 	// considering that prepare and process always decode txs, assuming they're the ones providing txs we should never

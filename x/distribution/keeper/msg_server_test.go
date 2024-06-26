@@ -175,8 +175,7 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 }
 
 func TestMsgFundCommunityPool(t *testing.T) {
-	ctx, addrs, distrKeeper, dep := initFixture(t)
-	dep.poolKeeper.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	ctx, addrs, distrKeeper, _ := initFixture(t)
 	msgServer := keeper.NewMsgServerImpl(distrKeeper)
 
 	addr0Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addrs[0])
@@ -280,8 +279,7 @@ func TestMsgUpdateParams(t *testing.T) {
 }
 
 func TestMsgCommunityPoolSpend(t *testing.T) {
-	ctx, addrs, distrKeeper, dep := initFixture(t)
-	dep.poolKeeper.EXPECT().DistributeFromCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	ctx, addrs, distrKeeper, _ := initFixture(t)
 	msgServer := keeper.NewMsgServerImpl(distrKeeper)
 
 	authorityAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))

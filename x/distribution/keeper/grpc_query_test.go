@@ -149,7 +149,6 @@ func TestQueryCommunityPool(t *testing.T) {
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100)))
 	decCoins := sdk.NewDecCoinsFromCoins(coins...)
-	dep.poolKeeper.EXPECT().GetCommunityPool(gomock.Any()).Return(coins, nil).AnyTimes()
 
 	cases := []struct {
 		name   string

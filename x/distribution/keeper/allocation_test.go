@@ -51,7 +51,6 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
-	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 
@@ -69,7 +68,6 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		poolKeeper,
 		testCometService,
 		"fee_collector",
 		authorityAddr,
@@ -118,7 +116,6 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
-	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	feeCollectorAcc := authtypes.NewEmptyModuleAccount("fee_collector")
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
@@ -136,7 +133,6 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		poolKeeper,
 		testCometService,
 		"fee_collector",
 		authorityAddr,
@@ -201,7 +197,6 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), feeCollectorAcc.GetAddress()).Return(fees)
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "fee_collector", disttypes.ModuleName, fees)
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), disttypes.ModuleName, disttypes.ProtocolPoolModuleName, sdk.Coins{{Denom: sdk.DefaultBondDenom, Amount: math.NewInt(2)}}) // 2 community pool coins
-	poolKeeper.EXPECT().SetToDistribute(ctx, gomock.Any(), gomock.Any())
 
 	votes := []comet.VoteInfo{
 		{
@@ -259,7 +254,6 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
-	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	feeCollectorAcc := authtypes.NewEmptyModuleAccount("fee_collector")
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
@@ -277,7 +271,6 @@ func TestAllocateTokensTruncation(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		poolKeeper,
 		testCometService,
 		"fee_collector",
 		authorityAddr,
@@ -355,7 +348,6 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), feeCollectorAcc.GetAddress()).Return(fees)
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "fee_collector", disttypes.ModuleName, fees)
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), disttypes.ModuleName, disttypes.ProtocolPoolModuleName, gomock.Any()) // something is sent to community pool
-	poolKeeper.EXPECT().SetToDistribute(ctx, gomock.Any(), gomock.Any())
 
 	votes := []comet.VoteInfo{
 		{

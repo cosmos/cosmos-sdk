@@ -19,7 +19,7 @@ A Protobuf `Msg` service processes [messages](./02-messages-and-queries.md#messa
 
 Each module should define a Protobuf `Msg` service, which will be responsible for processing requests (implementing `sdk.Msg`) and returning responses.
 
-As further described in [ADR 031](../../architecture/adr-031-msg-service.md), this approach has the advantage of clearly specifying return types and generating server and client code.
+As further described in [ADR 031](../architecture/adr-031-msg-service.md), this approach has the advantage of clearly specifying return types and generating server and client code.
 
 Protobuf generates a `MsgServer` interface based on the definition of `Msg` service. It is the role of the module developer to implement this interface, by implementing the state transition logic that should happen upon receival of each `transaction.Msg`. As an example, here is the generated `MsgServer` interface for `x/bank`, which exposes two `transaction.Msg`s:
 

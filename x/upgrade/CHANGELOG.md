@@ -28,6 +28,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * [#19672](https://github.com/cosmos/cosmos-sdk/pull/19672) Follow latest `cosmossdk.io/core` `PreBlock` simplification.
+* [#20771](https://github.com/cosmos/cosmos-sdk/pull/20771) Create upgrade directory only when necessary (upgrade flow and not init flow).
 
 ### API Breaking Changes
 

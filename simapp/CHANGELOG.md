@@ -35,6 +35,7 @@ Always refer to the [UPGRADING.md](https://github.com/cosmos/cosmos-sdk/blob/mai
 * [#20409](https://github.com/cosmos/cosmos-sdk/pull/20409) Add `tx` as `SkipStoreKeys` in `app_config.go`.
 * [#20485](https://github.com/cosmos/cosmos-sdk/pull/20485) The signature of `x/upgrade/types.UpgradeHandler` has changed to accept `appmodule.VersionMap` from `module.VersionMap`.  These types are interchangeable, but usages of `UpradeKeeper.SetUpgradeHandler` may need to adjust their usages to match the new signature.
 * [#20740](https://github.com/cosmos/cosmos-sdk/pull/20740) Update `genutilcli.Commands` to use the genutil modules from the module manager.
+* [#20771](https://github.com/cosmos/cosmos-sdk/pull/20771) Use client/v2 `GetNodeHomeDirectory` helper in `app.go` and use the `DefaultNodeHome` constant everywhere in the app.
 
 <!-- TODO: move changelog.md elements to here -->
 

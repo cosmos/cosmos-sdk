@@ -80,6 +80,7 @@ func (s *TestSuite) SetupTest() {
 
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.encCfg.InterfaceRegistry)
 	authz.RegisterQueryServer(queryHelper, s.authzKeeper)
+	authz.RegisterMsgServer(s.baseApp.MsgServiceRouter(), s.authzKeeper)
 	queryClient := authz.NewQueryClient(queryHelper)
 	s.queryClient = queryClient
 

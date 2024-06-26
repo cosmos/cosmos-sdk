@@ -1,4 +1,4 @@
-package errors
+package baseapp
 
 import (
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
@@ -6,9 +6,9 @@ import (
 	errorsmod "cosmossdk.io/errors"
 )
 
-// ResponseCheckTxWithEvents returns an ABCI ResponseCheckTx object with fields filled in
+// responseCheckTxWithEvents returns an ABCI ResponseCheckTx object with fields filled in
 // from the given error, gas values and events.
-func ResponseCheckTxWithEvents(err error, gw, gu uint64, events []abci.Event, debug bool) *abci.CheckTxResponse {
+func responseCheckTxWithEvents(err error, gw, gu uint64, events []abci.Event, debug bool) *abci.CheckTxResponse {
 	space, code, log := errorsmod.ABCIInfo(err, debug)
 	return &abci.CheckTxResponse{
 		Codespace: space,
@@ -20,9 +20,9 @@ func ResponseCheckTxWithEvents(err error, gw, gu uint64, events []abci.Event, de
 	}
 }
 
-// ResponseExecTxResultWithEvents returns an ABCI ExecTxResult object with fields
+// responseExecTxResultWithEvents returns an ABCI ExecTxResult object with fields
 // filled in from the given error, gas values and events.
-func ResponseExecTxResultWithEvents(err error, gw, gu uint64, events []abci.Event, debug bool) *abci.ExecTxResult {
+func responseExecTxResultWithEvents(err error, gw, gu uint64, events []abci.Event, debug bool) *abci.ExecTxResult {
 	space, code, log := errorsmod.ABCIInfo(err, debug)
 	return &abci.ExecTxResult{
 		Codespace: space,
@@ -34,9 +34,9 @@ func ResponseExecTxResultWithEvents(err error, gw, gu uint64, events []abci.Even
 	}
 }
 
-// QueryResult returns a ResponseQuery from an error. It will try to parse ABCI
+// queryResult returns a ResponseQuery from an error. It will try to parse ABCI
 // info from the error.
-func QueryResult(err error, debug bool) *abci.QueryResponse {
+func queryResult(err error, debug bool) *abci.QueryResponse {
 	space, code, log := errorsmod.ABCIInfo(err, debug)
 	return &abci.QueryResponse{
 		Codespace: space,

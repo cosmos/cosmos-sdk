@@ -114,7 +114,7 @@ func NewSimApp(
 					RootDir: DefaultNodeHome,
 					SSType:  0,
 					SCType:  0,
-					SCPruneOptions: &store.PruneOptions{
+					SCPruningOption: &store.PruningOption{
 						KeepRecent: 0,
 						Interval:   0,
 					},

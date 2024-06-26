@@ -106,6 +106,8 @@ github.com/cosmos/cosmos-proto v1.0.0-beta.5 h1:eNcayDLpip+zVLRLYafhzLvQlSmyab+R
 github.com/cosmos/cosmos-proto v1.0.0-beta.5/go.mod h1:hQGLpiIUloJBMdQMMWb/4wRApmI9hjHH05nefC0Ojec=
 github.com/cosmos/crypto v0.0.0-20240620174915-3a98519717c2 h1:JuS0NqjkwG6Q7J6WS1xFHfSRIQp93Q9/WX4p0BbGkXU=
 github.com/cosmos/crypto v0.0.0-20240620174915-3a98519717c2/go.mod h1:b6VWz3HczIpBaQPvI7KrbQeF3pXHh0al3T5e0uwMBQw=
+github.com/cosmos/crypto v0.1.0 h1:jy58haX1JdcTS9sReuatXGUQAcN/Cq/itBpjZkfGp/4=
+github.com/cosmos/crypto v0.1.0/go.mod h1:b6VWz3HczIpBaQPvI7KrbQeF3pXHh0al3T5e0uwMBQw=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=
 github.com/cosmos/gogogateway v1.2.0 h1:Ae/OivNhp8DqBi/sh2A8a1D0y638GpL3tkmLQAiKxTE=

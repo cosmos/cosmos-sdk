@@ -161,7 +161,7 @@ require (
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
-	github.com/cosmos/crypto v0.0.0-20240620174915-3a98519717c2 // indirect
+	github.com/cosmos/crypto v0.1.0 // indirect
 	github.com/dgraph-io/badger/v4 v4.2.0 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect

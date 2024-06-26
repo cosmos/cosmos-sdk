@@ -49,7 +49,7 @@ require github.com/cometbft/cometbft/api v1.0.0-rc.1
 
 require (
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
-	github.com/cosmos/crypto v0.0.0-20240620174915-3a98519717c2
+	github.com/cosmos/crypto v0.1.0
 )
 
 require (

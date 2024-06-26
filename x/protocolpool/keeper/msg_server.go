@@ -165,9 +165,6 @@ func (k MsgServer) WithdrawContinuousFund(ctx context.Context, msg *types.MsgWit
 	if err != nil {
 		return nil, err
 	}
-	if amount.IsNil() {
-		k.Logger.Info(fmt.Sprintf("no distribution amount found for recipient %s", msg.RecipientAddress))
-	}
 
 	return &types.MsgWithdrawContinuousFundResponse{Amount: amount}, nil
 }

@@ -193,13 +193,20 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 	}
 
 	totalStreamFundsPercentage := math.LegacyZeroDec()
-	err = k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
-		totalStreamFundsPercentage = totalStreamFundsPercentage.Add(value.Percentage)
+	err = k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, cf types.ContinuousFund) (stop bool, err error) {
+		// Check if the continuous fund has expired
+		if cf.Expiry != nil && cf.Expiry.Before(k.HeaderService.HeaderInfo(ctx).Time) {
+			return false, nil
+		}
+
+		totalStreamFundsPercentage = totalStreamFundsPercentage.Add(cf.Percentage)
+		if totalStreamFundsPercentage.GT(math.LegacyOneDec()) {
+			return true, fmt.Errorf("total funds percentage cannot exceed 100")
+		}
+
 		return false, nil
 	})
-	if totalStreamFundsPercentage.GT(math.LegacyOneDec()) {
-		return fmt.Errorf("total funds percentage cannot exceed 100")
-	}
+
 	if err != nil {
 		return err
 	}

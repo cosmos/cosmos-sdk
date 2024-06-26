@@ -76,7 +76,5 @@ func (r dynamicTypeResolver) FindMessageByURL(url string) (protoreflect.MessageT
 	return r.FindMessageByName(protoreflect.FullName(url))
 }
 
-var (
-	_ protoregistry.MessageTypeResolver   = dynamicTypeResolver{}
-	_ protoregistry.ExtensionTypeResolver = dynamicTypeResolver{}
-)
+var _ protoregistry.MessageTypeResolver = dynamicTypeResolver{}
+var _ protoregistry.ExtensionTypeResolver = dynamicTypeResolver{}

@@ -48,7 +48,6 @@ func (s *CLITestSuite) SetupSuite() {
 	s.baseCtx = client.Context{}.
 		WithKeyring(s.kr).
 		WithTxConfig(s.encCfg.TxConfig).
-		WithInterfaceRegistry(s.encCfg.InterfaceRegistry).
 		WithCodec(s.encCfg.Codec).
 		WithClient(clitestutil.MockCometRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
@@ -115,6 +114,13 @@ func (s *CLITestSuite) TestTxInitCmd() {
 			extraArgs:    extraArgs,
 			expectErrMsg: "provided message is not valid",
 		},
+		{
+			name:         "invalid sender",
+			accountType:  "test",
+			jsonMsg:      `{}`,
+			extraArgs:    append(extraArgs, fmt.Sprintf("--%s=%s", flags.FlagFrom, "bar")),
+			expectErrMsg: "failed to convert address field to address",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -128,96 +134,6 @@ func (s *CLITestSuite) TestTxInitCmd() {
 			args = append(args, tc.extraArgs...)
 
 			cmd.SetContext(ctx)
-			cmd.SetArgs(args)
-
-			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
-			if tc.expectErrMsg != "" {
-				s.Require().Error(err)
-				s.Require().Contains(out.String(), tc.expectErrMsg)
-			} else {
-				s.Require().NoError(err)
-				msg := &sdk.TxResponse{}
-				s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), msg), out.String())
-			}
-		})
-	}
-}
-
-func (s *CLITestSuite) TestTxExecuteCmd() {
-	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-	accountStr := make([]string, len(accounts))
-	for i, acc := range accounts {
-		addrStr, err := s.baseCtx.AddressCodec.BytesToString(acc.Address)
-		s.Require().NoError(err)
-		accountStr[i] = addrStr
-	}
-
-	s.baseCtx = s.baseCtx.WithFromAddress(accounts[0].Address)
-
-	extraArgs := []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("photon", math.NewInt(10))).String()),
-		fmt.Sprintf("--%s=test-chain", flags.FlagChainID),
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, accountStr[0]),
-	}
-
-	cmd := cli.GetTxInitCmd()
-	cmd.SetOutput(io.Discard)
-
-	ctxGen := func() client.Context {
-		bz, _ := s.encCfg.Codec.Marshal(&v1.SchemaResponse{
-			InitSchema: &v1.SchemaResponse_Handler{
-				Request:  sdk.MsgTypeURL(&types.Empty{})[1:],
-				Response: sdk.MsgTypeURL(&types.Empty{})[1:],
-			},
-		})
-		c := clitestutil.NewMockCometRPC(abci.QueryResponse{
-			Value: bz,
-		})
-		return s.baseCtx.WithClient(c)
-	}
-	s.clientCtx = ctxGen()
-
-	testCases := []struct {
-		name         string
-		accountType  string
-		jsonMsg      string
-		extraArgs    []string
-		expectErrMsg string
-	}{
-		{
-			name:         "valid transaction",
-			accountType:  "test",
-			jsonMsg:      `{}`,
-			extraArgs:    extraArgs,
-			expectErrMsg: "",
-		},
-		{
-			name:         "invalid json msg",
-			accountType:  "test",
-			jsonMsg:      `{"test": "jsonmsg"}`,
-			extraArgs:    extraArgs,
-			expectErrMsg: "provided message is not valid",
-		},
-		{
-			name:         "invalid sender",
-			accountType:  "test",
-			jsonMsg:      `{}`,
-			extraArgs:    append(extraArgs, fmt.Sprintf("--%s=%s", flags.FlagFrom, "bar")),
-			expectErrMsg: "failed to convert address field to address",
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			var args []string
-			args = append(args, tc.accountType)
-			args = append(args, tc.jsonMsg)
-			args = append(args, tc.extraArgs...)
-
-			cmd.SetContext(s.baseCtx.CmdContext)
 			cmd.SetArgs(args)
 
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)

@@ -44,13 +44,11 @@ Example:
 				return err
 			}
 
-			// Get the output format flag
 			outputFormat, err := cmd.Flags().GetString(flags.FlagOutput)
 			if err != nil {
 				return err
 			}
 
-			// Print the CommitInfo based on the output format
 			switch outputFormat {
 			case flags.OutputFormatJSON:
 				jsonOutput, err := json.MarshalIndent(commitInfoForHeight, "", "  ")

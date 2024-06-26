@@ -128,7 +128,7 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipientAddr string
 	}
 
 	// withdraw continuous fund
-	withdrawnAmount, err := k.withdrawRecipientFunds(ctx, recipientAddr)
+	withdrawnAmount, err := k.withdrawRecipientFunds(ctx, recipient)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("error while withdrawing recipient funds for recipient: %s", recipientAddr)
 	}
@@ -136,12 +136,7 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipientAddr string
 	return withdrawnAmount, nil
 }
 
-func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipientAddr string) (sdk.Coin, error) {
-	recipient, err := k.authKeeper.AddressCodec().StringToBytes(recipientAddr)
-	if err != nil {
-		return sdk.Coin{}, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
-	}
-
+func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient []byte) (sdk.Coin, error) {
 	// get allocated continuous fund
 	fundsAllocated, err := k.RecipientFundDistribution.Get(ctx, recipient)
 	if err != nil {
@@ -160,7 +155,7 @@ func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipientAddr string
 	withdrawnAmount := sdk.NewCoin(denom, fundsAllocated)
 	err = k.DistributeFromStreamFunds(ctx, sdk.NewCoins(withdrawnAmount), recipient)
 	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("error while distributing funds to the recipient %s: %w", recipientAddr, err)
+		return sdk.Coin{}, fmt.Errorf("error while distributing funds: %w", err)
 	}
 
 	// reset fund distribution
@@ -273,7 +268,6 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 	}
 
 	totalPercentageToBeDistributed := math.LegacyZeroDec()
-	// recipientFundList := []types.ContinuousFund{}
 
 	denom, err := k.stakingKeeper.BondDenom(ctx)
 	if err != nil {

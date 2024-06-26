@@ -10,14 +10,15 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/client/v2/offchain"
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/cometbft"
-	"cosmossdk.io/server/v2/store"
 	"cosmossdk.io/simapp/v2"
+	storev2 "cosmossdk.io/store/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 	authcmd "cosmossdk.io/x/auth/client/cli"
 
@@ -53,7 +54,7 @@ func (t *temporaryTxDecoder) DecodeJSON(bz []byte) (transaction.Tx, error) {
 func newApp(
 	logger log.Logger,
 	viper *viper.Viper,
-) serverv2.AppI[transaction.Tx] {
+) servercore.AppI[transaction.Tx] {
 	sa := simapp.NewSimApp(logger, viper)
 	return sa
 }
@@ -85,7 +86,7 @@ func initRootCmd(
 		logger,
 		cometbft.New(&temporaryTxDecoder{txConfig}),
 		grpc.New(),
-		store.New(),
+		storev2.New(),
 	); err != nil {
 		panic(err)
 	}

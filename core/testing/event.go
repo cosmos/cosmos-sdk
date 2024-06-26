@@ -3,6 +3,7 @@ package coretesting
 import (
 	"context"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/core/event"
@@ -39,7 +40,7 @@ type eventManager struct {
 	ctx        *dummyCtx
 }
 
-func (e eventManager) Emit(event protoiface.MessageV1) error {
+func (e eventManager) Emit(event gogoproto.Message) error {
 	e.ctx.protoEvents[e.moduleName] = append(e.ctx.protoEvents[e.moduleName], event)
 	return nil
 }

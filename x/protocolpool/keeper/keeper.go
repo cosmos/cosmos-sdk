@@ -33,11 +33,9 @@ type Keeper struct {
 	Schema         collections.Schema
 	BudgetProposal collections.Map[sdk.AccAddress, types.Budget]
 	ContinuousFund collections.Map[sdk.AccAddress, types.ContinuousFund]
-	// RecipientFundPercentage key: RecipientAddr | value: Percentage in math.Int
-	RecipientFundPercentage collections.Map[sdk.AccAddress, math.Int]
 	// RecipientFundDistribution key: RecipientAddr | value: Claimable amount
 	RecipientFundDistribution collections.Map[sdk.AccAddress, math.Int]
-	// ToDistribute is to keep track of funds distributed
+	// ToDistribute is to keep track of funds to be distributed. It gets zeroed out in iterateAndUpdateFundsDistribution.
 	ToDistribute collections.Item[math.Int]
 }
 
@@ -63,7 +61,6 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.Accoun
 		authority:                 authority,
 		BudgetProposal:            collections.NewMap(sb, types.BudgetKey, "budget", sdk.AccAddressKey, codec.CollValue[types.Budget](cdc)),
 		ContinuousFund:            collections.NewMap(sb, types.ContinuousFundKey, "continuous_fund", sdk.AccAddressKey, codec.CollValue[types.ContinuousFund](cdc)),
-		RecipientFundPercentage:   collections.NewMap(sb, types.RecipientFundPercentageKey, "recipient_fund_percentage", sdk.AccAddressKey, sdk.IntValue),
 		RecipientFundDistribution: collections.NewMap(sb, types.RecipientFundDistributionKey, "recipient_fund_distribution", sdk.AccAddressKey, sdk.IntValue),
 		ToDistribute:              collections.NewItem(sb, types.ToDistributeKey, "to_distribute", sdk.IntValue),
 	}
@@ -125,16 +122,9 @@ func (k Keeper) withdrawContinuousFund(ctx context.Context, recipientAddr string
 		return sdk.Coin{}, fmt.Errorf("cannot withdraw continuous funds: continuous fund expired for recipient: %s", recipientAddr)
 	}
 
-	toDistributeAmount, err := k.ToDistribute.Get(ctx)
+	err = k.iterateAndUpdateFundsDistribution(ctx)
 	if err != nil {
-		return sdk.Coin{}, err
-	}
-
-	if !toDistributeAmount.Equal(math.ZeroInt()) {
-		err = k.iterateAndUpdateFundsDistribution(ctx, toDistributeAmount)
-		if err != nil {
-			return sdk.Coin{}, fmt.Errorf("error while iterating all the continuous funds: %w", err)
-		}
+		return sdk.Coin{}, fmt.Errorf("error while iterating all the continuous funds: %w", err)
 	}
 
 	// withdraw continuous fund
@@ -181,7 +171,8 @@ func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipientAddr string
 	return withdrawnAmount, nil
 }
 
-// SetToDistribute sets the amount to be distributed among recipients.
+// SetToDistribute sets the amount to be distributed among recipients, usually called by x/distribution while allocating
+// reward and fee distribution.
 // This could be only set by the authority address.
 func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr string) error {
 	authAddr, err := k.authKeeper.AddressCodec().StringToBytes(addr)
@@ -201,12 +192,12 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 		return err
 	}
 
-	totalStreamFundsPercentage := math.ZeroInt()
-	err = k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
-		totalStreamFundsPercentage = totalStreamFundsPercentage.Add(value)
+	totalStreamFundsPercentage := math.LegacyZeroDec()
+	err = k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
+		totalStreamFundsPercentage = totalStreamFundsPercentage.Add(value.Percentage)
 		return false, nil
 	})
-	if totalStreamFundsPercentage.GT(math.NewInt(100)) {
+	if totalStreamFundsPercentage.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("total funds percentage cannot exceed 100")
 	}
 	if err != nil {
@@ -218,14 +209,19 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 		return err
 	}
 
-	err = k.ToDistribute.Set(ctx, amount.AmountOf(denom))
+	amountToDistribute, err := k.ToDistribute.Get(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = k.ToDistribute.Set(ctx, amountToDistribute.Add(amount.AmountOf(denom)))
 	if err != nil {
 		return fmt.Errorf("error while setting ToDistribute: %w", err)
 	}
 	return nil
 }
 
-func (k Keeper) sendFundsToStreamModule(ctx context.Context, denom string, percentage math.Int) error {
+func (k Keeper) sendFundsToStreamModule(ctx context.Context, denom string, percentage math.LegacyDec) error {
 	totalPoolAmt, err := k.GetCommunityPool(ctx)
 	if err != nil {
 		return err
@@ -233,7 +229,7 @@ func (k Keeper) sendFundsToStreamModule(ctx context.Context, denom string, perce
 
 	poolAmt := totalPoolAmt.AmountOf(denom)
 	poolAmtDec := sdk.NewDecCoins(sdk.NewDecCoin(denom, poolAmt))
-	amt := poolAmtDec.MulDec(math.LegacyNewDecFromIntWithPrec(percentage, 2))
+	amt := poolAmtDec.MulDec(percentage)
 	streamAmt := sdk.NewCoins(sdk.NewCoin(denom, amt.AmountOf(denom).TruncateInt()))
 
 	// Send streaming funds to the StreamModuleAccount
@@ -254,44 +250,35 @@ func (k Keeper) hasPermission(addr []byte) (bool, error) {
 	return bytes.Equal(authAcc, addr), nil
 }
 
-type recipientFund struct {
-	RecipientAddr string
-	Percentage    math.Int
-}
+func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context) error {
+	toDistributeAmount, err := k.ToDistribute.Get(ctx)
+	if err != nil {
+		return err
+	}
 
-func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistributeAmount math.Int) error {
-	totalPercentageToBeDistributed := math.ZeroInt()
+	// if there are no funds to distribute, return
+	if toDistributeAmount.IsZero() {
+		return nil
+	}
 
-	recipientFundList := []recipientFund{}
+	totalPercentageToBeDistributed := math.LegacyZeroDec()
+	recipientFundList := []types.ContinuousFund{}
 
 	// Calculate totalPercentageToBeDistributed and store values
-	err := k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
-		addr, err := k.authKeeper.AddressCodec().BytesToString(key)
-		if err != nil {
-			return true, err
-		}
-
-		cf, err := k.ContinuousFund.Get(ctx, key)
-		if err != nil {
-			return true, err
-		}
-
+	err = k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, cf types.ContinuousFund) (stop bool, err error) {
 		// Check if the continuous fund has expired
 		if cf.Expiry != nil && cf.Expiry.Before(k.HeaderService.HeaderInfo(ctx).Time) {
 			return false, nil
 		}
 
-		totalPercentageToBeDistributed = totalPercentageToBeDistributed.Add(value)
-		recipientFundList = append(recipientFundList, recipientFund{
-			RecipientAddr: addr,
-			Percentage:    value,
-		})
+		totalPercentageToBeDistributed = totalPercentageToBeDistributed.Add(cf.Percentage)
+		recipientFundList = append(recipientFundList, cf)
 		return false, nil
 	})
 	if err != nil {
 		return err
 	}
-	if totalPercentageToBeDistributed.GT(math.NewInt(100)) {
+	if totalPercentageToBeDistributed.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("total funds percentage cannot exceed 100")
 	}
 
@@ -302,17 +289,15 @@ func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistrib
 	toDistributeDec := sdk.NewDecCoins(sdk.NewDecCoin(denom, toDistributeAmount))
 
 	// Calculate the funds to be distributed based on the total percentage to be distributed
-	totalAmountToBeDistributed := toDistributeDec.MulDec(math.LegacyNewDecFromIntWithPrec(totalPercentageToBeDistributed, 2))
+	totalAmountToBeDistributed := toDistributeDec.MulDec(totalPercentageToBeDistributed)
 	totalDistrAmount := totalAmountToBeDistributed.AmountOf(denom)
 
 	for _, value := range recipientFundList {
 		// Calculate the funds to be distributed based on the percentage
-		decValue := math.LegacyNewDecFromIntWithPrec(value.Percentage, 2)
-		percentage := math.LegacyNewDecFromIntWithPrec(totalPercentageToBeDistributed, 2)
-		recipientAmount := totalDistrAmount.Mul(decValue).Quo(percentage)
+		recipientAmount := totalDistrAmount.Mul(value.Percentage).Quo(totalPercentageToBeDistributed)
 		recipientCoins := recipientAmount.TruncateInt()
 
-		key, err := k.authKeeper.AddressCodec().StringToBytes(value.RecipientAddr)
+		key, err := k.authKeeper.AddressCodec().StringToBytes(value.Recipient)
 		if err != nil {
 			return err
 		}

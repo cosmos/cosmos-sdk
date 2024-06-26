@@ -510,3 +510,7 @@ func (k Keeper) validateContinuousFund(ctx context.Context, msg types.MsgCreateC
 
 	return nil
 }
+
+func (k Keeper) BeginBlocker(ctx context.Context) error {
+	return k.SetToDistribute(ctx)
+}

@@ -7,11 +7,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	corectx "cosmossdk.io/core/context"
 	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	// storev2 "cosmossdk.io/store/v2"
-	corectx "cosmossdk.io/core/context"
 )
 
 // QueryBlockResultsCmd implements the default command for a BlockResults query.

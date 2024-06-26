@@ -10,7 +10,6 @@ import (
 	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	// serverv2 "cosmossdk.io/server/v2"
 )
 
 type StoreComponent struct {

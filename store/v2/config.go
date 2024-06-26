@@ -1,9 +1,5 @@
 package store
 
-import (
-	// storev2 "cosmossdk.io/store/v2"
-)
-
 func DefaultConfig() *Config {
 	return &Config{
 		Pruning:           PruningOptionDefault,

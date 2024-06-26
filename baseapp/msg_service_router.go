@@ -6,13 +6,13 @@ import (
 	"reflect"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	"github.com/cosmos/cosmos-sdk/baseapp/internal/protoutils"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 
 	errorsmod "cosmossdk.io/errors"
 
+	"github.com/cosmos/cosmos-sdk/baseapp/internal/protoutils"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

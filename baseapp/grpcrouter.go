@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	"github.com/cosmos/cosmos-sdk/baseapp/internal/protoutils"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 
+	"github.com/cosmos/cosmos-sdk/baseapp/internal/protoutils"
 	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

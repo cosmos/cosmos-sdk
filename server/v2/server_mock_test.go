@@ -7,9 +7,9 @@ import (
 
 	"github.com/spf13/viper"
 
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	serverv2 "cosmossdk.io/server/v2"
 )
 
 type mockServerConfig struct {
@@ -55,6 +55,6 @@ func (s *mockServer) Config() any {
 	return MockServerDefaultConfig()
 }
 
-func (s *mockServer) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
+func (s *mockServer) Init(appI servercore.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
 	return nil
 }

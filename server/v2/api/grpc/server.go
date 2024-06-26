@@ -15,9 +15,9 @@ import (
 
 	_ "cosmossdk.io/api/amino" // Import amino.proto file for reflection
 	appmanager "cosmossdk.io/core/app"
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 )
 
@@ -41,7 +41,7 @@ func New() *GRPCServer {
 
 // Init returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server.
-func (g *GRPCServer) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
+func (g *GRPCServer) Init(appI servercore.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
 	cfg := DefaultConfig()
 	if v != nil {
 		if err := v.Sub(serverName).Unmarshal(&cfg); err != nil {

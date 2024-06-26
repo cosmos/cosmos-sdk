@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 )
@@ -23,12 +24,12 @@ type ServerComponent[T transaction.Tx] interface {
 
 	Start(context.Context) error
 	Stop(context.Context) error
-	Init(AppI[T], *viper.Viper, log.Logger) error
+	Init(servercore.AppI[T], *viper.Viper, log.Logger) error
 }
 
 // HasCLICommands is a server module that has CLI commands.
 type HasCLICommands interface {
-	CLICommands(AppCreator[transaction.Tx]) CLIConfig
+	CLICommands(servercore.AppCreator[transaction.Tx]) servercore.CLIConfig
 }
 
 // HasConfig is a server module that has a config.
@@ -120,7 +121,7 @@ func (s *Server) Stop(ctx context.Context) error {
 }
 
 // CLICommands returns all CLI commands of all components.
-func (s *Server) CLICommands(appCreator AppCreator[transaction.Tx]) CLIConfig {
+func (s *Server) CLICommands(appCreator servercore.AppCreator[transaction.Tx]) servercore.CLIConfig {
 	compart := func(name string, cmds ...*cobra.Command) *cobra.Command {
 		if len(cmds) == 1 && strings.HasPrefix(cmds[0].Use, name) {
 			return cmds[0]
@@ -135,7 +136,7 @@ func (s *Server) CLICommands(appCreator AppCreator[transaction.Tx]) CLIConfig {
 		return rootCmd
 	}
 
-	commands := CLIConfig{}
+	commands := servercore.CLIConfig{}
 	for _, mod := range s.components {
 		if climod, ok := mod.(HasCLICommands); ok {
 			commands.Commands = append(commands.Commands, compart(mod.Name(), climod.CLICommands(appCreator).Commands...))
@@ -161,7 +162,7 @@ func (s *Server) Configs() map[string]any {
 }
 
 // Configs returns all configs of all server components.
-func (s *Server) Init(appI AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
+func (s *Server) Init(appI servercore.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
 	var components []ServerComponent[transaction.Tx]
 	for _, mod := range s.components {
 		mod := mod

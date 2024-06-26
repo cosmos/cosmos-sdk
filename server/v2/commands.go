@@ -11,13 +11,14 @@ import (
 
 	"github.com/spf13/cobra"
 
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 )
 
-func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, components ...ServerComponent[transaction.Tx]) (CLIConfig, error) {
+func Commands(rootCmd *cobra.Command, newApp servercore.AppCreator[transaction.Tx], logger log.Logger, components ...ServerComponent[transaction.Tx]) (servercore.CLIConfig, error) {
 	if len(components) == 0 {
-		return CLIConfig{}, errors.New("no components provided")
+		return servercore.CLIConfig{}, errors.New("no components provided")
 	}
 
 	server := NewServer(logger, components...)
@@ -76,7 +77,7 @@ func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger 
 	return cmds, nil
 }
 
-func AddCommands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, components ...ServerComponent[transaction.Tx]) error {
+func AddCommands(rootCmd *cobra.Command, newApp servercore.AppCreator[transaction.Tx], logger log.Logger, components ...ServerComponent[transaction.Tx]) error {
 	cmds, err := Commands(rootCmd, newApp, logger, components...)
 	if err != nil {
 		return err

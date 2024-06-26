@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	coreapp "cosmossdk.io/core/app"
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
@@ -30,7 +31,7 @@ func (*mockInterfaceRegistry) ListImplementations(ifaceTypeURL string) []string 
 func (*mockInterfaceRegistry) ListAllInterfaces() []string { panic("not implemented") }
 
 type mockApp[T transaction.Tx] struct {
-	serverv2.AppI[T]
+	servercore.AppI[T]
 }
 
 func (*mockApp[T]) InterfaceRegistry() coreapp.InterfaceRegistry {

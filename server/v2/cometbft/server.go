@@ -29,6 +29,7 @@ import (
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
 
+	servercore "cosmossdk.io/core/server"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -70,7 +71,7 @@ func New[T transaction.Tx](txCodec transaction.Codec[T]) *CometBFTServer[T] {
 	}
 }
 
-func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
+func (s *CometBFTServer[T]) Init(appI servercore.AppI[T], v *viper.Viper, logger log.Logger) error {
 	store := appI.GetStore().(types.Store)
 
 	cfg := Config{CmtConfig: GetConfigFromViper(v), ConsensusAuthority: appI.GetConsensusAuthority()}
@@ -81,7 +82,11 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 
 	// create consensus
 	// txCodec should be in server from New()
-	consensus := NewConsensus[T](appI.GetAppManager(), mempool, store, cfg, s.App.txCodec, logger)
+	appManager, ok := appI.GetAppManager().(*appmanager.AppManager[T])
+	if !ok {
+		return fmt.Errorf("Can not get appManager")
+	}
+	consensus := NewConsensus[T](appManager, mempool, store, cfg, s.App.txCodec, logger)
 
 	consensus.SetPrepareProposalHandler(handlers.NoOpPrepareProposal[T]())
 	consensus.SetProcessProposalHandler(handlers.NoOpProcessProposal[T]())
@@ -211,8 +216,8 @@ func (s *CometBFTServer[T]) StartCmdFlags() pflag.FlagSet {
 	return flags
 }
 
-func (s *CometBFTServer[T]) CLICommands(_ serverv2.AppCreator[T]) serverv2.CLIConfig {
-	return serverv2.CLIConfig{
+func (s *CometBFTServer[T]) CLICommands(_ servercore.AppCreator[T]) servercore.CLIConfig {
+	return servercore.CLIConfig{
 		Commands: []*cobra.Command{
 			s.StatusCommand(),
 			s.ShowNodeIDCmd(),

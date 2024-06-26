@@ -127,6 +127,6 @@ func (a *App) ExecuteGenesisTx(_ []byte) error {
 	panic("App.ExecuteGenesisTx not supported in runtime/v2")
 }
 
-func (a *App) GetAppManager() *appmanager.AppManager[transaction.Tx] {
+func (a *App) GetAppManager() any {
 	return a.AppManager
 }

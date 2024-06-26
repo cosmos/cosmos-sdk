@@ -2,17 +2,18 @@ package simapp
 
 import (
 	_ "embed"
-	"os"
 	"path/filepath"
 
 	"github.com/spf13/viper"
 
+	clienthelpers "cosmossdk.io/client/v2/helpers"
 	coreapp "cosmossdk.io/core/app"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/runtime/v2"
+	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	"cosmossdk.io/store/v2/db"
@@ -37,10 +38,8 @@ import (
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/std"
 )
 
@@ -78,12 +77,11 @@ type SimApp[T transaction.Tx] struct {
 }
 
 func init() {
-	userHomeDir, err := os.UserHomeDir()
+	var err error
+	DefaultNodeHome, err = clienthelpers.GetNodeHomeDirectory(".simappv2")
 	if err != nil {
 		panic(err)
 	}
-
-	DefaultNodeHome = filepath.Join(userHomeDir, ".simappv2")
 }
 
 // AppConfig returns the default app config.
@@ -98,8 +96,8 @@ func NewSimApp[T transaction.Tx](
 	logger log.Logger,
 	viper *viper.Viper,
 ) *SimApp[T] {
-	homeDir := viper.Get(flags.FlagHome).(string) // TODO
-	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(homeDir, "data"), nil)
+	viper.Set(serverv2.FlagHome, DefaultNodeHome) // TODO possibly set earlier when viper is created
+	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(DefaultNodeHome, "data"), nil)
 	if err != nil {
 		panic(err)
 	}
@@ -114,10 +112,10 @@ func NewSimApp[T transaction.Tx](
 				logger,
 				&root.FactoryOptions{
 					Logger:  logger,
-					RootDir: homeDir,
+					RootDir: DefaultNodeHome,
 					SSType:  0,
 					SCType:  0,
-					SCPruneOptions: &store.PruneOptions{
+					SCPruningOption: &store.PruningOption{
 						KeepRecent: 0,
 						Interval:   0,
 					},
@@ -127,7 +125,7 @@ func NewSimApp[T transaction.Tx](
 					},
 					SCRawDB: scRawDb,
 				},
-				servertypes.AppOptions(viper),
+				viper,
 
 				// ADVANCED CONFIGURATION
 

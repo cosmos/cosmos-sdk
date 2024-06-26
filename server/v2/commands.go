@@ -7,13 +7,31 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 )
+
+// Execute executes the root command of an application.
+// It handles adding core CLI flags, specifically the logging flags.
+func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
+	rootCmd.PersistentFlags().String(FlagLogLevel, "info", "The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:<level>,<key>:<level>')")
+	rootCmd.PersistentFlags().String(FlagLogFormat, "plain", "The logging format (json|plain)")
+	rootCmd.PersistentFlags().Bool(FlagLogNoColor, false, "Disable colored logs")
+	rootCmd.PersistentFlags().StringP(FlagHome, "", defaultHome, "directory for config and data")
+
+	// update the global viper with the root command's configuration
+	viper.SetEnvPrefix(envPrefix)
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
+	viper.AutomaticEnv()
+
+	return rootCmd.Execute()
+}
 
 func Commands[AppT AppI[T], T transaction.Tx](
 	rootCmd *cobra.Command,
@@ -100,8 +118,7 @@ func AddCommands[AppT AppI[T], T transaction.Tx](
 			return err
 		}
 
-		err = configHandle(server, home, cmd)
-		if err != nil {
+		if err = configHandle(server, home, cmd); err != nil {
 			return err
 		}
 
@@ -119,13 +136,16 @@ func AddCommands[AppT AppI[T], T transaction.Tx](
 
 // configHandle writes the default config to the home directory if it does not exist and sets the server context
 func configHandle[AppT AppI[T], T transaction.Tx](s *Server[AppT, T], home string, cmd *cobra.Command) error {
-	if _, err := os.Stat(filepath.Join(home, "config")); os.IsNotExist(err) {
-		if err = s.WriteConfig(filepath.Join(home, "config")); err != nil {
+	configDir := filepath.Join(home, "config")
+
+	// we need to check app.toml as the config folder can already exist for the client.toml
+	if _, err := os.Stat(filepath.Join(configDir, "app.toml")); os.IsNotExist(err) {
+		if err = s.WriteConfig(configDir); err != nil {
 			return err
 		}
 	}
 
-	viper, err := ReadConfig(filepath.Join(home, "config"))
+	viper, err := ReadConfig(configDir)
 	if err != nil {
 		return err
 	}

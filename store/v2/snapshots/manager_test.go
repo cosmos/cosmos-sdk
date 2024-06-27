@@ -293,6 +293,27 @@ func TestSnapshot_Take_Restore(t *testing.T) {
 
 	err = manager.Restore(*snapshot)
 	require.NoError(t, err)
+
+	// Feeding the chunks should work
+	for i, chunk := range readChunks(chunks) {
+		done, err := manager.RestoreChunk(chunk)
+		require.NoError(t, err)
+		if i == len(chunks)-1 {
+			assert.True(t, done)
+		} else {
+			assert.False(t, done)
+		}
+	}
+
+	// The snapshot is saved in local snapshot store
+	snapshots, err := store.List()
+	require.NoError(t, err)
+	require.Equal(t, uint64(5), snapshots[0].Height)
+	require.Equal(t, types.CurrentFormat, snapshots[0].Format)
+
+	// Starting a new restore should fail now, because the target already has contents.
+	err = manager.Restore(*snapshot)
+	require.Error(t, err)
 }
 
 func TestSnapshot_Take_Prune(t *testing.T) {

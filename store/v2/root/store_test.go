@@ -64,7 +64,7 @@ func (s *RootStoreTestSuite) SetupTest() {
 	s.rootStore = rs
 }
 
-func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruneOptions) {
+func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruningOption) {
 	noopLog := log.NewNopLogger()
 
 	sqliteDB, err := sqlite.New(s.T().TempDir())
@@ -415,24 +415,24 @@ func (s *RootStoreTestSuite) TestPrune() {
 	testCases := []struct {
 		name        string
 		numVersions int64
-		po          store.PruneOptions
+		po          store.PruningOption
 		deleted     []uint64
 		saved       []uint64
 	}{
-		{"prune nothing", 10, *store.DefaultPruneOptions(), nil, []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
-		{"prune everything", 12, store.PruneOptions{
+		{"prune nothing", 10, *store.NewPruningOption(store.PruningNothing), nil, []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
+		{"prune everything", 12, store.PruningOption{
 			KeepRecent: 1,
 			Interval:   10,
 		}, []uint64{1, 2, 3, 4, 5, 6, 7, 8}, []uint64{9, 10, 11, 12}},
-		{"prune some; no batch", 10, store.PruneOptions{
+		{"prune some; no batch", 10, store.PruningOption{
 			KeepRecent: 2,
 			Interval:   1,
 		}, []uint64{1, 2, 3, 4, 6, 5, 7}, []uint64{8, 9, 10}},
-		{"prune some; small batch", 10, store.PruneOptions{
+		{"prune some; small batch", 10, store.PruningOption{
 			KeepRecent: 2,
 			Interval:   3,
 		}, []uint64{1, 2, 3, 4, 5, 6}, []uint64{7, 8, 9, 10}},
-		{"prune some; large batch", 10, store.PruneOptions{
+		{"prune some; large batch", 10, store.PruningOption{
 			KeepRecent: 2,
 			Interval:   11,
 		}, nil, []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
@@ -493,7 +493,7 @@ func (s *RootStoreTestSuite) TestMultiStore_Pruning_SameHeightsTwice() {
 		interval    uint64 = 10
 	)
 
-	s.newStoreWithPruneConfig(&store.PruneOptions{
+	s.newStoreWithPruneConfig(&store.PruningOption{
 		KeepRecent: keepRecent,
 		Interval:   interval,
 	})
@@ -545,7 +545,7 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	cs := corestore.NewChangeset()
 	cs.Add(testStoreKeyBytes, []byte("key"), []byte("val"), false)
 
-	pruneOpt := &store.PruneOptions{
+	pruneOpt := &store.PruningOption{
 		KeepRecent: 2,
 		Interval:   11,
 	}

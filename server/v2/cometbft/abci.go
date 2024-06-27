@@ -70,10 +70,6 @@ func NewConsensus[T transaction.Tx](
 	}
 }
 
-func (c *Consensus[T]) SetMempool(mp mempool.Mempool[T]) {
-	c.mempool = mp
-}
-
 func (c *Consensus[T]) SetStreamingManager(sm streaming.Manager) {
 	c.streaming = sm
 }
@@ -92,22 +88,6 @@ func (c *Consensus[T]) RegisterExtensions(extensions ...snapshots.ExtensionSnaps
 	if err := c.snapshotManager.RegisterExtensions(extensions...); err != nil {
 		panic(fmt.Errorf("failed to register snapshot extensions: %w", err))
 	}
-}
-
-func (c *Consensus[T]) SetPrepareProposalHandler(handler handlers.PrepareHandler[T]) {
-	c.prepareProposalHandler = handler
-}
-
-func (c *Consensus[T]) SetProcessProposalHandler(handler handlers.ProcessHandler[T]) {
-	c.processProposalHandler = handler
-}
-
-func (c *Consensus[T]) SetExtendVoteExtension(handler handlers.ExtendVoteHandler) {
-	c.extendVote = handler
-}
-
-func (c *Consensus[T]) SetVerifyVoteExtension(handler handlers.VerifyVoteExtensionhandler) {
-	c.verifyVoteExt = handler
 }
 
 // BlockData is used to keep some data about the last committed block. Currently

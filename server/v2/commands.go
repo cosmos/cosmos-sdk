@@ -33,7 +33,12 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 	return rootCmd.Execute()
 }
 
-func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, components ...ServerComponent[transaction.Tx]) (CLIConfig, error) {
+func Commands[AppT AppI[T], T transaction.Tx](
+	rootCmd *cobra.Command,
+	newApp AppCreator[AppT, T],
+	logger log.Logger,
+	components ...ServerComponent[AppT, T],
+) (CLIConfig, error) {
 	if len(components) == 0 {
 		return CLIConfig{}, errors.New("no components provided")
 	}
@@ -94,7 +99,12 @@ func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger 
 	return cmds, nil
 }
 
-func AddCommands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, components ...ServerComponent[transaction.Tx]) error {
+func AddCommands[AppT AppI[T], T transaction.Tx](
+	rootCmd *cobra.Command,
+	newApp AppCreator[AppT, T],
+	logger log.Logger,
+	components ...ServerComponent[AppT, T],
+) error {
 	cmds, err := Commands(rootCmd, newApp, logger, components...)
 	if err != nil {
 		return err
@@ -125,7 +135,7 @@ func AddCommands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logg
 }
 
 // configHandle writes the default config to the home directory if it does not exist and sets the server context
-func configHandle(s *Server, home string, cmd *cobra.Command) error {
+func configHandle[AppT AppI[T], T transaction.Tx](s *Server[AppT, T], home string, cmd *cobra.Command) error {
 	configDir := filepath.Join(home, "config")
 
 	// we need to check app.toml as the config folder can already exist for the client.toml

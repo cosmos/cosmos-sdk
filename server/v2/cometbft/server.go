@@ -45,11 +45,13 @@ const (
 	FlagTrace         = "trace"
 )
 
-var _ serverv2.ServerComponent[
-	serverv2.AppI[transaction.Tx], transaction.Tx,
-] = (*CometBFTServer[
-	serverv2.AppI[transaction.Tx], transaction.Tx,
-])(nil)
+var (
+	_ serverv2.ServerComponent[
+		serverv2.AppI[transaction.Tx], transaction.Tx,
+	] = (*CometBFTServer[serverv2.AppI[transaction.Tx], transaction.Tx])(nil)
+	_ serverv2.HasCLICommands = (*CometBFTServer[serverv2.AppI[transaction.Tx], transaction.Tx])(nil)
+	_ serverv2.HasStartFlags  = (*CometBFTServer[serverv2.AppI[transaction.Tx], transaction.Tx])(nil)
+)
 
 type CometBFTServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
 	Node   *node.Node
@@ -200,8 +202,8 @@ func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, e
 	}
 }
 
-func (s *CometBFTServer[AppT, T]) StartCmdFlags() pflag.FlagSet {
-	flags := *pflag.NewFlagSet("cometbft", pflag.ExitOnError)
+func (s *CometBFTServer[AppT, T]) StartCmdFlags() *pflag.FlagSet {
+	flags := pflag.NewFlagSet("cometbft", pflag.ExitOnError)
 	flags.Bool(flagWithComet, true, "Run abci app embedded in-process with CometBFT")
 	flags.String(flagAddress, "tcp://127.0.0.1:26658", "Listen address")
 	flags.String(flagTransport, "socket", "Transport protocol: socket, grpc")

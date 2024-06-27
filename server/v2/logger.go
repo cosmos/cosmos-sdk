@@ -3,10 +3,10 @@ package serverv2
 import (
 	"io"
 
-	corelog "cosmossdk.io/core/log"
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
 
+	corelog "cosmossdk.io/core/log"
 	"cosmossdk.io/log"
 )
 

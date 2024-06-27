@@ -27,7 +27,6 @@ func SetCmdServerContext(cmd *cobra.Command, viper *viper.Viper, logger log.Logg
 	cmd.SetContext(cmdCtx)
 
 	return nil
-
 }
 
 func GetViperFromCmd(cmd *cobra.Command) *viper.Viper {

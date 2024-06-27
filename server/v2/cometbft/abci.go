@@ -161,18 +161,14 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (*abciproto.QueryResponse, error) {
 	// follow the query path from here
 	decodedMsg, err := c.txCodec.Decode(req.Data)
-	if err != nil {
-		return nil, err
-	}
-
-	protoMsg, ok := any(decodedMsg).(transaction.Msg)
-	if !ok {
-		return nil, fmt.Errorf("decoded type T %T must implement core/transaction.Msg", decodedMsg)
-	}
-
 	// if no error is returned then we can handle the query with the appmanager
 	// otherwise it is a KV store query
 	if err == nil {
+		protoMsg, ok := any(decodedMsg).(transaction.Msg)
+		if !ok {
+			return nil, fmt.Errorf("decoded type T %T must implement core/transaction.Msg", decodedMsg)
+		}
+
 		res, err := c.app.Query(ctx, uint64(req.Height), protoMsg)
 
 		if err != nil {

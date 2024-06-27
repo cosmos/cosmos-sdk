@@ -237,7 +237,8 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 
 	// store chainID to be used later on in execution
 	c.chainID = req.ChainId
-	c.cfg.InitialHeight = uint64(req.InitialHeight) // TODO: cfg is loaded initially ???
+	// TODO: check if we need to load the config from genesis.json or config.toml
+	c.cfg.InitialHeight = uint64(req.InitialHeight)
 
 	// On a new chain, we consider the init chain block height as 0, even though
 	// req.InitialHeight is 1 by default.

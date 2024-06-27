@@ -70,10 +70,6 @@ func NewConsensus[T transaction.Tx](
 	}
 }
 
-func (c *Consensus[T]) SetMempool(mp mempool.Mempool[T]) {
-	c.mempool = mp
-}
-
 func (c *Consensus[T]) SetStreamingManager(sm streaming.Manager) {
 	c.streaming = sm
 }
@@ -92,22 +88,6 @@ func (c *Consensus[T]) RegisterExtensions(extensions ...snapshots.ExtensionSnaps
 	if err := c.snapshotManager.RegisterExtensions(extensions...); err != nil {
 		panic(fmt.Errorf("failed to register snapshot extensions: %w", err))
 	}
-}
-
-func (c *Consensus[T]) SetPrepareProposalHandler(handler handlers.PrepareHandler[T]) {
-	c.prepareProposalHandler = handler
-}
-
-func (c *Consensus[T]) SetProcessProposalHandler(handler handlers.ProcessHandler[T]) {
-	c.processProposalHandler = handler
-}
-
-func (c *Consensus[T]) SetExtendVoteExtension(handler handlers.ExtendVoteHandler) {
-	c.extendVote = handler
-}
-
-func (c *Consensus[T]) SetVerifyVoteExtension(handler handlers.VerifyVoteExtensionhandler) {
-	c.verifyVoteExt = handler
 }
 
 // BlockData is used to keep some data about the last committed block. Currently
@@ -181,6 +161,9 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (*abciproto.QueryResponse, error) {
 	// follow the query path from here
 	decodedMsg, err := c.txCodec.Decode(req.Data)
+	c.logger.Error("-----------------")
+	c.logger.Warn(fmt.Sprintf("%v", decodedMsg))
+	c.logger.Error("-----------------")
 	protoMsg, ok := any(decodedMsg).(transaction.Msg)
 	if !ok {
 		return nil, fmt.Errorf("decoded type T %T must implement core/transaction.Msg", decodedMsg)

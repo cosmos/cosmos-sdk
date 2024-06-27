@@ -22,27 +22,11 @@ import (
 	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/transaction"
 	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/server/v2/appmanager"
-	"cosmossdk.io/server/v2/cometbft/handlers"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
-	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
 
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-)
-
-const (
-	flagWithComet     = "with-comet"
-	flagAddress       = "address"
-	flagTransport     = "transport"
-	flagTraceStore    = "trace-store"
-	flagCPUProfile    = "cpu-profile"
-	FlagMinGasPrices  = "minimum-gas-prices"
-	FlagQueryGasLimit = "query-gas-limit"
-	FlagHaltHeight    = "halt-height"
-	FlagHaltTime      = "halt-time"
-	FlagTrace         = "trace"
 )
 
 var (
@@ -54,25 +38,19 @@ var (
 )
 
 type CometBFTServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
-	Node   *node.Node
-	App    *Consensus[T]
-	logger log.Logger
+	Node      *node.Node
+	Consensus *Consensus[T]
 
-	config Config
+	logger  log.Logger
+	config  Config
+	options ServerOptions[T]
 }
 
-// App is an interface that represents an application in the CometBFT server.
-// It provides methods to access the app manager, logger, and store.
-type App[T transaction.Tx] interface {
-	GetApp() *appmanager.AppManager[T]
-	GetLogger() log.Logger
-	GetStore() types.Store
-}
-
-func New[AppT serverv2.AppI[T], T transaction.Tx](txCodec transaction.Codec[T]) *CometBFTServer[AppT, T] {
+func New[AppT serverv2.AppI[T], T transaction.Tx](txCodec transaction.Codec[T], options ServerOptions[T]) *CometBFTServer[AppT, T] {
 	consensus := &Consensus[T]{txCodec: txCodec}
 	return &CometBFTServer[AppT, T]{
-		App: consensus,
+		Consensus: consensus,
+		options:   options,
 	}
 }
 
@@ -80,19 +58,15 @@ func (s *CometBFTServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Log
 	store := appI.GetStore().(types.Store)
 
 	cfg := Config{CmtConfig: GetConfigFromViper(v), ConsensusAuthority: appI.GetConsensusAuthority()}
-	logger = logger.With("module", "cometbft-server")
-
-	// create noop mempool
-	mempool := mempool.NoOpMempool[T]{}
+	logger = logger.With("module", s.Name())
 
 	// create consensus
-	// txCodec should be in server from New()
-	consensus := NewConsensus[T](appI.GetAppManager(), mempool, store, cfg, s.App.txCodec, logger)
+	consensus := NewConsensus[T](appI.GetAppManager(), s.options.Mempool, store, cfg, s.Consensus.txCodec, logger)
 
-	consensus.SetPrepareProposalHandler(handlers.NoOpPrepareProposal[T]())
-	consensus.SetProcessProposalHandler(handlers.NoOpProcessProposal[T]())
-	consensus.SetVerifyVoteExtension(handlers.NoOpVerifyVoteExtensionHandler())
-	consensus.SetExtendVoteExtension(handlers.NoOpExtendVote())
+	consensus.prepareProposalHandler = s.options.PrepareProposalHandler
+	consensus.processProposalHandler = s.options.ProcessProposalHandler
+	consensus.verifyVoteExt = s.options.VerifyVoteExtensionHandler
+	consensus.extendVote = s.options.ExtendVoteHandler
 
 	// TODO: set these; what is the appropriate presence of the Store interface here?
 	var ss snapshots.StorageSnapshotter
@@ -100,21 +74,21 @@ func (s *CometBFTServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Log
 
 	snapshotStore, err := GetSnapshotStore(cfg.CmtConfig.RootDir)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	sm := snapshots.NewManager(snapshotStore, snapshots.SnapshotOptions{}, sc, ss, nil, logger) // TODO: set options somehow
 	consensus.SetSnapshotManager(sm)
 
 	s.config = cfg
-	s.App = consensus
+	s.Consensus = consensus
 	s.logger = logger
 
 	return nil
 }
 
 func (s *CometBFTServer[AppT, T]) Name() string {
-	return "cometbft"
+	return "cometbft-server"
 }
 
 func (s *CometBFTServer[AppT, T]) Start(ctx context.Context) error {
@@ -123,7 +97,7 @@ func (s *CometBFTServer[AppT, T]) Start(ctx context.Context) error {
 
 	wrappedLogger := cometlog.CometLoggerWrapper{Logger: s.logger}
 	if s.config.Standalone {
-		svr, err := abciserver.NewServer(s.config.Addr, s.config.Transport, s.App)
+		svr, err := abciserver.NewServer(s.config.Addr, s.config.Transport, s.Consensus)
 		if err != nil {
 			return fmt.Errorf("error creating listener: %w", err)
 		}
@@ -143,7 +117,7 @@ func (s *CometBFTServer[AppT, T]) Start(ctx context.Context) error {
 		cometConfig,
 		pvm.LoadOrGenFilePV(cometConfig.PrivValidatorKeyFile(), cometConfig.PrivValidatorStateFile()),
 		nodeKey,
-		proxy.NewConsensusSyncLocalClientCreator(s.App),
+		proxy.NewConsensusSyncLocalClientCreator(s.Consensus),
 		getGenDocProvider(cometConfig),
 		cmtcfg.DefaultDBProvider,
 		node.DefaultMetricsProvider(cometConfig.Instrumentation),
@@ -204,15 +178,15 @@ func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, e
 
 func (s *CometBFTServer[AppT, T]) StartCmdFlags() *pflag.FlagSet {
 	flags := pflag.NewFlagSet("cometbft", pflag.ExitOnError)
-	flags.Bool(flagWithComet, true, "Run abci app embedded in-process with CometBFT")
-	flags.String(flagAddress, "tcp://127.0.0.1:26658", "Listen address")
-	flags.String(flagTransport, "socket", "Transport protocol: socket, grpc")
-	flags.String(flagTraceStore, "", "Enable KVStore tracing to an output file")
+	flags.Bool(FlagWithComet, true, "Run abci app embedded in-process with CometBFT")
+	flags.String(FlagAddress, "tcp://127.0.0.1:26658", "Listen address")
+	flags.String(FlagTransport, "socket", "Transport protocol: socket, grpc")
+	flags.String(FlagTraceStore, "", "Enable KVStore tracing to an output file")
 	flags.String(FlagMinGasPrices, "", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)")
 	flags.Uint64(FlagQueryGasLimit, 0, "Maximum gas a Rest/Grpc query can consume. Blank and 0 imply unbounded.")
 	flags.Uint64(FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node")
 	flags.Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")
-	flags.String(flagCPUProfile, "", "Enable CPU profiling and write to the provided file")
+	flags.String(FlagCPUProfile, "", "Enable CPU profiling and write to the provided file")
 	flags.Bool(FlagTrace, false, "Provide full stack traces for errors in ABCI Log")
 	return flags
 }

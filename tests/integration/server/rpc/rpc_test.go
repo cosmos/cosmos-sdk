@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	_ "cosmossdk.io/x/accounts"
+	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"

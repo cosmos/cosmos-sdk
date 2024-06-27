@@ -16,12 +16,12 @@ import (
 	"cosmossdk.io/math"
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
-	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	stakingtypes "github.com/cosmos/cosmos-sdk/testutil/x/staking/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -124,7 +124,7 @@ func appStateFnWithExtendedCbs(
 			panic(err)
 		}
 
-		stakingStateBz, ok := rawState[stakingtypes.ModuleName]
+		stakingStateBz, ok := rawState[stakingModuleName]
 		if !ok {
 			panic("staking genesis state is missing")
 		}
@@ -169,7 +169,7 @@ func appStateFnWithExtendedCbs(
 
 		// change appState back
 		for name, state := range map[string]proto.Message{
-			stakingtypes.ModuleName: stakingState,
+			stakingModuleName:       stakingState,
 			testutil.BankModuleName: bankState,
 		} {
 			if moduleStateCb != nil {

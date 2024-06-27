@@ -171,7 +171,10 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 )
 
-require cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
+require (
+	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/x/slashing v0.0.0-20240619171957-8ab643dc10a7 // indirect
+)
 
 replace github.com/cosmos/cosmos-sdk => ../../.
 

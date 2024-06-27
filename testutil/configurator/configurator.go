@@ -23,6 +23,7 @@ import (
 	poolmodulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
+	mstakingmodulev1 "cosmossdk.io/api/cosmos/testutil/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/depinject"
@@ -196,6 +197,15 @@ func StakingModule() ModuleOption {
 		config.ModuleConfigs[testutil.StakingModuleName] = &appv1alpha1.ModuleConfig{
 			Name:   testutil.StakingModuleName,
 			Config: appconfig.WrapAny(&stakingmodulev1.Module{}),
+		}
+	}
+}
+
+func MockStakingModule() ModuleOption {
+	return func(config *Config) {
+		config.ModuleConfigs[testutil.MockStakingModuleName] = &appv1alpha1.ModuleConfig{
+			Name:   testutil.MockStakingModuleName,
+			Config: appconfig.WrapAny(&mstakingmodulev1.Module{}),
 		}
 	}
 }

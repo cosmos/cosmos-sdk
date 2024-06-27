@@ -15,7 +15,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-const mintModuleName = "mint"
+const (
+	mintModuleName    = "mint"
+	stakingModuleName = "staking"
+)
 
 type GenerateAccountStrategy func(int) []sdk.AccAddress
 

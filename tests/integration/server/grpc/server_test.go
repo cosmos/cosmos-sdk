@@ -14,6 +14,7 @@ import (
 
 	authclient "cosmossdk.io/x/auth/client"
 	banktypes "cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/staking"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client"

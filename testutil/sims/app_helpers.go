@@ -16,7 +16,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
-	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -26,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
+	stakingtypes "github.com/cosmos/cosmos-sdk/testutil/x/staking/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -259,7 +259,7 @@ func GenesisStateWithValSet(
 
 	// set validators and delegations
 	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
-	genesisState[stakingtypes.ModuleName] = codec.MustMarshalJSON(stakingGenesis)
+	genesisState[stakingModuleName] = codec.MustMarshalJSON(stakingGenesis)
 
 	totalSupply := sdk.NewCoins()
 	for _, b := range balances {

@@ -419,7 +419,10 @@ func (s *RootStoreTestSuite) TestPrune() {
 		deleted     []uint64
 		saved       []uint64
 	}{
-		{"prune nothing", 10, *store.NewPruningOption(store.PruningNothing), nil, []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
+		{"prune nothing", 10, store.PruningOption{
+			KeepRecent: 0,
+			Interval:   0,
+		}, nil, []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
 		{"prune everything", 12, store.PruningOption{
 			KeepRecent: 1,
 			Interval:   10,

@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/cosmos/gogoproto/proto"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
 
@@ -67,7 +66,7 @@ func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg gogoproto.Mess
 	}
 
 	// get response type
-	typ := proto.MessageType(respName)
+	typ := gogoproto.MessageType(respName)
 	if typ == nil {
 		return nil, fmt.Errorf("no message type found for %s", respName)
 	}
@@ -134,7 +133,7 @@ func (m *queryRouterService) InvokeUntyped(ctx context.Context, req gogoproto.Me
 	}
 
 	// get response type
-	typ := proto.MessageType(respName)
+	typ := gogoproto.MessageType(respName)
 	if typ == nil {
 		return nil, fmt.Errorf("no message type found for %s", respName)
 	}
@@ -147,10 +146,10 @@ func (m *queryRouterService) InvokeUntyped(ctx context.Context, req gogoproto.Me
 }
 
 // msgTypeURL returns the TypeURL of a proto message.
-func msgTypeURL(msg proto.Message) string {
+func msgTypeURL(msg gogoproto.Message) string {
 	if m, ok := msg.(protov2.Message); ok {
 		return string(m.ProtoReflect().Descriptor().FullName())
 	}
 
-	return proto.MessageName(msg)
+	return gogoproto.MessageName(msg)
 }

@@ -90,7 +90,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 	return cmd
 }
 
-func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (*PruneOptions, error) {
+func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (*PruningOption, error) {
 	// Get viper from cmd context
 	var rootViper *viper.Viper
 	value := cmd.Context().Value(corectx.ViperContextKey{})
@@ -114,7 +114,7 @@ func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (*PruneOptions,
 
 	switch strategy {
 	case PruningOptionDefault, PruningOptionNothing, PruningOptionEverything:
-		return NewPruneOptions(strategy), nil
+		return NewPruningOptionFromString(strategy), nil
 
 	case PruningOptionCustom:
 		var (
@@ -126,7 +126,7 @@ func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (*PruneOptions,
 		if cmd.Flags().Changed(FlagPruningKeepRecent) {
 			pruningKeepRecent, err = cmd.Flags().GetUint64(FlagPruningKeepRecent)
 			if err != nil {
-				return &PruneOptions{}, err
+				return nil, err
 			}
 		} else {
 			pruningKeepRecent = rootViper.GetUint64(FlagPruningKeepRecent)
@@ -135,13 +135,13 @@ func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (*PruneOptions,
 		if cmd.Flags().Changed(FlagPruningInterval) {
 			pruningInterval, err = cmd.Flags().GetUint64(FlagPruningInterval)
 			if err != nil {
-				return &PruneOptions{}, err
+				return nil, err
 			}
 		} else {
 			pruningInterval = rootViper.GetUint64(FlagPruningInterval)
 		}
 
-		opts := NewCustomPruneOptions(
+		opts := NewPruningOptionWithCustom(
 			pruningKeepRecent,
 			pruningInterval,
 		)
@@ -153,6 +153,6 @@ func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (*PruneOptions,
 		return opts, nil
 
 	default:
-		return &PruneOptions{}, fmt.Errorf("unknown pruning strategy %s", strategy)
+		return nil, fmt.Errorf("unknown pruning strategy %s", strategy)
 	}
 }

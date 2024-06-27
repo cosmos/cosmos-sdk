@@ -49,7 +49,6 @@ var _ ServerComponent[transaction.Tx] = (*Server)(nil)
 // Configs returns a viper instance of the config file
 func ReadConfig(configPath string) (*viper.Viper, error) {
 	v := viper.New()
-
 	v.SetConfigType("toml")
 	v.SetConfigName("config")
 	v.AddConfigPath(configPath)

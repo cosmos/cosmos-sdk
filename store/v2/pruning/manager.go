@@ -11,21 +11,21 @@ const batchFlushThreshold = 1 << 16 // 64KB
 type Manager struct {
 	// scPruner is the pruner for the SC.
 	scPruner store.Pruner
-	// scPruningOptions are the pruning options for the SC.
-	scPruningOptions *store.PruneOptions
+	// scPruningOption are the pruning options for the SC.
+	scPruningOption *store.PruningOption
 	// ssPruner is the pruner for the SS.
 	ssPruner store.Pruner
-	// ssPruningOptions are the pruning options for the SS.
-	ssPruningOptions *store.PruneOptions
+	// ssPruningOption are the pruning options for the SS.
+	ssPruningOption *store.PruningOption
 }
 
 // NewManager creates a new Pruning Manager.
-func NewManager(scPruner, ssPruner store.Pruner, scPruningOptions, ssPruningOptions *store.PruneOptions) *Manager {
+func NewManager(scPruner, ssPruner store.Pruner, scPruningOption, ssPruningOption *store.PruningOption) *Manager {
 	return &Manager{
-		scPruner:         scPruner,
-		scPruningOptions: scPruningOptions,
-		ssPruner:         ssPruner,
-		ssPruningOptions: ssPruningOptions,
+		scPruner:        scPruner,
+		scPruningOption: scPruningOption,
+		ssPruner:        ssPruner,
+		ssPruningOption: ssPruningOption,
 	}
 }
 
@@ -34,8 +34,8 @@ func NewManager(scPruner, ssPruner store.Pruner, scPruningOptions, ssPruningOpti
 // NOTE: It can be called outside of the store manually.
 func (m *Manager) Prune(version uint64) error {
 	// Prune the SC.
-	if m.scPruningOptions != nil {
-		if prune, pruneTo := m.scPruningOptions.ShouldPrune(version); prune {
+	if m.scPruningOption != nil {
+		if prune, pruneTo := m.scPruningOption.ShouldPrune(version); prune {
 			if err := m.scPruner.Prune(pruneTo); err != nil {
 				return err
 			}
@@ -43,8 +43,8 @@ func (m *Manager) Prune(version uint64) error {
 	}
 
 	// Prune the SS.
-	if m.ssPruningOptions != nil {
-		if prune, pruneTo := m.ssPruningOptions.ShouldPrune(version); prune {
+	if m.ssPruningOption != nil {
+		if prune, pruneTo := m.ssPruningOption.ShouldPrune(version); prune {
 			if err := m.ssPruner.Prune(pruneTo); err != nil {
 				return err
 			}

@@ -308,7 +308,11 @@ func (s *Store) loadVersion(v uint64, upgrades *corestore.StoreUpgrades) error {
 	s.commitHeader = nil
 
 	// set lastCommitInfo explicitly s.t. Commit commits the correct version, i.e. v+1
-	s.lastCommitInfo = &proof.CommitInfo{Version: v}
+	var err error
+	s.lastCommitInfo, err = s.stateCommitment.GetCommitInfo(v)
+	if err != nil {
+		return fmt.Errorf("failed to get commit info for version %d: %w", v, err)
+	}
 
 	// if we're migrating, we need to start the migration process
 	if s.isMigrating {

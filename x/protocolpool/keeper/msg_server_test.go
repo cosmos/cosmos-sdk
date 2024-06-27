@@ -968,3 +968,62 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 		})
 	}
 }
+
+// TestWithdrawExpiredFunds checks that a continuous fund cannot be withdrawn if it has expired.
+// There was a case in which an expired continuous fund would keep getting funds allocated when
+// other funds were withdrawn. These funds would then get withdrawn if CancelContinuousFund was called.
+func (suite *KeeperTestSuite) TestWithdrawExpiredFunds() {
+	suite.SetupTest()
+	recipientStrAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(recipientAddr)
+	suite.Require().NoError(err)
+	recipient2 := sdk.AccAddress([]byte("recipientAddr2___________________"))
+	recipient2StrAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(recipient2)
+	suite.Require().NoError(err)
+
+	expiration := suite.environment.HeaderService.HeaderInfo(suite.ctx).Time.Add(24 * time.Hour)
+	_, err = suite.msgServer.CreateContinuousFund(suite.ctx, &types.MsgCreateContinuousFund{
+		Authority:  suite.poolKeeper.GetAuthority(),
+		Recipient:  recipientStrAddr,
+		Percentage: math.LegacyMustNewDecFromStr("0.5"),
+		Expiry:     &expiration,
+	})
+	suite.Require().NoError(err)
+
+	_, err = suite.msgServer.CreateContinuousFund(suite.ctx, &types.MsgCreateContinuousFund{
+		Authority:  suite.poolKeeper.GetAuthority(),
+		Recipient:  recipient2StrAddr,
+		Percentage: math.LegacyMustNewDecFromStr("0.5"),
+	})
+	suite.Require().NoError(err)
+
+	toDistribute := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
+	suite.mockStreamFunds()
+	err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
+	suite.Require().NoError(err)
+
+	suite.mockWithdrawContinuousFund()
+	_, err = suite.msgServer.WithdrawContinuousFund(suite.ctx, &types.MsgWithdrawContinuousFund{RecipientAddress: recipientStrAddr})
+	suite.Require().NoError(err)
+
+	header := suite.ctx.HeaderInfo()
+	header.Time = expiration.Add(1 * time.Second)
+	suite.ctx = suite.ctx.WithHeaderInfo(header)
+
+	_, err = suite.msgServer.WithdrawContinuousFund(suite.ctx, &types.MsgWithdrawContinuousFund{RecipientAddress: recipientStrAddr})
+	suite.Require().ErrorContains(err, "continuous fund expired for recipient")
+
+	suite.mockStreamFunds()
+	err = suite.poolKeeper.SetToDistribute(suite.ctx, toDistribute, suite.poolKeeper.GetAuthority())
+	suite.Require().NoError(err)
+
+	suite.mockWithdrawContinuousFund()
+	_, err = suite.msgServer.WithdrawContinuousFund(suite.ctx, &types.MsgWithdrawContinuousFund{RecipientAddress: recipient2StrAddr})
+	suite.Require().NoError(err)
+
+	res, err := suite.msgServer.CancelContinuousFund(suite.ctx, &types.MsgCancelContinuousFund{
+		Authority:        suite.poolKeeper.GetAuthority(),
+		RecipientAddress: recipientStrAddr,
+	})
+	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0)), res.WithdrawnAllocatedFund)
+}

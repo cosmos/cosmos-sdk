@@ -122,4 +122,8 @@ message Metadata {
   //
   // Since: cosmos-sdk 0.46
   string uri_hash = 8 [(gogoproto.customname) = "URIHash"];
+  // Decimals represent the number of decimals use to represent token amount on chain
+  //
+  // Since: cosmos-sdk 0.50
+  uint32 decimals = 9;
 }

@@ -50,6 +50,7 @@ func defaultConfig() *Config {
 		BeginBlockersOrder: []string{
 			testutil.MintModuleName,
 			testutil.DistributionModuleName,
+			testutil.ProtocolPoolModuleName,
 			testutil.SlashingModuleName,
 			testutil.EvidenceModuleName,
 			testutil.StakingModuleName,

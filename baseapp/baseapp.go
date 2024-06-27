@@ -676,7 +676,11 @@ func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 	}
 
 	if mode == execModeSimulate {
-		ctx, _ = ctx.CacheContext()
+		if ms, err := app.cms.CacheMultiStoreWithVersion(app.cms.LatestVersion()); err != nil {
+			ctx, _ = ctx.CacheContext()
+		} else {
+			ctx = ctx.WithMultiStore(ms)
+		}
 	}
 
 	return ctx
@@ -917,8 +921,9 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		if err != nil {
 			return gInfo, nil, nil, err
 		}
-
-		msCache.Write()
+		if mode != execModeSimulate {
+			msCache.Write()
+		}
 		anteEvents = events.ToABCIEvents()
 	}
 

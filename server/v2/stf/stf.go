@@ -262,8 +262,6 @@ func (s STF[T]) execTx(
 		postTxCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, postTxState, execMode)
 		postTxCtx.setHeaderInfo(hi)
 
-		// TODO: runtime sets a noop posttxexec if the app doesnt set anything (julien)
-
 		postTxErr := s.postTxExec(postTxCtx, tx, false)
 		if postTxErr != nil {
 			// if the post tx handler fails, then we do not apply any state change to the initial state.

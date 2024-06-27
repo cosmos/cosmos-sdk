@@ -125,10 +125,7 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 
 func (s *CommitStoreTestSuite) TestStore_Pruning() {
 	storeKeys := []string{storeKey1, storeKey2}
-	pruneOpts := &store.PruneOptions{
-		KeepRecent: 10,
-		Interval:   5,
-	}
+	pruneOpts := store.NewPruningOptionWithCustom(10, 5)
 	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, log.NewNopLogger())
 	s.Require().NoError(err)
 

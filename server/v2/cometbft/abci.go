@@ -190,11 +190,15 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 	// otherwise it is a KV store query
 	if err == nil {
 		res, err := c.app.Query(ctx, uint64(req.Height), protoMsg)
+
 		if err != nil {
-			return nil, err
+			resp := queryResult(err)
+			resp.Height = req.Height
+			return resp, err
+
 		}
 
-		return queryResponse(res)
+		return queryResponse(res, req.Height)
 	}
 
 	// this error most probably means that we can't handle it with a proto message, so
@@ -313,6 +317,7 @@ func (c *Consensus[T]) PrepareProposal(
 			// TODO: vote extension meta data as a custom type to avoid possibly accepting invalid txs
 			// continue even if tx decoding fails
 			c.logger.Error("failed to decode tx", "err", err)
+			continue
 		}
 		decodedTxs = append(decodedTxs, decTx)
 	}
@@ -352,6 +357,7 @@ func (c *Consensus[T]) ProcessProposal(
 			// TODO: vote extension meta data as a custom type to avoid possibly accepting invalid txs
 			// continue even if tx decoding fails
 			c.logger.Error("failed to decode tx", "err", err)
+			continue
 		}
 		decodedTxs = append(decodedTxs, decTx)
 	}

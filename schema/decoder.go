@@ -1,21 +1,20 @@
-package indexerbase
+package schema
 
-// DecodableModule is an interface that modules can implement to provide a ModuleDecoder.
+// HasModuleCodec is an interface that modules can implement to provide a ModuleCodec.
 // Usually these modules would also implement appmodule.AppModule, but that is not included
 // to keep this package free of any dependencies.
-type DecodableModule interface {
-	// ModuleDecoder returns a ModuleDecoder for the module.
-	ModuleDecoder() (ModuleDecoder, error)
+type HasModuleCodec interface {
+	// ModuleCodec returns a ModuleCodec for the module.
+	ModuleCodec() (ModuleCodec, error)
 }
 
-// ModuleDecoder is a struct that contains the schema and a KVDecoder for a module.
-type ModuleDecoder struct {
-	// Schema is the schema for the module.
+// ModuleCodec is a struct that contains the schema and a KVDecoder for a module.
+type ModuleCodec struct {
+	// Schema is the schema for the module. It is required.
 	Schema ModuleSchema
 
 	// KVDecoder is a function that decodes a key-value pair into an ObjectUpdate.
-	// If modules pass logical updates directly to the engine and don't require logical decoding of raw bytes,
-	// then this function should be nil.
+	// If it is nil, the module doesn't support state decoding directly.
 	KVDecoder KVDecoder
 }
 

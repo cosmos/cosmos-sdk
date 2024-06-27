@@ -1,11 +1,13 @@
 package keeper_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -152,6 +154,17 @@ func (s *KeeperTestSuite) TestBeginBlocker() {
 	newMinter, err := s.mintKeeper.Minter.Get(s.ctx)
 	s.NoError(err)
 	s.NotEqual(minter, newMinter)
+
+	// now use a mintfn that doesn't do anything
+	err = s.mintKeeper.BeginBlocker(s.ctx, func(ctx context.Context, env appmodule.Environment, minter *types.Minter, epochId string, epochNumber int64) error {
+		return nil
+	})
+	s.NoError(err)
+
+	// get minter again and compare
+	unchangedMinter, err := s.mintKeeper.Minter.Get(s.ctx)
+	s.NoError(err)
+	s.Equal(newMinter, unchangedMinter)
 }
 
 func (s *KeeperTestSuite) TestMigrator() {

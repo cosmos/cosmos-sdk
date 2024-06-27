@@ -92,7 +92,7 @@ func (s *CometBFTServer[AppT, T]) Name() string {
 }
 
 func (s *CometBFTServer[AppT, T]) Start(ctx context.Context) error {
-	viper := ctx.Value(corectx.ViperContextKey{}).(*viper.Viper)
+	viper := ctx.Value(corectx.ViperContextKey).(*viper.Viper)
 	cometConfig := GetConfigFromViper(viper)
 
 	wrappedLogger := cometlog.CometLoggerWrapper{Logger: s.logger}

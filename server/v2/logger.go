@@ -3,6 +3,7 @@ package serverv2
 import (
 	"io"
 
+	corelog "cosmossdk.io/core/log"
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
 
@@ -11,7 +12,7 @@ import (
 
 // NewLogger creates a the default SDK logger.
 // It reads the log level and format from the server context.
-func NewLogger(v *viper.Viper, out io.Writer) (log.Logger, error) {
+func NewLogger(v *viper.Viper, out io.Writer) (corelog.Logger, error) {
 	var opts []log.Option
 	if v.GetString(FlagLogFormat) == OutputFormatJSON {
 		opts = append(opts, log.OutputJSONOption())

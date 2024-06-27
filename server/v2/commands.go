@@ -110,15 +110,14 @@ func AddCommands[AppT AppI[T], T transaction.Tx](
 		return err
 	}
 
-	server := NewServer(logger, components...)
+	srv := NewServer(logger, components...)
 	originalPersistentPreRunE := rootCmd.PersistentPreRunE
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		home, err := cmd.Flags().GetString(FlagHome)
-		if err != nil {
-			return err
-		}
+		// set the default command outputs
+		cmd.SetOut(cmd.OutOrStdout())
+		cmd.SetErr(cmd.ErrOrStderr())
 
-		if err = configHandle(server, home, cmd); err != nil {
+		if err = configHandle(srv, cmd); err != nil {
 			return err
 		}
 
@@ -135,7 +134,12 @@ func AddCommands[AppT AppI[T], T transaction.Tx](
 }
 
 // configHandle writes the default config to the home directory if it does not exist and sets the server context
-func configHandle[AppT AppI[T], T transaction.Tx](s *Server[AppT, T], home string, cmd *cobra.Command) error {
+func configHandle[AppT AppI[T], T transaction.Tx](s *Server[AppT, T], cmd *cobra.Command) error {
+	home, err := cmd.Flags().GetString(FlagHome)
+	if err != nil {
+		return err
+	}
+
 	configDir := filepath.Join(home, "config")
 
 	// we need to check app.toml as the config folder can already exist for the client.toml
@@ -145,19 +149,19 @@ func configHandle[AppT AppI[T], T transaction.Tx](s *Server[AppT, T], home strin
 		}
 	}
 
-	viper, err := ReadConfig(configDir)
-	if err != nil {
-		return err
-	}
-	viper.Set(FlagHome, home)
-	if err := viper.BindPFlags(cmd.Flags()); err != nil {
-		return err
-	}
-
-	log, err := NewLogger(viper, cmd.OutOrStdout())
+	v, err := ReadConfig(configDir)
 	if err != nil {
 		return err
 	}
 
-	return SetCmdServerContext(cmd, viper, log)
+	if err := v.BindPFlags(cmd.Flags()); err != nil {
+		return err
+	}
+
+	log, err := NewLogger(v, cmd.OutOrStdout())
+	if err != nil {
+		return err
+	}
+
+	return SetCmdServerContext(cmd, v, log)
 }

@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strconv"
 
+	"github.com/InjectiveLabs/metrics"
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
@@ -201,6 +202,8 @@ type BaseApp struct {
 	// StreamEvents
 	EnableStreamer bool
 	StreamEvents   chan StreamEvents
+
+	traceFlightRecorder *metrics.TraceRecorder
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

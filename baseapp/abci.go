@@ -488,6 +488,15 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		app.setState(execModeFinalize, header)
 	}
 
+	// metrics and trace
+	heightStr := strconv.Itoa(int(req.Height))
+	metricsCtx, doneFn := metrics.ReportFuncCallAndTimingSdkCtx(app.processProposalState.Context(), metrics.Tags{"svc": "app", "height": heightStr})
+	defer doneFn()
+	if app.traceFlightRecorder != nil {
+		defer app.traceFlightRecorder.StartRegion("process-proposal", heightStr)()
+	}
+	app.processProposalState.SetContext(metricsCtx)
+
 	app.processProposalState.SetContext(app.getContextForProposal(app.processProposalState.Context(), req.Height).
 		WithVoteInfos(req.ProposedLastCommit.Votes). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
@@ -724,6 +733,15 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 		app.setState(execModeFinalize, header)
 	}
 
+	// metrics and trace
+	heightStr := strconv.Itoa(int(req.Height))
+	metricsCtx, doneFn := metrics.ReportFuncCallAndTimingSdkCtx(app.finalizeBlockState.Context(), metrics.Tags{"svc": "app", "height": heightStr})
+	defer doneFn()
+	if app.traceFlightRecorder != nil {
+		defer app.traceFlightRecorder.StartRegion("finalize-block", heightStr)()
+	}
+	app.finalizeBlockState.SetContext(metricsCtx)
+
 	// Context is now updated with Header information.
 	app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().
 		WithBlockHeader(header).
@@ -744,10 +762,6 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 			ProposerAddress: req.ProposerAddress,
 			LastCommit:      req.DecidedLastCommit,
 		}))
-
-	metricsCtx, doneFn := metrics.ReportFuncCallAndTimingSdkCtx(app.finalizeBlockState.Context(), metrics.Tags{"svc": "app", "height": strconv.Itoa(int(req.Height))})
-	defer doneFn()
-	app.finalizeBlockState.SetContext(metricsCtx)
 
 	// GasMeter must be set after we get a context with updated consensus params.
 	gasMeter := app.getBlockGasMeter(app.finalizeBlockState.Context())

@@ -33,9 +33,6 @@ type Committer interface {
 	// WorkingCommitInfo returns the CommitInfo for the working tree.
 	WorkingCommitInfo(version uint64) *proof.CommitInfo
 
-	// GetLatestVersion returns the latest version.
-	GetLatestVersion() (uint64, error)
-
 	// LoadVersion loads the tree at the given version.
 	LoadVersion(targetVersion uint64) error
 
@@ -53,9 +50,6 @@ type Committer interface {
 
 	// SetInitialVersion sets the initial version of the tree.
 	SetInitialVersion(version uint64) error
-
-	// GetCommitInfo returns the CommitInfo for the given version.
-	GetCommitInfo(version uint64) (*proof.CommitInfo, error)
 
 	// IsEmpty returns true if the database is empty.
 	IsEmpty() (bool, error)

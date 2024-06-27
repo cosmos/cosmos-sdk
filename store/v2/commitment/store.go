@@ -1,7 +1,6 @@
 package commitment
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -14,15 +13,9 @@ import (
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/internal"
 	"cosmossdk.io/store/v2/internal/conv"
-	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/snapshots"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
-)
-
-const (
-	commitInfoKeyFmt = "c/%d" // c/<version>
-	latestVersionKey = "c/latest"
 )
 
 var (
@@ -39,6 +32,7 @@ var (
 type CommitStore struct {
 	logger     log.Logger
 	db         corestore.KVStoreWithBatch
+	metadata   *MetadataStore
 	multiTrees map[string]Tree
 }
 
@@ -48,6 +42,7 @@ func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, logger
 		logger:     logger,
 		db:         db,
 		multiTrees: trees,
+		metadata:   NewMetadataStore(db),
 	}, nil
 }
 
@@ -96,23 +91,6 @@ func (c *CommitStore) WorkingCommitInfo(version uint64) *proof.CommitInfo {
 	}
 }
 
-func (c *CommitStore) GetLatestVersion() (uint64, error) {
-	value, err := c.db.Get([]byte(latestVersionKey))
-	if err != nil {
-		return 0, err
-	}
-	if value == nil {
-		return 0, nil
-	}
-
-	version, _, err := encoding.DecodeUvarint(value)
-	if err != nil {
-		return 0, err
-	}
-
-	return version, nil
-}
-
 // IsEmpty returns true if the CommitStore is empty.
 func (c *CommitStore) IsEmpty() (bool, error) {
 	value, err := c.db.Get([]byte(latestVersionKey))
@@ -159,54 +137,7 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 		cInfo = c.WorkingCommitInfo(targetVersion)
 	}
 
-	return c.flushCommitInfo(targetVersion, cInfo)
-}
-
-func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
-	key := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
-	value, err := c.db.Get(key)
-	if err != nil {
-		return nil, err
-	}
-	if value == nil {
-		return nil, nil
-	}
-
-	cInfo := &proof.CommitInfo{}
-	if err := cInfo.Unmarshal(value); err != nil {
-		return nil, err
-	}
-
-	return cInfo, nil
-}
-
-func (c *CommitStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo) error {
-	// do nothing if commit info is nil, as will be the case for an empty, initializing store
-	if cInfo == nil {
-		return nil
-	}
-
-	batch := c.db.NewBatch()
-	defer batch.Close()
-	cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
-	value, err := cInfo.Marshal()
-	if err != nil {
-		return err
-	}
-	if err := batch.Set(cInfoKey, value); err != nil {
-		return err
-	}
-
-	var buf bytes.Buffer
-	buf.Grow(encoding.EncodeUvarintSize(version))
-	if err := encoding.EncodeUvarint(&buf, version); err != nil {
-		return err
-	}
-	if err := batch.Set([]byte(latestVersionKey), buf.Bytes()); err != nil {
-		return err
-	}
-
-	return batch.WriteSync()
+	return c.metadata.flushCommitInfo(targetVersion, cInfo)
 }
 
 func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
@@ -247,7 +178,7 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 		StoreInfos: storeInfos,
 	}
 
-	if err := c.flushCommitInfo(version, cInfo); err != nil {
+	if err := c.metadata.flushCommitInfo(version, cInfo); err != nil {
 		return nil, err
 	}
 
@@ -274,7 +205,7 @@ func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]p
 	if err != nil {
 		return nil, err
 	}
-	cInfo, err := c.GetCommitInfo(version)
+	cInfo, err := c.metadata.GetCommitInfo(version)
 	if err != nil {
 		return nil, err
 	}

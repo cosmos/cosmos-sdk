@@ -206,7 +206,10 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 	}
 
 	// send streaming funds to the stream module account
-	if err := k.sendFundsToStreamModule(ctx, denom, totalStreamFundsPercentage); err != nil {
+	toDistributeDec := sdk.NewDecCoins(sdk.NewDecCoin(denom, amount.AmountOf(denom)))
+	amt := toDistributeDec.MulDec(totalStreamFundsPercentage)
+	streamAmt := sdk.NewCoins(sdk.NewCoin(denom, amt.AmountOf(denom).TruncateInt()))
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.StreamAccount, streamAmt); err != nil {
 		return err
 	}
 
@@ -223,25 +226,6 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 	if err != nil {
 		return fmt.Errorf("error while setting ToDistribute: %w", err)
 	}
-	return nil
-}
-
-func (k Keeper) sendFundsToStreamModule(ctx context.Context, denom string, percentage math.LegacyDec) error {
-	totalPoolAmt, err := k.GetCommunityPool(ctx)
-	if err != nil {
-		return err
-	}
-
-	poolAmt := totalPoolAmt.AmountOf(denom)
-	poolAmtDec := sdk.NewDecCoins(sdk.NewDecCoin(denom, poolAmt))
-	amt := poolAmtDec.MulDec(percentage)
-	streamAmt := sdk.NewCoins(sdk.NewCoin(denom, amt.AmountOf(denom).TruncateInt()))
-
-	// Send streaming funds to the StreamModuleAccount
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.StreamAccount, streamAmt); err != nil {
-		return err
-	}
-
 	return nil
 }
 

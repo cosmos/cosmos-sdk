@@ -161,9 +161,6 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (*abciproto.QueryResponse, error) {
 	// follow the query path from here
 	decodedMsg, err := c.txCodec.Decode(req.Data)
-	c.logger.Error("-----------------")
-	c.logger.Warn(fmt.Sprintf("%v", decodedMsg))
-	c.logger.Error("-----------------")
 	protoMsg, ok := any(decodedMsg).(transaction.Msg)
 	if !ok {
 		return nil, fmt.Errorf("decoded type T %T must implement core/transaction.Msg", decodedMsg)

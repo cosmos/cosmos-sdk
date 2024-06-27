@@ -33,6 +33,8 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 	return rootCmd.Execute()
 }
 
+// Commands creates the start command of an application and gives back the CLIConfig containing all the server commands.
+// This API is for advanced user only, most users should use AddCommands instead that abstract more.
 func Commands[AppT AppI[T], T transaction.Tx](
 	rootCmd *cobra.Command,
 	newApp AppCreator[AppT, T],
@@ -89,6 +91,7 @@ func Commands[AppT AppI[T], T transaction.Tx](
 			return nil
 		},
 	}
+	startCmd.SetContext(rootCmd.Context())
 
 	cmds := server.CLICommands()
 	cmds.Commands = append(cmds.Commands, startCmd)
@@ -96,6 +99,8 @@ func Commands[AppT AppI[T], T transaction.Tx](
 	return cmds, nil
 }
 
+// AddCommands add the server commands to the root command
+// It configure the config handling and the logger handling
 func AddCommands[AppT AppI[T], T transaction.Tx](
 	rootCmd *cobra.Command,
 	newApp AppCreator[AppT, T],
@@ -132,10 +137,10 @@ func AddCommands[AppT AppI[T], T transaction.Tx](
 		if queryCmd := findSubCommand(rootCmd, "query"); queryCmd != nil {
 			queryCmd.AddCommand(cmds.Queries...)
 		} else {
-			topLevelCmd := topLevelCmd(rootCmd.Context(), "query", "Querying subcommands")
-			topLevelCmd.Aliases = []string{"q"}
-			topLevelCmd.AddCommand(cmds.Queries...)
-			rootCmd.AddCommand(topLevelCmd)
+			queryCmd := topLevelCmd(rootCmd.Context(), "query", "Querying subcommands")
+			queryCmd.Aliases = []string{"q"}
+			queryCmd.AddCommand(cmds.Queries...)
+			rootCmd.AddCommand(queryCmd)
 		}
 	}
 
@@ -143,9 +148,9 @@ func AddCommands[AppT AppI[T], T transaction.Tx](
 		if txCmd := findSubCommand(rootCmd, "tx"); txCmd != nil {
 			txCmd.AddCommand(cmds.Txs...)
 		} else {
-			topLevelCmd := topLevelCmd(rootCmd.Context(), "tx", "Transaction subcommands")
-			topLevelCmd.AddCommand(cmds.Txs...)
-			rootCmd.AddCommand(topLevelCmd)
+			txCmd := topLevelCmd(rootCmd.Context(), "tx", "Transaction subcommands")
+			txCmd.AddCommand(cmds.Txs...)
+			rootCmd.AddCommand(txCmd)
 		}
 	}
 

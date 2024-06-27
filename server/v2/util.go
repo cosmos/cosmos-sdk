@@ -22,10 +22,12 @@ func SetCmdServerContext(cmd *cobra.Command, viper *viper.Viper, logger log.Logg
 		cmdCtx = cmd.Context()
 	}
 
-	cmd.SetContext(context.WithValue(cmdCtx, corectx.LoggerContextKey, logger))
-	cmd.SetContext(context.WithValue(cmdCtx, corectx.ViperContextKey, viper))
+	cmdCtx = context.WithValue(cmdCtx, corectx.LoggerContextKey, logger)
+	cmdCtx = context.WithValue(cmdCtx, corectx.ViperContextKey, viper)
+	cmd.SetContext(cmdCtx)
 
 	return nil
+
 }
 
 func GetViperFromCmd(cmd *cobra.Command) *viper.Viper {

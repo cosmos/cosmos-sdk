@@ -35,8 +35,8 @@ func ExecInitCmd(mm *module.Manager, home string, cdc codec.Codec) error {
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper)
-	ctx = context.WithValue(ctx, corectx.LoggerContextKey{}, logger)
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
+	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
 
 	cmd.SetArgs([]string{"appnode-test"})
 

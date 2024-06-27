@@ -164,45 +164,45 @@ As mentioned throughout the documentation `BeginBlock`, `ExecuteTx` and `EndBloc
 Although every full-node operates individually and locally, the outcome is always consistent and unequivocal. This is because the state changes brought about by the messages are predictable, and the transactions are specifically sequenced in the proposed block.
 
 ```text
-		-----------------------
-		|Receive Block Proposal|
-		-----------------------
-							|
-				v
-		-------------------------
-		| FinalizeBlock	        |
-		          |
-			  v
-				-------------------
-				| BeginBlock	    | 
-				-------------------
-		          |
-			  v
-			--------------------
-			| ExecuteTx(tx0)   |
-			| ExecuteTx(tx1)   |
-			| ExecuteTx(tx2)   |
-			| ExecuteTx(tx3)   |
-			|	.	      |
-			|	.	      |
-			|	.	      |
-			-------------------
-		          |
-			  v
-			--------------------
-			| EndBlock	      |
-			--------------------
-		-------------------------
-		          |
-			  v
-		-----------------------
-		| Consensus	      |
-		-----------------------
-		          |
-			  v
-		-----------------------
-		| Commit	      |
-		-----------------------
+        --------------------------
+        | Receive Block Proposal |
+        --------------------------
+                    |
+                    v
+        -------------------------
+        |     FinalizeBlock      |
+        -------------------------
+                    |
+                    v
+            -------------------
+            |   BeginBlock     | 
+            -------------------
+                    |
+                    v
+            --------------------
+            | ExecuteTx(tx0)   |
+            | ExecuteTx(tx1)   |
+            | ExecuteTx(tx2)   |
+            | ExecuteTx(tx3)   |
+            |       .          |
+            |       .          |
+            |       .          |
+            -------------------
+                    |
+                    v
+            --------------------
+            |    EndBlock      |
+            --------------------
+                    |
+                    v
+        -------------------------
+        |       Consensus        |
+        -------------------------
+                    |
+                    v
+        -------------------------
+        |         Commit         |
+        -------------------------
 ```
 
 ### Transaction Execution

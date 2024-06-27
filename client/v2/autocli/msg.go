@@ -38,7 +38,11 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 	for cmdName, subCmdDescriptor := range cmdDescriptor.SubCommands {
 		subCmd := findSubCommand(cmd, cmdName)
 		if subCmd == nil {
-			subCmd = topLevelCmd(cmd.Context(), cmdName, fmt.Sprintf("Tx commands for the %s service", subCmdDescriptor.Service))
+			short := subCmdDescriptor.Short
+			if short == "" {
+				short = fmt.Sprintf("Tx commands for the %s service", subCmdDescriptor.Service)
+			}
+			subCmd = topLevelCmd(cmd.Context(), cmdName, short)
 		}
 
 		// Add recursive sub-commands if there are any. This is used for nested services.

@@ -170,7 +170,6 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 		}
 
 		res, err := c.app.Query(ctx, uint64(req.Height), protoMsg)
-
 		if err != nil {
 			resp := queryResult(err)
 			resp.Height = req.Height
@@ -204,6 +203,8 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 		resp = QueryResult(errorsmod.Wrap(cometerrors.ErrUnknownRequest, "unknown query path"), c.cfg.Trace)
 	}
 
+	// handle original txcodec decode error if not a app/p2p/store query
+	// or handle error from the query handler from a app/p2p/store query
 	if err != nil {
 		return QueryResult(err, c.cfg.Trace), nil
 	}

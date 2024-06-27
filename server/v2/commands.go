@@ -69,10 +69,7 @@ func Commands[AppT AppI[T], T transaction.Tx](
 				return err
 			}
 
-			srvConfig := Config{StartBlock: true}
-			ctx := cmd.Context()
-			ctx = context.WithValue(ctx, ServerContextKey, srvConfig)
-			ctx, cancelFn := context.WithCancel(ctx)
+			ctx, cancelFn := context.WithCancel(cmd.Context())
 			go func() {
 				sigCh := make(chan os.Signal, 1)
 				signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
@@ -130,6 +127,28 @@ func AddCommands[AppT AppI[T], T transaction.Tx](
 	}
 
 	rootCmd.AddCommand(cmds.Commands...)
+
+	if len(cmds.Queries) > 0 {
+		if queryCmd := findSubCommand(rootCmd, "query"); queryCmd != nil {
+			queryCmd.AddCommand(cmds.Queries...)
+		} else {
+			topLevelCmd := topLevelCmd(rootCmd.Context(), "query", "Querying subcommands")
+			topLevelCmd.Aliases = []string{"q"}
+			topLevelCmd.AddCommand(cmds.Queries...)
+			rootCmd.AddCommand(topLevelCmd)
+		}
+	}
+
+	if len(cmds.Txs) > 0 {
+		if txCmd := findSubCommand(rootCmd, "tx"); txCmd != nil {
+			txCmd.AddCommand(cmds.Txs...)
+		} else {
+			topLevelCmd := topLevelCmd(rootCmd.Context(), "tx", "Transaction subcommands")
+			topLevelCmd.AddCommand(cmds.Txs...)
+			rootCmd.AddCommand(topLevelCmd)
+		}
+	}
+
 	return nil
 }
 
@@ -164,4 +183,38 @@ func configHandle[AppT AppI[T], T transaction.Tx](s *Server[AppT, T], cmd *cobra
 	}
 
 	return SetCmdServerContext(cmd, v, log)
+}
+
+// findSubCommand finds a sub-command of the provided command whose Use
+// string is or begins with the provided subCmdName.
+// It verifies the command's aliases as well.
+func findSubCommand(cmd *cobra.Command, subCmdName string) *cobra.Command {
+	for _, subCmd := range cmd.Commands() {
+		use := subCmd.Use
+		if use == subCmdName || strings.HasPrefix(use, subCmdName+" ") {
+			return subCmd
+		}
+
+		for _, alias := range subCmd.Aliases {
+			if alias == subCmdName || strings.HasPrefix(alias, subCmdName+" ") {
+				return subCmd
+			}
+		}
+	}
+	return nil
+}
+
+// topLevelCmd creates a new top-level command with the provided name and
+// description. The command will have DisableFlagParsing set to false and
+// SuggestionsMinimumDistance set to 2.
+func topLevelCmd(ctx context.Context, use, short string) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:                        use,
+		Short:                      short,
+		DisableFlagParsing:         false,
+		SuggestionsMinimumDistance: 2,
+	}
+	cmd.SetContext(ctx)
+
+	return cmd
 }

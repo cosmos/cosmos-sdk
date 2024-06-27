@@ -23,7 +23,7 @@ import (
 
 const serverName = "grpc-server"
 
-type GRPCServer struct {
+type GRPCServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
 	logger log.Logger
 	config *Config
 
@@ -35,13 +35,13 @@ type GRPCService interface {
 	RegisterGRPCServer(gogogrpc.Server)
 }
 
-func New() *GRPCServer {
-	return &GRPCServer{}
+func New[AppT serverv2.AppI[T], T transaction.Tx]() *GRPCServer[AppT, T] {
+	return &GRPCServer[AppT, T]{}
 }
 
 // Init returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server.
-func (g *GRPCServer) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
+func (g *GRPCServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Logger) error {
 	cfg := DefaultConfig()
 	if v != nil {
 		if err := v.Sub(serverName).Unmarshal(&cfg); err != nil {
@@ -68,11 +68,11 @@ func (g *GRPCServer) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, lo
 	return nil
 }
 
-func (g *GRPCServer) Name() string {
+func (g *GRPCServer[AppT, T]) Name() string {
 	return serverName
 }
 
-func (g *GRPCServer) Start(ctx context.Context) error {
+func (g *GRPCServer[AppT, T]) Start(ctx context.Context) error {
 	listener, err := net.Listen("tcp", g.config.Address)
 	if err != nil {
 		return fmt.Errorf("failed to listen on address %s: %w", g.config.Address, err)
@@ -95,14 +95,14 @@ func (g *GRPCServer) Start(ctx context.Context) error {
 	return err
 }
 
-func (g *GRPCServer) Stop(ctx context.Context) error {
+func (g *GRPCServer[AppT, T]) Stop(ctx context.Context) error {
 	g.logger.Info("stopping gRPC server...", "address", g.config.Address)
 	g.grpcSrv.GracefulStop()
 
 	return nil
 }
 
-func (g *GRPCServer) Config() any {
+func (g *GRPCServer[AppT, T]) Config() any {
 	if g.config == nil || g.config == (&Config{}) {
 		return DefaultConfig()
 	}

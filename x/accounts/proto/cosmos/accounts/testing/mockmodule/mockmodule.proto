@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package cosmos.accounts.testing.mockmodule;
+
+option go_package = "cosmossdk.io/x/accounts/testing/mockmodule";
+
+import "cosmos/msg/v1/msg.proto";
+
+message MsgEcho {
+  option (cosmos.msg.v1.signer) = "sender";
+  string sender                 = 1;
+  string msg                    = 2;
+}
+
+message MsgEchoResponse {
+  string msg_echo = 1;
+}
+
+message QueryEchoRequest {
+  string msg = 1;
+}
+
+message QueryEchoResponse {
+  string msg_echo = 1;
+}

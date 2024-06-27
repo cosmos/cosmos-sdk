@@ -8,6 +8,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/cosmos/gogoproto/proto"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections"
@@ -64,7 +66,7 @@ func NewKeeper(
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	keeper := Keeper{
 		Environment:      env,
-		codec:            cdc,
+		getSenders:       cdc.GetMsgSigners,
 		addressCodec:     addressCodec,
 		makeSendCoinsMsg: coinfTransferer.MakeTransferCoinsMessage,
 		Schema:           collections.Schema{},
@@ -90,8 +92,9 @@ func NewKeeper(
 type Keeper struct {
 	appmodule.Environment
 
-	addressCodec     address.Codec
-	codec            codec.Codec
+	addressCodec address.Codec
+	getSenders   func(msg proto.Message) ([][]byte, protoreflect.Message, error)
+
 	makeSendCoinsMsg func(ctx context.Context, from []byte, to []byte, amount sdk.Coins) (implementation.ProtoMsg, implementation.ProtoMsg, error)
 
 	accounts map[string]implementation.Implementation
@@ -380,7 +383,7 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 // It should be used when the response type is not known by the caller.
 func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
 	// do sender assertions.
-	wantSenders, _, err := k.codec.GetMsgSigners(msg)
+	wantSenders, _, err := k.getSenders(msg)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get signers: %w", err)
 	}
@@ -403,7 +406,7 @@ func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg
 // is not trying to impersonate another account.
 func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgResp implementation.ProtoMsg) error {
 	// do sender assertions.
-	wantSenders, _, err := k.codec.GetMsgSigners(msg)
+	wantSenders, _, err := k.getSenders(msg)
 	if err != nil {
 		return fmt.Errorf("cannot get signers: %w", err)
 	}

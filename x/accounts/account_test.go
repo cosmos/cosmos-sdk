@@ -2,12 +2,12 @@ package accounts
 
 import (
 	"context"
+	"errors"
 	"strconv"
 
+	"cosmossdk.io/x/accounts/testing/mockmodule"
 	"github.com/cosmos/gogoproto/types"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
@@ -28,10 +28,7 @@ type TestAccount struct {
 func (t TestAccount) RegisterInitHandler(builder *implementation.InitBuilder) {
 	implementation.RegisterInitHandler(builder, func(ctx context.Context, _ *types.Empty) (*types.Empty, error) {
 		// we also force a module call here to test things work as expected.
-		_, err := implementation.QueryModule[bankv1beta1.QueryBalanceResponse](ctx, &bankv1beta1.QueryBalanceRequest{
-			Address: string(implementation.Whoami(ctx)),
-			Denom:   "atom",
-		})
+		_, err := implementation.QueryModule[mockmodule.QueryEchoResponse](ctx, &mockmodule.QueryEchoRequest{Msg: "echo"})
 		return &types.Empty{}, err
 	})
 }
@@ -52,21 +49,17 @@ func (t TestAccount) RegisterExecuteHandlers(builder *implementation.ExecuteBuil
 
 	// this is for intermodule comms testing, we simulate a bank send
 	implementation.RegisterExecuteHandler(builder, func(ctx context.Context, req *types.Int64Value) (*types.Empty, error) {
-		resp, err := implementation.ExecModule[bankv1beta1.MsgSendResponse](ctx, &bankv1beta1.MsgSend{
-			FromAddress: string(implementation.Whoami(ctx)),
-			ToAddress:   "recipient",
-			Amount: []*basev1beta1.Coin{
-				{
-					Denom:  "test",
-					Amount: strconv.FormatInt(req.Value, 10),
-				},
-			},
-		})
+		resp, err := implementation.ExecModule[mockmodule.MsgEchoResponse](
+			ctx,
+			&mockmodule.MsgEcho{Msg: "echo", Sender: string(implementation.Whoami(ctx))})
 		if err != nil {
 			return nil, err
 		}
 		if resp == nil {
 			panic("nil response") // should never happen
+		}
+		if resp.MsgEcho != "echo" {
+			return nil, errors.New("bad echo")
 		}
 
 		return &types.Empty{}, nil
@@ -90,19 +83,17 @@ func (t TestAccount) RegisterQueryHandlers(builder *implementation.QueryBuilder)
 	// test intermodule comms, we simulate someone is sending the account a request for the accounts balance
 	// of a given denom.
 	implementation.RegisterQueryHandler(builder, func(ctx context.Context, req *types.StringValue) (*types.Int64Value, error) {
-		resp, err := implementation.QueryModule[bankv1beta1.QueryBalanceResponse](ctx, &bankv1beta1.QueryBalanceRequest{
-			Address: string(implementation.Whoami(ctx)),
-			Denom:   req.Value,
-		})
+		resp, err := implementation.QueryModule[mockmodule.QueryEchoResponse](ctx, &mockmodule.QueryEchoRequest{Msg: "echo"})
 		if err != nil {
 			return nil, err
 		}
-
-		amt, err := strconv.ParseInt(resp.Balance.Amount, 10, 64)
-		if err != nil {
-			return nil, err
+		if resp == nil {
+			return nil, errors.New("nil response")
 		}
-		return &types.Int64Value{Value: amt}, nil
+		if resp.MsgEcho != "echo" {
+			return nil, errors.New("invalid echo response")
+		}
+		return &types.Int64Value{}, nil
 	})
 
 	// genesis testing; DoubleValue does not make sense as a request type for this query, but empty is already taken

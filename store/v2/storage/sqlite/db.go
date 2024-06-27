@@ -190,6 +190,10 @@ func (db *Database) Prune(version uint64) error {
 		return fmt.Errorf("failed to create SQL transaction: %w", err)
 	}
 
+	defer func() {
+		_ = tx.Commit()
+	}()
+
 	pruneStmt := `DELETE FROM state_storage
 	WHERE version < (
 		SELECT max(version) FROM state_storage t2 WHERE
@@ -249,6 +253,10 @@ func (db *Database) PruneStoreKey(storeKey []byte) error {
 		return fmt.Errorf("failed to create SQL transaction: %w", err)
 	}
 
+	defer func() {
+		_ = tx.Commit()
+	}()
+
 	_, err = tx.Exec(`DELETE FROM state_storage WHERE store_key = ?`, storeKey)
 	if err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
@@ -266,6 +274,10 @@ func (db *Database) MigrateStoreKey(fromStoreKey, toStoreKey []byte) error {
 	if err != nil {
 		return fmt.Errorf("failed to create SQL transaction: %w", err)
 	}
+
+	defer func() {
+		_ = tx.Commit()
+	}()
 
 	_, err = tx.Exec(`
 	UPDATE state_storage SET store_key = ?

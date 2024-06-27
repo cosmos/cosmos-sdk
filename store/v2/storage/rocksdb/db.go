@@ -225,7 +225,7 @@ func (db *Database) MigrateStoreKey(fromStoreKey, toStoreKey []byte) error {
 		// replace the prefix
 		key := ritr.Key()
 		key = key[:len(key)-16] // remove the timestamp
-		prefixedKey := append(storePrefix(toStoreKey), key...)
+		prefixedKey := prependStoreKey(toStoreKey, key)
 		batch.PutCFWithTS(db.cfHandle, prefixedKey, ritr.Timestamp(), ritr.Value())
 		if batch.Count() >= batchBufferCount {
 			if err := db.storage.Write(defaultWriteOpts, batch); err != nil {
@@ -250,11 +250,11 @@ func newTSReadOptions(version uint64) *grocksdb.ReadOptions {
 }
 
 func storePrefix(storeKey []byte) []byte {
-	return append([]byte(StorePrefixTpl), storeKey...)
+	return []byte(fmt.Sprintf(StorePrefixTpl, storeKey))
 }
 
 func prependStoreKey(storeKey, key []byte) []byte {
-	return append(storePrefix(storeKey), key...)
+	return []byte(fmt.Sprintf("%s%s", storePrefix(storeKey), key))
 }
 
 // copyAndFreeSlice will copy a given RocksDB slice and free it. If the slice does

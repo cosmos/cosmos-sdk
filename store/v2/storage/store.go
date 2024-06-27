@@ -143,8 +143,7 @@ func (ss *StorageStore) Restore(version uint64, chStorage <-chan *corestore.Stat
 func (ss *StorageStore) PruneStoreKey(storeKey []byte) error {
 	gdb, ok := ss.db.(store.UpgradableDatabase)
 	if !ok {
-		ss.logger.Warn("db does not implement UpgradableDatabase interface")
-		return nil
+		return fmt.Errorf("db does not implement UpgradableDatabase interface")
 	}
 
 	return gdb.PruneStoreKey(storeKey)

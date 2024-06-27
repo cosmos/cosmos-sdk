@@ -240,6 +240,10 @@ func (s *Store) LoadVersion(version uint64) error {
 //
 // NOTE: It cannot be called while the store is migrating.
 func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreUpgrades) error {
+	if upgrades == nil {
+		return fmt.Errorf("upgrades cannot be nil")
+	}
+
 	if s.telemetry != nil {
 		defer s.telemetry.MeasureSince(time.Now(), "root_store", "load_version_and_upgrade")
 	}
@@ -248,21 +252,19 @@ func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreU
 		return fmt.Errorf("cannot upgrade while migrating")
 	}
 
+	// we need to prune the old store keys from SS and SC
 	removedStoreKeys := make([]string, 0)
 	removedKVStores := make([]corestore.KVStoreWithBatch, 0)
-	// if upgrades is not nil, we need to prune the old store keys from SS and SC
-	if upgrades != nil {
-		removedStoreKeys = append(removedStoreKeys, upgrades.Deleted...)
-		for _, renamedStore := range upgrades.Renamed {
-			removedStoreKeys = append(removedStoreKeys, renamedStore.OldKey)
-		}
-		// if the state commitment implements the KVStoreGetter interface, prune the
-		// old KVStores
-		kvStoreGetter, ok := s.stateCommitment.(store.KVStoreGetter)
-		if ok {
-			for _, storeKey := range removedStoreKeys {
-				removedKVStores = append(removedKVStores, kvStoreGetter.GetKVStoreWithBatch(storeKey))
-			}
+	removedStoreKeys = append(removedStoreKeys, upgrades.Deleted...)
+	for _, renamedStore := range upgrades.Renamed {
+		removedStoreKeys = append(removedStoreKeys, renamedStore.OldKey)
+	}
+	// if the state commitment implements the KVStoreGetter interface, prune the
+	// old KVStores
+	kvStoreGetter, ok := s.stateCommitment.(store.KVStoreGetter)
+	if ok {
+		for _, storeKey := range removedStoreKeys {
+			removedKVStores = append(removedKVStores, kvStoreGetter.GetKVStoreWithBatch(storeKey))
 		}
 	}
 

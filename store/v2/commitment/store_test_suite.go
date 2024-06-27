@@ -156,6 +156,7 @@ func (s *CommitStoreTestSuite) TestStore_LoadVersion() {
 	for i := uint64(1); i <= latestVersion; i++ {
 		commitInfo, _ := targetStore.GetCommitInfo(i)
 		s.Require().NotNil(commitInfo)
+		s.Require().Equal(i, commitInfo.Version)
 	}
 
 	// rollback to a previous version
@@ -250,12 +251,23 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 		},
 		Deleted: []string{storeKey3},
 	}
-	newStoreKeys := []string{"store1", "store2", "store3", "renamedStore1", "newStore1", "newStore2"}
-	realStoreKeys := []string{"renamedStore1", "store2", "newStore1", "newStore2"}
+	newStoreKeys := []string{storeKey1, storeKey2, storeKey3, "renamedStore1", "newStore1", "newStore2"}
+	realStoreKeys := []string{"renamedStore1", storeKey2, "newStore1", "newStore2"}
 	commitStore, err = s.NewStore(commitDB, newStoreKeys, log.NewNopLogger())
 	s.Require().NoError(err)
 	err = commitStore.LoadVersionAndUpgrade(latestVersion, upgrades)
 	s.Require().NoError(err)
+
+	// verify removed stores
+	for _, storeKey := range []string{storeKey1, storeKey3} {
+		for i := uint64(1); i <= latestVersion; i++ {
+			for j := 0; j < kvCount; j++ {
+				proof, err := commitStore.GetProof([]byte(storeKey), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
+				s.Require().Error(err)
+				s.Require().Nil(proof)
+			}
+		}
+	}
 
 	// apply the changeset again
 	for i := latestVersion + 1; i < latestVersion*2; i++ {
@@ -293,6 +305,15 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 	for i := uint64(1); i < latestVersion*2; i++ {
 		for j := 0; j < kvCount; j++ {
 			proof, err := commitStore.GetProof([]byte("renamedStore1"), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
+			s.Require().NoError(err)
+			s.Require().NotNil(proof)
+		}
+	}
+
+	// verify existing store
+	for i := uint64(1); i < latestVersion*2; i++ {
+		for j := 0; j < kvCount; j++ {
+			proof, err := commitStore.GetProof([]byte(storeKey2), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
 			s.Require().NoError(err)
 			s.Require().NotNil(proof)
 		}

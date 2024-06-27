@@ -97,7 +97,6 @@ func (s *UpgradeStoreTestSuite) TestLoadVersionAndUpgrade() {
 		Added: []string{"newStore1", "newStore2"},
 		Renamed: []corestore.StoreRename{
 			{OldKey: "store1", NewKey: "renamedStore1"},
-			{OldKey: "store2", NewKey: "renamedStore2"},
 		},
 		Deleted: []string{"store3"},
 	}
@@ -110,7 +109,7 @@ func (s *UpgradeStoreTestSuite) TestLoadVersionAndUpgrade() {
 	s.Require().NoError(err)
 
 	// commit changeset
-	newStoreKeys := []string{"newStore1", "newStore2", "renamedStore1", "renamedStore2"}
+	newStoreKeys := []string{"newStore1", "newStore2", "renamedStore1"}
 	toVersion := uint64(40)
 	keyCount := 10
 	for version := v + 1; version <= toVersion; version++ {
@@ -125,7 +124,7 @@ func (s *UpgradeStoreTestSuite) TestLoadVersionAndUpgrade() {
 	}
 
 	// check old store keys are pruned
-	oldStoreKeys := []string{"store1", "store2", "store3"}
+	oldStoreKeys := []string{"store1", "store3"}
 	for _, storeKey := range oldStoreKeys {
 		for version := uint64(1); version <= toVersion; version++ {
 			for i := 0; i < keyCount; i++ {
@@ -150,6 +149,14 @@ func (s *UpgradeStoreTestSuite) TestLoadVersionAndUpgrade() {
 				_, err := s.rootStore.Query([]byte(storeKey), version, []byte(fmt.Sprintf("key-%d-%d", version, i)), true)
 				s.Require().NoError(err)
 			}
+		}
+	}
+
+	// check the original store key is queryable
+	for version := uint64(1); version <= toVersion; version++ {
+		for i := 0; i < keyCount; i++ {
+			_, err := s.rootStore.Query([]byte("store2"), version, []byte(fmt.Sprintf("key-%d-%d", version, i)), true)
+			s.Require().NoError(err)
 		}
 	}
 }

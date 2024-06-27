@@ -362,7 +362,7 @@ func (db *Database) MigrateStoreKey(fromStoreKey, toStoreKey []byte) error {
 
 	for itr.First(); itr.Valid(); itr.Next() {
 		key := itr.Key()[len(storePrefix(fromStoreKey)):]
-		key = append(storePrefix(toStoreKey), key...)
+		key = prependStoreKey(toStoreKey, key)
 		value, err := itr.ValueAndErr()
 		if err != nil {
 			return err
@@ -382,11 +382,11 @@ func (db *Database) MigrateStoreKey(fromStoreKey, toStoreKey []byte) error {
 }
 
 func storePrefix(storeKey []byte) []byte {
-	return append([]byte(StorePrefixTpl), storeKey...)
+	return []byte(fmt.Sprintf(StorePrefixTpl, storeKey))
 }
 
 func prependStoreKey(storeKey, key []byte) []byte {
-	return append(storePrefix(storeKey), key...)
+	return []byte(fmt.Sprintf("%s%s", storePrefix(storeKey), key))
 }
 
 func getPruneHeight(storage *pebble.DB) (uint64, error) {

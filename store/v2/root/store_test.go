@@ -569,7 +569,7 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 
 	for v := uint64(1); v <= actualHeightToPrune; v++ {
 		checkErr := func() bool {
-			if err = s.rootStore.LoadVersion(v); err != nil {
+			if _, err = s.rootStore.StateAt(v); err != nil {
 				return true
 			}
 			return false

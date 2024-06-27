@@ -421,9 +421,6 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient, cf)
 				suite.Require().NoError(err)
 				// Set recipient fund percentage and recipient fund distribution
-				intPercentage := percentage.MulInt64(100)
-				err = suite.poolKeeper.RecipientFundPercentage.Set(suite.ctx, recipient, intPercentage.TruncateInt())
-				suite.Require().NoError(err)
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
 				suite.Require().NoError(err)
 
@@ -439,8 +436,6 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient2, cf)
 				suite.Require().NoError(err)
 				// Set recipient fund percentage and recipient fund distribution
-				intPercentage = percentage.MulInt64(100)
-				err = suite.poolKeeper.RecipientFundPercentage.Set(suite.ctx, recipient2, intPercentage.TruncateInt())
 				suite.Require().NoError(err)
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient2, math.ZeroInt())
 				suite.Require().NoError(err)
@@ -486,9 +481,6 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient, cf)
 				suite.Require().NoError(err)
 				// Set recipient fund percentage and recipient fund distribution
-				intPercentage := percentage.MulInt64(100)
-				err = suite.poolKeeper.RecipientFundPercentage.Set(suite.ctx, recipient, intPercentage.TruncateInt())
-				suite.Require().NoError(err)
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
 				suite.Require().NoError(err)
 				err = suite.poolKeeper.ToDistribute.Set(suite.ctx, math.ZeroInt())
@@ -510,9 +502,6 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient, cf)
 				suite.Require().NoError(err)
 				// Set recipient fund percentage and recipient fund distribution
-				intPercentage := percentage.MulInt64(100)
-				err = suite.poolKeeper.RecipientFundPercentage.Set(suite.ctx, recipient, intPercentage.TruncateInt())
-				suite.Require().NoError(err)
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
 				suite.Require().NoError(err)
 				suite.mockStreamFunds()
@@ -538,9 +527,6 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient, cf)
 				suite.Require().NoError(err)
 				// Set recipient fund percentage and recipient fund distribution
-				intPercentage := percentage.MulInt64(100)
-				err = suite.poolKeeper.RecipientFundPercentage.Set(suite.ctx, recipient, intPercentage.TruncateInt())
-				suite.Require().NoError(err)
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
 				suite.Require().NoError(err)
 				suite.mockStreamFunds()
@@ -567,9 +553,6 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient, cf)
 				suite.Require().NoError(err)
 				// Set recipient fund percentage and recipient fund distribution
-				intPercentage := percentage.MulInt64(100)
-				err = suite.poolKeeper.RecipientFundPercentage.Set(suite.ctx, recipient, intPercentage.TruncateInt())
-				suite.Require().NoError(err)
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient, math.ZeroInt())
 				suite.Require().NoError(err)
 
@@ -578,16 +561,13 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				suite.Require().NoError(err)
 				cf = types.ContinuousFund{
 					Recipient:  recipient2StrAddr,
-					Percentage: percentage,
+					Percentage: percentage2,
 					Expiry:     &expiry,
 				}
 				// Set continuous fund
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient2, cf)
 				suite.Require().NoError(err)
 				// Set recipient fund percentage and recipient fund distribution
-				intPercentage = percentage2.MulInt64(100)
-				err = suite.poolKeeper.RecipientFundPercentage.Set(suite.ctx, recipient2, intPercentage.TruncateInt())
-				suite.Require().NoError(err)
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient2, math.ZeroInt())
 				suite.Require().NoError(err)
 
@@ -596,16 +576,13 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 				suite.Require().NoError(err)
 				cf = types.ContinuousFund{
 					Recipient:  recipient3StrAddr,
-					Percentage: percentage2,
+					Percentage: percentage3,
 					Expiry:     &expiry,
 				}
 				// Set continuous fund
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient3, cf)
 				suite.Require().NoError(err)
 				// Set recipient fund percentage and recipient fund distribution
-				intPercentage = percentage3.MulInt64(100)
-				err = suite.poolKeeper.RecipientFundPercentage.Set(suite.ctx, recipient3, intPercentage.TruncateInt())
-				suite.Require().NoError(err)
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient3, math.ZeroInt())
 				suite.Require().NoError(err)
 
@@ -764,9 +741,6 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 				}
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient2, cf)
 				suite.Require().NoError(err)
-				intPercentage := percentage.MulInt64(100)
-				err = suite.poolKeeper.RecipientFundPercentage.Set(suite.ctx, recipient2, intPercentage.TruncateInt())
-				suite.Require().NoError(err)
 			},
 			input: &types.MsgCreateContinuousFund{
 				Authority:  suite.poolKeeper.GetAuthority(),
@@ -857,9 +831,6 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipientAddr, cf)
 				suite.Require().NoError(err)
 				// Set recipient fund percentage and recipient fund distribution
-				intPercentage := percentage.MulInt64(100)
-				err = suite.poolKeeper.RecipientFundPercentage.Set(suite.ctx, recipientAddr, intPercentage.TruncateInt())
-				suite.Require().NoError(err)
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipientAddr, math.ZeroInt())
 				suite.Require().NoError(err)
 
@@ -875,9 +846,6 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient2, cf)
 				suite.Require().NoError(err)
 				// Set recipient fund percentage and recipient fund distribution
-				intPercentage = percentage.MulInt64(100)
-				err = suite.poolKeeper.RecipientFundPercentage.Set(suite.ctx, recipient2, intPercentage.TruncateInt())
-				suite.Require().NoError(err)
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient2, math.ZeroInt())
 				suite.Require().NoError(err)
 
@@ -915,8 +883,6 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				suite.mockWithdrawContinuousFund()
 				err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, recipient3, cf)
 				suite.Require().NoError(err)
-				err = suite.poolKeeper.RecipientFundPercentage.Set(suite.ctx, recipient3, math.ZeroInt())
-				suite.Require().NoError(err)
 				err = suite.poolKeeper.RecipientFundDistribution.Set(suite.ctx, recipient3, math.ZeroInt())
 				suite.Require().NoError(err)
 			},
@@ -951,8 +917,6 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				suite.Require().NoError(err)
 				suite.Require().Equal(tc.withdrawnFunds, resp.WithdrawnAllocatedFund)
 				// All items below should return error as they are removed from the store
-				_, err := suite.poolKeeper.RecipientFundPercentage.Get(suite.ctx, tc.recipientAddr)
-				suite.Require().Contains(err.Error(), "collections: not found")
 				_, err = suite.poolKeeper.ContinuousFund.Get(suite.ctx, tc.recipientAddr)
 				suite.Require().Contains(err.Error(), "collections: not found")
 				_, err = suite.poolKeeper.RecipientFundDistribution.Get(suite.ctx, tc.recipientAddr)

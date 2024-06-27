@@ -2,8 +2,10 @@ package accounts
 
 import (
 	"context"
+	"errors"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -42,6 +44,14 @@ func (e eventService) EmitKV(eventType string, attrs ...event.Attribute) error {
 
 func (e eventService) EventManager(ctx context.Context) event.Manager { return e }
 
+var _ CoinTransferer = (*coinTransferer)(nil)
+
+type coinTransferer struct{}
+
+func (c coinTransferer) MakeTransferCoinsMessage(ctx context.Context, from, to []byte, amount sdk.Coins) (implementation.ProtoMsg, implementation.ProtoMsg, error) {
+	return nil, nil, errors.New("do not call")
+}
+
 func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Keeper, context.Context) {
 	t.Helper()
 
@@ -77,7 +87,7 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 	ss := coretesting.KVStoreService(ctx, "test")
 	env := runtime.NewEnvironment(ss, log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter))
 	env.EventService = eventService{}
-	m, err := NewKeeper(codec.NewProtoCodec(ir), env, addressCodec, ir, accounts...)
+	m, err := NewKeeper(codec.NewProtoCodec(ir), env, addressCodec, ir, coinTransferer{}, accounts...)
 	require.NoError(t, err)
 	return m, ctx
 }

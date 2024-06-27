@@ -36,6 +36,18 @@ var (
 	AccountByNumber = collections.NewPrefix(2)
 )
 
+// CoinTransferer defines a type which given from and to and the amount of funds to transfer
+// returns the message and relative response that we need to execute to send the money
+// from one account to the other.
+type CoinTransferer interface {
+	MakeTransferCoinsMessage(
+		ctx context.Context,
+		from,
+		to []byte,
+		amount sdk.Coins,
+	) (implementation.ProtoMsg, implementation.ProtoMsg, error)
+}
+
 type InterfaceRegistry interface {
 	RegisterInterface(name string, iface any, impls ...protoiface.MessageV1)
 	RegisterImplementations(iface any, impls ...protoiface.MessageV1)
@@ -46,6 +58,7 @@ func NewKeeper(
 	env appmodule.Environment,
 	addressCodec address.Codec,
 	ir InterfaceRegistry,
+	coinfTransferer CoinTransferer,
 	accounts ...accountstd.AccountCreatorFunc,
 ) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
@@ -53,7 +66,7 @@ func NewKeeper(
 		Environment:      env,
 		codec:            cdc,
 		addressCodec:     addressCodec,
-		makeSendCoinsMsg: defaultCoinsTransferMsgFunc(addressCodec),
+		makeSendCoinsMsg: coinfTransferer.MakeTransferCoinsMessage,
 		Schema:           collections.Schema{},
 		AccountNumber:    collections.NewSequence(sb, AccountNumberKey, "account_number"),
 		AccountsByType:   collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
@@ -79,7 +92,7 @@ type Keeper struct {
 
 	addressCodec     address.Codec
 	codec            codec.Codec
-	makeSendCoinsMsg coinsTransferMsgFunc
+	makeSendCoinsMsg func(ctx context.Context, from []byte, to []byte, amount sdk.Coins) (implementation.ProtoMsg, implementation.ProtoMsg, error)
 
 	accounts map[string]implementation.Implementation
 
@@ -417,7 +430,7 @@ func (k Keeper) maybeSendFunds(ctx context.Context, from, to []byte, amt sdk.Coi
 		return nil
 	}
 
-	msg, msgResp, err := k.makeSendCoinsMsg(from, to, amt)
+	msg, msgResp, err := k.makeSendCoinsMsg(ctx, from, to, amt)
 	if err != nil {
 		return err
 	}

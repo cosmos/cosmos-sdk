@@ -5,12 +5,6 @@ import (
 	"testing"
 	"time"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	types "github.com/cosmos/gogoproto/types/any"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/runtime/protoiface"
-
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/event"
@@ -19,6 +13,10 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	banktypes "cosmossdk.io/x/bank/types"
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	types "github.com/cosmos/gogoproto/types/any"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -26,7 +24,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type ProtoMsg = protoiface.MessageV1
+type ProtoMsg = gogoproto.Message
 
 var TestFunds = sdk.NewCoins(sdk.NewCoin("test", math.NewInt(10)))
 

@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/math"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank/types"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -494,4 +495,13 @@ func (k BaseViewKeeper) IterateTotalSupply(ctx context.Context, cb func(sdk.Coin
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (k BaseKeeper) MakeTransferCoinsMessage(
+	ctx context.Context,
+	from,
+	to []byte,
+	amount sdk.Coins,
+) (gogoproto.Message, gogoproto.Message, error) {
+
 }

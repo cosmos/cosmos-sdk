@@ -205,10 +205,17 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 		return err
 	}
 
+	// if percentage is 0 then return early
+	if totalStreamFundsPercentage.IsZero() {
+		return nil
+	}
+
 	// send streaming funds to the stream module account
-	toDistributeDec := sdk.NewDecCoins(sdk.NewDecCoin(denom, amount.AmountOf(denom)))
-	amt := toDistributeDec.MulDec(totalStreamFundsPercentage)
-	streamAmt := sdk.NewCoins(sdk.NewCoin(denom, amt.AmountOf(denom).TruncateInt()))
+	toDistributeDec := sdk.NewDecCoin(denom, amount.AmountOf(denom))
+	if totalStreamFundsPercentage.LT(math.LegacyOneDec()) {
+		toDistributeDec.Amount = toDistributeDec.Amount.Mul(totalStreamFundsPercentage).TruncateDec()
+	}
+	streamAmt := sdk.NewCoins(sdk.NewCoin(denom, toDistributeDec.Amount.TruncateInt()))
 	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.StreamAccount, streamAmt); err != nil {
 		return err
 	}

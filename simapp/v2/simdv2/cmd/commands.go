@@ -50,8 +50,8 @@ func (t *temporaryTxDecoder) DecodeJSON(bz []byte) (transaction.Tx, error) {
 	return t.txConfig.TxJSONDecoder()(bz)
 }
 
-func newApp(logger log.Logger, viper *viper.Viper) servercore.AppI[transaction.Tx] {
-	return simapp.NewSimApp(logger, viper)
+func newApp(logger log.Logger, appOpts servercore.AppOptions) servercore.AppI[transaction.Tx] {
+	return simapp.NewSimApp(logger, appOpts.(*viper.Viper))
 }
 
 func initRootCmd(

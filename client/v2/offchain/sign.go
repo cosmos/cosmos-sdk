@@ -63,7 +63,7 @@ func Sign(ctx client.Context, rawBytes []byte, fromName, indent, encoding, outpu
 
 // sign signs a digest with provided key and SignMode.
 func sign(ctx client.Context, fromName, digest string) (*apitx.Tx, error) {
-	keybase, err := keyring.NewAutoCLIKeyring(ctx.Keyring)
+	keybase, err := keyring.NewAutoCLIKeyring(ctx.Keyring, ctx.AddressCodec)
 	if err != nil {
 		return nil, err
 	}

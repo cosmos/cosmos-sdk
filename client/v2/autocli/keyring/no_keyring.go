@@ -29,3 +29,11 @@ func (k NoKeyring) GetPubKey(name string) (cryptotypes.PubKey, error) {
 func (k NoKeyring) Sign(name string, msg []byte, signMode signingv1beta1.SignMode) ([]byte, error) {
 	return nil, errNoKeyring
 }
+
+func (k NoKeyring) KeyType(name string) (uint, error) {
+	return 0, errNoKeyring
+}
+
+func (k NoKeyring) KeyInfo(name string) (string, string, uint, error) {
+	return "", "", 0, errNoKeyring
+}

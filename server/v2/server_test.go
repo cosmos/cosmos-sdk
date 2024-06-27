@@ -58,8 +58,8 @@ func TestServer(t *testing.T) {
 	}
 
 	logger := log.NewLogger(os.Stdout)
-	grpcServer, err := grpc.New().Init(&mockApp[transaction.Tx]{}, v, logger)
-	if err != nil {
+	grpcServer := grpc.New[serverv2.AppI[transaction.Tx], transaction.Tx]()
+	if err := grpcServer.Init(&mockApp[transaction.Tx]{}, v, logger); err != nil {
 		t.Log(err)
 		t.Fail()
 	}

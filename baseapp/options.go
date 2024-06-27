@@ -5,9 +5,10 @@ import (
 	"io"
 	"math"
 
+	"github.com/InjectiveLabs/metrics"
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/store/metrics"
+	sdkmetrics "cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -366,7 +367,7 @@ func (app *BaseApp) SetVerifyVoteExtensionHandler(handler sdk.VerifyVoteExtensio
 }
 
 // SetStoreMetrics sets the prepare proposal function for the BaseApp.
-func (app *BaseApp) SetStoreMetrics(gatherer metrics.StoreMetrics) {
+func (app *BaseApp) SetStoreMetrics(gatherer sdkmetrics.StoreMetrics) {
 	if app.sealed {
 		panic("SetStoreMetrics() on sealed BaseApp")
 	}
@@ -392,4 +393,12 @@ func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 // SetGRPCQueryRouter sets the GRPCQueryRouter of the BaseApp.
 func (app *BaseApp) SetGRPCQueryRouter(grpcQueryRouter *GRPCQueryRouter) {
 	app.grpcQueryRouter = grpcQueryRouter
+}
+
+func (app *BaseApp) SetTraceFlightRecorder(tr *metrics.TraceRecorder) {
+	app.traceFlightRecorder = tr
+}
+
+func SetTraceFlightRecorder(tr *metrics.TraceRecorder) func(*BaseApp) {
+	return func(app *BaseApp) { app.traceFlightRecorder = tr }
 }

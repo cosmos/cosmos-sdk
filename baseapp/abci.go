@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/InjectiveLabs/metrics"
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -742,6 +744,10 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 			ProposerAddress: req.ProposerAddress,
 			LastCommit:      req.DecidedLastCommit,
 		}))
+
+	metricsCtx, doneFn := metrics.ReportFuncCallAndTimingSdkCtx(app.finalizeBlockState.Context(), metrics.Tags{"svc": "app", "height": strconv.Itoa(int(req.Height))})
+	defer doneFn()
+	app.finalizeBlockState.SetContext(metricsCtx)
 
 	// GasMeter must be set after we get a context with updated consensus params.
 	gasMeter := app.getBlockGasMeter(app.finalizeBlockState.Context())

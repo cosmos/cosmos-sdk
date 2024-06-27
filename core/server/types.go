@@ -18,4 +18,3 @@ type AppI[T transaction.Tx] interface {
 	InterfaceRegistry() coreapp.InterfaceRegistry
 	GetStore() any
 }
-

@@ -214,12 +214,12 @@ func (k Keeper) SetToDistribute(ctx context.Context) error {
 		toDistributeDec.Amount = toDistributeDec.Amount.Mul(totalStreamFundsPercentage).TruncateDec()
 	}
 
-	// Send streaming funds to the StreamModuleAccount
 	streamAmt := sdk.NewCoins(sdk.NewCoin(denom, toDistributeDec.Amount.TruncateInt()))
 	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.StreamAccount, streamAmt); err != nil {
 		return err
 	}
 
+	// update toDistribute
 	amountToDistribute, err := k.ToDistribute.Get(ctx)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {

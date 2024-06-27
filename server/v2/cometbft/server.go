@@ -41,27 +41,26 @@ type CometBFTServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
 	Node      *node.Node
 	Consensus *Consensus[T]
 
-	logger  log.Logger
-	config  Config
-	options ServerOptions[T]
+	initTxCodec transaction.Codec[T]
+	logger      log.Logger
+	config      Config
+	options     ServerOptions[T]
 }
 
 func New[AppT serverv2.AppI[T], T transaction.Tx](txCodec transaction.Codec[T], options ServerOptions[T]) *CometBFTServer[AppT, T] {
-	consensus := &Consensus[T]{txCodec: txCodec}
 	return &CometBFTServer[AppT, T]{
-		Consensus: consensus,
-		options:   options,
+		initTxCodec: txCodec,
+		options:     options,
 	}
 }
 
 func (s *CometBFTServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Logger) error {
-	store := appI.GetStore().(types.Store)
-
-	cfg := Config{CmtConfig: GetConfigFromViper(v), ConsensusAuthority: appI.GetConsensusAuthority()}
-	logger = logger.With("module", s.Name())
+	s.config = Config{CmtConfig: GetConfigFromViper(v), ConsensusAuthority: appI.GetConsensusAuthority()}
+	s.logger = logger.With(log.ModuleKey, s.Name())
 
 	// create consensus
-	consensus := NewConsensus[T](appI.GetAppManager(), s.options.Mempool, store, cfg, s.Consensus.txCodec, logger)
+	store := appI.GetStore().(types.Store)
+	consensus := NewConsensus[T](appI.GetAppManager(), s.options.Mempool, store, s.config, s.initTxCodec, s.logger)
 
 	consensus.prepareProposalHandler = s.options.PrepareProposalHandler
 	consensus.processProposalHandler = s.options.ProcessProposalHandler
@@ -72,18 +71,15 @@ func (s *CometBFTServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Log
 	var ss snapshots.StorageSnapshotter
 	var sc snapshots.CommitSnapshotter
 
-	snapshotStore, err := GetSnapshotStore(cfg.CmtConfig.RootDir)
+	snapshotStore, err := GetSnapshotStore(s.config.CmtConfig.RootDir)
 	if err != nil {
 		return err
 	}
 
-	sm := snapshots.NewManager(snapshotStore, snapshots.SnapshotOptions{}, sc, ss, nil, logger) // TODO: set options somehow
+	sm := snapshots.NewManager(snapshotStore, s.options.SnapshotOptions, sc, ss, nil, s.logger)
 	consensus.SetSnapshotManager(sm)
 
-	s.config = cfg
 	s.Consensus = consensus
-	s.logger = logger
-
 	return nil
 }
 

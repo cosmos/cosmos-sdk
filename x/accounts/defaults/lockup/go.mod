@@ -20,12 +20,12 @@ require (
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	github.com/cometbft/cometbft/api v1.0.0-rc.1 // indirect
-	github.com/cosmos/crypto v0.0.0-20240309083813-82ed2537802e // indirect
+	github.com/cosmos/crypto v0.1.0 // indirect
 	github.com/dgraph-io/badger/v4 v4.2.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/flatbuffers v2.0.8+incompatible // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/supranational/blst v0.3.11 // indirect
+	github.com/supranational/blst v0.3.12 // indirect
 	go.opencensus.io v0.24.0 // indirect
 )
 

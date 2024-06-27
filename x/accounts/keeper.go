@@ -95,7 +95,7 @@ type Keeper struct {
 	addressCodec address.Codec
 	getSenders   func(msg proto.Message) ([][]byte, protoreflect.Message, error)
 
-	makeSendCoinsMsg func(ctx context.Context, from []byte, to []byte, amount sdk.Coins) (implementation.ProtoMsg, implementation.ProtoMsg, error)
+	makeSendCoinsMsg func(ctx context.Context, from, to []byte, amount sdk.Coins) (implementation.ProtoMsg, implementation.ProtoMsg, error)
 
 	accounts map[string]implementation.Implementation
 

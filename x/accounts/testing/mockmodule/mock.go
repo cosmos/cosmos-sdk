@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/core/router"
 	"google.golang.org/protobuf/runtime/protoiface"
+
+	"cosmossdk.io/core/router"
 )
 
-type msgRouter struct {
-}
+type msgRouter struct{}
 
 func (m msgRouter) CanInvoke(ctx context.Context, typeURL string) error {
 	return errors.New("not implemented")
@@ -38,8 +38,7 @@ func MockMsgRouter() router.Service {
 	return msgRouter{}
 }
 
-type queryRouter struct {
-}
+type queryRouter struct{}
 
 func (q queryRouter) CanInvoke(ctx context.Context, typeURL string) error {
 	return errors.New("do not call")

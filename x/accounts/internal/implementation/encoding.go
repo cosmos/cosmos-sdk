@@ -5,8 +5,9 @@ import (
 	"reflect"
 	"strings"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/gogoproto/proto"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 type ProtoMsg = proto.Message

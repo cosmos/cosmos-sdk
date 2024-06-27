@@ -5,9 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/x/accounts/testing/mockmodule"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -15,13 +12,16 @@ import (
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/testing"
 	"cosmossdk.io/x/accounts/internal/implementation"
+	"cosmossdk.io/x/accounts/testing/mockmodule"
 	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ address.Codec = (*addressCodec)(nil)

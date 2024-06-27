@@ -5,12 +5,12 @@ import (
 	"errors"
 	"strconv"
 
-	"cosmossdk.io/x/accounts/testing/mockmodule"
 	"github.com/cosmos/gogoproto/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
+	"cosmossdk.io/x/accounts/testing/mockmodule"
 )
 
 var _ implementation.Account = (*TestAccount)(nil)

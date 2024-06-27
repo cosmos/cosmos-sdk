@@ -216,21 +216,27 @@ func (s *CometBFTServer[T]) StartCmdFlags() pflag.FlagSet {
 	return flags
 }
 
-func (s *CometBFTServer[T]) CLICommands(_ servercore.AppCreator[T]) servercore.CLIConfig {
-	return servercore.CLIConfig{
-		Commands: []*cobra.Command{
-			s.StatusCommand(),
-			s.ShowNodeIDCmd(),
-			s.ShowValidatorCmd(),
-			s.ShowAddressCmd(),
-			s.VersionCmd(),
-			s.QueryBlockCmd(),
-			s.QueryBlocksCmd(),
-			s.QueryBlockResultsCmd(),
-			cmtcmd.ResetAllCmd,
-			cmtcmd.ResetStateCmd,
-		},
+func (s *CometBFTServer[T]) GetCommands(_ servercore.AppCreator[T]) []*cobra.Command {
+	return []*cobra.Command{
+		s.StatusCommand(),
+		s.ShowNodeIDCmd(),
+		s.ShowValidatorCmd(),
+		s.ShowAddressCmd(),
+		s.VersionCmd(),
+		s.QueryBlockCmd(),
+		s.QueryBlocksCmd(),
+		s.QueryBlockResultsCmd(),
+		cmtcmd.ResetAllCmd,
+		cmtcmd.ResetStateCmd,
 	}
+}
+
+func (s *CometBFTServer[T]) GetTxs() []*cobra.Command {
+	return nil
+}
+
+func (s *CometBFTServer[T]) GetQueries() []*cobra.Command {
+	return nil
 }
 
 func (s *CometBFTServer[T]) WriteDefaultConfigAt(configPath string) error {

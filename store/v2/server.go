@@ -43,12 +43,18 @@ func (s *StoreComponent) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (s *StoreComponent) CLICommands(appCreator servercore.AppCreator[transaction.Tx]) servercore.CLIConfig {
-	return servercore.CLIConfig{
-		Commands: []*cobra.Command{
-			s.PrunesCmd(appCreator),
-		},
+func (s *StoreComponent) GetCommands(appCreator servercore.AppCreator[transaction.Tx]) []*cobra.Command {
+	return []*cobra.Command{
+		s.PrunesCmd(appCreator),
 	}
+}
+
+func (s *StoreComponent) GetTxs() []*cobra.Command {
+	return nil
+}
+
+func (s *StoreComponent) GetQueries() []*cobra.Command {
+	return nil
 }
 
 func (g *StoreComponent) Config() any {

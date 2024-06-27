@@ -29,7 +29,9 @@ type ServerComponent[T transaction.Tx] interface {
 
 // HasCLICommands is a server module that has CLI commands.
 type HasCLICommands interface {
-	CLICommands(servercore.AppCreator[transaction.Tx]) servercore.CLIConfig
+	GetCommands(servercore.AppCreator[transaction.Tx]) []*cobra.Command
+	GetTxs() []*cobra.Command
+	GetQueries() []*cobra.Command
 }
 
 // HasConfig is a server module that has a config.
@@ -121,7 +123,7 @@ func (s *Server) Stop(ctx context.Context) error {
 }
 
 // CLICommands returns all CLI commands of all components.
-func (s *Server) CLICommands(appCreator servercore.AppCreator[transaction.Tx]) servercore.CLIConfig {
+func (s *Server) CLICommands(appCreator servercore.AppCreator[transaction.Tx]) CLIConfig {
 	compart := func(name string, cmds ...*cobra.Command) *cobra.Command {
 		if len(cmds) == 1 && strings.HasPrefix(cmds[0].Use, name) {
 			return cmds[0]
@@ -136,12 +138,12 @@ func (s *Server) CLICommands(appCreator servercore.AppCreator[transaction.Tx]) s
 		return rootCmd
 	}
 
-	commands := servercore.CLIConfig{}
+	commands := CLIConfig{}
 	for _, mod := range s.components {
 		if climod, ok := mod.(HasCLICommands); ok {
-			commands.Commands = append(commands.Commands, compart(mod.Name(), climod.CLICommands(appCreator).Commands...))
-			commands.Txs = append(commands.Txs, compart(mod.Name(), climod.CLICommands(appCreator).Txs...))
-			commands.Queries = append(commands.Queries, compart(mod.Name(), climod.CLICommands(appCreator).Queries...))
+			commands.Commands = append(commands.Commands, compart(mod.Name(), climod.GetCommands(appCreator)...))
+			commands.Txs = append(commands.Txs, compart(mod.Name(), climod.GetTxs()...))
+			commands.Queries = append(commands.Queries, compart(mod.Name(), climod.GetQueries()...))
 		}
 	}
 

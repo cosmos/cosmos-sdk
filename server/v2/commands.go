@@ -16,9 +16,9 @@ import (
 	"cosmossdk.io/log"
 )
 
-func Commands(rootCmd *cobra.Command, newApp servercore.AppCreator[transaction.Tx], logger log.Logger, components ...ServerComponent[transaction.Tx]) (servercore.CLIConfig, error) {
+func Commands(rootCmd *cobra.Command, newApp servercore.AppCreator[transaction.Tx], logger log.Logger, components ...ServerComponent[transaction.Tx]) (CLIConfig, error) {
 	if len(components) == 0 {
-		return servercore.CLIConfig{}, errors.New("no components provided")
+		return CLIConfig{}, errors.New("no components provided")
 	}
 
 	server := NewServer(logger, components...)

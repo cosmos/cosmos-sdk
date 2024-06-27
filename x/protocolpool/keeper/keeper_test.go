@@ -118,7 +118,7 @@ func (s *KeeperTestSuite) TestIterateAndUpdateFundsDistribution() {
 	// We'll create 2 continuous funds of 30% each, and the total pool is 1000000, meaning each fund should get 300000
 
 	s.SetupTest()
-	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ModuleName).Return(poolAcc).AnyTimes()
+	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ProtocolPoolDistrAccount).Return(poolAcc).AnyTimes()
 	distrBal := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000000)))
 	s.bankKeeper.EXPECT().GetAllBalances(s.ctx, poolAcc.GetAddress()).Return(distrBal).AnyTimes()
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, poolAcc.GetName(), streamAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(600000)))).AnyTimes()
@@ -137,7 +137,7 @@ func (s *KeeperTestSuite) TestIterateAndUpdateFundsDistribution() {
 	})
 	s.Require().NoError(err)
 
-	_ = s.poolKeeper.SetToDistribute(s.ctx, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000000))), s.poolKeeper.GetAuthority())
+	_ = s.poolKeeper.SetToDistribute(s.ctx)
 
 	err = s.poolKeeper.IterateAndUpdateFundsDistribution(s.ctx)
 	s.Require().NoError(err)

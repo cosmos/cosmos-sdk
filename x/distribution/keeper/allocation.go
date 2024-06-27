@@ -75,7 +75,7 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 	}
 	// send to community pool and set remainder in fee pool
 	amt, re := remaining.TruncateDecimal()
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.ProtocolPoolModuleName, amt); err != nil {
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.ProtocolPoolDistrAccount, amt); err != nil {
 		return err
 	}
 

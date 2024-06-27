@@ -9,6 +9,9 @@ const (
 	// StreamAccount is the name constant used for stream account
 	StreamAccount = "stream_acc"
 
+	// ProtocolPoolDistrAccount is an intermediary account that holds the funds to be distributed to the protocolpool accounts.
+	ProtocolPoolDistrAccount = "protocolpool_distr"
+
 	// StoreKey is the store key string for protocolpool
 	StoreKey = ModuleName
 
@@ -27,5 +30,4 @@ var (
 	RecipientFundPercentageKey   = collections.NewPrefix(4)
 	RecipientFundDistributionKey = collections.NewPrefix(5)
 	ToDistributeKey              = collections.NewPrefix(6)
-	PoolBalanceSnapshotKey       = collections.NewPrefix(7)
 )

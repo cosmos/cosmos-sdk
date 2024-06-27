@@ -42,6 +42,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Features
 
+* (types) [#20748](https://github.com/cosmos/cosmos-sdk/pull/20748) Replace cometbft/crypto types with cosmos/crypto types
 * (client) [#20690](https://github.com/cosmos/cosmos-sdk/pull/20690) Import mnemonic from file
 * (tests) [#20013](https://github.com/cosmos/cosmos-sdk/pull/20013) Introduce system tests to run multi node local testnet in CI
 * (runtime) [#19953](https://github.com/cosmos/cosmos-sdk/pull/19953) Implement `core/transaction.Service` in runtime.

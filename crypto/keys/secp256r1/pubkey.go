@@ -3,11 +3,10 @@ package secp256r1
 import (
 	"encoding/base64"
 
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cosmoscrypto "github.com/cosmos/crypto/types"
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/internal/ecdsa"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // customProtobufType is here to make sure that ecdsaPK and ecdsaSK implement the
@@ -38,7 +37,7 @@ func (m *PubKey) Bytes() []byte {
 }
 
 // Equals implements SDK PubKey interface.
-func (m *PubKey) Equals(other cryptotypes.PubKey) bool {
+func (m *PubKey) Equals(other cosmoscrypto.PubKey) bool {
 	pk2, ok := other.(*PubKey)
 	if !ok {
 		return false
@@ -47,7 +46,7 @@ func (m *PubKey) Equals(other cryptotypes.PubKey) bool {
 }
 
 // Address implements SDK PubKey interface.
-func (m *PubKey) Address() cmtcrypto.Address {
+func (m *PubKey) Address() cosmoscrypto.Address {
 	return m.Key.Address(proto.MessageName(m))
 }
 

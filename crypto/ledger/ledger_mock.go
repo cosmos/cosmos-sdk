@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cometbft/cometbft/crypto"
+	"github.com/cosmos/crypto/hash/sha256"
 	"github.com/cosmos/go-bip39"
 	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
@@ -96,7 +96,7 @@ func (mock LedgerSECP256K1Mock) SignSECP256K1(derivationPath []uint32, message [
 	}
 
 	priv := secp.PrivKeyFromBytes(derivedPriv)
-	sig := ecdsa.Sign(priv, crypto.Sha256(message))
+	sig := ecdsa.Sign(priv, sha256.Sum(message))
 
 	return sig.Serialize(), nil
 }

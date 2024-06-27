@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/99designs/keyring"
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cosmoscrypto "github.com/cosmos/crypto/random"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
 
@@ -2014,7 +2014,7 @@ func TestRenameKey(t *testing.T) {
 func TestChangeBcrypt(t *testing.T) {
 	pw := []byte("somepasswword!")
 
-	saltBytes := cmtcrypto.CRandBytes(16)
+	saltBytes := cosmoscrypto.CRandBytes(16)
 	cosmosHash, err := cosmosbcrypt.GenerateFromPassword(saltBytes, pw, 2)
 	require.NoError(t, err)
 

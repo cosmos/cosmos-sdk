@@ -22,7 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
-	"github.com/cosmos/cosmos-sdk/crypto/types"
+	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -95,10 +95,10 @@ type Keyring interface {
 	SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (*Record, error)
 
 	// SaveOfflineKey stores a public key and returns the persisted Info structure.
-	SaveOfflineKey(uid string, pubkey types.PubKey) (*Record, error)
+	SaveOfflineKey(uid string, pubkey sdkcrypto.PubKey) (*Record, error)
 
 	// SaveMultisig stores and returns a new multsig (offline) key reference.
-	SaveMultisig(uid string, pubkey types.PubKey) (*Record, error)
+	SaveMultisig(uid string, pubkey sdkcrypto.PubKey) (*Record, error)
 
 	Signer
 
@@ -111,10 +111,10 @@ type Keyring interface {
 // Signer is implemented by key stores that want to provide signing capabilities.
 type Signer interface {
 	// Sign sign byte messages with a user key.
-	Sign(uid string, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error)
+	Sign(uid string, msg []byte, signMode signing.SignMode) ([]byte, sdkcrypto.PubKey, error)
 
 	// SignByAddress sign byte messages with a user key providing the address.
-	SignByAddress(address, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error)
+	SignByAddress(address, msg []byte, signMode signing.SignMode) ([]byte, sdkcrypto.PubKey, error)
 }
 
 // Importer is implemented by key stores that support import of public and private keys.
@@ -156,7 +156,7 @@ type Options struct {
 	// define Ledger Derivation function
 	LedgerDerivation func() (ledger.SECP256K1, error)
 	// define Ledger key generation function
-	LedgerCreateKey func([]byte) types.PubKey
+	LedgerCreateKey func([]byte) sdkcrypto.PubKey
 	// define Ledger app name
 	LedgerAppName string
 	// indicate whether Ledger should skip DER Conversion on signature,
@@ -304,7 +304,7 @@ func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor stri
 }
 
 // ExportPrivateKeyObject exports an armored private key object.
-func (ks keystore) ExportPrivateKeyObject(uid string) (types.PrivKey, error) {
+func (ks keystore) ExportPrivateKeyObject(uid string) (sdkcrypto.PrivKey, error) {
 	k, err := ks.Key(uid)
 	if err != nil {
 		return nil, err
@@ -380,7 +380,7 @@ func (ks keystore) ImportPubKey(uid, armor string) error {
 		return err
 	}
 
-	var pubKey types.PubKey
+	var pubKey sdkcrypto.PubKey
 	if err := ks.cdc.UnmarshalInterface(pubBytes, &pubKey); err != nil {
 		return err
 	}
@@ -393,7 +393,7 @@ func (ks keystore) ImportPubKey(uid, armor string) error {
 	return nil
 }
 
-func (ks keystore) Sign(uid string, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error) {
+func (ks keystore) Sign(uid string, msg []byte, signMode signing.SignMode) ([]byte, sdkcrypto.PubKey, error) {
 	k, err := ks.Key(uid)
 	if err != nil {
 		return nil, nil, err
@@ -426,7 +426,7 @@ func (ks keystore) Sign(uid string, msg []byte, signMode signing.SignMode) ([]by
 	}
 }
 
-func (ks keystore) SignByAddress(address, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error) {
+func (ks keystore) SignByAddress(address, msg []byte, signMode signing.SignMode) ([]byte, sdkcrypto.PubKey, error) {
 	k, err := ks.KeyByAddress(address)
 	if err != nil {
 		return nil, nil, err
@@ -450,7 +450,7 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 	return ks.writeLedgerKey(uid, priv.PubKey(), hdPath)
 }
 
-func (ks keystore) writeLedgerKey(name string, pk types.PubKey, path *hd.BIP44Params) (*Record, error) {
+func (ks keystore) writeLedgerKey(name string, pk sdkcrypto.PubKey, path *hd.BIP44Params) (*Record, error) {
 	k, err := NewLedgerRecord(name, pk, path)
 	if err != nil {
 		return nil, err
@@ -459,11 +459,11 @@ func (ks keystore) writeLedgerKey(name string, pk types.PubKey, path *hd.BIP44Pa
 	return k, ks.writeRecord(k)
 }
 
-func (ks keystore) SaveMultisig(uid string, pubkey types.PubKey) (*Record, error) {
+func (ks keystore) SaveMultisig(uid string, pubkey sdkcrypto.PubKey) (*Record, error) {
 	return ks.writeMultisigKey(uid, pubkey)
 }
 
-func (ks keystore) SaveOfflineKey(uid string, pubkey types.PubKey) (*Record, error) {
+func (ks keystore) SaveOfflineKey(uid string, pubkey sdkcrypto.PubKey) (*Record, error) {
 	return ks.writeOfflineKey(uid, pubkey)
 }
 
@@ -631,7 +631,7 @@ func (ks keystore) SupportedAlgorithms() (SigningAlgoList, SigningAlgoList) {
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object
 // and returns the signed bytes and the public key. It returns an error if the device could
 // not be queried or it returned an error.
-func SignWithLedger(k *Record, msg []byte, signMode signing.SignMode) (sig []byte, pub types.PubKey, err error) {
+func SignWithLedger(k *Record, msg []byte, signMode signing.SignMode) (sig []byte, pub sdkcrypto.PubKey, err error) {
 	ledgerInfo := k.GetLedger()
 	if ledgerInfo == nil {
 		return nil, nil, ErrNotLedgerObj
@@ -807,7 +807,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 	}
 }
 
-func (ks keystore) writeLocalKey(name string, privKey types.PrivKey) (*Record, error) {
+func (ks keystore) writeLocalKey(name string, privKey sdkcrypto.PrivKey) (*Record, error) {
 	k, err := NewLocalRecord(name, privKey, privKey.PubKey())
 	if err != nil {
 		return nil, err
@@ -894,7 +894,7 @@ func (ks keystore) existsInDb(addr []byte, name string) (bool, error) {
 	return false, nil
 }
 
-func (ks keystore) writeOfflineKey(name string, pk types.PubKey) (*Record, error) {
+func (ks keystore) writeOfflineKey(name string, pk sdkcrypto.PubKey) (*Record, error) {
 	k, err := NewOfflineRecord(name, pk)
 	if err != nil {
 		return nil, err
@@ -904,7 +904,7 @@ func (ks keystore) writeOfflineKey(name string, pk types.PubKey) (*Record, error
 }
 
 // writeMultisigKey investigate where thisf function is called maybe remove it
-func (ks keystore) writeMultisigKey(name string, pk types.PubKey) (*Record, error) {
+func (ks keystore) writeMultisigKey(name string, pk sdkcrypto.PubKey) (*Record, error) {
 	k, err := NewMultiRecord(name, pk)
 	if err != nil {
 		return nil, err

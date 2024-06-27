@@ -7,7 +7,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/cometbft/cometbft/crypto"
+	cosmoscrypto "github.com/cosmos/crypto/random"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -51,7 +51,7 @@ func (suite *SKSuite) TestMarshal() {
 func (suite *SKSuite) TestSign() {
 	require := suite.Require()
 
-	msg := crypto.CRandBytes(1000)
+	msg := cosmoscrypto.CRandBytes(1000)
 	sig, err := suite.sk.Sign(msg)
 	require.NoError(err)
 	sigCpy := make([]byte, len(sig))

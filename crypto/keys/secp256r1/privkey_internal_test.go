@@ -3,7 +3,7 @@ package secp256r1
 import (
 	"testing"
 
-	"github.com/cometbft/cometbft/crypto"
+	"github.com/cosmos/crypto/random"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
@@ -87,7 +87,7 @@ func (suite *SKSuite) TestMarshalProto() {
 func (suite *SKSuite) TestSign() {
 	require := suite.Require()
 
-	msg := crypto.CRandBytes(1000)
+	msg := random.CRandBytes(1000)
 	sig, err := suite.sk.Sign(msg)
 	require.NoError(err)
 	sigCpy := make([]byte, len(sig))

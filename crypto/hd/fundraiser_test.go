@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cometbft/cometbft/crypto"
+	cosmoscrypto "github.com/cosmos/crypto/types"
 	"github.com/cosmos/go-bip39"
 	"github.com/stretchr/testify/require"
 
@@ -83,7 +83,7 @@ func TestFundraiserCompatibility(t *testing.T) {
 
 		addr := pub.Address()
 		t.Logf("ADDR  \t%X %X\n", addrB, addr)
-		require.Equal(t, addr, crypto.Address(addrB), fmt.Sprintf("Expected addresses to match %d", i))
+		require.Equal(t, addr, cosmoscrypto.Address(addrB), fmt.Sprintf("Expected addresses to match %d", i))
 
 	}
 }

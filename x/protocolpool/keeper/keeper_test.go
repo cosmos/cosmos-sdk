@@ -27,8 +27,9 @@ import (
 )
 
 var (
-	poolAcc   = authtypes.NewEmptyModuleAccount(types.ModuleName)
-	streamAcc = authtypes.NewEmptyModuleAccount(types.StreamAccount)
+	poolAcc      = authtypes.NewEmptyModuleAccount(types.ModuleName)
+	streamAcc    = authtypes.NewEmptyModuleAccount(types.StreamAccount)
+	poolDistrAcc = authtypes.NewEmptyModuleAccount(types.ProtocolPoolDistrAccount)
 )
 
 type KeeperTestSuite struct {
@@ -104,10 +105,12 @@ func (s *KeeperTestSuite) mockWithdrawContinuousFund() {
 
 func (s *KeeperTestSuite) mockStreamFunds() {
 	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ModuleName).Return(poolAcc).AnyTimes()
+	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ProtocolPoolDistrAccount).Return(poolDistrAcc).AnyTimes()
 	s.authKeeper.EXPECT().GetModuleAddress(types.StreamAccount).Return(streamAcc.GetAddress()).AnyTimes()
 	distrBal := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
-	s.bankKeeper.EXPECT().GetAllBalances(s.ctx, poolAcc.GetAddress()).Return(distrBal).AnyTimes()
-	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, poolAcc.GetName(), streamAcc.GetName(), gomock.Any()).AnyTimes()
+	s.bankKeeper.EXPECT().GetAllBalances(s.ctx, poolDistrAcc.GetAddress()).Return(distrBal).AnyTimes()
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, poolDistrAcc.GetName(), streamAcc.GetName(), gomock.Any()).AnyTimes()
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, poolDistrAcc.GetName(), poolAcc.GetName(), gomock.Any()).AnyTimes()
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -121,7 +124,8 @@ func (s *KeeperTestSuite) TestIterateAndUpdateFundsDistribution() {
 	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ProtocolPoolDistrAccount).Return(poolAcc).AnyTimes()
 	distrBal := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000000)))
 	s.bankKeeper.EXPECT().GetAllBalances(s.ctx, poolAcc.GetAddress()).Return(distrBal).AnyTimes()
-	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, poolAcc.GetName(), streamAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(600000)))).AnyTimes()
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, poolDistrAcc.GetName(), streamAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(600000))))
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, poolDistrAcc.GetName(), poolAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(400000))))
 
 	_, err := s.msgServer.CreateContinuousFund(s.ctx, &types.MsgCreateContinuousFund{
 		Authority:  s.poolKeeper.GetAuthority(),

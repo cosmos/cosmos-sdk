@@ -203,20 +203,26 @@ func (k Keeper) SetToDistribute(ctx context.Context) error {
 		return err
 	}
 
-	// if percentage is 0 then return early
-	if totalStreamFundsPercentage.IsZero() {
-		return nil
+	remainingAmt := currentBalance
+	if !totalStreamFundsPercentage.IsZero() {
+		// send streaming funds to the stream module account
+		toDistributeDec := sdk.NewDecCoin(denom, currentBalance.AmountOf(denom))
+		if totalStreamFundsPercentage.LT(math.LegacyOneDec()) {
+			toDistributeDec.Amount = toDistributeDec.Amount.Mul(totalStreamFundsPercentage).TruncateDec()
+		}
+
+		streamAmt := sdk.NewCoins(sdk.NewCoin(denom, toDistributeDec.Amount.TruncateInt()))
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.StreamAccount, streamAmt); err != nil {
+			return err
+		}
+		remainingAmt = remainingAmt.Sub(streamAmt...)
 	}
 
-	// send streaming funds to the stream module account
-	toDistributeDec := sdk.NewDecCoin(denom, currentBalance.AmountOf(denom))
-	if totalStreamFundsPercentage.LT(math.LegacyOneDec()) {
-		toDistributeDec.Amount = toDistributeDec.Amount.Mul(totalStreamFundsPercentage).TruncateDec()
-	}
-
-	streamAmt := sdk.NewCoins(sdk.NewCoin(denom, toDistributeDec.Amount.TruncateInt()))
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.StreamAccount, streamAmt); err != nil {
-		return err
+	// send remaining funds to the community pool
+	if !remainingAmt.IsZero() {
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.ModuleName, remainingAmt); err != nil {
+			return err
+		}
 	}
 
 	// update toDistribute

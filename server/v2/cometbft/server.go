@@ -23,9 +23,7 @@ import (
 	"cosmossdk.io/core/transaction"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/appmanager"
-	"cosmossdk.io/server/v2/cometbft/handlers"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
-	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
 
@@ -33,98 +31,74 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-const (
-	flagWithComet     = "with-comet"
-	flagAddress       = "address"
-	flagTransport     = "transport"
-	flagTraceStore    = "trace-store"
-	flagCPUProfile    = "cpu-profile"
-	FlagMinGasPrices  = "minimum-gas-prices"
-	FlagQueryGasLimit = "query-gas-limit"
-	FlagHaltHeight    = "halt-height"
-	FlagHaltTime      = "halt-time"
-	FlagTrace         = "trace"
+var (
+	_ serverv2.ServerComponent[
+		servercore.AppI[transaction.Tx], transaction.Tx,
+	] = (*CometBFTServer[servercore.AppI[transaction.Tx], transaction.Tx])(nil)
+	_ serverv2.HasCLICommands[
+		servercore.AppI[transaction.Tx], transaction.Tx,
+	] = (*CometBFTServer[servercore.AppI[transaction.Tx], transaction.Tx])(nil)
+	_ serverv2.HasStartFlags  = (*CometBFTServer[servercore.AppI[transaction.Tx], transaction.Tx])(nil)
 )
 
-var _ serverv2.ServerComponent[transaction.Tx] = (*CometBFTServer[transaction.Tx])(nil)
-var _ serverv2.HasCLICommands = (*CometBFTServer[transaction.Tx])(nil)
-var _ serverv2.HasStartFlags = (*CometBFTServer[transaction.Tx])(nil)
+type CometBFTServer[AppT servercore.AppI[T], T transaction.Tx] struct {
+	Node      *node.Node
+	Consensus *Consensus[T]
 
-type CometBFTServer[T transaction.Tx] struct {
-	Node   *node.Node
-	App    *Consensus[T]
-	logger log.Logger
-
-	config Config
+	initTxCodec transaction.Codec[T]
+	logger      log.Logger
+	config      Config
+	options     ServerOptions[T]
 }
 
-// App is an interface that represents an application in the CometBFT server.
-// It provides methods to access the app manager, logger, and store.
-type App[T transaction.Tx] interface {
-	GetApp() *appmanager.AppManager[T]
-	GetLogger() log.Logger
-	GetStore() types.Store
-}
-
-func New[T transaction.Tx](txCodec transaction.Codec[T]) *CometBFTServer[T] {
-	consensus := &Consensus[T]{txCodec: txCodec}
-	return &CometBFTServer[T]{
-		App: consensus,
+func New[AppT servercore.AppI[T], T transaction.Tx](txCodec transaction.Codec[T], options ServerOptions[T]) *CometBFTServer[AppT, T] {
+	return &CometBFTServer[AppT, T]{
+		initTxCodec: txCodec,
+		options:     options,
 	}
 }
 
-func (s *CometBFTServer[T]) Init(appI servercore.AppI[T], v *viper.Viper, logger log.Logger) error {
-	store := appI.GetStore().(types.Store)
-
-	cfg := Config{CmtConfig: GetConfigFromViper(v), ConsensusAuthority: appI.GetConsensusAuthority()}
-	logger = logger.With("module", "cometbft-server")
-
-	// create noop mempool
-	mempool := mempool.NoOpMempool[T]{}
+func (s *CometBFTServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Logger) error {
+	s.config = Config{CmtConfig: GetConfigFromViper(v), ConsensusAuthority: appI.GetConsensusAuthority()}
+	s.logger = logger.With(log.ModuleKey, s.Name())
 
 	// create consensus
-	// txCodec should be in server from New()
-	appManager, ok := appI.GetAppManager().(*appmanager.AppManager[T])
-	if !ok {
-		return fmt.Errorf("Can not get appManager")
-	}
-	consensus := NewConsensus[T](appManager, mempool, store, cfg, s.App.txCodec, logger)
+	store := appI.GetStore().(types.Store)
+	appManager := appI.GetAppManager().(*appmanager.AppManager[T])
+	consensus := NewConsensus[T](appManager, s.options.Mempool, store, s.config, s.initTxCodec, s.logger)
 
-	consensus.SetPrepareProposalHandler(handlers.NoOpPrepareProposal[T]())
-	consensus.SetProcessProposalHandler(handlers.NoOpProcessProposal[T]())
-	consensus.SetVerifyVoteExtension(handlers.NoOpVerifyVoteExtensionHandler())
-	consensus.SetExtendVoteExtension(handlers.NoOpExtendVote())
+	consensus.prepareProposalHandler = s.options.PrepareProposalHandler
+	consensus.processProposalHandler = s.options.ProcessProposalHandler
+	consensus.verifyVoteExt = s.options.VerifyVoteExtensionHandler
+	consensus.extendVote = s.options.ExtendVoteHandler
 
 	// TODO: set these; what is the appropriate presence of the Store interface here?
 	var ss snapshots.StorageSnapshotter
 	var sc snapshots.CommitSnapshotter
 
-	snapshotStore, err := GetSnapshotStore(cfg.CmtConfig.RootDir)
+	snapshotStore, err := GetSnapshotStore(s.config.CmtConfig.RootDir)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	sm := snapshots.NewManager(snapshotStore, snapshots.SnapshotOptions{}, sc, ss, nil, logger) // TODO: set options somehow
+	sm := snapshots.NewManager(snapshotStore, s.options.SnapshotOptions, sc, ss, nil, s.logger)
 	consensus.SetSnapshotManager(sm)
 
-	s.config = cfg
-	s.App = consensus
-	s.logger = logger
-
+	s.Consensus = consensus
 	return nil
 }
 
-func (s *CometBFTServer[T]) Name() string {
-	return "cometbft"
+func (s *CometBFTServer[AppT, T]) Name() string {
+	return "cometbft-server"
 }
 
-func (s *CometBFTServer[T]) Start(ctx context.Context) error {
-	viper := ctx.Value(corectx.ViperContextKey{}).(*viper.Viper)
+func (s *CometBFTServer[AppT, T]) Start(ctx context.Context) error {
+	viper := ctx.Value(corectx.ViperContextKey).(*viper.Viper)
 	cometConfig := GetConfigFromViper(viper)
 
 	wrappedLogger := cometlog.CometLoggerWrapper{Logger: s.logger}
 	if s.config.Standalone {
-		svr, err := abciserver.NewServer(s.config.Addr, s.config.Transport, s.App)
+		svr, err := abciserver.NewServer(s.config.Addr, s.config.Transport, s.Consensus)
 		if err != nil {
 			return fmt.Errorf("error creating listener: %w", err)
 		}
@@ -144,7 +118,7 @@ func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 		cometConfig,
 		pvm.LoadOrGenFilePV(cometConfig.PrivValidatorKeyFile(), cometConfig.PrivValidatorStateFile()),
 		nodeKey,
-		proxy.NewConsensusSyncLocalClientCreator(s.App),
+		proxy.NewConsensusSyncLocalClientCreator(s.Consensus),
 		getGenDocProvider(cometConfig),
 		cmtcfg.DefaultDBProvider,
 		node.DefaultMetricsProvider(cometConfig.Instrumentation),
@@ -157,7 +131,7 @@ func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 	return s.Node.Start()
 }
 
-func (s *CometBFTServer[T]) Stop(context.Context) error {
+func (s *CometBFTServer[AppT, T]) Stop(context.Context) error {
 	if s.Node != nil && s.Node.IsRunning() {
 		return s.Node.Stop()
 	}
@@ -203,22 +177,22 @@ func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, e
 	}
 }
 
-func (s *CometBFTServer[T]) StartCmdFlags() *pflag.FlagSet {
+func (s *CometBFTServer[AppT, T]) StartCmdFlags() *pflag.FlagSet {
 	flags := pflag.NewFlagSet("cometbft", pflag.ExitOnError)
-	flags.Bool(flagWithComet, true, "Run abci app embedded in-process with CometBFT")
-	flags.String(flagAddress, "tcp://127.0.0.1:26658", "Listen address")
-	flags.String(flagTransport, "socket", "Transport protocol: socket, grpc")
-	flags.String(flagTraceStore, "", "Enable KVStore tracing to an output file")
+	flags.Bool(FlagWithComet, true, "Run abci app embedded in-process with CometBFT")
+	flags.String(FlagAddress, "tcp://127.0.0.1:26658", "Listen address")
+	flags.String(FlagTransport, "socket", "Transport protocol: socket, grpc")
+	flags.String(FlagTraceStore, "", "Enable KVStore tracing to an output file")
 	flags.String(FlagMinGasPrices, "", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)")
 	flags.Uint64(FlagQueryGasLimit, 0, "Maximum gas a Rest/Grpc query can consume. Blank and 0 imply unbounded.")
 	flags.Uint64(FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node")
 	flags.Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")
-	flags.String(flagCPUProfile, "", "Enable CPU profiling and write to the provided file")
+	flags.String(FlagCPUProfile, "", "Enable CPU profiling and write to the provided file")
 	flags.Bool(FlagTrace, false, "Provide full stack traces for errors in ABCI Log")
 	return flags
 }
 
-func (s *CometBFTServer[T]) GetCommands(_ servercore.AppCreator[T]) []*cobra.Command {
+func (s *CometBFTServer[AppT, T]) GetCommands(_ servercore.AppCreator[AppT, T]) []*cobra.Command {
 	return []*cobra.Command{
 		s.StatusCommand(),
 		s.ShowNodeIDCmd(),
@@ -233,15 +207,15 @@ func (s *CometBFTServer[T]) GetCommands(_ servercore.AppCreator[T]) []*cobra.Com
 	}
 }
 
-func (s *CometBFTServer[T]) GetTxs() []*cobra.Command {
+func (s *CometBFTServer[AppT, T]) GetTxs() []*cobra.Command {
 	return nil
 }
 
-func (s *CometBFTServer[T]) GetQueries() []*cobra.Command {
+func (s *CometBFTServer[AppT, T]) GetQueries() []*cobra.Command {
 	return nil
 }
 
-func (s *CometBFTServer[T]) WriteDefaultConfigAt(configPath string) error {
+func (s *CometBFTServer[AppT, T]) WriteDefaultConfigAt(configPath string) error {
 	cometConfig := cmtcfg.DefaultConfig()
 	cmtcfg.WriteConfigFile(filepath.Join(configPath, "config.toml"), cometConfig)
 	return nil

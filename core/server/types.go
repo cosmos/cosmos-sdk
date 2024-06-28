@@ -6,11 +6,11 @@ import (
 	"cosmossdk.io/core/transaction"
 )
 
-type AppCreator[T transaction.Tx] func(log.Logger, AppOptions) AppI[T]
-
 type AppOptions interface {
 	Get(string) interface{}
 }
+
+type AppCreator[AppT AppI[T], T transaction.Tx] func(log.Logger, AppOptions) AppT
 
 type AppI[T transaction.Tx] interface {
 	GetAppManager() any

@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
@@ -16,6 +17,7 @@ import (
 	authtxconfig "cosmossdk.io/x/auth/tx/config"
 	"cosmossdk.io/x/auth/types"
 
+	servercore "cosmossdk.io/core/server"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -24,10 +26,10 @@ import (
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the main function.
-func NewRootCmd() *cobra.Command {
+func NewRootCmd[AppT servercore.AppI[T], T transaction.Tx]() *cobra.Command {
 	var (
 		autoCliOpts   autocli.AppOptions
-		moduleManager *runtime.MM
+		moduleManager *runtime.MM[T]
 		clientCtx     client.Context
 	)
 
@@ -59,10 +61,6 @@ func NewRootCmd() *cobra.Command {
 		Short:         "simulation app",
 		SilenceErrors: true,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			// set the default command outputs
-			cmd.SetOut(cmd.OutOrStdout())
-			cmd.SetErr(cmd.ErrOrStderr())
-
 			clientCtx = clientCtx.WithCmdContext(cmd.Context())
 			clientCtx, err := client.ReadPersistentCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
@@ -83,7 +81,7 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, clientCtx.TxConfig, moduleManager)
+	initRootCmd[AppT, T](rootCmd, clientCtx.TxConfig, moduleManager)
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}

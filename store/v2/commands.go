@@ -9,12 +9,11 @@ import (
 
 	corectx "cosmossdk.io/core/context"
 	servercore "cosmossdk.io/core/server"
-	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 )
 
 // QueryBlockResultsCmd implements the default command for a BlockResults query.
-func (s *StoreComponent) PrunesCmd(appCreator servercore.AppCreator[transaction.Tx]) *cobra.Command {
+func (s *StoreComponent[AppT, T]) PrunesCmd(appCreator servercore.AppCreator[AppT, T]) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prune [pruning-method]",
 		Short: "Prune app history states by keeping the recent heights and deleting old heights",
@@ -93,7 +92,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (*PruningOption, error) {
 	// Get viper from cmd context
 	var rootViper *viper.Viper
-	value := cmd.Context().Value(corectx.ViperContextKey{})
+	value := cmd.Context().Value(corectx.ViperContextKey)
 	rootViper, ok := value.(*viper.Viper)
 	if !ok {
 		rootViper = viper.New()

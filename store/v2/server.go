@@ -12,15 +12,15 @@ import (
 	"cosmossdk.io/log"
 )
 
-type StoreComponent struct {
+type StoreComponent[AppT servercore.AppI[T], T transaction.Tx] struct {
 	config *Config
 }
 
-func New() *StoreComponent {
-	return &StoreComponent{}
+func New[AppT servercore.AppI[T], T transaction.Tx]() *StoreComponent[AppT, T] {
+	return &StoreComponent[AppT, T]{}
 }
 
-func (s *StoreComponent) Init(appI servercore.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
+func (s *StoreComponent[AppT, T]) Init(appI servercore.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
 	cfg := DefaultConfig()
 	if v != nil {
 		if err := v.Sub(s.Name()).Unmarshal(&cfg); err != nil {
@@ -31,33 +31,33 @@ func (s *StoreComponent) Init(appI servercore.AppI[transaction.Tx], v *viper.Vip
 	return nil
 }
 
-func (s *StoreComponent) Name() string {
+func (s *StoreComponent[AppT, T]) Name() string {
 	return "store"
 }
 
-func (s *StoreComponent) Start(ctx context.Context) error {
+func (s *StoreComponent[AppT, T]) Start(ctx context.Context) error {
 	return nil
 }
 
-func (s *StoreComponent) Stop(ctx context.Context) error {
+func (s *StoreComponent[AppT, T]) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (s *StoreComponent) GetCommands(appCreator servercore.AppCreator[transaction.Tx]) []*cobra.Command {
+func (s *StoreComponent[AppT, T]) GetCommands(appCreator servercore.AppCreator[AppT, T]) []*cobra.Command {
 	return []*cobra.Command{
 		s.PrunesCmd(appCreator),
 	}
 }
 
-func (s *StoreComponent) GetTxs() []*cobra.Command {
+func (s *StoreComponent[AppT, T]) GetTxs() []*cobra.Command {
 	return nil
 }
 
-func (s *StoreComponent) GetQueries() []*cobra.Command {
+func (s *StoreComponent[AppT, T]) GetQueries() []*cobra.Command {
 	return nil
 }
 
-func (g *StoreComponent) Config() any {
+func (g *StoreComponent[AppT, T]) Config() any {
 	if g.config == nil || g.config == (&Config{}) {
 		return DefaultConfig()
 	}

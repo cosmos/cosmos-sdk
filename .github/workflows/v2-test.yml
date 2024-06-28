@@ -83,7 +83,7 @@ jobs:
             store/v2/**/*.go
             store/v2/go.mod
             store/v2/go.sum
-      - name: tests
+      - name: test & coverage report creation
         if: env.GIT_DIFF
         run: |
           cd store/v2

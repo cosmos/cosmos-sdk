@@ -1,6 +1,7 @@
 package proof
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -37,23 +38,32 @@ func TestGetStoreProof(t *testing.T) {
 	}
 
 	for i, tc := range tests {
-		// create a commit info
-		ci := CommitInfo{
-			Version:    1,
-			Timestamp:  time.Now(),
-			StoreInfos: tc.storeInfos,
-		}
-		commitHash := ci.Hash()
-		// make sure the store infos are sorted
-		require.Equal(t, ci.StoreInfos[0].Name, []byte("key1"))
-		for _, si := range tc.storeInfos {
-			// get the proof
-			_, proof, err := ci.GetStoreProof(si.Name)
-			require.NoError(t, err, "test case %d", i)
-			// verify the proof
-			expRoots, err := proof.Run([][]byte{si.CommitID.Hash})
-			require.NoError(t, err, "test case %d", i)
-			require.Equal(t, commitHash, expRoots[0], "test case %d", i)
-		}
+		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+			// create a commit info
+			ci := CommitInfo{
+				Version:    1,
+				Timestamp:  time.Now(),
+				StoreInfos: tc.storeInfos,
+			}
+			commitHash := ci.Hash()
+			// make sure the store infos are sorted
+			require.Equal(t, ci.StoreInfos[0].Name, []byte("key1"))
+			for _, si := range tc.storeInfos {
+				// get the proof
+				_, proof, err := ci.GetStoreProof(si.Name)
+				require.NoError(t, err, "test case %d", i)
+				// verify the proof
+				expRoots, err := proof.Run([][]byte{si.CommitID.Hash})
+				require.NoError(t, err, "test case %d", i)
+				require.Equal(t, commitHash, expRoots[0], "test case %d", i)
+
+				bz, err := ci.Marshal()
+				require.NoError(t, err)
+				var ci2 CommitInfo
+				err = ci2.Unmarshal(bz)
+				require.NoError(t, err)
+				require.Equal(t, ci, ci2)
+			}
+		})
 	}
 }

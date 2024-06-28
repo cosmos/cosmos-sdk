@@ -178,6 +178,14 @@ func (ci *CommitInfo) Unmarshal(buf []byte) error {
 			return err
 		}
 		buf = buf[n:]
+		// Structure
+		structure, n, err := encoding.DecodeBytes(buf)
+		if err != nil {
+			return err
+		}
+		buf = buf[n:]
+		ci.StoreInfos[i].Structure = string(structure)
+
 		ci.StoreInfos[i].CommitID = CommitID{
 			Hash:    hash,
 			Version: ci.Version,

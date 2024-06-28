@@ -415,6 +415,10 @@ func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
 	return c.metadata.GetCommitInfo(version)
 }
 
+func (c *CommitStore) GetLatestVersion() (uint64, error) {
+	return c.metadata.GetLatestVersion()
+}
+
 func (c *CommitStore) Close() (ferr error) {
 	for _, tree := range c.multiTrees {
 		if err := tree.Close(); err != nil {

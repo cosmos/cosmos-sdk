@@ -2,10 +2,11 @@ package commitment
 
 import (
 	"bytes"
+	"fmt"
+
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/proof"
-	"fmt"
 )
 
 const (
@@ -21,23 +22,6 @@ func NewMetadataStore(kv corestore.KVStoreWithBatch) *MetadataStore {
 	return &MetadataStore{
 		kv: kv,
 	}
-}
-
-func (c *CommitStore) GetLatestVersion() (uint64, error) {
-	value, err := c.db.Get([]byte(latestVersionKey))
-	if err != nil {
-		return 0, err
-	}
-	if value == nil {
-		return 0, nil
-	}
-
-	version, _, err := encoding.DecodeUvarint(value)
-	if err != nil {
-		return 0, err
-	}
-
-	return version, nil
 }
 
 func (m *MetadataStore) GetLatestVersion() (uint64, error) {
@@ -82,7 +66,6 @@ func (m *MetadataStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo)
 	}
 
 	batch := m.kv.NewBatch()
-	defer batch.Close()
 	cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
 	value, err := cInfo.Marshal()
 	if err != nil {
@@ -101,5 +84,8 @@ func (m *MetadataStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo)
 		return err
 	}
 
-	return batch.WriteSync()
+	if err := batch.WriteSync(); err != nil {
+		return err
+	}
+	return batch.Close()
 }

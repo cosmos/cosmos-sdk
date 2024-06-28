@@ -48,6 +48,10 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.Accoun
 	if addr := ak.GetModuleAddress(types.StreamAccount); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.StreamAccount))
 	}
+	// ensure protocol pool distribution account is set
+	if addr := ak.GetModuleAddress(types.ProtocolPoolDistrAccount); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.ProtocolPoolDistrAccount))
+	}
 
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 

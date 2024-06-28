@@ -168,6 +168,7 @@ func AuthModule() ModuleOption {
 					{Account: testutil.NFTModuleName},
 					{Account: testutil.ProtocolPoolModuleName},
 					{Account: "stream_acc"},
+					{Account: "protocolpool_distr"},
 				},
 			}),
 		}

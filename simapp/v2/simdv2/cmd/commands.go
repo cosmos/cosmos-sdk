@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/client/v2/offchain"
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
@@ -17,6 +18,7 @@ import (
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/cometbft"
 	"cosmossdk.io/simapp/v2"
+	storev2 "cosmossdk.io/store/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 	authcmd "cosmossdk.io/x/auth/client/cli"
 
@@ -72,13 +74,13 @@ func (t *temporaryTxDecoder[T]) DecodeJSON(bz []byte) (T, error) {
 	return out, nil
 }
 
-func newApp[AppT serverv2.AppI[T], T transaction.Tx](
-	logger log.Logger, viper *viper.Viper,
+func newApp[AppT servercore.AppI[T], T transaction.Tx](
+	logger log.Logger, appOtps servercore.AppOptions,
 ) AppT {
-	return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper)).(AppT)
+	return servercore.AppI[T](simapp.NewSimApp[T](logger, appOtps.(*viper.Viper))).(AppT)
 }
 
-func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
+func initRootCmd[AppT servercore.AppI[T], T transaction.Tx](
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,
 	moduleManager *runtimev2.MM[T],
@@ -90,7 +92,6 @@ func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
 		genutilcli.InitCmd(moduleManager),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
-		// pruning.Cmd(newApp), // TODO add to comet server
 		// snapshot.Cmd(newApp), // TODO add to comet server
 	)
 
@@ -100,9 +101,9 @@ func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
 	}
 
 	// Add empty server struct here for writing default config
-	if err = serverv2.AddCommands(
+	if err = serverv2.AddCommands[AppT, T](
 		rootCmd,
-		newApp,
+		newApp[AppT, T],
 		logger,
 		cometbft.New[AppT, T](&temporaryTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
 		grpc.New[AppT, T](),

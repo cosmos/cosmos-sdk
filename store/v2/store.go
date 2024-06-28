@@ -67,6 +67,8 @@ type RootStore interface {
 	// SetMetrics sets the telemetry handler on the RootStore.
 	SetMetrics(m metrics.Metrics)
 
+	Prune(version uint64) error
+
 	io.Closer
 }
 

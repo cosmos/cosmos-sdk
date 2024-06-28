@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 )
@@ -35,9 +36,9 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 
 // Commands creates the start command of an application and gives back the CLIConfig containing all the server commands.
 // This API is for advanced user only, most users should use AddCommands instead that abstract more.
-func Commands[AppT AppI[T], T transaction.Tx](
+func Commands[AppT servercore.AppI[T], T transaction.Tx](
 	rootCmd *cobra.Command,
-	newApp AppCreator[AppT, T],
+	newApp servercore.AppCreator[AppT, T],
 	logger log.Logger,
 	components ...ServerComponent[AppT, T],
 ) (CLIConfig, error) {
@@ -93,7 +94,7 @@ func Commands[AppT AppI[T], T transaction.Tx](
 	}
 	startCmd.SetContext(rootCmd.Context())
 
-	cmds := server.CLICommands()
+	cmds := server.CLICommands(newApp)
 	cmds.Commands = append(cmds.Commands, startCmd)
 
 	return cmds, nil
@@ -101,9 +102,9 @@ func Commands[AppT AppI[T], T transaction.Tx](
 
 // AddCommands add the server commands to the root command
 // It configure the config handling and the logger handling
-func AddCommands[AppT AppI[T], T transaction.Tx](
+func AddCommands[AppT servercore.AppI[T], T transaction.Tx](
 	rootCmd *cobra.Command,
-	newApp AppCreator[AppT, T],
+	newApp servercore.AppCreator[AppT, T],
 	logger log.Logger,
 	components ...ServerComponent[AppT, T],
 ) error {
@@ -158,7 +159,7 @@ func AddCommands[AppT AppI[T], T transaction.Tx](
 }
 
 // configHandle writes the default config to the home directory if it does not exist and sets the server context
-func configHandle[AppT AppI[T], T transaction.Tx](s *Server[AppT, T], cmd *cobra.Command) error {
+func configHandle[AppT servercore.AppI[T], T transaction.Tx](s *Server[AppT, T], cmd *cobra.Command) error {
 	home, err := cmd.Flags().GetString(FlagHome)
 	if err != nil {
 		return err

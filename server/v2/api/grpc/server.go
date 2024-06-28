@@ -15,13 +15,13 @@ import (
 
 	_ "cosmossdk.io/api/amino" // Import amino.proto file for reflection
 	appmanager "cosmossdk.io/core/app"
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 )
 
-type GRPCServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
+type GRPCServer[AppT servercore.AppI[T], T transaction.Tx] struct {
 	logger log.Logger
 	config *Config
 
@@ -33,7 +33,7 @@ type GRPCService interface {
 	RegisterGRPCServer(gogogrpc.Server)
 }
 
-func New[AppT serverv2.AppI[T], T transaction.Tx]() *GRPCServer[AppT, T] {
+func New[AppT servercore.AppI[T], T transaction.Tx]() *GRPCServer[AppT, T] {
 	return &GRPCServer[AppT, T]{}
 }
 

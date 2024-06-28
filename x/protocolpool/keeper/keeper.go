@@ -39,9 +39,6 @@ type Keeper struct {
 	RecipientFundDistribution collections.Map[sdk.AccAddress, math.Int]
 	// ToDistribute is to keep track of funds distributed
 	ToDistribute collections.Item[math.Int]
-	// TotalFundPercentage is to keep track total recipient fund percentage
-	// Helps eliminate unnecessary loops
-	TotalFundPercentage collections.Item[math.Int]
 }
 
 func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, authority string,
@@ -69,7 +66,6 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.Accoun
 		RecipientFundPercentage:   collections.NewMap(sb, types.RecipientFundPercentageKey, "recipient_fund_percentage", sdk.AccAddressKey, sdk.IntValue),
 		RecipientFundDistribution: collections.NewMap(sb, types.RecipientFundDistributionKey, "recipient_fund_distribution", sdk.AccAddressKey, sdk.IntValue),
 		ToDistribute:              collections.NewItem(sb, types.ToDistributeKey, "to_distribute", sdk.IntValue),
-		TotalFundPercentage:       collections.NewItem(sb, types.TotalFundPercentageKey, "total_fund_percentage", sdk.IntValue),
 	}
 
 	schema, err := sb.Build()
@@ -205,22 +201,16 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 		return err
 	}
 
-	var totalStreamFundsPercentage math.Int
-	hasTotalFund, err := k.TotalFundPercentage.Has(ctx)
-	if err != nil {
-		return err
-	}
-	if !hasTotalFund {
-		totalStreamFundsPercentage = math.ZeroInt()
-	} else {
-		totalStreamFundsPercentage, err = k.TotalFundPercentage.Get(ctx)
-		if err != nil {
-			return err
-		}
-	}
-
+	totalStreamFundsPercentage := math.ZeroInt()
+	err = k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
+		totalStreamFundsPercentage = totalStreamFundsPercentage.Add(value)
+		return false, nil
+	})
 	if totalStreamFundsPercentage.GT(math.NewInt(100)) {
 		return fmt.Errorf("total funds percentage cannot exceed 100")
+	}
+	if err != nil {
+		return err
 	}
 
 	// send streaming funds to the stream module account
@@ -270,19 +260,28 @@ type recipientFund struct {
 }
 
 func (k Keeper) iterateAndUpdateFundsDistribution(ctx context.Context, toDistributeAmount math.Int) error {
-	totalPercentageToBeDistributed, err := k.TotalFundPercentage.Get(ctx)
-	if err != nil {
-		return err
-	}
+	totalPercentageToBeDistributed := math.ZeroInt()
 
 	recipientFundList := []recipientFund{}
 
 	// Calculate totalPercentageToBeDistributed and store values
-	err = k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
+	err := k.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
 		addr, err := k.authKeeper.AddressCodec().BytesToString(key)
 		if err != nil {
 			return true, err
 		}
+
+		cf, err := k.ContinuousFund.Get(ctx, key)
+		if err != nil {
+			return true, err
+		}
+
+		// Check if the continuous fund has expired
+		if cf.Expiry != nil && cf.Expiry.Before(k.HeaderService.HeaderInfo(ctx).Time) {
+			return false, nil
+		}
+
+		totalPercentageToBeDistributed = totalPercentageToBeDistributed.Add(value)
 		recipientFundList = append(recipientFundList, recipientFund{
 			RecipientAddr: addr,
 			Percentage:    value,

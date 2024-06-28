@@ -171,3 +171,35 @@ Next step is to add the new token to the assert map. But we can also make it mor
 ```shell
 go test -mod=readonly -tags='system_test' -v ./...  --run TestQueryTotalSupply --verbose --nodes-count=1 
 ```
+
+## Part 4: Set state via TX
+
+Complexer workflows and tests require modifying state on a running chain. This works only with builtin logic and operations.
+If we want to burn some our new tokens, we need to submit a bank burn message to do this.
+The CLI wrapper works similar to the query. Just pass the parameters. It uses the `node0` key as *default*:
+
+```go
+	// and when
+	txHash := cli.Run("tx", "bank", "burn", "node0", "400000mytoken")
+	RequireTxSuccess(t, txHash)
+```
+`RequireTxSuccess` or `RequireTxFailure` can be used to ensure the expected result of the operation.
+Next, check that the changes are applied.
+```go
+	exp["mytoken"] = 600_000 // update expected state
+	raw = cli.CustomQuery("q", "bank", "total-supply")
+	for k, v := range exp {
+		got := gjson.Get(raw, fmt.Sprintf("supply.#(denom==%q).amount", k)).Int()
+		assert.Equal(t, v, got, raw)
+	}
+	assert.Equal(t, int64(600_000), cli.QueryBalance(cli.GetKeyAddr("node0"), "mytoken"))
+```
+
+While tests are still more or less readable, it can gets harder the longer they are. I found it helpful to add
+some comments at the beginning to describe what the intention is. For example:
+```go
+	// scenario:
+	// given a chain with a custom token on genesis
+	// when an amount is burned
+	// then this is reflected in the total supply
+```

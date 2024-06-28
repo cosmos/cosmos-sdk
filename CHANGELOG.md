@@ -102,6 +102,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (proto) [#20098](https://github.com/cosmos/cosmos-sdk/pull/20098) Use cosmos_proto added_in annotation instead of // Since comments.
 * (baseapp) [#20208](https://github.com/cosmos/cosmos-sdk/pull/20208) Skip running validateBasic for rechecking txs.
 * (baseapp) [#20380](https://github.com/cosmos/cosmos-sdk/pull/20380) Enhanced OfferSnapshot documentation.
+* (client) [#20771](https://github.com/cosmos/cosmos-sdk/pull/20771) Remove `ReadDefaultValuesFromDefaultClientConfig` from `client` package. (It was introduced in `v0.50.6` as a quick fix).
 
 ### Bug Fixes
 
@@ -191,6 +192,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (client) [#20255](https://github.com/cosmos/cosmos-sdk/pull/20255) Use comet proofOp proto type instead of sdk version to avoid needing to translate to later be proven in the merkle proof runtime. 
 * (all) [#19726](https://github.com/cosmos/cosmos-sdk/pull/19726) Integrate comet v1
 * (client) [#20616](https://github.com/cosmos/cosmos-sdk/pull/20616) gentx subcommand output goes to `cmd.ErrOrStderr()` instead of being hardcoded to `os.Stderr`
+* (types/errors) [#20756](https://github.com/cosmos/cosmos-sdk/pull/20756) Remove `ResponseCheckTxWithEvents`, `ResponseExecTxResultWithEvents` & `QueryResult` from types/errors pkg. They have been moved to `baseapp/errors.go` and made private
 
 ### Client Breaking Changes
 

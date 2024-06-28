@@ -257,8 +257,6 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 		return nil
 	}
 
-	totalPercentageToBeDistributed := math.LegacyZeroDec()
-
 	denom, err := k.stakingKeeper.BondDenom(ctx)
 	if err != nil {
 		return err
@@ -266,6 +264,7 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 	toDistributeDec := sdk.NewDecCoin(denom, toDistributeAmount)
 
 	// Calculate totalPercentageToBeDistributed and store values
+	totalPercentageToBeDistributed := math.LegacyZeroDec()
 	err = k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, cf types.ContinuousFund) (stop bool, err error) {
 		// Check if the continuous fund has expired
 		if cf.Expiry != nil && cf.Expiry.Before(k.HeaderService.HeaderInfo(ctx).Time) {

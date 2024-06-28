@@ -43,13 +43,15 @@ func TestWithdrawAnytime(t *testing.T) {
 	require.NotNil(t, acc)
 
 	testAddrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 5, math.NewInt(1))
+	testAddr0Str, err := accountKeeper.AddressCodec().BytesToString(testAddrs[0])
+	require.NoError(t, err)
 
 	msgServer := protocolpoolkeeper.NewMsgServerImpl(protocolpoolKeeper)
 	_, err = msgServer.CreateContinuousFund(
 		ctx,
 		&protocolpooltypes.MsgCreateContinuousFund{
 			Authority:  protocolpoolKeeper.GetAuthority(),
-			Recipient:  testAddrs[0].String(),
+			Recipient:  testAddr0Str,
 			Percentage: math.LegacyMustNewDecFromStr("0.5"),
 		},
 	)
@@ -63,7 +65,7 @@ func TestWithdrawAnytime(t *testing.T) {
 		// withdraw funds randomly, but it must always land on the same end balance
 		if rand.Intn(100) > 50 {
 			_, err = msgServer.WithdrawContinuousFund(ctx, &protocolpooltypes.MsgWithdrawContinuousFund{
-				RecipientAddress: testAddrs[0].String(),
+				RecipientAddress: testAddr0Str,
 			})
 			require.NoError(t, err)
 		}
@@ -74,7 +76,7 @@ func TestWithdrawAnytime(t *testing.T) {
 	require.True(t, pool.IsAllGT(sdk.NewCoins(sdk.NewInt64Coin("stake", 100000))))
 
 	_, err = msgServer.WithdrawContinuousFund(ctx, &protocolpooltypes.MsgWithdrawContinuousFund{
-		RecipientAddress: testAddrs[0].String(),
+		RecipientAddress: testAddr0Str,
 	})
 	require.NoError(t, err)
 
@@ -103,6 +105,8 @@ func TestExpireInTheMiddle(t *testing.T) {
 	require.NotNil(t, acc)
 
 	testAddrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 5, math.NewInt(1))
+	testAddr0Str, err := accountKeeper.AddressCodec().BytesToString(testAddrs[0])
+	require.NoError(t, err)
 
 	msgServer := protocolpoolkeeper.NewMsgServerImpl(protocolpoolKeeper)
 
@@ -110,10 +114,9 @@ func TestExpireInTheMiddle(t *testing.T) {
 	_, err = msgServer.CreateContinuousFund(
 		ctx,
 		&protocolpooltypes.MsgCreateContinuousFund{
-			Authority:  protocolpoolKeeper.GetAuthority(),
-			Recipient:  testAddrs[0].String(),
-			Percentage: math.LegacyMustNewDecFromStr("0.1"),
-			Expiry:     &expirationTime,
+			Authority: protocolpoolKeeper.GetAuthority(),
+			Recipient: testAddr0Str,
+			Expiry:    &expirationTime,
 		},
 	)
 	require.NoError(t, err)
@@ -125,7 +128,7 @@ func TestExpireInTheMiddle(t *testing.T) {
 	}
 
 	_, err = msgServer.WithdrawContinuousFund(ctx, &protocolpooltypes.MsgWithdrawContinuousFund{
-		RecipientAddress: testAddrs[0].String(),
+		RecipientAddress: testAddr0Str,
 	})
 	require.Error(t, err)
 

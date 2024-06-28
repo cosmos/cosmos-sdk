@@ -104,7 +104,7 @@ func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
 		rootCmd,
 		newApp,
 		logger,
-		cometbft.New[AppT, T](&temporaryTxDecoder[T]{txConfig}),
+		cometbft.New[AppT, T](&temporaryTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
 		grpc.New[AppT, T](),
 	); err != nil {
 		panic(err)

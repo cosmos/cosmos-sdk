@@ -113,19 +113,6 @@ func (c *CommitStore) GetLatestVersion() (uint64, error) {
 	return version, nil
 }
 
-// IsEmpty returns true if the CommitStore is empty.
-func (c *CommitStore) IsEmpty() (bool, error) {
-	value, err := c.db.Get([]byte(latestVersionKey))
-	if err != nil {
-		return false, err
-	}
-	if value == nil {
-		return true, nil
-	} else {
-		return false, nil
-	}
-}
-
 func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 	// Rollback the metadata to the target version.
 	latestVersion, err := c.GetLatestVersion()
@@ -219,17 +206,17 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 		// If a commit event execution is interrupted, a new iavl store's version
 		// will be larger than the RMS's metadata, when the block is replayed, we
 		// should avoid committing that iavl store again.
-		var (
-			commitID      proof.CommitID
-			latestVersion = tree.GetLatestVersion()
-		)
-		if latestVersion != 0 && latestVersion >= version {
+		var commitID proof.CommitID
+		if tree.GetLatestVersion() >= version {
 			commitID.Version = version
 			commitID.Hash = tree.Hash()
 		} else {
-			hash, version, err := tree.Commit()
+			hash, cversion, err := tree.Commit()
 			if err != nil {
 				return nil, err
+			}
+			if cversion != version {
+				return nil, fmt.Errorf("commit version %d does not match the target version %d", cversion, version)
 			}
 			commitID = proof.CommitID{
 				Version: version,

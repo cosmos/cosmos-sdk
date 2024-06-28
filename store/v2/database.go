@@ -57,9 +57,6 @@ type Committer interface {
 	// GetCommitInfo returns the CommitInfo for the given version.
 	GetCommitInfo(version uint64) (*proof.CommitInfo, error)
 
-	// IsEmpty returns true if the database is empty.
-	IsEmpty() (bool, error)
-
 	// Close releases associated resources. It should NOT be idempotent. It must
 	// only be called once and any call after may panic.
 	io.Closer

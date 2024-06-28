@@ -19,7 +19,7 @@ import (
 	"cosmossdk.io/server/v2/stf"
 )
 
-var _ AppI[transaction.Tx] = (*App)(nil)
+var _ AppI[transaction.Tx] = (*App[transaction.Tx])(nil)
 
 // AppI is an interface that defines the methods required by the App.
 type AppI[T transaction.Tx] interface {
@@ -33,7 +33,7 @@ type AppI[T transaction.Tx] interface {
 	QueryWithState(ctx context.Context, state store.ReaderMap, request transaction.Msg) (transaction.Msg, error)
 
 	Logger() log.Logger
-	ModuleManager() *MM
+	ModuleManager() *MM[T]
 	Close() error
 }
 
@@ -46,11 +46,11 @@ type AppI[T transaction.Tx] interface {
 // App can be used to create a hybrid app.go setup where some configuration is
 // done declaratively with an app config and the rest of it is done the old way.
 // See simapp/app_v2.go for an example of this setup.
-type App struct {
-	*appmanager.AppManager[transaction.Tx]
+type App[T transaction.Tx] struct {
+	*appmanager.AppManager[T]
 
 	// app manager dependencies
-	stf                *stf.STF[transaction.Tx]
+	stf                *stf.STF[T]
 	msgRouterBuilder   *stf.MsgRouterBuilder
 	queryRouterBuilder *stf.MsgRouterBuilder
 	db                 Store
@@ -64,47 +64,47 @@ type App struct {
 	storeKeys          []string
 	interfaceRegistrar registry.InterfaceRegistrar
 	amino              legacy.Amino
-	moduleManager      *MM
+	moduleManager      *MM[T]
 }
 
 // Logger returns the app logger.
-func (a *App) Logger() log.Logger {
+func (a *App[T]) Logger() log.Logger {
 	return a.logger
 }
 
 // ModuleManager returns the module manager.
-func (a *App) ModuleManager() *MM {
+func (a *App[T]) ModuleManager() *MM[T] {
 	return a.moduleManager
 }
 
 // DefaultGenesis returns a default genesis from the registered modules.
-func (a *App) DefaultGenesis() map[string]json.RawMessage {
+func (a *App[T]) DefaultGenesis() map[string]json.RawMessage {
 	return a.moduleManager.DefaultGenesis()
 }
 
 // LoadLatest loads the latest version.
-func (a *App) LoadLatest() error {
+func (a *App[T]) LoadLatest() error {
 	return a.db.LoadLatestVersion()
 }
 
 // LoadHeight loads a particular height
-func (a *App) LoadHeight(height uint64) error {
+func (a *App[T]) LoadHeight(height uint64) error {
 	return a.db.LoadVersion(height)
 }
 
 // Close is called in start cmd to gracefully cleanup resources.
-func (a *App) Close() error {
+func (a *App[T]) Close() error {
 	return nil
 }
 
 // GetStoreKeys returns all the app store keys.
-func (a *App) GetStoreKeys() []string {
+func (a *App[T]) GetStoreKeys() []string {
 	return a.storeKeys
 }
 
 // UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.
 // NOTE: This should only be used in testing.
-func (a *App) UnsafeFindStoreKey(storeKey string) (string, error) {
+func (a *App[T]) UnsafeFindStoreKey(storeKey string) (string, error) {
 	i := slices.IndexFunc(a.storeKeys, func(s string) bool { return s == storeKey })
 	if i == -1 {
 		return "", errors.New("store key not found")
@@ -114,19 +114,19 @@ func (a *App) UnsafeFindStoreKey(storeKey string) (string, error) {
 }
 
 // GetStore returns the app store.
-func (a *App) GetStore() Store {
+func (a *App[T]) GetStore() Store {
 	return a.db
 }
 
 // GetLogger returns the app logger.
-func (a *App) GetLogger() log.Logger {
+func (a *App[T]) GetLogger() log.Logger {
 	return a.logger
 }
 
-func (a *App) ExecuteGenesisTx(_ []byte) error {
+func (a *App[T]) ExecuteGenesisTx(_ []byte) error {
 	panic("App.ExecuteGenesisTx not supported in runtime/v2")
 }
 
-func (a *App) GetAppManager() *appmanager.AppManager[transaction.Tx] {
+func (a *App[T]) GetAppManager() *appmanager.AppManager[T] {
 	return a.AppManager
 }

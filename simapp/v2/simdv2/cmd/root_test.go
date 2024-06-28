@@ -6,6 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/transaction"
+	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/simapp/v2"
 	"cosmossdk.io/simapp/v2/simdv2/cmd"
 
@@ -15,7 +17,7 @@ import (
 )
 
 func TestInitCmd(t *testing.T) {
-	rootCmd := cmd.NewRootCmd()
+	rootCmd := cmd.NewRootCmd[serverv2.AppI[transaction.Tx], transaction.Tx]()
 	rootCmd.SetArgs([]string{
 		"init",        // Test the init cmd
 		"simapp-test", // Moniker
@@ -28,7 +30,7 @@ func TestInitCmd(t *testing.T) {
 func TestHomeFlagRegistration(t *testing.T) {
 	homeDir := "/tmp/foo"
 
-	rootCmd := cmd.NewRootCmd()
+	rootCmd := cmd.NewRootCmd[serverv2.AppI[transaction.Tx], transaction.Tx]()
 	rootCmd.SetArgs([]string{
 		"query",
 		fmt.Sprintf("--%s", flags.FlagHome),

@@ -78,8 +78,8 @@ func TestInitCmd(t *testing.T) {
 
 			ctx := context.Background()
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-			ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper)
-			ctx = context.WithValue(ctx, corectx.LoggerContextKey{}, logger)
+			ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
+			ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
 
 			cmd := genutilcli.InitCmd(testMbm)
 			cmd.SetArgs(
@@ -112,8 +112,8 @@ func TestInitRecover(t *testing.T) {
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper)
-	ctx = context.WithValue(ctx, corectx.LoggerContextKey{}, logger)
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
+	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
 
 	cmd := genutilcli.InitCmd(testMbm)
 	cmd.SetContext(ctx)
@@ -145,8 +145,8 @@ func TestInitDefaultBondDenom(t *testing.T) {
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper)
-	ctx = context.WithValue(ctx, corectx.LoggerContextKey{}, logger)
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
+	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
 
 	cmd := genutilcli.InitCmd(testMbm)
 
@@ -173,8 +173,8 @@ func TestEmptyState(t *testing.T) {
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper)
-	ctx = context.WithValue(ctx, corectx.LoggerContextKey{}, logger)
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
+	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
 
 	cmd := genutilcli.InitCmd(testMbm)
 	cmd.SetArgs([]string{"appnode-test"})
@@ -268,8 +268,8 @@ func TestInitConfig(t *testing.T) {
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper)
-	ctx = context.WithValue(ctx, corectx.LoggerContextKey{}, logger)
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
+	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
 
 	cmd := genutilcli.InitCmd(testMbm)
 	cmd.SetArgs([]string{"testnode"})
@@ -318,8 +318,8 @@ func TestInitWithHeight(t *testing.T) {
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper)
-	ctx = context.WithValue(ctx, corectx.LoggerContextKey{}, logger)
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
+	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
 
 	testInitialHeight := int64(333)
 
@@ -355,8 +355,8 @@ func TestInitWithNegativeHeight(t *testing.T) {
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper)
-	ctx = context.WithValue(ctx, corectx.LoggerContextKey{}, logger)
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
+	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
 
 	testInitialHeight := int64(-333)
 

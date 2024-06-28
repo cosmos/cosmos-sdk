@@ -33,7 +33,14 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 	return rootCmd.Execute()
 }
 
-func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, components ...ServerComponent[transaction.Tx]) (CLIConfig, error) {
+// Commands creates the start command of an application and gives back the CLIConfig containing all the server commands.
+// This API is for advanced user only, most users should use AddCommands instead that abstract more.
+func Commands[AppT AppI[T], T transaction.Tx](
+	rootCmd *cobra.Command,
+	newApp AppCreator[AppT, T],
+	logger log.Logger,
+	components ...ServerComponent[AppT, T],
+) (CLIConfig, error) {
 	if len(components) == 0 {
 		return CLIConfig{}, errors.New("no components provided")
 	}
@@ -64,10 +71,7 @@ func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger 
 				return err
 			}
 
-			srvConfig := Config{StartBlock: true}
-			ctx := cmd.Context()
-			ctx = context.WithValue(ctx, ServerContextKey, srvConfig)
-			ctx, cancelFn := context.WithCancel(ctx)
+			ctx, cancelFn := context.WithCancel(cmd.Context())
 			go func() {
 				sigCh := make(chan os.Signal, 1)
 				signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
@@ -87,6 +91,7 @@ func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger 
 			return nil
 		},
 	}
+	startCmd.SetContext(rootCmd.Context())
 
 	cmds := server.CLICommands()
 	cmds.Commands = append(cmds.Commands, startCmd)
@@ -94,21 +99,27 @@ func Commands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger 
 	return cmds, nil
 }
 
-func AddCommands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logger log.Logger, components ...ServerComponent[transaction.Tx]) error {
+// AddCommands add the server commands to the root command
+// It configure the config handling and the logger handling
+func AddCommands[AppT AppI[T], T transaction.Tx](
+	rootCmd *cobra.Command,
+	newApp AppCreator[AppT, T],
+	logger log.Logger,
+	components ...ServerComponent[AppT, T],
+) error {
 	cmds, err := Commands(rootCmd, newApp, logger, components...)
 	if err != nil {
 		return err
 	}
 
-	server := NewServer(logger, components...)
+	srv := NewServer(logger, components...)
 	originalPersistentPreRunE := rootCmd.PersistentPreRunE
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		home, err := cmd.Flags().GetString(FlagHome)
-		if err != nil {
-			return err
-		}
+		// set the default command outputs
+		cmd.SetOut(cmd.OutOrStdout())
+		cmd.SetErr(cmd.ErrOrStderr())
 
-		if err = configHandle(server, home, cmd); err != nil {
+		if err = configHandle(srv, cmd); err != nil {
 			return err
 		}
 
@@ -121,11 +132,38 @@ func AddCommands(rootCmd *cobra.Command, newApp AppCreator[transaction.Tx], logg
 	}
 
 	rootCmd.AddCommand(cmds.Commands...)
+
+	if len(cmds.Queries) > 0 {
+		if queryCmd := findSubCommand(rootCmd, "query"); queryCmd != nil {
+			queryCmd.AddCommand(cmds.Queries...)
+		} else {
+			queryCmd := topLevelCmd(rootCmd.Context(), "query", "Querying subcommands")
+			queryCmd.Aliases = []string{"q"}
+			queryCmd.AddCommand(cmds.Queries...)
+			rootCmd.AddCommand(queryCmd)
+		}
+	}
+
+	if len(cmds.Txs) > 0 {
+		if txCmd := findSubCommand(rootCmd, "tx"); txCmd != nil {
+			txCmd.AddCommand(cmds.Txs...)
+		} else {
+			txCmd := topLevelCmd(rootCmd.Context(), "tx", "Transaction subcommands")
+			txCmd.AddCommand(cmds.Txs...)
+			rootCmd.AddCommand(txCmd)
+		}
+	}
+
 	return nil
 }
 
 // configHandle writes the default config to the home directory if it does not exist and sets the server context
-func configHandle(s *Server, home string, cmd *cobra.Command) error {
+func configHandle[AppT AppI[T], T transaction.Tx](s *Server[AppT, T], cmd *cobra.Command) error {
+	home, err := cmd.Flags().GetString(FlagHome)
+	if err != nil {
+		return err
+	}
+
 	configDir := filepath.Join(home, "config")
 
 	// we need to check app.toml as the config folder can already exist for the client.toml
@@ -135,19 +173,53 @@ func configHandle(s *Server, home string, cmd *cobra.Command) error {
 		}
 	}
 
-	viper, err := ReadConfig(configDir)
-	if err != nil {
-		return err
-	}
-	viper.Set(FlagHome, home)
-	if err := viper.BindPFlags(cmd.Flags()); err != nil {
-		return err
-	}
-
-	log, err := NewLogger(viper, cmd.OutOrStdout())
+	v, err := ReadConfig(configDir)
 	if err != nil {
 		return err
 	}
 
-	return SetCmdServerContext(cmd, viper, log)
+	if err := v.BindPFlags(cmd.Flags()); err != nil {
+		return err
+	}
+
+	log, err := NewLogger(v, cmd.OutOrStdout())
+	if err != nil {
+		return err
+	}
+
+	return SetCmdServerContext(cmd, v, log)
+}
+
+// findSubCommand finds a sub-command of the provided command whose Use
+// string is or begins with the provided subCmdName.
+// It verifies the command's aliases as well.
+func findSubCommand(cmd *cobra.Command, subCmdName string) *cobra.Command {
+	for _, subCmd := range cmd.Commands() {
+		use := subCmd.Use
+		if use == subCmdName || strings.HasPrefix(use, subCmdName+" ") {
+			return subCmd
+		}
+
+		for _, alias := range subCmd.Aliases {
+			if alias == subCmdName || strings.HasPrefix(alias, subCmdName+" ") {
+				return subCmd
+			}
+		}
+	}
+	return nil
+}
+
+// topLevelCmd creates a new top-level command with the provided name and
+// description. The command will have DisableFlagParsing set to false and
+// SuggestionsMinimumDistance set to 2.
+func topLevelCmd(ctx context.Context, use, short string) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:                        use,
+		Short:                      short,
+		DisableFlagParsing:         false,
+		SuggestionsMinimumDistance: 2,
+	}
+	cmd.SetContext(ctx)
+
+	return cmd
 }

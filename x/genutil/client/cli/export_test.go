@@ -73,8 +73,8 @@ func NewExportSystem(t *testing.T, exporter types.AppExporter) *ExportSystem {
 
 	cCtx := (client.Context{}).WithHomeDir(homeDir)
 
-	ctx := context.WithValue(context.Background(), corectx.ViperContextKey{}, viper)
-	ctx = context.WithValue(ctx, corectx.LoggerContextKey{}, logger)
+	ctx := context.WithValue(context.Background(), corectx.ViperContextKey, viper)
+	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
 
 	ctx = context.WithValue(ctx, client.ClientContextKey, &cCtx)
 

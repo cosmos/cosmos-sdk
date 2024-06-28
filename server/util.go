@@ -227,8 +227,8 @@ func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
 	}
 
 	cmdCtx = context.WithValue(cmdCtx, ServerContextKey, serverCtx)
-	cmdCtx = context.WithValue(cmdCtx, corectx.ViperContextKey{}, serverCtx.Viper)
-	cmdCtx = context.WithValue(cmdCtx, corectx.LoggerContextKey{}, serverCtx.Logger)
+	cmdCtx = context.WithValue(cmdCtx, corectx.ViperContextKey, serverCtx.Viper)
+	cmdCtx = context.WithValue(cmdCtx, corectx.LoggerContextKey, serverCtx.Logger)
 
 	cmd.SetContext(cmdCtx)
 

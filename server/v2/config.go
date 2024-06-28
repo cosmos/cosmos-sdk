@@ -2,15 +2,6 @@ package serverv2
 
 import "github.com/spf13/cobra"
 
-var ServerContextKey = struct{}{}
-
-// Config is the config of the main server.
-type Config struct {
-	// StartBlock indicates if the server should block or not.
-	// If true, the server will block until the context is canceled.
-	StartBlock bool
-}
-
 // CLIConfig defines the CLI configuration for a module server.
 type CLIConfig struct {
 	// Commands defines the main command of a module server.

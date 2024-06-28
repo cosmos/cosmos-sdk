@@ -9,6 +9,8 @@ import (
 	"cosmossdk.io/server/v2/cometbft/types"
 )
 
+// TODO REDO/VERIFY THIS
+
 func GetConfigFromViper(v *viper.Viper) *cmtcfg.Config {
 	conf := cmtcfg.DefaultConfig()
 	err := v.Unmarshal(conf)

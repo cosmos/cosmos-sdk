@@ -20,7 +20,7 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
     * perform functional tests
     * add more tests
     * release new beta version as the bugs are discovered and fixed.
-* After the team feels that the `main` works fine we create a `release/vY` branch (going forward known a release branch), where `Y` is the version number, with the patch part substituted to `x` (eg: 0.42.x, 1.0.x). Ensure the release branch is protected so that pushes against the release branch are permitted only by the release manager or release coordinator.
+* After the team feels that the `main` works fine we create a `release/vY` branch (going forward known as release branch), where `Y` is the version number, with the patch part substituted to `x` (eg: 0.42.x, 1.0.x). Ensure the release branch is protected so that pushes against the release branch are permitted only by the release manager or release coordinator.
     * **PRs targeting this branch can be merged _only_ when exceptional circumstances arise**
     * update the GitHub mergify integration by adding instructions for automatically backporting commits from `main` to the `release/vY` using the `backport/Y` label.
 * In the release branch prepare a new version section in the `CHANGELOG.md`
@@ -31,7 +31,7 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
 * Remove GitHub workflows that should not be in the release branch
     * `test.yml`: All standalone go module tests should be removed (expect `./simapp`, and `./tests`, SDK and modules tests).
         * These packages are tracked and tested directly on main.
-    * `build.yml`: Only the SDK and SimApp needs to be built on release branches.
+    * `build.yml`: Only the SDK and SimApp need to be built on release branches.
         * Tooling is tracked and tested directly on main.
         * This does not apply for tooling depending on the SDK (e.g. `confix`)
     * Update `Dockerfile` to not use latest go.mod and go.sum files.
@@ -66,7 +66,7 @@ After the release branch has all commits required for the next patch release:
 
 * Update `CHANGELOG.md` and `RELEASE_NOTES.md` (if applicable).
 * Create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
-    * If the release is a submodule update, first go the submodule folder and name the tag prepending the path to the version:
+    * If the release is a submodule update, first go to the submodule folder and name the tag prepending the path to the version:
       `cd core && git -a core/v1.1.0` or `cd tools/cosmovisor && git -a tools/cosmovisor/v1.4.0`
 * Create a GitHub release (if applicable).
 
@@ -138,7 +138,7 @@ See the SDK's policy on migrations [here](https://docs.cosmos.network/main/migra
 
 * State machine changes.
 * Breaking changes in Protobuf definitions, as specified in [ADR-044](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-044-protobuf-updates-guidelines.md).
-* Changes that introduces API breakages (e.g. public functions and interfaces removal/renaming).
+* Changes that introduce API breakages (e.g. public functions and interfaces removal/renaming).
 * Client-breaking changes in gRPC and HTTP request and response types.
 * CLI-breaking changes.
 * Cosmetic fixes, such as formatting or linter warning fixes.
@@ -182,7 +182,7 @@ As rule of thumb, the following changes will **NOT** be automatically accepted i
 ```md
 #### Impact
 
-Brief xplanation of the effects of the bug on users and a justification for backporting the fix to the stable release.
+Brief explanation of the effects of the bug on users and a justification for backporting the fix to the stable release.
 
 #### Test Case
 
@@ -190,7 +190,7 @@ Detailed instructions on how to reproduce the bug on Stargate's most recently pu
 
 #### Regression Potential
 
-Explanation on how regressions might manifest - even if it's unlikely.
+Explanation of how regressions might manifest - even if it's unlikely.
 It is assumed that stable release fixes are well-tested and they come with a low risk of regressions.
 It's crucial to make the effort of thinking about what could happen in case a regression emerges.
 ```

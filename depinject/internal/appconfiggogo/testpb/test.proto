@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package testpb;
+
+import "cosmos/app/v1alpha1/module.proto";
+
+message TestModuleGogo {
+  option (cosmos.app.v1alpha1.module) = {
+    go_import: "cosmossdk.io/core/internal/appconfiggogo/testpb"
+  };
+}

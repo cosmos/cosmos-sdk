@@ -22,45 +22,66 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/debug"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-var _ transaction.Codec[transaction.Tx] = &temporaryTxDecoder{}
+var _ transaction.Codec[transaction.Tx] = &temporaryTxDecoder[transaction.Tx]{}
 
-type temporaryTxDecoder struct {
+type temporaryTxDecoder[T transaction.Tx] struct {
 	txConfig client.TxConfig
 }
 
 // Decode implements transaction.Codec.
-func (t *temporaryTxDecoder) Decode(bz []byte) (transaction.Tx, error) {
-	return t.txConfig.TxDecoder()(bz)
+func (t *temporaryTxDecoder[T]) Decode(bz []byte) (T, error) {
+	var out T
+	tx, err := t.txConfig.TxDecoder()(bz)
+	if err != nil {
+		return out, err
+	}
+
+	var ok bool
+	out, ok = tx.(T)
+	if !ok {
+		return out, errors.New("unexpected Tx type")
+	}
+
+	return out, nil
 }
 
 // DecodeJSON implements transaction.Codec.
-func (t *temporaryTxDecoder) DecodeJSON(bz []byte) (transaction.Tx, error) {
-	return t.txConfig.TxJSONDecoder()(bz)
+func (t *temporaryTxDecoder[T]) DecodeJSON(bz []byte) (T, error) {
+	var out T
+	tx, err := t.txConfig.TxJSONDecoder()(bz)
+	if err != nil {
+		return out, err
+	}
+
+	var ok bool
+	out, ok = tx.(T)
+	if !ok {
+		return out, errors.New("unexpected Tx type")
+	}
+
+	return out, nil
 }
 
-func newApp(
-	logger log.Logger,
-	viper *viper.Viper,
-) serverv2.AppI[transaction.Tx] {
-	sa := simapp.NewSimApp(logger, viper)
-	return sa
+func newApp[AppT serverv2.AppI[T], T transaction.Tx](
+	logger log.Logger, viper *viper.Viper,
+) AppT {
+	return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper)).(AppT)
 }
 
-func initRootCmd(
+func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,
-	moduleManager *runtimev2.MM,
-	v1moduleManager *module.Manager,
+	moduleManager *runtimev2.MM[T],
 ) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
@@ -83,8 +104,8 @@ func initRootCmd(
 		rootCmd,
 		newApp,
 		logger,
-		cometbft.New(&temporaryTxDecoder{txConfig}),
-		grpc.New(),
+		cometbft.New[AppT, T](&temporaryTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
+		grpc.New[AppT, T](),
 	); err != nil {
 		panic(err)
 	}
@@ -92,7 +113,7 @@ func initRootCmd(
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
 		server.StatusCommand(),
-		genesisCommand(txConfig, v1moduleManager, appExport),
+		genesisCommand[T](txConfig, moduleManager, appExport[T]),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
@@ -101,9 +122,9 @@ func initRootCmd(
 }
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
-func genesisCommand(
+func genesisCommand[T transaction.Tx](
 	txConfig client.TxConfig,
-	moduleManager *module.Manager,
+	moduleManager *runtimev2.MM[T],
 	appExport func(logger log.Logger,
 		height int64,
 		forZeroHeight bool,
@@ -122,7 +143,7 @@ func genesisCommand(
 		return appExport(logger, height, forZeroHeight, jailAllowedAddrs, viperAppOpts, modulesToExport)
 	}
 
-	cmd := genutilcli.Commands(txConfig, moduleManager, compatAppExporter)
+	cmd := genutilcli.Commands(txConfig, moduleManager.Modules()[genutiltypes.ModuleName].(genutil.AppModule), moduleManager, compatAppExporter)
 	for _, subCmd := range cmds {
 		cmd.AddCommand(subCmd)
 	}
@@ -176,7 +197,7 @@ func txCommand() *cobra.Command {
 }
 
 // appExport creates a new simapp (optionally at a given height) and exports state.
-func appExport(
+func appExport[T transaction.Tx](
 	logger log.Logger,
 	height int64,
 	forZeroHeight bool,
@@ -184,24 +205,18 @@ func appExport(
 	viper *viper.Viper,
 	modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
-	// this check is necessary as we use the flag in x/upgrade.
-	// we can exit more gracefully by checking the flag here.
-	homePath, ok := viper.Get(flags.FlagHome).(string)
-	if !ok || homePath == "" {
-		return servertypes.ExportedApp{}, errors.New("application home not set")
-	}
 	// overwrite the FlagInvCheckPeriod
 	viper.Set(server.FlagInvCheckPeriod, 1)
 
-	var simApp *simapp.SimApp
+	var simApp *simapp.SimApp[T]
 	if height != -1 {
-		simApp = simapp.NewSimApp(logger, viper)
+		simApp = simapp.NewSimApp[T](logger, viper)
 
 		if err := simApp.LoadHeight(uint64(height)); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		simApp = simapp.NewSimApp(logger, viper)
+		simApp = simapp.NewSimApp[T](logger, viper)
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)

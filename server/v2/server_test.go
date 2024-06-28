@@ -58,8 +58,8 @@ func TestServer(t *testing.T) {
 	}
 
 	logger := log.NewLogger(os.Stdout)
-	grpcServer, err := grpc.New().Init(&mockApp[transaction.Tx]{}, v, logger)
-	if err != nil {
+	grpcServer := grpc.New[serverv2.AppI[transaction.Tx], transaction.Tx]()
+	if err := grpcServer.Init(&mockApp[transaction.Tx]{}, v, logger); err != nil {
 		t.Log(err)
 		t.Fail()
 	}
@@ -99,9 +99,7 @@ func TestServer(t *testing.T) {
 	}
 
 	// start empty
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, serverv2.ServerContextKey, serverv2.Config{StartBlock: true})
-	ctx, cancelFn := context.WithCancel(ctx)
+	ctx, cancelFn := context.WithCancel(context.TODO())
 	go func() {
 		// wait 5sec and cancel context
 		<-time.After(5 * time.Second)

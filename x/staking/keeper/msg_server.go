@@ -651,6 +651,28 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", cv)
 	}
 
+	// check if the new public key type is valid
+	paramsRes := consensusv1.QueryParamsResponse{}
+	if err := k.QueryRouterService.InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &paramsRes); err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "failed to query consensus params: %s", err)
+	}
+	if paramsRes.Params.Validator != nil {
+		pkType := pk.Type()
+		if !slices.Contains(paramsRes.Params.Validator.PubKeyTypes, pkType) {
+			return nil, errorsmod.Wrapf(
+				types.ErrValidatorPubKeyTypeNotSupported,
+				"got: %s, expected: %s", pk.Type(), paramsRes.Params.Validator.PubKeyTypes,
+			)
+		}
+
+		if pkType == sdk.PubKeyEd25519Type && len(pk.Bytes()) != ed25519.PubKeySize {
+			return nil, errorsmod.Wrapf(
+				types.ErrConsensusPubKeyLenInvalid,
+				"got: %d, expected: %d", len(pk.Bytes()), ed25519.PubKeySize,
+			)
+		}
+	}
+
 	err = k.checkConsKeyAlreadyUsed(ctx, pk)
 	if err != nil {
 		return nil, err

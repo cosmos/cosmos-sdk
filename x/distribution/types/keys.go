@@ -29,6 +29,7 @@ const (
 	ProtocolPoolDistrAccount = "protocolpool_distr"
 
 	// ProtocolPoolModuleName duplicates the protocolpool accounts's name to avoid a cyclic dependency with x/protocolpool.
+	// DO NOT USE: This is only used in deprecated methods CommunityPoolSpend, FundCommunityPool and query CommunityPool.
 	ProtocolPoolModuleName = "protocolpool"
 )
 

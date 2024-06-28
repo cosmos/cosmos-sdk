@@ -210,12 +210,8 @@ func (k Keeper) SetToDistribute(ctx context.Context) error {
 	remainingAmt := currentBalance
 	if !totalStreamFundsPercentage.IsZero() {
 		// send streaming funds to the stream module account
-		toDistributeDec := sdk.NewDecCoin(denom, currentBalance.AmountOf(denom))
-		if totalStreamFundsPercentage.LT(math.LegacyOneDec()) {
-			toDistributeDec.Amount = toDistributeDec.Amount.Mul(totalStreamFundsPercentage).TruncateDec()
-		}
-
-		streamAmt := sdk.NewCoins(sdk.NewCoin(denom, toDistributeDec.Amount.TruncateInt()))
+		toDistributeAmt := math.LegacyNewDecFromInt(currentBalance.AmountOf(denom)).Mul(totalStreamFundsPercentage).TruncateInt()
+		streamAmt := sdk.NewCoins(sdk.NewCoin(denom, toDistributeAmt))
 		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.StreamAccount, streamAmt); err != nil {
 			return err
 		}

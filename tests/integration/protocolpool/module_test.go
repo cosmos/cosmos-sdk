@@ -114,9 +114,10 @@ func TestExpireInTheMiddle(t *testing.T) {
 	_, err = msgServer.CreateContinuousFund(
 		ctx,
 		&protocolpooltypes.MsgCreateContinuousFund{
-			Authority: protocolpoolKeeper.GetAuthority(),
-			Recipient: testAddr0Str,
-			Expiry:    &expirationTime,
+			Authority:  protocolpoolKeeper.GetAuthority(),
+			Recipient:  testAddr0Str,
+			Percentage: math.LegacyMustNewDecFromStr("0.1"),
+			Expiry:     &expirationTime,
 		},
 	)
 	require.NoError(t, err)

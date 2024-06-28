@@ -129,6 +129,7 @@ func assertMetaDataEqual(t *testing.T, expected, actual types.Metadata) {
 	require.Equal(t, expected.GetBase(), actual.GetBase())
 	require.Equal(t, expected.GetDisplay(), actual.GetDisplay())
 	require.Equal(t, expected.GetDescription(), actual.GetDescription())
+	require.Equal(t, expected.GetDecimals(), actual.GetDecimals())
 	require.Equal(t, expected.GetDenomUnits()[1].GetDenom(), actual.GetDenomUnits()[1].GetDenom())
 	require.Equal(t, expected.GetDenomUnits()[1].GetExponent(), actual.GetDenomUnits()[1].GetExponent())
 	require.Equal(t, expected.GetDenomUnits()[1].GetAliases(), actual.GetDenomUnits()[1].GetAliases())

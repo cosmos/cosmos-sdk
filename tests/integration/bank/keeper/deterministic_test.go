@@ -51,8 +51,9 @@ var (
 				Aliases:  []string{"ATOM"},
 			},
 		},
-		Base:    "uatom",
-		Display: "atom",
+		Base:     "uatom",
+		Display:  "atom",
+		Decimals: 6,
 	}
 )
 

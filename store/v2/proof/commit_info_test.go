@@ -12,27 +12,27 @@ func TestGetStoreProof(t *testing.T) {
 		storeInfos []StoreInfo
 	}{
 		{[]StoreInfo{
-			{[]byte("key1"), CommitID{1, []byte("value1")}},
+			{[]byte("key1"), CommitID{1, []byte("value1")}, "iavl"},
 		}},
 		{[]StoreInfo{
-			{[]byte("key2"), CommitID{1, []byte("value2")}},
-			{[]byte("key1"), CommitID{1, []byte("value1")}},
+			{[]byte("key2"), CommitID{1, []byte("value2")}, "iavl"},
+			{[]byte("key1"), CommitID{1, []byte("value1")}, "iavl"},
 		}},
 		{[]StoreInfo{
-			{[]byte("key3"), CommitID{1, []byte("value3")}},
-			{[]byte("key2"), CommitID{1, []byte("value2")}},
-			{[]byte("key1"), CommitID{1, []byte("value1")}},
+			{[]byte("key3"), CommitID{1, []byte("value3")}, "iavl"},
+			{[]byte("key2"), CommitID{1, []byte("value2")}, "iavl"},
+			{[]byte("key1"), CommitID{1, []byte("value1")}, "iavl"},
 		}},
 		{[]StoreInfo{
-			{[]byte("key2"), CommitID{1, []byte("value2")}},
-			{[]byte("key1"), CommitID{1, []byte("value1")}},
-			{[]byte("key3"), CommitID{1, []byte("value3")}},
+			{[]byte("key2"), CommitID{1, []byte("value2")}, "iavl"},
+			{[]byte("key1"), CommitID{1, []byte("value1")}, "iavl"},
+			{[]byte("key3"), CommitID{1, []byte("value3")}, "iavl"},
 		}},
 		{[]StoreInfo{
-			{[]byte("key4"), CommitID{1, []byte("value4")}},
-			{[]byte("key1"), CommitID{1, []byte("value1")}},
-			{[]byte("key3"), CommitID{1, []byte("value3")}},
-			{[]byte("key2"), CommitID{1, []byte("value2")}},
+			{[]byte("key4"), CommitID{1, []byte("value4")}, "iavl"},
+			{[]byte("key1"), CommitID{1, []byte("value1")}, "iavl"},
+			{[]byte("key3"), CommitID{1, []byte("value3")}, "iavl"},
+			{[]byte("key2"), CommitID{1, []byte("value2")}, "iavl"},
 		}},
 	}
 

@@ -411,6 +411,10 @@ loop:
 	return snapshotItem, c.LoadVersion(version)
 }
 
+func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
+	return c.metadata.GetCommitInfo(version)
+}
+
 func (c *CommitStore) Close() (ferr error) {
 	for _, tree := range c.multiTrees {
 		if err := tree.Close(); err != nil {

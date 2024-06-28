@@ -4,7 +4,6 @@ import (
 	"context"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/core/event"
 )
@@ -31,7 +30,7 @@ func (e MemEventsService) GetEvents(ctx context.Context) []event.Event {
 	return unwrap(ctx).events[e.moduleName]
 }
 
-func (e MemEventsService) GetProtoEvents(ctx context.Context) []protoiface.MessageV1 {
+func (e MemEventsService) GetProtoEvents(ctx context.Context) []gogoproto.Message {
 	return unwrap(ctx).protoEvents[e.moduleName]
 }
 

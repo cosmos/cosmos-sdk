@@ -49,8 +49,8 @@ github.com/InjectiveLabs/cometbft v0.38.9-0.20240627210259-c4118b1758b5 h1:RukGi
 github.com/InjectiveLabs/cometbft v0.38.9-0.20240627210259-c4118b1758b5/go.mod h1:xOoGZrtUT+A5izWfHSJgl0gYZUE7lu7Z2XIS1vWG/QQ=
 github.com/InjectiveLabs/cosmos-sdk/store v1.1.1-0.20240522173845-46ef88f66790 h1:F4FYZR9rLg9igzxitFdLU5s7ZU9XS0wUB7DbkBOVXc8=
 github.com/InjectiveLabs/cosmos-sdk/store v1.1.1-0.20240522173845-46ef88f66790/go.mod h1:ZW4eIE98wivInyQyhxU2nHqEielc/iZAcr41qNyWSrw=
-github.com/InjectiveLabs/metrics v0.0.7 h1:vzhMJcOdZiJ6ReNixQPJhpmY0tlFYhrCxeTR3G1H46A=
-github.com/InjectiveLabs/metrics v0.0.7/go.mod h1:qvdwYLA6kRYUk/eP/RAvJwM3ImGpomaEy08ThKNJthg=
+github.com/InjectiveLabs/metrics v0.0.8 h1:QA+eJTE+kCA8iRjRDXBYVR67b36Ph3S2KW5F7VjwlNU=
+github.com/InjectiveLabs/metrics v0.0.8/go.mod h1:qvdwYLA6kRYUk/eP/RAvJwM3ImGpomaEy08ThKNJthg=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
 github.com/Microsoft/go-winio v0.5.0/go.mod h1:JPGBdM1cNvN/6ISo+n8V5iA4v8pBzdOpzfwIujj1a84=
 github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migciow=

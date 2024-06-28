@@ -2,12 +2,13 @@ package serverv2
 
 import (
 	"context"
-	"os"
+	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	corectx "cosmossdk.io/core/context"
+	corelog "cosmossdk.io/core/log"
 	"cosmossdk.io/log"
 )
 
@@ -21,26 +22,28 @@ func SetCmdServerContext(cmd *cobra.Command, viper *viper.Viper, logger log.Logg
 		cmdCtx = cmd.Context()
 	}
 
-	cmd.SetContext(context.WithValue(cmdCtx, corectx.LoggerContextKey{}, logger))
-	cmd.SetContext(context.WithValue(cmdCtx, corectx.ViperContextKey{}, viper))
+	cmdCtx = context.WithValue(cmdCtx, corectx.LoggerContextKey, logger)
+	cmdCtx = context.WithValue(cmdCtx, corectx.ViperContextKey, viper)
+	cmd.SetContext(cmdCtx)
 
 	return nil
 }
 
 func GetViperFromCmd(cmd *cobra.Command) *viper.Viper {
-	value := cmd.Context().Value(corectx.ViperContextKey{})
+	value := cmd.Context().Value(corectx.ViperContextKey)
 	v, ok := value.(*viper.Viper)
 	if !ok {
-		return viper.New()
+		panic(fmt.Sprintf("incorrect viper type %T: expected *viper.Viper. Have you forgot to set the viper in the command context?", value))
 	}
 	return v
 }
 
-func GetLoggerFromCmd(cmd *cobra.Command) log.Logger {
-	v := cmd.Context().Value(corectx.LoggerContextKey{})
-	logger, ok := v.(log.Logger)
+func GetLoggerFromCmd(cmd *cobra.Command) corelog.Logger {
+	v := cmd.Context().Value(corectx.LoggerContextKey)
+	logger, ok := v.(corelog.Logger)
 	if !ok {
-		return log.NewLogger(os.Stdout)
+		panic(fmt.Sprintf("incorrect logger type %T: expected log.Logger. Have you forgot to set the logger in the command context?", v))
 	}
+
 	return logger
 }

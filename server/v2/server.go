@@ -18,12 +18,12 @@ import (
 )
 
 // ServerComponent is a server module that can be started and stopped.
-type ServerComponent[T transaction.Tx] interface {
+type ServerComponent[AppT AppI[T], T transaction.Tx] interface {
 	Name() string
 
 	Start(context.Context) error
 	Stop(context.Context) error
-	Init(AppI[T], *viper.Viper, log.Logger) error
+	Init(AppT, *viper.Viper, log.Logger) error
 }
 
 // HasCLICommands is a server module that has CLI commands.
@@ -41,12 +41,11 @@ type HasStartFlags interface {
 	StartCmdFlags() *pflag.FlagSet
 }
 
-var _ ServerComponent[transaction.Tx] = (*Server)(nil)
+var _ ServerComponent[AppI[transaction.Tx], transaction.Tx] = (*Server[AppI[transaction.Tx], transaction.Tx])(nil)
 
 // Configs returns a viper instance of the config file
 func ReadConfig(configPath string) (*viper.Viper, error) {
 	v := viper.New()
-
 	v.SetConfigType("toml")
 	v.SetConfigName("config")
 	v.AddConfigPath(configPath)
@@ -64,24 +63,26 @@ func ReadConfig(configPath string) (*viper.Viper, error) {
 	return v, nil
 }
 
-type Server struct {
+type Server[AppT AppI[T], T transaction.Tx] struct {
 	logger     log.Logger
-	components []ServerComponent[transaction.Tx]
+	components []ServerComponent[AppT, T]
 }
 
-func NewServer(logger log.Logger, components ...ServerComponent[transaction.Tx]) *Server {
-	return &Server{
+func NewServer[AppT AppI[T], T transaction.Tx](
+	logger log.Logger, components ...ServerComponent[AppT, T],
+) *Server[AppT, T] {
+	return &Server[AppT, T]{
 		logger:     logger,
 		components: components,
 	}
 }
 
-func (s *Server) Name() string {
+func (s *Server[AppT, T]) Name() string {
 	return "server"
 }
 
 // Start starts all components concurrently.
-func (s *Server) Start(ctx context.Context) error {
+func (s *Server[AppT, T]) Start(ctx context.Context) error {
 	s.logger.Info("starting servers...")
 
 	g, ctx := errgroup.WithContext(ctx)
@@ -96,16 +97,13 @@ func (s *Server) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to start servers: %w", err)
 	}
 
-	serverCfg := ctx.Value(ServerContextKey).(Config)
-	if serverCfg.StartBlock {
-		<-ctx.Done()
-	}
+	<-ctx.Done()
 
 	return nil
 }
 
 // Stop stops all components concurrently.
-func (s *Server) Stop(ctx context.Context) error {
+func (s *Server[AppT, T]) Stop(ctx context.Context) error {
 	s.logger.Info("stopping servers...")
 
 	g, ctx := errgroup.WithContext(ctx)
@@ -120,19 +118,19 @@ func (s *Server) Stop(ctx context.Context) error {
 }
 
 // CLICommands returns all CLI commands of all components.
-func (s *Server) CLICommands() CLIConfig {
+func (s *Server[AppT, T]) CLICommands() CLIConfig {
 	compart := func(name string, cmds ...*cobra.Command) *cobra.Command {
 		if len(cmds) == 1 && strings.HasPrefix(cmds[0].Use, name) {
 			return cmds[0]
 		}
 
-		rootCmd := &cobra.Command{
+		subCmd := &cobra.Command{
 			Use:   name,
 			Short: fmt.Sprintf("Commands from the %s server component", name),
 		}
-		rootCmd.AddCommand(cmds...)
+		subCmd.AddCommand(cmds...)
 
-		return rootCmd
+		return subCmd
 	}
 
 	commands := CLIConfig{}
@@ -148,7 +146,7 @@ func (s *Server) CLICommands() CLIConfig {
 }
 
 // Configs returns all configs of all server components.
-func (s *Server) Configs() map[string]any {
+func (s *Server[AppT, T]) Configs() map[string]any {
 	cfgs := make(map[string]any)
 	for _, mod := range s.components {
 		if configmod, ok := mod.(HasConfig); ok {
@@ -161,8 +159,8 @@ func (s *Server) Configs() map[string]any {
 }
 
 // Configs returns all configs of all server components.
-func (s *Server) Init(appI AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
-	var components []ServerComponent[transaction.Tx]
+func (s *Server[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Logger) error {
+	var components []ServerComponent[AppT, T]
 	for _, mod := range s.components {
 		mod := mod
 		if err := mod.Init(appI, v, logger); err != nil {
@@ -178,7 +176,7 @@ func (s *Server) Init(appI AppI[transaction.Tx], v *viper.Viper, logger log.Logg
 
 // WriteConfig writes the config to the given path.
 // Note: it does not use viper.WriteConfigAs because we do not want to store flag values in the config.
-func (s *Server) WriteConfig(configPath string) error {
+func (s *Server[AppT, T]) WriteConfig(configPath string) error {
 	cfgs := s.Configs()
 	b, err := toml.Marshal(cfgs)
 	if err != nil {
@@ -196,6 +194,9 @@ func (s *Server) WriteConfig(configPath string) error {
 	}
 
 	for _, component := range s.components {
+		// undocumented interface to write the component default config in another file than app.toml
+		// it is used by cometbft for backward compatibility
+		// it should not be used by other components
 		if mod, ok := component.(interface{ WriteDefaultConfigAt(string) error }); ok {
 			if err := mod.WriteDefaultConfigAt(configPath); err != nil {
 				return err
@@ -207,7 +208,7 @@ func (s *Server) WriteConfig(configPath string) error {
 }
 
 // Flags returns all flags of all server components.
-func (s *Server) StartFlags() []*pflag.FlagSet {
+func (s *Server[AppT, T]) StartFlags() []*pflag.FlagSet {
 	flags := []*pflag.FlagSet{}
 	for _, mod := range s.components {
 		if startmod, ok := mod.(HasStartFlags); ok {

@@ -64,7 +64,7 @@ func (s *RootStoreTestSuite) SetupTest() {
 	s.rootStore = rs
 }
 
-func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruneOptions) {
+func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruningOption) {
 	noopLog := log.NewNopLogger()
 
 	sqliteDB, err := sqlite.New(s.T().TempDir())
@@ -112,7 +112,38 @@ func (s *RootStoreTestSuite) TestGetStateStorage() {
 }
 
 func (s *RootStoreTestSuite) TestSetInitialVersion() {
-	s.Require().NoError(s.rootStore.SetInitialVersion(100))
+	initialVersion := uint64(5)
+	s.Require().NoError(s.rootStore.SetInitialVersion(initialVersion))
+
+	// perform the initial commit
+	cs := corestore.NewChangeset()
+	cs.Add(testStoreKeyBytes, []byte("foo"), []byte("bar"), false)
+
+	wHash, err := s.rootStore.WorkingHash(cs)
+	s.Require().NoError(err)
+	cHash, err := s.rootStore.Commit(corestore.NewChangeset())
+	s.Require().NoError(err)
+	s.Require().Equal(wHash, cHash)
+
+	// check the latest version
+	lVersion, err := s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(initialVersion, lVersion)
+
+	// set the initial version again
+	rInitialVersion := uint64(100)
+	s.Require().NoError(s.rootStore.SetInitialVersion(rInitialVersion))
+
+	// perform the commit
+	cs = corestore.NewChangeset()
+	cs.Add(testStoreKey2Bytes, []byte("foo"), []byte("bar"), false)
+	_, err = s.rootStore.Commit(cs)
+	s.Require().NoError(err)
+	lVersion, err = s.rootStore.GetLatestVersion()
+	s.Require().NoError(err)
+	// SetInitialVersion only works once
+	s.Require().NotEqual(rInitialVersion, lVersion)
+	s.Require().Equal(initialVersion+1, lVersion)
 }
 
 func (s *RootStoreTestSuite) TestSetCommitHeader() {
@@ -348,6 +379,29 @@ func (s *RootStoreTestSuite) TestStateAt() {
 	}
 }
 
+func (s *RootStoreTestSuite) TestWorkingHash() {
+	// write keys over multiple versions
+	for v := uint64(1); v <= 5; v++ {
+		// perform changes
+		cs := corestore.NewChangeset()
+		for _, storeKeyBytes := range [][]byte{testStoreKeyBytes, testStoreKey2Bytes, testStoreKey3Bytes} {
+			for i := 0; i < 100; i++ {
+				key := fmt.Sprintf("key_%x_%03d", i, storeKeyBytes) // key000, key001, ..., key099
+				val := fmt.Sprintf("val%03d_%03d", i, v)            // val000_1, val001_1, ..., val099_1
+
+				cs.Add(storeKeyBytes, []byte(key), []byte(val), false)
+			}
+		}
+
+		wHash, err := s.rootStore.WorkingHash(cs)
+		s.Require().NoError(err)
+		// execute Commit with empty changeset
+		cHash, err := s.rootStore.Commit(corestore.NewChangeset())
+		s.Require().NoError(err)
+		s.Require().Equal(wHash, cHash)
+	}
+}
+
 func (s *RootStoreTestSuite) TestPrune() {
 	// perform changes
 	cs := corestore.NewChangeset()
@@ -361,24 +415,27 @@ func (s *RootStoreTestSuite) TestPrune() {
 	testCases := []struct {
 		name        string
 		numVersions int64
-		po          store.PruneOptions
+		po          store.PruningOption
 		deleted     []uint64
 		saved       []uint64
 	}{
-		{"prune nothing", 10, *store.DefaultPruneOptions(), nil, []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
-		{"prune everything", 12, store.PruneOptions{
+		{"prune nothing", 10, store.PruningOption{
+			KeepRecent: 0,
+			Interval:   0,
+		}, nil, []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
+		{"prune everything", 12, store.PruningOption{
 			KeepRecent: 1,
 			Interval:   10,
 		}, []uint64{1, 2, 3, 4, 5, 6, 7, 8}, []uint64{9, 10, 11, 12}},
-		{"prune some; no batch", 10, store.PruneOptions{
+		{"prune some; no batch", 10, store.PruningOption{
 			KeepRecent: 2,
 			Interval:   1,
 		}, []uint64{1, 2, 3, 4, 6, 5, 7}, []uint64{8, 9, 10}},
-		{"prune some; small batch", 10, store.PruneOptions{
+		{"prune some; small batch", 10, store.PruningOption{
 			KeepRecent: 2,
 			Interval:   3,
 		}, []uint64{1, 2, 3, 4, 5, 6}, []uint64{7, 8, 9, 10}},
-		{"prune some; large batch", 10, store.PruneOptions{
+		{"prune some; large batch", 10, store.PruningOption{
 			KeepRecent: 2,
 			Interval:   11,
 		}, nil, []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
@@ -439,7 +496,7 @@ func (s *RootStoreTestSuite) TestMultiStore_Pruning_SameHeightsTwice() {
 		interval    uint64 = 10
 	)
 
-	s.newStoreWithPruneConfig(&store.PruneOptions{
+	s.newStoreWithPruneConfig(&store.PruningOption{
 		KeepRecent: keepRecent,
 		Interval:   interval,
 	})
@@ -459,7 +516,7 @@ func (s *RootStoreTestSuite) TestMultiStore_Pruning_SameHeightsTwice() {
 	for v := uint64(1); v < numVersions-keepRecent; v++ {
 		var err error
 		checkErr := func() bool {
-			if err = s.rootStore.LoadVersion(v); err != nil {
+			if _, err = s.rootStore.StateAt(v); err != nil {
 				return true
 			}
 			return false
@@ -469,7 +526,7 @@ func (s *RootStoreTestSuite) TestMultiStore_Pruning_SameHeightsTwice() {
 	}
 
 	for v := (numVersions - keepRecent); v < numVersions; v++ {
-		err := s.rootStore.LoadVersion(v)
+		_, err := s.rootStore.StateAt(v)
 		s.Require().NoError(err, "expected no error when loading height: %d", v)
 	}
 
@@ -491,7 +548,7 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	cs := corestore.NewChangeset()
 	cs.Add(testStoreKeyBytes, []byte("key"), []byte("val"), false)
 
-	pruneOpt := &store.PruneOptions{
+	pruneOpt := &store.PruningOption{
 		KeepRecent: 2,
 		Interval:   11,
 	}
@@ -710,7 +767,7 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 	s.Require().Equal([]byte(fmt.Sprintf("val%03d_%03d", 4, 3)), result, "value should be equal")
 }
 
-func (s *RootStoreTestSuite) TestHashStableWithEmptyCommit() {
+func (s *RootStoreTestSuite) TestHashStableWithEmptyCommitAndRestart() {
 	err := s.rootStore.LoadLatestVersion()
 	s.Require().Nil(err)
 
@@ -739,4 +796,10 @@ func (s *RootStoreTestSuite) TestHashStableWithEmptyCommit() {
 	s.Require().Nil(err)
 	s.Require().Equal(uint64(2), latestVersion)
 	s.Require().Equal(hash, cHash)
+
+	// reload the store
+	s.Require().NoError(s.rootStore.LoadLatestVersion())
+	lastCommitID, err = s.rootStore.LastCommitID()
+	s.Require().NoError(err)
+	s.Require().Equal(lastCommitID.Hash, hash)
 }

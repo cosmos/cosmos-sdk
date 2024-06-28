@@ -62,6 +62,8 @@ func TestGetStoreProof(t *testing.T) {
 				var ci2 CommitInfo
 				err = ci2.Unmarshal(bz)
 				require.NoError(t, err)
+				require.True(t, ci.Timestamp.Equal(ci2.Timestamp))
+				ci2.Timestamp = ci.Timestamp
 				require.Equal(t, ci, ci2)
 			}
 		})

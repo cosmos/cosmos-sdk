@@ -573,6 +573,8 @@ func Test_txBuilder_SetSignatures(t *testing.T) {
 			sigs := tt.signatures()
 			err := b.SetSignatures(sigs...)
 			require.NoError(t, err)
+			tx, _ := b.GetTx()
+			require.Equal(t, len(sigs), len(tx.Signatures))
 		})
 	}
 }

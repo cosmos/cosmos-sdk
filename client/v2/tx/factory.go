@@ -70,18 +70,17 @@ func (f *Factory) Prepare() error {
 	}
 
 	if f.txParams.accountNumber == 0 || f.txParams.sequence == 0 {
-		fc := f
-		num, seq, err := fc.accountRetriever.GetAccountNumberSequence(context.Background(), f.txParams.address)
+		num, seq, err := f.accountRetriever.GetAccountNumberSequence(context.Background(), f.txParams.address)
 		if err != nil {
 			return err
 		}
 
 		if f.txParams.accountNumber == 0 {
-			fc.WithAccountNumber(num)
+			f.WithAccountNumber(num)
 		}
 
 		if f.txParams.sequence == 0 {
-			fc.WithSequence(seq)
+			f.WithSequence(seq)
 		}
 	}
 

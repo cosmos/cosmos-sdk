@@ -126,18 +126,17 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 
 	// Check if total funds percentage exceeds 100%
 	// If exceeds, we should not setup continuous fund proposal.
-	totalStreamFundsPercentage := math.ZeroInt()
-	err = k.Keeper.RecipientFundPercentage.Walk(ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
-		totalStreamFundsPercentage = totalStreamFundsPercentage.Add(value)
+	totalStreamFundsPercentage := math.LegacyZeroDec()
+	err = k.Keeper.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
+		totalStreamFundsPercentage = totalStreamFundsPercentage.Add(value.Percentage)
 		return false, nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	percentage := msg.Percentage.MulInt64(100)
-	totalStreamFundsPercentage = totalStreamFundsPercentage.Add(percentage.TruncateInt())
-	if totalStreamFundsPercentage.GT(math.NewInt(100)) {
-		return nil, fmt.Errorf("cannot set continuous fund proposal\ntotal funds percentage exceeds 100\ncurrent total percentage: %v", totalStreamFundsPercentage.Sub(percentage.TruncateInt()))
+	totalStreamFundsPercentage = totalStreamFundsPercentage.Add(msg.Percentage)
+	if totalStreamFundsPercentage.GT(math.LegacyOneDec()) {
+		return nil, fmt.Errorf("cannot set continuous fund proposal\ntotal funds percentage exceeds 100\ncurrent total percentage: %s", totalStreamFundsPercentage.Sub(msg.Percentage).MulInt64(100).TruncateInt().String())
 	}
 
 	// Create continuous fund proposal
@@ -153,11 +152,6 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 		return nil, err
 	}
 
-	// Set recipient fund percentage & distribution
-	err = k.RecipientFundPercentage.Set(ctx, recipient, percentage.TruncateInt())
-	if err != nil {
-		return nil, err
-	}
 	err = k.RecipientFundDistribution.Set(ctx, recipient, math.ZeroInt())
 	if err != nil {
 		return nil, err
@@ -170,9 +164,6 @@ func (k MsgServer) WithdrawContinuousFund(ctx context.Context, msg *types.MsgWit
 	amount, err := k.withdrawContinuousFund(ctx, msg.RecipientAddress)
 	if err != nil {
 		return nil, err
-	}
-	if amount.IsNil() {
-		k.Logger.Info(fmt.Sprintf("no distribution amount found for recipient %s", msg.RecipientAddress))
 	}
 
 	return &types.MsgWithdrawContinuousFundResponse{Amount: amount}, nil
@@ -200,17 +191,13 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 	}
 
 	// withdraw funds if any are allocated
-	withdrawnFunds, err := k.withdrawRecipientFunds(ctx, msg.RecipientAddress)
+	withdrawnFunds, err := k.withdrawRecipientFunds(ctx, recipient)
 	if err != nil && !errorspkg.Is(err, types.ErrNoRecipientFund) {
 		return nil, fmt.Errorf("error while withdrawing already allocated funds for recipient %s: %w", msg.RecipientAddress, err)
 	}
 
 	if err := k.ContinuousFund.Remove(ctx, recipient); err != nil {
 		return nil, fmt.Errorf("failed to remove continuous fund for recipient %s: %w", msg.RecipientAddress, err)
-	}
-
-	if err := k.RecipientFundPercentage.Remove(ctx, recipient); err != nil {
-		return nil, fmt.Errorf("failed to remove recipient fund percentage for recipient %s: %w", msg.RecipientAddress, err)
 	}
 
 	if err := k.RecipientFundDistribution.Remove(ctx, recipient); err != nil {

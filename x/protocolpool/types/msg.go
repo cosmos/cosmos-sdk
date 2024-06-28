@@ -18,9 +18,9 @@ func NewMsgFundCommunityPool(amount sdk.Coins, depositor string) *MsgFundCommuni
 	}
 }
 
-// NewCommunityPoolSpend returns a new CommunityPoolSpend with authority, recipient and
+// NewMsgCommunityPoolSpend returns a new CommunityPoolSpend with authority, recipient and
 // a spending amount.
-func NewCommunityPoolSpend(amount sdk.Coins, authority, recipient string) *MsgCommunityPoolSpend {
+func NewMsgCommunityPoolSpend(amount sdk.Coins, authority, recipient string) *MsgCommunityPoolSpend {
 	return &MsgCommunityPoolSpend{
 		Authority: authority,
 		Recipient: recipient,

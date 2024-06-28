@@ -3,7 +3,12 @@
 package systemtests
 
 import (
+	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 )
 
 func TestQueryTotalSupply(t *testing.T) {
@@ -12,5 +17,15 @@ func TestQueryTotalSupply(t *testing.T) {
 
 	cli := NewCLIWrapper(t, sut, verbose)
 	raw := cli.CustomQuery("q", "bank", "total-supply")
-	t.Log("### got: " + raw)
+
+	exp := map[string]int64{
+		"stake":     2000000190,
+		"testtoken": 4000000000,
+	}
+	require.Len(t, gjson.Get(raw, "supply").Array(), len(exp), raw)
+
+	for k, v := range exp {
+		got := gjson.Get(raw, fmt.Sprintf("supply.#(denom==%q).amount", k)).Int()
+		assert.Equal(t, v, got, raw)
+	}
 }

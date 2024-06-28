@@ -14,7 +14,7 @@ mkdir -p ./tests/systemtests/binaries
 cp ./build/simd ./tests/systemtests/binaries/
 ```
 
-## Writing the first system test
+## Part 1: Writing the first system test
 
 Switch to the `tests/systemtests` folder to work from here.
 
@@ -45,7 +45,8 @@ This gives you a multi node chain started on your box.
 It is a good practice to reset state in the beginning so that you have a stable base.
 
 The system tests framework comes with a CLI wrapper that makes it easier to interact or parse results.
-In this example we want to execute `simd q bank total-supply --output json --node tcp://localhost:26657` which queries the bank module.
+In this example we want to execute `simd q bank total-supply --output json --node tcp://localhost:26657` which queries
+the bank module.
 Then print the result to for the next steps
 
 ### Run the test
@@ -80,3 +81,39 @@ At the end is a tail from the server log printed. This can sometimes be handy wh
 ### Tips
 
 * Passing `--nodes-count=1` overwrites the default node count and can speed up your test for local runs
+
+## Part 2: Working with json
+
+When we have a json response, the [gjson](https://github.com/tidwall/gjson) lib can shine. It comes with jquery like
+syntax that makes it easy to navigation within the document.
+
+For example `gjson.Get(raw, "supply").Array()` gives us all the childs to `supply` as an array.
+Or `gjson.Get("supply.#(denom==stake).amount").Int()` for the amount of the stake token as int64 type.
+
+In order to test our assumptions in the system test, we modify the code to use `gjson` to fetch the data:
+
+```go
+	raw := cli.CustomQuery("q", "bank", "total-supply")
+
+	exp := map[string]int64{
+		"stake":     2000000190,
+		"testtoken": 4000000000,
+	}
+	require.Len(t, gjson.Get(raw, "supply").Array(), len(exp), raw)
+
+	for k, v := range exp {
+		got := gjson.Get(raw, fmt.Sprintf("supply.#(denom==%q).amount", k)).Int()
+		assert.Equal(t, v, got, raw)
+	}
+```
+
+### Run the test
+
+```shell
+go test -mod=readonly -tags='system_test' -v ./...  --run TestQueryTotalSupply --verbose 
+```
+
+### Tips
+
+* Putting the `raw` json response to the assert/require statements helps with debugging on failures. You are usually lacking
+  context when you look at the values only.

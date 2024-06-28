@@ -124,10 +124,11 @@ func (cms Store) GetStoreType() types.StoreType {
 func (cms Store) Write() {
 	cms.db.Write()
 	wg := sync.WaitGroup{}
+	wg.Add(len(cms.stores))
 	for _, store := range cms.stores {
 		go func(s types.CacheWrap) {
+			defer wg.Done()
 			s.Write()
-			wg.Done()
 		}(store)
 	}
 	wg.Wait()

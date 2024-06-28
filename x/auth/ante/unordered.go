@@ -24,6 +24,8 @@ var bufPool = sync.Pool{
 	},
 }
 
+const DefaultSha256Cost = 25
+
 var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
 
 // UnorderedTxDecorator defines an AnteHandler decorator that is responsible for
@@ -43,13 +45,15 @@ type UnorderedTxDecorator struct {
 	maxUnOrderedTTL uint64
 	txManager       *unorderedtx.Manager
 	env             appmodule.Environment
+	sha256Cost      uint64
 }
 
-func NewUnorderedTxDecorator(maxTTL uint64, m *unorderedtx.Manager, env appmodule.Environment) *UnorderedTxDecorator {
+func NewUnorderedTxDecorator(maxTTL uint64, m *unorderedtx.Manager, env appmodule.Environment, gasCost uint64) *UnorderedTxDecorator {
 	return &UnorderedTxDecorator{
 		maxUnOrderedTTL: maxTTL,
 		txManager:       m,
 		env:             env,
+		sha256Cost:      gasCost,
 	}
 }
 
@@ -75,7 +79,7 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 	}
 
 	// consume gas in all exec modes to avoid gas estimation discrepancies
-	if err := d.env.GasService.GasMeter(ctx).Consume(25, "consume gas for calculating tx hash"); err != nil {
+	if err := d.env.GasService.GasMeter(ctx).Consume(d.sha256Cost, "consume gas for calculating tx hash"); err != nil {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrOutOfGas, "out of gas")
 	}
 

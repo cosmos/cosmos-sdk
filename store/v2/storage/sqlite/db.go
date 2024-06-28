@@ -191,7 +191,7 @@ func (db *Database) Prune(version uint64) error {
 	}
 
 	defer func() {
-		_ = tx.Commit()
+		_ = tx.Rollback()
 	}()
 
 	pruneStmt := `DELETE FROM state_storage
@@ -254,7 +254,7 @@ func (db *Database) PruneStoreKey(storeKey []byte) error {
 	}
 
 	defer func() {
-		_ = tx.Commit()
+		_ = tx.Rollback()
 	}()
 
 	_, err = tx.Exec(`DELETE FROM state_storage WHERE store_key = ?`, storeKey)
@@ -276,7 +276,7 @@ func (db *Database) MigrateStoreKey(fromStoreKey, toStoreKey []byte) error {
 	}
 
 	defer func() {
-		_ = tx.Commit()
+		_ = tx.Rollback()
 	}()
 
 	_, err = tx.Exec(`

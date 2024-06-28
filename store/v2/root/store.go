@@ -253,8 +253,10 @@ func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreU
 	}
 
 	// we need to prune the old store keys from SS and SC
-	removedStoreKeys := make([]string, 0)
-	removedKVStores := make([]corestore.KVStoreWithBatch, 0)
+	var (
+		removedStoreKeys []string
+		removedKVStores  []corestore.KVStoreWithBatch
+	)
 	removedStoreKeys = append(removedStoreKeys, upgrades.Deleted...)
 	for _, renamedStore := range upgrades.Renamed {
 		removedStoreKeys = append(removedStoreKeys, renamedStore.OldKey)

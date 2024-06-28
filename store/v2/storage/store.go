@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/core/log"
@@ -143,7 +144,7 @@ func (ss *StorageStore) Restore(version uint64, chStorage <-chan *corestore.Stat
 func (ss *StorageStore) PruneStoreKey(storeKey []byte) error {
 	gdb, ok := ss.db.(store.UpgradableDatabase)
 	if !ok {
-		return fmt.Errorf("db does not implement UpgradableDatabase interface")
+		return errors.New("db does not implement UpgradableDatabase interface")
 	}
 
 	return gdb.PruneStoreKey(storeKey)

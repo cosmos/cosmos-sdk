@@ -10,8 +10,6 @@ import (
 	epochstypes "cosmossdk.io/x/epochs/types"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-
-	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the sample SimApp upgrade
@@ -47,9 +45,6 @@ func (app SimApp) RegisterUpgradeHandlers() {
 				accounts.StoreKey,
 				protocolpooltypes.StoreKey,
 				epochstypes.StoreKey,
-			},
-			Deleted: []string{
-				crisistypes.StoreKey, // The SDK discontinued the crisis module in v0.51.0
 			},
 		}
 

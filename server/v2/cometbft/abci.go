@@ -41,7 +41,7 @@ type Consensus[T transaction.Tx] struct {
 
 	// this is only available after this node has committed a block (in FinalizeBlock),
 	// otherwise it will be empty and we will need to query the app for the last
-	// committed block. TODO(tip): check if concurrency is really needed
+	// committed block.
 	lastCommittedHeight atomic.Int64
 
 	prepareProposalHandler handlers.PrepareHandler[T]

@@ -9,12 +9,10 @@ import (
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/runtime/protoiface"
 
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/cosmos/cosmos-sdk/baseapp/internal/protocompat"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/baseapp/internal/protoutils"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -27,14 +25,12 @@ type MessageRouter interface {
 	HandlerByTypeURL(typeURL string) MsgServiceHandler
 
 	ResponseNameByMsgName(msgName string) string
-	HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error
 }
 
 // MsgServiceRouter routes fully-qualified Msg service methods to their handler.
 type MsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
-	hybridHandlers    map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error
 	responseByMsgName map[string]string
 	circuitBreaker    CircuitBreaker
 }
@@ -45,7 +41,6 @@ var _ gogogrpc.Server = &MsgServiceRouter{}
 func NewMsgServiceRouter() *MsgServiceRouter {
 	return &MsgServiceRouter{
 		routes:            map[string]MsgServiceHandler{},
-		hybridHandlers:    map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error{},
 		responseByMsgName: map[string]string{},
 		circuitBreaker:    nil,
 	}
@@ -79,60 +74,14 @@ func (msr *MsgServiceRouter) HandlerByTypeURL(typeURL string) MsgServiceHandler 
 func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
 	// Adds a top-level query handler based on the gRPC service name.
 	for _, method := range sd.Methods {
-		err := msr.registerMsgServiceHandler(sd, method, handler)
-		if err != nil {
-			panic(err)
-		}
-		err = msr.registerHybridHandler(sd, method, handler)
-		if err != nil {
+		if err := msr.registerMsgServiceHandler(sd, method, handler); err != nil {
 			panic(err)
 		}
 	}
-}
-
-func (msr *MsgServiceRouter) HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error {
-	return msr.hybridHandlers[msgName]
 }
 
 func (msr *MsgServiceRouter) ResponseNameByMsgName(msgName string) string {
 	return msr.responseByMsgName[msgName]
-}
-
-func (msr *MsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) error {
-	inputName, err := protocompat.RequestFullNameFromMethodDesc(sd, method)
-	if err != nil {
-		return err
-	}
-	outputName, err := protocompat.ResponseFullNameFromMethodDesc(sd, method)
-	if err != nil {
-		return err
-	}
-	cdc := codec.NewProtoCodec(msr.interfaceRegistry)
-	hybridHandler, err := protocompat.MakeHybridHandler(cdc, sd, method, handler)
-	if err != nil {
-		return err
-	}
-	// map input name to output name
-	msr.responseByMsgName[string(inputName)] = string(outputName)
-	// if circuit breaker is not nil, then we decorate the hybrid handler with the circuit breaker
-	if msr.circuitBreaker == nil {
-		msr.hybridHandlers[string(inputName)] = hybridHandler
-		return nil
-	}
-	// decorate the hybrid handler with the circuit breaker
-	circuitBreakerHybridHandler := func(ctx context.Context, req, resp protoiface.MessageV1) error {
-		messageName := codectypes.MsgTypeURL(req)
-		allowed, err := msr.circuitBreaker.IsAllowed(ctx, messageName)
-		if err != nil {
-			return err
-		}
-		if !allowed {
-			return fmt.Errorf("circuit breaker disallows execution of message %s", messageName)
-		}
-		return hybridHandler(ctx, req, resp)
-	}
-	msr.hybridHandlers[string(inputName)] = circuitBreakerHybridHandler
-	return nil
 }
 
 func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) error {
@@ -243,6 +192,13 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 			MsgResponses: []*codectypes.Any{anyResp},
 		}, nil
 	}
+
+	// register response by request name
+	reqName, respName, err := protoutils.RequestAndResponseFullNameFromMethodDesc(sd, method)
+	if err != nil {
+		return fmt.Errorf("msg service router unable to compute request name and response name: %w", err)
+	}
+	msr.responseByMsgName[string(reqName)] = string(respName)
 	return nil
 }
 

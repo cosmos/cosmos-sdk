@@ -2,27 +2,26 @@ package accounts
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/runtime/protoiface"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
-	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/testing"
-	coretransaction "cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/accounts/internal/implementation"
+	"cosmossdk.io/x/accounts/testing/mockmodule"
 	"cosmossdk.io/x/tx/signing"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ address.Codec = (*addressCodec)(nil)
@@ -42,6 +41,14 @@ func (e eventService) EmitKV(eventType string, attrs ...event.Attribute) error {
 
 func (e eventService) EventManager(ctx context.Context) event.Manager { return e }
 
+var _ CoinTransferer = (*coinTransferer)(nil)
+
+type coinTransferer struct{}
+
+func (c coinTransferer) MakeTransferCoinsMessage(ctx context.Context, from, to []byte, amount sdk.Coins) (implementation.ProtoMsg, implementation.ProtoMsg, error) {
+	return nil, nil, errors.New("do not call")
+}
+
 func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Keeper, context.Context) {
 	t.Helper()
 
@@ -58,45 +65,21 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 	if err != nil {
 		t.Fatal(err)
 	}
-	msgRouter := baseapp.NewMsgServiceRouter()
-	msgRouter.SetInterfaceRegistry(ir)
-	queryRouter := baseapp.NewGRPCQueryRouter()
-	queryRouter.SetInterfaceRegistry(ir)
-
-	ir.RegisterImplementations((*coretransaction.Msg)(nil),
-		&bankv1beta1.MsgSend{},
-		&bankv1beta1.MsgBurn{},
-		&bankv1beta1.MsgSetSendEnabled{},
-		&bankv1beta1.MsgMultiSend{},
-		&bankv1beta1.MsgUpdateParams{},
-	)
-	queryRouter.RegisterService(&bankv1beta1.Query_ServiceDesc, &bankQueryServer{})
-	msgRouter.RegisterService(&bankv1beta1.Msg_ServiceDesc, &bankMsgServer{})
 
 	ctx := coretesting.Context()
 	ss := coretesting.KVStoreService(ctx, "test")
-	env := runtime.NewEnvironment(ss, log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter))
+	env := appmodule.Environment{
+		QueryRouterService: mockmodule.MockQueryRouter(),
+		MsgRouterService:   mockmodule.MockMsgRouter(),
+		KVStoreService:     ss,
+		EventService:       eventService{},
+	}
 	env.EventService = eventService{}
-	m, err := NewKeeper(codec.NewProtoCodec(ir), env, addressCodec, ir, accounts...)
+	m, err := NewKeeper(codec.NewProtoCodec(ir), env, addressCodec, ir, coinTransferer{}, accounts...)
+	m.getSenders = func(msg gogoproto.Message) ([][]byte, protoreflect.Message, error) {
+		typedMsg := msg.(*mockmodule.MsgEcho)
+		return [][]byte{[]byte(typedMsg.Sender)}, nil, nil
+	}
 	require.NoError(t, err)
 	return m, ctx
-}
-
-type bankQueryServer struct {
-	bankv1beta1.UnimplementedQueryServer
-}
-
-type bankMsgServer struct {
-	bankv1beta1.UnimplementedMsgServer
-}
-
-func (b bankQueryServer) Balance(context.Context, *bankv1beta1.QueryBalanceRequest) (*bankv1beta1.QueryBalanceResponse, error) {
-	return &bankv1beta1.QueryBalanceResponse{Balance: &basev1beta1.Coin{
-		Denom:  "atom",
-		Amount: "1000",
-	}}, nil
-}
-
-func (b bankMsgServer) Send(context.Context, *bankv1beta1.MsgSend) (*bankv1beta1.MsgSendResponse, error) {
-	return &bankv1beta1.MsgSendResponse{}, nil
 }

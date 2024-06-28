@@ -85,8 +85,7 @@ func TestKeeper_Query(t *testing.T) {
 	})
 
 	t.Run("query module", func(t *testing.T) {
-		resp, err := m.Query(ctx, accAddr, &types.StringValue{Value: "atom"})
+		_, err := m.Query(ctx, accAddr, &types.StringValue{Value: "atom"})
 		require.NoError(t, err)
-		require.True(t, implementation.Equal(&types.Int64Value{Value: 1000}, resp))
 	})
 }

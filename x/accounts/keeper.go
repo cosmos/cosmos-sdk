@@ -8,6 +8,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/cosmos/gogoproto/proto"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/collections"
@@ -36,6 +38,18 @@ var (
 	AccountByNumber = collections.NewPrefix(2)
 )
 
+// CoinTransferer defines a type which given from and to and the amount of funds to transfer
+// returns the message and relative response that we need to execute to send the money
+// from one account to the other.
+type CoinTransferer interface {
+	MakeTransferCoinsMessage(
+		ctx context.Context,
+		from,
+		to []byte,
+		amount sdk.Coins,
+	) (implementation.ProtoMsg, implementation.ProtoMsg, error)
+}
+
 type InterfaceRegistry interface {
 	RegisterInterface(name string, iface any, impls ...protoiface.MessageV1)
 	RegisterImplementations(iface any, impls ...protoiface.MessageV1)
@@ -46,14 +60,15 @@ func NewKeeper(
 	env appmodule.Environment,
 	addressCodec address.Codec,
 	ir InterfaceRegistry,
+	coinfTransferer CoinTransferer,
 	accounts ...accountstd.AccountCreatorFunc,
 ) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	keeper := Keeper{
 		Environment:      env,
-		codec:            cdc,
+		getSenders:       cdc.GetMsgSigners,
 		addressCodec:     addressCodec,
-		makeSendCoinsMsg: defaultCoinsTransferMsgFunc(addressCodec),
+		makeSendCoinsMsg: coinfTransferer.MakeTransferCoinsMessage,
 		Schema:           collections.Schema{},
 		AccountNumber:    collections.NewSequence(sb, AccountNumberKey, "account_number"),
 		AccountsByType:   collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
@@ -77,9 +92,10 @@ func NewKeeper(
 type Keeper struct {
 	appmodule.Environment
 
-	addressCodec     address.Codec
-	codec            codec.Codec
-	makeSendCoinsMsg coinsTransferMsgFunc
+	addressCodec address.Codec
+	getSenders   func(msg proto.Message) ([][]byte, protoreflect.Message, error)
+
+	makeSendCoinsMsg func(ctx context.Context, from, to []byte, amount sdk.Coins) (implementation.ProtoMsg, implementation.ProtoMsg, error)
 
 	accounts map[string]implementation.Implementation
 
@@ -367,7 +383,7 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 // It should be used when the response type is not known by the caller.
 func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
 	// do sender assertions.
-	wantSenders, _, err := k.codec.GetMsgSigners(msg)
+	wantSenders, _, err := k.getSenders(msg)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get signers: %w", err)
 	}
@@ -390,7 +406,7 @@ func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg
 // is not trying to impersonate another account.
 func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgResp implementation.ProtoMsg) error {
 	// do sender assertions.
-	wantSenders, _, err := k.codec.GetMsgSigners(msg)
+	wantSenders, _, err := k.getSenders(msg)
 	if err != nil {
 		return fmt.Errorf("cannot get signers: %w", err)
 	}
@@ -417,7 +433,7 @@ func (k Keeper) maybeSendFunds(ctx context.Context, from, to []byte, amt sdk.Coi
 		return nil
 	}
 
-	msg, msgResp, err := k.makeSendCoinsMsg(from, to, amt)
+	msg, msgResp, err := k.makeSendCoinsMsg(ctx, from, to, amt)
 	if err != nil {
 		return err
 	}

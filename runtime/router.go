@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 
+	v1 "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
@@ -13,6 +14,7 @@ import (
 	"cosmossdk.io/core/router"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NewMsgRouterService implements router.Service.
@@ -37,7 +39,7 @@ func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error 
 
 	typeURL = strings.TrimPrefix(typeURL, "/")
 
-	handler := m.router.HybridHandlerByMsgName(typeURL)
+	handler := m.router.HandlerByTypeURL(typeURL)
 	if handler == nil {
 		return fmt.Errorf("unknown message: %s", typeURL)
 	}
@@ -50,12 +52,20 @@ func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error 
 // Use InvokeUntyped if the response type is not known.
 func (m *msgRouterService) InvokeTyped(ctx context.Context, msg, resp protoiface.MessageV1) error {
 	messageName := msgTypeURL(msg)
-	handler := m.router.HybridHandlerByMsgName(messageName)
+	handler := m.router.HandlerByTypeURL("/" + messageName)
 	if handler == nil {
 		return fmt.Errorf("unknown message: %s", messageName)
 	}
 
-	return handler(ctx, msg, resp)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	var err error
+	resp, err = handler(sdkCtx, msg) // Assign value to resp
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // InvokeUntyped execute a message and returns a response.
@@ -93,18 +103,13 @@ type queryRouterService struct {
 }
 
 // CanInvoke returns an error if the given request cannot be invoked.
-func (m *queryRouterService) CanInvoke(ctx context.Context, typeURL string) error {
+func (m *queryRouterService) CanInvoke(_ context.Context, typeURL string) error {
 	if typeURL == "" {
 		return fmt.Errorf("missing type url")
 	}
-
-	typeURL = strings.TrimPrefix(typeURL, "/")
-
-	handlers := m.router.HybridHandlerByRequestName(typeURL)
-	if len(handlers) == 0 {
+	handlers := m.router.Route("/" + typeURL)
+	if handlers == nil {
 		return fmt.Errorf("unknown request: %s", typeURL)
-	} else if len(handlers) > 1 {
-		return fmt.Errorf("ambiguous request, query have multiple handlers: %s", typeURL)
 	}
 
 	return nil
@@ -115,14 +120,27 @@ func (m *queryRouterService) CanInvoke(ctx context.Context, typeURL string) erro
 // Use InvokeUntyped if the response type is not known.
 func (m *queryRouterService) InvokeTyped(ctx context.Context, req, resp protoiface.MessageV1) error {
 	reqName := msgTypeURL(req)
-	handlers := m.router.HybridHandlerByRequestName(reqName)
-	if len(handlers) == 0 {
+	handlers := m.router.HandlerByRequestName(reqName)
+	if handlers == nil {
 		return fmt.Errorf("unknown request: %s", reqName)
-	} else if len(handlers) > 1 {
-		return fmt.Errorf("ambiguous request, query have multiple handlers: %s", reqName)
 	}
 
-	return handlers[0](ctx, req, resp)
+	var err error
+
+	bz, err := proto.Marshal(req)
+	if err != nil {
+		return err
+	}
+	qreq := v1.QueryRequest{
+		Data: bz,
+	}
+
+	abciResp, err := handlers(sdk.UnwrapSDKContext(ctx), &qreq)
+	if err != nil {
+		return err
+	}
+
+	return proto.Unmarshal(abciResp.Value, resp)
 }
 
 // InvokeUntyped execute a message and returns a response.

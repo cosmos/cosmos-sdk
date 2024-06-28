@@ -161,7 +161,7 @@ func (k Keeper) sendDecimalPoolToCommunityPool(ctx context.Context) error {
 	}
 
 	amt, re := feePool.DecimalPool.TruncateDecimal()
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.ProtocolPoolModuleName, amt); err != nil {
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.ProtocolPoolDistrAccount, amt); err != nil {
 		return err
 	}
 

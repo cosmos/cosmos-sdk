@@ -2,6 +2,7 @@ package cometbft
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"sync/atomic"
@@ -231,10 +232,13 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		return nil, err
 	}
 
+	// populate hash with empty byte slice instead of nil
+	bz := sha256.Sum256([]byte(""))
+
 	br := &coreappmgr.BlockRequest[T]{
 		Height:            uint64(req.InitialHeight - 1),
 		Time:              req.Time,
-		Hash:              nil,
+		Hash:              bz[:],
 		AppHash:           ci.Hash,
 		ChainId:           req.ChainId,
 		ConsensusMessages: consMessages,

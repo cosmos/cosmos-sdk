@@ -47,7 +47,7 @@ type AppI[T transaction.Tx] interface {
 // done declaratively with an app config and the rest of it is done the old way.
 // See simapp/app_v2.go for an example of this setup.
 type App[T transaction.Tx] struct {
-	*appmanager.AppManager[T]
+	appmanager.AppManager[T]
 
 	// app manager dependencies
 	stf                *stf.STF[T]
@@ -127,6 +127,6 @@ func (a *App[T]) ExecuteGenesisTx(_ []byte) error {
 	panic("App.ExecuteGenesisTx not supported in runtime/v2")
 }
 
-func (a *App[T]) GetAppManager() *appmanager.AppManager[T] {
+func (a *App[T]) GetAppManager() appmanager.AppManager[T] {
 	return a.AppManager
 }

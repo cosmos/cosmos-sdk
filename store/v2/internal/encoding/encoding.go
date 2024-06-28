@@ -96,10 +96,6 @@ func EncodeBytes(w io.Writer, bz []byte) error {
 	return err
 }
 
-func EncodeString(w io.Writer, s string) error {
-	return EncodeBytes(w, []byte(s))
-}
-
 // encodeBytesSlice length-prefixes the byte slice and returns it.
 func EncodeBytesSlice(bz []byte) ([]byte, error) {
 	buf := bufPool.Get().(*bytes.Buffer)

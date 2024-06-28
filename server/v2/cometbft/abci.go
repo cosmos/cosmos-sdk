@@ -8,6 +8,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	coreappmgr "cosmossdk.io/core/app"
 	"cosmossdk.io/core/comet"
@@ -30,6 +31,9 @@ import (
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
 type Consensus[T transaction.Tx] struct {
+	// legacy support for gRPC
+	grpcQueryDecoders map[string]func(requestBytes []byte) (gogoproto.Message, error)
+
 	app             *appmanager.AppManager[T]
 	cfg             Config
 	store           types.Store
@@ -149,18 +153,15 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 
 // Query implements types.Application.
 // It is called by cometbft to query application state.
-func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (*abciproto.QueryResponse, error) {
-	// follow the query path from here
-	decodedMsg, err := c.txCodec.Decode(req.Data)
-	protoMsg, ok := any(decodedMsg).(transaction.Msg)
-	if !ok {
-		return nil, fmt.Errorf("decoded type T %T must implement core/transaction.Msg", decodedMsg)
-	}
-
-	// if no error is returned then we can handle the query with the appmanager
-	// otherwise it is a KV store query
-	if err == nil {
-		res, err := c.app.Query(ctx, uint64(req.Height), protoMsg)
+func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (resp *abciproto.QueryResponse, err error) {
+	// check if it's a gRPC method
+	grpcQueryDecoder, isGRPC := c.grpcQueryDecoders[req.Path]
+	if isGRPC {
+		protoRequest, err := grpcQueryDecoder(req.Data)
+		if err != nil {
+			return nil, fmt.Errorf("unable to decode gRPC request with path %s from ABCI.Query: %w", req.Path, err)
+		}
+		res, err := c.app.Query(ctx, uint64(req.Height), protoRequest)
 
 		if err != nil {
 			resp := queryResult(err)
@@ -178,8 +179,6 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 	if len(path) == 0 {
 		return QueryResult(errorsmod.Wrap(cometerrors.ErrUnknownRequest, "no query path provided"), c.cfg.Trace), nil
 	}
-
-	var resp *abciproto.QueryResponse
 
 	switch path[0] {
 	case cmtservice.QueryPathApp:
@@ -383,7 +382,7 @@ func (c *Consensus[T]) FinalizeBlock(
 	//		ProposerAddress: req.ProposerAddress,
 	//		LastCommit:      req.DecidedLastCommit,
 	//	},
-	//}
+	// }
 	//
 	// ctx = context.WithValue(ctx, corecontext.CometInfoKey, &comet.Info{
 	// 	Evidence:        sdktypes.ToSDKEvidence(req.Misbehavior),

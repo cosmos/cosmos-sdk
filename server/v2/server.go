@@ -97,10 +97,7 @@ func (s *Server[AppT, T]) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to start servers: %w", err)
 	}
 
-	serverCfg := ctx.Value(ServerContextKey).(Config)
-	if serverCfg.StartBlock {
-		<-ctx.Done()
-	}
+	<-ctx.Done()
 
 	return nil
 }
@@ -127,13 +124,13 @@ func (s *Server[AppT, T]) CLICommands() CLIConfig {
 			return cmds[0]
 		}
 
-		rootCmd := &cobra.Command{
+		subCmd := &cobra.Command{
 			Use:   name,
 			Short: fmt.Sprintf("Commands from the %s server component", name),
 		}
-		rootCmd.AddCommand(cmds...)
+		subCmd.AddCommand(cmds...)
 
-		return rootCmd
+		return subCmd
 	}
 
 	commands := CLIConfig{}
@@ -197,6 +194,9 @@ func (s *Server[AppT, T]) WriteConfig(configPath string) error {
 	}
 
 	for _, component := range s.components {
+		// undocumented interface to write the component default config in another file than app.toml
+		// it is used by cometbft for backward compatibility
+		// it should not be used by other components
 		if mod, ok := component.(interface{ WriteDefaultConfigAt(string) error }); ok {
 			if err := mod.WriteDefaultConfigAt(configPath); err != nil {
 				return err

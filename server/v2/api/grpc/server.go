@@ -21,8 +21,6 @@ import (
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 )
 
-const serverName = "grpc-server"
-
 type GRPCServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
 	logger log.Logger
 	config *Config
@@ -44,7 +42,7 @@ func New[AppT serverv2.AppI[T], T transaction.Tx]() *GRPCServer[AppT, T] {
 func (g *GRPCServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Logger) error {
 	cfg := DefaultConfig()
 	if v != nil {
-		if err := v.Sub(serverName).Unmarshal(&cfg); err != nil {
+		if err := v.Sub(g.Name()).Unmarshal(&cfg); err != nil {
 			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
@@ -63,13 +61,13 @@ func (g *GRPCServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Logger)
 
 	g.grpcSrv = grpcSrv
 	g.config = cfg
-	g.logger = logger.With(log.ModuleKey, serverName)
+	g.logger = logger.With(log.ModuleKey, g.Name())
 
 	return nil
 }
 
 func (g *GRPCServer[AppT, T]) Name() string {
-	return serverName
+	return "grpc-server"
 }
 
 func (g *GRPCServer[AppT, T]) Start(ctx context.Context) error {

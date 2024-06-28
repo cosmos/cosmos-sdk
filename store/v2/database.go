@@ -51,9 +51,6 @@ type Committer interface {
 	// SetInitialVersion sets the initial version of the tree.
 	SetInitialVersion(version uint64) error
 
-	// IsEmpty returns true if the database is empty.
-	IsEmpty() (bool, error)
-
 	// Close releases associated resources. It should NOT be idempotent. It must
 	// only be called once and any call after may panic.
 	io.Closer

@@ -48,9 +48,9 @@ func (i *Info) Bytes() ([]byte, error) {
 	binary.LittleEndian.PutUint64(timeBytes, uint64(i.Time.Unix()))
 	buf = append(buf, timeBytes...)
 
-	if len(i.AppHash) == 0 {
-		i.AppHash = make([]byte, hashSize)
-	}
+	// if len(i.AppHash) == 0 {
+	// 	i.AppHash = make([]byte, hashSize)
+	// }
 	// Encode AppHash
 	if len(i.Hash) != hashSize {
 		return nil, errors.New("invalid hash size")

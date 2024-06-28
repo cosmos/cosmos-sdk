@@ -234,8 +234,8 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	br := &coreappmgr.BlockRequest[T]{
 		Height:            uint64(req.InitialHeight - 1),
 		Time:              req.Time,
-		Hash:              ci.Hash,
-		AppHash:           nil,
+		Hash:              nil,
+		AppHash:           ci.Hash,
 		ChainId:           req.ChainId,
 		ConsensusMessages: consMessages,
 		IsGenesis:         true,

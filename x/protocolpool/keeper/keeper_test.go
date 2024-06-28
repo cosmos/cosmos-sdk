@@ -143,9 +143,12 @@ func (s *KeeperTestSuite) TestIterateAndUpdateFundsDistribution() {
 	s.Require().NoError(err)
 
 	err = s.poolKeeper.RecipientFundDistribution.Walk(s.ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
-		if key.String() == "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2srklj6" {
+		strAddr, err := s.authKeeper.AddressCodec().BytesToString(key)
+		s.Require().NoError(err)
+
+		if strAddr == "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2srklj6" {
 			s.Require().Equal(value, math.NewInt(300000))
-		} else if key.String() == "cosmos1tygms3xhhs3yv487phx3dw4a95jn7t7lpm470r" {
+		} else if strAddr == "cosmos1tygms3xhhs3yv487phx3dw4a95jn7t7lpm470r" {
 			s.Require().Equal(value, math.NewInt(300000))
 		}
 		return false, nil

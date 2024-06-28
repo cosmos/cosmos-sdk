@@ -96,8 +96,8 @@ In order to test our assumptions in the system test, we modify the code to use `
 	raw := cli.CustomQuery("q", "bank", "total-supply")
 
 	exp := map[string]int64{
-		"stake":     2000000190,
-		"testtoken": 4000000000,
+        "stake":     int64(500000000 * sut.nodesCount),
+        "testtoken": int64(1000000000 * sut.nodesCount),
 	}
 	require.Len(t, gjson.Get(raw, "supply").Array(), len(exp), raw)
 
@@ -106,6 +106,7 @@ In order to test our assumptions in the system test, we modify the code to use `
 		assert.Equal(t, v, got, raw)
 	}
 ```
+The assumption on the staking token usually fails due to inflation minted on the staking token. Let's fix this in the next step 
 
 ### Run the test
 
@@ -117,3 +118,56 @@ go test -mod=readonly -tags='system_test' -v ./...  --run TestQueryTotalSupply -
 
 * Putting the `raw` json response to the assert/require statements helps with debugging on failures. You are usually lacking
   context when you look at the values only.
+
+
+## Part 3: Setting state via genesis
+
+First step is to disable inflation. This can be done via the `ModifyGenesisJSON` helper. But to add some complexity, 
+we also introduce a new token and update the balance of the account for key `node0`.
+The setup code looks quite big and unreadable now. Usually a good time to think about extracting helper functions for
+common operations. The `genesis_io.go` file contains some examples already. I would skip this and take this to showcase the mix
+of `gjson`, `sjson` and stdlib json operations.
+
+```go
+	sut.ResetChain(t)
+    cli := NewCLIWrapper(t, sut, verbose)
+
+	sut.ModifyGenesisJSON(t, func(genesis []byte) []byte {
+		// disable inflation
+		genesis, err := sjson.SetRawBytes(genesis, "app_state.mint.minter.inflation", []byte(`"0.000000000000000000"`))
+		require.NoError(t, err)
+
+		// add new token to supply
+		var supply []json.RawMessage
+		rawSupply := gjson.Get(string(genesis), "app_state.bank.supply").String()
+		require.NoError(t, json.Unmarshal([]byte(rawSupply), &supply))
+		supply = append(supply, json.RawMessage(`{"denom": "mytoken","amount": "1000000"}`))
+		newSupply, err := json.Marshal(supply)
+		require.NoError(t, err)
+		genesis, err = sjson.SetRawBytes(genesis, "app_state.bank.supply", newSupply)
+		require.NoError(t, err)
+
+		// add amount to any balance
+		anyAddr := cli.GetKeyAddr("node0")
+		newBalances := GetGenesisBalance(genesis, anyAddr).Add(sdk.NewInt64Coin("mytoken", 1000000))
+		newBalancesBz, err := newBalances.MarshalJSON()
+		require.NoError(t, err)
+		newState, err := sjson.SetRawBytes(genesis, fmt.Sprintf("app_state.bank.balances.#[address==%q]#.coins", anyAddr), newBalancesBz)
+		require.NoError(t, err)
+		return newState
+	})
+    sut.StartChain(t)
+```
+Next step is to add the new token to the assert map. But we can also make it more resilient to different node counts.
+
+```go
+	exp := map[string]int64{
+		"stake":     int64(500000000 * sut.nodesCount),
+		"testtoken": int64(1000000000 * sut.nodesCount),
+		"mytoken":   1000000,
+	}
+```
+
+```shell
+go test -mod=readonly -tags='system_test' -v ./...  --run TestQueryTotalSupply --verbose --nodes-count=1 
+```

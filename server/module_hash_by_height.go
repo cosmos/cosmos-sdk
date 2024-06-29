@@ -55,11 +55,11 @@ Example:
 				if err != nil {
 					return err
 				}
-				fmt.Println(string(jsonOutput))
+				cmd.Println(string(jsonOutput))
 			case flags.OutputFormatText:
 				fallthrough
 			default:
-				fmt.Println(commitInfoForHeight.String())
+				cmd.Println(commitInfoForHeight.String())
 			}
 
 			return nil

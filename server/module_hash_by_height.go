@@ -26,7 +26,7 @@ func ModuleHashByHeightQuery[T servertypes.Application](appCreator servertypes.A
 		Short: "Get module hashes at a given height",
 		Long: `Get module hashes at a given height. This command is useful for debugging and verifying the state of the application at a given height. Daemon should not be running when calling this command.
 Example:
-	osmosisd module-hash-by-height 16841115,
+	appd module-hash-by-height 16841115,
 `,
 		Args: cobra.ExactArgs(1), // Ensure exactly one argument is provided
 		RunE: func(cmd *cobra.Command, args []string) error {

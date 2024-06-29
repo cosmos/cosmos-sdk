@@ -113,3 +113,45 @@ func (s *KeeperTestSuite) mockStreamFunds() {
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
+
+func (s *KeeperTestSuite) TestIterateAndUpdateFundsDistribution() {
+	// We'll create 2 continuous funds of 30% each, and the total pool is 1000000, meaning each fund should get 300000
+
+	s.SetupTest()
+	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ModuleName).Return(poolAcc).AnyTimes()
+	distrBal := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000000)))
+	s.bankKeeper.EXPECT().GetAllBalances(s.ctx, poolAcc.GetAddress()).Return(distrBal).AnyTimes()
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, poolAcc.GetName(), streamAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(600000)))).AnyTimes()
+
+	_, err := s.msgServer.CreateContinuousFund(s.ctx, &types.MsgCreateContinuousFund{
+		Authority:  s.poolKeeper.GetAuthority(),
+		Recipient:  "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2srklj6",
+		Percentage: math.LegacyMustNewDecFromStr("0.3"),
+	})
+	s.Require().NoError(err)
+
+	_, err = s.msgServer.CreateContinuousFund(s.ctx, &types.MsgCreateContinuousFund{
+		Authority:  s.poolKeeper.GetAuthority(),
+		Recipient:  "cosmos1tygms3xhhs3yv487phx3dw4a95jn7t7lpm470r",
+		Percentage: math.LegacyMustNewDecFromStr("0.3"),
+	})
+	s.Require().NoError(err)
+
+	_ = s.poolKeeper.SetToDistribute(s.ctx, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000000))), s.poolKeeper.GetAuthority())
+
+	err = s.poolKeeper.IterateAndUpdateFundsDistribution(s.ctx)
+	s.Require().NoError(err)
+
+	err = s.poolKeeper.RecipientFundDistribution.Walk(s.ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
+		strAddr, err := s.authKeeper.AddressCodec().BytesToString(key)
+		s.Require().NoError(err)
+
+		if strAddr == "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2srklj6" {
+			s.Require().Equal(value, math.NewInt(300000))
+		} else if strAddr == "cosmos1tygms3xhhs3yv487phx3dw4a95jn7t7lpm470r" {
+			s.Require().Equal(value, math.NewInt(300000))
+		}
+		return false, nil
+	})
+	s.Require().NoError(err)
+}

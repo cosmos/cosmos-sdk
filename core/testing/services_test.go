@@ -3,8 +3,6 @@ package coretesting
 import (
 	"context"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestKVStoreService(t *testing.T) {
@@ -13,23 +11,37 @@ func TestKVStoreService(t *testing.T) {
 
 	// must panic
 	t.Run("must panic on invalid ctx", func(t *testing.T) {
-		require.Panics(t, func() {
-			svc1.OpenKVStore(context.Background())
-		})
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("expected panic, but got none")
+			}
+		}()
+
+		svc1.OpenKVStore(context.Background())
 	})
 
 	t.Run("success", func(t *testing.T) {
 		kv := svc1.OpenKVStore(ctx)
-		require.NoError(t, kv.Set([]byte("key"), []byte("value")))
+		err := kv.Set([]byte("key"), []byte("value"))
+		if err != nil {
+			t.Errorf("failed to set value: %v", err)
+		}
 
 		value, err := kv.Get([]byte("key"))
-		require.NoError(t, err)
-		require.Equal(t, []byte("value"), value)
+		if err != nil {
+			t.Errorf("failed to get value: %v", err)
+		}
+
+		if string(value) != "value" {
+			t.Errorf("expected value 'value', but got '%s'", string(value))
+		}
 	})
 
 	t.Run("contains module name", func(t *testing.T) {
 		KVStoreService(ctx, "auth")
 		_, ok := unwrap(ctx).stores["auth"]
-		require.True(t, ok)
+		if !ok {
+			t.Errorf("expected store 'auth' to exist, but it doesn't")
+		}
 	})
 }

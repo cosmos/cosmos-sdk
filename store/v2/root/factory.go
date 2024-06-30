@@ -32,15 +32,15 @@ const (
 )
 
 type FactoryOptions struct {
-	Logger         log.Logger
-	RootDir        string
-	SSType         SSType
-	SCType         SCType
-	SSPruneOptions *store.PruneOptions
-	SCPruneOptions *store.PruneOptions
-	IavlConfig     *iavl.Config
-	StoreKeys      []string
-	SCRawDB        corestore.KVStoreWithBatch
+	Logger          log.Logger
+	RootDir         string
+	SSType          SSType
+	SCType          SCType
+	SSPruningOption *store.PruningOption
+	SCPruningOption *store.PruningOption
+	IavlConfig      *iavl.Config
+	StoreKeys       []string
+	SCRawDB         corestore.KVStoreWithBatch
 }
 
 // CreateRootStore is a convenience function to create a root store based on the
@@ -101,7 +101,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		return nil, err
 	}
 
-	pm := pruning.NewManager(sc, ss, opts.SCPruneOptions, opts.SSPruneOptions)
+	pm := pruning.NewManager(sc, ss, opts.SCPruningOption, opts.SSPruningOption)
 
 	return New(opts.Logger, ss, sc, pm, nil, nil)
 }

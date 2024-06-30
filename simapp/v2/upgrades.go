@@ -20,7 +20,7 @@ import (
 // v0.50.x to v0.51.x.
 const UpgradeName = "v050-to-v051"
 
-func (app *SimApp) RegisterUpgradeHandlers() {
+func (app *SimApp[T]) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,
 		func(ctx context.Context, _ upgradetypes.Plan, fromVM appmodule.VersionMap) (appmodule.VersionMap, error) {

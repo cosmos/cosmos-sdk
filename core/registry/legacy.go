@@ -1,7 +1,7 @@
 package registry
 
 import (
-	"google.golang.org/protobuf/runtime/protoiface"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 )
 
 type InterfaceRegistrar interface {
@@ -14,12 +14,12 @@ type InterfaceRegistrar interface {
 	//
 	// Ex:
 	//   registry.RegisterInterface("cosmos.base.v1beta1.Msg", (*sdk.Msg)(nil))
-	RegisterInterface(protoName string, iface interface{}, impls ...protoiface.MessageV1)
+	RegisterInterface(protoName string, iface interface{}, impls ...gogoproto.Message)
 
 	// RegisterImplementations registers impls as concrete implementations of
 	// the interface iface.
 	//
 	// Ex:
 	//  registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSend{}, &MsgMultiSend{})
-	RegisterImplementations(iface interface{}, impls ...protoiface.MessageV1)
+	RegisterImplementations(iface interface{}, impls ...gogoproto.Message)
 }

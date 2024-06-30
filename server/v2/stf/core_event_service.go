@@ -7,7 +7,6 @@ import (
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/maps"
-	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/core/event"
 )
@@ -31,7 +30,7 @@ type eventManager struct {
 
 // Emit emits an typed event that is defined in the protobuf file.
 // In the future these events will be added to consensus.
-func (em *eventManager) Emit(tev protoiface.MessageV1) error {
+func (em *eventManager) Emit(tev gogoproto.Message) error {
 	res, err := TypedEventToEvent(tev)
 	if err != nil {
 		return err
@@ -49,7 +48,7 @@ func (em *eventManager) EmitKV(eventType string, attrs ...event.Attribute) error
 
 // EmitNonConsensus emits an typed event that is defined in the protobuf file.
 // These events will not be added to consensus.
-func (em *eventManager) EmitNonConsensus(event protoiface.MessageV1) error {
+func (em *eventManager) EmitNonConsensus(event gogoproto.Message) error {
 	return em.Emit(event)
 }
 

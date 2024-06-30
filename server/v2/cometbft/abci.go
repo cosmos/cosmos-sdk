@@ -41,8 +41,8 @@ type Consensus[T transaction.Tx] struct {
 
 	// this is only available after this node has committed a block (in FinalizeBlock),
 	// otherwise it will be empty and we will need to query the app for the last
-	// committed block. TODO(tip): check if concurrency is really needed
-	lastCommittedBlock atomic.Pointer[BlockData]
+	// committed block.
+	lastCommittedHeight atomic.Int64
 
 	prepareProposalHandler handlers.PrepareHandler[T]
 	processProposalHandler handlers.ProcessHandler[T]
@@ -88,15 +88,6 @@ func (c *Consensus[T]) RegisterExtensions(extensions ...snapshots.ExtensionSnaps
 	if err := c.snapshotManager.RegisterExtensions(extensions...); err != nil {
 		panic(fmt.Errorf("failed to register snapshot extensions: %w", err))
 	}
-}
-
-// BlockData is used to keep some data about the last committed block. Currently
-// we only use the height, the rest is not needed right now and might get removed
-// in the future.
-type BlockData struct {
-	Height       int64
-	Hash         []byte
-	StateChanges []store.StateChanges
 }
 
 // CheckTx implements types.Application.
@@ -407,10 +398,7 @@ func (c *Consensus[T]) FinalizeBlock(
 		if err != nil {
 			return nil, fmt.Errorf("unable to commit the changeset: %w", err)
 		}
-		c.lastCommittedBlock.Store(&BlockData{
-			Height: req.Height,
-			Hash:   appHash,
-		})
+		c.lastCommittedHeight.Store(req.Height)
 		return &abciproto.FinalizeBlockResponse{
 			AppHash: appHash,
 		}, nil
@@ -482,11 +470,7 @@ func (c *Consensus[T]) FinalizeBlock(
 		return nil, fmt.Errorf("unable to remove txs: %w", err)
 	}
 
-	c.lastCommittedBlock.Store(&BlockData{
-		Height:       req.Height,
-		Hash:         appHash,
-		StateChanges: stateChanges,
-	})
+	c.lastCommittedHeight.Store(req.Height)
 
 	cp, err := c.GetConsensusParams(ctx) // we get the consensus params from the latest state because we committed state above
 	if err != nil {
@@ -499,9 +483,9 @@ func (c *Consensus[T]) FinalizeBlock(
 // Commit implements types.Application.
 // It is called by cometbft to notify the application that a block was committed.
 func (c *Consensus[T]) Commit(ctx context.Context, _ *abciproto.CommitRequest) (*abciproto.CommitResponse, error) {
-	lastCommittedBlock := c.lastCommittedBlock.Load()
+	lastCommittedHeight := c.lastCommittedHeight.Load()
 
-	c.snapshotManager.SnapshotIfApplicable(lastCommittedBlock.Height)
+	c.snapshotManager.SnapshotIfApplicable(lastCommittedHeight)
 
 	cp, err := c.GetConsensusParams(ctx)
 	if err != nil {
@@ -509,7 +493,7 @@ func (c *Consensus[T]) Commit(ctx context.Context, _ *abciproto.CommitRequest) (
 	}
 
 	return &abci.CommitResponse{
-		RetainHeight: c.GetBlockRetentionHeight(cp, lastCommittedBlock.Height),
+		RetainHeight: c.GetBlockRetentionHeight(cp, lastCommittedHeight),
 	}, nil
 }
 

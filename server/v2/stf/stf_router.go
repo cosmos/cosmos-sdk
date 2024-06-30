@@ -7,7 +7,6 @@ import (
 	"reflect"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/runtime/protoiface"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/router"
@@ -155,7 +154,7 @@ func (r Router) CanInvoke(_ context.Context, typeURL string) error {
 	return nil
 }
 
-func (r Router) InvokeTyped(ctx context.Context, req, resp protoiface.MessageV1) error {
+func (r Router) InvokeTyped(ctx context.Context, req, resp gogoproto.Message) error {
 	handlerResp, err := r.InvokeUntyped(ctx, req)
 	if err != nil {
 		return err
@@ -164,11 +163,11 @@ func (r Router) InvokeTyped(ctx context.Context, req, resp protoiface.MessageV1)
 	return nil
 }
 
-func merge(src, dst protoiface.MessageV1) {
+func merge(src, dst gogoproto.Message) {
 	reflect.Indirect(reflect.ValueOf(dst)).Set(reflect.Indirect(reflect.ValueOf(src)))
 }
 
-func (r Router) InvokeUntyped(ctx context.Context, req protoiface.MessageV1) (res protoiface.MessageV1, err error) {
+func (r Router) InvokeUntyped(ctx context.Context, req gogoproto.Message) (res gogoproto.Message, err error) {
 	typeName := msgTypeURL(req)
 	handler, exists := r.handlers[typeName]
 	if !exists {

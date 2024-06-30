@@ -3,7 +3,7 @@ package runtime
 import (
 	"context"
 
-	"google.golang.org/protobuf/runtime/protoiface"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/event"
 
@@ -34,7 +34,7 @@ func NewEventManager(ctx context.Context) event.Manager {
 
 // Emit emits an typed event that is defined in the protobuf file.
 // In the future these events will be added to consensus.
-func (e Events) Emit(event protoiface.MessageV1) error {
+func (e Events) Emit(event gogoproto.Message) error {
 	return e.EventManagerI.EmitTypedEvent(event)
 }
 

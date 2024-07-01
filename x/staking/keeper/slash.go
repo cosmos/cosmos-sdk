@@ -399,13 +399,17 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 		}
 
 		dstValidator, err := k.GetValidator(ctx, valDstAddr)
-		if err != nil {
+		isNotFoundErr := errors.Is(err, types.ErrNoValidatorFound)
+		if err != nil && !isNotFoundErr {
 			return math.ZeroInt(), err
 		}
 
 		// tokens of a redelegation currently live in the destination validator
 		// therefore we must burn tokens from the destination-validator's bonding status
 		switch {
+		// this case covers for when a validator is removed from the set when his bond drops down to 0.
+		case isNotFoundErr:
+			notBondedBurnedAmount = notBondedBurnedAmount.Add(tokensToBurn)
 		case dstValidator.IsBonded():
 			bondedBurnedAmount = bondedBurnedAmount.Add(tokensToBurn)
 		case dstValidator.IsUnbonded() || dstValidator.IsUnbonding():

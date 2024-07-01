@@ -6,13 +6,13 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cast"
 
 	"cosmossdk.io/core/appmodule"
+	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -105,12 +105,11 @@ type SimApp struct {
 }
 
 func init() {
-	userHomeDir, err := os.UserHomeDir()
+	var err error
+	DefaultNodeHome, err = clienthelpers.GetNodeHomeDirectory(".simapp")
 	if err != nil {
 		panic(err)
 	}
-
-	DefaultNodeHome = filepath.Join(userHomeDir, ".simapp")
 }
 
 // AppConfig returns the default app config.

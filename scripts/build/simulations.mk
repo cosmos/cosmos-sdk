@@ -82,7 +82,7 @@ test-sim-fuzz:
 #? test-sim-benchmark: Run benchmark test for simapp
 test-sim-benchmark:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$  \
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -tags='sims' -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$  \
 		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h
 
 # Requires an exported plugin. See store/streaming/README.md for documentation.
@@ -96,12 +96,12 @@ test-sim-benchmark:
 #   make test-sim-benchmark-streaming
 test-sim-benchmark-streaming:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$  \
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -tags='sims' -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$  \
 		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h -EnableStreaming=true
 
 test-sim-profile:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -benchmem -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$ \
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -tags='sims' -benchmem -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$ \
 		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
 
 # Requires an exported plugin. See store/streaming/README.md for documentation.
@@ -115,7 +115,7 @@ test-sim-profile:
 #   make test-sim-profile-streaming
 test-sim-profile-streaming:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -benchmem -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$ \
+	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -tags='sims' -benchmem -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$ \
 		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out -EnableStreaming=true
 
 .PHONY: test-sim-profile test-sim-benchmark test-sim-fuzz

@@ -19,14 +19,15 @@ import (
 )
 
 type config struct {
-	handler        *txsigning.HandlerMap
-	decoder        sdk.TxDecoder
-	encoder        sdk.TxEncoder
-	jsonDecoder    sdk.TxDecoder
-	jsonEncoder    sdk.TxEncoder
-	protoCodec     codec.Codec
-	signingContext *txsigning.Context
-	txDecoder      *txdecode.Decoder
+	handler            *txsigning.HandlerMap
+	decoder            sdk.TxDecoder
+	encoder            sdk.TxEncoder
+	jsonDecoder        sdk.TxDecoder
+	jsonEncoder        sdk.TxEncoder
+	protoCodec         codec.Codec
+	signingContext     *txsigning.Context
+	txDecoder          *txdecode.Decoder
+	txDecoderCacheSize uint
 }
 
 // ConfigOptions define the configuration of a TxConfig when calling NewTxConfigWithOptions.
@@ -57,6 +58,8 @@ type ConfigOptions struct {
 	JSONDecoder sdk.TxDecoder
 	// JSONEncoder is the encoder that will be used to encode json transactions.
 	JSONEncoder sdk.TxEncoder
+	// TxDecoderCacheSize defines the capacity of TxDecoder LRU cache
+	TxDecoderCacheSize uint
 }
 
 // DefaultSignModes are the default sign modes enabled for protobuf transactions.
@@ -168,11 +171,12 @@ func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, erro
 // custom sign mode handlers. If ConfigOptions is an empty struct then default values will be used.
 func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions) (client.TxConfig, error) {
 	txConfig := &config{
-		protoCodec:  protoCodec,
-		decoder:     configOptions.ProtoDecoder,
-		encoder:     configOptions.ProtoEncoder,
-		jsonDecoder: configOptions.JSONDecoder,
-		jsonEncoder: configOptions.JSONEncoder,
+		protoCodec:         protoCodec,
+		decoder:            configOptions.ProtoDecoder,
+		encoder:            configOptions.ProtoEncoder,
+		jsonDecoder:        configOptions.JSONDecoder,
+		jsonEncoder:        configOptions.JSONEncoder,
+		txDecoderCacheSize: configOptions.TxDecoderCacheSize,
 	}
 
 	var err error
@@ -189,10 +193,15 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 		}
 	}
 
+	if configOptions.TxDecoderCacheSize == 0 {
+		txConfig.txDecoderCacheSize = txdecode.DefaultTxCacheSize
+	}
+
 	if configOptions.ProtoDecoder == nil {
 		dec, err := txdecode.NewDecoder(txdecode.Options{
 			SigningContext: configOptions.SigningContext,
 			ProtoCodec:     protoCodec,
+			TxCacheSize:    txConfig.txDecoderCacheSize,
 		},
 		)
 		if err != nil {

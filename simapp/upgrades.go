@@ -46,6 +46,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 				protocolpooltypes.StoreKey,
 				epochstypes.StoreKey,
 			},
+			Deleted: []string{"crisis"},
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades

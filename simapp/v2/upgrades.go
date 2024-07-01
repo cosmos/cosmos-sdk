@@ -37,6 +37,7 @@ func (app *SimApp[T]) RegisterUpgradeHandlers() {
 				accounts.ModuleName,
 				protocolpooltypes.ModuleName,
 			},
+			Deleted: []string{"crisis"},
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades

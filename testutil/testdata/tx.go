@@ -1,7 +1,6 @@
 package testdata
 
 import (
-	"cosmossdk.io/math"
 	"testing"
 
 	"gotest.tools/v3/assert"
@@ -82,8 +81,7 @@ func NewTestMsg(addrs ...sdk.AccAddress) *TestMsg {
 	}
 
 	return &TestMsg{
-		Signers:  accAddresses,
-		DecField: math.LegacyZeroDec(),
+		Signers: accAddresses,
 	}
 }
 

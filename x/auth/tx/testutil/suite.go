@@ -68,6 +68,8 @@ func (s *TxConfigTestSuite) TestTxBuilderSetMsgs() {
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	msg1 := testdata.NewTestMsg(addr1)
 	msg2 := testdata.NewTestMsg(addr2)
+	msg1.DecField = math.LegacyZeroDec()
+	msg2.DecField = math.LegacyZeroDec()
 	msgs := []sdk.Msg{msg1, msg2}
 
 	txBuilder := s.TxConfig.NewTxBuilder()

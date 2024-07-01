@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -45,12 +44,11 @@ func validateBudget(bp Budget) error {
 	}
 
 	// Validate BudgetPerTranche
-	amount := sdk.NewCoins(*bp.BudgetPerTranche)
-	if amount.IsZero() {
+	if bp.BudgetPerTranche == nil || bp.BudgetPerTranche.IsZero() {
 		return fmt.Errorf("budget per tranche cannot be zero")
 	}
-	if err := amount.Validate(); err != nil {
-		return errors.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
+	if err := bp.BudgetPerTranche.Validate(); err != nil {
+		return errors.Wrap(sdkerrors.ErrInvalidCoins, bp.BudgetPerTranche.String())
 	}
 
 	if bp.TranchesLeft == 0 {
@@ -69,7 +67,7 @@ func validateContinuousFund(cf ContinuousFund) error {
 	}
 
 	// Validate percentage
-	if cf.Percentage.IsZero() || cf.Percentage.IsNil() {
+	if cf.Percentage.IsNil() || cf.Percentage.IsZero() {
 		return fmt.Errorf("percentage cannot be zero or empty")
 	}
 	if cf.Percentage.IsNegative() {

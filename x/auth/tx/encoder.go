@@ -2,12 +2,13 @@ package tx
 
 import (
 	"fmt"
+
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
-	"google.golang.org/protobuf/proto"
 )
 
 // DefaultTxEncoder returns a default protobuf TxEncoder using the provided Marshaler

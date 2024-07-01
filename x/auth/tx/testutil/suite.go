@@ -3,11 +3,12 @@ package testutil
 import (
 	"bytes"
 	"context"
-	"cosmossdk.io/math"
-	"github.com/stretchr/testify/suite"
 	"strings"
 
+	"github.com/stretchr/testify/suite"
+
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"

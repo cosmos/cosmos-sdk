@@ -48,8 +48,8 @@ func start() error {
 	}(pg)
 
 	indexer, err := postgres.NewIndexer(context.Background(), postgres.configOptions{
-		Driver:        "pgx",
-		ConnectionURL: dbUrl,
+		DatabaseDriver: "pgx",
+		DatabaseURL:    dbUrl,
 	})
 
 	fixture := appdatatest.NewSimulator(appdatatest.SimulatorOptions{

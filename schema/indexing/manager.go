@@ -13,9 +13,14 @@ type Options struct {
 	Options    map[string]interface{}
 	Resolver   decoding.DecoderResolver
 	SyncSource decoding.SyncSource
+	Logger     Logger
 }
 
 func Start(opts Options) (appdata.Listener, error) {
+	if opts.Logger != nil {
+		opts.Logger.Info("Starting Indexer Manager")
+	}
+
 	var indexers []appdata.Listener
 	ctx := opts.Context
 	if ctx == nil {
@@ -26,6 +31,10 @@ func Start(opts Options) (appdata.Listener, error) {
 		indexerOpts, ok := opts.Options[indexerName]
 		if !ok {
 			continue
+		}
+
+		if opts.Logger != nil {
+			opts.Logger.Info(fmt.Sprintf("Starting Indexer %s", indexerName), "options", indexerOpts)
 		}
 
 		optsMap, ok := indexerOpts.(map[string]interface{})

@@ -34,6 +34,7 @@ func (app *BaseApp) EnableIndexer(indexerOpts interface{}, keys map[string]*stor
 		Options:    optsMap,
 		Resolver:   decoding.ModuleSetDecoderResolver(appModules),
 		SyncSource: nil,
+		Logger:     app.logger.With("module", "indexer"),
 	})
 	if err != nil {
 		return err

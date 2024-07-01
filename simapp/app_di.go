@@ -54,6 +54,10 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	"github.com/cosmos/cosmos-sdk/types/module"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
+
+	_ "cosmossdk.io/indexer/postgres"
 )
 
 // DefaultNodeHome default home directories for the application daemon

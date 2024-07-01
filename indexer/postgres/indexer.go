@@ -44,8 +44,8 @@ func (i *Indexer) Initialize(ctx context.Context, data indexing.InitializationDa
 }
 
 type configOptions struct {
-	Driver          string `json:"driver"`
-	ConnectionURL   string `json:"connection_url"`
+	DatabaseDriver  string `json:"database_driver"`
+	DatabaseURL     string `json:"database_url"`
 	RetainDeletions bool   `json:"retain_deletions"`
 }
 
@@ -62,15 +62,15 @@ func init() {
 			return nil, fmt.Errorf("failed to unmarshal options: %w", err)
 		}
 
-		if opts.Driver == "" {
-			opts.Driver = "pgx"
+		if opts.DatabaseDriver == "" {
+			opts.DatabaseDriver = "pgx"
 		}
 
-		if opts.ConnectionURL == "" {
+		if opts.DatabaseURL == "" {
 			return nil, fmt.Errorf("connection URL not set")
 		}
 
-		db, err := sql.Open(opts.Driver, opts.ConnectionURL)
+		db, err := sql.Open(opts.DatabaseDriver, opts.DatabaseURL)
 		if err != nil {
 			return nil, fmt.Errorf("failed to open database: %w", err)
 		}

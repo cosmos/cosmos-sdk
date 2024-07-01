@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"cosmossdk.io/math"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -36,6 +37,7 @@ func (s *testMsgSuite) TestMsgTypeURL() {
 
 func (s *testMsgSuite) TestGetMsgFromTypeURL() {
 	msg := testdata.NewTestMsg()
+	msg.DecField = math.LegacyZeroDec()
 	cdc := codec.NewProtoCodec(testdata.NewTestInterfaceRegistry())
 
 	result, err := sdk.GetMsgFromTypeURL(cdc, "/testpb.TestMsg")

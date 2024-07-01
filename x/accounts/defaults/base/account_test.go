@@ -207,4 +207,22 @@ func TestAuthenticate(t *testing.T) {
 		SignerIndex: 0,
 	})
 	require.NoError(t, err)
+
+	// testing with invalid signature
+	txDoc.BodyBytes = []byte("invalid_msg")
+	signBytes, err = txDoc.Marshal()
+	require.NoError(t, err)
+	invalidSig, err := privKey.Sign(signBytes)
+	require.NoError(t, err)
+
+	transaction.Signatures = append([][]byte{}, invalidSig)
+
+	rawTx.Signatures = transaction.Signatures
+
+	_, err = baseAcc.Authenticate(ctx, &aa_interface_v1.MsgAuthenticate{
+		RawTx:       &rawTx,
+		Tx:          &transaction,
+		SignerIndex: 0,
+	})
+	require.Error(t, err)
 }

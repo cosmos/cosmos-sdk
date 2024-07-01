@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
-	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 
 	accountsv1 "cosmossdk.io/x/accounts/v1"
@@ -27,8 +26,6 @@ import (
 )
 
 type ProtoMsg = protoiface.MessageV1
-
-var TestFunds = sdk.NewCoins(sdk.NewCoin("test", math.NewInt(10)))
 
 // mock statecodec
 type mockStateCodec struct {
@@ -53,12 +50,6 @@ func (c mockStateCodec) Unmarshal(bz []byte, ptr gogoproto.Message) error {
 	return err
 }
 
-type (
-	ModuleExecUntypedFunc = func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error)
-	ModuleExecFunc        = func(ctx context.Context, sender []byte, msg, msgResp ProtoMsg) error
-	ModuleQueryFunc       = func(ctx context.Context, queryReq, queryResp ProtoMsg) error
-)
-
 // mock address codec
 type addressCodec struct{}
 
@@ -68,7 +59,7 @@ func (a addressCodec) BytesToString(bz []byte) (string, error)   { return string
 func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 	t.Helper()
 	return accountstd.NewMockContext(
-		0, []byte("mock_base_account"), []byte("sender"), TestFunds, func(ctx context.Context, sender []byte, msg, msgResp ProtoMsg) error {
+		0, []byte("mock_base_account"), []byte("sender"), nil, func(ctx context.Context, sender []byte, msg, msgResp ProtoMsg) error {
 			return nil
 		}, func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error) {
 			return nil, nil

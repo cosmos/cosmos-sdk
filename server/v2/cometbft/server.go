@@ -37,7 +37,7 @@ var (
 	_ serverv2.HasStartFlags  = (*CometBFTServer[serverv2.AppI[transaction.Tx], transaction.Tx])(nil)
 )
 
-type CometBFTServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
+type CometBFTServer[T transaction.Tx] struct {
 	Node      *node.Node
 	Consensus *Consensus[T]
 
@@ -47,14 +47,14 @@ type CometBFTServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
 	options     ServerOptions[T]
 }
 
-func New[AppT serverv2.AppI[T], T transaction.Tx](txCodec transaction.Codec[T], options ServerOptions[T]) *CometBFTServer[AppT, T] {
-	return &CometBFTServer[AppT, T]{
+func New[T transaction.Tx](txCodec transaction.Codec[T], options ServerOptions[T]) *CometBFTServer[T] {
+	return &CometBFTServer[T]{
 		initTxCodec: txCodec,
 		options:     options,
 	}
 }
 
-func (s *CometBFTServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Logger) error {
+func (s *CometBFTServer[T]) Init(appI AppI[T], v *viper.Viper, logger log.Logger) error {
 	s.config = Config{CmtConfig: GetConfigFromViper(v), ConsensusAuthority: appI.GetConsensusAuthority()}
 	s.logger = logger.With(log.ModuleKey, s.Name())
 
@@ -83,11 +83,11 @@ func (s *CometBFTServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Log
 	return nil
 }
 
-func (s *CometBFTServer[AppT, T]) Name() string {
+func (s *CometBFTServer[T]) Name() string {
 	return "cometbft-server"
 }
 
-func (s *CometBFTServer[AppT, T]) Start(ctx context.Context) error {
+func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 	viper := ctx.Value(corectx.ViperContextKey).(*viper.Viper)
 	cometConfig := GetConfigFromViper(viper)
 
@@ -126,7 +126,7 @@ func (s *CometBFTServer[AppT, T]) Start(ctx context.Context) error {
 	return s.Node.Start()
 }
 
-func (s *CometBFTServer[AppT, T]) Stop(context.Context) error {
+func (s *CometBFTServer[T]) Stop(context.Context) error {
 	if s.Node != nil && s.Node.IsRunning() {
 		return s.Node.Stop()
 	}
@@ -172,7 +172,7 @@ func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, e
 	}
 }
 
-func (s *CometBFTServer[AppT, T]) StartCmdFlags() *pflag.FlagSet {
+func (s *CometBFTServer[T]) StartCmdFlags() *pflag.FlagSet {
 	flags := pflag.NewFlagSet("cometbft", pflag.ExitOnError)
 	flags.Bool(FlagWithComet, true, "Run abci app embedded in-process with CometBFT")
 	flags.String(FlagAddress, "tcp://127.0.0.1:26658", "Listen address")
@@ -187,7 +187,7 @@ func (s *CometBFTServer[AppT, T]) StartCmdFlags() *pflag.FlagSet {
 	return flags
 }
 
-func (s *CometBFTServer[AppT, T]) CLICommands() serverv2.CLIConfig {
+func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
 	return serverv2.CLIConfig{
 		Commands: []*cobra.Command{
 			s.StatusCommand(),
@@ -204,7 +204,7 @@ func (s *CometBFTServer[AppT, T]) CLICommands() serverv2.CLIConfig {
 	}
 }
 
-func (s *CometBFTServer[AppT, T]) WriteDefaultConfigAt(configPath string) error {
+func (s *CometBFTServer[T]) WriteDefaultConfigAt(configPath string) error {
 	cometConfig := cmtcfg.DefaultConfig()
 	cmtcfg.WriteConfigFile(filepath.Join(configPath, "config.toml"), cometConfig)
 	return nil

@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"google.golang.org/protobuf/runtime/protoiface"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
@@ -37,8 +37,8 @@ var (
 )
 
 type InterfaceRegistry interface {
-	RegisterInterface(name string, iface any, impls ...protoiface.MessageV1)
-	RegisterImplementations(iface any, impls ...protoiface.MessageV1)
+	RegisterInterface(name string, iface any, impls ...gogoproto.Message)
+	RegisterImplementations(iface any, impls ...gogoproto.Message)
 }
 
 func NewKeeper(

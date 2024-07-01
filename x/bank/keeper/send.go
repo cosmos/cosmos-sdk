@@ -167,6 +167,27 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, inputs []types.Inp
 		return err
 	}
 
+	for _, in := range inputs {
+		inAddress, err := k.ak.AddressCodec().StringToBytes(in.Address)
+		if err != nil {
+			return err
+		}
+
+		inAddress = k.ak.GetMergedAccountAddressIfExists(ctx, inAddress)
+		for _, out := range outputs {
+			outAddress, err := k.ak.AddressCodec().StringToBytes(out.Address)
+			if err != nil {
+				return err
+			}
+
+			outAddress = k.ak.GetMergedAccountAddressIfExists(ctx, outAddress)
+			_, err = k.sendRestriction.apply(ctx, inAddress, outAddress, out.Coins)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	for _, in := range inputs {
@@ -176,9 +197,6 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, inputs []types.Inp
 		}
 
 		inAddress = k.ak.GetMergedAccountAddressIfExists(ctx, inAddress)
-		if err != nil {
-			return err
-		}
 
 		err = k.subUnlockedCoins(ctx, inAddress, in.Coins)
 		if err != nil {
@@ -200,10 +218,6 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, inputs []types.Inp
 		}
 
 		outAddress = k.ak.GetMergedAccountAddressIfExists(ctx, outAddress)
-		// outAddress, err = k.sendRestriction.apply(ctx, inAddress, outAddress, out.Coins)
-		// if err != nil {
-		// 	return err
-		// }
 
 		if err := k.addCoins(ctx, outAddress, out.Coins); err != nil {
 			return err
@@ -246,12 +260,14 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 		return err
 	}
 
-	err = k.subUnlockedCoins(ctx, fromAddr, amt)
+	// Unreleased improvement in v0.51
+	// https://github.com/cosmos/cosmos-sdk/pull/20517
+	toAddr, err = k.sendRestriction.apply(ctx, fromAddr, toAddr, amt)
 	if err != nil {
 		return err
 	}
 
-	toAddr, err = k.sendRestriction.apply(ctx, fromAddr, toAddr, amt)
+	err = k.subUnlockedCoins(ctx, fromAddr, amt)
 	if err != nil {
 		return err
 	}

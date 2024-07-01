@@ -233,7 +233,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	}
 
 	// populate hash with empty byte slice instead of nil
-	bz := sha256.Sum256([]byte(""))
+	bz := sha256.Sum256([]byte{})
 
 	br := &coreappmgr.BlockRequest[T]{
 		Height:            uint64(req.InitialHeight - 1),

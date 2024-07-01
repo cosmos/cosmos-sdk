@@ -640,6 +640,59 @@ func (s *StorageTestSuite) TestDatabase_Prune_KeepRecent() {
 	s.Require().Equal([]byte("val200"), bz)
 }
 
+func (s *StorageTestSuite) TestUpgradable() {
+	ss, err := s.NewDB(s.T().TempDir())
+	s.Require().NoError(err)
+	defer ss.Close()
+
+	// Ensure the database is upgradable.
+	if _, ok := ss.db.(store.UpgradableDatabase); !ok {
+		s.T().Skip("database is not upgradable")
+	}
+
+	storeKeys := []string{"store1", "store2", "store3"}
+	uptoVersion := uint64(50)
+	keyCount := 10
+	for _, storeKey := range storeKeys {
+		for v := uint64(1); v <= uptoVersion; v++ {
+			keys := make([][]byte, keyCount)
+			vals := make([][]byte, keyCount)
+			for i := 0; i < keyCount; i++ {
+				keys[i] = []byte(fmt.Sprintf("key%03d", i))
+				vals[i] = []byte(fmt.Sprintf("val%03d-%03d", i, v))
+			}
+			DBApplyChangeset(s.T(), ss, v, storeKey, keys, vals)
+		}
+	}
+
+	// prune store1
+	err = ss.PruneStoreKey([]byte(storeKeys[0]))
+	s.Require().NoError(err)
+	// skip the test of RocksDB
+	if !slices.Contains(s.SkipTests, "TestUpgradable_Prune") {
+		for v := uint64(1); v <= uptoVersion; v++ {
+			for i := 0; i < keyCount; i++ {
+				bz, err := ss.Get([]byte(storeKeys[0]), v, []byte(fmt.Sprintf("key%03d", i)))
+				s.Require().NoError(err)
+				s.Require().Nil(bz)
+			}
+		}
+	}
+
+	// migrate store2
+	newStoreKey := "mstore2"
+	err = ss.MigrateStoreKey([]byte(storeKeys[1]), []byte(newStoreKey))
+	s.Require().NoError(err)
+	for v := uint64(1); v <= uptoVersion; v++ {
+		for i := 0; i < keyCount; i++ {
+			bz, err := ss.Get([]byte(newStoreKey), v, []byte(fmt.Sprintf("key%03d", i)))
+			s.T().Logf("version: %d, key: %s, value: %s\n", v, fmt.Sprintf("key%03d", i), string(bz))
+			s.Require().NoError(err)
+			s.Require().Equal([]byte(fmt.Sprintf("val%03d-%03d", i, v)), bz)
+		}
+	}
+}
+
 func DBApplyChangeset(
 	t *testing.T,
 	db store.VersionedDatabase,

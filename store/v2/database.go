@@ -25,6 +25,15 @@ type VersionedDatabase interface {
 	io.Closer
 }
 
+// UpgradableDatabase defines an API for a versioned database that allows storeKey
+// upgrades.
+type UpgradableDatabase interface {
+	// PruneStoreKey prunes all data associated with the given storeKey.
+	PruneStoreKey(storeKey []byte) error
+	// MigrateStoreKey upgrades the storeKey from the old to the new storeKey.
+	MigrateStoreKey(oldStoreKey, newStoreKey []byte) error
+}
+
 // Committer defines an API for committing state.
 type Committer interface {
 	// WriteChangeset writes the changeset to the commitment state.
@@ -51,7 +60,7 @@ type Committer interface {
 	// Once migration is complete, this method should be removed and/or not used.
 	Get(storeKey []byte, version uint64, key []byte) ([]byte, error)
 
-	// SetInitialVersion sets the initial version of the tree.
+	// SetInitialVersion sets the initial version of the committer.
 	SetInitialVersion(version uint64) error
 
 	// GetCommitInfo returns the CommitInfo for the given version.
@@ -60,4 +69,11 @@ type Committer interface {
 	// Close releases associated resources. It should NOT be idempotent. It must
 	// only be called once and any call after may panic.
 	io.Closer
+}
+
+// KVStoreGetter is an interface that allows getting the KVStoreWithBatch for
+// the underlying store key from the Committer.
+// It is used to migrate or remove data when upgrading the store key.
+type KVStoreGetter interface {
+	GetKVStoreWithBatch(storeKey string) corestore.KVStoreWithBatch
 }

@@ -19,6 +19,7 @@ import (
 const (
 	storeKey1 = "store1"
 	storeKey2 = "store2"
+	storeKey3 = "store3"
 )
 
 // CommitStoreTestSuite is a test suite to be used for all tree backends.
@@ -123,6 +124,61 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 	}
 }
 
+func (s *CommitStoreTestSuite) TestStore_LoadVersion() {
+	storeKeys := []string{storeKey1, storeKey2}
+	mdb := dbm.NewMemDB()
+	commitStore, err := s.NewStore(mdb, storeKeys, log.NewNopLogger())
+	s.Require().NoError(err)
+
+	latestVersion := uint64(10)
+	kvCount := 10
+	for i := uint64(1); i <= latestVersion; i++ {
+		kvPairs := make(map[string]corestore.KVPairs)
+		for _, storeKey := range storeKeys {
+			kvPairs[storeKey] = corestore.KVPairs{}
+			for j := 0; j < kvCount; j++ {
+				key := []byte(fmt.Sprintf("key-%d-%d", i, j))
+				value := []byte(fmt.Sprintf("value-%d-%d", i, j))
+				kvPairs[storeKey] = append(kvPairs[storeKey], corestore.KVPair{Key: key, Value: value})
+			}
+		}
+		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(kvPairs)))
+		_, err = commitStore.Commit(i)
+		s.Require().NoError(err)
+	}
+
+	// load the store with the latest version
+	targetStore, err := s.NewStore(mdb, storeKeys, log.NewNopLogger())
+	s.Require().NoError(err)
+	err = targetStore.LoadVersion(latestVersion)
+	s.Require().NoError(err)
+	// check the store
+	for i := uint64(1); i <= latestVersion; i++ {
+		commitInfo, _ := targetStore.GetCommitInfo(i)
+		s.Require().NotNil(commitInfo)
+		s.Require().Equal(i, commitInfo.Version)
+	}
+
+	// rollback to a previous version
+	rollbackVersion := uint64(5)
+	rollbackStore, err := s.NewStore(mdb, storeKeys, log.NewNopLogger())
+	s.Require().NoError(err)
+	err = rollbackStore.LoadVersion(rollbackVersion)
+	s.Require().NoError(err)
+	// check the store
+	v, err := rollbackStore.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(rollbackVersion, v)
+	for i := uint64(1); i <= latestVersion; i++ {
+		commitInfo, _ := rollbackStore.GetCommitInfo(i)
+		if i > rollbackVersion {
+			s.Require().Nil(commitInfo)
+		} else {
+			s.Require().NotNil(commitInfo)
+		}
+	}
+}
+
 func (s *CommitStoreTestSuite) TestStore_Pruning() {
 	storeKeys := []string{storeKey1, storeKey2}
 	pruneOpts := store.NewPruningOptionWithCustom(10, 5)
@@ -160,6 +216,106 @@ func (s *CommitStoreTestSuite) TestStore_Pruning() {
 			s.Require().Nil(commitInfo)
 		} else {
 			s.Require().NotNil(commitInfo)
+		}
+	}
+}
+
+func (s *CommitStoreTestSuite) TestStore_Upgrades() {
+	storeKeys := []string{storeKey1, storeKey2, storeKey3}
+	commitDB := dbm.NewMemDB()
+	commitStore, err := s.NewStore(commitDB, storeKeys, log.NewNopLogger())
+	s.Require().NoError(err)
+
+	latestVersion := uint64(10)
+	kvCount := 10
+	for i := uint64(1); i <= latestVersion; i++ {
+		kvPairs := make(map[string]corestore.KVPairs)
+		for _, storeKey := range storeKeys {
+			kvPairs[storeKey] = corestore.KVPairs{}
+			for j := 0; j < kvCount; j++ {
+				key := []byte(fmt.Sprintf("key-%d-%d", i, j))
+				value := []byte(fmt.Sprintf("value-%d-%d", i, j))
+				kvPairs[storeKey] = append(kvPairs[storeKey], corestore.KVPair{Key: key, Value: value})
+			}
+		}
+		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(kvPairs)))
+		_, err = commitStore.Commit(i)
+		s.Require().NoError(err)
+	}
+
+	// create a new commitment store with upgrades
+	upgrades := &corestore.StoreUpgrades{
+		Added: []string{"newStore1", "newStore2"},
+		Renamed: []corestore.StoreRename{
+			{OldKey: storeKey1, NewKey: "renamedStore1"},
+		},
+		Deleted: []string{storeKey3},
+	}
+	newStoreKeys := []string{storeKey1, storeKey2, storeKey3, "renamedStore1", "newStore1", "newStore2"}
+	realStoreKeys := []string{"renamedStore1", storeKey2, "newStore1", "newStore2"}
+	commitStore, err = s.NewStore(commitDB, newStoreKeys, log.NewNopLogger())
+	s.Require().NoError(err)
+	err = commitStore.LoadVersionAndUpgrade(latestVersion, upgrades)
+	s.Require().NoError(err)
+
+	// verify removed stores
+	for _, storeKey := range []string{storeKey1, storeKey3} {
+		for i := uint64(1); i <= latestVersion; i++ {
+			for j := 0; j < kvCount; j++ {
+				proof, err := commitStore.GetProof([]byte(storeKey), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
+				s.Require().Error(err)
+				s.Require().Nil(proof)
+			}
+		}
+	}
+
+	// apply the changeset again
+	for i := latestVersion + 1; i < latestVersion*2; i++ {
+		kvPairs := make(map[string]corestore.KVPairs)
+		for _, storeKey := range realStoreKeys {
+			kvPairs[storeKey] = corestore.KVPairs{}
+			for j := 0; j < kvCount; j++ {
+				key := []byte(fmt.Sprintf("key-%d-%d", i, j))
+				value := []byte(fmt.Sprintf("value-%d-%d", i, j))
+				kvPairs[storeKey] = append(kvPairs[storeKey], corestore.KVPair{Key: key, Value: value})
+			}
+		}
+		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(kvPairs)))
+		commitInfo, err := commitStore.Commit(i)
+		s.Require().NoError(err)
+		s.Require().NotNil(commitInfo)
+		s.Require().Equal(len(realStoreKeys), len(commitInfo.StoreInfos))
+		for _, storeKey := range realStoreKeys {
+			s.Require().NotNil(commitInfo.GetStoreCommitID([]byte(storeKey)))
+		}
+	}
+
+	// verify new stores
+	for _, storeKey := range []string{"newStore1", "newStore2"} {
+		for i := latestVersion + 1; i < latestVersion*2; i++ {
+			for j := 0; j < kvCount; j++ {
+				proof, err := commitStore.GetProof([]byte(storeKey), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
+				s.Require().NoError(err)
+				s.Require().NotNil(proof)
+			}
+		}
+	}
+
+	// verify renamed store
+	for i := uint64(1); i < latestVersion*2; i++ {
+		for j := 0; j < kvCount; j++ {
+			proof, err := commitStore.GetProof([]byte("renamedStore1"), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
+			s.Require().NoError(err)
+			s.Require().NotNil(proof)
+		}
+	}
+
+	// verify existing store
+	for i := uint64(1); i < latestVersion*2; i++ {
+		for j := 0; j < kvCount; j++ {
+			proof, err := commitStore.GetProof([]byte(storeKey2), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
+			s.Require().NoError(err)
+			s.Require().NotNil(proof)
 		}
 	}
 }

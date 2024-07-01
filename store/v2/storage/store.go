@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/core/log"
@@ -18,6 +19,7 @@ var (
 	_ store.VersionedDatabase      = (*StorageStore)(nil)
 	_ snapshots.StorageSnapshotter = (*StorageStore)(nil)
 	_ store.Pruner                 = (*StorageStore)(nil)
+	_ store.UpgradableDatabase     = (*StorageStore)(nil)
 )
 
 // StorageStore is a wrapper around the store.VersionedDatabase interface.
@@ -135,6 +137,28 @@ func (ss *StorageStore) Restore(version uint64, chStorage <-chan *corestore.Stat
 	}
 
 	return nil
+}
+
+// PruneStoreKey prunes the store key which implements the store.UpgradableDatabase
+// interface.
+func (ss *StorageStore) PruneStoreKey(storeKey []byte) error {
+	gdb, ok := ss.db.(store.UpgradableDatabase)
+	if !ok {
+		return errors.New("db does not implement UpgradableDatabase interface")
+	}
+
+	return gdb.PruneStoreKey(storeKey)
+}
+
+// MigrateStoreKey migrates the store key which implements the store.UpgradableDatabase
+// interface.
+func (ss *StorageStore) MigrateStoreKey(oldStoreKey, newStoreKey []byte) error {
+	gdb, ok := ss.db.(store.UpgradableDatabase)
+	if !ok {
+		return fmt.Errorf("db does not implement UpgradableDatabase interface")
+	}
+
+	return gdb.MigrateStoreKey(oldStoreKey, newStoreKey)
 }
 
 // Close closes the store.

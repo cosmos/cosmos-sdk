@@ -19,7 +19,10 @@ import (
 	"cosmossdk.io/store/v2/pruning"
 )
 
-var _ store.RootStore = (*Store)(nil)
+var (
+	_ store.RootStore        = (*Store)(nil)
+	_ store.UpgradeableStore = (*Store)(nil)
+)
 
 // Store defines the SDK's default RootStore implementation. It contains a single
 // State Storage (SS) backend and a single State Commitment (SC) backend. The SC
@@ -222,7 +225,7 @@ func (s *Store) LoadLatestVersion() error {
 		return err
 	}
 
-	return s.loadVersion(lv)
+	return s.loadVersion(lv, nil)
 }
 
 func (s *Store) LoadVersion(version uint64) error {
@@ -231,14 +234,80 @@ func (s *Store) LoadVersion(version uint64) error {
 		defer s.telemetry.MeasureSince(now, "root_store", "load_version")
 	}
 
-	return s.loadVersion(version)
+	return s.loadVersion(version, nil)
 }
 
-func (s *Store) loadVersion(v uint64) error {
+// LoadVersionAndUpgrade implements the UpgradeableStore interface.
+//
+// NOTE: It cannot be called while the store is migrating.
+func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreUpgrades) error {
+	if upgrades == nil {
+		return fmt.Errorf("upgrades cannot be nil")
+	}
+
+	if s.telemetry != nil {
+		defer s.telemetry.MeasureSince(time.Now(), "root_store", "load_version_and_upgrade")
+	}
+
+	if s.isMigrating {
+		return fmt.Errorf("cannot upgrade while migrating")
+	}
+
+	// we need to prune the old store keys from SS and SC
+	var (
+		removedStoreKeys []string
+		removedKVStores  []corestore.KVStoreWithBatch
+	)
+	removedStoreKeys = append(removedStoreKeys, upgrades.Deleted...)
+	for _, renamedStore := range upgrades.Renamed {
+		removedStoreKeys = append(removedStoreKeys, renamedStore.OldKey)
+	}
+	// if the state commitment implements the KVStoreGetter interface, prune the
+	// old KVStores
+	kvStoreGetter, ok := s.stateCommitment.(store.KVStoreGetter)
+	if ok {
+		for _, storeKey := range removedStoreKeys {
+			removedKVStores = append(removedKVStores, kvStoreGetter.GetKVStoreWithBatch(storeKey))
+		}
+	}
+
+	if err := s.loadVersion(version, upgrades); err != nil {
+		return err
+	}
+
+	if err := s.pruningManager.PruneKVStores(removedKVStores); err != nil {
+		return fmt.Errorf("failed to set pruned KVStores: %w", err)
+	}
+	// if the state storage implements the UpgradableDatabase interface, prune the
+	// old store keys
+	upgradableDatabase, ok := s.stateStorage.(store.UpgradableDatabase)
+	if ok {
+		for _, storeKey := range removedStoreKeys {
+			if err := upgradableDatabase.PruneStoreKey([]byte(storeKey)); err != nil {
+				return fmt.Errorf("failed to prune store key %s: %w", storeKey, err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (s *Store) loadVersion(v uint64, upgrades *corestore.StoreUpgrades) error {
 	s.logger.Debug("loading version", "version", v)
 
-	if err := s.stateCommitment.LoadVersion(v); err != nil {
-		return fmt.Errorf("failed to load SC version %d: %w", v, err)
+	if upgrades == nil {
+		if err := s.stateCommitment.LoadVersion(v); err != nil {
+			return fmt.Errorf("failed to load SC version %d: %w", v, err)
+		}
+	} else {
+		// if upgrades are provided, we need to load the version and apply the upgrades
+		upgradeableStore, ok := s.stateCommitment.(store.UpgradeableStore)
+		if !ok {
+			return fmt.Errorf("SC store does not support upgrades")
+		}
+		if err := upgradeableStore.LoadVersionAndUpgrade(v, upgrades); err != nil {
+			return fmt.Errorf("failed to load SS version with upgrades %d: %w", v, err)
+		}
 	}
 
 	s.commitHeader = nil
@@ -298,8 +367,8 @@ func (s *Store) WorkingHash(cs *corestore.Changeset) ([]byte, error) {
 
 // Commit commits all state changes to the underlying SS and SC backends. It
 // writes a batch of the changeset to the SC tree, and retrieves the CommitInfo
-// from the SC tree. Finally, it commits the SC tree and returns the hash of the
-// CommitInfo.
+// from the SC tree. Finally, it commits the SC tree and returns the hash of
+// the CommitInfo.
 func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	if s.telemetry != nil {
 		now := time.Now()

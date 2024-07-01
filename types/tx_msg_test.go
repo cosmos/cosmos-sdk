@@ -1,11 +1,13 @@
 package types_test
 
 import (
-	"cosmossdk.io/math"
 	"testing"
+
 
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"

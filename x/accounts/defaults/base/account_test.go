@@ -209,7 +209,32 @@ func TestAuthenticate(t *testing.T) {
 	require.NoError(t, err)
 
 	// testing with invalid signature
+
+	// update sequence number
+	transaction = tx.Tx{
+		Body: &tx.TxBody{},
+		AuthInfo: &tx.AuthInfo{
+			SignerInfos: []*tx.SignerInfo{
+				{
+					PublicKey: pkAny,
+					ModeInfo: &tx.ModeInfo{
+						Sum: &tx.ModeInfo_Single_{
+							Single: &tx.ModeInfo_Single{
+								Mode: 1,
+							},
+						},
+					},
+					Sequence: 1,
+				},
+			},
+		},
+		Signatures: [][]byte{},
+	}
+	authByte, err = transaction.AuthInfo.Marshal()
+	require.NoError(t, err)
+
 	txDoc.BodyBytes = []byte("invalid_msg")
+	txDoc.AuthInfoBytes = authByte
 	signBytes, err = txDoc.Marshal()
 	require.NoError(t, err)
 	invalidSig, err := privKey.Sign(signBytes)
@@ -224,5 +249,5 @@ func TestAuthenticate(t *testing.T) {
 		Tx:          &transaction,
 		SignerIndex: 0,
 	})
-	require.Error(t, err)
+	require.Equal(t, errors.New("signature verification failed"), err)
 }

@@ -218,14 +218,7 @@ func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, 
 func (c *CommitStore) Prune(version uint64) (ferr error) {
 	// prune the metadata
 	for v := version; v > 0; v-- {
-		ci, err := c.metadata.GetCommitInfo(v)
-		if err != nil {
-			return err
-		}
-		if ci == nil {
-			break
-		}
-		if err = c.metadata.deleteCommitInfo(v); err != nil {
+		if err := c.metadata.deleteCommitInfo(v); err != nil {
 			return err
 		}
 	}

@@ -21,6 +21,10 @@ const (
 	// DefaultMaxUnOrderedTTL defines the default maximum TTL an un-ordered transaction
 	// can set.
 	DefaultMaxUnOrderedTTL = 1024
+	// DefaultmaxTimeoutDuration defines the default maximum duration an un-ordered transaction
+	// can set.
+	// TODO: need to decide a default value
+	DefaultmaxTimeoutDuration = time.Minute * 40
 
 	dirName  = "unordered_txs"
 	fileName = "data"

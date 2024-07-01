@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -81,6 +82,14 @@ type (
 
 	// TxWithTimeoutHeight extends the Tx interface by allowing a transaction to
 	// set a height timeout.
+	TxWithTimeoutTimeStamp interface {
+		Tx
+
+		GetTimeoutTimeStamp() time.Time
+	}
+
+	// TxWithTimeoutHeight extends the Tx interface by allowing a transaction to
+	// set a height timeout.
 	TxWithTimeoutHeight interface {
 		Tx
 
@@ -91,6 +100,7 @@ type (
 	// the unordered field, which implicitly relies on TxWithTimeoutHeight.
 	TxWithUnordered interface {
 		TxWithTimeoutHeight
+		TxWithTimeoutTimeStamp
 
 		GetUnordered() bool
 	}

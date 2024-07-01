@@ -35,7 +35,7 @@ func (s *testMsgSuite) TestMsgTypeURL() {
 }
 
 func (s *testMsgSuite) TestGetMsgFromTypeURL() {
-	msg := new(testdata.TestMsg)
+	msg := testdata.NewTestMsg()
 	cdc := codec.NewProtoCodec(testdata.NewTestInterfaceRegistry())
 
 	result, err := sdk.GetMsgFromTypeURL(cdc, "/testpb.TestMsg")

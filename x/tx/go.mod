@@ -11,6 +11,7 @@ require (
 	github.com/cosmos/gogoproto v1.5.0
 	github.com/google/go-cmp v0.6.0
 	github.com/google/gofuzz v1.2.0
+	github.com/hashicorp/golang-lru v1.0.2
 	github.com/iancoleman/strcase v0.3.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.9.0

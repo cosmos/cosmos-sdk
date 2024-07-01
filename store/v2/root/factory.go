@@ -83,6 +83,24 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 	}
 	ss = storage.NewStorageStore(ssDb, opts.Logger)
 
+	if len(opts.StoreKeys) == 0 {
+		metadata := commitment.NewMetadataStore(opts.SCRawDB)
+		latestVersion, err := metadata.GetLatestVersion()
+		if err != nil {
+			return nil, err
+		}
+		lastCommitInfo, err := metadata.GetCommitInfo(latestVersion)
+		if err != nil {
+			return nil, err
+		}
+		if lastCommitInfo == nil {
+			return nil, fmt.Errorf("tried to construct a root store with no store keys specified but no commit info found for version %d", latestVersion)
+		}
+		for _, si := range lastCommitInfo.StoreInfos {
+			opts.StoreKeys = append(opts.StoreKeys, string(si.Name))
+		}
+	}
+
 	trees := make(map[string]commitment.Tree)
 	for _, key := range opts.StoreKeys {
 		if internal.IsMemoryStoreKey(key) {

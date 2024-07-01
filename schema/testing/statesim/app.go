@@ -30,13 +30,20 @@ func NewApp(appSchema map[string]schema.ModuleSchema, options Options) *App {
 		return moduleNames[u]
 	})
 
+	numUpdatesGen := rapid.IntRange(1, 2)
 	updateGen := rapid.Custom(func(t *rapid.T) appdata.ObjectUpdateData {
 		moduleName := moduleNameSelector.Draw(t, "moduleName")
 		moduleState, ok := moduleStates.Get(moduleName)
 		require.True(t, ok)
+		numUpdates := numUpdatesGen.Draw(t, "numUpdates")
+		updates := make([]schema.ObjectUpdate, numUpdates)
+		for i := 0; i < numUpdates; i++ {
+			update := moduleState.UpdateGen().Draw(t, fmt.Sprintf("update[%d]", i))
+			updates[i] = update
+		}
 		return appdata.ObjectUpdateData{
 			ModuleName: moduleName,
-			Update:     moduleState.UpdateGen().Draw(t, "update"),
+			Updates:    updates,
 		}
 	})
 

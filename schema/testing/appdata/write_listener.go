@@ -23,8 +23,8 @@ func WriterListener(w io.Writer) appdata.Listener {
 		OnTx:     nil,
 		OnEvent:  nil,
 		OnKVPair: nil,
-		Commit: func() error {
-			_, err := fmt.Fprintf(w, "Commit\n")
+		Commit: func(data appdata.CommitData) error {
+			_, err := fmt.Fprintf(w, "Commit: %v\n", data)
 			return err
 		},
 		InitializeModuleData: func(data appdata.ModuleInitializationData) error {

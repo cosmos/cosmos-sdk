@@ -2,6 +2,7 @@ module cosmossdk.io/indexer/postgres/testing
 
 require (
 	cosmossdk.io/indexer/postgres v0.0.0
+	cosmossdk.io/schema v0.0.0
 	cosmossdk.io/schema/testing v0.0.0-00010101000000-000000000000
 	github.com/fergusstrange/embedded-postgres v1.27.0
 	github.com/hashicorp/consul/sdk v0.16.1
@@ -10,7 +11,7 @@ require (
 )
 
 require (
-	cosmossdk.io/schema v0.0.0 // indirect
+	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect

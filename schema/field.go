@@ -14,6 +14,7 @@ type Field struct {
 	Nullable bool
 
 	// AddressPrefix is the address prefix of the field's kind, currently only used for Bech32AddressKind.
+	// TODO: add validation for valid address prefixes
 	AddressPrefix string
 
 	// EnumDefinition is the definition of the enum type and is only valid when Kind is EnumKind.

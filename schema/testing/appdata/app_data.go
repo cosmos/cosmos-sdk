@@ -78,15 +78,22 @@ func (a *Simulator) BlockDataGenN(maxUpdatesPerBlock int) *rapid.Generator[Block
 
 		updateSet := map[string]bool{}
 		// filter out any updates to the same key from this block, otherwise we can end up with weird errors
-		updateGen := a.state.UpdateGen().Filter(func(update appdata.ObjectUpdateData) bool {
-			_, existing := updateSet[fmt.Sprintf("%s:%v", update.ModuleName, update.Update.Key)]
-			return !existing
+		updateGen := a.state.UpdateGen().Filter(func(data appdata.ObjectUpdateData) bool {
+			for _, update := range data.Updates {
+				_, existing := updateSet[fmt.Sprintf("%s:%v", data.ModuleName, update.Key)]
+				if existing {
+					return false
+				}
+			}
+			return true
 		})
 		numUpdates := numUpdatesGen.Draw(t, "numUpdates")
 		for i := 0; i < numUpdates; i++ {
-			update := updateGen.Draw(t, fmt.Sprintf("update[%d]", i))
-			updateSet[fmt.Sprintf("%s:%v", update.ModuleName, update.Update.Key)] = true
-			packets = append(packets, update)
+			data := updateGen.Draw(t, fmt.Sprintf("update[%d]", i))
+			for _, update := range data.Updates {
+				updateSet[fmt.Sprintf("%s:%v", data.ModuleName, update.Key)] = true
+			}
+			packets = append(packets, data)
 		}
 
 		return packets
@@ -110,15 +117,17 @@ func (a *Simulator) ProcessBlockData(data BlockData) error {
 		}
 
 		if updateData, ok := packet.(appdata.ObjectUpdateData); ok {
-			err = a.state.ApplyUpdate(updateData.ModuleName, updateData.Update)
-			if err != nil {
-				return err
+			for _, update := range updateData.Updates {
+				err = a.state.ApplyUpdate(updateData.ModuleName, update)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
 
 	if f := a.options.Listener.Commit; f != nil {
-		err := f()
+		err := f(appdata.CommitData{})
 		if err != nil {
 			return err
 		}

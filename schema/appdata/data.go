@@ -92,8 +92,8 @@ type ObjectUpdateData struct {
 	// ModuleName is the name of the module that the update corresponds to.
 	ModuleName string
 
-	// Update is the object update.
-	Update []schema.ObjectUpdate
+	// Updates are the object updates.
+	Updates []schema.ObjectUpdate
 }
 
 type CommitData struct{}

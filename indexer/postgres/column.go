@@ -29,7 +29,7 @@ func (tm *TableManager) createColumnDef(writer io.Writer, field schema.Field) er
 				return err
 			}
 		case schema.Bech32AddressKind:
-			_, err = fmt.Fprintf(writer, "BYTEA") // TODO: string conversion
+			_, err = fmt.Fprintf(writer, "TEXT")
 			if err != nil {
 				return err
 			}

@@ -75,7 +75,7 @@ func Middleware(target appdata.Listener, opts Options) appdata.Listener {
 
 			return target.OnObjectUpdate(appdata.ObjectUpdateData{
 				ModuleName: data.ModuleName,
-				Update:     update,
+				Updates:    update,
 			})
 		}
 

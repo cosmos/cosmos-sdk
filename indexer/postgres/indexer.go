@@ -83,25 +83,31 @@ func (i *Indexer) initModuleSchema(data appdata.ModuleInitializationData) error 
 
 func (i *Indexer) onObjectUpdate(data appdata.ObjectUpdateData) error {
 	module := data.ModuleName
-	update := data.Update
 	mod, ok := i.Modules[module]
 	if !ok {
 		return fmt.Errorf("module %s not initialized", module)
 	}
 
-	tm, ok := mod.Tables[update.TypeName]
-	if !ok {
-		return fmt.Errorf("object type %s not found in schema for module %s", update.TypeName, module)
-	}
+	for _, update := range data.Updates {
+		tm, ok := mod.Tables[update.TypeName]
+		if !ok {
+			return fmt.Errorf("object type %s not found in schema for module %s", update.TypeName, module)
+		}
 
-	if update.Delete {
-		return tm.Delete(i.ctx, i.Tx, update.Key)
-	} else {
-		return tm.InsertUpdate(i.ctx, i.Tx, update.Key, update.Value)
+		var err error
+		if update.Delete {
+			err = tm.Delete(i.ctx, i.Tx, update.Key)
+		} else {
+			err = tm.InsertUpdate(i.ctx, i.Tx, update.Key, update.Value)
+		}
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func (i *Indexer) commit() error {
+func (i *Indexer) commit(data appdata.CommitData) error {
 	err := i.Tx.Commit()
 	if err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)

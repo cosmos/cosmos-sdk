@@ -87,7 +87,7 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 	// This is done to avoid sha256 computation in simulation mode
 	if d.env.TransactionService.ExecMode(ctx) != transaction.ExecModeSimulate {
 		// calculate the tx hash
-		txHash, err := txIdentifier(ttl, tx)
+		txHash, err := TxIdentifier(ttl, tx)
 		if err != nil {
 			return ctx, err
 		}
@@ -105,8 +105,8 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 	return next(ctx, tx, false)
 }
 
-// txIdentifier returns a unique identifier for a transaction that is intended to be unordered.
-func txIdentifier(timeout uint64, tx sdk.Tx) ([32]byte, error) {
+// TxIdentifier returns a unique identifier for a transaction that is intended to be unordered.
+func TxIdentifier(timeout uint64, tx sdk.Tx) ([32]byte, error) {
 	feetx := tx.(sdk.FeeTx)
 	if feetx.GetFee().IsZero() {
 		return [32]byte{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction must have a fee")

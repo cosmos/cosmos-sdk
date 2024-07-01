@@ -77,7 +77,7 @@ type ToBytes = func() ([]byte, error)
 type ToJSON = func() (json.RawMessage, error)
 
 type KVPairData struct {
-	Update []schema.KVPairUpdate
+	Updates []ModuleKVPairUpdate
 }
 
 type ModuleKVPairUpdate struct {

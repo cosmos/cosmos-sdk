@@ -2,6 +2,7 @@ package testing
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"os"
 	"testing"
@@ -14,6 +15,7 @@ import (
 	"cosmossdk.io/indexer/postgres"
 	"cosmossdk.io/schema"
 	"cosmossdk.io/schema/appdata"
+	"cosmossdk.io/schema/indexing"
 	indexertesting "cosmossdk.io/schema/testing"
 	appdatatest "cosmossdk.io/schema/testing/appdata"
 	"cosmossdk.io/schema/testing/statesim"
@@ -50,17 +52,21 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 		require.NoError(t, err)
 	})
 
-	indexer, err := postgres.NewIndexer(ctx, postgres.Options{
-		Driver:          "pgx",
-		ConnectionURL:   dbUrl,
+	db, err := sql.Open("pgx", dbUrl)
+	require.NoError(t, err)
+
+	indexer, err := postgres.NewIndexer(db, postgres.Options{
 		RetainDeletions: retainDeletions,
 	})
+	require.NoError(t, err)
+
+	res, err := indexer.Initialize(ctx, indexing.InitializationData{})
 	require.NoError(t, err)
 
 	fixture := appdatatest.NewSimulator(appdatatest.SimulatorOptions{
 		Listener: appdata.ListenerMux(
 			appdata.DebugListener(os.Stdout),
-			indexer.Listener(),
+			res.Listener,
 		),
 		AppSchema: indexertesting.ExampleAppSchema,
 		StateSimOptions: statesim.Options{
@@ -76,20 +82,20 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 		require.NoError(t, fixture.ProcessBlockData(blockData))
 
 		require.NoError(t, fixture.AppState().ScanObjectCollections(func(moduleName string, collection *statesim.ObjectCollection) error {
-			modMgr, ok := indexer.Modules[moduleName]
+			modMgr, ok := indexer.Modules()[moduleName]
 			require.True(t, ok)
 			tblMgr, ok := modMgr.Tables[collection.ObjectType().Name]
 			require.True(t, ok)
 
 			expectedCount := collection.Len()
-			actualCount, err := tblMgr.Count(context.Background(), indexer.Tx)
+			actualCount, err := tblMgr.Count(context.Background(), indexer.ActiveTx())
 			require.NoError(t, err)
 			require.Equalf(t, expectedCount, actualCount, "table %s %s count mismatch", moduleName, collection.ObjectType().Name)
 
 			return collection.ScanState(func(update schema.ObjectUpdate) error {
 				found, err := tblMgr.Equals(
 					context.Background(),
-					indexer.Tx, update.Key, update.Value)
+					indexer.ActiveTx(), update.Key, update.Value)
 				if err != nil {
 					return err
 				}
@@ -101,32 +107,5 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 				return nil
 			})
 		}))
-		//require.NoError(t, fixture.AppState().ScanModuleSchemas(func(modName string, modSchema schema.ModuleSchema) error {
-		//	modState, ok := fixture.AppState().GetModule(modName)
-		//	require.True(t, ok)
-		//	modMgr, ok := indexer.Modules[modName]
-		//	require.True(t, ok)
-		//	for _, objType := range modSchema.ObjectTypes {
-		//		objColl, ok := modState.GetObjectCollection(objType.Name)
-		//		require.True(t, ok)
-		//		tblMgr, ok := modMgr.Tables[objType.Name]
-		//		require.True(t, ok)
-		//
-		//		expectedCount := objColl.Len()
-		//		actualCount, err := tblMgr.Count(context.Background(), indexer.Tx)
-		//		require.NoError(t, err)
-		//		require.Equalf(t, expectedCount, actualCount, "table %s %s count mismatch", modName, objType.Name)
-		//
-		//		objColl.ScanState(func(update schema.ObjectUpdate) bool {
-		//			found, err := tblMgr.Equals(
-		//				context.Background(),
-		//				indexer.Tx, update.Key, update.Value)
-		//			require.NoError(t, err)
-		//			require.Truef(t, found, "object not found in table %s %s %v %v", modName, objType.Name, update.Key, update.Value)
-		//			return true
-		//		})
-		//	}
-		//	return nil
-		//}))
 	}
 }

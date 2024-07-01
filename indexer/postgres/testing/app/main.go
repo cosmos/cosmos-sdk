@@ -47,7 +47,7 @@ func start() error {
 		}
 	}(pg)
 
-	indexer, err := postgres.NewIndexer(context.Background(), postgres.Options{
+	indexer, err := postgres.NewIndexer(context.Background(), postgres.configOptions{
 		Driver:        "pgx",
 		ConnectionURL: dbUrl,
 	})

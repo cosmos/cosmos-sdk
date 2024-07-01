@@ -58,25 +58,28 @@ func Middleware(target appdata.Listener, opts Options) appdata.Listener {
 		}
 
 		if target.OnObjectUpdate != nil {
-			codec, ok := moduleCodecs[data.ModuleName]
-			if !ok {
-				// TODO handle discovering a new module
-				return nil
-			}
+			for _, kvUpdate := range data.Updates {
 
-			update, ok, err := codec.KVDecoder(data.Key, data.Value, data.Delete)
-			if err != nil {
-				return err
-			}
+				codec, ok := moduleCodecs[kvUpdate.ModuleName]
+				if !ok {
+					// TODO handle discovering a new module
+					return nil
+				}
 
-			if !ok {
-				return nil
-			}
+				updates, err := codec.KVDecoder(kvUpdate.Update)
+				if err != nil {
+					return err
+				}
 
-			return target.OnObjectUpdate(appdata.ObjectUpdateData{
-				ModuleName: data.ModuleName,
-				Updates:    update,
-			})
+				if !ok {
+					return nil
+				}
+
+				return target.OnObjectUpdate(appdata.ObjectUpdateData{
+					ModuleName: kvUpdate.ModuleName,
+					Updates:    updates,
+				})
+			}
 		}
 
 		return nil

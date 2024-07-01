@@ -89,3 +89,8 @@ func (m *MetadataStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo)
 	}
 	return batch.Close()
 }
+
+func (m *MetadataStore) deleteCommitInfo(version uint64) error {
+	cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
+	return m.kv.Delete(cInfoKey)
+}

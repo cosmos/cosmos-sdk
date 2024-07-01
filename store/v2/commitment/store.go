@@ -31,7 +31,6 @@ var (
 // and trees.
 type CommitStore struct {
 	logger     log.Logger
-	db         corestore.KVStoreWithBatch
 	metadata   *MetadataStore
 	multiTrees map[string]Tree
 }
@@ -40,7 +39,6 @@ type CommitStore struct {
 func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, logger log.Logger) (*CommitStore, error) {
 	return &CommitStore{
 		logger:     logger,
-		db:         db,
 		multiTrees: trees,
 		metadata:   NewMetadataStore(db),
 	}, nil
@@ -98,16 +96,10 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 		return err
 	}
 	if targetVersion < latestVersion {
-		batch := c.db.NewBatch()
-		defer batch.Close()
 		for version := latestVersion; version > targetVersion; version-- {
-			cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
-			if err := batch.Delete(cInfoKey); err != nil {
+			if err = c.metadata.deleteCommitInfo(version); err != nil {
 				return err
 			}
-		}
-		if err := batch.WriteSync(); err != nil {
-			return err
 		}
 	}
 
@@ -225,19 +217,17 @@ func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, 
 // Prune implements store.Pruner.
 func (c *CommitStore) Prune(version uint64) (ferr error) {
 	// prune the metadata
-	batch := c.db.NewBatch()
-	defer batch.Close()
 	for v := version; v > 0; v-- {
-		cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, v))
-		if exist, _ := c.db.Has(cInfoKey); !exist {
-			break
-		}
-		if err := batch.Delete(cInfoKey); err != nil {
+		ci, err := c.metadata.GetCommitInfo(v)
+		if err != nil {
 			return err
 		}
-	}
-	if err := batch.WriteSync(); err != nil {
-		return err
+		if ci == nil {
+			break
+		}
+		if err = c.metadata.deleteCommitInfo(v); err != nil {
+			return err
+		}
 	}
 
 	for _, tree := range c.multiTrees {

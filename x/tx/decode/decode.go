@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"unsafe"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	lru "github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru/v2"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
@@ -55,7 +56,7 @@ type cacheEntry struct {
 type Decoder struct {
 	signingCtx *signing.Context
 	codec      gogoProtoCodec
-	txCache    *lru.Cache
+	txCache    *lru.Cache[string, cacheEntry]
 }
 
 // Options are options for creating a Decoder.
@@ -80,7 +81,7 @@ func NewDecoder(options Options) (*Decoder, error) {
 	}
 
 	// Create a new LRU tx decoder cache
-	txCache, err := lru.New(int(txCacheSize))
+	txCache, err := lru.New[string, cacheEntry](int(txCacheSize))
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize tx decoder cache: %w", err)
 	}
@@ -95,14 +96,11 @@ func NewDecoder(options Options) (*Decoder, error) {
 // Decode decodes raw protobuf encoded transaction bytes into a DecodedTx.
 func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	// generate cache key using txBytes
-	cacheKey := string(txBytes)
+	cacheKey := *(*string)(unsafe.Pointer(&txBytes))
 
 	// check if the tx is already present the cache
 	if entry, found := d.txCache.Get(cacheKey); found {
-		c, ok := entry.(cacheEntry)
-		if ok {
-			return c.decodedTx, c.err
-		}
+		return entry.decodedTx, entry.err
 	}
 
 	// Make sure txBytes follow ADR-027.
@@ -215,14 +213,14 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	}
 
 	// store the decoded tx in the tx decoder cache
-	d.txCache.Add(cacheKey, &cacheEntry{decodedTx: decodedTx, err: err})
+	d.txCache.Add(cacheKey, cacheEntry{decodedTx: decodedTx, err: err})
 
 	return decodedTx, nil
 }
 
 func (d *Decoder) returnDecodeError(cacheKey string, err error) (*DecodedTx, error) {
 	// store the error in the tx decoder cache
-	d.txCache.Add(cacheKey, &cacheEntry{decodedTx: nil, err: err})
+	d.txCache.Add(cacheKey, cacheEntry{decodedTx: nil, err: err})
 	return nil, err
 }
 

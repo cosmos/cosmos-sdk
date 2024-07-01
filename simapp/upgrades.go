@@ -46,7 +46,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 				protocolpooltypes.StoreKey,
 				epochstypes.StoreKey,
 			},
-			Deleted: []string{"crisis"},
+			Deleted: []string{"crisis"}, // The SDK discontinued the crisis module in v0.52.0
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades

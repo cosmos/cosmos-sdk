@@ -15,7 +15,6 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/accountstd"
-
 	accountsv1 "cosmossdk.io/x/accounts/v1"
 	"cosmossdk.io/x/tx/signing"
 
@@ -88,8 +87,7 @@ func makeMockDependencies(storeservice store.KVStoreService) accountstd.Dependen
 	}
 }
 
-type headerService struct {
-}
+type headerService struct{}
 
 func (h headerService) HeaderInfo(context.Context) header.Info {
 	return header.Info{

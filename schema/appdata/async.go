@@ -1,52 +1,38 @@
 package appdata
 
-import "context"
-
-func AsyncListener(listener Listener, bufferSize int, commitChan chan<- error) Listener {
+func AsyncListener(listener Listener, bufferSize int, commitChan chan<- error, doneChan <-chan struct{}) Listener {
 	packetChan := make(chan Packet, bufferSize)
 	res := Listener{}
 
-	res.Initialize = func(ctx context.Context, data InitializationData) (lastBlockPersisted int64, err error) {
-		if listener.Initialize != nil {
-			lastBlockPersisted, err = listener.Initialize(ctx, data)
-			if err != nil {
+	go func() {
+		var err error
+		for {
+			select {
+			case packet := <-packetChan:
+				if err != nil {
+					// if we have an error, don't process any more packets
+					// and return the error and finish when it's time to commit
+					if _, ok := packet.(CommitData); ok {
+						commitChan <- err
+						return
+					}
+				} else {
+					// process the packet
+					err = listener.SendPacket(packet)
+					// if it's a commit
+					if _, ok := packet.(CommitData); ok {
+						commitChan <- err
+						if err != nil {
+							return
+						}
+					}
+				}
+
+			case <-doneChan:
 				return
 			}
 		}
-
-		cancel := ctx.Done()
-		go func() {
-			var err error
-			for {
-				select {
-				case packet := <-packetChan:
-					if err != nil {
-						// if we have an error, don't process any more packets
-						// and return the error and finish when it's time to commit
-						if _, ok := packet.(CommitData); ok {
-							commitChan <- err
-							return
-						}
-					} else {
-						// process the packet
-						err = listener.SendPacket(packet)
-						// if it's a commit
-						if _, ok := packet.(CommitData); ok {
-							commitChan <- err
-							if err != nil {
-								return
-							}
-						}
-					}
-
-				case <-cancel:
-					return
-				}
-			}
-		}()
-
-		return
-	}
+	}()
 
 	if listener.InitializeModuleData != nil {
 		res.InitializeModuleData = func(data ModuleInitializationData) error {
@@ -93,13 +79,13 @@ func AsyncListener(listener Listener, bufferSize int, commitChan chan<- error) L
 	return res
 }
 
-func AsyncListenerMux(listeners []Listener, bufferSize int) Listener {
+func AsyncListenerMux(listeners []Listener, bufferSize int, doneChan <-chan struct{}) Listener {
 	asyncListeners := make([]Listener, len(listeners))
 	commitChans := make([]chan error, len(listeners))
 	for i, l := range listeners {
 		commitChan := make(chan error)
 		commitChans[i] = commitChan
-		asyncListeners[i] = AsyncListener(l, bufferSize, commitChan)
+		asyncListeners[i] = AsyncListener(l, bufferSize, commitChan, doneChan)
 	}
 	mux := ListenerMux(asyncListeners...)
 	muxCommit := mux.Commit

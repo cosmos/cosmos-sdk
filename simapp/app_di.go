@@ -249,34 +249,21 @@ func NewSimApp(
 
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 
-	// TODO: enable this depending on configuration
-	//// register streaming services
-	//if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
-	//	panic(err)
-	//}
-	modules := map[string]interface{}{}
-	for moduleName, module := range appModules {
-		modules[moduleName] = module
+	if indexerOpts := appOpts.Get("indexer"); indexerOpts != nil {
+		moduleSet := map[string]any{}
+		for modName, mod := range appModules {
+			moduleSet[modName] = mod
+		}
+		err := app.EnableIndexer(indexerOpts, app.kvStoreKeys(), moduleSet)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		// register streaming services
+		if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
+			panic(err)
+		}
 	}
-
-	//pgIndexer, err := postgres.NewIndexer(context.Background(), postgres.Options{})
-	//if err != nil {
-	//	panic(err)
-	//}
-	//engine, err := indexerbase.NewEngine(indexerbase.EngineOptions{
-	//	ModuleDecoders: moduleDecoders,
-	//	LogicalListeners: []indexerbase.LogicalListener{
-	//		pgIndexer,
-	//	},
-	//	Logger: logger.With("module", "indexer"),
-	//})
-	//if err != nil {
-	//	panic(err)
-	//}
-	//err = app.RegisterIndexer(app.kvStoreKeys(), storetypes.FromPhysicalListener(engine.PhysicalListener()))
-	//if err != nil {
-	//	panic(err)
-	//}
 
 	/****  Module Options ****/
 

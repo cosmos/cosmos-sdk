@@ -1,28 +1,24 @@
 package appdata
 
-import (
-	"context"
-)
-
 // ListenerMux returns a listener that forwards received events to all the provided listeners and only
 // registers a callback if a non-nil callback is present in at least one of the listeners.
 func ListenerMux(listeners ...Listener) Listener {
 	mux := Listener{}
 
-	for _, l := range listeners {
-		if l.Initialize != nil {
-			mux.Initialize = func(ctx context.Context, data InitializationData) (lastBlockPersisted int64, err error) {
-				for _, l := range listeners {
-					if l.Initialize != nil {
-						return l.Initialize(ctx, data)
-					}
-				}
-				// TODO: deal with return values!
-				return 0, nil
-			}
-			break
-		}
-	}
+	//for _, l := range listeners {
+	//	if l.Initialize != nil {
+	//		mux.Initialize = func(ctx context.Context, data InitializationData) (lastBlockPersisted int64, err error) {
+	//			for _, l := range listeners {
+	//				if l.Initialize != nil {
+	//					return l.Initialize(ctx, data)
+	//				}
+	//			}
+	//			// TODO: deal with return values!
+	//			return 0, nil
+	//		}
+	//		break
+	//	}
+	//}
 
 	for _, l := range listeners {
 		if l.InitializeModuleData != nil {

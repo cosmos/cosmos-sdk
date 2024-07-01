@@ -1,8 +1,6 @@
 package decoding
 
 import (
-	"context"
-
 	"cosmossdk.io/schema"
 	"cosmossdk.io/schema/appdata"
 )
@@ -16,41 +14,28 @@ type Options struct {
 	SyncSource SyncSource
 }
 
-func Middleware(target appdata.Listener, opts Options) appdata.Listener {
-	initialize := target.Initialize
+func Middleware(target appdata.Listener, opts Options) (appdata.Listener, error) {
 	initializeModuleData := target.InitializeModuleData
 	onKVPair := target.OnKVPair
 
 	moduleCodecs := map[string]schema.ModuleCodec{}
-	target.Initialize = func(ctx context.Context, data appdata.InitializationData) (lastBlock int64, err error) {
-		if initialize != nil {
-			// TODO: handle case where the indexer isn't update and returns an older lastBlock,should this be in a separate middleware layer?
-			lastBlock, err = initialize(ctx, data)
-			if err != nil {
-				return
+	if opts.DecoderResolver != nil {
+		err := opts.DecoderResolver.Iterate(func(moduleName string, codec schema.ModuleCodec) error {
+			moduleCodecs[moduleName] = codec
+			if initializeModuleData != nil {
+				return initializeModuleData(appdata.ModuleInitializationData{
+					ModuleName: moduleName,
+					Schema:     codec.Schema,
+				})
 			}
+			return nil
+		})
+		if err != nil {
+			return appdata.Listener{}, err
 		}
-
-		if opts.DecoderResolver != nil {
-			err = opts.DecoderResolver.Iterate(func(moduleName string, codec schema.ModuleCodec) error {
-				moduleCodecs[moduleName] = codec
-				if initializeModuleData != nil {
-					return initializeModuleData(appdata.ModuleInitializationData{
-						ModuleName: moduleName,
-						Schema:     codec.Schema,
-					})
-				}
-				return nil
-			})
-			if err != nil {
-				return
-			}
-		}
-
-		// TODO: catch-up sync
-
-		return
 	}
+
+	// TODO: catch-up sync
 
 	target.OnKVPair = func(data appdata.KVPairData) error {
 		if onKVPair != nil {
@@ -85,5 +70,5 @@ func Middleware(target appdata.Listener, opts Options) appdata.Listener {
 		return nil
 	}
 
-	return target
+	return target, nil
 }

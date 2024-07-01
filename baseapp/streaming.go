@@ -7,6 +7,8 @@ import (
 
 	"github.com/spf13/cast"
 
+	"cosmossdk.io/schema/decoding"
+	"cosmossdk.io/schema/indexing"
 	"cosmossdk.io/store/streaming"
 	storetypes "cosmossdk.io/store/types"
 
@@ -22,13 +24,29 @@ const (
 	StreamingABCIStopNodeOnErrTomlKey = "stop-node-on-err"
 )
 
-func (app *BaseApp) RegisterIndexer(keys map[string]*storetypes.KVStoreKey, listener storetypes.ABCIListener) error {
+func (app *BaseApp) EnableIndexer(indexerOpts interface{}, keys map[string]*storetypes.KVStoreKey, appModules map[string]any) error {
+	optsMap, ok := indexerOpts.(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("invalid indexer options type %T, expected a map", indexerOpts)
+	}
+
+	listener, err := indexing.Start(indexing.Options{
+		Options:    optsMap,
+		Resolver:   decoding.ModuleSetDecoderResolver(appModules),
+		SyncSource: nil,
+	})
+	if err != nil {
+		return err
+	}
+
 	exposedKeys := exposeStoreKeysSorted([]string{"*"}, keys)
 	app.cms.AddListeners(exposedKeys)
+
 	app.streamingManager = storetypes.StreamingManager{
-		ABCIListeners: []storetypes.ABCIListener{listener},
+		ABCIListeners: []storetypes.ABCIListener{storetypes.FromSchemaListener(listener)},
 		StopNodeOnErr: true,
 	}
+
 	return nil
 }
 

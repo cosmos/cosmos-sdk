@@ -19,7 +19,7 @@ import (
 
 // ExportAppStateAndValidators exports the state of the application for a genesis
 // file.
-func (app *SimApp) ExportAppStateAndValidators(ctx context.Context, forZeroHeight bool, jailAllowedAddrs, modulesToExport []string) (servertypes.ExportedApp, error) {
+func (app *SimApp[T]) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs, modulesToExport []string) (servertypes.ExportedApp, error) {
 	// as if they could withdraw from the start of the next block
 
 	// We export at last height + 1, because that's the height at which
@@ -71,7 +71,7 @@ func (app *SimApp) ExportAppStateAndValidators(ctx context.Context, forZeroHeigh
 // NOTE zero height genesis is a temporary feature which will be deprecated
 //
 //	in favor of export at a block height
-func (app *SimApp) prepForZeroHeightGenesis(ctx context.Context, jailAllowedAddrs []string) {
+func (app *SimApp[T]) prepForZeroHeightGenesis(ctx context.Context, jailAllowedAddrs []string) {
 	applyAllowedAddrs := false
 
 	// check if there is a allowed address list

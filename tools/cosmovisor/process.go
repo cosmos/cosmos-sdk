@@ -28,7 +28,7 @@ type Launcher struct {
 }
 
 func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
-	fw, err := newUpgradeFileWatcher(cfg, logger)
+	fw, err := newUpgradeFileWatcher(cfg)
 	if err != nil {
 		return Launcher{}, err
 	}

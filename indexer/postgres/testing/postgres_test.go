@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	"cosmossdk.io/log"
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	"github.com/hashicorp/consul/sdk/freeport"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -57,6 +58,7 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 
 	indexer, err := postgres.NewIndexer(db, postgres.Options{
 		RetainDeletions: retainDeletions,
+		Logger:          log.NewTestLogger(t),
 	})
 	require.NoError(t, err)
 

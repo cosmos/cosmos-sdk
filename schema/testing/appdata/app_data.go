@@ -1,7 +1,6 @@
 package appdatatest
 
 import (
-	"context"
 	"fmt"
 
 	"pgregory.net/rapid"
@@ -45,15 +44,6 @@ func NewSimulator(options SimulatorOptions) *Simulator {
 }
 
 func (a *Simulator) Initialize() error {
-	if f := a.options.Listener.Initialize; f != nil {
-		_, err := f(context.Background(), appdata.InitializationData{
-			HasEventAlignedWrites: a.options.EventAlignedWrites,
-		})
-		if err != nil {
-			return err
-		}
-	}
-
 	if f := a.options.Listener.InitializeModuleData; f != nil {
 		err := a.state.ScanModuleSchemas(func(moduleName string, moduleSchema schema.ModuleSchema) error {
 			return f(appdata.ModuleInitializationData{ModuleName: moduleName, Schema: moduleSchema})

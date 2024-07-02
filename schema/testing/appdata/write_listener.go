@@ -1,7 +1,6 @@
 package appdatatest
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,11 +10,6 @@ import (
 
 func WriterListener(w io.Writer) appdata.Listener {
 	return appdata.Listener{
-		Initialize: func(ctx context.Context, data appdata.InitializationData) (lastBlockPersisted int64, err error) {
-
-			_, err = fmt.Fprintf(w, "Initialize: %v\n", data)
-			return 0, err
-		},
 		StartBlock: func(data appdata.StartBlockData) error {
 			_, err := fmt.Fprintf(w, "StartBlock: %v\n", data)
 			return err

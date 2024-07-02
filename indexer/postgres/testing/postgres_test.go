@@ -86,18 +86,18 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 		require.NoError(t, fixture.AppState().ScanObjectCollections(func(moduleName string, collection *statesim.ObjectCollection) error {
 			modMgr, ok := indexer.Modules()[moduleName]
 			require.True(t, ok)
-			tblMgr, ok := modMgr.Tables[collection.ObjectType().Name]
+			tblMgr, ok := modMgr.Tables()[collection.ObjectType().Name]
 			require.True(t, ok)
 
 			expectedCount := collection.Len()
-			actualCount, err := tblMgr.Count(context.Background(), indexer.ActiveTx())
+			actualCount, err := tblMgr.Count(context.Background(), db)
 			require.NoError(t, err)
 			require.Equalf(t, expectedCount, actualCount, "table %s %s count mismatch", moduleName, collection.ObjectType().Name)
 
 			return collection.ScanState(func(update schema.ObjectUpdate) error {
 				found, err := tblMgr.Equals(
 					context.Background(),
-					indexer.ActiveTx(), update.Key, update.Value)
+					db, update.Key, update.Value)
 				if err != nil {
 					return err
 				}

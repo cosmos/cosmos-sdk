@@ -2,17 +2,16 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
 	"cosmossdk.io/schema"
 )
 
+// ModuleManager manages the tables for a module.
 type ModuleManager struct {
-	moduleName string
-	schema     schema.ModuleSchema
-	// TODO: make private or internal
-	Tables       map[string]*TableManager
+	moduleName   string
+	schema       schema.ModuleSchema
+	tables       map[string]*TableManager
 	definedEnums map[string]schema.EnumDefinition
 	options      Options
 }
@@ -21,32 +20,32 @@ func newModuleManager(moduleName string, modSchema schema.ModuleSchema, options 
 	return &ModuleManager{
 		moduleName:   moduleName,
 		schema:       modSchema,
-		Tables:       map[string]*TableManager{},
+		tables:       map[string]*TableManager{},
 		definedEnums: map[string]schema.EnumDefinition{},
 		options:      options,
 	}
 }
 
-func (m *ModuleManager) Init(ctx context.Context, tx *sql.Tx) error {
+// InitializeSchema creates tables for all object types in the module schema and creates enum types.
+func (m *ModuleManager) InitializeSchema(ctx context.Context, conn DBConn) error {
 	// create enum types
 	for _, typ := range m.schema.ObjectTypes {
-		err := m.createEnumTypesForFields(ctx, tx, typ.KeyFields)
+		err := m.createEnumTypesForFields(ctx, conn, typ.KeyFields)
 		if err != nil {
 			return err
 		}
 
-		err = m.createEnumTypesForFields(ctx, tx, typ.ValueFields)
+		err = m.createEnumTypesForFields(ctx, conn, typ.ValueFields)
 		if err != nil {
 			return err
 		}
 	}
 
 	// create tables for all object types
-	// NOTE: if we want to support foreign keys, we need to sort tables ind dependency order
 	for _, typ := range m.schema.ObjectTypes {
 		tm := NewTableManager(m.moduleName, typ, m.options)
-		m.Tables[typ.Name] = tm
-		err := tm.CreateTable(ctx, tx)
+		m.tables[typ.Name] = tm
+		err := tm.CreateTable(ctx, conn)
 		if err != nil {
 			return fmt.Errorf("failed to create table for %s in module %s: %w", typ.Name, m.moduleName, err)
 		}
@@ -54,4 +53,9 @@ func (m *ModuleManager) Init(ctx context.Context, tx *sql.Tx) error {
 
 	return nil
 
+}
+
+// Tables returns the table managers for the module.
+func (m *ModuleManager) Tables() map[string]*TableManager {
+	return m.tables
 }

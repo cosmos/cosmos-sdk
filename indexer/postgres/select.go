@@ -8,16 +8,18 @@ import (
 	"strings"
 )
 
-func (tm *TableManager) Exists(ctx context.Context, tx *sql.Tx, key interface{}) (bool, error) {
+// Exists checks if a row with the provided key exists in the table.
+func (tm *TableManager) Exists(ctx context.Context, conn DBConn, key interface{}) (bool, error) {
 	buf := new(strings.Builder)
 	params, err := tm.ExistsSqlAndParams(buf, key)
 	if err != nil {
 		return false, err
 	}
 
-	return tm.checkExists(ctx, tx, buf.String(), params)
+	return tm.checkExists(ctx, conn, buf.String(), params)
 }
 
+// ExistsSqlAndParams generates a SELECT statement to check if a row with the provided key exists in the table.
 func (tm *TableManager) ExistsSqlAndParams(w io.Writer, key interface{}) ([]interface{}, error) {
 	_, err := fmt.Fprintf(w, "SELECT 1 FROM %q", tm.TableName())
 	if err != nil {
@@ -33,16 +35,18 @@ func (tm *TableManager) ExistsSqlAndParams(w io.Writer, key interface{}) ([]inte
 	return keyParams, err
 }
 
-func (tm *TableManager) Equals(ctx context.Context, tx *sql.Tx, key, val interface{}) (bool, error) {
+// Equals checks if a row with the provided key and value exists.
+func (tm *TableManager) Equals(ctx context.Context, conn DBConn, key, val interface{}) (bool, error) {
 	buf := new(strings.Builder)
 	params, err := tm.EqualsSqlAndParams(buf, key, val)
 	if err != nil {
 		return false, err
 	}
 
-	return tm.checkExists(ctx, tx, buf.String(), params)
+	return tm.checkExists(ctx, conn, buf.String(), params)
 }
 
+// EqualsSqlAndParams generates a SELECT statement to check if a row with the provided key and value exists in the table.
 func (tm *TableManager) EqualsSqlAndParams(w io.Writer, key, val interface{}) ([]interface{}, error) {
 	_, err := fmt.Fprintf(w, "SELECT 1 FROM %q", tm.TableName())
 	if err != nil {
@@ -76,10 +80,12 @@ func (tm *TableManager) EqualsSqlAndParams(w io.Writer, key, val interface{}) ([
 	return allParams, err
 }
 
-func (tm *TableManager) checkExists(ctx context.Context, tx *sql.Tx, sqlStr string, params []interface{}) (bool, error) {
+// checkExists checks if a row exists in the table.
+func (tm *TableManager) checkExists(ctx context.Context, conn DBConn, sqlStr string, params []interface{}) (bool, error) {
 	tm.options.Logger.Debug("Select", "sql", sqlStr, "params", params)
 	var res interface{}
-	err := tx.QueryRowContext(ctx, sqlStr, params...).Scan(&res)
+	// TODO check for multiple rows which would be a logic error
+	err := conn.QueryRowContext(ctx, sqlStr, params...).Scan(&res)
 	switch err {
 	case nil:
 		return true, nil

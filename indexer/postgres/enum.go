@@ -10,7 +10,8 @@ import (
 	"cosmossdk.io/schema"
 )
 
-func (m *ModuleManager) createEnumTypesForFields(ctx context.Context, tx *sql.Tx, fields []schema.Field) error {
+// createEnumTypesForFields creates enum types for all the fields that have enum kind in the module schema.
+func (m *ModuleManager) createEnumTypesForFields(ctx context.Context, conn DBConn, fields []schema.Field) error {
 	for _, field := range fields {
 		if field.Kind != schema.EnumKind {
 			continue
@@ -22,7 +23,7 @@ func (m *ModuleManager) createEnumTypesForFields(ctx context.Context, tx *sql.Tx
 			continue
 		}
 
-		err := m.CreateEnumType(ctx, tx, field.EnumDefinition)
+		err := m.CreateEnumType(ctx, conn, field.EnumDefinition)
 		if err != nil {
 			return err
 		}
@@ -33,13 +34,10 @@ func (m *ModuleManager) createEnumTypesForFields(ctx context.Context, tx *sql.Tx
 	return nil
 }
 
-func enumTypeName(moduleName string, enum schema.EnumDefinition) string {
-	return fmt.Sprintf("%s_%s", moduleName, enum.Name)
-}
-
-func (m *ModuleManager) CreateEnumType(ctx context.Context, tx *sql.Tx, enum schema.EnumDefinition) error {
+// CreateEnumType creates an enum type in the database.
+func (m *ModuleManager) CreateEnumType(ctx context.Context, conn DBConn, enum schema.EnumDefinition) error {
 	typeName := enumTypeName(m.moduleName, enum)
-	row := tx.QueryRowContext(ctx, "SELECT 1 FROM pg_type WHERE typname = $1", typeName)
+	row := conn.QueryRowContext(ctx, "SELECT 1 FROM pg_type WHERE typname = $1", typeName)
 	var res interface{}
 	if err := row.Scan(&res); err != nil {
 		if err != sql.ErrNoRows {
@@ -58,10 +56,11 @@ func (m *ModuleManager) CreateEnumType(ctx context.Context, tx *sql.Tx, enum sch
 
 	sqlStr := buf.String()
 	m.options.Logger.Debug("Creating enum type", "sql", sqlStr)
-	_, err = tx.ExecContext(ctx, sqlStr)
+	_, err = conn.ExecContext(ctx, sqlStr)
 	return err
 }
 
+// CreateEnumTypeSql generates a CREATE TYPE statement for the enum definition.
 func (m *ModuleManager) CreateEnumTypeSql(writer io.Writer, enum schema.EnumDefinition) error {
 	_, err := fmt.Fprintf(writer, "CREATE TYPE %q AS ENUM (", enumTypeName(m.moduleName, enum))
 	if err != nil {
@@ -83,4 +82,9 @@ func (m *ModuleManager) CreateEnumTypeSql(writer io.Writer, enum schema.EnumDefi
 
 	_, err = fmt.Fprintf(writer, ");")
 	return err
+}
+
+// enumTypeName returns the name of the enum type scoped to the module.
+func enumTypeName(moduleName string, enum schema.EnumDefinition) string {
+	return fmt.Sprintf("%s_%s", moduleName, enum.Name)
 }

@@ -2,13 +2,13 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"io"
 	"strings"
 )
 
-func (tm *TableManager) CreateTable(ctx context.Context, tx *sql.Tx) error {
+// CreateTable creates the table for the object type.
+func (tm *TableManager) CreateTable(ctx context.Context, conn DBConn) error {
 	buf := new(strings.Builder)
 	err := tm.CreateTableSql(buf)
 	if err != nil {
@@ -17,7 +17,7 @@ func (tm *TableManager) CreateTable(ctx context.Context, tx *sql.Tx) error {
 
 	sqlStr := buf.String()
 	tm.options.Logger.Debug("Creating table", "table", tm.TableName(), "sql", sqlStr)
-	_, err = tx.ExecContext(ctx, sqlStr)
+	_, err = conn.ExecContext(ctx, sqlStr)
 	return err
 }
 

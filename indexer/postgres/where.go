@@ -5,6 +5,7 @@ import (
 	"io"
 )
 
+// WhereSqlAndParams generates a WHERE clause for the provided key and returns the parameters.
 func (tm *TableManager) WhereSqlAndParams(w io.Writer, key interface{}, startParamIdx int) (endParamIdx int, keyParams []interface{}, err error) {
 	var keyCols []string
 	keyParams, keyCols, err = tm.bindKeyParams(key)
@@ -16,6 +17,7 @@ func (tm *TableManager) WhereSqlAndParams(w io.Writer, key interface{}, startPar
 	return
 }
 
+// WhereSql generates a WHERE clause for the provided columns and returns the parameters.
 func (tm *TableManager) WhereSql(w io.Writer, params []interface{}, cols []string, startParamIdx int) (endParamIdx int, resParams []interface{}, err error) {
 	_, err = fmt.Fprintf(w, " WHERE ")
 	if err != nil {

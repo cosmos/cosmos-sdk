@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/schema"
 )
 
+// bindKeyParams binds the key to the key columns.
 func (tm *TableManager) bindKeyParams(key interface{}) ([]interface{}, []string, error) {
 	n := len(tm.typ.KeyFields)
 	if n == 0 {

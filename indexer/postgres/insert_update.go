@@ -2,14 +2,14 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"io"
 	"strings"
 )
 
-func (tm *TableManager) InsertUpdate(ctx context.Context, tx *sql.Tx, key, value interface{}) error {
-	exists, err := tm.Exists(ctx, tx, key)
+// InsertUpdate inserts or updates the row with the provided key and value.
+func (tm *TableManager) InsertUpdate(ctx context.Context, conn DBConn, key, value interface{}) error {
+	exists, err := tm.Exists(ctx, conn, key)
 	if err != nil {
 		return err
 	}
@@ -24,10 +24,11 @@ func (tm *TableManager) InsertUpdate(ctx context.Context, tx *sql.Tx, key, value
 
 	sqlStr := buf.String()
 	tm.options.Logger.Debug("Insert or Update", "sql", sqlStr, "params", params)
-	_, err = tx.ExecContext(ctx, sqlStr, params...)
+	_, err = conn.ExecContext(ctx, sqlStr, params...)
 	return err
 }
 
+// InsertSql generates an INSERT statement and binding parameters for the provided key and value.
 func (tm *TableManager) InsertSql(w io.Writer, key, value interface{}) ([]interface{}, error) {
 	keyParams, keyCols, err := tm.bindKeyParams(key)
 	if err != nil {
@@ -59,6 +60,7 @@ func (tm *TableManager) InsertSql(w io.Writer, key, value interface{}) ([]interf
 	return allParams, err
 }
 
+// UpdateSql generates an UPDATE statement and binding parameters for the provided key and value.
 func (tm *TableManager) UpdateSql(w io.Writer, key, value interface{}) ([]interface{}, error) {
 	_, err := fmt.Fprintf(w, "UPDATE %q SET ", tm.TableName())
 

@@ -38,6 +38,7 @@ func NewTableManager(moduleName string, typ schema.ObjectType, options Options) 
 	}
 }
 
+// TableName returns the name of the table for the object type scoped to its module.
 func (tm *TableManager) TableName() string {
 	return fmt.Sprintf("%s_%s", tm.moduleName, tm.typ.Name)
 }

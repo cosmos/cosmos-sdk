@@ -2,12 +2,12 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 )
 
-func (tm *TableManager) Count(ctx context.Context, tx *sql.Tx) (int, error) {
-	row := tx.QueryRowContext(ctx, fmt.Sprintf("SELECT COUNT(*) FROM %q;", tm.TableName()))
+// Count returns the number of rows in the table.
+func (tm *TableManager) Count(ctx context.Context, conn DBConn) (int, error) {
+	row := conn.QueryRowContext(ctx, fmt.Sprintf("SELECT COUNT(*) FROM %q;", tm.TableName()))
 	var count int
 	err := row.Scan(&count)
 	return count, err

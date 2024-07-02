@@ -38,7 +38,7 @@ func (i *Indexer) Initialize(ctx context.Context, data indexing.InitializationDa
 		return indexing.InitializationResult{}, fmt.Errorf("failed to start transaction: %w", err)
 	}
 
-	_, err = tx.ExecContext(ctx, baseSql)
+	_, err = tx.ExecContext(ctx, BaseSQL)
 	if err != nil {
 		return indexing.InitializationResult{}, err
 	}
@@ -121,7 +121,7 @@ func (i *Indexer) initModuleSchema(data appdata.ModuleInitializationData) error 
 	mm := newModuleManager(moduleName, modSchema, i.options)
 	i.modules[moduleName] = mm
 
-	return mm.Init(i.ctx, i.tx)
+	return mm.InitializeSchema(i.ctx, i.tx)
 }
 
 func (i *Indexer) onObjectUpdate(data appdata.ObjectUpdateData) error {
@@ -132,7 +132,7 @@ func (i *Indexer) onObjectUpdate(data appdata.ObjectUpdateData) error {
 	}
 
 	for _, update := range data.Updates {
-		tm, ok := mod.Tables[update.TypeName]
+		tm, ok := mod.tables[update.TypeName]
 		if !ok {
 			return fmt.Errorf("object type %s not found in schema for module %s", update.TypeName, module)
 		}
@@ -158,10 +158,6 @@ func (i *Indexer) commit(_ appdata.CommitData) error {
 
 	i.tx, err = i.db.BeginTx(i.ctx, nil)
 	return err
-}
-
-func (i *Indexer) ActiveTx() *sql.Tx {
-	return i.tx
 }
 
 func (i *Indexer) Modules() map[string]*ModuleManager {

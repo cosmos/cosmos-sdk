@@ -5,8 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/collections"
-	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/distribution"
@@ -32,6 +30,7 @@ func TestMigration(t *testing.T) {
 	addr1 := secp256k1.GenPrivKey().PubKey().Address()
 	consAddr1 := sdk.ConsAddress(addr1)
 
+	// Set and check the previous proposer
 	err := v4.SetPreviousProposerConsAddr(ctx, storeService, cdc, consAddr1)
 	require.NoError(t, err)
 
@@ -42,13 +41,7 @@ func TestMigration(t *testing.T) {
 	err = v4.MigrateStore(ctx, env, cdc)
 	require.NoError(t, err)
 
-	sb := collections.NewSchemaBuilder(storeService)
-	prevProposer := collections.NewItem(sb, v4.NewProposerKey, "previous_proposer", collcodec.KeyToValueCodec(sdk.ConsAddressKey))
-	_, err = sb.Build()
-	require.NoError(t, err)
-
-	newAddr, err := prevProposer.Get(ctx)
-	require.NoError(t, err)
-
-	require.Equal(t, consAddr1, newAddr)
+	// Check that the previous proposer has been removed
+	_, err = v4.GetPreviousProposerConsAddr(ctx, storeService, cdc)
+	require.ErrorContains(t, err, "previous proposer not set")
 }

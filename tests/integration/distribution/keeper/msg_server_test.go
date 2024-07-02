@@ -216,7 +216,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	require.NoError(t, f.distrKeeper.Params.Set(f.sdkCtx, distrtypes.DefaultParams()))
 
 	delAddr := sdk.AccAddress(PKS[1].Address())
-	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
 
 	valCommission := sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", math.LegacyNewDec(5).Quo(math.LegacyNewDec(4))),
@@ -325,9 +324,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	}
 	height := f.app.LastBlockHeight()
 
-	_, err = f.distrKeeper.PreviousProposer.Get(f.sdkCtx)
-	assert.ErrorIs(t, err, collections.ErrNotFound)
-
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
@@ -358,10 +354,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				assert.Assert(t, initBalance.IsAllLTE(curBalance))
 			}
 
-			prevProposerConsAddr, err := f.distrKeeper.PreviousProposer.Get(f.sdkCtx)
-			assert.NilError(t, err)
-			assert.Assert(t, prevProposerConsAddr.Empty() == false)
-			assert.DeepEqual(t, prevProposerConsAddr, valConsAddr)
 			var previousTotalPower int64
 			for _, vote := range f.sdkCtx.CometInfo().LastCommit.Votes {
 				previousTotalPower += vote.Validator.Power

@@ -33,8 +33,6 @@ const (
 //
 // - 0x00<proposalID_Bytes>: FeePol
 //
-// - 0x01: sdk.ConsAddress
-//
 // - 0x02<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorOutstandingRewards
 //
 // - 0x03<accAddrLen (1 Byte)><accAddr_Bytes>: sdk.AccAddress
@@ -52,7 +50,6 @@ const (
 // - 0x09: Params
 var (
 	FeePoolKey                           = collections.NewPrefix(0) // key for global distribution state
-	ProposerKey                          = collections.NewPrefix(1) // key for the proposer operator address
 	ValidatorOutstandingRewardsPrefix    = collections.NewPrefix(2) // key for outstanding rewards
 	DelegatorWithdrawAddrPrefix          = collections.NewPrefix(3) // key for delegator withdraw address
 	DelegatorStartingInfoPrefix          = collections.NewPrefix(4) // key for delegator starting info
@@ -61,6 +58,11 @@ var (
 	ValidatorAccumulatedCommissionPrefix = collections.NewPrefix(7) // key for accumulated validator commission
 	ValidatorSlashEventPrefix            = collections.NewPrefix(8) // key for validator slash fraction
 	ParamsKey                            = collections.NewPrefix(9) // key for distribution module params
+)
+
+// Reserved prefixes
+var (
+	DeprecatedProposerKey = collections.NewPrefix(1) // key for the proposer operator address
 )
 
 // GetValidatorSlashEventAddressHeight creates the height from a validator's slash event key.

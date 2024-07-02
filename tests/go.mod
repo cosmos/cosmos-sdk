@@ -2,8 +2,6 @@ module github.com/cosmos/cosmos-sdk/tests
 
 go 1.21
 
-toolchain go1.22.4
-
 require (
 	cosmossdk.io/api v0.3.1
 	cosmossdk.io/depinject v1.0.0-alpha.4

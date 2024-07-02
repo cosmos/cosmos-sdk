@@ -83,13 +83,13 @@ type ValueCodec[T any] interface {
 //
 // Implementations of IndexableCodec should test that they are conformant using the schema.ValidateWithKeyFields
 // and schema.ValidateWithValueFields depending on whether the codec is a KeyCodec or ValueCodec respectively.
-type IndexableCodec interface {
-	LogicalDecoder() LogicalDecoder
+type IndexableCodec[T any] interface {
+	LogicalDecoder() (LogicalDecoder[T], error)
 }
 
-type LogicalDecoder struct {
-	Fields []schema.Field
-	Decode func([]byte) (any, error)
+type LogicalDecoder[T any] struct {
+	Fields       []schema.Field
+	ToSchemaType func(T) (any, error)
 }
 
 // NewUntypedValueCodec returns an UntypedValueCodec for the provided ValueCodec.

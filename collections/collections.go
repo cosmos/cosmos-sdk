@@ -93,7 +93,7 @@ type Collection interface {
 
 	genesisHandler
 
-	logicalDecoder() logicalDecoder
+	logicalDecoder() (logicalDecoder, error)
 
 	isSecondaryIndex() bool
 }

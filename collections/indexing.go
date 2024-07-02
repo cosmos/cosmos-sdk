@@ -36,7 +36,10 @@ func (s Schema) ModuleCodec(opts IndexingOptions) (schema.ModuleCodec, error) {
 			continue
 		}
 
-		ld := coll.logicalDecoder()
+		ld, err := coll.logicalDecoder()
+		if err != nil {
+			return schema.ModuleCodec{}, err
+		}
 
 		if !retainDeletions[coll.GetName()] {
 			ld.objectType.RetainDeletions = true
@@ -116,51 +119,74 @@ func (c collDecoder) decodeKVPair(update schema.KVPairUpdate) ([]schema.ObjectUp
 	}, nil
 }
 
-func (c collectionImpl[K, V]) logicalDecoder() logicalDecoder {
+func (c collectionImpl[K, V]) logicalDecoder() (logicalDecoder, error) {
 	res := logicalDecoder{}
 	res.objectType.Name = c.GetName()
 
-	if indexable, ok := c.m.kc.(codec.IndexableCodec); ok {
-		keyDecoder := indexable.LogicalDecoder()
-		res.objectType.KeyFields = keyDecoder.Fields
-		res.keyDecoder = keyDecoder.Decode
-	} else {
-		fields, decoder := fallbackDecoder[K](func(bz []byte) (any, error) {
-			_, k, err := c.m.kc.Decode(bz)
-			return k, err
-		})
-		res.objectType.KeyFields = fields
-		res.keyDecoder = decoder
+	keyDecoder, err := KeyCodecDecoder(c.m.kc)
+	if err != nil {
+		return logicalDecoder{}, err
+	}
+	res.objectType.KeyFields = keyDecoder.Fields
+	res.keyDecoder = func(i []byte) (any, error) {
+		_, x, err := c.m.kc.Decode(i)
+		if err != nil {
+			return nil, err
+		}
+		return keyDecoder.ToSchemaType(x)
 	}
 	ensureFieldNames(c.m.kc, "key", res.objectType.KeyFields)
 
-	if indexable, ok := c.m.vc.(codec.IndexableCodec); ok {
-		valueDecoder := indexable.LogicalDecoder()
-		res.objectType.KeyFields = valueDecoder.Fields
-		res.valueDecoder = valueDecoder.Decode
-	} else {
-		fields, decoder := fallbackDecoder[V](func(bz []byte) (any, error) {
-			v, err := c.m.vc.Decode(bz)
-			return v, err
-		})
-		res.objectType.ValueFields = fields
-		res.valueDecoder = decoder
+	valueDecoder, err := ValueCodecDecoder(c.m.vc)
+	if err != nil {
+		return logicalDecoder{}, err
+	}
+	res.objectType.ValueFields = valueDecoder.Fields
+	res.valueDecoder = func(i []byte) (any, error) {
+		x, err := c.m.vc.Decode(i)
+		if err != nil {
+			return nil, err
+		}
+		return valueDecoder.ToSchemaType(x)
 	}
 	ensureFieldNames(c.m.vc, "value", res.objectType.ValueFields)
 
-	return res
+	return res, nil
 }
 
-func fallbackDecoder[T any](decode func([]byte) (any, error)) ([]schema.Field, func([]byte) (any, error)) {
+func KeyCodecDecoder[K any](cdc codec.KeyCodec[K]) (codec.LogicalDecoder[K], error) {
+	if indexable, ok := cdc.(codec.IndexableCodec[K]); ok {
+		return indexable.LogicalDecoder()
+	} else {
+		return FallbackDecoder[K](), nil
+	}
+}
+
+func ValueCodecDecoder[K any](cdc codec.ValueCodec[K]) (codec.LogicalDecoder[K], error) {
+	if indexable, ok := cdc.(codec.IndexableCodec[K]); ok {
+		return indexable.LogicalDecoder()
+	} else {
+		return FallbackDecoder[K](), nil
+	}
+}
+
+func FallbackDecoder[T any]() codec.LogicalDecoder[T] {
 	var t T
 	kind := schema.KindForGoValue(t)
 	if err := kind.Validate(); err == nil {
-		return []schema.Field{{Kind: kind}}, decode
+		return codec.LogicalDecoder[T]{
+			Fields: []schema.Field{{Kind: kind}},
+			ToSchemaType: func(t T) (any, error) {
+				return t, nil
+			},
+		}
 	} else {
-		return []schema.Field{{Kind: schema.JSONKind}}, func(b []byte) (any, error) {
-			t, err := decode(b)
-			bz, err := json.Marshal(t)
-			return json.RawMessage(bz), err
+		return codec.LogicalDecoder[T]{
+			Fields: []schema.Field{{Kind: schema.JSONKind}},
+			ToSchemaType: func(t T) (any, error) {
+				bz, err := json.Marshal(t)
+				return json.RawMessage(bz), err
+			},
 		}
 	}
 }

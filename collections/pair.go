@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/collections/codec"
+	"cosmossdk.io/schema"
 )
 
 // Pair defines a key composed of two keys.
@@ -234,6 +235,48 @@ func (p pairKeyCodec[K1, K2]) Name() string {
 		return "key1,key2"
 	}
 	return fmt.Sprintf("%s,%s", p.key1Name, p.key2Name)
+}
+
+func (p pairKeyCodec[K1, K2]) LogicalDecoder() (res codec.LogicalDecoder[Pair[K1, K2]], err error) {
+	dec1, err := KeyCodecDecoder(p.keyCodec1)
+	if err != nil {
+		return
+	}
+
+	dec2, err := KeyCodecDecoder(p.keyCodec2)
+	if err != nil {
+		return
+	}
+
+	if len(dec1.Fields) != 1 {
+		err = fmt.Errorf("key1 codec must have exactly one field")
+		return
+	}
+	if len(dec2.Fields) != 1 {
+		err = fmt.Errorf("key1 codec must have exactly one field")
+		return
+	}
+
+	fields := []schema.Field{dec1.Fields[0], dec2.Fields[0]}
+	fields[0].Name = p.key1Name
+	fields[1].Name = p.key2Name
+
+	return codec.LogicalDecoder[Pair[K1, K2]]{
+		Fields: fields,
+		ToSchemaType: func(pair Pair[K1, K2]) (any, error) {
+			k1, err := dec1.ToSchemaType(*pair.key1)
+			if err != nil {
+				return nil, err
+			}
+
+			k2, err := dec2.ToSchemaType(*pair.key2)
+			if err != nil {
+				return nil, err
+			}
+
+			return []any{k1, k2}, nil
+		},
+	}, nil
 }
 
 //func (p pairKeyCodec[K1, K2]) SchemaColumns() []schema.Field {

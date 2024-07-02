@@ -1,4 +1,4 @@
-package appdatatest
+package appdatasim
 
 import (
 	"fmt"

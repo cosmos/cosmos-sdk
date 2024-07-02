@@ -18,7 +18,7 @@ import (
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/indexing"
 	indexertesting "cosmossdk.io/schema/testing"
-	appdatatest "cosmossdk.io/schema/testing/appdata"
+	"cosmossdk.io/schema/testing/appdatasim"
 	"cosmossdk.io/schema/testing/statesim"
 )
 
@@ -65,7 +65,7 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 	res, err := indexer.Initialize(ctx, indexing.InitializationData{})
 	require.NoError(t, err)
 
-	fixture := appdatatest.NewSimulator(appdatatest.SimulatorOptions{
+	fixture := appdatasim.NewSimulator(appdatasim.SimulatorOptions{
 		Listener: appdata.ListenerMux(
 			appdata.DebugListener(os.Stdout),
 			res.Listener,

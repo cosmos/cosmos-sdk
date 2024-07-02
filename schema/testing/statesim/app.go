@@ -11,11 +11,13 @@ import (
 	"cosmossdk.io/schema/appdata"
 )
 
+// App is a collection of simulated module states corresponding to an app's schema for testing purposes.
 type App struct {
 	moduleStates *btree.Map[string, *Module]
 	updateGen    *rapid.Generator[appdata.ObjectUpdateData]
 }
 
+// NewApp creates a new simulation App for the given app schema.
 func NewApp(appSchema map[string]schema.ModuleSchema, options Options) *App {
 	moduleStates := &btree.Map[string, *Module]{}
 	var moduleNames []string
@@ -53,19 +55,30 @@ func NewApp(appSchema map[string]schema.ModuleSchema, options Options) *App {
 	}
 }
 
-func (a *App) ApplyUpdate(moduleName string, update schema.ObjectUpdate) error {
-	moduleState, ok := a.moduleStates.Get(moduleName)
+// ApplyUpdate applies the given object update to the module.
+func (a *App) ApplyUpdate(data appdata.ObjectUpdateData) error {
+	moduleState, ok := a.moduleStates.Get(data.ModuleName)
 	if !ok {
-		return fmt.Errorf("module %s not found", moduleName)
+		return fmt.Errorf("module %s not found", data.ModuleName)
 	}
 
-	return moduleState.ApplyUpdate(update)
+	for _, update := range data.Updates {
+		err := moduleState.ApplyUpdate(update)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
+// UpdateGen is a generator for object update data against the app. It is stateful and includes a certain number of
+// updates and deletions to existing objects.
 func (a *App) UpdateGen() *rapid.Generator[appdata.ObjectUpdateData] {
 	return a.updateGen
 }
 
+// ScanModuleSchemas iterates over all the modules schemas in the app.
 func (a *App) ScanModuleSchemas(f func(string, schema.ModuleSchema) error) error {
 	var err error
 	a.moduleStates.Scan(func(key string, value *Module) bool {
@@ -75,21 +88,12 @@ func (a *App) ScanModuleSchemas(f func(string, schema.ModuleSchema) error) error
 	return err
 }
 
+// GetModule returns the module state for the given module name.
 func (a *App) GetModule(moduleName string) (*Module, bool) {
 	return a.moduleStates.Get(moduleName)
 }
 
-func (a *App) ScanState(f func(moduleName string, update schema.ObjectUpdate) error) error {
-	var err error
-	a.moduleStates.Scan(func(moduleName string, value *Module) bool {
-		err = value.ScanState(func(update schema.ObjectUpdate) error {
-			return f(moduleName, update)
-		})
-		return err == nil
-	})
-	return err
-}
-
+// ScanObjectCollections iterates over all the object collections in the app.
 func (a *App) ScanObjectCollections(f func(moduleName string, collection *ObjectCollection) error) error {
 	var err error
 	a.moduleStates.Scan(func(moduleName string, value *Module) bool {

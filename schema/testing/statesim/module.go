@@ -10,12 +10,14 @@ import (
 	"cosmossdk.io/schema"
 )
 
+// Module is a collection of object collections corresponding to a module's schema for testing purposes.
 type Module struct {
 	moduleSchema      schema.ModuleSchema
 	objectCollections *btree.Map[string, *ObjectCollection]
 	updateGen         *rapid.Generator[schema.ObjectUpdate]
 }
 
+// NewModule creates a new Module for the given module schema.
 func NewModule(moduleSchema schema.ModuleSchema, options Options) *Module {
 	objectCollections := &btree.Map[string, *ObjectCollection]{}
 	var objectTypeNames []string
@@ -43,6 +45,7 @@ func NewModule(moduleSchema schema.ModuleSchema, options Options) *Module {
 	}
 }
 
+// ApplyUpdate applies the given object update to the module.
 func (o *Module) ApplyUpdate(update schema.ObjectUpdate) error {
 	objState, ok := o.objectCollections.Get(update.TypeName)
 	if !ok {
@@ -52,14 +55,18 @@ func (o *Module) ApplyUpdate(update schema.ObjectUpdate) error {
 	return objState.ApplyUpdate(update)
 }
 
+// UpdateGen returns a generator for object updates. The generator is stateful and returns
+// a certain number of updates and deletes of existing objects in the module.
 func (o *Module) UpdateGen() *rapid.Generator[schema.ObjectUpdate] {
 	return o.updateGen
 }
 
+// GetObjectCollection returns the object collection for the given object type.
 func (o *Module) GetObjectCollection(objectType string) (*ObjectCollection, bool) {
 	return o.objectCollections.Get(objectType)
 }
 
+// ScanState scans the state of all object collections in the module.
 func (o *Module) ScanState(f func(schema.ObjectUpdate) error) error {
 	var err error
 	o.objectCollections.Scan(func(key string, value *ObjectCollection) bool {

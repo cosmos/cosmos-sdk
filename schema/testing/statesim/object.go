@@ -10,6 +10,7 @@ import (
 	schematesting "cosmossdk.io/schema/testing"
 )
 
+// ObjectCollection is a collection of objects of a specific type for testing purposes.
 type ObjectCollection struct {
 	options           Options
 	objectType        schema.ObjectType
@@ -18,6 +19,7 @@ type ObjectCollection struct {
 	valueFieldIndices map[string]int
 }
 
+// NewObjectCollection creates a new ObjectCollection for the given object type.
 func NewObjectCollection(objectType schema.ObjectType, options Options) *ObjectCollection {
 	objects := &btree.Map[string, schema.ObjectUpdate]{}
 	updateGen := schematesting.ObjectUpdateGen(objectType, objects)
@@ -35,6 +37,7 @@ func NewObjectCollection(objectType schema.ObjectType, options Options) *ObjectC
 	}
 }
 
+// ApplyUpdate applies the given object update to the collection.
 func (o *ObjectCollection) ApplyUpdate(update schema.ObjectUpdate) error {
 	if update.TypeName != o.objectType.Name {
 		return fmt.Errorf("update type name %q does not match object type name %q", update.TypeName, o.objectType.Name)
@@ -91,10 +94,13 @@ func (o *ObjectCollection) ApplyUpdate(update schema.ObjectUpdate) error {
 	return nil
 }
 
+// UpdateGen returns a generator for random object updates against the collection. This generator
+// is stateful and returns a certain number of updates and deletes to existing objects.
 func (o *ObjectCollection) UpdateGen() *rapid.Generator[schema.ObjectUpdate] {
 	return o.updateGen
 }
 
+// ScanState scans the state of the collection by calling the given function for each object update.
 func (o *ObjectCollection) ScanState(f func(schema.ObjectUpdate) error) error {
 	var err error
 	o.objects.Scan(func(_ string, v schema.ObjectUpdate) bool {
@@ -104,14 +110,18 @@ func (o *ObjectCollection) ScanState(f func(schema.ObjectUpdate) error) error {
 	return err
 }
 
-func (o *ObjectCollection) GetObject(key any) (schema.ObjectUpdate, bool) {
+// GetObject returns the object with the given key from the collection represented as an ObjectUpdate
+// itself. Deletions that are retained are returned as ObjectUpdate's with delete set to true.
+func (o *ObjectCollection) GetObject(key any) (update schema.ObjectUpdate, found bool) {
 	return o.objects.Get(fmt.Sprintf("%v", key))
 }
 
+// ObjectType returns the object type of the collection.
 func (o *ObjectCollection) ObjectType() schema.ObjectType {
 	return o.objectType
 }
 
+// Len returns the number of objects in the collection.
 func (o *ObjectCollection) Len() int {
 	return o.objects.Len()
 }

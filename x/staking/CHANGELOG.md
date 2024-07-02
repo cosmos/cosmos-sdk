@@ -92,20 +92,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * remove from `types`: `GetValidatorByConsAddrKey`
 * [#17248](https://github.com/cosmos/cosmos-sdk/pull/17248) Use collections for `UnbondingType`.
     * remove from `types`: `GetUnbondingTypeKey`.
-* [#17063](https://github.com/cosmos/cosmos-sdk/pull/17063) Use collections for `HistoricalInfo`:
-    * remove `Keeper`: `GetHistoricalInfo`, `SetHistoricalInfo`
 * [#17062](https://github.com/cosmos/cosmos-sdk/pull/17062), [#19788](https://github.com/cosmos/cosmos-sdk/pull/19788) Remove `GetValidatorUpdates` and `ValidatorUpdates` storage.
 * [#17026](https://github.com/cosmos/cosmos-sdk/pull/17026) Use collections for `LastTotalPower`:
     * remove `Keeper`: `SetLastTotalPower`, `GetLastTotalPower`
 * [#17335](https://github.com/cosmos/cosmos-sdk/pull/17335) Remove usage of `"cosmossdk.io/x/staking/types".Infraction_*` in favour of `"cosmossdk.io/api/cosmos/staking/v1beta1".Infraction_` in order to remove dependency between modules on staking
-* [#17655](https://github.com/cosmos/cosmos-sdk/pull/17655) `QueryHistoricalInfo` was adjusted to return `HistoricalRecord` and marked `Hist` as deprecated.
 * [#20295](https://github.com/cosmos/cosmos-sdk/pull/20295) `GetValidatorByConsAddr` now returns the Cosmos SDK `cryptotypes.Pubkey` instead of `cometcrypto.Publickey`. The caller is responsible to translate the returned value to the expected type. 
     * Remove `CmtConsPublicKey()` and `TmConsPublicKey()` from `Validator` interface and as methods on the `Validator` struct.
-* [#20728](https://github.com/cosmos/cosmos-sdk/pull/20728) Remove `NewHistoricalInfo` and related functions to Historical Info & `GetCmtConsPubKey`, `ToCmtValidator` & `ToCmtValidators` as comet validator type is no longer used in the staking module. 
 
 ### State Breaking changes
 
 * [#18841](https://github.com/cosmos/cosmos-sdk/pull/18841) In a undelegation or redelegation if the shares being left delegated correspond to less than 1 token (in base denom) the entire delegation gets removed.
 * [#18142](https://github.com/cosmos/cosmos-sdk/pull/18142) Introduce `key_rotation_fee` param to calculate fees while rotating the keys
-* [#17655](https://github.com/cosmos/cosmos-sdk/pull/17655) `HistoricalInfo` was replaced with `HistoricalRecord`, it removes the validator set and comet header and only keep what is needed for IBC.
 * [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) `InitGenesis` and `ExportGenesis` module code and keeper code do not panic but return errors.
+* [#20845](https://github.com/cosmoc/cosmos-sdk/pull/20845) Remove HistoricalInfo from the staking modules storage

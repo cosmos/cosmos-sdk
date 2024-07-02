@@ -121,12 +121,6 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 
 	f = f.WithPreprocessTxHook(clientCtx.PreprocessTxHook)
 
-	unordered = clientCtx.Viper.GetBool(flags.FlagUnordered)
-	f = f.WithUnordered(unordered)
-
-	timeoutHeight = clientCtx.Viper.GetUint64(flags.FlagTimeoutHeight)
-	f = f.WithTimeoutHeight(timeoutHeight)
-
 	return f, nil
 }
 

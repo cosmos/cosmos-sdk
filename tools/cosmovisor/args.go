@@ -310,7 +310,7 @@ func parseEnvDuration(input string) (time.Duration, error) {
 	}
 
 	if duration <= 0 {
-		return 0, fmt.Errorf("must be greater than 0")
+		return 0, errors.New("must be greater than 0")
 	}
 
 	return duration, nil

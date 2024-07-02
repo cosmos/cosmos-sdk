@@ -2,6 +2,7 @@ package genutil
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -60,7 +61,7 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic, keyT
 	nodeID string, valPubKey cryptotypes.PubKey, err error,
 ) {
 	if len(mnemonic) > 0 && !bip39.IsMnemonicValid(mnemonic) {
-		return "", nil, fmt.Errorf("invalid mnemonic")
+		return "", nil, errors.New("invalid mnemonic")
 	}
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {

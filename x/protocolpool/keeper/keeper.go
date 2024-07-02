@@ -196,7 +196,7 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 
 		totalStreamFundsPercentage = totalStreamFundsPercentage.Add(cf.Percentage)
 		if totalStreamFundsPercentage.GT(math.LegacyOneDec()) {
-			return true, fmt.Errorf("total funds percentage cannot exceed 100")
+			return true, errors.New("total funds percentage cannot exceed 100")
 		}
 
 		return false, nil
@@ -272,7 +272,7 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 		// sanity check for max percentage
 		totalPercentageToBeDistributed = totalPercentageToBeDistributed.Add(cf.Percentage)
 		if totalPercentageToBeDistributed.GT(math.LegacyOneDec()) {
-			return true, fmt.Errorf("total funds percentage cannot exceed 100")
+			return true, errors.New("total funds percentage cannot exceed 100")
 		}
 
 		// Calculate the funds to be distributed based on the percentage
@@ -356,7 +356,7 @@ func (k Keeper) getClaimableFunds(ctx context.Context, recipientAddr string) (am
 	// Check if the distribution time has not reached
 	if budget.LastClaimedAt != nil {
 		if currentTime.Before(*budget.LastClaimedAt) {
-			return sdk.Coin{}, fmt.Errorf("distribution has not started yet")
+			return sdk.Coin{}, errors.New("distribution has not started yet")
 		}
 	}
 
@@ -374,7 +374,7 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 
 	// Check the time elapsed has passed period length
 	if timeElapsed < *budget.Period {
-		return sdk.Coin{}, fmt.Errorf("budget period has not passed yet")
+		return sdk.Coin{}, errors.New("budget period has not passed yet")
 	}
 
 	// Calculate how many periods have passed
@@ -415,7 +415,7 @@ func (k Keeper) calculateClaimableFunds(ctx context.Context, recipient sdk.AccAd
 
 func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.MsgSubmitBudgetProposal) (*types.Budget, error) {
 	if bp.BudgetPerTranche.IsZero() {
-		return nil, fmt.Errorf("invalid budget proposal: budget per tranche cannot be zero")
+		return nil, errors.New("invalid budget proposal: budget per tranche cannot be zero")
 	}
 
 	if err := validateAmount(sdk.NewCoins(*bp.BudgetPerTranche)); err != nil {
@@ -428,15 +428,15 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.Ms
 	}
 
 	if currentTime.After(*bp.StartTime) {
-		return nil, fmt.Errorf("invalid budget proposal: start time cannot be less than the current block time")
+		return nil, errors.New("invalid budget proposal: start time cannot be less than the current block time")
 	}
 
 	if bp.Tranches == 0 {
-		return nil, fmt.Errorf("invalid budget proposal: tranches must be greater than zero")
+		return nil, errors.New("invalid budget proposal: tranches must be greater than zero")
 	}
 
 	if bp.Period == nil || *bp.Period == 0 {
-		return nil, fmt.Errorf("invalid budget proposal: period length should be greater than zero")
+		return nil, errors.New("invalid budget proposal: period length should be greater than zero")
 	}
 
 	// Create and return an updated budget proposal
@@ -455,19 +455,19 @@ func (k Keeper) validateAndUpdateBudgetProposal(ctx context.Context, bp types.Ms
 func (k Keeper) validateContinuousFund(ctx context.Context, msg types.MsgCreateContinuousFund) error {
 	// Validate percentage
 	if msg.Percentage.IsZero() || msg.Percentage.IsNil() {
-		return fmt.Errorf("percentage cannot be zero or empty")
+		return errors.New("percentage cannot be zero or empty")
 	}
 	if msg.Percentage.IsNegative() {
-		return fmt.Errorf("percentage cannot be negative")
+		return errors.New("percentage cannot be negative")
 	}
 	if msg.Percentage.GTE(math.LegacyOneDec()) {
-		return fmt.Errorf("percentage cannot be greater than or equal to one")
+		return errors.New("percentage cannot be greater than or equal to one")
 	}
 
 	// Validate expiry
 	currentTime := k.HeaderService.HeaderInfo(ctx).Time
 	if msg.Expiry != nil && msg.Expiry.Compare(currentTime) == -1 {
-		return fmt.Errorf("expiry time cannot be less than the current block time")
+		return errors.New("expiry time cannot be less than the current block time")
 	}
 
 	return nil

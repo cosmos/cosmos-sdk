@@ -1,6 +1,7 @@
 package root
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -110,7 +111,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 			case SCTypeIavl:
 				trees[key] = iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, opts.IavlConfig)
 			case SCTypeIavlV2:
-				return nil, fmt.Errorf("iavl v2 not supported")
+				return nil, errors.New("iavl v2 not supported")
 			}
 		}
 	}

@@ -362,7 +362,7 @@ func (s *SystemUnderTest) PrintBuffer() {
 // AwaitBlockHeight blocks until te target height is reached. An optional timeout parameter can be passed to abort early
 func (s *SystemUnderTest) AwaitBlockHeight(t *testing.T, targetHeight int64, timeout ...time.Duration) {
 	t.Helper()
-	require.Greater(t, targetHeight, s.currentHeight)
+	require.Greater(t, targetHeight, s.currentHeight.Load())
 	var maxWaitTime time.Duration
 	if len(timeout) != 0 {
 		maxWaitTime = timeout[0]

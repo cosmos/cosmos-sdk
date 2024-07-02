@@ -3,6 +3,7 @@
 package systemtests
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 )
@@ -29,10 +30,13 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 	timeoutHeightStr := strconv.Itoa(int(timeoutHeight))
 	// send tokens
 	rsp1 := cli.Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake", "--timeout-height="+timeoutHeightStr, "--unordered")
-	rsp2 := cli.Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake", "--timeout-height="+timeoutHeightStr, "--unordered")
-	t.Logf("rsp2: %s\n", rsp2)
-
 	RequireTxSuccess(t, rsp1)
+	fmt.Println(sut.CurrentHeight())
+	awaitHeight := timeoutHeight - 10
+	sut.AwaitBlockHeight(t, awaitHeight)
+	fmt.Println(sut.CurrentHeight())
+	rsp2 := cli.Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake", "--timeout-height="+timeoutHeightStr, "--unordered")
+
 	RequireTxFailure(t, rsp2)
 
 	// assert TX executed before timeout

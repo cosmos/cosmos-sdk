@@ -273,6 +273,8 @@ func TestQueryLockupAccountBaseInfo(t *testing.T) {
 
 	baseLockup := setup(t, ctx, ss)
 
-	_, err := baseLockup.QueryLockupAccountBaseInfo(ctx, &lockuptypes.QueryLockupAccountInfoRequest{})
+	res, err := baseLockup.QueryLockupAccountBaseInfo(ctx, &lockuptypes.QueryLockupAccountInfoRequest{})
+	require.Equal(t, res.OriginalLocking.AmountOf("test"), math.NewInt(10))
+	require.Equal(t, res.Owner, "owner")
 	require.NoError(t, err)
 }

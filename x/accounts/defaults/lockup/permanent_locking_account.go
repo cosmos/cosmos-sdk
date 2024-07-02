@@ -100,8 +100,9 @@ func (plva PermanentLockingAccount) RegisterInitHandler(builder *accountstd.Init
 
 func (plva PermanentLockingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, plva.Delegate)
+	accountstd.RegisterExecuteHandler(builder, plva.Undelegate)
 	accountstd.RegisterExecuteHandler(builder, plva.SendCoins)
-	plva.BaseLockup.RegisterExecuteHandlers(builder)
+	accountstd.RegisterExecuteHandler(builder, plva.WithdrawReward)
 }
 
 func (plva PermanentLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

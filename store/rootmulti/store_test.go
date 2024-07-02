@@ -116,7 +116,7 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 	// require we cannot commit (write) to a cache-versioned multi-store
 	require.Panics(t, func() {
 		kvStore.Set(k, []byte("newValue"))
-		cms.Write()
+		kvStore.(types.CacheWrap).Write()
 	})
 }
 
@@ -1030,5 +1030,42 @@ func TestCommitStores(t *testing.T) {
 			require.Equal(t, version, res.Version)
 			require.Equal(t, tc.exptectCommit, store.Committed)
 		})
+	}
+}
+
+func TestCacheMultiStoreWrite(t *testing.T) {
+	// for testing the cacheMultiStore parallel write, file based db is used
+	db, err := dbm.NewDB("test", dbm.GoLevelDBBackend, t.TempDir())
+	require.NoError(t, err)
+
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	require.NoError(t, ms.LoadLatestVersion())
+
+	cacheMulti := ms.CacheMultiStore()
+
+	toVersion := int64(100)
+	keyCount := 100
+	storeKeys := []types.StoreKey{testStoreKey1, testStoreKey2, testStoreKey3}
+	for i := int64(1); i <= toVersion; i++ {
+		for _, storeKey := range storeKeys {
+			store := cacheMulti.GetKVStore(storeKey)
+			for j := 0; j < keyCount; j++ {
+				store.Set([]byte(fmt.Sprintf("key-%d-%d", i, j)), []byte(fmt.Sprintf("value-%d-%d", i, j)))
+			}
+		}
+		cacheMulti.Write()
+		ms.Commit()
+	}
+
+	// check the data
+	for _, storeKey := range storeKeys {
+		store := cacheMulti.GetKVStore(storeKey)
+		for i := int64(1); i <= toVersion; i++ {
+			for j := 0; j < keyCount; j++ {
+				key := []byte(fmt.Sprintf("key-%d-%d", i, j))
+				value := store.Get(key)
+				require.Equal(t, []byte(fmt.Sprintf("value-%d-%d", i, j)), value)
+			}
+		}
 	}
 }

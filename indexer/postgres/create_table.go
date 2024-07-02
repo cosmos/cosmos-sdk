@@ -6,42 +6,51 @@ import (
 	"fmt"
 	"io"
 	"strings"
-
-	indexerbase "cosmossdk.io/indexer/base"
 )
 
-func (s *TableManager) CreateTable(ctx context.Context, tx *sql.Tx) error {
+func (tm *TableManager) CreateTable(ctx context.Context, tx *sql.Tx) error {
 	buf := new(strings.Builder)
-	err := s.GenCreateTable(buf)
+	err := tm.CreateTableSql(buf)
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.ExecContext(ctx, buf.String())
+	sqlStr := buf.String()
+	tm.options.Logger.Debug("Creating table", "table", tm.TableName(), "sql", sqlStr)
+	_, err = tx.ExecContext(ctx, sqlStr)
 	return err
 }
 
-// GenCreateTable generates a CREATE TABLE statement for the object type.
-func (s *TableManager) GenCreateTable(writer io.Writer) error {
-	_, err := fmt.Fprintf(writer, "CREATE TABLE IF NOT EXISTS %s (", s.TableName())
+// CreateTableSql generates a CREATE TABLE statement for the object type.
+func (tm *TableManager) CreateTableSql(writer io.Writer) error {
+	_, err := fmt.Fprintf(writer, "CREATE TABLE IF NOT EXISTS %q (", tm.TableName())
 	if err != nil {
 		return err
 	}
 	isSingleton := false
-	if len(s.typ.KeyFields) == 0 {
+	if len(tm.typ.KeyFields) == 0 {
 		isSingleton = true
 		_, err = fmt.Fprintf(writer, "_id INTEGER NOT NULL CHECK (_id = 1),\n\t")
 	} else {
-		for _, field := range s.typ.KeyFields {
-			err = s.createColumnDef(writer, field)
+		for _, field := range tm.typ.KeyFields {
+			err = tm.createColumnDef(writer, field)
 			if err != nil {
 				return err
 			}
 		}
 	}
 
-	for _, field := range s.typ.ValueFields {
-		err = s.createColumnDef(writer, field)
+	for _, field := range tm.typ.ValueFields {
+		err = tm.createColumnDef(writer, field)
+		if err != nil {
+			return err
+		}
+	}
+
+	// add _deleted column when we have RetainDeletions set and enabled
+	// NOTE: needs more design
+	if tm.options.RetainDeletions && tm.typ.RetainDeletions {
+		_, err = fmt.Fprintf(writer, "_deleted BOOLEAN NOT NULL DEFAULT FALSE,\n\t")
 		if err != nil {
 			return err
 		}
@@ -49,47 +58,49 @@ func (s *TableManager) GenCreateTable(writer io.Writer) error {
 
 	var pKeys []string
 	if !isSingleton {
-		for _, field := range s.typ.KeyFields {
-			pKeys = append(pKeys, field.Name)
+		for _, field := range tm.typ.KeyFields {
+			name, err := tm.updatableColumnName(field)
+			if err != nil {
+				return err
+			}
+
+			pKeys = append(pKeys, name)
 		}
 	} else {
 		pKeys = []string{"_id"}
 	}
 
-	_, err = fmt.Fprintf(writer, "PRIMARY KEY (%s)\n", strings.Join(pKeys, ", "))
+	_, err = fmt.Fprintf(writer, "PRIMARY KEY (%s)", strings.Join(pKeys, ", "))
 	if err != nil {
 		return err
 	}
 
-	_, err = fmt.Fprintf(writer, `);
+	// TODO: we need test data to not generate constraint failures to safely enable this
+	//for _, uniq := range tm.typ.UniqueConstraints {
+	//	cols := make([]string, len(uniq.FieldNames))
+	//	for i, name := range uniq.FieldNames {
+	//		field, ok := tm.allFields[name]
+	//		if !ok {
+	//			return fmt.Errorf("unknown field %q in unique constraint", name)
+	//		}
+	//
+	//		cols[i], err = tm.updatableColumnName(field)
+	//		if err != nil {
+	//			return err
+	//		}
+	//	}
+	//
+	//	_, err = fmt.Fprintf(writer, ",\n\tUNIQUE NULLS NOT DISTINCT (%s)", strings.Join(cols, ", "))
+	//}
 
-GRANT SELECT ON TABLE %s TO PUBLIC;
-`, s.TableName())
+	_, err = fmt.Fprintf(writer, `
+);
+
+GRANT SELECT ON TABLE %q TO PUBLIC;
+`, tm.TableName())
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func (s *TableManager) createColumnDef(writer io.Writer, field indexerbase.Field) error {
-	typeStr, err := columnType(field)
-	if err != nil {
-		return err
-	}
-
-	_, err = fmt.Fprintf(writer, "%s %s", field.Name, typeStr)
-	if err != nil {
-		return err
-	}
-
-	if !field.Nullable {
-		_, err = fmt.Fprint(writer, " NOT")
-		if err != nil {
-			return err
-		}
-	}
-
-	_, err = fmt.Fprint(writer, " NULL,\n\t")
-	return err
 }

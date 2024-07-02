@@ -2,22 +2,44 @@ package testing
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
+	"os"
 	"testing"
 
+	"cosmossdk.io/log"
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	"github.com/hashicorp/consul/sdk/freeport"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/stretchr/testify/require"
 
-	indexertesting "cosmossdk.io/indexer/testing"
-
 	"cosmossdk.io/indexer/postgres"
-
-	_ "github.com/jackc/pgx/v5/stdlib"
+	"cosmossdk.io/schema"
+	"cosmossdk.io/schema/appdata"
+	"cosmossdk.io/schema/indexing"
+	indexertesting "cosmossdk.io/schema/testing"
+	appdatatest "cosmossdk.io/schema/testing/appdata"
+	"cosmossdk.io/schema/testing/statesim"
 )
 
 func TestPostgresIndexer(t *testing.T) {
+	t.Run("RetainDeletions", func(t *testing.T) {
+		testPostgresIndexer(t, true)
+	})
+	t.Run("NoRetainDeletions", func(t *testing.T) {
+		testPostgresIndexer(t, false)
+	})
+}
+
+func testPostgresIndexer(t *testing.T, retainDeletions bool) {
+	tempDir, err := os.MkdirTemp("", "postgres-indexer-test")
+	require.NoError(t, err)
+
 	dbPort := freeport.GetOne(t)
-	pgConfig := embeddedpostgres.DefaultConfig().Port(uint32(dbPort))
+	pgConfig := embeddedpostgres.DefaultConfig().
+		Port(uint32(dbPort)).
+		DataPath(tempDir)
+
 	dbUrl := pgConfig.GetConnectionURL()
 	pg := embeddedpostgres.NewDatabase(pgConfig)
 	require.NoError(t, pg.Start())
@@ -27,14 +49,65 @@ func TestPostgresIndexer(t *testing.T) {
 	t.Cleanup(func() {
 		cancel()
 		require.NoError(t, pg.Stop())
+		err := os.RemoveAll(tempDir)
+		require.NoError(t, err)
 	})
 
-	indexer, err := postgres.NewIndexer(ctx, postgres.Options{
-		Driver:        "pgx",
-		ConnectionURL: dbUrl,
+	db, err := sql.Open("pgx", dbUrl)
+	require.NoError(t, err)
+
+	indexer, err := postgres.NewIndexer(db, postgres.Options{
+		RetainDeletions: retainDeletions,
+		Logger:          log.NewTestLogger(t),
 	})
 	require.NoError(t, err)
 
-	fixture := indexertesting.NewListenerTestFixture(indexer.Listener(), indexertesting.ListenerTestFixtureOptions{})
+	res, err := indexer.Initialize(ctx, indexing.InitializationData{})
+	require.NoError(t, err)
+
+	fixture := appdatatest.NewSimulator(appdatatest.SimulatorOptions{
+		Listener: appdata.ListenerMux(
+			appdata.DebugListener(os.Stdout),
+			res.Listener,
+		),
+		AppSchema: indexertesting.ExampleAppSchema,
+		StateSimOptions: statesim.Options{
+			CanRetainDeletions: retainDeletions,
+		},
+	})
+
 	require.NoError(t, fixture.Initialize())
+
+	blockDataGen := fixture.BlockDataGenN(1000)
+	for i := 0; i < 1000; i++ {
+		blockData := blockDataGen.Example(i)
+		require.NoError(t, fixture.ProcessBlockData(blockData))
+
+		require.NoError(t, fixture.AppState().ScanObjectCollections(func(moduleName string, collection *statesim.ObjectCollection) error {
+			modMgr, ok := indexer.Modules()[moduleName]
+			require.True(t, ok)
+			tblMgr, ok := modMgr.Tables[collection.ObjectType().Name]
+			require.True(t, ok)
+
+			expectedCount := collection.Len()
+			actualCount, err := tblMgr.Count(context.Background(), indexer.ActiveTx())
+			require.NoError(t, err)
+			require.Equalf(t, expectedCount, actualCount, "table %s %s count mismatch", moduleName, collection.ObjectType().Name)
+
+			return collection.ScanState(func(update schema.ObjectUpdate) error {
+				found, err := tblMgr.Equals(
+					context.Background(),
+					indexer.ActiveTx(), update.Key, update.Value)
+				if err != nil {
+					return err
+				}
+
+				if !found {
+					return fmt.Errorf("object not found in table %s %s %v %v", moduleName, collection.ObjectType().Name, update.Key, update.Value)
+				}
+
+				return nil
+			})
+		}))
+	}
 }

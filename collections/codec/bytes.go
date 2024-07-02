@@ -10,9 +10,11 @@ import (
 // using the BytesKey KeyCodec.
 const MaxBytesKeyNonTerminalSize = math.MaxUint8
 
-func NewBytesKey[T ~[]byte]() KeyCodec[T] { return bytesKey[T]{} }
+func NewBytesKey[T ~[]byte]() NameableKeyCodec[T] { return bytesKey[T]{} }
 
-type bytesKey[T ~[]byte] struct{}
+type bytesKey[T ~[]byte] struct {
+	name string
+}
 
 func (b bytesKey[T]) Encode(buffer []byte, key T) (int, error) {
 	return copy(buffer, key), nil
@@ -76,4 +78,13 @@ func (bytesKey[T]) DecodeNonTerminal(buffer []byte) (int, T, error) {
 
 func (bytesKey[T]) SizeNonTerminal(key T) int {
 	return len(key) + 1
+}
+
+func (b bytesKey[T]) WithName(name string) NamedKeyCodec[T] {
+	b.name = name
+	return b
+}
+
+func (b bytesKey[T]) Name() string {
+	return b.name
 }

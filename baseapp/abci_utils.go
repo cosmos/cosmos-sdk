@@ -272,9 +272,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 				}
 
 				var txGasLimit uint64
-				if gasTx, ok := tx.(interface {
-					GetGas() uint64
-				}); ok {
+				if gasTx, ok := tx.(mempool.GasTx); ok {
 					txGasLimit = gasTx.GetGas()
 				}
 

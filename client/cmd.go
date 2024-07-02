@@ -322,6 +322,16 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		}
 	}
 
+	if clientCtx.Unordered || flagSet.Changed(flags.FlagUnordered) {
+		unordered, _ := flagSet.GetBool(flags.FlagUnordered)
+		clientCtx = clientCtx.WithUnordered(unordered)
+	}
+
+	if clientCtx.TimeoutHeight > 0 || flagSet.Changed(flags.FlagTimeoutHeight) {
+		timeoutHeight, _ := flagSet.GetUint64(flags.FlagTimeoutHeight)
+		clientCtx = clientCtx.WithTimeoutHeight(timeoutHeight)
+	}
+
 	return clientCtx, nil
 }
 

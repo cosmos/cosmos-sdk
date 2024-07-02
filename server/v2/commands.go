@@ -35,11 +35,11 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 
 // Commands creates the start command of an application and gives back the CLIConfig containing all the server commands.
 // This API is for advanced user only, most users should use AddCommands instead that abstract more.
-func Commands[AppT AppI[T], T transaction.Tx](
+func Commands[T transaction.Tx](
 	rootCmd *cobra.Command,
-	newApp AppCreator[AppT, T],
+	newApp AppCreator[T],
 	logger log.Logger,
-	components ...ServerComponent[AppT, T],
+	components ...ServerComponent[T],
 ) (CLIConfig, error) {
 	if len(components) == 0 {
 		return CLIConfig{}, errors.New("no components provided")
@@ -101,11 +101,11 @@ func Commands[AppT AppI[T], T transaction.Tx](
 
 // AddCommands add the server commands to the root command
 // It configure the config handling and the logger handling
-func AddCommands[AppT AppI[T], T transaction.Tx](
+func AddCommands[T transaction.Tx](
 	rootCmd *cobra.Command,
-	newApp AppCreator[AppT, T],
+	newApp AppCreator[T],
 	logger log.Logger,
-	components ...ServerComponent[AppT, T],
+	components ...ServerComponent[T],
 ) error {
 	cmds, err := Commands(rootCmd, newApp, logger, components...)
 	if err != nil {
@@ -158,7 +158,7 @@ func AddCommands[AppT AppI[T], T transaction.Tx](
 }
 
 // configHandle writes the default config to the home directory if it does not exist and sets the server context
-func configHandle[AppT AppI[T], T transaction.Tx](s *Server[AppT, T], cmd *cobra.Command) error {
+func configHandle[T transaction.Tx](s *Server[T], cmd *cobra.Command) error {
 	home, err := cmd.Flags().GetString(FlagHome)
 	if err != nil {
 		return err

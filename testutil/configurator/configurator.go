@@ -56,7 +56,6 @@ func defaultConfig() *Config {
 			testutil.AuthModuleName,
 			testutil.BankModuleName,
 			testutil.GovModuleName,
-			"crisis",
 			"genutil",
 			testutil.AuthzModuleName,
 			testutil.FeegrantModuleName,
@@ -69,7 +68,6 @@ func defaultConfig() *Config {
 			testutil.EpochsModuleName,
 		},
 		EndBlockersOrder: []string{
-			"crisis",
 			testutil.GovModuleName,
 			testutil.StakingModuleName,
 			testutil.AuthModuleName,
@@ -98,7 +96,6 @@ func defaultConfig() *Config {
 			testutil.SlashingModuleName,
 			testutil.GovModuleName,
 			testutil.MintModuleName,
-			"crisis",
 			"genutil",
 			testutil.EvidenceModuleName,
 			testutil.AuthzModuleName,

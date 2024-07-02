@@ -66,6 +66,11 @@ type Options struct {
 	TxCacheSize    uint
 }
 
+// NewCacheEntry creates a new cache entry
+func NewCacheEntry(decodedTx *DecodedTx, err error) cacheEntry {
+	return cacheEntry{decodedTx, err}
+}
+
 // NewDecoder creates a new Decoder for decoding transactions.
 func NewDecoder(options Options) (*Decoder, error) {
 	if options.SigningContext == nil {
@@ -93,13 +98,27 @@ func NewDecoder(options Options) (*Decoder, error) {
 	}, nil
 }
 
-// Decode decodes raw protobuf encoded transaction bytes into a DecodedTx.
-func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
+// TxCache returns cache of the tx decoder
+func (d *Decoder) TxCache() *lru.Cache[string, cacheEntry] {
+	return d.txCache
+}
+
+// TxCacheEntry returns stored transaction entry in cache
+func (d *Decoder) TxCacheEntry(txBytes []byte) (cacheKey string, entry cacheEntry, found bool) {
 	// generate cache key using txBytes
-	cacheKey := *(*string)(unsafe.Pointer(&txBytes))
+	cacheKey = *(*string)(unsafe.Pointer(&txBytes))
 
 	// check if the tx is already present the cache
-	if entry, found := d.txCache.Get(cacheKey); found {
+	entry, found = d.txCache.Get(cacheKey)
+
+	return
+}
+
+// Decode decodes raw protobuf encoded transaction bytes into a DecodedTx.
+func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
+	// generate cache key and check if the tx is already present the cache
+	cacheKey, entry, found := d.TxCacheEntry(txBytes)
+	if found {
 		return entry.decodedTx, entry.err
 	}
 

@@ -50,8 +50,9 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		bz, err := in.AddressCodec.StringToBytes(in.Config.Authority)
 		if err != nil {
 			authority = sdkaddress.Module(in.Config.Authority)
+		} else {
+			authority = bz
 		}
-		authority = bz
 	}
 
 	authorityAddr, err := in.AddressCodec.BytesToString(authority)

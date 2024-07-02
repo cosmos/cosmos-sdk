@@ -12,7 +12,7 @@ import (
 	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/runtime/v2"
+	runtime "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment/iavl"
@@ -51,6 +51,7 @@ var DefaultNodeHome string
 // capabilities aren't needed for testing.
 type SimApp[T transaction.Tx] struct {
 	*runtime.App[T]
+
 	legacyAmino       legacy.Amino
 	appCodec          codec.Codec
 	txConfig          client.TxConfig

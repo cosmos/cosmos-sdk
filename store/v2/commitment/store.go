@@ -1,6 +1,7 @@
 package commitment
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -44,6 +45,10 @@ func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, logger
 	}, nil
 }
 
+// WriteChangeset writes a Changeset to the CommitStore.
+//
+// NOTE: Insertion order should be preserved in the commit store, especially for
+// IAVL trees, as the order of insertion affects the root hash.
 func (c *CommitStore) WriteChangeset(cs *corestore.Changeset) error {
 	for _, pairs := range cs.Changes {
 
@@ -53,7 +58,12 @@ func (c *CommitStore) WriteChangeset(cs *corestore.Changeset) error {
 		if !ok {
 			return fmt.Errorf("store key %s not found in multiTrees", key)
 		}
+		var prevKey []byte
 		for _, kv := range pairs.StateChanges {
+			if bytes.Compare(kv.Key, prevKey) < 1 {
+				return fmt.Errorf("keys must be inserted in order, got %X after %X", kv.Key, prevKey)
+			}
+			prevKey = kv.Key
 			if kv.Remove {
 				if err := tree.Remove(kv.Key); err != nil {
 					return err

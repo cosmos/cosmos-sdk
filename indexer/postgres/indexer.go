@@ -51,9 +51,10 @@ func (i *Indexer) Initialize(ctx context.Context, data indexing.InitializationDa
 }
 
 type configOptions struct {
-	DatabaseDriver  string `json:"database_driver"`
-	DatabaseURL     string `json:"database_url"`
-	RetainDeletions bool   `json:"retain_deletions"`
+	DatabaseDriver string `json:"database_driver"`
+	DatabaseURL    string `json:"database_url"`
+	// TODO should probably default to true
+	RetainDeletions bool `json:"retain_deletions"`
 }
 
 func init() {
@@ -160,6 +161,7 @@ func (i *Indexer) commit(_ appdata.CommitData) error {
 	return err
 }
 
+// Modules retains the module managers for the indexer.
 func (i *Indexer) Modules() map[string]*ModuleManager {
 	return i.modules
 }

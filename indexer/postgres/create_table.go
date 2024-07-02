@@ -31,6 +31,9 @@ func (tm *TableManager) CreateTableSql(writer io.Writer) error {
 	if len(tm.typ.KeyFields) == 0 {
 		isSingleton = true
 		_, err = fmt.Fprintf(writer, "_id INTEGER NOT NULL CHECK (_id = 1),\n\t")
+		if err != nil {
+			return err
+		}
 	} else {
 		for _, field := range tm.typ.KeyFields {
 			err = tm.createColumnDefinition(writer, field)
@@ -48,7 +51,6 @@ func (tm *TableManager) CreateTableSql(writer io.Writer) error {
 	}
 
 	// add _deleted column when we have RetainDeletions set and enabled
-	// NOTE: needs more design
 	if tm.options.RetainDeletions && tm.typ.RetainDeletions {
 		_, err = fmt.Fprintf(writer, "_deleted BOOLEAN NOT NULL DEFAULT FALSE,\n\t")
 		if err != nil {
@@ -75,29 +77,15 @@ func (tm *TableManager) CreateTableSql(writer io.Writer) error {
 		return err
 	}
 
-	// TODO: we need test data to not generate constraint failures to safely enable this
-	//for _, uniq := range tm.typ.UniqueConstraints {
-	//	cols := make([]string, len(uniq.FieldNames))
-	//	for i, name := range uniq.FieldNames {
-	//		field, ok := tm.allFields[name]
-	//		if !ok {
-	//			return fmt.Errorf("unknown field %q in unique constraint", name)
-	//		}
-	//
-	//		cols[i], err = tm.updatableColumnName(field)
-	//		if err != nil {
-	//			return err
-	//		}
-	//	}
-	//
-	//	_, err = fmt.Fprintf(writer, ",\n\tUNIQUE NULLS NOT DISTINCT (%s)", strings.Join(cols, ", "))
-	//}
+	_, err = fmt.Fprintf(writer, "\n);\n")
+	if err != nil {
+		return err
+	}
 
-	_, err = fmt.Fprintf(writer, `
-);
-
-GRANT SELECT ON TABLE %q TO PUBLIC;
-`, tm.TableName())
+	// we GRANT SELECT on the table to PUBLIC so that the table is automatically available
+	// for querying using off-the-shelf tools like pg_graphql, Postgrest, Postgraphile, etc.
+	// without any login permissions
+	_, err = fmt.Fprintf(writer, "GRANT SELECT ON TABLE %q TO PUBLIC;", tm.TableName())
 	if err != nil {
 		return err
 	}

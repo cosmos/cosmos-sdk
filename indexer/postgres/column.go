@@ -55,6 +55,7 @@ func (tm *TableManager) createColumnDefinition(writer io.Writer, field schema.Fi
 	}
 }
 
+// writeNullability writes column nullability.
 func writeNullability(writer io.Writer, nullable bool) error {
 	if nullable {
 		_, err := fmt.Fprintf(writer, " NULL,\n\t")
@@ -65,6 +66,7 @@ func writeNullability(writer io.Writer, nullable bool) error {
 	}
 }
 
+// simpleColumnType returns the postgres column type for the kind for simple types.
 func simpleColumnType(kind schema.Kind) string {
 	switch kind {
 	case schema.StringKind:

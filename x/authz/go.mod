@@ -181,10 +181,10 @@ replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
-	cosmossdk.io/store => ../../store
-	cosmossdk.io/logger => ../../logger
 	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/depinject => ../../depinject
+	cosmossdk.io/logger => ../../logger
+	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank

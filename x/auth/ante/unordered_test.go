@@ -75,7 +75,6 @@ func TestUnorderedTxDecorator_UnorderedTx_InvalidTTL(t *testing.T) {
 }
 
 func TestUnorderedTxDecorator_UnorderedTx_AlreadyExists(t *testing.T) {
-
 	txm := unorderedtx.NewManager(t.TempDir())
 	defer func() {
 		require.NoError(t, txm.Close())

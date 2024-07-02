@@ -729,7 +729,6 @@ func (s *SystemUnderTest) anyNodeRunning() bool {
 
 func (s *SystemUnderTest) CurrentHeight() int64 {
 	return s.currentHeight.Load()
-
 }
 
 type Node struct {

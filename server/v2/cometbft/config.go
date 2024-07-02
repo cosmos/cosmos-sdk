@@ -2,10 +2,25 @@ package cometbft
 
 import (
 	cmtcfg "github.com/cometbft/cometbft/config"
+	"github.com/spf13/viper"
 
+	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/cometbft/types"
 )
+
+// TODO REDO/VERIFY THIS
+
+func GetConfigFromViper(v *viper.Viper) *cmtcfg.Config {
+	conf := cmtcfg.DefaultConfig()
+	err := v.Unmarshal(conf)
+	rootDir := v.GetString(serverv2.FlagHome)
+	if err != nil {
+		return cmtcfg.DefaultConfig().SetRoot(rootDir)
+	}
+
+	return conf.SetRoot(rootDir)
+}
 
 // Config is the configuration for the CometBFT application
 type Config struct {

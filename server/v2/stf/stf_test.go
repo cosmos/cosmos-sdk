@@ -7,36 +7,64 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	coregas "cosmossdk.io/core/gas"
 	"cosmossdk.io/core/store"
-	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/gas"
 	"cosmossdk.io/server/v2/stf/mock"
 )
 
+func addMsgHandlerToSTF[T any, PT interface {
+	*T
+	proto.Message
+},
+	U any, UT interface {
+		*U
+		proto.Message
+	}](
+	t *testing.T,
+	stf *STF[mock.Tx],
+	handler func(ctx context.Context, msg PT) (UT, error),
+) {
+	t.Helper()
+	msgRouterBuilder := NewMsgRouterBuilder()
+	err := msgRouterBuilder.RegisterHandler(
+		msgTypeURL(PT(new(T))),
+		func(ctx context.Context, msg appmodulev2.Message) (msgResp appmodulev2.Message, err error) {
+			typedReq := msg.(PT)
+			typedResp, err := handler(ctx, typedReq)
+			if err != nil {
+				return nil, err
+			}
+
+			return typedResp, nil
+		},
+	)
+	require.NoError(t, err)
+
+	msgRouter, err := msgRouterBuilder.Build()
+	require.NoError(t, err)
+	stf.msgRouter = msgRouter
+}
+
 func TestSTF(t *testing.T) {
 	state := mock.DB()
 	mockTx := mock.Tx{
 		Sender:   []byte("sender"),
-		Msg:      wrapperspb.Bool(true), // msg does not matter at all because our handler does nothing.
+		Msg:      &gogotypes.BoolValue{Value: true},
 		GasLimit: 100_000,
 	}
 
 	sum := sha256.Sum256([]byte("test-hash"))
 
 	s := &STF[mock.Tx]{
-		handleMsg: func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
-			kvSet(t, ctx, "exec")
-			return nil, nil
-		},
-		handleQuery: nil,
-		doPreBlock:  func(ctx context.Context, txs []mock.Tx) error { return nil },
+		doPreBlock: func(ctx context.Context, txs []mock.Tx) error { return nil },
 		doBeginBlock: func(ctx context.Context) error {
 			kvSet(t, ctx, "begin-block")
 			return nil
@@ -58,6 +86,11 @@ func TestSTF(t *testing.T) {
 		makeGasMeter:        gas.DefaultGasMeter,
 		makeGasMeteredState: gas.DefaultWrapWithGasMeter,
 	}
+
+	addMsgHandlerToSTF(t, s, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
+		kvSet(t, ctx, "exec")
+		return nil, nil
+	})
 
 	t.Run("begin and end block", func(t *testing.T) {
 		_, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
@@ -95,8 +128,8 @@ func TestSTF(t *testing.T) {
 
 		mockTx := mock.Tx{
 			Sender:   []byte("sender"),
-			Msg:      wrapperspb.Bool(true), // msg does not matter at all because our handler does nothing.
-			GasLimit: 0,                     // NO GAS!
+			Msg:      &gogotypes.BoolValue{Value: true}, // msg does not matter at all because our handler does nothing.
+			GasLimit: 0,                                 // NO GAS!
 		}
 
 		// this handler will propagate the storage error back, we expect
@@ -124,9 +157,9 @@ func TestSTF(t *testing.T) {
 	t.Run("fail exec tx", func(t *testing.T) {
 		// update the stf to fail on the handler
 		s := s.clone()
-		s.handleMsg = func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
+		addMsgHandlerToSTF(t, &s, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
 			return nil, fmt.Errorf("failure")
-		}
+		})
 
 		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
 			Height:  uint64(1),
@@ -167,9 +200,9 @@ func TestSTF(t *testing.T) {
 
 	t.Run("tx failed and post tx failed", func(t *testing.T) {
 		s := s.clone()
-		s.handleMsg = func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
+		addMsgHandlerToSTF(t, &s, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
 			return nil, fmt.Errorf("exec failure")
-		}
+		})
 		s.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error { return fmt.Errorf("post tx failure") }
 		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
 			Height:  uint64(1),

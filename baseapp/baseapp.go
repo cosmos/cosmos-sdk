@@ -764,7 +764,7 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 	gInfo, result, anteEvents, err := app.runTx(execModeFinalize, tx)
 	if err != nil {
 		resultStr = "failed"
-		resp = sdkerrors.ResponseExecTxResultWithEvents(
+		resp = responseExecTxResultWithEvents(
 			err,
 			gInfo.GasWanted,
 			gInfo.GasUsed,
@@ -1164,4 +1164,9 @@ func (app *BaseApp) Close() error {
 	}
 
 	return errors.Join(errs...)
+}
+
+// GetBaseApp returns the pointer to itself.
+func (app *BaseApp) GetBaseApp() *BaseApp {
+	return app
 }

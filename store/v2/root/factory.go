@@ -32,15 +32,15 @@ const (
 )
 
 type FactoryOptions struct {
-	Logger         log.Logger
-	RootDir        string
-	SSType         SSType
-	SCType         SCType
-	SSPruneOptions *store.PruneOptions
-	SCPruneOptions *store.PruneOptions
-	IavlConfig     *iavl.Config
-	StoreKeys      []string
-	SCRawDB        corestore.KVStoreWithBatch
+	Logger          log.Logger
+	RootDir         string
+	SSType          SSType
+	SCType          SCType
+	SSPruningOption *store.PruningOption
+	SCPruningOption *store.PruningOption
+	IavlConfig      *iavl.Config
+	StoreKeys       []string
+	SCRawDB         corestore.KVStoreWithBatch
 }
 
 // CreateRootStore is a convenience function to create a root store based on the
@@ -83,6 +83,24 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 	}
 	ss = storage.NewStorageStore(ssDb, opts.Logger)
 
+	if len(opts.StoreKeys) == 0 {
+		metadata := commitment.NewMetadataStore(opts.SCRawDB)
+		latestVersion, err := metadata.GetLatestVersion()
+		if err != nil {
+			return nil, err
+		}
+		lastCommitInfo, err := metadata.GetCommitInfo(latestVersion)
+		if err != nil {
+			return nil, err
+		}
+		if lastCommitInfo == nil {
+			return nil, fmt.Errorf("tried to construct a root store with no store keys specified but no commit info found for version %d", latestVersion)
+		}
+		for _, si := range lastCommitInfo.StoreInfos {
+			opts.StoreKeys = append(opts.StoreKeys, string(si.Name))
+		}
+	}
+
 	trees := make(map[string]commitment.Tree)
 	for _, key := range opts.StoreKeys {
 		if internal.IsMemoryStoreKey(key) {
@@ -101,7 +119,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		return nil, err
 	}
 
-	pm := pruning.NewManager(sc, ss, opts.SCPruneOptions, opts.SSPruneOptions)
+	pm := pruning.NewManager(sc, ss, opts.SCPruningOption, opts.SSPruningOption)
 
 	return New(opts.Logger, ss, sc, pm, nil, nil)
 }

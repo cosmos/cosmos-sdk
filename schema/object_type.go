@@ -11,7 +11,7 @@ type ObjectType struct {
 	// KeyFields is a list of fields that make up the primary key of the object.
 	// It can be empty in which case indexers should assume that this object is
 	// a singleton and only has one value. Field names must be unique within the
-	// object between both key and value fields.
+	// object between both key and value fields. Key fields CANNOT be nullable.
 	KeyFields []Field
 
 	// ValueFields is a list of fields that are not part of the primary key of the object.
@@ -25,6 +25,8 @@ type ObjectType struct {
 	// though it is still valid in order to save space. Indexers will want to have
 	// the option of retaining such data and distinguishing from other "true" deletions.
 	RetainDeletions bool
+
+	UniqueConstraints []UniqueConstraint
 }
 
 // Validate validates the object type.
@@ -37,6 +39,10 @@ func (o ObjectType) Validate() error {
 	for _, field := range o.KeyFields {
 		if err := field.Validate(); err != nil {
 			return fmt.Errorf("invalid key field %q: %w", field.Name, err)
+		}
+
+		if field.Nullable {
+			return fmt.Errorf("key field %q cannot be nullable", field.Name)
 		}
 
 		if fieldNames[field.Name] {

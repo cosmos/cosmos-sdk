@@ -10,10 +10,11 @@ type Field struct {
 	// Kind is the basic type of the field.
 	Kind Kind
 
-	// Nullable indicates whether null values are accepted for the field.
+	// Nullable indicates whether null values are accepted for the field. Key fields CANNOT be nullable.
 	Nullable bool
 
 	// AddressPrefix is the address prefix of the field's kind, currently only used for Bech32AddressKind.
+	// TODO: add validation for valid address prefixes
 	AddressPrefix string
 
 	// EnumDefinition is the definition of the enum type and is only valid when Kind is EnumKind.
@@ -21,6 +22,10 @@ type Field struct {
 	// the same values for the same enum name. This possibly introduces some duplication of
 	// definitions but makes it easier to reason about correctness and validation in isolation.
 	EnumDefinition EnumDefinition
+
+	// References is the name of another field in the same module schema that this field references.
+	// It must be in the form of "<object type name>.<field name>", ex. "Account.address".
+	References string
 }
 
 // Validate validates the field.

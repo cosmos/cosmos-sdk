@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
 	coreheader "cosmossdk.io/core/header"
@@ -22,6 +23,34 @@ func createValAddrs(count int) ([]sdk.AccAddress, []sdk.ValAddress) {
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 
 	return addrs, valAddrs
+}
+
+func (s *KeeperTestSuite) TestSharesToTokensConversion() {
+	ctx, keeper := s.ctx, s.stakingKeeper
+
+	initialTokens := math.NewInt(1000000)
+	// Create a validator
+	_, valAddrs := createValAddrs(1)
+	valAddr := valAddrs[0]
+	validator, err := stakingtypes.NewValidator(valAddr.String(), PKs[0], stakingtypes.Description{})
+	require.NoError(s.T(), err)
+	validator, issuedShares := validator.AddTokensFromDel(initialTokens)
+	require.NoError(s.T(), keeper.SetValidator(ctx, validator))
+
+	// Delegate tokens
+	delAddr := sdk.AccAddress([]byte("delegator"))
+	delegation := stakingtypes.NewDelegation(delAddr.String(), valAddr.String(), issuedShares)
+	require.NoError(s.T(), keeper.SetDelegation(ctx, delegation))
+
+	// Convert shares to tokens
+	shares := math.LegacyNewDecFromInt(initialTokens)
+	tokens := validator.TokensFromSharesTruncated(shares)
+	require.Equal(s.T(), initialTokens, tokens.RoundInt())
+
+	// Convert tokens back to shares
+	newShares, err := validator.SharesFromTokens(initialTokens)
+	require.NoError(s.T(), err)
+	require.True(s.T(), shares.Equal(newShares))
 }
 
 // tests GetDelegation, GetDelegatorDelegations, SetDelegation, RemoveDelegation, GetDelegatorDelegations

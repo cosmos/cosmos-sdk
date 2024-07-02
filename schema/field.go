@@ -22,10 +22,6 @@ type Field struct {
 	// the same values for the same enum name. This possibly introduces some duplication of
 	// definitions but makes it easier to reason about correctness and validation in isolation.
 	EnumDefinition EnumDefinition
-
-	// References is the name of another field in the same module schema that this field references.
-	// It must be in the form of "<object type name>.<field name>", ex. "Account.address".
-	References string
 }
 
 // Validate validates the field.

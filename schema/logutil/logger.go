@@ -1,5 +1,8 @@
-package log
+// Package logutil defines the Logger interface expected by indexer implementations.
+// It is implemented by cosmossdk.io/log which is not imported to minimize dependencies.
+package logutil
 
+// Logger is the logger interface expected by indexer implementations.
 type Logger interface {
 	// Info takes a message and a set of key/value pairs and logs with level INFO.
 	// The key of the tuple must be a string.
@@ -18,14 +21,15 @@ type Logger interface {
 	Debug(msg string, keyVals ...interface{})
 }
 
+// NoopLogger is a logger that doesn't do anything.
 type NoopLogger struct{}
 
-func (n NoopLogger) Info(msg string, keyVals ...interface{}) {}
+func (n NoopLogger) Info(string, ...interface{}) {}
 
-func (n NoopLogger) Warn(msg string, keyVals ...interface{}) {}
+func (n NoopLogger) Warn(string, ...interface{}) {}
 
-func (n NoopLogger) Error(msg string, keyVals ...interface{}) {}
+func (n NoopLogger) Error(string, ...interface{}) {}
 
-func (n NoopLogger) Debug(msg string, keyVals ...interface{}) {}
+func (n NoopLogger) Debug(string, ...interface{}) {}
 
 var _ Logger = NoopLogger{}

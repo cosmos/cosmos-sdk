@@ -8,7 +8,7 @@ import (
 
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/indexing"
-	"cosmossdk.io/schema/log"
+	"cosmossdk.io/schema/logutil"
 )
 
 type Indexer struct {
@@ -86,7 +86,7 @@ func init() {
 
 type Options struct {
 	RetainDeletions bool
-	Logger          log.Logger
+	Logger          logutil.Logger
 }
 
 func NewIndexer(db *sql.DB, opts Options) (*Indexer, error) {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/schema/appdata"
-	"cosmossdk.io/schema/log"
+	"cosmossdk.io/schema/logutil"
 )
 
 type Indexer interface {
@@ -13,7 +13,7 @@ type Indexer interface {
 }
 
 type IndexerResources struct {
-	Logger log.Logger
+	Logger logutil.Logger
 }
 
 type IndexerFactory = func(options map[string]interface{}, resources IndexerResources) (Indexer, error)

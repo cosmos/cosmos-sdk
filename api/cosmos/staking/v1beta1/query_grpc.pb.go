@@ -86,6 +86,7 @@ type QueryClient interface {
 	// DelegatorValidator queries validator info for given delegator validator
 	// pair.
 	DelegatorValidator(ctx context.Context, in *QueryDelegatorValidatorRequest, opts ...grpc.CallOption) (*QueryDelegatorValidatorResponse, error)
+	// Deprecated: Do not use.
 	// HistoricalInfo queries the historical info for given height.
 	HistoricalInfo(ctx context.Context, in *QueryHistoricalInfoRequest, opts ...grpc.CallOption) (*QueryHistoricalInfoResponse, error)
 	// Pool queries the pool info.
@@ -201,6 +202,7 @@ func (c *queryClient) DelegatorValidator(ctx context.Context, in *QueryDelegator
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *queryClient) HistoricalInfo(ctx context.Context, in *QueryHistoricalInfoRequest, opts ...grpc.CallOption) (*QueryHistoricalInfoResponse, error) {
 	out := new(QueryHistoricalInfoResponse)
 	err := c.cc.Invoke(ctx, Query_HistoricalInfo_FullMethodName, in, out, opts...)
@@ -279,6 +281,7 @@ type QueryServer interface {
 	// DelegatorValidator queries validator info for given delegator validator
 	// pair.
 	DelegatorValidator(context.Context, *QueryDelegatorValidatorRequest) (*QueryDelegatorValidatorResponse, error)
+	// Deprecated: Do not use.
 	// HistoricalInfo queries the historical info for given height.
 	HistoricalInfo(context.Context, *QueryHistoricalInfoRequest) (*QueryHistoricalInfoResponse, error)
 	// Pool queries the pool info.

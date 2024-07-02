@@ -25,22 +25,6 @@ var _ types.ValidatorSet = Keeper{}
 // Implements DelegationSet interface
 var _ types.DelegationSet = Keeper{}
 
-func HistoricalInfoCodec(cdc codec.BinaryCodec) collcodec.ValueCodec[types.HistoricalRecord] {
-	return collcodec.NewAltValueCodec(codec.CollValue[types.HistoricalRecord](cdc), func(b []byte) (types.HistoricalRecord, error) {
-		historicalinfo := types.HistoricalInfo{} //nolint: staticcheck // HistoricalInfo is deprecated
-		err := historicalinfo.Unmarshal(b)
-		if err != nil {
-			return types.HistoricalRecord{}, err
-		}
-
-		return types.HistoricalRecord{
-			Apphash:        historicalinfo.Header.AppHash,
-			Time:           &historicalinfo.Header.Time,
-			ValidatorsHash: historicalinfo.Header.NextValidatorsHash,
-		}, nil
-	})
-}
-
 type rotationHistoryIndexes struct {
 	Block *indexes.Multi[uint64, collections.Pair[[]byte, uint64], types.ConsPubKeyRotationHistory]
 }
@@ -81,8 +65,6 @@ type Keeper struct {
 
 	Schema collections.Schema
 
-	// HistoricalInfo key: Height | value: HistoricalInfo
-	HistoricalInfo collections.Map[uint64, types.HistoricalRecord]
 	// LastTotalPower value: LastTotalPower
 	LastTotalPower collections.Item[math.Int]
 	// DelegationsByValidator key: valAddr+delAddr | value: none used (index key for delegations by validator index)
@@ -172,7 +154,6 @@ func NewKeeper(
 		consensusAddressCodec: consensusAddressCodec,
 		cometInfoService:      cometInfoService,
 		LastTotalPower:        collections.NewItem(sb, types.LastTotalPowerKey, "last_total_power", sdk.IntValue),
-		HistoricalInfo:        collections.NewMap(sb, types.HistoricalInfoKey, "historical_info", collections.Uint64Key, HistoricalInfoCodec(cdc)),
 		Delegations: collections.NewMap(
 			sb, types.DelegationKey, "delegations",
 			collections.PairKeyCodec(

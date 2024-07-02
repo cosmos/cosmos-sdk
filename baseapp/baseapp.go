@@ -186,6 +186,12 @@ type BaseApp struct {
 	// including the goroutine handling.This is experimental and must be enabled
 	// by developers.
 	optimisticExec *oe.OptimisticExecution
+
+	// Mutex for simulating transactions
+	// This mutex is used to prevent the checkState corruption during the app.Simulate.
+	//
+	// checkTx holds a write lock, while simulate holds a read lock.
+	simulateMutex sync.RWMutex
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -497,7 +503,10 @@ func (app *BaseApp) setState(mode execMode, h cmtproto.Header) {
 
 	switch mode {
 	case execModeCheck:
-		baseState.SetContext(baseState.Context().WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices))
+		// should take a snapshot of the multistore and cache it
+		// to prevent state corruption during checktx or simulate.
+		baseState.ms, _ = app.cms.CacheMultiStoreWithVersion(app.cms.LatestVersion())
+		baseState.SetContext(baseState.Context().WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices).WithMultiStore(baseState.ms))
 		app.checkState = baseState
 
 	case execModePrepareProposal:

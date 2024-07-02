@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 	"testing"
 
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
@@ -77,7 +78,7 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 		ctxGen       func() client.Context
 		from         string
 		to           []string
-		amount       sdk.Coins
+		amounts      []sdk.Coins
 		extraArgs    []string
 		expectErrMsg string
 	}{
@@ -91,10 +92,16 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 				accountStr[1],
 				accountStr[2],
 			},
-			sdk.NewCoins(
-				sdk.NewCoin("stake", sdkmath.NewInt(10)),
-				sdk.NewCoin("photon", sdkmath.NewInt(40)),
-			),
+			[]sdk.Coins{
+				sdk.NewCoins(
+					sdk.NewCoin("stake", sdkmath.NewInt(10)),
+					sdk.NewCoin("photon", sdkmath.NewInt(40)),
+				),
+				sdk.NewCoins(
+					sdk.NewCoin("stake", sdkmath.NewInt(20)),
+					sdk.NewCoin("photon", sdkmath.NewInt(30)),
+				),
+			},
 			extraArgs,
 			"",
 		},
@@ -108,10 +115,16 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 				accountStr[1],
 				accountStr[2],
 			},
-			sdk.NewCoins(
-				sdk.NewCoin("stake", sdkmath.NewInt(10)),
-				sdk.NewCoin("photon", sdkmath.NewInt(40)),
-			),
+			[]sdk.Coins{
+				sdk.NewCoins(
+					sdk.NewCoin("stake", sdkmath.NewInt(10)),
+					sdk.NewCoin("photon", sdkmath.NewInt(40)),
+				),
+				sdk.NewCoins(
+					sdk.NewCoin("stake", sdkmath.NewInt(20)),
+					sdk.NewCoin("photon", sdkmath.NewInt(30)),
+				),
+			},
 			extraArgs,
 			"key not found",
 		},
@@ -125,10 +138,16 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 				accountStr[1],
 				"bar",
 			},
-			sdk.NewCoins(
-				sdk.NewCoin("stake", sdkmath.NewInt(10)),
-				sdk.NewCoin("photon", sdkmath.NewInt(40)),
-			),
+			[]sdk.Coins{
+				sdk.NewCoins(
+					sdk.NewCoin("stake", sdkmath.NewInt(10)),
+					sdk.NewCoin("photon", sdkmath.NewInt(40)),
+				),
+				sdk.NewCoins(
+					sdk.NewCoin("stake", sdkmath.NewInt(20)),
+					sdk.NewCoin("photon", sdkmath.NewInt(30)),
+				),
+			},
 			extraArgs,
 			"invalid bech32 string",
 		},
@@ -155,8 +174,18 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 
 			var args []string
 			args = append(args, tc.from)
-			args = append(args, tc.to...)
-			args = append(args, tc.amount.String())
+
+			var outputs []string
+			amountsLen := len(tc.amounts)
+			for i, address := range tc.to {
+				if i < amountsLen {
+					outputs = append(outputs, fmt.Sprintf("%s:%s", address, tc.amounts[i].String()))
+				} else {
+					outputs = append(outputs, fmt.Sprintf("%s:%s", address, ""))
+				}
+			}
+			args = append(args, strings.Join(outputs, ";"))
+
 			args = append(args, tc.extraArgs...)
 
 			cmd.SetContext(ctx)

@@ -126,28 +126,6 @@ var ExampleAppSchema = map[string]schema.ModuleSchema{
 				},
 				RetainDeletions: true,
 			},
-			{
-				Name: "UniqueConstraint",
-				KeyFields: []schema.Field{
-					{
-						Name: "Key",
-						Kind: schema.StringKind,
-					},
-				},
-				ValueFields: []schema.Field{
-					{
-						Name: "Value1",
-						Kind: schema.Int32Kind,
-					},
-					{
-						Name: "Value2",
-						Kind: schema.BytesKind,
-					},
-				},
-				UniqueConstraints: []schema.UniqueConstraint{
-					{[]string{"Value1"}},
-				},
-			},
 		},
 	},
 }

@@ -3,9 +3,8 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
 	coreheader "cosmossdk.io/core/header"

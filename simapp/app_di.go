@@ -136,7 +136,6 @@ func NewSimApp(
 				appOpts,
 				// supply the logger
 				logger,
-
 				// ADVANCED CONFIGURATION
 
 				//
@@ -238,7 +237,8 @@ func NewSimApp(
 		voteExtHandler := NewVoteExtensionHandler()
 		voteExtHandler.SetHandlers(bApp)
 	}
-	baseAppOptions = append(baseAppOptions, voteExtOp, baseapp.SetOptimisticExecution())
+	baseAppOptions = append(baseAppOptions, voteExtOp, baseapp.SetOptimisticExecution(),
+		baseapp.SetExcludeNestedMsgsGas(govkeeper.DefaultConfig().ExcludedNestedMsgsForGasSim))
 
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 

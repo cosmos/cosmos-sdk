@@ -119,6 +119,19 @@ func SetOptimisticExecution(opts ...func(*oe.OptimisticExecution)) func(*BaseApp
 	}
 }
 
+// SetExcludeNestedMsgsGas sets the message types for which gas costs for its nested messages are not calculated when simulating.
+func SetExcludeNestedMsgsGas(msgs []sdk.Msg) func(*BaseApp) {
+	return func(app *BaseApp) {
+		app.excludeNestedMsgsGas = make(map[string]struct{})
+		for _, msg := range msgs {
+			if _, ok := msg.(HasNestedMsgs); !ok {
+				continue
+			}
+			app.excludeNestedMsgsGas[sdk.MsgTypeURL(msg)] = struct{}{}
+		}
+	}
+}
+
 func (app *BaseApp) SetName(name string) {
 	if app.sealed {
 		panic("SetName() on sealed BaseApp")

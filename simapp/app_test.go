@@ -36,7 +36,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -319,7 +318,7 @@ func TestAddressCodecFactory(t *testing.T) {
 
 	err := depinject.Inject(
 		depinject.Configs(
-			network.MinimumAppConfig(),
+			AppConfig(),
 			depinject.Supply(log.NewNopLogger()),
 		),
 		&addrCodec, &valAddressCodec, &consAddressCodec)
@@ -337,7 +336,7 @@ func TestAddressCodecFactory(t *testing.T) {
 	// Set the address codec to the custom one
 	err = depinject.Inject(
 		depinject.Configs(
-			network.MinimumAppConfig(),
+			AppConfig(),
 			depinject.Supply(
 				log.NewNopLogger(),
 				func() address.Codec { return customAddressCodec{} },

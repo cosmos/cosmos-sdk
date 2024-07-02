@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/btcutil/bech32"
+
 	"cosmossdk.io/schema"
 )
 
@@ -106,7 +108,7 @@ func (tm *TableManager) bindParam(field schema.Field, value interface{}) (param 
 
 		param = int64(t)
 	} else if field.Kind == schema.Bech32AddressKind {
-		param, err = bech32Encode(field.AddressPrefix, value.([]byte))
+		param, err = bech32.EncodeFromBase256(field.AddressPrefix, value.([]byte))
 		if err != nil {
 			return nil, fmt.Errorf("encoding bech32 failed: %w", err)
 		}

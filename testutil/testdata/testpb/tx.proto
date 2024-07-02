@@ -5,6 +5,7 @@ import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "testpb/testdata.proto";
 import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/testutil/testdata";
 
@@ -35,4 +36,11 @@ message TestMsg {
   option (amino.name)                = "testpb/TestMsg";
 
   repeated string signers = 1;
+
+  string decField = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (amino.dont_omitempty) = true,
+    (gogoproto.nullable)   = false
+  ];
 }

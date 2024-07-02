@@ -113,6 +113,7 @@ service Query {
 
   // HistoricalInfo queries the historical info for given height.
   rpc HistoricalInfo(QueryHistoricalInfoRequest) returns (QueryHistoricalInfoResponse) {
+    option deprecated                          = true;
     option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get               = "/cosmos/staking/v1beta1/historical_info/{height}";
   }
@@ -367,6 +368,7 @@ message QueryDelegatorValidatorResponse {
 // QueryHistoricalInfoRequest is request type for the Query/HistoricalInfo RPC
 // method.
 message QueryHistoricalInfoRequest {
+  option deprecated = true;
   // height defines at which height to query the historical info.
   int64 height = 1;
 }
@@ -374,6 +376,7 @@ message QueryHistoricalInfoRequest {
 // QueryHistoricalInfoResponse is response type for the Query/HistoricalInfo RPC
 // method.
 message QueryHistoricalInfoResponse {
+  option deprecated = true;
   // hist defines the historical info at the given height.
   HistoricalInfo   hist              = 1 [deprecated = true];
   HistoricalRecord historical_record = 2;

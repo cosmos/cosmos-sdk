@@ -314,13 +314,6 @@ func (c CLIWrapper) QueryBalances(addr string) string {
 	return c.CustomQuery("q", "bank", "balances", addr)
 }
 
-// QueryHeight returns the current block height
-// Example: `{"block_height":"1"}`
-func (c CLIWrapper) QueryHeight() int64 {
-	h := c.CustomQuery("q", "block", "--type=height")
-	return gjson.Get(h, "height").Int()
-}
-
 // QueryBalance returns balance amount for given denom.
 // 0 when not found
 func (c CLIWrapper) QueryBalance(addr, denom string) int64 {

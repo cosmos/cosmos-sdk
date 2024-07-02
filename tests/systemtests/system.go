@@ -44,7 +44,7 @@ type TestnetInitializer interface {
 type SystemUnderTest struct {
 	execBinary         string
 	blockListener      *EventListener
-	currentHeight      int64
+	currentHeight      atomic.Int64
 	outputDir          string
 	testnetInitializer TestnetInitializer
 
@@ -164,7 +164,7 @@ func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
 		s.blockListener.Subscribe("tm.event='NewBlock'", func(e ctypes.ResultEvent) (more bool) {
 			newBlock, ok := e.Data.(tmtypes.EventDataNewBlock)
 			require.True(t, ok, "unexpected type %T", e.Data)
-			atomic.StoreInt64(&s.currentHeight, newBlock.Block.Height)
+			s.currentHeight.Store(newBlock.Block.Height)
 			return true
 		}),
 	)
@@ -367,7 +367,7 @@ func (s *SystemUnderTest) AwaitBlockHeight(t *testing.T, targetHeight int64, tim
 	if len(timeout) != 0 {
 		maxWaitTime = timeout[0]
 	} else {
-		maxWaitTime = time.Duration(targetHeight-s.currentHeight+3) * s.blockTime
+		maxWaitTime = time.Duration(targetHeight-s.currentHeight.Load()+3) * s.blockTime
 	}
 	abort := time.NewTimer(maxWaitTime).C
 	for {
@@ -393,10 +393,10 @@ func (s *SystemUnderTest) AwaitNextBlock(t *testing.T, timeout ...time.Duration)
 	}
 	done := make(chan int64)
 	go func() {
-		for start, current := atomic.LoadInt64(&s.currentHeight), atomic.LoadInt64(&s.currentHeight); current == start; current = atomic.LoadInt64(&s.currentHeight) {
+		for start, current := s.currentHeight.Load(), s.currentHeight.Load(); current == start; current = s.currentHeight.Load() {
 			time.Sleep(s.blockTime)
 		}
-		done <- atomic.LoadInt64(&s.currentHeight)
+		done <- s.currentHeight.Load()
 		close(done)
 	}()
 	select {
@@ -434,7 +434,7 @@ func (s *SystemUnderTest) ResetChain(t *testing.T) {
 
 	// reset all validator nodes
 	s.ForEachNodeExecAndWait(t, []string{"comet", "unsafe-reset-all"})
-	s.currentHeight = 0
+	s.currentHeight.Store(0)
 	s.dirty = false
 }
 
@@ -725,6 +725,11 @@ func (s *SystemUnderTest) anyNodeRunning() bool {
 	s.pidsLock.RLock()
 	defer s.pidsLock.RUnlock()
 	return len(s.pids) != 0
+}
+
+func (s *SystemUnderTest) CurrentHeight() int64 {
+	return s.currentHeight.Load()
+
 }
 
 type Node struct {

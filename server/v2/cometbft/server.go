@@ -195,11 +195,13 @@ func (s *CometBFTServer[AppT, T]) CLICommands() serverv2.CLIConfig {
 			s.ShowValidatorCmd(),
 			s.ShowAddressCmd(),
 			s.VersionCmd(),
+			cmtcmd.ResetAllCmd,
+			cmtcmd.ResetStateCmd,
+		},
+		Queries: []*cobra.Command{
 			s.QueryBlockCmd(),
 			s.QueryBlocksCmd(),
 			s.QueryBlockResultsCmd(),
-			cmtcmd.ResetAllCmd,
-			cmtcmd.ResetStateCmd,
 		},
 	}
 }

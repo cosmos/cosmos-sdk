@@ -19,6 +19,8 @@ require (
 	google.golang.org/protobuf v1.34.2
 )
 
+require github.com/golang/mock v1.6.0 // indirect
+
 require github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 
 require (
@@ -76,7 +78,7 @@ require (
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
-	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/gogo/protobuf v1.3.2
 	github.com/golang/glog v1.2.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.4 // indirect

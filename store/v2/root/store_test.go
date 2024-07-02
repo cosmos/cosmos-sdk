@@ -1,6 +1,7 @@
 package root
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"testing"
 	"time"
@@ -386,7 +387,7 @@ func (s *RootStoreTestSuite) TestWorkingHash() {
 		cs := corestore.NewChangeset()
 		for _, storeKeyBytes := range [][]byte{testStoreKeyBytes, testStoreKey2Bytes, testStoreKey3Bytes} {
 			for i := 0; i < 100; i++ {
-				key := fmt.Sprintf("key_%x_%03d", i, storeKeyBytes) // key000, key001, ..., key099
+				key := fmt.Sprintf("key_%x_%03d", storeKeyBytes, i) // key000, key001, ..., key099
 				val := fmt.Sprintf("val%03d_%03d", i, v)            // val000_1, val001_1, ..., val099_1
 
 				cs.Add(storeKeyBytes, []byte(key), []byte(val), false)
@@ -771,7 +772,8 @@ func (s *RootStoreTestSuite) TestHashStableWithEmptyCommitAndRestart() {
 	err := s.rootStore.LoadLatestVersion()
 	s.Require().Nil(err)
 
-	commitID := proof.CommitID{}
+	emptyHash := sha256.Sum256([]byte{})
+	commitID := proof.CommitID{Hash: emptyHash[:]}
 	lastCommitID, err := s.rootStore.LastCommitID()
 	s.Require().Nil(err)
 

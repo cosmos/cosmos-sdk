@@ -15,6 +15,7 @@ import (
 
 func TestCommitterSuite(t *testing.T) {
 	s := &commitment.CommitStoreTestSuite{
+		BackendTreeType: commitment.TreeTypeIAVL,
 		NewStore: func(db corestore.KVStoreWithBatch, storeKeys []string, logger log.Logger) (*commitment.CommitStore, error) {
 			multiTrees := make(map[string]commitment.Tree)
 			cfg := DefaultConfig()

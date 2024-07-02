@@ -25,7 +25,8 @@ const (
 type CommitStoreTestSuite struct {
 	suite.Suite
 
-	NewStore func(db corestore.KVStoreWithBatch, storeKeys []string, logger log.Logger) (*CommitStore, error)
+	BackendTreeType TreeType
+	NewStore        func(db corestore.KVStoreWithBatch, storeKeys []string, logger log.Logger) (*CommitStore, error)
 }
 
 func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
@@ -161,5 +162,21 @@ func (s *CommitStoreTestSuite) TestStore_Pruning() {
 		} else {
 			s.Require().NotNil(commitInfo)
 		}
+	}
+}
+
+func (s *CommitStoreTestSuite) TestStore_WriteChangeset_IAVLInsertionOrder() {
+	storeKeys := []string{storeKey1, storeKey2}
+	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, log.NewNopLogger())
+	s.Require().NoError(err)
+
+	cs := corestore.NewChangeset()
+	cs.Add([]byte(storeKey1), []byte("key0000"), []byte("value"), false)
+	cs.Add([]byte(storeKey1), []byte("key0002"), []byte("value"), false)
+	cs.Add([]byte(storeKey1), []byte("key0001"), []byte("value"), false)
+
+	err = commitStore.WriteChangeset(cs)
+	if s.BackendTreeType == TreeTypeIAVL {
+		s.Require().Error(err)
 	}
 }

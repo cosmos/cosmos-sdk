@@ -140,6 +140,7 @@ message QueryValidatorsRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
+// ValidatorInfo contains the validator's address and public key.
 message ValidatorInfo {
   option (cosmos_proto.message_added_in) = "x/staking v0.2.0";
   // consensus_address is the consensus address of the validator.
@@ -378,8 +379,7 @@ message QueryHistoricalInfoRequest {
 message QueryHistoricalInfoResponse {
   option deprecated = true;
   // hist defines the historical info at the given height.
-  HistoricalInfo   hist              = 1 [deprecated = true];
-  HistoricalRecord historical_record = 2;
+  HistoricalInfo hist = 1 [deprecated = true];
 }
 
 // QueryPoolRequest is request type for the Query/Pool RPC method.

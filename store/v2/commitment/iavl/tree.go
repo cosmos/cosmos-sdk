@@ -139,6 +139,11 @@ func (t *IavlTree) Import(version uint64) (commitment.Importer, error) {
 	}, nil
 }
 
+// Type returns the type of the tree.
+func (t *IavlTree) Type() commitment.TreeType {
+	return commitment.TreeTypeIAVL
+}
+
 // Close closes the iavl tree.
 func (t *IavlTree) Close() error {
 	return t.tree.Close()

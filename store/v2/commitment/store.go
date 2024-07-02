@@ -47,8 +47,8 @@ func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, logger
 
 // WriteChangeset writes a Changeset to the CommitStore.
 //
-// NOTE: Insertion order should be preserved in the commit store, especially for
-// IAVL trees, as the order of insertion affects the root hash.
+// NOTE: Insertion order should be preserved in the IAVL trees, as the order of
+// insertion affects the root hash.
 func (c *CommitStore) WriteChangeset(cs *corestore.Changeset) error {
 	for _, pairs := range cs.Changes {
 
@@ -60,10 +60,12 @@ func (c *CommitStore) WriteChangeset(cs *corestore.Changeset) error {
 		}
 		var prevKey []byte
 		for _, kv := range pairs.StateChanges {
-			if bytes.Compare(kv.Key, prevKey) < 1 {
-				return fmt.Errorf("keys must be inserted in order, got %X after %X", kv.Key, prevKey)
+			if tree.Type() == TreeTypeIAVL {
+				if bytes.Compare(kv.Key, prevKey) < 1 {
+					return fmt.Errorf("keys must be inserted in order in IAVL tree, got %X after %X", kv.Key, prevKey)
+				}
+				prevKey = kv.Key
 			}
-			prevKey = kv.Key
 			if kv.Remove {
 				if err := tree.Remove(kv.Key); err != nil {
 					return err

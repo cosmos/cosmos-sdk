@@ -62,6 +62,10 @@ func (t *Tree) Import(version uint64) (commitment.Importer, error) {
 	return nil, nil
 }
 
+func (t *Tree) Type() commitment.TreeType {
+	return commitment.TreeTypeMem
+}
+
 func New() *Tree {
 	return &Tree{MemDB: db.NewMemDB()}
 }

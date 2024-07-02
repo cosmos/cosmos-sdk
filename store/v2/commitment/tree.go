@@ -9,6 +9,13 @@ import (
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
+type TreeType uint
+
+const (
+	TreeTypeMem  TreeType = iota
+	TreeTypeIAVL TreeType = iota
+)
+
 // ErrorExportDone is returned by Exporter.Next() when all items have been exported.
 var ErrorExportDone = errors.New("export is complete")
 
@@ -38,6 +45,9 @@ type Tree interface {
 	Prune(version uint64) error
 	Export(version uint64) (Exporter, error)
 	Import(version uint64) (Importer, error)
+
+	// Type returns the type of the tree.
+	Type() TreeType
 
 	io.Closer
 }

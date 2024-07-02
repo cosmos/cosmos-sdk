@@ -201,6 +201,79 @@ Each gRPC method has its corresponding REST endpoint, generated using [gRPC-gate
 
 An example can be seen [here](https://docs.cosmos.network/main/user/run-node/txs#using-rest)
 
+##### Data Conversion Flow for `/cosmos/tx/v1beta1/txs` Endpoint
+
+To handle the JSON to Protobuf conversion for the `/cosmos/tx/v1beta1/txs` endpoint. Here are the steps to follow:
+
+1. Parse the JSON to Structs:
+Continue parsing the JSON string into Go structs as previously done.
+
+```go
+jsonString := `{
+    "from_address": "cosmos1...",
+    "to_address": "cosmos1...",
+    "amount": [{"denom": "stake", "amount": "50"}],
+    "memo": "Test transaction"
+}`
+
+var jsonTx struct {
+    FromAddress string       `json:"from_address"`
+    ToAddress   string       `json:"to_address"`
+    Amount      []tx.Coin    `json:"amount"`
+    Memo        string       `json:"memo"`
+}
+json.Unmarshal([]byte(jsonString), &jsonTx)
+```
+
+2. Use `txFactory` to Construct and Serialise the Transaction:
+Use `txFactory` to configure and sign the transaction.
+
+```go
+// initialise `txFactory` with configuration
+txFactory := txConfig.NewFactory().
+    WithChainID("your-chain-id").
+    WithKeybase(keyring).
+    WithSignMode(signing.SignMode_SIGN_MODE_TEXTUAL)
+
+// create a new transaction builder with factory
+txBuilder := txFactory.NewTxBuilder()
+
+// set the message using the parsed JSON data
+msg := &tx.MsgSend{
+    FromAddress: jsonTx.FromAddress,
+    ToAddress:   jsonTx.ToAddress,
+    Amount:      jsonTx.Amount,
+}
+txBuilder.SetMsgs(msg)
+txBuilder.SetMemo(jsonTx.Memo)
+txBuilder.SetFeeAmount(jsonTx.Amount)
+txBuilder.SetGasLimit(200000)
+
+err := authclient.SignTx(txFactory, clientCtx, "moniker", txBuilder, false, true)
+if err != nil {
+    panic(err)
+}
+
+// get the serialised transaction bytes
+txBytes, err := txConfig.TxEncoder()(txBuilder.GetTx())
+if err != nil {
+    panic(err)
+}
+
+ // convert to Base64
+txBase64 := base64.StdEncoding.EncodeToString(txBytes)
+```
+
+3. Provide the Base64 Encoded Transaction:
+The `tx_bytesz should be the base64 encoded string of txBytes.
+
+```json
+{
+    "tx_bytes": "txBase64",
+    "mode": "BROADCAST_MODE_UNSPECIFIED"
+}
+```
+
 #### CometBFT RPC
 
 The three methods presented above are actually higher abstractions over the CometBFT RPC `/broadcast_tx_{async,sync,commit}` endpoints, documented [here](https://docs.cometbft.com/v1.0/explanation/core/rpc). This means that you can use the CometBFT RPC endpoints directly to broadcast the transaction, if you wish so.

@@ -30,7 +30,6 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 	// send tokens
 	rsp1 := cli.Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake", "--unordered=true", "--timeout-height="+timeoutHeightStr)
 	rsp2 := cli.Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake", "--unordered=true", "--timeout-height="+timeoutHeightStr)
-	t.Logf("rsp2: %s\n\n", rsp2)
 
 	RequireTxSuccess(t, rsp1)
 	RequireTxFailure(t, rsp2)

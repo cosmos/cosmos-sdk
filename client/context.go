@@ -65,8 +65,6 @@ type Context struct {
 	Viper             *viper.Viper
 	LedgerHasProtobuf bool
 	PreprocessTxHook  PreprocessTxFn
-	Unordered         bool
-	TimeoutHeight     uint64
 
 	// IsAux is true when the signer is an auxiliary signer (e.g. the tipper).
 	IsAux bool
@@ -155,18 +153,6 @@ func (ctx Context) WithNodeURI(nodeURI string) Context {
 // WithHeight returns a copy of the context with an updated height.
 func (ctx Context) WithHeight(height int64) Context {
 	ctx.Height = height
-	return ctx
-}
-
-// WithUnordered returns a copy of the context with an updated unordered flag.
-func (ctx Context) WithUnordered(unordered bool) Context {
-	ctx.Unordered = unordered
-	return ctx
-}
-
-// WithTimeoutHeight returns a copy of the context with an updated timeout height.
-func (ctx Context) WithTimeoutHeight(timeoutHeight uint64) Context {
-	ctx.TimeoutHeight = timeoutHeight
 	return ctx
 }
 

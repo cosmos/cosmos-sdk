@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
-	indexerbase "cosmossdk.io/schema"
+	"cosmossdk.io/schema"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -42,6 +42,8 @@ var (
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
+
+	_ schema.HasModuleCodec = AppModule{}
 )
 
 // AppModule implements an application module for the bank module.
@@ -182,6 +184,6 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 }
 
-func (am AppModule) ModuleDecoder() (indexerbase.ModuleCodec, error) {
+func (am AppModule) ModuleCodec() (schema.ModuleCodec, error) {
 	return am.keeper.(keeper.BaseKeeper).Schema.ModuleCodec(collections.IndexingOptions{})
 }

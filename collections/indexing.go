@@ -118,6 +118,7 @@ func (c collDecoder) decodeKVPair(update schema.KVPairUpdate) ([]schema.ObjectUp
 
 func (c collectionImpl[K, V]) logicalDecoder() logicalDecoder {
 	res := logicalDecoder{}
+	res.objectType.Name = c.GetName()
 
 	if indexable, ok := c.m.kc.(codec.IndexableCodec); ok {
 		keyDecoder := indexable.LogicalDecoder()

@@ -77,7 +77,7 @@ func (tm *TableManager) EqualsSqlAndParams(w io.Writer, key, val interface{}) ([
 }
 
 func (tm *TableManager) checkExists(ctx context.Context, tx *sql.Tx, sqlStr string, params []interface{}) (bool, error) {
-	tm.options.Logger.Error("Select", "sql", sqlStr, "params", params)
+	tm.options.Logger.Debug("Select", "sql", sqlStr, "params", params)
 	var res interface{}
 	err := tx.QueryRowContext(ctx, sqlStr, params...).Scan(&res)
 	switch err {

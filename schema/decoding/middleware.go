@@ -20,7 +20,7 @@ type Options struct {
 
 func Middleware(target appdata.Listener, opts Options) (appdata.Listener, error) {
 	initializeModuleData := target.InitializeModuleData
-	//onKVPair := target.OnKVPair
+	onKVPair := target.OnKVPair
 
 	moduleCodecs := map[string]schema.ModuleCodec{}
 	if opts.DecoderResolver != nil {
@@ -29,6 +29,10 @@ func Middleware(target appdata.Listener, opts Options) (appdata.Listener, error)
 
 			if _, ok := moduleCodecs[moduleName]; ok {
 				return fmt.Errorf("module %s already initialized", moduleName)
+			}
+
+			if err := codec.Schema.Validate(); err != nil {
+				return fmt.Errorf("error validating schema for module %s: %w", moduleName, err)
 			}
 
 			moduleCodecs[moduleName] = codec
@@ -47,40 +51,37 @@ func Middleware(target appdata.Listener, opts Options) (appdata.Listener, error)
 
 	// TODO: catch-up sync
 
-	//target.OnKVPair = func(data appdata.KVPairData) error {
-	//if onKVPair != nil {
-	//	return onKVPair(data)
-	//}
+	target.OnKVPair = func(data appdata.KVPairData) error {
+		if onKVPair != nil {
+			return onKVPair(data)
+		}
 
-	//if target.OnObjectUpdate != nil {
-	//	fmt.Printf("decoding")
-	//	for _, kvUpdate := range data.Updates {
-	//		fmt.Printf("decoding %v", kvUpdate)
-	//
-	//		codec, ok := moduleCodecs[kvUpdate.ModuleName]
-	//		if !ok {
-	//			// TODO handle discovering a new module
-	//			return nil
-	//		}
-	//
-	//		updates, err := codec.KVDecoder(kvUpdate.Update)
-	//		if err != nil {
-	//			return err
-	//		}
-	//
-	//		if !ok {
-	//			return nil
-	//		}
-	//
-	//		return target.OnObjectUpdate(appdata.ObjectUpdateData{
-	//			ModuleName: kvUpdate.ModuleName,
-	//			Updates:    updates,
-	//		})
-	//	}
-	//}
+		if target.OnObjectUpdate != nil {
+			for _, kvUpdate := range data.Updates {
+				codec, ok := moduleCodecs[kvUpdate.ModuleName]
+				if !ok {
+					// TODO handle discovering a new module
+					return nil
+				}
 
-	//	return nil
-	//}
+				updates, err := codec.KVDecoder(kvUpdate.Update)
+				if err != nil {
+					return err
+				}
+
+				if !ok {
+					return nil
+				}
+
+				return target.OnObjectUpdate(appdata.ObjectUpdateData{
+					ModuleName: kvUpdate.ModuleName,
+					Updates:    updates,
+				})
+			}
+		}
+
+		return nil
+	}
 
 	return target, nil
 }

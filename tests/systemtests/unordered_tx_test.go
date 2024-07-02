@@ -5,6 +5,9 @@ package systemtests
 import (
 	"strconv"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUnorderedTXDuplicate(t *testing.T) {
@@ -31,7 +34,12 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 	rsp1 := cli.Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake", "--timeout-height="+timeoutHeightStr, "--unordered", "--sequence=1", "--note=1")
 	RequireTxSuccess(t, rsp1)
 
-	rsp2 := cli.Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake", "--timeout-height="+timeoutHeightStr, "--unordered", "--sequence=1")
+	assertDuplicateErr := func(xt assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
+		require.Len(t, gotOutputs, 1)
+		assert.Contains(t, gotOutputs[0], "is duplicated: invalid request")
+		return false // always abort
+	}
+	rsp2 := cli.WithRunErrorMatcher(assertDuplicateErr).Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake", "--timeout-height="+timeoutHeightStr, "--unordered", "--sequence=1")
 	RequireTxFailure(t, rsp2)
 
 	// assert TX executed before timeout

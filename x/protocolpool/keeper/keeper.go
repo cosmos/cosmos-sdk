@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -48,6 +47,10 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.Accoun
 	// ensure stream account is set
 	if addr := ak.GetModuleAddress(types.StreamAccount); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.StreamAccount))
+	}
+	// ensure protocol pool distribution account is set
+	if addr := ak.GetModuleAddress(types.ProtocolPoolDistrAccount); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.ProtocolPoolDistrAccount))
 	}
 
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
@@ -100,7 +103,7 @@ func (k Keeper) DistributeFromStreamFunds(ctx context.Context, amount sdk.Coins,
 func (k Keeper) GetCommunityPool(ctx context.Context) (sdk.Coins, error) {
 	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 	if moduleAccount == nil {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleAccount)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", types.ModuleName)
 	}
 	return k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress()), nil
 }
@@ -166,25 +169,24 @@ func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient []byte) (s
 	return withdrawnAmount, nil
 }
 
-// SetToDistribute sets the amount to be distributed among recipients, usually called by x/distribution while allocating
-// reward and fee distribution.
-// This could be only set by the authority address.
-func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr string) error {
-	authAddr, err := k.authKeeper.AddressCodec().StringToBytes(addr)
-	if err != nil {
-		return err
-	}
-	hasPermission, err := k.hasPermission(authAddr)
-	if err != nil {
-		return err
-	}
-	if !hasPermission {
-		return sdkerrors.ErrUnauthorized
+// SetToDistribute sets the amount to be distributed among recipients.
+func (k Keeper) SetToDistribute(ctx context.Context) error {
+	// Get current balance of the intermediary module account
+	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.ProtocolPoolDistrAccount)
+	if moduleAccount == nil {
+		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", types.ProtocolPoolDistrAccount)
 	}
 
 	denom, err := k.stakingKeeper.BondDenom(ctx)
 	if err != nil {
 		return err
+	}
+
+	currentBalance := k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress())
+
+	// if the balance is zero, return early
+	if currentBalance.AmountOf(denom).IsZero() {
+		return nil
 	}
 
 	totalStreamFundsPercentage := math.LegacyZeroDec()
@@ -205,18 +207,25 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 		return err
 	}
 
-	// if percentage is 0 then return early
-	if totalStreamFundsPercentage.IsZero() {
-		return nil
+	remainingAmt := currentBalance
+	if !totalStreamFundsPercentage.IsZero() {
+		// send streaming funds to the stream module account
+		toDistributeAmt := math.LegacyNewDecFromInt(currentBalance.AmountOf(denom)).Mul(totalStreamFundsPercentage).TruncateInt()
+		streamAmt := sdk.NewCoins(sdk.NewCoin(denom, toDistributeAmt))
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.StreamAccount, streamAmt); err != nil {
+			return err
+		}
+		remainingAmt = remainingAmt.Sub(streamAmt...)
 	}
 
-	// send streaming funds to the stream module account
-	toDistributeAmt := math.LegacyNewDecFromInt(amount.AmountOf(denom)).Mul(totalStreamFundsPercentage).TruncateInt()
-	streamAmt := sdk.NewCoins(sdk.NewCoin(denom, toDistributeAmt))
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.StreamAccount, streamAmt); err != nil {
-		return err
+	// send remaining funds to the community pool
+	if !remainingAmt.IsZero() {
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.ModuleName, remainingAmt); err != nil {
+			return err
+		}
 	}
 
+	// update toDistribute
 	amountToDistribute, err := k.ToDistribute.Get(ctx)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
@@ -226,21 +235,11 @@ func (k Keeper) SetToDistribute(ctx context.Context, amount sdk.Coins, addr stri
 		}
 	}
 
-	err = k.ToDistribute.Set(ctx, amountToDistribute.Add(amount.AmountOf(denom)))
+	err = k.ToDistribute.Set(ctx, amountToDistribute.Add(currentBalance.AmountOf(denom)))
 	if err != nil {
 		return fmt.Errorf("error while setting ToDistribute: %w", err)
 	}
 	return nil
-}
-
-func (k Keeper) hasPermission(addr []byte) (bool, error) {
-	authority := k.GetAuthority()
-	authAcc, err := k.authKeeper.AddressCodec().StringToBytes(authority)
-	if err != nil {
-		return false, err
-	}
-
-	return bytes.Equal(authAcc, addr), nil
 }
 
 func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
@@ -254,8 +253,6 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 		return nil
 	}
 
-	totalPercentageToBeDistributed := math.LegacyZeroDec()
-
 	denom, err := k.stakingKeeper.BondDenom(ctx)
 	if err != nil {
 		return err
@@ -263,6 +260,7 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 	toDistributeDec := sdk.NewDecCoin(denom, toDistributeAmount)
 
 	// Calculate totalPercentageToBeDistributed and store values
+	totalPercentageToBeDistributed := math.LegacyZeroDec()
 	err = k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, cf types.ContinuousFund) (stop bool, err error) {
 		// Check if the continuous fund has expired
 		if cf.Expiry != nil && cf.Expiry.Before(k.HeaderService.HeaderInfo(ctx).Time) {
@@ -471,4 +469,8 @@ func (k Keeper) validateContinuousFund(ctx context.Context, msg types.MsgCreateC
 	}
 
 	return nil
+}
+
+func (k Keeper) BeginBlocker(ctx context.Context) error {
+	return k.SetToDistribute(ctx)
 }

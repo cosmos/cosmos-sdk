@@ -114,7 +114,7 @@ func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundComm
 		return nil, err
 	}
 
-	if err := k.poolKeeper.FundCommunityPool(ctx, msg.Amount, depositor); err != nil {
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, depositor, types.ProtocolPoolModuleName, msg.Amount); err != nil {
 		return nil, err
 	}
 
@@ -158,7 +158,7 @@ func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 		return nil, fmt.Errorf("invalid recipient address: %w", err)
 	}
 
-	if err := k.poolKeeper.DistributeFromCommunityPool(ctx, msg.Amount, recipient); err != nil {
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ProtocolPoolModuleName, recipient, msg.Amount); err != nil {
 		return nil, err
 	}
 

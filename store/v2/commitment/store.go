@@ -59,8 +59,9 @@ func (c *CommitStore) WriteChangeset(cs *corestore.Changeset) error {
 			return fmt.Errorf("store key %s not found in multiTrees", key)
 		}
 		var prevKey []byte
+		isIAVL := (tree.Type() == TreeTypeIAVL)
 		for _, kv := range pairs.StateChanges {
-			if tree.Type() == TreeTypeIAVL {
+			if isIAVL {
 				if bytes.Compare(kv.Key, prevKey) < 1 {
 					return fmt.Errorf("keys must be inserted in order in IAVL tree, got %X after %X", kv.Key, prevKey)
 				}

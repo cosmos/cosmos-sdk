@@ -100,7 +100,7 @@ func simpleColumnType(kind schema.Kind) string {
 		return "JSONB"
 	case schema.DurationKind:
 		// TODO: set COMMENT on field indicating nanoseconds unit
-		return "BIGINT"
+		return "BIGINT" // TODO: maybe convert to postgres interval
 	default:
 		return ""
 	}

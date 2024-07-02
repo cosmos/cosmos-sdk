@@ -14,6 +14,7 @@ import (
 )
 
 type IndexingOptions struct {
+	// RetainDeletionsFor is the list of collections to retain deletions for.
 	RetainDeletionsFor []string
 }
 

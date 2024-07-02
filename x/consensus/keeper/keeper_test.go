@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/log"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
 	"cosmossdk.io/x/consensus/types"
 
@@ -22,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
@@ -45,7 +45,7 @@ func (s *KeeperTestSuite) SetupTest(enabledFeatures bool) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 
-	authority, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
+	authority, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(address.Module("gov"))
 	s.Require().NoError(err)
 
 	keeper := consensusparamkeeper.NewKeeper(encCfg.Codec, env, authority)

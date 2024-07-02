@@ -9,7 +9,6 @@ Here are some production-grade modules that can be used in Cosmos SDK applicatio
 * [Auth](./auth/README.md) - Authentication of accounts and transactions for Cosmos SDK applications.
 * [Authz](./authz/README.md) - Authorization for accounts to perform actions on behalf of other accounts.
 * [Bank](./bank/README.md) - Token transfer functionalities.
-* [Crisis](./crisis/README.md) - Halting the blockchain under certain circumstances (e.g. if an invariant is broken).
 * [Distribution](./distribution/README.md) - Fee distribution, and staking token provision distribution.
 * [Epochs](./epochs/README.md) - Allow other modules to set that they would like to be signaled once every period
 * [Evidence](./evidence/README.md) - Evidence handling for double signing, misbehaviour, etc.

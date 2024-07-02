@@ -33,7 +33,7 @@ func (tm *TableManager) CreateTableSql(writer io.Writer) error {
 		_, err = fmt.Fprintf(writer, "_id INTEGER NOT NULL CHECK (_id = 1),\n\t")
 	} else {
 		for _, field := range tm.typ.KeyFields {
-			err = tm.createColumnDef(writer, field)
+			err = tm.createColumnDefinition(writer, field)
 			if err != nil {
 				return err
 			}
@@ -41,7 +41,7 @@ func (tm *TableManager) CreateTableSql(writer io.Writer) error {
 	}
 
 	for _, field := range tm.typ.ValueFields {
-		err = tm.createColumnDef(writer, field)
+		err = tm.createColumnDefinition(writer, field)
 		if err != nil {
 			return err
 		}

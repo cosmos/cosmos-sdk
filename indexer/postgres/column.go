@@ -7,7 +7,8 @@ import (
 	"cosmossdk.io/schema"
 )
 
-func (tm *TableManager) createColumnDef(writer io.Writer, field schema.Field) error {
+// createColumnDefinition writes a column definition within a CREATE TABLE statement for the field.
+func (tm *TableManager) createColumnDefinition(writer io.Writer, field schema.Field) error {
 	_, err := fmt.Fprintf(writer, "%q ", field.Name)
 	if err != nil {
 		return err
@@ -37,7 +38,7 @@ func (tm *TableManager) createColumnDef(writer io.Writer, field schema.Field) er
 		case schema.TimeKind:
 			nanosCol := fmt.Sprintf("%s_nanos", field.Name)
 			// TODO: retain at least microseconds in the timestamp
-			_, err = fmt.Fprintf(writer, "TIMESTAMPTZ GENERATED ALWAYS AS (to_timestamp(%q / 1000000000)) STORED,\n\t", nanosCol)
+			_, err = fmt.Fprintf(writer, "TIMESTAMPTZ GENERATED ALWAYS AS (nanos_to_timestamptz(%q)) STORED,\n\t", nanosCol)
 			if err != nil {
 				return err
 			}
@@ -99,13 +100,15 @@ func simpleColumnType(kind schema.Kind) string {
 	case schema.JSONKind:
 		return "JSONB"
 	case schema.DurationKind:
-		// TODO: set COMMENT on field indicating nanoseconds unit
-		return "BIGINT" // TODO: maybe convert to postgres interval
+		return "BIGINT"
 	default:
 		return ""
 	}
 }
 
+// updatableColumnName is the name of the insertable/updatable column name for the field.
+// This is the field name in most cases, except for time columns which are stored as nanos
+// and then converted to timestamp generated columns.
 func (tm *TableManager) updatableColumnName(field schema.Field) (name string, err error) {
 	name = field.Name
 	if field.Kind == schema.TimeKind {

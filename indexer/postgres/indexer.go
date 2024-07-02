@@ -38,6 +38,11 @@ func (i *Indexer) Initialize(ctx context.Context, data indexing.InitializationDa
 		return indexing.InitializationResult{}, fmt.Errorf("failed to start transaction: %w", err)
 	}
 
+	_, err = tx.ExecContext(ctx, baseSql)
+	if err != nil {
+		return indexing.InitializationResult{}, err
+	}
+
 	i.tx = tx
 
 	return indexing.InitializationResult{

@@ -4,9 +4,6 @@ import (
 	"context"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-
-	"cosmossdk.io/schema"
-	"cosmossdk.io/schema/appdata"
 )
 
 // ABCIListener is the interface that we're exposing as a streaming service.
@@ -28,56 +25,4 @@ type StreamingManager struct {
 
 	// StopNodeOnErr halts the node when ABCI streaming service listening results in an error.
 	StopNodeOnErr bool
-}
-
-func FromSchemaListener(listener appdata.Listener) ABCIListener {
-	return &listenerWrapper{listener: listener}
-}
-
-type listenerWrapper struct {
-	listener appdata.Listener
-}
-
-func (p listenerWrapper) ListenFinalizeBlock(_ context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error {
-	if p.listener.StartBlock != nil {
-		err := p.listener.StartBlock(appdata.StartBlockData{
-			Height: uint64(req.Height),
-		})
-		if err != nil {
-			return err
-		}
-	}
-
-	//// TODO txs, events
-
-	return nil
-}
-
-func (p listenerWrapper) ListenCommit(ctx context.Context, res abci.CommitResponse, changeSet []*StoreKVPair) error {
-	if cb := p.listener.OnKVPair; cb != nil {
-		updates := make([]appdata.ModuleKVPairUpdate, len(changeSet))
-		for i, pair := range changeSet {
-			updates[i] = appdata.ModuleKVPairUpdate{
-				ModuleName: pair.StoreKey,
-				Update: schema.KVPairUpdate{
-					Key:    pair.Key,
-					Value:  pair.Value,
-					Delete: pair.Delete,
-				},
-			}
-		}
-		err := cb(appdata.KVPairData{Updates: updates})
-		if err != nil {
-			return err
-		}
-	}
-
-	if p.listener.Commit != nil {
-		err := p.listener.Commit(appdata.CommitData{})
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

@@ -12,9 +12,8 @@ import (
 	"cosmossdk.io/server/v2/appmanager/store"
 )
 
-// AppManager is a coordinator for all things related to an application
-// TODO: add exportGenesis function
-type AppManager[T transaction.Tx] struct {
+// appManager is a coordinator for all things related to an application
+type appManager[T transaction.Tx] struct {
 	config Config
 
 	db store.Store
@@ -25,7 +24,7 @@ type AppManager[T transaction.Tx] struct {
 	stf StateTransitionFunction[T]
 }
 
-func (a AppManager[T]) InitGenesis(
+func (a appManager[T]) InitGenesis(
 	ctx context.Context,
 	blockRequest *appmanager.BlockRequest[T],
 	initGenesisJSON []byte,
@@ -69,7 +68,7 @@ func (a AppManager[T]) InitGenesis(
 }
 
 // ExportGenesis exports the genesis state of the application.
-func (a AppManager[T]) ExportGenesis(ctx context.Context, version uint64) ([]byte, error) {
+func (a appManager[T]) ExportGenesis(ctx context.Context, version uint64) ([]byte, error) {
 	bz, err := a.exportGenesis(ctx, version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to export genesis state: %w", err)
@@ -78,7 +77,7 @@ func (a AppManager[T]) ExportGenesis(ctx context.Context, version uint64) ([]byt
 	return bz, nil
 }
 
-func (a AppManager[T]) DeliverBlock(
+func (a appManager[T]) DeliverBlock(
 	ctx context.Context,
 	block *appmanager.BlockRequest[T],
 ) (*appmanager.BlockResponse, corestore.WriterMap, error) {
@@ -102,7 +101,7 @@ func (a AppManager[T]) DeliverBlock(
 // ValidateTx will validate the tx against the latest storage state. This means that
 // only the stateful validation will be run, not the execution portion of the tx.
 // If full execution is needed, Simulate must be used.
-func (a AppManager[T]) ValidateTx(ctx context.Context, tx T) (appmanager.TxResult, error) {
+func (a appManager[T]) ValidateTx(ctx context.Context, tx T) (appmanager.TxResult, error) {
 	_, latestState, err := a.db.StateLatest()
 	if err != nil {
 		return appmanager.TxResult{}, err
@@ -111,7 +110,7 @@ func (a AppManager[T]) ValidateTx(ctx context.Context, tx T) (appmanager.TxResul
 }
 
 // Simulate runs validation and execution flow of a Tx.
-func (a AppManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult, corestore.WriterMap, error) {
+func (a appManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult, corestore.WriterMap, error) {
 	_, state, err := a.db.StateLatest()
 	if err != nil {
 		return appmanager.TxResult{}, nil, err
@@ -122,7 +121,7 @@ func (a AppManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult,
 
 // Query queries the application at the provided version.
 // CONTRACT: Version must always be provided, if 0, get latest
-func (a AppManager[T]) Query(ctx context.Context, version uint64, request transaction.Msg) (transaction.Msg, error) {
+func (a appManager[T]) Query(ctx context.Context, version uint64, request transaction.Msg) (transaction.Msg, error) {
 	// if version is provided attempt to do a height query.
 	if version != 0 {
 		queryState, err := a.db.StateAt(version)
@@ -143,7 +142,7 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request transa
 // QueryWithState executes a query with the provided state. This allows to process a query
 // independently of the db state. For example, it can be used to process a query with temporary
 // and uncommitted state
-func (a AppManager[T]) QueryWithState(
+func (a appManager[T]) QueryWithState(
 	ctx context.Context,
 	state corestore.ReaderMap,
 	request transaction.Msg,

@@ -34,7 +34,7 @@ func GetSnapshotStore(rootDir string) (*snapshots.Store, error) {
 }
 
 // ApplySnapshotChunk implements types.Application.
-func (c *Consensus[T]) ApplySnapshotChunk(_ context.Context, req *abci.ApplySnapshotChunkRequest) (*abci.ApplySnapshotChunkResponse, error) {
+func (c *consensus[T]) ApplySnapshotChunk(_ context.Context, req *abci.ApplySnapshotChunkRequest) (*abci.ApplySnapshotChunkResponse, error) {
 	if c.snapshotManager == nil {
 		c.logger.Error("snapshot manager not configured")
 		return &abci.ApplySnapshotChunkResponse{Result: abci.APPLY_SNAPSHOT_CHUNK_RESULT_ABORT}, nil
@@ -65,7 +65,7 @@ func (c *Consensus[T]) ApplySnapshotChunk(_ context.Context, req *abci.ApplySnap
 }
 
 // ListSnapshots implements types.Application.
-func (c *Consensus[T]) ListSnapshots(_ context.Context, ctx *abci.ListSnapshotsRequest) (*abci.ListSnapshotsResponse, error) {
+func (c *consensus[T]) ListSnapshots(_ context.Context, ctx *abci.ListSnapshotsRequest) (*abci.ListSnapshotsResponse, error) {
 	if c.snapshotManager == nil {
 		return nil, nil
 	}
@@ -91,7 +91,7 @@ func (c *Consensus[T]) ListSnapshots(_ context.Context, ctx *abci.ListSnapshotsR
 }
 
 // LoadSnapshotChunk implements types.Application.
-func (c *Consensus[T]) LoadSnapshotChunk(_ context.Context, req *abci.LoadSnapshotChunkRequest) (*abci.LoadSnapshotChunkResponse, error) {
+func (c *consensus[T]) LoadSnapshotChunk(_ context.Context, req *abci.LoadSnapshotChunkRequest) (*abci.LoadSnapshotChunkResponse, error) {
 	if c.snapshotManager == nil {
 		return &abci.LoadSnapshotChunkResponse{}, nil
 	}
@@ -112,7 +112,7 @@ func (c *Consensus[T]) LoadSnapshotChunk(_ context.Context, req *abci.LoadSnapsh
 }
 
 // OfferSnapshot implements types.Application.
-func (c *Consensus[T]) OfferSnapshot(_ context.Context, req *abci.OfferSnapshotRequest) (*abci.OfferSnapshotResponse, error) {
+func (c *consensus[T]) OfferSnapshot(_ context.Context, req *abci.OfferSnapshotRequest) (*abci.OfferSnapshotResponse, error) {
 	if c.snapshotManager == nil {
 		c.logger.Error("snapshot manager not configured")
 		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_ABORT}, nil

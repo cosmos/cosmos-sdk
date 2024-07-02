@@ -26,8 +26,8 @@ type Builder[T transaction.Tx] struct {
 
 // Build creates a new instance of AppManager with the provided configuration and returns it.
 // It initializes the AppManager with the given database, export state, import state, initGenesis function, and state transition function.
-func (b Builder[T]) Build() (*AppManager[T], error) {
-	return &AppManager[T]{
+func (b Builder[T]) Build() (AppManager[T], error) {
+	return &appManager[T]{
 		config: Config{
 			ValidateTxGasLimit: b.ValidateTxGasLimit,
 			QueryGasLimit:      b.QueryGasLimit,

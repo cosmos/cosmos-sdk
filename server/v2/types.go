@@ -12,7 +12,7 @@ import (
 type AppCreator[AppT AppI[T], T transaction.Tx] func(log.Logger, *viper.Viper) AppT
 
 type AppI[T transaction.Tx] interface {
-	GetAppManager() *appmanager.AppManager[T]
+	GetAppManager() appmanager.AppManager[T]
 	GetConsensusAuthority() string
 	InterfaceRegistry() coreapp.InterfaceRegistry
 	GetStore() any

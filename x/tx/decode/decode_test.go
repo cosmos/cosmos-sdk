@@ -30,6 +30,8 @@ func (m mockCodec) Unmarshal(bytes []byte, message gogoproto.Message) error {
 
 func TestDecode(t *testing.T) {
 	accSeq := uint64(2)
+	// set tx cache size to 1
+	cacheSize := uint(1)
 
 	pkAny, err := anyutil.New(&secp256k1.PubKey{Key: []byte("foo")})
 	require.NoError(t, err)
@@ -54,6 +56,7 @@ func TestDecode(t *testing.T) {
 	decoder, err := decode.NewDecoder(decode.Options{
 		SigningContext: signingCtx,
 		ProtoCodec:     mockCodec{},
+		TxCacheSize:    cacheSize,
 	})
 	require.NoError(t, err)
 
@@ -75,6 +78,8 @@ func TestDecode(t *testing.T) {
 			error: "no cosmos.msg.v1.signer option found for message A; use DefineCustomGetSigners to specify a custom getter: tx parse error",
 		},
 	}
+
+	var cacheKeys []string
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -104,6 +109,13 @@ func TestDecode(t *testing.T) {
 			require.NoError(t, err)
 
 			decodeTx, err := decoder.Decode(txBytes)
+
+			// check tx cache
+			key, entry, found := decoder.TxCacheEntry(txBytes)
+			require.True(t, found)
+			require.Equal(t, decode.NewCacheEntry(decodeTx, err), entry)
+			cacheKeys = append(cacheKeys, key)
+
 			if tc.error != "" {
 				require.EqualError(t, err, tc.error)
 				return
@@ -115,6 +127,16 @@ func TestDecode(t *testing.T) {
 				decodeTx.Tx.Body.Messages[0].TypeUrl)
 		})
 	}
+
+	// check length of tx decoder cache
+	txCache := decoder.TxCache()
+	require.Equal(t, txCache.Len(), int(cacheSize))
+
+	// check tx cache is updated with latest tx as cache size is 1
+	_, found := txCache.Get(cacheKeys[0])
+	require.False(t, found)
+	_, found = txCache.Get(cacheKeys[1])
+	require.True(t, found)
 }
 
 type dummyAddressCodec struct{}

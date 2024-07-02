@@ -15,9 +15,9 @@ func (tm *TableManager) CreateTable(ctx context.Context, tx *sql.Tx) error {
 		return err
 	}
 
-	// TODO: proper logging
-	fmt.Printf("SQL: %s\n", buf.String())
-	_, err = tx.ExecContext(ctx, buf.String())
+	sqlStr := buf.String()
+	tm.options.Logger.Debug("Creating table", "table", tm.TableName(), "sql", sqlStr)
+	_, err = tx.ExecContext(ctx, sqlStr)
 	return err
 }
 

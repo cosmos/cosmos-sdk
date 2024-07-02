@@ -22,9 +22,9 @@ func (tm *TableManager) InsertUpdate(ctx context.Context, tx *sql.Tx, key, value
 		params, err = tm.InsertSql(buf, key, value)
 	}
 
-	// TODO: proper logging
-	fmt.Printf("%s %v\n", buf.String(), params)
-	_, err = tx.ExecContext(ctx, buf.String(), params...)
+	sqlStr := buf.String()
+	tm.options.Logger.Debug("Insert or Update", "sql", sqlStr, "params", params)
+	_, err = tx.ExecContext(ctx, sqlStr, params...)
 	return err
 }
 

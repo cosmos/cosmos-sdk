@@ -5,6 +5,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 
+	"cosmossdk.io/schema"
 	"cosmossdk.io/schema/appdata"
 )
 
@@ -53,22 +54,30 @@ func (p listenerWrapper) ListenFinalizeBlock(_ context.Context, req abci.Finaliz
 }
 
 func (p listenerWrapper) ListenCommit(ctx context.Context, res abci.CommitResponse, changeSet []*StoreKVPair) error {
-	if p.listener.OnKVPair != nil {
-		for _, _ = range changeSet {
-			//err := p.listener.OnKVPair(
-			//	kv.StoreKey, kv.Key, kv.Value, kv.Delete)
-			//if err != nil {
-			//	return err
-			//}
-			panic("TODO")
+	if cb := p.listener.OnKVPair; cb != nil {
+		updates := make([]appdata.ModuleKVPairUpdate, len(changeSet))
+		for i, pair := range changeSet {
+			updates[i] = appdata.ModuleKVPairUpdate{
+				ModuleName: pair.StoreKey,
+				Update: schema.KVPairUpdate{
+					Key:    pair.Key,
+					Value:  pair.Value,
+					Delete: pair.Delete,
+				},
+			}
+		}
+		err := cb(appdata.KVPairData{Updates: updates})
+		if err != nil {
+			return err
 		}
 	}
-	//
-	//if p.listener.Commit != nil {
-	//	err := p.listener.Commit()
-	//	if err != nil {
-	//		return err
-	//	}
-	//}
+
+	if p.listener.Commit != nil {
+		err := p.listener.Commit(appdata.CommitData{})
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

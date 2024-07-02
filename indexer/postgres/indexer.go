@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/indexing"
+	"cosmossdk.io/schema/log"
 )
 
 type Indexer struct {
@@ -16,11 +17,12 @@ type Indexer struct {
 	tx      *sql.Tx
 	options Options
 
-	// TODO: make private or internal
 	modules map[string]*ModuleManager
 }
 
 func (i *Indexer) Initialize(ctx context.Context, data indexing.InitializationData) (indexing.InitializationResult, error) {
+	i.options.Logger.Info("Starting Postgres Indexer")
+
 	go func() {
 		<-ctx.Done()
 		err := i.db.Close()
@@ -50,7 +52,7 @@ type configOptions struct {
 }
 
 func init() {
-	indexing.RegisterIndexer("postgres", func(rawOpts map[string]interface{}) (indexing.Indexer, error) {
+	indexing.RegisterIndexer("postgres", func(rawOpts map[string]interface{}, resources indexing.IndexerResources) (indexing.Indexer, error) {
 		bz, err := json.Marshal(rawOpts)
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal options: %w", err)
@@ -75,18 +77,21 @@ func init() {
 			return nil, fmt.Errorf("failed to open database: %w", err)
 		}
 
-		return NewIndexer(db, Options{RetainDeletions: opts.RetainDeletions})
+		return NewIndexer(db, Options{
+			RetainDeletions: opts.RetainDeletions,
+			Logger:          resources.Logger,
+		})
 	})
 }
 
 type Options struct {
 	RetainDeletions bool
+	Logger          log.Logger
 }
 
 func NewIndexer(db *sql.DB, opts Options) (*Indexer, error) {
 	return &Indexer{
-		db: db,
-		// TODO: make private or internal
+		db:      db,
 		modules: map[string]*ModuleManager{},
 		options: opts,
 	}, nil
@@ -140,7 +145,7 @@ func (i *Indexer) onObjectUpdate(data appdata.ObjectUpdateData) error {
 	return nil
 }
 
-func (i *Indexer) commit(data appdata.CommitData) error {
+func (i *Indexer) commit(_ appdata.CommitData) error {
 	err := i.tx.Commit()
 	if err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)

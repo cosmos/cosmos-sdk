@@ -5,21 +5,6 @@ package appdata
 func ListenerMux(listeners ...Listener) Listener {
 	mux := Listener{}
 
-	//for _, l := range listeners {
-	//	if l.Initialize != nil {
-	//		mux.Initialize = func(ctx context.Context, data InitializationData) (lastBlockPersisted int64, err error) {
-	//			for _, l := range listeners {
-	//				if l.Initialize != nil {
-	//					return l.Initialize(ctx, data)
-	//				}
-	//			}
-	//			// TODO: deal with return values!
-	//			return 0, nil
-	//		}
-	//		break
-	//	}
-	//}
-
 	for _, l := range listeners {
 		if l.InitializeModuleData != nil {
 			mux.InitializeModuleData = func(data ModuleInitializationData) error {

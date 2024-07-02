@@ -5,13 +5,18 @@ import (
 	"fmt"
 
 	"cosmossdk.io/schema/appdata"
+	"cosmossdk.io/schema/log"
 )
 
 type Indexer interface {
 	Initialize(context.Context, InitializationData) (InitializationResult, error)
 }
 
-type IndexerFactory = func(options map[string]interface{}) (Indexer, error)
+type IndexerResources struct {
+	Logger log.Logger
+}
+
+type IndexerFactory = func(options map[string]interface{}, resources IndexerResources) (Indexer, error)
 
 type InitializationData struct{}
 

@@ -21,9 +21,9 @@ func (tm *TableManager) Delete(ctx context.Context, tx *sql.Tx, key interface{})
 		return err
 	}
 
-	// TODO: proper logging
-	fmt.Printf("%s %v\n", buf.String(), params)
-	_, err = tx.ExecContext(ctx, buf.String(), params...)
+	sqlStr := buf.String()
+	tm.options.Logger.Debug("Delete", "sql", sqlStr, "params", params)
+	_, err = tx.ExecContext(ctx, sqlStr, params...)
 	return err
 }
 

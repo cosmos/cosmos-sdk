@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/decoding"
+	"cosmossdk.io/schema/log"
 )
 
 type Options struct {
@@ -13,13 +14,17 @@ type Options struct {
 	Options    map[string]interface{}
 	Resolver   decoding.DecoderResolver
 	SyncSource decoding.SyncSource
-	Logger     Logger
+	Logger     log.Logger
 }
 
 func Start(opts Options) (appdata.Listener, error) {
-	if opts.Logger != nil {
-		opts.Logger.Info("Starting Indexer Manager")
+	if opts.Logger == nil {
+		opts.Logger = log.NoopLogger{}
 	}
+
+	opts.Logger.Info("Starting Indexer Manager")
+
+	resources := IndexerResources{Logger: opts.Logger}
 
 	var indexers []appdata.Listener
 	ctx := opts.Context
@@ -42,7 +47,7 @@ func Start(opts Options) (appdata.Listener, error) {
 			return appdata.Listener{}, fmt.Errorf("invalid indexer options type %T for %s, expected a map", indexerOpts, indexerName)
 		}
 
-		indexer, err := factory(optsMap)
+		indexer, err := factory(optsMap, resources)
 		if err != nil {
 			return appdata.Listener{}, fmt.Errorf("failed to create indexer %s: %w", indexerName, err)
 		}
@@ -60,5 +65,6 @@ func Start(opts Options) (appdata.Listener, error) {
 	return decoding.Middleware(appdata.AsyncListenerMux(indexers, 1024, ctx.Done()), decoding.Options{
 		DecoderResolver: opts.Resolver,
 		SyncSource:      opts.SyncSource,
+		Logger:          opts.Logger,
 	})
 }

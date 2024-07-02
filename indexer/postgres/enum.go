@@ -56,9 +56,9 @@ func (m *ModuleManager) CreateEnumType(ctx context.Context, tx *sql.Tx, enum sch
 		return err
 	}
 
-	// TODO: proper logging
-	fmt.Printf("%s\n", buf.String())
-	_, err = tx.ExecContext(ctx, buf.String())
+	sqlStr := buf.String()
+	m.options.Logger.Debug("Creating enum type", "sql", sqlStr)
+	_, err = tx.ExecContext(ctx, sqlStr)
 	return err
 }
 

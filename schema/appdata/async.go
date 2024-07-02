@@ -76,6 +76,13 @@ func AsyncListener(listener Listener, bufferSize int, commitChan chan<- error, d
 		}
 	}
 
+	if listener.Commit != nil {
+		res.Commit = func(data CommitData) error {
+			packetChan <- data
+			return nil
+		}
+	}
+
 	return res
 }
 

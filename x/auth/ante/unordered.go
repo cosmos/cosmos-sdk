@@ -115,6 +115,7 @@ func TxIdentifier(timeout uint64, tx sdk.Tx) ([32]byte, error) {
 	buf := bufPool.Get().(*bytes.Buffer)
 	// Make sure to reset the buffer
 	buf.Reset()
+	defer bufPool.Put(buf)
 
 	// Use the buffer
 	for _, msg := range tx.GetMsgs() {
@@ -144,6 +145,5 @@ func TxIdentifier(timeout uint64, tx sdk.Tx) ([32]byte, error) {
 	txHash := sha256.Sum256(buf.Bytes())
 
 	// Return the Buffer to the pool
-	bufPool.Put(buf)
 	return txHash, nil
 }

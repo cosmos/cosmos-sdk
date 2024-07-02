@@ -261,15 +261,35 @@ func (d *DedupTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
     return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "unordered tx ttl exceeds %d", d.maxUnOrderedTTL)
   }
 
-  // check for duplicates
-  if d.m.Contains(tx.Hash()) {
-    return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "tx is duplicated")
-  }
+  	// in order to create a deterministic hash based on the tx, we need to hash the contents of the tx with signature
+	// Get a Buffer from the pool
+	buf := bufPool.Get().(*bytes.Buffer)
+	// Make sure to reset the buffer
+	buf.Reset()
 
-  if !ctx.IsCheckTx() {
-    // a new tx included in the block, add the hash to the unordered tx manager
-    d.m.Add(tx.Hash(), tx.TimeoutHeight())
-  }
+	// Use the buffer
+	for _, msg := range tx.GetMsgs() {
+		// loop through the messages and write them to the buffer
+		// encoding the msg to bytes makes it deterministic within the state machine.
+		// Malleability is not a concern here because the state machine will encode the transaction deterministically.
+		bz, err := proto.Marshal(msg)
+		if err != nil {
+			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshal message")
+		}
+
+		buf.Write(bz)
+	}
+
+  // check for duplicates
+ 	// check for duplicates
+	if d.txManager.Contains(txHash) {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "tx %X is duplicated")
+	}
+
+	if d.env.TransactionService.ExecMode(ctx) == transaction.ExecModeFinalize {
+		// a new tx included in the block, add the hash to the unordered tx manager
+		d.txManager.Add(txHash, ttl)
+	}
 
   return next(ctx, tx, simulate)
 }
@@ -282,10 +302,7 @@ encoding is not malleable. If a given transaction, which is otherwise valid, can
 be encoded to produce different hashes, which reflect the same valid transaction,
 then a duplicate unordered transaction can be submitted and included in a block.
 
-In order to prevent this, transactions should be encoded in a deterministic manner.
-[ADR-027](./adr-027-deterministic-protobuf-serialization.md) provides such a mechanism.
-However, it is important to note that the way a transaction is signed should ensure
-ADR-027 is followed. E.g. we want to avoid Amino signing.
+In order to prevent this, the decoded transaction contents is taken. Starting with the content of the transaction we marshal the transaction in order to prevent a client reordering the transaction. Next we include the gas and timeout height as part of the identifier. All these fields are signed over in the transaction payload. If one of them changes the signature will not match the transaction. 
 
 ### State Management
 

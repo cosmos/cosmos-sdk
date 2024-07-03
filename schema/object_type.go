@@ -29,11 +29,18 @@ type ObjectType struct {
 
 // Validate validates the object type.
 func (o ObjectType) Validate() error {
+	return o.validate(map[string]map[string]bool{})
+}
+
+// validate validates the object type with an enumValueMap that can be
+// shared across a whole module schema.
+func (o ObjectType) validate(enumValueMap map[string]map[string]bool) error {
 	if !ValidateName(o.Name) {
 		return fmt.Errorf("invalid object type name %q", o.Name)
 	}
 
 	fieldNames := map[string]bool{}
+
 	for _, field := range o.KeyFields {
 		if err := field.Validate(); err != nil {
 			return fmt.Errorf("invalid key field %q: %w", field.Name, err)
@@ -47,6 +54,10 @@ func (o ObjectType) Validate() error {
 			return fmt.Errorf("duplicate field name %q", field.Name)
 		}
 		fieldNames[field.Name] = true
+
+		if err := checkEnumCompatibility(enumValueMap, field); err != nil {
+			return err
+		}
 	}
 
 	for _, field := range o.ValueFields {
@@ -58,6 +69,10 @@ func (o ObjectType) Validate() error {
 			return fmt.Errorf("duplicate field name %q", field.Name)
 		}
 		fieldNames[field.Name] = true
+
+		if err := checkEnumCompatibility(enumValueMap, field); err != nil {
+			return err
+		}
 	}
 
 	if len(o.KeyFields) == 0 && len(o.ValueFields) == 0 {
@@ -73,7 +88,7 @@ func (o ObjectType) ValidateObjectUpdate(update ObjectUpdate) error {
 		return fmt.Errorf("object type name %q does not match update type name %q", o.Name, update.TypeName)
 	}
 
-	if err := ValidateForKeyFields(o.KeyFields, update.Key); err != nil {
+	if err := ValidateObjectKey(o.KeyFields, update.Key); err != nil {
 		return fmt.Errorf("invalid key for object type %q: %w", update.TypeName, err)
 	}
 
@@ -81,5 +96,5 @@ func (o ObjectType) ValidateObjectUpdate(update ObjectUpdate) error {
 		return nil
 	}
 
-	return ValidateForValueFields(o.ValueFields, update.Value)
+	return ValidateObjectValue(o.ValueFields, update.Value)
 }

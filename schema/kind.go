@@ -19,7 +19,6 @@ const (
 
 	// StringKind is a string type and values of this type must be of the go type string
 	// containing valid UTF-8 and cannot contain null characters.
-	// TODO: add validation for null characters
 	StringKind
 
 	// BytesKind is a bytes type and values of this type must be of the go type []byte.
@@ -287,8 +286,16 @@ func (t Kind) ValidateValue(value interface{}) error {
 
 	switch t {
 	case StringKind:
-		if !utf8.ValidString(value.(string)) {
+		str := value.(string)
+		if !utf8.ValidString(str) {
 			return fmt.Errorf("expected valid utf-8 string, got %s", value)
+		}
+
+		// check for null characters
+		for _, r := range str {
+			if r == 0 {
+				return fmt.Errorf("expected string without null characters, got %s", value)
+			}
 		}
 	case IntegerStringKind:
 		if !integerRegex.Match([]byte(value.(string))) {

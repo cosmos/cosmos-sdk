@@ -26,6 +26,7 @@ type ModuleCodec struct {
 // were decodable to aid debugging.
 type KVDecoder = func(KVPairUpdate) ([]ObjectUpdate, error)
 
+// KVPairUpdate represents a key-value pair set or delete.
 type KVPairUpdate struct {
 	// Key is the key of the key-value pair.
 	Key []byte

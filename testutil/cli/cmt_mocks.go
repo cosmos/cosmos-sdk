@@ -27,6 +27,14 @@ func NewMockCometRPC(respQuery abci.QueryResponse) MockCometRPC {
 	return MockCometRPC{responseQuery: respQuery}
 }
 
+// NewMockCometRPCWithValue returns a mock CometBFT RPC implementation with value only.
+// It is used for CLI testing.
+func NewMockCometRPCWithValue(bz []byte) MockCometRPC {
+	return MockCometRPC{responseQuery: abci.QueryResponse{
+		Value: bz,
+	}}
+}
+
 func (MockCometRPC) BroadcastTxSync(context.Context, cmttypes.Tx) (*coretypes.ResultBroadcastTx, error) {
 	return &coretypes.ResultBroadcastTx{Code: 0}, nil
 }

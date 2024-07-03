@@ -221,7 +221,7 @@ message UnbondingDelegation {
   string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   // entries are the unbonding delegation entries.
   repeated UnbondingDelegationEntry entries = 3
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true]; // unbonding delegation entries
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];  // unbonding delegation entries
 }
 
 // UnbondingDelegationEntry defines an unbonding object with relevant metadata.
@@ -294,7 +294,7 @@ message Redelegation {
   string validator_dst_address = 3 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   // entries are the redelegation entries.
   repeated RedelegationEntry entries = 4
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true]; // redelegation entries
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];  // redelegation entries
 }
 
 // Params defines the parameters for the x/staking module.
@@ -310,7 +310,7 @@ message Params {
   // max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio).
   uint32 max_entries = 3;
   // historical_entries is the number of historical entries to persist.
-  uint32 historical_entries = 4;
+  uint32 historical_entries = 4 [deprecated = true];
   // bond_denom defines the bondable coin denomination.
   string bond_denom = 5;
   // min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators

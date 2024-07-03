@@ -28,7 +28,8 @@ const (
 	// DefaultHistorical entries is 10000. Apps that don't use IBC can ignore this
 	// value by not adding the staking module to the application module manager's
 	// SetOrderBeginBlockers.
-	DefaultHistoricalEntries uint32 = 10000
+	// Deprecated: HistoricalEntries is deprecated
+	DefaultHistoricalEntries uint32 = 0
 )
 
 var (
@@ -41,7 +42,7 @@ var (
 
 // NewParams creates a new Params instance
 func NewParams(unbondingTime time.Duration,
-	maxValidators, maxEntries, historicalEntries uint32,
+	maxValidators, maxEntries uint32,
 	bondDenom string, minCommissionRate math.LegacyDec,
 	keyRotationFee sdk.Coin,
 ) Params {
@@ -49,7 +50,7 @@ func NewParams(unbondingTime time.Duration,
 		UnbondingTime:     unbondingTime,
 		MaxValidators:     maxValidators,
 		MaxEntries:        maxEntries,
-		HistoricalEntries: historicalEntries,
+		HistoricalEntries: 0,
 		BondDenom:         bondDenom,
 		MinCommissionRate: minCommissionRate,
 		KeyRotationFee:    keyRotationFee,
@@ -62,7 +63,6 @@ func DefaultParams() Params {
 		DefaultUnbondingTime,
 		DefaultMaxValidators,
 		DefaultMaxEntries,
-		DefaultHistoricalEntries,
 		sdk.DefaultBondDenom,
 		DefaultMinCommissionRate,
 		DefaultKeyRotationFee,

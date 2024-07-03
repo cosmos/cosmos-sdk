@@ -39,7 +39,6 @@ var (
 	ErrDelegatorShareExRateInvalid     = errors.Register(ModuleName, 34, "cannot delegate to validators with invalid (zero) ex-rate")
 	ErrBothShareMsgsGiven              = errors.Register(ModuleName, 35, "both shares amount and shares percent provided")
 	ErrNeitherShareMsgsGiven           = errors.Register(ModuleName, 36, "neither shares amount nor shares percent provided")
-	ErrInvalidHistoricalInfo           = errors.Register(ModuleName, 37, "invalid historical info")
 	ErrEmptyValidatorPubKey            = errors.Register(ModuleName, 39, "empty validator public key")
 	ErrCommissionLTMinRate             = errors.Register(ModuleName, 40, "commission cannot be less than min rate")
 	ErrUnbondingNotFound               = errors.Register(ModuleName, 41, "unbonding operation not found")

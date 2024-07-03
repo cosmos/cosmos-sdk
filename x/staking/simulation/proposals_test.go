@@ -44,7 +44,7 @@ func TestProposalMsgs(t *testing.T) {
 	assert.Equal(t, addr, msgUpdateParams.Authority)
 	assert.Equal(t, "GqiQWIXnku", msgUpdateParams.Params.BondDenom)
 	assert.Equal(t, uint32(213), msgUpdateParams.Params.MaxEntries)
-	assert.Equal(t, uint32(300), msgUpdateParams.Params.HistoricalEntries)
+	assert.Equal(t, uint32(0), msgUpdateParams.Params.HistoricalEntries)
 	assert.Equal(t, uint32(539), msgUpdateParams.Params.MaxValidators)
 	assert.Equal(t, 8898194435*time.Second, msgUpdateParams.Params.UnbondingTime)
 	assert.DeepEqual(t, sdkmath.LegacyNewDecWithPrec(579040435581502128, 18), msgUpdateParams.Params.MinCommissionRate)

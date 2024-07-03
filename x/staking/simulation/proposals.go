@@ -39,7 +39,7 @@ func SimulateMsgUpdateParams(r *rand.Rand, _ []simtypes.Account, addressCodec co
 
 	params := types.DefaultParams()
 	params.BondDenom = simtypes.RandStringOfLength(r, 10)
-	params.HistoricalEntries = uint32(simtypes.RandIntBetween(r, 0, 1000))
+	params.HistoricalEntries = uint32(0)
 	params.MaxEntries = uint32(simtypes.RandIntBetween(r, 1, 1000))
 	params.MaxValidators = uint32(simtypes.RandIntBetween(r, 1, 1000))
 	params.UnbondingTime = time.Duration(simtypes.RandTimestamp(r).UnixNano())

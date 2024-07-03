@@ -70,14 +70,17 @@ type ToBytes = func() ([]byte, error)
 // ToJSON is a function that lazily returns the JSON representation of data.
 type ToJSON = func() (json.RawMessage, error)
 
+// KVPairData represents a batch of key-value pair data that is passed to a listener.
 type KVPairData struct {
 	Updates []ModuleKVPairUpdate
 }
 
+// ModuleKVPairUpdate represents a key-value pair update for a specific module.
 type ModuleKVPairUpdate struct {
 	// ModuleName is the name of the module that the key-value pair belongs to.
 	ModuleName string
 
+	// Update is the key-value pair update.
 	Update schema.KVPairUpdate
 }
 
@@ -90,5 +93,5 @@ type ObjectUpdateData struct {
 	Updates []schema.ObjectUpdate
 }
 
-// CommitData represents commit data
+// CommitData represents commit data. It is empty for now, but fields could be added later.
 type CommitData struct{}

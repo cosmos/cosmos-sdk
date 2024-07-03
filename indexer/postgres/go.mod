@@ -10,7 +10,4 @@ go 1.12
 // and cosmossdk.io/indexer/base.
 require cosmossdk.io/schema v0.0.0
 
-// TODO: is this dependency okay?
-require github.com/cosmos/btcutil v1.0.5
-
 replace cosmossdk.io/schema => ../../schema

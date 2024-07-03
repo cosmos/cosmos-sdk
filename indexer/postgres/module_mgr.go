@@ -16,7 +16,8 @@ type ModuleManager struct {
 	options      Options
 }
 
-func newModuleManager(moduleName string, modSchema schema.ModuleSchema, options Options) *ModuleManager {
+// NewModuleManager creates a new ModuleManager for the given module schema.
+func NewModuleManager(moduleName string, modSchema schema.ModuleSchema, options Options) *ModuleManager {
 	return &ModuleManager{
 		moduleName:   moduleName,
 		schema:       modSchema,

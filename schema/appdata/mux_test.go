@@ -1,31 +1,33 @@
 package appdata
 
 import (
+	"fmt"
 	"testing"
 )
 
 func TestListenerMux(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
-		res := ListenerMux(Listener{}, Listener{})
-		if res.InitializeModuleData != nil {
+		listener := ListenerMux(Listener{}, Listener{})
+
+		if listener.InitializeModuleData != nil {
 			t.Error("expected nil")
 		}
-		if res.StartBlock != nil {
+		if listener.StartBlock != nil {
 			t.Error("expected nil")
 		}
-		if res.OnTx != nil {
+		if listener.OnTx != nil {
 			t.Error("expected nil")
 		}
-		if res.OnEvent != nil {
+		if listener.OnEvent != nil {
 			t.Error("expected nil")
 		}
-		if res.OnKVPair != nil {
+		if listener.OnKVPair != nil {
 			t.Error("expected nil")
 		}
-		if res.OnObjectUpdate != nil {
+		if listener.OnObjectUpdate != nil {
 			t.Error("expected nil")
 		}
-		if res.Commit != nil {
+		if listener.Commit != nil {
 			t.Error("expected nil")
 		}
 	})
@@ -33,7 +35,7 @@ func TestListenerMux(t *testing.T) {
 	t.Run("all called once", func(t *testing.T) {
 		var calls []string
 		onCall := func(name string, i int, _ Packet) {
-			calls = append(calls, name)
+			calls = append(calls, fmt.Sprintf("%s %d", name, i))
 		}
 
 		res := ListenerMux(callCollector(1, onCall), callCollector(2, onCall))

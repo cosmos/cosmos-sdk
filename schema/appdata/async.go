@@ -16,9 +16,11 @@ func AsyncListenerMux(listeners []Listener, bufferSize int, doneChan <-chan stru
 	mux := ListenerMux(asyncListeners...)
 	muxCommit := mux.Commit
 	mux.Commit = func(data CommitData) error {
-		err := muxCommit(data)
-		if err != nil {
-			return err
+		if muxCommit != nil {
+			err := muxCommit(data)
+			if err != nil {
+				return err
+			}
 		}
 
 		for _, commitChan := range commitChans {
@@ -70,6 +72,7 @@ func AsyncListener(listener Listener, bufferSize int, commitChan chan<- error, d
 				}
 
 			case <-doneChan:
+				close(packetChan)
 				return
 			}
 		}

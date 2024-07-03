@@ -3,12 +3,14 @@ package codec_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/stretchr/testify/require"
 )
 
 var _ address.Codec = (*customAddressCodec)(nil)

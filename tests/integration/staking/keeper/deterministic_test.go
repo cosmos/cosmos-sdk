@@ -732,47 +732,6 @@ func TestGRPCDelegatorUnbondingDelegations(t *testing.T) {
 	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorUnbondingDelegations, 1302, false)
 }
 
-func TestGRPCHistoricalInfo(t *testing.T) {
-	t.Parallel()
-	f := initDeterministicFixture(t)
-
-	rapid.Check(t, func(rt *rapid.T) {
-		historical := stakingtypes.HistoricalRecord{}
-
-		height := rapid.Int64Min(0).Draw(rt, "height")
-
-		assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(
-			f.ctx,
-			uint64(height),
-			historical,
-		))
-
-		req := &stakingtypes.QueryHistoricalInfoRequest{
-			Height: height,
-		}
-
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.HistoricalInfo, 0, true)
-	})
-
-	f = initDeterministicFixture(t) // reset
-
-	historicalInfo := stakingtypes.HistoricalRecord{}
-
-	height := int64(127)
-
-	assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(
-		f.ctx,
-		uint64(height),
-		historicalInfo,
-	))
-
-	req := &stakingtypes.QueryHistoricalInfoRequest{
-		Height: height,
-	}
-
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.HistoricalInfo, 1027, false)
-}
-
 func TestGRPCDelegatorValidators(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)

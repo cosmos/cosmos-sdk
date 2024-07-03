@@ -41,6 +41,15 @@ func (m *MetadataStore) GetLatestVersion() (uint64, error) {
 	return version, nil
 }
 
+func (m *MetadataStore) setLatestVersion(version uint64) error {
+	var buf bytes.Buffer
+	buf.Grow(encoding.EncodeUvarintSize(version))
+	if err := encoding.EncodeUvarint(&buf, version); err != nil {
+		return err
+	}
+	return m.kv.Set([]byte(latestVersionKey), buf.Bytes())
+}
+
 func (m *MetadataStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
 	key := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
 	value, err := m.kv.Get(key)

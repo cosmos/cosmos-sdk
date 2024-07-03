@@ -721,7 +721,7 @@ func TestGRPCQueryHistoricalInfo(t *testing.T) {
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
-	_, err := queryClient.HistoricalInfo(gocontext.Background(), &types.QueryHistoricalInfoRequest{})
+	_, err := queryClient.HistoricalInfo(gocontext.Background(), &types.QueryHistoricalInfoRequest{}) // nolint:staticcheck // SA1019: deprecated endpoint
 	assert.ErrorContains(t, err, "this endpoint has been deprecated and removed in 0.52")
 }
 

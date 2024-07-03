@@ -498,10 +498,7 @@ func (app *BaseApp) setState(mode execMode, h cmtproto.Header) {
 
 	switch mode {
 	case execModeCheck:
-		// should take a snapshot of the multistore and cache it
-		// to prevent state corruption during checktx or simulate.
-		baseState.ms, _ = app.cms.CacheMultiStoreWithVersion(app.cms.LatestVersion())
-		baseState.SetContext(baseState.Context().WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices).WithMultiStore(baseState.ms))
+		baseState.SetContext(baseState.Context().WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices))
 		app.checkState = baseState
 
 	case execModePrepareProposal:
@@ -934,7 +931,14 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 			return gInfo, nil, nil, err
 		}
 
-		msCache.Write()
+		if mode == execModeCheck || mode == execModeReCheck {
+			app.simulateMutex.Lock()
+			msCache.Write()
+			app.simulateMutex.Unlock()
+		} else {
+			msCache.Write()
+		}
+
 		anteEvents = events.ToABCIEvents()
 	}
 

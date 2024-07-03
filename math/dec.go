@@ -43,40 +43,8 @@ var dec128Context = apd.Context{
 	Traps:       apd.DefaultTraps,
 }
 
-type SetupConstraint func(Dec) error
-
-// AssertNotNegative greater or equal 0
-func AssertNotNegative() SetupConstraint {
-	return func(d Dec) error {
-		if d.IsNegative() {
-			return ErrInvalidDec.Wrap("is negative")
-		}
-		return nil
-	}
-}
-
-// AssertGreaterThanZero greater than 0
-func AssertGreaterThanZero() SetupConstraint {
-	return func(d Dec) error {
-		if !d.IsPositive() {
-			return ErrInvalidDec.Wrap("is negative")
-		}
-		return nil
-	}
-}
-
-// AssertMaxDecimals limit the decimal places
-func AssertMaxDecimals(max uint32) SetupConstraint {
-	return func(d Dec) error {
-		if d.NumDecimalPlaces() > max {
-			return ErrInvalidDec.Wrapf("exceeds maximum decimal places: %d", max)
-		}
-		return nil
-	}
-}
-
 // NewDecFromString constructor
-func NewDecFromString(s string, c ...SetupConstraint) (Dec, error) {
+func NewDecFromString(s string) (Dec, error) {
 	d, _, err := apd.NewFromString(s)
 	if err != nil {
 		return Dec{}, ErrInvalidDec.Wrap(err.Error())
@@ -89,16 +57,11 @@ func NewDecFromString(s string, c ...SetupConstraint) (Dec, error) {
 		return Dec{}, ErrInvalidDec.Wrapf(s)
 	default:
 		result := Dec{*d}
-		for _, v := range c {
-			if err := v(result); err != nil {
-				return Dec{}, err
-			}
-		}
 		return result, nil
 	}
 }
 
-func NewDecFromInt64(x int64, c ...SetupConstraint) Dec {
+func NewDecFromInt64(x int64) Dec {
 	var res Dec
 	res.dec.SetInt64(x)
 	return res

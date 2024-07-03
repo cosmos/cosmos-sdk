@@ -115,7 +115,7 @@ func TestDecWithRapid(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, res.Equal(two))
 
-	res, err = five.Rem(two)
+	res, err = five.Modulo(two)
 	require.NoError(t, err)
 	require.True(t, res.Equal(one))
 

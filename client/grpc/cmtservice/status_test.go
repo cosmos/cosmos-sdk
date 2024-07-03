@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/depinject"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/server"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"

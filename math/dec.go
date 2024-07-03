@@ -142,7 +142,7 @@ func (x Dec) Quo(y Dec) (Dec, error) {
 	var z Dec
 	_, err := dec128Context.Quo(&z.dec, &x.dec, &y.dec)
 	if err != nil {
-		return Dec{}, ErrInvalidDec
+		return Dec{}, ErrInvalidDec.Wrap(err.Error())
 	}
 
 	return z, errors.Wrap(err, "decimal quotient error")
@@ -168,7 +168,7 @@ func (x Dec) QuoExact(y Dec) (Dec, error) {
 	var z Dec
 	condition, err := dec128Context.Quo(&z.dec, &x.dec, &y.dec)
 	if err != nil {
-		return z, ErrInvalidDec
+		return z, ErrInvalidDec.Wrap(err.Error())
 	}
 	if condition.Rounded() {
 		return z, ErrUnexpectedRounding
@@ -182,7 +182,7 @@ func (x Dec) QuoInteger(y Dec) (Dec, error) {
 	var z Dec
 	_, err := dec128Context.QuoInteger(&z.dec, &x.dec, &y.dec)
 	if err != nil {
-		return z, ErrInvalidDec
+		return z, ErrInvalidDec.Wrap(err.Error())
 	}
 	return z, nil
 }

@@ -108,6 +108,10 @@ func (g *GRPCServer[AppT, T]) Config() any {
 	return g.config
 }
 
+func (g *GRPCServer[AppT, T]) SetConfig(config *Config) {
+	g.config = config
+}
+
 type protoCodec struct {
 	interfaceRegistry appmanager.InterfaceRegistry
 }

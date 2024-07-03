@@ -56,7 +56,7 @@ func TestValidateForKeyFields(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ValidateForKeyFields(tt.keyFields, tt.key)
+			err := ValidateKeyValue(tt.keyFields, tt.key)
 			if tt.errContains == "" {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
@@ -128,7 +128,7 @@ func TestValidateForValueFields(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ValidateForValueFields(tt.valueFields, tt.value)
+			err := ValidateValueValue(tt.valueFields, tt.value)
 			if tt.errContains == "" {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)

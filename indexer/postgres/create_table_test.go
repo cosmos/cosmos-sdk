@@ -8,14 +8,6 @@ import (
 	"cosmossdk.io/schema/logutil"
 )
 
-func exampleCreateTable(objectType schema.ObjectType) {
-	tm := NewTableManager("test", objectType, Options{Logger: logutil.NoopLogger{}})
-	err := tm.CreateTableSql(os.Stdout)
-	if err != nil {
-		panic(err)
-	}
-}
-
 func ExampleCreateTable_AllKinds() {
 	exampleCreateTable(testdata.AllKindsObject)
 	// Output:
@@ -55,4 +47,12 @@ func ExampleCreateTable_Singleton() {
 	//	PRIMARY KEY (_id)
 	// );
 	// GRANT SELECT ON TABLE "test_singleton" TO PUBLIC;
+}
+
+func exampleCreateTable(objectType schema.ObjectType) {
+	tm := NewTableManager("test", objectType, Options{Logger: logutil.NoopLogger{}})
+	err := tm.CreateTableSql(os.Stdout)
+	if err != nil {
+		panic(err)
+	}
 }

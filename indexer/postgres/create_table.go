@@ -51,7 +51,7 @@ func (tm *TableManager) CreateTableSql(writer io.Writer) error {
 	}
 
 	// add _deleted column when we have RetainDeletions set and enabled
-	if tm.options.RetainDeletions && tm.typ.RetainDeletions {
+	if tm.options.DisableRetainDeletions && tm.typ.RetainDeletions {
 		_, err = fmt.Fprintf(writer, "_deleted BOOLEAN NOT NULL DEFAULT FALSE,\n\t")
 		if err != nil {
 			return err

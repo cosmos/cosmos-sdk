@@ -170,7 +170,10 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 )
 
-require github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+require (
+	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
+	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+)
 
 replace github.com/cosmos/cosmos-sdk => ../../.
 

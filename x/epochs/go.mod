@@ -165,6 +165,7 @@ require (
 )
 
 require (
+	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/log v1.3.1 // indirect
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect

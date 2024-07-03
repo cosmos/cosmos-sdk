@@ -30,6 +30,7 @@ require (
 )
 
 require (
+	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
 	github.com/cockroachdb/errors v1.11.1 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect

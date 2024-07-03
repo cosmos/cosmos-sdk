@@ -21,6 +21,7 @@ require (
 )
 
 require (
+	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
@@ -53,6 +54,7 @@ require (
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/rs/zerolog v1.33.0 // indirect
+	github.com/tidwall/btree v1.7.0 // indirect
 	golang.org/x/crypto v0.24.0 // indirect
 	golang.org/x/exp v0.0.0-20240314144324-c7f7c6466f7f // indirect
 	golang.org/x/sys v0.21.0 // indirect
@@ -64,5 +66,7 @@ require (
 )
 
 replace cosmossdk.io/core => ../../core
+
+replace cosmossdk.io/core/testing => ../../core/testing
 
 replace cosmossdk.io/log => ../../log

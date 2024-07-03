@@ -25,9 +25,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Bug Fixes
+
+* [#20688](https://github.com/cosmos/cosmos-sdk/pull/20688) Avoid overslashing unbonding delegations after a redelegation.
+
 ### Features
 
 * [#19537](https://github.com/cosmos/cosmos-sdk/pull/19537) Changing `MinCommissionRate` in `MsgUpdateParams` now updates the minimum commission rate for all validators.
+* [#20434](https://github.com/cosmos/cosmos-sdk/pull/20434) Add consensus address to validator query response
 
 ### Improvements
 
@@ -96,6 +101,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#17655](https://github.com/cosmos/cosmos-sdk/pull/17655) `QueryHistoricalInfo` was adjusted to return `HistoricalRecord` and marked `Hist` as deprecated.
 * [#20295](https://github.com/cosmos/cosmos-sdk/pull/20295) `GetValidatorByConsAddr` now returns the Cosmos SDK `cryptotypes.Pubkey` instead of `cometcrypto.Publickey`. The caller is responsible to translate the returned value to the expected type. 
     * Remove `CmtConsPublicKey()` and `TmConsPublicKey()` from `Validator` interface and as methods on the `Validator` struct.
+* [#20728](https://github.com/cosmos/cosmos-sdk/pull/20728) Remove `NewHistoricalInfo` and related functions to Historical Info & `GetCmtConsPubKey`, `ToCmtValidator` & `ToCmtValidators` as comet validator type is no longer used in the staking module. 
 
 ### State Breaking changes
 

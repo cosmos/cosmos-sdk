@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	indexerbase "cosmossdk.io/indexer/base"
+	"cosmossdk.io/schema"
 )
 
 var ErrEncoding = errors.New("collections: encoding error")
@@ -81,15 +81,15 @@ type ValueCodec[T any] interface {
 // a future version of collections may make it required and all codec's should aim to implement it.
 // If it is not implemented, fallback defaults will be used for indexing that may be sub-optimal.
 //
-// Implementations of IndexableCodec should test that they are conformant using the indexerbase.ValidateWithKeyFields
-// and indexerbase.ValidateWithValueFields depending on whether the codec is a KeyCodec or ValueCodec respectively.
-type IndexableCodec interface {
-	LogicalDecoder() LogicalDecoder
+// Implementations of IndexableCodec should test that they are conformant using the schema.ValidateWithKeyFields
+// and schema.ValidateWithValueFields depending on whether the codec is a KeyCodec or ValueCodec respectively.
+type IndexableCodec[T any] interface {
+	LogicalDecoder() (LogicalDecoder[T], error)
 }
 
-type LogicalDecoder struct {
-	Fields []indexerbase.Field
-	Decode func([]byte) (any, error)
+type LogicalDecoder[T any] struct {
+	Fields       []schema.Field
+	ToSchemaType func(T) (any, error)
 }
 
 // NewUntypedValueCodec returns an UntypedValueCodec for the provided ValueCodec.

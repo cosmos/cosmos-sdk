@@ -5,9 +5,10 @@ go 1.21
 require (
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
+	cosmossdk.io/schema v0.0.0
 	github.com/stretchr/testify v1.9.0
+	github.com/tidwall/btree v1.7.0
 	pgregory.net/rapid v1.1.0
-	cosmossdk.io/indexer/base v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -17,7 +18,6 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
-	github.com/tidwall/btree v1.7.0 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
 	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
@@ -31,5 +31,5 @@ require (
 replace (
 	cosmossdk.io/core => ../core
 	cosmossdk.io/core/testing => ../core/testing
-	cosmossdk.io/indexer/base => ../indexer/base
+	cosmossdk.io/schema => ../schema
 )

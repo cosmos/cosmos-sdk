@@ -6,8 +6,9 @@ import (
 	"io"
 	"math"
 
+	"cosmossdk.io/schema"
+
 	"cosmossdk.io/collections/codec"
-	indexerbase "cosmossdk.io/indexer/base"
 )
 
 var (
@@ -92,13 +93,13 @@ type Collection interface {
 
 	genesisHandler
 
-	logicalDecoder() logicalDecoder
+	logicalDecoder() (logicalDecoder, error)
 
 	isSecondaryIndex() bool
 }
 
 type logicalDecoder struct {
-	objectType   indexerbase.ObjectType
+	objectType   schema.ObjectType
 	keyDecoder   func([]byte) (any, error)
 	valueDecoder func([]byte) (any, error)
 }

@@ -34,7 +34,7 @@ func genMaxValidators(r *rand.Rand) (maxValidators uint32) {
 
 // getHistEntries returns randomized HistoricalEntries between 0-100.
 func getHistEntries(r *rand.Rand) uint32 {
-	return 0
+	return uint32(r.Intn(int(types.DefaultHistoricalEntries + 1)))
 }
 
 // getKeyRotationFee returns randomized keyRotationFee between 10000-1000000.

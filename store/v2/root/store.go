@@ -2,6 +2,7 @@ package root
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"sync"
@@ -35,7 +36,8 @@ type Store struct {
 	// stateCommitment reflects the state commitment (SC) backend
 	stateCommitment store.Committer
 
-	// commitHeader reflects the header used when committing state (note, this isn't required and only used for query purposes)
+	// commitHeader reflects the header used when committing state
+	// note, this isn't required and only used for query purposes)
 	commitHeader *coreheader.Info
 
 	// lastCommitInfo reflects the last version/hash that has been committed
@@ -147,8 +149,10 @@ func (s *Store) LastCommitID() (proof.CommitID, error) {
 	if err != nil {
 		return proof.CommitID{}, err
 	}
+	// if the latest version is 0, we return a CommitID with version 0 and a hash of an empty byte slice
+	bz := sha256.Sum256([]byte{})
 
-	return proof.CommitID{Version: latestVersion}, nil
+	return proof.CommitID{Version: latestVersion, Hash: bz[:]}, nil
 }
 
 // GetLatestVersion returns the latest version based on the latest internal
@@ -259,6 +263,40 @@ func (s *Store) loadVersion(v uint64) error {
 
 func (s *Store) SetCommitHeader(h *coreheader.Info) {
 	s.commitHeader = h
+}
+
+// WorkingHash writes the changeset to SC and SS and returns the workingHash
+// of the CommitInfo.
+func (s *Store) WorkingHash(cs *corestore.Changeset) ([]byte, error) {
+	if s.telemetry != nil {
+		now := time.Now()
+		defer s.telemetry.MeasureSince(now, "root_store", "working_hash")
+	}
+
+	// write the changeset to the SC and SS backends
+	eg := new(errgroup.Group)
+	eg.Go(func() error {
+		if err := s.writeSC(cs); err != nil {
+			return fmt.Errorf("failed to write SC: %w", err)
+		}
+
+		return nil
+	})
+	eg.Go(func() error {
+		if err := s.stateStorage.ApplyChangeset(s.initialVersion, cs); err != nil {
+			return fmt.Errorf("failed to commit SS: %w", err)
+		}
+
+		return nil
+	})
+	if err := eg.Wait(); err != nil {
+		return nil, err
+	}
+
+	workingHash := s.lastCommitInfo.Hash()
+	s.lastCommitInfo.Version -= 1 // reset lastCommitInfo to allow Commit() to work correctly
+
+	return workingHash, nil
 }
 
 // Commit commits all state changes to the underlying SS and SC backends. It
@@ -392,13 +430,8 @@ func (s *Store) writeSC(cs *corestore.Changeset) error {
 		return fmt.Errorf("failed to write batch to SC store: %w", err)
 	}
 
-	isEmpty, err := s.stateCommitment.IsEmpty()
-	if err != nil {
-		return fmt.Errorf("failed to check if SC store is empty: %w", err)
-	}
-
 	var previousHeight, version uint64
-	if isEmpty {
+	if s.lastCommitInfo.GetVersion() == 0 && s.initialVersion > 1 {
 		// This case means that no commit has been made in the store, we
 		// start from initialVersion.
 		version = s.initialVersion

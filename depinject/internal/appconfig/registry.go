@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"reflect"
 
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 )
 
 // ModuleRegistry is the registry of module initializers indexed by their golang

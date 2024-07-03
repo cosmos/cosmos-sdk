@@ -358,7 +358,7 @@ func TestSub(t *testing.T) {
 		},
 		"1e100000 - 0 = 1e100000": {
 			x:   NewDecWithPrec(1, 100_000),
-			y:   NewDecFromInt64(0111),
+			y:   NewDecFromInt64(0),
 			exp: must(NewDecFromString("1e100000")),
 		},
 		"1e100001 - 0 -> err": {
@@ -395,7 +395,7 @@ func TestSub(t *testing.T) {
 				return
 			}
 			require.NoError(t, gotErr)
-			assert.True(t, spec.exp.Equal(got))
+			assert.True(t, spec.exp.Equal(got), got.String())
 		})
 	}
 }
@@ -810,7 +810,7 @@ func TestQuoInteger(t *testing.T) {
 		"123 / 123 = 1": {
 			x:   NewDecFromInt64(123),
 			y:   NewDecFromInt64(123),
-			exp: NewDecFromInt64(5),
+			exp: NewDecFromInt64(1),
 		},
 		"-123 / 123 = -1": {
 			x:   NewDecFromInt64(-123),
@@ -1198,15 +1198,15 @@ func TestMulExact(t *testing.T) {
 			y:      NewDecWithPrec(1, 1),
 			expErr: ErrInvalidDec,
 		},
-		"1e0000 * -1 = 1e0000": {
+		"1e0000 * -1 = -1e0000": {
 			x:   NewDecWithPrec(1, 100_000),
 			y:   NewDecWithPrec(-1, 0),
-			exp: NewDecWithPrec(1, 100_000),
+			exp: NewDecWithPrec(-1, 100_000),
 		},
 		"1e100000 * -9 = 9e100000": {
 			x:   NewDecWithPrec(1, 100_000),
 			y:   NewDecFromInt64(-9),
-			exp: NewDecWithPrec(9, 100_000),
+			exp: NewDecWithPrec(-9, 100_000),
 		},
 		"1e100000 * -10 = err": {
 			x:      NewDecWithPrec(1, 100_000),

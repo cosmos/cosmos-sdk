@@ -1,6 +1,7 @@
 package root
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"testing"
 	"time"
@@ -771,7 +772,9 @@ func (s *RootStoreTestSuite) TestHashStableWithEmptyCommitAndRestart() {
 	err := s.rootStore.LoadLatestVersion()
 	s.Require().Nil(err)
 
-	commitID := proof.CommitID{}
+	emptyHash := sha256.Sum256([]byte{})
+	appHash := emptyHash[:]
+	commitID := proof.CommitID{Hash: appHash}
 	lastCommitID, err := s.rootStore.LastCommitID()
 	s.Require().Nil(err)
 

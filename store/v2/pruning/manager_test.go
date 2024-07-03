@@ -48,15 +48,9 @@ func (s *PruningManagerTestSuite) SetupTest() {
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
 	s.ss = storage.NewStorageStore(sqliteDB, nopLog)
-	scPruneOptions := &store.PruneOptions{
-		KeepRecent: 0,
-		Interval:   1,
-	} // prune all
-	ssPruneOptions := &store.PruneOptions{
-		KeepRecent: 5,
-		Interval:   10,
-	} // prune some
-	s.manager = NewManager(s.sc, s.ss, scPruneOptions, ssPruneOptions)
+	scPruningOption := store.NewPruningOptionWithCustom(0, 1)  // prune all
+	ssPruningOption := store.NewPruningOptionWithCustom(5, 10) // prune some
+	s.manager = NewManager(s.sc, s.ss, scPruningOption, ssPruningOption)
 }
 
 func (s *PruningManagerTestSuite) TestPrune() {
@@ -94,7 +88,7 @@ func (s *PruningManagerTestSuite) TestPrune() {
 	s.Require().Eventually(checkSCPrune, 10*time.Second, 1*time.Second)
 
 	// check the storage store
-	_, pruneVersion := s.manager.ssPruningOptions.ShouldPrune(toVersion)
+	_, pruneVersion := s.manager.ssPruningOption.ShouldPrune(toVersion)
 	for version := uint64(1); version <= toVersion; version++ {
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
@@ -112,50 +106,38 @@ func (s *PruningManagerTestSuite) TestPrune() {
 	}
 }
 
-func TestPruneOptions(t *testing.T) {
+func TestPruningOption(t *testing.T) {
 	testCases := []struct {
 		name         string
-		options      *store.PruneOptions
+		options      *store.PruningOption
 		version      uint64
 		pruning      bool
 		pruneVersion uint64
 	}{
 		{
-			name: "no pruning",
-			options: &store.PruneOptions{
-				KeepRecent: 100,
-				Interval:   0,
-			},
+			name:         "no pruning",
+			options:      store.NewPruningOptionWithCustom(100, 0),
 			version:      100,
 			pruning:      false,
 			pruneVersion: 0,
 		},
 		{
-			name: "prune all",
-			options: &store.PruneOptions{
-				KeepRecent: 0,
-				Interval:   1,
-			},
+			name:         "prune all",
+			options:      store.NewPruningOptionWithCustom(0, 1),
 			version:      19,
 			pruning:      true,
 			pruneVersion: 18,
 		},
 		{
-			name: "prune none",
-			options: &store.PruneOptions{
-				KeepRecent: 100,
-				Interval:   10,
-			},
+			name:         "prune none",
+			options:      store.NewPruningOptionWithCustom(100, 10),
 			version:      19,
 			pruning:      false,
 			pruneVersion: 0,
 		},
 		{
-			name: "prune some",
-			options: &store.PruneOptions{
-				KeepRecent: 10,
-				Interval:   50,
-			},
+			name:         "prune some",
+			options:      store.NewPruningOptionWithCustom(10, 50),
 			version:      100,
 			pruning:      true,
 			pruneVersion: 89,

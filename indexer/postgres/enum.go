@@ -31,7 +31,9 @@ func (m *ModuleManager) CreateEnumType(ctx context.Context, conn DBConn, enum sc
 	}
 
 	sqlStr := buf.String()
-	m.options.Logger.Debug("Creating enum type", "sql", sqlStr)
+	if m.options.Logger != nil {
+		m.options.Logger.Debug("Creating enum type", "sql", sqlStr)
+	}
 	_, err = conn.ExecContext(ctx, sqlStr)
 	return err
 }

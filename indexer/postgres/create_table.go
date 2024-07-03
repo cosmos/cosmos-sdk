@@ -16,7 +16,9 @@ func (tm *TableManager) CreateTable(ctx context.Context, conn DBConn) error {
 	}
 
 	sqlStr := buf.String()
-	tm.options.Logger.Debug("Creating table", "table", tm.TableName(), "sql", sqlStr)
+	if tm.options.Logger != nil {
+		tm.options.Logger.Debug("Creating table", "table", tm.TableName(), "sql", sqlStr)
+	}
 	_, err = conn.ExecContext(ctx, sqlStr)
 	return err
 }

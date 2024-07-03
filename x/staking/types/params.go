@@ -29,7 +29,7 @@ const (
 	// value by not adding the staking module to the application module manager's
 	// SetOrderBeginBlockers.
 	// Deprecated: HistoricalEntries is deprecated
-	DefaultHistoricalEntries uint32 = 0
+	DefaultHistoricalEntries uint32 = 10000
 )
 
 var (

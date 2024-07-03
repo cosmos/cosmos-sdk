@@ -154,7 +154,7 @@ func (x Dec) MulExact(y Dec) (Dec, error) {
 	var z Dec
 	condition, err := dec128Context.Mul(&z.dec, &x.dec, &y.dec)
 	if err != nil {
-		return z, err
+		return z, ErrInvalidDec
 	}
 	if condition.Rounded() {
 		return z, ErrUnexpectedRounding
@@ -187,11 +187,14 @@ func (x Dec) QuoInteger(y Dec) (Dec, error) {
 	return z, nil
 }
 
-// Rem returns the integral remainder from `x/y` (formatted as decimal128, with 34 digit precision) without
+// Modulo returns the integral remainder from `x/y` (formatted as decimal128, with 34 digit precision) without
 // mutating any argument and error if the integer part of x/y cannot fit in 34 digit precision
-func (x Dec) Rem(y Dec) (Dec, error) {
+func (x Dec) Modulo(y Dec) (Dec, error) {
 	var z Dec
 	_, err := dec128Context.Rem(&z.dec, &x.dec, &y.dec)
+	if err != nil {
+		return z, ErrInvalidDec
+	}
 	return z, errors.Wrap(err, "decimal remainder error")
 }
 

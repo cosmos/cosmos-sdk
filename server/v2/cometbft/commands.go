@@ -19,7 +19,6 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"cosmossdk.io/server/v2/cometbft/client/rpc"
-	"cosmossdk.io/server/v2/cometbft/flags"
 	auth "cosmossdk.io/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/client"
 
@@ -38,8 +37,8 @@ func (s *CometBFTServer[AppT, T]) rpcClient(cmd *cobra.Command) (rpc.CometRPC, e
 		return client, nil
 	}
 
-	if s.Node == nil || cmd.Flags().Changed(flags.FlagNode) {
-		rpcURI, err := cmd.Flags().GetString(flags.FlagNode)
+	if s.Node == nil || cmd.Flags().Changed(FlagNode) {
+		rpcURI, err := cmd.Flags().GetString(FlagNode)
 		if err != nil {
 			return nil, err
 		}
@@ -76,8 +75,8 @@ func (s *CometBFTServer[AppT, T]) StatusCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	cmd.Flags().StringP(flags.FlagOutput, "o", "json", "Output format (text|json)")
+	cmd.Flags().StringP(FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
+	cmd.Flags().StringP(FlagOutput, "o", "json", "Output format (text|json)")
 
 	return cmd
 }
@@ -203,8 +202,8 @@ for. Each module documents its respective events under 'xx_events.md'.
 			}
 
 			query, _ := cmd.Flags().GetString(auth.FlagQuery)
-			page, _ := cmd.Flags().GetInt(flags.FlagPage)
-			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
+			page, _ := cmd.Flags().GetInt(FlagPage)
+			limit, _ := cmd.Flags().GetInt(FlagLimit)
 			orderBy, _ := cmd.Flags().GetString(auth.FlagOrderBy)
 
 			blocks, err := rpc.QueryBlocks(cmd.Context(), rpcclient, page, limit, query, orderBy)
@@ -221,9 +220,9 @@ for. Each module documents its respective events under 'xx_events.md'.
 		},
 	}
 
-	flags.AddQueryFlagsToCmd(cmd)
-	cmd.Flags().Int(flags.FlagPage, query.DefaultPage, "Query a specific page of paginated results")
-	cmd.Flags().Int(flags.FlagLimit, query.DefaultLimit, "Query number of transactions results per page returned")
+	AddQueryFlagsToCmd(cmd)
+	cmd.Flags().Int(FlagPage, query.DefaultPage, "Query a specific page of paginated results")
+	cmd.Flags().Int(FlagLimit, query.DefaultLimit, "Query number of transactions results per page returned")
 	cmd.Flags().String(auth.FlagQuery, "", "The blocks events query per CometBFT's query semantics")
 	cmd.Flags().String(auth.FlagOrderBy, "", "The ordering semantics (asc|dsc)")
 	_ = cmd.MarkFlagRequired(auth.FlagQuery)
@@ -312,7 +311,7 @@ $ %s query block --%s=%s <hash>
 		},
 	}
 
-	flags.AddQueryFlagsToCmd(cmd)
+	AddQueryFlagsToCmd(cmd)
 	cmd.Flags().String(auth.FlagType, auth.TypeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\"", auth.TypeHeight, auth.TypeHash))
 
 	return cmd
@@ -364,7 +363,7 @@ func (s *CometBFTServer[AppT, T]) QueryBlockResultsCmd() *cobra.Command {
 		},
 	}
 
-	flags.AddQueryFlagsToCmd(cmd)
+	AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -396,7 +395,7 @@ func (s *CometBFTServer[AppT, T]) BootstrapStateCmd() *cobra.Command {
 				return err
 			}
 			if height == 0 {
-				height, err = s.App.store.GetLatestVersion()
+				height, err = s.Consensus.store.GetLatestVersion()
 				if err != nil {
 					return err
 				}
@@ -414,7 +413,7 @@ func (s *CometBFTServer[AppT, T]) BootstrapStateCmd() *cobra.Command {
 
 func printOutput(cmd *cobra.Command, out []byte) error {
 	// Get flags output
-	outFlag, err := cmd.Flags().GetString(flags.FlagOutput)
+	outFlag, err := cmd.Flags().GetString(FlagOutput)
 	if err != nil {
 		return err
 	}

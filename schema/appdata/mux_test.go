@@ -1,6 +1,8 @@
 package appdata
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestListenerMux(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
@@ -30,89 +32,15 @@ func TestListenerMux(t *testing.T) {
 
 	t.Run("all called once", func(t *testing.T) {
 		var calls []string
-		res := ListenerMux(Listener{
-			InitializeModuleData: func(ModuleInitializationData) error {
-				calls = append(calls, "InitializeModuleData 1")
-				return nil
-			},
-			StartBlock: func(StartBlockData) error {
-				calls = append(calls, "StartBlock 1")
-				return nil
-			},
-			OnTx: func(TxData) error {
-				calls = append(calls, "OnTx 1")
-				return nil
-			},
-			OnEvent: func(EventData) error {
-				calls = append(calls, "OnEvent 1")
-				return nil
-			},
-			OnKVPair: func(KVPairData) error {
-				calls = append(calls, "OnKVPair 1")
-				return nil
-			},
-			OnObjectUpdate: func(ObjectUpdateData) error {
-				calls = append(calls, "OnObjectUpdate 1")
-				return nil
-			},
-			Commit: func(CommitData) error {
-				calls = append(calls, "Commit 1")
-				return nil
-			},
-		}, Listener{
-			InitializeModuleData: func(ModuleInitializationData) error {
-				calls = append(calls, "InitializeModuleData 2")
-				return nil
-			},
-			StartBlock: func(StartBlockData) error {
-				calls = append(calls, "StartBlock 2")
-				return nil
-			},
-			OnTx: func(TxData) error {
-				calls = append(calls, "OnTx 2")
-				return nil
-			},
-			OnEvent: func(EventData) error {
-				calls = append(calls, "OnEvent 2")
-				return nil
-			},
-			OnKVPair: func(KVPairData) error {
-				calls = append(calls, "OnKVPair 2")
-				return nil
-			},
-			OnObjectUpdate: func(ObjectUpdateData) error {
-				calls = append(calls, "OnObjectUpdate 2")
-				return nil
-			},
-			Commit: func(CommitData) error {
-				calls = append(calls, "Commit 2")
-				return nil
-			},
-		})
-
-		if err := res.InitializeModuleData(ModuleInitializationData{}); err != nil {
-			t.Error(err)
-		}
-		if err := res.StartBlock(StartBlockData{}); err != nil {
-			t.Error(err)
-		}
-		if err := res.OnTx(TxData{}); err != nil {
-			t.Error(err)
-		}
-		if err := res.OnEvent(EventData{}); err != nil {
-			t.Error(err)
-		}
-		if err := res.OnKVPair(KVPairData{}); err != nil {
-			t.Error(err)
-		}
-		if err := res.OnObjectUpdate(ObjectUpdateData{}); err != nil {
-			t.Error(err)
-		}
-		if err := res.Commit(CommitData{}); err != nil {
-			t.Error(err)
+		onCall := func(name string, i int, _ Packet) {
+			calls = append(calls, name)
 		}
 
-		expected := []string{
+		res := ListenerMux(callCollector(1, onCall), callCollector(2, onCall))
+
+		callAllCallbacksOnces(t, res)
+
+		checkExpectedCallOrder(t, calls, []string{
 			"InitializeModuleData 1",
 			"InitializeModuleData 2",
 			"StartBlock 1",
@@ -127,16 +55,75 @@ func TestListenerMux(t *testing.T) {
 			"OnObjectUpdate 2",
 			"Commit 1",
 			"Commit 2",
-		}
-
-		if len(calls) != len(expected) {
-			t.Fatalf("expected %d calls, got %d", len(expected), len(calls))
-		}
-
-		for i := range calls {
-			if calls[i] != expected[i] {
-				t.Errorf("expected %q, got %q", expected[i], calls[i])
-			}
-		}
+		})
 	})
+}
+
+func callAllCallbacksOnces(t *testing.T, listener Listener) {
+	if err := listener.InitializeModuleData(ModuleInitializationData{}); err != nil {
+		t.Error(err)
+	}
+	if err := listener.StartBlock(StartBlockData{}); err != nil {
+		t.Error(err)
+	}
+	if err := listener.OnTx(TxData{}); err != nil {
+		t.Error(err)
+	}
+	if err := listener.OnEvent(EventData{}); err != nil {
+		t.Error(err)
+	}
+	if err := listener.OnKVPair(KVPairData{}); err != nil {
+		t.Error(err)
+	}
+	if err := listener.OnObjectUpdate(ObjectUpdateData{}); err != nil {
+		t.Error(err)
+	}
+	if err := listener.Commit(CommitData{}); err != nil {
+		t.Error(err)
+	}
+}
+
+func callCollector(i int, onCall func(string, int, Packet)) Listener {
+	return Listener{
+		InitializeModuleData: func(ModuleInitializationData) error {
+			onCall("InitializeModuleData", i, nil)
+			return nil
+		},
+		StartBlock: func(StartBlockData) error {
+			onCall("StartBlock", i, nil)
+			return nil
+		},
+		OnTx: func(TxData) error {
+			onCall("OnTx", i, nil)
+			return nil
+		},
+		OnEvent: func(EventData) error {
+			onCall("OnEvent", i, nil)
+			return nil
+		},
+		OnKVPair: func(KVPairData) error {
+			onCall("OnKVPair", i, nil)
+			return nil
+		},
+		OnObjectUpdate: func(ObjectUpdateData) error {
+			onCall("OnObjectUpdate", i, nil)
+			return nil
+		},
+		Commit: func(CommitData) error {
+			onCall("Commit", i, nil)
+			return nil
+		},
+	}
+}
+
+func checkExpectedCallOrder(t *testing.T, actual, expected []string) {
+	if len(actual) != len(expected) {
+		t.Fatalf("expected %d calls, got %d", len(expected), len(actual))
+	}
+
+	for i := range actual {
+		if actual[i] != expected[i] {
+			t.Errorf("expected %q, got %q", expected[i], actual[i])
+		}
+	}
 }

@@ -65,7 +65,7 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 	res, err := indexer.Initialize(ctx, indexing.InitializationData{})
 	require.NoError(t, err)
 
-	fixture := appdatasim.NewSimulator(appdatasim.SimulatorOptions{
+	fixture := appdatasim.NewSimulator(appdatasim.Options{
 		Listener: appdata.ListenerMux(
 			appdata.DebugListener(os.Stdout),
 			res.Listener,
@@ -83,30 +83,33 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 		blockData := blockDataGen.Example(i)
 		require.NoError(t, fixture.ProcessBlockData(blockData))
 
-		require.NoError(t, fixture.AppState().ScanObjectCollections(func(moduleName string, collection *statesim.ObjectCollection) error {
+		require.NoError(t, fixture.AppState().ScanModules(func(moduleName string, mod *statesim.Module) error {
 			modMgr, ok := indexer.Modules()[moduleName]
 			require.True(t, ok)
-			tblMgr, ok := modMgr.Tables()[collection.ObjectType().Name]
-			require.True(t, ok)
 
-			expectedCount := collection.Len()
-			actualCount, err := tblMgr.Count(context.Background(), db)
-			require.NoError(t, err)
-			require.Equalf(t, expectedCount, actualCount, "table %s %s count mismatch", moduleName, collection.ObjectType().Name)
+			return mod.ScanObjectCollections(func(collection *statesim.ObjectCollection) error {
+				tblMgr, ok := modMgr.Tables()[collection.ObjectType().Name]
+				require.True(t, ok)
 
-			return collection.ScanState(func(update schema.ObjectUpdate) error {
-				found, err := tblMgr.Equals(
-					context.Background(),
-					db, update.Key, update.Value)
-				if err != nil {
-					return err
-				}
+				expectedCount := collection.Len()
+				actualCount, err := tblMgr.Count(context.Background(), db)
+				require.NoError(t, err)
+				require.Equalf(t, expectedCount, actualCount, "table %s %s count mismatch", moduleName, collection.ObjectType().Name)
 
-				if !found {
-					return fmt.Errorf("object not found in table %s %s %v %v", moduleName, collection.ObjectType().Name, update.Key, update.Value)
-				}
+				return collection.ScanState(func(update schema.ObjectUpdate) error {
+					found, err := tblMgr.Equals(
+						context.Background(),
+						db, update.Key, update.Value)
+					if err != nil {
+						return err
+					}
 
-				return nil
+					if !found {
+						return fmt.Errorf("object not found in table %s %s %v %v", moduleName, collection.ObjectType().Name, update.Key, update.Value)
+					}
+
+					return nil
+				})
 			})
 		}))
 	}

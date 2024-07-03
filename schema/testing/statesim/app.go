@@ -78,29 +78,15 @@ func (a *App) UpdateGen() *rapid.Generator[appdata.ObjectUpdateData] {
 	return a.updateGen
 }
 
-// ScanModuleSchemas iterates over all the modules schemas in the app.
-func (a *App) ScanModuleSchemas(f func(string, schema.ModuleSchema) error) error {
-	var err error
-	a.moduleStates.Scan(func(key string, value *Module) bool {
-		err = f(key, value.moduleSchema)
-		return err == nil
-	})
-	return err
-}
-
 // GetModule returns the module state for the given module name.
 func (a *App) GetModule(moduleName string) (*Module, bool) {
 	return a.moduleStates.Get(moduleName)
 }
 
-// ScanObjectCollections iterates over all the object collections in the app.
-func (a *App) ScanObjectCollections(f func(moduleName string, collection *ObjectCollection) error) error {
+func (a *App) ScanModules(f func(moduleName string, modState *Module) error) error {
 	var err error
-	a.moduleStates.Scan(func(moduleName string, value *Module) bool {
-		value.objectCollections.Scan(func(key string, value *ObjectCollection) bool {
-			err = f(moduleName, value)
-			return err == nil
-		})
+	a.moduleStates.Scan(func(key string, value *Module) bool {
+		err = f(key, value)
 		return err == nil
 	})
 	return err

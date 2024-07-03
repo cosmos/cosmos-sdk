@@ -11,6 +11,7 @@ var fieldsGen = rapid.SliceOfNDistinct(FieldGen, 1, 12, func(f schema.Field) str
 	return f.Name
 })
 
+// ObjectTypeGen generates random ObjectType's based on the validity criteria of object types.
 var ObjectTypeGen = rapid.Custom(func(t *rapid.T) schema.ObjectType {
 	typ := schema.ObjectType{
 		Name: NameGen.Draw(t, "name"),
@@ -34,34 +35,39 @@ var ObjectTypeGen = rapid.Custom(func(t *rapid.T) schema.ObjectType {
 }).Filter(func(typ schema.ObjectType) bool {
 	// filter out duplicate enum names
 	enumTypeNames := map[string]bool{}
-	if !checkDuplicateEnumName(enumTypeNames, typ.KeyFields) {
+	if hasDuplicateEnumName(enumTypeNames, typ.KeyFields) {
 		return false
 	}
-	if !checkDuplicateEnumName(enumTypeNames, typ.ValueFields) {
+	if hasDuplicateEnumName(enumTypeNames, typ.ValueFields) {
 		return false
 	}
 	return true
 })
 
-func checkDuplicateEnumName(enumTypeNames map[string]bool, fields []schema.Field) bool {
+// hasDuplicateEnumName checks if there is an enum field with a duplicate name
+// in the object type
+func hasDuplicateEnumName(enumTypeNames map[string]bool, fields []schema.Field) bool {
 	for _, field := range fields {
 		if field.Kind != schema.EnumKind {
 			continue
 		}
 
 		if _, ok := enumTypeNames[field.EnumDefinition.Name]; ok {
-			return false
+			return true
 		}
 
 		enumTypeNames[field.EnumDefinition.Name] = true
 	}
-	return true
+	return false
 }
 
+// ObjectInsertGen generates object updates that are valid for insertion.
 func ObjectInsertGen(objectType schema.ObjectType) *rapid.Generator[schema.ObjectUpdate] {
 	return ObjectUpdateGen(objectType, nil)
 }
 
+// ObjectUpdateGen generates object updates that are valid for updates using the provided state map as a source
+// of valid existing keys.
 func ObjectUpdateGen(objectType schema.ObjectType, state *btree.Map[string, schema.ObjectUpdate]) *rapid.Generator[schema.ObjectUpdate] {
 	keyGen := KeyFieldsValueGen(objectType.KeyFields)
 

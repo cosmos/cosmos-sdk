@@ -29,21 +29,17 @@ func (tm *TableManager) createColumnDefinition(writer io.Writer, field schema.Fi
 			if err != nil {
 				return err
 			}
-		case schema.Bech32AddressKind:
-			_, err = fmt.Fprintf(writer, "TEXT")
-			if err != nil {
-				return err
-			}
-
 		case schema.TimeKind:
-			nanosCol := fmt.Sprintf("%s_nanos", field.Name)
-			// TODO: retain at least microseconds in the timestamp
-			_, err = fmt.Fprintf(writer, "TIMESTAMPTZ GENERATED ALWAYS AS (nanos_to_timestamptz(%q)) STORED,\n\t", nanosCol)
+			// for time fields, we generate two columns:
+			// - one with nanoseconds precision for lossless storage, suffixed with _nanos
+			// - one as a timestamptz (microsecond precision) for ease of use, that is GENERATED
+			nanosColName := fmt.Sprintf("%s_nanos", field.Name)
+			_, err = fmt.Fprintf(writer, "TIMESTAMPTZ GENERATED ALWAYS AS (nanos_to_timestamptz(%q)) STORED,\n\t", nanosColName)
 			if err != nil {
 				return err
 			}
 
-			_, err = fmt.Fprintf(writer, `%q BIGINT`, nanosCol)
+			_, err = fmt.Fprintf(writer, `%q BIGINT`, nanosColName)
 			if err != nil {
 				return err
 			}
@@ -103,6 +99,8 @@ func simpleColumnType(kind schema.Kind) string {
 		return "JSONB"
 	case schema.DurationKind:
 		return "BIGINT"
+	case schema.Bech32AddressKind:
+		return "TEXT"
 	default:
 		return ""
 	}

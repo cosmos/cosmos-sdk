@@ -12,7 +12,7 @@ import (
 
 func TestAppSimulator_ExampleSchema(t *testing.T) {
 	out := &bytes.Buffer{}
-	appSim := NewSimulator(SimulatorOptions{
+	appSim := NewSimulator(Options{
 		AppSchema: schematesting.ExampleAppSchema,
 		Listener:  WriterListener(out),
 	})

@@ -8,6 +8,8 @@ import (
 	"cosmossdk.io/schema/appdata"
 )
 
+// WriterListener returns an appdata.Listener that writes events to the given io.Writer deterministically
+// for testing purposes.
 func WriterListener(w io.Writer) appdata.Listener {
 	return appdata.Listener{
 		StartBlock: func(data appdata.StartBlockData) error {

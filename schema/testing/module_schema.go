@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/schema"
 )
 
+// ModuleSchemaGen generates random ModuleSchema's based on the validity criteria of module schemas.
 var ModuleSchemaGen = rapid.Custom(func(t *rapid.T) schema.ModuleSchema {
 	schema := schema.ModuleSchema{}
 	numObjectTypes := rapid.IntRange(1, 10).Draw(t, "numObjectTypes")
@@ -20,10 +21,10 @@ var ModuleSchemaGen = rapid.Custom(func(t *rapid.T) schema.ModuleSchema {
 	// filter out enums with duplicate names
 	enumTypeNames := map[string]bool{}
 	for _, objectType := range schema.ObjectTypes {
-		if !checkDuplicateEnumName(enumTypeNames, objectType.KeyFields) {
+		if !hasDuplicateEnumName(enumTypeNames, objectType.KeyFields) {
 			return false
 		}
-		if !checkDuplicateEnumName(enumTypeNames, objectType.ValueFields) {
+		if !hasDuplicateEnumName(enumTypeNames, objectType.ValueFields) {
 			return false
 		}
 	}

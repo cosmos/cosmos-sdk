@@ -61,18 +61,21 @@ func (o *Module) UpdateGen() *rapid.Generator[schema.ObjectUpdate] {
 	return o.updateGen
 }
 
+// ModuleSchema returns the module schema for the module.
+func (o *Module) ModuleSchema() schema.ModuleSchema {
+	return o.moduleSchema
+}
+
 // GetObjectCollection returns the object collection for the given object type.
 func (o *Module) GetObjectCollection(objectType string) (*ObjectCollection, bool) {
 	return o.objectCollections.Get(objectType)
 }
 
-// ScanState scans the state of all object collections in the module.
-func (o *Module) ScanState(f func(schema.ObjectUpdate) error) error {
+// ScanObjectCollections scans all object collections in the module.
+func (o *Module) ScanObjectCollections(f func(value *ObjectCollection) error) error {
 	var err error
 	o.objectCollections.Scan(func(key string, value *ObjectCollection) bool {
-		err = value.ScanState(func(update schema.ObjectUpdate) error {
-			return f(update)
-		})
+		err = f(value)
 		return err == nil
 	})
 	return err

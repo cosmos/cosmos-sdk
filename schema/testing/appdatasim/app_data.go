@@ -11,7 +11,8 @@ import (
 	"cosmossdk.io/schema/testing/statesim"
 )
 
-type SimulatorOptions struct {
+// Options are the options for creating an app data Simulator.
+type Options struct {
 	AppSchema          map[string]schema.ModuleSchema
 	Listener           appdata.Listener
 	EventAlignedWrites bool
@@ -21,16 +22,19 @@ type SimulatorOptions struct {
 	EventDataGen       *rapid.Generator[appdata.EventData]
 }
 
+// Simulator simulates a stream of app data.
 type Simulator struct {
 	state        *statesim.App
-	options      SimulatorOptions
+	options      Options
 	blockNum     uint64
 	blockDataGen *rapid.Generator[BlockData]
 }
 
+// BlockData represents the app data packets in a block.
 type BlockData = []appdata.Packet
 
-func NewSimulator(options SimulatorOptions) *Simulator {
+// NewSimulator creates a new app data simulator with the given options.
+func NewSimulator(options Options) *Simulator {
 	if options.AppSchema == nil {
 		options.AppSchema = schematesting.ExampleAppSchema
 	}
@@ -43,10 +47,11 @@ func NewSimulator(options SimulatorOptions) *Simulator {
 	return sim
 }
 
+// Initialize runs the initialization methods of the app data stream.
 func (a *Simulator) Initialize() error {
 	if f := a.options.Listener.InitializeModuleData; f != nil {
-		err := a.state.ScanModuleSchemas(func(moduleName string, moduleSchema schema.ModuleSchema) error {
-			return f(appdata.ModuleInitializationData{ModuleName: moduleName, Schema: moduleSchema})
+		err := a.state.ScanModules(func(moduleName string, mod *statesim.Module) error {
+			return f(appdata.ModuleInitializationData{ModuleName: moduleName, Schema: mod.ModuleSchema()})
 		})
 		if err != nil {
 			return err
@@ -56,15 +61,21 @@ func (a *Simulator) Initialize() error {
 	return nil
 }
 
+// BlockDataGen generates random block data. It is expected that generated data is passed to ProcessBlockData
+// to simulate the app data stream and advance app state based on the object updates in the block. The first
+// packet in the block data will be a StartBlockData packet with the height set to the next block height.
 func (a *Simulator) BlockDataGen() *rapid.Generator[BlockData] {
 	return a.BlockDataGenN(100)
 }
 
+// BlockDataGenN creates a block data generator which allows specifying the maximum number of updates per block.
 func (a *Simulator) BlockDataGenN(maxUpdatesPerBlock int) *rapid.Generator[BlockData] {
 	numUpdatesGen := rapid.IntRange(1, maxUpdatesPerBlock)
 
 	return rapid.Custom(func(t *rapid.T) BlockData {
 		var packets BlockData
+
+		packets = append(packets, appdata.StartBlockData{Height: a.blockNum + 1})
 
 		updateSet := map[string]bool{}
 		// filter out any updates to the same key from this block, otherwise we can end up with weird errors
@@ -86,38 +97,43 @@ func (a *Simulator) BlockDataGenN(maxUpdatesPerBlock int) *rapid.Generator[Block
 			packets = append(packets, data)
 		}
 
+		packets = append(packets, appdata.CommitData{})
+
 		return packets
 	})
 }
 
+// ProcessBlockData processes the given block data, advancing the app state based on the object updates in the block
+// and forwarding all packets to the attached listener. It is expected that the data passed came from BlockDataGen,
+// however, other data can be passed as long as the first packet is a StartBlockData packet with the block height
+// set to the current block height + 1 and the last packet is a CommitData packet.
 func (a *Simulator) ProcessBlockData(data BlockData) error {
+	if len(data) < 2 {
+		return fmt.Errorf("block data must contain at least two packets")
+	}
+
+	if startBlock, ok := data[0].(appdata.StartBlockData); !ok || startBlock.Height != a.blockNum+1 {
+		return fmt.Errorf("first packet in block data must be a StartBlockData packet with height %d", a.blockNum+1)
+	}
+
+	if _, ok := data[len(data)-1].(appdata.CommitData); !ok {
+		return fmt.Errorf("last packet in block data must be a CommitData packet")
+	}
+
+	// advance the block height
 	a.blockNum++
 
-	if f := a.options.Listener.StartBlock; f != nil {
-		err := f(appdata.StartBlockData{Height: a.blockNum})
-		if err != nil {
-			return err
-		}
-	}
-
 	for _, packet := range data {
-		err := a.options.Listener.SendPacket(packet)
-		if err != nil {
-			return err
-		}
-
+		// apply state updates from object updates
 		if updateData, ok := packet.(appdata.ObjectUpdateData); ok {
-			for _, update := range updateData.Updates {
-				err = a.state.ApplyUpdate(updateData.ModuleName, update)
-				if err != nil {
-					return err
-				}
+			err := a.state.ApplyUpdate(updateData)
+			if err != nil {
+				return err
 			}
 		}
-	}
 
-	if f := a.options.Listener.Commit; f != nil {
-		err := f(appdata.CommitData{})
+		// send the packet to the listener
+		err := a.options.Listener.SendPacket(packet)
 		if err != nil {
 			return err
 		}
@@ -126,6 +142,12 @@ func (a *Simulator) ProcessBlockData(data BlockData) error {
 	return nil
 }
 
+// AppState returns the current app state backing the simulator.
 func (a *Simulator) AppState() *statesim.App {
 	return a.state
+}
+
+// BlockNum returns the current block number of the simulator.
+func (a *Simulator) BlockNum() uint64 {
+	return a.blockNum
 }

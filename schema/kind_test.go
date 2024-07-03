@@ -110,6 +110,8 @@ func TestKind_ValidateValue(t *testing.T) {
 		{Int64Kind, int64(1), true},
 		{Int32Kind, "abc", false},
 		{BytesKind, nil, false},
+		// strings with null characters are invalid
+		{StringKind, string([]byte{1, 2, 0, 3}), false},
 		// check integer, decimal and json more thoroughly
 		{IntegerStringKind, "1", true},
 		{IntegerStringKind, "0", true},

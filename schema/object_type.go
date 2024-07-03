@@ -32,7 +32,8 @@ func (o ObjectType) Validate() error {
 	return o.validate(map[string]map[string]bool{})
 }
 
-// Validate validates the object type.
+// validate validates the object type with an enumValueMap that can be
+// shared across a whole module schema.
 func (o ObjectType) validate(enumValueMap map[string]map[string]bool) error {
 	if !ValidateName(o.Name) {
 		return fmt.Errorf("invalid object type name %q", o.Name)

@@ -29,11 +29,17 @@ type ObjectType struct {
 
 // Validate validates the object type.
 func (o ObjectType) Validate() error {
+	return o.validate(map[string]map[string]bool{})
+}
+
+// Validate validates the object type.
+func (o ObjectType) validate(enumValueMap map[string]map[string]bool) error {
 	if !ValidateName(o.Name) {
 		return fmt.Errorf("invalid object type name %q", o.Name)
 	}
 
 	fieldNames := map[string]bool{}
+
 	for _, field := range o.KeyFields {
 		if err := field.Validate(); err != nil {
 			return fmt.Errorf("invalid key field %q: %w", field.Name, err)
@@ -47,6 +53,10 @@ func (o ObjectType) Validate() error {
 			return fmt.Errorf("duplicate field name %q", field.Name)
 		}
 		fieldNames[field.Name] = true
+
+		if err := checkEnumCompatibility(enumValueMap, field); err != nil {
+			return err
+		}
 	}
 
 	for _, field := range o.ValueFields {
@@ -58,6 +68,10 @@ func (o ObjectType) Validate() error {
 			return fmt.Errorf("duplicate field name %q", field.Name)
 		}
 		fieldNames[field.Name] = true
+
+		if err := checkEnumCompatibility(enumValueMap, field); err != nil {
+			return err
+		}
 	}
 
 	if len(o.KeyFields) == 0 && len(o.ValueFields) == 0 {

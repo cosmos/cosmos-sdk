@@ -51,7 +51,7 @@ type SignatureVerificationGasConsumer = func(meter storetypes.GasMeter, sig sign
 
 type AccountAbstractionKeeper interface {
 	IsAbstractedAccount(ctx context.Context, addr []byte) (bool, error)
-	AuthenticateAccount(ctx sdk.Context, signer []byte, bundler string, rawTx *tx.TxRaw, protoTx *tx.Tx, signIndex uint32) error
+	AuthenticateAccount(ctx context.Context, signer []byte, bundler string, rawTx *tx.TxRaw, protoTx *tx.Tx, signIndex uint32) error
 }
 
 // SigVerificationDecorator verifies all signatures for a tx and returns an

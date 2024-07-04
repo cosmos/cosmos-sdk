@@ -39,44 +39,44 @@ var (
 
 type CometBFTServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
 	Node      *node.Node
-	Consensus Consensus[T]
+	Consensus *Consensus[T]
 
 	initTxCodec transaction.Codec[T]
-	Logger      log.Logger
-	Config      Config
-	Options     ServerOptions[T]
+	logger      log.Logger
+	config      Config
+	options     ServerOptions[T]
 }
 
 func New[AppT serverv2.AppI[T], T transaction.Tx](txCodec transaction.Codec[T], options ServerOptions[T]) *CometBFTServer[AppT, T] {
 	return &CometBFTServer[AppT, T]{
 		initTxCodec: txCodec,
-		Options:     options,
+		options:     options,
 	}
 }
 
 func (s *CometBFTServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Logger) error {
-	s.Config = Config{CmtConfig: GetConfigFromViper(v), ConsensusAuthority: appI.GetConsensusAuthority()}
-	s.Logger = logger.With(log.ModuleKey, s.Name())
+	s.config = Config{CmtConfig: GetConfigFromViper(v), ConsensusAuthority: appI.GetConsensusAuthority()}
+	s.logger = logger.With(log.ModuleKey, s.Name())
 
 	// create consensus
 	store := appI.GetStore().(types.Store)
-	consensus := NewConsensus[T](appI.GetAppManager(), s.Options.Mempool, store, s.Config, s.initTxCodec, s.Logger)
+	consensus := NewConsensus[T](appI.GetAppManager(), s.options.Mempool, store, s.config, s.initTxCodec, s.logger)
 
-	consensus.prepareProposalHandler = s.Options.PrepareProposalHandler
-	consensus.processProposalHandler = s.Options.ProcessProposalHandler
-	consensus.verifyVoteExt = s.Options.VerifyVoteExtensionHandler
-	consensus.extendVote = s.Options.ExtendVoteHandler
+	consensus.prepareProposalHandler = s.options.PrepareProposalHandler
+	consensus.processProposalHandler = s.options.ProcessProposalHandler
+	consensus.verifyVoteExt = s.options.VerifyVoteExtensionHandler
+	consensus.extendVote = s.options.ExtendVoteHandler
 
 	// TODO: set these; what is the appropriate presence of the Store interface here?
 	var ss snapshots.StorageSnapshotter
 	var sc snapshots.CommitSnapshotter
 
-	snapshotStore, err := GetSnapshotStore(s.Config.CmtConfig.RootDir)
+	snapshotStore, err := GetSnapshotStore(s.config.CmtConfig.RootDir)
 	if err != nil {
 		return err
 	}
 
-	sm := snapshots.NewManager(snapshotStore, s.Options.SnapshotOptions, sc, ss, nil, s.Logger)
+	sm := snapshots.NewManager(snapshotStore, s.options.SnapshotOptions, sc, ss, nil, s.logger)
 	consensus.SetSnapshotManager(sm)
 
 	s.Consensus = consensus
@@ -91,9 +91,9 @@ func (s *CometBFTServer[AppT, T]) Start(ctx context.Context) error {
 	viper := ctx.Value(corectx.ViperContextKey).(*viper.Viper)
 	cometConfig := GetConfigFromViper(viper)
 
-	wrappedLogger := cometlog.CometLoggerWrapper{Logger: s.Logger}
-	if s.Config.Standalone {
-		svr, err := abciserver.NewServer(s.Config.Addr, s.Config.Transport, s.Consensus)
+	wrappedLogger := cometlog.CometLoggerWrapper{Logger: s.logger}
+	if s.config.Standalone {
+		svr, err := abciserver.NewServer(s.config.Addr, s.config.Transport, s.Consensus)
 		if err != nil {
 			return fmt.Errorf("error creating listener: %w", err)
 		}

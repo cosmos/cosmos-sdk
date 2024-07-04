@@ -29,7 +29,7 @@ import (
 )
 
 func (s *CometBFTServer[AppT, T]) rpcClient(cmd *cobra.Command) (rpc.CometRPC, error) {
-	if s.Config.Standalone {
+	if s.config.Standalone {
 		client, err := rpchttp.New(client.GetConfigFromCmd(cmd).RPC.ListenAddress)
 		if err != nil {
 			return nil, err
@@ -395,7 +395,7 @@ func (s *CometBFTServer[AppT, T]) BootstrapStateCmd() *cobra.Command {
 				return err
 			}
 			if height == 0 {
-				height, err = s.Consensus.GetStore().GetLatestVersion()
+				height, err = s.Consensus.store.GetLatestVersion()
 				if err != nil {
 					return err
 				}

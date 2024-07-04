@@ -61,8 +61,22 @@ func (s *GRPCServer[AppT, T]) Name() string {
 	return "grpc"
 }
 
+func (s *GRPCServer[AppT, T]) Config() any {
+	if s.config == nil || s.config == (&Config{}) {
+		cfg := DefaultConfig()
+		// overwrite the default config with the provided options
+		for _, opt := range s.cfgOptions {
+			opt(cfg)
+		}
+
+		return cfg
+	}
+
+	return s.config
+}
+
 func (s *GRPCServer[AppT, T]) Start(ctx context.Context) error {
-	if !s.Config().(*Config).Enable {
+	if !s.config.Enable {
 		return nil
 	}
 
@@ -89,7 +103,7 @@ func (s *GRPCServer[AppT, T]) Start(ctx context.Context) error {
 }
 
 func (s *GRPCServer[AppT, T]) Stop(ctx context.Context) error {
-	if !s.Config().(*Config).Enable {
+	if !s.config.Enable {
 		return nil
 	}
 
@@ -97,16 +111,4 @@ func (s *GRPCServer[AppT, T]) Stop(ctx context.Context) error {
 	s.grpcSrv.GracefulStop()
 
 	return nil
-}
-
-func (s *GRPCServer[AppT, T]) Config() any {
-	if s.config == nil || s.config == (&Config{}) {
-		cfg := DefaultConfig()
-		// overwrite the default config with the provided options
-		for _, opt := range s.cfgOptions {
-			opt(cfg)
-		}
-	}
-
-	return s.config
 }

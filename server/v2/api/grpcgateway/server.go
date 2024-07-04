@@ -101,7 +101,7 @@ func (s *GRPCGatewayServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.
 }
 
 func (s *GRPCGatewayServer[AppT, T]) Start(ctx context.Context) error {
-	if !s.Config().(*Config).Enable {
+	if !s.config.Enable {
 		return nil
 	}
 
@@ -111,7 +111,7 @@ func (s *GRPCGatewayServer[AppT, T]) Start(ctx context.Context) error {
 }
 
 func (s *GRPCGatewayServer[AppT, T]) Stop(ctx context.Context) error {
-	if !s.Config().(*Config).Enable {
+	if !s.config.Enable {
 		return nil
 	}
 

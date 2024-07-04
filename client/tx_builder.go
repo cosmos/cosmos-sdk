@@ -1,4 +1,4 @@
-package tx
+package client
 
 import (
 	"fmt"
@@ -14,7 +14,6 @@ import (
 	authsign "cosmossdk.io/x/auth/signing"
 	"cosmossdk.io/x/tx/decode"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -24,8 +23,35 @@ import (
 )
 
 var (
-	_ client.TxBuilder          = &builder{}
+	_ TxBuilder                 = &builder{}
 	_ ExtensionOptionsTxBuilder = &builder{}
+)
+
+type (
+	// TxBuilder defines an interface which an application-defined concrete transaction
+	// type must implement. Namely, it must be able to set messages, generate
+	// signatures, and provide canonical bytes to sign over. The transaction must
+	// also know how to encode itself.
+	TxBuilder interface {
+		GetTx() authsign.Tx
+
+		SetMsgs(msgs ...sdk.Msg) error
+		SetSignatures(signatures ...signing.SignatureV2) error
+		SetMemo(memo string)
+		SetFeeAmount(amount sdk.Coins)
+		SetFeePayer(feePayer sdk.AccAddress)
+		SetGasLimit(limit uint64)
+		SetTimeoutHeight(height uint64)
+		SetUnordered(v bool)
+		SetFeeGranter(feeGranter sdk.AccAddress)
+		AddAuxSignerData(tx.AuxSignerData) error
+	}
+
+	// ExtendedTxBuilder extends the TxBuilder interface,
+	// which is used to set extension options to be included in a transaction.
+	ExtendedTxBuilder interface {
+		SetExtensionOptions(extOpts ...*codectypes.Any)
+	}
 )
 
 func newBuilder(addressCodec address.Codec, decoder *decode.Decoder, codec codec.BinaryCodec) *builder {
@@ -211,7 +237,7 @@ func (w *builder) SetSignatures(signatures ...signing.SignatureV2) error {
 			pubKey   *codectypes.Any
 			err      error
 		)
-		modeInfo, rawSigs[i] = SignatureDataToModeInfoAndSig(sig.Data)
+		modeInfo, rawSigs[i] = signatureDataToModeInfoAndSig(sig.Data)
 		if sig.PubKey != nil {
 			pubKey, err = codectypes.NewAnyWithValue(sig.PubKey)
 			if err != nil {
@@ -363,5 +389,48 @@ func fromV2ModeInfo(v2 *txv1beta1.ModeInfo, v1 *tx.ModeInfo) {
 				ModeInfos: modeInfos,
 			},
 		}
+	}
+}
+
+// signatureDataToModeInfoAndSig converts a SignatureData to a ModeInfo and raw bytes signature
+func signatureDataToModeInfoAndSig(data signing.SignatureData) (*tx.ModeInfo, []byte) {
+	if data == nil {
+		return nil, nil
+	}
+
+	switch data := data.(type) {
+	case *signing.SingleSignatureData:
+		return &tx.ModeInfo{
+			Sum: &tx.ModeInfo_Single_{
+				Single: &tx.ModeInfo_Single{Mode: data.SignMode},
+			},
+		}, data.Signature
+	case *signing.MultiSignatureData:
+		n := len(data.Signatures)
+		modeInfos := make([]*tx.ModeInfo, n)
+		sigs := make([][]byte, n)
+
+		for i, d := range data.Signatures {
+			modeInfos[i], sigs[i] = signatureDataToModeInfoAndSig(d)
+		}
+
+		multisig := cryptotypes.MultiSignature{
+			Signatures: sigs,
+		}
+		sig, err := multisig.Marshal()
+		if err != nil {
+			panic(err)
+		}
+
+		return &tx.ModeInfo{
+			Sum: &tx.ModeInfo_Multi_{
+				Multi: &tx.ModeInfo_Multi{
+					Bitarray:  data.BitArray,
+					ModeInfos: modeInfos,
+				},
+			},
+		}, sig
+	default:
+		panic(fmt.Sprintf("unexpected signature data type %T", data))
 	}
 }

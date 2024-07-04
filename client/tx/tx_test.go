@@ -11,7 +11,6 @@ import (
 
 	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/signing"
-	authtx "cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -32,7 +31,7 @@ func newTestTxConfig() (client.TxConfig, codec.Codec) {
 	encodingConfig := moduletestutil.MakeTestEncodingConfig(testutil.CodecOptions{})
 	cdc := codec.NewProtoCodec(encodingConfig.InterfaceRegistry)
 	signingCtx := encodingConfig.InterfaceRegistry.SigningContext()
-	return authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes), encodingConfig.Codec
+	return client.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), client.DefaultSignModes), encodingConfig.Codec
 }
 
 // mockContext is a mock client.Context to return arbitrary simulation response, used to
@@ -392,7 +391,7 @@ func TestPreprocessHook(t *testing.T) {
 	requireT.NoError(err)
 
 	preprocessHook := client.PreprocessTxFn(func(chainID string, key keyring.KeyType, tx client.TxBuilder) error {
-		extensionBuilder, ok := tx.(authtx.ExtensionOptionsTxBuilder)
+		extensionBuilder, ok := tx.(client.ExtensionOptionsTxBuilder)
 		requireT.True(ok)
 
 		// Set new extension and tip

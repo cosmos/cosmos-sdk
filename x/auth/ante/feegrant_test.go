@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/x/auth/ante"
 	authsign "cosmossdk.io/x/auth/signing"
 	"cosmossdk.io/x/auth/testutil"
-	"cosmossdk.io/x/auth/tx"
 	authtypes "cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -147,7 +146,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 			suite := SetupTestSuite(t, false)
 			cdc := codec.NewProtoCodec(suite.encCfg.InterfaceRegistry)
 			signingCtx := suite.encCfg.InterfaceRegistry.SigningContext()
-			protoTxCfg := tx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), tx.DefaultSignModes)
+			protoTxCfg := client.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), client.DefaultSignModes)
 			// this just tests our handler
 			dfd := ante.NewDeductFeeDecorator(suite.accountKeeper, suite.bankKeeper, suite.feeGrantKeeper, nil)
 			feeAnteHandler := sdk.ChainAnteDecorators(dfd)

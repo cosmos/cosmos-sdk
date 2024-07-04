@@ -1,8 +1,6 @@
 package testutil
 
 import (
-	"cosmossdk.io/x/auth/tx"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -31,7 +29,7 @@ func MakeTestEncodingConfig(codecOpt testutil.CodecOptions, modules ...module.Ap
 	encCfg := TestEncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
 		Codec:             cdc,
-		TxConfig:          tx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), tx.DefaultSignModes),
+		TxConfig:          client.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), client.DefaultSignModes),
 		Amino:             aminoCodec,
 	}
 
@@ -48,7 +46,7 @@ func MakeTestTxConfig(codecOpt testutil.CodecOptions) client.TxConfig {
 	interfaceRegistry := codecOpt.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	signingCtx := interfaceRegistry.SigningContext()
-	return tx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), tx.DefaultSignModes)
+	return client.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), client.DefaultSignModes)
 }
 
 type TestBuilderTxConfig struct {

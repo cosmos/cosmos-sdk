@@ -1,18 +1,26 @@
-package testutil
+package client_test
 
 import (
 	"bytes"
 	"context"
+	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	"cosmossdk.io/x/auth/signing"
+	coretransaction "cosmossdk.io/core/transaction"
+	authsigning "cosmossdk.io/x/auth/signing"
+	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -102,7 +110,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 
 	signModeHandler := s.TxConfig.SignModeHandler()
 	s.Require().Contains(signModeHandler.SupportedModes(), signingv1beta1.SignMode_SIGN_MODE_DIRECT)
-	defaultSignMode, err := signing.APISignModeToInternal(s.TxConfig.SignModeHandler().DefaultMode())
+	defaultSignMode, err := authsigning.APISignModeToInternal(s.TxConfig.SignModeHandler().DefaultMode())
 	s.Require().NoError(err)
 
 	// set SignatureV2 without actual signature bytes
@@ -136,27 +144,27 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().NoError(sigTx.ValidateBasic())
 
 	// sign transaction
-	signerData := signing.SignerData{
+	signerData := authsigning.SignerData{
 		Address:       addr.String(),
 		ChainID:       "test",
 		AccountNumber: 1,
 		Sequence:      seq1,
 		PubKey:        pubkey,
 	}
-	signBytes, err := signing.GetSignBytesAdapter(context.Background(),
+	signBytes, err := authsigning.GetSignBytesAdapter(context.Background(),
 		s.TxConfig.SignModeHandler(), defaultSignMode, signerData, sigTx)
 	s.Require().NoError(err)
 	sigBz, err := privKey.Sign(signBytes)
 	s.Require().NoError(err)
 
-	signerData = signing.SignerData{
+	signerData = authsigning.SignerData{
 		Address:       msigAddr.String(),
 		ChainID:       "test",
 		AccountNumber: 3,
 		Sequence:      mseq,
 		PubKey:        multisigPk,
 	}
-	mSignBytes, err := signing.GetSignBytesAdapter(context.Background(),
+	mSignBytes, err := authsigning.GetSignBytesAdapter(context.Background(),
 		s.TxConfig.SignModeHandler(), defaultSignMode, signerData, sigTx)
 	s.Require().NoError(err)
 	mSigBz1, err := privKey.Sign(mSignBytes)
@@ -269,7 +277,7 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	tx2, err := s.TxConfig.TxDecoder()(txBytes)
 
 	s.Require().NoError(err)
-	tx3, ok := tx2.(signing.Tx)
+	tx3, ok := tx2.(authsigning.Tx)
 	s.Require().True(ok)
 	s.Require().Equal([]sdk.Msg{msg}, tx3.GetMsgs())
 	s.Require().Equal(feeAmount, tx3.GetFee())
@@ -290,7 +298,7 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	log("JSON decode transaction")
 	tx2, err = s.TxConfig.TxJSONDecoder()(jsonTxBytes)
 	s.Require().NoError(err)
-	tx3, ok = tx2.(signing.Tx)
+	tx3, ok = tx2.(authsigning.Tx)
 	s.Require().True(ok)
 	s.Require().Equal([]sdk.Msg{msg}, tx3.GetMsgs())
 	s.Require().Equal(feeAmount, tx3.GetFee())
@@ -330,4 +338,56 @@ func (s *TxConfigTestSuite) TestWrapTxBuilder() {
 	tx2Bytes, err := s.TxConfig.TxEncoder()(tx2)
 	s.Require().NoError(err)
 	s.Require().Equal(tx1Bytes, tx2Bytes)
+}
+
+func TestGenerator(t *testing.T) {
+	interfaceRegistry := testutil.CodecOptions{}.NewInterfaceRegistry()
+	std.RegisterInterfaces(interfaceRegistry)
+	interfaceRegistry.RegisterImplementations((*coretransaction.Msg)(nil), &testdata.TestMsg{})
+	protoCodec := codec.NewProtoCodec(interfaceRegistry)
+	signingCtx := protoCodec.InterfaceRegistry().SigningContext()
+	suite.Run(t, NewTxConfigTestSuite(client.NewTxConfig(protoCodec, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), client.DefaultSignModes)))
+}
+
+func TestConfigOptions(t *testing.T) {
+	interfaceRegistry := testutil.CodecOptions{}.NewInterfaceRegistry()
+	protoCodec := codec.NewProtoCodec(interfaceRegistry)
+	configOptions := client.ConfigOptions{SigningOptions: &signing.Options{
+		AddressCodec:          interfaceRegistry.SigningContext().AddressCodec(),
+		ValidatorAddressCodec: interfaceRegistry.SigningContext().ValidatorAddressCodec(),
+	}}
+	txConfig, err := client.NewTxConfigWithOptions(protoCodec, configOptions)
+	require.NoError(t, err)
+	require.NotNil(t, txConfig)
+	handler := txConfig.SignModeHandler()
+	require.NotNil(t, handler)
+}
+
+func TestDecodeMultisignatures(t *testing.T) {
+	testSigs := [][]byte{
+		[]byte("dummy1"),
+		[]byte("dummy2"),
+		[]byte("dummy3"),
+	}
+
+	badMultisig := testdata.BadMultiSignature{
+		Signatures:     testSigs,
+		MaliciousField: []byte("bad stuff..."),
+	}
+	bz, err := badMultisig.Marshal()
+	require.NoError(t, err)
+
+	_, err = client.DecodeMultisignatures(bz)
+	require.Error(t, err)
+
+	goodMultisig := cryptotypes.MultiSignature{
+		Signatures: testSigs,
+	}
+	bz, err = goodMultisig.Marshal()
+	require.NoError(t, err)
+
+	decodedSigs, err := client.DecodeMultisignatures(bz)
+	require.NoError(t, err)
+
+	require.Equal(t, testSigs, decodedSigs)
 }

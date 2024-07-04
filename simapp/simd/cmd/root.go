@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
-	"cosmossdk.io/x/auth/tx"
 	authtxconfig "cosmossdk.io/x/auth/tx/config"
 	"cosmossdk.io/x/auth/types"
 	txsigning "cosmossdk.io/x/tx/signing"
@@ -78,8 +77,8 @@ func NewRootCmd() *cobra.Command {
 			// sets the RPC client needed for SIGN_MODE_TEXTUAL. This sign mode
 			// is only available if the client is online.
 			if !initClientCtx.Offline {
-				enabledSignModes := append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
-				txConfigOpts := tx.ConfigOptions{
+				enabledSignModes := append(client.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
+				txConfigOpts := client.ConfigOptions{
 					EnabledSignModes:           enabledSignModes,
 					TextualCoinMetadataQueryFn: authtxconfig.NewGRPCCoinMetadataQueryFn(initClientCtx),
 					SigningOptions: &txsigning.Options{
@@ -87,7 +86,7 @@ func NewRootCmd() *cobra.Command {
 						ValidatorAddressCodec: initClientCtx.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
 					},
 				}
-				txConfig, err := tx.NewTxConfigWithOptions(
+				txConfig, err := client.NewTxConfigWithOptions(
 					initClientCtx.Codec,
 					txConfigOpts,
 				)

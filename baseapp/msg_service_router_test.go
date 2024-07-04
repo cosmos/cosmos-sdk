@@ -11,8 +11,8 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	authsigning "cosmossdk.io/x/auth/signing"
-	authtx "cosmossdk.io/x/auth/tx"
 
+	authtx "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

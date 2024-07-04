@@ -18,7 +18,6 @@ import (
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/posthandler"
-	"cosmossdk.io/x/auth/tx"
 	authtypes "cosmossdk.io/x/auth/types"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/textual"
@@ -60,7 +59,7 @@ type ModuleOutputs struct {
 	depinject.Out
 
 	TxConfig        client.TxConfig
-	TxConfigOptions tx.ConfigOptions
+	TxConfigOptions client.ConfigOptions
 	BaseAppOption   runtime.BaseAppOption // This is only useful for chains using baseapp. Server/v2 chains use TxValidator.
 }
 
@@ -74,8 +73,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		customSignModeHandlers = in.CustomSignModeHandlers()
 	}
 
-	txConfigOptions := tx.ConfigOptions{
-		EnabledSignModes: tx.DefaultSignModes,
+	txConfigOptions := client.ConfigOptions{
+		EnabledSignModes: client.DefaultSignModes,
 		SigningOptions: &txsigning.Options{
 			FileResolver:          in.ProtoFileResolver,
 			AddressCodec:          in.AddressCodec,
@@ -95,7 +94,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		txConfigOptions.TextualCoinMetadataQueryFn = NewBankKeeperCoinMetadataQueryFn(in.MetadataBankKeeper)
 	}
 
-	txConfig, err := tx.NewTxConfigWithOptions(in.Codec, txConfigOptions)
+	txConfig, err := client.NewTxConfigWithOptions(in.Codec, txConfigOptions)
 	if err != nil {
 		panic(err)
 	}

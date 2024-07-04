@@ -15,47 +15,12 @@ sidebar_position: 1
 
 This document specifies the `x/auth/tx` package of the Cosmos SDK.
 
-This package represents the Cosmos SDK implementation of the `client.TxConfig`, `client.TxBuilder`, `client.TxEncoder` and `client.TxDecoder` interfaces.
 
 ## Contents
 
-* [Transactions](#transactions)
-    * [`TxConfig`](#txconfig)
-    * [`TxBuilder`](#txbuilder)
-    * [`TxEncoder`/ `TxDecoder`](#txencoder-txdecoder)
 * [Client](#client)
     * [CLI](#cli)
     * [gRPC](#grpc)
-
-## Transactions
-
-### `TxConfig`
-
-`client.TxConfig` defines an interface a client can utilize to generate an application-defined concrete transaction type.
-The interface defines a set of methods for creating a `client.TxBuilder`.
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/client/tx_config.go#L25-L31
-```
-
-The default implementation of `client.TxConfig` is instantiated by `NewTxConfig` in `x/auth/tx` module.
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/auth/tx/config.go#L22-L28
-```
-
-### `TxBuilder`
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/client/tx_config.go#L33-L50
-```
-
-The [`client.TxBuilder`](https://docs.cosmos.network/main/core/transactions#transaction-generation) interface is as well implemented by `x/auth/tx`.
-A `client.TxBuilder` can be accessed with `TxConfig.NewTxBuilder()`.  
-
-### `TxEncoder`/ `TxDecoder`
-
-More information about `TxEncoder` and `TxDecoder` can be found [here](https://docs.cosmos.network/main/core/encoding#transaction-encoding).
 
 ## Client
 

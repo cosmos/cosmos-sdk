@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/simapp/v2"
-	"cosmossdk.io/x/auth/tx"
 	authtxconfig "cosmossdk.io/x/auth/tx/config"
 	"cosmossdk.io/x/auth/types"
 
@@ -92,7 +91,7 @@ func NewRootCmd[AppT serverv2.AppI[T], T transaction.Tx]() *cobra.Command {
 func ProvideClientContext(
 	appCodec codec.Codec,
 	interfaceRegistry codectypes.InterfaceRegistry,
-	txConfigOpts tx.ConfigOptions,
+	txConfigOpts client.ConfigOptions,
 	legacyAmino legacy.Amino,
 	addressCodec address.Codec,
 	validatorAddressCodec address.ValidatorAddressCodec,
@@ -126,7 +125,7 @@ func ProvideClientContext(
 
 	// textual is enabled by default, we need to re-create the tx config grpc instead of bank keeper.
 	txConfigOpts.TextualCoinMetadataQueryFn = authtxconfig.NewGRPCCoinMetadataQueryFn(clientCtx)
-	txConfig, err := tx.NewTxConfigWithOptions(clientCtx.Codec, txConfigOpts)
+	txConfig, err := client.NewTxConfigWithOptions(clientCtx.Codec, txConfigOpts)
 	if err != nil {
 		panic(err)
 	}

@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/x/auth/ante"
-	"cosmossdk.io/x/auth/tx"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,7 +37,7 @@ func TestRejectExtensionOptionsDecorator(t *testing.T) {
 			_, err := antehandler(suite.ctx, theTx, false)
 			require.NoError(t, err)
 
-			extOptsTxBldr, ok := txBuilder.(tx.ExtensionOptionsTxBuilder)
+			extOptsTxBldr, ok := txBuilder.(client.ExtensionOptionsTxBuilder)
 			if !ok {
 				// if we can't set extension options, this decorator doesn't apply and we're done
 				return

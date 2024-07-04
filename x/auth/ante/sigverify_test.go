@@ -12,11 +12,11 @@ import (
 	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/migrations/legacytx"
 	authsign "cosmossdk.io/x/auth/signing"
-	authtx "cosmossdk.io/x/auth/tx"
 	txmodule "cosmossdk.io/x/auth/tx/config"
 	"cosmossdk.io/x/auth/types"
 	txsigning "cosmossdk.io/x/tx/signing"
 
+	authtx "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"

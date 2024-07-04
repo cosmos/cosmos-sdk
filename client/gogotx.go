@@ -1,4 +1,4 @@
-package tx
+package client
 
 import (
 	"fmt"
@@ -9,21 +9,19 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/auth/ante"
 	authsigning "cosmossdk.io/x/auth/signing"
 	"cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -102,14 +100,11 @@ type gogoTxWrapper struct {
 
 func (w *gogoTxWrapper) String() string { return w.Tx.String() }
 
-var (
-	_ authsigning.Tx             = &gogoTxWrapper{}
-	_ ante.HasExtensionOptionsTx = &gogoTxWrapper{}
-)
+var _ authsigning.Tx = &gogoTxWrapper{}
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
 type ExtensionOptionsTxBuilder interface {
-	client.TxBuilder
+	TxBuilder
 
 	SetExtensionOptions(...*codectypes.Any)
 	SetNonCriticalExtensionOptions(...*codectypes.Any)
@@ -199,7 +194,7 @@ func (w *gogoTxWrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 			}
 		} else {
 			var err error
-			sigData, err := ModeInfoAndSigToSignatureData(si.ModeInfo, sigs[i])
+			sigData, err := modeInfoAndSigToSignatureData(si.ModeInfo, sigs[i])
 			if err != nil {
 				return nil, err
 			}
@@ -236,33 +231,6 @@ func (w *gogoTxWrapper) GetNonCriticalExtensionOptions() []*codectypes.Any {
 	return intoAnyV1(w.Tx.Body.NonCriticalExtensionOptions)
 }
 
-func (w *gogoTxWrapper) AsTx() (*txtypes.Tx, error) {
-	body := new(txtypes.TxBody)
-	authInfo := new(txtypes.AuthInfo)
-
-	err := w.cdc.Unmarshal(w.TxRaw.BodyBytes, body)
-	if err != nil {
-		return nil, err
-	}
-	err = w.cdc.Unmarshal(w.TxRaw.AuthInfoBytes, authInfo)
-	if err != nil {
-		return nil, err
-	}
-	return &txtypes.Tx{
-		Body:       body,
-		AuthInfo:   authInfo,
-		Signatures: w.TxRaw.Signatures,
-	}, nil
-}
-
-func (w *gogoTxWrapper) AsTxRaw() (*txtypes.TxRaw, error) {
-	return &txtypes.TxRaw{
-		BodyBytes:     w.TxRaw.BodyBytes,
-		AuthInfoBytes: w.TxRaw.AuthInfoBytes,
-		Signatures:    w.TxRaw.Signatures,
-	}, nil
-}
-
 func intoAnyV1(v2s []*anypb.Any) []*codectypes.Any {
 	v1s := make([]*codectypes.Any, len(v2s))
 	for i, v2 := range v2s {
@@ -289,4 +257,59 @@ func decodeFromAny(cdc codec.BinaryCodec, anyPB *anypb.Any) (proto.Message, erro
 		return nil, err
 	}
 	return v1, nil
+}
+
+// modeInfoAndSigToSignatureData converts a ModeInfo and raw bytes signature to a SignatureData or returns
+// an error
+func modeInfoAndSigToSignatureData(modeInfoPb *txv1beta1.ModeInfo, sig []byte) (signing.SignatureData, error) {
+	switch modeInfo := modeInfoPb.Sum.(type) {
+	case *txv1beta1.ModeInfo_Single_:
+		return &signing.SingleSignatureData{
+			SignMode:  signing.SignMode(modeInfo.Single.Mode),
+			Signature: sig,
+		}, nil
+
+	case *txv1beta1.ModeInfo_Multi_:
+		multi := modeInfo.Multi
+
+		sigs, err := DecodeMultisignatures(sig)
+		if err != nil {
+			return nil, err
+		}
+
+		sigv2s := make([]signing.SignatureData, len(sigs))
+		for i, mi := range multi.ModeInfos {
+			sigv2s[i], err = modeInfoAndSigToSignatureData(mi, sigs[i])
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return &signing.MultiSignatureData{
+			BitArray: &cryptotypes.CompactBitArray{
+				ExtraBitsStored: multi.Bitarray.ExtraBitsStored,
+				Elems:           multi.Bitarray.Elems,
+			},
+			Signatures: sigv2s,
+		}, nil
+
+	default:
+		panic(fmt.Errorf("unexpected ModeInfo data type %T", modeInfo))
+	}
+}
+
+// DecodeMultisignatures safely decodes the raw bytes as a MultiSignature protobuf message
+func DecodeMultisignatures(bz []byte) ([][]byte, error) {
+	multisig := cryptotypes.MultiSignature{}
+	err := multisig.Unmarshal(bz)
+	if err != nil {
+		return nil, err
+	}
+	// NOTE: it is import to reject multi-signatures that contain unrecognized fields because this is an exploitable
+	// malleability in the protobuf message. Basically an attacker could bloat a MultiSignature message with unknown
+	// fields, thus bloating the transaction and causing it to fail.
+	if len(multisig.XXX_unrecognized) > 0 {
+		return nil, fmt.Errorf("rejecting unrecognized fields found in MultiSignature")
+	}
+	return multisig.Signatures, nil
 }

@@ -20,7 +20,7 @@ type jsonMessageFlagType struct {
 	messageDesc protoreflect.MessageDescriptor
 }
 
-func (j jsonMessageFlagType) NewValue(_ context.Context, builder *Builder) Value {
+func (j jsonMessageFlagType) NewValue(_ *context.Context, builder *Builder) Value {
 	return &jsonMessageFlagValue{
 		messageType:          util.ResolveMessageType(builder.TypeResolver, j.messageDesc),
 		jsonMarshalOptions:   protojson.MarshalOptions{Resolver: builder.TypeResolver},

@@ -26,6 +26,14 @@ type Store interface {
 	// state. Must error when the version does not exist.
 	StateAt(version uint64) (store.ReaderMap, error)
 
+	// SetInitialVersion sets the initial version of the store.
+	SetInitialVersion(uint64) error
+
+	// WorkingHash writes the provided changeset to the state and returns
+	// the working hash of the state.
+	WorkingHash(changeset *store.Changeset) (store.Hash, error)
+
+	// Commit commits the provided changeset and returns the new state root of the state.
 	Commit(changeset *store.Changeset) (store.Hash, error)
 
 	// Query is a key/value query directly to the underlying database. This skips the appmanager

@@ -16,7 +16,6 @@ import (
 	"cosmossdk.io/math"
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
-	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -124,22 +123,22 @@ func appStateFnWithExtendedCbs(
 			panic(err)
 		}
 
-		stakingStateBz, ok := rawState[stakingtypes.ModuleName]
+		stakingStateBz, ok := rawState[testutil.StakingModuleName]
 		if !ok {
 			panic("staking genesis state is missing")
 		}
 
-		stakingState := new(stakingtypes.GenesisState)
-		if err = cdc.UnmarshalJSON(stakingStateBz, stakingState); err != nil {
+		stakingState := new(StakingGenesisState)
+		if err = json.Unmarshal(stakingStateBz, stakingState); err != nil {
 			panic(err)
 		}
 		// compute not bonded balance
 		notBondedTokens := math.ZeroInt()
 		for _, val := range stakingState.Validators {
-			if val.Status != stakingtypes.Unbonded {
+			if val.Status != 1 { // unbonded
 				continue
 			}
-			notBondedTokens = notBondedTokens.Add(val.GetTokens())
+			notBondedTokens = notBondedTokens.Add(val.Tokens)
 		}
 		notBondedCoins := sdk.NewCoin(stakingState.Params.BondDenom, notBondedTokens)
 		// edit bank state to make it have the not bonded pool tokens
@@ -152,7 +151,7 @@ func appStateFnWithExtendedCbs(
 			panic(err)
 		}
 
-		stakingAddr := authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName).String()
+		stakingAddr := authtypes.NewModuleAddress(StakingNotBondedPoolName).String()
 		var found bool
 		for _, balance := range bankState.Balances {
 			if balance.Address == stakingAddr {
@@ -169,7 +168,7 @@ func appStateFnWithExtendedCbs(
 
 		// change appState back
 		for name, state := range map[string]proto.Message{
-			stakingtypes.ModuleName: stakingState,
+			// stakingtypes.ModuleName: stakingState, TODO(@julienrbrt) uncomment (!)
 			testutil.BankModuleName: bankState,
 		} {
 			if moduleStateCb != nil {

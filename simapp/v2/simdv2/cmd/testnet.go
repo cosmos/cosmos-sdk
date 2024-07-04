@@ -32,6 +32,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+
 	// srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -204,11 +205,8 @@ func initTestnetFiles[T transaction.Tx](
 	inBuf := bufio.NewReader(cmd.InOrStdin())
 	// generate private keys, node IDs, and initial transactions
 	for i := 0; i < args.numValidators; i++ {
-
-		cometServer := cometbft.New[serverv2.AppI[T], T](&temporaryTxDecoder[T]{clientCtx.TxConfig}, cometbft.ServerOptions[T]{})
-		grpcServer := grpc.New[serverv2.AppI[T], T]()
-
 		var portOffset int
+		var grpcConfig *grpc.Config
 		if args.singleMachine {
 			portOffset = i
 			p2pPortStart = 16656 // use different start point to not conflict with rpc port
@@ -216,15 +214,12 @@ func initTestnetFiles[T transaction.Tx](
 			nodeConfig.P2P.PexReactor = false
 			nodeConfig.P2P.AllowDuplicateIP = true
 
-			// Set grpc addr
-			grpcServer.SetConfig(&grpc.Config{
+			grpcConfig = &grpc.Config{
 				Enable:         true,
 				Address:        fmt.Sprintf("127.0.0.1:%d", grpcPort+portOffset),
 				MaxRecvMsgSize: grpc.DefaultConfig().MaxRecvMsgSize,
 				MaxSendMsgSize: grpc.DefaultConfig().MaxSendMsgSize,
-			})
-			// appConfig.API.Address = fmt.Sprintf("tcp://127.0.0.1:%d", apiPort+portOffset)
-			// appConfig.GRPC.Address = fmt.Sprintf("127.0.0.1:%d", grpcPort+portOffset)
+			}
 		}
 
 		nodeDirName := fmt.Sprintf("%s%d", args.nodeDirPrefix, i)
@@ -348,20 +343,11 @@ func initTestnetFiles[T transaction.Tx](
 			return err
 		}
 
-		// if err := srvconfig.SetConfigTemplate(srvconfig.DefaultConfigTemplate); err != nil {
-		// 	return err
-		// }
-
-		// cmd.PrintErrf("node Dir", nodeDir)
-
-		// if err := srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), appConfig); err != nil {
-		// 	return err
-		// }
-
+		// Write server config
+		cometServer := cometbft.New[serverv2.AppI[T], T](&temporaryTxDecoder[T]{clientCtx.TxConfig}, cometbft.ServerOptions[T]{}, cometbft.OverwriteDefaultCometConfig(nodeConfig))
+		grpcServer := grpc.New[serverv2.AppI[T], T](grpc.OverwriteDefaultConfig(grpcConfig))
 		server := serverv2.NewServer(log.NewNopLogger(), cometServer, grpcServer)
 		server.WriteConfig(filepath.Join(nodeDir, "config"))
-
-		cmd.Println("Cai l gi day")
 	}
 
 	if err := initGenFiles(clientCtx, mm, args.chainID, genAccounts, genBalances, genFiles, args.numValidators); err != nil {

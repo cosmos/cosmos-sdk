@@ -84,7 +84,7 @@ func (s *CometBFTServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Log
 }
 
 func (s *CometBFTServer[AppT, T]) Name() string {
-	return "cometbft-server"
+	return "comet"
 }
 
 func (s *CometBFTServer[AppT, T]) Start(ctx context.Context) error {

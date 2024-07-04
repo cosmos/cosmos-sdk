@@ -4,11 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
-	"net"
 
 	corectx "cosmossdk.io/core/context"
 	corelog "cosmossdk.io/core/log"

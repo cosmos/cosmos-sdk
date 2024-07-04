@@ -66,6 +66,7 @@ func (m *MetadataStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo)
 	}
 
 	batch := m.kv.NewBatch()
+	defer batch.Close()
 	cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
 	value, err := cInfo.Marshal()
 	if err != nil {
@@ -87,7 +88,7 @@ func (m *MetadataStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo)
 	if err := batch.WriteSync(); err != nil {
 		return err
 	}
-	return batch.Close()
+	return nil
 }
 
 func (m *MetadataStore) deleteCommitInfo(version uint64) error {

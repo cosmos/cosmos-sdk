@@ -87,6 +87,7 @@ func (s *Snapshotter) restore(height uint64, payloadReader snapshot.ExtensionPay
 		// and let it be purge during purge loop
 		if timestamp != 0 {
 			s.m.AddTimestamp(txHash, time.Unix(int64(timestamp), 0))
+			i += chunkSize
 			continue
 		}
 
@@ -94,7 +95,6 @@ func (s *Snapshotter) restore(height uint64, payloadReader snapshot.ExtensionPay
 		if height < ttl {
 			// only add unordered transactions that are still valid, i.e. unexpired
 			s.m.Add(txHash, ttl)
-			i += chunkSize
 		}
 
 		i += chunkSize

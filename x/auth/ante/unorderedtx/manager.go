@@ -153,7 +153,7 @@ func (m *Manager) OnInit() error {
 
 	var (
 		r   = bufio.NewReader(f)
-		buf = make([]byte, newChukSize)
+		buf = make([]byte, chunkSize)
 	)
 	for {
 		n, err := io.ReadFull(r, buf)
@@ -171,8 +171,8 @@ func (m *Manager) OnInit() error {
 		var txHash TxHash
 		copy(txHash[:], buf[:txHashSize])
 
-		blockHeight := binary.BigEndian.Uint64(buf[txHashSize : txHashSize+ttlSize])
-		timeStamp := binary.BigEndian.Uint64(buf[txHashSize+ttlSize:])
+		blockHeight := binary.BigEndian.Uint64(buf[txHashSize : txHashSize+heightSize])
+		timeStamp := binary.BigEndian.Uint64(buf[txHashSize+heightSize:])
 
 		// if not zero value
 		if timeStamp != 0 {
@@ -346,19 +346,19 @@ func (m *Manager) batchReceive() (uint64, time.Time, bool) {
 }
 
 func unorderedTxToBytes(txHash TxHash, ttl uint64, isBlockHeight bool) []byte {
-	chunk := make([]byte, newChukSize)
+	chunk := make([]byte, chunkSize)
 	copy(chunk[:txHashSize], txHash[:])
 
-	ttlBz := make([]byte, ttlSize)
+	ttlBz := make([]byte, heightSize)
 	binary.BigEndian.PutUint64(ttlBz, ttl)
 	emptyBz := make([]byte, 8)
 	binary.BigEndian.PutUint64(emptyBz, 0)
 	if isBlockHeight {
 		copy(chunk[txHashSize+ttl:], emptyBz)
-		copy(chunk[txHashSize:txHashSize+ttlSize], ttlBz)
+		copy(chunk[txHashSize:txHashSize+heightSize], ttlBz)
 	} else {
-		copy(chunk[txHashSize+ttlSize:], ttlBz)
-		copy(chunk[txHashSize:txHashSize+ttlSize], emptyBz)
+		copy(chunk[txHashSize+heightSize:], ttlBz)
+		copy(chunk[txHashSize:txHashSize+heightSize], emptyBz)
 	}
 
 	return chunk

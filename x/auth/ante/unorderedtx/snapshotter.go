@@ -11,10 +11,9 @@ import (
 
 const (
 	txHashSize  = 32
-	ttlSize     = 8
+	heightSize  = 8
 	timeoutSize = 8
-	chunkSize   = txHashSize + ttlSize
-	newChukSize = txHashSize + ttlSize + timeoutSize
+	chunkSize   = txHashSize + heightSize + timeoutSize
 )
 
 var _ snapshot.ExtensionSnapshotter = &Snapshotter{}
@@ -72,7 +71,7 @@ func (s *Snapshotter) restore(height uint64, payloadReader snapshot.ExtensionPay
 		return err
 	}
 
-	if len(payload)%newChukSize != 0 {
+	if len(payload)%chunkSize != 0 {
 		return errors.New("invalid unordered txs payload length")
 	}
 

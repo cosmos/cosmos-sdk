@@ -41,16 +41,18 @@ type CometBFTServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
 	Node      *node.Node
 	Consensus *Consensus[T]
 
-	initTxCodec transaction.Codec[T]
-	logger      log.Logger
-	config      Config
-	options     ServerOptions[T]
+	initTxCodec      transaction.Codec[T]
+	logger           log.Logger
+	config           Config
+	options          ServerOptions[T]
+	cmtConfigOptions []CmtCfgOption
 }
 
-func New[AppT serverv2.AppI[T], T transaction.Tx](txCodec transaction.Codec[T], options ServerOptions[T]) *CometBFTServer[AppT, T] {
+func New[AppT serverv2.AppI[T], T transaction.Tx](txCodec transaction.Codec[T], options ServerOptions[T], cfgOptions ...CmtCfgOption) *CometBFTServer[AppT, T] {
 	return &CometBFTServer[AppT, T]{
-		initTxCodec: txCodec,
-		options:     options,
+		initTxCodec:      txCodec,
+		options:          options,
+		cmtConfigOptions: cfgOptions,
 	}
 }
 
@@ -208,6 +210,10 @@ func (s *CometBFTServer[AppT, T]) CLICommands() serverv2.CLIConfig {
 
 func (s *CometBFTServer[AppT, T]) WriteDefaultConfigAt(configPath string) error {
 	cometConfig := cmtcfg.DefaultConfig()
+	for _, opt := range s.cmtConfigOptions {
+		opt(cometConfig)
+	}
+
 	cmtcfg.WriteConfigFile(filepath.Join(configPath, "config.toml"), cometConfig)
 	return nil
 }

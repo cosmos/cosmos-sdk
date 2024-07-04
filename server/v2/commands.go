@@ -52,17 +52,7 @@ func Commands[AppT AppI[T], T transaction.Tx](
 		Use:   "start",
 		Short: "Run the application",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			home, err := cmd.Flags().GetString(FlagHome)
-			if err != nil {
-				return err
-			}
-			// Read server config from home flag
-			// then bind cmd flags later
-			v, err := ReadConfig(filepath.Join(home, "config"))
-			if err != nil {
-				return err
-			}
-
+			v := GetViperFromCmd(cmd)
 			l := GetLoggerFromCmd(cmd)
 
 			for _, startFlags := range flags {

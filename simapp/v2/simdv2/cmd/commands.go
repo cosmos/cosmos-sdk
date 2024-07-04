@@ -101,7 +101,6 @@ func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
-		server.StatusCommand(),
 		genesisCommand[T](txConfig, moduleManager, appExport[T]),
 		queryCommand(),
 		txCommand(),

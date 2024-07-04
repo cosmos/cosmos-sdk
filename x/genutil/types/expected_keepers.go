@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	bankexported "cosmossdk.io/x/bank/exported"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"

@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/decoding"
-	"cosmossdk.io/schema/log"
+	"cosmossdk.io/schema/logutil"
 )
 
 type Options struct {
@@ -14,12 +14,12 @@ type Options struct {
 	Options    map[string]interface{}
 	Resolver   decoding.DecoderResolver
 	SyncSource decoding.SyncSource
-	Logger     log.Logger
+	Logger     logutil.Logger
 }
 
 func Start(opts Options) (appdata.Listener, error) {
 	if opts.Logger == nil {
-		opts.Logger = log.NoopLogger{}
+		opts.Logger = logutil.NoopLogger{}
 	}
 
 	opts.Logger.Info("Starting Indexer Manager")
@@ -62,9 +62,9 @@ func Start(opts Options) (appdata.Listener, error) {
 		// TODO handle last block persisted
 	}
 
-	return decoding.Middleware(appdata.AsyncListenerMux(indexers, 1024, ctx.Done()), decoding.Options{
-		DecoderResolver: opts.Resolver,
-		SyncSource:      opts.SyncSource,
-		Logger:          opts.Logger,
-	})
+	return decoding.Middleware(
+		appdata.AsyncListenerMux(indexers, 1024, ctx.Done()),
+		opts.Resolver,
+		decoding.MiddlewareOptions{},
+	)
 }

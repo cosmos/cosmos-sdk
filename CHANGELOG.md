@@ -213,6 +213,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Improvements
 
+* (client) [#20876](https://github.com/cosmos/cosmos-sdk/pull/20876) Refactor transaction configuration to use client.NewTxConfig instead of authtx.NewTxConfig.
 * (debug) [#20328](https://github.com/cosmos/cosmos-sdk/pull/20328) Add consensus address for debug cmd.
 * (runtime) [#20264](https://github.com/cosmos/cosmos-sdk/pull/20264) Expose grpc query router via depinject.
 * (x/consensus) [#20381](https://github.com/cosmos/cosmos-sdk/pull/20381) Use Comet utility for consensus module consensus param updates.

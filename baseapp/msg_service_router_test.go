@@ -12,7 +12,7 @@ import (
 	"cosmossdk.io/log"
 	authsigning "cosmossdk.io/x/auth/signing"
 
-	authtx "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -139,7 +139,7 @@ func TestMsgService(t *testing.T) {
 	signingCtx := interfaceRegistry.SigningContext()
 
 	// patch in TxConfig instead of using an output from x/auth/tx
-	txConfig := authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
+	txConfig := client.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), client.DefaultSignModes)
 	// set the TxDecoder in the BaseApp for minimal tx simulations
 	app.SetTxDecoder(txConfig.TxDecoder())
 

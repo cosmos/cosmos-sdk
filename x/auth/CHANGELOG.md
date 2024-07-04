@@ -44,6 +44,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#20876](https://github.com/cosmos/cosmos-sdk/pull/20876) Refactor of auth/tx:
+  * Removed `NewTxConfig`, `NewSigningOptions`, `NewTxConfigWithOptions`, and `NewSigningHandlerMap` from `auth/tx`.
+  * Moved `NewSignModeLegacyAminoJSONHandler` to `auth/signing`, now requires a `x/tx` decoder.
 * [#19447](https://github.com/cosmos/cosmos-sdk/pull/19447) Address and validator address codecs are now arguments of `NewTxConfig`. `NewDefaultSigningOptions` has been replaced with `NewSigningOptions` which takes address and validator address codecs as arguments.
 * [#17985](https://github.com/cosmos/cosmos-sdk/pull/17985) Remove `StdTxConfig`
 * [#19161](https://github.com/cosmos/cosmos-sdk/pull/19161) Remove `simulate` from `SetGasMeter`

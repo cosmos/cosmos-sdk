@@ -38,8 +38,8 @@ type CfgOption func(*Config)
 
 // OverwriteDefaultConfig overwrites the default config with the new config.
 func OverwriteDefaultConfig(newCfg *Config) CfgOption {
-	return func(cfg *Config) { // nolint:staticcheck // We want to overwrite everything
-		cfg = newCfg // nolint:ineffassign,staticcheck // We want to overwrite everything
+	return func(cfg *Config) {
+		*cfg = *newCfg
 	}
 }
 

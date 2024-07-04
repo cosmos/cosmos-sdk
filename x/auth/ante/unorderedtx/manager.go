@@ -175,12 +175,12 @@ func (m *Manager) OnInit() error {
 		timeStamp := binary.BigEndian.Uint64(buf[txHashSize+ttlSize:])
 
 		// if not zero value
-		if blockHeight != 0 {
-			m.Add(txHash, blockHeight)
+		if timeStamp != 0 {
+			m.AddTimestamp(txHash, time.Unix(int64(timeStamp), 0))
 			continue
 		}
 
-		m.AddTimestamp(txHash, time.Unix(int64(timeStamp), 0))
+		m.Add(txHash, blockHeight)
 	}
 
 	return nil
@@ -210,6 +210,21 @@ func (m *Manager) exportSnapshot(height uint64, snapshotWriter func([]byte) erro
 		}
 
 		chunk := unorderedTxToBytes(txHash, ttl, true)
+
+		if _, err := w.Write(chunk); err != nil {
+			return fmt.Errorf("failed to write unordered tx to buffer: %w", err)
+		}
+	}
+
+	keys = maps.Keys(m.txHashesTimestamp)
+	sort.Slice(keys, func(i, j int) bool { return bytes.Compare(keys[i][:], keys[j][:]) < 0 })
+
+	for _, txHash := range keys {
+		timestamp := m.txHashesTimestamp[txHash]
+
+		// right now we dont have access block time at this flow, so we would just include the expired txs
+		// and let it be purge during purge loop
+		chunk := unorderedTxToBytes(txHash, uint64(timestamp.Unix()), false)
 
 		if _, err := w.Write(chunk); err != nil {
 			return fmt.Errorf("failed to write unordered tx to buffer: %w", err)

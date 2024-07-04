@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"time"
 
 	snapshot "cosmossdk.io/store/snapshots/types"
 )
@@ -71,7 +72,7 @@ func (s *Snapshotter) restore(height uint64, payloadReader snapshot.ExtensionPay
 		return err
 	}
 
-	if len(payload)%chunkSize != 0 {
+	if len(payload)%newChukSize != 0 {
 		return errors.New("invalid unordered txs payload length")
 	}
 
@@ -80,11 +81,21 @@ func (s *Snapshotter) restore(height uint64, payloadReader snapshot.ExtensionPay
 		var txHash TxHash
 		copy(txHash[:], payload[i:i+txHashSize])
 
-		ttl := binary.BigEndian.Uint64(payload[i+txHashSize : i+chunkSize])
+		ttl := binary.BigEndian.Uint64(payload[i+txHashSize : i+txHashSize+timeoutSize])
 
-		if height < ttl {
+		if ttl != 0 && height < ttl {
 			// only add unordered transactions that are still valid, i.e. unexpired
 			s.m.Add(txHash, ttl)
+			i += chunkSize
+			continue
+		}
+
+		timestamp := binary.BigEndian.Uint64(payload[i+txHashSize+timeoutSize : i+chunkSize])
+		// need to come up with a way to fetch blocktime to filter out expired txs
+		if timestamp != 0 {
+			// right now we dont have access block time at this flow, so we would just include the expired txs
+			// and let it be purge during purge loop
+			s.m.AddTimestamp(txHash, time.Unix(int64(timestamp), 0))
 		}
 
 		i += chunkSize

@@ -119,12 +119,14 @@ func TestUnorderedTxManager_Flow(t *testing.T) {
 		defer ticker.Stop()
 
 		var (
-			height uint64 = 1
-			i             = 101
+			height    uint64    = 1
+			timestamp time.Time = time.Now()
+			i                   = 101
 		)
-		for range ticker.C {
-			txm.OnNewBlock(height)
+		for time := range ticker.C {
+			txm.OnNewBlock(height, timestamp)
 			height++
+			timestamp = time
 
 			if height > 51 {
 				doneBlockCh <- true

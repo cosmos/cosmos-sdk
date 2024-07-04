@@ -9,9 +9,11 @@ import (
 )
 
 const (
-	txHashSize = 32
-	ttlSize    = 8
-	chunkSize  = txHashSize + ttlSize
+	txHashSize  = 32
+	ttlSize     = 8
+	timeoutSize = 8
+	chunkSize   = txHashSize + ttlSize
+	newChukSize = txHashSize + ttlSize + timeoutSize
 )
 
 var _ snapshot.ExtensionSnapshotter = &Snapshotter{}

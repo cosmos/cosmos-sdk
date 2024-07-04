@@ -113,6 +113,7 @@ func (b *builder) GetSigningTxData() (txsigning.TxData, error) {
 		Messages:                    msgs,
 		Memo:                        body.Memo,
 		TimeoutHeight:               body.TimeoutHeight,
+		TimeoutTimestamp:            body.TimeoutTimestamp,
 		ExtensionOptions:            extOptions,
 		NonCriticalExtensionOptions: nonCriticalExtOptions,
 	}

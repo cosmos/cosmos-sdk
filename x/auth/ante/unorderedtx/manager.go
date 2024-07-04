@@ -33,11 +33,16 @@ const (
 // TxHash defines a transaction hash type alias, which is a fixed array of 32 bytes.
 type TxHash [32]byte
 
+type blockInfo struct {
+	blockHeight uint64
+	blockTime   time.Time
+}
+
 // Manager contains the tx hash dictionary for duplicates checking, and expire
 // them when block production progresses.
 type Manager struct {
 	// blockCh defines a channel to receive newly committed block heights
-	blockCh chan uint64
+	blockCh chan blockInfo
 	// doneCh allows us to ensure the purgeLoop has gracefully terminated prior to closing
 	doneCh chan struct{}
 
@@ -52,10 +57,15 @@ type Manager struct {
 	dataDir string
 
 	mu sync.RWMutex
-	// txHashes defines a map from tx hash -> TTL value, which is used for duplicate
+	// txHashesBlockHeight defines a map from tx hash -> TTL value defined as block height, which is used for duplicate
 	// checking and replay protection, as well as purging the map when the TTL is
 	// expired.
-	txHashes map[TxHash]uint64
+	txHashesBlockHeight map[TxHash]uint64
+
+	// txHashesTimestamp defines a map from tx hash -> TTL value defined as block time, which is used for duplicate
+	// checking and replay protection, as well as purging the map when the TTL is
+	// expired.
+	txHashesTimestamp map[TxHash]time.Time
 }
 
 func NewManager(dataDir string) *Manager {
@@ -65,10 +75,11 @@ func NewManager(dataDir string) *Manager {
 	}
 
 	m := &Manager{
-		dataDir:  dataDir,
-		blockCh:  make(chan uint64, 16),
-		doneCh:   make(chan struct{}),
-		txHashes: make(map[TxHash]uint64),
+		dataDir:             dataDir,
+		blockCh:             make(chan blockInfo, 16),
+		doneCh:              make(chan struct{}),
+		txHashesBlockHeight: make(map[TxHash]uint64),
+		txHashesTimestamp:   make(map[TxHash]time.Time),
 	}
 
 	return m
@@ -96,7 +107,11 @@ func (m *Manager) Contains(hash TxHash) bool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	_, ok := m.txHashes[hash]
+	_, ok := m.txHashesBlockHeight[hash]
+	if ok {
+		return ok
+	}
+	_, ok = m.txHashesTimestamp[hash]
 	return ok
 }
 
@@ -104,14 +119,21 @@ func (m *Manager) Size() int {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	return len(m.txHashes)
+	return len(m.txHashesBlockHeight) + len(m.txHashesTimestamp)
 }
 
 func (m *Manager) Add(txHash TxHash, ttl uint64) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	m.txHashes[txHash] = ttl
+	m.txHashesBlockHeight[txHash] = ttl
+}
+
+func (m *Manager) AddTimestamp(txHash TxHash, timestamp time.Time) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.txHashesTimestamp[txHash] = timestamp
 }
 
 // OnInit must be called when a node starts up. Typically, this should be called
@@ -131,7 +153,7 @@ func (m *Manager) OnInit() error {
 
 	var (
 		r   = bufio.NewReader(f)
-		buf = make([]byte, chunkSize)
+		buf = make([]byte, newChukSize)
 	)
 	for {
 		n, err := io.ReadFull(r, buf)
@@ -142,14 +164,23 @@ func (m *Manager) OnInit() error {
 				return fmt.Errorf("failed to read unconfirmed txs file: %w", err)
 			}
 		}
-		if n != 32+8 {
+		if n != 32+8+8 {
 			return fmt.Errorf("read unexpected number of bytes from unconfirmed txs file: %d", n)
 		}
 
 		var txHash TxHash
 		copy(txHash[:], buf[:txHashSize])
 
-		m.Add(txHash, binary.BigEndian.Uint64(buf[txHashSize:]))
+		blockHeight := binary.BigEndian.Uint64(buf[txHashSize : txHashSize+ttlSize])
+		timeStamp := binary.BigEndian.Uint64(buf[txHashSize+ttlSize:])
+
+		// if not zero value
+		if blockHeight != 0 {
+			m.Add(txHash, blockHeight)
+			continue
+		}
+
+		m.AddTimestamp(txHash, time.Unix(int64(timeStamp), 0))
 	}
 
 	return nil
@@ -157,25 +188,28 @@ func (m *Manager) OnInit() error {
 
 // OnNewBlock sends the latest block number to the background purge loop, which
 // should be called in ABCI Commit event.
-func (m *Manager) OnNewBlock(blockHeight uint64) {
-	m.blockCh <- blockHeight
+func (m *Manager) OnNewBlock(blockHeight uint64, blockTime time.Time) {
+	m.blockCh <- blockInfo{
+		blockHeight: blockHeight,
+		blockTime:   blockTime,
+	}
 }
 
 func (m *Manager) exportSnapshot(height uint64, snapshotWriter func([]byte) error) error {
 	var buf bytes.Buffer
 	w := bufio.NewWriter(&buf)
 
-	keys := maps.Keys(m.txHashes)
+	keys := maps.Keys(m.txHashesBlockHeight)
 	sort.Slice(keys, func(i, j int) bool { return bytes.Compare(keys[i][:], keys[j][:]) < 0 })
 
 	for _, txHash := range keys {
-		ttl := m.txHashes[txHash]
+		ttl := m.txHashesBlockHeight[txHash]
 		if height > ttl {
 			// skip expired txs that have yet to be purged
 			continue
 		}
 
-		chunk := unorderedTxToBytes(txHash, ttl)
+		chunk := unorderedTxToBytes(txHash, ttl, true)
 
 		if _, err := w.Write(chunk); err != nil {
 			return fmt.Errorf("failed to write unordered tx to buffer: %w", err)
@@ -199,8 +233,16 @@ func (m *Manager) flushToFile() error {
 	defer f.Close()
 
 	w := bufio.NewWriter(f)
-	for txHash, ttl := range m.txHashes {
-		chunk := unorderedTxToBytes(txHash, ttl)
+	for txHash, ttl := range m.txHashesBlockHeight {
+		chunk := unorderedTxToBytes(txHash, ttl, true)
+
+		if _, err = w.Write(chunk); err != nil {
+			return fmt.Errorf("failed to write unordered tx to buffer: %w", err)
+		}
+	}
+
+	for txHash, timestamp := range m.txHashesTimestamp {
+		chunk := unorderedTxToBytes(txHash, uint64(timestamp.Unix()), false)
 
 		if _, err = w.Write(chunk); err != nil {
 			return fmt.Errorf("failed to write unordered tx to buffer: %w", err)
@@ -215,13 +257,19 @@ func (m *Manager) flushToFile() error {
 }
 
 // expiredTxs returns expired tx hashes based on the provided block height.
-func (m *Manager) expiredTxs(blockHeight uint64) []TxHash {
+func (m *Manager) expiredTxs(blockHeight uint64, blockTime time.Time) []TxHash {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
 	var result []TxHash
-	for txHash, ttl := range m.txHashes {
+	for txHash, ttl := range m.txHashesBlockHeight {
 		if blockHeight > ttl {
+			result = append(result, txHash)
+		}
+	}
+
+	for txHash, timestamp := range m.txHashesTimestamp {
+		if blockTime.After(timestamp) {
 			result = append(result, txHash)
 		}
 	}
@@ -229,61 +277,74 @@ func (m *Manager) expiredTxs(blockHeight uint64) []TxHash {
 	return result
 }
 
-func (m *Manager) purge(txHashes []TxHash) {
+func (m *Manager) purge(txHashesBlockHeight []TxHash) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	for _, txHash := range txHashes {
-		delete(m.txHashes, txHash)
+	for _, txHash := range txHashesBlockHeight {
+		delete(m.txHashesBlockHeight, txHash)
 	}
 }
 
 // purgeLoop removes expired tx hashes in the background
 func (m *Manager) purgeLoop() {
 	for {
-		latestHeight, ok := m.batchReceive()
+		latestHeight, latestTime, ok := m.batchReceive()
 		if !ok {
 			// channel closed
 			m.doneCh <- struct{}{}
 			return
 		}
 
-		hashes := m.expiredTxs(latestHeight)
+		hashes := m.expiredTxs(latestHeight, latestTime)
 		if len(hashes) > 0 {
 			m.purge(hashes)
 		}
 	}
 }
 
-func (m *Manager) batchReceive() (uint64, bool) {
+func (m *Manager) batchReceive() (uint64, time.Time, bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var latestHeight uint64
+	var latestTime time.Time
 	for {
 		select {
 		case <-ctx.Done():
-			return latestHeight, true
+			return latestHeight, latestTime, true
 
-		case blockHeight, ok := <-m.blockCh:
+		case blockInfo, ok := <-m.blockCh:
 			if !ok {
 				// channel is closed
-				return 0, false
+				return 0, time.Time{}, false
 			}
-			if blockHeight > latestHeight {
-				latestHeight = blockHeight
+			if blockInfo.blockHeight > latestHeight {
+				latestHeight = blockInfo.blockHeight
+			}
+
+			if blockInfo.blockTime.After(latestTime) {
+				latestTime = blockInfo.blockTime
 			}
 		}
 	}
 }
 
-func unorderedTxToBytes(txHash TxHash, ttl uint64) []byte {
-	chunk := make([]byte, chunkSize)
+func unorderedTxToBytes(txHash TxHash, ttl uint64, isBlockHeight bool) []byte {
+	chunk := make([]byte, newChukSize)
 	copy(chunk[:txHashSize], txHash[:])
 
 	ttlBz := make([]byte, ttlSize)
 	binary.BigEndian.PutUint64(ttlBz, ttl)
-	copy(chunk[txHashSize:], ttlBz)
+	emptyBz := make([]byte, 8)
+	binary.BigEndian.PutUint64(emptyBz, 0)
+	if isBlockHeight {
+		copy(chunk[txHashSize+ttl:], emptyBz)
+		copy(chunk[txHashSize:txHashSize+ttlSize], ttlBz)
+	} else {
+		copy(chunk[txHashSize+ttlSize:], ttlBz)
+		copy(chunk[txHashSize:txHashSize+ttlSize], emptyBz)
+	}
 
 	return chunk
 }

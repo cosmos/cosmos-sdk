@@ -123,8 +123,8 @@ message TxBody {
   // incremented, which allows for fire-and-forget as well as concurrent
   // transaction execution.
   //
-  // Note, when set to true, the existing 'timeout_height' or 'timeout_timestamp' value must be set and
-  // will be used to correspond to a height in which the transaction is deemed
+  // Note, when set to true, the existing 'timeout_height' or 'timeout_timestamp' value must
+  // be set and will be used to correspond to a height/time_stamp in which the transaction is deemed
   // valid.
   bool unordered = 4;
 

@@ -87,9 +87,9 @@ func simpleColumnType(kind schema.Kind) string {
 		return "BIGINT"
 	case schema.Uint64Kind:
 		return "NUMERIC"
-	case schema.IntegerKind:
+	case schema.IntegerStringKind:
 		return "NUMERIC"
-	case schema.DecimalKind:
+	case schema.DecimalStringKind:
 		return "NUMERIC"
 	case schema.Float32Kind:
 		return "REAL"

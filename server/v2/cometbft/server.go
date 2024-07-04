@@ -84,7 +84,7 @@ func (s *CometBFTServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Log
 }
 
 func (s *CometBFTServer[AppT, T]) Name() string {
-	return "cometbft-server"
+	return "comet"
 }
 
 func (s *CometBFTServer[AppT, T]) Start(ctx context.Context) error {
@@ -195,11 +195,13 @@ func (s *CometBFTServer[AppT, T]) CLICommands() serverv2.CLIConfig {
 			s.ShowValidatorCmd(),
 			s.ShowAddressCmd(),
 			s.VersionCmd(),
+			cmtcmd.ResetAllCmd,
+			cmtcmd.ResetStateCmd,
+		},
+		Queries: []*cobra.Command{
 			s.QueryBlockCmd(),
 			s.QueryBlocksCmd(),
 			s.QueryBlockResultsCmd(),
-			cmtcmd.ResetAllCmd,
-			cmtcmd.ResetStateCmd,
 		},
 	}
 }

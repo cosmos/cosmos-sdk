@@ -67,7 +67,7 @@ func (g *GRPCServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Logger)
 }
 
 func (g *GRPCServer[AppT, T]) Name() string {
-	return "grpc-server"
+	return "grpc"
 }
 
 func (g *GRPCServer[AppT, T]) Start(ctx context.Context) error {

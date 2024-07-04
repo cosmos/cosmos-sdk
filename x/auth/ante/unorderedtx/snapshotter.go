@@ -80,21 +80,21 @@ func (s *Snapshotter) restore(height uint64, payloadReader snapshot.ExtensionPay
 		var txHash TxHash
 		copy(txHash[:], payload[i:i+txHashSize])
 
-		ttl := binary.BigEndian.Uint64(payload[i+txHashSize : i+txHashSize+timeoutSize])
-
-		if ttl != 0 && height < ttl {
-			// only add unordered transactions that are still valid, i.e. unexpired
-			s.m.Add(txHash, ttl)
-			i += chunkSize
+		timestamp := binary.BigEndian.Uint64(payload[i+txHashSize+heightSize : i+chunkSize])
+		// need to come up with a way to fetch blocktime to filter out expired txs
+		//
+		// right now we dont have access block time at this flow, so we would just include the expired txs
+		// and let it be purge during purge loop
+		if timestamp != 0 {
+			s.m.AddTimestamp(txHash, time.Unix(int64(timestamp), 0))
 			continue
 		}
 
-		timestamp := binary.BigEndian.Uint64(payload[i+txHashSize+timeoutSize : i+chunkSize])
-		// need to come up with a way to fetch blocktime to filter out expired txs
-		if timestamp != 0 {
-			// right now we dont have access block time at this flow, so we would just include the expired txs
-			// and let it be purge during purge loop
-			s.m.AddTimestamp(txHash, time.Unix(int64(timestamp), 0))
+		ttl := binary.BigEndian.Uint64(payload[i+txHashSize : i+txHashSize+heightSize])
+		if height < ttl {
+			// only add unordered transactions that are still valid, i.e. unexpired
+			s.m.Add(txHash, ttl)
+			i += chunkSize
 		}
 
 		i += chunkSize

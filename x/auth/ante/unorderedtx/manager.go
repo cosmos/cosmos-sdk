@@ -354,7 +354,7 @@ func unorderedTxToBytes(txHash TxHash, ttl uint64, isBlockHeight bool) []byte {
 	emptyBz := make([]byte, 8)
 	binary.BigEndian.PutUint64(emptyBz, 0)
 	if isBlockHeight {
-		copy(chunk[txHashSize+ttl:], emptyBz)
+		copy(chunk[txHashSize+heightSize:], emptyBz)
 		copy(chunk[txHashSize:txHashSize+heightSize], ttlBz)
 	} else {
 		copy(chunk[txHashSize+heightSize:], ttlBz)

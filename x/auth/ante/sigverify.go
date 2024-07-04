@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	aa_interface_v1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	authsigning "cosmossdk.io/x/auth/signing"
 	"cosmossdk.io/x/auth/types"
 	txsigning "cosmossdk.io/x/tx/signing"
@@ -52,7 +51,7 @@ type SignatureVerificationGasConsumer = func(meter storetypes.GasMeter, sig sign
 
 type AccountAbstractionKeeper interface {
 	IsAbstractedAccount(ctx context.Context, addr []byte) (bool, error)
-	AuthenticateAccount(ctx context.Context, addr []byte, msg *aa_interface_v1.MsgAuthenticate) error
+	AuthenticateAccount(ctx sdk.Context, signer []byte, bundler string, rawTx *tx.TxRaw, protoTx *tx.Tx, signIndex uint32) error
 }
 
 // SigVerificationDecorator verifies all signatures for a tx and returns an
@@ -438,12 +437,7 @@ func (svd SigVerificationDecorator) authenticateAbstractedAccount(ctx sdk.Contex
 		GetProtoTx() *tx.Tx
 	})
 
-	return svd.aaKeeper.AuthenticateAccount(ctx, signer, &aa_interface_v1.MsgAuthenticate{
-		Bundler:     selfBundler,
-		RawTx:       infoTx.GetRawTx(),
-		Tx:          infoTx.GetProtoTx(),
-		SignerIndex: uint32(index),
-	})
+	return svd.aaKeeper.AuthenticateAccount(ctx, signer, selfBundler, infoTx.GetRawTx(), infoTx.GetProtoTx(), uint32(index))
 }
 
 // ValidateSigCountDecorator takes in Params and returns errors if there are too many signatures in the tx for the given params

@@ -7,6 +7,8 @@ import (
 
 	"cosmossdk.io/collections"
 	aa_interface_v1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
@@ -37,8 +39,14 @@ func (k Keeper) IsAbstractedAccount(ctx context.Context, addr []byte) (bool, err
 	return impl.HasExec(&aa_interface_v1.MsgAuthenticate{}), nil
 }
 
-func (k Keeper) AuthenticateAccount(ctx context.Context, addr []byte, msg *aa_interface_v1.MsgAuthenticate) error {
-	_, err := k.Execute(ctx, addr, address.Module("accounts"), msg, nil)
+func (k Keeper) AuthenticateAccount(ctx sdk.Context, signer []byte, bundler string, rawTx *tx.TxRaw, protoTx *tx.Tx, signIndex uint32) error {
+	msg := &aa_interface_v1.MsgAuthenticate{
+		Bundler:     bundler,
+		RawTx:       rawTx,
+		Tx:          protoTx,
+		SignerIndex: signIndex,
+	}
+	_, err := k.Execute(ctx, signer, address.Module("accounts"), msg, nil)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrAuthentication, err)
 	}

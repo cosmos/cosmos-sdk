@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 
 	bankexported "cosmossdk.io/x/bank/exported"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -31,7 +30,7 @@ type GenesisAccountsIterator interface {
 	)
 }
 
-// GenesisAccountsIterator defines the expected iterating genesis accounts object (noalias)
+// GenesisBalancesIterator defines the expected iterating genesis balances object (noalias)
 type GenesisBalancesIterator interface {
 	IterateGenesisBalances(
 		cdc codec.JSONCodec,

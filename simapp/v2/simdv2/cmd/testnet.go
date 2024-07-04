@@ -32,7 +32,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-
 	// srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,11 +47,6 @@ var (
 	flagNodeDaemonHome    = "node-daemon-home"
 	flagStartingIPAddress = "starting-ip-address"
 	flagListenIPAddress   = "listen-ip-address"
-	flagEnableLogging     = "enable-logging"
-	flagGRPCAddress       = "grpc.address"
-	flagRPCAddress        = "rpc.address"
-	flagAPIAddress        = "api.address"
-	flagPrintMnemonic     = "print-mnemonic"
 	flagStakingDenom      = "staking-denom"
 	flagCommitTimeout     = "commit-timeout"
 	flagSingleHost        = "single-host"
@@ -347,7 +341,10 @@ func initTestnetFiles[T transaction.Tx](
 		cometServer := cometbft.New[serverv2.AppI[T], T](&temporaryTxDecoder[T]{clientCtx.TxConfig}, cometbft.ServerOptions[T]{}, cometbft.OverwriteDefaultCometConfig(nodeConfig))
 		grpcServer := grpc.New[serverv2.AppI[T], T](grpc.OverwriteDefaultConfig(grpcConfig))
 		server := serverv2.NewServer(log.NewNopLogger(), cometServer, grpcServer)
-		server.WriteConfig(filepath.Join(nodeDir, "config"))
+		err = server.WriteConfig(filepath.Join(nodeDir, "config"))
+		if err != nil {
+			return err
+		}
 	}
 
 	if err := initGenFiles(clientCtx, mm, args.chainID, genAccounts, genBalances, genFiles, args.numValidators); err != nil {

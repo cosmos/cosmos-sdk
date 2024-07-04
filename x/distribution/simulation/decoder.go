@@ -22,9 +22,6 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvB.Value, &feePoolB)
 			return fmt.Sprintf("%v\n%v", feePoolA, feePoolB)
 
-		case bytes.Equal(kvA.Key[:1], types.ProposerKey):
-			return fmt.Sprintf("%v\n%v", sdk.ConsAddress(kvA.Value), sdk.ConsAddress(kvB.Value))
-
 		case bytes.Equal(kvA.Key[:1], types.ValidatorOutstandingRewardsPrefix):
 			var rewardsA, rewardsB types.ValidatorOutstandingRewards
 			cdc.MustUnmarshal(kvA.Value, &rewardsA)

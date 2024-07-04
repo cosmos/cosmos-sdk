@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -57,7 +57,7 @@ func TestSTF(t *testing.T) {
 	state := mock.DB()
 	mockTx := mock.Tx{
 		Sender:   []byte("sender"),
-		Msg:      wrapperspb.Bool(true),
+		Msg:      &gogotypes.BoolValue{Value: true},
 		GasLimit: 100_000,
 	}
 
@@ -87,7 +87,7 @@ func TestSTF(t *testing.T) {
 		makeGasMeteredState: gas.DefaultWrapWithGasMeter,
 	}
 
-	addMsgHandlerToSTF(t, s, func(ctx context.Context, msg *wrapperspb.BoolValue) (*wrapperspb.BoolValue, error) {
+	addMsgHandlerToSTF(t, s, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
 		kvSet(t, ctx, "exec")
 		return nil, nil
 	})
@@ -128,8 +128,8 @@ func TestSTF(t *testing.T) {
 
 		mockTx := mock.Tx{
 			Sender:   []byte("sender"),
-			Msg:      wrapperspb.Bool(true), // msg does not matter at all because our handler does nothing.
-			GasLimit: 0,                     // NO GAS!
+			Msg:      &gogotypes.BoolValue{Value: true}, // msg does not matter at all because our handler does nothing.
+			GasLimit: 0,                                 // NO GAS!
 		}
 
 		// this handler will propagate the storage error back, we expect
@@ -157,7 +157,7 @@ func TestSTF(t *testing.T) {
 	t.Run("fail exec tx", func(t *testing.T) {
 		// update the stf to fail on the handler
 		s := s.clone()
-		addMsgHandlerToSTF(t, &s, func(ctx context.Context, msg *wrapperspb.BoolValue) (*wrapperspb.BoolValue, error) {
+		addMsgHandlerToSTF(t, &s, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
 			return nil, fmt.Errorf("failure")
 		})
 
@@ -200,7 +200,7 @@ func TestSTF(t *testing.T) {
 
 	t.Run("tx failed and post tx failed", func(t *testing.T) {
 		s := s.clone()
-		addMsgHandlerToSTF(t, &s, func(ctx context.Context, msg *wrapperspb.BoolValue) (*wrapperspb.BoolValue, error) {
+		addMsgHandlerToSTF(t, &s, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
 			return nil, fmt.Errorf("exec failure")
 		})
 		s.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error { return fmt.Errorf("post tx failure") }

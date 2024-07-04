@@ -49,11 +49,16 @@ type RootStore interface {
 	// queries based on block time need to be supported.
 	SetCommitHeader(h *coreheader.Info)
 
+	// WorkingHash returns the current WIP commitment hash by applying the Changeset
+	// to the SC backend. It is only used to get the hash of the intermediate state
+	// before committing, the typical use case is for the genesis block.
+	// NOTE: It also writes the changeset to the SS backend.
+	WorkingHash(cs *corestore.Changeset) ([]byte, error)
+
 	// Commit should be responsible for taking the provided changeset and flushing
-	// it to disk. Note, depending on the implementation, the changeset, at this
-	// point, may already be written to the SC backends. Commit() should ensure
-	// the changeset is committed to all SC and SC backends and flushed to disk.
-	// It must return a hash of the merkle-ized committed state.
+	// it to disk. Note, it will overwrite the changeset if WorkingHash() was called.
+	// Commit() should ensure the changeset is committed to all SC and SS backends
+	// and flushed to disk. It must return a hash of the merkle-ized committed state.
 	Commit(cs *corestore.Changeset) ([]byte, error)
 
 	// LastCommitID returns a CommitID pertaining to the last commitment.

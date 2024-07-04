@@ -134,7 +134,11 @@ func (m *ValidatorInfo) GetConsensusAddress() string {
 
 // QueryValidatorsResponse is response type for the Query/Validators RPC method
 type QueryValidatorsResponse struct {
-	Validators    []Validator         `protobuf:"bytes,1,rep,name=validators,proto3" json:"validators"`
+	Validators []Validator `protobuf:"bytes,1,rep,name=validators,proto3" json:"validators"`
+	// validator_info contains additional information for each validator.
+	// The order of the elements in this list corresponds to the order of the elements in the validators list.
+	// For example, if you want the ValidatorInfo for the third validator in the validators list,
+	// you should look at the third element in the validator_info list.
 	ValidatorInfo []ValidatorInfo     `protobuf:"bytes,2,rep,name=validator_info,json=validatorInfo,proto3" json:"validator_info"`
 	Pagination    *query.PageResponse `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }

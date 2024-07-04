@@ -33,7 +33,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 
 	runtimev2 "cosmossdk.io/runtime/v2"
-	"github.com/cosmos/cosmos-sdk/server"
 
 	// srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -490,7 +489,7 @@ func collectGenFiles(
 
 func getIP(i int, startingIPAddr string) (ip string, err error) {
 	if len(startingIPAddr) == 0 {
-		ip, err = server.ExternalIP()
+		ip, err = serverv2.ExternalIP()
 		if err != nil {
 			return "", err
 		}

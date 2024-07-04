@@ -25,24 +25,16 @@ import (
 	consensus "cosmossdk.io/x/consensus/types"
 )
 
-func queryResponse(res transaction.Msg) (*abci.QueryResponse, error) {
-	// TODO(kocu): we are tightly coupled go gogoproto here, is this problem?
+func queryResponse(res transaction.Msg, height int64) (*abci.QueryResponse, error) {
+	// this is a tied to protobuf due to client responses always being handled in protobuf
 	bz, err := gogoproto.Marshal(res)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: how do I reply? I suppose we need to different replies depending of the query
 	return &abci.QueryResponse{
-		Code:  0,
-		Log:   "",
-		Info:  "",
-		Index: 0,
-		Key:   []byte{},
-		Value: bz,
-		// ProofOps:  &cmtcrypto.ProofOps{},
-		Height:    0,
-		Codespace: "",
+		Value:  bz,
+		Height: height,
 	}, nil
 }
 
@@ -411,4 +403,15 @@ func uint64ToInt64(u uint64) int64 {
 		return math.MaxInt64
 	}
 	return int64(u)
+}
+
+// queryResult returns a ResponseQuery from an error. It will try to parse ABCI
+// info from the error.
+func queryResult(err error) *abci.QueryResponse {
+	space, code, log := errorsmod.ABCIInfo(err, false)
+	return &abci.QueryResponse{
+		Codespace: space,
+		Code:      code,
+		Log:       log,
+	}
 }

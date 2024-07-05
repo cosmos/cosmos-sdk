@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cast"
 
-	"cosmossdk.io/schema/indexing"
+	"cosmossdk.io/schema/indexer"
 
 	"cosmossdk.io/schema"
 	"cosmossdk.io/schema/appdata"
@@ -34,13 +34,8 @@ const (
 // kv-store keys, and app modules. Using the built-in indexer framework is mutually exclusive from using other
 // types of streaming listeners.
 func (app *BaseApp) EnableIndexer(indexerOpts interface{}, keys map[string]*storetypes.KVStoreKey, appModules map[string]any) error {
-	optsMap, ok := indexerOpts.(map[string]interface{})
-	if !ok {
-		return fmt.Errorf("invalid indexer options type %T, expected a map", indexerOpts)
-	}
-
-	listener, err := indexing.Start(indexing.Options{
-		Options:    optsMap,
+	listener, err := indexer.StartManager(indexer.ManagerOptions{
+		Config:     indexerOpts,
 		Resolver:   decoding.ModuleSetDecoderResolver(appModules),
 		SyncSource: nil,
 		Logger:     app.logger.With("module", "indexer"),

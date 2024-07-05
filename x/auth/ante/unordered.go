@@ -85,21 +85,23 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 
 	// Avoid checking for duplicates and creating the identifier in simulation mode
 	// This is done to avoid sha256 computation in simulation mode
-	if d.env.TransactionService.ExecMode(ctx) != transaction.ExecModeSimulate {
-		// calculate the tx hash
-		txHash, err := TxIdentifier(ttl, tx)
-		if err != nil {
-			return ctx, err
-		}
+	if d.env.TransactionService.ExecMode(ctx) == transaction.ExecModeSimulate {
+		return next(ctx, tx, false)
+	}
 
-		// check for duplicates
-		if d.txManager.Contains(txHash) {
-			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "tx %X is duplicated")
-		}
-		if d.env.TransactionService.ExecMode(ctx) == transaction.ExecModeFinalize {
-			// a new tx included in the block, add the hash to the unordered tx manager
-			d.txManager.Add(txHash, ttl)
-		}
+	// calculate the tx hash
+	txHash, err := TxIdentifier(ttl, tx)
+	if err != nil {
+		return ctx, err
+	}
+
+	// check for duplicates
+	if d.txManager.Contains(txHash) {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "tx %X is duplicated")
+	}
+	if d.env.TransactionService.ExecMode(ctx) == transaction.ExecModeFinalize {
+		// a new tx included in the block, add the hash to the unordered tx manager
+		d.txManager.Add(txHash, ttl)
 	}
 
 	return next(ctx, tx, false)

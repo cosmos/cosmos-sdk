@@ -12,8 +12,9 @@ import (
 // parts of the data stream as well as indexer specific options under the config
 // subsection.
 //
-// NOTE: it is an error for an indexer to change its common options after the indexer
-// has been initialized because this could result in an inconsistent state.
+// NOTE: it is an error for an indexer to change its common options, such as adding
+// or removing indexed modules, after the indexer has been initialized because this
+// could result in an inconsistent state.
 type Config struct {
 	// Type is the name of the indexer type as registered with Register.
 	Type string `json:"type"`

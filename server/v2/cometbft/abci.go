@@ -162,7 +162,6 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 	// otherwise it is a KV store query
 	if err == nil {
 		res, err := c.app.Query(ctx, uint64(req.Height), protoMsg)
-
 		if err != nil {
 			resp := queryResult(err)
 			resp.Height = req.Height

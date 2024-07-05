@@ -510,7 +510,7 @@ func (c *Consensus[T]) Commit(ctx context.Context, _ *abciproto.CommitRequest) (
 		return nil, err
 	}
 
-	return &abci.CommitResponse{
+	return &abciproto.CommitResponse{
 		RetainHeight: c.GetBlockRetentionHeight(cp, lastCommittedHeight),
 	}, nil
 }

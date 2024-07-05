@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 
 	"cosmossdk.io/core/address"
@@ -41,7 +41,7 @@ func initChain(
 	}
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
 	consensusParams := randomConsensusParams(r, appState, cdc, blockMaxGas)
-	req := abci.InitChainRequest{
+	req := abciproto.InitChainRequest{
 		AppStateBytes:   appState,
 		ChainId:         chainID,
 		ConsensusParams: consensusParams,
@@ -136,7 +136,7 @@ func SimulateFromSeedX(
 
 	var (
 		pastTimes          []time.Time
-		pastVoteInfos      [][]abci.VoteInfo
+		pastVoteInfos      [][]abciproto.VoteInfo
 		timeOperationQueue []simulation.FutureOperation
 
 		blockHeight     = int64(config.InitialBlockHeight)

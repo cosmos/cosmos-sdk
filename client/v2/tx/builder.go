@@ -1,7 +1,6 @@
 package tx
 
 import (
-	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogoany "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -30,7 +29,7 @@ type ExtendedTxBuilder interface {
 // signatures, and provide canonical bytes to sign over. The transaction must
 // also know how to encode itself.
 type TxBuilder interface {
-	GetTx() (*apitx.Tx, error)
+	GetTx() (Tx, error)
 	GetSigningTxData() (*signing.TxData, error)
 
 	SetMsgs(...transaction.Msg) error
@@ -110,7 +109,11 @@ func newTxBuilder(addressCodec address.Codec, decoder Decoder, codec codec.Binar
 }
 
 // GetTx converts txBuilder messages to V2 and returns a Tx.
-func (b *txBuilder) GetTx() (*apitx.Tx, error) {
+func (b *txBuilder) GetTx() (Tx, error) {
+	return b.getTx()
+}
+
+func (b *txBuilder) getTx() (*wrappedTx, error) {
 	msgs, err := msgsV1toAnyV2(b.msgs)
 	if err != nil {
 		return nil, err
@@ -135,11 +138,31 @@ func (b *txBuilder) GetTx() (*apitx.Tx, error) {
 		Fee:         fee,
 	}
 
-	return &apitx.Tx{
-		Body:       body,
-		AuthInfo:   authInfo,
-		Signatures: b.signatures,
-	}, nil
+	bodyBytes, err := marshalOption.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	authInfoBytes, err := marshalOption.Marshal(authInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	txRawBytes, err := marshalOption.Marshal(&apitx.TxRaw{
+		BodyBytes:     bodyBytes,
+		AuthInfoBytes: authInfoBytes,
+		Signatures:    b.signatures,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	decodedTx, err := b.decoder.Decode(txRawBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return newWrapperTx(b.codec, decodedTx), nil
 }
 
 // getFee computes the transaction fee information for the txBuilder.
@@ -174,40 +197,17 @@ func (b *txBuilder) getFee() (fee *apitx.Fee, err error) {
 
 // GetSigningTxData returns a TxData with the txBuilder info.
 func (b *txBuilder) GetSigningTxData() (*signing.TxData, error) {
-	tx, err := b.GetTx()
-	if err != nil {
-		return nil, err
-	}
-
-	bodyBytes, err := gogoproto.Marshal(tx.Body)
-	if err != nil {
-		return nil, err
-	}
-	authBytes, err := gogoproto.Marshal(tx.AuthInfo)
-	if err != nil {
-		return nil, err
-	}
-
-	rawTx, err := marshalOption.Marshal(&apitx.TxRaw{
-		BodyBytes:     bodyBytes,
-		AuthInfoBytes: authBytes,
-		Signatures:    b.signatures,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	decodedTx, err := b.decoder.Decode(rawTx)
+	tx, err := b.getTx()
 	if err != nil {
 		return nil, err
 	}
 
 	return &signing.TxData{
-		Body:                       decodedTx.Tx.Body,
-		AuthInfo:                   decodedTx.Tx.AuthInfo,
-		BodyBytes:                  decodedTx.TxRaw.BodyBytes,
-		AuthInfoBytes:              decodedTx.TxRaw.AuthInfoBytes,
-		BodyHasUnknownNonCriticals: decodedTx.TxBodyHasUnknownNonCriticals,
+		Body:                       tx.Tx.Body,
+		AuthInfo:                   tx.Tx.AuthInfo,
+		BodyBytes:                  tx.TxRaw.BodyBytes,
+		AuthInfoBytes:              tx.TxRaw.AuthInfoBytes,
+		BodyHasUnknownNonCriticals: tx.TxBodyHasUnknownNonCriticals,
 	}, nil
 }
 

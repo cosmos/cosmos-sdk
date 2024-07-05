@@ -1,18 +1,15 @@
 package tx
 
 import (
-	"reflect"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"testing"
-
-	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/anypb"
 
 	base "cosmossdk.io/api/cosmos/base/v1beta1"
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/transaction"
 	txdecode "cosmossdk.io/x/tx/decode"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -115,39 +112,31 @@ func Test_txBuilder_GetTx(t *testing.T) {
 	tests := []struct {
 		name        string
 		txSetter    func() *txBuilder
-		checkResult func(*apitx.Tx) bool
+		checkResult func(Tx)
 	}{
 		{
 			name: "empty tx",
 			txSetter: func() *txBuilder {
 				return newTxBuilder(ac, decoder, cdc)
 			},
-			checkResult: func(tx *apitx.Tx) bool {
-				if !reflect.DeepEqual(tx.Body, &apitx.TxBody{
-					Messages:                    []*anypb.Any{},
-					Memo:                        "",
-					TimeoutHeight:               0,
-					Unordered:                   false,
-					ExtensionOptions:            nil,
-					NonCriticalExtensionOptions: nil,
-				}) {
-					return false
-				}
-				if !reflect.DeepEqual(tx.AuthInfo, &apitx.AuthInfo{
-					SignerInfos: nil,
-					Fee: &apitx.Fee{
-						Amount:   nil,
-						GasLimit: 0,
-						Payer:    "",
-						Granter:  "",
-					},
-				}) {
-					return false
-				}
-				if tx.Signatures != nil {
-					return false
-				}
-				return true
+			checkResult: func(tx Tx) {
+				wTx, ok := tx.(*wrappedTx)
+				require.True(t, ok)
+				//require.Equal(t, []*anypb.Any(nil), wTx.Tx.Body.Messages)
+				require.Nil(t, wTx.Tx.Body.Messages)
+				require.Empty(t, wTx.Tx.Body.Memo)
+				require.Equal(t, uint64(0), wTx.Tx.Body.TimeoutHeight)
+				require.Equal(t, wTx.Tx.Body.Unordered, false)
+				require.Nil(t, wTx.Tx.Body.ExtensionOptions)
+				require.Nil(t, wTx.Tx.Body.NonCriticalExtensionOptions)
+
+				require.Nil(t, wTx.Tx.AuthInfo.SignerInfos)
+				require.Nil(t, wTx.Tx.AuthInfo.Fee.Amount)
+				require.Equal(t, uint64(0), wTx.Tx.AuthInfo.Fee.GasLimit)
+				require.Empty(t, wTx.Tx.AuthInfo.Fee.Payer)
+				require.Empty(t, wTx.Tx.AuthInfo.Fee.Granter)
+
+				require.Nil(t, wTx.Tx.Signatures)
 			},
 		},
 		{
@@ -182,17 +171,16 @@ func Test_txBuilder_GetTx(t *testing.T) {
 				require.NoError(t, err)
 				return b
 			},
-			checkResult: func(tx *apitx.Tx) bool {
-				if len(tx.Body.Messages) < 1 {
-					return false
-				}
-				if tx.AuthInfo.SignerInfos == nil || tx.AuthInfo.Fee.Amount == nil {
-					return false
-				}
-				if tx.Signatures == nil {
-					return false
-				}
-				return true
+			checkResult: func(tx Tx) {
+				wTx, ok := tx.(*wrappedTx)
+				require.True(t, ok)
+				require.True(t, len(wTx.Tx.Body.Messages) == 1)
+
+				require.NotNil(t, wTx.Tx.AuthInfo.SignerInfos)
+				require.NotNil(t, wTx.Tx.AuthInfo.Fee.Amount)
+
+				require.NotNil(t, wTx.Tx.Signatures)
+
 			},
 		},
 	}
@@ -202,7 +190,7 @@ func Test_txBuilder_GetTx(t *testing.T) {
 			got, err := b.GetTx()
 			require.NoError(t, err)
 			require.NotNil(t, got)
-			require.True(t, tt.checkResult(got))
+			tt.checkResult(got)
 		})
 	}
 }
@@ -569,12 +557,16 @@ func Test_txBuilder_SetSignatures(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			cryptocodec.RegisterInterfaces(cdc.InterfaceRegistry())
 			b := newTxBuilder(ac, decoder, cdc)
 			sigs := tt.signatures()
 			err := b.SetSignatures(sigs...)
 			require.NoError(t, err)
-			tx, _ := b.GetTx()
-			require.Equal(t, len(sigs), len(tx.Signatures))
+			tx, err := b.GetTx()
+			require.NoError(t, err)
+			signatures, err := tx.GetSignatures()
+			require.NoError(t, err)
+			require.Equal(t, len(sigs), len(signatures))
 		})
 	}
 }

@@ -1,10 +1,12 @@
 package tx
 
 import (
+	"errors"
+	"fmt"
+
 	"google.golang.org/protobuf/encoding/protojson"
 	protov2 "google.golang.org/protobuf/proto"
 
-	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	txdecode "cosmossdk.io/x/tx/decode"
 )
 
@@ -26,29 +28,35 @@ type Decoder interface {
 }
 
 // txApiDecoder is a function type that unmarshals transaction bytes into an API Tx type.
-type txApiDecoder func(txBytes []byte) (*apitx.Tx, error)
+type txDecoder func(txBytes []byte) (Tx, error)
 
 // txApiEncoder is a function type that marshals a transaction into bytes.
-type txApiEncoder func(tx *apitx.Tx) ([]byte, error)
+type txEncoder func(tx Tx) ([]byte, error)
 
-// txDecoder decodes transaction bytes into an apitx.Tx structure.
-func txDecoder(txBytes []byte) (*apitx.Tx, error) {
-	var tx apitx.Tx
-	return &tx, protov2.Unmarshal(txBytes, &tx)
+// decodeTx decodes transaction bytes into an apitx.Tx structure.
+func decodeTx(txBytes []byte) (Tx, error) {
+	return nil, errors.New("not implemented")
 }
 
-// txEncoder encodes an apitx.Tx into bytes using protobuf marshaling options.
-func txEncoder(tx *apitx.Tx) ([]byte, error) {
-	return marshalOption.Marshal(tx)
+// encodeTx encodes an apitx.Tx into bytes using protobuf marshaling options.
+func encodeTx(tx Tx) ([]byte, error) {
+	wTx, ok := tx.(*wrappedTx)
+	if !ok {
+		return nil, fmt.Errorf("unexpected tx type: %T", tx)
+	}
+	return marshalOption.Marshal(wTx.Tx)
 }
 
-// txJsonDecoder decodes transaction bytes into an apitx.Tx structure using JSON format.
-func txJsonDecoder(txBytes []byte) (*apitx.Tx, error) {
-	var tx apitx.Tx
-	return &tx, protojson.Unmarshal(txBytes, &tx)
+// decodeJsonTx decodes transaction bytes into an apitx.Tx structure using JSON format.
+func decodeJsonTx(txBytes []byte) (Tx, error) {
+	return nil, errors.New("not implemented")
 }
 
-// txJsonEncoder encodes an apitx.Tx into bytes using JSON marshaling options.
-func txJsonEncoder(tx *apitx.Tx) ([]byte, error) {
-	return jsonMarshalOptions.Marshal(tx)
+// encodeJsonTx encodes an apitx.Tx into bytes using JSON marshaling options.
+func encodeJsonTx(tx Tx) ([]byte, error) {
+	wTx, ok := tx.(*wrappedTx)
+	if !ok {
+		return nil, fmt.Errorf("unexpected tx type: %T", tx)
+	}
+	return jsonMarshalOptions.Marshal(wTx.Tx)
 }

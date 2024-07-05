@@ -1,22 +1,15 @@
 package tx
 
 import (
-	"errors"
 	"fmt"
-	"reflect"
-	"strings"
 
-	"github.com/cosmos/gogoproto/proto"
 	gogoany "github.com/cosmos/gogoproto/types/any"
-	"google.golang.org/protobuf/types/known/anypb"
-
+	
 	base "cosmossdk.io/api/cosmos/base/v1beta1"
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/client/v2/internal/coins"
 	"cosmossdk.io/core/transaction"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -138,103 +131,12 @@ func (gr GasEstimateResponse) String() string {
 
 // Tx defines the interface for transaction operations.
 type Tx interface {
-	// GetMsgs retrieves the messages included in the transaction.
-	GetMsgs() ([]transaction.Msg, error)
+	transaction.Tx
+
 	// GetSigners fetches the addresses of the signers of the transaction.
 	GetSigners() ([][]byte, error)
 	// GetPubKeys retrieves the public keys of the signers of the transaction.
 	GetPubKeys() ([]cryptotypes.PubKey, error)
 	// GetSignatures fetches the signatures attached to the transaction.
 	GetSignatures() ([]Signature, error)
-}
-
-// wrappedTx wraps a transaction and provides a codec for binary encoding/decoding.
-type wrappedTx struct {
-	tx  *apitx.Tx         // tx is the transaction being wrapped.
-	cdc codec.BinaryCodec // cdc is the codec used for binary encoding/decoding.
-}
-
-// GetMsgs retrieves the messages included in the transaction.
-func (w wrappedTx) GetMsgs() ([]transaction.Msg, error) {
-	return nil, errors.New("not implemented")
-}
-
-// GetSigners fetches the addresses of the signers of the transaction.
-func (w wrappedTx) GetSigners() ([][]byte, error) {
-	return nil, errors.New("not implemented")
-}
-
-// GetPubKeys retrieves the public keys of the signers from the transaction's SignerInfos.
-func (w wrappedTx) GetPubKeys() ([]cryptotypes.PubKey, error) {
-	signerInfos := w.tx.AuthInfo.SignerInfos
-	pks := make([]cryptotypes.PubKey, len(signerInfos))
-
-	for i, si := range signerInfos {
-		// NOTE: it is okay to leave this nil if there is no PubKey in the SignerInfo.
-		// PubKey's can be left unset in SignerInfo.
-		if si.PublicKey == nil {
-			continue
-		}
-		maybePk, err := w.decodeAny(si.PublicKey)
-		if err != nil {
-			return nil, err
-		}
-		pk, ok := maybePk.(cryptotypes.PubKey)
-		if !ok {
-			return nil, fmt.Errorf("invalid public key type: %T", maybePk)
-		}
-		pks[i] = pk
-	}
-
-	return pks, nil
-}
-
-// GetSignatures fetches the signatures attached to the transaction.
-func (w wrappedTx) GetSignatures() ([]Signature, error) {
-	signerInfos := w.tx.AuthInfo.SignerInfos
-	sigs := w.tx.Signatures
-
-	pubKeys, err := w.GetPubKeys()
-	if err != nil {
-		return nil, err
-	}
-	signatures := make([]Signature, len(sigs))
-
-	for i, si := range signerInfos {
-		if si.ModeInfo == nil || si.ModeInfo.Sum == nil {
-			signatures[i] = Signature{
-				PubKey: pubKeys[i],
-			}
-		} else {
-			sigData, err := ModeInfoAndSigToSignatureData(si.ModeInfo, sigs[i])
-			if err != nil {
-				return nil, err
-			}
-			signatures[i] = Signature{
-				PubKey:   pubKeys[i],
-				Data:     sigData,
-				Sequence: si.GetSequence(),
-			}
-		}
-	}
-
-	return signatures, nil
-}
-
-// decodeAny decodes a protobuf Any message into a concrete proto.Message.
-func (w wrappedTx) decodeAny(anyPb *anypb.Any) (proto.Message, error) {
-	name := anyPb.GetTypeUrl()
-	if i := strings.LastIndexByte(name, '/'); i >= 0 {
-		name = name[i+len("/"):]
-	}
-	typ := proto.MessageType(name)
-	if typ == nil {
-		return nil, fmt.Errorf("unknown type: %s", name)
-	}
-	v1 := reflect.New(typ.Elem()).Interface().(proto.Message)
-	err := w.cdc.Unmarshal(anyPb.GetValue(), v1)
-	if err != nil {
-		return nil, err
-	}
-	return v1, nil
 }

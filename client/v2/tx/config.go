@@ -45,13 +45,13 @@ type TxConfig interface {
 // It provides methods for both binary and JSON encoding/decoding.
 type TxEncodingConfig interface {
 	// TxEncoder returns an encoder for binary transaction encoding.
-	TxEncoder() txApiEncoder
+	TxEncoder() txEncoder
 	// TxDecoder returns a decoder for binary transaction decoding.
-	TxDecoder() txApiDecoder
+	TxDecoder() txDecoder
 	// TxJSONEncoder returns an encoder for JSON transaction encoding.
-	TxJSONEncoder() txApiEncoder
+	TxJSONEncoder() txEncoder
 	// TxJSONDecoder returns a decoder for JSON transaction decoding.
-	TxJSONDecoder() txApiDecoder
+	TxJSONDecoder() txDecoder
 }
 
 // TxSigningConfig defines the interface for transaction signing configurations.
@@ -144,23 +144,23 @@ func NewTxConfig(options ConfigOptions) (TxConfig, error) {
 type defaultEncodingConfig struct{}
 
 // TxEncoder returns the default transaction encoder.
-func (t defaultEncodingConfig) TxEncoder() txApiEncoder {
-	return txEncoder
+func (t defaultEncodingConfig) TxEncoder() txEncoder {
+	return encodeTx
 }
 
 // TxDecoder returns the default transaction decoder.
-func (t defaultEncodingConfig) TxDecoder() txApiDecoder {
-	return txDecoder
+func (t defaultEncodingConfig) TxDecoder() txDecoder {
+	return decodeTx
 }
 
 // TxJSONEncoder returns the default JSON transaction encoder.
-func (t defaultEncodingConfig) TxJSONEncoder() txApiEncoder {
-	return txJsonEncoder
+func (t defaultEncodingConfig) TxJSONEncoder() txEncoder {
+	return encodeJsonTx
 }
 
 // TxJSONDecoder returns the default JSON transaction decoder.
-func (t defaultEncodingConfig) TxJSONDecoder() txApiDecoder {
-	return txJsonDecoder
+func (t defaultEncodingConfig) TxJSONDecoder() txDecoder {
+	return decodeJsonTx
 }
 
 // defaultTxSigningConfig is a struct that holds the signing context and handler map.

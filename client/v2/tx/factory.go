@@ -328,11 +328,7 @@ func (f *Factory) Sign(ctx context.Context, txBuilder TxBuilder, overwriteSig bo
 			return err
 		}
 
-		txWrap := wrappedTx{
-			tx:  tx,
-			cdc: f.cdc,
-		}
-		prevSignatures, err = txWrap.GetSignatures()
+		prevSignatures, err = tx.GetSignatures()
 		if err != nil {
 			return err
 		}
@@ -353,12 +349,8 @@ func (f *Factory) Sign(ctx context.Context, txBuilder TxBuilder, overwriteSig bo
 	if err != nil {
 		return err
 	}
-	txWrap := wrappedTx{
-		tx:  tx,
-		cdc: f.cdc,
-	}
 
-	if err := checkMultipleSigners(txWrap); err != nil {
+	if err := checkMultipleSigners(tx); err != nil {
 		return err
 	}
 

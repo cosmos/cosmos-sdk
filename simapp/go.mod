@@ -249,7 +249,6 @@ replace (
 	cosmossdk.io/core => ../core
 	cosmossdk.io/core/testing => ../core/testing
 	cosmossdk.io/depinject => ../depinject
-	cosmossdk.io/indexer/postgres => ../indexer/postgres
 	cosmossdk.io/log => ../log
 	cosmossdk.io/schema => ../schema
 	cosmossdk.io/store => ../store

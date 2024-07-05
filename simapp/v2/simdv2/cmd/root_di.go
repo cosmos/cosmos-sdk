@@ -57,7 +57,7 @@ func NewRootCmd[T transaction.Tx]() *cobra.Command {
 
 	rootCmd := &cobra.Command{
 		Use:           "simd",
-		Short:         "simulation app",
+		Short:         "simulation app v2",
 		SilenceErrors: true,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx = clientCtx.WithCmdContext(cmd.Context())

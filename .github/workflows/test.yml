@@ -184,7 +184,7 @@ jobs:
           name: "testnet-setup"
           path: ./systemtests/testnet/
           retention-days: 3
-      - name: system tests v2
+      - name: system tests DI
         if: env.GIT_DIFF
         run: |
           make test-system

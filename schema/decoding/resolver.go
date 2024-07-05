@@ -6,22 +6,13 @@ import (
 	"cosmossdk.io/schema"
 )
 
+// DecoderResolver is an interface that allows indexers to discover and use module decoders.
 type DecoderResolver interface {
-	// IterateAll iterates over all module decoders which should be initialized at startup.
+	// IterateAll iterates over all available module decoders.
 	IterateAll(func(moduleName string, cdc schema.ModuleCodec) error) error
 
-	// LookupDecoder allows for resolving decoders dynamically. For instance, some module-like
-	// things may come into existence dynamically (like x/accounts or EVM or WASM contracts).
-	// The first time the manager sees one of these appearing in KV-store writes, it will
-	// lookup a decoder for it and cache it for future use. The manager will also perform
-	// a catch-up sync before passing any new writes to ensure that all historical state has
-	// been synced if there is any This check will only happen the first time a module is seen
-	// by the manager in a given process (a process restart will cause this check to happen again).
+	// LookupDecoder looks up a specific module decoder.
 	LookupDecoder(moduleName string) (decoder schema.ModuleCodec, found bool, err error)
-}
-
-type moduleSetDecoderResolver struct {
-	moduleSet map[string]interface{}
 }
 
 // ModuleSetDecoderResolver returns DecoderResolver that will discover modules implementing
@@ -30,6 +21,10 @@ func ModuleSetDecoderResolver(moduleSet map[string]interface{}) DecoderResolver 
 	return &moduleSetDecoderResolver{
 		moduleSet: moduleSet,
 	}
+}
+
+type moduleSetDecoderResolver struct {
+	moduleSet map[string]interface{}
 }
 
 func (a moduleSetDecoderResolver) IterateAll(f func(string, schema.ModuleCodec) error) error {

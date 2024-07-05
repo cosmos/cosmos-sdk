@@ -7,7 +7,7 @@ set -x
 ROOT=$PWD
 
 SIMD="$ROOT/build/simd"
-CONFIG="${CONFIG:-$HOME/.simappv2/config}"
+CONFIG="${CONFIG:-$HOME/.simapp/config}"
 
 COSMOS_BUILD_OPTIONS=v2 make build     
 

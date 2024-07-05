@@ -120,7 +120,7 @@ func TestUnorderedTxManager_Flow(t *testing.T) {
 
 		var (
 			height    uint64    = 1
-			timestamp time.Time = time.Now()
+			timestamp time.Time = time.Now() //nolint:stylecheck // false positive
 			i                   = 101
 		)
 		for time := range ticker.C {

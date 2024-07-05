@@ -59,10 +59,9 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 	}
 
 	timeoutTimestamp := unorderedTx.GetTimeoutTimeStamp()
-	// TTL is defined as a specific block height at which this tx is no longer valid
-	if !timeoutTimestamp.IsZero() {
+	if !timeoutTimestamp.IsZero() && timeoutTimestamp.Unix() != 0 {
 		if timeoutTimestamp.Before(ctx.BlockTime()) {
-			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction has a timeout_height that has already passed")
+			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction has a timeout_timestamp that has already passed")
 		}
 		if timeoutTimestamp.After(ctx.BlockTime().Add(d.maxTimeoutDuration)) {
 			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unordered tx ttl exceeds %d", d.maxUnOrderedTTL)
@@ -76,6 +75,7 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 		return next(ctx, tx, false)
 	}
 
+	// TTL is defined as a specific block height at which this tx is no longer valid
 	ttl := unorderedTx.GetTimeoutHeight()
 	if ttl == 0 && timeoutTimestamp.IsZero() {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction must have timeout_height or timeout_timestamp set")

@@ -269,7 +269,7 @@ func (txh TxTimeoutHeightDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) e
 	}
 
 	timeoutTimestamp := timeoutTx.GetTimeoutTimeStamp()
-	if !timeoutTimestamp.IsZero() && timeoutTimestamp.Before(headerInfo.Time) {
+	if !timeoutTimestamp.IsZero() && timeoutTimestamp.Unix() != 0 && timeoutTimestamp.Before(headerInfo.Time) {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrTxTimeout, "block time: %s, timeout timestamp: %s", headerInfo.Time.String(), timeoutTimestamp.String(),
 		)

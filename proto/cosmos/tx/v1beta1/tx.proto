@@ -134,7 +134,7 @@ message TxBody {
   // Note, if unordered=true this value MUST be set
   // and will act as a short-lived TTL in which the transaction is deemed valid
   // and kept in memory to prevent duplicates.
-  google.protobuf.Timestamp timeout_timestamp = 5 [(gogoproto.stdtime) = true];
+  google.protobuf.Timestamp timeout_timestamp = 5 [(gogoproto.nullable) = true, (gogoproto.stdtime) = true];
 
   // extension_options are arbitrary options that can be added by chains
   // when the default options are not sufficient. If any of these are present

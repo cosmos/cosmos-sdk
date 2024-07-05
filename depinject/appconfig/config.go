@@ -14,7 +14,6 @@ import (
 	"sigs.k8s.io/yaml"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-
 	"cosmossdk.io/depinject"
 	internal "cosmossdk.io/depinject/internal/appconfig"
 )
@@ -94,7 +93,6 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 				return depinject.Error(fmt.Errorf("no module registered for type URL %s, did you forget to import %s: find more information on how to make a module ready for app wiring: https://docs.cosmos.network/main/building-modules/depinject\n\n%s",
 					module.Config.TypeUrl, modDesc.GoImport, dumpRegisteredModules(modules)))
 			}
-
 		}
 
 		var config gogoproto.Message

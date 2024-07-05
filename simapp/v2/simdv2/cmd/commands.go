@@ -19,6 +19,7 @@ import (
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 	authcmd "cosmossdk.io/x/auth/client/cli"
+	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/debug"
@@ -90,6 +91,7 @@ func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
 		genutilcli.InitCmd(moduleManager),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
+		NewTestnetCmd(moduleManager, banktypes.GenesisBalancesIterator{}),
 		// pruning.Cmd(newApp), // TODO add to comet server
 		// snapshot.Cmd(newApp), // TODO add to comet server
 	)
@@ -98,6 +100,15 @@ func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
 	if err != nil {
 		panic(fmt.Sprintf("failed to create logger: %v", err))
 	}
+
+	// add keybase, auxiliary RPC, query, genesis, and tx child commands
+	rootCmd.AddCommand(
+		genesisCommand[T](txConfig, moduleManager, appExport[T]),
+		queryCommand(),
+		txCommand(),
+		keys.Commands(),
+		offchain.OffChain(),
+	)
 
 	// Add empty server struct here for writing default config
 	if err = serverv2.AddCommands(
@@ -109,16 +120,6 @@ func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
 	); err != nil {
 		panic(err)
 	}
-
-	// add keybase, auxiliary RPC, query, genesis, and tx child commands
-	rootCmd.AddCommand(
-		server.StatusCommand(),
-		genesisCommand[T](txConfig, moduleManager, appExport[T]),
-		queryCommand(),
-		txCommand(),
-		keys.Commands(),
-		offchain.OffChain(),
-	)
 }
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter

@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/decoding"
+	"cosmossdk.io/schema/indexer"
 	"cosmossdk.io/schema/logutil"
 )
 
@@ -29,8 +30,11 @@ type Options struct {
 	Context context.Context
 }
 
-// IndexingConfig is the configuration of all the
+// IndexingConfig is the configuration of the indexing manager and contains the configuration for each indexer target.
 type IndexingConfig struct {
+
+	// Target is a map of indexer targets to their configuration.
+	Target map[string]indexer.Config
 }
 
 // Start starts the indexer manager with the given options. The state machine should write all relevant app data to

@@ -48,6 +48,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#20631](https://github.com/cosmos/cosmos-sdk/pull/20631) Fix json parsing in the wait-tx command.
 * (x/auth) [#20438](https://github.com/cosmos/cosmos-sdk/pull/20438) Add `--skip-signature-verification` flag to multisign command to allow nested multisigs.
 
+## Bug Fixes
+
+* (simulation) [#18196](https://github.com/cosmos/cosmos-sdk/pull/18196) Fix the problem of `validator set is empty after InitGenesis` in simulation test.
+
 ## [v0.50.7](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.7) - 2024-06-04
 
 ### Improvements
@@ -59,18 +63,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-<<<<<<< HEAD
 * (baseapp) [#20346](https://github.com/cosmos/cosmos-sdk/pull/20346) Correctly assign `execModeSimulate` to context for `simulateTx`.
 * (baseapp) [#20144](https://github.com/cosmos/cosmos-sdk/pull/20144) Remove txs from mempool when AnteHandler fails in recheck.
 * (baseapp) [#20107](https://github.com/cosmos/cosmos-sdk/pull/20107) Avoid header height overwrite block height.
 * (cli) [#20020](https://github.com/cosmos/cosmos-sdk/pull/20020) Make bootstrap-state command support both new and legacy genesis format.
 * (testutil/sims) [#20151](https://github.com/cosmos/cosmos-sdk/pull/20151) Set all signatures and don't overwrite the previous one in `GenSignedMockTx`.
-=======
-* (x/slashing) [#18016](https://github.com/cosmos/cosmos-sdk/pull/18016) Fixed builder function for missed blocks key (`validatorMissedBlockBitArrayPrefixKey`) in slashing/migration/v4
-* (x/gov) [#17873](https://github.com/cosmos/cosmos-sdk/pull/17873) Fail any inactive and active proposals whose messages cannot be decoded.
-* (simulation) [#17911](https://github.com/cosmos/cosmos-sdk/pull/17911) Fix all problems with executing command `make test-sim-custom-genesis-fast` for simulation test.
-* (simulation) [#18196](https://github.com/cosmos/cosmos-sdk/pull/18196) Fix the problem of `validator set is empty after InitGenesis` in simulation test.
->>>>>>> f2f47ffd4 (fix(simulation): fix the problem of `validator set is empty after InitGenesis` in simulation test (#18196))
 
 ## [v0.50.6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.6) - 2024-04-22
 

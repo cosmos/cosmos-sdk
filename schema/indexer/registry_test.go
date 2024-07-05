@@ -7,11 +7,11 @@ func TestRegister(t *testing.T) {
 		return InitResult{}, nil
 	})
 
-	if Lookup("test") == nil {
+	if indexerRegistry["test"] == nil {
 		t.Fatalf("expected to find indexer")
 	}
 
-	if Lookup("test2") != nil {
+	if indexerRegistry["test2"] != nil {
 		t.Fatalf("expected not to find indexer")
 	}
 

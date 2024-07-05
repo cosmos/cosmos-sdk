@@ -356,7 +356,7 @@ func Test_txBuilder_GetSigningTxData(t *testing.T) {
 					PubKey: pk,
 					Data: &SingleSignatureData{
 						SignMode:  apisigning.SignMode_SIGN_MODE_DIRECT,
-						Signature: nil,
+						Signature: []byte("signature"),
 					},
 					Sequence: 0,
 				}}...)

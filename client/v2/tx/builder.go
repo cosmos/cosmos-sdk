@@ -1,6 +1,7 @@
 package tx
 
 import (
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogoany "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -178,11 +179,11 @@ func (b *txBuilder) GetSigningTxData() (*signing.TxData, error) {
 		return nil, err
 	}
 
-	bodyBytes, err := marshalOption.Marshal(tx.Body)
+	bodyBytes, err := gogoproto.Marshal(tx.Body)
 	if err != nil {
 		return nil, err
 	}
-	authBytes, err := marshalOption.Marshal(tx.AuthInfo)
+	authBytes, err := gogoproto.Marshal(tx.AuthInfo)
 	if err != nil {
 		return nil, err
 	}

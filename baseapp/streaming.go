@@ -8,10 +8,11 @@ import (
 
 	"github.com/spf13/cast"
 
+	"cosmossdk.io/schema/indexing"
+
 	"cosmossdk.io/schema"
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/decoding"
-	"cosmossdk.io/schema/indexing"
 	"cosmossdk.io/store/streaming"
 	storetypes "cosmossdk.io/store/types"
 
@@ -29,6 +30,9 @@ const (
 	StreamingABCIStopNodeOnErrTomlKey = "stop-node-on-err"
 )
 
+// EnableIndexer enables the built-in indexer with the provided options (usually from the app.toml indexer key),
+// kv-store keys, and app modules. Using the built-in indexer framework is mutually exclusive from using other
+// types of streaming listeners.
 func (app *BaseApp) EnableIndexer(indexerOpts interface{}, keys map[string]*storetypes.KVStoreKey, appModules map[string]any) error {
 	optsMap, ok := indexerOpts.(map[string]interface{})
 	if !ok {

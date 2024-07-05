@@ -245,6 +245,7 @@ func NewSimApp(
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 
 	if indexerOpts := appOpts.Get("indexer"); indexerOpts != nil {
+		// if we have indexer options in app.toml, then enable the built-in indexer framework
 		moduleSet := map[string]any{}
 		for modName, mod := range appModules {
 			moduleSet[modName] = mod
@@ -254,7 +255,7 @@ func NewSimApp(
 			panic(err)
 		}
 	} else {
-		// register streaming services
+		// register legacy streaming services if we don't have the built-in indexer enabled
 		if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
 			panic(err)
 		}

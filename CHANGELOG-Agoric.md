@@ -41,6 +41,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (auth, bank) Agoric/agoric-sdk#8989 Remove deprecated lien support
 
+### Bug Fixes
+
+* (baseapp) [#338](https://github.com/agoric-labs/cosmos-sdk/pull/338) Make sure we don't execute blocks beyond the halt height. Restored from [#305](https://github.com/agoric-labs/cosmos-sdk/pull/305) but compatible with older `SIGINT`, `SIGTERM` logic
+
 ## `v0.46.16-alpha.agoric.2.4` - 2024-04-19
 
 ### Improvements
@@ -67,7 +71,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* (baseapp) [#338](https://github.com/agoric-labs/cosmos-sdk/pull/338) Make sure we don't execute blocks beyond the halt height. Restored from [#305](https://github.com/agoric-labs/cosmos-sdk/pull/305) but compatible with older `SIGINT`, `SIGTERM` logic
 * (baseapp) [#413](https://github.com/agoric-labs/cosmos-sdk/pull/413) Ignore events from simulated transactions
 
 ## `v0.46.16-alpha.agoric.2.1` - 2024-03-08
@@ -86,7 +89,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## `v0.46.16-alpha.agoric.1` - 2024-02-05
 
-* Agoric/agoric-sdk#8224 Merge [cosmos/cosmos-sdk v0.46.16](https://github.com/osmos/cosmos-sdk/releases/tag/v0.46.16)
+* Agoric/agoric-sdk#8224 Merge [cosmos/cosmos-sdk v0.46.16](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.16)
 
 ### Bug Fixes
 

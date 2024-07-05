@@ -1,17 +1,24 @@
 package baseapp
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strings"
 
 	"github.com/spf13/cast"
 
+	"cosmossdk.io/schema"
+	"cosmossdk.io/schema/appdata"
+	"cosmossdk.io/schema/decoding"
+	"cosmossdk.io/schema/indexing"
 	"cosmossdk.io/store/streaming"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 )
 
 const (
@@ -21,6 +28,33 @@ const (
 	StreamingABCIKeysTomlKey          = "keys"
 	StreamingABCIStopNodeOnErrTomlKey = "stop-node-on-err"
 )
+
+func (app *BaseApp) EnableIndexer(indexerOpts interface{}, keys map[string]*storetypes.KVStoreKey, appModules map[string]any) error {
+	optsMap, ok := indexerOpts.(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("invalid indexer options type %T, expected a map", indexerOpts)
+	}
+
+	listener, err := indexing.Start(indexing.Options{
+		Options:    optsMap,
+		Resolver:   decoding.ModuleSetDecoderResolver(appModules),
+		SyncSource: nil,
+		Logger:     app.logger.With("module", "indexer"),
+	})
+	if err != nil {
+		return err
+	}
+
+	exposedKeys := exposeStoreKeysSorted([]string{"*"}, keys)
+	app.cms.AddListeners(exposedKeys)
+
+	app.streamingManager = storetypes.StreamingManager{
+		ABCIListeners: []storetypes.ABCIListener{listenerWrapper{listener}},
+		StopNodeOnErr: true,
+	}
+
+	return nil
+}
 
 // RegisterStreamingServices registers streaming services with the BaseApp.
 func (app *BaseApp) RegisterStreamingServices(appOpts servertypes.AppOptions, keys map[string]*storetypes.KVStoreKey) error {
@@ -109,4 +143,52 @@ func exposeStoreKeysSorted(keysStr []string, keys map[string]*storetypes.KVStore
 	})
 
 	return exposeStoreKeys
+}
+
+type listenerWrapper struct {
+	listener appdata.Listener
+}
+
+func (p listenerWrapper) ListenFinalizeBlock(_ context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error {
+	if p.listener.StartBlock != nil {
+		err := p.listener.StartBlock(appdata.StartBlockData{
+			Height: uint64(req.Height),
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	//// TODO txs, events
+
+	return nil
+}
+
+func (p listenerWrapper) ListenCommit(ctx context.Context, res abci.CommitResponse, changeSet []*storetypes.StoreKVPair) error {
+	if cb := p.listener.OnKVPair; cb != nil {
+		updates := make([]appdata.ModuleKVPairUpdate, len(changeSet))
+		for i, pair := range changeSet {
+			updates[i] = appdata.ModuleKVPairUpdate{
+				ModuleName: pair.StoreKey,
+				Update: schema.KVPairUpdate{
+					Key:    pair.Key,
+					Value:  pair.Value,
+					Delete: pair.Delete,
+				},
+			}
+		}
+		err := cb(appdata.KVPairData{Updates: updates})
+		if err != nil {
+			return err
+		}
+	}
+
+	if p.listener.Commit != nil {
+		err := p.listener.Commit(appdata.CommitData{})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

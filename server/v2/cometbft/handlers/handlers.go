@@ -13,11 +13,11 @@ import (
 type (
 	// PrepareHandler passes in the list of Txs that are being proposed. The app can then do stateful operations
 	// over the list of proposed transactions. It can return a modified list of txs to include in the proposal.
-	PrepareHandler[T transaction.Tx] func(context.Context, AppManager[T], []T, proto.Message) ([]T, error)
+	PrepareHandler[T transaction.Tx] func(context.Context, store.ReaderMap, AppManager[T], []T, proto.Message) ([]T, error)
 
 	// ProcessHandler is a function that takes a list of transactions and returns a boolean and an error.
 	// If the verification of a transaction fails, the boolean is false and the error is non-nil.
-	ProcessHandler[T transaction.Tx] func(context.Context, AppManager[T], []T, proto.Message) error
+	ProcessHandler[T transaction.Tx] func(context.Context, store.ReaderMap, AppManager[T], []T, proto.Message) error
 
 	// VerifyVoteExtensionhandler is a function type that handles the verification of a vote extension request.
 	// It takes a context, a store reader map, and a request to verify a vote extension.

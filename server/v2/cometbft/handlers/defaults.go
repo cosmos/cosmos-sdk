@@ -33,7 +33,7 @@ func NewDefaultProposalHandler[T transaction.Tx](mp mempool.Mempool[T]) *Default
 }
 
 func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
-	return func(ctx context.Context, app AppManager[T], txs []T, req proto.Message) ([]T, error) {
+	return func(ctx context.Context, reader store.ReaderMap, app AppManager[T], txs []T, req proto.Message) ([]T, error) {
 		abciReq, ok := req.(*abci.PrepareProposalRequest)
 		if !ok {
 			return nil, fmt.Errorf("expected abci.PrepareProposalRequest, invalid request type: %T,", req)
@@ -102,7 +102,7 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 }
 
 func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
-	return func(ctx context.Context, app AppManager[T], txs []T, req proto.Message) error {
+	return func(ctx context.Context, reader store.ReaderMap, app AppManager[T], txs []T, req proto.Message) error {
 		// If the mempool is nil we simply return ACCEPT,
 		// because PrepareProposal may have included txs that could fail verification.
 		_, isNoOp := h.mempool.(mempool.NoOpMempool[T])
@@ -156,7 +156,7 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
 // NoOpPrepareProposal defines a no-op PrepareProposal handler. It will always
 // return the transactions sent by the client's request.
 func NoOpPrepareProposal[T transaction.Tx]() PrepareHandler[T] {
-	return func(ctx context.Context, app AppManager[T], txs []T, req proto.Message) ([]T, error) {
+	return func(ctx context.Context, reader store.ReaderMap, app AppManager[T], txs []T, req proto.Message) ([]T, error) {
 		return txs, nil
 	}
 }
@@ -164,7 +164,7 @@ func NoOpPrepareProposal[T transaction.Tx]() PrepareHandler[T] {
 // NoOpProcessProposal defines a no-op ProcessProposal Handler. It will always
 // return ACCEPT.
 func NoOpProcessProposal[T transaction.Tx]() ProcessHandler[T] {
-	return func(context.Context, AppManager[T], []T, proto.Message) error {
+	return func(context.Context, store.ReaderMap, AppManager[T], []T, proto.Message) error {
 		return nil
 	}
 }

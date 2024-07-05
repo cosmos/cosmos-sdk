@@ -315,7 +315,12 @@ func (c *Consensus[T]) PrepareProposal(
 		LastCommit:      toCoreExtendedCommitInfo(req.LocalLastCommit),
 	})
 
-	txs, err := c.prepareProposalHandler(ciCtx, c.app, decodedTxs, req)
+	_, latestStore, err := c.store.StateLatest()
+	if err != nil {
+		return nil, err
+	}
+
+	txs, err := c.prepareProposalHandler(ciCtx, latestStore, c.app, decodedTxs, req)
 	if err != nil {
 		return nil, err
 	}
@@ -355,7 +360,12 @@ func (c *Consensus[T]) ProcessProposal(
 		LastCommit:      toCoreCommitInfo(req.ProposedLastCommit),
 	})
 
-	err := c.processProposalHandler(ciCtx, c.app, decodedTxs, req)
+	_, latestStore, err := c.store.StateLatest()
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.processProposalHandler(ciCtx, latestStore, c.app, decodedTxs, req)
 	if err != nil {
 		c.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abciproto.ProcessProposalResponse{

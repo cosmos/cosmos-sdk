@@ -162,6 +162,33 @@ func TestObjectType_Validate(t *testing.T) {
 			},
 			errContains: "key field \"field1\" cannot be nullable",
 		},
+		{
+			name: "duplicate incompatible enum",
+			objectType: ObjectType{
+				Name: "objectWithEnums",
+				KeyFields: []Field{
+					{
+						Name: "key",
+						Kind: EnumKind,
+						EnumDefinition: EnumDefinition{
+							Name:   "enum1",
+							Values: []string{"a", "b"},
+						},
+					},
+				},
+				ValueFields: []Field{
+					{
+						Name: "value",
+						Kind: EnumKind,
+						EnumDefinition: EnumDefinition{
+							Name:   "enum1",
+							Values: []string{"c", "b"},
+						},
+					},
+				},
+			},
+			errContains: "enum \"enum1\" has different values",
+		},
 	}
 
 	for _, tt := range tests {

@@ -110,6 +110,39 @@ func TestModuleSchema_Validate(t *testing.T) {
 			},
 			errContains: "different values",
 		},
+		{
+			name: "same enum",
+			moduleSchema: ModuleSchema{
+				ObjectTypes: []ObjectType{
+					{
+						Name: "object1",
+						KeyFields: []Field{
+							{
+								Name: "k",
+								Kind: EnumKind,
+								EnumDefinition: EnumDefinition{
+									Name:   "enum1",
+									Values: []string{"a", "b"},
+								},
+							},
+						},
+					},
+					{
+						Name: "object2",
+						KeyFields: []Field{
+							{
+								Name: "k",
+								Kind: EnumKind,
+								EnumDefinition: EnumDefinition{
+									Name:   "enum1",
+									Values: []string{"a", "b"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {

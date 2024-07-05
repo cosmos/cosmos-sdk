@@ -7,15 +7,6 @@ package appdata
 // decoding of data out of the box, so the InitializeModuleData and OnObjectUpdate methods will not be called.
 // These methods will only be called when listening logical decoding is setup.
 type Listener struct {
-	//// TODO: this is the only method that can't be packetized so muxing is a bit more complex - maybe we should pull this out and create a separate initialization mechanism
-	//// Initialize is called when the listener is initialized before any other methods are called.
-	//// The lastBlockPersisted return value should be the last block height the listener persisted if it is
-	//// persisting block data, 0 if it is not interested in persisting block data, or -1 if it is
-	//// persisting block data but has not persisted any data yet. This check allows the indexer
-	//// framework to ensure that the listener has not missed blocks. Data sources MUST call
-	//// initialize before any other method is called, otherwise, no data will be processed.
-	//Initialize func(context.Context, InitializationData) (lastBlockPersisted int64, err error)
-
 	// InitializeModuleData should be called whenever the blockchain process starts OR whenever
 	// logical decoding of a module is initiated. An indexer listening to this event
 	// should ensure that they have performed whatever initialization steps (such as database

@@ -66,6 +66,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking
 
+* [#20735](https://github.com/cosmos/cosmos-sdk/pull/20735) Remove PreviousProposer from the state machine.
 * [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) Migrate community pool funds from `x/distribution` to `x/protocolpool`.
 * [#17115](https://github.com/cosmos/cosmos-sdk/pull/17115) Migrate `PreviousProposer` to collections.
 * [#18539](https://github.com/cosmos/cosmos-sdk/pull/18539) Introduce `FeePool.DecimalPool` to replace `FeePool.CommunityPool`, which temporarily holds fractional rewards until they are distributed to the community pool every 1000 blocks.

@@ -6,32 +6,26 @@ import (
 	"cosmossdk.io/schema"
 )
 
-// InitializationData represents initialization data that is passed to a listener.
-type InitializationData struct {
-	// HasEventAlignedWrites indicates that the blockchain data source will emit KV-pair events
-	// in an order aligned with transaction, message and event callbacks. If this is true
-	// then indexers can assume that KV-pair data is associated with these specific transactions, messages
-	// and events. This may be useful for indexers which store a log of all operations (such as immutable
-	// or version controlled databases) so that the history log can include fine grain correlation between
-	// state updates and transactions, messages and events. If this value is false, then indexers should
-	// assume that KV-pair data occurs out of order with respect to transaction, message and event callbacks -
-	// the only safe assumption being that KV-pair data is associated with the block in which it was emitted.
-	HasEventAlignedWrites bool
-}
-
+// ModuleInitializationData represents data for related to module initialization, in particular
+// the module's schema.
 type ModuleInitializationData struct {
+	// ModuleName is the name of the module.
 	ModuleName string
-	Schema     schema.ModuleSchema
+
+	// Schema is the schema of the module.
+	Schema schema.ModuleSchema
 }
 
+// StartBlockData represents the data that is passed to a listener when a block is started.
 type StartBlockData struct {
 	// Height is the height of the block.
 	Height uint64
 
-	// Bytes is the raw byte representation of the block header.
+	// Bytes is the raw byte representation of the block header. It may be nil if the source does not provide it.
 	HeaderBytes ToBytes
 
 	// JSON is the JSON representation of the block header. It should generally be a JSON object.
+	// It may be nil if the source does not provide it.
 	HeaderJSON ToJSON
 }
 
@@ -76,14 +70,17 @@ type ToBytes = func() ([]byte, error)
 // ToJSON is a function that lazily returns the JSON representation of data.
 type ToJSON = func() (json.RawMessage, error)
 
+// KVPairData represents a batch of key-value pair data that is passed to a listener.
 type KVPairData struct {
 	Updates []ModuleKVPairUpdate
 }
 
+// ModuleKVPairUpdate represents a key-value pair update for a specific module.
 type ModuleKVPairUpdate struct {
 	// ModuleName is the name of the module that the key-value pair belongs to.
 	ModuleName string
 
+	// Update is the key-value pair update.
 	Update schema.KVPairUpdate
 }
 
@@ -96,4 +93,5 @@ type ObjectUpdateData struct {
 	Updates []schema.ObjectUpdate
 }
 
+// CommitData represents commit data. It is empty for now, but fields could be added later.
 type CommitData struct{}

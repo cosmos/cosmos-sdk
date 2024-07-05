@@ -1,7 +1,5 @@
 package schema
 
-import "context"
-
 // HasModuleCodec is an interface that modules can implement to provide a ModuleCodec.
 // Usually these modules would also implement appmodule.AppModule, but that is not included
 // to keep this package free of any dependencies.
@@ -18,11 +16,6 @@ type ModuleCodec struct {
 	// KVDecoder is a function that decodes a key-value pair into an ObjectUpdate.
 	// If it is nil, the module doesn't support state decoding directly.
 	KVDecoder KVDecoder
-
-	// ApplyUpdate is a function that applies an ObjectUpdate to the module's state for the given context.
-	// If it is nil, the module doesn't support applying logical updates. If this function is provided
-	// then it can be used as a genesis import path.
-	ApplyUpdate ApplyUpdate
 }
 
 // KVDecoder is a function that decodes a key-value pair into one or more ObjectUpdate's.
@@ -33,6 +26,7 @@ type ModuleCodec struct {
 // were decodable to aid debugging.
 type KVDecoder = func(KVPairUpdate) ([]ObjectUpdate, error)
 
+// KVPairUpdate represents a key-value pair set or delete.
 type KVPairUpdate struct {
 	// Key is the key of the key-value pair.
 	Key []byte
@@ -44,6 +38,3 @@ type KVPairUpdate struct {
 	// then it is assumed that this has been a set operation.
 	Delete bool
 }
-
-// ApplyUpdate is a function that applies an ObjectUpdate to the module's state for the given context.
-type ApplyUpdate = func(context.Context, ObjectUpdate) error

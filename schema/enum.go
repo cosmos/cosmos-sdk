@@ -5,6 +5,9 @@ import "fmt"
 // EnumDefinition represents the definition of an enum type.
 type EnumDefinition struct {
 	// Name is the name of the enum type. It must conform to the NameFormat regular expression.
+	// Its name must be unique between all enum types and object types in the module.
+	// The same enum, however, can be used in multiple object types and fields as long as the
+	// definition is identical each time
 	Name string
 
 	// Values is a list of distinct, non-empty values that are part of the enum type.
@@ -43,4 +46,32 @@ func (e EnumDefinition) ValidateValue(value string) error {
 		}
 	}
 	return fmt.Errorf("value %q is not a valid enum value for %s", value, e.Name)
+}
+
+// checkEnumCompatibility checks that the enum values are consistent across object types and fields.
+func checkEnumCompatibility(enumValueMap map[string]map[string]bool, field Field) error {
+	if field.Kind != EnumKind {
+		return nil
+	}
+
+	enum := field.EnumDefinition
+
+	if existing, ok := enumValueMap[enum.Name]; ok {
+		if len(existing) != len(enum.Values) {
+			return fmt.Errorf("enum %q has different number of values in different object types", enum.Name)
+		}
+
+		for _, value := range enum.Values {
+			if !existing[value] {
+				return fmt.Errorf("enum %q has different values in different object types", enum.Name)
+			}
+		}
+	} else {
+		valueMap := map[string]bool{}
+		for _, value := range enum.Values {
+			valueMap[value] = true
+		}
+		enumValueMap[enum.Name] = valueMap
+	}
+	return nil
 }

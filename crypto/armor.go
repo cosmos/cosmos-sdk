@@ -59,12 +59,17 @@ const (
 var BcryptSecurityParameter uint32 = 12
 
 //-----------------------------------------------------------------
-// add armor
 
+// EncodeArmor is a wrapper function for armor.EncodeArmor.
+// It encodes the given data into an armored string format.
+// It takes a block type, headers, and data as input and returns the armored string and any error encountered.
 func EncodeArmor(blockType string, headers map[string]string, data []byte) (string, error) {
 	return armor.EncodeArmor(blockType, headers, data)
 }
 
+// DecodeArmor is a wrapper function for armor.DecodeArmor.
+// It decodes an armored string into its components.
+// It returns the block type, headers, decoded data, and any error encountered during decoding.
 func DecodeArmor(armorStr string) (blockType string, headers map[string]string, data []byte, err error) {
 	return armor.DecodeArmor(armorStr)
 }

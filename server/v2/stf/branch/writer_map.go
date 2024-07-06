@@ -1,6 +1,7 @@
 package branch
 
 import (
+	"bytes"
 	"fmt"
 	"unsafe"
 
@@ -78,7 +79,7 @@ func (b WriterMap) GetStateChanges() ([]store.StateChanges, error) {
 }
 
 // recurseStateChanges will recursively collect state changes from the tree of
-// WriterMap's and write them to the `changes` map.
+// WriterMap's and write them to the `changes` map in sorted order.
 func (b WriterMap) recurseStateChanges(changes map[string][]store.KVPair) error {
 	// depth first
 	if wr, ok := b.state.(WriterMap); ok {
@@ -91,7 +92,31 @@ func (b WriterMap) recurseStateChanges(changes map[string][]store.KVPair) error 
 		if err != nil {
 			return err
 		}
-		changes[account] = append(changes[account], kvChanges...)
+		if len(kvChanges) == 0 {
+			continue
+		}
+		// it will overwrite the changes and append in order
+		newChanges := make([]store.KVPair, 0, len(kvChanges))
+		oldChanges := changes[account]
+		index, end := 0, len(oldChanges)
+		for _, kv := range kvChanges {
+			for ; index < end; index++ {
+				switch bytes.Compare(oldChanges[index].Key, kv.Key) {
+				case -1:
+					newChanges = append(newChanges, oldChanges[index])
+					continue
+				case 0:
+					// overwrite the old value
+					continue
+				}
+				break
+			}
+			newChanges = append(newChanges, kv)
+		}
+		// append the remaining old changes
+		newChanges = append(newChanges, oldChanges[index:]...)
+
+		changes[account] = newChanges
 	}
 	return nil
 }

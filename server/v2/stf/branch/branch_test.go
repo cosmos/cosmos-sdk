@@ -54,7 +54,7 @@ func TestBranch(t *testing.T) {
 		}
 	}
 
-	parent := newMemState()
+	parent := newMemStore()
 
 	// populate parent with some state
 	set(parent, "1", "a")
@@ -103,7 +103,86 @@ func TestBranch(t *testing.T) {
 	// test reverse iter
 }
 
-func newMemState() memStore {
+func TestWriterMap(t *testing.T) {
+	apply := func(s store.Writer, pairs [][]string) {
+		kvs := make([]store.KVPair, len(pairs))
+		for i, pair := range pairs {
+			if len(pair) == 1 {
+				kvs[i] = store.KVPair{Key: []byte(pair[0]), Remove: true}
+			} else {
+				kvs[i] = store.KVPair{Key: []byte(pair[0]), Value: []byte(pair[1])}
+			}
+		}
+		require.NoError(t, s.ApplyChangeSets(kvs))
+	}
+
+	verify := func(cs store.KVPairs, pairs [][]string) {
+		require.Len(t, cs, len(pairs))
+		for i, pair := range pairs {
+			if len(pair) == 1 {
+				require.Equal(t, store.KVPair{Key: []byte(pair[0]), Remove: true}, cs[i])
+			} else {
+				require.Equal(t, store.KVPair{Key: []byte(pair[0]), Value: []byte(pair[1])}, cs[i])
+			}
+		}
+	}
+
+	storeKey := "store1"
+	wm := DefaultNewWriterMap(newMemState([]string{storeKey}))
+
+	store1, err := wm.GetWriter([]byte(storeKey))
+	require.NoError(t, err)
+	apply(store1, [][]string{
+		{"a", "1"},
+		{"c", "3"},
+		{"b", "2"},
+	})
+
+	wm2 := DefaultNewWriterMap(wm)
+	branch1, err := wm2.GetWriter([]byte(storeKey))
+	require.NoError(t, err)
+	apply(branch1, [][]string{
+		{"d", "4"},
+		{"a"},       // remove
+		{"c", "33"}, // update
+	})
+
+	// check the state changes
+	sc, err := wm2.GetStateChanges()
+	require.NoError(t, err)
+	require.Equal(t, len(sc), 1)
+	require.Equal(t, sc[0].Actor, []byte(storeKey))
+	verify(sc[0].StateChanges, [][]string{
+		{"a"},
+		{"b", "2"},
+		{"c", "33"},
+		{"d", "4"},
+	})
+
+	wm3 := DefaultNewWriterMap(wm2)
+	branch2, err := wm3.GetWriter([]byte(storeKey))
+	require.NoError(t, err)
+	apply(branch2, [][]string{
+		{"b"},
+		{"f", "6"},
+		{"e", "5"},
+		{"d", "44"},
+	})
+
+	// check the state changes
+	sc, err = wm3.GetStateChanges()
+	require.NoError(t, err)
+	verify(sc[0].StateChanges, [][]string{
+		{"a"},
+		{"b"},
+		{"c", "33"},
+		{"d", "44"},
+		{"e", "5"},
+		{"f", "6"},
+	})
+}
+
+func newMemStore() memStore {
 	return memStore{btree.NewBTreeGOptions(byKeys, btree.Options{Degree: bTreeDegree, NoLocks: true})}
 }
 
@@ -148,4 +227,22 @@ func (m memStore) Iterator(start, end []byte) (store.Iterator, error) {
 
 func (m memStore) ReverseIterator(start, end []byte) (store.Iterator, error) {
 	return newMemIterator(start, end, m.t, false), nil
+}
+
+var _ store.ReaderMap = memState{}
+
+type memState struct {
+	stores map[string]memStore
+}
+
+func newMemState(storeKeys []string) memState {
+	stores := make(map[string]memStore, len(storeKeys))
+	for _, key := range storeKeys {
+		stores[key] = newMemStore()
+	}
+	return memState{stores: stores}
+}
+
+func (m memState) GetReader(actor []byte) (store.Reader, error) {
+	return m.stores[string(actor)], nil
 }

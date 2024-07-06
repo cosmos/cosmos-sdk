@@ -239,7 +239,8 @@ func TestBcryptLegacyEncryption(t *testing.T) {
 		armor       string
 	}
 
-	str1, _ := crypto.EncodeArmor("TENDERMINT PRIVATE KEY", headerBcrypt, encBytesBcryptXsalsa20symetric)
+	str1, err := crypto.EncodeArmor("TENDERMINT PRIVATE KEY", headerBcrypt, encBytesBcryptXsalsa20symetric)
+	require.NoError(t, err)
 
 	for _, scenario := range []testCase{
 		{
@@ -266,9 +267,10 @@ func TestBcryptLegacyEncryption(t *testing.T) {
 		"salt": fmt.Sprintf("%X", saltBytes),
 	}
 
-	str2, _ := crypto.EncodeArmor("TENDERMINT PRIVATE KEY", headerWithoutKdf, encBytesBcryptXsalsa20symetric)
+	str2, err := crypto.EncodeArmor("TENDERMINT PRIVATE KEY", headerWithoutKdf, encBytesBcryptXsalsa20symetric)
+	require.NoError(t, err)
 
-	_, _, err := crypto.UnarmorDecryptPrivKey(str2, "passphrase")
+	_, _, err = crypto.UnarmorDecryptPrivKey(str2, "passphrase")
 	require.Error(t, err)
 	require.Equal(t, "unrecognized KDF type: wrongKdf", err.Error())
 }

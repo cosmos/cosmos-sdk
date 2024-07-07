@@ -133,9 +133,10 @@ func TestWriterMap(t *testing.T) {
 	store1, err := wm.GetWriter([]byte(storeKey))
 	require.NoError(t, err)
 	apply(store1, [][]string{
+		{"b", "2"},
 		{"a", "1"},
 		{"c", "3"},
-		{"b", "2"},
+		{"b", "22"}, // self update
 	})
 
 	wm2 := DefaultNewWriterMap(wm)
@@ -154,7 +155,7 @@ func TestWriterMap(t *testing.T) {
 	require.Equal(t, sc[0].Actor, []byte(storeKey))
 	verify(sc[0].StateChanges, [][]string{
 		{"a"},
-		{"b", "2"},
+		{"b", "22"},
 		{"c", "33"},
 		{"d", "4"},
 	})

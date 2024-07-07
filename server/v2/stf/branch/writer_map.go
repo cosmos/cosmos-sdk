@@ -95,28 +95,7 @@ func (b WriterMap) recurseStateChanges(changes map[string][]store.KVPair) error 
 		if len(kvChanges) == 0 {
 			continue
 		}
-		// it will overwrite the changes and append in order
-		newChanges := make([]store.KVPair, 0, len(kvChanges))
-		oldChanges := changes[account]
-		index, end := 0, len(oldChanges)
-		for _, kv := range kvChanges {
-			for ; index < end; index++ {
-				switch bytes.Compare(oldChanges[index].Key, kv.Key) {
-				case -1:
-					newChanges = append(newChanges, oldChanges[index])
-					continue
-				case 0:
-					// overwrite the old value
-					continue
-				}
-				break
-			}
-			newChanges = append(newChanges, kv)
-		}
-		// append the remaining old changes
-		newChanges = append(newChanges, oldChanges[index:]...)
-
-		changes[account] = newChanges
+		changes[account] = mergeChanges(changes[account], kvChanges)
 	}
 	return nil
 }
@@ -130,3 +109,29 @@ func (b WriterMap) applyStateChange(sc store.StateChanges) error {
 }
 
 func unsafeString(b []byte) string { return *(*string)(unsafe.Pointer(&b)) }
+
+// mergeChanges merges two sorted slices of KVPair into a single sorted slice.
+// If a key is present in both slices, the value from the newChanges slice is used.
+func mergeChanges(oldChanges, newChanges []store.KVPair) []store.KVPair {
+	result := make([]store.KVPair, 0, len(oldChanges)+len(newChanges))
+	i, j := 0, 0
+	for i < len(oldChanges) && j < len(newChanges) {
+		switch bytes.Compare(oldChanges[i].Key, newChanges[j].Key) {
+		case -1:
+			result = append(result, oldChanges[i])
+			i++
+		case 0:
+			// overwrite the old value
+			result = append(result, newChanges[j])
+			i++
+			j++
+		case 1:
+			result = append(result, newChanges[j])
+			j++
+		}
+	}
+	// append remaining changes
+	result = append(result, oldChanges[i:]...)
+	result = append(result, newChanges[j:]...)
+	return result
+}

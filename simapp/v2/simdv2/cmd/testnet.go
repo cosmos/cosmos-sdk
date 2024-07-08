@@ -15,12 +15,12 @@ import (
 	"github.com/spf13/pflag"
 
 	"cosmossdk.io/core/log"
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
-	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/cometbft"
 	authtypes "cosmossdk.io/x/auth/types"

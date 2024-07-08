@@ -13,10 +13,10 @@ import (
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
-	servercore "cosmossdk.io/core/server"
 )
 
 var _ serverv2.ServerComponent[

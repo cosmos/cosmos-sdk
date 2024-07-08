@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/viper"
 
-	"cosmossdk.io/core/transaction"
 	servercore "cosmossdk.io/core/server"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 )
 

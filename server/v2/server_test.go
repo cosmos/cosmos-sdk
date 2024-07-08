@@ -12,10 +12,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	coreapp "cosmossdk.io/core/app"
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
-	servercore "cosmossdk.io/core/server"
 	grpc "cosmossdk.io/server/v2/api/grpc"
 )
 

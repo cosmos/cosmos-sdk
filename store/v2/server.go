@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"cosmossdk.io/core/log"
 	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/core/log"
 )
 
 type StoreComponent[AppT servercore.AppI[T], T transaction.Tx] struct {

@@ -6,11 +6,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/simapp/v2"
 	"cosmossdk.io/simapp/v2/simdv2/cmd"
 
-	servercore "cosmossdk.io/core/server"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"

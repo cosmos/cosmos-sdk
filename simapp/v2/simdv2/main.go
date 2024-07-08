@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	serverv2 "cosmossdk.io/server/v2"
-	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/simapp/v2"
 	"cosmossdk.io/simapp/v2/simdv2/cmd"
 )

@@ -1,13 +1,15 @@
 package tx
 
 import (
-	"errors"
 	"fmt"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	protov2 "google.golang.org/protobuf/proto"
 
+	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	txdecode "cosmossdk.io/x/tx/decode"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 var (
@@ -34,8 +36,25 @@ type txDecoder func(txBytes []byte) (Tx, error)
 type txEncoder func(tx Tx) ([]byte, error)
 
 // decodeTx decodes transaction bytes into an apitx.Tx structure.
-func decodeTx(txBytes []byte) (Tx, error) {
-	return nil, errors.New("not implemented")
+func decodeTx(cdc codec.BinaryCodec, decoder Decoder) txDecoder {
+	return func(txBytes []byte) (Tx, error) {
+		tx := new(txv1beta1.Tx)
+		err := protov2.Unmarshal(txBytes, tx)
+		if err != nil {
+			return nil, err
+		}
+
+		pTxBytes, err := protoTxBytes(tx)
+		if err != nil {
+			return nil, err
+		}
+
+		decodedTx, err := decoder.Decode(pTxBytes)
+		if err != nil {
+			return nil, err
+		}
+		return newWrapperTx(cdc, decodedTx), nil
+	}
 }
 
 // encodeTx encodes an apitx.Tx into bytes using protobuf marshaling options.
@@ -48,8 +67,28 @@ func encodeTx(tx Tx) ([]byte, error) {
 }
 
 // decodeJsonTx decodes transaction bytes into an apitx.Tx structure using JSON format.
-func decodeJsonTx(txBytes []byte) (Tx, error) {
-	return nil, errors.New("not implemented")
+func decodeJsonTx(cdc codec.BinaryCodec, decoder Decoder) txDecoder {
+	return func(txBytes []byte) (Tx, error) {
+		jsonTx := new(txv1beta1.Tx)
+		err := protojson.UnmarshalOptions{
+			AllowPartial:   false,
+			DiscardUnknown: false,
+		}.Unmarshal(txBytes, jsonTx)
+		if err != nil {
+			return nil, err
+		}
+
+		pTxBytes, err := protoTxBytes(jsonTx)
+		if err != nil {
+			return nil, err
+		}
+
+		decodedTx, err := decoder.Decode(pTxBytes)
+		if err != nil {
+			return nil, err
+		}
+		return newWrapperTx(cdc, decodedTx), nil
+	}
 }
 
 // encodeJsonTx encodes an apitx.Tx into bytes using JSON marshaling options.
@@ -59,4 +98,22 @@ func encodeJsonTx(tx Tx) ([]byte, error) {
 		return nil, fmt.Errorf("unexpected tx type: %T", tx)
 	}
 	return jsonMarshalOptions.Marshal(wTx.Tx)
+}
+
+func protoTxBytes(tx *txv1beta1.Tx) ([]byte, error) {
+	bodyBytes, err := marshalOption.Marshal(tx.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	authInfoBytes, err := marshalOption.Marshal(tx.AuthInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return marshalOption.Marshal(&txv1beta1.TxRaw{
+		BodyBytes:     bodyBytes,
+		AuthInfoBytes: authInfoBytes,
+		Signatures:    tx.Signatures,
+	})
 }

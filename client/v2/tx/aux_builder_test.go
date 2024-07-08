@@ -1,4 +1,4 @@
-package tx_test
+package tx
 
 import (
 	"testing"
@@ -8,17 +8,14 @@ import (
 
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/client/v2/tx"
 	"cosmossdk.io/core/transaction"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter"
 	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 const (
@@ -36,14 +33,13 @@ var (
 
 func TestAuxTxBuilder(t *testing.T) {
 	counterModule := counter.AppModule{}
-	cdc := moduletestutil.MakeTestEncodingConfig(testutil.CodecOptions{}, counterModule).Codec
 	reg := codectypes.NewInterfaceRegistry()
 
 	testdata.RegisterInterfaces(reg)
 	// required for test case: "GetAuxSignerData works for DIRECT_AUX"
 	counterModule.RegisterInterfaces(reg)
 
-	var b tx.AuxTxBuilder
+	var b AuxTxBuilder
 
 	testcases := []struct {
 		name      string
@@ -217,7 +213,7 @@ func TestAuxTxBuilder(t *testing.T) {
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			b = tx.NewAuxTxBuilder()
+			b = NewAuxTxBuilder()
 			err := tc.malleate()
 
 			if tc.expErr {

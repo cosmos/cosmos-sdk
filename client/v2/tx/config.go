@@ -135,13 +135,19 @@ func NewTxConfig(options ConfigOptions) (TxConfig, error) {
 
 	return &txConfig{
 		TxBuilderProvider: NewBuilderProvider(options.AddressCodec, options.Decoder, options.Cdc),
-		TxEncodingConfig:  defaultEncodingConfig{},
-		TxSigningConfig:   signingCtx,
+		TxEncodingConfig: defaultEncodingConfig{
+			cdc:     options.Cdc,
+			decoder: options.Decoder,
+		},
+		TxSigningConfig: signingCtx,
 	}, nil
 }
 
 // defaultEncodingConfig is an empty struct that implements the TxEncodingConfig interface.
-type defaultEncodingConfig struct{}
+type defaultEncodingConfig struct {
+	cdc     codec.BinaryCodec
+	decoder Decoder
+}
 
 // TxEncoder returns the default transaction encoder.
 func (t defaultEncodingConfig) TxEncoder() txEncoder {
@@ -150,7 +156,7 @@ func (t defaultEncodingConfig) TxEncoder() txEncoder {
 
 // TxDecoder returns the default transaction decoder.
 func (t defaultEncodingConfig) TxDecoder() txDecoder {
-	return decodeTx
+	return decodeTx(t.cdc, t.decoder)
 }
 
 // TxJSONEncoder returns the default JSON transaction encoder.
@@ -160,7 +166,7 @@ func (t defaultEncodingConfig) TxJSONEncoder() txEncoder {
 
 // TxJSONDecoder returns the default JSON transaction decoder.
 func (t defaultEncodingConfig) TxJSONDecoder() txDecoder {
-	return decodeJsonTx
+	return decodeJsonTx(t.cdc, t.decoder)
 }
 
 // defaultTxSigningConfig is a struct that holds the signing context and handler map.

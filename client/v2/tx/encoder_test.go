@@ -6,11 +6,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	base "cosmossdk.io/api/cosmos/base/v1beta1"
+	countertypes "cosmossdk.io/api/cosmos/counter/v1"
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/core/transaction"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 )
 
 func getWrappedTx(t *testing.T) *wrappedTx {
@@ -48,31 +48,28 @@ func getWrappedTx(t *testing.T) *wrappedTx {
 }
 
 func Test_txEncoder_txDecoder(t *testing.T) {
-	tests := []struct {
-		name string
-	}{
-		{
-			name: "encode tx",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			wTx := getWrappedTx(t)
+	wTx := getWrappedTx(t)
 
-			encodedTx, err := encodeTx(wTx)
-			require.NoError(t, err)
-			require.NotNil(t, encodedTx)
+	encodedTx, err := encodeTx(wTx)
+	require.NoError(t, err)
+	require.NotNil(t, encodedTx)
 
-			isDeterministic, err := encodeTx(wTx)
-			require.NoError(t, err)
-			require.NotNil(t, encodedTx)
-			require.Equal(t, encodedTx, isDeterministic)
+	isDeterministic, err := encodeTx(wTx)
+	require.NoError(t, err)
+	require.NotNil(t, encodedTx)
+	require.Equal(t, encodedTx, isDeterministic)
 
-			//decodedTx, err := decodeTx(encodedTx)
-			//require.NoError(t, err)
-			//require.NotNil(t, decodedTx)
-		})
-	}
+	f := decodeTx(cdc, decoder)
+	decodedTx, err := f(encodedTx)
+	require.NoError(t, err)
+	require.NotNil(t, decodedTx)
+
+	dTx, ok := decodedTx.(*wrappedTx)
+	require.True(t, ok)
+	require.Equal(t, wTx.TxRaw, dTx.TxRaw)
+	require.Equal(t, wTx.Tx.AuthInfo.String(), dTx.Tx.AuthInfo.String())
+	require.Equal(t, wTx.Tx.Body.String(), dTx.Tx.Body.String())
+	require.Equal(t, wTx.Tx.Signatures, dTx.Tx.Signatures)
 }
 
 func Test_txJsonEncoder_txJsonDecoder(t *testing.T) {
@@ -91,9 +88,17 @@ func Test_txJsonEncoder_txJsonDecoder(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, encodedTx)
 
-			decodedTx, err := decodeJsonTx(encodedTx)
+			f := decodeJsonTx(cdc, decoder)
+			decodedTx, err := f(encodedTx)
 			require.NoError(t, err)
 			require.NotNil(t, decodedTx)
+
+			dTx, ok := decodedTx.(*wrappedTx)
+			require.True(t, ok)
+			require.Equal(t, wTx.TxRaw, dTx.TxRaw)
+			require.Equal(t, wTx.Tx.AuthInfo.String(), dTx.Tx.AuthInfo.String())
+			require.Equal(t, wTx.Tx.Body.String(), dTx.Tx.Body.String())
+			require.Equal(t, wTx.Tx.Signatures, dTx.Tx.Signatures)
 		})
 	}
 }

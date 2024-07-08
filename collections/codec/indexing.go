@@ -43,23 +43,30 @@ type SchemaCodec[T any] struct {
 	FromSchemaType func(any) (T, error)
 }
 
+// KeySchemaCodec gets the schema codec for the provided KeyCodec either
+// by casting to HasSchemaCodec or returning a fallback codec.
 func KeySchemaCodec[K any](cdc KeyCodec[K]) (SchemaCodec[K], error) {
 	if indexable, ok := cdc.(HasSchemaCodec[K]); ok {
 		return indexable.SchemaCodec()
 	} else {
-		return FallbackCodec[K](), nil
+		return FallbackSchemaCodec[K](), nil
 	}
 }
 
+// ValueSchemaCodec gets the schema codec for the provided ValueCodec either
+// by casting to HasSchemaCodec or returning a fallback codec.
 func ValueSchemaCodec[V any](cdc ValueCodec[V]) (SchemaCodec[V], error) {
 	if indexable, ok := cdc.(HasSchemaCodec[V]); ok {
 		return indexable.SchemaCodec()
 	} else {
-		return FallbackCodec[V](), nil
+		return FallbackSchemaCodec[V](), nil
 	}
 }
 
-func FallbackCodec[T any]() SchemaCodec[T] {
+// FallbackSchemaCodec returns a fallback schema codec for T when one isn't explicitly
+// specified with HasSchemaCodec. It maps all simple types directly to schema kinds
+// and converts everything else to JSON.
+func FallbackSchemaCodec[T any]() SchemaCodec[T] {
 	var t T
 	kind := schema.KindForGoValue(t)
 	if err := kind.Validate(); err == nil {

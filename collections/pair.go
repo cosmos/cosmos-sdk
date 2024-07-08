@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"cosmossdk.io/collections/codec"
-	"cosmossdk.io/schema"
 )
 
 // Pair defines a key composed of two keys.
@@ -55,22 +54,9 @@ func PairKeyCodec[K1, K2 any](keyCodec1 codec.KeyCodec[K1], keyCodec2 codec.KeyC
 	}
 }
 
-// NamedPairKeyCodec instantiates a new KeyCodec instance that can encode the Pair, given the KeyCodec of the
-// first part of the key and the KeyCodec of the second part of the key, with names assigned to each part
-// which will only be used for indexing and informational purposes.
-func NamedPairKeyCodec[K1, K2 any](key1Name string, keyCodec1 codec.KeyCodec[K1], key2Name string, keyCodec2 codec.KeyCodec[K2]) codec.NamedKeyCodec[Pair[K1, K2]] {
-	return pairKeyCodec[K1, K2]{
-		key1Name:  key1Name,
-		key2Name:  key2Name,
-		keyCodec1: keyCodec1,
-		keyCodec2: keyCodec2,
-	}
-}
-
 type pairKeyCodec[K1, K2 any] struct {
-	key1Name, key2Name string
-	keyCodec1          codec.KeyCodec[K1]
-	keyCodec2          codec.KeyCodec[K2]
+	keyCodec1 codec.KeyCodec[K1]
+	keyCodec2 codec.KeyCodec[K2]
 }
 
 func (p pairKeyCodec[K1, K2]) KeyCodec1() codec.KeyCodec[K1] { return p.keyCodec1 }
@@ -229,69 +215,6 @@ func (p pairKeyCodec[K1, K2]) DecodeJSON(b []byte) (Pair[K1, K2], error) {
 
 	return Join(k1, k2), nil
 }
-
-func (p pairKeyCodec[K1, K2]) Name() string {
-	if p.key1Name == "" || p.key2Name == "" {
-		return "key1,key2"
-	}
-	return fmt.Sprintf("%s,%s", p.key1Name, p.key2Name)
-}
-
-func (p pairKeyCodec[K1, K2]) LogicalDecoder() (res codec.LogicalDecoder[Pair[K1, K2]], err error) {
-	dec1, err := KeyCodecDecoder(p.keyCodec1)
-	if err != nil {
-		return
-	}
-
-	dec2, err := KeyCodecDecoder(p.keyCodec2)
-	if err != nil {
-		return
-	}
-
-	if len(dec1.Fields) != 1 {
-		err = fmt.Errorf("key1 codec must have exactly one field")
-		return
-	}
-	if len(dec2.Fields) != 1 {
-		err = fmt.Errorf("key1 codec must have exactly one field")
-		return
-	}
-
-	fields := []schema.Field{dec1.Fields[0], dec2.Fields[0]}
-	fields[0].Name = p.key1Name
-	fields[1].Name = p.key2Name
-
-	return codec.LogicalDecoder[Pair[K1, K2]]{
-		Fields: fields,
-		ToSchemaType: func(pair Pair[K1, K2]) (any, error) {
-			k1, err := dec1.ToSchemaType(*pair.key1)
-			if err != nil {
-				return nil, err
-			}
-
-			k2, err := dec2.ToSchemaType(*pair.key2)
-			if err != nil {
-				return nil, err
-			}
-
-			return []any{k1, k2}, nil
-		},
-	}, nil
-}
-
-//func (p pairKeyCodec[K1, K2]) SchemaColumns() []schema.Field {
-//	//var k1 K1
-//	//col1, _ := extractFields(k1)
-//	//if len(col1) == 1 {
-//	//	col1[0].Name = p.key1Name
-//	//}
-//	//var k2 K2
-//	//col2, _ := extractFields(k2)
-//	//if len(col2) == 1 {
-//	//	col2[0].Name = p.key2Name
-//	//}
-//	//return append(col1, col2...)
-//}
 
 // NewPrefixUntilPairRange defines a collection query which ranges until the provided Pair prefix.
 // Unstable: this API might change in the future.

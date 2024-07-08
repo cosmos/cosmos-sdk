@@ -64,10 +64,45 @@ func TestMiddleware(t *testing.T) {
 	}
 }
 
+func TestMiddleware_filtered(t *testing.T) {
+	tl := newTestFixture(t)
+	listener, err := Middleware(tl.Listener, tl.resolver, MiddlewareOptions{
+		ModuleFilter: func(moduleName string) bool {
+			return moduleName == "one"
+		},
+	})
+	if err != nil {
+		t.Fatal("unexpected error", err)
+	}
+	tl.setListener(listener)
+
+	tl.bankMod.Mint("bob", "foo", 100)
+	tl.oneMod.SetValue("abc")
+
+	if len(tl.bankUpdates) != 0 {
+		t.Fatalf("expected no bank updates")
+	}
+
+	expectedOne := []schema.ObjectUpdate{
+		{TypeName: "item", Value: "abc"},
+	}
+
+	if !reflect.DeepEqual(tl.oneValueUpdates, expectedOne) {
+		t.Fatalf("expected %v, got %v", expectedOne, tl.oneValueUpdates)
+	}
+}
+
 func TestSync(t *testing.T) {
 	tl := newTestFixture(t)
 	tl.bankMod.Mint("bob", "foo", 100)
 	err := tl.bankMod.Send("bob", "alice", "foo", 50)
+	if err != nil {
+		t.Fatal("unexpected error", err)
+	}
+
+	tl.oneMod.SetValue("def")
+
+	err = Sync(tl.Listener, tl.multiStore, tl.resolver, SyncOptions{})
 	if err != nil {
 		t.Fatal("unexpected error", err)
 	}
@@ -90,13 +125,43 @@ func TestSync(t *testing.T) {
 		},
 	}
 
-	err = Sync(tl.Listener, tl.multiStore, tl.resolver, SyncOptions{})
+	if !reflect.DeepEqual(tl.bankUpdates, expected) {
+		t.Fatalf("expected %v, got %v", expected, tl.bankUpdates)
+	}
+
+	expectedOne := []schema.ObjectUpdate{
+		{TypeName: "item", Value: "def"},
+	}
+
+	if !reflect.DeepEqual(tl.oneValueUpdates, expectedOne) {
+		t.Fatalf("expected %v, got %v", expectedOne, tl.oneValueUpdates)
+	}
+}
+
+func TestSync_filtered(t *testing.T) {
+	tl := newTestFixture(t)
+	tl.bankMod.Mint("bob", "foo", 100)
+	tl.oneMod.SetValue("def")
+
+	err := Sync(tl.Listener, tl.multiStore, tl.resolver, SyncOptions{
+		ModuleFilter: func(moduleName string) bool {
+			return moduleName == "one"
+		},
+	})
 	if err != nil {
 		t.Fatal("unexpected error", err)
 	}
 
-	if !reflect.DeepEqual(tl.bankUpdates, expected) {
-		t.Fatalf("expected %v, got %v", expected, tl.bankUpdates)
+	if len(tl.bankUpdates) != 0 {
+		t.Fatalf("expected no bank updates")
+	}
+
+	expectedOne := []schema.ObjectUpdate{
+		{TypeName: "item", Value: "def"},
+	}
+
+	if !reflect.DeepEqual(tl.oneValueUpdates, expectedOne) {
+		t.Fatalf("expected %v, got %v", expectedOne, tl.oneValueUpdates)
 	}
 }
 

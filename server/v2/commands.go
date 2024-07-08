@@ -15,6 +15,7 @@ import (
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	servercore "cosmossdk.io/core/server"
 )
 
 // Execute executes the root command of an application.
@@ -35,7 +36,7 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 
 // AddCommands add the server commands to the root command
 // It configure the config handling and the logger handling
-func AddCommands[AppT AppI[T], T transaction.Tx](
+func AddCommands[AppT servercore.AppI[T], T transaction.Tx](
 	rootCmd *cobra.Command,
 	newApp AppCreator[AppT, T],
 	logger log.Logger,
@@ -65,7 +66,7 @@ func AddCommands[AppT AppI[T], T transaction.Tx](
 		return originalPersistentPreRunE(cmd, args)
 	}
 
-	cmds := server.CLICommands(newApp)
+	cmds := server.CLICommands()
 	startCmd := createStartCommand(server, newApp)
 	startCmd.SetContext(rootCmd.Context())
 	cmds.Commands = append(cmds.Commands, startCmd)
@@ -96,7 +97,7 @@ func AddCommands[AppT AppI[T], T transaction.Tx](
 }
 
 // createStartCommand creates the start command for the application.
-func createStartCommand[AppT AppI[T], T transaction.Tx](
+func createStartCommand[AppT servercore.AppI[T], T transaction.Tx](
 	server *Server[AppT, T],
 	newApp AppCreator[AppT, T],
 ) *cobra.Command {
@@ -146,7 +147,7 @@ func createStartCommand[AppT AppI[T], T transaction.Tx](
 }
 
 // configHandle writes the default config to the home directory if it does not exist and sets the server context
-func configHandle[AppT AppI[T], T transaction.Tx](s *Server[AppT, T], cmd *cobra.Command) error {
+func configHandle[AppT servercore.AppI[T], T transaction.Tx](s *Server[AppT, T], cmd *cobra.Command) error {
 	home, err := cmd.Flags().GetString(FlagHome)
 	if err != nil {
 		return err

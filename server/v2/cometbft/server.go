@@ -20,8 +20,10 @@ import (
 
 	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/core/log"
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/appmanager"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
@@ -31,15 +33,15 @@ import (
 
 var (
 	_ serverv2.ServerComponent[
-		serverv2.AppI[transaction.Tx], transaction.Tx,
-	] = (*CometBFTServer[serverv2.AppI[transaction.Tx], transaction.Tx])(nil)
+		servercore.AppI[transaction.Tx], transaction.Tx,
+	] = (*CometBFTServer[servercore.AppI[transaction.Tx], transaction.Tx])(nil)
 	_ serverv2.HasCLICommands[
-		serverv2.AppI[transaction.Tx], transaction.Tx,
-	] = (*CometBFTServer[serverv2.AppI[transaction.Tx], transaction.Tx])(nil)
-	_ serverv2.HasStartFlags = (*CometBFTServer[serverv2.AppI[transaction.Tx], transaction.Tx])(nil)
+		servercore.AppI[transaction.Tx], transaction.Tx,
+	] = (*CometBFTServer[servercore.AppI[transaction.Tx], transaction.Tx])(nil)
+	_ serverv2.HasStartFlags = (*CometBFTServer[servercore.AppI[transaction.Tx], transaction.Tx])(nil)
 )
 
-type CometBFTServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
+type CometBFTServer[AppT servercore.AppI[T], T transaction.Tx] struct {
 	Node      *node.Node
 	Consensus *Consensus[T]
 
@@ -50,7 +52,7 @@ type CometBFTServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
 	cmtConfigOptions []CmtCfgOption
 }
 
-func New[AppT serverv2.AppI[T], T transaction.Tx](txCodec transaction.Codec[T], options ServerOptions[T], cfgOptions ...CmtCfgOption) *CometBFTServer[AppT, T] {
+func New[AppT servercore.AppI[T], T transaction.Tx](txCodec transaction.Codec[T], options ServerOptions[T], cfgOptions ...CmtCfgOption) *CometBFTServer[AppT, T] {
 	return &CometBFTServer[AppT, T]{
 		initTxCodec:      txCodec,
 		options:          options,
@@ -64,7 +66,8 @@ func (s *CometBFTServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Log
 
 	// create consensus
 	store := appI.GetStore().(types.Store)
-	consensus := NewConsensus[T](appI.GetAppManager(), s.options.Mempool, store, s.config, s.initTxCodec, s.logger)
+	appManager := appI.GetAppManager().(*appmanager.AppManager[T])
+	consensus := NewConsensus[T](appManager, s.options.Mempool, store, s.config, s.initTxCodec, s.logger)
 
 	consensus.prepareProposalHandler = s.options.PrepareProposalHandler
 	consensus.processProposalHandler = s.options.ProcessProposalHandler
@@ -191,7 +194,7 @@ func (s *CometBFTServer[AppT, T]) StartCmdFlags() *pflag.FlagSet {
 	return flags
 }
 
-func (s *CometBFTServer[AppT, T]) GetCommands(_ serverv2.AppCreator[AppT, T]) []*cobra.Command {
+func (s *CometBFTServer[AppT, T]) GetCommands() []*cobra.Command {
 	return []*cobra.Command{
 		s.StatusCommand(),
 		s.ShowNodeIDCmd(),

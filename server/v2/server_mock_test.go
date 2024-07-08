@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/viper"
 
-	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/core/transaction"
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/log"
 )
 
@@ -33,7 +33,7 @@ func (s *mockServer) Name() string {
 	return s.name
 }
 
-func (s *mockServer) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
+func (s *mockServer) Init(appI servercore.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
 	return nil
 }
 

@@ -8,13 +8,13 @@ import (
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	"cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 )
 
-type GRPCServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
+type GRPCServer[AppT servercore.AppI[T], T transaction.Tx] struct {
 	logger     log.Logger
 	config     *Config
 	cfgOptions []CfgOption
@@ -23,7 +23,7 @@ type GRPCServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
 }
 
 // New creates a new grpc server.
-func New[AppT serverv2.AppI[T], T transaction.Tx](cfgOptions ...CfgOption) *GRPCServer[AppT, T] {
+func New[AppT servercore.AppI[T], T transaction.Tx](cfgOptions ...CfgOption) *GRPCServer[AppT, T] {
 	return &GRPCServer[AppT, T]{
 		cfgOptions: cfgOptions,
 	}

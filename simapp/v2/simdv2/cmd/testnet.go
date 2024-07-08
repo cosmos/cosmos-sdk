@@ -20,6 +20,7 @@ import (
 	"cosmossdk.io/math/unsafe"
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/cometbft"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -336,9 +337,9 @@ func initTestnetFiles[T transaction.Tx](
 		}
 
 		// Write server config
-		cometServer := cometbft.New[serverv2.AppI[T], T](&temporaryTxDecoder[T]{clientCtx.TxConfig}, cometbft.ServerOptions[T]{}, cometbft.OverwriteDefaultCometConfig(nodeConfig))
-		grpcServer := grpc.New[serverv2.AppI[T], T](grpc.OverwriteDefaultConfig(grpcConfig))
-		server := serverv2.NewServer(log.NewNopLogger(), cometServer, grpcServer)
+		cometServer := cometbft.New[servercore.AppI[T], T](&temporaryTxDecoder[T]{clientCtx.TxConfig}, cometbft.ServerOptions[T]{}, cometbft.OverwriteDefaultCometConfig(nodeConfig))
+		grpcServer := grpc.New[servercore.AppI[T], T](grpc.OverwriteDefaultConfig(grpcConfig))
+		server := serverv2.NewServer[servercore.AppI[T], T](log.NewNopLogger(), cometServer, grpcServer)
 		err = server.WriteConfig(filepath.Join(nodeDir, "config"))
 		if err != nil {
 			return err

@@ -14,10 +14,11 @@ import (
 	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/cometbft"
 	"cosmossdk.io/simapp/v2"
-	// storev2 "cosmossdk.io/store/v2"
+	storev2 "cosmossdk.io/store/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 	authcmd "cosmossdk.io/x/auth/client/cli"
 
@@ -73,13 +74,13 @@ func (t *temporaryTxDecoder[T]) DecodeJSON(bz []byte) (T, error) {
 	return out, nil
 }
 
-func newApp[AppT serverv2.AppI[T], T transaction.Tx](
+func newApp[AppT servercore.AppI[T], T transaction.Tx](
 	logger log.Logger, viper *viper.Viper,
 ) AppT {
-	return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper)).(AppT)
+	return servercore.AppI[T](simapp.NewSimApp[T](logger, viper)).(AppT)
 }
 
-func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
+func initRootCmd[AppT servercore.AppI[T], T transaction.Tx](
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,
 	moduleManager *runtimev2.MM[T],
@@ -117,6 +118,7 @@ func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
 		logger,
 		cometbft.New[AppT, T](&temporaryTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
 		grpc.New[AppT, T](),
+		storev2.New[AppT, T](),
 	); err != nil {
 		panic(err)
 	}

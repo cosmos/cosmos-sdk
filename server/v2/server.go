@@ -13,12 +13,13 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 
+	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 )
 
 // ServerComponent is a server module that can be started and stopped.
-type ServerComponent[AppT AppI[T], T transaction.Tx] interface {
+type ServerComponent[AppT servercore.AppI[T], T transaction.Tx] interface {
 	Name() string
 
 	Start(context.Context) error
@@ -27,8 +28,8 @@ type ServerComponent[AppT AppI[T], T transaction.Tx] interface {
 }
 
 // HasCLICommands is a server module that has CLI commands.
-type HasCLICommands[AppT AppI[T], T transaction.Tx] interface {
-	GetCommands(AppCreator[AppT, T]) []*cobra.Command
+type HasCLICommands[AppT servercore.AppI[T], T transaction.Tx] interface {
+	GetCommands() []*cobra.Command
 	GetTxs() []*cobra.Command
 	GetQueries() []*cobra.Command
 }
@@ -43,7 +44,7 @@ type HasStartFlags interface {
 	StartCmdFlags() *pflag.FlagSet
 }
 
-var _ ServerComponent[AppI[transaction.Tx], transaction.Tx] = (*Server[AppI[transaction.Tx], transaction.Tx])(nil)
+var _ ServerComponent[servercore.AppI[transaction.Tx], transaction.Tx] = (*Server[servercore.AppI[transaction.Tx], transaction.Tx])(nil)
 
 // Configs returns a viper instance of the config file
 func ReadConfig(configPath string) (*viper.Viper, error) {
@@ -65,12 +66,12 @@ func ReadConfig(configPath string) (*viper.Viper, error) {
 	return v, nil
 }
 
-type Server[AppT AppI[T], T transaction.Tx] struct {
+type Server[AppT servercore.AppI[T], T transaction.Tx] struct {
 	logger     log.Logger
 	components []ServerComponent[AppT, T]
 }
 
-func NewServer[AppT AppI[T], T transaction.Tx](
+func NewServer[AppT servercore.AppI[T], T transaction.Tx](
 	logger log.Logger, components ...ServerComponent[AppT, T],
 ) *Server[AppT, T] {
 	return &Server[AppT, T]{
@@ -120,7 +121,7 @@ func (s *Server[AppT, T]) Stop(ctx context.Context) error {
 }
 
 // CLICommands returns all CLI commands of all components.
-func (s *Server[AppT, T]) CLICommands(appCreator AppCreator[AppT, T]) CLIConfig {
+func (s *Server[AppT, T]) CLICommands() CLIConfig {
 	compart := func(name string, cmds ...*cobra.Command) *cobra.Command {
 		if len(cmds) == 1 && strings.HasPrefix(cmds[0].Use, name) {
 			return cmds[0]
@@ -138,7 +139,7 @@ func (s *Server[AppT, T]) CLICommands(appCreator AppCreator[AppT, T]) CLIConfig 
 	commands := CLIConfig{}
 	for _, mod := range s.components {
 		if climod, ok := mod.(HasCLICommands[AppT, T]); ok {
-			commands.Commands = append(commands.Commands, compart(mod.Name(), climod.GetCommands(appCreator)...))
+			commands.Commands = append(commands.Commands, compart(mod.Name(), climod.GetCommands()...))
 			commands.Txs = append(commands.Txs, compart(mod.Name(), climod.GetTxs()...))
 			commands.Queries = append(commands.Queries, compart(mod.Name(), climod.GetQueries()...))
 		}

@@ -55,6 +55,11 @@ var SingletonObject = schema.ObjectType{
 			Kind:     schema.Int32Kind,
 			Nullable: true,
 		},
+		{
+			Name:           "an_enum",
+			Kind:           schema.EnumKind,
+			EnumDefinition: MyEnum,
+		},
 	},
 }
 

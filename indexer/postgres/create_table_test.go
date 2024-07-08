@@ -43,6 +43,7 @@ func ExampleTableManager_CreateTableSql_singleton() {
 	// CREATE TABLE IF NOT EXISTS "test_singleton" (_id INTEGER NOT NULL CHECK (_id = 1),
 	//	"foo" TEXT NOT NULL,
 	//	"bar" INTEGER NULL,
+	//	"an_enum" "test_my_enum" NOT NULL,
 	//	PRIMARY KEY (_id)
 	// );
 	// GRANT SELECT ON TABLE "test_singleton" TO PUBLIC;

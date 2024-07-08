@@ -69,4 +69,6 @@ replace cosmossdk.io/core => ../../core
 
 replace cosmossdk.io/core/testing => ../../core/testing
 
+replace cosmossdk.io/core/testing => ../../core/testing
+
 replace cosmossdk.io/log => ../../log

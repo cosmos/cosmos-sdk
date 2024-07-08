@@ -34,7 +34,7 @@ GRANT SELECT ON TABLE "test_all_kinds" TO PUBLIC;
 Creating table test_singleton
 CREATE TABLE IF NOT EXISTS "test_singleton" (_id INTEGER NOT NULL CHECK (_id = 1),
 	"foo" TEXT NOT NULL,
-	"bar" INTEGER NOT NULL,
+	"bar" INTEGER NULL,
 	PRIMARY KEY (_id)
 );
 GRANT SELECT ON TABLE "test_singleton" TO PUBLIC;

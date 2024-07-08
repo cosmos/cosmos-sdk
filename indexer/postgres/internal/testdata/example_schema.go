@@ -38,7 +38,7 @@ func init() {
 		ObjectTypes: []schema.ObjectType{
 			AllKindsObject,
 			SingletonObject,
-			RetainDeleteObject,
+			VoteObject,
 		},
 	}
 }
@@ -51,13 +51,14 @@ var SingletonObject = schema.ObjectType{
 			Kind: schema.StringKind,
 		},
 		{
-			Name: "bar",
-			Kind: schema.Int32Kind,
+			Name:     "bar",
+			Kind:     schema.Int32Kind,
+			Nullable: true,
 		},
 	},
 }
 
-var RetainDeleteObject = schema.ObjectType{
+var VoteObject = schema.ObjectType{
 	Name: "vote",
 	KeyFields: []schema.Field{
 		{

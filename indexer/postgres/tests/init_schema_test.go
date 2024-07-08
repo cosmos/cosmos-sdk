@@ -35,7 +35,7 @@ func testInitSchema(t *testing.T, disableRetainDeletions bool, goldenFileName st
 	connectionUrl := createTestDB(t)
 
 	buf := &strings.Builder{}
-	var logger = func(msg string, sql string, params ...interface{}) {
+	logger := func(msg, sql string, params ...interface{}) {
 		_, err := fmt.Fprintln(buf, msg)
 		require.NoError(t, err)
 		_, err = fmt.Fprintln(buf, sql)

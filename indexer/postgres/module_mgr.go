@@ -53,7 +53,6 @@ func (m *ModuleManager) InitializeSchema(ctx context.Context, conn DBConn) error
 	}
 
 	return nil
-
 }
 
 // Tables returns the table managers for the module.

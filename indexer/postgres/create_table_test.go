@@ -42,14 +42,44 @@ func ExampleTableManager_CreateTableSql_singleton() {
 	// Output:
 	// CREATE TABLE IF NOT EXISTS "test_singleton" (_id INTEGER NOT NULL CHECK (_id = 1),
 	//	"foo" TEXT NOT NULL,
-	//	"bar" INTEGER NOT NULL,
+	//	"bar" INTEGER NULL,
 	//	PRIMARY KEY (_id)
 	// );
 	// GRANT SELECT ON TABLE "test_singleton" TO PUBLIC;
 }
 
+func ExampleTableManager_CreateTableSql_vote() {
+	exampleCreateTable(testdata.VoteObject)
+	// Output:
+	// CREATE TABLE IF NOT EXISTS "test_vote" ("proposal" BIGINT NOT NULL,
+	// 	"address" TEXT NOT NULL,
+	// 	"vote" "test_vote_type" NOT NULL,
+	// 	_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+	// 	PRIMARY KEY ("proposal", "address")
+	// );
+	// GRANT SELECT ON TABLE "test_vote" TO PUBLIC;
+}
+
+func ExampleTableManager_CreateTableSql_vote_no_retain_delete() {
+	exampleCreateTableOpt(testdata.VoteObject, true)
+	// Output:
+	// CREATE TABLE IF NOT EXISTS "test_vote" ("proposal" BIGINT NOT NULL,
+	//	"address" TEXT NOT NULL,
+	//	"vote" "test_vote_type" NOT NULL,
+	//	PRIMARY KEY ("proposal", "address")
+	// );
+	// GRANT SELECT ON TABLE "test_vote" TO PUBLIC;
+}
+
 func exampleCreateTable(objectType schema.ObjectType) {
-	tm := NewTableManager("test", objectType, ManagerOptions{Logger: func(msg string, sql string, params ...interface{}) {}})
+	exampleCreateTableOpt(objectType, false)
+}
+
+func exampleCreateTableOpt(objectType schema.ObjectType, noRetainDelete bool) {
+	tm := NewTableManager("test", objectType, ManagerOptions{
+		Logger:                 func(msg, sql string, params ...interface{}) {},
+		DisableRetainDeletions: noRetainDelete,
+	})
 	err := tm.CreateTableSql(os.Stdout)
 	if err != nil {
 		panic(err)

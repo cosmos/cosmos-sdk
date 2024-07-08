@@ -19,7 +19,7 @@ type Config struct {
 	DisableRetainDeletions bool `json:"disable_retain_deletions"`
 }
 
-type SqlLogger = func(msg string, sql string, params ...interface{})
+type SqlLogger = func(msg, sql string, params ...interface{})
 
 func StartIndexer(ctx context.Context, logger SqlLogger, config Config) (appdata.Listener, error) {
 	if config.DatabaseURL == "" {

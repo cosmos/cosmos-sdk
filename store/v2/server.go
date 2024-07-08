@@ -9,7 +9,7 @@ import (
 
 	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
 )
 
 type StoreComponent[AppT servercore.AppI[T], T transaction.Tx] struct {
@@ -20,7 +20,7 @@ func New[AppT servercore.AppI[T], T transaction.Tx]() *StoreComponent[AppT, T] {
 	return &StoreComponent[AppT, T]{}
 }
 
-func (s *StoreComponent[AppT, T]) Init(appI servercore.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
+func (s *StoreComponent[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Logger) error {
 	cfg := DefaultConfig()
 	if v != nil {
 		if err := v.Sub(s.Name()).Unmarshal(&cfg); err != nil {
@@ -43,9 +43,9 @@ func (s *StoreComponent[AppT, T]) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (s *StoreComponent[AppT, T]) GetCommands(appCreator servercore.AppCreator[AppT, T]) []*cobra.Command {
+func (s *StoreComponent[AppT, T]) GetCommands() []*cobra.Command {
 	return []*cobra.Command{
-		s.PrunesCmd(appCreator),
+		s.PrunesCmd(),
 	}
 }
 

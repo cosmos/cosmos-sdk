@@ -12,7 +12,7 @@ import (
 )
 
 // QueryBlockResultsCmd implements the default command for a BlockResults query.
-func (s *StoreComponent[AppT, T]) PrunesCmd(appCreator serverv2.AppCreator[AppT, T]) *cobra.Command {
+func (s *StoreComponent[AppT, T]) PrunesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prune [pruning-method]",
 		Short: "Prune app history states by keeping the recent heights and deleting old heights",
@@ -49,13 +49,16 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 			)
 
 			logger := log.NewLogger(cmd.OutOrStdout())
-			app := appCreator(logger, vp)
-			store := app.GetStore()
-
-			rootStore, ok := store.(RootStore)
-			if !ok {
-				return fmt.Errorf("currently only support the pruning of rootmulti.Store type")
+			home, err := cmd.Flags().GetString("home") // should be FlagHome
+			if err != nil {
+				return err
 			}
+
+			rootStore, err := CreateRootStore(home, logger)
+			if err != nil {
+				return fmt.Errorf("Can not create root store", err)
+			}
+
 			latestHeight, err := rootStore.GetLatestVersion()
 			if err != nil {
 				return err

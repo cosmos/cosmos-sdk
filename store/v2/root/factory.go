@@ -3,6 +3,7 @@ package root
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
@@ -41,6 +42,30 @@ type FactoryOptions struct {
 	IavlConfig      *iavl.Config
 	StoreKeys       []string
 	SCRawDB         corestore.KVStoreWithBatch
+}
+
+func init() {
+	store.CreateRootStore = func(rootDir string, logger log.Logger) (store.RootStore, error) {
+		scRawDb, err := db.NewGoLevelDB("application", filepath.Join(rootDir, "data"), nil)
+		if err != nil {
+			panic(err)
+		}
+		return CreateRootStore(&FactoryOptions{
+			Logger:  logger,
+			RootDir: rootDir,
+			SSType:  0,
+			SCType:  0,
+			SCPruningOption: &store.PruningOption{
+				KeepRecent: 0,
+				Interval:   0,
+			},
+			IavlConfig: &iavl.Config{
+				CacheSize:              100_000,
+				SkipFastStorageUpgrade: true,
+			},
+			SCRawDB: scRawDb,
+		})
+	}
 }
 
 // CreateRootStore is a convenience function to create a root store based on the

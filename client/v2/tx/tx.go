@@ -211,7 +211,7 @@ func validateMessages(msgs ...transaction.Msg) error {
 
 // generateAuxSignerData simply generates and prints the AuxSignerData.
 func generateAuxSignerData(ctx client.Context, txf Factory, msgs ...transaction.Msg) error {
-	auxSignerData, err := makeAuxSignerData(ctx, txf, msgs...)
+	auxSignerData, err := makeAuxSignerData(txf, msgs...)
 	if err != nil {
 		return err
 	}
@@ -344,7 +344,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...transaction.Msg)
 }
 
 // makeAuxSignerData generates an AuxSignerData from the client inputs.
-func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...transaction.Msg) (*apitx.AuxSignerData, error) {
+func makeAuxSignerData(f Factory, msgs ...transaction.Msg) (*apitx.AuxSignerData, error) {
 	b := NewAuxTxBuilder()
 
 	b.SetAddress(f.txParams.fromAddress)
@@ -380,7 +380,7 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...transaction.
 		return nil, err
 	}
 
-	b.SetChainID(clientCtx.ChainID)
+	b.SetChainID(f.txParams.chainID)
 	signBz, err := b.GetSignBytes()
 	if err != nil {
 		return nil, err

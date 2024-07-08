@@ -11,11 +11,14 @@ import (
 	"cosmossdk.io/schema"
 )
 
+// IndexingOptions are indexing options for the collections schema.
 type IndexingOptions struct {
+
 	// RetainDeletionsFor is the list of collections to retain deletions for.
 	RetainDeletionsFor []string
 }
 
+// ModuleCodec returns the ModuleCodec for this schema for the provided options.
 func (s Schema) ModuleCodec(opts IndexingOptions) (schema.ModuleCodec, error) {
 	decoder := moduleDecoder{
 		collectionLookup: &btree.Map[string, *collDecoder]{},
@@ -40,11 +43,12 @@ func (s Schema) ModuleCodec(opts IndexingOptions) (schema.ModuleCodec, error) {
 			return schema.ModuleCodec{}, err
 		}
 
-		if !retainDeletions[coll.GetName()] {
+		if retainDeletions[coll.GetName()] {
 			ld.objectType.RetainDeletions = true
 		}
 
 		objectTypes = append(objectTypes, ld.objectType)
+
 		decoder.collectionLookup.Set(string(coll.GetPrefix()), &collDecoder{
 			Collection:  coll,
 			schemaCodec: ld,
@@ -60,6 +64,7 @@ func (s Schema) ModuleCodec(opts IndexingOptions) (schema.ModuleCodec, error) {
 }
 
 type moduleDecoder struct {
+	// collectionLookup lets us efficiently look the correct collection based on raw key bytes
 	collectionLookup *btree.Map[string, *collDecoder]
 }
 
@@ -67,6 +72,7 @@ func (m moduleDecoder) decodeKV(update schema.KVPairUpdate) ([]schema.ObjectUpda
 	key := update.Key
 	ks := string(key)
 	var cd *collDecoder
+	// we look for the collection whose prefix is less than this key
 	m.collectionLookup.Descend(ks, func(prefix string, cur *collDecoder) bool {
 		bytesPrefix := cur.GetPrefix()
 		if bytes.HasPrefix(key, bytesPrefix) {
@@ -153,6 +159,8 @@ func (c collectionImpl[K, V]) schemaCodec() (schemaCodec, error) {
 	return res, nil
 }
 
+// ensureFieldNames makes sure that all fields have valid names - either the
+// names were specified by user or they get filled in with defaults here
 func ensureFieldNames(x any, defaultName string, cols []schema.Field) {
 	var names []string = nil
 	if hasName, ok := x.(interface{ Name() string }); ok {

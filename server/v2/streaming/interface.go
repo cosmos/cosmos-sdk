@@ -28,9 +28,14 @@ var Handshake = plugin.HandshakeConfig{
 	MagicCookieValue: "ef78114d-7bdf-411c-868f-347c99a78345",
 }
 
-// ListenerGRPCPlugin implements the plugin.GRPCPlugin interface for the Listener service.
+var _ plugin.GRPCPlugin = (*ListenerGRPCPlugin)(nil)
+
+// ListenerGRPCPlugin is the implementation of plugin.GRPCPlugin, so we can serve/consume this.
 type ListenerGRPCPlugin struct {
+	// GRPCPlugin must still implement the Plugin interface
 	plugin.Plugin
+	// Concrete implementation, written in Go. This is only used for plugins
+	// that are written in Go.
 	Impl Listener
 }
 

@@ -56,7 +56,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 
 			rootStore, err := CreateRootStore(home, logger)
 			if err != nil {
-				return fmt.Errorf("Can not create root store %v", err)
+				return fmt.Errorf("Can not create root store %w", err)
 			}
 
 			latestHeight, err := rootStore.GetLatestVersion()

@@ -17,9 +17,13 @@ type Map[K, V any] struct {
 	vc codec.ValueCodec[V]
 
 	// store accessor
-	sa               func(context.Context) store.KVStore
-	prefix           []byte
-	name             string
+	sa     func(context.Context) store.KVStore
+	prefix []byte
+	name   string
+
+	// isSecondaryIndex indicates that this map represents a secondary index
+	// on another collection and that it should be skipped when generating
+	// a user facing schema
 	isSecondaryIndex bool
 }
 

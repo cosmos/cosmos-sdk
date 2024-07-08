@@ -34,7 +34,7 @@ The mapping of `cosmossdk.io/schema` `Kind`s to PostgreSQL types is as follows:
 | `DecimalStringKind` | `NUMERIC`                  |                                                                                                                                                                                 |
 | `JSONKind`          | `JSONB`                    |                                                                                                                                                                                 |
 | `Bech32AddressKind` | `TEXT`                     | addresses are converted to strings with the specified address prefix                                                                                                            |
-| `TimeKind`          | `BIGINT` and `TIMESTAMPTZ` | time types are stored as two columns, one with the `_nanos` suffix with full nano-seconds precision, and another as a `TIMESTAMPTZ` generated column with microsecond precision |
+| `TimeKind`          | `BIGINT` and `TIMESTAMPTZ` | time types are stored as two columns, one with the `_nanos` suffix with full nanoseconds precision, and another as a `TIMESTAMPTZ` generated column with microsecond precision |
 | `DurationKind`      | `BIGINT`                   | durations are stored as a single column in nanoseconds                                                                                                                          |
 | `EnumKind` | `<module_name>_<enum_name>` | a custom enum type is created for each module prefixed with the module name it pertains to                                                                                     |
 

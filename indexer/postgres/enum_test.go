@@ -7,7 +7,10 @@ import (
 )
 
 func ExampleCreateEnumType() {
-	CreateEnumTypeSql(os.Stdout, "test", testdata.MyEnum)
+	err := CreateEnumTypeSql(os.Stdout, "test", testdata.MyEnum)
+	if err != nil {
+		panic(err)
+	}
 	// Output:
 	// CREATE TYPE "test_my_enum" AS ENUM ('a', 'b', 'c');
 }

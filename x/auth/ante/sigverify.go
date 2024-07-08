@@ -433,11 +433,21 @@ func (svd SigVerificationDecorator) authenticateAbstractedAccount(ctx sdk.Contex
 	}
 
 	infoTx := authTx.(interface {
-		GetRawTx() *tx.TxRaw
-		GetProtoTx() *tx.Tx
+		AsTxRaw() (*tx.TxRaw, error)
+		AsTx() (*tx.Tx, error)
 	})
 
-	return svd.aaKeeper.AuthenticateAccount(ctx, signer, selfBundler, infoTx.GetRawTx(), infoTx.GetProtoTx(), uint32(index))
+	txRaw, err := infoTx.AsTxRaw()
+	if err != nil {
+		return fmt.Errorf("unable to get raw tx: %w", err)
+	}
+
+	protoTx, err := infoTx.AsTx()
+	if err != nil {
+		return fmt.Errorf("unable to get proto tx: %w", err)
+	}
+
+	return svd.aaKeeper.AuthenticateAccount(ctx, signer, selfBundler, txRaw, protoTx, uint32(index))
 }
 
 // ValidateSigCountDecorator takes in Params and returns errors if there are too many signatures in the tx for the given params

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	gogoproto "github.com/cosmos/gogoproto/proto" // nolint:typecheck // import is used
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/appmodule"
 	corecontext "cosmossdk.io/core/context"

@@ -7,7 +7,7 @@ import (
 	"cosmossdk.io/schema"
 )
 
-func ExampleCreateTable_AllKinds() {
+func ExampleTableManager_CreateTableSql_allKinds() {
 	exampleCreateTable(testdata.AllKindsObject)
 	// Output:
 	// CREATE TABLE IF NOT EXISTS "test_all_kinds" ("id" BIGINT NOT NULL,
@@ -37,7 +37,7 @@ func ExampleCreateTable_AllKinds() {
 	// GRANT SELECT ON TABLE "test_all_kinds" TO PUBLIC;
 }
 
-func ExampleCreateTable_Singleton() {
+func ExampleTableManager_CreateTableSql_singleton() {
 	exampleCreateTable(testdata.SingletonObject)
 	// Output:
 	// CREATE TABLE IF NOT EXISTS "test_singleton" (_id INTEGER NOT NULL CHECK (_id = 1),

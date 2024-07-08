@@ -6,7 +6,7 @@ import (
 	"cosmossdk.io/indexer/postgres/internal/testdata"
 )
 
-func ExampleCreateEnumType() {
+func ExampleCreateEnumTypeSql() {
 	err := CreateEnumTypeSql(os.Stdout, "test", testdata.MyEnum)
 	if err != nil {
 		panic(err)

@@ -1,6 +1,11 @@
 package codec
 
-import "cosmossdk.io/schema"
+import (
+	"encoding/json"
+	"fmt"
+
+	"cosmossdk.io/schema"
+)
 
 // HasSchemaCodec is an interface that all codec's should implement in order
 // to properly support indexing. // It is not required by KeyCodec or ValueCodec
@@ -36,4 +41,55 @@ type SchemaCodec[T any] struct {
 	// If this function is nil, it will be assumed that T already represents a
 	// value that conforms to a schema value without any further conversion.
 	FromSchemaType func(any) (T, error)
+}
+
+func KeySchemaCodec[K any](cdc KeyCodec[K]) (SchemaCodec[K], error) {
+	if indexable, ok := cdc.(HasSchemaCodec[K]); ok {
+		return indexable.SchemaCodec()
+	} else {
+		return FallbackCodec[K](), nil
+	}
+}
+
+func ValueSchemaCodec[V any](cdc ValueCodec[V]) (SchemaCodec[V], error) {
+	if indexable, ok := cdc.(HasSchemaCodec[V]); ok {
+		return indexable.SchemaCodec()
+	} else {
+		return FallbackCodec[V](), nil
+	}
+}
+
+func FallbackCodec[T any]() SchemaCodec[T] {
+	var t T
+	kind := schema.KindForGoValue(t)
+	if err := kind.Validate(); err == nil {
+		return SchemaCodec[T]{
+			Fields: []schema.Field{{
+				// we don't set any name so that this can be set to a good default by the caller
+				Name: "",
+				Kind: kind,
+			}},
+			// these can be nil because T maps directly to a schema value for this kind
+			ToSchemaType:   nil,
+			FromSchemaType: nil,
+		}
+	} else {
+		// we default to encoding everything to JSON
+		return SchemaCodec[T]{
+			Fields: []schema.Field{{Kind: schema.JSONKind}},
+			ToSchemaType: func(t T) (any, error) {
+				bz, err := json.Marshal(t)
+				return json.RawMessage(bz), err
+			},
+			FromSchemaType: func(a any) (T, error) {
+				var t T
+				bz, ok := a.(json.RawMessage)
+				if !ok {
+					return t, fmt.Errorf("expected json.RawMessage, got %")
+				}
+				err := json.Unmarshal(bz, &t)
+				return t, err
+			},
+		}
+	}
 }

@@ -2,15 +2,13 @@ package collections
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/tidwall/btree"
 
-	"cosmossdk.io/schema"
-
 	"cosmossdk.io/collections/codec"
+	"cosmossdk.io/schema"
 )
 
 type IndexingOptions struct {
@@ -37,7 +35,7 @@ func (s Schema) ModuleCodec(opts IndexingOptions) (schema.ModuleCodec, error) {
 			continue
 		}
 
-		ld, err := coll.logicalDecoder()
+		ld, err := coll.schemaCodec()
 		if err != nil {
 			return schema.ModuleCodec{}, err
 		}
@@ -48,8 +46,8 @@ func (s Schema) ModuleCodec(opts IndexingOptions) (schema.ModuleCodec, error) {
 
 		objectTypes = append(objectTypes, ld.objectType)
 		decoder.collectionLookup.Set(string(coll.GetPrefix()), &collDecoder{
-			Collection:     coll,
-			logicalDecoder: ld,
+			Collection:  coll,
+			schemaCodec: ld,
 		})
 	}
 
@@ -86,7 +84,7 @@ func (m moduleDecoder) decodeKV(update schema.KVPairUpdate) ([]schema.ObjectUpda
 
 type collDecoder struct {
 	Collection
-	logicalDecoder
+	schemaCodec
 }
 
 func (c collDecoder) decodeKVPair(update schema.KVPairUpdate) ([]schema.ObjectUpdate, error) {
@@ -120,13 +118,13 @@ func (c collDecoder) decodeKVPair(update schema.KVPairUpdate) ([]schema.ObjectUp
 	}, nil
 }
 
-func (c collectionImpl[K, V]) logicalDecoder() (logicalDecoder, error) {
-	res := logicalDecoder{}
+func (c collectionImpl[K, V]) schemaCodec() (schemaCodec, error) {
+	res := schemaCodec{}
 	res.objectType.Name = c.GetName()
 
-	keyDecoder, err := KeyCodecDecoder(c.m.kc)
+	keyDecoder, err := codec.KeySchemaCodec(c.m.kc)
 	if err != nil {
-		return logicalDecoder{}, err
+		return schemaCodec{}, err
 	}
 	res.objectType.KeyFields = keyDecoder.Fields
 	res.keyDecoder = func(i []byte) (any, error) {
@@ -138,9 +136,9 @@ func (c collectionImpl[K, V]) logicalDecoder() (logicalDecoder, error) {
 	}
 	ensureFieldNames(c.m.kc, "key", res.objectType.KeyFields)
 
-	valueDecoder, err := ValueCodecDecoder(c.m.vc)
+	valueDecoder, err := codec.ValueSchemaCodec(c.m.vc)
 	if err != nil {
-		return logicalDecoder{}, err
+		return schemaCodec{}, err
 	}
 	res.objectType.ValueFields = valueDecoder.Fields
 	res.valueDecoder = func(i []byte) (any, error) {
@@ -153,43 +151,6 @@ func (c collectionImpl[K, V]) logicalDecoder() (logicalDecoder, error) {
 	ensureFieldNames(c.m.vc, "value", res.objectType.ValueFields)
 
 	return res, nil
-}
-
-func KeyCodecDecoder[K any](cdc codec.KeyCodec[K]) (codec.SchemaCodec[K], error) {
-	if indexable, ok := cdc.(codec.HasSchemaCodec[K]); ok {
-		return indexable.SchemaCodec()
-	} else {
-		return FallbackDecoder[K](), nil
-	}
-}
-
-func ValueCodecDecoder[K any](cdc codec.ValueCodec[K]) (codec.SchemaCodec[K], error) {
-	if indexable, ok := cdc.(codec.HasSchemaCodec[K]); ok {
-		return indexable.SchemaCodec()
-	} else {
-		return FallbackDecoder[K](), nil
-	}
-}
-
-func FallbackDecoder[T any]() codec.SchemaCodec[T] {
-	var t T
-	kind := schema.KindForGoValue(t)
-	if err := kind.Validate(); err == nil {
-		return codec.SchemaCodec[T]{
-			Fields: []schema.Field{{Kind: kind}},
-			ToSchemaType: func(t T) (any, error) {
-				return t, nil
-			},
-		}
-	} else {
-		return codec.SchemaCodec[T]{
-			Fields: []schema.Field{{Kind: schema.JSONKind}},
-			ToSchemaType: func(t T) (any, error) {
-				bz, err := json.Marshal(t)
-				return json.RawMessage(bz), err
-			},
-		}
-	}
 }
 
 func ensureFieldNames(x any, defaultName string, cols []schema.Field) {

@@ -171,16 +171,17 @@ func (s *Server[AppT, T]) Configs() map[string]any {
 // Init initializes all server components with the provided application, configuration, and logger.
 // It returns an error if any component fails to initialize.
 func (s *Server[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Logger) error {
-	var initializedComponents []ServerComponent[AppT, T]
-
-	for _, component := range s.components {
-		if err := component.Init(appI, v, logger); err != nil {
-			return fmt.Errorf("failed to initialize component: %w", err)
+	var components []ServerComponent[AppT, T]
+	for _, mod := range s.components {
+		mod := mod
+		if err := mod.Init(appI, v, logger); err != nil {
+			return err
 		}
-		initializedComponents = append(initializedComponents, component)
+
+		components = append(components, mod)
 	}
 
-	s.components = initializedComponents
+	s.components = components
 	return nil
 }
 

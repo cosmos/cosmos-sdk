@@ -509,9 +509,11 @@ jobs:
         if: env.GIT_DIFF
         run: |
           cd indexer/postgres
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic ./...
+          go test -mod=readonly -timeout 30m -coverprofile=cov1.out -covermode=atomic ./...
           cd tests
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic ./...
+          go test -mod=readonly -timeout 30m -coverprofile=cov2.out -covermode=atomic -coverpkg=cosmossdk.io/indexer/postgres ./...
+          cd ..
+          go run github.com/dylandreimerink/gocovmerge/cmd/gocovmerge@latest cov1.out tests/cov2.out > coverage.out
       - name: sonarcloud
         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
         uses: SonarSource/sonarcloud-github-action@master

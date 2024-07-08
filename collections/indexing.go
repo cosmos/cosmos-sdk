@@ -155,34 +155,34 @@ func (c collectionImpl[K, V]) logicalDecoder() (logicalDecoder, error) {
 	return res, nil
 }
 
-func KeyCodecDecoder[K any](cdc codec.KeyCodec[K]) (codec.LogicalDecoder[K], error) {
-	if indexable, ok := cdc.(codec.IndexableCodec[K]); ok {
-		return indexable.LogicalDecoder()
+func KeyCodecDecoder[K any](cdc codec.KeyCodec[K]) (codec.SchemaCodec[K], error) {
+	if indexable, ok := cdc.(codec.HasSchemaCodec[K]); ok {
+		return indexable.SchemaCodec()
 	} else {
 		return FallbackDecoder[K](), nil
 	}
 }
 
-func ValueCodecDecoder[K any](cdc codec.ValueCodec[K]) (codec.LogicalDecoder[K], error) {
-	if indexable, ok := cdc.(codec.IndexableCodec[K]); ok {
-		return indexable.LogicalDecoder()
+func ValueCodecDecoder[K any](cdc codec.ValueCodec[K]) (codec.SchemaCodec[K], error) {
+	if indexable, ok := cdc.(codec.HasSchemaCodec[K]); ok {
+		return indexable.SchemaCodec()
 	} else {
 		return FallbackDecoder[K](), nil
 	}
 }
 
-func FallbackDecoder[T any]() codec.LogicalDecoder[T] {
+func FallbackDecoder[T any]() codec.SchemaCodec[T] {
 	var t T
 	kind := schema.KindForGoValue(t)
 	if err := kind.Validate(); err == nil {
-		return codec.LogicalDecoder[T]{
+		return codec.SchemaCodec[T]{
 			Fields: []schema.Field{{Kind: kind}},
 			ToSchemaType: func(t T) (any, error) {
 				return t, nil
 			},
 		}
 	} else {
-		return codec.LogicalDecoder[T]{
+		return codec.SchemaCodec[T]{
 			Fields: []schema.Field{{Kind: schema.JSONKind}},
 			ToSchemaType: func(t T) (any, error) {
 				bz, err := json.Marshal(t)

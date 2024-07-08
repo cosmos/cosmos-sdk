@@ -3,8 +3,6 @@ package codec
 import (
 	"errors"
 	"fmt"
-
-	"cosmossdk.io/schema"
 )
 
 var ErrEncoding = errors.New("collections: encoding error")
@@ -74,22 +72,6 @@ type ValueCodec[T any] interface {
 	Stringify(value T) string
 	// ValueType returns the identifier for the type.
 	ValueType() string
-}
-
-// IndexableCodec is an interface that all codec's should implement in order to properly support indexing.
-// It is not required by KeyCodec or ValueCodec in order to preserve backwards compatibility, but
-// a future version of collections may make it required and all codec's should aim to implement it.
-// If it is not implemented, fallback defaults will be used for indexing that may be sub-optimal.
-//
-// Implementations of IndexableCodec should test that they are conformant using the schema.ValidateWithKeyFields
-// and schema.ValidateWithValueFields depending on whether the codec is a KeyCodec or ValueCodec respectively.
-type IndexableCodec[T any] interface {
-	LogicalDecoder() (LogicalDecoder[T], error)
-}
-
-type LogicalDecoder[T any] struct {
-	Fields       []schema.Field
-	ToSchemaType func(T) (any, error)
 }
 
 // NewUntypedValueCodec returns an UntypedValueCodec for the provided ValueCodec.

@@ -465,7 +465,7 @@ func (s *SystemUnderTest) ModifyGenesisJSON(t *testing.T, mutators ...GenesisMut
 // modify json without enforcing a reset
 func (s *SystemUnderTest) modifyGenesisJSON(t *testing.T, mutators ...GenesisMutator) {
 	t.Helper()
-	require.Empty(t, s.currentHeight, "forced chain reset required")
+	require.Empty(t, s.currentHeight.Load(), "forced chain reset required")
 	current, err := os.ReadFile(filepath.Join(WorkDir, s.nodePath(0), "config", "genesis.json"))
 	require.NoError(t, err)
 	for _, m := range mutators {

@@ -136,9 +136,19 @@ func (s *Server[AppT, T]) CLICommands() CLIConfig {
 	commands := CLIConfig{}
 	for _, mod := range s.components {
 		if climod, ok := mod.(HasCLICommands); ok {
-			commands.Commands = append(commands.Commands, compart(mod.Name(), climod.CLICommands().Commands...))
-			commands.Txs = append(commands.Txs, compart(mod.Name(), climod.CLICommands().Txs...))
-			commands.Queries = append(commands.Queries, compart(mod.Name(), climod.CLICommands().Queries...))
+			srvCmd := climod.CLICommands()
+
+			if len(srvCmd.Commands) > 0 {
+				commands.Commands = append(commands.Commands, compart(mod.Name(), srvCmd.Commands...))
+			}
+
+			if len(srvCmd.Txs) > 0 {
+				commands.Txs = append(commands.Txs, compart(mod.Name(), srvCmd.Txs...))
+			}
+
+			if len(srvCmd.Queries) > 0 {
+				commands.Queries = append(commands.Queries, compart(mod.Name(), srvCmd.Queries...))
+			}
 		}
 	}
 

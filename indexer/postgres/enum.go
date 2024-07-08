@@ -17,7 +17,8 @@ func (m *ModuleManager) CreateEnumType(ctx context.Context, conn DBConn, enum sc
 	var res interface{}
 	if err := row.Scan(&res); err != nil {
 		if err != sql.ErrNoRows {
-			return fmt.Errorf("failed to check if enum type %q exists: %v", typeName, err)
+			// use %v instead of %w for go 1.12 compat
+			return fmt.Errorf("failed to check if enum type %q exists: %v", typeName, err) //nolint:errorlint
 		}
 	} else {
 		// the enum type already exists

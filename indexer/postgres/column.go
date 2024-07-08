@@ -64,6 +64,7 @@ func writeNullability(writer io.Writer, nullable bool) error {
 
 // simpleColumnType returns the postgres column type for the kind for simple types.
 func simpleColumnType(kind schema.Kind) string {
+	//nolint:goconst
 	switch kind {
 	case schema.StringKind:
 		return "TEXT"

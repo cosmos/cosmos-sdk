@@ -48,7 +48,8 @@ func (m *ModuleManager) InitializeSchema(ctx context.Context, conn DBConn) error
 		m.tables[typ.Name] = tm
 		err := tm.CreateTable(ctx, conn)
 		if err != nil {
-			return fmt.Errorf("failed to create table for %s in module %s: %v", typ.Name, m.moduleName, err)
+			// use %v instead of %w for go 1.12 compat
+			return fmt.Errorf("failed to create table for %s in module %s: %v", typ.Name, m.moduleName, err) //nolint:errorlint
 		}
 	}
 

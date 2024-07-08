@@ -48,7 +48,7 @@ func (m *ModuleManager) InitializeSchema(ctx context.Context, conn DBConn) error
 		m.tables[typ.Name] = tm
 		err := tm.CreateTable(ctx, conn)
 		if err != nil {
-			return fmt.Errorf("failed to create table for %s in module %s: %w", typ.Name, m.moduleName, err)
+			return fmt.Errorf("failed to create table for %s in module %s: %v", typ.Name, m.moduleName, err)
 		}
 	}
 

@@ -17,7 +17,7 @@ func (m *ModuleManager) CreateEnumType(ctx context.Context, conn DBConn, enum sc
 	var res interface{}
 	if err := row.Scan(&res); err != nil {
 		if err != sql.ErrNoRows {
-			return fmt.Errorf("failed to check if enum type %q exists: %w", typeName, err)
+			return fmt.Errorf("failed to check if enum type %q exists: %v", typeName, err)
 		}
 	} else {
 		// the enum type already exists

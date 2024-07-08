@@ -77,7 +77,6 @@ func TestUnorderedTxDecorator_UnorderedTx_InvalidTTL(t *testing.T) {
 	ctx = sdk.Context{}.WithTxBytes(txBz).WithHeaderInfo(header.Info{Time: time.Now()})
 	_, err = chain(ctx, tx, false)
 	require.Error(t, err)
-
 }
 
 func TestUnorderedTxDecorator_UnorderedTx_AlreadyExists(t *testing.T) {

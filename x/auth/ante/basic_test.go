@@ -194,6 +194,8 @@ func TestTxHeightTimeoutDecorator(t *testing.T) {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 
+	currentTime := time.Now()
+
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
 	feeAmount := testdata.NewTestFeeAmount()
@@ -211,11 +213,11 @@ func TestTxHeightTimeoutDecorator(t *testing.T) {
 		{"no timeout (greater height)", 15, 10, time.Time{}, time.Time{}, nil},
 		{"no timeout (same height)", 10, 10, time.Time{}, time.Time{}, nil},
 		{"timeout (smaller height)", 9, 10, time.Time{}, time.Time{}, sdkerrors.ErrTxTimeoutHeight},
-		{"no timeout (timeout after timestamp)", 0, 20, time.Now().Add(time.Minute), time.Now(), nil},
-		{"no timeout (current time)", 0, 20, time.Now(), time.Now(), nil},
-		{"timeout before timestamp", 0, 20, time.Now(), time.Now().Add(time.Minute), sdkerrors.ErrTxTimeout},
-		{"tx contain both timeouts, timeout (timeout before timestamp)", 15, 10, time.Now(), time.Now().Add(time.Minute), sdkerrors.ErrTxTimeout},
-		{"tx contain both timeout, no timeout", 15, 10, time.Now().Add(time.Minute), time.Now(), nil},
+		{"no timeout (timeout after timestamp)", 0, 20, currentTime.Add(time.Minute), currentTime, nil},
+		{"no timeout (current time)", 0, 20, currentTime, currentTime, nil},
+		{"timeout before timestamp", 0, 20, currentTime, currentTime.Add(time.Minute), sdkerrors.ErrTxTimeout},
+		{"tx contain both timeouts, timeout (timeout before timestamp)", 15, 10, currentTime, currentTime.Add(time.Minute), sdkerrors.ErrTxTimeout},
+		{"tx contain both timeout, no timeout", 15, 10, currentTime.Add(time.Minute), currentTime, nil},
 	}
 
 	for _, tc := range testCases {

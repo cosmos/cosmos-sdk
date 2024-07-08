@@ -241,6 +241,7 @@ replace (
 	cosmossdk.io/core/testing => ../core/testing
 	cosmossdk.io/depinject => ../depinject
 	cosmossdk.io/log => ../log
+	cosmossdk.io/store => ../store
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/accounts/defaults/lockup => ../x/accounts/defaults/lockup
 	cosmossdk.io/x/auth => ../x/auth

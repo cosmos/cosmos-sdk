@@ -24,6 +24,38 @@ func createValAddrs(count int) ([]sdk.AccAddress, []sdk.ValAddress) {
 	return addrs, valAddrs
 }
 
+func (s *KeeperTestSuite) TestSharesToTokensConversion() {
+	ctx, keeper := s.ctx, s.stakingKeeper
+	require := s.Require()
+
+	addrDels, valAddrs := createValAddrs(1)
+
+	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+
+	initialTokens := math.NewInt(1000000)
+	validator := testutil.NewValidator(s.T(), valAddrs[0], PKs[0])
+	validator, issuedShares := validator.AddTokensFromDel(initialTokens)
+	require.NoError(keeper.SetValidator(ctx, validator))
+
+	// Delegate tokens
+	delegation := stakingtypes.NewDelegation(s.addressToString(addrDels[0]), s.valAddressToString(valAddrs[0]), issuedShares)
+	require.NoError(keeper.SetDelegation(ctx, delegation))
+
+	// Re-get the validator after delegation
+	validator, err := keeper.GetValidator(ctx, valAddrs[0])
+	require.NoError(err)
+
+	// Convert shares to tokens
+	shares := math.LegacyNewDecFromInt(initialTokens)
+	tokens := validator.TokensFromSharesTruncated(shares)
+	require.Equal(initialTokens, tokens.RoundInt())
+
+	// Convert tokens back to shares
+	newShares, err := validator.SharesFromTokens(initialTokens)
+	require.NoError(err)
+	require.True(shares.Equal(newShares))
+}
+
 // tests GetDelegation, GetDelegatorDelegations, SetDelegation, RemoveDelegation, GetDelegatorDelegations
 func (s *KeeperTestSuite) TestDelegation() {
 	ctx, keeper := s.ctx, s.stakingKeeper

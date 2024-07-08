@@ -1,9 +1,12 @@
 package appdata
 
+// Packet is the interface that all listener data structures implement so that this data can be "packetized"
+// and processed in a stream, possibly asynchronously.
 type Packet interface {
 	apply(*Listener) error
 }
 
+// SendPacket sends a packet to a listener invoking the appropriate callback for this packet if one is registered.
 func (l Listener) SendPacket(p Packet) error {
 	return p.apply(&l)
 }

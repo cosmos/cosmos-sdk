@@ -8,12 +8,11 @@ import (
 	"github.com/spf13/viper"
 
 	corectx "cosmossdk.io/core/context"
-	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/log"
 )
 
 // QueryBlockResultsCmd implements the default command for a BlockResults query.
-func (s *StoreComponent[AppT, T]) PrunesCmd(appCreator servercore.AppCreator[AppT, T]) *cobra.Command {
+func (s *StoreComponent[AppT, T]) PrunesCmd(appCreator serverv2.AppCreator[AppT, T]) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prune [pruning-method]",
 		Short: "Prune app history states by keeping the recent heights and deleting old heights",

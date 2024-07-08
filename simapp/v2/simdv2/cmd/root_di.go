@@ -12,12 +12,12 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
+	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/simapp/v2"
 	"cosmossdk.io/x/auth/tx"
 	authtxconfig "cosmossdk.io/x/auth/tx/config"
 	"cosmossdk.io/x/auth/types"
 
-	servercore "cosmossdk.io/core/server"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -26,7 +26,7 @@ import (
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the main function.
-func NewRootCmd[AppT servercore.AppI[T], T transaction.Tx]() *cobra.Command {
+func NewRootCmd[AppT serverv2.AppI[T], T transaction.Tx]() *cobra.Command {
 	var (
 		autoCliOpts   autocli.AppOptions
 		moduleManager *runtime.MM[T]

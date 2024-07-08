@@ -22,39 +22,39 @@ import (
 	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/transaction"
 	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/server/v2/appmanager"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
 
-	servercore "cosmossdk.io/core/server"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 var (
 	_ serverv2.ServerComponent[
-		servercore.AppI[transaction.Tx], transaction.Tx,
-	] = (*CometBFTServer[servercore.AppI[transaction.Tx], transaction.Tx])(nil)
+		serverv2.AppI[transaction.Tx], transaction.Tx,
+	] = (*CometBFTServer[serverv2.AppI[transaction.Tx], transaction.Tx])(nil)
 	_ serverv2.HasCLICommands[
-		servercore.AppI[transaction.Tx], transaction.Tx,
-	] = (*CometBFTServer[servercore.AppI[transaction.Tx], transaction.Tx])(nil)
-	_ serverv2.HasStartFlags  = (*CometBFTServer[servercore.AppI[transaction.Tx], transaction.Tx])(nil)
+		serverv2.AppI[transaction.Tx], transaction.Tx,
+	] = (*CometBFTServer[serverv2.AppI[transaction.Tx], transaction.Tx])(nil)
+	_ serverv2.HasStartFlags = (*CometBFTServer[serverv2.AppI[transaction.Tx], transaction.Tx])(nil)
 )
 
-type CometBFTServer[AppT servercore.AppI[T], T transaction.Tx] struct {
+type CometBFTServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
 	Node      *node.Node
 	Consensus *Consensus[T]
 
-	initTxCodec transaction.Codec[T]
-	logger      log.Logger
-	config      Config
-	options     ServerOptions[T]
+	initTxCodec      transaction.Codec[T]
+	logger           log.Logger
+	config           Config
+	options          ServerOptions[T]
+	cmtConfigOptions []CmtCfgOption
 }
 
-func New[AppT servercore.AppI[T], T transaction.Tx](txCodec transaction.Codec[T], options ServerOptions[T]) *CometBFTServer[AppT, T] {
+func New[AppT serverv2.AppI[T], T transaction.Tx](txCodec transaction.Codec[T], options ServerOptions[T], cfgOptions ...CmtCfgOption) *CometBFTServer[AppT, T] {
 	return &CometBFTServer[AppT, T]{
-		initTxCodec: txCodec,
-		options:     options,
+		initTxCodec:      txCodec,
+		options:          options,
+		cmtConfigOptions: cfgOptions,
 	}
 }
 
@@ -64,8 +64,7 @@ func (s *CometBFTServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Log
 
 	// create consensus
 	store := appI.GetStore().(types.Store)
-	appManager := appI.GetAppManager().(*appmanager.AppManager[T])
-	consensus := NewConsensus[T](appManager, s.options.Mempool, store, s.config, s.initTxCodec, s.logger)
+	consensus := NewConsensus[T](appI.GetAppManager(), s.options.Mempool, store, s.config, s.initTxCodec, s.logger)
 
 	consensus.prepareProposalHandler = s.options.PrepareProposalHandler
 	consensus.processProposalHandler = s.options.ProcessProposalHandler
@@ -89,7 +88,7 @@ func (s *CometBFTServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Log
 }
 
 func (s *CometBFTServer[AppT, T]) Name() string {
-	return "cometbft-server"
+	return "comet"
 }
 
 func (s *CometBFTServer[AppT, T]) Start(ctx context.Context) error {
@@ -192,16 +191,13 @@ func (s *CometBFTServer[AppT, T]) StartCmdFlags() *pflag.FlagSet {
 	return flags
 }
 
-func (s *CometBFTServer[AppT, T]) GetCommands(_ servercore.AppCreator[AppT, T]) []*cobra.Command {
+func (s *CometBFTServer[AppT, T]) GetCommands(_ serverv2.AppCreator[AppT, T]) []*cobra.Command {
 	return []*cobra.Command{
 		s.StatusCommand(),
 		s.ShowNodeIDCmd(),
 		s.ShowValidatorCmd(),
 		s.ShowAddressCmd(),
 		s.VersionCmd(),
-		s.QueryBlockCmd(),
-		s.QueryBlocksCmd(),
-		s.QueryBlockResultsCmd(),
 		cmtcmd.ResetAllCmd,
 		cmtcmd.ResetStateCmd,
 	}
@@ -212,11 +208,19 @@ func (s *CometBFTServer[AppT, T]) GetTxs() []*cobra.Command {
 }
 
 func (s *CometBFTServer[AppT, T]) GetQueries() []*cobra.Command {
-	return nil
+	return []*cobra.Command{
+		s.QueryBlockCmd(),
+		s.QueryBlocksCmd(),
+		s.QueryBlockResultsCmd(),
+	}
 }
 
 func (s *CometBFTServer[AppT, T]) WriteDefaultConfigAt(configPath string) error {
 	cometConfig := cmtcfg.DefaultConfig()
+	for _, opt := range s.cmtConfigOptions {
+		opt(cometConfig)
+	}
+
 	cmtcfg.WriteConfigFile(filepath.Join(configPath, "config.toml"), cometConfig)
 	return nil
 }

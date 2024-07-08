@@ -12,11 +12,11 @@ type TableManager struct {
 	typ         schema.ObjectType
 	valueFields map[string]schema.Field
 	allFields   map[string]schema.Field
-	options     Options
+	options     ManagerOptions
 }
 
 // NewTableManager creates a new TableManager for the given object type.
-func NewTableManager(moduleName string, typ schema.ObjectType, options Options) *TableManager {
+func NewTableManager(moduleName string, typ schema.ObjectType, options ManagerOptions) *TableManager {
 	allFields := make(map[string]schema.Field)
 	valueFields := make(map[string]schema.Field)
 

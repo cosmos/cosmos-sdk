@@ -17,7 +17,7 @@ func (tm *TableManager) CreateTable(ctx context.Context, conn DBConn) error {
 
 	sqlStr := buf.String()
 	if tm.options.Logger != nil {
-		tm.options.Logger.Debug("Creating table", "table", tm.TableName(), "sql", sqlStr)
+		tm.options.Logger(fmt.Sprintf("Creating table %s", tm.TableName()), sqlStr)
 	}
 	_, err = conn.ExecContext(ctx, sqlStr)
 	return err
@@ -53,7 +53,7 @@ func (tm *TableManager) CreateTableSql(writer io.Writer) error {
 	}
 
 	// add _deleted column when we have RetainDeletions set and enabled
-	if tm.options.DisableRetainDeletions && tm.typ.RetainDeletions {
+	if !tm.options.DisableRetainDeletions && tm.typ.RetainDeletions {
 		_, err = fmt.Fprintf(writer, "_deleted BOOLEAN NOT NULL DEFAULT FALSE,\n\t")
 		if err != nil {
 			return err

@@ -5,7 +5,6 @@ import (
 
 	"cosmossdk.io/indexer/postgres/internal/testdata"
 	"cosmossdk.io/schema"
-	"cosmossdk.io/schema/logutil"
 )
 
 func ExampleCreateTable_AllKinds() {
@@ -50,7 +49,7 @@ func ExampleCreateTable_Singleton() {
 }
 
 func exampleCreateTable(objectType schema.ObjectType) {
-	tm := NewTableManager("test", objectType, Options{Logger: logutil.NoopLogger{}})
+	tm := NewTableManager("test", objectType, ManagerOptions{Logger: func(msg string, sql string, params ...interface{}) {}})
 	err := tm.CreateTableSql(os.Stdout)
 	if err != nil {
 		panic(err)

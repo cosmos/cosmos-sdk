@@ -13,11 +13,11 @@ type ModuleManager struct {
 	schema       schema.ModuleSchema
 	tables       map[string]*TableManager
 	definedEnums map[string]schema.EnumDefinition
-	options      Options
+	options      ManagerOptions
 }
 
 // NewModuleManager creates a new ModuleManager for the given module schema.
-func NewModuleManager(moduleName string, modSchema schema.ModuleSchema, options Options) *ModuleManager {
+func NewModuleManager(moduleName string, modSchema schema.ModuleSchema, options ManagerOptions) *ModuleManager {
 	return &ModuleManager{
 		moduleName:   moduleName,
 		schema:       modSchema,

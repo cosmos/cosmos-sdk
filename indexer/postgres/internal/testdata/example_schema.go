@@ -38,6 +38,7 @@ func init() {
 		ObjectTypes: []schema.ObjectType{
 			AllKindsObject,
 			SingletonObject,
+			RetainDeleteObject,
 		},
 	}
 }
@@ -54,6 +55,31 @@ var SingletonObject = schema.ObjectType{
 			Kind: schema.Int32Kind,
 		},
 	},
+}
+
+var RetainDeleteObject = schema.ObjectType{
+	Name: "vote",
+	KeyFields: []schema.Field{
+		{
+			Name: "proposal",
+			Kind: schema.Int64Kind,
+		},
+		{
+			Name: "address",
+			Kind: schema.Bech32AddressKind,
+		},
+	},
+	ValueFields: []schema.Field{
+		{
+			Name: "vote",
+			Kind: schema.EnumKind,
+			EnumDefinition: schema.EnumDefinition{
+				Name:   "vote_type",
+				Values: []string{"yes", "no", "abstain"},
+			},
+		},
+	},
+	RetainDeletions: true,
 }
 
 var MyEnum = schema.EnumDefinition{

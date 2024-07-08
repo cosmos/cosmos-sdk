@@ -224,6 +224,7 @@ func GenesisStateWithValSet(
 	genesisState[authtypes.ModuleName] = codec.MustMarshalJSON(authGenesis)
 
 	validators := make([]StakingValidator, 0, len(valSet.Validators))
+	delegations := make([]StakingDelegation, 0, len(valSet.Validators))
 
 	bondAmt := sdk.DefaultPowerReduction
 
@@ -247,8 +248,15 @@ func GenesisStateWithValSet(
 			DelegatorShares:   sdkmath.LegacyOneDec(),
 			MinSelfDelegation: sdkmath.ZeroInt(),
 		}
+
 		validators = append(validators, validator)
 
+		deletation := StakingDelegation{
+			DelegatorAddress: genAccs[0].GetAddress().String(),
+			ValidatorAddress: sdk.ValAddress(val.Address).String(),
+			Shares:           sdkmath.LegacyOneDec(),
+		}
+		delegations = append(delegations, deletation)
 	}
 
 	// set validators and delegations
@@ -261,7 +269,8 @@ func GenesisStateWithValSet(
 			BondDenom:         sdk.DefaultBondDenom,
 			MinCommissionRate: sdkmath.LegacyZeroDec(),
 		},
-		Validators: validators,
+		Validators:  validators,
+		Delegations: delegations,
 	}
 	genesisState[testutil.StakingModuleName], _ = json.Marshal(stakingGenesis)
 
@@ -269,6 +278,11 @@ func GenesisStateWithValSet(
 	for _, b := range balances {
 		// add genesis acc tokens to total supply
 		totalSupply = totalSupply.Add(b.Coins...)
+	}
+
+	for range delegations {
+		// add delegated tokens to total supply
+		totalSupply = totalSupply.Add(sdk.NewCoin(sdk.DefaultBondDenom, bondAmt))
 	}
 
 	// add bonded amount to bonded pool module account

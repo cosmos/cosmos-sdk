@@ -167,14 +167,22 @@ func appStateFnWithExtendedCbs(
 		}
 
 		// change appState back
-		for name, state := range map[string]proto.Message{
-			// stakingtypes.ModuleName: stakingState, TODO(@julienrbrt) uncomment (!)
-			testutil.BankModuleName: bankState,
+		for name, state := range map[string]interface{}{
+			testutil.StakingModuleName: stakingState,
+			testutil.BankModuleName:    bankState,
 		} {
 			if moduleStateCb != nil {
 				moduleStateCb(name, state)
 			}
-			rawState[name] = cdc.MustMarshalJSON(state)
+
+			if ps, ok := state.(proto.Message); ok {
+				rawState[name] = cdc.MustMarshalJSON(ps)
+			} else {
+				rawState[name], err = json.Marshal(state)
+				if err != nil {
+					panic(err)
+				}
+			}
 		}
 
 		// extend state from callback function

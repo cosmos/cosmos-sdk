@@ -44,7 +44,8 @@ type Factory struct {
 
 // NewFactory returns a new instance of Factory.
 func NewFactory(keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever account.AccountRetriever,
-	txConfig TxConfig, ac address.Codec, conn gogogrpc.ClientConn, parameters TxParameters) (Factory, error) {
+	txConfig TxConfig, ac address.Codec, conn gogogrpc.ClientConn, parameters TxParameters,
+) (Factory, error) {
 	return Factory{
 		keybase:          keybase,
 		cdc:              cdc,

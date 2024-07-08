@@ -189,6 +189,13 @@ func (c Context) WithBlockHeight(height int64) Context {
 	return c.WithBlockHeader(newHeader)
 }
 
+// WithBlockTime returns a Context with an updated block time.
+func (c Context) WithBlockTime(time time.Time) Context {
+	newHeader := c.BlockHeader()
+	newHeader.Time = time
+	return c.WithBlockHeader(newHeader)
+}
+
 // WithChainID returns a Context with an updated chain identifier.
 func (c Context) WithChainID(chainID string) Context {
 	c.chainID = chainID

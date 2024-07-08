@@ -18,9 +18,9 @@ import (
 )
 
 const (
-	// DefaultMaxUnOrderedTTL defines the default maximum TTL an un-ordered transaction
+	// DefaultMaxUnOrderedHeight defines the default maximum height an un-ordered transaction
 	// can set.
-	DefaultMaxUnOrderedTTL = 1024
+	DefaultMaxUnOrderedHeight = 1024
 	// DefaultmaxTimeoutDuration defines the default maximum duration an un-ordered transaction
 	// can set.
 	// TODO: need to decide a default value
@@ -62,10 +62,10 @@ type Manager struct {
 	// expired.
 	txHashesBlockHeight map[TxHash]uint64
 
-	// txHashesTimestamp defines a map from tx hash -> TTL value defined as block time, which is used for duplicate
+	// txHashesBlockTime defines a map from tx hash -> TTL value defined as block time, which is used for duplicate
 	// checking and replay protection, as well as purging the map when the TTL is
 	// expired.
-	txHashesTimestamp map[TxHash]time.Time
+	txHashesBlockTime map[TxHash]time.Time
 }
 
 func NewManager(dataDir string) *Manager {
@@ -79,7 +79,7 @@ func NewManager(dataDir string) *Manager {
 		blockCh:             make(chan blockInfo, 16),
 		doneCh:              make(chan struct{}),
 		txHashesBlockHeight: make(map[TxHash]uint64),
-		txHashesTimestamp:   make(map[TxHash]time.Time),
+		txHashesBlockTime:   make(map[TxHash]time.Time),
 	}
 
 	return m
@@ -111,7 +111,7 @@ func (m *Manager) Contains(hash TxHash) bool {
 	if ok {
 		return ok
 	}
-	_, ok = m.txHashesTimestamp[hash]
+	_, ok = m.txHashesBlockTime[hash]
 	return ok
 }
 
@@ -119,21 +119,21 @@ func (m *Manager) Size() int {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	return len(m.txHashesBlockHeight) + len(m.txHashesTimestamp)
+	return len(m.txHashesBlockHeight) + len(m.txHashesBlockTime)
 }
 
-func (m *Manager) Add(txHash TxHash, ttl uint64) {
+func (m *Manager) Add(txHash TxHash, height uint64) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	m.txHashesBlockHeight[txHash] = ttl
+	m.txHashesBlockHeight[txHash] = height
 }
 
 func (m *Manager) AddTimestamp(txHash TxHash, timestamp time.Time) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	m.txHashesTimestamp[txHash] = timestamp
+	m.txHashesBlockTime[txHash] = timestamp
 }
 
 // OnInit must be called when a node starts up. Typically, this should be called
@@ -203,24 +203,24 @@ func (m *Manager) exportSnapshot(height uint64, snapshotWriter func([]byte) erro
 	sort.Slice(keys, func(i, j int) bool { return bytes.Compare(keys[i][:], keys[j][:]) < 0 })
 
 	for _, txHash := range keys {
-		ttl := m.txHashesBlockHeight[txHash]
-		if height > ttl {
+		blockHeight := m.txHashesBlockHeight[txHash]
+		if height > blockHeight {
 			// skip expired txs that have yet to be purged
 			continue
 		}
 
-		chunk := unorderedTxToBytes(txHash, ttl, true)
+		chunk := unorderedTxToBytes(txHash, blockHeight, true)
 
 		if _, err := w.Write(chunk); err != nil {
 			return fmt.Errorf("failed to write unordered tx to buffer: %w", err)
 		}
 	}
 
-	keys = maps.Keys(m.txHashesTimestamp)
+	keys = maps.Keys(m.txHashesBlockTime)
 	sort.Slice(keys, func(i, j int) bool { return bytes.Compare(keys[i][:], keys[j][:]) < 0 })
 
 	for _, txHash := range keys {
-		timestamp := m.txHashesTimestamp[txHash]
+		timestamp := m.txHashesBlockTime[txHash]
 
 		// right now we dont have access block time at this flow, so we would just include the expired txs
 		// and let it be purge during purge loop
@@ -248,15 +248,15 @@ func (m *Manager) flushToFile() error {
 	defer f.Close()
 
 	w := bufio.NewWriter(f)
-	for txHash, ttl := range m.txHashesBlockHeight {
-		chunk := unorderedTxToBytes(txHash, ttl, true)
+	for txHash, height := range m.txHashesBlockHeight {
+		chunk := unorderedTxToBytes(txHash, height, true)
 
 		if _, err = w.Write(chunk); err != nil {
 			return fmt.Errorf("failed to write unordered tx to buffer: %w", err)
 		}
 	}
 
-	for txHash, timestamp := range m.txHashesTimestamp {
+	for txHash, timestamp := range m.txHashesBlockTime {
 		chunk := unorderedTxToBytes(txHash, uint64(timestamp.Unix()), false)
 
 		if _, err = w.Write(chunk); err != nil {
@@ -277,13 +277,13 @@ func (m *Manager) expiredTxs(blockHeight uint64, blockTime time.Time) []TxHash {
 	defer m.mu.RUnlock()
 
 	var result []TxHash
-	for txHash, ttl := range m.txHashesBlockHeight {
-		if blockHeight > ttl {
+	for txHash, height := range m.txHashesBlockHeight {
+		if blockHeight > height {
 			result = append(result, txHash)
 		}
 	}
 
-	for txHash, timestamp := range m.txHashesTimestamp {
+	for txHash, timestamp := range m.txHashesBlockTime {
 		if blockTime.After(timestamp) {
 			result = append(result, txHash)
 		}
@@ -298,6 +298,7 @@ func (m *Manager) purge(txHashesBlockHeight []TxHash) {
 
 	for _, txHash := range txHashesBlockHeight {
 		delete(m.txHashesBlockHeight, txHash)
+		delete(m.txHashesBlockTime, txHash)
 	}
 }
 

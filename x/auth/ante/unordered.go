@@ -2,6 +2,7 @@ package ante
 
 import (
 	"crypto/sha256"
+	"fmt"
 	"time"
 
 	"cosmossdk.io/core/appmodule/v2"
@@ -35,11 +36,12 @@ type UnorderedTxDecorator struct {
 	env                appmodule.Environment
 }
 
-func NewUnorderedTxDecorator(maxTTL uint64, m *unorderedtx.Manager, env appmodule.Environment) *UnorderedTxDecorator {
+func NewUnorderedTxDecorator(maxTTL uint64, maxDuration time.Duration, m *unorderedtx.Manager, env appmodule.Environment) *UnorderedTxDecorator {
 	return &UnorderedTxDecorator{
-		maxUnOrderedTTL: maxTTL,
-		txManager:       m,
-		env:             env,
+		maxUnOrderedTTL:    maxTTL,
+		maxTimeoutDuration: maxDuration,
+		txManager:          m,
+		env:                env,
 	}
 }
 
@@ -58,12 +60,14 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "tx %X is duplicated")
 	}
 
+	headerInfo := d.env.HeaderService.HeaderInfo(ctx)
 	timeoutTimestamp := unorderedTx.GetTimeoutTimeStamp()
 	if !timeoutTimestamp.IsZero() && timeoutTimestamp.Unix() != 0 {
-		if timeoutTimestamp.Before(ctx.BlockTime()) {
+		if timeoutTimestamp.Before(headerInfo.Time) {
 			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction has a timeout_timestamp that has already passed")
 		}
-		if timeoutTimestamp.After(ctx.BlockTime().Add(d.maxTimeoutDuration)) {
+		if timeoutTimestamp.After(headerInfo.Time.Add(d.maxTimeoutDuration)) {
+			fmt.Println(timeoutTimestamp.String(), headerInfo.Time.String())
 			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unordered tx ttl exceeds %d", d.maxUnOrderedTTL)
 		}
 
@@ -80,10 +84,10 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 	if ttl == 0 && timeoutTimestamp.IsZero() {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction must have timeout_height or timeout_timestamp set")
 	}
-	if ttl < uint64(ctx.BlockHeight()) {
+	if ttl < uint64(headerInfo.Height) {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction has a timeout_height that has already passed")
 	}
-	if ttl > uint64(ctx.BlockHeight())+d.maxUnOrderedTTL {
+	if ttl > uint64(headerInfo.Height)+d.maxUnOrderedTTL {
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unordered tx ttl exceeds %d", d.maxUnOrderedTTL)
 	}
 

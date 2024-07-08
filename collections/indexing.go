@@ -21,7 +21,7 @@ type IndexingOptions struct {
 // ModuleCodec returns the ModuleCodec for this schema for the provided options.
 func (s Schema) ModuleCodec(opts IndexingOptions) (schema.ModuleCodec, error) {
 	decoder := moduleDecoder{
-		collectionLookup: &btree.Map[string, *collDecoder]{},
+		collectionLookup: &btree.Map[string, *collectionSchemaCodec]{},
 	}
 
 	retainDeletions := make(map[string]bool)
@@ -38,21 +38,18 @@ func (s Schema) ModuleCodec(opts IndexingOptions) (schema.ModuleCodec, error) {
 			continue
 		}
 
-		ld, err := coll.schemaCodec()
+		cdc, err := coll.schemaCodec()
 		if err != nil {
 			return schema.ModuleCodec{}, err
 		}
 
 		if retainDeletions[coll.GetName()] {
-			ld.objectType.RetainDeletions = true
+			cdc.objectType.RetainDeletions = true
 		}
 
-		objectTypes = append(objectTypes, ld.objectType)
+		objectTypes = append(objectTypes, cdc.objectType)
 
-		decoder.collectionLookup.Set(string(coll.GetPrefix()), &collDecoder{
-			Collection:  coll,
-			schemaCodec: ld,
-		})
+		decoder.collectionLookup.Set(string(coll.GetPrefix()), cdc)
 	}
 
 	return schema.ModuleCodec{
@@ -65,16 +62,16 @@ func (s Schema) ModuleCodec(opts IndexingOptions) (schema.ModuleCodec, error) {
 
 type moduleDecoder struct {
 	// collectionLookup lets us efficiently look the correct collection based on raw key bytes
-	collectionLookup *btree.Map[string, *collDecoder]
+	collectionLookup *btree.Map[string, *collectionSchemaCodec]
 }
 
 func (m moduleDecoder) decodeKV(update schema.KVPairUpdate) ([]schema.ObjectUpdate, error) {
 	key := update.Key
 	ks := string(key)
-	var cd *collDecoder
+	var cd *collectionSchemaCodec
 	// we look for the collection whose prefix is less than this key
-	m.collectionLookup.Descend(ks, func(prefix string, cur *collDecoder) bool {
-		bytesPrefix := cur.GetPrefix()
+	m.collectionLookup.Descend(ks, func(prefix string, cur *collectionSchemaCodec) bool {
+		bytesPrefix := cur.coll.GetPrefix()
 		if bytes.HasPrefix(key, bytesPrefix) {
 			cd = cur
 			return true
@@ -88,49 +85,46 @@ func (m moduleDecoder) decodeKV(update schema.KVPairUpdate) ([]schema.ObjectUpda
 	return cd.decodeKVPair(update)
 }
 
-type collDecoder struct {
-	Collection
-	schemaCodec
-}
-
-func (c collDecoder) decodeKVPair(update schema.KVPairUpdate) ([]schema.ObjectUpdate, error) {
+func (c collectionSchemaCodec) decodeKVPair(update schema.KVPairUpdate) ([]schema.ObjectUpdate, error) {
 	// strip prefix
 	key := update.Key
-	key = key[len(c.GetPrefix()):]
+	key = key[len(c.coll.GetPrefix()):]
 
 	k, err := c.keyDecoder(key)
 	if err != nil {
 		return []schema.ObjectUpdate{
-			{TypeName: c.GetName()},
+			{TypeName: c.coll.GetName()},
 		}, err
 
 	}
 
 	if update.Delete {
 		return []schema.ObjectUpdate{
-			{TypeName: c.GetName(), Key: k, Delete: true},
+			{TypeName: c.coll.GetName(), Key: k, Delete: true},
 		}, nil
 	}
 
 	v, err := c.valueDecoder(update.Value)
 	if err != nil {
 		return []schema.ObjectUpdate{
-			{TypeName: c.GetName(), Key: k},
+			{TypeName: c.coll.GetName(), Key: k},
 		}, err
 	}
 
 	return []schema.ObjectUpdate{
-		{TypeName: c.GetName(), Key: k, Value: v},
+		{TypeName: c.coll.GetName(), Key: k, Value: v},
 	}, nil
 }
 
-func (c collectionImpl[K, V]) schemaCodec() (schemaCodec, error) {
-	res := schemaCodec{}
+func (c collectionImpl[K, V]) schemaCodec() (*collectionSchemaCodec, error) {
+	res := &collectionSchemaCodec{
+		coll: c,
+	}
 	res.objectType.Name = c.GetName()
 
 	keyDecoder, err := codec.KeySchemaCodec(c.m.kc)
 	if err != nil {
-		return schemaCodec{}, err
+		return nil, err
 	}
 	res.objectType.KeyFields = keyDecoder.Fields
 	res.keyDecoder = func(i []byte) (any, error) {
@@ -144,7 +138,7 @@ func (c collectionImpl[K, V]) schemaCodec() (schemaCodec, error) {
 
 	valueDecoder, err := codec.ValueSchemaCodec(c.m.vc)
 	if err != nil {
-		return schemaCodec{}, err
+		return nil, err
 	}
 	res.objectType.ValueFields = valueDecoder.Fields
 	res.valueDecoder = func(i []byte) (any, error) {
@@ -160,7 +154,7 @@ func (c collectionImpl[K, V]) schemaCodec() (schemaCodec, error) {
 }
 
 // ensureFieldNames makes sure that all fields have valid names - either the
-// names were specified by user or they get filled in with defaults here
+// names were specified by user or they get filleed
 func ensureFieldNames(x any, defaultName string, cols []schema.Field) {
 	var names []string = nil
 	if hasName, ok := x.(interface{ Name() string }); ok {

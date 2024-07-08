@@ -93,17 +93,18 @@ type Collection interface {
 
 	genesisHandler
 
-	// schemaCodec returns the schema codec for this collection.
-	schemaCodec() (schemaCodec, error)
+	// collectionSchemaCodec returns the schema codec for this collection.
+	schemaCodec() (*collectionSchemaCodec, error)
 
 	// isSecondaryIndex indicates that this collection represents a secondary index
 	// in the schema and should be excluded from the module's user facing schema.
 	isSecondaryIndex() bool
 }
 
-// schemaCodec maps a collection to a schema object type and provides
+// collectionSchemaCodec maps a collection to a schema object type and provides
 // decoders and encoders to and from schema values and raw kv-store bytes.
-type schemaCodec struct {
+type collectionSchemaCodec struct {
+	coll         Collection
 	objectType   schema.ObjectType
 	keyDecoder   func([]byte) (any, error)
 	valueDecoder func([]byte) (any, error)

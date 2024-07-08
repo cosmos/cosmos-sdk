@@ -85,7 +85,7 @@ func FallbackCodec[T any]() SchemaCodec[T] {
 				var t T
 				bz, ok := a.(json.RawMessage)
 				if !ok {
-					return t, fmt.Errorf("expected json.RawMessage, got %")
+					return t, fmt.Errorf("expected json.RawMessage, got %T", a)
 				}
 				err := json.Unmarshal(bz, &t)
 				return t, err

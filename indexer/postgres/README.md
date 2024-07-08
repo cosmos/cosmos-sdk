@@ -1,6 +1,6 @@
 # PostgreSQL Indexer
 
-The PostgreSQL indexer can fully index current state for all modules that
+The PostgreSQL indexer can fully index the current state for all modules that implement `cosmossdk.io/schema.HasModuleCodec`.
 implement `cosmossdk.io/schema.HasModuleCodec`.
 
 ## Table, Column and Enum Naming

@@ -13,26 +13,22 @@ import (
 )
 
 func TestMiddleware(t *testing.T) {
-	appMods := map[string]interface{}{}
-	resolver := ModuleSetDecoderResolver(appMods)
-	tl := newTestBankListener(t)
-	listener, err := Middleware(tl.Listener, resolver, MiddlewareOptions{})
+	tl := newTestFixture(t)
+	listener, err := Middleware(tl.Listener, tl.resolver, MiddlewareOptions{})
 	if err != nil {
 		t.Fatal("unexpected error", err)
 	}
-	store := newTestStore(t, "bank", listener)
-	bankMod := exampleBankModule{
-		store: store,
-	}
-	appMods["bank"] = bankMod
+	tl.setListener(listener)
 
-	bankMod.Mint("bob", "foo", 100)
-	err = bankMod.Send("bob", "alice", "foo", 50)
+	tl.bankMod.Mint("bob", "foo", 100)
+	err = tl.bankMod.Send("bob", "alice", "foo", 50)
 	if err != nil {
 		t.Fatal("unexpected error", err)
 	}
 
-	expected := []schema.ObjectUpdate{
+	tl.oneMod.SetValue("abc")
+
+	expectedBank := []schema.ObjectUpdate{
 		{
 			TypeName: "supply",
 			Key:      []interface{}{"foo"},
@@ -55,20 +51,23 @@ func TestMiddleware(t *testing.T) {
 		},
 	}
 
-	if !reflect.DeepEqual(tl.updates, expected) {
-		t.Fatalf("expected %v, got %v", expected, tl.updates)
+	if !reflect.DeepEqual(tl.bankUpdates, expectedBank) {
+		t.Fatalf("expected %v, got %v", expectedBank, tl.bankUpdates)
+	}
+
+	expectedOne := []schema.ObjectUpdate{
+		{TypeName: "item", Value: "abc"},
+	}
+
+	if !reflect.DeepEqual(tl.oneValueUpdates, expectedOne) {
+		t.Fatalf("expected %v, got %v", expectedOne, tl.oneValueUpdates)
 	}
 }
 
 func TestSync(t *testing.T) {
-	tl := newTestBankListener(t)
-	store := newTestStore(t, "bank", tl.Listener)
-	bankMod := exampleBankModule{
-		store: store,
-	}
-
-	bankMod.Mint("bob", "foo", 100)
-	err := bankMod.Send("bob", "alice", "foo", 50)
+	tl := newTestFixture(t)
+	tl.bankMod.Mint("bob", "foo", 100)
+	err := tl.bankMod.Send("bob", "alice", "foo", 50)
 	if err != nil {
 		t.Fatal("unexpected error", err)
 	}
@@ -91,45 +90,80 @@ func TestSync(t *testing.T) {
 		},
 	}
 
-	appMods := map[string]interface{}{}
-	appMods["bank"] = bankMod
-	resolver := ModuleSetDecoderResolver(appMods)
-	err = Sync(tl.Listener, store, resolver, SyncOptions{})
+	err = Sync(tl.Listener, tl.multiStore, tl.resolver, SyncOptions{})
 	if err != nil {
 		t.Fatal("unexpected error", err)
 	}
 
-	if !reflect.DeepEqual(tl.updates, expected) {
-		t.Fatalf("expected %v, got %v", expected, tl.updates)
+	if !reflect.DeepEqual(tl.bankUpdates, expected) {
+		t.Fatalf("expected %v, got %v", expected, tl.bankUpdates)
 	}
 }
 
-type testListener struct {
+type testFixture struct {
 	appdata.Listener
-	updates []schema.ObjectUpdate
+	bankUpdates     []schema.ObjectUpdate
+	oneValueUpdates []schema.ObjectUpdate
+	resolver        DecoderResolver
+	multiStore      *testMultiStore
+	bankMod         *exampleBankModule
+	oneMod          *oneValueModule
 }
 
-func newTestBankListener(t *testing.T) *testListener {
-	res := &testListener{}
+func newTestFixture(t *testing.T) *testFixture {
+	res := &testFixture{}
 	res.Listener = appdata.Listener{
 		InitializeModuleData: func(data appdata.ModuleInitializationData) error {
-			if data.ModuleName != "bank" {
-				t.Errorf("expected bank module, got %s", data.ModuleName)
+			var expected schema.ModuleSchema
+			switch data.ModuleName {
+			case "bank":
+				expected = exampleBankSchema
+			case "one":
+
+				expected = oneValueModSchema
+			default:
+				t.Fatalf("unexpected module %s", data.ModuleName)
 			}
-			if !reflect.DeepEqual(data.Schema, exampleBankSchema) {
-				t.Errorf("expected %v, got %v", exampleBankSchema, data.Schema)
+
+			if !reflect.DeepEqual(data.Schema, expected) {
+				t.Errorf("expected %v, got %v", expected, data.Schema)
 			}
 			return nil
 		},
 		OnObjectUpdate: func(data appdata.ObjectUpdateData) error {
-			if data.ModuleName != "bank" {
-				t.Errorf("expected bank module, got %s", data.ModuleName)
+			switch data.ModuleName {
+			case "bank":
+				res.bankUpdates = append(res.bankUpdates, data.Updates...)
+			case "one":
+				res.oneValueUpdates = append(res.oneValueUpdates, data.Updates...)
+			default:
+				t.Errorf("unexpected module %s", data.ModuleName)
 			}
-			res.updates = append(res.updates, data.Updates...)
 			return nil
 		},
 	}
+	res.multiStore = newTestMultiStore()
+	res.bankMod = &exampleBankModule{
+		store: res.multiStore.newTestStore(t, "bank"),
+	}
+	res.oneMod = &oneValueModule{
+		store: res.multiStore.newTestStore(t, "one"),
+	}
+	modSet := map[string]interface{}{
+		"bank": res.bankMod,
+		"one":  res.oneMod,
+	}
+	res.resolver = ModuleSetDecoderResolver(modSet)
 	return res
+}
+
+func (f *testFixture) setListener(listener appdata.Listener) {
+	f.bankMod.store.listener = listener
+	f.oneMod.store.listener = listener
+}
+
+type testMultiStore struct {
+	stores map[string]*testStore
 }
 
 type testStore struct {
@@ -139,13 +173,42 @@ type testStore struct {
 	listener appdata.Listener
 }
 
-func newTestStore(t *testing.T, modName string, listener appdata.Listener) *testStore {
-	return &testStore{
-		t:        t,
-		modName:  modName,
-		listener: listener,
-		store:    map[string][]byte{},
+func newTestMultiStore() *testMultiStore {
+	return &testMultiStore{
+		stores: map[string]*testStore{},
 	}
+}
+
+var _ SyncSource = &testMultiStore{}
+
+func (ms *testMultiStore) IterateAllKVPairs(moduleName string, fn func(key []byte, value []byte) error) error {
+	s, ok := ms.stores[moduleName]
+	if !ok {
+		return fmt.Errorf("don't have state for module %s", moduleName)
+	}
+
+	var keys []string
+	for key := range s.store {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		err := fn([]byte(key), s.store[key])
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (ms *testMultiStore) newTestStore(t *testing.T, modName string) *testStore {
+	s := &testStore{
+		t:       t,
+		modName: modName,
+		store:   map[string][]byte{},
+	}
+	ms.stores[modName] = s
+	return s
 }
 
 func (t testStore) Get(key []byte) []byte {
@@ -184,27 +247,6 @@ func (t testStore) Set(key, value []byte) {
 
 func (t testStore) SetUInt64(key []byte, value uint64) {
 	t.Set(key, []byte(strconv.FormatUint(value, 10)))
-}
-
-var _ SyncSource = &testStore{}
-
-func (t testStore) IterateAllKVPairs(moduleName string, fn func(key []byte, value []byte) error) error {
-	if t.modName != moduleName {
-		return fmt.Errorf("don't have state for module %s", moduleName)
-	}
-
-	var keys []string
-	for key := range t.store {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	for _, key := range keys {
-		err := fn([]byte(key), t.store[key])
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 type exampleBankModule struct {
@@ -312,3 +354,38 @@ func (e exampleBankModule) ModuleCodec() (schema.ModuleCodec, error) {
 }
 
 var _ schema.HasModuleCodec = exampleBankModule{}
+
+type oneValueModule struct {
+	store *testStore
+}
+
+var oneValueModSchema = schema.ModuleSchema{
+	ObjectTypes: []schema.ObjectType{
+		{
+			Name: "item",
+			ValueFields: []schema.Field{
+				{Name: "value", Kind: schema.StringKind},
+			},
+		},
+	},
+}
+
+func (i oneValueModule) ModuleCodec() (schema.ModuleCodec, error) {
+	return schema.ModuleCodec{
+		Schema: oneValueModSchema,
+		KVDecoder: func(update schema.KVPairUpdate) ([]schema.ObjectUpdate, error) {
+			if string(update.Key) != "key" {
+				return nil, fmt.Errorf("unexpected key: %v", update.Key)
+			}
+			return []schema.ObjectUpdate{
+				{TypeName: "item", Value: string(update.Value)},
+			}, nil
+		},
+	}, nil
+}
+
+func (i oneValueModule) SetValue(x string) {
+	i.store.Set([]byte("key"), []byte(x))
+}
+
+var _ schema.HasModuleCodec = oneValueModule{}

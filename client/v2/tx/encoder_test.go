@@ -44,6 +44,7 @@ func getWrappedTx(t *testing.T) *wrappedTx {
 	}}...)
 	require.NoError(t, err)
 	wTx, err := b.getTx()
+	require.NoError(t, err)
 	return wTx
 }
 

@@ -1,18 +1,19 @@
 package tx
 
 import (
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	base "cosmossdk.io/api/cosmos/base/v1beta1"
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/transaction"
 	txdecode "cosmossdk.io/x/tx/decode"
-	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -122,7 +123,7 @@ func Test_txBuilder_GetTx(t *testing.T) {
 			checkResult: func(tx Tx) {
 				wTx, ok := tx.(*wrappedTx)
 				require.True(t, ok)
-				//require.Equal(t, []*anypb.Any(nil), wTx.Tx.Body.Messages)
+				// require.Equal(t, []*anypb.Any(nil), wTx.Tx.Body.Messages)
 				require.Nil(t, wTx.Tx.Body.Messages)
 				require.Empty(t, wTx.Tx.Body.Memo)
 				require.Equal(t, uint64(0), wTx.Tx.Body.TimeoutHeight)
@@ -180,7 +181,6 @@ func Test_txBuilder_GetTx(t *testing.T) {
 				require.NotNil(t, wTx.Tx.AuthInfo.Fee.Amount)
 
 				require.NotNil(t, wTx.Tx.Signatures)
-
 			},
 		},
 	}

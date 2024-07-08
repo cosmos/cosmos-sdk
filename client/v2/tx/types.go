@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	gogoany "github.com/cosmos/gogoproto/types/any"
-	
+
 	base "cosmossdk.io/api/cosmos/base/v1beta1"
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/client/v2/internal/coins"

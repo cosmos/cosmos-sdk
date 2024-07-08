@@ -2,7 +2,6 @@ package ante
 
 import (
 	"crypto/sha256"
-	"fmt"
 	"time"
 
 	"cosmossdk.io/core/appmodule/v2"
@@ -67,7 +66,6 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction has a timeout_timestamp that has already passed")
 		}
 		if timeoutTimestamp.After(headerInfo.Time.Add(d.maxTimeoutDuration)) {
-			fmt.Println(timeoutTimestamp.String(), headerInfo.Time.String())
 			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unordered tx ttl exceeds %d", d.maxUnOrderedTTL)
 		}
 

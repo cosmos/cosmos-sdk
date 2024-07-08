@@ -124,7 +124,7 @@ func TestUnorderedTxDecorator_UnorderedTx_ValidCheckTx(t *testing.T) {
 	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedHeight, unorderedtx.DefaultmaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment()))
 
 	tx, txBz := genUnorderedTx(t, true, 150, time.Now().Add(time.Minute))
-	ctx := sdk.Context{}.WithTxBytes(txBz).WithBlockHeight(100).WithExecMode(sdk.ExecModeCheck)
+	ctx := sdk.Context{}.WithTxBytes(txBz).WithBlockHeight(100).WithHeaderInfo(header.Info{Time: time.Now()}).WithExecMode(sdk.ExecModeCheck)
 
 	_, err := chain(ctx, tx, false)
 	require.NoError(t, err)

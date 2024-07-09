@@ -112,6 +112,20 @@ func TestUnorderedTxManager_Flow(t *testing.T) {
 		}
 	}
 
+	currentTime := time.Now()
+
+	// Seed the manager with a txs, some of which should eventually be purged and
+	// the others will remain. Txs with TTL less than or equal to 50 should be purged.
+	for i := 1; i <= 100; i++ {
+		txHash := [32]byte{byte(i + 100)}
+
+		if i <= 50 {
+			txm.AddTimestamp(txHash, currentTime.Add(time.Millisecond*500*time.Duration(i)))
+		} else {
+			txm.AddTimestamp(txHash, currentTime.Add(time.Hour))
+		}
+	}
+
 	// start a goroutine that mimics new blocks being made every 500ms
 	doneBlockCh := make(chan bool)
 	go func() {
@@ -119,20 +133,15 @@ func TestUnorderedTxManager_Flow(t *testing.T) {
 		defer ticker.Stop()
 
 		var (
-			height    uint64    = 1
-			timestamp time.Time = time.Now() //nolint:stylecheck // false positive
-			i                   = 101
+			height uint64 = 1
 		)
-		for time := range ticker.C {
-			txm.OnNewBlock(height, timestamp)
+		for t := range ticker.C {
+			txm.OnNewBlock(height, t)
 			height++
-			timestamp = time
 
-			if height > 51 {
+			if height > 51 && t.After(currentTime.Add(time.Millisecond*500*time.Duration(50))) {
 				doneBlockCh <- true
 				return
-			} else {
-				txm.Add([32]byte{byte(i)}, 50)
 			}
 		}
 	}()
@@ -142,7 +151,7 @@ func TestUnorderedTxManager_Flow(t *testing.T) {
 	require.Eventually(
 		t,
 		func() bool {
-			return txm.Size() == 50
+			return txm.Size() == 100
 		},
 		2*time.Minute,
 		5*time.Second,

@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cast"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"

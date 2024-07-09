@@ -44,7 +44,7 @@ require (
 	cloud.google.com/go/storage v1.42.0 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/math v1.3.0 // indirect
-	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91 // indirect
+	cosmossdk.io/schema v0.0.0 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.13.3 // indirect
@@ -209,6 +209,7 @@ replace (
 	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/log => ../../log
+	cosmossdk.io/schema => ../../schema
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank

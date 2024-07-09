@@ -38,7 +38,7 @@ func CommandsWithCustomMigrationMap(txConfig client.TxConfig, genutilModule genu
 	cmd.AddCommand(
 		GenTxCmd(genMM, txConfig, banktypes.GenesisBalancesIterator{}, txConfig.SigningContext().ValidatorAddressCodec()),
 		MigrateGenesisCmd(migrationMap),
-		CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, genutilModule.GenTxValidator()),
+		CollectGenTxsCmd(genutilModule.GenTxValidator()),
 		ValidateGenesisCmd(genMM),
 		AddGenesisAccountCmd(txConfig.SigningContext().AddressCodec()),
 		ExportCmd(appExport),

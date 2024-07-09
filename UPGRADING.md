@@ -277,6 +277,10 @@ Authz was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/authz
 
 Bank was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/bank`
 
+### `x/crsis`
+
+The Crisis module was removed due to it not being supported or functional any longer. 
+
 #### `x/distribution`
 
 Distribution was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/distribution`

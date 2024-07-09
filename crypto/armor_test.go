@@ -32,8 +32,9 @@ import (
 
 func TestArmorUnarmorPrivKey(t *testing.T) {
 	priv := secp256k1.GenPrivKey()
-	armored := crypto.EncryptArmorPrivKey(priv, "passphrase", "")
-	_, _, err := crypto.UnarmorDecryptPrivKey(armored, "wrongpassphrase")
+	armored, err := crypto.EncryptArmorPrivKey(priv, "passphrase", "")
+	require.NoError(t, err)
+	_, _, err = crypto.UnarmorDecryptPrivKey(armored, "wrongpassphrase")
 	require.Error(t, err)
 	decrypted, algo, err := crypto.UnarmorDecryptPrivKey(armored, "passphrase")
 	require.NoError(t, err)
@@ -48,7 +49,8 @@ func TestArmorUnarmorPrivKey(t *testing.T) {
 	require.Empty(t, algo)
 
 	// wrong key type
-	armored = crypto.ArmorPubKeyBytes(priv.PubKey().Bytes(), "")
+	armored, err = crypto.ArmorPubKeyBytes(priv.PubKey().Bytes(), "")
+	require.NoError(t, err)
 	_, _, err = crypto.UnarmorDecryptPrivKey(armored, "passphrase")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "unrecognized armor type")
@@ -99,7 +101,8 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 	require.NoError(t, err)
 	key, err := k.GetPubKey()
 	require.NoError(t, err)
-	armored := crypto.ArmorPubKeyBytes(legacy.Cdc.Amino.MustMarshalBinaryBare(key), "")
+	armored, err := crypto.ArmorPubKeyBytes(legacy.Cdc.Amino.MustMarshalBinaryBare(key), "")
+	require.NoError(t, err)
 	pubBytes, algo, err := crypto.UnarmorPubKeyBytes(armored)
 	require.NoError(t, err)
 	pub, err := legacy.PubKeyFromBytes(pubBytes)
@@ -107,7 +110,8 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 	require.Equal(t, string(hd.Secp256k1Type), algo)
 	require.True(t, pub.Equals(key))
 
-	armored = crypto.ArmorPubKeyBytes(legacy.Cdc.Amino.MustMarshalBinaryBare(key), "unknown")
+	armored, err = crypto.ArmorPubKeyBytes(legacy.Cdc.Amino.MustMarshalBinaryBare(key), "unknown")
+	require.NoError(t, err)
 	pubBytes, algo, err = crypto.UnarmorPubKeyBytes(armored)
 	require.NoError(t, err)
 	pub, err = legacy.PubKeyFromBytes(pubBytes)
@@ -164,7 +168,8 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 
 func TestArmorInfoBytes(t *testing.T) {
 	bs := []byte("test")
-	armoredString := crypto.ArmorInfoBytes(bs)
+	armoredString, err := crypto.ArmorInfoBytes(bs)
+	require.NoError(t, err)
 	unarmoredBytes, err := crypto.UnarmorInfoBytes(armoredString)
 	require.NoError(t, err)
 	require.True(t, bytes.Equal(bs, unarmoredBytes))
@@ -239,17 +244,20 @@ func TestBcryptLegacyEncryption(t *testing.T) {
 		armor       string
 	}
 
-	str1, err := crypto.EncodeArmor("TENDERMINT PRIVATE KEY", headerBcrypt, encBytesBcryptXsalsa20symetric)
+	armorStr1, err := crypto.EncodeArmor("TENDERMINT PRIVATE KEY", headerBcrypt, encBytesBcryptXsalsa20symetric)
+	require.NoError(t, err)
+
+	armorPrivKey, err := crypto.EncryptArmorPrivKey(privKey, "passphrase", "")
 	require.NoError(t, err)
 
 	for _, scenario := range []testCase{
 		{
 			description: "Argon2 + Aead",
-			armor:       crypto.EncryptArmorPrivKey(privKey, "passphrase", ""),
+			armor:       armorPrivKey,
 		},
 		{
 			description: "Bcrypt + xsalsa20symmetric",
-			armor:       str1,
+			armor:       armorStr1,
 		},
 	} {
 		t.Run(scenario.description, func(t *testing.T) {

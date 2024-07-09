@@ -167,7 +167,7 @@ require (
 )
 
 require (
-	cosmossdk.io/schema v0.0.0 // indirect
+	cosmossdk.io/schema v0.1.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 )
 
@@ -181,7 +181,6 @@ replace (
 	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/log => ../../log
-	cosmossdk.io/schema => ../../schema
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/consensus => ../consensus

@@ -49,7 +49,7 @@ func TestSnapshotter(t *testing.T) {
 	// restore with timestamp < timeout time which should result in all unordered txs synced
 	txm3 := unorderedtx.NewManager(dataDir)
 	s3 := unorderedtx.NewSnapshotter(txm3)
-	err = s3.RestoreExtension(uint64(currentTime.Add(time.Second*99).Unix()), unorderedtx.SnapshotFormat, pr)
+	err = s3.RestoreExtension(uint64(currentTime.Add(time.Second*50).Unix()), unorderedtx.SnapshotFormat, pr)
 	require.NoError(t, err)
 	require.Equal(t, 100, txm3.Size())
 

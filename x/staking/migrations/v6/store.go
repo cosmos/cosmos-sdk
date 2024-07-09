@@ -12,5 +12,6 @@ import (
 // It deletes the ValidatorUpdatesKey from the store.
 func MigrateStore(ctx context.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
 	store.Delete(ValidatorUpdatesKey)
+	store.Delete(HistoricalInfoKey)
 	return nil
 }

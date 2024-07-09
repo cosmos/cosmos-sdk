@@ -6,14 +6,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strings"
 
 	cfg "github.com/cometbft/cometbft/config"
 
 	"cosmossdk.io/core/address"
-	bankexported "cosmossdk.io/x/bank/exported"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -24,12 +22,12 @@ import (
 
 // GenAppStateFromConfig gets the genesis app state from the config
 func GenAppStateFromConfig(cdc codec.JSONCodec, txEncodingConfig client.TxEncodingConfig,
-	config *cfg.Config, initCfg types.InitConfig, genesis *types.AppGenesis, genBalIterator types.GenesisBalancesIterator,
+	config *cfg.Config, initCfg types.InitConfig, genesis *types.AppGenesis,
 	validator types.MessageValidator, valAddrCodec address.ValidatorAddressCodec, addressCodec address.Codec,
 ) (appState json.RawMessage, err error) {
 	// process genesis transactions, else create default genesis.json
 	appGenTxs, persistentPeers, err := CollectTxs(
-		cdc, txEncodingConfig.TxJSONDecoder(), config.Moniker, initCfg.GenTxsDir, genesis, genBalIterator, validator, valAddrCodec, addressCodec)
+		txEncodingConfig.TxJSONDecoder(), config.Moniker, initCfg.GenTxsDir, genesis, validator, valAddrCodec, addressCodec)
 	if err != nil {
 		return appState, err
 	}
@@ -66,8 +64,8 @@ func GenAppStateFromConfig(cdc codec.JSONCodec, txEncodingConfig client.TxEncodi
 
 // CollectTxs processes and validates application's genesis Txs and returns
 // the list of appGenTxs, and persistent peers required to generate genesis.json.
-func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTxsDir string,
-	genesis *types.AppGenesis, genBalIterator types.GenesisBalancesIterator,
+func CollectTxs(txJSONDecoder sdk.TxDecoder, moniker, genTxsDir string,
+	genesis *types.AppGenesis,
 	validator types.MessageValidator, valAddrCodec address.ValidatorAddressCodec, addressCodec address.Codec,
 ) (appGenTxs []sdk.Tx, persistentPeers string, err error) {
 	// prepare a map of all balances in genesis state to then validate
@@ -81,17 +79,6 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 	if err != nil {
 		return appGenTxs, persistentPeers, err
 	}
-
-	balancesMap := make(map[string]bankexported.GenesisBalance)
-
-	genBalIterator.IterateGenesisBalances(
-		cdc, appState,
-		func(balance bankexported.GenesisBalance) (stop bool) {
-			addr := balance.GetAddress()
-			balancesMap[addr] = balance
-			return false
-		},
-	)
 
 	// addresses and IPs (and port) validator server info
 	var addressesIPs []string
@@ -135,43 +122,6 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 
 		// TODO abstract out staking message validation back to staking
 		msg := msgs[0].(*stakingtypes.MsgCreateValidator)
-
-		// validate validator addresses and funds against the accounts in the state
-		valAddr, err := valAddrCodec.StringToBytes(msg.ValidatorAddress)
-		if err != nil {
-			return appGenTxs, persistentPeers, err
-		}
-
-		valAccAddr, err := addressCodec.BytesToString(valAddr)
-		if err != nil {
-			return appGenTxs, persistentPeers, err
-		}
-
-		delBal, delOk := balancesMap[valAccAddr]
-		if !delOk {
-			_, file, no, ok := runtime.Caller(1)
-			if ok {
-				fmt.Printf("CollectTxs-1, called from %s#%d\n", file, no)
-			}
-
-			return appGenTxs, persistentPeers, fmt.Errorf("account %s balance not in genesis state: %+v", valAccAddr, balancesMap)
-		}
-
-		_, valOk := balancesMap[valAccAddr]
-		if !valOk {
-			_, file, no, ok := runtime.Caller(1)
-			if ok {
-				fmt.Printf("CollectTxs-2, called from %s#%d - %s\n", file, no, valAccAddr)
-			}
-			return appGenTxs, persistentPeers, fmt.Errorf("account %s balance not in genesis state: %+v", valAddr, balancesMap)
-		}
-
-		if delBal.GetCoins().AmountOf(msg.Value.Denom).LT(msg.Value.Amount) {
-			return appGenTxs, persistentPeers, fmt.Errorf(
-				"insufficient fund for delegation %v: %v < %v",
-				delBal.GetAddress(), delBal.GetCoins().AmountOf(msg.Value.Denom), msg.Value.Amount,
-			)
-		}
 
 		// exclude itself from persistent peers
 		if msg.Description.Moniker != moniker {

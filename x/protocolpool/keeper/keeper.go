@@ -109,37 +109,6 @@ func (k Keeper) GetCommunityPool(ctx context.Context) (sdk.Coins, error) {
 	return k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress()), nil
 }
 
-func (k Keeper) withdrawContinuousFund(ctx context.Context, recipientAddr string) (sdk.Coin, error) {
-	recipient, err := k.authKeeper.AddressCodec().StringToBytes(recipientAddr)
-	if err != nil {
-		return sdk.Coin{}, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
-	}
-
-	cf, err := k.ContinuousFund.Get(ctx, recipient)
-	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			return sdk.Coin{}, fmt.Errorf("no continuous fund found for recipient: %s", recipientAddr)
-		}
-		return sdk.Coin{}, fmt.Errorf("get continuous fund failed for recipient: %s", recipientAddr)
-	}
-	if cf.Expiry != nil && cf.Expiry.Before(k.HeaderService.HeaderInfo(ctx).Time) {
-		return sdk.Coin{}, fmt.Errorf("cannot withdraw continuous funds: continuous fund expired for recipient: %s", recipientAddr)
-	}
-
-	err = k.IterateAndUpdateFundsDistribution(ctx)
-	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("error while iterating all the continuous funds: %w", err)
-	}
-
-	// withdraw continuous fund
-	withdrawnAmount, err := k.withdrawRecipientFunds(ctx, recipient)
-	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("error while withdrawing recipient funds for recipient: %s", recipientAddr)
-	}
-
-	return withdrawnAmount, nil
-}
-
 func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient []byte) (sdk.Coin, error) {
 	// get allocated continuous fund
 	fundsAllocated, err := k.RecipientFundDistribution.Get(ctx, recipient)
@@ -250,6 +219,10 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 			amountToDistribute := f.Percentage.MulInt(amount).TruncateInt()
 			toDistribute[f.Recipient] = toDistribute[f.Recipient].Add(amountToDistribute)
 			fullAmountToDistribute = fullAmountToDistribute.Add(amountToDistribute)
+
+			if fullAmountToDistribute.IsNegative() || amountToDistribute.IsNegative() {
+				return true, fmt.Errorf("negative amount to distribute")
+			}
 		}
 
 		// sanity check for max percentage
@@ -265,8 +238,12 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 		return err
 	}
 
-	// clear the distributions
+	// clear the distributions and reset the last balance
 	if err = k.Distributions.Clear(ctx, nil); err != nil {
+		return err
+	}
+
+	if err = k.LastBalance.Set(ctx, math.ZeroInt()); err != nil {
 		return err
 	}
 

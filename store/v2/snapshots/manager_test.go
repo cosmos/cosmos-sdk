@@ -314,15 +314,34 @@ func TestSnapshot_Take_Restore(t *testing.T) {
 	// Starting a new restore should fail now, because the target already has contents.
 	err = manager.Restore(*snapshot)
 	require.Error(t, err)
+
+	storeSnapshot, chunks, err = store.Load(snapshot.Height, snapshot.Format)
+	require.NoError(t, err)
+	assert.Equal(t, snapshot, storeSnapshot)
+	assert.Equal(t, expectChunks, readChunks(chunks))
+
+	// Feeding the chunks should work
+	for i, chunk := range readChunks(chunks) {
+		done, err := manager.RestoreChunk(chunk)
+		require.NoError(t, err)
+		if i == len(chunks)-1 {
+			assert.True(t, done)
+		} else {
+			assert.False(t, done)
+		}
+	}
+
+	assert.Equal(t, items, commitSnapshotter.items)
+	assert.Equal(t, 10, len(extSnapshotter.state))
+
+	snapshots, err = store.List()
+	require.NoError(t, err)
+	require.Equal(t, uint64(5), snapshots[0].Height)
+	require.Equal(t, types.CurrentFormat, snapshots[0].Format)
 }
 
 func TestSnapshot_Take_Prune(t *testing.T) {
 	store := setupStore(t)
-
-	// Prune should error while a snapshot is being taken
-	manager := setupBusyManager(t)
-	_, err := manager.Prune(2)
-	require.Error(t, err)
 
 	items := [][]byte{
 		{1, 2, 3},
@@ -335,8 +354,8 @@ func TestSnapshot_Take_Prune(t *testing.T) {
 	extSnapshotter := newExtSnapshotter(10)
 
 	expectChunks := snapshotItems(items, extSnapshotter)
-	manager = snapshots.NewManager(store, opts, commitSnapshotter, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
-	err = manager.RegisterExtensions(extSnapshotter)
+	manager := snapshots.NewManager(store, opts, commitSnapshotter, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
+	err := manager.RegisterExtensions(extSnapshotter)
 	require.NoError(t, err)
 
 	// creating a snapshot at height 4
@@ -393,4 +412,9 @@ func TestSnapshot_Take_Prune(t *testing.T) {
 	list, err := manager.List()
 	require.NoError(t, err)
 	assert.Len(t, list, 1)
+
+	// Prune should error while a snapshot is being taken
+	manager = setupBusyManager(t)
+	_, err = manager.Prune(2)
+	require.Error(t, err)
 }

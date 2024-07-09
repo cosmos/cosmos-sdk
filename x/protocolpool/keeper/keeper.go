@@ -219,10 +219,6 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 			amountToDistribute := f.Percentage.MulInt(amount).TruncateInt()
 			toDistribute[f.Recipient] = toDistribute[f.Recipient].Add(amountToDistribute)
 			fullAmountToDistribute = fullAmountToDistribute.Add(amountToDistribute)
-
-			if fullAmountToDistribute.IsNegative() || amountToDistribute.IsNegative() {
-				return true, fmt.Errorf("negative amount to distribute")
-			}
 		}
 
 		// sanity check for max percentage

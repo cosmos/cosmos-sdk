@@ -1,13 +1,14 @@
 package appdata
 
 import (
+	"context"
 	"fmt"
 	"testing"
 )
 
 func TestAsyncListenerMux(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
-		listener := AsyncListenerMux([]Listener{{}, {}}, 16, make(chan struct{}))
+		listener := AsyncListenerMux([]Listener{{}, {}}, 16, context.Background())
 
 		if listener.InitializeModuleData != nil {
 			t.Error("expected nil")
@@ -31,8 +32,8 @@ func TestAsyncListenerMux(t *testing.T) {
 		// commit is not expected to be nil
 	})
 
-	t.Run("call done", func(t *testing.T) {
-		doneChan := make(chan struct{})
+	t.Run("call cancel", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
 		var calls1, calls2 []string
 		listener1 := callCollector(1, func(name string, _ int, _ Packet) {
 			calls1 = append(calls1, name)
@@ -40,7 +41,7 @@ func TestAsyncListenerMux(t *testing.T) {
 		listener2 := callCollector(2, func(name string, _ int, _ Packet) {
 			calls2 = append(calls2, name)
 		})
-		res := AsyncListenerMux([]Listener{listener1, listener2}, 16, doneChan)
+		res := AsyncListenerMux([]Listener{listener1, listener2}, 16, ctx)
 
 		callAllCallbacksOnces(t, res)
 
@@ -57,27 +58,27 @@ func TestAsyncListenerMux(t *testing.T) {
 		checkExpectedCallOrder(t, calls1, expectedCalls)
 		checkExpectedCallOrder(t, calls2, expectedCalls)
 
-		calls1 = nil
-		calls2 = nil
+		cancel()
 
-		doneChan <- struct{}{}
-
+		// expect a panic if we try to write to the now closed channels
+		defer func() {
+			if err := recover(); err == nil {
+				t.Fatalf("expected panic")
+			}
+		}()
 		callAllCallbacksOnces(t, res)
-		//
-		//checkExpectedCallOrder(t, calls1, nil)
-		//checkExpectedCallOrder(t, calls2, nil)
 	})
 }
 
 func TestAsyncListener(t *testing.T) {
-	t.Run("call done", func(t *testing.T) {
+	t.Run("call cancel", func(t *testing.T) {
 		commitChan := make(chan error)
-		doneChan := make(chan struct{})
+		ctx, cancel := context.WithCancel(context.Background())
 		var calls []string
 		listener := callCollector(1, func(name string, _ int, _ Packet) {
 			calls = append(calls, name)
 		})
-		res := AsyncListener(listener, 16, commitChan, doneChan)
+		res := AsyncListener(listener, 16, commitChan, ctx)
 
 		callAllCallbacksOnces(t, res)
 
@@ -98,7 +99,7 @@ func TestAsyncListener(t *testing.T) {
 
 		calls = nil
 
-		doneChan <- struct{}{}
+		cancel()
 
 		callAllCallbacksOnces(t, res)
 
@@ -107,7 +108,6 @@ func TestAsyncListener(t *testing.T) {
 
 	t.Run("error", func(t *testing.T) {
 		commitChan := make(chan error)
-		doneChan := make(chan struct{})
 		var calls []string
 		listener := callCollector(1, func(name string, _ int, _ Packet) {
 			calls = append(calls, name)
@@ -117,7 +117,7 @@ func TestAsyncListener(t *testing.T) {
 			return fmt.Errorf("error")
 		}
 
-		res := AsyncListener(listener, 16, commitChan, doneChan)
+		res := AsyncListener(listener, 16, commitChan, context.Background())
 
 		callAllCallbacksOnces(t, res)
 

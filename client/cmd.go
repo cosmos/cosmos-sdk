@@ -165,6 +165,8 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 				})))
 			}
 
+			dialOpts = append(dialOpts, grpc.WithDefaultCallOptions(grpc.ForceCodec(clientCtx.gRPCCodec())))
+
 			grpcClient, err := grpc.Dial(grpcURI, dialOpts...)
 			if err != nil {
 				return Context{}, err

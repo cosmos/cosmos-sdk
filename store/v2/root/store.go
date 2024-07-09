@@ -265,13 +265,9 @@ func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreU
 	for _, renamedStore := range upgrades.Renamed {
 		removedStoreKeys = append(removedStoreKeys, renamedStore.OldKey)
 	}
-	// if the state commitment implements the KVStoreGetter interface, prune the
-	// old KVStores
-	kvStoreGetter, ok := s.stateCommitment.(store.KVStoreGetter)
-	if ok {
-		for _, storeKey := range removedStoreKeys {
-			removedKVStores = append(removedKVStores, kvStoreGetter.GetKVStoreWithBatch(storeKey))
-		}
+
+	for _, storeKey := range removedStoreKeys {
+		removedKVStores = append(removedKVStores, s.stateCommitment.GetKVStoreWithBatch(storeKey))
 	}
 
 	if err := s.loadVersion(version, upgrades); err != nil {

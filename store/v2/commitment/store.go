@@ -28,8 +28,9 @@ var (
 	_ store.UpgradeableStore      = (*CommitStore)(nil)
 	_ snapshots.CommitSnapshotter = (*CommitStore)(nil)
 	_ store.PausablePruner        = (*CommitStore)(nil)
-	_ store.KVStoreGetter         = (*CommitStore)(nil)
 )
+
+type MountTreeFn func(storeKey string) (Tree, error)
 
 // CommitStore is a wrapper around multiple Tree objects mapped by a unique store
 // key. Each store key reflects dedicated and unique usage within a module. A caller
@@ -40,14 +41,19 @@ type CommitStore struct {
 	logger     log.Logger
 	metadata   *MetadataStore
 	multiTrees map[string]Tree
+
+	mountTreeFn MountTreeFn
+	oldTrees    map[string]Tree
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, logger log.Logger) (*CommitStore, error) {
+func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, mountTreeFn MountTreeFn, logger log.Logger) (*CommitStore, error) {
 	return &CommitStore{
-		logger:     logger,
-		multiTrees: trees,
-		metadata:   NewMetadataStore(db),
+		logger:      logger,
+		multiTrees:  trees,
+		metadata:    NewMetadataStore(db),
+		mountTreeFn: mountTreeFn,
+		oldTrees:    make(map[string]Tree),
 	}, nil
 }
 
@@ -109,8 +115,7 @@ func (c *CommitStore) LoadVersionAndUpgrade(targetVersion uint64, upgrades *core
 	for storeKey := range c.multiTrees {
 		storeKeys = append(storeKeys, storeKey)
 	}
-	// deterministic iteration order for upgrades
-	// (as the underlying store may change and
+	// deterministic iteration order for upgrades (as the underlying store may change and
 	// upgrades make store changes where the execution order may matter)
 	sort.Slice(storeKeys, func(i, j int) bool {
 		return storeKeys[i] < storeKeys[j]
@@ -128,11 +133,6 @@ func (c *CommitStore) LoadVersionAndUpgrade(targetVersion uint64, upgrades *core
 
 	newStoreKeys := make([]string, 0, len(c.multiTrees))
 	for _, storeKey := range storeKeys {
-		// If it has been renamed, continue to the next store key.
-		if upgrades.IsRenamed(storeKey) {
-			continue
-		}
-
 		// If it has been deleted, remove the tree.
 		if upgrades.IsDeleted(storeKey) {
 			if err := removeTree(storeKey); err != nil {
@@ -153,9 +153,6 @@ func (c *CommitStore) LoadVersionAndUpgrade(targetVersion uint64, upgrades *core
 		// If it has been renamed, migrate the data.
 		if oldKey := upgrades.GetOldKeyFromNew(storeKey); oldKey != "" {
 			if err := c.migrateKVStore(oldKey, storeKey); err != nil {
-				return err
-			}
-			if err := removeTree(oldKey); err != nil {
 				return err
 			}
 		}
@@ -207,10 +204,12 @@ func (c *CommitStore) migrateKVStore(oldKey, newKey string) error {
 		newKVStore corestore.KVStoreWithBatch
 	)
 
-	if oldTree, ok := c.multiTrees[oldKey]; ok {
-		if getter, ok := oldTree.(KVStoreGetter); ok {
-			oldKVStore = getter.GetKVStoreWithBatch()
-		}
+	oldTree, err := c.mountTreeFn(oldKey)
+	if err != nil {
+		return err
+	}
+	if getter, ok := oldTree.(KVStoreGetter); ok {
+		oldKVStore = getter.GetKVStoreWithBatch()
 	}
 
 	if newTree, ok := c.multiTrees[newKey]; ok {
@@ -269,7 +268,11 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 		// will be larger than the RMS's metadata, when the block is replayed, we
 		// should avoid committing that iavl store again.
 		var commitID proof.CommitID
-		if tree.GetLatestVersion() >= version {
+		v, err := tree.GetLatestVersion()
+		if err != nil {
+			return nil, err
+		}
+		if v >= version {
 			commitID.Version = version
 			commitID.Hash = tree.Hash()
 		} else {
@@ -314,9 +317,19 @@ func (c *CommitStore) SetInitialVersion(version uint64) error {
 }
 
 func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]proof.CommitmentOp, error) {
-	tree, ok := c.multiTrees[conv.UnsafeBytesToStr(storeKey)]
+	rawStoreKey := conv.UnsafeBytesToStr(storeKey)
+	tree, ok := c.multiTrees[rawStoreKey]
 	if !ok {
-		return nil, fmt.Errorf("store %s not found", storeKey)
+		// If the tree is not found, it means the store is an old store that has been
+		// deleted or renamed. We should use the old tree to get the proof.
+		if tree, ok = c.oldTrees[rawStoreKey]; !ok {
+			var err error
+			tree, err = c.mountTreeFn(rawStoreKey)
+			if err != nil {
+				return nil, fmt.Errorf("store %s not found: %w", storeKey, err)
+			}
+			c.oldTrees[rawStoreKey] = tree
+		}
 	}
 
 	iProof, err := tree.GetProof(version, key)

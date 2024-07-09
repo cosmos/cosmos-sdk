@@ -18,11 +18,15 @@ func TestCommitterSuite(t *testing.T) {
 		NewStore: func(db corestore.KVStoreWithBatch, storeKeys []string, logger log.Logger) (*commitment.CommitStore, error) {
 			multiTrees := make(map[string]commitment.Tree)
 			cfg := DefaultConfig()
-			for _, storeKey := range storeKeys {
+			mountTreeFn := func(storeKey string) (commitment.Tree, error) {
 				prefixDB := dbm.NewPrefixDB(db, []byte(storeKey))
-				multiTrees[storeKey] = NewIavlTree(prefixDB, logger, cfg)
+				return NewIavlTree(prefixDB, logger, cfg), nil
 			}
-			return commitment.NewCommitStore(multiTrees, db, logger)
+			for _, storeKey := range storeKeys {
+				multiTrees[storeKey], _ = mountTreeFn(storeKey)
+			}
+
+			return commitment.NewCommitStore(multiTrees, db, mountTreeFn, logger)
 		},
 	}
 
@@ -40,7 +44,8 @@ func TestIavlTree(t *testing.T) {
 	tree := generateTree()
 	require.NotNil(t, tree)
 
-	initVersion := tree.GetLatestVersion()
+	initVersion, err := tree.GetLatestVersion()
+	require.NoError(t, err)
 	require.Equal(t, uint64(0), initVersion)
 
 	// write a batch of version 1
@@ -50,14 +55,18 @@ func TestIavlTree(t *testing.T) {
 
 	workingHash := tree.WorkingHash()
 	require.NotNil(t, workingHash)
-	require.Equal(t, uint64(0), tree.GetLatestVersion())
+	v, err := tree.GetLatestVersion()
+	require.NoError(t, err)
+	require.Equal(t, uint64(0), v)
 
 	// commit the batch
 	commitHash, version, err := tree.Commit()
 	require.NoError(t, err)
 	require.Equal(t, version, uint64(1))
 	require.Equal(t, workingHash, commitHash)
-	require.Equal(t, uint64(1), tree.GetLatestVersion())
+	v, err = tree.GetLatestVersion()
+	require.NoError(t, err)
+	require.Equal(t, uint64(1), v)
 
 	// ensure we can get expected values
 	bz, err := tree.Get(1, []byte("key1"))
@@ -99,7 +108,9 @@ func TestIavlTree(t *testing.T) {
 	// prune version 1
 	err = tree.Prune(1)
 	require.NoError(t, err)
-	require.Equal(t, uint64(3), tree.GetLatestVersion())
+	v, err = tree.GetLatestVersion()
+	require.NoError(t, err)
+	require.Equal(t, uint64(3), v)
 	// async pruning check
 	checkErr := func() bool {
 		if _, err := tree.tree.LoadVersion(1); err != nil {

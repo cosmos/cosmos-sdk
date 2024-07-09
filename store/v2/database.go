@@ -66,14 +66,11 @@ type Committer interface {
 	// GetCommitInfo returns the CommitInfo for the given version.
 	GetCommitInfo(version uint64) (*proof.CommitInfo, error)
 
+	// GetKVStoreWithBatch returns the KVStoreWithBatch for the given storeKey.
+	// It is used to migrate or remove data when upgrading the store key.
+	GetKVStoreWithBatch(storeKey string) corestore.KVStoreWithBatch
+
 	// Close releases associated resources. It should NOT be idempotent. It must
 	// only be called once and any call after may panic.
 	io.Closer
-}
-
-// KVStoreGetter is an interface that allows getting the KVStoreWithBatch for
-// the underlying store key from the Committer.
-// It is used to migrate or remove data when upgrading the store key.
-type KVStoreGetter interface {
-	GetKVStoreWithBatch(storeKey string) corestore.KVStoreWithBatch
 }

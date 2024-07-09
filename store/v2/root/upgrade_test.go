@@ -44,7 +44,7 @@ func (s *UpgradeStoreTestSuite) SetupTest() {
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
 	ss := storage.NewStorageStore(sqliteDB, testLog)
-	sc, err := commitment.NewCommitStore(multiTrees, s.commitDB, testLog)
+	sc, err := commitment.NewCommitStore(multiTrees, s.commitDB, nil, testLog)
 	s.Require().NoError(err)
 	pm := pruning.NewManager(sc, ss, nil, nil)
 	s.rootStore, err = New(testLog, ss, sc, pm, nil, nil)
@@ -84,7 +84,7 @@ func (s *UpgradeStoreTestSuite) loadWithUpgrades(upgrades *corestore.StoreUpgrad
 		multiTrees[rename.NewKey] = iavl.NewIavlTree(prefixDB, nopLog, iavl.DefaultConfig())
 	}
 
-	sc, err := commitment.NewCommitStore(multiTrees, s.commitDB, testLog)
+	sc, err := commitment.NewCommitStore(multiTrees, s.commitDB, nil, testLog)
 	s.Require().NoError(err)
 	pm := pruning.NewManager(sc, s.rootStore.GetStateStorage().(store.Pruner), nil, nil)
 	s.rootStore, err = New(testLog, s.rootStore.GetStateStorage(), sc, pm, nil, nil)

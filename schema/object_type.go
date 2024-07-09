@@ -25,6 +25,8 @@ type ObjectType struct {
 	// though it is still valid in order to save space. Indexers will want to have
 	// the option of retaining such data and distinguishing from other "true" deletions.
 	RetainDeletions bool
+
+	UniqueConstraints []UniqueConstraint
 }
 
 // Validate validates the object type.
@@ -44,6 +46,10 @@ func (o ObjectType) validate(enumValueMap map[string]map[string]bool) error {
 	for _, field := range o.KeyFields {
 		if err := field.Validate(); err != nil {
 			return fmt.Errorf("invalid key field %q: %v", field.Name, err)
+		}
+
+		if field.Nullable {
+			return fmt.Errorf("key field %q cannot be nullable", field.Name)
 		}
 
 		if field.Nullable {

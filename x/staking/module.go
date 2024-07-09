@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/depinject"
+
 	"cosmossdk.io/x/staking/client/cli"
 	"cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/types"
@@ -174,3 +175,7 @@ func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
 func (am AppModule) EndBlock(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {
 	return am.keeper.EndBlocker(ctx)
 }
+
+//func (am AppModule) ModuleCodec() (indexerbase.ModuleCodec, error) {
+//	return am.keeper.Schema.ModuleCodec(collections.IndexingOptions{})
+//}

@@ -8,6 +8,9 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"google.golang.org/protobuf/encoding/protojson"
 	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/schema"
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
@@ -91,6 +94,16 @@ func (c collValue[T, PT]) ValueType() string {
 	return "github.com/cosmos/gogoproto/" + c.messageName
 }
 
+func (c collValue[T, PT]) SchemaColumns() []schema.Field {
+	var pt PT
+	msgName := proto.MessageName(pt)
+	desc, err := proto.HybridResolver.FindDescriptorByName(protoreflect.FullName(msgName))
+	if err != nil {
+		panic(fmt.Errorf("could not find descriptor for %s: %w", msgName, err))
+	}
+	return protoCols(desc.(protoreflect.MessageDescriptor))
+}
+
 type protoMessageV2[T any] interface {
 	*T
 	protov2.Message
@@ -136,6 +149,11 @@ func (c collValue2[T, PT]) ValueType() string {
 	return "google.golang.org/protobuf/" + c.messageName
 }
 
+func (c collValue2[T, PT]) SchemaColumns() []schema.Field {
+	var pt PT
+	return protoCols(pt.ProtoReflect().Descriptor())
+}
+
 // CollInterfaceValue instantiates a new collections.ValueCodec for a generic
 // interface value. The codec must be able to marshal and unmarshal the
 // interface.
@@ -178,4 +196,71 @@ func (c collInterfaceValue[T]) Stringify(value T) string {
 func (c collInterfaceValue[T]) ValueType() string {
 	var t T
 	return fmt.Sprintf("%T", t)
+}
+
+func protoCols(desc protoreflect.MessageDescriptor) []schema.Field {
+	nFields := desc.Fields()
+	cols := make([]schema.Field, 0, nFields.Len())
+	for i := 0; i < nFields.Len(); i++ {
+		f := nFields.Get(i)
+		cols = append(cols, protoCol(f))
+	}
+	return cols
+}
+
+func protoCol(f protoreflect.FieldDescriptor) schema.Field {
+	col := schema.Field{Name: string(f.Name())}
+
+	if f.IsMap() || f.IsList() {
+		col.Kind = schema.JSONKind
+		col.Nullable = true
+	} else {
+		switch f.Kind() {
+		case protoreflect.BoolKind:
+			col.Kind = schema.BoolKind
+		case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
+			col.Kind = schema.Int32Kind
+		case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
+			col.Kind = schema.Int64Kind
+		case protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
+			col.Kind = schema.Int64Kind
+		case protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
+			col.Kind = schema.IntegerStringKind
+		case protoreflect.FloatKind:
+			col.Kind = schema.Float32Kind
+		case protoreflect.DoubleKind:
+			col.Kind = schema.Float64Kind
+		case protoreflect.StringKind:
+			col.Kind = schema.StringKind
+		case protoreflect.BytesKind:
+			col.Kind = schema.BytesKind
+		case protoreflect.EnumKind:
+			col.Kind = schema.EnumKind
+			enumDesc := f.Enum()
+			var vals []string
+			n := enumDesc.Values().Len()
+			for i := 0; i < n; i++ {
+				vals = append(vals, string(enumDesc.Values().Get(i).Name()))
+			}
+			col.EnumDefinition = schema.EnumDefinition{
+				Name:   string(enumDesc.Name()),
+				Values: vals,
+			}
+		case protoreflect.MessageKind:
+			col.Nullable = true
+			fullName := f.Message().FullName()
+			if fullName == "google.protobuf.Timestamp" {
+				col.Kind = schema.TimeKind
+			} else if fullName == "google.protobuf.Duration" {
+				col.Kind = schema.DurationKind
+			} else {
+				col.Kind = schema.JSONKind
+			}
+		}
+		if f.HasPresence() {
+			col.Nullable = true
+		}
+	}
+
+	return col
 }

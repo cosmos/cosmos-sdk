@@ -9,9 +9,13 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/collections"
+	"cosmossdk.io/schema"
+
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
+
 	"cosmossdk.io/x/distribution/client/cli"
 	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/simulation"
@@ -193,4 +197,8 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		simState.AppParams, simState.Cdc, simState.TxConfig,
 		am.accountKeeper, am.bankKeeper, am.keeper, am.stakingKeeper,
 	)
+}
+
+func (am AppModule) ModuleDecoder() (schema.ModuleCodec, error) {
+	return am.keeper.Schema.ModuleCodec(collections.IndexingOptions{})
 }

@@ -764,7 +764,7 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 	gInfo, result, anteEvents, err := app.runTx(execModeFinalize, tx)
 	if err != nil {
 		resultStr = "failed"
-		resp = sdkerrors.ResponseExecTxResultWithEvents(
+		resp = responseExecTxResultWithEvents(
 			err,
 			gInfo.GasWanted,
 			gInfo.GasUsed,
@@ -868,7 +868,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 
 	tx, err := app.txDecoder(txBytes)
 	if err != nil {
-		return sdk.GasInfo{}, nil, nil, err
+		return sdk.GasInfo{GasUsed: 0, GasWanted: 0}, nil, nil, sdkerrors.ErrTxDecode.Wrap(err.Error())
 	}
 
 	msgs := tx.GetMsgs()

@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/protocolpool/keeper"
 	"cosmossdk.io/x/protocolpool/types"
@@ -24,7 +23,6 @@ const ConsensusVersion = 1
 
 var (
 	_ module.HasName             = AppModule{}
-	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 
@@ -59,9 +57,6 @@ func (AppModule) IsAppModule() {}
 
 // Name returns the pool module's name.
 func (AppModule) Name() string { return types.ModuleName }
-
-// RegisterLegacyAminoCodec registers the pool module's types on the LegacyAmino codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes
 func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
@@ -104,10 +99,8 @@ func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error
 	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
 		return err
 	}
-	if err := am.keeper.InitGenesis(ctx, &genesisState); err != nil {
-		return err
-	}
-	return nil
+
+	return am.keeper.InitGenesis(ctx, &genesisState)
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the protocolpool module.

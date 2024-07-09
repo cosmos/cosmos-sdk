@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/server/v2/stf/branch"
@@ -38,7 +38,7 @@ func TestBranchService(t *testing.T) {
 		makeGasMeter:        gas.DefaultGasMeter,
 		makeGasMeteredState: gas.DefaultWrapWithGasMeter,
 	}
-	addMsgHandlerToSTF(t, s, func(ctx context.Context, msg *wrapperspb.BoolValue) (*wrapperspb.BoolValue, error) {
+	addMsgHandlerToSTF(t, s, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
 		kvSet(t, ctx, "exec")
 		return nil, nil
 	})

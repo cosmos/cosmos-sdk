@@ -10,10 +10,11 @@ type Field struct {
 	// Kind is the basic type of the field.
 	Kind Kind
 
-	// Nullable indicates whether null values are accepted for the field.
+	// Nullable indicates whether null values are accepted for the field. Key fields CANNOT be nullable.
 	Nullable bool
 
 	// AddressPrefix is the address prefix of the field's kind, currently only used for Bech32AddressKind.
+	// TODO: in a future update, stricter criteria and validation for address prefixes should be added.
 	AddressPrefix string
 
 	// EnumDefinition is the definition of the enum type and is only valid when Kind is EnumKind.
@@ -32,7 +33,7 @@ func (c Field) Validate() error {
 
 	// valid kind
 	if err := c.Kind.Validate(); err != nil {
-		return fmt.Errorf("invalid field kind for %q: %w", c.Name, err)
+		return fmt.Errorf("invalid field kind for %q: %v", c.Name, err)
 	}
 
 	// address prefix only valid with Bech32AddressKind
@@ -45,7 +46,7 @@ func (c Field) Validate() error {
 	// enum definition only valid with EnumKind
 	if c.Kind == EnumKind {
 		if err := c.EnumDefinition.Validate(); err != nil {
-			return fmt.Errorf("invalid enum definition for field %q: %w", c.Name, err)
+			return fmt.Errorf("invalid enum definition for field %q: %v", c.Name, err)
 		}
 	} else if c.Kind != EnumKind && (c.EnumDefinition.Name != "" || c.EnumDefinition.Values != nil) {
 		return fmt.Errorf("enum definition is only valid for field %q with type EnumKind", c.Name)
@@ -66,7 +67,7 @@ func (c Field) ValidateValue(value interface{}) error {
 	}
 	err := c.Kind.ValidateValueType(value)
 	if err != nil {
-		return fmt.Errorf("invalid value for field %q: %w", c.Name, err)
+		return fmt.Errorf("invalid value for field %q: %v", c.Name, err)
 	}
 
 	if c.Kind == EnumKind {

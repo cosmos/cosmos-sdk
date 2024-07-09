@@ -139,6 +139,11 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 		return nil, fmt.Errorf("cannot set continuous fund proposal\ntotal funds percentage exceeds 100\ncurrent total percentage: %s", totalStreamFundsPercentage.Sub(msg.Percentage).MulInt64(100).TruncateInt().String())
 	}
 
+	// Distribute funds to avoid giving this new fund more than it should get
+	if err := k.IterateAndUpdateFundsDistribution(ctx); err != nil {
+		return nil, err
+	}
+
 	// Create continuous fund proposal
 	cf := types.ContinuousFund{
 		Recipient:  msg.Recipient,
@@ -182,11 +187,8 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 	canceledHeight := k.HeaderService.HeaderInfo(ctx).Height
 	canceledTime := k.HeaderService.HeaderInfo(ctx).Time
 
-	found, err := k.ContinuousFund.Has(ctx, recipient)
-	if !found {
-		return nil, fmt.Errorf("no recipient found to cancel continuous fund: %s", msg.RecipientAddress)
-	}
-	if err != nil {
+	// distribute funds before withdrawing
+	if err = k.IterateAndUpdateFundsDistribution(ctx); err != nil {
 		return nil, err
 	}
 

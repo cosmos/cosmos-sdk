@@ -29,5 +29,6 @@ var (
 	ContinuousFundKey            = collections.NewPrefix(3)
 	RecipientFundPercentageKey   = collections.NewPrefix(4)
 	RecipientFundDistributionKey = collections.NewPrefix(5)
-	ToDistributeKey              = collections.NewPrefix(6)
+	DistributionsKey             = collections.NewPrefix(6)
+	LastBalanceKey               = collections.NewPrefix(7)
 )

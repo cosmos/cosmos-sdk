@@ -49,7 +49,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error
 		}
 	}
 
-	if err := k.ToDistribute.Set(ctx, data.ToDistribute); err != nil {
+	if err := k.Distributions.Set(ctx, currentTime, data.ToDistribute); err != nil {
 		return fmt.Errorf("failed to set to distribute: %w", err)
 	}
 
@@ -96,10 +96,16 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 
 	genState := types.NewGenesisState(cf, budget)
 
-	genState.ToDistribute, err = k.ToDistribute.Get(ctx)
+	//
+	balances := k.bankKeeper.GetAllBalances(ctx, k.authKeeper.GetModuleAccount(ctx, types.ProtocolPoolDistrAccount).GetAddress())
+	bondDenom, err := k.stakingKeeper.BondDenom(ctx)
 	if err != nil {
 		return nil, err
 	}
+
+	genState.ToDistribute = balances.AmountOf(bondDenom)
+
+	// TODO: fix export by adding all the funds to be distributed
 
 	return genState, nil
 }

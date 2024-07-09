@@ -37,9 +37,9 @@ but doesn't handle the actual signing process (i.e., applying a cryptographic si
 ### Key Features
 1. SignModeHandler Interface: this is the core interface that defines how different signing modes should be implemented.
 2. SignModeHandler Implementations:
-   * [aminojson](https://github.com/cosmos/cosmos-sdk/blob/v0.50.7/docs/architecture/adr-020-protobuf-transaction-encoding.md#sign_mode_direct)
+   * [aminojson](https://github.com/cosmos/cosmos-sdk/blob/v0.50.7/docs/architecture/adr-020-protobuf-transaction-encoding.md#sign_mode_legacy_amino)
    * [direct](https://github.com/cosmos/cosmos-sdk/blob/v0.50.7/docs/architecture/adr-020-protobuf-transaction-encoding.md#sign_mode_direct)
-   * [direct aux](https://github.com/cosmos/cosmos-sdk/blob/v0.50.7/docs/architecture/adr-020-protobuf-transaction-encoding.md#sign_mode_direct)
+   * [direct aux](https://github.com/cosmos/cosmos-sdk/blob/v0.50.7/docs/architecture/adr-020-protobuf-transaction-encoding.md#sign_mode_direct_aux)
    * [textual](https://github.com/cosmos/cosmos-sdk/blob/v0.50.7/docs/architecture/adr-050-sign-mode-textual-annex1.md#adr-050-sign_mode_textual-annex-1-value-renderers)
 3. Context: the signing Context provides necessary information for retrieving signers from messages and resolving protobuf types.
 4. TxData and SignerData: these structures contain the necessary data for generating sign bytes. TxData includes transaction details, while SignerData contains information about the signer.

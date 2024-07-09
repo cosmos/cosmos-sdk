@@ -95,4 +95,4 @@ x/{module_name}
 * The root directory includes the module's `AppModule` implementation.
     * `autocli.go`: The module [autocli](https://docs.cosmos.network/main/core/autocli) options.
 
-> Note: although the above pattern is followed by most of the Cosmos SDK modules, there are some modules ( e.g `x/group` and `x/nft` ) don't have a `types` folder, instead all of the type definitions for messages, events, and genesis state are live in the root directory.
+> Note: although the above pattern is followed by most of the Cosmos SDK modules, there are some modules that don't follow this pattern. E.g `x/group` and `x/nft` dont have a `types` folder, instead all of the type definitions for messages, events, and genesis state are live in the root directory and the module's `AppModule` implementation lives in the `module` folder.

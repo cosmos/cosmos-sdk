@@ -132,9 +132,7 @@ func TestUnorderedTxManager_Flow(t *testing.T) {
 		ticker := time.NewTicker(time.Millisecond * 500)
 		defer ticker.Stop()
 
-		var (
-			height uint64 = 1
-		)
+		var height uint64 = 1
 		for t := range ticker.C {
 			txm.OnNewBlock(height, t)
 			height++

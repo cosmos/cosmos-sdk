@@ -7,6 +7,7 @@ replace (
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/log => ../../log
+	cosmossdk.io/schema => ../../schema
 	cosmossdk.io/server/v2/appmanager => ./appmanager
 	cosmossdk.io/server/v2/stf => ./stf
 	cosmossdk.io/x/tx => ../../x/tx

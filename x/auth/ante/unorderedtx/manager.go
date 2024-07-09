@@ -33,16 +33,11 @@ const (
 // TxHash defines a transaction hash type alias, which is a fixed array of 32 bytes.
 type TxHash [32]byte
 
-type blockInfo struct {
-	blockHeight uint64
-	blockTime   time.Time
-}
-
 // Manager contains the tx hash dictionary for duplicates checking, and expire
 // them when block production progresses.
 type Manager struct {
 	// blockCh defines a channel to receive newly committed block heights
-	blockCh chan blockInfo
+	blockCh chan time.Time
 	// doneCh allows us to ensure the purgeLoop has gracefully terminated prior to closing
 	doneCh chan struct{}
 
@@ -57,15 +52,11 @@ type Manager struct {
 	dataDir string
 
 	mu sync.RWMutex
-	// txHashesBlockHeight defines a map from tx hash -> TTL value defined as block height, which is used for duplicate
-	// checking and replay protection, as well as purging the map when the TTL is
-	// expired.
-	txHashesBlockHeight map[TxHash]uint64
 
-	// txHashesBlockTime defines a map from tx hash -> TTL value defined as block time, which is used for duplicate
+	// txHashes defines a map from tx hash -> TTL value defined as block time, which is used for duplicate
 	// checking and replay protection, as well as purging the map when the TTL is
 	// expired.
-	txHashesBlockTime map[TxHash]time.Time
+	txHashes map[TxHash]time.Time
 }
 
 func NewManager(dataDir string) *Manager {
@@ -75,11 +66,10 @@ func NewManager(dataDir string) *Manager {
 	}
 
 	m := &Manager{
-		dataDir:             dataDir,
-		blockCh:             make(chan blockInfo, 16),
-		doneCh:              make(chan struct{}),
-		txHashesBlockHeight: make(map[TxHash]uint64),
-		txHashesBlockTime:   make(map[TxHash]time.Time),
+		dataDir:  dataDir,
+		blockCh:  make(chan time.Time, 16),
+		doneCh:   make(chan struct{}),
+		txHashes: make(map[TxHash]time.Time),
 	}
 
 	return m
@@ -106,12 +96,7 @@ func (m *Manager) Close() error {
 func (m *Manager) Contains(hash TxHash) bool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-
-	_, ok := m.txHashesBlockHeight[hash]
-	if ok {
-		return ok
-	}
-	_, ok = m.txHashesBlockTime[hash]
+	_, ok := m.txHashes[hash]
 	return ok
 }
 
@@ -119,21 +104,14 @@ func (m *Manager) Size() int {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	return len(m.txHashesBlockHeight) + len(m.txHashesBlockTime)
+	return len(m.txHashes)
 }
 
-func (m *Manager) Add(txHash TxHash, height uint64) {
+func (m *Manager) Add(txHash TxHash, timestamp time.Time) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	m.txHashesBlockHeight[txHash] = height
-}
-
-func (m *Manager) AddTimestamp(txHash TxHash, timestamp time.Time) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	m.txHashesBlockTime[txHash] = timestamp
+	m.txHashes[txHash] = timestamp
 }
 
 // OnInit must be called when a node starts up. Typically, this should be called
@@ -164,23 +142,15 @@ func (m *Manager) OnInit() error {
 				return fmt.Errorf("failed to read unconfirmed txs file: %w", err)
 			}
 		}
-		if n != 32+8+8 {
+		if n != 32+8 {
 			return fmt.Errorf("read unexpected number of bytes from unconfirmed txs file: %d", n)
 		}
 
 		var txHash TxHash
 		copy(txHash[:], buf[:txHashSize])
 
-		blockHeight := binary.BigEndian.Uint64(buf[txHashSize : txHashSize+heightSize])
-		timeStamp := binary.BigEndian.Uint64(buf[txHashSize+heightSize:])
-
-		// if not zero value
-		if timeStamp != 0 {
-			m.AddTimestamp(txHash, time.Unix(int64(timeStamp), 0))
-			continue
-		}
-
-		m.Add(txHash, blockHeight)
+		timeStamp := binary.BigEndian.Uint64(buf[txHashSize:])
+		m.Add(txHash, time.Unix(int64(timeStamp), 0))
 	}
 
 	return nil
@@ -188,43 +158,27 @@ func (m *Manager) OnInit() error {
 
 // OnNewBlock sends the latest block number to the background purge loop, which
 // should be called in ABCI Commit event.
-func (m *Manager) OnNewBlock(blockHeight uint64, blockTime time.Time) {
-	m.blockCh <- blockInfo{
-		blockHeight: blockHeight,
-		blockTime:   blockTime,
-	}
+func (m *Manager) OnNewBlock(blockTime time.Time) {
+	m.blockCh <- blockTime
 }
 
 func (m *Manager) exportSnapshot(height uint64, snapshotWriter func([]byte) error) error {
 	var buf bytes.Buffer
 	w := bufio.NewWriter(&buf)
 
-	keys := maps.Keys(m.txHashesBlockHeight)
+	keys := maps.Keys(m.txHashes)
 	sort.Slice(keys, func(i, j int) bool { return bytes.Compare(keys[i][:], keys[j][:]) < 0 })
 
 	for _, txHash := range keys {
-		blockHeight := m.txHashesBlockHeight[txHash]
-		if height > blockHeight {
+		timeoutTime := m.txHashes[txHash]
+		timestamp := time.Unix(int64(height), 0)
+		if timestamp.After(timeoutTime) {
 			// skip expired txs that have yet to be purged
 			continue
 		}
-
-		chunk := unorderedTxToBytes(txHash, blockHeight, true)
-
-		if _, err := w.Write(chunk); err != nil {
-			return fmt.Errorf("failed to write unordered tx to buffer: %w", err)
-		}
-	}
-
-	keys = maps.Keys(m.txHashesBlockTime)
-	sort.Slice(keys, func(i, j int) bool { return bytes.Compare(keys[i][:], keys[j][:]) < 0 })
-
-	for _, txHash := range keys {
-		timestamp := m.txHashesBlockTime[txHash]
-
 		// right now we dont have access block time at this flow, so we would just include the expired txs
 		// and let it be purge during purge loop
-		chunk := unorderedTxToBytes(txHash, uint64(timestamp.Unix()), false)
+		chunk := unorderedTxToBytes(txHash, uint64(timeoutTime.Unix()))
 
 		if _, err := w.Write(chunk); err != nil {
 			return fmt.Errorf("failed to write unordered tx to buffer: %w", err)
@@ -248,16 +202,8 @@ func (m *Manager) flushToFile() error {
 	defer f.Close()
 
 	w := bufio.NewWriter(f)
-	for txHash, height := range m.txHashesBlockHeight {
-		chunk := unorderedTxToBytes(txHash, height, true)
-
-		if _, err = w.Write(chunk); err != nil {
-			return fmt.Errorf("failed to write unordered tx to buffer: %w", err)
-		}
-	}
-
-	for txHash, timestamp := range m.txHashesBlockTime {
-		chunk := unorderedTxToBytes(txHash, uint64(timestamp.Unix()), false)
+	for txHash, timestamp := range m.txHashes {
+		chunk := unorderedTxToBytes(txHash, uint64(timestamp.Unix()))
 
 		if _, err = w.Write(chunk); err != nil {
 			return fmt.Errorf("failed to write unordered tx to buffer: %w", err)
@@ -272,18 +218,12 @@ func (m *Manager) flushToFile() error {
 }
 
 // expiredTxs returns expired tx hashes based on the provided block height.
-func (m *Manager) expiredTxs(blockHeight uint64, blockTime time.Time) []TxHash {
+func (m *Manager) expiredTxs(blockTime time.Time) []TxHash {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
 	var result []TxHash
-	for txHash, height := range m.txHashesBlockHeight {
-		if blockHeight > height {
-			result = append(result, txHash)
-		}
-	}
-
-	for txHash, timestamp := range m.txHashesBlockTime {
+	for txHash, timestamp := range m.txHashes {
 		if blockTime.After(timestamp) {
 			result = append(result, txHash)
 		}
@@ -292,75 +232,62 @@ func (m *Manager) expiredTxs(blockHeight uint64, blockTime time.Time) []TxHash {
 	return result
 }
 
-func (m *Manager) purge(txHashesBlockHeight []TxHash) {
+func (m *Manager) purge(txHashes []TxHash) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	for _, txHash := range txHashesBlockHeight {
-		delete(m.txHashesBlockHeight, txHash)
-		delete(m.txHashesBlockTime, txHash)
+	for _, txHash := range txHashes {
+		delete(m.txHashes, txHash)
 	}
 }
 
 // purgeLoop removes expired tx hashes in the background
 func (m *Manager) purgeLoop() {
 	for {
-		latestHeight, latestTime, ok := m.batchReceive()
+		latestTime, ok := m.batchReceive()
 		if !ok {
 			// channel closed
 			m.doneCh <- struct{}{}
 			return
 		}
 
-		hashes := m.expiredTxs(latestHeight, latestTime)
+		hashes := m.expiredTxs(latestTime)
 		if len(hashes) > 0 {
 			m.purge(hashes)
 		}
 	}
 }
 
-func (m *Manager) batchReceive() (uint64, time.Time, bool) {
+func (m *Manager) batchReceive() (time.Time, bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var latestHeight uint64
 	var latestTime time.Time
 	for {
 		select {
 		case <-ctx.Done():
-			return latestHeight, latestTime, true
+			return latestTime, true
 
-		case blockInfo, ok := <-m.blockCh:
+		case blockTime, ok := <-m.blockCh:
 			if !ok {
 				// channel is closed
-				return 0, time.Time{}, false
-			}
-			if blockInfo.blockHeight > latestHeight {
-				latestHeight = blockInfo.blockHeight
+				return time.Time{}, false
 			}
 
-			if blockInfo.blockTime.After(latestTime) {
-				latestTime = blockInfo.blockTime
+			if blockTime.After(latestTime) {
+				latestTime = blockTime
 			}
 		}
 	}
 }
 
-func unorderedTxToBytes(txHash TxHash, ttl uint64, isBlockHeight bool) []byte {
+func unorderedTxToBytes(txHash TxHash, ttl uint64) []byte {
 	chunk := make([]byte, chunkSize)
 	copy(chunk[:txHashSize], txHash[:])
 
-	ttlBz := make([]byte, heightSize)
+	ttlBz := make([]byte, timeoutSize)
 	binary.BigEndian.PutUint64(ttlBz, ttl)
-	emptyBz := make([]byte, 8)
-	binary.BigEndian.PutUint64(emptyBz, 0)
-	if isBlockHeight {
-		copy(chunk[txHashSize+heightSize:], emptyBz)
-		copy(chunk[txHashSize:txHashSize+heightSize], ttlBz)
-	} else {
-		copy(chunk[txHashSize+heightSize:], ttlBz)
-		copy(chunk[txHashSize:txHashSize+heightSize], emptyBz)
-	}
+	copy(chunk[txHashSize:], ttlBz)
 
 	return chunk
 }

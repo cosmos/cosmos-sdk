@@ -99,7 +99,6 @@ type (
 	// TxWithUnordered extends the Tx interface by allowing a transaction to set
 	// the unordered field, which implicitly relies on TxWithTimeoutHeight.
 	TxWithUnordered interface {
-		TxWithTimeoutHeight
 		TxWithTimeoutTimeStamp
 
 		GetUnordered() bool

@@ -29,15 +29,13 @@ var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
 // chain to ensure that during DeliverTx, the transaction is added to the UnorderedTxManager.
 type UnorderedTxDecorator struct {
 	// maxUnOrderedTTL defines the maximum TTL a transaction can define.
-	maxUnOrderedTTL    uint64
 	maxTimeoutDuration time.Duration
 	txManager          *unorderedtx.Manager
 	env                appmodule.Environment
 }
 
-func NewUnorderedTxDecorator(maxTTL uint64, maxDuration time.Duration, m *unorderedtx.Manager, env appmodule.Environment) *UnorderedTxDecorator {
+func NewUnorderedTxDecorator(maxDuration time.Duration, m *unorderedtx.Manager, env appmodule.Environment) *UnorderedTxDecorator {
 	return &UnorderedTxDecorator{
-		maxUnOrderedTTL:    maxTTL,
 		maxTimeoutDuration: maxDuration,
 		txManager:          m,
 		env:                env,
@@ -52,6 +50,18 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 		return next(ctx, tx, false)
 	}
 
+	headerInfo := d.env.HeaderService.HeaderInfo(ctx)
+	timeoutTimestamp := unorderedTx.GetTimeoutTimeStamp()
+	if timeoutTimestamp.IsZero() || timeoutTimestamp.Unix() == 0 {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction must have timeout_timestamp set")
+	}
+	if timeoutTimestamp.Before(headerInfo.Time) {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction has a timeout_timestamp that has already passed")
+	}
+	if timeoutTimestamp.After(headerInfo.Time.Add(d.maxTimeoutDuration)) {
+		return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unordered tx ttl exceeds %s", d.maxTimeoutDuration.String())
+	}
+
 	txHash := sha256.Sum256(ctx.TxBytes())
 
 	// check for duplicates
@@ -59,39 +69,9 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "tx %X is duplicated")
 	}
 
-	headerInfo := d.env.HeaderService.HeaderInfo(ctx)
-	timeoutTimestamp := unorderedTx.GetTimeoutTimeStamp()
-	if !timeoutTimestamp.IsZero() && timeoutTimestamp.Unix() != 0 {
-		if timeoutTimestamp.Before(headerInfo.Time) {
-			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction has a timeout_timestamp that has already passed")
-		}
-		if timeoutTimestamp.After(headerInfo.Time.Add(d.maxTimeoutDuration)) {
-			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unordered tx ttl exceeds %d", d.maxUnOrderedTTL)
-		}
-
-		if d.env.TransactionService.ExecMode(ctx) == transaction.ExecModeFinalize {
-			// a new tx included in the block, add the hash to the unordered tx manager
-			d.txManager.AddTimestamp(txHash, timeoutTimestamp)
-		}
-
-		return next(ctx, tx, false)
-	}
-
-	// TTL is defined as a specific block height at which this tx is no longer valid
-	ttl := unorderedTx.GetTimeoutHeight()
-	if ttl == 0 && timeoutTimestamp.IsZero() {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction must have timeout_height or timeout_timestamp set")
-	}
-	if ttl < uint64(headerInfo.Height) {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction has a timeout_height that has already passed")
-	}
-	if ttl > uint64(headerInfo.Height)+d.maxUnOrderedTTL {
-		return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unordered tx ttl exceeds %d", d.maxUnOrderedTTL)
-	}
-
 	if d.env.TransactionService.ExecMode(ctx) == transaction.ExecModeFinalize {
 		// a new tx included in the block, add the hash to the unordered tx manager
-		d.txManager.Add(txHash, ttl)
+		d.txManager.Add(txHash, timeoutTimestamp)
 	}
 
 	return next(ctx, tx, false)

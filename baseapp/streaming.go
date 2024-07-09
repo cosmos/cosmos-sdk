@@ -6,20 +6,18 @@ import (
 	"sort"
 	"strings"
 
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/spf13/cast"
-
-	"cosmossdk.io/schema/indexer"
 
 	"cosmossdk.io/schema"
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/decoding"
+	"cosmossdk.io/schema/indexer"
 	"cosmossdk.io/store/streaming"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 )
 
 const (

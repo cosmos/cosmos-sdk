@@ -33,7 +33,6 @@ type ManagerOptions struct {
 
 // ManagerConfig is the configuration of the indexer manager and contains the configuration for each indexer target.
 type ManagerConfig struct {
-
 	// Target is a map of named indexer targets to their configuration.
 	Target map[string]Config
 }

@@ -25,7 +25,7 @@ func (tm *TableManager) CreateTable(ctx context.Context, conn DBConn) error {
 
 // CreateTableSql generates a CREATE TABLE statement for the object type.
 func (tm *TableManager) CreateTableSql(writer io.Writer) error {
-	_, err := fmt.Fprintf(writer, "CREATE TABLE IF NOT EXISTS %q (", tm.TableName())
+	_, err := fmt.Fprintf(writer, "CREATE TABLE IF NOT EXISTS %q (\n\t", tm.TableName())
 	if err != nil {
 		return err
 	}

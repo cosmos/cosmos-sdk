@@ -14,6 +14,10 @@ func init() {
 				Name: "id",
 				Kind: schema.Int64Kind,
 			},
+			{
+				Name: "ts",
+				Kind: schema.TimeKind,
+			},
 		},
 	}
 

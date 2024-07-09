@@ -3,14 +3,18 @@ package postgres
 import (
 	"os"
 
-	"cosmossdk.io/indexer/postgres/internal/testdata"
 	"cosmossdk.io/schema"
+
+	"cosmossdk.io/indexer/postgres/internal/testdata"
 )
 
 func ExampleTableManager_CreateTableSql_allKinds() {
 	exampleCreateTable(testdata.AllKindsObject)
 	// Output:
-	// CREATE TABLE IF NOT EXISTS "test_all_kinds" ("id" BIGINT NOT NULL,
+	// CREATE TABLE IF NOT EXISTS "test_all_kinds" (
+	// 	"id" BIGINT NOT NULL,
+	//	"ts" TIMESTAMPTZ GENERATED ALWAYS AS (nanos_to_timestamptz("ts_nanos")) STORED,
+	//	"ts_nanos" BIGINT NOT NULL,
 	//	"string" TEXT NOT NULL,
 	//	"bytes" BYTEA NOT NULL,
 	//	"int8" SMALLINT NOT NULL,
@@ -32,7 +36,7 @@ func ExampleTableManager_CreateTableSql_allKinds() {
 	//	"bech32address" TEXT NOT NULL,
 	//	"enum" "test_my_enum" NOT NULL,
 	//	"json" JSONB NOT NULL,
-	//	PRIMARY KEY ("id")
+	//	PRIMARY KEY ("id", "ts_nanos")
 	// );
 	// GRANT SELECT ON TABLE "test_all_kinds" TO PUBLIC;
 }
@@ -40,7 +44,8 @@ func ExampleTableManager_CreateTableSql_allKinds() {
 func ExampleTableManager_CreateTableSql_singleton() {
 	exampleCreateTable(testdata.SingletonObject)
 	// Output:
-	// CREATE TABLE IF NOT EXISTS "test_singleton" (_id INTEGER NOT NULL CHECK (_id = 1),
+	// CREATE TABLE IF NOT EXISTS "test_singleton" (
+	// 	_id INTEGER NOT NULL CHECK (_id = 1),
 	//	"foo" TEXT NOT NULL,
 	//	"bar" INTEGER NULL,
 	//	"an_enum" "test_my_enum" NOT NULL,
@@ -52,7 +57,8 @@ func ExampleTableManager_CreateTableSql_singleton() {
 func ExampleTableManager_CreateTableSql_vote() {
 	exampleCreateTable(testdata.VoteObject)
 	// Output:
-	// CREATE TABLE IF NOT EXISTS "test_vote" ("proposal" BIGINT NOT NULL,
+	// CREATE TABLE IF NOT EXISTS "test_vote" (
+	// 	"proposal" BIGINT NOT NULL,
 	// 	"address" TEXT NOT NULL,
 	// 	"vote" "test_vote_type" NOT NULL,
 	// 	_deleted BOOLEAN NOT NULL DEFAULT FALSE,
@@ -64,7 +70,8 @@ func ExampleTableManager_CreateTableSql_vote() {
 func ExampleTableManager_CreateTableSql_vote_no_retain_delete() {
 	exampleCreateTableOpt(testdata.VoteObject, true)
 	// Output:
-	// CREATE TABLE IF NOT EXISTS "test_vote" ("proposal" BIGINT NOT NULL,
+	// CREATE TABLE IF NOT EXISTS "test_vote" (
+	// 	"proposal" BIGINT NOT NULL,
 	//	"address" TEXT NOT NULL,
 	//	"vote" "test_vote_type" NOT NULL,
 	//	PRIMARY KEY ("proposal", "address")

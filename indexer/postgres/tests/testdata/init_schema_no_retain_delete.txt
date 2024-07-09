@@ -5,7 +5,10 @@ Creating enum type
 CREATE TYPE "test_vote_type" AS ENUM ('yes', 'no', 'abstain');
 
 Creating table test_all_kinds
-CREATE TABLE IF NOT EXISTS "test_all_kinds" ("id" BIGINT NOT NULL,
+CREATE TABLE IF NOT EXISTS "test_all_kinds" (
+	"id" BIGINT NOT NULL,
+	"ts" TIMESTAMPTZ GENERATED ALWAYS AS (nanos_to_timestamptz("ts_nanos")) STORED,
+	"ts_nanos" BIGINT NOT NULL,
 	"string" TEXT NOT NULL,
 	"bytes" BYTEA NOT NULL,
 	"int8" SMALLINT NOT NULL,
@@ -27,12 +30,13 @@ CREATE TABLE IF NOT EXISTS "test_all_kinds" ("id" BIGINT NOT NULL,
 	"bech32address" TEXT NOT NULL,
 	"enum" "test_my_enum" NOT NULL,
 	"json" JSONB NOT NULL,
-	PRIMARY KEY ("id")
+	PRIMARY KEY ("id", "ts_nanos")
 );
 GRANT SELECT ON TABLE "test_all_kinds" TO PUBLIC;
 
 Creating table test_singleton
-CREATE TABLE IF NOT EXISTS "test_singleton" (_id INTEGER NOT NULL CHECK (_id = 1),
+CREATE TABLE IF NOT EXISTS "test_singleton" (
+	_id INTEGER NOT NULL CHECK (_id = 1),
 	"foo" TEXT NOT NULL,
 	"bar" INTEGER NULL,
 	"an_enum" "test_my_enum" NOT NULL,
@@ -41,7 +45,8 @@ CREATE TABLE IF NOT EXISTS "test_singleton" (_id INTEGER NOT NULL CHECK (_id = 1
 GRANT SELECT ON TABLE "test_singleton" TO PUBLIC;
 
 Creating table test_vote
-CREATE TABLE IF NOT EXISTS "test_vote" ("proposal" BIGINT NOT NULL,
+CREATE TABLE IF NOT EXISTS "test_vote" (
+	"proposal" BIGINT NOT NULL,
 	"address" TEXT NOT NULL,
 	"vote" "test_vote_type" NOT NULL,
 	PRIMARY KEY ("proposal", "address")

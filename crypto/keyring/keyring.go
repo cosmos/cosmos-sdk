@@ -281,7 +281,7 @@ func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 		return "", err
 	}
 
-	return crypto.ArmorPubKeyBytes(bz, key.Type()), nil
+	return crypto.ArmorPubKeyBytes(bz, key.Type())
 }
 
 func (ks keystore) ExportPubKeyArmorByAddress(address []byte) (string, error) {
@@ -300,7 +300,7 @@ func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor stri
 		return "", err
 	}
 
-	return crypto.EncryptArmorPrivKey(priv, encryptPassphrase, priv.Type()), nil
+	return crypto.EncryptArmorPrivKey(priv, encryptPassphrase, priv.Type())
 }
 
 // ExportPrivateKeyObject exports an armored private key object.

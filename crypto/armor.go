@@ -75,18 +75,22 @@ func DecodeArmor(armorStr string) (blockType string, headers map[string]string, 
 }
 
 // ArmorInfoBytes armor the InfoBytes
-func ArmorInfoBytes(bz []byte) string {
+func ArmorInfoBytes(bz []byte) (string, error) {
 	header := map[string]string{
 		headerType:    "Info",
 		headerVersion: "0.0.0",
 	}
 
-	s, _ := armor.EncodeArmor(blockTypeKeyInfo, header, bz)
-	return s
+	s, err := armor.EncodeArmor(blockTypeKeyInfo, header, bz)
+	if err != nil {
+		return "", err
+	}
+
+	return s, nil
 }
 
 // ArmorPubKeyBytes armor the PubKeyBytes
-func ArmorPubKeyBytes(bz []byte, algo string) string {
+func ArmorPubKeyBytes(bz []byte, algo string) (string, error) {
 	header := map[string]string{
 		headerVersion: "0.0.1",
 	}
@@ -94,12 +98,15 @@ func ArmorPubKeyBytes(bz []byte, algo string) string {
 		header[headerType] = algo
 	}
 
-	s, _ := armor.EncodeArmor(blockTypePubKey, header, bz)
-	return s
+	s, err := armor.EncodeArmor(blockTypePubKey, header, bz)
+	if err != nil {
+		return "", err
+	}
+
+	return s, nil
 }
 
 //-----------------------------------------------------------------
-// remove armor
 
 // UnarmorInfoBytes unarmor the InfoBytes
 func UnarmorInfoBytes(armorStr string) ([]byte, error) {
@@ -157,7 +164,7 @@ func unarmorBytes(armorStr, blockType string) (bz []byte, header map[string]stri
 // encrypt/decrypt with armor
 
 // EncryptArmorPrivKey encrypt and armor the private key.
-func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase, algo string) string {
+func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase, algo string) (string, error) {
 	saltBytes, encBytes := encryptPrivKey(privKey, passphrase)
 	header := map[string]string{
 		kdfHeader: kdfArgon2,
@@ -168,9 +175,12 @@ func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase, algo string) s
 		header[headerType] = algo
 	}
 
-	armorStr, _ := armor.EncodeArmor(blockTypePrivKey, header, encBytes)
+	armorStr, err := armor.EncodeArmor(blockTypePrivKey, header, encBytes)
+	if err != nil {
+		return "", err
+	}
 
-	return armorStr
+	return armorStr, nil
 }
 
 func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes, encBytes []byte) {

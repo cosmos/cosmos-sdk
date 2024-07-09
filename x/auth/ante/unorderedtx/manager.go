@@ -18,9 +18,6 @@ import (
 )
 
 const (
-	// DefaultMaxUnOrderedHeight defines the default maximum height an un-ordered transaction
-	// can set.
-	DefaultMaxUnOrderedHeight = 1024
 	// DefaultmaxTimeoutDuration defines the default maximum duration an un-ordered transaction
 	// can set.
 	// TODO: need to decide a default value

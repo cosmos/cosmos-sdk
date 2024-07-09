@@ -197,11 +197,13 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Client Breaking Changes
 
 * (runtime) [#19040](https://github.com/cosmos/cosmos-sdk/pull/19040) Simplify app config implementation and deprecate `/cosmos/app/v1alpha1/config` query.
+* (client) [#20870](https://github.com/cosmos/cosmos-sdk/pull/20870) Increased gas cost for processing newly added timeout timestamp field in tx body. 
 
 ### CLI Breaking Changes
 
 * (perf)[#20490](https://github.com/cosmos/cosmos-sdk/pull/20490) Sims: Replace runsim command with Go stdlib testing. CLI: `Commit` default true, `Lean`, `SimulateEveryOperation`, `PrintAllInvariants`, `DBBackend` params removed
 * (server) [#18303](https://github.com/cosmos/cosmos-sdk/pull/18303) `appd export` has moved with other genesis commands, use `appd genesis export` instead.
+* (client) [#20870](https://github.com/cosmos/cosmos-sdk/pull/20870) Add `-timeout-timestamp` flag for tx time based timout.
 
 ### Deprecated
 

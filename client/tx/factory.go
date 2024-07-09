@@ -413,7 +413,6 @@ func (f Factory) PrintUnsignedTx(clientCtx client.Context, msgs ...sdk.Msg) erro
 		return err
 	}
 
-	fmt.Println(unsignedTx)
 
 	encoder := f.txConfig.TxJSONEncoder()
 	if encoder == nil {

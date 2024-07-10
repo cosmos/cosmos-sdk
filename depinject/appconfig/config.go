@@ -10,6 +10,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
 	"sigs.k8s.io/yaml"
 
@@ -21,8 +22,17 @@ import (
 
 // LoadJSON loads an app config in JSON format.
 func LoadJSON(bz []byte) depinject.Config {
-	config := &appv1alpha1.Config{}
-	err := protojson.UnmarshalOptions{
+	// in order to avoid a direct dependency on api types, but in order to also be able to support
+	// either gogo or google.golang.org/protobuf types, we use protojson and dynamicpb to unmarshal
+	// from JSON
+	resolver := gogoproto.HybridResolver
+	desc, err := resolver.FindDescriptorByName(protoreflect.FullName(gogoproto.MessageName(&Config{})))
+	if err != nil {
+		return depinject.Error(err)
+	}
+
+	config := dynamicpb.NewMessage(desc.(protoreflect.MessageDescriptor))
+	err = protojson.UnmarshalOptions{
 		Resolver: dynamicTypeResolver{resolver: gogoproto.HybridResolver},
 	}.Unmarshal(bz, config)
 	if err != nil {
@@ -54,17 +64,22 @@ func WrapAny(config protoreflect.ProtoMessage) *anypb.Any {
 
 // Compose composes an app config into a container option by resolving
 // the required modules and composing their options. appConfig should be an instance
-// of cosmos.app.v1alpha1.Config.
+// of cosmos.app.v1.Config or cosmos.app.v1alpha1.Config (they should be the same
+// and it doesn't matter whether you use gogo proto or google.golang.org/protobuf
+// types).
 func Compose(appConfig gogoproto.Message) depinject.Config {
-	bz, err := gogoproto.Marshal(appConfig)
-	if err != nil {
-		return depinject.Error(err)
-	}
+	appConfigConcrete, ok := appConfig.(*Config)
+	if !ok {
+		appConfigConcrete = &Config{}
+		bz, err := gogoproto.Marshal(appConfig)
+		if err != nil {
+			return depinject.Error(err)
+		}
 
-	var appConfigConcrete appv1alpha1.Config
-	err = gogoproto.Unmarshal(bz, &appConfigConcrete)
-	if err != nil {
-		return depinject.Error(err)
+		err = gogoproto.Unmarshal(bz, appConfigConcrete)
+		if err != nil {
+			return depinject.Error(err)
+		}
 	}
 
 	opts := []depinject.Config{

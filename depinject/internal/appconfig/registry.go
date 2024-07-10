@@ -5,7 +5,10 @@ import (
 	"reflect"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	"github.com/cosmos/gogoproto/protoc-gen-gogo/descriptor"
+	"google.golang.org/protobuf/encoding/protowire"
 	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/depinject/appconfig/v1alpha1"
@@ -35,6 +38,9 @@ func ModulesByModuleTypeName() (map[string]*ModuleInitializer, error) {
 		fullName := gogoproto.MessageName(initializer.ConfigProtoMessage)
 
 		if desc, err := gogoproto.HybridResolver.FindDescriptorByName(protoreflect.FullName(fullName)); err == nil {
+			dp := protodesc.ToDescriptorProto(desc.(protoreflect.MessageDescriptor))
+			fmt.Printf("dp: %v\n", dp)
+
 			modDesc, err := GetModuleDescriptor(desc)
 			if err != nil {
 				return nil, err
@@ -68,30 +74,42 @@ func ModulesByModuleTypeName() (map[string]*ModuleInitializer, error) {
 // GetModuleDescriptor returns the cosmos.app.v1alpha1.ModuleDescriptor or nil if one isn't found.
 // Errors are returned in unexpected cases.
 func GetModuleDescriptor(desc protoreflect.Descriptor) (*v1alpha1.ModuleDescriptor, error) {
-	var modDesc protov2.Message
-	// we range over the extensions to retrieve the module extension dynamically without needing to import the api module
-	protov2.RangeExtensions(desc.Options(), func(extensionType protoreflect.ExtensionType, value any) bool {
-		if string(extensionType.TypeDescriptor().FullName()) == v1alpha1.E_Module.Name {
-			modDesc = value.(protov2.Message)
-			return false
-		}
-		return true
-	})
+	// we need to take a somewhat round about way to get the extension here
+	// our most complete type registry has a mix of gogoproto and protoreflect types
+	// so we start with a protoreflect descriptor, convert it to a gogo descriptor
+	// and then get the extension by its raw field value to avoid any unmarshaling errors
 
-	if modDesc == nil {
+	rawV2Desc := protodesc.ToDescriptorProto(desc.(protoreflect.MessageDescriptor))
+	bz, err := protov2.Marshal(rawV2Desc)
+	if err != nil {
+		return nil, err
+	}
+	var gogoDesc descriptor.DescriptorProto
+	err = gogoproto.Unmarshal(bz, &gogoDesc)
+	if err != nil {
+		return nil, err
+	}
+
+	opts := gogoDesc.Options
+	if !gogoproto.HasExtension(opts, v1alpha1.E_Module) {
 		return nil, nil
 	}
 
-	// we convert the returned descriptor to the concrete gogo type we have in v1alpha1 to have a concrete type here
-	var modDescGogo v1alpha1.ModuleDescriptor
-	bz, err := protov2.Marshal(modDesc)
-	if err != nil {
-		return nil, err
-	}
-	err = gogoproto.Unmarshal(bz, &modDescGogo)
+	bz, err = gogoproto.GetRawExtension(gogoproto.GetUnsafeExtensionsMap(opts), v1alpha1.E_Module.Field)
 	if err != nil {
 		return nil, err
 	}
 
-	return &modDescGogo, nil
+	// we have to skip the field tag and length prefix itself to actually get the raw bytes we want
+	// this is really frustrating, but other methods caused runtime errors
+	_, _, n := protowire.ConsumeTag(bz)
+	bz, _ = protowire.ConsumeBytes(bz[n:])
+
+	var ext v1alpha1.ModuleDescriptor
+	err = gogoproto.Unmarshal(bz, &ext)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ext, nil
 }

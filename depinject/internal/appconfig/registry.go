@@ -101,7 +101,8 @@ func GetModuleDescriptor(desc protoreflect.Descriptor) (*v1alpha1.ModuleDescript
 	}
 
 	// we have to skip the field tag and length prefix itself to actually get the raw bytes we want
-	// this is really frustrating, but other methods caused runtime errors
+	// this is really overly complex, but other methods caused runtime errors because of validation
+	// that gogo does that appears simply not necessary
 	_, _, n := protowire.ConsumeTag(bz)
 	bz, _ = protowire.ConsumeBytes(bz[n:])
 

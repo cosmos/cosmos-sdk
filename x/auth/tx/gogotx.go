@@ -178,7 +178,7 @@ func (w *gogoTxWrapper) GetMemo() string { return w.Tx.Body.Memo }
 // GetTimeoutHeight returns the transaction's timeout height (if set).
 func (w *gogoTxWrapper) GetTimeoutHeight() uint64 { return w.Tx.Body.TimeoutHeight }
 
-// GetTimeoutHeight returns the transaction's timeout height (if set).
+// GetTimeoutTimeStamp returns the transaction's timeout timestamp (if set).
 func (w *gogoTxWrapper) GetTimeoutTimeStamp() time.Time {
 	return w.Tx.Body.TimeoutTimestamp.AsTime()
 }

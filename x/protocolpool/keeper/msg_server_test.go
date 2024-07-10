@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"time"
 
+	"github.com/golang/mock/gomock"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
@@ -10,7 +12,6 @@ import (
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/golang/mock/gomock"
 )
 
 var (
@@ -1015,10 +1016,11 @@ func (suite *KeeperTestSuite) TestFundCommunityPool() {
 	amount := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
 	suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), sender, types.ModuleName, amount).Return(nil).Times(1)
 
-	suite.msgServer.FundCommunityPool(suite.ctx, &types.MsgFundCommunityPool{
+	_, err = suite.msgServer.FundCommunityPool(suite.ctx, &types.MsgFundCommunityPool{
 		Amount:    amount,
 		Depositor: senderAddr,
 	})
+	suite.Require().NoError(err)
 }
 
 func (suite *KeeperTestSuite) TestCommunityPoolSpend() {
@@ -1030,9 +1032,10 @@ func (suite *KeeperTestSuite) TestCommunityPoolSpend() {
 	amount := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
 	suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, recipient, amount).Return(nil).Times(1)
 
-	suite.msgServer.CommunityPoolSpend(suite.ctx, &types.MsgCommunityPoolSpend{
+	_, err = suite.msgServer.CommunityPoolSpend(suite.ctx, &types.MsgCommunityPoolSpend{
 		Authority: suite.poolKeeper.GetAuthority(),
 		Recipient: recipientAddr,
 		Amount:    amount,
 	})
+	suite.Require().NoError(err)
 }

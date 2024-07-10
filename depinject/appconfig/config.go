@@ -17,6 +17,7 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig/v1alpha1"
 	internal "cosmossdk.io/depinject/internal/appconfig"
 )
 
@@ -26,7 +27,7 @@ func LoadJSON(bz []byte) depinject.Config {
 	// either gogo or google.golang.org/protobuf types, we use protojson and dynamicpb to unmarshal
 	// from JSON
 	resolver := gogoproto.HybridResolver
-	desc, err := resolver.FindDescriptorByName(protoreflect.FullName(gogoproto.MessageName(&Config{})))
+	desc, err := resolver.FindDescriptorByName(protoreflect.FullName(gogoproto.MessageName(&v1alpha1.Config{})))
 	if err != nil {
 		return depinject.Error(err)
 	}
@@ -64,13 +65,12 @@ func WrapAny(config protoreflect.ProtoMessage) *anypb.Any {
 
 // Compose composes an app config into a container option by resolving
 // the required modules and composing their options. appConfig should be an instance
-// of cosmos.app.v1.Config or cosmos.app.v1alpha1.Config (they should be the same
-// and it doesn't matter whether you use gogo proto or google.golang.org/protobuf
-// types).
+// of cosmos.app.v1alpha1.Config (it doesn't matter whether you use gogo proto or
+// google.golang.org/protobuf types).
 func Compose(appConfig gogoproto.Message) depinject.Config {
-	appConfigConcrete, ok := appConfig.(*Config)
+	appConfigConcrete, ok := appConfig.(*v1alpha1.Config)
 	if !ok {
-		appConfigConcrete = &Config{}
+		appConfigConcrete = &v1alpha1.Config{}
 		bz, err := gogoproto.Marshal(appConfig)
 		if err != nil {
 			return depinject.Error(err)

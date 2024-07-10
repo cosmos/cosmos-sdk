@@ -85,19 +85,19 @@ func (k Keeper) GetAuthority() string {
 }
 
 // FundCommunityPool allows an account to directly fund the community fund pool.
-func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error {
+func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender []byte) error {
 	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount)
 }
 
 // DistributeFromCommunityPool distributes funds from the protocolpool module account to
 // a receiver address.
-func (k Keeper) DistributeFromCommunityPool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
+func (k Keeper) DistributeFromCommunityPool(ctx context.Context, amount sdk.Coins, receiveAddr []byte) error {
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
 }
 
 // DistributeFromStreamFunds distributes funds from the protocolpool's stream module account to
 // a receiver address.
-func (k Keeper) DistributeFromStreamFunds(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
+func (k Keeper) DistributeFromStreamFunds(ctx context.Context, amount sdk.Coins, receiveAddr []byte) error {
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.StreamAccount, receiveAddr, amount)
 }
 
@@ -184,7 +184,7 @@ func (k Keeper) SetToDistribute(ctx context.Context) error {
 func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 	// first we get all the continuous funds, and keep a list of the ones that expired so we can delete later
 	funds := []types.ContinuousFund{}
-	toDelete := []sdk.AccAddress{}
+	toDelete := [][]byte{}
 	err := k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, cf types.ContinuousFund) (stop bool, err error) {
 		funds = append(funds, cf)
 

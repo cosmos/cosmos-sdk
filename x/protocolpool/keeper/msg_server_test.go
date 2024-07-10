@@ -10,6 +10,7 @@ import (
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/golang/mock/gomock"
 )
 
 var (
@@ -1003,4 +1004,35 @@ func (suite *KeeperTestSuite) TestWithdrawExpiredFunds() {
 	})
 	suite.Require().NoError(err)
 	suite.Require().True(res.WithdrawnAllocatedFund.IsNil())
+}
+
+func (suite *KeeperTestSuite) TestFundCommunityPool() {
+	sender := []byte("fundingAddr1____________________")
+	addrCodec := codectestutil.CodecOptions{}.GetAddressCodec()
+	senderAddr, err := addrCodec.BytesToString(sender)
+	suite.Require().NoError(err)
+
+	amount := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
+	suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), sender, types.ModuleName, amount).Return(nil).Times(1)
+
+	suite.msgServer.FundCommunityPool(suite.ctx, &types.MsgFundCommunityPool{
+		Amount:    amount,
+		Depositor: senderAddr,
+	})
+}
+
+func (suite *KeeperTestSuite) TestCommunityPoolSpend() {
+	recipient := []byte("fundingAddr1____________________")
+	addrCodec := codectestutil.CodecOptions{}.GetAddressCodec()
+	recipientAddr, err := addrCodec.BytesToString(recipient)
+	suite.Require().NoError(err)
+
+	amount := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
+	suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, recipient, amount).Return(nil).Times(1)
+
+	suite.msgServer.CommunityPoolSpend(suite.ctx, &types.MsgCommunityPoolSpend{
+		Authority: suite.poolKeeper.GetAuthority(),
+		Recipient: recipientAddr,
+		Amount:    amount,
+	})
 }

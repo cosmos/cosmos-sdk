@@ -1,6 +1,6 @@
 module cosmossdk.io/x/accounts
 
-go 1.22.3
+go 1.22.2
 
 require (
 	cosmossdk.io/api v0.7.5

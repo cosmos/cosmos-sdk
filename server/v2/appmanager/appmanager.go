@@ -11,7 +11,7 @@ import (
 	"cosmossdk.io/core/transaction"
 )
 
-// Store defines the underlying storage behaviour needed by AppManager.
+// Store defines the underlying storage behavior needed by AppManager.
 type Store interface {
 	// StateLatest returns a readonly view over the latest
 	// committed state of the store. Alongside the version

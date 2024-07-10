@@ -1,11 +1,8 @@
 package pruning
 
 import (
-	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 )
-
-const batchFlushThreshold = 1 << 16 // 64KB
 
 // Manager is a struct that manages the pruning of old versions of the SC and SS.
 type Manager struct {
@@ -68,57 +65,6 @@ func (m *Manager) SignalCommit(start bool, version uint64) error {
 
 	if !start {
 		return m.Prune(version)
-	}
-
-	return nil
-}
-
-// PruneKVStores prunes KVStores which are needed to be pruned by upgrading the
-// store key.
-func (m *Manager) PruneKVStores(kvStores []corestore.KVStoreWithBatch) error {
-	for _, kvStore := range kvStores {
-		if kvStore == nil {
-			continue
-		}
-		if err := func() error {
-			batch := kvStore.NewBatch()
-			iter, err := kvStore.Iterator(nil, nil)
-			if err != nil {
-				return err
-			}
-			defer func() {
-				_ = iter.Close()
-				_ = batch.Close()
-			}()
-
-			for ; iter.Valid(); iter.Next() {
-				if err := batch.Delete(iter.Key()); err != nil {
-					return err
-				}
-				bs, err := batch.GetByteSize()
-				if err != nil {
-					return err
-				}
-				if bs > batchFlushThreshold {
-					if err := batch.Write(); err != nil {
-						return err
-					}
-					if err := batch.Close(); err != nil {
-						return err
-					}
-					batch = kvStore.NewBatch()
-				}
-			}
-			if err := batch.Write(); err != nil {
-				return err
-			}
-			if err := batch.Close(); err != nil {
-				return err
-			}
-			return nil
-		}(); err != nil {
-			return err
-		}
 	}
 
 	return nil

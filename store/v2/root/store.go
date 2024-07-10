@@ -256,35 +256,23 @@ func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreU
 		return fmt.Errorf("cannot upgrade while migrating")
 	}
 
-	// we need to prune the old store keys from SS and SC
-	var (
-		removedStoreKeys []string
-		removedKVStores  []corestore.KVStoreWithBatch
-	)
+	// we need to prune the old store keys from SS
+	var removedStoreKeys []string
 	removedStoreKeys = append(removedStoreKeys, upgrades.Deleted...)
 	for _, renamedStore := range upgrades.Renamed {
 		removedStoreKeys = append(removedStoreKeys, renamedStore.OldKey)
-	}
-
-	for _, storeKey := range removedStoreKeys {
-		removedKVStores = append(removedKVStores, s.stateCommitment.GetKVStoreWithBatch(storeKey))
 	}
 
 	if err := s.loadVersion(version, upgrades); err != nil {
 		return err
 	}
 
-	if err := s.pruningManager.PruneKVStores(removedKVStores); err != nil {
-		return fmt.Errorf("failed to set pruned KVStores: %w", err)
-	}
 	// if the state storage implements the UpgradableDatabase interface, prune the
 	// old store keys
 	upgradableDatabase, ok := s.stateStorage.(store.UpgradableDatabase)
 	if ok {
-		for _, storeKey := range removedStoreKeys {
-			if err := upgradableDatabase.PruneStoreKey([]byte(storeKey)); err != nil {
-				return fmt.Errorf("failed to prune store key %s: %w", storeKey, err)
-			}
+		if err := upgradableDatabase.PruneStoreKeys(removedStoreKeys, version); err != nil {
+			return fmt.Errorf("failed to prune store keys %v: %w", removedStoreKeys, err)
 		}
 	}
 

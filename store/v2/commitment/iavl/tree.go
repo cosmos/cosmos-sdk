@@ -96,7 +96,8 @@ func (t *IavlTree) Get(version uint64, key []byte) ([]byte, error) {
 
 // GetLatestVersion returns the latest version of the tree.
 func (t *IavlTree) GetLatestVersion() (uint64, error) {
-	return uint64(t.tree.Version()), nil
+	v, err := t.tree.GetLatestVersion()
+	return uint64(v), err
 }
 
 // SetInitialVersion sets the initial version of the database.

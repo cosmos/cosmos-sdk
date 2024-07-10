@@ -6,6 +6,7 @@ import (
 	"io"
 	"math"
 	"sort"
+	"sync"
 
 	protoio "github.com/cosmos/gogoproto/io"
 
@@ -43,7 +44,7 @@ type CommitStore struct {
 	multiTrees map[string]Tree
 
 	mountTreeFn MountTreeFn
-	oldTrees    map[string]Tree
+	oldTrees    sync.Map
 }
 
 // NewCommitStore creates a new CommitStore instance.
@@ -53,7 +54,7 @@ func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, mountT
 		multiTrees:  trees,
 		metadata:    NewMetadataStore(db),
 		mountTreeFn: mountTreeFn,
-		oldTrees:    make(map[string]Tree),
+		oldTrees:    sync.Map{},
 	}, nil
 }
 
@@ -132,12 +133,14 @@ func (c *CommitStore) LoadVersionAndUpgrade(targetVersion uint64, upgrades *core
 	}
 
 	newStoreKeys := make([]string, 0, len(c.multiTrees))
+	removedStoreKeys := make([]string, 0)
 	for _, storeKey := range storeKeys {
 		// If it has been deleted, remove the tree.
 		if upgrades.IsDeleted(storeKey) {
 			if err := removeTree(storeKey); err != nil {
 				return err
 			}
+			removedStoreKeys = append(removedStoreKeys, storeKey)
 			continue
 		}
 
@@ -155,8 +158,13 @@ func (c *CommitStore) LoadVersionAndUpgrade(targetVersion uint64, upgrades *core
 			if err := c.migrateKVStore(oldKey, storeKey); err != nil {
 				return err
 			}
+			removedStoreKeys = append(removedStoreKeys, oldKey)
 		}
 		newStoreKeys = append(newStoreKeys, storeKey)
+	}
+
+	if err := c.metadata.flushRemovedStoreKeys(targetVersion, removedStoreKeys); err != nil {
+		return err
 	}
 
 	return c.loadVersion(targetVersion, newStoreKeys)
@@ -322,13 +330,16 @@ func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]p
 	if !ok {
 		// If the tree is not found, it means the store is an old store that has been
 		// deleted or renamed. We should use the old tree to get the proof.
-		if tree, ok = c.oldTrees[rawStoreKey]; !ok {
+		v, ok := c.oldTrees.Load(rawStoreKey)
+		if !ok {
 			var err error
 			tree, err = c.mountTreeFn(rawStoreKey)
 			if err != nil {
 				return nil, fmt.Errorf("store %s not found: %w", storeKey, err)
 			}
-			c.oldTrees[rawStoreKey] = tree
+			c.oldTrees.Store(rawStoreKey, tree)
+		} else {
+			tree = v.(Tree)
 		}
 	}
 
@@ -371,14 +382,83 @@ func (c *CommitStore) Prune(version uint64) (ferr error) {
 	// prune the metadata
 	for v := version; v > 0; v-- {
 		if err := c.metadata.deleteCommitInfo(v); err != nil {
-			return err
+			ferr = errors.Join(ferr, err)
 		}
 	}
-
+	// prune the trees
 	for _, tree := range c.multiTrees {
 		if err := tree.Prune(version); err != nil {
 			ferr = errors.Join(ferr, err)
 		}
+	}
+	// prune the removed store keys
+	if err := c.pruneRemovedStoreKeys(version); err != nil {
+		ferr = errors.Join(ferr, err)
+	}
+
+	return ferr
+}
+
+func (c *CommitStore) pruneRemovedStoreKeys(version uint64) (ferr error) {
+	removedStoreKeys, err := c.metadata.getRemovedStoreKeys(version)
+	if err != nil {
+		ferr = errors.Join(ferr, err)
+	}
+	for _, storeKey := range removedStoreKeys {
+		tree, err := c.mountTreeFn(storeKey)
+		if err != nil {
+			ferr = errors.Join(ferr, err)
+			continue
+		}
+
+		clearKVStore := func(kvStore corestore.KVStoreWithBatch) (err error) {
+			batch := kvStore.NewBatch()
+			iter, err := kvStore.Iterator(nil, nil)
+			if err != nil {
+				return err
+			}
+			defer func() {
+				err = iter.Close()
+				err = batch.Close()
+			}()
+
+			for ; iter.Valid(); iter.Next() {
+				if err := batch.Delete(iter.Key()); err != nil {
+					return err
+				}
+				bs, err := batch.GetByteSize()
+				if err != nil {
+					return err
+				}
+				if bs > batchFlushThreshold {
+					if err := batch.Write(); err != nil {
+						return err
+					}
+					if err := batch.Close(); err != nil {
+						return err
+					}
+					batch = kvStore.NewBatch()
+				}
+			}
+			if err := batch.Write(); err != nil {
+				return err
+			}
+			if err := batch.Close(); err != nil {
+				return err
+			}
+			return nil
+		}
+
+		if kvStoreGetter, ok := tree.(KVStoreGetter); ok {
+			kvStore := kvStoreGetter.GetKVStoreWithBatch()
+			if err := clearKVStore(kvStore); err != nil {
+				ferr = errors.Join(ferr, err)
+			}
+		}
+	}
+
+	if err := c.metadata.deleteRemovedStoreKeys(removedStoreKeys, version); err != nil {
+		ferr = errors.Join(ferr, err)
 	}
 
 	return ferr

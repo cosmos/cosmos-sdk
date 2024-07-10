@@ -665,20 +665,6 @@ func (s *StorageTestSuite) TestUpgradable() {
 		}
 	}
 
-	// prune store1
-	err = ss.PruneStoreKey([]byte(storeKeys[0]))
-	s.Require().NoError(err)
-	// skip the test of RocksDB
-	if !slices.Contains(s.SkipTests, "TestUpgradable_Prune") {
-		for v := uint64(1); v <= uptoVersion; v++ {
-			for i := 0; i < keyCount; i++ {
-				bz, err := ss.Get([]byte(storeKeys[0]), v, []byte(fmt.Sprintf("key%03d", i)))
-				s.Require().NoError(err)
-				s.Require().Nil(bz)
-			}
-		}
-	}
-
 	// migrate store2
 	newStoreKey := "mstore2"
 	err = ss.MigrateStoreKey([]byte(storeKeys[1]), []byte(newStoreKey))
@@ -689,6 +675,35 @@ func (s *StorageTestSuite) TestUpgradable() {
 			s.T().Logf("version: %d, key: %s, value: %s\n", v, fmt.Sprintf("key%03d", i), string(bz))
 			s.Require().NoError(err)
 			s.Require().Equal([]byte(fmt.Sprintf("val%03d-%03d", i, v)), bz)
+		}
+	}
+
+	// prune storekeys store1
+	err = ss.PruneStoreKeys([]string{storeKeys[0]}, uptoVersion)
+	s.Require().NoError(err)
+
+	removedStoreKeys := []string{storeKeys[0], storeKeys[2]}
+	// should be able to query before Prune for removed storeKeys
+	for _, storeKey := range removedStoreKeys {
+		for v := uint64(1); v <= uptoVersion; v++ {
+			for i := 0; i < keyCount; i++ {
+				bz, err := ss.Get([]byte(storeKey), v, []byte(fmt.Sprintf("key%03d", i)))
+				s.Require().NoError(err)
+				s.Require().Equal([]byte(fmt.Sprintf("val%03d-%03d", i, v)), bz)
+			}
+		}
+	}
+	s.Require().NoError(ss.Prune(uptoVersion))
+	// should not be able to query after Prune
+	// skip the test of RocksDB
+	if !slices.Contains(s.SkipTests, "TestUpgradable_Prune") {
+		for _, storeKey := range removedStoreKeys {
+			for v := uint64(1); v <= uptoVersion; v++ {
+				for i := 0; i < keyCount; i++ {
+					_, err := ss.Get([]byte(storeKey), v, []byte(fmt.Sprintf("key%03d", i)))
+					s.Require().Error(err)
+				}
+			}
 		}
 	}
 }

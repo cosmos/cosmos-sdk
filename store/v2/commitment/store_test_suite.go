@@ -327,4 +327,17 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 			s.Require().NotNil(proof)
 		}
 	}
+
+	// prune the old stores
+	s.Require().NoError(commitStore.Prune(latestVersion))
+
+	// GetProof should fail for the old stores
+	for _, storeKey := range []string{storeKey1, storeKey3} {
+		for i := uint64(1); i <= latestVersion; i++ {
+			for j := 0; j < kvCount; j++ {
+				_, err := commitStore.GetProof([]byte(storeKey), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
+				s.Require().Error(err)
+			}
+		}
+	}
 }

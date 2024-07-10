@@ -28,8 +28,8 @@ type VersionedDatabase interface {
 // UpgradableDatabase defines an API for a versioned database that allows storeKey
 // upgrades.
 type UpgradableDatabase interface {
-	// PruneStoreKey prunes all data associated with the given storeKey.
-	PruneStoreKey(storeKey []byte) error
+	// PruneStoreKeys prunes all data associated with the given storeKeys.
+	PruneStoreKeys(storeKeys []string, version uint64) error
 	// MigrateStoreKey upgrades the storeKey from the old to the new storeKey.
 	MigrateStoreKey(oldStoreKey, newStoreKey []byte) error
 }

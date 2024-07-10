@@ -982,7 +982,7 @@ func (suite *KeeperTestSuite) TestWithdrawExpiredFunds() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0)), res.WithdrawnAllocatedFund)
 
-	// cancelling an expired continuous fund, won't error
+	// canceling an expired continuous fund, won't error
 	res, err = suite.msgServer.CancelContinuousFund(suite.ctx, &types.MsgCancelContinuousFund{
 		Authority:        suite.poolKeeper.GetAuthority(),
 		RecipientAddress: recipientStrAddr,

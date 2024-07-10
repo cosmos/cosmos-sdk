@@ -9,12 +9,10 @@ import (
 
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	"github.com/hashicorp/consul/sdk/freeport"
-	"gotest.tools/v3/golden"
-
 	// this is where we get our pgx database driver from
 	_ "github.com/jackc/pgx/v5/stdlib"
-
 	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/golden"
 
 	"cosmossdk.io/indexer/postgres"
 	"cosmossdk.io/indexer/postgres/internal/testdata"

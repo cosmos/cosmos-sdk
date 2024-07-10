@@ -14,8 +14,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"sigs.k8s.io/yaml"
 
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig/v1alpha1"
 	internal "cosmossdk.io/depinject/internal/appconfig"
@@ -112,10 +110,14 @@ func Compose(appConfig gogoproto.Message) depinject.Config {
 		init, ok := modules[msgName]
 		if !ok {
 			if msgDesc, err := gogoproto.HybridResolver.FindDescriptorByName(protoreflect.FullName(msgName)); err == nil {
-				modDesc := protov2.GetExtension(msgDesc.Options(), appv1alpha1.E_Module).(*appv1alpha1.ModuleDescriptor)
+				modDesc, err := internal.GetModuleDescriptor(msgDesc)
+				if err != nil {
+					return depinject.Error(err)
+				}
+
 				if modDesc == nil {
 					return depinject.Error(fmt.Errorf("no module registered for type URL %s and that protobuf type does not have the option %s\n\n%s",
-						module.Config.TypeUrl, appv1alpha1.E_Module.TypeDescriptor().FullName(), dumpRegisteredModules(modules)))
+						module.Config.TypeUrl, v1alpha1.E_Module.Name, dumpRegisteredModules(modules)))
 				}
 
 				return depinject.Error(fmt.Errorf("no module registered for type URL %s, did you forget to import %s: find more information on how to make a module ready for app wiring: https://docs.cosmos.network/main/building-modules/depinject\n\n%s",

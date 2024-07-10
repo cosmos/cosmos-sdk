@@ -1,19 +1,36 @@
 package appdata
 
-import "context"
+import (
+	"context"
+	"sync"
+)
+
+// AsyncListenerOptions are options for async listeners and listener mux's.
+type AsyncListenerOptions struct {
+	// Context is the context whose Done() channel listeners use will use to listen for completion to close their
+	// goroutine. If it is nil, then context.Background() will be used and goroutines may be leaked.
+	Context context.Context
+
+	// BufferSize is the buffer size of the channels to use. It defaults to 0.
+	BufferSize int
+
+	// DoneWaitGroup is an optional wait-group that listener goroutines will notify via Add(1) when they are started
+	// and Done() after they are cancelled and completed.
+	DoneWaitGroup *sync.WaitGroup
+}
 
 // AsyncListenerMux returns a listener that forwards received events to all the provided listeners asynchronously
 // with each listener processing in a separate go routine. All callbacks in the returned listener will return nil
 // except for Commit which will return an error or nil once all listeners have processed the commit. The context
 // is used to signal that the listeners should stop listening and return. bufferSize is the size of the buffer for the
 // channels used to send events to the listeners.
-func AsyncListenerMux(listeners []Listener, bufferSize int, ctx context.Context) Listener {
+func AsyncListenerMux(opts AsyncListenerOptions, listeners ...Listener) Listener {
 	asyncListeners := make([]Listener, len(listeners))
 	commitChans := make([]chan error, len(listeners))
 	for i, l := range listeners {
 		commitChan := make(chan error)
 		commitChans[i] = commitChan
-		asyncListeners[i] = AsyncListener(l, bufferSize, commitChan, ctx)
+		asyncListeners[i] = AsyncListener(opts, commitChan, l)
 	}
 	mux := ListenerMux(asyncListeners...)
 	muxCommit := mux.Commit
@@ -45,11 +62,20 @@ func AsyncListenerMux(listeners []Listener, bufferSize int, ctx context.Context)
 // bufferSize is the size of the buffer for the channel that is used to send events to the listener.
 // Instead of using AsyncListener directly, it is recommended to use AsyncListenerMux which does coordination directly
 // via its Commit callback.
-func AsyncListener(listener Listener, bufferSize int, commitChan chan<- error, ctx context.Context) Listener {
-	packetChan := make(chan Packet, bufferSize)
+func AsyncListener(opts AsyncListenerOptions, commitChan chan<- error, listener Listener) Listener {
+	packetChan := make(chan Packet, opts.BufferSize)
 	res := Listener{}
+	ctx := opts.Context
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	done := ctx.Done()
 
 	go func() {
+		if opts.DoneWaitGroup != nil {
+			opts.DoneWaitGroup.Add(1)
+		}
+
 		var err error
 		for {
 			select {
@@ -73,8 +99,11 @@ func AsyncListener(listener Listener, bufferSize int, commitChan chan<- error, c
 					}
 				}
 
-			case <-ctx.Done():
+			case <-done:
 				close(packetChan)
+				if opts.DoneWaitGroup != nil {
+					opts.DoneWaitGroup.Done()
+				}
 				return
 			}
 		}

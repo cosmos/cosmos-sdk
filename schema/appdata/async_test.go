@@ -3,12 +3,13 @@ package appdata
 import (
 	"context"
 	"fmt"
+	"sync"
 	"testing"
 )
 
 func TestAsyncListenerMux(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
-		listener := AsyncListenerMux([]Listener{{}, {}}, 16, context.Background())
+		listener := AsyncListenerMux(AsyncListenerOptions{}, Listener{}, Listener{})
 
 		if listener.InitializeModuleData != nil {
 			t.Error("expected nil")
@@ -34,6 +35,7 @@ func TestAsyncListenerMux(t *testing.T) {
 
 	t.Run("call cancel", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
+		wg := &sync.WaitGroup{}
 		var calls1, calls2 []string
 		listener1 := callCollector(1, func(name string, _ int, _ Packet) {
 			calls1 = append(calls1, name)
@@ -41,7 +43,9 @@ func TestAsyncListenerMux(t *testing.T) {
 		listener2 := callCollector(2, func(name string, _ int, _ Packet) {
 			calls2 = append(calls2, name)
 		})
-		res := AsyncListenerMux([]Listener{listener1, listener2}, 16, ctx)
+		res := AsyncListenerMux(AsyncListenerOptions{
+			BufferSize: 16, Context: ctx, DoneWaitGroup: wg,
+		}, listener1, listener2)
 
 		callAllCallbacksOnces(t, res)
 
@@ -58,15 +62,28 @@ func TestAsyncListenerMux(t *testing.T) {
 		checkExpectedCallOrder(t, calls1, expectedCalls)
 		checkExpectedCallOrder(t, calls2, expectedCalls)
 
+		// cancel and expect the test to finish - if all goroutines aren't canceled the test will hang
 		cancel()
+		wg.Wait()
+	})
 
-		// expect a panic if we try to write to the now closed channels
-		defer func() {
-			if err := recover(); err == nil {
-				t.Fatalf("expected panic")
-			}
-		}()
-		callAllCallbacksOnces(t, res)
+	t.Run("error on commit", func(t *testing.T) {
+		var calls1, calls2 []string
+		listener1 := callCollector(1, func(name string, _ int, _ Packet) {
+			calls1 = append(calls1, name)
+		})
+		listener1.Commit = func(data CommitData) error {
+			return fmt.Errorf("error")
+		}
+		listener2 := callCollector(2, func(name string, _ int, _ Packet) {
+			calls2 = append(calls2, name)
+		})
+		res := AsyncListenerMux(AsyncListenerOptions{}, listener1, listener2)
+
+		err := res.Commit(CommitData{})
+		if err == nil || err.Error() != "error" {
+			t.Fatalf("expected error, got %v", err)
+		}
 	})
 }
 
@@ -74,11 +91,13 @@ func TestAsyncListener(t *testing.T) {
 	t.Run("call cancel", func(t *testing.T) {
 		commitChan := make(chan error)
 		ctx, cancel := context.WithCancel(context.Background())
+		wg := &sync.WaitGroup{}
 		var calls []string
 		listener := callCollector(1, func(name string, _ int, _ Packet) {
 			calls = append(calls, name)
 		})
-		res := AsyncListener(listener, 16, commitChan, ctx)
+		res := AsyncListener(AsyncListenerOptions{BufferSize: 16, Context: ctx, DoneWaitGroup: wg},
+			commitChan, listener)
 
 		callAllCallbacksOnces(t, res)
 
@@ -99,11 +118,9 @@ func TestAsyncListener(t *testing.T) {
 
 		calls = nil
 
+		// expect wait group to return after cancel is called
 		cancel()
-
-		callAllCallbacksOnces(t, res)
-
-		checkExpectedCallOrder(t, calls, nil)
+		wg.Wait()
 	})
 
 	t.Run("error", func(t *testing.T) {
@@ -117,7 +134,7 @@ func TestAsyncListener(t *testing.T) {
 			return fmt.Errorf("error")
 		}
 
-		res := AsyncListener(listener, 16, commitChan, context.Background())
+		res := AsyncListener(AsyncListenerOptions{BufferSize: 16}, commitChan, listener)
 
 		callAllCallbacksOnces(t, res)
 

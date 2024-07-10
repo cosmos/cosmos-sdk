@@ -179,7 +179,7 @@ func (k MsgServer) WithdrawContinuousFund(ctx context.Context, msg *types.MsgWit
 	// withdraw continuous fund
 	withdrawnAmount, err := k.withdrawRecipientFunds(ctx, recipient)
 	if err != nil {
-		return nil, fmt.Errorf("error while withdrawing recipient funds for recipient: %s", msg.RecipientAddress)
+		return nil, fmt.Errorf("error while withdrawing recipient funds for recipient: %w", err)
 	}
 
 	return &types.MsgWithdrawContinuousFundResponse{Amount: withdrawnAmount}, nil
@@ -205,7 +205,7 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 
 	// withdraw funds if any are allocated
 	withdrawnFunds, err := k.withdrawRecipientFunds(ctx, recipient)
-	if err != nil && !errorspkg.Is(err, types.ErrNoRecipientFund) {
+	if err != nil && !errorspkg.Is(err, types.ErrNoRecipientFound) {
 		return nil, fmt.Errorf("error while withdrawing already allocated funds for recipient %s: %w", msg.RecipientAddress, err)
 	}
 

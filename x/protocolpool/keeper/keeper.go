@@ -115,7 +115,7 @@ func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient []byte) (s
 	fundsAllocated, err := k.RecipientFundDistribution.Get(ctx, recipient)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
-			return sdk.Coin{}, types.ErrNoRecipientFund
+			return sdk.Coin{}, types.ErrNoRecipientFound
 		}
 		return sdk.Coin{}, err
 	}

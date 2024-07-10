@@ -96,7 +96,6 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 
 	genState := types.NewGenesisState(cf, budget)
 
-	//
 	balances := k.bankKeeper.GetAllBalances(ctx, k.authKeeper.GetModuleAccount(ctx, types.ProtocolPoolDistrAccount).GetAddress())
 	bondDenom, err := k.stakingKeeper.BondDenom(ctx)
 	if err != nil {

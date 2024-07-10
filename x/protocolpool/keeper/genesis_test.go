@@ -31,6 +31,9 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 		},
 	)
 
+	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).Return(poolDistrAcc)
+	suite.bankKeeper.EXPECT().GetAllBalances(suite.ctx, poolDistrAcc.GetAddress()).Return(sdk.NewCoins(sdk.NewInt64Coin("stake", 1000000)))
+
 	err := suite.poolKeeper.InitGenesis(suite.ctx, gs)
 	suite.Require().NoError(err)
 

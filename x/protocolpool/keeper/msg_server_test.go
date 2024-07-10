@@ -403,7 +403,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 		"recipient with no continuous fund": {
 			recipientAddress: []sdk.AccAddress{recipient},
 			expErr:           true,
-			expErrMsg:        "no continuous fund found for recipient",
+			expErrMsg:        "error while withdrawing recipient funds for recipient: no recipient found",
 		},
 		"funds percentage > 100": {
 			preRun: func() {
@@ -448,7 +448,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 			expErr:           true,
 			expErrMsg:        "error while iterating all the continuous funds: total funds percentage cannot exceed 100",
 		},
-		"expired case": {
+		"expired case with no funds left to withdraw": {
 			preRun: func() {
 				percentage, err := math.LegacyNewDecFromStr("0.2")
 				suite.Require().NoError(err)
@@ -464,7 +464,7 @@ func (suite *KeeperTestSuite) TestWithdrawContinuousFund() {
 			},
 			recipientAddress: []sdk.AccAddress{recipient},
 			expErr:           true,
-			expErrMsg:        "cannot withdraw continuous funds: continuous fund expired for recipient",
+			expErrMsg:        "error while withdrawing recipient funds for recipient: no recipient found",
 		},
 		"valid case with ToDistribute amount zero": {
 			preRun: func() {
@@ -964,8 +964,14 @@ func (suite *KeeperTestSuite) TestWithdrawExpiredFunds() {
 	header.Time = expiration.Add(1 * time.Second)
 	suite.ctx = suite.ctx.WithHeaderInfo(header)
 
-	_, err = suite.msgServer.WithdrawContinuousFund(suite.ctx, &types.MsgWithdrawContinuousFund{RecipientAddress: recipientStrAddr})
-	suite.Require().ErrorContains(err, "continuous fund expired for recipient")
+	// If we keep calling WithdrawContinuousFund, it should not error and return always an amount of 0
+	withdrawRes, err := suite.msgServer.WithdrawContinuousFund(suite.ctx, &types.MsgWithdrawContinuousFund{RecipientAddress: recipientStrAddr})
+	suite.Require().True(withdrawRes.Amount.IsZero())
+	suite.Require().NoError(err)
+
+	withdrawRes, err = suite.msgServer.WithdrawContinuousFund(suite.ctx, &types.MsgWithdrawContinuousFund{RecipientAddress: recipientStrAddr})
+	suite.Require().True(withdrawRes.Amount.IsZero())
+	suite.Require().NoError(err)
 
 	suite.mockStreamFunds(math.NewInt(100000))
 	err = suite.poolKeeper.SetToDistribute(suite.ctx)

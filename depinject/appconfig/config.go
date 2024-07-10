@@ -14,6 +14,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+
 	"cosmossdk.io/depinject"
 	internal "cosmossdk.io/depinject/internal/appconfig"
 )
@@ -51,9 +52,21 @@ func WrapAny(config protoreflect.ProtoMessage) *anypb.Any {
 	return cfg
 }
 
-// Compose composes a v1alpha1 app config into a container option by resolving
-// the required modules and composing their options.
-func Compose(appConfig *appv1alpha1.Config) depinject.Config {
+// Compose composes an app config into a container option by resolving
+// the required modules and composing their options. appConfig should be an instance
+// of cosmos.app.v1alpha1.Config.
+func Compose(appConfig gogoproto.Message) depinject.Config {
+	bz, err := gogoproto.Marshal(appConfig)
+	if err != nil {
+		return depinject.Error(err)
+	}
+
+	var appConfigConcrete appv1alpha1.Config
+	err = gogoproto.Unmarshal(bz, &appConfigConcrete)
+	if err != nil {
+		return depinject.Error(err)
+	}
+
 	opts := []depinject.Config{
 		depinject.Supply(appConfig),
 	}
@@ -63,7 +76,7 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 		return depinject.Error(err)
 	}
 
-	for _, module := range appConfig.Modules {
+	for _, module := range appConfigConcrete.Modules {
 		if module.Name == "" {
 			return depinject.Error(fmt.Errorf("module is missing name"))
 		}
@@ -122,7 +135,7 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 		}
 	}
 
-	for _, binding := range appConfig.GolangBindings {
+	for _, binding := range appConfigConcrete.GolangBindings {
 		opts = append(opts, depinject.BindInterface(binding.InterfaceType, binding.Implementation))
 	}
 

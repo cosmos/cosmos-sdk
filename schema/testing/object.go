@@ -69,7 +69,7 @@ func ObjectInsertGen(objectType schema.ObjectType) *rapid.Generator[schema.Objec
 // ObjectUpdateGen generates object updates that are valid for updates using the provided state map as a source
 // of valid existing keys.
 func ObjectUpdateGen(objectType schema.ObjectType, state *btree.Map[string, schema.ObjectUpdate]) *rapid.Generator[schema.ObjectUpdate] {
-	keyGen := KeyFieldsValueGen(objectType.KeyFields)
+	keyGen := ObjectKeyGen(objectType.KeyFields)
 
 	if len(objectType.ValueFields) == 0 {
 		// special case where there are no value fields,
@@ -95,8 +95,8 @@ func ObjectUpdateGen(objectType schema.ObjectType, state *btree.Map[string, sche
 			return update
 		})
 	} else {
-		insertValueGen := ValueFieldsValueGen(objectType.ValueFields, false)
-		updateValueGen := ValueFieldsValueGen(objectType.ValueFields, true)
+		insertValueGen := ObjectValueGen(objectType.ValueFields, false)
+		updateValueGen := ObjectValueGen(objectType.ValueFields, true)
 		return rapid.Custom(func(t *rapid.T) schema.ObjectUpdate {
 			update := schema.ObjectUpdate{
 				TypeName: objectType.Name,

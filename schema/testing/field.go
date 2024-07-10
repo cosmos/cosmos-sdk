@@ -100,8 +100,8 @@ func baseFieldValue(field schema.Field) *rapid.Generator[any] {
 	}
 }
 
-// KeyFieldsValueGen generates a value that is valid for the provided key fields.
-func KeyFieldsValueGen(keyFields []schema.Field) *rapid.Generator[any] {
+// ObjectKeyGen generates a value that is valid for the provided object key fields.
+func ObjectKeyGen(keyFields []schema.Field) *rapid.Generator[any] {
 	if len(keyFields) == 0 {
 		return rapid.Just[any](nil)
 	}
@@ -124,12 +124,12 @@ func KeyFieldsValueGen(keyFields []schema.Field) *rapid.Generator[any] {
 	})
 }
 
-// ValueFieldsValueGen generates a value that is valid for the provided value fields. The
+// ObjectValueGen generates a value that is valid for the provided object value fields. The
 // forUpdate parameter indicates whether the generator should generate value that
 // are valid for insertion (in the case forUpdate is false) or for update (in the case forUpdate is true).
 // Values that are for update may skip some fields in a ValueUpdates instance whereas values for insertion
 // will always contain all values.
-func ValueFieldsValueGen(valueFields []schema.Field, forUpdate bool) *rapid.Generator[any] {
+func ObjectValueGen(valueFields []schema.Field, forUpdate bool) *rapid.Generator[any] {
 	// special case where there are no value fields
 	// we shouldn't end up here, but just in case
 	if len(valueFields) == 0 {

@@ -6,6 +6,8 @@ import (
 	"cosmossdk.io/schema"
 )
 
+// ExampleAppSchema is an example app schema that intends to cover all schema cases that indexers should handle
+// that can be used in reproducible unit testing and property based testing.
 var ExampleAppSchema = map[string]schema.ModuleSchema{
 	"all_kinds": mkAllKindsModule(),
 	"test_cases": {

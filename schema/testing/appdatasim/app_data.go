@@ -11,15 +11,18 @@ import (
 	"cosmossdk.io/schema/testing/statesim"
 )
 
-// Options are the options for creating an app data Simulator.
+// Options are the options for creating an app data simulator.
 type Options struct {
-	AppSchema          map[string]schema.ModuleSchema
-	Listener           appdata.Listener
-	EventAlignedWrites bool
-	StateSimOptions    statesim.Options
-	StartBlockDataGen  *rapid.Generator[appdata.StartBlockData]
-	TxDataGen          *rapid.Generator[appdata.TxData]
-	EventDataGen       *rapid.Generator[appdata.EventData]
+	// AppSchema is the schema to use. If it is nil, then schematesting.ExampleAppSchema
+	// will be used.
+	AppSchema map[string]schema.ModuleSchema
+
+	// Listener is the listener to output appdata updates to.
+	Listener appdata.Listener
+
+	// StateSimOptions are the options to pass to the statesim.App instance used under
+	// the hood.
+	StateSimOptions statesim.Options
 }
 
 // Simulator simulates a stream of app data.

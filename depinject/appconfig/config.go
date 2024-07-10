@@ -68,6 +68,8 @@ func WrapAny(config protoreflect.ProtoMessage) *anypb.Any {
 func Compose(appConfig gogoproto.Message) depinject.Config {
 	appConfigConcrete, ok := appConfig.(*v1alpha1.Config)
 	if !ok {
+		// we convert any other proto type that was passed (such as an api module type) to the concrete
+		// type we're using here
 		appConfigConcrete = &v1alpha1.Config{}
 		bz, err := gogoproto.Marshal(appConfig)
 		if err != nil {

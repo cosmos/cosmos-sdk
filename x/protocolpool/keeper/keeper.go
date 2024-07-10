@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -263,8 +264,14 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 		}
 	}
 
-	// update the recipient fund distribution
-	for recipient, amount := range toDistribute {
+	// update the recipient fund distribution, first get the keys and sort them
+	recipients := make([]string, 0, len(toDistribute))
+	for k2 := range toDistribute {
+		recipients = append(recipients, k2)
+	}
+	sort.Strings(recipients)
+
+	for _, recipient := range recipients {
 		// Set funds to be claimed
 		bzAddr, err := k.authKeeper.AddressCodec().StringToBytes(recipient)
 		if err != nil {
@@ -280,7 +287,7 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 			}
 		}
 
-		amount = toClaim.Add(amount)
+		amount := toClaim.Add(toDistribute[recipient])
 		if err = k.RecipientFundDistribution.Set(ctx, bzAddr, amount); err != nil {
 			return err
 		}

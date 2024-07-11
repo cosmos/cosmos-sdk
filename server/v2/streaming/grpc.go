@@ -14,11 +14,12 @@ type GRPCClient struct {
 	client ListenerServiceClient
 }
 
-// ListenEndBlock listens to end block request and responses.
-// In addition, it retrieves a types.Context from a context.Context instance.
-// It panics if a types.Context was not properly attached.
-// When the node is configured to stop on listening errors,
-// it will terminate immediately and exit with a non-zero code.
+// ListenDeliverBlock listens for block delivery requests and responses.
+// It retrieves a types.Context from the provided context.Context.
+// If the node is configured to stop on listening errors, it will terminate
+// and exit with a non-zero code upon encountering an error.
+//
+// Panics if a types.Context is not properly attached to the provided context.Context.
 func (m *GRPCClient) ListenDeliverBlock(goCtx context.Context, req ListenDeliverBlockRequest) error {
 	ctx := goCtx.(Context)
 	sm := ctx.StreamingManager()
@@ -30,11 +31,12 @@ func (m *GRPCClient) ListenDeliverBlock(goCtx context.Context, req ListenDeliver
 	return err
 }
 
-// ListenCommit listens to commit responses and state changes for the current block.
-// In addition, it retrieves a types.Context from a context.Context instance.
-// It panics if a types.Context was not properly attached.
-// When the node is configured to stop on listening errors,
-// it will terminate immediately and exit with a non-zero code.
+// ListenStateChanges listens for state changes in the current block.
+// It retrieves a types.Context from the provided context.Context.
+// If the node is configured to stop on listening errors, it will terminate
+// and exit with a non-zero code upon encountering an error.
+//
+// Panics if a types.Context is not properly attached to the provided context.Context.
 func (m *GRPCClient) ListenStateChanges(goCtx context.Context, changeSet []*StoreKVPair) error {
 	ctx := goCtx.(Context)
 	sm := ctx.StreamingManager()

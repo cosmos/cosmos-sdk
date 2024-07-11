@@ -330,7 +330,11 @@ func (m *MM[T]) EndBlock() (
 			}
 		}
 
-		return validatorUpdates, nil
+		// Reset validatorUpdates
+		res := validatorUpdates
+		validatorUpdates = []appmodulev2.ValidatorUpdate{}
+
+		return res, nil
 	}
 
 	return endBlockFunc, valUpdateFunc

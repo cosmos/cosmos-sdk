@@ -5,7 +5,6 @@ import (
 	"github.com/spf13/viper"
 
 	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/cometbft/types"
 )
 
@@ -41,12 +40,19 @@ type Config struct {
 	Addr       string `mapstructure:"addr" toml:"addr"`
 	Standalone bool   `mapstructure:"standalone" toml:"standalone"`
 	Trace      bool   `mapstructure:"trace" toml:"trace"`
-
-	GrpcConfig grpc.Config
-
-	// MempoolConfig
-	CmtConfig *cmtcfg.Config
-
 	// Must be set by the application to grant authority to the consensus engine to send messages to the consensus module
 	ConsensusAuthority string
+
+	// config.toml
+	CmtConfig *cmtcfg.Config
+}
+
+// CmtCfgOption is a function that allows to overwrite the default server configuration.
+type CmtCfgOption func(*cmtcfg.Config)
+
+// OverwriteDefaultCometConfig overwrites the default comet config with the new config.
+func OverwriteDefaultCometConfig(newCfg *cmtcfg.Config) CmtCfgOption {
+	return func(cfg *cmtcfg.Config) { // nolint:staticcheck // We want to overwrite everything
+		cfg = newCfg // nolint:ineffassign,staticcheck // We want to overwrite everything
+	}
 }

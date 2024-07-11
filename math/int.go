@@ -521,7 +521,7 @@ func (i *Int) Size() int {
 func (i Int) MarshalAmino() ([]byte, error)   { return i.Marshal() }
 func (i *Int) UnmarshalAmino(bz []byte) error { return i.Unmarshal(bz) }
 
-// intended to be used with require/assert:  require.True(IntEq(...))
+// IntEq intended to be used with require/assert:  require.True(IntEq(...))
 func IntEq(t *testing.T, exp, got Int) (*testing.T, bool, string, string, string) {
 	t.Helper()
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()

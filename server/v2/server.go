@@ -43,7 +43,7 @@ type HasStartFlags interface {
 
 var _ ServerComponent[AppI[transaction.Tx], transaction.Tx] = (*Server[AppI[transaction.Tx], transaction.Tx])(nil)
 
-// Configs returns a viper instance of the config file
+// ReadConfig returns a viper instance of the config file
 func ReadConfig(configPath string) (*viper.Viper, error) {
 	v := viper.New()
 	v.SetConfigType("toml")
@@ -168,7 +168,8 @@ func (s *Server[AppT, T]) Configs() map[string]any {
 	return cfgs
 }
 
-// Configs returns all configs of all server components.
+// Init initializes all server components with the provided application, configuration, and logger.
+// It returns an error if any component fails to initialize.
 func (s *Server[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Logger) error {
 	var components []ServerComponent[AppT, T]
 	for _, mod := range s.components {
@@ -217,7 +218,7 @@ func (s *Server[AppT, T]) WriteConfig(configPath string) error {
 	return nil
 }
 
-// Flags returns all flags of all server components.
+// StartFlags returns all flags of all server components.
 func (s *Server[AppT, T]) StartFlags() []*pflag.FlagSet {
 	flags := []*pflag.FlagSet{}
 	for _, mod := range s.components {

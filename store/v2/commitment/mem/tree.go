@@ -3,6 +3,7 @@ package mem
 import (
 	ics23 "github.com/cosmos/ics23/go"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/db"
 )
@@ -14,8 +15,19 @@ type Tree struct {
 	*db.MemDB
 }
 
-func (t *Tree) Remove(key []byte) error {
-	return t.MemDB.Delete(key)
+func (t *Tree) Write(pairs corestore.KVPairs) error {
+	for _, pair := range pairs {
+		if pair.Remove {
+			if err := t.MemDB.Delete(pair.Key); err != nil {
+				return err
+			}
+		} else {
+			if err := t.MemDB.Set(pair.Key, pair.Value); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (t *Tree) GetLatestVersion() uint64 {

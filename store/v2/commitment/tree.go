@@ -6,6 +6,7 @@ import (
 
 	ics23 "github.com/cosmos/ics23/go"
 
+	coresstore "cosmossdk.io/core/store"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
@@ -14,8 +15,9 @@ var ErrorExportDone = errors.New("export is complete")
 
 // Tree is the interface that wraps the basic Tree methods.
 type Tree interface {
-	Set(key, value []byte) error
-	Remove(key []byte) error
+	// Write writes a batch of key-value pairs to the tree.
+	Write(pairs coresstore.KVPairs) error
+	// GetLatestVersion returns the latest version of the tree.
 	GetLatestVersion() uint64
 
 	// Hash returns the hash of the latest saved version of the tree.
@@ -24,9 +26,13 @@ type Tree interface {
 	// WorkingHash returns the working hash of the tree.
 	WorkingHash() []byte
 
+	// LoadVersion loads the tree at the given version.
 	LoadVersion(version uint64) error
+	// Commit commits the current state to the tree.
 	Commit() ([]byte, uint64, error)
+	// SetInitialVersion sets the initial version of the tree.
 	SetInitialVersion(version uint64) error
+	// GetProof returns a proof for the given key and version.
 	GetProof(version uint64, key []byte) (*ics23.CommitmentProof, error)
 
 	// Get attempts to retrieve a value from the tree for a given version.

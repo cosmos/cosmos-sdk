@@ -1,7 +1,9 @@
 package iavl
 
 import (
+	"bytes"
 	"fmt"
+	"sort"
 
 	"github.com/cosmos/iavl"
 	ics23 "github.com/cosmos/ics23/go"
@@ -20,30 +22,40 @@ var (
 
 // IavlTree is a wrapper around iavl.MutableTree.
 type IavlTree struct {
-	tree *iavl.MutableTree
+	tree               *iavl.MutableTree
+	enableSortedInsert bool
 }
 
 // NewIavlTree creates a new IavlTree instance.
 func NewIavlTree(db corestore.KVStoreWithBatch, logger log.Logger, cfg *Config) *IavlTree {
 	tree := iavl.NewMutableTree(dbm.NewWrapper(db), cfg.CacheSize, cfg.SkipFastStorageUpgrade, logger, iavl.AsyncPruningOption(true))
 	return &IavlTree{
-		tree: tree,
+		tree:               tree,
+		enableSortedInsert: cfg.EnableSortedInsert,
 	}
 }
 
-// Remove removes the given key from the tree.
-func (t *IavlTree) Remove(key []byte) error {
-	_, _, err := t.tree.Remove(key)
-	if err != nil {
-		return err
+// Write writes a batch of key-value pairs to the tree.
+func (t *IavlTree) Write(pairs corestore.KVPairs) error {
+	if t.enableSortedInsert {
+		// Sort the pairs before writing them to the tree.
+		sort.Slice(pairs, func(i, j int) bool {
+			return bytes.Compare(pairs[i].Key, pairs[j].Key) < 0
+		})
+	}
+
+	for _, pair := range pairs {
+		if pair.Remove {
+			if _, _, err := t.tree.Remove(pair.Key); err != nil {
+				return err
+			}
+		} else {
+			if _, err := t.tree.Set(pair.Key, pair.Value); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
-}
-
-// Set sets the given key-value pair in the tree.
-func (t *IavlTree) Set(key, value []byte) error {
-	_, err := t.tree.Set(key, value)
-	return err
 }
 
 // Hash returns the hash of the latest saved version of the tree.

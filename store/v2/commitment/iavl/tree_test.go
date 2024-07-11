@@ -44,9 +44,11 @@ func TestIavlTree(t *testing.T) {
 	require.Equal(t, uint64(0), initVersion)
 
 	// write a batch of version 1
-	require.NoError(t, tree.Set([]byte("key1"), []byte("value1")))
-	require.NoError(t, tree.Set([]byte("key2"), []byte("value2")))
-	require.NoError(t, tree.Set([]byte("key3"), []byte("value3")))
+	require.NoError(t, tree.Write(corestore.KVPairs{
+		{Key: []byte("key1"), Value: []byte("value1")},
+		{Key: []byte("key2"), Value: []byte("value2")},
+		{Key: []byte("key3"), Value: []byte("value3")},
+	}))
 
 	workingHash := tree.WorkingHash()
 	require.NotNil(t, workingHash)
@@ -69,10 +71,12 @@ func TestIavlTree(t *testing.T) {
 	require.Nil(t, bz)
 
 	// write a batch of version 2
-	require.NoError(t, tree.Set([]byte("key4"), []byte("value4")))
-	require.NoError(t, tree.Set([]byte("key5"), []byte("value5")))
-	require.NoError(t, tree.Set([]byte("key6"), []byte("value6")))
-	require.NoError(t, tree.Remove([]byte("key1"))) // delete key1
+	require.NoError(t, tree.Write(corestore.KVPairs{
+		{Key: []byte("key4"), Value: []byte("value4")},
+		{Key: []byte("key5"), Value: []byte("value5")},
+		{Key: []byte("key6"), Value: []byte("value6")},
+		{Key: []byte("key1"), Remove: true},
+	}))
 	version2Hash := tree.WorkingHash()
 	require.NotNil(t, version2Hash)
 	commitHash, version, err = tree.Commit()
@@ -90,8 +94,10 @@ func TestIavlTree(t *testing.T) {
 	require.NotNil(t, proof.GetNonexist())
 
 	// write a batch of version 3
-	require.NoError(t, tree.Set([]byte("key7"), []byte("value7")))
-	require.NoError(t, tree.Set([]byte("key8"), []byte("value8")))
+	require.NoError(t, tree.Write(corestore.KVPairs{
+		{Key: []byte("key7"), Value: []byte("value7")},
+		{Key: []byte("key8"), Value: []byte("value8")},
+	}))
 	require.NoError(t, err)
 	_, _, err = tree.Commit()
 	require.NoError(t, err)
@@ -116,4 +122,38 @@ func TestIavlTree(t *testing.T) {
 
 	// close the db
 	require.NoError(t, tree.Close())
+}
+
+func TestIavlTreeWithSortedInsert(t *testing.T) {
+	// generate a new tree
+	cfg := DefaultConfig()
+	cfg.EnableSortedInsert = true
+	db := dbm.NewMemDB()
+	tree := NewIavlTree(db, log.NewNopLogger(), cfg)
+	require.NotNil(t, tree)
+
+	// write a batch of version 1
+	require.NoError(t, tree.Write(corestore.KVPairs{
+		{Key: []byte("key2"), Value: []byte("value2")},
+		{Key: []byte("key1"), Value: []byte("value1")},
+		{Key: []byte("key4"), Value: []byte("value4")},
+		{Key: []byte("key3"), Value: []byte("value3")},
+	}))
+
+	// commit the batch
+	commitHash, _, err := tree.Commit()
+	require.NoError(t, err)
+
+	// replay against new tree
+	tree1 := NewIavlTree(dbm.NewMemDB(), log.NewNopLogger(), DefaultConfig())
+	require.NoError(t, tree1.Write(corestore.KVPairs{
+		{Key: []byte("key1"), Value: []byte("value1")},
+		{Key: []byte("key2"), Value: []byte("value2")},
+		{Key: []byte("key3"), Value: []byte("value3")},
+		{Key: []byte("key4"), Value: []byte("value4")},
+	}))
+	commitHash1, _, err := tree1.Commit()
+	require.NoError(t, err)
+
+	require.Equal(t, commitHash, commitHash1)
 }

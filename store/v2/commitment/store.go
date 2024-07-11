@@ -53,14 +53,9 @@ func (c *CommitStore) WriteChangeset(cs *corestore.Changeset) error {
 		if !ok {
 			return fmt.Errorf("store key %s not found in multiTrees", key)
 		}
-		for _, kv := range pairs.StateChanges {
-			if kv.Remove {
-				if err := tree.Remove(kv.Key); err != nil {
-					return err
-				}
-			} else if err := tree.Set(kv.Key, kv.Value); err != nil {
-				return err
-			}
+
+		if err := tree.Write(pairs.StateChanges); err != nil {
+			return err
 		}
 	}
 

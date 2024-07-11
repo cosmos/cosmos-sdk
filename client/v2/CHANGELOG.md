@@ -36,6 +36,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v2.0.0-beta.3] - 2024-07-11
+
 ### Features
 
 * [#20771](https://github.com/cosmos/cosmos-sdk/pull/20771) Add `GetNodeHomeDirectory` helper in `client/v2/helpers`.

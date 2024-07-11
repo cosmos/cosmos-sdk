@@ -87,8 +87,8 @@ const (
 	JSONKind
 )
 
-// MAX_VALID_KIND is the maximum valid kind value.
-const MAX_VALID_KIND = JSONKind
+// MaxValidKind is the maximum valid kind value.
+const MaxValidKind = JSONKind
 
 const (
 	// IntegerFormat is a regex that describes the format integer number strings must match. It specifies

@@ -8,7 +8,7 @@ import (
 )
 
 func TestKind_Validate(t *testing.T) {
-	for kind := InvalidKind + 1; kind <= MAX_VALID_KIND; kind++ {
+	for kind := InvalidKind + 1; kind <= MaxValidKind; kind++ {
 		if err := kind.Validate(); err != nil {
 			t.Errorf("expected valid kind %s to pass validation, got: %v", kind, err)
 		}
@@ -92,7 +92,7 @@ func TestKind_ValidateValueType(t *testing.T) {
 	}
 
 	// nils get rejected
-	for kind := InvalidKind + 1; kind <= MAX_VALID_KIND; kind++ {
+	for kind := InvalidKind + 1; kind <= MaxValidKind; kind++ {
 		if err := kind.ValidateValueType(nil); err == nil {
 			t.Errorf("expected nil value to fail validation for kind %s", kind)
 		}

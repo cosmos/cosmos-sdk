@@ -1,6 +1,7 @@
 package serverv2
 
 import (
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
 
 	coreapp "cosmossdk.io/core/app"
@@ -15,5 +16,6 @@ type AppI[T transaction.Tx] interface {
 	GetAppManager() *appmanager.AppManager[T]
 	GetConsensusAuthority() string
 	InterfaceRegistry() coreapp.InterfaceRegistry
+	GetGRPCQueryDecoders() map[string]func(requestBytes []byte) (gogoproto.Message, error)
 	GetStore() any
 }

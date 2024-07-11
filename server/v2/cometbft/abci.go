@@ -60,18 +60,28 @@ type Consensus[T transaction.Tx] struct {
 func NewConsensus[T transaction.Tx](
 	app *appmanager.AppManager[T],
 	mp mempool.Mempool[T],
+	grpcQueryDecoders map[string]func(requestBytes []byte) (gogoproto.Message, error),
 	store types.Store,
 	cfg Config,
 	txCodec transaction.Codec[T],
 	logger log.Logger,
 ) *Consensus[T] {
 	return &Consensus[T]{
-		mempool: mp,
-		store:   store,
-		app:     app,
-		cfg:     cfg,
-		txCodec: txCodec,
-		logger:  logger,
+		grpcQueryDecoders:      grpcQueryDecoders,
+		app:                    app,
+		cfg:                    cfg,
+		store:                  store,
+		logger:                 logger,
+		txCodec:                txCodec,
+		streaming:              streaming.Manager{},
+		snapshotManager:        nil,
+		mempool:                mp,
+		lastCommittedHeight:    atomic.Int64{},
+		prepareProposalHandler: nil,
+		processProposalHandler: nil,
+		verifyVoteExt:          nil,
+		extendVote:             nil,
+		chainID:                "",
 	}
 }
 

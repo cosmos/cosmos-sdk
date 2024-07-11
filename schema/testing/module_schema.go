@@ -21,10 +21,7 @@ var ModuleSchemaGen = rapid.Custom(func(t *rapid.T) schema.ModuleSchema {
 	// filter out enums with duplicate names
 	enumTypeNames := map[string]bool{}
 	for _, objectType := range schema.ObjectTypes {
-		if hasDuplicateEnumName(enumTypeNames, objectType.KeyFields) {
-			return false
-		}
-		if hasDuplicateEnumName(enumTypeNames, objectType.ValueFields) {
+		if hasDuplicateEnumName(enumTypeNames, objectType.KeyFields) || hasDuplicateEnumName(enumTypeNames, objectType.ValueFields) {
 			return false
 		}
 	}

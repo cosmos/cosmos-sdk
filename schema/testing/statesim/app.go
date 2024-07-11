@@ -28,7 +28,7 @@ func NewApp(appSchema map[string]schema.ModuleSchema, options Options) *App {
 		moduleNames = append(moduleNames, moduleName)
 	}
 
-	moduleNameSelector := rapid.Map(rapid.IntRange(0, len(moduleNames)), func(u int) string {
+	moduleNameSelector := rapid.Map(rapid.IntRange(0, len(moduleNames)-1), func(u int) string {
 		return moduleNames[u]
 	})
 

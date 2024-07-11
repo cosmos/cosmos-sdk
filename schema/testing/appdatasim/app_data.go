@@ -25,7 +25,8 @@ type Options struct {
 	StateSimOptions statesim.Options
 }
 
-// Simulator simulates a stream of app data.
+// Simulator simulates a stream of app data. Currently, it only simulates InitializeModuleData, OnObjectUpdate,
+// StartBlock and Commit callbacks but others will be added in the future.
 type Simulator struct {
 	state        *statesim.App
 	options      Options
@@ -68,12 +69,12 @@ func (a *Simulator) Initialize() error {
 // to simulate the app data stream and advance app state based on the object updates in the block. The first
 // packet in the block data will be a StartBlockData packet with the height set to the next block height.
 func (a *Simulator) BlockDataGen() *rapid.Generator[BlockData] {
-	return a.BlockDataGenN(100)
+	return a.BlockDataGenN(0, 100)
 }
 
 // BlockDataGenN creates a block data generator which allows specifying the maximum number of updates per block.
-func (a *Simulator) BlockDataGenN(maxUpdatesPerBlock int) *rapid.Generator[BlockData] {
-	numUpdatesGen := rapid.IntRange(1, maxUpdatesPerBlock)
+func (a *Simulator) BlockDataGenN(minUpdatesPerBlock, maxUpdatesPerBlock int) *rapid.Generator[BlockData] {
+	numUpdatesGen := rapid.IntRange(minUpdatesPerBlock, maxUpdatesPerBlock)
 
 	return rapid.Custom(func(t *rapid.T) BlockData {
 		var packets BlockData

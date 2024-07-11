@@ -27,7 +27,7 @@ func NewModule(moduleSchema schema.ModuleSchema, options Options) *Module {
 		objectTypeNames = append(objectTypeNames, objectType.Name)
 	}
 
-	objectTypeSelector := rapid.Map(rapid.IntRange(0, len(objectTypeNames)), func(u int) string {
+	objectTypeSelector := rapid.Map(rapid.IntRange(0, len(objectTypeNames)-1), func(u int) string {
 		return objectTypeNames[u]
 	})
 

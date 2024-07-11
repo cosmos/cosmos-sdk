@@ -13,7 +13,7 @@ Indexers are expected to process all valid `schema` and `appdata` types, yet it 
 ```go
 func TestMyIndexer(t *testing.T) {
     indexerListener := myIndexer.Setup()
-    simulator := appdatasim.NewSimulator(appdatatest.SimulatorOptions{
+    simulator, err := appdatasim.NewSimulator(appdatatest.SimulatorOptions{
         AppSchema: indexertesting.ExampleAppSchema,
         StateSimOptions: statesim.Options{
             CanRetainDeletions: true,
@@ -21,7 +21,7 @@ func TestMyIndexer(t *testing.T) {
 		Listener: indexerListener,
     })
     
-    require.NoError(t, simulator.Initialize())
+    require.NoError(t, err)
     
     blockDataGen := fixture.BlockDataGen()
     for i := 0; i < 1000; i++ {

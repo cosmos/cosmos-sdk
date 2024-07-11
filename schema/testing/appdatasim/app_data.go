@@ -2,6 +2,7 @@ package appdatasim
 
 import (
 	"fmt"
+	"sort"
 
 	"pgregory.net/rapid"
 
@@ -37,31 +38,45 @@ type Simulator struct {
 // BlockData represents the app data packets in a block.
 type BlockData = []appdata.Packet
 
-// NewSimulator creates a new app data simulator with the given options.
-func NewSimulator(options Options) *Simulator {
+// NewSimulator creates a new app data simulator with the given options and runs its
+// initialization methods.
+func NewSimulator(options Options) (*Simulator, error) {
 	if options.AppSchema == nil {
 		options.AppSchema = schematesting.ExampleAppSchema
 	}
 
 	sim := &Simulator{
-		state:   statesim.NewApp(options.AppSchema, options.StateSimOptions),
+		// we initialize the state simulator with no app schema because we'll do
+		// that in the first block
+		state:   statesim.NewApp(nil, options.StateSimOptions),
 		options: options,
 	}
 
-	return sim
+	err := sim.initialize()
+	if err != nil {
+		return nil, err
+	}
+
+	return sim, nil
 }
 
-// Initialize runs the initialization methods of the app data stream.
-func (a *Simulator) Initialize() error {
-	if f := a.options.Listener.InitializeModuleData; f != nil {
-		err := a.state.ScanModules(func(moduleName string, mod *statesim.Module) error {
-			return f(appdata.ModuleInitializationData{ModuleName: moduleName, Schema: mod.ModuleSchema()})
+func (a *Simulator) initialize() error {
+	// in block "0" we only pass module initialization data and don't
+	// even generate any real block data
+	var keys []string
+	for key := range a.options.AppSchema {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, moduleName := range keys {
+		err := a.ProcessPacket(appdata.ModuleInitializationData{
+			ModuleName: moduleName,
+			Schema:     a.options.AppSchema[moduleName],
 		})
 		if err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -109,41 +124,30 @@ func (a *Simulator) BlockDataGenN(minUpdatesPerBlock, maxUpdatesPerBlock int) *r
 
 // ProcessBlockData processes the given block data, advancing the app state based on the object updates in the block
 // and forwarding all packets to the attached listener. It is expected that the data passed came from BlockDataGen,
-// however, other data can be passed as long as the first packet is a StartBlockData packet with the block height
-// set to the current block height + 1 and the last packet is a CommitData packet.
+// however, other data can be passed as long as any StartBlockData packet has the height set to the current height + 1.
 func (a *Simulator) ProcessBlockData(data BlockData) error {
-	if len(data) < 2 {
-		return fmt.Errorf("block data must contain at least two packets")
-	}
-
-	if startBlock, ok := data[0].(appdata.StartBlockData); !ok || startBlock.Height != a.blockNum+1 {
-		return fmt.Errorf("first packet in block data must be a StartBlockData packet with height %d", a.blockNum+1)
-	}
-
-	if _, ok := data[len(data)-1].(appdata.CommitData); !ok {
-		return fmt.Errorf("last packet in block data must be a CommitData packet")
-	}
-
-	// advance the block height
-	a.blockNum++
-
 	for _, packet := range data {
-		// apply state updates from object updates
-		if updateData, ok := packet.(appdata.ObjectUpdateData); ok {
-			err := a.state.ApplyUpdate(updateData)
-			if err != nil {
-				return err
-			}
-		}
-
-		// send the packet to the listener
-		err := a.options.Listener.SendPacket(packet)
+		err := a.ProcessPacket(packet)
 		if err != nil {
 			return err
 		}
 	}
-
 	return nil
+}
+
+func (a *Simulator) ProcessPacket(packet appdata.Packet) error {
+	switch packet := packet.(type) {
+	case appdata.StartBlockData:
+		if packet.Height != a.blockNum+1 {
+			return fmt.Errorf("invalid StartBlockData packet: %v", packet)
+		}
+		a.blockNum++
+	case appdata.ModuleInitializationData:
+		return a.state.InitializeModule(packet)
+	case appdata.ObjectUpdateData:
+		return a.state.ApplyUpdate(packet)
+	}
+	return a.options.Listener.SendPacket(packet)
 }
 
 // AppState returns the current app state backing the simulator.

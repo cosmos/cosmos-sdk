@@ -10,20 +10,70 @@ import (
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/golden"
 
+	"cosmossdk.io/schema"
 	"cosmossdk.io/schema/appdata"
 	schematesting "cosmossdk.io/schema/testing"
 	"cosmossdk.io/schema/testing/statesim"
 )
 
-func TestAppSimulator_ExampleSchema(t *testing.T) {
+func TestAppSimulator_mirror(t *testing.T) {
+	t.Run("default", func(t *testing.T) {
+		testAppSimulator_mirror(t, false)
+	})
+	t.Run("retain deletes", func(t *testing.T) {
+		testAppSimulator_mirror(t, true)
+	})
+}
+
+func testAppSimulator_mirror(t *testing.T, retainDeletes bool) {
+	stateSimOpts := statesim.Options{CanRetainDeletions: retainDeletes}
+	mirror, err := NewSimulator(Options{
+		StateSimOptions: stateSimOpts,
+	})
+	require.NoError(t, err)
+
+	appSim, err := NewSimulator(Options{
+		AppSchema: schematesting.ExampleAppSchema,
+		Listener: appdata.PacketForwarder(func(packet appdata.Packet) error {
+			return mirror.ProcessPacket(packet)
+		}),
+		StateSimOptions: stateSimOpts,
+	})
+	require.NoError(t, err)
+
+	blockDataGen := appSim.BlockDataGenN(50, 100)
+
+	for i := 0; i < 10; i++ {
+		data := blockDataGen.Example(i + 1)
+		require.NoError(t, appSim.ProcessBlockData(data))
+		require.NoError(t, appSim.AppState().ScanModules(func(moduleName string, modState *statesim.Module) error {
+			mirrorMod, ok := mirror.AppState().GetModule(moduleName)
+			require.True(t, ok)
+			return modState.ScanObjectCollections(func(objState *statesim.ObjectCollection) error {
+				mirrorObjState, ok := mirrorMod.GetObjectCollection(objState.ObjectType().Name)
+				require.True(t, ok)
+				require.Equal(t, objState.Len(), mirrorObjState.Len())
+				return objState.ScanState(func(update schema.ObjectUpdate) error {
+					mirrorUpdate, ok := mirrorObjState.GetObject(update.Key)
+					require.True(t, ok)
+					eq, err := objState.ObjectType().ObjectUpdatesEqual(update, mirrorUpdate)
+					require.NoError(t, err)
+					require.True(t, eq)
+					return nil
+				})
+			})
+		}))
+	}
+}
+
+func TestAppSimulator_exampleSchema(t *testing.T) {
 	out := &bytes.Buffer{}
-	appSim := NewSimulator(Options{
+	appSim, err := NewSimulator(Options{
 		AppSchema:       schematesting.ExampleAppSchema,
 		Listener:        writerListener(out),
 		StateSimOptions: statesim.Options{},
 	})
-
-	require.NoError(t, appSim.Initialize())
+	require.NoError(t, err)
 
 	blockDataGen := appSim.BlockDataGenN(10, 20)
 

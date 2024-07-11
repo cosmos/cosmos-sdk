@@ -27,9 +27,7 @@ func NewModule(moduleSchema schema.ModuleSchema, options Options) *Module {
 		objectTypeNames = append(objectTypeNames, objectType.Name)
 	}
 
-	objectTypeSelector := rapid.Map(rapid.IntRange(0, len(objectTypeNames)-1), func(u int) string {
-		return objectTypeNames[u]
-	})
+	objectTypeSelector := rapid.SampledFrom(objectTypeNames)
 
 	updateGen := rapid.Custom(func(t *rapid.T) schema.ObjectUpdate {
 		objectType := objectTypeSelector.Draw(t, "objectType")

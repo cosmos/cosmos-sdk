@@ -2,6 +2,7 @@ package config
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -68,7 +69,7 @@ func CreateClientConfig(ctx client.Context, customClientTemplate string, customC
 		}
 
 		if (customClientTemplate != "" && customConfig == nil) || (customClientTemplate == "" && customConfig != nil) {
-			return ctx, fmt.Errorf("customClientTemplate and customConfig should be both nil or not nil")
+			return ctx, errors.New("customClientTemplate and customConfig should be both nil or not nil")
 		}
 
 		if customClientTemplate != "" {

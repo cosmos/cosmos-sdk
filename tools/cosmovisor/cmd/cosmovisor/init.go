@@ -111,6 +111,32 @@ func InitializeCosmovisor(logger log.Logger, args []string) error {
 
 func minConfigValidate(cfg *cosmovisor.Config) error {
 	var errs []error
+
+	// Note: Not using GetConfigFromEnv here because that checks that the directories already exist.
+	// We also don't care about the rest of the configuration stuff in here.
+	cfg := &cosmovisor.Config{
+		Home: os.Getenv(cosmovisor.EnvHome),
+		Name: os.Getenv(cosmovisor.EnvName),
+	}
+
+	var err error
+	if cfg.ColorLogs, err = cosmovisor.BooleanOption(cosmovisor.EnvColorLogs, true); err != nil {
+		errs = append(errs, err)
+	}
+
+	if cfg.TimeFormatLogs, err = cosmovisor.TimeFormatOptionFromEnv(cosmovisor.EnvTimeFormatLogs, time.Kitchen); err != nil {
+		errs = append(errs, err)
+	}
+
+	// if backup is not set, use the home directory
+	if cfg.DataBackupPath == "" {
+		cfg.DataBackupPath = cfg.Home
+	}
+
+	if cfg.DataPath == "" {
+		cfg.DataPath = cfg.DefaultDataDirPath()
+	}
+
 	if len(cfg.Name) == 0 {
 		errs = append(errs, fmt.Errorf("%s is not set", cosmovisor.EnvName))
 	}

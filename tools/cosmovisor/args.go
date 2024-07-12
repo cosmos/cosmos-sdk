@@ -109,17 +109,11 @@ func (cfg *Config) BaseUpgradeDir() string {
 
 // UpgradeInfoFilePath is the expected upgrade-info filename created by `x/upgrade/keeper`.
 func (cfg *Config) UpgradeInfoFilePath() string {
-	return filepath.Join(cfg.DataDirPath(), upgradetypes.UpgradeInfoFilename)
+	return filepath.Join(cfg.DataPath, upgradetypes.UpgradeInfoFilename)
 }
 
-func (cfg *Config) DataDirPath() string {
-	if cfg.DataPath != "" {
-		// Return the Absolute path defined by user
-		return cfg.DataPath
-	}
-	// Otherwise, return the default path
+func (cfg *Config) DefaultDataDirPath() string {
 	return filepath.Join(cfg.Home, dataDir)
-
 }
 
 // SymLinkToGenesis creates a symbolic link from "./current" to the genesis directory.
@@ -229,6 +223,10 @@ func GetConfigFromEnv(skipValidate bool) (*Config, error) {
 
 	if cfg.DataBackupPath == "" {
 		cfg.DataBackupPath = cfg.Home
+	}
+
+	if cfg.DataPath == "" {
+		cfg.DataPath = cfg.DefaultDataDirPath()
 	}
 
 	var err error
@@ -585,7 +583,7 @@ func (cfg Config) DetailString() string {
 		{"Genesis Bin", cfg.GenesisBin()},
 		{"Monitored File", cfg.UpgradeInfoFilePath()},
 		{"Data Backup Dir", cfg.DataBackupPath},
-		{"Data Dir", cfg.DataDirPath()},
+		{"Data Dir", cfg.DataPath},
 	}
 
 	var sb strings.Builder

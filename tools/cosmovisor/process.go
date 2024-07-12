@@ -187,8 +187,8 @@ func (l Launcher) doBackup() error {
 
 		l.logger.Info("starting to take backup of data directory", "backup start time", st)
 
-		// copy the $DAEMON_HOME/data to a backup dir
-		if err = copy.Copy(filepath.Join(l.cfg.Home, "data"), dst); err != nil {
+		// copy the data dir to a backup dir
+		if err = copy.Copy(filepath.Join(l.cfg.DataDirPath()), dst); err != nil {
 			return fmt.Errorf("error while taking data backup: %w", err)
 		}
 

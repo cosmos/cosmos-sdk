@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -67,7 +68,20 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 
 		app.logger.Debug("gRPC query received of type: " + fmt.Sprintf("%#v", req))
 
-		return handler(grpcCtx, req)
+		// Catch an OutOfGasPanic caused in the query handlers
+		defer func() {
+			if r := recover(); r != nil {
+				switch rType := r.(type) {
+				case storetypes.ErrorOutOfGas:
+					err = errorsmod.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
+				default:
+					panic(r)
+				}
+			}
+		}()
+		resp, err = handler(grpcCtx, req)
+
+		return
 	}
 
 	// Loop through all services and methods, add the interceptor, and register

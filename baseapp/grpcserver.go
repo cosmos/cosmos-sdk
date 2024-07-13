@@ -73,7 +73,7 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 			if r := recover(); r != nil {
 				switch rType := r.(type) {
 				case storetypes.ErrorOutOfGas:
-					err = errorsmod.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
+					err = errorsmod.Wrapf(sdkerrors.ErrOutOfGas, "Query gas limit exceeded: %v, out of gas in location: %v", sdkCtx.GasMeter().Limit(), rType.Descriptor)
 				default:
 					panic(r)
 				}

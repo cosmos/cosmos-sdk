@@ -34,7 +34,8 @@ func (s *processTestSuite) TestLaunchProcess() {
 	// binaries from testdata/validate directory
 	require := s.Require()
 	home := copyTestData(s.T(), "validate")
-	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PollInterval: 20, UnsafeSkipBackup: true}
+	dataPath := filepath.Join(home, "data")
+	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", DataPath: dataPath, PollInterval: 20, UnsafeSkipBackup: true}
 	logger := log.NewTestLogger(s.T()).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output
@@ -79,7 +80,8 @@ func (s *processTestSuite) TestPlanDisableRecase() {
 	// binaries from testdata/validate directory
 	require := s.Require()
 	home := copyTestData(s.T(), "norecase")
-	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PollInterval: 20, UnsafeSkipBackup: true, DisableRecase: true}
+	dataPath := filepath.Join(home, "data")
+	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", DataPath: dataPath, PollInterval: 20, UnsafeSkipBackup: true, DisableRecase: true}
 	logger := log.NewTestLogger(s.T()).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output
@@ -123,7 +125,8 @@ func (s *processTestSuite) TestLaunchProcessWithRestartDelay() {
 	// binaries from testdata/validate directory
 	require := s.Require()
 	home := copyTestData(s.T(), "validate")
-	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", RestartDelay: 5 * time.Second, PollInterval: 20, UnsafeSkipBackup: true}
+	dataPath := filepath.Join(home, "data")
+	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", DataPath: dataPath, RestartDelay: 5 * time.Second, PollInterval: 20, UnsafeSkipBackup: true}
 	logger := log.NewTestLogger(s.T()).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output
@@ -149,12 +152,13 @@ func (s *processTestSuite) TestLaunchProcessWithRestartDelay() {
 	}
 }
 
-// TestPlanShutdownGrace will test upgrades without lower case plan names
+// TestPlanShutdownGrace will wait for clean up before sending the kill signal
 func (s *processTestSuite) TestPlanShutdownGrace() {
 	// binaries from testdata/validate directory
 	require := s.Require()
 	home := copyTestData(s.T(), "dontdie")
-	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PollInterval: 20, UnsafeSkipBackup: true, ShutdownGrace: 2 * time.Second}
+	dataPath := filepath.Join(home, "data")
+	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", DataPath: dataPath, PollInterval: 20, UnsafeSkipBackup: true, ShutdownGrace: 2 * time.Second}
 	logger := log.NewTestLogger(s.T()).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output
@@ -203,7 +207,8 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	// chain3-zip_dir - doesn't upgrade
 	require := s.Require()
 	home := copyTestData(s.T(), "download")
-	cfg := &cosmovisor.Config{Home: home, Name: "autod", AllowDownloadBinaries: true, PollInterval: 100, UnsafeSkipBackup: true}
+	dataPath := filepath.Join(home, "data")
+	cfg := &cosmovisor.Config{Home: home, Name: "autod", DataPath: dataPath, AllowDownloadBinaries: true, PollInterval: 100, UnsafeSkipBackup: true}
 	logger := log.NewTestLogger(s.T()).With(log.ModuleKey, "cosmovisor")
 	upgradeFilename := cfg.UpgradeInfoFilePath()
 
@@ -266,9 +271,11 @@ func (s *processTestSuite) TestLaunchProcessWithDownloadsAndMissingPreupgrade() 
 	// chain3-zip_dir - doesn't upgrade
 	require := s.Require()
 	home := copyTestData(s.T(), "download")
+	dataPath := filepath.Join(home, "data")
 	cfg := &cosmovisor.Config{
 		Home:                  home,
 		Name:                  "autod",
+		DataPath:              dataPath,
 		AllowDownloadBinaries: true,
 		PollInterval:          100,
 		UnsafeSkipBackup:      true,
@@ -302,9 +309,11 @@ func (s *processTestSuite) TestLaunchProcessWithDownloadsAndPreupgrade() {
 	// chain3-zip_dir - doesn't upgrade
 	require := s.Require()
 	home := copyTestData(s.T(), "download")
+	dataPath := filepath.Join(home, "data")
 	cfg := &cosmovisor.Config{
 		Home:                  home,
 		Name:                  "autod",
+		DataPath:              dataPath,
 		AllowDownloadBinaries: true,
 		PollInterval:          100,
 		UnsafeSkipBackup:      true,
@@ -368,6 +377,53 @@ func (s *processTestSuite) TestLaunchProcessWithDownloadsAndPreupgrade() {
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(err)
 	require.Equal(cfg.UpgradeBin("chain3"), currentBin)
+}
+
+// TestPlanCustomDataLocation will detect upgrade when chain data dir is not located in the default path
+// the custom path should be provided as an absolute path to the configs
+func (s *processTestSuite) TestPlanCustomDataLocation() {
+	// binaries from testdata/validate directory
+	require := s.Require()
+	home := copyTestData(s.T(), "custom-data-path")
+	dataPath := filepath.Join(home, "custom-location/data")
+	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", DataPath: dataPath, PollInterval: 20, UnsafeSkipBackup: true}
+	logger := log.NewTestLogger(s.T()).With(log.ModuleKey, "cosmosvisor")
+
+	// should run the genesis binary and produce expected output
+	stdout, stderr := newBuffer(), newBuffer()
+	currentBin, err := cfg.CurrentBin()
+	require.NoError(err)
+	require.Equal(cfg.GenesisBin(), currentBin)
+
+	launcher, err := cosmovisor.NewLauncher(logger, cfg)
+	require.NoError(err)
+
+	upgradeFile := cfg.UpgradeInfoFilePath()
+
+	args := []string{"foo", "bar", "1234", upgradeFile}
+	doUpgrade, err := launcher.Run(args, stdout, stderr)
+	require.NoError(err)
+	require.True(doUpgrade)
+	require.Equal("", stderr.String())
+	require.Equal(fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"chain2\" NEEDED at height: 49: {}\n", upgradeFile), stdout.String())
+
+	// ensure this is upgraded now and produces new output
+	currentBin, err = cfg.CurrentBin()
+	require.NoError(err)
+
+	require.Equal(cfg.UpgradeBin("chain2"), currentBin)
+	args = []string{"second", "run", "--verbose"}
+	stdout.Reset()
+	stderr.Reset()
+
+	doUpgrade, err = launcher.Run(args, stdout, stderr)
+	require.NoError(err)
+	require.False(doUpgrade)
+	require.Equal("", stderr.String())
+	require.Equal("chain 2 is live!\nArgs: second run --verbose\nFinished successfully\n", stdout.String())
+
+	// ended without other upgrade
+	require.Equal(cfg.UpgradeBin("chain2"), currentBin)
 }
 
 // TestSkipUpgrade tests heights that are identified to be skipped and return if upgrade height matches the skip heights

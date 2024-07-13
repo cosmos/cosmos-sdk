@@ -373,7 +373,7 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 
 // TestPlanCustomDataLocation will detect upgrade when chain data dir is not located in the default path
 // the custom path should be provided as an absolute path to the configs
-func () TestPlanCustomDataLocation(t *testing.T) {
+func TestPlanCustomDataLocation(t *testing.T) {
 	// binaries from testdata/validate directory
 	home := copyTestData(t, "custom-data-path")
 	dataPath := filepath.Join(home, "custom-location/data")
@@ -381,6 +381,7 @@ func () TestPlanCustomDataLocation(t *testing.T) {
 	logger := log.NewTestLogger(t).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output
+	stdin, _ := os.Open(os.DevNull)
 	stdout, stderr := newBuffer(), newBuffer()
 	currentBin, err := cfg.CurrentBin()
 	require.NoError(t, err)
@@ -392,7 +393,7 @@ func () TestPlanCustomDataLocation(t *testing.T) {
 	upgradeFile := cfg.UpgradeInfoFilePath()
 
 	args := []string{"foo", "bar", "1234", upgradeFile}
-	doUpgrade, err := launcher.Run(args, stdout, stderr)
+	doUpgrade, err := launcher.Run(args, stdin, stdout, stderr)
 	require.NoError(t, err)
 	require.True(t, doUpgrade)
 	require.Equal(t, "", stderr.String())
@@ -402,12 +403,12 @@ func () TestPlanCustomDataLocation(t *testing.T) {
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(t, err)
 
-	require.Equal(cfg.UpgradeBin("chain2"), currentBin)
+	require.Equal(t, cfg.UpgradeBin("chain2"), currentBin)
 	args = []string{"second", "run", "--verbose"}
 	stdout.Reset()
 	stderr.Reset()
 
-	doUpgrade, err = launcher.Run(args, stdout, stderr)
+	doUpgrade, err = launcher.Run(args, stdin, stdout, stderr)
 	require.NoError(t, err)
 	require.False(t, doUpgrade)
 	require.Equal(t, "", stderr.String())

@@ -188,7 +188,7 @@ func (l Launcher) doBackup() error {
 		l.logger.Info("starting to take backup of data directory", "backup start time", st)
 
 		// copy the data dir to a backup dir
-		if err = copy.Copy(filepath.Join(l.cfg.DataPath), dst); err != nil {
+		if err = copy.Copy(l.cfg.DataPath, dst); err != nil {
 			return fmt.Errorf("error while taking data backup: %w", err)
 		}
 

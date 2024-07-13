@@ -79,9 +79,8 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 				}
 			}
 		}()
-		resp, err = handler(grpcCtx, req)
 
-		return
+		return handler(grpcCtx, req)
 	}
 
 	// Loop through all services and methods, add the interceptor, and register

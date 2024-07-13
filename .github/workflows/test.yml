@@ -831,7 +831,7 @@ jobs:
         with:
           projectBaseDir: x/accounts/
 
- test-x-accounts-lockup:
+  test-x-accounts-lockup:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

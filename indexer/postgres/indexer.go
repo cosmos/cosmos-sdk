@@ -47,8 +47,8 @@ func StartIndexer(ctx context.Context, logger SqlLogger, config Config) (appdata
 		return appdata.Listener{}, err
 	}
 
-	moduleMgrs := map[string]*ModuleManager{}
-	mgrOpts := ManagerOptions{
+	moduleMgrs := map[string]*ModuleIndexer{}
+	mgrOpts := Options{
 		DisableRetainDeletions: config.DisableRetainDeletions,
 		Logger:                 logger,
 	}
@@ -62,7 +62,7 @@ func StartIndexer(ctx context.Context, logger SqlLogger, config Config) (appdata
 				return fmt.Errorf("module %s already initialized", moduleName)
 			}
 
-			mm := NewModuleManager(moduleName, modSchema, mgrOpts)
+			mm := NewModuleIndexer(moduleName, modSchema, mgrOpts)
 			moduleMgrs[moduleName] = mm
 
 			return mm.InitializeSchema(ctx, tx)

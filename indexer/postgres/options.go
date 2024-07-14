@@ -1,7 +1,7 @@
 package postgres
 
-// ManagerOptions are the options for module and table managers.
-type ManagerOptions struct {
+// Options are the options for module and object indexers.
+type Options struct {
 	// DisableRetainDeletions disables retain deletions functionality even on object types that have it set.
 	DisableRetainDeletions bool
 

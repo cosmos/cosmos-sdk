@@ -6,17 +6,17 @@ import (
 	"cosmossdk.io/schema"
 )
 
-// TableManager is a helper struct that generates SQL for a given object type.
-type TableManager struct {
+// ObjectIndexer is a helper struct that generates SQL for a given object type.
+type ObjectIndexer struct {
 	moduleName  string
 	typ         schema.ObjectType
 	valueFields map[string]schema.Field
 	allFields   map[string]schema.Field
-	options     ManagerOptions
+	options     Options
 }
 
-// NewTableManager creates a new TableManager for the given object type.
-func NewTableManager(moduleName string, typ schema.ObjectType, options ManagerOptions) *TableManager {
+// NewObjectIndexer creates a new ObjectIndexer for the given object type.
+func NewObjectIndexer(moduleName string, typ schema.ObjectType, options Options) *ObjectIndexer {
 	allFields := make(map[string]schema.Field)
 	valueFields := make(map[string]schema.Field)
 
@@ -29,7 +29,7 @@ func NewTableManager(moduleName string, typ schema.ObjectType, options ManagerOp
 		allFields[field.Name] = field
 	}
 
-	return &TableManager{
+	return &ObjectIndexer{
 		moduleName:  moduleName,
 		typ:         typ,
 		allFields:   allFields,
@@ -39,6 +39,6 @@ func NewTableManager(moduleName string, typ schema.ObjectType, options ManagerOp
 }
 
 // TableName returns the name of the table for the object type scoped to its module.
-func (tm *TableManager) TableName() string {
+func (tm *ObjectIndexer) TableName() string {
 	return fmt.Sprintf("%s_%s", tm.moduleName, tm.typ.Name)
 }

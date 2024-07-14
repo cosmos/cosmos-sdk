@@ -3,11 +3,12 @@ package postgres
 import (
 	"os"
 
-	"cosmossdk.io/indexer/postgres/internal/testdata"
 	"cosmossdk.io/schema"
+
+	"cosmossdk.io/indexer/postgres/internal/testdata"
 )
 
-func ExampleTableManager_CreateTableSql_allKinds() {
+func ExampleObjectIndexer_CreateTableSql_allKinds() {
 	exampleCreateTable(testdata.AllKindsObject)
 	// Output:
 	// CREATE TABLE IF NOT EXISTS "test_all_kinds" (
@@ -40,7 +41,7 @@ func ExampleTableManager_CreateTableSql_allKinds() {
 	// GRANT SELECT ON TABLE "test_all_kinds" TO PUBLIC;
 }
 
-func ExampleTableManager_CreateTableSql_singleton() {
+func ExampleObjectIndexer_CreateTableSql_singleton() {
 	exampleCreateTable(testdata.SingletonObject)
 	// Output:
 	// CREATE TABLE IF NOT EXISTS "test_singleton" (
@@ -53,7 +54,7 @@ func ExampleTableManager_CreateTableSql_singleton() {
 	// GRANT SELECT ON TABLE "test_singleton" TO PUBLIC;
 }
 
-func ExampleTableManager_CreateTableSql_vote() {
+func ExampleObjectIndexer_CreateTableSql_vote() {
 	exampleCreateTable(testdata.VoteObject)
 	// Output:
 	// CREATE TABLE IF NOT EXISTS "test_vote" (
@@ -66,7 +67,7 @@ func ExampleTableManager_CreateTableSql_vote() {
 	// GRANT SELECT ON TABLE "test_vote" TO PUBLIC;
 }
 
-func ExampleTableManager_CreateTableSql_vote_no_retain_delete() {
+func ExampleObjectIndexer_CreateTableSql_vote_no_retain_delete() {
 	exampleCreateTableOpt(testdata.VoteObject, true)
 	// Output:
 	// CREATE TABLE IF NOT EXISTS "test_vote" (
@@ -83,7 +84,7 @@ func exampleCreateTable(objectType schema.ObjectType) {
 }
 
 func exampleCreateTableOpt(objectType schema.ObjectType, noRetainDelete bool) {
-	tm := NewTableManager("test", objectType, ManagerOptions{
+	tm := NewObjectIndexer("test", objectType, Options{
 		Logger:                 func(msg, sql string, params ...interface{}) {},
 		DisableRetainDeletions: noRetainDelete,
 	})

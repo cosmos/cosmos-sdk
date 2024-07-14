@@ -11,7 +11,7 @@ import (
 )
 
 // CreateEnumType creates an enum type in the database.
-func (m *ModuleManager) CreateEnumType(ctx context.Context, conn DBConn, enum schema.EnumDefinition) error {
+func (m *ModuleIndexer) CreateEnumType(ctx context.Context, conn DBConn, enum schema.EnumDefinition) error {
 	typeName := enumTypeName(m.moduleName, enum)
 	row := conn.QueryRowContext(ctx, "SELECT 1 FROM pg_type WHERE typname = $1", typeName)
 	var res interface{}
@@ -68,7 +68,7 @@ func enumTypeName(moduleName string, enum schema.EnumDefinition) string {
 }
 
 // createEnumTypesForFields creates enum types for all the fields that have enum kind in the module schema.
-func (m *ModuleManager) createEnumTypesForFields(ctx context.Context, conn DBConn, fields []schema.Field) error {
+func (m *ModuleIndexer) createEnumTypesForFields(ctx context.Context, conn DBConn, fields []schema.Field) error {
 	for _, field := range fields {
 		if field.Kind != schema.EnumKind {
 			continue

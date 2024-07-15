@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"sort"
 	"strconv"
@@ -13,6 +12,7 @@ import (
 	"cosmossdk.io/store/rootmulti"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -41,29 +41,12 @@ func ModuleHashByHeightQuery[T servertypes.Application](appCreator servertypes.A
 				return err
 			}
 
-			outputFormat, err := cmd.Flags().GetString(flags.FlagOutput)
-			if err != nil {
-				return err
-			}
-
-			switch outputFormat {
-			case flags.OutputFormatJSON:
-				jsonOutput, err := json.MarshalIndent(commitInfoForHeight, "", "  ")
-				if err != nil {
-					return err
-				}
-				cmd.Println(string(jsonOutput))
-			case flags.OutputFormatText:
-				fallthrough
-			default:
-				cmd.Println(commitInfoForHeight.String())
-			}
-
-			return nil
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			return clientCtx.PrintProto(commitInfoForHeight)
 		},
 	}
 
-	cmd.Flags().StringP(flags.FlagOutput, "o", flags.OutputFormatText, "Output format (text|json)")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }

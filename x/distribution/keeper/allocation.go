@@ -21,6 +21,10 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 	// (and distributed to the previous proposer)
 	feeCollector := k.authKeeper.GetModuleAccount(ctx, k.feeCollectorName)
 	feesCollectedInt := k.bankKeeper.GetAllBalances(ctx, feeCollector.GetAddress())
+	// return early if no fees to distribute
+	if feesCollectedInt.Empty() {
+		return nil
+	}
 	feesCollected := sdk.NewDecCoinsFromCoins(feesCollectedInt...)
 
 	// transfer collected fees to the distribution module account

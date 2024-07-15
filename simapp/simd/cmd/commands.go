@@ -3,7 +3,6 @@ package cmd
 import (
 	"errors"
 	"io"
-	"os"
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
@@ -14,11 +13,9 @@ import (
 	"cosmossdk.io/simapp"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 	authcmd "cosmossdk.io/x/auth/client/cli"
-	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/debug"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
@@ -27,7 +24,9 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 func initRootCmd(
@@ -40,7 +39,7 @@ func initRootCmd(
 
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(moduleManager),
-		NewTestnetCmd(moduleManager, banktypes.GenesisBalancesIterator{}),
+		NewTestnetCmd(moduleManager),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
 		pruning.Cmd(newApp),
@@ -62,8 +61,7 @@ func initRootCmd(
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
 func genesisCommand(txConfig client.TxConfig, moduleManager *module.Manager, appExport servertypes.AppExporter, cmds ...*cobra.Command) *cobra.Command {
-	cmd := genutilcli.Commands(txConfig, moduleManager, appExport)
-
+	cmd := genutilcli.Commands(txConfig, moduleManager.Modules[genutiltypes.ModuleName].(genutil.AppModule), moduleManager, appExport)
 	for _, subCmd := range cmds {
 		cmd.AddCommand(subCmd)
 	}
@@ -142,13 +140,6 @@ func appExport(
 	appOpts servertypes.AppOptions,
 	modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
-	// this check is necessary as we use the flag in x/upgrade.
-	// we can exit more gracefully by checking the flag here.
-	homePath, ok := appOpts.Get(flags.FlagHome).(string)
-	if !ok || homePath == "" {
-		return servertypes.ExportedApp{}, errors.New("application home not set")
-	}
-
 	viperAppOpts, ok := appOpts.(*viper.Viper)
 	if !ok {
 		return servertypes.ExportedApp{}, errors.New("appOpts is not viper.Viper")
@@ -170,14 +161,4 @@ func appExport(
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
-}
-
-var tempDir = func() string {
-	dir, err := os.MkdirTemp("", "simapp")
-	if err != nil {
-		dir = simapp.DefaultNodeHome
-	}
-	defer os.RemoveAll(dir)
-
-	return dir
 }

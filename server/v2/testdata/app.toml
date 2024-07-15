@@ -1,4 +1,4 @@
-[grpc-server]
+[grpc]
 # Enable defines if the gRPC server should be enabled.
 enable = true
 # Address defines the gRPC server address to bind to.

@@ -68,10 +68,10 @@ func Test_TestnetCmd(t *testing.T) {
 		WithValidatorAddressCodec(cdcOpts.GetValidatorCodec())
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper)
-	ctx = context.WithValue(ctx, corectx.LoggerContextKey{}, logger)
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
+	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	cmd := testnetInitFilesCmd(moduleManager, banktypes.GenesisBalancesIterator{})
+	cmd := testnetInitFilesCmd(moduleManager)
 	cmd.SetArgs([]string{fmt.Sprintf("--%s=test", flags.FlagKeyringBackend), fmt.Sprintf("--output-dir=%s", home)})
 	err = cmd.ExecuteContext(ctx)
 	require.NoError(t, err)

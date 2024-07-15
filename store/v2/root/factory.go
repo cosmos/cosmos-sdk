@@ -116,7 +116,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		}
 	}
 
-	trees := make(map[string]commitment.Tree)
+	trees := make(map[string]commitment.Tree, len(opts.StoreKeys))
 	for _, key := range opts.StoreKeys {
 		tree, err := newTreeFn(key)
 		if err != nil {

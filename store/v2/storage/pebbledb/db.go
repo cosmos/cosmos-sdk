@@ -25,11 +25,11 @@ const (
 	// batchBufferSize defines the maximum size of a batch before it is committed.
 	batchBufferSize = 100_000
 
-	StorePrefixTpl         = "s/k:%s/"         // s/k:<storeKey>
-	removedStoreKeysPrefix = "s/_removed_keys" // NB: removedStoreKeys key must be lexically smaller than StorePrefixTpl
-	latestVersionKey       = "s/_latest"       // NB: latestVersionKey key must be lexically smaller than StorePrefixTpl
-	pruneHeightKey         = "s/_prune_height" // NB: pruneHeightKey key must be lexically smaller than StorePrefixTpl
-	tombstoneVal           = "TOMBSTONE"
+	StorePrefixTpl        = "s/k:%s/"         // s/k:<storeKey>
+	removedStoreKeyPrefix = "s/_removed_key"  // NB: removedStoreKeys key must be lexically smaller than StorePrefixTpl
+	latestVersionKey      = "s/_latest"       // NB: latestVersionKey key must be lexically smaller than StorePrefixTpl
+	pruneHeightKey        = "s/_prune_height" // NB: pruneHeightKey key must be lexically smaller than StorePrefixTpl
+	tombstoneVal          = "TOMBSTONE"
 )
 
 var (
@@ -335,7 +335,7 @@ func (db *Database) PruneStoreKeys(storeKeys []string, version uint64) error {
 	defer batch.Close()
 
 	for _, storeKey := range storeKeys {
-		if err := batch.Set([]byte(fmt.Sprintf("%s%020d/%s", removedStoreKeysPrefix, version, storeKey)), []byte{}, nil); err != nil {
+		if err := batch.Set([]byte(fmt.Sprintf("%s%s", buildRemovedStoreKeyPrefix(version), storeKey)), []byte{}, nil); err != nil {
 			return err
 		}
 	}
@@ -462,16 +462,17 @@ func (db *Database) deleteRemovedStoreKeys(version uint64) error {
 	batch := db.storage.NewBatch()
 	defer batch.Close()
 
-	end := []byte(fmt.Sprintf("%s%020d/", removedStoreKeysPrefix, version+1))
-	storeKeyIter, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: []byte(removedStoreKeysPrefix), UpperBound: end})
+	end := buildRemovedStoreKeyPrefix(version + 1)
+	storeKeyIter, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: []byte(removedStoreKeyPrefix), UpperBound: end})
 	if err != nil {
 		return err
 	}
 	defer storeKeyIter.Close()
 
 	var storeKeys []string
+	prefixLen := len(end)
 	for storeKeyIter.First(); storeKeyIter.Valid(); storeKeyIter.Next() {
-		storeKey := string(storeKeyIter.Key()[len(end):])
+		storeKey := string(storeKeyIter.Key()[prefixLen:])
 		storeKeys = append(storeKeys, storeKey)
 		if err := batch.Delete(storeKeyIter.Key(), nil); err != nil {
 			return err
@@ -505,4 +506,10 @@ func (db *Database) deleteRemovedStoreKeys(version uint64) error {
 	}
 
 	return batch.Commit(&pebble.WriteOptions{Sync: true})
+}
+
+func buildRemovedStoreKeyPrefix(version uint64) []byte {
+	buf := make([]byte, 8)
+	binary.BigEndian.PutUint64(buf, version)
+	return []byte(fmt.Sprintf("%s%x/", removedStoreKeyPrefix, buf))
 }

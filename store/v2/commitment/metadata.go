@@ -2,8 +2,8 @@ package commitment
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
-	"slices"
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2/internal/encoding"
@@ -108,7 +108,7 @@ func (m *MetadataStore) flushRemovedStoreKeys(version uint64, storeKeys []string
 	}()
 
 	for _, storeKey := range storeKeys {
-		key := []byte(fmt.Sprintf("%s%020d/%s", removedStoreKeyPrefix, version, storeKey))
+		key := []byte(fmt.Sprintf("%s%s", buildRemovedStoreKeyPrefix(version), storeKey))
 		if err := batch.Set(key, []byte{}); err != nil {
 			return err
 		}
@@ -116,27 +116,7 @@ func (m *MetadataStore) flushRemovedStoreKeys(version uint64, storeKeys []string
 	return batch.WriteSync()
 }
 
-func (m *MetadataStore) getRemovedStoreKeys(version uint64) (storeKeys []string, err error) {
-	end := []byte(fmt.Sprintf("%s%020d/", removedStoreKeyPrefix, version+1))
-	iter, err := m.kv.Iterator([]byte(removedStoreKeyPrefix), end)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if ierr := iter.Close(); ierr != nil {
-			err = ierr
-		}
-	}()
-
-	for ; iter.Valid(); iter.Next() {
-		storeKey := string(iter.Key()[len(end):])
-		storeKeys = append(storeKeys, storeKey)
-	}
-
-	return
-}
-
-func (m *MetadataStore) deleteRemovedStoreKeys(storeKeys []string, version uint64) (err error) {
+func (m *MetadataStore) deleteRemovedStoreKeys(version uint64, fn func(storeKey []byte) error) (err error) {
 	batch := m.kv.NewBatch()
 	defer func() {
 		if berr := batch.Close(); berr != nil {
@@ -144,7 +124,7 @@ func (m *MetadataStore) deleteRemovedStoreKeys(storeKeys []string, version uint6
 		}
 	}()
 
-	end := []byte(fmt.Sprintf("%s%020d/", removedStoreKeyPrefix, version+1))
+	end := buildRemovedStoreKeyPrefix(version + 1)
 	iter, err := m.kv.Iterator([]byte(removedStoreKeyPrefix), end)
 	if err != nil {
 		return err
@@ -156,9 +136,9 @@ func (m *MetadataStore) deleteRemovedStoreKeys(storeKeys []string, version uint6
 	}()
 
 	for ; iter.Valid(); iter.Next() {
-		storeKey := string(iter.Key()[len(end):])
-		if !slices.Contains(storeKeys, storeKey) {
-			continue
+		storeKey := iter.Key()[len(end):]
+		if err := fn(storeKey); err != nil {
+			return err
 		}
 		if err := batch.Delete(iter.Key()); err != nil {
 			return nil
@@ -171,4 +151,10 @@ func (m *MetadataStore) deleteRemovedStoreKeys(storeKeys []string, version uint6
 func (m *MetadataStore) deleteCommitInfo(version uint64) error {
 	cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
 	return m.kv.Delete(cInfoKey)
+}
+
+func buildRemovedStoreKeyPrefix(version uint64) []byte {
+	buf := make([]byte, 8)
+	binary.BigEndian.PutUint64(buf, version)
+	return []byte(fmt.Sprintf("%s%x/", removedStoreKeyPrefix, buf))
 }

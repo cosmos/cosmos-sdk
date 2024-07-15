@@ -72,7 +72,8 @@ func (ci *CommitInfo) GetStoreProof(storeKey []byte) ([]byte, *CommitmentOp, err
 		return bytes.Compare(ci.StoreInfos[i].Name, ci.StoreInfos[j].Name) < 0
 	})
 
-	index := len(ci.StoreInfos)
+	isEmpty := len(storeKey) == 0
+	index := -1
 	leaves := make([][]byte, len(ci.StoreInfos))
 	for i, si := range ci.StoreInfos {
 		var err error
@@ -80,20 +81,20 @@ func (ci *CommitInfo) GetStoreProof(storeKey []byte) ([]byte, *CommitmentOp, err
 		if err != nil {
 			return nil, nil, err
 		}
-		if bytes.Equal(si.Name, storeKey) {
+		if !isEmpty && bytes.Equal(si.Name, storeKey) {
 			index = i
 		}
 	}
 
-	if index == len(ci.StoreInfos) && len(storeKey) > 0 {
-		return nil, nil, fmt.Errorf("store key %s not found", storeKey)
+	if index == -1 {
+		if isEmpty {
+			index = 0
+		} else {
+			return nil, nil, fmt.Errorf("store key %s not found", storeKey)
+		}
 	}
 
 	rootHash, inners := ProofFromByteSlices(leaves, index)
-	if index == len(ci.StoreInfos) {
-		return rootHash, nil, nil
-	}
-
 	commitmentOp := ConvertCommitmentOp(inners, storeKey, ci.StoreInfos[index].GetHash())
 	return rootHash, &commitmentOp, nil
 }

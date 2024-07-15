@@ -108,7 +108,6 @@ func (t *IavlTree) SetInitialVersion(version uint64) error {
 
 // Prune prunes all versions up to and including the provided version.
 func (t *IavlTree) Prune(version uint64) error {
-	// latestVersion := t.tree.Version()
 	return t.tree.DeleteVersionsTo(int64(version))
 }
 

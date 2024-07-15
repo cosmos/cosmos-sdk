@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	protoio "github.com/cosmos/gogoproto/io"
+	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
@@ -112,15 +113,10 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 
 // LoadVersionAndUpgrade implements store.UpgradeableStore.
 func (c *CommitStore) LoadVersionAndUpgrade(targetVersion uint64, upgrades *corestore.StoreUpgrades) error {
-	storeKeys := make([]string, 0, len(c.multiTrees))
-	for storeKey := range c.multiTrees {
-		storeKeys = append(storeKeys, storeKey)
-	}
 	// deterministic iteration order for upgrades (as the underlying store may change and
 	// upgrades make store changes where the execution order may matter)
-	sort.Slice(storeKeys, func(i, j int) bool {
-		return storeKeys[i] < storeKeys[j]
-	})
+	storeKeys := maps.Keys(c.multiTrees)
+	sort.Strings(storeKeys)
 
 	removeTree := func(storeKey string) error {
 		if oldTree, ok := c.multiTrees[storeKey]; ok {
@@ -154,7 +150,7 @@ func (c *CommitStore) LoadVersionAndUpgrade(targetVersion uint64, upgrades *core
 		}
 
 		// If it has been renamed, migrate the data.
-		if oldKey := upgrades.GetOldKeyFromNew(storeKey); oldKey != "" {
+		if oldKey := upgrades.GetOldKeyFromNew(storeKey); len(oldKey) != 0 {
 			if err := c.migrateKVStore(oldKey, storeKey); err != nil {
 				return err
 			}
@@ -399,69 +395,59 @@ func (c *CommitStore) Prune(version uint64) (ferr error) {
 	return ferr
 }
 
-func (c *CommitStore) pruneRemovedStoreKeys(version uint64) (ferr error) {
-	removedStoreKeys, err := c.metadata.getRemovedStoreKeys(version)
-	if err != nil {
-		ferr = errors.Join(ferr, err)
-	}
-	for _, storeKey := range removedStoreKeys {
-		tree, err := c.mountTreeFn(storeKey)
+func (c *CommitStore) pruneRemovedStoreKeys(version uint64) error {
+	clearKVStore := func(storeKey []byte) (err error) {
+		tree, err := c.mountTreeFn(string(storeKey))
 		if err != nil {
-			ferr = errors.Join(ferr, err)
-			continue
+			return err
 		}
+		kvStoreGetter, ok := tree.(KVStoreGetter)
+		if !ok {
+			return nil
+		}
+		kvStore := kvStoreGetter.GetKVStoreWithBatch()
 
-		clearKVStore := func(kvStore corestore.KVStoreWithBatch) (err error) {
-			batch := kvStore.NewBatch()
-			iter, err := kvStore.Iterator(nil, nil)
+		batch := kvStore.NewBatch()
+		iter, err := kvStore.Iterator(nil, nil)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			err = iter.Close()
+			err = batch.Close()
+		}()
+
+		for ; iter.Valid(); iter.Next() {
+			if err := batch.Delete(iter.Key()); err != nil {
+				return err
+			}
+			bs, err := batch.GetByteSize()
 			if err != nil {
 				return err
 			}
-			defer func() {
-				err = iter.Close()
-				err = batch.Close()
-			}()
-
-			for ; iter.Valid(); iter.Next() {
-				if err := batch.Delete(iter.Key()); err != nil {
+			if bs > batchFlushThreshold {
+				if err := batch.Write(); err != nil {
 					return err
 				}
-				bs, err := batch.GetByteSize()
-				if err != nil {
+				if err := batch.Close(); err != nil {
 					return err
 				}
-				if bs > batchFlushThreshold {
-					if err := batch.Write(); err != nil {
-						return err
-					}
-					if err := batch.Close(); err != nil {
-						return err
-					}
-					batch = kvStore.NewBatch()
-				}
-			}
-			if err := batch.Write(); err != nil {
-				return err
-			}
-			if err := batch.Close(); err != nil {
-				return err
-			}
-			return nil
-		}
-
-		if kvStoreGetter, ok := tree.(KVStoreGetter); ok {
-			kvStore := kvStoreGetter.GetKVStoreWithBatch()
-			if err := clearKVStore(kvStore); err != nil {
-				ferr = errors.Join(ferr, err)
+				batch = kvStore.NewBatch()
 			}
 		}
+		if err := batch.Write(); err != nil {
+			return err
+		}
+		if err := batch.Close(); err != nil {
+			return err
+		}
+
+		c.oldTrees.Delete(string(storeKey))
+
+		return nil
 	}
 
-	if err := c.metadata.deleteRemovedStoreKeys(removedStoreKeys, version); err != nil {
-		ferr = errors.Join(ferr, err)
-	}
-
-	return ferr
+	return c.metadata.deleteRemovedStoreKeys(version, clearKVStore)
 }
 
 // PausePruning implements store.PausablePruner.

@@ -187,8 +187,8 @@ type BaseApp struct {
 	// by developers.
 	optimisticExec *oe.OptimisticExecution
 
-	// excludeNestedMsgsGas holds a set of message types for which gas costs for its nested messages are not calculated.
-	excludeNestedMsgsGas map[string]struct{}
+	// includeNestedMsgsGas holds a set of message types for which gas costs for its nested messages are calculated.
+	includeNestedMsgsGas map[string]struct{}
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -236,8 +236,8 @@ func NewBaseApp(
 	if app.interBlockCache != nil {
 		app.cms.SetInterBlockCache(app.interBlockCache)
 	}
-	if app.excludeNestedMsgsGas == nil {
-		app.excludeNestedMsgsGas = make(map[string]struct{})
+	if app.includeNestedMsgsGas == nil {
+		app.includeNestedMsgsGas = make(map[string]struct{})
 	}
 	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()
 
@@ -965,14 +965,10 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	}
 
 	if mode == execModeSimulate {
-		gas := ctx.GasMeter().GasConsumed()
 		for _, msg := range msgs {
 			nestedErr := app.simulateNestedMessages(ctx, msg)
 			if nestedErr != nil {
 				return gInfo, nil, anteEvents, nestedErr
-			}
-			if _, ok := app.excludeNestedMsgsGas[sdk.MsgTypeURL(msg)]; ok {
-				ctx.GasMeter().RefundGas(ctx.GasMeter().GasConsumed()-gas, "simulation of nested messages")
 			}
 		}
 	}
@@ -1095,15 +1091,15 @@ func (app *BaseApp) simulateNestedMessages(ctx sdk.Context, msg sdk.Msg) error {
 		return err
 	}
 
+	if err := validateBasicTxMsgs(app.msgServiceRouter, msgs); err != nil {
+		return err
+	}
+
 	for _, msg := range msgs {
 		err = app.simulateNestedMessages(ctx, msg)
 		if err != nil {
 			return err
 		}
-	}
-
-	if err := validateBasicTxMsgs(app.msgServiceRouter, msgs); err != nil {
-		return err
 	}
 
 	protoMessages := make([]protoreflect.Message, len(msgs))
@@ -1115,7 +1111,14 @@ func (app *BaseApp) simulateNestedMessages(ctx sdk.Context, msg sdk.Msg) error {
 		protoMessages[i] = protoMsg
 	}
 
+	initialGas := ctx.GasMeter().GasConsumed()
 	_, err = app.runMsgs(ctx, msgs, protoMessages, execModeSimulate)
+	if err == nil {
+		if _, includeGas := app.includeNestedMsgsGas[sdk.MsgTypeURL(msg)]; !includeGas {
+			consumedGas := ctx.GasMeter().GasConsumed() - initialGas
+			ctx.GasMeter().RefundGas(consumedGas, "simulation of nested messages")
+		}
+	}
 	return err
 }
 

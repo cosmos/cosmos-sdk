@@ -936,24 +936,24 @@ func TestABCI_Query_SimulateNestedMessagesGas(t *testing.T) {
 		consumedGas uint64
 	}{
 		{
-			name:  "add gas",
+			name:  "don't add gas",
 			suite: NewBaseAppSuite(t, anteOpt),
 			message: &baseapptestutil.MsgSend{
 				From:   addr.String(),
 				To:     toAddr.String(),
 				Amount: "10000stake",
 			},
-			consumedGas: 10,
+			consumedGas: 5,
 		},
 		{
-			name:  "don't add gas",
-			suite: NewBaseAppSuite(t, anteOpt, baseapp.SetExcludeNestedMsgsGas([]sdk.Msg{&baseapptestutil.MsgNestedMessages{}})),
+			name:  "add gas",
+			suite: NewBaseAppSuite(t, anteOpt, baseapp.SetIncludeNestedMsgsGas([]sdk.Msg{&baseapptestutil.MsgNestedMessages{}})),
 			message: &baseapptestutil.MsgSend{
 				From:   addr.String(),
 				To:     toAddr.String(),
 				Amount: "10000stake",
 			},
-			consumedGas: 5,
+			consumedGas: 10,
 		},
 	}
 	for _, tt := range tests {

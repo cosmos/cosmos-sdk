@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/math"
 	v1 "cosmossdk.io/x/gov/types/v1"
 )
@@ -34,8 +33,6 @@ type Config struct {
 	// CalculateVoteResultsAndVotingPowerFn is a function signature for calculating vote results and voting power
 	// Keeping it nil will use the default implementation
 	CalculateVoteResultsAndVotingPowerFn CalculateVoteResultsAndVotingPowerFn
-	// ExcludedNestedMsgsForGasSim is a list of messages that will avoid adding the gas of their nested messages when simulating
-	ExcludedNestedMsgsForGasSim []transaction.Msg
 }
 
 // DefaultConfig returns the default config for gov.
@@ -46,6 +43,5 @@ func DefaultConfig() Config {
 		MaxSummaryLen:                        10200,
 		MaxVoteOptionsLen:                    0, // 0 means this param is disabled, hence all supported options are allowed
 		CalculateVoteResultsAndVotingPowerFn: nil,
-		ExcludedNestedMsgsForGasSim:          []transaction.Msg{&v1.MsgSubmitProposal{}},
 	}
 }

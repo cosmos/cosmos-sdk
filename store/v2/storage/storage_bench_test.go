@@ -39,7 +39,7 @@ var (
 		},
 		"btree_sqlite": func(dataDir string) (store.VersionedDatabase, error) {
 			db, err := sqlite.New(dataDir)
-			return storage.NewStorageStore(db, lcoretestingg.NewNopLogger()), err
+			return storage.NewStorageStore(db, coretesting.NewNopLogger()), err
 		},
 	}
 	rng = rand.New(rand.NewSource(567320))

@@ -1,7 +1,12 @@
 package ante
 
 import (
+	"bytes"
 	"crypto/sha256"
+	"encoding/binary"
+	"sync"
+
+	"github.com/golang/protobuf/proto" // nolint: staticcheck // for proto.Message
 
 	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
@@ -11,6 +16,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
+
+// bufPool is a pool of bytes.Buffer objects to reduce memory allocations.
+var bufPool = sync.Pool{
+	New: func() interface{} {
+		return new(bytes.Buffer)
+	},
+}
+
+const DefaultSha256Cost = 25
 
 var _ sdk.AnteDecorator = (*UnorderedTxDecorator)(nil)
 
@@ -31,13 +45,15 @@ type UnorderedTxDecorator struct {
 	maxUnOrderedTTL uint64
 	txManager       *unorderedtx.Manager
 	env             appmodule.Environment
+	sha256Cost      uint64
 }
 
-func NewUnorderedTxDecorator(maxTTL uint64, m *unorderedtx.Manager, env appmodule.Environment) *UnorderedTxDecorator {
+func NewUnorderedTxDecorator(maxTTL uint64, m *unorderedtx.Manager, env appmodule.Environment, gasCost uint64) *UnorderedTxDecorator {
 	return &UnorderedTxDecorator{
 		maxUnOrderedTTL: maxTTL,
 		txManager:       m,
 		env:             env,
+		sha256Cost:      gasCost,
 	}
 }
 
@@ -62,17 +78,74 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unordered tx ttl exceeds %d", d.maxUnOrderedTTL)
 	}
 
-	txHash := sha256.Sum256(ctx.TxBytes())
+	// consume gas in all exec modes to avoid gas estimation discrepancies
+	if err := d.env.GasService.GasMeter(ctx).Consume(d.sha256Cost, "consume gas for calculating tx hash"); err != nil {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrOutOfGas, "out of gas")
+	}
+
+	// Avoid checking for duplicates and creating the identifier in simulation mode
+	// This is done to avoid sha256 computation in simulation mode
+	if d.env.TransactionService.ExecMode(ctx) == transaction.ExecModeSimulate {
+		return next(ctx, tx, false)
+	}
+
+	// calculate the tx hash
+	txHash, err := TxIdentifier(ttl, tx)
+	if err != nil {
+		return ctx, err
+	}
 
 	// check for duplicates
 	if d.txManager.Contains(txHash) {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "tx %X is duplicated")
 	}
-
 	if d.env.TransactionService.ExecMode(ctx) == transaction.ExecModeFinalize {
 		// a new tx included in the block, add the hash to the unordered tx manager
 		d.txManager.Add(txHash, ttl)
 	}
 
 	return next(ctx, tx, false)
+}
+
+// TxIdentifier returns a unique identifier for a transaction that is intended to be unordered.
+func TxIdentifier(timeout uint64, tx sdk.Tx) ([32]byte, error) {
+	feetx := tx.(sdk.FeeTx)
+	if feetx.GetFee().IsZero() {
+		return [32]byte{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction must have a fee")
+	}
+
+	buf := bufPool.Get().(*bytes.Buffer)
+	// Make sure to reset the buffer
+	buf.Reset()
+	defer bufPool.Put(buf)
+
+	// Use the buffer
+	for _, msg := range tx.GetMsgs() {
+		// loop through the messages and write them to the buffer
+		// encoding the msg to bytes makes it deterministic within the state machine.
+		// Malleability is not a concern here because the state machine will encode the transaction deterministically.
+		bz, err := proto.Marshal(msg)
+		if err != nil {
+			return [32]byte{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshal message")
+		}
+
+		if _, err := buf.Write(bz); err != nil {
+			return [32]byte{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to write message to buffer")
+		}
+	}
+
+	// write the timeout height to the buffer
+	if err := binary.Write(buf, binary.LittleEndian, timeout); err != nil {
+		return [32]byte{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to write timeout_height to buffer")
+	}
+
+	// write gas to the buffer
+	if err := binary.Write(buf, binary.LittleEndian, feetx.GetGas()); err != nil {
+		return [32]byte{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to write unordered to buffer")
+	}
+
+	txHash := sha256.Sum256(buf.Bytes())
+
+	// Return the Buffer to the pool
+	return txHash, nil
 }

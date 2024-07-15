@@ -111,6 +111,7 @@ func getModuleHashesAtHeight[T servertypes.Application](svrCtx *Context, appCrea
 	commitInfoForHeight = &storetypes.CommitInfo{
 		Version:    commitInfoForHeight.Version,
 		StoreInfos: storeInfos,
+		Timestamp:  commitInfoForHeight.Timestamp,
 	}
 
 	return commitInfoForHeight, nil

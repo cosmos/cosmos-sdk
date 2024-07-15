@@ -15,15 +15,22 @@ serialization, ensuring proper field ordering and encoding. A key feature of the
 various signing handlers. These handlers provide different methods for generating sign bytes. It also includes APIs for
 custom signer definitions, allowing developers to tailor the signing process to their specific needs.
 
+**Note**: `x/tx` is not a traditional Cosmos SDK module (it's not an AppModule).
+
 ## Contents
 
-* [Signing](#signing)
-  * [Key Features](#key-features)
-* [Decode](#decode)
-  * [Key Features](#key-features-1)
-  * [DecodedTx](#decodedtx)
-  * [Class Diagram](#class-diagram)
-  * [Decode Sequence Diagram](#decode-sequence-diagram)
+- [x/tx](#xtx)
+  - [Abstract](#abstract)
+  - [Contents](#contents)
+  - [Signing](#signing)
+    - [Key Features](#key-features)
+  - [Decode](#decode)
+    - [Key Features](#key-features-1)
+    - [DecodedTx](#decodedtx)
+    - [Class Diagram](#class-diagram)
+    - [Decode Sequence Diagram](#decode-sequence-diagram)
+  - [Disambiguation Note](#disambiguation-note)
+  - [Disclaimer](#disclaimer)
 
 
 ## Signing
@@ -151,3 +158,14 @@ sequenceDiagram
     D->>DT: Create DecodedTx
     D-->>-C: Return DecodedTx
 ```
+
+## Disclaimer
+
+It's important to clarify that `x/tx` is distinct from `x/auth/tx`:
+
+* `x/tx`: This package (the one described in this README) provides core transaction handling functionality.
+* `x/auth/tx`: This is a separate package and is typically used in the context of building a complete tx is that is going to be broadcast in Cosmos SDK applications.
+
+When you see a "tx" module referenced in `app_config.go` or similar application configuration files, it refers to
+`x/auth/tx`, not `x/tx` (as it's not an Appmodule). This naming similarity can be confusing, so it's crucial to pay
+attention to the import paths and context when working with these packages.

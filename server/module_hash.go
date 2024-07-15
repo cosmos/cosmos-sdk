@@ -35,7 +35,7 @@ func ModuleHashByHeightQuery[T servertypes.Application](appCreator servertypes.A
 
 			height, err := strconv.ParseInt(heightToRetrieveString, 10, 64)
 			if err != nil {
-				return err
+				return fmt.Errorf("invalid height: %w", err)
 			}
 
 			commitInfoForHeight, err := getModuleHashesAtHeight(serverCtx, appCreator, height)

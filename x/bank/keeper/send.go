@@ -350,6 +350,8 @@ func (k BaseSendKeeper) setBalance(ctx context.Context, addr sdk.AccAddress, bal
 		if err != nil {
 			return err
 		}
+		// set transient balance which will be emitted in the Endblocker
+		k.setTransientBalance(sdk.UnwrapSDKContext(ctx), addr, balance)
 		return nil
 	}
 

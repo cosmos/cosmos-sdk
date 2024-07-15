@@ -135,3 +135,7 @@ func (a *App[T]) ExecuteGenesisTx(_ []byte) error {
 func (a *App[T]) GetAppManager() *appmanager.AppManager[T] {
 	return a.AppManager
 }
+
+func (a *App[T]) GetGRPCQueryDecoders() map[string]func(requestBytes []byte) (gogoproto.Message, error) {
+	return a.GRPCQueryDecoders
+}

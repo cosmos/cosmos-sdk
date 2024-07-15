@@ -4,7 +4,6 @@ import (
 	_ "embed"
 	"path/filepath"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
@@ -225,9 +224,6 @@ func NewSimApp[T transaction.Tx](
 	if err := app.LoadLatest(); err != nil {
 		panic(err)
 	}
-
-	app.App.GetStore()
-
 	return app
 }
 
@@ -257,8 +253,4 @@ func (app *SimApp[T]) GetConsensusAuthority() string {
 // GetStore gets the app store.
 func (app *SimApp[T]) GetStore() any {
 	return app.App.GetStore()
-}
-
-func (app *SimApp[T]) GetGRPCQueryDecoders() map[string]func(requestBytes []byte) (gogoproto.Message, error) {
-	return app.GRPCQueryDecoders
 }

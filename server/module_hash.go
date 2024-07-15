@@ -4,12 +4,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/store/rootmulti"
@@ -72,7 +70,7 @@ func ModuleHashByHeightQuery[T servertypes.Application](appCreator servertypes.A
 
 func getModuleHashesAtHeight[T servertypes.Application](svrCtx *Context, appCreator servertypes.AppCreator[T], height int64) (*storetypes.CommitInfo, error) {
 	home := svrCtx.Config.RootDir
-	db, err := openDB(home, GetAppDBBackend(svrCtx.Viper))
+	db, err := OpenDB(home, GetAppDBBackend(svrCtx.Viper))
 	if err != nil {
 		return nil, fmt.Errorf("error opening DB, make sure osmosisd is not running when calling this query: %w", err)
 	}
@@ -116,9 +114,4 @@ func getModuleHashesAtHeight[T servertypes.Application](svrCtx *Context, appCrea
 	}
 
 	return commitInfoForHeight, nil
-}
-
-func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
-	dataDir := filepath.Join(rootDir, "data")
-	return dbm.NewDB("application", backendType, dataDir)
 }

@@ -107,6 +107,15 @@ updates:
       - "A:automerge"
       - dependencies
   - package-ecosystem: gomod
+    directory: "/schema"
+    schedule:
+      interval: weekly
+      day: wednesday
+      time: "01:53"
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
     directory: "/x/tx"
     schedule:
       interval: weekly
@@ -157,6 +166,24 @@ updates:
       interval: weekly
       day: wednesday
       time: "02:35"
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "x/accounts/defaults/multisig"
+    schedule:
+      interval: weekly
+      day: wednesday
+      time: "02:45"
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "x/accounts/defaults/lockup"
+    schedule:
+      interval: weekly
+      day: wednesday
+      time: "02:55"
     labels:
       - "A:automerge"
       - dependencies

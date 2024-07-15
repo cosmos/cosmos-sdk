@@ -43,7 +43,7 @@ func (o ObjectType) validate(enumValueMap map[string]map[string]bool) error {
 
 	for _, field := range o.KeyFields {
 		if err := field.Validate(); err != nil {
-			return fmt.Errorf("invalid key field %q: %w", field.Name, err)
+			return fmt.Errorf("invalid key field %q: %v", field.Name, err)
 		}
 
 		if field.Nullable {
@@ -62,7 +62,7 @@ func (o ObjectType) validate(enumValueMap map[string]map[string]bool) error {
 
 	for _, field := range o.ValueFields {
 		if err := field.Validate(); err != nil {
-			return fmt.Errorf("invalid value field %q: %w", field.Name, err)
+			return fmt.Errorf("invalid value field %q: %v", field.Name, err)
 		}
 
 		if fieldNames[field.Name] {
@@ -89,7 +89,7 @@ func (o ObjectType) ValidateObjectUpdate(update ObjectUpdate) error {
 	}
 
 	if err := ValidateObjectKey(o.KeyFields, update.Key); err != nil {
-		return fmt.Errorf("invalid key for object type %q: %w", update.TypeName, err)
+		return fmt.Errorf("invalid key for object type %q: %v", update.TypeName, err)
 	}
 
 	if update.Delete {

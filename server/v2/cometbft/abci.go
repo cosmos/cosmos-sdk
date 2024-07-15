@@ -506,6 +506,7 @@ func (c *Consensus[T]) Commit(ctx context.Context, _ *abciproto.CommitRequest) (
 }
 
 // Vote extensions
+
 // VerifyVoteExtension implements types.Application.
 func (c *Consensus[T]) VerifyVoteExtension(
 	ctx context.Context,

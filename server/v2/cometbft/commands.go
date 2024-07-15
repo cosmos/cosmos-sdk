@@ -20,8 +20,8 @@ import (
 
 	"cosmossdk.io/server/v2/cometbft/client/rpc"
 	auth "cosmossdk.io/x/auth/client/cli"
-	"github.com/cosmos/cosmos-sdk/client"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"

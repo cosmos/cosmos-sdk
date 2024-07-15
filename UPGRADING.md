@@ -103,7 +103,7 @@ transactions in your application:
 	anteDecorators := []sdk.AnteDecorator{
 		ante.NewSetUpContextDecorator(),
 		// ...
-		ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, unorderedtx.DefaultmaxTimeoutDuration, app.UnorderedTxManager),
+		ante.NewUnorderedTxDecorator(unorderedtx.DefaultmaxTimeoutDuration, app.UnorderedTxManager),
 		// ...
 	}
 

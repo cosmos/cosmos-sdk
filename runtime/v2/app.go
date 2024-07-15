@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 
@@ -9,33 +8,13 @@ import (
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	coreappmanager "cosmossdk.io/core/app"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/registry"
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 )
-
-var _ AppI[transaction.Tx] = (*App[transaction.Tx])(nil)
-
-// AppI is an interface that defines the methods required by the App.
-type AppI[T transaction.Tx] interface {
-	DeliverBlock(
-		ctx context.Context,
-		block *coreappmanager.BlockRequest[T],
-	) (*coreappmanager.BlockResponse, store.WriterMap, error)
-	ValidateTx(ctx context.Context, tx T) (coreappmanager.TxResult, error)
-	Simulate(ctx context.Context, tx T) (coreappmanager.TxResult, store.WriterMap, error)
-	Query(ctx context.Context, version uint64, request transaction.Msg) (transaction.Msg, error)
-	QueryWithState(ctx context.Context, state store.ReaderMap, request transaction.Msg) (transaction.Msg, error)
-
-	Logger() log.Logger
-	ModuleManager() *MM[T]
-	Close() error
-}
 
 // App is a wrapper around AppManager and ModuleManager that can be used in hybrid
 // app.go/app config scenarios or directly as a servertypes.Application instance.

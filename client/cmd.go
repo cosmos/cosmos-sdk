@@ -92,11 +92,6 @@ func ValidateCmd(cmd *cobra.Command, args []string) error {
 // - client.Context field pre-populated & flag not set: uses pre-populated value
 // - client.Context field pre-populated & flag set: uses set flag value
 func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
-	if clientCtx.OutputFormat == "" || flagSet.Changed(cli.OutputFlag) {
-		output, _ := flagSet.GetString(cli.OutputFlag)
-		clientCtx = clientCtx.WithOutputFormat(output)
-	}
-
 	if clientCtx.HomeDir == "" || flagSet.Changed(flags.FlagHome) {
 		homeDir, _ := flagSet.GetString(flags.FlagHome)
 		clientCtx = clientCtx.WithHomeDir(homeDir)
@@ -165,11 +160,19 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 				})))
 			}
 
+			dialOpts = append(dialOpts, grpc.WithDefaultCallOptions(grpc.ForceCodec(clientCtx.gRPCCodec())))
+
 			grpcClient, err := grpc.Dial(grpcURI, dialOpts...)
 			if err != nil {
 				return Context{}, err
 			}
 			clientCtx = clientCtx.WithGRPCClient(grpcClient)
+		}
+
+		// this should be last as gRPCCodec overwrites output flag to JSON
+		if clientCtx.OutputFormat == "" || flagSet.Changed(cli.OutputFlag) {
+			output, _ := flagSet.GetString(cli.OutputFlag)
+			clientCtx = clientCtx.WithOutputFormat(output)
 		}
 	}
 

@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type IntegrationTestOutOfGasSuite struct {
@@ -76,7 +77,7 @@ func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_TestService() {
 	s.Require().Equal("hello", testRes.Message)
 }
 
-func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_BankBalance() {
+func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_BankBalance_OutOfGas() {
 	val0 := s.network.GetValidators()[0]
 
 	// gRPC query to bank service should work
@@ -88,7 +89,8 @@ func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_BankBalance() {
 		&banktypes.QueryBalanceRequest{Address: val0.GetAddress().String(), Denom: denom},
 		grpc.Header(&header), // Also fetch grpc header
 	)
-	s.Require().ErrorContains(err, "out of gas")
+
+	s.Require().ErrorContains(err, sdkerrors.ErrOutOfGas.Error())
 }
 
 func TestIntegrationTestOutOfGasSuite(t *testing.T) {

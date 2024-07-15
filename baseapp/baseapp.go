@@ -787,10 +787,10 @@ func (app *BaseApp) beginBlock(_ *abci.RequestFinalizeBlock) (sdk.BeginBlock, er
 }
 
 func (app *BaseApp) deliverTx(tx []byte, txIndex int) *abci.ExecTxResult {
-	return app.deliverTxWithMultiStore(tx, txIndex, nil)
+	return app.deliverTxWithMultiStore(tx, txIndex, nil, nil)
 }
 
-func (app *BaseApp) deliverTxWithMultiStore(tx []byte, txIndex int, txMultiStore storetypes.MultiStore) *abci.ExecTxResult {
+func (app *BaseApp) deliverTxWithMultiStore(tx []byte, txIndex int, txMultiStore storetypes.MultiStore, incarnationCache map[string]any) *abci.ExecTxResult {
 	gInfo := sdk.GasInfo{}
 	resultStr := "successful"
 
@@ -803,7 +803,7 @@ func (app *BaseApp) deliverTxWithMultiStore(tx []byte, txIndex int, txMultiStore
 		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
 	}()
 
-	gInfo, result, anteEvents, err := app.runTxWithMultiStore(execModeFinalize, tx, nil, txIndex, txMultiStore)
+	gInfo, result, anteEvents, err := app.runTxWithMultiStore(execModeFinalize, tx, nil, txIndex, txMultiStore, incarnationCache)
 	if err != nil {
 		resultStr = "failed"
 		resp = sdkerrors.ResponseExecTxResultWithEvents(
@@ -863,16 +863,17 @@ func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
 // both txbytes and the decoded tx are passed to runTx to avoid the state machine encoding the tx and decoding the transaction twice
 // passing the decoded tx to runTX is optional, it will be decoded if the tx is nil
 func (app *BaseApp) runTx(mode execMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
-	return app.runTxWithMultiStore(mode, txBytes, tx, -1, nil)
+	return app.runTxWithMultiStore(mode, txBytes, tx, -1, nil, nil)
 }
 
-func (app *BaseApp) runTxWithMultiStore(mode execMode, txBytes []byte, tx sdk.Tx, txIndex int, txMultiStore storetypes.MultiStore) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
+func (app *BaseApp) runTxWithMultiStore(mode execMode, txBytes []byte, tx sdk.Tx, txIndex int, txMultiStore storetypes.MultiStore, incarnationCache map[string]any) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter, so we initialize upfront.
 	var gasWanted uint64
 
 	ctx := app.getContextForTx(mode, txBytes, txIndex)
+	ctx = ctx.WithIncarnationCache(incarnationCache)
 	if txMultiStore != nil {
 		ctx = ctx.WithMultiStore(txMultiStore)
 	}

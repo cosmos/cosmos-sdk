@@ -857,8 +857,8 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 
 func (app *BaseApp) executeTxs(ctx context.Context, txs [][]byte) ([]*abci.ExecTxResult, error) {
 	if app.txExecutor != nil {
-		return app.txExecutor(ctx, len(txs), app.finalizeBlockState.ms, func(i int, ms storetypes.MultiStore) *abci.ExecTxResult {
-			return app.deliverTxWithMultiStore(txs[i], i, ms)
+		return app.txExecutor(ctx, len(txs), app.finalizeBlockState.ms, func(i int, ms storetypes.MultiStore, incarnationCache map[string]any) *abci.ExecTxResult {
+			return app.deliverTxWithMultiStore(txs[i], i, ms, incarnationCache)
 		})
 	}
 

@@ -28,7 +28,7 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 
 	sut.StartChain(t)
 
-	timeoutTimestamp := time.Now().Add(time.Minute * 2)
+	timeoutTimestamp := time.Now().Add(time.Minute)
 	// send tokens
 	rsp1 := cli.Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake", fmt.Sprintf("--timeout-timestamp=%v", timeoutTimestamp.Unix()), "--unordered", "--sequence=1", "--note=1")
 	RequireTxSuccess(t, rsp1)
@@ -41,11 +41,7 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 	rsp2 := cli.WithRunErrorMatcher(assertDuplicateErr).Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake", fmt.Sprintf("--timeout-timestamp=%v", timeoutTimestamp.Unix()), "--unordered", "--sequence=1")
 	RequireTxFailure(t, rsp2)
 
-	// assert TX executed before timeout
-	for cli.QueryBalance(account2Addr, "stake") != 5000 {
-		t.Log("query balance")
-		if time.Now().After(timeoutTimestamp) {
-			t.Fatal("TX was not executed before timeout")
-		}
-	}
+	require.Eventually(t, func() bool {
+		return cli.QueryBalance(account2Addr, "stake") == 5000
+	}, time.Minute, time.Microsecond*500, "TX was not executed before timeout")
 }

@@ -1,8 +1,12 @@
 package store
 
+import (
+	storev2 "cosmossdk.io/store/v2"
+)
+
 func DefaultConfig() *Config {
 	return &Config{
-		Pruning:           PruningOptionDefault,
+		Pruning:           storev2.PruningOptionDefault,
 		AppDBBackend:      "",
 		PruningKeepRecent: 0,
 		PruningInterval:   0,

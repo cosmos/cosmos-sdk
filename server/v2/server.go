@@ -13,13 +13,12 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 
-	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 )
 
 // ServerComponent is a server module that can be started and stopped.
-type ServerComponent[AppT servercore.AppI[T], T transaction.Tx] interface {
+type ServerComponent[AppT AppI[T], T transaction.Tx] interface {
 	Name() string
 
 	Start(context.Context) error
@@ -28,7 +27,7 @@ type ServerComponent[AppT servercore.AppI[T], T transaction.Tx] interface {
 }
 
 // HasCLICommands is a server module that has CLI commands.
-type HasCLICommands[AppT servercore.AppI[T], T transaction.Tx] interface {
+type HasCLICommands[AppT AppI[T], T transaction.Tx] interface {
 	GetCommands() []*cobra.Command
 	GetTxs() []*cobra.Command
 	GetQueries() []*cobra.Command
@@ -44,7 +43,7 @@ type HasStartFlags interface {
 	StartCmdFlags() *pflag.FlagSet
 }
 
-var _ ServerComponent[servercore.AppI[transaction.Tx], transaction.Tx] = (*Server[servercore.AppI[transaction.Tx], transaction.Tx])(nil)
+var _ ServerComponent[AppI[transaction.Tx], transaction.Tx] = (*Server[AppI[transaction.Tx], transaction.Tx])(nil)
 
 // Configs returns a viper instance of the config file
 func ReadConfig(configPath string) (*viper.Viper, error) {
@@ -66,12 +65,12 @@ func ReadConfig(configPath string) (*viper.Viper, error) {
 	return v, nil
 }
 
-type Server[AppT servercore.AppI[T], T transaction.Tx] struct {
+type Server[AppT AppI[T], T transaction.Tx] struct {
 	logger     log.Logger
 	components []ServerComponent[AppT, T]
 }
 
-func NewServer[AppT servercore.AppI[T], T transaction.Tx](
+func NewServer[AppT AppI[T], T transaction.Tx](
 	logger log.Logger, components ...ServerComponent[AppT, T],
 ) *Server[AppT, T] {
 	return &Server[AppT, T]{

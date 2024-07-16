@@ -13,22 +13,21 @@ import (
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 
-	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 )
 
 var _ serverv2.ServerComponent[
-	servercore.AppI[transaction.Tx], transaction.Tx,
-] = (*GRPCGatewayServer[servercore.AppI[transaction.Tx], transaction.Tx])(nil)
+	serverv2.AppI[transaction.Tx], transaction.Tx,
+] = (*GRPCGatewayServer[serverv2.AppI[transaction.Tx], transaction.Tx])(nil)
 
 const (
 	// GRPCBlockHeightHeader is the gRPC header for block height.
 	GRPCBlockHeightHeader = "x-cosmos-block-height"
 )
 
-type GRPCGatewayServer[AppT servercore.AppI[T], T transaction.Tx] struct {
+type GRPCGatewayServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
 	logger     log.Logger
 	config     *Config
 	cfgOptions []CfgOption
@@ -38,7 +37,7 @@ type GRPCGatewayServer[AppT servercore.AppI[T], T transaction.Tx] struct {
 }
 
 // New creates a new gRPC-gateway server.
-func New[AppT servercore.AppI[T], T transaction.Tx](grpcSrv *grpc.Server, ir jsonpb.AnyResolver, cfgOptions ...CfgOption) *GRPCGatewayServer[AppT, T] {
+func New[AppT serverv2.AppI[T], T transaction.Tx](grpcSrv *grpc.Server, ir jsonpb.AnyResolver, cfgOptions ...CfgOption) *GRPCGatewayServer[AppT, T] {
 	// The default JSON marshaller used by the gRPC-Gateway is unable to marshal non-nullable non-scalar fields.
 	// Using the gogo/gateway package with the gRPC-Gateway WithMarshaler option fixes the scalar field marshaling issue.
 	marshalerOption := &gateway.JSONPb{

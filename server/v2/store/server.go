@@ -8,15 +8,16 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/log"
-	servercore "cosmossdk.io/core/server"
+
 	"cosmossdk.io/core/transaction"
+	serverv2 "cosmossdk.io/server/v2"
 )
 
-type StoreComponent[AppT servercore.AppI[T], T transaction.Tx] struct {
+type StoreComponent[AppT serverv2.AppI[T], T transaction.Tx] struct {
 	config *Config
 }
 
-func New[AppT servercore.AppI[T], T transaction.Tx]() *StoreComponent[AppT, T] {
+func New[AppT serverv2.AppI[T], T transaction.Tx]() *StoreComponent[AppT, T] {
 	return &StoreComponent[AppT, T]{}
 }
 

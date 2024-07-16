@@ -9,6 +9,7 @@ import (
 
 	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/log"
+	storev2 "cosmossdk.io/store/v2"
 )
 
 // QueryBlockResultsCmd implements the default command for a BlockResults query.
@@ -54,7 +55,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				return err
 			}
 
-			rootStore, err := CreateRootStore(home, logger)
+			rootStore, err := storev2.CreateRootStore(home, logger)
 			if err != nil {
 				return fmt.Errorf("Can not create root store %w", err)
 			}
@@ -91,7 +92,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 	return cmd
 }
 
-func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (*PruningOption, error) {
+func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (*storev2.PruningOption, error) {
 	// Get viper from cmd context
 	var rootViper *viper.Viper
 	value := cmd.Context().Value(corectx.ViperContextKey)
@@ -114,10 +115,10 @@ func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (*PruningOption
 	strategy := strings.ToLower(pruning)
 
 	switch strategy {
-	case PruningOptionDefault, PruningOptionNothing, PruningOptionEverything:
-		return NewPruningOptionFromString(strategy), nil
+	case storev2.PruningOptionDefault, storev2.PruningOptionNothing, storev2.PruningOptionEverything:
+		return storev2.NewPruningOptionFromString(strategy), nil
 
-	case PruningOptionCustom:
+	case storev2.PruningOptionCustom:
 		var (
 			pruningKeepRecent uint64
 			pruningInterval   uint64
@@ -142,7 +143,7 @@ func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (*PruningOption
 			pruningInterval = rootViper.GetUint64(FlagPruningInterval)
 		}
 
-		opts := NewPruningOptionWithCustom(
+		opts := storev2.NewPruningOptionWithCustom(
 			pruningKeepRecent,
 			pruningInterval,
 		)

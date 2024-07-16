@@ -15,7 +15,6 @@ import (
 	"github.com/spf13/pflag"
 
 	"cosmossdk.io/core/log"
-	servercore "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
@@ -337,9 +336,9 @@ func initTestnetFiles[T transaction.Tx](
 		}
 
 		// Write server config
-		cometServer := cometbft.New[servercore.AppI[T], T](&temporaryTxDecoder[T]{clientCtx.TxConfig}, cometbft.ServerOptions[T]{}, cometbft.OverwriteDefaultCometConfig(nodeConfig))
-		grpcServer := grpc.New[servercore.AppI[T], T](grpc.OverwriteDefaultConfig(grpcConfig))
-		server := serverv2.NewServer[servercore.AppI[T], T](log.NewNopLogger(), cometServer, grpcServer)
+		cometServer := cometbft.New[serverv2.AppI[T], T](&temporaryTxDecoder[T]{clientCtx.TxConfig}, cometbft.ServerOptions[T]{}, cometbft.OverwriteDefaultCometConfig(nodeConfig))
+		grpcServer := grpc.New[serverv2.AppI[T], T](grpc.OverwriteDefaultConfig(grpcConfig))
+		server := serverv2.NewServer[serverv2.AppI[T], T](log.NewNopLogger(), cometServer, grpcServer)
 		err = server.WriteConfig(filepath.Join(nodeDir, "config"))
 		if err != nil {
 			return err

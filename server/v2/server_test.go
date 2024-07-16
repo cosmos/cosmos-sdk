@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	coreapp "cosmossdk.io/core/app"
-	servercore "cosmossdk.io/core/server"
+
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
@@ -31,7 +31,7 @@ func (*mockInterfaceRegistry) ListImplementations(ifaceTypeURL string) []string 
 func (*mockInterfaceRegistry) ListAllInterfaces() []string { panic("not implemented") }
 
 type mockApp[T transaction.Tx] struct {
-	servercore.AppI[T]
+	serverv2.AppI[T]
 }
 
 func (*mockApp[T]) InterfaceRegistry() coreapp.InterfaceRegistry {
@@ -59,7 +59,7 @@ func TestServer(t *testing.T) {
 	}
 
 	logger := log.NewLogger(os.Stdout)
-	grpcServer := grpc.New[servercore.AppI[transaction.Tx], transaction.Tx]()
+	grpcServer := grpc.New[serverv2.AppI[transaction.Tx], transaction.Tx]()
 	if err := grpcServer.Init(&mockApp[transaction.Tx]{}, v, logger); err != nil {
 		t.Log(err)
 		t.Fail()
@@ -67,7 +67,7 @@ func TestServer(t *testing.T) {
 
 	mockServer := &mockServer{name: "mock-server-1", ch: make(chan string, 100)}
 
-	server := serverv2.NewServer[servercore.AppI[transaction.Tx], transaction.Tx](
+	server := serverv2.NewServer[serverv2.AppI[transaction.Tx], transaction.Tx](
 		logger,
 		grpcServer,
 		mockServer,

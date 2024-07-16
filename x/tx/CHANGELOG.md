@@ -33,10 +33,6 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 ## [Unreleased]
 
-### Improvements
-
-* [#20438](https://github.com/cosmos/cosmos-sdk/pull/20438) Add `--skip-signature-verification` flag to multisign command to allow nested multisigs.
-
 ## [v0.13.3](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.3) - 2024-04-22
 
 ### Improvements

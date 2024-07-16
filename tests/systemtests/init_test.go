@@ -22,5 +22,5 @@ func TestWaitForBlock(t *testing.T) {
 	sut.StartChain(t)
 
 	// query validator address to delegate tokens
-	sut.AwaitBlockHeight(t, 5, time.Second*30)
+	sut.AwaitBlockHeight(t, 12, time.Second*30)
 }

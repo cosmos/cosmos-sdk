@@ -567,7 +567,11 @@ func registerServices[T transaction.Tx](s appmodule.HasServices, app *App[T], re
 	if err != nil {
 		return fmt.Errorf("unable to register services: %w", err)
 	}
-	app.GRPCMethodsToMessageMap = c.grpcQueryDecoders
+
+	// we merge current app.GRPCQueryDecoders with the ones we got from the module.
+	for path, decoder := range c.grpcQueryDecoders {
+		app.GRPCQueryDecoders[path] = decoder
+	}
 	return nil
 }
 
@@ -621,7 +625,8 @@ func (c *configurator) registerQueryHandlers(sd *grpc.ServiceDesc, ss interface{
 		decoderFunc := func() gogoproto.Message {
 			return reflect.New(typ.Elem()).Interface().(gogoproto.Message)
 		}
-		c.grpcQueryDecoders[md.MethodName] = decoderFunc
+		methodName := fmt.Sprintf("/%s/%s", sd.ServiceName, md.MethodName)
+		c.grpcQueryDecoders[methodName] = decoderFunc
 	}
 	return nil
 }

@@ -130,11 +130,19 @@ func ProvideAppBuilder[T transaction.Tx](
 
 	msgRouterBuilder := stf.NewMsgRouterBuilder()
 	app := &App[T]{
+		AppManager:         nil,
+		stf:                nil,
+		msgRouterBuilder:   msgRouterBuilder,
+		queryRouterBuilder: stf.NewMsgRouterBuilder(), // TODO dedicated query router
+		db:                 nil,
+		logger:             nil,
+		config:             nil,
+		appConfig:          nil,
 		storeKeys:          nil,
 		interfaceRegistrar: interfaceRegistrar,
 		amino:              amino,
-		msgRouterBuilder:   msgRouterBuilder,
-		queryRouterBuilder: stf.NewMsgRouterBuilder(), // TODO dedicated query router
+		moduleManager:      nil,
+		GRPCQueryDecoders:  map[string]func(requestBytes []byte) (proto.Message, error){},
 	}
 	appBuilder := &AppBuilder[T]{app: app}
 

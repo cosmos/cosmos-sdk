@@ -27,7 +27,7 @@ func TestUnorderedTxDecorator_OrderedTx(t *testing.T) {
 
 	suite := SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultmaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment()))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment()))
 
 	tx, txBz := genUnorderedTx(t, false, time.Time{})
 	ctx := sdk.Context{}.WithTxBytes(txBz)
@@ -46,7 +46,7 @@ func TestUnorderedTxDecorator_UnorderedTx_NoTTL(t *testing.T) {
 
 	suite := SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultmaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment()))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment()))
 
 	tx, txBz := genUnorderedTx(t, true, time.Time{})
 	ctx := sdk.Context{}.WithTxBytes(txBz)
@@ -65,9 +65,9 @@ func TestUnorderedTxDecorator_UnorderedTx_InvalidTTL(t *testing.T) {
 
 	suite := SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultmaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment()))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment()))
 
-	tx, txBz := genUnorderedTx(t, true, time.Now().Add(unorderedtx.DefaultmaxTimeoutDuration+time.Second))
+	tx, txBz := genUnorderedTx(t, true, time.Now().Add(unorderedtx.DefaultMaxTimeoutDuration+time.Second))
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithHeaderInfo(header.Info{Time: time.Now()})
 	_, err := chain(ctx, tx, false)
 	require.Error(t, err)
@@ -83,7 +83,7 @@ func TestUnorderedTxDecorator_UnorderedTx_AlreadyExists(t *testing.T) {
 
 	suite := SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultmaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment()))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment()))
 
 	tx, txBz := genUnorderedTx(t, true, time.Now().Add(time.Minute))
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithHeaderInfo(header.Info{Time: time.Now()})
@@ -105,7 +105,7 @@ func TestUnorderedTxDecorator_UnorderedTx_ValidCheckTx(t *testing.T) {
 
 	suite := SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultmaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment()))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment()))
 
 	tx, txBz := genUnorderedTx(t, true, time.Now().Add(time.Minute))
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithHeaderInfo(header.Info{Time: time.Now()}).WithExecMode(sdk.ExecModeCheck)
@@ -124,7 +124,7 @@ func TestUnorderedTxDecorator_UnorderedTx_ValidDeliverTx(t *testing.T) {
 
 	suite := SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultmaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment()))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment()))
 
 	tx, txBz := genUnorderedTx(t, true, time.Now().Add(time.Minute))
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithHeaderInfo(header.Info{Time: time.Now()}).WithExecMode(sdk.ExecModeFinalize)

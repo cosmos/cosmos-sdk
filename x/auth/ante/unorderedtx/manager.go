@@ -20,8 +20,7 @@ import (
 const (
 	// DefaultmaxTimeoutDuration defines the default maximum duration an un-ordered transaction
 	// can set.
-	// TODO: need to decide a default value
-	DefaultmaxTimeoutDuration = time.Minute * 40
+	DefaultMaxTimeoutDuration = time.Minute * 40
 
 	dirName  = "unordered_txs"
 	fileName = "data"
@@ -166,9 +165,9 @@ func (m *Manager) exportSnapshot(height uint64, snapshotWriter func([]byte) erro
 	keys := maps.Keys(m.txHashes)
 	sort.Slice(keys, func(i, j int) bool { return bytes.Compare(keys[i][:], keys[j][:]) < 0 })
 
+	timestamp := time.Unix(int64(height), 0)
 	for _, txHash := range keys {
 		timeoutTime := m.txHashes[txHash]
-		timestamp := time.Unix(int64(height), 0)
 		if timestamp.After(timeoutTime) {
 			// skip expired txs that have yet to be purged
 			continue

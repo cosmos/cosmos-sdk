@@ -2,6 +2,8 @@ package stf
 
 import (
 	"context"
+
+	"cosmossdk.io/core/store"
 )
 
 func GetExecutionContext(ctx context.Context) *executionContext {
@@ -10,4 +12,8 @@ func GetExecutionContext(ctx context.Context) *executionContext {
 		return nil
 	}
 	return executionCtx
+}
+
+func GetStateFromContext(ctx *executionContext) store.WriterMap {
+	return ctx.state
 }

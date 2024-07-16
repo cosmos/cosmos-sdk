@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"crypto/sha256"
 	"fmt"
 
 	"cosmossdk.io/core/log"
@@ -94,9 +95,10 @@ func (s *MockStore) Query(storeKey []byte, version uint64, key []byte, prove boo
 
 func (s *MockStore) LastCommitID() (proof.CommitID, error) {
 	v, _, err := s.StateLatest()
+	bz := sha256.Sum256([]byte{})
 	return proof.CommitID{
 		Version: v,
-		Hash:    []byte{},
+		Hash:    bz[:],
 	}, err
 }
 
@@ -105,7 +107,10 @@ func (s *MockStore) SetInitialVersion(v uint64) error {
 }
 
 func (s *MockStore) WorkingHash(changeset *corestore.Changeset) (corestore.Hash, error) {
-	return s.Commiter.SetInitialVersion(v)
+	_, state, _ := s.StateLatest()
+	writer := branch.DefaultNewWriterMap(state)
+	err := writer.ApplyStateChanges(changeset.Changes)
+	return []byte{}, err
 }
 
 

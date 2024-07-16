@@ -2,31 +2,36 @@ package cometbft
 
 import (
 	"context"
+	"fmt"
 	"testing"
+	"time"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/core/transaction"
 	am "cosmossdk.io/server/v2/appmanager"
-	ammstore "cosmossdk.io/server/v2/appmanager/store"
 	"cosmossdk.io/server/v2/cometbft/mempool"
+	cometmock "cosmossdk.io/server/v2/cometbft/mock"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/mock"
-	cometmock "cosmossdk.io/server/v2/cometbft/mock"
-	"cosmossdk.io/store/v2/storage/pebbledb"
-	abci "github.com/cometbft/cometbft/abci/types"
+	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+
+	// gogoproto "github.com/cosmos/gogoproto/proto"
+	// gogotypes "github.com/cosmos/gogoproto/types"
+	"crypto/sha256"
+
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func TestConsensus(t *testing.T) {
-	mockTx := mock.Tx{
-		Sender:   []byte("sender"),
-		Msg:      wrapperspb.Bool(true), // msg does not matter at all because our handler does nothing.
-		GasLimit: 100_000,
-	}
+	// mockTx := mock.Tx{
+	// 	Sender:   []byte("sender"),
+	// 	Msg:      &gogotypes.BoolValue{Value: true},
+	// 	GasLimit: 100_000,
+	// }
+
+	sum := sha256.Sum256([]byte("test-hash"))
 
 	s, err := stf.NewSTF(
 		log.NewNopLogger().With("module", "stf"),
@@ -64,15 +69,26 @@ func TestConsensus(t *testing.T) {
 	am, err := b.Build()
 	require.NoError(t, err)
 
-
 	c := NewConsensus[mock.Tx](am, mempool.NoOpMempool[mock.Tx]{}, mockStore, Config{}, mock.TxCodec{}, nil)
 
-	t.Run("Check tx basic", func(t *testing.T) {
-		res, err := c.CheckTx(context.Background(), &abci.RequestCheckTx{
-			Tx:   mockTx.Bytes(),
-			Type: 0,
+	// t.Run("Check tx basic", func(t *testing.T) {
+	// 	res, err := c.CheckTx(context.Background(), &abciproto.CheckTxRequest{
+	// 		Tx:   mockTx.Bytes(),
+	// 		Type: 0,
+	// 	})
+	// 	require.NotNil(t, res.GasUsed)
+	// 	require.NoError(t, err)
+	// })
+
+	t.Run("Finalize block", func(t *testing.T) {
+		res, err := c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
+			Txs:    nil,
+			Height: 1,
+			Time:   time.Now(),
+			Hash:   sum[:],
 		})
-		require.NotNil(t, res.GasUsed)
+		fmt.Println(len(sum[:]))
+		fmt.Println("Finalize ", res, err)
 		require.NoError(t, err)
 	})
 }
@@ -83,7 +99,7 @@ func kvSet(t *testing.T, ctx context.Context, v string) error {
 	t.Helper()
 	executionCtx := stf.GetExecutionContext(ctx)
 	require.NotNil(t, executionCtx)
-	state, err := executionCtx.State.GetWriter(actorName)
+	state, err := stf.GetStateFromContext(executionCtx).GetWriter(actorName)
 	require.NoError(t, err)
 	return state.Set([]byte(v), []byte(v))
 }

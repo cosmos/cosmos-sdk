@@ -698,7 +698,6 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 		fmt.Sprintf("--p2p.laddr=tcp://localhost:%d", node.P2PPort),
 		fmt.Sprintf("--rpc.laddr=tcp://localhost:%d", node.RPCPort),
 		fmt.Sprintf("--grpc.address=localhost:%d", 9090+nodeNumber),
-		fmt.Sprintf("--grpc-web.address=localhost:%d", 8090+nodeNumber),
 		"--moniker=" + moniker,
 		"--log_level=info",
 		"--home", nodePath,

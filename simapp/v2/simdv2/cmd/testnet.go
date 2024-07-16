@@ -336,8 +336,8 @@ func initTestnetFiles[T transaction.Tx](
 		}
 
 		// Write server config
-		cometServer := cometbft.New[serverv2.AppI[T], T](&temporaryTxDecoder[T]{clientCtx.TxConfig}, cometbft.ServerOptions[T]{}, cometbft.OverwriteDefaultCometConfig(nodeConfig))
-		grpcServer := grpc.New[serverv2.AppI[T], T](grpc.OverwriteDefaultConfig(grpcConfig))
+		cometServer := cometbft.New[T](&temporaryTxDecoder[T]{clientCtx.TxConfig}, cometbft.ServerOptions[T]{}, cometbft.OverwriteDefaultCometConfig(nodeConfig))
+		grpcServer := grpc.New[T](grpc.OverwriteDefaultConfig(grpcConfig))
 		server := serverv2.NewServer(coretesting.NewNopLogger(), cometServer, grpcServer)
 		err = server.WriteConfig(filepath.Join(nodeDir, "config"))
 		if err != nil {

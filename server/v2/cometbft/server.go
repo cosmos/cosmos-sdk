@@ -20,7 +20,6 @@ import (
 
 	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/core/log"
-
 	"cosmossdk.io/core/transaction"
 	serverv2 "cosmossdk.io/server/v2"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
@@ -34,10 +33,8 @@ var (
 	_ serverv2.ServerComponent[
 		serverv2.AppI[transaction.Tx], transaction.Tx,
 	] = (*CometBFTServer[serverv2.AppI[transaction.Tx], transaction.Tx])(nil)
-	_ serverv2.HasCLICommands[
-		serverv2.AppI[transaction.Tx], transaction.Tx,
-	] = (*CometBFTServer[serverv2.AppI[transaction.Tx], transaction.Tx])(nil)
-	_ serverv2.HasStartFlags = (*CometBFTServer[serverv2.AppI[transaction.Tx], transaction.Tx])(nil)
+	_ serverv2.HasCLICommands = (*CometBFTServer[serverv2.AppI[transaction.Tx], transaction.Tx])(nil)
+	_ serverv2.HasStartFlags  = (*CometBFTServer[serverv2.AppI[transaction.Tx], transaction.Tx])(nil)
 )
 
 type CometBFTServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
@@ -192,27 +189,22 @@ func (s *CometBFTServer[AppT, T]) StartCmdFlags() *pflag.FlagSet {
 	return flags
 }
 
-func (s *CometBFTServer[AppT, T]) GetCommands() []*cobra.Command {
-	return []*cobra.Command{
-		s.StatusCommand(),
-		s.ShowNodeIDCmd(),
-		s.ShowValidatorCmd(),
-		s.ShowAddressCmd(),
-		s.VersionCmd(),
-		cmtcmd.ResetAllCmd,
-		cmtcmd.ResetStateCmd,
-	}
-}
-
-func (s *CometBFTServer[AppT, T]) GetTxs() []*cobra.Command {
-	return nil
-}
-
-func (s *CometBFTServer[AppT, T]) GetQueries() []*cobra.Command {
-	return []*cobra.Command{
-		s.QueryBlockCmd(),
-		s.QueryBlocksCmd(),
-		s.QueryBlockResultsCmd(),
+func (s *CometBFTServer[AppT, T]) CLICommands() serverv2.CLIConfig {
+	return serverv2.CLIConfig{
+		Commands: []*cobra.Command{
+			s.StatusCommand(),
+			s.ShowNodeIDCmd(),
+			s.ShowValidatorCmd(),
+			s.ShowAddressCmd(),
+			s.VersionCmd(),
+			cmtcmd.ResetAllCmd,
+			cmtcmd.ResetStateCmd,
+		},
+		Queries: []*cobra.Command{
+			s.QueryBlockCmd(),
+			s.QueryBlocksCmd(),
+			s.QueryBlockResultsCmd(),
+		},
 	}
 }
 

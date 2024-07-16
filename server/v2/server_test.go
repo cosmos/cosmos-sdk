@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	coreapp "cosmossdk.io/core/app"
-
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
@@ -67,7 +66,7 @@ func TestServer(t *testing.T) {
 
 	mockServer := &mockServer{name: "mock-server-1", ch: make(chan string, 100)}
 
-	server := serverv2.NewServer[serverv2.AppI[transaction.Tx], transaction.Tx](
+	server := serverv2.NewServer(
 		logger,
 		grpcServer,
 		mockServer,

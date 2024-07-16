@@ -27,10 +27,8 @@ type ServerComponent[AppT AppI[T], T transaction.Tx] interface {
 }
 
 // HasCLICommands is a server module that has CLI commands.
-type HasCLICommands[AppT AppI[T], T transaction.Tx] interface {
-	GetCommands() []*cobra.Command
-	GetTxs() []*cobra.Command
-	GetQueries() []*cobra.Command
+type HasCLICommands interface {
+	CLICommands() CLIConfig
 }
 
 // HasConfig is a server module that has a config.
@@ -137,10 +135,20 @@ func (s *Server[AppT, T]) CLICommands() CLIConfig {
 
 	commands := CLIConfig{}
 	for _, mod := range s.components {
-		if climod, ok := mod.(HasCLICommands[AppT, T]); ok {
-			commands.Commands = append(commands.Commands, compart(mod.Name(), climod.GetCommands()...))
-			commands.Txs = append(commands.Txs, compart(mod.Name(), climod.GetTxs()...))
-			commands.Queries = append(commands.Queries, compart(mod.Name(), climod.GetQueries()...))
+		if climod, ok := mod.(HasCLICommands); ok {
+			srvCmd := climod.CLICommands()
+
+			if len(srvCmd.Commands) > 0 {
+				commands.Commands = append(commands.Commands, compart(mod.Name(), srvCmd.Commands...))
+			}
+
+			if len(srvCmd.Txs) > 0 {
+				commands.Txs = append(commands.Txs, compart(mod.Name(), srvCmd.Txs...))
+			}
+
+			if len(srvCmd.Queries) > 0 {
+				commands.Queries = append(commands.Queries, compart(mod.Name(), srvCmd.Queries...))
+			}
 		}
 	}
 

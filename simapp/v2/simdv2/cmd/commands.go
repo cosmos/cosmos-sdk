@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/client/v2/offchain"
-
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
@@ -114,7 +113,7 @@ func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
 	// Add empty server struct here for writing default config
 	if err = serverv2.AddCommands[AppT, T](
 		rootCmd,
-		newApp[AppT, T],
+		newApp,
 		logger,
 		cometbft.New[AppT, T](&temporaryTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
 		grpc.New[AppT, T](),

@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/log"
-
 	"cosmossdk.io/core/transaction"
 	serverv2 "cosmossdk.io/server/v2"
 )

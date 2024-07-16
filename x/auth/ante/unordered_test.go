@@ -17,6 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
+const gasConsumed = uint64(25)
+
 func TestUnorderedTxDecorator_OrderedTx(t *testing.T) {
 	txm := unorderedtx.NewManager(t.TempDir())
 	defer func() {
@@ -27,7 +29,7 @@ func TestUnorderedTxDecorator_OrderedTx(t *testing.T) {
 
 	suite := SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment()))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment(), ante.DefaultSha256Cost))
 
 	tx, txBz := genUnorderedTx(t, false, time.Time{})
 	ctx := sdk.Context{}.WithTxBytes(txBz)
@@ -46,7 +48,7 @@ func TestUnorderedTxDecorator_UnorderedTx_NoTTL(t *testing.T) {
 
 	suite := SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment()))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment(), ante.DefaultSha256Cost))
 
 	tx, txBz := genUnorderedTx(t, true, time.Time{})
 	ctx := sdk.Context{}.WithTxBytes(txBz)
@@ -65,7 +67,7 @@ func TestUnorderedTxDecorator_UnorderedTx_InvalidTTL(t *testing.T) {
 
 	suite := SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment()))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment(), ante.DefaultSha256Cost))
 
 	tx, txBz := genUnorderedTx(t, true, time.Now().Add(unorderedtx.DefaultMaxTimeoutDuration+time.Second))
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithHeaderInfo(header.Info{Time: time.Now()})
@@ -83,7 +85,7 @@ func TestUnorderedTxDecorator_UnorderedTx_AlreadyExists(t *testing.T) {
 
 	suite := SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment()))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment(), ante.DefaultSha256Cost))
 
 	tx, txBz := genUnorderedTx(t, true, time.Now().Add(time.Minute))
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithHeaderInfo(header.Info{Time: time.Now()})
@@ -105,7 +107,7 @@ func TestUnorderedTxDecorator_UnorderedTx_ValidCheckTx(t *testing.T) {
 
 	suite := SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment()))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment(), ante.DefaultSha256Cost))
 
 	tx, txBz := genUnorderedTx(t, true, time.Now().Add(time.Minute))
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithHeaderInfo(header.Info{Time: time.Now()}).WithExecMode(sdk.ExecModeCheck)
@@ -124,7 +126,7 @@ func TestUnorderedTxDecorator_UnorderedTx_ValidDeliverTx(t *testing.T) {
 
 	suite := SetupTestSuite(t, false)
 
-	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment()))
+	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment(), ante.DefaultSha256Cost))
 
 	tx, txBz := genUnorderedTx(t, true, time.Now().Add(time.Minute))
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithHeaderInfo(header.Info{Time: time.Now()}).WithExecMode(sdk.ExecModeFinalize)
@@ -132,8 +134,10 @@ func TestUnorderedTxDecorator_UnorderedTx_ValidDeliverTx(t *testing.T) {
 	_, err := chain(ctx, tx, false)
 	require.NoError(t, err)
 
-	txHash := sha256.Sum256(txBz)
-	require.True(t, txm.Contains(txHash))
+	bz := [32]byte{}
+	copy(bz[:], txBz[:32])
+
+	require.True(t, txm.Contains(bz))
 }
 
 func genUnorderedTx(t *testing.T, unordered bool, timestamp time.Time) (sdk.Tx, []byte) {
@@ -160,8 +164,9 @@ func genUnorderedTx(t *testing.T, unordered bool, timestamp time.Time) (sdk.Tx, 
 	tx, err := s.CreateTestTx(s.ctx, privKeys, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	txBz, err := s.encCfg.TxConfig.TxEncoder()(tx)
+	txBz, err := ante.TxIdentifier(uint64(timestamp.Unix()), tx)
+
 	require.NoError(t, err)
 
-	return tx, txBz
+	return tx, txBz[:]
 }

@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	rootCmd := cmd.NewRootCmd[serverv2.AppI[transaction.Tx], transaction.Tx]()
+	rootCmd := cmd.NewRootCmd[transaction.Tx]()
 	if err := serverv2.Execute(rootCmd, clientv2helpers.EnvPrefix, simapp.DefaultNodeHome); err != nil {
 		fmt.Fprintln(rootCmd.OutOrStderr(), err)
 		os.Exit(1)

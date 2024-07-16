@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/slices"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
@@ -44,6 +45,10 @@ type App[T transaction.Tx] struct {
 	interfaceRegistrar registry.InterfaceRegistrar
 	amino              legacy.Amino
 	moduleManager      *MM[T]
+
+	// GRPCQueryDecoders maps gRPC method name to a function that decodes the request
+	// bytes into a gogoproto.Message, which then can be passed to appmanager.
+	GRPCQueryDecoders map[string]func(requestBytes []byte) (gogoproto.Message, error)
 }
 
 // Logger returns the app logger.
@@ -108,4 +113,8 @@ func (a *App[T]) ExecuteGenesisTx(_ []byte) error {
 
 func (a *App[T]) GetAppManager() *appmanager.AppManager[T] {
 	return a.AppManager
+}
+
+func (a *App[T]) GetGRPCQueryDecoders() map[string]func(requestBytes []byte) (gogoproto.Message, error) {
+	return a.GRPCQueryDecoders
 }

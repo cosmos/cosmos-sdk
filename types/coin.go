@@ -957,3 +957,35 @@ func NormalizeCoins(coins []DecCoin) Coins {
 
 	return result
 }
+
+// CoinFromString constructs coin from string
+func NewCoinFromString(stringCoin string) (Coin, error) {
+	// Check if the first character is a digit
+	if len(stringCoin) == 0 || !unicode.IsDigit(rune(stringCoin[0])) {
+		return Coin{}, fmt.Errorf("invalid input: %s", stringCoin)
+	}
+
+	var amountPart string
+	var denomPart string
+	// Iterate through the input string
+	for i, char := range stringCoin {
+		if unicode.IsDigit(char) {
+			amountPart += string(char)
+		} else {
+			denomPart = stringCoin[i:]
+			break
+		}
+	}
+
+	// Check amount and denom
+	if amountPart == "" || !MatchDenom(denomPart) {
+		return Coin{}, fmt.Errorf("invalid input: %s", stringCoin)
+	}
+	// convert amount
+	amountInt, ok := math.NewIntFromString(amountPart)
+	if !ok {
+		return Coin{}, fmt.Errorf("invalid input: %s", stringCoin)
+	}
+
+	return NewCoin(denomPart, amountInt), nil
+}

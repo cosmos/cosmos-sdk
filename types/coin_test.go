@@ -1488,3 +1488,15 @@ func (s *coinTestSuite) TestParseCoin() {
 		}
 	}
 }
+
+func (s *coinTestSuite) TestNewCoinFromString() {
+	a, err := sdk.NewCoinFromString("1000atom")
+	s.NoError(err)
+	s.Equal(a, sdk.NewInt64Coin("atom", 1000))
+
+	_, err = sdk.NewCoinFromString("1000:usdt")
+	s.Error(err)
+
+	_, err = sdk.NewCoinFromString("u1000atom")
+	s.Error(err)
+}

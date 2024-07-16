@@ -116,7 +116,7 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 	// require we cannot commit (write) to a cache-versioned multi-store
 	require.Panics(t, func() {
 		kvStore.Set(k, []byte("newValue"))
-		kvStore.(types.CacheWrap).Write()
+		cms.Write()
 	})
 }
 

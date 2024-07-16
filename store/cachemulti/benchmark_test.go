@@ -4,16 +4,18 @@ import (
 	"fmt"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/core/log"
 	"cosmossdk.io/store/iavl"
 	"cosmossdk.io/store/types"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/stretchr/testify/require"
 )
 
 func setupStore(b *testing.B, storeCount uint) (Store, map[string]types.StoreKey) {
-	db := dbm.NewMemDB()
+	b.Helper()
 
+	db := dbm.NewMemDB()
 	storeKeys := make(map[string]types.StoreKey)
 	stores := make(map[types.StoreKey]types.CacheWrapper)
 	for i := uint(0); i < storeCount; i++ {
@@ -29,6 +31,7 @@ func setupStore(b *testing.B, storeCount uint) (Store, map[string]types.StoreKey
 }
 
 func benchmarkStore(b *testing.B, storeCount, keyCount uint) {
+	b.Helper()
 	store, storeKeys := setupStore(b, storeCount)
 	b.ResetTimer()
 
@@ -59,5 +62,4 @@ func BenchmarkCacheMultiStore(b *testing.B) {
 			})
 		}
 	}
-
 }

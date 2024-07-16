@@ -3,9 +3,9 @@ package cachemulti
 import (
 	"fmt"
 	"io"
-	"sync"
 
 	dbm "github.com/cosmos/cosmos-db"
+	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/dbadapter"
@@ -123,15 +123,22 @@ func (cms Store) GetStoreType() types.StoreType {
 // Write calls Write on each underlying store.
 func (cms Store) Write() {
 	cms.db.Write()
-	wg := sync.WaitGroup{}
-	wg.Add(len(cms.stores))
+	eg := new(errgroup.Group)
 	for _, store := range cms.stores {
-		go func(s types.CacheWrap) {
-			defer wg.Done()
+		s := store // https://golang.org/doc/faq#closures_and_goroutines
+		eg.Go(func() (err error) {
+			defer func() {
+				if r := recover(); r != nil {
+					err = fmt.Errorf("panic in Write: %v", r)
+				}
+			}()
 			s.Write()
-		}(store)
+			return nil
+		})
 	}
-	wg.Wait()
+	if err := eg.Wait(); err != nil {
+		panic(err)
+	}
 }
 
 // Implements CacheWrapper.

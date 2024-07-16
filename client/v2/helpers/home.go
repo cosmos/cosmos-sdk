@@ -28,13 +28,13 @@ func GetNodeHomeDirectory(name string) (string, error) {
 	// get the home directory from the environment variable
 	// to not clash with the $HOME system variable, when no prefix is set
 	// we check the NODE_HOME environment variable
-	envHome := "HOME"
+	homeDir, envHome := "", "HOME"
 	if len(EnvPrefix) > 0 {
-		homeDir := os.Getenv(EnvPrefix + "_" + envHome)
-		if homeDir != "" {
-			return filepath.Clean(homeDir), nil
-		}
-	} else if homeDir := os.Getenv("NODE_" + envHome); homeDir != "" {
+		homeDir = os.Getenv(EnvPrefix + "_" + envHome)
+	} else {
+		homeDir = os.Getenv("NODE_" + envHome)
+	}
+	if homeDir != "" {
 		return filepath.Clean(homeDir), nil
 	}
 

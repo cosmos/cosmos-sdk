@@ -22,27 +22,24 @@ var (
 
 // IavlTree is a wrapper around iavl.MutableTree.
 type IavlTree struct {
-	tree               *iavl.MutableTree
-	enableSortedInsert bool
+	tree *iavl.MutableTree
 }
 
 // NewIavlTree creates a new IavlTree instance.
 func NewIavlTree(db corestore.KVStoreWithBatch, logger log.Logger, cfg *Config) *IavlTree {
 	tree := iavl.NewMutableTree(dbm.NewWrapper(db), cfg.CacheSize, cfg.SkipFastStorageUpgrade, logger, iavl.AsyncPruningOption(true))
 	return &IavlTree{
-		tree:               tree,
-		enableSortedInsert: cfg.EnableSortedInsert,
+		tree: tree,
 	}
 }
 
 // Write writes a batch of key-value pairs to the tree.
+//
+// Note: The pairs would be sorted by key before writing to the tree.
 func (t *IavlTree) Write(pairs corestore.KVPairs) error {
-	if t.enableSortedInsert {
-		// Sort the pairs before writing them to the tree.
-		sort.Slice(pairs, func(i, j int) bool {
-			return bytes.Compare(pairs[i].Key, pairs[j].Key) < 0
-		})
-	}
+	sort.Slice(pairs, func(i, j int) bool {
+		return bytes.Compare(pairs[i].Key, pairs[j].Key) < 0
+	})
 
 	for _, pair := range pairs {
 		if pair.Remove {

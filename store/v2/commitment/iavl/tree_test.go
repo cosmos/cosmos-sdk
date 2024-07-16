@@ -126,10 +126,8 @@ func TestIavlTree(t *testing.T) {
 
 func TestIavlTreeWithSortedInsert(t *testing.T) {
 	// generate a new tree
-	cfg := DefaultConfig()
-	cfg.EnableSortedInsert = true
 	db := dbm.NewMemDB()
-	tree := NewIavlTree(db, log.NewNopLogger(), cfg)
+	tree := NewIavlTree(db, log.NewNopLogger(), DefaultConfig())
 	require.NotNil(t, tree)
 
 	// write a batch of version 1

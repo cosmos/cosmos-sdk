@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"sort"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -329,7 +330,11 @@ func (m *MM[T]) EndBlock() (
 			}
 		}
 
-		return validatorUpdates, nil
+		// Reset validatorUpdates
+		res := validatorUpdates
+		validatorUpdates = []appmodulev2.ValidatorUpdate{}
+
+		return res, nil
 	}
 
 	return endBlockFunc, valUpdateFunc
@@ -551,17 +556,28 @@ func (m *MM[T]) assertNoForgottenModules(
 
 func registerServices[T transaction.Tx](s appmodule.HasServices, app *App[T], registry *protoregistry.Files) error {
 	c := &configurator{
-		stfQueryRouter: app.queryRouterBuilder,
-		stfMsgRouter:   app.msgRouterBuilder,
-		registry:       registry,
-		err:            nil,
+		grpcQueryDecoders: map[string]func([]byte) (gogoproto.Message, error){},
+		stfQueryRouter:    app.queryRouterBuilder,
+		stfMsgRouter:      app.msgRouterBuilder,
+		registry:          registry,
+		err:               nil,
 	}
-	return s.RegisterServices(c)
+
+	err := s.RegisterServices(c)
+	if err != nil {
+		return fmt.Errorf("unable to register services: %w", err)
+	}
+	app.GRPCQueryDecoders = c.grpcQueryDecoders
+	return nil
 }
 
 var _ grpc.ServiceRegistrar = (*configurator)(nil)
 
 type configurator struct {
+	// grpcQueryDecoders is required because module expose queries through gRPC
+	// this provides a way to route to modules using gRPC.
+	grpcQueryDecoders map[string]func([]byte) (gogoproto.Message, error)
+
 	stfQueryRouter *stf.MsgRouterBuilder
 	stfMsgRouter   *stf.MsgRouterBuilder
 	registry       *protoregistry.Files
@@ -592,17 +608,28 @@ func (c *configurator) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
 func (c *configurator) registerQueryHandlers(sd *grpc.ServiceDesc, ss interface{}) error {
 	for _, md := range sd.Methods {
 		// TODO(tip): what if a query is not deterministic?
-		err := registerMethod(c.stfQueryRouter, sd, md, ss)
+		requestFullName, err := registerMethod(c.stfQueryRouter, sd, md, ss)
 		if err != nil {
 			return fmt.Errorf("unable to register query handler %s: %w", md.MethodName, err)
 		}
+
+		// register gRPC query method.
+		typ := gogoproto.MessageType(requestFullName)
+		if typ == nil {
+			return fmt.Errorf("unable to find message in gogotype registry: %w", err)
+		}
+		decoderFunc := func(bytes []byte) (gogoproto.Message, error) {
+			msg := reflect.New(typ.Elem()).Interface().(gogoproto.Message)
+			return msg, gogoproto.Unmarshal(bytes, msg)
+		}
+		c.grpcQueryDecoders[md.MethodName] = decoderFunc
 	}
 	return nil
 }
 
 func (c *configurator) registerMsgHandlers(sd *grpc.ServiceDesc, ss interface{}) error {
 	for _, md := range sd.Methods {
-		err := registerMethod(c.stfMsgRouter, sd, md, ss)
+		_, err := registerMethod(c.stfMsgRouter, sd, md, ss)
 		if err != nil {
 			return fmt.Errorf("unable to register msg handler %s: %w", md.MethodName, err)
 		}
@@ -629,13 +656,13 @@ func registerMethod(
 	sd *grpc.ServiceDesc,
 	md grpc.MethodDesc,
 	ss interface{},
-) error {
+) (string, error) {
 	requestName, err := requestFullNameFromMethodDesc(sd, md)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return stfRouter.RegisterHandler(string(requestName), func(
+	return string(requestName), stfRouter.RegisterHandler(string(requestName), func(
 		ctx context.Context,
 		msg appmodulev2.Message,
 	) (resp appmodulev2.Message, err error) {

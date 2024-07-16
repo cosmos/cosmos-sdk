@@ -72,13 +72,13 @@ func (t *temporaryTxDecoder[T]) DecodeJSON(bz []byte) (T, error) {
 	return out, nil
 }
 
-func newApp[AppT serverv2.AppI[T], T transaction.Tx](
+func newApp[T transaction.Tx](
 	logger log.Logger, viper *viper.Viper,
-) AppT {
-	return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper)).(AppT)
+) serverv2.AppI[T] {
+	return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper))
 }
 
-func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
+func initRootCmd[T transaction.Tx](
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,
 	moduleManager *runtimev2.MM[T],
@@ -90,6 +90,7 @@ func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
 		genutilcli.InitCmd(moduleManager),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
+		NewTestnetCmd(moduleManager),
 		// pruning.Cmd(newApp), // TODO add to comet server
 		// snapshot.Cmd(newApp), // TODO add to comet server
 	)
@@ -99,26 +100,25 @@ func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
 		panic(fmt.Sprintf("failed to create logger: %v", err))
 	}
 
-	// Add empty server struct here for writing default config
-	if err = serverv2.AddCommands(
-		rootCmd,
-		newApp,
-		logger,
-		cometbft.New[AppT, T](&temporaryTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
-		grpc.New[AppT, T](),
-	); err != nil {
-		panic(err)
-	}
-
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
-		server.StatusCommand(),
 		genesisCommand[T](txConfig, moduleManager, appExport[T]),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
 		offchain.OffChain(),
 	)
+
+	// Add empty server struct here for writing default config
+	if err = serverv2.AddCommands(
+		rootCmd,
+		newApp,
+		logger,
+		cometbft.New[T](&temporaryTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
+		grpc.New[T](),
+	); err != nil {
+		panic(err)
+	}
 }
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter

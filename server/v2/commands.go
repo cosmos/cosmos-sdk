@@ -33,22 +33,76 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 	return rootCmd.Execute()
 }
 
-// Commands creates the start command of an application and gives back the CLIConfig containing all the server commands.
-// This API is for advanced user only, most users should use AddCommands instead that abstract more.
-func Commands[AppT AppI[T], T transaction.Tx](
+// AddCommands add the server commands to the root command
+// It configure the config handling and the logger handling
+func AddCommands[T transaction.Tx](
 	rootCmd *cobra.Command,
-	newApp AppCreator[AppT, T],
+	newApp AppCreator[T],
 	logger log.Logger,
-	components ...ServerComponent[AppT, T],
-) (CLIConfig, error) {
+	components ...ServerComponent[T],
+) error {
 	if len(components) == 0 {
-		return CLIConfig{}, errors.New("no components provided")
+		return errors.New("no components provided")
 	}
 
 	server := NewServer(logger, components...)
+	originalPersistentPreRunE := rootCmd.PersistentPreRunE
+	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		// set the default command outputs
+		cmd.SetOut(cmd.OutOrStdout())
+		cmd.SetErr(cmd.ErrOrStderr())
+
+		if err := configHandle(server, cmd); err != nil {
+			return err
+		}
+
+		// call the original PersistentPreRun(E) if it exists
+		if rootCmd.PersistentPreRun != nil {
+			rootCmd.PersistentPreRun(cmd, args)
+			return nil
+		}
+
+		return originalPersistentPreRunE(cmd, args)
+	}
+
+	cmds := server.CLICommands()
+	startCmd := createStartCommand(server, newApp)
+	startCmd.SetContext(rootCmd.Context())
+	cmds.Commands = append(cmds.Commands, startCmd)
+	rootCmd.AddCommand(cmds.Commands...)
+
+	if len(cmds.Queries) > 0 {
+		if queryCmd := findSubCommand(rootCmd, "query"); queryCmd != nil {
+			queryCmd.AddCommand(cmds.Queries...)
+		} else {
+			queryCmd := topLevelCmd(rootCmd.Context(), "query", "Querying subcommands")
+			queryCmd.Aliases = []string{"q"}
+			queryCmd.AddCommand(cmds.Queries...)
+			rootCmd.AddCommand(queryCmd)
+		}
+	}
+
+	if len(cmds.Txs) > 0 {
+		if txCmd := findSubCommand(rootCmd, "tx"); txCmd != nil {
+			txCmd.AddCommand(cmds.Txs...)
+		} else {
+			txCmd := topLevelCmd(rootCmd.Context(), "tx", "Transactions subcommands")
+			txCmd.AddCommand(cmds.Txs...)
+			rootCmd.AddCommand(txCmd)
+		}
+	}
+
+	return nil
+}
+
+// createStartCommand creates the start command for the application.
+func createStartCommand[T transaction.Tx](
+	server *Server[T],
+	newApp AppCreator[T],
+) *cobra.Command {
 	flags := server.StartFlags()
 
-	startCmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "start",
 		Short: "Run the application",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -65,9 +119,7 @@ func Commands[AppT AppI[T], T transaction.Tx](
 				return err
 			}
 
-			app := newApp(l, v)
-
-			if err := server.Init(app, v, l); err != nil {
+			if err := server.Init(newApp(l, v), v, l); err != nil {
 				return err
 			}
 
@@ -91,74 +143,10 @@ func Commands[AppT AppI[T], T transaction.Tx](
 			return nil
 		},
 	}
-	startCmd.SetContext(rootCmd.Context())
-
-	cmds := server.CLICommands()
-	cmds.Commands = append(cmds.Commands, startCmd)
-
-	return cmds, nil
-}
-
-// AddCommands add the server commands to the root command
-// It configure the config handling and the logger handling
-func AddCommands[AppT AppI[T], T transaction.Tx](
-	rootCmd *cobra.Command,
-	newApp AppCreator[AppT, T],
-	logger log.Logger,
-	components ...ServerComponent[AppT, T],
-) error {
-	cmds, err := Commands(rootCmd, newApp, logger, components...)
-	if err != nil {
-		return err
-	}
-
-	srv := NewServer(logger, components...)
-	originalPersistentPreRunE := rootCmd.PersistentPreRunE
-	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		// set the default command outputs
-		cmd.SetOut(cmd.OutOrStdout())
-		cmd.SetErr(cmd.ErrOrStderr())
-
-		if err = configHandle(srv, cmd); err != nil {
-			return err
-		}
-
-		if rootCmd.PersistentPreRun != nil {
-			rootCmd.PersistentPreRun(cmd, args)
-			return nil
-		}
-
-		return originalPersistentPreRunE(cmd, args)
-	}
-
-	rootCmd.AddCommand(cmds.Commands...)
-
-	if len(cmds.Queries) > 0 {
-		if queryCmd := findSubCommand(rootCmd, "query"); queryCmd != nil {
-			queryCmd.AddCommand(cmds.Queries...)
-		} else {
-			queryCmd := topLevelCmd(rootCmd.Context(), "query", "Querying subcommands")
-			queryCmd.Aliases = []string{"q"}
-			queryCmd.AddCommand(cmds.Queries...)
-			rootCmd.AddCommand(queryCmd)
-		}
-	}
-
-	if len(cmds.Txs) > 0 {
-		if txCmd := findSubCommand(rootCmd, "tx"); txCmd != nil {
-			txCmd.AddCommand(cmds.Txs...)
-		} else {
-			txCmd := topLevelCmd(rootCmd.Context(), "tx", "Transaction subcommands")
-			txCmd.AddCommand(cmds.Txs...)
-			rootCmd.AddCommand(txCmd)
-		}
-	}
-
-	return nil
 }
 
 // configHandle writes the default config to the home directory if it does not exist and sets the server context
-func configHandle[AppT AppI[T], T transaction.Tx](s *Server[AppT, T], cmd *cobra.Command) error {
+func configHandle[T transaction.Tx](s *Server[T], cmd *cobra.Command) error {
 	home, err := cmd.Flags().GetString(FlagHome)
 	if err != nil {
 		return err

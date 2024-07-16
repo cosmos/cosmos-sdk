@@ -10,7 +10,7 @@ import (
 	"cosmossdk.io/server/v2/appmanager"
 )
 
-type AppCreator[AppT AppI[T], T transaction.Tx] func(log.Logger, *viper.Viper) AppT
+type AppCreator[T transaction.Tx] func(log.Logger, *viper.Viper) AppI[T]
 
 type AppI[T transaction.Tx] interface {
 	GetAppManager() *appmanager.AppManager[T]

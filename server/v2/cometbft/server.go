@@ -60,7 +60,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 
 	// create consensus
 	store := appI.GetStore().(types.Store)
-	consensus := NewConsensus[T](appI.GetAppManager(), s.options.Mempool, store, s.config, s.initTxCodec, s.logger)
+	consensus := NewConsensus[T](appI.GetAppManager(), s.options.Mempool, appI.GetGRPCQueryDecoders(), store, s.config, s.initTxCodec, s.logger)
 
 	consensus.prepareProposalHandler = s.options.PrepareProposalHandler
 	consensus.processProposalHandler = s.options.ProcessProposalHandler

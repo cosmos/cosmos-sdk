@@ -31,10 +31,17 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 		},
 	)
 
-	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).Return(poolDistrAcc)
-	suite.bankKeeper.EXPECT().GetAllBalances(suite.ctx, poolDistrAcc.GetAddress()).Return(sdk.NewCoins(sdk.NewInt64Coin("stake", 1000000)))
+	gs.Distributions = append(gs.Distributions, &types.Distribution{
+		Amount: math.OneInt(),
+		Time:   &time.Time{},
+	})
 
 	err := suite.poolKeeper.InitGenesis(suite.ctx, gs)
+	suite.Require().ErrorContains(err, "total to be distributed is greater than the last balance")
+
+	// Set last balance
+	gs.LastBalance = math.NewInt(1)
+	err = suite.poolKeeper.InitGenesis(suite.ctx, gs)
 	suite.Require().NoError(err)
 
 	// Export
@@ -42,4 +49,5 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(gs.ContinuousFund, exportedGenState.ContinuousFund)
 	suite.Require().Equal(gs.Budget, exportedGenState.Budget)
+	suite.Require().Equal(math.OneInt(), exportedGenState.LastBalance)
 }

@@ -31,7 +31,6 @@ import (
 
 func initRootCmd(
 	rootCmd *cobra.Command,
-	txConfig client.TxConfig,
 	moduleManager *module.Manager,
 ) {
 	cfg := sdk.GetConfig()

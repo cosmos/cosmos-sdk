@@ -59,13 +59,19 @@ func (m *MetadataStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error)
 	return cInfo, nil
 }
 
-func (m *MetadataStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo) error {
+func (m *MetadataStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo) (err error) {
 	// do nothing if commit info is nil, as will be the case for an empty, initializing store
 	if cInfo == nil {
 		return nil
 	}
 
 	batch := m.kv.NewBatch()
+	defer func() {
+		cErr := batch.Close()
+		if err == nil {
+			err = cErr
+		}
+	}()
 	cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
 	value, err := cInfo.Marshal()
 	if err != nil {
@@ -87,7 +93,7 @@ func (m *MetadataStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo)
 	if err := batch.WriteSync(); err != nil {
 		return err
 	}
-	return batch.Close()
+	return nil
 }
 
 func (m *MetadataStore) deleteCommitInfo(version uint64) error {

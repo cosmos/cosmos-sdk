@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
@@ -22,6 +23,9 @@ import (
 	stakingtypes "cosmossdk.io/x/staking/types"
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -30,8 +34,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // SimAppChainID hardcoded chainID for simulation
@@ -57,19 +59,21 @@ func TestFullAppSimulation(t *testing.T) {
 func setupStateFactory(app *SimApp) sims.SimStateFactory {
 	blockedAddre, _ := BlockedAddresses(app.interfaceRegistry.SigningContext().AddressCodec())
 	return sims.SimStateFactory{
-		Codec:       app.AppCodec(),
-		AppStateFn:  simtestutil.AppStateFn(app.AppCodec(), app.AuthKeeper.AddressCodec(), app.StakingKeeper.ValidatorAddressCodec(), app.SimulationManager(), app.DefaultGenesis()),
-		BlockedAddr: blockedAddre,
+		Codec:         app.AppCodec(),
+		AppStateFn:    simtestutil.AppStateFn(app.AppCodec(), app.AuthKeeper.AddressCodec(), app.StakingKeeper.ValidatorAddressCodec(), app.SimulationManager().Modules, app.DefaultGenesis()),
+		BlockedAddr:   blockedAddre,
+		AccountSource: app.AuthKeeper,
+		BalanceSource: app.BankKeeper,
 	}
 }
 
 var (
-	exportAllModules       = []string{}
-	exportWithValidatorSet = []string{}
+	exportAllModules       []string
+	exportWithValidatorSet []string
 )
 
 func TestAppImportExport(t *testing.T) {
-	sims.Run(t, NewSimApp, setupStateFactory, func(t *testing.T, ti sims.TestInstance[*SimApp]) {
+	sims.Run(t, NewSimApp, setupStateFactory, func(t testing.TB, ti sims.TestInstance[*SimApp]) {
 		app := ti.App
 		t.Log("exporting genesis...\n")
 		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
@@ -111,40 +115,36 @@ func TestAppImportExport(t *testing.T) {
 //	set up a new node instance, Init chain from exported genesis
 //	run new instance for n blocks
 func TestAppSimulationAfterImport(t *testing.T) {
-	sims.Run(t, NewSimApp, setupStateFactory, func(t *testing.T, ti sims.TestInstance[*SimApp]) {
+	sims.Run(t, NewSimApp, setupStateFactory, func(t testing.TB, ti sims.TestInstance[*SimApp]) {
 		app := ti.App
 		t.Log("exporting genesis...\n")
 		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
 		require.NoError(t, err)
 
 		t.Log("importing genesis...\n")
-		newTestInstance := sims.NewSimulationAppInstance(t, ti.Cfg, NewSimApp)
-		newApp := newTestInstance.App
-		_, err = newApp.InitChain(&abci.InitChainRequest{
-			AppStateBytes: exported.AppState,
-			ChainId:       sims.SimAppChainID,
-		})
-		if IsEmptyValidatorSetErr(err) {
-			t.Skip("Skipping simulation as all validators have been unbonded")
-			return
+		importGenesisStateFactory := func(app *SimApp) sims.SimStateFactory {
+			return sims.SimStateFactory{
+				Codec: app.AppCodec(),
+				AppStateFn: func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config) (json.RawMessage, []simtypes.Account, string, time.Time) {
+					_, err = app.InitChain(&abci.InitChainRequest{
+						AppStateBytes: exported.AppState,
+						ChainId:       sims.SimAppChainID,
+					})
+					if IsEmptyValidatorSetErr(err) {
+						t.Skip("Skipping simulation as all validators have been unbonded")
+						return nil, nil, "", time.Time{}
+					}
+					acc, err := simtestutil.AccountsFromAppState(app.AppCodec(), exported.AppState)
+					require.NoError(t, err)
+					genesisTimestamp := time.Unix(config.GenesisTime, 0)
+					return exported.AppState, acc, config.ChainID, genesisTimestamp
+				},
+				BlockedAddr:   must(BlockedAddresses(app.AuthKeeper.AddressCodec())),
+				AccountSource: app.AuthKeeper,
+				BalanceSource: app.BankKeeper,
+			}
 		}
-		require.NoError(t, err)
-		newStateFactory := setupStateFactory(newApp)
-		_, err = simulation.SimulateFromSeedX(
-			t,
-			newTestInstance.AppLogger,
-			sims.WriteToDebugLog(newTestInstance.AppLogger),
-			newApp.BaseApp,
-			newStateFactory.AppStateFn,
-			simtypes.RandomAccounts,
-			simtestutil.SimulationOperations(newApp, newApp.AppCodec(), newTestInstance.Cfg, newApp.TxConfig()),
-			newStateFactory.BlockedAddr,
-			newTestInstance.Cfg,
-			newStateFactory.Codec,
-			newApp.TxConfig().SigningContext().AddressCodec(),
-			ti.ExecLogWriter,
-		)
-		require.NoError(t, err)
+		sims.RunWithSeed(t, ti.Cfg, NewSimApp, importGenesisStateFactory, ti.Cfg.Seed, ti.Cfg.FuzzSeed)
 	})
 }
 
@@ -190,7 +190,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	var mx sync.Mutex
 	appHashResults := make(map[int64][][]byte)
 	appSimLogger := make(map[int64][]simulation.LogWriter)
-	captureAndCheckHash := func(t *testing.T, ti sims.TestInstance[*SimApp]) {
+	captureAndCheckHash := func(t testing.TB, ti sims.TestInstance[*SimApp]) {
 		seed, appHash := ti.Cfg.Seed, ti.App.LastCommitID().Hash
 		mx.Lock()
 		otherHashes, execWriters := appHashResults[seed], appSimLogger[seed]
@@ -226,7 +226,7 @@ type ComparableStoreApp interface {
 	GetStoreKeys() []storetypes.StoreKey
 }
 
-func AssertEqualStores(t *testing.T, app ComparableStoreApp, newApp ComparableStoreApp, storeDecoders simtypes.StoreDecoderRegistry, skipPrefixes map[string][][]byte) {
+func AssertEqualStores(t testing.TB, app, newApp ComparableStoreApp, storeDecoders simtypes.StoreDecoderRegistry, skipPrefixes map[string][][]byte) {
 	ctxA := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 	ctxB := newApp.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 
@@ -272,4 +272,11 @@ func FuzzFullAppSimulation(f *testing.F) {
 			rawSeed[8:],
 		)
 	})
+}
+
+func must[T any](r T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return r
 }

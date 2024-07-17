@@ -2,7 +2,6 @@ package commitment
 
 import (
 	"bytes"
-	"encoding/binary"
 	"fmt"
 
 	corestore "cosmossdk.io/core/store"
@@ -108,7 +107,7 @@ func (m *MetadataStore) flushRemovedStoreKeys(version uint64, storeKeys []string
 	}()
 
 	for _, storeKey := range storeKeys {
-		key := []byte(fmt.Sprintf("%s%s", buildRemovedStoreKeyPrefix(version), storeKey))
+		key := []byte(fmt.Sprintf("%s%s", encoding.BuildPrefixWithVersion(removedStoreKeyPrefix, version), storeKey))
 		if err := batch.Set(key, []byte{}); err != nil {
 			return err
 		}
@@ -124,7 +123,7 @@ func (m *MetadataStore) deleteRemovedStoreKeys(version uint64, fn func(storeKey 
 		}
 	}()
 
-	end := buildRemovedStoreKeyPrefix(version + 1)
+	end := encoding.BuildPrefixWithVersion(removedStoreKeyPrefix, version+1)
 	iter, err := m.kv.Iterator([]byte(removedStoreKeyPrefix), end)
 	if err != nil {
 		return err
@@ -151,10 +150,4 @@ func (m *MetadataStore) deleteRemovedStoreKeys(version uint64, fn func(storeKey 
 func (m *MetadataStore) deleteCommitInfo(version uint64) error {
 	cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
 	return m.kv.Delete(cInfoKey)
-}
-
-func buildRemovedStoreKeyPrefix(version uint64) []byte {
-	buf := make([]byte, 8)
-	binary.BigEndian.PutUint64(buf, version)
-	return []byte(fmt.Sprintf("%s%x/", removedStoreKeyPrefix, buf))
 }

@@ -13,6 +13,7 @@ import (
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	storeerrors "cosmossdk.io/store/v2/errors"
+	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/util"
 )
@@ -335,7 +336,7 @@ func (db *Database) PruneStoreKeys(storeKeys []string, version uint64) error {
 	defer batch.Close()
 
 	for _, storeKey := range storeKeys {
-		if err := batch.Set([]byte(fmt.Sprintf("%s%s", buildRemovedStoreKeyPrefix(version), storeKey)), []byte{}, nil); err != nil {
+		if err := batch.Set([]byte(fmt.Sprintf("%s%s", encoding.BuildPrefixWithVersion(removedStoreKeyPrefix, version), storeKey)), []byte{}, nil); err != nil {
 			return err
 		}
 	}
@@ -462,7 +463,7 @@ func (db *Database) deleteRemovedStoreKeys(version uint64) error {
 	batch := db.storage.NewBatch()
 	defer batch.Close()
 
-	end := buildRemovedStoreKeyPrefix(version + 1)
+	end := encoding.BuildPrefixWithVersion(removedStoreKeyPrefix, version+1)
 	storeKeyIter, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: []byte(removedStoreKeyPrefix), UpperBound: end})
 	if err != nil {
 		return err
@@ -506,10 +507,4 @@ func (db *Database) deleteRemovedStoreKeys(version uint64) error {
 	}
 
 	return batch.Commit(&pebble.WriteOptions{Sync: true})
-}
-
-func buildRemovedStoreKeyPrefix(version uint64) []byte {
-	buf := make([]byte, 8)
-	binary.BigEndian.PutUint64(buf, version)
-	return []byte(fmt.Sprintf("%s%x/", removedStoreKeyPrefix, buf))
 }

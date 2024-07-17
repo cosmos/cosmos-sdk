@@ -186,6 +186,16 @@ func (db *Database) Get(storeKey []byte, targetVersion uint64, key []byte) ([]by
 // We perform the prune by deleting all versions of a key, excluding reserved keys,
 // that are <= the given version, except for the latest version of the key.
 func (db *Database) Prune(version uint64) error {
+	tx, err := db.storage.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to create SQL transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			err = tx.Rollback()
+		}
+	}()
+
 	// prune all keys of old versions
 	pruneStmt := `DELETE FROM state_storage
 	WHERE version < (
@@ -195,7 +205,7 @@ func (db *Database) Prune(version uint64) error {
 		t2.version <= ?
 	) AND store_key != ?;
 	`
-	if err := db.executeTx(pruneStmt, version, reservedStoreKey); err != nil {
+	if _, err := tx.Exec(pruneStmt, version, reservedStoreKey); err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
 	}
 
@@ -205,22 +215,25 @@ func (db *Database) Prune(version uint64) error {
 		SELECT key FROM state_storage WHERE store_key = ? AND value = ? AND version <= ?
 	);
 	`
-	if err := db.executeTx(pruneRemovedStoreKeysStmt, reservedStoreKey, valueRemovedStore, version); err != nil {
+	if _, err := tx.Exec(pruneRemovedStoreKeysStmt, reservedStoreKey, valueRemovedStore, version); err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
 	}
 
 	// delete the removedKeys
-	if err := db.executeTx("DELETE FROM state_storage WHERE store_key = ? AND value = ? AND version <= ?", reservedStoreKey, valueRemovedStore, version); err != nil {
+	if _, err := tx.Exec("DELETE FROM state_storage WHERE store_key = ? AND value = ? AND version <= ?", reservedStoreKey, valueRemovedStore, version); err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
 	}
 
 	// set the prune height so we can return <nil> for queries below this height
-	if err := db.executeTx(reservedUpsertStmt, reservedStoreKey, keyPruneHeight, version, 0, version); err != nil {
+	if _, err := tx.Exec(reservedUpsertStmt, reservedStoreKey, keyPruneHeight, version, 0, version); err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
 	}
 
-	db.earliestVersion = version + 1
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to write SQL transaction: %w", err)
+	}
 
+	db.earliestVersion = version + 1
 	return nil
 }
 
@@ -249,15 +262,26 @@ func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end 
 }
 
 func (db *Database) PruneStoreKeys(storeKeys []string, version uint64) (err error) {
-	// flush removed store keys
-	flushRemovedStoreKeysStmt := fmt.Sprintf(`INSERT INTO state_storage(store_key, key, value, version) 
-		VALUES %s`, strings.Repeat("(?, ?, ?, ?),", len(storeKeys)))
-
-	values := make([]interface{}, 0, len(storeKeys)*4)
-	for _, key := range storeKeys {
-		values = append(values, reservedStoreKey, []byte(key), valueRemovedStore, version)
+	tx, err := db.storage.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to create SQL transaction: %w", err)
 	}
-	return db.executeTx(flushRemovedStoreKeysStmt[:len(flushRemovedStoreKeysStmt)-1], values...)
+	defer func() {
+		if err != nil {
+			err = tx.Rollback()
+		}
+	}()
+
+	// flush removed store keys
+	flushRemovedStoreKeyStmt := `INSERT INTO state_storage(store_key, key, value, version) 
+		VALUES (?, ?, ?, ?)`
+	for _, storeKey := range storeKeys {
+		if _, err := tx.Exec(flushRemovedStoreKeyStmt, reservedStoreKey, []byte(storeKey), valueRemovedStore, version); err != nil {
+			return fmt.Errorf("failed to exec SQL statement: %w", err)
+		}
+	}
+
+	return tx.Commit()
 }
 
 func (db *Database) MigrateStoreKey(fromStoreKey, toStoreKey []byte) error {

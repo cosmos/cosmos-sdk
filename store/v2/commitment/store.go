@@ -374,25 +374,25 @@ func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, 
 }
 
 // Prune implements store.Pruner.
-func (c *CommitStore) Prune(version uint64) (ferr error) {
+func (c *CommitStore) Prune(version uint64) error {
 	// prune the metadata
 	for v := version; v > 0; v-- {
 		if err := c.metadata.deleteCommitInfo(v); err != nil {
-			ferr = errors.Join(ferr, err)
+			return err
 		}
 	}
 	// prune the trees
 	for _, tree := range c.multiTrees {
 		if err := tree.Prune(version); err != nil {
-			ferr = errors.Join(ferr, err)
+			return err
 		}
 	}
 	// prune the removed store keys
 	if err := c.pruneRemovedStoreKeys(version); err != nil {
-		ferr = errors.Join(ferr, err)
+		return err
 	}
 
-	return ferr
+	return nil
 }
 
 func (c *CommitStore) pruneRemovedStoreKeys(version uint64) error {
@@ -631,12 +631,12 @@ func (c *CommitStore) GetLatestVersion() (uint64, error) {
 	return c.metadata.GetLatestVersion()
 }
 
-func (c *CommitStore) Close() (ferr error) {
+func (c *CommitStore) Close() error {
 	for _, tree := range c.multiTrees {
 		if err := tree.Close(); err != nil {
-			ferr = errors.Join(ferr, err)
+			return err
 		}
 	}
 
-	return ferr
+	return nil
 }

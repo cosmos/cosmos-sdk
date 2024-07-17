@@ -1,10 +1,5 @@
 package store
 
-import (
-	"errors"
-	"fmt"
-)
-
 type PruningStrategy int
 
 const (
@@ -29,27 +24,8 @@ type PruningOption struct {
 
 	// Interval sets the number of how often to prune.
 	// If set to 0, no pruning will be done.
-	Interval uint64   `mapstructure:"interval" toml:"interval"`
+	Interval uint64 `mapstructure:"interval" toml:"interval"`
 }
-
-// Pruning option string constants
-const (
-	PruningOptionDefault    = "default"
-	PruningOptionEverything = "everything"
-	PruningOptionNothing    = "nothing"
-	PruningOptionCustom     = "custom"
-)
-
-const (
-	pruneEverythingKeepRecent = 2
-	pruneEverythingInterval   = 10
-)
-
-var (
-	ErrPruningIntervalZero       = errors.New("'pruning-interval' must not be 0. If you want to disable pruning, select pruning = \"nothing\"")
-	ErrPruningIntervalTooSmall   = fmt.Errorf("'pruning-interval' must not be less than %d. For the most aggressive pruning, select pruning = \"everything\"", pruneEverythingInterval)
-	ErrPruningKeepRecentTooSmall = fmt.Errorf("'pruning-keep-recent' must not be less than %d. For the most aggressive pruning, select pruning = \"everything\"", pruneEverythingKeepRecent)
-)
 
 // NewPruningOption returns a new PruningOption instance based on the given pruning strategy.
 func NewPruningOption(pruningStrategy PruningStrategy) *PruningOption {
@@ -74,48 +50,12 @@ func NewPruningOption(pruningStrategy PruningStrategy) *PruningOption {
 	}
 }
 
-// NewPruningOption returns a new PruningOption instance based on the given pruning strategy.
-func NewPruningOptionFromString(pruningStrategy string) *PruningOption {
-	switch pruningStrategy {
-	case PruningOptionDefault:
-		return &PruningOption{
-			KeepRecent: 362880,
-			Interval:   10,
-		}
-	case PruningOptionEverything:
-		return &PruningOption{
-			KeepRecent: 2,
-			Interval:   10,
-		}
-	case PruningOptionNothing:
-		return &PruningOption{
-			KeepRecent: 0,
-			Interval:   0,
-		}
-	default:
-		return nil
-	}
-}
-
 // NewPruningOptionWithCustom returns a new PruningOption based on the given parameters.
 func NewPruningOptionWithCustom(keepRecent, interval uint64) *PruningOption {
 	return &PruningOption{
 		KeepRecent: keepRecent,
 		Interval:   interval,
 	}
-}
-
-func (po *PruningOption) Validate() error {
-	if po.Interval == 0 {
-		return ErrPruningIntervalZero
-	}
-	if po.Interval < pruneEverythingInterval {
-		return ErrPruningIntervalTooSmall
-	}
-	if po.KeepRecent < pruneEverythingKeepRecent {
-		return ErrPruningKeepRecentTooSmall
-	}
-	return nil
 }
 
 // ShouldPrune returns true if the given version should be pruned.

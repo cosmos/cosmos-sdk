@@ -8,14 +8,13 @@ import (
 
 func DefaultConfig() *Config {
 	return &Config{
-		Pruning:      storev2.PruningOptionDefault,
 		AppDBBackend: "",
 		Options: root.Options{
 			SSType: 0,
 			SCType: 0,
 			SCPruningOption: &storev2.PruningOption{
-				KeepRecent: 0,
-				Interval:   0,
+				KeepRecent: 2,
+				Interval:   1,
 			},
 			IavlConfig: &iavl.Config{
 				CacheSize:              100_000,

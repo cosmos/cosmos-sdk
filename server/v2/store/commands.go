@@ -3,12 +3,10 @@ package store
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	storev2 "cosmossdk.io/store/v2"
@@ -43,16 +41,6 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				return err
 			}
 
-			pruningOptions, err := getPruningOptionsFromCmd(cmd, args)
-			if err != nil {
-				return err
-			}
-
-			cmd.Printf("get pruning options from command flags, strategy: %v, keep-recent: %v\n",
-				args[0],
-				pruningOptions.KeepRecent,
-			)
-
 			logger := log.NewLogger(cmd.OutOrStdout())
 			home, err := cmd.Flags().GetString(serverv2.FlagHome) // should be FlagHome
 			if err != nil {
@@ -74,21 +62,10 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				return fmt.Errorf("the database has no valid heights to prune, the latest height: %v", latestHeight)
 			}
 
-			pruningHeight := int64(latestHeight) - int64(pruningOptions.KeepRecent)
-			cmd.Println("heights", latestHeight, pruningOptions.KeepRecent)
-			cmd.Printf("pruning heights up to %v\n", pruningHeight)
-
-			if pruningHeight <= 0 {
-				return fmt.Errorf("pruning skipped, height is less than or equal to 0")
-			}
-
-			err = rootStore.Prune(uint64(pruningHeight))
+			err = rootStore.Prune(latestHeight)
 			if err != nil {
 				return err
 			}
-
-			err = rootStore.LoadVersion(5)
-			cmd.Println("load old version", err)
 
 			cmd.Println("successfully pruned the application root multi stores")
 			return nil
@@ -102,73 +79,6 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 		this is not used by this command but kept for compatibility with the complete pruning options`)
 
 	return cmd
-}
-
-func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (*storev2.PruningOption, error) {
-	// Get viper from cmd context
-	var rootViper *viper.Viper
-	value := cmd.Context().Value(corectx.ViperContextKey)
-	rootViper, ok := value.(*viper.Viper)
-	if !ok {
-		rootViper = viper.New()
-	}
-
-	var pruning string
-	if len(args) > 0 {
-		// use the first argument if present to set the pruning method
-		pruning = args[0]
-	} else {
-		// If we not pass pruning option to the first argument,
-		// Get it from app.toml
-		// If we not do any modify to app.toml, should be default prune in there.
-		pruning = rootViper.GetString(FlagPruning)
-	}
-
-	strategy := strings.ToLower(pruning)
-
-	switch strategy {
-	case storev2.PruningOptionDefault, storev2.PruningOptionNothing, storev2.PruningOptionEverything:
-		return storev2.NewPruningOptionFromString(strategy), nil
-
-	case storev2.PruningOptionCustom:
-		var (
-			pruningKeepRecent uint64
-			pruningInterval   uint64
-			err               error
-		)
-
-		if cmd.Flags().Changed(FlagPruningKeepRecent) {
-			pruningKeepRecent, err = cmd.Flags().GetUint64(FlagPruningKeepRecent)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			pruningKeepRecent = rootViper.GetUint64(FlagPruningKeepRecent)
-		}
-
-		if cmd.Flags().Changed(FlagPruningInterval) {
-			pruningInterval, err = cmd.Flags().GetUint64(FlagPruningInterval)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			pruningInterval = rootViper.GetUint64(FlagPruningInterval)
-		}
-
-		opts := storev2.NewPruningOptionWithCustom(
-			pruningKeepRecent,
-			pruningInterval,
-		)
-
-		if err := opts.Validate(); err != nil {
-			return opts, fmt.Errorf("invalid custom pruning options: %w", err)
-		}
-
-		return opts, nil
-
-	default:
-		return nil, fmt.Errorf("unknown pruning strategy %s", strategy)
-	}
 }
 
 func createRootStore(rootDir string, v *viper.Viper, logger log.Logger) (storev2.RootStore, error) {

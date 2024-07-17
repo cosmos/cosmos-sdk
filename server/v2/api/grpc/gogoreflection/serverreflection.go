@@ -17,7 +17,7 @@
  */
 
 /*
-Package reflection implements server reflection service.
+Package gogoreflection implements server reflection service.
 
 The service implemented is defined in:
 https://github.com/grpc/grpc/blob/master/src/proto/grpc/reflection/v1alpha/reflection.proto.

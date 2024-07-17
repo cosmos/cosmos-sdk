@@ -163,7 +163,7 @@ func (st *Store) SetPruning(_ pruningtypes.PruningOptions) {
 	panic("cannot set pruning options on an initialized IAVL store")
 }
 
-// SetPruning panics as pruning options should be provided at initialization
+// GetPruning panics as pruning options should be provided at initialization
 // since IAVl accepts pruning options directly.
 func (st *Store) GetPruning() pruningtypes.PruningOptions {
 	panic("cannot get pruning options on an initialized IAVL store")

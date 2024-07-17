@@ -73,13 +73,13 @@ func (t *temporaryTxDecoder[T]) DecodeJSON(bz []byte) (T, error) {
 	return out, nil
 }
 
-func newApp[AppT serverv2.AppI[T], T transaction.Tx](
+func newApp[T transaction.Tx](
 	logger log.Logger, viper *viper.Viper,
-) AppT {
-	return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper)).(AppT)
+) serverv2.AppI[T] {
+	return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper))
 }
 
-func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
+func initRootCmd[T transaction.Tx](
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,
 	moduleManager *runtimev2.MM[T],
@@ -111,13 +111,13 @@ func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
 	)
 
 	// Add empty server struct here for writing default config
-	if err = serverv2.AddCommands[AppT, T](
+	if err = serverv2.AddCommands(
 		rootCmd,
 		newApp,
 		logger,
-		cometbft.New[AppT, T](&temporaryTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
-		grpc.New[AppT, T](),
-		store.New[AppT, T](),
+		cometbft.New[T](&temporaryTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
+		grpc.New[T](),
+		store.New[T](),
 	); err != nil {
 		panic(err)
 	}

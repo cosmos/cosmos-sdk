@@ -2,7 +2,7 @@
 
 1. Copy the `adr-template.md` file. Use the following filename pattern: `adr-next_number-title.md`
 2. Create a draft Pull Request if you want to get an early feedback.
-3. Make sure the context and a solution is clear and well documented.
+3. Make sure the context and solution is clear and well documented.
 4. Add an entry to a list in the [README](./README.md) file.
 5. Create a Pull Request to propose a new ADR.
 

@@ -50,7 +50,7 @@ type Config struct {
 // CmtCfgOption is a function that allows to overwrite the default server configuration.
 type CmtCfgOption func(*cmtcfg.Config)
 
-// OverwriteDefaultConfig overwrites the default config with the new config.
+// OverwriteDefaultCometConfig overwrites the default comet config with the new config.
 func OverwriteDefaultCometConfig(newCfg *cmtcfg.Config) CmtCfgOption {
 	return func(cfg *cmtcfg.Config) { // nolint:staticcheck // We want to overwrite everything
 		cfg = newCfg // nolint:ineffassign,staticcheck // We want to overwrite everything

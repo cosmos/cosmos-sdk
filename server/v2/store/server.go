@@ -12,15 +12,15 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 )
 
-type StoreComponent[AppT serverv2.AppI[T], T transaction.Tx] struct {
+type StoreComponent[T transaction.Tx] struct {
 	config *Config
 }
 
-func New[AppT serverv2.AppI[T], T transaction.Tx]() *StoreComponent[AppT, T] {
-	return &StoreComponent[AppT, T]{}
+func New[T transaction.Tx]() *StoreComponent[T] {
+	return &StoreComponent[T]{}
 }
 
-func (s *StoreComponent[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Logger) error {
+func (s *StoreComponent[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
 	cfg := DefaultConfig()
 	if v != nil {
 		if err := v.Sub(s.Name()).Unmarshal(&cfg); err != nil {
@@ -31,33 +31,33 @@ func (s *StoreComponent[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Log
 	return nil
 }
 
-func (s *StoreComponent[AppT, T]) Name() string {
+func (s *StoreComponent[T]) Name() string {
 	return "store"
 }
 
-func (s *StoreComponent[AppT, T]) Start(ctx context.Context) error {
+func (s *StoreComponent[T]) Start(ctx context.Context) error {
 	return nil
 }
 
-func (s *StoreComponent[AppT, T]) Stop(ctx context.Context) error {
+func (s *StoreComponent[T]) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (s *StoreComponent[AppT, T]) GetCommands() []*cobra.Command {
+func (s *StoreComponent[T]) GetCommands() []*cobra.Command {
 	return []*cobra.Command{
 		s.PrunesCmd(),
 	}
 }
 
-func (s *StoreComponent[AppT, T]) GetTxs() []*cobra.Command {
+func (s *StoreComponent[T]) GetTxs() []*cobra.Command {
 	return nil
 }
 
-func (s *StoreComponent[AppT, T]) GetQueries() []*cobra.Command {
+func (s *StoreComponent[T]) GetQueries() []*cobra.Command {
 	return nil
 }
 
-func (s *StoreComponent[AppT, T]) CLICommands() serverv2.CLIConfig {
+func (s *StoreComponent[T]) CLICommands() serverv2.CLIConfig {
 	return serverv2.CLIConfig{
 		Commands: []*cobra.Command{
 			s.PrunesCmd(),
@@ -65,7 +65,7 @@ func (s *StoreComponent[AppT, T]) CLICommands() serverv2.CLIConfig {
 	}
 }
 
-func (g *StoreComponent[AppT, T]) Config() any {
+func (g *StoreComponent[T]) Config() any {
 	if g.config == nil || g.config == (&Config{}) {
 		return DefaultConfig()
 	}

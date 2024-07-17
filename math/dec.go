@@ -896,7 +896,7 @@ func (d *LegacyDec) UnmarshalAmino(bz []byte) error { return d.Unmarshal(bz) }
 
 // helpers
 
-// test if two decimal arrays are equal
+// LegacyDecsEqual return true if two decimal arrays are equal.
 func LegacyDecsEqual(d1s, d2s []LegacyDec) bool {
 	if len(d1s) != len(d2s) {
 		return false

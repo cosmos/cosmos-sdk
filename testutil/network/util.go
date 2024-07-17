@@ -15,11 +15,11 @@ import (
 	"github.com/cometbft/cometbft/proxy"
 	"github.com/cometbft/cometbft/rpc/client/local"
 	cmttime "github.com/cometbft/cometbft/types/time"
+	"github.com/cosmos/cosmos-sdk/testutil/internal/banktypes"
 	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/log"
 	authtypes "cosmossdk.io/x/auth/types"
-	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -195,10 +195,17 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 
 	// set the balances in the genesis state
 	var bankGenState banktypes.GenesisState
-	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[testutil.BankModuleName], &bankGenState)
+	err = json.Unmarshal(cfg.GenesisState[testutil.BankModuleName], &bankGenState)
+	if err != nil {
+		return err
+	}
 
 	bankGenState.Balances = append(bankGenState.Balances, genBalances...)
-	cfg.GenesisState[testutil.BankModuleName] = cfg.Codec.MustMarshalJSON(&bankGenState)
+	bankGenesisJson, err := json.Marshal(bankGenState)
+	if err != nil {
+		return err
+	}
+	cfg.GenesisState[testutil.BankModuleName] = bankGenesisJson
 
 	appGenStateJSON, err := json.MarshalIndent(cfg.GenesisState, "", "  ")
 	if err != nil {

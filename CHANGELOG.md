@@ -38,6 +38,26 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.50.8-lsm](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.8)-lsm
+
+This is a special cosmos-sdk release with support LSM and some backports.
+
+Previous version: [v0.47.16-ics-lsm](https://github.com/cosmos/cosmos-sdk/tree/v0.47.16-ics-lsm)
+Previous feature branch: [feature/v0.47.x-ics-lsm](https://github.com/cosmos/cosmos-sdk/tree/feature/v0.47.x-ics-lsm).
+Initial v0.47.x LSM update PR: [#18694](https://github.com/cosmos/cosmos-sdk/pull/18694)
+
+## Features
+* (x/staking) [#20975](https://github.com/cosmos/cosmos-sdk/pull/20975) Port x/staking LSM changes 
+
+## Improvements
+Backported PRs from main that were included on [feature/v0.47.x-ics-lsm](https://github.com/cosmos/cosmos-sdk/tree/feature/v0.47.x-ics-lsm) 
+* https://github.com/cosmos/cosmos-sdk/pull/19056
+* https://github.com/cosmos/cosmos-sdk/pull/19076
+* https://github.com/cosmos/cosmos-sdk/pull/19491
+* https://github.com/cosmos/cosmos-sdk/pull/19614
+* https://github.com/cosmos/cosmos-sdk/pull/20444
+
+
 ## [v0.50.8](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.8) - 2024-07-15
 
 ## Features

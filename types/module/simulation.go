@@ -1,6 +1,7 @@
 package module
 
 import (
+	"context"
 	"encoding/json"
 	"math/rand"
 	"sort"
@@ -12,48 +13,68 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 // AppModuleSimulation defines the standard functions that every module should expose
 // for the SDK blockchain simulator
 type AppModuleSimulation interface {
-	// randomized genesis states
+	// GenerateGenesisState randomized genesis states
 	GenerateGenesisState(input *SimulationState)
 
-	// register a func to decode the each module's defined types from their corresponding store key
+	// RegisterStoreDecoder register a func to decode the each module's defined types from their corresponding store key
 	RegisterStoreDecoder(simulation.StoreDecoderRegistry)
-
-	// simulation operations (i.e msgs) with their respective weight
-	WeightedOperations(simState SimulationState) []simulation.WeightedOperation
 }
+type (
+	HasLegacyWeightedOperations interface {
+		// WeightedOperations simulation operations (i.e msgs) with their respective weight
+		WeightedOperations(simState SimulationState) []simulation.WeightedOperation
+	}
+	// HasLegacyProposalMsgs defines the messages that can be used to simulate governance (v1) proposals
+	// Deprecated replaced by HasProposalMsgsX
+	HasLegacyProposalMsgs interface {
+		// ProposalMsgs msg functions used to simulate governance proposals
+		ProposalMsgs(simState SimulationState) []simulation.WeightedProposalMsg
+	}
 
-// HasProposalMsgs defines the messages that can be used to simulate governance (v1) proposals
-type HasProposalMsgs interface {
-	// msg functions used to simulate governance proposals
-	ProposalMsgs(simState SimulationState) []simulation.WeightedProposalMsg
-}
+	// HasLegacyProposalContents defines the contents that can be used to simulate legacy governance (v1beta1) proposals
+	// Deprecated replaced by HasProposalMsgsX
+	HasLegacyProposalContents interface {
+		// ProposalContents content functions used to simulate governance proposals
+		ProposalContents(simState SimulationState) []simulation.WeightedProposalContent //nolint:staticcheck // legacy v1beta1 governance
+	}
+)
 
-// HasProposalContents defines the contents that can be used to simulate legacy governance (v1beta1) proposals
-type HasProposalContents interface {
-	// content functions used to simulate governance proposals
-	ProposalContents(simState SimulationState) []simulation.WeightedProposalContent //nolint:staticcheck // legacy v1beta1 governance
-}
+type (
+	AccountSource interface {
+		GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+		GetModuleAddress(moduleName string) sdk.AccAddress
+	}
+	BalanceSource interface {
+		SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+		IsSendEnabledDenom(ctx context.Context, denom string) bool
+	}
+)
 
 // SimulationManager defines a simulation manager that provides the high level utility
 // for managing and executing simulation functionalities for a group of modules
 type SimulationManager struct {
 	Modules       []AppModuleSimulation           // array of app modules; we use an array for deterministic simulation tests
 	StoreDecoders simulation.StoreDecoderRegistry // functions to decode the key-value pairs from each module's store
+	AccountSource AccountSource
+	BalanceSource BalanceSource
 }
 
 // NewSimulationManager creates a new SimulationManager object
 //
 // CONTRACT: All the modules provided must be also registered on the module Manager
-func NewSimulationManager(modules ...AppModuleSimulation) *SimulationManager {
+func NewSimulationManager(ak AccountSource, bk BalanceSource, modules ...AppModuleSimulation) *SimulationManager {
 	return &SimulationManager{
 		Modules:       modules,
 		StoreDecoders: make(simulation.StoreDecoderRegistry),
+		AccountSource: ak,
+		BalanceSource: bk,
 	}
 }
 
@@ -63,15 +84,14 @@ func NewSimulationManager(modules ...AppModuleSimulation) *SimulationManager {
 // with the same moduleName.
 // Then it attempts to cast every provided AppModule into an AppModuleSimulation.
 // If the cast succeeds, its included, otherwise it is excluded.
-func NewSimulationManagerFromAppModules(modules map[string]appmodule.AppModule, overrideModules map[string]AppModuleSimulation) *SimulationManager {
-	simModules := []AppModuleSimulation{}
+func NewSimulationManagerFromAppModules(ak AccountSource, bk BalanceSource, modules map[string]appmodule.AppModule, overrideModules map[string]AppModuleSimulation) *SimulationManager {
 	appModuleNamesSorted := make([]string, 0, len(modules))
 	for moduleName := range modules {
 		appModuleNamesSorted = append(appModuleNamesSorted, moduleName)
 	}
-
 	sort.Strings(appModuleNamesSorted)
 
+	var simModules []AppModuleSimulation
 	for _, moduleName := range appModuleNamesSorted {
 		// for every module, see if we override it. If so, use override.
 		// Else, if we can cast the app module into a simulation module add it.
@@ -86,7 +106,7 @@ func NewSimulationManagerFromAppModules(modules map[string]appmodule.AppModule, 
 			// cannot cast, so we continue
 		}
 	}
-	return NewSimulationManager(simModules...)
+	return NewSimulationManager(ak, bk, simModules...)
 }
 
 // Deprecated: Use GetProposalMsgs instead.
@@ -95,21 +115,8 @@ func NewSimulationManagerFromAppModules(modules map[string]appmodule.AppModule, 
 func (sm *SimulationManager) GetProposalContents(simState SimulationState) []simulation.WeightedProposalContent {
 	wContents := make([]simulation.WeightedProposalContent, 0, len(sm.Modules))
 	for _, module := range sm.Modules {
-		if module, ok := module.(HasProposalContents); ok {
+		if module, ok := module.(HasLegacyProposalContents); ok {
 			wContents = append(wContents, module.ProposalContents(simState)...)
-		}
-	}
-
-	return wContents
-}
-
-// GetProposalMsgs returns each module's proposal msg generator function
-// with their default operation weight and key.
-func (sm *SimulationManager) GetProposalMsgs(simState SimulationState) []simulation.WeightedProposalMsg {
-	wContents := make([]simulation.WeightedProposalMsg, 0, len(sm.Modules))
-	for _, module := range sm.Modules {
-		if module, ok := module.(HasProposalMsgs); ok {
-			wContents = append(wContents, module.ProposalMsgs(simState)...)
 		}
 	}
 
@@ -129,16 +136,6 @@ func (sm *SimulationManager) GenerateGenesisStates(simState *SimulationState) {
 	for _, module := range sm.Modules {
 		module.GenerateGenesisState(simState)
 	}
-}
-
-// WeightedOperations returns all the modules' weighted operations of an application
-func (sm *SimulationManager) WeightedOperations(simState SimulationState) []simulation.WeightedOperation {
-	wOps := make([]simulation.WeightedOperation, 0, len(sm.Modules))
-	for _, module := range sm.Modules {
-		wOps = append(wOps, module.WeightedOperations(simState)...)
-	}
-
-	return wOps
 }
 
 // SimulationState is the input parameters used on each of the module's randomized

@@ -373,11 +373,8 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 		if err != nil {
 			return math.ZeroInt(), err
 		}
-		sharesToUnbond, err := dstVal.SharesFromTokensTruncated(slashAmount)
-		if err != nil {
-			return math.ZeroInt(), err
-		}
 
+		sharesToUnbond, _ := dstVal.SharesFromTokensTruncated(slashAmount) // ignore the error as it only errors when tokens == 0
 		if sharesToUnbond.IsZero() {
 			continue
 		}

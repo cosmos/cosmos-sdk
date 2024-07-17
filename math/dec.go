@@ -52,6 +52,12 @@ var dec128Context = apd.Context{
 // - "1.23e4" -> Dec{12300}
 // - "NaN" or "Infinity" -> ErrInvalidDec
 //
+// The internal representation is an arbitrary-precision decimal: Negative × Coeff × 10*Exponent
+// The maximum exponent is 100_000 and must not exceeded. Following values would be invalid:
+// 1e100001 -> ErrInvalidDec
+// -1e100001 -> ErrInvalidDec
+// 1e-100001 -> ErrInvalidDec
+//
 // This function is essential for converting textual data into Dec types for numerical operations.
 func NewDecFromString(s string) (Dec, error) {
 	d, _, err := apd.NewFromString(s)
@@ -93,16 +99,16 @@ func NewDecWithPrec(coeff int64, exp int32) Dec {
 	return res
 }
 
-// Add returns a new Dec representing the sum of `x` and `y` using decimal128 precision.
+// Add returns a new Dec representing the sum of `x` and `y` using returning a new Dec, we use apd.BaseContext.
 // This function ensures that no arguments are mutated during the operation and checks for overflow conditions.
 // If an overflow occurs, an error is returned.
 //
-// Key error scenarios:
-// - Overflow if the sum exceeds the maximum representable value within decimal128 precision.
-//
-// Examples:
-// - `MaxDec + 1` results in an overflow error.
-// - `123.456 + 654.321` yields `777.777`.
+// The precision is much higher as long as the max exponent is not exceeded. If the max exponent is exceeded, an error is returned.
+// For example:
+// - 1e100000 + -1e^-1
+// - 1e100000 + -9e900000 
+// - 1e100000 + 0 
+// We can see that in apd.BaseContext the  max exponent is defined hence we cannot exceed.
 //
 // This function wraps any internal errors with a context-specific error message for clarity.
 func (x Dec) Add(y Dec) (Dec, error) {
@@ -115,18 +121,19 @@ func (x Dec) Add(y Dec) (Dec, error) {
 	return z, nil
 }
 
-// Sub returns a new Dec representing the difference `x-y` using decimal128 precision.
-// This function ensures that no arguments are mutated and checks for overflow conditions.
-// If an overflow occurs, or if subtraction results in a non-representable value, an error is returned.
+// Sub returns a new Dec representing the sum of `x` and `y` using returning a new Dec, we use apd.BaseContext.
+// This function ensures that no arguments are mutated during the operation and checks for overflow conditions.
+// If an overflow occurs, an error is returned.
 //
-// Key error scenarios:
-// - Overflow if the difference is less than the minimum representable value within decimal128 precision.
+// The precision is much higher as long as the max exponent is not exceeded. If the max exponent is exceeded, an error is returned.
+// For example:
+// - 1e-100001 - 0
+// - 1e100000 - 1^1
+// - 1e100001 - 1e100001 (upper limit exceeded)
+// - -100_001 - -100_001 (lower liit exceeded)
+// We can see that in apd.BaseContext the  max exponent is defined hence we cannot exceed.
 //
-// Examples:
-// - `MinDec - 1` results in an overflow error.
-// - `1000.000 - 500.000` yields `500.000`.
-//
-// Errors are wrapped to enhance error clarity, providing specific messages related to subtraction operations.
+// This function wraps any internal errors with a context-specific error message for clarity.
 func (x Dec) Sub(y Dec) (Dec, error) {
 	var z Dec
 	_, err := apd.BaseContext.Sub(&z.dec, &x.dec, &y.dec)
@@ -140,6 +147,9 @@ func (x Dec) Sub(y Dec) (Dec, error) {
 
 // Quo performs division of x by y using the decimal128 context with 34 digits of precision.
 // It returns a new Dec or an error if the division is not feasible due to constraints of decimal128.
+//
+// Within Quo rounding is performed and specifies the Rounder in the context to use during the rounding function. 
+// RoundHalfUp is used if empty or not present in Roundings.
 //
 // Key error scenarios:
 // - Division by zero (e.g., `123 / 0` or `0 / 0`) results in ErrInvalidDec.
@@ -182,7 +192,7 @@ func (x Dec) MulExact(y Dec) (Dec, error) {
 	return z, nil
 }
 
-// QuoExact performs division like Quo but additionally checks for rounding. It returns ErrUnexpectedRounding if
+// QuoExact performs division like Quo andadditionally checks for rounding. It returns ErrUnexpectedRounding if
 // any rounding occurred during the division. If the division is exact, it returns the result without error.
 //
 // This function is particularly useful in financial calculations or other scenarios where precision is critical

@@ -2,6 +2,7 @@ package store
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -9,7 +10,10 @@ import (
 
 	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/log"
+	serverv2 "cosmossdk.io/server/v2"
 	storev2 "cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/db"
+	"cosmossdk.io/store/v2/root"
 )
 
 // QueryBlockResultsCmd implements the default command for a BlockResults query.
@@ -31,7 +35,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 		Args:    cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// bind flags to the Context's Viper so we can get pruning options.
-			vp := viper.New()
+			vp := serverv2.GetViperFromCmd(cmd)
 			if err := vp.BindPFlags(cmd.Flags()); err != nil {
 				return err
 			}
@@ -50,12 +54,12 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 			)
 
 			logger := log.NewLogger(cmd.OutOrStdout())
-			home, err := cmd.Flags().GetString("home") // should be FlagHome
+			home, err := cmd.Flags().GetString(serverv2.FlagHome) // should be FlagHome
 			if err != nil {
 				return err
 			}
 
-			rootStore, err := storev2.CreateRootStore(home, logger)
+			rootStore, err := createRootStore(home, vp, logger)
 			if err != nil {
 				return fmt.Errorf("can not create root store %w", err)
 			}
@@ -70,13 +74,21 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				return fmt.Errorf("the database has no valid heights to prune, the latest height: %v", latestHeight)
 			}
 
-			pruningHeight := latestHeight - pruningOptions.KeepRecent
+			pruningHeight := int64(latestHeight) - int64(pruningOptions.KeepRecent)
+			cmd.Println("heights", latestHeight, pruningOptions.KeepRecent)
 			cmd.Printf("pruning heights up to %v\n", pruningHeight)
 
-			err = rootStore.Prune(pruningHeight)
+			if pruningHeight <= 0 {
+				return fmt.Errorf("pruning skipped, height is less than or equal to 0")
+			}
+
+			err = rootStore.Prune(uint64(pruningHeight))
 			if err != nil {
 				return err
 			}
+
+			err = rootStore.LoadVersion(5)
+			cmd.Println("load old version", err)
 
 			cmd.Println("successfully pruned the application root multi stores")
 			return nil
@@ -157,4 +169,18 @@ func getPruningOptionsFromCmd(cmd *cobra.Command, args []string) (*storev2.Pruni
 	default:
 		return nil, fmt.Errorf("unknown pruning strategy %s", strategy)
 	}
+}
+
+func createRootStore(rootDir string, v *viper.Viper, logger log.Logger) (storev2.RootStore, error) {
+	fmt.Println("prune root dir", rootDir)
+	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(rootDir, "data"), nil)
+	if err != nil {
+		panic(err)
+	}
+	return root.CreateRootStore(&root.FactoryOptions{
+		Logger:  logger,
+		RootDir: rootDir,
+		Options: v,
+		SCRawDB: scRawDb,
+	})
 }

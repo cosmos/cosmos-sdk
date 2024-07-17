@@ -57,6 +57,14 @@ func (s *StoreComponent[AppT, T]) GetQueries() []*cobra.Command {
 	return nil
 }
 
+func (s *StoreComponent[AppT, T]) CLICommands() serverv2.CLIConfig {
+	return serverv2.CLIConfig{
+		Commands: []*cobra.Command{
+			s.PrunesCmd(),
+		},
+	}
+}
+
 func (g *StoreComponent[AppT, T]) Config() any {
 	if g.config == nil || g.config == (&Config{}) {
 		return DefaultConfig()

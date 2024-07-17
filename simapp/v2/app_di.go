@@ -14,8 +14,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/commitment/iavl"
 	"cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/root"
 	"cosmossdk.io/x/accounts"
@@ -113,16 +111,7 @@ func NewSimApp[T transaction.Tx](
 				&root.FactoryOptions{
 					Logger:  logger,
 					RootDir: DefaultNodeHome,
-					SSType:  0,
-					SCType:  0,
-					SCPruningOption: &store.PruningOption{
-						KeepRecent: 0,
-						Interval:   0,
-					},
-					IavlConfig: &iavl.Config{
-						CacheSize:              100_000,
-						SkipFastStorageUpgrade: true,
-					},
+					Options: viper,
 					SCRawDB: scRawDb,
 				},
 				viper,

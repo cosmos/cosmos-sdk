@@ -4,7 +4,6 @@ import (
 	"io"
 
 	coreheader "cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/proof"
@@ -110,5 +109,3 @@ type QueryResult struct {
 	Version  uint64
 	ProofOps []proof.CommitmentOp
 }
-
-var CreateRootStore func(rootDir string, logger log.Logger) (RootStore, error)

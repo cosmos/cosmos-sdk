@@ -3,7 +3,6 @@ package root
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
@@ -17,6 +16,7 @@ import (
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/pebbledb"
 	"cosmossdk.io/store/v2/storage/sqlite"
+	"github.com/spf13/viper"
 )
 
 type (
@@ -32,40 +32,20 @@ const (
 	SCTypeIavlV2 SCType = 1
 )
 
-type FactoryOptions struct {
-	Logger          log.Logger
-	RootDir         string
-	SSType          SSType
-	SCType          SCType
-	SSPruningOption *store.PruningOption
-	SCPruningOption *store.PruningOption
-	IavlConfig      *iavl.Config
-	StoreKeys       []string
-	SCRawDB         corestore.KVStoreWithBatch
+type Options struct {
+	SSType          SSType               `mapstructure:"ss-type" toml:"ss-type"`
+	SCType          SCType               `mapstructure:"sc-type" toml:"sc-type"`
+	SSPruningOption *store.PruningOption `mapstructure:"ss-pruning-option" toml:"ss-pruning-option"`
+	SCPruningOption *store.PruningOption `mapstructure:"sc-pruning-option" toml:"sc-pruning-option"`
+	IavlConfig      *iavl.Config         `mapstructure:"iavl-config" toml:"iavl-config"`
 }
 
-func init() {
-	store.CreateRootStore = func(rootDir string, logger log.Logger) (store.RootStore, error) {
-		scRawDb, err := db.NewGoLevelDB("application", filepath.Join(rootDir, "data"), nil)
-		if err != nil {
-			panic(err)
-		}
-		return CreateRootStore(&FactoryOptions{
-			Logger:  logger,
-			RootDir: rootDir,
-			SSType:  0,
-			SCType:  0,
-			SCPruningOption: &store.PruningOption{
-				KeepRecent: 0,
-				Interval:   0,
-			},
-			IavlConfig: &iavl.Config{
-				CacheSize:              100_000,
-				SkipFastStorageUpgrade: true,
-			},
-			SCRawDB: scRawDb,
-		})
-	}
+type FactoryOptions struct {
+	Logger    log.Logger
+	RootDir   string
+	Options   *viper.Viper
+	StoreKeys []string
+	SCRawDB   corestore.KVStoreWithBatch
 }
 
 // CreateRootStore is a convenience function to create a root store based on the
@@ -86,7 +66,15 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		}
 	)
 
-	switch opts.SSType {
+	v := opts.Options
+	storeOpts:= Options{}
+	if v != nil {
+		if err := v.Sub("store.options").Unmarshal(&storeOpts); err != nil {
+			return nil, fmt.Errorf("failed to store options: %w", err)
+		}
+	}
+
+	switch storeOpts.SSType {
 	case SSTypeSQLite:
 		dir := fmt.Sprintf("%s/data/ss/sqlite", opts.RootDir)
 		if err = ensureDir(dir); err != nil {
@@ -131,9 +119,9 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		if internal.IsMemoryStoreKey(key) {
 			trees[key] = mem.New()
 		} else {
-			switch opts.SCType {
+			switch storeOpts.SCType {
 			case SCTypeIavl:
-				trees[key] = iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, opts.IavlConfig)
+				trees[key] = iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, storeOpts.IavlConfig)
 			case SCTypeIavlV2:
 				return nil, fmt.Errorf("iavl v2 not supported")
 			}
@@ -144,7 +132,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		return nil, err
 	}
 
-	pm := pruning.NewManager(sc, ss, opts.SCPruningOption, opts.SSPruningOption)
+	pm := pruning.NewManager(sc, ss, storeOpts.SCPruningOption, storeOpts.SSPruningOption)
 
 	return New(opts.Logger, ss, sc, pm, nil, nil)
 }

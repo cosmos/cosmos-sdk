@@ -25,11 +25,11 @@ const (
 // PruningOption defines the pruning configuration.
 type PruningOption struct {
 	// KeepRecent sets the number of recent versions to keep.
-	KeepRecent uint64
+	KeepRecent uint64 `mapstructure:"keep-recent" toml:"keep-recent"`
 
 	// Interval sets the number of how often to prune.
 	// If set to 0, no pruning will be done.
-	Interval uint64
+	Interval uint64   `mapstructure:"interval" toml:"interval"`
 }
 
 // Pruning option string constants

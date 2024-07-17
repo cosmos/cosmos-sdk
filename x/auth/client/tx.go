@@ -78,16 +78,6 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
-	// check whether the address is a signer
-	signers, err := txBuilder.GetTx().GetSigners()
-	if err != nil {
-		return err
-	}
-
-	if !isTxSigner(addr, signers) {
-		return fmt.Errorf("%s: %s", errors.ErrorInvalidSigner, name)
-	}
-
 	if !offline {
 		txFactory, err = populateAccountFromState(txFactory, clientCtx, addr)
 		if err != nil {

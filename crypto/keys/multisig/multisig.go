@@ -156,6 +156,13 @@ func (m *LegacyAminoPubKey) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 		if err != nil {
 			return err
 		}
+
+		if pk != nil {
+			// sets the compat.aminoBz value
+			if err = any.UnmarshalAmino(pk.Bytes()); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

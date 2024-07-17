@@ -1,15 +1,18 @@
 package sims
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
+	tlog "cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -18,7 +21,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/simsx"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
@@ -66,7 +72,7 @@ func Run[T SimulationApp](
 		baseAppOptions ...func(*baseapp.BaseApp),
 	) T,
 	setupStateFactory func(app T) SimStateFactory,
-	postRunActions ...func(t *testing.T, app TestInstance[T]),
+	postRunActions ...func(t testing.TB, app TestInstance[T]),
 ) {
 	t.Helper()
 	RunWithSeeds(t, appFactory, setupStateFactory, defaultSeeds, nil, postRunActions...)
@@ -80,7 +86,7 @@ func Run[T SimulationApp](
 // The execution is deterministic and can be used for fuzz tests as well.
 //
 // The system under test is isolated for each run but unlike the old runsim command, there is no Process separation.
-// This means, global caches may be reused for example. This implementation build upon the vanialla Go stdlib test framework.
+// This means, global caches may be reused for example. This implementation build upon the vanilla Go stdlib test framework.
 func RunWithSeeds[T SimulationApp](
 	t *testing.T,
 	appFactory func(
@@ -94,7 +100,7 @@ func RunWithSeeds[T SimulationApp](
 	setupStateFactory func(app T) SimStateFactory,
 	seeds []int64,
 	fuzzSeed []byte,
-	postRunActions ...func(t *testing.T, app TestInstance[T]),
+	postRunActions ...func(t testing.TB, app TestInstance[T]),
 ) {
 	t.Helper()
 	cfg := cli.NewConfigFromFlags()
@@ -103,45 +109,81 @@ func RunWithSeeds[T SimulationApp](
 		seed := seeds[i]
 		t.Run(fmt.Sprintf("seed: %d", seed), func(t *testing.T) {
 			t.Parallel()
-			// setup environment
-			tCfg := cfg.With(t, seed, fuzzSeed)
-			testInstance := NewSimulationAppInstance(t, tCfg, appFactory)
-			var runLogger log.Logger
-			if cli.FlagVerboseValue {
-				runLogger = log.NewTestLogger(t)
-			} else {
-				runLogger = log.NewTestLoggerInfo(t)
-			}
-			runLogger = runLogger.With("seed", tCfg.Seed)
-
-			app := testInstance.App
-			stateFactory := setupStateFactory(app)
-			simParams, err := simulation.SimulateFromSeedX(
-				t,
-				runLogger,
-				WriteToDebugLog(runLogger),
-				app.GetBaseApp(),
-				stateFactory.AppStateFn,
-				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-				simtestutil.SimulationOperations(app, stateFactory.Codec, tCfg, testInstance.App.TxConfig()),
-				stateFactory.BlockedAddr,
-				tCfg,
-				stateFactory.Codec,
-				app.TxConfig().SigningContext().AddressCodec(),
-				testInstance.ExecLogWriter,
-			)
-			require.NoError(t, err)
-			err = simtestutil.CheckExportSimulation(app, tCfg, simParams)
-			require.NoError(t, err)
-			if tCfg.Commit {
-				simtestutil.PrintStats(testInstance.DB)
-			}
-			for _, step := range postRunActions {
-				step(t, testInstance)
-			}
+			RunWithSeed(t, cfg, appFactory, setupStateFactory, seed, fuzzSeed, postRunActions...)
 		})
 	}
 }
+
+func RunWithSeed[T SimulationApp](
+	tb testing.TB,
+	cfg simtypes.Config,
+	appFactory func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	setupStateFactory func(app T) SimStateFactory,
+	seed int64,
+	fuzzSeed []byte,
+	postRunActions ...func(t testing.TB, app TestInstance[T]),
+) {
+	tb.Helper()
+	// setup environment
+	tCfg := cfg.With(tb, seed, fuzzSeed)
+	testInstance := NewSimulationAppInstance(tb, tCfg, appFactory)
+	var runLogger log.Logger
+	if cli.FlagVerboseValue {
+		runLogger = tlog.NewTestLogger(tb)
+	} else {
+		runLogger = tlog.NewTestLoggerInfo(tb)
+	}
+	runLogger = runLogger.With("seed", tCfg.Seed)
+
+	app := testInstance.App
+	stateFactory := setupStateFactory(app)
+	ops, reporter := prepareWeightedOps(app.SimulationManager(), stateFactory, tCfg, testInstance.App.TxConfig(), runLogger)
+	simParams, err := simulation.SimulateFromSeedX(tb, runLogger, WriteToDebugLog(runLogger), app.GetBaseApp(), stateFactory.AppStateFn, simtypes.RandomAccounts, ops, stateFactory.BlockedAddr, tCfg, stateFactory.Codec, testInstance.ExecLogWriter)
+	require.NoError(tb, err)
+	err = simtestutil.CheckExportSimulation(app, tCfg, simParams)
+	require.NoError(tb, err)
+	if tCfg.Commit {
+		simtestutil.PrintStats(testInstance.DB, tb.Log)
+	}
+	// not using tb.Log to always print the summary
+	fmt.Printf("+++ DONE (seed: %d): \n%s\n", seed, reporter.Summary().String())
+	for _, step := range postRunActions {
+		step(tb, testInstance)
+	}
+}
+
+type (
+	HasWeightedOperationsX interface {
+		WeightedOperationsX(weight simsx.WeightSource, reg simsx.Registry)
+	}
+	HasWeightedOperationsXWithProposals interface {
+		WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry, proposals []simtypes.WeightedProposalMsg,
+			legacyProposals []simtypes.WeightedProposalContent) //nolint: staticcheck // used for legacy proposal types
+	}
+	HasProposalMsgsX interface {
+		ProposalMsgsX(weights simsx.WeightSource, reg simsx.Registry)
+	}
+)
+
+type (
+	HasLegacyWeightedOperations interface {
+		// WeightedOperations simulation operations (i.e msgs) with their respective weight
+		WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation
+	}
+	// HasLegacyProposalMsgs defines the messages that can be used to simulate governance (v1) proposals
+	// Deprecated replaced by HasProposalMsgsX
+	HasLegacyProposalMsgs interface {
+		// ProposalMsgs msg fu	nctions used to simulate governance proposals
+		ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg
+	}
+
+	// HasLegacyProposalContents defines the contents that can be used to simulate legacy governance (v1beta1) proposals
+	// Deprecated replaced by HasProposalMsgsX
+	HasLegacyProposalContents interface {
+		// ProposalContents content functions used to simulate governance proposals
+		ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent //nolint:staticcheck // legacy v1beta1 governance
+	}
+)
 
 // TestInstance is a generic type that represents an instance of a SimulationApp used for testing simulations.
 // It contains the following fields:
@@ -151,6 +193,73 @@ func RunWithSeeds[T SimulationApp](
 //   - Cfg: The configuration flags for the simulator.
 //   - AppLogger: The logger used for logging in the app during the simulation, with seed value attached.
 //   - ExecLogWriter: Captures block and operation data coming from the simulation
+//
+// included to avoid cyclic dependency in testutils/sims
+func prepareWeightedOps(
+	sm *module.SimulationManager,
+	stateFact SimStateFactory,
+	config simtypes.Config,
+	txConfig client.TxConfig,
+	logger log.Logger,
+) (simulation.WeightedOperations, *simsx.BasicSimulationReporter) {
+	cdc := stateFact.Codec
+	signingCtx := cdc.InterfaceRegistry().SigningContext()
+	simState := module.SimulationState{
+		AppParams:      make(simtypes.AppParams),
+		Cdc:            cdc,
+		AddressCodec:   signingCtx.AddressCodec(),
+		ValidatorCodec: signingCtx.ValidatorAddressCodec(),
+		TxConfig:       txConfig,
+		BondDenom:      sdk.DefaultBondDenom,
+	}
+
+	if config.ParamsFile != "" {
+		bz, err := os.ReadFile(config.ParamsFile)
+		if err != nil {
+			panic(err)
+		}
+
+		err = json.Unmarshal(bz, &simState.AppParams)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	simState.LegacyProposalContents = sm.GetProposalContents(simState) //nolint:staticcheck // we're testing the old way here
+
+	weights := simsx.ParamWeightSource(simState.AppParams)
+	reporter := simsx.NewBasicSimulationReporter()
+
+	pReg := simsx.NewSimsProposalRegistryAdapter(reporter, sm.AccountSource, sm.BalanceSource, txConfig.SigningContext().AddressCodec(), logger)
+	wProps := make([]simtypes.WeightedProposalMsg, 0, len(sm.Modules))
+
+	// add gov proposals types
+	for _, m := range sm.Modules {
+		switch xm := m.(type) {
+		case HasProposalMsgsX:
+			xm.ProposalMsgsX(weights, pReg)
+		case HasLegacyProposalMsgs:
+			wProps = append(wProps, xm.ProposalMsgs(simState)...)
+		}
+	}
+	simState.ProposalMsgs = append(wProps, pReg.ToLegacyObjects()...)
+
+	oReg := simsx.NewSimsMsgRegistryAdapter(reporter, sm.AccountSource, sm.BalanceSource, txConfig, logger)
+	wOps := make([]simtypes.WeightedOperation, 0, len(sm.Modules))
+	for _, m := range sm.Modules {
+		// add operations
+		switch xm := m.(type) {
+		case HasWeightedOperationsX:
+			xm.WeightedOperationsX(weights, oReg)
+		case HasWeightedOperationsXWithProposals:
+			xm.WeightedOperationsX(weights, oReg, simState.ProposalMsgs, simState.LegacyProposalContents)
+		case HasLegacyWeightedOperations:
+			wOps = append(wOps, xm.WeightedOperations(simState)...)
+		}
+	}
+	return append(wOps, oReg.ToLegacyObjects()...), reporter
+}
+
 type TestInstance[T SimulationApp] struct {
 	App           T
 	DB            dbm.DB
@@ -166,31 +275,34 @@ type TestInstance[T SimulationApp] struct {
 // The function then initializes a logger based on the verbosity flag and sets the logger's seed to the test configuration's seed.
 // The database is closed and cleaned up on test completion.
 func NewSimulationAppInstance[T SimulationApp](
-	t *testing.T,
+	tb testing.TB,
 	tCfg simtypes.Config,
 	appFactory func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
 ) TestInstance[T] {
-	t.Helper()
-	workDir := t.TempDir()
+	tb.Helper()
+	workDir := tb.TempDir()
 	dbDir := filepath.Join(workDir, "leveldb-app-sim")
 	var logger log.Logger
 	if cli.FlagVerboseValue {
-		logger = log.NewTestLogger(t)
+		logger = tlog.NewTestLogger(tb)
 	} else {
-		logger = log.NewTestLoggerError(t)
+		logger = tlog.NewTestLoggerError(tb)
 	}
 	logger = logger.With("seed", tCfg.Seed)
 
 	db, err := dbm.NewDB("Simulation", dbm.BackendType(tCfg.DBBackend), dbDir)
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		require.NoError(t, db.Close())
+	require.NoError(tb, err)
+	tb.Cleanup(func() {
+		require.NoError(tb, db.Close())
 	})
 	appOptions := make(simtestutil.AppOptionsMap)
 	appOptions[flags.FlagHome] = workDir
 	appOptions[server.FlagInvCheckPeriod] = cli.FlagPeriodValue
-
-	app := appFactory(logger, db, nil, true, appOptions, baseapp.SetChainID(SimAppChainID))
+	opts := []func(*baseapp.BaseApp){baseapp.SetChainID(SimAppChainID)}
+	if tCfg.FauxMerkle {
+		opts = append(opts, FauxMerkleModeOpt)
+	}
+	app := appFactory(logger, db, nil, true, appOptions, opts...)
 	if !cli.FlagSigverifyTxValue {
 		app.SetNotSigverifyTx()
 	}

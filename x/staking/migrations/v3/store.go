@@ -1,3 +1,5 @@
+//nolint
+
 package v3
 
 import (
@@ -33,7 +35,7 @@ func migrateParamsStore(ctx sdk.Context, paramstore subspace) {
 	if paramstore.HasKeyTable() {
 		paramstore.Set(ctx, types.KeyMinCommissionRate, types.DefaultMinCommissionRate)
 	} else {
-		paramstore.WithKeyTable(types.ParamKeyTable()) //nolint:staticcheck
+		paramstore.WithKeyTable(types.ParamKeyTable())
 		paramstore.Set(ctx, types.KeyMinCommissionRate, types.DefaultMinCommissionRate)
 	}
 }

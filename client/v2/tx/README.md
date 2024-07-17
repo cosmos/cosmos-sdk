@@ -40,25 +40,25 @@ graph TD
 classDiagram
     class TxConfig {
         <<interface>>
-        +TxEncodingConfig
-        +TxSigningConfig
-        +TxBuilderProvider
+        TxEncodingConfig
+        TxSigningConfig
+        TxBuilderProvider
     }
 
     class TxEncodingConfig {
         <<interface>>
-        +TxEncoder() txEncoder
-        +TxDecoder() txDecoder
-        +TxJSONEncoder() txEncoder
-        +TxJSONDecoder() txDecoder
+        TxEncoder() txEncoder
+        TxDecoder() txDecoder
+        TxJSONEncoder() txEncoder
+        TxJSONDecoder() txDecoder
     }
 
     class TxSigningConfig {
         <<interface>>
-        +SignModeHandler() *signing.HandlerMap
-        +SigningContext() *signing.Context
-        +MarshalSignatureJSON([]Signature) ([]byte, error)
-        +UnmarshalSignatureJSON([]byte) ([]Signature, error)
+        SignModeHandler() *signing.HandlerMap
+        SigningContext() *signing.Context
+        MarshalSignatureJSON([]Signature) ([]byte, error)
+        UnmarshalSignatureJSON([]byte) ([]Signature, error)
     }
 
     class TxBuilderProvider {
@@ -66,28 +66,28 @@ classDiagram
     }
 
     class txConfig {
-        +TxBuilderProvider
-        +TxEncodingConfig
-        +TxSigningConfig
+        TxBuilderProvider
+        TxEncodingConfig
+        TxSigningConfig
     }
 
     class defaultEncodingConfig {
-        -cdc codec.BinaryCodec
-        -decoder Decoder
-        +TxEncoder() txEncoder
-        +TxDecoder() txDecoder
-        +TxJSONEncoder() txEncoder
-        +TxJSONDecoder() txDecoder
+        cdc codec.BinaryCodec
+        decoder Decoder
+        TxEncoder() txEncoder
+        TxDecoder() txDecoder
+        TxJSONEncoder() txEncoder
+        TxJSONDecoder() txDecoder
     }
 
     class defaultTxSigningConfig {
-        -signingCtx *signing.Context
-        -handlerMap *signing.HandlerMap
-        -cdc codec.BinaryCodec
-        +SignModeHandler() *signing.HandlerMap
-        +SigningContext() *signing.Context
-        +MarshalSignatureJSON([]Signature) ([]byte, error)
-        +UnmarshalSignatureJSON([]byte) ([]Signature, error)
+        signingCtx *signing.Context
+        handlerMap *signing.HandlerMap
+        cdc codec.BinaryCodec
+        SignModeHandler() *signing.HandlerMap
+        SigningContext() *signing.Context
+        MarshalSignatureJSON([]Signature) ([]byte, error)
+        UnmarshalSignatureJSON([]byte) ([]Signature, error)
     }
 
     TxConfig <|-- txConfig
@@ -106,17 +106,17 @@ classDiagram
 classDiagram
     class TxBuilder {
         <<interface>>
-        +GetTx() (Tx, error)
-        +GetSigningTxData() (*signing.TxData, error)
-        +SetMsgs(...transaction.Msg) error
-        +SetMemo(string)
-        +SetFeeAmount([]*base.Coin)
-        +SetGasLimit(uint64)
-        +SetTimeoutHeight(uint64)
-        +SetFeePayer(string) error
-        +SetFeeGranter(string) error
-        +SetUnordered(bool)
-        +SetSignatures(...Signature) error
+        GetTx() (Tx, error)
+        GetSigningTxData() (*signing.TxData, error)
+        SetMsgs(...transaction.Msg) error
+        SetMemo(string)
+        SetFeeAmount([]*base.Coin)
+        SetGasLimit(uint64)
+        SetTimeoutHeight(uint64)
+        SetFeePayer(string) error
+        SetFeeGranter(string) error
+        SetUnordered(bool)
+        SetSignatures(...Signature) error
     }
 
     class ExtendedTxBuilder {
@@ -125,48 +125,48 @@ classDiagram
     }
 
     class txBuilder {
-        -addressCodec address.Codec
-        -decoder Decoder
-        -codec codec.BinaryCodec
-        -msgs []transaction.Msg
-        -timeoutHeight uint64
-        -granter []byte
-        -payer []byte
-        -unordered bool
-        -memo string
-        -gasLimit uint64
-        -fees []*base.Coin
-        -signerInfos []*apitx.SignerInfo
-        -signatures [][]byte
-        -extensionOptions []*anypb.Any
-        -nonCriticalExtensionOptions []*anypb.Any
-        +GetTx() (Tx, error)
-        +GetSigningTxData() (*signing.TxData, error)
-        +SetMsgs(...transaction.Msg) error
-        +SetMemo(string)
-        +SetFeeAmount([]*base.Coin)
-        +SetGasLimit(uint64)
-        +SetTimeoutHeight(uint64)
-        +SetFeePayer(string) error
-        +SetFeeGranter(string) error
-        +SetUnordered(bool)
-        +SetSignatures(...Signature) error
-        -getTx() (*wrappedTx, error)
-        -getFee() (*apitx.Fee, error)
+        addressCodec address.Codec
+        decoder Decoder
+        codec codec.BinaryCodec
+        msgs []transaction.Msg
+        timeoutHeight uint64
+        granter []byte
+        payer []byte
+        unordered bool
+        memo string
+        gasLimit uint64
+        fees []*base.Coin
+        signerInfos []*apitx.SignerInfo
+        signatures [][]byte
+        extensionOptions []*anypb.Any
+        nonCriticalExtensionOptions []*anypb.Any
+        GetTx() (Tx, error)
+        GetSigningTxData() (*signing.TxData, error)
+        SetMsgs(...transaction.Msg) error
+        SetMemo(string)
+        SetFeeAmount([]*base.Coin)
+        SetGasLimit(uint64)
+        SetTimeoutHeight(uint64)
+        SetFeePayer(string) error
+        SetFeeGranter(string) error
+        SetUnordered(bool)
+        SetSignatures(...Signature) error
+        getTx() (*wrappedTx, error)
+        getFee() (*apitx.Fee, error)
     }
 
     class TxBuilderProvider {
         <<interface>>
-        +NewTxBuilder() TxBuilder
-        +WrapTxBuilder(*apitx.Tx) (TxBuilder, error)
+        NewTxBuilder() TxBuilder
+        WrapTxBuilder(*apitx.Tx) (TxBuilder, error)
     }
 
     class BuilderProvider {
-        -addressCodec address.Codec
-        -decoder Decoder
-        -codec codec.BinaryCodec
-        +NewTxBuilder() TxBuilder
-        +WrapTxBuilder(*apitx.Tx) (TxBuilder, error)
+        addressCodec address.Codec
+        decoder Decoder
+        codec codec.BinaryCodec
+        NewTxBuilder() TxBuilder
+        WrapTxBuilder(*apitx.Tx) (TxBuilder, error)
     }
 
     TxBuilder <|.. txBuilder : implements
@@ -187,35 +187,36 @@ The `Factory` is the main entry point for creating and managing transactions. It
 ```mermaid
 classDiagram
     class Factory {
-        -keybase keyring.Keyring
-        -cdc codec.BinaryCodec
-        -accountRetriever account.AccountRetriever
-        -ac address.Codec
-        -conn gogogrpc.ClientConn
-        -txConfig TxConfig
-        -txParams TxParameters
+        keybase keyring.Keyring
+        cdc codec.BinaryCodec
+        accountRetriever account.AccountRetriever
+        ac address.Codec
+        conn gogogrpc.ClientConn
+        txConfig TxConfig
+        txParams TxParameters
 
-        +NewFactory(keybase, cdc, accRetriever, txConfig, ac, conn, parameters) Factory
-        +Prepare() error
-        +BuildUnsignedTx(msgs ...transaction.Msg) (TxBuilder, error)
-        +calculateGas(msgs ...transaction.Msg) error
-        +Simulate(msgs ...transaction.Msg) (*apitx.SimulateResponse, uint64, error)
-        +UnsignedTxString(msgs ...transaction.Msg) (string, error)
-        +BuildSimTx(msgs ...transaction.Msg) ([]byte, error)
-        +Sign(ctx context.Context, txBuilder TxBuilder, overwriteSig bool) error
-        +WithGas(gas uint64)
-        +WithSequence(sequence uint64)
-        +WithAccountNumber(accnum uint64)
-        +PreprocessTx(keyname string, builder TxBuilder) error
-        +AccountNumber() uint64
-        +Sequence() uint64
-        +GasAdjustment() float64
-        +Keybase() keyring.Keyring
-        +SimulateAndExecute() bool
-        +SignMode() apitxsigning.SignMode
-        -getSimPK() (cryptotypes.PubKey, error)
-        -getSimSignatureData(pk cryptotypes.PubKey) SignatureData
-        -getSignBytesAdapter(ctx context.Context, signerData signing.SignerData, builder TxBuilder) ([]byte, error)
+        NewFactory(keybase, cdc, accRetriever, txConfig, ac, conn, parameters) Factory
+        Prepare() error
+        BuildUnsignedTx(msgs ...transaction.Msg) (TxBuilder, error)
+        BuildsSignedTx(ctx context.Context, msgs ...transaction.Msg) (Tx, error)
+        calculateGas(msgs ...transaction.Msg) error
+        Simulate(msgs ...transaction.Msg) (*apitx.SimulateResponse, uint64, error)
+        UnsignedTxString(msgs ...transaction.Msg) (string, error)
+        BuildSimTx(msgs ...transaction.Msg) ([]byte, error)
+        sign(ctx context.Context, txBuilder TxBuilder, overwriteSig bool) (Tx, error)
+        WithGas(gas uint64)
+        WithSequence(sequence uint64)
+        WithAccountNumber(accnum uint64)
+        preprocessTx(keyname string, builder TxBuilder) error
+        accountNumber() uint64
+        sequence() uint64
+        GgasAdjustment() float64
+        keyring() keyring.Keyring
+        simulateAndExecute() bool
+        signMode() apitxsigning.SignMode
+        getSimPK() (cryptotypes.PubKey, error)
+        getSimSignatureData(pk cryptotypes.PubKey) SignatureData
+        getSignBytesAdapter(ctx context.Context, signerData signing.SignerData, builder TxBuilder) ([]byte, error)
     }
 
     class TxParameters {
@@ -243,38 +244,38 @@ The package includes functions for encoding and decoding transactions in both bi
 classDiagram
     class Decoder {
         <<interface>>
-        +Decode(txBytes []byte) (*txdecode.DecodedTx, error)
+        Decode(txBytes []byte) (*txdecode.DecodedTx, error)
     }
 
     class txDecoder {
         <<function>>
-        +decode(txBytes []byte) (Tx, error)
+        decode(txBytes []byte) (Tx, error)
     }
 
     class txEncoder {
         <<function>>
-        +encode(tx Tx) ([]byte, error)
+        encode(tx Tx) ([]byte, error)
     }
 
     class EncoderUtils {
         <<utility>>
-        +decodeTx(cdc codec.BinaryCodec, decoder Decoder) txDecoder
-        +encodeTx(tx Tx) ([]byte, error)
-        +decodeJsonTx(cdc codec.BinaryCodec, decoder Decoder) txDecoder
-        +encodeJsonTx(tx Tx) ([]byte, error)
-        -protoTxBytes(tx *txv1beta1.Tx) ([]byte, error)
+        decodeTx(cdc codec.BinaryCodec, decoder Decoder) txDecoder
+        encodeTx(tx Tx) ([]byte, error)
+        decodeJsonTx(cdc codec.BinaryCodec, decoder Decoder) txDecoder
+        encodeJsonTx(tx Tx) ([]byte, error)
+        protoTxBytes(tx *txv1beta1.Tx) ([]byte, error)
     }
 
     class MarshalOptions {
         <<utility>>
-        +Deterministic bool
+        Deterministic bool
     }
 
     class JSONMarshalOptions {
         <<utility>>
-        +Indent string
-        +UseProtoNames bool
-        +UseEnumNumbers bool
+        Indent string
+        UseProtoNames bool
+        UseEnumNumbers bool
     }
 
     Decoder <.. EncoderUtils : uses
@@ -483,13 +484,13 @@ sequenceDiagram
         end
     end
 
-    BroadcastTx->>Factory: Sign(ctx, builder, true)
+    BroadcastTx->>Factory: sign(ctx, builder, true)
     Factory->>Factory: keybase.GetPubKey(fromName)
     Factory->>Factory: getSignBytesAdapter()
     Factory->>Factory: keybase.Sign(fromName, bytesToSign, signMode)
     Factory->>TxBuilder: SetSignatures(sig)
+    Factory->>TxBuilder: GetTx()
 
-    BroadcastTx->>TxBuilder: GetTx()
     BroadcastTx->>Factory: txConfig.TxEncoder()
     BroadcastTx->>clientCtx: BroadcastTx(txBytes)
 

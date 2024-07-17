@@ -40,6 +40,8 @@ type Factory struct {
 	conn             gogogrpc.ClientConn
 	txConfig         TxConfig
 	txParams         TxParameters
+
+	cachedTx TxBuilder
 }
 
 // NewFactory returns a new instance of Factory.
@@ -162,6 +164,20 @@ func (f *Factory) BuildUnsignedTx(msgs ...transaction.Msg) (TxBuilder, error) {
 	return txBuilder, nil
 }
 
+func (f *Factory) BuildsSignedTx(ctx context.Context, msgs ...transaction.Msg) (Tx, error) {
+	err := f.Prepare()
+	if err != nil {
+		return nil, err
+	}
+
+	tx, err := f.BuildUnsignedTx(msgs...)
+	if err != nil {
+		return nil, err
+	}
+
+	return f.sign(ctx, tx, true)
+}
+
 // calculateGas calculates the gas required for the given messages.
 func (f *Factory) calculateGas(msgs ...transaction.Msg) error {
 	if f.txParams.offline {
@@ -193,7 +209,7 @@ func (f *Factory) Simulate(msgs ...transaction.Msg) (*apitx.SimulateResponse, ui
 		return nil, 0, err
 	}
 
-	return simRes, uint64(f.GasAdjustment() * float64(simRes.GasInfo.GasUsed)), nil
+	return simRes, uint64(f.gasAdjustment() * float64(simRes.GasInfo.GasUsed)), nil
 }
 
 // UnsignedTxString will generate an unsigned transaction and print it to the writer
@@ -201,7 +217,7 @@ func (f *Factory) Simulate(msgs ...transaction.Msg) (*apitx.SimulateResponse, ui
 // simulated and also printed to the same writer before the transaction is
 // printed.
 func (f *Factory) UnsignedTxString(msgs ...transaction.Msg) (string, error) {
-	if f.SimulateAndExecute() {
+	if f.simulateAndExecute() {
 		err := f.calculateGas(msgs...)
 		if err != nil {
 			return "", err
@@ -250,7 +266,7 @@ func (f *Factory) BuildSimTx(msgs ...transaction.Msg) ([]byte, error) {
 	sig := Signature{
 		PubKey:   pk,
 		Data:     f.getSimSignatureData(pk),
-		Sequence: f.Sequence(),
+		Sequence: f.sequence(),
 	}
 	if err := txb.SetSignatures(sig); err != nil {
 		return nil, err
@@ -268,15 +284,15 @@ func (f *Factory) BuildSimTx(msgs ...transaction.Msg) ([]byte, error) {
 	return encoder(tx)
 }
 
-// Sign signs a given tx with a named key. The bytes signed over are canonical.
+// sign signs a given tx with a named key. The bytes signed over are canonical.
 // The resulting signature will be added to the transaction builder overwriting the previous
 // ones if overwrite=true (otherwise, the signature will be appended).
 // Signing a transaction with multiple signers in the DIRECT mode is not supported and will
 // return an error.
 // An error is returned upon failure.
-func (f *Factory) Sign(ctx context.Context, txBuilder TxBuilder, overwriteSig bool) error {
+func (f *Factory) sign(ctx context.Context, txBuilder TxBuilder, overwriteSig bool) (Tx, error) {
 	if f.keybase == nil {
-		return errors.New("keybase must be set prior to signing a transaction")
+		return nil, errors.New("keybase must be set prior to signing a transaction")
 	}
 
 	var err error
@@ -286,12 +302,12 @@ func (f *Factory) Sign(ctx context.Context, txBuilder TxBuilder, overwriteSig bo
 
 	pubKey, err := f.keybase.GetPubKey(f.txParams.fromName)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	addr, err := f.ac.BytesToString(pubKey.Address())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	signerData := signing.SignerData{
@@ -327,12 +343,12 @@ func (f *Factory) Sign(ctx context.Context, txBuilder TxBuilder, overwriteSig bo
 	if !overwriteSig {
 		tx, err := txBuilder.GetTx()
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		prevSignatures, err = tx.GetSignatures()
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 	// Overwrite or append signer infos.
@@ -344,32 +360,32 @@ func (f *Factory) Sign(ctx context.Context, txBuilder TxBuilder, overwriteSig bo
 		sigs = append(sigs, sig)
 	}
 	if err := txBuilder.SetSignatures(sigs...); err != nil {
-		return err
+		return nil, err
 	}
 
 	tx, err := txBuilder.GetTx()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if err := checkMultipleSigners(tx); err != nil {
-		return err
+		return nil, err
 	}
 
 	bytesToSign, err := f.getSignBytesAdapter(ctx, signerData, txBuilder)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Sign those bytes
 	sigBytes, err := f.keybase.Sign(f.txParams.fromName, bytesToSign, f.txParams.signMode)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Construct the SignatureV2 struct
 	sigData = SingleSignatureData{
-		SignMode:  f.SignMode(),
+		SignMode:  f.signMode(),
 		Signature: sigBytes,
 	}
 	sig = Signature{
@@ -386,12 +402,17 @@ func (f *Factory) Sign(ctx context.Context, txBuilder TxBuilder, overwriteSig bo
 	}
 
 	if err != nil {
-		return fmt.Errorf("unable to set signatures on payload: %w", err)
+		return nil, fmt.Errorf("unable to set signatures on payload: %w", err)
 	}
 
 	// Run optional preprocessing if specified. By default, this is unset
 	// and will return nil.
-	return f.PreprocessTx(f.txParams.fromName, txBuilder)
+	err = f.preprocessTx(f.txParams.fromName, txBuilder)
+	if err != nil {
+		return nil, err
+	}
+
+	return txBuilder.GetTx()
 }
 
 // getSignBytesAdapter returns the sign bytes for a given transaction and sign mode.
@@ -402,7 +423,7 @@ func (f *Factory) getSignBytesAdapter(ctx context.Context, signerData signing.Si
 	}
 
 	// Generate the bytes to be signed.
-	return f.txConfig.SignModeHandler().GetSignBytes(ctx, f.SignMode(), signerData, *txData)
+	return f.txConfig.SignModeHandler().GetSignBytes(ctx, f.signMode(), signerData, *txData)
 }
 
 // WithGas returns a copy of the Factory with an updated gas value.
@@ -420,38 +441,38 @@ func (f *Factory) WithAccountNumber(accnum uint64) {
 	f.txParams.accountNumber = accnum
 }
 
-// PreprocessTx calls the preprocessing hook with the factory parameters and
+// preprocessTx calls the preprocessing hook with the factory parameters and
 // returns the result.
-func (f *Factory) PreprocessTx(keyname string, builder TxBuilder) error {
+func (f *Factory) preprocessTx(keyname string, builder TxBuilder) error {
 	if f.txParams.preprocessTxHook == nil {
 		// Allow pass-through
 		return nil
 	}
 
-	keyType, err := f.Keybase().KeyType(keyname)
+	keyType, err := f.keyring().KeyType(keyname)
 	if err != nil {
 		return err
 	}
 	return f.txParams.preprocessTxHook(f.txParams.chainID, keyType, builder)
 }
 
-// AccountNumber returns the account number.
-func (f *Factory) AccountNumber() uint64 { return f.txParams.accountNumber }
+// accountNumber returns the account number.
+func (f *Factory) accountNumber() uint64 { return f.txParams.accountNumber }
 
-// Sequence returns the sequence number.
-func (f *Factory) Sequence() uint64 { return f.txParams.sequence }
+// sequence returns the sequence number.
+func (f *Factory) sequence() uint64 { return f.txParams.sequence }
 
-// GasAdjustment returns the gas adjustment value.
-func (f *Factory) GasAdjustment() float64 { return f.txParams.gasAdjustment }
+// gasAdjustment returns the gas adjustment value.
+func (f *Factory) gasAdjustment() float64 { return f.txParams.gasAdjustment }
 
-// Keybase returns the keyring.
-func (f *Factory) Keybase() keyring.Keyring { return f.keybase }
+// keyring returns the keyring.
+func (f *Factory) keyring() keyring.Keyring { return f.keybase }
 
-// SimulateAndExecute returns whether to simulate and execute.
-func (f *Factory) SimulateAndExecute() bool { return f.txParams.simulateAndExecute }
+// simulateAndExecute returns whether to simulate and execute.
+func (f *Factory) simulateAndExecute() bool { return f.txParams.simulateAndExecute }
 
-// SignMode returns the sign mode.
-func (f *Factory) SignMode() apitxsigning.SignMode { return f.txParams.signMode }
+// signMode returns the sign mode.
+func (f *Factory) signMode() apitxsigning.SignMode { return f.txParams.signMode }
 
 // getSimPK gets the public key to use for building a simulation tx.
 // Note, we should only check for keys in the keybase if we are in simulate and execute mode,
@@ -495,7 +516,7 @@ func (f *Factory) getSimSignatureData(pk cryptotypes.PubKey) SignatureData {
 	multiSignatureData := make([]SignatureData, 0, multisigPubKey.Threshold)
 	for i := uint32(0); i < multisigPubKey.Threshold; i++ {
 		multiSignatureData = append(multiSignatureData, &SingleSignatureData{
-			SignMode: f.SignMode(),
+			SignMode: f.signMode(),
 		})
 	}
 

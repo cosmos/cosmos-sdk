@@ -292,12 +292,14 @@ func TestFactory_Sign(t *testing.T) {
 			require.Nil(t, builderTx.signatures)
 			require.Nil(t, builderTx.signerInfos)
 
-			err = f.Sign(context.Background(), builder, true)
+			tx, err := f.sign(context.Background(), builder, true)
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.NotNil(t, builderTx.signatures)
+				sigs, err := tx.GetSignatures()
+				require.NoError(t, err)
+				require.NotNil(t, sigs)
 				require.NotNil(t, builderTx.signerInfos)
 			}
 		})

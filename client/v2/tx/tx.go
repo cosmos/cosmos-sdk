@@ -277,7 +277,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...transaction.Msg)
 		return err
 	}
 
-	if txf.SimulateAndExecute() {
+	if txf.simulateAndExecute() {
 		err = txf.calculateGas(msgs...)
 		if err != nil {
 			return err
@@ -320,11 +320,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...transaction.Msg)
 		}
 	}
 
-	if err = txf.Sign(clientCtx.CmdContext, builder, true); err != nil {
-		return err
-	}
-
-	signedTx, err := builder.GetTx()
+	signedTx, err := txf.sign(clientCtx.CmdContext, builder, true)
 	if err != nil {
 		return err
 	}
@@ -349,8 +345,8 @@ func makeAuxSignerData(f Factory, msgs ...transaction.Msg) (*apitx.AuxSignerData
 
 	b.SetAddress(f.txParams.fromAddress)
 	if f.txParams.offline {
-		b.SetAccountNumber(f.AccountNumber())
-		b.SetSequence(f.Sequence())
+		b.SetAccountNumber(f.accountNumber())
+		b.SetSequence(f.sequence())
 	} else {
 		accNum, seq, err := f.accountRetriever.GetAccountNumberSequence(context.Background(), f.txParams.address)
 		if err != nil {
@@ -365,7 +361,7 @@ func makeAuxSignerData(f Factory, msgs ...transaction.Msg) (*apitx.AuxSignerData
 		return nil, err
 	}
 
-	err = b.SetSignMode(f.SignMode())
+	err = b.SetSignMode(f.signMode())
 	if err != nil {
 		return nil, err
 	}
@@ -386,7 +382,7 @@ func makeAuxSignerData(f Factory, msgs ...transaction.Msg) (*apitx.AuxSignerData
 		return nil, err
 	}
 
-	sig, err := f.keybase.Sign(f.txParams.fromName, signBz, f.SignMode())
+	sig, err := f.keybase.Sign(f.txParams.fromName, signBz, f.signMode())
 	if err != nil {
 		return nil, err
 	}

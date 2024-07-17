@@ -26,7 +26,7 @@ func RegisterLegacyAminoCodec(cdc corelegacy.Amino) {
 	legacy.RegisterAminoMsg(cdc, &MsgCreatePeriodicVestingAccount{}, "cosmos-sdk/MsgCreatePeriodVestAccount")
 }
 
-// RegisterInterface associates protoName with AccountI and VestingAccount
+// RegisterInterfaces associates protoName with AccountI and VestingAccount
 // Interfaces and creates a registry of it's concrete implementations
 func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 	registrar.RegisterInterface(

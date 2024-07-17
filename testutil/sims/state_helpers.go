@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
@@ -128,10 +129,16 @@ func appStateFnWithExtendedCbs(
 			panic("staking genesis state is missing")
 		}
 
-		stakingState := new(StakingGenesisState)
-		if err = json.Unmarshal(stakingStateBz, stakingState); err != nil {
+		rawStakingState := new(anypb.Any)
+		if err = json.Unmarshal(stakingStateBz, rawStakingState); err != nil {
 			panic(err)
 		}
+
+		stakingState, err := ProtoToStakingGenesisState(rawStakingState)
+		if err != nil {
+			panic(err)
+		}
+
 		// compute not bonded balance
 		notBondedTokens := math.ZeroInt()
 		for _, val := range stakingState.Validators {

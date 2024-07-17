@@ -3,13 +3,11 @@ package sims
 import (
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
-	any "github.com/cosmos/gogoproto/types/any"
+	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"cosmossdk.io/math"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -28,6 +26,44 @@ type StakingGenesisState struct {
 	Validators []StakingValidator `protobuf:"bytes,4,rep,name=validators,proto3" json:"validators"`
 	// delegations defines the delegations active at genesis.
 	Delegations []StakingDelegation `protobuf:"bytes,5,rep,name=delegations,proto3" json:"delegations"`
+}
+
+func (s *StakingGenesisState) ToProto() (*anypb.Any, error) {
+	// Create a map to hold the protobuf fields
+	fields := map[string]interface{}{
+		"params":           s.Params,
+		"last_total_power": s.LastTotalPower,
+		"validators":       s.Validators,
+		"delegations":      s.Delegations,
+	}
+
+	// Convert the map to a protobuf Struct
+	pbStruct, err := structpb.NewStruct(fields)
+	if err != nil {
+		return nil, err
+	}
+
+	// Marshal the Struct into an Any message
+	anyMsg, err := anypb.New(pbStruct)
+	if err != nil {
+		return nil, err
+	}
+
+	return anyMsg, nil
+}
+
+func ProtoToStakingGenesisState(protoMsg *anypb.Any) (*StakingGenesisState, error) {
+	var s structpb.Struct
+	if err := protoMsg.UnmarshalTo(&s); err != nil {
+		return nil, err
+	}
+
+	genesisStake := &StakingGenesisState{}
+	// myStruct.Params = s.Fields["params"].GetStringValue()
+	// myStruct.Field2 = int32(s.Fields["field2"].GetNumberValue())
+	// myStruct.Field3 = []byte(s.Fields["field3"].GetStringValue())
+
+	return genesisStake, nil
 }
 
 type StakingParams struct {
@@ -71,35 +107,35 @@ type StakingDelegation struct {
 	Shares math.LegacyDec `protobuf:"bytes,3,opt,name=shares,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"shares"`
 }
 
-func FakeStakingMsgCreateValidator(
-	valAddr string, pubKey cryptotypes.PubKey, selfDelegation sdk.Coin,
-	rate, maxRate, maxChangeRate math.LegacyDec, minSelfDelegation math.Int,
-) (proto.Message, error) {
-	var pkAny *codectypes.Any
-	if pubKey != nil {
-		var err error
-		if pkAny, err = codectypes.NewAnyWithValue(pubKey); err != nil {
-			return nil, err
-		}
-	}
+// func FakeStakingMsgCreateValidator(
+// 	valAddr string, pubKey cryptotypes.PubKey, selfDelegation sdk.Coin,
+// 	rate, maxRate, maxChangeRate math.LegacyDec, minSelfDelegation math.Int,
+// ) (proto.Message, error) {
+// 	var pkAny *codectypes.Any
+// 	if pubKey != nil {
+// 		var err error
+// 		if pkAny, err = codectypes.NewAnyWithValue(pubKey); err != nil {
+// 			return nil, err
+// 		}
+// 	}
 
-	v := &StakingMsgCreateValidator{
-		Commission: StakingValidatorCommission{
-			Rate:          rate,
-			MaxRate:       maxRate,
-			MaxChangeRate: maxChangeRate,
-		},
-		MinSelfDelegation: minSelfDelegation,
-		DelegatorAddress:  "",
-		ValidatorAddress:  valAddr,
-		Pubkey:            pkAny,
-		Value:             selfDelegation,
-	}
+// 	v := &StakingMsgCreateValidator{
+// 		Commission: StakingValidatorCommission{
+// 			Rate:          rate,
+// 			MaxRate:       maxRate,
+// 			MaxChangeRate: maxChangeRate,
+// 		},
+// 		MinSelfDelegation: minSelfDelegation,
+// 		DelegatorAddress:  "",
+// 		ValidatorAddress:  valAddr,
+// 		Pubkey:            pkAny,
+// 		Value:             selfDelegation,
+// 	}
 
-	_ = v
+// 	_ = v
 
-	return nil, nil
-}
+// 	return nil, nil
+// }
 
 type StakingMsgCreateValidator struct {
 	Commission        StakingValidatorCommission `protobuf:"bytes,2,opt,name=commission,proto3" json:"commission"`

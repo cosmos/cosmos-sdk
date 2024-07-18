@@ -33,7 +33,7 @@ func (c Field) Validate() error {
 
 	// valid kind
 	if err := c.Kind.Validate(); err != nil {
-		return fmt.Errorf("invalid field kind for %q: %v", c.Name, err)
+		return fmt.Errorf("invalid field kind for %q: %v", c.Name, err) //nolint:errorlint // false positive due to using go1.12
 	}
 
 	// address prefix only valid with Bech32AddressKind
@@ -46,7 +46,7 @@ func (c Field) Validate() error {
 	// enum definition only valid with EnumKind
 	if c.Kind == EnumKind {
 		if err := c.EnumDefinition.Validate(); err != nil {
-			return fmt.Errorf("invalid enum definition for field %q: %v", c.Name, err)
+			return fmt.Errorf("invalid enum definition for field %q: %v", c.Name, err) //nolint:errorlint // false positive due to using go1.12
 		}
 	} else if c.Kind != EnumKind && (c.EnumDefinition.Name != "" || c.EnumDefinition.Values != nil) {
 		return fmt.Errorf("enum definition is only valid for field %q with type EnumKind", c.Name)
@@ -67,7 +67,7 @@ func (c Field) ValidateValue(value interface{}) error {
 	}
 	err := c.Kind.ValidateValueType(value)
 	if err != nil {
-		return fmt.Errorf("invalid value for field %q: %v", c.Name, err)
+		return fmt.Errorf("invalid value for field %q: %v", c.Name, err) //nolint:errorlint // false positive due to using go1.12
 	}
 
 	if c.Kind == EnumKind {

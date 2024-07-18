@@ -3,9 +3,8 @@ package postgres
 import (
 	"os"
 
-	"cosmossdk.io/schema"
-
 	"cosmossdk.io/indexer/postgres/internal/testdata"
+	"cosmossdk.io/schema"
 )
 
 func ExampleObjectIndexer_CreateTableSql_allKinds() {

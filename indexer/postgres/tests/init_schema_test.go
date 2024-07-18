@@ -9,6 +9,7 @@ import (
 
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	"github.com/hashicorp/consul/sdk/freeport"
+
 	// this is where we get our pgx database driver from
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/stretchr/testify/require"
@@ -30,6 +31,7 @@ func TestInitSchema(t *testing.T) {
 }
 
 func testInitSchema(t *testing.T, disableRetainDeletions bool, goldenFileName string) {
+	t.Helper()
 	connectionUrl := createTestDB(t)
 
 	buf := &strings.Builder{}
@@ -64,6 +66,7 @@ func testInitSchema(t *testing.T, disableRetainDeletions bool, goldenFileName st
 }
 
 func createTestDB(t *testing.T) (connectionUrl string) {
+	t.Helper()
 	tempDir, err := os.MkdirTemp("", "postgres-indexer-test")
 	require.NoError(t, err)
 	t.Cleanup(func() {

@@ -130,7 +130,7 @@ func appStateFnWithExtendedCbs(
 		}
 
 		rawStakingState := new(anypb.Any)
-		if err = json.Unmarshal(stakingStateBz, rawStakingState); err != nil {
+		if err = cdc.UnmarshalJSON(stakingStateBz, rawStakingState); err != nil {
 			panic(err)
 		}
 

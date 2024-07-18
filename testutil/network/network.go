@@ -483,13 +483,27 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			return nil, err
 		}
 
-		createValMsg, err := sims.FakeStakingMsgCreateValidator(
-			sdk.ValAddress(addr).String(),
-			valPubKeys[i],
-			sdk.NewCoin(cfg.BondDenom, cfg.BondedTokens),
-			commission, sdkmath.LegacyOneDec(), sdkmath.LegacyOneDec(),
-			sdkmath.OneInt(),
-		)
+		var pkAny *codectypes.Any
+		if pubkey := valPubKeys[i]; pubkey != nil {
+			var err error
+			if pkAny, err = codectypes.NewAnyWithValue(pubKey); err != nil {
+				return nil, err
+			}
+		}
+
+		createValMsgStruct := &sims.StakingMsgCreateValidator{
+			Commission: sims.StakingValidatorCommission{
+				Rate:          commission,
+				MaxRate:       commission,
+				MaxChangeRate: sdkmath.LegacyOneDec(),
+			},
+			MinSelfDelegation: sdkmath.OneInt(),
+			ValidatorAddress:  sdk.ValAddress(addr).String(),
+			Pubkey:            pkAny,
+			Value:             sdk.NewCoin(cfg.BondDenom, cfg.BondedTokens),
+		}
+
+		createValMsg, err := createValMsgStruct.ToProto()
 		if err != nil {
 			return nil, err
 		}

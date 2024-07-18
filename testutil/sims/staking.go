@@ -3,6 +3,7 @@ package sims
 import (
 	"time"
 
+	gogoany "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/structpb"
 
@@ -29,9 +30,14 @@ type StakingGenesisState struct {
 }
 
 func (s *StakingGenesisState) ToProto() (*anypb.Any, error) {
+	params, err := s.Params.ToProto()
+	if err != nil {
+		return nil, err
+	}
+
 	// Create a map to hold the protobuf fields
 	fields := map[string]interface{}{
-		"params":           s.Params,
+		"params":           params,
 		"last_total_power": s.LastTotalPower,
 		"validators":       s.Validators,
 		"delegations":      s.Delegations,
@@ -59,9 +65,10 @@ func ProtoToStakingGenesisState(protoMsg *anypb.Any) (*StakingGenesisState, erro
 	}
 
 	genesisStake := &StakingGenesisState{}
-	// myStruct.Params = s.Fields["params"].GetStringValue()
-	// myStruct.Field2 = int32(s.Fields["field2"].GetNumberValue())
-	// myStruct.Field3 = []byte(s.Fields["field3"].GetStringValue())
+	// genesisStake.Params = s.Fields["params"].
+	// genesisStake.LastTotalPower = s.Fields["last_total_power"].
+	// genesisStake.Validators = s.Fields["validators"].
+	// genesisStake.Delegations = s.Fields["delegations"].
 
 	return genesisStake, nil
 }
@@ -81,11 +88,37 @@ type StakingParams struct {
 	MinCommissionRate math.LegacyDec `protobuf:"bytes,6,opt,name=min_commission_rate,json=minCommissionRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"min_commission_rate" yaml:"min_commission_rate"`
 }
 
+func (s *StakingParams) ToProto() (*anypb.Any, error) {
+	// Create a map to hold the protobuf fields
+	fields := map[string]interface{}{
+		"unbonding_time":      s.UnbondingTime.String(),
+		"max_validators":      s.MaxValidators,
+		"max_entries":         s.MaxEntries,
+		"historical_entries":  s.HistoricalEntries,
+		"bondDenom":           s.BondDenom,
+		"min_commission_rate": s.MinCommissionRate.String(),
+	}
+
+	// Convert the map to a protobuf Struct
+	pbStruct, err := structpb.NewStruct(fields)
+	if err != nil {
+		return nil, err
+	}
+
+	// Marshal the Struct into an Any message
+	anyMsg, err := anypb.New(pbStruct)
+	if err != nil {
+		return nil, err
+	}
+
+	return anyMsg, nil
+}
+
 type StakingValidator struct {
 	// operator_address defines the address of the validator's operator; bech encoded in JSON.
 	OperatorAddress string `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty"`
 	// consensus_pubkey is the consensus public key of the validator, as a Protobuf Any.
-	ConsensusPubkey *any.Any `protobuf:"bytes,2,opt,name=consensus_pubkey,json=consensusPubkey,proto3" json:"consensus_pubkey,omitempty"`
+	ConsensusPubkey *gogoany.Any `protobuf:"bytes,2,opt,name=consensus_pubkey,json=consensusPubkey,proto3" json:"consensus_pubkey,omitempty"`
 	// jailed defined whether the validator has been jailed from bonded status or not.
 	Jailed bool `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
 	// status is the validator status (bonded/unbonding/unbonded).
@@ -98,6 +131,33 @@ type StakingValidator struct {
 	MinSelfDelegation math.Int `protobuf:"bytes,11,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=cosmossdk.io/math.Int" json:"min_self_delegation"`
 }
 
+func (s *StakingValidator) ToProto() (*anypb.Any, error) {
+	// Create a map to hold the protobuf fields
+	fields := map[string]interface{}{
+		"operator_address":    s.OperatorAddress,
+		"consensus_pubkey":    s.ConsensusPubkey,
+		"jailed":              s.Jailed,
+		"status":              s.Status,
+		"tokens":              s.Tokens.String(),
+		"delegator_shares":    s.DelegatorShares.String(),
+		"min_self_delegation": s.MinSelfDelegation.String(),
+	}
+
+	// Convert the map to a protobuf Struct
+	pbStruct, err := structpb.NewStruct(fields)
+	if err != nil {
+		return nil, err
+	}
+
+	// Marshal the Struct into an Any message
+	anyMsg, err := anypb.New(pbStruct)
+	if err != nil {
+		return nil, err
+	}
+
+	return anyMsg, nil
+}
+
 type StakingDelegation struct {
 	// delegator_address is the encoded address of the delegator.
 	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
@@ -107,46 +167,67 @@ type StakingDelegation struct {
 	Shares math.LegacyDec `protobuf:"bytes,3,opt,name=shares,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"shares"`
 }
 
-// func FakeStakingMsgCreateValidator(
-// 	valAddr string, pubKey cryptotypes.PubKey, selfDelegation sdk.Coin,
-// 	rate, maxRate, maxChangeRate math.LegacyDec, minSelfDelegation math.Int,
-// ) (proto.Message, error) {
-// 	var pkAny *codectypes.Any
-// 	if pubKey != nil {
-// 		var err error
-// 		if pkAny, err = codectypes.NewAnyWithValue(pubKey); err != nil {
-// 			return nil, err
-// 		}
-// 	}
+func (s *StakingDelegation) ToProto() (*anypb.Any, error) {
+	// Create a map to hold the protobuf fields
+	fields := map[string]interface{}{
+		"delegator_address": s.DelegatorAddress,
+		"validator_address": s.ValidatorAddress,
+		"shares":            s.Shares.String(),
+	}
 
-// 	v := &StakingMsgCreateValidator{
-// 		Commission: StakingValidatorCommission{
-// 			Rate:          rate,
-// 			MaxRate:       maxRate,
-// 			MaxChangeRate: maxChangeRate,
-// 		},
-// 		MinSelfDelegation: minSelfDelegation,
-// 		DelegatorAddress:  "",
-// 		ValidatorAddress:  valAddr,
-// 		Pubkey:            pkAny,
-// 		Value:             selfDelegation,
-// 	}
+	// Convert the map to a protobuf Struct
+	pbStruct, err := structpb.NewStruct(fields)
+	if err != nil {
+		return nil, err
+	}
 
-// 	_ = v
+	// Marshal the Struct into an Any message
+	anyMsg, err := anypb.New(pbStruct)
+	if err != nil {
+		return nil, err
+	}
 
-// 	return nil, nil
-// }
+	return anyMsg, nil
+}
 
 type StakingMsgCreateValidator struct {
 	Commission        StakingValidatorCommission `protobuf:"bytes,2,opt,name=commission,proto3" json:"commission"`
 	MinSelfDelegation math.Int                   `protobuf:"bytes,3,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=cosmossdk.io/math.Int" json:"min_self_delegation"`
-	// Deprecated: Use of Delegator Address in MsgCreateValidator is deprecated.
 	// The validator address bytes and delegator address bytes refer to the same account while creating validator (defer
 	// only in bech32 notation).
-	DelegatorAddress string   `protobuf:"bytes,4,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"` // Deprecated: Do not use.
-	ValidatorAddress string   `protobuf:"bytes,5,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
-	Pubkey           *any.Any `protobuf:"bytes,6,opt,name=pubkey,proto3" json:"pubkey,omitempty"`
-	Value            sdk.Coin `protobuf:"bytes,7,opt,name=value,proto3" json:"value"`
+	ValidatorAddress string       `protobuf:"bytes,5,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
+	Pubkey           *gogoany.Any `protobuf:"bytes,6,opt,name=pubkey,proto3" json:"pubkey,omitempty"`
+	Value            sdk.Coin     `protobuf:"bytes,7,opt,name=value,proto3" json:"value"`
+}
+
+func (s *StakingMsgCreateValidator) ToProto() (*anypb.Any, error) {
+	comm, err := s.Commission.ToProto()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a map to hold the protobuf fields
+	fields := map[string]interface{}{
+		"commission":          comm,
+		"min_self_delegation": s.MinSelfDelegation.String(),
+		"validator_address":   s.ValidatorAddress,
+		"pubkey":              s.Pubkey,
+		"value":               s.Value.String(),
+	}
+
+	// Convert the map to a protobuf Struct
+	pbStruct, err := structpb.NewStruct(fields)
+	if err != nil {
+		return nil, err
+	}
+
+	// Marshal the Struct into an Any message
+	anyMsg, err := anypb.New(pbStruct)
+	if err != nil {
+		return nil, err
+	}
+
+	return anyMsg, nil
 }
 
 type StakingValidatorCommission struct {
@@ -156,4 +237,27 @@ type StakingValidatorCommission struct {
 	MaxRate math.LegacyDec `protobuf:"bytes,2,opt,name=max_rate,json=maxRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_rate"`
 	// max_change_rate defines the maximum daily increase of the validator commission, as a fraction.
 	MaxChangeRate math.LegacyDec `protobuf:"bytes,3,opt,name=max_change_rate,json=maxChangeRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_change_rate"`
+}
+
+func (s *StakingValidatorCommission) ToProto() (*anypb.Any, error) {
+	// Create a map to hold the protobuf fields
+	fields := map[string]interface{}{
+		"rate":            s.Rate.String(),
+		"max_rate":        s.MaxRate.String(),
+		"max_change_rate": s.MaxChangeRate.String(),
+	}
+
+	// Convert the map to a protobuf Struct
+	pbStruct, err := structpb.NewStruct(fields)
+	if err != nil {
+		return nil, err
+	}
+
+	// Marshal the Struct into an Any message
+	anyMsg, err := anypb.New(pbStruct)
+	if err != nil {
+		return nil, err
+	}
+
+	return anyMsg, nil
 }

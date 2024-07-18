@@ -122,6 +122,7 @@ type Manager struct {
 }
 
 // NewManager creates a new Manager object.
+// Deprecated: Use NewManagerFromMap instead.
 func NewManager(modules ...AppModule) *Manager {
 	moduleMap := make(map[string]appmodule.AppModule)
 	modulesStr := make([]string, 0, len(modules))
@@ -151,7 +152,6 @@ func NewManager(modules ...AppModule) *Manager {
 }
 
 // NewManagerFromMap creates a new Manager object from a map of module names to module implementations.
-// This method should be used for apps and modules which have migrated to the cosmossdk.io/core.appmodule.AppModule API.
 func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 	simpleModuleMap := make(map[string]appmodule.AppModule)
 	modulesStr := make([]string, 0, len(simpleModuleMap))

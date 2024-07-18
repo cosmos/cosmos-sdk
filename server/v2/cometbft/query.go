@@ -61,7 +61,7 @@ func (c *Consensus[T]) handlerQueryApp(ctx context.Context, path []string, req *
 			return nil, errorsmod.Wrap(err, "failed to simulate tx")
 		}
 
-		bz, err := intoABCISimulationResponse(txResult, c.cfg.AppTomlConfig.IndexEvents)
+		bz, err := intoABCISimulationResponse(txResult, c.indexedEvents)
 		if err != nil {
 			return nil, errorsmod.Wrap(err, "failed to marshal txResult")
 		}

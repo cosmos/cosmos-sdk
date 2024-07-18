@@ -39,12 +39,13 @@ type CometBFTServer[T transaction.Tx] struct {
 	Node      *node.Node
 	Consensus *Consensus[T]
 
-	appName, version string
-	initTxCodec      transaction.Codec[T]
-	logger           log.Logger
-	config           Config
-	options          ServerOptions[T]
-	cfgOptions       []CfgOption
+	appName     string
+	version     string
+	initTxCodec transaction.Codec[T]
+	logger      log.Logger
+	config      Config
+	options     ServerOptions[T]
+	cfgOptions  []CfgOption
 }
 
 func New[T transaction.Tx](appName, version string, txCodec transaction.Codec[T], options ServerOptions[T], cfgOptions ...CfgOption) *CometBFTServer[T] {
@@ -58,12 +59,21 @@ func New[T transaction.Tx](appName, version string, txCodec transaction.Codec[T]
 }
 
 func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
-	s.config = Config{ConfigTomlConfig: GetConfigTomlFromViper(v), ConsensusAuthority: appI.GetConsensusAuthority()}
+	s.config = Config{
+		ConfigTomlConfig:   GetConfigTomlFromViper(v),
+		AppTomlConfig:      GetAppTomlFromViper(v),
+		ConsensusAuthority: appI.GetConsensusAuthority(),
+	}
 	s.logger = logger.With(log.ModuleKey, s.Name())
 
 	// create consensus
+	indexEvents := make(map[string]struct{}, len(s.config.AppTomlConfig.IndexEvents))
+	for _, e := range s.config.AppTomlConfig.IndexEvents {
+		indexEvents[e] = struct{}{}
+	}
+
 	store := appI.GetStore().(types.Store)
-	consensus := NewConsensus[T](s.appName, s.version, appI.GetAppManager(), s.options.Mempool, appI.GetGRPCQueryDecoders(), store, s.config, s.initTxCodec, s.logger)
+	consensus := NewConsensus[T](s.logger, s.appName, s.version, appI.GetAppManager(), s.options.Mempool, indexEvents, appI.GetGRPCQueryDecoders(), store, s.config, s.initTxCodec)
 
 	consensus.prepareProposalHandler = s.options.PrepareProposalHandler
 	consensus.processProposalHandler = s.options.ProcessProposalHandler

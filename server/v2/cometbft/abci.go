@@ -44,6 +44,7 @@ type Consensus[T transaction.Tx] struct {
 	// legacy support for gRPC
 	grpcQueryDecoders map[string]func(requestBytes []byte) (gogoproto.Message, error)
 
+	indexedEvents map[string]struct{}
 	initialHeight uint64
 	// this is only available after this node has committed a block (in FinalizeBlock),
 	// otherwise it will be empty and we will need to query the app for the last
@@ -59,14 +60,15 @@ type Consensus[T transaction.Tx] struct {
 }
 
 func NewConsensus[T transaction.Tx](
+	logger log.Logger,
 	appName, version string,
 	app *appmanager.AppManager[T],
 	mp mempool.Mempool[T],
+	indexedEvents map[string]struct{},
 	grpcQueryDecoders map[string]func(requestBytes []byte) (gogoproto.Message, error),
 	store types.Store,
 	cfg Config,
 	txCodec transaction.Codec[T],
-	logger log.Logger,
 ) *Consensus[T] {
 	return &Consensus[T]{
 		appName:                appName,
@@ -86,6 +88,8 @@ func NewConsensus[T transaction.Tx](
 		verifyVoteExt:          nil,
 		extendVote:             nil,
 		chainID:                "",
+		indexedEvents:          indexedEvents,
+		initialHeight:          0,
 	}
 }
 
@@ -126,7 +130,7 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 		Code:      resp.Code,
 		GasWanted: uint64ToInt64(resp.GasWanted),
 		GasUsed:   uint64ToInt64(resp.GasUsed),
-		Events:    intoABCIEvents(resp.Events, c.cfg.AppTomlConfig.IndexEvents),
+		Events:    intoABCIEvents(resp.Events, c.indexedEvents),
 		Info:      resp.Info,
 		Data:      resp.Data,
 		Log:       resp.Log,
@@ -148,7 +152,7 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 
 	// cp, err := c.GetConsensusParams(ctx)
 	// if err != nil {
-	//	return nil, err
+	// 	return nil, err
 	// }
 
 	cid, err := c.store.LastCommitID()
@@ -159,7 +163,7 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 	return &abciproto.InfoResponse{
 		Data:             c.appName,
 		Version:          c.version,
-		AppVersion:       0, // TODO fetch from store?
+		AppVersion:       0, // TODO fetch consensus params?
 		LastBlockHeight:  int64(version),
 		LastBlockAppHash: cid.Hash,
 	}, nil
@@ -501,7 +505,7 @@ func (c *Consensus[T]) FinalizeBlock(
 		return nil, err
 	}
 
-	return finalizeBlockResponse(resp, cp, appHash, c.cfg.AppTomlConfig.IndexEvents)
+	return finalizeBlockResponse(resp, cp, appHash, c.indexedEvents)
 }
 
 // Commit implements types.Application.

@@ -22,7 +22,7 @@ type Config struct {
 func DefaultConfig() *AppTomlConfig {
 	return &AppTomlConfig{
 		MinRetainBlocks: 1,
-		IndexEvents:     map[string]struct{}{},
+		IndexEvents:     make([]string, 0),
 		HaltHeight:      0,
 		HaltTime:        0,
 		Address:         "tcp://127.0.0.1:26658",
@@ -33,14 +33,14 @@ func DefaultConfig() *AppTomlConfig {
 }
 
 type AppTomlConfig struct {
-	MinRetainBlocks uint64              `mapstructure:"min_retain_blocks" toml:"min_retain_blocks"`
-	IndexEvents     map[string]struct{} `mapstructure:"index_events" toml:"index_events"`
-	HaltHeight      uint64              `mapstructure:"halt_height" toml:"halt_height"`
-	HaltTime        uint64              `mapstructure:"halt_time" toml:"halt_time"`
-	Address         string              `mapstructure:"address" toml:"address"`
-	Transport       string              `mapstructure:"transport" toml:"transport"`
-	Trace           bool                `mapstructure:"trace" toml:"trace"`
-	Standalone      bool                `mapstructure:"standalone" toml:"standalone"`
+	MinRetainBlocks uint64   `mapstructure:"min_retain_blocks" toml:"min_retain_blocks"`
+	IndexEvents     []string `mapstructure:"index_events" toml:"index_events"`
+	HaltHeight      uint64   `mapstructure:"halt_height" toml:"halt_height"`
+	HaltTime        uint64   `mapstructure:"halt_time" toml:"halt_time"`
+	Address         string   `mapstructure:"address" toml:"address"`
+	Transport       string   `mapstructure:"transport" toml:"transport"`
+	Trace           bool     `mapstructure:"trace" toml:"trace"`
+	Standalone      bool     `mapstructure:"standalone" toml:"standalone"`
 }
 
 // CfgOption is a function that allows to overwrite the default server configuration.

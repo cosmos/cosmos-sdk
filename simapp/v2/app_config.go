@@ -71,6 +71,8 @@ import (
 )
 
 var (
+	AppName = "SimAppV2"
+
 	// module account permissions
 	moduleAccPerms = []*authmodulev1.ModuleAccountPermission{
 		{Account: authtypes.FeeCollectorName},
@@ -103,7 +105,7 @@ var (
 			{
 				Name: runtime.ModuleName,
 				Config: appconfig.WrapAny(&runtimev2.Module{
-					AppName: "SimAppV2",
+					AppName: AppName,
 					// NOTE: upgrade module is required to be prioritized
 					PreBlockers: []string{
 						upgradetypes.ModuleName,

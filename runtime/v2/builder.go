@@ -36,22 +36,26 @@ func (a *AppBuilder[T]) DefaultGenesis() map[string]json.RawMessage {
 
 // RegisterModules registers the provided modules with the module manager.
 // This is the primary hook for integrating with modules which are not registered using the app config.
-func (a *AppBuilder[T]) RegisterModules(modules ...appmodulev2.AppModule) error {
-	for _, appModule := range modules {
-		if mod, ok := appModule.(appmodule.HasName); ok {
-			name := mod.Name()
-			if _, ok := a.app.moduleManager.modules[name]; ok {
-				return fmt.Errorf("module named %q already exists", name)
+func (a *AppBuilder[T]) RegisterModules(modules map[string]appmodulev2.AppModule) error {
+	for name, appModule := range modules {
+		// if a (legacy) module implements the HasName interface, check that the name matches
+		if mod, ok := appModule.(interface{ Name() string }); ok {
+			if name != mod.Name() {
+				a.app.logger.Warn(fmt.Sprintf("module name %q does not match name returned by HasName: %q", name, mod.Name()))
 			}
-			a.app.moduleManager.modules[name] = appModule
+		}
 
-			if mod, ok := appModule.(appmodulev2.HasRegisterInterfaces); ok {
-				mod.RegisterInterfaces(a.app.interfaceRegistrar)
-			}
+		if _, ok := a.app.moduleManager.modules[name]; ok {
+			return fmt.Errorf("module named %q already exists", name)
+		}
+		a.app.moduleManager.modules[name] = appModule
 
-			if mod, ok := appModule.(appmodule.HasAminoCodec); ok {
-				mod.RegisterLegacyAminoCodec(a.app.amino)
-			}
+		if mod, ok := appModule.(appmodulev2.HasRegisterInterfaces); ok {
+			mod.RegisterInterfaces(a.app.interfaceRegistrar)
+		}
+
+		if mod, ok := appModule.(appmodule.HasAminoCodec); ok {
+			mod.RegisterLegacyAminoCodec(a.app.amino)
 		}
 	}
 

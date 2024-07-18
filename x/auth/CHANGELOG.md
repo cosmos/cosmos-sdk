@@ -51,6 +51,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#19290](https://github.com/cosmos/cosmos-sdk/issues/19290) Pass `appmodule.Environment` to NewKeeper instead of passing individual services. 
 * [#19535](https://github.com/cosmos/cosmos-sdk/pull/19535) Remove vesting account creation when the chain is running. The accounts module is required for creating vesting accounts on a running chain. 
 * [#19600](https://github.com/cosmos/cosmos-sdk/pull/19600) add a consensus query method to the consensus module in order for modules to query consensus for the consensus params. 
+* [#20983](https://github.com/cosmos/cosmos-sdk/pull/20983) Refactor of `auth/tx`:
+  * Moved `NewTxConfig`, `NewSigningOptions`, `NewTxConfigWithOptions`, and `NewSigningHandlerMap` from `auth/tx` to `sdk/client/tx`.
+  * Moved `NewSignModeLegacyAminoJSONHandler` from `auth/tx` to `auth/signing`, which now requires an `x/tx` decoder.
 <!-- TODO add a link to lockup accounts docs -->
 
 ### Consensus Breaking Changes

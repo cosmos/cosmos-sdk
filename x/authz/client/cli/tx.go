@@ -137,7 +137,7 @@ Examples:
 				}
 
 				if !spendLimit.IsAllPositive() {
-					return fmt.Errorf("spend-limit should be greater than zero")
+					return errors.New("spend-limit should be greater than zero")
 				}
 
 				allowList, err := cmd.Flags().GetStringSlice(FlagAllowList)
@@ -202,7 +202,7 @@ Examples:
 					}
 
 					if !spendLimit.IsPositive() {
-						return fmt.Errorf("spend-limit should be greater than zero")
+						return errors.New("spend-limit should be greater than zero")
 					}
 					delegateLimit = &spendLimit
 				}

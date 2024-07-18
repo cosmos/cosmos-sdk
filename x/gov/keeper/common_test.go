@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -126,14 +126,14 @@ func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 
 	baseApp := baseapp.NewBaseApp(
 		"authz",
-		log.NewNopLogger(),
+		coretesting.NewNopLogger(),
 		testCtx.DB,
 		encCfg.TxConfig.TxDecoder(),
 	)
 	baseApp.SetCMS(testCtx.CMS)
 	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
-	environment := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithQueryRouterService(baseApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(baseApp.MsgServiceRouter()))
+	environment := runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(baseApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(baseApp.MsgServiceRouter()))
 
 	// gomock initializations
 	ctrl := gomock.NewController(t)
@@ -192,14 +192,14 @@ func setupGovKeeperWithMaxVoteOptionsLen(t *testing.T, maxVoteOptionsLen uint64,
 
 	baseApp := baseapp.NewBaseApp(
 		"authz",
-		log.NewNopLogger(),
+		coretesting.NewNopLogger(),
 		testCtx.DB,
 		encCfg.TxConfig.TxDecoder(),
 	)
 	baseApp.SetCMS(testCtx.CMS)
 	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
-	environment := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithQueryRouterService(baseApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(baseApp.MsgServiceRouter()))
+	environment := runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(baseApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(baseApp.MsgServiceRouter()))
 
 	// gomock initializations
 	ctrl := gomock.NewController(t)

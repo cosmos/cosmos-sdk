@@ -1,4 +1,4 @@
-package testutil
+package tx_test
 
 import (
 	"bytes"

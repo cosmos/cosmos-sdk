@@ -8,7 +8,6 @@ import (
 
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	coretransaction "cosmossdk.io/core/transaction"
-	txtestutil "cosmossdk.io/x/auth/tx/testutil"
 	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -24,7 +23,7 @@ func TestGenerator(t *testing.T) {
 	interfaceRegistry.RegisterImplementations((*coretransaction.Msg)(nil), &testdata.TestMsg{})
 	protoCodec := codec.NewProtoCodec(interfaceRegistry)
 	signingCtx := protoCodec.InterfaceRegistry().SigningContext()
-	suite.Run(t, txtestutil.NewTxConfigTestSuite(tx.NewTxConfig(protoCodec, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), tx.DefaultSignModes)))
+	suite.Run(t, NewTxConfigTestSuite(tx.NewTxConfig(protoCodec, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), tx.DefaultSignModes)))
 }
 
 func TestConfigOptions(t *testing.T) {

@@ -49,9 +49,7 @@ management logic.
 
 The `BaseApp` type holds many important parameters for any Cosmos SDK based application.
 
-```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/baseapp.go#L58-L182
-```
 
 Let us go through the most important components.
 
@@ -148,7 +146,7 @@ To avoid unnecessary roundtrip to the main state, all reads to the branched stor
 
 ### CheckTx State Updates
 
-During `CheckTx`, the `checkState`, which is based off of the last committed state from the root
+During `CheckTx`, the `checkState`, which is based on the last committed state from the root
 store, is used for any reads and writes. Here we only execute the `AnteHandler` and verify a service router
 exists for every message in the transaction. Note, when we execute the `AnteHandler`, we branch
 the already branched `checkState`.
@@ -492,9 +490,8 @@ The `FinalizeBlock` ABCI function defined in `BaseApp` does the bulk of the stat
 
 Instead of using their `checkState`, full-nodes use `finalizeblock`:
 
-```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/baseapp.go#LL708-L743
-```
+
 
 Transaction execution within `FinalizeBlock` performs the **exact same steps as `CheckTx`**, with a little caveat at step 3 and the addition of a fifth step:
 

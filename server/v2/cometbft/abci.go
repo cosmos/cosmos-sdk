@@ -9,6 +9,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	coreappmgr "cosmossdk.io/core/app"
 	"cosmossdk.io/core/comet"
@@ -31,6 +32,9 @@ import (
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
 type Consensus[T transaction.Tx] struct {
+	// legacy support for gRPC
+	grpcQueryDecoders map[string]func(requestBytes []byte) (gogoproto.Message, error)
+
 	app             *appmanager.AppManager[T]
 	cfg             Config
 	store           types.Store
@@ -56,18 +60,28 @@ type Consensus[T transaction.Tx] struct {
 func NewConsensus[T transaction.Tx](
 	app *appmanager.AppManager[T],
 	mp mempool.Mempool[T],
+	grpcQueryDecoders map[string]func(requestBytes []byte) (gogoproto.Message, error),
 	store types.Store,
 	cfg Config,
 	txCodec transaction.Codec[T],
 	logger log.Logger,
 ) *Consensus[T] {
 	return &Consensus[T]{
-		mempool: mp,
-		store:   store,
-		app:     app,
-		cfg:     cfg,
-		txCodec: txCodec,
-		logger:  logger,
+		grpcQueryDecoders:      grpcQueryDecoders,
+		app:                    app,
+		cfg:                    cfg,
+		store:                  store,
+		logger:                 logger,
+		txCodec:                txCodec,
+		streaming:              streaming.Manager{},
+		snapshotManager:        nil,
+		mempool:                mp,
+		lastCommittedHeight:    atomic.Int64{},
+		prepareProposalHandler: nil,
+		processProposalHandler: nil,
+		verifyVoteExt:          nil,
+		extendVote:             nil,
+		chainID:                "",
 	}
 }
 
@@ -150,18 +164,16 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 
 // Query implements types.Application.
 // It is called by cometbft to query application state.
-func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (*abciproto.QueryResponse, error) {
-	// follow the query path from here
-	decodedMsg, err := c.txCodec.Decode(req.Data)
-	protoMsg, ok := any(decodedMsg).(transaction.Msg)
-	if !ok {
-		return nil, fmt.Errorf("decoded type T %T must implement core/transaction.Msg", decodedMsg)
-	}
+func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (resp *abciproto.QueryResponse, err error) {
+	// check if it's a gRPC method
+	grpcQueryDecoder, isGRPC := c.grpcQueryDecoders[req.Path]
+	if isGRPC {
+		protoRequest, err := grpcQueryDecoder(req.Data)
+		if err != nil {
+			return nil, fmt.Errorf("unable to decode gRPC request with path %s from ABCI.Query: %w", req.Path, err)
+		}
+		res, err := c.app.Query(ctx, uint64(req.Height), protoRequest)
 
-	// if no error is returned then we can handle the query with the appmanager
-	// otherwise it is a KV store query
-	if err == nil {
-		res, err := c.app.Query(ctx, uint64(req.Height), protoMsg)
 		if err != nil {
 			resp := queryResult(err)
 			resp.Height = req.Height
@@ -178,8 +190,6 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 	if len(path) == 0 {
 		return QueryResult(errorsmod.Wrap(cometerrors.ErrUnknownRequest, "no query path provided"), c.cfg.Trace), nil
 	}
-
-	var resp *abciproto.QueryResponse
 
 	switch path[0] {
 	case cmtservice.QueryPathApp:
@@ -391,7 +401,7 @@ func (c *Consensus[T]) FinalizeBlock(
 	//		ProposerAddress: req.ProposerAddress,
 	//		LastCommit:      req.DecidedLastCommit,
 	//	},
-	//}
+	// }
 	//
 	// ctx = context.WithValue(ctx, corecontext.CometInfoKey, &comet.Info{
 	// 	Evidence:        sdktypes.ToSDKEvidence(req.Misbehavior),
@@ -506,6 +516,7 @@ func (c *Consensus[T]) Commit(ctx context.Context, _ *abciproto.CommitRequest) (
 }
 
 // Vote extensions
+
 // VerifyVoteExtension implements types.Application.
 func (c *Consensus[T]) VerifyVoteExtension(
 	ctx context.Context,

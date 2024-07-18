@@ -42,7 +42,7 @@ baseAppOptions = append(baseAppOptions, mempoolOpt)
 ### No-op Mempool
 
 A no-op mempool is a mempool where transactions are completely discarded and ignored when BaseApp interacts with the mempool.
-When this mempool is used, it assumed that an application will rely on CometBFT's transaction ordering defined in `RequestPrepareProposal`,
+When this mempool is used, it is assumed that an application will rely on CometBFT's transaction ordering defined in `RequestPrepareProposal`,
 which is FIFO-ordered by default.
 
 > Note: If a NoOp mempool is used, PrepareProposal and ProcessProposal both should be aware of this as

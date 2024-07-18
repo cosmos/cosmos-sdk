@@ -11432,7 +11432,7 @@ func (x *QuerySupplyByQueryStringResponse) GetAmount() uint64 {
 	return 0
 }
 
-// QueryNFTstRequest is the request type for the Query/NFTs RPC method
+// QueryNFTsRequest is the request type for the Query/NFTs RPC method
 type QueryNFTsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

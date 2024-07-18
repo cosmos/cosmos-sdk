@@ -11,7 +11,6 @@ import (
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
-	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
@@ -120,7 +119,7 @@ func (a *AppBuilder[T]) Build(viper *viper.Viper, opts ...AppBuilderOption[T]) (
 
 	a.app.stf = stf
 
-	home := viper.GetString(serverv2.FlagHome)
+	home := viper.GetString(FlagHome)
 	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(home, "data"), nil)
 	if err != nil {
 		panic(err)

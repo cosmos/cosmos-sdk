@@ -6,7 +6,7 @@
 ###############################################################################
 
 # The network chain ID
-chain-id = ""
+chain-id = "demo"
 # The keyring's backend, where the keys are stored (os|file|kwallet|pass|test|memory)
 keyring-backend = "test"
 # Default key name, if set, defines the default key to use for signing transaction when the --from flag is not specified

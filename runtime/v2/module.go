@@ -28,7 +28,6 @@ import (
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
-	rootstorev2 "cosmossdk.io/store/v2/root"
 )
 
 var (
@@ -151,7 +150,6 @@ type AppInputs struct {
 	InterfaceRegistrar registry.InterfaceRegistrar
 	LegacyAmino        legacy.Amino
 	Logger             log.Logger
-	StoreOptions       *rootstorev2.FactoryOptions `optional:"true"`
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -162,12 +160,6 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager = inputs.ModuleManager
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistrar)
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
-
-	if inputs.StoreOptions != nil {
-		inputs.AppBuilder.storeOptions = inputs.StoreOptions
-		inputs.AppBuilder.storeOptions.StoreKeys = inputs.AppBuilder.app.storeKeys
-		inputs.AppBuilder.storeOptions.StoreKeys = append(inputs.AppBuilder.storeOptions.StoreKeys, "stf")
-	}
 }
 
 func ProvideModuleManager[T transaction.Tx](

@@ -5,15 +5,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"path/filepath"
 
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
+	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
+	"cosmossdk.io/store/v2/db"
 	rootstore "cosmossdk.io/store/v2/root"
+	"github.com/spf13/viper"
 )
 
 // AppBuilder is a type that is injected into a container by the runtime/v2 module
@@ -70,7 +74,7 @@ func (a *AppBuilder[T]) RegisterStores(keys ...string) {
 }
 
 // Build builds an *App instance.
-func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
+func (a *AppBuilder[T]) Build(viper *viper.Viper, opts ...AppBuilderOption[T]) (*App[T], error) {
 	for _, opt := range opts {
 		opt(a)
 	}
@@ -115,6 +119,21 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	}
 
 	a.app.stf = stf
+
+	home := viper.GetString(serverv2.FlagHome)
+	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(home, "data"), nil)
+	if err != nil {
+		panic(err)
+	}
+
+	storeOptions := &rootstore.FactoryOptions{
+		Logger:    a.app.logger,
+		RootDir:   home,
+		Options:   viper,
+		StoreKeys: append(a.app.storeKeys, "stf"),
+		SCRawDB:   scRawDb,
+	}
+	a.storeOptions = storeOptions
 
 	rs, err := rootstore.CreateRootStore(a.storeOptions)
 	if err != nil {

@@ -58,7 +58,7 @@ func TestServer(t *testing.T) {
 	}
 
 	logger := log.NewLogger(os.Stdout)
-	grpcServer := grpc.New[serverv2.AppI[transaction.Tx], transaction.Tx]()
+	grpcServer := grpc.New[transaction.Tx]()
 	if err := grpcServer.Init(&mockApp[transaction.Tx]{}, v, logger); err != nil {
 		t.Log(err)
 		t.Fail()
@@ -129,6 +129,6 @@ func TestReadConfig(t *testing.T) {
 	require.NoError(t, err)
 
 	grpcConfig := grpc.DefaultConfig()
-	err = v.Sub("grpc-server").Unmarshal(&grpcConfig)
+	err = v.Sub("grpc").Unmarshal(&grpcConfig)
 	require.NoError(t, err)
 }

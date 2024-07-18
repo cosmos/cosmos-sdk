@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
 	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
 	"cosmossdk.io/x/consensus/types"
@@ -43,7 +43,7 @@ func (s *KeeperTestSuite) SetupTest(enabledFeatures bool) {
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 5})
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
 	authority, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(address.Module("gov"))
 	s.Require().NoError(err)

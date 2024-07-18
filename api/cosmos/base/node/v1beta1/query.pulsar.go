@@ -2086,7 +2086,7 @@ func (x *ConfigResponse) GetHaltHeight() uint64 {
 	return 0
 }
 
-// StateRequest defines the request structure for the status of a node.
+// StatusRequest defines the request structure for the status of a node.
 type StatusRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

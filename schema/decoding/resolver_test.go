@@ -1,7 +1,7 @@
 package decoding
 
 import (
-	"fmt"
+	"errors"
 	"testing"
 
 	"cosmossdk.io/schema"
@@ -106,7 +106,7 @@ func TestModuleSetDecoderResolver_LookupDecoder(t *testing.T) {
 type modD struct{}
 
 func (m modD) ModuleCodec() (schema.ModuleCodec, error) {
-	return schema.ModuleCodec{}, fmt.Errorf("an error")
+	return schema.ModuleCodec{}, errors.New("an error")
 }
 
 func TestModuleSetDecoderResolver_IterateAll_Error(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/authz/keeper"
@@ -58,7 +58,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 
 	suite.baseApp = baseapp.NewBaseApp(
 		"authz",
-		log.NewNopLogger(),
+		coretesting.NewNopLogger(),
 		testCtx.DB,
 		suite.encCfg.TxConfig.TxDecoder(),
 	)
@@ -68,7 +68,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 
 	msr := suite.baseApp.MsgServiceRouter()
 	msr.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithMsgRouterService(msr))
+	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithMsgRouterService(msr))
 
 	suite.keeper = keeper.NewKeeper(env, suite.encCfg.Codec, suite.accountKeeper)
 }

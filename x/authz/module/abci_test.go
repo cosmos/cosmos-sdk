@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/authz"
@@ -36,7 +36,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 
 	baseApp := baseapp.NewBaseApp(
 		"authz",
-		log.NewNopLogger(),
+		coretesting.NewNopLogger(),
 		testCtx.DB,
 		encCfg.TxConfig.TxDecoder(),
 	)
@@ -66,7 +66,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithQueryRouterService(baseApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(baseApp.MsgServiceRouter()))
+	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(baseApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(baseApp.MsgServiceRouter()))
 	authzKeeper := keeper.NewKeeper(env, encCfg.Codec, accountKeeper)
 
 	save := func(grantee sdk.AccAddress, exp *time.Time) {

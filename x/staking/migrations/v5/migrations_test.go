@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/staking"
@@ -30,7 +30,7 @@ func TestHistoricalKeysMigration(t *testing.T) {
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)
-	logger := log.NewNopLogger()
+	logger := coretesting.NewNopLogger()
 
 	type testCase struct {
 		oldKey, newKey []byte
@@ -87,7 +87,7 @@ func TestDelegationsByValidatorMigrations(t *testing.T) {
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)
-	logger := log.NewNopLogger()
+	logger := coretesting.NewNopLogger()
 
 	accAddrs := sims.CreateIncrementalAccounts(11)
 	valAddrs := sims.ConvertAddrsToValAddrs(accAddrs[0:1])

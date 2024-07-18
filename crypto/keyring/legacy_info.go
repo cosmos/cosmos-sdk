@@ -5,11 +5,11 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 // Deprecated: LegacyInfo is the publicly exposed information about a keypair
@@ -218,10 +218,10 @@ func (i LegacyMultiInfo) GetPath() (*hd.BIP44Params, error) {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (i LegacyMultiInfo) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (i LegacyMultiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	multiPK := i.PubKey.(*multisig.LegacyAminoPubKey)
 
-	return gogoprotoany.UnpackInterfaces(multiPK, unpacker)
+	return codectypes.UnpackInterfaces(multiPK, unpacker)
 }
 
 // MarshalInfo encoding info

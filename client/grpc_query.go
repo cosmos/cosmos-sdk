@@ -19,7 +19,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 var _ gogogrpc.ClientConn = Context{}
@@ -116,7 +115,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 	}
 
 	if ctx.InterfaceRegistry != nil {
-		return gogoprotoany.UnpackInterfaces(reply, ctx.InterfaceRegistry)
+		return types.UnpackInterfaces(reply, ctx.InterfaceRegistry)
 	}
 
 	return nil

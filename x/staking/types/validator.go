@@ -13,10 +13,10 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 const (
@@ -39,7 +39,7 @@ var _ sdk.ValidatorI = Validator{}
 
 // NewValidator constructs a new Validator
 func NewValidator(operator string, pubKey cryptotypes.PubKey, description Description) (Validator, error) {
-	pkAny, err := gogoprotoany.NewAnyWithCacheWithValue(pubKey)
+	pkAny, err := codectypes.NewAnyWithValue(pubKey)
 	if err != nil {
 		return Validator{}, err
 	}
@@ -138,7 +138,7 @@ func (valz ValidatorsByVotingPower) Swap(i, j int) {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (v Validators) UnpackInterfaces(c gogoprotoany.AnyUnpacker) error {
+func (v Validators) UnpackInterfaces(c codectypes.AnyUnpacker) error {
 	for i := range v.Validators {
 		if err := v.Validators[i].UnpackInterfaces(c); err != nil {
 			return err
@@ -494,7 +494,7 @@ func (v Validator) GetMinSelfDelegation() math.Int     { return v.MinSelfDelegat
 func (v Validator) GetDelegatorShares() math.LegacyDec { return v.DelegatorShares }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (v Validator) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (v Validator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var pk cryptotypes.PubKey
 	return unpacker.UnpackAny(v.ConsensusPubkey, &pk)
 }

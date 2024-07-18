@@ -11,8 +11,8 @@ import (
 	"google.golang.org/grpc"
 	"gotest.tools/v3/assert"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 // iterCount defines the number of iterations to run on each query to test
@@ -29,7 +29,7 @@ func (e QueryImpl) TestAny(_ context.Context, request *TestAnyRequest) (*TestAny
 		return nil, fmt.Errorf("expected Animal")
 	}
 
-	any, err := gogoprotoany.NewAnyWithCacheWithValue(animal.(proto.Message))
+	any, err := types.NewAnyWithValue(animal.(proto.Message))
 	if err != nil {
 		return nil, err
 	}
@@ -49,16 +49,16 @@ func (e QueryImpl) SayHello(_ context.Context, request *SayHelloRequest) (*SayHe
 	return &SayHelloResponse{Greeting: greeting}, nil
 }
 
-var _ gogoprotoany.UnpackInterfacesMessage = &TestAnyRequest{}
+var _ types.UnpackInterfacesMessage = &TestAnyRequest{}
 
-func (m *TestAnyRequest) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (m *TestAnyRequest) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var animal test.Animal
 	return unpacker.UnpackAny(m.AnyAnimal, &animal)
 }
 
-var _ gogoprotoany.UnpackInterfacesMessage = &TestAnyResponse{}
+var _ types.UnpackInterfacesMessage = &TestAnyResponse{}
 
-func (m *TestAnyResponse) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (m *TestAnyResponse) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return m.HasAnimal.UnpackInterfaces(unpacker)
 }
 

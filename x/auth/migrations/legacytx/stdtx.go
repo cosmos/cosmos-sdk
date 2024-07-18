@@ -5,17 +5,17 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 // Interface implementation checks
 var (
-	_ gogoprotoany.UnpackInterfacesMessage = (*StdTx)(nil)
+	_ codectypes.UnpackInterfacesMessage = (*StdTx)(nil)
 
-	_ gogoprotoany.UnpackInterfacesMessage = (*StdSignature)(nil)
+	_ codectypes.UnpackInterfacesMessage = (*StdSignature)(nil)
 )
 
 // StdFee includes the amount of coins paid in fees and the maximum
@@ -104,8 +104,8 @@ func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 // Deprecated: AsAny implements intoAny. It doesn't work for protobuf serialization,
 // so it can't be saved into protobuf configured storage. We are using it only for API
 // compatibility.
-func (tx *StdTx) AsAny() *gogoprotoany.Any {
-	return gogoprotoany.UnsafePackAnyWithCache(tx)
+func (tx *StdTx) AsAny() *codectypes.Any {
+	return codectypes.UnsafePackAny(tx)
 }
 
 // GetMemo returns the memo
@@ -169,9 +169,9 @@ func (tx StdTx) FeeGranter() sdk.AccAddress {
 	return nil
 }
 
-func (tx StdTx) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (tx StdTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, m := range tx.Msgs {
-		err := gogoprotoany.UnpackInterfaces(m, unpacker)
+		err := codectypes.UnpackInterfaces(m, unpacker)
 		if err != nil {
 			return err
 		}

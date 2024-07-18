@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 var (
@@ -104,7 +103,7 @@ func (k Record) GetType() KeyType {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (k *Record) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (k *Record) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var pk cryptotypes.PubKey
 	if err := unpacker.UnpackAny(k.PubKey, &pk); err != nil {
 		return err

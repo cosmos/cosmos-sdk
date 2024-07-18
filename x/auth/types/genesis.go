@@ -9,12 +9,12 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
-var _ gogoprotoany.UnpackInterfacesMessage = GenesisState{}
+var _ types.UnpackInterfacesMessage = GenesisState{}
 
 // RandomGenesisAccountsFn defines the function required to generate custom account types
 type RandomGenesisAccountsFn func(simState *module.SimulationState) GenesisAccounts
@@ -32,7 +32,7 @@ func NewGenesisState(params Params, accounts GenesisAccounts) *GenesisState {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (g GenesisState) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (g GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, any := range g.Accounts {
 		var account GenesisAccount
 		err := unpacker.UnpackAny(any, &account)
@@ -164,14 +164,14 @@ func (GenesisAccountIterator) IterateGenesisAccounts(
 }
 
 // PackAccounts converts GenesisAccounts to Any slice
-func PackAccounts(accounts GenesisAccounts) ([]*gogoprotoany.Any, error) {
-	accountsAny := make([]*gogoprotoany.Any, len(accounts))
+func PackAccounts(accounts GenesisAccounts) ([]*types.Any, error) {
+	accountsAny := make([]*types.Any, len(accounts))
 	for i, acc := range accounts {
 		msg, ok := acc.(proto.Message)
 		if !ok {
 			return nil, fmt.Errorf("cannot proto marshal %T", acc)
 		}
-		any, err := gogoprotoany.NewAnyWithCacheWithValue(msg)
+		any, err := types.NewAnyWithValue(msg)
 		if err != nil {
 			return nil, err
 		}
@@ -182,7 +182,7 @@ func PackAccounts(accounts GenesisAccounts) ([]*gogoprotoany.Any, error) {
 }
 
 // UnpackAccounts converts Any slice to GenesisAccounts
-func UnpackAccounts(accountsAny []*gogoprotoany.Any) (GenesisAccounts, error) {
+func UnpackAccounts(accountsAny []*types.Any) (GenesisAccounts, error) {
 	accounts := make(GenesisAccounts, len(accountsAny))
 	for i, any := range accountsAny {
 		acc, ok := any.GetCachedValue().(GenesisAccount)

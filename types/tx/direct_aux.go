@@ -1,10 +1,10 @@
 package tx
 
 import (
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 // ValidateBasic performs stateless validation of the sign doc.
@@ -21,7 +21,7 @@ func (s *SignDocDirectAux) ValidateBasic() error {
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
-func (s *SignDocDirectAux) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (s *SignDocDirectAux) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return unpacker.UnpackAny(s.PublicKey, new(cryptotypes.PubKey))
 }
 
@@ -60,6 +60,6 @@ func (a *AuxSignerData) GetSignatureV2() (signing.SignatureV2, error) {
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
-func (a *AuxSignerData) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (a *AuxSignerData) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return a.GetSignDoc().UnpackInterfaces(unpacker)
 }

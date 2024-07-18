@@ -3,8 +3,8 @@ package signing
 import (
 	"fmt"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 // SignatureV2 is a convenience type that is easier to use in application logic
@@ -86,10 +86,10 @@ func SignatureDataFromProto(descData *SignatureDescriptor_Data) SignatureData {
 	}
 }
 
-var _, _ gogoprotoany.UnpackInterfacesMessage = &SignatureDescriptors{}, &SignatureDescriptor{}
+var _, _ codectypes.UnpackInterfacesMessage = &SignatureDescriptors{}, &SignatureDescriptor{}
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
-func (sds *SignatureDescriptors) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (sds *SignatureDescriptors) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, sig := range sds.Signatures {
 		err := sig.UnpackInterfaces(unpacker)
 		if err != nil {
@@ -101,6 +101,6 @@ func (sds *SignatureDescriptors) UnpackInterfaces(unpacker gogoprotoany.AnyUnpac
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
-func (sd *SignatureDescriptor) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (sd *SignatureDescriptor) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return unpacker.UnpackAny(sd.PublicKey, new(cryptotypes.PubKey))
 }

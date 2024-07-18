@@ -9,12 +9,11 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	multisigtypes "github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 var (
-	_ multisigtypes.PubKey                 = &LegacyAminoPubKey{}
-	_ gogoprotoany.UnpackInterfacesMessage = &LegacyAminoPubKey{}
+	_ multisigtypes.PubKey          = &LegacyAminoPubKey{}
+	_ types.UnpackInterfacesMessage = &LegacyAminoPubKey{}
 )
 
 // NewLegacyAminoPubKey returns a new LegacyAminoPubKey.
@@ -150,7 +149,7 @@ func (m *LegacyAminoPubKey) Type() string {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m *LegacyAminoPubKey) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (m *LegacyAminoPubKey) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, any := range m.PubKeys {
 		var pk cryptotypes.PubKey
 		err := unpacker.UnpackAny(any, &pk)

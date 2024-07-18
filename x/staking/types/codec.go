@@ -19,6 +19,13 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgBeginRedelegate{}, "cosmos-sdk/MsgBeginRedelegate")
 	legacy.RegisterAminoMsg(cdc, &MsgCancelUnbondingDelegation{}, "cosmos-sdk/MsgCancelUnbondingDelegation")
 	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/x/staking/MsgUpdateParams")
+	legacy.RegisterAminoMsg(cdc, &MsgValidatorBond{}, "cosmos-sdk/MsgValidatorBond")
+	legacy.RegisterAminoMsg(cdc, &MsgUnbondValidator{}, "cosmos-sdk/MsgUnbondValidator")
+	legacy.RegisterAminoMsg(cdc, &MsgTokenizeShares{}, "cosmos-sdk/MsgTokenizeShares")
+	legacy.RegisterAminoMsg(cdc, &MsgRedeemTokensForShares{}, "cosmos-sdk/MsgRedeemTokensForShares")
+	legacy.RegisterAminoMsg(cdc, &MsgTransferTokenizeShareRecord{}, "cosmos-sdk/MsgTransferTokenizeRecord")
+	legacy.RegisterAminoMsg(cdc, &MsgDisableTokenizeShares{}, "cosmos-sdk/MsgDisableTokenizeShares")
+	legacy.RegisterAminoMsg(cdc, &MsgEnableTokenizeShares{}, "cosmos-sdk/MsgEnableTokenizeShares")
 
 	cdc.RegisterInterface((*isStakeAuthorization_Validators)(nil), nil)
 	cdc.RegisterConcrete(&StakeAuthorization_AllowList{}, "cosmos-sdk/StakeAuthorization/AllowList", nil)
@@ -37,6 +44,13 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgBeginRedelegate{},
 		&MsgCancelUnbondingDelegation{},
 		&MsgUpdateParams{},
+		&MsgValidatorBond{},
+		&MsgUnbondValidator{},
+		&MsgTokenizeShares{},
+		&MsgRedeemTokensForShares{},
+		&MsgTransferTokenizeShareRecord{},
+		&MsgDisableTokenizeShares{},
+		&MsgEnableTokenizeShares{},
 	)
 	registry.RegisterImplementations(
 		(*authz.Authorization)(nil),

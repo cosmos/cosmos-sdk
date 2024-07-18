@@ -6,6 +6,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	distirbuitonv1beta1 "cosmossdk.io/api/cosmos/distribution/v1beta1"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -84,6 +85,16 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "community-pool",
 					Short:     "Query the amount of coins in the community pool",
 					Example:   fmt.Sprintf(`$ %s query distribution community-pool`, version.AppName),
+				},
+				{
+					RpcMethod: "TokenizeShareRecordReward",
+					Use:       "tokenize-share-record-rewards [owner]",
+					Short:     "Query distribution tokenize share record rewards",
+					Example: fmt.Sprintf(`$ %s query distribution tokenize-share-record-rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj`,
+						version.AppName, sdk.GetConfig().GetBech32AccountAddrPrefix()),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "owner_address"},
+					},
 				},
 			},
 		},

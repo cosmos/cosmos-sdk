@@ -291,11 +291,16 @@ func (d Redelegations) String() (out string) {
 
 // NewDelegationResp creates a new DelegationResponse instance
 func NewDelegationResp(
-	delegatorAddr, validatorAddr string, shares math.LegacyDec, balance sdk.Coin,
+	delegatorAddr, validatorAddr string, shares math.LegacyDec, validatorBond bool, balance sdk.Coin,
 ) DelegationResponse {
 	return DelegationResponse{
-		Delegation: NewDelegation(delegatorAddr, validatorAddr, shares),
-		Balance:    balance,
+		Delegation: Delegation{
+			DelegatorAddress: delegatorAddr,
+			ValidatorAddress: validatorAddr,
+			Shares:           shares,
+			ValidatorBond:    validatorBond,
+		},
+		Balance: balance,
 	}
 }
 

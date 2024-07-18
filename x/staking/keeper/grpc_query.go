@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 
@@ -594,6 +595,7 @@ func delegationToDelegationResponse(ctx context.Context, k *Keeper, del types.De
 		del.DelegatorAddress,
 		del.GetValidatorAddr(),
 		del.Shares,
+		del.ValidatorBond,
 		sdk.NewCoin(bondDenom, val.TokensFromShares(del.Shares).TruncateInt()),
 	), nil
 }
@@ -657,4 +659,179 @@ func redelegationsToRedelegationResponses(ctx context.Context, k *Keeper, redels
 	}
 
 	return resp, nil
+}
+
+// Query for individual tokenize share record information by share by id
+func (k Querier) TokenizeShareRecordById(c context.Context, req *types.QueryTokenizeShareRecordByIdRequest) (*types.QueryTokenizeShareRecordByIdResponse, error) { //nolint:revive // fixing this would require changing the .proto files, so we might as well leave it alone
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	record, err := k.GetTokenizeShareRecord(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryTokenizeShareRecordByIdResponse{
+		Record: record,
+	}, nil
+}
+
+// Query for individual tokenize share record information by share denom
+func (k Querier) TokenizeShareRecordByDenom(c context.Context, req *types.QueryTokenizeShareRecordByDenomRequest) (*types.QueryTokenizeShareRecordByDenomResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	record, err := k.GetTokenizeShareRecordByDenom(ctx, req.Denom)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryTokenizeShareRecordByDenomResponse{
+		Record: record,
+	}, nil
+}
+
+// Query tokenize share records by address
+func (k Querier) TokenizeShareRecordsOwned(c context.Context, req *types.QueryTokenizeShareRecordsOwnedRequest) (*types.QueryTokenizeShareRecordsOwnedResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	owner, err := k.authKeeper.AddressCodec().StringToBytes(req.Owner)
+	if err != nil {
+		return nil, err
+	}
+	records := k.GetTokenizeShareRecordsByOwner(ctx, owner)
+
+	return &types.QueryTokenizeShareRecordsOwnedResponse{
+		Records: records,
+	}, nil
+}
+
+// Query for all tokenize share records
+func (k Querier) AllTokenizeShareRecords(c context.Context, req *types.QueryAllTokenizeShareRecordsRequest) (*types.QueryAllTokenizeShareRecordsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	var records []types.TokenizeShareRecord
+
+	store := k.storeService.OpenKVStore(ctx)
+	valStore := prefix.NewStore(runtime.KVStoreAdapter(store), types.TokenizeShareRecordPrefix)
+	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
+		var tokenizeShareRecord types.TokenizeShareRecord
+		if err := k.cdc.Unmarshal(value, &tokenizeShareRecord); err != nil {
+			return false, err
+		}
+
+		if accumulate {
+			records = append(records, tokenizeShareRecord)
+		}
+		return true, nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryAllTokenizeShareRecordsResponse{
+		Records:    records,
+		Pagination: pageRes,
+	}, nil
+}
+
+// Query for last tokenize share record id
+func (k Querier) LastTokenizeShareRecordId(c context.Context, req *types.QueryLastTokenizeShareRecordIdRequest) (*types.QueryLastTokenizeShareRecordIdResponse, error) { //nolint:revive // fixing this would require changing the .proto files, so we might as well leave it alone
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	return &types.QueryLastTokenizeShareRecordIdResponse{
+		Id: k.GetLastTokenizeShareRecordID(ctx),
+	}, nil
+}
+
+// Query for total tokenized staked assets
+func (k Querier) TotalTokenizeSharedAssets(c context.Context, req *types.QueryTotalTokenizeSharedAssetsRequest) (*types.QueryTotalTokenizeSharedAssetsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	records := k.GetAllTokenizeShareRecords(ctx)
+	totalTokenizeShared := math.ZeroInt()
+
+	for _, record := range records {
+		moduleAcc := record.GetModuleAddress()
+		valAddr, err := k.validatorAddressCodec.StringToBytes(record.Validator)
+		if err != nil {
+			return nil, err
+		}
+
+		validator, err := k.GetValidator(ctx, valAddr)
+		if err != nil {
+			return nil, err
+		}
+
+		delegation, err := k.GetDelegation(ctx, moduleAcc, valAddr)
+		if err != nil {
+			return nil, err
+		}
+
+		tokens := validator.TokensFromShares(delegation.Shares)
+		totalTokenizeShared = totalTokenizeShared.Add(tokens.RoundInt())
+	}
+
+	bondDenom, err := k.BondDenom(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryTotalTokenizeSharedAssetsResponse{
+		Value: sdk.NewCoin(bondDenom, totalTokenizeShared),
+	}, nil
+}
+
+// Query for total tokenized staked tokens
+// Liquid staked tokens are either tokenized delegations or delegations
+// owned by a module account
+func (k Querier) TotalLiquidStaked(c context.Context, req *types.QueryTotalLiquidStaked) (*types.QueryTotalLiquidStakedResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	totalLiquidStaked := k.GetTotalLiquidStakedTokens(ctx).String()
+	return &types.QueryTotalLiquidStakedResponse{
+		Tokens: totalLiquidStaked,
+	}, nil
+}
+
+// Query status of an account's tokenize share lock
+func (k Querier) TokenizeShareLockInfo(c context.Context, req *types.QueryTokenizeShareLockInfo) (*types.QueryTokenizeShareLockInfoResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	address, err := k.authKeeper.AddressCodec().StringToBytes(req.Address)
+	if err != nil {
+		panic(err)
+	}
+
+	status, completionTime := k.GetTokenizeSharesLock(ctx, address)
+
+	timeString := ""
+	if !completionTime.IsZero() {
+		timeString = completionTime.String()
+	}
+
+	return &types.QueryTokenizeShareLockInfoResponse{
+		Status:         status.String(),
+		ExpirationTime: timeString,
+	}, nil
 }

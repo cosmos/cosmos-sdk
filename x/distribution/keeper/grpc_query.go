@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	goerrors "errors"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -369,4 +370,78 @@ func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoo
 	}
 
 	return &types.QueryCommunityPoolResponse{Pool: pool.CommunityPool}, nil
+}
+
+// TokenizeShareRecordReward returns estimated amount of reward from tokenize share record ownership
+func (k Keeper) TokenizeShareRecordReward(c context.Context, req *types.QueryTokenizeShareRecordRewardRequest) (*types.QueryTokenizeShareRecordRewardResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	totalRewards := sdk.DecCoins{}
+	rewards := []types.TokenizeShareRecordReward{}
+
+	ownerAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.OwnerAddress)
+	if err != nil {
+		return nil, err
+	}
+	records := k.stakingKeeper.GetTokenizeShareRecordsByOwner(ctx, ownerAddr)
+	for _, record := range records {
+		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(record.Validator)
+		if err != nil {
+			return nil, err
+		}
+
+		moduleAddr := record.GetModuleAddress()
+		moduleBalance := k.bankKeeper.GetAllBalances(ctx, moduleAddr)
+		moduleBalanceDecCoins := sdk.NewDecCoinsFromCoins(moduleBalance...)
+
+		validatorFound := true
+		val, err := k.stakingKeeper.Validator(ctx, valAddr)
+		if err != nil {
+			if !goerrors.Is(err, stakingtypes.ErrNoValidatorFound) {
+				return nil, err
+			}
+
+			validatorFound = false
+		}
+
+		delegationFound := true
+		del, err := k.stakingKeeper.Delegation(ctx, moduleAddr, valAddr)
+		if err != nil {
+			if !goerrors.Is(err, stakingtypes.ErrNoDelegation) {
+				return nil, err
+			}
+
+			delegationFound = false
+		}
+
+		if validatorFound && delegationFound {
+			// withdraw rewards
+			endingPeriod, err := k.IncrementValidatorPeriod(ctx, val)
+			if err != nil {
+				return nil, err
+			}
+
+			recordReward, err := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+			if err != nil {
+				return nil, err
+			}
+
+			rewards = append(rewards, types.TokenizeShareRecordReward{
+				RecordId: record.Id,
+				Reward:   recordReward.Add(moduleBalanceDecCoins...),
+			})
+			totalRewards = totalRewards.Add(recordReward...)
+		} else if !moduleBalance.IsZero() {
+			rewards = append(rewards, types.TokenizeShareRecordReward{
+				RecordId: record.Id,
+				Reward:   moduleBalanceDecCoins,
+			})
+			totalRewards = totalRewards.Add(moduleBalanceDecCoins...)
+		}
+	}
+
+	return &types.QueryTokenizeShareRecordRewardResponse{
+		Rewards: rewards,
+		Total:   totalRewards,
+	}, nil
 }

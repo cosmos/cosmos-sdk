@@ -19,13 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_SetWithdrawAddress_FullMethodName          = "/cosmos.distribution.v1beta1.Msg/SetWithdrawAddress"
-	Msg_WithdrawDelegatorReward_FullMethodName     = "/cosmos.distribution.v1beta1.Msg/WithdrawDelegatorReward"
-	Msg_WithdrawValidatorCommission_FullMethodName = "/cosmos.distribution.v1beta1.Msg/WithdrawValidatorCommission"
-	Msg_FundCommunityPool_FullMethodName           = "/cosmos.distribution.v1beta1.Msg/FundCommunityPool"
-	Msg_UpdateParams_FullMethodName                = "/cosmos.distribution.v1beta1.Msg/UpdateParams"
-	Msg_CommunityPoolSpend_FullMethodName          = "/cosmos.distribution.v1beta1.Msg/CommunityPoolSpend"
-	Msg_DepositValidatorRewardsPool_FullMethodName = "/cosmos.distribution.v1beta1.Msg/DepositValidatorRewardsPool"
+	Msg_SetWithdrawAddress_FullMethodName                   = "/cosmos.distribution.v1beta1.Msg/SetWithdrawAddress"
+	Msg_WithdrawDelegatorReward_FullMethodName              = "/cosmos.distribution.v1beta1.Msg/WithdrawDelegatorReward"
+	Msg_WithdrawValidatorCommission_FullMethodName          = "/cosmos.distribution.v1beta1.Msg/WithdrawValidatorCommission"
+	Msg_FundCommunityPool_FullMethodName                    = "/cosmos.distribution.v1beta1.Msg/FundCommunityPool"
+	Msg_UpdateParams_FullMethodName                         = "/cosmos.distribution.v1beta1.Msg/UpdateParams"
+	Msg_CommunityPoolSpend_FullMethodName                   = "/cosmos.distribution.v1beta1.Msg/CommunityPoolSpend"
+	Msg_DepositValidatorRewardsPool_FullMethodName          = "/cosmos.distribution.v1beta1.Msg/DepositValidatorRewardsPool"
+	Msg_WithdrawTokenizeShareRecordReward_FullMethodName    = "/cosmos.distribution.v1beta1.Msg/WithdrawTokenizeShareRecordReward"
+	Msg_WithdrawAllTokenizeShareRecordReward_FullMethodName = "/cosmos.distribution.v1beta1.Msg/WithdrawAllTokenizeShareRecordReward"
 )
 
 // MsgClient is the client API for Msg service.
@@ -61,6 +63,10 @@ type MsgClient interface {
 	//
 	// Since: cosmos-sdk 0.50
 	DepositValidatorRewardsPool(ctx context.Context, in *MsgDepositValidatorRewardsPool, opts ...grpc.CallOption) (*MsgDepositValidatorRewardsPoolResponse, error)
+	// WithdrawTokenizeShareRecordReward defines a method to withdraw reward for an owning TokenizeShareRecord
+	WithdrawTokenizeShareRecordReward(ctx context.Context, in *MsgWithdrawTokenizeShareRecordReward, opts ...grpc.CallOption) (*MsgWithdrawTokenizeShareRecordRewardResponse, error)
+	// WithdrawAllTokenizeShareRecordReward defines a method to withdraw reward for all owning TokenizeShareRecord
+	WithdrawAllTokenizeShareRecordReward(ctx context.Context, in *MsgWithdrawAllTokenizeShareRecordReward, opts ...grpc.CallOption) (*MsgWithdrawAllTokenizeShareRecordRewardResponse, error)
 }
 
 type msgClient struct {
@@ -134,6 +140,24 @@ func (c *msgClient) DepositValidatorRewardsPool(ctx context.Context, in *MsgDepo
 	return out, nil
 }
 
+func (c *msgClient) WithdrawTokenizeShareRecordReward(ctx context.Context, in *MsgWithdrawTokenizeShareRecordReward, opts ...grpc.CallOption) (*MsgWithdrawTokenizeShareRecordRewardResponse, error) {
+	out := new(MsgWithdrawTokenizeShareRecordRewardResponse)
+	err := c.cc.Invoke(ctx, Msg_WithdrawTokenizeShareRecordReward_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) WithdrawAllTokenizeShareRecordReward(ctx context.Context, in *MsgWithdrawAllTokenizeShareRecordReward, opts ...grpc.CallOption) (*MsgWithdrawAllTokenizeShareRecordRewardResponse, error) {
+	out := new(MsgWithdrawAllTokenizeShareRecordRewardResponse)
+	err := c.cc.Invoke(ctx, Msg_WithdrawAllTokenizeShareRecordReward_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -167,6 +191,10 @@ type MsgServer interface {
 	//
 	// Since: cosmos-sdk 0.50
 	DepositValidatorRewardsPool(context.Context, *MsgDepositValidatorRewardsPool) (*MsgDepositValidatorRewardsPoolResponse, error)
+	// WithdrawTokenizeShareRecordReward defines a method to withdraw reward for an owning TokenizeShareRecord
+	WithdrawTokenizeShareRecordReward(context.Context, *MsgWithdrawTokenizeShareRecordReward) (*MsgWithdrawTokenizeShareRecordRewardResponse, error)
+	// WithdrawAllTokenizeShareRecordReward defines a method to withdraw reward for all owning TokenizeShareRecord
+	WithdrawAllTokenizeShareRecordReward(context.Context, *MsgWithdrawAllTokenizeShareRecordReward) (*MsgWithdrawAllTokenizeShareRecordRewardResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -194,6 +222,12 @@ func (UnimplementedMsgServer) CommunityPoolSpend(context.Context, *MsgCommunityP
 }
 func (UnimplementedMsgServer) DepositValidatorRewardsPool(context.Context, *MsgDepositValidatorRewardsPool) (*MsgDepositValidatorRewardsPoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DepositValidatorRewardsPool not implemented")
+}
+func (UnimplementedMsgServer) WithdrawTokenizeShareRecordReward(context.Context, *MsgWithdrawTokenizeShareRecordReward) (*MsgWithdrawTokenizeShareRecordRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawTokenizeShareRecordReward not implemented")
+}
+func (UnimplementedMsgServer) WithdrawAllTokenizeShareRecordReward(context.Context, *MsgWithdrawAllTokenizeShareRecordReward) (*MsgWithdrawAllTokenizeShareRecordRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawAllTokenizeShareRecordReward not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -334,6 +368,42 @@ func _Msg_DepositValidatorRewardsPool_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_WithdrawTokenizeShareRecordReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawTokenizeShareRecordReward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawTokenizeShareRecordReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_WithdrawTokenizeShareRecordReward_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawTokenizeShareRecordReward(ctx, req.(*MsgWithdrawTokenizeShareRecordReward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_WithdrawAllTokenizeShareRecordReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawAllTokenizeShareRecordReward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawAllTokenizeShareRecordReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_WithdrawAllTokenizeShareRecordReward_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawAllTokenizeShareRecordReward(ctx, req.(*MsgWithdrawAllTokenizeShareRecordReward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -368,6 +438,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DepositValidatorRewardsPool",
 			Handler:    _Msg_DepositValidatorRewardsPool_Handler,
+		},
+		{
+			MethodName: "WithdrawTokenizeShareRecordReward",
+			Handler:    _Msg_WithdrawTokenizeShareRecordReward_Handler,
+		},
+		{
+			MethodName: "WithdrawAllTokenizeShareRecordReward",
+			Handler:    _Msg_WithdrawAllTokenizeShareRecordReward_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -44,7 +44,10 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 
-	unbond, err := sdk.ParseCoinNormalized("10stake")
+	unbondCoin, err := sdk.ParseCoinNormalized("10stake")
+	s.Require().NoError(err)
+
+	tokenizeCoin, err := sdk.ParseCoinNormalized("1000stake")
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
@@ -56,7 +59,7 @@ func (s *E2ETestSuite) SetupSuite() {
 		val.Address,
 		val.ValAddress,
 		val2.ValAddress,
-		unbond,
+		unbondCoin,
 		fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
 	)
 	s.Require().NoError(err)
@@ -65,14 +68,31 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().Equal(uint32(0), txRes.Code)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	unbondingAmount := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(5))
-
 	// unbonding the amount
-	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondingAmount)
+	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondCoin)
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
 	s.Require().Equal(uint32(0), txRes.Code)
 	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// tokenize shares twice (once for the transfer and one for the redeem)
+	for i := 1; i <= 2; i++ {
+		out, err := MsgTokenizeSharesExec(
+			val.ClientCtx,
+			val.Address,
+			val.ValAddress,
+			val.Address,
+			tokenizeCoin,
+			fmt.Sprintf("--%s=%d", flags.FlagGas, 1000000),
+		)
+
+		s.Require().NoError(err)
+		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+		s.Require().Equal(uint32(0), txRes.Code)
+		s.Require().NoError(s.network.WaitForNextBlock())
+	}
+
+	unbondingAmount := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(5))
 
 	// unbonding the amount
 	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondingAmount)

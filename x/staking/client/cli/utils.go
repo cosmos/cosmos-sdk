@@ -6,13 +6,11 @@ import (
 	"fmt"
 	"os"
 
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -41,7 +39,6 @@ func parseAndValidateValidatorJSON(cdc codec.Codec, path string) (validator, err
 		CommissionRate      string          `json:"commission-rate"`
 		CommissionMaxRate   string          `json:"commission-max-rate"`
 		CommissionMaxChange string          `json:"commission-max-change-rate"`
-		MinSelfDelegation   string          `json:"min-self-delegation"`
 	}
 
 	contents, err := os.ReadFile(path)
@@ -80,24 +77,15 @@ func parseAndValidateValidatorJSON(cdc codec.Codec, path string) (validator, err
 		return validator{}, err
 	}
 
-	if v.MinSelfDelegation == "" {
-		return validator{}, fmt.Errorf("must specify minimum self delegation")
-	}
-	minSelfDelegation, ok := math.NewIntFromString(v.MinSelfDelegation)
-	if !ok {
-		return validator{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
-	}
-
 	return validator{
-		Amount:            amount,
-		PubKey:            pk,
-		Moniker:           v.Moniker,
-		Identity:          v.Identity,
-		Website:           v.Website,
-		Security:          v.Security,
-		Details:           v.Details,
-		CommissionRates:   commissionRates,
-		MinSelfDelegation: minSelfDelegation,
+		Amount:          amount,
+		PubKey:          pk,
+		Moniker:         v.Moniker,
+		Identity:        v.Identity,
+		Website:         v.Website,
+		Security:        v.Security,
+		Details:         v.Details,
+		CommissionRates: commissionRates,
 	}, nil
 }
 

@@ -6,6 +6,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -13,7 +14,16 @@ import (
 // and prune the oldest entry based on the HistoricalEntries parameter
 func (k *Keeper) BeginBlocker(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
-	return k.TrackHistoricalInfo(ctx)
+
+	err := k.TrackHistoricalInfo(ctx)
+	if err != nil {
+		return err
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.RemoveExpiredTokenizeShareLocks(ctx, sdkCtx.BlockTime())
+
+	return nil
 }
 
 // EndBlocker called at every block, update validator set

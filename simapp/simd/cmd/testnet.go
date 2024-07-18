@@ -309,7 +309,6 @@ func initTestnetFiles(
 			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(math.LegacyOneDec(), math.LegacyOneDec(), math.LegacyOneDec()),
-			math.OneInt(),
 		)
 		if err != nil {
 			return err

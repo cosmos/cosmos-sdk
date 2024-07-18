@@ -1,3 +1,5 @@
+//nolint
+
 package v3
 
 import (

@@ -30,6 +30,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
@@ -50,6 +52,7 @@ type fixture struct {
 
 	accountKeeper authkeeper.AccountKeeper
 	bankKeeper    bankkeeper.Keeper
+	mintKeeper    mintkeeper.Keeper
 	distrKeeper   distrkeeper.Keeper
 	stakingKeeper *stakingkeeper.Keeper
 
@@ -74,6 +77,7 @@ func initFixture(t testing.TB) *fixture {
 		distrtypes.ModuleName:          {authtypes.Minter},
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+		minttypes.ModuleName:           {authtypes.Minter, authtypes.Burner},
 	}
 
 	accountKeeper := authkeeper.NewAccountKeeper(
@@ -100,9 +104,21 @@ func initFixture(t testing.TB) *fixture {
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
+	mintKeeper := mintkeeper.NewKeeper(
+		cdc,
+		runtime.NewKVStoreService(keys[minttypes.StoreKey]),
+		stakingKeeper,
+		accountKeeper,
+		bankKeeper,
+		authtypes.FeeCollectorName,
+		authority.String(),
+	)
+
 	distrKeeper := distrkeeper.NewKeeper(
 		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
 	)
+
+	stakingKeeper.SetHooks(distrKeeper.Hooks())
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
@@ -133,6 +149,13 @@ func initFixture(t testing.TB) *fixture {
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
+	// set default staking params
+	assert.NilError(t, stakingKeeper.SetParams(ctx, stakingtypes.DefaultParams()))
+
+	// reset fee pool
+	assert.NilError(t, distrKeeper.FeePool.Set(ctx, distrtypes.InitialFeePool()))
+	assert.NilError(t, distrKeeper.Params.Set(ctx, distrtypes.DefaultParams()))
+
 	// Register MsgServer and QueryServer
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(distrKeeper))
 	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(distrKeeper))
@@ -144,10 +167,22 @@ func initFixture(t testing.TB) *fixture {
 		keys:          keys,
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
+		mintKeeper:    mintKeeper,
 		distrKeeper:   distrKeeper,
 		stakingKeeper: stakingKeeper,
 		addr:          addr,
 		valAddr:       valAddr,
+	}
+}
+
+func fundAccounts(t testing.TB, ctx sdk.Context, bankKeeper bankkeeper.Keeper) {
+	// add accounts and set total supply
+	totalSupplyAmt := initAmt.MulRaw(int64(len(PKS)))
+	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupplyAmt))
+	require.NoError(t, bankKeeper.MintCoins(ctx, minttypes.ModuleName, totalSupply))
+
+	for _, addr := range PKS {
+		require.NoError(t, bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, (sdk.AccAddress)(addr.Address()), initCoins))
 	}
 }
 

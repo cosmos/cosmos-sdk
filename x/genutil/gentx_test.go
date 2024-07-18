@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/genesis"
-	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -63,12 +62,11 @@ func (suite *GenTxTestSuite) SetupTest() {
 
 	var err error
 	amount := sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)
-	one := math.OneInt()
 	suite.msg1, err = stakingtypes.NewMsgCreateValidator(
-		sdk.ValAddress(pk1.Address()).String(), pk1, amount, desc, comm, one)
+		sdk.ValAddress(pk1.Address()).String(), pk1, amount, desc, comm)
 	suite.NoError(err)
 	suite.msg2, err = stakingtypes.NewMsgCreateValidator(
-		sdk.ValAddress(pk2.Address()).String(), pk1, amount, desc, comm, one)
+		sdk.ValAddress(pk2.Address()).String(), pk1, amount, desc, comm)
 	suite.NoError(err)
 }
 

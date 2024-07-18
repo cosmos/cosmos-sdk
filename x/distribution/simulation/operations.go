@@ -20,15 +20,17 @@ import (
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgSetWithdrawAddress          = "op_weight_msg_set_withdraw_address"
-	OpWeightMsgWithdrawDelegationReward    = "op_weight_msg_withdraw_delegation_reward"
-	OpWeightMsgWithdrawValidatorCommission = "op_weight_msg_withdraw_validator_commission"
-	OpWeightMsgFundCommunityPool           = "op_weight_msg_fund_community_pool"
+	OpWeightMsgSetWithdrawAddress                   = "op_weight_msg_set_withdraw_address"
+	OpWeightMsgWithdrawDelegationReward             = "op_weight_msg_withdraw_delegation_reward"
+	OpWeightMsgWithdrawValidatorCommission          = "op_weight_msg_withdraw_validator_commission"
+	OpWeightMsgFundCommunityPool                    = "op_weight_msg_fund_community_pool"
+	OpWeightMsgWithdrawAllTokenizeShareRecordReward = "op_weight_msg_withdraw_all_tokenize_share_record_reward"
 
-	DefaultWeightMsgSetWithdrawAddress          int = 50
-	DefaultWeightMsgWithdrawDelegationReward    int = 50
-	DefaultWeightMsgWithdrawValidatorCommission int = 50
-	DefaultWeightMsgFundCommunityPool           int = 50
+	DefaultWeightMsgSetWithdrawAddress                   int = 50
+	DefaultWeightMsgWithdrawDelegationReward             int = 50
+	DefaultWeightMsgWithdrawValidatorCommission          int = 50
+	DefaultWeightMsgFundCommunityPool                    int = 50
+	DefaultWeightMsgWithdrawAllTokenizeShareRecordReward int = 50
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -61,6 +63,11 @@ func WeightedOperations(
 		weightMsgFundCommunityPool = DefaultWeightMsgFundCommunityPool
 	})
 
+	var weightMsgWithdrawTokenizeShareRecordReward int
+	appParams.GetOrGenerate(OpWeightMsgWithdrawAllTokenizeShareRecordReward, &weightMsgWithdrawTokenizeShareRecordReward, nil, func(_ *rand.Rand) {
+		weightMsgWithdrawTokenizeShareRecordReward = DefaultWeightMsgWithdrawAllTokenizeShareRecordReward
+	})
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgSetWithdrawAddress,
@@ -77,6 +84,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgFundCommunityPool,
 			SimulateMsgFundCommunityPool(txConfig, ak, bk, k, sk),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgWithdrawTokenizeShareRecordReward,
+			SimulateMsgWithdrawTokenizeShareRecordReward(txConfig, ak, bk, k, sk),
 		),
 	}
 }
@@ -276,5 +287,58 @@ func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeep
 		}
 
 		return simulation.GenAndDeliverTx(txCtx, fees)
+	}
+}
+
+// SimulateMsgWithdrawTokenizeShareRecordReward simulates MsgWithdrawTokenizeShareRecordReward execution where
+// a random account claim tokenize share record rewards.
+func SimulateMsgWithdrawTokenizeShareRecordReward(txConfig client.TxConfig, ak types.AccountKeeper, bk types.BankKeeper, _ keeper.Keeper, sk types.StakingKeeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		msgType := sdk.MsgTypeURL(&types.MsgWithdrawTokenizeShareRecordReward{})
+		rewardOwner, _ := simtypes.RandomAcc(r, accs)
+
+		records := sk.GetAllTokenizeShareRecords(ctx)
+		if len(records) > 0 {
+			record := records[r.Intn(len(records))]
+			for _, acc := range accs {
+				if acc.Address.String() == record.Owner {
+					rewardOwner = acc
+					break
+				}
+			}
+		}
+
+		// if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
+		if rewardOwner.PrivKey == nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "account private key is nil"), nil, nil
+		}
+
+		rewardOwnerAddr, err := ak.AddressCodec().BytesToString(rewardOwner.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "error converting reward owner address"), nil, err
+		}
+
+		msg := types.NewMsgWithdrawAllTokenizeShareRecordReward(rewardOwnerAddr)
+
+		account := ak.GetAccount(ctx, rewardOwner.Address)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           txConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			Context:         ctx,
+			SimAccount:      rewardOwner,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }

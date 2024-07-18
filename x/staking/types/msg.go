@@ -17,16 +17,23 @@ var (
 	_ sdk.Msg                            = &MsgEditValidator{}
 	_ sdk.Msg                            = &MsgDelegate{}
 	_ sdk.Msg                            = &MsgUndelegate{}
+	_ sdk.Msg                            = &MsgUnbondValidator{}
 	_ sdk.Msg                            = &MsgBeginRedelegate{}
 	_ sdk.Msg                            = &MsgCancelUnbondingDelegation{}
 	_ sdk.Msg                            = &MsgUpdateParams{}
+	_ sdk.Msg                            = &MsgTokenizeShares{}
+	_ sdk.Msg                            = &MsgRedeemTokensForShares{}
+	_ sdk.Msg                            = &MsgTransferTokenizeShareRecord{}
+	_ sdk.Msg                            = &MsgDisableTokenizeShares{}
+	_ sdk.Msg                            = &MsgEnableTokenizeShares{}
+	_ sdk.Msg                            = &MsgValidatorBond{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
 // Delegator address and validator address are the same.
 func NewMsgCreateValidator(
 	valAddr string, pubKey cryptotypes.PubKey,
-	selfDelegation sdk.Coin, description Description, commission CommissionRates, minSelfDelegation math.Int,
+	selfDelegation sdk.Coin, description Description, commission CommissionRates,
 ) (*MsgCreateValidator, error) {
 	var pkAny *codectypes.Any
 	if pubKey != nil {
@@ -36,12 +43,11 @@ func NewMsgCreateValidator(
 		}
 	}
 	return &MsgCreateValidator{
-		Description:       description,
-		ValidatorAddress:  valAddr,
-		Pubkey:            pkAny,
-		Value:             selfDelegation,
-		Commission:        commission,
-		MinSelfDelegation: minSelfDelegation,
+		Description:      description,
+		ValidatorAddress: valAddr,
+		Pubkey:           pkAny,
+		Value:            selfDelegation,
+		Commission:       commission,
 	}, nil
 }
 
@@ -73,17 +79,6 @@ func (msg MsgCreateValidator) Validate(ac address.Codec) error {
 		return err
 	}
 
-	if !msg.MinSelfDelegation.IsPositive() {
-		return errorsmod.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"minimum self delegation must be a positive integer",
-		)
-	}
-
-	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
-		return ErrSelfDelegationBelowMinimum
-	}
-
 	return nil
 }
 
@@ -94,12 +89,11 @@ func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) 
 }
 
 // NewMsgEditValidator creates a new MsgEditValidator instance
-func NewMsgEditValidator(valAddr string, description Description, newRate *math.LegacyDec, newMinSelfDelegation *math.Int) *MsgEditValidator {
+func NewMsgEditValidator(valAddr string, description Description, newRate *math.LegacyDec) *MsgEditValidator {
 	return &MsgEditValidator{
-		Description:       description,
-		CommissionRate:    newRate,
-		ValidatorAddress:  valAddr,
-		MinSelfDelegation: newMinSelfDelegation,
+		Description:      description,
+		CommissionRate:   newRate,
+		ValidatorAddress: valAddr,
 	}
 }
 
@@ -140,5 +134,61 @@ func NewMsgCancelUnbondingDelegation(delAddr, valAddr string, creationHeight int
 		ValidatorAddress: valAddr,
 		Amount:           amount,
 		CreationHeight:   creationHeight,
+	}
+}
+
+// NewMsgUnbondValidator creates a new MsgUnbondValidator instance.
+func NewMsgUnbondValidator(valAddr string) *MsgUnbondValidator {
+	return &MsgUnbondValidator{
+		ValidatorAddress: valAddr,
+	}
+}
+
+// NewMsgTokenizeShares creates a new MsgTokenizeShares instance.
+func NewMsgTokenizeShares(delAddr, valAddr string, amount sdk.Coin, owner string) *MsgTokenizeShares {
+	return &MsgTokenizeShares{
+		DelegatorAddress:    delAddr,
+		ValidatorAddress:    valAddr,
+		Amount:              amount,
+		TokenizedShareOwner: owner,
+	}
+}
+
+// NewMsgRedeemTokensForShares creates a new MsgRedeemTokensForShares instance.
+func NewMsgRedeemTokensForShares(delAddr string, amount sdk.Coin) *MsgRedeemTokensForShares {
+	return &MsgRedeemTokensForShares{
+		DelegatorAddress: delAddr,
+		Amount:           amount,
+	}
+}
+
+// NewMsgTransferTokenizeShareRecord creates a new MsgTransferTokenizeShareRecord instance.
+func NewMsgTransferTokenizeShareRecord(recordID uint64, sender, newOwner string) *MsgTransferTokenizeShareRecord {
+	return &MsgTransferTokenizeShareRecord{
+		TokenizeShareRecordId: recordID,
+		Sender:                sender,
+		NewOwner:              newOwner,
+	}
+}
+
+// NewMsgDisableTokenizeShares creates a new MsgDisableTokenizeShares instance.
+func NewMsgDisableTokenizeShares(delAddr string) *MsgDisableTokenizeShares {
+	return &MsgDisableTokenizeShares{
+		DelegatorAddress: delAddr,
+	}
+}
+
+// NewMsgEnableTokenizeShares creates a new MsgEnableTokenizeShares instance.
+func NewMsgEnableTokenizeShares(delAddr string) *MsgEnableTokenizeShares {
+	return &MsgEnableTokenizeShares{
+		DelegatorAddress: delAddr,
+	}
+}
+
+// NewMsgValidatorBond creates a new MsgValidatorBond instance.
+func NewMsgValidatorBond(delAddr, valAddr string) *MsgValidatorBond {
+	return &MsgValidatorBond{
+		DelegatorAddress: delAddr,
+		ValidatorAddress: valAddr,
 	}
 }

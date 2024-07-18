@@ -38,6 +38,26 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.50.8-lsm](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.8)-lsm
+
+This is a special cosmos-sdk release with support LSM and some backports.
+
+Previous version: [v0.47.16-ics-lsm](https://github.com/cosmos/cosmos-sdk/tree/v0.47.16-ics-lsm)
+Previous feature branch: [feature/v0.47.x-ics-lsm](https://github.com/cosmos/cosmos-sdk/tree/feature/v0.47.x-ics-lsm).
+Initial v0.47.x LSM update PR: [#18694](https://github.com/cosmos/cosmos-sdk/pull/18694)
+
+## Features
+* (x/staking) [#20975](https://github.com/cosmos/cosmos-sdk/pull/20975) Port x/staking LSM changes 
+
+## Improvements
+Backported PRs from main that were included on [feature/v0.47.x-ics-lsm](https://github.com/cosmos/cosmos-sdk/tree/feature/v0.47.x-ics-lsm) 
+* https://github.com/cosmos/cosmos-sdk/pull/19056
+* https://github.com/cosmos/cosmos-sdk/pull/19076
+* https://github.com/cosmos/cosmos-sdk/pull/19491
+* https://github.com/cosmos/cosmos-sdk/pull/19614
+* https://github.com/cosmos/cosmos-sdk/pull/20444
+
+
 ## [v0.50.8](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.8) - 2024-07-15
 
 ## Features
@@ -56,6 +76,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (simulation) [#18196](https://github.com/cosmos/cosmos-sdk/pull/18196) Fix the problem of `validator set is empty after InitGenesis` in simulation test.
 
 ## [v0.50.7](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.7) - 2024-06-04
+* (x/authz) [#513](https://github.com/osmosis-labs/cosmos-sdk/pull/513) Limit expired authz grant pruning to 200 per block.
 
 ### Improvements
 
@@ -148,6 +169,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (x/staking) [#20444](https://github.com/cosmos/cosmos-sdk/pull/20444) Disable tokenization of shares from redelegations.
 * (x/bank) [#18956](https://github.com/cosmos/cosmos-sdk/pull/18956) Introduced a new `DenomOwnersByQuery` query method for `DenomOwners`, which accepts the denom value as a query string parameter, resolving issues with denoms containing slashes.
 * (x/gov) [#18707](https://github.com/cosmos/cosmos-sdk/pull/18707) Improve genesis validation.
 * (x/auth/tx) [#18772](https://github.com/cosmos/cosmos-sdk/pull/18772) Remove misleading gas wanted from tx simulation failure log.
@@ -300,6 +322,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking
 
+* (x/staking) [#19614](https://github.com/cosmos/cosmos-sdk/pull/19614) Facilitate the tokenization of vested delegation in the LSM module.
 * (x/gov) [#18146](https://github.com/cosmos/cosmos-sdk/pull/18146) Add denom check to reject denoms outside of those listed in `MinDeposit`. A new `MinDepositRatio` param is added (with a default value of `0.001`) and now deposits are required to be at least `MinDepositRatio*MinDeposit` to be accepted.
 * (x/group,x/gov) [#16235](https://github.com/cosmos/cosmos-sdk/pull/16235) A group and gov proposal is rejected if the proposal metadata title and summary do not match the proposal title and summary.
 * (baseapp) [#15930](https://github.com/cosmos/cosmos-sdk/pull/15930) change vote info provided by prepare and process proposal to the one in the block.

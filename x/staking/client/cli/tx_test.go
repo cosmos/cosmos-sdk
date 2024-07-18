@@ -81,7 +81,7 @@ func (s *CLITestSuite) TestPrepareConfigForTxCreateValidator() {
 	valPubKey := privKey.PubKey()
 	moniker := "DefaultMoniker"
 	require := s.Require()
-	mkTxValCfg := func(amount, commission, commissionMax, commissionMaxChange, minSelfDelegation string) cli.TxCreateValidatorConfig {
+	mkTxValCfg := func(amount, commission, commissionMax, commissionMaxChange string) cli.TxCreateValidatorConfig {
 		return cli.TxCreateValidatorConfig{
 			IP:                      ip,
 			ChainID:                 chainID,
@@ -93,7 +93,6 @@ func (s *CLITestSuite) TestPrepareConfigForTxCreateValidator() {
 			CommissionRate:          commission,
 			CommissionMaxRate:       commissionMax,
 			CommissionMaxChangeRate: commissionMaxChange,
-			MinSelfDelegation:       minSelfDelegation,
 		}
 	}
 
@@ -105,42 +104,35 @@ func (s *CLITestSuite) TestPrepareConfigForTxCreateValidator() {
 		{
 			name:        "all defaults",
 			fsModify:    func(fs *pflag.FlagSet) {},
-			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.1", "0.2", "0.01", "1"),
+			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.1", "0.2", "0.01"),
 		},
 		{
 			name: "Custom amount",
 			fsModify: func(fs *pflag.FlagSet) {
 				require.NoError(fs.Set(cli.FlagAmount, "2000stake"))
 			},
-			expectedCfg: mkTxValCfg("2000stake", "0.1", "0.2", "0.01", "1"),
+			expectedCfg: mkTxValCfg("2000stake", "0.1", "0.2", "0.01"),
 		},
 		{
 			name: "Custom commission rate",
 			fsModify: func(fs *pflag.FlagSet) {
 				require.NoError(fs.Set(cli.FlagCommissionRate, "0.54"))
 			},
-			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.54", "0.2", "0.01", "1"),
+			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.54", "0.2", "0.01"),
 		},
 		{
 			name: "Custom commission max rate",
 			fsModify: func(fs *pflag.FlagSet) {
 				require.NoError(fs.Set(cli.FlagCommissionMaxRate, "0.89"))
 			},
-			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.1", "0.89", "0.01", "1"),
+			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.1", "0.89", "0.01"),
 		},
 		{
 			name: "Custom commission max change rate",
 			fsModify: func(fs *pflag.FlagSet) {
 				require.NoError(fs.Set(cli.FlagCommissionMaxChangeRate, "0.55"))
 			},
-			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.1", "0.2", "0.55", "1"),
-		},
-		{
-			name: "Custom min self delegations",
-			fsModify: func(fs *pflag.FlagSet) {
-				require.NoError(fs.Set(cli.FlagMinSelfDelegation, "0.33"))
-			},
-			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.1", "0.2", "0.01", "0.33"),
+			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.1", "0.2", "0.55"),
 		},
 	}
 
@@ -175,8 +167,7 @@ func (s *CLITestSuite) TestNewCreateValidatorCmd() {
 		"details": "'Hey, I am a new validator. Please delegate!'",
   		"commission-rate": "0.5",
   		"commission-max-rate": "1.0",
-  		"commission-max-change-rate": "0.1",
-  		"min-self-delegation": "1"
+  		"commission-max-change-rate": "0.1"
 	}`, 100)
 	validJSONFile := testutil.WriteToNewTempFile(s.T(), validJSON)
 	defer validJSONFile.Close()
@@ -188,8 +179,7 @@ func (s *CLITestSuite) TestNewCreateValidatorCmd() {
   		"moniker": "NewValidator",
   		"commission-rate": "0.5",
   		"commission-max-rate": "1.0",
-  		"commission-max-change-rate": "0.1",
-  		"min-self-delegation": "1"
+  		"commission-max-change-rate": "0.1"
 	}`, 100)
 	validJSONWOOptionalFile := testutil.WriteToNewTempFile(s.T(), validJSONWithoutOptionalFields)
 	defer validJSONWOOptionalFile.Close()
@@ -200,8 +190,7 @@ func (s *CLITestSuite) TestNewCreateValidatorCmd() {
   		"moniker": "NewValidator",
   		"commission-rate": "0.5",
   		"commission-max-rate": "1.0",
-  		"commission-max-change-rate": "0.1",
-  		"min-self-delegation": "1"
+  		"commission-max-change-rate": "0.1"
 	}`
 	noAmountJSONFile := testutil.WriteToNewTempFile(s.T(), noAmountJSON)
 	defer noAmountJSONFile.Close()
@@ -212,8 +201,7 @@ func (s *CLITestSuite) TestNewCreateValidatorCmd() {
   		"moniker": "NewValidator",
   		"commission-rate": "0.5",
   		"commission-max-rate": "1.0",
-  		"commission-max-change-rate": "0.1",
-  		"min-self-delegation": "1"
+  		"commission-max-change-rate": "0.1"
 	}`, 100)
 	noPubKeyJSONFile := testutil.WriteToNewTempFile(s.T(), noPubKeyJSON)
 	defer noPubKeyJSONFile.Close()
@@ -224,8 +212,7 @@ func (s *CLITestSuite) TestNewCreateValidatorCmd() {
   		"amount": "%dstake",
   		"commission-rate": "0.5",
   		"commission-max-rate": "1.0",
-  		"commission-max-change-rate": "0.1",
-  		"min-self-delegation": "1"
+  		"commission-max-change-rate": "0.1"
 	}`, 100)
 	noMonikerJSONFile := testutil.WriteToNewTempFile(s.T(), noMonikerJSON)
 	defer noMonikerJSONFile.Close()

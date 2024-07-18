@@ -159,7 +159,7 @@ require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	cosmossdk.io/log v1.3.1 // indirect
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
-	github.com/cosmos/crypto v0.1.1 // indirect
+	github.com/cosmos/crypto v0.1.2 // indirect
 	github.com/dgraph-io/badger/v4 v4.2.0 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect

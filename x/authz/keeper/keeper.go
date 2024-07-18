@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/appmodule"
 	corecontext "cosmossdk.io/core/context"
@@ -65,7 +65,7 @@ func (k Keeper) update(ctx context.Context, grantee, granter sdk.AccAddress, upd
 		return authz.ErrNoAuthorizationFound
 	}
 
-	msg, ok := updated.(proto.Message)
+	msg, ok := updated.(gogoproto.Message)
 	if !ok {
 		return sdkerrors.ErrPackAny.Wrapf("cannot proto marshal %T", updated)
 	}

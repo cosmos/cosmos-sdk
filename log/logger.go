@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/pkgerrors"
 
 	corelog "cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 )
 
 func init() {
@@ -150,7 +151,7 @@ func (l zeroLogWrapper) Impl() interface{} {
 }
 
 // NewNopLogger returns a new logger that does nothing.
-var NewNopLogger = corelog.NewNopLogger
+var NewNopLogger = coretesting.NewNopLogger
 
 // LogWrapper wraps a Logger and implements the Logger interface.
 // it is only meant to avoid breakage of legacy versions of the Logger interface.

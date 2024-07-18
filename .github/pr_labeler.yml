@@ -24,8 +24,14 @@
   - orm/**/*
 "C:schema":
   - schema/**/*
+"C:indexer/postgres":
+  - indexer/postgres/**/*
 "C:x/accounts":
   - x/accounts/**/*
+"C:x/accounts/multisig":
+  - x/accounts/defaults/multisig/**/*
+"C:x/accounts/lockup":
+  - x/accounts/defaults/lockup/**/*
 "C:x/auth":
   - x/auth/**/*
 "C:x/authz":

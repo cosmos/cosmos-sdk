@@ -61,7 +61,7 @@ func (c *Consensus[T]) handlerQueryApp(ctx context.Context, path []string, req *
 			return nil, errorsmod.Wrap(err, "failed to simulate tx")
 		}
 
-		bz, err := intoABCISimulationResponse(txResult, c.cfg.IndexEvents)
+		bz, err := intoABCISimulationResponse(txResult, c.cfg.AppTomlConfig.IndexEvents)
 		if err != nil {
 			return nil, errorsmod.Wrap(err, "failed to marshal txResult")
 		}
@@ -75,7 +75,7 @@ func (c *Consensus[T]) handlerQueryApp(ctx context.Context, path []string, req *
 	case "version":
 		return &abci.QueryResponse{
 			Codespace: cometerrors.RootCodespace,
-			Value:     []byte(c.cfg.Version),
+			Value:     []byte(c.version),
 			Height:    req.Height,
 		}, nil
 	}

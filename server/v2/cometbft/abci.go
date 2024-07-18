@@ -32,18 +32,19 @@ import (
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
 type Consensus[T transaction.Tx] struct {
+	appName, version string
+	app              *appmanager.AppManager[T]
+	cfg              Config
+	store            types.Store
+	logger           log.Logger
+	txCodec          transaction.Codec[T]
+	streaming        streaming.Manager
+	snapshotManager  *snapshots.Manager
+	mempool          mempool.Mempool[T]
 	// legacy support for gRPC
 	grpcQueryDecoders map[string]func(requestBytes []byte) (gogoproto.Message, error)
 
-	app             *appmanager.AppManager[T]
-	cfg             Config
-	store           types.Store
-	logger          log.Logger
-	txCodec         transaction.Codec[T]
-	streaming       streaming.Manager
-	snapshotManager *snapshots.Manager
-	mempool         mempool.Mempool[T]
-
+	initialHeight uint64
 	// this is only available after this node has committed a block (in FinalizeBlock),
 	// otherwise it will be empty and we will need to query the app for the last
 	// committed block.
@@ -58,6 +59,7 @@ type Consensus[T transaction.Tx] struct {
 }
 
 func NewConsensus[T transaction.Tx](
+	appName, version string,
 	app *appmanager.AppManager[T],
 	mp mempool.Mempool[T],
 	grpcQueryDecoders map[string]func(requestBytes []byte) (gogoproto.Message, error),
@@ -67,6 +69,8 @@ func NewConsensus[T transaction.Tx](
 	logger log.Logger,
 ) *Consensus[T] {
 	return &Consensus[T]{
+		appName:                appName,
+		version:                version,
 		grpcQueryDecoders:      grpcQueryDecoders,
 		app:                    app,
 		cfg:                    cfg,
@@ -122,7 +126,7 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 		Code:      resp.Code,
 		GasWanted: uint64ToInt64(resp.GasWanted),
 		GasUsed:   uint64ToInt64(resp.GasUsed),
-		Events:    intoABCIEvents(resp.Events, c.cfg.IndexEvents),
+		Events:    intoABCIEvents(resp.Events, c.cfg.AppTomlConfig.IndexEvents),
 		Info:      resp.Info,
 		Data:      resp.Data,
 		Log:       resp.Log,
@@ -153,9 +157,8 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 	}
 
 	return &abciproto.InfoResponse{
-		Data:    c.cfg.Name,
-		Version: c.cfg.Version,
-		// AppVersion:       cp.GetVersion().App,
+		Data:             c.appName,
+		Version:          c.version,
 		AppVersion:       0, // TODO fetch from store?
 		LastBlockHeight:  int64(version),
 		LastBlockAppHash: cid.Hash,
@@ -188,7 +191,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 	// it must be an app/p2p/store query
 	path := splitABCIQueryPath(req.Path)
 	if len(path) == 0 {
-		return QueryResult(errorsmod.Wrap(cometerrors.ErrUnknownRequest, "no query path provided"), c.cfg.Trace), nil
+		return QueryResult(errorsmod.Wrap(cometerrors.ErrUnknownRequest, "no query path provided"), c.cfg.AppTomlConfig.Trace), nil
 	}
 
 	switch path[0] {
@@ -202,11 +205,11 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 		resp, err = c.handleQueryP2P(path)
 
 	default:
-		resp = QueryResult(errorsmod.Wrap(cometerrors.ErrUnknownRequest, "unknown query path"), c.cfg.Trace)
+		resp = QueryResult(errorsmod.Wrap(cometerrors.ErrUnknownRequest, "unknown query path"), c.cfg.AppTomlConfig.Trace)
 	}
 
 	if err != nil {
-		return QueryResult(err, c.cfg.Trace), nil
+		return QueryResult(err, c.cfg.AppTomlConfig.Trace), nil
 	}
 
 	return resp, nil
@@ -219,7 +222,10 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	// store chainID to be used later on in execution
 	c.chainID = req.ChainId
 	// TODO: check if we need to load the config from genesis.json or config.toml
-	c.cfg.InitialHeight = uint64(req.InitialHeight)
+	c.initialHeight = uint64(req.InitialHeight)
+	if c.initialHeight == 0 { // If initial height is 0, set it to 1
+		c.initialHeight = 1
+	}
 
 	// On a new chain, we consider the init chain block height as 0, even though
 	// req.InitialHeight is 1 by default.
@@ -411,7 +417,7 @@ func (c *Consensus[T]) FinalizeBlock(
 	// })
 
 	// we don't need to deliver the block in the genesis block
-	if req.Height == int64(c.cfg.InitialHeight) {
+	if req.Height == int64(c.initialHeight) {
 		appHash, err := c.store.Commit(store.NewChangeset())
 		if err != nil {
 			return nil, fmt.Errorf("unable to commit the changeset: %w", err)
@@ -495,7 +501,7 @@ func (c *Consensus[T]) FinalizeBlock(
 		return nil, err
 	}
 
-	return finalizeBlockResponse(resp, cp, appHash, c.cfg.IndexEvents)
+	return finalizeBlockResponse(resp, cp, appHash, c.cfg.AppTomlConfig.IndexEvents)
 }
 
 // Commit implements types.Application.

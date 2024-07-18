@@ -9,19 +9,6 @@ const (
 )
 
 const (
-	FlagWithComet     = "with-comet"
-	FlagAddress       = "address"
-	FlagTransport     = "transport"
-	FlagTraceStore    = "trace-store"
-	FlagCPUProfile    = "cpu-profile"
-	FlagMinGasPrices  = "minimum-gas-prices"
-	FlagQueryGasLimit = "query-gas-limit"
-	FlagHaltHeight    = "halt-height"
-	FlagHaltTime      = "halt-time"
-	FlagTrace         = "trace"
-)
-
-const (
 	FlagChainID      = "chain-id"
 	FlagNode         = "node"
 	FlagGRPC         = "grpc-addr"
@@ -30,6 +17,8 @@ const (
 	FlagPage         = "page"
 	FlagLimit        = "limit"
 	FlagOutput       = "output"
+	TypeHash         = "hash"
+	TypeHeight       = "height"
 )
 
 // List of supported output formats

@@ -9,10 +9,13 @@ import (
 
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 
+	"cosmossdk.io/x/tx/decode"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // QueryTxsByEvents retrieves a list of paginated transactions from CometBFT's
@@ -52,7 +55,7 @@ func QueryTxsByEvents(clientCtx client.Context, page, limit int, query, orderBy 
 		return nil, err
 	}
 
-	txs, err := formatTxResults(clientCtx.TxConfig, resTxs.Txs, resBlocks)
+	txs, err := formatTxResults(clientCtx, resTxs.Txs, resBlocks)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +86,7 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 		return nil, err
 	}
 
-	out, err := mkTxResult(clientCtx.TxConfig, resTx, resBlocks[resTx.Height])
+	out, err := mkTxResult(clientCtx, resTx, resBlocks[resTx.Height])
 	if err != nil {
 		return out, err
 	}
@@ -92,11 +95,11 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 }
 
 // formatTxResults parses the indexed txs into a slice of TxResponse objects.
-func formatTxResults(txConfig client.TxConfig, resTxs []*coretypes.ResultTx, resBlocks map[int64]*coretypes.ResultBlock) ([]*sdk.TxResponse, error) {
+func formatTxResults(clientCtx client.Context, resTxs []*coretypes.ResultTx, resBlocks map[int64]*coretypes.ResultBlock) ([]*sdk.TxResponse, error) {
 	var err error
 	out := make([]*sdk.TxResponse, len(resTxs))
 	for i := range resTxs {
-		out[i], err = mkTxResult(txConfig, resTxs[i], resBlocks[resTxs[i].Height])
+		out[i], err = mkTxResult(clientCtx, resTxs[i], resBlocks[resTxs[i].Height])
 		if err != nil {
 			return nil, err
 		}
@@ -129,20 +132,39 @@ func getBlocksForTxResults(clientCtx client.Context, resTxs []*coretypes.ResultT
 	return resBlocks, nil
 }
 
-func mkTxResult(txConfig client.TxConfig, resTx *coretypes.ResultTx, resBlock *coretypes.ResultBlock) (*sdk.TxResponse, error) {
-	txb, err := txConfig.TxDecoder()(resTx.Tx)
+func mkTxResult(clientCtx client.Context, resTx *coretypes.ResultTx, resBlock *coretypes.ResultBlock) (*sdk.TxResponse, error) {
+	decoder, err := decode.NewDecoder(decode.Options{
+		SigningContext: clientCtx.TxConfig.SigningContext(),
+		ProtoCodec:     clientCtx.Codec,
+	})
 	if err != nil {
 		return nil, err
-	}
-	p, ok := txb.(*gogoTxWrapper)
-	if !ok {
-		return nil, fmt.Errorf("unexpected type, wanted gogoTxWrapper, got: %T", txb)
 	}
 
-	tx, err := p.AsTx()
+	p, err := decoder.Decode(resTx.Tx)
 	if err != nil {
 		return nil, err
 	}
+
+	body := new(txtypes.TxBody)
+	authInfo := new(txtypes.AuthInfo)
+
+	err = clientCtx.Codec.Unmarshal(p.TxRaw.BodyBytes, body)
+	if err != nil {
+		return nil, err
+	}
+
+	err = clientCtx.Codec.Unmarshal(p.TxRaw.AuthInfoBytes, authInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := &txtypes.Tx{
+		Body:       body,
+		AuthInfo:   authInfo,
+		Signatures: p.TxRaw.Signatures,
+	}
+
 	anyTx, err := codectypes.NewAnyWithValue(tx)
 	if err != nil {
 		return nil, err

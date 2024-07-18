@@ -22,11 +22,10 @@ import (
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
-	authtx "cosmossdk.io/x/auth/tx"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
+	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -66,7 +65,7 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 	signingCtx := cdc.InterfaceRegistry().SigningContext()
 
-	txConfig := authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
+	txConfig := clienttx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), clienttx.DefaultSignModes)
 	db := dbm.NewMemDB()
 	logBuffer := new(bytes.Buffer)
 	logger := log.NewLogger(logBuffer, log.ColorOption(false))
@@ -504,7 +503,7 @@ func TestTxDecoder(t *testing.T) {
 	signingCtx := cdc.InterfaceRegistry().SigningContext()
 
 	// patch in TxConfig instead of using an output from x/auth/tx
-	txConfig := authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
+	txConfig := clienttx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), clienttx.DefaultSignModes)
 
 	tx := newTxCounter(t, txConfig, 1, 0)
 	txBytes, err := txConfig.TxEncoder()(tx)

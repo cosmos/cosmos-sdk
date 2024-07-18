@@ -2,6 +2,7 @@ package aminojson
 
 import (
 	"context"
+	"cosmossdk.io/x/tx/decode"
 	"fmt"
 	"reflect"
 	"strings"
@@ -36,7 +37,6 @@ import (
 	"cosmossdk.io/x/auth"
 	"cosmossdk.io/x/auth/migrations/legacytx"
 	"cosmossdk.io/x/auth/signing"
-	"cosmossdk.io/x/auth/tx"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/auth/vesting"
 	vestingtypes "cosmossdk.io/x/auth/vesting/types"
@@ -174,7 +174,13 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				signBz, err := handler.GetSignBytes(context.Background(), signerData, txData)
 				require.NoError(t, err)
 
-				legacyHandler := tx.NewSignModeLegacyAminoJSONHandler()
+				decoder, err := decode.NewDecoder(decode.Options{
+					SigningContext: encCfg.TxConfig.SigningContext(),
+					ProtoCodec:     encCfg.Codec,
+				})
+				require.NoError(t, err)
+
+				legacyHandler := signing.NewSignModeLegacyAminoJSONHandler(decoder)
 				txBuilder := encCfg.TxConfig.NewTxBuilder()
 				require.NoError(t, txBuilder.SetMsgs([]types.Msg{tt.Gogo}...))
 				txBuilder.SetMemo(handlerOptions.Memo)
@@ -491,7 +497,13 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			signBz, err := handler.GetSignBytes(context.Background(), signerData, txData)
 			require.NoError(t, err)
 
-			legacyHandler := tx.NewSignModeLegacyAminoJSONHandler()
+			decoder, err := decode.NewDecoder(decode.Options{
+				SigningContext: encCfg.TxConfig.SigningContext(),
+				ProtoCodec:     encCfg.Codec,
+			})
+			require.NoError(t, err)
+
+			legacyHandler := signing.NewSignModeLegacyAminoJSONHandler(decoder)
 			txBuilder := encCfg.TxConfig.NewTxBuilder()
 			require.NoError(t, txBuilder.SetMsgs([]types.Msg{msg}...))
 			txBuilder.SetMemo(handlerOptions.Memo)

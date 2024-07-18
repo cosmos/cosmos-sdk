@@ -1,4 +1,4 @@
-package tx
+package tx_test
 
 import (
 	"context"
@@ -11,9 +11,9 @@ import (
 
 	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/signing"
-	authtx "cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -32,7 +32,7 @@ func newTestTxConfig() (client.TxConfig, codec.Codec) {
 	encodingConfig := moduletestutil.MakeTestEncodingConfig(testutil.CodecOptions{})
 	cdc := codec.NewProtoCodec(encodingConfig.InterfaceRegistry)
 	signingCtx := encodingConfig.InterfaceRegistry.SigningContext()
-	return authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes), encodingConfig.Codec
+	return clienttx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), clienttx.DefaultSignModes), encodingConfig.Codec
 }
 
 // mockContext is a mock client.Context to return arbitrary simulation response, used to
@@ -83,7 +83,7 @@ func TestCalculateGas(t *testing.T) {
 		defaultSignMode, err := signing.APISignModeToInternal(txCfg.SignModeHandler().DefaultMode())
 		require.NoError(t, err)
 
-		txf := Factory{}.
+		txf := clienttx.Factory{}.
 			WithChainID("test-chain").
 			WithTxConfig(txCfg).WithSignMode(defaultSignMode)
 
@@ -92,7 +92,7 @@ func TestCalculateGas(t *testing.T) {
 				gasUsed: tc.args.mockGasUsed,
 				wantErr: tc.args.mockWantErr,
 			}
-			simRes, gotAdjusted, err := CalculateGas(mockClientCtx, txf.WithGasAdjustment(stc.args.adjustment))
+			simRes, gotAdjusted, err := clienttx.CalculateGas(mockClientCtx, txf.WithGasAdjustment(stc.args.adjustment))
 			if stc.expPass {
 				require.NoError(t, err)
 				require.Equal(t, simRes.GasInfo.GasUsed, stc.wantEstimate)
@@ -106,8 +106,8 @@ func TestCalculateGas(t *testing.T) {
 	}
 }
 
-func mockTxFactory(txCfg client.TxConfig) Factory {
-	return Factory{}.
+func mockTxFactory(txCfg client.TxConfig) clienttx.Factory {
+	return clienttx.Factory{}.
 		WithTxConfig(txCfg).
 		WithAccountNumber(50).
 		WithSequence(23).
@@ -198,7 +198,7 @@ func TestMnemonicInMemo(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			txf := Factory{}.
+			txf := clienttx.Factory{}.
 				WithTxConfig(txConfig).
 				WithAccountNumber(50).
 				WithSequence(23).
@@ -269,7 +269,7 @@ func TestSign(t *testing.T) {
 
 	testCases := []struct {
 		name         string
-		txf          Factory
+		txf          clienttx.Factory
 		txb          client.TxBuilder
 		from         string
 		overwrite    bool
@@ -356,7 +356,7 @@ func TestSign(t *testing.T) {
 	var prevSigs []signingtypes.SignatureV2
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err = Sign(context.TODO(), tc.txf, tc.from, tc.txb, tc.overwrite)
+			err = clienttx.Sign(context.TODO(), tc.txf, tc.from, tc.txb, tc.overwrite)
 			if len(tc.expectedPKs) == 0 {
 				requireT.Error(err)
 			} else {
@@ -392,7 +392,7 @@ func TestPreprocessHook(t *testing.T) {
 	requireT.NoError(err)
 
 	preprocessHook := client.PreprocessTxFn(func(chainID string, key keyring.KeyType, tx client.TxBuilder) error {
-		extensionBuilder, ok := tx.(authtx.ExtensionOptionsTxBuilder)
+		extensionBuilder, ok := tx.(clienttx.ExtensionOptionsTxBuilder)
 		requireT.True(ok)
 
 		// Set new extension and tip
@@ -413,7 +413,7 @@ func TestPreprocessHook(t *testing.T) {
 	txb, err := txfDirect.BuildUnsignedTx(msg1, msg2)
 	requireT.NoError(err)
 
-	err = Sign(context.TODO(), txfDirect, from, txb, false)
+	err = clienttx.Sign(context.TODO(), txfDirect, from, txb, false)
 	requireT.NoError(err)
 
 	// Run preprocessing

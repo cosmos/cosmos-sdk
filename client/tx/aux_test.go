@@ -24,13 +24,12 @@ var (
 	aux2Priv, aux2Pk, aux2Addr             = testdata.KeyTestPubAddr()
 	feepayerPriv, feepayerPk, feepayerAddr = testdata.KeyTestPubAddr()
 
-	msg  = testdata.NewTestMsg(tipperAddr, aux2Addr)
-	memo = "test-memo"
+	msg = testdata.NewTestMsg(tipperAddr, aux2Addr)
+	//memo = "test-memo"
 
-	chainID = "test-chain"
-	gas     = testdata.NewTestGasLimit()
-	fee     = testdata.NewTestFeeAmount()
-	extOpt  = &testdata.Cat{}
+	gas    = testdata.NewTestGasLimit()
+	fee    = testdata.NewTestFeeAmount()
+	extOpt = &testdata.Cat{}
 )
 
 // TestBuilderWithAux creates a tx with 2 aux signers:

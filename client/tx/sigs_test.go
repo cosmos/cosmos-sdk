@@ -1,10 +1,11 @@
-package tx
+package tx_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
@@ -23,7 +24,7 @@ func TestDecodeMultisignatures(t *testing.T) {
 	bz, err := badMultisig.Marshal()
 	require.NoError(t, err)
 
-	_, err = decodeMultisignatures(bz)
+	_, err = tx.DecodeMultisignatures(bz)
 	require.Error(t, err)
 
 	goodMultisig := types.MultiSignature{
@@ -32,7 +33,7 @@ func TestDecodeMultisignatures(t *testing.T) {
 	bz, err = goodMultisig.Marshal()
 	require.NoError(t, err)
 
-	decodedSigs, err := decodeMultisignatures(bz)
+	decodedSigs, err := tx.DecodeMultisignatures(bz)
 	require.NoError(t, err)
 
 	require.Equal(t, testSigs, decodedSigs)

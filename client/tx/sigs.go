@@ -68,7 +68,7 @@ func ModeInfoAndSigToSignatureData(modeInfoPb *txv1beta1.ModeInfo, sig []byte) (
 	case *txv1beta1.ModeInfo_Multi_:
 		multi := modeInfo.Multi
 
-		sigs, err := decodeMultisignatures(sig)
+		sigs, err := DecodeMultisignatures(sig)
 		if err != nil {
 			return nil, err
 		}
@@ -94,8 +94,8 @@ func ModeInfoAndSigToSignatureData(modeInfoPb *txv1beta1.ModeInfo, sig []byte) (
 	}
 }
 
-// decodeMultisignatures safely decodes the raw bytes as a MultiSignature protobuf message
-func decodeMultisignatures(bz []byte) ([][]byte, error) {
+// DecodeMultisignatures safely decodes the raw bytes as a MultiSignature protobuf message
+func DecodeMultisignatures(bz []byte) ([][]byte, error) {
 	multisig := cryptotypes.MultiSignature{}
 	err := multisig.Unmarshal(bz)
 	if err != nil {

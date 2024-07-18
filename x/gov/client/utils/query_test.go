@@ -57,6 +57,8 @@ func (mock TxSearchMock) Block(ctx context.Context, height *int64) (*coretypes.R
 func TestGetPaginatedVotes(t *testing.T) {
 	cdcOpts := codectestutil.CodecOptions{}
 	encCfg := moduletestutil.MakeTestEncodingConfig(cdcOpts, gov.AppModule{})
+	cdc := cdcOpts.NewCodec()
+	v1.RegisterInterfaces(cdc.InterfaceRegistry())
 
 	type testCase struct {
 		description string
@@ -154,7 +156,9 @@ func TestGetPaginatedVotes(t *testing.T) {
 			clientCtx := client.Context{}.
 				WithLegacyAmino(encCfg.Amino).
 				WithClient(cli).
-				WithTxConfig(encCfg.TxConfig)
+				WithTxConfig(encCfg.TxConfig).
+				WithTxConfig(encCfg.TxConfig).
+				WithCodec(cdc)
 
 			for i := range tc.msgs {
 				txBuilder := clientCtx.TxConfig.NewTxBuilder()

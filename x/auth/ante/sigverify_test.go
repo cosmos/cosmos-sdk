@@ -12,11 +12,11 @@ import (
 	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/migrations/legacytx"
 	authsign "cosmossdk.io/x/auth/signing"
-	authtx "cosmossdk.io/x/auth/tx"
 	txmodule "cosmossdk.io/x/auth/tx/config"
 	"cosmossdk.io/x/auth/types"
 	txsigning "cosmossdk.io/x/tx/signing"
 
+	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -101,7 +101,7 @@ func TestSigVerification(t *testing.T) {
 	// Since TEXTUAL is not enabled by default, we create a custom TxConfig
 	// here which includes it.
 	cdc := codec.NewProtoCodec(suite.encCfg.InterfaceRegistry)
-	txConfigOpts := authtx.ConfigOptions{
+	txConfigOpts := clienttx.ConfigOptions{
 		TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(suite.clientCtx),
 		EnabledSignModes:           enabledSignModes,
 		SigningOptions: &txsigning.Options{
@@ -110,7 +110,7 @@ func TestSigVerification(t *testing.T) {
 		},
 	}
 	var err error
-	suite.clientCtx.TxConfig, err = authtx.NewTxConfigWithOptions(
+	suite.clientCtx.TxConfig, err = clienttx.NewTxConfigWithOptions(
 		cdc,
 		txConfigOpts,
 	)
@@ -141,7 +141,7 @@ func TestSigVerification(t *testing.T) {
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 
-	txConfigOpts = authtx.ConfigOptions{
+	txConfigOpts = clienttx.ConfigOptions{
 		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(suite.txBankKeeper),
 		EnabledSignModes:           enabledSignModes,
 		SigningOptions: &txsigning.Options{
@@ -149,7 +149,7 @@ func TestSigVerification(t *testing.T) {
 			ValidatorAddressCodec: cdc.InterfaceRegistry().SigningContext().ValidatorAddressCodec(),
 		},
 	}
-	anteTxConfig, err := authtx.NewTxConfigWithOptions(
+	anteTxConfig, err := clienttx.NewTxConfigWithOptions(
 		codec.NewProtoCodec(suite.encCfg.InterfaceRegistry),
 		txConfigOpts,
 	)
@@ -314,7 +314,7 @@ func TestAnteHandlerChecks(t *testing.T) {
 	// Since TEXTUAL is not enabled by default, we create a custom TxConfig
 	// here which includes it.
 	cdc := codec.NewProtoCodec(suite.encCfg.InterfaceRegistry)
-	txConfigOpts := authtx.ConfigOptions{
+	txConfigOpts := clienttx.ConfigOptions{
 		TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(suite.clientCtx),
 		EnabledSignModes:           enabledSignModes,
 		SigningOptions: &txsigning.Options{
@@ -323,7 +323,7 @@ func TestAnteHandlerChecks(t *testing.T) {
 		},
 	}
 
-	anteTxConfig, err := authtx.NewTxConfigWithOptions(
+	anteTxConfig, err := clienttx.NewTxConfigWithOptions(
 		cdc,
 		txConfigOpts,
 	)

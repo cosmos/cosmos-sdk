@@ -13,10 +13,10 @@ import (
 	"cosmossdk.io/x/auth/ante"
 	authsign "cosmossdk.io/x/auth/signing"
 	"cosmossdk.io/x/auth/testutil"
-	"cosmossdk.io/x/auth/tx"
 	authtypes "cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"

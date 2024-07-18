@@ -38,8 +38,6 @@ func ModulesByModuleTypeName() (map[string]*ModuleInitializer, error) {
 		fullName := gogoproto.MessageName(initializer.ConfigProtoMessage)
 
 		if desc, err := gogoproto.HybridResolver.FindDescriptorByName(protoreflect.FullName(fullName)); err == nil {
-			dp := protodesc.ToDescriptorProto(desc.(protoreflect.MessageDescriptor))
-
 			modDesc, err := GetModuleDescriptor(desc)
 			if err != nil {
 				return nil, err

@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/client/v2/offchain"
+	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
@@ -72,13 +72,13 @@ func (t *temporaryTxDecoder[T]) DecodeJSON(bz []byte) (T, error) {
 	return out, nil
 }
 
-func newApp[AppT serverv2.AppI[T], T transaction.Tx](
+func newApp[T transaction.Tx](
 	logger log.Logger, viper *viper.Viper,
-) AppT {
-	return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper)).(AppT)
+) serverv2.AppI[T] {
+	return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper))
 }
 
-func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
+func initRootCmd[T transaction.Tx](
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,
 	moduleManager *runtimev2.MM[T],
@@ -102,7 +102,7 @@ func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
-		genesisCommand[T](txConfig, moduleManager, appExport[T]),
+		genesisCommand[T](moduleManager, appExport[T]),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
@@ -114,8 +114,8 @@ func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
 		rootCmd,
 		newApp,
 		logger,
-		cometbft.New[AppT, T](&temporaryTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
-		grpc.New[AppT, T](),
+		cometbft.New[T](&temporaryTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
+		grpc.New[T](),
 	); err != nil {
 		panic(err)
 	}
@@ -123,7 +123,6 @@ func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
 func genesisCommand[T transaction.Tx](
-	txConfig client.TxConfig,
 	moduleManager *runtimev2.MM[T],
 	appExport func(logger log.Logger,
 		height int64,
@@ -143,7 +142,7 @@ func genesisCommand[T transaction.Tx](
 		return appExport(logger, height, forZeroHeight, jailAllowedAddrs, viperAppOpts, modulesToExport)
 	}
 
-	cmd := genutilcli.Commands(txConfig, moduleManager.Modules()[genutiltypes.ModuleName].(genutil.AppModule), moduleManager, compatAppExporter)
+	cmd := genutilcli.Commands(moduleManager.Modules()[genutiltypes.ModuleName].(genutil.AppModule), moduleManager, compatAppExporter)
 	for _, subCmd := range cmds {
 		cmd.AddCommand(subCmd)
 	}

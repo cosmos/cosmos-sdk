@@ -292,7 +292,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 	appCfgFilePath := filepath.Join(configPath, "app.toml")
 	if _, err := os.Stat(appCfgFilePath); os.IsNotExist(err) {
 		if (customAppTemplate != "" && customConfig == nil) || (customAppTemplate == "" && customConfig != nil) {
-			return nil, fmt.Errorf("customAppTemplate and customConfig should be both nil or not nil")
+			return nil, errors.New("customAppTemplate and customConfig should be both nil or not nil")
 		}
 
 		if customAppTemplate != "" {

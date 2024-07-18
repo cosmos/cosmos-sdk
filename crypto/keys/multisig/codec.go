@@ -13,6 +13,7 @@ import (
 // TODO: Figure out API for others to either add their own pubkey types, or
 // to make verify / marshal accept a AminoCdc.
 const (
+	// PubKeyAminoRoute defines the amino route for a multisig threshold public key
 	PubKeyAminoRoute = "tendermint/PubKeyMultisigThreshold"
 )
 

@@ -47,7 +47,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				return err
 			}
 
-			rootStore, err := createRootStore(home, vp, logger)
+			rootStore, err, interval := createRootStore(cmd, home, vp, logger)
 			if err != nil {
 				return fmt.Errorf("can not create root store %w", err)
 			}
@@ -61,6 +61,9 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 			if latestHeight <= 0 {
 				return fmt.Errorf("the database has no valid heights to prune, the latest height: %v", latestHeight)
 			}
+
+			upTo := latestHeight - interval
+			cmd.Printf("pruning heights up to %v\n", upTo)
 
 			err = rootStore.Prune(latestHeight)
 			if err != nil {
@@ -81,16 +84,40 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 	return cmd
 }
 
-func createRootStore(rootDir string, v *viper.Viper, logger log.Logger) (storev2.RootStore, error) {
-	fmt.Println("prune root dir", rootDir)
+func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger log.Logger) (storev2.RootStore, error, uint64) {
 	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(rootDir, "data"), nil)
 	if err != nil {
 		panic(err)
 	}
-	return root.CreateRootStore(&root.FactoryOptions{
+
+	// handle KeepRecent & Interval flags
+	if cmd.Flags().Changed(FlagPruningKeepRecent) {
+		keepRecent, err := cmd.Flags().GetUint64(FlagPruningKeepRecent)
+		if err != nil {
+			return nil, err, 0
+		}
+
+		// Expect ss & sc have same pruning options
+		viper.Set("store.options.sc-pruning-option.keep-recent", keepRecent) // entry that read from app.toml
+		viper.Set("store.options.ss-pruning-option.keep-recent", keepRecent)
+	}
+
+	if cmd.Flags().Changed(FlagPruningInterval) {
+		interval, err := cmd.Flags().GetUint64(FlagPruningInterval)
+		if err != nil {
+			return nil, err, 0
+		}
+
+		viper.Set("store.options.sc-pruning-option.interval", interval)
+		viper.Set("store.options.ss-pruning-option.interval", interval)
+	}
+
+	store, err := root.CreateRootStore(&root.FactoryOptions{
 		Logger:  logger,
 		RootDir: rootDir,
 		Options: v,
 		SCRawDB: scRawDb,
 	})
+
+	return store, err, viper.GetUint64("store.options.sc-pruning-option.keep-recent")
 }

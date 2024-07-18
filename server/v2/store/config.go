@@ -16,6 +16,10 @@ func DefaultConfig() *Config {
 				KeepRecent: 2,
 				Interval:   1,
 			},
+			SSPruningOption: &storev2.PruningOption{
+				KeepRecent: 2,
+				Interval:   1,
+			},
 			IavlConfig: &iavl.Config{
 				CacheSize:              100_000,
 				SkipFastStorageUpgrade: true,
@@ -25,7 +29,6 @@ func DefaultConfig() *Config {
 }
 
 type Config struct {
-	Pruning      string       `mapstructure:"pruning" toml:"pruning"`
 	AppDBBackend string       `mapstructure:"app-db-backend" toml:"app-db-backend"`
 	Options      root.Options `mapstructure:"options" toml:"options"`
 }

@@ -125,7 +125,7 @@ type StartCmdOptions[T types.Application] struct {
 	PostSetupStandalone func(app T, svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
 	// AddFlags add custom flags to start cmd
 	AddFlags func(cmd *cobra.Command)
-	// StartCommandHanlder can be used to customize the start command handler
+	// StartCommandHandler can be used to customize the start command handler
 	StartCommandHandler func(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator[T], inProcessConsensus bool, opts StartCmdOptions[T]) error
 }
 

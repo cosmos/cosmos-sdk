@@ -188,6 +188,24 @@ updates:
       - "A:automerge"
       - dependencies
   - package-ecosystem: gomod
+    directory: "x/accounts/defaults/multisig"
+    schedule:
+      interval: weekly
+      day: wednesday
+      time: "02:45"
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "x/accounts/defaults/lockup"
+    schedule:
+      interval: weekly
+      day: wednesday
+      time: "02:55"
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
     directory: "/x/nft"
     schedule:
       interval: weekly

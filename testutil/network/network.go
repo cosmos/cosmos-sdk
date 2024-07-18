@@ -164,6 +164,10 @@ func DefaultConfig(factory TestFixtureFactory) Config {
 }
 
 func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
+	return DefaultConfigWithAppConfigWithQueryGasLimit(appConfig, 0)
+}
+
+func DefaultConfigWithAppConfigWithQueryGasLimit(appConfig depinject.Config, queryGasLimit uint64) (Config, error) {
 	var (
 		appBuilder            *runtime.AppBuilder
 		txConfig              client.TxConfig
@@ -221,6 +225,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			baseapp.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
 			baseapp.SetChainID(cfg.ChainID),
+			baseapp.SetQueryGasLimit(queryGasLimit),
 		)
 
 		testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})

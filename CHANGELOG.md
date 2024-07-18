@@ -42,7 +42,6 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Features
 
-* (client) [#20690](https://github.com/cosmos/cosmos-sdk/pull/20690) Import mnemonic from file
 * (tests) [#20013](https://github.com/cosmos/cosmos-sdk/pull/20013) Introduce system tests to run multi node local testnet in CI
 * (runtime) [#19953](https://github.com/cosmos/cosmos-sdk/pull/19953) Implement `core/transaction.Service` in runtime.
 * (client) [#19905](https://github.com/cosmos/cosmos-sdk/pull/19905) Add grpc client config to `client.toml`.
@@ -103,6 +102,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (baseapp) [#20208](https://github.com/cosmos/cosmos-sdk/pull/20208) Skip running validateBasic for rechecking txs.
 * (baseapp) [#20380](https://github.com/cosmos/cosmos-sdk/pull/20380) Enhanced OfferSnapshot documentation.
 * (client) [#20771](https://github.com/cosmos/cosmos-sdk/pull/20771) Remove `ReadDefaultValuesFromDefaultClientConfig` from `client` package. (It was introduced in `v0.50.6` as a quick fix).
+* (grpcserver) [#20945](https://github.com/cosmos/cosmos-sdk/pull/20945) Adds error handling for out-of-gas panics in grpc query handlers.
 
 ### Bug Fixes
 
@@ -111,13 +111,12 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (client/keys) [#18562](https://github.com/cosmos/cosmos-sdk/pull/18562) `keys delete` won't terminate when a key is not found.
 * (baseapp) [#18383](https://github.com/cosmos/cosmos-sdk/pull/18383) Fixed a data race inside BaseApp.getContext, found by end-to-end (e2e) tests.
 * (client/server) [#18345](https://github.com/cosmos/cosmos-sdk/pull/18345) Consistently set viper prefix in client and server. It defaults for the binary name for both client and server.
-* (simulation) [#17911](https://github.com/cosmos/cosmos-sdk/pull/17911) Fix all problems with executing command `make test-sim-custom-genesis-fast` for simulation test.
-* (simulation) [#18196](https://github.com/cosmos/cosmos-sdk/pull/18196) Fix the problem of `validator set is empty after InitGenesis` in simulation test.
 * (baseapp) [#18551](https://github.com/cosmos/cosmos-sdk/pull/18551) Fix SelectTxForProposal the calculation method of tx bytes size is inconsistent with CometBFT
 * (server) [#18994](https://github.com/cosmos/cosmos-sdk/pull/18994) Update server context directly rather than a reference to a sub-object
 * [#19833](https://github.com/cosmos/cosmos-sdk/pull/19833) Fix some places in which we call Remove inside a Walk.
 * [#19851](https://github.com/cosmos/cosmos-sdk/pull/19851) Fix some places in which we call Remove inside a Walk (x/staking and x/gov).
-* [#20631](https://github.com/cosmos/cosmos-sdk/pull/20631) Fix json parsing in the wait-tx command.
+* [#20939](https://github.com/cosmos/cosmos-sdk/pull/20939) Fix collection reverse iterator to include `pagination.key` in the result.
+* (client/grpc) [#20969](https://github.com/cosmos/cosmos-sdk/pull/20969) Fix `node.NewQueryServer` method not setting `cfg`.
 
 ### API Breaking Changes
 
@@ -208,6 +207,23 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (simapp) [#19146](https://github.com/cosmos/cosmos-sdk/pull/19146) Replace `--v` CLI option with `--validator-count`/`-n`.
 * (module) [#19370](https://github.com/cosmos/cosmos-sdk/pull/19370) Deprecate `module.Configurator`, use `appmodule.HasMigrations` and `appmodule.HasServices` instead from Core API.
 * (x/auth) [#20531](https://github.com/cosmos/cosmos-sdk/pull/20531) Deprecate auth keeper `NextAccountNumber`, use `keeper.AccountsModKeeper.NextAccountNumber` instead.
+
+## [v0.50.8](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.8) - 2024-07-15
+
+## Features
+
+* (client) [#20690](https://github.com/cosmos/cosmos-sdk/pull/20690) Import mnemonic from file
+
+## Improvements
+
+* (x/authz,x/feegrant) [#20590](https://github.com/cosmos/cosmos-sdk/pull/20590) Provide updated keeper in depinject for authz and feegrant modules.
+* [#20631](https://github.com/cosmos/cosmos-sdk/pull/20631) Fix json parsing in the wait-tx command.
+* (x/auth) [#20438](https://github.com/cosmos/cosmos-sdk/pull/20438) Add `--skip-signature-verification` flag to multisign command to allow nested multisigs.
+
+## Bug Fixes
+
+* (simulation) [#17911](https://github.com/cosmos/cosmos-sdk/pull/17911) Fix all problems with executing command `make test-sim-custom-genesis-fast` for simulation test.
+* (simulation) [#18196](https://github.com/cosmos/cosmos-sdk/pull/18196) Fix the problem of `validator set is empty after InitGenesis` in simulation test.
 
 ## [v0.50.7](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.7) - 2024-06-04
 
@@ -689,6 +705,13 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (types) [#16980](https://github.com/cosmos/cosmos-sdk/pull/16980) Deprecate `IntProto` and `DecProto`. Instead, `math.Int` and `math.LegacyDec` should be used respectively. Both types support `Marshal` and `Unmarshal` for binary serialization.
 * (x/staking) [#14567](https://github.com/cosmos/cosmos-sdk/pull/14567) The `delegator_address` field of `MsgCreateValidator` has been deprecated.
    The validator address bytes and delegator address bytes refer to the same account while creating validator (defer only in bech32 notation).
+
+## [v0.47.13](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.13) - 2024-07-15
+
+### Bug Fixes
+
+* (client) [#20912](https://github.com/cosmos/cosmos-sdk/pull/20912) Fix `math.LegacyDec` type deserialization in GRPC queries.
+* (x/group) [#20750](https://github.com/cosmos/cosmos-sdk/pull/20750) x/group shouldn't claim "orm" error codespace. This prevents any chain Cosmos SDK `v0.47` chain to use the ORM module.
 
 ## [v0.47.12](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.12) - 2024-06-10
 

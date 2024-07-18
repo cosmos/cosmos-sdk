@@ -200,7 +200,7 @@ func testInvalidNewNonNegativeDecFromString(t *rapid.T) {
 			func(s string) bool { return !strings.HasPrefix(s, "-0") && !strings.HasPrefix(s, "-.0") },
 		),
 	).Draw(t, "s")
-	_, err := NewDecFromString(s, AssertNotNegative())
+	_, err := NewDecFromString(s)
 	require.Error(t, err)
 }
 
@@ -215,7 +215,7 @@ func testInvalidNewNonNegativeFixedDecFromString(t *rapid.T) {
 		),
 		rapid.StringMatching(fmt.Sprintf(`\d*\.\d{%d,}`, n+1)),
 	).Draw(t, "s")
-	_, err := NewDecFromString(s, AssertNotNegative(), AssertMaxDecimals(n))
+	_, err := NewDecFromString(s)
 	require.Error(t, err)
 }
 
@@ -226,7 +226,7 @@ func testInvalidNewPositiveDecFromString(t *rapid.T) {
 		rapid.StringMatching("[[:alpha:]]+"),
 		rapid.StringMatching(`^-\d*\.?\d+|0$`),
 	).Draw(t, "s")
-	_, err := NewDecFromString(s, AssertGreaterThanZero())
+	_, err := NewDecFromString(s)
 	require.Error(t, err)
 }
 
@@ -239,7 +239,7 @@ func testInvalidNewPositiveFixedDecFromString(t *rapid.T) {
 		rapid.StringMatching(`^-\d*\.?\d+|0$`),
 		rapid.StringMatching(fmt.Sprintf(`\d*\.\d{%d,}`, n+1)),
 	).Draw(t, "s")
-	_, err := NewDecFromString(s, AssertGreaterThanZero(), AssertMaxDecimals(n))
+	_, err := NewDecFromString(s)
 	require.Error(t, err)
 }
 

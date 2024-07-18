@@ -53,7 +53,7 @@ var dec128Context = apd.Context{
 // - "NaN" or "Infinity" -> ErrInvalidDec
 //
 // The internal representation is an arbitrary-precision decimal: Negative × Coeff × 10*Exponent
-// The maximum exponent is 100_000 and must not exceeded. Following values would be invalid:
+// The maximum exponent is 100_000 and must not be exceeded. Following values would be invalid:
 // 1e100001 -> ErrInvalidDec
 // -1e100001 -> ErrInvalidDec
 // 1e-100001 -> ErrInvalidDec
@@ -105,9 +105,9 @@ func NewDecWithPrec(coeff int64, exp int32) Dec {
 //
 // The precision is much higher as long as the max exponent is not exceeded. If the max exponent is exceeded, an error is returned.
 // For example:
-// - 1e100000 + -1e^-1
-// - 1e100000 + -9e900000 
-// - 1e100000 + 0 
+// - 1e100000 + -1e-1
+// - 1e100000 + 9e100000
+// - 1e100001 + 0
 // We can see that in apd.BaseContext the  max exponent is defined hence we cannot exceed.
 //
 // This function wraps any internal errors with a context-specific error message for clarity.
@@ -128,9 +128,10 @@ func (x Dec) Add(y Dec) (Dec, error) {
 // The precision is much higher as long as the max exponent is not exceeded. If the max exponent is exceeded, an error is returned.
 // For example:
 // - 1e-100001 - 0
-// - 1e100000 - 1^1
+// - 1e100000 - 1e-1
+// - 1e100000 - -9e100000
 // - 1e100001 - 1e100001 (upper limit exceeded)
-// - -100_001 - -100_001 (lower liit exceeded)
+// - 1e-100001 - 1e-100001 (lower limit exceeded)
 // We can see that in apd.BaseContext the  max exponent is defined hence we cannot exceed.
 //
 // This function wraps any internal errors with a context-specific error message for clarity.
@@ -148,8 +149,8 @@ func (x Dec) Sub(y Dec) (Dec, error) {
 // Quo performs division of x by y using the decimal128 context with 34 digits of precision.
 // It returns a new Dec or an error if the division is not feasible due to constraints of decimal128.
 //
-// Within Quo rounding is performed and specifies the Rounder in the context to use during the rounding function. 
-// RoundHalfUp is used if empty or not present in Roundings.
+// Within Quo half up rounding may be performed to match the defined precision. If this is unwanted, QuoExact
+// should be used instead.
 //
 // Key error scenarios:
 // - Division by zero (e.g., `123 / 0` or `0 / 0`) results in ErrInvalidDec.
@@ -159,6 +160,10 @@ func (x Dec) Sub(y Dec) (Dec, error) {
 // - `0 / 123` yields `0`.
 // - `123 / 123` yields `1.000000000000000000000000000000000`.
 // - `-123 / 123` yields `-1.000000000000000000000000000000000`.
+// - `4 / 9` yields `0.4444444444444444444444444444444444`.
+// - `5 / 9` yields `0.5555555555555555555555555555555556`.
+// - `6 / 9` yields `0.6666666666666666666666666666666667`.
+// - `1e-100000 / 10`  yields error.
 //
 // This function is non-mutative and enhances error clarity with specific messages.
 func (x Dec) Quo(y Dec) (Dec, error) {
@@ -192,7 +197,7 @@ func (x Dec) MulExact(y Dec) (Dec, error) {
 	return z, nil
 }
 
-// QuoExact performs division like Quo andadditionally checks for rounding. It returns ErrUnexpectedRounding if
+// QuoExact performs division like Quo and additionally checks for rounding. It returns ErrUnexpectedRounding if
 // any rounding occurred during the division. If the division is exact, it returns the result without error.
 //
 // This function is particularly useful in financial calculations or other scenarios where precision is critical
@@ -206,6 +211,8 @@ func (x Dec) MulExact(y Dec) (Dec, error) {
 // - `0 / 123` yields `0` without rounding.
 // - `123 / 123` yields `1.000000000000000000000000000000000` exactly.
 // - `-123 / 123` yields `-1.000000000000000000000000000000000` exactly.
+// - `1 / 9` yields error for the precision limit
+// - `1e-100000 / 10` yields error for crossing the lower exponent limit.
 // - Any division resulting in a non-terminating decimal under decimal128 precision constraints triggers ErrUnexpectedRounding.
 //
 // This function does not mutate any arguments and wraps any internal errors with a context-specific error message for clarity.

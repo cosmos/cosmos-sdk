@@ -65,16 +65,10 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 			upTo := latestHeight - interval
 			cmd.Printf("pruning heights up to %v\n", upTo)
 
-			before, err := rootStore.GetStateCommitment().GetCommitInfo(2)
-			fmt.Println("before", before, err)
-
 			err = rootStore.Prune(latestHeight)
 			if err != nil {
 				return err
 			}
-
-			after, err := rootStore.GetStateCommitment().GetCommitInfo(2)
-			fmt.Println("after", after, err)
 
 			cmd.Println("successfully pruned the application root multi stores")
 			return nil
@@ -124,6 +118,6 @@ func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger 
 		Options: v,
 		SCRawDB: scRawDb,
 	})
-
+	
 	return store, err, viper.GetUint64("store.options.sc-pruning-option.keep-recent")
 }

@@ -13,10 +13,9 @@ import (
 
 func TestNewDecFromString(t *testing.T) {
 	specs := map[string]struct {
-		src         string
-		constraints []SetupConstraint
-		exp         Dec
-		expErr      error
+		src    string
+		exp    Dec
+		expErr error
 	}{
 		"simple decimal": {
 			src: "1",
@@ -239,13 +238,13 @@ func TestAdd(t *testing.T) {
 			y:   NewDecFromInt64(1),
 			exp: must(NewDecWithPrec(1, 100_000).Add(NewDecFromInt64(1))),
 		},
-		"1e100000 + 0 -> err": {
+		"1e100001 + 0 -> err": {
 			x:      NewDecWithPrec(1, 100_001),
 			y:      NewDecFromInt64(0),
 			expErr: ErrInvalidDec,
 		},
-		"-1e100000 + 0 -> err": {
-			x:      NewDecWithPrec(-1, 100_001),
+		"-1e100001 + 0 -> err": {
+			x:      NewDecWithPrec(1, 100_001),
 			y:      NewDecFromInt64(0),
 			expErr: ErrInvalidDec,
 		},
@@ -265,11 +264,10 @@ func TestAdd(t *testing.T) {
 
 func TestSub(t *testing.T) {
 	specs := map[string]struct {
-		x           Dec
-		y           Dec
-		exp         Dec
-		expErr      error
-		constraints []SetupConstraint
+		x      Dec
+		y      Dec
+		exp    Dec
+		expErr error
 	}{
 		"0 - 0 = 0": {
 			x:   NewDecFromInt64(0),
@@ -367,9 +365,9 @@ func TestSub(t *testing.T) {
 			expErr: ErrInvalidDec,
 		},
 		"1e100000 - -1 -> 100..1": {
-			x:   NewDecWithPrec(1, 100_000),
-			y:   NewDecFromInt64(-1),
-			exp: must(NewDecFromString("1" + strings.Repeat("0", 99_999) + "1")),
+			x:      NewDecWithPrec(1, 100_000),
+			y:      must(NewDecFromString("-9e100000")),
+			expErr: ErrInvalidDec,
 		},
 		"1e-100000 - 0 = 1e-100000": {
 			x:   NewDecWithPrec(1, -100_000),

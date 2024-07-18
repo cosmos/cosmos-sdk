@@ -25,7 +25,6 @@ var (
 	feepayerPriv, feepayerPk, feepayerAddr = testdata.KeyTestPubAddr()
 
 	msg = testdata.NewTestMsg(tipperAddr, aux2Addr)
-	//memo = "test-memo"
 
 	gas    = testdata.NewTestGasLimit()
 	fee    = testdata.NewTestFeeAmount()

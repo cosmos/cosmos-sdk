@@ -24,6 +24,8 @@
   - orm/**/*
 "C:schema":
   - schema/**/*
+"C:indexer/postgres":
+  - indexer/postgres/**/*
 "C:x/accounts":
   - x/accounts/**/*
 "C:x/accounts/multisig":

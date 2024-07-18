@@ -2,7 +2,9 @@ package store
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -77,14 +79,12 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 
 	cmd.Flags().String(FlagAppDBBackend, "", "The type of database for application and snapshots databases")
 	cmd.Flags().Uint64(FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
-	cmd.Flags().Uint64(FlagPruningInterval, 10,
-		`Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom'), 
-		this is not used by this command but kept for compatibility with the complete pruning options`)
-
+	
 	return cmd
 }
 
 func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger log.Logger) (storev2.RootStore, error, uint64) {
+	tempViper := v
 	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(rootDir, "data"), nil)
 	if err != nil {
 		panic(err)
@@ -97,27 +97,48 @@ func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger 
 			return nil, err, 0
 		}
 
-		// Expect ss & sc have same pruning options
-		viper.Set("store.options.sc-pruning-option.keep-recent", keepRecent) // entry that read from app.toml
-		viper.Set("store.options.ss-pruning-option.keep-recent", keepRecent)
-	}
+		// viper has an issue that we could not override subitem then Unmarshal key
+		// so we can not do viper.Set() as comment below
+		// https://github.com/spf13/viper/issues/1106
+		// Do it by a hacky: overwrite app.toml file then read config again.
 
-	if cmd.Flags().Changed(FlagPruningInterval) {
-		interval, err := cmd.Flags().GetUint64(FlagPruningInterval)
+		// v.Set("store.options.sc-pruning-option.keep-recent", keepRecent) // entry that read from app.toml
+		// v.Set("store.options.ss-pruning-option.keep-recent", keepRecent)
+
+		err = overrideKeepRecent(filepath.Join(rootDir, "config"), keepRecent)
 		if err != nil {
 			return nil, err, 0
 		}
 
-		viper.Set("store.options.sc-pruning-option.interval", interval)
-		viper.Set("store.options.ss-pruning-option.interval", interval)
+		tempViper, err = serverv2.ReadConfig(filepath.Join(rootDir, "config"))
+		if err != nil {
+			return nil, err, 0
+		}
 	}
 
 	store, err := root.CreateRootStore(&root.FactoryOptions{
 		Logger:  logger,
 		RootDir: rootDir,
-		Options: v,
+		Options: tempViper,
 		SCRawDB: scRawDb,
 	})
 	
-	return store, err, viper.GetUint64("store.options.sc-pruning-option.keep-recent")
+	return store, err, tempViper.GetUint64("store.options.sc-pruning-option.keep-recent")
+}
+
+func overrideKeepRecent(configPath string, keepRecent uint64) error {
+	bz, err := os.ReadFile(filepath.Join(configPath, "app.toml"))
+	if err != nil {
+		return err
+	}
+	lines := strings.Split(string(bz), "\n")
+
+	for i, line := range lines {
+		if strings.Contains(line, "keep-recent") {
+				lines[i] = fmt.Sprintf("keep-recent = %d", keepRecent)
+		}
+	}
+	output := strings.Join(lines, "\n")
+
+	return os.WriteFile(filepath.Join(configPath, "app.toml"), []byte(output), 0o600)
 }

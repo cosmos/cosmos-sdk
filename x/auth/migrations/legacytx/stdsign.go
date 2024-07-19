@@ -7,7 +7,7 @@ import (
 
 	"sigs.k8s.io/yaml"
 
-	"cosmossdk.io/errors"
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
@@ -173,7 +173,7 @@ func pubKeySigToSigData(cdc *codec.LegacyAmino, key cryptotypes.PubKey, sig []by
 		if bitArray.GetIndex(i) {
 			data, err := pubKeySigToSigData(cdc, pubKeys[i], multiSig.Sigs[sigIdx])
 			if err != nil {
-				return nil, errors.Wrapf(err, "Unable to convert Signature to SigData %d", sigIdx)
+				return nil, errorsmod.Wrapf(err, "Unable to convert Signature to SigData %d", sigIdx)
 			}
 
 			sigDatas[sigIdx] = data

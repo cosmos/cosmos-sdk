@@ -61,7 +61,7 @@ type Consensus[T transaction.Tx] struct {
 
 func NewConsensus[T transaction.Tx](
 	logger log.Logger,
-	appName, version string,
+	appName string,
 	app *appmanager.AppManager[T],
 	mp mempool.Mempool[T],
 	indexedEvents map[string]struct{},
@@ -72,7 +72,7 @@ func NewConsensus[T transaction.Tx](
 ) *Consensus[T] {
 	return &Consensus[T]{
 		appName:                appName,
-		version:                version,
+		version:                getCometBFTServerVersion(),
 		grpcQueryDecoders:      grpcQueryDecoders,
 		app:                    app,
 		cfg:                    cfg,
@@ -95,14 +95,6 @@ func NewConsensus[T transaction.Tx](
 
 func (c *Consensus[T]) SetStreamingManager(sm streaming.Manager) {
 	c.streaming = sm
-}
-
-// SetSnapshotManager sets the snapshot manager for the Consensus.
-// The snapshot manager is responsible for managing snapshots of the Consensus state.
-// It allows for creating, storing, and restoring snapshots of the Consensus state.
-// The provided snapshot manager will be used by the Consensus to handle snapshots.
-func (c *Consensus[T]) SetSnapshotManager(sm *snapshots.Manager) {
-	c.snapshotManager = sm
 }
 
 // RegisterExtensions registers the given extensions with the consensus module's snapshot manager.

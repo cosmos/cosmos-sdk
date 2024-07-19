@@ -40,7 +40,6 @@ type CometBFTServer[T transaction.Tx] struct {
 	Consensus *Consensus[T]
 
 	appName     string
-	version     string
 	initTxCodec transaction.Codec[T]
 	logger      log.Logger
 	config      Config
@@ -48,10 +47,9 @@ type CometBFTServer[T transaction.Tx] struct {
 	cfgOptions  []CfgOption
 }
 
-func New[T transaction.Tx](appName, version string, txCodec transaction.Codec[T], options ServerOptions[T], cfgOptions ...CfgOption) *CometBFTServer[T] {
+func New[T transaction.Tx](appName string, txCodec transaction.Codec[T], options ServerOptions[T], cfgOptions ...CfgOption) *CometBFTServer[T] {
 	return &CometBFTServer[T]{
 		appName:     appName,
-		version:     version,
 		initTxCodec: txCodec,
 		options:     options,
 		cfgOptions:  cfgOptions,
@@ -59,6 +57,8 @@ func New[T transaction.Tx](appName, version string, txCodec transaction.Codec[T]
 }
 
 func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
+	store := appI.GetStore().(types.Store)
+
 	s.config = Config{
 		ConfigTomlConfig:   GetConfigTomlFromViper(v),
 		AppTomlConfig:      GetAppTomlFromViper(v),
@@ -66,15 +66,22 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 	}
 	s.logger = logger.With(log.ModuleKey, s.Name())
 
-	// create consensus
 	indexEvents := make(map[string]struct{}, len(s.config.AppTomlConfig.IndexEvents))
 	for _, e := range s.config.AppTomlConfig.IndexEvents {
 		indexEvents[e] = struct{}{}
 	}
 
-	store := appI.GetStore().(types.Store)
-	consensus := NewConsensus[T](s.logger, s.appName, s.version, appI.GetAppManager(), s.options.Mempool, indexEvents, appI.GetGRPCQueryDecoders(), store, s.config, s.initTxCodec)
-
+	consensus := NewConsensus(
+		s.logger,
+		s.appName,
+		appI.GetAppManager(),
+		s.options.Mempool,
+		indexEvents,
+		appI.GetGRPCQueryDecoders(),
+		store,
+		s.config,
+		s.initTxCodec,
+	)
 	consensus.prepareProposalHandler = s.options.PrepareProposalHandler
 	consensus.processProposalHandler = s.options.ProcessProposalHandler
 	consensus.verifyVoteExt = s.options.VerifyVoteExtensionHandler
@@ -88,11 +95,10 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 	if err != nil {
 		return err
 	}
-
-	sm := snapshots.NewManager(snapshotStore, s.options.SnapshotOptions, sc, ss, nil, s.logger)
-	consensus.SetSnapshotManager(sm)
+	consensus.snapshotManager = snapshots.NewManager(snapshotStore, s.options.SnapshotOptions, sc, ss, nil, s.logger)
 
 	s.Consensus = consensus
+
 	return nil
 }
 

@@ -22,6 +22,7 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/cometbft"
+	"cosmossdk.io/simapp/v2"
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -338,8 +339,7 @@ func initTestnetFiles[T transaction.Tx](
 
 		// Write server config
 		cometServer := cometbft.New[T](
-			args.chainID,
-			version.Version,
+			simapp.AppName,
 			&temporaryTxDecoder[T]{clientCtx.TxConfig},
 			cometbft.ServerOptions[T]{},
 			cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig),

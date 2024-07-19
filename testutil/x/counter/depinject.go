@@ -1,12 +1,12 @@
 package counter
 
 import (
-	modulev1 "cosmossdk.io/api/cosmos/counter/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter/keeper"
+	"github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -16,7 +16,7 @@ func (am AppModule) IsOnePerModuleType() {}
 
 func init() {
 	appconfig.RegisterModule(
-		&modulev1.Module{},
+		&types.Module{},
 		appconfig.Provide(ProvideModule),
 	)
 }
@@ -24,7 +24,7 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config      *modulev1.Module
+	Config      *types.Module
 	Environment appmodule.Environment
 }
 

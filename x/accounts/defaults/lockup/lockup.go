@@ -3,7 +3,7 @@ package lockup
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -349,7 +349,7 @@ func (bva *BaseLockup) WithdrawUnlockedCoins(
 		}
 	}
 	if len(amount) == 0 {
-		return nil, fmt.Errorf("no tokens available for withdrawing")
+		return nil, errors.New("no tokens available for withdrawing")
 	}
 
 	msgSend := &banktypes.MsgSend{
@@ -379,7 +379,7 @@ func (bva *BaseLockup) checkSender(ctx context.Context, sender string) error {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err.Error())
 	}
 	if !bytes.Equal(owner, senderBytes) {
-		return fmt.Errorf("sender is not the owner of this vesting account")
+		return errors.New("sender is not the owner of this vesting account")
 	}
 
 	return nil

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/viper"
+
 	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
@@ -17,7 +19,6 @@ import (
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/pebbledb"
 	"cosmossdk.io/store/v2/storage/sqlite"
-	"github.com/spf13/viper"
 )
 
 type (
@@ -68,7 +69,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 	)
 
 	v := opts.Options
-	storeOpts:= Options{}
+	storeOpts := Options{}
 	if v != nil {
 		if err := v.Sub("store.options").Unmarshal(&storeOpts); err != nil {
 			return nil, fmt.Errorf("failed to store options: %w", err)

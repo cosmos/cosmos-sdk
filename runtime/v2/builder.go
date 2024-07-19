@@ -7,6 +7,8 @@ import (
 	"io"
 	"path/filepath"
 
+	"github.com/spf13/viper"
+
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/store"
@@ -16,7 +18,6 @@ import (
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/store/v2/db"
 	rootstore "cosmossdk.io/store/v2/root"
-	"github.com/spf13/viper"
 )
 
 // AppBuilder is a type that is injected into a container by the runtime/v2 module

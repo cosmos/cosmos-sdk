@@ -79,7 +79,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 
 	cmd.Flags().String(FlagAppDBBackend, "", "The type of database for application and snapshots databases")
 	cmd.Flags().Uint64(FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
-	
+
 	return cmd
 }
 
@@ -122,7 +122,7 @@ func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger 
 		Options: tempViper,
 		SCRawDB: scRawDb,
 	})
-	
+
 	return store, err, tempViper.GetUint64("store.options.sc-pruning-option.keep-recent")
 }
 
@@ -135,7 +135,7 @@ func overrideKeepRecent(configPath string, keepRecent uint64) error {
 
 	for i, line := range lines {
 		if strings.Contains(line, "keep-recent") {
-				lines[i] = fmt.Sprintf("keep-recent = %d", keepRecent)
+			lines[i] = fmt.Sprintf("keep-recent = %d", keepRecent)
 		}
 	}
 	output := strings.Join(lines, "\n")

@@ -96,10 +96,6 @@ func SimulateMsgUnjail(
 		info, _ := k.ValidatorSigningInfo.Get(ctx, consAddr)
 
 		selfDel, _ := sk.Delegation(ctx, simAccount.Address, bz)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get self delegation"), nil, nil
-		}
-
 		if selfDel == nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "self delegation is nil"), nil, nil // skip
 		}

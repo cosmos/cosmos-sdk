@@ -38,6 +38,9 @@ type HasConfig interface {
 
 // HasStartFlags is a server module that has start flags.
 type HasStartFlags interface {
+	// StartCmdFlags returns server start flags.
+	// Those flags should be prefixed with the server name.
+	// They are then merged with the server config in one viper instance.
 	StartCmdFlags() *pflag.FlagSet
 }
 

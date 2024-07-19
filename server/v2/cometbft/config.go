@@ -4,7 +4,6 @@ import (
 	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/spf13/viper"
 
-	"cosmossdk.io/core/transaction"
 	serverv2 "cosmossdk.io/server/v2"
 )
 
@@ -43,19 +42,19 @@ type CfgOption func(*Config)
 
 // OverwriteDefaultConfigTomlConfig overwrites the default comet config with the new config.
 func OverwriteDefaultConfigTomlConfig(newCfg *cmtcfg.Config) CfgOption {
-	return func(cfg *Config) { 
+	return func(cfg *Config) {
 		cfg.ConfigTomlConfig = newCfg // nolint:ineffassign,staticcheck // We want to overwrite everything
 	}
 }
 
 // OverwriteDefaultAppTomlConfig overwrites the default comet config with the new config.
 func OverwriteDefaultAppTomlConfig(newCfg *AppTomlConfig) CfgOption {
-	return func(cfg *Config) { 
+	return func(cfg *Config) {
 		cfg.AppTomlConfig = newCfg // nolint:ineffassign,staticcheck // We want to overwrite everything
 	}
 }
 
-func GetConfigTomlFromViper(v *viper.Viper) *cmtcfg.Config {
+func getConfigTomlFromViper(v *viper.Viper) *cmtcfg.Config {
 	conf := cmtcfg.DefaultConfig()
 	err := v.Unmarshal(conf)
 	rootDir := v.GetString(serverv2.FlagHome)
@@ -64,13 +63,4 @@ func GetConfigTomlFromViper(v *viper.Viper) *cmtcfg.Config {
 	}
 
 	return conf.SetRoot(rootDir)
-}
-
-func GetAppTomlFromViper(v *viper.Viper) *AppTomlConfig {
-	cfg := DefaultAppTomlConfig()
-	if err := v.Sub((&CometBFTServer[transaction.Tx]{}).Name()).Unmarshal(&cfg); err != nil {
-		return cfg
-	}
-
-	return cfg
 }

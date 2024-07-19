@@ -18,7 +18,6 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/transaction"
 	serverv2 "cosmossdk.io/server/v2"
@@ -55,9 +54,15 @@ func New[T transaction.Tx](txCodec transaction.Codec[T], serverOptions ServerOpt
 }
 
 func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
+	appTomlConfig := s.Config().(*AppTomlConfig)
+	if v != nil {
+		if err := v.Sub(s.Name()).Unmarshal(&appTomlConfig); err != nil {
+			return fmt.Errorf("failed to unmarshal config: %w", err)
+		}
+	}
 	s.config = Config{
-		ConfigTomlConfig: GetConfigTomlFromViper(v),
-		AppTomlConfig:    GetAppTomlFromViper(v),
+		ConfigTomlConfig: getConfigTomlFromViper(v),
+		AppTomlConfig:    appTomlConfig,
 	}
 	s.logger = logger.With(log.ModuleKey, s.Name())
 
@@ -105,9 +110,6 @@ func (s *CometBFTServer[T]) Name() string {
 }
 
 func (s *CometBFTServer[T]) Start(ctx context.Context) error {
-	viper := ctx.Value(corectx.ViperContextKey).(*viper.Viper)
-	cometConfig := GetConfigTomlFromViper(viper)
-
 	wrappedLogger := cometlog.CometLoggerWrapper{Logger: s.logger}
 	if s.config.AppTomlConfig.Standalone {
 		svr, err := abciserver.NewServer(s.config.AppTomlConfig.Address, s.config.AppTomlConfig.Transport, s.Consensus)
@@ -120,20 +122,20 @@ func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 		return svr.Start()
 	}
 
-	nodeKey, err := p2p.LoadOrGenNodeKey(cometConfig.NodeKeyFile())
+	nodeKey, err := p2p.LoadOrGenNodeKey(s.config.ConfigTomlConfig.NodeKeyFile())
 	if err != nil {
 		return err
 	}
 
 	s.Node, err = node.NewNode(
 		ctx,
-		cometConfig,
-		pvm.LoadOrGenFilePV(cometConfig.PrivValidatorKeyFile(), cometConfig.PrivValidatorStateFile()),
+		s.config.ConfigTomlConfig,
+		pvm.LoadOrGenFilePV(s.config.ConfigTomlConfig.PrivValidatorKeyFile(), s.config.ConfigTomlConfig.PrivValidatorStateFile()),
 		nodeKey,
 		proxy.NewConsensusSyncLocalClientCreator(s.Consensus),
-		getGenDocProvider(cometConfig),
+		getGenDocProvider(s.config.ConfigTomlConfig),
 		cmtcfg.DefaultDBProvider,
-		node.DefaultMetricsProvider(cometConfig.Instrumentation),
+		node.DefaultMetricsProvider(s.config.ConfigTomlConfig.Instrumentation),
 		wrappedLogger,
 	)
 	if err != nil {
@@ -191,12 +193,20 @@ func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, e
 
 func (s *CometBFTServer[T]) StartCmdFlags() *pflag.FlagSet {
 	flags := pflag.NewFlagSet("cometbft", pflag.ExitOnError)
-	flags.String(FlagAddress, "tcp://127.0.0.1:26658", "Listen address")
-	flags.String(FlagTransport, "socket", "Transport protocol: socket, grpc")
-	flags.Uint64(FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node")
-	flags.Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")
-	flags.Bool(FlagTrace, false, "Provide full stack traces for errors in ABCI Log")
-	flags.Bool(Standalone, false, "Run app without CometBFT")
+
+	// start flags are prefixed with the server name
+	// as the config in prefixed with the server name
+	// this allows viper to properly bind the flags
+	prefix := func(f string) string {
+		return fmt.Sprintf("%s.%s", s.Name(), f)
+	}
+
+	flags.String(prefix(FlagAddress), "tcp://127.0.0.1:26658", "Listen address")
+	flags.String(prefix(FlagTransport), "socket", "Transport protocol: socket, grpc")
+	flags.Uint64(prefix(FlagHaltHeight), 0, "Block height at which to gracefully halt the chain and shutdown the node")
+	flags.Uint64(prefix(FlagHaltTime), 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")
+	flags.Bool(prefix(FlagTrace), false, "Provide full stack traces for errors in ABCI Log")
+	flags.Bool(prefix(Standalone), false, "Run app without CometBFT")
 	return flags
 }
 

@@ -3,7 +3,6 @@ package serverv2
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -108,13 +107,6 @@ func createStartCommand[T transaction.Tx](
 		RunE: func(cmd *cobra.Command, args []string) error {
 			v := GetViperFromCmd(cmd)
 			l := GetLoggerFromCmd(cmd)
-
-			for _, startFlags := range flags {
-				if err := v.BindPFlags(startFlags); err != nil {
-					return err
-				}
-			}
-
 			if err := v.BindPFlags(cmd.Flags()); err != nil {
 				return err
 			}
@@ -137,7 +129,7 @@ func createStartCommand[T transaction.Tx](
 			}()
 
 			if err := server.Start(ctx); err != nil {
-				return fmt.Errorf("failed to start servers: %w", err)
+				return err
 			}
 
 			return nil

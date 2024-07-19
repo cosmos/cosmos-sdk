@@ -31,9 +31,6 @@ func ReadConfig(configPath string) (*viper.Viper, error) {
 // UnmarshalSubconfig unmarshals the given subconfig from the viper instance.
 // It unmarshals the config, env, flags into the target struct.
 // Use this instead of viper.Sub because viper does not unmarshal flags.
-// UnmarshalSubconfig unmarshals the given subconfig from the viper instance.
-// It unmarshals the config, env, flags into the target struct.
-// Use this instead of viper.Sub because viper does not unmarshal flags.
 func UnmarshalSubConfig(v *viper.Viper, subName string, target any) error {
 	var sub any
 	for k, val := range v.AllSettings() {

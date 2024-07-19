@@ -281,7 +281,7 @@ var (
 				Name:   epochstypes.ModuleName,
 				Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
 			},
-			// This module is used for testing the depinject module registration.
+			// This module is used for testing the depinject gogo x pulsar module registration.
 			{
 				Name:   countertypes.ModuleName,
 				Config: appconfig.WrapAny(&countertypes.Module{}),

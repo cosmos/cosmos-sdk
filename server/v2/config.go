@@ -2,7 +2,9 @@ package serverv2
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 )
 
@@ -24,4 +26,39 @@ func ReadConfig(configPath string) (*viper.Viper, error) {
 	v.WatchConfig()
 
 	return v, nil
+}
+
+// UnmarshalSubconfig unmarshals the given subconfig from the viper instance.
+// It unmarshals the config, env, flags into the target struct.
+// Use this instead of viper.Sub because viper does not unmarshal flags.
+// UnmarshalSubconfig unmarshals the given subconfig from the viper instance.
+// It unmarshals the config, env, flags into the target struct.
+// Use this instead of viper.Sub because viper does not unmarshal flags.
+func UnmarshalSubConfig(v *viper.Viper, subName string, target any) error {
+	var sub any
+	for k, val := range v.AllSettings() {
+		if strings.HasPrefix(k, subName) {
+			sub = val
+		}
+	}
+
+	// Create a new decoder with custom decoding options
+	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			mapstructure.StringToTimeDurationHookFunc(),
+			mapstructure.StringToSliceHookFunc(","),
+		),
+		Result:           target,
+		WeaklyTypedInput: true,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create decoder: %w", err)
+	}
+
+	// Decode the sub-configuration
+	if err := decoder.Decode(sub); err != nil {
+		return fmt.Errorf("failed to decode sub-configuration: %w", err)
+	}
+
+	return nil
 }

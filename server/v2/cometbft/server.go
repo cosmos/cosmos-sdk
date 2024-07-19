@@ -57,7 +57,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 	// get configs (app.toml + config.toml) from viper
 	appTomlConfig := s.Config().(*AppTomlConfig)
 	if v != nil {
-		if err := v.Sub(s.Name()).Unmarshal(&appTomlConfig); err != nil {
+		if err := serverv2.UnmarshalSubConfig(v, s.Name(), &appTomlConfig); err != nil {
 			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}

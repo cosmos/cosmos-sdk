@@ -6,6 +6,7 @@ import (
 	"slices"
 
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -150,6 +151,7 @@ type AppInputs struct {
 	InterfaceRegistrar registry.InterfaceRegistrar
 	LegacyAmino        legacy.Amino
 	Logger             log.Logger
+	Viper              *viper.Viper `optional:"true"`
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -160,6 +162,10 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager = inputs.ModuleManager
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistrar)
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
+
+	if inputs.Viper != nil {
+		inputs.AppBuilder.viper = inputs.Viper
+	}
 }
 
 func ProvideModuleManager[T transaction.Tx](

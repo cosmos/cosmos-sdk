@@ -25,6 +25,7 @@ import (
 type AppBuilder[T transaction.Tx] struct {
 	app          *App[T]
 	storeOptions *rootstore.FactoryOptions
+	viper        *viper.Viper
 
 	// the following fields are used to overwrite the default
 	branch      func(state store.ReaderMap) store.WriterMap
@@ -73,7 +74,7 @@ func (a *AppBuilder[T]) RegisterStores(keys ...string) {
 }
 
 // Build builds an *App instance.
-func (a *AppBuilder[T]) Build(viper *viper.Viper, opts ...AppBuilderOption[T]) (*App[T], error) {
+func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	for _, opt := range opts {
 		opt(a)
 	}
@@ -119,7 +120,8 @@ func (a *AppBuilder[T]) Build(viper *viper.Viper, opts ...AppBuilderOption[T]) (
 
 	a.app.stf = stf
 
-	home := viper.GetString(FlagHome)
+	v := a.viper
+	home := v.GetString(FlagHome)
 	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(home, "data"), nil)
 	if err != nil {
 		panic(err)
@@ -128,7 +130,7 @@ func (a *AppBuilder[T]) Build(viper *viper.Viper, opts ...AppBuilderOption[T]) (
 	storeOptions := &rootstore.FactoryOptions{
 		Logger:    a.app.logger,
 		RootDir:   home,
-		Options:   viper,
+		Options:   v,
 		StoreKeys: append(a.app.storeKeys, "stf"),
 		SCRawDB:   scRawDb,
 	}

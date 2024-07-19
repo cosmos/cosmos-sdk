@@ -182,12 +182,11 @@ func NewSimApp[T transaction.Tx](
 		panic(err)
 	}
 
-	buildedApp, err := appBuilder.Build(viper)
+	var err error
+	app.App, err = appBuilder.Build()
 	if err != nil {
 		panic(err)
 	}
-
-	app.App = buildedApp
 
 	/****  Module Options ****/
 

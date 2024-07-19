@@ -150,7 +150,6 @@ func createStartCommand[T transaction.Tx](
 	}
 
 	return cmd
-
 }
 
 // configHandle writes the default config to the home directory if it does not exist and sets the server context

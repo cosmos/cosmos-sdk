@@ -180,7 +180,6 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 			return nil, fmt.Errorf("unable to decode gRPC request with path %s from ABCI.Query: %w", req.Path, err)
 		}
 		res, err := c.app.Query(ctx, uint64(req.Height), protoRequest)
-
 		if err != nil {
 			resp := queryResult(err)
 			resp.Height = req.Height

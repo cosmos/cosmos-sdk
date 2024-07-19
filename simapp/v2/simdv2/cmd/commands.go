@@ -74,7 +74,7 @@ func initRootCmd[T transaction.Tx](
 		rootCmd,
 		newApp,
 		logger,
-		cometbft.New(&temporaryTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
+		cometbft.New(&genericTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
 		grpc.New[T](),
 	); err != nil {
 		panic(err)
@@ -181,14 +181,14 @@ func appExport[T transaction.Tx](
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
 }
 
-var _ transaction.Codec[transaction.Tx] = &temporaryTxDecoder[transaction.Tx]{}
+var _ transaction.Codec[transaction.Tx] = &genericTxDecoder[transaction.Tx]{}
 
-type temporaryTxDecoder[T transaction.Tx] struct {
+type genericTxDecoder[T transaction.Tx] struct {
 	txConfig client.TxConfig
 }
 
 // Decode implements transaction.Codec.
-func (t *temporaryTxDecoder[T]) Decode(bz []byte) (T, error) {
+func (t *genericTxDecoder[T]) Decode(bz []byte) (T, error) {
 	var out T
 	tx, err := t.txConfig.TxDecoder()(bz)
 	if err != nil {
@@ -205,7 +205,7 @@ func (t *temporaryTxDecoder[T]) Decode(bz []byte) (T, error) {
 }
 
 // DecodeJSON implements transaction.Codec.
-func (t *temporaryTxDecoder[T]) DecodeJSON(bz []byte) (T, error) {
+func (t *genericTxDecoder[T]) DecodeJSON(bz []byte) (T, error) {
 	var out T
 	tx, err := t.txConfig.TxJSONDecoder()(bz)
 	if err != nil {

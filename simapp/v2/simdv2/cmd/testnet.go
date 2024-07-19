@@ -338,7 +338,7 @@ func initTestnetFiles[T transaction.Tx](
 
 		// Write server config
 		cometServer := cometbft.New[T](
-			&temporaryTxDecoder[T]{clientCtx.TxConfig},
+			&genericTxDecoder[T]{clientCtx.TxConfig},
 			cometbft.ServerOptions[T]{},
 			cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig),
 		)

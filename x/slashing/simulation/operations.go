@@ -111,7 +111,7 @@ func SimulateMsgUnjail(
 
 		fees, err := simtypes.RandomFees(r, ctx, spendable)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to generate fees"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to generate fees"), nil, nil
 		}
 
 		msg := types.NewMsgUnjail(validator.GetOperator())
@@ -139,6 +139,7 @@ func SimulateMsgUnjail(
 		// - self delegation too low
 		if info.Tombstoned ||
 			ctx.BlockHeader().Time.Before(info.JailedUntil) ||
+			selfDel.GetShares().IsNil() ||
 			validator.TokensFromShares(selfDel.GetShares()).TruncateInt().LT(validator.GetMinSelfDelegation()) {
 			if res != nil && err == nil {
 				if info.Tombstoned {
@@ -147,7 +148,8 @@ func SimulateMsgUnjail(
 				if ctx.BlockHeader().Time.Before(info.JailedUntil) {
 					return simtypes.NewOperationMsg(msg, true, ""), nil, errors.New("validator unjailed while validator still in jail period")
 				}
-				if validator.TokensFromShares(selfDel.GetShares()).TruncateInt().LT(validator.GetMinSelfDelegation()) {
+				if selfDel.GetShares().IsNil() ||
+					validator.TokensFromShares(selfDel.GetShares()).TruncateInt().LT(validator.GetMinSelfDelegation()) {
 					return simtypes.NewOperationMsg(msg, true, ""), nil, errors.New("validator unjailed even though self-delegation too low")
 				}
 			}

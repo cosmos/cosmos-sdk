@@ -102,7 +102,7 @@ func createStartCommand[T transaction.Tx](
 ) *cobra.Command {
 	flags := server.StartFlags()
 
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the application",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -143,6 +143,14 @@ func createStartCommand[T transaction.Tx](
 			return nil
 		},
 	}
+
+	// add the start flags to the command
+	for _, startFlags := range flags {
+		cmd.Flags().AddFlagSet(startFlags)
+	}
+
+	return cmd
+
 }
 
 // configHandle writes the default config to the home directory if it does not exist and sets the server context

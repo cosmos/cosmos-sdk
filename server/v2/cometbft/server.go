@@ -39,17 +39,15 @@ type CometBFTServer[T transaction.Tx] struct {
 	Node      *node.Node
 	Consensus *Consensus[T]
 
-	appName       string
 	initTxCodec   transaction.Codec[T]
 	logger        log.Logger
-	config        Config
 	serverOptions ServerOptions[T]
+	config        Config
 	cfgOptions    []CfgOption
 }
 
-func New[T transaction.Tx](appName string, txCodec transaction.Codec[T], serverOptions ServerOptions[T], cfgOptions ...CfgOption) *CometBFTServer[T] {
+func New[T transaction.Tx](txCodec transaction.Codec[T], serverOptions ServerOptions[T], cfgOptions ...CfgOption) *CometBFTServer[T] {
 	return &CometBFTServer[T]{
-		appName:       appName,
 		initTxCodec:   txCodec,
 		serverOptions: serverOptions,
 		cfgOptions:    cfgOptions,
@@ -57,8 +55,6 @@ func New[T transaction.Tx](appName string, txCodec transaction.Codec[T], serverO
 }
 
 func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
-	store := appI.GetStore().(types.Store)
-
 	s.config = Config{
 		ConfigTomlConfig: GetConfigTomlFromViper(v),
 		AppTomlConfig:    GetAppTomlFromViper(v),
@@ -72,13 +68,13 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 
 	consensus := NewConsensus(
 		s.logger,
-		s.appName,
+		appI.Name(),
 		appI.GetConsensusAuthority(),
 		appI.GetAppManager(),
 		s.serverOptions.Mempool,
 		indexEvents,
 		appI.GetGRPCQueryDecoders(),
-		store,
+		appI.GetStore().(types.Store),
 		s.config,
 		s.initTxCodec,
 	)

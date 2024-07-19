@@ -117,7 +117,6 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create STF: %w", err)
 	}
-
 	a.app.stf = stf
 
 	rs, err := rootstore.CreateRootStore(a.storeOptions)

@@ -129,6 +129,6 @@ func TestReadConfig(t *testing.T) {
 	require.NoError(t, err)
 
 	grpcConfig := grpc.DefaultConfig()
-	err = v.Sub("grpc-server").Unmarshal(&grpcConfig)
+	err = v.Sub("grpc").Unmarshal(&grpcConfig)
 	require.NoError(t, err)
 }

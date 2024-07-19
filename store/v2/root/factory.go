@@ -1,6 +1,7 @@
 package root
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -89,7 +90,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		ssDb, err = pebbledb.New(dir)
 	case SSTypeRocks:
 		// TODO: rocksdb requires build tags so is not supported here by default
-		return nil, fmt.Errorf("rocksdb not supported")
+		return nil, errors.New("rocksdb not supported")
 	}
 	if err != nil {
 		return nil, err
@@ -123,7 +124,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 			case SCTypeIavl:
 				trees[key] = iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, storeOpts.IavlConfig)
 			case SCTypeIavlV2:
-				return nil, fmt.Errorf("iavl v2 not supported")
+				return nil, errors.New("iavl v2 not supported")
 			}
 		}
 	}

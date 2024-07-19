@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	cosmossdk.io/core v0.12.0
+	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.3.1
 	github.com/cockroachdb/pebble v1.1.0
@@ -64,6 +65,7 @@ require (
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
+	github.com/tidwall/btree v1.7.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/crypto v0.25.0 // indirect
@@ -78,5 +80,7 @@ require (
 )
 
 replace cosmossdk.io/core => ../../core
+
+replace cosmossdk.io/core/testing => ../../core/testing
 
 replace cosmossdk.io/log => ../../log

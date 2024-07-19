@@ -49,7 +49,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				return err
 			}
 
-			rootStore, err, interval := createRootStore(cmd, home, vp, logger)
+			rootStore, keepRecent, err := createRootStore(cmd, home, vp, logger)
 			if err != nil {
 				return fmt.Errorf("can not create root store %w", err)
 			}
@@ -64,7 +64,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				return fmt.Errorf("the database has no valid heights to prune, the latest height: %v", latestHeight)
 			}
 
-			upTo := latestHeight - interval
+			upTo := latestHeight - keepRecent
 			cmd.Printf("pruning heights up to %v\n", upTo)
 
 			err = rootStore.Prune(latestHeight)
@@ -83,7 +83,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 	return cmd
 }
 
-func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger log.Logger) (storev2.RootStore, error, uint64) {
+func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger log.Logger) (storev2.RootStore, uint64, error) {
 	tempViper := v
 	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(rootDir, "data"), nil)
 	if err != nil {
@@ -94,7 +94,7 @@ func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger 
 	if cmd.Flags().Changed(FlagPruningKeepRecent) {
 		keepRecent, err := cmd.Flags().GetUint64(FlagPruningKeepRecent)
 		if err != nil {
-			return nil, err, 0
+			return nil, 0, err
 		}
 
 		// viper has an issue that we could not override subitem then Unmarshal key
@@ -107,12 +107,12 @@ func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger 
 
 		err = overrideKeepRecent(filepath.Join(rootDir, "config"), keepRecent)
 		if err != nil {
-			return nil, err, 0
+			return nil, 0, err
 		}
 
 		tempViper, err = serverv2.ReadConfig(filepath.Join(rootDir, "config"))
 		if err != nil {
-			return nil, err, 0
+			return nil, 0, err
 		}
 	}
 
@@ -123,7 +123,7 @@ func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger 
 		SCRawDB: scRawDb,
 	})
 
-	return store, err, tempViper.GetUint64("store.options.sc-pruning-option.keep-recent")
+	return store, tempViper.GetUint64("store.options.sc-pruning-option.keep-recent"), err
 }
 
 func overrideKeepRecent(configPath string, keepRecent uint64) error {

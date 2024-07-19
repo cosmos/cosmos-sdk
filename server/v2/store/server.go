@@ -12,6 +12,8 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 )
 
+// StoreComponent manages store config
+// and contains prune & snapshot commands
 type StoreComponent[T transaction.Tx] struct {
 	config *Config
 }

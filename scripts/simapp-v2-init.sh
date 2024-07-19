@@ -27,7 +27,7 @@ $SIMD config set client chain-id simapp-v2-chain
 $SIMD keys add test_validator --indiscreet
 VALIDATOR_ADDRESS=$($SIMD keys show test_validator -a --keyring-backend test)
 
-$SIMD genesis add-genesis-account test_validator 1000000000stake
+$SIMD genesis add-genesis-account "$VALIDATOR_ADDRESS" 1000000000stake
 $SIMD genesis gentx test_validator 1000000000stake --keyring-backend test
 $SIMD genesis collect-gentxs
 

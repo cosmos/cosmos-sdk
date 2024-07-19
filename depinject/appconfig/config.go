@@ -52,13 +52,28 @@ func LoadYAML(bz []byte) depinject.Config {
 }
 
 // WrapAny marshals a proto message into a proto Any instance
-func WrapAny(config protoreflect.ProtoMessage) *anypb.Any {
-	cfg, err := anyutil.New(config)
-	if err != nil {
-		panic(err)
-	}
+func WrapAny(config gogoproto.Message) *anypb.Any {
+	switch cfg := config.(type) {
+	case protoreflect.ProtoMessage:
+		cfg, err := anyutil.New(cfg)
+		if err != nil {
+			panic(err)
+		}
 
-	return cfg
+		return cfg.(*anypb.Any)
+	case gogoproto.Message:
+		pbz, err := gogoproto.Marshal(cfg)
+		if err != nil {
+			panic(err)
+		}
+
+		return &anypb.Any{
+			TypeUrl: "/" + gogoproto.MessageName(cfg),
+			Value:   pbz,
+		}
+	default:
+		panic(fmt.Errorf("unexpected type %T", config))
+	}
 }
 
 // Compose composes an app config into a container option by resolving

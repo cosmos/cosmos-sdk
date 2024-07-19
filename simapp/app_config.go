@@ -69,6 +69,8 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
+	_ "github.com/cosmos/cosmos-sdk/testutil/x/counter" // import for side-effects
+	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -278,6 +280,11 @@ var (
 			{
 				Name:   epochstypes.ModuleName,
 				Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
+			},
+			// This module is used for testing the depinject module registration.
+			{
+				Name:   countertypes.ModuleName,
+				Config: appconfig.WrapAny(&countertypes.Module{}),
 			},
 		},
 	})

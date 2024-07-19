@@ -54,6 +54,7 @@ func New[T transaction.Tx](txCodec transaction.Codec[T], serverOptions ServerOpt
 }
 
 func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
+	// get configs (app.toml + config.toml) from viper
 	appTomlConfig := s.Config().(*AppTomlConfig)
 	if v != nil {
 		if err := v.Sub(s.Name()).Unmarshal(&appTomlConfig); err != nil {
@@ -64,13 +65,13 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 		ConfigTomlConfig: getConfigTomlFromViper(v),
 		AppTomlConfig:    appTomlConfig,
 	}
-	s.logger = logger.With(log.ModuleKey, s.Name())
 
 	indexEvents := make(map[string]struct{}, len(s.config.AppTomlConfig.IndexEvents))
 	for _, e := range s.config.AppTomlConfig.IndexEvents {
 		indexEvents[e] = struct{}{}
 	}
 
+	s.logger = logger.With(log.ModuleKey, s.Name())
 	consensus := NewConsensus(
 		s.logger,
 		appI.Name(),

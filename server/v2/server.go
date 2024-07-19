@@ -26,16 +26,6 @@ type ServerComponent[T transaction.Tx] interface {
 	Init(AppI[T], *viper.Viper, log.Logger) error
 }
 
-// HasCLICommands is a server module that has CLI commands.
-type HasCLICommands interface {
-	CLICommands() CLIConfig
-}
-
-// HasConfig is a server module that has a config.
-type HasConfig interface {
-	Config() any
-}
-
 // HasStartFlags is a server module that has start flags.
 type HasStartFlags interface {
 	// StartCmdFlags returns server start flags.
@@ -44,27 +34,29 @@ type HasStartFlags interface {
 	StartCmdFlags() *pflag.FlagSet
 }
 
-var _ ServerComponent[transaction.Tx] = (*Server[transaction.Tx])(nil)
-
-// ReadConfig returns a viper instance of the config file
-func ReadConfig(configPath string) (*viper.Viper, error) {
-	v := viper.New()
-	v.SetConfigType("toml")
-	v.SetConfigName("config")
-	v.AddConfigPath(configPath)
-	if err := v.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to read config: %s: %w", configPath, err)
-	}
-
-	v.SetConfigName("app")
-	if err := v.MergeInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to merge configuration: %w", err)
-	}
-
-	v.WatchConfig()
-
-	return v, nil
+// HasConfig is a server module that has a config.
+type HasConfig interface {
+	Config() any
 }
+
+// HasCLICommands is a server module that has CLI commands.
+type HasCLICommands interface {
+	CLICommands() CLIConfig
+}
+
+// CLIConfig defines the CLI configuration for a module server.
+type CLIConfig struct {
+	// Commands defines the main command of a module server.
+	Commands []*cobra.Command
+	// Queries defines the query commands of a module server.
+	// Those commands are meant to be added in the root query command.
+	Queries []*cobra.Command
+	// Txs defines the tx commands of a module server.
+	// Those commands are meant to be added in the root tx command.
+	Txs []*cobra.Command
+}
+
+var _ ServerComponent[transaction.Tx] = (*Server[transaction.Tx])(nil)
 
 type Server[T transaction.Tx] struct {
 	logger     log.Logger

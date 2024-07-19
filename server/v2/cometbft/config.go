@@ -55,10 +55,10 @@ func OverwriteDefaultAppTomlConfig(newCfg *AppTomlConfig) CfgOption {
 }
 
 func getConfigTomlFromViper(v *viper.Viper) *cmtcfg.Config {
-	conf := cmtcfg.DefaultConfig()
-	err := v.Unmarshal(conf)
 	rootDir := v.GetString(serverv2.FlagHome)
-	if err != nil {
+
+	conf := cmtcfg.DefaultConfig()
+	if err := v.Unmarshal(conf); err != nil {
 		return cmtcfg.DefaultConfig().SetRoot(rootDir)
 	}
 

@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/core/event"
 	coretesting "cosmossdk.io/core/testing"
 	coretransaction "cosmossdk.io/core/transaction"
-	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	"cosmossdk.io/x/tx/signing"
 

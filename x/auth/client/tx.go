@@ -3,6 +3,7 @@ package client
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -142,7 +143,7 @@ func ReadTxsFromFile(ctx client.Context, filename string) (txs []sdk.Tx, err err
 // Unlike ReadTxFromFile, this function does not decode the txs.
 func ReadTxsFromInput(txCfg client.TxConfig, filenames ...string) (scanner *BatchScanner, err error) {
 	if len(filenames) == 0 {
-		return nil, fmt.Errorf("no file name provided")
+		return nil, errors.New("no file name provided")
 	}
 
 	var infile io.Reader = os.Stdin

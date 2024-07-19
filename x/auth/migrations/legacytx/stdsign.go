@@ -2,6 +2,7 @@ package legacytx
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"sigs.k8s.io/yaml"
@@ -62,7 +63,7 @@ func mustSortJSON(bz []byte) []byte {
 // Deprecated: Please use x/tx/signing/aminojson instead.
 func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
 	if RegressionTestingAminoCodec == nil {
-		panic(fmt.Errorf("must set RegressionTestingAminoCodec before calling StdSignBytes"))
+		panic(errors.New("must set RegressionTestingAminoCodec before calling StdSignBytes"))
 	}
 	msgsBytes := make([]json.RawMessage, 0, len(msgs))
 	for _, msg := range msgs {

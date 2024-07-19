@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/cosmos/cosmos-proto/anyutil"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/encoding/protojson"
 	protov2 "google.golang.org/protobuf/proto"
@@ -53,26 +52,14 @@ func LoadYAML(bz []byte) depinject.Config {
 
 // WrapAny marshals a proto message into a proto Any instance
 func WrapAny(config gogoproto.Message) *anypb.Any {
-	switch cfg := config.(type) {
-	case protoreflect.ProtoMessage:
-		cfg, err := anyutil.New(cfg)
-		if err != nil {
-			panic(err)
-		}
+	pbz, err := gogoproto.Marshal(config)
+	if err != nil {
+		panic(err)
+	}
 
-		return cfg.(*anypb.Any)
-	case gogoproto.Message:
-		pbz, err := gogoproto.Marshal(cfg)
-		if err != nil {
-			panic(err)
-		}
-
-		return &anypb.Any{
-			TypeUrl: "/" + gogoproto.MessageName(cfg),
-			Value:   pbz,
-		}
-	default:
-		panic(fmt.Errorf("unexpected type %T", config))
+	return &anypb.Any{
+		TypeUrl: "/" + gogoproto.MessageName(config),
+		Value:   pbz,
 	}
 }
 

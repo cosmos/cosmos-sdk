@@ -32,6 +32,8 @@ var (
 	_ store.PausablePruner        = (*CommitStore)(nil)
 )
 
+// MountTreeFn is a function that mounts a tree given a store key.
+// It is used to lazily mount trees when needed (e.g. during upgrade or proof generation).
 type MountTreeFn func(storeKey string) (Tree, error)
 
 // CommitStore is a wrapper around multiple Tree objects mapped by a unique store

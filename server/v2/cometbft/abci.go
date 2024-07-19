@@ -32,19 +32,21 @@ import (
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
 type Consensus[T transaction.Tx] struct {
-	appName, version string
-	app              *appmanager.AppManager[T]
-	cfg              Config
-	store            types.Store
-	logger           log.Logger
-	txCodec          transaction.Codec[T]
-	streaming        streaming.Manager
-	snapshotManager  *snapshots.Manager
-	mempool          mempool.Mempool[T]
-	// legacy support for gRPC
-	grpcQueryDecoders map[string]func(requestBytes []byte) (gogoproto.Message, error)
+	logger             log.Logger
+	appName, version   string
+	consensusAuthority string // Set by the application to grant authority to the consensus engine to send messages to the consensus module
+	app                *appmanager.AppManager[T]
+	txCodec            transaction.Codec[T]
+	store              types.Store
+	streaming          streaming.Manager
+	snapshotManager    *snapshots.Manager
+	mempool            mempool.Mempool[T]
+	grpcQueryDecoders  map[string]func(requestBytes []byte) (gogoproto.Message, error) // legacy support for gRPC
 
+	cfg           Config
 	indexedEvents map[string]struct{}
+	chainID       string
+
 	initialHeight uint64
 	// this is only available after this node has committed a block (in FinalizeBlock),
 	// otherwise it will be empty and we will need to query the app for the last
@@ -56,12 +58,14 @@ type Consensus[T transaction.Tx] struct {
 	verifyVoteExt          handlers.VerifyVoteExtensionhandler
 	extendVote             handlers.ExtendVoteHandler
 
-	chainID string
+	addrPeerFilter types.PeerFilter // filter peers by address and port
+	idPeerFilter   types.PeerFilter // filter peers by node ID
 }
 
 func NewConsensus[T transaction.Tx](
 	logger log.Logger,
 	appName string,
+	consensusAuthority string,
 	app *appmanager.AppManager[T],
 	mp mempool.Mempool[T],
 	indexedEvents map[string]struct{},
@@ -73,6 +77,7 @@ func NewConsensus[T transaction.Tx](
 	return &Consensus[T]{
 		appName:                appName,
 		version:                getCometBFTServerVersion(),
+		consensusAuthority:     consensusAuthority,
 		grpcQueryDecoders:      grpcQueryDecoders,
 		app:                    app,
 		cfg:                    cfg,
@@ -93,16 +98,19 @@ func NewConsensus[T transaction.Tx](
 	}
 }
 
+// SetStreamingManager sets the streaming manager for the consensus module.
 func (c *Consensus[T]) SetStreamingManager(sm streaming.Manager) {
 	c.streaming = sm
 }
 
 // RegisterExtensions registers the given extensions with the consensus module's snapshot manager.
 // It allows additional snapshotter implementations to be used for creating and restoring snapshots.
-func (c *Consensus[T]) RegisterExtensions(extensions ...snapshots.ExtensionSnapshotter) {
+func (c *Consensus[T]) RegisterSnapshotExtensions(extensions ...snapshots.ExtensionSnapshotter) error {
 	if err := c.snapshotManager.RegisterExtensions(extensions...); err != nil {
-		panic(fmt.Errorf("failed to register snapshot extensions: %w", err))
+		return fmt.Errorf("failed to register snapshot extensions: %w", err)
 	}
+
+	return nil
 }
 
 // CheckTx implements types.Application.
@@ -217,20 +225,17 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 
 	// store chainID to be used later on in execution
 	c.chainID = req.ChainId
+
 	// TODO: check if we need to load the config from genesis.json or config.toml
 	c.initialHeight = uint64(req.InitialHeight)
 	if c.initialHeight == 0 { // If initial height is 0, set it to 1
 		c.initialHeight = 1
 	}
 
-	// On a new chain, we consider the init chain block height as 0, even though
-	// req.InitialHeight is 1 by default.
-	// TODO
-
 	var consMessages []transaction.Msg
 	if req.ConsensusParams != nil {
 		consMessages = append(consMessages, &consensustypes.MsgUpdateParams{
-			Authority: c.cfg.ConsensusAuthority,
+			Authority: c.consensusAuthority,
 			Block:     req.ConsensusParams.Block,
 			Evidence:  req.ConsensusParams.Evidence,
 			Validator: req.ConsensusParams.Validator,
@@ -396,7 +401,7 @@ func (c *Consensus[T]) FinalizeBlock(
 
 	// TODO evaluate this approach vs. service using context.
 	// cometInfo := &consensustypes.MsgUpdateCometInfo{
-	//	Authority: c.cfg.ConsensusAuthority,
+	//	Authority: c.consensusAuthority,
 	//	CometInfo: &consensustypes.CometInfo{
 	//		Evidence:        req.Misbehavior,
 	//		ValidatorsHash:  req.NextValidatorsHash,

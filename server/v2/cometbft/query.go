@@ -20,13 +20,14 @@ func (c *Consensus[T]) handleQueryP2P(path []string) (*abci.QueryResponse, error
 
 	cmd, typ, arg := path[1], path[2], path[3]
 	if cmd == "filter" {
-		if typ == "addr" {
-			if c.cfg.AddrPeerFilter != nil {
-				return c.cfg.AddrPeerFilter(arg)
+		switch typ {
+		case "addr":
+			if c.addrPeerFilter != nil {
+				return c.addrPeerFilter(arg)
 			}
-		} else if typ == "id" {
-			if c.cfg.IdPeerFilter != nil {
-				return c.cfg.IdPeerFilter(arg)
+		case "id":
+			if c.idPeerFilter != nil {
+				return c.idPeerFilter(arg)
 			}
 		}
 	}

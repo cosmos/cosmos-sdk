@@ -209,8 +209,8 @@ func (s *Server[T]) WriteConfig(configPath string) error {
 		// undocumented interface to write the component default config in another file than app.toml
 		// it is used by cometbft for backward compatibility
 		// it should not be used by other components
-		if mod, ok := component.(interface{ WriteDefaultConfigAt(string) error }); ok {
-			if err := mod.WriteDefaultConfigAt(configPath); err != nil {
+		if mod, ok := component.(interface{ WriteCustomConfigAt(string) error }); ok {
+			if err := mod.WriteCustomConfigAt(configPath); err != nil {
 				return err
 			}
 		}

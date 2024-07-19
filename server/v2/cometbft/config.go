@@ -6,20 +6,15 @@ import (
 
 	"cosmossdk.io/core/transaction"
 	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/server/v2/cometbft/types"
 )
 
 // Config is the configuration for the CometBFT application
 type Config struct {
-	AddrPeerFilter     types.PeerFilter // filter peers by address and port
-	IdPeerFilter       types.PeerFilter // filter peers by node ID
-	ConsensusAuthority string           // Set by the application to grant authority to the consensus engine to send messages to the consensus module
-
 	AppTomlConfig    *AppTomlConfig
 	ConfigTomlConfig *cmtcfg.Config
 }
 
-func DefaultConfig() *AppTomlConfig {
+func DefaultAppTomlConfig() *AppTomlConfig {
 	return &AppTomlConfig{
 		MinRetainBlocks: 1,
 		IndexEvents:     make([]string, 0),
@@ -72,7 +67,7 @@ func GetConfigTomlFromViper(v *viper.Viper) *cmtcfg.Config {
 }
 
 func GetAppTomlFromViper(v *viper.Viper) *AppTomlConfig {
-	cfg := DefaultConfig()
+	cfg := DefaultAppTomlConfig()
 	if err := v.Sub((&CometBFTServer[transaction.Tx]{}).Name()).Unmarshal(&cfg); err != nil {
 		return cfg
 	}

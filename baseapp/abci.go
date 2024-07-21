@@ -139,7 +139,7 @@ func (app *BaseApp) Info(_ *abci.InfoRequest) (*abci.InfoResponse, error) {
 	lastCommitID := app.cms.LastCommitID()
 	appVersion := InitialAppVersion
 	if lastCommitID.Version > 0 {
-		ctx, err := app.CreateQueryContext(lastCommitID.Version, false)
+		ctx, err := app.CreateQueryContextWithCheckHeader(lastCommitID.Version, false, false)
 		if err != nil {
 			return nil, fmt.Errorf("failed creating query context: %w", err)
 		}
@@ -1200,6 +1200,12 @@ func checkNegativeHeight(height int64) error {
 // CreateQueryContext creates a new sdk.Context for a query, taking as args
 // the block height and whether the query needs a proof or not.
 func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, error) {
+	return app.CreateQueryContextWithCheckHeader(height, prove, true)
+}
+
+// CreateQueryContextWithCheckHeader creates a new sdk.Context for a query, taking as args
+// the block height, whether the query needs a proof or not, and whether to check the header or not.
+func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, checkHeader bool) (sdk.Context, error) {
 	if err := checkNegativeHeight(height); err != nil {
 		return sdk.Context{}, err
 	}
@@ -1253,7 +1259,7 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 		if state != nil {
 			// branch the commit multi-store for safety
 			h := state.Context().BlockHeader()
-			if h.Height == height || height != lastBlockHeight {
+			if !checkHeader || h.Height == height || height != lastBlockHeight {
 				header = &h
 				break
 			}

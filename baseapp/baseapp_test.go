@@ -741,6 +741,37 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 	}
 }
 
+func TestABCI_CreateQueryContextWithCheckHeader(t *testing.T) {
+	t.Parallel()
+	app := getQueryBaseapp(t)
+	var height int64 = 2
+	var headerHeight int64 = 1
+
+	testCases := []struct {
+		checkHeader bool
+		expErr      bool
+	}{
+		{true, true},
+		{false, false},
+	}
+
+	for _, tc := range testCases {
+		t.Run("valid height with different initial height", func(t *testing.T) {
+			_, err := app.InitChain(&abci.InitChainRequest{
+				InitialHeight: headerHeight,
+			})
+			require.NoError(t, err)
+			ctx, err := app.CreateQueryContextWithCheckHeader(height, true, tc.checkHeader)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, height, ctx.BlockHeight())
+			}
+		})
+	}
+}
+
 func TestABCI_CreateQueryContext_Before_Set_CheckState(t *testing.T) {
 	t.Parallel()
 

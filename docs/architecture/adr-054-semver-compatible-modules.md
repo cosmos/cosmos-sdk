@@ -3,7 +3,7 @@
 ## Changelog
 
 * 2022-04-27: First draft
-* 2024-07-21: Update
+* 2024-07-21: Second draft
 
 ## Status
 
@@ -287,7 +287,7 @@ the [protoreflect API](https://pkg.go.dev/google.golang.org/protobuf/reflect/pro
 to ensure that no fields unknown to the receiving module are set. This could
 result in an undesirable performance hit depending on how complex this logic is.
 
-#### No New Fields in Protobuf Message
+#### No New Fields in Existing Protobuf Messages
 
 An alternative to addressing minor version incompatibilities as described above is disallowing new fields in existing protobuf messages. While this is more restrictive, it simplifies versioning and eliminates the need for runtime unknown field checking. In addition, this approach would simplify cross language communication with the proposed [RFC 002: Zero Copy Encoding](../rfc/rfc-002-zero-copy-encoding.md). So, while it is rather restrictive, it has gained a fair amount of support.
 

@@ -106,7 +106,7 @@ func (m *MM[T]) DefaultGenesis() map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
 	for name, b := range m.modules {
 		if mod, ok := b.(appmodule.HasGenesisBasics); ok {
-			genesisData[mod.Name()] = mod.DefaultGenesis()
+			genesisData[name] = mod.DefaultGenesis()
 		} else if mod, ok := b.(appmodulev2.HasGenesis); ok {
 			genesisData[name] = mod.DefaultGenesis()
 		} else {
@@ -121,7 +121,7 @@ func (m *MM[T]) DefaultGenesis() map[string]json.RawMessage {
 func (m *MM[T]) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 	for name, b := range m.modules {
 		if mod, ok := b.(appmodule.HasGenesisBasics); ok {
-			if err := mod.ValidateGenesis(genesisData[mod.Name()]); err != nil {
+			if err := mod.ValidateGenesis(genesisData[name]); err != nil {
 				return err
 			}
 		} else if mod, ok := b.(appmodulev2.HasGenesis); ok {

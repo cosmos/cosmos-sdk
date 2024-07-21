@@ -623,7 +623,7 @@ func CountSubKeys(pub cryptotypes.PubKey) int {
 // as well as the aggregated signature.
 func signatureDataToBz(data signing.SignatureData) ([][]byte, error) {
 	if data == nil {
-		return nil, fmt.Errorf("got empty SignatureData")
+		return nil, errors.New("got empty SignatureData")
 	}
 
 	switch data := data.(type) {

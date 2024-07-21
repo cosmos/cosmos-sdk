@@ -21,7 +21,6 @@ import (
 const ConsensusVersion = 1
 
 var (
-	_ module.HasName        = AppModule{}
 	_ module.HasAminoCodec  = AppModule{}
 	_ module.HasGRPCGateway = AppModule{}
 
@@ -47,6 +46,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 func (AppModule) IsAppModule() {}
 
 // Name returns the consensus module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string { return types.ModuleName }
 
 // RegisterLegacyAminoCodec registers the consensus module's types on the LegacyAmino codec.

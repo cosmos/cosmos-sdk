@@ -2,7 +2,7 @@ package lockup
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -87,7 +87,7 @@ func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 			case "/cosmos.bank.v1beta1.MsgSend":
 				return &banktypes.MsgSendResponse{}, nil
 			default:
-				return nil, fmt.Errorf("unrecognized request type")
+				return nil, errors.New("unrecognized request type")
 			}
 		}, func(ctx context.Context, req, resp ProtoMsg) error {
 			_, ok := req.(*banktypes.QueryBalanceRequest)

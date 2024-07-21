@@ -436,13 +436,13 @@ Other downsides to this approach are:
 
 ### Approach E) Use Structural Typing in Inter-module APIs, Avoid New Fields on Messages
 
-The current non-router based approach for inter-module communication is for one module to define a `Keeper` interface and then for a consumer module to define an expected keeper interface type which contains a subset of the methods supported by the implementation. Such an interface can allow one module to avoid a dependency on another module if the expected keeper interface doesn't contain any types that must be imported from that other module. For instance, if we had a method `DoSomething(context.Context, string, uint64)` as in `foo.v1`, a module calling `DoSomething` would have no need for any direct import of `foo` using the expected keeper approach. If, however, we had a struct parameter such as `Condition` and the new method were `DoSomethingV2(context.Context, string, uint64, foo.Condition)` then a calling module would generally need to import foo just to get a reference to the `foo.Condition` struct.
+The current non-router based approach for inter-module communication is for a module to define a `Keeper` interface and for a consumer module to define an expected keeper interface with a subset of the keeper's methods. Such an interface can allow one module to avoid a direct dependency on another module if no concrete types need to be imported from the other module. For instance, if we had a method `DoSomething(context.Context, string, uint64)` as in `foo.v1`, then a module calling `DoSomething` would not need to import `foo` directly. If, however, we had a struct parameter such as `Condition` and the new method were `DoSomethingV2(context.Context, string, uint64, foo.Condition)` then a calling module would generally need to import foo just to get a reference to the `foo.Condition` struct.
 
-Golang, however, supports both structural and nominal typing. Nominal typing means that two types equivalent if and only if they have the same name. Structural typing in golang means that two types are equivalent if they have the same structure and are unnamed. So if we defined `Condition` nominally it would look like `type Condition struct { Field1 string }` and if we defined it structurally it would look like `type Condition = struct { Field1 string }`. If `Condition` were defined structurally we could use the expected keeper approach and a calling module _would not_ need to import `foo` at all to define the `DoSomethingV2` method in its expected keeper interface. Structural typing avoids the dependency problems described above.
+Golang, however, supports both structural and nominal typing. Nominal typing means that two types equivalent if and only if they have the same name. Structural typing in golang means that two types are equivalent if they have the same structure and are unnamed. So if we defined `Condition` nominally it might look like `type Condition struct { Field1 string }` and if we defined it structurally it would look like `type Condition = struct { Field1 string }`. If `Condition` were defined structurally we could use the expected keeper approach and a calling module _would not_ need to import `foo` at all to define the `DoSomethingV2` method in its expected keeper interface. Structural typing avoids the dependency problems described above.
 
-We could actually extend this structural typing paradigm to protobuf generated code _if_ we disallow adding new fields to existing protobuf messages. This would be required because two struct types are only identical if their fields are identical. If even the order of fields in a struct or the struct tags change, then golang considers the structs as different types. While this is fairly restrictive, it is under consideration for approach A) as well and has gained supporters within the SDK community. 
+We could actually extend this structural typing paradigm to protobuf generated code _if_ we disallow adding new fields to existing protobuf messages. This would be required because two struct types are only identical if their fields are identical. If even the order of fields in a struct or the struct tags change, then golang considers the structs as different types. While this is fairly restrictive, it is under consideration for approach A) and [RFC 002](../rfc/rfc-002-zero-copy-encoding.md) as well and has gained a fair amount of support.
 
-Small modifications to the existing pulsar code generator could potentially generate code that uses structural typing and moves the implementation of protobuf interfaces to wrapper types (this is necessary because unnamed structs can't define methods). Here's an example of what this might look like:
+Small modifications to the existing pulsar code generator could potentially generate code that uses structural typing and moves the implementation of protobuf interfaces to wrapper types because unnamed structs can't define methods. Here's an example of what this might look like:
 
 ```go
 type MsgDoSomething = struct {
@@ -450,7 +450,7 @@ type MsgDoSomething = struct {
     Amount uint64
 }
 
-type MsgDoSomething_Message(MsgDoSomething)
+type MsgDoSomething_Message(*MsgDoSomething)
 
 // MsgDoSomething_Message would actually implement protobuf methods
 var _ proto.Message = (*MsgDoSomething_Message)(nil)
@@ -458,11 +458,11 @@ var _ proto.Message = (*MsgDoSomething_Message)(nil)
 
 At least at the message layer, such an API wouldn't pose a problem because the transaction decoder does message decoding and modules wouldn't need to interact with the `proto.Message` interface directly.
 
-In order to avoid problems with the global protobuf registry, the structural typing code generator would only register message descriptors with the global registry but not register message types. This would allow two modules to generate the same protobuf types in different packages without causing a conflict and because the types are structural, they would actually be the _same identical_ types to the golang type system but no direct import would be required. The main thing that would be required is a runtime startup check to make sure that each message descriptor defines the same set of fields (no new fields) and is thus compatible.
+In order to avoid problems with the global protobuf registry, the structural typing generated code would only register message descriptors with the global registry but not register message types. This would allow two modules to generate the same protobuf types in different packages without causing a conflict. Because the types are defined structurally, they would actually be the _same_ types but no direct import would be required. In order to ensure compatibility, when message descriptors are registered at startup, a check would be required to ensure that messages are identical (i.e. no new fields).
 
-With this approach, a module `bar` calling module `foo` could either import `foo` directly to get its types or generate its own set of compatible types for `foo`s API. The dependency problem is essentially solved with this approach without needing any sort of special discipline around an API module. The main discipline is around versioning protobuf APIs correctly and not adding new fields.
+With this approach, a module `bar` calling module `foo` could either import `foo` directly to get its types or generate its own set of compatible types for `foo`s API. The dependency problem is essentially solved with this approach without needing any sort of special discipline around a separate API module. The main discipline would be around versioning protobuf APIs correctly and not adding new fields.
 
-Taking the structural typing approach one step further, we could potentially even define APIs that unwrap the request and response types, i.e. `DoSomething(context.Context, string, uint64) error` vs `DoSomething(context.Context, MsgDoSomething) (MsgDoSomethingResponse, error)`. Or, APIs could even be defined directly in golang and the `.proto` files plus marshaling code could be generated using `go generate`, ex:
+Taking this approach one step further, we could potentially even define APIs that unwrap the request and response types, i.e. `DoSomething(context.Context, string, uint64) error` vs `DoSomething(context.Context, MsgDoSomething) (MsgDoSomethingResponse, error)`. Or, APIs could even be defined directly in golang and the `.proto` files plus marshaling code could be generated via `go generate`. Ex:
 
 ```go
 package foo 
@@ -476,10 +476,10 @@ type Msg interface {
 }
 ```
 
-This, while having the limitation of not allowing new fields to get added to existing structs, has the following benefits:
-* unlike approach A), api types can get defined in the same go module, but direct imports can always be avoided
-* generated client/server code could look more like regular go interfaces (without always needing a set of intermediate structs)
-* keepers defined in golang could be turned into protobuf inter-module or external APIs
+While having the limitation of not allowing new fields to be added to existing structs, approach E) has the following benefits:
+* unlike approach A), api types can be generated in the same go module, but direct imports can always be avoided
+* generated client/server code could look more like regular go interfaces (without needing a set of intermediate structs)
+* keeper interface defined in `.go` files could be turned into protobuf APIs (rather than needing to write `.proto` files)
 * SDK modules could adopt go semantic versioning without any of the issues described above, achieving the initially stated goals of this ADR
 
 ## Decision

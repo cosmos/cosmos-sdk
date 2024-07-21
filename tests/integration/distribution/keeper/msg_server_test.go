@@ -277,7 +277,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	height := f.app.LastBlockHeight()
 
 	proposerAddr, _ := f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
-	// the store key is set but
 	assert.Equal(t, proposerAddr.Empty(), true)
 
 	for _, tc := range testCases {

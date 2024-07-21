@@ -59,10 +59,19 @@ func NewIntegrationApp(
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
 	bApp.MountKVStores(keys)
 
+<<<<<<< HEAD
 	bApp.SetInitChainer(func(ctx sdk.Context, _ *cmtabcitypes.RequestInitChain) (*cmtabcitypes.ResponseInitChain, error) {
 		for _, mod := range modules {
 			if m, ok := mod.(module.HasGenesis); ok {
 				m.InitGenesis(ctx, appCodec, m.DefaultGenesis(appCodec))
+=======
+	bApp.SetInitChainer(func(_ sdk.Context, _ *cmtabcitypes.InitChainRequest) (*cmtabcitypes.InitChainResponse, error) {
+		for _, mod := range modules {
+			if m, ok := mod.(module.HasGenesis); ok {
+				if err := m.InitGenesis(sdkCtx, m.DefaultGenesis()); err != nil {
+					return nil, err
+				}
+>>>>>>> 6f1592d3d (fix: NewIntegrationApp does not write default genesis to state (#21006))
 			}
 		}
 

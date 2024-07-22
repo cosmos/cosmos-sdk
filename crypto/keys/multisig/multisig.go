@@ -9,11 +9,12 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	multisigtypes "github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 var (
-	_ multisigtypes.PubKey          = &LegacyAminoPubKey{}
-	_ types.UnpackInterfacesMessage = &LegacyAminoPubKey{}
+	_ multisigtypes.PubKey                 = &LegacyAminoPubKey{}
+	_ gogoprotoany.UnpackInterfacesMessage = &LegacyAminoPubKey{}
 )
 
 // NewLegacyAminoPubKey returns a new LegacyAminoPubKey.
@@ -149,7 +150,7 @@ func (m *LegacyAminoPubKey) Type() string {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m *LegacyAminoPubKey) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (m *LegacyAminoPubKey) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	for _, any := range m.PubKeys {
 		var pk cryptotypes.PubKey
 		err := unpacker.UnpackAny(any, &pk)
@@ -170,10 +171,10 @@ func packPubKeys(pubKeys []cryptotypes.PubKey) ([]*types.Any, error) {
 		}
 		anyPubKeys[i] = any
 
-		// sets the compat.aminoBz value
-		if err := anyPubKeys[i].UnmarshalAmino(pubKeys[i].Bytes()); err != nil {
-			return nil, err
-		}
+		// // sets the compat.aminoBz value
+		// if err := anyPubKeys[i].UnmarshalAmino(pubKeys[i].Bytes()); err != nil {
+		// 	return nil, err
+		// }
 	}
 	return anyPubKeys, nil
 }

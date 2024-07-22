@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/x/authz"
 	"cosmossdk.io/x/authz/keeper"
 	banktype "cosmossdk.io/x/bank/types"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -260,7 +261,7 @@ func SimulateMsgExec(
 	ak authz.AccountKeeper,
 	bk authz.BankKeeper,
 	k keeper.Keeper,
-	unpacker cdctypes.AnyUnpacker,
+	unpacker gogoprotoany.AnyUnpacker,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,

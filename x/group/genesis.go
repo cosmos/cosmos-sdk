@@ -5,8 +5,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 // NewGenesisState creates a new genesis state with default values.
@@ -83,7 +83,7 @@ func (s GenesisState) Validate() error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (s GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (s GenesisState) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	for _, g := range s.GroupPolicies {
 		err := g.UnpackInterfaces(unpacker)
 		if err != nil {

@@ -9,6 +9,7 @@ import (
 
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/types"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -130,7 +131,7 @@ func TestUnpackInterfaces(t *testing.T) {
 
 	testCases := []struct {
 		msg      string
-		unpacker codectypes.AnyUnpacker
+		unpacker gogoprotoany.AnyUnpacker
 		expPass  bool
 	}{
 		{

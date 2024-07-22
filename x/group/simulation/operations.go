@@ -20,6 +20,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 const unsetGroupID = 100000000000000
@@ -104,7 +105,7 @@ func WeightedOperations(
 	registry cdctypes.InterfaceRegistry,
 	appParams simtypes.AppParams, cdc codec.JSONCodec, txGen client.TxConfig,
 	ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper,
-	appCdc cdctypes.AnyUnpacker,
+	appCdc gogoprotoany.AnyUnpacker,
 ) simulation.WeightedOperations {
 	var (
 		weightMsgCreateGroup                     int

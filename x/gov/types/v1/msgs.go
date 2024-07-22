@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/x/gov/types/v1beta1"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,8 +13,8 @@ import (
 )
 
 var (
-	_, _, _, _, _, _, _, _ sdk.Msg                            = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}, &MsgExecLegacyContent{}, &MsgUpdateParams{}, &MsgCancelProposal{}, &MsgSubmitMultipleChoiceProposal{}
-	_, _                   codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}, &MsgExecLegacyContent{}
+	_, _, _, _, _, _, _, _ sdk.Msg                              = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}, &MsgExecLegacyContent{}, &MsgUpdateParams{}, &MsgCancelProposal{}, &MsgSubmitMultipleChoiceProposal{}
+	_, _                   gogoprotoany.UnpackInterfacesMessage = &MsgSubmitProposal{}, &MsgExecLegacyContent{}
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
@@ -60,7 +61,7 @@ func (m *MsgSubmitProposal) SetMsgs(msgs []sdk.Msg) error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgSubmitProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (m MsgSubmitProposal) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	return sdktx.UnpackInterfaces(unpacker, m.Messages)
 }
 
@@ -120,7 +121,7 @@ func (c MsgExecLegacyContent) ValidateBasic() error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (c MsgExecLegacyContent) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (c MsgExecLegacyContent) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var content v1beta1.Content
 	return unpacker.UnpackAny(c.Content, &content)
 }

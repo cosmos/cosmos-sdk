@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"github.com/cosmos/gogoproto/types/any/test"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -49,16 +50,16 @@ func (e QueryImpl) SayHello(_ context.Context, request *SayHelloRequest) (*SayHe
 	return &SayHelloResponse{Greeting: greeting}, nil
 }
 
-var _ types.UnpackInterfacesMessage = &TestAnyRequest{}
+var _ gogoprotoany.UnpackInterfacesMessage = &TestAnyRequest{}
 
-func (m *TestAnyRequest) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (m *TestAnyRequest) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var animal test.Animal
 	return unpacker.UnpackAny(m.AnyAnimal, &animal)
 }
 
-var _ types.UnpackInterfacesMessage = &TestAnyResponse{}
+var _ gogoprotoany.UnpackInterfacesMessage = &TestAnyResponse{}
 
-func (m *TestAnyResponse) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (m *TestAnyResponse) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	return m.HasAnimal.UnpackInterfaces(unpacker)
 }
 

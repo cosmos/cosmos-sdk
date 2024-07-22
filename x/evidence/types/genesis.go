@@ -4,13 +4,14 @@ import (
 	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	"cosmossdk.io/x/evidence/exported"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-var _ types.UnpackInterfacesMessage = GenesisState{}
+var _ gogoprotoany.UnpackInterfacesMessage = GenesisState{}
 
 // NewGenesisState creates a new genesis state for the evidence module.
 func NewGenesisState(e []exported.Evidence) *GenesisState {
@@ -55,7 +56,7 @@ func (gs GenesisState) Validate() error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (gs GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (gs GenesisState) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	for _, any := range gs.Evidence {
 		var evi exported.Evidence
 		err := unpacker.UnpackAny(any, &evi)

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	"cosmossdk.io/core/appmodule"
 	corecontext "cosmossdk.io/core/context"
@@ -23,12 +24,12 @@ const (
 )
 
 var (
-	_ FeeAllowanceI                 = (*AllowedMsgAllowance)(nil)
-	_ types.UnpackInterfacesMessage = (*AllowedMsgAllowance)(nil)
+	_ FeeAllowanceI                        = (*AllowedMsgAllowance)(nil)
+	_ gogoprotoany.UnpackInterfacesMessage = (*AllowedMsgAllowance)(nil)
 )
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (a *AllowedMsgAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (a *AllowedMsgAllowance) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var allowance FeeAllowanceI
 	return unpacker.UnpackAny(a.Allowance, &allowance)
 }

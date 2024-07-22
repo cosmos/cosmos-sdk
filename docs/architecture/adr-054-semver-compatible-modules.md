@@ -291,6 +291,24 @@ result in an undesirable performance hit depending on how complex this logic is.
 
 An alternative to addressing minor version incompatibilities as described above is disallowing new fields in existing protobuf messages. While this is more restrictive, it simplifies versioning and eliminates the need for runtime unknown field checking. In addition, this approach would simplify cross language communication with the proposed [RFC 002: Zero Copy Encoding](../rfc/rfc-002-zero-copy-encoding.md). So, while it is rather restrictive, it has gained a fair amount of support.
 
+Although disallowing new fields may seem overly restrictive, there is a straightforward way to work around it using protobuf `oneof`s. Because `oneof` and `enum` cases must get processed through a `switch` statement, adding new cases is not problematic because any unknown cases can be handled by a `default` clause. The router layer wouldn't need to do unknown field filtering for these because the `switch` statement is a native way to do this. If we needed to add new fields to `MsgDoSomething` from above and retain the possibility of adding more new fields in the future, we could do something like this:
+
+```protobuf
+message MsgDoSomethingWithOptions {
+  string sender = 1;
+  uint64 amount = 2;
+  repeated MsgDoSomethingOption options = 3;
+}
+
+message MsgDoSomethingOption {
+  oneof option {
+    Condition condition = 1;
+  }
+}
+```
+
+New `oneof` cases can be added to `MsgDoSomethingOption` and this has a similar effect as adding new fields to `MsgDoSomethingWithOptions` but no new fields are needed. A similar strategy is recommended for adding variadic options to golang functions in https://go.dev/blog/module-compatibility and expanded upon in https://commandcenter.blogspot.com/2014/01/self-referential-functions-and-design.html.
+
 ### Approach B) Changes to Generated Code to a Getter/Setter API
 
 An alternate approach to solving the versioning problem is to change how protobuf code is generated and move modules

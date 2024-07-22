@@ -890,7 +890,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 		switch store := rs.GetCommitStore(key).(type) {
 		case *iavl.Store:
 			stores = append(stores, namedStore{name: key.Name(), Store: store})
-		case *transient.Store, *mem.Store:
+		case *transient.Store, *mem.Store, *transient.ObjStore:
 			// Non-persisted stores shouldn't be snapshotted
 			continue
 		default:

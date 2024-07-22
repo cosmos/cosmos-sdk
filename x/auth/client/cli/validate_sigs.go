@@ -2,7 +2,7 @@ package cli
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -52,7 +52,7 @@ func makeValidateSignaturesCmd() func(cmd *cobra.Command, args []string) error {
 		}
 
 		if !printAndValidateSigs(cmd, clientCtx, txBldr.ChainID(), stdTx, clientCtx.Offline) {
-			return fmt.Errorf("signatures validation failed")
+			return errors.New("signatures validation failed")
 		}
 
 		return nil

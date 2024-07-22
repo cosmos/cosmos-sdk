@@ -415,7 +415,7 @@ func (k Keeper) HasHandler(name string) bool {
 func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 	handler := k.upgradeHandlers[plan.Name]
 	if handler == nil {
-		return fmt.Errorf("ApplyUpgrade should never be called without first checking HasHandler")
+		return errors.New("ApplyUpgrade should never be called without first checking HasHandler")
 	}
 
 	vm, err := k.GetModuleVersionMap(ctx)

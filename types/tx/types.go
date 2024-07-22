@@ -1,7 +1,7 @@
 package tx
 
 import (
-	"fmt"
+	"errors"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -40,22 +40,22 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 // ValidateBasic implements the ValidateBasic method on sdk.Tx.
 func (t *Tx) ValidateBasic() error {
 	if t == nil {
-		return fmt.Errorf("bad Tx")
+		return errors.New("bad Tx")
 	}
 
 	body := t.Body
 	if body == nil {
-		return fmt.Errorf("missing TxBody")
+		return errors.New("missing TxBody")
 	}
 
 	authInfo := t.AuthInfo
 	if authInfo == nil {
-		return fmt.Errorf("missing AuthInfo")
+		return errors.New("missing AuthInfo")
 	}
 
 	fee := authInfo.Fee
 	if fee == nil {
-		return fmt.Errorf("missing fee")
+		return errors.New("missing fee")
 	}
 
 	if fee.GasLimit > MaxGasWanted {

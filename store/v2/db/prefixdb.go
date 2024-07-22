@@ -247,7 +247,7 @@ func (itr *prefixDBIterator) Next() {
 	}
 }
 
-// Next implements Iterator.
+// Key implements Iterator.
 func (itr *prefixDBIterator) Key() []byte {
 	itr.assertIsValid()
 	key := itr.source.Key()

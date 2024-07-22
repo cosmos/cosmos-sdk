@@ -148,7 +148,6 @@ func (db *Database) Has(storeKey []byte, version uint64, key []byte) (bool, erro
 }
 
 func (db *Database) Get(storeKey []byte, targetVersion uint64, key []byte) ([]byte, error) {
-	fmt.Println("version", targetVersion, db.earliestVersion)
 	if targetVersion < db.earliestVersion {
 		return nil, storeerrors.ErrVersionPruned{EarliestVersion: db.earliestVersion, RequestedVersion: targetVersion}
 	}

@@ -38,32 +38,39 @@ Additionally, there is an overlap in functionality with a Token Factory module, 
 
 **Legacy Support**: A legacy wrapper will be implemented to ensure compatibility with about 90% of existing functions. This measure will facilitate a smooth transition while keeping older systems functional.
 
-**Callback Functions**: We propose to to integrate callbacks which are handled by an`x/account` and will handle the callback message type. This allows for  for customisable behaviour during minting, burning and transferring operations without complicating statemanagement.It also helps overwrite the default accounting mechanism by allowing to overwrite the balance method (this is particularly useful for rebasing tokens).
+**Denom Implementation**: A asset interface will be added to standardise interactions such as transfers, balance inquiries, minting, and burning across different tokens. This will allow the bank module to support arbitrary asset types, enabling developers to implement custom, ERC20-like denominations.
 
-Each denom will be an `x/account` and will implement `OnTransfer`, `OnBurn`, `OnMint` and `OnBalanceOf` hooks. The bank module will check if the denom is an x/account and implement the respective hook. Depending on the hook, th bank module will send a message to the denom account. From there the denom account will return the new balances of the accounts.
+For example, currently if a team would like to extend the transfer method the changes would apply universally, affecting all denom’s. With the proposed Asset Interface, it allows teams to customise or extend the transfer method specifically for their own tokens without impacting others.
 
-We would have the following messages `MsgMint`, `MsgBurn`, `MsgOnTransfer`, `QueryBalance` that would be sent to the denom account. 
+These improvements are expected to enhance the flexibility of the bank module, allowing for the creation of custom tokens similar to ERC20 standards and assets backed by CosmWasm (CW) contracts. The integration efforts will also aim to unify CW20 with bank coins across the Cosmos chains.
 
-How the `x/account` denom implementation would look is as per below:
+Example of denom interface:
 
 ```go
-func (a Account) RegisterExecuteHandlers(r accountsd.Router) {
-accountsd.RegisterHandler(r, a.OnTransfer)
-accountsd.RegisterHAndler(r. a.Burn)
-}
-
-func (a Account) OnTransfer(ctx context.Context, msg MsgOnTransfer) (MsgOnTransferResponse, error) {
-    ... check if account KYCd...
+type AssetInterface interface {
+    Transfer(ctx sdk.Context, from sdk.AccAddress, to sdk.AccAddress, amount sdk.Coin) error
+    Mint(ctx sdk.Context, to sdk.AccAddress, amount sdk.Coin) error
+    Burn(ctx sdk.Context, from sdk.AccAddress, amount sdk.Coin) error
+    QueryBalance(ctx sdk.Context, account sdk.AccAddress) (sdk.Coin, error)
 }
 ```
 
-For example if alice sends `MsgSend{to: bob, amount: 100ATOM}` to bank, bank checks if `ATOM` is an `x/account` implementing the `OnTransfer` hook.
+Overview of flow:
 
-If `ATOM` is an `x/account` implementing the `OnTransfer` hook then bank sends a `MsgTransfer` to the `ATOM` denom account. The `ATOM` denom account returns the new balances of alice and bob.
+1. Alice initiates a transfer by entering Bob's address and the amount (100 ATOM)
+2. The Bank module verifies that the ATOM token implements the `AssetInterface` by querying the `ATOM_Denom_Account`, which is an `x/account` denom account.
+3. The Bank module executes the transfer by subtracting 100 ATOM from Alice’s balance and adding 100 ATOM to Bob’s balance.
+4. The Bank module calls the Transfer method on the `ATOM_Denom_Account`. The Transfer method, defined in the `AssetInterface`, handles the logic to subtract 100 ATOM from Alice’s balance and add 100 ATOM to Bob’s balance.
+5. The Bank module updates the chain and returns the new balances.
+6. Both Alice and Bob successfully receive the updated balances.
 
-If `ATOM` is not an `x/account` implementing the `OnTransfer` hook then bank will simply substract amount from alice and add it to bob.
 
-[flow diagram of the above process](flow.png)
+
+
+
+
+
+
 
 
 ## Migration Plans

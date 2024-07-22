@@ -1,6 +1,9 @@
 package schema
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 // EnumDefinition represents the definition of an enum type.
 type EnumDefinition struct {
@@ -22,7 +25,7 @@ func (e EnumDefinition) Validate() error {
 	}
 
 	if len(e.Values) == 0 {
-		return fmt.Errorf("enum definition values cannot be empty")
+		return errors.New("enum definition values cannot be empty")
 	}
 	seen := make(map[string]bool, len(e.Values))
 	for i, v := range e.Values {

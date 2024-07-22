@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/v2/storage"
 )
 
@@ -18,7 +18,7 @@ func TestStorageTestSuite(t *testing.T) {
 	s := &storage.StorageTestSuite{
 		NewDB: func(dir string) (*storage.StorageStore, error) {
 			db, err := New(dir)
-			return storage.NewStorageStore(db, log.NewNopLogger()), err
+			return storage.NewStorageStore(db, coretesting.NewNopLogger()), err
 		},
 		EmptyBatchSize: 0,
 	}

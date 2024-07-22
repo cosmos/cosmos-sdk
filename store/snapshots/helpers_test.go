@@ -15,7 +15,7 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -211,7 +211,7 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 	require.NoError(t, err)
 	hung := newHungSnapshotter()
 	hung.SetSnapshotInterval(opts.Interval)
-	mgr := snapshots.NewManager(store, opts, hung, nil, log.NewNopLogger())
+	mgr := snapshots.NewManager(store, opts, hung, nil, coretesting.NewNopLogger())
 	require.Equal(t, opts.Interval, hung.snapshotInterval)
 
 	// Channel to ensure the test doesn't finish until the goroutine is done.

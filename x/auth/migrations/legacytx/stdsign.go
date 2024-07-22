@@ -2,11 +2,12 @@ package legacytx
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"sigs.k8s.io/yaml"
 
-	"cosmossdk.io/errors"
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
@@ -62,7 +63,7 @@ func mustSortJSON(bz []byte) []byte {
 // Deprecated: Please use x/tx/signing/aminojson instead.
 func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
 	if RegressionTestingAminoCodec == nil {
-		panic(fmt.Errorf("must set RegressionTestingAminoCodec before calling StdSignBytes"))
+		panic(errors.New("must set RegressionTestingAminoCodec before calling StdSignBytes"))
 	}
 	msgsBytes := make([]json.RawMessage, 0, len(msgs))
 	for _, msg := range msgs {
@@ -172,7 +173,7 @@ func pubKeySigToSigData(cdc *codec.LegacyAmino, key cryptotypes.PubKey, sig []by
 		if bitArray.GetIndex(i) {
 			data, err := pubKeySigToSigData(cdc, pubKeys[i], multiSig.Sigs[sigIdx])
 			if err != nil {
-				return nil, errors.Wrapf(err, "Unable to convert Signature to SigData %d", sigIdx)
+				return nil, errorsmod.Wrapf(err, "Unable to convert Signature to SigData %d", sigIdx)
 			}
 
 			sigDatas[sigIdx] = data

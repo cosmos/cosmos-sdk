@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
 	_ "cosmossdk.io/x/accounts" // import as blank for app wiring
 	_ "cosmossdk.io/x/auth"     // import as blank for app wiring
@@ -69,7 +69,7 @@ func (suite *SimTestSuite) SetupTest() {
 	app, err := simtestutil.Setup(
 		depinject.Configs(
 			AppConfig,
-			depinject.Supply(log.NewNopLogger()),
+			depinject.Supply(coretesting.NewNopLogger()),
 		),
 		&suite.codec,
 		&suite.interfaceRegistry,

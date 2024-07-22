@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/distribution"
 	v4 "cosmossdk.io/x/distribution/migrations/v4"
@@ -25,7 +25,7 @@ func TestMigration(t *testing.T) {
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
+	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 
 	addr1 := secp256k1.GenPrivKey().PubKey().Address()
 	consAddr1 := sdk.ConsAddress(addr1)

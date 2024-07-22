@@ -2,6 +2,7 @@ package autocli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -176,14 +177,14 @@ func encoder(encoder aminojson.Encoder) aminojson.Encoder {
 		fields := msg.Descriptor().Fields()
 		secondsField := fields.ByName(secondsName)
 		if secondsField == nil {
-			return fmt.Errorf("expected seconds field")
+			return errors.New("expected seconds field")
 		}
 
 		seconds := msg.Get(secondsField).Int()
 
 		nanosField := fields.ByName(nanosName)
 		if nanosField == nil {
-			return fmt.Errorf("expected nanos field")
+			return errors.New("expected nanos field")
 		}
 
 		nanos := msg.Get(nanosField).Int()
@@ -199,14 +200,14 @@ func encoder(encoder aminojson.Encoder) aminojson.Encoder {
 		fields := msg.Descriptor().Fields()
 		denomField := fields.ByName(denomName)
 		if denomField == nil {
-			return fmt.Errorf("expected denom field")
+			return errors.New("expected denom field")
 		}
 
 		denom := msg.Get(denomField).String()
 
 		amountField := fields.ByName(amountName)
 		if amountField == nil {
-			return fmt.Errorf("expected amount field")
+			return errors.New("expected amount field")
 		}
 
 		amount := msg.Get(amountField).String()

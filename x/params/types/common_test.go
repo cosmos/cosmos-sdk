@@ -39,7 +39,7 @@ func validateUnbondingTime(i interface{}) error {
 	}
 
 	if v < (24 * time.Hour) {
-		return fmt.Errorf("unbonding time must be at least one day")
+		return errors.New("unbonding time must be at least one day")
 	}
 
 	return nil

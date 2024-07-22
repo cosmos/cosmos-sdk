@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/simapp/v2"
 	"cosmossdk.io/simapp/v2/simdv2/cmd"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -20,5 +21,5 @@ func TestInitTestFilesCmd(t *testing.T) {
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest), // Set keyring-backend to test
 	})
 
-	require.NoError(t, svrcmd.Execute(rootCmd, "", t.TempDir()))
+	require.NoError(t, svrcmd.Execute(rootCmd, "", simapp.DefaultNodeHome))
 }

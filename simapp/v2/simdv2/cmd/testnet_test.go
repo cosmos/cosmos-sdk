@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/transaction"
+	svrcmd "cosmossdk.io/server/v2"
 	"cosmossdk.io/simapp/v2"
 	"cosmossdk.io/simapp/v2/simdv2/cmd"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 )
 
 func TestInitTestFilesCmd(t *testing.T) {

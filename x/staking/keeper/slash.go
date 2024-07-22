@@ -190,7 +190,7 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 			return math.NewInt(0), err
 		}
 	default:
-		return math.NewInt(0), fmt.Errorf("invalid validator status")
+		return math.NewInt(0), errors.New("invalid validator status")
 	}
 
 	k.Logger.Info(
@@ -415,7 +415,7 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 		case dstValidator.IsUnbonded() || dstValidator.IsUnbonding():
 			notBondedBurnedAmount = notBondedBurnedAmount.Add(tokensToBurn)
 		default:
-			return math.ZeroInt(), fmt.Errorf("unknown validator status")
+			return math.ZeroInt(), errors.New("unknown validator status")
 		}
 	}
 

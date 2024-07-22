@@ -17,7 +17,5 @@ require (
 	google.golang.org/protobuf v1.34.2 // indirect
 )
 
-retract (
-	// Version tagged too early and incompatible with v0.50 (latest at the time of tagging)
-	v0.12.0
-)
+// Version tagged too early and incompatible with v0.50 (latest at the time of tagging)
+retract v0.12.0

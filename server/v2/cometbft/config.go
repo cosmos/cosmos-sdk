@@ -27,10 +27,10 @@ func DefaultAppTomlConfig() *AppTomlConfig {
 }
 
 type AppTomlConfig struct {
-	MinRetainBlocks uint64   `mapstructure:"min_retain_blocks" toml:"min_retain_blocks" comment:"min_retain_blocks defines the minimum block height offset from the current block being committed, such that all blocks past this offset are pruned from CometBFT. A value of 0 indicates that no blocks should be pruned."`
-	IndexEvents     []string `mapstructure:"index_events" toml:"index_events" comment:"index_events defines the set of events in the form {eventType}.{attributeKey}, which informs CometBFT what to index. If empty, all events will be indexed."`
-	HaltHeight      uint64   `mapstructure:"halt_height" toml:"halt_height" comment:"halt_height contains a non-zero block height at which a node will gracefully halt and shutdown that can be used to assist upgrades and testing."`
-	HaltTime        uint64   `mapstructure:"halt_time" toml:"halt_time" comment:"halt_time contains a non-zero minimum block time (in Unix seconds) at which a node will gracefully halt and shutdown that can be used to assist upgrades and testing."`
+	MinRetainBlocks uint64   `mapstructure:"min-retain-blocks" toml:"min-retain-blocks" comment:"min-retain-blocks defines the minimum block height offset from the current block being committed, such that all blocks past this offset are pruned from CometBFT. A value of 0 indicates that no blocks should be pruned."`
+	IndexEvents     []string `mapstructure:"index-events" toml:"index-events" comment:"index-events defines the set of events in the form {eventType}.{attributeKey}, which informs CometBFT what to index. If empty, all events will be indexed."`
+	HaltHeight      uint64   `mapstructure:"halt-height" toml:"halt-height" comment:"halt-height contains a non-zero block height at which a node will gracefully halt and shutdown that can be used to assist upgrades and testing."`
+	HaltTime        uint64   `mapstructure:"halt-time" toml:"halt-time" comment:"halt-time contains a non-zero minimum block time (in Unix seconds) at which a node will gracefully halt and shutdown that can be used to assist upgrades and testing."`
 	Address         string   `mapstructure:"address" toml:"address" comment:"address defines the CometBFT RPC server address to bind to."`
 	Transport       string   `mapstructure:"transport" toml:"transport" comment:"transport defines the CometBFT RPC server transport protocol: socket, grpc"`
 	Trace           bool     `mapstructure:"trace" toml:"trace" comment:"trace enables the CometBFT RPC server to output trace information about its internal operations."`

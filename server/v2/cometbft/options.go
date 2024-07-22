@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/cometbft/handlers"
 	"cosmossdk.io/server/v2/cometbft/mempool"
+	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
 )
 
@@ -16,6 +17,9 @@ type ServerOptions[T transaction.Tx] struct {
 	ExtendVoteHandler          handlers.ExtendVoteHandler
 
 	SnapshotOptions snapshots.SnapshotOptions
+
+	AddrPeerFilter types.PeerFilter // filter peers by address and port
+	IdPeerFilter   types.PeerFilter // filter peers by node ID
 }
 
 // DefaultServerOptions returns the default server options.
@@ -28,5 +32,7 @@ func DefaultServerOptions[T transaction.Tx]() ServerOptions[T] {
 		VerifyVoteExtensionHandler: handlers.NoOpVerifyVoteExtensionHandler(),
 		ExtendVoteHandler:          handlers.NoOpExtendVote(),
 		SnapshotOptions:            snapshots.NewSnapshotOptions(0, 0),
+		AddrPeerFilter:             nil,
+		IdPeerFilter:               nil,
 	}
 }

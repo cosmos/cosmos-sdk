@@ -3,7 +3,6 @@ package serverv2
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -102,19 +101,12 @@ func createStartCommand[T transaction.Tx](
 ) *cobra.Command {
 	flags := server.StartFlags()
 
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the application",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			v := GetViperFromCmd(cmd)
 			l := GetLoggerFromCmd(cmd)
-
-			for _, startFlags := range flags {
-				if err := v.BindPFlags(startFlags); err != nil {
-					return err
-				}
-			}
-
 			if err := v.BindPFlags(cmd.Flags()); err != nil {
 				return err
 			}
@@ -137,12 +129,19 @@ func createStartCommand[T transaction.Tx](
 			}()
 
 			if err := server.Start(ctx); err != nil {
-				return fmt.Errorf("failed to start servers: %w", err)
+				return err
 			}
 
 			return nil
 		},
 	}
+
+	// add the start flags to the command
+	for _, startFlags := range flags {
+		cmd.Flags().AddFlagSet(startFlags)
+	}
+
+	return cmd
 }
 
 // configHandle writes the default config to the home directory if it does not exist and sets the server context

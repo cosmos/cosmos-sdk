@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	dbm "cosmossdk.io/store/v2/db"
@@ -25,35 +25,35 @@ func setupMigrationManager(t *testing.T, noCommitStore bool) (*Manager, *commitm
 	multiTrees := make(map[string]commitment.Tree)
 	for _, storeKey := range storeKeys {
 		prefixDB := dbm.NewPrefixDB(db, []byte(storeKey))
-		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, log.NewNopLogger(), iavl.DefaultConfig())
+		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, coretesting.NewNopLogger(), iavl.DefaultConfig())
 	}
 
-	commitStore, err := commitment.NewCommitStore(multiTrees, db, log.NewNopLogger())
+	commitStore, err := commitment.NewCommitStore(multiTrees, db, coretesting.NewNopLogger())
 	require.NoError(t, err)
 
 	snapshotsStore, err := snapshots.NewStore(t.TempDir())
 	require.NoError(t, err)
 
-	snapshotsManager := snapshots.NewManager(snapshotsStore, snapshots.NewSnapshotOptions(1500, 2), commitStore, nil, nil, log.NewNopLogger())
+	snapshotsManager := snapshots.NewManager(snapshotsStore, snapshots.NewSnapshotOptions(1500, 2), commitStore, nil, nil, coretesting.NewNopLogger())
 
 	storageDB, err := pebbledb.New(t.TempDir())
 	require.NoError(t, err)
-	newStorageStore := storage.NewStorageStore(storageDB, log.NewNopLogger()) // for store/v2
+	newStorageStore := storage.NewStorageStore(storageDB, coretesting.NewNopLogger()) // for store/v2
 
 	db1 := dbm.NewMemDB()
 	multiTrees1 := make(map[string]commitment.Tree)
 	for _, storeKey := range storeKeys {
 		prefixDB := dbm.NewPrefixDB(db1, []byte(storeKey))
-		multiTrees1[storeKey] = iavl.NewIavlTree(prefixDB, log.NewNopLogger(), iavl.DefaultConfig())
+		multiTrees1[storeKey] = iavl.NewIavlTree(prefixDB, coretesting.NewNopLogger(), iavl.DefaultConfig())
 	}
 
-	newCommitStore, err := commitment.NewCommitStore(multiTrees1, db1, log.NewNopLogger()) // for store/v2
+	newCommitStore, err := commitment.NewCommitStore(multiTrees1, db1, coretesting.NewNopLogger()) // for store/v2
 	require.NoError(t, err)
 	if noCommitStore {
 		newCommitStore = nil
 	}
 
-	return NewManager(db, snapshotsManager, newStorageStore, newCommitStore, log.NewNopLogger()), commitStore
+	return NewManager(db, snapshotsManager, newStorageStore, newCommitStore, coretesting.NewNopLogger()), commitStore
 }
 
 func TestMigrateState(t *testing.T) {
@@ -78,6 +78,11 @@ func TestMigrateState(t *testing.T) {
 
 			err := m.Migrate(toVersion - 1)
 			require.NoError(t, err)
+
+			// expecting error for conflicting process, since Migrate trigger snapshotter create migration,
+			// which start a snapshot process already.
+			_, err = m.snapshotsManager.Create(toVersion - 1)
+			require.Error(t, err)
 
 			if m.stateCommitment != nil {
 				// check the migrated state

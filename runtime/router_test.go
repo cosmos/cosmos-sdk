@@ -7,7 +7,7 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	counterv1 "cosmossdk.io/api/cosmos/counter/v1"
-	"cosmossdk.io/log"
+	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -26,7 +26,7 @@ func TestRouterService(t *testing.T) {
 	queryRouter.SetInterfaceRegistry(interfaceRegistry)
 	key := storetypes.NewKVStoreKey(countertypes.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
-	counterKeeper := counterkeeper.NewKeeper(runtime.NewEnvironment(storeService, log.NewNopLogger()))
+	counterKeeper := counterkeeper.NewKeeper(runtime.NewEnvironment(storeService, coretesting.NewNopLogger()))
 	countertypes.RegisterInterfaces(interfaceRegistry)
 	countertypes.RegisterMsgServer(msgRouter, counterKeeper)
 	countertypes.RegisterQueryServer(queryRouter, counterKeeper)

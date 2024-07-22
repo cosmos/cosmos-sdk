@@ -14,7 +14,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
@@ -29,8 +28,6 @@ const (
 var ModuleAccountAddress = address.Module(ModuleName)
 
 var (
-	_ module.HasName = AppModule{}
-
 	_ appmodule.AppModule           = AppModule{}
 	_ appmodule.HasServices         = AppModule{}
 	_ appmodule.HasGenesis          = AppModule{}
@@ -48,6 +45,8 @@ type AppModule struct {
 
 func (m AppModule) IsAppModule() {}
 
+// Name returns the module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string { return ModuleName }
 
 func (m AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {

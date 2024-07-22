@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/client/v2/offchain"
+	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
@@ -31,46 +31,6 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
-
-var _ transaction.Codec[transaction.Tx] = &temporaryTxDecoder[transaction.Tx]{}
-
-type temporaryTxDecoder[T transaction.Tx] struct {
-	txConfig client.TxConfig
-}
-
-// Decode implements transaction.Codec.
-func (t *temporaryTxDecoder[T]) Decode(bz []byte) (T, error) {
-	var out T
-	tx, err := t.txConfig.TxDecoder()(bz)
-	if err != nil {
-		return out, err
-	}
-
-	var ok bool
-	out, ok = tx.(T)
-	if !ok {
-		return out, errors.New("unexpected Tx type")
-	}
-
-	return out, nil
-}
-
-// DecodeJSON implements transaction.Codec.
-func (t *temporaryTxDecoder[T]) DecodeJSON(bz []byte) (T, error) {
-	var out T
-	tx, err := t.txConfig.TxJSONDecoder()(bz)
-	if err != nil {
-		return out, err
-	}
-
-	var ok bool
-	out, ok = tx.(T)
-	if !ok {
-		return out, errors.New("unexpected Tx type")
-	}
-
-	return out, nil
-}
 
 func newApp[T transaction.Tx](
 	logger log.Logger, viper *viper.Viper,
@@ -102,19 +62,19 @@ func initRootCmd[T transaction.Tx](
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
-		genesisCommand[T](txConfig, moduleManager, appExport[T]),
+		genesisCommand(moduleManager, appExport[T]),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
 		offchain.OffChain(),
 	)
 
-	// Add empty server struct here for writing default config
+	// wire server commands
 	if err = serverv2.AddCommands(
 		rootCmd,
 		newApp,
 		logger,
-		cometbft.New[T](&temporaryTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
+		cometbft.New(&genericTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
 		grpc.New[T](),
 	); err != nil {
 		panic(err)
@@ -123,7 +83,6 @@ func initRootCmd[T transaction.Tx](
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
 func genesisCommand[T transaction.Tx](
-	txConfig client.TxConfig,
 	moduleManager *runtimev2.MM[T],
 	appExport func(logger log.Logger,
 		height int64,
@@ -143,7 +102,7 @@ func genesisCommand[T transaction.Tx](
 		return appExport(logger, height, forZeroHeight, jailAllowedAddrs, viperAppOpts, modulesToExport)
 	}
 
-	cmd := genutilcli.Commands(txConfig, moduleManager.Modules()[genutiltypes.ModuleName].(genutil.AppModule), moduleManager, compatAppExporter)
+	cmd := genutilcli.Commands(moduleManager.Modules()[genutiltypes.ModuleName].(genutil.AppModule), moduleManager, compatAppExporter)
 	for _, subCmd := range cmds {
 		cmd.AddCommand(subCmd)
 	}
@@ -220,4 +179,44 @@ func appExport[T transaction.Tx](
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
+}
+
+var _ transaction.Codec[transaction.Tx] = &genericTxDecoder[transaction.Tx]{}
+
+type genericTxDecoder[T transaction.Tx] struct {
+	txConfig client.TxConfig
+}
+
+// Decode implements transaction.Codec.
+func (t *genericTxDecoder[T]) Decode(bz []byte) (T, error) {
+	var out T
+	tx, err := t.txConfig.TxDecoder()(bz)
+	if err != nil {
+		return out, err
+	}
+
+	var ok bool
+	out, ok = tx.(T)
+	if !ok {
+		return out, errors.New("unexpected Tx type")
+	}
+
+	return out, nil
+}
+
+// DecodeJSON implements transaction.Codec.
+func (t *genericTxDecoder[T]) DecodeJSON(bz []byte) (T, error) {
+	var out T
+	tx, err := t.txConfig.TxJSONDecoder()(bz)
+	if err != nil {
+		return out, err
+	}
+
+	var ok bool
+	out, ok = tx.(T)
+	if !ok {
+		return out, errors.New("unexpected Tx type")
+	}
+
+	return out, nil
 }

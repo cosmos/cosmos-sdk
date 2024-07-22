@@ -34,7 +34,7 @@ func New[T transaction.Tx](cfgOptions ...CfgOption) *GRPCServer[T] {
 func (s *GRPCServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
 	cfg := s.Config().(*Config)
 	if v != nil {
-		if err := v.Sub(s.Name()).Unmarshal(&cfg); err != nil {
+		if err := serverv2.UnmarshalSubConfig(v, s.Name(), &cfg); err != nil {
 			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}

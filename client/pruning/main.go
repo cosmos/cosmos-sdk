@@ -1,6 +1,7 @@
 package pruning
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -76,7 +77,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 
 			rootMultiStore, ok := cms.(*rootmulti.Store)
 			if !ok {
-				return fmt.Errorf("currently only support the pruning of rootmulti.Store type")
+				return errors.New("currently only support the pruning of rootmulti.Store type")
 			}
 			latestHeight := rootmulti.GetLatestVersion(db)
 			// valid heights should be greater than 0.

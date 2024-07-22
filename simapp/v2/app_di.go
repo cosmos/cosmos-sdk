@@ -224,7 +224,6 @@ func NewSimApp[T transaction.Tx](
 	if err := app.LoadLatest(); err != nil {
 		panic(err)
 	}
-
 	return app
 }
 

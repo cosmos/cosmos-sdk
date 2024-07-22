@@ -209,7 +209,7 @@ func (cs *ConsensusGenesis) UnmarshalJSON(b []byte) error {
 
 func (cs *ConsensusGenesis) ValidateAndComplete() error {
 	if cs == nil {
-		return fmt.Errorf("consensus genesis cannot be nil")
+		return errors.New("consensus genesis cannot be nil")
 	}
 
 	if cs.Params == nil {

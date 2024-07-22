@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 
 	storetypes "cosmossdk.io/core/store"
@@ -63,7 +64,7 @@ func (m Migrator) Migrate2to3(ctx context.Context) error {
 
 func migrateAppVersion(ctx context.Context, keeper *Keeper) error {
 	if keeper.versionModifier == nil {
-		return fmt.Errorf("version modifier is not set")
+		return errors.New("version modifier is not set")
 	}
 
 	store := keeper.KVStoreService.OpenKVStore(ctx)

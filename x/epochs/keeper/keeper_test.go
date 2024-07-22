@@ -9,7 +9,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
 	epochskeeper "cosmossdk.io/x/epochs/keeper"
 	"cosmossdk.io/x/epochs/types"
@@ -54,7 +54,7 @@ func Setup(t *testing.T) (sdk.Context, *epochskeeper.Keeper, appmodule.Environme
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
-	environment := runtime.NewEnvironment(storeService, log.NewNopLogger())
+	environment := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})

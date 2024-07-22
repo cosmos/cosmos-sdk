@@ -725,7 +725,7 @@ func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 	return nil
 }
 
-// getStoreByName performs a lookup of a StoreKey given a store name typically
+// GetStoreByName performs a lookup of a StoreKey given a store name typically
 // provided in a path. The StoreKey is then used to perform a lookup and return
 // a Store. If the Store is wrapped in an inter-block cache, it will be unwrapped
 // prior to being returned. If the StoreKey does not exist, nil is returned.

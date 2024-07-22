@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/x/auth/signing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -33,7 +33,7 @@ func AddressGenerator(t *rapid.T) *rapid.Generator[sdk.AccAddress] {
 }
 
 func testMempoolProperties(t *rapid.T) {
-	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, false, coretesting.NewNopLogger())
 	mp := mempool.NewSenderNonceMempool()
 
 	genMultipleAddress := rapid.SliceOfNDistinct(AddressGenerator(t), 1, 10, func(acc sdk.AccAddress) string {

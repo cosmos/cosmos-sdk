@@ -107,6 +107,24 @@ updates:
       - "A:automerge"
       - dependencies
   - package-ecosystem: gomod
+    directory: "/indexer/postgres"
+    schedule:
+      interval: weekly
+      day: wednesday
+      time: "01:53"
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/indexer/postgres/tests"
+    schedule:
+      interval: weekly
+      day: wednesday
+      time: "01:53"
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
     directory: "/schema"
     schedule:
       interval: weekly

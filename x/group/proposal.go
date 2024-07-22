@@ -1,9 +1,10 @@
 package group
 
 import (
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 // GetMsgs unpacks p.Messages Any's into sdk.Msg's

@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/types"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

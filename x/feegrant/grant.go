@@ -2,12 +2,12 @@ package feegrant
 
 import (
 	"github.com/cosmos/gogoproto/proto"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 var _ gogoprotoany.UnpackInterfacesMessage = &Grant{}

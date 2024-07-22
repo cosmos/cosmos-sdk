@@ -2,11 +2,11 @@ package codec
 
 import (
 	"github.com/cosmos/gogoproto/proto"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 type (

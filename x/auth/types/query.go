@@ -1,8 +1,9 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (m *QueryAccountResponse) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {

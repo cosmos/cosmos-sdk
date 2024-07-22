@@ -4,12 +4,11 @@ import (
 	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	"cosmossdk.io/x/evidence/exported"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
-
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 var _ gogoprotoany.UnpackInterfacesMessage = GenesisState{}

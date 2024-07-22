@@ -1,8 +1,9 @@
 package tx
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // TxExtensionOptionI defines the interface for tx extension options

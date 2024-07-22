@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"time"
 
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	corecontext "cosmossdk.io/core/context"
@@ -13,7 +15,6 @@ import (
 	"cosmossdk.io/x/authz"
 	"cosmossdk.io/x/authz/keeper"
 	banktype "cosmossdk.io/x/bank/types"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"

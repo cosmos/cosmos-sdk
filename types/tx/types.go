@@ -3,6 +3,7 @@ package tx
 import (
 	"fmt"
 
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/core/registry"
@@ -12,7 +13,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 // MaxGasWanted defines the max gas allowed.

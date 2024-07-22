@@ -4,8 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/x/gov/types/v1beta1"
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
+	"cosmossdk.io/x/gov/types/v1beta1"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

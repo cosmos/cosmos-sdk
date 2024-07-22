@@ -4,10 +4,11 @@ import (
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	errorsmod "cosmossdk.io/errors"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 // NewGrant returns new Grant. Expiration is optional and noop if null.

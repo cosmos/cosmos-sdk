@@ -1,10 +1,11 @@
 package tx
 
 import (
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 // ValidateBasic performs stateless validation of the sign doc.

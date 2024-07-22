@@ -3,8 +3,9 @@ package types
 import (
 	"encoding/json"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // NewGenesisState creates a new GenesisState instance

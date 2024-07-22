@@ -8,6 +8,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/keeper"
@@ -20,7 +22,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 const unsetGroupID = 100000000000000

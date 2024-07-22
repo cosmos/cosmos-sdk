@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"sigs.k8s.io/yaml"
 
 	"cosmossdk.io/errors"
@@ -15,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 // LegacyMsg defines the old interface a message must fulfill,

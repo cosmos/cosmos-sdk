@@ -3,10 +3,11 @@ package group
 import (
 	"fmt"
 
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
 	errorsmod "cosmossdk.io/errors"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 // NewGenesisState creates a new genesis state with default values.

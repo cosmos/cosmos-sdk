@@ -3,8 +3,9 @@ package v1beta1
 import (
 	"fmt"
 
-	"cosmossdk.io/math"
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
+	"cosmossdk.io/math"
 )
 
 // NewGenesisState creates a new genesis state for the governance module

@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	cosmossdk.io/api v0.2.6
-	cosmossdk.io/depinject v1.0.0-alpha.4.0.20240719194821-702115b0ac1a
+	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/math v1.0.0-beta.4
 	github.com/cosmos/cosmos-db v0.0.0-20221226095112-f3c38ecb5e32
 	github.com/stretchr/testify v1.9.0

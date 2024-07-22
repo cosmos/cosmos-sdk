@@ -370,12 +370,15 @@ func (x Dec) Reduce() (Dec, int) {
 
 // Marshal serializes the decimal value into a byte slice in a text format.
 // This method ensures the decimal is represented in a portable and human-readable form.
-func (d Dec) Marshal() ([]byte, error) {
-	return d.dec.MarshalText()
+// Note: The output may be in scientific notation due to MarshalText.
+func (x Dec) Marshal() ([]byte, error) {
+	reducedDec, _ := x.dec.Reduce(&x.dec)
+	return reducedDec.MarshalText()
 }
 
 // Unmarshal parses a byte slice containing a text-formatted decimal and stores the result in the receiver.
 // It returns an error if the byte slice does not represent a valid decimal.
-func (d *Dec) Unmarshal(data []byte) error {
-	return d.dec.UnmarshalText(data)
+func (x *Dec) Unmarshal(data []byte) error {
+	reducedDec, _ := x.dec.Reduce(&x.dec)
+	return reducedDec.UnmarshalText(data)
 }

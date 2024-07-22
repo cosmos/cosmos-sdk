@@ -7,14 +7,14 @@ import (
 	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 
-	// ammstore "cosmossdk.io/server/v2/appmanager/store"
-	"cosmossdk.io/server/v2/stf/branch"
+	
 	storev2 "cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/storage"
-	"cosmossdk.io/store/v2/storage/pebbledb"
+	"cosmossdk.io/store/v2/storage/sqlite"
+	"cosmossdk.io/store/v2/commitment/iavl"
 )
 
 type MockStore struct {
@@ -23,13 +23,18 @@ type MockStore struct {
 }
 
 func NewMockStorage(logger log.Logger) storev2.VersionedDatabase {
-	storageDB, _ := pebbledb.New("dir")
+	storageDB, _ := sqlite.New("dir")
 	ss := storage.NewStorageStore(storageDB, logger)
 	return ss
 }
 
-func NewMockCommiter(logger log.Logger) storev2.Committer {
-	sc, _ := commitment.NewCommitStore(map[string]commitment.Tree{}, dbm.NewMemDB(), logger)
+func NewMockCommiter(logger log.Logger, actors ...string) storev2.Committer {
+	treeMap := make(map[string]commitment.Tree)
+	for _, actor := range actors {
+		tree := iavl.NewIavlTree(dbm.NewMemDB(), logger, iavl.DefaultConfig())
+		treeMap[actor] = tree
+	}
+	sc, _ := commitment.NewCommitStore(treeMap, dbm.NewMemDB(), logger)
 	return sc
 }
 
@@ -38,8 +43,12 @@ func NewMockStore(ss storev2.VersionedDatabase, sc storev2.Committer) *MockStore
 }
 
 func (s *MockStore) GetLatestVersion() (uint64, error) {
-	v, err := s.Storage.GetLatestVersion()
-	return v, err
+	lastCommitID, err := s.LastCommitID()
+	if err != nil {
+		return 0, err
+	}
+
+	return lastCommitID.Version, nil
 }
 
 func (s *MockStore) StateLatest() (uint64, corestore.ReaderMap, error) {
@@ -52,10 +61,19 @@ func (s *MockStore) StateLatest() (uint64, corestore.ReaderMap, error) {
 }
 
 func (s *MockStore) Commit(changeset *corestore.Changeset) (corestore.Hash, error) {
-	_, state, _ := s.StateLatest()
-	writer := branch.DefaultNewWriterMap(state)
-	err := writer.ApplyStateChanges(changeset.Changes)
-	return []byte{}, err
+	v, _, _ := s.StateLatest()
+	err := s.Storage.ApplyChangeset(v, changeset)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	err = s.Commiter.WriteChangeset(changeset)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	s.Commiter.Commit(v+1)
+	return []byte{}, nil
 }
 
 func (s *MockStore) StateAt(version uint64) (corestore.ReaderMap, error) {
@@ -94,7 +112,7 @@ func (s *MockStore) Query(storeKey []byte, version uint64, key []byte, prove boo
 }
 
 func (s *MockStore) LastCommitID() (proof.CommitID, error) {
-	v, _, err := s.StateLatest()
+	v, err := s.GetStateCommitment().GetLatestVersion()
 	bz := sha256.Sum256([]byte{})
 	return proof.CommitID{
 		Version: v,
@@ -107,10 +125,17 @@ func (s *MockStore) SetInitialVersion(v uint64) error {
 }
 
 func (s *MockStore) WorkingHash(changeset *corestore.Changeset) (corestore.Hash, error) {
-	_, state, _ := s.StateLatest()
-	writer := branch.DefaultNewWriterMap(state)
-	err := writer.ApplyStateChanges(changeset.Changes)
-	return []byte{}, err
+	v, _, _ := s.StateLatest()
+	err := s.Storage.ApplyChangeset(v, changeset)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	err = s.Commiter.WriteChangeset(changeset)
+	if err != nil {
+		return []byte{}, err
+	}
+	return []byte{}, nil
 }
 
 

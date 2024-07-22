@@ -542,7 +542,7 @@ func (k Keeper) unbondMatureValidators(
 		}
 
 		if !val.IsUnbonding() {
-			return fmt.Errorf("unexpected validator in unbonding queue; status was not unbonding")
+			return errors.New("unexpected validator in unbonding queue; status was not unbonding")
 		}
 
 		// if the ref count is not zero, early exit.

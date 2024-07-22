@@ -103,7 +103,7 @@ func (c *Consensus[T]) SetStreamingManager(sm streaming.Manager) {
 	c.streaming = sm
 }
 
-// RegisterExtensions registers the given extensions with the consensus module's snapshot manager.
+// RegisterSnapshotExtensions registers the given extensions with the consensus module's snapshot manager.
 // It allows additional snapshotter implementations to be used for creating and restoring snapshots.
 func (c *Consensus[T]) RegisterSnapshotExtensions(extensions ...snapshots.ExtensionSnapshotter) error {
 	if err := c.snapshotManager.RegisterExtensions(extensions...); err != nil {

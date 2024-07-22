@@ -30,7 +30,8 @@ type KeeperTestSuite struct {
 func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(consensusparamkeeper.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{})
+	header := cmtproto.Header{Height: 5}
+	ctx := testCtx.Ctx.WithBlockHeader(header)
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	storeService := runtime.NewKVStoreService(key)
 
@@ -43,6 +44,8 @@ func (s *KeeperTestSuite) SetupTest() {
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
 	types.RegisterQueryServer(queryHelper, keeper)
 	s.queryClient = types.NewQueryClient(queryHelper)
+	err := s.consensusParamsKeeper.ParamsStore.Set(ctx, cmttypes.DefaultConsensusParams().ToProto())
+	s.Require().NoError(err)
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -50,7 +53,14 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
-	defaultConsensusParams := cmttypes.DefaultConsensusParams().ToProto()
+	// Create ConsensusParams with modified fields
+	modifiedConsensusParams := cmttypes.DefaultConsensusParams().ToProto()
+	modifiedConsensusParams.Block.MaxBytes++
+	modifiedConsensusParams.Block.MaxGas = 100
+	modifiedConsensusParams.Evidence.MaxAgeDuration++
+	modifiedConsensusParams.Evidence.MaxAgeNumBlocks++
+	modifiedConsensusParams.Evidence.MaxBytes++
+	modifiedConsensusParams.Validator.PubKeyTypes = []string{cmttypes.ABCIPubKeyTypeSecp256k1}
 
 	testCases := []struct {
 		msg      string
@@ -65,18 +75,22 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 			func() {
 				input := &types.MsgUpdateParams{
 					Authority: s.consensusParamsKeeper.GetAuthority(),
-					Block:     defaultConsensusParams.Block,
-					Validator: defaultConsensusParams.Validator,
-					Evidence:  defaultConsensusParams.Evidence,
+					Block:     modifiedConsensusParams.Block,
+					Validator: modifiedConsensusParams.Validator,
+					Evidence:  modifiedConsensusParams.Evidence,
 				}
-				s.consensusParamsKeeper.UpdateParams(s.ctx, input)
+				_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, input)
+				s.Require().NoError(err)
 			},
 			types.QueryParamsResponse{
 				Params: &cmtproto.ConsensusParams{
-					Block:     defaultConsensusParams.Block,
-					Validator: defaultConsensusParams.Validator,
-					Evidence:  defaultConsensusParams.Evidence,
-					Version:   defaultConsensusParams.Version,
+					Block:     modifiedConsensusParams.Block,
+					Validator: modifiedConsensusParams.Validator,
+					Evidence:  modifiedConsensusParams.Evidence,
+					Version:   modifiedConsensusParams.Version,
+					Abci: &cmtproto.ABCIParams{
+						VoteExtensionsEnableHeight: 0,
+					},
 				},
 			},
 			true,
@@ -87,21 +101,22 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 			func() {
 				input := &types.MsgUpdateParams{
 					Authority: s.consensusParamsKeeper.GetAuthority(),
-					Block:     defaultConsensusParams.Block,
-					Validator: defaultConsensusParams.Validator,
-					Evidence:  defaultConsensusParams.Evidence,
+					Block:     modifiedConsensusParams.Block,
+					Validator: modifiedConsensusParams.Validator,
+					Evidence:  modifiedConsensusParams.Evidence,
 					Abci: &cmtproto.ABCIParams{
 						VoteExtensionsEnableHeight: 1234,
 					},
 				}
-				s.consensusParamsKeeper.UpdateParams(s.ctx, input)
+				_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, input)
+				s.Require().NoError(err)
 			},
 			types.QueryParamsResponse{
 				Params: &cmtproto.ConsensusParams{
-					Block:     defaultConsensusParams.Block,
-					Validator: defaultConsensusParams.Validator,
-					Evidence:  defaultConsensusParams.Evidence,
-					Version:   defaultConsensusParams.Version,
+					Block:     modifiedConsensusParams.Block,
+					Validator: modifiedConsensusParams.Validator,
+					Evidence:  modifiedConsensusParams.Evidence,
+					Version:   modifiedConsensusParams.Version,
 					Abci: &cmtproto.ABCIParams{
 						VoteExtensionsEnableHeight: 1234,
 					},
@@ -204,6 +219,76 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 			expErr:    true,
 			expErrMsg: "all parameters must be present",
 		},
+		{
+			name: "valid ABCI update",
+			input: &types.MsgUpdateParams{
+				Authority: s.consensusParamsKeeper.GetAuthority(),
+				Block:     defaultConsensusParams.Block,
+				Validator: defaultConsensusParams.Validator,
+				Evidence:  defaultConsensusParams.Evidence,
+				Abci: &cmtproto.ABCIParams{
+					VoteExtensionsEnableHeight: 1235,
+				},
+			},
+			expErr:    false,
+			expErrMsg: "",
+		},
+		{
+			name: "noop ABCI update",
+			input: &types.MsgUpdateParams{
+				Authority: s.consensusParamsKeeper.GetAuthority(),
+				Block:     defaultConsensusParams.Block,
+				Validator: defaultConsensusParams.Validator,
+				Evidence:  defaultConsensusParams.Evidence,
+				Abci: &cmtproto.ABCIParams{
+					VoteExtensionsEnableHeight: 1235,
+				},
+			},
+			expErr:    false,
+			expErrMsg: "",
+		},
+		{
+			name: "valid ABCI clear",
+			input: &types.MsgUpdateParams{
+				Authority: s.consensusParamsKeeper.GetAuthority(),
+				Block:     defaultConsensusParams.Block,
+				Validator: defaultConsensusParams.Validator,
+				Evidence:  defaultConsensusParams.Evidence,
+				Abci: &cmtproto.ABCIParams{
+					VoteExtensionsEnableHeight: 0,
+				},
+			},
+			expErr:    false,
+			expErrMsg: "",
+		},
+		{
+			name: "invalid ABCI update - current height",
+			input: &types.MsgUpdateParams{
+				Authority: s.consensusParamsKeeper.GetAuthority(),
+				Block:     defaultConsensusParams.Block,
+				Validator: defaultConsensusParams.Validator,
+				Evidence:  defaultConsensusParams.Evidence,
+				Abci: &cmtproto.ABCIParams{
+					VoteExtensionsEnableHeight: 5,
+				},
+			},
+			expErr:    true,
+			expErrMsg: "vote extensions cannot be updated to a past or current height",
+		},
+		{
+			name: "invalid ABCI update - past height",
+			input: &types.MsgUpdateParams{
+				Authority: s.consensusParamsKeeper.GetAuthority(),
+				Block:     defaultConsensusParams.Block,
+				Validator: defaultConsensusParams.Validator,
+				Evidence:  defaultConsensusParams.Evidence,
+				Abci: &cmtproto.ABCIParams{
+					VoteExtensionsEnableHeight: 4,
+				},
+			},
+			expErr:    true,
+			expErrMsg: "vote extensions cannot be updated to a past or current height",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -220,7 +305,9 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				res, err := s.consensusParamsKeeper.Params(s.ctx, &types.QueryParamsRequest{})
 				s.Require().NoError(err)
 
-				s.Require().Equal(tc.input.Abci, res.Params.Abci)
+				if tc.input.Abci != nil {
+					s.Require().Equal(tc.input.Abci, res.Params.Abci)
+				}
 				s.Require().Equal(tc.input.Block, res.Params.Block)
 				s.Require().Equal(tc.input.Evidence, res.Params.Evidence)
 				s.Require().Equal(tc.input.Validator, res.Params.Validator)

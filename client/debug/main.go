@@ -253,28 +253,43 @@ $ %s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			addrString := args[0]
-			var addr []byte
-
 			// try hex, then bech32
-			var err error
-			addr, err = hex.DecodeString(addrString)
-			if err != nil {
-				var err2 error
-				addr, err2 = sdk.AccAddressFromBech32(addrString)
-				if err2 != nil {
-					var err3 error
-					addr, err3 = sdk.ValAddressFromBech32(addrString)
-
-					if err3 != nil {
-						return fmt.Errorf("expected hex or bech32. Got errors: hex: %v, bech32 acc: %v, bech32 val: %v", err, err2, err3)
-					}
+			var (
+				addr []byte
+				err  error
+			)
+			decodeFns := []func(text string) ([]byte, error){
+				hex.DecodeString,
+				func(text string) ([]byte, error) { return sdk.AccAddressFromBech32(text) },
+				func(text string) ([]byte, error) { return sdk.ValAddressFromBech32(text) },
+				func(text string) ([]byte, error) { return sdk.ConsAddressFromBech32(text) },
+			}
+			errs := make([]any, 0, len(decodeFns))
+			for _, fn := range decodeFns {
+				if addr, err = fn(addrString); err == nil {
+					break
 				}
+				errs = append(errs, err)
+			}
+			if len(errs) == len(decodeFns) {
+				errTags := []string{
+					"hex", "bech32 acc", "bech32 val", "bech32 con",
+				}
+				format := ""
+				for i := range errs {
+					if format != "" {
+						format += ", "
+					}
+					format += errTags[i] + ": %w"
+				}
+				return fmt.Errorf("expected hex or bech32. Got errors: "+format, errs...)
 			}
 
 			cmd.Println("Address:", addr)
 			cmd.Printf("Address (hex): %X\n", addr)
 			cmd.Printf("Bech32 Acc: %s\n", sdk.AccAddress(addr))
 			cmd.Printf("Bech32 Val: %s\n", sdk.ValAddress(addr))
+			cmd.Printf("Bech32 Con: %s\n", sdk.ConsAddress(addr))
 			return nil
 		},
 	}

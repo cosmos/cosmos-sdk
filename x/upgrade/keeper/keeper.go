@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -62,10 +61,6 @@ func NewKeeper(skipUpgradeHeights map[int64]bool, storeService corestore.KVStore
 		upgradeHandlers:    map[string]types.UpgradeHandler{},
 		versionSetter:      vs,
 		authority:          authority,
-	}
-
-	if upgradePlan, err := k.ReadUpgradeInfoFromDisk(); err == nil && upgradePlan.Height > 0 {
-		telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(upgradePlan.Height, 10))})
 	}
 
 	return k
@@ -534,17 +529,12 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
 
 // GetUpgradeInfoPath returns the upgrade info file path
 func (k Keeper) GetUpgradeInfoPath() (string, error) {
-	upgradeInfoFileDir := path.Join(k.getHomeDir(), "data")
+	upgradeInfoFileDir := filepath.Join(k.homePath, "data")
 	if err := os.MkdirAll(upgradeInfoFileDir, os.ModePerm); err != nil {
 		return "", fmt.Errorf("could not create directory %q: %w", upgradeInfoFileDir, err)
 	}
 
 	return filepath.Join(upgradeInfoFileDir, types.UpgradeInfoFilename), nil
-}
-
-// getHomeDir returns the height at which the given upgrade was executed
-func (k Keeper) getHomeDir() string {
-	return k.homePath
 }
 
 // ReadUpgradeInfoFromDisk returns the name and height of the upgrade which is
@@ -575,6 +565,10 @@ func (k Keeper) ReadUpgradeInfoFromDisk() (types.Plan, error) {
 
 	if err := upgradeInfo.ValidateBasic(); err != nil {
 		return upgradeInfo, err
+	}
+
+	if upgradeInfo.Height > 0 {
+		telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(upgradeInfo.Height, 10))})
 	}
 
 	return upgradeInfo, nil

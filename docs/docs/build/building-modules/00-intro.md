@@ -70,6 +70,15 @@ Cosmos SDK modules can be seen as little state-machines within the state-machine
 
 As a result of this architecture, building a Cosmos SDK application usually revolves around writing modules to implement the specialized logic of the application and composing them with existing modules to complete the application. Developers will generally work on modules that implement logic needed for their specific use case that do not exist yet, and will use existing modules for more generic functionalities like staking, accounts, or token management.
 
+
+### Modules as Sudo
+
+Modules have the ability to perform actions that are not available to regular users. This is because modules are given sudo permissions by the state machine. Modules can reject another modules desire to execute a function but this logic must be explicit. Examples of this can be seen when modules create functions to modify parameters:
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/61da5d1c29c16a1eb5bb5488719fde604ec07b10/x/bank/keeper/msg_server.go#L147-L149
+```
+
 ## How to Approach Building Modules as a Developer
 
 While there are no definitive guidelines for writing modules, here are some important design principles developers should keep in mind when building them:

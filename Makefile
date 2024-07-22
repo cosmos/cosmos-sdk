@@ -8,6 +8,8 @@ include scripts/build/testing.mk
 include scripts/build/documentation.mk
 include scripts/build/build.mk
 
+.DEFAULT_GOAL := help
+
 ###############################################################################
 ###                          Tools & Dependencies                           ###
 ###############################################################################

@@ -123,6 +123,14 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 
 	v := a.viper
 	home := v.GetString(FlagHome)
+
+	storeOpts := rootstore.Options{}
+	if v != nil {
+		if err := v.Sub("store.options").Unmarshal(&storeOpts); err != nil {
+			return nil, fmt.Errorf("failed to store options: %w", err)
+		}
+	}
+	
 	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(home, "data"), nil)
 	if err != nil {
 		panic(err)
@@ -131,7 +139,7 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	storeOptions := &rootstore.FactoryOptions{
 		Logger:    a.app.logger,
 		RootDir:   home,
-		Options:   v,
+		Options:   storeOpts,
 		StoreKeys: append(a.app.storeKeys, "stf"),
 		SCRawDB:   scRawDb,
 	}

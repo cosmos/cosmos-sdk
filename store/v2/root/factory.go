@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/viper"
-
 	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
@@ -45,7 +43,7 @@ type Options struct {
 type FactoryOptions struct {
 	Logger    log.Logger
 	RootDir   string
-	Options   *viper.Viper
+	Options   Options
 	StoreKeys []string
 	SCRawDB   corestore.KVStoreWithBatch
 }
@@ -68,14 +66,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		}
 	)
 
-	v := opts.Options
-	storeOpts := Options{}
-	if v != nil {
-		if err := v.Sub("store.options").Unmarshal(&storeOpts); err != nil {
-			return nil, fmt.Errorf("failed to store options: %w", err)
-		}
-	}
-
+	storeOpts := opts.Options
 	switch storeOpts.SSType {
 	case SSTypeSQLite:
 		dir := fmt.Sprintf("%s/data/ss/sqlite", opts.RootDir)

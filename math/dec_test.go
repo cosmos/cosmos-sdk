@@ -1287,3 +1287,100 @@ func must[T any](r T, err error) T {
 	}
 	return r
 }
+
+func TestMarshal(t *testing.T) {
+	specs := map[string]struct {
+		x   Dec
+		exp string
+	}{
+		"No trailing zeros": {
+			x:   NewDecFromInt64(123456),
+			exp: "123456",
+		},
+		"Trailing zeros": {
+			x:   NewDecFromInt64(123456000),
+			exp: "1.23456E+8",
+		},
+		"Zero value": {
+			x:   NewDecFromInt64(0),
+			exp: "0",
+		},
+		"Decimal value": {
+			x:   must(NewDecFromString("1.30000")),
+			exp: "1.3",
+		},
+		"Positive value": {
+			x:   NewDecFromInt64(10),
+			exp: "1E+1",
+		},
+		"negative value": {
+			x:   NewDecFromInt64(-10),
+			exp: "-1E+1",
+		},
+		"max decimal": {
+			x:   must(NewDecFromString("9." + strings.Repeat("0", 34))),
+			exp: "9",
+		},
+		"min decimal": {
+			x:   must(NewDecFromString("-1." + strings.Repeat("0", 34))),
+			exp: "-1",
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			marshaled, err := spec.x.Marshal()
+			require.NoError(t, err)
+			assert.Equal(t, spec.exp, string(marshaled))
+		})
+	}
+}
+
+func TestUnMarshal(t *testing.T) {
+	specs := map[string]struct {
+		x   Dec
+		exp string
+	}{
+		"No trailing zeros": {
+			x:   NewDecFromInt64(123456),
+			exp: "123456",
+		},
+		"Trailing zeros": {
+			x:   NewDecFromInt64(123456000),
+			exp: "123456000",
+		},
+		"Zero value": {
+			x:   NewDecFromInt64(0),
+			exp: "0",
+		},
+		"Decimal value": {
+			x:   must(NewDecFromString("1.30000")),
+			exp: "1.3",
+		},
+		"Positive value": {
+			x:   NewDecFromInt64(10),
+			exp: "10",
+		},
+		"negative value": {
+			x:   NewDecFromInt64(-10),
+			exp: "-10",
+		},
+		"max decimal": {
+			x:   must(NewDecFromString("9." + strings.Repeat("0", 34))),
+			exp: "9",
+		},
+		"min decimal": {
+			x:   must(NewDecFromString("-1." + strings.Repeat("0", 34))),
+			exp: "-1",
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			marshaled, err := spec.x.Marshal()
+			require.NoError(t, err)
+			var unmarshaled Dec
+			err = unmarshaled.Unmarshal(marshaled)
+			require.NoError(t, err)
+			assert.Equal(t, spec.exp, unmarshaled.String())
+		})
+	}
+}

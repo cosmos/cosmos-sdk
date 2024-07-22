@@ -15,7 +15,7 @@ type Config struct {
 
 func DefaultAppTomlConfig() *AppTomlConfig {
 	return &AppTomlConfig{
-		MinRetainBlocks: 1,
+		MinRetainBlocks: 0,
 		IndexEvents:     make([]string, 0),
 		HaltHeight:      0,
 		HaltTime:        0,

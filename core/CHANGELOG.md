@@ -34,8 +34,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
+## [v0.5.2](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.5.2)
 
-### API-Breaking Changes
-
-- (store)[14635](https://github.com/cosmos/cosmos-sdk/pull/14635) Add error handling to all methods on the `KVStore` interface
+* [#21023](https://github.com/cosmos/cosmos-sdk/pull/21023) Upgrade depinject to v1.0.0.

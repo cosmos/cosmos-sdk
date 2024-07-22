@@ -80,8 +80,8 @@ type (
 		GetMemo() string
 	}
 
-	// TxWithTimeoutHeight extends the Tx interface by allowing a transaction to
-	// set a height timeout.
+	// TxWithTimeoutTimeStamp extends the Tx interface by allowing a transaction to
+	// set a timeout timestamp.
 	TxWithTimeoutTimeStamp interface {
 		Tx
 
@@ -97,7 +97,7 @@ type (
 	}
 
 	// TxWithUnordered extends the Tx interface by allowing a transaction to set
-	// the unordered field, which implicitly relies on TxWithTimeoutHeight.
+	// the unordered field, which implicitly relies on TxWithTimeoutTimeStamp.
 	TxWithUnordered interface {
 		TxWithTimeoutTimeStamp
 

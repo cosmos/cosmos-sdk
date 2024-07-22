@@ -123,6 +123,7 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	if cmd.Flag(FlagFrom) == nil { // avoid flag redefinition when it's already been added by AutoCLI
 		f.String(FlagFrom, "", "Name or address of private key with which to sign")
 	}
+	cmd.MarkFlagsMutuallyExclusive(FlagTimeoutHeight, FlagTimeoutTimestamp)
 	f.Uint64P(FlagAccountNumber, "a", 0, "The account number of the signing account (offline mode only)")
 	f.Uint64P(FlagSequence, "s", 0, "The sequence number of the signing account (offline mode only)")
 	f.String(FlagNote, "", "Note to add a description to the transaction (previously --memo)")

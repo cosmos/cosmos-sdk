@@ -52,7 +52,6 @@ import (
 	"cosmossdk.io/x/consensus"
 	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
 	consensusparamtypes "cosmossdk.io/x/consensus/types"
-	consensustypes "cosmossdk.io/x/consensus/types"
 	distr "cosmossdk.io/x/distribution"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
 	distrtypes "cosmossdk.io/x/distribution/types"
@@ -81,7 +80,6 @@ import (
 	"cosmossdk.io/x/protocolpool"
 	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
-	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	"cosmossdk.io/x/slashing"
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	slashingtypes "cosmossdk.io/x/slashing/types"
@@ -440,26 +438,26 @@ func NewSimApp(
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
 	app.ModuleManager = module.NewManagerFromMap(map[string]appmodule.AppModule{
-		genutiltypes.ModuleName:      genutil.NewAppModule(appCodec, app.AuthKeeper, app.StakingKeeper, app, txConfig, genutiltypes.DefaultMessageValidator),
-		accounts.ModuleName:          accounts.NewAppModule(appCodec, app.AccountsKeeper),
-		authtypes.ModuleName:         auth.NewAppModule(appCodec, app.AuthKeeper, app.AccountsKeeper, authsims.RandomGenesisAccounts),
-		vestingtypes.ModuleName:      vesting.NewAppModule(app.AuthKeeper, app.BankKeeper),
-		banktypes.ModuleName:         bank.NewAppModule(appCodec, app.BankKeeper, app.AuthKeeper),
-		feegrant.ModuleName:          feegrantmodule.NewAppModule(appCodec, app.AuthKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
-		govtypes.ModuleName:          gov.NewAppModule(appCodec, &app.GovKeeper, app.AuthKeeper, app.BankKeeper, app.PoolKeeper),
-		minttypes.ModuleName:         mint.NewAppModule(appCodec, app.MintKeeper, app.AuthKeeper, nil),
-		slashingtypes.ModuleName:     slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.interfaceRegistry, cometService),
-		distrtypes.ModuleName:        distr.NewAppModule(appCodec, app.DistrKeeper, app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper),
-		stakingtypes.ModuleName:      staking.NewAppModule(appCodec, app.StakingKeeper, app.AuthKeeper, app.BankKeeper),
-		upgradetypes.ModuleName:      upgrade.NewAppModule(app.UpgradeKeeper),
-		evidencetypes.ModuleName:     evidence.NewAppModule(appCodec, app.EvidenceKeeper, cometService),
-		authz.ModuleName:             authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AuthKeeper, app.BankKeeper, app.interfaceRegistry),
-		group.ModuleName:             groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AuthKeeper, app.BankKeeper, app.interfaceRegistry),
-		nft.ModuleName:               nftmodule.NewAppModule(appCodec, app.NFTKeeper, app.AuthKeeper, app.BankKeeper, app.interfaceRegistry),
-		consensustypes.ModuleName:    consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
-		circuittypes.ModuleName:      circuit.NewAppModule(appCodec, app.CircuitKeeper),
-		protocolpooltypes.ModuleName: protocolpool.NewAppModule(appCodec, app.PoolKeeper, app.AuthKeeper, app.BankKeeper),
-		epochstypes.ModuleName:       epochs.NewAppModule(appCodec, app.EpochsKeeper),
+		genutiltypes.ModuleName:        genutil.NewAppModule(appCodec, app.AuthKeeper, app.StakingKeeper, app, txConfig, genutiltypes.DefaultMessageValidator),
+		accounts.ModuleName:            accounts.NewAppModule(appCodec, app.AccountsKeeper),
+		authtypes.ModuleName:           auth.NewAppModule(appCodec, app.AuthKeeper, app.AccountsKeeper, authsims.RandomGenesisAccounts),
+		vestingtypes.ModuleName:        vesting.NewAppModule(app.AuthKeeper, app.BankKeeper),
+		banktypes.ModuleName:           bank.NewAppModule(appCodec, app.BankKeeper, app.AuthKeeper),
+		feegrant.ModuleName:            feegrantmodule.NewAppModule(appCodec, app.AuthKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
+		govtypes.ModuleName:            gov.NewAppModule(appCodec, &app.GovKeeper, app.AuthKeeper, app.BankKeeper, app.PoolKeeper),
+		minttypes.ModuleName:           mint.NewAppModule(appCodec, app.MintKeeper, app.AuthKeeper, nil),
+		slashingtypes.ModuleName:       slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.interfaceRegistry, cometService),
+		distrtypes.ModuleName:          distr.NewAppModule(appCodec, app.DistrKeeper, app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.PoolKeeper),
+		stakingtypes.ModuleName:        staking.NewAppModule(appCodec, app.StakingKeeper, app.AuthKeeper, app.BankKeeper),
+		upgradetypes.ModuleName:        upgrade.NewAppModule(app.UpgradeKeeper),
+		evidencetypes.ModuleName:       evidence.NewAppModule(appCodec, app.EvidenceKeeper, cometService),
+		authz.ModuleName:               authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AuthKeeper, app.BankKeeper, app.interfaceRegistry),
+		group.ModuleName:               groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AuthKeeper, app.BankKeeper, app.interfaceRegistry),
+		nft.ModuleName:                 nftmodule.NewAppModule(appCodec, app.NFTKeeper, app.AuthKeeper, app.BankKeeper, app.interfaceRegistry),
+		consensusparamtypes.ModuleName: consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
+		circuittypes.ModuleName:        circuit.NewAppModule(appCodec, app.CircuitKeeper),
+		pooltypes.ModuleName:           protocolpool.NewAppModule(appCodec, app.PoolKeeper, app.AuthKeeper, app.BankKeeper),
+		epochstypes.ModuleName:         epochs.NewAppModule(appCodec, app.EpochsKeeper),
 	})
 
 	app.ModuleManager.RegisterLegacyAminoCodec(legacyAmino)

@@ -198,7 +198,7 @@ func initTestnetFiles[T transaction.Tx](
 	// generate private keys, node IDs, and initial transactions
 	for i := 0; i < args.numValidators; i++ {
 		var portOffset int
-		var grpcConfig *grpc.Config
+		grpcConfig := grpc.DefaultConfig()
 		if args.singleMachine {
 			portOffset = i
 			p2pPortStart = 16656 // use different start point to not conflict with rpc port

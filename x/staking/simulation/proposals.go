@@ -5,7 +5,6 @@ import (
 	"time"
 
 	coreaddress "cosmossdk.io/core/address"
-	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,12 +37,11 @@ func SimulateMsgUpdateParams(r *rand.Rand, _ []simtypes.Account, addressCodec co
 	var authority sdk.AccAddress = address.Module("gov")
 
 	params := types.DefaultParams()
-	params.BondDenom = simtypes.RandStringOfLength(r, 10)
 	params.HistoricalEntries = uint32(simtypes.RandIntBetween(r, 0, 1000))
 	params.MaxEntries = uint32(simtypes.RandIntBetween(r, 1, 1000))
 	params.MaxValidators = uint32(simtypes.RandIntBetween(r, 1, 1000))
 	params.UnbondingTime = time.Duration(simtypes.RandTimestamp(r).UnixNano())
-	params.MinCommissionRate = simtypes.RandomDecAmount(r, sdkmath.LegacyNewDec(1))
+	// changes to MinCommissionRate or BondDenom create issues for in flight messages or state operations
 
 	addr, err := addressCodec.BytesToString(authority)
 	if err != nil {

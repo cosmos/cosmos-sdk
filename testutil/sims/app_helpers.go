@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	apibanktypes "cosmossdk.io/api/cosmos/bank/v1beta1"
+	base "cosmossdk.io/api/cosmos/base/v1beta1"
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
@@ -281,7 +283,61 @@ func GenesisStateWithValSet(
 
 	// update total supply
 	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{}, []banktypes.SendEnabled{})
-	genesisState[testutil.BankModuleName] = codec.MustMarshalJSON(bankGenesis)
+	apibalances := []*apibanktypes.Balance{}
+	for _, b := range bankGenesis.Balances {
+		apibalances = append(apibalances, &apibanktypes.Balance{
+			Address: b.Address,
+		})
+		for _, c := range b.Coins {
+			apibalances[len(apibalances)-1].Coins = append(apibalances[len(apibalances)-1].Coins, &base.Coin{
+				Denom:  c.Denom,
+				Amount: c.Amount.String(),
+			})
+		}
+	}
+
+	sendenabled := []*apibanktypes.SendEnabled{}
+	for _, s := range bankGenesis.SendEnabled {
+		sendenabled = append(sendenabled, &apibanktypes.SendEnabled{
+			Denom:   s.Denom,
+			Enabled: s.Enabled,
+		})
+	}
+
+	bc := []*base.Coin{}
+	for _, c := range bankGenesis.Supply {
+		bc = append(bc, &base.Coin{
+			Denom:  c.Denom,
+			Amount: c.Amount.String(),
+		})
+	}
+
+	dm := []*apibanktypes.Metadata{}
+	for _, d := range bankGenesis.DenomMetadata {
+		dm = append(dm, &apibanktypes.Metadata{
+			Description: d.Description,
+			DenomUnits: []*apibanktypes.DenomUnit{
+				{
+					Denom:    d.DenomUnits[0].Denom,
+					Exponent: d.DenomUnits[0].Exponent,
+					Aliases:  d.DenomUnits[0].Aliases,
+				},
+			},
+			Base:    d.Base,
+			Display: d.Display,
+		})
+	}
+
+	bg := &apibanktypes.GenesisState{
+		Params: &apibanktypes.Params{
+			DefaultSendEnabled: bankGenesis.Params.DefaultSendEnabled,
+		},
+		Balances:      apibalances,
+		Supply:        bc,
+		DenomMetadata: dm,
+		SendEnabled:   sendenabled,
+	}
+	genesisState[testutil.BankModuleName] = codec.MustMarshalJSON(bg)
 
 	return genesisState, nil
 }

@@ -193,7 +193,6 @@ replace (
 	cosmossdk.io/store => ./store
 	cosmossdk.io/x/accounts => ./x/accounts
 	cosmossdk.io/x/auth => ./x/auth
-	cosmossdk.io/x/bank => ./x/bank
 	cosmossdk.io/x/consensus => ./x/consensus
 	cosmossdk.io/x/staking => ./x/staking
 	cosmossdk.io/x/tx => ./x/tx

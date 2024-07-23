@@ -318,7 +318,7 @@ func TestModuleSchema_ScanTypes(t *testing.T) {
 	})
 
 	var objectTypeNames []string
-	moduleSchema.ScanTypes(func(typ Type) bool {
+	moduleSchema.Types(func(typ Type) bool {
 		objectType, ok := typ.(ObjectType)
 		if !ok {
 			t.Fatalf("expected object type, got %T", typ)
@@ -334,7 +334,7 @@ func TestModuleSchema_ScanTypes(t *testing.T) {
 
 	objectTypeNames = nil
 	// scan just the first type and return false
-	moduleSchema.ScanTypes(func(typ Type) bool {
+	moduleSchema.Types(func(typ Type) bool {
 		objectType, ok := typ.(ObjectType)
 		if !ok {
 			t.Fatalf("expected object type, got %T", typ)

@@ -105,9 +105,9 @@ func (s ModuleSchema) LookupType(name string) (Type, bool) {
 	return typ, ok
 }
 
-// ScanTypes calls the provided function for each type in the module schema and stops if the function returns false.
-// The types are iterated over in sorted order by name.
-func (s ModuleSchema) ScanTypes(f func(Type) bool) {
+// Types calls the provided function for each type in the module schema and stops if the function returns false.
+// The types are iterated over in sorted order by name. This function is compatible with go 1.23 iterators.
+func (s ModuleSchema) Types(f func(Type) bool) {
 	keys := make([]string, 0, len(s.types))
 	for k := range s.types {
 		keys = append(keys, k)

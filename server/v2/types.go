@@ -17,6 +17,6 @@ type AppI[T transaction.Tx] interface {
 	InterfaceRegistry() coreapp.InterfaceRegistry
 	GetAppManager() *appmanager.AppManager[T]
 	GetConsensusAuthority() string
-	GetGRPCQueryDecoders() map[string]func(requestBytes []byte) (gogoproto.Message, error)
+	GetGPRCMethodsToMessageMap() map[string]func() gogoproto.Message
 	GetStore() any
 }

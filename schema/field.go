@@ -13,10 +13,6 @@ type Field struct {
 	// Nullable indicates whether null values are accepted for the field. Key fields CANNOT be nullable.
 	Nullable bool
 
-	// AddressPrefix is the address prefix of the field's kind, currently only used for Bech32AddressKind.
-	// TODO: in a future update, stricter criteria and validation for address prefixes should be added.
-	AddressPrefix string
-
 	// EnumDefinition is the definition of the enum type and is only valid when Kind is EnumKind.
 	// The same enum types can be reused in the same module schema, but they always must contain
 	// the same values for the same enum name. This possibly introduces some duplication of
@@ -34,13 +30,6 @@ func (c Field) Validate() error {
 	// valid kind
 	if err := c.Kind.Validate(); err != nil {
 		return fmt.Errorf("invalid field kind for %q: %v", c.Name, err) //nolint:errorlint // false positive due to using go1.12
-	}
-
-	// address prefix only valid with Bech32AddressKind
-	if c.Kind == Bech32AddressKind && c.AddressPrefix == "" {
-		return fmt.Errorf("missing address prefix for field %q", c.Name)
-	} else if c.Kind != Bech32AddressKind && c.AddressPrefix != "" {
-		return fmt.Errorf("address prefix is only valid for field %q with type Bech32AddressKind", c.Name)
 	}
 
 	// enum definition only valid with EnumKind

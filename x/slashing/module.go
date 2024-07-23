@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/simsx"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -42,12 +43,9 @@ var (
 // AppModule implements an application module for the slashing module.
 type AppModule struct {
 	cdc          codec.Codec
-	registry     cdctypes.InterfaceRegistry
 	cometService comet.Service
 
 	keeper        keeper.Keeper
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
 }
 
@@ -63,10 +61,7 @@ func NewAppModule(
 ) AppModule {
 	return AppModule{
 		cdc:           cdc,
-		registry:      registry,
 		keeper:        keeper,
-		accountKeeper: ak,
-		bankKeeper:    bk,
 		stakingKeeper: sk,
 		cometService:  cs,
 	}
@@ -173,9 +168,9 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalMsgs returns msgs used for governance proposals for simulations.
-func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
-	return simulation.ProposalMsgs()
+// ProposalMsgsX returns msgs used for governance proposals for simulations.
+func (AppModule) ProposalMsgsX(weights simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weights.Get("msg_update_params", 100), simulation.MsgUpdateParamsFactory())
 }
 
 // RegisterStoreDecoder registers a decoder for slashing module's types
@@ -183,10 +178,8 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
-// WeightedOperations returns the all the slashing module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		am.registry, simState.AppParams, simState.Cdc, simState.TxConfig,
-		am.accountKeeper, am.bankKeeper, am.keeper, am.stakingKeeper,
-	)
+// WeightedOperationsX returns the all the slashing module operations with their respective weights.
+func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry) {
+	// note: using old keys for backwards compatibility
+	reg.Add(weights.Get("msg_unjail", 100), simulation.MsgUnjailFactory(am.keeper, am.stakingKeeper))
 }

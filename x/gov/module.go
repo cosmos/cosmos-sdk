@@ -22,6 +22,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -214,12 +215,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // ProposalContents returns all the gov content functions used to
 // simulate governance proposals.
 func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent { //nolint:staticcheck // used for legacy testing
-	return simulation.ProposalContents()
-}
-
-// ProposalMsgs returns all the gov msgs used to simulate governance proposals.
-func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
-	return simulation.ProposalMsgs()
+	return simulation.ProposalContents() // todo (Alex): remove
 }
 
 // RegisterStoreDecoder registers a decoder for gov module's types
@@ -227,11 +223,26 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[govtypes.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.keeper.Schema)
 }
 
-// WeightedOperations returns the all the gov module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		simState.AppParams, simState.TxConfig,
-		am.accountKeeper, am.bankKeeper, am.keeper,
-		simState.ProposalMsgs, simState.LegacyProposalContents,
-	)
+// ProposalMsgsX returns msgs used for governance proposals for simulations.
+func (AppModule) ProposalMsgsX(weights simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weights.Get("submit_text_proposal", 5), simulation.TextProposalFactory())
+}
+
+func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry, proposals []simtypes.WeightedProposalMsg,
+	legacyProposals []simtypes.WeightedProposalContent, //nolint:staticcheck // used for legacy proposal types
+) {
+	// submit proposal for each payload message
+	for _, wMsg := range proposals {
+		// todo: pick a ratio so that we don't flood with gov ops
+		reg.Add(uint32(wMsg.DefaultWeight()/25), simulation.MsgSubmitProposalFactory(am.keeper, wMsg.MsgSimulatorFn()))
+	}
+	for _, wContent := range legacyProposals {
+		reg.Add(weights.Get(wContent.AppParamsKey(), uint32(wContent.DefaultWeight())), simulation.MsgSubmitLegacyProposalFactory(am.keeper, wContent.ContentSimulatorFn()))
+	}
+
+	state := simulation.NewSharedState()
+	reg.Add(weights.Get("msg_deposit", 100), simulation.MsgDepositFactory(am.keeper, state))
+	reg.Add(weights.Get("msg_vote", 67), simulation.MsgVoteFactory(am.keeper, state))
+	reg.Add(weights.Get("msg_weighted_vote", 33), simulation.MsgWeightedVoteFactory(am.keeper, state))
+	reg.Add(weights.Get("cancel_proposal", 5), simulation.MsgCancelProposalFactory(am.keeper, state))
 }

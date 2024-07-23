@@ -2,11 +2,16 @@ package grpc
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"net"
 
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -43,9 +48,8 @@ func (s *GRPCServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.L
 		grpc.ForceServerCodec(newProtoCodec(appI.InterfaceRegistry()).GRPCCodec()),
 		grpc.MaxSendMsgSize(cfg.MaxSendMsgSize),
 		grpc.MaxRecvMsgSize(cfg.MaxRecvMsgSize),
+		grpc.UnknownServiceHandler(makeUnknownServiceHandler(appI.GetGPRCMethodsToMessageMap(), appI.GetAppManager())),
 	)
-
-	// appI.RegisterGRPCServer(grpcSrv)
 
 	// Reflection allows external clients to see what services and methods the gRPC server exposes.
 	gogoreflection.Register(grpcSrv)
@@ -55,6 +59,43 @@ func (s *GRPCServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.L
 	s.logger = logger.With(log.ModuleKey, s.Name())
 
 	return nil
+}
+
+func makeUnknownServiceHandler(messageMap map[string]func() proto.Message, querier interface {
+	Query(ctx context.Context, version uint64, msg proto.Message) (proto.Message, error)
+}) grpc.StreamHandler {
+	return func(srv any, stream grpc.ServerStream) error {
+		method, ok := grpc.MethodFromServerStream(stream)
+		if !ok {
+			return status.Error(codes.InvalidArgument, "unable to get method")
+		}
+		makeMsg, exists := messageMap[method]
+		if !exists {
+			return status.Errorf(codes.Unimplemented, "gRPC method %s is not handled", method)
+		}
+		for {
+			req := makeMsg()
+			err := stream.RecvMsg(req)
+			if err != nil {
+				if errors.Is(err, io.EOF) {
+					return nil
+				}
+				return err
+			}
+
+			// extract height header
+			height := uint64(0)
+
+			resp, err := querier.Query(stream.Context(), height, req)
+			if err != nil {
+				return err
+			}
+			err = stream.SendMsg(resp)
+			if err != nil {
+				return err
+			}
+		}
+	}
 }
 
 func (s *GRPCServer[T]) Name() string {

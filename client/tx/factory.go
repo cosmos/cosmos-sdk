@@ -88,7 +88,6 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 
 	gasAdj := clientCtx.Viper.GetFloat64(flags.FlagGasAdjustment)
 	memo := clientCtx.Viper.GetString(flags.FlagNote)
-	timeoutHeight := clientCtx.Viper.GetUint64(flags.FlagTimeoutHeight)
 	timestampUnix := clientCtx.Viper.GetInt64(flags.FlagTimeoutTimestamp)
 	timeoutTimestamp := time.Unix(timestampUnix, 0)
 	unordered := clientCtx.Viper.GetBool(flags.FlagUnordered)
@@ -108,7 +107,6 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 		simulateAndExecute: gasSetting.Simulate,
 		accountNumber:      accNum,
 		sequence:           accSeq,
-		timeoutHeight:      timeoutHeight,
 		timeoutTimestamp:   timeoutTimestamp,
 		unordered:          unordered,
 		gasAdjustment:      gasAdj,

@@ -73,7 +73,6 @@ const (
 	FlagPageKey          = "page-key"
 	FlagOffset           = "offset"
 	FlagCountTotal       = "count-total"
-	FlagTimeoutHeight    = "timeout-height"
 	FlagTimeoutTimestamp = "timeout-timestamp"
 	FlagUnordered        = "unordered"
 	FlagKeyAlgorithm     = "algo"
@@ -123,7 +122,6 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	if cmd.Flag(FlagFrom) == nil { // avoid flag redefinition when it's already been added by AutoCLI
 		f.String(FlagFrom, "", "Name or address of private key with which to sign")
 	}
-	cmd.MarkFlagsMutuallyExclusive(FlagTimeoutHeight, FlagTimeoutTimestamp)
 	f.Uint64P(FlagAccountNumber, "a", 0, "The account number of the signing account (offline mode only)")
 	f.Uint64P(FlagSequence, "s", 0, "The sequence number of the signing account (offline mode only)")
 	f.String(FlagNote, "", "Note to add a description to the transaction (previously --memo)")
@@ -138,7 +136,6 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	f.Bool(FlagOffline, false, "Offline mode (does not allow any online functionality)")
 	f.BoolP(FlagSkipConfirmation, "y", false, "Skip tx broadcasting prompt confirmation")
 	f.String(FlagSignMode, "", "Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature")
-	f.Uint64(FlagTimeoutHeight, 0, "Set a block timeout height to prevent the tx from being committed past a certain height")
 	f.Int64(FlagTimeoutTimestamp, 0, "Set a block timeout timestamp to prevent the tx from being committed past a certain time")
 	f.Bool(FlagUnordered, false, "Enable unordered transaction delivery; must be used in conjunction with --timeout-height")
 	f.String(FlagFeePayer, "", "Fee payer pays fees for the transaction instead of deducting from the signer")

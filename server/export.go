@@ -20,6 +20,8 @@ const (
 	FlagHeight           = "height"
 	FlagForZeroHeight    = "for-zero-height"
 	FlagJailAllowedAddrs = "jail-allowed-addrs"
+	// minAppVersionExport is the lowest app version where the app version is stored in consensus params and exported via this command.
+	minAppVersionExport = 2
 )
 
 // ExportCmd dumps app state to JSON.
@@ -94,6 +96,9 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				Validator: tmproto.ValidatorParams{
 					PubKeyTypes: exported.ConsensusParams.Validator.PubKeyTypes,
 				},
+			}
+			if appVersion := exported.ConsensusParams.GetVersion().GetAppVersion(); appVersion >= minAppVersionExport {
+				doc.ConsensusParams.Version.AppVersion = appVersion
 			}
 
 			// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc

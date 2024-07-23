@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
-	cosmossdk.io/depinject v1.0.0-alpha.4
+	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
 	github.com/cometbft/cometbft v1.0.0-rc1
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
@@ -174,7 +174,6 @@ replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/core/testing => ../../core/testing
-	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/log => ../../log
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/auth => ../auth

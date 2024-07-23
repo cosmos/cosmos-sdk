@@ -16,7 +16,7 @@ pull_request_rules:
         commit_message_template: |
           {{ title }} (#{{ number }})
           {{ body }}
-  - name: backport patches to v0.50.x branch
+  - name: backport patches to v0.52.x branch
     conditions:
       - base=main
       - label=backport/v0.52.x

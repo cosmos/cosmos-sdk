@@ -1,6 +1,9 @@
 package encoding
 
-import "testing"
+import (
+	"bytes"
+	"testing"
+)
 
 func TestBuildPrefixWithVersion(t *testing.T) {
 	testcases := []struct {
@@ -17,13 +20,8 @@ func TestBuildPrefixWithVersion(t *testing.T) {
 
 	for _, tc := range testcases {
 		got := BuildPrefixWithVersion(tc.prefix, tc.version)
-		if len(got) != len(tc.want) {
+		if !bytes.Equal(got, tc.want) {
 			t.Fatalf("BuildPrefixWithVersion(%q, %d) = %v, want %v", tc.prefix, tc.version, got, tc.want)
-		}
-		for i := range got {
-			if got[i] != tc.want[i] {
-				t.Fatalf("BuildPrefixWithVersion(%q, %d) = %v, want %v", tc.prefix, tc.version, got, tc.want)
-			}
 		}
 	}
 }

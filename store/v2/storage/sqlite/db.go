@@ -210,12 +210,19 @@ func (db *Database) Prune(version uint64) error {
 	}
 
 	// prune removed stores
-	pruneRemovedStoreKeysStmt := `DELETE FROM state_storage
-	WHERE store_key IN (
-		SELECT key FROM state_storage WHERE store_key = ? AND value = ? AND version <= ?
+	pruneRemovedStoreKeysStmt := `DELETE FROM state_storage AS s
+	WHERE EXISTS ( 
+		SELECT * FROM
+			(
+			SELECT key, MAX(version) AS max_version
+			FROM state_storage
+			WHERE store_key = ? AND value = ? AND version <= ?
+			GROUP BY key
+			) AS t
+		WHERE s.store_key = t.key AND s.version <= t.max_version
 	);
 	`
-	if _, err := tx.Exec(pruneRemovedStoreKeysStmt, reservedStoreKey, valueRemovedStore, version); err != nil {
+	if _, err := tx.Exec(pruneRemovedStoreKeysStmt, reservedStoreKey, valueRemovedStore, version, version); err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
 	}
 
@@ -285,7 +292,26 @@ func (db *Database) PruneStoreKeys(storeKeys []string, version uint64) (err erro
 }
 
 func (db *Database) MigrateStoreKey(fromStoreKey, toStoreKey []byte) error {
-	return db.executeTx(`
+	executeTx := func(stmt string, args ...interface{}) (err error) {
+		tx, err := db.storage.Begin()
+		if err != nil {
+			return fmt.Errorf("failed to create SQL transaction: %w", err)
+		}
+		defer func() {
+			if err != nil {
+				err = tx.Rollback()
+			}
+		}()
+		if _, err = tx.Exec(stmt, args...); err != nil {
+			return fmt.Errorf("failed to exec SQL statement: %w", err)
+		}
+		if err := tx.Commit(); err != nil {
+			return fmt.Errorf("failed to write SQL transaction: %w", err)
+		}
+		return nil
+	}
+
+	return executeTx(`
 	INSERT INTO state_storage(store_key, key, value, version)
 	SELECT ?, key, value, version FROM state_storage
 	WHERE store_key = ?;
@@ -325,25 +351,6 @@ func (db *Database) PrintRowsDebug() {
 	}
 
 	fmt.Println(strings.TrimSpace(sb.String()))
-}
-
-func (db *Database) executeTx(stmt string, args ...interface{}) (err error) {
-	tx, err := db.storage.Begin()
-	if err != nil {
-		return fmt.Errorf("failed to create SQL transaction: %w", err)
-	}
-	defer func() {
-		if err != nil {
-			err = tx.Rollback()
-		}
-	}()
-	if _, err = tx.Exec(stmt, args...); err != nil {
-		return fmt.Errorf("failed to exec SQL statement: %w", err)
-	}
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("failed to write SQL transaction: %w", err)
-	}
-	return nil
 }
 
 func getPruneHeight(storage *sql.DB) (uint64, error) {

@@ -470,19 +470,30 @@ func (db *Database) deleteRemovedStoreKeys(version uint64) error {
 	}
 	defer storeKeyIter.Close()
 
-	var storeKeys []string
+	var storeKeys []struct {
+		storeKey string
+		version  uint64
+	}
 	prefixLen := len(end)
 	for storeKeyIter.First(); storeKeyIter.Valid(); storeKeyIter.Next() {
+		verBz := storeKeyIter.Key()[len(removedStoreKeyPrefix):prefixLen]
+		v, err := decodeUint64Ascending(verBz)
+		if err != nil {
+			return err
+		}
 		storeKey := string(storeKeyIter.Key()[prefixLen:])
-		storeKeys = append(storeKeys, storeKey)
+		storeKeys = append(storeKeys, struct {
+			storeKey string
+			version  uint64
+		}{storeKey, v})
 		if err := batch.Delete(storeKeyIter.Key(), nil); err != nil {
 			return err
 		}
 	}
 
-	for _, key := range storeKeys {
+	for _, s := range storeKeys {
 		if err := func() error {
-			storeKey := []byte(key)
+			storeKey := []byte(s.storeKey)
 			itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: storePrefix(storeKey), UpperBound: storePrefix(util.CopyIncr(storeKey))})
 			if err != nil {
 				return err
@@ -490,6 +501,16 @@ func (db *Database) deleteRemovedStoreKeys(version uint64) error {
 			defer itr.Close()
 
 			for itr.First(); itr.Valid(); itr.Next() {
+				itrKey := itr.Key()
+				_, verBz, _ := SplitMVCCKey(itrKey)
+				keyVersion, err := decodeUint64Ascending(verBz)
+				if err != nil {
+					return err
+				}
+				if keyVersion > s.version {
+					// skip keys that are newer than the version
+					continue
+				}
 				if err := batch.Delete(itr.Key(), nil); err != nil {
 					return err
 				}

@@ -115,7 +115,7 @@ func (m *MetadataStore) flushRemovedStoreKeys(version uint64, storeKeys []string
 	return batch.WriteSync()
 }
 
-func (m *MetadataStore) deleteRemovedStoreKeys(version uint64, removeStore func(storeKey []byte) error) (err error) {
+func (m *MetadataStore) deleteRemovedStoreKeys(version uint64, removeStore func(storeKey []byte, version uint64) error) (err error) {
 	batch := m.kv.NewBatch()
 	defer func() {
 		if berr := batch.Close(); berr != nil {
@@ -136,7 +136,7 @@ func (m *MetadataStore) deleteRemovedStoreKeys(version uint64, removeStore func(
 
 	for ; iter.Valid(); iter.Next() {
 		storeKey := iter.Key()[len(end):]
-		if err := removeStore(storeKey); err != nil {
+		if err := removeStore(storeKey, version); err != nil {
 			return err
 		}
 		if err := batch.Delete(iter.Key()); err != nil {

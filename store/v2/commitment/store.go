@@ -398,55 +398,13 @@ func (c *CommitStore) Prune(version uint64) error {
 }
 
 func (c *CommitStore) pruneRemovedStoreKeys(version uint64) error {
-	clearKVStore := func(storeKey []byte) (err error) {
+	clearKVStore := func(storeKey []byte, version uint64) (err error) {
 		tree, err := c.mountTreeFn(string(storeKey))
 		if err != nil {
 			return err
 		}
-		kvStoreGetter, ok := tree.(KVStoreGetter)
-		if !ok {
-			return nil
-		}
-		kvStore := kvStoreGetter.GetKVStoreWithBatch()
 
-		batch := kvStore.NewBatch()
-		iter, err := kvStore.Iterator(nil, nil)
-		if err != nil {
-			return err
-		}
-		defer func() {
-			err = iter.Close()
-			err = batch.Close()
-		}()
-
-		for ; iter.Valid(); iter.Next() {
-			if err := batch.Delete(iter.Key()); err != nil {
-				return err
-			}
-			bs, err := batch.GetByteSize()
-			if err != nil {
-				return err
-			}
-			if bs > batchFlushThreshold {
-				if err := batch.Write(); err != nil {
-					return err
-				}
-				if err := batch.Close(); err != nil {
-					return err
-				}
-				batch = kvStore.NewBatch()
-			}
-		}
-		if err := batch.Write(); err != nil {
-			return err
-		}
-		if err := batch.Close(); err != nil {
-			return err
-		}
-
-		c.oldTrees.Delete(string(storeKey))
-
-		return nil
+		return tree.Prune(version)
 	}
 
 	return c.metadata.deleteRemovedStoreKeys(version, clearKVStore)

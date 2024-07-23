@@ -44,7 +44,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 			}
 
 			logger := log.NewLogger(cmd.OutOrStdout())
-			home, err := cmd.Flags().GetString(serverv2.FlagHome) // should be FlagHome
+			home, err := cmd.Flags().GetString(serverv2.FlagHome)
 			if err != nil {
 				return err
 			}
@@ -128,7 +128,7 @@ func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger 
 		}
 	}
 
-	storeOpts := DefaultStoreOptions()
+	storeOpts := root.DefaultStoreOptions()
 	if v != nil {
 		if err := v.Sub("store.options").Unmarshal(&storeOpts); err != nil {
 			return nil, 0, fmt.Errorf("failed to store options: %w", err)

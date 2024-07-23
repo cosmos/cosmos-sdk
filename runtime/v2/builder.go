@@ -127,11 +127,9 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	v := a.viper
 	home := v.GetString(FlagHome)
 
-	storeOpts := rootstore.Options{}
-	if v != nil {
-		if err := v.Sub("store.options").Unmarshal(&storeOpts); err != nil {
-			return nil, fmt.Errorf("failed to store options: %w", err)
-		}
+	storeOpts := rootstore.DefaultStoreOptions()
+	if err := v.Sub("store.options").Unmarshal(&storeOpts); err != nil {
+		return nil, fmt.Errorf("failed to store options: %w", err)
 	}
 
 	scRawDb, err := db.NewDB(db.DBType(v.GetString("store.app-db-backend")), "application", filepath.Join(home, "data"), nil)

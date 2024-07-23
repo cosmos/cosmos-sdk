@@ -36,23 +36,6 @@ func TestField_Validate(t *testing.T) {
 			errContains: "invalid field kind",
 		},
 		{
-			name: "missing address prefix",
-			field: Field{
-				Name: "field1",
-				Kind: Bech32AddressKind,
-			},
-			errContains: "missing address prefix",
-		},
-		{
-			name: "address prefix with non-Bech32AddressKind",
-			field: Field{
-				Name:          "field1",
-				Kind:          StringKind,
-				AddressPrefix: "prefix",
-			},
-			errContains: "address prefix is only valid for field \"field1\" with type Bech32AddressKind",
-		},
-		{
 			name: "invalid enum definition",
 			field: Field{
 				Name: "field1",

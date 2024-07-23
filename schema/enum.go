@@ -5,8 +5,8 @@ import (
 	"fmt"
 )
 
-// EnumDefinition represents the definition of an enum type.
-type EnumDefinition struct {
+// EnumType represents the definition of an enum type.
+type EnumType struct {
 	// Name is the name of the enum type. It must conform to the NameFormat regular expression.
 	// Its name must be unique between all enum types and object types in the module.
 	// The same enum, however, can be used in multiple object types and fields as long as the
@@ -18,10 +18,15 @@ type EnumDefinition struct {
 	Values []string
 }
 
-func (EnumDefinition) isType() {}
+// TypeName implements the Type interface.
+func (e EnumType) TypeName() string {
+	return e.Name
+}
+
+func (EnumType) isType() {}
 
 // Validate validates the enum definition.
-func (e EnumDefinition) Validate() error {
+func (e EnumType) Validate() error {
 	if !ValidateName(e.Name) {
 		return fmt.Errorf("invalid enum definition name %q", e.Name)
 	}
@@ -44,7 +49,7 @@ func (e EnumDefinition) Validate() error {
 }
 
 // ValidateValue validates that the value is a valid enum value.
-func (e EnumDefinition) ValidateValue(value string) error {
+func (e EnumType) ValidateValue(value string) error {
 	for _, v := range e.Values {
 		if v == value {
 			return nil

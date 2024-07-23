@@ -22,7 +22,7 @@ func ProposalMsgs() []simtypes.WeightedProposalMsg {
 			DefaultWeightTextProposal,
 			SimulateTextProposal,
 		),
-	}
+	} //nolint:staticcheck // used for legacy testing
 }
 
 // SimulateTextProposal returns a random text proposal content.

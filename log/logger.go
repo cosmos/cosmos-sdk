@@ -40,6 +40,12 @@ var ContextKey struct{}
 // All functionalities of the logger are available through the Impl() method.
 type Logger = corelog.Logger
 
+// LoggerV2 is the new type that logger's implement which supports the core Logger and LoggerV2 interfaces.
+type LoggerV2 = interface {
+	Logger
+	corelog.LoggerV2
+}
+
 // WithJSONMarshal configures zerolog global json encoding.
 func WithJSONMarshal(marshaler func(v any) ([]byte, error)) {
 	zerolog.InterfaceMarshalFunc = func(i any) ([]byte, error) {
@@ -68,7 +74,7 @@ type zeroLogWrapper struct {
 //
 // Stderr is the typical destination for logs,
 // so that any output from your application can still be piped to other processes.
-func NewLogger(dst io.Writer, options ...Option) Logger {
+func NewLogger(dst io.Writer, options ...Option) LoggerV2 {
 	logCfg := defaultConfig
 	for _, opt := range options {
 		opt(&logCfg)
@@ -110,7 +116,7 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 }
 
 // NewCustomLogger returns a new logger with the given zerolog logger.
-func NewCustomLogger(logger zerolog.Logger) Logger {
+func NewCustomLogger(logger zerolog.Logger) LoggerV2 {
 	return zeroLogWrapper{&logger}
 }
 
@@ -139,7 +145,12 @@ func (l zeroLogWrapper) Debug(msg string, keyVals ...interface{}) {
 }
 
 // With returns a new wrapped logger with additional context provided by a set.
-func (l zeroLogWrapper) With(keyVals ...interface{}) Logger {
+func (l zeroLogWrapper) With(keyVals ...interface{}) corelog.Logger {
+	logger := l.Logger.With().Fields(keyVals).Logger()
+	return zeroLogWrapper{&logger}
+}
+
+func (l zeroLogWrapper) WithV2(keyVals ...interface{}) any {
 	logger := l.Logger.With().Fields(keyVals).Logger()
 	return zeroLogWrapper{&logger}
 }
@@ -159,7 +170,7 @@ type LogWrapper struct {
 	corelog.Logger
 }
 
-func NewLogWrapper(logger corelog.Logger) Logger {
+func NewLogWrapper(logger corelog.Logger) LoggerV2 {
 	return LogWrapper{logger}
 }
 
@@ -167,7 +178,11 @@ func (l LogWrapper) Impl() interface{} {
 	return l.Logger
 }
 
-func (l LogWrapper) With(keyVals ...interface{}) Logger {
+func (l LogWrapper) With(keyVals ...interface{}) corelog.Logger {
+	return NewLogWrapper(l.Logger.With(keyVals...))
+}
+
+func (l LogWrapper) WithV2(keyVals ...interface{}) any {
 	return NewLogWrapper(l.Logger.With(keyVals...))
 }
 

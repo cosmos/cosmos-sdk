@@ -1002,7 +1002,21 @@ func (app *BaseApp) FetchOracleVotes(req *abci.RequestFetchOracleVotes) (*abci.R
 	if app.fetchOracleVotes != nil {
 		return app.fetchOracleVotes(context.Background(), req)
 	}
-	return &abci.ResponseFetchOracleVotes{}, fmt.Errorf("fetchOracleVotes hook or prepareProposalState is not set")
+	return &abci.ResponseFetchOracleVotes{}, fmt.Errorf("fetchOracleVotes hook is not set")
+}
+
+func (app *BaseApp) DoesOracleResultExist(req *abci.RequestDoesOracleResultExist) (*abci.ResponseDoesOracleResultExist, error) {
+	if app.doesOracleResultExist != nil {
+		return app.doesOracleResultExist(context.Background(), req)
+	}
+	return &abci.ResponseDoesOracleResultExist{}, fmt.Errorf("doesOracleResultExist hook is not set")
+}
+
+func (app *BaseApp) DoesSubAccountBelongToVal(req *abci.RequestDoesSubAccountBelongToVal) (*abci.ResponseDoesSubAccountBelongToVal, error) {
+	if app.doesSubAccountBelongToVal != nil {
+		return app.doesSubAccountBelongToVal(context.Background(), req)
+	}
+	return &abci.ResponseDoesSubAccountBelongToVal{}, fmt.Errorf("doesSubAccountBelongToVal hook is not set")
 }
 
 func (app *BaseApp) ValidateOracleVotes(req *abci.RequestValidateOracleVotes) (*abci.ResponseValidateOracleVotes, error) {

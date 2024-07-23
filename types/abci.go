@@ -30,6 +30,10 @@ type CreateOracleResultTxHandler func(Context, *abci.RequestCreateOracleResultTx
 
 type FetchOracleVotesHandler func(context.Context, *abci.RequestFetchOracleVotes) (*abci.ResponseFetchOracleVotes, error)
 
+type DoesOracleResultExistHandler func(context.Context, *abci.RequestDoesOracleResultExist) (*abci.ResponseDoesOracleResultExist, error)
+
+type DoesSubAccountBelongToValHandler func(context.Context, *abci.RequestDoesSubAccountBelongToVal) (*abci.ResponseDoesSubAccountBelongToVal, error)
+
 type ValidateOracleVotesHandler func(Context, *abci.RequestValidateOracleVotes) (*abci.ResponseValidateOracleVotes, error)
 
 type MsgHandlerMiddleware func(ctx Context, msg Msg, handler Handler) (*Result, error)

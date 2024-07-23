@@ -1,6 +1,7 @@
 package iavl
 
 // Config is the configuration for the IAVL tree.
+// app.toml config options
 type Config struct {
 	CacheSize              int  `mapstructure:"cache_size" toml:"cache_size"`
 	SkipFastStorageUpgrade bool `mapstructure:"skip_fast_storage_upgrade" toml:"skip_fast_storage_upgrade"`

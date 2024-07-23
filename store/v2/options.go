@@ -18,6 +18,7 @@ const (
 )
 
 // PruningOption defines the pruning configuration.
+// app.toml config options
 type PruningOption struct {
 	// KeepRecent sets the number of recent versions to keep.
 	KeepRecent uint64 `mapstructure:"keep-recent" toml:"keep-recent"`

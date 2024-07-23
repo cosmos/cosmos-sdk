@@ -32,6 +32,7 @@ const (
 	SCTypeIavlV2 SCType = 1
 )
 
+// app.toml config options
 type Options struct {
 	SSType          SSType               `mapstructure:"ss-type" toml:"ss-type"`
 	SCType          SCType               `mapstructure:"sc-type" toml:"sc-type"`

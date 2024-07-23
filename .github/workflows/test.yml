@@ -4,7 +4,7 @@ on:
   merge_group:
   push:
     branches:
-      - release/v0.52.x
+      - main
 
 permissions:
   contents: read

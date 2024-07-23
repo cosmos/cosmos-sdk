@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -216,6 +217,29 @@ func TestModuleSchema_ValidateObjectUpdate(t *testing.T) {
 			},
 			errContains: "object type \"object2\" not found in module schema",
 		},
+		{
+			name: "type name refers to an enum",
+			moduleSchema: RequireNewModuleSchema(t, []ObjectType{
+				{
+					Name: "obj1",
+					KeyFields: []Field{
+						{
+							Name: "field1",
+							Kind: EnumKind,
+							EnumDefinition: EnumDefinition{
+								Name:   "enum1",
+								Values: []string{"a", "b"},
+							},
+						},
+					},
+				},
+			}),
+			objectUpdate: ObjectUpdate{
+				TypeName: "enum1",
+				Key:      "a",
+			},
+			errContains: "type \"enum1\" is not an object type",
+		},
 	}
 
 	for _, tt := range tests {
@@ -241,4 +265,86 @@ func RequireNewModuleSchema(t *testing.T, objectTypes []ObjectType) ModuleSchema
 		t.Fatalf("unexpected error: %v", err)
 	}
 	return moduleSchema
+}
+
+func TestModuleSchema_LookupType(t *testing.T) {
+	moduleSchema := RequireNewModuleSchema(t, []ObjectType{
+		{
+			Name: "object1",
+			KeyFields: []Field{
+				{
+					Name: "field1",
+					Kind: StringKind,
+				},
+			},
+		},
+	})
+
+	typ, ok := moduleSchema.LookupType("object1")
+	if !ok {
+		t.Fatalf("expected to find object type \"object1\"")
+	}
+
+	objectType, ok := typ.(ObjectType)
+	if !ok {
+		t.Fatalf("expected object type, got %T", typ)
+	}
+
+	if objectType.Name != "object1" {
+		t.Fatalf("expected object type name \"object1\", got %q", objectType.Name)
+	}
+}
+
+func TestModuleSchema_ScanTypes(t *testing.T) {
+	moduleSchema := RequireNewModuleSchema(t, []ObjectType{
+		{
+			Name: "object1",
+			KeyFields: []Field{
+				{
+					Name: "field1",
+					Kind: StringKind,
+				},
+			},
+		},
+		{
+			Name: "object2",
+			KeyFields: []Field{
+				{
+					Name: "field1",
+					Kind: StringKind,
+				},
+			},
+		},
+	})
+
+	var objectTypeNames []string
+	moduleSchema.ScanTypes(func(typ Type) bool {
+		objectType, ok := typ.(ObjectType)
+		if !ok {
+			t.Fatalf("expected object type, got %T", typ)
+		}
+		objectTypeNames = append(objectTypeNames, objectType.Name)
+		return true
+	})
+
+	expected := []string{"object1", "object2"}
+	if !reflect.DeepEqual(objectTypeNames, expected) {
+		t.Fatalf("expected object type names %v, got %v", expected, objectTypeNames)
+	}
+
+	objectTypeNames = nil
+	// scan just the first type and return false
+	moduleSchema.ScanTypes(func(typ Type) bool {
+		objectType, ok := typ.(ObjectType)
+		if !ok {
+			t.Fatalf("expected object type, got %T", typ)
+		}
+		objectTypeNames = append(objectTypeNames, objectType.Name)
+		return false
+	})
+
+	expected = []string{"object1"}
+	if !reflect.DeepEqual(objectTypeNames, expected) {
+		t.Fatalf("expected object type names %v, got %v", expected, objectTypeNames)
+	}
 }

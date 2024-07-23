@@ -8,22 +8,26 @@ import (
 
 func DefaultConfig() *Config {
 	return &Config{
-		AppDBBackend: "",
-		Options: root.Options{
-			SSType: 0,
-			SCType: 0,
-			SCPruningOption: &storev2.PruningOption{
-				KeepRecent: 2,
-				Interval:   1,
-			},
-			SSPruningOption: &storev2.PruningOption{
-				KeepRecent: 2,
-				Interval:   1,
-			},
-			IavlConfig: &iavl.Config{
-				CacheSize:              100_000,
-				SkipFastStorageUpgrade: true,
-			},
+		AppDBBackend: "goleveldb",
+		Options: DefaultStoreOptions(),
+	}
+}
+
+func DefaultStoreOptions() root.Options {
+	return root.Options{
+		SSType: 0,
+		SCType: 0,
+		SCPruningOption: &storev2.PruningOption{
+			KeepRecent: 2,
+			Interval:   1,
+		},
+		SSPruningOption: &storev2.PruningOption{
+			KeepRecent: 2,
+			Interval:   1,
+		},
+		IavlConfig: &iavl.Config{
+			CacheSize:              100_000,
+			SkipFastStorageUpgrade: true,
 		},
 	}
 }

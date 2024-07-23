@@ -130,8 +130,8 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 			return nil, fmt.Errorf("failed to store options: %w", err)
 		}
 	}
-	
-	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(home, "data"), nil)
+
+	scRawDb, err := db.NewDB(db.DBType(v.GetString("store.app-db-backend")), "application", filepath.Join(home, "data"), nil)	
 	if err != nil {
 		panic(err)
 	}

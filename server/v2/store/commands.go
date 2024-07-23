@@ -85,7 +85,19 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 
 func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger log.Logger) (storev2.RootStore, uint64, error) {
 	tempViper := v
-	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(rootDir, "data"), nil)
+	
+	// handle FlagAppDBBackend
+	var dbType db.DBType
+	if cmd.Flags().Changed(FlagAppDBBackend) {
+		dbStr, err := cmd.Flags().GetString(FlagAppDBBackend)
+		if err != nil {
+			return nil, 0, err
+		}
+		dbType = db.DBType(dbStr)
+	} else {
+		dbType = db.DBType(v.GetString("store.app-db-backend"))
+	}
+	scRawDb, err := db.NewDB(dbType, "application", filepath.Join(rootDir, "data"), nil)
 	if err != nil {
 		panic(err)
 	}
@@ -116,10 +128,17 @@ func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger 
 		}
 	}
 
+	storeOpts := DefaultStoreOptions()
+	if v != nil {
+		if err := v.Sub("store.options").Unmarshal(&storeOpts); err != nil {
+			return nil, 0, fmt.Errorf("failed to store options: %w", err)
+		}
+	}
+
 	store, err := root.CreateRootStore(&root.FactoryOptions{
 		Logger:  logger,
 		RootDir: rootDir,
-		Options: tempViper,
+		Options: storeOpts,
 		SCRawDB: scRawDb,
 	})
 

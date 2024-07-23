@@ -29,7 +29,6 @@ type ModuleInputs struct {
 
 	Cdc           codec.Codec
 	AccountKeeper authz.AccountKeeper
-	BankKeeper    authz.BankKeeper
 	Registry      cdctypes.InterfaceRegistry
 	Environment   appmodule.Environment
 }
@@ -43,6 +42,6 @@ type ModuleOutputs struct {
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewKeeper(in.Environment, in.Cdc, in.AccountKeeper)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
+	m := NewAppModule(in.Cdc, k, in.Registry)
 	return ModuleOutputs{AuthzKeeper: k, Module: m}
 }

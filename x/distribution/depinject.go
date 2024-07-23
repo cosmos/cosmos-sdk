@@ -74,7 +74,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authorityAddr,
 	)
 
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper)
+	m := NewAppModule(in.Cdc, k, in.StakingKeeper)
 
 	return ModuleOutputs{
 		DistrKeeper: k,

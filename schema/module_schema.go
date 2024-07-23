@@ -27,7 +27,7 @@ func NewModuleSchema(objectTypes []ObjectType) (ModuleSchema, error) {
 		return ModuleSchema{}, err
 	}
 
-	return ModuleSchema{types: types}, nil
+	return res, nil
 }
 
 func addEnumType(types map[string]Type, field Field) error {

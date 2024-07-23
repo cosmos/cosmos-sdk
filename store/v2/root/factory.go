@@ -34,10 +34,10 @@ const (
 
 // app.toml config options
 type Options struct {
-	SSType          SSType               `mapstructure:"ss-type" toml:"ss-type"`
-	SCType          SCType               `mapstructure:"sc-type" toml:"sc-type"`
-	SSPruningOption *store.PruningOption `mapstructure:"ss-pruning-option" toml:"ss-pruning-option"`
-	SCPruningOption *store.PruningOption `mapstructure:"sc-pruning-option" toml:"sc-pruning-option"`
+	SSType          SSType               `mapstructure:"ss-type" toml:"ss-type" comment:"State storage database type. Currently we support: 0 for SQLite, 1 for Pebble"`
+	SCType          SCType               `mapstructure:"sc-type" toml:"sc-type" comment:"State commitment database type. Currently we support:0 for iavl, 1 for iavl v2"`
+	SSPruningOption *store.PruningOption `mapstructure:"ss-pruning-option" toml:"ss-pruning-option" comment:"Pruning options for state storage"`
+	SCPruningOption *store.PruningOption `mapstructure:"sc-pruning-option" toml:"sc-pruning-option" comment:"Pruning options for state commitment"`
 	IavlConfig      *iavl.Config         `mapstructure:"iavl-config" toml:"iavl-config"`
 }
 
@@ -47,6 +47,25 @@ type FactoryOptions struct {
 	Options   Options
 	StoreKeys []string
 	SCRawDB   corestore.KVStoreWithBatch
+}
+
+func DefaultStoreOptions() Options {
+	return Options{
+		SSType: 0,
+		SCType: 0,
+		SCPruningOption: &store.PruningOption{
+			KeepRecent: 2,
+			Interval:   1,
+		},
+		SSPruningOption: &store.PruningOption{
+			KeepRecent: 2,
+			Interval:   1,
+		},
+		IavlConfig: &iavl.Config{
+			CacheSize:              100_000,
+			SkipFastStorageUpgrade: true,
+		},
+	}
 }
 
 // CreateRootStore is a convenience function to create a root store based on the

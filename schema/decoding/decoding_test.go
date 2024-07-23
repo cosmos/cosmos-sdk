@@ -68,7 +68,7 @@ func TestMiddleware_filtered(t *testing.T) {
 	tl := newTestFixture(t)
 	listener, err := Middleware(tl.Listener, tl.resolver, MiddlewareOptions{
 		ModuleFilter: func(moduleName string) bool {
-			return moduleName == "one"
+			return moduleName == "one" //nolint:goconst // adding constants for this would impede readability
 		},
 	})
 	if err != nil {
@@ -176,6 +176,7 @@ type testFixture struct {
 }
 
 func newTestFixture(t *testing.T) *testFixture {
+	t.Helper()
 	res := &testFixture{}
 	res.Listener = appdata.Listener{
 		InitializeModuleData: func(data appdata.ModuleInitializationData) error {
@@ -246,7 +247,7 @@ func newTestMultiStore() *testMultiStore {
 
 var _ SyncSource = &testMultiStore{}
 
-func (ms *testMultiStore) IterateAllKVPairs(moduleName string, fn func(key []byte, value []byte) error) error {
+func (ms *testMultiStore) IterateAllKVPairs(moduleName string, fn func(key, value []byte) error) error {
 	s, ok := ms.stores[moduleName]
 	if !ok {
 		return fmt.Errorf("don't have state for module %s", moduleName)
@@ -267,6 +268,7 @@ func (ms *testMultiStore) IterateAllKVPairs(moduleName string, fn func(key []byt
 }
 
 func (ms *testMultiStore) newTestStore(t *testing.T, modName string) *testStore {
+	t.Helper()
 	s := &testStore{
 		t:       t,
 		modName: modName,

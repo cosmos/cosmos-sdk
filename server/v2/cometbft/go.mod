@@ -6,7 +6,6 @@ replace (
 	cosmossdk.io/api => ../../../api
 	cosmossdk.io/core => ../../../core
 	cosmossdk.io/core/testing => ../../../core/testing
-	cosmossdk.io/depinject => ../../../depinject
 	cosmossdk.io/log => ../../../log
 	cosmossdk.io/server/v2 => ../
 	cosmossdk.io/server/v2/appmanager => ../appmanager
@@ -29,7 +28,6 @@ require (
 	cosmossdk.io/server/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
-	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-rc1
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
@@ -51,11 +49,12 @@ require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
+	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/log v1.3.1 // indirect
 	cosmossdk.io/math v1.3.0 // indirect
 	cosmossdk.io/schema v0.1.1 // indirect
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
+	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.13.3 // indirect

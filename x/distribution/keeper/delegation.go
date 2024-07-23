@@ -52,12 +52,12 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx context.Context, val sdk.V
 ) (sdk.DecCoins, error) {
 	// sanity check
 	if startingPeriod > endingPeriod {
-		return sdk.DecCoins{}, fmt.Errorf("startingPeriod cannot be greater than endingPeriod")
+		return sdk.DecCoins{}, errors.New("startingPeriod cannot be greater than endingPeriod")
 	}
 
 	// sanity check
 	if stake.IsNegative() {
-		return sdk.DecCoins{}, fmt.Errorf("stake should not be negative")
+		return sdk.DecCoins{}, errors.New("stake should not be negative")
 	}
 
 	valBz, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
@@ -78,7 +78,7 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx context.Context, val sdk.V
 
 	difference := ending.CumulativeRewardRatio.Sub(starting.CumulativeRewardRatio)
 	if difference.IsAnyNegative() {
-		return sdk.DecCoins{}, fmt.Errorf("negative rewards should not be possible")
+		return sdk.DecCoins{}, errors.New("negative rewards should not be possible")
 	}
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 	rewards := difference.MulDecTruncate(stake)

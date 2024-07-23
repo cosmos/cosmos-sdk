@@ -81,7 +81,7 @@ func (a AppManager[T]) InitGenesis(
 
 	err = genesisState.ApplyStateChanges(blockZeroStateChanges)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to apply blcok zero state changes to genesis state: %w", err)
+		return nil, nil, fmt.Errorf("failed to apply block zero state changes to genesis state: %w", err)
 	}
 
 	return blockResponse, genesisState, err

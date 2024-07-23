@@ -33,46 +33,6 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-var _ transaction.Codec[transaction.Tx] = &temporaryTxDecoder[transaction.Tx]{}
-
-type temporaryTxDecoder[T transaction.Tx] struct {
-	txConfig client.TxConfig
-}
-
-// Decode implements transaction.Codec.
-func (t *temporaryTxDecoder[T]) Decode(bz []byte) (T, error) {
-	var out T
-	tx, err := t.txConfig.TxDecoder()(bz)
-	if err != nil {
-		return out, err
-	}
-
-	var ok bool
-	out, ok = tx.(T)
-	if !ok {
-		return out, errors.New("unexpected Tx type")
-	}
-
-	return out, nil
-}
-
-// DecodeJSON implements transaction.Codec.
-func (t *temporaryTxDecoder[T]) DecodeJSON(bz []byte) (T, error) {
-	var out T
-	tx, err := t.txConfig.TxJSONDecoder()(bz)
-	if err != nil {
-		return out, err
-	}
-
-	var ok bool
-	out, ok = tx.(T)
-	if !ok {
-		return out, errors.New("unexpected Tx type")
-	}
-
-	return out, nil
-}
-
 func newApp[T transaction.Tx](
 	logger log.Logger, viper *viper.Viper,
 ) serverv2.AppI[T] {
@@ -103,19 +63,19 @@ func initRootCmd[T transaction.Tx](
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
-		genesisCommand[T](moduleManager, appExport[T]),
+		genesisCommand(moduleManager, appExport[T]),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
 		offchain.OffChain(),
 	)
 
-	// Add empty server struct here for writing default config
+	// wire server commands
 	if err = serverv2.AddCommands(
 		rootCmd,
 		newApp,
 		logger,
-		cometbft.New[T](&temporaryTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
+		cometbft.New(&genericTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
 		grpc.New[T](),
 		store.New[T](),
 	); err != nil {
@@ -221,4 +181,44 @@ func appExport[T transaction.Tx](
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
+}
+
+var _ transaction.Codec[transaction.Tx] = &genericTxDecoder[transaction.Tx]{}
+
+type genericTxDecoder[T transaction.Tx] struct {
+	txConfig client.TxConfig
+}
+
+// Decode implements transaction.Codec.
+func (t *genericTxDecoder[T]) Decode(bz []byte) (T, error) {
+	var out T
+	tx, err := t.txConfig.TxDecoder()(bz)
+	if err != nil {
+		return out, err
+	}
+
+	var ok bool
+	out, ok = tx.(T)
+	if !ok {
+		return out, errors.New("unexpected Tx type")
+	}
+
+	return out, nil
+}
+
+// DecodeJSON implements transaction.Codec.
+func (t *genericTxDecoder[T]) DecodeJSON(bz []byte) (T, error) {
+	var out T
+	tx, err := t.txConfig.TxJSONDecoder()(bz)
+	if err != nil {
+		return out, err
+	}
+
+	var ok bool
+	out, ok = tx.(T)
+	if !ok {
+		return out, errors.New("unexpected Tx type")
+	}
+
+	return out, nil
 }

@@ -39,7 +39,6 @@ func TestModuleSetDecoderResolver_IterateAll(t *testing.T) {
 		objectTypes[cdc.Schema.ObjectTypes[0].Name] = true
 		return nil
 	})
-
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

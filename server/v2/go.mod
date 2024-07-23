@@ -6,7 +6,6 @@ replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/core/testing => ../../core/testing
-	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/log => ../../log
 	cosmossdk.io/server/v2/appmanager => ./appmanager
 	cosmossdk.io/server/v2/stf => ./stf
@@ -31,6 +30,7 @@ require (
 	github.com/hashicorp/go-hclog v1.6.2
 	github.com/hashicorp/go-metrics v0.5.3
 	github.com/hashicorp/go-plugin v1.6.0
+	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/prometheus/client_golang v1.19.1
 	github.com/prometheus/common v0.55.0
@@ -83,7 +83,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
-	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

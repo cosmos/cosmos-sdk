@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"time"
 
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	corecontext "cosmossdk.io/core/context"
@@ -260,7 +262,7 @@ func SimulateMsgExec(
 	ak authz.AccountKeeper,
 	bk authz.BankKeeper,
 	k keeper.Keeper,
-	unpacker cdctypes.AnyUnpacker,
+	unpacker gogoprotoany.AnyUnpacker,
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,

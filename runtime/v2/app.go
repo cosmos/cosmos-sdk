@@ -51,6 +51,11 @@ type App[T transaction.Tx] struct {
 	GRPCQueryDecoders map[string]func(requestBytes []byte) (gogoproto.Message, error)
 }
 
+// Name returns the app name.
+func (a *App[T]) Name() string {
+	return a.config.AppName
+}
+
 // Logger returns the app logger.
 func (a *App[T]) Logger() log.Logger {
 	return a.logger

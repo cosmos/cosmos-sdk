@@ -21,7 +21,11 @@ type Module struct {
 func NewModule(moduleSchema schema.ModuleSchema, options Options) *Module {
 	objectCollections := &btree.Map[string, *ObjectCollection]{}
 	var objectTypeNames []string
-	for _, objectType := range moduleSchema.ObjectTypes {
+	for typ := range moduleSchema.Types {
+		objectType, ok := typ.(schema.ObjectType)
+		if !ok {
+			continue
+		}
 		objectCollection := NewObjectCollection(objectType, options)
 		objectCollections.Set(objectType.Name, objectCollection)
 		objectTypeNames = append(objectTypeNames, objectType.Name)
@@ -69,12 +73,9 @@ func (o *Module) GetObjectCollection(objectType string) (*ObjectCollection, bool
 	return o.objectCollections.Get(objectType)
 }
 
-// ScanObjectCollections scans all object collections in the module.
-func (o *Module) ScanObjectCollections(f func(value *ObjectCollection) error) error {
-	var err error
+// ObjectCollections iterates over all object collections in the module.
+func (o *Module) ObjectCollections(f func(value *ObjectCollection) bool) {
 	o.objectCollections.Scan(func(key string, value *ObjectCollection) bool {
-		err = f(value)
-		return err == nil
+		return f(value)
 	})
-	return err
 }

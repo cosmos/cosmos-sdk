@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/golden"
 
-	"cosmossdk.io/schema"
 	"cosmossdk.io/schema/appdata"
 	schematesting "cosmossdk.io/schema/testing"
 	"cosmossdk.io/schema/testing/statesim"
@@ -46,23 +45,22 @@ func testAppSimulator_mirror(t *testing.T, retainDeletes bool) {
 	for i := 0; i < 10; i++ {
 		data := blockDataGen.Example(i + 1)
 		require.NoError(t, appSim.ProcessBlockData(data))
-		require.NoError(t, appSim.AppState().ScanModules(func(moduleName string, modState *statesim.Module) error {
+		for moduleName, modState := range appSim.AppState().Modules {
 			mirrorMod, ok := mirror.AppState().GetModule(moduleName)
 			require.True(t, ok)
-			return modState.ScanObjectCollections(func(objState *statesim.ObjectCollection) error {
+			for objState := range modState.ObjectCollections {
 				mirrorObjState, ok := mirrorMod.GetObjectCollection(objState.ObjectType().Name)
 				require.True(t, ok)
 				require.Equal(t, objState.Len(), mirrorObjState.Len())
-				return objState.ScanState(func(update schema.ObjectUpdate) error {
+				for update := range objState.AllState {
 					mirrorUpdate, ok := mirrorObjState.GetObject(update.Key)
 					require.True(t, ok)
 					eq, err := objState.ObjectType().ObjectUpdatesEqual(update, mirrorUpdate)
 					require.NoError(t, err)
 					require.True(t, eq)
-					return nil
-				})
-			})
-		}))
+				}
+			}
+		}
 	}
 }
 

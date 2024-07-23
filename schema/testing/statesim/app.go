@@ -94,12 +94,7 @@ func (a *App) GetModule(moduleName string) (*Module, bool) {
 	return a.moduleStates.Get(moduleName)
 }
 
-// ScanModules scans all the module state instances in the app.
-func (a *App) ScanModules(f func(moduleName string, modState *Module) error) error {
-	var err error
-	a.moduleStates.Scan(func(key string, value *Module) bool {
-		err = f(key, value)
-		return err == nil
-	})
-	return err
+// Modules iterates over all the module state instances in the app.
+func (a *App) Modules(f func(moduleName string, modState *Module) bool) {
+	a.moduleStates.Scan(f)
 }

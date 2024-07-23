@@ -34,29 +34,28 @@ var ObjectTypeGen = rapid.Custom(func(t *rapid.T) schema.ObjectType {
 	return typ
 }).Filter(func(typ schema.ObjectType) bool {
 	// filter out duplicate enum names
-	enumTypeNames := map[string]bool{}
-	if hasDuplicateEnumName(enumTypeNames, typ.KeyFields) {
+	typeNames := map[string]bool{typ.Name: true}
+	if hasDuplicateNames(typeNames, typ.KeyFields) {
 		return false
 	}
-	if hasDuplicateEnumName(enumTypeNames, typ.ValueFields) {
+	if hasDuplicateNames(typeNames, typ.ValueFields) {
 		return false
 	}
 	return true
 })
 
-// hasDuplicateEnumName checks if there is an enum field with a duplicate name
-// in the object type
-func hasDuplicateEnumName(enumTypeNames map[string]bool, fields []schema.Field) bool {
+// hasDuplicateNames checks if there is type name in the fields
+func hasDuplicateNames(typeNames map[string]bool, fields []schema.Field) bool {
 	for _, field := range fields {
 		if field.Kind != schema.EnumKind {
 			continue
 		}
 
-		if _, ok := enumTypeNames[field.EnumDefinition.Name]; ok {
+		if _, ok := typeNames[field.EnumDefinition.Name]; ok {
 			return true
 		}
 
-		enumTypeNames[field.EnumDefinition.Name] = true
+		typeNames[field.EnumDefinition.Name] = true
 	}
 	return false
 }

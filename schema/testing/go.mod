@@ -17,4 +17,4 @@ require (
 
 replace cosmossdk.io/schema => ./..
 
-go 1.22
+go 1.23

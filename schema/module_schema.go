@@ -30,6 +30,16 @@ func NewModuleSchema(objectTypes []ObjectType) (ModuleSchema, error) {
 	return res, nil
 }
 
+// MustNewModuleSchema calls NewModuleSchema and panics if there's an error. This should generally be used
+// only in tests or initialization code.
+func MustNewModuleSchema(objectTypes []ObjectType) ModuleSchema {
+	schema, err := NewModuleSchema(objectTypes)
+	if err != nil {
+		panic(err)
+	}
+	return schema
+}
+
 func addEnumType(types map[string]Type, field Field) error {
 	enumDef := field.EnumDefinition
 	if enumDef.Name == "" {

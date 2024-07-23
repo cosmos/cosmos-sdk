@@ -8,7 +8,6 @@ import (
 
 	"cosmossdk.io/schema"
 	"cosmossdk.io/schema/appdata"
-	schematesting "cosmossdk.io/schema/testing"
 	"cosmossdk.io/schema/testing/statesim"
 )
 
@@ -41,10 +40,6 @@ type BlockData = []appdata.Packet
 // NewSimulator creates a new app data simulator with the given options and runs its
 // initialization methods.
 func NewSimulator(options Options) (*Simulator, error) {
-	if options.AppSchema == nil {
-		options.AppSchema = schematesting.ExampleAppSchema
-	}
-
 	sim := &Simulator{
 		// we initialize the state simulator with no app schema because we'll do
 		// that in the first block

@@ -10,138 +10,135 @@ import (
 // that can be used in reproducible unit testing and property based testing.
 var ExampleAppSchema = map[string]schema.ModuleSchema{
 	"all_kinds": mkAllKindsModule(),
-	"test_cases": {
-		ObjectTypes: []schema.ObjectType{
-			{
-				Name:      "Singleton",
-				KeyFields: []schema.Field{},
-				ValueFields: []schema.Field{
-					{
-						Name: "Value",
-						Kind: schema.StringKind,
-					},
-					{
-						Name: "Value2",
-						Kind: schema.BytesKind,
-					},
+	"test_cases": schema.MustNewModuleSchema([]schema.ObjectType{
+		{
+			Name:      "Singleton",
+			KeyFields: []schema.Field{},
+			ValueFields: []schema.Field{
+				{
+					Name: "Value",
+					Kind: schema.StringKind,
 				},
-			},
-			{
-				Name: "Simple",
-				KeyFields: []schema.Field{
-					{
-						Name: "Key",
-						Kind: schema.StringKind,
-					},
+				{
+					Name: "Value2",
+					Kind: schema.BytesKind,
 				},
-				ValueFields: []schema.Field{
-					{
-						Name: "Value1",
-						Kind: schema.Int32Kind,
-					},
-					{
-						Name: "Value2",
-						Kind: schema.BytesKind,
-					},
-				},
-			},
-			{
-				Name: "TwoKeys",
-				KeyFields: []schema.Field{
-					{
-						Name: "Key1",
-						Kind: schema.StringKind,
-					},
-					{
-						Name: "Key2",
-						Kind: schema.Int32Kind,
-					},
-				},
-			},
-			{
-				Name: "ThreeKeys",
-				KeyFields: []schema.Field{
-					{
-						Name: "Key1",
-						Kind: schema.StringKind,
-					},
-					{
-						Name: "Key2",
-						Kind: schema.Int32Kind,
-					},
-					{
-						Name: "Key3",
-						Kind: schema.Uint64Kind,
-					},
-				},
-				ValueFields: []schema.Field{
-					{
-						Name: "Value1",
-						Kind: schema.Int32Kind,
-					},
-				},
-			},
-			{
-				Name: "ManyValues",
-				KeyFields: []schema.Field{
-					{
-						Name: "Key",
-						Kind: schema.StringKind,
-					},
-				},
-				ValueFields: []schema.Field{
-					{
-						Name: "Value1",
-						Kind: schema.Int32Kind,
-					},
-					{
-						Name: "Value2",
-						Kind: schema.BytesKind,
-					},
-					{
-						Name: "Value3",
-						Kind: schema.Float64Kind,
-					},
-					{
-						Name: "Value4",
-						Kind: schema.Uint64Kind,
-					},
-				},
-			},
-			{
-				Name: "RetainDeletions",
-				KeyFields: []schema.Field{
-					{
-						Name: "Key",
-						Kind: schema.StringKind,
-					},
-				},
-				ValueFields: []schema.Field{
-					{
-						Name: "Value1",
-						Kind: schema.Int32Kind,
-					},
-					{
-						Name: "Value2",
-						Kind: schema.BytesKind,
-					},
-				},
-				RetainDeletions: true,
 			},
 		},
-	},
+		{
+			Name: "Simple",
+			KeyFields: []schema.Field{
+				{
+					Name: "Key",
+					Kind: schema.StringKind,
+				},
+			},
+			ValueFields: []schema.Field{
+				{
+					Name: "Value1",
+					Kind: schema.Int32Kind,
+				},
+				{
+					Name: "Value2",
+					Kind: schema.BytesKind,
+				},
+			},
+		},
+		{
+			Name: "TwoKeys",
+			KeyFields: []schema.Field{
+				{
+					Name: "Key1",
+					Kind: schema.StringKind,
+				},
+				{
+					Name: "Key2",
+					Kind: schema.Int32Kind,
+				},
+			},
+		},
+		{
+			Name: "ThreeKeys",
+			KeyFields: []schema.Field{
+				{
+					Name: "Key1",
+					Kind: schema.StringKind,
+				},
+				{
+					Name: "Key2",
+					Kind: schema.Int32Kind,
+				},
+				{
+					Name: "Key3",
+					Kind: schema.Uint64Kind,
+				},
+			},
+			ValueFields: []schema.Field{
+				{
+					Name: "Value1",
+					Kind: schema.Int32Kind,
+				},
+			},
+		},
+		{
+			Name: "ManyValues",
+			KeyFields: []schema.Field{
+				{
+					Name: "Key",
+					Kind: schema.StringKind,
+				},
+			},
+			ValueFields: []schema.Field{
+				{
+					Name: "Value1",
+					Kind: schema.Int32Kind,
+				},
+				{
+					Name: "Value2",
+					Kind: schema.BytesKind,
+				},
+				{
+					Name: "Value3",
+					Kind: schema.Float64Kind,
+				},
+				{
+					Name: "Value4",
+					Kind: schema.Uint64Kind,
+				},
+			},
+		},
+		{
+			Name: "RetainDeletions",
+			KeyFields: []schema.Field{
+				{
+					Name: "Key",
+					Kind: schema.StringKind,
+				},
+			},
+			ValueFields: []schema.Field{
+				{
+					Name: "Value1",
+					Kind: schema.Int32Kind,
+				},
+				{
+					Name: "Value2",
+					Kind: schema.BytesKind,
+				},
+			},
+			RetainDeletions: true,
+		},
+	}),
 }
 
 func mkAllKindsModule() schema.ModuleSchema {
-	mod := schema.ModuleSchema{}
-
+	var objTypes []schema.ObjectType
 	for i := 1; i < int(schema.MAX_VALID_KIND); i++ {
 		kind := schema.Kind(i)
 		typ := mkTestObjectType(kind)
-		mod.ObjectTypes = append(mod.ObjectTypes, typ)
+		objTypes = append(objTypes, typ)
 	}
 
-	return mod
+	return schema.MustNewModuleSchema(objTypes)
 }
 
 func mkTestObjectType(kind schema.Kind) schema.ObjectType {
@@ -151,10 +148,6 @@ func mkTestObjectType(kind schema.Kind) schema.ObjectType {
 
 	if kind == schema.EnumKind {
 		field.EnumDefinition = testEnum
-	}
-
-	if kind == schema.Bech32AddressKind {
-		field.AddressPrefix = "cosmos"
 	}
 
 	keyField := field

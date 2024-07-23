@@ -100,14 +100,12 @@ func (o *ObjectCollection) UpdateGen() *rapid.Generator[schema.ObjectUpdate] {
 	return o.updateGen
 }
 
-// ScanState scans the state of the collection by calling the given function for each object update.
-func (o *ObjectCollection) ScanState(f func(schema.ObjectUpdate) error) error {
-	var err error
+// AllState iterates over the state of the collection by calling the given function with each item in
+// state represented as an object update.
+func (o *ObjectCollection) AllState(f func(schema.ObjectUpdate) bool) {
 	o.objects.Scan(func(_ string, v schema.ObjectUpdate) bool {
-		err = f(v)
-		return err == nil
+		return f(v)
 	})
-	return err
 }
 
 // GetObject returns the object with the given key from the collection represented as an ObjectUpdate

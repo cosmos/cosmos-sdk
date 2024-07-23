@@ -29,8 +29,6 @@ var FieldGen = rapid.Custom(func(t *rapid.T) schema.Field {
 	switch kind {
 	case schema.EnumKind:
 		field.EnumDefinition = EnumDefinitionGen.Draw(t, "enumDefinition")
-	case schema.Bech32AddressKind:
-		field.AddressPrefix = NameGen.Draw(t, "addressPrefix")
 	default:
 	}
 
@@ -91,7 +89,7 @@ func baseFieldValue(field schema.Field) *rapid.Generator[any] {
 		return rapid.Map(rapid.Int64(), func(i int64) time.Duration {
 			return time.Duration(i)
 		}).AsAny()
-	case schema.Bech32AddressKind:
+	case schema.AddressKind:
 		return rapid.SliceOfN(rapid.Byte(), 20, 64).AsAny()
 	case schema.EnumKind:
 		return rapid.SampledFrom(field.EnumDefinition.Values).AsAny()

@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strconv"
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/core/transaction"
@@ -19,7 +21,9 @@ import (
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 )
 
-type GRPCServer[T transaction.Tx] struct {
+const BlockHeightHeader = "x-cosmos-block-height"
+
+type Server[T transaction.Tx] struct {
 	logger     log.Logger
 	config     *Config
 	cfgOptions []CfgOption
@@ -28,15 +32,15 @@ type GRPCServer[T transaction.Tx] struct {
 }
 
 // New creates a new grpc server.
-func New[T transaction.Tx](cfgOptions ...CfgOption) *GRPCServer[T] {
-	return &GRPCServer[T]{
+func New[T transaction.Tx](cfgOptions ...CfgOption) *Server[T] {
+	return &Server[T]{
 		cfgOptions: cfgOptions,
 	}
 }
 
 // Init returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server.
-func (s *GRPCServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
+func (s *Server[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
 	cfg := s.Config().(*Config)
 	if v != nil {
 		if err := serverv2.UnmarshalSubConfig(v, s.Name(), &cfg); err != nil {
@@ -84,9 +88,12 @@ func makeUnknownServiceHandler(messageMap map[string]func() proto.Message, queri
 			}
 
 			// extract height header
-			height := uint64(0)
-
-			resp, err := querier.Query(stream.Context(), height, req)
+			ctx := stream.Context()
+			height, err := getHeightFromCtx(ctx)
+			if err != nil {
+				return status.Errorf(codes.InvalidArgument, "invalid get height from context: %v", err)
+			}
+			resp, err := querier.Query(ctx, height, req)
 			if err != nil {
 				return err
 			}
@@ -98,11 +105,33 @@ func makeUnknownServiceHandler(messageMap map[string]func() proto.Message, queri
 	}
 }
 
-func (s *GRPCServer[T]) Name() string {
+func getHeightFromCtx(ctx context.Context) (uint64, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return 0, nil
+	}
+	values := md.Get(BlockHeightHeader)
+	if len(values) == 0 {
+		return 0, nil
+	}
+	if len(values) != 1 {
+		return 0, fmt.Errorf("gRPC height metadata must be of lenght 1, got: %d", len(values))
+	}
+
+	heightStr := values[0]
+	height, err := strconv.ParseUint(heightStr, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("unable to parse height string from gRPC metadata %s: %v", heightStr, err)
+	}
+
+	return height, nil
+}
+
+func (s *Server[T]) Name() string {
 	return "grpc"
 }
 
-func (s *GRPCServer[T]) Config() any {
+func (s *Server[T]) Config() any {
 	if s.config == nil || s.config == (&Config{}) {
 		cfg := DefaultConfig()
 		// overwrite the default config with the provided options
@@ -116,7 +145,7 @@ func (s *GRPCServer[T]) Config() any {
 	return s.config
 }
 
-func (s *GRPCServer[T]) Start(ctx context.Context) error {
+func (s *Server[T]) Start(ctx context.Context) error {
 	if !s.config.Enable {
 		return nil
 	}
@@ -143,7 +172,7 @@ func (s *GRPCServer[T]) Start(ctx context.Context) error {
 	return err
 }
 
-func (s *GRPCServer[T]) Stop(ctx context.Context) error {
+func (s *Server[T]) Stop(ctx context.Context) error {
 	if !s.config.Enable {
 		return nil
 	}

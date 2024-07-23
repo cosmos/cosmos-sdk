@@ -9,7 +9,7 @@ import (
 func DefaultConfig() *Config {
 	return &Config{
 		AppDBBackend: "goleveldb",
-		Options: DefaultStoreOptions(),
+		Options:      DefaultStoreOptions(),
 	}
 }
 

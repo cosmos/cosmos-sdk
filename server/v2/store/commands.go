@@ -85,7 +85,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 
 func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger log.Logger) (storev2.RootStore, uint64, error) {
 	tempViper := v
-	
+
 	// handle FlagAppDBBackend
 	var dbType db.DBType
 	if cmd.Flags().Changed(FlagAppDBBackend) {

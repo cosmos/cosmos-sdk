@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	coreheader "cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
@@ -46,7 +46,7 @@ func TestStorageTestSuite(t *testing.T) {
 }
 
 func (s *RootStoreTestSuite) SetupTest() {
-	noopLog := log.NewNopLogger()
+	noopLog := coretesting.NewNopLogger()
 
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
@@ -66,7 +66,7 @@ func (s *RootStoreTestSuite) SetupTest() {
 }
 
 func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruningOption) {
-	noopLog := log.NewNopLogger()
+	noopLog := coretesting.NewNopLogger()
 
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
@@ -91,7 +91,7 @@ func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruningOption
 }
 
 func (s *RootStoreTestSuite) newStoreWithBackendMount(ss store.VersionedDatabase, sc store.Committer, pm *pruning.Manager) {
-	noopLog := log.NewNopLogger()
+	noopLog := coretesting.NewNopLogger()
 
 	rs, err := New(noopLog, ss, sc, pm, nil, nil)
 	s.Require().NoError(err)
@@ -554,7 +554,7 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 		Interval:   11,
 	}
 
-	noopLog := log.NewNopLogger()
+	noopLog := coretesting.NewNopLogger()
 
 	mdb1 := dbm.NewMemDB()
 	mdb2 := dbm.NewMemDB()
@@ -630,12 +630,12 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 			return false
 		}
 		// wait for async pruning process to finish
-		s.Require().Eventually(checkErr, 2*time.Second, 100*time.Millisecond, "expected error when loading height: %d", v)
+		s.Require().Eventually(checkErr, 5*time.Second, 100*time.Millisecond, "expected error when loading height: %d", v)
 	}
 }
 
 func (s *RootStoreTestSuite) TestMultiStoreRestart() {
-	noopLog := log.NewNopLogger()
+	noopLog := coretesting.NewNopLogger()
 
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)

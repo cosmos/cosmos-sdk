@@ -8,6 +8,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/keeper"
@@ -104,7 +106,7 @@ func WeightedOperations(
 	registry cdctypes.InterfaceRegistry,
 	appParams simtypes.AppParams, cdc codec.JSONCodec, txGen client.TxConfig,
 	ak group.AccountKeeper, bk group.BankKeeper, k keeper.Keeper,
-	appCdc cdctypes.AnyUnpacker,
+	appCdc gogoprotoany.AnyUnpacker,
 ) simulation.WeightedOperations {
 	var (
 		weightMsgCreateGroup                     int

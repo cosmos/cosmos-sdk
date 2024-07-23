@@ -18,18 +18,16 @@ type AppModuleWithAllExtensions interface {
 	appmodulev2.HasConsensusVersion
 	appmodulev2.HasGenesis
 	module.HasABCIEndBlock
-	module.HasName
 }
 
 // mocks to be used in module tests.
 type AppModuleWithAllExtensionsABCI interface {
 	module.AppModule
 	module.HasServices
-	module.HasABCIGenesis
+	appmodulev2.HasABCIGenesis
 	module.HasInvariants
 	appmodulev2.HasConsensusVersion
 	module.HasABCIEndBlock
-	module.HasName
 }
 
 // CoreAppModule is solely here for the purpose of generating

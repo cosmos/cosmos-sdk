@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/v2"
 	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/snapshots"
@@ -30,7 +31,7 @@ type CommitStoreTestSuite struct {
 
 func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 	storeKeys := []string{storeKey1, storeKey2}
-	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, log.NewNopLogger())
+	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 
 	latestVersion := uint64(10)
@@ -64,7 +65,7 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 		},
 	}
 
-	targetStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, log.NewNopLogger())
+	targetStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 
 	chunks := make(chan io.ReadCloser, kvCount*int(latestVersion))
@@ -126,7 +127,7 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 func (s *CommitStoreTestSuite) TestStore_Pruning() {
 	storeKeys := []string{storeKey1, storeKey2}
 	pruneOpts := store.NewPruningOptionWithCustom(10, 5)
-	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, log.NewNopLogger())
+	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 
 	latestVersion := uint64(100)

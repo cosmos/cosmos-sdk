@@ -137,7 +137,7 @@ func Example() {
 	// Output: 10000
 }
 
-// ExampleOneModule shows how to use the integration test framework to test the integration of a single module.
+// Example_oneModule shows how to use the integration test framework to test the integration of a single module.
 // That module has no dependency on other modules.
 func Example_oneModule() {
 	// in this example we are testing the integration of the auth module:

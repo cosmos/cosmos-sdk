@@ -3,7 +3,8 @@ package signing
 import (
 	"fmt"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -86,10 +87,10 @@ func SignatureDataFromProto(descData *SignatureDescriptor_Data) SignatureData {
 	}
 }
 
-var _, _ codectypes.UnpackInterfacesMessage = &SignatureDescriptors{}, &SignatureDescriptor{}
+var _, _ gogoprotoany.UnpackInterfacesMessage = &SignatureDescriptors{}, &SignatureDescriptor{}
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
-func (sds *SignatureDescriptors) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (sds *SignatureDescriptors) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	for _, sig := range sds.Signatures {
 		err := sig.UnpackInterfaces(unpacker)
 		if err != nil {
@@ -101,6 +102,6 @@ func (sds *SignatureDescriptors) UnpackInterfaces(unpacker codectypes.AnyUnpacke
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
-func (sd *SignatureDescriptor) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (sd *SignatureDescriptor) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	return unpacker.UnpackAny(sd.PublicKey, new(cryptotypes.PubKey))
 }

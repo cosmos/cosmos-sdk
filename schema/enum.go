@@ -1,6 +1,9 @@
 package schema
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 // EnumDefinition represents the definition of an enum type.
 type EnumDefinition struct {
@@ -15,6 +18,8 @@ type EnumDefinition struct {
 	Values []string
 }
 
+func (EnumDefinition) isType() {}
+
 // Validate validates the enum definition.
 func (e EnumDefinition) Validate() error {
 	if !ValidateName(e.Name) {
@@ -22,7 +27,7 @@ func (e EnumDefinition) Validate() error {
 	}
 
 	if len(e.Values) == 0 {
-		return fmt.Errorf("enum definition values cannot be empty")
+		return errors.New("enum definition values cannot be empty")
 	}
 	seen := make(map[string]bool, len(e.Values))
 	for i, v := range e.Values {
@@ -46,32 +51,4 @@ func (e EnumDefinition) ValidateValue(value string) error {
 		}
 	}
 	return fmt.Errorf("value %q is not a valid enum value for %s", value, e.Name)
-}
-
-// checkEnumCompatibility checks that the enum values are consistent across object types and fields.
-func checkEnumCompatibility(enumValueMap map[string]map[string]bool, field Field) error {
-	if field.Kind != EnumKind {
-		return nil
-	}
-
-	enum := field.EnumDefinition
-
-	if existing, ok := enumValueMap[enum.Name]; ok {
-		if len(existing) != len(enum.Values) {
-			return fmt.Errorf("enum %q has different number of values in different object types", enum.Name)
-		}
-
-		for _, value := range enum.Values {
-			if !existing[value] {
-				return fmt.Errorf("enum %q has different values in different object types", enum.Name)
-			}
-		}
-	} else {
-		valueMap := map[string]bool{}
-		for _, value := range enum.Values {
-			valueMap[value] = true
-		}
-		enumValueMap[enum.Name] = valueMap
-	}
-	return nil
 }

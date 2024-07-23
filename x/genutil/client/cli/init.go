@@ -89,6 +89,9 @@ func InitCmd(mm genesisMM) *cobra.Command {
 			default:
 				chainID = fmt.Sprintf("test-chain-%v", unsafe.Str(6))
 			}
+			if config.RootDir == "" {
+				config.RootDir = clientCtx.HomeDir
+			}
 
 			// Get bip39 mnemonic
 			var mnemonic string

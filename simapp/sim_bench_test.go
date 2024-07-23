@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/testutils/sims"
-
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 )
 

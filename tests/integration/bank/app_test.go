@@ -80,15 +80,19 @@ type suite struct {
 
 func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) suite {
 	t.Helper()
-	res := suite{}
-
 	var genAccounts []simtestutil.GenesisAccount
 	for _, acc := range genesisAccounts {
 		genAccounts = append(genAccounts, simtestutil.GenesisAccount{GenesisAccount: acc})
 	}
+	return createTestSuiteX(t, genAccounts)
+}
+
+func createTestSuiteX(tb testing.TB, genesisAccounts []simtestutil.GenesisAccount) suite {
+	tb.Helper()
+	res := suite{}
 
 	startupCfg := simtestutil.DefaultStartUpConfig()
-	startupCfg.GenesisAccounts = genAccounts
+	startupCfg.GenesisAccounts = genesisAccounts
 
 	app, err := simtestutil.SetupWithConfiguration(
 		depinject.Configs(
@@ -109,7 +113,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 
 	res.App = app
 
-	require.NoError(t, err)
+	require.NoError(tb, err)
 	return res
 }
 

@@ -10,7 +10,7 @@ require (
 	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
 	cosmossdk.io/x/tx v0.13.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/cosmos-sdk v0.51.0
+	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	google.golang.org/grpc v1.64.1

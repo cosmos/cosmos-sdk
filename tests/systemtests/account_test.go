@@ -29,13 +29,14 @@ func TestAccountCreation(t *testing.T) {
 
 	// query account1
 	rsp := cli.CustomQuery("q", "auth", "account", account1Addr)
-	assert.Equal(t, "0", gjson.Get(rsp, "account.value.sequence").String(), rsp)
+	assert.Equal(t, account1Addr, gjson.Get(rsp, "account.value.address").String(), rsp)
 
 	rsp1 := cli.Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake")
 	RequireTxSuccess(t, rsp1)
 
 	// query account2
-	rsp2 := cli.CustomQuery("q", "auth", "account", account1Addr)
+
+	rsp2 := cli.WithRunErrorsIgnored().CustomQuery("q", "auth", "account", account2Addr)
 	assert.True(t, strings.Contains(rsp2, "not found: key not found"))
 
 	rsp3 := cli.Run("tx", "bank", "send", account2Addr, account1Addr, "1000stake", "--from="+account1Addr, "--fees=1stake")

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/log"
@@ -35,6 +36,7 @@ func NewGRPCServer(clientCtx client.Context, app types.Application, cfg config.G
 		grpc.ForceServerCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
 		grpc.MaxSendMsgSize(maxSendMsgSize),
 		grpc.MaxRecvMsgSize(maxRecvMsgSize),
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 	)
 
 	app.RegisterGRPCServer(grpcSrv)

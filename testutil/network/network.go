@@ -515,9 +515,21 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		}
 	}
 
-	err := initGenFiles(cfg, genAccounts, genBalances, genFiles)
-	if err != nil {
+	if err := initGenFiles(cfg, genAccounts, genBalances, genFiles); err != nil {
 		return nil, err
+	}
+
+	// setup viper config.toml for each validator
+	for i, val := range network.Validators {
+		cmtCfg := cmtConfigs[i]
+		nodeDir := filepath.Join(network.BaseDir, val.moniker, "simd")
+		cmtCfg.Moniker = val.moniker
+		cmtCfg.SetRoot(nodeDir)
+		v := network.Validators[i].GetViper()
+		v.Set(flags.FlagHome, nodeDir)
+		v.SetConfigType("toml")
+		v.SetConfigName("config")
+		v.AddConfigPath(filepath.Join(nodeDir, "config"))
 	}
 
 	l.Log("starting test network...")

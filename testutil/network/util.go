@@ -40,7 +40,7 @@ func startInProcess(cfg Config, val *Validator) error {
 
 	nodeKey, err := p2p.LoadOrGenNodeKey(cmtCfg.NodeKeyFile())
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to load node key: %w", err)
 	}
 
 	app := cfg.AppConstructor(val)

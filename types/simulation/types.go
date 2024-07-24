@@ -46,9 +46,11 @@ type WeightedProposalMsg interface {
 	MsgSimulatorFn() MsgSimulatorFnX // msg simulator function
 }
 
-// Deprecated: use MsgSimulatorFnX
-type MsgSimulatorFn func(r *rand.Rand, accs []Account, cdc address.Codec) (sdk.Msg, error)
-type MsgSimulatorFnX func(ctx context.Context, r *rand.Rand, accs []Account, cdc address.Codec) (sdk.Msg, error)
+type (
+	// Deprecated: use MsgSimulatorFnX
+	MsgSimulatorFn  func(r *rand.Rand, accs []Account, cdc address.Codec) (sdk.Msg, error)
+	MsgSimulatorFnX func(ctx context.Context, r *rand.Rand, accs []Account, cdc address.Codec) (sdk.Msg, error)
+)
 
 type SimValFn func(r *rand.Rand) string
 

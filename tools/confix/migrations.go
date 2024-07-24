@@ -3,6 +3,7 @@ package confix
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/creachadair/tomledit"
@@ -22,22 +23,49 @@ const (
 type MigrationMap map[string]func(from *tomledit.Document, to, planType string) transform.Plan
 
 var Migrations = MigrationMap{
-	"v0.45": NoPlan, // Confix supports only the current supported SDK version. So we do not support v0.44 -> v0.45.
-	"v0.46": PlanBuilder,
-	"v0.47": PlanBuilder,
-	"v0.50": PlanBuilder,
-	"v0.52": PlanBuilder,
+	"v0.45":    NoPlan, // Confix supports only the current supported SDK version. So we do not support v0.44 -> v0.45.
+	"v0.46":    PlanBuilder,
+	"v0.47":    PlanBuilder,
+	"v0.50":    PlanBuilder,
+	"v0.52":    PlanBuilder,
+	"serverv2": PlanBuilder,
 	// "v0.xx.x": PlanBuilder, // add specific migration in case of configuration changes in minor versions
+}
+
+type moveKeyMap map[string]struct {
+	section string
+	keyname string
+}
+
+var moveKeyMappings = map[string]moveKeyMap{
+	"serverv2": {
+		"min-retain-blocks": {
+			section: "comet",
+			keyname: "min-retain-blocks",
+		},
+		// Add other key mappings as needed
+	},
+	// "v0.xx.x": {}, // add keys to move for specific version if needed
 }
 
 // PlanBuilder is a function that returns a transformation plan for a given diff between two files.
 func PlanBuilder(from *tomledit.Document, to, planType string) transform.Plan {
 	plan := transform.Plan{}
-	deletedSections := map[string]bool{}
+	deleteSections := []string{}
 
 	target, err := LoadLocalConfig(to, planType)
 	if err != nil {
 		panic(fmt.Errorf("failed to parse file: %w. This file should have been valid", err))
+	}
+
+	moveKeys := []string{}
+
+	// check if key moves needed with "to" version
+	moves, ok := moveKeyMappings[to]
+	if ok {
+		for oldKey, _ := range moves {
+			moveKeys = append(moveKeys, oldKey)
+		}
 	}
 
 	diffs := DiffKeys(from, target)
@@ -92,26 +120,35 @@ func PlanBuilder(from *tomledit.Document, to, planType string) transform.Plan {
 				panic(fmt.Errorf("unknown diff type: %s", diff.Type))
 			}
 		} else {
-			if diff.Type == Section {
-				deletedSections[kv.Key] = true
-				step = transform.Step{
-					Desc: fmt.Sprintf("remove %s section", kv.Key),
-					T:    transform.Remove(keys),
+			if diff.Type == Mapping {
+				if slices.Contains(moveKeys, kv.Key) {
+					newKey := moves[kv.Key]
+
+					step = transform.Step{
+						Desc: fmt.Sprintf("move %s key to %s key in section %s", kv.Key, newKey.keyname, newKey.section),
+						T:    transform.MoveKey(keys, parser.Key{newKey.section}, parser.Key{newKey.keyname}),
+					}
+				} else {
+					step = transform.Step{
+						Desc: fmt.Sprintf("remove %s key", kv.Key),
+						T:    transform.Remove(keys),
+					}
 				}
 			} else {
-				// when the whole section is deleted we don't need to remove the keys
-				if len(keys) > 1 && deletedSections[keys[0]] {
-					continue
-				}
-
-				step = transform.Step{
-					Desc: fmt.Sprintf("remove %s key", kv.Key),
-					T:    transform.Remove(keys),
-				}
+				deleteSections = append(deleteSections, kv.Key)
+				continue
 			}
 		}
 
 		plan = append(plan, step)
+	}
+
+	for _, section := range deleteSections {
+		keys := strings.Split(section, ".")
+		plan = append(plan, transform.Step{
+			Desc: fmt.Sprintf("remove %s key", section),
+			T:    transform.Remove(keys),
+		})
 	}
 
 	return plan

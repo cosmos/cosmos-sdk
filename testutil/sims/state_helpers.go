@@ -10,12 +10,12 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/testutil/internal/banktypes"
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 	authtypes "cosmossdk.io/x/auth/types"
-	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -148,7 +148,7 @@ func appStateFnWithExtendedCbs(
 			panic("bank genesis state is missing")
 		}
 		bankState := new(banktypes.GenesisState)
-		if err = cdc.UnmarshalJSON(bankStateBz, bankState); err != nil {
+		if err = json.Unmarshal(bankStateBz, bankState); err != nil {
 			panic(err)
 		}
 
@@ -168,14 +168,23 @@ func appStateFnWithExtendedCbs(
 		}
 
 		// change appState back
-		for name, state := range map[string]proto.Message{
+
+		for name, state := range map[string]any{
 			stakingtypes.ModuleName: stakingState,
 			testutil.BankModuleName: bankState,
 		} {
 			if moduleStateCb != nil {
 				moduleStateCb(name, state)
 			}
-			rawState[name] = cdc.MustMarshalJSON(state)
+			if pm, ok := state.(proto.Message); ok {
+				rawState[name] = cdc.MustMarshalJSON(pm)
+			} else {
+				stateJson, err := json.Marshal(pm)
+				if err != nil {
+					panic(err)
+				}
+				rawState[name] = stateJson
+			}
 		}
 
 		// extend state from callback function

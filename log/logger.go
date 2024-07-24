@@ -42,9 +42,10 @@ type Logger interface {
 	With(keyVals ...any) Logger
 }
 
-// LoggerV2 is the new Cosmos SDK logger interface.
-// It maintains as much backward compatibility with the CometBFT logger as possible.
-// All functionalities of the logger are available through the Impl() method.
+// LoggerV2 is the new Cosmos SDK logger interface. It can be used in libraries without any need to import
+// the core or log packages directly.
+// All constructors in this package return a logger that implements this interface, but the constructor
+// functions have not been changed to avoid breakage.
 type LoggerV2 interface {
 	LoggerBase
 

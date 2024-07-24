@@ -459,6 +459,7 @@ func NewSimApp(
 		protocolpool.NewAppModule(appCodec, app.PoolKeeper, app.AuthKeeper, app.BankKeeper),
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 	)
+
 	app.ModuleManager.RegisterLegacyAminoCodec(legacyAmino)
 	app.ModuleManager.RegisterInterfaces(interfaceRegistry)
 

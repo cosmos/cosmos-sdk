@@ -22,7 +22,6 @@ import (
 const ConsensusVersion = 1
 
 var (
-	_ module.HasName             = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 
@@ -56,7 +55,8 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
 // IsAppModule implements the appmodule.AppModule interface.
 func (AppModule) IsAppModule() {}
 
-// Name returns the pool module's name.
+// Name returns the protocolpool module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string { return types.ModuleName }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes

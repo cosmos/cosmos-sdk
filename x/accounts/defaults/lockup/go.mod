@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/distribution v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
-	github.com/cosmos/cosmos-sdk v0.51.0
+	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.5.0
 )
 
@@ -18,10 +18,10 @@ require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
+	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/schema v0.1.1 // indirect
 	github.com/cometbft/cometbft/api v1.0.0-rc.1 // indirect
-	github.com/cosmos/crypto v0.1.1 // indirect
+	github.com/cosmos/crypto v0.1.2 // indirect
 	github.com/dgraph-io/badger/v4 v4.2.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/flatbuffers v2.0.8+incompatible // indirect
@@ -176,7 +176,6 @@ replace (
 	cosmossdk.io/collections => ../../../../collections // TODO tag new collections ASAP
 	cosmossdk.io/core => ../../../../core
 	cosmossdk.io/core/testing => ../../../../core/testing
-	cosmossdk.io/depinject => ../../../../depinject
 	cosmossdk.io/log => ../../../../log
 	cosmossdk.io/x/accounts => ../../.
 	cosmossdk.io/x/auth => ../../../auth

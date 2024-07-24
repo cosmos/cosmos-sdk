@@ -8,7 +8,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -41,7 +41,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
 	authorityAddr, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
@@ -153,7 +153,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
 	authorityAddr, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
@@ -268,7 +268,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
 	authorityAddr, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
@@ -404,7 +404,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
 	authorityAddr, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
@@ -513,7 +513,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
 	authorityAddr, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
@@ -600,7 +600,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
 	authorityAddr, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
@@ -728,7 +728,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
 	authorityAddr, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
@@ -880,7 +880,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
 	authorityAddr, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
@@ -1093,7 +1093,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	stakingKeeper.EXPECT().BondDenom(gomock.Any()).Return("stake", nil).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
 	authorityAddr, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)

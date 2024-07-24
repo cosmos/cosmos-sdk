@@ -10,7 +10,7 @@ import (
 
 	coreheader "cosmossdk.io/core/header"
 	corestore "cosmossdk.io/core/store"
-	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
@@ -46,7 +46,7 @@ func TestStorageTestSuite(t *testing.T) {
 }
 
 func (s *RootStoreTestSuite) SetupTest() {
-	noopLog := coretesting.NewNopLogger()
+	noopLog := log.NewNopLogger()
 
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
@@ -66,7 +66,7 @@ func (s *RootStoreTestSuite) SetupTest() {
 }
 
 func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruningOption) {
-	noopLog := coretesting.NewNopLogger()
+	noopLog := log.NewNopLogger()
 
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
@@ -91,7 +91,7 @@ func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruningOption
 }
 
 func (s *RootStoreTestSuite) newStoreWithBackendMount(ss store.VersionedDatabase, sc store.Committer, pm *pruning.Manager) {
-	noopLog := coretesting.NewNopLogger()
+	noopLog := log.NewNopLogger()
 
 	rs, err := New(noopLog, ss, sc, pm, nil, nil)
 	s.Require().NoError(err)
@@ -554,7 +554,7 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 		Interval:   11,
 	}
 
-	noopLog := coretesting.NewNopLogger()
+	noopLog := log.NewNopLogger()
 
 	mdb1 := dbm.NewMemDB()
 	mdb2 := dbm.NewMemDB()
@@ -635,7 +635,7 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 }
 
 func (s *RootStoreTestSuite) TestMultiStoreRestart() {
-	noopLog := coretesting.NewNopLogger()
+	noopLog := log.NewNopLogger()
 
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)

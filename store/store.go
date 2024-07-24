@@ -3,7 +3,7 @@ package store
 import (
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/cache"
 	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/rootmulti"

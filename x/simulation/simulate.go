@@ -16,7 +16,7 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"

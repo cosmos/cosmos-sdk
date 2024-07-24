@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
-	coretesting "cosmossdk.io/core/testing"
+
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2/commitment"
 	dbm "cosmossdk.io/store/v2/db"
 )
@@ -33,7 +33,7 @@ func TestCommitterSuite(t *testing.T) {
 func generateTree() *IavlTree {
 	cfg := DefaultConfig()
 	db := dbm.NewMemDB()
-	return NewIavlTree(db, coretesting.NewNopLogger(), cfg)
+	return NewIavlTree(db, log.NewNopLogger(), cfg)
 }
 
 func TestIavlTree(t *testing.T) {

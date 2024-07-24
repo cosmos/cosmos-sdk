@@ -5,9 +5,8 @@ import (
 	"math/rand"
 	"testing"
 
+	"cosmossdk.io/log"
 	"github.com/stretchr/testify/require"
-
-	coretesting "cosmossdk.io/core/testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -16,7 +15,7 @@ import (
 
 func (s *MempoolTestSuite) TestTxOrder() {
 	t := s.T()
-	ctx := sdk.NewContext(nil, false, coretesting.NewNopLogger())
+	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 5)
 	sa := accounts[0].Address
 	sb := accounts[1].Address
@@ -140,7 +139,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 
 func (s *MempoolTestSuite) TestMaxTx() {
 	t := s.T()
-	ctx := sdk.NewContext(nil, false, coretesting.NewNopLogger())
+	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
 	mp := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(1))
 
@@ -170,7 +169,7 @@ func (s *MempoolTestSuite) TestMaxTx() {
 
 func (s *MempoolTestSuite) TestTxNotFoundOnSender() {
 	t := s.T()
-	ctx := sdk.NewContext(nil, false, coretesting.NewNopLogger())
+	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
 	mp := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
 

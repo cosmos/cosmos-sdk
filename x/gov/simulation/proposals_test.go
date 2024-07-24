@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	"context"
 	"math/rand"
 	"testing"
 
@@ -30,7 +31,7 @@ func TestProposalMsgs(t *testing.T) {
 	assert.Equal(t, simulation.OpWeightSubmitTextProposal, w0.AppParamsKey())
 	assert.Equal(t, simulation.DefaultWeightTextProposal, w0.DefaultWeight())
 
-	msg, err := w0.MsgSimulatorFn()(r, accounts, codectestutil.CodecOptions{}.GetAddressCodec())
+	msg, err := w0.MsgSimulatorFn()(context.Background(), r, accounts, codectestutil.CodecOptions{}.GetAddressCodec())
 	assert.NilError(t, err)
 	assert.Assert(t, msg == nil)
 }

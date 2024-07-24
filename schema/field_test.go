@@ -46,18 +46,18 @@ func TestField_Validate(t *testing.T) {
 		{
 			name: "enum definition with non-EnumKind",
 			field: Field{
-				Name:           "field1",
-				Kind:           StringKind,
-				EnumDefinition: EnumDefinition{Name: "enum"},
+				Name:     "field1",
+				Kind:     StringKind,
+				EnumType: EnumType{Name: "enum"},
 			},
 			errContains: "enum definition is only valid for field \"field1\" with type EnumKind",
 		},
 		{
 			name: "valid enum",
 			field: Field{
-				Name:           "field1",
-				Kind:           EnumKind,
-				EnumDefinition: EnumDefinition{Name: "enum", Values: []string{"a", "b"}},
+				Name:     "field1",
+				Kind:     EnumKind,
+				EnumType: EnumType{Name: "enum", Values: []string{"a", "b"}},
 			},
 		},
 	}
@@ -128,9 +128,9 @@ func TestField_ValidateValue(t *testing.T) {
 		{
 			name: "valid enum",
 			field: Field{
-				Name:           "field1",
-				Kind:           EnumKind,
-				EnumDefinition: EnumDefinition{Name: "enum", Values: []string{"a", "b"}},
+				Name:     "field1",
+				Kind:     EnumKind,
+				EnumType: EnumType{Name: "enum", Values: []string{"a", "b"}},
 			},
 			value:       "a",
 			errContains: "",
@@ -138,9 +138,9 @@ func TestField_ValidateValue(t *testing.T) {
 		{
 			name: "invalid enum",
 			field: Field{
-				Name:           "field1",
-				Kind:           EnumKind,
-				EnumDefinition: EnumDefinition{Name: "enum", Values: []string{"a", "b"}},
+				Name:     "field1",
+				Kind:     EnumKind,
+				EnumType: EnumType{Name: "enum", Values: []string{"a", "b"}},
 			},
 			value:       "c",
 			errContains: "not a valid enum value",

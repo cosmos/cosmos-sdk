@@ -212,14 +212,14 @@ func (db *Database) Prune(version uint64) error {
 	// prune removed stores
 	pruneRemovedStoreKeysStmt := `DELETE FROM state_storage AS s
 	WHERE EXISTS ( 
-		SELECT * FROM
+		SELECT 1 FROM
 			(
 			SELECT key, MAX(version) AS max_version
 			FROM state_storage
 			WHERE store_key = ? AND value = ? AND version <= ?
 			GROUP BY key
 			) AS t
-		WHERE s.store_key = t.key AND s.version <= t.max_version
+		WHERE s.store_key = t.key AND s.version <= t.max_version LIMIT 1
 	);
 	`
 	if _, err := tx.Exec(pruneRemovedStoreKeysStmt, reservedStoreKey, valueRemovedStore, version, version); err != nil {

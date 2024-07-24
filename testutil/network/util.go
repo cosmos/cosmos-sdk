@@ -14,7 +14,6 @@ import (
 	pvm "github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
 	"github.com/cometbft/cometbft/rpc/client/local"
-	cmttime "github.com/cometbft/cometbft/types/time"
 	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/log"
@@ -27,8 +26,6 @@ import (
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -130,51 +127,6 @@ func startInProcess(cfg Config, val *Validator) error {
 		})
 
 		val.api = apiSrv
-	}
-
-	return nil
-}
-
-func collectGenFiles(cfg Config, vals []*Validator, cmtConfigs []*cmtcfg.Config, outputDir string) error {
-	genTime := cfg.GenesisTime
-	if genTime.IsZero() {
-		genTime = cmttime.Now()
-	}
-
-	for i := 0; i < cfg.NumValidators; i++ {
-		cmtCfg := cmtConfigs[i]
-
-		nodeDir := filepath.Join(outputDir, vals[i].moniker, "simd")
-		gentxsDir := filepath.Join(outputDir, "gentxs")
-
-		cmtCfg.Moniker = vals[i].moniker
-		cmtCfg.SetRoot(nodeDir)
-
-		initCfg := genutiltypes.NewInitConfig(cfg.ChainID, gentxsDir, vals[i].nodeID, vals[i].pubKey)
-
-		genFile := cmtCfg.GenesisFile()
-		appGenesis, err := genutiltypes.AppGenesisFromFile(genFile)
-		if err != nil {
-			return err
-		}
-
-		appState, err := genutil.GenAppStateFromConfig(cfg.Codec, cfg.TxConfig,
-			cmtCfg, initCfg, appGenesis, banktypes.GenesisBalancesIterator{}, genutiltypes.DefaultMessageValidator,
-			cfg.ValidatorAddressCodec, cfg.AddressCodec)
-		if err != nil {
-			return err
-		}
-
-		// overwrite each validator's genesis file to have a canonical genesis time
-		if err := genutil.ExportGenesisFileWithTime(genFile, cfg.ChainID, nil, appState, genTime); err != nil {
-			return err
-		}
-
-		v := vals[i].GetViper()
-		err = genutiltest.TrackCometConfig(v, nodeDir)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil

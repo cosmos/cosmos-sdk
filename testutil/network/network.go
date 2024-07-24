@@ -519,10 +519,6 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = collectGenFiles(cfg, network.Validators, cmtConfigs, network.BaseDir)
-	if err != nil {
-		return nil, err
-	}
 
 	l.Log("starting test network...")
 	for idx, v := range network.Validators {

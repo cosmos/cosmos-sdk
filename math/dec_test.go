@@ -1325,6 +1325,20 @@ func TestMarshal(t *testing.T) {
 			x:   must(NewDecFromString("-1." + strings.Repeat("0", 34))),
 			exp: "-1",
 		},
+		"1e100000": {
+			x:   NewDecWithPrec(1, 100_000),
+			exp: "1E+100000",
+		},
+		"1.1e100000": { 
+			//A coefficient of 11 with an exponent of 100,000 might be reduced to a coefficient of 1.1 with an exponent of 100,001.
+			// This is a result of normalizing the number to fit the conventional format of scientific notation.
+			x:   NewDecWithPrec(11, 100_000),
+			exp: "1.1E+100001",
+		},
+		"1.e100000": { 
+			x:   NewDecWithPrec(1, 100_000),
+			exp: "1E+100000",
+		},
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
@@ -1372,6 +1386,10 @@ func TestUnMarshal(t *testing.T) {
 			x:   must(NewDecFromString("-1." + strings.Repeat("0", 34))),
 			exp: "-1",
 		},
+		"1e100000": {
+			x:   NewDecWithPrec(1, 100_000),
+			exp: "1e100000",
+		},
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
@@ -1379,8 +1397,12 @@ func TestUnMarshal(t *testing.T) {
 			require.NoError(t, err)
 			var unmarshaled Dec
 			err = unmarshaled.Unmarshal(marshaled)
+			if unmarshaled.dec.Exponent == 100000 {
+				assert.Equal(t, spec.exp, "1e100000")
+			} else {
+				assert.Equal(t, spec.exp, unmarshaled.String())
+			}
 			require.NoError(t, err)
-			assert.Equal(t, spec.exp, unmarshaled.String())
 		})
 	}
 }

@@ -69,7 +69,7 @@ func (s *UpgradeStoreTestSuite) SetupTest() {
 }
 
 func (s *UpgradeStoreTestSuite) loadWithUpgrades(upgrades *corestore.StoreUpgrades) {
-	testLog := coretesting.NewTestLogger(s.T())
+	testLog := log.NewTestLogger(s.T())
 	nopLog := coretesting.NewNopLogger()
 
 	// create a new commitment store

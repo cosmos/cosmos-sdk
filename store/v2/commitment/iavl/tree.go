@@ -21,7 +21,6 @@ var (
 // IavlTree is a wrapper around iavl.MutableTree.
 type IavlTree struct {
 	tree *iavl.MutableTree
-	db   corestore.KVStoreWithBatch
 }
 
 // NewIavlTree creates a new IavlTree instance.
@@ -29,7 +28,6 @@ func NewIavlTree(db corestore.KVStoreWithBatch, logger log.Logger, cfg *Config) 
 	tree := iavl.NewMutableTree(dbm.NewWrapper(db), cfg.CacheSize, cfg.SkipFastStorageUpgrade, logger, iavl.AsyncPruningOption(true))
 	return &IavlTree{
 		tree: tree,
-		db:   db,
 	}
 }
 

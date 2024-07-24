@@ -36,7 +36,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -48,7 +47,6 @@ import (
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -388,7 +386,6 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		nodeDirName := fmt.Sprintf("node%d", i)
 		nodeDir := filepath.Join(network.BaseDir, nodeDirName, "simd")
 		clientDir := filepath.Join(network.BaseDir, nodeDirName, "simcli")
-		gentxsDir := filepath.Join(network.BaseDir, "gentxs")
 
 		err := os.MkdirAll(filepath.Join(nodeDir, "config"), 0o755)
 		if err != nil {
@@ -478,72 +475,6 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: balances.Sort()})
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
-		commission, err := sdkmath.LegacyNewDecFromStr("0.5")
-		if err != nil {
-			return nil, err
-		}
-
-		var pkAny *codectypes.Any
-		if pubkey := valPubKeys[i]; pubkey != nil {
-			var err error
-			if pkAny, err = codectypes.NewAnyWithValue(pubKey); err != nil {
-				return nil, err
-			}
-		}
-
-		createValMsgStruct := &sims.StakingMsgCreateValidator{
-			Commission: sims.StakingValidatorCommission{
-				Rate:          commission,
-				MaxRate:       commission,
-				MaxChangeRate: sdkmath.LegacyOneDec(),
-			},
-			MinSelfDelegation: sdkmath.OneInt(),
-			ValidatorAddress:  sdk.ValAddress(addr).String(),
-			Pubkey:            pkAny,
-			Value:             sdk.NewCoin(cfg.BondDenom, cfg.BondedTokens),
-		}
-
-		createValMsg, err := createValMsgStruct.ToProto()
-		if err != nil {
-			return nil, err
-		}
-
-		p2pURL, err := url.Parse(p2pAddr)
-		if err != nil {
-			return nil, err
-		}
-
-		memo := fmt.Sprintf("%s@%s:%s", nodeIDs[i], p2pURL.Hostname(), p2pURL.Port())
-		fee := sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), sdkmath.NewInt(0)))
-		txBuilder := cfg.TxConfig.NewTxBuilder()
-		err = txBuilder.SetMsgs(createValMsg)
-		if err != nil {
-			return nil, err
-		}
-		txBuilder.SetFeeAmount(fee)    // Arbitrary fee
-		txBuilder.SetGasLimit(1000000) // Need at least 100386
-		txBuilder.SetMemo(memo)
-
-		txFactory := tx.Factory{}
-		txFactory = txFactory.
-			WithChainID(cfg.ChainID).
-			WithMemo(memo).
-			WithKeybase(kb).
-			WithTxConfig(cfg.TxConfig)
-
-		err = tx.Sign(context.Background(), txFactory, nodeDirName, txBuilder, true)
-		if err != nil {
-			return nil, err
-		}
-
-		txBz, err := cfg.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
-		if err != nil {
-			return nil, err
-		}
-		err = writeFile(fmt.Sprintf("%v.json", nodeDirName), gentxsDir, txBz)
-		if err != nil {
-			return nil, err
-		}
 		err = srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), appCfg)
 		if err != nil {
 			return nil, err

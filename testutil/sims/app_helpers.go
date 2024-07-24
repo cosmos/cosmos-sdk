@@ -224,11 +224,13 @@ func GenesisStateWithValSet(
 	genesisState[authtypes.ModuleName] = codec.MustMarshalJSON(authGenesis)
 
 	validators := make([]StakingValidator, 0, len(valSet.Validators))
+	lastValidatorPower := make([]LastValidatorPower, 0, len(valSet.Validators))
 	delegations := make([]StakingDelegation, 0, len(valSet.Validators))
 
 	bondAmt := sdk.DefaultPowerReduction
+	var totalPower int64
 
-	for _, val := range valSet.Validators {
+	for i, val := range valSet.Validators {
 		pk, err := cryptocodec.FromCmtPubKeyInterface(val.PubKey)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert pubkey: %w", err)
@@ -239,17 +241,37 @@ func GenesisStateWithValSet(
 			return nil, fmt.Errorf("failed to create new any: %w", err)
 		}
 
-		validator := StakingValidator{
-			OperatorAddress:   sdk.ValAddress(val.Address).String(),
-			ConsensusPubkey:   pkAny,
-			Jailed:            false,
-			Status:            3,
-			Tokens:            bondAmt,
-			DelegatorShares:   sdkmath.LegacyOneDec(),
-			MinSelfDelegation: sdkmath.ZeroInt(),
+		commission, err := sdkmath.LegacyNewDecFromStr("0.5")
+		if err != nil {
+			return nil, err
 		}
 
+		validator := StakingValidator{
+			OperatorAddress: sdk.ValAddress(val.Address).String(),
+			ConsensusPubkey: pkAny,
+			Jailed:          false,
+			Status:          3,
+			Tokens:          bondAmt,
+			DelegatorShares: sdkmath.LegacyOneDec(),
+			Description: StakingDescription{
+				Moniker: fmt.Sprintf("val-%d", i),
+			},
+			Commission: StakingValidatorCommission{
+				StakingCommissionRates: StakingCommissionRates{
+					Rate:          commission,
+					MaxRate:       commission,
+					MaxChangeRate: sdkmath.LegacyOneDec(),
+				},
+			},
+			MinSelfDelegation: sdkmath.OneInt(),
+		}
 		validators = append(validators, validator)
+		totalPower += int64(bondAmt.Int64())
+
+		lastValidatorPower = append(lastValidatorPower, LastValidatorPower{
+			Address: sdk.ValAddress(val.Address).String(),
+			Power:   int64(bondAmt.Int64()),
+		})
 
 		deletation := StakingDelegation{
 			DelegatorAddress: genAccs[0].GetAddress().String(),
@@ -265,12 +287,16 @@ func GenesisStateWithValSet(
 			UnbondingTime:     time.Hour * 24 * 7 * 3,
 			MaxValidators:     100,
 			MaxEntries:        7,
-			HistoricalEntries: 10000,
+			HistoricalEntries: 0,
 			BondDenom:         sdk.DefaultBondDenom,
 			MinCommissionRate: sdkmath.LegacyZeroDec(),
+			KeyRotationFee:    sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100)),
 		},
-		Validators:  validators,
-		Delegations: delegations,
+		LastTotalPower:      sdkmath.NewInt(totalPower),
+		LastValidatorPowers: lastValidatorPower,
+		Validators:          validators,
+		Delegations:         delegations,
+		Exported:            true,
 	}
 	genesisState[testutil.StakingModuleName], _ = json.Marshal(stakingGenesis)
 

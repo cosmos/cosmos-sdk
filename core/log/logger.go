@@ -9,11 +9,15 @@ const ModuleKey = "module"
 type Logger interface {
 	LoggerBase
 
-	// With returns a new wrapped logger with additional context provided by a set.
-	With(keyVals ...any) Logger
+	// WithContext returns a new wrapped logger with additional context provided by the key value pairs.
+	// The returned value can be safely cast to LoggerV2. An any is returned instead of LoggerV2
+	// to avoid the need for log users to import the log package directly.
+	WithContext(keyVals ...any) any
 }
 
-// LoggerBase defines basic logger functionality.
+// LoggerBase defines basic logger functionality that all previous versions of the Logger interface should
+// support. Library users should prefer to use this interface when possible, then type case to Logger
+// to see if WithContext is supported.
 type LoggerBase interface {
 	// Info takes a message and a set of key/value pairs and logs with level INFO.
 	// The key of the tuple must be a string.
@@ -35,15 +39,4 @@ type LoggerBase interface {
 	// It is used to access the full functionalities of the underlying logger.
 	// Advanced users can type cast the returned value to the actual logger.
 	Impl() any
-}
-
-// LoggerV2 is the newer Cosmos SDK logger interface. It can be used in libraries without any need to import
-// the core or log packages directly.
-type LoggerV2 interface {
-	LoggerBase
-
-	// WithContext returns a new wrapped logger with additional context provided by the key value pairs.
-	// The returned value can be safely cast to LoggerV2. An any is returned instead of LoggerV2
-	// to avoid the need for log users to import the log package directly.
-	WithContext(keyVals ...any) any
 }

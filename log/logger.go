@@ -32,33 +32,10 @@ const ModuleKey = "module"
 // ContextKey is used to store the logger in the context.
 var ContextKey struct{}
 
-// Logger is the Cosmos SDK logger interface.
-// It maintains as much backward compatibility with the CometBFT logger as possible.
-// All functionalities of the logger are available through the Impl() method.
+// Deprecated: Logger is the Cosmos SDK logger interface.
+// Use cosmossdk.io/core/log.Logger instead. All constructor functions in this package
+// return a type that can be cast to that interface.
 type Logger interface {
-	LoggerBase
-
-	// With returns a new wrapped logger with additional context provided by a set.
-	With(keyVals ...any) Logger
-}
-
-// LoggerV2 is the new Cosmos SDK logger interface. It can be used in libraries without any need to import
-// the core or log packages directly.
-// All constructors in this package return a logger that implements this interface, but the constructor
-// functions have not been changed to avoid breakage.
-type LoggerV2 interface {
-	LoggerBase
-
-	// WithContext returns a new wrapped logger with additional context provided by the key value pairs.
-	// The returned value can be safely cast to LoggerV2. An any is returned instead of LoggerV2
-	// to avoid the need for log users to import the log package directly.
-	WithContext(keyVals ...any) any
-}
-
-// LoggerBase is the basic Cosmos SDK logger interface.
-// It maintains as much backward compatibility with the CometBFT logger as possible.
-// All functionalities of the logger are available through the Impl() method.
-type LoggerBase interface {
 	// Info takes a message and a set of key/value pairs and logs with level INFO.
 	// The key of the tuple must be a string.
 	Info(msg string, keyVals ...any)
@@ -74,6 +51,9 @@ type LoggerBase interface {
 	// Debug takes a message and a set of key/value pairs and logs with level DEBUG.
 	// The key of the tuple must be a string.
 	Debug(msg string, keyVals ...any)
+
+	// With returns a new wrapped logger with additional context provided by a set.
+	With(keyVals ...any) Logger
 
 	// Impl returns the underlying logger implementation.
 	// It is used to access the full functionalities of the underlying logger.
@@ -109,6 +89,7 @@ type zeroLogWrapper struct {
 //
 // Stderr is the typical destination for logs,
 // so that any output from your application can still be piped to other processes.
+// The returned value can be safely cast to cosmossdk.io/core/log.Logger.
 func NewLogger(dst io.Writer, options ...Option) Logger {
 	logCfg := defaultConfig
 	for _, opt := range options {

@@ -470,10 +470,7 @@ func (db *Database) deleteRemovedStoreKeys(version uint64) error {
 	}
 	defer storeKeyIter.Close()
 
-	var storeKeys []struct {
-		storeKey string
-		version  uint64
-	}
+	storeKeys := make(map[string]uint64)
 	prefixLen := len(end)
 	for storeKeyIter.First(); storeKeyIter.Valid(); storeKeyIter.Next() {
 		verBz := storeKeyIter.Key()[len(removedStoreKeyPrefix):prefixLen]
@@ -482,18 +479,21 @@ func (db *Database) deleteRemovedStoreKeys(version uint64) error {
 			return err
 		}
 		storeKey := string(storeKeyIter.Key()[prefixLen:])
-		storeKeys = append(storeKeys, struct {
-			storeKey string
-			version  uint64
-		}{storeKey, v})
+		if ev, ok := storeKeys[storeKey]; ok {
+			if ev < v {
+				storeKeys[storeKey] = v
+			}
+		} else {
+			storeKeys[storeKey] = v
+		}
 		if err := batch.Delete(storeKeyIter.Key(), nil); err != nil {
 			return err
 		}
 	}
 
-	for _, s := range storeKeys {
+	for storeKey, v := range storeKeys {
 		if err := func() error {
-			storeKey := []byte(s.storeKey)
+			storeKey := []byte(storeKey)
 			itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: storePrefix(storeKey), UpperBound: storePrefix(util.CopyIncr(storeKey))})
 			if err != nil {
 				return err
@@ -502,12 +502,15 @@ func (db *Database) deleteRemovedStoreKeys(version uint64) error {
 
 			for itr.First(); itr.Valid(); itr.Next() {
 				itrKey := itr.Key()
-				_, verBz, _ := SplitMVCCKey(itrKey)
+				_, verBz, ok := SplitMVCCKey(itrKey)
+				if !ok {
+					return fmt.Errorf("invalid PebbleDB MVCC key: %s", itrKey)
+				}
 				keyVersion, err := decodeUint64Ascending(verBz)
 				if err != nil {
 					return err
 				}
-				if keyVersion > s.version {
+				if keyVersion > v {
 					// skip keys that are newer than the version
 					continue
 				}

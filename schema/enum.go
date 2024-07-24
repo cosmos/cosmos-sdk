@@ -1,16 +1,24 @@
 package schema
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 // EnumDefinition represents the definition of an enum type.
 type EnumDefinition struct {
 	// Name is the name of the enum type. It must conform to the NameFormat regular expression.
+	// Its name must be unique between all enum types and object types in the module.
+	// The same enum, however, can be used in multiple object types and fields as long as the
+	// definition is identical each time
 	Name string
 
 	// Values is a list of distinct, non-empty values that are part of the enum type.
 	// Each value must conform to the NameFormat regular expression.
 	Values []string
 }
+
+func (EnumDefinition) isType() {}
 
 // Validate validates the enum definition.
 func (e EnumDefinition) Validate() error {
@@ -19,7 +27,7 @@ func (e EnumDefinition) Validate() error {
 	}
 
 	if len(e.Values) == 0 {
-		return fmt.Errorf("enum definition values cannot be empty")
+		return errors.New("enum definition values cannot be empty")
 	}
 	seen := make(map[string]bool, len(e.Values))
 	for i, v := range e.Values {

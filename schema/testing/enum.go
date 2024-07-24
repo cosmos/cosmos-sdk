@@ -8,9 +8,9 @@ import (
 
 var enumValuesGen = rapid.SliceOfNDistinct(NameGen, 1, 10, func(x string) string { return x })
 
-// EnumDefinitionGen generates random valid EnumDefinitions.
-var EnumDefinitionGen = rapid.Custom(func(t *rapid.T) schema.EnumDefinition {
-	enum := schema.EnumDefinition{
+// EnumType generates random valid EnumTypes.
+var EnumType = rapid.Custom(func(t *rapid.T) schema.EnumType {
+	enum := schema.EnumType{
 		Name:   NameGen.Draw(t, "name"),
 		Values: enumValuesGen.Draw(t, "values"),
 	}

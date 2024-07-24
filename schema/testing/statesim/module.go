@@ -21,11 +21,7 @@ type Module struct {
 func NewModule(moduleSchema schema.ModuleSchema, options Options) *Module {
 	objectCollections := &btree.Map[string, *ObjectCollection]{}
 	var objectTypeNames []string
-	for typ := range moduleSchema.Types {
-		objectType, ok := typ.(schema.ObjectType)
-		if !ok {
-			continue
-		}
+	for objectType := range moduleSchema.ObjectTypes {
 		objectCollection := NewObjectCollection(objectType, options)
 		objectCollections.Set(objectType.Name, objectCollection)
 		objectTypeNames = append(objectTypeNames, objectType.Name)

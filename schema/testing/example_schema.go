@@ -147,7 +147,7 @@ func mkTestObjectType(kind schema.Kind) schema.ObjectType {
 	}
 
 	if kind == schema.EnumKind {
-		field.EnumDefinition = testEnum
+		field.EnumType = testEnum
 	}
 
 	keyField := field
@@ -165,7 +165,7 @@ func mkTestObjectType(kind schema.Kind) schema.ObjectType {
 	}
 }
 
-var testEnum = schema.EnumDefinition{
+var testEnum = schema.EnumType{
 	Name:   "test_enum_type",
 	Values: []string{"foo", "bar", "baz"},
 }

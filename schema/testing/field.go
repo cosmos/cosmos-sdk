@@ -28,7 +28,7 @@ var FieldGen = rapid.Custom(func(t *rapid.T) schema.Field {
 
 	switch kind {
 	case schema.EnumKind:
-		field.EnumDefinition = EnumDefinitionGen.Draw(t, "enumDefinition")
+		field.EnumType = EnumType.Draw(t, "enumDefinition")
 	default:
 	}
 
@@ -92,7 +92,7 @@ func baseFieldValue(field schema.Field) *rapid.Generator[any] {
 	case schema.AddressKind:
 		return rapid.SliceOfN(rapid.Byte(), 20, 64).AsAny()
 	case schema.EnumKind:
-		return rapid.SampledFrom(field.EnumDefinition.Values).AsAny()
+		return rapid.SampledFrom(field.EnumType.Values).AsAny()
 	default:
 		panic(fmt.Errorf("unexpected kind: %v", field.Kind))
 	}

@@ -51,11 +51,11 @@ func hasDuplicateNames(typeNames map[string]bool, fields []schema.Field) bool {
 			continue
 		}
 
-		if _, ok := typeNames[field.EnumDefinition.Name]; ok {
+		if _, ok := typeNames[field.EnumType.Name]; ok {
 			return true
 		}
 
-		typeNames[field.EnumDefinition.Name] = true
+		typeNames[field.EnumType.Name] = true
 	}
 	return false
 }

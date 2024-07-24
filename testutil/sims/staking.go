@@ -602,7 +602,7 @@ func structpbToMap(any *anypb.Any) (map[string]interface{}, error) {
 	return s.AsMap(), nil
 }
 
-// Extract the value from a marshalled any without unmarshalling the whole thing
+// Extract the value from a marshaled any without unmarshalling the whole thing
 // This is requird as we cannot unmarshal the protobuf structs directly to json
 func extractAnyValueFromJSON(jsonData []byte) ([]byte, error) {
 	// Find the start of the "value" field

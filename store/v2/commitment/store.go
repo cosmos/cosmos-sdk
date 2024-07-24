@@ -6,8 +6,10 @@ import (
 	"io"
 	"math"
 	"sort"
+	"sync"
 
 	protoio "github.com/cosmos/gogoproto/io"
+	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
@@ -28,8 +30,11 @@ var (
 	_ store.UpgradeableStore      = (*CommitStore)(nil)
 	_ snapshots.CommitSnapshotter = (*CommitStore)(nil)
 	_ store.PausablePruner        = (*CommitStore)(nil)
-	_ store.KVStoreGetter         = (*CommitStore)(nil)
 )
+
+// MountTreeFn is a function that mounts a tree given a store key.
+// It is used to lazily mount trees when needed (e.g. during upgrade or proof generation).
+type MountTreeFn func(storeKey string) (Tree, error)
 
 // CommitStore is a wrapper around multiple Tree objects mapped by a unique store
 // key. Each store key reflects dedicated and unique usage within a module. A caller
@@ -40,14 +45,19 @@ type CommitStore struct {
 	logger     log.Logger
 	metadata   *MetadataStore
 	multiTrees map[string]Tree
+
+	mountTreeFn MountTreeFn
+	oldTrees    sync.Map
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, logger log.Logger) (*CommitStore, error) {
+func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, mountTreeFn MountTreeFn, logger log.Logger) (*CommitStore, error) {
 	return &CommitStore{
-		logger:     logger,
-		multiTrees: trees,
-		metadata:   NewMetadataStore(db),
+		logger:      logger,
+		multiTrees:  trees,
+		metadata:    NewMetadataStore(db),
+		mountTreeFn: mountTreeFn,
+		oldTrees:    sync.Map{},
 	}, nil
 }
 
@@ -105,16 +115,10 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 
 // LoadVersionAndUpgrade implements store.UpgradeableStore.
 func (c *CommitStore) LoadVersionAndUpgrade(targetVersion uint64, upgrades *corestore.StoreUpgrades) error {
-	storeKeys := make([]string, 0, len(c.multiTrees))
-	for storeKey := range c.multiTrees {
-		storeKeys = append(storeKeys, storeKey)
-	}
-	// deterministic iteration order for upgrades
-	// (as the underlying store may change and
+	// deterministic iteration order for upgrades (as the underlying store may change and
 	// upgrades make store changes where the execution order may matter)
-	sort.Slice(storeKeys, func(i, j int) bool {
-		return storeKeys[i] < storeKeys[j]
-	})
+	storeKeys := maps.Keys(c.multiTrees)
+	sort.Strings(storeKeys)
 
 	removeTree := func(storeKey string) error {
 		if oldTree, ok := c.multiTrees[storeKey]; ok {
@@ -127,17 +131,14 @@ func (c *CommitStore) LoadVersionAndUpgrade(targetVersion uint64, upgrades *core
 	}
 
 	newStoreKeys := make([]string, 0, len(c.multiTrees))
+	removedStoreKeys := make([]string, 0)
 	for _, storeKey := range storeKeys {
-		// If it has been renamed, continue to the next store key.
-		if upgrades.IsRenamed(storeKey) {
-			continue
-		}
-
 		// If it has been deleted, remove the tree.
 		if upgrades.IsDeleted(storeKey) {
 			if err := removeTree(storeKey); err != nil {
 				return err
 			}
+			removedStoreKeys = append(removedStoreKeys, storeKey)
 			continue
 		}
 
@@ -151,15 +152,17 @@ func (c *CommitStore) LoadVersionAndUpgrade(targetVersion uint64, upgrades *core
 		}
 
 		// If it has been renamed, migrate the data.
-		if oldKey := upgrades.GetOldKeyFromNew(storeKey); oldKey != "" {
+		if oldKey := upgrades.GetOldKeyFromNew(storeKey); len(oldKey) != 0 {
 			if err := c.migrateKVStore(oldKey, storeKey); err != nil {
 				return err
 			}
-			if err := removeTree(oldKey); err != nil {
-				return err
-			}
+			removedStoreKeys = append(removedStoreKeys, oldKey)
 		}
 		newStoreKeys = append(newStoreKeys, storeKey)
+	}
+
+	if err := c.metadata.flushRemovedStoreKeys(targetVersion, removedStoreKeys); err != nil {
+		return err
 	}
 
 	return c.loadVersion(targetVersion, newStoreKeys)
@@ -207,10 +210,12 @@ func (c *CommitStore) migrateKVStore(oldKey, newKey string) error {
 		newKVStore corestore.KVStoreWithBatch
 	)
 
-	if oldTree, ok := c.multiTrees[oldKey]; ok {
-		if getter, ok := oldTree.(KVStoreGetter); ok {
-			oldKVStore = getter.GetKVStoreWithBatch()
-		}
+	oldTree, err := c.mountTreeFn(oldKey)
+	if err != nil {
+		return err
+	}
+	if getter, ok := oldTree.(KVStoreGetter); ok {
+		oldKVStore = getter.GetKVStoreWithBatch()
 	}
 
 	if newTree, ok := c.multiTrees[newKey]; ok {
@@ -269,7 +274,11 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 		// will be larger than the RMS's metadata, when the block is replayed, we
 		// should avoid committing that iavl store again.
 		var commitID proof.CommitID
-		if tree.GetLatestVersion() >= version {
+		v, err := tree.GetLatestVersion()
+		if err != nil {
+			return nil, err
+		}
+		if v >= version {
 			commitID.Version = version
 			commitID.Hash = tree.Hash()
 		} else {
@@ -314,9 +323,22 @@ func (c *CommitStore) SetInitialVersion(version uint64) error {
 }
 
 func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]proof.CommitmentOp, error) {
-	tree, ok := c.multiTrees[conv.UnsafeBytesToStr(storeKey)]
+	rawStoreKey := conv.UnsafeBytesToStr(storeKey)
+	tree, ok := c.multiTrees[rawStoreKey]
 	if !ok {
-		return nil, fmt.Errorf("store %s not found", storeKey)
+		// If the tree is not found, it means the store is an old store that has been
+		// deleted or renamed. We should use the old tree to get the proof.
+		v, ok := c.oldTrees.Load(rawStoreKey)
+		if !ok {
+			var err error
+			tree, err = c.mountTreeFn(rawStoreKey)
+			if err != nil {
+				return nil, fmt.Errorf("store %s not found: %w", storeKey, err)
+			}
+			c.oldTrees.Store(rawStoreKey, tree)
+		} else {
+			tree = v.(Tree)
+		}
 	}
 
 	iProof, err := tree.GetProof(version, key)
@@ -354,21 +376,38 @@ func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, 
 }
 
 // Prune implements store.Pruner.
-func (c *CommitStore) Prune(version uint64) (ferr error) {
+func (c *CommitStore) Prune(version uint64) error {
 	// prune the metadata
 	for v := version; v > 0; v-- {
 		if err := c.metadata.deleteCommitInfo(v); err != nil {
 			return err
 		}
 	}
-
+	// prune the trees
 	for _, tree := range c.multiTrees {
 		if err := tree.Prune(version); err != nil {
-			ferr = errors.Join(ferr, err)
+			return err
 		}
 	}
+	// prune the removed store keys
+	if err := c.pruneRemovedStoreKeys(version); err != nil {
+		return err
+	}
 
-	return ferr
+	return nil
+}
+
+func (c *CommitStore) pruneRemovedStoreKeys(version uint64) error {
+	clearKVStore := func(storeKey []byte, version uint64) (err error) {
+		tree, err := c.mountTreeFn(string(storeKey))
+		if err != nil {
+			return err
+		}
+
+		return tree.Prune(version)
+	}
+
+	return c.metadata.deleteRemovedStoreKeys(version, clearKVStore)
 }
 
 // PausePruning implements store.PausablePruner.
@@ -552,12 +591,12 @@ func (c *CommitStore) GetLatestVersion() (uint64, error) {
 	return c.metadata.GetLatestVersion()
 }
 
-func (c *CommitStore) Close() (ferr error) {
+func (c *CommitStore) Close() error {
 	for _, tree := range c.multiTrees {
 		if err := tree.Close(); err != nil {
-			ferr = errors.Join(ferr, err)
+			return err
 		}
 	}
 
-	return ferr
+	return nil
 }

@@ -199,9 +199,9 @@ func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end 
 	return newRocksDBIterator(itr, prefix, start, end, true), nil
 }
 
-// PruneStoreKey will do nothing for RocksDB, it will be pruned by compaction
+// PruneStoreKeys will do nothing for RocksDB, it will be pruned by compaction
 // when the version is pruned
-func (db *Database) PruneStoreKey(storeKey []byte) error {
+func (db *Database) PruneStoreKeys(_ []string, _ uint64) error {
 	return nil
 }
 

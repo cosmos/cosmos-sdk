@@ -66,7 +66,7 @@ func getCommitStore(b *testing.B, db corestore.KVStoreWithBatch) *commitment.Com
 		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, log.NewNopLogger(), iavl.DefaultConfig())
 	}
 
-	sc, err := commitment.NewCommitStore(multiTrees, db, log.NewNopLogger())
+	sc, err := commitment.NewCommitStore(multiTrees, db, nil, log.NewNopLogger())
 	require.NoError(b, err)
 
 	return sc

@@ -101,20 +101,30 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		}
 	}
 
-	trees := make(map[string]commitment.Tree)
-	for _, key := range opts.StoreKeys {
+	newTreeFn := func(key string) (commitment.Tree, error) {
 		if internal.IsMemoryStoreKey(key) {
-			trees[key] = mem.New()
+			return mem.New(), nil
 		} else {
 			switch opts.SCType {
 			case SCTypeIavl:
-				trees[key] = iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, opts.IavlConfig)
+				return iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, opts.IavlConfig), nil
 			case SCTypeIavlV2:
 				return nil, fmt.Errorf("iavl v2 not supported")
+			default:
+				return nil, fmt.Errorf("unsupported commitment store type")
 			}
 		}
 	}
-	sc, err = commitment.NewCommitStore(trees, opts.SCRawDB, opts.Logger)
+
+	trees := make(map[string]commitment.Tree, len(opts.StoreKeys))
+	for _, key := range opts.StoreKeys {
+		tree, err := newTreeFn(key)
+		if err != nil {
+			return nil, err
+		}
+		trees[key] = tree
+	}
+	sc, err = commitment.NewCommitStore(trees, opts.SCRawDB, newTreeFn, opts.Logger)
 	if err != nil {
 		return nil, err
 	}

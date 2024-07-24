@@ -35,16 +35,19 @@ func (s *UpgradeStoreTestSuite) SetupTest() {
 
 	s.commitDB = dbm.NewMemDB()
 	multiTrees := make(map[string]commitment.Tree)
-	for _, storeKey := range storeKeys {
+	newTreeFn := func(storeKey string) (commitment.Tree, error) {
 		prefixDB := dbm.NewPrefixDB(s.commitDB, []byte(storeKey))
-		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, nopLog, iavl.DefaultConfig())
+		return iavl.NewIavlTree(prefixDB, nopLog, iavl.DefaultConfig()), nil
+	}
+	for _, storeKey := range storeKeys {
+		multiTrees[storeKey], _ = newTreeFn(storeKey)
 	}
 
 	// create storage and commitment stores
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
 	ss := storage.NewStorageStore(sqliteDB, testLog)
-	sc, err := commitment.NewCommitStore(multiTrees, s.commitDB, testLog)
+	sc, err := commitment.NewCommitStore(multiTrees, s.commitDB, newTreeFn, testLog)
 	s.Require().NoError(err)
 	pm := pruning.NewManager(sc, ss, nil, nil)
 	s.rootStore, err = New(testLog, ss, sc, pm, nil, nil)
@@ -71,20 +74,21 @@ func (s *UpgradeStoreTestSuite) loadWithUpgrades(upgrades *corestore.StoreUpgrad
 
 	// create a new commitment store
 	multiTrees := make(map[string]commitment.Tree)
-	for _, storeKey := range storeKeys {
+	newTreeFn := func(storeKey string) (commitment.Tree, error) {
 		prefixDB := dbm.NewPrefixDB(s.commitDB, []byte(storeKey))
-		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, nopLog, iavl.DefaultConfig())
+		return iavl.NewIavlTree(prefixDB, nopLog, iavl.DefaultConfig()), nil
+	}
+	for _, storeKey := range storeKeys {
+		multiTrees[storeKey], _ = newTreeFn(storeKey)
 	}
 	for _, added := range upgrades.Added {
-		prefixDB := dbm.NewPrefixDB(s.commitDB, []byte(added))
-		multiTrees[added] = iavl.NewIavlTree(prefixDB, nopLog, iavl.DefaultConfig())
+		multiTrees[added], _ = newTreeFn(added)
 	}
 	for _, rename := range upgrades.Renamed {
-		prefixDB := dbm.NewPrefixDB(s.commitDB, []byte(rename.NewKey))
-		multiTrees[rename.NewKey] = iavl.NewIavlTree(prefixDB, nopLog, iavl.DefaultConfig())
+		multiTrees[rename.NewKey], _ = newTreeFn(rename.NewKey)
 	}
 
-	sc, err := commitment.NewCommitStore(multiTrees, s.commitDB, testLog)
+	sc, err := commitment.NewCommitStore(multiTrees, s.commitDB, newTreeFn, testLog)
 	s.Require().NoError(err)
 	pm := pruning.NewManager(sc, s.rootStore.GetStateStorage().(store.Pruner), nil, nil)
 	s.rootStore, err = New(testLog, s.rootStore.GetStateStorage(), sc, pm, nil, nil)
@@ -108,10 +112,22 @@ func (s *UpgradeStoreTestSuite) TestLoadVersionAndUpgrade() {
 	err = s.rootStore.(store.UpgradeableStore).LoadVersionAndUpgrade(v, upgrades)
 	s.Require().NoError(err)
 
+	keyCount := 10
+	// check old store keys are queryable
+	oldStoreKeys := []string{"store1", "store3"}
+	for _, storeKey := range oldStoreKeys {
+		for version := uint64(1); version <= v; version++ {
+			for i := 0; i < keyCount; i++ {
+				proof, err := s.rootStore.Query([]byte(storeKey), version, []byte(fmt.Sprintf("key-%d-%d", version, i)), true)
+				s.Require().NoError(err)
+				s.Require().NotNil(proof)
+			}
+		}
+	}
+
 	// commit changeset
 	newStoreKeys := []string{"newStore1", "newStore2", "renamedStore1"}
 	toVersion := uint64(40)
-	keyCount := 10
 	for version := v + 1; version <= toVersion; version++ {
 		cs := corestore.NewChangeset()
 		for _, storeKey := range newStoreKeys {
@@ -121,25 +137,6 @@ func (s *UpgradeStoreTestSuite) TestLoadVersionAndUpgrade() {
 		}
 		_, err = s.rootStore.Commit(cs)
 		s.Require().NoError(err)
-	}
-
-	// check old store keys are pruned
-	oldStoreKeys := []string{"store1", "store3"}
-	for _, storeKey := range oldStoreKeys {
-		for version := uint64(1); version <= toVersion; version++ {
-			for i := 0; i < keyCount; i++ {
-				_, err := s.rootStore.Query([]byte(storeKey), version, []byte(fmt.Sprintf("key-%d-%d", version, i)), true)
-				s.Require().Error(err)
-			}
-		}
-	}
-
-	// check commitDB is empty for old store keys
-	for _, storeKey := range oldStoreKeys {
-		oldKeyStore := dbm.NewPrefixDB(s.commitDB, []byte(storeKey))
-		itr, err := oldKeyStore.Iterator(nil, nil)
-		s.Require().NoError(err)
-		s.Require().False(itr.Valid())
 	}
 
 	// check new store keys are queryable

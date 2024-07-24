@@ -18,8 +18,8 @@ func (t *Tree) Remove(key []byte) error {
 	return t.MemDB.Delete(key)
 }
 
-func (t *Tree) GetLatestVersion() uint64 {
-	return 0
+func (t *Tree) GetLatestVersion() (uint64, error) {
+	return 0, nil
 }
 
 func (t *Tree) Hash() []byte {

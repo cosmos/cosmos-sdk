@@ -251,20 +251,29 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 		},
 		Deleted: []string{storeKey3},
 	}
-	newStoreKeys := []string{storeKey1, storeKey2, storeKey3, "renamedStore1", "newStore1", "newStore2"}
+	newStoreKeys := []string{storeKey2, storeKey3, "renamedStore1", "newStore1", "newStore2"}
 	realStoreKeys := []string{"renamedStore1", storeKey2, "newStore1", "newStore2"}
 	commitStore, err = s.NewStore(commitDB, newStoreKeys, log.NewNopLogger())
 	s.Require().NoError(err)
 	err = commitStore.LoadVersionAndUpgrade(latestVersion, upgrades)
 	s.Require().NoError(err)
 
-	// verify removed stores
+	// GetProof should work for the old stores
 	for _, storeKey := range []string{storeKey1, storeKey3} {
 		for i := uint64(1); i <= latestVersion; i++ {
 			for j := 0; j < kvCount; j++ {
 				proof, err := commitStore.GetProof([]byte(storeKey), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
+				s.Require().NoError(err)
+				s.Require().NotNil(proof)
+			}
+		}
+	}
+	// GetProof should fail for the new stores
+	for _, storeKey := range []string{"newStore1", "newStore2", "renamedStore1"} {
+		for i := uint64(1); i <= latestVersion; i++ {
+			for j := 0; j < kvCount; j++ {
+				_, err := commitStore.GetProof([]byte(storeKey), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
 				s.Require().Error(err)
-				s.Require().Nil(proof)
 			}
 		}
 	}
@@ -302,7 +311,7 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 	}
 
 	// verify renamed store
-	for i := uint64(1); i < latestVersion*2; i++ {
+	for i := latestVersion + 1; i < latestVersion*2; i++ {
 		for j := 0; j < kvCount; j++ {
 			proof, err := commitStore.GetProof([]byte("renamedStore1"), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
 			s.Require().NoError(err)
@@ -314,6 +323,75 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 	for i := uint64(1); i < latestVersion*2; i++ {
 		for j := 0; j < kvCount; j++ {
 			proof, err := commitStore.GetProof([]byte(storeKey2), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
+			s.Require().NoError(err)
+			s.Require().NotNil(proof)
+		}
+	}
+
+	// create a new commitment store with one more upgrades
+	upgrades = &corestore.StoreUpgrades{
+		Added:   []string{storeKey3},
+		Deleted: []string{storeKey2},
+	}
+	newRealStoreKeys := []string{"renamedStore1", "newStore1", "newStore2", storeKey3}
+	commitStore, err = s.NewStore(commitDB, newStoreKeys, log.NewNopLogger())
+	s.Require().NoError(err)
+	err = commitStore.LoadVersionAndUpgrade(2*latestVersion-1, upgrades)
+	s.Require().NoError(err)
+
+	// apply the changeset again
+	for i := latestVersion * 2; i < latestVersion*3; i++ {
+		kvPairs := make(map[string]corestore.KVPairs)
+		for _, storeKey := range newRealStoreKeys {
+			kvPairs[storeKey] = corestore.KVPairs{}
+			for j := 0; j < kvCount; j++ {
+				key := []byte(fmt.Sprintf("key-%d-%d", i, j))
+				value := []byte(fmt.Sprintf("value-%d-%d", i, j))
+				kvPairs[storeKey] = append(kvPairs[storeKey], corestore.KVPair{Key: key, Value: value})
+			}
+		}
+		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(kvPairs)))
+		commitInfo, err := commitStore.Commit(i)
+		s.Require().NoError(err)
+		s.Require().NotNil(commitInfo)
+		s.Require().Equal(len(newRealStoreKeys), len(commitInfo.StoreInfos))
+		for _, storeKey := range newRealStoreKeys {
+			s.Require().NotNil(commitInfo.GetStoreCommitID([]byte(storeKey)))
+		}
+	}
+
+	// prune the old stores
+	s.Require().NoError(commitStore.Prune(latestVersion))
+	// GetProof should fail for the old stores
+	for _, storeKey := range []string{storeKey1, storeKey3} {
+		for i := uint64(1); i <= latestVersion; i++ {
+			for j := 0; j < kvCount; j++ {
+				_, err := commitStore.GetProof([]byte(storeKey), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
+				s.Require().Error(err)
+			}
+		}
+	}
+	// GetProof should not faile for the newly removed store
+	for i := latestVersion + 1; i < latestVersion*2; i++ {
+		for j := 0; j < kvCount; j++ {
+			proof, err := commitStore.GetProof([]byte(storeKey2), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
+			s.Require().NoError(err)
+			s.Require().NotNil(proof)
+		}
+	}
+
+	s.Require().NoError(commitStore.Prune(latestVersion * 2))
+	// GetProof should fail for the newly deleted stores
+	for i := uint64(1); i < latestVersion*2; i++ {
+		for j := 0; j < kvCount; j++ {
+			_, err := commitStore.GetProof([]byte(storeKey2), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
+			s.Require().Error(err)
+		}
+	}
+	// GetProof should work for the new added store
+	for i := latestVersion*2 + 1; i < latestVersion*3; i++ {
+		for j := 0; j < kvCount; j++ {
+			proof, err := commitStore.GetProof([]byte(storeKey3), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
 			s.Require().NoError(err)
 			s.Require().NotNil(proof)
 		}

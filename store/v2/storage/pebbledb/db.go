@@ -13,6 +13,7 @@ import (
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	storeerrors "cosmossdk.io/store/v2/errors"
+	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/util"
 )
@@ -25,10 +26,11 @@ const (
 	// batchBufferSize defines the maximum size of a batch before it is committed.
 	batchBufferSize = 100_000
 
-	StorePrefixTpl   = "s/k:%s/"         // s/k:<storeKey>
-	latestVersionKey = "s/_latest"       // NB: latestVersionKey key must be lexically smaller than StorePrefixTpl
-	pruneHeightKey   = "s/_prune_height" // NB: pruneHeightKey key must be lexically smaller than StorePrefixTpl
-	tombstoneVal     = "TOMBSTONE"
+	StorePrefixTpl        = "s/k:%s/"         // s/k:<storeKey>
+	removedStoreKeyPrefix = "s/_removed_key"  // NB: removedStoreKeys key must be lexically smaller than StorePrefixTpl
+	latestVersionKey      = "s/_latest"       // NB: latestVersionKey key must be lexically smaller than StorePrefixTpl
+	pruneHeightKey        = "s/_prune_height" // NB: pruneHeightKey key must be lexically smaller than StorePrefixTpl
+	tombstoneVal          = "TOMBSTONE"
 )
 
 var (
@@ -274,6 +276,10 @@ func (db *Database) Prune(version uint64) error {
 		}
 	}
 
+	if err := db.deleteRemovedStoreKeys(version); err != nil {
+		return err
+	}
+
 	return db.setPruneHeight(version)
 }
 
@@ -325,25 +331,13 @@ func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end 
 	return newPebbleDBIterator(itr, storePrefix(storeKey), start, end, version, db.earliestVersion, true), nil
 }
 
-func (db *Database) PruneStoreKey(storeKey []byte) error {
+func (db *Database) PruneStoreKeys(storeKeys []string, version uint64) error {
 	batch := db.storage.NewBatch()
 	defer batch.Close()
 
-	itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: storePrefix(storeKey), UpperBound: storePrefix(util.CopyIncr(storeKey))})
-	if err != nil {
-		return err
-	}
-	defer itr.Close()
-
-	for itr.First(); itr.Valid(); itr.Next() {
-		if err := batch.Delete(itr.Key(), nil); err != nil {
+	for _, storeKey := range storeKeys {
+		if err := batch.Set([]byte(fmt.Sprintf("%s%s", encoding.BuildPrefixWithVersion(removedStoreKeyPrefix, version), storeKey)), []byte{}, nil); err != nil {
 			return err
-		}
-		if batch.Len() >= batchBufferSize {
-			if err := batch.Commit(&pebble.WriteOptions{Sync: db.sync}); err != nil {
-				return err
-			}
-			batch.Reset()
 		}
 	}
 
@@ -463,4 +457,78 @@ func getMVCCSlice(db *pebble.DB, storeKey, key []byte, version uint64) ([]byte, 
 
 	value, err := itr.ValueAndErr()
 	return slices.Clone(value), err
+}
+
+func (db *Database) deleteRemovedStoreKeys(version uint64) error {
+	batch := db.storage.NewBatch()
+	defer batch.Close()
+
+	end := encoding.BuildPrefixWithVersion(removedStoreKeyPrefix, version+1)
+	storeKeyIter, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: []byte(removedStoreKeyPrefix), UpperBound: end})
+	if err != nil {
+		return err
+	}
+	defer storeKeyIter.Close()
+
+	storeKeys := make(map[string]uint64)
+	prefixLen := len(end)
+	for storeKeyIter.First(); storeKeyIter.Valid(); storeKeyIter.Next() {
+		verBz := storeKeyIter.Key()[len(removedStoreKeyPrefix):prefixLen]
+		v, err := decodeUint64Ascending(verBz)
+		if err != nil {
+			return err
+		}
+		storeKey := string(storeKeyIter.Key()[prefixLen:])
+		if ev, ok := storeKeys[storeKey]; ok {
+			if ev < v {
+				storeKeys[storeKey] = v
+			}
+		} else {
+			storeKeys[storeKey] = v
+		}
+		if err := batch.Delete(storeKeyIter.Key(), nil); err != nil {
+			return err
+		}
+	}
+
+	for storeKey, v := range storeKeys {
+		if err := func() error {
+			storeKey := []byte(storeKey)
+			itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: storePrefix(storeKey), UpperBound: storePrefix(util.CopyIncr(storeKey))})
+			if err != nil {
+				return err
+			}
+			defer itr.Close()
+
+			for itr.First(); itr.Valid(); itr.Next() {
+				itrKey := itr.Key()
+				_, verBz, ok := SplitMVCCKey(itrKey)
+				if !ok {
+					return fmt.Errorf("invalid PebbleDB MVCC key: %s", itrKey)
+				}
+				keyVersion, err := decodeUint64Ascending(verBz)
+				if err != nil {
+					return err
+				}
+				if keyVersion > v {
+					// skip keys that are newer than the version
+					continue
+				}
+				if err := batch.Delete(itr.Key(), nil); err != nil {
+					return err
+				}
+				if batch.Len() >= batchBufferSize {
+					if err := batch.Commit(&pebble.WriteOptions{Sync: db.sync}); err != nil {
+						return err
+					}
+					batch.Reset()
+				}
+			}
+			return nil
+		}(); err != nil {
+			return err
+		}
+	}
+
+	return batch.Commit(&pebble.WriteOptions{Sync: true})
 }

@@ -139,15 +139,15 @@ func (ss *StorageStore) Restore(version uint64, chStorage <-chan *corestore.Stat
 	return nil
 }
 
-// PruneStoreKey prunes the store key which implements the store.UpgradableDatabase
+// PruneStoreKeys prunes the store keys which implements the store.UpgradableDatabase
 // interface.
-func (ss *StorageStore) PruneStoreKey(storeKey []byte) error {
+func (ss *StorageStore) PruneStoreKeys(storeKeys []string, version uint64) error {
 	gdb, ok := ss.db.(store.UpgradableDatabase)
 	if !ok {
 		return errors.New("db does not implement UpgradableDatabase interface")
 	}
 
-	return gdb.PruneStoreKey(storeKey)
+	return gdb.PruneStoreKeys(storeKeys, version)
 }
 
 // MigrateStoreKey migrates the store key which implements the store.UpgradableDatabase

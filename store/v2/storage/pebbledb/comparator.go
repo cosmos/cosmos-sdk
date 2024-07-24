@@ -155,7 +155,7 @@ func SplitMVCCKey(mvccKey []byte) (key, version []byte, ok bool) {
 
 	key = mvccKeyCopy[:n-tsLen]
 	if tsLen > 0 {
-		version = mvccKeyCopy[n-tsLen+1 : len(mvccKeyCopy)-1]
+		version = mvccKeyCopy[n-tsLen+1 : n]
 	}
 
 	return key, version, true

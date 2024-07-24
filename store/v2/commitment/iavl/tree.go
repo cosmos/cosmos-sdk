@@ -14,9 +14,8 @@ import (
 )
 
 var (
-	_ commitment.Tree          = (*IavlTree)(nil)
-	_ commitment.KVStoreGetter = (*IavlTree)(nil)
-	_ store.PausablePruner     = (*IavlTree)(nil)
+	_ commitment.Tree      = (*IavlTree)(nil)
+	_ store.PausablePruner = (*IavlTree)(nil)
 )
 
 // IavlTree is a wrapper around iavl.MutableTree.
@@ -32,11 +31,6 @@ func NewIavlTree(db corestore.KVStoreWithBatch, logger log.Logger, cfg *Config) 
 		tree: tree,
 		db:   db,
 	}
-}
-
-// GetKVStoreWithBatch implements the KVStoreGetter interface.
-func (t *IavlTree) GetKVStoreWithBatch() corestore.KVStoreWithBatch {
-	return t.db
 }
 
 // Remove removes the given key from the tree.

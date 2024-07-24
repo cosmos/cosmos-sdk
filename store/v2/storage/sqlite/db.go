@@ -291,33 +291,6 @@ func (db *Database) PruneStoreKeys(storeKeys []string, version uint64) (err erro
 	return tx.Commit()
 }
 
-func (db *Database) MigrateStoreKey(fromStoreKey, toStoreKey []byte) error {
-	executeTx := func(stmt string, args ...interface{}) (err error) {
-		tx, err := db.storage.Begin()
-		if err != nil {
-			return fmt.Errorf("failed to create SQL transaction: %w", err)
-		}
-		defer func() {
-			if err != nil {
-				err = tx.Rollback()
-			}
-		}()
-		if _, err = tx.Exec(stmt, args...); err != nil {
-			return fmt.Errorf("failed to exec SQL statement: %w", err)
-		}
-		if err := tx.Commit(); err != nil {
-			return fmt.Errorf("failed to write SQL transaction: %w", err)
-		}
-		return nil
-	}
-
-	return executeTx(`
-	INSERT INTO state_storage(store_key, key, value, version)
-	SELECT ?, key, value, version FROM state_storage
-	WHERE store_key = ?;
-	`, toStoreKey, fromStoreKey)
-}
-
 func (db *Database) PrintRowsDebug() {
 	stmt, err := db.storage.Prepare("SELECT store_key, key, value, version, tombstone FROM state_storage")
 	if err != nil {

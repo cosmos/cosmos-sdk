@@ -150,17 +150,6 @@ func (ss *StorageStore) PruneStoreKeys(storeKeys []string, version uint64) error
 	return gdb.PruneStoreKeys(storeKeys, version)
 }
 
-// MigrateStoreKey migrates the store key which implements the store.UpgradableDatabase
-// interface.
-func (ss *StorageStore) MigrateStoreKey(oldStoreKey, newStoreKey []byte) error {
-	gdb, ok := ss.db.(store.UpgradableDatabase)
-	if !ok {
-		return fmt.Errorf("db does not implement UpgradableDatabase interface")
-	}
-
-	return gdb.MigrateStoreKey(oldStoreKey, newStoreKey)
-}
-
 // Close closes the store.
 func (ss *StorageStore) Close() error {
 	return ss.db.Close()

@@ -245,14 +245,11 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 
 	// create a new commitment store with upgrades
 	upgrades := &corestore.StoreUpgrades{
-		Added: []string{"newStore1", "newStore2"},
-		Renamed: []corestore.StoreRename{
-			{OldKey: storeKey1, NewKey: "renamedStore1"},
-		},
+		Added:   []string{"newStore1", "newStore2"},
 		Deleted: []string{storeKey3},
 	}
-	newStoreKeys := []string{storeKey2, storeKey3, "renamedStore1", "newStore1", "newStore2"}
-	realStoreKeys := []string{"renamedStore1", storeKey2, "newStore1", "newStore2"}
+	newStoreKeys := []string{storeKey1, storeKey2, storeKey3, "newStore1", "newStore2"}
+	realStoreKeys := []string{storeKey1, storeKey2, "newStore1", "newStore2"}
 	commitStore, err = s.NewStore(commitDB, newStoreKeys, log.NewNopLogger())
 	s.Require().NoError(err)
 	err = commitStore.LoadVersionAndUpgrade(latestVersion, upgrades)
@@ -269,7 +266,7 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 		}
 	}
 	// GetProof should fail for the new stores
-	for _, storeKey := range []string{"newStore1", "newStore2", "renamedStore1"} {
+	for _, storeKey := range []string{"newStore1", "newStore2"} {
 		for i := uint64(1); i <= latestVersion; i++ {
 			for j := 0; j < kvCount; j++ {
 				_, err := commitStore.GetProof([]byte(storeKey), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
@@ -310,15 +307,6 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 		}
 	}
 
-	// verify renamed store
-	for i := latestVersion + 1; i < latestVersion*2; i++ {
-		for j := 0; j < kvCount; j++ {
-			proof, err := commitStore.GetProof([]byte("renamedStore1"), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))
-			s.Require().NoError(err)
-			s.Require().NotNil(proof)
-		}
-	}
-
 	// verify existing store
 	for i := uint64(1); i < latestVersion*2; i++ {
 		for j := 0; j < kvCount; j++ {
@@ -333,7 +321,7 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 		Added:   []string{storeKey3},
 		Deleted: []string{storeKey2},
 	}
-	newRealStoreKeys := []string{"renamedStore1", "newStore1", "newStore2", storeKey3}
+	newRealStoreKeys := []string{storeKey1, storeKey3, "newStore1", "newStore2"}
 	commitStore, err = s.NewStore(commitDB, newStoreKeys, log.NewNopLogger())
 	s.Require().NoError(err)
 	err = commitStore.LoadVersionAndUpgrade(2*latestVersion-1, upgrades)

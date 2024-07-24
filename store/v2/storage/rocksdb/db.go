@@ -205,39 +205,6 @@ func (db *Database) PruneStoreKeys(_ []string, _ uint64) error {
 	return nil
 }
 
-func (db *Database) MigrateStoreKey(fromStoreKey, toStoreKey []byte) error {
-	latestVersion, err := db.GetLatestVersion()
-	if err != nil {
-		return fmt.Errorf("failed to get latest version: %w", err)
-	}
-
-	// need to copy all keys with the given fromStoreKey prefix to toStoreKey
-	readOpts := newTSReadOptions(latestVersion)
-	readOpts.SetIterStartTimestamp([]byte{0, 0, 0, 0, 0, 0, 0, 0})
-	itr := db.storage.NewIteratorCF(readOpts, db.cfHandle)
-	prefix := storePrefix(fromStoreKey)
-	ritr := newRocksDBIterator(itr, prefix, nil, nil, false)
-	defer ritr.Close()
-
-	batch := grocksdb.NewWriteBatch()
-	defer batch.Destroy()
-	for ; ritr.Valid(); ritr.Next() {
-		// replace the prefix
-		key := ritr.Key()
-		key = key[:len(key)-16] // remove the timestamp
-		prefixedKey := prependStoreKey(toStoreKey, key)
-		batch.PutCFWithTS(db.cfHandle, prefixedKey, ritr.Timestamp(), ritr.Value())
-		if batch.Count() >= batchBufferCount {
-			if err := db.storage.Write(defaultWriteOpts, batch); err != nil {
-				return err
-			}
-			batch.Clear()
-		}
-	}
-
-	return db.storage.Write(defaultWriteOpts, batch)
-}
-
 // newTSReadOptions returns ReadOptions used in the RocksDB column family read.
 func newTSReadOptions(version uint64) *grocksdb.ReadOptions {
 	var ts [TimestampSize]byte

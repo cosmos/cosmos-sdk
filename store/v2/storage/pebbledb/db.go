@@ -344,37 +344,6 @@ func (db *Database) PruneStoreKeys(storeKeys []string, version uint64) error {
 	return batch.Commit(&pebble.WriteOptions{Sync: db.sync})
 }
 
-func (db *Database) MigrateStoreKey(fromStoreKey, toStoreKey []byte) error {
-	batch := db.storage.NewBatch()
-	defer batch.Close()
-
-	itr, err := db.storage.NewIter(&pebble.IterOptions{LowerBound: storePrefix(fromStoreKey), UpperBound: storePrefix(util.CopyIncr(fromStoreKey))})
-	if err != nil {
-		return err
-	}
-	defer itr.Close()
-
-	for itr.First(); itr.Valid(); itr.Next() {
-		key := itr.Key()[len(storePrefix(fromStoreKey)):]
-		key = prependStoreKey(toStoreKey, key)
-		value, err := itr.ValueAndErr()
-		if err != nil {
-			return err
-		}
-		if err := batch.Set(key, value, nil); err != nil {
-			return err
-		}
-		if batch.Len() >= batchBufferSize {
-			if err := batch.Commit(&pebble.WriteOptions{Sync: db.sync}); err != nil {
-				return err
-			}
-			batch.Reset()
-		}
-	}
-
-	return batch.Commit(&pebble.WriteOptions{Sync: db.sync})
-}
-
 func storePrefix(storeKey []byte) []byte {
 	return []byte(fmt.Sprintf(StorePrefixTpl, storeKey))
 }

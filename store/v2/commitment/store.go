@@ -21,10 +21,6 @@ import (
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
-const (
-	batchFlushThreshold = 1 << 16 // 64KB
-)
-
 var (
 	_ store.Committer             = (*CommitStore)(nil)
 	_ store.UpgradeableStore      = (*CommitStore)(nil)
@@ -151,13 +147,6 @@ func (c *CommitStore) LoadVersionAndUpgrade(targetVersion uint64, upgrades *core
 			continue
 		}
 
-		// If it has been renamed, migrate the data.
-		if oldKey := upgrades.GetOldKeyFromNew(storeKey); len(oldKey) != 0 {
-			if err := c.migrateKVStore(oldKey, storeKey); err != nil {
-				return err
-			}
-			removedStoreKeys = append(removedStoreKeys, oldKey)
-		}
 		newStoreKeys = append(newStoreKeys, storeKey)
 	}
 
@@ -199,68 +188,6 @@ func (c *CommitStore) loadVersion(targetVersion uint64, storeKeys []string) erro
 	}
 
 	return nil
-}
-
-// migrateKVStore migrates the data from the old key to the new key.
-// It should be synchronous to ensure that the data is migrated before the
-// old store is pruned.
-func (c *CommitStore) migrateKVStore(oldKey, newKey string) error {
-	var (
-		oldKVStore corestore.KVStoreWithBatch
-		newKVStore corestore.KVStoreWithBatch
-	)
-
-	oldTree, err := c.mountTreeFn(oldKey)
-	if err != nil {
-		return err
-	}
-	if getter, ok := oldTree.(KVStoreGetter); ok {
-		oldKVStore = getter.GetKVStoreWithBatch()
-	}
-
-	if newTree, ok := c.multiTrees[newKey]; ok {
-		if getter, ok := newTree.(KVStoreGetter); ok {
-			newKVStore = getter.GetKVStoreWithBatch()
-		}
-	}
-
-	if oldKVStore == nil {
-		return fmt.Errorf("old store %s not found", oldKey)
-	}
-	if newKVStore == nil {
-		return fmt.Errorf("new store %s not found", newKey)
-	}
-
-	batch := newKVStore.NewBatch()
-	iter, err := oldKVStore.Iterator(nil, nil)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = iter.Close()
-		_ = batch.Close()
-	}()
-
-	for ; iter.Valid(); iter.Next() {
-		if err := batch.Set(iter.Key(), iter.Value()); err != nil {
-			return err
-		}
-		bs, err := batch.GetByteSize()
-		if err != nil {
-			return err
-		}
-		if bs > batchFlushThreshold {
-			if err := batch.Write(); err != nil {
-				return err
-			}
-			if err := batch.Close(); err != nil {
-				return err
-			}
-			batch = newKVStore.NewBatch()
-		}
-	}
-
-	return batch.Write()
 }
 
 func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
@@ -570,17 +497,6 @@ loop:
 	}
 
 	return snapshotItem, c.LoadVersion(version)
-}
-
-// GetKVStoreWithBatch implements store.KVStoreGetter.
-func (c *CommitStore) GetKVStoreWithBatch(storeKey string) corestore.KVStoreWithBatch {
-	if tree, ok := c.multiTrees[storeKey]; ok {
-		if kvGetter, ok := tree.(KVStoreGetter); ok {
-			return kvGetter.GetKVStoreWithBatch()
-		}
-	}
-
-	return nil
 }
 
 func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {

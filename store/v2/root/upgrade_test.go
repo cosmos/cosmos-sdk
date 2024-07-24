@@ -84,9 +84,6 @@ func (s *UpgradeStoreTestSuite) loadWithUpgrades(upgrades *corestore.StoreUpgrad
 	for _, added := range upgrades.Added {
 		multiTrees[added], _ = newTreeFn(added)
 	}
-	for _, rename := range upgrades.Renamed {
-		multiTrees[rename.NewKey], _ = newTreeFn(rename.NewKey)
-	}
 
 	sc, err := commitment.NewCommitStore(multiTrees, s.commitDB, newTreeFn, testLog)
 	s.Require().NoError(err)
@@ -98,10 +95,7 @@ func (s *UpgradeStoreTestSuite) loadWithUpgrades(upgrades *corestore.StoreUpgrad
 func (s *UpgradeStoreTestSuite) TestLoadVersionAndUpgrade() {
 	// upgrade store keys
 	upgrades := &corestore.StoreUpgrades{
-		Added: []string{"newStore1", "newStore2"},
-		Renamed: []corestore.StoreRename{
-			{OldKey: "store1", NewKey: "renamedStore1"},
-		},
+		Added:   []string{"newStore1", "newStore2"},
 		Deleted: []string{"store3"},
 	}
 	s.loadWithUpgrades(upgrades)
@@ -126,7 +120,7 @@ func (s *UpgradeStoreTestSuite) TestLoadVersionAndUpgrade() {
 	}
 
 	// commit changeset
-	newStoreKeys := []string{"newStore1", "newStore2", "renamedStore1"}
+	newStoreKeys := []string{"newStore1", "newStore2"}
 	toVersion := uint64(40)
 	for version := v + 1; version <= toVersion; version++ {
 		cs := corestore.NewChangeset()

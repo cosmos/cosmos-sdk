@@ -25,13 +25,12 @@ type VersionedDatabase interface {
 	io.Closer
 }
 
-// UpgradableDatabase defines an API for a versioned database that allows storeKey
-// upgrades.
+// UpgradableDatabase defines an API for a versioned database that allows pruning
+// deleted storeKeys
 type UpgradableDatabase interface {
-	// PruneStoreKeys prunes all data associated with the given storeKeys.
+	// PruneStoreKeys prunes all data associated with the given storeKeys whenever
+	// the given version is pruned.
 	PruneStoreKeys(storeKeys []string, version uint64) error
-	// MigrateStoreKey upgrades the storeKey from the old to the new storeKey.
-	MigrateStoreKey(oldStoreKey, newStoreKey []byte) error
 }
 
 // Committer defines an API for committing state.
@@ -65,10 +64,6 @@ type Committer interface {
 
 	// GetCommitInfo returns the CommitInfo for the given version.
 	GetCommitInfo(version uint64) (*proof.CommitInfo, error)
-
-	// GetKVStoreWithBatch returns the KVStoreWithBatch for the given storeKey.
-	// It is used to migrate or remove data when upgrading the store key.
-	GetKVStoreWithBatch(storeKey string) corestore.KVStoreWithBatch
 
 	// Close releases associated resources. It should NOT be idempotent. It must
 	// only be called once and any call after may panic.

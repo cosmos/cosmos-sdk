@@ -665,18 +665,6 @@ func (s *StorageTestSuite) TestUpgradable() {
 		}
 	}
 
-	// migrate store2
-	newStoreKey := "mstore2"
-	err = ss.MigrateStoreKey([]byte(storeKeys[1]), []byte(newStoreKey))
-	s.Require().NoError(err)
-	for v := uint64(1); v <= uptoVersion; v++ {
-		for i := 0; i < keyCount; i++ {
-			bz, err := ss.Get([]byte(newStoreKey), v, []byte(fmt.Sprintf("key%03d", i)))
-			s.Require().NoError(err)
-			s.Require().Equal([]byte(fmt.Sprintf("val%03d-%03d", i, v)), bz)
-		}
-	}
-
 	// prune storekeys (`store2`, `store3`)
 	removedStoreKeys := []string{storeKeys[1], storeKeys[2]}
 	err = ss.PruneStoreKeys(removedStoreKeys, uptoVersion)

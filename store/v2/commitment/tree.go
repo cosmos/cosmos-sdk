@@ -6,7 +6,6 @@ import (
 
 	ics23 "github.com/cosmos/ics23/go"
 
-	corestore "cosmossdk.io/core/store"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
 
@@ -56,11 +55,4 @@ type Importer interface {
 	Commit() error
 
 	io.Closer
-}
-
-// KVStoreGetter is an interface that allows getting the KVStoreWithBatch from a Tree.
-// It is used to allow the commitment Tree to be used as a KVStore which can be used
-// in the upgrade module.
-type KVStoreGetter interface {
-	GetKVStoreWithBatch() corestore.KVStoreWithBatch
 }

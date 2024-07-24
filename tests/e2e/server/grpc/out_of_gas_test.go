@@ -24,7 +24,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-type IntegrationTestOutOfGasSuite struct {
+type E2ETestOutOfGasSuite struct {
 	suite.Suite
 
 	cfg     network.Config
@@ -32,9 +32,9 @@ type IntegrationTestOutOfGasSuite struct {
 	conn    *grpc.ClientConn
 }
 
-func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
+func (s *E2ETestOutOfGasSuite) SetupSuite() {
 	var err error
-	s.T().Log("setting up integration test suite")
+	s.T().Log("setting up E2E test suite")
 
 	s.cfg, err = network.DefaultConfigWithAppConfigWithQueryGasLimit(configurator.NewAppConfig(
 		configurator.AccountsModule(),
@@ -63,13 +63,13 @@ func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
 	s.Require().NoError(err)
 }
 
-func (s *IntegrationTestOutOfGasSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+func (s *E2ETestOutOfGasSuite) TearDownSuite() {
+	s.T().Log("tearing down E2E test suite")
 	s.conn.Close()
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_TestService() {
+func (s *E2ETestOutOfGasSuite) TestGRPCServer_TestService() {
 	// gRPC query to test service should work
 	testClient := testdata.NewQueryClient(s.conn)
 	testRes, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
@@ -77,7 +77,7 @@ func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_TestService() {
 	s.Require().Equal("hello", testRes.Message)
 }
 
-func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_BankBalance_OutOfGas() {
+func (s *E2ETestOutOfGasSuite) TestGRPCServer_BankBalance_OutOfGas() {
 	val0 := s.network.GetValidators()[0]
 
 	// gRPC query to bank service should work
@@ -93,6 +93,6 @@ func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_BankBalance_OutOfGas() {
 	s.Require().ErrorContains(err, sdkerrors.ErrOutOfGas.Error())
 }
 
-func TestIntegrationTestOutOfGasSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestOutOfGasSuite))
+func TestE2ETestOutOfGasSuite(t *testing.T) {
+	suite.Run(t, new(E2ETestOutOfGasSuite))
 }

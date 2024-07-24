@@ -365,3 +365,138 @@ func TestOverSlashing(t *testing.T) {
 	require.Equal(t, "550000stake", balance2AfterSlashing.String())
 	require.Equal(t, "550000stake", balance3AfterSlashing.String())
 }
+
+func TestSlashRedelegation_ValidatorLeftWithNoTokens(t *testing.T) {
+	// setting up
+	var (
+		authKeeper    authkeeper.AccountKeeper
+		stakingKeeper *stakingkeeper.Keeper
+		bankKeeper    bankkeeper.Keeper
+		slashKeeper   slashingkeeper.Keeper
+		distrKeeper   distributionkeeper.Keeper
+	)
+
+	app, err := simtestutil.Setup(
+		depinject.Configs(
+			depinject.Supply(log.NewNopLogger()),
+			slashing.AppConfig,
+		),
+		&stakingKeeper,
+		&bankKeeper,
+		&slashKeeper,
+		&distrKeeper,
+		&authKeeper,
+	)
+	require.NoError(t, err)
+
+	// get sdk context, staking msg server and bond denom
+	ctx := app.BaseApp.NewContext(false).WithBlockHeight(1).WithHeaderInfo(header.Info{Height: 1})
+	stakingMsgServer := stakingkeeper.NewMsgServerImpl(stakingKeeper)
+	bondDenom, err := stakingKeeper.BondDenom(ctx)
+	require.NoError(t, err)
+
+	// create validators DST and SRC
+	dstPubKey := secp256k1.GenPrivKey().PubKey()
+	srcPubKey := secp256k1.GenPrivKey().PubKey()
+
+	dstAddr := sdk.ValAddress(dstPubKey.Address())
+	srcAddr := sdk.ValAddress(srcPubKey.Address())
+
+	testCoin := sdk.NewCoin(bondDenom, stakingKeeper.TokensFromConsensusPower(ctx, 1000))
+	fundAccount(t, ctx, bankKeeper, authKeeper, sdk.AccAddress(dstAddr), testCoin)
+	fundAccount(t, ctx, bankKeeper, authKeeper, sdk.AccAddress(srcAddr), testCoin)
+
+	createValMsgDST, _ := stakingtypes.NewMsgCreateValidator(
+		dstAddr.String(), dstPubKey, testCoin, stakingtypes.Description{Details: "Validator DST"}, stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0)), math.OneInt())
+	_, err = stakingMsgServer.CreateValidator(ctx, createValMsgDST)
+	require.NoError(t, err)
+
+	createValMsgSRC, _ := stakingtypes.NewMsgCreateValidator(
+		srcAddr.String(), srcPubKey, testCoin, stakingtypes.Description{Details: "Validator SRC"}, stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0)), math.OneInt())
+	_, err = stakingMsgServer.CreateValidator(ctx, createValMsgSRC)
+	require.NoError(t, err)
+
+	// create a user accounts and delegate to SRC and DST
+	userAcc := sdk.AccAddress([]byte("user1_______________"))
+	fundAccount(t, ctx, bankKeeper, authKeeper, userAcc, testCoin)
+
+	userAcc2 := sdk.AccAddress([]byte("user2_______________"))
+	fundAccount(t, ctx, bankKeeper, authKeeper, userAcc2, testCoin)
+
+	delMsg := stakingtypes.NewMsgDelegate(userAcc.String(), srcAddr.String(), testCoin)
+	_, err = stakingMsgServer.Delegate(ctx, delMsg)
+	require.NoError(t, err)
+
+	delMsg = stakingtypes.NewMsgDelegate(userAcc2.String(), dstAddr.String(), testCoin)
+	_, err = stakingMsgServer.Delegate(ctx, delMsg)
+	require.NoError(t, err)
+
+	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	require.NoError(t, err)
+
+	// commit an infraction with DST and store the power at this height
+	dstVal, err := stakingKeeper.GetValidator(ctx, dstAddr)
+	require.NoError(t, err)
+	dstPower := stakingKeeper.TokensToConsensusPower(ctx, dstVal.Tokens)
+	dstConsAddr, err := dstVal.GetConsAddr()
+	require.NoError(t, err)
+	dstInfractionHeight := ctx.BlockHeight()
+
+	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	require.NoError(t, err)
+
+	// undelegate all the user tokens from DST
+	undelMsg := stakingtypes.NewMsgUndelegate(userAcc2.String(), dstAddr.String(), testCoin)
+	_, err = stakingMsgServer.Undelegate(ctx, undelMsg)
+	require.NoError(t, err)
+
+	// commit an infraction with SRC and store the power at this height
+	srcVal, err := stakingKeeper.GetValidator(ctx, srcAddr)
+	require.NoError(t, err)
+	srcPower := stakingKeeper.TokensToConsensusPower(ctx, srcVal.Tokens)
+	srcConsAddr, err := srcVal.GetConsAddr()
+	require.NoError(t, err)
+	srcInfractionHeight := ctx.BlockHeight()
+
+	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	require.NoError(t, err)
+
+	// redelegate all the user tokens from SRC to DST
+	redelMsg := stakingtypes.NewMsgBeginRedelegate(userAcc.String(), srcAddr.String(), dstAddr.String(), testCoin)
+	_, err = stakingMsgServer.BeginRedelegate(ctx, redelMsg)
+	require.NoError(t, err)
+
+	// undelegate the self delegation from DST
+	undelMsg = stakingtypes.NewMsgUndelegate(sdk.AccAddress(dstAddr).String(), dstAddr.String(), testCoin)
+	_, err = stakingMsgServer.Undelegate(ctx, undelMsg)
+	require.NoError(t, err)
+
+	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	require.NoError(t, err)
+
+	undelMsg = stakingtypes.NewMsgUndelegate(userAcc.String(), dstAddr.String(), testCoin)
+	_, err = stakingMsgServer.Undelegate(ctx, undelMsg)
+	require.NoError(t, err)
+
+	// check that dst now has zero tokens
+	valDst, err := stakingKeeper.GetValidator(ctx, dstAddr)
+	require.NoError(t, err)
+	require.Equal(t, math.ZeroInt().String(), valDst.Tokens.String())
+
+	// slash the infractions
+	err = slashKeeper.Slash(ctx, dstConsAddr, math.LegacyMustNewDecFromStr("0.8"), dstPower, dstInfractionHeight)
+	require.NoError(t, err)
+
+	err = slashKeeper.Slash(ctx, srcConsAddr, math.LegacyMustNewDecFromStr("0.5"), srcPower, srcInfractionHeight)
+	require.NoError(t, err)
+
+	// assert invariants to ensure correctness
+	_, stop := stakingkeeper.AllInvariants(stakingKeeper)(ctx)
+	require.False(t, stop)
+
+	_, stop = bankkeeper.AllInvariants(bankKeeper)(ctx)
+	require.False(t, stop)
+
+	_, stop = distributionkeeper.AllInvariants(distrKeeper)(ctx)
+	require.False(t, stop)
+}

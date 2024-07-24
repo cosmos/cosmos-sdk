@@ -62,12 +62,16 @@ func (o *ObjectCollection) ApplyUpdate(update schema.ObjectUpdate) error {
 			o.objects.Delete(keyStr)
 		}
 	} else {
-		// merge value updates only if we have more than one value field
-		if valueUpdates, ok := update.Value.(schema.ValueUpdates); ok &&
-			len(o.objectType.ValueFields) > 1 {
+		// convert value updates to array
+		if valueUpdates, ok := update.Value.(schema.ValueUpdates); ok {
 			var values []interface{}
+			n := len(o.objectType.ValueFields)
 			if exists {
-				values = cur.Value.([]interface{})
+				if n == 1 {
+					values = []interface{}{cur.Value}
+				} else {
+					values = cur.Value.([]interface{})
+				}
 			} else {
 				values = make([]interface{}, len(o.objectType.ValueFields))
 			}
@@ -85,11 +89,15 @@ func (o *ObjectCollection) ApplyUpdate(update schema.ObjectUpdate) error {
 				return err
 			}
 
-			update.Value = values
+			if n == 1 {
+				update.Value = values[0]
+			} else {
+				update.Value = values
+			}
 		}
-
-		o.objects.Set(keyStr, update)
 	}
+
+	o.objects.Set(keyStr, update)
 
 	return nil
 }

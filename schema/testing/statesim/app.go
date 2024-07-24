@@ -90,11 +90,13 @@ func (a *App) UpdateGen() *rapid.Generator[appdata.ObjectUpdateData] {
 }
 
 // GetModule returns the module state for the given module name.
-func (a *App) GetModule(moduleName string) (*Module, bool) {
+func (a *App) GetModule(moduleName string) (ModuleState, bool) {
 	return a.moduleStates.Get(moduleName)
 }
 
 // Modules iterates over all the module state instances in the app.
-func (a *App) Modules(f func(moduleName string, modState *Module) bool) {
-	a.moduleStates.Scan(f)
+func (a *App) Modules(f func(moduleName string, modState ModuleState) bool) {
+	a.moduleStates.Scan(func(key string, value *Module) bool {
+		return f(key, value)
+	})
 }

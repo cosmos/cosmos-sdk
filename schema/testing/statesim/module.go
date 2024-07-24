@@ -21,11 +21,13 @@ type Module struct {
 func NewModule(moduleSchema schema.ModuleSchema, options Options) *Module {
 	objectCollections := &btree.Map[string, *ObjectCollection]{}
 	var objectTypeNames []string
-	for objectType := range moduleSchema.ObjectTypes {
+
+	moduleSchema.ObjectTypes(func(objectType schema.ObjectType) bool {
 		objectCollection := NewObjectCollection(objectType, options)
 		objectCollections.Set(objectType.Name, objectCollection)
 		objectTypeNames = append(objectTypeNames, objectType.Name)
-	}
+		return true
+	})
 
 	objectTypeSelector := rapid.SampledFrom(objectTypeNames)
 
@@ -65,12 +67,12 @@ func (o *Module) ModuleSchema() schema.ModuleSchema {
 }
 
 // GetObjectCollection returns the object collection for the given object type.
-func (o *Module) GetObjectCollection(objectType string) (*ObjectCollection, bool) {
+func (o *Module) GetObjectCollection(objectType string) (ObjectCollectionState, bool) {
 	return o.objectCollections.Get(objectType)
 }
 
 // ObjectCollections iterates over all object collections in the module.
-func (o *Module) ObjectCollections(f func(value *ObjectCollection) bool) {
+func (o *Module) ObjectCollections(f func(value ObjectCollectionState) bool) {
 	o.objectCollections.Scan(func(key string, value *ObjectCollection) bool {
 		return f(value)
 	})

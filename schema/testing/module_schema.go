@@ -32,6 +32,10 @@ var objectTypesGen = rapid.Custom(func(t *rapid.T) []schema.ObjectType {
 		if hasDuplicateNames(typeNames, objectType.KeyFields) || hasDuplicateNames(typeNames, objectType.ValueFields) {
 			return false
 		}
+		if typeNames[objectType.Name] {
+			return false
+		}
+		typeNames[objectType.Name] = true
 	}
 	return true
 })

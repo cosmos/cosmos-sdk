@@ -131,6 +131,10 @@ func (a *Simulator) ProcessBlockData(data BlockData) error {
 }
 
 func (a *Simulator) ProcessPacket(packet appdata.Packet) error {
+	err := a.options.Listener.SendPacket(packet)
+	if err != nil {
+		return err
+	}
 	switch packet := packet.(type) {
 	case appdata.StartBlockData:
 		if packet.Height != a.blockNum+1 {
@@ -142,7 +146,7 @@ func (a *Simulator) ProcessPacket(packet appdata.Packet) error {
 	case appdata.ObjectUpdateData:
 		return a.state.ApplyUpdate(packet)
 	}
-	return a.options.Listener.SendPacket(packet)
+	return nil
 }
 
 // AppState returns the current app state backing the simulator.

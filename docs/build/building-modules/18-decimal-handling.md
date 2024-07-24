@@ -14,39 +14,33 @@ These changes require a state migration to update existing decimal values to the
 
 ## Why the Change?
 
-* **Enhanced Precision**: `Dec` uses the [apd](https://github.com/cockroachdb/apd) library for arbitrary precision decimals, suitable for accurate financial calculations.
-* **Immutable Operations**: `Dec` operations are safer for concurrent use as they do not mutate the original values.
-* **Better Performance**: `Dec` operations are faster and more efficient than `LegacyDec`.`
+* Historically we have wrapped a `big.Int` to represent decimals in the Cosmos SDK and never had a decimal type. Finally, we have a decimal type that is more efficient and accurate.
+* `Dec` uses the [apd](https://github.com/cockroachdb/apd) library for arbitrary precision decimals, suitable for accurate financial calculations.
+* `Dec` operations are safer for concurrent use as they do not mutate the original values.
+* `Dec` operations are faster and more efficient than `LegacyDec`.
 
 ## Using `Dec` in Modules that haven't used `LegacyDec`
 
 If you are creating a new module or updating an existing module that has not used `LegacyDec`, you can directly use `Dec` without any changes.
 
-As an example we will use `DecCoin` which is a common type used in the Cosmos SDK.
+-- math.NewLegacyDecFromInt64(100)
+++ math.NewDecFromInt64(100)
 
+-- math.LegacyNewDecWithPrec(100, 18)
+++ math.NewDecWithPrec(100, 18)
 
-```protobuf
-message DecCoin {
-  option (gogoproto.equal) = true;
+-- math.LegacyNewDecFromStr("100")
+++ math.NewDecFromStr("100")
 
-  string denom  = 1;
-  string amount = 2 [
-    (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "cosmossdk.io/math.Dec",
-    (gogoproto.nullable)   = false
-  ];
-}
-```
+-- math.LegacyNewDecFromStr("100.000000000000000000").Quo(math.LegacyNewDecFromInt(2))
+++ math.NewDecFromStr("100.000000000000000000").Quo(math.NewDecFromInt(2))
 
-How you can implement `Dec` in your module:
+-- math.LegacyNewDecFromStr("100.000000000000000000").Add(math.LegacyNewDecFromInt(2))
+++ math.NewDecFromStr("100.000000000000000000").Add(math.NewDecFromInt(2))
 
-```go
-import (
-	"cosmossdk.io/math"
-)
+-- math.LegacyNewDecFromStr("100.000000000000000000").Sub(math.LegacyNewDecFromInt(2))
+++ math.NewDecFromStr("100.000000000000000000").Sub(math.NewDecFromInt(2))
 
-example := math.NewDecFromInt64(100)
-```
 
 ## Modules migrating from `LegacyDec` to `Dec`
 
@@ -59,57 +53,9 @@ The reason for the state breaking change is the difference in precision handling
 * **LegacyDec**: Fixed precision of 18 decimal places.
 * **Dec**: Flexible precision up to 34 decimal places using the apd library.
 
-## Byte Representation Changes Example
-
-The change in precision handling directly impacts the byte representation of decimal values:
-
-**Legacy Dec Byte Representation:**
-`2333435363738393030303030303030303030303030303030303030`
-
-This example includes the value 123456789 followed by 18 zeros to maintain the fixed precision.
-
-**New Dec Byte Representation:**
-`0a03617364121031323334353637383900000000000000`
-
-This example shows the value 123456789 without additional padding, reflecting the flexible precision handling of the new Dec type.
-
 ## Impact of Precision Change
 
 The increase in precision from 18 to 34 decimal places allows for more detailed decimal values but requires data migration. This change in how data is formatted and stored is a key aspect of why the transition is considered state-breaking.
-
-## Example of State-Breaking Change
-
-The protobuf definitions for DecCoin illustrate the change in the custom type for the amount field.
-
-**Before:**
-
-```protobuf
-message DecCoin {
-  option (gogoproto.equal) = true;
-
-  string denom  = 1;
-  string amount = 2 [
-    (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
-    (gogoproto.nullable)   = false
-  ];
-}
-```
-
-**After:**
-
-```protobuf
-message DecCoin {
-  option (gogoproto.equal) = true;
-
-  string denom  = 1;
-  string amount = 2 [
-    (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "cosmossdk.io/math.Dec",
-    (gogoproto.nullable)   = false
-  ];
-}
-```
 
 ## Converting `LegacyDec` to `Dec` without storing the data
 

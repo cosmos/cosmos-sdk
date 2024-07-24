@@ -1,6 +1,7 @@
 package sims
 
 import (
+	"bytes"
 	"fmt"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 
 	"cosmossdk.io/math"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -44,12 +46,16 @@ type StakingGenesisState struct {
 }
 
 func (s *StakingGenesisState) ToProto() (*anypb.Any, error) {
-	params, err := s.Params.ToProto()
+	paramsAny, err := s.Params.ToProto()
+	if err != nil {
+		return nil, err
+	}
+	params, err := structpbToMap(paramsAny)
 	if err != nil {
 		return nil, err
 	}
 
-	lastValidatorPowers := make([]map[string]interface{}, len(s.LastValidatorPowers))
+	lastValidatorPowers := make([]interface{}, len(s.LastValidatorPowers))
 	for i, lvp := range s.LastValidatorPowers {
 		lastValidatorPowers[i] = map[string]interface{}{
 			"address": lvp.Address,
@@ -57,22 +63,30 @@ func (s *StakingGenesisState) ToProto() (*anypb.Any, error) {
 		}
 	}
 
-	validators := make([]map[string]interface{}, len(s.Validators))
+	validators := make([]interface{}, len(s.Validators))
 	for i, v := range s.Validators {
-		validatorProto, err := v.ToProto()
+		validatorAny, err := v.ToProto()
 		if err != nil {
 			return nil, err
 		}
-		validators[i] = map[string]interface{}{"validator": validatorProto}
+		validatorProto, err := structpbToMap(validatorAny)
+		if err != nil {
+			return nil, err
+		}
+		validators[i] = validatorProto
 	}
 
-	delegations := make([]map[string]interface{}, len(s.Delegations))
+	delegations := make([]interface{}, len(s.Delegations))
 	for i, d := range s.Delegations {
-		delegationProto, err := d.ToProto()
+		delegationAny, err := d.ToProto()
 		if err != nil {
 			return nil, err
 		}
-		delegations[i] = map[string]interface{}{"delegation": delegationProto}
+		delegationProto, err := structpbToMap(delegationAny)
+		if err != nil {
+			return nil, err
+		}
+		delegations[i] = delegationProto
 	}
 
 	fields := map[string]interface{}{
@@ -133,7 +147,7 @@ func ProtoToStakingGenesisState(protoMsg *anypb.Any) (*StakingGenesisState, erro
 	validatorsValue := s.Fields["validators"].GetListValue()
 	genesisState.Validators = make([]StakingValidator, len(validatorsValue.Values))
 	for i, v := range validatorsValue.Values {
-		validatorAny, err := anypb.New(v.GetStructValue().Fields["validator"].GetStructValue())
+		validatorAny, err := anypb.New(v.GetStructValue())
 		if err != nil {
 			return nil, err
 		}
@@ -148,7 +162,7 @@ func ProtoToStakingGenesisState(protoMsg *anypb.Any) (*StakingGenesisState, erro
 	delegationsValue := s.Fields["delegations"].GetListValue()
 	genesisState.Delegations = make([]StakingDelegation, len(delegationsValue.Values))
 	for i, v := range delegationsValue.Values {
-		delegationAny, err := anypb.New(v.GetStructValue().Fields["delegation"].GetStructValue())
+		delegationAny, err := anypb.New(v.GetStructValue())
 		if err != nil {
 			return nil, err
 		}
@@ -247,7 +261,8 @@ type StakingValidator struct {
 	// operator_address defines the address of the validator's operator; bech encoded in JSON.
 	OperatorAddress string `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty"`
 	// consensus_pubkey is the consensus public key of the validator, as a Protobuf Any.
-	ConsensusPubkey *gogoany.Any `protobuf:"bytes,2,opt,name=consensus_pubkey,json=consensusPubkey,proto3" json:"consensus_pubkey,omitempty"`
+	ConsensusPubkey         *gogoany.Any       `protobuf:"bytes,2,opt,name=consensus_pubkey,json=consensusPubkey,proto3" json:"consensus_pubkey,omitempty"`
+	consensusPubKeyConcrete cryptotypes.PubKey `protobuf:-,json:"-"`
 	// jailed defined whether the validator has been jailed from bonded status or not.
 	Jailed bool `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
 	// status is the validator status (bonded/unbonding/unbonded).
@@ -273,24 +288,42 @@ type StakingValidator struct {
 }
 
 func (s *StakingValidator) ToProto() (*anypb.Any, error) {
-	consensusPubkeyAny, err := gogoany.NewAnyWithCacheWithValue(s.ConsensusPubkey)
+	var consensusPubkeyProto map[string]interface{}
+	if s.ConsensusPubkey != nil {
+		consensusPubkeyProto = map[string]interface{}{
+			"@type": s.ConsensusPubkey.TypeUrl,
+			"key":   s.consensusPubKeyConcrete.Bytes(),
+		}
+	}
+
+	descriptionAny, err := s.Description.ToProto()
 	if err != nil {
 		return nil, err
 	}
 
-	descriptionProto, err := s.Description.ToProto()
+	descriptionProto, err := structpbToMap(descriptionAny)
 	if err != nil {
 		return nil, err
 	}
 
-	commissionProto, err := s.Commission.ToProto()
+	commissionAny, err := s.Commission.ToProto()
 	if err != nil {
 		return nil, err
+	}
+
+	commissionProto, err := structpbToMap(commissionAny)
+	if err != nil {
+		return nil, err
+	}
+
+	unbondingIds := make([]interface{}, len(s.UnbondingIds))
+	for i, id := range s.UnbondingIds {
+		unbondingIds[i] = id
 	}
 
 	fields := map[string]interface{}{
 		"operator_address":            s.OperatorAddress,
-		"consensus_pubkey":            consensusPubkeyAny,
+		"consensus_pubkey":            consensusPubkeyProto,
 		"jailed":                      s.Jailed,
 		"status":                      s.Status,
 		"tokens":                      s.Tokens.String(),
@@ -301,7 +334,7 @@ func (s *StakingValidator) ToProto() (*anypb.Any, error) {
 		"commission":                  commissionProto,
 		"min_self_delegation":         s.MinSelfDelegation.String(),
 		"unbonding_on_hold_ref_count": s.UnbondingOnHoldRefCount,
-		"unbonding_ids":               s.UnbondingIds,
+		"unbonding_ids":               unbondingIds,
 	}
 
 	pbStruct, err := structpb.NewStruct(fields)
@@ -323,9 +356,9 @@ func ProtoToStakingValidator(protoMsg *anypb.Any) (*StakingValidator, error) {
 	validator.OperatorAddress = s.Fields["operator_address"].GetStringValue()
 
 	consensusPubkeyAny := s.Fields["consensus_pubkey"].GetStructValue()
-	validator.ConsensusPubkey = &gogoany.Any{
-		TypeUrl: consensusPubkeyAny.Fields["type_url"].GetStringValue(),
-		Value:   []byte(consensusPubkeyAny.Fields["value"].GetStringValue()),
+	validator.ConsensusPubkey = &gogoany.Any{ // TODO(@julienrbrt): Possibly this is not correct, as we just put the raw bytes of the pubkey in the any value. To check later, right now it works :D
+		TypeUrl: consensusPubkeyAny.Fields["@type"].GetStringValue(),
+		Value:   []byte(consensusPubkeyAny.Fields["key"].GetStringValue()),
 	}
 
 	validator.Jailed = s.Fields["jailed"].GetBoolValue()
@@ -492,7 +525,7 @@ type StakingCommissionRates struct {
 // StakingValidatorCommission defines the initial commission rates to be used for creating a validator.
 type StakingValidatorCommission struct {
 	// commission_rates defines the initial commission rates to be used for creating a validator.
-	StakingCommissionRates `protobuf:"bytes,1,opt,name=commission_rates,json=commissionRates,proto3,embedded=commission_rates" json:"commission_rates"`
+	CommissionRates StakingCommissionRates `protobuf:"bytes,1,opt,name=commission_rates,json=commissionRates,proto3,embedded=commission_rates" json:"commission_rates"`
 	// update_time is the last time the commission rate was changed.
 	UpdateTime time.Time `protobuf:"bytes,2,opt,name=update_time,json=updateTime,proto3,stdtime" json:"update_time"`
 }
@@ -500,9 +533,12 @@ type StakingValidatorCommission struct {
 func (s *StakingValidatorCommission) ToProto() (*anypb.Any, error) {
 	// Create a map to hold the protobuf fields
 	fields := map[string]interface{}{
-		"rate":            s.Rate.String(),
-		"max_rate":        s.MaxRate.String(),
-		"max_change_rate": s.MaxChangeRate.String(),
+		"commission_rates": map[string]interface{}{
+			"rate":            s.CommissionRates.Rate.String(),
+			"max_rate":        s.CommissionRates.MaxRate.String(),
+			"max_change_rate": s.CommissionRates.MaxChangeRate.String(),
+		},
+		"update_time": s.UpdateTime.Format(time.RFC3339),
 	}
 
 	// Convert the map to a protobuf Struct
@@ -536,7 +572,7 @@ func ProtoToStakingValidatorCommission(protoMsg *anypb.Any) (*StakingValidatorCo
 		return nil, err
 	}
 
-	commission.StakingCommissionRates = StakingCommissionRates{
+	commission.CommissionRates = StakingCommissionRates{
 		Rate:          rate,
 		MaxRate:       maxRate,
 		MaxChangeRate: maxChangeRate,
@@ -549,4 +585,55 @@ func ProtoToStakingValidatorCommission(protoMsg *anypb.Any) (*StakingValidatorCo
 	commission.UpdateTime = updateTime
 
 	return commission, nil
+}
+
+func structpbToMap(any *anypb.Any) (map[string]interface{}, error) {
+	if any == nil {
+		return nil, nil
+	}
+	var s structpb.Struct
+	if err := any.UnmarshalTo(&s); err != nil {
+		return nil, err
+	}
+	return s.AsMap(), nil
+}
+
+// Extract the value from a marshalled any without unmarshalling the whole thing
+// This is requird as we cannot unmarshal the protobuf structs directly to json
+func extractAnyValueFromJSON(jsonData []byte) ([]byte, error) {
+	// Find the start of the "value" field
+	valueStart := bytes.Index(jsonData, []byte(`"value"`))
+	if valueStart == -1 {
+		return nil, fmt.Errorf("error: 'value' field not found")
+	}
+
+	// Find the start of the value's content (skip over "value": )
+	contentStart := bytes.IndexByte(jsonData[valueStart:], '{')
+	if contentStart == -1 {
+		return nil, fmt.Errorf("error: opening brace for 'value' content not found")
+	}
+	contentStart += valueStart
+
+	// Keep track of nested braces
+	braceCount := 1
+	var contentEnd int
+
+	// Find the end of the value's content
+	for i := contentStart + 1; i < len(jsonData); i++ {
+		if jsonData[i] == '{' {
+			braceCount++
+		} else if jsonData[i] == '}' {
+			braceCount--
+			if braceCount == 0 {
+				contentEnd = i + 1
+				break
+			}
+		}
+	}
+
+	if contentEnd == 0 {
+		return nil, fmt.Errorf("error: closing brace for 'value' content not found")
+	}
+
+	return jsonData[contentStart:contentEnd], nil
 }

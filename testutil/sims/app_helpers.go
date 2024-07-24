@@ -247,17 +247,18 @@ func GenesisStateWithValSet(
 		}
 
 		validator := StakingValidator{
-			OperatorAddress: sdk.ValAddress(val.Address).String(),
-			ConsensusPubkey: pkAny,
-			Jailed:          false,
-			Status:          3,
-			Tokens:          bondAmt,
-			DelegatorShares: sdkmath.LegacyOneDec(),
+			OperatorAddress:         sdk.ValAddress(val.Address).String(),
+			ConsensusPubkey:         pkAny,
+			consensusPubKeyConcrete: pk,
+			Jailed:                  false,
+			Status:                  3,
+			Tokens:                  bondAmt,
+			DelegatorShares:         sdkmath.LegacyOneDec(),
 			Description: StakingDescription{
 				Moniker: fmt.Sprintf("val-%d", i),
 			},
 			Commission: StakingValidatorCommission{
-				StakingCommissionRates: StakingCommissionRates{
+				CommissionRates: StakingCommissionRates{
 					Rate:          commission,
 					MaxRate:       commission,
 					MaxChangeRate: sdkmath.LegacyOneDec(),
@@ -266,11 +267,11 @@ func GenesisStateWithValSet(
 			MinSelfDelegation: sdkmath.OneInt(),
 		}
 		validators = append(validators, validator)
-		totalPower += int64(bondAmt.Int64())
+		totalPower += bondAmt.Int64()
 
 		lastValidatorPower = append(lastValidatorPower, LastValidatorPower{
 			Address: sdk.ValAddress(val.Address).String(),
-			Power:   int64(bondAmt.Int64()),
+			Power:   bondAmt.Int64(),
 		})
 
 		deletation := StakingDelegation{
@@ -298,7 +299,21 @@ func GenesisStateWithValSet(
 		Delegations:         delegations,
 		Exported:            true,
 	}
-	genesisState[testutil.StakingModuleName], _ = json.Marshal(stakingGenesis)
+
+	stakingGenesisProto, err := stakingGenesis.ToProto()
+	if err != nil {
+		return nil, fmt.Errorf("transform staking genesis struct to proto failed: %w", err)
+	}
+
+	marshalledStakingGenesisProto, err := codec.MarshalJSON(stakingGenesisProto)
+	if err != nil {
+		return nil, fmt.Errorf("marshal staking genesis proto to json failed: %w", err)
+	}
+
+	genesisState[testutil.StakingModuleName], err = extractAnyValueFromJSON(marshalledStakingGenesisProto)
+	if err != nil {
+		return nil, fmt.Errorf("extract staking genesis proto from json failed: %w", err)
+	}
 
 	totalSupply := sdk.NewCoins()
 	for _, b := range balances {

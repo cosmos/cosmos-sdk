@@ -412,10 +412,6 @@ func (m *Manager) InitGenesis(ctx sdk.Context, genesisData map[string]json.RawMe
 	var validatorUpdates []ValidatorUpdate
 	ctx.Logger().Info("initializing blockchain state from genesis.json")
 	for _, moduleName := range m.OrderInitGenesis {
-		if moduleName == "staking" {
-			fmt.Println(string(genesisData[moduleName]))
-		}
-
 		if genesisData[moduleName] == nil {
 			continue
 		}

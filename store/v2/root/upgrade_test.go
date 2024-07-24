@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
@@ -31,7 +31,7 @@ func TestUpgradeStoreTestSuite(t *testing.T) {
 
 func (s *UpgradeStoreTestSuite) SetupTest() {
 	testLog := log.NewTestLogger(s.T())
-	nopLog := corelog.NewNopLogger()
+	nopLog := coretesting.NewNopLogger()
 
 	s.commitDB = dbm.NewMemDB()
 	multiTrees := make(map[string]commitment.Tree)
@@ -69,8 +69,8 @@ func (s *UpgradeStoreTestSuite) SetupTest() {
 }
 
 func (s *UpgradeStoreTestSuite) loadWithUpgrades(upgrades *corestore.StoreUpgrades) {
-	testLog := log.NewTestLogger(s.T())
-	nopLog := corelog.NewNopLogger()
+	testLog := coretesting.NewTestLogger(s.T())
+	nopLog := coretesting.NewNopLogger()
 
 	// create a new commitment store
 	multiTrees := make(map[string]commitment.Tree)

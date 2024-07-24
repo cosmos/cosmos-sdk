@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -10,6 +11,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 
@@ -56,9 +58,9 @@ func (m MockWeightedProposals) DefaultWeight() int {
 	return m.n
 }
 
-func (m MockWeightedProposals) MsgSimulatorFn() simtypes.MsgSimulatorFn {
-	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
-		return nil
+func (m MockWeightedProposals) MsgSimulatorFn() simtypes.MsgSimulatorFnX {
+	return func(_ context.Context, _ *rand.Rand, _ []simtypes.Account, _ address.Codec) (sdk.Msg, error) {
+		return nil, nil
 	}
 }
 
@@ -405,6 +407,7 @@ type suite struct {
 
 // returns context and an app with updated mint keeper
 func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
+	t.Helper()
 	res := suite{}
 
 	app, err := simtestutil.Setup(
@@ -435,6 +438,7 @@ func getTestingAccounts(
 	accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, stakingKeeper *stakingkeeper.Keeper,
 	ctx sdk.Context, n int,
 ) []simtypes.Account {
+	t.Helper()
 	accounts := simtypes.RandomAccounts(r, n)
 
 	initAmt := stakingKeeper.TokensFromConsensusPower(ctx, 200)

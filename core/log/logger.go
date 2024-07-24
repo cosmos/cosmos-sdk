@@ -42,7 +42,8 @@ type LoggerBase interface {
 type LoggerV2 interface {
 	LoggerBase
 
-	// WithV2 returns a type which can be cast to LoggerV2 with additional context provided by a set.
-	// any is returned instead of LoggerV2 to avoid the need for log users to import the log package directly.
-	WithV2(keyVals ...any) any
+	// WithContext returns a new wrapped logger with additional context provided by the key value pairs.
+	// The returned value can be safely cast to LoggerV2. An any is returned instead of LoggerV2
+	// to avoid the need for log users to import the log package directly.
+	WithContext(keyVals ...any) any
 }

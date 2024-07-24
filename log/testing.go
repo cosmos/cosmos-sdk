@@ -16,7 +16,7 @@ type TestingT zerolog.TestingLog
 // If the logs may help debug a test failure,
 // you may want to use NewTestLogger(t) in your test.
 // Otherwise, use NewNopLogger().
-func NewTestLogger(t TestingT) LoggerV2 {
+func NewTestLogger(t TestingT) Logger {
 	return newTestLogger(t, zerolog.DebugLevel)
 }
 
@@ -25,7 +25,7 @@ func NewTestLogger(t TestingT) LoggerV2 {
 //
 // This is primarily helpful during active debugging of a test
 // with verbose logs.
-func NewTestLoggerInfo(t TestingT) LoggerV2 {
+func NewTestLoggerInfo(t TestingT) Logger {
 	return newTestLogger(t, zerolog.InfoLevel)
 }
 
@@ -34,11 +34,11 @@ func NewTestLoggerInfo(t TestingT) LoggerV2 {
 //
 // This is primarily helpful during active debugging of a test
 // with verbose logs.
-func NewTestLoggerError(t TestingT) LoggerV2 {
+func NewTestLoggerError(t TestingT) Logger {
 	return newTestLogger(t, zerolog.ErrorLevel)
 }
 
-func newTestLogger(t TestingT, lvl zerolog.Level) LoggerV2 {
+func newTestLogger(t TestingT, lvl zerolog.Level) Logger {
 	cw := zerolog.NewConsoleWriter()
 	cw.Out = zerolog.TestWriter{
 		T: t,

@@ -9,9 +9,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
-
-	corelog "cosmossdk.io/core/log"
-	coretesting "cosmossdk.io/core/testing"
 )
 
 func init() {
@@ -30,7 +27,7 @@ func init() {
 }
 
 // ModuleKey defines a module logging key.
-const ModuleKey = corelog.ModuleKey
+const ModuleKey = "module"
 
 // ContextKey is used to store the logger in the context.
 var ContextKey struct{}
@@ -38,12 +35,49 @@ var ContextKey struct{}
 // Logger is the Cosmos SDK logger interface.
 // It maintains as much backward compatibility with the CometBFT logger as possible.
 // All functionalities of the logger are available through the Impl() method.
-type Logger = corelog.Logger
+type Logger interface {
+	LoggerBase
 
-// LoggerV2 is the new type that logger's implement which supports the core Logger and LoggerV2 interfaces.
-type LoggerV2 = interface {
-	Logger
-	corelog.LoggerV2
+	// With returns a new wrapped logger with additional context provided by a set.
+	With(keyVals ...any) Logger
+}
+
+// LoggerV2 is the new Cosmos SDK logger interface.
+// It maintains as much backward compatibility with the CometBFT logger as possible.
+// All functionalities of the logger are available through the Impl() method.
+type LoggerV2 interface {
+	LoggerBase
+
+	// WithContext returns a new wrapped logger with additional context provided by the key value pairs.
+	// The returned value can be safely cast to LoggerV2. An any is returned instead of LoggerV2
+	// to avoid the need for log users to import the log package directly.
+	WithContext(keyVals ...any) any
+}
+
+// LoggerBase is the basic Cosmos SDK logger interface.
+// It maintains as much backward compatibility with the CometBFT logger as possible.
+// All functionalities of the logger are available through the Impl() method.
+type LoggerBase interface {
+	// Info takes a message and a set of key/value pairs and logs with level INFO.
+	// The key of the tuple must be a string.
+	Info(msg string, keyVals ...any)
+
+	// Warn takes a message and a set of key/value pairs and logs with level WARN.
+	// The key of the tuple must be a string.
+	Warn(msg string, keyVals ...any)
+
+	// Error takes a message and a set of key/value pairs and logs with level ERR.
+	// The key of the tuple must be a string.
+	Error(msg string, keyVals ...any)
+
+	// Debug takes a message and a set of key/value pairs and logs with level DEBUG.
+	// The key of the tuple must be a string.
+	Debug(msg string, keyVals ...any)
+
+	// Impl returns the underlying logger implementation.
+	// It is used to access the full functionalities of the underlying logger.
+	// Advanced users can type cast the returned value to the actual logger.
+	Impl() any
 }
 
 // WithJSONMarshal configures zerolog global json encoding.
@@ -74,7 +108,7 @@ type zeroLogWrapper struct {
 //
 // Stderr is the typical destination for logs,
 // so that any output from your application can still be piped to other processes.
-func NewLogger(dst io.Writer, options ...Option) LoggerV2 {
+func NewLogger(dst io.Writer, options ...Option) Logger {
 	logCfg := defaultConfig
 	for _, opt := range options {
 		opt(&logCfg)
@@ -116,7 +150,7 @@ func NewLogger(dst io.Writer, options ...Option) LoggerV2 {
 }
 
 // NewCustomLogger returns a new logger with the given zerolog logger.
-func NewCustomLogger(logger zerolog.Logger) LoggerV2 {
+func NewCustomLogger(logger zerolog.Logger) Logger {
 	return zeroLogWrapper{&logger}
 }
 
@@ -145,12 +179,13 @@ func (l zeroLogWrapper) Debug(msg string, keyVals ...interface{}) {
 }
 
 // With returns a new wrapped logger with additional context provided by a set.
-func (l zeroLogWrapper) With(keyVals ...interface{}) corelog.Logger {
+func (l zeroLogWrapper) With(keyVals ...interface{}) Logger {
 	logger := l.Logger.With().Fields(keyVals).Logger()
 	return zeroLogWrapper{&logger}
 }
 
-func (l zeroLogWrapper) WithV2(keyVals ...interface{}) any {
+// WithContext returns a new wrapped logger with additional context provided by a set.
+func (l zeroLogWrapper) WithContext(keyVals ...interface{}) any {
 	logger := l.Logger.With().Fields(keyVals).Logger()
 	return zeroLogWrapper{&logger}
 }
@@ -162,42 +197,20 @@ func (l zeroLogWrapper) Impl() interface{} {
 }
 
 // NewNopLogger returns a new logger that does nothing.
-var NewNopLogger = coretesting.NewNopLogger
-
-// LogWrapper wraps a Logger and implements the Logger interface.
-// it is only meant to avoid breakage of legacy versions of the Logger interface.
-type LogWrapper struct {
-	corelog.Logger
+func NewNopLogger() Logger {
+	// The custom nopLogger is about 3x faster than a zeroLogWrapper with zerolog.Nop().
+	return nopLogger{}
 }
 
-func NewLogWrapper(logger corelog.Logger) LoggerV2 {
-	return LogWrapper{logger}
-}
+// nopLogger is a Logger that does nothing when called.
+// See the "specialized nop logger" benchmark and compare with the "zerolog nop logger" benchmark.
+// The custom implementation is about 3x faster.
+type nopLogger struct{}
 
-func (l LogWrapper) Impl() interface{} {
-	return l.Logger
-}
-
-func (l LogWrapper) With(keyVals ...interface{}) corelog.Logger {
-	return NewLogWrapper(l.Logger.With(keyVals...))
-}
-
-func (l LogWrapper) WithV2(keyVals ...interface{}) any {
-	return NewLogWrapper(l.Logger.With(keyVals...))
-}
-
-func (l LogWrapper) Info(msg string, keyVals ...interface{}) {
-	l.Logger.Info(msg, keyVals...)
-}
-
-func (l LogWrapper) Warn(msg string, keyVals ...interface{}) {
-	l.Logger.Warn(msg, keyVals...)
-}
-
-func (l LogWrapper) Error(msg string, keyVals ...interface{}) {
-	l.Logger.Error(msg, keyVals...)
-}
-
-func (l LogWrapper) Debug(msg string, keyVals ...interface{}) {
-	l.Logger.Debug(msg, keyVals...)
-}
+func (nopLogger) Info(string, ...any)    {}
+func (nopLogger) Warn(string, ...any)    {}
+func (nopLogger) Error(string, ...any)   {}
+func (nopLogger) Debug(string, ...any)   {}
+func (nopLogger) With(...any) Logger     { return nopLogger{} }
+func (nopLogger) WithContext(...any) any { return nopLogger{} }
+func (nopLogger) Impl() any              { return nopLogger{} }

@@ -271,6 +271,7 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning
 	}
 	// update account changes in state.
 	svd.ak.SetAccount(ctx, acc)
+	fmt.Println("Aasdasd", acc.GetAddress().String(), acc.GetPubKey(), acc.GetAccountNumber())
 	return nil
 }
 

@@ -95,7 +95,7 @@ To look up all denoms, do not provide any arguments.`,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Send",
-					Use:       "send [from_key_or_address] [to_address] [amount]",
+					Use:       "send [from_key_or_address] [to_address] [amount ...]",
 					Short:     "Send funds from one account to another.",
 					Long: `Send funds from one account to another.
 Note, the '--from' flag is ignored as it is implied from [from_key_or_address].

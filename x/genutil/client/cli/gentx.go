@@ -28,7 +28,7 @@ import (
 )
 
 // GenTxCmd builds the application's gentx command.
-func GenTxCmd(genMM genesisMM, txEncCfg client.TxEncodingConfig, genBalIterator types.GenesisBalancesIterator, valAdddressCodec address.Codec) *cobra.Command {
+func GenTxCmd(genMM genesisMM, txEncCfg client.TxEncodingConfig, valAdddressCodec address.Codec) *cobra.Command {
 	ipDefault, _ := server.ExternalIP()
 	fsCreateValidator, defaultsDesc := cli.CreateValidatorMsgFlagSet(ipDefault)
 
@@ -129,7 +129,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			if err != nil {
 				return err
 			}
-			err = genutil.ValidateAccountInGenesis(genesisState, genBalIterator, strAddr, coins, cdc)
+			err = genutil.ValidateAccountInGenesis(genesisState, strAddr, coins, cdc)
 			if err != nil {
 				return errors.Wrap(err, "failed to validate account in genesis")
 			}

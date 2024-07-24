@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"strings"
 
+	apibanktypes "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/core/genesis"
-	bankexported "cosmossdk.io/x/bank/exported"
+	"cosmossdk.io/math"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -37,10 +38,22 @@ func SetGenTxsInAppGenesisState(
 	return types.SetGenesisStateInAppState(cdc, appGenesisState, genesisState), nil
 }
 
+// GetGenesisStateFromAppState returns x/bank GenesisState given raw application
+// genesis state.
+func GetBankGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.RawMessage) *apibanktypes.GenesisState {
+	var genesisState apibanktypes.GenesisState
+
+	if appState["bank"] != nil {
+		cdc.MustUnmarshalJSON(appState["bank"], &genesisState)
+	}
+
+	return &genesisState
+}
+
 // ValidateAccountInGenesis checks that the provided account has a sufficient
 // balance in the set of genesis accounts.
 func ValidateAccountInGenesis(
-	appGenesisState map[string]json.RawMessage, genBalIterator types.GenesisBalancesIterator,
+	appGenesisState map[string]json.RawMessage,
 	addr string, coins sdk.Coins, cdc codec.JSONCodec,
 ) error {
 	var stakingData stakingtypes.GenesisState
@@ -51,29 +64,32 @@ func ValidateAccountInGenesis(
 
 	accountIsInGenesis := false
 
-	genBalIterator.IterateGenesisBalances(cdc, appGenesisState,
-		func(bal bankexported.GenesisBalance) (stop bool) {
-			accAddress := bal.GetAddress()
-			accCoins := bal.GetCoins()
-			// ensure that account is in genesis
-			if strings.EqualFold(accAddress, addr) {
-				// ensure account contains enough funds of default bond denom
-				if coins.AmountOf(bondDenom).GT(accCoins.AmountOf(bondDenom)) {
-					err = fmt.Errorf(
-						"account %s has a balance in genesis, but it only has %v%s available to stake, not %v%s",
-						addr, accCoins.AmountOf(bondDenom), bondDenom, coins.AmountOf(bondDenom), bondDenom,
-					)
-
-					return true
+	balances := GetBankGenesisStateFromAppState(cdc, appGenesisState).Balances
+	for _, bal := range balances {
+		accAddress := bal.Address
+		accCoins := bal.Coins
+		// ensure that account is in genesis
+		if strings.EqualFold(accAddress, addr) {
+			// ensure account contains enough funds of default bond denom
+			bd := math.Int{}
+			for _, coin := range accCoins {
+				if coin.Denom == bondDenom {
+					bd, _ = math.NewIntFromString(coin.Amount)
 				}
+			}
+			if coins.AmountOf(bondDenom).GT(bd) {
+				err = fmt.Errorf(
+					"account %s has a balance in genesis, but it only has %v%s available to stake, not %v%s",
+					addr, bd, bondDenom, coins.AmountOf(bondDenom), bondDenom,
+				)
 
-				accountIsInGenesis = true
-				return true
+				return err
 			}
 
-			return false
-		},
-	)
+			accountIsInGenesis = true
+			return nil
+		}
+	}
 
 	if err != nil {
 		return err

@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 
-	bankexported "cosmossdk.io/x/bank/exported"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -28,14 +26,5 @@ type GenesisAccountsIterator interface {
 		cdc *codec.LegacyAmino,
 		appGenesis map[string]json.RawMessage,
 		cb func(sdk.AccountI) (stop bool),
-	)
-}
-
-// GenesisBalancesIterator defines the expected iterating genesis balances object (noalias)
-type GenesisBalancesIterator interface {
-	IterateGenesisBalances(
-		cdc codec.JSONCodec,
-		appGenesis map[string]json.RawMessage,
-		cb func(bankexported.GenesisBalance) (stop bool),
 	)
 }

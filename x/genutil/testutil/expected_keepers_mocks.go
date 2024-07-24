@@ -9,7 +9,6 @@ import (
 	json "encoding/json"
 	reflect "reflect"
 
-	exported "cosmossdk.io/x/bank/exported"
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	types "github.com/cosmos/cosmos-sdk/types"
 	module "github.com/cosmos/cosmos-sdk/types/module"
@@ -159,16 +158,4 @@ func NewMockGenesisBalancesIterator(ctrl *gomock.Controller) *MockGenesisBalance
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockGenesisBalancesIterator) EXPECT() *MockGenesisBalancesIteratorMockRecorder {
 	return m.recorder
-}
-
-// IterateGenesisBalances mocks base method.
-func (m *MockGenesisBalancesIterator) IterateGenesisBalances(cdc codec.JSONCodec, appGenesis map[string]json.RawMessage, cb func(exported.GenesisBalance) bool) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "IterateGenesisBalances", cdc, appGenesis, cb)
-}
-
-// IterateGenesisBalances indicates an expected call of IterateGenesisBalances.
-func (mr *MockGenesisBalancesIteratorMockRecorder) IterateGenesisBalances(cdc, appGenesis, cb interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IterateGenesisBalances", reflect.TypeOf((*MockGenesisBalancesIterator)(nil).IterateGenesisBalances), cdc, appGenesis, cb)
 }

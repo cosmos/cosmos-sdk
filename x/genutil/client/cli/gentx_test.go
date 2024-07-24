@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
-	banktypes "cosmossdk.io/x/bank/types"
 	stakingcli "cosmossdk.io/x/staking/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -124,7 +123,7 @@ func (s *CLITestSuite) TestGenTxCmd() {
 			clientCtx := s.clientCtx
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 
-			cmd := cli.GenTxCmd(module.NewManager(), clientCtx.TxConfig, banktypes.GenesisBalancesIterator{}, address.NewBech32Codec("cosmosvaloper"))
+			cmd := cli.GenTxCmd(module.NewManager(), clientCtx.TxConfig, address.NewBech32Codec("cosmosvaloper"))
 			cmd.SetContext(ctx)
 			cmd.SetArgs(tc.args)
 

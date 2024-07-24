@@ -5,8 +5,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	banktypes "cosmossdk.io/x/bank/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -36,7 +34,7 @@ func CommandsWithCustomMigrationMap(txConfig client.TxConfig, genutilModule genu
 		RunE:                       client.ValidateCmd,
 	}
 	cmd.AddCommand(
-		GenTxCmd(genMM, txConfig, banktypes.GenesisBalancesIterator{}, txConfig.SigningContext().ValidatorAddressCodec()),
+		GenTxCmd(genMM, txConfig, txConfig.SigningContext().ValidatorAddressCodec()),
 		MigrateGenesisCmd(migrationMap),
 		CollectGenTxsCmd(genutilModule.GenTxValidator()),
 		ValidateGenesisCmd(genMM),

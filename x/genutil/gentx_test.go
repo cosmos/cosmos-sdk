@@ -30,6 +30,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
+const (
+	stakingModuleName = "staking"
+	bankModuleName    = "bank"
+)
+
 var (
 	priv1 = secp256k1.GenPrivKey()
 	priv2 = secp256k1.GenPrivKey()
@@ -192,7 +197,7 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 					Address: addr2Str,
 					Coins:   sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)},
 				}
-				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance([]banktypes.Balance{balances})
+				appGenesisState[bankModuleName] = suite.setAccountBalance([]banktypes.Balance{balances})
 			},
 			false,
 		},
@@ -204,7 +209,7 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 					Address: addr1Str,
 					Coins:   sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 25)},
 				}
-				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance([]banktypes.Balance{balances})
+				appGenesisState[bankModuleName] = suite.setAccountBalance([]banktypes.Balance{balances})
 			},
 			false,
 		},
@@ -216,7 +221,7 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 					Address: addr1Str,
 					Coins:   sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 25)},
 				}
-				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance([]banktypes.Balance{balances})
+				appGenesisState[bankModuleName] = suite.setAccountBalance([]banktypes.Balance{balances})
 			},
 			true,
 		},
@@ -228,14 +233,14 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 
 			stakingGenesis, err := cdc.MarshalJSON(&stakingtypes.GenesisState{Params: stakingtypes.DefaultParams()}) // TODO switch this to use Marshaler
 			suite.Require().NoError(err)
-			appGenesisState[stakingtypes.ModuleName] = stakingGenesis
+			appGenesisState[stakingModuleName] = stakingGenesis
 
 			addr, err := addresscodec.NewBech32Codec("cosmos").BytesToString(addr1)
 			suite.Require().NoError(err)
 
 			tc.malleate()
 			err = genutil.ValidateAccountInGenesis(
-				appGenesisState, banktypes.GenesisBalancesIterator{},
+				appGenesisState,
 				addr, coins, cdc,
 			)
 

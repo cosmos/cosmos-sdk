@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/core/address"
 	authtypes "cosmossdk.io/x/auth/types"
 	authvesting "cosmossdk.io/x/auth/vesting/types"
@@ -13,6 +15,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+)
+
+const (
+	bankModuleName = "bank"
+	authModuleName = "auth"
 )
 
 // AddGenesisAccount adds a genesis account to the genesis state.
@@ -49,7 +56,12 @@ func AddGenesisAccount(
 	// create concrete account type based on input parameters
 	var genAccount authtypes.GenesisAccount
 
-	balances := banktypes.Balance{Address: addr, Coins: coins.Sort()}
+	cs := []*basev1beta1.Coin{}
+	for _, coin := range coins {
+		cs = append(cs, &basev1beta1.Coin{Denom: coin.Denom, Amount: coin.Amount.String()})
+	}
+
+	balances := bankv1beta1.Balance{Address: addr, Coins: cs}
 	baseAccount := authtypes.NewBaseAccount(accAddr, nil, 0, 0)
 
 	if !vestingAmt.IsZero() {
@@ -59,7 +71,7 @@ func AddGenesisAccount(
 		}
 
 		if (balances.Coins.IsZero() && !baseVestingAccount.OriginalVesting.IsZero()) ||
-			baseVestingAccount.OriginalVesting.IsAnyGT(balances.Coins) {
+			baseVestingAccount.OriginalVesting.IsAnyGT(cs) {
 			return errors.New("vesting amount cannot be greater than total amount")
 		}
 
@@ -95,20 +107,20 @@ func AddGenesisAccount(
 		return fmt.Errorf("failed to get accounts from any: %w", err)
 	}
 
-	bankGenState := banktypes.GetGenesisStateFromAppState(cdc, appState)
+	bankGenState := GetBankGenesisStateFromAppState(cdc, appState)
 	if accs.Contains(accAddr) {
 		if !appendAcct {
 			return fmt.Errorf(" Account %s already exists\nUse `append` flag to append account at existing address", accAddr)
 		}
 
-		genesisB := banktypes.GetGenesisStateFromAppState(cdc, appState)
+		genesisB := GetBankGenesisStateFromAppState(cdc, appState)
 		for idx, acc := range genesisB.Balances {
 			if acc.Address != addr {
 				continue
 			}
 
 			updatedCoins := acc.Coins.Add(coins...)
-			bankGenState.Balances[idx] = banktypes.Balance{Address: addr, Coins: updatedCoins.Sort()}
+			bankGenState.Balances[idx] = &bankv1beta1.Balance{Address: addr, Coins: updatedCoins.Sort()}
 			break
 		}
 	} else {
@@ -126,9 +138,9 @@ func AddGenesisAccount(
 		if err != nil {
 			return fmt.Errorf("failed to marshal auth genesis state: %w", err)
 		}
-		appState[authtypes.ModuleName] = authGenStateBz
+		appState[authModuleName] = authGenStateBz
 
-		bankGenState.Balances = append(bankGenState.Balances, balances)
+		bankGenState.Balances = append(bankGenState.Balances, &balances)
 	}
 
 	bankGenState.Balances, err = banktypes.SanitizeGenesisBalances(bankGenState.Balances, addressCodec)
@@ -141,7 +153,7 @@ func AddGenesisAccount(
 	if err != nil {
 		return fmt.Errorf("failed to marshal bank genesis state: %w", err)
 	}
-	appState[banktypes.ModuleName] = bankGenStateBz
+	appState[bankModuleName] = bankGenStateBz
 
 	appStateJSON, err := json.Marshal(appState)
 	if err != nil {

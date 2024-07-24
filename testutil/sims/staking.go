@@ -261,8 +261,8 @@ type StakingValidator struct {
 	// operator_address defines the address of the validator's operator; bech encoded in JSON.
 	OperatorAddress string `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty"`
 	// consensus_pubkey is the consensus public key of the validator, as a Protobuf Any.
-	ConsensusPubkey         *gogoany.Any       `protobuf:"bytes,2,opt,name=consensus_pubkey,json=consensusPubkey,proto3" json:"consensus_pubkey,omitempty"`
-	consensusPubKeyConcrete cryptotypes.PubKey `protobuf:-,json:"-"`
+	ConsensusPubkey         *gogoany.Any `protobuf:"bytes,2,opt,name=consensus_pubkey,json=consensusPubkey,proto3" json:"consensus_pubkey,omitempty"`
+	consensusPubKeyConcrete cryptotypes.PubKey
 	// jailed defined whether the validator has been jailed from bonded status or not.
 	Jailed bool `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
 	// status is the validator status (bonded/unbonding/unbonded).
@@ -285,6 +285,10 @@ type StakingValidator struct {
 	UnbondingOnHoldRefCount int64 `protobuf:"varint,12,opt,name=unbonding_on_hold_ref_count,json=unbondingOnHoldRefCount,proto3" json:"unbonding_on_hold_ref_count,omitempty"`
 	// list of unbonding ids, each uniquely identifying an unbonding of this validator
 	UnbondingIds []uint64 `protobuf:"varint,13,rep,packed,name=unbonding_ids,json=unbondingIds,proto3" json:"unbonding_ids,omitempty"`
+}
+
+func (s *StakingValidator) SetPubKeyContrete(pk cryptotypes.PubKey) {
+	s.consensusPubKeyConcrete = pk
 }
 
 func (s *StakingValidator) ToProto() (*anypb.Any, error) {

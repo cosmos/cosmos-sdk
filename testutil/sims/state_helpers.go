@@ -139,6 +139,11 @@ func appStateFnWithExtendedCbs(
 			panic(err)
 		}
 
+		stakingStateProto, err := stakingState.ToProto()
+		if err != nil {
+			panic(fmt.Errorf("failed to convert staking state to proto: %w", err))
+		}
+
 		// compute not bonded balance
 		notBondedTokens := math.ZeroInt()
 		for _, val := range stakingState.Validators {
@@ -174,22 +179,15 @@ func appStateFnWithExtendedCbs(
 		}
 
 		// change appState back
-		for name, state := range map[string]interface{}{
-			testutil.StakingModuleName: stakingState,
+		for name, state := range map[string]proto.Message{
+			testutil.StakingModuleName: stakingStateProto,
 			testutil.BankModuleName:    bankState,
 		} {
 			if moduleStateCb != nil {
 				moduleStateCb(name, state)
 			}
 
-			if ps, ok := state.(proto.Message); ok {
-				rawState[name] = cdc.MustMarshalJSON(ps)
-			} else {
-				rawState[name], err = json.Marshal(state)
-				if err != nil {
-					panic(err)
-				}
-			}
+			rawState[name] = cdc.MustMarshalJSON(state)
 		}
 
 		// extend state from callback function

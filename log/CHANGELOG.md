@@ -22,6 +22,8 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
+* [#21045](https://github.com/cosmos/cosmos-sdk/pull/21045) Add `LoggerV2` and `LoggerBase` interfaces and `WithContext` method to eliminate the need for libraries to depend on the `log` package directly.
+
 ## [v1.3.1](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.3.0) - 2024-02-05
 
 * [#19346](https://github.com/cosmos/cosmos-sdk/pull/19346) Upgrade zerolog to v1.32.0.

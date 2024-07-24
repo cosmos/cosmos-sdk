@@ -26,9 +26,12 @@ type ServerComponent[T transaction.Tx] interface {
 	Init(AppI[T], *viper.Viper, log.Logger) error
 }
 
-// HasCLICommands is a server module that has CLI commands.
-type HasCLICommands interface {
-	CLICommands() CLIConfig
+// HasStartFlags is a server module that has start flags.
+type HasStartFlags interface {
+	// StartCmdFlags returns server start flags.
+	// Those flags should be prefixed with the server name.
+	// They are then merged with the server config in one viper instance.
+	StartCmdFlags() *pflag.FlagSet
 }
 
 // HasConfig is a server module that has a config.
@@ -36,32 +39,24 @@ type HasConfig interface {
 	Config() any
 }
 
-// HasStartFlags is a server module that has start flags.
-type HasStartFlags interface {
-	StartCmdFlags() *pflag.FlagSet
+// HasCLICommands is a server module that has CLI commands.
+type HasCLICommands interface {
+	CLICommands() CLIConfig
+}
+
+// CLIConfig defines the CLI configuration for a module server.
+type CLIConfig struct {
+	// Commands defines the main command of a module server.
+	Commands []*cobra.Command
+	// Queries defines the query commands of a module server.
+	// Those commands are meant to be added in the root query command.
+	Queries []*cobra.Command
+	// Txs defines the tx commands of a module server.
+	// Those commands are meant to be added in the root tx command.
+	Txs []*cobra.Command
 }
 
 var _ ServerComponent[transaction.Tx] = (*Server[transaction.Tx])(nil)
-
-// ReadConfig returns a viper instance of the config file
-func ReadConfig(configPath string) (*viper.Viper, error) {
-	v := viper.New()
-	v.SetConfigType("toml")
-	v.SetConfigName("config")
-	v.AddConfigPath(configPath)
-	if err := v.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to read config: %s: %w", configPath, err)
-	}
-
-	v.SetConfigName("app")
-	if err := v.MergeInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to merge configuration: %w", err)
-	}
-
-	v.WatchConfig()
-
-	return v, nil
-}
 
 type Server[T transaction.Tx] struct {
 	logger     log.Logger
@@ -209,8 +204,8 @@ func (s *Server[T]) WriteConfig(configPath string) error {
 		// undocumented interface to write the component default config in another file than app.toml
 		// it is used by cometbft for backward compatibility
 		// it should not be used by other components
-		if mod, ok := component.(interface{ WriteDefaultConfigAt(string) error }); ok {
-			if err := mod.WriteDefaultConfigAt(configPath); err != nil {
+		if mod, ok := component.(interface{ WriteCustomConfigAt(string) error }); ok {
+			if err := mod.WriteCustomConfigAt(configPath); err != nil {
 				return err
 			}
 		}

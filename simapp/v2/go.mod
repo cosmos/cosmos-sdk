@@ -6,13 +6,13 @@ require (
 	cosmossdk.io/api v0.7.5
 	cosmossdk.io/client/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
-	cosmossdk.io/depinject v1.0.0-alpha.4
+	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.3.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000
-	cosmossdk.io/server/v2 v2.0.0-00010101000000-000000000000
+	cosmossdk.io/server/v2 v2.0.0-20240718121635-a877e3e8048a
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store/v2 v2.0.0
+	cosmossdk.io/store/v2 v2.0.0 // indirect
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
@@ -34,7 +34,7 @@ require (
 	github.com/cometbft/cometbft v1.0.0-rc1
 	github.com/cosmos/cosmos-db v1.0.2
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.51.0
+	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
@@ -250,7 +250,6 @@ replace (
 	cosmossdk.io/client/v2 => ../../client/v2
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
-	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/tools/confix => ../../tools/confix
 	cosmossdk.io/x/accounts => ../../x/accounts
 	cosmossdk.io/x/accounts/defaults/lockup => ../../x/accounts/defaults/lockup

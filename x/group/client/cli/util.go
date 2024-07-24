@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 
@@ -14,7 +15,7 @@ import (
 // parseDecisionPolicy reads and parses the decision policy.
 func parseDecisionPolicy(cdc codec.Codec, decisionPolicyFile string) (group.DecisionPolicy, error) {
 	if decisionPolicyFile == "" {
-		return nil, fmt.Errorf("decision policy is required")
+		return nil, errors.New("decision policy is required")
 	}
 
 	contents, err := os.ReadFile(decisionPolicyFile)

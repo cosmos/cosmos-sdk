@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,7 +21,7 @@ const (
 var (
 	_, _, _, _ sdk.Msg = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}
 
-	_ codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}
+	_ gogoprotoany.UnpackInterfacesMessage = &MsgSubmitProposal{}
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
@@ -73,7 +74,7 @@ func (m *MsgSubmitProposal) SetContent(content Content) error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgSubmitProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (m MsgSubmitProposal) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var content Content
 	return unpacker.UnpackAny(m.Content, &content)
 }

@@ -62,9 +62,13 @@ func startInProcess(cfg Config, val *Validator) error {
 		return node.ChecksummedGenesisDoc{GenesisDoc: gen, Sha256Checksum: make([]byte, 0)}, nil
 	}
 
+	ctx := context.Background()
+	ctx, val.cancelFn = context.WithCancel(ctx)
+	val.errGroup, ctx = errgroup.WithContext(ctx)
+
 	cmtApp := server.NewCometABCIWrapper(app)
 	tmNode, err := node.NewNode( //resleak:notresource
-		context.TODO(),
+		ctx,
 		cmtCfg,
 		pvm.LoadOrGenFilePV(cmtCfg.PrivValidatorKeyFile(), cmtCfg.PrivValidatorStateFile()),
 		nodeKey,
@@ -96,10 +100,6 @@ func startInProcess(cfg Config, val *Validator) error {
 		app.RegisterTendermintService(val.clientCtx)
 		app.RegisterNodeService(val.clientCtx, *val.AppConfig)
 	}
-
-	ctx := context.Background()
-	ctx, val.cancelFn = context.WithCancel(ctx)
-	val.errGroup, ctx = errgroup.WithContext(ctx)
 
 	grpcCfg := val.AppConfig.GRPC
 

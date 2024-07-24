@@ -21,8 +21,6 @@ import (
 const (
 	TimestampSize = 8
 
-	batchBufferCount = 1000
-
 	StorePrefixTpl   = "s/k:%s/"
 	latestVersionKey = "s/latest"
 )

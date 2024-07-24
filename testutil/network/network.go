@@ -31,11 +31,13 @@ import (
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -391,6 +393,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		nodeDirName := fmt.Sprintf("node%d", i)
 		nodeDir := filepath.Join(network.BaseDir, nodeDirName, "simd")
 		clientDir := filepath.Join(network.BaseDir, nodeDirName, "simcli")
+		gentxsDir := filepath.Join(network.BaseDir, "gentxs")
 
 		err := os.MkdirAll(filepath.Join(nodeDir, "config"), 0o755)
 		if err != nil {
@@ -480,6 +483,59 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: balances.Sort()})
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
+		commission, err := sdkmath.LegacyNewDecFromStr("0.5")
+		if err != nil {
+			return nil, err
+		}
+
+		createValMsg, err := stakingtypes.NewMsgCreateValidator(
+			sdk.ValAddress(addr).String(),
+			valPubKeys[i],
+			sdk.NewCoin(cfg.BondDenom, cfg.BondedTokens),
+			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
+			stakingtypes.NewCommissionRates(commission, sdkmath.LegacyOneDec(), sdkmath.LegacyOneDec()),
+			sdkmath.OneInt(),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		p2pURL, err := url.Parse(p2pAddr)
+		if err != nil {
+			return nil, err
+		}
+
+		memo := fmt.Sprintf("%s@%s:%s", nodeIDs[i], p2pURL.Hostname(), p2pURL.Port())
+		fee := sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), sdkmath.NewInt(0)))
+		txBuilder := cfg.TxConfig.NewTxBuilder()
+		err = txBuilder.SetMsgs(createValMsg)
+		if err != nil {
+			return nil, err
+		}
+		txBuilder.SetFeeAmount(fee)    // Arbitrary fee
+		txBuilder.SetGasLimit(1000000) // Need at least 100386
+		txBuilder.SetMemo(memo)
+
+		txFactory := tx.Factory{}
+		txFactory = txFactory.
+			WithChainID(cfg.ChainID).
+			WithMemo(memo).
+			WithKeybase(kb).
+			WithTxConfig(cfg.TxConfig)
+
+		err = tx.Sign(context.Background(), txFactory, nodeDirName, txBuilder, true)
+		if err != nil {
+			return nil, err
+		}
+
+		txBz, err := cfg.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
+		if err != nil {
+			return nil, err
+		}
+		err = writeFile(fmt.Sprintf("%v.json", nodeDirName), gentxsDir, txBz)
+		if err != nil {
+			return nil, err
+		}
 		err = srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), appCfg)
 		if err != nil {
 			return nil, err
@@ -520,21 +576,13 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		}
 	}
 
-	if err := initGenFiles(cfg, genAccounts, genBalances, genFiles); err != nil {
+	err := initGenFiles(cfg, genAccounts, genBalances, genFiles)
+	if err != nil {
 		return nil, err
 	}
-
-	// setup viper config.toml for each validator
-	for i, val := range network.Validators {
-		cmtCfg := cmtConfigs[i]
-		nodeDir := filepath.Join(network.BaseDir, val.moniker, "simd")
-		cmtCfg.Moniker = val.moniker
-		cmtCfg.SetRoot(nodeDir)
-		v := network.Validators[i].GetViper()
-		v.Set(flags.FlagHome, nodeDir)
-		v.SetConfigType("toml")
-		v.SetConfigName("config")
-		v.AddConfigPath(filepath.Join(nodeDir, "config"))
+	err = collectGenFiles(cfg, network.Validators, cmtConfigs, network.BaseDir)
+	if err != nil {
+		return nil, err
 	}
 
 	l.Log("starting test network...")

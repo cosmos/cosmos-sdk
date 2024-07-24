@@ -14,7 +14,7 @@ import (
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 )
 
-type GRPCServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
+type GRPCServer[T transaction.Tx] struct {
 	logger     log.Logger
 	config     *Config
 	cfgOptions []CfgOption
@@ -23,18 +23,18 @@ type GRPCServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
 }
 
 // New creates a new grpc server.
-func New[AppT serverv2.AppI[T], T transaction.Tx](cfgOptions ...CfgOption) *GRPCServer[AppT, T] {
-	return &GRPCServer[AppT, T]{
+func New[T transaction.Tx](cfgOptions ...CfgOption) *GRPCServer[T] {
+	return &GRPCServer[T]{
 		cfgOptions: cfgOptions,
 	}
 }
 
 // Init returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server.
-func (s *GRPCServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Logger) error {
+func (s *GRPCServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
 	cfg := s.Config().(*Config)
 	if v != nil {
-		if err := v.Sub(s.Name()).Unmarshal(&cfg); err != nil {
+		if err := serverv2.UnmarshalSubConfig(v, s.Name(), &cfg); err != nil {
 			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
@@ -57,11 +57,11 @@ func (s *GRPCServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Logger)
 	return nil
 }
 
-func (s *GRPCServer[AppT, T]) Name() string {
+func (s *GRPCServer[T]) Name() string {
 	return "grpc"
 }
 
-func (s *GRPCServer[AppT, T]) Config() any {
+func (s *GRPCServer[T]) Config() any {
 	if s.config == nil || s.config == (&Config{}) {
 		cfg := DefaultConfig()
 		// overwrite the default config with the provided options
@@ -75,7 +75,7 @@ func (s *GRPCServer[AppT, T]) Config() any {
 	return s.config
 }
 
-func (s *GRPCServer[AppT, T]) Start(ctx context.Context) error {
+func (s *GRPCServer[T]) Start(ctx context.Context) error {
 	if !s.config.Enable {
 		return nil
 	}
@@ -102,7 +102,7 @@ func (s *GRPCServer[AppT, T]) Start(ctx context.Context) error {
 	return err
 }
 
-func (s *GRPCServer[AppT, T]) Stop(ctx context.Context) error {
+func (s *GRPCServer[T]) Stop(ctx context.Context) error {
 	if !s.config.Enable {
 		return nil
 	}

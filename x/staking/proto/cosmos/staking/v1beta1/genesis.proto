@@ -7,6 +7,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/staking/v1beta1/staking.proto";
 import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
+import "google/protobuf/timestamp.proto";
 
 // GenesisState defines the staking module's genesis state.
 message GenesisState {
@@ -40,6 +41,13 @@ message GenesisState {
 
   // exported defines a bool to identify whether the chain dealing with exported or initialized genesis.
   bool exported = 8;
+
+  repeated RotationIndexRecord rotation_index_records = 9 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+
+  repeated ConsPubKeyRotationHistory rotation_history = 10
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+
+  repeated RotationQueueRecord rotation_queue = 11 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // LastValidatorPower required for validator set update logic.
@@ -52,4 +60,17 @@ message LastValidatorPower {
 
   // power defines the power of the validator.
   int64 power = 2;
+}
+
+message RotationIndexRecord { // contains address as bytes and time as int64
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  bytes                     address = 1;
+  google.protobuf.Timestamp time    = 6 [(gogoproto.stdtime) = true];
+}
+
+message RotationQueueRecord {
+  ValAddrsOfRotatedConsKeys val_addrs = 1;
+  google.protobuf.Timestamp time      = 2 [(gogoproto.stdtime) = true];
 }

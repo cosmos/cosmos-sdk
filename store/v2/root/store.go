@@ -513,3 +513,7 @@ func (s *Store) commitSC() error {
 
 	return nil
 }
+
+func (s *Store) Prune(version uint64) error {
+	return s.pruningManager.Prune(version)
+}

@@ -52,6 +52,7 @@ var moveKeyMappings = map[string]moveKeyMap{
 func PlanBuilder(from *tomledit.Document, to, planType string) transform.Plan {
 	plan := transform.Plan{}
 	deleteSections := []string{}
+	deleteMappings := []Diff{}
 
 	target, err := LoadLocalConfig(to, planType)
 	if err != nil {
@@ -63,7 +64,7 @@ func PlanBuilder(from *tomledit.Document, to, planType string) transform.Plan {
 	// check if key moves needed with "to" version
 	moves, ok := moveKeyMappings[to]
 	if ok {
-		for oldKey, _ := range moves {
+		for oldKey := range moves {
 			moveKeys = append(moveKeys, oldKey)
 		}
 	}
@@ -121,25 +122,35 @@ func PlanBuilder(from *tomledit.Document, to, planType string) transform.Plan {
 			}
 		} else {
 			if diff.Type == Mapping {
-				if slices.Contains(moveKeys, kv.Key) {
-					newKey := moves[kv.Key]
-
-					step = transform.Step{
-						Desc: fmt.Sprintf("move %s key to %s key in section %s", kv.Key, newKey.keyname, newKey.section),
-						T:    transform.MoveKey(keys, parser.Key{newKey.section}, parser.Key{newKey.keyname}),
-					}
-				} else {
-					step = transform.Step{
-						Desc: fmt.Sprintf("remove %s key", kv.Key),
-						T:    transform.Remove(keys),
-					}
-				}
+				deleteMappings = append(deleteMappings, diff)
 			} else {
 				deleteSections = append(deleteSections, kv.Key)
-				continue
 			}
+			continue
 		}
 
+		plan = append(plan, step)
+	}
+
+	for _, mapping := range deleteMappings {
+		kv := mapping.KV
+
+		var step transform.Step
+		keys := strings.Split(kv.Key, ".")
+
+		if slices.Contains(moveKeys, kv.Key) {
+			newKey := moves[kv.Key]
+
+			step = transform.Step{
+				Desc: fmt.Sprintf("move %s key to %s key in section %s", kv.Key, newKey.keyname, newKey.section),
+				T:    transform.MoveKey(keys, parser.Key{newKey.section}, parser.Key{newKey.keyname}),
+			}
+		} else {
+			step = transform.Step{
+				Desc: fmt.Sprintf("remove %s key", kv.Key),
+				T:    transform.Remove(keys),
+			}
+		}
 		plan = append(plan, step)
 	}
 

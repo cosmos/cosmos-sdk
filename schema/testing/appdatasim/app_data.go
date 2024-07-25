@@ -130,6 +130,8 @@ func (a *Simulator) ProcessBlockData(data BlockData) error {
 	return nil
 }
 
+// ProcessPacket processes a single packet, advancing the app state based on the data in the packet,
+// and forwarding the packet to any listener.
 func (a *Simulator) ProcessPacket(packet appdata.Packet) error {
 	err := a.options.Listener.SendPacket(packet)
 	if err != nil {

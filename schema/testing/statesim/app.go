@@ -70,7 +70,8 @@ func (a *App) InitializeModule(data appdata.ModuleInitializationData) error {
 func (a *App) ApplyUpdate(data appdata.ObjectUpdateData) error {
 	moduleState, ok := a.moduleStates.Get(data.ModuleName)
 	if !ok {
-		return fmt.Errorf("module %s not found", data.ModuleName)
+		// we don't have this module so skip the update
+		return nil
 	}
 
 	for _, update := range data.Updates {

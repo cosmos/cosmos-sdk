@@ -1,6 +1,10 @@
 package appdatasim
 
-import "cosmossdk.io/schema/testing/statesim"
+import (
+	"fmt"
+
+	"cosmossdk.io/schema/testing/statesim"
+)
 
 type HasAppData interface {
 	AppState() statesim.AppState
@@ -16,7 +20,7 @@ func DiffAppData(expected, actual HasAppData) string {
 	}
 
 	if expected.BlockNum() != actual.BlockNum() {
-		res += "BlockNum: expected %d, got %d\n"
+		res += fmt.Sprintf("BlockNum: expected %d, got %d\n", expected.BlockNum(), actual.BlockNum())
 	}
 
 	return res

@@ -62,7 +62,7 @@ func (s *StoreComponent[T]) ExportSnapshotCmd() *cobra.Command {
 				}
 			}
 
-			sm := snapshots.NewManager(snapshotStore, snapshots.NewSnapshotOptions(interval, uint32(keepRecent)), rootStore.GetStateCommitment(), rootStore.GetStateStorage(), nil, logger)
+			sm := snapshots.NewManager(snapshotStore, snapshots.NewSnapshotOptions(interval, uint32(keepRecent)), rootStore.GetStateCommitment().(snapshots.CommitSnapshotter), rootStore.GetStateStorage().(snapshots.StorageSnapshotter), nil, logger)
 			snapshot, err := sm.Create(uint64(height))
 			if err != nil {
 				return err

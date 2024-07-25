@@ -78,7 +78,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 	}
 
 	cmd.Flags().String(FlagAppDBBackend, "", "The type of database for application and snapshots databases")
-	cmd.Flags().Uint64(FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
+	cmd.Flags().Uint64(FlagKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
 
 	return cmd
 }
@@ -103,8 +103,8 @@ func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger 
 	}
 
 	// handle KeepRecent & Interval flags
-	if cmd.Flags().Changed(FlagPruningKeepRecent) {
-		keepRecent, err := cmd.Flags().GetUint64(FlagPruningKeepRecent)
+	if cmd.Flags().Changed(FlagKeepRecent) {
+		keepRecent, err := cmd.Flags().GetUint64(FlagKeepRecent)
 		if err != nil {
 			return nil, 0, err
 		}

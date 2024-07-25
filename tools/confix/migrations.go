@@ -32,14 +32,23 @@ var Migrations = MigrationMap{
 	// "v0.xx.x": PlanBuilder, // add specific migration in case of configuration changes in minor versions
 }
 
-type KeyModificationMap map[string]string
+type KeyModificationMap map[string][]string
 
 var KeyModifications = map[string]KeyModificationMap{
 	"serverv2": {
-		"min-retain-blocks": "comet.min-retain-blocks",
-		"index-events":      "comet.index-events",
-		"halt-height":       "comet.halt-height",
-		"halt-time":         "comet.min-retain-blocks",
+		"min-retain-blocks": []string{"comet.min-retain-blocks"},
+		"index-events":      []string{"comet.index-events"},
+		"halt-height":       []string{"comet.halt-height"},
+		"halt-time":         []string{"comet.min-retain-blocks"},
+		"pruning-keep-recent": []string{
+			"store.options.ss-pruning-option.keep-recent",
+			"store.options.sc-pruning-option.keep-recent",
+		},
+		"pruning-interval": []string{
+			"store.options.ss-pruning-option.interval",
+			"store.options.sc-pruning-option.interval",
+		},
+		"iavl-cache-size": []string{"store.options.iavl-config.cache-size"},
 		// Add other key mappings as needed
 	},
 	// "v0.xx.x": {}, // add keys to move for specific version if needed
@@ -67,9 +76,9 @@ func PlanBuilder(from *tomledit.Document, to, planType string) transform.Plan {
 	// check if key changes are needed with the "to" version
 	changes, ok := KeyModifications[to]
 	if ok {
-		for oldKey, newKey := range changes {
+		for oldKey, newKeys := range changes {
 			oldKeysToModify = append(oldKeysToModify, oldKey)
-			newKeysToModify = append(newKeysToModify, newKey)
+			newKeysToModify = append(newKeysToModify, newKeys...)
 		}
 	}
 
@@ -157,14 +166,16 @@ func PlanBuilder(from *tomledit.Document, to, planType string) transform.Plan {
 		keys := strings.Split(kv.Key, ".")
 
 		if slices.Contains(oldKeysToModify, kv.Key) {
-			newKey := changes[kv.Key]
-			if updatedKey, ok := keyUpdates[newKey]; ok {
-				value := updatedKey.keyValue
-				value.Value = parser.MustValue(kv.Value)
-				plan = append(plan, transform.Step{
-					Desc: fmt.Sprintf("add %s key", kv.Key),
-					T:    transform.EnsureKey(updatedKey.tableKey, value),
-				})
+			newKeys := changes[kv.Key]
+			for _, newKey := range newKeys {
+				if updatedKey, ok := keyUpdates[newKey]; ok {
+					value := updatedKey.keyValue
+					value.Value = parser.MustValue(kv.Value)
+					plan = append(plan, transform.Step{
+						Desc: fmt.Sprintf("add %s key", kv.Key),
+						T:    transform.EnsureKey(updatedKey.tableKey, value),
+					})
+				}
 			}
 		}
 

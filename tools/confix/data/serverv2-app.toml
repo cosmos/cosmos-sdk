@@ -54,6 +54,6 @@ interval = 1
 
 [store.options.iavl-config]
 # CacheSize set the size of the iavl tree cache.
-cache_size = 100000
+cache-size = 100000
 # If true, the tree will work like no fast storage and always not upgrade fast storage.
-skip_fast_storage_upgrade = true
+skip-fast-storage-upgrade = true

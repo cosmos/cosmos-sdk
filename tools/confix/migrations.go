@@ -32,20 +32,22 @@ var Migrations = MigrationMap{
 	// "v0.xx.x": PlanBuilder, // add specific migration in case of configuration changes in minor versions
 }
 
-type moveKeyMap map[string]struct {
-	section string
-	keyname string
-}
+type KeyModificationMap map[string]string
 
-var moveKeyMappings = map[string]moveKeyMap{
+var KeyModifications = map[string]KeyModificationMap{
 	"serverv2": {
-		"min-retain-blocks": {
-			section: "comet",
-			keyname: "min-retain-blocks",
-		},
+		"min-retain-blocks": "comet.min-retain-blocks",
+		"index-events":      "comet.index-events",
+		"halt-height":       "comet.halt-height",
+		"halt-time":         "comet.min-retain-blocks",
 		// Add other key mappings as needed
 	},
 	// "v0.xx.x": {}, // add keys to move for specific version if needed
+}
+
+type updatedKeyValue struct {
+	tableKey parser.Key
+	keyValue *parser.KeyValue
 }
 
 // PlanBuilder is a function that returns a transformation plan for a given diff between two files.
@@ -59,13 +61,15 @@ func PlanBuilder(from *tomledit.Document, to, planType string) transform.Plan {
 		panic(fmt.Errorf("failed to parse file: %w. This file should have been valid", err))
 	}
 
-	moveKeys := []string{}
+	var oldKeysToModify, newKeysToModify []string
+	keyUpdates := map[string]updatedKeyValue{}
 
-	// check if key moves needed with "to" version
-	moves, ok := moveKeyMappings[to]
+	// check if key changes are needed with the "to" version
+	changes, ok := KeyModifications[to]
 	if ok {
-		for oldKey := range moves {
-			moveKeys = append(moveKeys, oldKey)
+		for oldKey, newKey := range changes {
+			oldKeysToModify = append(oldKeysToModify, oldKey)
+			newKeysToModify = append(newKeysToModify, newKey)
 		}
 	}
 
@@ -98,29 +102,44 @@ func PlanBuilder(from *tomledit.Document, to, planType string) transform.Plan {
 					}),
 				}
 			case Mapping:
+				var tableKey parser.Key
+				var keyValue *parser.KeyValue
+
 				if len(keys) == 1 { // top-level key
-					step = transform.Step{
-						Desc: fmt.Sprintf("add %s key", kv.Key),
-						T: transform.EnsureKey(nil, &parser.KeyValue{
-							Block: kv.Block,
-							Name:  parser.Key{keys[0]},
-							Value: parser.MustValue(kv.Value),
-						}),
+					tableKey = nil
+					keyValue = &parser.KeyValue{
+						Block: kv.Block,
+						Name:  parser.Key{keys[0]},
+						Value: parser.MustValue(kv.Value),
 					}
 				} else if len(keys) > 1 {
+					tableKey = keys[0 : len(keys)-1]
+					keyValue = &parser.KeyValue{
+						Block: kv.Block,
+						Name:  parser.Key{keys[len(keys)-1]},
+						Value: parser.MustValue(kv.Value),
+					}
+				} else {
+					continue
+				}
+
+				if slices.Contains(newKeysToModify, kv.Key) {
+					// store the key-value pair for later modification
+					keyUpdates[kv.Key] = updatedKeyValue{tableKey, keyValue}
+					continue
+				} else {
+					// create a step to add a new key-value pair
 					step = transform.Step{
 						Desc: fmt.Sprintf("add %s key", kv.Key),
-						T: transform.EnsureKey(keys[0:len(keys)-1], &parser.KeyValue{
-							Block: kv.Block,
-							Name:  parser.Key{keys[len(keys)-1]},
-							Value: parser.MustValue(kv.Value),
-						}),
+						T:    transform.EnsureKey(tableKey, keyValue),
 					}
 				}
+
 			default:
 				panic(fmt.Errorf("unknown diff type: %s", diff.Type))
 			}
 		} else {
+			// separate deleted mappings and sections for later processing
 			if diff.Type == Mapping {
 				deleteMappings = append(deleteMappings, diff)
 			} else {
@@ -132,28 +151,32 @@ func PlanBuilder(from *tomledit.Document, to, planType string) transform.Plan {
 		plan = append(plan, step)
 	}
 
+	// process deleted mappings and update them if they are in the modifications list
 	for _, mapping := range deleteMappings {
 		kv := mapping.KV
-
-		var step transform.Step
 		keys := strings.Split(kv.Key, ".")
 
-		if slices.Contains(moveKeys, kv.Key) {
-			newKey := moves[kv.Key]
+		if slices.Contains(oldKeysToModify, kv.Key) {
+			newKey := changes[kv.Key]
+			if updatedKey, ok := keyUpdates[newKey]; ok {
+				value := updatedKey.keyValue
+				value.Value = parser.MustValue(kv.Value)
+				plan = append(plan, transform.Step{
+					Desc: fmt.Sprintf("add %s key", kv.Key),
+					T:    transform.EnsureKey(updatedKey.tableKey, value),
+				})
+			}
+		}
 
-			step = transform.Step{
-				Desc: fmt.Sprintf("move %s key to %s key in section %s", kv.Key, newKey.keyname, newKey.section),
-				T:    transform.MoveKey(keys, parser.Key{newKey.section}, parser.Key{newKey.keyname}),
-			}
-		} else {
-			step = transform.Step{
-				Desc: fmt.Sprintf("remove %s key", kv.Key),
-				T:    transform.Remove(keys),
-			}
+		// create a step to remove the old key-value pair
+		step := transform.Step{
+			Desc: fmt.Sprintf("remove %s key", kv.Key),
+			T:    transform.Remove(keys),
 		}
 		plan = append(plan, step)
 	}
 
+	// create steps to remove old sections
 	for _, section := range deleteSections {
 		keys := strings.Split(section, ".")
 		plan = append(plan, transform.Step{

@@ -18,16 +18,14 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 )
 
-var _ serverv2.ServerComponent[
-	serverv2.AppI[transaction.Tx], transaction.Tx,
-] = (*GRPCGatewayServer[serverv2.AppI[transaction.Tx], transaction.Tx])(nil)
+var _ serverv2.ServerComponent[transaction.Tx] = (*GRPCGatewayServer[transaction.Tx])(nil)
 
 const (
 	// GRPCBlockHeightHeader is the gRPC header for block height.
 	GRPCBlockHeightHeader = "x-cosmos-block-height"
 )
 
-type GRPCGatewayServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
+type GRPCGatewayServer[T transaction.Tx] struct {
 	logger     log.Logger
 	config     *Config
 	cfgOptions []CfgOption
@@ -37,7 +35,7 @@ type GRPCGatewayServer[AppT serverv2.AppI[T], T transaction.Tx] struct {
 }
 
 // New creates a new gRPC-gateway server.
-func New[AppT serverv2.AppI[T], T transaction.Tx](grpcSrv *grpc.Server, ir jsonpb.AnyResolver, cfgOptions ...CfgOption) *GRPCGatewayServer[AppT, T] {
+func New[T transaction.Tx](grpcSrv *grpc.Server, ir jsonpb.AnyResolver, cfgOptions ...CfgOption) *GRPCGatewayServer[T] {
 	// The default JSON marshaller used by the gRPC-Gateway is unable to marshal non-nullable non-scalar fields.
 	// Using the gogo/gateway package with the gRPC-Gateway WithMarshaler option fixes the scalar field marshaling issue.
 	marshalerOption := &gateway.JSONPb{
@@ -47,7 +45,7 @@ func New[AppT serverv2.AppI[T], T transaction.Tx](grpcSrv *grpc.Server, ir jsonp
 		AnyResolver:  ir,
 	}
 
-	return &GRPCGatewayServer[AppT, T]{
+	return &GRPCGatewayServer[T]{
 		GRPCSrv: grpcSrv,
 		GRPCGatewayRouter: runtime.NewServeMux(
 			// Custom marshaler option is required for gogo proto
@@ -65,11 +63,11 @@ func New[AppT serverv2.AppI[T], T transaction.Tx](grpcSrv *grpc.Server, ir jsonp
 	}
 }
 
-func (g *GRPCGatewayServer[AppT, T]) Name() string {
+func (g *GRPCGatewayServer[T]) Name() string {
 	return "grpc-gateway"
 }
 
-func (s *GRPCGatewayServer[AppT, T]) Config() any {
+func (s *GRPCGatewayServer[T]) Config() any {
 	if s.config == nil || s.config == (&Config{}) {
 		cfg := DefaultConfig()
 		// overwrite the default config with the provided options
@@ -83,10 +81,10 @@ func (s *GRPCGatewayServer[AppT, T]) Config() any {
 	return s.config
 }
 
-func (s *GRPCGatewayServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.Logger) error {
+func (s *GRPCGatewayServer[T]) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
 	cfg := s.Config().(*Config)
 	if v != nil {
-		if err := v.Sub(s.Name()).Unmarshal(&cfg); err != nil {
+		if err := serverv2.UnmarshalSubConfig(v, s.Name(), &cfg); err != nil {
 			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
@@ -100,7 +98,7 @@ func (s *GRPCGatewayServer[AppT, T]) Init(appI AppT, v *viper.Viper, logger log.
 	return nil
 }
 
-func (s *GRPCGatewayServer[AppT, T]) Start(ctx context.Context) error {
+func (s *GRPCGatewayServer[T]) Start(ctx context.Context) error {
 	if !s.config.Enable {
 		return nil
 	}
@@ -110,7 +108,7 @@ func (s *GRPCGatewayServer[AppT, T]) Start(ctx context.Context) error {
 	return nil
 }
 
-func (s *GRPCGatewayServer[AppT, T]) Stop(ctx context.Context) error {
+func (s *GRPCGatewayServer[T]) Stop(ctx context.Context) error {
 	if !s.config.Enable {
 		return nil
 	}
@@ -119,7 +117,7 @@ func (s *GRPCGatewayServer[AppT, T]) Stop(ctx context.Context) error {
 }
 
 // Register implements registers a grpc-gateway server
-func (s *GRPCGatewayServer[AppT, T]) Register(r mux.Router) error {
+func (s *GRPCGatewayServer[T]) Register(r mux.Router) error {
 	// configure grpc-gatway server
 	r.PathPrefix("/").Handler(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		// Fall back to grpc gateway server.

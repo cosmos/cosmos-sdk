@@ -26,7 +26,7 @@ var Migrations = MigrationMap{
 	"v0.46": PlanBuilder,
 	"v0.47": PlanBuilder,
 	"v0.50": PlanBuilder,
-	"v0.51": PlanBuilder,
+	"v0.52": PlanBuilder,
 	// "v0.xx.x": PlanBuilder, // add specific migration in case of configuration changes in minor versions
 }
 

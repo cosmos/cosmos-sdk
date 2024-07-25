@@ -1,7 +1,7 @@
 package decoding
 
 import (
-	"fmt"
+	"errors"
 	"testing"
 
 	"cosmossdk.io/schema"
@@ -10,16 +10,24 @@ import (
 type modA struct{}
 
 func (m modA) ModuleCodec() (schema.ModuleCodec, error) {
+	modSchema, err := schema.NewModuleSchema([]schema.ObjectType{{Name: "A", KeyFields: []schema.Field{{Name: "field1", Kind: schema.StringKind}}}})
+	if err != nil {
+		return schema.ModuleCodec{}, err
+	}
 	return schema.ModuleCodec{
-		Schema: schema.ModuleSchema{ObjectTypes: []schema.ObjectType{{Name: "A"}}},
+		Schema: modSchema,
 	}, nil
 }
 
 type modB struct{}
 
 func (m modB) ModuleCodec() (schema.ModuleCodec, error) {
+	modSchema, err := schema.NewModuleSchema([]schema.ObjectType{{Name: "B", KeyFields: []schema.Field{{Name: "field2", Kind: schema.StringKind}}}})
+	if err != nil {
+		return schema.ModuleCodec{}, err
+	}
 	return schema.ModuleCodec{
-		Schema: schema.ModuleSchema{ObjectTypes: []schema.ObjectType{{Name: "B"}}},
+		Schema: modSchema,
 	}, nil
 }
 
@@ -31,12 +39,18 @@ var moduleSet = map[string]interface{}{
 	"modC": modC{},
 }
 
-var resolver = ModuleSetDecoderResolver(moduleSet)
+var testResolver = ModuleSetDecoderResolver(moduleSet)
 
 func TestModuleSetDecoderResolver_IterateAll(t *testing.T) {
 	objectTypes := map[string]bool{}
-	err := resolver.IterateAll(func(moduleName string, cdc schema.ModuleCodec) error {
-		objectTypes[cdc.Schema.ObjectTypes[0].Name] = true
+	err := testResolver.IterateAll(func(moduleName string, cdc schema.ModuleCodec) error {
+		cdc.Schema.Types(func(t schema.Type) bool {
+			objTyp, ok := t.(schema.ObjectType)
+			if ok {
+				objectTypes[objTyp.Name] = true
+			}
+			return true
+		})
 		return nil
 	})
 	if err != nil {
@@ -57,7 +71,7 @@ func TestModuleSetDecoderResolver_IterateAll(t *testing.T) {
 }
 
 func TestModuleSetDecoderResolver_LookupDecoder(t *testing.T) {
-	decoder, found, err := resolver.LookupDecoder("modA")
+	decoder, found, err := testResolver.LookupDecoder("modA")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -66,11 +80,12 @@ func TestModuleSetDecoderResolver_LookupDecoder(t *testing.T) {
 		t.Fatalf("expected to find decoder for modA")
 	}
 
-	if decoder.Schema.ObjectTypes[0].Name != "A" {
-		t.Fatalf("expected object type A, got %s", decoder.Schema.ObjectTypes[0].Name)
+	_, ok := decoder.Schema.LookupType("A")
+	if !ok {
+		t.Fatalf("expected object type A")
 	}
 
-	decoder, found, err = resolver.LookupDecoder("modB")
+	decoder, found, err = testResolver.LookupDecoder("modB")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -79,11 +94,12 @@ func TestModuleSetDecoderResolver_LookupDecoder(t *testing.T) {
 		t.Fatalf("expected to find decoder for modB")
 	}
 
-	if decoder.Schema.ObjectTypes[0].Name != "B" {
-		t.Fatalf("expected object type B, got %s", decoder.Schema.ObjectTypes[0].Name)
+	_, ok = decoder.Schema.LookupType("B")
+	if !ok {
+		t.Fatalf("expected object type B")
 	}
 
-	decoder, found, err = resolver.LookupDecoder("modC")
+	decoder, found, err = testResolver.LookupDecoder("modC")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -92,7 +108,7 @@ func TestModuleSetDecoderResolver_LookupDecoder(t *testing.T) {
 		t.Fatalf("expected not to find decoder")
 	}
 
-	decoder, found, err = resolver.LookupDecoder("modD")
+	decoder, found, err = testResolver.LookupDecoder("modD")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -105,7 +121,7 @@ func TestModuleSetDecoderResolver_LookupDecoder(t *testing.T) {
 type modD struct{}
 
 func (m modD) ModuleCodec() (schema.ModuleCodec, error) {
-	return schema.ModuleCodec{}, fmt.Errorf("an error")
+	return schema.ModuleCodec{}, errors.New("an error")
 }
 
 func TestModuleSetDecoderResolver_IterateAll_Error(t *testing.T) {

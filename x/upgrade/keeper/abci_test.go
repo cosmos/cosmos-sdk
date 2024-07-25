@@ -12,7 +12,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/upgrade"
@@ -122,13 +122,13 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	s.baseApp = baseapp.NewBaseApp(
 		"upgrade",
-		log.NewNopLogger(),
+		coretesting.NewNopLogger(),
 		testCtx.DB,
 		s.encCfg.TxConfig.TxDecoder(),
 	)
 
 	storeService := runtime.NewKVStoreService(key)
-	s.env = runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithMsgRouterService(s.baseApp.MsgServiceRouter()), runtime.EnvWithQueryRouterService(s.baseApp.GRPCQueryRouter()))
+	s.env = runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithMsgRouterService(s.baseApp.MsgServiceRouter()), runtime.EnvWithQueryRouterService(s.baseApp.GRPCQueryRouter()))
 
 	s.baseApp.SetParamStore(&paramStore{params: cmtproto.ConsensusParams{Version: &cmtproto.VersionParams{App: 1}}})
 

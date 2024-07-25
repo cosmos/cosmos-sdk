@@ -2,7 +2,6 @@ package simapp
 
 import (
 	_ "embed"
-	"path/filepath"
 
 	"github.com/spf13/viper"
 
@@ -14,10 +13,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/commitment/iavl"
-	"cosmossdk.io/store/v2/db"
-	"cosmossdk.io/store/v2/root"
 	"cosmossdk.io/x/accounts"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
@@ -97,10 +92,6 @@ func NewSimApp[T transaction.Tx](
 	viper *viper.Viper,
 ) *SimApp[T] {
 	viper.Set(serverv2.FlagHome, DefaultNodeHome) // TODO possibly set earlier when viper is created
-	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(DefaultNodeHome, "data"), nil)
-	if err != nil {
-		panic(err)
-	}
 	var (
 		app        = &SimApp[T]{}
 		appBuilder *runtime.AppBuilder[T]
@@ -110,21 +101,6 @@ func NewSimApp[T transaction.Tx](
 			AppConfig(),
 			depinject.Supply(
 				logger,
-				&root.FactoryOptions{
-					Logger:  logger,
-					RootDir: DefaultNodeHome,
-					SSType:  0,
-					SCType:  0,
-					SCPruningOption: &store.PruningOption{
-						KeepRecent: 0,
-						Interval:   0,
-					},
-					IavlConfig: &iavl.Config{
-						CacheSize:              100_000,
-						SkipFastStorageUpgrade: true,
-					},
-					SCRawDB: scRawDb,
-				},
 				viper,
 
 				// ADVANCED CONFIGURATION
@@ -206,6 +182,7 @@ func NewSimApp[T transaction.Tx](
 		panic(err)
 	}
 
+	var err error
 	app.App, err = appBuilder.Build()
 	if err != nil {
 		panic(err)
@@ -224,7 +201,6 @@ func NewSimApp[T transaction.Tx](
 	if err := app.LoadLatest(); err != nil {
 		panic(err)
 	}
-
 	return app
 }
 

@@ -33,7 +33,6 @@ const (
 
 var (
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasName             = AppModule{}
 
 	_ appmodulev2.HasGenesis    = AppModule{}
 	_ appmodulev2.AppModule     = AppModule{}
@@ -67,7 +66,8 @@ func NewAppModule(
 	}
 }
 
-// Name returns the auth module's name.
+// Name returns the module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }

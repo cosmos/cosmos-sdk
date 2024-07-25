@@ -113,7 +113,7 @@ tokens, then the tokens are no longer staked and unable to be slashed.
 
 Additionally in the case of an emergency situation of a colluding and malicious
 dCERT group, the community needs the capability to disband the entire dCERT
-group and likely fully slash them. This could be achieved though a special new
+group and likely fully slash them. This could be achieved through a special new
 proposal type (implemented as a general governance proposal) which would halt
 the functionality of the dCERT group until the proposal was concluded. This
 special proposal type would likely need to also have a fairly large wager which

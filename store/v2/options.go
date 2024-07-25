@@ -18,13 +18,14 @@ const (
 )
 
 // PruningOption defines the pruning configuration.
+// app.toml config options
 type PruningOption struct {
 	// KeepRecent sets the number of recent versions to keep.
-	KeepRecent uint64
+	KeepRecent uint64 `mapstructure:"keep-recent" toml:"keep-recent" comment:"Number of recent heights to keep on disk."`
 
 	// Interval sets the number of how often to prune.
 	// If set to 0, no pruning will be done.
-	Interval uint64
+	Interval uint64 `mapstructure:"interval" toml:"interval" comment:"Height interval at which pruned heights are removed from disk."`
 }
 
 // NewPruningOption returns a new PruningOption instance based on the given pruning strategy.

@@ -2,6 +2,7 @@ package sims
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -164,7 +165,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	// create validator set
 	valSet, err := startupConfig.ValidatorSet()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create validator set")
+		return nil, errors.New("failed to create validator set")
 	}
 
 	var (

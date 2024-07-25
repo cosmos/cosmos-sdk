@@ -39,3 +39,13 @@ var objectTypesGen = rapid.Custom(func(t *rapid.T) []schema.ObjectType {
 	}
 	return true
 })
+
+// MustNewModuleSchema calls NewModuleSchema and panics if there's an error. This should generally be used
+// only in tests or initialization code.
+func MustNewModuleSchema(objectTypes []schema.ObjectType) schema.ModuleSchema {
+	schema, err := schema.NewModuleSchema(objectTypes)
+	if err != nil {
+		panic(err)
+	}
+	return schema
+}

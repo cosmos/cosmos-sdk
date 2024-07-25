@@ -61,11 +61,6 @@ type Logger interface {
 	Impl() any
 }
 
-type LoggerImpl interface {
-	Logger
-	WithContext(keyVals ...any) any
-}
-
 // WithJSONMarshal configures zerolog global json encoding.
 func WithJSONMarshal(marshaler func(v any) ([]byte, error)) {
 	zerolog.InterfaceMarshalFunc = func(i any) ([]byte, error) {
@@ -95,7 +90,7 @@ type zeroLogWrapper struct {
 // Stderr is the typical destination for logs,
 // so that any output from your application can still be piped to other processes.
 // The returned value can be safely cast to cosmossdk.io/core/log.Logger.
-func NewLogger(dst io.Writer, options ...Option) LoggerImpl {
+func NewLogger(dst io.Writer, options ...Option) Logger {
 	logCfg := defaultConfig
 	for _, opt := range options {
 		opt(&logCfg)
@@ -137,7 +132,7 @@ func NewLogger(dst io.Writer, options ...Option) LoggerImpl {
 }
 
 // NewCustomLogger returns a new logger with the given zerolog logger.
-func NewCustomLogger(logger zerolog.Logger) LoggerImpl {
+func NewCustomLogger(logger zerolog.Logger) Logger {
 	return zeroLogWrapper{&logger}
 }
 
@@ -184,7 +179,7 @@ func (l zeroLogWrapper) Impl() interface{} {
 }
 
 // NewNopLogger returns a new logger that does nothing.
-func NewNopLogger() LoggerImpl {
+func NewNopLogger() Logger {
 	// The custom nopLogger is about 3x faster than a zeroLogWrapper with zerolog.Nop().
 	return nopLogger{}
 }

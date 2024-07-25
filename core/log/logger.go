@@ -2,19 +2,6 @@ package log
 
 const ModuleKey = "module"
 
-// Logger is the Cosmos SDK logger interface.
-// It maintains as much backward compatibility with the CometBFT logger as possible.
-// cosmossdk.io/log is the implementation provided by the Cosmos SDK
-// All functionalities of the logger are available through the Impl() method.
-type Loggerv2 interface {
-	Logger
-
-	// WithContext returns a new wrapped logger with additional context provided by the key value pairs.
-	// The returned value can be safely cast to LoggerV2. An any is returned instead of LoggerV2
-	// to avoid the need for log users to import the log package directly.
-	WithContext(keyVals ...any) any
-}
-
 // Logger defines basic logger functionality that all previous versions of the Logger interface should
 // support. Library users should prefer to use this interface when possible, then type case to Logger
 // to see if WithContext is supported.

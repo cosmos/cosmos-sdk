@@ -1,6 +1,7 @@
 package decoding
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"sort"
@@ -360,7 +361,7 @@ func (e exampleBankModule) subBalance(acct, denom string, amount uint64) error {
 	key := balanceKey(acct, denom)
 	cur := e.store.GetUInt64(key)
 	if cur < amount {
-		return fmt.Errorf("insufficient balance")
+		return errors.New("insufficient balance")
 	}
 	e.store.SetUInt64(key, cur-amount)
 	return nil

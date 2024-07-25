@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -171,12 +170,12 @@ func SimulateMsgSubmitProposal(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k *keeper.Keeper,
-	msgSim simtypes.MsgSimulatorFn,
+	msgSim simtypes.MsgSimulatorFnX,
 ) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, app simtypes.AppEntrypoint, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msgs := []sdk.Msg{}
-		proposalMsg, err := msgSim(r, accs, ak.AddressCodec())
+		proposalMsg, err := msgSim(ctx, r, accs, ak.AddressCodec())
 		if err != nil {
 			return simtypes.OperationMsg{}, nil, err
 		}
@@ -198,7 +197,7 @@ func SimulateMsgSubmitLegacyProposal(
 	k *keeper.Keeper,
 	contentSim simtypes.ContentSimulatorFn, //nolint:staticcheck // used for legacy testing
 ) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, app simtypes.AppEntrypoint, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		// 1) submit proposal now
 		content := contentSim(r, ctx, accs)
@@ -249,7 +248,7 @@ func simulateMsgSubmitProposal(
 
 	return func(
 		r *rand.Rand,
-		app *baseapp.BaseApp,
+		app simtypes.AppEntrypoint,
 		ctx sdk.Context,
 		accs []simtypes.Account,
 		chainID string,
@@ -327,16 +326,19 @@ func simulateMsgSubmitProposal(
 		whoVotes = whoVotes[:numVotes]
 		params, _ := k.Params.Get(ctx)
 		votingPeriod := params.VotingPeriod
-
-		fops := make([]simtypes.FutureOperation, numVotes+1)
-		for i := 0; i < numVotes; i++ {
-			whenVote := ctx.HeaderInfo().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
-			fops[i] = simtypes.FutureOperation{
-				BlockTime: whenVote,
-				Op:        operationSimulateMsgVote(txGen, ak, bk, k, accs[whoVotes[i]], int64(proposalID), nil),
+		var fops []simtypes.FutureOperation
+		if false { // future ops deactivated because they were not implemented correct in the framework before and flood the system now
+			fops = make([]simtypes.FutureOperation, numVotes+1)
+			for i := 0; i < numVotes; i++ {
+				whenVote := ctx.HeaderInfo().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
+				fops[i] = simtypes.FutureOperation{
+					BlockTime: whenVote,
+					Op: func(r *rand.Rand, app simtypes.AppEntrypoint, ctx sdk.Context, accounts []simtypes.Account, chainID string) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
+						return operationSimulateMsgVote(txGen, ak, bk, k, accs[whoVotes[i]], int64(proposalID), nil)(r, app, ctx, accounts, chainID)
+					},
+				}
 			}
 		}
-
 		return opMsg, fops, nil
 	}
 }
@@ -350,7 +352,7 @@ func SimulateMsgDeposit(
 	s *SharedState,
 ) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		r *rand.Rand, app simtypes.AppEntrypoint, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
@@ -429,7 +431,7 @@ func operationSimulateMsgVote(
 	s *SharedState,
 ) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		r *rand.Rand, app simtypes.AppEntrypoint, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		if simAccount.Equals(simtypes.Account{}) {
@@ -498,7 +500,7 @@ func operationSimulateMsgVoteWeighted(
 	s *SharedState,
 ) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		r *rand.Rand, app simtypes.AppEntrypoint, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		if simAccount.Equals(simtypes.Account{}) {
@@ -549,7 +551,7 @@ func operationSimulateMsgVoteWeighted(
 // SimulateMsgCancelProposal generates a MsgCancelProposal.
 func SimulateMsgCancelProposal(txGen client.TxConfig, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		r *rand.Rand, app simtypes.AppEntrypoint, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount := accs[0]

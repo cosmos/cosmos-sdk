@@ -13,6 +13,8 @@ func NewGenesisState(cf []*ContinuousFund, budget []*Budget) *GenesisState {
 	return &GenesisState{
 		ContinuousFund: cf,
 		Budget:         budget,
+		LastBalance:    math.ZeroInt(),
+		Distributions:  []*Distribution{},
 	}
 }
 

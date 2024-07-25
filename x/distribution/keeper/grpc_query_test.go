@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
+	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/distribution/keeper"
 	distrtestutil "cosmossdk.io/x/distribution/testutil"
 	"cosmossdk.io/x/distribution/types"
@@ -147,9 +148,13 @@ func TestQueryCommunityPool(t *testing.T) {
 	ctx, _, distrKeeper, dep := initFixture(t)
 	queryServer := keeper.NewQuerier(distrKeeper)
 
+	poolAcc := authtypes.NewEmptyModuleAccount(types.ProtocolPoolModuleName)
+	dep.accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ProtocolPoolModuleName).Return(poolAcc).AnyTimes()
+
+	dep.bankKeeper.EXPECT().GetAllBalances(gomock.Any(), poolAcc.GetAddress()).Return(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))))
+
 	coins := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100)))
 	decCoins := sdk.NewDecCoinsFromCoins(coins...)
-	dep.poolKeeper.EXPECT().GetCommunityPool(gomock.Any()).Return(coins, nil).AnyTimes()
 
 	cases := []struct {
 		name   string

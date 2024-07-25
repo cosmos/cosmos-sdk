@@ -5,6 +5,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -20,8 +21,8 @@ import (
 )
 
 var (
-	_ ServiceServer                      = queryServer{}
-	_ codectypes.UnpackInterfacesMessage = &GetLatestValidatorSetResponse{}
+	_ ServiceServer                        = queryServer{}
+	_ gogoprotoany.UnpackInterfacesMessage = &GetLatestValidatorSetResponse{}
 )
 
 type (
@@ -112,7 +113,7 @@ func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *GetLatestVa
 	return ValidatorsOutput(ctx, s.clientCtx, nil, page, limit)
 }
 
-func (m *GetLatestValidatorSetResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (m *GetLatestValidatorSetResponse) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var pubKey cryptotypes.PubKey
 	for _, val := range m.Validators {
 		err := unpacker.UnpackAny(val.PubKey, &pubKey)

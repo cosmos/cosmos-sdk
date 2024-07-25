@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -62,7 +62,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		suite.encodedAddrs = append(suite.encodedAddrs, str)
 	}
 
-	suite.feegrantKeeper = keeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger()), encCfg.Codec, suite.accountKeeper)
+	suite.feegrantKeeper = keeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger()), encCfg.Codec, suite.accountKeeper)
 	suite.ctx = testCtx.Ctx
 	suite.msgSrvr = keeper.NewMsgServerImpl(suite.feegrantKeeper)
 	suite.atom = sdk.NewCoins(sdk.NewCoin("atom", sdkmath.NewInt(555)))

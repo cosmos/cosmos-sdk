@@ -3,7 +3,7 @@ package sims
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io"
 	"math/rand"
 	"os"
@@ -289,7 +289,7 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile str
 
 		a, ok := acc.GetCachedValue().(sdk.AccountI)
 		if !ok {
-			return *genesis, nil, fmt.Errorf("expected account")
+			return *genesis, nil, errors.New("expected account")
 		}
 
 		// create simulator accounts

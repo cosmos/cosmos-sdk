@@ -50,6 +50,7 @@ func defaultConfig() *Config {
 		BeginBlockersOrder: []string{
 			testutil.MintModuleName,
 			testutil.DistributionModuleName,
+			testutil.ProtocolPoolModuleName,
 			testutil.SlashingModuleName,
 			testutil.EvidenceModuleName,
 			testutil.StakingModuleName,
@@ -164,6 +165,7 @@ func AuthModule() ModuleOption {
 					{Account: testutil.NFTModuleName},
 					{Account: testutil.ProtocolPoolModuleName},
 					{Account: "stream_acc"},
+					{Account: "protocolpool_distr"},
 				},
 			}),
 		}

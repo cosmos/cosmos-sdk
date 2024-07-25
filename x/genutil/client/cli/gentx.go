@@ -11,7 +11,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/errors"
 	authclient "cosmossdk.io/x/auth/client"
 	"cosmossdk.io/x/staking/client/cli"
@@ -28,7 +27,7 @@ import (
 )
 
 // GenTxCmd builds the application's gentx command.
-func GenTxCmd(genMM genesisMM, txEncCfg client.TxEncodingConfig, genBalIterator types.GenesisBalancesIterator, valAdddressCodec address.Codec) *cobra.Command {
+func GenTxCmd(genMM genesisMM, genBalIterator types.GenesisBalancesIterator) *cobra.Command {
 	ipDefault, _ := server.ExternalIP()
 	fsCreateValidator, defaultsDesc := cli.CreateValidatorMsgFlagSet(ipDefault)
 
@@ -139,11 +138,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 				return err
 			}
 
-			pub, err := key.GetAddress()
-			if err != nil {
-				return err
-			}
-			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(pub)
+			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(addr)
 
 			// The following line comes from a discrepancy between the `gentx`
 			// and `create-validator` commands:
@@ -159,7 +154,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			createValCfg.Amount = amount
 
 			// create a 'create-validator' message
-			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, createValCfg, txFactory, true, valAdddressCodec)
+			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, createValCfg, txFactory, true)
 			if err != nil {
 				return errors.Wrap(err, "failed to build create-validator message")
 			}

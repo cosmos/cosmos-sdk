@@ -151,7 +151,7 @@ func (t Kind) String() string {
 	case Float64Kind:
 		return "float64"
 	case AddressKind:
-		return "bech32address"
+		return "address"
 	case EnumKind:
 		return "enum"
 	case JSONKind:

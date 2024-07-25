@@ -3,64 +3,58 @@ package schematesting
 import (
 	"bytes"
 	"fmt"
-	"io"
 
 	"cosmossdk.io/schema"
 )
 
-func CompareObjectKeys(fields []schema.Field, expected, actual any, diffWriter io.Writer) bool {
+func DiffObjectKeys(fields []schema.Field, expected, actual any) string {
 	n := len(fields)
 	switch n {
 	case 0:
-		return true
+		return ""
 	case 1:
-		return CompareFieldValues(fields[0], expected, actual, diffWriter)
+		return DiffFieldValues(fields[0], expected, actual)
 	default:
-		es := actual.([]interface{})
-		as := expected.([]interface{})
-		for i := 0; i < n; i++ {
-			if !CompareFieldValues(fields[i], es[i], as[i], diffWriter) {
-				return false
-			}
+		actualValues, ok := actual.([]interface{})
+		if !ok {
+			return fmt.Sprintf("ERROR: expected array of values for actual, got %v\n", actual)
 		}
-		return true
+		expectedValues, ok := expected.([]interface{})
+		if !ok {
+			return fmt.Sprintf("ERROR: expected array of values for expected, got %v\n", actual)
+		}
+		res := ""
+		for i := 0; i < n; i++ {
+			res += DiffFieldValues(fields[i], expectedValues[i], actualValues[i])
+		}
+		return res
 	}
 }
 
-func CompareObjectValues(fields []schema.Field, expected, actual any, diffWriter io.Writer) bool {
+func DiffObjectValues(fields []schema.Field, expected, actual any) string {
 	if len(fields) == 0 {
-		return true
+		return ""
 	}
 
 	_, ok := expected.(schema.ValueUpdates)
 	_, ok2 := expected.(schema.ValueUpdates)
 
 	if ok || ok2 {
-		_, err := fmt.Fprintf(diffWriter, "ValueUpdates is not expected when comparing state")
-		if err != nil {
-			panic(err)
-		}
-		return false
+		return fmt.Sprintf("ValueUpdates is not expected when comparing state")
 	}
 
-	return CompareObjectKeys(fields, expected, actual, diffWriter)
+	return DiffObjectKeys(fields, expected, actual)
 }
 
-func CompareFieldValues(field schema.Field, expected, actual any, diffWriter io.Writer) bool {
+func DiffFieldValues(field schema.Field, expected, actual any) string {
 	eq, err := CompareKindValues(field.Kind, actual, expected)
 	if err != nil {
-		_, err = fmt.Fprintf(diffWriter, "%s: ERROR: %v", field.Name, err)
-		if err != nil {
-			panic(err)
-		}
+		return fmt.Sprintf("%s: ERROR: %v\n", field.Name, err)
 	}
 	if !eq {
-		_, err = fmt.Fprintf(diffWriter, "%s: expected %v, got %v", field.Name, expected, actual)
-		if err != nil {
-			panic(err)
-		}
+		return fmt.Sprintf("%s: expected %v, got %v\n", field.Name, expected, actual)
 	}
-	return eq
+	return ""
 }
 
 func CompareKindValues(kind schema.Kind, expected, actual any) (bool, error) {

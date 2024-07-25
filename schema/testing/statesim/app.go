@@ -100,3 +100,8 @@ func (a *App) Modules(f func(moduleName string, modState ModuleState) bool) {
 		return f(key, value)
 	})
 }
+
+// NumModules returns the number of modules in the app.
+func (a *App) NumModules() int {
+	return a.moduleStates.Len()
+}

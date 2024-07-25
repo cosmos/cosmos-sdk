@@ -150,7 +150,7 @@ func (a *Simulator) ProcessPacket(packet appdata.Packet) error {
 }
 
 // AppState returns the current app state backing the simulator.
-func (a *Simulator) AppState() *statesim.App {
+func (a *Simulator) AppState() statesim.AppState {
 	return a.state
 }
 

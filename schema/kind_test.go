@@ -213,7 +213,7 @@ func TestKind_String(t *testing.T) {
 		{Float64Kind, "float64"},
 		{JSONKind, "json"},
 		{EnumKind, "enum"},
-		{AddressKind, "bech32address"},
+		{AddressKind, "address"},
 		{InvalidKind, "invalid(0)"},
 	}
 	for i, tt := range tests {

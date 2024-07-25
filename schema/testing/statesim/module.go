@@ -77,3 +77,8 @@ func (o *Module) ObjectCollections(f func(value ObjectCollectionState) bool) {
 		return f(value)
 	})
 }
+
+// NumObjectCollections returns the number of object collections in the module.
+func (o *Module) NumObjectCollections() int {
+	return o.objectCollections.Len()
+}

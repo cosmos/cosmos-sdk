@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -46,7 +45,7 @@ func testAppSimulator_mirror(t *testing.T, retainDeletes bool) {
 	for i := 0; i < 10; i++ {
 		data := blockDataGen.Example(i + 1)
 		require.NoError(t, appSim.ProcessBlockData(data))
-		require.True(t, statesim.CompareAppStates(appSim.AppState(), mirror.AppState(), os.Stderr))
+		require.Empty(t, DiffAppData(appSim, mirror))
 	}
 }
 

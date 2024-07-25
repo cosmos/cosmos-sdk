@@ -24,9 +24,9 @@ CREATE TABLE IF NOT EXISTS event
 (
     id           BIGSERIAL PRIMARY KEY,
     block_number BIGINT NOT NULL REFERENCES block (number),
-    tx_id        BIGINT NOT NULL REFERENCES tx (id),
-    msg_index    BIGINT NOT NULL,
-    event_index  BIGINT NOT NULL,
+    tx_id        BIGINT NULL REFERENCES tx (id),
+    msg_index    BIGINT NULL,
+    event_index  BIGINT NULL,
     type         TEXT   NOT NULL,
     data         JSONB  NOT NULL
 );

@@ -5,20 +5,19 @@ package appdata
 func ListenerMux(listeners ...Listener) Listener {
 	mux := Listener{}
 
+	cbListeners := make([]Listener, 0, len(listeners))
 	for _, l := range listeners {
 		if l.InitializeModuleData != nil {
-			mux.InitializeModuleData = func(data ModuleInitializationData) error {
-				for _, l := range listeners {
-					if l.InitializeModuleData != nil {
-						if err := l.InitializeModuleData(data); err != nil {
-							return err
-						}
-					}
-				}
-				return nil
-			}
-			break
+			cbListeners = append(cbListeners, l)
 		}
+	}
+	mux.InitializeModuleData = func(data ModuleInitializationData) error {
+		for _, l := range cbListeners {
+			if err := l.InitializeModuleData(data); err != nil {
+				return err
+			}
+		}
+		return nil
 	}
 
 	for _, l := range listeners {

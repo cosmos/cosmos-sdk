@@ -162,8 +162,8 @@ func (b *SimsAccountBalance) randomAmount(retryCount int, reporter SimulationRep
 func (b *SimsAccountBalance) RandFees() sdk.Coins {
 	amount, err := simtypes.RandomFees(b.r, b.Coins)
 	if err != nil {
-		panic(err.Error()) // todo: setup a better way to abort execution
-	} // todo: revisit the panic
+		return sdk.Coins{}
+	}
 	return amount
 }
 

@@ -2,6 +2,8 @@ package indexer
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/decoding"
@@ -10,8 +12,8 @@ import (
 
 // ManagerOptions are the options for starting the indexer manager.
 type ManagerOptions struct {
-	// Config is the user configuration for all indexing. It should generally be an instance of map[string]interface{}
-	// and match the json structure of ManagerConfig. The manager will attempt to convert it to ManagerConfig.
+	// Config is the user configuration for all indexing. It should generally be an instance map[string]interface{}
+	// or json.RawMessage and match the json structure of ManagerConfig. The manager will attempt to convert it to ManagerConfig.
 	Config interface{}
 
 	// Resolver is the decoder resolver that will be used to decode the data. It is required.
@@ -37,8 +39,144 @@ type ManagerConfig struct {
 	Target map[string]Config
 }
 
+// TODO add global include & exclude module filters
+type ManagerResult struct{}
+
 // StartManager starts the indexer manager with the given options. The state machine should write all relevant app data to
 // the returned listener.
 func StartManager(opts ManagerOptions) (appdata.Listener, error) {
-	panic("TODO: this will be implemented in a follow-up PR, this function is just a stub to demonstrate the API")
+	logger := opts.Logger
+	if logger == nil {
+		logger = logutil.NoopLogger{}
+	}
+
+	logger.Info("Starting indexer manager")
+
+	scopeableLogger, canScopeLogger := logger.(logutil.ScopeableLogger)
+
+	cfg, err := unmarshalConfig(opts.Config)
+	if err != nil {
+		return appdata.Listener{}, err
+	}
+
+	ctx := opts.Context
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	listeners := make([]appdata.Listener, 0, len(cfg.Target))
+
+	includeModuleFilter := map[string]bool{}
+	var excludeModuleFilter map[string]bool
+
+	for targetName, targetCfg := range cfg.Target {
+		init, ok := indexerRegistry[targetCfg.Type]
+		if !ok {
+			return appdata.Listener{}, fmt.Errorf("indexer type %q not found", targetCfg.Type)
+		}
+
+		logger.Info("Starting indexer", "target", targetName, "type", targetCfg.Type)
+
+		if len(targetCfg.ExcludeModules) != 0 && len(targetCfg.IncludeModules) != 0 {
+			return appdata.Listener{}, fmt.Errorf("only one of exclude_modules or include_modules can be set for indexer %s", targetName)
+		}
+
+		childLogger := logger
+		if canScopeLogger {
+			childLogger = scopeableLogger.WithAsAny("indexer", targetName).(logutil.Logger)
+		}
+
+		initRes, err := init(InitParams{
+			Config:  targetCfg,
+			Context: ctx,
+			Logger:  childLogger,
+		})
+		if err != nil {
+			return appdata.Listener{}, err
+		}
+
+		listener := initRes.Listener
+
+		var excludedModuleFilter map[string]bool
+		allIncludedModules := map[string]bool{}
+		if len(targetCfg.ExcludeModules) != 0 {
+			excluded := map[string]bool{}
+
+			for _, moduleName := range targetCfg.ExcludeModules {
+				excluded[moduleName] = true
+			}
+
+			// for excluded modules we must do an intersection
+			excludedModuleFilter = filterIntersection(excludedModuleFilter, excluded)
+
+			listener = appdata.ModuleFilter(listener, func(moduleName string) bool {
+				return !excluded[moduleName]
+			})
+
+		} else if len(targetCfg.IncludeModules) != 0 {
+			included := map[string]bool{}
+			for _, moduleName := range targetCfg.IncludeModules {
+				included[moduleName] = true
+				// for included modules we do a union
+				allIncludedModules[moduleName] = true
+			}
+			listener = appdata.ModuleFilter(listener, func(moduleName string) bool {
+				return included[moduleName]
+			})
+		}
+
+		if targetCfg.ExcludeBlockHeaders && listener.StartBlock != nil {
+			cb := listener.StartBlock
+			listener.StartBlock = func(data appdata.StartBlockData) error {
+				data.HeaderBytes = nil
+				data.HeaderJSON = nil
+				return cb(data)
+			}
+		}
+
+		if targetCfg.ExcludeTxs {
+			listener.OnTx = nil
+		}
+
+		if targetCfg.ExcludeEvents {
+			listener.OnEvent = nil
+		}
+
+		listeners = append(listeners, listener)
+
+		// TODO check last block persisted
+	}
+
+	rootListener := appdata.AsyncListenerMux(
+		appdata.AsyncListenerOptions{Context: ctx},
+		listeners...,
+	)
+
+	rootModuleFilter := combineIncludeExcludeFilters(includeModuleFilter, excludeModuleFilter)
+	if rootModuleFilter != nil {
+		rootListener = appdata.ModuleFilter(rootListener, rootModuleFilter)
+	}
+
+	return rootListener, nil
+}
+
+func unmarshalConfig(cfg interface{}) (*ManagerConfig, error) {
+	var jsonBz []byte
+	var err error
+
+	switch cfg := cfg.(type) {
+	case map[string]interface{}:
+		jsonBz, err = json.Marshal(cfg)
+		if err != nil {
+			return nil, err
+		}
+	case json.RawMessage:
+		jsonBz = cfg
+	default:
+		return nil, fmt.Errorf("can't convert %T to %T", cfg, ManagerConfig{})
+	}
+
+	var res ManagerConfig
+	err = json.Unmarshal(jsonBz, &res)
+	return &res, err
 }

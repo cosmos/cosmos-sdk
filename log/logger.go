@@ -34,7 +34,7 @@ var ContextKey struct{}
 
 // Logger is the Cosmos SDK logger interface.
 // It extends cosmossdk.io/core/log.Logger to return a child logger.
-// Use cosmossdk.io/core/log.Logger or cosmossdk.io/core/log.LoggerWithContext instead in modules.
+// Use cosmossdk.io/core/log.Logger instead in modules.
 type Logger interface {
 	// Info takes a message and a set of key/value pairs and logs with level INFO.
 	// The key of the tuple must be a string.

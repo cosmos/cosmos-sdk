@@ -33,6 +33,10 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 ## [Unreleased]
 
+### Improvements
+
+* [#21073](https://github.com/cosmos/cosmos-sdk/pull/21073) Add write-only mutex in Context to protect `getSignersFuncs` map from concurrent writes.
+
 ## [v0.13.3](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.3) - 2024-04-22
 
 ### Improvements

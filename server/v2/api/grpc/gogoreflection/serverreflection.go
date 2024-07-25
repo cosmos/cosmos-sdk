@@ -42,13 +42,17 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"reflect"
 	"sort"
+	"strings"
 	"sync"
 
-	//nolint: staticcheck // keep this import for backward compatibility
-	"github.com/golang/protobuf/proto"
+	"cosmossdk.io/core/log"
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoreflect"
+
+	// nolint: staticcheck // keep this import for backward compatibility
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -60,15 +64,20 @@ type serverReflectionServer struct {
 	rpb.UnimplementedServerReflectionServer
 	s *grpc.Server
 
+	methods []string
+
 	initSymbols  sync.Once
 	serviceNames []string
 	symbols      map[string]*dpb.FileDescriptorProto // map of fully-qualified names to files
+	log          log.Logger
 }
 
 // Register registers the server reflection service on the given gRPC server.
-func Register(s *grpc.Server) {
+func Register(s *grpc.Server, methods []string, logger log.Logger) {
 	rpb.RegisterServerReflectionServer(s, &serverReflectionServer{
-		s: s,
+		s:       s,
+		methods: methods,
+		log:     logger,
 	})
 }
 
@@ -82,21 +91,13 @@ type protoMessage interface {
 
 func (s *serverReflectionServer) getSymbols() (svcNames []string, symbolIndex map[string]*dpb.FileDescriptorProto) {
 	s.initSymbols.Do(func() {
-		serviceInfo := s.s.GetServiceInfo()
 
 		s.symbols = map[string]*dpb.FileDescriptorProto{}
-		s.serviceNames = make([]string, 0, len(serviceInfo))
+		services, fds := s.getServices(s.methods)
+		s.serviceNames = services
+
 		processed := map[string]struct{}{}
-		for svc, info := range serviceInfo {
-			s.serviceNames = append(s.serviceNames, svc)
-			fdenc, ok := parseMetadata(info.Metadata)
-			if !ok {
-				continue
-			}
-			fd, err := decodeFileDesc(fdenc)
-			if err != nil {
-				continue
-			}
+		for _, fd := range fds {
 			s.processFile(fd, processed)
 		}
 		sort.Strings(s.serviceNames)
@@ -207,7 +208,7 @@ func decodeFileDesc(enc []byte) (*dpb.FileDescriptorProto, error) {
 	}
 
 	fd := new(dpb.FileDescriptorProto)
-	if err := proto.Unmarshal(raw, fd); err != nil {
+	if err := gogoproto.Unmarshal(raw, fd); err != nil {
 		return nil, fmt.Errorf("bad descriptor: %w", err)
 	}
 	return fd, nil
@@ -237,7 +238,7 @@ func typeForName(name string) (reflect.Type, error) {
 }
 
 func fileDescContainingExtension(st reflect.Type, ext int32) (*dpb.FileDescriptorProto, error) {
-	m, ok := reflect.Zero(reflect.PtrTo(st)).Interface().(proto.Message)
+	m, ok := reflect.Zero(reflect.PtrTo(st)).Interface().(gogoproto.Message)
 	if !ok {
 		return nil, fmt.Errorf("failed to create message from type: %v", st)
 	}
@@ -252,7 +253,7 @@ func fileDescContainingExtension(st reflect.Type, ext int32) (*dpb.FileDescripto
 }
 
 func (s *serverReflectionServer) allExtensionNumbersForType(st reflect.Type) ([]int32, error) {
-	m, ok := reflect.Zero(reflect.PtrTo(st)).Interface().(proto.Message)
+	m, ok := reflect.Zero(reflect.PtrTo(st)).Interface().(gogoproto.Message)
 	if !ok {
 		return nil, fmt.Errorf("failed to create message from type: %v", st)
 	}
@@ -272,7 +273,7 @@ func fileDescWithDependencies(fd *dpb.FileDescriptorProto, sentFileDescriptors m
 		queue = queue[1:]
 		if sent := sentFileDescriptors[currentfd.GetName()]; len(r) == 0 || !sent {
 			sentFileDescriptors[currentfd.GetName()] = true
-			currentfdEncoded, err := proto.Marshal(currentfd)
+			currentfdEncoded, err := gogoproto.Marshal(currentfd)
 			if err != nil {
 				return nil, err
 			}
@@ -446,7 +447,6 @@ func (s *serverReflectionServer) ServerReflectionInfo(stream rpb.ServerReflectio
 						ErrorMessage: err.Error(),
 					},
 				}
-				log.Printf("OH NO: %s", err)
 			} else {
 				out.MessageResponse = &rpb.ServerReflectionResponse_AllExtensionNumbersResponse{
 					AllExtensionNumbersResponse: &rpb.ExtensionNumberResponse{ //nolint:staticcheck // SA1019: we want to keep using v1alpha
@@ -475,4 +475,28 @@ func (s *serverReflectionServer) ServerReflectionInfo(stream rpb.ServerReflectio
 			return err
 		}
 	}
+}
+
+func (s *serverReflectionServer) getServices(methods []string) (svcs []string, fds []*dpb.FileDescriptorProto) {
+	registry, err := gogoproto.MergedRegistry()
+	if err != nil {
+		s.log.Error("unable to load merged registry", "err", err)
+		return nil, nil
+	}
+	seenSvc := map[protoreflect.FullName]struct{}{}
+	for _, methodName := range methods {
+		methodName = strings.Join(strings.Split(methodName[1:], "/"), ".")
+		md, err := registry.FindDescriptorByName(protoreflect.FullName(methodName))
+		if err != nil {
+			s.log.Error("unable to load method descriptor", "method", methodName, "err", err)
+			continue
+		}
+		svc := md.(protoreflect.MethodDescriptor).Parent()
+		if _, seen := seenSvc[svc.FullName()]; !seen {
+			svcs = append(svcs, string(svc.FullName()))
+			file := svc.ParentFile()
+			fds = append(fds, protodesc.ToFileDescriptorProto(file))
+		}
+	}
+	return
 }

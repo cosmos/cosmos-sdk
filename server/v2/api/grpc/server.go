@@ -9,7 +9,9 @@ import (
 	"strconv"
 
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -21,7 +23,10 @@ import (
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 )
 
-const BlockHeightHeader = "x-cosmos-block-height"
+const (
+	BlockHeightHeader = "x-cosmos-block-height"
+	FlagAddress       = "address"
+)
 
 type Server[T transaction.Tx] struct {
 	logger     log.Logger
@@ -47,22 +52,39 @@ func (s *Server[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logge
 			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
+	methodsMap := appI.GetGPRCMethodsToMessageMap()
 
 	grpcSrv := grpc.NewServer(
 		grpc.ForceServerCodec(newProtoCodec(appI.InterfaceRegistry()).GRPCCodec()),
 		grpc.MaxSendMsgSize(cfg.MaxSendMsgSize),
 		grpc.MaxRecvMsgSize(cfg.MaxRecvMsgSize),
-		grpc.UnknownServiceHandler(makeUnknownServiceHandler(appI.GetGPRCMethodsToMessageMap(), appI.GetAppManager())),
+		grpc.UnknownServiceHandler(
+			makeUnknownServiceHandler(methodsMap, appI.GetAppManager()),
+		),
 	)
 
 	// Reflection allows external clients to see what services and methods the gRPC server exposes.
-	gogoreflection.Register(grpcSrv)
+	gogoreflection.Register(grpcSrv, maps.Keys(methodsMap), logger.With("sub-module", "grpc-reflection"))
 
 	s.grpcSrv = grpcSrv
 	s.config = cfg
 	s.logger = logger.With(log.ModuleKey, s.Name())
 
 	return nil
+}
+
+func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
+	flags := pflag.NewFlagSet("grpc", pflag.ExitOnError)
+
+	// start flags are prefixed with the server name
+	// as the config in prefixed with the server name
+	// this allows viper to properly bind the flags
+	prefix := func(f string) string {
+		return fmt.Sprintf("%s.%s", s.Name(), f)
+	}
+
+	flags.String(prefix(FlagAddress), "localhost:9090", "Listen address")
+	return flags
 }
 
 func makeUnknownServiceHandler(messageMap map[string]func() proto.Message, querier interface {

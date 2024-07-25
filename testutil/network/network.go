@@ -350,7 +350,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 				apiListenAddr = cfg.APIAddress
 			} else {
 				if len(portPool) == 0 {
-					return nil, fmt.Errorf("failed to get port for API server")
+					return nil, errors.New("failed to get port for API server")
 				}
 				port := <-portPool
 				apiListenAddr = fmt.Sprintf("tcp://127.0.0.1:%s", port)
@@ -367,7 +367,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 				cmtCfg.RPC.ListenAddress = cfg.RPCAddress
 			} else {
 				if len(portPool) == 0 {
-					return nil, fmt.Errorf("failed to get port for RPC server")
+					return nil, errors.New("failed to get port for RPC server")
 				}
 				port := <-portPool
 				cmtCfg.RPC.ListenAddress = fmt.Sprintf("tcp://127.0.0.1:%s", port)
@@ -377,7 +377,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 				appCfg.GRPC.Address = cfg.GRPCAddress
 			} else {
 				if len(portPool) == 0 {
-					return nil, fmt.Errorf("failed to get port for GRPC server")
+					return nil, errors.New("failed to get port for GRPC server")
 				}
 				port := <-portPool
 				appCfg.GRPC.Address = fmt.Sprintf("127.0.0.1:%s", port)
@@ -410,14 +410,14 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		monikers[i] = nodeDirName
 
 		if len(portPool) == 0 {
-			return nil, fmt.Errorf("failed to get port for Proxy server")
+			return nil, errors.New("failed to get port for Proxy server")
 		}
 		port := <-portPool
 		proxyAddr := fmt.Sprintf("tcp://127.0.0.1:%s", port)
 		cmtCfg.ProxyApp = proxyAddr
 
 		if len(portPool) == 0 {
-			return nil, fmt.Errorf("failed to get port for Proxy server")
+			return nil, errors.New("failed to get port for Proxy server")
 		}
 		port = <-portPool
 		p2pAddr := fmt.Sprintf("tcp://127.0.0.1:%s", port)

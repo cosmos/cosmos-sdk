@@ -215,7 +215,7 @@ func (m *Manager) GetMigratedVersion() uint64 {
 func (m *Manager) Sync() error {
 	version := m.GetMigratedVersion()
 	if version == 0 {
-		return fmt.Errorf("migration is not done yet")
+		return errors.New("migration is not done yet")
 	}
 	version += 1
 

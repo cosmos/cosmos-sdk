@@ -162,7 +162,7 @@ func newTxDescriptor(ir codectypes.InterfaceRegistry) (*TxDescriptor, error) {
 	// get base tx type name
 	txPbName := proto.MessageName(&tx.Tx{})
 	if txPbName == "" {
-		return nil, fmt.Errorf("unable to get *tx.Tx protobuf name")
+		return nil, errors.New("unable to get *tx.Tx protobuf name")
 	}
 	// get msgs
 	sdkMsgImplementers := ir.ListImplementations(sdk.MsgInterfaceProtoName)

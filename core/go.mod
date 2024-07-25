@@ -16,3 +16,6 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240709173604-40e1e62336c5 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 )
+
+// Version tagged too early and incompatible with v0.50 (latest at the time of tagging)
+retract v0.12.0

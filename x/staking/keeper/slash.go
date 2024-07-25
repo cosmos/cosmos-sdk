@@ -373,13 +373,12 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 		if err != nil {
 			return math.ZeroInt(), err
 		}
-		sharesToUnbond, err := dstVal.SharesFromTokensTruncated(slashAmount)
-		if err != nil {
-			return math.ZeroInt(), err
-		}
 
+		sharesToUnbond, err := dstVal.SharesFromTokensTruncated(slashAmount)
 		if sharesToUnbond.IsZero() {
 			continue
+		} else if err != nil {
+			return math.ZeroInt(), err
 		}
 
 		// Delegations can be dynamic hence need to be looked up on every redelegation entry loop.

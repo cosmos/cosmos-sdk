@@ -9,3 +9,5 @@ go 1.12
 // This module should only use the golang standard library (database/sql)
 // and cosmossdk.io/indexer/base.
 require cosmossdk.io/schema v0.1.1
+
+replace cosmossdk.io/schema => ../../schema

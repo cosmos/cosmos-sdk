@@ -11,7 +11,7 @@ import (
 )
 
 // CreateEnumType creates an enum type in the database.
-func (m *ModuleIndexer) CreateEnumType(ctx context.Context, conn DBConn, enum schema.EnumDefinition) error {
+func (m *ModuleIndexer) CreateEnumType(ctx context.Context, conn DBConn, enum schema.EnumType) error {
 	typeName := enumTypeName(m.moduleName, enum)
 	row := conn.QueryRowContext(ctx, "SELECT 1 FROM pg_type WHERE typname = $1", typeName)
 	var res interface{}
@@ -39,7 +39,7 @@ func (m *ModuleIndexer) CreateEnumType(ctx context.Context, conn DBConn, enum sc
 }
 
 // CreateEnumTypeSql generates a CREATE TYPE statement for the enum definition.
-func CreateEnumTypeSql(writer io.Writer, moduleName string, enum schema.EnumDefinition) error {
+func CreateEnumTypeSql(writer io.Writer, moduleName string, enum schema.EnumType) error {
 	_, err := fmt.Fprintf(writer, "CREATE TYPE %q AS ENUM (", enumTypeName(moduleName, enum))
 	if err != nil {
 		return err
@@ -63,30 +63,6 @@ func CreateEnumTypeSql(writer io.Writer, moduleName string, enum schema.EnumDefi
 }
 
 // enumTypeName returns the name of the enum type scoped to the module.
-func enumTypeName(moduleName string, enum schema.EnumDefinition) string {
+func enumTypeName(moduleName string, enum schema.EnumType) string {
 	return fmt.Sprintf("%s_%s", moduleName, enum.Name)
-}
-
-// createEnumTypesForFields creates enum types for all the fields that have enum kind in the module schema.
-func (m *ModuleIndexer) createEnumTypesForFields(ctx context.Context, conn DBConn, fields []schema.Field) error {
-	for _, field := range fields {
-		if field.Kind != schema.EnumKind {
-			continue
-		}
-
-		if _, ok := m.definedEnums[field.EnumDefinition.Name]; ok {
-			// if the enum type is already defined, skip
-			// we assume validation already happened
-			continue
-		}
-
-		err := m.CreateEnumType(ctx, conn, field.EnumDefinition)
-		if err != nil {
-			return err
-		}
-
-		m.definedEnums[field.EnumDefinition.Name] = field.EnumDefinition
-	}
-
-	return nil
 }

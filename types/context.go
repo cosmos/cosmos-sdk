@@ -9,7 +9,7 @@ import (
 
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
-	corelog "cosmossdk.io/core/log"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/gaskv"
 	storetypes "cosmossdk.io/store/types"
 )
@@ -44,7 +44,7 @@ type Context struct {
 	headerHash           []byte          // Deprecated: Use HeaderService for hash
 	chainID              string          // Deprecated: Use HeaderService for chainID and CometService for the rest
 	txBytes              []byte
-	logger               corelog.Logger
+	logger               log.Logger
 	voteInfo             []abci.VoteInfo // Deprecated: use Cometinfo.LastCommit.Votes instead, will be removed after 0.51
 	gasMeter             storetypes.GasMeter
 	blockGasMeter        storetypes.GasMeter
@@ -73,7 +73,7 @@ func (c Context) BlockHeight() int64                            { return c.heade
 func (c Context) BlockTime() time.Time                          { return c.headerInfo.Time } // Deprecated: use HeaderInfo().Time
 func (c Context) ChainID() string                               { return c.chainID }
 func (c Context) TxBytes() []byte                               { return c.txBytes }
-func (c Context) Logger() corelog.Logger                        { return c.logger }
+func (c Context) Logger() log.Logger                            { return c.logger }
 func (c Context) VoteInfos() []abci.VoteInfo                    { return c.voteInfo }
 func (c Context) GasMeter() storetypes.GasMeter                 { return c.gasMeter }
 func (c Context) BlockGasMeter() storetypes.GasMeter            { return c.blockGasMeter }
@@ -121,7 +121,7 @@ func (c Context) Err() error {
 }
 
 // create a new context
-func NewContext(ms storetypes.MultiStore, isCheckTx bool, logger corelog.Logger) Context {
+func NewContext(ms storetypes.MultiStore, isCheckTx bool, logger log.Logger) Context {
 	h := cmtproto.Header{}
 	h.Time = h.Time.UTC()
 	return Context{
@@ -202,7 +202,7 @@ func (c Context) WithTxBytes(txBytes []byte) Context {
 }
 
 // WithLogger returns a Context with an updated logger.
-func (c Context) WithLogger(logger corelog.Logger) Context {
+func (c Context) WithLogger(logger log.Logger) Context {
 	c.logger = logger
 	return c
 }

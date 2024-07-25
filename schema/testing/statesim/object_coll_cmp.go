@@ -8,13 +8,29 @@ import (
 	schematesting "cosmossdk.io/schema/testing"
 )
 
+// ObjectCollectionState is the interface for the state of an object collection
+// represented by ObjectUpdate's for an ObjectType. ObjectUpdates must not include
+// ValueUpdates in the Value field. When ValueUpdates are applied they must be
+// converted to individual value or array format depending on the number of fields in
+// the value. For collections which retain deletions, ObjectUpdate's with the Delete
+// field set to true should be returned with the latest Value still intact.
 type ObjectCollectionState interface {
-	AllState(f func(schema.ObjectUpdate) bool)
-	GetObject(key any) (update schema.ObjectUpdate, found bool)
+	// ObjectType returns the object type for the collection.
 	ObjectType() schema.ObjectType
+
+	// GetObject returns the object update for the given key if it exists.
+	GetObject(key any) (update schema.ObjectUpdate, found bool)
+
+	// AllState iterates over the state of the collection by calling the given function with each item in
+	// state represented as an object update.
+	AllState(f func(schema.ObjectUpdate) bool)
+
+	// Len returns the number of objects in the collection.
 	Len() int
 }
 
+// DiffObjectCollections compares the object collection state of two objects that implement ObjectCollectionState and returns a string with a diff if they
+// are different or the empty string if they are the same.
 func DiffObjectCollections(expected, actual ObjectCollectionState) string {
 	res := ""
 	if expected.Len() != actual.Len() {

@@ -7,6 +7,8 @@ import (
 	"cosmossdk.io/schema"
 )
 
+// DiffObjectKeys compares the values as object keys for the provided field and returns a diff if they
+// differ or an empty string if they are equal.
 func DiffObjectKeys(fields []schema.Field, expected, actual any) string {
 	n := len(fields)
 	switch n {
@@ -31,6 +33,8 @@ func DiffObjectKeys(fields []schema.Field, expected, actual any) string {
 	}
 }
 
+// DiffObjectValues compares the values as object values for the provided field and returns a diff if they
+// differ or an empty string if they are equal. Object values cannot be ValueUpdates for this comparison.
 func DiffObjectValues(fields []schema.Field, expected, actual any) string {
 	if len(fields) == 0 {
 		return ""
@@ -46,6 +50,8 @@ func DiffObjectValues(fields []schema.Field, expected, actual any) string {
 	return DiffObjectKeys(fields, expected, actual)
 }
 
+// DiffFieldValues compares the values for the provided field and returns a diff if they differ or an empty
+// string if they are equal.
 func DiffFieldValues(field schema.Field, expected, actual any) string {
 	if field.Nullable {
 		if expected == nil {
@@ -69,6 +75,8 @@ func DiffFieldValues(field schema.Field, expected, actual any) string {
 	return ""
 }
 
+// CompareKindValues compares the expected and actual values for the provided kind and returns true if they are equal,
+// false if they are not, and an error if the types are not valid for the kind.
 func CompareKindValues(kind schema.Kind, expected, actual any) (bool, error) {
 	if kind.ValidateValueType(expected) != nil {
 		return false, fmt.Errorf("unexpected type %T for kind %s", expected, kind)

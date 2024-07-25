@@ -6,13 +6,23 @@ import (
 	"cosmossdk.io/schema"
 )
 
+// ModuleState defines an interface for things that represent module state in schema format.
 type ModuleState interface {
+	// ModuleSchema returns the schema for the module.
 	ModuleSchema() schema.ModuleSchema
-	ObjectCollections(f func(value ObjectCollectionState) bool)
+
+	// GetObjectCollection returns the object collection state for the given object type.
 	GetObjectCollection(objectType string) (ObjectCollectionState, bool)
+
+	// ObjectCollections iterates over all the object collection states in the module.
+	ObjectCollections(f func(value ObjectCollectionState) bool)
+
+	// NumObjectCollections returns the number of object collections in the module.
 	NumObjectCollections() int
 }
 
+// DiffModuleStates compares the module state of two objects that implement ModuleState and returns a string with a diff if they
+// are different or the empty string if they are the same.
 func DiffModuleStates(expected, actual ModuleState) string {
 	res := ""
 

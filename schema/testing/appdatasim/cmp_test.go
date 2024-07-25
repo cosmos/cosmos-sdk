@@ -10,6 +10,7 @@ import (
 	schematesting "cosmossdk.io/schema/testing"
 )
 
+// this test checks that diffs in app data are deterministic and can be used for regression testing
 func TestDiffAppData(t *testing.T) {
 	appSim, err := NewSimulator(Options{
 		AppSchema: schematesting.ExampleAppSchema,

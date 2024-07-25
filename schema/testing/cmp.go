@@ -47,6 +47,18 @@ func DiffObjectValues(fields []schema.Field, expected, actual any) string {
 }
 
 func DiffFieldValues(field schema.Field, expected, actual any) string {
+	if field.Nullable {
+		if expected == nil {
+			if actual == nil {
+				return ""
+			} else {
+				return fmt.Sprintf("%s: expected nil, got %v\n", field.Name, actual)
+			}
+		} else if actual == nil {
+			return fmt.Sprintf("%s: expected %v, got nil\n", field.Name, expected)
+		}
+	}
+
 	eq, err := CompareKindValues(field.Kind, actual, expected)
 	if err != nil {
 		return fmt.Sprintf("%s: ERROR: %v\n", field.Name, err)

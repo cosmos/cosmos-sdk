@@ -28,15 +28,21 @@ func DiffObjectCollections(expected, actual ObjectCollectionState) string {
 			return true
 		}
 
-		valueDiff := schematesting.DiffObjectValues(expected.ObjectType().KeyFields, expectedUpdate.Value, actualUpdate.Value)
+		if expectedUpdate.Delete != actualUpdate.Delete {
+			res += fmt.Sprintf("Object %s: Deleted mismatch, expected %v, got %v\n", fmtObjectKey(expected.ObjectType(), expectedUpdate.Key), expectedUpdate.Delete, actualUpdate.Delete)
+		}
+
+		if expectedUpdate.Delete {
+			return true
+		}
+
+		valueDiff := schematesting.DiffObjectValues(expected.ObjectType().ValueFields, expectedUpdate.Value, actualUpdate.Value)
 		if valueDiff != "" {
 			res += "Object "
 			res += fmtObjectKey(expected.ObjectType(), expectedUpdate.Key)
 			res += "\n"
 			res += indentAllLines(valueDiff)
 		}
-
-		panic("check Deleted")
 
 		return true
 	})

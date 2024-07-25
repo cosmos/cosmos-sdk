@@ -30,7 +30,7 @@ func DiffModuleStates(expected, actual ModuleState) string {
 
 		diff := DiffObjectCollections(expectedColl, actualColl)
 		if diff != "" {
-			res += "Object Collection" + objTypeName + "\n"
+			res += "Object Collection " + objTypeName + "\n"
 			res += indentAllLines(diff)
 		}
 

@@ -1,0 +1,124 @@
+App State Diff:
+MODULE COUNT ERROR: expected 2, got 1
+Module all_kinds
+  Object Collection test_address
+    OBJECT COUNT ERROR: expected 17, got 0
+    Object key=0x00261500850107dc0d33031701060328d70502102f951202c7100214db: NOT FOUND
+    Object key=0x004f1a6d69de6fff04ff08860e01ff9740ff0300090c013f012aff0b02d59e4436b7a7650017ff6f000a63f4130a2fe80102ff7d050100d63d0107e60ab218d4: NOT FOUND
+    Object key=0x015d7d01015d33000001081a00053305e53beb03f00ce100006c020c7401011224521f006dcd12030100043b00: NOT FOUND
+    Object key=0x019f3f8701e504aefb0c055a2b295c0b26099553299d02: NOT FOUND
+    Object key=0x040102045d0e003bfc9536019b0001ef04c22b010585df01010103b603040000600915b537: NOT FOUND
+    Object key=0x044b143f1002005f0001d3003400b582055804530001074a050017004da9114b7cf6: NOT FOUND
+    Object key=0x05fe123b03ff004900f6010019010602c000081c011c891df1: NOT FOUND
+    Object key=0x0c6ff6530300000704ff285714816e0d0b03010d0102010302ff7400d60103c2110e3700c30105679f0910570048aa48f6b4680128821c98011d00240c2c00ff: NOT FOUND
+    Object key=0x1312fe0945f3ff130400ff01370d0fbcf501345eeb48f3c30101d3060ef5304b0a1e: NOT FOUND
+    Object key=0x43063c0003f6218d29280001002e0e352f630100f70d073a01010e039a077a3d00379d0100b9018302fddb3000131939469d0172bc1614343802f916: NOT FOUND
+    Object key=0x4630ff1edaae0201eaa5874894001c505b1e0b04021402bc03070af236cc4700006bc101001100d4010100d105a53904066725ff04018100f1011c0800004378: NOT FOUND
+    Object key=0x4b01ffff3bd9014e8c0108031ffff731519bdc7ed1000164300405110403669e000003050000: NOT FOUND
+    Object key=0xd1010f1f0d0681482402ff62a30833400a07026b0c591f3a00013937e0008c5e1308ea3040d0f705028d00: NOT FOUND
+    Object key=0xd43e0de2c027000506741a1f5a02070402440a1d3c531324e6012f3615052cff3a040403d502171e0bff: NOT FOUND
+    Object key=0xdb0803faa1001f0a0300675c03050c1b2ff602043a008800d38b0107850001: NOT FOUND
+    Object key=0xf18768004610026a6e088276263c030500ff433f9701036f171c00: NOT FOUND
+    Object key=0xff1500002003024e0f790725e5765203ce3e01ff502dc1ab07b12e069265f500cb3d01030000000a024707c104160b005b5c054700000401010dd1010c2100bc: NOT FOUND
+    Object Collection test_bool
+    OBJECT COUNT ERROR: expected 2, got 0
+    Object key=false: NOT FOUND
+    Object key=true: NOT FOUND
+    Object Collection test_bytes
+    OBJECT COUNT ERROR: expected 5, got 0
+    Object key=0x: NOT FOUND
+    Object key=0x03031b192f: NOT FOUND
+    Object key=0x0b03056d8bff0225010648000c11011c: NOT FOUND
+    Object key=0x0e0827: NOT FOUND
+    Object key=0xff661b1c00: NOT FOUND
+    Object Collection test_decimal
+    OBJECT COUNT ERROR: expected 4, got 0
+    Object key=-201E-7: NOT FOUND
+    Object key=11251: NOT FOUND
+    Object key=41090120E-3: NOT FOUND
+    Object key=7400E-11: NOT FOUND
+    Object Collection test_duration
+    OBJECT COUNT ERROR: expected 3, got 0
+    Object key=-1182h58m40.614511272s: NOT FOUND
+    Object key=-11ns: NOT FOUND
+    Object key=2562047h47m16.854775807s: NOT FOUND
+    Object Collection test_enum
+    OBJECT COUNT ERROR: expected 3, got 0
+    Object key=bar: NOT FOUND
+    Object key=baz: NOT FOUND
+    Object key=foo: NOT FOUND
+    Object Collection test_float32
+    OBJECT COUNT ERROR: expected 4, got 0
+    Object key=-1.7926416e+37: NOT FOUND
+    Object key=-4.6060725e-20: NOT FOUND
+    Object key=1.8950598e+11: NOT FOUND
+    Object key=6204: NOT FOUND
+    Object Collection test_float64
+    OBJECT COUNT ERROR: expected 3, got 0
+    Object key=-0.52490234375: NOT FOUND
+    Object key=-1.5460750562657897e-83: NOT FOUND
+    Object key=0: NOT FOUND
+    Object Collection test_int16
+    OBJECT COUNT ERROR: expected 8, got 0
+    Object key=-21825: NOT FOUND
+    Object key=-27120: NOT FOUND
+    Object key=-4371: NOT FOUND
+    Object key=-7456: NOT FOUND
+    Object key=-8: NOT FOUND
+    Object key=-988: NOT FOUND
+    Object key=36: NOT FOUND
+    Object key=5: NOT FOUND
+    Object Collection test_int32
+    OBJECT COUNT ERROR: expected 1, got 0
+    Object key=-7573: NOT FOUND
+    Object Collection test_int64
+    OBJECT COUNT ERROR: expected 7, got 0
+    Object key=-1: NOT FOUND
+    Object key=-15928: NOT FOUND
+    Object key=-22191: NOT FOUND
+    Object key=-41: NOT FOUND
+    Object key=-5: NOT FOUND
+    Object key=-653551: NOT FOUND
+    Object key=49770648: NOT FOUND
+    Object Collection test_int8
+    OBJECT COUNT ERROR: expected 3, got 0
+    Object key=126: NOT FOUND
+    Object key=53: NOT FOUND
+    Object key=6: NOT FOUND
+    Object Collection test_integer
+    OBJECT COUNT ERROR: expected 6, got 0
+    Object key=-111739987599: NOT FOUND
+    Object key=-504: NOT FOUND
+    Object key=-7008503312: NOT FOUND
+    Object key=11598611: NOT FOUND
+    Object key=12: NOT FOUND
+    Object key=191: NOT FOUND
+    Object Collection test_string
+    OBJECT COUNT ERROR: expected 2, got 0
+    Object key=A&ꥎ-㈡: NOT FOUND
+    Object key=F [aa+ª(*¹._�#: NOT FOUND
+    Object Collection test_time
+    OBJECT COUNT ERROR: expected 4, got 0
+    Object key=1970-01-01 00:59:59.999879152 +0100 CET: NOT FOUND
+    Object key=1970-01-01 00:59:59.999999594 +0100 CET: NOT FOUND
+    Object key=1970-01-01 01:00:00.001598687 +0100 CET: NOT FOUND
+    Object key=1970-01-01 01:00:00.063190021 +0100 CET: NOT FOUND
+    Object Collection test_uint16
+    OBJECT COUNT ERROR: expected 3, got 0
+    Object key=220: NOT FOUND
+    Object key=80: NOT FOUND
+    Object key=9407: NOT FOUND
+    Object Collection test_uint32
+    OBJECT COUNT ERROR: expected 2, got 0
+    Object key=1027738: NOT FOUND
+    Object key=80378: NOT FOUND
+    Object Collection test_uint64
+    OBJECT COUNT ERROR: expected 2, got 0
+    Object key=1369302: NOT FOUND
+    Object key=663282744859: NOT FOUND
+    Object Collection test_uint8
+    OBJECT COUNT ERROR: expected 2, got 0
+    Object key=2: NOT FOUND
+    Object key=51: NOT FOUND
+    Module test_cases: NOT FOUND
+BlockNum: expected %d, got %d

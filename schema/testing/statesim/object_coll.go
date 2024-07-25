@@ -95,9 +95,9 @@ func (o *ObjectCollection) ApplyUpdate(update schema.ObjectUpdate) error {
 				update.Value = values
 			}
 		}
-	}
 
-	o.objects.Set(keyStr, update)
+		o.objects.Set(keyStr, update)
+	}
 
 	return nil
 }

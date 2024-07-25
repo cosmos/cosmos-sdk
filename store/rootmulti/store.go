@@ -17,7 +17,6 @@ import (
 	iavltree "github.com/cosmos/iavl"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/iavl"
@@ -57,7 +56,7 @@ func keysFromStoreKeyMap[V any](m map[types.StoreKey]V) []types.StoreKey {
 // the CommitMultiStore interface.
 type Store struct {
 	db                  dbm.DB
-	logger              log.Logger
+	logger              iavltree.Logger
 	lastCommitInfo      *types.CommitInfo
 	pruningManager      *pruning.Manager
 	iavlCacheSize       int
@@ -85,7 +84,7 @@ var (
 // store will be created with a PruneNothing pruning strategy by default. After
 // a store is created, KVStores must be mounted and finally LoadLatestVersion or
 // LoadVersion must be called.
-func NewStore(db dbm.DB, logger log.Logger, metricGatherer metrics.StoreMetrics) *Store {
+func NewStore(db dbm.DB, logger iavltree.Logger, metricGatherer metrics.StoreMetrics) *Store {
 	return &Store{
 		db:                  db,
 		logger:              logger,

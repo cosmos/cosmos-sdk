@@ -7,8 +7,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 )
 

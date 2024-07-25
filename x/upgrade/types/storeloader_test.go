@@ -121,7 +121,7 @@ func TestSetLoader(t *testing.T) {
 
 			logger := coretesting.NewNopLogger()
 
-			oldApp := baseapp.NewBaseApp(t.Name(), logger.With("instance", "orig"), db, nil, opts...)
+			oldApp := baseapp.NewBaseApp(t.Name(), logger.(log.Logger).With("instance", "orig"), db, nil, opts...)
 			oldApp.MountStores(storetypes.NewKVStoreKey(tc.origStoreKey))
 
 			err := oldApp.LoadLatestVersion()
@@ -142,7 +142,7 @@ func TestSetLoader(t *testing.T) {
 			}
 
 			// load the new newApp with the original newApp db
-			newApp := baseapp.NewBaseApp(t.Name(), logger.With("instance", "new"), db, nil, opts...)
+			newApp := baseapp.NewBaseApp(t.Name(), logger.(log.Logger).With("instance", "new"), db, nil, opts...)
 			newApp.MountStores(storetypes.NewKVStoreKey(tc.loadStoreKey))
 
 			err = newApp.LoadLatestVersion()

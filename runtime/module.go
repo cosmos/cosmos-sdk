@@ -18,7 +18,6 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/legacy"
-	corelog "cosmossdk.io/core/log"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
@@ -270,16 +269,13 @@ func ProvideEnvironment(
 		memKvService = memStoreService{key: memStoreKey}
 	}
 
-	if cl, ok := logger.With(log.ModuleKey, fmt.Sprintf("x/%s", key.Name())).(corelog.Logger); ok {
-		return kvService, memKvService, NewEnvironment(
-			kvService,
-			cl,
-			EnvWithMsgRouterService(msgServiceRouter),
-			EnvWithQueryRouterService(queryServiceRouter),
-			EnvWithMemStoreService(memKvService),
-		)
-	}
-	panic("unexpected logger type")
+	return kvService, memKvService, NewEnvironment(
+		kvService,
+		logger.With(log.ModuleKey, fmt.Sprintf("x/%s", key.Name())),
+		EnvWithMsgRouterService(msgServiceRouter),
+		EnvWithQueryRouterService(queryServiceRouter),
+		EnvWithMemStoreService(memKvService),
+	)
 }
 
 func ProvideTransientStoreService(

@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -65,7 +66,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	s.baseApp = baseapp.NewBaseApp(
 		"staking",
-		coretesting.NewNopLogger(),
+		log.NewNopLogger(),
 		testCtx.DB,
 		encCfg.TxConfig.TxDecoder(),
 	)

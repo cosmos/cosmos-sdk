@@ -138,12 +138,12 @@ var (
 type MockContext struct {
 	baseCtx          context.Context
 	header           cmtproto.Header
-	logger           log.Logger
+	logger           storetypes.Logger
 	streamingManager storetypes.StreamingManager
 }
 
 func (m MockContext) BlockHeight() int64                            { return m.header.Height }
-func (m MockContext) Logger() log.Logger                            { return m.logger }
+func (m MockContext) Logger() storetypes.Logger                     { return m.logger }
 func (m MockContext) StreamingManager() storetypes.StreamingManager { return m.streamingManager }
 
 func (m MockContext) BlockHeader() cmtproto.Header {
@@ -151,7 +151,7 @@ func (m MockContext) BlockHeader() cmtproto.Header {
 	return *msg
 }
 
-func NewMockContext(header cmtproto.Header, logger log.Logger, sm storetypes.StreamingManager) MockContext {
+func NewMockContext(header cmtproto.Header, logger storetypes.Logger, sm storetypes.StreamingManager) MockContext {
 	header.Time = header.Time.UTC()
 	return MockContext{
 		baseCtx:          context.Background(),

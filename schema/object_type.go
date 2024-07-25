@@ -27,6 +27,11 @@ type ObjectType struct {
 	RetainDeletions bool
 }
 
+// TypeName implements the Type interface.
+func (o ObjectType) TypeName() string {
+	return o.Name
+}
+
 func (ObjectType) isType() {}
 
 // Validate validates the object type.

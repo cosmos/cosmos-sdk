@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -65,7 +64,7 @@ func mustMarshalJSONIndent(o interface{}) []byte {
 // OperationInput is a struct that holds all the needed values to generate a tx and deliver it
 type OperationInput struct {
 	R               *rand.Rand
-	App             *baseapp.BaseApp
+	App             simtypes.AppEntrypoint
 	TxGen           client.TxConfig
 	Cdc             *codec.ProtoCodec
 	Msg             sdk.Msg

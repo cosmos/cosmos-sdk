@@ -63,6 +63,7 @@ func (s *StoreComponent[T]) CLICommands() serverv2.CLIConfig {
 	return serverv2.CLIConfig{
 		Commands: []*cobra.Command{
 			s.PrunesCmd(),
+			s.ExportSnapshotCmd(),
 		},
 	}
 }

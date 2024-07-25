@@ -48,8 +48,11 @@ func Upgrade(ctx context.Context, plan transform.Plan, configPath, outputPath st
 		return fmt.Errorf("formatting config: %w", err)
 	}
 
+	// ignore validation for serverv2 by checking any default field found in doc
+	entry := doc.First(strings.Split("store.options.ss-pruning-option", ".")...)
+
 	// allow to skip validation
-	if !skipValidate {
+	if !skipValidate && entry == nil {
 		// verify that file is valid after applying fixes
 		if err := CheckValid(configPath, buf.Bytes()); err != nil {
 			return fmt.Errorf("updated config is invalid: %w", err)

@@ -32,14 +32,15 @@ var Migrations = MigrationMap{
 	// "v0.xx.x": PlanBuilder, // add specific migration in case of configuration changes in minor versions
 }
 
-type KeyModificationMap map[string][]string
+type keyModificationMap map[string][]string
 
-var KeyModifications = map[string]KeyModificationMap{
+var keyModifications = map[string]keyModificationMap{
 	"serverv2": {
 		"min-retain-blocks": []string{"comet.min-retain-blocks"},
 		"index-events":      []string{"comet.index-events"},
 		"halt-height":       []string{"comet.halt-height"},
-		"halt-time":         []string{"comet.min-retain-blocks"},
+		"halt-time":         []string{"comet.halt-time"},
+		"app-db-backend":    []string{"store.app-db-backend"},
 		"pruning-keep-recent": []string{
 			"store.options.ss-pruning-option.keep-recent",
 			"store.options.sc-pruning-option.keep-recent",
@@ -48,10 +49,42 @@ var KeyModifications = map[string]KeyModificationMap{
 			"store.options.ss-pruning-option.interval",
 			"store.options.sc-pruning-option.interval",
 		},
-		"iavl-cache-size": []string{"store.options.iavl-config.cache-size"},
+		"iavl-cache-size":       []string{"store.options.iavl-config.cache-size"},
+		"iavl-disable-fastnode": []string{"store.options.iavl-config.skip-fast-storage-upgrade"},
 		// Add other key mappings as needed
 	},
 	// "v0.xx.x": {}, // add keys to move for specific version if needed
+}
+
+// add extra steps if needed for specific version
+var addditionalSteps = map[string]func(planType string) []transform.Step{
+	"serverv2": func(planType string) []transform.Step {
+		steps := []transform.Step{}
+		if planType == "app" {
+			step := transform.Step{
+				Desc: "check and update app-db-backend value",
+				T: transform.Func(func(_ context.Context, doc *tomledit.Document) error {
+					// Get the value of the app-db-backend
+					fieldKey := "store.app-db-backend"
+					fieldKeys := strings.Split(fieldKey, ".")
+					entry := doc.First(fieldKeys...)
+					if entry == nil {
+						return fmt.Errorf("no store.app-db-backend field found")
+					}
+
+					// check if app-db-backend value is empty and update it to goleveldb
+					if entry.KeyValue != nil && entry.KeyValue.Value.String() == `""` {
+						entry.KeyValue.Value = parser.MustValue("'goleveldb'")
+					}
+
+					return nil
+				}),
+			}
+			steps = append(steps, step)
+		}
+		return steps
+	},
+	// "v0.xx.x": func(planType string) []transform.Step {},
 }
 
 type updatedKeyValue struct {
@@ -74,7 +107,7 @@ func PlanBuilder(from *tomledit.Document, to, planType string) transform.Plan {
 	keyUpdates := map[string]updatedKeyValue{}
 
 	// check if key changes are needed with the "to" version
-	changes, ok := KeyModifications[to]
+	changes, ok := keyModifications[to]
 	if ok {
 		for oldKey, newKeys := range changes {
 			oldKeysToModify = append(oldKeysToModify, oldKey)
@@ -194,6 +227,11 @@ func PlanBuilder(from *tomledit.Document, to, planType string) transform.Plan {
 			Desc: fmt.Sprintf("remove %s key", section),
 			T:    transform.Remove(keys),
 		})
+	}
+
+	// check and run additional steps if found for "to" versions
+	if stepsFunc, ok := addditionalSteps[to]; ok {
+		plan = append(plan, stepsFunc(planType)...)
 	}
 
 	return plan

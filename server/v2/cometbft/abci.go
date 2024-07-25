@@ -543,7 +543,7 @@ func (c *Consensus[T]) VerifyVoteExtension(
 	}
 
 	if c.verifyVoteExt == nil {
-		return nil, fmt.Errorf("vote extensions are enabled but no verify function was set")
+		return nil, errors.New("vote extensions are enabled but no verify function was set")
 	}
 
 	_, latestStore, err := c.store.StateLatest()
@@ -579,7 +579,7 @@ func (c *Consensus[T]) ExtendVote(ctx context.Context, req *abciproto.ExtendVote
 	}
 
 	if c.verifyVoteExt == nil {
-		return nil, fmt.Errorf("vote extensions are enabled but no verify function was set")
+		return nil, errors.New("vote extensions are enabled but no verify function was set")
 	}
 
 	_, latestStore, err := c.store.StateLatest()

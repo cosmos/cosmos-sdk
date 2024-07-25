@@ -441,7 +441,7 @@ func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
 
 	encoder := f.txConfig.TxEncoder()
 	if encoder == nil {
-		return nil, fmt.Errorf("cannot simulate tx: tx encoder is nil")
+		return nil, errors.New("cannot simulate tx: tx encoder is nil")
 	}
 
 	return encoder(txb.GetTx())

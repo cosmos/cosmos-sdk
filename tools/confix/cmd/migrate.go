@@ -78,7 +78,10 @@ In case of any error in updating the file, no output is written.`,
 				outputPath = ""
 			}
 
-			if err := confix.Upgrade(ctx, plan(rawFile, targetVersion, configType), configPath, outputPath, FlagSkipValidate); err != nil {
+			// get transformation steps and formatDoc in which plan need to be applied
+			steps, formatDoc := plan(rawFile, targetVersion, configType)
+
+			if err := confix.Upgrade(ctx, steps, formatDoc, configPath, outputPath, FlagSkipValidate); err != nil {
 				return fmt.Errorf("failed to migrate config: %w", err)
 			}
 

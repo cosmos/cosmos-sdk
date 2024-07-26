@@ -3,7 +3,6 @@ package confix
 import (
 	"context"
 	"fmt"
-	"slices"
 	"strings"
 
 	"github.com/creachadair/tomledit"
@@ -20,7 +19,7 @@ const (
 )
 
 // MigrationMap defines a mapping from a version to a transformation plan.
-type MigrationMap map[string]func(from *tomledit.Document, to, planType string) transform.Plan
+type MigrationMap map[string]func(from *tomledit.Document, to, planType string) (transform.Plan, *tomledit.Document)
 
 var Migrations = MigrationMap{
 	"v0.45":    NoPlan, // Confix supports only the current supported SDK version. So we do not support v0.44 -> v0.45.
@@ -28,13 +27,13 @@ var Migrations = MigrationMap{
 	"v0.47":    PlanBuilder,
 	"v0.50":    PlanBuilder,
 	"v0.52":    PlanBuilder,
-	"serverv2": PlanBuilder,
+	"serverv2": V2PlanBuilder,
 	// "v0.xx.x": PlanBuilder, // add specific migration in case of configuration changes in minor versions
 }
 
-type keyModificationMap map[string][]string
+type v2KeyChangesMap map[string][]string
 
-var keyModifications = map[string]keyModificationMap{
+var v2KeyChanges = map[string]v2KeyChangesMap{
 	"serverv2": {
 		"min-retain-blocks": []string{"comet.min-retain-blocks"},
 		"index-events":      []string{"comet.index-events"},
@@ -53,66 +52,17 @@ var keyModifications = map[string]keyModificationMap{
 		"iavl-disable-fastnode": []string{"store.options.iavl-config.skip-fast-storage-upgrade"},
 		// Add other key mappings as needed
 	},
-	// "v0.xx.x": {}, // add keys to move for specific version if needed
-}
-
-// add extra steps if needed for specific version
-var addditionalSteps = map[string]func(planType string) []transform.Step{
-	"serverv2": func(planType string) []transform.Step {
-		steps := []transform.Step{}
-		if planType == "app" {
-			step := transform.Step{
-				Desc: "check and update app-db-backend value",
-				T: transform.Func(func(_ context.Context, doc *tomledit.Document) error {
-					// Get the value of the app-db-backend
-					fieldKey := "store.app-db-backend"
-					fieldKeys := strings.Split(fieldKey, ".")
-					entry := doc.First(fieldKeys...)
-					if entry == nil {
-						return fmt.Errorf("no store.app-db-backend field found")
-					}
-
-					// check if app-db-backend value is empty and update it to goleveldb
-					if entry.KeyValue != nil && entry.KeyValue.Value.String() == `""` {
-						entry.KeyValue.Value = parser.MustValue("'goleveldb'")
-					}
-
-					return nil
-				}),
-			}
-			steps = append(steps, step)
-		}
-		return steps
-	},
-	// "v0.xx.x": func(planType string) []transform.Step {},
-}
-
-type updatedKeyValue struct {
-	tableKey parser.Key
-	keyValue *parser.KeyValue
+	// "v0.xx.x": {}, // add keys to move for specific version of v2 if needed
 }
 
 // PlanBuilder is a function that returns a transformation plan for a given diff between two files.
-func PlanBuilder(from *tomledit.Document, to, planType string) transform.Plan {
+func PlanBuilder(from *tomledit.Document, to, planType string) (transform.Plan, *tomledit.Document) {
 	plan := transform.Plan{}
-	deleteSections := []string{}
-	deleteMappings := []Diff{}
+	deletedSections := map[string]bool{}
 
 	target, err := LoadLocalConfig(to, planType)
 	if err != nil {
 		panic(fmt.Errorf("failed to parse file: %w. This file should have been valid", err))
-	}
-
-	var oldKeysToModify, newKeysToModify []string
-	keyUpdates := map[string]updatedKeyValue{}
-
-	// check if key changes are needed with the "to" version
-	changes, ok := keyModifications[to]
-	if ok {
-		for oldKey, newKeys := range changes {
-			oldKeysToModify = append(oldKeysToModify, oldKey)
-			newKeysToModify = append(newKeysToModify, newKeys...)
-		}
 	}
 
 	diffs := DiffKeys(from, target)
@@ -144,101 +94,146 @@ func PlanBuilder(from *tomledit.Document, to, planType string) transform.Plan {
 					}),
 				}
 			case Mapping:
-				var tableKey parser.Key
-				var keyValue *parser.KeyValue
-
 				if len(keys) == 1 { // top-level key
-					tableKey = nil
-					keyValue = &parser.KeyValue{
-						Block: kv.Block,
-						Name:  parser.Key{keys[0]},
-						Value: parser.MustValue(kv.Value),
-					}
-				} else if len(keys) > 1 {
-					tableKey = keys[0 : len(keys)-1]
-					keyValue = &parser.KeyValue{
-						Block: kv.Block,
-						Name:  parser.Key{keys[len(keys)-1]},
-						Value: parser.MustValue(kv.Value),
-					}
-				} else {
-					continue
-				}
-
-				if slices.Contains(newKeysToModify, kv.Key) {
-					// store the key-value pair for later modification
-					keyUpdates[kv.Key] = updatedKeyValue{tableKey, keyValue}
-					continue
-				} else {
-					// create a step to add a new key-value pair
 					step = transform.Step{
 						Desc: fmt.Sprintf("add %s key", kv.Key),
-						T:    transform.EnsureKey(tableKey, keyValue),
+						T: transform.EnsureKey(nil, &parser.KeyValue{
+							Block: kv.Block,
+							Name:  parser.Key{keys[0]},
+							Value: parser.MustValue(kv.Value),
+						}),
+					}
+				} else if len(keys) > 1 {
+					step = transform.Step{
+						Desc: fmt.Sprintf("add %s key", kv.Key),
+						T: transform.EnsureKey(keys[0:len(keys)-1], &parser.KeyValue{
+							Block: kv.Block,
+							Name:  parser.Key{keys[len(keys)-1]},
+							Value: parser.MustValue(kv.Value),
+						}),
 					}
 				}
-
 			default:
 				panic(fmt.Errorf("unknown diff type: %s", diff.Type))
 			}
 		} else {
-			// separate deleted mappings and sections for later processing
-			if diff.Type == Mapping {
-				deleteMappings = append(deleteMappings, diff)
+			if diff.Type == Section {
+				deletedSections[kv.Key] = true
+				step = transform.Step{
+					Desc: fmt.Sprintf("remove %s section", kv.Key),
+					T:    transform.Remove(keys),
+				}
 			} else {
-				deleteSections = append(deleteSections, kv.Key)
-			}
-			continue
-		}
+				// when the whole section is deleted we don't need to remove the keys
+				if len(keys) > 1 && deletedSections[keys[0]] {
+					continue
+				}
 
-		plan = append(plan, step)
-	}
-
-	// process deleted mappings and update them if they are in the modifications list
-	for _, mapping := range deleteMappings {
-		kv := mapping.KV
-		keys := strings.Split(kv.Key, ".")
-
-		if slices.Contains(oldKeysToModify, kv.Key) {
-			newKeys := changes[kv.Key]
-			for _, newKey := range newKeys {
-				if updatedKey, ok := keyUpdates[newKey]; ok {
-					value := updatedKey.keyValue
-					value.Value = parser.MustValue(kv.Value)
-					plan = append(plan, transform.Step{
-						Desc: fmt.Sprintf("add %s key", kv.Key),
-						T:    transform.EnsureKey(updatedKey.tableKey, value),
-					})
+				step = transform.Step{
+					Desc: fmt.Sprintf("remove %s key", kv.Key),
+					T:    transform.Remove(keys),
 				}
 			}
 		}
 
-		// create a step to remove the old key-value pair
-		step := transform.Step{
-			Desc: fmt.Sprintf("remove %s key", kv.Key),
-			T:    transform.Remove(keys),
-		}
 		plan = append(plan, step)
 	}
 
-	// create steps to remove old sections
-	for _, section := range deleteSections {
-		keys := strings.Split(section, ".")
-		plan = append(plan, transform.Step{
-			Desc: fmt.Sprintf("remove %s key", section),
-			T:    transform.Remove(keys),
-		})
-	}
-
-	// check and run additional steps if found for "to" versions
-	if stepsFunc, ok := addditionalSteps[to]; ok {
-		plan = append(plan, stepsFunc(planType)...)
-	}
-
-	return plan
+	return plan, from
 }
 
 // NoPlan returns a no-op plan.
-func NoPlan(_ *tomledit.Document, to, planType string) transform.Plan {
+func NoPlan(from *tomledit.Document, to, planType string) (transform.Plan, *tomledit.Document) {
 	fmt.Printf("no migration needed to %s\n", to)
-	return transform.Plan{}
+	return transform.Plan{}, from
+}
+
+// V2PlanBuilder is a function that returns a transformation plan to convert to serverv2 config
+func V2PlanBuilder(from *tomledit.Document, to, planType string) (transform.Plan, *tomledit.Document) {
+	if planType != "app" {
+		return PlanBuilder(from, to, planType)
+	}
+
+	target, err := LoadLocalConfig(to, planType)
+	if err != nil {
+		panic(fmt.Errorf("failed to parse file: %w. This file should have been valid", err))
+	}
+
+	plan := transform.Plan{}
+	plan = updateMatchedKeysPlan(from, target, plan)
+	plan = applyKeyChangesPlan(from, to, plan)
+
+	return plan, target
+}
+
+// updateMatchedKeysPlan updates all matched keys with old key values
+func updateMatchedKeysPlan(from, target *tomledit.Document, plan transform.Plan) transform.Plan {
+	matches := MatchKeys(from, target)
+	for oldKey, newKey := range matches {
+		oldEntry := getEntry(from, oldKey)
+		if oldEntry == nil {
+			continue
+		}
+
+		if isAppDBBackend(newKey, oldEntry) {
+			continue
+		}
+
+		step := createUpdateStep(oldKey, newKey, oldEntry)
+		plan = append(plan, step)
+	}
+	return plan
+}
+
+// applyKeyChangesPlan checks if key changes are needed with the "to" version and applies them
+func applyKeyChangesPlan(from *tomledit.Document, to string, plan transform.Plan) transform.Plan {
+	changes := v2KeyChanges[to]
+	for oldKey, newKeys := range changes {
+		oldEntry := getEntry(from, oldKey)
+		if oldEntry == nil {
+			continue
+		}
+
+		for _, newKey := range newKeys {
+			if isAppDBBackend(newKey, oldEntry) {
+				continue
+			}
+
+			step := createUpdateStep(oldKey, newKey, oldEntry)
+			plan = append(plan, step)
+		}
+	}
+	return plan
+}
+
+// getEntry retrieves the first entry for the given key from the document
+func getEntry(doc *tomledit.Document, key string) *parser.KeyValue {
+	splitKeys := strings.Split(key, ".")
+	entry := doc.First(splitKeys...)
+	if entry == nil || entry.KeyValue == nil {
+		return nil
+	}
+	return entry.KeyValue
+}
+
+// isAppDBBackend checks if the key is "store.app-db-backend" and the value is empty
+func isAppDBBackend(key string, entry *parser.KeyValue) bool {
+	return key == "store.app-db-backend" && entry.Value.String() == `""`
+}
+
+// createUpdateStep creates a transformation step to update a key with a new key value
+func createUpdateStep(oldKey, newKey string, oldEntry *parser.KeyValue) transform.Step {
+	return transform.Step{
+		Desc: fmt.Sprintf("updating %s key with %s key", oldKey, newKey),
+		T: transform.Func(func(_ context.Context, doc *tomledit.Document) error {
+			splitNewKeys := strings.Split(newKey, ".")
+			newEntry := doc.First(splitNewKeys...)
+			if newEntry == nil || newEntry.KeyValue == nil {
+				return nil
+			}
+
+			newEntry.KeyValue.Value = oldEntry.Value
+			return nil
+		}),
+	}
 }

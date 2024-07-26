@@ -15,7 +15,11 @@ import (
 )
 
 func (a *App) registerRuntimeServices(cfg module.Configurator) error {
-	appv1alpha1.RegisterQueryServer(cfg.QueryServer(), services.NewAppQueryService(a.appConfig))
+	// no app config service if user is using app.yaml / app.json
+	// it is as in v0.52, this whole query service does not exist at all.
+	if a.appConfig != nil {
+		appv1alpha1.RegisterQueryServer(cfg.QueryServer(), services.NewAppQueryService(a.appConfig))
+	}
 	autocliv1.RegisterQueryServer(cfg.QueryServer(), services.NewAutoCLIQueryService(a.ModuleManager.Modules))
 
 	reflectionSvc, err := services.NewReflectionService()

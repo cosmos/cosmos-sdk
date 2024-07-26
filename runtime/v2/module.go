@@ -144,7 +144,6 @@ func ProvideAppBuilder[T transaction.Tx](
 type AppInputs struct {
 	depinject.In
 
-	AppConfig          *appv1alpha1.Config
 	Config             *runtimev2.Module
 	AppBuilder         *AppBuilder[transaction.Tx]
 	ModuleManager      *MM[transaction.Tx]
@@ -157,7 +156,6 @@ type AppInputs struct {
 func SetupAppBuilder(inputs AppInputs) {
 	app := inputs.AppBuilder.app
 	app.config = inputs.Config
-	app.appConfig = inputs.AppConfig
 	app.logger = inputs.Logger
 	app.moduleManager = inputs.ModuleManager
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistrar)

@@ -14,8 +14,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	runtimev2 "cosmossdk.io/runtime/v2"
@@ -345,7 +345,7 @@ func initTestnetFiles[T transaction.Tx](
 		)
 		grpcServer := grpc.New[T](grpc.OverwriteDefaultConfig(grpcConfig))
 		storeServer := store.New[T]()
-		server := serverv2.NewServer(coretesting.NewNopLogger(), cometServer, grpcServer, storeServer)
+		server := serverv2.NewServer(log.NewNopLogger(), cometServer, grpcServer, storeServer)
 		err = server.WriteConfig(filepath.Join(nodeDir, "config"))
 		if err != nil {
 			return err

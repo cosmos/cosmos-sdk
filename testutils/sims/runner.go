@@ -127,7 +127,7 @@ func RunWithSeed[T SimulationApp](
 	// setup environment
 	tCfg := cfg.With(tb, seed, fuzzSeed)
 	testInstance := NewSimulationAppInstance(tb, tCfg, appFactory)
-	var runLogger log.Logger
+	var runLogger tlog.Logger
 	if cli.FlagVerboseValue {
 		runLogger = tlog.NewTestLogger(tb)
 	} else {
@@ -282,7 +282,7 @@ func NewSimulationAppInstance[T SimulationApp](
 	tb.Helper()
 	workDir := tb.TempDir()
 	dbDir := filepath.Join(workDir, "leveldb-app-sim")
-	var logger log.Logger
+	var logger tlog.Logger
 	if cli.FlagVerboseValue {
 		logger = tlog.NewTestLogger(tb)
 	} else {

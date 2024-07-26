@@ -17,7 +17,7 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	corelog "cosmossdk.io/core/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -62,7 +62,7 @@ func initChain(
 // operations, testing the provided invariants, but using the provided config.Seed.
 func SimulateFromSeed( // exists for backwards compatibility only
 	tb testing.TB,
-	logger log.Logger,
+	logger corelog.Logger,
 	w io.Writer,
 	app *baseapp.BaseApp,
 	appStateFn simtypes.AppStateFn,
@@ -82,7 +82,7 @@ func SimulateFromSeed( // exists for backwards compatibility only
 // operations, testing the provided invariants, but using the provided config.Seed.
 func SimulateFromSeedX(
 	tb testing.TB,
-	logger log.Logger,
+	logger corelog.Logger,
 	w io.Writer,
 	app *baseapp.BaseApp,
 	appStateFn simtypes.AppStateFn,

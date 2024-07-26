@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
-	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/mint/types"
 
@@ -23,7 +22,6 @@ type Keeper struct {
 	cdc              codec.BinaryCodec
 	stakingKeeper    types.StakingKeeper
 	bankKeeper       types.BankKeeper
-	logger           log.Logger
 	feeCollectorName string
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
@@ -55,7 +53,6 @@ func NewKeeper(
 		cdc:              cdc,
 		stakingKeeper:    sk,
 		bankKeeper:       bk,
-		logger:           env.Logger,
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
@@ -141,7 +138,7 @@ func (k Keeper) DefaultMintFn(ic types.InflationCalculationFn) types.MintFn {
 				// calculate the difference between maxSupply and totalSupply
 				diff := maxSupply.Sub(totalSupply)
 				if diff.LTE(math.ZeroInt()) {
-					k.logger.Info("max supply reached, no new tokens will be minted")
+					k.Environment.Logger.Info("max supply reached, no new tokens will be minted")
 					return nil
 				}
 

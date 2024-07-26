@@ -47,7 +47,7 @@ func (t Quad[K1, K2, K3, K4]) K3() (x K3) {
 
 // K4 returns the fourth part of the key. If nil, the zero value is returned.
 func (t Quad[K1, K2, K3, K4]) K4() (x K4) {
-	if t.k3 != nil {
+	if t.k4 != nil {
 		return *t.k4
 	}
 	return x

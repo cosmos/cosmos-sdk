@@ -44,17 +44,6 @@ require (
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-<<<<<<< HEAD
-=======
-	github.com/cockroachdb/errors v1.11.1 // indirect
-	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
-	github.com/cockroachdb/pebble v1.1.0 // indirect
-	github.com/cockroachdb/redact v1.1.5 // indirect
-	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cosmos/cosmos-db v1.0.2 // indirect
-	github.com/cosmos/iavl v1.2.1-0.20240725141113-7adc688cf179 // indirect
-	github.com/cosmos/ics23/go v0.10.0 // indirect
->>>>>>> 5c90246b3 (feat(log): remove core dependency and update core interface to be dependency free (#21045))
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect

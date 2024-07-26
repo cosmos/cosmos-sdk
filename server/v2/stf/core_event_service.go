@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"slices"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/maps"
 
@@ -55,7 +56,7 @@ func (em *eventManager) EmitNonConsensus(event gogoproto.Message) error {
 // TypedEventToEvent takes typed event and converts to Event object
 func TypedEventToEvent(tev gogoproto.Message) (event.Event, error) {
 	evtType := gogoproto.MessageName(tev)
-	evtJSON, err := gogoproto.Marshal(tev)
+	evtJSON, err := codec.ProtoMarshalJSON(tev, nil)
 	if err != nil {
 		return event.Event{}, err
 	}

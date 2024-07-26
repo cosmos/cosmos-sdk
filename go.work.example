@@ -9,12 +9,14 @@ use (
 	./core/testing
 	./depinject
 	./errors
+	./indexer/postgres
 	./log
 	./math
 	./orm
 	./simapp
 	./tests
 	./tests/systemtests
+	./schema
 	./server/v2/stf
 	./server/v2/appmanager
 	./store

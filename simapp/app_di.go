@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cast"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -136,7 +137,6 @@ func NewSimApp(
 				appOpts,
 				// supply the logger
 				logger,
-
 				// ADVANCED CONFIGURATION
 
 				//
@@ -179,8 +179,10 @@ func NewSimApp(
 		)
 	)
 
+	var appModules map[string]appmodule.AppModule
 	if err := depinject.Inject(appConfig,
 		&appBuilder,
+		&appModules,
 		&app.appCodec,
 		&app.legacyAmino,
 		&app.txConfig,
@@ -242,9 +244,21 @@ func NewSimApp(
 
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 
-	// register streaming services
-	if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
-		panic(err)
+	if indexerOpts := appOpts.Get("indexer"); indexerOpts != nil {
+		// if we have indexer options in app.toml, then enable the built-in indexer framework
+		moduleSet := map[string]any{}
+		for modName, mod := range appModules {
+			moduleSet[modName] = mod
+		}
+		err := app.EnableIndexer(indexerOpts, app.kvStoreKeys(), moduleSet)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		// register legacy streaming services if we don't have the built-in indexer enabled
+		if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
+			panic(err)
+		}
 	}
 
 	/****  Module Options ****/

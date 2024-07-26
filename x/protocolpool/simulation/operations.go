@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/x/protocolpool/keeper"
 	"cosmossdk.io/x/protocolpool/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -47,7 +46,7 @@ func WeightedOperations(
 // a random account sends a random amount of its funds to the community pool.
 func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+		r *rand.Rand, app simtypes.AppEntrypoint, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		funder, _ := simtypes.RandomAcc(r, accs)
 

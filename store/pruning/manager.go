@@ -8,8 +8,8 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/core/log"
 	"cosmossdk.io/store/pruning/types"
+	storetypes "cosmossdk.io/store/types"
 )
 
 // Manager is an abstraction to handle the logic needed for
@@ -17,7 +17,7 @@ import (
 // based on the strategy described by the pruning options.
 type Manager struct {
 	db               dbm.DB
-	logger           log.Logger
+	logger           storetypes.Logger
 	opts             types.PruningOptions
 	snapshotInterval uint64
 	// Snapshots are taken in a separate goroutine from the regular execution
@@ -46,7 +46,7 @@ var pruneSnapshotHeightsKey = []byte("s/prunesnapshotheights")
 // The returned manager uses a pruning strategy of "nothing" which
 // keeps all heights. Users of the Manager may change the strategy
 // by calling SetOptions.
-func NewManager(db dbm.DB, logger log.Logger) *Manager {
+func NewManager(db dbm.DB, logger storetypes.Logger) *Manager {
 	return &Manager{
 		db:                   db,
 		logger:               logger,

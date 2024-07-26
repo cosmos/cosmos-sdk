@@ -12,7 +12,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	authtypes "cosmossdk.io/x/auth/types"

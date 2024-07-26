@@ -2,6 +2,7 @@ package integration_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"testing"
@@ -112,7 +113,7 @@ func Example() {
 	// in this example the result is an empty response, a nil check is enough
 	// in other cases, it is recommended to check the result value.
 	if result == nil {
-		panic(fmt.Errorf("unexpected nil result"))
+		panic(errors.New("unexpected nil result"))
 	}
 
 	// we now check the result
@@ -137,7 +138,7 @@ func Example() {
 	// Output: 10000
 }
 
-// ExampleOneModule shows how to use the integration test framework to test the integration of a single module.
+// Example_oneModule shows how to use the integration test framework to test the integration of a single module.
 // That module has no dependency on other modules.
 func Example_oneModule() {
 	// in this example we are testing the integration of the auth module:
@@ -220,7 +221,7 @@ func Example_oneModule() {
 	// in this example the result is an empty response, a nil check is enough
 	// in other cases, it is recommended to check the result value.
 	if result == nil {
-		panic(fmt.Errorf("unexpected nil result"))
+		panic(errors.New("unexpected nil result"))
 	}
 
 	// we now check the result

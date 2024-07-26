@@ -2,7 +2,7 @@ package ormfield
 
 import (
 	"encoding/binary"
-	"fmt"
+	"errors"
 	"io"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -183,6 +183,6 @@ func DecodeCompactUint32(reader io.Reader) (uint32, error) {
 		x |= uint32(buf[4])
 		return x, nil
 	default:
-		return 0, fmt.Errorf("unexpected case")
+		return 0, errors.New("unexpected case")
 	}
 }

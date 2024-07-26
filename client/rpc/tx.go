@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -17,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -94,7 +95,7 @@ func QueryEventForTxCmd() *cobra.Command {
 	return WaitTxCmd()
 }
 
-// WaitTx returns a CLI command that waits for a transaction with the given hash to be included in a block.
+// WaitTxCmd returns a CLI command that waits for a transaction with the given hash to be included in a block.
 func WaitTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "wait-tx [hash]",
@@ -187,7 +188,7 @@ $ %[1]s tx [flags] | %[1]s q wait-tx
 					return clientCtx.PrintProto(newResponseFormatBroadcastTxCommit(res))
 				}
 			case <-ctx.Done():
-				return errors.ErrLogic.Wrapf("timed out waiting for transaction %X to be included in a block", hash)
+				return sdkerrors.ErrLogic.Wrapf("timed out waiting for transaction %X to be included in a block", hash)
 			}
 			return nil
 		},
@@ -222,5 +223,5 @@ func parseHashFromInput(in []byte) ([]byte, error) {
 			return hex.DecodeString(hash)
 		}
 	}
-	return nil, fmt.Errorf("txhash not found")
+	return nil, errors.New("txhash not found")
 }

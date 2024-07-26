@@ -8,7 +8,7 @@ import (
 
 	protoio "github.com/cosmos/gogoproto/io"
 
-	"cosmossdk.io/core/log"
+	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/internal"
@@ -30,13 +30,13 @@ var (
 // RootStore use a CommitStore as an abstraction to handle multiple store keys
 // and trees.
 type CommitStore struct {
-	logger     log.Logger
+	logger     corelog.Logger
 	metadata   *MetadataStore
 	multiTrees map[string]Tree
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, logger log.Logger) (*CommitStore, error) {
+func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, logger corelog.Logger) (*CommitStore, error) {
 	return &CommitStore{
 		logger:     logger,
 		multiTrees: trees,
@@ -244,7 +244,7 @@ func (c *CommitStore) PausePruning(pause bool) {
 // Snapshot implements snapshotstypes.CommitSnapshotter.
 func (c *CommitStore) Snapshot(version uint64, protoWriter protoio.Writer) error {
 	if version == 0 {
-		return fmt.Errorf("the snapshot version must be greater than 0")
+		return errors.New("the snapshot version must be greater than 0")
 	}
 
 	latestVersion, err := c.GetLatestVersion()
@@ -348,7 +348,7 @@ loop:
 
 		case *snapshotstypes.SnapshotItem_IAVL:
 			if importer == nil {
-				return snapshotstypes.SnapshotItem{}, fmt.Errorf("received IAVL node item before store item")
+				return snapshotstypes.SnapshotItem{}, errors.New("received IAVL node item before store item")
 			}
 			node := item.IAVL
 			if node.Height > int32(math.MaxInt8) {

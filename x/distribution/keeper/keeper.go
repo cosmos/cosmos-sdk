@@ -28,7 +28,6 @@ type Keeper struct {
 	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
-	poolKeeper    types.PoolKeeper
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
@@ -51,7 +50,6 @@ type Keeper struct {
 	ValidatorOutstandingRewards collections.Map[sdk.ValAddress, types.ValidatorOutstandingRewards]
 	// ValidatorHistoricalRewards key: valAddr+period | value: ValidatorHistoricalRewards
 	ValidatorHistoricalRewards collections.Map[collections.Pair[sdk.ValAddress, uint64], types.ValidatorHistoricalRewards]
-	PreviousProposer           collections.Item[sdk.ConsAddress]
 	// ValidatorSlashEvents key: valAddr+height+period | value: ValidatorSlashEvent
 	ValidatorSlashEvents collections.Map[collections.Triple[sdk.ValAddress, uint64, uint64], types.ValidatorSlashEvent]
 
@@ -65,7 +63,6 @@ func NewKeeper(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
-	pk types.PoolKeeper,
 	cometService comet.Service,
 	feeCollectorName, authority string,
 ) Keeper {
@@ -82,7 +79,6 @@ func NewKeeper(
 		authKeeper:       ak,
 		bankKeeper:       bk,
 		stakingKeeper:    sk,
-		poolKeeper:       pk,
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
@@ -130,7 +126,6 @@ func NewKeeper(
 			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.LEUint64Key), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			codec.CollValue[types.ValidatorHistoricalRewards](cdc),
 		),
-		PreviousProposer: collections.NewItem(sb, types.ProposerKey, "previous_proposer", collcodec.KeyToValueCodec(sdk.ConsAddressKey)),
 		ValidatorSlashEvents: collections.NewMap(
 			sb,
 			types.ValidatorSlashEventPrefix,

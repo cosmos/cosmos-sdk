@@ -10,8 +10,8 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/log"
 	"cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/iavl"
 	sdkmaps "cosmossdk.io/store/internal/maps"

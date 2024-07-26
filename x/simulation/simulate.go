@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"math/rand"
@@ -15,7 +16,7 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	corelog "cosmossdk.io/core/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -60,7 +61,7 @@ func initChain(
 // operations, testing the provided invariants, but using the provided config.Seed.
 func SimulateFromSeed( // exists for backwards compatibility only
 	tb testing.TB,
-	logger log.Logger,
+	logger corelog.Logger,
 	w io.Writer,
 	app *baseapp.BaseApp,
 	appStateFn simulation.AppStateFn,
@@ -80,7 +81,7 @@ func SimulateFromSeed( // exists for backwards compatibility only
 // operations, testing the provided invariants, but using the provided config.Seed.
 func SimulateFromSeedX(
 	tb testing.TB,
-	logger log.Logger,
+	logger corelog.Logger,
 	w io.Writer,
 	app *baseapp.BaseApp,
 	appStateFn simulation.AppStateFn,
@@ -113,7 +114,7 @@ func SimulateFromSeedX(
 	// At least 2 accounts must be added here, otherwise when executing SimulateMsgSend
 	// two accounts will be selected to meet the conditions from != to and it will fall into an infinite loop.
 	if len(accs) <= 1 {
-		return params, fmt.Errorf("at least two genesis accounts are required")
+		return params, errors.New("at least two genesis accounts are required")
 	}
 
 	config.ChainID = chainID
@@ -246,6 +247,7 @@ func SimulateFromSeedX(
 		proposerAddress = validators.randomProposer(r)
 
 		if config.Commit {
+			app.SimWriteState()
 			if _, err := app.Commit(); err != nil {
 				return params, fmt.Errorf("commit failed at height %d: %w", blockHeight, err)
 			}

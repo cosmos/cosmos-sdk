@@ -190,7 +190,7 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 			return math.NewInt(0), err
 		}
 	default:
-		return math.NewInt(0), fmt.Errorf("invalid validator status")
+		return math.NewInt(0), errors.New("invalid validator status")
 	}
 
 	k.Logger.Info(
@@ -373,13 +373,12 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 		if err != nil {
 			return math.ZeroInt(), err
 		}
-		sharesToUnbond, err := dstVal.SharesFromTokensTruncated(slashAmount)
-		if err != nil {
-			return math.ZeroInt(), err
-		}
 
+		sharesToUnbond, err := dstVal.SharesFromTokensTruncated(slashAmount)
 		if sharesToUnbond.IsZero() {
 			continue
+		} else if err != nil {
+			return math.ZeroInt(), err
 		}
 
 		// Delegations can be dynamic hence need to be looked up on every redelegation entry loop.
@@ -399,19 +398,23 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 		}
 
 		dstValidator, err := k.GetValidator(ctx, valDstAddr)
-		if err != nil {
+		isNotFoundErr := errors.Is(err, types.ErrNoValidatorFound)
+		if err != nil && !isNotFoundErr {
 			return math.ZeroInt(), err
 		}
 
 		// tokens of a redelegation currently live in the destination validator
 		// therefore we must burn tokens from the destination-validator's bonding status
 		switch {
+		// this case covers for when a validator is removed from the set when his bond drops down to 0.
+		case isNotFoundErr:
+			notBondedBurnedAmount = notBondedBurnedAmount.Add(tokensToBurn)
 		case dstValidator.IsBonded():
 			bondedBurnedAmount = bondedBurnedAmount.Add(tokensToBurn)
 		case dstValidator.IsUnbonded() || dstValidator.IsUnbonding():
 			notBondedBurnedAmount = notBondedBurnedAmount.Add(tokensToBurn)
 		default:
-			return math.ZeroInt(), fmt.Errorf("unknown validator status")
+			return math.ZeroInt(), errors.New("unknown validator status")
 		}
 	}
 

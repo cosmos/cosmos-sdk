@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"time"
+	"unicode/utf8"
 )
 
 // Kind represents the basic type of a field in an object.
@@ -16,7 +17,8 @@ const (
 	// InvalidKind indicates that an invalid type.
 	InvalidKind Kind = iota
 
-	// StringKind is a string type and values of this type must be of the go type string.
+	// StringKind is a string type and values of this type must be of the go type string
+	// containing valid UTF-8 and cannot contain null characters.
 	StringKind
 
 	// BytesKind is a bytes type and values of this type must be of the go type []byte.
@@ -46,14 +48,14 @@ const (
 	// Uint64Kind is a uint64 type and values of this type must be of the go type uint64.
 	Uint64Kind
 
-	// IntegerKind represents an arbitrary precision integer number. Values of this type must
+	// IntegerStringKind represents an arbitrary precision integer number. Values of this type must
 	// be of the go type string and formatted as base10 integers, specifically matching to
 	// the IntegerFormat regex.
-	IntegerKind
+	IntegerStringKind
 
-	// DecimalKind represents an arbitrary precision decimal or integer number. Values of this type
+	// DecimalStringKind represents an arbitrary precision decimal or integer number. Values of this type
 	// must be of the go type string and match the DecimalFormat regex.
-	DecimalKind
+	DecimalStringKind
 
 	// BoolKind is a boolean type and values of this type must be of the go type bool.
 	BoolKind
@@ -70,13 +72,13 @@ const (
 	// Float64Kind is a float64 type and values of this type must be of the go type float64.
 	Float64Kind
 
-	// Bech32AddressKind is a bech32 address type and values of this type must be of the go type []byte.
-	// Fields of this type are expected to set the AddressPrefix field in the field definition to the
-	// bech32 address prefix so that indexers can properly convert them to strings.
-	Bech32AddressKind
+	// AddressKind represents an account address and must be of type []byte. Addresses usually have a
+	// human-readable rendering, such as bech32, and tooling should provide a way for apps to define a
+	// string encoder for friendly user-facing display.
+	AddressKind
 
 	// EnumKind is an enum type and values of this type must be of the go type string.
-	// Fields of this type are expected to set the EnumDefinition field in the field definition to the enum
+	// Fields of this type are expected to set the EnumType field in the field definition to the enum
 	// definition.
 	EnumKind
 
@@ -134,9 +136,9 @@ func (t Kind) String() string {
 		return "int64"
 	case Uint64Kind:
 		return "uint64"
-	case DecimalKind:
+	case DecimalStringKind:
 		return "decimal"
-	case IntegerKind:
+	case IntegerStringKind:
 		return "integer"
 	case BoolKind:
 		return "bool"
@@ -148,7 +150,7 @@ func (t Kind) String() string {
 		return "float32"
 	case Float64Kind:
 		return "float64"
-	case Bech32AddressKind:
+	case AddressKind:
 		return "bech32address"
 	case EnumKind:
 		return "enum"
@@ -216,13 +218,13 @@ func (t Kind) ValidateValueType(value interface{}) error {
 		if !ok {
 			return fmt.Errorf("expected uint64, got %T", value)
 		}
-	case IntegerKind:
+	case IntegerStringKind:
 		_, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("expected string, got %T", value)
 		}
 
-	case DecimalKind:
+	case DecimalStringKind:
 		_, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("expected string, got %T", value)
@@ -252,7 +254,7 @@ func (t Kind) ValidateValueType(value interface{}) error {
 		if !ok {
 			return fmt.Errorf("expected float64, got %T", value)
 		}
-	case Bech32AddressKind:
+	case AddressKind:
 		_, ok := value.([]byte)
 		if !ok {
 			return fmt.Errorf("expected []byte, got %T", value)
@@ -283,11 +285,23 @@ func (t Kind) ValidateValue(value interface{}) error {
 	}
 
 	switch t {
-	case IntegerKind:
+	case StringKind:
+		str := value.(string)
+		if !utf8.ValidString(str) {
+			return fmt.Errorf("expected valid utf-8 string, got %s", value)
+		}
+
+		// check for null characters
+		for _, r := range str {
+			if r == 0 {
+				return fmt.Errorf("expected string without null characters, got %s", value)
+			}
+		}
+	case IntegerStringKind:
 		if !integerRegex.Match([]byte(value.(string))) {
 			return fmt.Errorf("expected base10 integer, got %s", value)
 		}
-	case DecimalKind:
+	case DecimalStringKind:
 		if !decimalRegex.Match([]byte(value.(string))) {
 			return fmt.Errorf("expected decimal number, got %s", value)
 		}
@@ -307,7 +321,7 @@ var (
 )
 
 // KindForGoValue finds the simplest kind that can represent the given go value. It will not, however,
-// return kinds such as IntegerKind, DecimalKind, Bech32AddressKind, or EnumKind which all can be
+// return kinds such as IntegerStringKind, DecimalStringKind, AddressKind, or EnumKind which all can be
 // represented as strings.
 func KindForGoValue(value interface{}) Kind {
 	switch value.(type) {

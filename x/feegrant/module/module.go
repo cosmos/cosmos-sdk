@@ -24,7 +24,6 @@ import (
 )
 
 var (
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
@@ -62,6 +61,7 @@ func NewAppModule(cdc codec.Codec, ak feegrant.AccountKeeper, bk feegrant.BankKe
 func (AppModule) IsAppModule() {}
 
 // Name returns the feegrant module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return feegrant.ModuleName
 }

@@ -21,6 +21,10 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 	// (and distributed to the previous proposer)
 	feeCollector := k.authKeeper.GetModuleAccount(ctx, k.feeCollectorName)
 	feesCollectedInt := k.bankKeeper.GetAllBalances(ctx, feeCollector.GetAddress())
+	// return early if no fees to distribute
+	if feesCollectedInt.Empty() {
+		return nil
+	}
 	feesCollected := sdk.NewDecCoinsFromCoins(feesCollectedInt...)
 
 	// transfer collected fees to the distribution module account
@@ -75,12 +79,7 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 	}
 	// send to community pool and set remainder in fee pool
 	amt, re := remaining.TruncateDecimal()
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.ProtocolPoolModuleName, amt); err != nil {
-		return err
-	}
-
-	// set ToDistribute in protocolpool to keep track of continuous funds distribution
-	if err := k.poolKeeper.SetToDistribute(ctx, amt, k.GetAuthority()); err != nil { // TODO: this should be distribution module account
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.ProtocolPoolDistrAccount, amt); err != nil {
 		return err
 	}
 
@@ -166,7 +165,7 @@ func (k Keeper) sendDecimalPoolToCommunityPool(ctx context.Context) error {
 	}
 
 	amt, re := feePool.DecimalPool.TruncateDecimal()
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.ProtocolPoolModuleName, amt); err != nil {
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.ProtocolPoolDistrAccount, amt); err != nil {
 		return err
 	}
 

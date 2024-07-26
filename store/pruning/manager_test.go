@@ -9,7 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/mock"
 	"cosmossdk.io/store/pruning"
 	"cosmossdk.io/store/pruning/types"

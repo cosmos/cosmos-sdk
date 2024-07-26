@@ -7,7 +7,7 @@ package mock
 import (
 	reflect "reflect"
 
-	log "cosmossdk.io/core/log"
+	log "cosmossdk.io/log"
 	gomock "github.com/golang/mock/gomock"
 )
 

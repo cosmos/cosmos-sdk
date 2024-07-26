@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -56,8 +57,8 @@ func (m MockWeightedProposals) DefaultWeight() int {
 	return m.n
 }
 
-func (m MockWeightedProposals) MsgSimulatorFn() simtypes.MsgSimulatorFn {
-	return func(r *rand.Rand, _ []simtypes.Account, _ address.Codec) (sdk.Msg, error) {
+func (m MockWeightedProposals) MsgSimulatorFn() simtypes.MsgSimulatorFnX {
+	return func(_ context.Context, r *rand.Rand, _ []simtypes.Account, _ address.Codec) (sdk.Msg, error) {
 		return nil, nil
 	}
 }

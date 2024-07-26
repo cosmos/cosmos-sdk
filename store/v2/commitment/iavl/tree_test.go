@@ -7,15 +7,16 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/core/log"
+	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/v2/commitment"
 	dbm "cosmossdk.io/store/v2/db"
 )
 
 func TestCommitterSuite(t *testing.T) {
 	s := &commitment.CommitStoreTestSuite{
-		NewStore: func(db corestore.KVStoreWithBatch, storeKeys []string, logger log.Logger) (*commitment.CommitStore, error) {
+		NewStore: func(db corestore.KVStoreWithBatch, storeKeys []string, logger corelog.Logger) (*commitment.CommitStore, error) {
 			multiTrees := make(map[string]commitment.Tree)
 			cfg := DefaultConfig()
 			for _, storeKey := range storeKeys {
@@ -32,7 +33,7 @@ func TestCommitterSuite(t *testing.T) {
 func generateTree() *IavlTree {
 	cfg := DefaultConfig()
 	db := dbm.NewMemDB()
-	return NewIavlTree(db, log.NewNopLogger(), cfg)
+	return NewIavlTree(db, coretesting.NewNopLogger(), cfg)
 }
 
 func TestIavlTree(t *testing.T) {

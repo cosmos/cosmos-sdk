@@ -9,7 +9,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"

@@ -361,6 +361,7 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 	tx.SetFeeGranter(f.feeGranter)
 	tx.SetFeePayer(f.feePayer)
 	tx.SetTimeoutHeight(f.TimeoutHeight())
+	tx.SetUnordered(f.Unordered())
 
 	if etx, ok := tx.(client.ExtendedTxBuilder); ok {
 		etx.SetExtensionOptions(f.extOptions...)
@@ -440,7 +441,7 @@ func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
 
 	encoder := f.txConfig.TxEncoder()
 	if encoder == nil {
-		return nil, fmt.Errorf("cannot simulate tx: tx encoder is nil")
+		return nil, errors.New("cannot simulate tx: tx encoder is nil")
 	}
 
 	return encoder(txb.GetTx())

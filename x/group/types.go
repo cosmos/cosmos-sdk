@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
@@ -286,7 +287,7 @@ func (g GroupPolicyInfo) GetDecisionPolicy() (DecisionPolicy, error) {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (g GroupPolicyInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (g GroupPolicyInfo) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var decisionPolicy DecisionPolicy
 	return unpacker.UnpackAny(g.DecisionPolicy, &decisionPolicy)
 }
@@ -458,16 +459,16 @@ func (v Vote) ValidateBasic() error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (q QueryGroupPoliciesByGroupResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (q QueryGroupPoliciesByGroupResponse) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	return unpackGroupPolicies(unpacker, q.GroupPolicies)
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (q QueryGroupPoliciesByAdminResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (q QueryGroupPoliciesByAdminResponse) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	return unpackGroupPolicies(unpacker, q.GroupPolicies)
 }
 
-func unpackGroupPolicies(unpacker codectypes.AnyUnpacker, accs []*GroupPolicyInfo) error {
+func unpackGroupPolicies(unpacker gogoprotoany.AnyUnpacker, accs []*GroupPolicyInfo) error {
 	for _, g := range accs {
 		err := g.UnpackInterfaces(unpacker)
 		if err != nil {

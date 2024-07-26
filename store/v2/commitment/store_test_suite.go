@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/core/log"
+	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/v2"
@@ -26,7 +26,7 @@ const (
 type CommitStoreTestSuite struct {
 	suite.Suite
 
-	NewStore func(db corestore.KVStoreWithBatch, storeKeys []string, logger log.Logger) (*CommitStore, error)
+	NewStore func(db corestore.KVStoreWithBatch, storeKeys []string, logger corelog.Logger) (*CommitStore, error)
 }
 
 func (s *CommitStoreTestSuite) TestStore_Snapshotter() {

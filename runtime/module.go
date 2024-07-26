@@ -9,16 +9,9 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
-<<<<<<< HEAD
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
-=======
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
-	"cosmossdk.io/core/app"
->>>>>>> 502450cd1 (fix(runtime): remove `appv1alpha1.Config` from runtime (#21042))
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
@@ -133,8 +126,6 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 type AppInputs struct {
 	depinject.In
 
-<<<<<<< HEAD
-	AppConfig          *appv1alpha1.Config
 	Config             *runtimev1alpha1.Module
 	AppBuilder         *AppBuilder
 	Modules            map[string]appmodule.AppModule
@@ -143,15 +134,6 @@ type AppInputs struct {
 	InterfaceRegistry  codectypes.InterfaceRegistry
 	LegacyAmino        *codec.LegacyAmino
 	Logger             log.Logger
-=======
-	Logger            log.Logger
-	Config            *runtimev1alpha1.Module
-	AppBuilder        *AppBuilder
-	ModuleManager     *module.Manager
-	BaseAppOptions    []BaseAppOption
-	InterfaceRegistry codectypes.InterfaceRegistry
-	LegacyAmino       legacy.Amino
->>>>>>> 502450cd1 (fix(runtime): remove `appv1alpha1.Config` from runtime (#21042))
 }
 
 func SetupAppBuilder(inputs AppInputs) {

@@ -3,7 +3,6 @@ package runtime
 import (
 	"context"
 
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/core/comet"
@@ -15,7 +14,6 @@ import (
 )
 
 func (a *App) registerRuntimeServices(cfg module.Configurator) error {
-	appv1alpha1.RegisterQueryServer(cfg.QueryServer(), services.NewAppQueryService(a.appConfig))
 	autocliv1.RegisterQueryServer(cfg.QueryServer(), services.NewAutoCLIQueryService(a.ModuleManager.Modules))
 
 	reflectionSvc, err := services.NewReflectionService()

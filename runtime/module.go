@@ -9,6 +9,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
@@ -126,6 +127,7 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 type AppInputs struct {
 	depinject.In
 
+	AppConfig          *appv1alpha1.Config `optional:"true"`
 	Config             *runtimev1alpha1.Module
 	AppBuilder         *AppBuilder
 	Modules            map[string]appmodule.AppModule
@@ -140,6 +142,7 @@ func SetupAppBuilder(inputs AppInputs) {
 	app := inputs.AppBuilder.app
 	app.baseAppOptions = inputs.BaseAppOptions
 	app.config = inputs.Config
+	app.appConfig = inputs.AppConfig
 	app.logger = inputs.Logger
 	app.ModuleManager = module.NewManagerFromMap(inputs.Modules)
 

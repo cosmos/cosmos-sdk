@@ -8,8 +8,8 @@ import (
 
 	protoio "github.com/cosmos/gogoproto/io"
 
+	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/internal"
 	"cosmossdk.io/store/v2/internal/conv"
@@ -30,13 +30,13 @@ var (
 // RootStore use a CommitStore as an abstraction to handle multiple store keys
 // and trees.
 type CommitStore struct {
-	logger     log.Logger
+	logger     corelog.Logger
 	metadata   *MetadataStore
 	multiTrees map[string]Tree
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, logger log.Logger) (*CommitStore, error) {
+func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, logger corelog.Logger) (*CommitStore, error) {
 	return &CommitStore{
 		logger:     logger,
 		multiTrees: trees,

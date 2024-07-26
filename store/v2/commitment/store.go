@@ -244,7 +244,7 @@ func (c *CommitStore) PausePruning(pause bool) {
 // Snapshot implements snapshotstypes.CommitSnapshotter.
 func (c *CommitStore) Snapshot(version uint64, protoWriter protoio.Writer) error {
 	if version == 0 {
-		return fmt.Errorf("the snapshot version must be greater than 0")
+		return errors.New("the snapshot version must be greater than 0")
 	}
 
 	latestVersion, err := c.GetLatestVersion()
@@ -348,7 +348,7 @@ loop:
 
 		case *snapshotstypes.SnapshotItem_IAVL:
 			if importer == nil {
-				return snapshotstypes.SnapshotItem{}, fmt.Errorf("received IAVL node item before store item")
+				return snapshotstypes.SnapshotItem{}, errors.New("received IAVL node item before store item")
 			}
 			node := item.IAVL
 			if node.Height > int32(math.MaxInt8) {

@@ -1,6 +1,7 @@
 package mempool_test
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -217,7 +218,7 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 
 	// a tx which does not implement SigVerifiableTx should not be inserted
 	tx := &sigErrTx{getSigs: func() ([]txsigning.SignatureV2, error) {
-		return nil, fmt.Errorf("error")
+		return nil, errors.New("error")
 	}}
 	require.Error(t, s.mempool.Insert(ctx, tx))
 	require.Error(t, s.mempool.Remove(tx))

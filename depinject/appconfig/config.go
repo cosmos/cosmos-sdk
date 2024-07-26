@@ -1,6 +1,7 @@
 package appconfig
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -95,7 +96,7 @@ func Compose(appConfig gogoproto.Message) depinject.Config {
 
 	for _, module := range appConfigConcrete.Modules {
 		if module.Name == "" {
-			return depinject.Error(fmt.Errorf("module is missing name"))
+			return depinject.Error(errors.New("module is missing name"))
 		}
 
 		if module.Config == nil {

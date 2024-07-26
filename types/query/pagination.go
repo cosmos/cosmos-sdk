@@ -1,7 +1,7 @@
 package query
 
 import (
-	"fmt"
+	"errors"
 	"math"
 
 	db "github.com/cosmos/cosmos-db"
@@ -62,7 +62,7 @@ func Paginate(
 	pageRequest = initPageRequestDefaults(pageRequest)
 
 	if pageRequest.Offset > 0 && pageRequest.Key != nil {
-		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
+		return nil, errors.New("invalid request, either offset or key is expected, got both")
 	}
 
 	iterator := getIterator(prefixStore, pageRequest.Key, pageRequest.Reverse)

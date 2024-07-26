@@ -8,7 +8,6 @@ import (
 	"golang.org/x/exp/slices"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
@@ -36,9 +35,8 @@ type App[T transaction.Tx] struct {
 	db                 Store
 
 	// app configuration
-	logger    log.Logger
-	config    *runtimev2.Module
-	appConfig *appv1alpha1.Config
+	logger log.Logger
+	config *runtimev2.Module
 
 	// modules configuration
 	storeKeys          []string

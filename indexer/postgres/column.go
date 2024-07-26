@@ -25,7 +25,7 @@ func (tm *ObjectIndexer) createColumnDefinition(writer io.Writer, field schema.F
 	} else {
 		switch field.Kind {
 		case schema.EnumKind:
-			_, err = fmt.Fprintf(writer, "%q", enumTypeName(tm.moduleName, field.EnumDefinition))
+			_, err = fmt.Fprintf(writer, "%q", enumTypeName(tm.moduleName, field.EnumType))
 			if err != nil {
 				return err
 			}
@@ -100,7 +100,7 @@ func simpleColumnType(kind schema.Kind) string {
 		return "JSONB"
 	case schema.DurationKind:
 		return "BIGINT"
-	case schema.Bech32AddressKind:
+	case schema.AddressKind:
 		return "TEXT"
 	default:
 		return ""

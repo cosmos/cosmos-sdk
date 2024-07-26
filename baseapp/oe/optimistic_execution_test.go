@@ -8,7 +8,7 @@ import (
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/stretchr/testify/assert"
 
-	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 )
 
 func testFinalizeBlock(_ context.Context, _ *abci.FinalizeBlockRequest) (*abci.FinalizeBlockResponse, error) {
@@ -16,7 +16,7 @@ func testFinalizeBlock(_ context.Context, _ *abci.FinalizeBlockRequest) (*abci.F
 }
 
 func TestOptimisticExecution(t *testing.T) {
-	oe := NewOptimisticExecution(coretesting.NewNopLogger(), testFinalizeBlock)
+	oe := NewOptimisticExecution(log.NewNopLogger(), testFinalizeBlock)
 	assert.True(t, oe.Enabled())
 	oe.Execute(&abci.ProcessProposalRequest{
 		Hash: []byte("test"),

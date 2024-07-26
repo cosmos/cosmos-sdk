@@ -14,10 +14,10 @@ import (
 	coreappmgr "cosmossdk.io/core/app"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
-	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/cometbft/client/grpc/cmtservice"
 	"cosmossdk.io/server/v2/cometbft/handlers"
@@ -543,7 +543,7 @@ func (c *Consensus[T]) VerifyVoteExtension(
 	}
 
 	if c.verifyVoteExt == nil {
-		return nil, fmt.Errorf("vote extensions are enabled but no verify function was set")
+		return nil, errors.New("vote extensions are enabled but no verify function was set")
 	}
 
 	_, latestStore, err := c.store.StateLatest()
@@ -579,7 +579,7 @@ func (c *Consensus[T]) ExtendVote(ctx context.Context, req *abciproto.ExtendVote
 	}
 
 	if c.verifyVoteExt == nil {
-		return nil, fmt.Errorf("vote extensions are enabled but no verify function was set")
+		return nil, errors.New("vote extensions are enabled but no verify function was set")
 	}
 
 	_, latestStore, err := c.store.StateLatest()

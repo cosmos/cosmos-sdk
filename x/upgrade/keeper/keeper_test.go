@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/upgrade"
@@ -54,7 +55,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	s.baseApp = baseapp.NewBaseApp(
 		"upgrade",
-		coretesting.NewNopLogger(),
+		log.NewNopLogger(),
 		testCtx.DB,
 		s.encCfg.TxConfig.TxDecoder(),
 	)

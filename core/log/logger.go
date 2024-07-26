@@ -2,10 +2,9 @@ package log
 
 const ModuleKey = "module"
 
-// Logger is the Cosmos SDK logger interface.
-// It maintains as much backward compatibility with the CometBFT logger as possible.
-// cosmossdk.io/log is the implementation provided by the Cosmos SDK
-// All functionalities of the logger are available through the Impl() method.
+// Logger defines basic logger functionality that all previous versions of the Logger interface should
+// support. Library users should prefer to use this interface when possible, then type case to Logger
+// to see if WithContext is supported.
 type Logger interface {
 	// Info takes a message and a set of key/value pairs and logs with level INFO.
 	// The key of the tuple must be a string.
@@ -22,9 +21,6 @@ type Logger interface {
 	// Debug takes a message and a set of key/value pairs and logs with level DEBUG.
 	// The key of the tuple must be a string.
 	Debug(msg string, keyVals ...any)
-
-	// With returns a new wrapped logger with additional context provided by a set.
-	With(keyVals ...any) Logger
 
 	// Impl returns the underlying logger implementation.
 	// It is used to access the full functionalities of the underlying logger.

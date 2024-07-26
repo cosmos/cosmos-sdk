@@ -2,6 +2,7 @@ package mempool
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"sync"
@@ -215,7 +216,7 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 		return err
 	}
 	if len(sigs) == 0 {
-		return fmt.Errorf("tx must have at least one signer")
+		return errors.New("tx must have at least one signer")
 	}
 
 	sig := sigs[0]
@@ -436,7 +437,7 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 		return err
 	}
 	if len(sigs) == 0 {
-		return fmt.Errorf("attempted to remove a tx with no signatures")
+		return errors.New("attempted to remove a tx with no signatures")
 	}
 
 	sig := sigs[0]
@@ -466,7 +467,7 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 func IsEmpty[C comparable](mempool Mempool) error {
 	mp := mempool.(*PriorityNonceMempool[C])
 	if mp.priorityIndex.Len() != 0 {
-		return fmt.Errorf("priorityIndex not empty")
+		return errors.New("priorityIndex not empty")
 	}
 
 	countKeys := make([]C, 0, len(mp.priorityCounts))

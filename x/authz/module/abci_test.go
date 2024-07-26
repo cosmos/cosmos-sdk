@@ -9,6 +9,7 @@ import (
 
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/authz"
@@ -36,7 +37,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 
 	baseApp := baseapp.NewBaseApp(
 		"authz",
-		coretesting.NewNopLogger(),
+		log.NewNopLogger(),
 		testCtx.DB,
 		encCfg.TxConfig.TxDecoder(),
 	)

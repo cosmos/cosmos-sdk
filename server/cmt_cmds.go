@@ -247,7 +247,10 @@ $ %s query block --%s=%s <hash>
 					err    error
 					height int64
 				)
-				heightStr := args[0]
+				heightStr := ""
+				if len(args) > 0 {
+					heightStr = args[0]
+				}
 
 				if heightStr == "" {
 					cmd.Println("Falling back to latest block height:")

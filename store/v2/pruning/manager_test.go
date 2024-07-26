@@ -219,6 +219,7 @@ func (s *PruningManagerTestSuite) TestSignalCommit() {
 	}
 	s.Require().Eventually(checkSCPrune, 10*time.Second, 1*time.Second)
 
+	// try with signal commit start and finish accordingly
 	// commit changesets with pruning
 	toVersion := uint64(100)
 	keyCount := 10

@@ -3,6 +3,8 @@ package simapp
 import (
 	_ "embed"
 
+	"github.com/spf13/viper"
+
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	coreapp "cosmossdk.io/core/app"
 	"cosmossdk.io/core/legacy"
@@ -30,7 +32,6 @@ import (
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

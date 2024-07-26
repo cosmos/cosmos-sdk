@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
-	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -124,22 +124,33 @@ func appStateFnWithExtendedCbs(
 			panic(err)
 		}
 
-		stakingStateBz, ok := rawState[stakingtypes.ModuleName]
+		stakingStateBz, ok := rawState[testutil.StakingModuleName]
 		if !ok {
 			panic("staking genesis state is missing")
 		}
 
-		stakingState := new(stakingtypes.GenesisState)
-		if err = cdc.UnmarshalJSON(stakingStateBz, stakingState); err != nil {
+		rawStakingState := new(anypb.Any)
+		if err = cdc.UnmarshalJSON(stakingStateBz, rawStakingState); err != nil {
 			panic(err)
 		}
+
+		stakingState, err := ProtoToStakingGenesisState(rawStakingState)
+		if err != nil {
+			panic(err)
+		}
+
+		stakingStateProto, err := stakingState.ToProto()
+		if err != nil {
+			panic(fmt.Errorf("failed to convert staking state to proto: %w", err))
+		}
+
 		// compute not bonded balance
 		notBondedTokens := math.ZeroInt()
 		for _, val := range stakingState.Validators {
-			if val.Status != stakingtypes.Unbonded {
+			if val.Status != 1 { // unbonded
 				continue
 			}
-			notBondedTokens = notBondedTokens.Add(val.GetTokens())
+			notBondedTokens = notBondedTokens.Add(val.Tokens)
 		}
 		notBondedCoins := sdk.NewCoin(stakingState.Params.BondDenom, notBondedTokens)
 		// edit bank state to make it have the not bonded pool tokens
@@ -152,7 +163,7 @@ func appStateFnWithExtendedCbs(
 			panic(err)
 		}
 
-		stakingAddr := authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName).String()
+		stakingAddr := authtypes.NewModuleAddress(StakingNotBondedPoolName).String()
 		var found bool
 		for _, balance := range bankState.Balances {
 			if balance.Address == stakingAddr {
@@ -169,12 +180,13 @@ func appStateFnWithExtendedCbs(
 
 		// change appState back
 		for name, state := range map[string]proto.Message{
-			stakingtypes.ModuleName: stakingState,
-			testutil.BankModuleName: bankState,
+			testutil.StakingModuleName: stakingStateProto,
+			testutil.BankModuleName:    bankState,
 		} {
 			if moduleStateCb != nil {
 				moduleStateCb(name, state)
 			}
+
 			rawState[name] = cdc.MustMarshalJSON(state)
 		}
 

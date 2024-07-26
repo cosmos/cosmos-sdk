@@ -36,7 +36,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
-type IntegrationTestSuite struct {
+type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
@@ -44,9 +44,9 @@ type IntegrationTestSuite struct {
 	conn    *grpc.ClientConn
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
+func (s *E2ETestSuite) SetupSuite() {
 	var err error
-	s.T().Log("setting up integration test suite")
+	s.T().Log("setting up E2E test suite")
 
 	s.cfg, err = network.DefaultConfigWithAppConfig(configurator.NewAppConfig(
 		configurator.AccountsModule(),
@@ -75,13 +75,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+func (s *E2ETestSuite) TearDownSuite() {
+	s.T().Log("tearing down E2E test suite")
 	s.conn.Close()
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestGRPCServer_TestService() {
+func (s *E2ETestSuite) TestGRPCServer_TestService() {
 	// gRPC query to test service should work
 	testClient := testdata.NewQueryClient(s.conn)
 	testRes, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
@@ -89,7 +89,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_TestService() {
 	s.Require().Equal("hello", testRes.Message)
 }
 
-func (s *IntegrationTestSuite) TestGRPCServer_BankBalance() {
+func (s *E2ETestSuite) TestGRPCServer_BankBalance() {
 	val0 := s.network.GetValidators()[0]
 
 	// gRPC query to bank service should work
@@ -120,7 +120,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_BankBalance() {
 	s.Require().Equal([]string{"1"}, blockHeight)
 }
 
-func (s *IntegrationTestSuite) TestGRPCServer_Reflection() {
+func (s *E2ETestSuite) TestGRPCServer_Reflection() {
 	// Test server reflection
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -142,7 +142,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_Reflection() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGRPCServer_InterfaceReflection() {
+func (s *E2ETestSuite) TestGRPCServer_InterfaceReflection() {
 	// this tests the application reflection capabilities and compatibility between v1 and v2
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -165,7 +165,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_InterfaceReflection() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGRPCServer_GetTxsEvent() {
+func (s *E2ETestSuite) TestGRPCServer_GetTxsEvent() {
 	// Query the tx via gRPC without pagination. This used to panic, see
 	// https://github.com/cosmos/cosmos-sdk/issues/8038.
 	txServiceClient := txtypes.NewServiceClient(s.conn)
@@ -178,7 +178,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_GetTxsEvent() {
 	s.Require().NoError(err)
 }
 
-func (s *IntegrationTestSuite) TestGRPCServer_BroadcastTx() {
+func (s *E2ETestSuite) TestGRPCServer_BroadcastTx() {
 	val0 := s.network.GetValidators()[0]
 
 	txBuilder := s.mkTxBuilder()
@@ -203,7 +203,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_BroadcastTx() {
 // Test and enforce that we upfront reject any connections to baseapp containing
 // invalid initial x-cosmos-block-height that aren't positive  and in the range [0, max(int64)]
 // See issue https://github.com/cosmos/cosmos-sdk/issues/7662.
-func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
+func (s *E2ETestSuite) TestGRPCServerInvalidHeaderHeights() {
 	t := s.T()
 
 	// We should reject connections with invalid block heights off the bat.
@@ -231,7 +231,7 @@ func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 
 // TestGRPCUnpacker - tests the grpc endpoint for Validator and using the interface registry unpack and extract the
 // ConsAddr. (ref: https://github.com/cosmos/cosmos-sdk/issues/8045)
-func (s *IntegrationTestSuite) TestGRPCUnpacker() {
+func (s *E2ETestSuite) TestGRPCUnpacker() {
 	ir := s.cfg.InterfaceRegistry
 	queryClient := stakingtypes.NewQueryClient(s.conn)
 	validator, err := queryClient.Validator(context.Background(),
@@ -252,7 +252,7 @@ func (s *IntegrationTestSuite) TestGRPCUnpacker() {
 }
 
 // mkTxBuilder creates a TxBuilder containing a signed tx from validator 0.
-func (s *IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
+func (s *E2ETestSuite) mkTxBuilder() client.TxBuilder {
 	val := s.network.GetValidators()[0]
 	s.Require().NoError(s.network.WaitForNextBlock())
 
@@ -285,6 +285,6 @@ func (s *IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 	return txBuilder
 }
 
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+func TestE2ETestSuite(t *testing.T) {
+	suite.Run(t, new(E2ETestSuite))
 }

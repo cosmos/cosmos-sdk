@@ -17,7 +17,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
-	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -26,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -224,12 +224,14 @@ func GenesisStateWithValSet(
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = codec.MustMarshalJSON(authGenesis)
 
-	validators := make([]stakingtypes.Validator, 0, len(valSet.Validators))
-	delegations := make([]stakingtypes.Delegation, 0, len(valSet.Validators))
+	validators := make([]StakingValidator, 0, len(valSet.Validators))
+	lastValidatorPower := make([]LastValidatorPower, 0, len(valSet.Validators))
+	delegations := make([]StakingDelegation, 0, len(valSet.Validators))
 
 	bondAmt := sdk.DefaultPowerReduction
+	var totalPower int64
 
-	for _, val := range valSet.Validators {
+	for i, val := range valSet.Validators {
 		pk, err := cryptocodec.FromCmtPubKeyInterface(val.PubKey)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert pubkey: %w", err)
@@ -240,27 +242,79 @@ func GenesisStateWithValSet(
 			return nil, fmt.Errorf("failed to create new any: %w", err)
 		}
 
-		validator := stakingtypes.Validator{
-			OperatorAddress:   sdk.ValAddress(val.Address).String(),
-			ConsensusPubkey:   pkAny,
-			Jailed:            false,
-			Status:            stakingtypes.Bonded,
-			Tokens:            bondAmt,
-			DelegatorShares:   sdkmath.LegacyOneDec(),
-			Description:       stakingtypes.Description{},
-			UnbondingHeight:   int64(0),
-			UnbondingTime:     time.Unix(0, 0).UTC(),
-			Commission:        stakingtypes.NewCommission(sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec()),
-			MinSelfDelegation: sdkmath.ZeroInt(),
+		commission, err := sdkmath.LegacyNewDecFromStr("0.5")
+		if err != nil {
+			return nil, err
+		}
+
+		validator := StakingValidator{
+			OperatorAddress:         sdk.ValAddress(val.Address).String(),
+			ConsensusPubkey:         pkAny,
+			consensusPubKeyConcrete: pk,
+			Jailed:                  false,
+			Status:                  3,
+			Tokens:                  bondAmt,
+			DelegatorShares:         sdkmath.LegacyOneDec(),
+			Description: StakingDescription{
+				Moniker: fmt.Sprintf("val-%d", i),
+			},
+			Commission: StakingValidatorCommission{
+				CommissionRates: StakingCommissionRates{
+					Rate:          commission,
+					MaxRate:       commission,
+					MaxChangeRate: sdkmath.LegacyOneDec(),
+				},
+			},
+			MinSelfDelegation: sdkmath.OneInt(),
 		}
 		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress().String(), sdk.ValAddress(val.Address).String(), sdkmath.LegacyOneDec()))
+		totalPower += bondAmt.Int64()
 
+		lastValidatorPower = append(lastValidatorPower, LastValidatorPower{
+			Address: sdk.ValAddress(val.Address).String(),
+			Power:   bondAmt.Int64(),
+		})
+
+		deletation := StakingDelegation{
+			DelegatorAddress: genAccs[0].GetAddress().String(),
+			ValidatorAddress: sdk.ValAddress(val.Address).String(),
+			Shares:           sdkmath.LegacyOneDec(),
+		}
+		delegations = append(delegations, deletation)
 	}
 
 	// set validators and delegations
-	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
-	genesisState[stakingtypes.ModuleName] = codec.MustMarshalJSON(stakingGenesis)
+	stakingGenesis := StakingGenesisState{
+		Params: StakingParams{
+			UnbondingTime:     time.Hour * 24 * 7 * 3,
+			MaxValidators:     100,
+			MaxEntries:        7,
+			HistoricalEntries: 0,
+			BondDenom:         sdk.DefaultBondDenom,
+			MinCommissionRate: sdkmath.LegacyZeroDec(),
+			KeyRotationFee:    sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100)),
+		},
+		LastTotalPower:      sdkmath.NewInt(totalPower),
+		LastValidatorPowers: lastValidatorPower,
+		Validators:          validators,
+		Delegations:         delegations,
+		Exported:            true,
+	}
+
+	stakingGenesisProto, err := stakingGenesis.ToProto()
+	if err != nil {
+		return nil, fmt.Errorf("transform staking genesis struct to proto failed: %w", err)
+	}
+
+	marshalledStakingGenesisProto, err := codec.MarshalJSON(stakingGenesisProto)
+	if err != nil {
+		return nil, fmt.Errorf("marshal staking genesis proto to json failed: %w", err)
+	}
+
+	genesisState[testutil.StakingModuleName], err = extractAnyValueFromJSON(marshalledStakingGenesisProto)
+	if err != nil {
+		return nil, fmt.Errorf("extract staking genesis proto from json failed: %w", err)
+	}
 
 	totalSupply := sdk.NewCoins()
 	for _, b := range balances {
@@ -275,7 +329,7 @@ func GenesisStateWithValSet(
 
 	// add bonded amount to bonded pool module account
 	balances = append(balances, banktypes.Balance{
-		Address: authtypes.NewModuleAddress(stakingtypes.BondedPoolName).String(),
+		Address: authtypes.NewModuleAddress(StakingBondedPoolName).String(),
 		Coins:   sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, bondAmt)},
 	})
 

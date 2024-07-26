@@ -64,11 +64,3 @@ func WriteAndTrackCometConfig(v *viper.Viper, home string, cfg *cmtcfg.Config) e
 	v.AddConfigPath(filepath.Join(home, "config"))
 	return v.ReadInConfig()
 }
-
-func TrackCometConfig(v *viper.Viper, home string) error {
-	v.Set(flags.FlagHome, home)
-	v.SetConfigType("toml")
-	v.SetConfigName("config")
-	v.AddConfigPath(filepath.Join(home, "config"))
-	return v.ReadInConfig()
-}

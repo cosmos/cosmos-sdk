@@ -20,6 +20,17 @@ type AppEntrypoint interface {
 	SimDeliver(_txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error)
 }
 
+var _ AppEntrypoint = SimDeliverFn(nil)
+
+type (
+	AppEntrypointFn = SimDeliverFn
+	SimDeliverFn    func(_txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error)
+)
+
+func (m SimDeliverFn) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
+	return m(txEncoder, tx)
+}
+
 // Deprecated: Use WeightedProposalMsg instead.
 type WeightedProposalContent interface {
 	AppParamsKey() string                   // key used to retrieve the value of the weight from the simulation application params

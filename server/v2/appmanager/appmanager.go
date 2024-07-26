@@ -119,6 +119,27 @@ func (a AppManager[T]) DeliverBlock(
 
 	return blockResponse, newState, nil
 }
+func (a AppManager[T]) DeliverSims(
+	ctx context.Context,
+	block *appmanager.BlockRequest[T],
+	simsBuilder func(ctx context.Context) (T, bool),
+) (*appmanager.BlockResponse, corestore.WriterMap, error) {
+	latestVersion, currentState, err := a.db.StateLatest()
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
+	}
+
+	if latestVersion+1 != block.Height {
+		return nil, nil, fmt.Errorf("invalid DeliverBlock height wanted %d, got %d", latestVersion+1, block.Height)
+	}
+
+	blockResponse, newState, err := a.stf.DeliverSims(ctx, block, currentState, simsBuilder)
+	if err != nil {
+		return nil, nil, fmt.Errorf("block delivery failed: %w", err)
+	}
+
+	return blockResponse, newState, nil
+}
 
 // ValidateTx will validate the tx against the latest storage state. This means that
 // only the stateful validation will be run, not the execution portion of the tx.

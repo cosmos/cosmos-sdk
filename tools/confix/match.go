@@ -61,7 +61,3 @@ func matchDocs(matchesMap map[string]string, lhs, rhs []KV) map[string]string {
 
 	return matchesMap
 }
-
-func formatMatchedKey(oldKey, newKey string) map[string][]string {
-	return map[string][]string{oldKey: []string{newKey}}
-}

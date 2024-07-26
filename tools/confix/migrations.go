@@ -150,10 +150,6 @@ func NoPlan(from *tomledit.Document, to, planType string) (transform.Plan, *toml
 
 // V2PlanBuilder is a function that returns a transformation plan to convert to serverv2 config
 func V2PlanBuilder(from *tomledit.Document, to, planType string) (transform.Plan, *tomledit.Document) {
-	if planType != "app" {
-		return PlanBuilder(from, to, planType)
-	}
-
 	target, err := LoadLocalConfig(to, planType)
 	if err != nil {
 		panic(fmt.Errorf("failed to parse file: %w. This file should have been valid", err))

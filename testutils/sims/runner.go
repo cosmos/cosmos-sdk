@@ -44,9 +44,11 @@ var defaultSeeds = []int64{
 }
 
 type SimStateFactory struct {
-	Codec       codec.Codec
-	AppStateFn  simtypes.AppStateFn
-	BlockedAddr map[string]bool
+	Codec         codec.Codec
+	AppStateFn    simtypes.AppStateFn
+	BlockedAddr   map[string]bool
+	AccountSource simsx.AccountSourceX
+	BalanceSource simsx.BalanceSource
 }
 
 // SimulationApp abstract app that is used by sims
@@ -230,7 +232,7 @@ func prepareWeightedOps(
 	weights := simsx.ParamWeightSource(simState.AppParams)
 	reporter := simsx.NewBasicSimulationReporter()
 
-	pReg := simsx.NewSimsProposalRegistryAdapter(reporter, sm.AccountSource, sm.BalanceSource, txConfig.SigningContext().AddressCodec(), logger)
+	pReg := simsx.NewSimsProposalRegistryAdapter(reporter, stateFact.AccountSource, stateFact.BalanceSource, txConfig.SigningContext().AddressCodec(), logger)
 	wProps := make([]simtypes.WeightedProposalMsg, 0, len(sm.Modules))
 
 	// add gov proposals types
@@ -244,7 +246,7 @@ func prepareWeightedOps(
 	}
 	simState.ProposalMsgs = append(wProps, pReg.ToLegacyObjects()...)
 
-	oReg := simsx.NewSimsMsgRegistryAdapter(reporter, sm.AccountSource, sm.BalanceSource, txConfig, logger)
+	oReg := simsx.NewSimsMsgRegistryAdapter(reporter, stateFact.AccountSource, stateFact.BalanceSource, txConfig, logger)
 	wOps := make([]simtypes.WeightedOperation, 0, len(sm.Modules))
 	for _, m := range sm.Modules {
 		// add operations

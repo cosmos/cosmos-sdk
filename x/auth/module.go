@@ -20,6 +20,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -186,17 +187,12 @@ func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState, am.randGenAccountsFn)
 }
 
-// ProposalMsgs returns msgs used for governance proposals for simulations.
-func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
-	return simulation.ProposalMsgs()
+// ProposalMsgsX returns msgs used for governance proposals for simulations.
+func (AppModule) ProposalMsgsX(weights simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weights.Get("msg_update_params", 100), simulation.MsgUpdateParamsFactory())
 }
 
 // RegisterStoreDecoder registers a decoder for auth module's types
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.accountKeeper.Schema)
-}
-
-// WeightedOperations doesn't return any auth module operation.
-func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
-	return nil
 }

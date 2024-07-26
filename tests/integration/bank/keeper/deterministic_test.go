@@ -200,7 +200,9 @@ func TestGRPCQueryAllBalances(t *testing.T) {
 
 		for i := 0; i < numCoins; i++ {
 			coin := getCoin(rt)
-
+			if exists, _ := coins.Find(coin.Denom); exists {
+				t.Skip("duplicate denom")
+			}
 			// NewCoins sorts the denoms
 			coins = sdk.NewCoins(append(coins, coin)...)
 		}

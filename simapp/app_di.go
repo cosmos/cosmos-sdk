@@ -276,7 +276,7 @@ func NewSimApp(
 	overrideModules := map[string]module.AppModuleSimulation{
 		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AuthKeeper, &app.AccountsKeeper, authsims.RandomGenesisAccounts),
 	}
-	app.sm = module.NewSimulationManagerFromAppModules(app.AuthKeeper, app.BankKeeper, app.ModuleManager.Modules, overrideModules)
+	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 
 	app.sm.RegisterStoreDecoders()
 

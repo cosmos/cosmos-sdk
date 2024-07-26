@@ -64,8 +64,8 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				return fmt.Errorf("the database has no valid heights to prune, the latest height: %v", latestHeight)
 			}
 
-			up to := latestHeight - keepRecent
-			cmd.Printf("pruning heights up to %v\n", up to)
+			upTo := latestHeight - keepRecent
+			cmd.Printf("pruning heights up to %v\n", upTo)
 
 			err = rootStore.Prune(latestHeight)
 			if err != nil {

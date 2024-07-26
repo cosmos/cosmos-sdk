@@ -573,7 +573,20 @@ jobs:
       - name: simapp-v2-smoke-test
         if: env.GIT_DIFF
         run: |
-          ./scripts/simapp-v2-init.sh
+          COSMOS_BUILD_OPTIONS=v2 make install
+          ./scripts/init-simapp-v2.sh
+          simdv2 start &
+          SIMD_PID=$!
+          cnt=0
+          while ! simdv2 query block --type=height 5; do
+            cnt=$((cnt + 1))
+            if [ $cnt -gt 30 ]; then
+              kill -9 "$SIMD_PID"
+              exit 1
+            fi
+            sleep 1
+          done
+          kill -9 "$SIMD_PID"
 
   test-collections:
     runs-on: ubuntu-latest

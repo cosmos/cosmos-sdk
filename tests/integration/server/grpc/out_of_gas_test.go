@@ -17,6 +17,7 @@ import (
 	_ "cosmossdk.io/x/consensus"
 	_ "cosmossdk.io/x/staking"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -36,7 +37,7 @@ func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
 	var err error
 	s.T().Log("setting up integration test suite")
 
-	s.cfg, err = network.DefaultConfigWithAppConfigWithQueryGasLimit(configurator.NewAppConfig(
+	s.cfg, err = network.DefaultConfigWithAppConfig(configurator.NewAppConfig(
 		configurator.AccountsModule(),
 		configurator.AuthModule(),
 		configurator.BankModule(),
@@ -44,7 +45,7 @@ func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
 		configurator.StakingModule(),
 		configurator.ConsensusModule(),
 		configurator.TxModule(),
-	), 10)
+	), baseapp.SetQueryGasLimit(10))
 	s.NoError(err)
 	s.cfg.NumValidators = 1
 

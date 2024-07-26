@@ -570,6 +570,11 @@ jobs:
             go.sum
             **/go.mod
             **/go.sum
+      - name: tests simapp
+        if: env.GIT_DIFF
+        run: |
+          cd simapp/v2
+          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
       - name: simapp-v2-smoke-test
         if: env.GIT_DIFF
         run: |

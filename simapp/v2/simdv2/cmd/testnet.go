@@ -14,8 +14,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	runtimev2 "cosmossdk.io/runtime/v2"
@@ -343,7 +343,12 @@ func initTestnetFiles[T transaction.Tx](
 			cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig),
 		)
 		grpcServer := grpc.New[T](grpc.OverwriteDefaultConfig(grpcConfig))
+<<<<<<< HEAD
 		server := serverv2.NewServer(coretesting.NewNopLogger(), cometServer, grpcServer)
+=======
+		storeServer := store.New[T]()
+		server := serverv2.NewServer(log.NewNopLogger(), cometServer, grpcServer, storeServer)
+>>>>>>> 5c90246b3 (feat(log): remove core dependency and update core interface to be dependency free (#21045))
 		err = server.WriteConfig(filepath.Join(nodeDir, "config"))
 		if err != nil {
 			return err

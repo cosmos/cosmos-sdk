@@ -17,5 +17,5 @@ func (nopLogger) Info(string, ...any)    {}
 func (nopLogger) Warn(string, ...any)    {}
 func (nopLogger) Error(string, ...any)   {}
 func (nopLogger) Debug(string, ...any)   {}
-func (nopLogger) With(...any) log.Logger { return nopLogger{} }
+func (nopLogger) WithContext(...any) any { return nopLogger{} }
 func (nopLogger) Impl() any              { return nopLogger{} }

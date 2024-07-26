@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/client/v2/offchain"
-	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"

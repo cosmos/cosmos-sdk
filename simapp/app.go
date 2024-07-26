@@ -19,7 +19,7 @@ import (
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/client/v2/autocli"
 	clienthelpers "cosmossdk.io/client/v2/helpers"
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/accounts/accountstd"

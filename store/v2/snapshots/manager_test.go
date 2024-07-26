@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	coretesting "cosmossdk.io/core/testing"
-	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2/snapshots"
 	"cosmossdk.io/store/v2/snapshots/types"
 )
@@ -355,7 +354,7 @@ func TestSnapshot_Take_Prune(t *testing.T) {
 	extSnapshotter := newExtSnapshotter(10)
 
 	expectChunks := snapshotItems(items, extSnapshotter)
-	manager := snapshots.NewManager(store, opts, commitSnapshotter, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
+	manager := snapshots.NewManager(store, opts, commitSnapshotter, &mockStorageSnapshotter{}, nil, coretesting.NewNopLogger())
 	err := manager.RegisterExtensions(extSnapshotter)
 	require.NoError(t, err)
 

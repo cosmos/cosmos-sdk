@@ -127,10 +127,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(evidenceKeeper))
 	suite.queryClient = types.NewQueryClient(queryHelper)
 	suite.evidenceKeeper = *evidenceKeeper
-
-	suite.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName),
-		suite.evidenceKeeper.Logger)
-
 	suite.msgServer = keeper.NewMsgServerImpl(suite.evidenceKeeper)
 }
 

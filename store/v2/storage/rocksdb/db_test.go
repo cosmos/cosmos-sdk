@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	coretesting "cosmossdk.io/core/testing"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/v2/storage"
 )
 

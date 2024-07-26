@@ -123,7 +123,6 @@ func NewSimApp(
 				appOpts,
 				// supply the logger
 				logger,
-
 				// ADVANCED CONFIGURATION
 
 				//

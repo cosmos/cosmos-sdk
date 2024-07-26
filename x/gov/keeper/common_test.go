@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -266,7 +267,7 @@ func trackMockBalances(bankKeeper *govtestutil.MockBankKeeper) error {
 		}
 		newBalance, negative := balances[senderAddr].SafeSub(coins...)
 		if negative {
-			return fmt.Errorf("not enough balance")
+			return errors.New("not enough balance")
 		}
 		balances[senderAddr] = newBalance
 		return nil

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -218,7 +220,7 @@ func (i LegacyMultiInfo) GetPath() (*hd.BIP44Params, error) {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (i LegacyMultiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (i LegacyMultiInfo) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	multiPK := i.PubKey.(*multisig.LegacyAminoPubKey)
 
 	return codectypes.UnpackInterfaces(multiPK, unpacker)

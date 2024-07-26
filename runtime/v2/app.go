@@ -8,7 +8,6 @@ import (
 	"golang.org/x/exp/slices"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/registry"
@@ -36,9 +35,8 @@ type App[T transaction.Tx] struct {
 	db                 Store
 
 	// app configuration
-	logger    log.Logger
-	config    *runtimev2.Module
-	appConfig *appv1alpha1.Config
+	logger log.Logger
+	config *runtimev2.Module
 
 	// modules configuration
 	storeKeys          []string
@@ -49,6 +47,11 @@ type App[T transaction.Tx] struct {
 	// GRPCQueryDecoders maps gRPC method name to a function that decodes the request
 	// bytes into a gogoproto.Message, which then can be passed to appmanager.
 	GRPCQueryDecoders map[string]func(requestBytes []byte) (gogoproto.Message, error)
+}
+
+// Name returns the app name.
+func (a *App[T]) Name() string {
+	return a.config.AppName
 }
 
 // Logger returns the app logger.

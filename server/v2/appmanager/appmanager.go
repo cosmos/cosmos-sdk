@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	appmanager "cosmossdk.io/core/app"
@@ -46,7 +47,7 @@ func (a AppManager[T]) InitGenesis(
 		return nil, nil, fmt.Errorf("unable to get latest state: %w", err)
 	}
 	if v != 0 { // TODO: genesis state may be > 0, we need to set version on store
-		return nil, nil, fmt.Errorf("cannot init genesis on non-zero state")
+		return nil, nil, errors.New("cannot init genesis on non-zero state")
 	}
 
 	var genTxs []T
@@ -81,7 +82,7 @@ func (a AppManager[T]) InitGenesis(
 
 	err = genesisState.ApplyStateChanges(blockZeroStateChanges)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to apply blcok zero state changes to genesis state: %w", err)
+		return nil, nil, fmt.Errorf("failed to apply block zero state changes to genesis state: %w", err)
 	}
 
 	return blockResponse, genesisState, err

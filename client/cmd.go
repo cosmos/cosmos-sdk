@@ -290,7 +290,7 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 
 		if keyType == keyring.TypeLedger && clientCtx.SignModeStr == flags.SignModeTextual {
 			if !slices.Contains(clientCtx.TxConfig.SignModeHandler().SupportedModes(), signingv1beta1.SignMode_SIGN_MODE_TEXTUAL) {
-				return clientCtx, fmt.Errorf("SIGN_MODE_TEXTUAL is not available")
+				return clientCtx, errors.New("SIGN_MODE_TEXTUAL is not available")
 			}
 		}
 

@@ -2,6 +2,7 @@ package cometbft
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -262,10 +263,10 @@ func (c *Consensus[T]) validateFinalizeBlockHeight(req *abci.FinalizeBlockReques
 
 	// expectedHeight holds the expected height to validate
 	var expectedHeight uint64
-	if lastBlockHeight == 0 && c.cfg.InitialHeight > 1 {
+	if lastBlockHeight == 0 && c.initialHeight > 1 {
 		// In this case, we're validating the first block of the chain, i.e no
 		// previous commit. The height we're expecting is the initial height.
-		expectedHeight = c.cfg.InitialHeight
+		expectedHeight = c.initialHeight
 	} else {
 		// This case can mean two things:
 		//
@@ -296,7 +297,7 @@ func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.Consen
 	}
 
 	if r, ok := res.(*consensus.QueryParamsResponse); !ok {
-		return nil, fmt.Errorf("failed to query consensus params")
+		return nil, errors.New("failed to query consensus params")
 	} else {
 		// convert our params to cometbft params
 		evidenceMaxDuration := r.Params.Evidence.MaxAgeDuration
@@ -327,7 +328,7 @@ func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.Consen
 
 func (c *Consensus[T]) GetBlockRetentionHeight(cp *cmtproto.ConsensusParams, commitHeight int64) int64 {
 	// pruning is disabled if minRetainBlocks is zero
-	if c.cfg.MinRetainBlocks == 0 {
+	if c.cfg.AppTomlConfig.MinRetainBlocks == 0 {
 		return 0
 	}
 
@@ -368,7 +369,7 @@ func (c *Consensus[T]) GetBlockRetentionHeight(cp *cmtproto.ConsensusParams, com
 		}
 	}
 
-	v := commitHeight - int64(c.cfg.MinRetainBlocks)
+	v := commitHeight - int64(c.cfg.AppTomlConfig.MinRetainBlocks)
 	retentionHeight = minNonZero(retentionHeight, v)
 
 	if retentionHeight <= 0 {
@@ -383,15 +384,15 @@ func (c *Consensus[T]) GetBlockRetentionHeight(cp *cmtproto.ConsensusParams, com
 func (c *Consensus[T]) checkHalt(height int64, time time.Time) error {
 	var halt bool
 	switch {
-	case c.cfg.HaltHeight > 0 && uint64(height) > c.cfg.HaltHeight:
+	case c.cfg.AppTomlConfig.HaltHeight > 0 && uint64(height) > c.cfg.AppTomlConfig.HaltHeight:
 		halt = true
 
-	case c.cfg.HaltTime > 0 && time.Unix() > int64(c.cfg.HaltTime):
+	case c.cfg.AppTomlConfig.HaltTime > 0 && time.Unix() > int64(c.cfg.AppTomlConfig.HaltTime):
 		halt = true
 	}
 
 	if halt {
-		return fmt.Errorf("halt per configuration height %d time %d", c.cfg.HaltHeight, c.cfg.HaltTime)
+		return fmt.Errorf("halt per configuration height %d time %d", c.cfg.AppTomlConfig.HaltHeight, c.cfg.AppTomlConfig.HaltTime)
 	}
 
 	return nil

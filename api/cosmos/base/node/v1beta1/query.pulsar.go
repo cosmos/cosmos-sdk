@@ -2113,7 +2113,7 @@ func (*StatusRequest) Descriptor() ([]byte, []int) {
 	return file_cosmos_base_node_v1beta1_query_proto_rawDescGZIP(), []int{2}
 }
 
-// StateResponse defines the response structure for the status of a node.
+// StatusResponse defines the response structure for the status of a node.
 type StatusResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

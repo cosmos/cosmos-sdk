@@ -4,8 +4,8 @@ import "fmt"
 
 // ObjectType describes an object type a module schema.
 type ObjectType struct {
-	// Name is the name of the object type. It must be unique within the module schema
-	// and conform to the NameFormat regular expression.
+	// Name is the name of the object type. It must be unique within the module schema amongst all object and enum
+	// types and conform to the NameFormat regular expression.
 	Name string
 
 	// KeyFields is a list of fields that make up the primary key of the object.
@@ -27,14 +27,21 @@ type ObjectType struct {
 	RetainDeletions bool
 }
 
+// TypeName implements the Type interface.
+func (o ObjectType) TypeName() string {
+	return o.Name
+}
+
+func (ObjectType) isType() {}
+
 // Validate validates the object type.
 func (o ObjectType) Validate() error {
-	return o.validate(map[string]map[string]bool{})
+	return o.validate(map[string]Type{})
 }
 
 // validate validates the object type with an enumValueMap that can be
 // shared across a whole module schema.
-func (o ObjectType) validate(enumValueMap map[string]map[string]bool) error {
+func (o ObjectType) validate(types map[string]Type) error {
 	if !ValidateName(o.Name) {
 		return fmt.Errorf("invalid object type name %q", o.Name)
 	}
@@ -55,7 +62,8 @@ func (o ObjectType) validate(enumValueMap map[string]map[string]bool) error {
 		}
 		fieldNames[field.Name] = true
 
-		if err := checkEnumCompatibility(enumValueMap, field); err != nil {
+		err := addEnumType(types, field)
+		if err != nil {
 			return err
 		}
 	}
@@ -70,7 +78,8 @@ func (o ObjectType) validate(enumValueMap map[string]map[string]bool) error {
 		}
 		fieldNames[field.Name] = true
 
-		if err := checkEnumCompatibility(enumValueMap, field); err != nil {
+		err := addEnumType(types, field)
+		if err != nil {
 			return err
 		}
 	}

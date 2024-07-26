@@ -10,7 +10,7 @@ import (
 	"cosmossdk.io/log"
 )
 
-// NewLogger creates a the default SDK logger.
+// NewLogger creates the default SDK logger.
 // It reads the log level and format from the server context.
 func NewLogger(v *viper.Viper, out io.Writer) (corelog.Logger, error) {
 	var opts []log.Option

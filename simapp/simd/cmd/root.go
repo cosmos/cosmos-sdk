@@ -6,7 +6,7 @@ import (
 	"os"
 
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/cosmos-sdk/client/grpc/node"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log"
@@ -122,8 +122,9 @@ func NewRootCmd() *cobra.Command {
 
 	autoCliOpts := tempApp.AutoCliOpts()
 	autoCliOpts.ClientCtx = initClientCtx
-	// autoCliOpts.Modules["node"] = node.NewNodeCommands()
-	autoCliOpts.ModuleOptions["node"] = node.AutoCLIModuleOptions
+
+	nodeCmds := nodeservice.NewNodeCommands()
+	autoCliOpts.ModuleOptions[nodeCmds.Name()] = nodeCmds.AutoCLIOptions()
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)

@@ -5,6 +5,7 @@ package cmd
 import (
 	"os"
 
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/spf13/cobra"
 
 	authv1 "cosmossdk.io/api/cosmos/auth/module/v1"
@@ -82,6 +83,9 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	initRootCmd(rootCmd, clientCtx.TxConfig, moduleManager)
+
+	nodeCmds := nodeservice.NewNodeCommands()
+	autoCliOpts.ModuleOptions[nodeCmds.Name()] = nodeCmds.AutoCLIOptions()
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)

@@ -570,7 +570,7 @@ func registerServices[T transaction.Tx](s appmodule.HasServices, app *App[T], re
 
 	// we merge current app.GRPCQueryDecoders with the ones we got from the module.
 	for path, decoder := range c.grpcQueryDecoders {
-		app.GRPCQueryDecoders[path] = decoder
+		c.grpcQueryDecoders[path] = decoder
 	}
 	return nil
 }

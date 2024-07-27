@@ -119,6 +119,33 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	}
 	a.app.stf = stf
 
+<<<<<<< HEAD
+=======
+	v := a.viper
+	home := v.GetString(FlagHome)
+
+	storeOpts := rootstore.DefaultStoreOptions()
+	if s := v.Sub("store.options"); s != nil {
+		if err := s.Unmarshal(&storeOpts); err != nil {
+			return nil, fmt.Errorf("failed to store options: %w", err)
+		}
+	}
+
+	scRawDb, err := db.NewDB(db.DBType(v.GetString("store.app-db-backend")), "application", filepath.Join(home, "data"), nil)
+	if err != nil {
+		panic(err)
+	}
+
+	storeOptions := &rootstore.FactoryOptions{
+		Logger:    a.app.logger,
+		RootDir:   home,
+		Options:   storeOpts,
+		StoreKeys: append(a.app.storeKeys, "stf"),
+		SCRawDB:   scRawDb,
+	}
+	a.storeOptions = storeOptions
+
+>>>>>>> b05bb2601 (fix(stf): fixes to make init genesis pass (#21088))
 	rs, err := rootstore.CreateRootStore(a.storeOptions)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create root store: %w", err)

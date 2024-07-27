@@ -253,3 +253,156 @@ func TestModuleSchema_ValidateObjectUpdate(t *testing.T) {
 		})
 	}
 }
+<<<<<<< HEAD
+=======
+
+func requireModuleSchema(t *testing.T, objectTypes []ObjectType) ModuleSchema {
+	t.Helper()
+	moduleSchema, err := NewModuleSchema(objectTypes)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	return moduleSchema
+}
+
+func TestModuleSchema_LookupType(t *testing.T) {
+	moduleSchema := requireModuleSchema(t, []ObjectType{
+		{
+			Name: "object1",
+			KeyFields: []Field{
+				{
+					Name: "field1",
+					Kind: StringKind,
+				},
+			},
+		},
+	})
+
+	typ, ok := moduleSchema.LookupType("object1")
+	if !ok {
+		t.Fatalf("expected to find object type \"object1\"")
+	}
+
+	objectType, ok := typ.(ObjectType)
+	if !ok {
+		t.Fatalf("expected object type, got %T", typ)
+	}
+
+	if objectType.Name != "object1" {
+		t.Fatalf("expected object type name \"object1\", got %q", objectType.Name)
+	}
+}
+
+func exampleSchema(t *testing.T) ModuleSchema {
+	t.Helper()
+	return requireModuleSchema(t, []ObjectType{
+		{
+			Name: "object1",
+			KeyFields: []Field{
+				{
+					Name: "field1",
+					Kind: EnumKind,
+					EnumType: EnumType{
+						Name:   "enum2",
+						Values: []string{"d", "e", "f"},
+					},
+				},
+			},
+		},
+		{
+			Name: "object2",
+			KeyFields: []Field{
+				{
+					Name: "field1",
+					Kind: EnumKind,
+					EnumType: EnumType{
+						Name:   "enum1",
+						Values: []string{"a", "b", "c"},
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestModuleSchema_Types(t *testing.T) {
+	moduleSchema := exampleSchema(t)
+
+	var typeNames []string
+	moduleSchema.Types(func(typ Type) bool {
+		typeNames = append(typeNames, typ.TypeName())
+		return true
+	})
+
+	expected := []string{"enum1", "enum2", "object1", "object2"}
+	if !reflect.DeepEqual(typeNames, expected) {
+		t.Fatalf("expected %v, got %v", expected, typeNames)
+	}
+
+	typeNames = nil
+	// scan just the first type and return false
+	moduleSchema.Types(func(typ Type) bool {
+		typeNames = append(typeNames, typ.TypeName())
+		return false
+	})
+
+	expected = []string{"enum1"}
+	if !reflect.DeepEqual(typeNames, expected) {
+		t.Fatalf("expected %v, got %v", expected, typeNames)
+	}
+}
+
+func TestModuleSchema_ObjectTypes(t *testing.T) {
+	moduleSchema := exampleSchema(t)
+
+	var typeNames []string
+	moduleSchema.ObjectTypes(func(typ ObjectType) bool {
+		typeNames = append(typeNames, typ.Name)
+		return true
+	})
+
+	expected := []string{"object1", "object2"}
+	if !reflect.DeepEqual(typeNames, expected) {
+		t.Fatalf("expected %v, got %v", expected, typeNames)
+	}
+
+	typeNames = nil
+	// scan just the first type and return false
+	moduleSchema.ObjectTypes(func(typ ObjectType) bool {
+		typeNames = append(typeNames, typ.Name)
+		return false
+	})
+
+	expected = []string{"object1"}
+	if !reflect.DeepEqual(typeNames, expected) {
+		t.Fatalf("expected %v, got %v", expected, typeNames)
+	}
+}
+
+func TestModuleSchema_EnumTypes(t *testing.T) {
+	moduleSchema := exampleSchema(t)
+
+	var typeNames []string
+	moduleSchema.EnumTypes(func(typ EnumType) bool {
+		typeNames = append(typeNames, typ.Name)
+		return true
+	})
+
+	expected := []string{"enum1", "enum2"}
+	if !reflect.DeepEqual(typeNames, expected) {
+		t.Fatalf("expected %v, got %v", expected, typeNames)
+	}
+
+	typeNames = nil
+	// scan just the first type and return false
+	moduleSchema.EnumTypes(func(typ EnumType) bool {
+		typeNames = append(typeNames, typ.Name)
+		return false
+	})
+
+	expected = []string{"enum1"}
+	if !reflect.DeepEqual(typeNames, expected) {
+		t.Fatalf("expected %v, got %v", expected, typeNames)
+	}
+}
+>>>>>>> b05bb2601 (fix(stf): fixes to make init genesis pass (#21088))

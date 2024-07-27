@@ -1,10 +1,12 @@
 package stf
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"slices"
 
+	"github.com/cosmos/gogoproto/jsonpb"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/maps"
 
@@ -55,14 +57,14 @@ func (em *eventManager) EmitNonConsensus(event gogoproto.Message) error {
 // TypedEventToEvent takes typed event and converts to Event object
 func TypedEventToEvent(tev gogoproto.Message) (event.Event, error) {
 	evtType := gogoproto.MessageName(tev)
-	evtJSON, err := gogoproto.Marshal(tev)
-	if err != nil {
+	buf := new(bytes.Buffer)
+	jm := &jsonpb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: nil}
+	if err := jm.Marshal(buf, tev); err != nil {
 		return event.Event{}, err
 	}
 
 	var attrMap map[string]json.RawMessage
-	err = json.Unmarshal(evtJSON, &attrMap)
-	if err != nil {
+	if err := json.Unmarshal(buf.Bytes(), &attrMap); err != nil {
 		return event.Event{}, err
 	}
 

@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"path/filepath"
+
+	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -13,6 +16,7 @@ import (
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
+	"cosmossdk.io/store/v2/db"
 	rootstore "cosmossdk.io/store/v2/root"
 )
 
@@ -22,6 +26,7 @@ import (
 type AppBuilder[T transaction.Tx] struct {
 	app          *App[T]
 	storeOptions *rootstore.FactoryOptions
+	viper        *viper.Viper
 
 	// the following fields are used to overwrite the default
 	branch      func(state store.ReaderMap) store.WriterMap
@@ -118,6 +123,30 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 		return nil, fmt.Errorf("failed to create STF: %w", err)
 	}
 	a.app.stf = stf
+
+	v := a.viper
+	home := v.GetString(FlagHome)
+
+	storeOpts := rootstore.DefaultStoreOptions()
+	if s := v.Sub("store.options"); s != nil {
+		if err := s.Unmarshal(&storeOpts); err != nil {
+			return nil, fmt.Errorf("failed to store options: %w", err)
+		}
+	}
+
+	scRawDb, err := db.NewDB(db.DBType(v.GetString("store.app-db-backend")), "application", filepath.Join(home, "data"), nil)
+	if err != nil {
+		panic(err)
+	}
+
+	storeOptions := &rootstore.FactoryOptions{
+		Logger:    a.app.logger,
+		RootDir:   home,
+		Options:   storeOpts,
+		StoreKeys: append(a.app.storeKeys, "stf"),
+		SCRawDB:   scRawDb,
+	}
+	a.storeOptions = storeOptions
 
 	rs, err := rootstore.CreateRootStore(a.storeOptions)
 	if err != nil {

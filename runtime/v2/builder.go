@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"path/filepath"
+
+	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -13,6 +16,7 @@ import (
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
+	"cosmossdk.io/store/v2/db"
 	rootstore "cosmossdk.io/store/v2/root"
 )
 
@@ -22,6 +26,7 @@ import (
 type AppBuilder[T transaction.Tx] struct {
 	app          *App[T]
 	storeOptions *rootstore.FactoryOptions
+	viper        *viper.Viper
 
 	// the following fields are used to overwrite the default
 	branch      func(state store.ReaderMap) store.WriterMap
@@ -119,8 +124,6 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	}
 	a.app.stf = stf
 
-<<<<<<< HEAD
-=======
 	v := a.viper
 	home := v.GetString(FlagHome)
 
@@ -145,7 +148,6 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	}
 	a.storeOptions = storeOptions
 
->>>>>>> b05bb2601 (fix(stf): fixes to make init genesis pass (#21088))
 	rs, err := rootstore.CreateRootStore(a.storeOptions)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create root store: %w", err)

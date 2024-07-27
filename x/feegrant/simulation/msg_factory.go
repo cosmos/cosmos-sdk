@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/x/feegrant/keeper"
 
 	"github.com/cosmos/cosmos-sdk/simsx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func MsgGrantAllowanceFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*feegrant.MsgGrantAllowance] {
@@ -23,7 +22,7 @@ func MsgGrantAllowanceFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*feegrant.M
 		}
 
 		coins := granter.LiquidBalance().RandSubsetCoins(reporter, simsx.WithSendEnabledCoins())
-		oneYear := sdk.UnwrapSDKContext(ctx).HeaderInfo().Time.AddDate(1, 0, 0)
+		oneYear := simsx.BlockTime(ctx).AddDate(1, 0, 0)
 		msg, err := feegrant.NewMsgGrantAllowance(
 			&feegrant.BasicAllowance{SpendLimit: coins, Expiration: &oneYear},
 			granter.AddressBech32,

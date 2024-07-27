@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/x/slashing/types"
 
 	"github.com/cosmos/cosmos-sdk/simsx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func MsgUnjailFactory(k keeper.Keeper, sk types.StakingKeeper) simsx.SimMsgFactoryX {
@@ -52,7 +51,7 @@ func MsgUnjailFactory(k keeper.Keeper, sk types.StakingKeeper) simsx.SimMsgFacto
 		// - validator is still in jailed period
 		// - self delegation too low
 		if info.Tombstoned ||
-			sdk.UnwrapSDKContext(ctx).HeaderInfo().Time.Before(info.JailedUntil) ||
+			simsx.BlockTime(ctx).Before(info.JailedUntil) ||
 			selfDel.GetShares().IsNil() ||
 			validator.TokensFromShares(selfDel.GetShares()).TruncateInt().LT(validator.GetMinSelfDelegation()) {
 			handler = func(err error) error {
@@ -60,7 +59,7 @@ func MsgUnjailFactory(k keeper.Keeper, sk types.StakingKeeper) simsx.SimMsgFacto
 					switch {
 					case info.Tombstoned:
 						return errors.New("validator should not have been unjailed if validator tombstoned")
-					case sdk.UnwrapSDKContext(ctx).HeaderInfo().Time.Before(info.JailedUntil):
+					case simsx.BlockTime(ctx).Before(info.JailedUntil):
 						return errors.New("validator unjailed while validator still in jail period")
 					case selfDel.GetShares().IsNil() || validator.TokensFromShares(selfDel.GetShares()).TruncateInt().LT(validator.GetMinSelfDelegation()):
 						return errors.New("validator unjailed even though self-delegation too low")

@@ -131,7 +131,7 @@ func MsgEditValidatorFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgE
 		}
 
 		newCommissionRate := r.DecN(val.Commission.MaxRate)
-		if err := val.Commission.ValidateNewRate(newCommissionRate, sdk.UnwrapSDKContext(ctx).HeaderInfo().Time); err != nil {
+		if err := val.Commission.ValidateNewRate(newCommissionRate, simsx.BlockTime(ctx)); err != nil {
 			// skip as the commission is invalid
 			reporter.Skip("invalid commission rate")
 			return nil, nil
@@ -257,7 +257,7 @@ func MsgCancelUnbondingDelegationFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn
 				break
 			}
 		}
-		if unbondingDelegationEntry.CompletionTime.Before(sdk.UnwrapSDKContext(ctx).HeaderInfo().Time) {
+		if unbondingDelegationEntry.CompletionTime.Before(simsx.BlockTime(ctx)) {
 			reporter.Skip("unbonding delegation is already processed")
 			return nil, nil
 		}

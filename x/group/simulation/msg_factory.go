@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/x/group/keeper"
 
 	"github.com/cosmos/cosmos-sdk/simsx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const unsetGroupID = 100000000000000
@@ -116,8 +115,7 @@ func MsgWithdrawProposalFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFac
 			reporter.Skip(err.Error())
 			return nil, nil
 		}
-		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		proposalsResult, err := k.ProposalsByGroupPolicy(sdkCtx,
+		proposalsResult, err := k.ProposalsByGroupPolicy(ctx,
 			&group.QueryProposalsByGroupPolicyRequest{Address: groupPolicy.Address},
 		)
 		if err != nil {
@@ -125,7 +123,7 @@ func MsgWithdrawProposalFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFac
 			return nil, nil
 		}
 
-		now := sdkCtx.HeaderInfo().Time
+		now := simsx.BlockTime(ctx)
 		proposal := simsx.First(proposalsResult.GetProposals(), func(p *group.Proposal) bool {
 			return p.Status == group.PROPOSAL_STATUS_SUBMITTED && p.VotingPeriodEnd.After(now)
 		})
@@ -151,8 +149,7 @@ func MsgVoteFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*grou
 		if reporter.IsSkipped() {
 			return nil, nil
 		}
-		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		proposalsResult, err := k.ProposalsByGroupPolicy(sdkCtx,
+		proposalsResult, err := k.ProposalsByGroupPolicy(ctx,
 			&group.QueryProposalsByGroupPolicyRequest{Address: groupPolicy.Address},
 		)
 		if err != nil {
@@ -160,7 +157,7 @@ func MsgVoteFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*grou
 			return nil, nil
 		}
 
-		now := sdkCtx.HeaderInfo().Time
+		now := simsx.BlockTime(ctx)
 		proposal := simsx.First(proposalsResult.GetProposals(), func(p *group.Proposal) bool {
 			return p.Status == group.PROPOSAL_STATUS_SUBMITTED && p.VotingPeriodEnd.After(now)
 		})
@@ -250,8 +247,7 @@ func MsgExecFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*grou
 		if reporter.IsSkipped() {
 			return nil, nil
 		}
-		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		proposalsResult, err := k.ProposalsByGroupPolicy(sdkCtx,
+		proposalsResult, err := k.ProposalsByGroupPolicy(ctx,
 			&group.QueryProposalsByGroupPolicyRequest{Address: groupPolicy.Address},
 		)
 		if err != nil {
@@ -278,7 +274,7 @@ func MsgExecFactory(k keeper.Keeper, s *SharedState) simsx.SimMsgFactoryFn[*grou
 func randomGroupPolicyWithAdmin(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter, k keeper.Keeper, s *SharedState) (*group.GroupPolicyInfo, simsx.SimAccount) {
 	for i := 0; i < 5; i++ {
 		_, groupPolicy := randomGroupPolicyX(ctx, testData, reporter, k, s)
-		if testData.HasAccount(groupPolicy.Admin) {
+		if groupPolicy != nil && testData.HasAccount(groupPolicy.Admin) {
 			return groupPolicy, testData.GetAccount(reporter, groupPolicy.Admin)
 		}
 	}
@@ -443,7 +439,7 @@ func genGroupMembersX(testData *simsx.ChainDataSource, reporter simsx.Simulation
 
 func randomGroupX(ctx context.Context, k keeper.Keeper, testdata *simsx.ChainDataSource, reporter simsx.SimulationReporter, s *SharedState) *group.GroupInfo {
 	r := testdata.Rand()
-	groupID := k.GetGroupSequence(sdk.UnwrapSDKContext(ctx))
+	groupID := k.GetGroupSequence(ctx)
 	if initialGroupID := s.getMinGroupID(); initialGroupID == unsetGroupID {
 		s.setMinGroupID(groupID)
 	} else if initialGroupID < groupID {

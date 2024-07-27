@@ -39,7 +39,7 @@ type WeightedProposalContent interface {
 }
 
 // Deprecated: Use MsgSimulatorFn instead.
-type ContentSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []Account) Content
+type ContentSimulatorFn func(r *rand.Rand, ctx context.Context, accs []Account) Content
 
 // Deprecated: Use MsgSimulatorFn instead.
 type Content interface {

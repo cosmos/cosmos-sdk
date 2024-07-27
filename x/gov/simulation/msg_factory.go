@@ -85,7 +85,7 @@ func MsgCancelProposalFactory(k *keeper.Keeper, sharedState *SharedState) simsx.
 		// is cancellable? copied from keeper
 		maxCancelPeriodRate := sdkmath.LegacyMustNewDecFromStr(must(k.Params.Get(ctx)).ProposalCancelMaxPeriod)
 		maxCancelPeriod := time.Duration(float64(proposal.VotingEndTime.Sub(*proposal.VotingStartTime)) * maxCancelPeriodRate.MustFloat64()).Round(time.Second)
-		if proposal.VotingEndTime.Add(-maxCancelPeriod).Before(sdk.UnwrapSDKContext(ctx).BlockTime()) {
+		if proposal.VotingEndTime.Add(-maxCancelPeriod).Before(simsx.BlockTime(ctx)) {
 			reporter.Skip("not cancellable anymore")
 			return nil, nil
 		}
@@ -104,7 +104,7 @@ func MsgSubmitLegacyProposalFactory(k *keeper.Keeper, contentSimFn simtypes.Cont
 	return simsx.NewSimMsgFactoryWithFutureOps[*v1.MsgSubmitProposal](func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter, fOpsReg simsx.FutureOpsRegistry) ([]simsx.SimAccount, *v1.MsgSubmitProposal) {
 		// 1) submit proposal now
 		accs := testData.AllAccounts()
-		content := contentSimFn(testData.Rand().Rand, sdk.UnwrapSDKContext(ctx), accs)
+		content := contentSimFn(testData.Rand().Rand, ctx, accs)
 		if content == nil {
 			reporter.Skip("content is nil")
 			return nil, nil
@@ -228,7 +228,7 @@ func submitProposalWithVotesScheduled(
 		// deactivate future ops so that votes do not flood the sims.
 		// a bug in the old sims framework prevented future-ops being executed
 		// this is fixed but we need a way to limit votes
-		now := sdk.UnwrapSDKContext(ctx).HeaderInfo().Time
+		now := simsx.BlockTime(ctx)
 		for i := 0; i < numVotes; i++ {
 			var vF simsx.SimMsgFactoryFn[*v1.MsgVote] = func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *v1.MsgVote) {
 				switch p, err := k.Proposals.Get(ctx, proposalID); {

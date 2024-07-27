@@ -7,7 +7,6 @@ import (
 	"slices"
 
 	"github.com/cosmos/gogoproto/jsonpb"
-
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/maps"
 

@@ -34,7 +34,7 @@ require (
 	github.com/cometbft/cometbft v1.0.0-rc1
 	github.com/cosmos/cosmos-db v1.0.2
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.51.0
+	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
@@ -293,10 +293,9 @@ replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/runtime/v2 => ../../runtime/v2
-	cosmossdk.io/server/v2 => ../../server/v2
-	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager
-	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
-	cosmossdk.io/server/v2/stf => ../../server/v2/stf
-	cosmossdk.io/store => ../../store
-	cosmossdk.io/store/v2 => ../../store/v2
+	cosmossdk.io/server/v2 => cosmossdk.io/server/v2 v2.0.0-20240727181124-b05bb2601edb // main
+	cosmossdk.io/server/v2/appmanager => cosmossdk.io/server/v2/appmanager v0.0.0-20240727181124-b05bb2601edb // main
+	cosmossdk.io/server/v2/cometbft => cosmossdk.io/server/v2/cometbft v0.0.0-20240727181124-b05bb2601edb // main
+	cosmossdk.io/server/v2/stf => cosmossdk.io/server/v2/stf v0.0.0-20240727181124-b05bb2601edb // main
+	cosmossdk.io/store/v2 => cosmossdk.io/store/v2 v2.0.0-20240727181124-b05bb2601edb // main
 )

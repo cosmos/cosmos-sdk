@@ -7,9 +7,9 @@ replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/core/testing => ../../core/testing
-	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager
-	cosmossdk.io/server/v2/stf => ../../server/v2/stf
-	cosmossdk.io/store/v2 => ../../store/v2
+	cosmossdk.io/server/v2/appmanager => cosmossdk.io/server/v2/appmanager v0.0.0-20240727181124-b05bb2601edb // main
+	cosmossdk.io/server/v2/stf => cosmossdk.io/server/v2/stf v0.0.0-20240727181124-b05bb2601edb // main
+	cosmossdk.io/store/v2 => cosmossdk.io/store/v2 v2.0.0-20240727181124-b05bb2601edb // main
 	cosmossdk.io/x/accounts => ../../x/accounts
 	cosmossdk.io/x/auth => ../../x/auth
 	cosmossdk.io/x/bank => ../../x/bank

@@ -112,7 +112,6 @@ func TestModuleSchema_Validate(t *testing.T) {
 		},
 		{
 			name: "same enum",
-<<<<<<< HEAD
 			moduleSchema: ModuleSchema{
 				ObjectTypes: []ObjectType{
 					{
@@ -138,31 +137,6 @@ func TestModuleSchema_Validate(t *testing.T) {
 									Name:   "enum1",
 									Values: []string{"a", "b"},
 								},
-=======
-			objectTypes: []ObjectType{
-				{
-					Name: "object1",
-					KeyFields: []Field{
-						{
-							Name: "k",
-							Kind: EnumKind,
-							EnumType: EnumType{
-								Name:   "enum1",
-								Values: []string{"a", "b"},
-							},
-						},
-					},
-				},
-				{
-					Name: "object2",
-					KeyFields: []Field{
-						{
-							Name: "k",
-							Kind: EnumKind,
-							EnumType: EnumType{
-								Name:   "enum1",
-								Values: []string{"a", "b"},
->>>>>>> 5c90246b3 (feat(log): remove core dependency and update core interface to be dependency free (#21045))
 							},
 						},
 					},

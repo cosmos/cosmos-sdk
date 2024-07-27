@@ -17,19 +17,18 @@ func (s STF[T]) DoSimsTXs(simsBuilder func(ctx context.Context) (T, bool)) DoInB
 		hi header.Info,
 	) ([]appmanager.TxResult, error) {
 		var results []appmanager.TxResult
-		// use exec context so that the msg factories get access to db state in keepers
-		exCtx := s.makeContext(ctx, appmanager.ConsensusIdentity, newState, internal.ExecModeFinalize)
-		exCtx.setHeaderInfo(hi)
 
-		tx, hasNext := simsBuilder(exCtx)
-		_ = hasNext
-		//for ; hasNext; tx, hasNext = simsBuilder(ctx) {
-		if err := isCtxCancelled(ctx); err != nil {
-			return nil, err
+		simsCtx := context.WithValue(ctx, "sims.header.time", hi.Time) // using string key to decouple
+		// use exec context so that the msg factories get access to db state in keepers
+		exCtx := s.makeContext(simsCtx, appmanager.ConsensusIdentity, newState, internal.ExecModeFinalize)
+		exCtx.setHeaderInfo(hi)
+		simsCtx = exCtx
+		for tx, exit := simsBuilder(simsCtx); !exit; tx, exit = simsBuilder(simsCtx) {
+			if err := isCtxCancelled(ctx); err != nil {
+				return nil, err
+			}
+			results = append(results, s.deliverTx(ctx, newState, tx, transaction.ExecModeFinalize, hi))
 		}
-		println("+++ delivering msg")
-		results = append(results, s.deliverTx(ctx, newState, tx, transaction.ExecModeFinalize, hi))
-		//}
 		return results, nil
 	}
 }

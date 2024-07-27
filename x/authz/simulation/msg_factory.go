@@ -20,7 +20,7 @@ func MsgGrantFactory() simsx.SimMsgFactoryFn[*authz.MsgGrant] {
 
 		r := testData.Rand()
 		var expiration *time.Time
-		if t1 := r.Timestamp(); !t1.Before(sdk.UnwrapSDKContext(ctx).HeaderInfo().Time) {
+		if t1 := r.Timestamp(); !t1.Before(simsx.BlockTime(ctx)) {
 			expiration = &t1
 		}
 		// pick random authorization

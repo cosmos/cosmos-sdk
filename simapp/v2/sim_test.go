@@ -11,9 +11,12 @@ import (
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	cometbfttypes "cosmossdk.io/server/v2/cometbft/types"
-	banktypes "cosmossdk.io/x/bank/types"
+	consensustypes "cosmossdk.io/x/consensus/types"
 	"encoding/json"
 	"errors"
+	"fmt"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simsx"
@@ -25,9 +28,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/maps"
 	"math/rand"
 	"os"
 	"path/filepath"
+	"slices"
+	"strings"
 	"testing"
 	"time"
 )
@@ -37,6 +43,14 @@ type HasWeightedOperationsX interface {
 	WeightedOperationsX(weight simsx.WeightSource, reg simsx.Registry)
 }
 
+const (
+	minTimePerBlock int64 = 10000 / 2
+
+	maxTimePerBlock int64 = 10000
+
+	timeRangePerBlock = maxTimePerBlock - minTimePerBlock
+)
+
 func TestSimsAppV2(t *testing.T) {
 	DefaultNodeHome = t.TempDir()
 	currentDir, err := os.Getwd()
@@ -44,10 +58,9 @@ func TestSimsAppV2(t *testing.T) {
 	configPath := filepath.Join(currentDir, "testdata")
 	v, err := serverv2.ReadConfig(configPath)
 	require.NoError(t, err)
-
-	logger := log.NewLogger(os.Stdout)
+	v.Set("store.app-db-backend", "memdb") // todo: I had added this new type to speed up testing. Does it make sense this way?
+	logger := log.NewTestLoggerInfo(t)
 	app := NewSimApp[T](logger, v)
-	//var abciApp *cometbft.Consensus[T]
 
 	tCfg := cli.NewConfigFromFlags().With(t, 1, nil)
 
@@ -58,24 +71,41 @@ func TestSimsAppV2(t *testing.T) {
 		toSimsModule(app.ModuleManager().Modules()),
 		app.DefaultGenesis(),
 	)
-
+	require.Equal(t, int64(1), tCfg.Seed) // todo revmoe
 	r := rand.New(rand.NewSource(tCfg.Seed))
 	params := simulation.RandomParams(r)
-	accounts := simtypes.RandomAccounts(r, params.NumKeys())
+	accounts := slices.DeleteFunc(simtypes.RandomAccounts(r, params.NumKeys()),
+		func(acc simtypes.Account) bool { // remove blocked accounts
+			return app.BankKeeper.GetBlockedAddresses()[acc.AddressBech32]
+		})
 
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, tCfg)
 
 	appStore := app.GetStore().(cometbfttypes.Store)
 	//consensusParams := simulation.RandomConsensusParams(r, appState, cdc, blockMaxGas)
 	req := &appmanager.BlockRequest[T]{
-		Height:    0,
-		Time:      genesisTimestamp,
-		Hash:      make([]byte, 32),
-		ChainId:   chainID,
-		AppHash:   make([]byte, 32),
+		Height:  1, // todo: do we start at height 1 instead of 0  in v2?
+		Time:    genesisTimestamp,
+		Hash:    make([]byte, 32),
+		ChainId: chainID,
+		AppHash: make([]byte, 32),
+		ConsensusMessages: []transaction.Msg{&consensustypes.MsgUpdateParams{
+			Authority: app.GetConsensusAuthority(), // todo: what else is needed?
+			Block: &cmtproto.BlockParams{
+				MaxBytes: 200000,
+				MaxGas:   100_000_000,
+			},
+			Evidence: &cmtproto.EvidenceParams{
+				MaxAgeNumBlocks: 302400,
+				MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+				MaxBytes:        10000,
+			},
+			Validator: &cmtproto.ValidatorParams{PubKeyTypes: []string{cmttypes.ABCIPubKeyTypeEd25519, cmttypes.ABCIPubKeyTypeSecp256k1}},
+		}},
 		IsGenesis: true,
 	}
 	ctx, done := context.WithCancel(context.Background())
+	defer done()
 	_, genesisState, err := app.InitGenesis(ctx, req, appState, &genericTxDecoder[T]{txConfig: app.TxConfig()})
 	require.NoError(t, err)
 	changeSet, err := genesisState.GetStateChanges()
@@ -85,57 +115,94 @@ func TestSimsAppV2(t *testing.T) {
 	require.NoError(t, err)
 
 	// next add a block
-	emptySimParams := make(map[string]json.RawMessage, 0) // todo
+	emptySimParams := make(map[string]json.RawMessage, 0) // todo read sims params from disk as before
 	weights := simsx.ParamWeightSource(emptySimParams)
-	reporter := simsx.NewBasicSimulationReporter(simsx.SkipHookFn(func(args ...any) { done() }))
 
-	oReg := make(SimsV2Reg) // reporter, app.AuthKeeper, app.BankKeeper, app.txConfig.SigningContext().AddressCodec(), logger)
-
-	// register all msg fectories // todo: just 1 example here
-	w, ok := app.ModuleManager().Modules()["bank"].(HasWeightedOperationsX)
-	if !ok {
-		panic("alex")
-	}
-	w.WeightedOperationsX(weights, oReg)
-	reqN := &appmanager.BlockRequest[T]{
-		Height:  2,
-		Time:    genesisTimestamp.Add(time.Second),
-		Hash:    stateRoot,
-		ChainId: chainID,
-		AppHash: stateRoot,
-	}
-	cometInfo := comet.Info{
-		//Evidence:        toCoreEvidence(req.Misbehavior),
-		//ValidatorsHash:  req.NextValidatorsHash,
-		//ProposerAddress: req.ProposerAddress,
-		//LastCommit:      toCoreCommitInfo(req.DecidedLastCommit),
-	}
-	ctx = context.WithValue(ctx, corecontext.CometInfoKey, cometInfo)
-	blockRsp, updates, err := app.DeliverSims(ctx, reqN, func(ctx context.Context) (T, bool) {
-		// todo: sort and pick msg factory by weight
-		wFac := oReg[sdk.MsgTypeURL(&banktypes.MsgSend{})]
-		sRep := reporter.WithScope(wFac.factory.MsgType())
-
-		// the stf context is required
-		testData := simsx.NewChainDataSource(ctx, r, app.AuthKeeper, app.BankKeeper, app.txConfig.SigningContext().AddressCodec(), accounts...)
-
-		signers, msg := wFac.factory.Create()(ctx, testData, sRep)
-		if sRep.IsSkipped() {
-			panic("alex: skipped: " + reporter.Comment()) // todo: skip and continue in loop
+	factoryRegistry := make(SimsV2Reg)
+	// register all msg factories
+	for name, v := range app.ModuleManager().Modules() {
+		if name == "authz" || // todo: enable when router issue is solved with `/` prefix in MsgTypeURL
+			name == "staking" { // todo: set proper consensus data and no changeset panic by x/staking/keeper/val_state_change.go:166
+			continue
 		}
-		tx, err := genTestTX(ctx, app.AuthKeeper, signers, msg, r, app.txConfig, chainID)
-		require.NoError(t, err)
-		return tx, false // todo: do loop
-	})
-	require.NoError(t, err)
-	changeSet, err = updates.GetStateChanges()
-	require.NoError(t, err)
-	cs = &store.Changeset{Changes: changeSet}
-	stateRoot, err = appStore.Commit(cs)
-	require.NoError(t, err)
-	for _, v := range blockRsp.TxResults {
-		require.NoError(t, v.Error)
+		if w, ok := v.(HasWeightedOperationsX); ok {
+			w.WeightedOperationsX(weights, factoryRegistry)
+		}
 	}
+	// todo: register legacy and v1 msg proposals
+
+	const ( // todo: read from CLI instead
+		numBlocks     = 50 // 500 default
+		maxTXPerBlock = 20 // 200 default
+	)
+
+	reporter := simsx.NewBasicSimulationReporter()
+	blockTime := genesisTimestamp
+	var (
+		txSkippedCounter int
+		txTotalCounter   int
+	)
+	for i := 0; i < numBlocks; i++ {
+		blockTime = blockTime.Add(time.Duration(minTimePerBlock) * time.Second)
+		blockTime = blockTime.Add(time.Duration(int64(r.Intn(int(timeRangePerBlock)))) * time.Second)
+
+		reqN := &appmanager.BlockRequest[T]{
+			Height:  uint64(2 + i),
+			Time:    blockTime,
+			Hash:    stateRoot,
+			AppHash: stateRoot,
+			ChainId: chainID,
+		}
+		cometInfo := comet.Info{
+			//Evidence:        toCoreEvidence(req.Misbehavior),
+			//ValidatorsHash:  req.NextValidatorsHash,
+			//ProposerAddress: req.ProposerAddress,
+			//LastCommit:      toCoreCommitInfo(req.DecidedLastCommit),
+		}
+		//app.ConsensusParamsKeeper.SetCometInfo()
+		orderedFactories := maps.Values(factoryRegistry)
+		slices.SortFunc(orderedFactories, func(a, b weightedFactory) int {
+			switch {
+			case a.weight > b.weight:
+				return -1
+			case a.weight < b.weight:
+				return 1
+			}
+			return strings.Compare(sdk.MsgTypeURL(a.factory.MsgType()), sdk.MsgTypeURL(b.factory.MsgType()))
+		})
+		ctx = context.WithValue(ctx, corecontext.CometInfoKey, cometInfo) // required
+		var txPerBlockCounter int
+		blockRsp, updates, err := app.DeliverSims(ctx, reqN, func(ctx context.Context) (T, bool) {
+			testData := simsx.NewChainDataSource(ctx, r, app.AuthKeeper, app.BankKeeper, app.txConfig.SigningContext().AddressCodec(), accounts...)
+			for txPerBlockCounter <= maxTXPerBlock {
+				txPerBlockCounter++
+				// todo: sort and pick msg factory by weight
+				wFac := simsx.OneOf(testData.Rand(), orderedFactories)
+				sRep := reporter.WithScope(wFac.factory.MsgType())
+
+				// the stf context is required to access state via keepers
+				signers, msg := wFac.factory.Create()(ctx, testData, sRep)
+				if sRep.IsSkipped() {
+					txSkippedCounter++
+					continue
+				}
+				tx, err := genTestTX(ctx, app.AuthKeeper, signers, msg, r, app.txConfig, chainID)
+				require.NoError(t, err)
+				return tx, false
+			}
+			return nil, true
+		})
+		require.NoError(t, err)
+		changeSet, err = updates.GetStateChanges()
+		require.NoError(t, err)
+		stateRoot, err = appStore.Commit(&store.Changeset{Changes: changeSet})
+		require.NoError(t, err)
+		for _, v := range blockRsp.TxResults {
+			require.NoError(t, v.Error)
+		}
+		txTotalCounter += txPerBlockCounter
+	}
+	fmt.Printf("Tx total: %d skipped: %d\n", txTotalCounter, txSkippedCounter)
 }
 
 const defaultGas = 500_000 // todo: pick value
@@ -202,7 +269,7 @@ func mapsInsert[K comparable, V any](src []K, f func(K) V) map[K]V {
 
 var _ transaction.Codec[transaction.Tx] = &genericTxDecoder[transaction.Tx]{}
 
-// todo: same as in commands
+// todo: this is the same as in commands
 type genericTxDecoder[T transaction.Tx] struct {
 	txConfig client.TxConfig
 }

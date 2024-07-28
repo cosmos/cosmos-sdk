@@ -36,6 +36,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 // DefaultNodeHome default home directories for the application daemon

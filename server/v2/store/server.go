@@ -45,25 +45,12 @@ func (s *StoreComponent[T]) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (s *StoreComponent[T]) GetCommands() []*cobra.Command {
-	return []*cobra.Command{
-		s.PrunesCmd(),
-	}
-}
-
-func (s *StoreComponent[T]) GetTxs() []*cobra.Command {
-	return nil
-}
-
-func (s *StoreComponent[T]) GetQueries() []*cobra.Command {
-	return nil
-}
-
 func (s *StoreComponent[T]) CLICommands() serverv2.CLIConfig {
 	return serverv2.CLIConfig{
 		Commands: []*cobra.Command{
 			s.PrunesCmd(),
 			s.ExportSnapshotCmd(),
+			s.RestoreSnapshotCmd(),
 		},
 	}
 }

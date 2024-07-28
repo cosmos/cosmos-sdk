@@ -31,17 +31,4 @@ $SIMD genesis add-genesis-account "$VALIDATOR_ADDRESS" 1000000000stake
 $SIMD genesis gentx test_validator 1000000000stake --keyring-backend test
 $SIMD genesis collect-gentxs
 
-$SIMD start &
-SIMD_PID=$!
-
-cnt=0
-while ! $SIMD query block --type=height 5; do
-  cnt=$((cnt + 1))
-  if [ $cnt -gt 30 ]; then
-    kill -9 "$SIMD_PID"
-    exit 1
-  fi
-  sleep 1
-done
-
-kill -9 "$SIMD_PID"
+$SIMD start

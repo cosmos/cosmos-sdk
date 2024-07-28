@@ -400,23 +400,28 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 
 	// chStorage is the channel to pass the KV pairs to the storage snapshotter.
 	chStorage := make(chan *corestore.StateChanges, defaultStorageChannelBufferSize)
-	defer close(chStorage)
 
 	storageErrs := make(chan error, 1)
 	go func() {
 		defer close(storageErrs)
+		fmt.Println("before storageSnapshotter.Restore")
 		err := m.storageSnapshotter.Restore(snapshot.Height, chStorage)
+		fmt.Println("after storageSnapshotter.Restore", err)
 		if err != nil {
 			storageErrs <- err
 		}
 	}()
 
+	fmt.Println("before commitSnapshotter.Restore")
+ 
 	nextItem, err = m.commitSnapshotter.Restore(snapshot.Height, snapshot.Format, streamReader, chStorage)
+	fmt.Println("after commitSnapshotter.Restore", nextItem, err)
 	if err != nil {
 		return errorsmod.Wrap(err, "multistore restore")
 	}
 
 	for {
+		fmt.Println("next item loop", nextItem)
 		if nextItem.Item == nil {
 			// end of stream
 			break
@@ -534,7 +539,11 @@ func (m *Manager) RestoreLocalSnapshot(height uint64, format uint32) error {
 	}
 	defer m.endLocked()
 
-	return m.doRestoreSnapshot(*snapshot, ch)
+	fmt.Println("before doRestoreSnapshot")
+	err = m.doRestoreSnapshot(*snapshot, ch)
+	fmt.Println("after doRestoreSnapshot", err)
+
+	return err
 }
 
 // sortedExtensionNames sort extension names for deterministic iteration.

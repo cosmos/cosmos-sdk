@@ -308,6 +308,11 @@ func (c *CommitStore) Restore(
 	protoReader protoio.Reader,
 	chStorage chan<- *corestore.StateChanges,
 ) (snapshotstypes.SnapshotItem, error) {
+	defer func() {
+		fmt.Println("chStorage channel closed")
+		close(chStorage)
+	}()
+
 	var (
 		importer     Importer
 		snapshotItem snapshotstypes.SnapshotItem
@@ -366,6 +371,7 @@ loop:
 				}
 
 				// If the node is a leaf node, it will be written to the storage.
+				fmt.Println("pass to chanel", string(storeKey), string(node.Key))
 				chStorage <- &corestore.StateChanges{
 					Actor: storeKey,
 					StateChanges: []corestore.KVPair{
@@ -391,7 +397,12 @@ loop:
 		}
 	}
 
-	return snapshotItem, c.LoadVersion(version)
+	err1 := c.LoadVersion(version)
+	fmt.Println("commitment version after restore", err1, version)
+	v, err := c.GetLatestVersion()
+	fmt.Println("commitment get last version", v, err)
+
+	return snapshotItem, err1
 }
 
 func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {

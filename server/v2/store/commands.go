@@ -44,12 +44,8 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 			}
 
 			logger := log.NewLogger(cmd.OutOrStdout())
-			home, err := cmd.Flags().GetString(serverv2.FlagHome)
-			if err != nil {
-				return err
-			}
 
-			rootStore, keepRecent, err := createRootStore(cmd, home, vp, logger)
+			rootStore, keepRecent, err := createRootStore(cmd, vp, logger)
 			if err != nil {
 				return fmt.Errorf("can not create root store %w", err)
 			}
@@ -83,9 +79,9 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 	return cmd
 }
 
-func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger log.Logger) (storev2.RootStore, uint64, error) {
+func createRootStore(cmd *cobra.Command, v *viper.Viper, logger log.Logger) (storev2.RootStore, uint64, error) {
 	tempViper := v
-
+	rootDir := v.GetString(serverv2.FlagHome)
 	// handle FlagAppDBBackend
 	var dbType db.DBType
 	if cmd.Flags().Changed(FlagAppDBBackend) {

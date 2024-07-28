@@ -108,31 +108,50 @@ func (ss *StorageStore) Restore(version uint64, chStorage <-chan *corestore.Stat
 	}
 
 	b, err := ss.db.NewBatch(version)
+	fmt.Println("ss.db.NewBatch", b, err)
 	if err != nil {
 		return err
 	}
 
 	for kvPair := range chStorage {
+		fmt.Println("kvPair loop", string(kvPair.Actor))
 		for _, kv := range kvPair.StateChanges {
-			if err := b.Set(kvPair.Actor, kv.Key, kv.Value); err != nil {
+			fmt.Println("kv loop", string(kv.Key))
+			err := b.Set(kvPair.Actor, kv.Key, kv.Value)
+			fmt.Println("b.Set err", err)
+			if err != nil {
 				return err
 			}
 			if b.Size() > defaultBatchBufferSize {
-				if err := b.Write(); err != nil {
+				err := b.Write()
+				fmt.Println("b.Write() err", err)
+				if err != nil {
 					return err
 				}
-				if err := b.Reset(); err != nil {
+				err = b.Reset() 
+				fmt.Println("b.Reset() err", err)
+				if err != nil {
 					return err
 				}
 			}
 		}
 	}
 
+	fmt.Println("b.Size()", b.Size())
 	if b.Size() > 0 {
-		if err := b.Write(); err != nil {
+		err := b.Write()
+		fmt.Println("b.Write()", err)
+		if err != nil {
 			return err
 		}
+		// if err := b.Write(); err != nil {
+		// 	return err
+		// }
 	}
+
+	v, err := ss.db.GetLatestVersion()
+
+	fmt.Println("storage version after restore", v, err)
 
 	return nil
 }

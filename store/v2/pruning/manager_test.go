@@ -198,7 +198,7 @@ func (s *PruningManagerTestSuite) TestSignalCommit() {
 	}
 	s.Require().Eventually(checkSCPrune, 10*time.Second, 1*time.Second)
 
-	// data from state commitment should not be pruned since we haven't signal the commit process has finish
+	// data from state commitment should not be pruned since we haven't signal the commit process has finished
 	val, err := s.sc.Get([]byte(storeKeys[0]), 1, []byte(fmt.Sprintf("key-%d-%d", 1, 0)))
 	s.Require().NoError(err)
 	s.Require().Equal(val, []byte(fmt.Sprintf("value-%d-%d", 1, 0)))

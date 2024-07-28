@@ -6,6 +6,7 @@ import (
 	"compress/zlib"
 	"crypto/sha256"
 	"errors"
+	"fmt"
 	"io"
 	"testing"
 	"time"
@@ -15,7 +16,6 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/v2/snapshots"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
@@ -126,7 +126,7 @@ func (m *mockCommitSnapshotter) Restore(
 		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
-			return snapshotstypes.SnapshotItem{}, errorsmod.Wrap(err, "invalid protobuf message")
+			return snapshotstypes.SnapshotItem{}, fmt.Errorf("invalid protobuf message: %w", err)
 		}
 		payload := item.GetExtensionPayload()
 		if payload == nil {

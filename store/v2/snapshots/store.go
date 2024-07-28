@@ -17,7 +17,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/errors"
+	"cosmossdk.io/errors/v2"
 	storeerrors "cosmossdk.io/store/v2/errors"
 	"cosmossdk.io/store/v2/snapshots/types"
 )
@@ -38,15 +38,15 @@ type Store struct {
 // NewStore creates a new snapshot store.
 func NewStore(dir string) (*Store, error) {
 	if dir == "" {
-		return nil, errors.Wrap(storeerrors.ErrLogic, "snapshot directory not given")
+		return nil, fmt.Errorf("snapshot directory not given: %w", storeerrors.ErrLogic)
 	}
 	err := os.MkdirAll(dir, 0o755)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create snapshot directory %q", dir)
+		return nil, fmt.Errorf("failed to create snapshot directory %q: %w", dir, err)
 	}
 	err = os.MkdirAll(filepath.Join(dir, "metadata"), 0o750)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create snapshot metadata directory %q", dir)
+		return nil, fmt.Errorf("failed to create snapshot metadata directory %q: %w", dir, err)
 	}
 
 	return &Store{

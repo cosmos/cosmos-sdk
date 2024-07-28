@@ -13,7 +13,7 @@ import (
 
 	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
-	errorsmod "cosmossdk.io/errors"
+	errorsmod "cosmossdk.io/errors/v2"
 	storeerrors "cosmossdk.io/store/v2/errors"
 	"cosmossdk.io/store/v2/snapshots/types"
 )

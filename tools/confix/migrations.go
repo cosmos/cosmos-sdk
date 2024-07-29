@@ -22,37 +22,35 @@ const (
 type MigrationMap map[string]func(from *tomledit.Document, to, planType string) (transform.Plan, *tomledit.Document)
 
 var Migrations = MigrationMap{
-	"v0.45":    NoPlan, // Confix supports only the current supported SDK version. So we do not support v0.44 -> v0.45.
-	"v0.46":    PlanBuilder,
-	"v0.47":    PlanBuilder,
-	"v0.50":    PlanBuilder,
-	"v0.52":    PlanBuilder,
-	"serverv2": V2PlanBuilder,
+	"v0.45": NoPlan, // Confix supports only the current supported SDK version. So we do not support v0.44 -> v0.45.
+	"v0.46": PlanBuilder,
+	"v0.47": PlanBuilder,
+	"v0.50": PlanBuilder,
+	"v0.52": PlanBuilder,
+	"v2":    V2PlanBuilder,
 	// "v0.xx.x": PlanBuilder, // add specific migration in case of configuration changes in minor versions
 }
 
 type v2KeyChangesMap map[string][]string
 
-var v2KeyChanges = map[string]v2KeyChangesMap{
-	"serverv2": {
-		"min-retain-blocks": []string{"comet.min-retain-blocks"},
-		"index-events":      []string{"comet.index-events"},
-		"halt-height":       []string{"comet.halt-height"},
-		"halt-time":         []string{"comet.halt-time"},
-		"app-db-backend":    []string{"store.app-db-backend"},
-		"pruning-keep-recent": []string{
-			"store.options.ss-pruning-option.keep-recent",
-			"store.options.sc-pruning-option.keep-recent",
-		},
-		"pruning-interval": []string{
-			"store.options.ss-pruning-option.interval",
-			"store.options.sc-pruning-option.interval",
-		},
-		"iavl-cache-size":       []string{"store.options.iavl-config.cache-size"},
-		"iavl-disable-fastnode": []string{"store.options.iavl-config.skip-fast-storage-upgrade"},
-		// Add other key mappings as needed
+// list all the keys which are need to be modified in v2
+var v2KeyChanges = v2KeyChangesMap{
+	"min-retain-blocks": []string{"comet.min-retain-blocks"},
+	"index-events":      []string{"comet.index-events"},
+	"halt-height":       []string{"comet.halt-height"},
+	"halt-time":         []string{"comet.halt-time"},
+	"app-db-backend":    []string{"store.app-db-backend"},
+	"pruning-keep-recent": []string{
+		"store.options.ss-pruning-option.keep-recent",
+		"store.options.sc-pruning-option.keep-recent",
 	},
-	// "v0.xx.x": {}, // add keys to move for specific version of v2 if needed
+	"pruning-interval": []string{
+		"store.options.ss-pruning-option.interval",
+		"store.options.sc-pruning-option.interval",
+	},
+	"iavl-cache-size":       []string{"store.options.iavl-config.cache-size"},
+	"iavl-disable-fastnode": []string{"store.options.iavl-config.skip-fast-storage-upgrade"},
+	// Add other key mappings as needed
 }
 
 // PlanBuilder is a function that returns a transformation plan for a given diff between two files.
@@ -148,7 +146,7 @@ func NoPlan(from *tomledit.Document, to, planType string) (transform.Plan, *toml
 	return transform.Plan{}, from
 }
 
-// V2PlanBuilder is a function that returns a transformation plan to convert to serverv2 config
+// V2PlanBuilder is a function that returns a transformation plan to convert to v2 config
 func V2PlanBuilder(from *tomledit.Document, to, planType string) (transform.Plan, *tomledit.Document) {
 	target, err := LoadLocalConfig(to, planType)
 	if err != nil {
@@ -157,7 +155,7 @@ func V2PlanBuilder(from *tomledit.Document, to, planType string) (transform.Plan
 
 	plan := transform.Plan{}
 	plan = updateMatchedKeysPlan(from, target, plan)
-	plan = applyKeyChangesPlan(from, to, plan)
+	plan = applyKeyChangesPlan(from, plan)
 
 	return plan, target
 }
@@ -171,10 +169,14 @@ func updateMatchedKeysPlan(from, target *tomledit.Document, plan transform.Plan)
 			continue
 		}
 
+		// check if the key "app-db-backend" exists and if its value is empty in the existing config
+		// If the value is empty, update the key value with the default value
+		// of v2 i.e., goleveldb  to prevent network failures.
 		if isAppDBBackend(newKey, oldEntry) {
-			continue
+			continue // lets keep app-db-backend with v2 default value
 		}
 
+		// update newKey value with old entry value
 		step := createUpdateStep(oldKey, newKey, oldEntry)
 		plan = append(plan, step)
 	}
@@ -182,8 +184,8 @@ func updateMatchedKeysPlan(from, target *tomledit.Document, plan transform.Plan)
 }
 
 // applyKeyChangesPlan checks if key changes are needed with the "to" version and applies them
-func applyKeyChangesPlan(from *tomledit.Document, to string, plan transform.Plan) transform.Plan {
-	changes := v2KeyChanges[to]
+func applyKeyChangesPlan(from *tomledit.Document, plan transform.Plan) transform.Plan {
+	changes := v2KeyChanges
 	for oldKey, newKeys := range changes {
 		oldEntry := getEntry(from, oldKey)
 		if oldEntry == nil {
@@ -191,10 +193,14 @@ func applyKeyChangesPlan(from *tomledit.Document, to string, plan transform.Plan
 		}
 
 		for _, newKey := range newKeys {
+			// check if the key "app-db-backend" exists and if its value is empty in the existing config
+			// If the value is empty, update the key value with the default value
+			// of v2 i.e., goleveldb  to prevent network failures.
 			if isAppDBBackend(newKey, oldEntry) {
-				continue
+				continue // lets keep app-db-backend with v2 default value
 			}
 
+			// update newKey value with old entry value
 			step := createUpdateStep(oldKey, newKey, oldEntry)
 			plan = append(plan, step)
 		}

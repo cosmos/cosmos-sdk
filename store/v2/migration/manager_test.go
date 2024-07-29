@@ -146,19 +146,17 @@ func TestStartMigrateState(t *testing.T) {
 			}
 
 			// feed changesets to channel
-			go func() error {
+			go func() {
 				for version := uint64(1); version <= toVersion; version++ {
 					chChangeset <- &VersionedChangeset{
 						Version:   version,
 						Changeset: &changesets[version-1],
 					}
 				}
-
-				return nil
 			}()
 
 			// check if migrate process complete
-			go func() error {
+			go func() {
 				for {
 					migrateVersion := m.GetMigratedVersion()
 					if migrateVersion == toVersion-1 {
@@ -167,8 +165,6 @@ func TestStartMigrateState(t *testing.T) {
 				}
 
 				chDone <- struct{}{}
-
-				return nil
 			}()
 
 			err := m.Start(toVersion-1, chChangeset, chDone)

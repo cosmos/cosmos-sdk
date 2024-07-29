@@ -240,5 +240,4 @@ func (s *CommitStoreTestSuite) TestStore_Get() {
 			}
 		}
 	}
-
 }

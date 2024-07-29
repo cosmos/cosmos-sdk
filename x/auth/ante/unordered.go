@@ -7,12 +7,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/protobuf/proto" // nolint: staticcheck // for proto.Message
-
 	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/auth/ante/unorderedtx"
+	"github.com/cosmos/gogoproto/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -49,7 +48,12 @@ type UnorderedTxDecorator struct {
 	sha256Cost         uint64
 }
 
-func NewUnorderedTxDecorator(maxDuration time.Duration, m *unorderedtx.Manager, env appmodule.Environment, gasCost uint64) *UnorderedTxDecorator {
+func NewUnorderedTxDecorator(
+	maxDuration time.Duration,
+	m *unorderedtx.Manager,
+	env appmodule.Environment,
+	gasCost uint64,
+) *UnorderedTxDecorator {
 	return &UnorderedTxDecorator{
 		maxTimeoutDuration: maxDuration,
 		txManager:          m,
@@ -58,7 +62,12 @@ func NewUnorderedTxDecorator(maxDuration time.Duration, m *unorderedtx.Manager, 
 	}
 }
 
-func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (d *UnorderedTxDecorator) AnteHandle(
+	ctx sdk.Context,
+	tx sdk.Tx,
+	_ bool,
+	next sdk.AnteHandler,
+) (sdk.Context, error) {
 	unorderedTx, ok := tx.(sdk.TxWithUnordered)
 	if !ok || !unorderedTx.GetUnordered() {
 		// If the transaction does not implement unordered capabilities or has the
@@ -69,13 +78,23 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 	headerInfo := d.env.HeaderService.HeaderInfo(ctx)
 	timeoutTimestamp := unorderedTx.GetTimeoutTimeStamp()
 	if timeoutTimestamp.IsZero() || timeoutTimestamp.Unix() == 0 {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction must have timeout_timestamp set")
+		return ctx, errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"unordered transaction must have timeout_timestamp set",
+		)
 	}
 	if timeoutTimestamp.Before(headerInfo.Time) {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction has a timeout_timestamp that has already passed")
+		return ctx, errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"unordered transaction has a timeout_timestamp that has already passed",
+		)
 	}
 	if timeoutTimestamp.After(headerInfo.Time.Add(d.maxTimeoutDuration)) {
-		return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unordered tx ttl exceeds %s", d.maxTimeoutDuration.String())
+		return ctx, errorsmod.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"unordered tx ttl exceeds %s",
+			d.maxTimeoutDuration.String(),
+		)
 	}
 
 	// consume gas in all exec modes to avoid gas estimation discrepancies
@@ -97,7 +116,10 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 
 	// check for duplicates
 	if d.txManager.Contains(txHash) {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "tx %X is duplicated")
+		return ctx, errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"tx %X is duplicated",
+		)
 	}
 	if d.env.TransactionService.ExecMode(ctx) == transaction.ExecModeFinalize {
 		// a new tx included in the block, add the hash to the unordered tx manager
@@ -111,7 +133,10 @@ func (d *UnorderedTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 func TxIdentifier(timeout uint64, tx sdk.Tx) ([32]byte, error) {
 	feetx := tx.(sdk.FeeTx)
 	if feetx.GetFee().IsZero() {
-		return [32]byte{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction must have a fee")
+		return [32]byte{}, errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"unordered transaction must have a fee",
+		)
 	}
 
 	buf := bufPool.Get().(*bytes.Buffer)
@@ -126,22 +151,34 @@ func TxIdentifier(timeout uint64, tx sdk.Tx) ([32]byte, error) {
 		// Malleability is not a concern here because the state machine will encode the transaction deterministically.
 		bz, err := proto.Marshal(msg)
 		if err != nil {
-			return [32]byte{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to marshal message")
+			return [32]byte{}, errorsmod.Wrap(
+				sdkerrors.ErrInvalidRequest,
+				"failed to marshal message",
+			)
 		}
 
 		if _, err := buf.Write(bz); err != nil {
-			return [32]byte{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to write message to buffer")
+			return [32]byte{}, errorsmod.Wrap(
+				sdkerrors.ErrInvalidRequest,
+				"failed to write message to buffer",
+			)
 		}
 	}
 
 	// write the timeout height to the buffer
 	if err := binary.Write(buf, binary.LittleEndian, timeout); err != nil {
-		return [32]byte{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to write timeout_height to buffer")
+		return [32]byte{}, errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"failed to write timeout_height to buffer",
+		)
 	}
 
 	// write gas to the buffer
 	if err := binary.Write(buf, binary.LittleEndian, feetx.GetGas()); err != nil {
-		return [32]byte{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to write unordered to buffer")
+		return [32]byte{}, errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"failed to write unordered to buffer",
+		)
 	}
 
 	txHash := sha256.Sum256(buf.Bytes())

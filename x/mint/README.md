@@ -8,6 +8,10 @@ sidebar_position: 1
 
 * [Concepts](#concepts)
     * [The Minting Mechanism](#the-minting-mechanism)
+    * [Provisions](#provisions)
+        * [Relation to Inflation](#relation-to-inflation)
+        * [Usage per Block](#usage-per-block)
+        * [Example](#example)
 * [State](#state)
     * [Minter](#minter)
     * [Params](#params)
@@ -51,6 +55,49 @@ It can be broken down in the following way:
 * If the actual percentage of bonded tokens is above the goal %-bonded the inflation rate will
    decrease until a minimum value is reached
 
+### Provisions
+
+Provisions are the amount of tokens generated and distributed in each block. They are directly related to the inflation rate and the current total supply of tokens. The amount of provisions generated per block is calculated based on the annual provisions, which are determined by the inflation rate and the total supply of tokens.
+
+#### Relation to Inflation
+
+The inflation rate determines the percentage of the total supply of tokens that will be added as provisions over a year. These annual provisions are divided by the number of blocks in a year to obtain the provisions per block.
+
+#### Usage per Block
+
+Each block uses a fraction of the annual provisions, calculated as: 
+
+```
+Provisions per block = Annual provisions / Number of blocks per year
+```
+
+These provisions are distributed to validators and delegators as rewards for their participation in the network. 
+
+
+#### Example
+
+For example, if the total supply of tokens is 1,000,000 and the inflation rate is 10%, the annual provisions would be:
+
+Annual provisions = 1,000,000 0.10 = 100,000 tokens
+
+If there are 3,153,600 blocks per year (one block every 10 seconds), the provisions per block would be:
+Provisions per block = 100,000 / 3,153,600 ≈ 0.0317 tokens per block.
+
+These provisions are then distributed to validators and delegators as rewards.
+
+```mermaid
+flowchart TD
+    A[Start] --> B[Get Total Supply]
+    B --> C[Get Inflation Rate]
+    C --> D[Calculate Annual Provisions]
+    D --> E[Calculate Provisions per Block]
+    E --> F[Distribute Provisions to Validators and Delegators]
+
+    subgraph Calculation
+        D --> |Annual Provisions = Total Supply * Inflation Rate| D
+        E --> |Provisions per Block = Annual Provisions / Number of Blocks per Year| E
+    end
+```
 
 ## State
 

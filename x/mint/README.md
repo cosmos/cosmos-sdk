@@ -78,7 +78,7 @@ These provisions are distributed to validators and delegators as rewards for the
 
 For example, if the total supply of tokens is 1,000,000 and the inflation rate is 10%, the annual provisions would be:
 
-Annual provisions = 1,000,000 0.10 = 100,000 tokens
+Annual provisions = 1,000,000 * 0.10 = 100,000 tokens
 
 If there are 3,153,600 blocks per year (one block every 10 seconds), the provisions per block would be:
 Provisions per block = 100,000 / 3,153,600 ≈ 0.0317 tokens per block.

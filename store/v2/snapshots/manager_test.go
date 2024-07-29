@@ -438,22 +438,24 @@ func TestSnapshot_Pruning_Take_Snapshot_Parallel(t *testing.T) {
 	err := manager.RegisterExtensions(extSnapshotter)
 	require.NoError(t, err)
 
+	var prunedCount uint64
 	// try take snapshot and pruning parallel while prune operation begins first
 	go func() {
-		pruned, err := manager.Prune(1)
-		require.NoError(t, err)
-		assert.EqualValues(t, 3, pruned)
+		checkOperation := func() bool {
+			op := manager.GetCurrentOperation()
+			return op == "prune"
+		}
+
+		require.Eventually(t, checkOperation, time.Millisecond*100, time.Millisecond)
+
+		// error since pruning is running
+		_, err = manager.Create(4)
+		require.Error(t, err)
 	}()
 
-	// let the pruning run first for a few moment
-	time.Sleep(time.Microsecond * 10)
-
-	// error since pruning is running
-	_, err = manager.Create(4)
-	require.Error(t, err)
-
-	// wait for the prune operation to finish
-	time.Sleep(time.Second * 5)
+	prunedCount, err = manager.Prune(1)
+	require.NoError(t, err)
+	assert.EqualValues(t, 3, prunedCount)
 
 	// creating a snapshot at a same height 4, should be true since we prune has finished
 	snapshot, err := manager.Create(4)
@@ -471,8 +473,14 @@ func TestSnapshot_Pruning_Take_Snapshot_Parallel(t *testing.T) {
 
 	// try take snapshot and pruning parallel while snapshot operation begins first
 	go func() {
-		time.Sleep(time.Millisecond * 10)
+		checkOperation := func() bool {
+			op := manager.GetCurrentOperation()
+			return op == "snapshot"
+		}
 
+		require.Eventually(t, checkOperation, time.Millisecond*100, time.Millisecond)
+
+		// error since snapshot is running
 		_, err = manager.Prune(1)
 		require.Error(t, err)
 	}()

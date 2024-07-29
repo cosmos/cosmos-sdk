@@ -234,7 +234,7 @@ func (s *Store) Prune(retain uint32) (uint64, error) {
 	// the height directory as well
 	for height, ok := range prunedHeights {
 		if ok {
-			err = os.RemoveAll(s.pathHeight(height))
+			err = os.Remove(s.pathHeight(height))
 			if err != nil {
 				return 0, errors.Wrapf(err, "failed to remove snapshot directory for height %v", height)
 			}

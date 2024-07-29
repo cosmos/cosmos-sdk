@@ -115,6 +115,13 @@ func (m *Manager) begin(op operation) error {
 	return m.beginLocked(op)
 }
 
+// GetCurrentOperation get the current operation
+func (m *Manager) GetCurrentOperation() operation {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
+	return m.operation
+}
+
 // beginLocked begins an operation while already holding the mutex.
 func (m *Manager) beginLocked(op operation) error {
 	if op == opNone {

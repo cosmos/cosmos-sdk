@@ -32,6 +32,7 @@ import (
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -374,4 +375,73 @@ func wonkyMsg(t *testing.T, cfg client.TxConfig, tx signing.Tx) signing.Tx {
 	err := builder.SetMsgs(msgs...)
 	require.NoError(t, err)
 	return builder.GetTx()
+}
+
+type SendServerImpl struct {
+	gas uint64
+}
+
+func (s SendServerImpl) Send(ctx context.Context, send *baseapptestutil.MsgSend) (*baseapptestutil.MsgSendResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if send.From == "" {
+		return nil, errors.New("from address cannot be empty")
+	}
+	if send.To == "" {
+		return nil, errors.New("to address cannot be empty")
+	}
+
+	_, err := sdk.ParseCoinNormalized(send.Amount)
+	if err != nil {
+		return nil, err
+	}
+	gas := s.gas
+	if gas == 0 {
+		gas = 5
+	}
+	sdkCtx.GasMeter().ConsumeGas(gas, "send test")
+	return &baseapptestutil.MsgSendResponse{}, nil
+}
+
+type NestedMessgesServerImpl struct {
+	gas uint64
+}
+
+func (n NestedMessgesServerImpl) Check(ctx context.Context, message *baseapptestutil.MsgNestedMessages) (*baseapptestutil.MsgCreateNestedMessagesResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	cdc := codectestutil.CodecOptions{}.NewCodec()
+	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+
+	signer, _, err := cdc.GetMsgSigners(message)
+	if err != nil {
+		return nil, err
+	}
+	if len(signer) != 1 {
+		return nil, fmt.Errorf("expected 1 signer, got %d", len(signer))
+	}
+
+	msgs, err := message.GetMsgs()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, msg := range msgs {
+		s, _, err := cdc.GetMsgSigners(msg)
+		if err != nil {
+			return nil, err
+		}
+		if len(s) != 1 {
+			return nil, fmt.Errorf("expected 1 signer, got %d", len(s))
+		}
+		if !bytes.Equal(signer[0], s[0]) {
+			return nil, errors.New("signer does not match")
+		}
+
+	}
+
+	gas := n.gas
+	if gas == 0 {
+		gas = 5
+	}
+	sdkCtx.GasMeter().ConsumeGas(gas, "nested messages test")
+	return nil, nil
 }

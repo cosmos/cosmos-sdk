@@ -2,6 +2,7 @@ package testdata
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -27,7 +28,7 @@ var _ QueryServer = QueryImpl{}
 func (e QueryImpl) TestAny(_ context.Context, request *TestAnyRequest) (*TestAnyResponse, error) {
 	animal, ok := request.AnyAnimal.GetCachedValue().(test.Animal)
 	if !ok {
-		return nil, fmt.Errorf("expected Animal")
+		return nil, errors.New("expected Animal")
 	}
 
 	any, err := types.NewAnyWithValue(animal.(proto.Message))

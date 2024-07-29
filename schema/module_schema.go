@@ -31,7 +31,7 @@ func NewModuleSchema(objectTypes []ObjectType) (ModuleSchema, error) {
 }
 
 func addEnumType(types map[string]Type, field Field) error {
-	enumDef := field.EnumDefinition
+	enumDef := field.EnumType
 	if enumDef.Name == "" {
 		return nil
 	}
@@ -42,7 +42,7 @@ func addEnumType(types map[string]Type, field Field) error {
 		return nil
 	}
 
-	existingEnum, ok := existing.(EnumDefinition)
+	existingEnum, ok := existing.(EnumType)
 	if !ok {
 		return fmt.Errorf("enum %q already exists as a different non-enum type", enumDef.Name)
 	}
@@ -118,4 +118,26 @@ func (s ModuleSchema) Types(f func(Type) bool) {
 			break
 		}
 	}
+}
+
+// ObjectTypes iterators over all the object types in the schema in alphabetical order.
+func (s ModuleSchema) ObjectTypes(f func(ObjectType) bool) {
+	s.Types(func(t Type) bool {
+		objTyp, ok := t.(ObjectType)
+		if ok {
+			return f(objTyp)
+		}
+		return true
+	})
+}
+
+// EnumTypes iterators over all the enum types in the schema in alphabetical order.
+func (s ModuleSchema) EnumTypes(f func(EnumType) bool) {
+	s.Types(func(t Type) bool {
+		enumType, ok := t.(EnumType)
+		if ok {
+			return f(enumType)
+		}
+		return true
+	})
 }

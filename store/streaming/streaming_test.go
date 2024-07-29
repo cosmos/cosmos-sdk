@@ -15,8 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/core/log"
-	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 )
 
@@ -59,7 +58,7 @@ func (s *PluginTestSuite) SetupTest() {
 	require.True(s.T(), ok, "should pass type check")
 
 	header := cmtproto.Header{Height: 1, Time: time.Now()}
-	logger := coretesting.NewNopLogger()
+	logger := log.NewNopLogger()
 	streamingService := storetypes.StreamingManager{
 		ABCIListeners: []storetypes.ABCIListener{abciListener},
 		StopNodeOnErr: true,

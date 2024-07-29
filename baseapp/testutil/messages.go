@@ -3,6 +3,7 @@ package testutil
 import (
 	errorsmod "cosmossdk.io/errors"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,10 +17,15 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgCounter{},
 		&MsgCounter2{},
 		&MsgKeyValue{},
+		&MsgNestedMessages{},
+		&MsgSend{},
 	)
+
 	msgservice.RegisterMsgServiceDesc(registry, &_Counter_serviceDesc)
 	msgservice.RegisterMsgServiceDesc(registry, &_Counter2_serviceDesc)
 	msgservice.RegisterMsgServiceDesc(registry, &_KeyValue_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(registry, &_NestedMessages_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(registry, &_Send_serviceDesc)
 
 	codec.RegisterInterfaces(registry)
 }
@@ -62,4 +68,22 @@ func (msg *MsgKeyValue) ValidateBasic() error {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "value cannot be nil")
 	}
 	return nil
+}
+
+func (msg *MsgNestedMessages) GetMsgs() ([]sdk.Msg, error) {
+	cdc := codectestutil.CodecOptions{}.NewCodec()
+	RegisterInterfaces(cdc.InterfaceRegistry())
+	msgs := make([]sdk.Msg, len(msg.GetMessages()))
+	for i, m := range msg.GetMessages() {
+		mm, err := cdc.InterfaceRegistry().Resolve(m.TypeUrl)
+		if err != nil {
+			return nil, err
+		}
+		err = cdc.UnpackAny(m, &mm)
+		if err != nil {
+			return nil, err
+		}
+		msgs[i] = mm
+	}
+	return msgs, nil
 }

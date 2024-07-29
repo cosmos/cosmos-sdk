@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"context"
 	"math/rand"
 
 	coreaddress "cosmossdk.io/core/address"
@@ -20,7 +21,7 @@ const (
 
 func ProposalMsgs() []simtypes.WeightedProposalMsg {
 	return []simtypes.WeightedProposalMsg{
-		simulation.NewWeightedProposalMsg(
+		simulation.NewWeightedProposalMsgX(
 			OpWeightMsgCommunityPoolSpend,
 			DefaultWeightMsgCommunityPoolSpend,
 			SimulateMsgCommunityPoolSpend,
@@ -28,7 +29,7 @@ func ProposalMsgs() []simtypes.WeightedProposalMsg {
 	}
 }
 
-func SimulateMsgCommunityPoolSpend(r *rand.Rand, _ []simtypes.Account, cdc coreaddress.Codec) (sdk.Msg, error) {
+func SimulateMsgCommunityPoolSpend(_ context.Context, r *rand.Rand, _ []simtypes.Account, cdc coreaddress.Codec) (sdk.Msg, error) {
 	// use the default gov module account address as authority
 	var authority sdk.AccAddress = address.Module("gov")
 

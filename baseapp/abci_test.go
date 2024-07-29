@@ -1833,19 +1833,29 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	expectedTxs := 8
+	var expectedTxBytes int64
+
 	for i := 0; i < 100; i++ {
 		tx2 := newTxCounter(t, suite.txConfig, int64(i), int64(i))
 		err := pool.Insert(sdk.Context{}, tx2)
 		require.NoError(t, err)
+
+		txBz, err := suite.txConfig.TxEncoder()(tx2)
+		require.NoError(t, err)
+		txDataSize := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz}))
+		if i < expectedTxs {
+			expectedTxBytes += int64(txDataSize)
+		}
 	}
 
 	reqPrepareProposal := abci.PrepareProposalRequest{
-		MaxTxBytes: 1500,
+		MaxTxBytes: expectedTxBytes,
 		Height:     1,
 	}
 	resPrepareProposal, err := suite.baseApp.PrepareProposal(&reqPrepareProposal)
 	require.NoError(t, err)
-	require.Equal(t, 8, len(resPrepareProposal.Txs))
+	require.Equal(t, expectedTxs, len(resPrepareProposal.Txs))
 }
 
 func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {

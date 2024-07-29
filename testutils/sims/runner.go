@@ -9,8 +9,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/log"
-	tlog "cosmossdk.io/log"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -109,9 +108,9 @@ func RunWithSeeds[T SimulationApp](
 			testInstance := NewSimulationAppInstance(t, tCfg, appFactory)
 			var runLogger log.Logger
 			if cli.FlagVerboseValue {
-				runLogger = tlog.NewTestLogger(t)
+				runLogger = log.NewTestLogger(t)
 			} else {
-				runLogger = tlog.NewTestLoggerInfo(t)
+				runLogger = log.NewTestLoggerInfo(t)
 			}
 			runLogger = runLogger.With("seed", tCfg.Seed)
 
@@ -176,9 +175,9 @@ func NewSimulationAppInstance[T SimulationApp](
 	dbDir := filepath.Join(workDir, "leveldb-app-sim")
 	var logger log.Logger
 	if cli.FlagVerboseValue {
-		logger = tlog.NewTestLogger(t)
+		logger = log.NewTestLogger(t)
 	} else {
-		logger = tlog.NewTestLoggerError(t)
+		logger = log.NewTestLoggerError(t)
 	}
 	logger = logger.With("seed", tCfg.Seed)
 

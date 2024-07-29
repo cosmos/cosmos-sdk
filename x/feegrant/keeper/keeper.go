@@ -2,14 +2,12 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
-	"cosmossdk.io/core/log"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/feegrant"
@@ -58,11 +56,6 @@ func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak feegrant.Acc
 			collections.BoolValue,
 		),
 	}
-}
-
-// Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", feegrant.ModuleName))
 }
 
 // GrantAllowance creates a new grant

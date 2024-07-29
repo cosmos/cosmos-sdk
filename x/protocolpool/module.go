@@ -22,8 +22,6 @@ import (
 const ConsensusVersion = 1
 
 var (
-	_ module.HasName             = AppModule{}
-	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 
@@ -31,6 +29,7 @@ var (
 	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ appmodule.HasBeginBlocker       = AppModule{}
 )
 
 // AppModule implements an application module for the pool module
@@ -56,11 +55,9 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
 // IsAppModule implements the appmodule.AppModule interface.
 func (AppModule) IsAppModule() {}
 
-// Name returns the pool module's name.
+// Name returns the protocolpool module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string { return types.ModuleName }
-
-// RegisterLegacyAminoCodec registers the pool module's types on the LegacyAmino codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes
 func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
@@ -103,10 +100,8 @@ func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error
 	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
 		return err
 	}
-	if err := am.keeper.InitGenesis(ctx, &genesisState); err != nil {
-		return err
-	}
-	return nil
+
+	return am.keeper.InitGenesis(ctx, &genesisState)
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the protocolpool module.
@@ -116,6 +111,11 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 		return nil, err
 	}
 	return am.cdc.MarshalJSON(gs)
+}
+
+// BeginBlock implements appmodule.HasBeginBlocker.
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	return am.keeper.BeginBlocker(ctx)
 }
 
 // ConsensusVersion implements HasConsensusVersion

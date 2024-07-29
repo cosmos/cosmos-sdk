@@ -14,7 +14,7 @@ type enumType struct {
 	enum protoreflect.EnumDescriptor
 }
 
-func (b enumType) NewValue(context.Context, *Builder) Value {
+func (b enumType) NewValue(*context.Context, *Builder) Value {
 	val := &enumValue{
 		enum:   b.enum,
 		valMap: map[string]protoreflect.EnumValueDescriptor{},

@@ -9,18 +9,17 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
 	_ appmodule.AppModule = coreAppModuleAdaptor{}
 
-	_ HasName                         = coreAppModuleAdaptor{}
 	_ HasAminoCodec                   = coreAppModuleAdaptor{}
 	_ HasGRPCGateway                  = coreAppModuleAdaptor{}
 	_ appmodule.HasRegisterInterfaces = coreAppModuleAdaptor{}
@@ -154,7 +153,8 @@ func (c coreAppModuleAdaptor) InitGenesis(ctx context.Context, bz json.RawMessag
 	return nil, nil
 }
 
-// Name implements HasName
+// Name implements legacy Name() interface
+// Kept for legacy reasons
 func (c coreAppModuleAdaptor) Name() string {
 	return c.name
 }
@@ -198,9 +198,9 @@ func (c coreAppModuleAdaptor) RegisterInterfaces(reg registry.InterfaceRegistrar
 }
 
 // RegisterLegacyAminoCodec implements HasAminoCodec
-func (c coreAppModuleAdaptor) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
+func (c coreAppModuleAdaptor) RegisterLegacyAminoCodec(amino legacy.Amino) {
 	if mod, ok := c.module.(interface {
-		RegisterLegacyAminoCodec(amino *codec.LegacyAmino)
+		RegisterLegacyAminoCodec(amino legacy.Amino)
 	}); ok {
 		mod.RegisterLegacyAminoCodec(amino)
 	}

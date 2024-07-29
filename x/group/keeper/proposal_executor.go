@@ -45,7 +45,7 @@ func (k Keeper) doExecuteMsgs(ctx context.Context, proposal group.Proposal, grou
 	}
 
 	for i, msg := range msgs {
-		if _, err := k.RouterService.MessageRouterService().InvokeUntyped(ctx, msg); err != nil {
+		if _, err := k.MsgRouterService.InvokeUntyped(ctx, msg); err != nil {
 			return errorsmod.Wrapf(err, "message %s at position %d", sdk.MsgTypeURL(msg), i)
 		}
 	}
@@ -57,7 +57,7 @@ func (k Keeper) doExecuteMsgs(ctx context.Context, proposal group.Proposal, grou
 func ensureMsgAuthZ(msgs []sdk.Msg, groupPolicyAcc sdk.AccAddress, cdc codec.Codec, addressCodec address.Codec) error {
 	for i := range msgs {
 		// In practice, GetMsgV1Signers should return a non-empty array without duplicates.
-		signers, _, err := cdc.GetMsgV1Signers(msgs[i])
+		signers, _, err := cdc.GetMsgSigners(msgs[i])
 		if err != nil {
 			return err
 		}

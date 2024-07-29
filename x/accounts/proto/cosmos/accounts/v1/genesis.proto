@@ -4,12 +4,14 @@ package cosmos.accounts.v1;
 
 option go_package = "cosmossdk.io/x/accounts/v1";
 
+import "cosmos/accounts/v1/tx.proto";
+
 // GenesisState defines the accounts' module's genesis state.
 message GenesisState {
-  // account_number is the latest account number.
-  uint64 account_number = 1;
   // accounts are the genesis accounts.
-  repeated GenesisAccount accounts = 2;
+  repeated GenesisAccount accounts = 1;
+  // init_accounts_msgs defines the genesis messages that will be executed to init the account.
+  repeated cosmos.accounts.v1.MsgInit init_account_msgs = 2;
 }
 
 // GenesisAccount defines an account to be initialized in the genesis state.

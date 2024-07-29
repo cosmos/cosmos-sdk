@@ -30,7 +30,12 @@ func NewAddUpgradeCmd() *cobra.Command {
 
 // AddUpgrade adds upgrade info to manifest
 func AddUpgrade(cmd *cobra.Command, args []string) error {
-	cfg, err := cosmovisor.GetConfigFromEnv()
+	configPath, err := cmd.Flags().GetString(cosmovisor.FlagCosmovisorConfig)
+	if err != nil {
+		return fmt.Errorf("failed to get config flag: %w", err)
+	}
+
+	cfg, err := cosmovisor.GetConfigFromFile(configPath)
 	if err != nil {
 		return err
 	}

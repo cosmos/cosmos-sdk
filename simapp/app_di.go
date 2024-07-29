@@ -6,12 +6,14 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cast"
 
+	clienthelpers "cosmossdk.io/client/v2/helpers"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -67,7 +69,7 @@ var (
 // capabilities aren't needed for testing.
 type SimApp struct {
 	*runtime.App
-	legacyAmino       *codec.LegacyAmino
+	legacyAmino       legacy.Amino
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
@@ -92,25 +94,25 @@ type SimApp struct {
 	ConsensusParamsKeeper consensuskeeper.Keeper
 	CircuitBreakerKeeper  circuitkeeper.Keeper
 	PoolKeeper            poolkeeper.Keeper
-	EpochsKeeper          epochskeeper.Keeper
+	EpochsKeeper          *epochskeeper.Keeper
 
 	// simulation manager
 	sm *module.SimulationManager
 }
 
 func init() {
-	userHomeDir, err := os.UserHomeDir()
+	var err error
+	DefaultNodeHome, err = clienthelpers.GetNodeHomeDirectory(".simapp")
 	if err != nil {
 		panic(err)
 	}
-
-	DefaultNodeHome = filepath.Join(userHomeDir, ".simapp")
 }
 
 // AppConfig returns the default app config.
 func AppConfig() depinject.Config {
 	return depinject.Configs(
-		appConfig, // Alternatively use appconfig.LoadYAML(AppConfigYAML)
+		appConfig,                               // Alternatively use appconfig.LoadYAML(AppConfigYAML)
+		depinject.Provide(ProvideExampleMintFn), // optional: override the mint module's mint function with epoched minting
 	)
 }
 
@@ -135,7 +137,6 @@ func NewSimApp(
 				appOpts,
 				// supply the logger
 				logger,
-
 				// ADVANCED CONFIGURATION
 
 				//
@@ -173,14 +174,15 @@ func NewSimApp(
 				//
 
 				// For providing a custom inflation function for x/mint add here your
-				// custom function that implements the minttypes.InflationCalculationFn
-				// interface.
+				// custom function that implements the minttypes.MintFn interface.
 			),
 		)
 	)
 
+	var appModules map[string]appmodule.AppModule
 	if err := depinject.Inject(appConfig,
 		&appBuilder,
+		&appModules,
 		&app.appCodec,
 		&app.legacyAmino,
 		&app.txConfig,
@@ -242,9 +244,21 @@ func NewSimApp(
 
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 
-	// register streaming services
-	if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
-		panic(err)
+	if indexerOpts := appOpts.Get("indexer"); indexerOpts != nil {
+		// if we have indexer options in app.toml, then enable the built-in indexer framework
+		moduleSet := map[string]any{}
+		for modName, mod := range appModules {
+			moduleSet[modName] = mod
+		}
+		err := app.EnableIndexer(indexerOpts, app.kvStoreKeys(), moduleSet)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		// register legacy streaming services if we don't have the built-in indexer enabled
+		if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
+			panic(err)
+		}
 	}
 
 	/****  Module Options ****/
@@ -292,7 +306,7 @@ func NewSimApp(
 			unorderedtx.NewSnapshotter(app.UnorderedTxManager),
 		)
 		if err != nil {
-			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
+			panic(fmt.Errorf("failed to register snapshot extension: %w", err))
 		}
 	}
 
@@ -342,7 +356,12 @@ func (app *SimApp) Close() error {
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
 func (app *SimApp) LegacyAmino() *codec.LegacyAmino {
-	return app.legacyAmino
+	switch cdc := app.legacyAmino.(type) {
+	case *codec.LegacyAmino:
+		return cdc
+	default:
+		panic("unexpected codec type")
+	}
 }
 
 // AppCodec returns SimApp's app codec.

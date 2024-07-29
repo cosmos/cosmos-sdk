@@ -7,18 +7,17 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
 
 	"github.com/hashicorp/go-metrics"
 
+	"cosmossdk.io/core/app"
 	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-	xp "cosmossdk.io/x/upgrade/exported"
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -26,7 +25,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 type Keeper struct {
@@ -36,10 +34,10 @@ type Keeper struct {
 	skipUpgradeHeights map[int64]bool                  // map of heights to skip for an upgrade
 	cdc                codec.BinaryCodec               // App-wide binary codec
 	upgradeHandlers    map[string]types.UpgradeHandler // map of plan name to upgrade handler
-	versionModifier    xp.AppVersionModifier           // implements setting the protocol version field on BaseApp
+	versionModifier    app.VersionModifier             // implements setting the protocol version field on BaseApp
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
 	authority          string                          // the address capable of executing and canceling an upgrade. Usually the gov module account
-	initVersionMap     module.VersionMap               // the module version map at init genesis
+	initVersionMap     appmodule.VersionMap            // the module version map at init genesis
 }
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
@@ -48,7 +46,14 @@ type Keeper struct {
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
 // vs - the interface implemented by baseapp which allows setting baseapp's protocol version field
-func NewKeeper(env appmodule.Environment, skipUpgradeHeights map[int64]bool, cdc codec.BinaryCodec, homePath string, vs xp.AppVersionModifier, authority string) *Keeper {
+func NewKeeper(
+	env appmodule.Environment,
+	skipUpgradeHeights map[int64]bool,
+	cdc codec.BinaryCodec,
+	homePath string,
+	vs app.VersionModifier,
+	authority string,
+) *Keeper {
 	k := &Keeper{
 		Environment:        env,
 		homePath:           homePath,
@@ -59,8 +64,8 @@ func NewKeeper(env appmodule.Environment, skipUpgradeHeights map[int64]bool, cdc
 		authority:          authority,
 	}
 
-	if upgradePlan, err := k.ReadUpgradeInfoFromDisk(); err == nil && upgradePlan.Height > 0 {
-		telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(upgradePlan.Height, 10))})
+	if homePath == "" {
+		k.Logger.Warn("homePath is empty; upgrade info will be written to the current directory")
 	}
 
 	return k
@@ -68,13 +73,13 @@ func NewKeeper(env appmodule.Environment, skipUpgradeHeights map[int64]bool, cdc
 
 // SetInitVersionMap sets the initial version map.
 // This is only used in app wiring and should not be used in any other context.
-func (k *Keeper) SetInitVersionMap(vm module.VersionMap) {
+func (k *Keeper) SetInitVersionMap(vm appmodule.VersionMap) {
 	k.initVersionMap = vm
 }
 
 // GetInitVersionMap gets the initial version map
 // This is only used in upgrade InitGenesis and should not be used in any other context.
-func (k *Keeper) GetInitVersionMap() module.VersionMap {
+func (k *Keeper) GetInitVersionMap() appmodule.VersionMap {
 	return k.initVersionMap
 }
 
@@ -86,7 +91,7 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 }
 
 // SetModuleVersionMap saves a given version map to state
-func (k Keeper) SetModuleVersionMap(ctx context.Context, vm module.VersionMap) error {
+func (k Keeper) SetModuleVersionMap(ctx context.Context, vm appmodule.VersionMap) error {
 	if len(vm) > 0 {
 		store := runtime.KVStoreAdapter(k.KVStoreService.OpenKVStore(ctx))
 		versionStore := prefix.NewStore(store, []byte{types.VersionMapByte})
@@ -114,7 +119,7 @@ func (k Keeper) SetModuleVersionMap(ctx context.Context, vm module.VersionMap) e
 
 // GetModuleVersionMap returns a map of key module name and value module consensus version
 // as defined in ADR-041.
-func (k Keeper) GetModuleVersionMap(ctx context.Context) (module.VersionMap, error) {
+func (k Keeper) GetModuleVersionMap(ctx context.Context) (appmodule.VersionMap, error) {
 	store := k.KVStoreService.OpenKVStore(ctx)
 	prefix := []byte{types.VersionMapByte}
 	it, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
@@ -123,7 +128,7 @@ func (k Keeper) GetModuleVersionMap(ctx context.Context) (module.VersionMap, err
 	}
 	defer it.Close()
 
-	vm := make(module.VersionMap)
+	vm := make(appmodule.VersionMap)
 	for ; it.Valid(); it.Next() {
 		moduleBytes := it.Key()
 		// first byte is prefix key, so we remove it here
@@ -410,7 +415,7 @@ func (k Keeper) HasHandler(name string) bool {
 func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 	handler := k.upgradeHandlers[plan.Name]
 	if handler == nil {
-		return fmt.Errorf("ApplyUpgrade should never be called without first checking HasHandler")
+		return errors.New("ApplyUpgrade should never be called without first checking HasHandler")
 	}
 
 	vm, err := k.GetModuleVersionMap(ctx)
@@ -482,17 +487,12 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
 
 // GetUpgradeInfoPath returns the upgrade info file path
 func (k Keeper) GetUpgradeInfoPath() (string, error) {
-	upgradeInfoFileDir := path.Join(k.getHomeDir(), "data")
+	upgradeInfoFileDir := filepath.Join(k.homePath, "data")
 	if err := os.MkdirAll(upgradeInfoFileDir, os.ModePerm); err != nil {
 		return "", fmt.Errorf("could not create directory %q: %w", upgradeInfoFileDir, err)
 	}
 
 	return filepath.Join(upgradeInfoFileDir, types.UpgradeInfoFilename), nil
-}
-
-// getHomeDir returns the height at which the given upgrade was executed
-func (k Keeper) getHomeDir() string {
-	return k.homePath
 }
 
 // ReadUpgradeInfoFromDisk returns the name and height of the upgrade which is
@@ -523,6 +523,10 @@ func (k Keeper) ReadUpgradeInfoFromDisk() (types.Plan, error) {
 
 	if err := upgradeInfo.ValidateBasic(); err != nil {
 		return upgradeInfo, err
+	}
+
+	if upgradeInfo.Height > 0 {
+		telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(upgradeInfo.Height, 10))})
 	}
 
 	return upgradeInfo, nil

@@ -44,11 +44,11 @@ type TestnetInitializer interface {
 type SystemUnderTest struct {
 	execBinary         string
 	blockListener      *EventListener
-	currentHeight      int64
+	currentHeight      atomic.Int64
 	outputDir          string
 	testnetInitializer TestnetInitializer
 
-	// blockTime is the the expected/desired block time. This is not going to be very precise
+	// blockTime is the expected/desired block time. This is not going to be very precise
 	// since Tendermint consensus does not allow specifying it directly.
 	blockTime         time.Duration
 	rpcAddr           string
@@ -164,7 +164,7 @@ func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
 		s.blockListener.Subscribe("tm.event='NewBlock'", func(e ctypes.ResultEvent) (more bool) {
 			newBlock, ok := e.Data.(tmtypes.EventDataNewBlock)
 			require.True(t, ok, "unexpected type %T", e.Data)
-			atomic.StoreInt64(&s.currentHeight, newBlock.Block.Height)
+			s.currentHeight.Store(newBlock.Block.Height)
 			return true
 		}),
 	)
@@ -362,12 +362,12 @@ func (s *SystemUnderTest) PrintBuffer() {
 // AwaitBlockHeight blocks until te target height is reached. An optional timeout parameter can be passed to abort early
 func (s *SystemUnderTest) AwaitBlockHeight(t *testing.T, targetHeight int64, timeout ...time.Duration) {
 	t.Helper()
-	require.Greater(t, targetHeight, s.currentHeight)
+	require.Greater(t, targetHeight, s.currentHeight.Load())
 	var maxWaitTime time.Duration
 	if len(timeout) != 0 {
 		maxWaitTime = timeout[0]
 	} else {
-		maxWaitTime = time.Duration(targetHeight-s.currentHeight+3) * s.blockTime
+		maxWaitTime = time.Duration(targetHeight-s.currentHeight.Load()+3) * s.blockTime
 	}
 	abort := time.NewTimer(maxWaitTime).C
 	for {
@@ -393,10 +393,10 @@ func (s *SystemUnderTest) AwaitNextBlock(t *testing.T, timeout ...time.Duration)
 	}
 	done := make(chan int64)
 	go func() {
-		for start, current := atomic.LoadInt64(&s.currentHeight), atomic.LoadInt64(&s.currentHeight); current == start; current = atomic.LoadInt64(&s.currentHeight) {
+		for start, current := s.currentHeight.Load(), s.currentHeight.Load(); current == start; current = s.currentHeight.Load() {
 			time.Sleep(s.blockTime)
 		}
-		done <- atomic.LoadInt64(&s.currentHeight)
+		done <- s.currentHeight.Load()
 		close(done)
 	}()
 	select {
@@ -434,7 +434,7 @@ func (s *SystemUnderTest) ResetChain(t *testing.T) {
 
 	// reset all validator nodes
 	s.ForEachNodeExecAndWait(t, []string{"comet", "unsafe-reset-all"})
-	s.currentHeight = 0
+	s.currentHeight.Store(0)
 	s.dirty = false
 }
 
@@ -465,7 +465,7 @@ func (s *SystemUnderTest) ModifyGenesisJSON(t *testing.T, mutators ...GenesisMut
 // modify json without enforcing a reset
 func (s *SystemUnderTest) modifyGenesisJSON(t *testing.T, mutators ...GenesisMutator) {
 	t.Helper()
-	require.Empty(t, s.currentHeight, "forced chain reset required")
+	require.Empty(t, s.currentHeight.Load(), "forced chain reset required")
 	current, err := os.ReadFile(filepath.Join(WorkDir, s.nodePath(0), "config", "genesis.json"))
 	require.NoError(t, err)
 	for _, m := range mutators {
@@ -727,6 +727,10 @@ func (s *SystemUnderTest) anyNodeRunning() bool {
 	return len(s.pids) != 0
 }
 
+func (s *SystemUnderTest) CurrentHeight() int64 {
+	return s.currentHeight.Load()
+}
+
 type Node struct {
 	ID      string
 	IP      string
@@ -935,18 +939,18 @@ func copyFile(src, dest string) (*os.File, error) {
 func copyFilesInDir(src, dest string) error {
 	err := os.MkdirAll(dest, 0o750)
 	if err != nil {
-		return fmt.Errorf("mkdirs: %s", err)
+		return fmt.Errorf("mkdirs: %w", err)
 	}
 	fs, err := os.ReadDir(src)
 	if err != nil {
-		return fmt.Errorf("read dir: %s", err)
+		return fmt.Errorf("read dir: %w", err)
 	}
 	for _, f := range fs {
 		if f.IsDir() {
 			continue
 		}
 		if _, err := copyFile(filepath.Join(src, f.Name()), filepath.Join(dest, f.Name())); err != nil {
-			return fmt.Errorf("copy file: %q: %s", f.Name(), err)
+			return fmt.Errorf("copy file: %q: %w", f.Name(), err)
 		}
 	}
 	return nil

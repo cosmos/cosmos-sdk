@@ -1,8 +1,9 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
+	coretransaction "cosmossdk.io/core/transaction"
 )
 
 const (
@@ -11,12 +12,12 @@ const (
 )
 
 // RegisterLegacyAminoCodec registers the sdk message type.
-func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterInterface((*Msg)(nil), nil)
+func RegisterLegacyAminoCodec(cdc legacy.Amino) {
+	cdc.RegisterInterface((*coretransaction.Msg)(nil), nil)
 	cdc.RegisterInterface((*Tx)(nil), nil)
 }
 
 // RegisterInterfaces registers the sdk message type.
-func RegisterInterfaces(registry types.InterfaceRegistry) {
+func RegisterInterfaces(registry registry.InterfaceRegistrar) {
 	registry.RegisterInterface(MsgInterfaceProtoName, (*Msg)(nil))
 }

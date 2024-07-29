@@ -29,9 +29,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#18737](https://github.com/cosmos/cosmos-sdk/pull/18737) Added a limit of 200 grants pruned per `BeginBlock` and the `PruneExpiredGrants` message that prunes 75 expired grants on every run.
 * [#20161](https://github.com/cosmos/cosmos-sdk/pull/20161) Added `RevokeAll` method to revoke all grants at once.
+* [#20687](https://github.com/cosmos/cosmos-sdk/pull/20687) Prevent user to grant authz MsgGrant to other accounts. Preventing user from accidentally authorizing their entire account to a different account.
 
 ### API Breaking Changes
 
+* [#20502](https://github.com/cosmos/cosmos-sdk/pull/20502) `Accept` on the `Authorization` interface now expects the authz environment in the `context.Context`. This is already done when `Accept` is called by `k.DispatchActions`, but should be done manually if `Accept` is called directly.
 * [#19783](https://github.com/cosmos/cosmos-sdk/pull/19783) Removes the use of Accounts String() method
     * `NewMsgExec`, `NewMsgGrant` and `NewMsgRevoke` now takes strings as arguments instead of `sdk.AccAddress`.
     * `ExportGenesis` also returns an error.

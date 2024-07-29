@@ -9,13 +9,18 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/keeper"
 	"cosmossdk.io/x/auth/simulation"
 	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -28,12 +33,11 @@ const (
 
 var (
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasName             = AppModule{}
 
-	_ appmodule.HasGenesis    = AppModule{}
-	_ appmodule.AppModule     = AppModule{}
-	_ appmodule.HasServices   = AppModule{}
-	_ appmodule.HasMigrations = AppModule{}
+	_ appmodulev2.HasGenesis    = AppModule{}
+	_ appmodulev2.AppModule     = AppModule{}
+	_ appmodule.HasServices     = AppModule{}
+	_ appmodulev2.HasMigrations = AppModule{}
 )
 
 // AppModule implements an application module for the auth module.
@@ -48,7 +52,12 @@ type AppModule struct {
 func (am AppModule) IsAppModule() {}
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, ak types.AccountsModKeeper, randGenAccountsFn types.RandomGenesisAccountsFn) AppModule {
+func NewAppModule(
+	cdc codec.Codec,
+	accountKeeper keeper.AccountKeeper,
+	ak types.AccountsModKeeper,
+	randGenAccountsFn types.RandomGenesisAccountsFn,
+) AppModule {
 	return AppModule{
 		accountKeeper:     accountKeeper,
 		randGenAccountsFn: randGenAccountsFn,
@@ -57,13 +66,14 @@ func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, ak types.
 	}
 }
 
-// Name returns the auth module's name.
+// Name returns the module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the auth module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
@@ -141,7 +151,32 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 	return am.cdc.MarshalJSON(gs)
 }
 
-// ConsensusVersion implements HasConsensusVersion
+// TxValidator implements appmodulev2.HasTxValidator.
+// It replaces auth ante handlers for server/v2
+func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
+	validators := []appmodulev2.TxValidator[sdk.Tx]{
+		ante.NewValidateBasicDecorator(am.accountKeeper.GetEnvironment()),
+		ante.NewTxTimeoutHeightDecorator(am.accountKeeper.GetEnvironment()),
+		ante.NewValidateMemoDecorator(am.accountKeeper),
+		ante.NewConsumeGasForTxSizeDecorator(am.accountKeeper),
+		ante.NewValidateSigCountDecorator(am.accountKeeper),
+	}
+
+	sdkTx, ok := tx.(sdk.Tx)
+	if !ok {
+		return fmt.Errorf("invalid tx type %T, expected sdk.Tx", tx)
+	}
+
+	for _, validator := range validators {
+		if err := validator.ValidateTx(ctx, sdkTx); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ConsensusVersion implements appmodule.HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // AppModuleSimulation functions

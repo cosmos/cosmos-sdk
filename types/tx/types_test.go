@@ -1,7 +1,8 @@
-package tx
+package tx_test
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"testing"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -15,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 func TestTx_GetMsgs(t *testing.T) {
@@ -56,8 +58,8 @@ func TestTx_GetMsgs(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			transaction := Tx{
-				Body: &TxBody{
+			transaction := tx.Tx{
+				Body: &tx.TxBody{
 					Messages: tc.msgs,
 				},
 			}
@@ -77,7 +79,7 @@ func TestTx_GetMsgs(t *testing.T) {
 func TestTx_ValidateBasic(t *testing.T) {
 	cases := []struct {
 		name        string
-		transaction *Tx
+		transaction *tx.Tx
 		expErr      bool
 	}{
 		{
@@ -87,46 +89,46 @@ func TestTx_ValidateBasic(t *testing.T) {
 		},
 		{
 			name:        "Tx without body",
-			transaction: &Tx{},
+			transaction: &tx.Tx{},
 			expErr:      true,
 		},
 		{
 			name:        "Tx without AuthInfo",
-			transaction: &Tx{Body: &TxBody{}},
+			transaction: &tx.Tx{Body: &tx.TxBody{}},
 			expErr:      true,
 		},
 		{
 			name:        "Tx without Fee",
-			transaction: &Tx{Body: &TxBody{}, AuthInfo: &AuthInfo{}},
+			transaction: &tx.Tx{Body: &tx.TxBody{}, AuthInfo: &tx.AuthInfo{}},
 			expErr:      true,
 		},
 		{
 			name:        "Tx with gas limit greater than Max gas wanted",
-			transaction: &Tx{Body: &TxBody{}, AuthInfo: &AuthInfo{Fee: &Fee{GasLimit: MaxGasWanted + 1}}},
+			transaction: &tx.Tx{Body: &tx.TxBody{}, AuthInfo: &tx.AuthInfo{Fee: &tx.Fee{GasLimit: tx.MaxGasWanted + 1}}},
 			expErr:      true,
 		},
 		{
 			name:        "Tx without Fee Amount",
-			transaction: &Tx{Body: &TxBody{}, AuthInfo: &AuthInfo{Fee: &Fee{GasLimit: MaxGasWanted}}},
+			transaction: &tx.Tx{Body: &tx.TxBody{}, AuthInfo: &tx.AuthInfo{Fee: &tx.Fee{GasLimit: tx.MaxGasWanted}}},
 			expErr:      true,
 		},
 		{
 			name: "Tx with negative Fee Amount",
-			transaction: &Tx{
-				Body: &TxBody{},
-				AuthInfo: &AuthInfo{
-					Fee: &Fee{GasLimit: MaxGasWanted, Amount: sdk.Coins{sdk.Coin{Amount: math.NewInt(-1)}}},
+			transaction: &tx.Tx{
+				Body: &tx.TxBody{},
+				AuthInfo: &tx.AuthInfo{
+					Fee: &tx.Fee{GasLimit: tx.MaxGasWanted, Amount: sdk.Coins{sdk.Coin{Amount: math.NewInt(-1)}}},
 				},
 			},
 			expErr: true,
 		},
 		{
 			name: "Tx with invalid fee payer address",
-			transaction: &Tx{
-				Body: &TxBody{},
-				AuthInfo: &AuthInfo{
-					Fee: &Fee{
-						GasLimit: MaxGasWanted,
+			transaction: &tx.Tx{
+				Body: &tx.TxBody{},
+				AuthInfo: &tx.AuthInfo{
+					Fee: &tx.Fee{
+						GasLimit: tx.MaxGasWanted,
 						Payer:    "invalidPayerAddress",
 						Amount:   sdk.Coins{sdk.NewCoin("aaa", math.NewInt(10))},
 					},
@@ -136,11 +138,11 @@ func TestTx_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "Tx without signature",
-			transaction: &Tx{
-				Body: &TxBody{},
-				AuthInfo: &AuthInfo{
-					Fee: &Fee{
-						GasLimit: MaxGasWanted,
+			transaction: &tx.Tx{
+				Body: &tx.TxBody{},
+				AuthInfo: &tx.AuthInfo{
+					Fee: &tx.Fee{
+						GasLimit: tx.MaxGasWanted,
 						Payer:    "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs",
 						Amount:   sdk.Coins{sdk.NewCoin("aaa", math.NewInt(11))},
 					},
@@ -150,11 +152,11 @@ func TestTx_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "Tx is valid",
-			transaction: &Tx{
-				Body: &TxBody{},
-				AuthInfo: &AuthInfo{
-					Fee: &Fee{
-						GasLimit: MaxGasWanted,
+			transaction: &tx.Tx{
+				Body: &tx.TxBody{},
+				AuthInfo: &tx.AuthInfo{
+					Fee: &tx.Fee{
+						GasLimit: tx.MaxGasWanted,
 						Payer:    "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs",
 						Amount:   sdk.Coins{sdk.NewCoin("aaa", math.NewInt(11))},
 					},
@@ -174,11 +176,11 @@ func TestTx_ValidateBasic(t *testing.T) {
 }
 
 func TestTx_GetSigners(t *testing.T) {
-	transaction := &Tx{
-		Body: &TxBody{},
-		AuthInfo: &AuthInfo{
-			Fee: &Fee{
-				GasLimit: MaxGasWanted,
+	transaction := &tx.Tx{
+		Body: &tx.TxBody{},
+		AuthInfo: &tx.AuthInfo{
+			Fee: &tx.Fee{
+				GasLimit: tx.MaxGasWanted,
 				Payer:    "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs",
 				Amount:   sdk.Coins{sdk.NewCoin("aaa", math.NewInt(11))},
 			},
@@ -206,17 +208,23 @@ func TestTx_GetSigners(t *testing.T) {
 	require.Nil(t, err)
 }
 
-type DummyProtoMessage1 struct{}
+type DummyProtoMessage1 struct {
+	Name string
+}
 
-func (d *DummyProtoMessage1) Reset()         {}
-func (d *DummyProtoMessage1) String() string { return "/dummy.proto.message1" }
-func (d *DummyProtoMessage1) ProtoMessage()  {}
+func (d *DummyProtoMessage1) Reset()                   {}
+func (d *DummyProtoMessage1) String() string           { return "/dummy.proto.message1" }
+func (d *DummyProtoMessage1) ProtoMessage()            {}
+func (d *DummyProtoMessage1) Marshal() ([]byte, error) { return json.Marshal(d) }
+func (d *DummyProtoMessage1) XXX_MessageName() string  { return "dummy.proto.message1" }
 
 type DummyProtoMessage2 struct{}
 
-func (d *DummyProtoMessage2) Reset()         {}
-func (d *DummyProtoMessage2) String() string { return "/dummy.proto.message2" }
-func (d *DummyProtoMessage2) ProtoMessage()  {}
+func (d *DummyProtoMessage2) Reset()                   {}
+func (d *DummyProtoMessage2) String() string           { return "/dummy.proto.message2" }
+func (d *DummyProtoMessage2) ProtoMessage()            {}
+func (d *DummyProtoMessage2) Marshal() ([]byte, error) { return json.Marshal(d) }
+func (d *DummyProtoMessage2) XXX_MessageName() string  { return "dummy.proto.message2" }
 
 type dummyAddressCodec struct{}
 

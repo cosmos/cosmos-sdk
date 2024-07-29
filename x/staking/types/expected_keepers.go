@@ -40,6 +40,7 @@ type BankKeeper interface {
 	DelegateCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 
 	BurnCoins(context.Context, []byte, sdk.Coins) error
+	IsSendEnabledDenom(ctx context.Context, denom string) bool
 }
 
 // ValidatorSet expected properties for the set of all validators (noalias)
@@ -117,4 +118,5 @@ func (StakingHooksWrapper) IsOnePerModuleType() {}
 
 type ConsensusKeeper interface {
 	Params(context.Context, *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error)
+	GetCometInfo(context.Context, *consensustypes.QueryGetCometInfoRequest) (*consensustypes.QueryGetCometInfoResponse, error)
 }

@@ -1,15 +1,21 @@
 package simulation
 
 import (
+	"context"
 	"math/rand"
 	"time"
 
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule"
+	corecontext "cosmossdk.io/core/context"
+	coregas "cosmossdk.io/core/gas"
+	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/x/authz"
 	"cosmossdk.io/x/authz/keeper"
 	banktype "cosmossdk.io/x/bank/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -96,7 +102,7 @@ func SimulateMsgGrant(
 	_ keeper.Keeper,
 ) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+		r *rand.Rand, app simtypes.AppEntrypoint, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		granter, _ := simtypes.RandomAcc(r, accs)
 		grantee, _ := simtypes.RandomAcc(r, accs)
@@ -177,7 +183,7 @@ func SimulateMsgRevoke(
 	k keeper.Keeper,
 ) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+		r *rand.Rand, app simtypes.AppEntrypoint, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		var granterAddr, granteeAddr sdk.AccAddress
 		var grant authz.Grant
@@ -255,10 +261,10 @@ func SimulateMsgExec(
 	ak authz.AccountKeeper,
 	bk authz.BankKeeper,
 	k keeper.Keeper,
-	unpacker cdctypes.AnyUnpacker,
+	unpacker gogoprotoany.AnyUnpacker,
 ) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+		r *rand.Rand, app simtypes.AppEntrypoint, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		var granterAddr sdk.AccAddress
 		var granteeAddr sdk.AccAddress
@@ -315,7 +321,12 @@ func SimulateMsgExec(
 
 		msg := []sdk.Msg{banktype.NewMsgSend(graStr, greStr, coins)}
 
-		_, err = sendAuth.Accept(ctx, msg[0])
+		goCtx := context.WithValue(ctx.Context(), corecontext.EnvironmentContextKey, appmodule.Environment{
+			HeaderService: headerService{},
+			GasService:    mockGasService{},
+		})
+
+		_, err = sendAuth.Accept(goCtx, msg[0])
 		if err != nil {
 			if sdkerrors.ErrInsufficientFunds.Is(err) {
 				return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, nil
@@ -358,4 +369,26 @@ func SimulateMsgExec(
 		}
 		return simtypes.NewOperationMsg(&msgExec, true, "success"), nil, nil
 	}
+}
+
+type headerService struct{}
+
+func (h headerService) HeaderInfo(ctx context.Context) coreheader.Info {
+	return sdk.UnwrapSDKContext(ctx).HeaderInfo()
+}
+
+type mockGasService struct {
+	coregas.Service
+}
+
+func (m mockGasService) GasMeter(ctx context.Context) coregas.Meter {
+	return mockGasMeter{}
+}
+
+type mockGasMeter struct {
+	coregas.Meter
+}
+
+func (m mockGasMeter) Consume(amount coregas.Gas, descriptor string) error {
+	return nil
 }

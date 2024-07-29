@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
@@ -892,4 +892,25 @@ func TestLoadVersionPruning(t *testing.T) {
 	err = app.LoadLatestVersion()
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(7), lastCommitID)
+}
+
+func TestABCI_FinalizeWithInvalidTX(t *testing.T) {
+	suite := NewBaseAppSuite(t)
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
+
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{ConsensusParams: &cmtproto.ConsensusParams{}})
+	require.NoError(t, err)
+
+	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	bz, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	// when
+	gotRsp, gotErr := suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{
+		Height: 1,
+		Txs:    [][]byte{bz[0 : len(bz)-5]},
+	})
+	require.NoError(t, gotErr)
+	require.Len(t, gotRsp.TxResults, 1)
+	require.Equal(t, uint32(2), gotRsp.TxResults[0].Code)
 }

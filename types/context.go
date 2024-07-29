@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 
 	"cosmossdk.io/core/comet"
@@ -391,6 +391,19 @@ func UnwrapSDKContext(ctx context.Context) Context {
 		return sdkCtx
 	}
 	return ctx.Value(SdkContextKey).(Context)
+}
+
+// TryUnwrapSDKContext attempts to retrieve a Context from a context.Context
+func TryUnwrapSDKContext(ctx context.Context) (Context, bool) {
+	if sdkCtx, ok := ctx.(Context); ok {
+		return sdkCtx, true
+	}
+	v := ctx.Value(SdkContextKey)
+	if v == nil {
+		return Context{}, false
+	}
+	c, ok := v.(Context)
+	return c, ok
 }
 
 // ToSDKEvidence takes comet evidence and returns sdk evidence

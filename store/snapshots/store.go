@@ -3,6 +3,7 @@ package snapshots
 import (
 	"crypto/sha256"
 	"encoding/binary"
+	"fmt"
 	"hash"
 	"io"
 	"math"
@@ -91,7 +92,7 @@ func (s *Store) Get(height uint64, format uint32) (*types.Snapshot, error) {
 	return snapshot, nil
 }
 
-// Get fetches the latest snapshot from the database, if any.
+// GetLatest fetches the latest snapshot from the database, if any.
 func (s *Store) GetLatest() (*types.Snapshot, error) {
 	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(uint64(math.MaxUint64), math.MaxUint32))
 	if err != nil {
@@ -140,6 +141,7 @@ func (s *Store) Load(height uint64, format uint32) (*types.Snapshot, <-chan io.R
 	}
 
 	ch := make(chan io.ReadCloser)
+
 	go func() {
 		defer close(ch)
 		for i := uint32(0); i < snapshot.Chunks; i++ {
@@ -150,14 +152,19 @@ func (s *Store) Load(height uint64, format uint32) (*types.Snapshot, <-chan io.R
 				_ = pw.CloseWithError(err)
 				return
 			}
-			defer chunk.Close()
-			_, err = io.Copy(pw, chunk)
+			err = func() error {
+				defer chunk.Close()
+
+				if _, err := io.Copy(pw, chunk); err != nil {
+					_ = pw.CloseWithError(err)
+					return fmt.Errorf("failed to copy chunk %d: %w", i, err)
+				}
+
+				return pw.Close()
+			}()
 			if err != nil {
-				_ = pw.CloseWithError(err)
 				return
 			}
-			chunk.Close()
-			pw.Close()
 		}
 	}()
 

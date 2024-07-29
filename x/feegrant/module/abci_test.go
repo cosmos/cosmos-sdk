@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
+	coretesting "cosmossdk.io/core/testing"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -49,7 +49,7 @@ func TestFeegrantPruning(t *testing.T) {
 	ac := address.NewBech32Codec("cosmos")
 	accountKeeper.EXPECT().AddressCodec().Return(ac).AnyTimes()
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
 	feegrantKeeper := keeper.NewKeeper(env, encCfg.Codec, accountKeeper)
 

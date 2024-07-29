@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cockroachdb/errors"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/proto"
@@ -47,8 +46,8 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 	for cmdName, subCmdDescriptor := range cmdDescriptor.SubCommands {
 		subCmd := findSubCommand(cmd, cmdName)
 		if subCmd == nil {
-			short := cmdDescriptor.Short
-			if cmdDescriptor.Short == "" {
+			short := subCmdDescriptor.Short
+			if short == "" {
 				short = fmt.Sprintf("Tx commands for the %s service", subCmdDescriptor.Service)
 			}
 			subCmd = topLevelCmd(cmd.Context(), cmdName, short)
@@ -69,7 +68,7 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 
 	descriptor, err := b.FileResolver.FindDescriptorByName(protoreflect.FullName(cmdDescriptor.Service))
 	if err != nil {
-		return errors.Errorf("can't find service %s: %v", cmdDescriptor.Service, err)
+		return fmt.Errorf("can't find service %s: %w", cmdDescriptor.Service, err)
 	}
 	service := descriptor.(protoreflect.ServiceDescriptor)
 	methods := service.Methods()
@@ -111,9 +110,7 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 			continue
 		}
 
-		if methodCmd != nil {
-			cmd.AddCommand(methodCmd)
-		}
+		cmd.AddCommand(methodCmd)
 	}
 
 	return nil
@@ -136,7 +133,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		// handle gov proposals commands
 		skipProposal, _ := cmd.Flags().GetBool(flags.FlagNoProposal)
 		if options.GovProposal && !skipProposal {
-			return b.handleGovProposal(options, cmd, input, clientCtx, addressCodec, fd)
+			return b.handleGovProposal(cmd, input, clientCtx, addressCodec, fd)
 		}
 
 		// set signer to signer field if empty
@@ -180,9 +177,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 	}
 
 	// silence usage only for inner txs & queries commands
-	if cmd != nil {
-		cmd.SilenceUsage = true
-	}
+	cmd.SilenceUsage = true
 
 	// set gov proposal flags if command is a gov proposal
 	if options.GovProposal {
@@ -195,7 +190,6 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 
 // handleGovProposal sets the authority field of the message to the gov module address and creates a gov proposal.
 func (b *Builder) handleGovProposal(
-	options *autocliv1.RpcCommandOptions,
 	cmd *cobra.Command,
 	input protoreflect.Message,
 	clientCtx client.Context,

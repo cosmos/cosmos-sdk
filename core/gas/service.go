@@ -29,16 +29,10 @@ type Service interface {
 	// will be returned.
 	GasMeter(context.Context) Meter
 
-	// WithGasMeter returns a new context with the provided transaction-level gas meter.
-	WithGasMeter(ctx context.Context, meter Meter) context.Context
-
 	// BlockGasMeter returns the current block-level gas meter. A non-nil meter
 	// is always returned. When one is unavailable in the context an infinite gas meter
 	// will be returned.
 	BlockGasMeter(context.Context) Meter
-
-	// WithBlockGasMeter returns a new context with the provided block-level gas meter.
-	WithBlockGasMeter(ctx context.Context, meter Meter) context.Context
 
 	// GasConfig returns the gas costs.
 	GasConfig(ctx context.Context) GasConfig
@@ -46,8 +40,8 @@ type Service interface {
 
 // Meter represents a gas meter for modules consumption
 type Meter interface {
-	Consume(amount Gas, descriptor string)
-	Refund(amount Gas, descriptor string)
+	Consume(amount Gas, descriptor string) error
+	Refund(amount Gas, descriptor string) error
 	Remaining() Gas
 	Limit() Gas
 }

@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -47,7 +48,7 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 	go func() {
 		for {
 			in, err := reflectClient.Recv()
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				// read done.
 				close(waitc)
 				return
@@ -58,7 +59,7 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 
 			switch res := in.MessageResponse.(type) {
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_ErrorResponse:
-				panic(err)
+				panic(res.ErrorResponse.String()) //nolint:staticcheck // we want to use the deprecated field
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_ListServicesResponse:
 				waitListServiceRes <- res.ListServicesResponse //nolint:staticcheck // we want to use the deprecated field
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse:
@@ -172,7 +173,7 @@ func addMissingFileDescriptors(ctx context.Context, client *grpc.ClientConn, fdM
 	go func() {
 		for {
 			in, err := reflectClient.Recv()
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				// read done.
 				close(waitc)
 				return

@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule/v2"
+	corecontext "cosmossdk.io/core/context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/authz"
@@ -40,12 +42,19 @@ func (a SendAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.Accep
 		return authz.AcceptResponse{}, sdkerrors.ErrInsufficientFunds.Wrapf("requested amount is more than spend limit")
 	}
 
+	authzEnv, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodule.Environment)
+	if !ok {
+		return authz.AcceptResponse{}, sdkerrors.ErrUnauthorized.Wrap("environment not set")
+	}
+
 	isAddrExists := false
 	toAddr := mSend.ToAddress
 	allowedList := a.GetAllowList()
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for _, addr := range allowedList {
-		sdkCtx.GasMeter().ConsumeGas(gasCostPerIteration, "send authorization")
+		if err := authzEnv.GasService.GasMeter(ctx).Consume(gasCostPerIteration, "send authorization"); err != nil {
+			return authz.AcceptResponse{}, err
+		}
+
 		if addr == toAddr {
 			isAddrExists = true
 			break

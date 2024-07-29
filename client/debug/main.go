@@ -260,26 +260,42 @@ func AddrCmd() *cobra.Command {
 				addr []byte
 				err  error
 			)
-			addr, err = hex.DecodeString(addrString)
-			if err != nil {
-				var err2 error
-				addr, err2 = clientCtx.AddressCodec.StringToBytes(addrString)
-				if err2 != nil {
-					var err3 error
-					addr, err3 = clientCtx.ValidatorAddressCodec.StringToBytes(addrString)
-					if err3 != nil {
-						return fmt.Errorf("expected hex or bech32. Got errors: hex: %w, bech32 acc: %w, bech32 val: %w", err, err2, err3)
-					}
+			decodeFns := []func(text string) ([]byte, error){
+				hex.DecodeString,
+				clientCtx.AddressCodec.StringToBytes,
+				clientCtx.ValidatorAddressCodec.StringToBytes,
+				clientCtx.ConsensusAddressCodec.StringToBytes,
+			}
+			errs := make([]any, 0, len(decodeFns))
+			for _, fn := range decodeFns {
+				if addr, err = fn(addrString); err == nil {
+					break
 				}
+				errs = append(errs, err)
+			}
+			if len(errs) == len(decodeFns) {
+				errTags := []string{
+					"hex", "bech32 acc", "bech32 val", "bech32 con",
+				}
+				format := ""
+				for i := range errs {
+					if format != "" {
+						format += ", "
+					}
+					format += errTags[i] + ": %w"
+				}
+				return fmt.Errorf("expected hex or bech32. Got errors: "+format, errs...)
 			}
 
 			acc, _ := clientCtx.AddressCodec.BytesToString(addr)
 			val, _ := clientCtx.ValidatorAddressCodec.BytesToString(addr)
+			con, _ := clientCtx.ConsensusAddressCodec.BytesToString(addr)
 
 			cmd.Println("Address:", addr)
 			cmd.Printf("Address (hex): %X\n", addr)
 			cmd.Printf("Bech32 Acc: %s\n", acc)
 			cmd.Printf("Bech32 Val: %s\n", val)
+			cmd.Printf("Bech32 Con: %s\n", con)
 			return nil
 		},
 	}

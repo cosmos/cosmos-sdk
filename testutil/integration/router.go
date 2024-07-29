@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
+	cmtabcitypes "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/core/address"
@@ -63,10 +64,10 @@ func NewIntegrationApp(
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
 	bApp.MountKVStores(keys)
 
-	bApp.SetInitChainer(func(ctx sdk.Context, _ *cmtabcitypes.InitChainRequest) (*cmtabcitypes.InitChainResponse, error) {
+	bApp.SetInitChainer(func(_ sdk.Context, _ *cmtabcitypes.InitChainRequest) (*cmtabcitypes.InitChainResponse, error) {
 		for _, mod := range modules {
 			if m, ok := mod.(module.HasGenesis); ok {
-				if err := m.InitGenesis(ctx, m.DefaultGenesis()); err != nil {
+				if err := m.InitGenesis(sdkCtx, m.DefaultGenesis()); err != nil {
 					return nil, err
 				}
 			}
@@ -89,17 +90,12 @@ func NewIntegrationApp(
 
 	if keys[consensusparamtypes.StoreKey] != nil {
 		// set baseApp param store
-		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(grpcRouter, msgRouter)), authtypes.NewModuleAddress("gov").String())
+		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcRouter), runtime.EnvWithMsgRouterService(msgRouter)), authtypes.NewModuleAddress("gov").String())
 		bApp.SetParamStore(consensusParamsKeeper.ParamsStore)
 		consensusparamtypes.RegisterQueryServer(grpcRouter, consensusParamsKeeper)
 
-		_, err := consensusParamsKeeper.SetParams(sdkCtx, &consensusparamtypes.ConsensusMsgParams{
-			Version:   simtestutil.DefaultConsensusParams.Version,
-			Block:     simtestutil.DefaultConsensusParams.Block,
-			Evidence:  simtestutil.DefaultConsensusParams.Evidence,
-			Validator: simtestutil.DefaultConsensusParams.Validator,
-			Abci:      simtestutil.DefaultConsensusParams.Abci,
-		})
+		params := cmttypes.ConsensusParamsFromProto(*simtestutil.DefaultConsensusParams) // This fills up missing param sections
+		err := consensusParamsKeeper.ParamsStore.Set(sdkCtx, params.ToProto())
 		if err != nil {
 			panic(fmt.Errorf("failed to set consensus params: %w", err))
 		}

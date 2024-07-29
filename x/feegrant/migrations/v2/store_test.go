@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
+	coretesting "cosmossdk.io/core/testing"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
@@ -89,7 +89,7 @@ func TestMigration(t *testing.T) {
 	}
 
 	ctx = ctx.WithHeaderInfo(header.Info{Time: now.Add(30 * time.Hour)})
-	require.NoError(t, v2.MigrateStore(ctx, runtime.NewEnvironment(runtime.NewKVStoreService(feegrantKey), log.NewNopLogger()), cdc))
+	require.NoError(t, v2.MigrateStore(ctx, runtime.NewEnvironment(runtime.NewKVStoreService(feegrantKey), coretesting.NewNopLogger()), cdc))
 	store = ctx.KVStore(feegrantKey)
 
 	require.NotNil(t, store.Get(v2.FeeAllowanceKey(granter1, grantee1)))

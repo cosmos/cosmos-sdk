@@ -30,7 +30,6 @@ network.
     * [UnbondingDelegation](#unbondingdelegation)
     * [Redelegation](#redelegation)
     * [Queues](#queues)
-    * [HistoricalInfo](#historicalinfo)
     * [ConsPubkeyRotation](#conspubkeyrotation)
 * [State Transitions](#state-transitions)
     * [Validators](#validators)
@@ -278,9 +277,9 @@ ValidatorConsensusKeyRotationRecordQueueKey: `103 | format(time) -> ProtocolBuff
 
 ValidatorConsensusKeyRotationRecordIndexKey:`104 | valAddr | format(time) -> ProtocolBuffer([]Byte{})`
 
-OldToNewConsKeyMap:`105 | byte(oldConsKey) -> byte(newConsKey)`
+OldToNewConsAddrMap:`105 | byte(oldConsAddr) -> byte(newConsAddr)`
 
-NewToOldConsKeyMap:`106 | byte(newConsKey) -> byte(oldConsKey)`
+ConsAddrToValidatorIdentifierMap:`106 | byte(newConsAddr) -> byte(initialConsAddr)`
 
 `ConsPubKeyRotationHistory` is used for querying the rotations of a validator
 
@@ -290,9 +289,9 @@ NewToOldConsKeyMap:`106 | byte(newConsKey) -> byte(oldConsKey)`
 
 A `ConsPubKeyRotationHistory` object is created every time a consensus pubkey rotation occurs.
 
-An entry is added in `OldToNewConsKeyMap` collection for every rotation (Note: this is to handle the evidences when submitted with old cons key).
+An entry is added in `OldToNewConsAddrMap` collection for every rotation (Note: this is to handle the evidences when submitted with old cons key).
 
-An entry is added in `NewToOldConsKeyMap` collection for every rotation, this entry is to block the rotation if the validator is rotating to the cons key which is involved in the history.
+An entry is added in `ConsAddrToValidatorIdentifierMap` collection for every rotation, this entry is to block the rotation if the validator is rotating to the cons key which is involved in the history.
 
 To prevent the spam: 
 
@@ -361,20 +360,8 @@ the present store info and append the `ValAddress` to the array and set it back 
 https://github.com/cosmos/cosmos-sdk/blob/8f0d5b15f0b10da7645d7fc1aa868fe44e3f3a44/proto/cosmos/staking/v1beta1/staking.proto#L429-L433
 ```
 
-### HistoricalInfo
 
-HistoricalInfo objects are stored and pruned at each block such that the staking keeper persists
-the `n` most recent historical info defined by staking module parameter: `HistoricalEntries`.
 
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L17-L24
-```
-
-At each BeginBlock, the staking keeper will persist the current Header and the Validators that committed
-the current block in a `HistoricalInfo` object. The Validators are sorted on their address to ensure that
-they are in a deterministic order.
-The oldest HistoricalEntries will be pruned to ensure that there only exist the parameter-defined number of
-historical entries.
 
 ## State Transitions
 
@@ -796,18 +783,6 @@ The message handling can fail if:
 * The `max_cons_pubkey_rotations` limit reached within unbonding period.
 * The validator doesn't have enough balance to pay for the rotation.
 
-## Begin-Block
-
-Each abci begin block call, the historical info will get stored and pruned
-according to the `HistoricalEntries` parameter.
-
-### Historical Info Tracking
-
-If the `HistoricalEntries` parameter is 0, then the `BeginBlock` performs a no-op.
-
-Otherwise, the latest historical info is stored under the key `historicalInfoKey|height`, while any entries older than `height - HistoricalEntries` is deleted.
-In most cases, this results in a single entry being pruned per block.
-However, if the parameter `HistoricalEntries` has changed to a lower value there will be multiple entries in the store that must be pruned.
 
 ## End-Block
 
@@ -2279,84 +2254,6 @@ Example Output:
 }
 ```
 
-#### HistoricalInfo
-
-```bash
-cosmos.staking.v1beta1.Query/HistoricalInfo
-```
-
-Example:
-
-```bash
-grpcurl -plaintext -d '{"height" : 1}' localhost:9090 cosmos.staking.v1beta1.Query/HistoricalInfo
-```
-
-Example Output:
-
-```bash
-{
-  "hist": {
-    "header": {
-      "version": {
-        "block": "11",
-        "app": "0"
-      },
-      "chain_id": "simd-1",
-      "height": "140142",
-      "time": "2021-10-11T10:56:29.720079569Z",
-      "last_block_id": {
-        "hash": "9gri/4LLJUBFqioQ3NzZIP9/7YHR9QqaM6B2aJNQA7o=",
-        "part_set_header": {
-          "total": 1,
-          "hash": "Hk1+C864uQkl9+I6Zn7IurBZBKUevqlVtU7VqaZl1tc="
-        }
-      },
-      "last_commit_hash": "VxrcS27GtvGruS3I9+AlpT7udxIT1F0OrRklrVFSSKc=",
-      "data_hash": "80BjOrqNYUOkTnmgWyz9AQ8n7SoEmPVi4QmAe8RbQBY=",
-      "validators_hash": "95W49n2hw8RWpr1GPTAO5MSPi6w6Wjr3JjjS7AjpBho=",
-      "next_validators_hash": "95W49n2hw8RWpr1GPTAO5MSPi6w6Wjr3JjjS7AjpBho=",
-      "consensus_hash": "BICRvH3cKD93v7+R1zxE2ljD34qcvIZ0Bdi389qtoi8=",
-      "app_hash": "ZZaxnSY3E6Ex5Bvkm+RigYCK82g8SSUL53NymPITeOE=",
-      "last_results_hash": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
-      "evidence_hash": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
-      "proposer_address": "aH6dO428B+ItuoqPq70efFHrSMY="
-    },
-  "valset": [
-      {
-        "operator_address": "cosmosvaloper196ax4vc0lwpxndu9dyhvca7jhxp70rmcqcnylw",
-        "consensus_pubkey": {
-          "@type": "/cosmos.crypto.ed25519.PubKey",
-          "key": "/O7BtNW0pafwfvomgR4ZnfldwPXiFfJs9mHg3gwfv5Q="
-        },
-        "jailed": false,
-        "status": "BOND_STATUS_BONDED",
-        "tokens": "1426045203613",
-        "delegator_shares": "1426045203613.000000000000000000",
-        "description": {
-          "moniker": "SG-1",
-          "identity": "48608633F99D1B60",
-          "website": "https://sg-1.online",
-          "security_contact": "",
-          "details": "SG-1 - your favorite validator on Witval. We offer 100% Soft Slash protection."
-        },
-        "unbonding_height": "0",
-        "unbonding_time": "1970-01-01T00:00:00Z",
-        "commission": {
-          "commission_rates": {
-            "rate": "0.037500000000000000",
-            "max_rate": "0.200000000000000000",
-            "max_change_rate": "0.030000000000000000"
-          },
-          "update_time": "2021-10-01T15:00:00Z"
-        },
-        "min_self_delegation": "1"
-      }
-    ]
-  }
-}
-
-```
-
 #### Pool
 
 The `Pool` endpoint queries the pool information.
@@ -2655,114 +2552,6 @@ Example Output:
       "update_time": "2021-10-09T19:03:54.984821705Z"
     },
     "min_self_delegation": "1"
-  }
-}
-```
-
-#### HistoricalInfo
-
-The `HistoricalInfo` REST endpoint queries the historical information for given height.
-
-```bash
-/cosmos/staking/v1beta1/historical_info/{height}
-```
-
-Example:
-
-```bash
-curl -X GET "http://localhost:1317/cosmos/staking/v1beta1/historical_info/153332" -H  "accept: application/json"
-```
-
-Example Output:
-
-```bash
-{
-  "hist": {
-    "header": {
-      "version": {
-        "block": "11",
-        "app": "0"
-      },
-      "chain_id": "cosmos-1",
-      "height": "153332",
-      "time": "2021-10-12T09:05:35.062230221Z",
-      "last_block_id": {
-        "hash": "NX8HevR5khb7H6NGKva+jVz7cyf0skF1CrcY9A0s+d8=",
-        "part_set_header": {
-          "total": 1,
-          "hash": "zLQ2FiKM5tooL3BInt+VVfgzjlBXfq0Hc8Iux/xrhdg="
-        }
-      },
-      "last_commit_hash": "P6IJrK8vSqU3dGEyRHnAFocoDGja0bn9euLuy09s350=",
-      "data_hash": "eUd+6acHWrNXYju8Js449RJ99lOYOs16KpqQl4SMrEM=",
-      "validators_hash": "mB4pravvMsJKgi+g8aYdSeNlt0kPjnRFyvtAQtaxcfw=",
-      "next_validators_hash": "mB4pravvMsJKgi+g8aYdSeNlt0kPjnRFyvtAQtaxcfw=",
-      "consensus_hash": "BICRvH3cKD93v7+R1zxE2ljD34qcvIZ0Bdi389qtoi8=",
-      "app_hash": "fuELArKRK+CptnZ8tu54h6xEleSWenHNmqC84W866fU=",
-      "last_results_hash": "p/BPexV4LxAzlVcPRvW+lomgXb6Yze8YLIQUo/4Kdgc=",
-      "evidence_hash": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
-      "proposer_address": "G0MeY8xQx7ooOsni8KE/3R/Ib3Q="
-    },
-    "valset": [
-      {
-        "operator_address": "cosmosvaloper196ax4vc0lwpxndu9dyhvca7jhxp70rmcqcnylw",
-        "consensus_pubkey": {
-          "@type": "/cosmos.crypto.ed25519.PubKey",
-          "key": "/O7BtNW0pafwfvomgR4ZnfldwPXiFfJs9mHg3gwfv5Q="
-        },
-        "jailed": false,
-        "status": "BOND_STATUS_BONDED",
-        "tokens": "1416521659632",
-        "delegator_shares": "1416521659632.000000000000000000",
-        "description": {
-          "moniker": "SG-1",
-          "identity": "48608633F99D1B60",
-          "website": "https://sg-1.online",
-          "security_contact": "",
-          "details": "SG-1 - your favorite validator on cosmos. We offer 100% Soft Slash protection."
-        },
-        "unbonding_height": "0",
-        "unbonding_time": "1970-01-01T00:00:00Z",
-        "commission": {
-          "commission_rates": {
-            "rate": "0.037500000000000000",
-            "max_rate": "0.200000000000000000",
-            "max_change_rate": "0.030000000000000000"
-          },
-          "update_time": "2021-10-01T15:00:00Z"
-        },
-        "min_self_delegation": "1"
-      },
-      {
-        "operator_address": "cosmosvaloper1t8ehvswxjfn3ejzkjtntcyrqwvmvuknzmvtaaa",
-        "consensus_pubkey": {
-          "@type": "/cosmos.crypto.ed25519.PubKey",
-          "key": "uExZyjNLtr2+FFIhNDAMcQ8+yTrqE7ygYTsI7khkA5Y="
-        },
-        "jailed": false,
-        "status": "BOND_STATUS_BONDED",
-        "tokens": "1348298958808",
-        "delegator_shares": "1348298958808.000000000000000000",
-        "description": {
-          "moniker": "Cosmostation",
-          "identity": "AE4C403A6E7AA1AC",
-          "website": "https://www.cosmostation.io",
-          "security_contact": "admin@stamper.network",
-          "details": "Cosmostation validator node. Delegate your tokens and Start Earning Staking Rewards"
-        },
-        "unbonding_height": "0",
-        "unbonding_time": "1970-01-01T00:00:00Z",
-        "commission": {
-          "commission_rates": {
-            "rate": "0.050000000000000000",
-            "max_rate": "1.000000000000000000",
-            "max_change_rate": "0.200000000000000000"
-          },
-          "update_time": "2021-10-01T15:06:38.821314287Z"
-        },
-        "min_self_delegation": "1"
-      }
-    ]
   }
 }
 ```

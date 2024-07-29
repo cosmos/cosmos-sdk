@@ -36,17 +36,17 @@ type mockStateCodec struct {
 }
 
 // GetMsgAnySigners implements codec.Codec.
-func (mockStateCodec) GetMsgAnySigners(msg *types.Any) ([][]byte, protoreflect.ProtoMessage, error) {
+func (mockStateCodec) GetMsgAnySigners(msg *types.Any) ([][]byte, protoreflect.Message, error) {
 	panic("unimplemented")
 }
 
-// GetMsgV1Signers implements codec.Codec.
-func (mockStateCodec) GetMsgV1Signers(msg gogoproto.Message) ([][]byte, protoreflect.ProtoMessage, error) {
+// GetMsgSigners implements codec.Codec.
+func (mockStateCodec) GetMsgSigners(msg gogoproto.Message) ([][]byte, protoreflect.Message, error) {
 	panic("unimplemented")
 }
 
-// GetMsgV2Signers implements codec.Codec.
-func (mockStateCodec) GetMsgV2Signers(msg protoreflect.ProtoMessage) ([][]byte, error) {
+// GetReflectMsgSigners implements codec.Codec.
+func (mockStateCodec) GetReflectMsgSigners(msg protoreflect.Message) ([][]byte, error) {
 	panic("unimplemented")
 }
 
@@ -163,7 +163,7 @@ func (a addressCodec) BytesToString(bz []byte) (string, error)   { return string
 func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 	t.Helper()
 	return accountstd.NewMockContext(
-		0, []byte("multisig_account"), []byte("sender"), TestFunds, func(ctx context.Context, sender []byte, msg, msgResp ProtoMsg) error {
+		0, []byte("mock_multisig_account"), []byte("sender"), TestFunds, func(ctx context.Context, sender []byte, msg, msgResp ProtoMsg) error {
 			return nil
 		}, func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error) {
 			return nil, nil

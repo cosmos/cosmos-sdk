@@ -82,7 +82,7 @@ This message sends coins directly from the sender to the community pool.
 
 :::tip
 If you know the protocolpool module account address, you can directly use bank `send` transaction instead.
-::::
+:::
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/97724493d792517ba2be8969078b5f92ad04d79c/proto/cosmos/protocolpool/v1/tx.proto#L32-L42
@@ -125,7 +125,7 @@ https://github.com/cosmos/cosmos-sdk/blob/97724493d792517ba2be8969078b5f92ad04d7
 
 The message will fail under the following conditions:
 
-* The total budget is zero.
+* The budget per tranche is zero.
 * The recipient address is empty or restricted.
 * The start time is less than current block time.
 * The number of tranches is not a positive integer.

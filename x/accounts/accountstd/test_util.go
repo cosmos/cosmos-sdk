@@ -3,8 +3,8 @@ package accountstd
 import (
 	"context"
 
-	"cosmossdk.io/collections/colltest"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/testing"
 	"cosmossdk.io/x/accounts/internal/implementation"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,7 +19,8 @@ func NewMockContext(
 	moduleExecUntyped implementation.ModuleExecUntypedFunc,
 	moduleQuery implementation.ModuleQueryFunc,
 ) (context.Context, store.KVStoreService) {
-	ss, ctx := colltest.MockStore()
+	ctx := coretesting.Context()
+	ss := coretesting.KVStoreService(ctx, "test")
 
 	return implementation.MakeAccountContext(
 		ctx, ss, accNumber, accountAddr, sender, funds, moduleExec, moduleExecUntyped, moduleQuery,

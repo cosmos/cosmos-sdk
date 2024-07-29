@@ -136,7 +136,7 @@ func mkTxResult(txConfig client.TxConfig, resTx *coretypes.ResultTx, resBlock *c
 	}
 	p, ok := txb.(*gogoTxWrapper)
 	if !ok {
-		return nil, fmt.Errorf("unexpected type, wnted gogoTxWrapper, got: %T", txb)
+		return nil, fmt.Errorf("unexpected type, wanted gogoTxWrapper, got: %T", txb)
 	}
 
 	tx, err := p.AsTx()

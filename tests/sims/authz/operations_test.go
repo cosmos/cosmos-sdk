@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
 	_ "cosmossdk.io/x/accounts" // import as blank for app wiring
 	_ "cosmossdk.io/x/auth"     // import as blank for app wiring
 	authkeeper "cosmossdk.io/x/auth/keeper"
@@ -57,7 +57,6 @@ type SimTestSuite struct {
 	ctx sdk.Context
 
 	app               *runtime.App
-	legacyAmino       *codec.LegacyAmino
 	codec             codec.Codec
 	interfaceRegistry codectypes.InterfaceRegistry
 	txConfig          client.TxConfig
@@ -70,9 +69,8 @@ func (suite *SimTestSuite) SetupTest() {
 	app, err := simtestutil.Setup(
 		depinject.Configs(
 			AppConfig,
-			depinject.Supply(log.NewNopLogger()),
+			depinject.Supply(coretesting.NewNopLogger()),
 		),
-		&suite.legacyAmino,
 		&suite.codec,
 		&suite.interfaceRegistry,
 		&suite.txConfig,

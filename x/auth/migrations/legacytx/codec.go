@@ -1,9 +1,9 @@
 package legacytx
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/core/legacy"
 )
 
-func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(StdTx{}, "cosmos-sdk/StdTx", nil)
+func RegisterLegacyAminoCodec(cdc legacy.Amino) {
+	cdc.RegisterConcrete(StdTx{}, "cosmos-sdk/StdTx")
 }

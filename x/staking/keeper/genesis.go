@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
@@ -26,9 +27,11 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]ap
 	// initialized for the validator set e.g. with a one-block offset - the
 	// first TM block is at height 1, so state updates applied from
 	// genesis.json are in block 0.
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx = sdkCtx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay) // TODO: remove this need for WithBlockHeight
-	ctx = sdkCtx
+	if sdkCtx, ok := sdk.TryUnwrapSDKContext(ctx); ok {
+		// this munging of the context is not necessary for server/v2 code paths, `ok` will be false
+		sdkCtx = sdkCtx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay) // TODO: remove this need for WithBlockHeight
+		ctx = sdkCtx
+	}
 
 	if err := k.Params.Set(ctx, data.Params); err != nil {
 		return nil, err
@@ -85,7 +88,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]ap
 	for _, delegation := range data.Delegations {
 		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(delegation.DelegatorAddress)
 		if err != nil {
-			return nil, fmt.Errorf("invalid delegator address: %s", err)
+			return nil, fmt.Errorf("invalid delegator address: %w", err)
 		}
 
 		valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
@@ -172,6 +175,24 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]ap
 	// likely malformed.
 	if !notBondedBalance.Equal(notBondedCoins) {
 		return nil, fmt.Errorf("not bonded pool balance is different from not bonded coins: %s <-> %s", notBondedBalance, notBondedCoins)
+	}
+
+	for _, record := range data.RotationIndexRecords {
+		if err := k.ValidatorConsensusKeyRotationRecordIndexKey.Set(ctx, collections.Join(record.Address, *record.Time)); err != nil {
+			return nil, err
+		}
+	}
+
+	for _, history := range data.RotationHistory {
+		if err := k.RotationHistory.Set(ctx, collections.Join(history.OperatorAddress, history.Height), history); err != nil {
+			return nil, err
+		}
+	}
+
+	for _, record := range data.RotationQueue {
+		if err := k.ValidatorConsensusKeyRotationRecordQueue.Set(ctx, *record.Time, *record.ValAddrs); err != nil {
+			return nil, err
+		}
 	}
 
 	// don't need to run CometBFT updates if we exported
@@ -275,6 +296,41 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 		return nil, err
 	}
 
+	rotationIndex := []types.RotationIndexRecord{}
+	err = k.ValidatorConsensusKeyRotationRecordIndexKey.Walk(ctx, nil, func(key collections.Pair[[]byte, time.Time]) (stop bool, err error) {
+		t := key.K2()
+		rotationIndex = append(rotationIndex, types.RotationIndexRecord{
+			Address: key.K1(),
+			Time:    &t,
+		})
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	conspubKeyRotationHistory := []types.ConsPubKeyRotationHistory{}
+	err = k.RotationHistory.Walk(ctx, nil, func(key collections.Pair[[]byte, uint64], value types.ConsPubKeyRotationHistory) (stop bool, err error) {
+		conspubKeyRotationHistory = append(conspubKeyRotationHistory, value)
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	rotationQueue := []types.RotationQueueRecord{}
+	err = k.ValidatorConsensusKeyRotationRecordQueue.Walk(ctx, nil, func(key time.Time, value types.ValAddrsOfRotatedConsKeys) (stop bool, err error) {
+		record := types.RotationQueueRecord{
+			Time:     &key,
+			ValAddrs: &value,
+		}
+		rotationQueue = append(rotationQueue, record)
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.GenesisState{
 		Params:               params,
 		LastTotalPower:       totalPower,
@@ -284,5 +340,8 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 		UnbondingDelegations: unbondingDelegations,
 		Redelegations:        redelegations,
 		Exported:             true,
+		RotationIndexRecords: rotationIndex,
+		RotationHistory:      conspubKeyRotationHistory,
+		RotationQueue:        rotationQueue,
 	}, nil
 }

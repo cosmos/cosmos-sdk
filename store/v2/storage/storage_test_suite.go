@@ -22,7 +22,7 @@ var storeKey1Bytes = []byte(storeKey1)
 type StorageTestSuite struct {
 	suite.Suite
 
-	NewDB          func(dir string) (store.VersionedDatabase, error)
+	NewDB          func(dir string) (*StorageStore, error)
 	EmptyBatchSize int
 	SkipTests      []string
 }
@@ -256,8 +256,6 @@ func (s *StorageTestSuite) TestDatabase_Iterator() {
 		itr, err := db.Iterator(storeKey1Bytes, v, []byte("key000"), nil)
 		s.Require().NoError(err)
 
-		defer itr.Close()
-
 		var i, count int
 		for ; itr.Valid(); itr.Next() {
 			s.Require().Equal([]byte(fmt.Sprintf("key%03d", i)), itr.Key(), string(itr.Key()))
@@ -271,14 +269,15 @@ func (s *StorageTestSuite) TestDatabase_Iterator() {
 
 		// seek past domain, which should make the iterator invalid and produce an error
 		s.Require().False(itr.Valid())
+
+		err = itr.Close()
+		s.Require().NoError(err, "Failed to close iterator")
 	}
 
 	// iterator with a start and end domain over multiple versions
 	for v := uint64(1); v < 5; v++ {
 		itr2, err := db.Iterator(storeKey1Bytes, v, []byte("key010"), []byte("key019"))
 		s.Require().NoError(err)
-
-		defer itr2.Close()
 
 		i, count := 10, 0
 		for ; itr2.Valid(); itr2.Next() {
@@ -293,6 +292,11 @@ func (s *StorageTestSuite) TestDatabase_Iterator() {
 
 		// seek past domain, which should make the iterator invalid and produce an error
 		s.Require().False(itr2.Valid())
+
+		err = itr2.Close()
+		if err != nil {
+			return
+		}
 	}
 
 	// start must be <= end

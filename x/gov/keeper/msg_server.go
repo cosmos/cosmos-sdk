@@ -7,6 +7,7 @@ import (
 
 	"google.golang.org/protobuf/runtime/protoiface"
 
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -97,10 +98,12 @@ func (k msgServer) SubmitProposal(ctx context.Context, msg *v1.MsgSubmitProposal
 	}
 
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/9683
-	k.GasService.GasMeter(ctx).Consume(
+	if err := k.GasService.GasMeter(ctx).Consume(
 		3*k.GasService.GasConfig(ctx).WriteCostPerByte*uint64(len(bytes)),
 		"submit proposal",
-	)
+	); err != nil {
+		return nil, err
+	}
 
 	votingStarted, err := k.Keeper.AddDeposit(ctx, proposal.Id, proposer, msg.GetInitialDeposit())
 	if err != nil {
@@ -207,7 +210,10 @@ func (k msgServer) ExecLegacyContent(ctx context.Context, msg *v1.MsgExecLegacyC
 	}
 
 	handler := k.Keeper.legacyRouter.GetRoute(content.ProposalRoute())
-	if err := handler(ctx, content); err != nil {
+
+	// NOTE: the support of legacy gov proposal in server/v2 is different than for baseapp.
+	// Legacy proposal in server/v2 can only access services provided by the gov module environment.
+	if err := handler(context.WithValue(ctx, corecontext.EnvironmentContextKey, k.Environment), content); err != nil {
 		return nil, errors.Wrapf(govtypes.ErrInvalidProposalContent, "failed to run legacy handler %s, %+v", content.ProposalRoute(), err)
 	}
 
@@ -376,11 +382,11 @@ func (k msgServer) SudoExec(ctx context.Context, msg *v1.MsgSudoExec) (*v1.MsgSu
 	var msgResp protoiface.MessageV1
 	if err := k.BranchService.Execute(ctx, func(ctx context.Context) error {
 		// TODO add route check here
-		if err := k.RouterService.MessageRouterService().CanInvoke(ctx, sdk.MsgTypeURL(sudoedMsg)); err != nil {
+		if err := k.MsgRouterService.CanInvoke(ctx, sdk.MsgTypeURL(sudoedMsg)); err != nil {
 			return errors.Wrapf(govtypes.ErrInvalidProposal, err.Error())
 		}
 
-		msgResp, err = k.RouterService.MessageRouterService().InvokeUntyped(ctx, sudoedMsg)
+		msgResp, err = k.MsgRouterService.InvokeUntyped(ctx, sudoedMsg)
 		if err != nil {
 			return errors.Wrapf(err, "failed to execute sudo-ed message; message %v", sudoedMsg)
 		}

@@ -42,10 +42,10 @@ func (m Migrator) Migrate3to4(ctx context.Context) error {
 // It migrates the GlobalAccountNumber from being a protobuf defined value to a
 // big-endian encoded uint64, it also migrates it to use a more canonical prefix.
 func (m Migrator) Migrate4To5(ctx context.Context) error {
-	return v5.Migrate(ctx, m.keeper.KVStoreService, m.keeper.AccountNumber)
+	return v5.Migrate(ctx, m.keeper.KVStoreService, m.keeper.accountNumber)
 }
 
-// V45_SetAccount implements V45_SetAccount
+// V45SetAccount implements V45_SetAccount
 // set the account without map to accAddr to accNumber.
 //
 // NOTE: This is used for testing purposes only.

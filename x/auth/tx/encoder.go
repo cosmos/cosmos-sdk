@@ -16,7 +16,7 @@ func DefaultTxEncoder() sdk.TxEncoder {
 		if !ok {
 			return nil, fmt.Errorf("unexpected tx type: %T", tx)
 		}
-		return marshalOption.Marshal(gogoWrapper.decodedTx.TxRaw)
+		return marshalOption.Marshal(gogoWrapper.TxRaw)
 	}
 }
 
@@ -32,6 +32,6 @@ func DefaultJSONTxEncoder(cdc codec.Codec) sdk.TxEncoder {
 		if !ok {
 			return nil, fmt.Errorf("unexpected tx type: %T", tx)
 		}
-		return jsonMarshaler.Marshal(gogoWrapper.decodedTx.Tx)
+		return jsonMarshaler.Marshal(gogoWrapper.Tx)
 	}
 }

@@ -38,6 +38,11 @@ message Module {
   // to be used in keeper construction.
   repeated StoreKeyConfig override_store_keys = 6;
 
+  // skip_store_keys is an optional list of store keys to skip when constructing the
+  // module's keeper. This is useful when a module does not have a store key.
+  // NOTE: the provided environment variable will have a fake store service.
+  repeated string skip_store_keys = 11;
+
   // order_migrations defines the order in which module migrations are performed.
   // If this is left empty, it uses the default migration order.
   // https://pkg.go.dev/github.com/cosmos/cosmos-sdk@v0.47.0-alpha2/types/module#DefaultMigrationsOrder

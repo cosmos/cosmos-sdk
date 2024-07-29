@@ -13,17 +13,16 @@ import (
 	"github.com/linxGnu/grocksdb"
 
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/store/v2"
 	storeerrors "cosmossdk.io/store/v2/errors"
 )
 
 var (
-	_ store.RawDB = (*RocksDB)(nil)
+	_ corestore.KVStoreWithBatch = (*RocksDB)(nil)
 
 	defaultReadOpts = grocksdb.NewDefaultReadOptions()
 )
 
-// RocksDB implements RawDB using RocksDB as the underlying storage engine.
+// RocksDB implements `corestore.KVStoreWithBatch` using RocksDB as the underlying storage engine.
 // It is used for only store v2 migration, since some clients use RocksDB as
 // the IAVL v0/v1 backend.
 type RocksDB struct {
@@ -92,6 +91,25 @@ func (db *RocksDB) Has(key []byte) (bool, error) {
 	return bz != nil, nil
 }
 
+func (db *RocksDB) Set(key, value []byte) error {
+	if len(key) == 0 {
+		return storeerrors.ErrKeyEmpty
+	}
+	if value == nil {
+		return storeerrors.ErrValueNil
+	}
+
+	return db.storage.Put(grocksdb.NewDefaultWriteOptions(), key, value)
+}
+
+func (db *RocksDB) Delete(key []byte) error {
+	if len(key) == 0 {
+		return storeerrors.ErrKeyEmpty
+	}
+
+	return db.storage.Delete(grocksdb.NewDefaultWriteOptions(), key)
+}
+
 func (db *RocksDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, storeerrors.ErrKeyEmpty
@@ -110,14 +128,14 @@ func (db *RocksDB) ReverseIterator(start, end []byte) (corestore.Iterator, error
 	return newRocksDBIterator(itr, start, end, true), nil
 }
 
-func (db *RocksDB) NewBatch() store.RawBatch {
+func (db *RocksDB) NewBatch() corestore.Batch {
 	return &rocksDBBatch{
 		db:    db,
 		batch: grocksdb.NewWriteBatch(),
 	}
 }
 
-func (db *RocksDB) NewBatchWithSize(_ int) store.RawBatch {
+func (db *RocksDB) NewBatchWithSize(_ int) corestore.Batch {
 	return db.NewBatch()
 }
 

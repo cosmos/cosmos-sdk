@@ -35,8 +35,23 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
-* [#20062](https://github.com/cosmos/cosmos-sdk/pull/20062) Fixed cosmovisor add-upgrade permissions
 
+## Features
+
+* [#19764](https://github.com/cosmos/cosmos-sdk/issues/19764) Use config file for cosmovisor configuration.
+
+## Improvements
+
+* [#20573](https://github.com/cosmos/cosmos-sdk/pull/20573) Bump `cosmossdk.io/x/upgrade` to v0.1.3 (including go-getter vulnerability fix)
+* [#19995](https://github.com/cosmos/cosmos-sdk/pull/19995):
+    * `init command` writes the configuration to the config file only at the default path `DAEMON_HOME/cosmovisor/config.toml`.
+    * Provide `--cosmovisor-config` flag with value as args to provide the path to the configuration file in the `run` command. `run --cosmovisor-config <path> (other cmds with flags) ...`.
+    * Add `--cosmovisor-config` flag to provide `config.toml` path to the configuration file in root command used by `add-upgrade` and `config` subcommands.
+    * `config command` now displays the configuration from the config file if it is provided. If the config file is not provided, it will display the configuration from the environment variables.
+
+## Bug Fixes
+
+* [#20062](https://github.com/cosmos/cosmos-sdk/pull/20062) Fixed cosmovisor add-upgrade permissions
 
 ## v1.5.0 - 2023-07-17
 

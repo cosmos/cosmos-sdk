@@ -2,62 +2,37 @@ package runtime
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
 
-	"github.com/cosmos/gogoproto/proto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/core/router"
-	"cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
-// NewRouterService creates a router.Service which allows to invoke messages and queries using the msg router.
-func NewRouterService(storeService store.KVStoreService, queryRouter *baseapp.GRPCQueryRouter, msgRouter baseapp.MessageRouter) router.Service {
-	return &routerService{
-		queryRouterService: &queryRouterService{
-			storeService: storeService, // TODO: this will be used later on as authenticating modules before routing
-			router:       queryRouter,
-		},
-		msgRouterService: &msgRouterService{
-			storeService: storeService, // TODO: this will be used later on as authenticating modules before routing
-			router:       msgRouter,
-		},
+// NewMsgRouterService implements router.Service.
+func NewMsgRouterService(msgRouter baseapp.MessageRouter) router.Service {
+	return &msgRouterService{
+		router: msgRouter,
 	}
 }
 
-var _ router.Service = (*routerService)(nil)
-
-type routerService struct {
-	queryRouterService router.Router
-	msgRouterService   router.Router
-}
-
-// MessageRouterService implements router.Service.
-func (r *routerService) MessageRouterService() router.Router {
-	return r.msgRouterService
-}
-
-// QueryRouterService implements router.Service.
-func (r *routerService) QueryRouterService() router.Router {
-	return r.queryRouterService
-}
-
-var _ router.Router = (*msgRouterService)(nil)
+var _ router.Service = (*msgRouterService)(nil)
 
 type msgRouterService struct {
-	storeService store.KVStoreService
-	router       baseapp.MessageRouter
+	// TODO: eventually authenticate modules to use the message router
+	router baseapp.MessageRouter
 }
 
 // CanInvoke returns an error if the given message cannot be invoked.
 func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error {
 	if typeURL == "" {
-		return fmt.Errorf("missing type url")
+		return errors.New("missing type url")
 	}
 
 	typeURL = strings.TrimPrefix(typeURL, "/")
@@ -73,7 +48,7 @@ func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error 
 // InvokeTyped execute a message and fill-in a response.
 // The response must be known and passed as a parameter.
 // Use InvokeUntyped if the response type is not known.
-func (m *msgRouterService) InvokeTyped(ctx context.Context, msg, resp protoiface.MessageV1) error {
+func (m *msgRouterService) InvokeTyped(ctx context.Context, msg, resp gogoproto.Message) error {
 	messageName := msgTypeURL(msg)
 	handler := m.router.HybridHandlerByMsgName(messageName)
 	if handler == nil {
@@ -84,7 +59,7 @@ func (m *msgRouterService) InvokeTyped(ctx context.Context, msg, resp protoiface
 }
 
 // InvokeUntyped execute a message and returns a response.
-func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg protoiface.MessageV1) (protoiface.MessageV1, error) {
+func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg gogoproto.Message) (gogoproto.Message, error) {
 	messageName := msgTypeURL(msg)
 	respName := m.router.ResponseNameByMsgName(messageName)
 	if respName == "" {
@@ -92,11 +67,11 @@ func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg protoiface.Mes
 	}
 
 	// get response type
-	typ := proto.MessageType(respName)
+	typ := gogoproto.MessageType(respName)
 	if typ == nil {
 		return nil, fmt.Errorf("no message type found for %s", respName)
 	}
-	msgResp, ok := reflect.New(typ.Elem()).Interface().(protoiface.MessageV1)
+	msgResp, ok := reflect.New(typ.Elem()).Interface().(gogoproto.Message)
 	if !ok {
 		return nil, fmt.Errorf("could not create response message %s", respName)
 	}
@@ -104,17 +79,23 @@ func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg protoiface.Mes
 	return msgResp, m.InvokeTyped(ctx, msg, msgResp)
 }
 
-var _ router.Router = (*queryRouterService)(nil)
+// NewQueryRouterService implements router.Service.
+func NewQueryRouterService(queryRouter baseapp.QueryRouter) router.Service {
+	return &queryRouterService{
+		router: queryRouter,
+	}
+}
+
+var _ router.Service = (*queryRouterService)(nil)
 
 type queryRouterService struct {
-	storeService store.KVStoreService
-	router       *baseapp.GRPCQueryRouter
+	router baseapp.QueryRouter
 }
 
 // CanInvoke returns an error if the given request cannot be invoked.
 func (m *queryRouterService) CanInvoke(ctx context.Context, typeURL string) error {
 	if typeURL == "" {
-		return fmt.Errorf("missing type url")
+		return errors.New("missing type url")
 	}
 
 	typeURL = strings.TrimPrefix(typeURL, "/")
@@ -132,7 +113,7 @@ func (m *queryRouterService) CanInvoke(ctx context.Context, typeURL string) erro
 // InvokeTyped execute a message and fill-in a response.
 // The response must be known and passed as a parameter.
 // Use InvokeUntyped if the response type is not known.
-func (m *queryRouterService) InvokeTyped(ctx context.Context, req, resp protoiface.MessageV1) error {
+func (m *queryRouterService) InvokeTyped(ctx context.Context, req, resp gogoproto.Message) error {
 	reqName := msgTypeURL(req)
 	handlers := m.router.HybridHandlerByRequestName(reqName)
 	if len(handlers) == 0 {
@@ -145,7 +126,7 @@ func (m *queryRouterService) InvokeTyped(ctx context.Context, req, resp protoifa
 }
 
 // InvokeUntyped execute a message and returns a response.
-func (m *queryRouterService) InvokeUntyped(ctx context.Context, req protoiface.MessageV1) (protoiface.MessageV1, error) {
+func (m *queryRouterService) InvokeUntyped(ctx context.Context, req gogoproto.Message) (gogoproto.Message, error) {
 	reqName := msgTypeURL(req)
 	respName := m.router.ResponseNameByRequestName(reqName)
 	if respName == "" {
@@ -153,11 +134,11 @@ func (m *queryRouterService) InvokeUntyped(ctx context.Context, req protoiface.M
 	}
 
 	// get response type
-	typ := proto.MessageType(respName)
+	typ := gogoproto.MessageType(respName)
 	if typ == nil {
 		return nil, fmt.Errorf("no message type found for %s", respName)
 	}
-	reqResp, ok := reflect.New(typ.Elem()).Interface().(protoiface.MessageV1)
+	reqResp, ok := reflect.New(typ.Elem()).Interface().(gogoproto.Message)
 	if !ok {
 		return nil, fmt.Errorf("could not create response request %s", respName)
 	}
@@ -166,10 +147,10 @@ func (m *queryRouterService) InvokeUntyped(ctx context.Context, req protoiface.M
 }
 
 // msgTypeURL returns the TypeURL of a proto message.
-func msgTypeURL(msg proto.Message) string {
+func msgTypeURL(msg gogoproto.Message) string {
 	if m, ok := msg.(protov2.Message); ok {
 		return string(m.ProtoReflect().Descriptor().FullName())
 	}
 
-	return proto.MessageName(msg)
+	return gogoproto.MessageName(msg)
 }

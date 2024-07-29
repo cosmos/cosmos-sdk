@@ -53,7 +53,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#12273](https://github.com/cosmos/cosmos-sdk/pull/12273) The timestamp key encoding was reworked to properly handle nil values. Existing users will need to manually migrate their data to the new encoding before upgrading.
 * [#15138](https://github.com/cosmos/cosmos-sdk/pull/15138) The duration key encoding was reworked to properly handle nil values. Existing users will need to manually migrate their data to the new encoding before upgrading.
+* [#19909](https://github.com/cosmos/cosmos-sdk/pull/19909) (Breaking) Adjusts the encoding of zero and positive nanoseconds to ensure consistent comparison of duration objects. In the previous implementation, when nanoseconds were greater than or equal to zero, the encoding format was simple: we just represented the number in bytes (for example, 0 with [0x0]). For negative nanoseconds, we added 999,999,999 to ensure they were non-negative. In the new implementation, we always add 999,999,999 to all nanoseconds to ensure consistency in encoding and to maintain lexicographical order when compared with other durations.
 
 ### Bug Fixes
 
 * [#16023](https://github.com/cosmos/cosmos-sdk/pull/16023) Fix bugs introduced by lack of CI tests in [#15138](https://github.com/cosmos/cosmos-sdk/pull/15138) and [#15813](https://github.com/cosmos/cosmos-sdk/pull/15813). This changes the duration encoding in [#15138](https://github.com/cosmos/cosmos-sdk/pull/15138) to correctly order values with negative nanos.
+ 

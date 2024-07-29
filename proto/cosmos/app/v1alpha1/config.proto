@@ -4,6 +4,8 @@ package cosmos.app.v1alpha1;
 
 import "google/protobuf/any.proto";
 
+option go_package = "cosmossdk.io/depinject/appconfig/v1alpha1";
+
 // Config represents the configuration for a Cosmos SDK ABCI app.
 // It is intended that all state machine logic including the version of
 // baseapp and tx handlers (and possibly even Tendermint) that an app needs

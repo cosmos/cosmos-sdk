@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/x/staking/client/cli"
@@ -28,7 +29,6 @@ const (
 
 var (
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.HasInvariants       = AppModule{}
@@ -36,7 +36,6 @@ var (
 	_ module.HasABCIEndBlock     = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
-	_ appmodule.HasBeginBlocker       = AppModule{}
 	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
@@ -71,12 +70,13 @@ func NewAppModule(
 func (am AppModule) IsAppModule() {}
 
 // Name returns the staking module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the staking module's types on the given LegacyAmino codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
@@ -114,19 +114,19 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
 	if err := mr.Register(types.ModuleName, 1, m.Migrate1to2); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err)
+		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %w", types.ModuleName, err)
 	}
 	if err := mr.Register(types.ModuleName, 2, m.Migrate2to3); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err)
+		return fmt.Errorf("failed to migrate x/%s from version 2 to 3: %w", types.ModuleName, err)
 	}
 	if err := mr.Register(types.ModuleName, 3, m.Migrate3to4); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err)
+		return fmt.Errorf("failed to migrate x/%s from version 3 to 4: %w", types.ModuleName, err)
 	}
 	if err := mr.Register(types.ModuleName, 4, m.Migrate4to5); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 4 to 5: %v", types.ModuleName, err)
+		return fmt.Errorf("failed to migrate x/%s from version 4 to 5: %w", types.ModuleName, err)
 	}
 	if err := mr.Register(types.ModuleName, 5, m.Migrate5to6); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 5 to 6: %v", types.ModuleName, err)
+		return fmt.Errorf("failed to migrate x/%s from version 5 to 6: %w", types.ModuleName, err)
 	}
 
 	return nil
@@ -169,11 +169,6 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 
 // ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
-
-// BeginBlock returns the begin blocker for the staking module.
-func (am AppModule) BeginBlock(ctx context.Context) error {
-	return am.keeper.BeginBlocker(ctx)
-}
 
 // EndBlock returns the end blocker for the staking module.
 func (am AppModule) EndBlock(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {

@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/errors"
@@ -138,7 +140,7 @@ func (valz ValidatorsByVotingPower) Swap(i, j int) {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (v Validators) UnpackInterfaces(c codectypes.AnyUnpacker) error {
+func (v Validators) UnpackInterfaces(c gogoprotoany.AnyUnpacker) error {
 	for i := range v.Validators {
 		if err := v.Validators[i].UnpackInterfaces(c); err != nil {
 			return err
@@ -494,7 +496,7 @@ func (v Validator) GetMinSelfDelegation() math.Int     { return v.MinSelfDelegat
 func (v Validator) GetDelegatorShares() math.LegacyDec { return v.DelegatorShares }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (v Validator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (v Validator) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var pk cryptotypes.PubKey
 	return unpacker.UnpackAny(v.ConsensusPubkey, &pk)
 }

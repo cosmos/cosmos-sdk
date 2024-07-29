@@ -7,11 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/collections/colltest"
+	"cosmossdk.io/core/testing"
 )
 
 func TestMigrate(t *testing.T) {
-	kv, ctx := colltest.MockStore()
+	ctx := coretesting.Context()
+	kv := coretesting.KVStoreService(ctx, "test")
 	sb := collections.NewSchemaBuilder(kv)
 	seq := collections.NewSequence(sb, collections.NewPrefix(0), "seq")
 
@@ -33,7 +34,8 @@ func TestMigrate(t *testing.T) {
 	require.Equal(t, wantValue, gotValue)
 
 	// case the global account number was not set
-	ctx = kv.NewStoreContext() // this resets the store to zero
+	ctx = coretesting.Context()
+	kv = coretesting.KVStoreService(ctx, "test")
 	wantValue = collections.DefaultSequenceStart
 
 	err = Migrate(ctx, kv, seq)

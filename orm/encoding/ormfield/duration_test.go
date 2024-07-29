@@ -38,7 +38,7 @@ func TestDuration(t *testing.T) {
 			"no nanos",
 			100,
 			0,
-			6,
+			9,
 		},
 		{
 			"with nanos",
@@ -113,14 +113,6 @@ func TestDurationOutOfRange(t *testing.T) {
 				Nanos:   0,
 			},
 			expectErr: "seconds is out of range",
-		},
-		{
-			name: "positive seconds negative nanos",
-			dur: &durationpb.Duration{
-				Seconds: 0,
-				Nanos:   -1,
-			},
-			expectErr: "nanos is out of range",
 		},
 		{
 			name: "positive seconds nanos too big",
@@ -237,6 +229,42 @@ func TestDurationCompare(t *testing.T) {
 			},
 			dur2: &durationpb.Duration{
 				Seconds: -1,
+				Nanos:   -1,
+			},
+			want: -1,
+		},
+		{
+			name: "negative seconds equal, dur1 nanos zero",
+			dur1: &durationpb.Duration{
+				Seconds: -1,
+				Nanos:   0,
+			},
+			dur2: &durationpb.Duration{
+				Seconds: -1,
+				Nanos:   -1,
+			},
+			want: 1,
+		},
+		{
+			name: "negative seconds equal, dur2 nanos zero",
+			dur1: &durationpb.Duration{
+				Seconds: -1,
+				Nanos:   -1,
+			},
+			dur2: &durationpb.Duration{
+				Seconds: -1,
+				Nanos:   0,
+			},
+			want: -1,
+		},
+		{
+			name: "seconds equal and dur1 nanos min values",
+			dur1: &durationpb.Duration{
+				Seconds: ormfield.DurationSecondsMin,
+				Nanos:   ormfield.DurationNanosMin,
+			},
+			dur2: &durationpb.Duration{
+				Seconds: ormfield.DurationSecondsMin,
 				Nanos:   -1,
 			},
 			want: -1,

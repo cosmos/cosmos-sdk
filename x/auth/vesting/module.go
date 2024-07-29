@@ -2,20 +2,13 @@ package vesting
 
 import (
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/auth/keeper"
 	"cosmossdk.io/x/auth/vesting/types"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-var (
-	_ module.AppModule = AppModule{}
-	_ module.HasName   = AppModule{}
-
-	_ appmodule.AppModule = AppModule{}
-)
+var _ appmodule.AppModule = AppModule{}
 
 // AppModule implementing the AppModule interface.
 type AppModule struct {
@@ -34,12 +27,13 @@ func NewAppModule(ak keeper.AccountKeeper, bk types.BankKeeper) AppModule {
 func (am AppModule) IsAppModule() {}
 
 // Name returns the module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
 
-// RegisterCodec registers the module's types with the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+// RegisterLegacyAminoCodec registers the module's types with the given codec.
+func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 

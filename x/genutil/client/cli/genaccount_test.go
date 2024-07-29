@@ -7,15 +7,14 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/auth"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -71,15 +70,18 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			home := t.TempDir()
 			logger := log.NewNopLogger()
-			cfg, err := genutiltest.CreateDefaultCometConfig(home)
-			require.NoError(t, err)
+			v := viper.New()
 
-			appCodec := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}).Codec
+			encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
+			appCodec := encodingConfig.Codec
+			txConfig := encodingConfig.TxConfig
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 
-			serverCtx := server.NewContext(viper.New(), cfg, logger)
-			clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(home).WithAddressCodec(ac)
+			err := writeAndTrackDefaultConfig(v, home)
+			require.NoError(t, err)
+			clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(home).
+				WithAddressCodec(ac).WithTxConfig(txConfig)
 
 			if tc.withKeyring {
 				path := hd.CreateHDPath(118, 0, 0).String()
@@ -92,9 +94,10 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 
 			ctx := context.Background()
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+			ctx = context.WithValue(ctx, corectx.ViperContextKey, v)
+			ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
 
-			cmd := genutilcli.AddGenesisAccountCmd(addresscodec.NewBech32Codec("cosmos"))
+			cmd := genutilcli.AddGenesisAccountCmd()
 			cmd.SetArgs([]string{
 				tc.addr,
 				tc.denom,

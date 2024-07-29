@@ -2,6 +2,7 @@ package flag
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -14,7 +15,7 @@ import (
 
 type pubkeyType struct{}
 
-func (a pubkeyType) NewValue(_ context.Context, _ *Builder) Value {
+func (a pubkeyType) NewValue(_ *context.Context, _ *Builder) Value {
 	return &pubkeyValue{}
 }
 
@@ -47,7 +48,7 @@ func (a *pubkeyValue) Set(s string) error {
 
 	any, err := types.NewAnyWithValue(pk)
 	if err != nil {
-		return fmt.Errorf("error converting to any type")
+		return errors.New("error converting to any type")
 	}
 
 	a.value = any

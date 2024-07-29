@@ -8,8 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/log"
-	"cosmossdk.io/store/v2"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/v2/storage"
 )
 
@@ -17,9 +16,9 @@ var storeKey1 = []byte("store1")
 
 func TestStorageTestSuite(t *testing.T) {
 	s := &storage.StorageTestSuite{
-		NewDB: func(dir string) (store.VersionedDatabase, error) {
+		NewDB: func(dir string) (*storage.StorageStore, error) {
 			db, err := New(dir)
-			return storage.NewStorageStore(db, nil, log.NewNopLogger()), err
+			return storage.NewStorageStore(db, coretesting.NewNopLogger()), err
 		},
 		EmptyBatchSize: 0,
 	}

@@ -2,6 +2,7 @@ package group
 
 import (
 	"github.com/cosmos/gogoproto/proto"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,9 +28,9 @@ var (
 	_ sdk.Msg = &MsgSubmitProposal{}
 	_ sdk.Msg = &MsgCreateGroupPolicy{}
 
-	_ types.UnpackInterfacesMessage = MsgCreateGroupPolicy{}
-	_ types.UnpackInterfacesMessage = MsgUpdateGroupPolicyDecisionPolicy{}
-	_ types.UnpackInterfacesMessage = MsgCreateGroupWithPolicy{}
+	_ gogoprotoany.UnpackInterfacesMessage = MsgCreateGroupPolicy{}
+	_ gogoprotoany.UnpackInterfacesMessage = MsgUpdateGroupPolicyDecisionPolicy{}
+	_ gogoprotoany.UnpackInterfacesMessage = MsgCreateGroupWithPolicy{}
 )
 
 // GetGroupID gets the group id of the MsgUpdateGroupMetadata.
@@ -83,7 +84,7 @@ func (m *MsgCreateGroupWithPolicy) SetDecisionPolicy(decisionPolicy DecisionPoli
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgCreateGroupWithPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (m MsgCreateGroupWithPolicy) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var decisionPolicy DecisionPolicy
 	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }
@@ -126,7 +127,7 @@ func (m *MsgUpdateGroupPolicyDecisionPolicy) GetDecisionPolicy() (DecisionPolicy
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgUpdateGroupPolicyDecisionPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (m MsgUpdateGroupPolicyDecisionPolicy) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var decisionPolicy DecisionPolicy
 	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }
@@ -180,7 +181,7 @@ func (m *MsgCreateGroupPolicy) SetDecisionPolicy(decisionPolicy DecisionPolicy) 
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgCreateGroupPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (m MsgCreateGroupPolicy) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var decisionPolicy DecisionPolicy
 	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }
@@ -218,6 +219,6 @@ func (m MsgSubmitProposal) GetMsgs() ([]sdk.Msg, error) {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgSubmitProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (m MsgSubmitProposal) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	return tx.UnpackInterfaces(unpacker, m.Messages)
 }

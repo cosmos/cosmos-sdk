@@ -36,12 +36,30 @@ func (m memStoreService) OpenMemoryStore(ctx context.Context) store.KVStore {
 	return newKVStore(sdk.UnwrapSDKContext(ctx).KVStore(m.key))
 }
 
+func NewTransientStoreService(storeKey *storetypes.TransientStoreKey) store.TransientStoreService {
+	return &transientStoreService{key: storeKey}
+}
+
 type transientStoreService struct {
 	key *storetypes.TransientStoreKey
 }
 
 func (t transientStoreService) OpenTransientStore(ctx context.Context) store.KVStore {
 	return newKVStore(sdk.UnwrapSDKContext(ctx).KVStore(t.key))
+}
+
+type failingStoreService struct{}
+
+func (failingStoreService) OpenKVStore(ctx context.Context) store.KVStore {
+	panic("kv store service not available for this module: verify runtime `skip_store_keys` app config if not expected")
+}
+
+func (failingStoreService) OpenMemoryStore(ctx context.Context) store.KVStore {
+	panic("memory kv store service not available for this module: verify runtime `skip_store_keys` app config if not expected")
+}
+
+func (failingStoreService) OpenTransientStore(ctx context.Context) store.KVStore {
+	panic("transient kv store service not available for this module: verify runtime `skip_store_keys` app config if not expected")
 }
 
 // CoreKVStore is a wrapper of Core/Store kvstore interface

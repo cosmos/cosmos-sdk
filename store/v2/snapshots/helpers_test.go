@@ -14,8 +14,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2/snapshots"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
@@ -123,7 +123,7 @@ func (m *mockCommitSnapshotter) Restore(
 	for {
 		item.Reset()
 		err := protoReader.ReadMsg(&item)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
 			return snapshotstypes.SnapshotItem{}, errorsmod.Wrap(err, "invalid protobuf message")
@@ -190,7 +190,7 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 	store, err := snapshots.NewStore(t.TempDir())
 	require.NoError(t, err)
 	hung := newHungCommitSnapshotter()
-	mgr := snapshots.NewManager(store, opts, hung, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
+	mgr := snapshots.NewManager(store, opts, hung, &mockStorageSnapshotter{}, nil, coretesting.NewNopLogger())
 
 	// Channel to ensure the test doesn't finish until the goroutine is done.
 	// Without this, there are intermittent test failures about
@@ -277,7 +277,7 @@ func (s *extSnapshotter) SnapshotExtension(height uint64, payloadWriter snapshot
 func (s *extSnapshotter) RestoreExtension(height uint64, format uint32, payloadReader snapshots.ExtensionPayloadReader) error {
 	for {
 		payload, err := payloadReader()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
 			return err

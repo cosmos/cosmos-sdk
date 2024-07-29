@@ -10,9 +10,8 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
+	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
-	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/snapshots"
@@ -43,7 +42,7 @@ type Manager struct {
 	stateStorage    *storage.StorageStore
 	stateCommitment *commitment.CommitStore
 
-	db              store.RawDB
+	db              corestore.KVStoreWithBatch
 	mtx             sync.Mutex // mutex for migratedVersion
 	migratedVersion uint64
 
@@ -54,7 +53,7 @@ type Manager struct {
 // NewManager returns a new Manager.
 //
 // NOTE: `sc` can be `nil` if don't want to migrate the commitment.
-func NewManager(db store.RawDB, sm *snapshots.Manager, ss *storage.StorageStore, sc *commitment.CommitStore, logger log.Logger) *Manager {
+func NewManager(db corestore.KVStoreWithBatch, sm *snapshots.Manager, ss *storage.StorageStore, sc *commitment.CommitStore, logger log.Logger) *Manager {
 	return &Manager{
 		logger:           logger,
 		snapshotsManager: sm,
@@ -182,13 +181,21 @@ func (m *Manager) writeChangeset() error {
 		}
 
 		batch := m.db.NewBatch()
-		defer batch.Close()
+		// Invoking this code in a closure so that defer is called immediately on return
+		// yet not in the for-loop which can leave resource lingering.
+		err = func() error {
+			defer batch.Close()
 
-		if err := batch.Set(csKey, csBytes); err != nil {
-			return fmt.Errorf("failed to write changeset to db.Batch: %w", err)
-		}
-		if err := batch.Write(); err != nil {
-			return fmt.Errorf("failed to write changeset to db: %w", err)
+			if err := batch.Set(csKey, csBytes); err != nil {
+				return fmt.Errorf("failed to write changeset to db.Batch: %w", err)
+			}
+			if err := batch.Write(); err != nil {
+				return fmt.Errorf("failed to write changeset to db: %w", err)
+			}
+			return nil
+		}()
+		if err != nil {
+			return err
 		}
 	}
 
@@ -208,7 +215,7 @@ func (m *Manager) GetMigratedVersion() uint64 {
 func (m *Manager) Sync() error {
 	version := m.GetMigratedVersion()
 	if version == 0 {
-		return fmt.Errorf("migration is not done yet")
+		return errors.New("migration is not done yet")
 	}
 	version += 1
 
@@ -235,7 +242,7 @@ func (m *Manager) Sync() error {
 				return fmt.Errorf("failed to unmarshal changeset: %w", err)
 			}
 			if m.stateCommitment != nil {
-				if err := m.stateCommitment.WriteBatch(cs); err != nil {
+				if err := m.stateCommitment.WriteChangeset(cs); err != nil {
 					return fmt.Errorf("failed to write changeset to commitment: %w", err)
 				}
 				if _, err := m.stateCommitment.Commit(version); err != nil {

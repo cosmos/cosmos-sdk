@@ -9,7 +9,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
+	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
 	epochskeeper "cosmossdk.io/x/epochs/keeper"
 	"cosmossdk.io/x/epochs/types"
@@ -27,7 +27,7 @@ type KeeperTestSuite struct {
 	suite.Suite
 	Ctx          sdk.Context
 	environment  appmodule.Environment
-	EpochsKeeper epochskeeper.Keeper
+	EpochsKeeper *epochskeeper.Keeper
 	queryClient  types.QueryClient
 }
 
@@ -39,7 +39,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.environment = environment
 	queryRouter := baseapp.NewGRPCQueryRouter()
 	cfg := module.NewConfigurator(nil, nil, queryRouter)
-	types.RegisterQueryServer(cfg.QueryServer(), epochskeeper.NewQuerier(s.EpochsKeeper))
+	types.RegisterQueryServer(cfg.QueryServer(), epochskeeper.NewQuerier(*s.EpochsKeeper))
 	grpcQueryService := &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: queryRouter,
 		Ctx:             s.Ctx,
@@ -49,12 +49,12 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.queryClient = types.NewQueryClient(grpcQueryService)
 }
 
-func Setup(t *testing.T) (sdk.Context, epochskeeper.Keeper, appmodule.Environment) {
+func Setup(t *testing.T) (sdk.Context, *epochskeeper.Keeper, appmodule.Environment) {
 	t.Helper()
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
-	environment := runtime.NewEnvironment(storeService, log.NewNopLogger())
+	environment := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
@@ -67,7 +67,7 @@ func Setup(t *testing.T) (sdk.Context, epochskeeper.Keeper, appmodule.Environmen
 	ctx.WithHeaderInfo(header.Info{Height: 1, Time: time.Now().UTC(), ChainID: "epochs"})
 	err := epochsKeeper.InitGenesis(ctx, *types.DefaultGenesis())
 	require.NoError(t, err)
-	SetEpochStartTime(ctx, epochsKeeper)
+	SetEpochStartTime(ctx, *epochsKeeper)
 
 	return ctx, epochsKeeper, environment
 }

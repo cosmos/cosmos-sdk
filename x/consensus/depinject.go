@@ -6,12 +6,12 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/consensus/keeper"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -45,9 +45,14 @@ type ModuleOutputs struct {
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress("gov")
+	authority := sdkaddress.Module("gov")
 	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+		bz, err := in.AddressCodec.StringToBytes(in.Config.Authority)
+		if err != nil {
+			authority = sdkaddress.Module(in.Config.Authority)
+		} else {
+			authority = bz
+		}
 	}
 
 	authorityAddr, err := in.AddressCodec.BytesToString(authority)

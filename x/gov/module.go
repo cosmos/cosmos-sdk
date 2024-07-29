@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	govclient "cosmossdk.io/x/gov/client"
 	"cosmossdk.io/x/gov/client/cli"
@@ -29,7 +30,6 @@ import (
 const ConsensusVersion = 6
 
 var (
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
@@ -74,12 +74,13 @@ func NewAppModule(
 func (am AppModule) IsAppModule() {}
 
 // Name returns the gov module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return govtypes.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the gov module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 	v1beta1.RegisterLegacyAminoCodec(cdc)
 	v1.RegisterLegacyAminoCodec(cdc)
 }

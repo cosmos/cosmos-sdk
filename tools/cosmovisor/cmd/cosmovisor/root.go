@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/tools/cosmovisor"
 )
 
 func NewRootCmd() *cobra.Command {
@@ -12,12 +14,13 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	rootCmd.AddCommand(
-		initCmd,
+		NewIntCmd(),
 		runCmd,
 		configCmd,
 		NewVersionCmd(),
 		NewAddUpgradeCmd(),
 	)
 
+	rootCmd.PersistentFlags().StringP(cosmovisor.FlagCosmovisorConfig, "c", "", "path to cosmovisor config file")
 	return rootCmd
 }

@@ -39,7 +39,7 @@ const (
 type QueryClient interface {
 	// Balance queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
 	Balance(ctx context.Context, in *QueryBalanceRequest, opts ...grpc.CallOption) (*QueryBalanceResponse, error)
-	// BalancebyQueryString queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
+	// BalanceByQueryString queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
 	BalanceByQueryString(ctx context.Context, in *QueryBalanceByQueryStringRequest, opts ...grpc.CallOption) (*QueryBalanceByQueryStringResponse, error)
 	// Owner queries the owner of the NFT based on its class and id, same as ownerOf in ERC721
 	Owner(ctx context.Context, in *QueryOwnerRequest, opts ...grpc.CallOption) (*QueryOwnerResponse, error)
@@ -186,7 +186,7 @@ func (c *queryClient) Classes(ctx context.Context, in *QueryClassesRequest, opts
 type QueryServer interface {
 	// Balance queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
 	Balance(context.Context, *QueryBalanceRequest) (*QueryBalanceResponse, error)
-	// BalancebyQueryString queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
+	// BalanceByQueryString queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
 	BalanceByQueryString(context.Context, *QueryBalanceByQueryStringRequest) (*QueryBalanceByQueryStringResponse, error)
 	// Owner queries the owner of the NFT based on its class and id, same as ownerOf in ERC721
 	Owner(context.Context, *QueryOwnerRequest) (*QueryOwnerResponse, error)

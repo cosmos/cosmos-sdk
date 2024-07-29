@@ -16,8 +16,8 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/errors"
-	"cosmossdk.io/store/v2"
 	storeerrors "cosmossdk.io/store/v2/errors"
 	"cosmossdk.io/store/v2/snapshots/types"
 )
@@ -420,7 +420,7 @@ func legacyV1EncodeKey(height uint64, format uint32) []byte {
 	return k
 }
 
-func (s *Store) MigrateFromV1(db store.RawDB) error {
+func (s *Store) MigrateFromV1(db corestore.KVStore) error {
 	itr, err := db.Iterator(legacyV1EncodeKey(0, 0), legacyV1EncodeKey(math.MaxUint64, math.MaxUint32))
 	if err != nil {
 		return err

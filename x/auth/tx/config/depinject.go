@@ -2,6 +2,7 @@ package tx
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -61,7 +62,7 @@ type ModuleOutputs struct {
 
 	TxConfig        client.TxConfig
 	TxConfigOptions tx.ConfigOptions
-	BaseAppOption   runtime.BaseAppOption
+	BaseAppOption   runtime.BaseAppOption // This is only useful for chains using baseapp. Server/v2 chains use TxValidator.
 }
 
 func ProvideProtoRegistry() txsigning.ProtoFileResolver {
@@ -144,7 +145,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 
 func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler, error) {
 	if in.BankKeeper == nil {
-		return nil, fmt.Errorf("both AccountKeeper and BankKeeper are required")
+		return nil, errors.New("both AccountKeeper and BankKeeper are required")
 	}
 
 	anteHandler, err := ante.NewAnteHandler(

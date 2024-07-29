@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/depinject/appconfig"
 	internal "cosmossdk.io/depinject/internal/appconfig"
 	"cosmossdk.io/depinject/internal/appconfig/testpb"
+	testpbgogo "cosmossdk.io/depinject/internal/appconfiggogo/testpb"
 )
 
 func expectContainerErrorContains(t *testing.T, option depinject.Config, contains string) {
@@ -68,7 +69,10 @@ modules:
    "@type": testpb.TestModuleA
 - name: b
   config:
-   "@type": testpb.TestModuleB
+   "@type": /testpb.TestModuleB
+- name: c
+  config:
+    "@type": /testpb.TestModuleGogo
 `))
 	assert.NilError(t, depinject.Inject(opt, &app))
 	buf := &bytes.Buffer{}
@@ -136,6 +140,10 @@ func init() {
 
 	appconfig.RegisterModule(&testpb.TestModuleB{},
 		appconfig.Provide(ProvideModuleB),
+	)
+
+	appconfig.RegisterModule(&testpbgogo.TestModuleGogo{},
+		appconfig.Provide(ProvideModuleC),
 	)
 }
 
@@ -220,3 +228,17 @@ type KeeperB interface {
 }
 
 func (k keeperB) isKeeperB() {}
+
+func ProvideModuleC(key StoreKey, b KeeperB) KeeperC {
+	return keeperC{key: key}
+}
+
+type keeperC struct {
+	key StoreKey
+}
+
+type KeeperC interface {
+	isKeeperC()
+}
+
+func (k keeperC) isKeeperC() {}

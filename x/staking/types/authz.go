@@ -2,9 +2,11 @@ package types
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule"
+	corecontext "cosmossdk.io/core/context"
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -62,12 +64,12 @@ func (a StakeAuthorization) MsgTypeURL() string {
 // is unspecified.
 func (a StakeAuthorization) ValidateBasic() error {
 	if a.MaxTokens != nil && a.MaxTokens.IsNegative() {
-		return errorsmod.Wrapf(fmt.Errorf("max tokens should be positive"),
+		return errorsmod.Wrapf(errors.New("max tokens should be positive"),
 			"negative coin amount: %v", a.MaxTokens)
 	}
 
 	if a.AuthorizationType == AuthorizationType_AUTHORIZATION_TYPE_UNSPECIFIED {
-		return fmt.Errorf("unknown authorization type")
+		return errors.New("unknown authorization type")
 	}
 
 	return nil
@@ -100,11 +102,17 @@ func (a StakeAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.Acce
 		return authz.AcceptResponse{}, sdkerrors.ErrInvalidRequest.Wrap("unknown msg type")
 	}
 
+	authzEnv, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodule.Environment)
+	if !ok {
+		return authz.AcceptResponse{}, sdkerrors.ErrUnauthorized.Wrap("environment not set")
+	}
 	isValidatorExists := false
 	allowedList := a.GetAllowList().GetAddress()
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for _, validator := range allowedList {
-		sdkCtx.GasMeter().ConsumeGas(gasCostPerIteration, "stake authorization")
+		if err := authzEnv.GasService.GasMeter(ctx).Consume(gasCostPerIteration, "stake authorization"); err != nil {
+			return authz.AcceptResponse{}, err
+		}
+
 		if validator == validatorAddress {
 			isValidatorExists = true
 			break
@@ -113,7 +121,10 @@ func (a StakeAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.Acce
 
 	denyList := a.GetDenyList().GetAddress()
 	for _, validator := range denyList {
-		sdkCtx.GasMeter().ConsumeGas(gasCostPerIteration, "stake authorization")
+		if err := authzEnv.GasService.GasMeter(ctx).Consume(gasCostPerIteration, "stake authorization"); err != nil {
+			return authz.AcceptResponse{}, err
+		}
+
 		if validator == validatorAddress {
 			return authz.AcceptResponse{}, sdkerrors.ErrUnauthorized.Wrapf("cannot delegate/undelegate to %s validator", validator)
 		}
@@ -209,7 +220,7 @@ func normalizeAuthzType(authzType AuthorizationType) (string, error) {
 	case AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION:
 		return sdk.MsgTypeURL(&MsgCancelUnbondingDelegation{}), nil
 	default:
-		return "", errorsmod.Wrapf(fmt.Errorf("unknown authorization type"),
+		return "", errorsmod.Wrapf(errors.New("unknown authorization type"),
 			"cannot normalize authz type with %T", authzType)
 	}
 }

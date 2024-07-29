@@ -2,6 +2,7 @@ package multisig
 
 import (
 	"context"
+	"math"
 	"testing"
 	"time"
 
@@ -11,17 +12,17 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/accountstd"
 	v1 "cosmossdk.io/x/accounts/defaults/multisig/v1"
+	accountsv1 "cosmossdk.io/x/accounts/v1"
 )
 
 func setup(t *testing.T, ctx context.Context, ss store.KVStoreService, timefn func() time.Time) *Account {
 	t.Helper()
 	deps := makeMockDependencies(ss, timefn)
 
-	multisig := NewAccount("multisig")
-	_, acc, err := multisig(deps)
+	acc, err := NewAccount(deps)
 	require.NoError(t, err)
 
-	return acc.(*Account)
+	return acc
 }
 
 func TestInit(t *testing.T) {
@@ -312,6 +313,29 @@ func TestUpdateConfig(t *testing.T) {
 				},
 			},
 		},
+		{
+			"change members, invalid weights",
+			&v1.MsgUpdateConfig{
+				UpdateMembers: []*v1.Member{
+					{
+						Address: "addr1",
+						Weight:  math.MaxUint64,
+					},
+					{
+						Address: "addr2",
+						Weight:  1,
+					},
+				},
+				Config: &v1.Config{
+					Threshold:    666,
+					Quorum:       400,
+					VotingPeriod: 60,
+				},
+			},
+			"overflow",
+			nil,
+			nil,
+		},
 	}
 
 	for _, tc := range testcases {
@@ -320,6 +344,8 @@ func TestUpdateConfig(t *testing.T) {
 			acc := setup(t, ctx, ss, nil)
 			_, err := acc.Init(ctx, startAcc)
 			require.NoError(t, err)
+
+			ctx = accountstd.SetSender(ctx, []byte("mock_multisig_account"))
 
 			_, err = acc.UpdateConfig(ctx, tc.msg)
 			if tc.expErr != "" {
@@ -340,6 +366,51 @@ func TestUpdateConfig(t *testing.T) {
 			require.Equal(t, tc.expMembers, cfg.Members)
 		})
 	}
+}
+
+func TestProposal_WrongSender(t *testing.T) {
+	startAcc := &v1.MsgInit{
+		Config: &v1.Config{
+			Threshold:    2640,
+			Quorum:       2000,
+			VotingPeriod: 60,
+		},
+		Members: []*v1.Member{
+			{
+				Address: "addr1",
+				Weight:  1000,
+			},
+			{
+				Address: "addr2",
+				Weight:  1000,
+			},
+			{
+				Address: "addr3",
+				Weight:  1000,
+			},
+			{
+				Address: "addr4",
+				Weight:  1000,
+			},
+		},
+	}
+
+	ctx, ss := newMockContext(t)
+	acc := setup(t, ctx, ss, nil)
+	_, err := acc.Init(ctx, startAcc)
+	require.NoError(t, err)
+
+	// change the sender to be something else to trigger an error
+	ctx = accountstd.SetSender(ctx, []byte("wrong_sender_here"))
+
+	newCfg := startAcc.Config
+	newCfg.VotingPeriod = 120
+	updateCfg := &v1.MsgUpdateConfig{
+		Config: newCfg,
+	}
+
+	_, err = acc.UpdateConfig(ctx, updateCfg)
+	require.ErrorContains(t, err, "only the account itself can update the config (through a proposal)")
 }
 
 func TestProposal_NotPassing(t *testing.T) {
@@ -491,12 +562,20 @@ func TestProposalPassing(t *testing.T) {
 	}
 
 	var acc *Account
-	ctx, ss := accountstd.NewMockContext(
+	var ctx context.Context
+	var ss store.KVStoreService
+	ctx, ss = accountstd.NewMockContext(
 		0, []byte("multisig_acc"), []byte("addr1"), TestFunds, func(ctx context.Context, sender []byte, msg, msgResp ProtoMsg) error {
 			return nil
-		}, func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error) {
-			if _, ok := msg.(*v1.MsgUpdateConfig); ok {
-				return acc.UpdateConfig(ctx, msg.(*v1.MsgUpdateConfig))
+		}, func(ictx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error) {
+			if execmsg, ok := msg.(*accountsv1.MsgExecute); ok {
+				updateCfg, err := accountstd.UnpackAny[v1.MsgUpdateConfig](execmsg.GetMessage())
+				if err != nil {
+					return nil, err
+				}
+
+				ctx = accountstd.SetSender(ctx, []byte("multisig_acc"))
+				return acc.UpdateConfig(ctx, updateCfg)
 			}
 			return nil, nil
 		}, func(ctx context.Context, req, resp ProtoMsg) error {
@@ -523,12 +602,21 @@ func TestProposalPassing(t *testing.T) {
 	anymsg, err := accountstd.PackAny(msg)
 	require.NoError(t, err)
 
+	execMsg := &accountsv1.MsgExecute{
+		Sender:  "multisig_acc",
+		Target:  "multisig_acc",
+		Message: anymsg,
+		Funds:   nil,
+	}
+	execMsgAny, err := accountstd.PackAny(execMsg)
+	require.NoError(t, err)
+
 	// create a proposal
 	createRes, err := acc.CreateProposal(ctx, &v1.MsgCreateProposal{
 		Proposal: &v1.Proposal{
 			Title:    "test",
 			Summary:  "test",
-			Messages: []*types.Any{anymsg},
+			Messages: []*types.Any{execMsgAny},
 		},
 	})
 	require.NoError(t, err)
@@ -572,9 +660,55 @@ func TestProposalPassing(t *testing.T) {
 	// check if addr1's weight changed
 	cfg, err := acc.QueryConfig(ctx, &v1.QueryConfig{})
 	require.NoError(t, err)
-	for _, v := range cfg.Members {
-		if v.Address == "addr1" {
-			require.Equal(t, uint64(500), v.Weight)
-		}
+
+	expectedMembers := []*v1.Member{
+		{
+			Address: "addr1",
+			Weight:  500,
+		},
+		{
+			Address: "addr2",
+			Weight:  1000,
+		},
+		{
+			Address: "addr3",
+			Weight:  1000,
+		},
+		{
+			Address: "addr4",
+			Weight:  1000,
+		},
 	}
+
+	require.Equal(t, expectedMembers, cfg.Members)
+}
+
+func TestWeightOverflow(t *testing.T) {
+	ctx, ss := newMockContext(t)
+	acc := setup(t, ctx, ss, nil)
+
+	startAcc := &v1.MsgInit{
+		Config: &v1.Config{
+			Threshold:    2640,
+			Quorum:       2000,
+			VotingPeriod: 60,
+		},
+		Members: []*v1.Member{
+			{
+				Address: "addr1",
+				Weight:  math.MaxUint64,
+			},
+		},
+	}
+
+	_, err := acc.Init(ctx, startAcc)
+	require.NoError(t, err)
+
+	// add another member with weight 1 to trigger an overflow
+	startAcc.Members = append(startAcc.Members, &v1.Member{
+		Address: "addr2",
+		Weight:  1,
+	})
+	_, err = acc.Init(ctx, startAcc)
+	require.ErrorContains(t, err, "overflow")
 }

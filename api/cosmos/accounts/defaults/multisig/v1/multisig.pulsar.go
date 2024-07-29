@@ -9490,7 +9490,7 @@ func (*QueryConfig) Descriptor() ([]byte, []int) {
 	return file_cosmos_accounts_defaults_multisig_v1_multisig_proto_rawDescGZIP(), []int{15}
 }
 
-// QuerySequenceResponse returns the sequence of the account.
+// QueryConfigResponse returns the config of the account.
 type QueryConfigResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

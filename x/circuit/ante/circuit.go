@@ -2,8 +2,7 @@ package ante
 
 import (
 	"context"
-
-	"github.com/cockroachdb/errors"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

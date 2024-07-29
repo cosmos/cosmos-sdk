@@ -149,7 +149,7 @@ func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, erro
 				TypeResolver:        signingOpts.TypeResolver,
 			})
 			if configOpts.TextualCoinMetadataQueryFn == nil {
-				return nil, fmt.Errorf("cannot enable SIGN_MODE_TEXTUAL without a TextualCoinMetadataQueryFn")
+				return nil, errors.New("cannot enable SIGN_MODE_TEXTUAL without a TextualCoinMetadataQueryFn")
 			}
 			if err != nil {
 				return nil, err
@@ -190,7 +190,11 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 	}
 
 	if configOptions.ProtoDecoder == nil {
-		dec, err := txdecode.NewDecoder(txdecode.Options{SigningContext: configOptions.SigningContext})
+		dec, err := txdecode.NewDecoder(txdecode.Options{
+			SigningContext: configOptions.SigningContext,
+			ProtoCodec:     protoCodec,
+		},
+		)
 		if err != nil {
 			return nil, err
 		}

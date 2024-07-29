@@ -38,12 +38,12 @@ func (k Keeper) GetValidator(ctx context.Context, addr sdk.ValAddress) (validato
 func (k Keeper) GetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAddress) (validator types.Validator, err error) {
 	opAddr, err := k.ValidatorByConsensusAddress.Get(ctx, consAddr)
 	if err != nil {
-		// if the validator not found try to find it in the map of `OldToNewConsKeyMap` because validator may've rotated it's key.
+		// if the validator not found try to find it in the map of `OldToNewConsAddrMap` because validator may've rotated it's key.
 		if !errors.Is(err, collections.ErrNotFound) {
 			return types.Validator{}, err
 		}
 
-		newConsAddr, err := k.OldToNewConsKeyMap.Get(ctx, consAddr.Bytes())
+		newConsAddr, err := k.OldToNewConsAddrMap.Get(ctx, consAddr.Bytes())
 		if err != nil {
 			if errors.Is(err, collections.ErrNotFound) {
 				return types.Validator{}, types.ErrNoValidatorFound
@@ -542,7 +542,7 @@ func (k Keeper) unbondMatureValidators(
 		}
 
 		if !val.IsUnbonding() {
-			return fmt.Errorf("unexpected validator in unbonding queue; status was not unbonding")
+			return errors.New("unexpected validator in unbonding queue; status was not unbonding")
 		}
 
 		// if the ref count is not zero, early exit.

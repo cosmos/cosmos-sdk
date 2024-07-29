@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/mint/keeper"
 	"cosmossdk.io/x/mint/simulation"
@@ -24,7 +25,6 @@ import (
 const ConsensusVersion = 3
 
 var (
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
@@ -43,28 +43,31 @@ type AppModule struct {
 	keeper     keeper.Keeper
 	authKeeper types.AccountKeeper
 
-	// inflationCalculator is used to calculate the inflation rate during BeginBlock.
-	// If inflationCalculator is nil, the default inflation calculation logic is used.
-	inflationCalculator types.InflationCalculationFn
+	// mintFn is used to mint new coins during BeginBlock. This function is in charge of
+	// minting new coins based on arbitrary logic, previously done through InflationCalculationFn.
+	// If mintFn is nil, the default minting logic is used.
+	mintFn types.MintFn
 }
 
 // NewAppModule creates a new AppModule object.
-// If the InflationCalculationFn argument is nil, then the SDK's default inflation function will be used.
+// If the mintFn argument is nil, then the SDK's default minting function will be used.
 func NewAppModule(
 	cdc codec.Codec,
 	keeper keeper.Keeper,
 	ak types.AccountKeeper,
-	ic types.InflationCalculationFn,
+	mintFn types.MintFn,
 ) AppModule {
-	if ic == nil {
-		ic = types.DefaultInflationCalculationFn
+	// If mintFn is nil, use the default minting function.
+	// This check also happens in ProvideModule when used with depinject.
+	if mintFn == nil {
+		mintFn = keeper.DefaultMintFn(types.DefaultInflationCalculationFn)
 	}
 
 	return AppModule{
-		cdc:                 cdc,
-		keeper:              keeper,
-		authKeeper:          ak,
-		inflationCalculator: ic,
+		cdc:        cdc,
+		keeper:     keeper,
+		authKeeper: ak,
+		mintFn:     mintFn,
 	}
 }
 
@@ -72,12 +75,13 @@ func NewAppModule(
 func (AppModule) IsAppModule() {}
 
 // Name returns the mint module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the mint module's types on the given LegacyAmino codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
@@ -156,7 +160,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the mint module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	return am.keeper.BeginBlocker(ctx, am.inflationCalculator)
+	return am.keeper.BeginBlocker(ctx, am.mintFn)
 }
 
 // AppModuleSimulation functions

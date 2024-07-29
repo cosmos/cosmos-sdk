@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/appmodule"
+	corecontext "cosmossdk.io/core/context"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/authz"
@@ -64,7 +65,7 @@ func (k Keeper) update(ctx context.Context, grantee, granter sdk.AccAddress, upd
 		return authz.ErrNoAuthorizationFound
 	}
 
-	msg, ok := updated.(proto.Message)
+	msg, ok := updated.(gogoproto.Message)
 	if !ok {
 		return sdkerrors.ErrPackAny.Wrapf("cannot proto marshal %T", updated)
 	}
@@ -83,11 +84,10 @@ func (k Keeper) update(ctx context.Context, grantee, granter sdk.AccAddress, upd
 // grants from the message signer to the grantee.
 func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msgs []sdk.Msg) ([][]byte, error) {
 	results := make([][]byte, len(msgs))
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	now := sdkCtx.HeaderInfo().Time
+	now := k.Environment.HeaderService.HeaderInfo(ctx).Time
 
 	for i, msg := range msgs {
-		signers, _, err := k.cdc.GetMsgV1Signers(msg)
+		signers, _, err := k.cdc.GetMsgSigners(msg)
 		if err != nil {
 			return nil, err
 		}
@@ -118,7 +118,10 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 				return nil, err
 			}
 
-			resp, err := authorization.Accept(sdkCtx, msg)
+			// pass the environment in the context
+			// users on server/v2 are expected to unwrap the environment from the context
+			// users on baseapp can still unwrap the sdk context
+			resp, err := authorization.Accept(context.WithValue(ctx, corecontext.EnvironmentContextKey, k.Environment), msg)
 			if err != nil {
 				return nil, err
 			}
@@ -142,7 +145,7 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 		}
 
 		// no need to use the branch service here, as if the transaction fails, the transaction will be reverted
-		_, err = k.RouterService.MessageRouterService().InvokeUntyped(ctx, msg)
+		_, err = k.MsgRouterService.InvokeUntyped(ctx, msg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to execute message %d; message %v: %w", i, msg, err)
 		}
@@ -435,7 +438,9 @@ func (k Keeper) removeFromGrantQueue(ctx context.Context, grantKey []byte, grant
 	queueItems := queueItem.MsgTypeUrls
 
 	for index, typeURL := range queueItems {
-		k.GasService.GasMeter(ctx).Consume(gasCostPerIteration, "grant queue")
+		if err := k.GasService.GasMeter(ctx).Consume(gasCostPerIteration, "grant queue"); err != nil {
+			return err
+		}
 
 		if typeURL == msgType {
 			end := len(queueItem.MsgTypeUrls) - 1

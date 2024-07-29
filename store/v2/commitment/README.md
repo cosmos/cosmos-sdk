@@ -8,10 +8,10 @@ into store/v2, specifically the `RootStore` type.
 A foremost design goal is that SC backends should be easily swappable, i.e. not
 necessarily IAVL. To this end, the scope of SC has been reduced, it must only:
 
-* Provide a stateful root app hash for height h resulting from applying a batch
+- Provide a stateful root app hash for height h resulting from applying a batch
   of key-value set/deletes to height h-1.
-* Fulfill (though not necessarily provide) historical proofs for all heights < `h`.
-* Provide an API for snapshot create/restore to fulfill state sync requests.
+- Fulfill (though not necessarily provide) historical proofs for all heights < `h`.
+- Provide an API for snapshot create/restore to fulfill state sync requests.
 
 Notably, SC is not required to provide key iteration or value retrieval for either
 queries or state machine execution, this now being the responsibility of state
@@ -42,6 +42,6 @@ and `Restore` methods.
 
 Similar to the `storage` package, the `commitment` package is designed to be used
 in a broader store implementation, i.e. it fulfills the role of the SC backend.
-Specifically, it provides a `CommitStore` type which accepts a `store.RawDB` and
-a mapping from store key, a string meant to represent a single module, to a `Tree`,
-which reflects the commitment structure.
+Specifically, it provides a `CommitStore` type which accepts a `corestore.KVStore` 
+and a mapping from store key, a string meant to represent a single module, to a 
+`Tree`, which reflects the commitment structure.

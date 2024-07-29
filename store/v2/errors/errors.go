@@ -43,9 +43,10 @@ var (
 // ErrVersionPruned defines an error returned when a version queried is pruned
 // or does not exist.
 type ErrVersionPruned struct {
-	EarliestVersion uint64
+	RequestedVersion uint64
+	EarliestVersion  uint64
 }
 
 func (e ErrVersionPruned) Error() string {
-	return fmt.Sprintf("requested version is pruned; earliest available version is: %d", e.EarliestVersion)
+	return fmt.Sprintf("requested version %d is pruned; earliest available version is: %d", e.RequestedVersion, e.EarliestVersion)
 }

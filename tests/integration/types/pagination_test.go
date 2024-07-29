@@ -84,6 +84,8 @@ func (s *paginationTestSuite) SetupTest() {
 	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{Height: 1})
 
 	s.ctx, s.bankKeeper, s.accountKeeper, s.cdc, s.app, s.interfaceReg = ctx, bankKeeper, accountKeeper, cdc, app, reg
+
+	s.Require().NoError(s.bankKeeper.SetParams(s.ctx, types.DefaultParams()))
 }
 
 func (s *paginationTestSuite) TestParsePagination() {

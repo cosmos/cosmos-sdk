@@ -15,9 +15,9 @@ import (
 	storeerrors "cosmossdk.io/store/v2/errors"
 )
 
-var _ store.RawDB = (*PebbleDB)(nil)
+var _ corestore.KVStoreWithBatch = (*PebbleDB)(nil)
 
-// PebbleDB implements RawDB using PebbleDB as the underlying storage engine.
+// PebbleDB implements `corestore.KVStoreWithBatch` using PebbleDB as the underlying storage engine.
 // It is used for only store v2 migration, since some clients use PebbleDB as
 // the IAVL v0/v1 backend.
 type PebbleDB struct {
@@ -87,6 +87,25 @@ func (db *PebbleDB) Has(key []byte) (bool, error) {
 	return bz != nil, nil
 }
 
+func (db *PebbleDB) Set(key, value []byte) error {
+	if len(key) == 0 {
+		return storeerrors.ErrKeyEmpty
+	}
+	if value == nil {
+		return storeerrors.ErrValueNil
+	}
+
+	return db.storage.Set(key, value, &pebble.WriteOptions{Sync: false})
+}
+
+func (db *PebbleDB) Delete(key []byte) error {
+	if len(key) == 0 {
+		return storeerrors.ErrKeyEmpty
+	}
+
+	return db.storage.Delete(key, &pebble.WriteOptions{Sync: false})
+}
+
 func (db *PebbleDB) Iterator(start, end []byte) (corestore.Iterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, storeerrors.ErrKeyEmpty
@@ -113,14 +132,14 @@ func (db *PebbleDB) ReverseIterator(start, end []byte) (corestore.Iterator, erro
 	return newPebbleDBIterator(itr, start, end, true), nil
 }
 
-func (db *PebbleDB) NewBatch() store.RawBatch {
+func (db *PebbleDB) NewBatch() corestore.Batch {
 	return &pebbleDBBatch{
 		db:    db,
 		batch: db.storage.NewBatch(),
 	}
 }
 
-func (db *PebbleDB) NewBatchWithSize(size int) store.RawBatch {
+func (db *PebbleDB) NewBatchWithSize(size int) corestore.Batch {
 	return &pebbleDBBatch{
 		db:    db,
 		batch: db.storage.NewBatchWithSize(size),
@@ -225,7 +244,7 @@ func (itr *pebbleDBIterator) assertIsValid() {
 	}
 }
 
-var _ store.RawBatch = (*pebbleDBBatch)(nil)
+var _ corestore.Batch = (*pebbleDBBatch)(nil)
 
 type pebbleDBBatch struct {
 	db    *PebbleDB

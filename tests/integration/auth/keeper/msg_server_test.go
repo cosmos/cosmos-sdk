@@ -81,7 +81,7 @@ func initFixture(t *testing.T) *fixture {
 	account := baseaccount.NewAccount("base", signing.NewHandlerMap(handler))
 	accountsKeeper, err := accounts.NewKeeper(
 		cdc,
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(queryRouter, router)),
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(router)),
 		addresscodec.NewBech32Codec("cosmos"),
 		cdc.InterfaceRegistry(),
 		account,

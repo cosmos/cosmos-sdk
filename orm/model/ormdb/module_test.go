@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"strings"
 	"testing"
 
@@ -103,7 +103,7 @@ func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) err
 	}
 
 	if amount > supply.Amount {
-		return fmt.Errorf("insufficient supply")
+		return errors.New("insufficient supply")
 	}
 
 	supply.Amount -= amount
@@ -171,7 +171,7 @@ func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount u
 	}
 
 	if amount > balance.Amount {
-		return fmt.Errorf("insufficient funds")
+		return errors.New("insufficient funds")
 	}
 
 	balance.Amount -= amount

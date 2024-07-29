@@ -5,7 +5,7 @@ import (
 	"sort"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmtsecp256k1 "github.com/cometbft/cometbft/crypto/secp256k1"
@@ -496,10 +496,10 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 	tx := builder.GetTx()
 	txBz, err := txConfig.TxEncoder()(tx)
 	s.Require().NoError(err)
-	s.Require().Len(txBz, 152)
+	s.Require().Len(txBz, 165)
 
 	txDataSize := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz}))
-	s.Require().Equal(txDataSize, 155)
+	s.Require().Equal(txDataSize, 168)
 
 	testCases := map[string]struct {
 		ctx         sdk.Context
@@ -532,15 +532,15 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
 				MaxTxBytes: 465,
 			},
-			expectedTxs: 3,
+			expectedTxs: 2,
 		},
 		"large max tx bytes len calculation": {
 			ctx: s.ctx,
 			req: &abci.PrepareProposalRequest{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
-				MaxTxBytes: 456,
+				MaxTxBytes: 504,
 			},
-			expectedTxs: 2,
+			expectedTxs: 3,
 		},
 		"max gas and tx bytes": {
 			ctx: s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
@@ -619,15 +619,15 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 		testTxs[i].size = int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{bz}))
 	}
 
-	s.Require().Equal(180, testTxs[0].size)
-	s.Require().Equal(190, testTxs[1].size)
-	s.Require().Equal(181, testTxs[2].size)
-	s.Require().Equal(181, testTxs[3].size)
-	s.Require().Equal(263, testTxs[4].size)
-	s.Require().Equal(273, testTxs[5].size)
-	s.Require().Equal(264, testTxs[6].size)
-	s.Require().Equal(264, testTxs[7].size)
-	s.Require().Equal(264, testTxs[8].size)
+	s.Require().Equal(193, testTxs[0].size)
+	s.Require().Equal(203, testTxs[1].size)
+	s.Require().Equal(194, testTxs[2].size)
+	s.Require().Equal(194, testTxs[3].size)
+	s.Require().Equal(276, testTxs[4].size)
+	s.Require().Equal(286, testTxs[5].size)
+	s.Require().Equal(277, testTxs[6].size)
+	s.Require().Equal(277, testTxs[7].size)
+	s.Require().Equal(277, testTxs[8].size)
 
 	testCases := map[string]struct {
 		ctx         sdk.Context
@@ -640,7 +640,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[0], testTxs[1], testTxs[2], testTxs[3]},
 			req: &abci.PrepareProposalRequest{
-				MaxTxBytes: 180 + 181,
+				MaxTxBytes: 193 + 194,
 			},
 			expectedTxs: []int{0, 3},
 		},
@@ -648,7 +648,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[4], testTxs[5], testTxs[6], testTxs[7], testTxs[8]},
 			req: &abci.PrepareProposalRequest{
-				MaxTxBytes: 263 + 264,
+				MaxTxBytes: 276 + 277,
 			},
 			expectedTxs: []int{4, 8},
 		},
@@ -657,7 +657,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[9], testTxs[10], testTxs[11]},
 			req: &abci.PrepareProposalRequest{
-				MaxTxBytes: 263 + 264,
+				MaxTxBytes: 276 + 277,
 			},
 			expectedTxs: []int{9},
 		},

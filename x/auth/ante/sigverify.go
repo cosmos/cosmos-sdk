@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	aa_interface_v1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	authsigning "cosmossdk.io/x/auth/signing"
 	"cosmossdk.io/x/auth/types"
 	txsigning "cosmossdk.io/x/tx/signing"
@@ -52,7 +51,7 @@ type SignatureVerificationGasConsumer = func(meter storetypes.GasMeter, sig sign
 
 type AccountAbstractionKeeper interface {
 	IsAbstractedAccount(ctx context.Context, addr []byte) (bool, error)
-	AuthenticateAccount(ctx context.Context, addr []byte, msg *aa_interface_v1.MsgAuthenticate) error
+	AuthenticateAccount(ctx context.Context, signer []byte, bundler string, rawTx *tx.TxRaw, protoTx *tx.Tx, signIndex uint32) error
 }
 
 // SigVerificationDecorator verifies all signatures for a tx and returns an
@@ -64,7 +63,7 @@ type AccountAbstractionKeeper interface {
 // gas for signature verification.
 //
 // In cases where unordered or parallel transactions are desired, it is recommended
-// to to set unordered=true with a reasonable timeout_height value, in which case
+// to set unordered=true with a reasonable timeout_height value, in which case
 // this nonce verification and increment will be skipped.
 //
 // CONTRACT: Tx must implement SigVerifiableTx interface
@@ -361,7 +360,7 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sd
 		if OnlyLegacyAminoSigners(sig.Data) {
 			// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to check account sequence number,
 			// and therefore communicate sequence number as a potential cause of error.
-			errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)", accNum, acc.GetSequence(), chainID)
+			errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s): (%s)", accNum, acc.GetSequence(), chainID, err.Error())
 		} else {
 			errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s): (%s)", accNum, chainID, err.Error())
 		}
@@ -434,16 +433,21 @@ func (svd SigVerificationDecorator) authenticateAbstractedAccount(ctx sdk.Contex
 	}
 
 	infoTx := authTx.(interface {
-		GetRawTx() *tx.TxRaw
-		GetProtoTx() *tx.Tx
+		AsTxRaw() (*tx.TxRaw, error)
+		AsTx() (*tx.Tx, error)
 	})
 
-	return svd.aaKeeper.AuthenticateAccount(ctx, signer, &aa_interface_v1.MsgAuthenticate{
-		Bundler:     selfBundler,
-		RawTx:       infoTx.GetRawTx(),
-		Tx:          infoTx.GetProtoTx(),
-		SignerIndex: uint32(index),
-	})
+	txRaw, err := infoTx.AsTxRaw()
+	if err != nil {
+		return fmt.Errorf("unable to get raw tx: %w", err)
+	}
+
+	protoTx, err := infoTx.AsTx()
+	if err != nil {
+		return fmt.Errorf("unable to get proto tx: %w", err)
+	}
+
+	return svd.aaKeeper.AuthenticateAccount(ctx, signer, selfBundler, txRaw, protoTx, uint32(index))
 }
 
 // ValidateSigCountDecorator takes in Params and returns errors if there are too many signatures in the tx for the given params
@@ -460,27 +464,37 @@ func NewValidateSigCountDecorator(ak AccountKeeper) ValidateSigCountDecorator {
 	}
 }
 
-func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (sdk.Context, error) {
+// AnteHandle implements an ante decorator for ValidateSigCountDecorator
+func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	if err := vscd.ValidateTx(ctx, tx); err != nil {
+		return ctx, err
+	}
+
+	return next(ctx, tx, false)
+}
+
+// ValidateTx implements an TxValidator for ValidateSigCountDecorator
+func (vscd ValidateSigCountDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")
+		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")
 	}
 
 	params := vscd.ak.GetParams(ctx)
 	pubKeys, err := sigTx.GetPubKeys()
 	if err != nil {
-		return ctx, err
+		return err
 	}
 
 	sigCount := 0
 	for _, pk := range pubKeys {
 		sigCount += CountSubKeys(pk)
 		if uint64(sigCount) > params.TxSigLimit {
-			return ctx, errorsmod.Wrapf(sdkerrors.ErrTooManySignatures, "signatures: %d, limit: %d", sigCount, params.TxSigLimit)
+			return errorsmod.Wrapf(sdkerrors.ErrTooManySignatures, "signatures: %d, limit: %d", sigCount, params.TxSigLimit)
 		}
 	}
 
-	return next(ctx, tx, false)
+	return nil
 }
 
 // DefaultSigVerificationGasConsumer is the default implementation of SignatureVerificationGasConsumer. It consumes gas
@@ -609,7 +623,7 @@ func CountSubKeys(pub cryptotypes.PubKey) int {
 // as well as the aggregated signature.
 func signatureDataToBz(data signing.SignatureData) ([][]byte, error) {
 	if data == nil {
-		return nil, fmt.Errorf("got empty SignatureData")
+		return nil, errors.New("got empty SignatureData")
 	}
 
 	switch data := data.(type) {

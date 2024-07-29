@@ -75,9 +75,20 @@ func GetTxInitCmd() *cobra.Command {
 				Message:     msgBytes,
 			}
 
+			isGenesis, err := cmd.Flags().GetBool("genesis")
+			if err != nil {
+				return err
+			}
+
+			// in case the genesis flag is provided then the init message is printed.
+			if isGenesis {
+				return clientCtx.WithOutputFormat(flags.OutputFormatJSON).PrintProto(&msg)
+			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
 	}
+	cmd.Flags().Bool("genesis", false, "if true will print the json init message for genesis")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

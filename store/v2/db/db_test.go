@@ -7,13 +7,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/store/v2"
+	corestore "cosmossdk.io/core/store"
 )
 
 type DBTestSuite struct {
 	suite.Suite
 
-	db store.RawDB
+	db corestore.KVStoreWithBatch
 }
 
 func (s *DBTestSuite) TearDownSuite() {
@@ -21,7 +21,7 @@ func (s *DBTestSuite) TearDownSuite() {
 }
 
 func (s *DBTestSuite) TestDBOperations() {
-	// Set
+	// Batch Set
 	b := s.db.NewBatch()
 	s.Require().NoError(b.Set([]byte("key"), []byte("value")))
 	s.Require().NoError(b.Set([]byte("key1"), []byte("value1")))
@@ -41,7 +41,7 @@ func (s *DBTestSuite) TestDBOperations() {
 	s.Require().NoError(err)
 	s.Require().False(has)
 
-	// Delete
+	// Batch Delete
 	b = s.db.NewBatch()
 	s.Require().NoError(b.Delete([]byte("key1")))
 	s.Require().NoError(b.Write())
@@ -50,6 +50,22 @@ func (s *DBTestSuite) TestDBOperations() {
 	has, err = s.db.Has([]byte("key1"))
 	s.Require().NoError(err)
 	s.Require().False(has)
+
+	// Set & Delete
+	s.Require().NoError(s.db.Set([]byte("key3"), []byte("value3")))
+	has, err = s.db.Has([]byte("key3"))
+	s.Require().NoError(err)
+	s.Require().True(has)
+	value, err = s.db.Get([]byte("key3"))
+	s.Require().NoError(err)
+	s.Require().Equal([]byte("value3"), value)
+	s.Require().NoError(s.db.Delete([]byte("key3")))
+	has, err = s.db.Has([]byte("key3"))
+	s.Require().NoError(err)
+	s.Require().False(has)
+	value, err = s.db.Get([]byte("key3"))
+	s.Require().NoError(err)
+	s.Require().Nil(value)
 }
 
 func (s *DBTestSuite) TestIterator() {

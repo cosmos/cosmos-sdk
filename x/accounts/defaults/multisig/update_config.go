@@ -4,11 +4,17 @@ import (
 	"context"
 	"errors"
 
+	"cosmossdk.io/x/accounts/accountstd"
 	v1 "cosmossdk.io/x/accounts/defaults/multisig/v1"
 )
 
 // UpdateConfig updates the configuration of the multisig account.
 func (a Account) UpdateConfig(ctx context.Context, msg *v1.MsgUpdateConfig) (*v1.MsgUpdateConfigResponse, error) {
+	// this function can only be executed by the account itself
+	if !accountstd.SenderIsSelf(ctx) {
+		return nil, errors.New("only the account itself can update the config (through a proposal)")
+	}
+
 	// set members
 	for i := range msg.UpdateMembers {
 		addrBz, err := a.addrCodec.StringToBytes(msg.UpdateMembers[i].Address)
@@ -37,8 +43,12 @@ func (a Account) UpdateConfig(ctx context.Context, msg *v1.MsgUpdateConfig) (*v1
 	// verify that the new set of members and config are valid
 	// get the weight from the stored members
 	totalWeight := uint64(0)
+	var addErr error
 	err := a.Members.Walk(ctx, nil, func(_ []byte, value uint64) (stop bool, err error) {
-		totalWeight += value
+		totalWeight, addErr = safeAdd(totalWeight, value)
+		if addErr != nil {
+			return true, addErr
+		}
 		return false, nil
 	})
 	if err != nil {

@@ -12,6 +12,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -26,7 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
@@ -52,7 +52,7 @@ func (s *TestSuite) VerifyDoUpgrade(t *testing.T) {
 	require.ErrorContains(t, err, "UPGRADE \"test\" NEEDED at height: 11: ")
 
 	t.Log("Verify that the upgrade can be successfully applied with a handler")
-	s.keeper.SetUpgradeHandler("test", func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+	s.keeper.SetUpgradeHandler("test", func(ctx context.Context, plan types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
 		return vm, nil
 	})
 
@@ -70,7 +70,7 @@ func (s *TestSuite) VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, pro
 	require.ErrorContains(t, err, "UPGRADE \""+proposalName+"\" NEEDED at height: ")
 
 	t.Log("Verify that the upgrade can be successfully applied with a handler")
-	s.keeper.SetUpgradeHandler(proposalName, func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+	s.keeper.SetUpgradeHandler(proposalName, func(ctx context.Context, plan types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
 		return vm, nil
 	})
 
@@ -129,7 +129,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 	)
 
 	storeService := runtime.NewKVStoreService(key)
-	s.env = runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(s.baseApp.GRPCQueryRouter(), s.baseApp.MsgServiceRouter()))
+	s.env = runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithMsgRouterService(s.baseApp.MsgServiceRouter()), runtime.EnvWithQueryRouterService(s.baseApp.GRPCQueryRouter()))
 
 	s.baseApp.SetParamStore(&paramStore{params: cmtproto.ConsensusParams{Version: &cmtproto.VersionParams{App: 1}}})
 
@@ -175,7 +175,7 @@ func TestHaltIfTooNew(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
 	t.Log("Verify that we don't panic with registered plan not in database at all")
 	var called int
-	s.keeper.SetUpgradeHandler("future", func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+	s.keeper.SetUpgradeHandler("future", func(_ context.Context, _ types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
 		called++
 		return vm, nil
 	})
@@ -421,7 +421,7 @@ func TestBinaryVersion(t *testing.T) {
 		{
 			"test not panic: upgrade handler is present for last applied upgrade",
 			func() sdk.Context {
-				s.keeper.SetUpgradeHandler("test0", func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+				s.keeper.SetUpgradeHandler("test0", func(_ context.Context, _ types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
 					return vm, nil
 				})
 
@@ -472,7 +472,7 @@ func TestDowngradeVerification(t *testing.T) {
 	s.ctx = s.ctx.WithHeaderInfo(header.Info{Height: s.ctx.HeaderInfo().Height + 1})
 
 	// set the handler.
-	s.keeper.SetUpgradeHandler(planName, func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+	s.keeper.SetUpgradeHandler(planName, func(_ context.Context, _ types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
 		return vm, nil
 	})
 
@@ -487,7 +487,7 @@ func TestDowngradeVerification(t *testing.T) {
 	}{
 		"valid binary": {
 			preRun: func(k *keeper.Keeper, ctx sdk.Context, name string) {
-				k.SetUpgradeHandler(planName, func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+				k.SetUpgradeHandler(planName, func(ctx context.Context, plan types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
 					return vm, nil
 				})
 			},

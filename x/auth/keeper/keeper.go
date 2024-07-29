@@ -46,6 +46,8 @@ type AccountKeeperI interface {
 	GetSequence(context.Context, sdk.AccAddress) (uint64, error)
 
 	// Fetch the next account number, and increment the internal counter.
+	//
+	// Deprecated: keep this to avoid breaking api
 	NextAccountNumber(context.Context) uint64
 
 	// GetModulePermissions fetches per-module account permissions
@@ -97,9 +99,13 @@ type AccountKeeper struct {
 	authority string
 
 	// State
-	Schema        collections.Schema
-	Params        collections.Item[types.Params]
-	AccountNumber collections.Sequence
+	Schema collections.Schema
+	Params collections.Item[types.Params]
+
+	// only use for upgrade handler
+	//
+	// Deprecated: move to accounts module accountNumber
+	accountNumber collections.Sequence
 	// Accounts key: AccAddr | value: AccountI | index: AccountsIndex
 	Accounts *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
 }
@@ -133,7 +139,7 @@ func NewAccountKeeper(
 		permAddrs:         permAddrs,
 		authority:         authority,
 		Params:            collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		AccountNumber:     collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
+		accountNumber:     collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
 		Accounts:          collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
 	}
 	schema, err := sb.Build()
@@ -142,6 +148,22 @@ func NewAccountKeeper(
 	}
 	ak.Schema = schema
 	return ak
+}
+
+// removeLegacyAccountNumberUnsafe is used for migration purpose only. It deletes the sequence in the DB
+// and returns the last value used on success.
+// Deprecated
+func (ak AccountKeeper) removeLegacyAccountNumberUnsafe(ctx context.Context) (uint64, error) {
+	accNum, err := ak.accountNumber.Peek(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	// Delete DB entry for legacy account number
+	store := ak.KVStoreService.OpenKVStore(ctx)
+	err = store.Delete(types.GlobalAccountNumberKey.Bytes())
+
+	return accNum, err
 }
 
 // GetAuthority returns the x/auth module's authority.
@@ -181,8 +203,10 @@ func (ak AccountKeeper) GetSequence(ctx context.Context, addr sdk.AccAddress) (u
 
 // NextAccountNumber returns and increments the global account number counter.
 // If the global account number is not set, it initializes it with value 0.
+//
+// Deprecated: NextAccountNumber is deprecated
 func (ak AccountKeeper) NextAccountNumber(ctx context.Context) uint64 {
-	n, err := ak.AccountNumber.Next(ctx)
+	n, err := ak.AccountsModKeeper.NextAccountNumber(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -313,4 +337,19 @@ func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAdd
 	}
 
 	return msgResponses, nil
+}
+
+// MigrateAccountNumberUnsafe migrates auth's account number to accounts's account number
+// and delete store entry for auth legacy GlobalAccountNumberKey.
+//
+// Should only use in an upgrade handler for migrating account number.
+func MigrateAccountNumberUnsafe(ctx context.Context, ak *AccountKeeper) error {
+	currentAccNum, err := ak.removeLegacyAccountNumberUnsafe(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to migrate account number: %w", err)
+	}
+
+	err = ak.AccountsModKeeper.InitAccountNumberSeqUnsafe(ctx, currentAccNum)
+
+	return err
 }

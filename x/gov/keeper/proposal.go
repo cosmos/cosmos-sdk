@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
@@ -70,7 +71,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 			}
 		}
 
-		signers, _, err := k.cdc.GetMsgV1Signers(msg)
+		signers, _, err := k.cdc.GetMsgSigners(msg)
 		if err != nil {
 			return v1.Proposal{}, err
 		}
@@ -87,7 +88,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 			return v1.Proposal{}, errorsmod.Wrapf(types.ErrInvalidSigner, addr)
 		}
 
-		if err := k.RouterService.MessageRouterService().CanInvoke(ctx, sdk.MsgTypeURL(msg)); err != nil {
+		if err := k.MsgRouterService.CanInvoke(ctx, sdk.MsgTypeURL(msg)); err != nil {
 			return v1.Proposal{}, errorsmod.Wrap(types.ErrUnroutableProposalMsg, err.Error())
 		}
 
@@ -113,7 +114,9 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 
 		if err = k.BranchService.Execute(ctx, func(ctx context.Context) error {
 			handler := k.legacyRouter.GetRoute(content.ProposalRoute())
-			if err := handler(ctx, content); err != nil {
+			// NOTE: the support of legacy gov proposal in server/v2 is different than for baseapp.
+			// Legacy proposal in server/v2 can only access services provided by the gov module environment.
+			if err := handler(context.WithValue(ctx, corecontext.EnvironmentContextKey, k.Environment), content); err != nil {
 				return types.ErrInvalidProposalContent.Wrapf("failed to run legacy handler %s, %+v", content.ProposalRoute(), err)
 			}
 

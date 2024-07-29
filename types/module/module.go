@@ -26,7 +26,7 @@ import (
 	"fmt"
 	"sort"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
@@ -34,51 +34,38 @@ import (
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/genesis"
+	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Deprecated: use the embed extension interfaces instead, when needed.
 type AppModuleBasic interface {
-	HasName
 	HasGRPCGateway
 	HasAminoCodec
 }
 
-// AppModule is the form for an application module. Most of
-// its functionality has been moved to extension interfaces.
+// AppModule is the form for an application module.
+// Most of its functionality has been moved to extension interfaces.
 // Deprecated: use appmodule.AppModule with a combination of extension interfaces instead.
 type AppModule interface {
-	HasName
+	Name() string
 
 	appmodulev2.AppModule
 }
 
-// HasName allows the module to provide its own name for legacy purposes.
-// Newer apps should specify the name for their modules using a map
-// using NewManagerFromMap.
-type HasName interface {
-	Name() string
-}
-
 // HasGenesisBasics is the legacy interface for stateless genesis methods.
-type HasGenesisBasics interface {
-	HasName
-
-	DefaultGenesis() json.RawMessage
-	ValidateGenesis(json.RawMessage) error
-}
+type HasGenesisBasics = appmodule.HasGenesisBasics
 
 // HasAminoCodec is the interface for modules that have amino codec registration.
 // Deprecated: modules should not need to register their own amino codecs.
 type HasAminoCodec interface {
-	RegisterLegacyAminoCodec(*codec.LegacyAmino)
+	RegisterLegacyAminoCodec(legacy.Amino)
 }
 
 // HasGRPCGateway is the interface for modules to register their gRPC gateway routes.
@@ -91,11 +78,7 @@ type HasGRPCGateway interface {
 type HasGenesis = appmodulev2.HasGenesis
 
 // HasABCIGenesis is the extension interface for stateful genesis methods which returns validator updates.
-type HasABCIGenesis interface {
-	HasGenesisBasics
-	InitGenesis(context.Context, json.RawMessage) ([]ValidatorUpdate, error)
-	ExportGenesis(context.Context) (json.RawMessage, error)
-}
+type HasABCIGenesis = appmodulev2.HasABCIGenesis
 
 // HasInvariants is the interface for registering invariants.
 type HasInvariants interface {
@@ -139,6 +122,7 @@ type Manager struct {
 }
 
 // NewManager creates a new Manager object.
+// Deprecated: Use NewManagerFromMap instead.
 func NewManager(modules ...AppModule) *Manager {
 	moduleMap := make(map[string]appmodule.AppModule)
 	modulesStr := make([]string, 0, len(modules))
@@ -168,7 +152,6 @@ func NewManager(modules ...AppModule) *Manager {
 }
 
 // NewManagerFromMap creates a new Manager object from a map of module names to module implementations.
-// This method should be used for apps and modules which have migrated to the cosmossdk.io/core.appmodule.AppModule API.
 func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 	simpleModuleMap := make(map[string]appmodule.AppModule)
 	modulesStr := make([]string, 0, len(simpleModuleMap))
@@ -299,7 +282,7 @@ func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 }
 
 // RegisterLegacyAminoCodec registers all module codecs
-func (m *Manager) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (m *Manager) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 	for _, b := range m.Modules {
 		if mod, ok := b.(HasAminoCodec); ok {
 			mod.RegisterLegacyAminoCodec(cdc)
@@ -321,7 +304,7 @@ func (m *Manager) DefaultGenesis() map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
 	for name, b := range m.Modules {
 		if mod, ok := b.(HasGenesisBasics); ok {
-			genesisData[mod.Name()] = mod.DefaultGenesis()
+			genesisData[name] = mod.DefaultGenesis()
 		} else if mod, ok := b.(appmodule.HasGenesis); ok {
 			genesisData[name] = mod.DefaultGenesis()
 		} else {
@@ -336,7 +319,7 @@ func (m *Manager) DefaultGenesis() map[string]json.RawMessage {
 func (m *Manager) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 	for name, b := range m.Modules {
 		if mod, ok := b.(HasGenesisBasics); ok {
-			if err := mod.ValidateGenesis(genesisData[mod.Name()]); err != nil {
+			if err := mod.ValidateGenesis(genesisData[name]); err != nil {
 				return err
 			}
 		} else if mod, ok := b.(appmodule.HasGenesis); ok {
@@ -657,7 +640,7 @@ func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []
 //	})
 //
 // Please also refer to https://docs.cosmos.network/main/core/upgrade for more information.
-func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM VersionMap) (VersionMap, error) {
+func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM appmodule.VersionMap) (appmodule.VersionMap, error) {
 	c, ok := cfg.(*configurator)
 	if !ok {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", &configurator{}, cfg)
@@ -668,7 +651,7 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	updatedVM := VersionMap{}
+	updatedVM := appmodule.VersionMap{}
 	for _, moduleName := range modules {
 		module := m.Modules[moduleName]
 		fromVersion, exists := fromVM[moduleName]
@@ -824,8 +807,8 @@ func (m *Manager) PrepareCheckState(ctx sdk.Context) error {
 }
 
 // GetVersionMap gets consensus version from all modules
-func (m *Manager) GetVersionMap() VersionMap {
-	vermap := make(VersionMap)
+func (m *Manager) GetVersionMap() appmodule.VersionMap {
+	vermap := make(appmodule.VersionMap)
 	for name, v := range m.Modules {
 		version := uint64(0)
 		if v, ok := v.(appmodule.HasConsensusVersion); ok {

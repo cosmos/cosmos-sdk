@@ -156,6 +156,20 @@ func (mr *MockBankKeeperMockRecorder) GetAllBalances(ctx, addr interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBalances", reflect.TypeOf((*MockBankKeeper)(nil).GetAllBalances), ctx, addr)
 }
 
+// IsSendEnabledDenom mocks base method.
+func (m *MockBankKeeper) IsSendEnabledDenom(ctx context.Context, denom string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsSendEnabledDenom", ctx, denom)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsSendEnabledDenom indicates an expected call of IsSendEnabledDenom.
+func (mr *MockBankKeeperMockRecorder) IsSendEnabledDenom(ctx, denom interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSendEnabledDenom", reflect.TypeOf((*MockBankKeeper)(nil).IsSendEnabledDenom), ctx, denom)
+}
+
 // MintCoins mocks base method.
 func (m *MockBankKeeper) MintCoins(ctx context.Context, moduleName string, amt types0.Coins) error {
 	m.ctrl.T.Helper()
@@ -224,86 +238,6 @@ func (m *MockBankKeeper) SpendableCoins(ctx context.Context, addr types0.AccAddr
 func (mr *MockBankKeeperMockRecorder) SpendableCoins(ctx, addr interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpendableCoins", reflect.TypeOf((*MockBankKeeper)(nil).SpendableCoins), ctx, addr)
-}
-
-// MockPoolKeeper is a mock of PoolKeeper interface.
-type MockPoolKeeper struct {
-	ctrl     *gomock.Controller
-	recorder *MockPoolKeeperMockRecorder
-}
-
-// MockPoolKeeperMockRecorder is the mock recorder for MockPoolKeeper.
-type MockPoolKeeperMockRecorder struct {
-	mock *MockPoolKeeper
-}
-
-// NewMockPoolKeeper creates a new mock instance.
-func NewMockPoolKeeper(ctrl *gomock.Controller) *MockPoolKeeper {
-	mock := &MockPoolKeeper{ctrl: ctrl}
-	mock.recorder = &MockPoolKeeperMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockPoolKeeper) EXPECT() *MockPoolKeeperMockRecorder {
-	return m.recorder
-}
-
-// DistributeFromCommunityPool mocks base method.
-func (m *MockPoolKeeper) DistributeFromCommunityPool(ctx context.Context, amount types0.Coins, receiveAddr types0.AccAddress) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DistributeFromCommunityPool", ctx, amount, receiveAddr)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DistributeFromCommunityPool indicates an expected call of DistributeFromCommunityPool.
-func (mr *MockPoolKeeperMockRecorder) DistributeFromCommunityPool(ctx, amount, receiveAddr interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DistributeFromCommunityPool", reflect.TypeOf((*MockPoolKeeper)(nil).DistributeFromCommunityPool), ctx, amount, receiveAddr)
-}
-
-// FundCommunityPool mocks base method.
-func (m *MockPoolKeeper) FundCommunityPool(ctx context.Context, amount types0.Coins, sender types0.AccAddress) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FundCommunityPool", ctx, amount, sender)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// FundCommunityPool indicates an expected call of FundCommunityPool.
-func (mr *MockPoolKeeperMockRecorder) FundCommunityPool(ctx, amount, sender interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FundCommunityPool", reflect.TypeOf((*MockPoolKeeper)(nil).FundCommunityPool), ctx, amount, sender)
-}
-
-// GetCommunityPool mocks base method.
-func (m *MockPoolKeeper) GetCommunityPool(ctx context.Context) (types0.Coins, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCommunityPool", ctx)
-	ret0, _ := ret[0].(types0.Coins)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetCommunityPool indicates an expected call of GetCommunityPool.
-func (mr *MockPoolKeeperMockRecorder) GetCommunityPool(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCommunityPool", reflect.TypeOf((*MockPoolKeeper)(nil).GetCommunityPool), ctx)
-}
-
-// SetToDistribute mocks base method.
-func (m *MockPoolKeeper) SetToDistribute(ctx context.Context, amount types0.Coins, addr string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetToDistribute", ctx, amount, addr)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetToDistribute indicates an expected call of SetToDistribute.
-func (mr *MockPoolKeeperMockRecorder) SetToDistribute(ctx, amount, addr interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetToDistribute", reflect.TypeOf((*MockPoolKeeper)(nil).SetToDistribute), ctx, amount, addr)
 }
 
 // MockStakingKeeper is a mock of StakingKeeper interface.

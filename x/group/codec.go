@@ -1,21 +1,21 @@
 package group
 
 import (
+	corelegacy "cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
+	coretransaction "cosmossdk.io/core/transaction"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
 // RegisterLegacyAminoCodec registers all the necessary group module concrete
 // types and interfaces with the provided codec reference.
 // These types are used for Amino JSON serialization.
-func RegisterLegacyAminoCodec(cdc *codectypes.LegacyAmino) {
+func RegisterLegacyAminoCodec(cdc corelegacy.Amino) {
 	cdc.RegisterInterface((*DecisionPolicy)(nil), nil)
-	cdc.RegisterConcrete(&ThresholdDecisionPolicy{}, "cosmos-sdk/ThresholdDecisionPolicy", nil)
-	cdc.RegisterConcrete(&PercentageDecisionPolicy{}, "cosmos-sdk/PercentageDecisionPolicy", nil)
+	cdc.RegisterConcrete(&ThresholdDecisionPolicy{}, "cosmos-sdk/ThresholdDecisionPolicy")
+	cdc.RegisterConcrete(&PercentageDecisionPolicy{}, "cosmos-sdk/PercentageDecisionPolicy")
 
 	legacy.RegisterAminoMsg(cdc, &MsgCreateGroup{}, "cosmos-sdk/MsgCreateGroup")
 	legacy.RegisterAminoMsg(cdc, &MsgUpdateGroupMembers{}, "cosmos-sdk/MsgUpdateGroupMembers")
@@ -35,7 +35,7 @@ func RegisterLegacyAminoCodec(cdc *codectypes.LegacyAmino) {
 
 // RegisterInterfaces registers the interfaces types with the interface registry.
 func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
-	registrar.RegisterImplementations((*sdk.Msg)(nil),
+	registrar.RegisterImplementations((*coretransaction.Msg)(nil),
 		&MsgCreateGroup{},
 		&MsgUpdateGroupMembers{},
 		&MsgUpdateGroupAdmin{},

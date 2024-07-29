@@ -3,7 +3,7 @@ package cli_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -11,17 +11,16 @@ import (
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	cmtcfg "github.com/cometbft/cometbft/config"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/cmdtest"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -37,8 +36,8 @@ type ExportSystem struct {
 
 	Ctx context.Context
 
-	Sctx *server.Context
-	Cctx client.Context
+	Viper  *viper.Viper
+	Logger log.Logger
 
 	HomeDir string
 }
@@ -65,23 +64,25 @@ func NewExportSystem(t *testing.T, exporter types.AppExporter) *ExportSystem {
 	tw := zerolog.NewTestWriter(t)
 	tw.Frame = 5 // Seems to be the magic number to get source location to match logger calls.
 
-	sCtx := server.NewContext(
-		viper.New(),
-		cmtcfg.DefaultConfig(),
-		log.NewCustomLogger(zerolog.New(tw)),
-	)
-	sCtx.Config.SetRoot(homeDir)
+	viper := viper.New()
+	logger := log.NewCustomLogger(zerolog.New(tw))
+	err := writeAndTrackDefaultConfig(viper, homeDir)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	cCtx := (client.Context{}).WithHomeDir(homeDir)
 
-	ctx := context.WithValue(context.Background(), server.ServerContextKey, sCtx)
+	ctx := context.WithValue(context.Background(), corectx.ViperContextKey, viper)
+	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
+
 	ctx = context.WithValue(ctx, client.ClientContextKey, &cCtx)
 
 	return &ExportSystem{
 		sys:     sys,
 		Ctx:     ctx,
-		Sctx:    sCtx,
-		Cctx:    cCtx,
+		Viper:   viper,
+		Logger:  logger,
 		HomeDir: homeDir,
 	}
 }
@@ -163,7 +164,7 @@ func (e *mockExporter) Export(
 	modulesToExport []string,
 ) (types.ExportedApp, error) {
 	if e.Err == nil && isZeroExportedApp(e.ExportApp) {
-		panic(fmt.Errorf("(*mockExporter).Export called without setting e.ExportApp or e.Err"))
+		panic(errors.New("(*mockExporter).Export called without setting e.ExportApp or e.Err"))
 	}
 	e.WasCalled = true
 
@@ -310,7 +311,7 @@ func TestExportCLI(t *testing.T) {
 		t.Parallel()
 
 		e := new(mockExporter)
-		e.Err = fmt.Errorf("whoopsie")
+		e.Err = errors.New("whoopsie")
 
 		sys := NewExportSystem(t, e.Export)
 		_ = sys.MustRun(t, "init", "some_moniker")

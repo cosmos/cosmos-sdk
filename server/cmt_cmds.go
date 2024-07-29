@@ -226,7 +226,7 @@ $ %s query block --%s=%s <hash>
 `,
 			version.AppName, auth.FlagType, auth.TypeHeight,
 			version.AppName, auth.FlagType, auth.TypeHash)),
-		Args: cobra.ExactArgs(1),
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -234,24 +234,43 @@ $ %s query block --%s=%s <hash>
 			}
 
 			typ, _ := cmd.Flags().GetString(auth.FlagType)
+			if len(args) == 0 {
+				// do not break default v0.50 behavior of block hash
+				// if no args are provided, set the type to height
+				typ = auth.TypeHeight
+			}
 
 			switch typ {
 			case auth.TypeHeight:
+<<<<<<< HEAD
 
 				if args[0] == "" {
 					return fmt.Errorf("argument should be a block height")
+=======
+				var (
+					err    error
+					height int64
+				)
+				heightStr := ""
+				if len(args) > 0 {
+					heightStr = args[0]
+>>>>>>> c4de9a970 (feat: check latest block if no arg in `q block` and `q block-results` (#21084))
 				}
 
-				// optional height
-				var height *int64
-				if len(args) > 0 {
-					height, err = parseOptionalHeight(args[0])
+				if heightStr == "" {
+					cmd.Println("Falling back to latest block height:")
+					height, err = rpc.GetChainHeight(clientCtx)
 					if err != nil {
-						return err
+						return fmt.Errorf("failed to get chain height: %w", err)
+					}
+				} else {
+					height, err = strconv.ParseInt(heightStr, 10, 64)
+					if err != nil {
+						return fmt.Errorf("failed to parse block height: %w", err)
 					}
 				}
 
-				output, err := rpc.GetBlockByHeight(clientCtx, height)
+				output, err := rpc.GetBlockByHeight(clientCtx, &height)
 				if err != nil {
 					return err
 				}
@@ -311,15 +330,21 @@ func QueryBlockResultsCmd() *cobra.Command {
 			}
 
 			// optional height
-			var height *int64
+			var height int64
 			if len(args) > 0 {
-				height, err = parseOptionalHeight(args[0])
+				height, err = strconv.ParseInt(args[0], 10, 64)
 				if err != nil {
 					return err
 				}
+			} else {
+				cmd.Println("Falling back to latest block height:")
+				height, err = rpc.GetChainHeight(clientCtx)
+				if err != nil {
+					return fmt.Errorf("failed to get chain height: %w", err)
+				}
 			}
 
-			blockRes, err := node.BlockResults(context.Background(), height)
+			blockRes, err := node.BlockResults(context.Background(), &height)
 			if err != nil {
 				return err
 			}
@@ -341,6 +366,7 @@ func QueryBlockResultsCmd() *cobra.Command {
 	return cmd
 }
 
+<<<<<<< HEAD
 func parseOptionalHeight(heightStr string) (*int64, error) {
 	h, err := strconv.Atoi(heightStr)
 	if err != nil {
@@ -357,6 +383,9 @@ func parseOptionalHeight(heightStr string) (*int64, error) {
 }
 
 func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
+=======
+func BootstrapStateCmd[T types.Application](appCreator types.AppCreator[T]) *cobra.Command {
+>>>>>>> c4de9a970 (feat: check latest block if no arg in `q block` and `q block-results` (#21084))
 	cmd := &cobra.Command{
 		Use:   "bootstrap-state",
 		Short: "Bootstrap CometBFT state at an arbitrary block height using a light client",

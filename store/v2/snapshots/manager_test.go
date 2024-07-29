@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	coretesting "cosmossdk.io/core/testing"
-	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2/snapshots"
 	"cosmossdk.io/store/v2/snapshots/types"
 )
@@ -356,7 +355,7 @@ func TestSnapshot_Take_Prune(t *testing.T) {
 	extSnapshotter := newExtSnapshotter(10)
 
 	expectChunks := snapshotItems(items, extSnapshotter)
-	manager := snapshots.NewManager(store, opts, commitSnapshotter, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
+	manager := snapshots.NewManager(store, opts, commitSnapshotter, &mockStorageSnapshotter{}, nil, coretesting.NewNopLogger())
 	err := manager.RegisterExtensions(extSnapshotter)
 	require.NoError(t, err)
 
@@ -435,7 +434,7 @@ func TestSnapshot_Pruning_Take_Snapshot_Parallel(t *testing.T) {
 	extSnapshotter := newExtSnapshotter(10)
 
 	expectChunks := snapshotItems(items, extSnapshotter)
-	manager := snapshots.NewManager(store, opts, commitSnapshotter, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
+	manager := snapshots.NewManager(store, opts, commitSnapshotter, &mockStorageSnapshotter{}, nil, coretesting.NewNopLogger())
 	err := manager.RegisterExtensions(extSnapshotter)
 	require.NoError(t, err)
 
@@ -508,7 +507,7 @@ func TestSnapshot_SnapshotIfApplicable(t *testing.T) {
 	snapshotOpts := snapshots.NewSnapshotOptions(1, 1)
 
 	// expectChunks := snapshotItems(items, extSnapshotter)
-	manager := snapshots.NewManager(store, snapshotOpts, commitSnapshotter, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
+	manager := snapshots.NewManager(store, snapshotOpts, commitSnapshotter, &mockStorageSnapshotter{}, nil, coretesting.NewNopLogger())
 	err := manager.RegisterExtensions(extSnapshotter)
 	require.NoError(t, err)
 

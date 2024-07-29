@@ -165,7 +165,7 @@ func (c *Context) Validate() error {
 					errs = append(errs, fmt.Errorf("a custom signer function as been defined for message %s which already has a signer field defined with (cosmos.msg.v1.signer)", md.FullName()))
 					continue
 				}
-				_, err := c.getGetSignersFn(md, true)
+				_, err := c.getGetSignersFn(md)
 				if err != nil {
 					errs = append(errs, err)
 				}
@@ -333,17 +333,13 @@ func (c *Context) getAddressCodec(field protoreflect.FieldDescriptor) address.Co
 	return addrCdc
 }
 
-func (c *Context) getGetSignersFn(messageDescriptor protoreflect.MessageDescriptor, add bool) (GetSignersFunc, error) {
+func (c *Context) getGetSignersFn(messageDescriptor protoreflect.MessageDescriptor) (GetSignersFunc, error) {
 	f, ok := c.customGetSignerFuncs[messageDescriptor.FullName()]
 	if ok {
 		return f, nil
 	}
 	f, ok = c.getSignersFuncs[messageDescriptor.FullName()]
 	if !ok {
-		if !add {
-			return nil, fmt.Errorf("no GetSignersFunc found for message %s; have you called Validate()?", messageDescriptor.FullName())
-		}
-
 		var err error
 		f, err = c.makeGetSignersFunc(messageDescriptor)
 		if err != nil {
@@ -357,7 +353,7 @@ func (c *Context) getGetSignersFn(messageDescriptor protoreflect.MessageDescript
 
 // GetSigners returns the signers for a given message.
 func (c *Context) GetSigners(msg proto.Message) ([][]byte, error) {
-	f, err := c.getGetSignersFn(msg.ProtoReflect().Descriptor(), false)
+	f, err := c.getGetSignersFn(msg.ProtoReflect().Descriptor())
 	if err != nil {
 		return nil, err
 	}

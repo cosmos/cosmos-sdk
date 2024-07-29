@@ -51,6 +51,33 @@ var deeplyNestedRepeatedSigner = &testpb.DeeplyNestedRepeatedSigner{
 	},
 }
 
+func TestGetGetSignersFnConcurrent(t *testing.T) {
+	ctx, err := NewContext(Options{
+		AddressCodec:          dummyAddressCodec{},
+		ValidatorAddressCodec: dummyValidatorAddressCodec{},
+	})
+	require.NoError(t, err)
+
+	msg := &bankv1beta1.MsgSend{
+		FromAddress: hex.EncodeToString([]byte("foo")),
+	}
+
+	desc := msg.ProtoReflect().Descriptor()
+
+	// err = ctx.Validate()
+	// require.NoError(t, err)
+
+	for i := 0; i < 100; i++ {
+		go func() {
+			_, _ = ctx.getGetSignersFn(desc)
+		}()
+	}
+
+	// signers, err := fn(msg)
+	// require.NoError(t, err)
+	// require.Equal(t, [][]byte{[]byte("foo")}, signers)
+}
+
 func TestGetSigners(t *testing.T) {
 	ctx, err := NewContext(Options{
 		AddressCodec:          dummyAddressCodec{},

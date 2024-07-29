@@ -41,7 +41,7 @@ import (
 )
 
 var (
-	flagMinGasPrices      = "min-gas-prices"
+	flagMinGasPrices      = "minimum-gas-prices"
 	flagNodeDirPrefix     = "node-dir-prefix"
 	flagNumValidators     = "validator-count"
 	flagOutputDir         = "output-dir"

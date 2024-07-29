@@ -701,7 +701,6 @@ func (s *StorageTestSuite) TestDatabase_Restore() {
 
 			v, err := db.Get(storeKey1Bytes, 11, []byte(key))
 			s.Require().NoError(err)
-			fmt.Println(string(v), val, i)
 			s.Require().Equal([]byte(val), v)
 		}
 	}

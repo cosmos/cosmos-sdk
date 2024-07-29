@@ -89,7 +89,8 @@ func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
 
 func makeUnknownServiceHandler(messageMap map[string]func() proto.Message, querier interface {
 	Query(ctx context.Context, version uint64, msg proto.Message) (proto.Message, error)
-}) grpc.StreamHandler {
+},
+) grpc.StreamHandler {
 	return func(srv any, stream grpc.ServerStream) error {
 		method, ok := grpc.MethodFromServerStream(stream)
 		if !ok {
@@ -137,7 +138,7 @@ func getHeightFromCtx(ctx context.Context) (uint64, error) {
 		return 0, nil
 	}
 	if len(values) != 1 {
-		return 0, fmt.Errorf("gRPC height metadata must be of lenght 1, got: %d", len(values))
+		return 0, fmt.Errorf("gRPC height metadata must be of length 1, got: %d", len(values))
 	}
 
 	heightStr := values[0]

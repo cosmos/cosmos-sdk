@@ -47,17 +47,17 @@ import (
 	"strings"
 	"sync"
 
-	"cosmossdk.io/core/log"
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/reflect/protodesc"
-	"google.golang.org/protobuf/reflect/protoreflect"
 
-	// nolint: staticcheck // keep this import for backward compatibility
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	rpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/core/log"
 )
 
 type serverReflectionServer struct {
@@ -91,7 +91,6 @@ type protoMessage interface {
 
 func (s *serverReflectionServer) getSymbols() (svcNames []string, symbolIndex map[string]*dpb.FileDescriptorProto) {
 	s.initSymbols.Do(func() {
-
 		s.symbols = map[string]*dpb.FileDescriptorProto{}
 		services, fds := s.getServices(s.methods)
 		s.serviceNames = services

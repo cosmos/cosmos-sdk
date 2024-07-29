@@ -15,7 +15,7 @@ type AsyncListenerOptions struct {
 	BufferSize int
 
 	// DoneWaitGroup is an optional wait-group that listener goroutines will notify via Add(1) when they are started
-	// and Done() after they are cancelled and completed.
+	// and Done() after they are canceled and completed.
 	DoneWaitGroup *sync.WaitGroup
 }
 

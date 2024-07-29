@@ -119,6 +119,7 @@ func callCollector(i int, onCall func(string, int, Packet)) Listener {
 }
 
 func checkExpectedCallOrder(t *testing.T, actual, expected []string) {
+	t.Helper()
 	if len(actual) != len(expected) {
 		t.Fatalf("expected %d calls, got %d", len(expected), len(actual))
 	}

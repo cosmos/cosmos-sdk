@@ -297,6 +297,7 @@ func TestModuleSchema_LookupType(t *testing.T) {
 }
 
 func exampleSchema(t *testing.T) ModuleSchema {
+	t.Helper()
 	return requireModuleSchema(t, []ObjectType{
 		{
 			Name: "object1",

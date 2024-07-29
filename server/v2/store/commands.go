@@ -129,7 +129,7 @@ func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger 
 	}
 
 	storeOpts := root.DefaultStoreOptions()
-	if v != nil {
+	if v != nil && v.Sub("store.options") != nil {
 		if err := v.Sub("store.options").Unmarshal(&storeOpts); err != nil {
 			return nil, 0, fmt.Errorf("failed to store options: %w", err)
 		}

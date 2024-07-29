@@ -3,7 +3,6 @@ package signing
 import (
 	"errors"
 	"fmt"
-	"sync"
 
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -30,11 +29,9 @@ type Context struct {
 	typeResolver          protoregistry.MessageTypeResolver
 	addressCodec          address.Codec
 	validatorAddressCodec address.Codec
+	getSignersFuncs       map[protoreflect.FullName]GetSignersFunc
 	customGetSignerFuncs  map[protoreflect.FullName]GetSignersFunc
 	maxRecursionDepth     int
-
-	mtx             sync.Mutex
-	getSignersFuncs map[protoreflect.FullName]GetSignersFunc
 }
 
 // Options are options for creating Context which will be used for signing operations.
@@ -113,10 +110,13 @@ func NewContext(options Options) (*Context, error) {
 		typeResolver:          protoTypes,
 		addressCodec:          options.AddressCodec,
 		validatorAddressCodec: options.ValidatorAddressCodec,
-		mtx:                   sync.Mutex{},
 		getSignersFuncs:       map[protoreflect.FullName]GetSignersFunc{},
 		customGetSignerFuncs:  customGetSignerFuncs,
 		maxRecursionDepth:     options.MaxRecursionDepth,
+	}
+
+	if err := c.Validate(); err != nil {
+		return nil, err
 	}
 
 	return c, nil
@@ -340,14 +340,7 @@ func (c *Context) getGetSignersFn(messageDescriptor protoreflect.MessageDescript
 	}
 	f, ok = c.getSignersFuncs[messageDescriptor.FullName()]
 	if !ok {
-		c.mtx.Lock()
-		defer c.mtx.Unlock()
-		var err error
-		f, err = c.makeGetSignersFunc(messageDescriptor)
-		if err != nil {
-			return nil, err
-		}
-		c.getSignersFuncs[messageDescriptor.FullName()] = f
+		return nil, fmt.Errorf("no GetSignersFunc found for message %s; have you called Validate()?", messageDescriptor.FullName())
 	}
 
 	return f, nil

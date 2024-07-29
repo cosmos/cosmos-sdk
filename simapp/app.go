@@ -603,11 +603,6 @@ func NewSimApp(
 		}
 	}
 
-	// validate SigningContext to pre-fill internal signers funcs map
-	if err = app.interfaceRegistry.SigningContext().Validate(); err != nil {
-		panic(err)
-	}
-
 	return app
 }
 

@@ -3,6 +3,7 @@ package snapshots_test
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -418,4 +419,76 @@ func TestSnapshot_Take_Prune(t *testing.T) {
 	manager = setupBusyManager(t)
 	_, err = manager.Prune(2)
 	require.Error(t, err)
+}
+
+func TestSnapshot_Pruning_Take_Snapshot_Parallel(t *testing.T) {
+	store := setupStore(t)
+
+	items := [][]byte{
+		{1, 2, 3},
+		{4, 5, 6},
+		{7, 8, 9},
+	}
+	commitSnapshotter := &mockCommitSnapshotter{
+		items: items,
+	}
+	extSnapshotter := newExtSnapshotter(10)
+
+	expectChunks := snapshotItems(items, extSnapshotter)
+	manager := snapshots.NewManager(store, opts, commitSnapshotter, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
+	err := manager.RegisterExtensions(extSnapshotter)
+	require.NoError(t, err)
+
+	// try take snapshot and pruning parallel while prune operation begins first
+	go func() {
+		pruned, err := manager.Prune(1)
+		require.NoError(t, err)
+		assert.EqualValues(t, 3, pruned)
+	}()
+
+	// let the pruning run first for a few moment
+	time.Sleep(time.Microsecond * 100)
+
+	// error since pruning is running
+	_, err = manager.Create(4)
+	require.Error(t, err)
+
+	// wait for the prune operation to finish
+	time.Sleep(time.Second * 5)
+
+	// creating a snapshot at a same height 4, should be true since we prune has finished
+	snapshot, err := manager.Create(4)
+	require.NoError(t, err)
+
+	assert.Equal(t, &types.Snapshot{
+		Height: 4,
+		Format: commitSnapshotter.SnapshotFormat(),
+		Chunks: 1,
+		Hash:   []uint8{0xc5, 0xf7, 0xfe, 0xea, 0xd3, 0x4d, 0x3e, 0x87, 0xff, 0x41, 0xa2, 0x27, 0xfa, 0xcb, 0x38, 0x17, 0xa, 0x5, 0xeb, 0x27, 0x4e, 0x16, 0x5e, 0xf3, 0xb2, 0x8b, 0x47, 0xd1, 0xe6, 0x94, 0x7e, 0x8b},
+		Metadata: types.Metadata{
+			ChunkHashes: checksums(expectChunks),
+		},
+	}, snapshot)
+
+	// try take snapshot and pruning parallel while snapshot operation begins first
+	go func() {
+		time.Sleep(time.Millisecond * 10)
+
+		_, err = manager.Prune(1)
+		require.Error(t, err)
+	}()
+
+	snapshot, err = manager.Create(5)
+	require.NoError(t, err)
+
+	assert.Equal(t, &types.Snapshot{
+		Height: 5,
+		Format: commitSnapshotter.SnapshotFormat(),
+		Chunks: 1,
+		Hash:   []uint8{0xc5, 0xf7, 0xfe, 0xea, 0xd3, 0x4d, 0x3e, 0x87, 0xff, 0x41, 0xa2, 0x27, 0xfa, 0xcb, 0x38, 0x17, 0xa, 0x5, 0xeb, 0x27, 0x4e, 0x16, 0x5e, 0xf3, 0xb2, 0x8b, 0x47, 0xd1, 0xe6, 0x94, 0x7e, 0x8b},
+		Metadata: types.Metadata{
+			ChunkHashes: checksums(expectChunks),
+		},
+	}, snapshot)
+
 }

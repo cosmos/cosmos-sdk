@@ -684,7 +684,8 @@ func (s *StorageTestSuite) TestDatabase_Restore() {
 		close(chStorage)
 	}()
 
-	// restore
+	// restore with snapshot version smaller than latest version
+	// should return an error
 	err = db.Restore(9, chStorage)
 	s.Require().Error(err)
 

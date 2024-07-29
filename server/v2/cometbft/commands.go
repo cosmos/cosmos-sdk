@@ -2,6 +2,7 @@ package cometbft
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -253,7 +254,7 @@ $ %s query block --%s=%s <hash>
 			switch typ {
 			case TypeHeight:
 				if args[0] == "" {
-					return fmt.Errorf("argument should be a block height")
+					return errors.New("argument should be a block height")
 				}
 
 				// optional height
@@ -284,7 +285,7 @@ $ %s query block --%s=%s <hash>
 			case TypeHash:
 
 				if args[0] == "" {
-					return fmt.Errorf("argument should be a tx hash")
+					return errors.New("argument should be a tx hash")
 				}
 
 				// If hash is given, then query the tx by hash.

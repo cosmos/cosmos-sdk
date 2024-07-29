@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/testutils/sims"
 
 	flag "github.com/spf13/pflag"
@@ -60,7 +60,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	// run randomized simulation
 	simParams, simErr := simulation.SimulateFromSeedX(
 		b,
-		coretesting.NewNopLogger(),
+		log.NewNopLogger(),
 		os.Stdout,
 		app.BaseApp,
 		simtestutil.AppStateFn(app.AppCodec(), app.AuthKeeper.AddressCodec(), app.StakingKeeper.ValidatorAddressCodec(), app.SimulationManager(), app.DefaultGenesis()),

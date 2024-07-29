@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math"
 
@@ -111,7 +112,7 @@ func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOpt
 		case ormv1alpha1.StorageType_STORAGE_TYPE_MEMORY:
 			service := options.MemoryStoreService
 			if service == nil {
-				return nil, fmt.Errorf("missing MemoryStoreService")
+				return nil, errors.New("missing MemoryStoreService")
 			}
 
 			backendResolver = func(ctx context.Context) (ormtable.ReadBackend, error) {
@@ -124,7 +125,7 @@ func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOpt
 		case ormv1alpha1.StorageType_STORAGE_TYPE_TRANSIENT:
 			service := options.TransientStoreService
 			if service == nil {
-				return nil, fmt.Errorf("missing TransientStoreService")
+				return nil, errors.New("missing TransientStoreService")
 			}
 
 			backendResolver = func(ctx context.Context) (ormtable.ReadBackend, error) {

@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -239,7 +240,7 @@ $ %s query block --%s=%s <hash>
 			case auth.TypeHeight:
 
 				if args[0] == "" {
-					return fmt.Errorf("argument should be a block height")
+					return errors.New("argument should be a block height")
 				}
 
 				// optional height
@@ -265,7 +266,7 @@ $ %s query block --%s=%s <hash>
 			case auth.TypeHash:
 
 				if args[0] == "" {
-					return fmt.Errorf("argument should be a tx hash")
+					return errors.New("argument should be a tx hash")
 				}
 
 				// If hash is given, then query the tx by hash.

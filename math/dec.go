@@ -499,7 +499,7 @@ func (d LegacyDec) ApproxRoot(root uint64) (guess LegacyDec, err error) {
 	return guess, nil
 }
 
-// Power returns a the result of raising to a positive integer power
+// Power returns the result of raising to a positive integer power
 func (d LegacyDec) Power(power uint64) LegacyDec {
 	res := LegacyDec{new(big.Int).Set(d.i)}
 	return res.PowerMut(power)

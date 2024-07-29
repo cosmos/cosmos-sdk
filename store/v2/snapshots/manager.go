@@ -11,7 +11,7 @@ import (
 	"sort"
 	"sync"
 
-	"cosmossdk.io/core/log"
+	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	storeerrors "cosmossdk.io/store/v2/errors"
@@ -41,7 +41,7 @@ type Manager struct {
 	// storageSnapshotter is the snapshotter for the storage state.
 	storageSnapshotter StorageSnapshotter
 
-	logger log.Logger
+	logger corelog.Logger
 
 	mtx               sync.Mutex
 	operation         operation
@@ -76,7 +76,7 @@ const (
 var ErrOptsZeroSnapshotInterval = errors.New("snapshot-interval must not be 0")
 
 // NewManager creates a new manager.
-func NewManager(store *Store, opts SnapshotOptions, commitSnapshotter CommitSnapshotter, storageSnapshotter StorageSnapshotter, extensions map[string]ExtensionSnapshotter, logger log.Logger) *Manager {
+func NewManager(store *Store, opts SnapshotOptions, commitSnapshotter CommitSnapshotter, storageSnapshotter StorageSnapshotter, extensions map[string]ExtensionSnapshotter, logger corelog.Logger) *Manager {
 	if extensions == nil {
 		extensions = map[string]ExtensionSnapshotter{}
 	}
@@ -86,7 +86,7 @@ func NewManager(store *Store, opts SnapshotOptions, commitSnapshotter CommitSnap
 		commitSnapshotter:  commitSnapshotter,
 		storageSnapshotter: storageSnapshotter,
 		extensions:         extensions,
-		logger:             logger.With("module", "snapshot_manager"),
+		logger:             logger,
 	}
 }
 

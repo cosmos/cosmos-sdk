@@ -12,8 +12,8 @@ import (
 
 	_ "cosmossdk.io/api/cosmos/counter/v1"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
-	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	"cosmossdk.io/x/auth/signing"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -175,7 +175,7 @@ func fetchTxs(iterator mempool.Iterator, maxBytes int64) []sdk.Tx {
 
 func (s *MempoolTestSuite) TestDefaultMempool() {
 	t := s.T()
-	ctx := sdk.NewContext(nil, false, coretesting.NewNopLogger())
+	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 10)
 	txCount := 1000
 	var txs []testTx
@@ -267,7 +267,7 @@ func TestMempoolTestSuite(t *testing.T) {
 }
 
 func (s *MempoolTestSuite) TestSampleTxs() {
-	ctxt := sdk.NewContext(nil, false, coretesting.NewNopLogger())
+	ctxt := sdk.NewContext(nil, false, log.NewNopLogger())
 	t := s.T()
 	s.resetMempool()
 	mp := s.mempool

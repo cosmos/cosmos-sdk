@@ -128,8 +128,10 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	home := v.GetString(FlagHome)
 
 	storeOpts := rootstore.DefaultStoreOptions()
-	if err := v.Sub("store.options").Unmarshal(&storeOpts); err != nil {
-		return nil, fmt.Errorf("failed to store options: %w", err)
+	if s := v.Sub("store.options"); s != nil {
+		if err := s.Unmarshal(&storeOpts); err != nil {
+			return nil, fmt.Errorf("failed to store options: %w", err)
+		}
 	}
 
 	scRawDb, err := db.NewDB(db.DBType(v.GetString("store.app-db-backend")), "application", filepath.Join(home, "data"), nil)

@@ -5,6 +5,39 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
+### BaseApp
+
+#### Nested Messages Simulation
+
+Now it is possible to simulate the nested messages of a message, providing developers with a powerful tool for
+testing and predicting the behavior of complex transactions. This feature allows for a more comprehensive
+evaluation of gas consumption, state changes, and potential errors that may occur when executing nested
+messages. However, it's important to note that while the simulation can provide valuable insights, it does not
+guarantee the correct execution of the nested messages in the future. Factors such as changes in the
+blockchain state or updates to the protocol could potentially affect the actual execution of these nested
+messages when the transaction is finally processed on the network.
+
+For example, consider a governance proposal that includes nested messages to update multiple protocol
+parameters. At the time of simulation, the blockchain state may be suitable for executing all these nested
+messages successfully. However, by the time the actual governance proposal is executed (which could be days or
+weeks later), the blockchain state might have changed significantly. As a result, while the simulation showed
+a successful execution, the actual governance proposal might fail when it's finally processed.
+
+By default, when simulating transactions, the gas cost of nested messages is not calculated. This means that
+only the gas cost of the top-level message is considered. However, this behavior can be customized using the
+`SetIncludeNestedMsgsGas` option when building the BaseApp. By providing a list of message types to this option,
+you can specify which messages should have their nested message gas costs included in the simulation. This
+allows for more accurate gas estimation for transactions involving specific message types that contain nested
+messages, while maintaining the default behavior for other message types.
+
+Here is an example on how `SetIncludeNestedMsgsGas` option could be set to calculate the gas of a gov proposal
+nested messages:
+```go
+baseAppOptions = append(baseAppOptions, baseapp.SetIncludeNestedMsgsGas([]sdk.Message{&gov.MsgSubmitProposal{}}))
+// ...
+app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
+```
+
 ### SimApp
 
 In this section we describe the changes made in Cosmos SDK' SimApp.
@@ -103,7 +136,7 @@ transactions in your application:
 	anteDecorators := []sdk.AnteDecorator{
 		ante.NewSetUpContextDecorator(),
 		// ...
-		ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, app.UnorderedTxManager),
+		ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, options.TxManager, options.Environment),
 		// ...
 	}
 
@@ -1262,4 +1295,4 @@ message MsgSetWithdrawAddress {
 }
 ```
 
-When clients interact with a node they are required to set a codec in in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).
+When clients interact with a node they are required to set a codec in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).

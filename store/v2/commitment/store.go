@@ -11,7 +11,7 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 	"golang.org/x/exp/maps"
 
-	"cosmossdk.io/core/log"
+	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/internal"
@@ -38,7 +38,7 @@ type MountTreeFn func(storeKey string) (Tree, error)
 // RootStore use a CommitStore as an abstraction to handle multiple store keys
 // and trees.
 type CommitStore struct {
-	logger     log.Logger
+	logger     corelog.Logger
 	metadata   *MetadataStore
 	multiTrees map[string]Tree
 
@@ -47,7 +47,7 @@ type CommitStore struct {
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, mountTreeFn MountTreeFn, logger log.Logger) (*CommitStore, error) {
+func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, mountTreeFn MountTreeFn, logger corelog.Logger) (*CommitStore, error) {
 	return &CommitStore{
 		logger:      logger,
 		multiTrees:  trees,

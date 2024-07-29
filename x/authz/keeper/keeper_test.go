@@ -9,6 +9,7 @@ import (
 
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/authz"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
@@ -56,7 +57,7 @@ func (s *TestSuite) SetupTest() {
 
 	s.baseApp = baseapp.NewBaseApp(
 		"authz",
-		coretesting.NewNopLogger(),
+		log.NewNopLogger(),
 		testCtx.DB,
 		s.encCfg.TxConfig.TxDecoder(),
 	)

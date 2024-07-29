@@ -9,7 +9,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"gotest.tools/v3/assert"
 
-	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -18,7 +18,7 @@ import (
 func TestRollback(t *testing.T) {
 	db := dbm.NewMemDB()
 	options := simapp.SetupOptions{
-		Logger:  coretesting.NewNopLogger(),
+		Logger:  log.NewNopLogger(),
 		DB:      db,
 		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	}

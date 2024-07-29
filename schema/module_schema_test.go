@@ -105,19 +105,20 @@ func TestModuleSchema_Validate(t *testing.T) {
 		},
 		{
 			name: "same enum",
-			objectTypes: []ObjectType{{
-				Name: "object1",
-				KeyFields: []Field{
-					{
-						Name: "k",
-						Kind: EnumKind,
-						EnumType: EnumType{
-							Name:   "enum1",
-							Values: []string{"a", "b"},
+			objectTypes: []ObjectType{
+				{
+					Name: "object1",
+					KeyFields: []Field{
+						{
+							Name: "k",
+							Kind: EnumKind,
+							EnumType: EnumType{
+								Name:   "enum1",
+								Values: []string{"a", "b"},
+							},
 						},
 					},
 				},
-			},
 				{
 					Name: "object2",
 					KeyFields: []Field{
@@ -296,6 +297,7 @@ func TestModuleSchema_LookupType(t *testing.T) {
 }
 
 func exampleSchema(t *testing.T) ModuleSchema {
+	t.Helper()
 	return requireModuleSchema(t, []ObjectType{
 		{
 			Name: "object1",

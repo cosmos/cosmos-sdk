@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/log v1.3.1
 	github.com/cockroachdb/pebble v1.1.0
 	github.com/cosmos/gogoproto v1.5.0
-	github.com/cosmos/iavl v1.2.0
+	github.com/cosmos/iavl v1.2.1-0.20240725141113-7adc688cf179
 	github.com/cosmos/ics23/go v0.10.0
 	github.com/google/btree v1.1.2
 	github.com/hashicorp/go-metrics v0.5.3
@@ -68,5 +68,3 @@ require (
 replace cosmossdk.io/core => ../../core
 
 replace cosmossdk.io/core/testing => ../../core/testing
-
-replace cosmossdk.io/log => ../../log

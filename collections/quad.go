@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/collections/codec"
 )
 
-// Quad defines a multipart key composed of three keys.
+// Quad defines a multipart key composed of four keys.
 type Quad[K1, K2, K3, K4 any] struct {
 	k1 *K1
 	k2 *K2

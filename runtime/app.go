@@ -8,10 +8,9 @@ import (
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/legacy"
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	authtx "cosmossdk.io/x/auth/tx"
 
@@ -51,7 +50,6 @@ type App struct {
 	baseAppOptions    []BaseAppOption
 	msgServiceRouter  *baseapp.MsgServiceRouter
 	grpcQueryRouter   *baseapp.GRPCQueryRouter
-	appConfig         *appv1alpha1.Config
 	logger            log.Logger
 	// initChainer is the init chainer function defined by the app config.
 	// this is only required if the chain wants to add special InitChainer logic.

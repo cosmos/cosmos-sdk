@@ -146,7 +146,7 @@ To avoid unnecessary roundtrip to the main state, all reads to the branched stor
 
 ### CheckTx State Updates
 
-During `CheckTx`, the `checkState`, which is based off of the last committed state from the root
+During `CheckTx`, the `checkState`, which is based on the last committed state from the root
 store, is used for any reads and writes. Here we only execute the `AnteHandler` and verify a service router
 exists for every message in the transaction. Note, when we execute the `AnteHandler`, we branch
 the already branched `checkState`.

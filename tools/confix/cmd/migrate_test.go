@@ -33,7 +33,7 @@ func TestMigrateCmd(t *testing.T) {
 	assert.Assert(t, strings.Contains(out.String(), "add app-db-backend key"))
 
 	// this should work
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd.MigrateCommand(), []string{"v0.51", filepath.Join(clientCtx.HomeDir, "config", "client.toml"), "--client", "--verbose"})
+	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd.MigrateCommand(), []string{"v0.52", filepath.Join(clientCtx.HomeDir, "config", "client.toml"), "--client", "--verbose"})
 	assert.NilError(t, err)
 	assert.Assert(t, strings.Contains(out.String(), "add keyring-default-keyname key"))
 }

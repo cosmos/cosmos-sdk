@@ -7,7 +7,8 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
-	cosmossdk.io/depinject v1.0.0-alpha.4
+	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.3.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
@@ -18,6 +19,7 @@ require (
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f
+	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/distribution v0.0.0-20240227221813-a248d05f70f4
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337
 	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
@@ -32,9 +34,10 @@ require (
 	cosmossdk.io/x/tx v0.13.3
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
 	github.com/cometbft/cometbft v1.0.0-rc1
+	github.com/cometbft/cometbft/api v1.0.0-rc.1
 	github.com/cosmos/cosmos-db v1.0.2
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.51.0
+	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.5.0
 	github.com/golang/mock v1.6.0
 	github.com/spf13/cast v1.6.0
@@ -45,10 +48,7 @@ require (
 	google.golang.org/protobuf v1.34.2
 )
 
-require github.com/cometbft/cometbft/api v1.0.0-rc.1
-
 require (
-	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cosmos/crypto v0.1.1
 )
 
@@ -61,7 +61,6 @@ require (
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	cloud.google.com/go/iam v1.1.8 // indirect
 	cloud.google.com/go/storage v1.42.0 // indirect
-	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/schema v0.1.1 // indirect
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000 // indirect
@@ -89,9 +88,10 @@ require (
 	github.com/cometbft/cometbft-db v0.12.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
+	github.com/cosmos/crypto v0.1.2 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/iavl v1.2.0 // indirect
+	github.com/cosmos/iavl v1.2.1-0.20240725141113-7adc688cf179 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
 	github.com/creachadair/atomicfile v0.3.4 // indirect
@@ -248,8 +248,6 @@ replace (
 	cosmossdk.io/collections => ../collections
 	cosmossdk.io/core => ../core
 	cosmossdk.io/core/testing => ../core/testing
-	cosmossdk.io/depinject => ../depinject
-	cosmossdk.io/log => ../log
 	cosmossdk.io/store => ../store
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/accounts => ../x/accounts

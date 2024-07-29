@@ -182,7 +182,7 @@ this will be more convenient:
 
 ```shell
 # define env variables in .env, .envrc etc
-NODE_HOME=<path to home>
+GAIA_HOME=<path to home>
 GAIA_NODE=<node address>
 GAIA_CHAIN_ID="testchain-1"
 GAIA_KEYRING_BACKEND="test"

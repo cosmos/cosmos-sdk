@@ -1,6 +1,7 @@
 package mempool_test
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -12,8 +13,8 @@ import (
 
 	_ "cosmossdk.io/api/cosmos/counter/v1"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
-	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	"cosmossdk.io/x/auth/signing"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -218,7 +219,7 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 
 	// a tx which does not implement SigVerifiableTx should not be inserted
 	tx := &sigErrTx{getSigs: func() ([]txsigning.SignatureV2, error) {
-		return nil, fmt.Errorf("error")
+		return nil, errors.New("error")
 	}}
 	require.Error(t, s.mempool.Insert(ctx, tx))
 	require.Error(t, s.mempool.Remove(tx))

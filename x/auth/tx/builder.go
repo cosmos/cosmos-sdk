@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"errors"
 	"fmt"
 
 	"google.golang.org/protobuf/proto"
@@ -241,7 +242,7 @@ func (w *builder) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	w.nonCriticalExtensionOptions = extOpts
 }
 
-func (w *builder) AddAuxSignerData(data tx.AuxSignerData) error { return fmt.Errorf("not supported") }
+func (w *builder) AddAuxSignerData(data tx.AuxSignerData) error { return errors.New("not supported") }
 
 func (w *builder) getFee() (fee *txv1beta1.Fee, err error) {
 	granterStr := ""

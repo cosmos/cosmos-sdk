@@ -202,7 +202,9 @@ func MVCCKeyCompare(a, b []byte) int {
 	return bytes.Compare(aTS, bTS)
 }
 
-// <key>\x00[<version>]<#version-bytes>
+// MVCCEncode encodes a key and version into an MVCC format.
+// The format is: <key>\x00[<version>]<#version-bytes>
+// If the version is 0, only the key and a null byte are encoded.
 func MVCCEncode(key []byte, version uint64) (dst []byte) {
 	dst = append(dst, key...)
 	dst = append(dst, 0)

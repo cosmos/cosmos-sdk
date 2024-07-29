@@ -22,7 +22,7 @@ This section is currently incomplete. Track the progress of this document [here]
 
 Let's assume we are running v0.38.0 of our software in our testnet and want to upgrade to v0.40.0.
 How would this look in practice? First of all, we want to finalize the v0.40.0 release candidate
-and there install a specially named upgrade handler (eg. "testnet-v2" or even "v0.40.0"). An upgrade
+and then install a specially named upgrade handler (eg. "testnet-v2" or even "v0.40.0"). An upgrade
 handler should be defined in a new version of the software to define what migrations
 to run to migrate from the older version of the software. Naturally, this is app-specific rather
 than module specific, and  must be defined in `app.go`, even if it imports logic from various

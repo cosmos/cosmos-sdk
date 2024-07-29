@@ -4,11 +4,12 @@ go 1.21
 
 require (
 	cosmossdk.io/core v0.12.0
+	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.3.1
 	github.com/cockroachdb/pebble v1.1.0
 	github.com/cosmos/gogoproto v1.5.0
-	github.com/cosmos/iavl v1.2.0
+	github.com/cosmos/iavl v1.2.1-0.20240725141113-7adc688cf179
 	github.com/cosmos/ics23/go v0.10.0
 	github.com/google/btree v1.1.2
 	github.com/hashicorp/go-metrics v0.5.3
@@ -36,7 +37,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
-	github.com/hashicorp/go-immutable-radix v1.0.0 // indirect
+	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-uuid v1.0.1 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/klauspost/compress v1.17.7 // indirect
@@ -53,6 +54,7 @@ require (
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/rs/zerolog v1.33.0 // indirect
+	github.com/tidwall/btree v1.7.0 // indirect
 	golang.org/x/crypto v0.25.0 // indirect
 	golang.org/x/exp v0.0.0-20240314144324-c7f7c6466f7f // indirect
 	golang.org/x/sys v0.22.0 // indirect
@@ -65,4 +67,4 @@ require (
 
 replace cosmossdk.io/core => ../../core
 
-replace cosmossdk.io/log => ../../log
+replace cosmossdk.io/core/testing => ../../core/testing

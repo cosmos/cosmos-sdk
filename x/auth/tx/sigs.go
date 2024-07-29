@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"errors"
 	"fmt"
 
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
@@ -105,7 +106,7 @@ func decodeMultisignatures(bz []byte) ([][]byte, error) {
 	// malleability in the protobuf message. Basically an attacker could bloat a MultiSignature message with unknown
 	// fields, thus bloating the transaction and causing it to fail.
 	if len(multisig.XXX_unrecognized) > 0 {
-		return nil, fmt.Errorf("rejecting unrecognized fields found in MultiSignature")
+		return nil, errors.New("rejecting unrecognized fields found in MultiSignature")
 	}
 	return multisig.Signatures, nil
 }

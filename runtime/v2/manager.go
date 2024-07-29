@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"sort"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -19,9 +20,9 @@ import (
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/legacy"
-	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/stf"
 )
 
@@ -105,7 +106,7 @@ func (m *MM[T]) DefaultGenesis() map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
 	for name, b := range m.modules {
 		if mod, ok := b.(appmodule.HasGenesisBasics); ok {
-			genesisData[mod.Name()] = mod.DefaultGenesis()
+			genesisData[name] = mod.DefaultGenesis()
 		} else if mod, ok := b.(appmodulev2.HasGenesis); ok {
 			genesisData[name] = mod.DefaultGenesis()
 		} else {
@@ -120,7 +121,7 @@ func (m *MM[T]) DefaultGenesis() map[string]json.RawMessage {
 func (m *MM[T]) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 	for name, b := range m.modules {
 		if mod, ok := b.(appmodule.HasGenesisBasics); ok {
-			if err := mod.ValidateGenesis(genesisData[mod.Name()]); err != nil {
+			if err := mod.ValidateGenesis(genesisData[name]); err != nil {
 				return err
 			}
 		} else if mod, ok := b.(appmodulev2.HasGenesis); ok {
@@ -165,7 +166,7 @@ func (m *MM[T]) InitGenesisJSON(
 		case appmodulev2.HasGenesis:
 			m.logger.Debug("running initialization for module", "module", moduleName)
 			if err := module.InitGenesis(ctx, genesisData[moduleName]); err != nil {
-				return err
+				return fmt.Errorf("init module %s: %w", moduleName, err)
 			}
 		case appmodulev2.HasABCIGenesis:
 			m.logger.Debug("running initialization for module", "module", moduleName)
@@ -409,7 +410,7 @@ func (m *MM[T]) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap
 
 				// The module manager assumes only one module will update the validator set, and it can't be a new module.
 				if len(moduleValUpdates) > 0 {
-					return nil, fmt.Errorf("validator InitGenesis update is already set by another module")
+					return nil, errors.New("validator InitGenesis update is already set by another module")
 				}
 			}
 		}
@@ -555,17 +556,28 @@ func (m *MM[T]) assertNoForgottenModules(
 
 func registerServices[T transaction.Tx](s appmodule.HasServices, app *App[T], registry *protoregistry.Files) error {
 	c := &configurator{
-		stfQueryRouter: app.queryRouterBuilder,
-		stfMsgRouter:   app.msgRouterBuilder,
-		registry:       registry,
-		err:            nil,
+		grpcQueryDecoders: map[string]func([]byte) (gogoproto.Message, error){},
+		stfQueryRouter:    app.queryRouterBuilder,
+		stfMsgRouter:      app.msgRouterBuilder,
+		registry:          registry,
+		err:               nil,
 	}
-	return s.RegisterServices(c)
+
+	err := s.RegisterServices(c)
+	if err != nil {
+		return fmt.Errorf("unable to register services: %w", err)
+	}
+	app.GRPCQueryDecoders = c.grpcQueryDecoders
+	return nil
 }
 
 var _ grpc.ServiceRegistrar = (*configurator)(nil)
 
 type configurator struct {
+	// grpcQueryDecoders is required because module expose queries through gRPC
+	// this provides a way to route to modules using gRPC.
+	grpcQueryDecoders map[string]func([]byte) (gogoproto.Message, error)
+
 	stfQueryRouter *stf.MsgRouterBuilder
 	stfMsgRouter   *stf.MsgRouterBuilder
 	registry       *protoregistry.Files
@@ -596,17 +608,28 @@ func (c *configurator) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
 func (c *configurator) registerQueryHandlers(sd *grpc.ServiceDesc, ss interface{}) error {
 	for _, md := range sd.Methods {
 		// TODO(tip): what if a query is not deterministic?
-		err := registerMethod(c.stfQueryRouter, sd, md, ss)
+		requestFullName, err := registerMethod(c.stfQueryRouter, sd, md, ss)
 		if err != nil {
 			return fmt.Errorf("unable to register query handler %s: %w", md.MethodName, err)
 		}
+
+		// register gRPC query method.
+		typ := gogoproto.MessageType(requestFullName)
+		if typ == nil {
+			return fmt.Errorf("unable to find message in gogotype registry: %w", err)
+		}
+		decoderFunc := func(bytes []byte) (gogoproto.Message, error) {
+			msg := reflect.New(typ.Elem()).Interface().(gogoproto.Message)
+			return msg, gogoproto.Unmarshal(bytes, msg)
+		}
+		c.grpcQueryDecoders[md.MethodName] = decoderFunc
 	}
 	return nil
 }
 
 func (c *configurator) registerMsgHandlers(sd *grpc.ServiceDesc, ss interface{}) error {
 	for _, md := range sd.Methods {
-		err := registerMethod(c.stfMsgRouter, sd, md, ss)
+		_, err := registerMethod(c.stfMsgRouter, sd, md, ss)
 		if err != nil {
 			return fmt.Errorf("unable to register msg handler %s: %w", md.MethodName, err)
 		}
@@ -633,13 +656,13 @@ func registerMethod(
 	sd *grpc.ServiceDesc,
 	md grpc.MethodDesc,
 	ss interface{},
-) error {
+) (string, error) {
 	requestName, err := requestFullNameFromMethodDesc(sd, md)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return stfRouter.RegisterHandler(string(requestName), func(
+	return string(requestName), stfRouter.RegisterHandler(string(requestName), func(
 		ctx context.Context,
 		msg appmodulev2.Message,
 	) (resp appmodulev2.Message, err error) {

@@ -6,8 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/core/address"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -25,7 +23,7 @@ const (
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
 // This command is provided as a default, applications are expected to provide their own command if custom genesis accounts are needed.
-func AddGenesisAccountCmd(addressCodec address.Codec) *cobra.Command {
+func AddGenesisAccountCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-genesis-account [address_or_key_name] [coin][,[coin]]",
 		Short: "Add a genesis account to genesis.json",
@@ -39,6 +37,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			config := client.GetConfigFromCmd(cmd)
 
+			addressCodec := clientCtx.TxConfig.SigningContext().AddressCodec()
 			var kr keyring.Keyring
 			addr, err := addressCodec.StringToBytes(args[0])
 			if err != nil {

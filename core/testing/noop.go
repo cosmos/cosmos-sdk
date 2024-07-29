@@ -1,7 +1,9 @@
-package log
+package coretesting
+
+import "cosmossdk.io/core/log"
 
 // NewNopLogger returns a new logger that does nothing.
-func NewNopLogger() Logger {
+func NewNopLogger() log.Logger {
 	// The custom nopLogger is about 3x faster than a zeroLogWrapper with zerolog.Nop().
 	return nopLogger{}
 }
@@ -11,9 +13,9 @@ func NewNopLogger() Logger {
 // The custom implementation is about 3x faster.
 type nopLogger struct{}
 
-func (nopLogger) Info(string, ...any)  {}
-func (nopLogger) Warn(string, ...any)  {}
-func (nopLogger) Error(string, ...any) {}
-func (nopLogger) Debug(string, ...any) {}
-func (nopLogger) With(...any) Logger   { return nopLogger{} }
-func (nopLogger) Impl() any            { return nopLogger{} }
+func (nopLogger) Info(string, ...any)    {}
+func (nopLogger) Warn(string, ...any)    {}
+func (nopLogger) Error(string, ...any)   {}
+func (nopLogger) Debug(string, ...any)   {}
+func (nopLogger) WithContext(...any) any { return nopLogger{} }
+func (nopLogger) Impl() any              { return nopLogger{} }

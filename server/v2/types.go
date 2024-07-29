@@ -1,6 +1,7 @@
 package serverv2
 
 import (
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
 
 	coreapp "cosmossdk.io/core/app"
@@ -9,11 +10,13 @@ import (
 	"cosmossdk.io/server/v2/appmanager"
 )
 
-type AppCreator[AppT AppI[T], T transaction.Tx] func(log.Logger, *viper.Viper) AppT
+type AppCreator[T transaction.Tx] func(log.Logger, *viper.Viper) AppI[T]
 
 type AppI[T transaction.Tx] interface {
+	Name() string
+	InterfaceRegistry() coreapp.InterfaceRegistry
 	GetAppManager() *appmanager.AppManager[T]
 	GetConsensusAuthority() string
-	InterfaceRegistry() coreapp.InterfaceRegistry
+	GetGRPCQueryDecoders() map[string]func(requestBytes []byte) (gogoproto.Message, error)
 	GetStore() any
 }

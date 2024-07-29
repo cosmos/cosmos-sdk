@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 
 	cosmoscrypto "github.com/cosmos/crypto/types"
@@ -14,7 +15,7 @@ import (
 // NewBaseAccountWithPubKey creates an account with a pubkey.
 func NewBaseAccountWithPubKey(pubkey sdkcrypto.PubKey) (*BaseAccount, error) {
 	if pubkey == nil {
-		return nil, fmt.Errorf("pubkey cannot be nil")
+		return nil, errors.New("pubkey cannot be nil")
 	}
 
 	baseAccount := NewBaseAccountWithAddress(sdk.AccAddress(pubkey.Address()))

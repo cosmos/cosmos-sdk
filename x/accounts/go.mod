@@ -7,11 +7,11 @@ require (
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
-	cosmossdk.io/depinject v1.0.0-alpha.4
+	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/tx v0.13.3
-	github.com/cosmos/cosmos-sdk v0.51.0
+	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.5.0
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0
 	github.com/spf13/cobra v1.8.1
@@ -59,10 +59,10 @@ require (
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.2 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
-	github.com/cosmos/crypto v0.1.1 // indirect
+	github.com/cosmos/crypto v0.1.2 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/iavl v1.2.0 // indirect
+	github.com/cosmos/iavl v1.2.1-0.20240725141113-7adc688cf179 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect
@@ -184,8 +184,6 @@ replace (
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/core/testing => ../../core/testing
-	cosmossdk.io/depinject => ../../depinject
-	cosmossdk.io/log => ../../log
 	cosmossdk.io/x/accounts/defaults/multisig => ./defaults/multisig
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank

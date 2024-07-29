@@ -16,7 +16,6 @@ import (
 )
 
 var (
-	_ module.HasName        = AppModule{}
 	_ module.HasABCIGenesis = AppModule{}
 
 	_ appmodule.AppModule        = AppModule{}
@@ -56,6 +55,7 @@ func NewAppModule(
 func (AppModule) IsAppModule() {}
 
 // Name returns the genutil module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }

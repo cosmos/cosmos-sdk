@@ -3,6 +3,8 @@ package keyring
 import (
 	"errors"
 
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
 	errorsmod "cosmossdk.io/errors"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -103,8 +105,8 @@ func (k Record) GetType() KeyType {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (k *Record) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var pk sdkcrypto.PubKey
+func (k *Record) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+	var pk cryptotypes.PubKey
 	if err := unpacker.UnpackAny(k.PubKey, &pk); err != nil {
 		return err
 	}

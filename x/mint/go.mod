@@ -6,7 +6,8 @@ require (
 	cosmossdk.io/api v0.7.5
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
-	cosmossdk.io/depinject v1.0.0-alpha.4
+	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
+	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.3.1
 	cosmossdk.io/math v1.3.0
@@ -14,7 +15,7 @@ require (
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/cosmos-sdk v0.51.0
+	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.5.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
@@ -51,7 +52,7 @@ require (
 	github.com/cosmos/cosmos-db v1.0.2 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/iavl v1.2.0 // indirect
+	github.com/cosmos/iavl v1.2.1-0.20240725141113-7adc688cf179 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect
@@ -162,7 +163,7 @@ require (
 	cosmossdk.io/schema v0.1.1 // indirect
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 	github.com/cometbft/cometbft/api v1.0.0-rc.1 // indirect
-	github.com/cosmos/crypto v0.1.1 // indirect
+	github.com/cosmos/crypto v0.1.2 // indirect
 	github.com/dgraph-io/badger/v4 v4.2.0 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
@@ -180,8 +181,6 @@ replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/core/testing => ../../core/testing
-	cosmossdk.io/depinject => ../../depinject
-	cosmossdk.io/log => ../../log
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank

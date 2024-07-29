@@ -20,7 +20,6 @@ import (
 	_ "cosmossdk.io/x/accounts"
 	xauthsigning "cosmossdk.io/x/auth/signing"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -74,8 +73,8 @@ func TestBaseApp_BlockGas(t *testing.T) {
 
 	for _, tc := range testcases {
 		var (
-			bankKeeper        baseapp.BankKeeper
-			accountKeeper     baseapp.AuthKeeper
+			bankKeeper        baseapputil.BankKeeper
+			accountKeeper     baseapputil.AuthKeeper
 			appBuilder        *runtime.AppBuilder
 			txConfig          client.TxConfig
 			cdc               codec.Codec

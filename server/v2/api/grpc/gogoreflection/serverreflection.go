@@ -476,6 +476,7 @@ func (s *serverReflectionServer) ServerReflectionInfo(stream rpb.ServerReflectio
 	}
 }
 
+// getServices gets the unique list of services given a list of methods. 
 func (s *serverReflectionServer) getServices(methods []string) (svcs []string, fds []*dpb.FileDescriptorProto) {
 	registry, err := gogoproto.MergedRegistry()
 	if err != nil {

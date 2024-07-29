@@ -42,6 +42,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Features
 
+* (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
 * (tests) [#20013](https://github.com/cosmos/cosmos-sdk/pull/20013) Introduce system tests to run multi node local testnet in CI
 * (runtime) [#19953](https://github.com/cosmos/cosmos-sdk/pull/19953) Implement `core/transaction.Service` in runtime.
 * (client) [#19905](https://github.com/cosmos/cosmos-sdk/pull/19905) Add grpc client config to `client.toml`.
@@ -120,7 +121,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (testutil/integration) [#21006](https://github.com/cosmos/cosmos-sdk/pull/21006) Fix `NewIntegrationApp` method not writing default genesis to state
 
 ### API Breaking Changes
-
+* (sims) [#21039](https://github.com/cosmos/cosmos-sdk/pull/21039): Remove Baseapp from sims by a new interface `simtypes.AppEntrypoint`
 * (client) [#20976](https://github.com/cosmos/cosmos-sdk/pull/20976) Simplified command initialization by removing unnecessary parameters such as `txConfig` and `addressCodec`.
   * Remove parameter `txConfig` from `genutilcli.Commands`,`genutilcli.CommandsWithCustomMigrationMap`,`genutilcli.GenTxCmd`.
   * Remove parameter `addressCodec` from `genutilcli.GenTxCmd`,`genutilcli.AddGenesisAccountCmd`,`stakingcli.BuildCreateValidatorMsg`.

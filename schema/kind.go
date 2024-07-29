@@ -72,13 +72,13 @@ const (
 	// Float64Kind is a float64 type and values of this type must be of the go type float64.
 	Float64Kind
 
-	// Bech32AddressKind is a bech32 address type and values of this type must be of the go type []byte.
-	// Fields of this type are expected to set the AddressPrefix field in the field definition to the
-	// bech32 address prefix so that indexers can properly convert them to strings.
-	Bech32AddressKind
+	// AddressKind represents an account address and must be of type []byte. Addresses usually have a
+	// human-readable rendering, such as bech32, and tooling should provide a way for apps to define a
+	// string encoder for friendly user-facing display.
+	AddressKind
 
 	// EnumKind is an enum type and values of this type must be of the go type string.
-	// Fields of this type are expected to set the EnumDefinition field in the field definition to the enum
+	// Fields of this type are expected to set the EnumType field in the field definition to the enum
 	// definition.
 	EnumKind
 
@@ -150,7 +150,7 @@ func (t Kind) String() string {
 		return "float32"
 	case Float64Kind:
 		return "float64"
-	case Bech32AddressKind:
+	case AddressKind:
 		return "bech32address"
 	case EnumKind:
 		return "enum"
@@ -254,7 +254,7 @@ func (t Kind) ValidateValueType(value interface{}) error {
 		if !ok {
 			return fmt.Errorf("expected float64, got %T", value)
 		}
-	case Bech32AddressKind:
+	case AddressKind:
 		_, ok := value.([]byte)
 		if !ok {
 			return fmt.Errorf("expected []byte, got %T", value)
@@ -321,7 +321,7 @@ var (
 )
 
 // KindForGoValue finds the simplest kind that can represent the given go value. It will not, however,
-// return kinds such as IntegerStringKind, DecimalStringKind, Bech32AddressKind, or EnumKind which all can be
+// return kinds such as IntegerStringKind, DecimalStringKind, AddressKind, or EnumKind which all can be
 // represented as strings.
 func KindForGoValue(value interface{}) Kind {
 	switch value.(type) {

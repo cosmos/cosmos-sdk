@@ -24,6 +24,7 @@ import (
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
+	any "github.com/cosmos/gogoproto/types/any"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
@@ -38,6 +39,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
+	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -758,6 +760,240 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 
 	msgCounter2 := getIntFromStore(t, store, deliverKey2)
 	require.Equal(t, int64(2), msgCounter2)
+}
+
+func anyMessage(t *testing.T, cdc codec.Codec, msg *baseapptestutil.MsgSend) *any.Any {
+	t.Helper()
+	b, err := cdc.Marshal(msg)
+	require.NoError(t, err)
+	return &any.Any{
+		TypeUrl: sdk.MsgTypeURL(msg),
+		Value:   b,
+	}
+}
+
+func TestABCI_Query_SimulateNestedMessagesTx(t *testing.T) {
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(uint64(15)))
+			return
+		})
+	}
+	suite := NewBaseAppSuite(t, anteOpt)
+
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+	require.NoError(t, err)
+
+	baseapptestutil.RegisterNestedMessagesServer(suite.baseApp.MsgServiceRouter(), NestedMessgesServerImpl{})
+	baseapptestutil.RegisterSendServer(suite.baseApp.MsgServiceRouter(), SendServerImpl{})
+
+	_, _, addr := testdata.KeyTestPubAddr()
+	_, _, toAddr := testdata.KeyTestPubAddr()
+	tests := []struct {
+		name    string
+		message sdk.Msg
+		wantErr bool
+	}{
+		{
+			name: "ok nested message",
+			message: &baseapptestutil.MsgSend{
+				From:   addr.String(),
+				To:     toAddr.String(),
+				Amount: "10000stake",
+			},
+		},
+		{
+			name: "different signers",
+			message: &baseapptestutil.MsgSend{
+				From:   toAddr.String(),
+				To:     addr.String(),
+				Amount: "10000stake",
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty from",
+			message: &baseapptestutil.MsgSend{
+				From:   "",
+				To:     toAddr.String(),
+				Amount: "10000stake",
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty to",
+			message: &baseapptestutil.MsgSend{
+				From:   addr.String(),
+				To:     "",
+				Amount: "10000stake",
+			},
+			wantErr: true,
+		},
+		{
+			name: "negative amount",
+			message: &baseapptestutil.MsgSend{
+				From:   addr.String(),
+				To:     toAddr.String(),
+				Amount: "-10000stake",
+			},
+			wantErr: true,
+		},
+		{
+			name: "with nested messages",
+			message: &baseapptestutil.MsgNestedMessages{
+				Signer: addr.String(),
+				Messages: []*any.Any{
+					anyMessage(t, suite.cdc, &baseapptestutil.MsgSend{
+						From:   addr.String(),
+						To:     toAddr.String(),
+						Amount: "10000stake",
+					}),
+				},
+			},
+		},
+		{
+			name: "with invalid nested messages",
+			message: &baseapptestutil.MsgNestedMessages{
+				Signer: addr.String(),
+				Messages: []*any.Any{
+					anyMessage(t, suite.cdc, &baseapptestutil.MsgSend{
+						From:   "",
+						To:     toAddr.String(),
+						Amount: "10000stake",
+					}),
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "with different signer ",
+			message: &baseapptestutil.MsgNestedMessages{
+				Signer: addr.String(),
+				Messages: []*any.Any{
+					anyMessage(t, suite.cdc, &baseapptestutil.MsgSend{
+						From:   toAddr.String(),
+						To:     addr.String(),
+						Amount: "10000stake",
+					}),
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			nestedMessages := make([]*any.Any, 1)
+			b, err := suite.cdc.Marshal(tt.message)
+			require.NoError(t, err)
+			nestedMessages[0] = &any.Any{
+				TypeUrl: sdk.MsgTypeURL(tt.message),
+				Value:   b,
+			}
+
+			msg := &baseapptestutil.MsgNestedMessages{
+				Messages: nestedMessages,
+				Signer:   addr.String(),
+			}
+
+			builder := suite.txConfig.NewTxBuilder()
+			err = builder.SetMsgs(msg)
+			require.NoError(t, err)
+			setTxSignature(t, builder, 0)
+			tx := builder.GetTx()
+
+			txBytes, err := suite.txConfig.TxEncoder()(tx)
+			require.Nil(t, err)
+
+			_, result, err := suite.baseApp.Simulate(txBytes)
+			if tt.wantErr {
+				require.Error(t, err)
+				require.Nil(t, result)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, result)
+			}
+		})
+	}
+}
+
+func TestABCI_Query_SimulateNestedMessagesGas(t *testing.T) {
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(uint64(10)))
+			return
+		})
+	}
+
+	_, _, addr := testdata.KeyTestPubAddr()
+	_, _, toAddr := testdata.KeyTestPubAddr()
+
+	tests := []struct {
+		name        string
+		suite       *BaseAppSuite
+		message     sdk.Msg
+		consumedGas uint64
+	}{
+		{
+			name:  "don't add gas",
+			suite: NewBaseAppSuite(t, anteOpt),
+			message: &baseapptestutil.MsgSend{
+				From:   addr.String(),
+				To:     toAddr.String(),
+				Amount: "10000stake",
+			},
+			consumedGas: 5,
+		},
+		{
+			name:  "add gas",
+			suite: NewBaseAppSuite(t, anteOpt, baseapp.SetIncludeNestedMsgsGas([]sdk.Msg{&baseapptestutil.MsgNestedMessages{}})),
+			message: &baseapptestutil.MsgSend{
+				From:   addr.String(),
+				To:     toAddr.String(),
+				Amount: "10000stake",
+			},
+			consumedGas: 10,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := tt.suite.baseApp.InitChain(&abci.InitChainRequest{
+				ConsensusParams: &cmtproto.ConsensusParams{},
+			})
+			require.NoError(t, err)
+
+			baseapptestutil.RegisterNestedMessagesServer(tt.suite.baseApp.MsgServiceRouter(), NestedMessgesServerImpl{})
+			baseapptestutil.RegisterSendServer(tt.suite.baseApp.MsgServiceRouter(), SendServerImpl{})
+
+			nestedMessages := make([]*any.Any, 1)
+			b, err := tt.suite.cdc.Marshal(tt.message)
+			require.NoError(t, err)
+			nestedMessages[0] = &any.Any{
+				TypeUrl: sdk.MsgTypeURL(tt.message),
+				Value:   b,
+			}
+
+			msg := &baseapptestutil.MsgNestedMessages{
+				Messages: nestedMessages,
+				Signer:   addr.String(),
+			}
+
+			builder := tt.suite.txConfig.NewTxBuilder()
+			err = builder.SetMsgs(msg)
+			require.NoError(t, err)
+			setTxSignature(t, builder, 0)
+			tx := builder.GetTx()
+
+			txBytes, err := tt.suite.txConfig.TxEncoder()(tx)
+			require.Nil(t, err)
+
+			gas, result, err := tt.suite.baseApp.Simulate(txBytes)
+			require.NoError(t, err)
+			require.NotNil(t, result)
+			require.True(t, gas.GasUsed == tt.consumedGas)
+		})
+	}
 }
 
 func TestABCI_Query_SimulateTx(t *testing.T) {

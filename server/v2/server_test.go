@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/server/v2/appmanager"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
@@ -31,6 +32,14 @@ func (*mockInterfaceRegistry) ListAllInterfaces() []string { panic("not implemen
 
 type mockApp[T transaction.Tx] struct {
 	serverv2.AppI[T]
+}
+
+func (*mockApp[T]) GetGPRCMethodsToMessageMap() map[string]func() gogoproto.Message {
+	return map[string]func() gogoproto.Message{}
+}
+
+func (*mockApp[T]) GetAppManager() *appmanager.AppManager[T] {
+	return nil
 }
 
 func (*mockApp[T]) InterfaceRegistry() coreapp.InterfaceRegistry {

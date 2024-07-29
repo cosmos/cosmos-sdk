@@ -410,9 +410,17 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 		}
 	}()
 
-	nextItem, err = m.commitSnapshotter.Restore(snapshot.Height, snapshot.Format, streamReader, chStorage)
-	if err != nil {
-		return errorsmod.Wrap(err, "multistore restore")
+	var commitmentErr error
+	go func() {
+		defer close(chStorage)
+		nextItem, err = m.commitSnapshotter.Restore(snapshot.Height, snapshot.Format, streamReader, chStorage)
+		if err != nil {
+			commitmentErr = err
+		}
+	}()
+
+	if commitmentErr != nil {
+		return commitmentErr
 	}
 
 	for {

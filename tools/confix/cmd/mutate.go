@@ -73,7 +73,12 @@ func SetCommand() *cobra.Command {
 				ctx = confix.WithLogWriter(ctx, cmd.ErrOrStderr())
 			}
 
-			return confix.Upgrade(ctx, plan, filename, outputPath, FlagSkipValidate)
+			doc, err := confix.LoadConfig(filename)
+			if err != nil {
+				return err
+			}
+
+			return confix.Upgrade(ctx, plan, doc, filename, outputPath, FlagSkipValidate)
 		},
 	}
 

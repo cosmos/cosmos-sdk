@@ -757,7 +757,7 @@ func (app *BaseApp) beginBlock(_ *abci.RequestFinalizeBlock) (sdk.BeginBlock, er
 			)
 		}
 
-		app.AddStreamEvents(ctx.BlockHeight(), ctx.BlockTime(), resp.Events, true)
+		app.AddStreamEvents(ctx.BlockHeight(), ctx.BlockTime(), resp.Events, false)
 
 		resp.Events = sdk.MarkEventsToIndex(resp.Events, app.indexEvents)
 	}

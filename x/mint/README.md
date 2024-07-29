@@ -57,7 +57,7 @@ It can be broken down in the following way:
 
 ### Provisions
 
-Provisions are the amount of tokens generated and distributed in each block. They are directly related to the inflation rate and the current total supply of tokens. The amount of provisions generated per block is calculated based on the annual provisions, which are determined by the inflation rate and the total supply of tokens.
+Provisions are the number of tokens generated and distributed in each block. They are directly related to the inflation rate and the current total supply of tokens. The amount of provisions generated per block is calculated based on the annual provisions, which are determined by the inflation rate and the total supply of tokens.
 
 #### Relation to Inflation
 
@@ -67,7 +67,7 @@ The inflation rate determines the percentage of the total supply of tokens that 
 
 Each block uses a fraction of the annual provisions, calculated as: 
 
-```
+```plaintext
 Provisions per block = Annual provisions / Number of blocks per year
 ```
 

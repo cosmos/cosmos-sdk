@@ -446,7 +446,7 @@ func TestSnapshot_Pruning_Take_Snapshot_Parallel(t *testing.T) {
 	}()
 
 	// let the pruning run first for a few moment
-	time.Sleep(time.Microsecond * 100)
+	time.Sleep(time.Microsecond * 10)
 
 	// error since pruning is running
 	_, err = manager.Create(4)
@@ -506,7 +506,6 @@ func TestSnapshot_SnapshotIfApplicable(t *testing.T) {
 
 	snapshotOpts := snapshots.NewSnapshotOptions(1, 1)
 
-	// expectChunks := snapshotItems(items, extSnapshotter)
 	manager := snapshots.NewManager(store, snapshotOpts, commitSnapshotter, &mockStorageSnapshotter{}, nil, coretesting.NewNopLogger())
 	err := manager.RegisterExtensions(extSnapshotter)
 	require.NoError(t, err)

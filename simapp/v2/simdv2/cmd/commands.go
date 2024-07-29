@@ -52,6 +52,7 @@ func initRootCmd[T transaction.Tx](
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
 		NewTestnetCmd(moduleManager),
+		store.New[T]().RestoreSnapshotCmd(newApp),
 		// pruning.Cmd(newApp), // TODO add to comet server
 		// snapshot.Cmd(newApp), // TODO add to comet server
 	)

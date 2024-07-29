@@ -65,7 +65,7 @@ func (s *StoreComponent[T]) ExportSnapshotCmd() *cobra.Command {
 }
 
 // RestoreSnapshotCmd returns a command to restore a snapshot
-func (s *StoreComponent[T]) RestoreSnapshotCmd() *cobra.Command {
+func (s *StoreComponent[T]) RestoreSnapshotCmd(newApp serverv2.AppCreator[T]) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "restore <height> <format>",
 		Short: "Restore app state from local snapshot",
@@ -84,10 +84,8 @@ func (s *StoreComponent[T]) RestoreSnapshotCmd() *cobra.Command {
 			}
 
 			logger := log.NewLogger(cmd.OutOrStdout())
-			rootStore, _, err := createRootStore(cmd, v, logger)
-			if err != nil {
-				return err
-			}
+			app := newApp(logger, v)
+			rootStore := app.GetStore().(storev2.RootStore)
 			
 			sm, err := createSnapshotsManager(cmd, v, logger, rootStore)
 			if err != nil {

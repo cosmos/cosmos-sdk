@@ -12,10 +12,6 @@ DRAFT
 
 V2 is a reset in the Cosmos SDK architecture. It is a complete rewrite of the SDK, with a focus on modularity, extensibility, and performance. The V2 SDK breaks apart the core SDK into smaller modular components allowing users to pick and choose the components they need for their specific use case. This document outlines the changes and migration path for users of the V1 SDK.
 
-> "If you can't explain it simply, you don't understand it well enough." Provide
-> a simplified and layman-accessible explanation of the ADR.
-> A short (~200 word) description of the issue being addressed.
-
 ## Context
 
 The Cosmos SDK began in 2016, at this time the software was written with the direct use case of the Cosmos Hub.Since then we have seen the SDK evolve and grow, with new features and improvements being added over time. The SDK today is used by over 100 different projects, with more users joining the ecosystem every day. This has led to a number of challenges, including:
@@ -53,18 +49,41 @@ graph TD
 
 This is a high-level overview of Baseapp today. As we can see baseapp houses all the logic for the ABCI methods, state management, transaction processing, and query handling. This has led baseapp to be a very large monolith.
 
-
-
-
 ## Alternatives
 
 The alternative to doing a rewrite is to spend more time cleaning up baseapp. This would not fix issues around forking the repository to make changes like we see today. Keeping the current codebase does not allow the project to progress and reduce the maintenance burden on the project.
 
-> This section describes alternative designs to the chosen design. This section
-> is important and if an adr does not have any alternatives then it should be
-> considered that the ADR was not thought through. 
 
 ## Decision
+
+The Descision is to rewrite the core componenets (baseapp, server, store) of the SDK into smaller modules. 
+
+These components will be broken into separate go.mods. The modules consist of the following:
+
+* Cometbft
+* Appmanager
+* STF  (State Transition Function)
+* Server/v2
+* Store/v2
+* Runtime/v2
+
+```mermaid
+graph TD
+    subgraph Server
+        Mempool
+        E[Vote Extensions]
+        F[Prepare & Process Proposal]
+        Consensus
+    end
+Server <--> A[AppManager]
+A[AppManager] <--> B["STF(State Transition Function)"]
+B <--> C[Bank]
+B <--> D[Auth]
+B <--> G[Staking]
+Server --> H[Storage]
+H --> I[State Storage]
+H --> J[State Commitment]
+```
 
 > This section describes our response to these forces. It is stated in full
 > sentences, with active voice. "We will ..."

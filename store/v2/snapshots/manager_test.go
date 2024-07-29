@@ -490,5 +490,38 @@ func TestSnapshot_Pruning_Take_Snapshot_Parallel(t *testing.T) {
 			ChunkHashes: checksums(expectChunks),
 		},
 	}, snapshot)
+}
 
+func TestSnapshot_SnapshotIfApplicable(t *testing.T) {
+	store := setupStore(t)
+
+	items := [][]byte{
+		{1, 2, 3},
+		{4, 5, 6},
+		{7, 8, 9},
+	}
+	commitSnapshotter := &mockCommitSnapshotter{
+		items: items,
+	}
+	extSnapshotter := newExtSnapshotter(10)
+
+	snapshotOpts := snapshots.NewSnapshotOptions(1, 1)
+
+	// expectChunks := snapshotItems(items, extSnapshotter)
+	manager := snapshots.NewManager(store, snapshotOpts, commitSnapshotter, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
+	err := manager.RegisterExtensions(extSnapshotter)
+	require.NoError(t, err)
+
+	manager.SnapshotIfApplicable(4)
+
+	checkLatestHeight := func() bool {
+		latestSnapshot, _ := manager.GetLatestSnapshot()
+		return latestSnapshot.Height == 4
+	}
+
+	require.Eventually(t, checkLatestHeight, time.Second*10, time.Second)
+
+	pruned, err := manager.Prune(1)
+	require.NoError(t, err)
+	require.Equal(t, uint64(0), pruned)
 }

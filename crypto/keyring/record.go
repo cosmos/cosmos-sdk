@@ -3,6 +3,7 @@ package keyring
 import (
 	"errors"
 
+	cryptotypes "github.com/cosmos/crypto/types"
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	errorsmod "cosmossdk.io/errors"

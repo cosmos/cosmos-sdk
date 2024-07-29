@@ -39,7 +39,7 @@ func DefaultJSONTxEncoder(cdc codec.Codec) sdk.TxEncoder {
 		if err != nil {
 			return nil, err
 		}
-		// 3) Umashal the bytes to a "v1" (gogoproto) Tx
+		// 3) Umarshal the bytes to a "v1" (gogoproto) Tx
 		v1Tx := &sdktx.Tx{}
 		err = gogoproto.Unmarshal(bz, v1Tx)
 		if err != nil {

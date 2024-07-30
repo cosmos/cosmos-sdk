@@ -62,6 +62,7 @@ func TestListenerMux(t *testing.T) {
 }
 
 func callAllCallbacksOnces(t *testing.T, listener Listener) {
+	t.Helper()
 	if err := listener.InitializeModuleData(ModuleInitializationData{}); err != nil {
 		t.Error(err)
 	}

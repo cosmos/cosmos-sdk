@@ -39,12 +39,14 @@ type ManagerConfig struct {
 	Target map[string]Config
 }
 
-// TODO add global include & exclude module filters
-type ManagerResult struct{}
+type ManagerResult struct {
+	Listener     appdata.Listener
+	ModuleFilter ModuleFilterConfig
+}
 
 // StartManager starts the indexer manager with the given options. The state machine should write all relevant app data to
 // the returned listener.
-func StartManager(opts ManagerOptions) (appdata.Listener, error) {
+func StartManager(opts ManagerOptions) (ManagerResult, error) {
 	logger := opts.Logger
 	if logger == nil {
 		logger = logutil.NoopLogger{}
@@ -56,7 +58,7 @@ func StartManager(opts ManagerOptions) (appdata.Listener, error) {
 
 	cfg, err := unmarshalConfig(opts.Config)
 	if err != nil {
-		return appdata.Listener{}, err
+		return ManagerResult{}, err
 	}
 
 	ctx := opts.Context
@@ -66,19 +68,17 @@ func StartManager(opts ManagerOptions) (appdata.Listener, error) {
 
 	listeners := make([]appdata.Listener, 0, len(cfg.Target))
 
-	includeModuleFilter := map[string]bool{}
-	var excludeModuleFilter map[string]bool
-
+	allModuleFilters := make([]ModuleFilterConfig, 0, len(cfg.Target))
 	for targetName, targetCfg := range cfg.Target {
 		init, ok := indexerRegistry[targetCfg.Type]
 		if !ok {
-			return appdata.Listener{}, fmt.Errorf("indexer type %q not found", targetCfg.Type)
+			return ManagerResult{}, fmt.Errorf("indexer type %q not found", targetCfg.Type)
 		}
 
 		logger.Info("Starting indexer", "target", targetName, "type", targetCfg.Type)
 
-		if len(targetCfg.ExcludeModules) != 0 && len(targetCfg.IncludeModules) != 0 {
-			return appdata.Listener{}, fmt.Errorf("only one of exclude_modules or include_modules can be set for indexer %s", targetName)
+		if err := targetCfg.Filter.Validate(); err != nil {
+			return ManagerResult{}, fmt.Errorf("invalid filter for target %q: %w", targetName, err)
 		}
 
 		childLogger := logger
@@ -92,59 +92,14 @@ func StartManager(opts ManagerOptions) (appdata.Listener, error) {
 			Logger:  childLogger,
 		})
 		if err != nil {
-			return appdata.Listener{}, err
+			return ManagerResult{}, err
 		}
 
-		listener := initRes.Listener
-
-		var excludedModuleFilter map[string]bool
-		allIncludedModules := map[string]bool{}
-		if len(targetCfg.ExcludeModules) != 0 {
-			excluded := map[string]bool{}
-
-			for _, moduleName := range targetCfg.ExcludeModules {
-				excluded[moduleName] = true
-			}
-
-			// for excluded modules we must do an intersection
-			excludedModuleFilter = filterIntersection(excludedModuleFilter, excluded)
-
-			listener = appdata.ModuleFilter(listener, func(moduleName string) bool {
-				return !excluded[moduleName]
-			})
-
-		} else if len(targetCfg.IncludeModules) != 0 {
-			included := map[string]bool{}
-			for _, moduleName := range targetCfg.IncludeModules {
-				included[moduleName] = true
-				// for included modules we do a union
-				allIncludedModules[moduleName] = true
-			}
-			listener = appdata.ModuleFilter(listener, func(moduleName string) bool {
-				return included[moduleName]
-			})
-		}
-
-		if targetCfg.ExcludeBlockHeaders && listener.StartBlock != nil {
-			cb := listener.StartBlock
-			listener.StartBlock = func(data appdata.StartBlockData) error {
-				data.HeaderBytes = nil
-				data.HeaderJSON = nil
-				return cb(data)
-			}
-		}
-
-		if targetCfg.ExcludeTxs {
-			listener.OnTx = nil
-		}
-
-		if targetCfg.ExcludeEvents {
-			listener.OnEvent = nil
-		}
-
+		listener := targetCfg.Filter.Apply(initRes.Listener)
+		listener = addSyncAndSanityCheck(initRes.LastBlockPersisted, listener, opts, targetCfg.Filter.Modules)
 		listeners = append(listeners, listener)
 
-		// TODO check last block persisted
+		allModuleFilters = append(allModuleFilters, targetCfg.Filter.Modules)
 	}
 
 	rootListener := appdata.AsyncListenerMux(
@@ -152,12 +107,13 @@ func StartManager(opts ManagerOptions) (appdata.Listener, error) {
 		listeners...,
 	)
 
-	rootModuleFilter := combineIncludeExcludeFilters(includeModuleFilter, excludeModuleFilter)
-	if rootModuleFilter != nil {
-		rootListener = appdata.ModuleFilter(rootListener, rootModuleFilter)
-	}
+	rootModuleFilter := combineModuleFilters(allModuleFilters)
+	rootListener = rootModuleFilter.Apply(rootListener)
 
-	return rootListener, nil
+	return ManagerResult{
+		Listener:     rootListener,
+		ModuleFilter: rootModuleFilter,
+	}, nil
 }
 
 func unmarshalConfig(cfg interface{}) (*ManagerConfig, error) {

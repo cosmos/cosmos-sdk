@@ -8,8 +8,8 @@ import (
 
 // DecoderResolver is an interface that allows indexers to discover and use module decoders.
 type DecoderResolver interface {
-	// IterateAll iterates over all available module decoders.
-	IterateAll(func(moduleName string, cdc schema.ModuleCodec) error) error
+	// AllDecoders iterates over all available module decoders.
+	AllDecoders(func(moduleName string, cdc schema.ModuleCodec) error) error
 
 	// LookupDecoder looks up a specific module decoder.
 	LookupDecoder(moduleName string) (decoder schema.ModuleCodec, found bool, err error)
@@ -27,7 +27,7 @@ type moduleSetDecoderResolver struct {
 	moduleSet map[string]interface{}
 }
 
-func (a moduleSetDecoderResolver) IterateAll(f func(string, schema.ModuleCodec) error) error {
+func (a moduleSetDecoderResolver) AllDecoders(f func(string, schema.ModuleCodec) error) error {
 	keys := make([]string, 0, len(a.moduleSet))
 	for k := range a.moduleSet {
 		keys = append(keys, k)

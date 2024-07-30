@@ -15,16 +15,19 @@ const (
 	removedStoreKeyPrefix = "c/removed/" // c/removed/<version>/<store-name>
 )
 
+// MetadataStore is a store for metadata related to the commitment store.
 type MetadataStore struct {
 	kv corestore.KVStoreWithBatch
 }
 
+// NewMetadataStore creates a new MetadataStore.
 func NewMetadataStore(kv corestore.KVStoreWithBatch) *MetadataStore {
 	return &MetadataStore{
 		kv: kv,
 	}
 }
 
+// GetLatestVersion returns the latest committed version.
 func (m *MetadataStore) GetLatestVersion() (uint64, error) {
 	value, err := m.kv.Get([]byte(latestVersionKey))
 	if err != nil {
@@ -51,6 +54,7 @@ func (m *MetadataStore) setLatestVersion(version uint64) error {
 	return m.kv.Set([]byte(latestVersionKey), buf.Bytes())
 }
 
+// GetCommitInfo returns the commit info for the given version.
 func (m *MetadataStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
 	key := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
 	value, err := m.kv.Get(key)
@@ -100,7 +104,7 @@ func (m *MetadataStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo)
 		return err
 	}
 
-	if err := batch.WriteSync(); err != nil {
+	if err := batch.Write(); err != nil {
 		return err
 	}
 	return nil
@@ -118,7 +122,7 @@ func (m *MetadataStore) flushRemovedStoreKeys(version uint64, storeKeys []string
 			return err
 		}
 	}
-	return batch.WriteSync()
+	return batch.Write()
 }
 
 func (m *MetadataStore) deleteRemovedStoreKeys(version uint64, removeStore func(storeKey []byte, version uint64) error) (err error) {
@@ -150,7 +154,7 @@ func (m *MetadataStore) deleteRemovedStoreKeys(version uint64, removeStore func(
 		}
 	}
 
-	return batch.WriteSync()
+	return batch.Write()
 }
 
 func (m *MetadataStore) deleteCommitInfo(version uint64) error {

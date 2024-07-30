@@ -60,7 +60,7 @@ The Descision is to rewrite the core componenets (baseapp, server, store) of the
 
 These components will be broken into separate go.mods. The modules consist of the following:
 
-* Cometbft
+* Consensus
 * Appmanager
 * STF  (State Transition Function)
 * Server/v2
@@ -88,6 +88,23 @@ H --> J[State Commitment]
 ```
 
 In the above diagram we do not mention runtime/v2 because it is the componend that is responsible for combining all the other components into a single application.
+
+### Consensus
+
+Consensus is the component that handles communication to the Consensus Engine (Networking & Consensus). The default implementation will be CometBFT, but other consensus engines can be used with v2. 
+
+```mermaid
+graph TD
+    subgraph Consensus
+        Mempool
+        E[Vote Extensions]
+        F[Prepare & Process Proposal]
+    end
+Consensus <-->|ABCI| A[CometBFT]
+```
+
+Consensus handles the connection to the consensus engine, is the only component in the V2 design with write access to the state, is decoding transactions,  passing the information to the appmanager to be processed and 
+
 
 > This section describes our response to these forces. It is stated in full
 > sentences, with active voice. "We will ..."

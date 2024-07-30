@@ -1299,7 +1299,7 @@ func TestMarshal(t *testing.T) {
 		},
 		"Trailing zeros": {
 			x:   NewDecFromInt64(123456000),
-			exp: "1.23456E+8",
+			exp: "123456000",
 		},
 		"Zero value": {
 			x:   NewDecFromInt64(0),
@@ -1307,35 +1307,33 @@ func TestMarshal(t *testing.T) {
 		},
 		"Decimal value": {
 			x:   must(NewDecFromString("1.30000")),
-			exp: "1.3",
+			exp: "1.30000",
 		},
 		"Positive value": {
 			x:   NewDecFromInt64(10),
-			exp: "1E+1",
+			exp: "10",
 		},
 		"negative value": {
 			x:   NewDecFromInt64(-10),
-			exp: "-1E+1",
+			exp: "-10",
 		},
 		"max decimal": {
 			x:   must(NewDecFromString("9." + strings.Repeat("0", 34))),
-			exp: "9",
+			exp: "9.0000000000000000000000000000000000",
 		},
 		"min decimal": {
 			x:   must(NewDecFromString("-1." + strings.Repeat("0", 34))),
-			exp: "-1",
+			exp: "-1.0000000000000000000000000000000000",
 		},
 		"1e100000": {
 			x:   NewDecWithPrec(1, 100_000),
 			exp: "1E+100000",
 		},
-		"1.1e100000": { 
-			//A coefficient of 11 with an exponent of 100,000 might be reduced to a coefficient of 1.1 with an exponent of 100,001.
-			// This is a result of normalizing the number to fit the conventional format of scientific notation.
+		"1.1e100000": {
 			x:   NewDecWithPrec(11, 100_000),
 			exp: "1.1E+100001",
 		},
-		"1.e100000": { 
+		"1.e100000": {
 			x:   NewDecWithPrec(1, 100_000),
 			exp: "1E+100000",
 		},
@@ -1351,54 +1349,89 @@ func TestMarshal(t *testing.T) {
 
 func TestUnMarshal(t *testing.T) {
 	specs := map[string]struct {
-		x   Dec
-		exp string
+		x      string
+		exp    string
+		expErr error
 	}{
 		"No trailing zeros": {
-			x:   NewDecFromInt64(123456),
+			x:   "123456",
 			exp: "123456",
 		},
 		"Trailing zeros": {
-			x:   NewDecFromInt64(123456000),
+			x:   "1.23456E+8",
+			exp: "123456000",
+		},
+		"Small e": {
+			x:   "1.23456e+8",
 			exp: "123456000",
 		},
 		"Zero value": {
-			x:   NewDecFromInt64(0),
+			x:   "0",
 			exp: "0",
 		},
 		"Decimal value": {
-			x:   must(NewDecFromString("1.30000")),
-			exp: "1.3",
+			x:   "1.3000",
+			exp: "1.3000",
 		},
 		"Positive value": {
-			x:   NewDecFromInt64(10),
+			x:   "1E+1",
 			exp: "10",
 		},
 		"negative value": {
-			x:   NewDecFromInt64(-10),
+			x:   "-1E+1",
 			exp: "-10",
 		},
 		"max decimal": {
-			x:   must(NewDecFromString("9." + strings.Repeat("0", 34))),
+			x:   "9",
 			exp: "9",
 		},
 		"min decimal": {
-			x:   must(NewDecFromString("-1." + strings.Repeat("0", 34))),
+			x:   "-1",
 			exp: "-1",
 		},
 		"1e100000": {
-			x:   NewDecWithPrec(1, 100_000),
+			x:   "1E+100000",
 			exp: "1e100000",
+		},
+		"1.1e100000": {
+			x:      "1.1E+100001",
+			expErr: ErrInvalidDec,
+		},
+		"1.e100000": {
+			x:   "1E+100000",
+			exp: "1e100000",
+		},
+		"-1e100000": {
+			x:   "-1e100000",
+			exp: "-1e100000",
+		},
+		"9e100000": {
+			x:   "9e100000",
+			exp: "9e100000",
+		},
+		"NaN": {
+			x:      "NaN",
+			expErr: ErrInvalidDec,
+		},
+		"1foo": {
+			x:      "1foo",
+			expErr: ErrInvalidDec,
 		},
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
-			marshaled, err := spec.x.Marshal()
-			require.NoError(t, err)
 			var unmarshaled Dec
-			err = unmarshaled.Unmarshal(marshaled)
+			err := unmarshaled.Unmarshal([]byte(spec.x))
+			if spec.expErr != nil {
+				require.ErrorIs(t, err, spec.expErr)
+				return
+			}
 			if unmarshaled.dec.Exponent == 100000 {
-				assert.Equal(t, spec.exp, "1e100000")
+				coeffStr := unmarshaled.dec.Coeff.String()
+				if unmarshaled.dec.Negative {
+					coeffStr = "-" + coeffStr
+				}
+				assert.Equal(t, spec.exp, coeffStr+"e"+strconv.Itoa(int(unmarshaled.dec.Exponent)))
 			} else {
 				assert.Equal(t, spec.exp, unmarshaled.String())
 			}

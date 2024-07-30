@@ -10,6 +10,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/tendermint/tendermint/proto/tendermint/version"
 	dbm "github.com/tendermint/tm-db"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -408,7 +409,12 @@ func (app *BaseApp) Init() error {
 	}
 
 	// needed for the export command which inits from store but never calls initchain
-	app.setCheckState(tmproto.Header{})
+	app.setCheckState(tmproto.Header{
+		Version: version.Consensus{
+			App: app.appVersion,
+		},
+		Height: app.LastBlockHeight(),
+	})
 	app.Seal()
 
 	if app.cms == nil {

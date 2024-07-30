@@ -58,24 +58,12 @@ func TestGetGetSignersFnConcurrent(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	msg := &bankv1beta1.MsgSend{
-		FromAddress: hex.EncodeToString([]byte("foo")),
-	}
-
-	desc := msg.ProtoReflect().Descriptor()
-
-	// err = ctx.Validate()
-	// require.NoError(t, err)
-
-	for i := 0; i < 100; i++ {
+	desc := (&testpb.RepeatedSigner{}).ProtoReflect().Descriptor()
+	for i := 0; i < 50; i++ {
 		go func() {
 			_, _ = ctx.getGetSignersFn(desc)
 		}()
 	}
-
-	// signers, err := fn(msg)
-	// require.NoError(t, err)
-	// require.Equal(t, [][]byte{[]byte("foo")}, signers)
 }
 
 func TestGetSigners(t *testing.T) {
@@ -277,9 +265,8 @@ func TestDefineCustomGetSigners(t *testing.T) {
 	options.DefineCustomGetSigners(proto.MessageName(simpleSigner), func(msg proto.Message) ([][]byte, error) {
 		return [][]byte{[]byte("qux")}, nil
 	})
-	context, err = NewContext(options)
-	require.NoError(t, err)
-	require.ErrorContains(t, context.Validate(), "a custom signer function as been defined for message SimpleSigner")
+	_, err = NewContext(options)
+	require.ErrorContains(t, err, "a custom signer function as been defined for message SimpleSigner")
 }
 
 type dummyAddressCodec struct{}

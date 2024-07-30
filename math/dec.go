@@ -371,24 +371,29 @@ func (x Dec) Reduce() (Dec, int) {
 // Marshal serializes the decimal value into a byte slice in a text format.
 // This method ensures the decimal is represented in a portable and human-readable form.
 // The output may be in scientific notation if the number's magnitude is very large or very small.
-// Specifically, scientific notation is used for numbers with an absolute value >= 1e6 or < 1e-5.
-//
-// Additionally, this method normalizes the decimal numbers to fit the conventional format of scientific notation:
-// - If the coefficient after normalization does not fall within the range [1, 10), the decimal is adjusted.
-//   For example, a coefficient of 11 with an exponent of 100,000 will be normalized to a coefficient of 1.1 with an exponent of 100,001.
-// - This normalization process ensures that the coefficient is a single digit followed by a decimal point and the rest of the significant digits, adjusting the exponent accordingly.
 //
 // Returns:
 // - A byte slice of the decimal in text format, which may include scientific notation depending on the value.
-// - An error if the decimal cannot be serialized, typically due to issues with the internal decimal representation.
 func (x Dec) Marshal() ([]byte, error) {
-	reducedDec, _ := x.dec.Reduce(&x.dec)
-	return reducedDec.MarshalText()
+	return x.dec.MarshalText()
 }
 
 // Unmarshal parses a byte slice containing a text-formatted decimal and stores the result in the receiver.
 // It returns an error if the byte slice does not represent a valid decimal.
 func (x *Dec) Unmarshal(data []byte) error {
-	reducedDec, _ := x.dec.Reduce(&x.dec)
-	return reducedDec.UnmarshalText(data)
+	var d apd.Decimal
+	_, _, err := d.SetString(string(data))
+	if err != nil {
+		return ErrInvalidDec.Wrap(err.Error())
+	}
+
+	switch d.Form {
+	case apd.NaN, apd.NaNSignaling:
+		return ErrInvalidDec.Wrap("not a number")
+	case apd.Infinite:
+		return ErrInvalidDec.Wrap("infinite decimal value not allowed")
+	default:
+		x.dec = d
+		return nil
+	}
 }

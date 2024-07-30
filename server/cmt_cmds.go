@@ -242,11 +242,6 @@ $ %s query block --%s=%s <hash>
 
 			switch typ {
 			case auth.TypeHeight:
-<<<<<<< HEAD
-
-				if args[0] == "" {
-					return fmt.Errorf("argument should be a block height")
-=======
 				var (
 					err    error
 					height int64
@@ -254,7 +249,6 @@ $ %s query block --%s=%s <hash>
 				heightStr := ""
 				if len(args) > 0 {
 					heightStr = args[0]
->>>>>>> c4de9a970 (feat: check latest block if no arg in `q block` and `q block-results` (#21084))
 				}
 
 				if heightStr == "" {

@@ -67,6 +67,8 @@ These components will be broken into separate go.mods. The modules consist of th
 * Store/v2
 * Runtime/v2
 
+The flow of all the components was designed to be as simple as possible, and the flow is as follows:
+
 ```mermaid
 graph TD
     subgraph Server
@@ -84,6 +86,8 @@ Server --> H[Storage]
 H --> I[State Storage]
 H --> J[State Commitment]
 ```
+
+In the above diagram we do not mention runtime/v2 because it is the componend that is responsible for combining all the other components into a single application.
 
 > This section describes our response to these forces. It is stated in full
 > sentences, with active voice. "We will ..."

@@ -144,7 +144,7 @@ func getHeightFromCtx(ctx context.Context) (uint64, error) {
 	heightStr := values[0]
 	height, err := strconv.ParseUint(heightStr, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("unable to parse height string from gRPC metadata %s: %v", heightStr, err)
+		return 0, fmt.Errorf("unable to parse height string from gRPC metadata %s: %w", heightStr, err)
 	}
 
 	return height, nil

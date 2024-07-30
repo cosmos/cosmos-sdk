@@ -48,7 +48,6 @@ import (
 	"sync"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -305,24 +304,6 @@ func (s *serverReflectionServer) fileDescEncodingByFilename(name string, sentFil
 	return fileDescWithDependencies(fd, sentFileDescriptors)
 }
 
-// parseMetadata finds the file descriptor bytes specified meta.
-// For SupportPackageIsVersion4, m is the name of the proto file, we
-// call proto.FileDescriptor to get the byte slice.
-// For SupportPackageIsVersion3, m is a byte slice itself.
-func parseMetadata(meta interface{}) ([]byte, bool) {
-	// Check if meta is the file name.
-	if fileNameForMeta, ok := meta.(string); ok {
-		return getFileDescriptor(fileNameForMeta), true
-	}
-
-	// Check if meta is the byte slice.
-	if enc, ok := meta.([]byte); ok {
-		return enc, true
-	}
-
-	return nil, false
-}
-
 // fileDescEncodingContainingSymbol finds the file descriptor containing the
 // given symbol, finds all of its previously unsent transitive dependencies,
 // does marshaling on them, and returns the marshaled result. The given symbol
@@ -476,7 +457,7 @@ func (s *serverReflectionServer) ServerReflectionInfo(stream rpb.ServerReflectio
 	}
 }
 
-// getServices gets the unique list of services given a list of methods. 
+// getServices gets the unique list of services given a list of methods.
 func (s *serverReflectionServer) getServices(methods []string) (svcs []string, fds []*dpb.FileDescriptorProto) {
 	registry, err := gogoproto.MergedRegistry()
 	if err != nil {

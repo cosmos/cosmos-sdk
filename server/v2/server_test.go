@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/server/v2/appmanager"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
@@ -17,6 +16,7 @@ import (
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	grpc "cosmossdk.io/server/v2/api/grpc"
+	"cosmossdk.io/server/v2/appmanager"
 )
 
 type mockInterfaceRegistry struct{}

@@ -1,6 +1,6 @@
 # Schema & Indexer Testing
 
-This module contains core test utilities and fixtures for testing `comossdk.io/schema` and `cosmossdk.io/schema/indexer` functionality. It is managed as a separate go module to manage versions better and allow for dependencies on useful testing libraries without imposing those elsewhere.
+This module contains core test utilities and fixtures for testing `cosmossdk.io/schema` and `cosmossdk.io/schema/indexer` functionality. It is managed as a separate go module to manage versions better and allow for dependencies on useful testing libraries without imposing those elsewhere.
 
 The two primary intended uses of this library are:
 - testing that indexers can handle all valid app data that they might be asked to index

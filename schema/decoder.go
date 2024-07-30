@@ -18,8 +18,23 @@ type ModuleCodec struct {
 	KVDecoder KVDecoder
 }
 
-// KVDecoder is a function that decodes a key-value pair into an ObjectUpdate.
-// If the KV-pair doesn't represent an object update, the function should return false
-// as the second return value. Error should only be non-nil when the decoder expected
-// to parse a valid update and was unable to.
-type KVDecoder = func(key, value []byte) (ObjectUpdate, bool, error)
+// KVDecoder is a function that decodes a key-value pair into one or more ObjectUpdate's.
+// If the KV-pair doesn't represent object updates, the function should return nil as the first
+// and no error. The error result  should only be non-nil when the decoder expected
+// to parse a valid update and was unable to. In the case of an error, the decoder may return
+// a non-nil value for the first return value, which can indicate which parts of the update
+// were decodable to aid debugging.
+type KVDecoder = func(KVPairUpdate) ([]ObjectUpdate, error)
+
+// KVPairUpdate represents a key-value pair set or delete.
+type KVPairUpdate struct {
+	// Key is the key of the key-value pair.
+	Key []byte
+
+	// Value is the value of the key-value pair. It should be ignored when Delete is true.
+	Value []byte
+
+	// Delete is a flag that indicates that the key-value pair was deleted. If it is false,
+	// then it is assumed that this has been a set operation.
+	Delete bool
+}

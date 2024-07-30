@@ -1,7 +1,6 @@
 package commitment
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -9,20 +8,14 @@ import (
 
 	protoio "github.com/cosmos/gogoproto/io"
 
-	"cosmossdk.io/core/log"
+	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/internal"
 	"cosmossdk.io/store/v2/internal/conv"
-	"cosmossdk.io/store/v2/internal/encoding"
 	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/snapshots"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
-)
-
-const (
-	commitInfoKeyFmt = "c/%d" // c/<version>
-	latestVersionKey = "c/latest"
 )
 
 var (
@@ -37,17 +30,17 @@ var (
 // RootStore use a CommitStore as an abstraction to handle multiple store keys
 // and trees.
 type CommitStore struct {
-	logger     log.Logger
-	db         corestore.KVStoreWithBatch
+	logger     corelog.Logger
+	metadata   *MetadataStore
 	multiTrees map[string]Tree
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, logger log.Logger) (*CommitStore, error) {
+func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, logger corelog.Logger) (*CommitStore, error) {
 	return &CommitStore{
 		logger:     logger,
-		db:         db,
 		multiTrees: trees,
+		metadata:   NewMetadataStore(db),
 	}, nil
 }
 
@@ -96,23 +89,6 @@ func (c *CommitStore) WorkingCommitInfo(version uint64) *proof.CommitInfo {
 	}
 }
 
-func (c *CommitStore) GetLatestVersion() (uint64, error) {
-	value, err := c.db.Get([]byte(latestVersionKey))
-	if err != nil {
-		return 0, err
-	}
-	if value == nil {
-		return 0, nil
-	}
-
-	version, _, err := encoding.DecodeUvarint(value)
-	if err != nil {
-		return 0, err
-	}
-
-	return version, nil
-}
-
 func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 	// Rollback the metadata to the target version.
 	latestVersion, err := c.GetLatestVersion()
@@ -120,16 +96,10 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 		return err
 	}
 	if targetVersion < latestVersion {
-		batch := c.db.NewBatch()
-		defer batch.Close()
 		for version := latestVersion; version > targetVersion; version-- {
-			cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
-			if err := batch.Delete(cInfoKey); err != nil {
+			if err = c.metadata.deleteCommitInfo(version); err != nil {
 				return err
 			}
-		}
-		if err := batch.WriteSync(); err != nil {
-			return err
 		}
 	}
 
@@ -146,54 +116,7 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 		cInfo = c.WorkingCommitInfo(targetVersion)
 	}
 
-	return c.flushCommitInfo(targetVersion, cInfo)
-}
-
-func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
-	key := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
-	value, err := c.db.Get(key)
-	if err != nil {
-		return nil, err
-	}
-	if value == nil {
-		return nil, nil
-	}
-
-	cInfo := &proof.CommitInfo{}
-	if err := cInfo.Unmarshal(value); err != nil {
-		return nil, err
-	}
-
-	return cInfo, nil
-}
-
-func (c *CommitStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo) error {
-	// do nothing if commit info is nil, as will be the case for an empty, initializing store
-	if cInfo == nil {
-		return nil
-	}
-
-	batch := c.db.NewBatch()
-	defer batch.Close()
-	cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
-	value, err := cInfo.Marshal()
-	if err != nil {
-		return err
-	}
-	if err := batch.Set(cInfoKey, value); err != nil {
-		return err
-	}
-
-	var buf bytes.Buffer
-	buf.Grow(encoding.EncodeUvarintSize(version))
-	if err := encoding.EncodeUvarint(&buf, version); err != nil {
-		return err
-	}
-	if err := batch.Set([]byte(latestVersionKey), buf.Bytes()); err != nil {
-		return err
-	}
-
-	return batch.WriteSync()
+	return c.metadata.flushCommitInfo(targetVersion, cInfo)
 }
 
 func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
@@ -234,7 +157,7 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 		StoreInfos: storeInfos,
 	}
 
-	if err := c.flushCommitInfo(version, cInfo); err != nil {
+	if err := c.metadata.flushCommitInfo(version, cInfo); err != nil {
 		return nil, err
 	}
 
@@ -261,7 +184,7 @@ func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]p
 	if err != nil {
 		return nil, err
 	}
-	cInfo, err := c.GetCommitInfo(version)
+	cInfo, err := c.metadata.GetCommitInfo(version)
 	if err != nil {
 		return nil, err
 	}
@@ -294,19 +217,10 @@ func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, 
 // Prune implements store.Pruner.
 func (c *CommitStore) Prune(version uint64) (ferr error) {
 	// prune the metadata
-	batch := c.db.NewBatch()
-	defer batch.Close()
 	for v := version; v > 0; v-- {
-		cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, v))
-		if exist, _ := c.db.Has(cInfoKey); !exist {
-			break
-		}
-		if err := batch.Delete(cInfoKey); err != nil {
+		if err := c.metadata.deleteCommitInfo(v); err != nil {
 			return err
 		}
-	}
-	if err := batch.WriteSync(); err != nil {
-		return err
 	}
 
 	for _, tree := range c.multiTrees {
@@ -330,7 +244,7 @@ func (c *CommitStore) PausePruning(pause bool) {
 // Snapshot implements snapshotstypes.CommitSnapshotter.
 func (c *CommitStore) Snapshot(version uint64, protoWriter protoio.Writer) error {
 	if version == 0 {
-		return fmt.Errorf("the snapshot version must be greater than 0")
+		return errors.New("the snapshot version must be greater than 0")
 	}
 
 	latestVersion, err := c.GetLatestVersion()
@@ -434,7 +348,7 @@ loop:
 
 		case *snapshotstypes.SnapshotItem_IAVL:
 			if importer == nil {
-				return snapshotstypes.SnapshotItem{}, fmt.Errorf("received IAVL node item before store item")
+				return snapshotstypes.SnapshotItem{}, errors.New("received IAVL node item before store item")
 			}
 			node := item.IAVL
 			if node.Height > int32(math.MaxInt8) {
@@ -478,6 +392,14 @@ loop:
 	}
 
 	return snapshotItem, c.LoadVersion(version)
+}
+
+func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
+	return c.metadata.GetCommitInfo(version)
+}
+
+func (c *CommitStore) GetLatestVersion() (uint64, error) {
+	return c.metadata.GetLatestVersion()
 }
 
 func (c *CommitStore) Close() (ferr error) {

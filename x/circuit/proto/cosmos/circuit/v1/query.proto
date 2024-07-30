@@ -16,7 +16,7 @@ service Query {
     option (google.api.http).get               = "/cosmos/circuit/v1/accounts/{address}";
   }
 
-  // Account returns account permissions.
+  // Accounts returns multiple accounts permissions.
   rpc Accounts(QueryAccountsRequest) returns (AccountsResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get               = "/cosmos/circuit/v1/accounts";
@@ -52,7 +52,7 @@ message AccountsResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryDisableListRequest is the request type for the Query/DisabledList RPC method.
+// QueryDisabledListRequest is the request type for the Query/DisabledList RPC method.
 message QueryDisabledListRequest {}
 
 // DisabledListResponse is the response type for the Query/DisabledList RPC method.

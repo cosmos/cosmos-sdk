@@ -29,7 +29,6 @@ const (
 
 var (
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.HasInvariants       = AppModule{}
@@ -37,7 +36,6 @@ var (
 	_ module.HasABCIEndBlock     = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
-	_ appmodule.HasBeginBlocker       = AppModule{}
 	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
@@ -72,6 +70,7 @@ func NewAppModule(
 func (am AppModule) IsAppModule() {}
 
 // Name returns the staking module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
@@ -170,11 +169,6 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 
 // ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
-
-// BeginBlock returns the begin blocker for the staking module.
-func (am AppModule) BeginBlock(ctx context.Context) error {
-	return am.keeper.BeginBlocker(ctx)
-}
 
 // EndBlock returns the end blocker for the staking module.
 func (am AppModule) EndBlock(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {

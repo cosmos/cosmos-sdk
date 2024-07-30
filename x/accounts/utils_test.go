@@ -12,7 +12,6 @@ import (
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
-	"cosmossdk.io/core/log"
 	coretesting "cosmossdk.io/core/testing"
 	coretransaction "cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/accounts/internal/implementation"
@@ -74,7 +73,7 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 
 	ctx := coretesting.Context()
 	ss := coretesting.KVStoreService(ctx, "test")
-	env := runtime.NewEnvironment(ss, log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter))
+	env := runtime.NewEnvironment(ss, coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter))
 	env.EventService = eventService{}
 	m, err := NewKeeper(codec.NewProtoCodec(ir), env, addressCodec, ir, accounts...)
 	require.NoError(t, err)

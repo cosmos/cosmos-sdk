@@ -98,7 +98,15 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 		} else if !bytes.Equal(feeGranterAddr, feePayer) {
 			err := dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranterAddr, feePayer, fee, sdkTx.GetMsgs())
 			if err != nil {
-				return errorsmod.Wrapf(err, "%s does not allow to pay fees for %s", feeGranter, feePayer)
+				granterAddr, acErr := dfd.accountKeeper.AddressCodec().BytesToString(feeGranter)
+				if acErr != nil {
+					return errorsmod.Wrapf(err, "%s, feeGranter does not allow to pay fees", acErr.Error())
+				}
+				payerAddr, acErr := dfd.accountKeeper.AddressCodec().BytesToString(feePayer)
+				if acErr != nil {
+					return errorsmod.Wrapf(err, "%s, feeGranter does not allow to pay fees", acErr.Error())
+				}
+				return errorsmod.Wrapf(err, "%s does not allow to pay fees for %s", granterAddr, payerAddr)
 			}
 		}
 

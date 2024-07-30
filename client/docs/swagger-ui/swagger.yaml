@@ -13941,6 +13941,9 @@ paths:
                       result to be
 
                       considered valid for an expedited proposal.
+                  proposal_execution_gas:
+                    type: string
+                    format: uint64
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
@@ -17345,7 +17348,177 @@ paths:
                   properties:
                     '@type':
                       type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
                   additionalProperties: {}
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
       tags:
         - Query
   /cosmos/mint/v1beta1/inflation:
@@ -17384,7 +17557,177 @@ paths:
                   properties:
                     '@type':
                       type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
                   additionalProperties: {}
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
       tags:
         - Query
   /cosmos/mint/v1beta1/params:
@@ -17443,7 +17786,177 @@ paths:
                   properties:
                     '@type':
                       type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
                   additionalProperties: {}
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
       tags:
         - Query
   /cosmos/params/v1beta1/params:
@@ -20236,29 +20749,6 @@ paths:
                         bonded shares
 
                         multiplied by exchange rate.
-              historical_record:
-                type: object
-                properties:
-                  apphash:
-                    type: string
-                    format: byte
-                  time:
-                    type: string
-                    format: date-time
-                  validators_hash:
-                    type: string
-                    format: byte
-                description: >-
-                  Historical contains a set of minimum values needed for
-                  evaluating historical validator sets and blocks.
-
-                  It is stored as part of staking module's state, which persists
-                  the `n` most
-
-                  recent HistoricalInfo
-
-                  (`n` is set by the staking module's `historical_entries`
-                  parameter).
             description: >-
               QueryHistoricalInfoResponse is response type for the
               Query/HistoricalInfo RPC
@@ -21150,9 +21640,32 @@ paths:
                     bonded shares
 
                     multiplied by exchange rate.
-                description: validators contains all the queried validators.
+              validator_info:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    consensus_address:
+                      type: string
+                      description: >-
+                        consensus_address is the consensus address of the
+                        validator.
+                  description: >-
+                    ValidatorInfo contains the validator's address and public
+                    key.
+                description: >-
+                  validator_info contains additional information for each
+                  validator.
+
+                  The order of the elements in this list corresponds to the
+                  order of the elements in the validators list.
+
+                  For example, if you want the ValidatorInfo for the third
+                  validator in the validators list,
+
+                  you should look at the third element in the validator_info
+                  list.
               pagination:
-                description: pagination defines the pagination in the response.
                 type: object
                 properties:
                   next_key:
@@ -21170,6 +21683,16 @@ paths:
                       PageRequest.count_total
 
                       was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
             title: >-
               QueryValidatorsResponse is response type for the Query/Validators
               RPC method
@@ -21884,7 +22407,6 @@ paths:
                     balance in addition to shares which is more suitable for
                     client responses.
               pagination:
-                description: pagination defines the pagination in the response.
                 type: object
                 properties:
                   next_key:
@@ -21902,6 +22424,16 @@ paths:
                       PageRequest.count_total
 
                       was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
             title: |-
               QueryValidatorDelegationsResponse is response type for the
               Query/ValidatorDelegations RPC method
@@ -22764,7 +23296,6 @@ paths:
 
                     for a single validator in an time-ordered list.
               pagination:
-                description: pagination defines the pagination in the response.
                 type: object
                 properties:
                   next_key:
@@ -22782,6 +23313,16 @@ paths:
                       PageRequest.count_total
 
                       was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
             description: >-
               QueryValidatorUnbondingDelegationsResponse is response type for
               the
@@ -29290,7 +29831,7 @@ paths:
   /cosmos/nft/v1beta1/balance:
     get:
       summary: >-
-        BalancebyQueryString queries the number of NFTs of a given class owned
+        BalanceByQueryString queries the number of NFTs of a given class owned
         by the owner, same as balanceOf in ERC721
       operationId: BalanceByQueryString
       responses:
@@ -49952,6 +50493,9 @@ definitions:
         description: |-
           Minimum percentage of total stake needed to vote for a result to be
           considered valid for an expedited proposal.
+      proposal_execution_gas:
+        type: string
+        format: uint64
     description: Params defines the parameters for the x/gov module.
   cosmos.gov.v1.Proposal:
     type: object
@@ -50711,6 +51255,9 @@ definitions:
               be
 
               considered valid for an expedited proposal.
+          proposal_execution_gas:
+            type: string
+            format: uint64
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   cosmos.gov.v1.QueryProposalResponse:
     type: object
@@ -52622,28 +53169,6 @@ definitions:
       recent HistoricalInfo
 
       (`n` is set by the staking module's `historical_entries` parameter).
-  cosmos.staking.v1beta1.HistoricalRecord:
-    type: object
-    properties:
-      apphash:
-        type: string
-        format: byte
-      time:
-        type: string
-        format: date-time
-      validators_hash:
-        type: string
-        format: byte
-    description: >-
-      Historical contains a set of minimum values needed for evaluating
-      historical validator sets and blocks.
-
-      It is stored as part of staking module's state, which persists the `n`
-      most
-
-      recent HistoricalInfo
-
-      (`n` is set by the staking module's `historical_entries` parameter).
   cosmos.staking.v1beta1.Params:
     type: object
     properties:
@@ -53607,28 +54132,6 @@ definitions:
                 shares
 
                 multiplied by exchange rate.
-      historical_record:
-        type: object
-        properties:
-          apphash:
-            type: string
-            format: byte
-          time:
-            type: string
-            format: date-time
-          validators_hash:
-            type: string
-            format: byte
-        description: >-
-          Historical contains a set of minimum values needed for evaluating
-          historical validator sets and blocks.
-
-          It is stored as part of staking module's state, which persists the `n`
-          most
-
-          recent HistoricalInfo
-
-          (`n` is set by the staking module's `historical_entries` parameter).
     description: >-
       QueryHistoricalInfoResponse is response type for the Query/HistoricalInfo
       RPC
@@ -53964,7 +54467,6 @@ definitions:
             balance in addition to shares which is more suitable for client
             responses.
       pagination:
-        description: pagination defines the pagination in the response.
         type: object
         properties:
           next_key:
@@ -53982,6 +54484,14 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
     title: |-
       QueryValidatorDelegationsResponse is response type for the
       Query/ValidatorDelegations RPC method
@@ -54225,7 +54735,6 @@ definitions:
 
             for a single validator in an time-ordered list.
       pagination:
-        description: pagination defines the pagination in the response.
         type: object
         properties:
           next_key:
@@ -54243,6 +54752,14 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
     description: |-
       QueryValidatorUnbondingDelegationsResponse is response type for the
       Query/ValidatorUnbondingDelegations RPC method.
@@ -54451,9 +54968,26 @@ definitions:
             exchange rate. Voting power can be calculated as total bonded shares
 
             multiplied by exchange rate.
-        description: validators contains all the queried validators.
+      validator_info:
+        type: array
+        items:
+          type: object
+          properties:
+            consensus_address:
+              type: string
+              description: consensus_address is the consensus address of the validator.
+          description: ValidatorInfo contains the validator's address and public key.
+        description: >-
+          validator_info contains additional information for each validator.
+
+          The order of the elements in this list corresponds to the order of the
+          elements in the validators list.
+
+          For example, if you want the ValidatorInfo for the third validator in
+          the validators list,
+
+          you should look at the third element in the validator_info list.
       pagination:
-        description: pagination defines the pagination in the response.
         type: object
         properties:
           next_key:
@@ -54471,6 +55005,14 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
     title: >-
       QueryValidatorsResponse is response type for the Query/Validators RPC
       method
@@ -55018,6 +55560,13 @@ definitions:
       exchange rate. Voting power can be calculated as total bonded shares
 
       multiplied by exchange rate.
+  cosmos.staking.v1beta1.ValidatorInfo:
+    type: object
+    properties:
+      consensus_address:
+        type: string
+        description: consensus_address is the consensus address of the validator.
+    description: ValidatorInfo contains the validator's address and public key.
   cometbft.abci.v1.Event:
     type: object
     properties:
@@ -64643,6 +65192,152 @@ definitions:
       breaker for Msg's of all type URLs.
        - LEVEL_SUPER_ADMIN: LEVEL_SUPER_ADMIN indicates that the account can take all circuit breaker
       actions and can grant permissions to other accounts.
+  cometbft.abci.v1.CommitInfo:
+    type: object
+    properties:
+      round:
+        type: integer
+        format: int32
+      votes:
+        type: array
+        items:
+          type: object
+          properties:
+            validator:
+              type: object
+              properties:
+                address:
+                  type: string
+                  format: byte
+                  title: The first 20 bytes of SHA256(public key)
+                power:
+                  type: string
+                  format: int64
+                  description: The voting power
+                  title: PubKey pub_key = 2 [(gogoproto.nullable)=false];
+              description: Validator in the validator set.
+            block_id_flag:
+              type: string
+              enum:
+                - BLOCK_ID_FLAG_UNKNOWN
+                - BLOCK_ID_FLAG_ABSENT
+                - BLOCK_ID_FLAG_COMMIT
+                - BLOCK_ID_FLAG_NIL
+              default: BLOCK_ID_FLAG_UNKNOWN
+              description: |-
+                - BLOCK_ID_FLAG_UNKNOWN: Indicates an error condition
+                 - BLOCK_ID_FLAG_ABSENT: The vote was not received
+                 - BLOCK_ID_FLAG_COMMIT: Voted for the block that received the majority
+                 - BLOCK_ID_FLAG_NIL: Voted for nil
+              title: BlockIdFlag indicates which BlockID the signature is for
+          description: VoteInfo contains the information about the vote.
+    description: CommitInfo contains votes for the particular round.
+  cometbft.abci.v1.Misbehavior:
+    type: object
+    properties:
+      type:
+        type: string
+        enum:
+          - MISBEHAVIOR_TYPE_UNKNOWN
+          - MISBEHAVIOR_TYPE_DUPLICATE_VOTE
+          - MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK
+        default: MISBEHAVIOR_TYPE_UNKNOWN
+        description: |-
+          The type of misbehavior committed by a validator.
+
+           - MISBEHAVIOR_TYPE_UNKNOWN: Unknown
+           - MISBEHAVIOR_TYPE_DUPLICATE_VOTE: Duplicate vote
+           - MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK: Light client attack
+      validator:
+        type: object
+        properties:
+          address:
+            type: string
+            format: byte
+            title: The first 20 bytes of SHA256(public key)
+          power:
+            type: string
+            format: int64
+            description: The voting power
+            title: PubKey pub_key = 2 [(gogoproto.nullable)=false];
+        description: Validator in the validator set.
+        title: The offending validator
+      height:
+        type: string
+        format: int64
+        title: The height when the offense occurred
+      time:
+        type: string
+        format: date-time
+        title: The corresponding time where the offense occurred
+      total_voting_power:
+        type: string
+        format: int64
+        title: >-
+          Total voting power of the validator set in case the ABCI application
+          does
+
+          not store historical validators.
+
+          https://github.com/tendermint/tendermint/issues/4581
+    description: Misbehavior is a type of misbehavior committed by a validator.
+  cometbft.abci.v1.MisbehaviorType:
+    type: string
+    enum:
+      - MISBEHAVIOR_TYPE_UNKNOWN
+      - MISBEHAVIOR_TYPE_DUPLICATE_VOTE
+      - MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK
+    default: MISBEHAVIOR_TYPE_UNKNOWN
+    description: |-
+      The type of misbehavior committed by a validator.
+
+       - MISBEHAVIOR_TYPE_UNKNOWN: Unknown
+       - MISBEHAVIOR_TYPE_DUPLICATE_VOTE: Duplicate vote
+       - MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK: Light client attack
+  cometbft.abci.v1.Validator:
+    type: object
+    properties:
+      address:
+        type: string
+        format: byte
+        title: The first 20 bytes of SHA256(public key)
+      power:
+        type: string
+        format: int64
+        description: The voting power
+        title: PubKey pub_key = 2 [(gogoproto.nullable)=false];
+    description: Validator in the validator set.
+  cometbft.abci.v1.VoteInfo:
+    type: object
+    properties:
+      validator:
+        type: object
+        properties:
+          address:
+            type: string
+            format: byte
+            title: The first 20 bytes of SHA256(public key)
+          power:
+            type: string
+            format: int64
+            description: The voting power
+            title: PubKey pub_key = 2 [(gogoproto.nullable)=false];
+        description: Validator in the validator set.
+      block_id_flag:
+        type: string
+        enum:
+          - BLOCK_ID_FLAG_UNKNOWN
+          - BLOCK_ID_FLAG_ABSENT
+          - BLOCK_ID_FLAG_COMMIT
+          - BLOCK_ID_FLAG_NIL
+        default: BLOCK_ID_FLAG_UNKNOWN
+        description: |-
+          - BLOCK_ID_FLAG_UNKNOWN: Indicates an error condition
+           - BLOCK_ID_FLAG_ABSENT: The vote was not received
+           - BLOCK_ID_FLAG_COMMIT: Voted for the block that received the majority
+           - BLOCK_ID_FLAG_NIL: Voted for nil
+        title: BlockIdFlag indicates which BlockID the signature is for
+    description: VoteInfo contains the information about the vote.
   cometbft.types.v1.ABCIParams:
     type: object
     properties:
@@ -65009,6 +65704,214 @@ definitions:
 
           It was named app_version in CometBFT 0.34.
     description: VersionParams contain the version of specific components of CometBFT.
+  cosmos.consensus.v1.CometInfo:
+    type: object
+    properties:
+      evidence:
+        type: array
+        items:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - MISBEHAVIOR_TYPE_UNKNOWN
+                - MISBEHAVIOR_TYPE_DUPLICATE_VOTE
+                - MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK
+              default: MISBEHAVIOR_TYPE_UNKNOWN
+              description: |-
+                The type of misbehavior committed by a validator.
+
+                 - MISBEHAVIOR_TYPE_UNKNOWN: Unknown
+                 - MISBEHAVIOR_TYPE_DUPLICATE_VOTE: Duplicate vote
+                 - MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK: Light client attack
+            validator:
+              type: object
+              properties:
+                address:
+                  type: string
+                  format: byte
+                  title: The first 20 bytes of SHA256(public key)
+                power:
+                  type: string
+                  format: int64
+                  description: The voting power
+                  title: PubKey pub_key = 2 [(gogoproto.nullable)=false];
+              description: Validator in the validator set.
+              title: The offending validator
+            height:
+              type: string
+              format: int64
+              title: The height when the offense occurred
+            time:
+              type: string
+              format: date-time
+              title: The corresponding time where the offense occurred
+            total_voting_power:
+              type: string
+              format: int64
+              title: >-
+                Total voting power of the validator set in case the ABCI
+                application does
+
+                not store historical validators.
+
+                https://github.com/tendermint/tendermint/issues/4581
+          description: Misbehavior is a type of misbehavior committed by a validator.
+      validators_hash:
+        type: string
+        format: byte
+      proposer_address:
+        type: string
+        format: byte
+      last_commit:
+        type: object
+        properties:
+          round:
+            type: integer
+            format: int32
+          votes:
+            type: array
+            items:
+              type: object
+              properties:
+                validator:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                      format: byte
+                      title: The first 20 bytes of SHA256(public key)
+                    power:
+                      type: string
+                      format: int64
+                      description: The voting power
+                      title: PubKey pub_key = 2 [(gogoproto.nullable)=false];
+                  description: Validator in the validator set.
+                block_id_flag:
+                  type: string
+                  enum:
+                    - BLOCK_ID_FLAG_UNKNOWN
+                    - BLOCK_ID_FLAG_ABSENT
+                    - BLOCK_ID_FLAG_COMMIT
+                    - BLOCK_ID_FLAG_NIL
+                  default: BLOCK_ID_FLAG_UNKNOWN
+                  description: |-
+                    - BLOCK_ID_FLAG_UNKNOWN: Indicates an error condition
+                     - BLOCK_ID_FLAG_ABSENT: The vote was not received
+                     - BLOCK_ID_FLAG_COMMIT: Voted for the block that received the majority
+                     - BLOCK_ID_FLAG_NIL: Voted for nil
+                  title: BlockIdFlag indicates which BlockID the signature is for
+              description: VoteInfo contains the information about the vote.
+        description: CommitInfo contains votes for the particular round.
+    description: CometInfo defines the structure of the x/consensus module's comet info.
+  cosmos.consensus.v1.QueryGetCometInfoResponse:
+    type: object
+    properties:
+      comet_info:
+        description: comet_info is the comet info of the x/consensus module.
+        type: object
+        properties:
+          evidence:
+            type: array
+            items:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - MISBEHAVIOR_TYPE_UNKNOWN
+                    - MISBEHAVIOR_TYPE_DUPLICATE_VOTE
+                    - MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK
+                  default: MISBEHAVIOR_TYPE_UNKNOWN
+                  description: |-
+                    The type of misbehavior committed by a validator.
+
+                     - MISBEHAVIOR_TYPE_UNKNOWN: Unknown
+                     - MISBEHAVIOR_TYPE_DUPLICATE_VOTE: Duplicate vote
+                     - MISBEHAVIOR_TYPE_LIGHT_CLIENT_ATTACK: Light client attack
+                validator:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                      format: byte
+                      title: The first 20 bytes of SHA256(public key)
+                    power:
+                      type: string
+                      format: int64
+                      description: The voting power
+                      title: PubKey pub_key = 2 [(gogoproto.nullable)=false];
+                  description: Validator in the validator set.
+                  title: The offending validator
+                height:
+                  type: string
+                  format: int64
+                  title: The height when the offense occurred
+                time:
+                  type: string
+                  format: date-time
+                  title: The corresponding time where the offense occurred
+                total_voting_power:
+                  type: string
+                  format: int64
+                  title: >-
+                    Total voting power of the validator set in case the ABCI
+                    application does
+
+                    not store historical validators.
+
+                    https://github.com/tendermint/tendermint/issues/4581
+              description: Misbehavior is a type of misbehavior committed by a validator.
+          validators_hash:
+            type: string
+            format: byte
+          proposer_address:
+            type: string
+            format: byte
+          last_commit:
+            type: object
+            properties:
+              round:
+                type: integer
+                format: int32
+              votes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    validator:
+                      type: object
+                      properties:
+                        address:
+                          type: string
+                          format: byte
+                          title: The first 20 bytes of SHA256(public key)
+                        power:
+                          type: string
+                          format: int64
+                          description: The voting power
+                          title: PubKey pub_key = 2 [(gogoproto.nullable)=false];
+                      description: Validator in the validator set.
+                    block_id_flag:
+                      type: string
+                      enum:
+                        - BLOCK_ID_FLAG_UNKNOWN
+                        - BLOCK_ID_FLAG_ABSENT
+                        - BLOCK_ID_FLAG_COMMIT
+                        - BLOCK_ID_FLAG_NIL
+                      default: BLOCK_ID_FLAG_UNKNOWN
+                      description: |-
+                        - BLOCK_ID_FLAG_UNKNOWN: Indicates an error condition
+                         - BLOCK_ID_FLAG_ABSENT: The vote was not received
+                         - BLOCK_ID_FLAG_COMMIT: Voted for the block that received the majority
+                         - BLOCK_ID_FLAG_NIL: Voted for nil
+                      title: BlockIdFlag indicates which BlockID the signature is for
+                  description: VoteInfo contains the information about the vote.
+            description: CommitInfo contains votes for the particular round.
+    description: >-
+      QueryCometInfoResponse defines the response type for querying x/consensus
+      comet info.
   cosmos.consensus.v1.QueryParamsResponse:
     type: object
     properties:
@@ -65688,4 +66591,4 @@ definitions:
               The scope of this
 
               field's configuration is global (not module specific).
-    description: QueryConfigRequest is the Query/Config response type.
+    description: QueryConfigResponse is the Query/Config response type.

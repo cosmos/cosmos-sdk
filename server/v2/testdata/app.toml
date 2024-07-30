@@ -1,6 +1,6 @@
-[grpc-server]
+[grpc]
 # Enable defines if the gRPC server should be enabled.
-enable = true
+enable = false
 # Address defines the gRPC server address to bind to.
 address = 'localhost:9090'
 # MaxRecvMsgSize defines the max message size in bytes the server can receive.

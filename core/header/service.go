@@ -33,14 +33,11 @@ func (i *Info) Bytes() ([]byte, error) {
 	binary.LittleEndian.PutUint64(heightBytes, uint64(i.Height))
 	buf = append(buf, heightBytes...)
 
-	// TODO; permit empty hash OK for genesis block?
-	if len(i.Hash) == 0 {
-		i.Hash = make([]byte, hashSize)
-	}
 	// Encode Hash
 	if len(i.Hash) != hashSize {
 		return nil, errors.New("invalid hash size")
 	}
+
 	buf = append(buf, i.Hash...)
 
 	// Encode Time
@@ -48,11 +45,8 @@ func (i *Info) Bytes() ([]byte, error) {
 	binary.LittleEndian.PutUint64(timeBytes, uint64(i.Time.Unix()))
 	buf = append(buf, timeBytes...)
 
-	if len(i.AppHash) == 0 {
-		i.AppHash = make([]byte, hashSize)
-	}
 	// Encode AppHash
-	if len(i.Hash) != hashSize {
+	if len(i.AppHash) != hashSize {
 		return nil, errors.New("invalid hash size")
 	}
 	buf = append(buf, i.AppHash...)

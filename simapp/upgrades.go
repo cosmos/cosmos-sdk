@@ -11,7 +11,7 @@ import (
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
-	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the sample SimApp upgrade
@@ -47,10 +47,9 @@ func (app SimApp) RegisterUpgradeHandlers() {
 				accounts.StoreKey,
 				protocolpooltypes.StoreKey,
 				epochstypes.StoreKey,
+				countertypes.StoreKey, // This module is used for testing purposes only.
 			},
-			Deleted: []string{
-				crisistypes.StoreKey, // The SDK discontinued the crisis module in v0.51.0
-			},
+			Deleted: []string{"crisis"}, // The SDK discontinued the crisis module in v0.52.0
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades

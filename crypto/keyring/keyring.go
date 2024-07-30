@@ -59,7 +59,7 @@ type Keyring interface {
 	// Backend get the backend type used in the keyring config: "file", "os", "kwallet", "pass", "test", "memory".
 	Backend() string
 
-	// Get the db keyring used in the keystore.
+	// DB get the db keyring used in the keystore.
 	DB() keyring.Keyring
 
 	// List all keys.

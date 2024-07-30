@@ -6,9 +6,8 @@ import (
 	"os"
 	"testing"
 
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/testutils/sims"
-
-	"cosmossdk.io/core/log"
 
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"

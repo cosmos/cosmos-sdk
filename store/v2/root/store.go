@@ -2,6 +2,7 @@ package root
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"sync"
@@ -10,7 +11,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	coreheader "cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/metrics"
@@ -26,7 +27,7 @@ var _ store.RootStore = (*Store)(nil)
 // backend may or may not support multiple store keys and is implementation
 // dependent.
 type Store struct {
-	logger         log.Logger
+	logger         corelog.Logger
 	initialVersion uint64
 
 	// stateStorage reflects the state storage backend
@@ -64,7 +65,7 @@ type Store struct {
 //
 // NOTE: The migration manager is optional and can be nil if no migration is required.
 func New(
-	logger log.Logger,
+	logger corelog.Logger,
 	ss store.VersionedDatabase,
 	sc store.Committer,
 	pm *pruning.Manager,
@@ -72,7 +73,7 @@ func New(
 	m metrics.StoreMetrics,
 ) (store.RootStore, error) {
 	return &Store{
-		logger:           logger.With("module", "root_store"),
+		logger:           logger,
 		initialVersion:   1,
 		stateStorage:     ss,
 		stateCommitment:  sc,
@@ -148,8 +149,10 @@ func (s *Store) LastCommitID() (proof.CommitID, error) {
 	if err != nil {
 		return proof.CommitID{}, err
 	}
+	// if the latest version is 0, we return a CommitID with version 0 and a hash of an empty byte slice
+	bz := sha256.Sum256([]byte{})
 
-	return proof.CommitID{Version: latestVersion}, nil
+	return proof.CommitID{Version: latestVersion, Hash: bz[:]}, nil
 }
 
 // GetLatestVersion returns the latest version based on the latest internal
@@ -463,4 +466,8 @@ func (s *Store) commitSC() error {
 	}
 
 	return nil
+}
+
+func (s *Store) Prune(version uint64) error {
+	return s.pruningManager.Prune(version)
 }

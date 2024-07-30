@@ -59,7 +59,7 @@ func TestRandomizedGenState(t *testing.T) {
 	}
 }
 
-// TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.
+// TestRandomizedGenState1 tests abnormal scenarios of applying RandomizedGenState.
 func TestRandomizedGenState1(t *testing.T) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)

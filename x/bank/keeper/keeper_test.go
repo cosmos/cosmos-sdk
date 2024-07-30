@@ -15,7 +15,7 @@ import (
 
 	coreevent "cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -132,7 +132,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
 	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	addr, err := ac.BytesToString(accAddrs[4])
@@ -310,7 +310,7 @@ func (suite *KeeperTestSuite) TestPrependSendRestriction() {
 }
 
 func (suite *KeeperTestSuite) TestGetAuthority() {
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(storetypes.NewKVStoreKey(banktypes.StoreKey)), log.NewNopLogger())
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(storetypes.NewKVStoreKey(banktypes.StoreKey)), coretesting.NewNopLogger())
 	NewKeeperWithAuthority := func(authority string) keeper.BaseKeeper {
 		return keeper.NewBaseKeeper(
 			env,

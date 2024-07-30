@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -63,7 +62,7 @@ func SimulateMsgSend(
 	bk keeper.Keeper,
 ) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		r *rand.Rand, app simtypes.AppEntrypoint, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msgType := sdk.MsgTypeURL(&types.MsgSend{})
@@ -110,7 +109,7 @@ func SimulateMsgSendToModuleAccount(
 	moduleAccount int,
 ) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		r *rand.Rand, app simtypes.AppEntrypoint, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msgType := sdk.MsgTypeURL(&types.MsgSend{})
@@ -146,7 +145,7 @@ func SimulateMsgSendToModuleAccount(
 
 // sendMsgSend sends a transaction with a MsgSend from a provided random account.
 func sendMsgSend(
-	r *rand.Rand, app *baseapp.BaseApp,
+	r *rand.Rand, app simtypes.AppEntrypoint,
 	txGen client.TxConfig,
 	bk keeper.Keeper, ak types.AccountKeeper,
 	msg *types.MsgSend, ctx sdk.Context, chainID string, privkeys []cryptotypes.PrivKey,
@@ -198,7 +197,7 @@ func sendMsgSend(
 // all accounts in msg fields exist in state
 func SimulateMsgMultiSend(txGen client.TxConfig, ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		r *rand.Rand, app simtypes.AppEntrypoint, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msgType := sdk.MsgTypeURL(&types.MsgMultiSend{})
@@ -302,7 +301,7 @@ func SimulateMsgMultiSendToModuleAccount(
 	moduleAccount int,
 ) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		r *rand.Rand, app simtypes.AppEntrypoint, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msgType := sdk.MsgTypeURL(&types.MsgMultiSend{})
@@ -370,7 +369,7 @@ func SimulateMsgMultiSendToModuleAccount(
 // sendMsgMultiSend sends a transaction with a MsgMultiSend from a provided random
 // account.
 func sendMsgMultiSend(
-	r *rand.Rand, app *baseapp.BaseApp,
+	r *rand.Rand, app simtypes.AppEntrypoint,
 	txGen client.TxConfig,
 	bk keeper.Keeper, ak types.AccountKeeper,
 	msg *types.MsgMultiSend, ctx sdk.Context, chainID string, privkeys []cryptotypes.PrivKey,

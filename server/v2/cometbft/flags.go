@@ -2,26 +2,11 @@ package cometbft
 
 import "github.com/spf13/cobra"
 
+// Query flags
 const (
-	FlagQuery   = "query"
-	FlagType    = "type"
-	FlagOrderBy = "order_by"
-)
-
-const (
-	FlagWithComet     = "with-comet"
-	FlagAddress       = "address"
-	FlagTransport     = "transport"
-	FlagTraceStore    = "trace-store"
-	FlagCPUProfile    = "cpu-profile"
-	FlagMinGasPrices  = "minimum-gas-prices"
-	FlagQueryGasLimit = "query-gas-limit"
-	FlagHaltHeight    = "halt-height"
-	FlagHaltTime      = "halt-time"
-	FlagTrace         = "trace"
-)
-
-const (
+	FlagQuery        = "query"
+	FlagType         = "type"
+	FlagOrderBy      = "order_by"
 	FlagChainID      = "chain-id"
 	FlagNode         = "node"
 	FlagGRPC         = "grpc-addr"
@@ -30,6 +15,8 @@ const (
 	FlagPage         = "page"
 	FlagLimit        = "limit"
 	FlagOutput       = "output"
+	TypeHash         = "hash"
+	TypeHeight       = "height"
 )
 
 // List of supported output formats
@@ -50,3 +37,13 @@ func AddQueryFlagsToCmd(cmd *cobra.Command) {
 	// hence the flag should not be required for those commands
 	_ = cmd.MarkFlagRequired(FlagChainID)
 }
+
+// Server flags
+const (
+	Standalone     = "standalone"
+	FlagAddress    = "address"
+	FlagTransport  = "transport"
+	FlagHaltHeight = "halt-height"
+	FlagHaltTime   = "halt-time"
+	FlagTrace      = "trace"
+)

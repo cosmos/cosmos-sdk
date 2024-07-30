@@ -25,16 +25,6 @@ message HistoricalInfo {
   repeated Validator       valset = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
-// HistoricalRecord contains a set of minimum values needed for evaluating historical validator sets and blocks.
-// It is stored as part of staking module's state, which persists the `n` most
-// recent HistoricalInfo
-// (`n` is set by the staking module's `historical_entries` parameter).
-message HistoricalRecord {
-  bytes                     apphash         = 1;
-  google.protobuf.Timestamp time            = 2 [(gogoproto.stdtime) = true];
-  bytes                     validators_hash = 3;
-}
-
 // CommissionRates defines the initial commission rates to be used for creating
 // a validator.
 message CommissionRates {
@@ -320,7 +310,7 @@ message Params {
   // max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio).
   uint32 max_entries = 3;
   // historical_entries is the number of historical entries to persist.
-  uint32 historical_entries = 4;
+  uint32 historical_entries = 4 [deprecated = true];
   // bond_denom defines the bondable coin denomination.
   string bond_denom = 5;
   // min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators

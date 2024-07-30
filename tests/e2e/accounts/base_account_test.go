@@ -43,9 +43,8 @@ func TestBaseAccount(t *testing.T) {
 
 func sendTx(t *testing.T, ctx sdk.Context, app *simapp.SimApp, sender []byte, msg sdk.Msg) {
 	tx := sign(t, ctx, app, sender, privKey, msg)
-	res, _, err := app.SimDeliver(app.TxEncode, tx)
+	_, _, err := app.SimDeliver(app.TxEncode, tx)
 	require.NoError(t, err)
-	t.Log(res)
 }
 
 func sign(t *testing.T, ctx sdk.Context, app *simapp.SimApp, from sdk.AccAddress, privKey cryptotypes.PrivKey, msg sdk.Msg) sdk.Tx {

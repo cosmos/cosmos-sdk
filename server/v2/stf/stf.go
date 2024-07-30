@@ -564,10 +564,10 @@ func (s STF[T]) makeContext(
 ) *executionContext {
 	valuedCtx := context.WithValue(ctx, corecontext.ExecModeKey, execMode)
 	return newExecutionContext(
+		valuedCtx,
 		s.makeGasMeter,
 		s.makeGasMeteredState,
 		s.branchFn,
-		valuedCtx,
 		sender,
 		store,
 		execMode,
@@ -577,10 +577,10 @@ func (s STF[T]) makeContext(
 }
 
 func newExecutionContext(
+	ctx context.Context,
 	makeGasMeterFn makeGasMeterFn,
 	makeGasMeteredStoreFn makeGasMeteredStateFn,
 	branchFn branchFn,
-	ctx context.Context,
 	sender transaction.Identity,
 	state store.WriterMap,
 	execMode transaction.ExecMode,

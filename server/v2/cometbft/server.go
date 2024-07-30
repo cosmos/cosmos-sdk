@@ -18,8 +18,8 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/types"
@@ -80,7 +80,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 		appI.GetAppManager(),
 		s.serverOptions.Mempool,
 		indexEvents,
-		appI.GetGRPCQueryDecoders(),
+		appI.GetGPRCMethodsToMessageMap(),
 		store,
 		s.config,
 		s.initTxCodec,

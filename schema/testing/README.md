@@ -1,6 +1,6 @@
 # Schema & Indexer Testing
 
-This module contains core test utilities and fixtures for testing `comossdk.io/schema` and `cosmossdk.io/schema/indexer` functionality. It is managed as a separate go module to manage versions better and allow for dependencies on useful testing libraries without imposing those elsewhere.
+This module contains core test utilities and fixtures for testing `cosmossdk.io/schema` and `cosmossdk.io/schema/indexer` functionality. It is managed as a separate go module to manage versions better and allow for dependencies on useful testing libraries without imposing those elsewhere.
 
 The two primary intended uses of this library are:
 - testing that indexers can handle all valid app data that they might be asked to index
@@ -8,7 +8,7 @@ The two primary intended uses of this library are:
 
 ## Testing Indexers
 
-Indexers are expected to process all valid `schema` and `appdata` types, yet it may be hard to find a data set in the wild that comprehensively represents the full valid range of these types. This library provides utilities for simulating such data. The simplest way for an indexer to leverage this test framework is to implement the `appdatasim.HasAppData` type against their data store. Then the the `appdatasim.Simulator` can be used to generate deterministically random valid data that can be sent to the indexer and also stored in the simulator. After each generated block is applied, `appdatasim.DiffAppData` can be used to compare the expected state in the simulator to the actual state in the indexer.
+Indexers are expected to process all valid `schema` and `appdata` types, yet it may be hard to find a data set in the wild that comprehensively represents the full valid range of these types. This library provides utilities for simulating such data. The simplest way for an indexer to leverage this test framework is to implement the `appdatasim.HasAppData` type against their data store. Then the `appdatasim.Simulator` can be used to generate deterministically random valid data that can be sent to the indexer and also stored in the simulator. After each generated block is applied, `appdatasim.DiffAppData` can be used to compare the expected state in the simulator to the actual state in the indexer.
 
 This example code shows how this might look in a test:
 
@@ -47,4 +47,4 @@ func TestMyIndexer(t *testing.T) {
 
 ## Testing State Management Frameworks
 
-The compliance of frameworks like `cosmossdk.io/collections` and `cosmossdk.io/orm` with `cosmossdk.io/schema` can be tested with this framework. One example of how this might be done is if there is a `KeyCodec` that represents an array of `schema.Field`s then `schematesting.ObjectKeyGen` might be used to generate a random object key which encoded and then decoded and then `schematesting.DiffObjectKeys` is used to compare the expected key with the decoded key. If such state management frameworks require that users that schema compliance when implementing things like `KeyCodec`s then those state management framework should specify best practices for users.
+The compliance of frameworks like `cosmossdk.io/collections` and `cosmossdk.io/orm` with `cosmossdk.io/schema` can be tested with this framework. One example of how this might be done is if there is a `KeyCodec` that represents an array of `schema.Field`s then `schematesting.ObjectKeyGen` might be used to generate a random object key which encoded and then decoded and then `schematesting.DiffObjectKeys` is used to compare the expected key with the decoded key. If such state management frameworks require that users that schema compliance when implementing things like `KeyCodec`s then those state management frameworks should specify best practices for users.

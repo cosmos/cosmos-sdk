@@ -42,7 +42,7 @@ require (
 	google.golang.org/protobuf v1.34.2
 )
 
-require cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
+require cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
@@ -92,7 +92,7 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.5.0 // indirect
-	github.com/cosmos/iavl v1.2.0 // indirect
+	github.com/cosmos/iavl v1.2.1-0.20240725141113-7adc688cf179 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
 	github.com/creachadair/atomicfile v0.3.4 // indirect
@@ -291,7 +291,6 @@ replace (
 replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core/testing => ../../core/testing
-	cosmossdk.io/log => ../../log
 	cosmossdk.io/runtime/v2 => ../../runtime/v2
 	cosmossdk.io/server/v2 => ../../server/v2
 	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager

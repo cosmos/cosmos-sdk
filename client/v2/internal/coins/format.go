@@ -1,7 +1,7 @@
 package coins
 
 import (
-	"fmt"
+	"errors"
 	"regexp"
 	"strings"
 
@@ -19,13 +19,13 @@ func ParseCoin(input string) (*basev1beta1.Coin, error) {
 	input = strings.TrimSpace(input)
 
 	if input == "" {
-		return nil, fmt.Errorf("empty input when parsing coin")
+		return nil, errors.New("empty input when parsing coin")
 	}
 
 	matches := coinRegex.FindStringSubmatch(input)
 
 	if len(matches) == 0 {
-		return nil, fmt.Errorf("invalid input format")
+		return nil, errors.New("invalid input format")
 	}
 
 	return &basev1beta1.Coin{

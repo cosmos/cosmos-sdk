@@ -8,6 +8,7 @@ import "cosmos/crypto/multisig/v1beta1/multisig.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/tx/signing/v1beta1/signing.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
 
@@ -110,10 +111,6 @@ message TxBody {
 
   // timeout_height is the block height after which this transaction will not
   // be processed by the chain.
-  //
-  // Note, if unordered=true this value MUST be set
-  // and will act as a short-lived TTL in which the transaction is deemed valid
-  // and kept in memory to prevent duplicates.
   uint64 timeout_height = 3;
 
   // unordered, when set to true, indicates that the transaction signer(s)
@@ -122,10 +119,18 @@ message TxBody {
   // incremented, which allows for fire-and-forget as well as concurrent
   // transaction execution.
   //
-  // Note, when set to true, the existing 'timeout_height' value must be set and
-  // will be used to correspond to a height in which the transaction is deemed
+  // Note, when set to true, the existing 'timeout_height' value must
+  // be set and will be used to correspond to a time_stamp in which the transaction is deemed
   // valid.
   bool unordered = 4;
+
+  // timeout_timestamp is the block time after which this transaction will not
+  // be processed by the chain.
+  //
+  // Note, if unordered=true this value MUST be set
+  // and will act as a short-lived TTL in which the transaction is deemed valid
+  // and kept in memory to prevent duplicates.
+  google.protobuf.Timestamp timeout_timestamp = 5 [(gogoproto.nullable) = true, (gogoproto.stdtime) = true];
 
   // extension_options are arbitrary options that can be added by chains
   // when the default options are not sufficient. If any of these are present

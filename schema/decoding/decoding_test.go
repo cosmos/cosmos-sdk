@@ -1,6 +1,7 @@
 package decoding
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"sort"
@@ -360,14 +361,15 @@ func (e exampleBankModule) subBalance(acct, denom string, amount uint64) error {
 	key := balanceKey(acct, denom)
 	cur := e.store.GetUInt64(key)
 	if cur < amount {
-		return fmt.Errorf("insufficient balance")
+		return errors.New("insufficient balance")
 	}
 	e.store.SetUInt64(key, cur-amount)
 	return nil
 }
 
-var exampleBankSchema = schema.ModuleSchema{
-	ObjectTypes: []schema.ObjectType{
+func init() {
+	var err error
+	exampleBankSchema, err = schema.NewModuleSchema([]schema.ObjectType{
 		{
 			Name: "balances",
 			KeyFields: []schema.Field{
@@ -387,8 +389,13 @@ var exampleBankSchema = schema.ModuleSchema{
 				},
 			},
 		},
-	},
+	})
+	if err != nil {
+		panic(err)
+	}
 }
+
+var exampleBankSchema schema.ModuleSchema
 
 func (e exampleBankModule) ModuleCodec() (schema.ModuleCodec, error) {
 	return schema.ModuleCodec{
@@ -426,16 +433,24 @@ type oneValueModule struct {
 	store *testStore
 }
 
-var oneValueModSchema = schema.ModuleSchema{
-	ObjectTypes: []schema.ObjectType{
-		{
-			Name: "item",
-			ValueFields: []schema.Field{
-				{Name: "value", Kind: schema.StringKind},
+func init() {
+	var err error
+	oneValueModSchema, err = schema.NewModuleSchema(
+		[]schema.ObjectType{
+			{
+				Name: "item",
+				ValueFields: []schema.Field{
+					{Name: "value", Kind: schema.StringKind},
+				},
 			},
 		},
-	},
+	)
+	if err != nil {
+		panic(err)
+	}
 }
+
+var oneValueModSchema schema.ModuleSchema
 
 func (i oneValueModule) ModuleCodec() (schema.ModuleCodec, error) {
 	return schema.ModuleCodec{

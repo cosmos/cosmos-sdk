@@ -13,11 +13,11 @@ type Field struct {
 	// Nullable indicates whether null values are accepted for the field. Key fields CANNOT be nullable.
 	Nullable bool
 
-	// EnumDefinition is the definition of the enum type and is only valid when Kind is EnumKind.
+	// EnumType is the definition of the enum type and is only valid when Kind is EnumKind.
 	// The same enum types can be reused in the same module schema, but they always must contain
 	// the same values for the same enum name. This possibly introduces some duplication of
 	// definitions but makes it easier to reason about correctness and validation in isolation.
-	EnumDefinition EnumDefinition
+	EnumType EnumType
 }
 
 // Validate validates the field.
@@ -34,10 +34,10 @@ func (c Field) Validate() error {
 
 	// enum definition only valid with EnumKind
 	if c.Kind == EnumKind {
-		if err := c.EnumDefinition.Validate(); err != nil {
+		if err := c.EnumType.Validate(); err != nil {
 			return fmt.Errorf("invalid enum definition for field %q: %v", c.Name, err) //nolint:errorlint // false positive due to using go1.12
 		}
-	} else if c.Kind != EnumKind && (c.EnumDefinition.Name != "" || c.EnumDefinition.Values != nil) {
+	} else if c.Kind != EnumKind && (c.EnumType.Name != "" || c.EnumType.Values != nil) {
 		return fmt.Errorf("enum definition is only valid for field %q with type EnumKind", c.Name)
 	}
 
@@ -45,7 +45,7 @@ func (c Field) Validate() error {
 }
 
 // ValidateValue validates that the value conforms to the field's kind and nullability.
-// Unlike Kind.ValidateValue, it also checks that the value conforms to the EnumDefinition
+// Unlike Kind.ValidateValue, it also checks that the value conforms to the EnumType
 // if the field is an EnumKind.
 func (c Field) ValidateValue(value interface{}) error {
 	if value == nil {
@@ -60,7 +60,7 @@ func (c Field) ValidateValue(value interface{}) error {
 	}
 
 	if c.Kind == EnumKind {
-		return c.EnumDefinition.ValidateValue(value.(string))
+		return c.EnumType.ValidateValue(value.(string))
 	}
 
 	return nil

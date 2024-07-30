@@ -8,7 +8,7 @@ The two primary intended uses of this library are:
 
 ## Testing Indexers
 
-Indexers are expected to process all valid `schema` and `appdata` types, yet it may be hard to find a data set in the wild that comprehensively represents the full valid range of these types. This library provides utilities for simulating such data. The simplest way for an indexer to leverage this test framework is to implement the `appdatasim.HasAppData` type against their data store. Then the the `appdatasim.Simulator` can be used to generate deterministically random valid data that can be sent to the indexer and also stored in the simulator. After each generated block is applied, `appdatasim.DiffAppData` can be used to compare the expected state in the simulator to the actual state in the indexer.
+Indexers are expected to process all valid `schema` and `appdata` types, yet it may be hard to find a data set in the wild that comprehensively represents the full valid range of these types. This library provides utilities for simulating such data. The simplest way for an indexer to leverage this test framework is to implement the `appdatasim.HasAppData` type against their data store. Then the `appdatasim.Simulator` can be used to generate deterministically random valid data that can be sent to the indexer and also stored in the simulator. After each generated block is applied, `appdatasim.DiffAppData` can be used to compare the expected state in the simulator to the actual state in the indexer.
 
 This example code shows how this might look in a test:
 

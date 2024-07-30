@@ -217,7 +217,7 @@ func (c CLIWrapper) runWithInput(args []string, input io.Reader) (output string,
 		cmd := exec.Command(locateExecutable(c.execBinary), args...) //nolint:gosec // test code only
 		cmd.Dir = WorkDir
 		cmd.Stdin = input
-		return cmd.CombinedOutput()
+		return cmd.Output()
 	}()
 	ok = c.assertErrorFn(c.t, gotErr, string(gotOut))
 	return strings.TrimSpace(string(gotOut)), ok

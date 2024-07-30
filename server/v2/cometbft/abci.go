@@ -432,7 +432,6 @@ func (c *Consensus[T]) FinalizeBlock(
 		AppHash: cid.Hash,
 		ChainId: c.chainID,
 		Txs:     decodedTxs,
-		// ConsensusMessages: []transaction.Msg{cometInfo},
 	}
 
 	ciCtx := contextWithCometInfo(ctx, comet.Info{

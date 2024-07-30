@@ -35,6 +35,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
+	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc
 	golang.org/x/sync v0.7.0
 	google.golang.org/grpc v1.64.1
 	google.golang.org/protobuf v1.34.2
@@ -76,7 +77,11 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/tidwall/btree v1.7.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
+<<<<<<< HEAD
 	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc // indirect
+=======
+	golang.org/x/crypto v0.25.0 // indirect
+>>>>>>> 8b4714165 (feat(serverv2): integrate gRPC (#21038))
 	golang.org/x/net v0.27.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/text v0.16.0 // indirect

@@ -441,12 +441,12 @@ func TestSnapshot_Pruning_Take_Snapshot_Parallel(t *testing.T) {
 	var prunedCount uint64
 	// try take snapshot and pruning parallel while prune operation begins first
 	go func() {
-		checkOperation := func() bool {
+		for {
 			op := manager.GetCurrentOperation()
-			return op == "prune"
+			if op == "prune" {
+				break
+			}
 		}
-
-		require.Eventually(t, checkOperation, time.Millisecond*100, time.Millisecond)
 
 		// error since pruning is running
 		_, err = manager.Create(4)
@@ -473,12 +473,12 @@ func TestSnapshot_Pruning_Take_Snapshot_Parallel(t *testing.T) {
 
 	// try take snapshot and pruning parallel while snapshot operation begins first
 	go func() {
-		checkOperation := func() bool {
+		for {
 			op := manager.GetCurrentOperation()
-			return op == "snapshot"
+			if op == "snapshot" {
+				break
+			}
 		}
-
-		require.Eventually(t, checkOperation, time.Millisecond*100, time.Millisecond)
 
 		// error since snapshot is running
 		_, err = manager.Prune(1)

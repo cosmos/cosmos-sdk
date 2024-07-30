@@ -13,7 +13,6 @@ import (
 
 	coreappmgr "cosmossdk.io/core/app"
 	"cosmossdk.io/core/comet"
-	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -400,13 +399,6 @@ func (c *Consensus[T]) FinalizeBlock(
 	if err := c.checkHalt(req.Height, req.Time); err != nil {
 		return nil, err
 	}
-
-	ctx = context.WithValue(ctx, corecontext.CometInfoKey, &comet.Info{
-		Evidence:        toCoreEvidence(req.Misbehavior),
-		ValidatorsHash:  req.NextValidatorsHash,
-		ProposerAddress: req.ProposerAddress,
-		LastCommit:      toCoreCommitInfo(req.DecidedLastCommit),
-	})
 
 	// we don't need to deliver the block in the genesis block
 	if req.Height == int64(c.initialHeight) {

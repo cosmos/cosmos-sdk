@@ -14,7 +14,7 @@ The primary objective of refactoring the bank module is to simplify and enhance 
 
 In addition to the above, the bank module is currently too rigid and handles too many tasks, so this proposal aims to streamline the module by focusing on core functions `Send`, `Mint`, and `Burn`.
 
-Currently, the module is split accross different keepers with scattered and duplicates functionalities (with 4 send functions for instance).
+Currently, the module is split across different keepers with scattered and duplicates functionalities (with 4 send functions for instance).
 
 Additionally, the integration of the token factory into the bank module allows for standardization, and better integration within the core modules.
 
@@ -90,7 +90,7 @@ Additionally, as bank plans to integrate token factory, migrations functions wil
 ### Positive
 
 * Simplified interaction with bank APIs
-* Backward comptible changes (no contracts or apis broken)
+* Backward compatible changes (no contracts or apis broken)
 * Optional migration (note: bank `v1beta1` won't get any new feature after bank `v2` release)
 
 ### Neutral

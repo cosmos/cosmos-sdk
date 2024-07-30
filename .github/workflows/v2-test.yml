@@ -125,7 +125,6 @@ jobs:
           name: "testnet-setup"
           path: ./systemtests/testnet/
           retention-days: 3
-          cd server/v2/appmanager && go test -mod=readonly -race -timeout 30m -tags='ledger test_ledger_mock'
 
   cometbft:
     runs-on: ubuntu-latest

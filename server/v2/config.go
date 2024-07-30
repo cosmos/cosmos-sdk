@@ -2,7 +2,6 @@ package serverv2
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
@@ -23,6 +22,12 @@ func ReadConfig(configPath string) (*viper.Viper, error) {
 		return nil, fmt.Errorf("failed to merge configuration: %w", err)
 	}
 
+	// Read client.toml to get chain-id
+	v.SetConfigName("client")
+	if err := v.MergeInConfig(); err != nil {
+		return nil, fmt.Errorf("failed to merge configuration: %w", err)
+	}
+
 	v.WatchConfig()
 
 	return v, nil
@@ -34,8 +39,9 @@ func ReadConfig(configPath string) (*viper.Viper, error) {
 func UnmarshalSubConfig(v *viper.Viper, subName string, target any) error {
 	var sub any
 	for k, val := range v.AllSettings() {
-		if strings.HasPrefix(k, subName) {
+		if k == subName {
 			sub = val
+			break
 		}
 	}
 

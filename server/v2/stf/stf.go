@@ -149,7 +149,7 @@ func (s STF[T]) DeliverBlock(
 		if err = isCtxCancelled(ctx); err != nil {
 			return nil, nil, err
 		}
-		txResults[i] = s.deliverTx(ctx, newState, txBytes, transaction.ExecModeFinalize, hi)
+		txResults[i] = s.deliverTx(exCtx, newState, txBytes, transaction.ExecModeFinalize, hi)
 	}
 	// reset events
 	exCtx.events = make([]event.Event, 0)

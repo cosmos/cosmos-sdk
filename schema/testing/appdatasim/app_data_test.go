@@ -17,14 +17,14 @@ import (
 
 func TestAppSimulator_mirror(t *testing.T) {
 	t.Run("default", func(t *testing.T) {
-		testAppSimulator_mirror(t, false)
+		testAppSimulatorMirror(t, false)
 	})
 	t.Run("retain deletes", func(t *testing.T) {
-		testAppSimulator_mirror(t, true)
+		testAppSimulatorMirror(t, true)
 	})
 }
 
-func testAppSimulator_mirror(t *testing.T, retainDeletes bool) {
+func testAppSimulatorMirror(t *testing.T, retainDeletes bool) { // nolint: thelper // this isn't a test helper function
 	stateSimOpts := statesim.Options{CanRetainDeletions: retainDeletes}
 	mirror, err := NewSimulator(Options{
 		StateSimOptions: stateSimOpts,

@@ -44,7 +44,7 @@ func DiffObjectValues(fields []schema.Field, expected, actual any) string {
 	_, ok2 := expected.(schema.ValueUpdates)
 
 	if ok || ok2 {
-		return fmt.Sprintf("ValueUpdates is not expected when comparing state")
+		return "ValueUpdates is not expected when comparing state"
 	}
 
 	return DiffObjectKeys(fields, expected, actual)

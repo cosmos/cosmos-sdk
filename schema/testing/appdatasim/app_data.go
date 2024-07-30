@@ -28,10 +28,9 @@ type Options struct {
 // Simulator simulates a stream of app data. Currently, it only simulates InitializeModuleData, OnObjectUpdate,
 // StartBlock and Commit callbacks but others will be added in the future.
 type Simulator struct {
-	state        *statesim.App
-	options      Options
-	blockNum     uint64
-	blockDataGen *rapid.Generator[BlockData]
+	state    *statesim.App
+	options  Options
+	blockNum uint64
 }
 
 // BlockData represents the app data packets in a block.

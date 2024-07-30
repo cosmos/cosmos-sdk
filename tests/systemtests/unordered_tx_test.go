@@ -3,8 +3,9 @@
 package systemtests
 
 import (
-	"strconv"
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -27,11 +28,9 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 
 	sut.StartChain(t)
 
-	height := sut.CurrentHeight()
-	timeoutHeight := height + 15
-	timeoutHeightStr := strconv.Itoa(int(timeoutHeight))
+	timeoutTimestamp := time.Now().Add(time.Minute)
 	// send tokens
-	rsp1 := cli.Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake", "--timeout-height="+timeoutHeightStr, "--unordered", "--sequence=1", "--note=1")
+	rsp1 := cli.Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake", fmt.Sprintf("--timeout-timestamp=%v", timeoutTimestamp.Unix()), "--unordered", "--sequence=1", "--note=1")
 	RequireTxSuccess(t, rsp1)
 
 	assertDuplicateErr := func(xt assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
@@ -39,14 +38,10 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 		assert.Contains(t, gotOutputs[0], "is duplicated: invalid request")
 		return false // always abort
 	}
-	rsp2 := cli.WithRunErrorMatcher(assertDuplicateErr).Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake", "--timeout-height="+timeoutHeightStr, "--unordered", "--sequence=1")
+	rsp2 := cli.WithRunErrorMatcher(assertDuplicateErr).Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake", fmt.Sprintf("--timeout-timestamp=%v", timeoutTimestamp.Unix()), "--unordered", "--sequence=1")
 	RequireTxFailure(t, rsp2)
 
-	// assert TX executed before timeout
-	for cli.QueryBalance(account2Addr, "stake") != 5000 {
-		t.Log("query balance")
-		if current := sut.AwaitNextBlock(t); current > timeoutHeight {
-			t.Fatal("TX was not executed before timeout")
-		}
-	}
+	require.Eventually(t, func() bool {
+		return cli.QueryBalance(account2Addr, "stake") == 5000
+	}, time.Minute, time.Microsecond*500, "TX was not executed before timeout")
 }

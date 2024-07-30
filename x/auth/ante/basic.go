@@ -2,6 +2,7 @@ package ante
 
 import (
 	"context"
+	"time"
 
 	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
@@ -227,6 +228,7 @@ type (
 		sdk.Tx
 
 		GetTimeoutHeight() uint64
+		GetTimeoutTimeStamp() time.Time
 	}
 )
 
@@ -263,6 +265,13 @@ func (txh TxTimeoutHeightDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) e
 	if timeoutHeight > 0 && uint64(headerInfo.Height) > timeoutHeight {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrTxTimeoutHeight, "block height: %d, timeout height: %d", headerInfo.Height, timeoutHeight,
+		)
+	}
+
+	timeoutTimestamp := timeoutTx.GetTimeoutTimeStamp()
+	if !timeoutTimestamp.IsZero() && timeoutTimestamp.Unix() != 0 && timeoutTimestamp.Before(headerInfo.Time) {
+		return errorsmod.Wrapf(
+			sdkerrors.ErrTxTimeout, "block time: %s, timeout timestamp: %s", headerInfo.Time.String(), timeoutTimestamp.String(),
 		)
 	}
 

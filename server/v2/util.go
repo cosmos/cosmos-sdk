@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/viper"
 
 	corectx "cosmossdk.io/core/context"
-	corelog "cosmossdk.io/core/log"
 	"cosmossdk.io/log"
 )
 
@@ -40,9 +39,9 @@ func GetViperFromCmd(cmd *cobra.Command) *viper.Viper {
 	return v
 }
 
-func GetLoggerFromCmd(cmd *cobra.Command) corelog.Logger {
+func GetLoggerFromCmd(cmd *cobra.Command) log.Logger {
 	v := cmd.Context().Value(corectx.LoggerContextKey)
-	logger, ok := v.(corelog.Logger)
+	logger, ok := v.(log.Logger)
 	if !ok {
 		panic(fmt.Sprintf("incorrect logger type %T: expected log.Logger. Have you forgot to set the logger in the command context?", v))
 	}

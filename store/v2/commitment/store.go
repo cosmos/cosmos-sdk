@@ -313,7 +313,7 @@ func (c *CommitStore) Restore(
 		snapshotItem snapshotstypes.SnapshotItem
 		storeKey     []byte
 	)
-	
+
 loop:
 	for {
 		snapshotItem = snapshotstypes.SnapshotItem{}

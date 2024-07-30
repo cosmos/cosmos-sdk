@@ -446,6 +446,7 @@ func TestSnapshot_Pruning_Take_Snapshot_Parallel(t *testing.T) {
 			if op == "prune" {
 				break
 			}
+			time.Sleep(10 * time.Millisecond) // avoid busy-waiting
 		}
 
 		// error since pruning is running
@@ -478,6 +479,7 @@ func TestSnapshot_Pruning_Take_Snapshot_Parallel(t *testing.T) {
 			if op == "snapshot" {
 				break
 			}
+			time.Sleep(10 * time.Millisecond) // avoid busy-waiting
 		}
 
 		// error since snapshot is running

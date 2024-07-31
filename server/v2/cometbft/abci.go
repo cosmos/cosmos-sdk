@@ -41,7 +41,6 @@ type Consensus[T transaction.Tx] struct {
 	streaming          streaming.Manager
 	snapshotManager    *snapshots.Manager
 	mempool            mempool.Mempool[T]
-	grpcQueryDecoders  map[string]func(requestBytes []byte) (gogoproto.Message, error) // legacy support for gRPC
 
 	cfg           Config
 	indexedEvents map[string]struct{}
@@ -60,6 +59,8 @@ type Consensus[T transaction.Tx] struct {
 
 	addrPeerFilter types.PeerFilter // filter peers by address and port
 	idPeerFilter   types.PeerFilter // filter peers by node ID
+
+	grpcMethodsMap map[string]func() gogoproto.Message // maps gRPC method to message creator func
 }
 
 func NewConsensus[T transaction.Tx](
@@ -69,7 +70,7 @@ func NewConsensus[T transaction.Tx](
 	app *appmanager.AppManager[T],
 	mp mempool.Mempool[T],
 	indexedEvents map[string]struct{},
-	grpcQueryDecoders map[string]func(requestBytes []byte) (gogoproto.Message, error),
+	gRPCMethodsMap map[string]func() gogoproto.Message,
 	store types.Store,
 	cfg Config,
 	txCodec transaction.Codec[T],
@@ -78,7 +79,7 @@ func NewConsensus[T transaction.Tx](
 		appName:                appName,
 		version:                getCometBFTServerVersion(),
 		consensusAuthority:     consensusAuthority,
-		grpcQueryDecoders:      grpcQueryDecoders,
+		grpcMethodsMap:         gRPCMethodsMap,
 		app:                    app,
 		cfg:                    cfg,
 		store:                  store,
@@ -173,9 +174,10 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 // It is called by cometbft to query application state.
 func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (resp *abciproto.QueryResponse, err error) {
 	// check if it's a gRPC method
-	grpcQueryDecoder, isGRPC := c.grpcQueryDecoders[req.Path]
+	makeGRPCRequest, isGRPC := c.grpcMethodsMap[req.Path]
 	if isGRPC {
-		protoRequest, err := grpcQueryDecoder(req.Data)
+		protoRequest := makeGRPCRequest()
+		err = gogoproto.Unmarshal(req.Data, protoRequest) // TODO: use codec
 		if err != nil {
 			return nil, fmt.Errorf("unable to decode gRPC request with path %s from ABCI.Query: %w", req.Path, err)
 		}
@@ -398,24 +400,6 @@ func (c *Consensus[T]) FinalizeBlock(
 		return nil, err
 	}
 
-	// TODO evaluate this approach vs. service using context.
-	// cometInfo := &consensustypes.MsgUpdateCometInfo{
-	//	Authority: c.consensusAuthority,
-	//	CometInfo: &consensustypes.CometInfo{
-	//		Evidence:        req.Misbehavior,
-	//		ValidatorsHash:  req.NextValidatorsHash,
-	//		ProposerAddress: req.ProposerAddress,
-	//		LastCommit:      req.DecidedLastCommit,
-	//	},
-	// }
-	//
-	// ctx = context.WithValue(ctx, corecontext.CometInfoKey, &comet.Info{
-	// 	Evidence:        sdktypes.ToSDKEvidence(req.Misbehavior),
-	// 	ValidatorsHash:  req.NextValidatorsHash,
-	// 	ProposerAddress: req.ProposerAddress,
-	// 	LastCommit:      sdktypes.ToSDKCommitInfo(req.DecidedLastCommit),
-	// })
-
 	// we don't need to deliver the block in the genesis block
 	if req.Height == int64(c.initialHeight) {
 		appHash, err := c.store.Commit(store.NewChangeset())
@@ -448,7 +432,6 @@ func (c *Consensus[T]) FinalizeBlock(
 		AppHash: cid.Hash,
 		ChainId: c.chainID,
 		Txs:     decodedTxs,
-		// ConsensusMessages: []transaction.Msg{cometInfo},
 	}
 
 	ciCtx := contextWithCometInfo(ctx, comet.Info{

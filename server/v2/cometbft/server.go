@@ -82,9 +82,8 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 		appI.GetAppManager(),
 		s.serverOptions.Mempool,
 		indexEvents,
-		nil, // TODO: backport https://github.com/cosmos/cosmos-sdk/pull/21038
-		// appI.GetGPRCMethodsToMessageMap(),
-		store,
+		appI.GetGPRCMethodsToMessageMap(),
+		appI.GetStore().(types.Store),
 		s.config,
 		s.initTxCodec,
 	)

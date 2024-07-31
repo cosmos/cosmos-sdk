@@ -14,6 +14,61 @@ import (
 	"cosmossdk.io/x/tx/internal/testpb"
 )
 
+<<<<<<< HEAD
+=======
+var deeplyNestedRepeatedSigner = &testpb.DeeplyNestedRepeatedSigner{
+	Inner: []*testpb.DeeplyNestedRepeatedSigner_Inner{
+		{
+			Inner: []*testpb.DeeplyNestedRepeatedSigner_Inner_Inner{
+				{
+					Inner: []*testpb.DeeplyNestedRepeatedSigner_Inner_Inner_Bottom{
+						{
+							Signer: []string{hex.EncodeToString([]byte("foo")), hex.EncodeToString([]byte("bar"))},
+						},
+					},
+				},
+			},
+		},
+		{
+			Inner: []*testpb.DeeplyNestedRepeatedSigner_Inner_Inner{
+				{
+					Inner: []*testpb.DeeplyNestedRepeatedSigner_Inner_Inner_Bottom{
+						{
+							Signer: []string{hex.EncodeToString([]byte("baz"))},
+						},
+					},
+				},
+				{
+					Inner: []*testpb.DeeplyNestedRepeatedSigner_Inner_Inner_Bottom{
+						{
+							Signer: []string{hex.EncodeToString([]byte("qux")), hex.EncodeToString([]byte("fuz"))},
+						},
+						{
+							Signer: []string{hex.EncodeToString([]byte("bing")), hex.EncodeToString([]byte("bap"))},
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+func TestGetGetSignersFnConcurrent(t *testing.T) {
+	ctx, err := NewContext(Options{
+		AddressCodec:          dummyAddressCodec{},
+		ValidatorAddressCodec: dummyValidatorAddressCodec{},
+	})
+	require.NoError(t, err)
+
+	desc := (&testpb.RepeatedSigner{}).ProtoReflect().Descriptor()
+	for i := 0; i < 50; i++ {
+		go func() {
+			_, _ = ctx.getGetSignersFn(desc)
+		}()
+	}
+}
+
+>>>>>>> de0708b40 (fix(x/tx): concurrent map writes when calling GetSigners (#21073))
 func TestGetSigners(t *testing.T) {
 	ctx, err := NewContext(Options{
 		AddressCodec:          dummyAddressCodec{},

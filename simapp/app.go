@@ -209,6 +209,10 @@ func NewSimApp(
 	legacyAmino := codec.NewLegacyAmino()
 	txConfig := tx.NewTxConfig(appCodec, tx.DefaultSignModes)
 
+	if err := signingCtx.Validate(); err != nil {
+		panic(err)
+	}
+
 	std.RegisterLegacyAminoCodec(legacyAmino)
 	std.RegisterInterfaces(interfaceRegistry)
 

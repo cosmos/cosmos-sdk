@@ -22,9 +22,9 @@ require (
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.3.1
-	cosmossdk.io/server/v2/appmanager v0.0.0-20240727181124-b05bb2601edb // main
-	cosmossdk.io/server/v2/stf v0.0.0-20240727181124-b05bb2601edb // main
-	cosmossdk.io/store/v2 v2.0.0-20240727181124-b05bb2601edb // main
+	cosmossdk.io/server/v2/appmanager v0.0.0-20240731205446-aee9803a0af6 // main
+	cosmossdk.io/server/v2/stf v0.0.0-20240731205446-aee9803a0af6 // main
+	cosmossdk.io/store/v2 v2.0.0-20240731205446-aee9803a0af6 // main
 	cosmossdk.io/x/tx v0.13.3
 	github.com/cosmos/gogoproto v1.5.0
 	github.com/spf13/viper v1.19.0
@@ -37,7 +37,7 @@ require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/errors v1.0.1 // indirect
+	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

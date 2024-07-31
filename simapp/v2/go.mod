@@ -10,9 +10,9 @@ require (
 	cosmossdk.io/log v1.3.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000
-	cosmossdk.io/server/v2 v2.0.0-20240727181124-b05bb2601edb // main
+	cosmossdk.io/server/v2 v2.0.0-20240731205446-aee9803a0af6 // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store/v2 v2.0.0-20240727181124-b05bb2601edb // indirect; main
+	cosmossdk.io/store/v2 v2.0.0-20240731205446-aee9803a0af6 // indirect; main
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
@@ -55,8 +55,8 @@ require (
 	cosmossdk.io/core/testing v0.0.0-20240726110027-5c90246b3f9f // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/schema v0.1.1 // indirect
-	cosmossdk.io/server/v2/appmanager v0.0.0-20240727181124-b05bb2601edb // indirect; main
-	cosmossdk.io/server/v2/stf v0.0.0-20240727181124-b05bb2601edb // indirect; main
+	cosmossdk.io/server/v2/appmanager v0.0.0-20240731205446-aee9803a0af6 // indirect; main
+	cosmossdk.io/server/v2/stf v0.0.0-20240731205446-aee9803a0af6 // indirect; main
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000 // indirect
@@ -238,6 +238,8 @@ require (
 	rsc.io/qr v0.2.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
+
+require cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 
 // Here are the short-lived replace from the SimApp
 // Replace here are pending PRs, or version to be tagged

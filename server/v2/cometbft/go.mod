@@ -21,9 +21,9 @@ require (
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.3.1
-	cosmossdk.io/server/v2 v2.0.0-20240727181124-b05bb2601edb // main
-	cosmossdk.io/server/v2/appmanager v0.0.0-20240727181124-b05bb2601edb // main
-	cosmossdk.io/store/v2 v2.0.0-20240727181124-b05bb2601edb // main
+	cosmossdk.io/server/v2 v2.0.0-20240731205446-aee9803a0af6 // main
+	cosmossdk.io/server/v2/appmanager v0.0.0-20240731205446-aee9803a0af6 // main
+	cosmossdk.io/store/v2 v2.0.0-20240731205446-aee9803a0af6 // main
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-rc1
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
@@ -45,6 +45,7 @@ require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/depinject v1.0.0 // indirect
+	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/math v1.3.0 // indirect
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000 // indirect

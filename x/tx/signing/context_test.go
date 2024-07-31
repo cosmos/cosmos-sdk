@@ -265,8 +265,9 @@ func TestDefineCustomGetSigners(t *testing.T) {
 	options.DefineCustomGetSigners(proto.MessageName(simpleSigner), func(msg proto.Message) ([][]byte, error) {
 		return [][]byte{[]byte("qux")}, nil
 	})
-	_, err = NewContext(options)
-	require.ErrorContains(t, err, "a custom signer function as been defined for message SimpleSigner")
+	context, err = NewContext(options)
+	require.NoError(t, err)
+	require.ErrorContains(t, context.Validate(), "a custom signer function as been defined for message SimpleSigner")
 }
 
 type dummyAddressCodec struct{}

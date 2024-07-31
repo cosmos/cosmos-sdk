@@ -66,6 +66,11 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 		AppTomlConfig:    appTomlConfig,
 	}
 
+	appGenesis, err := genutiltypes.AppGenesisFromFile(s.config.ConfigTomlConfig.GenesisFile())
+	if err != nil {
+		return err
+	}
+
 	indexEvents := make(map[string]struct{}, len(s.config.AppTomlConfig.IndexEvents))
 	for _, e := range s.config.AppTomlConfig.IndexEvents {
 		indexEvents[e] = struct{}{}
@@ -84,7 +89,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 		store,
 		s.config,
 		s.initTxCodec,
-		v.GetString(FlagChainID),
+		appGenesis.ChainID,
 	)
 	consensus.prepareProposalHandler = s.serverOptions.PrepareProposalHandler
 	consensus.processProposalHandler = s.serverOptions.ProcessProposalHandler

@@ -94,7 +94,7 @@ func NewConsensus[T transaction.Tx](
 		processProposalHandler: nil,
 		verifyVoteExt:          nil,
 		extendVote:             nil,
-		chainID:                "",
+		chainID:                chainId,
 		indexedEvents:          indexedEvents,
 		initialHeight:          0,
 	}
@@ -225,6 +225,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRequest) (*abciproto.InitChainResponse, error) {
 	c.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
 
+	// store chainID to be used later on in execution
 	c.chainID = req.ChainId
 
 	// TODO: check if we need to load the config from genesis.json or config.toml

@@ -14,21 +14,24 @@ import (
 
 // LoadValidatorPubKeyForNode load validator nodes consensus pub key for given node number
 func LoadValidatorPubKeyForNode(t *testing.T, sut *SystemUnderTest, nodeNumber int) cryptotypes.PubKey {
+	t.Helper()
 	return LoadValidatorPubKey(t, filepath.Join(WorkDir, sut.nodePath(nodeNumber), "config", "priv_validator_key.json"))
 }
 
 // LoadValidatorPubKey load validator nodes consensus pub key from disk
 func LoadValidatorPubKey(t *testing.T, keyFile string) cryptotypes.PubKey {
+	t.Helper()
 	filePV := privval.LoadFilePVEmptyState(keyFile, "")
 	pubKey, err := filePV.GetPubKey()
 	require.NoError(t, err)
-	valPubKey, err := cryptocodec.FromTmPubKeyInterface(pubKey)
+	valPubKey, err := cryptocodec.FromCmtPubKeyInterface(pubKey)
 	require.NoError(t, err)
 	return valPubKey
 }
 
 // QueryCometValidatorPowerForNode returns the validator's power from tendermint RPC endpoint. 0 when not found
 func QueryCometValidatorPowerForNode(t *testing.T, sut *SystemUnderTest, nodeNumber int) int64 {
+	t.Helper()
 	pubKebBz := LoadValidatorPubKeyForNode(t, sut, nodeNumber).Bytes()
 	return QueryCometValidatorPower(sut.RPCClient(t), pubKebBz)
 }

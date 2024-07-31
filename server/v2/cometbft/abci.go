@@ -223,10 +223,6 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRequest) (*abciproto.InitChainResponse, error) {
 	c.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
 
-	// verify chain id
-	if c.chainID != req.ChainId {
-		return nil, fmt.Errorf("chain-id mismatch, got %s, expected %s", req.ChainId, c.chainID)
-	}
 	c.chainID = req.ChainId
 
 	// TODO: check if we need to load the config from genesis.json or config.toml

@@ -1,21 +1,3 @@
-[comet]
-# min-retain-blocks defines the minimum block height offset from the current block being committed, such that all blocks past this offset are pruned from CometBFT. A value of 0 indicates that no blocks should be pruned.
-min-retain-blocks = 0
-# index-events defines the set of events in the form {eventType}.{attributeKey}, which informs CometBFT what to index. If empty, all events will be indexed.
-index-events = []
-# halt-height contains a non-zero block height at which a node will gracefully halt and shutdown that can be used to assist upgrades and testing.
-halt-height = 0
-# halt-time contains a non-zero minimum block time (in Unix seconds) at which a node will gracefully halt and shutdown that can be used to assist upgrades and testing.
-halt-time = 0
-# address defines the CometBFT RPC server address to bind to.
-address = 'tcp://127.0.0.1:26658'
-# transport defines the CometBFT RPC server transport protocol: socket, grpc
-transport = 'socket'
-# trace enables the CometBFT RPC server to output trace information about its internal operations.
-trace = false
-# standalone starts the application without the CometBFT node. The node should be started separately.
-standalone = false
-
 [grpc]
 # Enable defines if the gRPC server should be enabled.
 enable = false

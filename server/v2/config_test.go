@@ -9,6 +9,7 @@ import (
 
 	serverv2 "cosmossdk.io/server/v2"
 	grpc "cosmossdk.io/server/v2/api/grpc"
+	store "cosmossdk.io/server/v2/store"
 )
 
 func TestReadConfig(t *testing.T) {
@@ -20,6 +21,8 @@ func TestReadConfig(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, v.GetString("grpc.address"), grpc.DefaultConfig().Address)
+	require.Equal(t, v.GetString("store.app-db-backend"), store.DefaultConfig().AppDBBackend)
+	require.Equal(t, v.GetString("chain-id"), "simapp-v2-chain")
 }
 
 func TestUnmarshalSubConfig(t *testing.T) {
@@ -36,4 +39,9 @@ func TestUnmarshalSubConfig(t *testing.T) {
 
 	require.True(t, grpc.DefaultConfig().Enable)
 	require.False(t, grpcConfig.Enable)
+
+	storeConfig := store.Config{}
+	err = serverv2.UnmarshalSubConfig(v, "store", &storeConfig)
+	require.NoError(t, err)
+	require.Equal(t, *store.DefaultConfig(), storeConfig)
 }

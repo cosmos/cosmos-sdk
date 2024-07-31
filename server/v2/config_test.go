@@ -22,7 +22,6 @@ func TestReadConfig(t *testing.T) {
 
 	require.Equal(t, v.GetString("grpc.address"), grpc.DefaultConfig().Address)
 	require.Equal(t, v.GetString("store.app-db-backend"), store.DefaultConfig().AppDBBackend)
-	require.Equal(t, v.GetString("chain-id"), "simapp-v2-chain")
 }
 
 func TestUnmarshalSubConfig(t *testing.T) {

@@ -80,7 +80,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 		appI.GetAppManager(),
 		s.serverOptions.Mempool,
 		indexEvents,
-		appI.GetGRPCQueryDecoders(),
+		appI.GetGPRCMethodsToMessageMap(),
 		store,
 		s.config,
 		s.initTxCodec,

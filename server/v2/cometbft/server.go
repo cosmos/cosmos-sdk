@@ -79,13 +79,8 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 		appI.GetAppManager(),
 		s.serverOptions.Mempool,
 		indexEvents,
-<<<<<<< HEAD
-		appI.GetGRPCQueryDecoders(),
-		appI.GetStore().(types.Store),
-=======
 		appI.GetGPRCMethodsToMessageMap(),
-		store,
->>>>>>> 8b4714165 (feat(serverv2): integrate gRPC (#21038))
+		appI.GetStore().(types.Store),
 		s.config,
 		s.initTxCodec,
 	)

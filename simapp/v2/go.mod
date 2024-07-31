@@ -10,9 +10,9 @@ require (
 	cosmossdk.io/log v1.3.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000
-	cosmossdk.io/server/v2 v2.0.0-20240718121635-a877e3e8048a
+	cosmossdk.io/server/v2 v2.0.0-20240727181124-b05bb2601edb // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store/v2 v2.0.0 // indirect
+	cosmossdk.io/store/v2 v2.0.0-20240727181124-b05bb2601edb // indirect; main
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
@@ -42,8 +42,6 @@ require (
 	google.golang.org/protobuf v1.34.2
 )
 
-require cosmossdk.io/core/testing v0.0.0-20240726110027-5c90246b3f9f // indirect
-
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
@@ -54,10 +52,11 @@ require (
 	cloud.google.com/go/iam v1.1.8 // indirect
 	cloud.google.com/go/storage v1.42.0 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
+	cosmossdk.io/core/testing v0.0.0-20240726110027-5c90246b3f9f // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/schema v0.1.1 // indirect
-	cosmossdk.io/server/v2/appmanager v0.0.0-20240726110027-5c90246b3f9f // indirect
-	cosmossdk.io/server/v2/stf v0.0.0-20240726110027-5c90246b3f9f // indirect
+	cosmossdk.io/server/v2/appmanager v0.0.0-20240727181124-b05bb2601edb // indirect; main
+	cosmossdk.io/server/v2/stf v0.0.0-20240727181124-b05bb2601edb // indirect; main
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000 // indirect
@@ -293,9 +292,5 @@ replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/runtime/v2 => ../../runtime/v2
-	cosmossdk.io/server/v2 => cosmossdk.io/server/v2 v2.0.0-20240727181124-b05bb2601edb // main
-	cosmossdk.io/server/v2/appmanager => cosmossdk.io/server/v2/appmanager v0.0.0-20240727181124-b05bb2601edb // main
-	cosmossdk.io/server/v2/cometbft => cosmossdk.io/server/v2/cometbft v0.0.0-20240727181124-b05bb2601edb // main
-	cosmossdk.io/server/v2/stf => cosmossdk.io/server/v2/stf v0.0.0-20240727181124-b05bb2601edb // main
-	cosmossdk.io/store/v2 => cosmossdk.io/store/v2 v2.0.0-20240727181124-b05bb2601edb // main
+	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
 )

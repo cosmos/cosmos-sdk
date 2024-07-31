@@ -7,9 +7,6 @@ replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/core/testing => ../../core/testing
-	cosmossdk.io/server/v2/appmanager => cosmossdk.io/server/v2/appmanager v0.0.0-20240727181124-b05bb2601edb // main
-	cosmossdk.io/server/v2/stf => cosmossdk.io/server/v2/stf v0.0.0-20240727181124-b05bb2601edb // main
-	cosmossdk.io/store/v2 => cosmossdk.io/store/v2 v2.0.0-20240727181124-b05bb2601edb // main
 	cosmossdk.io/x/accounts => ../../x/accounts
 	cosmossdk.io/x/auth => ../../x/auth
 	cosmossdk.io/x/bank => ../../x/bank
@@ -25,9 +22,9 @@ require (
 	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.3.1
-	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000
-	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
+	cosmossdk.io/server/v2/appmanager v0.0.0-20240727181124-b05bb2601edb // main
+	cosmossdk.io/server/v2/stf v0.0.0-20240727181124-b05bb2601edb // main
+	cosmossdk.io/store/v2 v2.0.0-20240727181124-b05bb2601edb // main
 	cosmossdk.io/x/tx v0.13.3
 	github.com/cosmos/gogoproto v1.5.0
 	github.com/spf13/viper v1.19.0

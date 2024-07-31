@@ -41,9 +41,11 @@ message MsgUpdateParams {
   cometbft.types.v1.EvidenceParams  evidence  = 3;
   cometbft.types.v1.ValidatorParams validator = 4;
 
-  // Since: cosmos-sdk 0.51
-  cometbft.types.v1.ABCIParams      abci = 5 [deprecated = true, (cosmos_proto.field_added_in) = "cosmos-sdk 0.50"];
-  cometbft.types.v1.SynchronyParams synchrony = 6 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.51"];
+  // Since: cosmos-sdk 0.50
+  cometbft.types.v1.ABCIParams abci = 5 [deprecated = true, (cosmos_proto.field_added_in) = "cosmos-sdk 0.50"];
+
+  // Since: cosmos-sdk 0.52
+  cometbft.types.v1.SynchronyParams synchrony = 6 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.52"];
   cometbft.types.v1.FeatureParams   feature   = 7 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.52"];
 }
 

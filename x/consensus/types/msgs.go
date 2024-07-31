@@ -43,25 +43,19 @@ func (msg MsgUpdateParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, e
 
 	if msg.Feature != nil {
 		if msg.Feature.VoteExtensionsEnableHeight != nil {
-			cp.Feature.VoteExtensionsEnableHeight = &types.Int64Value{
-				Value: msg.Feature.GetVoteExtensionsEnableHeight().GetValue(),
-			}
+			cp.Feature.VoteExtensionsEnableHeight = msg.Feature.VoteExtensionsEnableHeight
 		}
 		if msg.Feature.PbtsEnableHeight != nil {
-			cp.Feature.PbtsEnableHeight = &types.Int64Value{
-				Value: msg.Feature.GetPbtsEnableHeight().GetValue(),
-			}
+			cp.Feature.PbtsEnableHeight = msg.Feature.PbtsEnableHeight
 		}
 	}
 
 	if msg.Synchrony != nil {
 		if msg.Synchrony.MessageDelay != nil {
-			delay := *msg.Synchrony.MessageDelay
-			cp.Synchrony.MessageDelay = &delay
+			cp.Synchrony.MessageDelay = msg.Synchrony.MessageDelay
 		}
 		if msg.Synchrony.Precision != nil {
-			precision := *msg.Synchrony.Precision
-			cp.Synchrony.Precision = &precision
+			cp.Synchrony.Precision = msg.Synchrony.Precision
 		}
 	}
 

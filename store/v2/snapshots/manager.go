@@ -405,24 +405,18 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 	storageErrs := make(chan error, 1)
 	go func() {
 		defer close(storageErrs)
-		fmt.Println("before storageSnapshotter.Restore")
 		err := m.storageSnapshotter.Restore(snapshot.Height, chStorage)
-		fmt.Println("after storageSnapshotter.Restore", err)
 		if err != nil {
 			storageErrs <- err
 		}
 	}()
-
-	fmt.Println("before commitSnapshotter.Restore")
  
 	nextItem, err = m.commitSnapshotter.Restore(snapshot.Height, snapshot.Format, streamReader, chStorage)
-	fmt.Println("after commitSnapshotter.Restore", nextItem, err)
 	if err != nil {
 		return errorsmod.Wrap(err, "multistore restore")
 	}
 
 	for {
-		fmt.Println("next item loop", nextItem)
 		if nextItem.Item == nil {
 			// end of stream
 			break
@@ -540,11 +534,7 @@ func (m *Manager) RestoreLocalSnapshot(height uint64, format uint32) error {
 	}
 	defer m.endLocked()
 
-	fmt.Println("before doRestoreSnapshot")
-	err = m.doRestoreSnapshot(*snapshot, ch)
-	fmt.Println("after doRestoreSnapshot", err)
-
-	return err
+	return m.doRestoreSnapshot(*snapshot, ch)
 }
 
 // sortedExtensionNames sort extension names for deterministic iteration.

@@ -128,23 +128,6 @@ func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 		return err
 	}
 
-	// bsDB, err := cmtcfg.DefaultDBProvider(&cmtcfg.DBContext{
-	// 	ID: "blockstore",
-	// 	Config: s.config.ConfigTomlConfig,
-	// })
-	// blockStore := cometstore.NewBlockStore(bsDB)
-	// fmt.Println("block store version", blockStore.Height(), err)
-
-	// stateDB, _ := cmtcfg.DefaultDBProvider(&cmtcfg.DBContext{
-	// 	ID: "state",
-	// 	Config: s.config.ConfigTomlConfig,
-	// })
-
-	// state, _, err := node.LoadStateFromDBOrGenesisDocProvider(stateDB, getGenDocProvider(s.config.ConfigTomlConfig), s.config.ConfigTomlConfig.Storage.GenesisHash)
-	// fmt.Println("state last version", state.LastBlockHeight, err)
-
-	fmt.Println("in me may ra")
-
 	s.Node, err = node.NewNode(
 		ctx,
 		s.config.ConfigTomlConfig,

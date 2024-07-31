@@ -17,7 +17,6 @@ replace (
 	cosmossdk.io/x/consensus => ../../../x/consensus
 	cosmossdk.io/x/staking => ../../../x/staking
 	cosmossdk.io/x/tx => ../../../x/tx
-	github.com/cometbft/cometbft => ../../../../cometbft
 	github.com/cosmos/cosmos-sdk => ../../../
 )
 

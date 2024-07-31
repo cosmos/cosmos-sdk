@@ -75,7 +75,6 @@ func (s *Store) Delete(height uint64, format uint32) error {
 
 // Get fetches snapshot info from the database.
 func (s *Store) Get(height uint64, format uint32) (*types.Snapshot, error) {
-	fmt.Println("snapshot path metadata", s.pathMetadata(height, format))
 	if _, err := os.Stat(s.pathMetadata(height, format)); os.IsNotExist(err) {
 		return nil, nil
 	}
@@ -333,13 +332,11 @@ func (s *Store) saveChunkContent(chunk []byte, index uint32, snapshot *types.Sna
 
 // saveSnapshot saves snapshot metadata to the database.
 func (s *Store) saveSnapshot(snapshot *types.Snapshot) error {
-	fmt.Println("snapshot before write", snapshot)
 	value, err := proto.Marshal(snapshot)
 	if err != nil {
 		return errors.Wrap(err, "failed to encode snapshot metadata")
 	}
 	err = os.WriteFile(s.pathMetadata(snapshot.Height, snapshot.Format), value, 0o600)
-	fmt.Println("write snapshots", s.pathMetadata(snapshot.Height, snapshot.Format), err)
 	if err != nil {
 		return errors.Wrap(err, "failed to write snapshot metadata")
 	}

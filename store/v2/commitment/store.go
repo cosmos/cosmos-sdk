@@ -366,7 +366,6 @@ loop:
 				}
 
 				// If the node is a leaf node, it will be written to the storage.
-				fmt.Println("pass to chanel", string(storeKey), string(node.Key))
 				chStorage <- &corestore.StateChanges{
 					Actor: storeKey,
 					StateChanges: []corestore.KVPair{
@@ -392,12 +391,7 @@ loop:
 		}
 	}
 
-	err1 := c.LoadVersion(version)
-	fmt.Println("commitment version after restore", err1, version)
-	v, err := c.GetLatestVersion()
-	fmt.Println("commitment get last version", v, err)
-
-	return snapshotItem, err1
+	return snapshotItem, c.LoadVersion(version)
 }
 
 func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {

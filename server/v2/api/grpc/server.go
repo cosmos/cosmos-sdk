@@ -184,7 +184,6 @@ func (s *Server[T]) Start(ctx context.Context) error {
 	// Start a blocking select to wait for an indication to stop the server or that
 	// the server failed to start properly.
 	err = <-errCh
-
 	if err != nil {
 		s.logger.Error("failed to start gRPC server", "err", err)
 	}

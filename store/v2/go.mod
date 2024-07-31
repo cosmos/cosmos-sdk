@@ -5,11 +5,7 @@ go 1.21
 require (
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
-<<<<<<< HEAD
 	cosmossdk.io/errors v1.0.1
-=======
-	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
->>>>>>> 98e09a720 (refactor(server/v2): add missing comet flags (#21123))
 	cosmossdk.io/log v1.3.1
 	github.com/cockroachdb/pebble v1.1.0
 	github.com/cosmos/gogoproto v1.5.0

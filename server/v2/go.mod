@@ -41,10 +41,6 @@ require (
 )
 
 require (
-<<<<<<< HEAD
-=======
-	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
->>>>>>> 98e09a720 (refactor(server/v2): add missing comet flags (#21123))
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

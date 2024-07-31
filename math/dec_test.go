@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cockroachdb/apd/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -1325,6 +1326,14 @@ func TestMarshal(t *testing.T) {
 			x:   must(NewDecFromString("-1." + strings.Repeat("0", 34))),
 			exp: "-1.0000000000000000000000000000000000",
 		},
+		"6 decimal places": {
+			x:   must(NewDecFromString("0.000001")),
+			exp: "0.000001",
+		},
+		"7 decimal places": {
+			x:   must(NewDecFromString("0.0000001")),
+			exp: "1E-7",
+		},
 		"1e100000": {
 			x:   NewDecWithPrec(1, 100_000),
 			exp: "1E+100000",
@@ -1353,13 +1362,13 @@ func TestUnMarshal(t *testing.T) {
 		exp    string
 		expErr error
 	}{
-		"No trailing zeros": {
-			x:   "123456",
+		"Leading zeros": {
+			x:   "000123456",
 			exp: "123456",
 		},
 		"Trailing zeros": {
-			x:   "1.23456E+8",
-			exp: "123456000",
+			x:   "1.00000",
+			exp: "1.00000",
 		},
 		"Small e": {
 			x:   "1.23456e+8",
@@ -1368,6 +1377,10 @@ func TestUnMarshal(t *testing.T) {
 		"Zero value": {
 			x:   "0",
 			exp: "0",
+		},
+		"-0": {
+			x:   "-0",
+			exp: "-0",
 		},
 		"Decimal value": {
 			x:   "1.3000",
@@ -1381,13 +1394,21 @@ func TestUnMarshal(t *testing.T) {
 			x:   "-1E+1",
 			exp: "-10",
 		},
-		"max decimal": {
-			x:   "9",
-			exp: "9",
+		"Max Exponent": {
+			x:   "1e" + strconv.Itoa(apd.MaxExponent),
+			exp: "1e" + strconv.Itoa(apd.MaxExponent),
 		},
-		"min decimal": {
-			x:   "-1",
-			exp: "-1",
+		"Above Max Exponent": {
+			x:      "1e" + strconv.Itoa(apd.MaxExponent+1),
+			expErr: ErrInvalidDec,
+		},
+		"Min Exponent": {
+			x:   "1e-100000",
+			exp: "1e-100000",
+		},
+		"Below Min Exponent": {
+			x:      "1e" + strconv.Itoa(apd.MinExponent-1),
+			expErr: ErrInvalidDec,
 		},
 		"1e100000": {
 			x:   "1E+100000",
@@ -1417,6 +1438,18 @@ func TestUnMarshal(t *testing.T) {
 			x:      "1foo",
 			expErr: ErrInvalidDec,
 		},
+		".": {
+			x:      ".",
+			expErr: ErrInvalidDec,
+		},
+		"0.": {
+			x:   "0.",
+			exp: "0",
+		},
+		".0": {
+			x:   ".0",
+			exp: "0.0",
+		},
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
@@ -1426,12 +1459,12 @@ func TestUnMarshal(t *testing.T) {
 				require.ErrorIs(t, err, spec.expErr)
 				return
 			}
-			if unmarshaled.dec.Exponent == 100000 {
-				coeffStr := unmarshaled.dec.Coeff.String()
+			if unmarshaled.dec.Exponent == 100000 || unmarshaled.dec.Exponent == -100000 {
 				if unmarshaled.dec.Negative {
-					coeffStr = "-" + coeffStr
+					assert.Equal(t, spec.exp, "-"+unmarshaled.dec.Coeff.String()+"e"+strconv.Itoa(int(unmarshaled.dec.Exponent)))
+				} else {
+					assert.Equal(t, spec.exp, unmarshaled.dec.Coeff.String()+"e"+strconv.Itoa(int(unmarshaled.dec.Exponent)))
 				}
-				assert.Equal(t, spec.exp, coeffStr+"e"+strconv.Itoa(int(unmarshaled.dec.Exponent)))
 			} else {
 				assert.Equal(t, spec.exp, unmarshaled.String())
 			}

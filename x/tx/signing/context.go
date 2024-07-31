@@ -116,10 +116,6 @@ func NewContext(options Options) (*Context, error) {
 		maxRecursionDepth:     options.MaxRecursionDepth,
 	}
 
-	if err := c.Validate(); err != nil {
-		return nil, err
-	}
-
 	return c, nil
 }
 

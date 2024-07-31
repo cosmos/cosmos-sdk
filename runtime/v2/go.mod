@@ -38,8 +38,13 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
+<<<<<<< HEAD
 	cosmossdk.io/core/testing v0.0.0-20240726110027-5c90246b3f9f // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
+=======
+	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
+>>>>>>> 98e09a720 (refactor(server/v2): add missing comet flags (#21123))
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

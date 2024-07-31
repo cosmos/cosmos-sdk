@@ -55,6 +55,10 @@ require (
 	cloud.google.com/go/storage v1.42.0 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
+<<<<<<< HEAD
+=======
+	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
+>>>>>>> 98e09a720 (refactor(server/v2): add missing comet flags (#21123))
 	cosmossdk.io/schema v0.1.1 // indirect
 	cosmossdk.io/server/v2/appmanager v0.0.0-20240726110027-5c90246b3f9f // indirect
 	cosmossdk.io/server/v2/stf v0.0.0-20240726110027-5c90246b3f9f // indirect

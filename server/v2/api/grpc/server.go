@@ -14,7 +14,17 @@ import (
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 )
 
+<<<<<<< HEAD
 type GRPCServer[T transaction.Tx] struct {
+=======
+const (
+	ServerName = "grpc"
+
+	BlockHeightHeader = "x-cosmos-block-height"
+)
+
+type Server[T transaction.Tx] struct {
+>>>>>>> 98e09a720 (refactor(server/v2): add missing comet flags (#21123))
 	logger     log.Logger
 	config     *Config
 	cfgOptions []CfgOption
@@ -57,8 +67,82 @@ func (s *GRPCServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.L
 	return nil
 }
 
+<<<<<<< HEAD
 func (s *GRPCServer[T]) Name() string {
 	return "grpc"
+=======
+func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
+	flags := pflag.NewFlagSet(s.Name(), pflag.ExitOnError)
+	flags.String(FlagAddress, "localhost:9090", "Listen address")
+	return flags
+}
+
+func makeUnknownServiceHandler(messageMap map[string]func() proto.Message, querier interface {
+	Query(ctx context.Context, version uint64, msg proto.Message) (proto.Message, error)
+},
+) grpc.StreamHandler {
+	return func(srv any, stream grpc.ServerStream) error {
+		method, ok := grpc.MethodFromServerStream(stream)
+		if !ok {
+			return status.Error(codes.InvalidArgument, "unable to get method")
+		}
+		makeMsg, exists := messageMap[method]
+		if !exists {
+			return status.Errorf(codes.Unimplemented, "gRPC method %s is not handled", method)
+		}
+		for {
+			req := makeMsg()
+			err := stream.RecvMsg(req)
+			if err != nil {
+				if errors.Is(err, io.EOF) {
+					return nil
+				}
+				return err
+			}
+
+			// extract height header
+			ctx := stream.Context()
+			height, err := getHeightFromCtx(ctx)
+			if err != nil {
+				return status.Errorf(codes.InvalidArgument, "invalid get height from context: %v", err)
+			}
+			resp, err := querier.Query(ctx, height, req)
+			if err != nil {
+				return err
+			}
+			err = stream.SendMsg(resp)
+			if err != nil {
+				return err
+			}
+		}
+	}
+}
+
+func getHeightFromCtx(ctx context.Context) (uint64, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return 0, nil
+	}
+	values := md.Get(BlockHeightHeader)
+	if len(values) == 0 {
+		return 0, nil
+	}
+	if len(values) != 1 {
+		return 0, fmt.Errorf("gRPC height metadata must be of length 1, got: %d", len(values))
+	}
+
+	heightStr := values[0]
+	height, err := strconv.ParseUint(heightStr, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("unable to parse height string from gRPC metadata %s: %w", heightStr, err)
+	}
+
+	return height, nil
+}
+
+func (s *Server[T]) Name() string {
+	return ServerName
+>>>>>>> 98e09a720 (refactor(server/v2): add missing comet flags (#21123))
 }
 
 func (s *GRPCServer[T]) Config() any {

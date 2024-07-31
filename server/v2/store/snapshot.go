@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"path/filepath"
 	"strconv"
 
@@ -9,8 +10,8 @@ import (
 
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/store/v2/snapshots"
 	storev2 "cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/snapshots"
 )
 
 // QueryBlockResultsCmd implements the default command for a BlockResults query.
@@ -86,7 +87,7 @@ func (s *StoreComponent[T]) RestoreSnapshotCmd(newApp serverv2.AppCreator[T]) *c
 			logger := log.NewLogger(cmd.OutOrStdout())
 			app := newApp(logger, v)
 			rootStore := app.GetStore().(storev2.RootStore)
-			
+
 			sm, err := createSnapshotsManager(cmd, v, logger, rootStore)
 			if err != nil {
 				return err
@@ -99,6 +100,60 @@ func (s *StoreComponent[T]) RestoreSnapshotCmd(newApp serverv2.AppCreator[T]) *c
 	addSnapshotFlagsToCmd(cmd)
 
 	return cmd
+}
+
+// ListSnapshotsCmd returns the command to list local snapshots
+func (s *StoreComponent[T]) ListSnapshotsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list",
+		Short: "List local snapshots",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			v := serverv2.GetViperFromCmd(cmd)
+			snapshotStore, err := snapshots.NewStore(filepath.Join(v.GetString(serverv2.FlagHome), "data", "snapshots"))
+			if err != nil {
+				return err
+			}
+			snapshots, err := snapshotStore.List()
+			if err != nil {
+				return fmt.Errorf("failed to list snapshots: %w", err)
+			}
+			for _, snapshot := range snapshots {
+				cmd.Println("height:", snapshot.Height, "format:", snapshot.Format, "chunks:", snapshot.Chunks)
+			}
+
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// DeleteSnapshotCmd returns the command to delete a local snapshot
+func (s *StoreComponent[T]) DeleteSnapshotCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "delete <height> <format>",
+		Short: "Delete a local snapshot",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			v := serverv2.GetViperFromCmd(cmd)
+
+			height, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+			format, err := strconv.ParseUint(args[1], 10, 32)
+			if err != nil {
+				return err
+			}
+
+			snapshotStore, err := snapshots.NewStore(filepath.Join(v.GetString(serverv2.FlagHome), "data", "snapshots"))
+			if err != nil {
+				return err
+			}
+
+			return snapshotStore.Delete(height, uint32(format))
+		},
+	}
 }
 
 func createSnapshotsManager(cmd *cobra.Command, v *viper.Viper, logger log.Logger, store storev2.RootStore) (*snapshots.Manager, error) {

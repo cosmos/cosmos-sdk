@@ -381,19 +381,16 @@ func (x Dec) Marshal() ([]byte, error) {
 // Unmarshal parses a byte slice containing a text-formatted decimal and stores the result in the receiver.
 // It returns an error if the byte slice does not represent a valid decimal.
 func (x *Dec) Unmarshal(data []byte) error {
-	var d apd.Decimal
-	_, _, err := d.SetString(string(data))
+	result, err := NewDecFromString(string(data))
 	if err != nil {
 		return ErrInvalidDec.Wrap(err.Error())
 	}
 
-	switch d.Form {
-	case apd.NaN, apd.NaNSignaling:
-		return ErrInvalidDec.Wrap("not a number")
-	case apd.Infinite:
-		return ErrInvalidDec.Wrap("infinite decimal value not allowed")
-	default:
-		x.dec = d
-		return nil
+	if result.dec.Form != apd.Finite {
+		return ErrInvalidDec.Wrap("unknown decimal form")
 	}
+
+	x.dec = result.dec
+	return nil
+
 }

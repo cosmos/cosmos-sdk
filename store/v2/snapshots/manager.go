@@ -400,6 +400,7 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 
 	// chStorage is the channel to pass the KV pairs to the storage snapshotter.
 	chStorage := make(chan *corestore.StateChanges, defaultStorageChannelBufferSize)
+	defer close(chStorage)
 
 	storageErrs := make(chan error, 1)
 	go func() {

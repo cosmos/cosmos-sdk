@@ -308,11 +308,6 @@ func (c *CommitStore) Restore(
 	protoReader protoio.Reader,
 	chStorage chan<- *corestore.StateChanges,
 ) (snapshotstypes.SnapshotItem, error) {
-	defer func() {
-		fmt.Println("chStorage channel closed")
-		close(chStorage)
-	}()
-
 	var (
 		importer     Importer
 		snapshotItem snapshotstypes.SnapshotItem

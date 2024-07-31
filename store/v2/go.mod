@@ -5,7 +5,7 @@ go 1.21
 require (
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
-	cosmossdk.io/errors/v2 v2.0.0-20240606172700-98eef6d22f85
+	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
 	cosmossdk.io/log v1.3.1
 	github.com/cockroachdb/pebble v1.1.0
 	github.com/cosmos/gogoproto v1.5.0

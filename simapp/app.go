@@ -215,6 +215,10 @@ func NewSimApp(
 	signingCtx := interfaceRegistry.SigningContext()
 	txConfig := authtx.NewTxConfig(appCodec, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
 
+	if err := signingCtx.Validate(); err != nil {
+		panic(err)
+	}
+
 	std.RegisterLegacyAminoCodec(legacyAmino)
 	std.RegisterInterfaces(interfaceRegistry)
 

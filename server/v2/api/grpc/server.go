@@ -2,11 +2,20 @@ package grpc
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"net"
+	"strconv"
 
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -14,9 +23,6 @@ import (
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 )
 
-<<<<<<< HEAD
-type GRPCServer[T transaction.Tx] struct {
-=======
 const (
 	ServerName = "grpc"
 
@@ -24,7 +30,6 @@ const (
 )
 
 type Server[T transaction.Tx] struct {
->>>>>>> 98e09a720 (refactor(server/v2): add missing comet flags (#21123))
 	logger     log.Logger
 	config     *Config
 	cfgOptions []CfgOption
@@ -33,32 +38,34 @@ type Server[T transaction.Tx] struct {
 }
 
 // New creates a new grpc server.
-func New[T transaction.Tx](cfgOptions ...CfgOption) *GRPCServer[T] {
-	return &GRPCServer[T]{
+func New[T transaction.Tx](cfgOptions ...CfgOption) *Server[T] {
+	return &Server[T]{
 		cfgOptions: cfgOptions,
 	}
 }
 
 // Init returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server.
-func (s *GRPCServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
+func (s *Server[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
 	cfg := s.Config().(*Config)
 	if v != nil {
 		if err := serverv2.UnmarshalSubConfig(v, s.Name(), &cfg); err != nil {
 			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
+	methodsMap := appI.GetGPRCMethodsToMessageMap()
 
 	grpcSrv := grpc.NewServer(
 		grpc.ForceServerCodec(newProtoCodec(appI.InterfaceRegistry()).GRPCCodec()),
 		grpc.MaxSendMsgSize(cfg.MaxSendMsgSize),
 		grpc.MaxRecvMsgSize(cfg.MaxRecvMsgSize),
+		grpc.UnknownServiceHandler(
+			makeUnknownServiceHandler(methodsMap, appI.GetAppManager()),
+		),
 	)
 
-	// appI.RegisterGRPCServer(grpcSrv)
-
 	// Reflection allows external clients to see what services and methods the gRPC server exposes.
-	gogoreflection.Register(grpcSrv)
+	gogoreflection.Register(grpcSrv, maps.Keys(methodsMap), logger.With("sub-module", "grpc-reflection"))
 
 	s.grpcSrv = grpcSrv
 	s.config = cfg
@@ -67,10 +74,6 @@ func (s *GRPCServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.L
 	return nil
 }
 
-<<<<<<< HEAD
-func (s *GRPCServer[T]) Name() string {
-	return "grpc"
-=======
 func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
 	flags := pflag.NewFlagSet(s.Name(), pflag.ExitOnError)
 	flags.String(FlagAddress, "localhost:9090", "Listen address")
@@ -142,10 +145,9 @@ func getHeightFromCtx(ctx context.Context) (uint64, error) {
 
 func (s *Server[T]) Name() string {
 	return ServerName
->>>>>>> 98e09a720 (refactor(server/v2): add missing comet flags (#21123))
 }
 
-func (s *GRPCServer[T]) Config() any {
+func (s *Server[T]) Config() any {
 	if s.config == nil || s.config == (&Config{}) {
 		cfg := DefaultConfig()
 		// overwrite the default config with the provided options
@@ -159,7 +161,7 @@ func (s *GRPCServer[T]) Config() any {
 	return s.config
 }
 
-func (s *GRPCServer[T]) Start(ctx context.Context) error {
+func (s *Server[T]) Start(ctx context.Context) error {
 	if !s.config.Enable {
 		return nil
 	}
@@ -186,7 +188,7 @@ func (s *GRPCServer[T]) Start(ctx context.Context) error {
 	return err
 }
 
-func (s *GRPCServer[T]) Stop(ctx context.Context) error {
+func (s *Server[T]) Stop(ctx context.Context) error {
 	if !s.config.Enable {
 		return nil
 	}

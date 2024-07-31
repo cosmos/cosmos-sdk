@@ -705,6 +705,53 @@ func (s *CLITestSuite) TestNewCancelUnbondingDelegationCmd() {
 	}
 }
 
+func (s *CLITestSuite) TestNewUnbondValidatorCmd() {
+	cmd := cli.NewUnbondValidatorCmd()
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErrMsg string
+	}{
+		{
+			"valid unbond",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
+			},
+			"",
+		},
+		{
+			"invalid unbond",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, "cosmosvaloper164nnsjsrqluwagwc62x7tyghjmehgyy2xgx0uw"),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
+			},
+			"failed to convert address field to address",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
+			if tc.expectErrMsg != "" {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expectErrMsg)
+			} else {
+				s.Require().NoError(err, out.String())
+				resp := &sdk.TxResponse{}
+				s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), resp))
+			}
+		})
+	}
+}
+
 func TestCLITestSuite(t *testing.T) {
 	suite.Run(t, new(CLITestSuite))
 }

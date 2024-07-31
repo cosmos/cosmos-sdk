@@ -138,9 +138,10 @@ func NewMsgCancelUnbondingDelegation(delAddr, valAddr string, creationHeight int
 }
 
 // NewMsgUnbondValidator creates a new MsgUnbondValidator instance.
-func NewMsgUnbondValidator(valAddr string) *MsgUnbondValidator {
+// Validator account address must be provided - do not use valoper address.
+func NewMsgUnbondValidator(valAccountAddr string) *MsgUnbondValidator {
 	return &MsgUnbondValidator{
-		ValidatorAddress: valAddr,
+		ValidatorAddress: valAccountAddr,
 	}
 }
 

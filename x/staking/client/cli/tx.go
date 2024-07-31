@@ -47,7 +47,7 @@ func NewTxCmd(valAddrCodec, ac address.Codec) *cobra.Command {
 		NewDelegateCmd(valAddrCodec, ac),
 		NewRedelegateCmd(valAddrCodec, ac),
 		NewUnbondCmd(valAddrCodec, ac),
-		NewUnbondValidatorCmd(valAddrCodec),
+		NewUnbondValidatorCmd(),
 		NewCancelUnbondingDelegation(valAddrCodec, ac),
 		NewTokenizeSharesCmd(valAddrCodec, ac),
 		NewRedeemTokensCmd(),
@@ -315,7 +315,7 @@ $ %s tx staking unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from
 	return cmd
 }
 
-func NewUnbondValidatorCmd(valAddrCodec address.Codec) *cobra.Command {
+func NewUnbondValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbond-validator",
 		Short: "Unbond a validator",
@@ -335,12 +335,7 @@ $ %s tx staking unbond-validator --from mykey
 				return err
 			}
 
-			valStr, err := valAddrCodec.BytesToString(sdk.ValAddress(clientCtx.GetFromAddress()))
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgUnbondValidator(valStr)
+			msg := types.NewMsgUnbondValidator(clientCtx.GetFromAddress().String())
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

@@ -247,7 +247,9 @@ message MsgUnbondValidator {
   option (cosmos.msg.v1.signer) = "validator_address";
   option (amino.name)           = "cosmos-sdk/MsgUnbondValidator";
 
-  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
+  // the address must be provided in bech32 notation e.g. cosmos1apsdadpks9i09idj87dah
+  // providing valoper or valcons address will result in an error
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 // MsgUnbondValidatorResponse defines the Msg/UnbondValidator response type.
 message MsgUnbondValidatorResponse {}

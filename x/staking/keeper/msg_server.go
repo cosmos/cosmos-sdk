@@ -734,7 +734,12 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 // This allows a validator to stop their services and jail themselves without
 // experiencing a slash
 func (k msgServer) UnbondValidator(ctx context.Context, msg *types.MsgUnbondValidator) (*types.MsgUnbondValidatorResponse, error) {
-	valAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
+	// convert sdk.AccAddress to sdk.ValAddress
+	accAddr, err := sdk.AccAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	valAddr, err := k.validatorAddressCodec.StringToBytes(sdk.ValAddress(accAddr).String())
 	if err != nil {
 		return nil, err
 	}

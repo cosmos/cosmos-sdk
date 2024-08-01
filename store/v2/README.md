@@ -24,7 +24,7 @@ to map store keys to a commitment trees.
 
 The `LoadVersionAndUpgrade` API of the `root.store` allows for adding or removing
 store keys. This is useful for upgrading the chain with new modules or removing
-old ones. The `Rename` feature is deprecated and should not be used in store/v2.
+old ones. The `Rename` feature is not supported in store/v2.
 
 ```mermaid
 sequenceDiagram

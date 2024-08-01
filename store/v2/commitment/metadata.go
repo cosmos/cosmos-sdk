@@ -150,7 +150,7 @@ func (m *MetadataStore) deleteRemovedStoreKeys(version uint64, removeStore func(
 			return err
 		}
 		if err := batch.Delete(iter.Key()); err != nil {
-			return nil
+			return err
 		}
 	}
 

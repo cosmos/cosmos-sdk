@@ -250,3 +250,7 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	// we expect nextNum to be 2 because we initialize fee_collector as account number 1
 	suite.Require().Equal(2, int(nextNum))
 }
+
+func (suite *KeeperTestSuite) Test() {
+	suite.SetupTest() // reset
+}

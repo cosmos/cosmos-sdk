@@ -103,14 +103,14 @@ func TestUnorderedTxManager_Flow(t *testing.T) {
 	currentTime := time.Now()
 
 	// Seed the manager with a txs, some of which should eventually be purged and
-	// the others will remain. Txs with TTL less than or equal to 50 should be purged.
+	// the others will remain. First 50 Txs should be purged.
 	for i := 1; i <= 100; i++ {
 		txHash := [32]byte{byte(i)}
 
 		if i <= 50 {
-			txm.Add(txHash, currentTime.Add(time.Millisecond*500*time.Duration(i)))
-		} else {
 			txm.Add(txHash, currentTime.Add(time.Hour))
+		} else {
+			txm.Add(txHash, currentTime.Add(time.Millisecond*500*time.Duration(i)))
 		}
 	}
 
@@ -130,7 +130,7 @@ func TestUnorderedTxManager_Flow(t *testing.T) {
 		}
 	}()
 
-	// Eventually all the txs that should be expired by block 50 should be purged.
+	// Eventually all the txs that are expired should be purged.
 	// The remaining txs should remain.
 	require.Eventually(
 		t,

@@ -14,8 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22.2"
@@ -31,9 +29,7 @@ jobs:
         if: env.GIT_DIFF
         id: lint_long
         run: |
-          nix develop -c make lint
-        env:
-          NIX: 1
+          make lint
       - uses: technote-space/get-diff-action@v6.1.2
         if: steps.lint_long.outcome == 'skipped'
         with:
@@ -43,8 +39,7 @@ jobs:
       - name: run linting (short)
         if: steps.lint_long.outcome == 'skipped' && env.GIT_DIFF
         run: |
-          nix develop -c make lint
+          make lint
         env:
           GIT_DIFF: ${{ env.GIT_DIFF }}
           LINT_DIFF: 1
-          NIX: 1

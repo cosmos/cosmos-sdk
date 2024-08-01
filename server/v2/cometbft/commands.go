@@ -1,8 +1,8 @@
-package server
+package cometbft
 
 import (
-	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -12,36 +12,56 @@ import (
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
+	"github.com/cometbft/cometbft/rpc/client/local"
 	cmtversion "github.com/cometbft/cometbft/version"
 	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/encoding/protojson"
 	"sigs.k8s.io/yaml"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/server/v2/cometbft/client/rpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
-	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
-	auth "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 )
 
+func (s *CometBFTServer[T]) rpcClient(cmd *cobra.Command) (rpc.CometRPC, error) {
+	if s.config.AppTomlConfig.Standalone {
+		client, err := rpchttp.New(client.GetConfigFromCmd(cmd).RPC.ListenAddress)
+		if err != nil {
+			return nil, err
+		}
+		return client, nil
+	}
+
+	if s.Node == nil || cmd.Flags().Changed(FlagNode) {
+		rpcURI, err := cmd.Flags().GetString(FlagNode)
+		if err != nil {
+			return nil, err
+		}
+		if rpcURI != "" {
+			return rpchttp.New(rpcURI)
+		}
+	}
+
+	return local.New(s.Node), nil
+}
+
 // StatusCommand returns the command to return the status of the network.
-func StatusCommand() *cobra.Command {
+func (s *CometBFTServer[T]) StatusCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status",
 		Short: "Query remote node for status",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			rpcclient, err := s.rpcClient(cmd)
 			if err != nil {
 				return err
 			}
 
-			status, err := cmtservice.GetNodeStatus(context.Background(), clientCtx)
+			status, err := rpcclient.Status(cmd.Context())
 			if err != nil {
 				return err
 			}
@@ -51,32 +71,24 @@ func StatusCommand() *cobra.Command {
 				return err
 			}
 
-			// In order to maintain backwards compatibility, the default json format output
-			outputFormat, _ := cmd.Flags().GetString(flags.FlagOutput)
-			if outputFormat == flags.OutputFormatJSON {
-				clientCtx = clientCtx.WithOutputFormat(flags.OutputFormatJSON)
-			}
-
-			return clientCtx.PrintRaw(output)
+			return printOutput(cmd, output)
 		},
 	}
 
-	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	cmd.Flags().StringP(flags.FlagOutput, "o", "json", "Output format (text|json)")
+	cmd.Flags().StringP(FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
+	cmd.Flags().StringP(FlagOutput, "o", "json", "Output format (text|json)")
 
 	return cmd
 }
 
 // ShowNodeIDCmd - ported from CometBFT, dump node ID to stdout
-func ShowNodeIDCmd() *cobra.Command {
+func (s *CometBFTServer[T]) ShowNodeIDCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "show-node-id",
 		Short: "Show this node's ID",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			serverCtx := GetServerContextFromCmd(cmd)
-			cfg := serverCtx.Config
-
-			nodeKey, err := p2p.LoadNodeKey(cfg.NodeKeyFile())
+			cmtConfig := client.GetConfigFromCmd(cmd)
+			nodeKey, err := p2p.LoadNodeKey(cmtConfig.NodeKeyFile())
 			if err != nil {
 				return err
 			}
@@ -88,14 +100,12 @@ func ShowNodeIDCmd() *cobra.Command {
 }
 
 // ShowValidatorCmd - ported from CometBFT, show this node's validator info
-func ShowValidatorCmd() *cobra.Command {
+func (s *CometBFTServer[T]) ShowValidatorCmd() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "show-validator",
 		Short: "Show this node's CometBFT validator info",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			serverCtx := GetServerContextFromCmd(cmd)
-			cfg := serverCtx.Config
-
+			cfg := client.GetConfigFromCmd(cmd)
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			pk, err := privValidator.GetPubKey()
 			if err != nil {
@@ -107,13 +117,15 @@ func ShowValidatorCmd() *cobra.Command {
 				return err
 			}
 
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			bz, err := clientCtx.Codec.MarshalInterfaceJSON(sdkPK)
-			if err != nil {
-				return err
-			}
+			cmd.Println(sdkPK) // TODO: figure out if we need the codec here or not, see below
 
-			cmd.Println(string(bz))
+			// clientCtx := client.GetClientContextFromCmd(cmd)
+			// bz, err := clientCtx.Codec.MarshalInterfaceJSON(sdkPK)
+			// if err != nil {
+			// 	return err
+			// }
+
+			// cmd.Println(string(bz))
 			return nil
 		},
 	}
@@ -122,16 +134,14 @@ func ShowValidatorCmd() *cobra.Command {
 }
 
 // ShowAddressCmd - show this node's validator address
-func ShowAddressCmd() *cobra.Command {
+func (s *CometBFTServer[T]) ShowAddressCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show-address",
 		Short: "Shows this node's CometBFT validator consensus address",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			serverCtx := GetServerContextFromCmd(cmd)
-			cfg := serverCtx.Config
-
+			cfg := client.GetConfigFromCmd(cmd)
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
-
+			// TODO: use address codec?
 			valConsAddr := (sdk.ConsAddress)(privValidator.GetAddress())
 
 			cmd.Println(valConsAddr.String())
@@ -143,7 +153,7 @@ func ShowAddressCmd() *cobra.Command {
 }
 
 // VersionCmd prints CometBFT and ABCI version numbers.
-func VersionCmd() *cobra.Command {
+func (s *CometBFTServer[T]) VersionCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
 		Short: "Print CometBFT libraries' version",
@@ -155,7 +165,7 @@ func VersionCmd() *cobra.Command {
 				BlockProtocol uint64
 				P2PProtocol   uint64
 			}{
-				CometBFT:      cmtversion.TMCoreSemVer,
+				CometBFT:      cmtversion.CMTSemVer,
 				ABCI:          cmtversion.ABCIVersion,
 				BlockProtocol: cmtversion.BlockProtocol,
 				P2PProtocol:   cmtversion.P2PProtocol,
@@ -171,7 +181,7 @@ func VersionCmd() *cobra.Command {
 }
 
 // QueryBlocksCmd returns a command to search through blocks by events.
-func QueryBlocksCmd() *cobra.Command {
+func (s *CometBFTServer[T]) QueryBlocksCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "blocks",
 		Short: "Query for paginated blocks that match a set of events",
@@ -186,36 +196,42 @@ for. Each module documents its respective events under 'xx_events.md'.
 			version.AppName,
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			query, _ := cmd.Flags().GetString(auth.FlagQuery)
-			page, _ := cmd.Flags().GetInt(flags.FlagPage)
-			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
-			orderBy, _ := cmd.Flags().GetString(auth.FlagOrderBy)
-
-			blocks, err := rpc.QueryBlocks(clientCtx, page, limit, query, orderBy)
+			rpcclient, err := s.rpcClient(cmd)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintProto(blocks)
+			query, _ := cmd.Flags().GetString(FlagQuery)
+			page, _ := cmd.Flags().GetInt(FlagPage)
+			limit, _ := cmd.Flags().GetInt(FlagLimit)
+			orderBy, _ := cmd.Flags().GetString(FlagOrderBy)
+
+			blocks, err := rpc.QueryBlocks(cmd.Context(), rpcclient, page, limit, query, orderBy)
+			if err != nil {
+				return err
+			}
+
+			bz, err := protojson.Marshal(blocks)
+			if err != nil {
+				return err
+			}
+
+			return printOutput(cmd, bz)
 		},
 	}
 
-	flags.AddQueryFlagsToCmd(cmd)
-	cmd.Flags().Int(flags.FlagPage, query.DefaultPage, "Query a specific page of paginated results")
-	cmd.Flags().Int(flags.FlagLimit, query.DefaultLimit, "Query number of transactions results per page returned")
-	cmd.Flags().String(auth.FlagQuery, "", "The blocks events query per CometBFT's query semantics")
-	cmd.Flags().String(auth.FlagOrderBy, "", "The ordering semantics (asc|dsc)")
-	_ = cmd.MarkFlagRequired(auth.FlagQuery)
+	AddQueryFlagsToCmd(cmd)
+	cmd.Flags().Int(FlagPage, query.DefaultPage, "Query a specific page of paginated results")
+	cmd.Flags().Int(FlagLimit, query.DefaultLimit, "Query number of transactions results per page returned")
+	cmd.Flags().String(FlagQuery, "", "The blocks events query per CometBFT's query semantics")
+	cmd.Flags().String(FlagOrderBy, "", "The ordering semantics (asc|dsc)")
+	_ = cmd.MarkFlagRequired(FlagQuery)
 
 	return cmd
 }
 
 // QueryBlockCmd implements the default command for a Block query.
-func QueryBlockCmd() *cobra.Command {
+func (s *CometBFTServer[T]) QueryBlockCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "block --type=[height|hash] [height|hash]",
 		Short: "Query for a committed block by height, hash, or event(s)",
@@ -224,47 +240,33 @@ func QueryBlockCmd() *cobra.Command {
 $ %s query block --%s=%s <height>
 $ %s query block --%s=%s <hash>
 `,
-			version.AppName, auth.FlagType, auth.TypeHeight,
-			version.AppName, auth.FlagType, auth.TypeHash)),
-		Args: cobra.MaximumNArgs(1),
+			version.AppName, FlagType, TypeHeight,
+			version.AppName, FlagType, TypeHash)),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			typ, _ := cmd.Flags().GetString(FlagType)
+
+			rpcclient, err := s.rpcClient(cmd)
 			if err != nil {
 				return err
 			}
 
-			typ, _ := cmd.Flags().GetString(auth.FlagType)
-			if len(args) == 0 {
-				// do not break default v0.50 behavior of block hash
-				// if no args are provided, set the type to height
-				typ = auth.TypeHeight
-			}
-
 			switch typ {
-			case auth.TypeHeight:
-				var (
-					err    error
-					height int64
-				)
-				heightStr := ""
+			case TypeHeight:
+				if args[0] == "" {
+					return errors.New("argument should be a block height")
+				}
+
+				// optional height
+				var height *int64
 				if len(args) > 0 {
-					heightStr = args[0]
-				}
-
-				if heightStr == "" {
-					cmd.Println("Falling back to latest block height:")
-					height, err = rpc.GetChainHeight(clientCtx)
+					height, err = parseOptionalHeight(args[0])
 					if err != nil {
-						return fmt.Errorf("failed to get chain height: %w", err)
-					}
-				} else {
-					height, err = strconv.ParseInt(heightStr, 10, 64)
-					if err != nil {
-						return fmt.Errorf("failed to parse block height: %w", err)
+						return err
 					}
 				}
 
-				output, err := rpc.GetBlockByHeight(clientCtx, &height)
+				output, err := rpc.GetBlockByHeight(cmd.Context(), rpcclient, height)
 				if err != nil {
 					return err
 				}
@@ -273,16 +275,21 @@ $ %s query block --%s=%s <hash>
 					return fmt.Errorf("no block found with height %s", args[0])
 				}
 
-				return clientCtx.PrintProto(output)
+				bz, err := json.Marshal(output)
+				if err != nil {
+					return err
+				}
 
-			case auth.TypeHash:
+				return printOutput(cmd, bz)
+
+			case TypeHash:
 
 				if args[0] == "" {
-					return fmt.Errorf("argument should be a tx hash")
+					return errors.New("argument should be a tx hash")
 				}
 
 				// If hash is given, then query the tx by hash.
-				output, err := rpc.GetBlockByHash(clientCtx, args[0])
+				output, err := rpc.GetBlockByHash(cmd.Context(), rpcclient, args[0])
 				if err != nil {
 					return err
 				}
@@ -291,54 +298,55 @@ $ %s query block --%s=%s <hash>
 					return fmt.Errorf("no block found with hash %s", args[0])
 				}
 
-				return clientCtx.PrintProto(output)
+				bz, err := json.Marshal(output)
+				if err != nil {
+					return err
+				}
+
+				return printOutput(cmd, bz)
 
 			default:
-				return fmt.Errorf("unknown --%s value %s", auth.FlagType, typ)
+				return fmt.Errorf("unknown --%s value %s", FlagType, typ)
 			}
 		},
 	}
 
-	flags.AddQueryFlagsToCmd(cmd)
-	cmd.Flags().String(auth.FlagType, auth.TypeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\"", auth.TypeHeight, auth.TypeHash))
+	AddQueryFlagsToCmd(cmd)
+	cmd.Flags().String(FlagType, TypeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\"", TypeHeight, TypeHash))
 
 	return cmd
 }
 
 // QueryBlockResultsCmd implements the default command for a BlockResults query.
-func QueryBlockResultsCmd() *cobra.Command {
+func (s *CometBFTServer[T]) QueryBlockResultsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "block-results [height]",
 		Short: "Query for a committed block's results by height",
 		Long:  "Query for a specific committed block's results using the CometBFT RPC `block_results` method",
 		Args:  cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
+			// clientCtx, err := client.GetClientQueryContext(cmd)
+			// if err != nil {
+			// 	return err
+			// }
 
-			node, err := clientCtx.GetNode()
+			// TODO: we should be able to do this without using client context
+
+			node, err := s.rpcClient(cmd)
 			if err != nil {
 				return err
 			}
 
 			// optional height
-			var height int64
+			var height *int64
 			if len(args) > 0 {
-				height, err = strconv.ParseInt(args[0], 10, 64)
+				height, err = parseOptionalHeight(args[0])
 				if err != nil {
 					return err
 				}
-			} else {
-				cmd.Println("Falling back to latest block height:")
-				height, err = rpc.GetChainHeight(clientCtx)
-				if err != nil {
-					return fmt.Errorf("failed to get chain height: %w", err)
-				}
 			}
 
-			blockRes, err := node.BlockResults(context.Background(), &height)
+			blockRes, err := node.BlockResults(cmd.Context(), height)
 			if err != nil {
 				return err
 			}
@@ -351,45 +359,84 @@ func QueryBlockResultsCmd() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintRaw(blockResStr)
+			return printOutput(cmd, blockResStr)
 		},
 	}
 
-	flags.AddQueryFlagsToCmd(cmd)
+	AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
 
-func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
+func parseOptionalHeight(heightStr string) (*int64, error) {
+	h, err := strconv.Atoi(heightStr)
+	if err != nil {
+		return nil, err
+	}
+
+	if h == 0 {
+		return nil, nil
+	}
+
+	tmp := int64(h)
+
+	return &tmp, nil
+}
+
+func (s *CometBFTServer[T]) BootstrapStateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bootstrap-state",
 		Short: "Bootstrap CometBFT state at an arbitrary block height using a light client",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			serverCtx := GetServerContextFromCmd(cmd)
-			logger := log.NewLogger(cmd.OutOrStdout())
-			cfg := serverCtx.Config
-
-			height, err := cmd.Flags().GetInt64("height")
+			cfg := client.GetConfigFromCmd(cmd)
+			height, err := cmd.Flags().GetUint64("height")
 			if err != nil {
 				return err
 			}
 			if height == 0 {
-				home := serverCtx.Viper.GetString(flags.FlagHome)
-				db, err := openDB(home, GetAppDBBackend(serverCtx.Viper))
+				height, err = s.Consensus.store.GetLatestVersion()
 				if err != nil {
 					return err
 				}
-
-				app := appCreator(logger, db, nil, serverCtx.Viper)
-				height = app.CommitMultiStore().LastCommitID().Version
 			}
 
-			return node.BootstrapStateWithGenProvider(cmd.Context(), cfg, cmtcfg.DefaultDBProvider, getGenDocProvider(cfg), uint64(height), nil)
+			// TODO genensis doc provider and apphash
+			return node.BootstrapState(cmd.Context(), cfg, cmtcfg.DefaultDBProvider, nil, height, nil)
 		},
 	}
 
 	cmd.Flags().Int64("height", 0, "Block height to bootstrap state at, if not provided it uses the latest block height in app state")
 
 	return cmd
+}
+
+func printOutput(cmd *cobra.Command, out []byte) error {
+	// Get flags output
+	outFlag, err := cmd.Flags().GetString(FlagOutput)
+	if err != nil {
+		return err
+	}
+
+	if outFlag == "text" {
+		out, err = yaml.JSONToYAML(out)
+		if err != nil {
+			return err
+		}
+	}
+
+	writer := cmd.OutOrStdout()
+	_, err = writer.Write(out)
+	if err != nil {
+		return err
+	}
+
+	if outFlag != "text" {
+		// append new-line for formats besides YAML
+		_, err = writer.Write([]byte("\n"))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

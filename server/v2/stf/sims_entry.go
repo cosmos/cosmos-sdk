@@ -9,7 +9,7 @@ import (
 	"cosmossdk.io/server/v2/stf/internal"
 )
 
-func (s STF[T]) DoSimsTXs(simsBuilder func(ctx context.Context) (T, bool)) DoInBlockDeliveryFn[T] {
+func (s STF[T]) DoSimsTXs(simsBuilder func(ctx context.Context) (T, bool)) doInBlockDeliveryFn[T] {
 	return func(
 		ctx context.Context,
 		_ []T,

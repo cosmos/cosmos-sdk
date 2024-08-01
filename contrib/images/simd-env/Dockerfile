@@ -9,7 +9,6 @@ COPY api/go.mod api/go.sum /work/api/
 COPY log/go.mod log/go.sum /work/log/
 COPY core/go.mod core/go.sum /work/core/
 COPY collections/go.mod collections/go.sum /work/collections/
-COPY store/go.mod store/go.sum /work/store/
 COPY depinject/go.mod depinject/go.sum /work/depinject/
 COPY x/tx/go.mod x/tx/go.sum /work/x/tx/
 COPY x/protocolpool/go.mod x/protocolpool/go.sum /work/x/protocolpool/

@@ -1,21 +1,19 @@
 package store
 
 import (
+	"archive/tar"
 	"bytes"
+	"compress/gzip"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
-	"archive/tar"
-	"compress/gzip"
-
-	"reflect"
 
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
@@ -286,9 +284,6 @@ func (s *StoreComponent[T]) LoadArchiveCmd() *cobra.Command {
 
 			var snapshot types.Snapshot
 			tr := tar.NewReader(reader)
-			if err != nil {
-				return fmt.Errorf("failed to create tar reader: %w", err)
-			}
 
 			hdr, err := tr.Next()
 			if err != nil {

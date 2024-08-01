@@ -83,11 +83,11 @@ func initRootCmd[T transaction.Tx](
 
 	// Add RestoreSnapshotCmd separately cause need appCreator
 	for _, cmd := range rootCmd.Commands() {
-        if cmd.Use == storeComponent.Name() {
-            cmd.AddCommand(storeComponent.RestoreSnapshotCmd(newApp))
+		if cmd.Use == storeComponent.Name() {
+			cmd.AddCommand(storeComponent.RestoreSnapshotCmd(newApp))
 			break
-        }
-    }
+		}
+	}
 }
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter

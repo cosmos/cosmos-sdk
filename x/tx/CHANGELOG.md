@@ -33,6 +33,9 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 ## [Unreleased]
 
+
+## [v0.13.4](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.4) - 2024-08-01
+
 ### Improvements
 
 * [#21073](https://github.com/cosmos/cosmos-sdk/pull/21073) In Context use sync.Map `getSignersFuncs` map from concurrent writes, we also call Validate when creating the Context.

@@ -1205,8 +1205,8 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 
 // CreateQueryContextWithCheckHeader creates a new sdk.Context for a query, taking as args
 // the block height, whether the query needs a proof or not, and whether to check the header or not.
-func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, checkHeader bool) (sdk.Context, error) {
-	if err := checkNegativeHeight(height); err != nil {
+func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, checkHeader bool) (ctx sdk.Context, err error) {
+	if err = checkNegativeHeight(height); err != nil {
 		return sdk.Context{}, err
 	}
 
@@ -1229,25 +1229,11 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 			)
 	}
 
-	// when a client did not provide a query height, manually inject the latest
-	if height == 0 {
-		height = lastBlockHeight
-	}
-
 	if height <= 1 && prove {
 		return sdk.Context{},
 			errorsmod.Wrap(
 				sdkerrors.ErrInvalidRequest,
 				"cannot query with proof when height <= 1; please provide a valid height",
-			)
-	}
-
-	cacheMS, err := qms.CacheMultiStoreWithVersion(height)
-	if err != nil {
-		return sdk.Context{},
-			errorsmod.Wrapf(
-				sdkerrors.ErrNotFound,
-				"failed to load state at height %d; %s (latest height: %d)", height, err, lastBlockHeight,
 			)
 	}
 
@@ -1259,7 +1245,10 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 		if state != nil {
 			// branch the commit multi-store for safety
 			h := state.Context().BlockHeader()
-			if !checkHeader || h.Height == height || height != lastBlockHeight {
+			if height == 0 {
+				lastBlockHeight = qms.LatestVersion()
+			}
+			if !checkHeader || height != 0 || height == 0 && h.Height == lastBlockHeight {
 				header = &h
 				break
 			}
@@ -1274,7 +1263,33 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 			)
 	}
 
-	ctx := sdk.NewContext(cacheMS, true, app.logger).
+	// when a client did not provide a query height, manually inject the latest
+	if height == 0 {
+		height = lastBlockHeight
+	} else {
+		defer func() {
+			if err == nil {
+				rms, ok := app.cms.(*rootmulti.Store)
+				if ok {
+					cInfo, err := rms.GetCommitInfo(height)
+					if cInfo != nil && err == nil {
+						ctx = ctx.WithHeaderInfo(coreheader.Info{Height: height, Time: cInfo.Timestamp})
+					}
+				}
+			}
+		}()
+	}
+
+	cacheMS, err := qms.CacheMultiStoreWithVersion(height)
+	if err != nil {
+		return sdk.Context{},
+			errorsmod.Wrapf(
+				sdkerrors.ErrNotFound,
+				"failed to load state at height %d; %s (latest height: %d)", height, err, lastBlockHeight,
+			)
+	}
+
+	ctx = sdk.NewContext(cacheMS, true, app.logger).
 		WithMinGasPrices(app.minGasPrices).
 		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit)).
 		WithHeaderInfo(coreheader.Info{
@@ -1283,17 +1298,6 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 		}).
 		WithBlockHeader(*header).
 		WithBlockHeight(height)
-
-	if height != lastBlockHeight {
-		rms, ok := app.cms.(*rootmulti.Store)
-		if ok {
-			cInfo, err := rms.GetCommitInfo(height)
-			if cInfo != nil && err == nil {
-				ctx = ctx.WithHeaderInfo(coreheader.Info{Height: height, Time: cInfo.Timestamp})
-			}
-		}
-	}
-
 	return ctx, nil
 }
 

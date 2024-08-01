@@ -730,7 +730,11 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 				})
 				require.NoError(t, err)
 			}
-			ctx, err := app.CreateQueryContext(tc.height, tc.prove)
+			height := tc.height
+			if tc.height > tc.headerHeight {
+				height = 0
+			}
+			ctx, err := app.CreateQueryContext(height, tc.prove)
 			if tc.expErr {
 				require.Error(t, err)
 			} else {
@@ -797,7 +801,7 @@ func TestABCI_CreateQueryContext_Before_Set_CheckState(t *testing.T) {
 			ABCIListeners: []storetypes.ABCIListener{
 				&mockABCIListener{
 					ListenCommitFn: func(context.Context, abci.CommitResponse, []*storetypes.StoreKVPair) error {
-						qCtx, qErr := app.CreateQueryContext(height, true)
+						qCtx, qErr := app.CreateQueryContext(0, true)
 						queryCtx = &qCtx
 						queryCtxErr = qErr
 						return nil

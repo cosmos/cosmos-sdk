@@ -7,14 +7,19 @@ replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/core/testing => ../../core/testing
+<<<<<<< HEAD
 	cosmossdk.io/x/accounts => ../../x/accounts
 	cosmossdk.io/x/auth => ../../x/auth
 	cosmossdk.io/x/bank => ../../x/bank
 	cosmossdk.io/x/consensus => ../../x/consensus
 	cosmossdk.io/x/distribution => ../../x/distribution
 	cosmossdk.io/x/staking => ../../x/staking
+=======
+	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager
+	cosmossdk.io/server/v2/stf => ../../server/v2/stf
+	cosmossdk.io/store/v2 => ../../store/v2
+>>>>>>> c55e8d710 (chore(runtime/v2): cleanup replaces (#21147))
 	cosmossdk.io/x/tx => ../../x/tx
-	github.com/cosmos/cosmos-sdk => ../..
 )
 
 require (

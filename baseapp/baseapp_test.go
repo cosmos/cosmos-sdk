@@ -761,7 +761,7 @@ func TestABCI_CreateQueryContextWithCheckHeader(t *testing.T) {
 				InitialHeight: headerHeight,
 			})
 			require.NoError(t, err)
-			ctx, err := app.CreateQueryContextWithCheckHeader(height, true, tc.checkHeader)
+			ctx, err := app.CreateQueryContextWithCheckHeader(0, true, tc.checkHeader)
 			if tc.expErr {
 				require.Error(t, err)
 			} else {

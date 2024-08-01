@@ -14,4 +14,4 @@ $SIMD testnet init-files --chain-id=testing --output-dir="$HOME/.testnet" --vali
 
 $SIMD start --log_level=info --home "$HOME/.testnet/node0/simdv2" &
 $SIMD start --log_level=info --home "$HOME/.testnet/node1/simdv2" &
-$SIMD start --log_level=info --home "$HOME/.testnet/node2/simdv2"
+$SIMD start --log_level=info --home "$HOME/.testnet/node2/simdv2" 

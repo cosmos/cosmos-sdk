@@ -24,8 +24,9 @@ import (
 )
 
 const (
+	ServerName = "grpc"
+
 	BlockHeightHeader = "x-cosmos-block-height"
-	FlagAddress       = "address"
 )
 
 type Server[T transaction.Tx] struct {
@@ -74,16 +75,8 @@ func (s *Server[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logge
 }
 
 func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
-	flags := pflag.NewFlagSet("grpc", pflag.ExitOnError)
-
-	// start flags are prefixed with the server name
-	// as the config in prefixed with the server name
-	// this allows viper to properly bind the flags
-	prefix := func(f string) string {
-		return fmt.Sprintf("%s.%s", s.Name(), f)
-	}
-
-	flags.String(prefix(FlagAddress), "localhost:9090", "Listen address")
+	flags := pflag.NewFlagSet(s.Name(), pflag.ExitOnError)
+	flags.String(FlagAddress, "localhost:9090", "Listen address")
 	return flags
 }
 
@@ -151,7 +144,7 @@ func getHeightFromCtx(ctx context.Context) (uint64, error) {
 }
 
 func (s *Server[T]) Name() string {
-	return "grpc"
+	return ServerName
 }
 
 func (s *Server[T]) Config() any {

@@ -52,9 +52,6 @@ func initRootCmd[T transaction.Tx](
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
 		NewTestnetCmd(moduleManager),
-		store.New[T]().RestoreSnapshotCmd(newApp),
-		// pruning.Cmd(newApp), // TODO add to comet server
-		// snapshot.Cmd(newApp), // TODO add to comet server
 	)
 
 	logger, err := serverv2.NewLogger(viper.New(), rootCmd.OutOrStdout())
@@ -71,6 +68,7 @@ func initRootCmd[T transaction.Tx](
 		offchain.OffChain(),
 	)
 
+	storeComponent := store.New[T]()
 	// wire server commands
 	if err = serverv2.AddCommands(
 		rootCmd,
@@ -78,10 +76,18 @@ func initRootCmd[T transaction.Tx](
 		logger,
 		cometbft.New(&genericTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
 		grpc.New[T](),
-		store.New[T](),
+		storeComponent,
 	); err != nil {
 		panic(err)
 	}
+
+	// Add RestoreSnapshotCmd separately cause need appCreator
+	for _, cmd := range rootCmd.Commands() {
+        if cmd.Use == storeComponent.Name() {
+            cmd.AddCommand(storeComponent.RestoreSnapshotCmd(newApp))
+			break
+        }
+    }
 }
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter

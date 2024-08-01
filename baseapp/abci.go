@@ -1205,8 +1205,8 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 
 // CreateQueryContextWithCheckHeader creates a new sdk.Context for a query, taking as args
 // the block height, whether the query needs a proof or not, and whether to check the header or not.
-func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, checkHeader bool) (ctx sdk.Context, err error) {
-	if err = checkNegativeHeight(height); err != nil {
+func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, checkHeader bool) (sdk.Context, error) {
+	if err := checkNegativeHeight(height); err != nil {
 		return sdk.Context{}, err
 	}
 
@@ -1278,7 +1278,8 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 			)
 	}
 
-	ctx = sdk.NewContext(cacheMS, true, app.logger).
+	// branch the commit multi-store for safety
+	ctx := sdk.NewContext(cacheMS, true, app.logger).
 		WithMinGasPrices(app.minGasPrices).
 		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit)).
 		WithHeaderInfo(coreheader.Info{

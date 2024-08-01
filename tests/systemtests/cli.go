@@ -15,11 +15,6 @@ import (
 	"github.com/tidwall/gjson"
 	"golang.org/x/exp/slices"
 
-	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -287,9 +282,18 @@ func (c CLIWrapper) AddKeyFromSeed(name, mnemoic string) string {
 	return addr
 }
 
-// GetKeyAddr returns address
+// GetKeyAddr returns Acc address
 func (c CLIWrapper) GetKeyAddr(name string) string {
 	cmd := c.withKeyringFlags("keys", "show", name, "-a")
+	out, _ := c.run(cmd)
+	addr := strings.Trim(out, "\n")
+	require.NotEmpty(c.t, addr, "got %q", out)
+	return addr
+}
+
+// GetKeyAddrPrefix returns key address with Beach32 prefix encoding for a key (acc|val|cons)
+func (c CLIWrapper) GetKeyAddrPrefix(name, prefix string) string {
+	cmd := c.withKeyringFlags("keys", "show", name, "-a", "--bech="+prefix)
 	out, _ := c.run(cmd)
 	addr := strings.Trim(out, "\n")
 	require.NotEmpty(c.t, addr, "got %q", out)
@@ -328,33 +332,6 @@ func (c CLIWrapper) QueryTotalSupply(denom string) int64 {
 	raw := c.CustomQuery("q", "bank", "total-supply")
 	require.Contains(c.t, raw, "amount", raw)
 	return gjson.Get(raw, fmt.Sprintf("supply.#(denom==%q).amount", denom)).Int()
-}
-
-func (c CLIWrapper) GetCometBFTValidatorSet() cmtservice.GetLatestValidatorSetResponse {
-	args := []string{"q", "comet-validator-set"}
-	got := c.CustomQuery(args...)
-
-	// still using amino here as the SDK
-	amino := codec.NewLegacyAmino()
-	std.RegisterLegacyAminoCodec(amino)
-	std.RegisterInterfaces(codectypes.NewInterfaceRegistry())
-
-	var res cmtservice.GetLatestValidatorSetResponse
-	require.NoError(c.t, amino.UnmarshalJSON([]byte(got), &res), got)
-	return res
-}
-
-// IsInCometBftValset returns true when the given pub key is in the current active tendermint validator set
-func (c CLIWrapper) IsInCometBftValset(valPubKey cryptotypes.PubKey) (cmtservice.GetLatestValidatorSetResponse, bool) {
-	valResult := c.GetCometBFTValidatorSet()
-	var found bool
-	for _, v := range valResult.Validators {
-		if v.PubKey.Equal(valPubKey) {
-			found = true
-			break
-		}
-	}
-	return valResult, found
 }
 
 // SubmitGovProposal submit a gov v1 proposal

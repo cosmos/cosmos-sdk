@@ -101,7 +101,7 @@ func (s STF[T]) DeliverBlock(
 }
 
 type doInBlockDeliveryFn[T transaction.Tx] func(
-	ctx context.Context,
+	exCtx *executionContext,
 	txs []T,
 	newState store.WriterMap,
 	hi header.Info,
@@ -190,7 +190,7 @@ func (s STF[T]) deliverBlock(
 }
 
 func (s STF[T]) doDeliverTXs(
-	ctx context.Context,
+	exCtx *executionContext,
 	txs []T,
 	newState store.WriterMap,
 	hi header.Info,
@@ -200,10 +200,10 @@ func (s STF[T]) doDeliverTXs(
 	// TODO: skip first tx if vote extensions are enabled (marko)
 	for i, tx := range txs {
 		// check if we need to return early or continue delivering txs
-		if err := isCtxCancelled(ctx); err != nil {
+		if err := isCtxCancelled(exCtx); err != nil {
 			return nil, err
 		}
-		txResults[i] = s.deliverTx(ctx, newState, tx, transaction.ExecModeFinalize, hi)
+		txResults[i] = s.deliverTx(exCtx, newState, tx, transaction.ExecModeFinalize, hi)
 	}
 	return txResults, nil
 }

@@ -656,8 +656,9 @@ var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 // This allows a validator to stop their services and jail themselves without
 // experiencing a slash
 type MsgUnbondValidator struct {
-	// the address must be provided in bech32 notation e.g. cosmos1apsdadpks9i09idj87dah
-	// providing valoper or valcons address will result in an error
+	// the provider address must be bech32 account address (e.g. 'cosmos')
+	// providing an operator address (e.g. 'cosmosvaloper') or consensus address will result in an error
+	// this field is populated by the CLI during Tx generation using the `--from` flag
 	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
 }
 

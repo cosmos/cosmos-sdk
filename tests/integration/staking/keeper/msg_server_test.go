@@ -1671,13 +1671,13 @@ func TestUnbondValidator(t *testing.T) {
 	// try unbonding not available validator
 	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
 	_, err = msgServer.UnbondValidator(ctx, &types.MsgUnbondValidator{
-		ValidatorAddress: sdk.ValAddress(addrs[1]).String(),
+		ValidatorAddress: addrs[1].String(),
 	})
 	require.Error(t, err)
 
 	// unbond validator
 	_, err = msgServer.UnbondValidator(ctx, &types.MsgUnbondValidator{
-		ValidatorAddress: addrVal1.String(),
+		ValidatorAddress: addrAcc1.String(),
 	})
 	require.NoError(t, err)
 

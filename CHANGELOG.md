@@ -38,7 +38,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v0.50.8-lsm](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.8)-lsm
+
+## [v0.50.9-lsm](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.9-lsm)
+
+* (x/staking) [#21138](https://github.com/cosmos/cosmos-sdk/pull/21138) change MsgUnbondValidator addr handling (use bech32 acc addr)
+
+
+## [v0.50.8-lsm](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.8-lsm)
 
 This is a special cosmos-sdk release with support LSM and some backports.
 

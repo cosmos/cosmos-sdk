@@ -315,7 +315,7 @@ func (c *Consensus[T]) PrepareProposal(
 	}
 
 	decodedTxs := make([]T, len(req.Txs))
-	for _, tx := range req.Txs {
+	for i, tx := range req.Txs {
 		decTx, err := c.txCodec.Decode(tx)
 		if err != nil {
 			// TODO: vote extension meta data as a custom type to avoid possibly accepting invalid txs
@@ -323,7 +323,8 @@ func (c *Consensus[T]) PrepareProposal(
 			c.logger.Error("failed to decode tx", "err", err)
 			continue
 		}
-		decodedTxs = append(decodedTxs, decTx)
+
+		decodedTxs[i] = decTx
 	}
 
 	ciCtx := contextWithCometInfo(ctx, comet.Info{
@@ -400,24 +401,6 @@ func (c *Consensus[T]) FinalizeBlock(
 		return nil, err
 	}
 
-	// TODO evaluate this approach vs. service using context.
-	// cometInfo := &consensustypes.MsgUpdateCometInfo{
-	//	Authority: c.consensusAuthority,
-	//	CometInfo: &consensustypes.CometInfo{
-	//		Evidence:        req.Misbehavior,
-	//		ValidatorsHash:  req.NextValidatorsHash,
-	//		ProposerAddress: req.ProposerAddress,
-	//		LastCommit:      req.DecidedLastCommit,
-	//	},
-	// }
-	//
-	// ctx = context.WithValue(ctx, corecontext.CometInfoKey, &comet.Info{
-	// 	Evidence:        sdktypes.ToSDKEvidence(req.Misbehavior),
-	// 	ValidatorsHash:  req.NextValidatorsHash,
-	// 	ProposerAddress: req.ProposerAddress,
-	// 	LastCommit:      sdktypes.ToSDKCommitInfo(req.DecidedLastCommit),
-	// })
-
 	// we don't need to deliver the block in the genesis block
 	if req.Height == int64(c.initialHeight) {
 		appHash, err := c.store.Commit(store.NewChangeset())
@@ -450,7 +433,6 @@ func (c *Consensus[T]) FinalizeBlock(
 		AppHash: cid.Hash,
 		ChainId: c.chainID,
 		Txs:     decodedTxs,
-		// ConsensusMessages: []transaction.Msg{cometInfo},
 	}
 
 	ciCtx := contextWithCometInfo(ctx, comet.Info{

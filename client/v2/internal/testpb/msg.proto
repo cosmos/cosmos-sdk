@@ -16,7 +16,7 @@ service Msg {
   };
 
   rpc Clawback(MsgClawbackRequest) returns (MsgClawbackResponse) {
-    option (cosmos_proto.method_added_in) = "cosmos-sdk v0.51.0";
+    option (cosmos_proto.method_added_in) = "cosmos-sdk v0.52.0 ";
   }
 }
 

@@ -22,6 +22,7 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/cometbft"
+	"cosmossdk.io/server/v2/store"
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -343,7 +344,8 @@ func initTestnetFiles[T transaction.Tx](
 			cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig),
 		)
 		grpcServer := grpc.New[T](grpc.OverwriteDefaultConfig(grpcConfig))
-		server := serverv2.NewServer(log.NewNopLogger(), cometServer, grpcServer)
+		storeServer := store.New[T]()
+		server := serverv2.NewServer(log.NewNopLogger(), cometServer, grpcServer, storeServer)
 		err = server.WriteConfig(filepath.Join(nodeDir, "config"))
 		if err != nil {
 			return err

@@ -6,6 +6,7 @@ import (
 	"slices"
 
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -28,7 +29,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
-	rootstorev2 "cosmossdk.io/store/v2/root"
 )
 
 var (
@@ -151,7 +151,7 @@ type AppInputs struct {
 	InterfaceRegistrar registry.InterfaceRegistrar
 	LegacyAmino        legacy.Amino
 	Logger             log.Logger
-	StoreOptions       *rootstorev2.FactoryOptions `optional:"true"`
+	Viper              *viper.Viper `optional:"true"`
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -162,10 +162,8 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistrar)
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 
-	if inputs.StoreOptions != nil {
-		inputs.AppBuilder.storeOptions = inputs.StoreOptions
-		inputs.AppBuilder.storeOptions.StoreKeys = inputs.AppBuilder.app.storeKeys
-		inputs.AppBuilder.storeOptions.StoreKeys = append(inputs.AppBuilder.storeOptions.StoreKeys, "stf")
+	if inputs.Viper != nil {
+		inputs.AppBuilder.viper = inputs.Viper
 	}
 }
 

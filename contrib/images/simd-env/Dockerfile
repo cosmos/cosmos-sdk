@@ -9,7 +9,6 @@ COPY api/go.mod api/go.sum /work/api/
 COPY log/go.mod log/go.sum /work/log/
 COPY core/go.mod core/go.sum /work/core/
 COPY collections/go.mod collections/go.sum /work/collections/
-COPY store/go.mod store/go.sum /work/store/
 COPY depinject/go.mod depinject/go.sum /work/depinject/
 COPY x/tx/go.mod x/tx/go.sum /work/x/tx/
 COPY x/protocolpool/go.mod x/protocolpool/go.sum /work/x/protocolpool/
@@ -24,9 +23,6 @@ COPY x/mint/go.mod x/mint/go.sum /work/x/mint/
 COPY x/consensus/go.mod x/consensus/go.sum /work/x/consensus/
 COPY x/accounts/go.mod x/accounts/go.sum /work/x/accounts/
 COPY runtime/v2/go.mod runtime/v2/go.sum /work/runtime/v2/
-COPY server/v2/go.mod server/v2/go.sum /work/server/v2/
-COPY server/v2/appmanager/go.mod server/v2/appmanager/go.sum /work/server/v2/appmanager/
-COPY server/v2/stf/go.mod server/v2/stf/go.sum /work/server/v2/stf/
 COPY server/v2/cometbft/go.mod server/v2/cometbft/go.sum /work/server/v2/cometbft/
 COPY core/testing/go.mod core/testing/go.sum /work/core/testing/
 

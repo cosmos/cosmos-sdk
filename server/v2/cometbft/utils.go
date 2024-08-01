@@ -2,6 +2,7 @@ package cometbft
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -296,7 +297,7 @@ func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.Consen
 	}
 
 	if r, ok := res.(*consensus.QueryParamsResponse); !ok {
-		return nil, fmt.Errorf("failed to query consensus params")
+		return nil, errors.New("failed to query consensus params")
 	} else {
 		// convert our params to cometbft params
 		return r.Params, nil

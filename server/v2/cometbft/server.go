@@ -74,6 +74,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 	}
 
 	s.logger = logger.With(log.ModuleKey, s.Name())
+	store := appI.GetStore().(types.Store)
 	consensus := NewConsensus(
 		s.logger,
 		appI.Name(),
@@ -82,7 +83,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 		s.serverOptions.Mempool,
 		indexEvents,
 		appI.GetGPRCMethodsToMessageMap(),
-		appI.GetStore().(types.Store),
+		store,
 		s.config,
 		s.initTxCodec,
 	)
@@ -93,9 +94,8 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 	consensus.addrPeerFilter = s.serverOptions.AddrPeerFilter
 	consensus.idPeerFilter = s.serverOptions.IdPeerFilter
 
-	// TODO: set these; what is the appropriate presence of the Store interface here?
-	var ss snapshots.StorageSnapshotter
-	var sc snapshots.CommitSnapshotter
+	ss := store.GetStateStorage().(snapshots.StorageSnapshotter)
+	sc := store.GetStateCommitment().(snapshots.CommitSnapshotter)
 
 	snapshotStore, err := GetSnapshotStore(s.config.ConfigTomlConfig.RootDir)
 	if err != nil {

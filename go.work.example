@@ -16,8 +16,6 @@ use (
 	./simapp
 	./tests
 	./tests/systemtests
-	./schema
-	./store
 	./runtime/v2
 	./tools/cosmovisor
 	./tools/confix

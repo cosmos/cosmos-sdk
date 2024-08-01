@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/log v1.3.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/simapp v0.0.0-20230309163709-87da587416ba
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
+	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // main
 	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f
@@ -241,7 +241,6 @@ replace (
 	cosmossdk.io/collections => ../collections
 	cosmossdk.io/core => ../core
 	cosmossdk.io/core/testing => ../core/testing
-	cosmossdk.io/store => ../store
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/accounts/defaults/lockup => ../x/accounts/defaults/lockup
 	cosmossdk.io/x/accounts/defaults/multisig => ../x/accounts/defaults/multisig

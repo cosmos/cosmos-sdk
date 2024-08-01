@@ -47,7 +47,7 @@ func TestAccountCreation(t *testing.T) {
 	rsp3 := cli.Run("tx", "bank", "send", account2Addr, account1Addr, "1000stake", "--from="+account2Addr, "--fees=1stake")
 	txResult, found = cli.AwaitTxCommitted(rsp3)
 	require.True(t, found)
-	RequireTxFailure(t, txResult)
+	RequireTxSuccess(t, txResult)
 
 	// query account2 to make sure its created
 	rsp4 := cli.CustomQuery("q", "auth", "account", account2Addr)

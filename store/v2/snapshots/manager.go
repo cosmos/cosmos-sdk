@@ -410,7 +410,7 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 			storageErrs <- err
 		}
 	}()
- 
+
 	nextItem, err = m.commitSnapshotter.Restore(snapshot.Height, snapshot.Format, streamReader, chStorage)
 	if err != nil {
 		return errorsmod.Wrap(err, "multistore restore")

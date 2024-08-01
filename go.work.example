@@ -16,7 +16,6 @@ use (
 	./simapp
 	./tests
 	./tests/systemtests
-	./runtime/v2
 	./tools/cosmovisor
 	./tools/confix
 	./tools/hubl

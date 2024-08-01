@@ -125,8 +125,8 @@ func TestSimsAppV2(t *testing.T) {
 	factoryRegistry := make(SimsV2Reg)
 	// register all msg factories
 	for name, v := range app.ModuleManager().Modules() {
-		if name == "authz" { // || // todo: enable when router issue is solved with `/` prefix in MsgTypeURL
-			//name == "slashing" { // todo: enable when tree issue fixed
+		if name == "authz" || // todo: enable when router issue is solved with `/` prefix in MsgTypeURL
+			name == "slashing" { // todo: enable when tree issue fixed
 
 			continue
 		}

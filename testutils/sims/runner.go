@@ -131,11 +131,10 @@ func RunWithSeed[T SimulationApp](
 	testInstance := NewSimulationAppInstance(tb, tCfg, appFactory)
 	var runLogger log.Logger
 	if cli.FlagVerboseValue {
-		runLogger = tlog.NewTestLogger(tb)
+		runLogger = tlog.NewTestLogger(tb).With("seed", tCfg.Seed)
 	} else {
-		runLogger = tlog.NewTestLoggerInfo(tb)
+		runLogger = tlog.NewTestLoggerInfo(tb).With("seed", tCfg.Seed)
 	}
-	runLogger = runLogger.With("seed", tCfg.Seed)
 
 	app := testInstance.App
 	stateFactory := setupStateFactory(app)
@@ -286,11 +285,10 @@ func NewSimulationAppInstance[T SimulationApp](
 	dbDir := filepath.Join(workDir, "leveldb-app-sim")
 	var logger log.Logger
 	if cli.FlagVerboseValue {
-		logger = tlog.NewTestLogger(tb)
+		logger = tlog.NewTestLogger(tb).With("seed", tCfg.Seed)
 	} else {
-		logger = tlog.NewTestLoggerError(tb)
+		logger = tlog.NewTestLoggerError(tb).With("seed", tCfg.Seed)
 	}
-	logger = logger.With("seed", tCfg.Seed)
 
 	db, err := dbm.NewDB("Simulation", dbm.BackendType(tCfg.DBBackend), dbDir)
 	require.NoError(tb, err)

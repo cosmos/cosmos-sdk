@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	abciserver "github.com/cometbft/cometbft/abci/server"
@@ -66,9 +67,19 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 		AppTomlConfig:    appTomlConfig,
 	}
 
-	appGenesis, err := genutiltypes.AppGenesisFromFile(s.config.ConfigTomlConfig.GenesisFile())
-	if err != nil {
-		return err
+	chainID := v.GetString(FlagChainID)
+	if chainID == "" {
+		// fallback to genesis chain-id
+		reader, err := os.Open(filepath.Join(v.GetString(serverv2.FlagHome), "config", "genesis.json"))
+		if err != nil {
+			panic(err)
+		}
+		defer reader.Close()
+
+		chainID, err = genutiltypes.ParseChainIDFromGenesis(reader)
+		if err != nil {
+			panic(fmt.Errorf("failed to parse chain-id from genesis file: %w", err))
+		}
 	}
 
 	indexEvents := make(map[string]struct{}, len(s.config.AppTomlConfig.IndexEvents))
@@ -89,7 +100,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 		store,
 		s.config,
 		s.initTxCodec,
-		appGenesis.ChainID,
+		chainID,
 	)
 	consensus.prepareProposalHandler = s.serverOptions.PrepareProposalHandler
 	consensus.processProposalHandler = s.serverOptions.ProcessProposalHandler

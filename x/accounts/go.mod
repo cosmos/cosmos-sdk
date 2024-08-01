@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/tx v0.13.3
-	github.com/cosmos/cosmos-sdk v0.51.0
+	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/cosmos/gogoproto v1.5.0
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0
 	github.com/spf13/cobra v1.8.1

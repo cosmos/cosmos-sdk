@@ -154,7 +154,7 @@ func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
 	t.Helper()
 	s.Log("Start chain\n")
 	s.ChainStarted = true
-	s.startNodesAsync(t, append([]string{"start", "--trace", "--log_level=info"}, xargs...)...)
+	s.startNodesAsync(t, append([]string{"start", "--trace", "--log_level=info", "--log_no_color"}, xargs...)...)
 
 	s.AwaitNodeUp(t, s.rpcAddr)
 
@@ -635,9 +635,12 @@ func AllNodes(t *testing.T, s *SystemUnderTest) []Node {
 	t.Helper()
 	result := make([]Node, s.nodesCount)
 	outs := s.ForEachNodeExecAndWait(t, []string{"comet", "show-node-id"})
-	ip, err := server.ExternalIP()
-	require.NoError(t, err)
-
+	ip := "127.0.0.1"
+	if false { // is there still a use case for external ip?
+		var err error
+		ip, err = server.ExternalIP()
+		require.NoError(t, err)
+	}
 	for i, out := range outs {
 		result[i] = Node{
 			ID:      strings.TrimSpace(out[0]),
@@ -655,7 +658,7 @@ func (s *SystemUnderTest) resetBuffers() {
 }
 
 // AddFullnode starts a new fullnode that connects to the existing chain but is not a validator.
-func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumber int, nodePath string)) Node {
+func (s *SystemUnderTest) AddFullnode(t *testing.T, minGasPrices string, beforeStart ...func(nodeNumber int, nodePath string)) Node {
 	t.Helper()
 	s.MarkDirty()
 	s.nodesCount++
@@ -698,9 +701,11 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 		fmt.Sprintf("--p2p.laddr=tcp://localhost:%d", node.P2PPort),
 		fmt.Sprintf("--rpc.laddr=tcp://localhost:%d", node.RPCPort),
 		fmt.Sprintf("--grpc.address=localhost:%d", 9090+nodeNumber),
-		fmt.Sprintf("--grpc-web.address=localhost:%d", 8090+nodeNumber),
+		fmt.Sprintf("--minimum-gas-prices=%s", minGasPrices),
+		"--p2p.pex=false",
 		"--moniker=" + moniker,
 		"--log_level=info",
+		"--log_no_color",
 		"--home", nodePath,
 	}
 	s.Logf("Execute `%s %s`\n", s.execBinary, strings.Join(args, " "))

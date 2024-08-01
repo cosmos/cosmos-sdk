@@ -123,7 +123,7 @@ func verifySignature(
 			return err
 		}
 		if !pubKey.VerifySignature(signBytes, data.Signature) {
-			return fmt.Errorf("unable to verify single signer signature")
+			return errors.New("unable to verify single signer signature")
 		}
 		return nil
 	default:

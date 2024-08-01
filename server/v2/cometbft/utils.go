@@ -2,6 +2,7 @@ package cometbft
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -296,32 +297,10 @@ func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.Consen
 	}
 
 	if r, ok := res.(*consensus.QueryParamsResponse); !ok {
-		return nil, fmt.Errorf("failed to query consensus params")
+		return nil, errors.New("failed to query consensus params")
 	} else {
 		// convert our params to cometbft params
-		evidenceMaxDuration := r.Params.Evidence.MaxAgeDuration
-		cs := &cmtproto.ConsensusParams{
-			Block: &cmtproto.BlockParams{
-				MaxBytes: r.Params.Block.MaxBytes,
-				MaxGas:   r.Params.Block.MaxGas,
-			},
-			Evidence: &cmtproto.EvidenceParams{
-				MaxAgeNumBlocks: r.Params.Evidence.MaxAgeNumBlocks,
-				MaxAgeDuration:  evidenceMaxDuration,
-			},
-			Validator: &cmtproto.ValidatorParams{
-				PubKeyTypes: r.Params.Validator.PubKeyTypes,
-			},
-			Version: &cmtproto.VersionParams{
-				App: r.Params.Version.App,
-			},
-		}
-		if r.Params.Abci != nil {
-			cs.Abci = &cmtproto.ABCIParams{ // nolint:staticcheck // deprecated type still supported for now
-				VoteExtensionsEnableHeight: r.Params.Abci.VoteExtensionsEnableHeight,
-			}
-		}
-		return cs, nil
+		return r.Params, nil
 	}
 }
 

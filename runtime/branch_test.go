@@ -2,7 +2,7 @@ package runtime
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -52,7 +52,7 @@ func TestBranchService(t *testing.T) {
 		ctx := testutil.DefaultContext(sk, tsk)
 		err := bs.Execute(ctx, func(ctx context.Context) error {
 			doStateChange(ctx)
-			return fmt.Errorf("failure")
+			return errors.New("failure")
 		})
 		require.Error(t, err)
 		assertRollback(ctx, true)
@@ -76,7 +76,7 @@ func TestBranchService(t *testing.T) {
 		ctx := testutil.DefaultContext(sk, tsk)
 		gasUsed, err := bs.ExecuteWithGasLimit(ctx, 4_000, func(ctx context.Context) error {
 			doStateChange(ctx)
-			return fmt.Errorf("failure")
+			return errors.New("failure")
 		})
 		require.Error(t, err)
 		// assert gas used

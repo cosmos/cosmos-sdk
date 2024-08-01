@@ -60,8 +60,8 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				return fmt.Errorf("the database has no valid heights to prune, the latest height: %v", latestHeight)
 			}
 
-			upTo := latestHeight - keepRecent
-			cmd.Printf("pruning heights up to %v\n", upTo)
+			diff := latestHeight - keepRecent
+			cmd.Printf("pruning heights up to %v\n", diff)
 
 			err = rootStore.Prune(latestHeight)
 			if err != nil {
@@ -125,7 +125,7 @@ func createRootStore(cmd *cobra.Command, v *viper.Viper, logger log.Logger) (sto
 	}
 
 	storeOpts := root.DefaultStoreOptions()
-	if v != nil {
+	if v != nil && v.Sub("store.options") != nil {
 		if err := v.Sub("store.options").Unmarshal(&storeOpts); err != nil {
 			return nil, 0, fmt.Errorf("failed to store options: %w", err)
 		}

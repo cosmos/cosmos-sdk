@@ -2,7 +2,7 @@ package stf
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 
 	gogotypes "github.com/cosmos/gogoproto/types"
@@ -70,7 +70,7 @@ func TestBranchService(t *testing.T) {
 		stfCtx := makeContext()
 		gasUsed, err := branchService.ExecuteWithGasLimit(stfCtx, 10000, func(ctx context.Context) error {
 			kvSet(t, ctx, "cookies")
-			return fmt.Errorf("fail")
+			return errors.New("fail")
 		})
 		require.Error(t, err)
 		require.NotZero(t, gasUsed)

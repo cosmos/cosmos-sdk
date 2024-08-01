@@ -19,21 +19,21 @@ func NewWrapper(db corestore.KVStoreWithBatch) *Wrapper {
 }
 
 // Iterator implements iavl.DB.
-func (db *Wrapper) Iterator(start, end []byte) (corestore.Iterator, error) {
+func (db *Wrapper) Iterator(start, end []byte) (idb.Iterator, error) {
 	return db.KVStoreWithBatch.Iterator(start, end)
 }
 
 // ReverseIterator implements iavl.DB.
-func (db *Wrapper) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
+func (db *Wrapper) ReverseIterator(start, end []byte) (idb.Iterator, error) {
 	return db.KVStoreWithBatch.ReverseIterator(start, end)
 }
 
 // NewBatch implements iavl.DB.
-func (db *Wrapper) NewBatch() corestore.Batch {
+func (db *Wrapper) NewBatch() idb.Batch {
 	return db.KVStoreWithBatch.NewBatch()
 }
 
 // NewBatchWithSize implements iavl.DB.
-func (db *Wrapper) NewBatchWithSize(size int) corestore.Batch {
+func (db *Wrapper) NewBatchWithSize(size int) idb.Batch {
 	return db.KVStoreWithBatch.NewBatchWithSize(size)
 }

@@ -1238,6 +1238,7 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 	}
 
 	var header *cmtproto.Header
+	isLatest := height == 0
 	for _, state := range []*state{
 		app.checkState,
 		app.finalizeBlockState,
@@ -1245,10 +1246,10 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 		if state != nil {
 			// branch the commit multi-store for safety
 			h := state.Context().BlockHeader()
-			if height == 0 {
+			if isLatest {
 				lastBlockHeight = qms.LatestVersion()
 			}
-			if !checkHeader || height != 0 || height == 0 && h.Height == lastBlockHeight {
+			if !checkHeader || !isLatest || isLatest && h.Height == lastBlockHeight {
 				header = &h
 				break
 			}
@@ -1264,20 +1265,8 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 	}
 
 	// when a client did not provide a query height, manually inject the latest
-	if height == 0 {
+	if isLatest {
 		height = lastBlockHeight
-	} else {
-		defer func() {
-			if err == nil {
-				rms, ok := app.cms.(*rootmulti.Store)
-				if ok {
-					cInfo, err := rms.GetCommitInfo(height)
-					if cInfo != nil && err == nil {
-						ctx = ctx.WithHeaderInfo(coreheader.Info{Height: height, Time: cInfo.Timestamp})
-					}
-				}
-			}
-		}()
 	}
 
 	cacheMS, err := qms.CacheMultiStoreWithVersion(height)
@@ -1298,6 +1287,16 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 		}).
 		WithBlockHeader(*header).
 		WithBlockHeight(height)
+
+	if !isLatest {
+		rms, ok := app.cms.(*rootmulti.Store)
+		if ok {
+			cInfo, err := rms.GetCommitInfo(height)
+			if cInfo != nil && err == nil {
+				ctx = ctx.WithHeaderInfo(coreheader.Info{Height: height, Time: cInfo.Timestamp})
+			}
+		}
+	}
 	return ctx, nil
 }
 

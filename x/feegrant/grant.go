@@ -2,6 +2,7 @@ package feegrant
 
 import (
 	"github.com/cosmos/gogoproto/proto"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -9,7 +10,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ types.UnpackInterfacesMessage = &Grant{}
+var _ gogoprotoany.UnpackInterfacesMessage = &Grant{}
 
 // NewGrant creates a new FeeAllowanceGrant.
 func NewGrant(granter, grantee string, feeAllowance FeeAllowanceI) (Grant, error) {
@@ -62,7 +63,7 @@ func (a Grant) GetGrant() (FeeAllowanceI, error) {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (a Grant) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (a Grant) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var allowance FeeAllowanceI
 	return unpacker.UnpackAny(a.Allowance, &allowance)
 }

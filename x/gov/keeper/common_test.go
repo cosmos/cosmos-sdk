@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -10,6 +11,7 @@ import (
 
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -126,7 +128,7 @@ func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 
 	baseApp := baseapp.NewBaseApp(
 		"authz",
-		coretesting.NewNopLogger(),
+		log.NewNopLogger(),
 		testCtx.DB,
 		encCfg.TxConfig.TxDecoder(),
 	)
@@ -192,7 +194,7 @@ func setupGovKeeperWithMaxVoteOptionsLen(t *testing.T, maxVoteOptionsLen uint64,
 
 	baseApp := baseapp.NewBaseApp(
 		"authz",
-		coretesting.NewNopLogger(),
+		log.NewNopLogger(),
 		testCtx.DB,
 		encCfg.TxConfig.TxDecoder(),
 	)
@@ -266,7 +268,7 @@ func trackMockBalances(bankKeeper *govtestutil.MockBankKeeper) error {
 		}
 		newBalance, negative := balances[senderAddr].SafeSub(coins...)
 		if negative {
-			return fmt.Errorf("not enough balance")
+			return errors.New("not enough balance")
 		}
 		balances[senderAddr] = newBalance
 		return nil

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"sigs.k8s.io/yaml"
 
 	errorsmod "cosmossdk.io/errors"
@@ -130,7 +131,7 @@ func (ss StdSignature) MarshalYAML() (interface{}, error) {
 	return string(bz), err
 }
 
-func (ss StdSignature) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (ss StdSignature) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	return codectypes.UnpackInterfaces(ss.PubKey, unpacker)
 }
 

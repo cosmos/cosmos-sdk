@@ -8,12 +8,12 @@ import (
 func TestEnumDefinition_Validate(t *testing.T) {
 	tests := []struct {
 		name        string
-		enum        EnumDefinition
+		enum        EnumType
 		errContains string
 	}{
 		{
 			name: "valid enum",
-			enum: EnumDefinition{
+			enum: EnumType{
 				Name:   "test",
 				Values: []string{"a", "b", "c"},
 			},
@@ -21,7 +21,7 @@ func TestEnumDefinition_Validate(t *testing.T) {
 		},
 		{
 			name: "empty name",
-			enum: EnumDefinition{
+			enum: EnumType{
 				Name:   "",
 				Values: []string{"a", "b", "c"},
 			},
@@ -29,7 +29,7 @@ func TestEnumDefinition_Validate(t *testing.T) {
 		},
 		{
 			name: "empty values",
-			enum: EnumDefinition{
+			enum: EnumType{
 				Name:   "test",
 				Values: []string{},
 			},
@@ -37,7 +37,7 @@ func TestEnumDefinition_Validate(t *testing.T) {
 		},
 		{
 			name: "empty value",
-			enum: EnumDefinition{
+			enum: EnumType{
 				Name:   "test",
 				Values: []string{"a", "", "c"},
 			},
@@ -45,7 +45,7 @@ func TestEnumDefinition_Validate(t *testing.T) {
 		},
 		{
 			name: "duplicate value",
-			enum: EnumDefinition{
+			enum: EnumType{
 				Name:   "test",
 				Values: []string{"a", "b", "a"},
 			},
@@ -72,7 +72,7 @@ func TestEnumDefinition_Validate(t *testing.T) {
 }
 
 func TestEnumDefinition_ValidateValue(t *testing.T) {
-	enum := EnumDefinition{
+	enum := EnumType{
 		Name:   "test",
 		Values: []string{"a", "b", "c"},
 	}

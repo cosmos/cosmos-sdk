@@ -1,6 +1,7 @@
 package decoding
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"sort"
@@ -68,7 +69,7 @@ func TestMiddleware_filtered(t *testing.T) {
 	tl := newTestFixture(t)
 	listener, err := Middleware(tl.Listener, tl.resolver, MiddlewareOptions{
 		ModuleFilter: func(moduleName string) bool {
-			return moduleName == "one"
+			return moduleName == "one" //nolint:goconst // adding constants for this would impede readability
 		},
 	})
 	if err != nil {
@@ -176,6 +177,7 @@ type testFixture struct {
 }
 
 func newTestFixture(t *testing.T) *testFixture {
+	t.Helper()
 	res := &testFixture{}
 	res.Listener = appdata.Listener{
 		InitializeModuleData: func(data appdata.ModuleInitializationData) error {
@@ -246,7 +248,7 @@ func newTestMultiStore() *testMultiStore {
 
 var _ SyncSource = &testMultiStore{}
 
-func (ms *testMultiStore) IterateAllKVPairs(moduleName string, fn func(key []byte, value []byte) error) error {
+func (ms *testMultiStore) IterateAllKVPairs(moduleName string, fn func(key, value []byte) error) error {
 	s, ok := ms.stores[moduleName]
 	if !ok {
 		return fmt.Errorf("don't have state for module %s", moduleName)
@@ -267,6 +269,7 @@ func (ms *testMultiStore) IterateAllKVPairs(moduleName string, fn func(key []byt
 }
 
 func (ms *testMultiStore) newTestStore(t *testing.T, modName string) *testStore {
+	t.Helper()
 	s := &testStore{
 		t:       t,
 		modName: modName,
@@ -358,14 +361,15 @@ func (e exampleBankModule) subBalance(acct, denom string, amount uint64) error {
 	key := balanceKey(acct, denom)
 	cur := e.store.GetUInt64(key)
 	if cur < amount {
-		return fmt.Errorf("insufficient balance")
+		return errors.New("insufficient balance")
 	}
 	e.store.SetUInt64(key, cur-amount)
 	return nil
 }
 
-var exampleBankSchema = schema.ModuleSchema{
-	ObjectTypes: []schema.ObjectType{
+func init() {
+	var err error
+	exampleBankSchema, err = schema.NewModuleSchema([]schema.ObjectType{
 		{
 			Name: "balances",
 			KeyFields: []schema.Field{
@@ -385,8 +389,13 @@ var exampleBankSchema = schema.ModuleSchema{
 				},
 			},
 		},
-	},
+	})
+	if err != nil {
+		panic(err)
+	}
 }
+
+var exampleBankSchema schema.ModuleSchema
 
 func (e exampleBankModule) ModuleCodec() (schema.ModuleCodec, error) {
 	return schema.ModuleCodec{
@@ -424,16 +433,24 @@ type oneValueModule struct {
 	store *testStore
 }
 
-var oneValueModSchema = schema.ModuleSchema{
-	ObjectTypes: []schema.ObjectType{
-		{
-			Name: "item",
-			ValueFields: []schema.Field{
-				{Name: "value", Kind: schema.StringKind},
+func init() {
+	var err error
+	oneValueModSchema, err = schema.NewModuleSchema(
+		[]schema.ObjectType{
+			{
+				Name: "item",
+				ValueFields: []schema.Field{
+					{Name: "value", Kind: schema.StringKind},
+				},
 			},
 		},
-	},
+	)
+	if err != nil {
+		panic(err)
+	}
 }
+
+var oneValueModSchema schema.ModuleSchema
 
 func (i oneValueModule) ModuleCodec() (schema.ModuleCodec, error) {
 	return schema.ModuleCodec{

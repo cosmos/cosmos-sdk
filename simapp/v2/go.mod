@@ -3,9 +3,10 @@ module cosmossdk.io/simapp/v2
 go 1.22.2
 
 require (
-	cosmossdk.io/api v0.7.5
+	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/client/v2 v2.0.0-00010101000000-000000000000
-	cosmossdk.io/core v0.12.1-0.20240726110027-5c90246b3f9f
+	cosmossdk.io/core v0.12.1-0.20240802064046-23fac2f1b8ab // main
+	cosmossdk.io/core/testing v0.0.0-20240802064046-23fac2f1b8ab // indirect; main
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.3.1
 	cosmossdk.io/math v1.3.0
@@ -51,9 +52,9 @@ require (
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	cloud.google.com/go/iam v1.1.8 // indirect
 	cloud.google.com/go/storage v1.42.0 // indirect
-	cosmossdk.io/collections v0.4.0 // indirect
-	cosmossdk.io/core/testing v0.0.0-20240726110027-5c90246b3f9f // indirect
+	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // indirect; main
 	cosmossdk.io/errors v1.0.1 // indirect
+	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/schema v0.1.1 // indirect
 	cosmossdk.io/server/v2/appmanager v0.0.0-20240731205446-aee9803a0af6 // indirect; main
 	cosmossdk.io/server/v2/stf v0.0.0-20240731205446-aee9803a0af6 // indirect; main
@@ -61,7 +62,7 @@ require (
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
-	cosmossdk.io/x/tx v0.13.3 // indirect
+	cosmossdk.io/x/tx v0.13.4-0.20240802064046-23fac2f1b8ab // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -239,8 +240,6 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-require cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
-
 // Here are the short-lived replace from the SimApp
 // Replace here are pending PRs, or version to be tagged
 // replace (
@@ -249,9 +248,12 @@ require cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
+	// pseudo version lower than the latest tag
+	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240802064046-23fac2f1b8ab // main
 	cosmossdk.io/client/v2 => ../../client/v2
-	cosmossdk.io/collections => ../../collections
-	cosmossdk.io/core => ../../core
+	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
+	// pseudo version lower than the latest tag
+	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240731205446-aee9803a0af6 // main
 	cosmossdk.io/tools/confix => ../../tools/confix
 	cosmossdk.io/x/accounts => ../../x/accounts
 	cosmossdk.io/x/accounts/defaults/lockup => ../../x/accounts/defaults/lockup
@@ -272,7 +274,6 @@ replace (
 	cosmossdk.io/x/protocolpool => ../../x/protocolpool
 	cosmossdk.io/x/slashing => ../../x/slashing
 	cosmossdk.io/x/staking => ../../x/staking
-	cosmossdk.io/x/tx => ../../x/tx
 	cosmossdk.io/x/upgrade => ../../x/upgrade
 )
 
@@ -287,13 +288,4 @@ replace (
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
-)
-
-// server v2 integration
-replace (
-	cosmossdk.io/api => ../../api
-	cosmossdk.io/core/testing => ../../core/testing
-	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
-	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240731205446-aee9803a0af6 // main
-
 )

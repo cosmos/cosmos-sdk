@@ -2,23 +2,11 @@ go 1.22.2
 
 use (
 	.
-	./api
 	./client/v2
-	./collections
-	./core
-	./core/testing
-	./depinject
-	./errors
-	./indexer/postgres
-	./log
-	./math
-	./orm
 	./simapp
 	./tests
 	./tests/systemtests
-	./tools/cosmovisor
 	./tools/confix
-	./tools/hubl
 	./x/accounts
 	./x/accounts/defaults/lockup
 	./x/auth
@@ -37,7 +25,6 @@ use (
 	./x/protocolpool
 	./x/slashing
 	./x/staking
-	./x/tx
 	./x/upgrade
 	./x/epochs
 )

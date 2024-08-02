@@ -1,6 +1,0 @@
-#!/bin/sh
-
-echo Chain 3 finally!
-echo Args: $@
-sleep 1
-echo Finished successfully

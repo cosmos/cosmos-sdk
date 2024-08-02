@@ -20,7 +20,7 @@ require (
 	cosmossdk.io/core v0.12.1-0.20240802064046-23fac2f1b8ab // main
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.3.1
-	cosmossdk.io/server/v2 v2.0.0-20240731205446-aee9803a0af6 // main
+	cosmossdk.io/server/v2 v2.0.0-20240802142126-a26970e547ab // main
 	cosmossdk.io/server/v2/appmanager v0.0.0-20240731205446-aee9803a0af6 // main
 	cosmossdk.io/store/v2 v2.0.0-20240731205446-aee9803a0af6 // main
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000

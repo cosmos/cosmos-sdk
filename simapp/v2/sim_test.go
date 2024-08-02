@@ -125,9 +125,8 @@ func TestSimsAppV2(t *testing.T) {
 	factoryRegistry := make(SimsV2Reg)
 	// register all msg factories
 	for name, v := range app.ModuleManager().Modules() {
-		if name == "authz" || // todo: enable when router issue is solved with `/` prefix in MsgTypeURL
-			name == "slashing" { // todo: enable when tree issue fixed
-
+		if name == "authz" { // || // todo: enable when router issue is solved with `/` prefix in MsgTypeURL
+			//name == "slashing" { // todo: enable when tree issue fixed
 			continue
 		}
 		if w, ok := v.(HasWeightedOperationsX); ok {
@@ -165,9 +164,11 @@ func TestSimsAppV2(t *testing.T) {
 		cometInfo := comet.Info{
 			ValidatorsHash:  nil,
 			Evidence:        valsetHistory.MissBehaviour(r),
-			ProposerAddress: activeValidatorSet[0].addr,
+			ProposerAddress: activeValidatorSet[0].addr, // todo: should be  simsx.OneOf(r, activeValidatorSet).addr,
 			LastCommit:      activeValidatorSet.NewCommitInfo(r),
 		}
+		fmt.Printf("PROPOSER: %X\n", cometInfo.ProposerAddress)
+
 		msgFactoriesFn := factoryRegistry.NextFactoryFn(r)
 		//app.ConsensusParamsKeeper.SetCometInfo()
 		ctx = context.WithValue(ctx, corecontext.CometInfoKey, cometInfo) // required for ContextAwareCometInfoService
@@ -271,7 +272,6 @@ func (s SimsV2Reg) NextFactoryFn(r *rand.Rand) func() simsx.SimMsgFactoryX {
 	}
 	return func() simsx.SimMsgFactoryX {
 		// this is copied from old sims WeightedOperations.getSelectOpFn
-		// TODO: refactor to make more efficient
 		x := r.Intn(totalWeight)
 		for i := 0; i < len(factories); i++ {
 			if x <= int(factories[i].weight) {
@@ -345,12 +345,14 @@ func Collect[T, E any](source []T, f func(a T) E) []E {
 	return r
 }
 
-// NewValSet constructor
-func NewValSet() WeightedValidators {
-	return make(WeightedValidators, 0)
-}
-
 type WeightedValidators []WeightedValidator
+
+// NewValSet constructor
+func NewValSet(vals ...WeightedValidator) WeightedValidators {
+	r := WeightedValidators(vals)
+	r.sort()
+	return r
+}
 
 func (v WeightedValidators) Update(updates []appmodulev2.ValidatorUpdate) WeightedValidators {
 	if len(updates) == 0 {
@@ -367,30 +369,35 @@ func (v WeightedValidators) Update(updates []appmodulev2.ValidatorUpdate) Weight
 			return bytes.Equal(u.addr, val.addr)
 		})
 		if pos == -1 {
-			if u.power > 0 {
+			if u.power > 0 { // add to valset
 				newValset = append(newValset, u)
 			}
 			continue
 		}
-		if u.power == 0 {
+		if u.power == 0 { // remove from valset
+			fmt.Printf("removing validator: %X\n", u.addr)
 			newValset = append(newValset[0:pos], newValset[pos+1:]...)
 			continue
 		}
-		newValset[pos].power = u.power
+		newValset[pos].power = u.power // update entry
 	}
 
-	// sort vals by power
-	slices.SortFunc(newValset, func(a, b WeightedValidator) int {
+	// sort vals by power, addr desc
+	newValset.sort()
+	return newValset
+}
+
+func (v *WeightedValidators) sort() {
+	slices.SortFunc(*v, func(a, b WeightedValidator) int {
 		switch {
+		case a.power > b.power:
+			return -1
 		case a.power < b.power:
 			return 1
-		case a.power > a.power:
-			return -1
 		default:
 			return bytes.Compare(a.addr, b.addr)
 		}
 	})
-	return newValset
 }
 
 // NewCommitInfo build Comet commit info for the validator set
@@ -440,39 +447,41 @@ type historicValSet struct {
 type ValSetHistory struct {
 	maxElements int
 	blockOffset int
-	vals        []historicValSet
+	historic    []historicValSet
 }
 
 func NewValSetHistory(maxElements int) *ValSetHistory {
 	return &ValSetHistory{
 		maxElements: maxElements,
 		blockOffset: 1, // start at height 1
-		vals:        make([]historicValSet, 0, maxElements),
+		historic:    make([]historicValSet, 0, maxElements),
 	}
 }
 
 func (h *ValSetHistory) Add(blockTime time.Time, vals WeightedValidators) {
 	newEntry := historicValSet{blockTime: blockTime, vals: vals}
-	if len(h.vals) >= h.maxElements {
-		h.vals = append(h.vals[1:], newEntry)
+	if len(h.historic) >= h.maxElements {
+		h.historic = append(h.historic[1:], newEntry)
 		h.blockOffset++
 		return
 	}
-	h.vals = append(h.vals, newEntry)
+	h.historic = append(h.historic, newEntry)
 }
 
 func (h *ValSetHistory) MissBehaviour(r *rand.Rand) []comet.Evidence {
-	if r.Intn(100) != 0 { // 1% chance
+	if r.Intn(10) != 0 { // 1% chance
+		//if r.Intn(100) != 0 { // 1% chance
 		return nil
 	}
-	n := r.Intn(len(h.vals))
-	badVal := simsx.OneOf(r, h.vals[n].vals)
+	n := r.Intn(len(h.historic))
+	badVal := simsx.OneOf(r, h.historic[n].vals)
 	evidence := comet.Evidence{
 		Type:             comet.DuplicateVote,
 		Validator:        comet.Validator{Address: badVal.addr, Power: badVal.power},
 		Height:           int64(h.blockOffset + n),
-		Time:             h.vals[n].blockTime,
-		TotalVotingPower: h.vals[n].vals.TotalPower(),
+		Time:             h.historic[n].blockTime,
+		TotalVotingPower: h.historic[n].vals.TotalPower(), // historic
+		//TotalVotingPower: h.vals[len(h.vals)-1].vals.TotalPower(), // current
 	}
 	if otherEvidence := h.MissBehaviour(r); otherEvidence != nil {
 		return append([]comet.Evidence{evidence}, otherEvidence...)

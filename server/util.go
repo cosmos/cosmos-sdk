@@ -270,7 +270,8 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 	return conf, nil
 }
 
-// add server commands
+// AddCommands adds some commands to the root command. These commands include:
+// start, tendermint, export, version, and rollback.
 func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator types.AppCreator, appExport types.AppExporter, addStartFlags types.ModuleInitFlags) {
 	tendermintCmd := &cobra.Command{
 		Use:     "tendermint",

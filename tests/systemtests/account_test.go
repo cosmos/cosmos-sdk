@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 )
 
@@ -21,6 +22,7 @@ func TestAccountCreation(t *testing.T) {
 	// add genesis account with some tokens
 	account1Addr := cli.AddKey("account1")
 	account2Addr := cli.AddKey("account2")
+	require.NotEqual(t, account1Addr, account2Addr)
 	sut.ModifyGenesisCLI(t,
 		[]string{"genesis", "add-genesis-account", account1Addr, "10000000stake"},
 	)
@@ -32,15 +34,20 @@ func TestAccountCreation(t *testing.T) {
 	assert.Equal(t, account1Addr, gjson.Get(rsp, "account.value.address").String(), rsp)
 
 	rsp1 := cli.Run("tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from="+account1Addr, "--fees=1stake")
-	RequireTxSuccess(t, rsp1)
+	txResult, found := cli.AwaitTxCommitted(rsp1)
+	require.True(t, found)
+	RequireTxSuccess(t, txResult)
 
 	// query account2
+	assertNotFound := func(t assert.TestingT, err error, msgAndArgs ...interface{}) (ok bool) {
+		return strings.Contains(err.Error(), "not found: key not found")
+	}
+	_ = cli.WithRunErrorMatcher(assertNotFound).CustomQuery("q", "auth", "account", account2Addr)
 
-	rsp2 := cli.WithRunErrorsIgnored().CustomQuery("q", "auth", "account", account2Addr)
-	assert.True(t, strings.Contains(rsp2, "not found: key not found"))
-
-	rsp3 := cli.Run("tx", "bank", "send", account2Addr, account1Addr, "1000stake", "--from="+account1Addr, "--fees=1stake")
-	RequireTxSuccess(t, rsp3)
+	rsp3 := cli.Run("tx", "bank", "send", account2Addr, account1Addr, "1000stake", "--from="+account2Addr, "--fees=1stake")
+	txResult, found = cli.AwaitTxCommitted(rsp3)
+	require.True(t, found)
+	RequireTxSuccess(t, txResult)
 
 	// query account2 to make sure its created
 	rsp4 := cli.CustomQuery("q", "auth", "account", account2Addr)

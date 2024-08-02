@@ -2,12 +2,10 @@ go 1.22.2
 
 use (
 	.
-	./api
 	./client/v2
 	./simapp
 	./tests
 	./tests/systemtests
-	./runtime/v2
 	./tools/confix
 	./x/accounts
 	./x/accounts/defaults/lockup

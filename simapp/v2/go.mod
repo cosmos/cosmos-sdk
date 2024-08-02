@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.3.1
 	cosmossdk.io/math v1.3.0
-	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000
+	cosmossdk.io/runtime/v2 v2.0.0-20240801110532-c55e8d71014b // main
 	cosmossdk.io/server/v2 v2.0.0-20240731205446-aee9803a0af6 // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-20240731205446-aee9803a0af6 // indirect; main
@@ -293,7 +293,6 @@ replace (
 replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core/testing => ../../core/testing
-	cosmossdk.io/runtime/v2 => ../../runtime/v2
 	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240731205446-aee9803a0af6 // main
 

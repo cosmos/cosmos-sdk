@@ -38,6 +38,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.50.9](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.9) - 2024-08-02
+
 ## Bug Fixes
 
 * [#20939](https://github.com/cosmos/cosmos-sdk/pull/20939) Fix collection reverse iterator to include `pagination.key` in the result.

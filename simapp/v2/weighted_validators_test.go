@@ -12,16 +12,18 @@ func TestUpdateWeightedValidators(t *testing.T) {
 		hash := sha256.Sum256(b)
 		return hash[:20]
 	}
-	val1, val2, val3 := WeightedValidator{
-		power: 100,
-		addr:  doHash(1),
-	}, WeightedValidator{
-		power: 100,
-		addr:  doHash(2),
-	}, WeightedValidator{
-		power: 50,
-		addr:  doHash(3),
-	}
+	sortedVals := NewWeightedValidators(
+		WeightedValidator{
+			power: 100,
+			addr:  doHash(1),
+		}, WeightedValidator{
+			power: 100,
+			addr:  doHash(2),
+		}, WeightedValidator{
+			power: 50,
+			addr:  doHash(3),
+		})
+	val1, val2, val3 := sortedVals[0], sortedVals[1], sortedVals[2]
 	specs := map[string]struct {
 		updates []appmodulev2.ValidatorUpdate
 		exp     WeightedValidators
@@ -49,7 +51,7 @@ func TestUpdateWeightedValidators(t *testing.T) {
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
-			src := NewValSet(val1, val2, val3)
+			src := NewWeightedValidators(val1, val2, val3)
 			gotValset := src.Update(spec.updates)
 			assert.Equal(t, spec.exp, gotValset)
 		})

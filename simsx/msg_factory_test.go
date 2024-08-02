@@ -51,3 +51,44 @@ func TestMsgFactories(t *testing.T) {
 		})
 	}
 }
+
+func TestLazyResultHandlers(t *testing.T) {
+	myErr := errors.New("testing")
+	passThrough := func(err error) error { return err }
+	ignore := func(err error) error { return nil }
+	specs := map[string]struct {
+		handlers []SimDeliveryResultHandler
+		expErrs  []error
+	}{
+		"handle err": {
+			handlers: []SimDeliveryResultHandler{ignore},
+			expErrs:  []error{nil},
+		},
+		"not handled": {
+			handlers: []SimDeliveryResultHandler{passThrough},
+			expErrs:  []error{myErr},
+		},
+		"nil value": {
+			handlers: []SimDeliveryResultHandler{nil},
+			expErrs:  []error{myErr},
+		},
+		"multiple": {
+			handlers: []SimDeliveryResultHandler{ignore, passThrough, nil, passThrough},
+			expErrs:  []error{nil, myErr, myErr, myErr},
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			var hPos int
+			f := NewSimMsgFactoryWithDeliveryResultHandler[*testdata.TestMsg](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg, handler SimDeliveryResultHandler) {
+				defer func() { hPos++ }()
+				return nil, nil, spec.handlers[hPos]
+			})
+			for i := 0; i < len(spec.handlers); i++ {
+				_, _ = f.Create()(context.Background(), nil, nil)
+				gotErr := f.DeliveryResultHandler()(myErr)
+				assert.Equal(t, spec.expErrs[i], gotErr)
+			}
+		})
+	}
+}

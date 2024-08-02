@@ -2,6 +2,7 @@ package simsx
 
 import (
 	"context"
+	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -33,18 +34,32 @@ type ResultHandlingSimMsgFactory[T sdk.Msg] struct {
 
 // NewSimMsgFactoryWithDeliveryResultHandler constructor
 func NewSimMsgFactoryWithDeliveryResultHandler[T sdk.Msg](f FactoryMethodWithDeliveryResultHandler[T]) *ResultHandlingSimMsgFactory[T] {
-	// the result handler is always called after the factory. so we initialize it lazy for syntactic sugar and simplicity
-	// in the message factory function that is implemented by the users
-	var lazyResultHandler SimDeliveryResultHandler
+	var (
+		mx sync.RWMutex
+		// the result handler is always called after the factory. so we initialize it lazy for syntactic sugar and simplicity
+		// in the message factory function that is implemented by the users.
+		// they are piped here as a block may cause multiple factory calls
+		lazyResultHandlers []SimDeliveryResultHandler
+	)
 	r := &ResultHandlingSimMsgFactory[T]{
 		resultHandler: func(err error) error {
-			return lazyResultHandler(err)
+			mx.Lock()
+			defer mx.Unlock()
+			if len(lazyResultHandlers) == 0 {
+				return err // default to no error handling
+			}
+			h := lazyResultHandlers[0]
+			lazyResultHandlers = lazyResultHandlers[1:]
+			return h(err)
 		},
 	}
 	r.SimMsgFactoryFn = func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg T) {
-		signer, msg, lazyResultHandler = f(ctx, testData, reporter)
-		if lazyResultHandler == nil {
-			lazyResultHandler = expectNoError
+		var resultHandler SimDeliveryResultHandler
+		signer, msg, resultHandler = f(ctx, testData, reporter)
+		if resultHandler != nil {
+			mx.Lock()
+			defer mx.Unlock()
+			lazyResultHandlers = append(lazyResultHandlers, resultHandler)
 		}
 		return
 	}

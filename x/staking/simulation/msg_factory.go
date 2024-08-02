@@ -287,11 +287,8 @@ func MsgRotateConsPubKeyFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.M
 	return func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *types.MsgRotateConsPubKey) {
 		r := testData.Rand()
 		val := randomValidator(ctx, reporter, k, r)
-		if reporter.IsSkipped() {
-			return nil, nil
-		}
-		if val.Status != types.Bonded || val.ConsensusPower(sdk.DefaultPowerReduction) == 0 {
-			reporter.Skip("validator not bonded.")
+		if val.Jailed || val.Status != types.Bonded || val.ConsensusPower(sdk.DefaultPowerReduction) == 0 {
+			reporter.Skip("validator not in state")
 			return nil, nil
 		}
 		valOpAddrBz := must(k.ValidatorAddressCodec().StringToBytes(val.GetOperator()))
@@ -299,7 +296,8 @@ func MsgRotateConsPubKeyFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.M
 		otherAccount := testData.AnyAccount(reporter, simsx.ExcludeAddresses(valOper.AddressBech32))
 
 		consAddress := must(k.ConsensusAddressCodec().BytesToString(must(val.GetConsAddr())))
-		accAddress := must(k.ConsensusAddressCodec().BytesToString(otherAccount.ConsKey.PubKey().Address()))
+		newPubKey := otherAccount.ConsKey.PubKey()
+		accAddress := must(k.ConsensusAddressCodec().BytesToString(newPubKey.Address()))
 		if consAddress == accAddress {
 			reporter.Skip("new pubkey and current pubkey should be different")
 			return nil, nil
@@ -313,13 +311,13 @@ func MsgRotateConsPubKeyFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.M
 			return nil, nil
 		}
 		// check whether the new cons key associated with another validator
-		newConsAddr := sdk.ConsAddress(otherAccount.ConsKey.PubKey().Address())
+		newConsAddr := sdk.ConsAddress(newPubKey.Address())
 
 		if _, err := k.GetValidatorByConsAddr(ctx, newConsAddr); err == nil {
 			reporter.Skip("cons key already used")
 			return nil, nil
 		}
-		msg := must(types.NewMsgRotateConsPubKey(val.GetOperator(), otherAccount.ConsKey.PubKey()))
+		msg := must(types.NewMsgRotateConsPubKey(val.GetOperator(), newPubKey))
 
 		// check if there's another key rotation for this same key in the same block
 		for _, r := range must(k.GetBlockConsPubKeyRotationHistory(ctx)) {

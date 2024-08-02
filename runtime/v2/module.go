@@ -176,7 +176,12 @@ func ProvideModuleManager[T transaction.Tx](
 }
 
 // ProvideEnvironment provides the environment for keeper modules, while maintaining backward compatibility and provide services directly as well.
-func ProvideEnvironment[T transaction.Tx](logger log.Logger, config *runtimev2.Module, key depinject.ModuleKey, appBuilder *AppBuilder[T]) (
+func ProvideEnvironment[T transaction.Tx](
+	logger log.Logger,
+	config *runtimev2.Module,
+	key depinject.ModuleKey,
+	appBuilder *AppBuilder[T],
+) (
 	appmodulev2.Environment,
 	store.KVStoreService,
 	store.MemoryStoreService,

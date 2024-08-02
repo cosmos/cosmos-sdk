@@ -3,8 +3,8 @@ module cosmossdk.io/x/accounts/defaults/multisig
 go 1.22.2
 
 require (
-	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
+	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // main
+	cosmossdk.io/core v0.12.1-0.20240802064046-23fac2f1b8ab // main
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
@@ -18,8 +18,8 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
-	cosmossdk.io/api v0.7.5 // indirect
-	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/api v0.8.0 // indirect
+	cosmossdk.io/core/testing v0.0.0-20240802064046-23fac2f1b8ab // indirect; main
 	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.3.1 // indirect
@@ -28,7 +28,7 @@ require (
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/x/tx v0.13.3 // indirect
+	cosmossdk.io/x/tx v0.13.4-0.20240802064046-23fac2f1b8ab // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -173,10 +173,8 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../../../.
 
 replace (
-	cosmossdk.io/api => ../../../../api
-	cosmossdk.io/collections => ../../../../collections // TODO tag new collections ASAP
-	cosmossdk.io/core => ../../../../core
-	cosmossdk.io/core/testing => ../../../../core/testing
+	// pseudo version lower than the latest tag
+	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240802064046-23fac2f1b8ab // main
 	cosmossdk.io/x/accounts => ../../.
 	cosmossdk.io/x/auth => ../../../auth
 	cosmossdk.io/x/bank => ../../../bank
@@ -186,5 +184,4 @@ replace (
 	cosmossdk.io/x/protocolpool => ../../../protocolpool
 	cosmossdk.io/x/slashing => ../../../slashing
 	cosmossdk.io/x/staking => ../../../staking
-	cosmossdk.io/x/tx => ../../../tx
 )

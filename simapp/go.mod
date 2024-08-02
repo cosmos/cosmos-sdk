@@ -3,11 +3,11 @@ module cosmossdk.io/simapp
 go 1.22.2
 
 require (
-	cosmossdk.io/api v0.7.5
+	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860
-	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
-	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // main
+	cosmossdk.io/core v0.12.1-0.20240802064046-23fac2f1b8ab // main
+	cosmossdk.io/core/testing v0.0.0-20240802064046-23fac2f1b8ab // indirect; main
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.3.1
 	cosmossdk.io/math v1.3.0
@@ -31,7 +31,7 @@ require (
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-20240226161501-23359a0b6d91
-	cosmossdk.io/x/tx v0.13.3
+	cosmossdk.io/x/tx v0.13.4-0.20240802064046-23fac2f1b8ab // main
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
 	github.com/cometbft/cometbft v1.0.0-rc1
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
@@ -239,11 +239,10 @@ require (
 
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
-	cosmossdk.io/api => ../api
+	// pseudo version lower than the latest tag
+	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240802064046-23fac2f1b8ab // main
 	cosmossdk.io/client/v2 => ../client/v2
-	cosmossdk.io/collections => ../collections
-	cosmossdk.io/core => ../core
-	cosmossdk.io/core/testing => ../core/testing
+	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240731205446-aee9803a0af6 // main
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/accounts => ../x/accounts
@@ -266,7 +265,6 @@ replace (
 	cosmossdk.io/x/protocolpool => ../x/protocolpool
 	cosmossdk.io/x/slashing => ../x/slashing
 	cosmossdk.io/x/staking => ../x/staking
-	cosmossdk.io/x/tx => ../x/tx
 	cosmossdk.io/x/upgrade => ../x/upgrade
 )
 

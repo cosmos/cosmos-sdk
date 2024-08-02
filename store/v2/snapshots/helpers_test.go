@@ -6,6 +6,7 @@ import (
 	"compress/zlib"
 	"crypto/sha256"
 	"errors"
+	"fmt"
 	"io"
 	"testing"
 	"time"
@@ -120,6 +121,7 @@ func (m *mockCommitSnapshotter) Restore(
 
 	var item snapshotstypes.SnapshotItem
 	m.items = [][]byte{}
+	keyCount := 0
 	for {
 		item.Reset()
 		err := protoReader.ReadMsg(&item)
@@ -133,6 +135,16 @@ func (m *mockCommitSnapshotter) Restore(
 			break
 		}
 		m.items = append(m.items, payload.Payload)
+		chStorage <- &corestore.StateChanges{
+			Actor: []byte("actor"),
+			StateChanges: []corestore.KVPair{
+				{
+					Key:   []byte(fmt.Sprintf("key-%d", keyCount)),
+					Value: payload.Payload,
+				},
+			},
+		}
+		keyCount++
 	}
 
 	return item, nil
@@ -155,9 +167,19 @@ func (m *mockCommitSnapshotter) SupportedFormats() []uint32 {
 	return []uint32{snapshotstypes.CurrentFormat}
 }
 
-type mockStorageSnapshotter struct{}
+type mockStorageSnapshotter struct {
+	items map[string][]byte
+}
 
 func (m *mockStorageSnapshotter) Restore(version uint64, chStorage <-chan *corestore.StateChanges) error {
+	// mock consuming chStorage to check if the loop closed properly
+	//
+	// ref: https://github.com/cosmos/cosmos-sdk/pull/21106
+	for change := range chStorage {
+		for _, kv := range change.StateChanges {
+			m.items[string(kv.Key)] = kv.Value
+		}
+	}
 	return nil
 }
 

@@ -131,7 +131,7 @@ func TestManager_Restore(t *testing.T) {
 	store := setupStore(t)
 	target := &mockCommitSnapshotter{}
 	extSnapshotter := newExtSnapshotter(0)
-	manager := snapshots.NewManager(store, opts, target, &mockStorageSnapshotter{}, nil, coretesting.NewNopLogger())
+	manager := snapshots.NewManager(store, opts, target, &mockStorageSnapshotter{items: map[string][]byte{}}, nil, coretesting.NewNopLogger())
 	err := manager.RegisterExtensions(extSnapshotter)
 	require.NoError(t, err)
 

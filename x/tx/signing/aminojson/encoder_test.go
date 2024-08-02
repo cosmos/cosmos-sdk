@@ -93,7 +93,7 @@ func TestCosmosInlineJSON(t *testing.T) {
 	}
 }
 
-func TestSortedJsonStringify(t *testing.T) {
+func TestSortedJSONStringify(t *testing.T) {
 	tests := map[string]struct {
 		input      []byte
 		wantOutput string
@@ -166,7 +166,7 @@ func TestSortedJsonStringify(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := sortedJsonStringify(tc.input)
+			got, err := sortedJSONStringify(tc.input)
 			require.NoError(t, err)
 			assert.Equal(t, tc.wantOutput, string(got))
 		})

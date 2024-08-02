@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
@@ -107,7 +108,9 @@ func TestRunMigrations(t *testing.T) {
 			mod.RegisterServices(configurator)
 		}
 
-		if mod, ok := mod.(appmodule.HasServices); ok {
+		if mod, ok := mod.(interface {
+			RegisterServices(grpc.ServiceRegistrar) error
+		}); ok {
 			err := mod.RegisterServices(configurator)
 			require.NoError(t, err)
 		}

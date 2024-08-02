@@ -16,7 +16,6 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/core/app"
-	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/genesis"
@@ -31,10 +30,8 @@ import (
 	"cosmossdk.io/server/v2/stf"
 )
 
-var (
-	_ appmodulev2.AppModule = appModule[transaction.Tx]{}
-	_ appmodule.HasServices = appModule[transaction.Tx]{}
-)
+var _ appmodulev2.AppModule = appModule[transaction.Tx]{}
+var _ hasServicesV1 = appModule[transaction.Tx]{}
 
 type appModule[T transaction.Tx] struct {
 	app *App[T]

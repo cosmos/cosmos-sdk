@@ -2029,22 +2029,13 @@ func TestBaseApp_PreBlocker(t *testing.T) {
 	wasHookCalled := false
 	app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
 		wasHookCalled = true
-<<<<<<< HEAD
-		return &sdk.ResponsePreBlock{
-			ConsensusParamsChanged: true,
-		}, nil
-	})
-	app.Seal()
 
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
-=======
 		ctx.EventManager().EmitEvent(sdk.NewEvent("preblockertest", sdk.NewAttribute("height", fmt.Sprintf("%d", req.Height))))
-		return nil
+		return nil, nil
 	})
 	app.Seal()
 
-	res, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
->>>>>>> c312d99ea (fix(baseapp): return events from preblocker in FinalizeBlockResponse (#21159))
+	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(t, err)
 	require.Equal(t, true, wasHookCalled)
 	require.Len(t, res.Events, 1)
@@ -2055,7 +2046,7 @@ func TestBaseApp_PreBlocker(t *testing.T) {
 	_, err = app.InitChain(&abci.RequestInitChain{})
 	require.NoError(t, err)
 
-	app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	app.SetPreBlocker(func(_ sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
 		return nil, errors.New("some error")
 	})
 	app.Seal()

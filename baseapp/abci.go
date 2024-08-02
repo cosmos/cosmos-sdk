@@ -756,6 +756,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 	if err := app.preBlock(req); err != nil {
 		return nil, err
 	}
+	events = append(events, app.finalizeBlockState.ctx.EventManager().ABCIEvents()...)
 
 	beginBlock, err := app.beginBlock(req)
 	if err != nil {

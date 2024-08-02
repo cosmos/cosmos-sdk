@@ -2029,6 +2029,7 @@ func TestBaseApp_PreBlocker(t *testing.T) {
 	wasHookCalled := false
 	app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
 		wasHookCalled = true
+<<<<<<< HEAD
 		return &sdk.ResponsePreBlock{
 			ConsensusParamsChanged: true,
 		}, nil
@@ -2036,8 +2037,18 @@ func TestBaseApp_PreBlocker(t *testing.T) {
 	app.Seal()
 
 	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+=======
+		ctx.EventManager().EmitEvent(sdk.NewEvent("preblockertest", sdk.NewAttribute("height", fmt.Sprintf("%d", req.Height))))
+		return nil
+	})
+	app.Seal()
+
+	res, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
+>>>>>>> c312d99ea (fix(baseapp): return events from preblocker in FinalizeBlockResponse (#21159))
 	require.NoError(t, err)
 	require.Equal(t, true, wasHookCalled)
+	require.Len(t, res.Events, 1)
+	require.Equal(t, "preblockertest", res.Events[0].Type)
 
 	// Now try erroring
 	app = baseapp.NewBaseApp(name, logger, db, nil)

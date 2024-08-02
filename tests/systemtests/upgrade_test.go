@@ -106,8 +106,8 @@ func FetchExecutable(t *testing.T, version string) string {
 	}
 	destFile := cacheFile
 	t.Log("+++ version not in cache, downloading from docker image")
-	runShellCmd(t, "docker", "pull", "ghcr.io/cosmos/simapp:"+version)
-	runShellCmd(t, "docker", "create", "--name=ci_temp", "ghcr.io/cosmos/simapp:"+version)
-	runShellCmd(t, "docker", "cp", "ci_temp:/usr/bin/simd", destFile)
+	MustRunShellCmd(t, "docker", "pull", "ghcr.io/cosmos/simapp:"+version)
+	MustRunShellCmd(t, "docker", "create", "--name=ci_temp", "ghcr.io/cosmos/simapp:"+version)
+	MustRunShellCmd(t, "docker", "cp", "ci_temp:/usr/bin/simd", destFile)
 	return destFile
 }

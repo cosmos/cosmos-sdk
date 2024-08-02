@@ -25,11 +25,97 @@ Types of changes (Stanzas):
 "Bug Fixes" for any bug fixes.
 "API Breaking" for breaking exported APIs used by developers building on SDK.
 Ref: https://keepachangelog.com/en/1.0.0/
+
+Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-sdk/blob/main/RELEASES.md
 -->
 
 # Changelog
 
 ## [Unreleased]
+
+
+## [v0.13.4](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.4) - 2024-08-01
+
+### Improvements
+
+* [#21073](https://github.com/cosmos/cosmos-sdk/pull/21073) In Context use sync.Map `getSignersFuncs` map from concurrent writes, we also call Validate when creating the Context.
+
+## [v0.13.3](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.3) - 2024-04-22
+
+### Improvements
+
+* [#20049](https://github.com/cosmos/cosmos-sdk/pull/20049) Sort JSON attributes for `inline_json` encoder.
+
+## [v0.13.2](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.2) - 2024-04-12
+
+### Features
+
+* [#19786](https://github.com/cosmos/cosmos-sdk/pull/19786)/[#19919](https://github.com/cosmos/cosmos-sdk/pull/19919) Add "inline_json" option to Amino JSON encoder.
+
+### Improvements
+
+* [#19845](https://github.com/cosmos/cosmos-sdk/pull/19845) Use hybrid resolver instead of only protov2 registry
+
+### Bug Fixes
+
+* [#19955](https://github.com/cosmos/cosmos-sdk/pull/19955) Don't shadow Amino marshalling error messages
+
+## [v0.13.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.1) - 2024-03-05
+
+### Features
+
+* [#19618](https://github.com/cosmos/cosmos-sdk/pull/19618) Add enum as string option to encoder.
+
+### Improvements
+
+* [#18857](https://github.com/cosmos/cosmos-sdk/pull/18857) Moved `FormatCoins` from `core/coins` to this package under `signing/textual`.
+
+### Bug Fixes
+
+* [#19265](https://github.com/cosmos/cosmos-sdk/pull/19265) Reject denoms that contain a comma.
+
+## [v0.13.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.0) - 2023-12-19
+
+### Improvements
+
+* [#18740](https://github.com/cosmos/cosmos-sdk/pull/18740) Support nested messages when fetching signers up to a default depth of 32.
+
+## v0.12.0
+
+### Improvements
+
+* [#18309](https://github.com/cosmos/cosmos-sdk/pull/18309) Update encoder so that amino types default to msg type url.
+
+## v0.11.0
+
+### Improvements
+
+* [#17787](https://github.com/cosmos/cosmos-sdk/pull/17787) Drop tip support.
+
+## v0.10.0
+
+### Features
+
+* [#17681](https://github.com/cosmos/cosmos-sdk/pull/17681) Add encoder `DefineTypeEncoding` method for defining custom type encodings.
+* [#17600](https://github.com/cosmos/cosmos-sdk/pull/17600) Add encoder `DefineScalarEncoding` method for defining custom scalar encodings.
+* [#17600](https://github.com/cosmos/cosmos-sdk/pull/17600) Add indent option to encoder.
+
+## v0.9.1
+
+### Improvements
+
+* [#16936](https://github.com/cosmos/cosmos-sdk/pull/16936) Remove extra whitespace when marshalling module accounts.
+
+## v0.9.0
+
+### Bug Fixes
+
+* [#16681](https://github.com/cosmos/cosmos-sdk/pull/16681): Catch and fix `(*Decoder).Decode` crash from invalid length prefix in Tx bytes.
+
+### Improvements
+
+* [#16846](https://github.com/cosmos/cosmos-sdk/pull/16846): Harmonize interface `signing.TypeResolver` with the rest of the codebase (orm and client/v2).
+* [#16684](https://github.com/cosmos/cosmos-sdk/pull/16684): Use `io.WriteString`+`fmt.Fprintf` to remove unnecessary `string`->`[]byte` roundtrip.
 
 ## v0.8.0
 

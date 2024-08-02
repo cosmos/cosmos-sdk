@@ -1,6 +1,8 @@
 package systemtests
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -150,6 +152,7 @@ func (c CLIWrapper) WithAssertTXUncommitted() CLIWrapper {
 // Run main entry for executing cli commands.
 // When configured, method blocks until tx is committed.
 func (c CLIWrapper) Run(args ...string) string {
+	c.t.Helper()
 	if c.fees != "" && !slices.ContainsFunc(args, func(s string) bool {
 		return strings.HasPrefix(s, "--fees")
 	}) {
@@ -160,14 +163,15 @@ func (c CLIWrapper) Run(args ...string) string {
 	if !ok {
 		return execOutput
 	}
-	rsp, committed := c.awaitTxCommitted(execOutput, DefaultWaitTime)
+	rsp, committed := c.AwaitTxCommitted(execOutput, DefaultWaitTime)
 	c.t.Logf("tx committed: %v", committed)
 	require.Equal(c.t, c.expTXCommitted, committed, "expected tx committed: %v", c.expTXCommitted)
 	return rsp
 }
 
-// wait for tx committed on chain
-func (c CLIWrapper) awaitTxCommitted(submitResp string, timeout ...time.Duration) (string, bool) {
+// AwaitTxCommitted wait for tx committed on chain
+func (c CLIWrapper) AwaitTxCommitted(submitResp string, timeout ...time.Duration) (string, bool) {
+	c.t.Helper()
 	RequireTxSuccess(c.t, submitResp)
 	txHash := gjson.Get(submitResp, "txhash")
 	require.True(c.t, txHash.Exists())
@@ -201,10 +205,12 @@ func (c CLIWrapper) CustomQuery(args ...string) string {
 
 // execute shell command
 func (c CLIWrapper) run(args []string) (output string, ok bool) {
+	c.t.Helper()
 	return c.runWithInput(args, nil)
 }
 
 func (c CLIWrapper) runWithInput(args []string, input io.Reader) (output string, ok bool) {
+	c.t.Helper()
 	if c.Debug {
 		c.t.Logf("+++ running `%s %s`", c.execBinary, strings.Join(args, " "))
 	}
@@ -219,8 +225,24 @@ func (c CLIWrapper) runWithInput(args []string, input io.Reader) (output string,
 		cmd.Stdin = input
 		return cmd.Output()
 	}()
+	gotOut = filterProtoNoise(gotOut)
 	ok = c.assertErrorFn(c.t, gotErr, string(gotOut))
 	return strings.TrimSpace(string(gotOut)), ok
+}
+
+func filterProtoNoise(in []byte) []byte {
+	// temporary hack to get rid of all the noise on the stderr
+	var out bytes.Buffer
+	scanner := bufio.NewScanner(bytes.NewReader(in))
+	for scanner.Scan() {
+		if !strings.Contains(scanner.Text(), " proto: duplicate proto type registered") {
+			_, _ = out.Write(scanner.Bytes())
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		panic(err)
+	}
+	return out.Bytes()
 }
 
 func (c CLIWrapper) withQueryFlags(args ...string) []string {
@@ -392,10 +414,10 @@ func RequireTxFailure(t *testing.T, got string, containsMsgs ...string) {
 func parseResultCode(t *testing.T, got string) (int64, string) {
 	t.Helper()
 	code := gjson.Get(got, "code")
-	require.True(t, code.Exists(), "got response: %s", got)
+	require.True(t, code.Exists(), "got response: %q", got)
 
 	details := got
-	if log := gjson.Get(got, "raw_log"); log.Exists() {
+	if log := gjson.Get(got, "raw_log"); log.Exists() && len(log.String()) != 0 {
 		details = log.String()
 	}
 	return code.Int(), details

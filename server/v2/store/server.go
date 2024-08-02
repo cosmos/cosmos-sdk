@@ -25,7 +25,7 @@ func New[T transaction.Tx]() *StoreComponent[T] {
 func (s *StoreComponent[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
 	cfg := DefaultConfig()
 	if v != nil {
-		if err := v.Sub(s.Name()).Unmarshal(&cfg); err != nil {
+		if err := serverv2.UnmarshalSubConfig(v, s.Name(), &cfg); err != nil {
 			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}

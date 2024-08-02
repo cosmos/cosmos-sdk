@@ -74,6 +74,7 @@ func NewConsensus[T transaction.Tx](
 	store types.Store,
 	cfg Config,
 	txCodec transaction.Codec[T],
+	chainId string,
 ) *Consensus[T] {
 	return &Consensus[T]{
 		appName:                appName,
@@ -93,7 +94,7 @@ func NewConsensus[T transaction.Tx](
 		processProposalHandler: nil,
 		verifyVoteExt:          nil,
 		extendVote:             nil,
-		chainID:                "",
+		chainID:                chainId,
 		indexedEvents:          indexedEvents,
 		initialHeight:          0,
 	}

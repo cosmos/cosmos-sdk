@@ -3,12 +3,12 @@ module cosmossdk.io/client/v2
 go 1.22.2
 
 require (
-	cosmossdk.io/api v0.7.5
-	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
+	cosmossdk.io/api v0.8.0
+	cosmossdk.io/core v0.12.1-0.20240802064046-23fac2f1b8ab // main
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
-	cosmossdk.io/x/tx v0.13.3
+	cosmossdk.io/x/tx v0.13.4-0.20240802064046-23fac2f1b8ab // main
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/spf13/cobra v1.8.1
@@ -22,7 +22,7 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
-	cosmossdk.io/collections v0.4.0 // indirect
+	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.3.1 // indirect
 	cosmossdk.io/math v1.3.0
@@ -176,10 +176,11 @@ replace github.com/cosmos/cosmos-sdk => ./../../
 
 // TODO remove post spinning out all modules
 replace (
-	cosmossdk.io/api => ./../../api
-	cosmossdk.io/core => ./../../core
-	cosmossdk.io/core/testing => ../../core/testing
+	// pseudo version lower than the latest tag
+	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240802064046-23fac2f1b8ab // main
+	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240731205446-aee9803a0af6 // main
+
 	cosmossdk.io/x/accounts => ./../../x/accounts
 	cosmossdk.io/x/auth => ./../../x/auth
 	cosmossdk.io/x/bank => ./../../x/bank
@@ -190,5 +191,4 @@ replace (
 	cosmossdk.io/x/protocolpool => ./../../x/protocolpool
 	cosmossdk.io/x/slashing => ./../../x/slashing
 	cosmossdk.io/x/staking => ./../../x/staking
-	cosmossdk.io/x/tx => ./../../x/tx
 )

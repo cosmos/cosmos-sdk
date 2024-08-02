@@ -4,8 +4,14 @@ buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88e
 buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2/go.mod h1:HqcXMSa5qnNuakaMUo+hWhF51mKbcrZxGl9Vp5EeJXc=
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-cosmossdk.io/collections v0.4.0 h1:PFmwj2W8szgpD5nOd8GWH6AbYNi1f2J6akWXJ7P5t9s=
-cosmossdk.io/collections v0.4.0/go.mod h1:oa5lUING2dP+gdDquow+QjlF45eL1t4TJDypgGd+tv0=
+cosmossdk.io/api v0.7.3-0.20240802064046-23fac2f1b8ab h1:5S0CQY6mp6iPjgnKu2FnZJ1RKr0DorhQHJF1Ymh4/jo=
+cosmossdk.io/api v0.7.3-0.20240802064046-23fac2f1b8ab/go.mod h1:vV3VnJvvK4IWkc1deNEJ1OAL028zw1WPezwKKDAsq60=
+cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab h1:E/IWad76v1Nc4Atswaccpt7twJ0VwHkbY94/PhmZfTo=
+cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab/go.mod h1:Or+5eVAo1aiS1DnPK90eQykGc59LGBWtqwBoJcxXTmw=
+cosmossdk.io/core v0.12.1-0.20240802064046-23fac2f1b8ab h1:ToOHw5+SaXQG3Bz8Mouh5o9G5hHTtqnbgHA6FpaBkUA=
+cosmossdk.io/core v0.12.1-0.20240802064046-23fac2f1b8ab/go.mod h1:sLzMwAW9HW+Nm3GltUVHDRSRZbcXLy9+2AYgi2bwt/s=
+cosmossdk.io/core/testing v0.0.0-20240802064046-23fac2f1b8ab h1:EfbhG9OKheOqL0Gok7oP4Ynt1FMVdeZDsjvAh1x0f4w=
+cosmossdk.io/core/testing v0.0.0-20240802064046-23fac2f1b8ab/go.mod h1:s6VKCgPZqs+CnW+18fNQqKoQtqxZ+U9bjz9BcySgNPs=
 cosmossdk.io/depinject v1.0.0 h1:dQaTu6+O6askNXO06+jyeUAnF2/ssKwrrszP9t5q050=
 cosmossdk.io/depinject v1.0.0/go.mod h1:zxK/h3HgHoA/eJVtiSsoaRaRA2D5U4cJ5thIG4ssbB8=
 cosmossdk.io/errors v1.0.1 h1:bzu+Kcr0kS/1DuPBtUFdWjzLqyUuCiyHjyJB6srBV/0=
@@ -26,6 +32,8 @@ cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc h1:R9O9d75e0qZYUsVV0zzi+
 cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc/go.mod h1:amTTatOUV3u1PsKmNb87z6/galCxrRbz9kRdJkL0DyU=
 cosmossdk.io/store/v2 v2.0.0-20240731205446-aee9803a0af6 h1:/ffIfMKzoCVUI38t5Vq3BNW9U8exRMxK5QgS/ujn0lA=
 cosmossdk.io/store/v2 v2.0.0-20240731205446-aee9803a0af6/go.mod h1:aG3brMLcldPsdhfkdCaisGDIe+tXTNWdUDt5JYsRDl8=
+cosmossdk.io/x/tx v0.13.4-0.20240802064046-23fac2f1b8ab h1:8NdM5U/ga6R+CkoDoSFTbBaRkKREUay4oG8dc6+Dcjw=
+cosmossdk.io/x/tx v0.13.4-0.20240802064046-23fac2f1b8ab/go.mod h1:63XbbKvpPpoN1ssIVUwwuZiYKXzZ451Wxk6DBVtEUNA=
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
 github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 h1:/vQbFIOMbk2FiG/kXiLl8BRyzTWDw7gX/Hz7Dd5eDMs=

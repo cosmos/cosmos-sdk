@@ -85,6 +85,15 @@ func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUn
 
 		// consume length prefix of nested message
 		_, o := protowire.ConsumeVarint(fieldBytes)
+		if o < 0 {
+			err = fmt.Errorf("could not consume length prefix fieldBytes for nested message: %v: %w",
+				fieldMessage, protowire.ParseError(o))
+			return hasUnknownNonCriticals, err
+		} else if o > len(fieldBytes) {
+			err = fmt.Errorf("length prefix > len(fieldBytes) for nested message: %v", fieldMessage)
+			return hasUnknownNonCriticals, err
+		}
+
 		fieldBytes = fieldBytes[o:]
 
 		var err error

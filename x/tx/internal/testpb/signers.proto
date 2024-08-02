@@ -55,6 +55,41 @@ message RepeatedNestedRepeatedSigner {
   }
 }
 
+message DeeplyNestedSigner {
+  option (cosmos.msg.v1.signer) = "inner_one";
+  InnerOne inner_one            = 1;
+
+  message InnerOne {
+    option (cosmos.msg.v1.signer) = "inner_two";
+    InnerTwo inner_two            = 1;
+
+    message InnerTwo {
+      option (cosmos.msg.v1.signer) = "signer";
+      string signer                 = 1;
+    }
+  }
+}
+
+message DeeplyNestedRepeatedSigner {
+  option (cosmos.msg.v1.signer) = "inner";
+  repeated Inner inner          = 1;
+
+  message Inner {
+    option (cosmos.msg.v1.signer) = "inner";
+    repeated Inner inner          = 1;
+
+    message Inner {
+      option (cosmos.msg.v1.signer) = "inner";
+      repeated Bottom inner         = 1;
+
+      message Bottom {
+        option (cosmos.msg.v1.signer) = "signer";
+        repeated string signer        = 1;
+      }
+    }
+  }
+}
+
 message BadSigner {
   option (cosmos.msg.v1.signer) = "signer";
   bytes signer                  = 1;

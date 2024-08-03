@@ -14,6 +14,9 @@ jobs:
   golangci:
     name: golangci-lint
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mode: [no-failure, no-deprecations]
     steps:
       - uses: actions/setup-go@v3
         with:
@@ -24,3 +27,6 @@ jobs:
         with:
           # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
           version: v1.49.0
+          args: --exclude=nolintlint
+            ${{ matrix.mode == 'no-deprecations' && '--exclude=SA1019:' || '' }}
+            ${{ matrix.mode == 'no-failure' && '--issues-exit-code=0' || '' }}

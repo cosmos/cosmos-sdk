@@ -37,23 +37,47 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### API Breaking
+
+* (auth, bank) Agoric/agoric-sdk#8989 Remove deprecated lien support
+
+### Bug Fixes
+
+* (baseapp) [#338](https://github.com/agoric-labs/cosmos-sdk/pull/338) Make sure we don't execute blocks beyond the halt height. Restored from [#305](https://github.com/agoric-labs/cosmos-sdk/pull/305) but compatible with older `SIGINT`, `SIGTERM` logic
+
+## `v0.46.16-alpha.agoric.2.4` - 2024-04-19
+
 ### Improvements
 
-* (auth) [#407](https://github.com/agoric-labs/cosmos-sdk/pull/407) Configurable fee collector module account in DeductFeeDecorator.
-* (baseapp) [#415](https://github.com/agoric-labs/cosmos-sdk/pull/415) Unit tests and documentation for event history.
-* (deps) [#412](https://github.com/agoric-labs/cosmos-sdk/pull/412) Bump iavl to v0.19.7
-* (server) [#409](https://github.com/agoric-labs/cosmos-sdk/pull/409) Flag to select ABCI client type.
-* (server) [#416](https://github.com/agoric-labs/cosmos-sdk/pull/416) Config entry to select ABCI client type.
 * (server) [#419](https://github.com/agoric-labs/cosmos-sdk/pull/419) More unit tests for flag vs toml precedence for ABCI client type.
+
+## `v0.46.16-alpha.agoric.2.3` - 2024-04-17
+
+### Improvements
+
+* (baseapp) [#415](https://github.com/agoric-labs/cosmos-sdk/pull/415) Unit tests and documentation for event history.
+* (server) [#416](https://github.com/agoric-labs/cosmos-sdk/pull/416) Config entry to select ABCI client type.
+
+### Bug Fixes
+
+* (baseapp) [#415](https://github.com/agoric-labs/cosmos-sdk/pull/415) Avoid duplicates in event history.
+
+## `v0.46.16-alpha.agoric.2.2` - 2024-04-12
+
+### Improvements
+
+* (server) [#409](https://github.com/agoric-labs/cosmos-sdk/pull/409) Flag to select ABCI client type.
+* (deps) [#412](https://github.com/agoric-labs/cosmos-sdk/pull/412) Bump iavl to v0.19.7
 
 ### Bug Fixes
 
 * (baseapp) [#413](https://github.com/agoric-labs/cosmos-sdk/pull/413) Ignore events from simulated transactions
-* (baseapp) [#415](https://github.com/agoric-labs/cosmos-sdk/pull/415) Avoid duplicates in event history.
 
-### API Breaking
+## `v0.46.16-alpha.agoric.2.1` - 2024-03-08
 
-* (auth, bank) Agoric/agoric-sdk#8989 Remove deprecated lien support
+### Improvements
+
+* (auth) [#407](https://github.com/agoric-labs/cosmos-sdk/pull/407) Configurable fee collector module account in DeductFeeDecorator. (backport #407)
 
 ## `v0.46.16-alpha.agoric.2` - 2024-02-08
 
@@ -79,7 +103,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* (baseapp) [#337](https://github.com/agoric-labs/cosmos-sdk/pull/337) revert #305 which causes test failures in agoric-sdk
+* (baseapp) [#337](https://github.com/agoric-labs/cosmos-sdk/pull/337) revert [#305](https://github.com/agoric-labs/cosmos-sdk/pull/305) which causes test failures in agoric-sdk
 
 ## `v0.45.16-alpha.agoric.1` - 2023-09-22
 

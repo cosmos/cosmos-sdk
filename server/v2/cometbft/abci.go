@@ -74,6 +74,7 @@ func NewConsensus[T transaction.Tx](
 	store types.Store,
 	cfg Config,
 	txCodec transaction.Codec[T],
+	chainId string,
 ) *Consensus[T] {
 	return &Consensus[T]{
 		appName:                appName,
@@ -93,7 +94,7 @@ func NewConsensus[T transaction.Tx](
 		processProposalHandler: nil,
 		verifyVoteExt:          nil,
 		extendVote:             nil,
-		chainID:                "",
+		chainID:                chainId,
 		indexedEvents:          indexedEvents,
 		initialHeight:          0,
 	}
@@ -315,7 +316,7 @@ func (c *Consensus[T]) PrepareProposal(
 	}
 
 	decodedTxs := make([]T, len(req.Txs))
-	for _, tx := range req.Txs {
+	for i, tx := range req.Txs {
 		decTx, err := c.txCodec.Decode(tx)
 		if err != nil {
 			// TODO: vote extension meta data as a custom type to avoid possibly accepting invalid txs
@@ -323,7 +324,8 @@ func (c *Consensus[T]) PrepareProposal(
 			c.logger.Error("failed to decode tx", "err", err)
 			continue
 		}
-		decodedTxs = append(decodedTxs, decTx)
+
+		decodedTxs[i] = decTx
 	}
 
 	ciCtx := contextWithCometInfo(ctx, comet.Info{

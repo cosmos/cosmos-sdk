@@ -2298,13 +2298,16 @@ func TestBaseApp_PreBlocker(t *testing.T) {
 	wasHookCalled := false
 	app.SetPreBlocker(func(ctx sdk.Context, req *abci.FinalizeBlockRequest) error {
 		wasHookCalled = true
+		ctx.EventManager().EmitEvent(sdk.NewEvent("preblockertest", sdk.NewAttribute("height", fmt.Sprintf("%d", req.Height))))
 		return nil
 	})
 	app.Seal()
 
-	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
+	res, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
 	require.NoError(t, err)
 	require.Equal(t, true, wasHookCalled)
+	require.Len(t, res.Events, 1)
+	require.Equal(t, "preblockertest", res.Events[0].Type)
 
 	// Now try erroring
 	app = baseapp.NewBaseApp(name, logger, db, nil)

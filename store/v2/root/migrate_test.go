@@ -43,7 +43,7 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 		prefixDB := dbm.NewPrefixDB(mdb, []byte(storeKey))
 		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, nopLog, iavl.DefaultConfig())
 	}
-	orgSC, err := commitment.NewCommitStore(multiTrees, mdb, nil, testLog)
+	orgSC, err := commitment.NewCommitStore(multiTrees, nil, mdb, testLog)
 	s.Require().NoError(err)
 
 	// apply changeset against the original store
@@ -70,7 +70,7 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 	for _, storeKey := range storeKeys {
 		multiTrees1[storeKey] = iavl.NewIavlTree(dbm.NewMemDB(), nopLog, iavl.DefaultConfig())
 	}
-	sc, err := commitment.NewCommitStore(multiTrees1, dbm.NewMemDB(), nil, testLog)
+	sc, err := commitment.NewCommitStore(multiTrees1, nil, dbm.NewMemDB(), testLog)
 	s.Require().NoError(err)
 
 	snapshotsStore, err := snapshots.NewStore(s.T().TempDir())

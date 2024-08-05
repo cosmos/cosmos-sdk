@@ -109,12 +109,12 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 	}
 	ss = storage.NewStorageStore(ssDb, opts.Logger)
 
+	metadata := commitment.NewMetadataStore(opts.SCRawDB)
+	latestVersion, err := metadata.GetLatestVersion()
+	if err != nil {
+		return nil, err
+	}
 	if len(opts.StoreKeys) == 0 {
-		metadata := commitment.NewMetadataStore(opts.SCRawDB)
-		latestVersion, err := metadata.GetLatestVersion()
-		if err != nil {
-			return nil, err
-		}
 		lastCommitInfo, err := metadata.GetCommitInfo(latestVersion)
 		if err != nil {
 			return nil, err
@@ -125,6 +125,10 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		for _, si := range lastCommitInfo.StoreInfos {
 			opts.StoreKeys = append(opts.StoreKeys, string(si.Name))
 		}
+	}
+	removedStoreKeys, err := metadata.GetRemovedStoreKeys(latestVersion)
+	if err != nil {
+		return nil, err
 	}
 
 	newTreeFn := func(key string) (commitment.Tree, error) {
@@ -150,7 +154,15 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		}
 		trees[key] = tree
 	}
-	sc, err = commitment.NewCommitStore(trees, opts.SCRawDB, newTreeFn, opts.Logger)
+	oldTrees := make(map[string]commitment.Tree, len(opts.StoreKeys))
+	for _, key := range removedStoreKeys {
+		tree, err := newTreeFn(string(key))
+		if err != nil {
+			return nil, err
+		}
+		oldTrees[string(key)] = tree
+	}
+	sc, err = commitment.NewCommitStore(trees, oldTrees, opts.SCRawDB, opts.Logger)
 	if err != nil {
 		return nil, err
 	}

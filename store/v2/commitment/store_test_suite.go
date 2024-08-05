@@ -27,12 +27,12 @@ const (
 type CommitStoreTestSuite struct {
 	suite.Suite
 
-	NewStore func(db corestore.KVStoreWithBatch, storeKeys []string, logger corelog.Logger) (*CommitStore, error)
+	NewStore func(db corestore.KVStoreWithBatch, storeKeys, oldStoreKeys []string, logger corelog.Logger) (*CommitStore, error)
 }
 
 func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 	storeKeys := []string{storeKey1, storeKey2}
-	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, coretesting.NewNopLogger())
+	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, nil, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 
 	latestVersion := uint64(10)
@@ -66,7 +66,7 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 		},
 	}
 
-	targetStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, coretesting.NewNopLogger())
+	targetStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, nil, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 
 	chunks := make(chan io.ReadCloser, kvCount*int(latestVersion))
@@ -128,7 +128,7 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 func (s *CommitStoreTestSuite) TestStore_LoadVersion() {
 	storeKeys := []string{storeKey1, storeKey2}
 	mdb := dbm.NewMemDB()
-	commitStore, err := s.NewStore(mdb, storeKeys, coretesting.NewNopLogger())
+	commitStore, err := s.NewStore(mdb, storeKeys, nil, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 
 	latestVersion := uint64(10)
@@ -149,7 +149,7 @@ func (s *CommitStoreTestSuite) TestStore_LoadVersion() {
 	}
 
 	// load the store with the latest version
-	targetStore, err := s.NewStore(mdb, storeKeys, coretesting.NewNopLogger())
+	targetStore, err := s.NewStore(mdb, storeKeys, nil, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 	err = targetStore.LoadVersion(latestVersion)
 	s.Require().NoError(err)
@@ -162,7 +162,7 @@ func (s *CommitStoreTestSuite) TestStore_LoadVersion() {
 
 	// rollback to a previous version
 	rollbackVersion := uint64(5)
-	rollbackStore, err := s.NewStore(mdb, storeKeys, coretesting.NewNopLogger())
+	rollbackStore, err := s.NewStore(mdb, storeKeys, nil, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 	err = rollbackStore.LoadVersion(rollbackVersion)
 	s.Require().NoError(err)
@@ -183,7 +183,7 @@ func (s *CommitStoreTestSuite) TestStore_LoadVersion() {
 func (s *CommitStoreTestSuite) TestStore_Pruning() {
 	storeKeys := []string{storeKey1, storeKey2}
 	pruneOpts := store.NewPruningOptionWithCustom(10, 5)
-	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, coretesting.NewNopLogger())
+	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, nil, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 
 	latestVersion := uint64(100)
@@ -224,7 +224,7 @@ func (s *CommitStoreTestSuite) TestStore_Pruning() {
 func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 	storeKeys := []string{storeKey1, storeKey2, storeKey3}
 	commitDB := dbm.NewMemDB()
-	commitStore, err := s.NewStore(commitDB, storeKeys, coretesting.NewNopLogger())
+	commitStore, err := s.NewStore(commitDB, storeKeys, nil, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 
 	latestVersion := uint64(10)
@@ -251,7 +251,8 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 	}
 	newStoreKeys := []string{storeKey1, storeKey2, storeKey3, "newStore1", "newStore2"}
 	realStoreKeys := []string{storeKey1, storeKey2, "newStore1", "newStore2"}
-	commitStore, err = s.NewStore(commitDB, newStoreKeys, coretesting.NewNopLogger())
+	oldStoreKeys := []string{storeKey1, storeKey3}
+	commitStore, err = s.NewStore(commitDB, newStoreKeys, oldStoreKeys, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 	err = commitStore.LoadVersionAndUpgrade(latestVersion, upgrades)
 	s.Require().NoError(err)
@@ -266,7 +267,7 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 			}
 		}
 	}
-	// GetProof should fail for the new stores
+	// GetProof should fail for the new stores against the old versions
 	for _, storeKey := range []string{"newStore1", "newStore2"} {
 		for i := uint64(1); i <= latestVersion; i++ {
 			for j := 0; j < kvCount; j++ {
@@ -323,7 +324,8 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 		Deleted: []string{storeKey2},
 	}
 	newRealStoreKeys := []string{storeKey1, storeKey3, "newStore1", "newStore2"}
-	commitStore, err = s.NewStore(commitDB, newStoreKeys, coretesting.NewNopLogger())
+	oldStoreKeys = []string{storeKey2, storeKey3}
+	commitStore, err = s.NewStore(commitDB, newStoreKeys, oldStoreKeys, coretesting.NewNopLogger())
 	s.Require().NoError(err)
 	err = commitStore.LoadVersionAndUpgrade(2*latestVersion-1, upgrades)
 	s.Require().NoError(err)
@@ -360,7 +362,7 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 			}
 		}
 	}
-	// GetProof should not faile for the newly removed store
+	// GetProof should not fail for the newly removed store
 	for i := latestVersion + 1; i < latestVersion*2; i++ {
 		for j := 0; j < kvCount; j++ {
 			proof, err := commitStore.GetProof([]byte(storeKey2), i, []byte(fmt.Sprintf("key-%d-%d", i, j)))

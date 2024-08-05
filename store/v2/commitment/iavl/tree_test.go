@@ -16,7 +16,7 @@ import (
 
 func TestCommitterSuite(t *testing.T) {
 	s := &commitment.CommitStoreTestSuite{
-		NewStore: func(db corestore.KVStoreWithBatch, storeKeys []string, logger corelog.Logger) (*commitment.CommitStore, error) {
+		NewStore: func(db corestore.KVStoreWithBatch, storeKeys, oldStoreKeys []string, logger corelog.Logger) (*commitment.CommitStore, error) {
 			multiTrees := make(map[string]commitment.Tree)
 			cfg := DefaultConfig()
 			mountTreeFn := func(storeKey string) (commitment.Tree, error) {
@@ -26,8 +26,12 @@ func TestCommitterSuite(t *testing.T) {
 			for _, storeKey := range storeKeys {
 				multiTrees[storeKey], _ = mountTreeFn(storeKey)
 			}
+			oldTrees := make(map[string]commitment.Tree)
+			for _, storeKey := range oldStoreKeys {
+				oldTrees[storeKey], _ = mountTreeFn(storeKey)
+			}
 
-			return commitment.NewCommitStore(multiTrees, db, mountTreeFn, logger)
+			return commitment.NewCommitStore(multiTrees, oldTrees, db, logger)
 		},
 	}
 

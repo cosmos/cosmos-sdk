@@ -125,18 +125,11 @@ func (m *MetadataStore) flushRemovedStoreKeys(version uint64, storeKeys []string
 	return batch.Write()
 }
 
-func (m *MetadataStore) deleteRemovedStoreKeys(version uint64, removeStore func(storeKey []byte, version uint64) error) (err error) {
-	batch := m.kv.NewBatch()
-	defer func() {
-		if berr := batch.Close(); berr != nil {
-			err = berr
-		}
-	}()
-
+func (m *MetadataStore) GetRemovedStoreKeys(version uint64) (storeKeys [][]byte, err error) {
 	end := encoding.BuildPrefixWithVersion(removedStoreKeyPrefix, version+1)
 	iter, err := m.kv.Iterator([]byte(removedStoreKeyPrefix), end)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer func() {
 		if ierr := iter.Close(); ierr != nil {
@@ -146,10 +139,31 @@ func (m *MetadataStore) deleteRemovedStoreKeys(version uint64, removeStore func(
 
 	for ; iter.Valid(); iter.Next() {
 		storeKey := iter.Key()[len(end):]
+		storeKeys = append(storeKeys, storeKey)
+	}
+	return storeKeys, nil
+}
+
+func (m *MetadataStore) deleteRemovedStoreKeys(version uint64, removeStore func(storeKey []byte, version uint64) error) (err error) {
+	removedStoreKeys, err := m.GetRemovedStoreKeys(version)
+	if err != nil {
+		return err
+	}
+	if len(removedStoreKeys) == 0 {
+		return nil
+	}
+
+	batch := m.kv.NewBatch()
+	defer func() {
+		if berr := batch.Close(); berr != nil {
+			err = berr
+		}
+	}()
+	for _, storeKey := range removedStoreKeys {
 		if err := removeStore(storeKey, version); err != nil {
 			return err
 		}
-		if err := batch.Delete(iter.Key()); err != nil {
+		if err := batch.Delete(storeKey); err != nil {
 			return err
 		}
 	}

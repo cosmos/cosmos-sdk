@@ -6,7 +6,6 @@ import (
 	"io"
 	"math"
 	"sort"
-	"sync"
 
 	protoio "github.com/cosmos/gogoproto/io"
 	"golang.org/x/exp/maps"
@@ -41,19 +40,18 @@ type CommitStore struct {
 	logger     corelog.Logger
 	metadata   *MetadataStore
 	multiTrees map[string]Tree
-
-	mountTreeFn MountTreeFn
-	oldTrees    sync.Map
+	// oldTrees is a map of store keys to old trees that have been deleted or renamed.
+	// It is used to get the proof for the old store keys.
+	oldTrees map[string]Tree
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, mountTreeFn MountTreeFn, logger corelog.Logger) (*CommitStore, error) {
+func NewCommitStore(trees, oldTrees map[string]Tree, db corestore.KVStoreWithBatch, logger corelog.Logger) (*CommitStore, error) {
 	return &CommitStore{
-		logger:      logger,
-		multiTrees:  trees,
-		metadata:    NewMetadataStore(db),
-		mountTreeFn: mountTreeFn,
-		oldTrees:    sync.Map{},
+		logger:     logger,
+		multiTrees: trees,
+		oldTrees:   oldTrees,
+		metadata:   NewMetadataStore(db),
 	}, nil
 }
 
@@ -253,18 +251,9 @@ func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]p
 	rawStoreKey := conv.UnsafeBytesToStr(storeKey)
 	tree, ok := c.multiTrees[rawStoreKey]
 	if !ok {
-		// If the tree is not found, it means the store is an old store that has been
-		// deleted or renamed. We should use the old tree to get the proof.
-		v, ok := c.oldTrees.Load(rawStoreKey)
+		tree, ok = c.oldTrees[rawStoreKey]
 		if !ok {
-			var err error
-			tree, err = c.mountTreeFn(rawStoreKey)
-			if err != nil {
-				return nil, fmt.Errorf("store %s not found: %w", storeKey, err)
-			}
-			c.oldTrees.Store(rawStoreKey, tree)
-		} else {
-			tree = v.(Tree)
+			return nil, fmt.Errorf("store %s not found", rawStoreKey)
 		}
 	}
 
@@ -326,14 +315,12 @@ func (c *CommitStore) Prune(version uint64) error {
 
 func (c *CommitStore) pruneRemovedStoreKeys(version uint64) error {
 	clearKVStore := func(storeKey []byte, version uint64) (err error) {
-		tree, err := c.mountTreeFn(string(storeKey))
-		if err != nil {
-			return err
+		tree, ok := c.oldTrees[string(storeKey)]
+		if !ok {
+			return fmt.Errorf("store %s not found in oldTrees", storeKey)
 		}
-
 		return tree.Prune(version)
 	}
-
 	return c.metadata.deleteRemovedStoreKeys(version, clearKVStore)
 }
 

@@ -42,7 +42,7 @@ func (s *PruningManagerTestSuite) SetupTest() {
 		prefixDB := dbm.NewPrefixDB(mdb, []byte(storeKey))
 		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, nopLog, iavl.DefaultConfig())
 	}
-	s.sc, err = commitment.NewCommitStore(multiTrees, mdb, nil, nopLog)
+	s.sc, err = commitment.NewCommitStore(multiTrees, nil, mdb, nopLog)
 	s.Require().NoError(err)
 
 	sqliteDB, err := sqlite.New(s.T().TempDir())

@@ -47,7 +47,7 @@ func (s *UpgradeStoreTestSuite) SetupTest() {
 	sqliteDB, err := sqlite.New(s.T().TempDir())
 	s.Require().NoError(err)
 	ss := storage.NewStorageStore(sqliteDB, testLog)
-	sc, err := commitment.NewCommitStore(multiTrees, s.commitDB, newTreeFn, testLog)
+	sc, err := commitment.NewCommitStore(multiTrees, nil, s.commitDB, testLog)
 	s.Require().NoError(err)
 	pm := pruning.NewManager(sc, ss, nil, nil)
 	s.rootStore, err = New(testLog, ss, sc, pm, nil, nil)
@@ -74,6 +74,7 @@ func (s *UpgradeStoreTestSuite) loadWithUpgrades(upgrades *corestore.StoreUpgrad
 
 	// create a new commitment store
 	multiTrees := make(map[string]commitment.Tree)
+	oldTrees := make(map[string]commitment.Tree)
 	newTreeFn := func(storeKey string) (commitment.Tree, error) {
 		prefixDB := dbm.NewPrefixDB(s.commitDB, []byte(storeKey))
 		return iavl.NewIavlTree(prefixDB, nopLog, iavl.DefaultConfig()), nil
@@ -84,8 +85,11 @@ func (s *UpgradeStoreTestSuite) loadWithUpgrades(upgrades *corestore.StoreUpgrad
 	for _, added := range upgrades.Added {
 		multiTrees[added], _ = newTreeFn(added)
 	}
+	for _, deleted := range upgrades.Deleted {
+		oldTrees[deleted], _ = newTreeFn(deleted)
+	}
 
-	sc, err := commitment.NewCommitStore(multiTrees, s.commitDB, newTreeFn, testLog)
+	sc, err := commitment.NewCommitStore(multiTrees, oldTrees, s.commitDB, testLog)
 	s.Require().NoError(err)
 	pm := pruning.NewManager(sc, s.rootStore.GetStateStorage().(store.Pruner), nil, nil)
 	s.rootStore, err = New(testLog, s.rootStore.GetStateStorage(), sc, pm, nil, nil)

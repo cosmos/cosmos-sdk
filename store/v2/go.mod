@@ -8,6 +8,7 @@ require (
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
 	cosmossdk.io/log v1.3.1
 	github.com/cockroachdb/pebble v1.1.0
+	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/gogoproto v1.5.0
 	github.com/cosmos/iavl v1.2.1-0.20240725141113-7adc688cf179
 	github.com/cosmos/ics23/go v0.10.0

@@ -331,10 +331,10 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 		nil,
 		nil,
 		func(ctx context.Context, sender []byte, msg, msgResp implementation.ProtoMsg) error {
-			return fmt.Errorf("cannot execute in query context")
+			return errors.New("cannot execute in query context")
 		},
 		func(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
-			return nil, fmt.Errorf("cannot execute in query context")
+			return nil, errors.New("cannot execute in query context")
 		},
 		k.queryModule,
 	)

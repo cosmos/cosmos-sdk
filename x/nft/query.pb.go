@@ -618,7 +618,7 @@ func (m *QuerySupplyByQueryStringResponse) GetAmount() uint64 {
 	return 0
 }
 
-// QueryNFTstRequest is the request type for the Query/NFTs RPC method
+// QueryNFTsRequest is the request type for the Query/NFTs RPC method
 type QueryNFTsRequest struct {
 	// class_id associated with the nft
 	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
@@ -1333,7 +1333,7 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Balance queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
 	Balance(ctx context.Context, in *QueryBalanceRequest, opts ...grpc.CallOption) (*QueryBalanceResponse, error)
-	// BalancebyQueryString queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
+	// BalanceByQueryString queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
 	BalanceByQueryString(ctx context.Context, in *QueryBalanceByQueryStringRequest, opts ...grpc.CallOption) (*QueryBalanceByQueryStringResponse, error)
 	// Owner queries the owner of the NFT based on its class and id, same as ownerOf in ERC721
 	Owner(ctx context.Context, in *QueryOwnerRequest, opts ...grpc.CallOption) (*QueryOwnerResponse, error)
@@ -1478,7 +1478,7 @@ func (c *queryClient) Classes(ctx context.Context, in *QueryClassesRequest, opts
 type QueryServer interface {
 	// Balance queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
 	Balance(context.Context, *QueryBalanceRequest) (*QueryBalanceResponse, error)
-	// BalancebyQueryString queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
+	// BalanceByQueryString queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
 	BalanceByQueryString(context.Context, *QueryBalanceByQueryStringRequest) (*QueryBalanceByQueryStringResponse, error)
 	// Owner queries the owner of the NFT based on its class and id, same as ownerOf in ERC721
 	Owner(context.Context, *QueryOwnerRequest) (*QueryOwnerResponse, error)

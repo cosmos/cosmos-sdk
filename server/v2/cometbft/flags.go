@@ -1,27 +1,16 @@
 package cometbft
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
 
-const (
-	FlagQuery   = "query"
-	FlagType    = "type"
-	FlagOrderBy = "order_by"
+	"github.com/spf13/cobra"
 )
 
+// Query flags
 const (
-	FlagWithComet     = "with-comet"
-	FlagAddress       = "address"
-	FlagTransport     = "transport"
-	FlagTraceStore    = "trace-store"
-	FlagCPUProfile    = "cpu-profile"
-	FlagMinGasPrices  = "minimum-gas-prices"
-	FlagQueryGasLimit = "query-gas-limit"
-	FlagHaltHeight    = "halt-height"
-	FlagHaltTime      = "halt-time"
-	FlagTrace         = "trace"
-)
-
-const (
+	FlagQuery        = "query"
+	FlagType         = "type"
+	FlagOrderBy      = "order_by"
 	FlagChainID      = "chain-id"
 	FlagNode         = "node"
 	FlagGRPC         = "grpc-addr"
@@ -30,6 +19,8 @@ const (
 	FlagPage         = "page"
 	FlagLimit        = "limit"
 	FlagOutput       = "output"
+	TypeHash         = "hash"
+	TypeHeight       = "height"
 )
 
 // List of supported output formats
@@ -50,3 +41,20 @@ func AddQueryFlagsToCmd(cmd *cobra.Command) {
 	// hence the flag should not be required for those commands
 	_ = cmd.MarkFlagRequired(FlagChainID)
 }
+
+// start flags are prefixed with the server name
+// as the config in prefixed with the server name
+// this allows viper to properly bind the flags
+func prefix(f string) string {
+	return fmt.Sprintf("%s.%s", ServerName, f)
+}
+
+// Server flags
+var (
+	Standalone     = prefix("standalone")
+	FlagAddress    = prefix("address")
+	FlagTransport  = prefix("transport")
+	FlagHaltHeight = prefix("halt-height")
+	FlagHaltTime   = prefix("halt-time")
+	FlagTrace      = prefix("trace")
+)

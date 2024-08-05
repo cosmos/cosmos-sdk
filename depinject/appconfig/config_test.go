@@ -235,7 +235,6 @@ func ProvideModuleC(key StoreKey, b KeeperB) KeeperC {
 
 type keeperC struct {
 	key StoreKey
-	b   KeeperB
 }
 
 type KeeperC interface {

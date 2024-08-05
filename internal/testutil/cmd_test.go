@@ -1,6 +1,7 @@
 package testutil_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -21,7 +22,7 @@ func TestSetArgsWithOriginalMethod(t *testing.T) {
 				c, _ := cmd.Flags().GetBool("c")
 				switch {
 				case a && b, a && c, b && c:
-					return fmt.Errorf("a,b,c only one could be true")
+					return errors.New("a,b,c only one could be true")
 				}
 				return nil
 			},

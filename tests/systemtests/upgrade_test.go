@@ -69,7 +69,7 @@ func TestChainUpgrade(t *testing.T) {
 	t.Logf("current_height: %d\n", sut.currentHeight)
 	raw = cli.CustomQuery("q", "gov", "proposal", proposalID)
 	proposalStatus := gjson.Get(raw, "proposal.status").String()
-	require.Equal(t, "3", proposalStatus, raw) // PROPOSAL_STATUS_PASSED
+	require.Equal(t, "PROPOSAL_STATUS_PASSED", proposalStatus, raw) // PROPOSAL_STATUS_PASSED
 
 	t.Log("waiting for upgrade info")
 	sut.AwaitUpgradeInfo(t)
@@ -106,8 +106,8 @@ func FetchExecutable(t *testing.T, version string) string {
 	}
 	destFile := cacheFile
 	t.Log("+++ version not in cache, downloading from docker image")
-	runShellCmd(t, "docker", "pull", "ghcr.io/cosmos/simapp:"+version)
-	runShellCmd(t, "docker", "create", "--name=ci_temp", "ghcr.io/cosmos/simapp:"+version)
-	runShellCmd(t, "docker", "cp", "ci_temp:/usr/bin/simd", destFile)
+	MustRunShellCmd(t, "docker", "pull", "ghcr.io/cosmos/simapp:"+version)
+	MustRunShellCmd(t, "docker", "create", "--name=ci_temp", "ghcr.io/cosmos/simapp:"+version)
+	MustRunShellCmd(t, "docker", "cp", "ci_temp:/usr/bin/simd", destFile)
 	return destFile
 }

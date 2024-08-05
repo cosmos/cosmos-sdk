@@ -22,7 +22,6 @@ import (
 )
 
 var (
-	_ module.HasName             = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 
@@ -58,6 +57,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak nft.AccountKeeper, b
 func (AppModule) IsAppModule() {}
 
 // Name returns the nft module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return nft.ModuleName
 }

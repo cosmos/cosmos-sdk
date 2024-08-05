@@ -11,7 +11,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	coreheader "cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/metrics"
@@ -27,7 +27,7 @@ var _ store.RootStore = (*Store)(nil)
 // backend may or may not support multiple store keys and is implementation
 // dependent.
 type Store struct {
-	logger         log.Logger
+	logger         corelog.Logger
 	initialVersion uint64
 
 	// stateStorage reflects the state storage backend
@@ -65,7 +65,7 @@ type Store struct {
 //
 // NOTE: The migration manager is optional and can be nil if no migration is required.
 func New(
-	logger log.Logger,
+	logger corelog.Logger,
 	ss store.VersionedDatabase,
 	sc store.Committer,
 	pm *pruning.Manager,
@@ -73,7 +73,7 @@ func New(
 	m metrics.StoreMetrics,
 ) (store.RootStore, error) {
 	return &Store{
-		logger:           logger.With("module", "root_store"),
+		logger:           logger,
 		initialVersion:   1,
 		stateStorage:     ss,
 		stateCommitment:  sc,
@@ -466,4 +466,8 @@ func (s *Store) commitSC() error {
 	}
 
 	return nil
+}
+
+func (s *Store) Prune(version uint64) error {
+	return s.pruningManager.Prune(version)
 }

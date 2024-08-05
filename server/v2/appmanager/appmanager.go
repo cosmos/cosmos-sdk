@@ -4,20 +4,31 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	appmanager "cosmossdk.io/core/app"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/server/v2/appmanager/store"
 )
 
+// Store defines the underlying storage behavior needed by AppManager.
+type Store interface {
+	// StateLatest returns a readonly view over the latest
+	// committed state of the store. Alongside the version
+	// associated with it.
+	StateLatest() (uint64, corestore.ReaderMap, error)
+
+	// StateAt returns a readonly view over the provided
+	// state. Must error when the version does not exist.
+	StateAt(version uint64) (corestore.ReaderMap, error)
+}
+
 // AppManager is a coordinator for all things related to an application
-// TODO: add exportGenesis function
 type AppManager[T transaction.Tx] struct {
 	config Config
 
-	db store.Store
+	db Store
 
 	initGenesis   InitGenesis
 	exportGenesis ExportGenesis
@@ -36,11 +47,11 @@ func (a AppManager[T]) InitGenesis(
 		return nil, nil, fmt.Errorf("unable to get latest state: %w", err)
 	}
 	if v != 0 { // TODO: genesis state may be > 0, we need to set version on store
-		return nil, nil, fmt.Errorf("cannot init genesis on non-zero state")
+		return nil, nil, errors.New("cannot init genesis on non-zero state")
 	}
 
 	var genTxs []T
-	zeroState, err = a.stf.RunWithCtx(ctx, zeroState, func(ctx context.Context) error {
+	genesisState, err := a.stf.RunWithCtx(ctx, zeroState, func(ctx context.Context) error {
 		return a.initGenesis(ctx, bytes.NewBuffer(initGenesisJSON), func(jsonTx json.RawMessage) error {
 			genTx, err := txDecoder.DecodeJSON(jsonTx)
 			if err != nil {
@@ -55,16 +66,26 @@ func (a AppManager[T]) InitGenesis(
 	}
 	// run block
 	// TODO: in an ideal world, genesis state is simply an initial state being applied
-	// unaware of what that state means in relation to every other, so here we can
-	// chain genesis
+	// unaware of what that state means in relation to every other
 	blockRequest.Txs = genTxs
 
-	blockresponse, genesisState, err := a.stf.DeliverBlock(ctx, blockRequest, zeroState)
+	blockResponse, blockZeroState, err := a.stf.DeliverBlock(ctx, blockRequest, genesisState)
 	if err != nil {
-		return blockresponse, nil, fmt.Errorf("failed to deliver block %d: %w", blockRequest.Height, err)
+		return blockResponse, nil, fmt.Errorf("failed to deliver block %d: %w", blockRequest.Height, err)
 	}
 
-	return blockresponse, genesisState, err
+	// after executing block 0, we extract the changes and apply them to the genesis state.
+	blockZeroStateChanges, err := blockZeroState.GetStateChanges()
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get block zero state changes: %w", err)
+	}
+
+	err = genesisState.ApplyStateChanges(blockZeroStateChanges)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to apply block zero state changes to genesis state: %w", err)
+	}
+
+	return blockResponse, genesisState, err
 	// consensus server will need to set the version of the store
 }
 

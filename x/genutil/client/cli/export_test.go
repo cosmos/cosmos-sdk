@@ -3,7 +3,7 @@ package cli_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -164,7 +164,7 @@ func (e *mockExporter) Export(
 	modulesToExport []string,
 ) (types.ExportedApp, error) {
 	if e.Err == nil && isZeroExportedApp(e.ExportApp) {
-		panic(fmt.Errorf("(*mockExporter).Export called without setting e.ExportApp or e.Err"))
+		panic(errors.New("(*mockExporter).Export called without setting e.ExportApp or e.Err"))
 	}
 	e.WasCalled = true
 
@@ -311,7 +311,7 @@ func TestExportCLI(t *testing.T) {
 		t.Parallel()
 
 		e := new(mockExporter)
-		e.Err = fmt.Errorf("whoopsie")
+		e.Err = errors.New("whoopsie")
 
 		sys := NewExportSystem(t, e.Export)
 		_ = sys.MustRun(t, "init", "some_moniker")

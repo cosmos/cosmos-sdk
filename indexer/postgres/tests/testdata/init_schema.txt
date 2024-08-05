@@ -53,3 +53,4 @@ CREATE TABLE IF NOT EXISTS "test_vote" (
 	PRIMARY KEY ("proposal", "address")
 );
 GRANT SELECT ON TABLE "test_vote" TO PUBLIC;
+

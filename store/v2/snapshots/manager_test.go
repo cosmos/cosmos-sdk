@@ -2,6 +2,7 @@ package snapshots_test
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -130,8 +131,9 @@ func TestManager_Prune(t *testing.T) {
 func TestManager_Restore(t *testing.T) {
 	store := setupStore(t)
 	target := &mockCommitSnapshotter{}
+	storageSnapshotter := &mockStorageSnapshotter{items: map[string][]byte{}}
 	extSnapshotter := newExtSnapshotter(0)
-	manager := snapshots.NewManager(store, opts, target, &mockStorageSnapshotter{items: map[string][]byte{}}, nil, coretesting.NewNopLogger())
+	manager := snapshots.NewManager(store, opts, target, storageSnapshotter, nil, coretesting.NewNopLogger())
 	err := manager.RegisterExtensions(extSnapshotter)
 	require.NoError(t, err)
 
@@ -204,6 +206,14 @@ func TestManager_Restore(t *testing.T) {
 	assert.Equal(t, expectItems, target.items)
 	assert.Equal(t, 10, len(extSnapshotter.state))
 
+	// make sure storageSnapshotter items are properly stored
+	for i, item := range target.items {
+		key := fmt.Sprintf("key-%d", i)
+		chunk := storageSnapshotter.items[key]
+		require.NotNil(t, chunk)
+		require.Equal(t, item, chunk)
+	}
+
 	// The snapshot is saved in local snapshot store
 	snapshots, err := store.List()
 	require.NoError(t, err)
@@ -266,10 +276,12 @@ func TestSnapshot_Take_Restore(t *testing.T) {
 	commitSnapshotter := &mockCommitSnapshotter{
 		items: items,
 	}
+	storageSnapshotter := &mockStorageSnapshotter{items: map[string][]byte{}}
+
 	extSnapshotter := newExtSnapshotter(10)
 
 	expectChunks := snapshotItems(items, extSnapshotter)
-	manager := snapshots.NewManager(store, opts, commitSnapshotter, &mockStorageSnapshotter{}, nil, coretesting.NewNopLogger())
+	manager := snapshots.NewManager(store, opts, commitSnapshotter, storageSnapshotter, nil, coretesting.NewNopLogger())
 	err := manager.RegisterExtensions(extSnapshotter)
 	require.NoError(t, err)
 

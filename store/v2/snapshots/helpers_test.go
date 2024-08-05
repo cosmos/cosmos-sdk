@@ -134,6 +134,9 @@ func (m *mockCommitSnapshotter) Restore(
 			break
 		}
 		m.items = append(m.items, payload.Payload)
+		// mock feeding chStorage to check if the loop closed properly
+		//
+		// ref: https://github.com/cosmos/cosmos-sdk/pull/21106
 		chStorage <- &corestore.StateChanges{
 			Actor: []byte("actor"),
 			StateChanges: []corestore.KVPair{

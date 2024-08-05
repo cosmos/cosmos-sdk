@@ -30,8 +30,10 @@ import (
 	"cosmossdk.io/server/v2/stf"
 )
 
-var _ appmodulev2.AppModule = appModule[transaction.Tx]{}
-var _ hasServicesV1 = appModule[transaction.Tx]{}
+var (
+	_ appmodulev2.AppModule = appModule[transaction.Tx]{}
+	_ hasServicesV1         = appModule[transaction.Tx]{}
+)
 
 type appModule[T transaction.Tx] struct {
 	app *App[T]

@@ -12,7 +12,7 @@ require (
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // main
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/tx v0.13.4-0.20240802064046-23fac2f1b8ab // main
+	cosmossdk.io/x/tx v0.13.4 // main
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cometbft/cometbft v1.0.0-rc1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5

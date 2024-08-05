@@ -22,8 +22,9 @@ type MockStore struct {
 	Commiter storev2.Committer
 }
 
-func NewMockStorage(logger log.Logger) storev2.VersionedDatabase {
-	storageDB, _ := sqlite.New("dir")
+func NewMockStorage(logger log.Logger, dir string) storev2.VersionedDatabase {
+	storageDB, err := sqlite.New(dir)
+	fmt.Println("storageDB", storageDB, err)
 	ss := storage.NewStorageStore(storageDB, logger)
 	return ss
 }
@@ -72,8 +73,9 @@ func (s *MockStore) Commit(changeset *corestore.Changeset) (corestore.Hash, erro
 		return []byte{}, err
 	}
 
-	s.Commiter.Commit(v+1)
-	return []byte{}, nil
+	commitInfo, err := s.Commiter.Commit(v+1)
+	fmt.Println("commitInfo", commitInfo, err)
+	return []byte{}, err
 }
 
 func (s *MockStore) StateAt(version uint64) (corestore.ReaderMap, error) {

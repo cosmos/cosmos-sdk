@@ -256,6 +256,7 @@ func (c *Consensus[T]) validateFinalizeBlockHeight(req *abci.FinalizeBlockReques
 	}
 
 	lastBlockHeight, _, err := c.store.StateLatest()
+	fmt.Println("lastBlockHeight", lastBlockHeight)
 	if err != nil {
 		return err
 	}
@@ -291,6 +292,7 @@ func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.Consen
 	}
 
 	res, err := c.app.Query(ctx, latestVersion, &consensus.QueryParamsRequest{})
+	fmt.Println("c.app.Query", res, err)
 	if err != nil {
 		return nil, err
 	}

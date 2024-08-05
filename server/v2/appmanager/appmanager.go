@@ -129,6 +129,9 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request transa
 		if err != nil {
 			return nil, err
 		}
+		fmt.Println("queryState", queryState)
+		fmt.Println("a.config.QueryGasLimit", a.config.QueryGasLimit)
+		fmt.Println("request", request, request.String())
 		return a.stf.Query(ctx, queryState, a.config.QueryGasLimit, request)
 	}
 

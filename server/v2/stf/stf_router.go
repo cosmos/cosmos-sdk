@@ -169,7 +169,9 @@ func merge(src, dst gogoproto.Message) {
 
 func (r Router) InvokeUntyped(ctx context.Context, req gogoproto.Message) (res gogoproto.Message, err error) {
 	typeName := msgTypeURL(req)
+	fmt.Println("typeName", typeName)
 	handler, exists := r.handlers[typeName]
+	fmt.Println("handler", exists)
 	if !exists {
 		return nil, fmt.Errorf("%w: %s", ErrNoHandler, typeName)
 	}

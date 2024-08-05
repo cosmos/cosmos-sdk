@@ -9,9 +9,7 @@ import (
 
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	"github.com/hashicorp/consul/sdk/freeport"
-
-	// this is where we get our pgx database driver from
-	_ "github.com/jackc/pgx/v5/stdlib"
+	_ "github.com/jackc/pgx/v5/stdlib" // this is where we get our pgx database driver from
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/golden"
 

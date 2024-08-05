@@ -32,13 +32,29 @@ In case of any error in updating the file, no output is written.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var configPath string
 			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			configType := confix.AppConfigType
+			isClient, _ := cmd.Flags().GetBool(confix.ClientConfigType)
+
+			if isClient {
+				configType = confix.ClientConfigType
+			}
+
 			switch {
 			case len(args) > 1:
 				configPath = args[1]
 			case clientCtx.HomeDir != "":
-				configPath = filepath.Join(clientCtx.HomeDir, "config", "app.toml")
+				suffix := "app.toml"
+				if isClient {
+					suffix = "client.toml"
+				}
+				configPath = filepath.Join(clientCtx.HomeDir, "config", suffix)
 			default:
 				return errors.New("must provide a path to the app.toml or client.toml")
+			}
+
+			if strings.HasSuffix(configPath, "client.toml") && !isClient {
+				return errors.New("app.toml file expected, got client.toml, use --client flag to migrate client.toml")
 			}
 
 			targetVersion := args[0]
@@ -62,15 +78,10 @@ In case of any error in updating the file, no output is written.`,
 				outputPath = ""
 			}
 
-			configType := confix.AppConfigType
-			if ok, _ := cmd.Flags().GetBool(confix.ClientConfigType); ok {
-				configPath = strings.ReplaceAll(configPath, "app.toml", "client.toml") // for the case we are using the home dir of client ctx
-				configType = confix.ClientConfigType
-			} else if strings.HasSuffix(configPath, "client.toml") {
-				return errors.New("app.toml file expected, got client.toml, use --client flag to migrate client.toml")
-			}
+			// get transformation steps and formatDoc in which plan need to be applied
+			steps, formatDoc := plan(rawFile, targetVersion, configType)
 
-			if err := confix.Upgrade(ctx, plan(rawFile, targetVersion, configType), configPath, outputPath, FlagSkipValidate); err != nil {
+			if err := confix.Upgrade(ctx, steps, formatDoc, configPath, outputPath, FlagSkipValidate); err != nil {
 				return fmt.Errorf("failed to migrate config: %w", err)
 			}
 

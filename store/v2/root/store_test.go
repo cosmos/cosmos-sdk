@@ -630,7 +630,7 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 			return false
 		}
 		// wait for async pruning process to finish
-		s.Require().Eventually(checkErr, 2*time.Second, 100*time.Millisecond, "expected error when loading height: %d", v)
+		s.Require().Eventually(checkErr, 5*time.Second, 100*time.Millisecond, "expected error when loading height: %d", v)
 	}
 }
 

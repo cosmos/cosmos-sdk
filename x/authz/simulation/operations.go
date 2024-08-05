@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"time"
 
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	corecontext "cosmossdk.io/core/context"
@@ -14,7 +16,6 @@ import (
 	"cosmossdk.io/x/authz/keeper"
 	banktype "cosmossdk.io/x/bank/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -101,7 +102,7 @@ func SimulateMsgGrant(
 	_ keeper.Keeper,
 ) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+		r *rand.Rand, app simtypes.AppEntrypoint, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		granter, _ := simtypes.RandomAcc(r, accs)
 		grantee, _ := simtypes.RandomAcc(r, accs)
@@ -182,7 +183,7 @@ func SimulateMsgRevoke(
 	k keeper.Keeper,
 ) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+		r *rand.Rand, app simtypes.AppEntrypoint, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		var granterAddr, granteeAddr sdk.AccAddress
 		var grant authz.Grant
@@ -260,10 +261,10 @@ func SimulateMsgExec(
 	ak authz.AccountKeeper,
 	bk authz.BankKeeper,
 	k keeper.Keeper,
-	unpacker cdctypes.AnyUnpacker,
+	unpacker gogoprotoany.AnyUnpacker,
 ) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+		r *rand.Rand, app simtypes.AppEntrypoint, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		var granterAddr sdk.AccAddress
 		var granteeAddr sdk.AccAddress

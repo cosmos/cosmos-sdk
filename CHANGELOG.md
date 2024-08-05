@@ -42,6 +42,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Features
 
+* (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
 * (tests) [#20013](https://github.com/cosmos/cosmos-sdk/pull/20013) Introduce system tests to run multi node local testnet in CI
 * (runtime) [#19953](https://github.com/cosmos/cosmos-sdk/pull/19953) Implement `core/transaction.Service` in runtime.
 * (client) [#19905](https://github.com/cosmos/cosmos-sdk/pull/19905) Add grpc client config to `client.toml`.
@@ -61,6 +62,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (client) [#19870](https://github.com/cosmos/cosmos-sdk/pull/19870) Add new query command `wait-tx`. Alias `event-query-tx-for` to `wait-tx` for backward compatibility.
 * (crypto/keyring) [#20212](https://github.com/cosmos/cosmos-sdk/pull/20212) Expose the db keyring used in the keystore.
 * (genutil) [#19971](https://github.com/cosmos/cosmos-sdk/pull/19971) Allow manually setting the consensus key type in genesis
+* (client/tx) [#20870](https://github.com/cosmos/cosmos-sdk/pull/20870) Add `timeout-timestamp` field for tx body defines time based timeout.Add `WithTimeoutTimestamp` to tx factory. Increased gas cost for processing newly added timeout timestamp field in tx body.
 
 ### Improvements
 
@@ -106,6 +108,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Bug Fixes
 
+* (baseapp) [#21159](https://github.com/cosmos/cosmos-sdk/pull/21159) Return PreBlocker events in FinalizeBlockResponse.
 * (baseapp) [#18727](https://github.com/cosmos/cosmos-sdk/pull/18727) Ensure that `BaseApp.Init` firstly returns any errors from a nil commit multistore instead of panicking on nil dereferencing and before sealing the app.
 * (client) [#18622](https://github.com/cosmos/cosmos-sdk/pull/18622) Fixed a potential under/overflow from `uint64->int64` when computing gas fees as a LegacyDec.
 * (client/keys) [#18562](https://github.com/cosmos/cosmos-sdk/pull/18562) `keys delete` won't terminate when a key is not found.
@@ -117,9 +120,10 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * [#19851](https://github.com/cosmos/cosmos-sdk/pull/19851) Fix some places in which we call Remove inside a Walk (x/staking and x/gov).
 * [#20939](https://github.com/cosmos/cosmos-sdk/pull/20939) Fix collection reverse iterator to include `pagination.key` in the result.
 * (client/grpc) [#20969](https://github.com/cosmos/cosmos-sdk/pull/20969) Fix `node.NewQueryServer` method not setting `cfg`.
+* (testutil/integration) [#21006](https://github.com/cosmos/cosmos-sdk/pull/21006) Fix `NewIntegrationApp` method not writing default genesis to state
 
 ### API Breaking Changes
-
+* (sims) [#21039](https://github.com/cosmos/cosmos-sdk/pull/21039): Remove Baseapp from sims by a new interface `simtypes.AppEntrypoint`
 * (client) [#20976](https://github.com/cosmos/cosmos-sdk/pull/20976) Simplified command initialization by removing unnecessary parameters such as `txConfig` and `addressCodec`.
   * Remove parameter `txConfig` from `genutilcli.Commands`,`genutilcli.CommandsWithCustomMigrationMap`,`genutilcli.GenTxCmd`.
   * Remove parameter `addressCodec` from `genutilcli.GenTxCmd`,`genutilcli.AddGenesisAccountCmd`,`stakingcli.BuildCreateValidatorMsg`.
@@ -198,12 +202,13 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Client Breaking Changes
 
-* (runtime) [#19040](https://github.com/cosmos/cosmos-sdk/pull/19040) Simplify app config implementation and deprecate `/cosmos/app/v1alpha1/config` query.
+* (runtime) [#19040](https://github.com/cosmos/cosmos-sdk/pull/19040) Simplify app config implementation and deprecate `/cosmos/app/v1alpha1/config` query. 
 
 ### CLI Breaking Changes
 
 * (perf)[#20490](https://github.com/cosmos/cosmos-sdk/pull/20490) Sims: Replace runsim command with Go stdlib testing. CLI: `Commit` default true, `Lean`, `SimulateEveryOperation`, `PrintAllInvariants`, `DBBackend` params removed
 * (server) [#18303](https://github.com/cosmos/cosmos-sdk/pull/18303) `appd export` has moved with other genesis commands, use `appd genesis export` instead.
+* (client/tx) [#20870](https://github.com/cosmos/cosmos-sdk/pull/20870) Removed `timeout-height` flag replace with `timeout-timestamp` flag for a time based timeout.
 
 ### Deprecated
 

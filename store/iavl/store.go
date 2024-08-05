@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/iavl"
 	ics23 "github.com/cosmos/ics23/go"
 
-	"cosmossdk.io/core/log"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/internal/kv"
@@ -37,14 +36,14 @@ var (
 // Store Implements types.KVStore and CommitKVStore.
 type Store struct {
 	tree    Tree
-	logger  log.Logger
+	logger  types.Logger
 	metrics metrics.StoreMetrics
 }
 
 // LoadStore returns an IAVL Store as a CommitKVStore. Internally, it will load the
 // store's version (id) from the provided DB. An error is returned if the version
 // fails to load, or if called with a positive version on an empty tree.
-func LoadStore(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics) (types.CommitKVStore, error) {
+func LoadStore(db dbm.DB, logger types.Logger, key types.StoreKey, id types.CommitID, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics) (types.CommitKVStore, error) {
 	return LoadStoreWithInitialVersion(db, logger, key, id, 0, cacheSize, disableFastNode, metrics)
 }
 
@@ -52,7 +51,7 @@ func LoadStore(db dbm.DB, logger log.Logger, key types.StoreKey, id types.Commit
 // to the one given. Internally, it will load the store's version (id) from the
 // provided DB. An error is returned if the version fails to load, or if called with a positive
 // version on an empty tree.
-func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, initialVersion uint64, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics) (types.CommitKVStore, error) {
+func LoadStoreWithInitialVersion(db dbm.DB, logger types.Logger, key types.StoreKey, id types.CommitID, initialVersion uint64, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics) (types.CommitKVStore, error) {
 	tree := iavl.NewMutableTree(wrapper.NewDBWrapper(db), cacheSize, disableFastNode, logger, iavl.InitialVersionOption(initialVersion), iavl.AsyncPruningOption(true))
 
 	isUpgradeable, err := tree.IsUpgradeable()
@@ -179,12 +178,12 @@ func (st *Store) GetAllVersions() []int {
 	return st.tree.AvailableVersions()
 }
 
-// Implements Store.
+// GetStoreType implements Store.
 func (st *Store) GetStoreType() types.StoreType {
 	return types.StoreTypeIAVL
 }
 
-// Implements Store.
+// CacheWrap implements Store.
 func (st *Store) CacheWrap() types.CacheWrap {
 	return cachekv.NewStore(st)
 }
@@ -194,7 +193,7 @@ func (st *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Ca
 	return cachekv.NewStore(tracekv.NewStore(st, w, tc))
 }
 
-// Implements types.KVStore.
+// Set implements types.KVStore.
 func (st *Store) Set(key, value []byte) {
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
@@ -204,7 +203,7 @@ func (st *Store) Set(key, value []byte) {
 	}
 }
 
-// Implements types.KVStore.
+// Get implements types.KVStore.
 func (st *Store) Get(key []byte) []byte {
 	defer st.metrics.MeasureSince("store", "iavl", "get")
 	value, err := st.tree.Get(key)
@@ -214,7 +213,7 @@ func (st *Store) Get(key []byte) []byte {
 	return value
 }
 
-// Implements types.KVStore.
+// Has implements types.KVStore.
 func (st *Store) Has(key []byte) (exists bool) {
 	defer st.metrics.MeasureSince("store", "iavl", "has")
 	has, err := st.tree.Has(key)
@@ -224,7 +223,7 @@ func (st *Store) Has(key []byte) (exists bool) {
 	return has
 }
 
-// Implements types.KVStore.
+// Delete implements types.KVStore.
 func (st *Store) Delete(key []byte) {
 	defer st.metrics.MeasureSince("store", "iavl", "delete")
 	_, _, err := st.tree.Remove(key)
@@ -246,7 +245,7 @@ func (st *Store) LoadVersionForOverwriting(targetVersion int64) error {
 	return st.tree.LoadVersionForOverwriting(targetVersion)
 }
 
-// Implements types.KVStore.
+// Iterator implements types.KVStore.
 func (st *Store) Iterator(start, end []byte) types.Iterator {
 	iterator, err := st.tree.Iterator(start, end, true)
 	if err != nil {
@@ -255,7 +254,7 @@ func (st *Store) Iterator(start, end []byte) types.Iterator {
 	return iterator
 }
 
-// Implements types.KVStore.
+// ReverseIterator implements types.KVStore.
 func (st *Store) ReverseIterator(start, end []byte) types.Iterator {
 	iterator, err := st.tree.Iterator(start, end, false)
 	if err != nil {
@@ -270,7 +269,7 @@ func (st *Store) SetInitialVersion(version int64) {
 	st.tree.SetInitialVersion(uint64(version))
 }
 
-// Exports the IAVL store at the given version, returning an iavl.Exporter for the tree.
+// Export exports the IAVL store at the given version, returning an iavl.Exporter for the tree.
 func (st *Store) Export(version int64) (*iavl.Exporter, error) {
 	istore, err := st.GetImmutable(version)
 	if err != nil {

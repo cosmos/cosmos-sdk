@@ -29831,7 +29831,7 @@ paths:
   /cosmos/nft/v1beta1/balance:
     get:
       summary: >-
-        BalancebyQueryString queries the number of NFTs of a given class owned
+        BalanceByQueryString queries the number of NFTs of a given class owned
         by the owner, same as balanceOf in ERC721
       operationId: BalanceByQueryString
       responses:

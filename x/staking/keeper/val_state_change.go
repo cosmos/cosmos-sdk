@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 
@@ -172,7 +173,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) ([]appmod
 		}
 
 		if validator.Jailed {
-			return nil, fmt.Errorf("should never retrieve a jailed validator from the power store")
+			return nil, errors.New("should never retrieve a jailed validator from the power store")
 		}
 
 		// if we get to a zero-power validator (which we don't bond),
@@ -198,7 +199,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) ([]appmod
 		case validator.IsBonded():
 			// no state change
 		default:
-			return nil, fmt.Errorf("unexpected validator status")
+			return nil, errors.New("unexpected validator status")
 		}
 
 		// fetch the old power bytes

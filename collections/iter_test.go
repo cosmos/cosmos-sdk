@@ -1,6 +1,7 @@
 package collections
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -188,7 +189,7 @@ func TestWalk(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	sentinelErr := fmt.Errorf("sentinel error")
+	sentinelErr := errors.New("sentinel error")
 	err = m.Walk(ctx, nil, func(key, value uint64) (stop bool, err error) {
 		require.LessOrEqual(t, key, uint64(3)) // asserts that after the number three we stop
 		if key == 3 {

@@ -8,11 +8,10 @@ import (
 	"golang.org/x/exp/slices"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/legacy"
-	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 )
@@ -36,9 +35,8 @@ type App[T transaction.Tx] struct {
 	db                 Store
 
 	// app configuration
-	logger    log.Logger
-	config    *runtimev2.Module
-	appConfig *appv1alpha1.Config
+	logger log.Logger
+	config *runtimev2.Module
 
 	// modules configuration
 	storeKeys          []string
@@ -46,9 +44,14 @@ type App[T transaction.Tx] struct {
 	amino              legacy.Amino
 	moduleManager      *MM[T]
 
-	// GRPCQueryDecoders maps gRPC method name to a function that decodes the request
+	// GRPCMethodsToMessageMap maps gRPC method name to a function that decodes the request
 	// bytes into a gogoproto.Message, which then can be passed to appmanager.
-	GRPCQueryDecoders map[string]func(requestBytes []byte) (gogoproto.Message, error)
+	GRPCMethodsToMessageMap map[string]func() gogoproto.Message
+}
+
+// Name returns the app name.
+func (a *App[T]) Name() string {
+	return a.config.AppName
 }
 
 // Logger returns the app logger.
@@ -115,6 +118,6 @@ func (a *App[T]) GetAppManager() *appmanager.AppManager[T] {
 	return a.AppManager
 }
 
-func (a *App[T]) GetGRPCQueryDecoders() map[string]func(requestBytes []byte) (gogoproto.Message, error) {
-	return a.GRPCQueryDecoders
+func (a *App[T]) GetGPRCMethodsToMessageMap() map[string]func() gogoproto.Message {
+	return a.GRPCMethodsToMessageMap
 }

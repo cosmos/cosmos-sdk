@@ -28,14 +28,9 @@ import (
 // Upgrade is a convenience wrapper for calls to LoadConfig, ApplyFixes, and
 // CheckValid. If the caller requires more control over the behavior of the
 // Upgrade, call those functions directly.
-func Upgrade(ctx context.Context, plan transform.Plan, configPath, outputPath string, skipValidate bool) error {
+func Upgrade(ctx context.Context, plan transform.Plan, doc *tomledit.Document, configPath, outputPath string, skipValidate bool) error {
 	if configPath == "" {
 		return errors.New("empty input configuration path")
-	}
-
-	doc, err := LoadConfig(configPath)
-	if err != nil {
-		return fmt.Errorf("loading config: %w", err)
 	}
 
 	// transforms doc and reports whether it succeeded.
@@ -48,14 +43,18 @@ func Upgrade(ctx context.Context, plan transform.Plan, configPath, outputPath st
 		return fmt.Errorf("formatting config: %w", err)
 	}
 
+	// ignore validation for serverv2 by checking any default field found in doc
+	isServerV2 := doc.First(strings.Split("store.options.ss-pruning-option", ".")...) != nil
+
 	// allow to skip validation
-	if !skipValidate {
+	if !skipValidate && !isServerV2 {
 		// verify that file is valid after applying fixes
 		if err := CheckValid(configPath, buf.Bytes()); err != nil {
 			return fmt.Errorf("updated config is invalid: %w", err)
 		}
 	}
 
+	var err error
 	if outputPath == "" {
 		_, err = os.Stdout.Write(buf.Bytes())
 	} else {

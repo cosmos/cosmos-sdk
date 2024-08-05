@@ -66,7 +66,7 @@ index-events = []
 # IavlCacheSize set the size of the iavl tree cache (in number of nodes).
 iavl-cache-size = 781250
 
-# IAVLDisableFastNode enables or disables the fast node feature of IAVL.
+# IAVLDisableFastNode enables or disables the fast node feature of IAVL. 
 # Default is false.
 iavl-disable-fastnode = false
 
@@ -126,7 +126,7 @@ datadog-hostname = ""
 [api]
 
 # Enable defines if the API server should be enabled.
-enable = true
+enable = false
 
 # Swagger defines if swagger documentation should automatically be registered.
 swagger = false
@@ -217,7 +217,7 @@ stop-node-on-err = true
 [mempool]
 
 # Setting max-txs to 0 will allow for a unbounded amount of transactions in the mempool.
-# Setting max_txs to negative 1 (-1) will disable transactions from being inserted into the mempool.
+# Setting max_txs to negative 1 (-1) will disable transactions from being inserted into the mempool (no-op mempool).
 # Setting max_txs to a positive number (> 0) will limit the number of transactions in the mempool, by the specified amount.
 #
 # Note, this configuration only applies to SDK built-in app-side mempool

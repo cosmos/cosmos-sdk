@@ -2,6 +2,7 @@ package genutil
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -60,7 +61,7 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic, keyT
 	nodeID string, valPubKey cryptotypes.PubKey, err error,
 ) {
 	if len(mnemonic) > 0 && !bip39.IsMnemonicValid(mnemonic) {
-		return "", nil, fmt.Errorf("invalid mnemonic")
+		return "", nil, errors.New("invalid mnemonic")
 	}
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
@@ -103,7 +104,7 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic, keyT
 			privKey = tmed25519.GenPrivKeyFromSecret([]byte(mnemonic))
 		case "bls12_381":
 			// TODO: need to add support for getting from mnemonic in Comet.
-			return "", nil, fmt.Errorf("BLS key type does not support mnemonic")
+			return "", nil, errors.New("BLS key type does not support mnemonic")
 		default:
 			privKey = tmed25519.GenPrivKeyFromSecret([]byte(mnemonic))
 		}

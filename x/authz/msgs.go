@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,8 +16,8 @@ var (
 	_ sdk.Msg = &MsgRevoke{}
 	_ sdk.Msg = &MsgExec{}
 
-	_ cdctypes.UnpackInterfacesMessage = &MsgGrant{}
-	_ cdctypes.UnpackInterfacesMessage = &MsgExec{}
+	_ gogoprotoany.UnpackInterfacesMessage = &MsgGrant{}
+	_ gogoprotoany.UnpackInterfacesMessage = &MsgExec{}
 )
 
 // NewMsgGrant creates a new MsgGrant
@@ -44,7 +45,7 @@ func (msg *MsgGrant) SetAuthorization(a Authorization) error {
 	if !ok {
 		return sdkerrors.ErrPackAny.Wrapf("can't proto marshal %T", m)
 	}
-	any, err := cdctypes.NewAnyWithValue(m)
+	any, err := gogoprotoany.NewAnyWithCacheWithValue(m)
 	if err != nil {
 		return err
 	}
@@ -53,7 +54,7 @@ func (msg *MsgGrant) SetAuthorization(a Authorization) error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (msg MsgExec) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+func (msg MsgExec) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	for _, x := range msg.Msgs {
 		var msgExecAuthorized sdk.Msg
 		err := unpacker.UnpackAny(x, &msgExecAuthorized)
@@ -66,7 +67,7 @@ func (msg MsgExec) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (msg MsgGrant) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+func (msg MsgGrant) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	return msg.Grant.UnpackInterfaces(unpacker)
 }
 

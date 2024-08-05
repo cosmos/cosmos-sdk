@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
@@ -147,6 +148,7 @@ type Router struct {
 }
 
 func (r Router) CanInvoke(_ context.Context, typeURL string) error {
+	typeURL = strings.TrimPrefix(typeURL, "/")
 	_, exists := r.handlers[typeURL]
 	if !exists {
 		return fmt.Errorf("%w: %s", ErrNoHandler, typeURL)

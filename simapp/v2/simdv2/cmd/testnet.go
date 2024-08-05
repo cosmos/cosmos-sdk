@@ -337,11 +337,15 @@ func initTestnetFiles[T transaction.Tx](
 			return err
 		}
 
+		cometAppTomlCfg := cometbft.DefaultAppTomlConfig()
+		cometAppTomlCfg.MinGasPrices = args.minGasPrices
+
 		// Write server config
 		cometServer := cometbft.New[T](
 			&genericTxDecoder[T]{clientCtx.TxConfig},
 			cometbft.ServerOptions[T]{},
 			cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig),
+			cometbft.OverwriteDefaultAppTomlConfig(cometAppTomlCfg),
 		)
 		grpcServer := grpc.New[T](grpc.OverwriteDefaultConfig(grpcConfig))
 		storeServer := store.New[T]()

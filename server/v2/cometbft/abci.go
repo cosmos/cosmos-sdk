@@ -18,6 +18,7 @@ import (
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/cometbft/client/grpc/cmtservice"
 	"cosmossdk.io/server/v2/cometbft/handlers"
@@ -27,6 +28,7 @@ import (
 	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
 	consensustypes "cosmossdk.io/x/consensus/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
@@ -123,6 +125,14 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 		return nil, err
 	}
 
+	// check tx fee with validator's minimum-gas-price config
+	if err := c.checkTxFeeWithMinGasPrices(decodedTx); err != nil {
+		return &abciproto.CheckTxResponse{
+			Code: 1,
+			Log:  err.Error(),
+		}, nil
+	}
+
 	resp, err := c.app.ValidateTx(ctx, decodedTx)
 	if err != nil {
 		return nil, err
@@ -143,6 +153,38 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 		cometResp.Log = resp.Error.Error()
 	}
 	return cometResp, nil
+}
+
+// checkTxFeeWithMinGasPrices ensure that the provided fees meet a minimum threshold for the validator,
+// if this is a CheckTx. This is only for local mempool purposes, and thus
+// is only ran on check tx.
+func (c *Consensus[T]) checkTxFeeWithMinGasPrices(tx transaction.Tx) error {
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		return errorsmod.Wrap(cometerrors.ErrTxDecode, "tx must be a feeTx")
+	}
+
+	feeCoins := feeTx.GetFee()
+	gas := feeTx.GetGas()
+
+	minGasPrices := c.cfg.GetMinGasPrices()
+	if !minGasPrices.IsZero() {
+		requiredFees := make(sdk.Coins, len(minGasPrices))
+
+		// Determine the required fees by multiplying each required minimum gas
+		// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
+		glDec := sdkmath.LegacyNewDec(int64(gas))
+		for i, gp := range minGasPrices {
+			fee := gp.Amount.Mul(glDec)
+			requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
+		}
+
+		if !feeCoins.IsAnyGTE(requiredFees) {
+			return errorsmod.Wrapf(cometerrors.ErrInsufficientFee, "insufficient fees; got: %s required: %s", feeCoins, requiredFees)
+		}
+	}
+
+	return nil
 }
 
 // Info implements types.Application.

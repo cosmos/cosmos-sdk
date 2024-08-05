@@ -35,11 +35,12 @@ type v2KeyChangesMap map[string][]string
 
 // list all the keys which are need to be modified in v2
 var v2KeyChanges = v2KeyChangesMap{
-	"min-retain-blocks": []string{"comet.min-retain-blocks"},
-	"index-events":      []string{"comet.index-events"},
-	"halt-height":       []string{"comet.halt-height"},
-	"halt-time":         []string{"comet.halt-time"},
-	"app-db-backend":    []string{"store.app-db-backend"},
+	"minimum-gas-prices": []string{"comet.minimum-gas-prices"},
+	"min-retain-blocks":  []string{"comet.min-retain-blocks"},
+	"index-events":       []string{"comet.index-events"},
+	"halt-height":        []string{"comet.halt-height"},
+	"halt-time":          []string{"comet.halt-time"},
+	"app-db-backend":     []string{"store.app-db-backend"},
 	"pruning-keep-recent": []string{
 		"store.options.ss-pruning-option.keep-recent",
 		"store.options.sc-pruning-option.keep-recent",

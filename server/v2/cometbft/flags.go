@@ -51,10 +51,11 @@ func prefix(f string) string {
 
 // Server flags
 var (
-	Standalone     = prefix("standalone")
-	FlagAddress    = prefix("address")
-	FlagTransport  = prefix("transport")
-	FlagHaltHeight = prefix("halt-height")
-	FlagHaltTime   = prefix("halt-time")
-	FlagTrace      = prefix("trace")
+	Standalone       = prefix("standalone")
+	FlagAddress      = prefix("address")
+	FlagTransport    = prefix("transport")
+	FlagHaltHeight   = prefix("halt-height")
+	FlagHaltTime     = prefix("halt-time")
+	FlagTrace        = prefix("trace")
+	FlagMinGasPrices = prefix("minimum-gas-prices")
 )

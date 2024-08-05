@@ -2787,8 +2787,11 @@ type GasConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// validate_tx_gas_limit is the gas limit for validating a tx.
 	ValidateTxGasLimit uint64 `protobuf:"varint,1,opt,name=validate_tx_gas_limit,json=validateTxGasLimit,proto3" json:"validate_tx_gas_limit,omitempty"`
-	QueryGasLimit      uint64 `protobuf:"varint,2,opt,name=query_gas_limit,json=queryGasLimit,proto3" json:"query_gas_limit,omitempty"`
+	// query_gas_limit is the gas limit for querying.
+	QueryGasLimit uint64 `protobuf:"varint,2,opt,name=query_gas_limit,json=queryGasLimit,proto3" json:"query_gas_limit,omitempty"`
+	// simulation_gas_limit is the gas limit for simulation.
 	SimulationGasLimit uint64 `protobuf:"varint,3,opt,name=simulation_gas_limit,json=simulationGasLimit,proto3" json:"simulation_gas_limit,omitempty"`
 }
 

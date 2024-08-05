@@ -4,11 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"cosmossdk.io/core/appmodule/v2"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/core/appmodule/v2"
 )
 
 func TestRouter(t *testing.T) {
@@ -51,7 +52,6 @@ func TestRouter(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, expectedResp, gotResp)
 	})
-
 }
 
 func TestMerge(t *testing.T) {

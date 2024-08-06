@@ -602,10 +602,10 @@ jobs:
         run: |
           COSMOS_BUILD_OPTIONS=v2 make install
           ./scripts/init-simapp-v2.sh
-          simdv2 start &
+          simd start &
           SIMD_PID=$!
           cnt=0
-          while ! simdv2 query block --type=height 5; do
+          while ! simd query block --type=height 5; do
             cnt=$((cnt + 1))
             if [ $cnt -gt 30 ]; then
               kill -9 "$SIMD_PID"

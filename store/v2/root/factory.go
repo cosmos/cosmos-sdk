@@ -55,11 +55,11 @@ func DefaultStoreOptions() Options {
 		SCType: 0,
 		SCPruningOption: &store.PruningOption{
 			KeepRecent: 2,
-			Interval:   1,
+			Interval:   100,
 		},
 		SSPruningOption: &store.PruningOption{
 			KeepRecent: 2,
-			Interval:   1,
+			Interval:   100,
 		},
 		IavlConfig: &iavl.Config{
 			CacheSize:              100_000,

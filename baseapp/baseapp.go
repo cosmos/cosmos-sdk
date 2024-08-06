@@ -704,11 +704,12 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	return ctx.WithMultiStore(msCache), msCache
 }
 
-func (app *BaseApp) preBlock(req *abci.FinalizeBlockRequest) error {
+func (app *BaseApp) preBlock(req *abci.FinalizeBlockRequest) ([]abci.Event, error) {
+	var events []abci.Event
 	if app.preBlocker != nil {
 		ctx := app.finalizeBlockState.Context()
 		if err := app.preBlocker(ctx, req); err != nil {
-			return err
+			return nil, err
 		}
 		// ConsensusParams can change in preblocker, so we need to
 		// write the consensus parameters in store to context
@@ -717,8 +718,9 @@ func (app *BaseApp) preBlock(req *abci.FinalizeBlockRequest) error {
 		gasMeter := app.getBlockGasMeter(ctx)
 		ctx = ctx.WithBlockGasMeter(gasMeter)
 		app.finalizeBlockState.SetContext(ctx)
+		events = ctx.EventManager().ABCIEvents()
 	}
-	return nil
+	return events, nil
 }
 
 func (app *BaseApp) beginBlock(_ *abci.FinalizeBlockRequest) (sdk.BeginBlock, error) {

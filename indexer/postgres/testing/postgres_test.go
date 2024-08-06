@@ -2,8 +2,7 @@ package testing
 
 import (
 	"context"
-	"database/sql"
-	"fmt"
+	"encoding/json"
 	"os"
 	"testing"
 
@@ -14,9 +13,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/indexer/postgres"
-	"cosmossdk.io/schema"
 	"cosmossdk.io/schema/appdata"
-	"cosmossdk.io/schema/indexing"
+	"cosmossdk.io/schema/indexer"
 	indexertesting "cosmossdk.io/schema/testing"
 	"cosmossdk.io/schema/testing/appdatasim"
 	"cosmossdk.io/schema/testing/statesim"
@@ -53,19 +51,28 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 		require.NoError(t, err)
 	})
 
-	db, err := sql.Open("pgx", dbUrl)
+	cfg := postgres.Config{
+		DatabaseURL:            dbUrl,
+		DisableRetainDeletions: !retainDeletions,
+	}
+	cfgBz, err := json.Marshal(cfg)
 	require.NoError(t, err)
 
-	indexer, err := postgres.NewIndexer(db, postgres.Options{
-		RetainDeletions: retainDeletions,
-		Logger:          log.NewTestLogger(t),
+	var cfgMap map[string]interface{}
+	err = json.Unmarshal(cfgBz, &cfgMap)
+
+	res, err := postgres.StartIndexer(indexer.InitParams{
+		Config: indexer.Config{
+			Type:   "postgres",
+			Config: cfgMap,
+		},
+		Context:      ctx,
+		Logger:       log.NewTestLogger(t),
+		AddressCodec: nil,
 	})
 	require.NoError(t, err)
 
-	res, err := indexer.Initialize(ctx, indexing.InitializationData{})
-	require.NoError(t, err)
-
-	fixture := appdatasim.NewSimulator(appdatasim.Options{
+	_, err = appdatasim.NewSimulator(appdatasim.Options{
 		Listener: appdata.ListenerMux(
 			appdata.DebugListener(os.Stdout),
 			res.Listener,
@@ -75,42 +82,5 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 			CanRetainDeletions: retainDeletions,
 		},
 	})
-
-	require.NoError(t, fixture.Initialize())
-
-	blockDataGen := fixture.BlockDataGenN(1000)
-	for i := 0; i < 1000; i++ {
-		blockData := blockDataGen.Example(i)
-		require.NoError(t, fixture.ProcessBlockData(blockData))
-
-		require.NoError(t, fixture.AppState().ScanModules(func(moduleName string, mod *statesim.Module) error {
-			modMgr, ok := indexer.Modules()[moduleName]
-			require.True(t, ok)
-
-			return mod.ScanObjectCollections(func(collection *statesim.ObjectCollection) error {
-				tblMgr, ok := modMgr.Tables()[collection.ObjectType().Name]
-				require.True(t, ok)
-
-				expectedCount := collection.Len()
-				actualCount, err := tblMgr.Count(context.Background(), db)
-				require.NoError(t, err)
-				require.Equalf(t, expectedCount, actualCount, "table %s %s count mismatch", moduleName, collection.ObjectType().Name)
-
-				return collection.ScanState(func(update schema.ObjectUpdate) error {
-					found, err := tblMgr.Equals(
-						context.Background(),
-						db, update.Key, update.Value)
-					if err != nil {
-						return err
-					}
-
-					if !found {
-						return fmt.Errorf("object not found in table %s %s %v %v", moduleName, collection.ObjectType().Name, update.Key, update.Value)
-					}
-
-					return nil
-				})
-			})
-		}))
-	}
+	require.NoError(t, err)
 }

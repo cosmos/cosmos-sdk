@@ -3,10 +3,12 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 
 	"cosmossdk.io/schema/appdata"
+	"cosmossdk.io/schema/indexer"
 )
 
 type Config struct {
@@ -22,9 +24,19 @@ type Config struct {
 
 type SqlLogger = func(msg, sql string, params ...interface{})
 
-func StartIndexer(ctx context.Context, logger SqlLogger, config Config) (appdata.Listener, error) {
+func StartIndexer(params indexer.InitParams) (indexer.InitResult, error) {
+	config, err := decodeConfig(params.Config.Config)
+	if err != nil {
+		return indexer.InitResult{}, err
+	}
+
+	ctx := params.Context
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	if config.DatabaseURL == "" {
-		return appdata.Listener{}, errors.New("missing database URL")
+		return indexer.InitResult{}, errors.New("missing database URL")
 	}
 
 	driver := config.DatabaseDriver
@@ -34,27 +46,35 @@ func StartIndexer(ctx context.Context, logger SqlLogger, config Config) (appdata
 
 	db, err := sql.Open(driver, config.DatabaseURL)
 	if err != nil {
-		return appdata.Listener{}, err
+		return indexer.InitResult{}, err
 	}
 
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
-		return appdata.Listener{}, err
+		return indexer.InitResult{}, err
 	}
 
 	// commit base schema
 	_, err = tx.Exec(BaseSQL)
 	if err != nil {
-		return appdata.Listener{}, err
+		return indexer.InitResult{}, err
 	}
 
 	moduleIndexers := map[string]*ModuleIndexer{}
+	var sqlLogger func(msg, sql string, params ...interface{})
+	if logger := params.Logger; logger != nil {
+		sqlLogger = func(msg, sql string, params ...interface{}) {
+			params = append(params, "sql", sql)
+			logger.Debug(msg, params...)
+		}
+	}
 	opts := Options{
 		DisableRetainDeletions: config.DisableRetainDeletions,
-		Logger:                 logger,
+		Logger:                 sqlLogger,
+		AddressCodec:           params.AddressCodec,
 	}
 
-	return appdata.Listener{
+	listener := appdata.Listener{
 		InitializeModuleData: func(data appdata.ModuleInitializationData) error {
 			moduleName := data.ModuleName
 			modSchema := data.Schema
@@ -68,6 +88,31 @@ func StartIndexer(ctx context.Context, logger SqlLogger, config Config) (appdata
 
 			return mm.InitializeSchema(ctx, tx)
 		},
+		OnObjectUpdate: func(data appdata.ObjectUpdateData) error {
+			module := data.ModuleName
+			mod, ok := moduleIndexers[module]
+			if !ok {
+				return fmt.Errorf("module %s not initialized", module)
+			}
+
+			for _, update := range data.Updates {
+				tm, ok := mod.tables[update.TypeName]
+				if !ok {
+					return fmt.Errorf("object type %s not found in schema for module %s", update.TypeName, module)
+				}
+
+				var err error
+				if update.Delete {
+					err = tm.Delete(ctx, tx, update.Key)
+				} else {
+					err = tm.InsertUpdate(ctx, tx, update.Key, update.Value)
+				}
+				if err != nil {
+					return err
+				}
+			}
+			return nil
+		},
 		Commit: func(data appdata.CommitData) error {
 			err = tx.Commit()
 			if err != nil {
@@ -77,5 +122,24 @@ func StartIndexer(ctx context.Context, logger SqlLogger, config Config) (appdata
 			tx, err = db.BeginTx(ctx, nil)
 			return err
 		},
+	}
+
+	return indexer.InitResult{
+		Listener: listener,
 	}, nil
+}
+
+func decodeConfig(rawConfig map[string]interface{}) (*Config, error) {
+	bz, err := json.Marshal(rawConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	var config Config
+	err = json.Unmarshal(bz, &config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &config, nil
 }

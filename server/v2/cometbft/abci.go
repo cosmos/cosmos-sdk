@@ -161,7 +161,7 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 func (c *Consensus[T]) checkTxFeeWithMinGasPrices(tx transaction.Tx) error {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
-		return errorsmod.Wrap(cometerrors.ErrTxDecode, "tx must be a feeTx")
+		return nil // don't force users to implement fee tx
 	}
 
 	feeCoins := feeTx.GetFee()

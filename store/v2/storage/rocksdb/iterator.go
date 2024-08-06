@@ -124,6 +124,10 @@ func (itr *iterator) Value() []byte {
 	return copyAndFreeSlice(itr.source.Value())
 }
 
+func (itr *iterator) Timestamp() []byte {
+	return itr.source.Timestamp().Data()
+}
+
 func (itr iterator) Next() {
 	if itr.invalid {
 		return

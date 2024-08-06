@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	comettypes "cosmossdk.io/server/v2/cometbft/types"
@@ -18,8 +19,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func NewTestApp(t *testing.T) *SimApp[transaction.Tx] {
+func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 	logger := log.NewTestLogger(t)
+
 	vp := viper.New()
 	vp.Set("store.app-db-backend", string(db.DBTypeGoLevelDB))
 	vp.Set(serverv2.FlagHome, t.TempDir())
@@ -29,14 +31,16 @@ func NewTestApp(t *testing.T) *SimApp[transaction.Tx] {
 	genesisBytes, err := json.Marshal(genesis)
 	require.NoError(t, err)
 
-	store := app.GetStore().(comettypes.Store)
-	ci, err := store.LastCommitID()
+	st := app.GetStore().(comettypes.Store)
+	ci, err := st.LastCommitID()
 	require.NoError(t, err)
 
 	bz := sha256.Sum256([]byte{})
 
-	_, _, err = app.InitGenesis(
-		context.Background(),
+	ctx := context.Background()
+
+	_, newState, err := app.InitGenesis(
+		ctx,
 		&app2.BlockRequest[transaction.Tx]{
 			0,
 			time.Now(),
@@ -52,11 +56,46 @@ func NewTestApp(t *testing.T) *SimApp[transaction.Tx] {
 	)
 	require.NoError(t, err)
 
-	return app
+	changes, err := newState.GetStateChanges()
+	require.NoError(t, err)
+
+	_, err = st.Commit(&store.Changeset{changes})
+	require.NoError(t, err)
+
+	return app, ctx
+}
+
+func MoveNextBlock(t *testing.T, app *SimApp[transaction.Tx], ctx context.Context) {
+	bz := sha256.Sum256([]byte{})
+
+	st := app.GetStore().(comettypes.Store)
+	ci, err := st.LastCommitID()
+	require.NoError(t, err)
+
+	height, err := app.LoadLatestHeight()
+	require.NoError(t, err)
+
+	_, newState, err := app.DeliverBlock(
+		ctx,
+		&app2.BlockRequest[transaction.Tx]{
+			Height:  height + 1,
+			Time:    time.Now(),
+			Hash:    bz[:],
+			AppHash: ci.Hash,
+		})
+	require.NoError(t, err)
+
+	changes, err := newState.GetStateChanges()
+	require.NoError(t, err)
+
+	_, err = st.Commit(&store.Changeset{changes})
+	require.NoError(t, err)
 }
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
-	app := NewTestApp(t)
+	app, ctx := NewTestApp(t)
+
+	MoveNextBlock(t, app, ctx)
 
 	gen, err := app.ExportAppStateAndValidators(false, nil, nil)
 	require.NoError(t, err)

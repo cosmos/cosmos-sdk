@@ -2031,7 +2031,7 @@ func TestBaseApp_PreBlocker(t *testing.T) {
 		wasHookCalled = true
 
 		ctx.EventManager().EmitEvent(sdk.NewEvent("preblockertest", sdk.NewAttribute("height", fmt.Sprintf("%d", req.Height))))
-		return nil, nil
+		return &sdk.ResponsePreBlock{ConsensusParamsChanged: false}, nil
 	})
 	app.Seal()
 

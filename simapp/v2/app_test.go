@@ -3,6 +3,8 @@ package simapp
 import (
 	"context"
 	app2 "cosmossdk.io/core/app"
+	"cosmossdk.io/core/comet"
+	context2 "cosmossdk.io/core/context"
 	serverv2 "cosmossdk.io/server/v2"
 	"crypto/sha256"
 	"encoding/json"
@@ -74,6 +76,14 @@ func MoveNextBlock(t *testing.T, app *SimApp[transaction.Tx], ctx context.Contex
 
 	height, err := app.LoadLatestHeight()
 	require.NoError(t, err)
+
+	// TODO: this is a hack to set the comet info in the context for distribution module dependency.
+	ctx = context.WithValue(ctx, context2.CometInfoKey, comet.Info{
+		Evidence:        nil,
+		ValidatorsHash:  nil,
+		ProposerAddress: nil,
+		LastCommit:      comet.CommitInfo{},
+	})
 
 	_, newState, err := app.DeliverBlock(
 		ctx,

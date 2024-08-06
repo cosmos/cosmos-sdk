@@ -790,7 +790,6 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Finaliz
 	if err != nil {
 		return nil, err
 	}
-
 	events = append(events, preblockEvents...)
 
 	beginBlock, err := app.beginBlock(req)

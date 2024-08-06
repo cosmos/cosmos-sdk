@@ -68,7 +68,7 @@ func initRootCmd[T transaction.Tx](
 		offchain.OffChain(),
 	)
 
-	storeComponent := store.New[T]()
+	storeComponent := store.New[T](newApp)
 	// wire server commands
 	if err = serverv2.AddCommands(
 		rootCmd,
@@ -79,14 +79,6 @@ func initRootCmd[T transaction.Tx](
 		storeComponent,
 	); err != nil {
 		panic(err)
-	}
-
-	// Add RestoreSnapshotCmd separately cause need appCreator
-	for _, cmd := range rootCmd.Commands() {
-		if cmd.Use == storeComponent.Name() {
-			cmd.AddCommand(storeComponent.RestoreSnapshotCmd(newApp))
-			break
-		}
 	}
 }
 

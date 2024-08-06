@@ -15,11 +15,13 @@ import (
 // StoreComponent manages store config
 // and contains prune & snapshot commands
 type StoreComponent[T transaction.Tx] struct {
-	config *Config
+	config     *Config
+	// saving appCreator for only RestoreSnapshotCmd
+	appCreator serverv2.AppCreator[T] 
 }
 
-func New[T transaction.Tx]() *StoreComponent[T] {
-	return &StoreComponent[T]{}
+func New[T transaction.Tx](appCreator serverv2.AppCreator[T]) *StoreComponent[T] {
+	return &StoreComponent[T]{appCreator: appCreator}
 }
 
 func (s *StoreComponent[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
@@ -54,6 +56,7 @@ func (s *StoreComponent[T]) CLICommands() serverv2.CLIConfig {
 			s.ListSnapshotsCmd(),
 			s.DumpArchiveCmd(),
 			s.LoadArchiveCmd(),
+			s.RestoreSnapshotCmd(s.appCreator),
 		},
 	}
 }

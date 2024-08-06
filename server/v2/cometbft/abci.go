@@ -168,20 +168,22 @@ func (c *Consensus[T]) checkTxFeeWithMinGasPrices(tx transaction.Tx) error {
 	gas := feeTx.GetGas()
 
 	minGasPrices := c.cfg.GetMinGasPrices()
-	if !minGasPrices.IsZero() {
-		requiredFees := make(sdk.Coins, len(minGasPrices))
+	if minGasPrices.IsZero() {
+		return nil
+	}
 
-		// Determine the required fees by multiplying each required minimum gas
-		// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
-		glDec := sdkmath.LegacyNewDec(int64(gas))
-		for i, gp := range minGasPrices {
-			fee := gp.Amount.Mul(glDec)
-			requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
-		}
+	requiredFees := make(sdk.Coins, len(minGasPrices))
 
-		if !feeCoins.IsAnyGTE(requiredFees) {
-			return errorsmod.Wrapf(cometerrors.ErrInsufficientFee, "insufficient fees; got: %s required: %s", feeCoins, requiredFees)
-		}
+	// Determine the required fees by multiplying each required minimum gas
+	// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
+	glDec := sdkmath.LegacyNewDec(int64(gas))
+	for i, gp := range minGasPrices {
+		fee := gp.Amount.Mul(glDec)
+		requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
+	}
+
+	if !feeCoins.IsAnyGTE(requiredFees) {
+		return errorsmod.Wrapf(cometerrors.ErrInsufficientFee, "insufficient fees; got: %s required: %s", feeCoins, requiredFees)
 	}
 
 	return nil

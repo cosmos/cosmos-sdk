@@ -155,13 +155,7 @@ func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
 	t.Helper()
 	s.Log("Start chain\n")
 	s.ChainStarted = true
-<<<<<<< HEAD
-	s.startNodesAsync(t, append([]string{"start", "--log_level=info"}, xargs...)...)
-||||||| 8b47141655
-	s.startNodesAsync(t, append([]string{"start", "--trace", "--log_level=info"}, xargs...)...)
-=======
 	s.startNodesAsync(t, append([]string{"start", "--log_level=info", "--log_no_color"}, xargs...)...)
->>>>>>> main
 
 	s.AwaitNodeUp(t, s.rpcAddr)
 

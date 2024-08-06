@@ -4,11 +4,12 @@
 
 ## 🚀 Highlights
 
-For this month patch release of the v0.50.x line, a few improvements were added to the SDK and some bugs were fixed.
+For this month patch release of the v0.50.x line, some bugs were fixed.
 
-Notably, we added and fixed the following:
+Notably, we fixed the following:
 
-* 
+* `PreBlock` events (mainly `x/upgrade`) are now emitted
+* Improve compatibility of depinject v1.0.0 with `app.yaml` / `app.json`
 
 ## 📝 Changelog
 

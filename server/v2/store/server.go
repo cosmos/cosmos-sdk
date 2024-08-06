@@ -15,9 +15,9 @@ import (
 // StoreComponent manages store config
 // and contains prune & snapshot commands
 type StoreComponent[T transaction.Tx] struct {
-	config     *Config
+	config *Config
 	// saving appCreator for only RestoreSnapshotCmd
-	appCreator serverv2.AppCreator[T] 
+	appCreator serverv2.AppCreator[T]
 }
 
 func New[T transaction.Tx](appCreator serverv2.AppCreator[T]) *StoreComponent[T] {

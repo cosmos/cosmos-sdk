@@ -68,7 +68,6 @@ func initRootCmd[T transaction.Tx](
 		offchain.OffChain(),
 	)
 
-	storeComponent := store.New[T](newApp)
 	// wire server commands
 	if err = serverv2.AddCommands(
 		rootCmd,
@@ -76,7 +75,7 @@ func initRootCmd[T transaction.Tx](
 		logger,
 		cometbft.New(&genericTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
 		grpc.New[T](),
-		storeComponent,
+		store.New[T](newApp),
 	); err != nil {
 		panic(err)
 	}

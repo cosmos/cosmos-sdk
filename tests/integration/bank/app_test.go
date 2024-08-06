@@ -118,7 +118,7 @@ func checkBalance(t *testing.T, baseApp *baseapp.BaseApp, addr sdk.AccAddress, b
 	t.Helper()
 	ctxCheck := baseApp.NewContext(true)
 	keeperBalances := keeper.GetAllBalances(ctxCheck, addr)
-	require.True(t, balances.Equal(keeperBalances))
+	require.True(t, balances.Equal(keeperBalances), balances.String(), keeperBalances.String())
 }
 
 func TestSendNotEnoughBalance(t *testing.T) {
@@ -502,7 +502,7 @@ func TestSendToNonExistingAccount(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check that the account was not created
-	acc2 := s.AccountKeeper.GetAccount(ctx, addr2)
+	acc2 := s.AccountKeeper.GetAccount(baseApp.NewContext(true), addr2)
 	require.Nil(t, acc2)
 
 	// But it does have a balance
@@ -514,7 +514,10 @@ func TestSendToNonExistingAccount(t *testing.T) {
 	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, baseApp, h, []sdk.Msg{sendMsg}, "", []uint64{0}, []uint64{0}, true, true, priv2)
 	require.NoError(t, err)
 
+	// Balance has been reduced
+	checkBalance(t, baseApp, addr2, sdk.NewCoins(), s.BankKeeper)
+
 	// Check that the account was created
-	acc2 = s.AccountKeeper.GetAccount(ctx, addr2)
+	acc2 = s.AccountKeeper.GetAccount(baseApp.NewContext(true), addr2)
 	require.NotNil(t, acc2, "account should have been created %s", addr2.String())
 }

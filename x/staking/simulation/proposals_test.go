@@ -1,13 +1,12 @@
 package simulation_test
 
 import (
+	"context"
 	"math/rand"
 	"testing"
-	"time"
 
 	"gotest.tools/v3/assert"
 
-	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/staking/simulation"
 	"cosmossdk.io/x/staking/types"
 
@@ -33,7 +32,7 @@ func TestProposalMsgs(t *testing.T) {
 	assert.Equal(t, simulation.OpWeightMsgUpdateParams, w0.AppParamsKey())
 	assert.Equal(t, simulation.DefaultWeightMsgUpdateParams, w0.DefaultWeight())
 
-	msg, err := w0.MsgSimulatorFn()(r, accounts, addressCodec)
+	msg, err := w0.MsgSimulatorFn()(context.Background(), r, accounts, addressCodec)
 	assert.NilError(t, err)
 	msgUpdateParams, ok := msg.(*types.MsgUpdateParams)
 	assert.Assert(t, ok)
@@ -42,10 +41,9 @@ func TestProposalMsgs(t *testing.T) {
 	assert.NilError(t, err)
 
 	assert.Equal(t, addr, msgUpdateParams.Authority)
-	assert.Equal(t, "GqiQWIXnku", msgUpdateParams.Params.BondDenom)
-	assert.Equal(t, uint32(213), msgUpdateParams.Params.MaxEntries)
-	assert.Equal(t, uint32(300), msgUpdateParams.Params.HistoricalEntries)
-	assert.Equal(t, uint32(539), msgUpdateParams.Params.MaxValidators)
-	assert.Equal(t, 8898194435*time.Second, msgUpdateParams.Params.UnbondingTime)
-	assert.DeepEqual(t, sdkmath.LegacyNewDecWithPrec(579040435581502128, 18), msgUpdateParams.Params.MinCommissionRate)
+	assert.Equal(t, "stake", msgUpdateParams.Params.BondDenom)
+	assert.Equal(t, uint32(905), msgUpdateParams.Params.MaxEntries)
+	assert.Equal(t, uint32(540), msgUpdateParams.Params.HistoricalEntries)
+	assert.Equal(t, uint32(151), msgUpdateParams.Params.MaxValidators)
+	assert.Equal(t, "2417694h42m25s", msgUpdateParams.Params.UnbondingTime.String())
 }

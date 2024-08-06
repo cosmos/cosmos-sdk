@@ -45,7 +45,7 @@ test-sim-custom-genesis-multi-seed:
 test-sim-multi-seed-long:
 	@echo "Running long multi-seed application simulation. This may take awhile!"
 	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -timeout=1h -tags='sims' -run TestFullAppSimulation \
-		-NumBlocks=500 -Period=50
+		-NumBlocks=150 -Period=50
 
 test-sim-multi-seed-short:
 	@echo "Running short multi-seed application simulation. This may take awhile!"

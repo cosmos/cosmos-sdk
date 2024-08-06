@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
@@ -13,6 +12,8 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func setupPeriodicAccount(t *testing.T, ctx context.Context, ss store.KVStoreService) *PeriodicLockingAccount {

@@ -10,6 +10,8 @@ import (
 	epochstypes "cosmossdk.io/x/epochs/types"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+
+	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the sample SimApp upgrade
@@ -45,6 +47,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 				accounts.StoreKey,
 				protocolpooltypes.StoreKey,
 				epochstypes.StoreKey,
+				countertypes.StoreKey, // This module is used for testing purposes only.
 			},
 			Deleted: []string{"crisis"}, // The SDK discontinued the crisis module in v0.52.0
 		}

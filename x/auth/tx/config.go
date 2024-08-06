@@ -149,7 +149,7 @@ func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, erro
 				TypeResolver:        signingOpts.TypeResolver,
 			})
 			if configOpts.TextualCoinMetadataQueryFn == nil {
-				return nil, fmt.Errorf("cannot enable SIGN_MODE_TEXTUAL without a TextualCoinMetadataQueryFn")
+				return nil, errors.New("cannot enable SIGN_MODE_TEXTUAL without a TextualCoinMetadataQueryFn")
 			}
 			if err != nil {
 				return nil, err

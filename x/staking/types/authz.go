@@ -2,7 +2,7 @@ package types
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -64,12 +64,12 @@ func (a StakeAuthorization) MsgTypeURL() string {
 // is unspecified.
 func (a StakeAuthorization) ValidateBasic() error {
 	if a.MaxTokens != nil && a.MaxTokens.IsNegative() {
-		return errorsmod.Wrapf(fmt.Errorf("max tokens should be positive"),
+		return errorsmod.Wrapf(errors.New("max tokens should be positive"),
 			"negative coin amount: %v", a.MaxTokens)
 	}
 
 	if a.AuthorizationType == AuthorizationType_AUTHORIZATION_TYPE_UNSPECIFIED {
-		return fmt.Errorf("unknown authorization type")
+		return errors.New("unknown authorization type")
 	}
 
 	return nil
@@ -220,7 +220,7 @@ func normalizeAuthzType(authzType AuthorizationType) (string, error) {
 	case AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION:
 		return sdk.MsgTypeURL(&MsgCancelUnbondingDelegation{}), nil
 	default:
-		return "", errorsmod.Wrapf(fmt.Errorf("unknown authorization type"),
+		return "", errorsmod.Wrapf(errors.New("unknown authorization type"),
 			"cannot normalize authz type with %T", authzType)
 	}
 }

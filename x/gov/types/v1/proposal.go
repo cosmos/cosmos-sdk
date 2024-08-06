@@ -5,7 +5,8 @@ import (
 	"strings"
 	"time"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 )
@@ -74,14 +75,14 @@ func (p Proposal) GetMinDepositFromParams(params Params) sdk.Coins {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (p Proposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (p Proposal) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	return sdktx.UnpackInterfaces(unpacker, p.Messages)
 }
 
 // Proposals is an array of proposal
 type Proposals []*Proposal
 
-var _ codectypes.UnpackInterfacesMessage = Proposals{}
+var _ gogoprotoany.UnpackInterfacesMessage = Proposals{}
 
 // String implements stringer interface
 func (p Proposals) String() string {
@@ -94,7 +95,7 @@ func (p Proposals) String() string {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (p Proposals) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (p Proposals) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	for _, x := range p {
 		err := x.UnpackInterfaces(unpacker)
 		if err != nil {

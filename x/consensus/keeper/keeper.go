@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -12,7 +11,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
-	coreapp "cosmossdk.io/core/app"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/consensus/exported"
@@ -28,8 +26,6 @@ type Keeper struct {
 
 	authority   string
 	ParamsStore collections.Item[cmtproto.ConsensusParams]
-	// storage of the last comet info
-	cometInfo collections.Item[types.CometInfo]
 }
 
 var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
@@ -40,7 +36,6 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, authority strin
 		Environment: env,
 		authority:   authority,
 		ParamsStore: collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
-		cometInfo:   collections.NewItem(sb, collections.NewPrefix("CometInfo"), "comet_info", codec.CollValue[types.CometInfo](cdc)),
 	}
 }
 
@@ -111,32 +106,4 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
-}
-
-func (k Keeper) SetCometInfo(ctx context.Context, msg *types.MsgSetCometInfo) (*types.MsgSetCometInfoResponse, error) {
-	if !bytes.Equal(coreapp.ConsensusIdentity, []byte(msg.Authority)) {
-		return nil, fmt.Errorf("invalid authority; expected %s, got %s", coreapp.ConsensusIdentity, msg.Authority)
-	}
-
-	cometInfo := types.CometInfo{
-		Evidence:        msg.Evidence,
-		ValidatorsHash:  msg.ValidatorsHash,
-		ProposerAddress: msg.ProposerAddress,
-		LastCommit:      msg.LastCommit,
-	}
-
-	if err := k.cometInfo.Set(ctx, cometInfo); err != nil {
-		return nil, err
-	}
-
-	return &types.MsgSetCometInfoResponse{}, nil
-}
-
-func (k Keeper) GetCometInfo(ctx context.Context, _ *types.QueryGetCometInfoRequest) (*types.QueryGetCometInfoResponse, error) {
-	cometInfo, err := k.cometInfo.Get(ctx)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	return &types.QueryGetCometInfoResponse{CometInfo: &cometInfo}, nil
 }

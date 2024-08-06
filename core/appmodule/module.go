@@ -66,11 +66,6 @@ type HasPrecommit interface {
 	Precommit(context.Context) error
 }
 
-// HasName is an extension interface that must return the appmodule.AppModule's Name.
-type HasName interface {
-	Name() string
-}
-
 // HasAminoCodec is an extension interface that module must implement to support JSON encoding and decoding of its types
 // through amino.  This is used in genesis & the CLI client.
 type HasAminoCodec interface {

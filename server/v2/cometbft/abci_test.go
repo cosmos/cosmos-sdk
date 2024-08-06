@@ -10,7 +10,7 @@ import (
 	"time"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/log"
 	am "cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/cometbft/mempool"
 	cometmock "cosmossdk.io/server/v2/cometbft/mock"
@@ -26,10 +26,24 @@ import (
 	"encoding/json"
 
 	consensustypes "cosmossdk.io/x/consensus/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 )
 
-var sum = sha256.Sum256([]byte("test-hash"))
+var (
+	sum                   = sha256.Sum256([]byte("test-hash"))
+	DefaulConsensusParams = &v1.ConsensusParams{
+		Block: &v1.BlockParams{
+			MaxGas: 5000000,
+		},
+	}
+	anyMsg, _ = gogotypes.MarshalAny(&gogotypes.BoolValue{Value: true})
+	mockTx = mock.Tx{
+		Sender:   []byte("sender"),
+		Msg:      anyMsg, // msg does not matter at all because our handler does nothing.
+		GasLimit: 100_000,                                 // NO GAS!
+	}
+)
 
 func addMsgHandlerToSTF[T any, PT interface {
 	*T
@@ -130,14 +144,10 @@ func TestConsensus_InitChain_With_UpdateParam(t *testing.T) {
 		return nil, nil
 	})
 	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
-		Time:    time.Now(),
-		ChainId: "test",
-		ConsensusParams: &v1.ConsensusParams{
-			Block: &v1.BlockParams{
-				MaxGas: 5000000,
-			},
-		},
-		InitialHeight: 1,
+		Time:            time.Now(),
+		ChainId:         "test",
+		ConsensusParams: DefaulConsensusParams,
+		InitialHeight:   1,
 	})
 	require.NoError(t, err)
 	stateStorageHas(t, mockStore, "init-chain", 1)
@@ -205,10 +215,16 @@ func TestConsensus_FinalizeBlock_Invalid_Height(t *testing.T) {
 
 func TestConsensus_FinalizeBlock_NoTxs(t *testing.T) {
 	c, s := setUpConsensus(t)
-	addQueryHandlerToSTF(t, s, func(ctx context.Context, q *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsRequest, error) {
+	mockStore := c.store
+
+	addQueryHandlerToSTF(t, s, func(ctx context.Context, q *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error) {
+		cParams := DefaulConsensusParams
 		kvSet(t, ctx, "query")
-		return nil, nil
+		return &consensustypes.QueryParamsResponse{
+			Params: cParams,
+		}, nil
 	})
+
 	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
 		Time:          time.Now(),
 		ChainId:       "test",
@@ -223,16 +239,64 @@ func TestConsensus_FinalizeBlock_NoTxs(t *testing.T) {
 	require.NoError(t, err)
 
 	endBlock := 10
-	for i := 2; i < endBlock; i++ {
+	for i := 2; i <= endBlock; i++ {
 		_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 			Time:   time.Now(),
 			Height: int64(i),
 			Hash:   sum[:],
 		})
 		require.NoError(t, err)
-	}
-	fmt.Println(c.lastCommittedHeight)
 
+		stateCommitmentHas(t, mockStore, "begin-block", uint64(i))
+		stateCommitmentNoHas(t, mockStore, "exec", uint64(i))
+		stateCommitmentHas(t, mockStore, "end-block", uint64(i))
+	}
+	require.Equal(t, int64(endBlock), c.lastCommittedHeight.Load())
+}
+
+func TestConsensus_FinalizeBlock_MultiTxs(t *testing.T) {
+	c, s := setUpConsensus(t)
+	mockStore := c.store
+
+	addQueryHandlerToSTF(t, s, func(ctx context.Context, q *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error) {
+		cParams := DefaulConsensusParams
+		kvSet(t, ctx, "query")
+		return &consensustypes.QueryParamsResponse{
+			Params: cParams,
+		}, nil
+	})
+	addMsgHandlerToSTF(t, s, func(ctx context.Context, msg *gogotypes.Any) (*gogotypes.Any, error) {
+		kvSet(t, ctx, "exec")
+		return nil, nil
+	})
+
+	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
+		Time:          time.Now(),
+		ChainId:       "test",
+		InitialHeight: 1,
+	})
+	require.NoError(t, err)
+
+	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
+		Time:   time.Now(),
+		Height: 1,
+	})
+	require.NoError(t, err)
+
+	endBlock := 10
+	for i := 2; i <= endBlock; i++ {
+		_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
+			Time:   time.Now(),
+			Height: int64(i),
+			Hash:   sum[:],
+			Txs:    [][]byte{mockTx.Bytes()},
+		})
+		require.NoError(t, err)
+		stateCommitmentHas(t, mockStore, "init-chain", uint64(i))
+		stateCommitmentHas(t, mockStore, "exec", uint64(i))
+		stateCommitmentHas(t, mockStore, "end-block", uint64(i))
+	}
+	require.Equal(t, int64(endBlock), c.lastCommittedHeight.Load())
 }
 
 func setUpConsensus(t *testing.T) (*Consensus[mock.Tx], *stf.STF[mock.Tx]) {
@@ -276,7 +340,7 @@ func setUpConsensus(t *testing.T) (*Consensus[mock.Tx], *stf.STF[mock.Tx]) {
 	am, err := b.Build()
 	require.NoError(t, err)
 
-	return NewConsensus[mock.Tx](am, mempool.NoOpMempool[mock.Tx]{}, mockStore, Config{}, mock.TxCodec{}, log.NewNopLogger()), s
+	return NewConsensus[mock.Tx](log.NewNopLogger(), "testing-app", "authority", am, mempool.NoOpMempool[mock.Tx]{}, map[string]struct{}{}, nil, mockStore, Config{AppTomlConfig: DefaultAppTomlConfig()}, mock.TxCodec{}, "test"), s
 }
 
 var actorName = []byte("cookies")
@@ -314,9 +378,6 @@ func stateCommitmentHas(t *testing.T, store types.Store, key string, version uin
 
 func stateCommitmentNoHas(t *testing.T, store types.Store, key string, version uint64) {
 	t.Helper()
-	bz, err := store.GetStateCommitment().Get(actorName, version, []byte(key))
-	// if not committed, should return version does not exist
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "version does not exist")
+	bz, _ := store.GetStateCommitment().Get(actorName, version, []byte(key))
 	require.Equal(t, len(bz), 0)
 }

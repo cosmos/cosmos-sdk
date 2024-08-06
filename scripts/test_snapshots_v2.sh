@@ -34,12 +34,20 @@ $SIMD genesis collect-gentxs
 $SIMD start &
 SIMD_PID=$!
 
-# wait 10s then export snapshot at height 10
+# wait 10s then export snapshot at height 5
 sleep 10
 
 kill -9 "$SIMD_PID"
 
 $SIMD store export --height 5
+
+$SIMD store dump 5 3 --output "$ROOT/5-3.tar.gz"
+
+$SIMD store delete 5 3 
+
+$SIMD store load "$ROOT/5-3.tar.gz"
+
+$SIMD store list
 
 # clear sc & ss data
 rm -rf "$HOME/.simappv2/data/application.db"
@@ -47,4 +55,9 @@ rm -rf "$HOME/.simappv2/data/ss"
 
 # restore
 
-$SIMD restore 5 3
+$SIMD store restore 5 3
+
+$SIMD start &
+SIMD_PID=$!
+sleep 10
+kill -9 "$SIMD_PID"

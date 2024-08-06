@@ -1,119 +1,126 @@
 package appdata
 
-// ListenerMux returns a listener that forwards received events to all the provided listeners and only
-// registers a callback if a non-nil callback is present in at least one of the listeners.
+// ListenerMux returns a listener that forwards received events to all the provided listeners in order.
+// A callback is only registered if a non-nil callback is present in at least one of the listeners.
 func ListenerMux(listeners ...Listener) Listener {
 	mux := Listener{}
 
+	initModDataCbs := make([]func(ModuleInitializationData) error, 0, len(listeners))
 	for _, l := range listeners {
 		if l.InitializeModuleData != nil {
-			mux.InitializeModuleData = func(data ModuleInitializationData) error {
-				for _, l := range listeners {
-					if l.InitializeModuleData != nil {
-						if err := l.InitializeModuleData(data); err != nil {
-							return err
-						}
-					}
+			initModDataCbs = append(initModDataCbs, l.InitializeModuleData)
+		}
+	}
+	if len(initModDataCbs) > 0 {
+		mux.InitializeModuleData = func(data ModuleInitializationData) error {
+			for _, cb := range initModDataCbs {
+				if err := cb(data); err != nil {
+					return err
 				}
-				return nil
 			}
-			break
+			return nil
 		}
 	}
 
+	startBlockCbs := make([]func(StartBlockData) error, 0, len(listeners))
 	for _, l := range listeners {
 		if l.StartBlock != nil {
-			mux.StartBlock = func(data StartBlockData) error {
-				for _, l := range listeners {
-					if l.StartBlock != nil {
-						if err := l.StartBlock(data); err != nil {
-							return err
-						}
-					}
+			startBlockCbs = append(startBlockCbs, l.StartBlock)
+		}
+	}
+	if len(startBlockCbs) > 0 {
+		mux.StartBlock = func(data StartBlockData) error {
+			for _, cb := range startBlockCbs {
+				if err := cb(data); err != nil {
+					return err
 				}
-				return nil
 			}
-			break
+			return nil
 		}
 	}
 
+	onTxCbs := make([]func(TxData) error, 0, len(listeners))
 	for _, l := range listeners {
 		if l.OnTx != nil {
-			mux.OnTx = func(data TxData) error {
-				for _, l := range listeners {
-					if l.OnTx != nil {
-						if err := l.OnTx(data); err != nil {
-							return err
-						}
-					}
+			onTxCbs = append(onTxCbs, l.OnTx)
+		}
+	}
+	if len(onTxCbs) > 0 {
+		mux.OnTx = func(data TxData) error {
+			for _, cb := range onTxCbs {
+				if err := cb(data); err != nil {
+					return err
 				}
-				return nil
 			}
-			break
+			return nil
 		}
 	}
 
-	for _, listener := range listeners {
-		if listener.OnEvent != nil {
-			mux.OnEvent = func(data EventData) error {
-				for _, l := range listeners {
-					if l.OnEvent != nil {
-						if err := l.OnEvent(data); err != nil {
-							return err
-						}
-					}
+	onEventCbs := make([]func(EventData) error, 0, len(listeners))
+	for _, l := range listeners {
+		if l.OnEvent != nil {
+			onEventCbs = append(onEventCbs, l.OnEvent)
+		}
+	}
+	if len(onEventCbs) > 0 {
+		mux.OnEvent = func(data EventData) error {
+			for _, cb := range onEventCbs {
+				if err := cb(data); err != nil {
+					return err
 				}
-				return nil
 			}
-			break
+			return nil
 		}
 	}
 
-	for _, listener := range listeners {
-		if listener.OnKVPair != nil {
-			mux.OnKVPair = func(data KVPairData) error {
-				for _, l := range listeners {
-					if l.OnKVPair != nil {
-						if err := l.OnKVPair(data); err != nil {
-							return err
-						}
-					}
+	onKvPairCbs := make([]func(KVPairData) error, 0, len(listeners))
+	for _, l := range listeners {
+		if l.OnKVPair != nil {
+			onKvPairCbs = append(onKvPairCbs, l.OnKVPair)
+		}
+	}
+	if len(onKvPairCbs) > 0 {
+		mux.OnKVPair = func(data KVPairData) error {
+			for _, cb := range onKvPairCbs {
+				if err := cb(data); err != nil {
+					return err
 				}
-				return nil
 			}
-			break
+			return nil
 		}
 	}
 
-	for _, listener := range listeners {
-		if listener.OnObjectUpdate != nil {
-			mux.OnObjectUpdate = func(data ObjectUpdateData) error {
-				for _, l := range listeners {
-					if l.OnObjectUpdate != nil {
-						if err := l.OnObjectUpdate(data); err != nil {
-							return err
-						}
-					}
+	onObjectUpdateCbs := make([]func(ObjectUpdateData) error, 0, len(listeners))
+	for _, l := range listeners {
+		if l.OnObjectUpdate != nil {
+			onObjectUpdateCbs = append(onObjectUpdateCbs, l.OnObjectUpdate)
+		}
+	}
+	if len(onObjectUpdateCbs) > 0 {
+		mux.OnObjectUpdate = func(data ObjectUpdateData) error {
+			for _, cb := range onObjectUpdateCbs {
+				if err := cb(data); err != nil {
+					return err
 				}
-				return nil
 			}
-			break
+			return nil
 		}
 	}
 
-	for _, listener := range listeners {
-		if listener.Commit != nil {
-			mux.Commit = func(data CommitData) error {
-				for _, l := range listeners {
-					if l.Commit != nil {
-						if err := l.Commit(data); err != nil {
-							return err
-						}
-					}
+	commitCbs := make([]func(CommitData) error, 0, len(listeners))
+	for _, l := range listeners {
+		if l.Commit != nil {
+			commitCbs = append(commitCbs, l.Commit)
+		}
+	}
+	if len(commitCbs) > 0 {
+		mux.Commit = func(data CommitData) error {
+			for _, cb := range commitCbs {
+				if err := cb(data); err != nil {
+					return err
 				}
-				return nil
 			}
-			break
+			return nil
 		}
 	}
 

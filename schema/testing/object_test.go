@@ -22,10 +22,3 @@ func TestObjectUpdate(t *testing.T) {
 		require.NoError(t, objectType.ValidateObjectUpdate(update))
 	})
 }
-
-func TestExample(t *testing.T) {
-	objectType := ObjectTypeGen.Example(1)
-	update := ObjectInsertGen(objectType).Example(2)
-	t.Logf("objectType: %+v", objectType)
-	t.Logf("update: %+v", update)
-}

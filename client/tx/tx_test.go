@@ -2,6 +2,7 @@ package tx
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -44,7 +45,7 @@ type mockContext struct {
 
 func (m mockContext) Invoke(_ context.Context, _ string, _, reply interface{}, _ ...grpc.CallOption) (err error) {
 	if m.wantErr {
-		return fmt.Errorf("mock err")
+		return errors.New("mock err")
 	}
 
 	*(reply.(*txtypes.SimulateResponse)) = txtypes.SimulateResponse{

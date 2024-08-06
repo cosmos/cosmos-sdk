@@ -21,15 +21,15 @@ type Module struct {
 func NewModule(moduleSchema schema.ModuleSchema, options Options) *Module {
 	objectCollections := &btree.Map[string, *ObjectCollection]{}
 	var objectTypeNames []string
-	for _, objectType := range moduleSchema.ObjectTypes {
+
+	moduleSchema.ObjectTypes(func(objectType schema.ObjectType) bool {
 		objectCollection := NewObjectCollection(objectType, options)
 		objectCollections.Set(objectType.Name, objectCollection)
 		objectTypeNames = append(objectTypeNames, objectType.Name)
-	}
-
-	objectTypeSelector := rapid.Map(rapid.IntRange(0, len(objectTypeNames)), func(u int) string {
-		return objectTypeNames[u]
+		return true
 	})
+
+	objectTypeSelector := rapid.SampledFrom(objectTypeNames)
 
 	updateGen := rapid.Custom(func(t *rapid.T) schema.ObjectUpdate {
 		objectType := objectTypeSelector.Draw(t, "objectType")
@@ -67,16 +67,18 @@ func (o *Module) ModuleSchema() schema.ModuleSchema {
 }
 
 // GetObjectCollection returns the object collection for the given object type.
-func (o *Module) GetObjectCollection(objectType string) (*ObjectCollection, bool) {
+func (o *Module) GetObjectCollection(objectType string) (ObjectCollectionState, bool) {
 	return o.objectCollections.Get(objectType)
 }
 
-// ScanObjectCollections scans all object collections in the module.
-func (o *Module) ScanObjectCollections(f func(value *ObjectCollection) error) error {
-	var err error
+// ObjectCollections iterates over all object collections in the module.
+func (o *Module) ObjectCollections(f func(value ObjectCollectionState) bool) {
 	o.objectCollections.Scan(func(key string, value *ObjectCollection) bool {
-		err = f(value)
-		return err == nil
+		return f(value)
 	})
-	return err
+}
+
+// NumObjectCollections returns the number of object collections in the module.
+func (o *Module) NumObjectCollections() int {
+	return o.objectCollections.Len()
 }

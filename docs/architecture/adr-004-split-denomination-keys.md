@@ -74,7 +74,7 @@ This will result in the balances being indexed by the byte representation of
 
 `DelegateCoins()` and `UndelegateCoins()` will be altered to only load each individual
 account balance by denomination found in the (un)delegation amount. As a result,
-any mutations to the account balance by will made by denomination.
+any mutations to the account balance will made by denomination.
 
 `SubtractCoins()` and `AddCoins()` will be altered to read & write the balances
 directly instead of calling `GetCoins()` / `SetCoins()` (which no longer exist).

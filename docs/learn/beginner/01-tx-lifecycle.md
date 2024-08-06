@@ -53,7 +53,7 @@ The command-line is an easy way to interact with an application, but `Tx` can al
 
 ## Transaction Broadcasting
 
-This is the next phase, where a transactison is sent from a client (such as a wallet or a command-line interface) to the network of nodes. This process is consensus-agnostic, meaning it can work with various consensus engines.
+This is the next phase, where a transaction is sent from a client (such as a wallet or a command-line interface) to the network of nodes. This process is consensus-agnostic, meaning it can work with various consensus engines.
 
 Below are the steps involved in transaction broadcasting:
 

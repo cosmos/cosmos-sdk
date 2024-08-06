@@ -2,10 +2,11 @@ package feegrant
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	"cosmossdk.io/core/appmodule"
 	corecontext "cosmossdk.io/core/context"
@@ -23,12 +24,12 @@ const (
 )
 
 var (
-	_ FeeAllowanceI                 = (*AllowedMsgAllowance)(nil)
-	_ types.UnpackInterfacesMessage = (*AllowedMsgAllowance)(nil)
+	_ FeeAllowanceI                        = (*AllowedMsgAllowance)(nil)
+	_ gogoprotoany.UnpackInterfacesMessage = (*AllowedMsgAllowance)(nil)
 )
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (a *AllowedMsgAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (a *AllowedMsgAllowance) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var allowance FeeAllowanceI
 	return unpacker.UnpackAny(a.Allowance, &allowance)
 }
@@ -99,7 +100,7 @@ func (a *AllowedMsgAllowance) allowedMsgsToMap(ctx context.Context) (map[string]
 	msgsMap := make(map[string]bool, len(a.AllowedMessages))
 	environment, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodule.Environment)
 	if !ok {
-		return nil, fmt.Errorf("environment not set")
+		return nil, errors.New("environment not set")
 	}
 	gasMeter := environment.GasService.GasMeter(ctx)
 	for _, msg := range a.AllowedMessages {
@@ -119,7 +120,7 @@ func (a *AllowedMsgAllowance) allMsgTypesAllowed(ctx context.Context, msgs []sdk
 	}
 	environment, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodule.Environment)
 	if !ok {
-		return false, fmt.Errorf("environment not set")
+		return false, errors.New("environment not set")
 	}
 	gasMeter := environment.GasService.GasMeter(ctx)
 	for _, msg := range msgs {

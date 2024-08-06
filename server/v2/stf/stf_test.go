@@ -3,7 +3,7 @@ package stf
 import (
 	"context"
 	"crypto/sha256"
-	"fmt"
+	"errors"
 	"testing"
 	"time"
 
@@ -158,7 +158,7 @@ func TestSTF(t *testing.T) {
 		// update the stf to fail on the handler
 		s := s.clone()
 		addMsgHandlerToSTF(t, &s, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
-			return nil, fmt.Errorf("failure")
+			return nil, errors.New("failure")
 		})
 
 		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
@@ -180,7 +180,7 @@ func TestSTF(t *testing.T) {
 	t.Run("tx is success but post tx failed", func(t *testing.T) {
 		s := s.clone()
 		s.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error {
-			return fmt.Errorf("post tx failure")
+			return errors.New("post tx failure")
 		}
 		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
 			Height:  uint64(1),
@@ -201,9 +201,9 @@ func TestSTF(t *testing.T) {
 	t.Run("tx failed and post tx failed", func(t *testing.T) {
 		s := s.clone()
 		addMsgHandlerToSTF(t, &s, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
-			return nil, fmt.Errorf("exec failure")
+			return nil, errors.New("exec failure")
 		})
-		s.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error { return fmt.Errorf("post tx failure") }
+		s.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error { return errors.New("post tx failure") }
 		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
 			Height:  uint64(1),
 			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
@@ -223,7 +223,7 @@ func TestSTF(t *testing.T) {
 	t.Run("fail validate tx", func(t *testing.T) {
 		// update stf to fail on the validation step
 		s := s.clone()
-		s.doTxValidation = func(ctx context.Context, tx mock.Tx) error { return fmt.Errorf("failure") }
+		s.doTxValidation = func(ctx context.Context, tx mock.Tx) error { return errors.New("failure") }
 		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
 			Height:  uint64(1),
 			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),

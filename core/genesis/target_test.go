@@ -2,31 +2,45 @@ package genesis
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestTarget(t *testing.T) {
 	target := &RawJSONTarget{}
 
 	w, err := target.Target()("foo")
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("Error creating target: %s", err)
+	}
 	_, err = w.Write([]byte("1"))
-	require.NoError(t, err)
-	require.NoError(t, w.Close())
+	if err != nil {
+		t.Errorf("Error writing to target: %s", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Errorf("Error closing target: %s", err)
+	}
 
 	w, err = target.Target()("bar")
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("Error creating target: %s", err)
+	}
 	_, err = w.Write([]byte(`"abc"`))
-	require.NoError(t, err)
-	require.NoError(t, w.Close())
+	if err != nil {
+		t.Errorf("Error writing to target: %s", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Errorf("Error closing target: %s", err)
+	}
 
 	bz, err := target.JSON()
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("Error getting JSON: %s", err)
+	}
 
 	// test that it's correct by reading back with a source
 	source, err := SourceFromRawJSON(bz)
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("Error creating source from JSON: %s", err)
+	}
 
 	expectJSON(t, source, "foo", "1")
 	expectJSON(t, source, "bar", `"abc"`)

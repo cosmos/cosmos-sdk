@@ -7,9 +7,9 @@ import (
 	"pgregory.net/rapid"
 )
 
-func TestEnumDefinition(t *testing.T) {
+func TestEnumType(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
-		enumDefinition := EnumDefinitionGen.Draw(t, "enum")
-		require.NoError(t, enumDefinition.Validate())
+		enumType := EnumType.Draw(t, "enum")
+		require.NoError(t, enumType.Validate())
 	})
 }

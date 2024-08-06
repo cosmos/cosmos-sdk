@@ -34,29 +34,28 @@ var ObjectTypeGen = rapid.Custom(func(t *rapid.T) schema.ObjectType {
 	return typ
 }).Filter(func(typ schema.ObjectType) bool {
 	// filter out duplicate enum names
-	enumTypeNames := map[string]bool{}
-	if hasDuplicateEnumName(enumTypeNames, typ.KeyFields) {
+	typeNames := map[string]bool{typ.Name: true}
+	if hasDuplicateNames(typeNames, typ.KeyFields) {
 		return false
 	}
-	if hasDuplicateEnumName(enumTypeNames, typ.ValueFields) {
+	if hasDuplicateNames(typeNames, typ.ValueFields) {
 		return false
 	}
 	return true
 })
 
-// hasDuplicateEnumName checks if there is an enum field with a duplicate name
-// in the object type
-func hasDuplicateEnumName(enumTypeNames map[string]bool, fields []schema.Field) bool {
+// hasDuplicateNames checks if there is type name in the fields
+func hasDuplicateNames(typeNames map[string]bool, fields []schema.Field) bool {
 	for _, field := range fields {
 		if field.Kind != schema.EnumKind {
 			continue
 		}
 
-		if _, ok := enumTypeNames[field.EnumDefinition.Name]; ok {
+		if _, ok := typeNames[field.EnumType.Name]; ok {
 			return true
 		}
 
-		enumTypeNames[field.EnumDefinition.Name] = true
+		typeNames[field.EnumType.Name] = true
 	}
 	return false
 }
@@ -69,7 +68,7 @@ func ObjectInsertGen(objectType schema.ObjectType) *rapid.Generator[schema.Objec
 // ObjectUpdateGen generates object updates that are valid for updates using the provided state map as a source
 // of valid existing keys.
 func ObjectUpdateGen(objectType schema.ObjectType, state *btree.Map[string, schema.ObjectUpdate]) *rapid.Generator[schema.ObjectUpdate] {
-	keyGen := KeyFieldsValueGen(objectType.KeyFields)
+	keyGen := ObjectKeyGen(objectType.KeyFields)
 
 	if len(objectType.ValueFields) == 0 {
 		// special case where there are no value fields,
@@ -95,8 +94,8 @@ func ObjectUpdateGen(objectType schema.ObjectType, state *btree.Map[string, sche
 			return update
 		})
 	} else {
-		insertValueGen := ValueFieldsValueGen(objectType.ValueFields, false)
-		updateValueGen := ValueFieldsValueGen(objectType.ValueFields, true)
+		insertValueGen := ObjectValueGen(objectType.ValueFields, false)
+		updateValueGen := ObjectValueGen(objectType.ValueFields, true)
 		return rapid.Custom(func(t *rapid.T) schema.ObjectUpdate {
 			update := schema.ObjectUpdate{
 				TypeName: objectType.Name,

@@ -13,29 +13,32 @@ import (
 
 // App is a collection of simulated module states corresponding to an app's schema for testing purposes.
 type App struct {
+	options      Options
 	moduleStates *btree.Map[string, *Module]
 	updateGen    *rapid.Generator[appdata.ObjectUpdateData]
 }
 
-// NewApp creates a new simulation App for the given app schema.
+// NewApp creates a new simulation App for the given app schema. The app schema can be nil
+// if the user desires initializing modules with InitializeModule instead.
 func NewApp(appSchema map[string]schema.ModuleSchema, options Options) *App {
-	moduleStates := &btree.Map[string, *Module]{}
-	var moduleNames []string
+	app := &App{
+		options:      options,
+		moduleStates: &btree.Map[string, *Module]{},
+	}
 
 	for moduleName, moduleSchema := range appSchema {
 		moduleState := NewModule(moduleSchema, options)
-		moduleStates.Set(moduleName, moduleState)
-		moduleNames = append(moduleNames, moduleName)
+		app.moduleStates.Set(moduleName, moduleState)
 	}
 
-	moduleNameSelector := rapid.Map(rapid.IntRange(0, len(moduleNames)), func(u int) string {
-		return moduleNames[u]
+	moduleNameSelector := rapid.Custom(func(t *rapid.T) string {
+		return rapid.SampledFrom(app.moduleStates.Keys()).Draw(t, "moduleName")
 	})
 
 	numUpdatesGen := rapid.IntRange(1, 2)
-	updateGen := rapid.Custom(func(t *rapid.T) appdata.ObjectUpdateData {
+	app.updateGen = rapid.Custom(func(t *rapid.T) appdata.ObjectUpdateData {
 		moduleName := moduleNameSelector.Draw(t, "moduleName")
-		moduleState, ok := moduleStates.Get(moduleName)
+		moduleState, ok := app.moduleStates.Get(moduleName)
 		require.True(t, ok)
 		numUpdates := numUpdatesGen.Draw(t, "numUpdates")
 		updates := make([]schema.ObjectUpdate, numUpdates)
@@ -49,17 +52,26 @@ func NewApp(appSchema map[string]schema.ModuleSchema, options Options) *App {
 		}
 	})
 
-	return &App{
-		moduleStates: moduleStates,
-		updateGen:    updateGen,
+	return app
+}
+
+// InitializeModule initializes the module with the provided schema. This returns an error if the
+// module is already initialized in state.
+func (a *App) InitializeModule(data appdata.ModuleInitializationData) error {
+	if _, ok := a.moduleStates.Get(data.ModuleName); ok {
+		return fmt.Errorf("module %s already initialized", data.ModuleName)
 	}
+
+	a.moduleStates.Set(data.ModuleName, NewModule(data.Schema, a.options))
+	return nil
 }
 
 // ApplyUpdate applies the given object update to the module.
 func (a *App) ApplyUpdate(data appdata.ObjectUpdateData) error {
 	moduleState, ok := a.moduleStates.Get(data.ModuleName)
 	if !ok {
-		return fmt.Errorf("module %s not found", data.ModuleName)
+		// we don't have this module so skip the update
+		return nil
 	}
 
 	for _, update := range data.Updates {
@@ -79,15 +91,18 @@ func (a *App) UpdateGen() *rapid.Generator[appdata.ObjectUpdateData] {
 }
 
 // GetModule returns the module state for the given module name.
-func (a *App) GetModule(moduleName string) (*Module, bool) {
+func (a *App) GetModule(moduleName string) (ModuleState, bool) {
 	return a.moduleStates.Get(moduleName)
 }
 
-func (a *App) ScanModules(f func(moduleName string, modState *Module) error) error {
-	var err error
+// Modules iterates over all the module state instances in the app.
+func (a *App) Modules(f func(moduleName string, modState ModuleState) bool) {
 	a.moduleStates.Scan(func(key string, value *Module) bool {
-		err = f(key, value)
-		return err == nil
+		return f(key, value)
 	})
-	return err
+}
+
+// NumModules returns the number of modules in the app.
+func (a *App) NumModules() int {
+	return a.moduleStates.Len()
 }

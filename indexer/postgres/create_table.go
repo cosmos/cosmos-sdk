@@ -8,7 +8,7 @@ import (
 )
 
 // CreateTable creates the table for the object type.
-func (tm *TableManager) CreateTable(ctx context.Context, conn DBConn) error {
+func (tm *ObjectIndexer) CreateTable(ctx context.Context, conn DBConn) error {
 	buf := new(strings.Builder)
 	err := tm.CreateTableSql(buf)
 	if err != nil {
@@ -16,14 +16,16 @@ func (tm *TableManager) CreateTable(ctx context.Context, conn DBConn) error {
 	}
 
 	sqlStr := buf.String()
-	tm.options.Logger.Debug("Creating table", "table", tm.TableName(), "sql", sqlStr)
+	if tm.options.Logger != nil {
+		tm.options.Logger(fmt.Sprintf("Creating table %s", tm.TableName()), sqlStr)
+	}
 	_, err = conn.ExecContext(ctx, sqlStr)
 	return err
 }
 
 // CreateTableSql generates a CREATE TABLE statement for the object type.
-func (tm *TableManager) CreateTableSql(writer io.Writer) error {
-	_, err := fmt.Fprintf(writer, "CREATE TABLE IF NOT EXISTS %q (", tm.TableName())
+func (tm *ObjectIndexer) CreateTableSql(writer io.Writer) error {
+	_, err := fmt.Fprintf(writer, "CREATE TABLE IF NOT EXISTS %q (\n\t", tm.TableName())
 	if err != nil {
 		return err
 	}
@@ -51,7 +53,7 @@ func (tm *TableManager) CreateTableSql(writer io.Writer) error {
 	}
 
 	// add _deleted column when we have RetainDeletions set and enabled
-	if tm.options.RetainDeletions && tm.typ.RetainDeletions {
+	if !tm.options.DisableRetainDeletions && tm.typ.RetainDeletions {
 		_, err = fmt.Fprintf(writer, "_deleted BOOLEAN NOT NULL DEFAULT FALSE,\n\t")
 		if err != nil {
 			return err

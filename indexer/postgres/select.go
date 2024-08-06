@@ -8,6 +8,14 @@ import (
 	"strings"
 )
 
+// Count returns the number of rows in the table.
+func (tm *ObjectIndexer) Count(ctx context.Context, conn DBConn) (int, error) {
+	row := conn.QueryRowContext(ctx, fmt.Sprintf("SELECT COUNT(*) FROM %q;", tm.TableName()))
+	var count int
+	err := row.Scan(&count)
+	return count, err
+}
+
 // Exists checks if a row with the provided key exists in the table.
 func (tm *ObjectIndexer) Exists(ctx context.Context, conn DBConn, key interface{}) (bool, error) {
 	buf := new(strings.Builder)
@@ -82,7 +90,7 @@ func (tm *ObjectIndexer) EqualsSqlAndParams(w io.Writer, key, val interface{}) (
 
 // checkExists checks if a row exists in the table.
 func (tm *ObjectIndexer) checkExists(ctx context.Context, conn DBConn, sqlStr string, params []interface{}) (bool, error) {
-	tm.options.Logger.Debug("Select", "sql", sqlStr, "params", params)
+	tm.options.Logger("Select", "sql", sqlStr, "params", params)
 	var res interface{}
 	// TODO check for multiple rows which would be a logic error
 	err := conn.QueryRowContext(ctx, sqlStr, params...).Scan(&res)

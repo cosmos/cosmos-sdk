@@ -13,7 +13,7 @@ type ObjectCollection interface {
 	ObjectType() schema.ObjectType
 
 	// GetObject returns the object update for the given key if it exists.
-	GetObject(key any) (update schema.ObjectUpdate, found bool)
+	GetObject(key interface{}) (update schema.ObjectUpdate, found bool)
 
 	// AllState iterates over the state of the collection by calling the given function with each item in
 	// state represented as an object update.

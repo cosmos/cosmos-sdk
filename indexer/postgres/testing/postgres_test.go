@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/indexer/postgres"
-	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/indexer"
 	indexertesting "cosmossdk.io/schema/testing"
 	"cosmossdk.io/schema/testing/appdatasim"
@@ -61,7 +60,7 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 	var cfgMap map[string]interface{}
 	err = json.Unmarshal(cfgBz, &cfgMap)
 
-	res, err := postgres.StartIndexer(indexer.InitParams{
+	pgIndexer, err := postgres.StartIndexer(indexer.InitParams{
 		Config: indexer.Config{
 			Type:   "postgres",
 			Config: cfgMap,
@@ -72,15 +71,14 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 	})
 	require.NoError(t, err)
 
-	_, err = appdatasim.NewSimulator(appdatasim.Options{
-		Listener: appdata.ListenerMux(
-			appdata.DebugListener(os.Stdout),
-			res.Listener,
-		),
+	sim, err := appdatasim.NewSimulator(appdatasim.Options{
+		Listener:  pgIndexer.Listener(),
 		AppSchema: indexertesting.ExampleAppSchema,
 		StateSimOptions: statesim.Options{
 			CanRetainDeletions: retainDeletions,
 		},
 	})
 	require.NoError(t, err)
+
+	require.Empty(t, appdatasim.DiffAppData(sim, pgIndexer))
 }

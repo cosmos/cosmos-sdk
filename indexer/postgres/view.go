@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"strings"
 
 	"cosmossdk.io/schema"
 	"cosmossdk.io/schema/view"
@@ -14,8 +15,7 @@ func (i *Indexer) AppState() view.AppState {
 }
 
 func (i *Indexer) BlockNum() uint64 {
-	//TODO implement me
-	panic("implement me")
+	return 0
 }
 
 type moduleView struct {
@@ -69,13 +69,19 @@ func (m *moduleView) GetObjectCollection(objectType string) (view.ObjectCollecti
 }
 
 func (m *moduleView) ObjectCollections(f func(value view.ObjectCollection) bool) {
-	//TODO implement me
-	panic("implement me")
+	for _, obj := range m.tables {
+		if !f(&objectView{
+			ObjectIndexer: *obj,
+			ctx:           m.ctx,
+			conn:          m.conn,
+		}) {
+			return
+		}
+	}
 }
 
 func (m *moduleView) NumObjectCollections() int {
-	//TODO implement me
-	panic("implement me")
+	return len(m.tables)
 }
 
 type objectView struct {
@@ -88,14 +94,38 @@ func (tm *objectView) ObjectType() schema.ObjectType {
 	return tm.typ
 }
 
-func (tm *objectView) GetObject(key any) (update schema.ObjectUpdate, found bool) {
-	//TODO implement me
-	panic("implement me")
+func (tm *objectView) GetObject(key interface{}) (update schema.ObjectUpdate, found bool) {
+	update, err := tm.Get(tm.ctx, tm.conn, key)
+	if err != nil {
+		return schema.ObjectUpdate{}, false
+	}
+	return update, true
 }
 
 func (tm *objectView) AllState(f func(schema.ObjectUpdate) bool) {
-	//TODO implement me
-	panic("implement me")
+	buf := new(strings.Builder)
+	err := tm.SelectAllSql(buf)
+	if err != nil {
+		panic(err)
+	}
+	sqlStr := buf.String()
+	if tm.options.Logger != nil {
+		tm.options.Logger("Select", "sql", sqlStr)
+	}
+	rows, err := tm.conn.QueryContext(tm.ctx, sqlStr)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		update, err := tm.readRow(rows)
+		if err != nil {
+			panic(err)
+		}
+		if !f(update) {
+			return
+		}
+	}
 }
 
 func (tm *objectView) Len() int {

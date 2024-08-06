@@ -29,9 +29,10 @@ func TestValidatorDoubleSign(t *testing.T) {
 	t.Log(rsp)
 	nodePowerBefore := QueryCometValidatorPowerForNode(t, sut, 0)
 	require.NotEmpty(t, nodePowerBefore)
+	t.Logf("nodePowerBefore: %v", nodePowerBefore)
 
 	var validatorPubKey cryptotypes.PubKey
-	newNode := sut.AddFullnode(t, "0.001stake", func(nodeNumber int, nodePath string) {
+	newNode := sut.AddFullnode(t, func(nodeNumber int, nodePath string) {
 		valKeyFile := filepath.Join(WorkDir, nodePath, "config", "priv_validator_key.json")
 		_ = os.Remove(valKeyFile)
 		_, err := copyFile(filepath.Join(WorkDir, sut.nodePath(0), "config", "priv_validator_key.json"), valKeyFile)
@@ -54,9 +55,15 @@ func TestValidatorDoubleSign(t *testing.T) {
 	// then comet status updated
 	nodePowerAfter := QueryCometValidatorPowerForNode(t, sut, 0)
 	require.Empty(t, nodePowerAfter)
+	t.Logf("nodePowerAfter: %v", nodePowerAfter)
 
 	// and sdk status updated
 	byzantineOperatorAddr := cli.GetKeyAddrPrefix("node0", "val")
 	rsp = cli.CustomQuery("q", "staking", "validator", byzantineOperatorAddr)
 	assert.True(t, gjson.Get(rsp, "validator.jailed").Bool(), rsp)
+
+	t.Log("let's run for some blocks to confirm all good")
+	for i := 0; i < 10; i++ {
+		sut.AwaitNextBlock(t)
+	}
 }

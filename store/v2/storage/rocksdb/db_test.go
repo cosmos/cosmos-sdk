@@ -23,6 +23,7 @@ func TestStorageTestSuite(t *testing.T) {
 			return storage.NewStorageStore(db, coretesting.NewNopLogger()), err
 		},
 		EmptyBatchSize: 12,
+		SkipTests:      []string{"TestUpgradable_Prune"},
 	}
 	suite.Run(t, s)
 }

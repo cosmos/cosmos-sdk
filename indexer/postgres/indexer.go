@@ -5,9 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 
-	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/indexer"
 )
 
@@ -24,10 +22,18 @@ type Config struct {
 
 type SqlLogger = func(msg, sql string, params ...interface{})
 
-func StartIndexer(params indexer.InitParams) (indexer.InitResult, error) {
+type Indexer struct {
+	ctx     context.Context
+	db      *sql.DB
+	tx      *sql.Tx
+	opts    Options
+	modules map[string]*ModuleIndexer
+}
+
+func StartIndexer(params indexer.InitParams) (*Indexer, error) {
 	config, err := decodeConfig(params.Config.Config)
 	if err != nil {
-		return indexer.InitResult{}, err
+		return nil, err
 	}
 
 	ctx := params.Context
@@ -36,7 +42,7 @@ func StartIndexer(params indexer.InitParams) (indexer.InitResult, error) {
 	}
 
 	if config.DatabaseURL == "" {
-		return indexer.InitResult{}, errors.New("missing database URL")
+		return nil, errors.New("missing database URL")
 	}
 
 	driver := config.DatabaseDriver
@@ -46,18 +52,18 @@ func StartIndexer(params indexer.InitParams) (indexer.InitResult, error) {
 
 	db, err := sql.Open(driver, config.DatabaseURL)
 	if err != nil {
-		return indexer.InitResult{}, err
+		return nil, err
 	}
 
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
-		return indexer.InitResult{}, err
+		return nil, err
 	}
 
 	// commit base schema
 	_, err = tx.Exec(BaseSQL)
 	if err != nil {
-		return indexer.InitResult{}, err
+		return nil, err
 	}
 
 	moduleIndexers := map[string]*ModuleIndexer{}
@@ -74,58 +80,12 @@ func StartIndexer(params indexer.InitParams) (indexer.InitResult, error) {
 		AddressCodec:           params.AddressCodec,
 	}
 
-	listener := appdata.Listener{
-		InitializeModuleData: func(data appdata.ModuleInitializationData) error {
-			moduleName := data.ModuleName
-			modSchema := data.Schema
-			_, ok := moduleIndexers[moduleName]
-			if ok {
-				return fmt.Errorf("module %s already initialized", moduleName)
-			}
-
-			mm := NewModuleIndexer(moduleName, modSchema, opts)
-			moduleIndexers[moduleName] = mm
-
-			return mm.InitializeSchema(ctx, tx)
-		},
-		OnObjectUpdate: func(data appdata.ObjectUpdateData) error {
-			module := data.ModuleName
-			mod, ok := moduleIndexers[module]
-			if !ok {
-				return fmt.Errorf("module %s not initialized", module)
-			}
-
-			for _, update := range data.Updates {
-				tm, ok := mod.tables[update.TypeName]
-				if !ok {
-					return fmt.Errorf("object type %s not found in schema for module %s", update.TypeName, module)
-				}
-
-				var err error
-				if update.Delete {
-					err = tm.Delete(ctx, tx, update.Key)
-				} else {
-					err = tm.InsertUpdate(ctx, tx, update.Key, update.Value)
-				}
-				if err != nil {
-					return err
-				}
-			}
-			return nil
-		},
-		Commit: func(data appdata.CommitData) error {
-			err = tx.Commit()
-			if err != nil {
-				return err
-			}
-
-			tx, err = db.BeginTx(ctx, nil)
-			return err
-		},
-	}
-
-	return indexer.InitResult{
-		Listener: listener,
+	return &Indexer{
+		ctx:     ctx,
+		db:      db,
+		tx:      tx,
+		opts:    opts,
+		modules: moduleIndexers,
 	}, nil
 }
 

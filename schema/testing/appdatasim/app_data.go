@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/schema"
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/testing/statesim"
+	"cosmossdk.io/schema/view"
 )
 
 // Options are the options for creating an app data simulator.
@@ -151,7 +152,7 @@ func (a *Simulator) ProcessPacket(packet appdata.Packet) error {
 }
 
 // AppState returns the current app state backing the simulator.
-func (a *Simulator) AppState() statesim.AppState {
+func (a *Simulator) AppState() view.AppState {
 	return a.state
 }
 

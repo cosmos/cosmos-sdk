@@ -8,6 +8,7 @@ import (
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/schema"
+	"cosmossdk.io/schema/view"
 )
 
 // Module is a collection of object collections corresponding to a module's schema for testing purposes.
@@ -67,12 +68,12 @@ func (o *Module) ModuleSchema() schema.ModuleSchema {
 }
 
 // GetObjectCollection returns the object collection for the given object type.
-func (o *Module) GetObjectCollection(objectType string) (ObjectCollectionState, bool) {
+func (o *Module) GetObjectCollection(objectType string) (view.ObjectCollection, bool) {
 	return o.objectCollections.Get(objectType)
 }
 
 // ObjectCollections iterates over all object collections in the module.
-func (o *Module) ObjectCollections(f func(value ObjectCollectionState) bool) {
+func (o *Module) ObjectCollections(f func(value view.ObjectCollection) bool) {
 	o.objectCollections.Scan(func(key string, value *ObjectCollection) bool {
 		return f(value)
 	})

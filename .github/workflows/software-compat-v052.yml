@@ -1,8 +1,8 @@
 name: SimApp (v2) v0.52 Integration with Main
 on:
   push:
-    #branches:
-    #  - main
+    branches:
+      - main
   workflow_dispatch:
 jobs:
   compat:

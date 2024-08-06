@@ -4,7 +4,6 @@ import (
 	"context"
 	app2 "cosmossdk.io/core/app"
 	serverv2 "cosmossdk.io/server/v2"
-	bank "cosmossdk.io/x/bank/types"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -59,7 +58,7 @@ func NewTestApp(t *testing.T) *SimApp[transaction.Tx] {
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	app := NewTestApp(t)
 
-	gen, err := app.ExportAppStateAndValidators(false, nil, []string{bank.ModuleName})
+	gen, err := app.ExportAppStateAndValidators(false, nil, nil)
 	require.NoError(t, err)
 
 	fmt.Printf("Exported genesis: %s\n", gen.AppState)

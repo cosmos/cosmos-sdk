@@ -201,6 +201,10 @@ func (k msgServer) Burn(ctx context.Context, msg *types.MsgBurn) (*types.MsgBurn
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, coins.String())
 	}
 
+	if !coins.IsAllPositive() {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, coins.String())
+	}
+
 	err = k.BurnCoins(ctx, from, coins)
 	if err != nil {
 		return nil, err

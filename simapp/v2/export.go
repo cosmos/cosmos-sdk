@@ -2,13 +2,8 @@ package simapp
 
 import (
 	"context"
-	"encoding/json"
-	"log"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-
-	"cosmossdk.io/x/staking"
-
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 )
 
@@ -16,10 +11,12 @@ import (
 // file.
 func (app *SimApp[T]) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs, modulesToExport []string) (servertypes.ExportedApp, error) {
 	// as if they could withdraw from the start of the next block
-	ctx := context.TODO() // TODO: remove
+	ctx := context.Background()
+
 	// We export at last height + 1, because that's the height at which
 	// CometBFT will start InitChain.
 	latestHeight, err := app.LoadLatestHeight()
+
 	if err != nil {
 		return servertypes.ExportedApp{}, err
 	}
@@ -29,36 +26,16 @@ func (app *SimApp[T]) ExportAppStateAndValidators(forZeroHeight bool, jailAllowe
 	// 	app.prepForZeroHeightGenesis(ctx, jailAllowedAddrs)
 	// }
 
-	genState, err := app.ModuleManager().ExportGenesisForModules(ctx, modulesToExport...)
+	genesis, err := app.ExportGenesis(ctx, height)
 	if err != nil {
 		return servertypes.ExportedApp{}, err
 	}
 
-	appState, err := json.MarshalIndent(genState, "", "  ")
-	if err != nil {
-		return servertypes.ExportedApp{}, err
-	}
-
-	res, err := app.ConsensusParamsKeeper.ParamsStore.Get(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-	cometParams := cmtproto.ConsensusParams{
-		Block:     res.Block,
-		Evidence:  res.Evidence,
-		Validator: res.Validator,
-		Feature:   res.Feature,
-		Version:   res.Version,
-		Synchrony: res.Synchrony,
-		Abci:      res.Abci,
-	}
-
-	validators, err := staking.WriteValidators(ctx, app.StakingKeeper)
 	return servertypes.ExportedApp{
-		AppState:        appState,
-		Validators:      validators,
+		AppState:        genesis,
+		Validators:      nil,
 		Height:          int64(height),
-		ConsensusParams: cometParams,
+		ConsensusParams: cmtproto.ConsensusParams{}, // TODO: CometBFT consensus params
 	}, err
 }
 

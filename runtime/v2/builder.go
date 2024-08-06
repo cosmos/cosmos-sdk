@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"cosmossdk.io/x/bank/types"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -174,6 +175,19 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 				return fmt.Errorf("failed to init genesis: %w", err)
 			}
 			return nil
+		},
+		ExportGenesis: func(ctx context.Context, version uint64) ([]byte, error) {
+			genesisJson, err := a.app.moduleManager.ExportGenesisForModules(ctx, []string{types.ModuleName}...)
+			if err != nil {
+				return nil, fmt.Errorf("failed to export genesis: %w", err)
+			}
+
+			bz, err := json.Marshal(genesisJson)
+			if err != nil {
+				return nil, fmt.Errorf("failed to marshal genesis: %w", err)
+			}
+
+			return bz, nil
 		},
 	}
 

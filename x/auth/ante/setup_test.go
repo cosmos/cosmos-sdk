@@ -117,7 +117,7 @@ func TestRecoverPanic(t *testing.T) {
 
 type OutOfGasDecorator struct{}
 
-// AnteDecorator that will throw OutOfGas panic
+// AnteHandle that will throw OutOfGas panic
 func (ogd OutOfGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	overLimit := ctx.GasMeter().Limit() + 1
 

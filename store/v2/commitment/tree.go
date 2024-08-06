@@ -16,7 +16,7 @@ var ErrorExportDone = errors.New("export is complete")
 type Tree interface {
 	Set(key, value []byte) error
 	Remove(key []byte) error
-	GetLatestVersion() uint64
+	GetLatestVersion() (uint64, error)
 
 	// Hash returns the hash of the latest saved version of the tree.
 	Hash() []byte

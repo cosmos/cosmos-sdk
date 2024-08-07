@@ -3,8 +3,9 @@ package keeper_test
 import (
 	"context"
 
-	"cosmossdk.io/x/auth/types"
 	"google.golang.org/protobuf/runtime/protoiface"
+
+	"cosmossdk.io/x/auth/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"

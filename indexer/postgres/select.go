@@ -15,7 +15,11 @@ import (
 
 // Count returns the number of rows in the table.
 func (tm *objectIndexer) count(ctx context.Context, conn dbConn) (int, error) {
-	row := conn.QueryRowContext(ctx, fmt.Sprintf("SELECT COUNT(*) FROM %q;", tm.TableName()))
+	sqlStr := fmt.Sprintf("SELECT COUNT(*) FROM %q;", tm.TableName())
+	if tm.options.Logger != nil {
+		tm.options.Logger("Count", sqlStr)
+	}
+	row := conn.QueryRowContext(ctx, sqlStr)
 	var count int
 	err := row.Scan(&count)
 	return count, err
@@ -34,7 +38,9 @@ func (tm *objectIndexer) exists(ctx context.Context, conn dbConn, key interface{
 
 // checkExists checks if a row exists in the table.
 func (tm *objectIndexer) checkExists(ctx context.Context, conn dbConn, sqlStr string, params []interface{}) (bool, error) {
-	tm.options.Logger("Select", "sql", sqlStr, "params", params)
+	if tm.options.Logger != nil {
+		tm.options.Logger("Check exists", sqlStr, "params", params)
+	}
 	var res interface{}
 	err := conn.QueryRowContext(ctx, sqlStr, params...).Scan(&res)
 	switch err {
@@ -71,7 +77,9 @@ func (tm *objectIndexer) get(ctx context.Context, conn dbConn, key interface{}) 
 	}
 
 	sqlStr := buf.String()
-	tm.options.Logger("Select", "sql", sqlStr, "params", params)
+	if tm.options.Logger != nil {
+		tm.options.Logger("Get", sqlStr, "params", params)
+	}
 
 	row := conn.QueryRowContext(ctx, sqlStr, params...)
 	return tm.readRow(row)

@@ -83,7 +83,7 @@ func exampleCreateTable(objectType schema.ObjectType) {
 }
 
 func exampleCreateTableOpt(objectType schema.ObjectType, noRetainDelete bool) {
-	tm := newObjectIndexer("test", objectType, Options{
+	tm := newObjectIndexer("test", objectType, options{
 		Logger:                 func(msg, sql string, params ...interface{}) {},
 		DisableRetainDeletions: noRetainDelete,
 	})

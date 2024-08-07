@@ -4,8 +4,8 @@ import (
 	"cosmossdk.io/schema/addressutil"
 )
 
-// Options are the options for module and object indexers.
-type Options struct {
+// options are the options for module and object indexers.
+type options struct {
 	// DisableRetainDeletions disables retain deletions functionality even on object types that have it set.
 	DisableRetainDeletions bool
 

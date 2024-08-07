@@ -12,11 +12,11 @@ type objectIndexer struct {
 	typ         schema.ObjectType
 	valueFields map[string]schema.Field
 	allFields   map[string]schema.Field
-	options     Options
+	options     options
 }
 
 // newObjectIndexer creates a new objectIndexer for the given object type.
-func newObjectIndexer(moduleName string, typ schema.ObjectType, options Options) *objectIndexer {
+func newObjectIndexer(moduleName string, typ schema.ObjectType, options options) *objectIndexer {
 	allFields := make(map[string]schema.Field)
 	valueFields := make(map[string]schema.Field)
 

@@ -26,7 +26,7 @@ type indexerImpl struct {
 	ctx     context.Context
 	db      *sql.DB
 	tx      *sql.Tx
-	opts    Options
+	opts    options
 	modules map[string]*moduleIndexer
 }
 
@@ -77,7 +77,7 @@ func StartIndexer(params indexer.InitParams) (indexer.InitResult, error) {
 			}
 		}
 	}
-	opts := Options{
+	opts := options{
 		DisableRetainDeletions: config.DisableRetainDeletions,
 		Logger:                 sqlLogger,
 		AddressCodec:           params.AddressCodec,

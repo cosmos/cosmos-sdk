@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/indexer/postgres"
 	"cosmossdk.io/schema/addressutil"
 	"cosmossdk.io/schema/indexer"
-	"cosmossdk.io/schema/logutil"
 	indexertesting "cosmossdk.io/schema/testing"
 	"cosmossdk.io/schema/testing/appdatasim"
 	"cosmossdk.io/schema/testing/statesim"
@@ -59,7 +58,7 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 	pgIndexer, err := postgres.StartIndexer(indexer.InitParams{
 		Config:       cfg,
 		Context:      ctx,
-		Logger:       logutil.NoopLogger{},
+		Logger:       prettyLogger{out: os.Stdout},
 		AddressCodec: addressutil.HexAddressCodec{},
 	})
 	require.NoError(t, err)

@@ -13,11 +13,11 @@ type moduleIndexer struct {
 	schema       schema.ModuleSchema
 	tables       map[string]*objectIndexer
 	definedEnums map[string]schema.EnumType
-	options      Options
+	options      options
 }
 
 // newModuleIndexer creates a new moduleIndexer for the given module schema.
-func newModuleIndexer(moduleName string, modSchema schema.ModuleSchema, options Options) *moduleIndexer {
+func newModuleIndexer(moduleName string, modSchema schema.ModuleSchema, options options) *moduleIndexer {
 	return &moduleIndexer{
 		moduleName:   moduleName,
 		schema:       modSchema,

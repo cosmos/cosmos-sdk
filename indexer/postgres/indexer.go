@@ -91,15 +91,9 @@ func StartIndexer(params indexer.InitParams) (indexer.InitResult, error) {
 		modules: moduleIndexers,
 	}
 
-	lastBlock, err := idx.BlockNum()
-	if err != nil {
-		return indexer.InitResult{}, err
-	}
-
 	return indexer.InitResult{
-		Listener:           idx.Listener(),
-		LastBlockPersisted: lastBlock,
-		View:               idx,
+		Listener: idx.Listener(),
+		View:     idx,
 	}, nil
 }
 

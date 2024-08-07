@@ -36,18 +36,19 @@ func DiffObjectCollections(expected, actual view.ObjectCollection) string {
 			return true
 		}
 
+		keyStr := fmtObjectKey(expected.ObjectType(), expectedUpdate.Key)
 		actualUpdate, found, err := actual.GetObject(expectedUpdate.Key)
 		if err != nil {
-			res += fmt.Sprintf("ERROR getting actual object: %s\n", err)
+			res += fmt.Sprintf("Object %s: ERROR: %v\n", keyStr, err)
 			return true
 		}
 		if !found {
-			res += fmt.Sprintf("Object %s: NOT FOUND\n", fmtObjectKey(expected.ObjectType(), expectedUpdate.Key))
+			res += fmt.Sprintf("Object %s: NOT FOUND\n", keyStr)
 			return true
 		}
 
 		if expectedUpdate.Delete != actualUpdate.Delete {
-			res += fmt.Sprintf("Object %s: Deleted mismatch, expected %v, got %v\n", fmtObjectKey(expected.ObjectType(), expectedUpdate.Key), expectedUpdate.Delete, actualUpdate.Delete)
+			res += fmt.Sprintf("Object %s: Deleted mismatch, expected %v, got %v\n", keyStr, expectedUpdate.Delete, actualUpdate.Delete)
 		}
 
 		if expectedUpdate.Delete {
@@ -57,7 +58,7 @@ func DiffObjectCollections(expected, actual view.ObjectCollection) string {
 		valueDiff := schematesting.DiffObjectValues(expected.ObjectType().ValueFields, expectedUpdate.Value, actualUpdate.Value)
 		if valueDiff != "" {
 			res += "Object "
-			res += fmtObjectKey(expected.ObjectType(), expectedUpdate.Key)
+			res += keyStr
 			res += "\n"
 			res += indentAllLines(valueDiff)
 		}

@@ -63,11 +63,11 @@ func (tm *objectIndexer) existsSqlAndParams(w io.Writer, key interface{}) ([]int
 	return keyParams, err
 }
 
-func (tm *objectIndexer) get(ctx context.Context, conn dbConn, key interface{}) (schema.ObjectUpdate, error) {
+func (tm *objectIndexer) get(ctx context.Context, conn dbConn, key interface{}) (schema.ObjectUpdate, bool, error) {
 	buf := new(strings.Builder)
 	params, err := tm.getSqlAndParams(buf, key)
 	if err != nil {
-		return schema.ObjectUpdate{}, err
+		return schema.ObjectUpdate{}, false, err
 	}
 
 	sqlStr := buf.String()
@@ -138,7 +138,7 @@ func (tm *objectIndexer) selectAllClause(w io.Writer) error {
 	return nil
 }
 
-func (tm *objectIndexer) readRow(row interface{ Scan(...interface{}) error }) (schema.ObjectUpdate, error) {
+func (tm *objectIndexer) readRow(row interface{ Scan(...interface{}) error }) (schema.ObjectUpdate, bool, error) {
 	var res []interface{}
 	for _, f := range tm.typ.KeyFields {
 		res = append(res, tm.colBindValue(f))
@@ -154,14 +154,17 @@ func (tm *objectIndexer) readRow(row interface{ Scan(...interface{}) error }) (s
 
 	err := row.Scan(res...)
 	if err != nil {
-		return schema.ObjectUpdate{}, err
+		if err == sql.ErrNoRows {
+			return schema.ObjectUpdate{}, false, err
+		}
+		return schema.ObjectUpdate{}, false, err
 	}
 
 	var keys []interface{}
 	for _, field := range tm.typ.KeyFields {
 		x, err := tm.readCol(field, res[0])
 		if err != nil {
-			return schema.ObjectUpdate{}, err
+			return schema.ObjectUpdate{}, false, err
 		}
 		keys = append(keys, x)
 		res = res[1:]
@@ -176,7 +179,7 @@ func (tm *objectIndexer) readRow(row interface{ Scan(...interface{}) error }) (s
 	for _, field := range tm.typ.ValueFields {
 		x, err := tm.readCol(field, res[0])
 		if err != nil {
-			return schema.ObjectUpdate{}, err
+			return schema.ObjectUpdate{}, false, err
 		}
 		values = append(values, x)
 		res = res[1:]
@@ -200,7 +203,7 @@ func (tm *objectIndexer) readRow(row interface{ Scan(...interface{}) error }) (s
 		}
 	}
 
-	return update, nil
+	return update, true, nil
 }
 
 func (tm *objectIndexer) colBindValue(field schema.Field) interface{} {

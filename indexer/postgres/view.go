@@ -105,11 +105,7 @@ func (tm *objectView) ObjectType() schema.ObjectType {
 }
 
 func (tm *objectView) GetObject(key interface{}) (update schema.ObjectUpdate, found bool, err error) {
-	update, err = tm.get(tm.ctx, tm.conn, key)
-	if err != nil {
-		return schema.ObjectUpdate{}, false, err
-	}
-	return update, true, err
+	return tm.get(tm.ctx, tm.conn, key)
 }
 
 func (tm *objectView) AllState(f func(schema.ObjectUpdate, error) bool) {
@@ -136,7 +132,10 @@ func (tm *objectView) AllState(f func(schema.ObjectUpdate, error) bool) {
 	}(rows)
 
 	for rows.Next() {
-		update, err := tm.readRow(rows)
+		update, found, err := tm.readRow(rows)
+		if err == nil && !found {
+			err = sql.ErrNoRows
+		}
 		if !f(update, err) {
 			return
 		}

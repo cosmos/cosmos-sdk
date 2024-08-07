@@ -74,7 +74,7 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 	require.NoError(t, err)
 
 	blockDataGen := sim.BlockDataGenN(10, 100)
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 100; i++ {
 		// using Example generates a deterministic data set based
 		// on a seed so that regression tests can be created OR rapid.Check can
 		// be used for fully random property-based testing

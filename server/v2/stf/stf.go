@@ -470,7 +470,9 @@ func (s STF[T]) Query(
 	queryCtx := s.makeContext(ctx, nil, queryState, internal.ExecModeSimulate)
 	queryCtx.setHeaderInfo(hi)
 	queryCtx.setGasLimit(gasLimit)
-	return s.queryRouter.InvokeUntyped(queryCtx, req)
+	res, err := s.queryRouter.InvokeUntyped(queryCtx, req)
+	fmt.Println("InvokeUntyped", res, err)
+	return res, err
 }
 
 // RunWithCtx is made to support genesis, if genesis was just the execution of messages instead

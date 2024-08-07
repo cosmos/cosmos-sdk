@@ -8,6 +8,7 @@ replace (
 	cosmossdk.io/core/testing => ../../../core/testing
 	cosmossdk.io/server/v2 => ../
 	cosmossdk.io/server/v2/appmanager => ../appmanager
+	cosmossdk.io/server/v2/stf => ../stf
 	cosmossdk.io/store => ../../../store
 	cosmossdk.io/store/v2 => ../../../store/v2
 	cosmossdk.io/x/accounts => ../../../x/accounts
@@ -27,6 +28,7 @@ require (
 	cosmossdk.io/log v1.3.1
 	cosmossdk.io/server/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000
+	cosmossdk.io/server/v2/stf v0.0.0-20240708142107-25e99c54bac1
 	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-rc1
@@ -39,6 +41,7 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
+	github.com/stretchr/testify v1.9.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240318140521-94a12d6c2237
 	google.golang.org/grpc v1.64.1
 	google.golang.org/protobuf v1.34.2
@@ -48,6 +51,7 @@ require (
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
+	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/math v1.3.0 // indirect
@@ -124,6 +128,7 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -149,7 +154,6 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
-	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/supranational/blst v0.3.12 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect

@@ -1,13 +1,5 @@
 package view
 
-type AppData interface {
-	// AppState returns the app state. If the view doesn't persist app state, nil should be returned.
-	AppState() AppState
-
-	// BlockNum returns the latest persisted block number.
-	BlockNum() (int64, error)
-}
-
 // AppState defines an interface for things that represent application state in schema format.
 type AppState interface {
 	// GetModule returns the module state for the given module name. If the module does not exist, nil and no error

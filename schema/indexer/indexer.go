@@ -74,16 +74,13 @@ type InitResult struct {
 	// Listener is the indexer's app data listener.
 	Listener appdata.Listener
 
-	// LastBlockPersisted indicates the last block that the indexer persisted (if it is persisting data). It
-	// should be 0 if the indexer has no data stored and wants to start syncing state. It should be -1 if the indexer
-	// does not care to persist state at all and is just listening for some other streaming purpose. If the indexer
-	// has persisted state and has missed some blocks, a runtime error will occur to prevent the indexer from continuing
-	// in an invalid state. If an indexer starts indexing after a chain's genesis (returning 0), the indexer manager
-	// will attempt to perform a catch-up sync of state. Historical events will not be replayed, but an accurate
-	// representation of the current state at the height at which indexing began can be reproduced.
-	LastBlockPersisted int64
-
 	// View is a view of indexed data that indexers can provide. It is optional and may be nil.
-	// if it is provided it can be used for automated testing and other purposes.
+	// If it is provided it can be used for automated testing and other purposes.
+	// At indexer start-up, the block number returned by the view will be used to determine the
+	// starting block for the indexer. If the block number is 0, the indexer manager will attempt
+	// to perform a catch-up sync of state. Historical events will not be replayed, but an accurate
+	// representation of the current state at the height at which indexing began can be reproduced.
+	// If the block number is non-zero but does not match the current chain height, a runtime error
+	// will occur because this is an unsafe condition that indicates lost data.
 	View view.AppData
 }

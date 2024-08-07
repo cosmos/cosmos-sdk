@@ -15,13 +15,13 @@ func (i *indexerImpl) AppState() view.AppState {
 	return i
 }
 
-func (i *indexerImpl) BlockNum() (int64, error) {
+func (i *indexerImpl) BlockNum() (uint64, error) {
 	var blockNum int64
 	err := i.tx.QueryRow("SELECT coalesce(max(number), 0) FROM block").Scan(&blockNum)
 	if err != nil {
 		return 0, err
 	}
-	return blockNum, nil
+	return uint64(blockNum), nil
 }
 
 type moduleView struct {

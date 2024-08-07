@@ -120,7 +120,7 @@ func (oe *OptimisticExecution) Execute(req *abci.RequestProcessProposal) {
 
 // AbortIfNeeded aborts the OE if the request hash is not the same as the one in
 // the running OE. Returns true if the OE was aborted.
-func (oe *OptimisticExecution) AbortIfNeeded(reqHash []byte) bool {
+func (oe *OptimisticExecution) AbortIfNeeded(req *abci.RequestFinalizeBlock) bool {
 	if oe == nil {
 		return false
 	}
@@ -128,8 +128,8 @@ func (oe *OptimisticExecution) AbortIfNeeded(reqHash []byte) bool {
 	oe.mtx.Lock()
 	defer oe.mtx.Unlock()
 
-	if !bytes.Equal(oe.request.Hash, reqHash) {
-		oe.logger.Error("OE aborted due to hash mismatch", "oe_hash", hex.EncodeToString(oe.request.Hash), "req_hash", hex.EncodeToString(reqHash), "oe_height", oe.request.Height, "req_height", oe.request.Height)
+	if !bytes.Equal(oe.request.Hash, req.Hash) {
+		oe.logger.Error("OE aborted due to hash mismatch", "oe_hash", hex.EncodeToString(oe.request.Hash), "req_hash", hex.EncodeToString(req.Hash), "oe_height", oe.request.Height, "req_height", req.Height)
 		oe.cancelFunc()
 		return true
 	} else if oe.abortRate > 0 && rand.Intn(100) < oe.abortRate {

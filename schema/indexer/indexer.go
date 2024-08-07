@@ -3,7 +3,6 @@ package indexer
 import (
 	"context"
 
-	"cosmossdk.io/schema/addressutil"
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/logutil"
 	"cosmossdk.io/schema/view"
@@ -63,10 +62,6 @@ type InitParams struct {
 	// Logger is a logger the indexer can use to write log messages. It may be nil if the indexer does not need
 	// to write logs.
 	Logger logutil.Logger
-
-	// AddressCodec is the address codec that the indexer can use to encode and decode addresses. It is
-	// expected to be non-nil.
-	AddressCodec addressutil.AddressCodec
 }
 
 // InitResult is the indexer initialization result and includes the indexer's listener implementation.

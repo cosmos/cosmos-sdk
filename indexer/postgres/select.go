@@ -190,8 +190,8 @@ func (tm *ObjectIndexer) readRow(row interface{ Scan(...interface{}) error }) (s
 
 func (tm *ObjectIndexer) colBindValue(field schema.Field) interface{} {
 	switch field.Kind {
-	case schema.BytesKind, schema.AddressKind:
-		return new([]byte)
+	case schema.BytesKind:
+		return new(interface{})
 	default:
 		return new(sql.NullString)
 	}
@@ -199,8 +199,9 @@ func (tm *ObjectIndexer) colBindValue(field schema.Field) interface{} {
 
 func (tm *ObjectIndexer) readCol(field schema.Field, value interface{}) (interface{}, error) {
 	switch field.Kind {
-	case schema.BytesKind, schema.AddressKind:
-		return *value.(*[]byte), nil
+	case schema.BytesKind:
+		value = *value.(*interface{})
+		return value, nil
 	default:
 	}
 
@@ -262,6 +263,8 @@ func (tm *ObjectIndexer) readCol(field schema.Field, value interface{}) (interfa
 			return nil, err
 		}
 		return time.Duration(value), nil
+	case schema.AddressKind:
+		return tm.options.AddressCodec.StringToBytes(str)
 	default:
 		return value, nil
 	}

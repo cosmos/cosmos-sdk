@@ -40,7 +40,7 @@ func DiffAppStates(expected, actual view.AppState) string {
 			return true
 		}
 		if actualMod == nil {
-			res += fmt.Sprintf("Module %s: actual module NOT FOUND\n")
+			res += fmt.Sprintf("Module %s: actual module NOT FOUND\n", moduleName)
 			return true
 		}
 

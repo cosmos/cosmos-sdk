@@ -299,6 +299,69 @@ func TestConsensus_FinalizeBlock_MultiTxs(t *testing.T) {
 	require.Equal(t, int64(endBlock), c.lastCommittedHeight.Load())
 }
 
+func TestConsensus_ExtendVote_Invalid(t *testing.T) {
+	c, s := setUpConsensus(t)
+
+	addQueryHandlerToSTF(t, s, func(ctx context.Context, q *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error) {
+		cParams := &v1.ConsensusParams{
+			Block: &v1.BlockParams{
+				MaxGas: 5000000,
+			},
+			Abci: &v1.ABCIParams{
+				VoteExtensionsEnableHeight: 2,
+			},
+			Feature: &v1.FeatureParams{
+				VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 2},
+			},
+		}
+
+		kvSet(t, ctx, "query")
+		return &consensustypes.QueryParamsResponse{
+			Params: cParams,
+		}, nil
+	})
+	addMsgHandlerToSTF(t, s, func(ctx context.Context, msg *consensustypes.MsgUpdateParams) (*consensustypes.MsgUpdateParams, error) {
+		kvSet(t, ctx, "exec")
+		return nil, nil
+	})
+
+	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
+		Time:          time.Now(),
+		ChainId:       "test",
+		InitialHeight: 1,
+		ConsensusParams: &v1.ConsensusParams{
+			Block: &v1.BlockParams{
+				MaxGas: 5000000,
+			},
+			Abci: &v1.ABCIParams{
+				VoteExtensionsEnableHeight: 2,
+			},
+			Feature: &v1.FeatureParams{
+				VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 2},
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	// Votes not enabled yet
+	_, err = c.ExtendVote(context.Background(), &abciproto.ExtendVoteRequest{
+		Height: 1,
+	})
+	require.ErrorContains(t, err, "vote extensions are not enabled")
+
+	// Empty extendVote handler
+	_, err = c.ExtendVote(context.Background(), &abciproto.ExtendVoteRequest{
+		Height: 2,
+	})
+	require.ErrorContains(t, err, "verify function was set")
+
+	c.extendVote = DefaultServerOptions[mock.Tx]().ExtendVoteHandler
+	res, err := c.ExtendVote(context.Background(), &abciproto.ExtendVoteRequest{
+		Height: 2,
+	})
+	fmt.Println(res, err)
+}
+
 func setUpConsensus(t *testing.T) (*Consensus[mock.Tx], *stf.STF[mock.Tx]) {
 	s, err := stf.NewSTF(
 		log.NewNopLogger().With("module", "stf"),

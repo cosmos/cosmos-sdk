@@ -41,7 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### CLI Breaking Changes
 
-* (vesting) [#18100](https://github.com/cosmos/cosmos-sdk/pull/18100) `appd tx vesting create-vesting-account` takes an amount of coin as last argument instead of second. Coins are space separated.
+* (vesting) [#19539](https://github.com/cosmos/cosmos-sdk/pull/19539) Remove vesting CLI.
 
 ### API Breaking Changes
 

@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/schema/appdata"
@@ -23,7 +24,7 @@ type SqlLogger = func(msg, sql string, params ...interface{})
 
 func StartIndexer(ctx context.Context, logger SqlLogger, config Config) (appdata.Listener, error) {
 	if config.DatabaseURL == "" {
-		return appdata.Listener{}, fmt.Errorf("missing database URL")
+		return appdata.Listener{}, errors.New("missing database URL")
 	}
 
 	driver := config.DatabaseDriver

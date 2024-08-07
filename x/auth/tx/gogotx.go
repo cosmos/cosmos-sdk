@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -176,6 +177,11 @@ func (w *gogoTxWrapper) GetMemo() string { return w.Tx.Body.Memo }
 
 // GetTimeoutHeight returns the transaction's timeout height (if set).
 func (w *gogoTxWrapper) GetTimeoutHeight() uint64 { return w.Tx.Body.TimeoutHeight }
+
+// GetTimeoutTimeStamp returns the transaction's timeout timestamp (if set).
+func (w *gogoTxWrapper) GetTimeoutTimeStamp() time.Time {
+	return w.Tx.Body.TimeoutTimestamp.AsTime()
+}
 
 // GetUnordered returns the transaction's unordered field (if set).
 func (w *gogoTxWrapper) GetUnordered() bool { return w.Tx.Body.Unordered }

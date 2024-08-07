@@ -20,9 +20,9 @@ import (
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/legacy"
-	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/stf"
 )
 
@@ -166,7 +166,7 @@ func (m *MM[T]) InitGenesisJSON(
 		case appmodulev2.HasGenesis:
 			m.logger.Debug("running initialization for module", "module", moduleName)
 			if err := module.InitGenesis(ctx, genesisData[moduleName]); err != nil {
-				return err
+				return fmt.Errorf("init module %s: %w", moduleName, err)
 			}
 		case appmodulev2.HasABCIGenesis:
 			m.logger.Debug("running initialization for module", "module", moduleName)
@@ -410,7 +410,7 @@ func (m *MM[T]) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap
 
 				// The module manager assumes only one module will update the validator set, and it can't be a new module.
 				if len(moduleValUpdates) > 0 {
-					return nil, fmt.Errorf("validator InitGenesis update is already set by another module")
+					return nil, errors.New("validator InitGenesis update is already set by another module")
 				}
 			}
 		}
@@ -556,7 +556,7 @@ func (m *MM[T]) assertNoForgottenModules(
 
 func registerServices[T transaction.Tx](s appmodule.HasServices, app *App[T], registry *protoregistry.Files) error {
 	c := &configurator{
-		grpcQueryDecoders: map[string]func([]byte) (gogoproto.Message, error){},
+		grpcQueryDecoders: map[string]func() gogoproto.Message{},
 		stfQueryRouter:    app.queryRouterBuilder,
 		stfMsgRouter:      app.msgRouterBuilder,
 		registry:          registry,
@@ -567,7 +567,10 @@ func registerServices[T transaction.Tx](s appmodule.HasServices, app *App[T], re
 	if err != nil {
 		return fmt.Errorf("unable to register services: %w", err)
 	}
-	app.GRPCQueryDecoders = c.grpcQueryDecoders
+	// merge maps
+	for path, decoder := range c.grpcQueryDecoders {
+		app.GRPCMethodsToMessageMap[path] = decoder
+	}
 	return nil
 }
 
@@ -576,7 +579,7 @@ var _ grpc.ServiceRegistrar = (*configurator)(nil)
 type configurator struct {
 	// grpcQueryDecoders is required because module expose queries through gRPC
 	// this provides a way to route to modules using gRPC.
-	grpcQueryDecoders map[string]func([]byte) (gogoproto.Message, error)
+	grpcQueryDecoders map[string]func() gogoproto.Message
 
 	stfQueryRouter *stf.MsgRouterBuilder
 	stfMsgRouter   *stf.MsgRouterBuilder
@@ -618,11 +621,11 @@ func (c *configurator) registerQueryHandlers(sd *grpc.ServiceDesc, ss interface{
 		if typ == nil {
 			return fmt.Errorf("unable to find message in gogotype registry: %w", err)
 		}
-		decoderFunc := func(bytes []byte) (gogoproto.Message, error) {
-			msg := reflect.New(typ.Elem()).Interface().(gogoproto.Message)
-			return msg, gogoproto.Unmarshal(bytes, msg)
+		decoderFunc := func() gogoproto.Message {
+			return reflect.New(typ.Elem()).Interface().(gogoproto.Message)
 		}
-		c.grpcQueryDecoders[md.MethodName] = decoderFunc
+		methodName := fmt.Sprintf("/%s/%s", sd.ServiceName, md.MethodName)
+		c.grpcQueryDecoders[methodName] = decoderFunc
 	}
 	return nil
 }

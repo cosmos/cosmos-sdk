@@ -8,9 +8,9 @@ import (
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	coreapp "cosmossdk.io/core/app"
 	"cosmossdk.io/core/legacy"
-	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/x/accounts"
@@ -36,6 +36,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 // DefaultNodeHome default home directories for the application daemon

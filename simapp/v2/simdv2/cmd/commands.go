@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/client/v2/offchain"
-	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
@@ -52,8 +52,6 @@ func initRootCmd[T transaction.Tx](
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
 		NewTestnetCmd(moduleManager),
-		// pruning.Cmd(newApp), // TODO add to comet server
-		// snapshot.Cmd(newApp), // TODO add to comet server
 	)
 
 	logger, err := serverv2.NewLogger(viper.New(), rootCmd.OutOrStdout())
@@ -77,7 +75,7 @@ func initRootCmd[T transaction.Tx](
 		logger,
 		cometbft.New(&genericTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
 		grpc.New[T](),
-		store.New[T](),
+		store.New[T](newApp),
 	); err != nil {
 		panic(err)
 	}

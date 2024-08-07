@@ -290,7 +290,7 @@ func (m *MockPoolKeeper) EXPECT() *MockPoolKeeperMockRecorder {
 }
 
 // FundCommunityPool mocks base method.
-func (m *MockPoolKeeper) FundCommunityPool(ctx context.Context, amount types.Coins, sender types.AccAddress) error {
+func (m *MockPoolKeeper) FundCommunityPool(ctx context.Context, amount types.Coins, sender []byte) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FundCommunityPool", ctx, amount, sender)
 	ret0, _ := ret[0].(error)

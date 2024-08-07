@@ -26,8 +26,8 @@ var Identity = []byte("stf")
 type STF[T transaction.Tx] struct {
 	logger log.Logger
 
-	msgRouter   Router
-	queryRouter Router
+	msgRouter   coreRouterImpl
+	queryRouter coreRouterImpl
 
 	doPreBlock        func(ctx context.Context, txs []T) error
 	doBeginBlock      func(ctx context.Context) error
@@ -149,7 +149,7 @@ func (s STF[T]) DeliverBlock(
 		if err = isCtxCancelled(ctx); err != nil {
 			return nil, nil, err
 		}
-		txResults[i] = s.deliverTx(ctx, newState, txBytes, transaction.ExecModeFinalize, hi)
+		txResults[i] = s.deliverTx(exCtx, newState, txBytes, transaction.ExecModeFinalize, hi)
 	}
 	// reset events
 	exCtx.events = make([]event.Event, 0)
@@ -564,10 +564,10 @@ func (s STF[T]) makeContext(
 ) *executionContext {
 	valuedCtx := context.WithValue(ctx, corecontext.ExecModeKey, execMode)
 	return newExecutionContext(
+		valuedCtx,
 		s.makeGasMeter,
 		s.makeGasMeteredState,
 		s.branchFn,
-		valuedCtx,
 		sender,
 		store,
 		execMode,
@@ -577,15 +577,15 @@ func (s STF[T]) makeContext(
 }
 
 func newExecutionContext(
+	ctx context.Context,
 	makeGasMeterFn makeGasMeterFn,
 	makeGasMeteredStoreFn makeGasMeteredStateFn,
 	branchFn branchFn,
-	ctx context.Context,
 	sender transaction.Identity,
 	state store.WriterMap,
 	execMode transaction.ExecMode,
-	msgRouter Router,
-	queryRouter Router,
+	msgRouter coreRouterImpl,
+	queryRouter coreRouterImpl,
 ) *executionContext {
 	meter := makeGasMeterFn(gas.NoGasLimit)
 	meteredState := makeGasMeteredStoreFn(meter, state)

@@ -4,7 +4,7 @@ package cosmos.epochs.module.v1;
 
 import "cosmos/app/v1alpha1/module.proto";
 
-// Module is the config object of the authz module.
+// Module is the config object of the epochs module.
 message Module {
   option (cosmos.app.v1alpha1.module) = {
     go_import: "cosmossdk.io/x/epochs"

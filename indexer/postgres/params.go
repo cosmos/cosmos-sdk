@@ -8,7 +8,7 @@ import (
 )
 
 // bindKeyParams binds the key to the key columns.
-func (tm *ObjectIndexer) bindKeyParams(key interface{}) ([]interface{}, []string, error) {
+func (tm *objectIndexer) bindKeyParams(key interface{}) ([]interface{}, []string, error) {
 	n := len(tm.typ.KeyFields)
 	if n == 0 {
 		// singleton, set _id = 1
@@ -25,7 +25,7 @@ func (tm *ObjectIndexer) bindKeyParams(key interface{}) ([]interface{}, []string
 	}
 }
 
-func (tm *ObjectIndexer) bindValueParams(value interface{}) (params []interface{}, valueCols []string, err error) {
+func (tm *objectIndexer) bindValueParams(value interface{}) (params []interface{}, valueCols []string, err error) {
 	n := len(tm.typ.ValueFields)
 	if n == 0 {
 		return nil, nil, nil
@@ -62,7 +62,7 @@ func (tm *ObjectIndexer) bindValueParams(value interface{}) (params []interface{
 	}
 }
 
-func (tm *ObjectIndexer) bindParams(fields []schema.Field, values []interface{}) ([]interface{}, []string, error) {
+func (tm *objectIndexer) bindParams(fields []schema.Field, values []interface{}) ([]interface{}, []string, error) {
 	names := make([]string, 0, len(fields))
 	params := make([]interface{}, 0, len(fields))
 	for i, field := range fields {
@@ -86,7 +86,7 @@ func (tm *ObjectIndexer) bindParams(fields []schema.Field, values []interface{})
 	return params, names, nil
 }
 
-func (tm *ObjectIndexer) bindParam(field schema.Field, value interface{}) (param interface{}, err error) {
+func (tm *objectIndexer) bindParam(field schema.Field, value interface{}) (param interface{}, err error) {
 	param = value
 	if value == nil {
 		if !field.Nullable {

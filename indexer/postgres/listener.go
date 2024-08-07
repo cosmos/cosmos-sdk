@@ -16,7 +16,7 @@ func (i *Indexer) Listener() appdata.Listener {
 				return fmt.Errorf("module %s already initialized", moduleName)
 			}
 
-			mm := NewModuleIndexer(moduleName, modSchema, i.opts)
+			mm := newModuleIndexer(moduleName, modSchema, i.opts)
 			i.modules[moduleName] = mm
 
 			return mm.InitializeSchema(i.ctx, i.tx)
@@ -40,9 +40,9 @@ func (i *Indexer) Listener() appdata.Listener {
 
 				var err error
 				if update.Delete {
-					err = tm.Delete(i.ctx, i.tx, update.Key)
+					err = tm.delete(i.ctx, i.tx, update.Key)
 				} else {
-					err = tm.InsertUpdate(i.ctx, i.tx, update.Key, update.Value)
+					err = tm.insertUpdate(i.ctx, i.tx, update.Key, update.Value)
 				}
 				if err != nil {
 					return err

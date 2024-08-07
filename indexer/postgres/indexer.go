@@ -27,7 +27,7 @@ type Indexer struct {
 	db      *sql.DB
 	tx      *sql.Tx
 	opts    Options
-	modules map[string]*ModuleIndexer
+	modules map[string]*moduleIndexer
 }
 
 func StartIndexer(params indexer.InitParams) (*Indexer, error) {
@@ -61,12 +61,12 @@ func StartIndexer(params indexer.InitParams) (*Indexer, error) {
 	}
 
 	// commit base schema
-	_, err = tx.Exec(BaseSQL)
+	_, err = tx.Exec(baseSQL)
 	if err != nil {
 		return nil, err
 	}
 
-	moduleIndexers := map[string]*ModuleIndexer{}
+	moduleIndexers := map[string]*moduleIndexer{}
 	var sqlLogger func(msg, sql string, params ...interface{})
 	if logger := params.Logger; logger != nil {
 		sqlLogger = func(msg, sql string, params ...interface{}) {

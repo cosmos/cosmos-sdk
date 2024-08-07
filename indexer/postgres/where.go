@@ -5,20 +5,20 @@ import (
 	"io"
 )
 
-// WhereSqlAndParams generates a WHERE clause for the provided key and returns the parameters.
-func (tm *ObjectIndexer) WhereSqlAndParams(w io.Writer, key interface{}, startParamIdx int) (endParamIdx int, keyParams []interface{}, err error) {
+// whereSqlAndParams generates a WHERE clause for the provided key and returns the parameters.
+func (tm *objectIndexer) whereSqlAndParams(w io.Writer, key interface{}, startParamIdx int) (endParamIdx int, keyParams []interface{}, err error) {
 	var keyCols []string
 	keyParams, keyCols, err = tm.bindKeyParams(key)
 	if err != nil {
 		return
 	}
 
-	endParamIdx, keyParams, err = tm.WhereSql(w, keyParams, keyCols, startParamIdx)
+	endParamIdx, keyParams, err = tm.whereSql(w, keyParams, keyCols, startParamIdx)
 	return
 }
 
-// WhereSql generates a WHERE clause for the provided columns and returns the parameters.
-func (tm *ObjectIndexer) WhereSql(w io.Writer, params []interface{}, cols []string, startParamIdx int) (endParamIdx int, resParams []interface{}, err error) {
+// whereSql generates a WHERE clause for the provided columns and returns the parameters.
+func (tm *objectIndexer) whereSql(w io.Writer, params []interface{}, cols []string, startParamIdx int) (endParamIdx int, resParams []interface{}, err error) {
 	_, err = fmt.Fprintf(w, " WHERE ")
 	if err != nil {
 		return

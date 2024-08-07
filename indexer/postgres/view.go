@@ -25,7 +25,7 @@ func (i *Indexer) BlockNum() (uint64, error) {
 }
 
 type moduleView struct {
-	ModuleIndexer
+	moduleIndexer
 	ctx  context.Context
 	conn DBConn
 }
@@ -36,7 +36,7 @@ func (i *Indexer) GetModule(moduleName string) (view.ModuleState, error) {
 		return nil, nil
 	}
 	return &moduleView{
-		ModuleIndexer: *mod,
+		moduleIndexer: *mod,
 		ctx:           i.ctx,
 		conn:          i.tx,
 	}, nil
@@ -45,7 +45,7 @@ func (i *Indexer) GetModule(moduleName string) (view.ModuleState, error) {
 func (i *Indexer) Modules(f func(modState view.ModuleState, err error) bool) {
 	for _, mod := range i.modules {
 		if !f(&moduleView{
-			ModuleIndexer: *mod,
+			moduleIndexer: *mod,
 			ctx:           i.ctx,
 			conn:          i.tx,
 		}, nil) {
@@ -72,7 +72,7 @@ func (m *moduleView) GetObjectCollection(objectType string) (view.ObjectCollecti
 		return nil, nil
 	}
 	return &objectView{
-		ObjectIndexer: *obj,
+		objectIndexer: *obj,
 		ctx:           m.ctx,
 		conn:          m.conn,
 	}, nil
@@ -81,7 +81,7 @@ func (m *moduleView) GetObjectCollection(objectType string) (view.ObjectCollecti
 func (m *moduleView) ObjectCollections(f func(value view.ObjectCollection, err error) bool) {
 	for _, obj := range m.tables {
 		if !f(&objectView{
-			ObjectIndexer: *obj,
+			objectIndexer: *obj,
 			ctx:           m.ctx,
 			conn:          m.conn,
 		}, nil) {
@@ -95,7 +95,7 @@ func (m *moduleView) NumObjectCollections() (int, error) {
 }
 
 type objectView struct {
-	ObjectIndexer
+	objectIndexer
 	ctx  context.Context
 	conn DBConn
 }
@@ -105,7 +105,7 @@ func (tm *objectView) ObjectType() schema.ObjectType {
 }
 
 func (tm *objectView) GetObject(key interface{}) (update schema.ObjectUpdate, found bool, err error) {
-	update, err = tm.Get(tm.ctx, tm.conn, key)
+	update, err = tm.get(tm.ctx, tm.conn, key)
 	if err != nil {
 		return schema.ObjectUpdate{}, false, err
 	}
@@ -114,7 +114,7 @@ func (tm *objectView) GetObject(key interface{}) (update schema.ObjectUpdate, fo
 
 func (tm *objectView) AllState(f func(schema.ObjectUpdate, error) bool) {
 	buf := new(strings.Builder)
-	err := tm.SelectAllSql(buf)
+	err := tm.selectAllSql(buf)
 	if err != nil {
 		panic(err)
 	}

@@ -7,9 +7,9 @@ import (
 	"strings"
 )
 
-// InsertUpdate inserts or updates the row with the provided key and value.
-func (tm *ObjectIndexer) InsertUpdate(ctx context.Context, conn DBConn, key, value interface{}) error {
-	exists, err := tm.Exists(ctx, conn, key)
+// insertUpdate inserts or updates the row with the provided key and value.
+func (tm *objectIndexer) insertUpdate(ctx context.Context, conn DBConn, key, value interface{}) error {
+	exists, err := tm.exists(ctx, conn, key)
 	if err != nil {
 		return err
 	}
@@ -17,9 +17,9 @@ func (tm *ObjectIndexer) InsertUpdate(ctx context.Context, conn DBConn, key, val
 	buf := new(strings.Builder)
 	var params []interface{}
 	if exists {
-		params, err = tm.UpdateSql(buf, key, value)
+		params, err = tm.updateSql(buf, key, value)
 	} else {
-		params, err = tm.InsertSql(buf, key, value)
+		params, err = tm.insertSql(buf, key, value)
 	}
 
 	sqlStr := buf.String()
@@ -28,8 +28,8 @@ func (tm *ObjectIndexer) InsertUpdate(ctx context.Context, conn DBConn, key, val
 	return err
 }
 
-// InsertSql generates an INSERT statement and binding parameters for the provided key and value.
-func (tm *ObjectIndexer) InsertSql(w io.Writer, key, value interface{}) ([]interface{}, error) {
+// insertSql generates an INSERT statement and binding parameters for the provided key and value.
+func (tm *objectIndexer) insertSql(w io.Writer, key, value interface{}) ([]interface{}, error) {
 	keyParams, keyCols, err := tm.bindKeyParams(key)
 	if err != nil {
 		return nil, err
@@ -60,8 +60,8 @@ func (tm *ObjectIndexer) InsertSql(w io.Writer, key, value interface{}) ([]inter
 	return allParams, err
 }
 
-// UpdateSql generates an UPDATE statement and binding parameters for the provided key and value.
-func (tm *ObjectIndexer) UpdateSql(w io.Writer, key, value interface{}) ([]interface{}, error) {
+// updateSql generates an UPDATE statement and binding parameters for the provided key and value.
+func (tm *objectIndexer) updateSql(w io.Writer, key, value interface{}) ([]interface{}, error) {
 	_, err := fmt.Fprintf(w, "UPDATE %q SET ", tm.TableName())
 
 	valueParams, valueCols, err := tm.bindValueParams(value)
@@ -92,7 +92,7 @@ func (tm *ObjectIndexer) UpdateSql(w io.Writer, key, value interface{}) ([]inter
 		}
 	}
 
-	_, keyParams, err := tm.WhereSqlAndParams(w, key, paramIdx)
+	_, keyParams, err := tm.whereSqlAndParams(w, key, paramIdx)
 	if err != nil {
 		return nil, err
 	}

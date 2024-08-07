@@ -7,28 +7,28 @@ import (
 	"cosmossdk.io/schema"
 )
 
-// ModuleIndexer manages the tables for a module.
-type ModuleIndexer struct {
+// moduleIndexer manages the tables for a module.
+type moduleIndexer struct {
 	moduleName   string
 	schema       schema.ModuleSchema
-	tables       map[string]*ObjectIndexer
+	tables       map[string]*objectIndexer
 	definedEnums map[string]schema.EnumType
 	options      Options
 }
 
-// NewModuleIndexer creates a new ModuleIndexer for the given module schema.
-func NewModuleIndexer(moduleName string, modSchema schema.ModuleSchema, options Options) *ModuleIndexer {
-	return &ModuleIndexer{
+// newModuleIndexer creates a new moduleIndexer for the given module schema.
+func newModuleIndexer(moduleName string, modSchema schema.ModuleSchema, options Options) *moduleIndexer {
+	return &moduleIndexer{
 		moduleName:   moduleName,
 		schema:       modSchema,
-		tables:       map[string]*ObjectIndexer{},
+		tables:       map[string]*objectIndexer{},
 		definedEnums: map[string]schema.EnumType{},
 		options:      options,
 	}
 }
 
 // InitializeSchema creates tables for all object types in the module schema and creates enum types.
-func (m *ModuleIndexer) InitializeSchema(ctx context.Context, conn DBConn) error {
+func (m *moduleIndexer) InitializeSchema(ctx context.Context, conn DBConn) error {
 	// create enum types
 	var err error
 	m.schema.EnumTypes(func(enumType schema.EnumType) bool {
@@ -41,7 +41,7 @@ func (m *ModuleIndexer) InitializeSchema(ctx context.Context, conn DBConn) error
 
 	// create tables for all object types
 	m.schema.ObjectTypes(func(typ schema.ObjectType) bool {
-		tm := NewObjectIndexer(m.moduleName, typ, m.options)
+		tm := newObjectIndexer(m.moduleName, typ, m.options)
 		m.tables[typ.Name] = tm
 		err = tm.CreateTable(ctx, conn)
 		if err != nil {
@@ -54,6 +54,6 @@ func (m *ModuleIndexer) InitializeSchema(ctx context.Context, conn DBConn) error
 }
 
 // ObjectIndexers returns the object indexers for the module.
-func (m *ModuleIndexer) ObjectIndexers() map[string]*ObjectIndexer {
+func (m *moduleIndexer) ObjectIndexers() map[string]*objectIndexer {
 	return m.tables
 }

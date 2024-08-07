@@ -14,17 +14,17 @@ import (
 )
 
 // Count returns the number of rows in the table.
-func (tm *ObjectIndexer) count(ctx context.Context, conn DBConn) (int, error) {
+func (tm *objectIndexer) count(ctx context.Context, conn DBConn) (int, error) {
 	row := conn.QueryRowContext(ctx, fmt.Sprintf("SELECT COUNT(*) FROM %q;", tm.TableName()))
 	var count int
 	err := row.Scan(&count)
 	return count, err
 }
 
-// Exists checks if a row with the provided key exists in the table.
-func (tm *ObjectIndexer) Exists(ctx context.Context, conn DBConn, key interface{}) (bool, error) {
+// exists checks if a row with the provided key exists in the table.
+func (tm *objectIndexer) exists(ctx context.Context, conn DBConn, key interface{}) (bool, error) {
 	buf := new(strings.Builder)
-	params, err := tm.ExistsSqlAndParams(buf, key)
+	params, err := tm.existsSqlAndParams(buf, key)
 	if err != nil {
 		return false, err
 	}
@@ -32,14 +32,29 @@ func (tm *ObjectIndexer) Exists(ctx context.Context, conn DBConn, key interface{
 	return tm.checkExists(ctx, conn, buf.String(), params)
 }
 
-// ExistsSqlAndParams generates a SELECT statement to check if a row with the provided key exists in the table.
-func (tm *ObjectIndexer) ExistsSqlAndParams(w io.Writer, key interface{}) ([]interface{}, error) {
+// checkExists checks if a row exists in the table.
+func (tm *objectIndexer) checkExists(ctx context.Context, conn DBConn, sqlStr string, params []interface{}) (bool, error) {
+	tm.options.Logger("Select", "sql", sqlStr, "params", params)
+	var res interface{}
+	err := conn.QueryRowContext(ctx, sqlStr, params...).Scan(&res)
+	switch err {
+	case nil:
+		return true, nil
+	case sql.ErrNoRows:
+		return false, nil
+	default:
+		return false, err
+	}
+}
+
+// existsSqlAndParams generates a SELECT statement to check if a row with the provided key exists in the table.
+func (tm *objectIndexer) existsSqlAndParams(w io.Writer, key interface{}) ([]interface{}, error) {
 	_, err := fmt.Fprintf(w, "SELECT 1 FROM %q", tm.TableName())
 	if err != nil {
 		return nil, err
 	}
 
-	_, keyParams, err := tm.WhereSqlAndParams(w, key, 1)
+	_, keyParams, err := tm.whereSqlAndParams(w, key, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -48,9 +63,9 @@ func (tm *ObjectIndexer) ExistsSqlAndParams(w io.Writer, key interface{}) ([]int
 	return keyParams, err
 }
 
-func (tm *ObjectIndexer) Get(ctx context.Context, conn DBConn, key interface{}) (schema.ObjectUpdate, error) {
+func (tm *objectIndexer) get(ctx context.Context, conn DBConn, key interface{}) (schema.ObjectUpdate, error) {
 	buf := new(strings.Builder)
-	params, err := tm.GetSqlAndParams(buf, key)
+	params, err := tm.getSqlAndParams(buf, key)
 	if err != nil {
 		return schema.ObjectUpdate{}, err
 	}
@@ -62,7 +77,7 @@ func (tm *ObjectIndexer) Get(ctx context.Context, conn DBConn, key interface{}) 
 	return tm.readRow(row)
 }
 
-func (tm *ObjectIndexer) SelectAllSql(w io.Writer) error {
+func (tm *objectIndexer) selectAllSql(w io.Writer) error {
 	err := tm.selectAllClause(w)
 	if err != nil {
 		return err
@@ -72,7 +87,7 @@ func (tm *ObjectIndexer) SelectAllSql(w io.Writer) error {
 	return err
 }
 
-func (tm *ObjectIndexer) GetSqlAndParams(w io.Writer, key interface{}) ([]interface{}, error) {
+func (tm *objectIndexer) getSqlAndParams(w io.Writer, key interface{}) ([]interface{}, error) {
 	err := tm.selectAllClause(w)
 	if err != nil {
 		return nil, err
@@ -83,7 +98,7 @@ func (tm *ObjectIndexer) GetSqlAndParams(w io.Writer, key interface{}) ([]interf
 		return nil, err
 	}
 
-	_, keyParams, err = tm.WhereSql(w, keyParams, keyCols, 1)
+	_, keyParams, err = tm.whereSql(w, keyParams, keyCols, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +107,7 @@ func (tm *ObjectIndexer) GetSqlAndParams(w io.Writer, key interface{}) ([]interf
 	return keyParams, err
 }
 
-func (tm *ObjectIndexer) selectAllClause(w io.Writer) error {
+func (tm *objectIndexer) selectAllClause(w io.Writer) error {
 	allFields := make([]string, 0, len(tm.typ.KeyFields)+len(tm.typ.ValueFields))
 
 	for _, field := range tm.typ.KeyFields {
@@ -123,7 +138,7 @@ func (tm *ObjectIndexer) selectAllClause(w io.Writer) error {
 	return nil
 }
 
-func (tm *ObjectIndexer) readRow(row interface{ Scan(...interface{}) error }) (schema.ObjectUpdate, error) {
+func (tm *objectIndexer) readRow(row interface{ Scan(...interface{}) error }) (schema.ObjectUpdate, error) {
 	var res []interface{}
 	for _, f := range tm.typ.KeyFields {
 		res = append(res, tm.colBindValue(f))
@@ -188,7 +203,7 @@ func (tm *ObjectIndexer) readRow(row interface{ Scan(...interface{}) error }) (s
 	return update, nil
 }
 
-func (tm *ObjectIndexer) colBindValue(field schema.Field) interface{} {
+func (tm *objectIndexer) colBindValue(field schema.Field) interface{} {
 	switch field.Kind {
 	case schema.BytesKind:
 		return new(interface{})
@@ -197,9 +212,10 @@ func (tm *ObjectIndexer) colBindValue(field schema.Field) interface{} {
 	}
 }
 
-func (tm *ObjectIndexer) readCol(field schema.Field, value interface{}) (interface{}, error) {
+func (tm *objectIndexer) readCol(field schema.Field, value interface{}) (interface{}, error) {
 	switch field.Kind {
 	case schema.BytesKind:
+		// for bytes types we either get []byte or nil
 		value = *value.(*interface{})
 		return value, nil
 	default:
@@ -267,66 +283,5 @@ func (tm *ObjectIndexer) readCol(field schema.Field, value interface{}) (interfa
 		return tm.options.AddressCodec.StringToBytes(str)
 	default:
 		return value, nil
-	}
-}
-
-// Equals checks if a row with the provided key and value exists.
-func (tm *ObjectIndexer) Equals(ctx context.Context, conn DBConn, key, val interface{}) (bool, error) {
-	buf := new(strings.Builder)
-	params, err := tm.EqualsSqlAndParams(buf, key, val)
-	if err != nil {
-		return false, err
-	}
-
-	return tm.checkExists(ctx, conn, buf.String(), params)
-}
-
-// EqualsSqlAndParams generates a SELECT statement to check if a row with the provided key and value exists in the table.
-func (tm *ObjectIndexer) EqualsSqlAndParams(w io.Writer, key, val interface{}) ([]interface{}, error) {
-	_, err := fmt.Fprintf(w, "SELECT 1 FROM %q", tm.TableName())
-	if err != nil {
-		return nil, err
-	}
-
-	keyParams, keyCols, err := tm.bindKeyParams(key)
-	if err != nil {
-		return nil, err
-	}
-
-	valueParams, valueCols, err := tm.bindValueParams(val)
-	if err != nil {
-		return nil, err
-	}
-
-	allParams := make([]interface{}, 0, len(keyParams)+len(valueParams))
-	allParams = append(allParams, keyParams...)
-	allParams = append(allParams, valueParams...)
-
-	allCols := make([]string, 0, len(keyCols)+len(valueCols))
-	allCols = append(allCols, keyCols...)
-	allCols = append(allCols, valueCols...)
-
-	_, allParams, err = tm.WhereSql(w, allParams, allCols, 1)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = fmt.Fprintf(w, ";")
-	return allParams, err
-}
-
-// checkExists checks if a row exists in the table.
-func (tm *ObjectIndexer) checkExists(ctx context.Context, conn DBConn, sqlStr string, params []interface{}) (bool, error) {
-	tm.options.Logger("Select", "sql", sqlStr, "params", params)
-	var res interface{}
-	// TODO check for multiple rows which would be a logic error
-	err := conn.QueryRowContext(ctx, sqlStr, params...).Scan(&res)
-	switch err {
-	case nil:
-		return true, nil
-	case sql.ErrNoRows:
-		return false, nil
-	default:
-		return false, err
 	}
 }

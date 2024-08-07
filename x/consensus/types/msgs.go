@@ -31,31 +31,13 @@ func (msg MsgUpdateParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, e
 			PubKeyTypes: msg.Validator.PubKeyTypes,
 		},
 		Version:   cmttypes.DefaultConsensusParams().ToProto().Version, // Version is stored in x/upgrade
-		Feature:   &cmtproto.FeatureParams{},
-		Synchrony: &cmtproto.SynchronyParams{},
+		Feature:   msg.Feature,
+		Synchrony: msg.Synchrony,
 	}
 
 	if msg.Abci != nil {
 		cp.Feature.VoteExtensionsEnableHeight = &types.Int64Value{
 			Value: msg.Abci.VoteExtensionsEnableHeight,
-		}
-	}
-
-	if msg.Feature != nil {
-		if msg.Feature.VoteExtensionsEnableHeight != nil {
-			cp.Feature.VoteExtensionsEnableHeight = msg.Feature.VoteExtensionsEnableHeight
-		}
-		if msg.Feature.PbtsEnableHeight != nil {
-			cp.Feature.PbtsEnableHeight = msg.Feature.PbtsEnableHeight
-		}
-	}
-
-	if msg.Synchrony != nil {
-		if msg.Synchrony.MessageDelay != nil {
-			cp.Synchrony.MessageDelay = msg.Synchrony.MessageDelay
-		}
-		if msg.Synchrony.Precision != nil {
-			cp.Synchrony.Precision = msg.Synchrony.Precision
 		}
 	}
 

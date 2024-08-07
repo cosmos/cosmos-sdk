@@ -264,6 +264,11 @@ func (suite *KeeperTestSuite) TestMigrateAccountNumberUnsafe() {
 	err := store.Set(types.GlobalAccountNumberKey.Bytes(), val)
 	require.NoError(suite.T(), err)
 
+	// check if value is set
+	val, err = store.Get(types.GlobalAccountNumberKey.Bytes())
+	require.NoError(suite.T(), err)
+	require.NotEmpty(suite.T(), val)
+
 	suite.acctsModKeeper.EXPECT().InitAccountNumberSeqUnsafe(gomock.Any(), gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context, accNum uint64) (uint64, error) {
 		return legacyAccNum, nil
 	})

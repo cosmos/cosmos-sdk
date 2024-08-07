@@ -11,7 +11,7 @@ import (
 )
 
 // CreateEnumType creates an enum type in the database.
-func (m *ModuleIndexer) CreateEnumType(ctx context.Context, conn DBConn, enum schema.EnumType) error {
+func (m *moduleIndexer) CreateEnumType(ctx context.Context, conn DBConn, enum schema.EnumType) error {
 	typeName := enumTypeName(m.moduleName, enum)
 	row := conn.QueryRowContext(ctx, "SELECT 1 FROM pg_type WHERE typname = $1", typeName)
 	var res interface{}

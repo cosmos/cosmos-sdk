@@ -3,6 +3,7 @@ package indexer
 import (
 	"context"
 
+	"cosmossdk.io/schema/addressutil"
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/logutil"
 )
@@ -55,11 +56,16 @@ type InitParams struct {
 	Config Config
 
 	// Context is the context that the indexer should use to listen for a shutdown signal via Context.Done(). Other
-	// parameters may also be passed through context from the app if necessary.
+	// parameters may also be passed through context from the app if necessary. It is expected to be non-nil.
 	Context context.Context
 
-	// Logger is a logger the indexer can use to write log messages.
+	// Logger is a logger the indexer can use to write log messages. It may be nil if the indexer does not need
+	// to write logs.
 	Logger logutil.Logger
+
+	// AddressCodec is the address codec that the indexer can use to encode and decode addresses. It is
+	// expected to be non-nil.
+	AddressCodec addressutil.AddressCodec
 }
 
 // InitResult is the indexer initialization result and includes the indexer's listener implementation.

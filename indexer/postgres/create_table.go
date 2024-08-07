@@ -8,7 +8,7 @@ import (
 )
 
 // CreateTable creates the table for the object type.
-func (tm *ObjectIndexer) CreateTable(ctx context.Context, conn DBConn) error {
+func (tm *objectIndexer) CreateTable(ctx context.Context, conn DBConn) error {
 	buf := new(strings.Builder)
 	err := tm.CreateTableSql(buf)
 	if err != nil {
@@ -24,7 +24,7 @@ func (tm *ObjectIndexer) CreateTable(ctx context.Context, conn DBConn) error {
 }
 
 // CreateTableSql generates a CREATE TABLE statement for the object type.
-func (tm *ObjectIndexer) CreateTableSql(writer io.Writer) error {
+func (tm *objectIndexer) CreateTableSql(writer io.Writer) error {
 	_, err := fmt.Fprintf(writer, "CREATE TABLE IF NOT EXISTS %q (\n\t", tm.TableName())
 	if err != nil {
 		return err

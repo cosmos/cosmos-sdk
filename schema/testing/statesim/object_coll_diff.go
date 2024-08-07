@@ -6,46 +6,49 @@ import (
 
 	"cosmossdk.io/schema"
 	schematesting "cosmossdk.io/schema/testing"
+	"cosmossdk.io/schema/view"
 )
-
-// ObjectCollectionState is the interface for the state of an object collection
-// represented by ObjectUpdate's for an ObjectType. ObjectUpdates must not include
-// ValueUpdates in the Value field. When ValueUpdates are applied they must be
-// converted to individual value or array format depending on the number of fields in
-// the value. For collections which retain deletions, ObjectUpdate's with the Delete
-// field set to true should be returned with the latest Value still intact.
-type ObjectCollectionState interface {
-	// ObjectType returns the object type for the collection.
-	ObjectType() schema.ObjectType
-
-	// GetObject returns the object update for the given key if it exists.
-	GetObject(key any) (update schema.ObjectUpdate, found bool)
-
-	// AllState iterates over the state of the collection by calling the given function with each item in
-	// state represented as an object update.
-	AllState(f func(schema.ObjectUpdate) bool)
-
-	// Len returns the number of objects in the collection.
-	Len() int
-}
 
 // DiffObjectCollections compares the object collection state of two objects that implement ObjectCollectionState and returns a string with a diff if they
 // are different or the empty string if they are the same.
-func DiffObjectCollections(expected, actual ObjectCollectionState) string {
+func DiffObjectCollections(expected, actual view.ObjectCollection) string {
 	res := ""
-	if expected.Len() != actual.Len() {
-		res += fmt.Sprintf("OBJECT COUNT ERROR: expected %d, got %d\n", expected.Len(), actual.Len())
+
+	expectedNumObjects, err := expected.Len()
+	if err != nil {
+		res += fmt.Sprintf("ERROR getting expected num objects: %s\n", err)
+		return res
 	}
 
-	expected.AllState(func(expectedUpdate schema.ObjectUpdate) bool {
-		actualUpdate, found := actual.GetObject(expectedUpdate.Key)
+	actualNumObjects, err := actual.Len()
+	if err != nil {
+		res += fmt.Sprintf("ERROR getting actual num objects: %s\n", err)
+		return res
+	}
+
+	if expectedNumObjects != actualNumObjects {
+		res += fmt.Sprintf("OBJECT COUNT ERROR: expected %d, got %d\n", expectedNumObjects, actualNumObjects)
+	}
+
+	expected.AllState(func(expectedUpdate schema.ObjectUpdate, err error) bool {
+		if err != nil {
+			res += fmt.Sprintf("ERROR getting expected object: %s\n", err)
+			return true
+		}
+
+		keyStr := fmtObjectKey(expected.ObjectType(), expectedUpdate.Key)
+		actualUpdate, found, err := actual.GetObject(expectedUpdate.Key)
+		if err != nil {
+			res += fmt.Sprintf("Object %s: ERROR: %v\n", keyStr, err)
+			return true
+		}
 		if !found {
-			res += fmt.Sprintf("Object %s: NOT FOUND\n", fmtObjectKey(expected.ObjectType(), expectedUpdate.Key))
+			res += fmt.Sprintf("Object %s: NOT FOUND\n", keyStr)
 			return true
 		}
 
 		if expectedUpdate.Delete != actualUpdate.Delete {
-			res += fmt.Sprintf("Object %s: Deleted mismatch, expected %v, got %v\n", fmtObjectKey(expected.ObjectType(), expectedUpdate.Key), expectedUpdate.Delete, actualUpdate.Delete)
+			res += fmt.Sprintf("Object %s: Deleted mismatch, expected %v, got %v\n", keyStr, expectedUpdate.Delete, actualUpdate.Delete)
 		}
 
 		if expectedUpdate.Delete {
@@ -55,7 +58,7 @@ func DiffObjectCollections(expected, actual ObjectCollectionState) string {
 		valueDiff := schematesting.DiffObjectValues(expected.ObjectType().ValueFields, expectedUpdate.Value, actualUpdate.Value)
 		if valueDiff != "" {
 			res += "Object "
-			res += fmtObjectKey(expected.ObjectType(), expectedUpdate.Key)
+			res += keyStr
 			res += "\n"
 			res += indentAllLines(valueDiff)
 		}

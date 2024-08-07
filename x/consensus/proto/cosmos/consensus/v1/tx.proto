@@ -19,9 +19,6 @@ service Msg {
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse) {
     option (cosmos_proto.method_added_in) = "cosmos-sdk 0.47";
   }
-
-  // SetCometInfo defines how to set the comet info for the x/consensus module.
-  rpc SetCometInfo(MsgSetCometInfo) returns (MsgSetCometInfoResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -50,27 +47,3 @@ message MsgUpdateParams {
 // MsgUpdateParamsResponse defines the response structure for executing a
 // MsgUpdateParams message.
 message MsgUpdateParamsResponse {}
-
-// MsgCometInfo is the Msg/CometInfo request type.
-message MsgSetCometInfo {
-  option (cosmos.msg.v1.signer) = "authority";
-  option (amino.name)           = "cosmos-sdk/x/consensus/MsgCometInfo";
-
-  // authority is the address that controls the module (defaults to x/gov unless overwritten).
-  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-
-  // evidence is the misbehaviour evidence to submit.
-  repeated cometbft.abci.v1.Misbehavior evidence = 2;
-
-  // validators_hash is the hash of the current validator set.
-  bytes validators_hash = 3;
-
-  // proposer_address is the address of the current proposer.
-  bytes proposer_address = 4;
-
-  // last_commit is the last commit info.
-  cometbft.abci.v1.CommitInfo last_commit = 5;
-}
-
-// MsgCometInfoResponse defines the response
-message MsgSetCometInfoResponse {}

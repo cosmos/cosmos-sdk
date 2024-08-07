@@ -28,7 +28,7 @@ func setupMigrationManager(t *testing.T, noCommitStore bool) (*Manager, *commitm
 		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, coretesting.NewNopLogger(), iavl.DefaultConfig())
 	}
 
-	commitStore, err := commitment.NewCommitStore(multiTrees, db, coretesting.NewNopLogger())
+	commitStore, err := commitment.NewCommitStore(multiTrees, nil, db, coretesting.NewNopLogger())
 	require.NoError(t, err)
 
 	snapshotsStore, err := snapshots.NewStore(t.TempDir())
@@ -47,7 +47,7 @@ func setupMigrationManager(t *testing.T, noCommitStore bool) (*Manager, *commitm
 		multiTrees1[storeKey] = iavl.NewIavlTree(prefixDB, coretesting.NewNopLogger(), iavl.DefaultConfig())
 	}
 
-	newCommitStore, err := commitment.NewCommitStore(multiTrees1, db1, coretesting.NewNopLogger()) // for store/v2
+	newCommitStore, err := commitment.NewCommitStore(multiTrees1, nil, db1, coretesting.NewNopLogger()) // for store/v2
 	require.NoError(t, err)
 	if noCommitStore {
 		newCommitStore = nil

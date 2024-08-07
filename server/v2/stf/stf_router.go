@@ -176,6 +176,8 @@ func (r coreRouterImpl) InvokeUntyped(ctx context.Context, req gogoproto.Message
 	return handler(ctx, req)
 }
 
+// merge merges together two protobuf messages by setting the pointer
+// to src in dst. Used internally.
 func merge(src, dst gogoproto.Message) error {
 	if src == nil {
 		return fmt.Errorf("source message is nil")

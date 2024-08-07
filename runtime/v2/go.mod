@@ -18,7 +18,7 @@ require (
 	cosmossdk.io/core v0.12.1-0.20240725072823-6a2d039e1212
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.3.1
-	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000
+	cosmossdk.io/server/v2/appmanager v0.0.0-20240802110823-cffeedff643d
 	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.13.3

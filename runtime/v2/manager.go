@@ -221,10 +221,13 @@ func (m *MM[T]) ExportGenesisForModules(
 			moduleI = module.(ModuleI)
 		} else if module, hasABCIGenesis := mod.(appmodulev2.HasGenesis); hasABCIGenesis {
 			moduleI = module.(ModuleI)
+		} else {
+			continue
 		}
 
 		channels[moduleName] = make(chan genesisResult)
 		go func(moduleI ModuleI, ch chan genesisResult) {
+			fmt.Println("Exporting genesis for module", moduleName)
 			jm, err := moduleI.ExportGenesis(ctx)
 			if err != nil {
 				ch <- genesisResult{nil, err}

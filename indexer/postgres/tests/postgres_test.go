@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"cosmossdk.io/log"
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	"github.com/hashicorp/consul/sdk/freeport"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -14,6 +13,7 @@ import (
 	"cosmossdk.io/indexer/postgres"
 	"cosmossdk.io/schema/addressutil"
 	"cosmossdk.io/schema/indexer"
+	"cosmossdk.io/schema/logutil"
 	indexertesting "cosmossdk.io/schema/testing"
 	"cosmossdk.io/schema/testing/appdatasim"
 	"cosmossdk.io/schema/testing/statesim"
@@ -59,7 +59,7 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 	pgIndexer, err := postgres.StartIndexer(indexer.InitParams{
 		Config:       cfg,
 		Context:      ctx,
-		Logger:       log.NewTestLogger(t),
+		Logger:       logutil.NoopLogger{},
 		AddressCodec: addressutil.HexAddressCodec{},
 	})
 	require.NoError(t, err)

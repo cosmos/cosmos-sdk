@@ -17,7 +17,7 @@ func (i *indexerImpl) AppState() view.AppState {
 
 func (i *indexerImpl) BlockNum() (int64, error) {
 	var blockNum int64
-	err := i.tx.QueryRow("SELECT max(number) FROM block").Scan(&blockNum)
+	err := i.tx.QueryRow("SELECT coalesce(max(number), 0) FROM block").Scan(&blockNum)
 	if err != nil {
 		return 0, err
 	}

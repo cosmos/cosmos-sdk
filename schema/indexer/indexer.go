@@ -3,6 +3,7 @@ package indexer
 import (
 	"context"
 
+	"cosmossdk.io/schema/addressutil"
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/logutil"
 )
@@ -64,7 +65,7 @@ type InitParams struct {
 
 	// AddressCodec is the address codec that the indexer can use to encode and decode addresses. It is
 	// expected to be non-nil.
-	AddressCodec AddressCodec
+	AddressCodec addressutil.AddressCodec
 }
 
 // InitResult is the indexer initialization result and includes the indexer's listener implementation.

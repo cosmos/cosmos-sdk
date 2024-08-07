@@ -1,6 +1,8 @@
 package postgres
 
-import "cosmossdk.io/schema/indexer"
+import (
+	"cosmossdk.io/schema/addressutil"
+)
 
 // Options are the options for module and object indexers.
 type Options struct {
@@ -11,5 +13,5 @@ type Options struct {
 	Logger SqlLogger
 
 	// AddressCodec is the codec for encoding and decoding addresses. It is expected to be non-nil.
-	AddressCodec indexer.AddressCodec
+	AddressCodec addressutil.AddressCodec
 }

@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"strings"
 
 	"cosmossdk.io/schema"
@@ -16,7 +17,7 @@ func (i *Indexer) AppState() view.AppState {
 
 func (i *Indexer) BlockNum() (uint64, error) {
 	var blockNum int64
-	err := i.tx.QueryRow("SELECT max(number) FROM block").Scan(blockNum)
+	err := i.tx.QueryRow("SELECT max(number) FROM block").Scan(&blockNum)
 	if err != nil {
 		return 0, err
 	}
@@ -117,15 +118,23 @@ func (tm *objectView) AllState(f func(schema.ObjectUpdate, error) bool) {
 	if err != nil {
 		panic(err)
 	}
+
 	sqlStr := buf.String()
 	if tm.options.Logger != nil {
 		tm.options.Logger("Select", "sql", sqlStr)
 	}
+
 	rows, err := tm.conn.QueryContext(tm.ctx, sqlStr)
 	if err != nil {
 		panic(err)
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(rows)
+
 	for rows.Next() {
 		update, err := tm.readRow(rows)
 		if !f(update, err) {

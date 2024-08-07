@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/indexer/postgres"
+	"cosmossdk.io/schema/addressutil"
 	"cosmossdk.io/schema/indexer"
 	indexertesting "cosmossdk.io/schema/testing"
 	"cosmossdk.io/schema/testing/appdatasim"
@@ -67,7 +68,7 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 		},
 		Context:      ctx,
 		Logger:       log.NewTestLogger(t),
-		AddressCodec: nil,
+		AddressCodec: addressutil.HexAddressCodec{},
 	})
 	require.NoError(t, err)
 

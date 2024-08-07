@@ -1,4 +1,4 @@
-package indexer
+package addressutil
 
 type AddressCodec interface {
 	// StringToBytes decodes text to bytes

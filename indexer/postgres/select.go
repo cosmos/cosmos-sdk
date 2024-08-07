@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"time"
 
@@ -189,46 +190,78 @@ func (tm *ObjectIndexer) readRow(row interface{ Scan(...interface{}) error }) (s
 
 func (tm *ObjectIndexer) colBindValue(field schema.Field) interface{} {
 	switch field.Kind {
-	case schema.BoolKind:
-		return new(bool)
-	case schema.Uint8Kind:
-		return new(uint8)
-	case schema.Uint16Kind:
-		return new(uint16)
-	case schema.Uint32Kind:
-		return new(uint32)
-	case schema.Uint64Kind:
-		return new(uint64)
-	case schema.Int8Kind:
-		return new(int8)
-	case schema.Int16Kind:
-		return new(int16)
-	case schema.Int32Kind:
-		return new(int32)
-	case schema.Int64Kind:
-		return new(int64)
-	case schema.Float32Kind:
-		return new(float32)
-	case schema.Float64Kind:
-		return new(float64)
 	case schema.BytesKind, schema.AddressKind:
 		return new([]byte)
-	case schema.TimeKind, schema.DurationKind:
-		return new(int64)
-	case schema.JSONKind:
-		return new(json.RawMessage)
 	default:
-		return new(string)
+		return new(sql.NullString)
 	}
 }
 
 func (tm *ObjectIndexer) readCol(field schema.Field, value interface{}) (interface{}, error) {
-	value = *value.(*interface{})
 	switch field.Kind {
+	case schema.BytesKind, schema.AddressKind:
+		return *value.(*[]byte), nil
+	default:
+	}
+
+	nullStr := *value.(*sql.NullString)
+	if field.Nullable {
+		if !nullStr.Valid {
+			return nil, nil
+		}
+	}
+	str := nullStr.String
+
+	switch field.Kind {
+	case schema.StringKind, schema.EnumKind, schema.IntegerStringKind, schema.DecimalStringKind:
+		return str, nil
+	case schema.Uint8Kind:
+		value, err := strconv.ParseUint(str, 10, 8)
+		return uint8(value), err
+	case schema.Uint16Kind:
+		value, err := strconv.ParseUint(str, 10, 16)
+		return uint16(value), err
+	case schema.Uint32Kind:
+		value, err := strconv.ParseUint(str, 10, 32)
+		return uint32(value), err
+	case schema.Uint64Kind:
+		value, err := strconv.ParseUint(str, 10, 64)
+		return value, err
+	case schema.Int8Kind:
+		value, err := strconv.ParseInt(str, 10, 8)
+		return int8(value), err
+	case schema.Int16Kind:
+		value, err := strconv.ParseInt(str, 10, 16)
+		return int16(value), err
+	case schema.Int32Kind:
+		value, err := strconv.ParseInt(str, 10, 32)
+		return int32(value), err
+	case schema.Int64Kind:
+		value, err := strconv.ParseInt(str, 10, 64)
+		return value, err
+	case schema.Float32Kind:
+		value, err := strconv.ParseFloat(str, 32)
+		return float32(value), err
+	case schema.Float64Kind:
+		value, err := strconv.ParseFloat(str, 64)
+		return value, err
+	case schema.BoolKind:
+		value, err := strconv.ParseBool(str)
+		return value, err
+	case schema.JSONKind:
+		return json.RawMessage(str), nil
 	case schema.TimeKind:
-		return time.Unix(0, value.(int64)), nil
+		value, err := strconv.ParseInt(str, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		return time.Unix(0, value), nil
 	case schema.DurationKind:
-		return time.Duration(value.(int64)), nil
+		value, err := strconv.ParseInt(str, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		return time.Duration(value), nil
 	default:
 		return value, nil
 	}

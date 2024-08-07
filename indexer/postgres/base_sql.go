@@ -8,9 +8,8 @@ $$ LANGUAGE SQL IMMUTABLE;
 
 CREATE TABLE IF NOT EXISTS block
 (
-    number        BIGINT NOT NULL PRIMARY KEY,
-    header_json   JSONB  NULL,
-	header_bytes  BYTEA NULL,
+    number BIGINT NOT NULL PRIMARY KEY,
+    header JSONB  NULL
 );
 
 CREATE TABLE IF NOT EXISTS tx

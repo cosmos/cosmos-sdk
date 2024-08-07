@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
@@ -61,7 +62,7 @@ func (b *MsgRouterBuilder) HandlerExists(msgType string) bool {
 	return ok
 }
 
-func (b *MsgRouterBuilder) Build() (Router, error) {
+func (b *MsgRouterBuilder) Build() (coreRouterImpl, error) {
 	handlers := make(map[string]appmodulev2.Handler)
 
 	globalPreHandler := func(ctx context.Context, msg appmodulev2.Message) error {
@@ -93,7 +94,7 @@ func (b *MsgRouterBuilder) Build() (Router, error) {
 		handlers[msgType] = buildHandler(handler, preHandlers, globalPreHandler, postHandlers, globalPostHandler)
 	}
 
-	return Router{
+	return coreRouterImpl{
 		handlers: handlers,
 	}, nil
 }
@@ -139,14 +140,18 @@ func msgTypeURL(msg gogoproto.Message) string {
 	return gogoproto.MessageName(msg)
 }
 
-var _ router.Service = (*Router)(nil)
+var _ router.Service = (*coreRouterImpl)(nil)
 
-// Router implements the STF router for msg and query handlers.
-type Router struct {
+// coreRouterImpl implements the STF router for msg and query handlers.
+type coreRouterImpl struct {
 	handlers map[string]appmodulev2.Handler
 }
 
-func (r Router) CanInvoke(_ context.Context, typeURL string) error {
+func (r coreRouterImpl) CanInvoke(_ context.Context, typeURL string) error {
+	// trimming prefixes is a backwards compatibility strategy that we use
+	// for baseapp components that did routing through type URL rather
+	// than protobuf message names.
+	typeURL = strings.TrimPrefix(typeURL, "/")
 	_, exists := r.handlers[typeURL]
 	if !exists {
 		return fmt.Errorf("%w: %s", ErrNoHandler, typeURL)
@@ -154,24 +159,54 @@ func (r Router) CanInvoke(_ context.Context, typeURL string) error {
 	return nil
 }
 
-func (r Router) InvokeTyped(ctx context.Context, req, resp gogoproto.Message) error {
+func (r coreRouterImpl) InvokeTyped(ctx context.Context, req, resp gogoproto.Message) error {
 	handlerResp, err := r.InvokeUntyped(ctx, req)
 	if err != nil {
 		return err
 	}
-	merge(handlerResp, resp)
-	return nil
+	return merge(handlerResp, resp)
 }
 
-func merge(src, dst gogoproto.Message) {
-	reflect.Indirect(reflect.ValueOf(dst)).Set(reflect.Indirect(reflect.ValueOf(src)))
-}
-
-func (r Router) InvokeUntyped(ctx context.Context, req gogoproto.Message) (res gogoproto.Message, err error) {
+func (r coreRouterImpl) InvokeUntyped(ctx context.Context, req gogoproto.Message) (res gogoproto.Message, err error) {
 	typeName := msgTypeURL(req)
 	handler, exists := r.handlers[typeName]
 	if !exists {
 		return nil, fmt.Errorf("%w: %s", ErrNoHandler, typeName)
 	}
 	return handler(ctx, req)
+}
+
+// merge merges together two protobuf messages by setting the pointer
+// to src in dst. Used internally.
+func merge(src, dst gogoproto.Message) error {
+	if src == nil {
+		return fmt.Errorf("source message is nil")
+	}
+	if dst == nil {
+		return fmt.Errorf("destination message is nil")
+	}
+
+	srcVal := reflect.ValueOf(src)
+	dstVal := reflect.ValueOf(dst)
+
+	if srcVal.Kind() == reflect.Interface {
+		srcVal = srcVal.Elem()
+	}
+	if dstVal.Kind() == reflect.Interface {
+		dstVal = dstVal.Elem()
+	}
+
+	if srcVal.Kind() != reflect.Ptr || dstVal.Kind() != reflect.Ptr {
+		return fmt.Errorf("both source and destination must be pointers")
+	}
+
+	srcElem := srcVal.Elem()
+	dstElem := dstVal.Elem()
+
+	if !srcElem.Type().AssignableTo(dstElem.Type()) {
+		return fmt.Errorf("incompatible types: cannot merge %v into %v", srcElem.Type(), dstElem.Type())
+	}
+
+	dstElem.Set(srcElem)
+	return nil
 }

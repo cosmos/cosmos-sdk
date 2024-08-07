@@ -11,14 +11,36 @@ import (
 func DiffAppStates(expected, actual view.AppState) string {
 	res := ""
 
-	if expected.NumModules() != actual.NumModules() {
-		res += fmt.Sprintf("MODULE COUNT ERROR: expected %d, got %d\n", expected.NumModules(), actual.NumModules())
+	expectNumModules, err := expected.NumModules()
+	if err != nil {
+		res += fmt.Sprintf("ERROR getting expected num modules: %s\n", err)
+		return res
 	}
 
-	expected.Modules(func(moduleName string, expectedMod view.ModuleState) bool {
-		actualMod, found := actual.GetModule(moduleName)
-		if !found {
-			res += fmt.Sprintf("Module %s: NOT FOUND\n", moduleName)
+	actualNumModules, err := actual.NumModules()
+	if err != nil {
+		res += fmt.Sprintf("ERROR getting actual num modules: %s\n", err)
+		return res
+	}
+
+	if expectNumModules != actualNumModules {
+		res += fmt.Sprintf("MODULE COUNT ERROR: expected %d, got %d\n", expectNumModules, actualNumModules)
+	}
+
+	expected.Modules(func(expectedMod view.ModuleState, err error) bool {
+		if err != nil {
+			res += fmt.Sprintf("ERROR getting expected module: %s\n", err)
+			return true
+		}
+
+		moduleName := expectedMod.ModuleName()
+		actualMod, err := actual.GetModule(moduleName)
+		if err != nil {
+			res += fmt.Sprintf("ERROR getting actual module: %s\n", err)
+			return true
+		}
+		if actualMod == nil {
+			res += fmt.Sprintf("Module %s: actual module NOT FOUND\n")
 			return true
 		}
 

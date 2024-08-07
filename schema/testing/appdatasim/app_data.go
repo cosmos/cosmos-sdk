@@ -157,6 +157,6 @@ func (a *Simulator) AppState() view.AppState {
 }
 
 // BlockNum returns the current block number of the simulator.
-func (a *Simulator) BlockNum() uint64 {
-	return a.blockNum
+func (a *Simulator) BlockNum() (uint64, error) {
+	return a.blockNum, nil
 }

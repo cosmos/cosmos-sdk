@@ -12,13 +12,16 @@ type ObjectCollection interface {
 	// ObjectType returns the object type for the collection.
 	ObjectType() schema.ObjectType
 
-	// GetObject returns the object update for the given key if it exists.
-	GetObject(key interface{}) (update schema.ObjectUpdate, found bool)
+	// GetObject returns the object update for the given key if it exists. And error should only be returned
+	// if there was an error getting the object update. If the object does not exist but there was no error,
+	// then found should be false and the error should be nil.
+	GetObject(key interface{}) (update schema.ObjectUpdate, found bool, err error)
 
 	// AllState iterates over the state of the collection by calling the given function with each item in
-	// state represented as an object update.
-	AllState(f func(schema.ObjectUpdate) bool)
+	// state represented as an object update. If there is an error getting an object update, the error will be
+	// non-nil and the object update should be empty.
+	AllState(f func(schema.ObjectUpdate, error) bool)
 
 	// Len returns the number of objects in the collection.
-	Len() int
+	Len() (int, error)
 }

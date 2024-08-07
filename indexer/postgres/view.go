@@ -14,8 +14,13 @@ func (i *Indexer) AppState() view.AppState {
 	return i
 }
 
-func (i *Indexer) BlockNum() uint64 {
-	return 0
+func (i *Indexer) BlockNum() (uint64, error) {
+	var blockNum int64
+	err := i.tx.QueryRow("SELECT max(number) FROM block").Scan(blockNum)
+	if err != nil {
+		return 0, err
+	}
+	return uint64(blockNum), nil
 }
 
 type moduleView struct {
@@ -24,64 +29,68 @@ type moduleView struct {
 	conn DBConn
 }
 
-func (i *Indexer) GetModule(moduleName string) (view.ModuleState, bool) {
+func (i *Indexer) GetModule(moduleName string) (view.ModuleState, error) {
 	mod, ok := i.modules[moduleName]
 	if !ok {
-		return nil, false
+		return nil, nil
 	}
 	return &moduleView{
 		ModuleIndexer: *mod,
 		ctx:           i.ctx,
 		conn:          i.tx,
-	}, true
+	}, nil
 }
 
-func (i *Indexer) Modules(f func(moduleName string, modState view.ModuleState) bool) {
-	for name, mod := range i.modules {
-		if !f(name, &moduleView{
+func (i *Indexer) Modules(f func(modState view.ModuleState, err error) bool) {
+	for _, mod := range i.modules {
+		if !f(&moduleView{
 			ModuleIndexer: *mod,
 			ctx:           i.ctx,
 			conn:          i.tx,
-		}) {
+		}, nil) {
 			return
 		}
 	}
 }
 
-func (i *Indexer) NumModules() int {
-	return len(i.modules)
+func (i *Indexer) NumModules() (int, error) {
+	return len(i.modules), nil
+}
+
+func (m *moduleView) ModuleName() string {
+	return m.moduleName
 }
 
 func (m *moduleView) ModuleSchema() schema.ModuleSchema {
 	return m.schema
 }
 
-func (m *moduleView) GetObjectCollection(objectType string) (view.ObjectCollection, bool) {
+func (m *moduleView) GetObjectCollection(objectType string) (view.ObjectCollection, error) {
 	obj, ok := m.tables[objectType]
 	if !ok {
-		return nil, false
+		return nil, nil
 	}
 	return &objectView{
 		ObjectIndexer: *obj,
 		ctx:           m.ctx,
 		conn:          m.conn,
-	}, true
+	}, nil
 }
 
-func (m *moduleView) ObjectCollections(f func(value view.ObjectCollection) bool) {
+func (m *moduleView) ObjectCollections(f func(value view.ObjectCollection, err error) bool) {
 	for _, obj := range m.tables {
 		if !f(&objectView{
 			ObjectIndexer: *obj,
 			ctx:           m.ctx,
 			conn:          m.conn,
-		}) {
+		}, nil) {
 			return
 		}
 	}
 }
 
-func (m *moduleView) NumObjectCollections() int {
-	return len(m.tables)
+func (m *moduleView) NumObjectCollections() (int, error) {
+	return len(m.tables), nil
 }
 
 type objectView struct {
@@ -94,15 +103,15 @@ func (tm *objectView) ObjectType() schema.ObjectType {
 	return tm.typ
 }
 
-func (tm *objectView) GetObject(key interface{}) (update schema.ObjectUpdate, found bool) {
-	update, err := tm.Get(tm.ctx, tm.conn, key)
+func (tm *objectView) GetObject(key interface{}) (update schema.ObjectUpdate, found bool, err error) {
+	update, err = tm.Get(tm.ctx, tm.conn, key)
 	if err != nil {
-		return schema.ObjectUpdate{}, false
+		return schema.ObjectUpdate{}, false, err
 	}
-	return update, true
+	return update, true, err
 }
 
-func (tm *objectView) AllState(f func(schema.ObjectUpdate) bool) {
+func (tm *objectView) AllState(f func(schema.ObjectUpdate, error) bool) {
 	buf := new(strings.Builder)
 	err := tm.SelectAllSql(buf)
 	if err != nil {
@@ -119,19 +128,16 @@ func (tm *objectView) AllState(f func(schema.ObjectUpdate) bool) {
 	defer rows.Close()
 	for rows.Next() {
 		update, err := tm.readRow(rows)
-		if err != nil {
-			panic(err)
-		}
-		if !f(update) {
+		if !f(update, err) {
 			return
 		}
 	}
 }
 
-func (tm *objectView) Len() int {
-	n, err := tm.Count(tm.ctx, tm.conn)
+func (tm *objectView) Len() (int, error) {
+	n, err := tm.count(tm.ctx, tm.conn)
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
-	return n
+	return n, nil
 }

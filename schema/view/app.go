@@ -1,21 +1,23 @@
 package view
 
 type AppData interface {
-	// AppState returns the app state.
+	// AppState returns the app state. If the view doesn't persist app state, nil should be returned.
 	AppState() AppState
 
 	// BlockNum returns the latest block number.
-	BlockNum() uint64
+	BlockNum() (uint64, error)
 }
 
 // AppState defines an interface for things that represent application state in schema format.
 type AppState interface {
-	// GetModule returns the module state for the given module name.
-	GetModule(moduleName string) (ModuleState, bool)
+	// GetModule returns the module state for the given module name. If the module does not exist, nil and no error
+	// should be returned.
+	GetModule(moduleName string) (ModuleState, error)
 
-	// Modules iterates over all the module state instances in the app.
-	Modules(f func(moduleName string, modState ModuleState) bool)
+	// Modules iterates over all the module state instances in the app. If there is an error getting a module state,
+	// modState may be nil and err will be non-nil.
+	Modules(f func(modState ModuleState, err error) bool)
 
 	// NumModules returns the number of modules in the app.
-	NumModules() int
+	NumModules() (int, error)
 }

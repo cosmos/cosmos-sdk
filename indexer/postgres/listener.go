@@ -21,6 +21,10 @@ func (i *Indexer) Listener() appdata.Listener {
 
 			return mm.InitializeSchema(i.ctx, i.tx)
 		},
+		StartBlock: func(data appdata.StartBlockData) error {
+			_, err := i.tx.Exec("INSERT INTO block (number) VALUES ($1)", data.Height)
+			return err
+		},
 		OnObjectUpdate: func(data appdata.ObjectUpdateData) error {
 			module := data.ModuleName
 			mod, ok := i.modules[module]

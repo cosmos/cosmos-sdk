@@ -11,15 +11,36 @@ import (
 func DiffModuleStates(expected, actual view.ModuleState) string {
 	res := ""
 
-	if expected.NumObjectCollections() != actual.NumObjectCollections() {
-		res += fmt.Sprintf("OBJECT COLLECTION COUNT ERROR: expected %d, got %d\n", expected.NumObjectCollections(), actual.NumObjectCollections())
+	expectedNumObjectCollections, err := expected.NumObjectCollections()
+	if err != nil {
+		res += fmt.Sprintf("ERROR getting expected num object collections: %s\n", err)
+		return res
 	}
 
-	expected.ObjectCollections(func(expectedColl view.ObjectCollection) bool {
+	actualNumObjectCollections, err := actual.NumObjectCollections()
+	if err != nil {
+		res += fmt.Sprintf("ERROR getting actual num object collections: %s\n", err)
+		return res
+	}
+
+	if expectedNumObjectCollections != actualNumObjectCollections {
+		res += fmt.Sprintf("OBJECT COLLECTION COUNT ERROR: expected %d, got %d\n", expectedNumObjectCollections, actualNumObjectCollections)
+	}
+
+	expected.ObjectCollections(func(expectedColl view.ObjectCollection, err error) bool {
+		if err != nil {
+			res += fmt.Sprintf("ERROR getting expected object collection: %s\n", err)
+			return true
+		}
+
 		objTypeName := expectedColl.ObjectType().Name
-		actualColl, found := actual.GetObjectCollection(objTypeName)
-		if !found {
-			res += fmt.Sprintf("Object Collection %s: NOT FOUND\n", objTypeName)
+		actualColl, err := actual.GetObjectCollection(objTypeName)
+		if err != nil {
+			res += fmt.Sprintf("ERROR getting actual object collection: %s\n", err)
+			return true
+		}
+		if actualColl == nil {
+			res += fmt.Sprintf("Object Collection %s: actuall collection NOT FOUND\n", objTypeName)
 			return true
 		}
 

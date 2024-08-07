@@ -13,12 +13,34 @@ import (
 // are different or the empty string if they are the same.
 func DiffObjectCollections(expected, actual view.ObjectCollection) string {
 	res := ""
-	if expected.Len() != actual.Len() {
-		res += fmt.Sprintf("OBJECT COUNT ERROR: expected %d, got %d\n", expected.Len(), actual.Len())
+
+	expectedNumObjects, err := expected.Len()
+	if err != nil {
+		res += fmt.Sprintf("ERROR getting expected num objects: %s\n", err)
+		return res
 	}
 
-	expected.AllState(func(expectedUpdate schema.ObjectUpdate) bool {
-		actualUpdate, found := actual.GetObject(expectedUpdate.Key)
+	actualNumObjects, err := actual.Len()
+	if err != nil {
+		res += fmt.Sprintf("ERROR getting actual num objects: %s\n", err)
+		return res
+	}
+
+	if expectedNumObjects != actualNumObjects {
+		res += fmt.Sprintf("OBJECT COUNT ERROR: expected %d, got %d\n", expectedNumObjects, actualNumObjects)
+	}
+
+	expected.AllState(func(expectedUpdate schema.ObjectUpdate, err error) bool {
+		if err != nil {
+			res += fmt.Sprintf("ERROR getting expected object: %s\n", err)
+			return true
+		}
+
+		actualUpdate, found, err := actual.GetObject(expectedUpdate.Key)
+		if err != nil {
+			res += fmt.Sprintf("ERROR getting actual object: %s\n", err)
+			return true
+		}
 		if !found {
 			res += fmt.Sprintf("Object %s: NOT FOUND\n", fmtObjectKey(expected.ObjectType(), expectedUpdate.Key))
 			return true

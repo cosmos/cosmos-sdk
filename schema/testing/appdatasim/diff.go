@@ -20,8 +20,20 @@ func DiffAppData(expected, actual view.AppData) string {
 		res += stateDiff
 	}
 
-	if expected.BlockNum() != actual.BlockNum() {
-		res += fmt.Sprintf("BlockNum: expected %d, got %d\n", expected.BlockNum(), actual.BlockNum())
+	expectedBlock, err := expected.BlockNum()
+	if err != nil {
+		res += fmt.Sprintf("ERROR getting expected block num: %s\n", err)
+		return res
+	}
+
+	actualBlock, err := actual.BlockNum()
+	if err != nil {
+		res += fmt.Sprintf("ERROR getting actual block num: %s\n", err)
+		return res
+	}
+
+	if expectedBlock != actualBlock {
+		res += fmt.Sprintf("BlockNum: expected %d, got %d\n", expectedBlock, actualBlock)
 	}
 
 	return res

@@ -91,7 +91,7 @@ func (a AppManager[T]) InitGenesis(
 
 // ExportGenesis exports the genesis state of the application.
 func (a AppManager[T]) ExportGenesis(ctx context.Context, version uint64) ([]byte, error) {
-	v, zeroState, err := a.db.StateLatest()
+	zeroState, err := a.db.StateAt(version)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get latest state: %w", err)
 	}
@@ -102,7 +102,7 @@ func (a AppManager[T]) ExportGenesis(ctx context.Context, version uint64) ([]byt
 			return errors.New("export genesis function not set")
 		}
 
-		bz, err = a.exportGenesis(ctx, v)
+		bz, err = a.exportGenesis(ctx, version)
 		if err != nil {
 			return fmt.Errorf("failed to export genesis state: %w", err)
 		}

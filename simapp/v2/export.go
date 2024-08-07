@@ -13,20 +13,14 @@ func (app *SimApp[T]) ExportAppStateAndValidators(forZeroHeight bool, jailAllowe
 	// as if they could withdraw from the start of the next block
 	ctx := context.Background()
 
-	// We export at last height + 1, because that's the height at which
-	// CometBFT will start InitChain.
 	latestHeight, err := app.LoadLatestHeight()
 
 	if err != nil {
 		return servertypes.ExportedApp{}, err
 	}
-	height := latestHeight + 1
-	// if forZeroHeight {
-	// 	height = 0
-	// 	app.prepForZeroHeightGenesis(ctx, jailAllowedAddrs)
-	// }
+	height := latestHeight
 
-	genesis, err := app.ExportGenesis(ctx, height)
+	genesis, err := app.ExportGenesis(ctx, latestHeight)
 	if err != nil {
 		return servertypes.ExportedApp{}, err
 	}

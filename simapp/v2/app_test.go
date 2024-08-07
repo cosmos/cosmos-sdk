@@ -8,7 +8,6 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	"crypto/sha256"
 	"encoding/json"
-	"fmt"
 	"testing"
 	"time"
 
@@ -107,8 +106,6 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 
 	MoveNextBlock(t, app, ctx)
 
-	gen, err := app.ExportAppStateAndValidators(false, nil, nil)
+	_, err := app.ExportAppStateAndValidators(false, nil, nil)
 	require.NoError(t, err)
-
-	fmt.Printf("Exported genesis: %s\n", gen.AppState)
 }

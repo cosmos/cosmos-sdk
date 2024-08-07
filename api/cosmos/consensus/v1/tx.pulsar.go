@@ -1298,11 +1298,8 @@ type MsgUpdateParams struct {
 	Block     *v1.BlockParams     `protobuf:"bytes,2,opt,name=block,proto3" json:"block,omitempty"`
 	Evidence  *v1.EvidenceParams  `protobuf:"bytes,3,opt,name=evidence,proto3" json:"evidence,omitempty"`
 	Validator *v1.ValidatorParams `protobuf:"bytes,4,opt,name=validator,proto3" json:"validator,omitempty"`
-	// Since: cosmos-sdk 0.50
-	//
 	// Deprecated: Do not use.
-	Abci *v1.ABCIParams `protobuf:"bytes,5,opt,name=abci,proto3" json:"abci,omitempty"`
-	// Since: cosmos-sdk 0.52
+	Abci      *v1.ABCIParams      `protobuf:"bytes,5,opt,name=abci,proto3" json:"abci,omitempty"`
 	Synchrony *v1.SynchronyParams `protobuf:"bytes,6,opt,name=synchrony,proto3" json:"synchrony,omitempty"`
 	Feature   *v1.FeatureParams   `protobuf:"bytes,7,opt,name=feature,proto3" json:"feature,omitempty"`
 }

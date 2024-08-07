@@ -98,7 +98,7 @@ func MoveNextBlock(t *testing.T, app *SimApp[transaction.Tx], ctx context.Contex
 	changes, err := newState.GetStateChanges()
 	require.NoError(t, err)
 
-	_, err = st.Commit(&store.Changeset{changes})
+	_, err = st.Commit(&store.Changeset{Changes: changes})
 	require.NoError(t, err)
 }
 

@@ -563,8 +563,8 @@ func (c *Consensus[T]) ExtendVote(ctx context.Context, req *abciproto.ExtendVote
 		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to ExtendVote at height %d", req.Height)
 	}
 
-	if c.verifyVoteExt == nil {
-		return nil, errors.New("vote extensions are enabled but no verify function was set")
+	if c.extendVote == nil {
+		return nil, errors.New("vote extensions are enabled but no extend function was set")
 	}
 
 	_, latestStore, err := c.store.StateLatest()
@@ -574,7 +574,7 @@ func (c *Consensus[T]) ExtendVote(ctx context.Context, req *abciproto.ExtendVote
 
 	resp, err := c.extendVote(ctx, latestStore, req)
 	if err != nil {
-		c.logger.Error("failed to verify vote extension", "height", req.Height, "err", err)
+		c.logger.Error("failed to extend vote", "height", req.Height, "err", err)
 		return &abciproto.ExtendVoteResponse{}, nil
 	}
 

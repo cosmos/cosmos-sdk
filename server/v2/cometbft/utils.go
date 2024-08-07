@@ -102,18 +102,24 @@ func intoABCIValidatorUpdates(updates []appmodulev2.ValidatorUpdate) []abci.Vali
 func intoABCITxResults(results []appmanager.TxResult, indexSet map[string]struct{}) []*abci.ExecTxResult {
 	res := make([]*abci.ExecTxResult, len(results))
 	for i := range results {
-		if results[i].Error == nil {
-			res[i] = responseExecTxResultWithEvents(
-				results[i].Error,
-				results[i].GasWanted,
-				results[i].GasUsed,
-				intoABCIEvents(results[i].Events, indexSet),
-				false,
-			)
+		if results[i].Error != nil {
+			space, code, log := errorsmod.ABCIInfo(results[i].Error, true)
+			res[i] = &abci.ExecTxResult{
+				Codespace: space,
+				Code:      code,
+				Log:       log,
+			}
+
 			continue
 		}
 
-		// TODO: handle properly once the we decide on the type of TxResult.Resp
+		res[i] = responseExecTxResultWithEvents(
+			results[i].Error,
+			results[i].GasWanted,
+			results[i].GasUsed,
+			intoABCIEvents(results[i].Events, indexSet),
+			false,
+		)
 	}
 
 	return res

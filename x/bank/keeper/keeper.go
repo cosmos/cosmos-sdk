@@ -414,12 +414,13 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.C
 		k.setSupply(ctx, supply)
 	}
 
-	k.Logger.Debug("burned tokens from account", "amount", amounts.String(), "from", address)
-
 	addrStr, err := k.ak.AddressCodec().BytesToString(acc.GetAddress())
 	if err != nil {
 		return err
 	}
+
+	k.Logger.Debug("burned tokens from account", "amount", amounts.String(), "from", addrStr)
+
 	// emit burn event
 	return k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCoinBurn,

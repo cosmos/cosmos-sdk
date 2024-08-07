@@ -7,6 +7,30 @@ import (
 	"github.com/spf13/viper"
 )
 
+// ServerConfig defines configuration for the main server.
+type ServerConfig struct {
+	MinGasPrices string `mapstructure:"minimum-gas-prices" toml:"minimum-gas-prices" comment:"minimum-gas-prices defines the price which a validator is willing to accept for processing a transaction. A transaction's fees must meet the minimum of any denomination specified in this config (e.g. 0.25token1;0.0001token2)."`
+}
+
+// ValidateBasic returns an error if min-gas-prices field is empty in Config. Otherwise, it returns nil.
+func (c ServerConfig) ValidateBasic() error {
+	if c.MinGasPrices == "" {
+		return fmt.Errorf("error in app.toml: set minimum-gas-prices in app.toml or flag or env variable")
+	}
+
+	return nil
+}
+
+// DefaultMainServerConfig returns the default config of main server component
+func DefaultMainServerConfig() ServerConfig {
+	return ServerConfig{}
+}
+
+// OverwriteDefaultConfig overwrites main server config with given config
+func (s *Server[T]) OverwriteDefaultConfig(cfg ServerConfig) {
+	s.config = cfg
+}
+
 // ReadConfig returns a viper instance of the config file
 func ReadConfig(configPath string) (*viper.Viper, error) {
 	v := viper.New()

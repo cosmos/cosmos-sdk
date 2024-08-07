@@ -8,7 +8,7 @@ import (
 )
 
 // insertUpdate inserts or updates the row with the provided key and value.
-func (tm *objectIndexer) insertUpdate(ctx context.Context, conn DBConn, key, value interface{}) error {
+func (tm *objectIndexer) insertUpdate(ctx context.Context, conn dbConn, key, value interface{}) error {
 	exists, err := tm.exists(ctx, conn, key)
 	if err != nil {
 		return err

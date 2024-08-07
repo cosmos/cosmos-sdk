@@ -28,11 +28,11 @@ func newModuleIndexer(moduleName string, modSchema schema.ModuleSchema, options 
 }
 
 // InitializeSchema creates tables for all object types in the module schema and creates enum types.
-func (m *moduleIndexer) InitializeSchema(ctx context.Context, conn DBConn) error {
+func (m *moduleIndexer) InitializeSchema(ctx context.Context, conn dbConn) error {
 	// create enum types
 	var err error
 	m.schema.EnumTypes(func(enumType schema.EnumType) bool {
-		err = m.CreateEnumType(ctx, conn, enumType)
+		err = m.createEnumType(ctx, conn, enumType)
 		return err == nil
 	})
 	if err != nil {

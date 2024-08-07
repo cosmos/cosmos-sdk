@@ -1,8 +1,7 @@
-package testing
+package tests
 
 import (
 	"context"
-	"encoding/json"
 	"os"
 	"testing"
 
@@ -51,21 +50,14 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 		require.NoError(t, err)
 	})
 
-	cfg := postgres.Config{
+	cfg, err := postgresConfigToIndexerConfig(postgres.Config{
 		DatabaseURL:            dbUrl,
 		DisableRetainDeletions: !retainDeletions,
-	}
-	cfgBz, err := json.Marshal(cfg)
+	})
 	require.NoError(t, err)
 
-	var cfgMap map[string]interface{}
-	err = json.Unmarshal(cfgBz, &cfgMap)
-
 	pgIndexer, err := postgres.StartIndexer(indexer.InitParams{
-		Config: indexer.Config{
-			Type:   "postgres",
-			Config: cfgMap,
-		},
+		Config:       cfg,
 		Context:      ctx,
 		Logger:       log.NewTestLogger(t),
 		AddressCodec: addressutil.HexAddressCodec{},
@@ -73,7 +65,7 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 	require.NoError(t, err)
 
 	sim, err := appdatasim.NewSimulator(appdatasim.Options{
-		Listener:  pgIndexer.Listener(),
+		Listener:  pgIndexer.Listener,
 		AppSchema: indexertesting.ExampleAppSchema,
 		StateSimOptions: statesim.Options{
 			CanRetainDeletions: retainDeletions,
@@ -93,6 +85,6 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 		require.NoError(t, sim.ProcessBlockData(blockData))
 
 		// compare the expected state in the simulator to the actual state in the indexer and expect the diff to be empty
-		require.Empty(t, appdatasim.DiffAppData(sim, pgIndexer))
+		require.Empty(t, appdatasim.DiffAppData(sim, pgIndexer.View))
 	}
 }

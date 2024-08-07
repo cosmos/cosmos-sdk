@@ -9,28 +9,28 @@ import (
 	"cosmossdk.io/schema/view"
 )
 
-var _ view.AppData = &Indexer{}
+var _ view.AppData = &indexerImpl{}
 
-func (i *Indexer) AppState() view.AppState {
+func (i *indexerImpl) AppState() view.AppState {
 	return i
 }
 
-func (i *Indexer) BlockNum() (uint64, error) {
+func (i *indexerImpl) BlockNum() (int64, error) {
 	var blockNum int64
 	err := i.tx.QueryRow("SELECT max(number) FROM block").Scan(&blockNum)
 	if err != nil {
 		return 0, err
 	}
-	return uint64(blockNum), nil
+	return blockNum, nil
 }
 
 type moduleView struct {
 	moduleIndexer
 	ctx  context.Context
-	conn DBConn
+	conn dbConn
 }
 
-func (i *Indexer) GetModule(moduleName string) (view.ModuleState, error) {
+func (i *indexerImpl) GetModule(moduleName string) (view.ModuleState, error) {
 	mod, ok := i.modules[moduleName]
 	if !ok {
 		return nil, nil
@@ -42,7 +42,7 @@ func (i *Indexer) GetModule(moduleName string) (view.ModuleState, error) {
 	}, nil
 }
 
-func (i *Indexer) Modules(f func(modState view.ModuleState, err error) bool) {
+func (i *indexerImpl) Modules(f func(modState view.ModuleState, err error) bool) {
 	for _, mod := range i.modules {
 		if !f(&moduleView{
 			moduleIndexer: *mod,
@@ -54,7 +54,7 @@ func (i *Indexer) Modules(f func(modState view.ModuleState, err error) bool) {
 	}
 }
 
-func (i *Indexer) NumModules() (int, error) {
+func (i *indexerImpl) NumModules() (int, error) {
 	return len(i.modules), nil
 }
 
@@ -97,7 +97,7 @@ func (m *moduleView) NumObjectCollections() (int, error) {
 type objectView struct {
 	objectIndexer
 	ctx  context.Context
-	conn DBConn
+	conn dbConn
 }
 
 func (tm *objectView) ObjectType() schema.ObjectType {

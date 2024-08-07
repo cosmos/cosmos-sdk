@@ -22,7 +22,7 @@ type Config struct {
 
 type SqlLogger = func(msg, sql string, params ...interface{})
 
-type Indexer struct {
+type indexerImpl struct {
 	ctx     context.Context
 	db      *sql.DB
 	tx      *sql.Tx
@@ -30,10 +30,10 @@ type Indexer struct {
 	modules map[string]*moduleIndexer
 }
 
-func StartIndexer(params indexer.InitParams) (*Indexer, error) {
+func StartIndexer(params indexer.InitParams) (indexer.InitResult, error) {
 	config, err := decodeConfig(params.Config.Config)
 	if err != nil {
-		return nil, err
+		return indexer.InitResult{}, err
 	}
 
 	ctx := params.Context
@@ -42,7 +42,7 @@ func StartIndexer(params indexer.InitParams) (*Indexer, error) {
 	}
 
 	if config.DatabaseURL == "" {
-		return nil, errors.New("missing database URL")
+		return indexer.InitResult{}, errors.New("missing database URL")
 	}
 
 	driver := config.DatabaseDriver
@@ -52,26 +52,29 @@ func StartIndexer(params indexer.InitParams) (*Indexer, error) {
 
 	db, err := sql.Open(driver, config.DatabaseURL)
 	if err != nil {
-		return nil, err
+		return indexer.InitResult{}, err
 	}
 
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, err
+		return indexer.InitResult{}, err
 	}
 
 	// commit base schema
 	_, err = tx.Exec(baseSQL)
 	if err != nil {
-		return nil, err
+		return indexer.InitResult{}, err
 	}
 
 	moduleIndexers := map[string]*moduleIndexer{}
 	var sqlLogger func(msg, sql string, params ...interface{})
 	if logger := params.Logger; logger != nil {
 		sqlLogger = func(msg, sql string, params ...interface{}) {
-			params = append(params, "sql", sql)
-			logger.Debug(msg, params...)
+			if len(params) == 0 {
+				logger.Debug(msg, "sql", sql)
+			} else {
+				logger.Debug(msg, "sql", sql, "params", params)
+			}
 		}
 	}
 	opts := Options{
@@ -80,12 +83,23 @@ func StartIndexer(params indexer.InitParams) (*Indexer, error) {
 		AddressCodec:           params.AddressCodec,
 	}
 
-	return &Indexer{
+	idx := &indexerImpl{
 		ctx:     ctx,
 		db:      db,
 		tx:      tx,
 		opts:    opts,
 		modules: moduleIndexers,
+	}
+
+	lastBlock, err := idx.BlockNum()
+	if err != nil {
+		return indexer.InitResult{}, err
+	}
+
+	return indexer.InitResult{
+		Listener:           idx.Listener(),
+		LastBlockPersisted: lastBlock,
+		View:               idx,
 	}, nil
 }
 

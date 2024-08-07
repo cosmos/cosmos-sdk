@@ -8,7 +8,7 @@ import (
 )
 
 // delete deletes the row with the provided key from the table.
-func (tm *objectIndexer) delete(ctx context.Context, conn DBConn, key interface{}) error {
+func (tm *objectIndexer) delete(ctx context.Context, conn dbConn, key interface{}) error {
 	buf := new(strings.Builder)
 	var params []interface{}
 	var err error

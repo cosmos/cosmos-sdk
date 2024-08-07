@@ -6,7 +6,7 @@ import (
 	"cosmossdk.io/schema/appdata"
 )
 
-func (i *Indexer) Listener() appdata.Listener {
+func (i *indexerImpl) Listener() appdata.Listener {
 	return appdata.Listener{
 		InitializeModuleData: func(data appdata.ModuleInitializationData) error {
 			moduleName := data.ModuleName

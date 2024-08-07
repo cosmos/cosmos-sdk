@@ -14,7 +14,7 @@ import (
 )
 
 // Count returns the number of rows in the table.
-func (tm *objectIndexer) count(ctx context.Context, conn DBConn) (int, error) {
+func (tm *objectIndexer) count(ctx context.Context, conn dbConn) (int, error) {
 	row := conn.QueryRowContext(ctx, fmt.Sprintf("SELECT COUNT(*) FROM %q;", tm.TableName()))
 	var count int
 	err := row.Scan(&count)
@@ -22,7 +22,7 @@ func (tm *objectIndexer) count(ctx context.Context, conn DBConn) (int, error) {
 }
 
 // exists checks if a row with the provided key exists in the table.
-func (tm *objectIndexer) exists(ctx context.Context, conn DBConn, key interface{}) (bool, error) {
+func (tm *objectIndexer) exists(ctx context.Context, conn dbConn, key interface{}) (bool, error) {
 	buf := new(strings.Builder)
 	params, err := tm.existsSqlAndParams(buf, key)
 	if err != nil {
@@ -33,7 +33,7 @@ func (tm *objectIndexer) exists(ctx context.Context, conn DBConn, key interface{
 }
 
 // checkExists checks if a row exists in the table.
-func (tm *objectIndexer) checkExists(ctx context.Context, conn DBConn, sqlStr string, params []interface{}) (bool, error) {
+func (tm *objectIndexer) checkExists(ctx context.Context, conn dbConn, sqlStr string, params []interface{}) (bool, error) {
 	tm.options.Logger("Select", "sql", sqlStr, "params", params)
 	var res interface{}
 	err := conn.QueryRowContext(ctx, sqlStr, params...).Scan(&res)
@@ -63,7 +63,7 @@ func (tm *objectIndexer) existsSqlAndParams(w io.Writer, key interface{}) ([]int
 	return keyParams, err
 }
 
-func (tm *objectIndexer) get(ctx context.Context, conn DBConn, key interface{}) (schema.ObjectUpdate, error) {
+func (tm *objectIndexer) get(ctx context.Context, conn dbConn, key interface{}) (schema.ObjectUpdate, error) {
 	buf := new(strings.Builder)
 	params, err := tm.getSqlAndParams(buf, key)
 	if err != nil {

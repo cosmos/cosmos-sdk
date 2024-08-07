@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/schema/addressutil"
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/logutil"
+	"cosmossdk.io/schema/view"
 )
 
 // Config species the configuration passed to an indexer initialization function.
@@ -81,4 +82,8 @@ type InitResult struct {
 	// will attempt to perform a catch-up sync of state. Historical events will not be replayed, but an accurate
 	// representation of the current state at the height at which indexing began can be reproduced.
 	LastBlockPersisted int64
+
+	// View is a view of indexed data that indexers can provide. It is optional and may be nil.
+	// if it is provided it can be used for automated testing and other purposes.
+	View view.AppData
 }

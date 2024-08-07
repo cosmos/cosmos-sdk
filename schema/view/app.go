@@ -4,8 +4,8 @@ type AppData interface {
 	// AppState returns the app state. If the view doesn't persist app state, nil should be returned.
 	AppState() AppState
 
-	// BlockNum returns the latest block number.
-	BlockNum() (uint64, error)
+	// BlockNum returns the latest persisted block number.
+	BlockNum() (int64, error)
 }
 
 // AppState defines an interface for things that represent application state in schema format.

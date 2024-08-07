@@ -8,7 +8,7 @@ import (
 )
 
 // CreateTable creates the table for the object type.
-func (tm *objectIndexer) CreateTable(ctx context.Context, conn DBConn) error {
+func (tm *objectIndexer) CreateTable(ctx context.Context, conn dbConn) error {
 	buf := new(strings.Builder)
 	err := tm.CreateTableSql(buf)
 	if err != nil {

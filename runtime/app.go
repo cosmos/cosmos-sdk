@@ -6,6 +6,7 @@ import (
 	"slices"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	"google.golang.org/grpc"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	"cosmossdk.io/core/appmodule"
@@ -77,7 +78,7 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 
 		if mod, ok := appModule.(module.HasServices); ok {
 			mod.RegisterServices(a.configurator)
-		} else if module, ok := appModule.(appmodule.HasServices); ok {
+		} else if module, ok := appModule.(hasServicesV1); ok {
 			if err := module.RegisterServices(a.configurator); err != nil {
 				return err
 			}
@@ -271,3 +272,9 @@ func (a *App) UnsafeFindStoreKey(storeKey string) storetypes.StoreKey {
 }
 
 var _ servertypes.Application = &App{}
+
+// hasServicesV1 is the interface for registering service in baseapp Cosmos SDK.
+// This API is part of core/appmodule but commented out for dependencies.
+type hasServicesV1 interface {
+	RegisterServices(grpc.ServiceRegistrar) error
+}

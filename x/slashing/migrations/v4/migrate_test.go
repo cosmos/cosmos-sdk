@@ -32,13 +32,15 @@ func TestMigrate(t *testing.T) {
 
 	// store old signing info and bitmap entries
 	bz := cdc.MustMarshal(&slashingtypes.ValidatorSigningInfo{Address: consStrAddr})
-	store.Set(v4.ValidatorSigningInfoKey(consAddr), bz)
+	err = store.Set(v4.ValidatorSigningInfoKey(consAddr), bz)
+	require.NoError(t, err)
 
 	for i := int64(0); i < params.SignedBlocksWindow; i++ {
 		// all even blocks are missed
 		missed := &gogotypes.BoolValue{Value: i%2 == 0}
 		bz := cdc.MustMarshal(missed)
-		store.Set(v4.ValidatorMissedBlockBitArrayKey(consAddr, i), bz)
+		err := store.Set(v4.ValidatorMissedBlockBitArrayKey(consAddr, i), bz)
+		require.NoError(t, err)
 	}
 
 	err = v4.Migrate(ctx, cdc, store, params, valCodec)

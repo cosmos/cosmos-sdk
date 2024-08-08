@@ -22,7 +22,6 @@ func encodeOldDoneKey(upgrade storedUpgrade) []byte {
 }
 
 func TestMigrateDoneUpgradeKeys(t *testing.T) {
-
 	ctx := testutil.DefaultContext("upgrade")
 	storeService := coretesting.KVStoreService(ctx, "upgrade")
 	store := storeService.OpenKVStore(ctx)

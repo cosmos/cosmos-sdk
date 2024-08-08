@@ -133,7 +133,9 @@ func deleteValidatorMissedBlockBitArray(_ context.Context, store corestore.KVSto
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {
-		store.Delete(iter.Key())
+		if err := store.Delete(iter.Key()); err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -166,6 +168,8 @@ func setMissedBlockBitmapValue(_ context.Context, store corestore.KVStore, addr 
 		return errors.Wrapf(err, "failed to encode bitmap chunk; index: %d", index)
 	}
 
-	store.Set(key, updatedChunk)
+	if err := store.Set(key, updatedChunk); err != nil {
+		return err
+	}
 	return nil
 }

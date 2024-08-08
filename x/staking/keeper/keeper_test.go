@@ -284,7 +284,8 @@ func (s *KeeperTestSuite) TestLastTotalPowerMigrationToColls() {
 			bz, err := s.cdc.Marshal(&gogotypes.Int64Value{Value: i})
 			s.Require().NoError(err)
 
-			s.env.KVStoreService.OpenKVStore(s.ctx).Set(getLastValidatorPowerKey(valAddrs[i]), bz)
+			err = s.env.KVStoreService.OpenKVStore(s.ctx).Set(getLastValidatorPowerKey(valAddrs[i]), bz)
+			s.Require().NoError(err)
 		},
 		"d9690cb1904ab91c618a3f6d27ef90bfe6fb57a2c01970b7c088ec4ecd0613eb",
 	)
@@ -317,7 +318,8 @@ func (s *KeeperTestSuite) TestSrcRedelegationsMigrationToColls() {
 		100,
 		func(i int64) {
 			// legacy method to set in the state
-			s.env.KVStoreService.OpenKVStore(s.ctx).Set(getREDByValSrcIndexKey(addrs[i], valAddrs[i], valAddrs[i+1]), []byte{})
+			err := s.env.KVStoreService.OpenKVStore(s.ctx).Set(getREDByValSrcIndexKey(addrs[i], valAddrs[i], valAddrs[i+1]), []byte{})
+			s.Require().NoError(err)
 		},
 		"43ab9766738a05bfe5f1fd5dd0fb01c05b574f7d43c004dbf228deb437e0eb7c",
 	)
@@ -349,7 +351,8 @@ func (s *KeeperTestSuite) TestDstRedelegationsMigrationToColls() {
 		100,
 		func(i int64) {
 			// legacy method to set in the state
-			s.env.KVStoreService.OpenKVStore(s.ctx).Set(getREDByValDstIndexKey(addrs[i], valAddrs[i], valAddrs[i+1]), []byte{})
+			err := s.env.KVStoreService.OpenKVStore(s.ctx).Set(getREDByValDstIndexKey(addrs[i], valAddrs[i], valAddrs[i+1]), []byte{})
+			s.Require().NoError(err)
 		},
 		"70c00b5171cbef019742d236096df60fc423cd7568c4933ab165baa3c68a64a1", // this hash obtained when ran this test in main branch
 	)
@@ -392,8 +395,10 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
 				},
 			}
 			bz := s.cdc.MustMarshal(&ubd)
-			s.env.KVStoreService.OpenKVStore(s.ctx).Set(getUBDKey(delAddrs[i], valAddrs[i]), bz)
-			s.env.KVStoreService.OpenKVStore(s.ctx).Set(getUBDByValIndexKey(delAddrs[i], valAddrs[i]), []byte{})
+			err := s.env.KVStoreService.OpenKVStore(s.ctx).Set(getUBDKey(delAddrs[i], valAddrs[i]), bz)
+			s.Require().NoError(err)
+			err = s.env.KVStoreService.OpenKVStore(s.ctx).Set(getUBDByValIndexKey(delAddrs[i], valAddrs[i]), []byte{})
+			s.Require().NoError(err)
 		},
 		"bae8a1f2070bea541bfeca8e7e4a1203cb316126451325b846b303897e8e7082",
 	)
@@ -434,7 +439,8 @@ func (s *KeeperTestSuite) TestUBDQueueMigrationToColls() {
 		func(i int64) {
 			date := time.Date(2023, 8, 21, 14, 33, 1, 0, &time.Location{})
 			// legacy Set method
-			s.env.KVStoreService.OpenKVStore(s.ctx).Set(getUnbondingDelegationTimeKey(date), []byte{})
+			err := s.env.KVStoreService.OpenKVStore(s.ctx).Set(getUnbondingDelegationTimeKey(date), []byte{})
+			s.Require().NoError(err)
 		},
 		"3f2de3f984c99cce5307db45961237220212c02981654b01b7b52f7a68b5b21b",
 	)
@@ -481,7 +487,8 @@ func (s *KeeperTestSuite) TestValidatorsMigrationToColls() {
 			}
 			valBz := s.cdc.MustMarshal(&val)
 			// legacy Set method
-			s.env.KVStoreService.OpenKVStore(s.ctx).Set(getValidatorKey(valAddrs[i]), valBz)
+			err = s.env.KVStoreService.OpenKVStore(s.ctx).Set(getValidatorKey(valAddrs[i]), valBz)
+			s.Require().NoError(err)
 		},
 		"d8acdcf8b7c8e17f3e83f0a4c293f89ad619a5dcb14d232911ccc5da15653177",
 	)
@@ -530,7 +537,8 @@ func (s *KeeperTestSuite) TestValidatorQueueMigrationToColls() {
 			s.Require().NoError(err)
 
 			// legacy Set method
-			s.env.KVStoreService.OpenKVStore(s.ctx).Set(getValidatorQueueKey(endTime, endHeight), bz)
+			err = s.env.KVStoreService.OpenKVStore(s.ctx).Set(getValidatorQueueKey(endTime, endHeight), bz)
+			s.Require().NoError(err)
 		},
 		"a631942cd94450d778706c98afc4f83231524e3e94c88474cdab79a01a4899a0",
 	)
@@ -573,7 +581,8 @@ func (s *KeeperTestSuite) TestRedelegationQueueMigrationToColls() {
 			}
 			bz, err := s.cdc.Marshal(&dvvTriplets)
 			s.Require().NoError(err)
-			s.env.KVStoreService.OpenKVStore(s.ctx).Set(getRedelegationTimeKey(date), bz)
+			err = s.env.KVStoreService.OpenKVStore(s.ctx).Set(getRedelegationTimeKey(date), bz)
+			s.Require().NoError(err)
 		},
 		"58722ccde0cacda42aa81d71d7da1123b2c4a8e35d961d55f1507c3f10ffbc96",
 	)

@@ -65,7 +65,6 @@ func (m mockGasMeter) Consume(amount coregas.Gas, descriptor string) error {
 }
 
 func TestAuthzAuthorizations(t *testing.T) {
-
 	testCtx := testutil.DefaultContextWithDB(t, stakingtypes.StoreKey)
 	sdkCtx := testCtx.Ctx.WithHeaderInfo(coreheader.Info{})
 	ctx := context.WithValue(sdkCtx.Context(), corecontext.EnvironmentContextKey, appmodule.Environment{

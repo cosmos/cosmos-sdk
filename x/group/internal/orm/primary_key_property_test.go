@@ -3,9 +3,10 @@ package orm
 import (
 	"testing"
 
-	coretesting "cosmossdk.io/core/testing"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
+
+	coretesting "cosmossdk.io/core/testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -64,7 +63,8 @@ func TestHistoricalKeysMigration(t *testing.T) {
 
 	// populate store using old key format
 	for _, tc := range testCases {
-		store.Set(tc.oldKey, tc.historicalInfo)
+		err := store.Set(tc.oldKey, tc.historicalInfo)
+		require.NoError(t, err)
 	}
 
 	// migrate store to new key format
@@ -107,7 +107,8 @@ func TestDelegationsByValidatorMigrations(t *testing.T) {
 		accAddr, err := codecOpts.GetAddressCodec().BytesToString(accAddrs[i])
 		assert.NoError(t, err)
 		del1 := stakingtypes.NewDelegation(accAddr, valAddr, sdkmath.LegacyNewDec(100))
-		store.Set(v5.GetDelegationKey(accAddrs[i], valAddrs[0]), stakingtypes.MustMarshalDelegation(cdc, del1))
+		err = store.Set(v5.GetDelegationKey(accAddrs[i], valAddrs[0]), stakingtypes.MustMarshalDelegation(cdc, del1))
+		require.NoError(t, err)
 		addedDels = append(addedDels, del1)
 	}
 

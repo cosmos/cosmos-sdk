@@ -83,7 +83,8 @@ func TestMigration(t *testing.T) {
 		bz, err := cdc.Marshal(&newGrant)
 		require.NoError(t, err)
 
-		store.Set(v2.FeeAllowanceKey(grant.granter, grant.grantee), bz)
+		err = store.Set(v2.FeeAllowanceKey(grant.granter, grant.grantee), bz)
+		require.NoError(t, err)
 	}
 
 	ctx = ctx.WithHeaderInfo(header.Info{Time: now.Add(30 * time.Hour)})
@@ -101,5 +102,4 @@ func TestMigration(t *testing.T) {
 	s4, err := store.Get(v2.FeeAllowanceKey(granter2, grantee1))
 	require.NoError(t, err)
 	require.NotNil(t, s4)
-
 }

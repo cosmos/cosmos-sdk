@@ -25,7 +25,6 @@ import (
 )
 
 func TestBankStateCompatibility(t *testing.T) {
-
 	testCtx := testutil.DefaultContextWithDB(t, banktypes.StoreKey)
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})

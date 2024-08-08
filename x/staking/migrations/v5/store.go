@@ -25,7 +25,9 @@ func migrateDelegationsByValidatorIndex(store corestore.KVStore) error {
 			return err
 		}
 
-		store.Set(GetDelegationsByValKey(val, del), []byte{})
+		if err := store.Set(GetDelegationsByValKey(val, del), []byte{}); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -62,7 +64,9 @@ func migrateHistoricalInfoKeys(store corestore.KVStore, logger log.Logger) error
 		newStoreKey := GetHistoricalInfoKey(intHeight)
 
 		// Set new key on store. Values don't change.
-		store.Set(newStoreKey, oldStoreIter.Value())
+		if err := store.Set(newStoreKey, oldStoreIter.Value()); err != nil {
+			return err
+		}
 		oldStore.Delete(oldStoreIter.Key())
 	}
 

@@ -158,7 +158,8 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBMMigrationToColls() {
 		s.env.KVStoreService,
 		100,
 		func(i int64) {
-			s.env.KVStoreService.OpenKVStore(s.ctx).Set(validatorMissedBlockBitmapKey(consAddr, index), []byte{})
+			err := s.env.KVStoreService.OpenKVStore(s.ctx).Set(validatorMissedBlockBitmapKey(consAddr, index), []byte{})
+			s.Require().NoError(err)
 		},
 		"7ad1f994d45ec9495ae5f990a3fba100c2cc70167a154c33fb43882dc004eafd",
 	)

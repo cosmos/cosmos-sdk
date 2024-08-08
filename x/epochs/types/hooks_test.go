@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/epochs/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -24,7 +23,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	s.Ctx = testutil.DefaultContext(storetypes.NewKVStoreKey(types.StoreKey))
+	s.Ctx = testutil.DefaultContext(types.StoreKey)
 }
 
 var dummyErr = errors.New("9", 9, "dummyError")

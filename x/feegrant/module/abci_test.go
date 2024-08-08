@@ -26,7 +26,6 @@ import (
 )
 
 func TestFeegrantPruning(t *testing.T) {
-
 	testCtx := testutil.DefaultContextWithDB(t, feegrant.StoreKey)
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 

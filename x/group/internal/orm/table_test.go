@@ -9,14 +9,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	coretesting "cosmossdk.io/core/testing"
 	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
 	grouperrors "cosmossdk.io/x/group/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -102,9 +101,8 @@ func TestCreate(t *testing.T) {
 			interfaceRegistry := types.NewInterfaceRegistry()
 			cdc := codec.NewProtoCodec(interfaceRegistry)
 
-			key := storetypes.NewKVStoreKey("test")
-			testCtx := testutil.DefaultContextWithDB(t, key)
-			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+			testCtx := testutil.DefaultContextWithDB(t, "test")
+			store := coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx)
 
 			anyPrefix := [2]byte{0x10}
 			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc, address.NewBech32Codec("cosmos"))
@@ -160,9 +158,8 @@ func TestUpdate(t *testing.T) {
 			interfaceRegistry := types.NewInterfaceRegistry()
 			cdc := codec.NewProtoCodec(interfaceRegistry)
 
-			key := storetypes.NewKVStoreKey("test")
-			testCtx := testutil.DefaultContextWithDB(t, key)
-			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+			testCtx := testutil.DefaultContextWithDB(t, "test")
+			store := coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx)
 
 			anyPrefix := [2]byte{0x10}
 			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc, address.NewBech32Codec("cosmos"))
@@ -210,9 +207,8 @@ func TestDelete(t *testing.T) {
 			interfaceRegistry := types.NewInterfaceRegistry()
 			cdc := codec.NewProtoCodec(interfaceRegistry)
 
-			key := storetypes.NewKVStoreKey("test")
-			testCtx := testutil.DefaultContextWithDB(t, key)
-			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+			testCtx := testutil.DefaultContextWithDB(t, "test")
+			store := coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx)
 
 			anyPrefix := [2]byte{0x10}
 			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc, address.NewBech32Codec("cosmos"))

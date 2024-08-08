@@ -8,8 +8,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/group"
 	groupkeeper "cosmossdk.io/x/group/keeper"
@@ -43,8 +43,7 @@ func initKeeper(t *testing.T) *fixture {
 		interfaceRegistry codectypes.InterfaceRegistry
 	)
 
-	key := storetypes.NewKVStoreKey(group.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key)
+	testCtx := testutil.DefaultContextWithDB(t, group.StoreKey)
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 
 	ctx := testCtx.Ctx
@@ -75,7 +74,8 @@ func initKeeper(t *testing.T) *fixture {
 	accountKeeper.EXPECT().NewAccount(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	accountKeeper.EXPECT().SetAccount(gomock.Any(), gomock.Any()).AnyTimes()
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger(), runtime.EnvWithQueryRouterService(bApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(bApp.MsgServiceRouter()))
+	kvs := coretesting.KVStoreService(testCtx.Ctx, group.StoreKey)
+	env := runtime.NewEnvironment(kvs, log.NewNopLogger(), runtime.EnvWithQueryRouterService(bApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(bApp.MsgServiceRouter()))
 
 	groupKeeper = groupkeeper.NewKeeper(env, encCfg.Codec, accountKeeper, group.DefaultConfig())
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)

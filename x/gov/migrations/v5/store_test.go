@@ -28,18 +28,20 @@ func TestMigrateStore(t *testing.T) {
 	constitutionCollection := collections.NewItem(sb, v5.ConstitutionKey, "constitution", collections.StringValue)
 
 	var params v1.Params
-	bz := store.Get(v5.ParamsKey)
+	bz, err := store.Get(v5.ParamsKey)
+	require.NoError(t, err)
 	require.NoError(t, cdc.Unmarshal(bz, &params))
 	require.NotNil(t, params)
 	require.Equal(t, "", params.ExpeditedThreshold)
 	require.Equal(t, (*time.Duration)(nil), params.ExpeditedVotingPeriod)
 
 	// Run migrations.
-	err := v5.MigrateStore(ctx, storeService, cdc, constitutionCollection)
+	err = v5.MigrateStore(ctx, storeService, cdc, constitutionCollection)
 	require.NoError(t, err)
 
 	// Check params
-	bz = store.Get(v5.ParamsKey)
+	bz, err = store.Get(v5.ParamsKey)
+	require.NoError(t, err)
 	require.NoError(t, cdc.Unmarshal(bz, &params))
 	require.NotNil(t, params)
 	require.Equal(t, v1.DefaultParams().ExpeditedMinDeposit, params.ExpeditedMinDeposit)

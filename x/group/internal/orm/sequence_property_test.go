@@ -6,9 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 
-	storetypes "cosmossdk.io/store/types"
+	coretesting "cosmossdk.io/core/testing"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
@@ -16,9 +15,9 @@ func TestSequence(t *testing.T) {
 	rapid.Check(t, func(rt *rapid.T) {
 		// Init sets up the real Sequence, including choosing a random initial value,
 		// and initializes the model state
-		key := storetypes.NewKVStoreKey("test")
-		testCtx := testutil.DefaultContextWithDB(t, key)
-		store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+
+		testCtx := testutil.DefaultContextWithDB(t, "test")
+		store := coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx)
 
 		// Create primary key table
 		seq := NewSequence(0x1)

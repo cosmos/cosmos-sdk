@@ -7,18 +7,20 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"cosmossdk.io/core/address"
-	storetypes "cosmossdk.io/core/store"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/slashing/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Migrate migrates state to consensus version 4. Specifically, the migration
 // deletes all existing validator bitmap entries and replaces them with a real
 // "chunked" bitmap.
-func Migrate(ctx context.Context, cdc codec.BinaryCodec, store storetypes.KVStore, params types.Params, addressCodec address.ValidatorAddressCodec) error {
+func Migrate(ctx context.Context, cdc codec.BinaryCodec, store corestore.KVStore, params types.Params, addressCodec address.ValidatorAddressCodec) error {
 	// Get all the missed blocks for each validator, based on the existing signing
 	// info.
 	var missedBlocks []types.ValidatorMissedBlocks
@@ -65,10 +67,12 @@ func Migrate(ctx context.Context, cdc codec.BinaryCodec, store storetypes.KVStor
 func iterateValidatorSigningInfos(
 	_ context.Context,
 	cdc codec.BinaryCodec,
-	store storetypes.KVStore,
+	store corestore.KVStore,
 	cb func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool),
 ) {
-	iter := storetypes.KVStorePrefixIterator(store, ValidatorSigningInfoKeyPrefix)
+	itStore := runtime.KVStoreAdapter(store)
+	iter := storetypes.KVStorePrefixIterator(itStore, ValidatorSigningInfoKeyPrefix)
+
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {
@@ -85,14 +89,17 @@ func iterateValidatorSigningInfos(
 func iterateValidatorMissedBlockBitArray(
 	_ context.Context,
 	cdc codec.BinaryCodec,
-	store storetypes.KVStore,
+	store corestore.KVStore,
 	addr sdk.ConsAddress,
 	params types.Params,
 	cb func(index int64, missed bool) (stop bool),
 ) {
 	for i := int64(0); i < params.SignedBlocksWindow; i++ {
 		var missed gogotypes.BoolValue
-		bz := store.Get(ValidatorMissedBlockBitArrayKey(addr, i))
+		bz, err := store.Get(ValidatorMissedBlockBitArrayKey(addr, i))
+		if err != nil {
+			continue
+		}
 		if bz == nil {
 			continue
 		}
@@ -107,7 +114,7 @@ func iterateValidatorMissedBlockBitArray(
 func GetValidatorMissedBlocks(
 	ctx context.Context,
 	cdc codec.BinaryCodec,
-	store storetypes.KVStore,
+	store corestore.KVStore,
 	addr sdk.ConsAddress,
 	params types.Params,
 ) []types.MissedBlock {
@@ -120,8 +127,9 @@ func GetValidatorMissedBlocks(
 	return missedBlocks
 }
 
-func deleteValidatorMissedBlockBitArray(_ context.Context, store storetypes.KVStore, addr sdk.ConsAddress) {
-	iter := storetypes.KVStorePrefixIterator(store, validatorMissedBlockBitArrayPrefixKey(addr))
+func deleteValidatorMissedBlockBitArray(_ context.Context, store corestore.KVStore, addr sdk.ConsAddress) {
+	itStore := runtime.KVStoreAdapter(store)
+	iter := storetypes.KVStorePrefixIterator(itStore, validatorMissedBlockBitArrayPrefixKey(addr))
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {
@@ -129,13 +137,16 @@ func deleteValidatorMissedBlockBitArray(_ context.Context, store storetypes.KVSt
 	}
 }
 
-func setMissedBlockBitmapValue(_ context.Context, store storetypes.KVStore, addr sdk.ConsAddress, index int64, missed bool) error {
+func setMissedBlockBitmapValue(_ context.Context, store corestore.KVStore, addr sdk.ConsAddress, index int64, missed bool) error {
 	// get the chunk or "word" in the logical bitmap
 	chunkIndex := index / MissedBlockBitmapChunkSize
 	key := ValidatorMissedBlockBitmapKey(addr, chunkIndex)
 
 	bs := bitset.New(uint(MissedBlockBitmapChunkSize))
-	chunk := store.Get(key)
+	chunk, err := store.Get(key)
+	if err != nil {
+		return err
+	}
 	if chunk != nil {
 		if err := bs.UnmarshalBinary(chunk); err != nil {
 			return errors.Wrapf(err, "failed to decode bitmap chunk; index: %d", index)

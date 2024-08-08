@@ -13,7 +13,6 @@ import (
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/gov/keeper"
@@ -117,10 +116,10 @@ func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 	sdk.Context,
 ) {
 	t.Helper()
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
-	testCtx := testutil.DefaultContextWithDB(t, key)
+
+	testCtx := testutil.DefaultContextWithDB(t, types.StoreKey)
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
+	storeService := coretesting.KVStoreService(ctx, types.StoreKey)
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	v1.RegisterInterfaces(encCfg.InterfaceRegistry)
 	v1beta1.RegisterInterfaces(encCfg.InterfaceRegistry)
@@ -183,10 +182,10 @@ func setupGovKeeperWithMaxVoteOptionsLen(t *testing.T, maxVoteOptionsLen uint64,
 	sdk.Context,
 ) {
 	t.Helper()
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
-	testCtx := testutil.DefaultContextWithDB(t, key)
+
+	testCtx := testutil.DefaultContextWithDB(t, types.StoreKey)
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
+	storeService := coretesting.KVStoreService(ctx, types.StoreKey)
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	v1.RegisterInterfaces(encCfg.InterfaceRegistry)
 	v1beta1.RegisterInterfaces(encCfg.InterfaceRegistry)

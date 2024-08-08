@@ -9,12 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/group/errors"
 	"cosmossdk.io/x/group/internal/orm/prefixstore"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
@@ -167,9 +166,9 @@ func TestIndexerOnDelete(t *testing.T) {
 	myRowID := EncodeSequence(1)
 
 	var multiKeyIndex MultiKeyIndex
-	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key)
-	store := prefixstore.New(runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx), []byte{multiKeyIndex.prefix})
+
+	testCtx := testutil.DefaultContextWithDB(t, "test")
+	store := prefixstore.New(coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx), []byte{multiKeyIndex.prefix})
 
 	specs := map[string]struct {
 		srcFunc        IndexerFunc
@@ -253,9 +252,8 @@ func TestIndexerOnUpdate(t *testing.T) {
 	myRowID := EncodeSequence(1)
 
 	var multiKeyIndex MultiKeyIndex
-	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key)
-	store := prefixstore.New(runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx), []byte{multiKeyIndex.prefix})
+	testCtx := testutil.DefaultContextWithDB(t, "test")
+	store := prefixstore.New(coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx), []byte{multiKeyIndex.prefix})
 
 	specs := map[string]struct {
 		srcFunc        IndexerFunc
@@ -410,9 +408,8 @@ func TestUniqueKeyAddFunc(t *testing.T) {
 	}
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {
-			key := storetypes.NewKVStoreKey("test")
-			testCtx := testutil.DefaultContextWithDB(t, key)
-			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+			testCtx := testutil.DefaultContextWithDB(t, "test")
+			store := coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx)
 			require.NoError(t, store.Set(presetKey, []byte{}))
 
 			err := uniqueKeysAddFunc(store, spec.srcKey, myRowID)
@@ -457,9 +454,8 @@ func TestMultiKeyAddFunc(t *testing.T) {
 	}
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {
-			key := storetypes.NewKVStoreKey("test")
-			testCtx := testutil.DefaultContextWithDB(t, key)
-			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+			testCtx := testutil.DefaultContextWithDB(t, "test")
+			store := coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx)
 			require.NoError(t, store.Set(presetKey, []byte{}))
 
 			err := multiKeyAddFunc(store, spec.srcKey, myRowID)

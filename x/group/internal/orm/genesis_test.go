@@ -5,12 +5,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	storetypes "cosmossdk.io/store/types"
+	coretesting "cosmossdk.io/core/testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
@@ -22,9 +21,8 @@ func TestImportExportTableData(t *testing.T) {
 	table, err := NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc, address.NewBech32Codec("cosmos"))
 	require.NoError(t, err)
 
-	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key)
-	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+	testCtx := testutil.DefaultContextWithDB(t, "test")
+	store := coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx)
 
 	tms := []*testdata.TableModel{
 		{

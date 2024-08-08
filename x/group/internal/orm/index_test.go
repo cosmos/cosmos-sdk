@@ -7,14 +7,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/group/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -105,9 +104,8 @@ func TestIndexPrefixScan(t *testing.T) {
 	}, testdata.TableModel{}.Name)
 	require.NoError(t, err)
 
-	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key)
-	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+	testCtx := testutil.DefaultContextWithDB(t, "test")
+	store := coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx)
 
 	g1 := testdata.TableModel{
 		Id:       1,
@@ -306,9 +304,8 @@ func TestUniqueIndex(t *testing.T) {
 	}, []byte{})
 	require.NoError(t, err)
 
-	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key)
-	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+	testCtx := testutil.DefaultContextWithDB(t, "test")
+	store := coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx)
 
 	m := testdata.TableModel{
 		Id:       1,

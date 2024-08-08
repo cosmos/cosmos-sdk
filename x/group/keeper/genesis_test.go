@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	coreaddress "cosmossdk.io/core/address"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/group"
@@ -52,9 +52,8 @@ var (
 )
 
 func (s *GenesisTestSuite) SetupTest() {
-	key := storetypes.NewKVStoreKey(group.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
-	testCtx := testutil.DefaultContextWithDB(s.T(), key)
+	testCtx := testutil.DefaultContextWithDB(s.T(), group.StoreKey)
+	storeService := coretesting.KVStoreService(testCtx.Ctx, group.StoreKey)
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 
 	ctrl := gomock.NewController(s.T())

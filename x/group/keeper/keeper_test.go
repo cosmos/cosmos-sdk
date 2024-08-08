@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -52,9 +52,8 @@ type TestSuite struct {
 
 func (s *TestSuite) SetupTest() {
 	s.blockTime = time.Now().Round(0).UTC()
-	key := storetypes.NewKVStoreKey(group.StoreKey)
 
-	testCtx := testutil.DefaultContextWithDB(s.T(), key)
+	testCtx := testutil.DefaultContextWithDB(s.T(), group.StoreKey)
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{}, bank.AppModule{})
 	addressCodec := address.NewBech32Codec("cosmos")
 	s.addrs = simtestutil.CreateIncrementalAccounts(6)
@@ -82,7 +81,8 @@ func (s *TestSuite) SetupTest() {
 	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	banktypes.RegisterMsgServer(bApp.MsgServiceRouter(), s.bankKeeper)
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger(), runtime.EnvWithQueryRouterService(bApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(bApp.MsgServiceRouter()))
+	kvs := coretesting.KVStoreService(testCtx.Ctx, group.StoreKey)
+	env := runtime.NewEnvironment(kvs, log.NewNopLogger(), runtime.EnvWithQueryRouterService(bApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(bApp.MsgServiceRouter()))
 	config := group.DefaultConfig()
 	s.groupKeeper = keeper.NewKeeper(env, encCfg.Codec, s.accountKeeper, config)
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: s.blockTime})

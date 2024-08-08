@@ -7,24 +7,23 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	coretesting "cosmossdk.io/core/testing"
 	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/group/errors"
 	"cosmossdk.io/x/group/internal/orm/prefixstore"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func TestTypeSafeRowGetter(t *testing.T) {
-	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key)
+
+	testCtx := testutil.DefaultContextWithDB(t, "test")
 	prefixKey := [2]byte{0x2}
-	store := prefixstore.New(runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx), prefixKey[:])
+	store := prefixstore.New(coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx), prefixKey[:])
 
 	md := testdata.TableModel{
 		Id:   1,
@@ -73,7 +72,7 @@ func TestTypeSafeRowGetter(t *testing.T) {
 			getter := NewTypeSafeRowGetter(prefixKey, spec.srcModelType, cdc)
 			var loadedObj testdata.TableModel
 
-			err := getter(runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx), spec.srcRowID, &loadedObj)
+			err := getter(coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx), spec.srcRowID, &loadedObj)
 			if spec.expErr != nil {
 				require.True(t, spec.expErr.Is(err), err)
 				return

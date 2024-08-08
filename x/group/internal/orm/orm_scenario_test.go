@@ -10,13 +10,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/group/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
@@ -28,9 +28,8 @@ func TestKeeperEndToEndWithAutoUInt64Table(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key)
-	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+	testCtx := testutil.DefaultContextWithDB(t, "test")
+	store := coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx)
 
 	k := NewTestKeeper(cdc)
 
@@ -107,9 +106,8 @@ func TestKeeperEndToEndWithPrimaryKeyTable(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key)
-	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+	testCtx := testutil.DefaultContextWithDB(t, "test")
+	store := coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx)
 
 	k := NewTestKeeper(cdc)
 
@@ -195,9 +193,8 @@ func TestGasCostsPrimaryKeyTable(t *testing.T) {
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	ac := address.NewBech32Codec("cosmos")
 
-	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key)
-	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+	testCtx := testutil.DefaultContextWithDB(t, "test")
+	store := coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx)
 
 	k := NewTestKeeper(cdc)
 
@@ -293,9 +290,8 @@ func TestExportImportStateAutoUInt64Table(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key)
-	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+	testCtx := testutil.DefaultContextWithDB(t, "test")
+	store := coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx)
 
 	k := NewTestKeeper(cdc)
 
@@ -317,8 +313,8 @@ func TestExportImportStateAutoUInt64Table(t *testing.T) {
 	require.Equal(t, seqVal, uint64(testRecordsNum))
 
 	// when a new db seeded
-	testCtx = testutil.DefaultContextWithDB(t, key)
-	store = runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+	testCtx = testutil.DefaultContextWithDB(t, "test")
+	store = coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx)
 
 	err = k.autoUInt64Table.Import(store, tms, seqVal)
 	require.NoError(t, err)
@@ -355,9 +351,8 @@ func TestExportImportStatePrimaryKeyTable(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key)
-	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+	testCtx := testutil.DefaultContextWithDB(t, "test")
+	store := coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx)
 
 	k := NewTestKeeper(cdc)
 
@@ -380,8 +375,8 @@ func TestExportImportStatePrimaryKeyTable(t *testing.T) {
 	require.NoError(t, err)
 
 	// when a new db seeded
-	testCtx = testutil.DefaultContextWithDB(t, key)
-	store = runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+	testCtx = testutil.DefaultContextWithDB(t, "test")
+	store = coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx)
 
 	err = k.primaryKeyTable.Import(store, tms, 0)
 	require.NoError(t, err)

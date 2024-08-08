@@ -2,6 +2,7 @@ package genutil
 
 import (
 	"context"
+	"fmt"
 
 	"cosmossdk.io/core/genesis"
 
@@ -11,17 +12,18 @@ import (
 )
 
 // InitGenesis - initialize accounts and deliver genesis transactions
+// NOTE: It isn't used in server/v2 applications.
 func InitGenesis(
 	ctx context.Context, stakingKeeper types.StakingKeeper,
 	deliverTx genesis.TxHandler, genesisState types.GenesisState,
 	txEncodingConfig client.TxEncodingConfig,
 ) (validatorUpdates []module.ValidatorUpdate, err error) {
+	if deliverTx == nil {
+		return nil, fmt.Errorf("deliverTx (genesis.TxHandler) not defined, verify x/genutil wiring")
+	}
+
 	if len(genesisState.GenTxs) > 0 {
-		moduleValidatorUpdates, err := DeliverGenTxs(ctx, genesisState.GenTxs, stakingKeeper, deliverTx, txEncodingConfig)
-		if err != nil {
-			return nil, err
-		}
-		return moduleValidatorUpdates, nil
+		return DeliverGenTxs(ctx, genesisState.GenTxs, stakingKeeper, deliverTx, txEncodingConfig)
 	}
 	return
 }

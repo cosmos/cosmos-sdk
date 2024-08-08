@@ -17,7 +17,7 @@ replace (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2
 	cosmossdk.io/api v0.8.0
-	cosmossdk.io/core v0.12.1-0.20240808073009-7040177316e3 // main
+	cosmossdk.io/core v0.12.1-0.20240808112341-8400d9b4263f // main
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.0
 	cosmossdk.io/server/v2 v2.0.0-20240802142126-a26970e547ab // main

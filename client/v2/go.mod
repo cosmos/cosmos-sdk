@@ -4,7 +4,7 @@ go 1.22.2
 
 require (
 	cosmossdk.io/api v0.8.0
-	cosmossdk.io/core v0.12.1-0.20240808073009-7040177316e3 // main
+	cosmossdk.io/core v0.12.1-0.20240808112341-8400d9b4263f // main
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a

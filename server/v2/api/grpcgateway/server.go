@@ -21,6 +21,8 @@ import (
 var _ serverv2.ServerComponent[transaction.Tx] = (*GRPCGatewayServer[transaction.Tx])(nil)
 
 const (
+	ServerName = "grpc-gateway"
+
 	// GRPCBlockHeightHeader is the gRPC header for block height.
 	GRPCBlockHeightHeader = "x-cosmos-block-height"
 )
@@ -64,7 +66,7 @@ func New[T transaction.Tx](grpcSrv *grpc.Server, ir jsonpb.AnyResolver, cfgOptio
 }
 
 func (g *GRPCGatewayServer[T]) Name() string {
-	return "grpc-gateway"
+	return ServerName
 }
 
 func (s *GRPCGatewayServer[T]) Config() any {

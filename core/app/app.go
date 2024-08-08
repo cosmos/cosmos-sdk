@@ -20,7 +20,7 @@ type QueryResponse struct {
 	Value  []byte
 }
 
-type BlockRequest[T any] struct {
+type BlockRequest[T transaction.Tx] struct {
 	Height            uint64
 	Time              time.Time
 	Hash              []byte

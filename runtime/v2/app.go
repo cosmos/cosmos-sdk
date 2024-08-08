@@ -44,9 +44,9 @@ type App[T transaction.Tx] struct {
 	amino              legacy.Amino
 	moduleManager      *MM[T]
 
-	// GRPCQueryDecoders maps gRPC method name to a function that decodes the request
+	// GRPCMethodsToMessageMap maps gRPC method name to a function that decodes the request
 	// bytes into a gogoproto.Message, which then can be passed to appmanager.
-	GRPCQueryDecoders map[string]func(requestBytes []byte) (gogoproto.Message, error)
+	GRPCMethodsToMessageMap map[string]func() gogoproto.Message
 }
 
 // Name returns the app name.
@@ -110,14 +110,10 @@ func (a *App[T]) GetLogger() log.Logger {
 	return a.logger
 }
 
-func (a *App[T]) ExecuteGenesisTx(_ []byte) error {
-	panic("App.ExecuteGenesisTx not supported in runtime/v2")
-}
-
 func (a *App[T]) GetAppManager() *appmanager.AppManager[T] {
 	return a.AppManager
 }
 
-func (a *App[T]) GetGRPCQueryDecoders() map[string]func(requestBytes []byte) (gogoproto.Message, error) {
-	return a.GRPCQueryDecoders
+func (a *App[T]) GetGPRCMethodsToMessageMap() map[string]func() gogoproto.Message {
+	return a.GRPCMethodsToMessageMap
 }

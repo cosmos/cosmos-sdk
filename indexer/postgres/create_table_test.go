@@ -32,7 +32,7 @@ func ExampleObjectIndexer_CreateTableSql_allKinds() {
 	//	"duration" BIGINT NOT NULL,
 	//	"float32" REAL NOT NULL,
 	//	"float64" DOUBLE PRECISION NOT NULL,
-	//	"bech32address" TEXT NOT NULL,
+	//	"address" TEXT NOT NULL,
 	//	"enum" "test_my_enum" NOT NULL,
 	//	"json" JSONB NOT NULL,
 	//	PRIMARY KEY ("id", "ts_nanos")

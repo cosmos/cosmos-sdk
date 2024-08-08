@@ -5,7 +5,7 @@ import (
 
 	ics23 "github.com/cosmos/ics23/go"
 
-	"cosmossdk.io/errors"
+	errors "cosmossdk.io/errors/v2"
 	storeerrors "cosmossdk.io/store/v2/errors"
 )
 

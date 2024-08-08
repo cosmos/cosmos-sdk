@@ -15,13 +15,14 @@ type Config struct {
 
 func DefaultAppTomlConfig() *AppTomlConfig {
 	return &AppTomlConfig{
-		IndexEvents: make([]string, 0),
-		HaltHeight:  0,
-		HaltTime:    0,
-		Address:     "tcp://127.0.0.1:26658",
-		Transport:   "socket",
-		Trace:       false,
-		Standalone:  false,
+		MinRetainBlocks: 0,
+		IndexEvents:     make([]string, 0),
+		HaltHeight:      0,
+		HaltTime:        0,
+		Address:         "tcp://127.0.0.1:26658",
+		Transport:       "socket",
+		Trace:           false,
+		Standalone:      false,
 	}
 }
 

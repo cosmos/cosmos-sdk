@@ -54,7 +54,9 @@ func ExtractAutoCLIOptions(appModules map[string]appmodule.AppModule) map[string
 			mod.RegisterServices(cfg)
 		}
 
-		if mod, ok := mod.(appmodule.HasServices); ok {
+		if mod, ok := mod.(interface {
+			RegisterServices(grpc.ServiceRegistrar) error
+		}); ok {
 			err := mod.RegisterServices(cfg)
 			if err != nil {
 				panic(err)

@@ -36,7 +36,6 @@ var (
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasEndBlocker         = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}

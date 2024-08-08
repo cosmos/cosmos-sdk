@@ -38,6 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#21166](https://github.com/cosmos/cosmos-sdk/pull/21166) Comment out `appmodule.HasServices` to simplify dependencies. This interface is however still supported.
 * [#19953](https://github.com/cosmos/cosmos-sdk/pull/19953) Add transaction service.
 * [#18379](https://github.com/cosmos/cosmos-sdk/pull/18379) Add branch service.
 * [#18457](https://github.com/cosmos/cosmos-sdk/pull/18457) Add branch.ExecuteWithGasLimit.

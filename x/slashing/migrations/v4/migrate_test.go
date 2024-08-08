@@ -14,7 +14,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
@@ -23,7 +22,7 @@ var consAddr = sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
 
 func TestMigrate(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, slashing.AppModule{}).Codec
-	ctx := testutil.DefaultContext(slashingtypes.ModuleName)
+	ctx := coretesting.Context()
 	store := coretesting.KVStoreService(ctx, slashingtypes.ModuleName).OpenKVStore(ctx)
 	params := slashingtypes.Params{SignedBlocksWindow: 100}
 	valCodec := address.NewBech32Codec("cosmosvalcons")
@@ -64,5 +63,5 @@ func TestMigrate(t *testing.T) {
 	// ensure there's only one chunk for a window of size 100
 	chunk, err := store.Get(v4.ValidatorMissedBlockBitmapKey(consAddr, 1))
 	require.NoError(t, err)
-	require.Nil(t, chunk)
+	require.Empty(t, chunk)
 }

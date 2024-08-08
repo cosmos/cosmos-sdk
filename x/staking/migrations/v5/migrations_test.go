@@ -1,6 +1,7 @@
 package v5_test
 
 import (
+	"context"
 	"math"
 	"math/rand"
 	"testing"
@@ -21,14 +22,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 func TestHistoricalKeysMigration(t *testing.T) {
-	ctx := testutil.DefaultContext("staking")
+	ctx := coretesting.Context()
 	storeService := coretesting.KVStoreService(ctx, "staking")
 	store := storeService.OpenKVStore(ctx)
 	logger := coretesting.NewNopLogger()
@@ -91,7 +91,7 @@ func TestDelegationsByValidatorMigrations(t *testing.T) {
 	codecOpts := codectestutil.CodecOptions{}
 	cdc := moduletestutil.MakeTestEncodingConfig(codecOpts, staking.AppModule{}).Codec
 
-	ctx := testutil.DefaultContext(v5.ModuleName)
+	ctx := coretesting.Context()
 	storeService := coretesting.KVStoreService(ctx, v5.ModuleName)
 	store := storeService.OpenKVStore(ctx)
 	logger := coretesting.NewNopLogger()
@@ -125,7 +125,7 @@ func TestDelegationsByValidatorMigrations(t *testing.T) {
 	assert.Equal(t, addedDels, dels)
 }
 
-func getValDelegations(ctx sdk.Context, cdc codec.Codec, storeService corestore.KVStoreService, valAddr sdk.ValAddress) []stakingtypes.Delegation {
+func getValDelegations(ctx context.Context, cdc codec.Codec, storeService corestore.KVStoreService, valAddr sdk.ValAddress) []stakingtypes.Delegation {
 	var delegations []stakingtypes.Delegation
 
 	iterator := storetypes.KVStorePrefixIterator(runtime.KVStoreAdapter(storeService.OpenKVStore(ctx)), v5.GetDelegationsByValPrefixKey(valAddr))

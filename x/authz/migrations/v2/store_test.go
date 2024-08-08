@@ -102,8 +102,9 @@ func TestMigration(t *testing.T) {
 		},
 	}
 
-	storeService := coretesting.KVStoreService(ctx, "authz")
-	store := storeService.OpenKVStore(ctx)
+	ctx2 := coretesting.Context()
+	storeService := coretesting.KVStoreService(ctx2, "authz")
+	store := storeService.OpenKVStore(ctx2)
 	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 
 	for _, g := range grants {

@@ -12,14 +12,13 @@ import (
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 func TestMigration(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{}).Codec
-	ctx := testutil.DefaultContext("distribution")
+	ctx := coretesting.Context()
 	storeService := coretesting.KVStoreService(ctx, "distribution")
 
 	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())

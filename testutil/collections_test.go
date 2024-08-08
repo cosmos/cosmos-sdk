@@ -11,7 +11,7 @@ import (
 )
 
 func TestDiffCollectionsMigration(t *testing.T) {
-	ctx := testutil.DefaultContext("test")
+	ctx := coretesting.Context()
 	kvs := coretesting.KVStoreService(ctx, "test")
 
 	// First try with some invalid hash
@@ -29,7 +29,6 @@ func TestDiffCollectionsMigration(t *testing.T) {
 	require.Error(t, err)
 
 	// Now reset and try with the correct hash
-	ctx = testutil.DefaultContext("test")
 	err = testutil.DiffCollectionsMigration(
 		ctx,
 		kvs,
@@ -44,7 +43,6 @@ func TestDiffCollectionsMigration(t *testing.T) {
 	require.NoError(t, err)
 
 	// Change the data a little and it will result in an error
-	ctx = testutil.DefaultContext("test")
 	err = testutil.DiffCollectionsMigration(
 		ctx,
 		kvs,

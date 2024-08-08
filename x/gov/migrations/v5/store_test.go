@@ -14,14 +14,13 @@ import (
 	v1 "cosmossdk.io/x/gov/types/v1"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 func TestMigrateStore(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, gov.AppModule{}, bank.AppModule{}).Codec
 
-	ctx := testutil.DefaultContext("gov")
+	ctx := coretesting.Context()
 	storeService := coretesting.KVStoreService(ctx, "gov")
 	store := storeService.OpenKVStore(ctx)
 	sb := collections.NewSchemaBuilder(storeService)

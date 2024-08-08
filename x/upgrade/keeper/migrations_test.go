@@ -8,8 +8,6 @@ import (
 
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/x/upgrade/types"
-
-	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 type storedUpgrade struct {
@@ -22,7 +20,7 @@ func encodeOldDoneKey(upgrade storedUpgrade) []byte {
 }
 
 func TestMigrateDoneUpgradeKeys(t *testing.T) {
-	ctx := testutil.DefaultContext("upgrade")
+	ctx := coretesting.Context()
 	storeService := coretesting.KVStoreService(ctx, "upgrade")
 	store := storeService.OpenKVStore(ctx)
 

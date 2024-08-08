@@ -33,7 +33,7 @@ func TestRouterService(t *testing.T) {
 
 	messageRouterService := runtime.NewMsgRouterService(msgRouter)
 	queryRouterService := runtime.NewQueryRouterService(queryRouter)
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(t, key)
 
 	// Messages
 

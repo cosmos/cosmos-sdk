@@ -45,7 +45,7 @@ func (s *VestingAccountTestSuite) SetupTest() {
 
 	key := storetypes.NewKVStoreKey(authtypes.StoreKey)
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(s.T(), key)
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
 
 	// gomock initializations

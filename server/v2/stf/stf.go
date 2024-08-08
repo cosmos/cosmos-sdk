@@ -26,8 +26,8 @@ var Identity = []byte("stf")
 type STF[T transaction.Tx] struct {
 	logger log.Logger
 
-	msgRouter   Router
-	queryRouter Router
+	msgRouter   coreRouterImpl
+	queryRouter coreRouterImpl
 
 	doPreBlock        func(ctx context.Context, txs []T) error
 	doBeginBlock      func(ctx context.Context) error
@@ -586,8 +586,8 @@ func newExecutionContext(
 	sender transaction.Identity,
 	state store.WriterMap,
 	execMode transaction.ExecMode,
-	msgRouter Router,
-	queryRouter Router,
+	msgRouter coreRouterImpl,
+	queryRouter coreRouterImpl,
 ) *executionContext {
 	meter := makeGasMeterFn(gas.NoGasLimit)
 	meteredState := makeGasMeteredStoreFn(meter, state)

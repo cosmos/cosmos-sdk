@@ -16,7 +16,6 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/core/app"
-	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/genesis"
@@ -33,7 +32,7 @@ import (
 
 var (
 	_ appmodulev2.AppModule = appModule[transaction.Tx]{}
-	_ appmodule.HasServices = appModule[transaction.Tx]{}
+	_ hasServicesV1         = appModule[transaction.Tx]{}
 )
 
 type appModule[T transaction.Tx] struct {
@@ -176,7 +175,12 @@ func ProvideModuleManager[T transaction.Tx](
 }
 
 // ProvideEnvironment provides the environment for keeper modules, while maintaining backward compatibility and provide services directly as well.
-func ProvideEnvironment[T transaction.Tx](logger log.Logger, config *runtimev2.Module, key depinject.ModuleKey, appBuilder *AppBuilder[T]) (
+func ProvideEnvironment[T transaction.Tx](
+	logger log.Logger,
+	config *runtimev2.Module,
+	key depinject.ModuleKey,
+	appBuilder *AppBuilder[T],
+) (
 	appmodulev2.Environment,
 	store.KVStoreService,
 	store.MemoryStoreService,

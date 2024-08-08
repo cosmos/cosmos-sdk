@@ -1568,6 +1568,7 @@ func _Service_ABCIQuery_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+var Service_serviceDesc = _Service_serviceDesc
 var _Service_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.base.tendermint.v1beta1.Service",
 	HandlerType: (*ServiceServer)(nil),

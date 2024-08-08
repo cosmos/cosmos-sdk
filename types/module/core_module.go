@@ -208,7 +208,7 @@ func (c coreAppModuleAdaptor) RegisterLegacyAminoCodec(amino legacy.Amino) {
 
 // RegisterServices implements HasServices
 func (c coreAppModuleAdaptor) RegisterServices(cfg Configurator) {
-	if module, ok := c.module.(appmodule.HasServices); ok {
+	if module, ok := c.module.(hasServicesV1); ok {
 		err := module.RegisterServices(cfg)
 		if err != nil {
 			panic(err)

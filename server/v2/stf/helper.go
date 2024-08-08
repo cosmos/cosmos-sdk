@@ -22,10 +22,10 @@ func GetStateFromContext(ctx *executionContext) store.WriterMap {
 	return ctx.state
 }
 
-func SetMsgRouter(s *STF[mock.Tx], msgRouter Router) {
+func SetMsgRouter(s *STF[mock.Tx], msgRouter coreRouterImpl) {
 	s.msgRouter = msgRouter
 }
 
-func SetQueryRouter(s *STF[mock.Tx], queryRouter Router) {
+func SetQueryRouter(s *STF[mock.Tx], queryRouter coreRouterImpl) {
 	s.queryRouter = queryRouter
 }

@@ -35,7 +35,7 @@ func NewMockCommiter(logger log.Logger, actors ...string) storev2.Committer {
 		tree := iavl.NewIavlTree(dbm.NewMemDB(), logger, iavl.DefaultConfig())
 		treeMap[actor] = tree
 	}
-	sc, _ := commitment.NewCommitStore(treeMap, dbm.NewMemDB(), logger)
+	sc, _ := commitment.NewCommitStore(treeMap, treeMap, dbm.NewMemDB(), logger)
 	return sc
 }
 

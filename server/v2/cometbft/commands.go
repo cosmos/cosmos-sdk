@@ -325,13 +325,6 @@ func (s *CometBFTServer[T]) QueryBlockResultsCmd() *cobra.Command {
 		Long:  "Query for a specific committed block's results using the CometBFT RPC `block_results` method",
 		Args:  cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// clientCtx, err := client.GetClientQueryContext(cmd)
-			// if err != nil {
-			// 	return err
-			// }
-
-			// TODO: we should be able to do this without using client context
-
 			node, err := s.rpcClient(cmd)
 			if err != nil {
 				return err

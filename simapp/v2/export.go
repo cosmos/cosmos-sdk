@@ -2,6 +2,7 @@ package simapp
 
 import (
 	"context"
+	"cosmossdk.io/x/staking"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -25,9 +26,10 @@ func (app *SimApp[T]) ExportAppStateAndValidators(forZeroHeight bool, jailAllowe
 		return servertypes.ExportedApp{}, err
 	}
 
+	validators, err := staking.WriteValidators(ctx, app.StakingKeeper)
 	return servertypes.ExportedApp{
 		AppState:        genesis,
-		Validators:      nil,
+		Validators:      validators,
 		Height:          int64(height),
 		ConsensusParams: cmtproto.ConsensusParams{}, // TODO: CometBFT consensus params
 	}, err

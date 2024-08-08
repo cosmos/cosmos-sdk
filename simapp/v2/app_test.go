@@ -101,10 +101,17 @@ func MoveNextBlock(t *testing.T, app *SimApp[transaction.Tx], ctx context.Contex
 	require.NoError(t, err)
 }
 
-func TestSimAppExportAndBlockedAddrs(t *testing.T) {
+func TestSimAppExportAndBlockedAddrs_WithOneBlockProduced(t *testing.T) {
 	app, ctx := NewTestApp(t)
 
 	MoveNextBlock(t, app, ctx)
+
+	_, err := app.ExportAppStateAndValidators(false, nil, nil)
+	require.NoError(t, err)
+}
+
+func TestSimAppExportAndBlockedAddrs_NoBlocksProduced(t *testing.T) {
+	app, _ := NewTestApp(t)
 
 	_, err := app.ExportAppStateAndValidators(false, nil, nil)
 	require.NoError(t, err)

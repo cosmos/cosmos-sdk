@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -386,7 +387,7 @@ func (bva *BaseLockup) checkSender(ctx context.Context, sender string) error {
 }
 
 func sendMessage(ctx context.Context, msg proto.Message) ([]*codectypes.Any, error) {
-	response, err := accountstd.ExecModuleUntyped(ctx, msg)
+	response, err := accountstd.ExecModule(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -401,13 +402,16 @@ func sendMessage(ctx context.Context, msg proto.Message) ([]*codectypes.Any, err
 
 func getStakingDenom(ctx context.Context) (string, error) {
 	// Query account balance for the sent denom
-	paramsQueryReq := &stakingtypes.QueryParamsRequest{}
-	resp, err := accountstd.QueryModule[stakingtypes.QueryParamsResponse](ctx, paramsQueryReq)
+	resp, err := accountstd.QueryModule(ctx, &stakingtypes.QueryParamsRequest{})
 	if err != nil {
 		return "", err
 	}
+	res, ok := resp.(*stakingtypes.QueryParamsResponse)
+	if !ok {
+		return "", fmt.Errorf("unexpected response type: %T", resp)
+	}
 
-	return resp.Params.BondDenom, nil
+	return res.Params.BondDenom, nil
 }
 
 // TrackDelegation tracks a delegation amount for any given lockup account type
@@ -533,12 +537,17 @@ func (bva *BaseLockup) TrackUndelegation(ctx context.Context, amount sdk.Coins) 
 func (bva BaseLockup) getBalance(ctx context.Context, sender, denom string) (*sdk.Coin, error) {
 	// Query account balance for the sent denom
 	balanceQueryReq := &banktypes.QueryBalanceRequest{Address: sender, Denom: denom}
-	resp, err := accountstd.QueryModule[banktypes.QueryBalanceResponse](ctx, balanceQueryReq)
+	resp, err := accountstd.QueryModule(ctx, balanceQueryReq)
 	if err != nil {
 		return nil, err
 	}
 
-	return resp.Balance, nil
+	res, ok := resp.(*banktypes.QueryBalanceResponse)
+	if !ok {
+		return nil, fmt.Errorf("unexpected response type: %T", resp)
+	}
+
+	return res.Balance, nil
 }
 
 func (bva BaseLockup) checkTokensSendable(ctx context.Context, sender string, amount, lockedCoins sdk.Coins) error {

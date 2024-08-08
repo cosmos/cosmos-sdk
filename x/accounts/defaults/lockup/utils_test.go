@@ -73,9 +73,8 @@ func (h headerService) HeaderInfo(ctx context.Context) header.Info {
 func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 	t.Helper()
 	return accountstd.NewMockContext(
-		0, []byte("lockup_account"), []byte("sender"), TestFunds, func(ctx context.Context, sender []byte, msg, msgResp ProtoMsg) error {
-			return nil
-		}, func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error) {
+		0, []byte("lockup_account"), []byte("sender"), TestFunds,
+		func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error) {
 			typeUrl := sdk.MsgTypeURL(msg)
 			switch typeUrl {
 			case "/cosmos.staking.v1beta1.MsgDelegate":
@@ -89,12 +88,13 @@ func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 			default:
 				return nil, errors.New("unrecognized request type")
 			}
-		}, func(ctx context.Context, req, resp ProtoMsg) error {
+		}, func(ctx context.Context, req ProtoMsg) (ProtoMsg, error) {
+			var resp ProtoMsg
 			_, ok := req.(*banktypes.QueryBalanceRequest)
 			if !ok {
 				_, ok = req.(*stakingtypes.QueryParamsRequest)
 				require.True(t, ok)
-				gogoproto.Merge(resp.(gogoproto.Message), &stakingtypes.QueryParamsResponse{
+				gogoproto.Merge(resp, &stakingtypes.QueryParamsResponse{
 					Params: stakingtypes.Params{
 						BondDenom: "test",
 					},
@@ -102,7 +102,7 @@ func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 			} else {
 				// NOTE: using gogoproto.Merge will fail for some reason unknown to me, but
 				// using proto.Merge with gogo messages seems to work fine.
-				proto.Merge(resp.(gogoproto.Message), &banktypes.QueryBalanceResponse{
+				proto.Merge(resp, &banktypes.QueryBalanceResponse{
 					Balance: &(sdk.Coin{
 						Denom:  "test",
 						Amount: TestFunds.AmountOf("test"),
@@ -110,7 +110,7 @@ func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 				})
 			}
 
-			return nil
+			return resp, nil
 		},
 	)
 }

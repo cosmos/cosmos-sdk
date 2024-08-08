@@ -18,7 +18,6 @@ import (
 	"cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/store"
@@ -99,7 +98,6 @@ func init() {
 			ProvideAppBuilder[transaction.Tx],
 			ProvideEnvironment[transaction.Tx],
 			ProvideModuleManager[transaction.Tx],
-			ProvideGenesisTxHandler[transaction.Tx],
 			ProvideCometService,
 			ProvideAppVersionModifier[transaction.Tx],
 		),
@@ -236,10 +234,6 @@ func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.St
 	}
 
 	return nil
-}
-
-func ProvideGenesisTxHandler[T transaction.Tx](appBuilder *AppBuilder[T]) genesis.TxHandler {
-	return appBuilder.app
 }
 
 func ProvideCometService() comet.Service {

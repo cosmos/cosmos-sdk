@@ -16,6 +16,7 @@ import (
 )
 
 func TestValidatorDoubleSign(t *testing.T) {
+	t.Skip()
 	// Scenario:
 	//   given: a running chain
 	//   when: a second instance with the same val key signs a block

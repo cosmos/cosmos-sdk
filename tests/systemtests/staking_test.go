@@ -3,6 +3,7 @@
 package systemtests
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -32,6 +33,7 @@ func TestStakeUnstake(t *testing.T) {
 
 	// stake tokens
 	rsp = cli.Run("tx", "staking", "delegate", valAddr, "10000stake", "--from="+account1Addr, "--fees=1stake")
+	fmt.Println(rsp, "rsp")
 	RequireTxSuccess(t, rsp)
 
 	t.Log(cli.QueryBalance(account1Addr, "stake"))

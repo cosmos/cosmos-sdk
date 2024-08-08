@@ -164,10 +164,6 @@ func (m *Manager) GetSnapshotBlockRetentionHeights() int64 {
 	return int64(m.opts.Interval * uint64(m.opts.KeepRecent))
 }
 
-func (m *Manager) GetLatestSnapshot() (*types.Snapshot, error) {
-	return m.store.GetLatest()
-}
-
 // Create creates a snapshot and returns its metadata.
 func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 	if m == nil {

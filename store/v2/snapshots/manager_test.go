@@ -525,7 +525,7 @@ func TestSnapshot_SnapshotIfApplicable(t *testing.T) {
 	manager.SnapshotIfApplicable(4)
 
 	checkLatestHeight := func() bool {
-		latestSnapshot, _ := manager.GetLatestSnapshot()
+		latestSnapshot, _ := store.GetLatest()
 		return latestSnapshot.Height == 4
 	}
 

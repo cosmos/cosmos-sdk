@@ -62,7 +62,11 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (client) [#19870](https://github.com/cosmos/cosmos-sdk/pull/19870) Add new query command `wait-tx`. Alias `event-query-tx-for` to `wait-tx` for backward compatibility.
 * (crypto/keyring) [#20212](https://github.com/cosmos/cosmos-sdk/pull/20212) Expose the db keyring used in the keystore.
 * (genutil) [#19971](https://github.com/cosmos/cosmos-sdk/pull/19971) Allow manually setting the consensus key type in genesis
+<<<<<<< HEAD
+* (store) [#20862](https://github.com/cosmos/cosmos-sdk/pull/20862) Add `Copy()` method for `CacheMultiStore` and `cachekv.Store`.
+=======
 * (client/tx) [#20870](https://github.com/cosmos/cosmos-sdk/pull/20870) Add `timeout-timestamp` field for tx body defines time based timeout.Add `WithTimeoutTimestamp` to tx factory. Increased gas cost for processing newly added timeout timestamp field in tx body.
+>>>>>>> upstream/main
 
 ### Improvements
 

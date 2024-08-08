@@ -425,7 +425,7 @@ func (m *MM[T]) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap
 func (m *MM[T]) RegisterServices(app *App[T]) error {
 	for _, module := range m.modules {
 		// register msg + query
-		if services, ok := module.(appmodule.HasServices); ok {
+		if services, ok := module.(hasServicesV1); ok {
 			if err := registerServices(services, app, protoregistry.GlobalFiles); err != nil {
 				return err
 			}
@@ -554,7 +554,7 @@ func (m *MM[T]) assertNoForgottenModules(
 	return nil
 }
 
-func registerServices[T transaction.Tx](s appmodule.HasServices, app *App[T], registry *protoregistry.Files) error {
+func registerServices[T transaction.Tx](s hasServicesV1, app *App[T], registry *protoregistry.Files) error {
 	c := &configurator{
 		grpcQueryDecoders: map[string]func() gogoproto.Message{},
 		stfQueryRouter:    app.queryRouterBuilder,
@@ -709,4 +709,10 @@ func defaultMigrationsOrder(modules []string) []string {
 		out = append(out, authName)
 	}
 	return out
+}
+
+// hasServicesV1 is the interface for registering service in baseapp Cosmos SDK.
+// This API is part of core/appmodule but commented out for dependencies.
+type hasServicesV1 interface {
+	RegisterServices(grpc.ServiceRegistrar) error
 }

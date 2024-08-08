@@ -87,7 +87,7 @@ type KVStoreWithBatch interface {
 //
 // Callers must make sure the iterator is valid before calling any methods on it,
 // otherwise these methods will panic.
-type Iterator interface {
+type Iterator = interface {
 	// Domain returns the start (inclusive) and end (exclusive) limits of the iterator.
 	Domain() (start, end []byte)
 

@@ -161,38 +161,6 @@ func (store *Store) Write() {
 	}
 }
 
-// Copy creates a deep copy of the Store object
-func (store *Store) Copy() types.CacheKVStore {
-	store.mtx.Lock()
-	defer store.mtx.Unlock()
-
-	// Copy cache
-	cacheCopy := make(map[string]*cValue, len(store.cache))
-	for key, val := range store.cache {
-		newVal := *val // Create a copy of the cValue
-		cacheCopy[key] = &newVal
-	}
-
-	// Copy unsortedCache
-	unsortedCacheCopy := make(map[string]struct{}, len(store.unsortedCache))
-	for key := range store.unsortedCache {
-		unsortedCacheCopy[key] = struct{}{}
-	}
-
-	// Copy sortedCache
-	sortedCacheCopy := store.sortedCache.Copy()
-
-	// Create new Store with copied values
-	newStore := &Store{
-		cache:         cacheCopy,
-		unsortedCache: unsortedCacheCopy,
-		sortedCache:   sortedCacheCopy,
-		parent:        store.parent,
-	}
-
-	return newStore
-}
-
 // CacheWrap implements CacheWrapper.
 func (store *Store) CacheWrap() types.CacheWrap {
 	return NewStore(store)

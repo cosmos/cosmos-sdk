@@ -1,10 +1,10 @@
+# TODO: re-enable lint on PRs and release branches.
 name: Lint
 on:
   push:
     branches:
       - main
       - release/**
-  pull_request:
   merge_group:
 permissions:
   contents: read

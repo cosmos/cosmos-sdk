@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govclitestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -280,116 +279,117 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 	}
 }
 
-func (s *E2ETestSuite) TestNewCmdCancelProposal() {
-	val := s.network.Validators[0]
-	val2 := sdk.AccAddress("invalid_acc_addr")
+// CancelProposal is not supported in dYdX chain. Leaving this test case commented out.
+// func (s *E2ETestSuite) TestNewCmdCancelProposal() {
+// 	val := s.network.Validators[0]
+// 	val2 := sdk.AccAddress("invalid_acc_addr")
 
-	testCases := []struct {
-		name         string
-		args         []string
-		expectErr    bool
-		expectedCode uint32
-	}{
-		{
-			"without proposal id",
-			[]string{
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-			},
-			true, 0,
-		},
-		{
-			"invalid proposal id",
-			[]string{
-				"asdasd",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-			},
-			true, 0,
-		},
-		{
-			"valid proposal-id but invalid proposer",
-			[]string{
-				"4",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val2),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-			},
-			true, 0,
-		},
-		{
-			"valid proposer",
-			[]string{
-				"4",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-			},
-			false, 0,
-		},
-		{
-			"proposal not exists after cancel",
-			[]string{
-				"4",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-			},
-			false, 1,
-		},
-	}
+// 	testCases := []struct {
+// 		name         string
+// 		args         []string
+// 		expectErr    bool
+// 		expectedCode uint32
+// 	}{
+// 		{
+// 			"without proposal id",
+// 			[]string{
+// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+// 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
+// 			},
+// 			true, 0,
+// 		},
+// 		{
+// 			"invalid proposal id",
+// 			[]string{
+// 				"asdasd",
+// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+// 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
+// 			},
+// 			true, 0,
+// 		},
+// 		{
+// 			"valid proposal-id but invalid proposer",
+// 			[]string{
+// 				"4",
+// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val2),
+// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+// 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
+// 			},
+// 			true, 0,
+// 		},
+// 		{
+// 			"valid proposer",
+// 			[]string{
+// 				"4",
+// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+// 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
+// 			},
+// 			false, 0,
+// 		},
+// 		{
+// 			"proposal not exists after cancel",
+// 			[]string{
+// 				"4",
+// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+// 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
+// 			},
+// 			false, 1,
+// 		},
+// 	}
 
-	for _, tc := range testCases {
-		var resp sdk.TxResponse
+// 	for _, tc := range testCases {
+// 		var resp sdk.TxResponse
 
-		s.Run(tc.name, func() {
-			cmd := cli.NewCmdCancelProposal()
-			clientCtx := val.ClientCtx
-			var balRes banktypes.QueryAllBalancesResponse
-			var newBalance banktypes.QueryAllBalancesResponse
-			if !tc.expectErr && tc.expectedCode == 0 {
-				resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val.APIAddress, val.Address.String()))
-				s.Require().NoError(err)
-				err = val.ClientCtx.Codec.UnmarshalJSON(resp, &balRes)
-				s.Require().NoError(err)
-			}
+// 		s.Run(tc.name, func() {
+// 			cmd := cli.NewCmdCancelProposal()
+// 			clientCtx := val.ClientCtx
+// 			var balRes banktypes.QueryAllBalancesResponse
+// 			var newBalance banktypes.QueryAllBalancesResponse
+// 			if !tc.expectErr && tc.expectedCode == 0 {
+// 				resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val.APIAddress, val.Address.String()))
+// 				s.Require().NoError(err)
+// 				err = val.ClientCtx.Codec.UnmarshalJSON(resp, &balRes)
+// 				s.Require().NoError(err)
+// 			}
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, tc.expectedCode))
+// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+// 			if tc.expectErr {
+// 				s.Require().Error(err)
+// 			} else {
+// 				s.Require().NoError(err)
+// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+// 				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, tc.expectedCode))
 
-				if !tc.expectErr && tc.expectedCode == 0 {
-					resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val.APIAddress, val.Address.String()))
-					s.Require().NoError(err)
-					err = val.ClientCtx.Codec.UnmarshalJSON(resp, &newBalance)
-					s.Require().NoError(err)
-					remainingAmount := v1.DefaultMinDepositTokens.Mul(
-						v1.DefaultProposalCancelRatio.Mul(math.LegacyMustNewDecFromStr("100")).TruncateInt(),
-					).Quo(math.NewIntFromUint64(100))
+// 				if !tc.expectErr && tc.expectedCode == 0 {
+// 					resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val.APIAddress, val.Address.String()))
+// 					s.Require().NoError(err)
+// 					err = val.ClientCtx.Codec.UnmarshalJSON(resp, &newBalance)
+// 					s.Require().NoError(err)
+// 					remainingAmount := v1.DefaultMinDepositTokens.Mul(
+// 						v1.DefaultProposalCancelRatio.Mul(math.LegacyMustNewDecFromStr("100")).TruncateInt(),
+// 					).Quo(math.NewIntFromUint64(100))
 
-					// new balance = old balance + remaining amount from proposal deposit - txFee (cancel proposal)
-					txFee := math.NewInt(10)
-					s.Require().True(
-						newBalance.Balances.AmountOf(s.network.Config.BondDenom).Equal(
-							balRes.Balances.AmountOf(s.network.Config.BondDenom).Add(remainingAmount).Sub(txFee),
-						),
-					)
-				}
-			}
-		})
-	}
-}
+// 					// new balance = old balance + remaining amount from proposal deposit - txFee (cancel proposal)
+// 					txFee := math.NewInt(10)
+// 					s.Require().True(
+// 						newBalance.Balances.AmountOf(s.network.Config.BondDenom).Equal(
+// 							balRes.Balances.AmountOf(s.network.Config.BondDenom).Add(remainingAmount).Sub(txFee),
+// 						),
+// 					)
+// 				}
+// 			}
+// 		})
+// 	}
+// }
 
 func (s *E2ETestSuite) TestNewCmdVote() {
 	val := s.network.Validators[0]

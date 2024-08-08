@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - release/v0.50.x
+      - dydx-fork-**
 
 permissions:
   contents: read

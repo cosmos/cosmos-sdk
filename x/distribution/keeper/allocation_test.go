@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/distribution/keeper"
@@ -42,8 +41,8 @@ var testCometService = &emptyCometService{}
 
 func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key)
+
+	testCtx := testutil.DefaultContextWithDB(t, disttypes.StoreKey)
 	cdcOpts := codectestutil.CodecOptions{}
 	encCfg := moduletestutil.MakeTestEncodingConfig(cdcOpts, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
@@ -52,7 +51,8 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
+	kvs := coretesting.KVStoreService(testCtx.Ctx, disttypes.StoreKey)
+	env := runtime.NewEnvironment(kvs, coretesting.NewNopLogger())
 
 	valCodec := address.NewBech32Codec("cosmosvaloper")
 
@@ -107,8 +107,8 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 
 func TestAllocateTokensToManyValidators(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key)
+
+	testCtx := testutil.DefaultContextWithDB(t, disttypes.StoreKey)
 	cdcOpts := codectestutil.CodecOptions{}
 	encCfg := moduletestutil.MakeTestEncodingConfig(cdcOpts, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
@@ -122,7 +122,8 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
+	kvs := coretesting.KVStoreService(testCtx.Ctx, disttypes.StoreKey)
+	env := runtime.NewEnvironment(kvs, coretesting.NewNopLogger())
 
 	authorityAddr, err := cdcOpts.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
@@ -245,8 +246,8 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 func TestAllocateTokensTruncation(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key)
+
+	testCtx := testutil.DefaultContextWithDB(t, disttypes.StoreKey)
 	cdcOpts := codectestutil.CodecOptions{}
 	encCfg := moduletestutil.MakeTestEncodingConfig(cdcOpts, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
@@ -260,7 +261,8 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
+	kvs := coretesting.KVStoreService(testCtx.Ctx, disttypes.StoreKey)
+	env := runtime.NewEnvironment(kvs, coretesting.NewNopLogger())
 
 	authorityAddr, err := cdcOpts.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)

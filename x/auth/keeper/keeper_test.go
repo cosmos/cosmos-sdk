@@ -10,7 +10,6 @@ import (
 
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	authcodec "cosmossdk.io/x/auth/codec"
 	"cosmossdk.io/x/auth/keeper"
@@ -53,11 +52,10 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
 
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
-	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
-	testCtx := testutil.DefaultContextWithDB(suite.T(), key)
+	testCtx := testutil.DefaultContextWithDB(suite.T(), types.StoreKey)
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
+	storeService := coretesting.KVStoreService(suite.ctx, types.StoreKey)
+	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())

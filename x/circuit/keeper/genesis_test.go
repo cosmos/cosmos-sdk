@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	coretesting "cosmossdk.io/core/testing"
-	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/circuit"
 	"cosmossdk.io/x/circuit/keeper"
@@ -35,8 +34,7 @@ func TestGenesisTestSuite(t *testing.T) {
 }
 
 func (s *GenesisTestSuite) SetupTest() {
-	key := storetypes.NewKVStoreKey(types.ModuleName)
-	testCtx := testutil.DefaultContextWithDB(s.T(), key)
+	testCtx := testutil.DefaultContextWithDB(s.T(), types.ModuleName)
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, circuit.AppModule{})
 
 	sdkCtx := testCtx.Ctx
@@ -51,7 +49,8 @@ func (s *GenesisTestSuite) SetupTest() {
 	s.Require().NoError(err)
 	s.addrBytes = bz
 
-	s.keeper = keeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger()), s.cdc, authority, ac)
+	kvs := coretesting.KVStoreService(testCtx.Ctx, types.ModuleName)
+	s.keeper = keeper.NewKeeper(runtime.NewEnvironment(kvs, coretesting.NewNopLogger()), s.cdc, authority, ac)
 }
 
 func (s *GenesisTestSuite) TestInitExportGenesis() {

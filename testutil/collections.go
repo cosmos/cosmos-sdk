@@ -1,13 +1,12 @@
 package testutil
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 
-	storetypes "cosmossdk.io/store/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	corestore "cosmossdk.io/core/store"
 )
 
 // DiffCollectionsMigration is meant to aid in the migration from the previous store
@@ -48,8 +47,8 @@ import (
 //		)
 //	}
 func DiffCollectionsMigration(
-	ctx sdk.Context,
-	storeKey *storetypes.KVStoreKey,
+	ctx context.Context,
+	storeService corestore.KVStoreService,
 	iterations int,
 	writeElem func(int64),
 	targetHash string,
@@ -59,7 +58,11 @@ func DiffCollectionsMigration(
 	}
 
 	h := sha256.New()
-	it := ctx.KVStore(storeKey).Iterator(nil, nil)
+	store := storeService.OpenKVStore(ctx)
+	it, err := store.Iterator(nil, nil)
+	if err != nil {
+		return err
+	}
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		h.Write(it.Key())

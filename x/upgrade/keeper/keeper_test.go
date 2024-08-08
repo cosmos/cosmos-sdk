@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
@@ -32,7 +31,7 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	key              *storetypes.KVStoreKey
+	env              appmodule.Environment
 	baseApp          *baseapp.BaseApp
 	upgradeKeeper    *keeper.Keeper
 	homeDir          string
@@ -46,11 +45,11 @@ type KeeperTestSuite struct {
 
 func (s *KeeperTestSuite) SetupTest() {
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, upgrade.AppModule{})
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
+
+	testCtx := testutil.DefaultContextWithDB(s.T(), types.StoreKey)
+	storeService := coretesting.KVStoreService(testCtx.Ctx, types.StoreKey)
 	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
-	s.key = key
-	testCtx := testutil.DefaultContextWithDB(s.T(), key)
+	s.env = env
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 10})
 
 	s.baseApp = baseapp.NewBaseApp(
@@ -253,9 +252,7 @@ func (s *KeeperTestSuite) TestIsSkipHeight() {
 	ok := s.upgradeKeeper.IsSkipHeight(11)
 	s.Require().False(ok)
 	skip := map[int64]bool{skipOne: true}
-	storeService := runtime.NewKVStoreService(s.key)
-	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
-	upgradeKeeper := keeper.NewKeeper(env, skip, s.encCfg.Codec, s.T().TempDir(), s.baseApp, s.encodedAuthority)
+	upgradeKeeper := keeper.NewKeeper(s.env, skip, s.encCfg.Codec, s.T().TempDir(), s.baseApp, s.encodedAuthority)
 	s.Require().True(upgradeKeeper.IsSkipHeight(9))
 	s.Require().False(upgradeKeeper.IsSkipHeight(10))
 }

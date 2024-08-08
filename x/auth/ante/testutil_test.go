@@ -14,7 +14,6 @@ import (
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/core/appmodule"
 	coretesting "cosmossdk.io/core/testing"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	"cosmossdk.io/x/auth/ante"
 	antetestutil "cosmossdk.io/x/auth/ante/testutil"
@@ -75,8 +74,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	suite.feeGrantKeeper = antetestutil.NewMockFeegrantKeeper(ctrl)
 	suite.acctsModKeeper = authtestutil.NewMockAccountsModKeeper(ctrl)
 
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key)
+	testCtx := testutil.DefaultContextWithDB(t, types.StoreKey)
 	suite.ctx = testCtx.Ctx.WithIsCheckTx(isCheckTx).WithBlockHeight(1)
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
 
@@ -105,9 +103,10 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	}, nil).AnyTimes()
 	consensustypes.RegisterQueryServer(grpcQueryRouter, suite.consensusKeeper)
 
-	suite.env = runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter))
+	kvs := coretesting.KVStoreService(testCtx.Ctx, types.StoreKey)
+	suite.env = runtime.NewEnvironment(kvs, coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter))
 	suite.accountKeeper = keeper.NewAccountKeeper(
-		runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger()), suite.encCfg.Codec, types.ProtoBaseAccount, suite.acctsModKeeper, maccPerms, authcodec.NewBech32Codec("cosmos"),
+		runtime.NewEnvironment(kvs, coretesting.NewNopLogger()), suite.encCfg.Codec, types.ProtoBaseAccount, suite.acctsModKeeper, maccPerms, authcodec.NewBech32Codec("cosmos"),
 		sdk.Bech32MainPrefix, types.NewModuleAddress("gov").String(),
 	)
 	suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)

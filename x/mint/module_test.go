@@ -6,9 +6,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/mint"
 	"cosmossdk.io/x/mint/keeper"
@@ -42,11 +42,11 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (s *ModuleTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, mint.AppModule{})
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
-	testCtx := testutil.DefaultContextWithDB(s.T(), key)
+
+	testCtx := testutil.DefaultContextWithDB(s.T(), types.StoreKey)
 	s.ctx = testCtx.Ctx
+	storeService := coretesting.KVStoreService(s.ctx, types.StoreKey)
+	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())

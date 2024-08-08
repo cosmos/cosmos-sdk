@@ -120,7 +120,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 	}
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, upgrade.AppModule{})
 
-	testCtx := testutil.DefaultContextWithDB(t, key)
+	testCtx := testutil.DefaultContextWithDB(t, types.StoreKey)
 	s.baseApp = baseapp.NewBaseApp(
 		"upgrade",
 		log.NewNopLogger(),
@@ -128,7 +128,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 		s.encCfg.TxConfig.TxDecoder(),
 	)
 
-	storeService := runtime.NewKVStoreService(key)
+	storeService := coretesting.KVStoreService(testCtx.Ctx, types.StoreKey)
 	s.env = runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithMsgRouterService(s.baseApp.MsgServiceRouter()), runtime.EnvWithQueryRouterService(s.baseApp.GRPCQueryRouter()))
 
 	s.baseApp.SetParamStore(&paramStore{params: cmtproto.ConsensusParams{Version: &cmtproto.VersionParams{App: 1}}})

@@ -13,7 +13,6 @@ import (
 	coreaddress "cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
@@ -89,11 +88,11 @@ type KeeperTestSuite struct {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, evidence.AppModule{})
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
-	tkey := storetypes.NewTransientStoreKey("evidence_transient_store")
-	testCtx := testutil.DefaultContextWithDB(suite.T(), key, tkey)
+
+	testCtx := testutil.DefaultContextWithDB(suite.T(), types.StoreKey)
 	suite.ctx = testCtx.Ctx
+	key := coretesting.KVStoreService(suite.ctx, types.StoreKey)
+	env := runtime.NewEnvironment(key, coretesting.NewNopLogger())
 	suite.addressCodec = address.NewBech32Codec("cosmos")
 	suite.consAddressCodec = address.NewBech32Codec("cosmosvalcons")
 

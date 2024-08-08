@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	authcodec "cosmossdk.io/x/auth/codec"
 	"cosmossdk.io/x/auth/keeper"
@@ -36,7 +35,6 @@ type DeterministicTestSuite struct {
 
 	accountNumberLanes uint64
 
-	key            *storetypes.KVStoreKey
 	environment    appmodule.Environment
 	ctx            sdk.Context
 	queryClient    types.QueryClient
@@ -60,11 +58,11 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
 
 	suite.Require()
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
-	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
-	testCtx := testutil.DefaultContextWithDB(suite.T(), key)
+
+	testCtx := testutil.DefaultContextWithDB(suite.T(), types.StoreKey)
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
+	storeService := coretesting.KVStoreService(suite.ctx, types.StoreKey)
+	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
@@ -101,7 +99,6 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	types.RegisterQueryServer(queryHelper, keeper.NewQueryServer(suite.accountKeeper))
 	suite.queryClient = types.NewQueryClient(queryHelper)
 
-	suite.key = key
 	suite.environment = env
 	suite.maccPerms = maccPerms
 	suite.accountNumberLanes = 1

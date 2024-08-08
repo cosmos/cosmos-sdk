@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
 	sdkmath "cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	slashingtestutil "cosmossdk.io/x/slashing/testutil"
@@ -39,17 +39,15 @@ type KeeperTestSuite struct {
 	slashingKeeper slashingkeeper.Keeper
 	queryClient    slashingtypes.QueryClient
 	msgServer      slashingtypes.MsgServer
-	key            *storetypes.KVStoreKey
+	env            appmodule.Environment
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	key := storetypes.NewKVStoreKey(slashingtypes.StoreKey)
-	s.key = key
-	storeService := runtime.NewKVStoreService(key)
-	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
-	testCtx := sdktestutil.DefaultContextWithDB(s.T(), key)
+	testCtx := sdktestutil.DefaultContextWithDB(s.T(), slashingtypes.StoreKey)
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now().Round(0).UTC()})
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
+	storeService := coretesting.KVStoreService(ctx, slashingtypes.StoreKey)
+	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
@@ -157,10 +155,10 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBMMigrationToColls() {
 	index := int64(0)
 	err := sdktestutil.DiffCollectionsMigration(
 		s.ctx,
-		s.key,
+		s.env.KVStoreService,
 		100,
 		func(i int64) {
-			s.ctx.KVStore(s.key).Set(validatorMissedBlockBitmapKey(consAddr, index), []byte{})
+			s.env.KVStoreService.OpenKVStore(s.ctx).Set(validatorMissedBlockBitmapKey(consAddr, index), []byte{})
 		},
 		"7ad1f994d45ec9495ae5f990a3fba100c2cc70167a154c33fb43882dc004eafd",
 	)
@@ -168,7 +166,7 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBMMigrationToColls() {
 
 	err = sdktestutil.DiffCollectionsMigration(
 		s.ctx,
-		s.key,
+		s.env.KVStoreService,
 		100,
 		func(i int64) {
 			err := s.slashingKeeper.SetMissedBlockBitmapChunk(s.ctx, consAddr, index, []byte{})

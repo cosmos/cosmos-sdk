@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
@@ -26,12 +25,13 @@ import (
 )
 
 func TestBankStateCompatibility(t *testing.T) {
-	key := storetypes.NewKVStoreKey(banktypes.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key)
+
+	testCtx := testutil.DefaultContextWithDB(t, banktypes.StoreKey)
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
+	kvs := coretesting.KVStoreService(testCtx.Ctx, banktypes.StoreKey)
+	env := runtime.NewEnvironment(kvs, coretesting.NewNopLogger())
 
 	// gomock initializations
 	ctrl := gomock.NewController(t)

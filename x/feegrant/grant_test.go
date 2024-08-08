@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/module"
 
@@ -20,8 +19,7 @@ import (
 
 func TestGrant(t *testing.T) {
 	addressCodec := codecaddress.NewBech32Codec("cosmos")
-	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key)
+	testCtx := testutil.DefaultContextWithDB(t, feegrant.StoreKey)
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})

@@ -7,9 +7,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/appmodule"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/mint"
 	"cosmossdk.io/x/mint/keeper"
@@ -33,7 +34,7 @@ type GenesisTestSuite struct {
 	keeper        keeper.Keeper
 	cdc           codec.BinaryCodec
 	accountKeeper types.AccountKeeper
-	key           *storetypes.KVStoreKey
+	env           appmodule.Environment
 }
 
 func TestGenesisTestSuite(t *testing.T) {
@@ -41,15 +42,14 @@ func TestGenesisTestSuite(t *testing.T) {
 }
 
 func (s *GenesisTestSuite) SetupTest() {
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(s.T(), key)
+
+	testCtx := testutil.DefaultContextWithDB(s.T(), types.StoreKey)
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, mint.AppModule{})
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
 	s.cdc = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	s.sdkCtx = testCtx.Ctx
-	s.key = key
 
 	stakingKeeper := minttestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := minttestutil.NewMockAccountKeeper(ctrl)
@@ -58,7 +58,9 @@ func (s *GenesisTestSuite) SetupTest() {
 	accountKeeper.EXPECT().GetModuleAddress(minterAcc.Name).Return(minterAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAccount(s.sdkCtx, minterAcc.Name).Return(minterAcc)
 
-	s.keeper = keeper.NewKeeper(s.cdc, runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger()), stakingKeeper, accountKeeper, bankKeeper, "", "")
+	env := runtime.NewEnvironment(coretesting.KVStoreService(s.sdkCtx, types.StoreKey), log.NewNopLogger())
+	s.keeper = keeper.NewKeeper(s.cdc, env, stakingKeeper, accountKeeper, bankKeeper, "", "")
+	s.env = env
 }
 
 func (s *GenesisTestSuite) TestImportExportGenesis() {
@@ -81,7 +83,7 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 	s.Require().Equal(genesisState.Minter, minter)
 	s.Require().NoError(err)
 
-	invalidCtx := testutil.DefaultContextWithDB(s.T(), s.key)
+	invalidCtx := testutil.DefaultContextWithDB(s.T(), types.StoreKey)
 	_, err = s.keeper.Minter.Get(invalidCtx.Ctx)
 	s.Require().ErrorIs(err, collections.ErrNotFound)
 

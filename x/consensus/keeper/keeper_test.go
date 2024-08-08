@@ -11,7 +11,6 @@ import (
 
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
-	storetypes "cosmossdk.io/store/types"
 	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
 	"cosmossdk.io/x/consensus/types"
 
@@ -38,11 +37,11 @@ func getDuration(d time.Duration) *time.Duration {
 }
 
 func (s *KeeperTestSuite) SetupTest(enabledFeatures bool) {
-	key := storetypes.NewKVStoreKey(consensusparamkeeper.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(s.T(), key)
+	testCtx := testutil.DefaultContextWithDB(s.T(), consensusparamkeeper.StoreKey)
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 5})
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
+	kvs := coretesting.KVStoreService(ctx, consensusparamkeeper.StoreKey)
+	env := runtime.NewEnvironment(kvs, coretesting.NewNopLogger())
 
 	authority, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(address.Module("gov"))
 	s.Require().NoError(err)

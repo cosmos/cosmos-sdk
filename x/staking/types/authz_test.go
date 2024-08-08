@@ -11,7 +11,6 @@ import (
 	corecontext "cosmossdk.io/core/context"
 	coregas "cosmossdk.io/core/gas"
 	coreheader "cosmossdk.io/core/header"
-	storetypes "cosmossdk.io/store/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -66,8 +65,8 @@ func (m mockGasMeter) Consume(amount coregas.Gas, descriptor string) error {
 }
 
 func TestAuthzAuthorizations(t *testing.T) {
-	key := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key)
+
+	testCtx := testutil.DefaultContextWithDB(t, stakingtypes.StoreKey)
 	sdkCtx := testCtx.Ctx.WithHeaderInfo(coreheader.Info{})
 	ctx := context.WithValue(sdkCtx.Context(), corecontext.EnvironmentContextKey, appmodule.Environment{
 		HeaderService: headerService{},

@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	"cosmossdk.io/x/circuit/ante"
 	cbtypes "cosmossdk.io/x/circuit/types"
@@ -21,7 +20,6 @@ import (
 
 type fixture struct {
 	ctx           context.Context
-	mockStoreKey  storetypes.StoreKey
 	mockMsgURL    string
 	mockclientCtx client.Context
 	txBuilder     client.TxBuilder
@@ -37,14 +35,12 @@ func (m MockCircuitBreaker) IsAllowed(ctx context.Context, typeURL string) (bool
 
 func initFixture(t *testing.T) *fixture {
 	t.Helper()
-	mockStoreKey := storetypes.NewKVStoreKey("test")
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
 	mockclientCtx := client.Context{}.
 		WithTxConfig(encCfg.TxConfig)
 
 	return &fixture{
-		ctx:           testutil.DefaultContextWithDB(t, mockStoreKey).Ctx,
-		mockStoreKey:  mockStoreKey,
+		ctx:           testutil.DefaultContextWithDB(t, "test").Ctx,
 		mockMsgURL:    "test",
 		mockclientCtx: mockclientCtx,
 		txBuilder:     mockclientCtx.TxConfig.NewTxBuilder(),

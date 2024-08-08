@@ -9,7 +9,6 @@ import (
 
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
@@ -42,17 +41,17 @@ type genesisFixture struct {
 
 func initFixture(t *testing.T) *genesisFixture {
 	t.Helper()
-	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key)
+	testCtx := testutil.DefaultContextWithDB(t, feegrant.StoreKey)
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 
 	ctrl := gomock.NewController(t)
 	accountKeeper := feegranttestutil.NewMockAccountKeeper(ctrl)
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
+	kvs := coretesting.KVStoreService(testCtx.Ctx, feegrant.StoreKey)
 	return &genesisFixture{
 		ctx:            testCtx.Ctx,
-		feegrantKeeper: keeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger()), encCfg.Codec, accountKeeper),
+		feegrantKeeper: keeper.NewKeeper(runtime.NewEnvironment(kvs, coretesting.NewNopLogger()), encCfg.Codec, accountKeeper),
 		accountKeeper:  accountKeeper,
 	}
 }

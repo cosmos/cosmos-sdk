@@ -11,7 +11,6 @@ import (
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/authz/keeper"
 	authzmodule "cosmossdk.io/x/authz/module"
 	authztestutil "cosmossdk.io/x/authz/testutil"
@@ -45,10 +44,9 @@ type GenesisTestSuite struct {
 }
 
 func (suite *GenesisTestSuite) SetupTest() {
-	key := storetypes.NewKVStoreKey(keeper.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
-	testCtx := testutil.DefaultContextWithDB(suite.T(), key)
+	testCtx := testutil.DefaultContextWithDB(suite.T(), keeper.StoreKey)
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
+	storeService := coretesting.KVStoreService(suite.ctx, keeper.StoreKey)
 
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, authzmodule.AppModule{})
 

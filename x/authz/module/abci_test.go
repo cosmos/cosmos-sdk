@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/authz"
 	"cosmossdk.io/x/authz/keeper"
@@ -29,11 +28,10 @@ import (
 )
 
 func TestExpiredGrantsQueue(t *testing.T) {
-	key := storetypes.NewKVStoreKey(keeper.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
-	testCtx := testutil.DefaultContextWithDB(t, key)
+	testCtx := testutil.DefaultContextWithDB(t, keeper.StoreKey)
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, authzmodule.AppModule{})
 	ctx := testCtx.Ctx
+	storeService := coretesting.KVStoreService(ctx, keeper.StoreKey)
 
 	baseApp := baseapp.NewBaseApp(
 		"authz",

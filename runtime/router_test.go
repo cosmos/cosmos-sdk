@@ -8,7 +8,6 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	counterv1 "cosmossdk.io/api/cosmos/counter/v1"
 	coretesting "cosmossdk.io/core/testing"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -24,16 +23,16 @@ func TestRouterService(t *testing.T) {
 	msgRouter.SetInterfaceRegistry(interfaceRegistry)
 	queryRouter := baseapp.NewGRPCQueryRouter()
 	queryRouter.SetInterfaceRegistry(interfaceRegistry)
-	key := storetypes.NewKVStoreKey(countertypes.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
+
+	messageRouterService := runtime.NewMsgRouterService(msgRouter)
+	queryRouterService := runtime.NewQueryRouterService(queryRouter)
+	testCtx := testutil.DefaultContextWithDB(t, countertypes.StoreKey)
+	storeService := coretesting.KVStoreService(testCtx.Ctx, counterkeeper.StoreKey)
+
 	counterKeeper := counterkeeper.NewKeeper(runtime.NewEnvironment(storeService, coretesting.NewNopLogger()))
 	countertypes.RegisterInterfaces(interfaceRegistry)
 	countertypes.RegisterMsgServer(msgRouter, counterKeeper)
 	countertypes.RegisterQueryServer(queryRouter, counterKeeper)
-
-	messageRouterService := runtime.NewMsgRouterService(msgRouter)
-	queryRouterService := runtime.NewQueryRouterService(queryRouter)
-	testCtx := testutil.DefaultContextWithDB(t, key)
 
 	// Messages
 

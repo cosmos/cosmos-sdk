@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	consensustypes "cosmossdk.io/x/consensus/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
@@ -49,18 +49,16 @@ type KeeperTestSuite struct {
 	accountKeeper *stakingtestutil.MockAccountKeeper
 	queryClient   stakingtypes.QueryClient
 	msgServer     stakingtypes.MsgServer
-	key           *storetypes.KVStoreKey
+	env           appmodule.Environment
 	cdc           codec.Codec
 }
 
 func (s *KeeperTestSuite) SetupTest() {
 	require := s.Require()
-	key := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
-	s.key = key
-	storeService := runtime.NewKVStoreService(key)
-	testCtx := testutil.DefaultContextWithDB(s.T(), key)
-	s.key = key
+
+	testCtx := testutil.DefaultContextWithDB(s.T(), stakingtypes.StoreKey)
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
+	storeService := coretesting.KVStoreService(ctx, stakingtypes.StoreKey)
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	s.cdc = encCfg.Codec
 
@@ -89,6 +87,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)
 	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(queryHelper.GRPCQueryRouter), runtime.EnvWithMsgRouterService(s.baseApp.MsgServiceRouter()))
+	s.env = env
 	authority, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(stakingtypes.GovModuleName))
 	s.Require().NoError(err)
 	keeper := stakingkeeper.NewKeeper(
@@ -279,13 +278,13 @@ func (s *KeeperTestSuite) TestLastTotalPowerMigrationToColls() {
 
 	err := testutil.DiffCollectionsMigration(
 		s.ctx,
-		s.key,
+		s.env.KVStoreService,
 		100,
 		func(i int64) {
 			bz, err := s.cdc.Marshal(&gogotypes.Int64Value{Value: i})
 			s.Require().NoError(err)
 
-			s.ctx.KVStore(s.key).Set(getLastValidatorPowerKey(valAddrs[i]), bz)
+			s.env.KVStoreService.OpenKVStore(s.ctx).Set(getLastValidatorPowerKey(valAddrs[i]), bz)
 		},
 		"d9690cb1904ab91c618a3f6d27ef90bfe6fb57a2c01970b7c088ec4ecd0613eb",
 	)
@@ -293,7 +292,7 @@ func (s *KeeperTestSuite) TestLastTotalPowerMigrationToColls() {
 
 	err = testutil.DiffCollectionsMigration(
 		s.ctx,
-		s.key,
+		s.env.KVStoreService,
 		100,
 		func(i int64) {
 			var intV gogotypes.Int64Value
@@ -314,11 +313,11 @@ func (s *KeeperTestSuite) TestSrcRedelegationsMigrationToColls() {
 
 	err := testutil.DiffCollectionsMigration(
 		s.ctx,
-		s.key,
+		s.env.KVStoreService,
 		100,
 		func(i int64) {
 			// legacy method to set in the state
-			s.ctx.KVStore(s.key).Set(getREDByValSrcIndexKey(addrs[i], valAddrs[i], valAddrs[i+1]), []byte{})
+			s.env.KVStoreService.OpenKVStore(s.ctx).Set(getREDByValSrcIndexKey(addrs[i], valAddrs[i], valAddrs[i+1]), []byte{})
 		},
 		"43ab9766738a05bfe5f1fd5dd0fb01c05b574f7d43c004dbf228deb437e0eb7c",
 	)
@@ -326,7 +325,7 @@ func (s *KeeperTestSuite) TestSrcRedelegationsMigrationToColls() {
 
 	err = testutil.DiffCollectionsMigration(
 		s.ctx,
-		s.key,
+		s.env.KVStoreService,
 		100,
 		func(i int64) {
 			// using collections
@@ -346,11 +345,11 @@ func (s *KeeperTestSuite) TestDstRedelegationsMigrationToColls() {
 
 	err := testutil.DiffCollectionsMigration(
 		s.ctx,
-		s.key,
+		s.env.KVStoreService,
 		100,
 		func(i int64) {
 			// legacy method to set in the state
-			s.ctx.KVStore(s.key).Set(getREDByValDstIndexKey(addrs[i], valAddrs[i], valAddrs[i+1]), []byte{})
+			s.env.KVStoreService.OpenKVStore(s.ctx).Set(getREDByValDstIndexKey(addrs[i], valAddrs[i], valAddrs[i+1]), []byte{})
 		},
 		"70c00b5171cbef019742d236096df60fc423cd7568c4933ab165baa3c68a64a1", // this hash obtained when ran this test in main branch
 	)
@@ -358,7 +357,7 @@ func (s *KeeperTestSuite) TestDstRedelegationsMigrationToColls() {
 
 	err = testutil.DiffCollectionsMigration(
 		s.ctx,
-		s.key,
+		s.env.KVStoreService,
 		100,
 		func(i int64) {
 			// using collections
@@ -377,7 +376,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
 	delAddrs, valAddrs := createValAddrs(100)
 	err := testutil.DiffCollectionsMigration(
 		s.ctx,
-		s.key,
+		s.env.KVStoreService,
 		100,
 		func(i int64) {
 			ubd := stakingtypes.UnbondingDelegation{
@@ -393,8 +392,8 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
 				},
 			}
 			bz := s.cdc.MustMarshal(&ubd)
-			s.ctx.KVStore(s.key).Set(getUBDKey(delAddrs[i], valAddrs[i]), bz)
-			s.ctx.KVStore(s.key).Set(getUBDByValIndexKey(delAddrs[i], valAddrs[i]), []byte{})
+			s.env.KVStoreService.OpenKVStore(s.ctx).Set(getUBDKey(delAddrs[i], valAddrs[i]), bz)
+			s.env.KVStoreService.OpenKVStore(s.ctx).Set(getUBDByValIndexKey(delAddrs[i], valAddrs[i]), []byte{})
 		},
 		"bae8a1f2070bea541bfeca8e7e4a1203cb316126451325b846b303897e8e7082",
 	)
@@ -402,7 +401,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationsMigrationToColls() {
 
 	err = testutil.DiffCollectionsMigration(
 		s.ctx,
-		s.key,
+		s.env.KVStoreService,
 		100,
 		func(i int64) {
 			ubd := stakingtypes.UnbondingDelegation{
@@ -430,12 +429,12 @@ func (s *KeeperTestSuite) TestUBDQueueMigrationToColls() {
 
 	err := testutil.DiffCollectionsMigration(
 		s.ctx,
-		s.key,
+		s.env.KVStoreService,
 		100,
 		func(i int64) {
 			date := time.Date(2023, 8, 21, 14, 33, 1, 0, &time.Location{})
 			// legacy Set method
-			s.ctx.KVStore(s.key).Set(getUnbondingDelegationTimeKey(date), []byte{})
+			s.env.KVStoreService.OpenKVStore(s.ctx).Set(getUnbondingDelegationTimeKey(date), []byte{})
 		},
 		"3f2de3f984c99cce5307db45961237220212c02981654b01b7b52f7a68b5b21b",
 	)
@@ -443,7 +442,7 @@ func (s *KeeperTestSuite) TestUBDQueueMigrationToColls() {
 
 	err = testutil.DiffCollectionsMigration(
 		s.ctx,
-		s.key,
+		s.env.KVStoreService,
 		100,
 		func(i int64) {
 			date := time.Date(2023, 8, 21, 14, 33, 1, 0, &time.Location{})
@@ -464,7 +463,7 @@ func (s *KeeperTestSuite) TestValidatorsMigrationToColls() {
 
 	err = testutil.DiffCollectionsMigration(
 		s.ctx,
-		s.key,
+		s.env.KVStoreService,
 		100,
 		func(i int64) {
 			val := stakingtypes.Validator{
@@ -482,7 +481,7 @@ func (s *KeeperTestSuite) TestValidatorsMigrationToColls() {
 			}
 			valBz := s.cdc.MustMarshal(&val)
 			// legacy Set method
-			s.ctx.KVStore(s.key).Set(getValidatorKey(valAddrs[i]), valBz)
+			s.env.KVStoreService.OpenKVStore(s.ctx).Set(getValidatorKey(valAddrs[i]), valBz)
 		},
 		"d8acdcf8b7c8e17f3e83f0a4c293f89ad619a5dcb14d232911ccc5da15653177",
 	)
@@ -490,7 +489,7 @@ func (s *KeeperTestSuite) TestValidatorsMigrationToColls() {
 
 	err = testutil.DiffCollectionsMigration(
 		s.ctx,
-		s.key,
+		s.env.KVStoreService,
 		100,
 		func(i int64) {
 			val := stakingtypes.Validator{
@@ -522,7 +521,7 @@ func (s *KeeperTestSuite) TestValidatorQueueMigrationToColls() {
 	endHeight := int64(10)
 	err := testutil.DiffCollectionsMigration(
 		s.ctx,
-		s.key,
+		s.env.KVStoreService,
 		100,
 		func(i int64) {
 			var addrs []string
@@ -531,7 +530,7 @@ func (s *KeeperTestSuite) TestValidatorQueueMigrationToColls() {
 			s.Require().NoError(err)
 
 			// legacy Set method
-			s.ctx.KVStore(s.key).Set(getValidatorQueueKey(endTime, endHeight), bz)
+			s.env.KVStoreService.OpenKVStore(s.ctx).Set(getValidatorQueueKey(endTime, endHeight), bz)
 		},
 		"a631942cd94450d778706c98afc4f83231524e3e94c88474cdab79a01a4899a0",
 	)
@@ -539,7 +538,7 @@ func (s *KeeperTestSuite) TestValidatorQueueMigrationToColls() {
 
 	err = testutil.DiffCollectionsMigration(
 		s.ctx,
-		s.key,
+		s.env.KVStoreService,
 		100,
 		func(i int64) {
 			var addrs []string
@@ -559,7 +558,7 @@ func (s *KeeperTestSuite) TestRedelegationQueueMigrationToColls() {
 	addrs, valAddrs := createValAddrs(101)
 	err := testutil.DiffCollectionsMigration(
 		s.ctx,
-		s.key,
+		s.env.KVStoreService,
 		100,
 		func(i int64) {
 			date := time.Unix(i, i)
@@ -574,7 +573,7 @@ func (s *KeeperTestSuite) TestRedelegationQueueMigrationToColls() {
 			}
 			bz, err := s.cdc.Marshal(&dvvTriplets)
 			s.Require().NoError(err)
-			s.ctx.KVStore(s.key).Set(getRedelegationTimeKey(date), bz)
+			s.env.KVStoreService.OpenKVStore(s.ctx).Set(getRedelegationTimeKey(date), bz)
 		},
 		"58722ccde0cacda42aa81d71d7da1123b2c4a8e35d961d55f1507c3f10ffbc96",
 	)
@@ -582,7 +581,7 @@ func (s *KeeperTestSuite) TestRedelegationQueueMigrationToColls() {
 
 	err = testutil.DiffCollectionsMigration(
 		s.ctx,
-		s.key,
+		s.env.KVStoreService,
 		100,
 		func(i int64) {
 			date := time.Unix(i, i)

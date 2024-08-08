@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/authz"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	authzmodule "cosmossdk.io/x/authz/module"
@@ -49,11 +48,10 @@ type TestSuite struct {
 }
 
 func (s *TestSuite) SetupTest() {
-	key := storetypes.NewKVStoreKey(authzkeeper.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
-	testCtx := testutil.DefaultContextWithDB(s.T(), key)
+	testCtx := testutil.DefaultContextWithDB(s.T(), authzkeeper.StoreKey)
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now().Round(0).UTC()})
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, authzmodule.AppModule{})
+	storeService := coretesting.KVStoreService(s.ctx, authzkeeper.StoreKey)
 
 	s.baseApp = baseapp.NewBaseApp(
 		"authz",

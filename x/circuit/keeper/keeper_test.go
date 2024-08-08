@@ -9,7 +9,6 @@ import (
 
 	"cosmossdk.io/core/address"
 	coretesting "cosmossdk.io/core/testing"
-	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/circuit"
 	"cosmossdk.io/x/circuit/keeper"
@@ -43,9 +42,10 @@ func initFixture(t *testing.T) *fixture {
 	t.Helper()
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, circuit.AppModule{})
 	ac := addresscodec.NewBech32Codec("cosmos")
-	mockStoreKey := storetypes.NewKVStoreKey("test")
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(mockStoreKey), coretesting.NewNopLogger())
+	ctx := testutil.DefaultContextWithDB(t, "test")
+	kvs := coretesting.KVStoreService(ctx.Ctx, "test")
+	env := runtime.NewEnvironment(kvs, coretesting.NewNopLogger())
 	authority, err := ac.BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
 	k := keeper.NewKeeper(env, encCfg.Codec, authority, ac)
@@ -54,7 +54,7 @@ func initFixture(t *testing.T) *fixture {
 	require.NoError(t, err)
 
 	return &fixture{
-		ctx:      testutil.DefaultContextWithDB(t, mockStoreKey).Ctx,
+		ctx:      ctx.Ctx,
 		keeper:   k,
 		mockAddr: bz,
 		mockPerms: types.Permissions{

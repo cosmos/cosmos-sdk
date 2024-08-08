@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/nft"
 	"cosmossdk.io/x/nft/keeper"
 	"cosmossdk.io/x/nft/module"
@@ -55,8 +55,7 @@ func (s *TestSuite) SetupTest() {
 	s.addrs = simtestutil.CreateIncrementalAccounts(3)
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 
-	key := storetypes.NewKVStoreKey(nft.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(s.T(), key)
+	testCtx := testutil.DefaultContextWithDB(s.T(), nft.StoreKey)
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now().Round(0).UTC()})
 
 	// gomock initializations
@@ -74,7 +73,7 @@ func (s *TestSuite) SetupTest() {
 
 	s.accountKeeper = accountKeeper
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+	env := runtime.NewEnvironment(coretesting.KVStoreService(ctx, nft.StoreKey), log.NewNopLogger())
 	nftKeeper := keeper.NewKeeper(env, s.encCfg.Codec, accountKeeper, bankKeeper)
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, s.encCfg.InterfaceRegistry)
 	nft.RegisterQueryServer(queryHelper, nftKeeper)

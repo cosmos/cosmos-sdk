@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/core/appmodule/v2"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/header"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -19,8 +18,7 @@ import (
 )
 
 func TestBasicFeeValidAllow(t *testing.T) {
-	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key)
+	testCtx := testutil.DefaultContextWithDB(t, feegrant.StoreKey)
 
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
 

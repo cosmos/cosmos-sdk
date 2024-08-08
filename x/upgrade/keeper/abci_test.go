@@ -120,7 +120,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 	}
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, upgrade.AppModule{})
 
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(t, key)
 	s.baseApp = baseapp.NewBaseApp(
 		"upgrade",
 		log.NewNopLogger(),

@@ -29,7 +29,7 @@ func TestMigration(t *testing.T) {
 	ac := addresscodec.NewBech32Codec("cosmos")
 
 	feegrantKey := storetypes.NewKVStoreKey(v2.ModuleName)
-	ctx := testutil.DefaultContext(feegrantKey, storetypes.NewTransientStoreKey("transient_test"))
+	ctx := testutil.DefaultContext(feegrantKey)
 	granter1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	grantee1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	granter2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())

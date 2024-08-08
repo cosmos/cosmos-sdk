@@ -24,8 +24,7 @@ var consAddr = sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
 func TestMigrate(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, slashing.AppModule{}).Codec
 	storeKey := storetypes.NewKVStoreKey(slashingtypes.ModuleName)
-	tKey := storetypes.NewTransientStoreKey("transient_test")
-	ctx := testutil.DefaultContext(storeKey, tKey)
+	ctx := testutil.DefaultContext(storeKey)
 	store := ctx.KVStore(storeKey)
 	params := slashingtypes.Params{SignedBlocksWindow: 100}
 	valCodec := address.NewBech32Codec("cosmosvalcons")

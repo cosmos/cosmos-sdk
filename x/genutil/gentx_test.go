@@ -56,8 +56,7 @@ func (suite *GenTxTestSuite) SetupTest() {
 	valAc := codectestutil.CodecOptions{}.GetValidatorCodec()
 	suite.encodingConfig = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, genutil.AppModule{})
 	key := storetypes.NewKVStoreKey("a_Store_Key")
-	tkey := storetypes.NewTransientStoreKey("a_transient_store")
-	suite.ctx = testutil.DefaultContext(key, tkey)
+	suite.ctx = testutil.DefaultContext(key)
 
 	ctrl := gomock.NewController(suite.T())
 	suite.stakingKeeper = genutiltestutil.NewMockStakingKeeper(ctrl)

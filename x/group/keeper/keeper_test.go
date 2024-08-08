@@ -54,7 +54,7 @@ func (s *TestSuite) SetupTest() {
 	s.blockTime = time.Now().Round(0).UTC()
 	key := storetypes.NewKVStoreKey(group.StoreKey)
 
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(s.T(), key)
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{}, bank.AppModule{})
 	addressCodec := address.NewBech32Codec("cosmos")
 	s.addrs = simtestutil.CreateIncrementalAccounts(6)

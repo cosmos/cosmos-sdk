@@ -50,7 +50,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	storeService := runtime.NewKVStoreService(key)
 	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 	s.key = key
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(s.T(), key)
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 10})
 
 	s.baseApp = baseapp.NewBaseApp(

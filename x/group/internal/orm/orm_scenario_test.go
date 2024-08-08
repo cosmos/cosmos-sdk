@@ -29,7 +29,7 @@ func TestKeeperEndToEndWithAutoUInt64Table(t *testing.T) {
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(t, key)
 	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 	k := NewTestKeeper(cdc)
@@ -108,7 +108,7 @@ func TestKeeperEndToEndWithPrimaryKeyTable(t *testing.T) {
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(t, key)
 	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 	k := NewTestKeeper(cdc)
@@ -196,7 +196,7 @@ func TestGasCostsPrimaryKeyTable(t *testing.T) {
 	ac := address.NewBech32Codec("cosmos")
 
 	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(t, key)
 	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 	k := NewTestKeeper(cdc)
@@ -294,7 +294,7 @@ func TestExportImportStateAutoUInt64Table(t *testing.T) {
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(t, key)
 	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 	k := NewTestKeeper(cdc)
@@ -317,7 +317,7 @@ func TestExportImportStateAutoUInt64Table(t *testing.T) {
 	require.Equal(t, seqVal, uint64(testRecordsNum))
 
 	// when a new db seeded
-	testCtx = testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx = testutil.DefaultContextWithDB(t, key)
 	store = runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 	err = k.autoUInt64Table.Import(store, tms, seqVal)
@@ -356,7 +356,7 @@ func TestExportImportStatePrimaryKeyTable(t *testing.T) {
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(t, key)
 	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 	k := NewTestKeeper(cdc)
@@ -380,7 +380,7 @@ func TestExportImportStatePrimaryKeyTable(t *testing.T) {
 	require.NoError(t, err)
 
 	// when a new db seeded
-	testCtx = testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx = testutil.DefaultContextWithDB(t, key)
 	store = runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 	err = k.primaryKeyTable.Import(store, tms, 0)

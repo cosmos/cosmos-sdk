@@ -47,7 +47,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.key = key
 	storeService := runtime.NewKVStoreService(key)
 	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
-	testCtx := sdktestutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := sdktestutil.DefaultContextWithDB(s.T(), key)
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now().Round(0).UTC()})
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 

@@ -168,7 +168,7 @@ func TestIndexerOnDelete(t *testing.T) {
 
 	var multiKeyIndex MultiKeyIndex
 	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(t, key)
 	store := prefixstore.New(runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx), []byte{multiKeyIndex.prefix})
 
 	specs := map[string]struct {
@@ -254,7 +254,7 @@ func TestIndexerOnUpdate(t *testing.T) {
 
 	var multiKeyIndex MultiKeyIndex
 	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(t, key)
 	store := prefixstore.New(runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx), []byte{multiKeyIndex.prefix})
 
 	specs := map[string]struct {
@@ -411,7 +411,7 @@ func TestUniqueKeyAddFunc(t *testing.T) {
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {
 			key := storetypes.NewKVStoreKey("test")
-			testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+			testCtx := testutil.DefaultContextWithDB(t, key)
 			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 			require.NoError(t, store.Set(presetKey, []byte{}))
 
@@ -458,7 +458,7 @@ func TestMultiKeyAddFunc(t *testing.T) {
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {
 			key := storetypes.NewKVStoreKey("test")
-			testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+			testCtx := testutil.DefaultContextWithDB(t, key)
 			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 			require.NoError(t, store.Set(presetKey, []byte{}))
 

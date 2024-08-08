@@ -23,7 +23,7 @@ func TestPrimaryKeyTable(t *testing.T) {
 		// table and making the empty model map
 		// Create context
 		key := storetypes.NewKVStoreKey("test")
-		testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+		testCtx := testutil.DefaultContextWithDB(t, key)
 		store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 		// Create primary key table

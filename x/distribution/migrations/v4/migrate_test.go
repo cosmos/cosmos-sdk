@@ -22,8 +22,7 @@ func TestMigration(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{}).Codec
 	storeKey := storetypes.NewKVStoreKey("distribution")
 	storeService := runtime.NewKVStoreService(storeKey)
-	tKey := storetypes.NewTransientStoreKey("transient_test")
-	ctx := testutil.DefaultContext(storeKey, tKey)
+	ctx := testutil.DefaultContext(storeKey)
 
 	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 

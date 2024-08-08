@@ -67,7 +67,7 @@ func (m mockGasMeter) Consume(amount coregas.Gas, descriptor string) error {
 
 func TestAuthzAuthorizations(t *testing.T) {
 	key := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(t, key)
 	sdkCtx := testCtx.Ctx.WithHeaderInfo(coreheader.Info{})
 	ctx := context.WithValue(sdkCtx.Context(), corecontext.EnvironmentContextKey, appmodule.Environment{
 		HeaderService: headerService{},

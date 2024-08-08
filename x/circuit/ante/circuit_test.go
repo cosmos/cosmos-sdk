@@ -43,7 +43,7 @@ func initFixture(t *testing.T) *fixture {
 		WithTxConfig(encCfg.TxConfig)
 
 	return &fixture{
-		ctx:           testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx,
+		ctx:           testutil.DefaultContextWithDB(t, mockStoreKey).Ctx,
 		mockStoreKey:  mockStoreKey,
 		mockMsgURL:    "test",
 		mockclientCtx: mockclientCtx,

@@ -28,7 +28,7 @@ func TestPrimaryKeyTablePrefixScan(t *testing.T) {
 	require.NoError(t, err)
 
 	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(t, key)
 	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 	metadata := []byte("metadata")
@@ -215,7 +215,7 @@ func TestContains(t *testing.T) {
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(t, key)
 	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 	tb, err := NewPrimaryKeyTable(PrimaryKeyTablePrefix, &testdata.TableModel{}, cdc, address.NewBech32Codec("cosmos"))

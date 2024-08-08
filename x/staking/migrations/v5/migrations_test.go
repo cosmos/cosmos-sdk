@@ -27,8 +27,7 @@ import (
 
 func TestHistoricalKeysMigration(t *testing.T) {
 	storeKey := storetypes.NewKVStoreKey("staking")
-	tKey := storetypes.NewTransientStoreKey("transient_test")
-	ctx := testutil.DefaultContext(storeKey, tKey)
+	ctx := testutil.DefaultContext(storeKey)
 	store := ctx.KVStore(storeKey)
 	logger := coretesting.NewNopLogger()
 
@@ -84,8 +83,7 @@ func TestDelegationsByValidatorMigrations(t *testing.T) {
 	codecOpts := codectestutil.CodecOptions{}
 	cdc := moduletestutil.MakeTestEncodingConfig(codecOpts, staking.AppModule{}).Codec
 	storeKey := storetypes.NewKVStoreKey(v5.ModuleName)
-	tKey := storetypes.NewTransientStoreKey("transient_test")
-	ctx := testutil.DefaultContext(storeKey, tKey)
+	ctx := testutil.DefaultContext(storeKey)
 	store := ctx.KVStore(storeKey)
 	logger := coretesting.NewNopLogger()
 

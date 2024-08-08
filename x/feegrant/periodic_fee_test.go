@@ -20,7 +20,7 @@ import (
 
 func TestPeriodicFeeValidAllow(t *testing.T) {
 	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(t, key)
 
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 

@@ -17,7 +17,6 @@ import (
 func TestBranchService(t *testing.T) {
 	bs := BranchService{}
 	sk := storetypes.NewKVStoreKey("test")
-	tsk := storetypes.NewTransientStoreKey("transient-test")
 	// helper to create a state change
 	doStateChange := func(ctx context.Context) {
 		t.Helper()
@@ -39,7 +38,7 @@ func TestBranchService(t *testing.T) {
 	}
 
 	t.Run("execute successful", func(t *testing.T) {
-		ctx := testutil.DefaultContext(sk, tsk)
+		ctx := testutil.DefaultContext(sk)
 		err := bs.Execute(ctx, func(ctx context.Context) error {
 			doStateChange(ctx)
 			return nil
@@ -49,7 +48,7 @@ func TestBranchService(t *testing.T) {
 	})
 
 	t.Run("execute failed", func(t *testing.T) {
-		ctx := testutil.DefaultContext(sk, tsk)
+		ctx := testutil.DefaultContext(sk)
 		err := bs.Execute(ctx, func(ctx context.Context) error {
 			doStateChange(ctx)
 			return errors.New("failure")
@@ -59,7 +58,7 @@ func TestBranchService(t *testing.T) {
 	})
 
 	t.Run("execute with limit successful", func(t *testing.T) {
-		ctx := testutil.DefaultContext(sk, tsk)
+		ctx := testutil.DefaultContext(sk)
 		gasUsed, err := bs.ExecuteWithGasLimit(ctx, 4_000, func(ctx context.Context) error {
 			doStateChange(ctx)
 			return nil
@@ -73,7 +72,7 @@ func TestBranchService(t *testing.T) {
 	})
 
 	t.Run("execute with limit failed", func(t *testing.T) {
-		ctx := testutil.DefaultContext(sk, tsk)
+		ctx := testutil.DefaultContext(sk)
 		gasUsed, err := bs.ExecuteWithGasLimit(ctx, 4_000, func(ctx context.Context) error {
 			doStateChange(ctx)
 			return errors.New("failure")
@@ -87,7 +86,7 @@ func TestBranchService(t *testing.T) {
 	})
 
 	t.Run("execute with limit out of gas", func(t *testing.T) {
-		ctx := testutil.DefaultContext(sk, tsk)
+		ctx := testutil.DefaultContext(sk)
 		gasUsed, err := bs.ExecuteWithGasLimit(ctx, 2239, func(ctx context.Context) error {
 			doStateChange(ctx)
 			return nil
@@ -102,7 +101,7 @@ func TestBranchService(t *testing.T) {
 
 	t.Run("execute with gas limit other panic error", func(t *testing.T) {
 		// ensures other panic errors are not caught by the gas limit panic catcher
-		ctx := testutil.DefaultContext(sk, tsk)
+		ctx := testutil.DefaultContext(sk)
 		require.Panics(t, func() {
 			_, _ = bs.ExecuteWithGasLimit(ctx, 2239, func(ctx context.Context) error {
 				panic("other panic error")

@@ -24,7 +24,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	s.Ctx = testutil.DefaultContext(storetypes.NewKVStoreKey(types.StoreKey), storetypes.NewTransientStoreKey("transient_test"))
+	s.Ctx = testutil.DefaultContext(storetypes.NewKVStoreKey(types.StoreKey))
 }
 
 var dummyErr = errors.New("9", 9, "dummyError")

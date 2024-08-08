@@ -103,7 +103,7 @@ func TestCreate(t *testing.T) {
 			cdc := codec.NewProtoCodec(interfaceRegistry)
 
 			key := storetypes.NewKVStoreKey("test")
-			testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+			testCtx := testutil.DefaultContextWithDB(t, key)
 			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 			anyPrefix := [2]byte{0x10}
@@ -161,7 +161,7 @@ func TestUpdate(t *testing.T) {
 			cdc := codec.NewProtoCodec(interfaceRegistry)
 
 			key := storetypes.NewKVStoreKey("test")
-			testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+			testCtx := testutil.DefaultContextWithDB(t, key)
 			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 			anyPrefix := [2]byte{0x10}
@@ -211,7 +211,7 @@ func TestDelete(t *testing.T) {
 			cdc := codec.NewProtoCodec(interfaceRegistry)
 
 			key := storetypes.NewKVStoreKey("test")
-			testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+			testCtx := testutil.DefaultContextWithDB(t, key)
 			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 			anyPrefix := [2]byte{0x10}

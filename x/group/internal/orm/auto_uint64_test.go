@@ -28,7 +28,7 @@ func TestAutoUInt64PrefixScan(t *testing.T) {
 	require.NoError(t, err)
 
 	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(t, key)
 	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 	metadata := []byte("metadata")

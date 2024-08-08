@@ -17,7 +17,7 @@ func TestSequence(t *testing.T) {
 		// Init sets up the real Sequence, including choosing a random initial value,
 		// and initializes the model state
 		key := storetypes.NewKVStoreKey("test")
-		testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+		testCtx := testutil.DefaultContextWithDB(t, key)
 		store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
 		// Create primary key table

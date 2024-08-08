@@ -30,7 +30,7 @@ func TestMigration(t *testing.T) {
 	cdc := encodingConfig.Codec
 
 	authzKey := storetypes.NewKVStoreKey("authz")
-	ctx := testutil.DefaultContext(authzKey, storetypes.NewTransientStoreKey("transient_test"))
+	ctx := testutil.DefaultContext(authzKey)
 	granter1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	grantee1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	granter2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())

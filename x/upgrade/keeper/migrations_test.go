@@ -25,7 +25,7 @@ func encodeOldDoneKey(upgrade storedUpgrade) []byte {
 func TestMigrateDoneUpgradeKeys(t *testing.T) {
 	upgradeKey := storetypes.NewKVStoreKey("upgrade")
 	storeService := runtime.NewKVStoreService(upgradeKey)
-	ctx := testutil.DefaultContext(upgradeKey, storetypes.NewTransientStoreKey("transient_test"))
+	ctx := testutil.DefaultContext(upgradeKey)
 	store := storeService.OpenKVStore(ctx)
 
 	testCases := []struct {

@@ -22,7 +22,7 @@ import (
 
 func TestTypeSafeRowGetter(t *testing.T) {
 	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(t, key)
 	prefixKey := [2]byte{0x2}
 	store := prefixstore.New(runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx), prefixKey[:])
 

@@ -49,8 +49,7 @@ func TestMigrate(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, groupmodule.AppModule{}).Codec
 	storeKey := storetypes.NewKVStoreKey(v2.ModuleName)
 	storeService := runtime.NewKVStoreService(storeKey)
-	tKey := storetypes.NewTransientStoreKey("transient_test")
-	ctx := testutil.DefaultContext(storeKey, tKey)
+	ctx := testutil.DefaultContext(storeKey)
 
 	oldAccs, accountKeeper, err := createOldPolicyAccount(t, ctx, storeKey, cdc, policies)
 	require.NoError(t, err)

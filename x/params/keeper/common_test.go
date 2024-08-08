@@ -19,7 +19,7 @@ func testComponents() (*codec.LegacyAmino, sdk.Context, storetypes.StoreKey, sto
 	legacyAmino := createTestCodec()
 	mkey := storetypes.NewKVStoreKey("test")
 	tkey := storetypes.NewTransientStoreKey("transient_test")
-	ctx := sdktestutil.DefaultContext(mkey, tkey)
+	ctx := sdktestutil.DefaultContext(mkey)
 	keeper := paramskeeper.NewKeeper(cdc, legacyAmino, mkey, tkey)
 
 	return legacyAmino, ctx, mkey, tkey, keeper

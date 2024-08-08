@@ -54,7 +54,7 @@ func initFixture(t *testing.T) *fixture {
 	require.NoError(t, err)
 
 	return &fixture{
-		ctx:      testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx,
+		ctx:      testutil.DefaultContextWithDB(t, mockStoreKey).Ctx,
 		keeper:   k,
 		mockAddr: bz,
 		mockPerms: types.Permissions{

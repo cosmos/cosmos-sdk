@@ -12,7 +12,7 @@ import (
 // represented by ObjectUpdate's for an ObjectType. ObjectUpdates must not include
 // ValueUpdates in the Value field. When ValueUpdates are applied they must be
 // converted to individual value or array format depending on the number of fields in
-// the value. For collections which retain deletions, ObjectUpdate's with the Remove
+// the value. For collections which retain deletions, ObjectUpdate's with the Delete
 // field set to true should be returned with the latest Value still intact.
 type ObjectCollectionState interface {
 	// ObjectType returns the object type for the collection.

@@ -29,14 +29,14 @@ sc-type = 0
 # Number of recent heights to keep on disk.
 keep-recent = 2
 # Height interval at which pruned heights are removed from disk.
-interval = 1
+interval = 100
 
 # Pruning options for state commitment
 [store.options.sc-pruning-option]
 # Number of recent heights to keep on disk.
 keep-recent = 2
 # Height interval at which pruned heights are removed from disk.
-interval = 1
+interval = 100
 
 [store.options.iavl-config]
 # CacheSize set the size of the iavl tree cache.

@@ -346,8 +346,8 @@ func initTestnetFiles[T transaction.Tx](
 			cometbft.ServerOptions[T]{},
 			cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig),
 		)
+		storeServer := store.New[T](newApp)
 		grpcServer := grpc.New[T](grpc.OverwriteDefaultConfig(grpcConfig))
-		storeServer := store.New[T]()
 		server := serverv2.NewServer(log.NewNopLogger(), serverCfg, cometServer, grpcServer, storeServer)
 		err = server.WriteConfig(filepath.Join(nodeDir, "config"))
 		if err != nil {
@@ -369,7 +369,7 @@ func initTestnetFiles[T transaction.Tx](
 	}
 
 	// Update viper root since root dir become rootdir/node/simd
-	client.GetViperFromCmd(cmd).Set(flags.FlagHome, nodeConfig.RootDir)
+	serverv2.GetViperFromCmd(cmd).Set(flags.FlagHome, nodeConfig.RootDir)
 
 	cmd.PrintErrf("Successfully initialized %d node directories\n", args.numValidators)
 	return nil

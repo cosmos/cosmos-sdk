@@ -4,7 +4,9 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
+	"reflect"
 
+	"github.com/cosmos/gogoproto/proto"
 	gogoproto "github.com/cosmos/gogoproto/types"
 
 	"cosmossdk.io/core/transaction"
@@ -69,7 +71,12 @@ func (t *Tx) Decode(b []byte) {
 	if err != nil {
 		panic(err)
 	}
-	var msg transaction.Msg
+	msgName, err := gogoproto.AnyMessageName(rawTx.Msg)
+	msgType := proto.MessageType(msgName).Elem()
+	if err != nil {
+		panic(err)
+	}
+	msg := reflect.New(msgType).Interface().(proto.Message)
 	if err := gogoproto.UnmarshalAny(rawTx.Msg, msg); err != nil {
 		panic(err)
 	}
@@ -84,7 +91,12 @@ func (t *Tx) DecodeJSON(b []byte) {
 	if err != nil {
 		panic(err)
 	}
-	var msg transaction.Msg
+	msgName, err := gogoproto.AnyMessageName(rawTx.Msg)
+	msgType := proto.MessageType(msgName).Elem()
+	if err != nil {
+		panic(err)
+	}
+	msg := reflect.New(msgType).Interface().(proto.Message)
 	if err := gogoproto.UnmarshalAny(rawTx.Msg, msg); err != nil {
 		panic(err)
 	}

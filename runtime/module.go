@@ -15,7 +15,6 @@ import (
 	"cosmossdk.io/core/app"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
@@ -240,7 +239,7 @@ func ProvideModuleManager(modules map[string]appmodule.AppModule) *module.Manage
 	return module.NewManagerFromMap(modules)
 }
 
-func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
+func ProvideGenesisTxHandler(appBuilder *AppBuilder) baseapp.TxHandler {
 	return appBuilder.app
 }
 

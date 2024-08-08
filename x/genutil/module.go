@@ -7,7 +7,6 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/genesis"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,7 +26,7 @@ type AppModule struct {
 	cdc              codec.Codec
 	accountKeeper    types.AccountKeeper
 	stakingKeeper    types.StakingKeeper
-	deliverTx        genesis.TxHandler
+	deliverTx        TxHandler // Unecessary in server/v2 applications
 	txEncodingConfig client.TxEncodingConfig
 	genTxValidator   types.MessageValidator
 }
@@ -37,7 +36,7 @@ func NewAppModule(
 	cdc codec.Codec,
 	accountKeeper types.AccountKeeper,
 	stakingKeeper types.StakingKeeper,
-	deliverTx genesis.TxHandler,
+	deliverTx TxHandler,
 	txEncodingConfig client.TxEncodingConfig,
 	genTxValidator types.MessageValidator,
 ) module.AppModule {
@@ -95,7 +94,7 @@ func (am AppModule) DecodeGenesisJSON(data json.RawMessage) ([]json.RawMessage, 
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the genutil module.
-func (am AppModule) ExportGenesis(_ context.Context) (json.RawMessage, error) {
+func (am AppModule) ExportGenesis(context.Context) (json.RawMessage, error) {
 	return am.DefaultGenesis(), nil
 }
 

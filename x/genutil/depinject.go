@@ -3,7 +3,6 @@ package genutil
 import (
 	modulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 
@@ -31,7 +30,7 @@ type ModuleInputs struct {
 	StakingKeeper  types.StakingKeeper
 	Config         client.TxConfig
 	Cdc            codec.Codec
-	DeliverTx      genesis.TxHandler      `optional:"true"` // Only used in server v0 applications
+	DeliverTx      TxHandler              `optional:"true"` // Only used in server v0 applications
 	GenTxValidator types.MessageValidator `optional:"true"`
 }
 

@@ -4,14 +4,17 @@ import (
 	"errors"
 
 	"github.com/cometbft/cometbft/abci/types"
-
-	"cosmossdk.io/core/genesis"
 )
 
-var _ genesis.TxHandler = (*BaseApp)(nil)
+var _ TxHandler = (*BaseApp)(nil)
 
-// ExecuteGenesisTx implements genesis.GenesisState from
-// cosmossdk.io/core/genesis to set initial state in genesis
+// TxHandler is an interface that defines how genesis txs are handled.
+// By default, BaseApp handles them using the deliverTx method.
+type TxHandler interface {
+	ExecuteGenesisTx([]byte) error
+}
+
+// ExecuteGenesis implements TxHandler. It executes a genesis tx.
 func (ba *BaseApp) ExecuteGenesisTx(tx []byte) error {
 	res := ba.deliverTx(tx)
 

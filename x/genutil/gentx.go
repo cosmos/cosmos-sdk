@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/core/genesis"
 	bankexported "cosmossdk.io/x/bank/exported"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
@@ -92,7 +91,7 @@ func ValidateAccountInGenesis(
 // NOTE: This isn't used in server/v2 applications.
 func DeliverGenTxs(
 	ctx context.Context, genTxs []json.RawMessage,
-	stakingKeeper types.StakingKeeper, deliverTx genesis.TxHandler,
+	stakingKeeper types.StakingKeeper, deliverTx TxHandler,
 	txEncodingConfig client.TxEncodingConfig,
 ) ([]module.ValidatorUpdate, error) {
 	for _, genTx := range genTxs {

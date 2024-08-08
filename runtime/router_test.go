@@ -54,7 +54,7 @@ func TestRouterService(t *testing.T) {
 
 	t.Run("invalid query", func(t *testing.T) {
 		_, err := queryRouterService.Invoke(testCtx.Ctx, &bankv1beta1.QueryBalanceRequest{})
-		require.ErrorContains(t, err, "unknown request: cosmos.bank.v1beta1.QueryBalanceRequest")
+		require.ErrorContains(t, err, "could not find response type for request cosmos.bank.v1beta1.QueryBalanceRequest")
 	})
 
 	t.Run("invoke: valid query (proto v1)", func(t *testing.T) {

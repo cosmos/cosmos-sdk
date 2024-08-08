@@ -111,7 +111,7 @@ func (m *queryRouterService) Invoke(ctx context.Context, req gogoproto.Message) 
 	reqName := msgTypeURL(req)
 	respName := m.router.ResponseNameByRequestName(reqName)
 	if respName == "" {
-		return nil, fmt.Errorf("could not find response type for request %s (%T)", reqName, req)
+		return nil, fmt.Errorf("unknown request: could not find response type for request %s (%T)", reqName, req)
 	}
 
 	// get response type

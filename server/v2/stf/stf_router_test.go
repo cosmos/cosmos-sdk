@@ -27,7 +27,7 @@ func TestRouter(t *testing.T) {
 
 	t.Run("can invoke message by name", func(t *testing.T) {
 		err := router.CanInvoke(context.Background(), expectedMsgName)
-		require.NoError(t, err, "must be invokable")
+		require.NoError(t, err, "must be invocable")
 	})
 
 	t.Run("can invoke message by type URL", func(t *testing.T) {

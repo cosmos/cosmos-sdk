@@ -22,7 +22,7 @@ require (
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
-	cosmossdk.io/log v1.3.1 // indirect
+	cosmossdk.io/log v1.4.0 // indirect
 	cosmossdk.io/schema v0.1.1 // indirect
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000 // indirect

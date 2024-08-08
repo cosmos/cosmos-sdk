@@ -2,7 +2,6 @@ module cosmossdk.io/schema/testing
 
 require (
 	cosmossdk.io/schema v0.0.0
-	github.com/cockroachdb/apd/v3 v3.2.1
 	github.com/stretchr/testify v1.9.0
 	github.com/tidwall/btree v1.7.0
 	gotest.tools/v3 v3.5.1

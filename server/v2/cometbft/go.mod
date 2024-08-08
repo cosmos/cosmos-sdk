@@ -19,7 +19,7 @@ require (
 	cosmossdk.io/api v0.8.0
 	cosmossdk.io/core v0.12.1-0.20240802064046-23fac2f1b8ab // main
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/log v1.3.1
+	cosmossdk.io/log v1.4.0
 	cosmossdk.io/server/v2 v2.0.0-20240802142126-a26970e547ab // main
 	cosmossdk.io/server/v2/appmanager v0.0.0-20240731205446-aee9803a0af6 // main
 	cosmossdk.io/store/v2 v2.0.0-20240731205446-aee9803a0af6 // main
@@ -161,7 +161,7 @@ require (
 	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc // indirect
 	golang.org/x/net v0.27.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
+	golang.org/x/sys v0.23.0 // indirect
 	golang.org/x/term v0.22.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect

@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"cosmossdk.io/core/appmodule/v2"
+	coregas "cosmossdk.io/core/gas"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth/migrations/legacytx"
 	authsigning "cosmossdk.io/x/auth/signing"
 
@@ -139,7 +139,7 @@ func (cgts ConsumeTxSizeGasDecorator) ValidateTx(ctx context.Context, tx sdk.Tx)
 	params := cgts.ak.GetParams(ctx)
 
 	gasService := cgts.ak.GetEnvironment().GasService
-	if err := gasService.GasMeter(ctx).Consume(params.TxSizeCostPerByte*storetypes.Gas(len(tx.Bytes())), "txSize"); err != nil {
+	if err := gasService.GasMeter(ctx).Consume(params.TxSizeCostPerByte*coregas.Gas(len(tx.Bytes())), "txSize"); err != nil {
 		return err
 	}
 
@@ -175,7 +175,7 @@ func (cgts ConsumeTxSizeGasDecorator) ValidateTx(ctx context.Context, tx sdk.Tx)
 			}
 
 			sigBz := legacy.Cdc.MustMarshal(simSig)
-			cost := storetypes.Gas(len(sigBz) + 6)
+			cost := coregas.Gas(len(sigBz) + 6)
 
 			// If the pubkey is a multi-signature pubkey, then we estimate for the maximum
 			// number of signers.

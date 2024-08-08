@@ -44,6 +44,6 @@ func (m Migrator) Migrate4to5(ctx context.Context) error {
 
 // Migrate5to6 migrates x/staking state from consensus version 5 to 6.
 func (m Migrator) Migrate5to6(ctx context.Context) error {
-	store := runtime.KVStoreAdapter(m.keeper.KVStoreService.OpenKVStore(ctx))
+	store := m.keeper.KVStoreService.OpenKVStore(ctx)
 	return v6.MigrateStore(ctx, store, m.keeper.cdc)
 }

@@ -63,7 +63,7 @@ func Migrate(ctx context.Context, cdc codec.BinaryCodec, store storetypes.KVStor
 }
 
 func iterateValidatorSigningInfos(
-	ctx context.Context,
+	_ context.Context,
 	cdc codec.BinaryCodec,
 	store storetypes.KVStore,
 	cb func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool),
@@ -83,7 +83,7 @@ func iterateValidatorSigningInfos(
 }
 
 func iterateValidatorMissedBlockBitArray(
-	ctx context.Context,
+	_ context.Context,
 	cdc codec.BinaryCodec,
 	store storetypes.KVStore,
 	addr sdk.ConsAddress,
@@ -120,7 +120,7 @@ func GetValidatorMissedBlocks(
 	return missedBlocks
 }
 
-func deleteValidatorMissedBlockBitArray(ctx context.Context, store storetypes.KVStore, addr sdk.ConsAddress) {
+func deleteValidatorMissedBlockBitArray(_ context.Context, store storetypes.KVStore, addr sdk.ConsAddress) {
 	iter := storetypes.KVStorePrefixIterator(store, validatorMissedBlockBitArrayPrefixKey(addr))
 	defer iter.Close()
 
@@ -129,7 +129,7 @@ func deleteValidatorMissedBlockBitArray(ctx context.Context, store storetypes.KV
 	}
 }
 
-func setMissedBlockBitmapValue(ctx context.Context, store storetypes.KVStore, addr sdk.ConsAddress, index int64, missed bool) error {
+func setMissedBlockBitmapValue(_ context.Context, store storetypes.KVStore, addr sdk.ConsAddress, index int64, missed bool) error {
 	// get the chunk or "word" in the logical bitmap
 	chunkIndex := index / MissedBlockBitmapChunkSize
 	key := ValidatorMissedBlockBitmapKey(addr, chunkIndex)

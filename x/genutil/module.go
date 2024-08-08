@@ -26,7 +26,7 @@ type AppModule struct {
 	cdc              codec.Codec
 	accountKeeper    types.AccountKeeper
 	stakingKeeper    types.StakingKeeper
-	deliverTx        TxHandler // Unecessary in server/v2 applications
+	deliverTx        TxHandler // Unnecessary in server/v2 applications
 	txEncodingConfig client.TxEncodingConfig
 	genTxValidator   types.MessageValidator
 }

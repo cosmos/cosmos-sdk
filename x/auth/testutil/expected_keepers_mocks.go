@@ -149,17 +149,17 @@ func (mr *MockAccountsModKeeperMockRecorder) NextAccountNumber(ctx interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextAccountNumber", reflect.TypeOf((*MockAccountsModKeeper)(nil).NextAccountNumber), ctx)
 }
 
-// SendModuleMessageUntyped mocks base method.
-func (m *MockAccountsModKeeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg protoiface.MessageV1) (protoiface.MessageV1, error) {
+// SendModuleMessage mocks base method.
+func (m *MockAccountsModKeeper) SendModuleMessage(ctx context.Context, sender []byte, msg protoiface.MessageV1) (protoiface.MessageV1, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendModuleMessageUntyped", ctx, sender, msg)
+	ret := m.ctrl.Call(m, "SendModuleMessage", ctx, sender, msg)
 	ret0, _ := ret[0].(protoiface.MessageV1)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// SendModuleMessageUntyped indicates an expected call of SendModuleMessageUntyped.
-func (mr *MockAccountsModKeeperMockRecorder) SendModuleMessageUntyped(ctx, sender, msg interface{}) *gomock.Call {
+// SendModuleMessage indicates an expected call of SendModuleMessage.
+func (mr *MockAccountsModKeeperMockRecorder) SendModuleMessage(ctx, sender, msg interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendModuleMessageUntyped", reflect.TypeOf((*MockAccountsModKeeper)(nil).SendModuleMessageUntyped), ctx, sender, msg)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendModuleMessage", reflect.TypeOf((*MockAccountsModKeeper)(nil).SendModuleMessage), ctx, sender, msg)
 }

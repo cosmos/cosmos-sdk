@@ -90,18 +90,13 @@ func SenderIsAccountsModule(ctx context.Context) bool {
 // returns nil.
 func Funds(ctx context.Context) sdk.Coins { return implementation.Funds(ctx) }
 
-// ExecModule can be used to execute a message towards a module.
-func ExecModule[Resp any, RespProto implementation.ProtoMsgG[Resp], Req any, ReqProto implementation.ProtoMsgG[Req]](ctx context.Context, msg ReqProto) (RespProto, error) {
-	return implementation.ExecModule[Resp, RespProto, Req, ReqProto](ctx, msg)
-}
-
-func ExecModuleUntyped(ctx context.Context, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
-	return implementation.ExecModuleUntyped(ctx, msg)
+func ExecModule(ctx context.Context, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
+	return implementation.ExecModule(ctx, msg)
 }
 
 // QueryModule can be used by an account to execute a module query.
-func QueryModule[Resp any, RespProto implementation.ProtoMsgG[Resp], Req any, ReqProto implementation.ProtoMsgG[Req]](ctx context.Context, req ReqProto) (RespProto, error) {
-	return implementation.QueryModule[Resp, RespProto, Req, ReqProto](ctx, req)
+func QueryModule(ctx context.Context, req implementation.ProtoMsg) (implementation.ProtoMsg, error) {
+	return implementation.QueryModule(ctx, req)
 }
 
 // UnpackAny unpacks a protobuf Any message generically.
@@ -124,7 +119,7 @@ func ExecModuleAnys(ctx context.Context, msgs []*implementation.Any) ([]*impleme
 		if err != nil {
 			return nil, fmt.Errorf("error unpacking message %d: %w", i, err)
 		}
-		resp, err := ExecModuleUntyped(ctx, concreteMessage)
+		resp, err := ExecModule(ctx, concreteMessage)
 		if err != nil {
 			return nil, fmt.Errorf("error executing message %d: %w", i, err)
 		}

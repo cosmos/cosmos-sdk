@@ -315,8 +315,7 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 			accountAddr,
 			sender,
 			funds,
-			k.sendModuleMessage,
-			k.SendModuleMessageUntyped,
+			k.SendModuleMessage,
 			k.queryModule,
 		)
 	}
@@ -330,9 +329,6 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 		accountAddr,
 		nil,
 		nil,
-		func(ctx context.Context, sender []byte, msg, msgResp implementation.ProtoMsg) error {
-			return errors.New("cannot execute in query context")
-		},
 		func(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
 			return nil, errors.New("cannot execute in query context")
 		},
@@ -350,7 +346,7 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 		if err != nil {
 			return nil, err
 		}
-		resp, err := k.SendModuleMessageUntyped(ctx, sender, msg)
+		resp, err := k.SendModuleMessage(ctx, sender, msg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to execute message %d: %s", i, err.Error())
 		}
@@ -363,9 +359,9 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 	return anyResponses, nil
 }
 
-// SendModuleMessageUntyped can be used to send a message towards a module.
+// SendModuleMessage can be used to send a message towards a module.
 // It should be used when the response type is not known by the caller.
-func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
+func (k Keeper) SendModuleMessage(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
 	// do sender assertions.
 	wantSenders, _, err := k.codec.GetMsgSigners(msg)
 	if err != nil {
@@ -377,7 +373,7 @@ func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg
 	if !bytes.Equal(sender, wantSenders[0]) {
 		return nil, fmt.Errorf("%w: sender does not match expected sender", ErrUnauthorized)
 	}
-	resp, err := k.MsgRouterService.InvokeUntyped(ctx, msg)
+	resp, err := k.MsgRouterService.Invoke(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -388,26 +384,27 @@ func (k Keeper) SendModuleMessageUntyped(ctx context.Context, sender []byte, msg
 // sendModuleMessage can be used to send a message towards a module. It expects the
 // response type to be known by the caller. It will also assert the sender has the right
 // is not trying to impersonate another account.
-func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg, msgResp implementation.ProtoMsg) error {
+func (k Keeper) sendModuleMessage(ctx context.Context, sender []byte, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
 	// do sender assertions.
 	wantSenders, _, err := k.codec.GetMsgSigners(msg)
 	if err != nil {
-		return fmt.Errorf("cannot get signers: %w", err)
+		return nil, fmt.Errorf("cannot get signers: %w", err)
 	}
 	if len(wantSenders) != 1 {
-		return fmt.Errorf("expected only one signer, got %d", len(wantSenders))
+		return nil, fmt.Errorf("expected only one signer, got %d", len(wantSenders))
 	}
 	if !bytes.Equal(sender, wantSenders[0]) {
-		return fmt.Errorf("%w: sender does not match expected sender", ErrUnauthorized)
+		return nil, fmt.Errorf("%w: sender does not match expected sender", ErrUnauthorized)
 	}
-	return k.MsgRouterService.InvokeTyped(ctx, msg, msgResp)
+
+	return k.MsgRouterService.Invoke(ctx, msg)
 }
 
 // queryModule is the entrypoint for an account to query a module.
 // It will try to find the query handler for the given query and execute it.
 // If multiple query handlers are found, it will return an error.
-func (k Keeper) queryModule(ctx context.Context, queryReq, queryResp implementation.ProtoMsg) error {
-	return k.QueryRouterService.InvokeTyped(ctx, queryReq, queryResp)
+func (k Keeper) queryModule(ctx context.Context, queryReq implementation.ProtoMsg) (implementation.ProtoMsg, error) {
+	return k.QueryRouterService.Invoke(ctx, queryReq)
 }
 
 // maybeSendFunds will send the provided coins between the provided addresses, if amt
@@ -417,16 +414,17 @@ func (k Keeper) maybeSendFunds(ctx context.Context, from, to []byte, amt sdk.Coi
 		return nil
 	}
 
-	msg, msgResp, err := k.makeSendCoinsMsg(from, to, amt)
+	msg, err := k.makeSendCoinsMsg(from, to, amt)
 	if err != nil {
 		return err
 	}
 
 	// send module message ensures that "from" cannot impersonate.
-	err = k.sendModuleMessage(ctx, from, msg, msgResp)
+	_, err = k.sendModuleMessage(ctx, from, msg)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 

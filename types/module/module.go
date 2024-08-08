@@ -96,7 +96,7 @@ type HasServices interface {
 // hasServicesV1 is the interface for registering service in baseapp Cosmos SDK.
 // This API is part of core/appmodule but commented out for dependencies.
 type hasServicesV1 interface {
-	appmodule.AppModule
+	appmodulev2.AppModule
 
 	RegisterServices(grpc.ServiceRegistrar) error
 }

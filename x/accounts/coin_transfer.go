@@ -14,7 +14,7 @@ import (
 // coinsTransferMsgFunc defines a function that creates a message to send coins from one
 // address to the other, and also a message that parses such  response.
 // This in most cases will be implemented as a bank.MsgSend creator, but we keep x/accounts independent of bank.
-type coinsTransferMsgFunc = func(from, to []byte, coins sdk.Coins) (implementation.ProtoMsg, implementation.ProtoMsg, error)
+type coinsTransferMsgFunc = func(from, to []byte, coins sdk.Coins) (implementation.ProtoMsg, error)
 
 type gogoProtoPlusV2 interface {
 	proto.Message
@@ -37,14 +37,14 @@ func (h protoV2GogoWrapper) XXX_MessageName() string {
 }
 
 func defaultCoinsTransferMsgFunc(addrCdc address.Codec) coinsTransferMsgFunc {
-	return func(from, to []byte, coins sdk.Coins) (implementation.ProtoMsg, implementation.ProtoMsg, error) {
+	return func(from, to []byte, coins sdk.Coins) (implementation.ProtoMsg, error) {
 		fromAddr, err := addrCdc.BytesToString(from)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		toAddr, err := addrCdc.BytesToString(to)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		v2Coins := make([]*v1beta1.Coin, len(coins))
 		for i, coin := range coins {
@@ -57,6 +57,6 @@ func defaultCoinsTransferMsgFunc(addrCdc address.Codec) coinsTransferMsgFunc {
 			FromAddress: fromAddr,
 			ToAddress:   toAddr,
 			Amount:      v2Coins,
-		}}, new(bankv1beta1.MsgSendResponse), nil
+		}}, nil
 	}
 }

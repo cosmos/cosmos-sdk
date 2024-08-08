@@ -3,6 +3,7 @@ go 1.22.2
 module github.com/cosmos/cosmos-sdk
 
 require (
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // main
 	cosmossdk.io/core v0.12.1-0.20240808073009-7040177316e3 // main
@@ -68,7 +69,6 @@ require (
 )
 
 require (
-	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

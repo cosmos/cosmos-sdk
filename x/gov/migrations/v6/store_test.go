@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
-	storetypes "cosmossdk.io/store/types"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/x/gov"
 	v6 "cosmossdk.io/x/gov/migrations/v6"
 	"cosmossdk.io/x/gov/types"
@@ -14,16 +14,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 func TestMigrateStore(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, gov.AppModule{}).Codec
-	govKey := storetypes.NewKVStoreKey("gov")
-	ctx := testutil.DefaultContext(govKey)
-	storeService := runtime.NewKVStoreService(govKey)
+	ctx := testutil.DefaultContext("gov")
+	storeService := coretesting.KVStoreService(ctx, "gov")
 	sb := collections.NewSchemaBuilder(storeService)
 	paramsCollection := collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[v1.Params](cdc))
 	proposalCollection := collections.NewMap(sb, types.ProposalsKeyPrefix, "proposals", collections.Uint64Key, codec.CollValue[v1.Proposal](cdc))

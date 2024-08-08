@@ -8,8 +8,8 @@ import (
 
 	"cosmossdk.io/core/address"
 	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authtestutil "cosmossdk.io/x/auth/testutil"
@@ -47,11 +47,10 @@ func mustAccAddressFromBech32(address string) sdk.AccAddress {
 
 func TestMigrate(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, groupmodule.AppModule{}).Codec
-	storeKey := storetypes.NewKVStoreKey(v2.ModuleName)
-	storeService := runtime.NewKVStoreService(storeKey)
-	ctx := testutil.DefaultContext(storeKey)
+	ctx := testutil.DefaultContext(v2.ModuleName)
+	storeService := coretesting.KVStoreService(ctx, v2.ModuleName)
 
-	oldAccs, accountKeeper, err := createOldPolicyAccount(t, ctx, storeKey, cdc, policies)
+	oldAccs, accountKeeper, err := createOldPolicyAccount(t, ctx, storeService, cdc, policies)
 	require.NoError(t, err)
 	groupPolicyTable, groupPolicySeq, err := createGroupPolicies(ctx, storeService, cdc, policies, codectestutil.CodecOptions{}.GetAddressCodec())
 	require.NoError(t, err)
@@ -104,7 +103,7 @@ func createGroupPolicies(ctx sdk.Context, storeService corestore.KVStoreService,
 }
 
 // createOldPolicyAccount re-creates the group policy account using a module account
-func createOldPolicyAccount(t *testing.T, ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Codec, policies []sdk.AccAddress) ([]*authtypes.ModuleAccount, group.AccountKeeper, error) {
+func createOldPolicyAccount(t *testing.T, ctx sdk.Context, storeService corestore.KVStoreService, cdc codec.Codec, policies []sdk.AccAddress) ([]*authtypes.ModuleAccount, group.AccountKeeper, error) {
 	t.Helper()
 	addressCodec := addresscodec.NewBech32Codec(sdk.Bech32MainPrefix)
 	authorityStrAddr, err := addressCodec.BytesToString(authorityAddr)
@@ -117,7 +116,7 @@ func createOldPolicyAccount(t *testing.T, ctx sdk.Context, storeKey storetypes.S
 	// mock account number
 	accNum := uint64(0)
 
-	accountKeeper := authkeeper.NewAccountKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey)), log.NewNopLogger()), cdc, authtypes.ProtoBaseAccount, acctsModKeeper, nil, addressCodec, sdk.Bech32MainPrefix, authorityStrAddr)
+	accountKeeper := authkeeper.NewAccountKeeper(runtime.NewEnvironment(storeService, log.NewNopLogger()), cdc, authtypes.ProtoBaseAccount, acctsModKeeper, nil, addressCodec, sdk.Bech32MainPrefix, authorityStrAddr)
 
 	oldPolicyAccounts := make([]*authtypes.ModuleAccount, len(policies))
 	for i, policyAddr := range policies {

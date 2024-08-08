@@ -9,7 +9,6 @@ import (
 	govtypes "cosmossdk.io/api/cosmos/gov/v1beta1"
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/authz"
 	v2 "cosmossdk.io/x/authz/migrations/v2"
 	authzmodule "cosmossdk.io/x/authz/module"
@@ -29,8 +28,7 @@ func TestMigration(t *testing.T) {
 	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, authzmodule.AppModule{}, bank.AppModule{})
 	cdc := encodingConfig.Codec
 
-	authzKey := storetypes.NewKVStoreKey("authz")
-	ctx := testutil.DefaultContext(authzKey)
+	ctx := testutil.DefaultContext("authz")
 	granter1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	grantee1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	granter2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
@@ -104,7 +102,7 @@ func TestMigration(t *testing.T) {
 		},
 	}
 
-	storeService := runtime.NewKVStoreService(authzKey)
+	storeService := coretesting.KVStoreService(ctx, "authz")
 	store := storeService.OpenKVStore(ctx)
 	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 

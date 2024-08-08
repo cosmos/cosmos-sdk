@@ -6,14 +6,17 @@ import (
 	"strconv"
 
 	"cosmossdk.io/core/log"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
 )
 
-func migrateDelegationsByValidatorIndex(store storetypes.KVStore) error {
-	iterator := storetypes.KVStorePrefixIterator(store, DelegationKey)
+func migrateDelegationsByValidatorIndex(store corestore.KVStore) error {
+	itStore := runtime.KVStoreAdapter(store)
+	iterator := storetypes.KVStorePrefixIterator(itStore, DelegationKey)
 
 	for ; iterator.Valid(); iterator.Next() {
 		key := iterator.Key()
@@ -29,7 +32,7 @@ func migrateDelegationsByValidatorIndex(store storetypes.KVStore) error {
 }
 
 // MigrateStore performs in-place store migrations from v4 to v5.
-func MigrateStore(ctx context.Context, store storetypes.KVStore, cdc codec.BinaryCodec, logger log.Logger) error {
+func MigrateStore(ctx context.Context, store corestore.KVStore, cdc codec.BinaryCodec, logger log.Logger) error {
 	if err := migrateDelegationsByValidatorIndex(store); err != nil {
 		return err
 	}
@@ -37,12 +40,13 @@ func MigrateStore(ctx context.Context, store storetypes.KVStore, cdc codec.Binar
 }
 
 // migrateHistoricalInfoKeys migrate HistoricalInfo keys to binary format
-func migrateHistoricalInfoKeys(store storetypes.KVStore, logger log.Logger) error {
+func migrateHistoricalInfoKeys(store corestore.KVStore, logger log.Logger) error {
 	// old key is of format:
 	// prefix (0x50) || heightBytes (string representation of height in 10 base)
 	// new key is of format:
 	// prefix (0x50) || heightBytes (byte array representation using big-endian byte order)
-	oldStore := prefix.NewStore(store, HistoricalInfoKey)
+	itStore := runtime.KVStoreAdapter(store)
+	oldStore := prefix.NewStore(itStore, HistoricalInfoKey)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer logDeferred(logger, func() error { return oldStoreIter.Close() })

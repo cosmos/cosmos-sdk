@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	coretesting "cosmossdk.io/core/testing"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/distribution"
 	v4 "cosmossdk.io/x/distribution/migrations/v4"
 
@@ -20,9 +19,8 @@ import (
 
 func TestMigration(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{}).Codec
-	storeKey := storetypes.NewKVStoreKey("distribution")
-	storeService := runtime.NewKVStoreService(storeKey)
-	ctx := testutil.DefaultContext(storeKey)
+	ctx := testutil.DefaultContext("distribution")
+	storeService := coretesting.KVStoreService(ctx, "distribution")
 
 	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 

@@ -16,7 +16,7 @@ const (
 func BenchmarkContext_KVStore(b *testing.B) {
 	key := types.NewKVStoreKey(b.Name() + tcc)
 
-	ctx := testutil.DefaultContext(key)
+	ctx := testutil.DefaultContext(key.Name())
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -27,7 +27,7 @@ func BenchmarkContext_KVStore(b *testing.B) {
 func BenchmarkContext_CacheContext(b *testing.B) {
 	key := types.NewKVStoreKey(b.Name() + tcc)
 
-	ctx := testutil.DefaultContext(key)
+	ctx := testutil.DefaultContext(key.Name())
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

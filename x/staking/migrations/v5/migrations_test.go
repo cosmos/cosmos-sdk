@@ -7,9 +7,11 @@ import (
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -19,6 +21,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,9 +29,9 @@ import (
 )
 
 func TestHistoricalKeysMigration(t *testing.T) {
-	storeKey := storetypes.NewKVStoreKey("staking")
-	ctx := testutil.DefaultContext(storeKey)
-	store := ctx.KVStore(storeKey)
+	ctx := testutil.DefaultContext("staking")
+	storeService := coretesting.KVStoreService(ctx, "staking")
+	store := storeService.OpenKVStore(ctx)
 	logger := coretesting.NewNopLogger()
 
 	type testCase struct {
@@ -69,9 +72,14 @@ func TestHistoricalKeysMigration(t *testing.T) {
 
 	// check results
 	for _, tc := range testCases {
-		require.Nilf(t, store.Get(tc.oldKey), "old key should be deleted, seed: %d", seed)
-		require.NotNilf(t, store.Get(tc.newKey), "new key should be created, seed: %d", seed)
-		require.Equalf(t, tc.historicalInfo, store.Get(tc.newKey), "seed: %d", seed)
+		bz, err := store.Get(tc.oldKey)
+		require.NoError(t, err)
+		require.Nilf(t, bz, "old key should be deleted, seed: %d", seed)
+
+		bz, err = store.Get(tc.newKey)
+		require.NoError(t, err)
+		require.NotNilf(t, bz, "new key should be created, seed: %d", seed)
+		require.Equalf(t, tc.historicalInfo, bz, "seed: %d", seed)
 	}
 }
 
@@ -82,9 +90,10 @@ func createHistoricalInfo(height int64, chainID string) *stakingtypes.Historical
 func TestDelegationsByValidatorMigrations(t *testing.T) {
 	codecOpts := codectestutil.CodecOptions{}
 	cdc := moduletestutil.MakeTestEncodingConfig(codecOpts, staking.AppModule{}).Codec
-	storeKey := storetypes.NewKVStoreKey(v5.ModuleName)
-	ctx := testutil.DefaultContext(storeKey)
-	store := ctx.KVStore(storeKey)
+
+	ctx := testutil.DefaultContext(v5.ModuleName)
+	storeService := coretesting.KVStoreService(ctx, v5.ModuleName)
+	store := storeService.OpenKVStore(ctx)
 	logger := coretesting.NewNopLogger()
 
 	accAddrs := sims.CreateIncrementalAccounts(11)
@@ -103,23 +112,22 @@ func TestDelegationsByValidatorMigrations(t *testing.T) {
 	}
 
 	// before migration the state of delegations by val index should be empty
-	dels := getValDelegations(ctx, cdc, storeKey, valAddrs[0])
+	dels := getValDelegations(ctx, cdc, storeService, valAddrs[0])
 	assert.Len(t, dels, 0)
 
 	err = v5.MigrateStore(ctx, store, cdc, logger)
 	assert.NoError(t, err)
 
 	// after migration the state of delegations by val index should not be empty
-	dels = getValDelegations(ctx, cdc, storeKey, valAddrs[0])
+	dels = getValDelegations(ctx, cdc, storeService, valAddrs[0])
 	assert.Len(t, dels, len(addedDels))
 	assert.Equal(t, addedDels, dels)
 }
 
-func getValDelegations(ctx sdk.Context, cdc codec.Codec, storeKey storetypes.StoreKey, valAddr sdk.ValAddress) []stakingtypes.Delegation {
+func getValDelegations(ctx sdk.Context, cdc codec.Codec, storeService corestore.KVStoreService, valAddr sdk.ValAddress) []stakingtypes.Delegation {
 	var delegations []stakingtypes.Delegation
 
-	store := ctx.KVStore(storeKey)
-	iterator := storetypes.KVStorePrefixIterator(store, v5.GetDelegationsByValPrefixKey(valAddr))
+	iterator := storetypes.KVStorePrefixIterator(runtime.KVStoreAdapter(storeService.OpenKVStore(ctx)), v5.GetDelegationsByValPrefixKey(valAddr))
 	for ; iterator.Valid(); iterator.Next() {
 		var delegation stakingtypes.Delegation
 		valAddr, delAddr, err := v5.ParseDelegationsByValKey(iterator.Key())
@@ -127,7 +135,10 @@ func getValDelegations(ctx sdk.Context, cdc codec.Codec, storeKey storetypes.Sto
 			panic(err)
 		}
 
-		bz := store.Get(v5.GetDelegationKey(delAddr, valAddr))
+		bz, err := storeService.OpenKVStore(ctx).Get(v5.GetDelegationKey(delAddr, valAddr))
+		if err != nil {
+			panic(err)
+		}
 
 		cdc.MustUnmarshal(bz, &delegation)
 

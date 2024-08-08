@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
 	sdkmath "cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 	v2 "cosmossdk.io/x/feegrant/migrations/v2"
 	"cosmossdk.io/x/feegrant/module"
@@ -28,8 +27,7 @@ func TestMigration(t *testing.T) {
 	cdc := encodingConfig.Codec
 	ac := addresscodec.NewBech32Codec("cosmos")
 
-	feegrantKey := storetypes.NewKVStoreKey(v2.ModuleName)
-	ctx := testutil.DefaultContext(feegrantKey)
+	ctx := testutil.DefaultContext(v2.ModuleName)
 	granter1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	grantee1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	granter2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
@@ -70,7 +68,7 @@ func TestMigration(t *testing.T) {
 		},
 	}
 
-	store := ctx.KVStore(feegrantKey)
+	store := coretesting.KVStoreService(ctx, v2.ModuleName).OpenKVStore(ctx)
 	for _, grant := range grants {
 		granterStr, err := ac.BytesToString(grant.granter)
 		require.NoError(t, err)
@@ -89,11 +87,19 @@ func TestMigration(t *testing.T) {
 	}
 
 	ctx = ctx.WithHeaderInfo(header.Info{Time: now.Add(30 * time.Hour)})
-	require.NoError(t, v2.MigrateStore(ctx, runtime.NewEnvironment(runtime.NewKVStoreService(feegrantKey), coretesting.NewNopLogger()), cdc))
-	store = ctx.KVStore(feegrantKey)
+	require.NoError(t, v2.MigrateStore(ctx, runtime.NewEnvironment(coretesting.KVStoreService(ctx, v2.ModuleName), coretesting.NewNopLogger()), cdc))
 
-	require.NotNil(t, store.Get(v2.FeeAllowanceKey(granter1, grantee1)))
-	require.Nil(t, store.Get(v2.FeeAllowanceKey(granter2, grantee2)))
-	require.NotNil(t, store.Get(v2.FeeAllowanceKey(granter1, grantee2)))
-	require.Nil(t, store.Get(v2.FeeAllowanceKey(granter2, grantee1)))
+	s1, err := store.Get(v2.FeeAllowanceKey(granter1, grantee1))
+	require.NoError(t, err)
+	require.NotNil(t, s1)
+	s2, err := store.Get(v2.FeeAllowanceKey(granter2, grantee2))
+	require.NoError(t, err)
+	require.NotNil(t, s2)
+	s3, err := store.Get(v2.FeeAllowanceKey(granter1, grantee2))
+	require.NoError(t, err)
+	require.NotNil(t, s3)
+	s4, err := store.Get(v2.FeeAllowanceKey(granter2, grantee1))
+	require.NoError(t, err)
+	require.NotNil(t, s4)
+
 }

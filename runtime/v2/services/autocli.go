@@ -2,8 +2,8 @@ package services
 
 import (
 	"context"
+	"fmt"
 
-	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 	protobuf "google.golang.org/protobuf/proto"
@@ -13,8 +13,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/core/appmodule"
-
-	"github.com/cosmos/cosmos-sdk/types/module"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 )
 
 // AutoCLIQueryService implements the cosmos.autocli.v1.Query service.
@@ -25,18 +24,20 @@ type AutoCLIQueryService struct {
 }
 
 // NewAutoCLIQueryService returns a AutoCLIQueryService for the provided modules.
-func NewAutoCLIQueryService(appModules map[string]appmodule.AppModule) *AutoCLIQueryService {
-	return &AutoCLIQueryService{
-		moduleOptions: ExtractAutoCLIOptions(appModules),
+func NewAutoCLIQueryService(appModules map[string]appmodulev2.AppModule) (*AutoCLIQueryService, error) {
+	moduleOptions, err := ExtractAutoCLIOptions(appModules)
+	if err != nil {
+		return nil, err
 	}
+
+	return &AutoCLIQueryService{moduleOptions: moduleOptions}, nil
 }
 
 // ExtractAutoCLIOptions extracts autocli ModuleOptions from the provided app modules.
-//
-// Example Usage:
-//
-//	ExtractAutoCLIOptions(ModuleManager.Modules)
-func ExtractAutoCLIOptions(appModules map[string]appmodule.AppModule) map[string]*autocliv1.ModuleOptions {
+// Example Usage: ExtractAutoCLIOptions(ModuleManager.Modules)
+// Note, runtimev2/services.ExtractAutoCLIOptions differs from runtimev1/services.ExtractAutoCLIOptions as
+// it supports only modules implementing fully the core appmodule interface.
+func ExtractAutoCLIOptions(appModules map[string]appmodule.AppModule) (map[string]*autocliv1.ModuleOptions, error) {
 	moduleOptions := map[string]*autocliv1.ModuleOptions{}
 	for modName, mod := range appModules {
 		if autoCliMod, ok := mod.(interface {
@@ -46,41 +47,38 @@ func ExtractAutoCLIOptions(appModules map[string]appmodule.AppModule) map[string
 			continue
 		}
 
-		cfg := &autocliConfigurator{}
+		autoCliRegistrar := &autocliRegistrar{}
 
 		// try to auto-discover options based on the last msg and query
 		// services registered for the module
-		if mod, ok := mod.(module.HasServices); ok {
-			mod.RegisterServices(cfg)
-		}
-
+		// this supports the legacy core/appmodule v1 service registration
 		if mod, ok := mod.(interface {
 			RegisterServices(grpc.ServiceRegistrar) error
 		}); ok {
-			err := mod.RegisterServices(cfg)
+			err := mod.RegisterServices(autoCliRegistrar)
 			if err != nil {
-				panic(err)
+				return nil, err
 			}
 		}
 
-		// check for errors in the configurator
-		if cfg.Error() != nil {
-			panic(cfg.Error())
+		// check for errors in the registrar
+		if err := autoCliRegistrar.Error(); err != nil {
+			return nil, err
 		}
 
 		haveServices := false
 		modOptions := &autocliv1.ModuleOptions{}
-		if cfg.msgServer.serviceName != "" {
+		if autoCliRegistrar.msgServer.serviceName != "" {
 			haveServices = true
 			modOptions.Tx = &autocliv1.ServiceCommandDescriptor{
-				Service: cfg.msgServer.serviceName,
+				Service: autoCliRegistrar.msgServer.serviceName,
 			}
 		}
 
-		if cfg.queryServer.serviceName != "" {
+		if autoCliRegistrar.queryServer.serviceName != "" {
 			haveServices = true
 			modOptions.Query = &autocliv1.ServiceCommandDescriptor{
-				Service: cfg.queryServer.serviceName,
+				Service: autoCliRegistrar.queryServer.serviceName,
 			}
 		}
 
@@ -88,7 +86,7 @@ func ExtractAutoCLIOptions(appModules map[string]appmodule.AppModule) map[string
 			moduleOptions[modName] = modOptions
 		}
 	}
-	return moduleOptions
+	return moduleOptions, nil
 }
 
 func (a AutoCLIQueryService) AppOptions(context.Context, *autocliv1.AppOptionsRequest) (*autocliv1.AppOptionsResponse, error) {
@@ -97,36 +95,29 @@ func (a AutoCLIQueryService) AppOptions(context.Context, *autocliv1.AppOptionsRe
 	}, nil
 }
 
-// autocliConfigurator allows us to call RegisterServices and introspect the services
-type autocliConfigurator struct {
+var _ grpc.ServiceRegistrar = (*autocliRegistrar)(nil)
+
+// autocliRegistrar allows us to call RegisterServices and introspect the services
+type autocliRegistrar struct {
 	msgServer     autocliServiceRegistrar
 	queryServer   autocliServiceRegistrar
 	registryCache *protoregistry.Files
 	err           error
 }
 
-var _ module.Configurator = &autocliConfigurator{} // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
-
-func (a *autocliConfigurator) MsgServer() gogogrpc.Server { return &a.msgServer }
-
-func (a *autocliConfigurator) QueryServer() gogogrpc.Server { return &a.queryServer }
-
-func (a *autocliConfigurator) RegisterMigration(string, uint64, module.MigrationHandler) error {
-	return nil
-}
-
-func (a *autocliConfigurator) Register(string, uint64, appmodule.MigrationHandler) error {
-	return nil
-}
-
-func (a *autocliConfigurator) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
+func (a *autocliRegistrar) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
 	if a.registryCache == nil {
 		a.registryCache, a.err = proto.MergedRegistry()
+		if a.err != nil {
+			a.err = fmt.Errorf("failed to build registry cache: %w", a.err)
+			return
+		}
 	}
 
-	desc, err := a.registryCache.FindDescriptorByName(protoreflect.FullName(sd.ServiceName))
+	fullName := protoreflect.FullName(sd.ServiceName)
+	desc, err := a.registryCache.FindDescriptorByName(fullName)
 	if err != nil {
-		a.err = err
+		a.err = fmt.Errorf("failed to find descriptor for %q: %w", fullName, err)
 		return
 	}
 
@@ -136,7 +127,10 @@ func (a *autocliConfigurator) RegisterService(sd *grpc.ServiceDesc, ss interface
 		a.queryServer.RegisterService(sd, ss)
 	}
 }
-func (a *autocliConfigurator) Error() error { return nil }
+
+func (a *autocliRegistrar) Error() error {
+	return a.err
+}
 
 // autocliServiceRegistrar is used to capture the service name for registered services
 type autocliServiceRegistrar struct {

@@ -58,3 +58,5 @@ cp -r github.com/cosmos/cosmos-sdk/* ./
 rm -rf github.com
 
 go mod tidy
+
+rm -rf api store depinject server/v2/streaming # remove directories that are not needed in release/v0.52.x

@@ -28,6 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 // appModule defines runtime as an AppModule
@@ -239,7 +240,7 @@ func ProvideModuleManager(modules map[string]appmodule.AppModule) *module.Manage
 	return module.NewManagerFromMap(modules)
 }
 
-func ProvideGenesisTxHandler(appBuilder *AppBuilder) baseapp.TxHandler {
+func ProvideGenesisTxHandler(appBuilder *AppBuilder) genutil.TxHandler {
 	return appBuilder.app
 }
 

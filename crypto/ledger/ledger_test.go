@@ -23,7 +23,7 @@ func TestPublicKeyUnsafe(t *testing.T) {
 	checkDefaultPubKey(t, priv)
 }
 
-func checkDefaultPubKey(t *testing.T, priv types.LedgerPrivKey) {
+func checkDefaultPubKey(t *testing.T, priv types.SdkPrivKey) {
 	t.Helper()
 	require.NotNil(t, priv)
 	expectedPkStr := "PubKeySecp256k1{034FEF9CD7C4C63588D3B03FEB5281B9D232CBA34D6F3D71AEE59211FFBFE1FE87}"
@@ -52,7 +52,7 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 
 	const numIters = 10
 
-	privKeys := make([]types.LedgerPrivKey, numIters)
+	privKeys := make([]types.SdkPrivKey, numIters)
 
 	// Check with device
 	for i := uint32(0); i < 10; i++ {
@@ -131,7 +131,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 
 	const numIters = 10
 
-	privKeys := make([]types.LedgerPrivKey, numIters)
+	privKeys := make([]types.SdkPrivKey, numIters)
 
 	// Check with device
 	for i := 0; i < len(expectedAddrs); i++ {

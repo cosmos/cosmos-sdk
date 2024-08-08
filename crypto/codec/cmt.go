@@ -10,12 +10,12 @@ import (
 	bls12_381 "github.com/cosmos/cosmos-sdk/crypto/keys/bls12_381"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // FromCmtProtoPublicKey converts a CMT's cmtprotocrypto.PublicKey into our own PubKey.
-func FromCmtProtoPublicKey(protoPk cmtprotocrypto.PublicKey) (cryptotypes.PubKey, error) {
+func FromCmtProtoPublicKey(protoPk cmtprotocrypto.PublicKey) (sdkcrypto.PubKey, error) {
 	switch protoPk := protoPk.Sum.(type) {
 	case *cmtprotocrypto.PublicKey_Ed25519:
 		return &ed25519.PubKey{
@@ -35,7 +35,7 @@ func FromCmtProtoPublicKey(protoPk cmtprotocrypto.PublicKey) (cryptotypes.PubKey
 }
 
 // ToCmtProtoPublicKey converts our own PubKey to Cmt's cmtprotocrypto.PublicKey.
-func ToCmtProtoPublicKey(pk cryptotypes.PubKey) (cmtprotocrypto.PublicKey, error) {
+func ToCmtProtoPublicKey(pk sdkcrypto.PubKey) (cmtprotocrypto.PublicKey, error) {
 	switch pk := pk.(type) {
 	case *ed25519.PubKey:
 		return cmtprotocrypto.PublicKey{
@@ -61,7 +61,7 @@ func ToCmtProtoPublicKey(pk cryptotypes.PubKey) (cmtprotocrypto.PublicKey, error
 }
 
 // FromCmtPubKeyInterface converts CMT's cmtcrypto.PubKey to our own PubKey.
-func FromCmtPubKeyInterface(tmPk cmtcrypto.PubKey) (cryptotypes.PubKey, error) {
+func FromCmtPubKeyInterface(tmPk cmtcrypto.PubKey) (sdkcrypto.PubKey, error) {
 	tmProtoPk, err := encoding.PubKeyToProto(tmPk)
 	if err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func FromCmtPubKeyInterface(tmPk cmtcrypto.PubKey) (cryptotypes.PubKey, error) {
 }
 
 // ToCmtPubKeyInterface converts our own PubKey to CMT's cmtcrypto.PubKey.
-func ToCmtPubKeyInterface(pk cryptotypes.PubKey) (cmtcrypto.PubKey, error) {
+func ToCmtPubKeyInterface(pk sdkcrypto.PubKey) (cmtcrypto.PubKey, error) {
 	tmProtoPk, err := ToCmtProtoPublicKey(pk)
 	if err != nil {
 		return nil, err

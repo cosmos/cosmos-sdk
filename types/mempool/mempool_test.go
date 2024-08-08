@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"testing"
 
+	cosmoscrypto "github.com/cosmos/crypto/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -43,7 +44,7 @@ func (t testPubKey) Bytes() []byte { panic("not implemented") }
 
 func (t testPubKey) VerifySignature(msg, sig []byte) bool { panic("not implemented") }
 
-func (t testPubKey) Equals(key cryptotypes.PubKey) bool { panic("not implemented") }
+func (t testPubKey) Equals(key cosmoscrypto.PubKey) bool { panic("not implemented") }
 
 func (t testPubKey) Type() string { panic("not implemented") }
 

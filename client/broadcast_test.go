@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cometbft/cometbft/mempool"
 	"github.com/cometbft/cometbft/rpc/client/mock"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	cmttypes "github.com/cometbft/cometbft/types"
+	"github.com/cosmos/crypto/hash/sha256"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -50,7 +50,7 @@ func TestBroadcastError(t *testing.T) {
 	}
 
 	txBytes := []byte{0xA, 0xB}
-	txHash := fmt.Sprintf("%X", tmhash.Sum(txBytes))
+	txHash := fmt.Sprintf("%X", sha256.Sum(txBytes))
 
 	for _, mode := range modes {
 		for err, code := range errors {

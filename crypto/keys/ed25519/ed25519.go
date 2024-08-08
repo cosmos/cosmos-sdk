@@ -7,14 +7,15 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/cometbft/cometbft/crypto"
-	"github.com/cometbft/cometbft/crypto/tmhash"
+	"github.com/cosmos/crypto/hash/sha256"
+	"github.com/cosmos/crypto/random"
+	cosmoscrypto "github.com/cosmos/crypto/types"
 	"github.com/hdevalence/ed25519consensus"
 
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -38,7 +39,7 @@ const (
 )
 
 var (
-	_ cryptotypes.PrivKey  = &PrivKey{}
+	_ sdkcrypto.PrivKey    = &PrivKey{}
 	_ codec.AminoMarshaler = &PrivKey{}
 )
 
@@ -61,7 +62,7 @@ func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 // PubKey gets the corresponding public key from the private key.
 //
 // Panics if the private key is not initialized.
-func (privKey *PrivKey) PubKey() cryptotypes.PubKey {
+func (privKey *PrivKey) PubKey() sdkcrypto.PubKey {
 	// If the latter 32 bytes of the privkey are all zero, privkey is not
 	// initialized.
 	initialized := false
@@ -83,7 +84,7 @@ func (privKey *PrivKey) PubKey() cryptotypes.PubKey {
 
 // Equals - you probably don't need to use this.
 // Runs in constant time based on length of the keys.
-func (privKey *PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
+func (privKey *PrivKey) Equals(other sdkcrypto.SdkPrivKey) bool {
 	if privKey.Type() != other.Type() {
 		return false
 	}
@@ -127,7 +128,7 @@ func (privKey *PrivKey) UnmarshalAminoJSON(bz []byte) error {
 // It uses OS randomness in conjunction with the current global random seed
 // in tendermint/libs/common to generate the private key.
 func GenPrivKey() *PrivKey {
-	return genPrivKey(crypto.CReader())
+	return genPrivKey(random.CReader())
 }
 
 // genPrivKey generates a new ed25519 private key using the provided reader.
@@ -148,7 +149,7 @@ func genPrivKey(rand io.Reader) *PrivKey {
 // NOTE: secret should be the output of a KDF like bcrypt,
 // if it's derived from user input.
 func GenPrivKeyFromSecret(secret []byte) *PrivKey {
-	seed := crypto.Sha256(secret) // Not Ripemd160 because we want 32 bytes.
+	seed := sha256.Sum(secret) // Not Ripemd160 because we want 32 bytes.
 
 	return &PrivKey{Key: ed25519.NewKeyFromSeed(seed)}
 }
@@ -156,20 +157,20 @@ func GenPrivKeyFromSecret(secret []byte) *PrivKey {
 //-------------------------------------
 
 var (
-	_ cryptotypes.PubKey   = &PubKey{}
+	_ sdkcrypto.PubKey     = &PubKey{}
 	_ codec.AminoMarshaler = &PubKey{}
 )
 
 // Address is the SHA256-20 of the raw pubkey bytes.
 // It doesn't implement ADR-28 addresses and it must not be used
 // in SDK except in a tendermint validator context.
-func (pubKey *PubKey) Address() crypto.Address {
+func (pubKey *PubKey) Address() cosmoscrypto.Address {
 	if len(pubKey.Key) != PubKeySize {
 		panic("pubkey is incorrect size")
 	}
 	// For ADR-28 compatible address we would need to
 	// return address.Hash(proto.MessageName(pubKey), pubKey.Key)
-	return crypto.Address(tmhash.SumTruncated(pubKey.Key))
+	return cosmoscrypto.Address(sha256.SumTruncated(pubKey.Key))
 }
 
 // Bytes returns the PubKey byte format.
@@ -196,7 +197,7 @@ func (pubKey *PubKey) Type() string {
 	return KeyType
 }
 
-func (pubKey *PubKey) Equals(other cryptotypes.PubKey) bool {
+func (pubKey *PubKey) Equals(other cosmoscrypto.PubKey) bool {
 	if pubKey.Type() != other.Type() {
 		return false
 	}

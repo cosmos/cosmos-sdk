@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/cometbft/cometbft/crypto"
+	"github.com/cosmos/crypto/types"
 
 	"cosmossdk.io/errors"
 
@@ -73,7 +73,7 @@ func Compose(typ string, subAddresses []Addressable) ([]byte, error) {
 func Module(moduleName string, derivationKeys ...[]byte) []byte {
 	mKey := []byte(moduleName)
 	if len(derivationKeys) == 0 { // fallback to the "traditional" ModuleAddress
-		return crypto.AddressHash(mKey)
+		return types.AddressHash(mKey)
 	}
 	// need to append zero byte to avoid potential clash between the module name and the first
 	// derivation key

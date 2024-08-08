@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
+	cosmoscrypto "github.com/cosmos/crypto/types"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
@@ -42,7 +43,7 @@ func (t testPubKey) Bytes() []byte { panic("not implemented") }
 
 func (t testPubKey) VerifySignature(msg, sig []byte) bool { panic("not implemented") }
 
-func (t testPubKey) Equals(key cryptotypes.PubKey) bool { panic("not implemented") }
+func (t testPubKey) Equals(key cosmoscrypto.PubKey) bool { panic("not implemented") }
 
 func (t testPubKey) Type() string { panic("not implemented") }
 
@@ -68,7 +69,7 @@ func (msg *KVStoreTx) Bytes() []byte {
 	panic("implement me")
 }
 
-func (msg *KVStoreTx) Equals(key cryptotypes.PubKey) bool {
+func (msg *KVStoreTx) Equals(key cosmoscrypto.PubKey) bool {
 	panic("implement me")
 }
 

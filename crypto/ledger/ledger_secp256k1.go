@@ -6,17 +6,22 @@ import (
 	"math/big"
 	"os"
 
+	cosmoscrypto "github.com/cosmos/crypto/types"
 	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 	"gitlab.com/yawning/secp256k1-voi/secec"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/crypto/types"
+	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
-// options stores the Ledger Options that can be used to customize Ledger usage
-var options Options
+var (
+	// options stores the Ledger Options that can be used to customize Ledger usage
+	options Options
+
+	_ sdkcrypto.LedgerPrivKeyAminoJSON = PrivKeyLedgerSecp256k1{}
+)
 
 type (
 	// discoverLedgerFn defines a Ledger discovery function that returns a
@@ -26,7 +31,7 @@ type (
 
 	// createPubkeyFn supports returning different public key types that implement
 	// types.PubKey
-	createPubkeyFn func([]byte) types.PubKey
+	createPubkeyFn func([]byte) sdkcrypto.PubKey
 
 	// SECP256K1 reflects an interface a Ledger API must implement for SECP256K1
 	SECP256K1 interface {
@@ -57,14 +62,14 @@ type (
 		// CachedPubKey should be private, but we want to encode it via
 		// go-amino so we can view the address later, even without having the
 		// ledger attached.
-		CachedPubKey types.PubKey
+		CachedPubKey sdkcrypto.PubKey
 		Path         hd.BIP44Params
 	}
 )
 
 // Initialize the default options values for the Cosmos Ledger
 func initOptionsDefault() {
-	options.createPubkey = func(key []byte) types.PubKey {
+	options.createPubkey = func(key []byte) sdkcrypto.PubKey {
 		return &secp256k1.PubKey{Key: key}
 	}
 	options.appName = "Cosmos"
@@ -96,7 +101,7 @@ func SetSkipDERConversion() {
 // This function is marked as unsafe as it will retrieve a pubkey without user verification.
 // It can only be used to verify a pubkey but never to create new accounts/keys. In that case,
 // please refer to NewPrivKeySecp256k1
-func NewPrivKeySecp256k1Unsafe(path hd.BIP44Params) (types.LedgerPrivKeyAminoJSON, error) {
+func NewPrivKeySecp256k1Unsafe(path hd.BIP44Params) (sdkcrypto.LedgerPrivKeyAminoJSON, error) {
 	device, err := getDevice()
 	if err != nil {
 		return nil, err
@@ -113,7 +118,7 @@ func NewPrivKeySecp256k1Unsafe(path hd.BIP44Params) (types.LedgerPrivKeyAminoJSO
 
 // NewPrivKeySecp256k1 will generate a new key and store the public key for later use.
 // The request will require user confirmation and will show account and index in the device
-func NewPrivKeySecp256k1(path hd.BIP44Params, hrp string) (types.LedgerPrivKey, string, error) {
+func NewPrivKeySecp256k1(path hd.BIP44Params, hrp string) (sdkcrypto.LedgerPrivKeyAminoJSON, string, error) {
 	device, err := getDevice()
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to retrieve device: %w", err)
@@ -129,7 +134,7 @@ func NewPrivKeySecp256k1(path hd.BIP44Params, hrp string) (types.LedgerPrivKey, 
 }
 
 // PubKey returns the cached public key.
-func (pkl PrivKeyLedgerSecp256k1) PubKey() types.PubKey {
+func (pkl PrivKeyLedgerSecp256k1) PubKey() sdkcrypto.PubKey {
 	return pkl.CachedPubKey
 }
 
@@ -158,7 +163,7 @@ func (pkl PrivKeyLedgerSecp256k1) SignLedgerAminoJSON(message []byte) ([]byte, e
 }
 
 // ShowAddress triggers a ledger device to show the corresponding address.
-func ShowAddress(path hd.BIP44Params, expectedPubKey types.PubKey, accountAddressPrefix string) error {
+func ShowAddress(path hd.BIP44Params, expectedPubKey cosmoscrypto.PubKey, accountAddressPrefix string) error {
 	device, err := getDevice()
 	if err != nil {
 		return err
@@ -209,7 +214,7 @@ func (pkl PrivKeyLedgerSecp256k1) Bytes() []byte {
 
 // Equals implements the PrivKey interface. It makes sure two private keys
 // refer to the same public key.
-func (pkl PrivKeyLedgerSecp256k1) Equals(other types.LedgerPrivKey) bool {
+func (pkl PrivKeyLedgerSecp256k1) Equals(other sdkcrypto.SdkPrivKey) bool {
 	if otherKey, ok := other.(PrivKeyLedgerSecp256k1); ok {
 		return pkl.CachedPubKey.Equals(otherKey.CachedPubKey)
 	}
@@ -314,7 +319,7 @@ func sign(device SECP256K1, pkl PrivKeyLedgerSecp256k1, msg []byte, p2 byte) ([]
 //
 // since this involves IO, it may return an error, which is not exposed
 // in the PubKey interface, so this function allows better error handling
-func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (types.PubKey, error) {
+func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (sdkcrypto.PubKey, error) {
 	publicKey, err := device.GetPublicKeySECP256K1(path.DerivationPath())
 	if err != nil {
 		return nil, fmt.Errorf("please open the %v app on the Ledger device - error: %w", options.appName, err)
@@ -338,7 +343,7 @@ func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (types.PubKey, error
 //
 // Since this involves IO, it may return an error, which is not exposed
 // in the PubKey interface, so this function allows better error handling.
-func getPubKeyAddrSafe(device SECP256K1, path hd.BIP44Params, hrp string) (types.PubKey, string, error) {
+func getPubKeyAddrSafe(device SECP256K1, path hd.BIP44Params, hrp string) (sdkcrypto.PubKey, string, error) {
 	publicKey, addr, err := device.GetAddressPubKeySECP256K1(path.DerivationPath(), hrp)
 	if err != nil {
 		return nil, "", fmt.Errorf("%w: address rejected for path %s", err, path)

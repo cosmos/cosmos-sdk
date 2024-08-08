@@ -3,11 +3,11 @@ package multisig
 import (
 	"fmt"
 
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cosmoscrypto "github.com/cosmos/crypto/types"
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdkcryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	multisigtypes "github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
@@ -21,7 +21,7 @@ var (
 // Multisig can be constructed with multiple same keys - it will increase the power of
 // the owner of that key (he will still need to add multiple signatures in the right order).
 // Panics if len(pubKeys) < k or 0 >= k.
-func NewLegacyAminoPubKey(threshold int, pubKeys []cryptotypes.PubKey) *LegacyAminoPubKey {
+func NewLegacyAminoPubKey(threshold int, pubKeys []sdkcryptotypes.PubKey) *LegacyAminoPubKey {
 	if threshold <= 0 {
 		panic("threshold k of n multisignature: k <= 0")
 	}
@@ -35,9 +35,9 @@ func NewLegacyAminoPubKey(threshold int, pubKeys []cryptotypes.PubKey) *LegacyAm
 	return &LegacyAminoPubKey{Threshold: uint32(threshold), PubKeys: anyPubKeys}
 }
 
-// Address implements cryptotypes.PubKey Address method
-func (m *LegacyAminoPubKey) Address() cryptotypes.Address {
-	return cmtcrypto.AddressHash(m.Bytes())
+// Address implements cosmoscrypto.PubKey Address method
+func (m *LegacyAminoPubKey) Address() sdkcryptotypes.Address {
+	return cosmoscrypto.AddressHash(m.Bytes())
 }
 
 // Bytes returns the proto encoded version of the LegacyAminoPubKey
@@ -98,7 +98,7 @@ func (m *LegacyAminoPubKey) VerifyMultisignature(getSignBytes multisigtypes.GetS
 	return nil
 }
 
-// VerifySignature implements cryptotypes.PubKey VerifySignature method,
+// VerifySignature implements cosmoscrypto.PubKey VerifySignature method,
 // it panics because it can't handle MultiSignatureData
 // cf. https://github.com/cosmos/cosmos-sdk/issues/7109#issuecomment-686329936
 func (m *LegacyAminoPubKey) VerifySignature(msg, sig []byte) bool {
@@ -106,11 +106,11 @@ func (m *LegacyAminoPubKey) VerifySignature(msg, sig []byte) bool {
 }
 
 // GetPubKeys implements the PubKey.GetPubKeys method
-func (m *LegacyAminoPubKey) GetPubKeys() []cryptotypes.PubKey {
+func (m *LegacyAminoPubKey) GetPubKeys() []sdkcryptotypes.PubKey {
 	if m != nil {
-		pubKeys := make([]cryptotypes.PubKey, len(m.PubKeys))
+		pubKeys := make([]sdkcryptotypes.PubKey, len(m.PubKeys))
 		for i := 0; i < len(m.PubKeys); i++ {
-			pubKeys[i] = m.PubKeys[i].GetCachedValue().(cryptotypes.PubKey)
+			pubKeys[i] = m.PubKeys[i].GetCachedValue().(sdkcryptotypes.PubKey)
 		}
 		return pubKeys
 	}
@@ -120,7 +120,7 @@ func (m *LegacyAminoPubKey) GetPubKeys() []cryptotypes.PubKey {
 
 // Equals returns true if m and other both have the same number of keys, and
 // all constituent keys are the same, and in the same order.
-func (m *LegacyAminoPubKey) Equals(key cryptotypes.PubKey) bool {
+func (m *LegacyAminoPubKey) Equals(key cosmoscrypto.PubKey) bool {
 	otherKey, ok := key.(multisigtypes.PubKey)
 	if !ok {
 		return false
@@ -152,7 +152,7 @@ func (m *LegacyAminoPubKey) Type() string {
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m *LegacyAminoPubKey) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	for _, any := range m.PubKeys {
-		var pk cryptotypes.PubKey
+		var pk sdkcryptotypes.PubKey
 		err := unpacker.UnpackAny(any, &pk)
 		if err != nil {
 			return err
@@ -161,7 +161,7 @@ func (m *LegacyAminoPubKey) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) 
 	return nil
 }
 
-func packPubKeys(pubKeys []cryptotypes.PubKey) ([]*types.Any, error) {
+func packPubKeys(pubKeys []sdkcryptotypes.PubKey) ([]*types.Any, error) {
 	anyPubKeys := make([]*types.Any, len(pubKeys))
 
 	for i := 0; i < len(pubKeys); i++ {

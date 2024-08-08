@@ -240,7 +240,7 @@ func TestSTF(t *testing.T) {
 		stateNotHas(t, newState, "exec")
 	})
 
-	t.Run("check validate tx with exec mode", func(t *testing.T) {
+	t.Run("test validate tx with exec mode", func(t *testing.T) {
 		// update stf to fail on the validation step
 		s := s.clone()
 		s.doTxValidation = func(ctx context.Context, tx mock.Tx) error {
@@ -253,7 +253,7 @@ func TestSTF(t *testing.T) {
 		res := s.ValidateTx(context.Background(), state, mockTx.GasLimit, mockTx)
 		require.Error(t, res.Error)
 
-		// check validate tx with exec mode as finalize
+		// test validate tx with exec mode as finalize
 		_, _, err := s.validateTx(context.Background(), s.branchFn(state), mockTx.GasLimit,
 			mockTx, transaction.ExecModeFinalize)
 		require.NoError(t, err)

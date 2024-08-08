@@ -5,6 +5,7 @@ import (
 	"cosmossdk.io/x/staking"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmttypes "github.com/cometbft/cometbft/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 )
 
@@ -26,7 +27,18 @@ func (app *SimApp[T]) ExportAppStateAndValidators(forZeroHeight bool, jailAllowe
 		return servertypes.ExportedApp{}, err
 	}
 
-	validators, err := staking.WriteValidators(ctx, app.StakingKeeper)
+	var validators []cmttypes.GenesisValidator
+	_, err = app.RunWithCtx(ctx, func(ctx context.Context) error {
+		validators, err = staking.WriteValidators(ctx, app.StakingKeeper)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return servertypes.ExportedApp{}, err
+	}
+
 	return servertypes.ExportedApp{
 		AppState:        genesis,
 		Validators:      validators,

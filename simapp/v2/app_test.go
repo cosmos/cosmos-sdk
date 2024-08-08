@@ -5,9 +5,16 @@ import (
 	app2 "cosmossdk.io/core/app"
 	"cosmossdk.io/core/comet"
 	context2 "cosmossdk.io/core/context"
+	sdkmath "cosmossdk.io/math"
 	serverv2 "cosmossdk.io/server/v2"
+	authtypes "cosmossdk.io/x/auth/types"
+	banktypes "cosmossdk.io/x/bank/types"
 	"crypto/sha256"
 	"encoding/json"
+	"github.com/cometbft/cometbft/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"testing"
 	"time"
 
@@ -16,6 +23,7 @@ import (
 	"cosmossdk.io/log"
 	comettypes "cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/db"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 )
@@ -29,6 +37,32 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 
 	app := NewSimApp[transaction.Tx](logger, vp)
 	genesis := app.ModuleManager().DefaultGenesis()
+
+	privVal := mock.NewPV()
+	pubKey, err := privVal.GetPubKey()
+	require.NoError(t, err)
+
+	// create validator set with single validator
+	validator := types.NewValidator(pubKey, 1)
+	valSet := types.NewValidatorSet([]*types.Validator{validator})
+
+	// generate genesis account
+	senderPrivKey := secp256k1.GenPrivKey()
+	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	balance := banktypes.Balance{
+		Address: acc.GetAddress().String(),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
+	}
+
+	genesis, err = simtestutil.GenesisStateWithValSet(
+		app.AppCodec(),
+		genesis,
+		valSet,
+		[]authtypes.GenesisAccount{acc},
+		balance,
+	)
+	require.NoError(t, err)
+
 	genesisBytes, err := json.Marshal(genesis)
 	require.NoError(t, err)
 

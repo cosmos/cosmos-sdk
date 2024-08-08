@@ -11,6 +11,6 @@ import (
 type Service interface {
 	// CanInvoke returns an error if the given request cannot be invoked.
 	CanInvoke(ctx context.Context, typeURL string) error
-	// Invoke execute a message or query. It should be used when the called doesn't know the type of the response.
+	// Invoke execute a message or query. The response should be type casted by the caller to the expected response.
 	Invoke(ctx context.Context, req gogoproto.Message) (res gogoproto.Message, err error)
 }

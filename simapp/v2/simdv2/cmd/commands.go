@@ -72,31 +72,28 @@ func initRootCmd[T transaction.Tx](
 
 	// Optionally allow the chain developer to overwrite the cometbft default
 	// app toml config.
-	cometAppTomlCfg := cometbft.DefaultAppTomlConfig()
+	serverCfg := serverv2.DefaultMainServerConfig()
 	// The cometbft server's default minimum gas price is set to "" (empty value) inside
 	// app.toml. If left empty by validators, the node will halt on startup.
 	// However, the chain developer can set a default app.toml value for their
 	// validators here.
 	//
 	// In summary:
-	// - if you leave cometAppTomlCfg.MinGasPrices = "", all validators MUST tweak their
+	// - if you leave serverCfg.MinGasPrices = "", all validators MUST tweak their
 	//   own app.toml config,
-	// - if you set cometAppTomlCfg.MinGasPrices non-empty, validators CAN tweak their
+	// - if you set serverCfg.MinGasPrices non-empty, validators CAN tweak their
 	//   own app.toml to override, or use this default value.
 	//
 	// In simapp, we set the min gas prices to 0.
-	cometAppTomlCfg.MinGasPrices = "0stake"
+	serverCfg.MinGasPrices = "0stake"
 
 	// wire server commands
 	if err = serverv2.AddCommands(
 		rootCmd,
 		newApp,
 		logger,
-		cometbft.New(
-			&genericTxDecoder[T]{txConfig},
-			cometbft.DefaultServerOptions[T](),
-			cometbft.OverwriteDefaultAppTomlConfig(cometAppTomlCfg),
-		),
+		serverCfg,
+		cometbft.New(&genericTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
 		grpc.New[T](),
 		store.New[T](),
 	); err != nil {

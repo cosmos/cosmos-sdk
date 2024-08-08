@@ -348,8 +348,7 @@ func initTestnetFiles[T transaction.Tx](
 		)
 		grpcServer := grpc.New[T](grpc.OverwriteDefaultConfig(grpcConfig))
 		storeServer := store.New[T]()
-		server := serverv2.NewServer(log.NewNopLogger(), cometServer, grpcServer, storeServer)
-		server.OverwriteDefaultConfig(serverCfg)
+		server := serverv2.NewServer(log.NewNopLogger(), serverCfg, cometServer, grpcServer, storeServer)
 		err = server.WriteConfig(filepath.Join(nodeDir, "config"))
 		if err != nil {
 			return err

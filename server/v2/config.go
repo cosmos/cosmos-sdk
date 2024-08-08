@@ -26,8 +26,8 @@ func DefaultMainServerConfig() ServerConfig {
 	return ServerConfig{}
 }
 
-// OverwriteDefaultConfig overwrites main server config with given config
-func (s *Server[T]) OverwriteDefaultConfig(cfg ServerConfig) {
+// SetMainServerConfig sets main server config with given config
+func (s *Server[T]) SetMainServerConfig(cfg ServerConfig) {
 	s.config = cfg
 }
 

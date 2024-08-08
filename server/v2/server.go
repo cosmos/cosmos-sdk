@@ -70,10 +70,12 @@ type Server[T transaction.Tx] struct {
 
 func NewServer[T transaction.Tx](
 	logger log.Logger,
+	config ServerConfig,
 	components ...ServerComponent[T],
 ) *Server[T] {
 	return &Server[T]{
 		logger:     logger,
+		config:     config,
 		components: components,
 	}
 }

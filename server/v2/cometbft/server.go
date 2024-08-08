@@ -130,11 +130,6 @@ func (s *CometBFTServer[T]) Name() string {
 }
 
 func (s *CometBFTServer[T]) Start(ctx context.Context) error {
-	// validate cometbft config
-	if err := s.config.ValidateBasic(); err != nil {
-		return err
-	}
-
 	wrappedLogger := cometlog.CometLoggerWrapper{Logger: s.logger}
 	if s.config.AppTomlConfig.Standalone {
 		svr, err := abciserver.NewServer(s.config.AppTomlConfig.Address, s.config.AppTomlConfig.Transport, s.Consensus)
@@ -223,7 +218,6 @@ func (s *CometBFTServer[T]) StartCmdFlags() *pflag.FlagSet {
 	flags.String(FlagTransport, "socket", "Transport protocol: socket, grpc")
 	flags.Uint64(FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node")
 	flags.Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")
-	flags.String(FlagMinGasPrices, "", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)")
 	flags.Bool(FlagTrace, false, "Provide full stack traces for errors in ABCI Log")
 	flags.Bool(Standalone, false, "Run app without CometBFT")
 

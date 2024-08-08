@@ -35,7 +35,7 @@ type v2KeyChangesMap map[string][]string
 
 // list all the keys which are need to be modified in v2
 var v2KeyChanges = v2KeyChangesMap{
-	"minimum-gas-prices": []string{"comet.minimum-gas-prices"},
+	"minimum-gas-prices": []string{"server.minimum-gas-prices"},
 	"min-retain-blocks":  []string{"comet.min-retain-blocks"},
 	"index-events":       []string{"comet.index-events"},
 	"halt-height":        []string{"comet.halt-height"},

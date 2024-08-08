@@ -522,9 +522,14 @@ func (c *Consensus[T]) VerifyVoteExtension(
 
 	// Note: we verify votes extensions on VoteExtensionsEnableHeight+1. Check
 	// comment in ExtendVote and ValidateVoteExtensions for more details.
-	extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
+	// Since Abci was deprecated, should check both Feature & Abci
+	extsEnabled := cp.Feature.VoteExtensionsEnableHeight != nil && req.Height >= cp.Feature.VoteExtensionsEnableHeight.Value && cp.Feature.VoteExtensionsEnableHeight.Value != 0
 	if !extsEnabled {
-		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to VerifyVoteExtension at height %d", req.Height)
+		// check abci params
+		extsEnabled = cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
+		if !extsEnabled {
+			return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to VerifyVoteExtension at height %d", req.Height)
+		}
 	}
 
 	if c.verifyVoteExt == nil {
@@ -558,13 +563,18 @@ func (c *Consensus[T]) ExtendVote(ctx context.Context, req *abciproto.ExtendVote
 	// greater than VoteExtensionsEnableHeight. This defers from the check done
 	// in ValidateVoteExtensions and PrepareProposal in which we'll check for
 	// vote extensions on VoteExtensionsEnableHeight+1.
-	extsEnabled := cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
+	// Since Abci was deprecated, should check both Feature & Abci
+	extsEnabled := cp.Feature.VoteExtensionsEnableHeight != nil && req.Height >= cp.Feature.VoteExtensionsEnableHeight.Value && cp.Feature.VoteExtensionsEnableHeight.Value != 0
 	if !extsEnabled {
-		return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to ExtendVote at height %d", req.Height)
+		// check abci params
+		extsEnabled = cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
+		if !extsEnabled {
+			return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to ExtendVote at height %d", req.Height)
+		}
 	}
 
-	if c.verifyVoteExt == nil {
-		return nil, errors.New("vote extensions are enabled but no verify function was set")
+	if c.extendVote == nil {
+		return nil, errors.New("vote extensions are enabled but no extend function was set")
 	}
 
 	_, latestStore, err := c.store.StateLatest()
@@ -574,7 +584,7 @@ func (c *Consensus[T]) ExtendVote(ctx context.Context, req *abciproto.ExtendVote
 
 	resp, err := c.extendVote(ctx, latestStore, req)
 	if err != nil {
-		c.logger.Error("failed to verify vote extension", "height", req.Height, "err", err)
+		c.logger.Error("failed to extend vote", "height", req.Height, "err", err)
 		return &abciproto.ExtendVoteResponse{}, nil
 	}
 

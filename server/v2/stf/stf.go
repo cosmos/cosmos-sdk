@@ -200,7 +200,7 @@ func (s STF[T]) deliverTx(
 		}
 	}
 
-	validateGas, validationEvents, err := s.validateTx(ctx, state, gasLimit, tx)
+	validateGas, validationEvents, err := s.validateTx(ctx, state, gasLimit, tx, execMode)
 	if err != nil {
 		return appmanager.TxResult{
 			Error: err,
@@ -224,13 +224,14 @@ func (s STF[T]) validateTx(
 	state store.WriterMap,
 	gasLimit uint64,
 	tx T,
+	execMode transaction.ExecMode,
 ) (gasUsed uint64, events []event.Event, err error) {
 	validateState := s.branchFn(state)
 	hi, err := s.getHeaderInfo(validateState)
 	if err != nil {
 		return 0, nil, err
 	}
-	validateCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, validateState, transaction.ExecModeCheck)
+	validateCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, validateState, execMode)
 	validateCtx.setHeaderInfo(hi)
 	validateCtx.setGasLimit(gasLimit)
 	err = s.doTxValidation(validateCtx, tx)
@@ -447,7 +448,7 @@ func (s STF[T]) ValidateTx(
 	tx T,
 ) appmanager.TxResult {
 	validationState := s.branchFn(state)
-	gasUsed, events, err := s.validateTx(ctx, validationState, gasLimit, tx)
+	gasUsed, events, err := s.validateTx(ctx, validationState, gasLimit, tx, transaction.ExecModeCheck)
 	return appmanager.TxResult{
 		Events:  events,
 		GasUsed: gasUsed,

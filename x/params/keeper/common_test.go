@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
@@ -19,7 +19,7 @@ func testComponents() (*codec.LegacyAmino, sdk.Context, storetypes.StoreKey, sto
 	legacyAmino := createTestCodec()
 	mkey := storetypes.NewKVStoreKey("test")
 	tkey := storetypes.NewTransientStoreKey("transient_test")
-	ctx := sdktestutil.DefaultContext(mkey)
+	ctx := testutil.DefaultContextWithKeys(map[string]*storetypes.KVStoreKey{mkey.Name(): mkey}, map[string]*storetypes.TransientStoreKey{tkey.Name(): tkey}, map[string]*storetypes.MemoryStoreKey{})
 	keeper := paramskeeper.NewKeeper(cdc, legacyAmino, mkey, tkey)
 
 	return legacyAmino, ctx, mkey, tkey, keeper

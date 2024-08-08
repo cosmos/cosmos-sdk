@@ -55,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * Add `PreMsghandler`and `PostMsgHandler` for pre and post message hooks
     * Add `MsgHandler` as an alternative to grpc handlers
     * Provide separate `MigrationRegistrar` instead of grouping with `RegisterServices`
+* [#21222](https://github.com/cosmos/cosmos-sdk/pull/21222) Make `Iterator` a type alias so that `KVStore` is structurally typed.
 
 ### API Breaking Changes
 

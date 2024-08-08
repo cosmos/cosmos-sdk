@@ -820,12 +820,11 @@ func (k Keeper) doTallyAndUpdate(ctx context.Context, p *group.Proposal, groupIn
 }
 
 // Exec executes the messages from a proposal.
-func (k Keeper) Exec(goCtx context.Context, msg *group.MsgExec) (*group.MsgExecResponse, error) {
+func (k Keeper) Exec(ctx context.Context, msg *group.MsgExec) (*group.MsgExecResponse, error) {
 	if msg.ProposalId == 0 {
 		return nil, errorsmod.Wrap(errors.ErrEmpty, "proposal id")
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	proposal, err := k.getProposal(ctx, msg.ProposalId)
 	if err != nil {
 		return nil, err

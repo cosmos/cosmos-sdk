@@ -48,4 +48,11 @@ type StateTransitionFunction[T transaction.Tx] interface {
 		state store.ReaderMap,
 		closure func(ctx context.Context) error,
 	) (store.WriterMap, error)
+
+	DeliverSims(
+		ctx context.Context,
+		block *appmanager.BlockRequest[T],
+		state store.ReaderMap,
+		simsBuilder func(ctx context.Context) (T, bool),
+	) (blockResult *appmanager.BlockResponse, newState store.WriterMap, err error)
 }

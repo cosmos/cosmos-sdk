@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/core v0.12.1-0.20240802064046-23fac2f1b8ab // main
 	cosmossdk.io/core/testing v0.0.0-20240802064046-23fac2f1b8ab // indirect; main
 	cosmossdk.io/depinject v1.0.0
-	cosmossdk.io/log v1.3.1
+	cosmossdk.io/log v1.4.0
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/runtime/v2 v2.0.0-20240801110532-c55e8d71014b // main
 	cosmossdk.io/server/v2 v2.0.0-20240806152830-8fb47b368cd4 // main
@@ -222,7 +222,7 @@ require (
 	golang.org/x/net v0.27.0 // indirect
 	golang.org/x/oauth2 v0.21.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
+	golang.org/x/sys v0.23.0 // indirect
 	golang.org/x/term v0.22.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/time v0.5.0 // indirect

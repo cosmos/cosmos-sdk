@@ -4,7 +4,7 @@ go 1.22.2
 
 require (
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // main
-	cosmossdk.io/core v0.12.1-0.20240808073009-7040177316e3 // main
+	cosmossdk.io/core v0.12.1-0.20240808112341-8400d9b4263f // main
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91

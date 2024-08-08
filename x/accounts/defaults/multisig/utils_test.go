@@ -163,20 +163,19 @@ func (a addressCodec) BytesToString(bz []byte) (string, error)   { return string
 func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 	t.Helper()
 	return accountstd.NewMockContext(
-		0, []byte("mock_multisig_account"), []byte("sender"), TestFunds, func(ctx context.Context, sender []byte, msg, msgResp ProtoMsg) error {
-			return nil
-		}, func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error) {
+		0, []byte("mock_multisig_account"), []byte("sender"), TestFunds, func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error) {
 			return nil, nil
-		}, func(ctx context.Context, req, resp ProtoMsg) error {
+		}, func(ctx context.Context, req ProtoMsg) (ProtoMsg, error) {
+			var resp ProtoMsg
 			_, ok := req.(*banktypes.QueryBalanceRequest)
 			require.True(t, ok)
-			gogoproto.Merge(resp.(gogoproto.Message), &banktypes.QueryBalanceResponse{
+			gogoproto.Merge(resp, &banktypes.QueryBalanceResponse{
 				Balance: &sdk.Coin{
 					Denom:  "test",
 					Amount: math.NewInt(5),
 				},
 			})
-			return nil
+			return resp, nil
 		},
 	)
 }

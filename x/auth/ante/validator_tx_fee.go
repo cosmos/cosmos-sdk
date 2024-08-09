@@ -4,7 +4,6 @@ import (
 	"context"
 	"math"
 
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
@@ -15,22 +14,30 @@ import (
 
 // checkTxFeeWithValidatorMinGasPrices implements the default fee logic, where the minimum price per
 // unit of gas is fixed and set by each validator, can the tx priority is computed from the gas price.
-func checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error) {
-	feeTx, ok := tx.(sdk.FeeTx)
-	if !ok {
-		return nil, 0, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
-	}
-
-	feeCoins := feeTx.GetFee()
-	gas := feeTx.GetGas()
+func (dfd DeductFeeDecorator) checkTxFeeWithValidatorMinGasPrices(ctx context.Context, _ sdk.Tx) (sdk.Coins, int64, error) {
+	globalFields := ctx.Value(globalFieldsKey).(dfdGlobalFields)
+	feeCoins := globalFields.feeTx.GetFee()
+	gas := globalFields.feeTx.GetGas()
 
 	// Ensure that the provided fees meet a minimum threshold for the validator,
 	// if this is a CheckTx. This is only for local mempool purposes, and thus
 	// is only ran on check tx.
-	if ctx.ExecMode() == sdk.ExecModeCheck { // NOTE: using environment here breaks the API of fee logic, an alternative must be found for server/v2. ref: https://github.com/cosmos/cosmos-sdk/issues/19640
-		minGasPrices := ctx.MinGasPrices()
-		if err := validateMinGasPricesWithFee(feeCoins, gas, minGasPrices); err != nil {
-			return nil, 0, err
+	if globalFields.execMode == transaction.ExecModeCheck {
+		minGasPrices := globalFields.minGasPrices
+		if !minGasPrices.IsZero() {
+			requiredFees := make(sdk.Coins, len(minGasPrices))
+
+			// Determine the required fees by multiplying each required minimum gas
+			// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
+			glDec := sdkmath.LegacyNewDec(int64(gas))
+			for i, gp := range minGasPrices {
+				fee := gp.Amount.Mul(glDec)
+				requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
+			}
+
+			if !feeCoins.IsAnyGTE(requiredFees) {
+				return nil, 0, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s required: %s", feeCoins, requiredFees)
+			}
 		}
 	}
 
@@ -56,47 +63,4 @@ func getTxPriority(fee sdk.Coins, gas int64) int64 {
 	}
 
 	return priority
-}
-
-// validateMinGasPricesWithFee ensure that the provided fees meet a minimum threshold for the validator,
-// if this is a CheckTx. This is only for local mempool purposes, and thus
-// is only ran on check tx.
-func validateMinGasPricesWithFee(feeCoins sdk.Coins, gas uint64, minGasPrices sdk.DecCoins) error {
-	if !minGasPrices.IsZero() {
-		requiredFees := make(sdk.Coins, len(minGasPrices))
-
-		// Determine the required fees by multiplying each required minimum gas
-		// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
-		glDec := sdkmath.LegacyNewDec(int64(gas))
-		for i, gp := range minGasPrices {
-			fee := gp.Amount.Mul(glDec)
-			requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
-		}
-
-		if !feeCoins.IsAnyGTE(requiredFees) {
-			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s required: %s", feeCoins, requiredFees)
-		}
-	}
-
-	return nil
-}
-
-// CheckTxFeeWithMinGasPricesV2 calculates the default fee logic, where the minimum price per
-// unit of gas is fixed and set by each validator and validates it with tx fees
-func CheckTxFeeWithMinGasPricesV2(ctx context.Context, env appmodule.Environment, tx sdk.Tx, minGasPrices sdk.DecCoins) error {
-	// validate only on check tx
-	txService := env.TransactionService
-	if txService.ExecMode(ctx) != transaction.ExecModeCheck {
-		return nil
-	}
-
-	feeTx, ok := tx.(sdk.FeeTx)
-	if !ok {
-		return nil // don't force users to implement fee tx
-	}
-
-	feeCoins := feeTx.GetFee()
-	gas := feeTx.GetGas()
-
-	return validateMinGasPricesWithFee(feeCoins, gas, minGasPrices)
 }

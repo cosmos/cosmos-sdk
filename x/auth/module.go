@@ -45,7 +45,10 @@ type AppModule struct {
 	randGenAccountsFn types.RandomGenesisAccountsFn
 	accountsModKeeper types.AccountsModKeeper
 	cdc               codec.Codec
-	minGasPrices      sdk.DecCoins
+
+	// v2 tx validator
+	txValidatorOptions TxValidatorOptions
+	minGasPrices       sdk.DecCoins
 }
 
 // IsAppModule implements the appmodule.AppModule interface.
@@ -151,6 +154,16 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 	return am.cdc.MarshalJSON(gs)
 }
 
+// SetTxValidatorOptions sets txValidationOptions of AppModule
+func (am *AppModule) SetTxValidatorOptions(options TxValidatorOptions) {
+	am.txValidatorOptions = options
+}
+
+// TxValidatorOptions sets txValidationOptions of AppModule
+func (am AppModule) TxValidatorOptions() TxValidatorOptions {
+	return am.txValidatorOptions
+}
+
 // SetMinGasPrices sets minimum gas prices in AppModule
 func (am *AppModule) SetMinGasPrices(minGasPrices sdk.DecCoins) {
 	am.minGasPrices = minGasPrices
@@ -159,23 +172,24 @@ func (am *AppModule) SetMinGasPrices(minGasPrices sdk.DecCoins) {
 // TxValidator implements appmodulev2.HasTxValidator.
 // It replaces auth ante handlers for server/v2
 func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
-	sdkTx, ok := tx.(sdk.Tx)
-	if !ok {
-		return fmt.Errorf("invalid tx type %T, expected sdk.Tx", tx)
-	}
-
-	// check tx fee with validator's minimum-gas-price config
-	if err := ante.CheckTxFeeWithMinGasPricesV2(ctx, am.accountKeeper.GetEnvironment(),
-		sdkTx, am.minGasPrices); err != nil {
-		return err
-	}
-
 	validators := []appmodulev2.TxValidator[sdk.Tx]{
 		ante.NewValidateBasicDecorator(am.accountKeeper.GetEnvironment()),
 		ante.NewTxTimeoutHeightDecorator(am.accountKeeper.GetEnvironment()),
 		ante.NewValidateMemoDecorator(am.accountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(am.accountKeeper),
 		ante.NewValidateSigCountDecorator(am.accountKeeper),
+	}
+
+	if am.txValidatorOptions.Validate() == nil {
+		dfd := ante.NewDeductFeeDecorator(am.accountKeeper, am.txValidatorOptions.BankKeeper,
+			am.txValidatorOptions.FeegrantKeeper, nil)
+		dfd.SetMinGasPrices(am.minGasPrices)
+		validators = append(validators, dfd)
+	}
+
+	sdkTx, ok := tx.(sdk.Tx)
+	if !ok {
+		return fmt.Errorf("invalid tx type %T, expected sdk.Tx", tx)
 	}
 
 	for _, validator := range validators {

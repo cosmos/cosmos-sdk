@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
+	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/keeper"
 	"cosmossdk.io/x/auth/simulation"
 	"cosmossdk.io/x/auth/types"
@@ -45,6 +46,10 @@ type ModuleInputs struct {
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
 	AccountI                func() sdk.AccountI           `optional:"true"`
 	Viper                   *viper.Viper                  `optional:"true"` // server v2
+	// BankKeeper is the expected bank keeper to be passed to TxValidator
+	BankKeeper types.BankKeeper `optional:"true"` // server v2
+	// FeegrantKeeper is the expected feegrant keeper to be passed to TxValidator
+	FeegrantKeeper ante.FeegrantKeeper `optional:"true"` // server v2
 }
 
 type ModuleOutputs struct {
@@ -89,6 +94,20 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 			panic(fmt.Sprintf("invalid minimum gas prices: %v", err))
 		}
 		m.SetMinGasPrices(minGasPrices)
+	}
+
+	// check bank keeper and add it to tx validator options if found
+	if in.BankKeeper != nil {
+		options := m.TxValidatorOptions()
+		options.BankKeeper = in.BankKeeper
+		m.SetTxValidatorOptions(options)
+	}
+
+	// check feegrant keeper and add it to tx validator options if found
+	if in.FeegrantKeeper != nil {
+		options := m.TxValidatorOptions()
+		options.FeegrantKeeper = in.FeegrantKeeper
+		m.SetTxValidatorOptions(options)
 	}
 
 	return ModuleOutputs{AccountKeeper: k, Module: m}

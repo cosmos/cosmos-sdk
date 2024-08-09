@@ -8,11 +8,11 @@ import (
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/cosmos/gogoproto/proto"
 
-	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 	appmanager "cosmossdk.io/core/app"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/cometbft/mempool"
+	consensustypes "cosmossdk.io/x/consensus/types"
 )
 
 type AppManager[T transaction.Tx] interface {
@@ -41,14 +41,14 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 
 		var maxBlockGas uint64
 
-		res, err := app.Query(ctx, 0, &consensusv1.QueryParamsRequest{})
+		res, err := app.Query(ctx, 0, &consensustypes.QueryParamsRequest{})
 		if err != nil {
 			return nil, err
 		}
 
-		paramsResp, ok := res.(*consensusv1.QueryParamsResponse)
+		paramsResp, ok := res.(*consensustypes.QueryParamsResponse)
 		if !ok {
-			return nil, fmt.Errorf("unexpected consensus params response type; expected: %T, got: %T", &consensusv1.QueryParamsResponse{}, res)
+			return nil, fmt.Errorf("unexpected consensus params response type; expected: %T, got: %T", &consensustypes.QueryParamsResponse{}, res)
 		}
 
 		if b := paramsResp.GetParams().Block; b != nil {
@@ -110,19 +110,19 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
 			return nil
 		}
 
-		_, ok := req.(*abci.PrepareProposalRequest)
+		_, ok := req.(*abci.ProcessProposalRequest)
 		if !ok {
 			return fmt.Errorf("invalid request type: %T", req)
 		}
 
-		res, err := app.Query(ctx, 0, &consensusv1.QueryParamsRequest{})
+		res, err := app.Query(ctx, 0, &consensustypes.QueryParamsRequest{})
 		if err != nil {
 			return err
 		}
 
-		paramsResp, ok := res.(*consensusv1.QueryParamsResponse)
+		paramsResp, ok := res.(*consensustypes.QueryParamsResponse)
 		if !ok {
-			return fmt.Errorf("unexpected consensus params response type; expected: %T, got: %T", &consensusv1.QueryParamsResponse{}, res)
+			return fmt.Errorf("unexpected consensus params response type; expected: %T, got: %T", &consensustypes.QueryParamsResponse{}, res)
 		}
 
 		var maxBlockGas uint64

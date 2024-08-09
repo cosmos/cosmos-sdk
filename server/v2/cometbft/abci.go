@@ -315,8 +315,12 @@ func (c *Consensus[T]) PrepareProposal(
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
 
-	decodedTxs := make([]T, len(req.Txs))
-	for i, tx := range req.Txs {
+	if c.prepareProposalHandler == nil {
+		return nil, errors.New("no prepare proposal function was set")
+	}
+
+	var decodedTxs []T
+	for _, tx := range req.Txs {
 		decTx, err := c.txCodec.Decode(tx)
 		if err != nil {
 			// TODO: vote extension meta data as a custom type to avoid possibly accepting invalid txs
@@ -325,7 +329,7 @@ func (c *Consensus[T]) PrepareProposal(
 			continue
 		}
 
-		decodedTxs[i] = decTx
+		decodedTxs = append(decodedTxs, decTx)
 	}
 
 	ciCtx := contextWithCometInfo(ctx, comet.Info{
@@ -356,7 +360,15 @@ func (c *Consensus[T]) ProcessProposal(
 	ctx context.Context,
 	req *abciproto.ProcessProposalRequest,
 ) (*abciproto.ProcessProposalResponse, error) {
-	decodedTxs := make([]T, len(req.Txs))
+	if req.Height < 1 {
+		return nil, errors.New("ProcessProposal called with invalid height")
+	}
+
+	if c.processProposalHandler == nil {
+		return nil, errors.New("no process proposal function was set")
+	}
+
+	var decodedTxs []T
 	for _, tx := range req.Txs {
 		decTx, err := c.txCodec.Decode(tx)
 		if err != nil {

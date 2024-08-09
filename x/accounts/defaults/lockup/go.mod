@@ -10,7 +10,7 @@ require (
 	cosmossdk.io/x/distribution v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk v0.53.0
-	github.com/cosmos/gogoproto v1.5.0
+	github.com/cosmos/gogoproto v1.6.0
 )
 
 require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect

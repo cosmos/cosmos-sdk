@@ -32,7 +32,7 @@ require (
 	github.com/cockroachdb/pebble v1.1.0 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cosmos/gogoproto v1.5.0 // indirect
+	github.com/cosmos/gogoproto v1.6.0 // indirect
 	github.com/cucumber/gherkin/go/v27 v27.0.0 // indirect
 	github.com/cucumber/messages/go/v22 v22.0.0 // indirect
 	github.com/cucumber/tag-expressions/go/v6 v6.1.0 // indirect

@@ -8,17 +8,19 @@ import (
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/schema"
+	"cosmossdk.io/schema/view"
 )
 
 // Module is a collection of object collections corresponding to a module's schema for testing purposes.
 type Module struct {
+	name              string
 	moduleSchema      schema.ModuleSchema
 	objectCollections *btree.Map[string, *ObjectCollection]
 	updateGen         *rapid.Generator[schema.ObjectUpdate]
 }
 
 // NewModule creates a new Module for the given module schema.
-func NewModule(moduleSchema schema.ModuleSchema, options Options) *Module {
+func NewModule(name string, moduleSchema schema.ModuleSchema, options Options) *Module {
 	objectCollections := &btree.Map[string, *ObjectCollection]{}
 	var objectTypeNames []string
 
@@ -39,6 +41,7 @@ func NewModule(moduleSchema schema.ModuleSchema, options Options) *Module {
 	})
 
 	return &Module{
+		name:              name,
 		moduleSchema:      moduleSchema,
 		updateGen:         updateGen,
 		objectCollections: objectCollections,
@@ -61,24 +64,33 @@ func (o *Module) UpdateGen() *rapid.Generator[schema.ObjectUpdate] {
 	return o.updateGen
 }
 
+// ModuleName returns the name of the module.
+func (o *Module) ModuleName() string {
+	return o.name
+}
+
 // ModuleSchema returns the module schema for the module.
 func (o *Module) ModuleSchema() schema.ModuleSchema {
 	return o.moduleSchema
 }
 
 // GetObjectCollection returns the object collection for the given object type.
-func (o *Module) GetObjectCollection(objectType string) (ObjectCollectionState, bool) {
-	return o.objectCollections.Get(objectType)
+func (o *Module) GetObjectCollection(objectType string) (view.ObjectCollection, error) {
+	obj, ok := o.objectCollections.Get(objectType)
+	if !ok {
+		return nil, nil
+	}
+	return obj, nil
 }
 
 // ObjectCollections iterates over all object collections in the module.
-func (o *Module) ObjectCollections(f func(value ObjectCollectionState) bool) {
+func (o *Module) ObjectCollections(f func(value view.ObjectCollection, err error) bool) {
 	o.objectCollections.Scan(func(key string, value *ObjectCollection) bool {
-		return f(value)
+		return f(value, nil)
 	})
 }
 
 // NumObjectCollections returns the number of object collections in the module.
-func (o *Module) NumObjectCollections() int {
-	return o.objectCollections.Len()
+func (o *Module) NumObjectCollections() (int, error) {
+	return o.objectCollections.Len(), nil
 }

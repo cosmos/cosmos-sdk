@@ -31,37 +31,17 @@ func (msg MsgUpdateParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, e
 			PubKeyTypes: msg.Validator.PubKeyTypes,
 		},
 		Version:   cmttypes.DefaultConsensusParams().ToProto().Version, // Version is stored in x/upgrade
-		Feature:   &cmtproto.FeatureParams{},
-		Synchrony: &cmtproto.SynchronyParams{},
+		Feature:   msg.Feature,
+		Synchrony: msg.Synchrony,
 	}
 
 	if msg.Abci != nil {
+		if cp.Feature == nil {
+			cp.Feature = &cmtproto.FeatureParams{}
+		}
+
 		cp.Feature.VoteExtensionsEnableHeight = &types.Int64Value{
 			Value: msg.Abci.VoteExtensionsEnableHeight,
-		}
-	}
-
-	if msg.Feature != nil {
-		if msg.Feature.VoteExtensionsEnableHeight != nil {
-			cp.Feature.VoteExtensionsEnableHeight = &types.Int64Value{
-				Value: msg.Feature.GetVoteExtensionsEnableHeight().GetValue(),
-			}
-		}
-		if msg.Feature.PbtsEnableHeight != nil {
-			cp.Feature.PbtsEnableHeight = &types.Int64Value{
-				Value: msg.Feature.GetPbtsEnableHeight().GetValue(),
-			}
-		}
-	}
-
-	if msg.Synchrony != nil {
-		if msg.Synchrony.MessageDelay != nil {
-			delay := *msg.Synchrony.MessageDelay
-			cp.Synchrony.MessageDelay = &delay
-		}
-		if msg.Synchrony.Precision != nil {
-			precision := *msg.Synchrony.Precision
-			cp.Synchrony.Precision = &precision
 		}
 	}
 

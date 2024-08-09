@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -20,8 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
@@ -30,7 +29,7 @@ var minterAcc = authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Mint
 type GenesisTestSuite struct {
 	suite.Suite
 
-	sdkCtx        sdk.Context
+	sdkCtx        context.Context
 	keeper        keeper.Keeper
 	cdc           codec.BinaryCodec
 	accountKeeper types.AccountKeeper
@@ -42,13 +41,13 @@ func TestGenesisTestSuite(t *testing.T) {
 }
 
 func (s *GenesisTestSuite) SetupTest() {
-	testCtx := testutil.DefaultContextWithDB(s.T(), types.StoreKey)
+	testCtx := coretesting.Context()
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, mint.AppModule{})
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
 	s.cdc = codec.NewProtoCodec(encCfg.InterfaceRegistry)
-	s.sdkCtx = testCtx.Ctx
+	s.sdkCtx = testCtx
 
 	stakingKeeper := minttestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := minttestutil.NewMockAccountKeeper(ctrl)
@@ -82,8 +81,9 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 	s.Require().Equal(genesisState.Minter, minter)
 	s.Require().NoError(err)
 
-	invalidCtx := testutil.DefaultContextWithDB(s.T(), types.StoreKey)
-	_, err = s.keeper.Minter.Get(invalidCtx.Ctx)
+	invalidCtx := coretesting.Context()
+	coretesting.KVStoreService(invalidCtx, types.StoreKey)
+	_, err = s.keeper.Minter.Get(invalidCtx)
 	s.Require().ErrorIs(err, collections.ErrNotFound)
 
 	params, err := s.keeper.Params.Get(s.sdkCtx)

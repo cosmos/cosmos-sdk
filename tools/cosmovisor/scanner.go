@@ -114,7 +114,7 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 	}
 
 	// no update if the file already exists and has not been modified
-	if !stat.ModTime().After(fw.lastModTime) && fw.initialized {
+	if fw.lastModTime != (time.Time{}) && !stat.ModTime().After(fw.lastModTime) {
 		return false
 	}
 

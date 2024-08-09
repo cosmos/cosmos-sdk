@@ -54,7 +54,9 @@ The **execution manager** is itself the **root account** and understands the fol
 
 Any other specifications regarding the encoding of messages, storage, events, transaction execution or interaction with consensus environments should get specified at a level above the cross-language framework. The cross-language framework is intended to be a minimal specification that allows for the execution of messages across different code environments.
 
-TODO: packet sizes and any details of formats of message data and message responses
+TODO: packet sizes and any details of message data and responses? what size packets are allowed?
+
+TODO: should message names be specified globally? do we have any concept of services (bundles of message handlers)? should any encoding details be specified at this level? 
 
 TODO: how do we deal with pre- and post-handlers that have been specified now in core? are these an execution manager concern, can they be dealt with at another level, or should they be unsupporte?
 

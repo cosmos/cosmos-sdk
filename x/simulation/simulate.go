@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
+	"slices"
 	"testing"
 	"time"
 
@@ -21,7 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/simulation"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 const AverageBlockTime = 6 * time.Second
@@ -30,12 +31,12 @@ const AverageBlockTime = 6 * time.Second
 func initChain(
 	r *rand.Rand,
 	params Params,
-	accounts []simulation.Account,
+	accounts []simtypes.Account,
 	app *baseapp.BaseApp,
-	appStateFn simulation.AppStateFn,
-	config simulation.Config,
+	appStateFn simtypes.AppStateFn,
+	config simtypes.Config,
 	cdc codec.JSONCodec,
-) (mockValidators, time.Time, []simulation.Account, string) {
+) (mockValidators, time.Time, []simtypes.Account, string) {
 	blockMaxGas := int64(-1)
 	if config.BlockMaxGas > 0 {
 		blockMaxGas = config.BlockMaxGas
@@ -64,17 +65,17 @@ func SimulateFromSeed( // exists for backwards compatibility only
 	logger corelog.Logger,
 	w io.Writer,
 	app *baseapp.BaseApp,
-	appStateFn simulation.AppStateFn,
-	randAccFn simulation.RandomAccountFn,
+	appStateFn simtypes.AppStateFn,
+	randAccFn simtypes.RandomAccountFn,
 	ops WeightedOperations,
 	blockedAddrs map[string]bool,
-	config simulation.Config,
+	config simtypes.Config,
 	cdc codec.JSONCodec,
 	addressCodec address.Codec,
 ) (exportedParams Params, err error) {
 	tb.Helper()
 	mode, _, _ := getTestingMode(tb)
-	return SimulateFromSeedX(tb, logger, w, app, appStateFn, randAccFn, ops, blockedAddrs, config, cdc, addressCodec, NewLogWriter(mode))
+	return SimulateFromSeedX(tb, logger, w, app, appStateFn, randAccFn, ops, blockedAddrs, config, cdc, NewLogWriter(mode))
 }
 
 // SimulateFromSeedX tests an application by running the provided
@@ -84,16 +85,20 @@ func SimulateFromSeedX(
 	logger corelog.Logger,
 	w io.Writer,
 	app *baseapp.BaseApp,
-	appStateFn simulation.AppStateFn,
-	randAccFn simulation.RandomAccountFn,
+	appStateFn simtypes.AppStateFn,
+	randAccFn simtypes.RandomAccountFn,
 	ops WeightedOperations,
 	blockedAddrs map[string]bool,
-	config simulation.Config,
+	config simtypes.Config,
 	cdc codec.JSONCodec,
-	addressCodec address.Codec,
 	logWriter LogWriter,
 ) (exportedParams Params, err error) {
 	tb.Helper()
+	defer func() {
+		if err != nil {
+			logWriter.PrintLogs()
+		}
+	}()
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, _, b := getTestingMode(tb)
 
@@ -120,25 +125,15 @@ func SimulateFromSeedX(
 	config.ChainID = chainID
 
 	// remove module account address if they exist in accs
-	var tmpAccs []simulation.Account
-
-	for _, acc := range accs {
-		accAddr, err := addressCodec.BytesToString(acc.Address)
-		if err != nil {
-			return params, err
-		}
-		if !blockedAddrs[accAddr] {
-			tmpAccs = append(tmpAccs, acc)
-		}
-	}
-
-	accs = tmpAccs
+	accs = slices.DeleteFunc(accs, func(acc simtypes.Account) bool {
+		return blockedAddrs[acc.AddressBech32]
+	})
 	nextValidators := validators
 
 	var (
 		pastTimes          []time.Time
 		pastVoteInfos      [][]abci.VoteInfo
-		timeOperationQueue []simulation.FutureOperation
+		timeOperationQueue []simtypes.FutureOperation
 
 		blockHeight     = int64(config.InitialBlockHeight)
 		proposerAddress = validators.randomProposer(r)
@@ -168,7 +163,7 @@ func SimulateFromSeedX(
 		eventStats.Tally,
 		ops,
 		operationQueue,
-		timeOperationQueue,
+		&timeOperationQueue,
 		logWriter,
 		config,
 	)
@@ -189,6 +184,10 @@ func SimulateFromSeedX(
 	// set exported params to the initial state
 	if config.ExportParamsPath != "" && config.ExportParamsHeight == 0 {
 		exportedParams = params
+	}
+
+	if _, err := app.FinalizeBlock(finalizeBlockReq); err != nil {
+		return params, fmt.Errorf("block finalization failed at height %d: %w", blockHeight, err)
 	}
 
 	for blockHeight < int64(config.NumBlocks+config.InitialBlockHeight) {
@@ -219,15 +218,14 @@ func SimulateFromSeedX(
 			tb, operationQueue, blockTime, int(blockHeight), r, app, ctx, accs, logWriter,
 			eventStats.Tally, config.Lean, config.ChainID,
 		)
-
 		numQueuedTimeOpsRan, timeFutureOps := runQueuedTimeOperations(tb,
-			timeOperationQueue, int(blockHeight), blockTime,
+			&timeOperationQueue, int(blockHeight), blockTime,
 			r, app, ctx, accs, logWriter, eventStats.Tally,
 			config.Lean, config.ChainID,
 		)
 
 		futureOps = append(futureOps, timeFutureOps...)
-		queueOperations(operationQueue, timeOperationQueue, futureOps)
+		queueOperations(operationQueue, &timeOperationQueue, futureOps)
 
 		// run standard operations
 		operations := blockSimulator(r, app, ctx, accs, cmtproto.Header{
@@ -237,7 +235,6 @@ func SimulateFromSeedX(
 			ChainID:         config.ChainID,
 		})
 		opCount += operations + numQueuedOpsRan + numQueuedTimeOpsRan
-
 		blockHeight++
 
 		logWriter.AddEntry(EndBlockEntry(blockTime, blockHeight))
@@ -272,7 +269,6 @@ func SimulateFromSeedX(
 			exportedParams = params
 		}
 	}
-
 	logger.Info("Simulation complete", "height", blockHeight, "block-time", blockTime, "opsCount", opCount,
 		"run-time", time.Since(startTime), "app-hash", hex.EncodeToString(app.LastCommitID().Hash))
 
@@ -287,9 +283,9 @@ func SimulateFromSeedX(
 
 type blockSimFn func(
 	r *rand.Rand,
-	app *baseapp.BaseApp,
+	app simtypes.AppEntrypoint,
 	ctx sdk.Context,
-	accounts []simulation.Account,
+	accounts []simtypes.Account,
 	header cmtproto.Header,
 ) (opCount int)
 
@@ -297,8 +293,8 @@ type blockSimFn func(
 // parameters being passed every time, to minimize memory overhead.
 func createBlockSimulator(tb testing.TB, printProgress bool, w io.Writer, params Params,
 	event func(route, op, evResult string), ops WeightedOperations,
-	operationQueue OperationQueue, timeOperationQueue []simulation.FutureOperation,
-	logWriter LogWriter, config simulation.Config,
+	operationQueue OperationQueue, timeOperationQueue *[]simtypes.FutureOperation,
+	logWriter LogWriter, config simtypes.Config,
 ) blockSimFn {
 	tb.Helper()
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
@@ -306,7 +302,7 @@ func createBlockSimulator(tb testing.TB, printProgress bool, w io.Writer, params
 	selectOp := ops.getSelectOpFn()
 
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simulation.Account, header cmtproto.Header,
+		r *rand.Rand, app simtypes.AppEntrypoint, ctx sdk.Context, accounts []simtypes.Account, header cmtproto.Header,
 	) (opCount int) {
 		_, _ = fmt.Fprintf(
 			w, "\rSimulating... block %d/%d, operation %d/%d.",
@@ -315,7 +311,7 @@ func createBlockSimulator(tb testing.TB, printProgress bool, w io.Writer, params
 		lastBlockSizeState, blocksize = getBlockSize(r, params, lastBlockSizeState, config.BlockSize)
 
 		type opAndR struct {
-			op   simulation.Operation
+			op   simtypes.Operation
 			rand *rand.Rand
 		}
 
@@ -363,11 +359,11 @@ Comment: %s`,
 	}
 }
 
-func runQueuedOperations(tb testing.TB, queueOps map[int][]simulation.Operation,
+func runQueuedOperations(tb testing.TB, queueOps map[int][]simtypes.Operation,
 	blockTime time.Time, height int, r *rand.Rand, app *baseapp.BaseApp,
-	ctx sdk.Context, accounts []simulation.Account, logWriter LogWriter,
+	ctx sdk.Context, accounts []simtypes.Account, logWriter LogWriter,
 	event func(route, op, evResult string), lean bool, chainID string,
-) (numOpsRan int, allFutureOps []simulation.FutureOperation) {
+) (numOpsRan int, allFutureOps []simtypes.FutureOperation) {
 	tb.Helper()
 	queuedOp, ok := queueOps[height]
 	if !ok {
@@ -375,11 +371,15 @@ func runQueuedOperations(tb testing.TB, queueOps map[int][]simulation.Operation,
 	}
 
 	// Keep all future operations
-	allFutureOps = make([]simulation.FutureOperation, 0)
+	allFutureOps = make([]simtypes.FutureOperation, 0)
 
 	numOpsRan = len(queuedOp)
 	for i := 0; i < numOpsRan; i++ {
 		opMsg, futureOps, err := queuedOp[i](r, app, ctx, accounts, chainID)
+		if err != nil {
+			logWriter.PrintLogs()
+			tb.FailNow()
+		}
 		if len(futureOps) > 0 {
 			allFutureOps = append(allFutureOps, futureOps...)
 		}
@@ -387,49 +387,44 @@ func runQueuedOperations(tb testing.TB, queueOps map[int][]simulation.Operation,
 		opMsg.LogEvent(event)
 
 		if !lean || opMsg.OK {
-			logWriter.AddEntry((QueuedMsgEntry(blockTime, int64(height), opMsg)))
+			logWriter.AddEntry(QueuedMsgEntry(blockTime, int64(height), opMsg))
 		}
 
-		if err != nil {
-			logWriter.PrintLogs()
-			tb.FailNow()
-		}
 	}
 	delete(queueOps, height)
 
 	return numOpsRan, allFutureOps
 }
 
-func runQueuedTimeOperations(tb testing.TB, queueOps []simulation.FutureOperation,
+func runQueuedTimeOperations(tb testing.TB, queueOps *[]simtypes.FutureOperation,
 	height int, currentTime time.Time, r *rand.Rand,
-	app *baseapp.BaseApp, ctx sdk.Context, accounts []simulation.Account,
+	app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account,
 	logWriter LogWriter, event func(route, op, evResult string),
 	lean bool, chainID string,
-) (numOpsRan int, allFutureOps []simulation.FutureOperation) {
+) (numOpsRan int, allFutureOps []simtypes.FutureOperation) {
 	tb.Helper()
 	// Keep all future operations
-	allFutureOps = make([]simulation.FutureOperation, 0)
-
 	numOpsRan = 0
-	for len(queueOps) > 0 && currentTime.After(queueOps[0].BlockTime) {
-		opMsg, futureOps, err := queueOps[0].Op(r, app, ctx, accounts, chainID)
+	for len(*queueOps) > 0 && currentTime.After((*queueOps)[0].BlockTime) {
+		if qOp := (*queueOps)[0]; qOp.Op != nil {
+			opMsg, futureOps, err := qOp.Op(r, app, ctx, accounts, chainID)
 
-		opMsg.LogEvent(event)
+			opMsg.LogEvent(event)
 
-		if !lean || opMsg.OK {
-			logWriter.AddEntry(QueuedMsgEntry(currentTime, int64(height), opMsg))
+			if !lean || opMsg.OK {
+				logWriter.AddEntry(QueuedMsgEntry(currentTime, int64(height), opMsg))
+			}
+
+			if err != nil {
+				logWriter.PrintLogs()
+				tb.Fatal(err)
+			}
+
+			if len(futureOps) > 0 {
+				allFutureOps = append(allFutureOps, futureOps...)
+			}
 		}
-
-		if err != nil {
-			logWriter.PrintLogs()
-			tb.FailNow()
-		}
-
-		if len(futureOps) > 0 {
-			allFutureOps = append(allFutureOps, futureOps...)
-		}
-
-		queueOps = queueOps[1:]
+		*queueOps = slices.Delete(*queueOps, 0, 1)
 		numOpsRan++
 	}
 

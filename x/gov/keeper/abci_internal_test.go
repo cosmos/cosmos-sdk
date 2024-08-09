@@ -16,7 +16,7 @@ type mockRouterService struct {
 	panic bool
 }
 
-func (m *mockRouterService) InvokeUntyped(ctx context.Context, req gogoproto.Message) (res gogoproto.Message, err error) {
+func (m *mockRouterService) Invoke(ctx context.Context, req gogoproto.Message) (res gogoproto.Message, err error) {
 	if m.panic {
 		panic("test-fail")
 	}

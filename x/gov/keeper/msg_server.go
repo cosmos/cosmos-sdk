@@ -386,7 +386,7 @@ func (k msgServer) SudoExec(ctx context.Context, msg *v1.MsgSudoExec) (*v1.MsgSu
 			return errors.Wrapf(govtypes.ErrInvalidProposal, err.Error())
 		}
 
-		msgResp, err = k.MsgRouterService.InvokeUntyped(ctx, sudoedMsg)
+		msgResp, err = k.MsgRouterService.Invoke(ctx, sudoedMsg)
 		if err != nil {
 			return errors.Wrapf(err, "failed to execute sudo-ed message; message %v", sudoedMsg)
 		}

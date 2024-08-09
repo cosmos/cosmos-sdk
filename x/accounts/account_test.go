@@ -28,7 +28,7 @@ type TestAccount struct {
 func (t TestAccount) RegisterInitHandler(builder *implementation.InitBuilder) {
 	implementation.RegisterInitHandler(builder, func(ctx context.Context, _ *types.Empty) (*types.Empty, error) {
 		// we also force a module call here to test things work as expected.
-		_, err := implementation.QueryModule[bankv1beta1.QueryBalanceResponse](ctx, &bankv1beta1.QueryBalanceRequest{
+		_, err := implementation.QueryModule(ctx, &bankv1beta1.QueryBalanceRequest{
 			Address: string(implementation.Whoami(ctx)),
 			Denom:   "atom",
 		})
@@ -52,7 +52,7 @@ func (t TestAccount) RegisterExecuteHandlers(builder *implementation.ExecuteBuil
 
 	// this is for intermodule comms testing, we simulate a bank send
 	implementation.RegisterExecuteHandler(builder, func(ctx context.Context, req *types.Int64Value) (*types.Empty, error) {
-		resp, err := implementation.ExecModule[bankv1beta1.MsgSendResponse](ctx, &bankv1beta1.MsgSend{
+		resp, err := implementation.ExecModule(ctx, &bankv1beta1.MsgSend{
 			FromAddress: string(implementation.Whoami(ctx)),
 			ToAddress:   "recipient",
 			Amount: []*basev1beta1.Coin{
@@ -90,7 +90,7 @@ func (t TestAccount) RegisterQueryHandlers(builder *implementation.QueryBuilder)
 	// test intermodule comms, we simulate someone is sending the account a request for the accounts balance
 	// of a given denom.
 	implementation.RegisterQueryHandler(builder, func(ctx context.Context, req *types.StringValue) (*types.Int64Value, error) {
-		resp, err := implementation.QueryModule[bankv1beta1.QueryBalanceResponse](ctx, &bankv1beta1.QueryBalanceRequest{
+		resp, err := implementation.QueryModule(ctx, &bankv1beta1.QueryBalanceRequest{
 			Address: string(implementation.Whoami(ctx)),
 			Denom:   req.Value,
 		})
@@ -98,7 +98,12 @@ func (t TestAccount) RegisterQueryHandlers(builder *implementation.QueryBuilder)
 			return nil, err
 		}
 
-		amt, err := strconv.ParseInt(resp.Balance.Amount, 10, 64)
+		r, ok := resp.(*bankv1beta1.QueryBalanceResponse)
+		if !ok {
+			panic("unexpected response type") // should never happen
+		}
+
+		amt, err := strconv.ParseInt(r.Balance.Amount, 10, 64)
 		if err != nil {
 			return nil, err
 		}

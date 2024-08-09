@@ -73,10 +73,15 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 	// Reject evidence if the double-sign is too old. Evidence is considered stale
 	// if the difference in time and number of blocks is greater than the allowed
 	// parameters defined.
-	var res consensusv1.QueryParamsResponse
-	if err := k.QueryRouterService.InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
+	resp, err := k.QueryRouterService.Invoke(ctx, &consensusv1.QueryParamsRequest{})
+	if err != nil {
 		return fmt.Errorf("failed to query consensus params: %w", err)
 	}
+	res, ok := resp.(*consensusv1.QueryParamsResponse)
+	if !ok {
+		return fmt.Errorf("unexpected response type: %T", resp)
+	}
+
 	if res.Params.Evidence != nil {
 		if ageDuration > res.Params.Evidence.MaxAgeDuration && ageBlocks > res.Params.Evidence.MaxAgeNumBlocks {
 			k.Logger.Info(

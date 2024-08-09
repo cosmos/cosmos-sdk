@@ -315,7 +315,7 @@ func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAdd
 		}
 
 		if err := ak.BranchService.Execute(ctx, func(ctx context.Context) error {
-			result, err := ak.AccountsModKeeper.SendModuleMessageUntyped(ctx, signer, msg)
+			result, err := ak.AccountsModKeeper.SendModuleMessage(ctx, signer, msg)
 			if err != nil {
 				// If an error occurs during message execution, append error response
 				response := &types.NonAtomicExecResult{Resp: nil, Error: err.Error()}

@@ -3,7 +3,7 @@ package coretesting
 import (
 	"context"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
+	gogoproto "cosmossdk.io/core/transaction"
 
 	"cosmossdk.io/core/event"
 )
@@ -30,7 +30,7 @@ func (e MemEventsService) GetEvents(ctx context.Context) []event.Event {
 	return unwrap(ctx).events[e.moduleName]
 }
 
-func (e MemEventsService) GetProtoEvents(ctx context.Context) []gogoproto.Message {
+func (e MemEventsService) GetProtoEvents(ctx context.Context) []gogoproto.Msg {
 	return unwrap(ctx).protoEvents[e.moduleName]
 }
 
@@ -39,7 +39,7 @@ type eventManager struct {
 	ctx        *dummyCtx
 }
 
-func (e eventManager) Emit(event gogoproto.Message) error {
+func (e eventManager) Emit(event gogoproto.Msg) error {
 	e.ctx.protoEvents[e.moduleName] = append(e.ctx.protoEvents[e.moduleName], event)
 	return nil
 }

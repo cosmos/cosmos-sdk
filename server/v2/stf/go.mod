@@ -19,3 +19,5 @@ require (
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.6.1-0.20240809124342-d6a57064ada0

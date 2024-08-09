@@ -11,6 +11,7 @@ replace (
 	cosmossdk.io/store/v2 => ../../store/v2
 	cosmossdk.io/store/v2/db => ../../store/v2/db
 	cosmossdk.io/x/tx => ../../x/tx
+	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.6.1-0.20240809124342-d6a57064ada0
 )
 
 require (

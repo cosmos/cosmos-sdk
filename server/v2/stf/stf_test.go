@@ -37,7 +37,7 @@ func addMsgHandlerToSTF[T any, PT interface {
 	msgRouterBuilder := NewMsgRouterBuilder()
 	err := msgRouterBuilder.RegisterHandler(
 		msgTypeURL(PT(new(T))),
-		func(ctx context.Context, msg appmodulev2.Message) (msgResp appmodulev2.Message, err error) {
+		func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
 			typedReq := msg.(PT)
 			typedResp, err := handler(ctx, typedReq)
 			if err != nil {

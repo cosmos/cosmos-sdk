@@ -186,7 +186,6 @@ func (fw *fileWatcher) checkHeight() (int64, error) {
 	}
 
 	return 0, errors.New("latest block height is empty")
-
 }
 
 func parseUpgradeInfoFile(filename string, disableRecase bool) (upgradetypes.Plan, error) {

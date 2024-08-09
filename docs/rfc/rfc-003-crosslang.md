@@ -43,14 +43,15 @@ Every code environment receives the following callback functions:
 **Gas limit** parameters are an integer which specifies the maximum amount of gas units that may be consumed during the execution of the handler before the code environment returns an error. When each handler returns it should return the amount of gas consumed. Each code environment is expected to track execution cost in a consistent way to avoid unbounded execution and the remaining gas should be passed to each nested call in order to enforce gas limits across the system.
 
 The following special messages are defined at the framework level and can optionally be implemented by accounts:
-* `on_create()`: called when an account is created
-* `on_destroy()`: called when an account is destroyed
-* `on_migrate(old code environment, old code id)`: called when an account is migrated to a new code environment
+* `on_create(init data)`: called when an account is created
+* `on_destroy(destroy data)`: called when an account is destroyed
+* `on_migrate(old code environment, old code id, migration data)`: called when an account is migrated to a new code environment and id. The previous code environment and id should be used to perform migration operations on the old state. If the old state can't be migrated, then the account should return an error.
 
 The **execution manager** is itself the **root account** and understands the following special messages: 
 * `create(code environment, code id, account address?)`: creates a new account in the specified code environment with the specified code id and optional pre-defined account address (if not provided, a new address is generated). The `on_create` message is called if it is implemented by the account.
 * `destroy(account address)`: deletes the account with the specified address and calls the `on_destroy` message if it is implemented by the account.
-* `migrate(account address, new code environment, new code id)`: migrates the account with the specified address to the new code environment and code id. The `on_migrate` message is called if it is implemented by the account. `migrate` can only be called by the account itself (or by the app outside of normal execution flow).
+* `migrate(account address, new code environment, new code id, miration data)`: migrates the account with the specified address to the new code environment and code id. The `on_migrate` message must be implemented by the new code and must not return an error for migration to succeed. `migrate` can only be called by the account itself (or by the app outside normal execution flow).
+* `force_migrate(account address, new code environment, new code id, init data, destroy data)`: this can be used when no `on_migrate` handler can perform a proper migration to the new code. In this case, `on_destroy` will be called on the old event, its state will be cleared, and `on_create` will be called on the new code. This is a destructive operation and should be used with caution.
 
 Any other specifications regarding the encoding of messages, storage, events, transaction execution or interaction with consensus environments should get specified at a level above the cross-language framework. The cross-language framework is intended to be a minimal specification that allows for the execution of messages across different code environments.
 

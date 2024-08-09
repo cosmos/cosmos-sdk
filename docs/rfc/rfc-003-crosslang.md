@@ -1,4 +1,4 @@
-# RFC 003: Cross-Language Account Manager Specification
+# RFC 003: Cross-Language Execution Manager Specification
 
 ## Changelog
 
@@ -21,39 +21,39 @@
 > The next required section is "Proposal" or "Goal". Given the background above, this section proposes a solution.
 > This should be an overview of the "how" for the solution, but for details further sections will be used.
 
-The base layer framework component for the cross-language framework is the **account manager** which specifies the meaning of the core concepts of **account**, **message**, **code environment** and **module**.
+The base layer framework component for the cross-language framework is the **execution manager** which specifies the meaning of the core concepts of **account**, **message**, **code environment**, **module** and **gas**.
 
 An **account** is defined as having:
 * a unique **account address**
 * a code handler which allows it to execute **messages**
 
-Every **account** runs in a **code environment**. The **account manager** contains a stateful mapping from `account address -> (code environment, code id)`. **Messages** in the **account manager** can be executed by specifying either:
+Every **account** runs in a **code environment**. The **execution manager** contains a stateful mapping from `account address -> (code environment, code id)`. **Messages** in the **execution manager** can be executed by specifying either:
 1. an **account address** and **message data**, or
 2. a **message name** and **message data** (when a default message handler has been registered)
 
-**Accounts** can register themselves as the default handler for a given message name. When this occurs a **message** can be invoked without knowing the address of the handling module - instead the **account manager** knows the mapping from **message name** to default account address. **Accounts** which register default message handlers are known as **modules**. Thus, the account manager also contains a stateful mapping from `message name -> account address`. TODO: can other accounts handle messages with the same name as messages that have a default handler, i.e. are "modules messages"?? 
+**Accounts** can register themselves as the default handler for a given message name. When this occurs a **message** can be invoked without knowing the address of the handling module - instead the **execution manager** knows the mapping from **message name** to default account address. **Accounts** which register default message handlers are known as **modules**. Thus, the **execution manager** also contains a stateful mapping from `message name -> account address`. TODO: can other accounts handle messages with the same name as messages that have a default handler, i.e. are "modules messages"?? 
 
-Every **code environment** must expose a `handle` function: which takes a `(code id, message data, account address, caller account address?)` as input parameters and returns an optional response. The `handle` function is the entry point for executing messages. `code id`s have a format defined by their code environment, although some common standards may emerge. `message data` is expected to include the message name embedded for routing purposes and the code environment is expected to parse this data and route it to the appropriate handler. The `caller account address` is specified except when the message is a query (TODO: how to specify queries? - either by message name or with a separate query handler).
+Every **code environment** must expose a `handle` function: which takes a `(code id, message data, account address, caller account address?, gas limit)` as input parameters and returns an optional response plus gas consumed. The `handle` function is the entry point for executing messages. `code id`s have a format defined by their code environment, although some common standards may emerge. `message data` is expected to include the message name embedded for routing purposes and the code environment is expected to parse this data and route it to the appropriate handler. The `caller account address` is specified except when the message is a query (TODO: how to specify queries? - either by message name or with a separate query handler). 
 
 Every code environment receives the following callback functions:
-* `invoke(account address, message data)`: sends a message to another account specified by its address
-* `invoke_default(message name, message data)`: sends a message to the account registered with the default handler for the given message name, if one exists
+* `invoke(account address, message data, gas limit)`: sends a message to another account specified by its address
+* `invoke_default(message name, message data, gas limit)`: sends a message to the account registered with the default handler for the given message name, if one exists
+
+**Gas limit** parameters are an integer which specifies the maximum amount of gas units that may be consumed during the execution of the handler before the code environment returns an error. When each handler returns it should return the amount of gas consumed. Each code environment is expected to track execution cost in a consistent way to avoid unbounded execution and the remaining gas should be passed to each nested call in order to enforce gas limits across the system.
 
 The following special messages are defined at the framework level and can optionally be implemented by accounts:
 * `on_create()`: called when an account is created
 * `on_destroy()`: called when an account is destroyed
 * `on_migrate(old code environment, old code id)`: called when an account is migrated to a new code environment
 
-The account manager is itself the **root account** and understands the following special messages: 
+The **execution manager** is itself the **root account** and understands the following special messages: 
 * `create(code environment, code id, account address?)`: creates a new account in the specified code environment with the specified code id and optional pre-defined account address (if not provided, a new address is generated). The `on_create` message is called if it is implemented by the account.
 * `destroy(account address)`: deletes the account with the specified address and calls the `on_destroy` message if it is implemented by the account.
 * `migrate(account address, new code environment, new code id)`: migrates the account with the specified address to the new code environment and code id. The `on_migrate` message is called if it is implemented by the account. `migrate` can only be called by the account itself (or by the app outside of normal execution flow).
 
 Any other specifications regarding the encoding of messages, storage, events, transaction execution or interaction with consensus environments should get specified at a level above the cross-language framework. The cross-language framework is intended to be a minimal specification that allows for the execution of messages across different code environments.
 
-TODO:
-* the packet sizes and formats of message data and message response
-* how is gas handled? this is likely a core part of the execution framework
+TODO: packet sizes and any details of formats of message data and message responses
 
 ## Abandoned Ideas (Optional)
 

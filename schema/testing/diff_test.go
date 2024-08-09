@@ -63,6 +63,12 @@ func TestCompareKindValues(t *testing.T) {
 			equal:    false,
 		},
 		{
+			kind:     schema.IntegerStringKind,
+			expected: "000123",
+			actual:   "123",
+			equal:    true,
+		},
+		{
 			kind:        schema.DecimalStringKind,
 			expected:    "abc",
 			actual:      "100.001",
@@ -83,6 +89,12 @@ func TestCompareKindValues(t *testing.T) {
 		{
 			kind:     schema.DecimalStringKind,
 			expected: "1.00001e2",
+			actual:   "100.001",
+			equal:    true,
+		},
+		{
+			kind:     schema.DecimalStringKind,
+			expected: "00000100.00100000",
 			actual:   "100.001",
 			equal:    true,
 		},

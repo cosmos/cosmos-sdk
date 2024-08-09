@@ -60,7 +60,7 @@ type Consensus[T transaction.Tx] struct {
 	addrPeerFilter types.PeerFilter // filter peers by address and port
 	idPeerFilter   types.PeerFilter // filter peers by node ID
 
-	grpcMethodsMap map[string]func() gogoproto.Message // maps gRPC method to message creator func
+	grpcMethodsMap map[string]func() transaction.Msg // maps gRPC method to message creator func
 }
 
 func NewConsensus[T transaction.Tx](
@@ -70,7 +70,7 @@ func NewConsensus[T transaction.Tx](
 	app *appmanager.AppManager[T],
 	mp mempool.Mempool[T],
 	indexedEvents map[string]struct{},
-	gRPCMethodsMap map[string]func() gogoproto.Message,
+	gRPCMethodsMap map[string]func() transaction.Msg,
 	store types.Store,
 	cfg Config,
 	txCodec transaction.Codec[T],

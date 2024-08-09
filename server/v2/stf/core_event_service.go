@@ -56,7 +56,7 @@ func (em *eventManager) EmitNonConsensus(event transaction.Msg) error {
 }
 
 // TypedEventToEvent takes typed event and converts to Event object
-func TypedEventToEvent(tev gogoproto.Message) (event.Event, error) {
+func TypedEventToEvent(tev transaction.Msg) (event.Event, error) {
 	evtType := gogoproto.MessageName(tev)
 	buf := new(bytes.Buffer)
 	jm := &jsonpb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: nil}

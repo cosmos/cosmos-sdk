@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
@@ -23,11 +22,11 @@ import (
 
 func addMsgHandlerToSTF[T any, PT interface {
 	*T
-	proto.Message
+	transaction.Msg
 },
 	U any, UT interface {
 		*U
-		proto.Message
+		transaction.Msg
 	}](
 	t *testing.T,
 	stf *STF[mock.Tx],

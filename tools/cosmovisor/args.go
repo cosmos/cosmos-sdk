@@ -31,6 +31,7 @@ const (
 	EnvShutdownGrace            = "DAEMON_SHUTDOWN_GRACE"
 	EnvSkipBackup               = "UNSAFE_SKIP_BACKUP"
 	EnvDataBackupPath           = "DAEMON_DATA_BACKUP_DIR"
+	EnvDataPath                 = "DAEMON_DATA_DIR"
 	EnvInterval                 = "DAEMON_POLL_INTERVAL"
 	EnvPreupgradeMaxRetries     = "DAEMON_PREUPGRADE_MAX_RETRIES"
 	EnvDisableLogs              = "COSMOVISOR_DISABLE_LOGS"
@@ -45,6 +46,7 @@ const (
 	genesisDir  = "genesis"
 	upgradesDir = "upgrades"
 	currentLink = "current"
+	dataDir     = "data"
 
 	cfgFileName  = "config"
 	cfgExtension = "toml"
@@ -62,6 +64,7 @@ type Config struct {
 	PollInterval             time.Duration `toml:"daemon_poll_interval" mapstructure:"daemon_poll_interval" default:"300ms"`
 	UnsafeSkipBackup         bool          `toml:"unsafe_skip_backup" mapstructure:"unsafe_skip_backup" default:"false"`
 	DataBackupPath           string        `toml:"daemon_data_backup_dir" mapstructure:"daemon_data_backup_dir"`
+	DataPath                 string        `toml:"daemon_data_dir" mapstructure:"daemon_data_dir"`
 	PreUpgradeMaxRetries     int           `toml:"daemon_preupgrade_max_retries" mapstructure:"daemon_preupgrade_max_retries" default:"0"`
 	DisableLogs              bool          `toml:"cosmovisor_disable_logs" mapstructure:"cosmovisor_disable_logs" default:"false"`
 	ColorLogs                bool          `toml:"cosmovisor_color_logs" mapstructure:"cosmovisor_color_logs" default:"true"`
@@ -106,7 +109,11 @@ func (cfg *Config) BaseUpgradeDir() string {
 
 // UpgradeInfoFilePath is the expected upgrade-info filename created by `x/upgrade/keeper`.
 func (cfg *Config) UpgradeInfoFilePath() string {
-	return filepath.Join(cfg.Home, "data", upgradetypes.UpgradeInfoFilename)
+	return filepath.Join(cfg.DataPath, upgradetypes.UpgradeInfoFilename)
+}
+
+func (cfg *Config) DefaultDataDirPath() string {
+	return filepath.Join(cfg.Home, dataDir)
 }
 
 // SymLinkToGenesis creates a symbolic link from "./current" to the genesis directory.
@@ -209,11 +216,16 @@ func GetConfigFromEnv() (*Config, error) {
 		Home:             os.Getenv(EnvHome),
 		Name:             os.Getenv(EnvName),
 		DataBackupPath:   os.Getenv(EnvDataBackupPath),
+		DataPath:         os.Getenv(EnvDataPath),
 		CustomPreUpgrade: os.Getenv(EnvCustomPreupgrade),
 	}
 
 	if cfg.DataBackupPath == "" {
 		cfg.DataBackupPath = cfg.Home
+	}
+
+	if cfg.DataPath == "" {
+		cfg.DataPath = cfg.DefaultDataDirPath()
 	}
 
 	var err error
@@ -339,6 +351,20 @@ func (cfg *Config) validate() []error {
 			errs = append(errs, fmt.Errorf("cannot stat home dir: %w", err))
 		case !info.IsDir():
 			errs = append(errs, fmt.Errorf("%s is not a directory", cfg.Root()))
+		}
+	}
+	// validate DataPath
+	switch {
+	case cfg.DataPath == "":
+		break
+	case !filepath.IsAbs(cfg.DataPath):
+		errs = append(errs, fmt.Errorf("%s must be an absolute path", cfg.DataPath))
+	default:
+		switch info, err := os.Stat(cfg.DataPath); {
+		case err != nil:
+			errs = append(errs, fmt.Errorf("%q must be a valid directory: %w", cfg.DataPath, err))
+		case !info.IsDir():
+			errs = append(errs, fmt.Errorf("%q must be a valid directory", cfg.DataPath))
 		}
 	}
 
@@ -539,6 +565,7 @@ func (cfg Config) DetailString() string {
 		{EnvInterval, cfg.PollInterval.String()},
 		{EnvSkipBackup, fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
 		{EnvDataBackupPath, cfg.DataBackupPath},
+		{EnvDataPath, cfg.DataPath},
 		{EnvPreupgradeMaxRetries, fmt.Sprintf("%d", cfg.PreUpgradeMaxRetries)},
 		{EnvDisableLogs, fmt.Sprintf("%t", cfg.DisableLogs)},
 		{EnvColorLogs, fmt.Sprintf("%t", cfg.ColorLogs)},
@@ -553,6 +580,7 @@ func (cfg Config) DetailString() string {
 		{"Genesis Bin", cfg.GenesisBin()},
 		{"Monitored File", cfg.UpgradeInfoFilePath()},
 		{"Data Backup Dir", cfg.DataBackupPath},
+		{"Data Dir", cfg.DataPath},
 	}
 
 	var sb strings.Builder

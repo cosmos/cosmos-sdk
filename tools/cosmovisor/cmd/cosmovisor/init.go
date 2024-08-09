@@ -129,6 +129,10 @@ func getConfigForInitCmd() (*cosmovisor.Config, error) {
 		cfg.DataBackupPath = cfg.Home
 	}
 
+	if cfg.DataPath == "" {
+		cfg.DataPath = cfg.DefaultDataDirPath()
+	}
+
 	if len(cfg.Name) == 0 {
 		errs = append(errs, fmt.Errorf("%s is not set", cosmovisor.EnvName))
 	}

@@ -18,6 +18,15 @@ type Field struct {
 	// the same values for the same enum name. This possibly introduces some duplication of
 	// definitions but makes it easier to reason about correctness and validation in isolation.
 	EnumType EnumType
+
+	// Width specifies the width of the field for IntNKind and UintNKind fields.
+	// It is invalid to have a non-zero Width for other kinds.
+	Width int
+
+	// MaxLength specifies a maximum length for StringKind, BytesKind, AddressKind, and JSONKind fields.
+	// If it is 0, the field has no maximum length.
+	// It is invalid to have a non-zero MaxLength for other kinds.
+	MaxLength int
 }
 
 // Validate validates the field.

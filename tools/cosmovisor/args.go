@@ -157,7 +157,7 @@ func (cfg *Config) CurrentBin() (string, error) {
 }
 
 // GetConfigFromFile will read the configuration from the config file at the given path.
-// If the file path is not provided, it will to read the configuration from the ENV variables.
+// If the file path is not provided, it will read the configuration from the ENV variables.
 // If a file path is provided and ENV variables are set, they will override the values in the file.
 func GetConfigFromFile(filePath string) (*Config, error) {
 	if filePath == "" {

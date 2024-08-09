@@ -156,12 +156,12 @@ func (cfg *Config) CurrentBin() (string, error) {
 	return binpath, nil
 }
 
-// GetConfigFromFile will read the configuration from the file at the given path.
-// If the file path is not provided, it will try to read the configuration from the ENV variables.
+// GetConfigFromFile will read the configuration from the config file at the given path.
+// If the file path is not provided, it will read the configuration from the ENV variables.
 // If a file path is provided and ENV variables are set, they will override the values in the file.
 func GetConfigFromFile(filePath string) (*Config, error) {
 	if filePath == "" {
-		return GetConfigFromEnv()
+		return GetConfigFromEnv(false)
 	}
 
 	// ensure the file exist
@@ -169,18 +169,19 @@ func GetConfigFromFile(filePath string) (*Config, error) {
 		return nil, fmt.Errorf("config not found: at %s : %w", filePath, err)
 	}
 
+	v := viper.New()
 	// read the configuration from the file
-	viper.SetConfigFile(filePath)
+	v.SetConfigFile(filePath)
 	// load the env variables
 	// if the env variable is set, it will override the value provided by the config
-	viper.AutomaticEnv()
+	v.AutomaticEnv()
 
-	if err := viper.ReadInConfig(); err != nil {
+	if err := v.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
 	cfg := &Config{}
-	if err := viper.Unmarshal(cfg); err != nil {
+	if err := v.Unmarshal(cfg); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal configuration: %w", err)
 	}
 
@@ -203,7 +204,7 @@ func GetConfigFromFile(filePath string) (*Config, error) {
 
 // GetConfigFromEnv will read the environmental variables into a config
 // and then validate it is reasonable
-func GetConfigFromEnv() (*Config, error) {
+func GetConfigFromEnv(skipValidate bool) (*Config, error) {
 	var errs []error
 	cfg := &Config{
 		Home:             os.Getenv(EnvHome),
@@ -281,9 +282,11 @@ func GetConfigFromEnv() (*Config, error) {
 		errs = append(errs, fmt.Errorf("%s could not be parsed to int: %w", EnvPreupgradeMaxRetries, err))
 	}
 
-	errs = append(errs, cfg.validate()...)
-	if len(errs) > 0 {
-		return nil, errors.Join(errs...)
+	if !skipValidate {
+		errs = append(errs, cfg.validate()...)
+		if len(errs) > 0 {
+			return nil, errors.Join(errs...)
+		}
 	}
 
 	return cfg, nil
@@ -574,7 +577,7 @@ func (cfg Config) DetailString() string {
 	return sb.String()
 }
 
-// Export exports the configuration to a file at the given path.
+// Export exports the configuration to a file at the cosmovisor root directory.
 func (cfg Config) Export() (string, error) {
 	// always use the default path
 	path := filepath.Clean(cfg.DefaultCfgPath())

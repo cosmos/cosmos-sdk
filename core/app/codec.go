@@ -19,6 +19,6 @@ type InterfaceRegistry interface {
 	ListAllInterfaces() []string
 }
 
-type AnyResolver interface {
+type AnyResolver = interface {
 	Resolve(typeUrl string) (gogoproto.Msg, error)
 }

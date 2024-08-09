@@ -96,7 +96,7 @@ func (t *Tx) DecodeJSON(b []byte) {
 	if err != nil {
 		panic(err)
 	}
-	msg := reflect.New(msgType).Interface().(proto.Message)
+	msg := reflect.New(msgType).Interface().(transaction.Msg)
 	if err := gogoproto.UnmarshalAny(rawTx.Msg, msg); err != nil {
 		panic(err)
 	}

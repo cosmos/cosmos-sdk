@@ -11,6 +11,7 @@ import (
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/router"
+	transaction "cosmossdk.io/core/transaction"
 )
 
 var ErrNoHandler = errors.New("no handler")
@@ -65,7 +66,7 @@ func (b *MsgRouterBuilder) HandlerExists(msgType string) bool {
 func (b *MsgRouterBuilder) Build() (coreRouterImpl, error) {
 	handlers := make(map[string]appmodulev2.Handler)
 
-	globalPreHandler := func(ctx context.Context, msg appmodulev2.Message) error {
+	globalPreHandler := func(ctx context.Context, msg transaction.Msg) error {
 		for _, h := range b.globalPreHandlers {
 			err := h(ctx, msg)
 			if err != nil {
@@ -75,7 +76,7 @@ func (b *MsgRouterBuilder) Build() (coreRouterImpl, error) {
 		return nil
 	}
 
-	globalPostHandler := func(ctx context.Context, msg, msgResp appmodulev2.Message) error {
+	globalPostHandler := func(ctx context.Context, msg, msgResp transaction.Msg) error {
 		for _, h := range b.globalPostHandlers {
 			err := h(ctx, msg, msgResp)
 			if err != nil {
@@ -106,7 +107,7 @@ func buildHandler(
 	postHandlers []appmodulev2.PostMsgHandler,
 	globalPostHandler appmodulev2.PostMsgHandler,
 ) appmodulev2.Handler {
-	return func(ctx context.Context, msg appmodulev2.Message) (msgResp appmodulev2.Message, err error) {
+	return func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
 		if len(preHandlers) != 0 {
 			for _, preHandler := range preHandlers {
 				if err := preHandler(ctx, msg); err != nil {
@@ -159,7 +160,7 @@ func (r coreRouterImpl) CanInvoke(_ context.Context, typeURL string) error {
 	return nil
 }
 
-func (r coreRouterImpl) InvokeTyped(ctx context.Context, req, resp gogoproto.Message) error {
+func (r coreRouterImpl) InvokeTyped(ctx context.Context, req, resp transaction.Msg) error {
 	handlerResp, err := r.InvokeUntyped(ctx, req)
 	if err != nil {
 		return err
@@ -167,7 +168,7 @@ func (r coreRouterImpl) InvokeTyped(ctx context.Context, req, resp gogoproto.Mes
 	return merge(handlerResp, resp)
 }
 
-func (r coreRouterImpl) InvokeUntyped(ctx context.Context, req gogoproto.Message) (res gogoproto.Message, err error) {
+func (r coreRouterImpl) InvokeUntyped(ctx context.Context, req transaction.Msg) (res transaction.Msg, err error) {
 	typeName := msgTypeURL(req)
 	handler, exists := r.handlers[typeName]
 	if !exists {

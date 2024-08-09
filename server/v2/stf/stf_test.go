@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
@@ -23,11 +22,11 @@ import (
 
 func addMsgHandlerToSTF[T any, PT interface {
 	*T
-	proto.Message
+	transaction.Msg
 },
 	U any, UT interface {
 		*U
-		proto.Message
+		transaction.Msg
 	}](
 	t *testing.T,
 	stf *STF[mock.Tx],
@@ -37,7 +36,7 @@ func addMsgHandlerToSTF[T any, PT interface {
 	msgRouterBuilder := NewMsgRouterBuilder()
 	err := msgRouterBuilder.RegisterHandler(
 		msgTypeURL(PT(new(T))),
-		func(ctx context.Context, msg appmodulev2.Message) (msgResp appmodulev2.Message, err error) {
+		func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
 			typedReq := msg.(PT)
 			typedResp, err := handler(ctx, typedReq)
 			if err != nil {

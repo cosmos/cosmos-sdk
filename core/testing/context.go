@@ -3,10 +3,9 @@ package coretesting
 import (
 	"context"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
-
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/transaction"
 )
 
 type dummyKey struct{}
@@ -15,7 +14,7 @@ func Context() context.Context {
 	dummy := &dummyCtx{
 		stores:      map[string]store.KVStore{},
 		events:      map[string][]event.Event{},
-		protoEvents: map[string][]gogoproto.Message{},
+		protoEvents: map[string][]transaction.Msg{},
 	}
 
 	ctx := context.WithValue(context.Background(), dummyKey{}, dummy)
@@ -28,7 +27,7 @@ type dummyCtx struct {
 	// maps event emitted by the actor.
 	events map[string][]event.Event
 	// maps proto events emitted by the actor.
-	protoEvents map[string][]gogoproto.Message
+	protoEvents map[string][]transaction.Msg
 }
 
 func unwrap(ctx context.Context) *dummyCtx {

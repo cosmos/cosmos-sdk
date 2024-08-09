@@ -17,7 +17,7 @@ require (
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.53.0
-	github.com/cosmos/gogoproto v1.6.0
+	github.com/cosmos/gogoproto v1.6.1-0.20240809124342-d6a57064ada0
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4

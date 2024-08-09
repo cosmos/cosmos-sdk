@@ -19,8 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-var StoreKey = "Consensus"
-
 type Keeper struct {
 	appmodule.Environment
 

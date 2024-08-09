@@ -38,6 +38,7 @@ Every **code environment** must expose a `handle` function: which takes a `(code
 Every code environment receives the following callback functions:
 * `invoke(account address, message data, gas limit)`: sends a message to another account specified by its address
 * `invoke_default(message name, message data, gas limit)`: sends a message to the account registered with the default handler for the given message name, if one exists
+* `register_default_handler(message name)`: registers the account as the default handler for the given message name - this will fail if two accounts try to register as the default handler for the same message name
 
 **Gas limit** parameters are an integer which specifies the maximum amount of gas units that may be consumed during the execution of the handler before the code environment returns an error. When each handler returns it should return the amount of gas consumed. Each code environment is expected to track execution cost in a consistent way to avoid unbounded execution and the remaining gas should be passed to each nested call in order to enforce gas limits across the system.
 
@@ -54,6 +55,8 @@ The **execution manager** is itself the **root account** and understands the fol
 Any other specifications regarding the encoding of messages, storage, events, transaction execution or interaction with consensus environments should get specified at a level above the cross-language framework. The cross-language framework is intended to be a minimal specification that allows for the execution of messages across different code environments.
 
 TODO: packet sizes and any details of formats of message data and message responses
+
+TODO: how do we deal with pre- and post-handlers that have been specified now in core? are these an execution manager concern, can they be dealt with at another level, or should they be unsupporte?
 
 ## Abandoned Ideas (Optional)
 

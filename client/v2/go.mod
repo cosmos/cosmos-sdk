@@ -13,7 +13,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
-	google.golang.org/grpc v1.64.1
+	google.golang.org/grpc v1.65.0
 	google.golang.org/protobuf v1.34.2
 	gotest.tools/v3 v3.5.1
 	sigs.k8s.io/yaml v1.4.0
@@ -77,7 +77,7 @@ require (
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/glog v1.2.0 // indirect
+	github.com/golang/glog v1.2.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
@@ -156,15 +156,15 @@ require (
 	golang.org/x/crypto v0.26.0 // indirect
 	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc // indirect
 	golang.org/x/mod v0.17.0 // indirect
-	golang.org/x/net v0.27.0 // indirect
+	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.23.0 // indirect
+	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/term v0.23.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240318140521-94a12d6c2237 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240709173604-40e1e62336c5 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240528184218-531527333157 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240808171019-573a1156607a // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	pgregory.net/rapid v1.1.0 // indirect

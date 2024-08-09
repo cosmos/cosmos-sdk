@@ -35,7 +35,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	tkey := storetypes.NewTransientStoreKey("params_transient_test")
 
-	suite.ctx = testutil.DefaultContext(key, tkey)
+	suite.ctx = testutil.DefaultContextWithKeys(map[string]*storetypes.KVStoreKey{key.Name(): key}, map[string]*storetypes.TransientStoreKey{tkey.Name(): tkey}, map[string]*storetypes.MemoryStoreKey{})
 	suite.paramsKeeper = keeper.NewKeeper(encodingCfg.Codec, encodingCfg.Amino, key, tkey)
 	suite.paramsKeeper.Subspace("bank")
 	suite.paramsKeeper.Subspace("staking")

@@ -6,12 +6,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 
-	storetypes "cosmossdk.io/store/types"
+	coretesting "cosmossdk.io/core/testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
@@ -22,9 +21,8 @@ func TestPrimaryKeyTable(t *testing.T) {
 		// Init creates a new instance of the state machine model by building the real
 		// table and making the empty model map
 		// Create context
-		key := storetypes.NewKVStoreKey("test")
-		testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-		store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+		testCtx := testutil.DefaultContextWithDB(t, "test")
+		store := coretesting.KVStoreService(testCtx.Ctx, "test").OpenKVStore(testCtx.Ctx)
 
 		// Create primary key table
 		interfaceRegistry := types.NewInterfaceRegistry()

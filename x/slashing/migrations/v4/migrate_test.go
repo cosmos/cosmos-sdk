@@ -7,14 +7,13 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
-	storetypes "cosmossdk.io/store/types"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/x/slashing"
 	v4 "cosmossdk.io/x/slashing/migrations/v4"
 	slashingtypes "cosmossdk.io/x/slashing/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
@@ -23,10 +22,8 @@ var consAddr = sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
 
 func TestMigrate(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, slashing.AppModule{}).Codec
-	storeKey := storetypes.NewKVStoreKey(slashingtypes.ModuleName)
-	tKey := storetypes.NewTransientStoreKey("transient_test")
-	ctx := testutil.DefaultContext(storeKey, tKey)
-	store := ctx.KVStore(storeKey)
+	ctx := coretesting.Context()
+	store := coretesting.KVStoreService(ctx, slashingtypes.ModuleName).OpenKVStore(ctx)
 	params := slashingtypes.Params{SignedBlocksWindow: 100}
 	valCodec := address.NewBech32Codec("cosmosvalcons")
 	consStrAddr, err := valCodec.BytesToString(consAddr)
@@ -34,13 +31,15 @@ func TestMigrate(t *testing.T) {
 
 	// store old signing info and bitmap entries
 	bz := cdc.MustMarshal(&slashingtypes.ValidatorSigningInfo{Address: consStrAddr})
-	store.Set(v4.ValidatorSigningInfoKey(consAddr), bz)
+	err = store.Set(v4.ValidatorSigningInfoKey(consAddr), bz)
+	require.NoError(t, err)
 
 	for i := int64(0); i < params.SignedBlocksWindow; i++ {
 		// all even blocks are missed
 		missed := &gogotypes.BoolValue{Value: i%2 == 0}
 		bz := cdc.MustMarshal(missed)
-		store.Set(v4.ValidatorMissedBlockBitArrayKey(consAddr, i), bz)
+		err := store.Set(v4.ValidatorMissedBlockBitArrayKey(consAddr, i), bz)
+		require.NoError(t, err)
 	}
 
 	err = v4.Migrate(ctx, cdc, store, params, valCodec)
@@ -48,7 +47,8 @@ func TestMigrate(t *testing.T) {
 
 	for i := int64(0); i < params.SignedBlocksWindow; i++ {
 		chunkIndex := i / v4.MissedBlockBitmapChunkSize
-		chunk := store.Get(v4.ValidatorMissedBlockBitmapKey(consAddr, chunkIndex))
+		chunk, err := store.Get(v4.ValidatorMissedBlockBitmapKey(consAddr, chunkIndex))
+		require.NoError(t, err)
 		require.NotNil(t, chunk)
 
 		bs := bitset.New(uint(v4.MissedBlockBitmapChunkSize))
@@ -61,6 +61,7 @@ func TestMigrate(t *testing.T) {
 	}
 
 	// ensure there's only one chunk for a window of size 100
-	chunk := store.Get(v4.ValidatorMissedBlockBitmapKey(consAddr, 1))
-	require.Nil(t, chunk)
+	chunk, err := store.Get(v4.ValidatorMissedBlockBitmapKey(consAddr, 1))
+	require.NoError(t, err)
+	require.Empty(t, chunk)
 }

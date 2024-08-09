@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/mint"
 	"cosmossdk.io/x/mint/keeper"
@@ -19,7 +18,6 @@ import (
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
@@ -30,7 +28,7 @@ type KeeperTestSuite struct {
 	suite.Suite
 
 	mintKeeper    keeper.Keeper
-	ctx           sdk.Context
+	ctx           context.Context
 	msgServer     types.MsgServer
 	stakingKeeper *minttestutil.MockStakingKeeper
 	bankKeeper    *minttestutil.MockBankKeeper
@@ -42,11 +40,10 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (s *KeeperTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, mint.AppModule{})
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
+	testCtx := coretesting.Context()
+	s.ctx = testCtx
+	storeService := coretesting.KVStoreService(s.ctx, types.StoreKey)
 	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	s.ctx = testCtx.Ctx
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())

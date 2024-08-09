@@ -1,14 +1,15 @@
 package keeper_test
 
 import (
+	"context"
 	gocontext "context"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/mint"
 	"cosmossdk.io/x/mint/keeper"
@@ -18,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
@@ -26,17 +26,17 @@ import (
 type MintTestSuite struct {
 	suite.Suite
 
-	ctx         sdk.Context
+	ctx         context.Context
 	queryClient types.QueryClient
 	mintKeeper  keeper.Keeper
 }
 
 func (suite *MintTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, mint.AppModule{})
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
-	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	suite.ctx = testCtx.Ctx
+	testCtx := coretesting.Context()
+	suite.ctx = testCtx
+	key := coretesting.KVStoreService(suite.ctx, types.StoreKey)
+	storeService := runtime.NewEnvironment(key, log.NewNopLogger())
 
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
@@ -59,7 +59,7 @@ func (suite *MintTestSuite) SetupTest() {
 	err := suite.mintKeeper.Params.Set(suite.ctx, types.DefaultParams())
 	suite.Require().NoError(err)
 	suite.Require().NoError(suite.mintKeeper.Minter.Set(suite.ctx, types.DefaultInitialMinter()))
-	queryHelper := baseapp.NewQueryServerTestHelper(testCtx.Ctx, encCfg.InterfaceRegistry)
+	queryHelper := baseapp.NewQueryServerTestHelper(testCtx, encCfg.InterfaceRegistry)
 	types.RegisterQueryServer(queryHelper, keeper.NewQueryServerImpl(suite.mintKeeper))
 
 	suite.queryClient = types.NewQueryClient(queryHelper)

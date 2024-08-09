@@ -6,11 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	storetypes "cosmossdk.io/store/types"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/x/upgrade/types"
-
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 type storedUpgrade struct {
@@ -23,9 +20,8 @@ func encodeOldDoneKey(upgrade storedUpgrade) []byte {
 }
 
 func TestMigrateDoneUpgradeKeys(t *testing.T) {
-	upgradeKey := storetypes.NewKVStoreKey("upgrade")
-	storeService := runtime.NewKVStoreService(upgradeKey)
-	ctx := testutil.DefaultContext(upgradeKey, storetypes.NewTransientStoreKey("transient_test"))
+	ctx := coretesting.Context()
+	storeService := coretesting.KVStoreService(ctx, "upgrade")
 	store := storeService.OpenKVStore(ctx)
 
 	testCases := []struct {

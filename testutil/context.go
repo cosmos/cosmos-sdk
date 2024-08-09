@@ -17,11 +17,12 @@ import (
 )
 
 // DefaultContext creates a sdk.Context with a fresh MemDB that can be used in tests.
-func DefaultContext(key, tkey storetypes.StoreKey) sdk.Context {
+func DefaultContext(key string) sdk.Context {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
-	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
-	cms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, db)
+	keyStore := storetypes.NewKVStoreKey(key)
+	cms.MountStoreWithDB(keyStore, storetypes.StoreTypeIAVL, db)
+
 	err := cms.LoadLatestVersion()
 	if err != nil {
 		panic(err)
@@ -67,12 +68,11 @@ type TestContext struct {
 	CMS store.CommitMultiStore
 }
 
-func DefaultContextWithDB(tb testing.TB, key, tkey storetypes.StoreKey) TestContext {
+func DefaultContextWithDB(tb testing.TB, key string) TestContext {
 	tb.Helper()
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
-	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
-	cms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, db)
+	cms.MountStoreWithDB(storetypes.NewKVStoreKey(key), storetypes.StoreTypeIAVL, db)
 	err := cms.LoadLatestVersion()
 	assert.NoError(tb, err)
 

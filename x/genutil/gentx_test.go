@@ -13,7 +13,6 @@ import (
 
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
@@ -54,9 +53,7 @@ type GenTxTestSuite struct {
 func (suite *GenTxTestSuite) SetupTest() {
 	valAc := codectestutil.CodecOptions{}.GetValidatorCodec()
 	suite.encodingConfig = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, genutil.AppModule{})
-	key := storetypes.NewKVStoreKey("a_Store_Key")
-	tkey := storetypes.NewTransientStoreKey("a_transient_store")
-	suite.ctx = testutil.DefaultContext(key, tkey)
+	suite.ctx = testutil.DefaultContext("a_Store_Key")
 
 	ctrl := gomock.NewController(suite.T())
 	suite.stakingKeeper = genutiltestutil.NewMockStakingKeeper(ctrl)

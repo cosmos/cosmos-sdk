@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"context"
 	gocontext "context"
 	"errors"
 	"fmt"
@@ -10,7 +11,6 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // QueryServiceTestHelper provides a helper for making grpc query service
@@ -19,7 +19,7 @@ import (
 // service client.
 type QueryServiceTestHelper struct {
 	*GRPCQueryRouter
-	Ctx sdk.Context
+	Ctx context.Context
 }
 
 var (
@@ -29,7 +29,7 @@ var (
 
 // NewQueryServerTestHelper creates a new QueryServiceTestHelper that wraps
 // the provided sdk.Context
-func NewQueryServerTestHelper(ctx sdk.Context, interfaceRegistry types.InterfaceRegistry) *QueryServiceTestHelper {
+func NewQueryServerTestHelper(ctx context.Context, interfaceRegistry types.InterfaceRegistry) *QueryServiceTestHelper {
 	qrt := NewGRPCQueryRouter()
 	qrt.SetInterfaceRegistry(interfaceRegistry)
 	return &QueryServiceTestHelper{GRPCQueryRouter: qrt, Ctx: ctx}

@@ -160,7 +160,7 @@ func (r coreRouterImpl) CanInvoke(_ context.Context, typeURL string) error {
 	return nil
 }
 
-func (r coreRouterImpl) InvokeTyped(ctx context.Context, req, resp gogoproto.Message) error {
+func (r coreRouterImpl) InvokeTyped(ctx context.Context, req, resp transaction.Msg) error {
 	handlerResp, err := r.InvokeUntyped(ctx, req)
 	if err != nil {
 		return err
@@ -168,7 +168,7 @@ func (r coreRouterImpl) InvokeTyped(ctx context.Context, req, resp gogoproto.Mes
 	return merge(handlerResp, resp)
 }
 
-func (r coreRouterImpl) InvokeUntyped(ctx context.Context, req gogoproto.Message) (res gogoproto.Message, err error) {
+func (r coreRouterImpl) InvokeUntyped(ctx context.Context, req transaction.Msg) (res transaction.Msg, err error) {
 	typeName := msgTypeURL(req)
 	handler, exists := r.handlers[typeName]
 	if !exists {

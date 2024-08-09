@@ -50,6 +50,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## Bug Fixes
 
 * [#20062](https://github.com/cosmos/cosmos-sdk/pull/20062) Fixed cosmovisor add-upgrade permissions
+* [#20585](https://github.com/cosmos/cosmos-sdk/pull/20585) Always parse stdout and stderr
+* [#20585](https://github.com/cosmos/cosmos-sdk/pull/20585) Pass right home to command `status`
+* [#20585](https://github.com/cosmos/cosmos-sdk/pull/20585) Fix upgrades applied automatically (check two casing of sync_info)
 
 ## v1.5.0 - 2023-07-17
 

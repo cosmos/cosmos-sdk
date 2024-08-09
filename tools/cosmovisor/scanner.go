@@ -16,8 +16,9 @@ import (
 )
 
 type fileWatcher struct {
-	filename string // full path to a watched file
-	interval time.Duration
+	deamonHome string
+	filename   string // full path to a watched file
+	interval   time.Duration
 
 	currentBin  string
 	currentInfo upgradetypes.Plan
@@ -52,6 +53,7 @@ func newUpgradeFileWatcher(cfg *Config) (*fileWatcher, error) {
 	}
 
 	return &fileWatcher{
+		deamonHome:    cfg.Home,
 		currentBin:    bin,
 		filename:      filenameAbs,
 		interval:      cfg.PollInterval,
@@ -111,7 +113,8 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 		return false
 	}
 
-	if !stat.ModTime().After(fw.lastModTime) {
+	// no update if the file already exists and has not been modified
+	if !stat.ModTime().After(fw.lastModTime) && fw.initialized {
 		return false
 	}
 
@@ -153,17 +156,20 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 
 // checkHeight checks if the current block height
 func (fw *fileWatcher) checkHeight() (int64, error) {
-	if !testing.Testing() {
+	if testing.Testing() {
 		return 0, nil
 	}
 
-	result, err := exec.Command(fw.currentBin, "status").CombinedOutput() //nolint:gosec // we want to execute the status command
+	result, err := exec.Command(fw.currentBin, "status", "--home", fw.deamonHome).CombinedOutput() //nolint:gosec // we want to execute the status command
 	if err != nil {
 		return 0, err
 	}
 
 	type response struct {
 		SyncInfo struct {
+			LatestBlockHeight string `json:"latest_block_height"`
+		} `json:"sync_info"`
+		AnotherCasingSyncInfo struct {
 			LatestBlockHeight string `json:"latest_block_height"`
 		} `json:"SyncInfo"`
 	}
@@ -173,11 +179,14 @@ func (fw *fileWatcher) checkHeight() (int64, error) {
 		return 0, err
 	}
 
-	if resp.SyncInfo.LatestBlockHeight == "" {
-		return 0, errors.New("latest block height is empty")
+	if resp.SyncInfo.LatestBlockHeight != "" {
+		return strconv.ParseInt(resp.SyncInfo.LatestBlockHeight, 10, 64)
+	} else if resp.AnotherCasingSyncInfo.LatestBlockHeight != "" {
+		return strconv.ParseInt(resp.AnotherCasingSyncInfo.LatestBlockHeight, 10, 64)
 	}
 
-	return strconv.ParseInt(resp.SyncInfo.LatestBlockHeight, 10, 64)
+	return 0, errors.New("latest block height is empty")
+
 }
 
 func parseUpgradeInfoFile(filename string, disableRecase bool) (upgradetypes.Plan, error) {

@@ -102,12 +102,12 @@ func LoadArchiveCmd() *cobra.Command {
 
 			savedSnapshot := <-quitChan
 			if savedSnapshot == nil {
-				return fmt.Errorf("failed to save snapshot")
+				return errors.New("failed to save snapshot")
 			}
 
 			if !reflect.DeepEqual(&snapshot, savedSnapshot) {
 				_ = snapshotStore.Delete(snapshot.Height, snapshot.Format)
-				return fmt.Errorf("invalid archive, the saved snapshot is not equal to the original one")
+				return errors.New("invalid archive, the saved snapshot is not equal to the original one")
 			}
 
 			return nil

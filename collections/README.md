@@ -677,7 +677,7 @@ func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
 		Balances: collections.NewMap(
 			sb, BalancesPrefix, "balances",
 			collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey),
-			math.IntValue,
+			sdk.IntValue,
 		),
 	}
 }
@@ -720,7 +720,7 @@ func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
 		Balances: collections.NewMap(
 			sb, BalancesPrefix, "balances",
 			collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey),
-			math.IntValue,
+			sdk.IntValue,
 		),
 	}
 }

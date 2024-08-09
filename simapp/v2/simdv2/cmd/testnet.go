@@ -14,14 +14,15 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/cometbft"
+	"cosmossdk.io/server/v2/store"
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -40,6 +41,7 @@ import (
 )
 
 var (
+	flagMinGasPrices      = "minimum-gas-prices"
 	flagNodeDirPrefix     = "node-dir-prefix"
 	flagNumValidators     = "validator-count"
 	flagOutputDir         = "output-dir"
@@ -70,7 +72,7 @@ func addTestnetFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().IntP(flagNumValidators, "n", 4, "Number of validators to initialize the testnet with")
 	cmd.Flags().StringP(flagOutputDir, "o", "./.testnets", "Directory to store initialization data for the testnet")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().String(cometbft.FlagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
+	cmd.Flags().String(flagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
 	cmd.Flags().String(flags.FlagKeyType, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 
 	// support old flags name for backwards compatibility
@@ -127,7 +129,7 @@ Example:
 			args.outputDir, _ = cmd.Flags().GetString(flagOutputDir)
 			args.keyringBackend, _ = cmd.Flags().GetString(flags.FlagKeyringBackend)
 			args.chainID, _ = cmd.Flags().GetString(flags.FlagChainID)
-			args.minGasPrices, _ = cmd.Flags().GetString(cometbft.FlagMinGasPrices)
+			args.minGasPrices, _ = cmd.Flags().GetString(flagMinGasPrices)
 			args.nodeDirPrefix, _ = cmd.Flags().GetString(flagNodeDirPrefix)
 			args.nodeDaemonHome, _ = cmd.Flags().GetString(flagNodeDaemonHome)
 			args.startingIPAddress, _ = cmd.Flags().GetString(flagStartingIPAddress)
@@ -198,7 +200,7 @@ func initTestnetFiles[T transaction.Tx](
 	// generate private keys, node IDs, and initial transactions
 	for i := 0; i < args.numValidators; i++ {
 		var portOffset int
-		var grpcConfig *grpc.Config
+		grpcConfig := grpc.DefaultConfig()
 		if args.singleMachine {
 			portOffset = i
 			p2pPortStart = 16656 // use different start point to not conflict with rpc port
@@ -336,9 +338,14 @@ func initTestnetFiles[T transaction.Tx](
 		}
 
 		// Write server config
-		cometServer := cometbft.New[serverv2.AppI[T], T](&temporaryTxDecoder[T]{clientCtx.TxConfig}, cometbft.ServerOptions[T]{}, cometbft.OverwriteDefaultCometConfig(nodeConfig))
-		grpcServer := grpc.New[serverv2.AppI[T], T](grpc.OverwriteDefaultConfig(grpcConfig))
-		server := serverv2.NewServer(log.NewNopLogger(), cometServer, grpcServer)
+		cometServer := cometbft.New[T](
+			&genericTxDecoder[T]{clientCtx.TxConfig},
+			cometbft.ServerOptions[T]{},
+			cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig),
+		)
+		storeServer := store.New[T](newApp)
+		grpcServer := grpc.New[T](grpc.OverwriteDefaultConfig(grpcConfig))
+		server := serverv2.NewServer(log.NewNopLogger(), cometServer, grpcServer, storeServer)
 		err = server.WriteConfig(filepath.Join(nodeDir, "config"))
 		if err != nil {
 			return err
@@ -359,7 +366,7 @@ func initTestnetFiles[T transaction.Tx](
 	}
 
 	// Update viper root since root dir become rootdir/node/simd
-	client.GetViperFromCmd(cmd).Set(flags.FlagHome, nodeConfig.RootDir)
+	serverv2.GetViperFromCmd(cmd).Set(flags.FlagHome, nodeConfig.RootDir)
 
 	cmd.PrintErrf("Successfully initialized %d node directories\n", args.numValidators)
 	return nil

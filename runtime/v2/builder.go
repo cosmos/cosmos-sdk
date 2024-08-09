@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"path/filepath"
+
+	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -13,6 +16,7 @@ import (
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
+	"cosmossdk.io/store/v2/db"
 	rootstore "cosmossdk.io/store/v2/root"
 )
 
@@ -22,6 +26,7 @@ import (
 type AppBuilder[T transaction.Tx] struct {
 	app          *App[T]
 	storeOptions *rootstore.FactoryOptions
+	viper        *viper.Viper
 
 	// the following fields are used to overwrite the default
 	branch      func(state store.ReaderMap) store.WriterMap
@@ -36,22 +41,26 @@ func (a *AppBuilder[T]) DefaultGenesis() map[string]json.RawMessage {
 
 // RegisterModules registers the provided modules with the module manager.
 // This is the primary hook for integrating with modules which are not registered using the app config.
-func (a *AppBuilder[T]) RegisterModules(modules ...appmodulev2.AppModule) error {
-	for _, appModule := range modules {
-		if mod, ok := appModule.(appmodule.HasName); ok {
-			name := mod.Name()
-			if _, ok := a.app.moduleManager.modules[name]; ok {
-				return fmt.Errorf("module named %q already exists", name)
+func (a *AppBuilder[T]) RegisterModules(modules map[string]appmodulev2.AppModule) error {
+	for name, appModule := range modules {
+		// if a (legacy) module implements the HasName interface, check that the name matches
+		if mod, ok := appModule.(interface{ Name() string }); ok {
+			if name != mod.Name() {
+				a.app.logger.Warn(fmt.Sprintf("module name %q does not match name returned by HasName: %q", name, mod.Name()))
 			}
-			a.app.moduleManager.modules[name] = appModule
+		}
 
-			if mod, ok := appModule.(appmodulev2.HasRegisterInterfaces); ok {
-				mod.RegisterInterfaces(a.app.interfaceRegistrar)
-			}
+		if _, ok := a.app.moduleManager.modules[name]; ok {
+			return fmt.Errorf("module named %q already exists", name)
+		}
+		a.app.moduleManager.modules[name] = appModule
 
-			if mod, ok := appModule.(appmodule.HasAminoCodec); ok {
-				mod.RegisterLegacyAminoCodec(a.app.amino)
-			}
+		if mod, ok := appModule.(appmodulev2.HasRegisterInterfaces); ok {
+			mod.RegisterInterfaces(a.app.interfaceRegistrar)
+		}
+
+		if mod, ok := appModule.(appmodule.HasAminoCodec); ok {
+			mod.RegisterLegacyAminoCodec(a.app.amino)
 		}
 	}
 
@@ -113,8 +122,31 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create STF: %w", err)
 	}
-
 	a.app.stf = stf
+
+	v := a.viper
+	home := v.GetString(FlagHome)
+
+	storeOpts := rootstore.DefaultStoreOptions()
+	if s := v.Sub("store.options"); s != nil {
+		if err := s.Unmarshal(&storeOpts); err != nil {
+			return nil, fmt.Errorf("failed to store options: %w", err)
+		}
+	}
+
+	scRawDb, err := db.NewDB(db.DBType(v.GetString("store.app-db-backend")), "application", filepath.Join(home, "data"), nil)
+	if err != nil {
+		panic(err)
+	}
+
+	storeOptions := &rootstore.FactoryOptions{
+		Logger:    a.app.logger,
+		RootDir:   home,
+		Options:   storeOpts,
+		StoreKeys: append(a.app.storeKeys, "stf"),
+		SCRawDB:   scRawDb,
+	}
+	a.storeOptions = storeOptions
 
 	rs, err := rootstore.CreateRootStore(a.storeOptions)
 	if err != nil {

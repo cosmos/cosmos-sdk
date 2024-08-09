@@ -24,6 +24,8 @@
   - orm/**/*
 "C:schema":
   - schema/**/*
+"C:indexer/postgres":
+  - indexer/postgres/**/*
 "C:x/accounts":
   - x/accounts/**/*
 "C:x/accounts/multisig":
@@ -72,6 +74,16 @@
   - x/upgrade/**/*
 "C:x/epochs":
   - x/epochs/**/*
+"C:server/v2":
+  - server/v2/**/*
+"C:server/v2 stf":
+  - server/v2/stf/**/*
+"C:server/v2 appmanager":
+  - server/v2/appmanager/**/*
+"C:server/v2 cometbft":
+  - server/v2/cometbft/**/*
+"C:server/v2 api":
+  - server/v2/api/**/*
 "Type: ADR":
   - docs/architecture/**/*
 "Type: Build":

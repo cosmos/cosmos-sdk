@@ -26,8 +26,8 @@ var Identity = []byte("stf")
 type STF[T transaction.Tx] struct {
 	logger log.Logger
 
-	msgRouter   Router
-	queryRouter Router
+	msgRouter   coreRouterImpl
+	queryRouter coreRouterImpl
 
 	doPreBlock        func(ctx context.Context, txs []T) error
 	doBeginBlock      func(ctx context.Context) error
@@ -149,7 +149,7 @@ func (s STF[T]) DeliverBlock(
 		if err = isCtxCancelled(ctx); err != nil {
 			return nil, nil, err
 		}
-		txResults[i] = s.deliverTx(ctx, newState, txBytes, transaction.ExecModeFinalize, hi)
+		txResults[i] = s.deliverTx(exCtx, newState, txBytes, transaction.ExecModeFinalize, hi)
 	}
 	// reset events
 	exCtx.events = make([]event.Event, 0)
@@ -200,7 +200,7 @@ func (s STF[T]) deliverTx(
 		}
 	}
 
-	validateGas, validationEvents, err := s.validateTx(ctx, state, gasLimit, tx)
+	validateGas, validationEvents, err := s.validateTx(ctx, state, gasLimit, tx, execMode)
 	if err != nil {
 		return appmanager.TxResult{
 			Error: err,
@@ -224,13 +224,14 @@ func (s STF[T]) validateTx(
 	state store.WriterMap,
 	gasLimit uint64,
 	tx T,
+	execMode transaction.ExecMode,
 ) (gasUsed uint64, events []event.Event, err error) {
 	validateState := s.branchFn(state)
 	hi, err := s.getHeaderInfo(validateState)
 	if err != nil {
 		return 0, nil, err
 	}
-	validateCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, validateState, transaction.ExecModeCheck)
+	validateCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, validateState, execMode)
 	validateCtx.setHeaderInfo(hi)
 	validateCtx.setGasLimit(gasLimit)
 	err = s.doTxValidation(validateCtx, tx)
@@ -447,7 +448,7 @@ func (s STF[T]) ValidateTx(
 	tx T,
 ) appmanager.TxResult {
 	validationState := s.branchFn(state)
-	gasUsed, events, err := s.validateTx(ctx, validationState, gasLimit, tx)
+	gasUsed, events, err := s.validateTx(ctx, validationState, gasLimit, tx, transaction.ExecModeCheck)
 	return appmanager.TxResult{
 		Events:  events,
 		GasUsed: gasUsed,
@@ -564,10 +565,10 @@ func (s STF[T]) makeContext(
 ) *executionContext {
 	valuedCtx := context.WithValue(ctx, corecontext.ExecModeKey, execMode)
 	return newExecutionContext(
+		valuedCtx,
 		s.makeGasMeter,
 		s.makeGasMeteredState,
 		s.branchFn,
-		valuedCtx,
 		sender,
 		store,
 		execMode,
@@ -577,15 +578,15 @@ func (s STF[T]) makeContext(
 }
 
 func newExecutionContext(
+	ctx context.Context,
 	makeGasMeterFn makeGasMeterFn,
 	makeGasMeteredStoreFn makeGasMeteredStateFn,
 	branchFn branchFn,
-	ctx context.Context,
 	sender transaction.Identity,
 	state store.WriterMap,
 	execMode transaction.ExecMode,
-	msgRouter Router,
-	queryRouter Router,
+	msgRouter coreRouterImpl,
+	queryRouter coreRouterImpl,
 ) *executionContext {
 	meter := makeGasMeterFn(gas.NoGasLimit)
 	meteredState := makeGasMeteredStoreFn(meter, state)

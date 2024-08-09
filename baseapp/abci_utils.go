@@ -177,7 +177,7 @@ func validateExtendedCommitAgainstLastCommit(ec abci.ExtendedCommitInfo, lc come
 		}
 		return -int(vote1.Validator.Power - vote2.Validator.Power) // vp sorted in descending order
 	}) {
-		return fmt.Errorf("extended commit votes are not sorted by voting power")
+		return errors.New("extended commit votes are not sorted by voting power")
 	}
 
 	addressCache := make(map[string]struct{}, len(ec.Votes))

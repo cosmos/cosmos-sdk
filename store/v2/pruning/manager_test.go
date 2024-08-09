@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
@@ -33,7 +33,7 @@ func TestPruningManagerTestSuite(t *testing.T) {
 }
 
 func (s *PruningManagerTestSuite) SetupTest() {
-	nopLog := log.NewNopLogger()
+	nopLog := coretesting.NewNopLogger()
 	var err error
 
 	mdb := dbm.NewMemDB()
@@ -42,7 +42,7 @@ func (s *PruningManagerTestSuite) SetupTest() {
 		prefixDB := dbm.NewPrefixDB(mdb, []byte(storeKey))
 		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, nopLog, iavl.DefaultConfig())
 	}
-	s.sc, err = commitment.NewCommitStore(multiTrees, mdb, nopLog)
+	s.sc, err = commitment.NewCommitStore(multiTrees, nil, mdb, nopLog)
 	s.Require().NoError(err)
 
 	sqliteDB, err := sqlite.New(s.T().TempDir())

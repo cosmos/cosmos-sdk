@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/log"
 	authtypes "cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -577,5 +577,4 @@ func (MockCoreAppModule) ExportGenesis(ctx context.Context, target appmodule.Gen
 var (
 	_ appmodule.AppModule      = MockCoreAppModule{}
 	_ appmodule.HasGenesisAuto = MockCoreAppModule{}
-	_ appmodule.HasServices    = MockCoreAppModule{}
 )

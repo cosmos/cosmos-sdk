@@ -14,12 +14,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // ModuleHashByHeightQuery retrieves the module hashes at a given height.
-func ModuleHashByHeightQuery[T servertypes.Application](appCreator servertypes.AppCreator[T]) *cobra.Command {
+func ModuleHashByHeightQuery(appCreator types.AppCreator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "module-hash-by-height [height]",
 		Short:   "Get module hashes at a given height",
@@ -51,9 +51,9 @@ func ModuleHashByHeightQuery[T servertypes.Application](appCreator servertypes.A
 	return cmd
 }
 
-func getModuleHashesAtHeight[T servertypes.Application](svrCtx *Context, appCreator servertypes.AppCreator[T], height int64) (*storetypes.CommitInfo, error) {
+func getModuleHashesAtHeight(svrCtx *Context, appCreator types.AppCreator, height int64) (*storetypes.CommitInfo, error) {
 	home := svrCtx.Config.RootDir
-	db, err := OpenDB(home, GetAppDBBackend(svrCtx.Viper))
+	db, err := openDB(home, GetAppDBBackend(svrCtx.Viper))
 	if err != nil {
 		return nil, fmt.Errorf("error opening DB, make sure daemon is not running when calling this query: %w", err)
 	}

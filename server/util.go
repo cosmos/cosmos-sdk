@@ -337,12 +337,8 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		cometCmd,
 		ExportCmd(appExport, defaultNodeHome),
 		version.NewVersionCommand(),
-<<<<<<< HEAD
 		NewRollbackCmd(appCreator, defaultNodeHome),
-=======
-		NewRollbackCmd(appCreator),
 		ModuleHashByHeightQuery(appCreator),
->>>>>>> 4e97c4951 (feat: module hash by height query (#20779))
 	)
 }
 

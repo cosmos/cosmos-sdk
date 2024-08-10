@@ -502,7 +502,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 			fmt.Sprintf("making sure %q is executable", genBinExe),
 			"checking on the current symlink and creating it if needed",
 			fmt.Sprintf("the current symlink points to: %q", genBinExe),
-			fmt.Sprintf("config file present at: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)),
+			fmt.Sprintf("cosmovisor config.toml created at: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)),
 		}
 
 		s.setEnv(s.T(), env)
@@ -555,7 +555,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 			fmt.Sprintf("the %q file already exists", genBinDirExe),
 			fmt.Sprintf("making sure %q is executable", genBinDirExe),
 			fmt.Sprintf("the current symlink points to: %q", genBinDirExe),
-			fmt.Sprintf("config file present at: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)),
+			fmt.Sprintf("cosmovisor config.toml created at: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)),
 		}
 
 		s.setEnv(t, env)
@@ -588,7 +588,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 			fmt.Sprintf("copying executable into place: %q", genBinExe),
 			fmt.Sprintf("making sure %q is executable", genBinExe),
 			fmt.Sprintf("the current symlink points to: %q", genBinExe),
-			fmt.Sprintf("config file present at: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)),
+			fmt.Sprintf("cosmovisor config.toml created at: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)),
 		}
 
 		s.setEnv(t, env)
@@ -620,7 +620,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 		require.NoError(t, err, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()
 		bufferStr := string(bufferBz)
-		assert.Contains(t, bufferStr, fmt.Sprintf("config file present at: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)))
+		assert.Contains(t, bufferStr, fmt.Sprintf("cosmovisor config.toml created at: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)))
 	})
 }
 

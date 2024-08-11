@@ -221,6 +221,83 @@ func (s *CommitStoreTestSuite) TestStore_Pruning() {
 	}
 }
 
+func (s *CommitStoreTestSuite) TestStore_GetProof() {
+	storeKeys := []string{storeKey1, storeKey2}
+	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, nil, coretesting.NewNopLogger())
+	s.Require().NoError(err)
+
+	toVersion := uint64(10)
+	keyCount := 5
+
+	// commit some changes
+	for version := uint64(1); version <= toVersion; version++ {
+		cs := corestore.NewChangeset()
+		for _, storeKey := range storeKeys {
+			for i := 0; i < keyCount; i++ {
+				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
+			}
+		}
+		err := commitStore.WriteChangeset(cs)
+		s.Require().NoError(err)
+		_, err = commitStore.Commit(version)
+		s.Require().NoError(err)
+	}
+
+	// get proof
+	for version := uint64(1); version <= toVersion; version++ {
+		for _, storeKey := range storeKeys {
+			for i := 0; i < keyCount; i++ {
+				_, err := commitStore.GetProof([]byte(storeKey), version, []byte(fmt.Sprintf("key-%d-%d", version, i)))
+				s.Require().NoError(err)
+			}
+		}
+	}
+
+	// prune version 1
+	s.Require().NoError(commitStore.Prune(1))
+
+	// check if proof for version 1 is pruned
+	_, err = commitStore.GetProof([]byte(storeKeys[0]), 1, []byte(fmt.Sprintf("key-%d-%d", 1, 0)))
+	s.Require().Error(err)
+	// check the commit info
+	commit, _ := commitStore.GetCommitInfo(1)
+	s.Require().Nil(commit)
+}
+
+func (s *CommitStoreTestSuite) TestStore_Get() {
+	storeKeys := []string{storeKey1, storeKey2}
+	commitStore, err := s.NewStore(dbm.NewMemDB(), storeKeys, nil, coretesting.NewNopLogger())
+	s.Require().NoError(err)
+
+	toVersion := uint64(10)
+	keyCount := 5
+
+	// commit some changes
+	for version := uint64(1); version <= toVersion; version++ {
+		cs := corestore.NewChangeset()
+		for _, storeKey := range storeKeys {
+			for i := 0; i < keyCount; i++ {
+				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
+			}
+		}
+		err := commitStore.WriteChangeset(cs)
+		s.Require().NoError(err)
+		_, err = commitStore.Commit(version)
+		s.Require().NoError(err)
+	}
+
+	// get proof
+	for version := uint64(1); version <= toVersion; version++ {
+		for _, storeKey := range storeKeys {
+			for i := 0; i < keyCount; i++ {
+				val, err := commitStore.Get([]byte(storeKey), version, []byte(fmt.Sprintf("key-%d-%d", version, i)))
+				s.Require().NoError(err)
+				s.Require().Equal([]byte(fmt.Sprintf("value-%d-%d", version, i)), val)
+			}
+		}
+	}
+}
+
 func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 	storeKeys := []string{storeKey1, storeKey2, storeKey3}
 	commitDB := dbm.NewMemDB()

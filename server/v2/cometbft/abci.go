@@ -13,6 +13,7 @@ import (
 
 	coreappmgr "cosmossdk.io/core/app"
 	"cosmossdk.io/core/comet"
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -234,14 +235,15 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		c.initialHeight = 1
 	}
 
-	var consMessages []transaction.Msg
 	if req.ConsensusParams != nil {
-		consMessages = append(consMessages, &consensustypes.MsgUpdateParams{
+		ctx = context.WithValue(ctx, corecontext.InitInfoKey, &consensustypes.MsgUpdateParams{
 			Authority: c.consensusAuthority,
 			Block:     req.ConsensusParams.Block,
 			Evidence:  req.ConsensusParams.Evidence,
 			Validator: req.ConsensusParams.Validator,
 			Abci:      req.ConsensusParams.Abci,
+			Synchrony: req.ConsensusParams.Synchrony,
+			Feature:   req.ConsensusParams.Feature,
 		})
 	}
 
@@ -254,13 +256,12 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	bz := sha256.Sum256([]byte{})
 
 	br := &coreappmgr.BlockRequest[T]{
-		Height:            uint64(req.InitialHeight - 1),
-		Time:              req.Time,
-		Hash:              bz[:],
-		AppHash:           ci.Hash,
-		ChainId:           req.ChainId,
-		ConsensusMessages: consMessages,
-		IsGenesis:         true,
+		Height:    uint64(req.InitialHeight - 1),
+		Time:      req.Time,
+		Hash:      bz[:],
+		AppHash:   ci.Hash,
+		ChainId:   req.ChainId,
+		IsGenesis: true,
 	}
 
 	blockresponse, genesisState, err := c.app.InitGenesis(

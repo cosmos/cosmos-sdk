@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"context"
+	"encoding/json"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
@@ -40,6 +41,12 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 		cdc:    cdc,
 		keeper: keeper,
 	}
+}
+
+// InitGenesis performs genesis initialization for the bank module.
+func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
+
+	return am.keeper.InitGenesis(ctx)
 }
 
 // IsAppModule implements the appmodule.AppModule interface.

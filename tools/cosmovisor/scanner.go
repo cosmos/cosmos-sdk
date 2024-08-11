@@ -118,12 +118,12 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 		return false
 	}
 
-	if fw.lastModTime.IsZero() {
-		// first initialization or daemon restart while upgrading-info.json exists.
-		// it could be that it was just created and not fully written to disk.
-		// wait tiniest bit of time to allow the file to be fully written.
-		time.Sleep(2 * time.Millisecond)
-	}
+	// if fw.lastModTime.IsZero() { // check https://github.com/cosmos/cosmos-sdk/issues/21086
+	// 	// first initialization or daemon restart while upgrading-info.json exists.
+	// 	// it could be that it was just created and not fully written to disk.
+	// 	// wait tiniest bit of time to allow the file to be fully written.
+	// 	time.Sleep(2 * time.Millisecond)
+	// }
 
 	info, err := parseUpgradeInfoFile(fw.filename, fw.disableRecase)
 	if err != nil {

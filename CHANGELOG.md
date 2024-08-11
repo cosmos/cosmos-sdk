@@ -133,6 +133,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (baseapp) [#20380](https://github.com/cosmos/cosmos-sdk/pull/20380) Enhanced OfferSnapshot documentation.
 * (client) [#20771](https://github.com/cosmos/cosmos-sdk/pull/20771) Remove `ReadDefaultValuesFromDefaultClientConfig` from `client` package. (It was introduced in `v0.50.6` as a quick fix).
 * (grpcserver) [#20945](https://github.com/cosmos/cosmos-sdk/pull/20945) Adds error handling for out-of-gas panics in grpc query handlers.
+* (x/genutil) [#21249](https://github.com/cosmos/cosmos-sdk/pull/21249) Incremental JSON parsing for AppGenesis where possible.
 
 ### Bug Fixes
 

@@ -1,4 +1,4 @@
-# RFC 003: Cross-Language Execution Manager Specification
+# RFC 003: Account, Module, Message Model
 
 ## Changelog
 
@@ -21,33 +21,31 @@
 > The next required section is "Proposal" or "Goal". Given the background above, this section proposes a solution.
 > This should be an overview of the "how" for the solution, but for details further sections will be used.
 
-The base layer framework component for the cross-language framework is the **execution manager** which specifies the meaning of the core concepts of **account**, **message**, **code environment**, **module** and **gas**.
+The base layer framework component for the cross-language framework is the **hypervisor** which specifies the meaning of the core concepts of **account**, **message**, **code environment**, **module** and **gas**.
 
 An **account** is defined as having:
 * a unique **account address**
 * a code handler which allows it to execute **messages**
 
-Every **account** runs in a **code environment**. The **execution manager** contains a stateful mapping from `account address -> (code environment, code id)`. **Messages** in the **execution manager** can be executed by specifying either:
-1. an **account address** and **message data**, or
-2. a **message name** and **message data** (when a default message handler has been registered)
+Every **account** runs in a **code environment**. The **hypervisor** contains a stateful mapping from `account address -> (code environment, code id)`. The **hypervisor** executes messages by specifying the **account address** and **message name**.
 
-**Accounts** can register themselves as the default handler for a given message name. When this occurs a **message** can be invoked without knowing the address of the handling module - instead the **execution manager** knows the mapping from **message name** to default account address. **Accounts** which register default message handlers are known as **modules**. Thus, the **execution manager** also contains a stateful mapping from `message name -> account address`. TODO: can other accounts handle messages with the same name as messages that have a default handler, i.e. are "modules messages"?? 
+**Accounts** can register themselves as the default handler for a given message name. When this occurs a **message** can be invoked without knowing the address of the handling module - instead the **hypervisor** knows the mapping from **message name** to default account address. **Accounts** which register default message handlers are known as **modules**. Thus, the **hypervisor** also contains a stateful mapping from `message name -> account address`. TODO: can other accounts handle messages with the same name as messages that have a default handler, i.e. are "modules messages"?? 
 
-Every **code environment** must expose a `handle` function: which takes a `(code id, message data, account address, caller account address?, gas limit)` as input parameters and returns an optional response plus gas consumed. The `handle` function is the entry point for executing messages. `code id`s have a format defined by their code environment, although some common standards may emerge. `message data` is expected to include the message name embedded for routing purposes and the code environment is expected to parse this data and route it to the appropriate handler. The `caller account address` is specified except when the message is a query (TODO: how to specify queries? - either by message name or with a separate query handler). 
+Every **code environment** must expose a `handle` function: which takes a `(code id, message data, account address, caller account address?, gas limit)` as input parameters and returns an optional response plus gas consumed. The `handle` function is the entry point for executing messages. `code id`s have a format defined by their code environment, although some common standards may emerge. `message data` is expected to include the message name embedded for routing purposes, and the code environment is expected to parse this data and route it to the appropriate handler. The `caller account address` is specified except when the message is a query (TODO: how to specify queries? - either by message name or with a separate query handler). 
 
 Every code environment receives the following callback functions:
 * `invoke(account address, message data, gas limit)`: sends a message to another account specified by its address
 * `invoke_default(message name, message data, gas limit)`: sends a message to the account registered with the default handler for the given message name, if one exists
-* `register_default_handler(message name)`: registers the account as the default handler for the given message name - this will fail if two accounts try to register as the default handler for the same message name
+* `register_default_handler(message name)`: registers the account as the default handler for the given message name. This will fail if two accounts try to register as the default handler for the same message name
 
-**Gas limit** parameters are an integer which specifies the maximum amount of gas units that may be consumed during the execution of the handler before the code environment returns an error. When each handler returns it should return the amount of gas consumed. Each code environment is expected to track execution cost in a consistent way to avoid unbounded execution and the remaining gas should be passed to each nested call in order to enforce gas limits across the system.
+**Gas limit** parameters are an integer which specifies the maximum number of gas units that may be consumed during the execution of the handler before the code environment returns an error. When each handler returns it should return the amount of gas consumed. Each code environment is expected to track execution cost consistently to avoid unbounded execution. The remaining gas should be passed to each nested call to enforce gas limits across the system.
 
 The following special messages are defined at the framework level and can optionally be implemented by accounts:
 * `on_create(init data)`: called when an account is created
 * `on_destroy(destroy data)`: called when an account is destroyed
 * `on_migrate(old code environment, old code id, migration data)`: called when an account is migrated to a new code environment and id. The previous code environment and id should be used to perform migration operations on the old state. If the old state can't be migrated, then the account should return an error.
 
-The **execution manager** is itself the **root account** and understands the following special messages: 
+The **hypervisor** is itself the **root account** and understands the following special messages: 
 * `create(code environment, code id, account address?)`: creates a new account in the specified code environment with the specified code id and optional pre-defined account address (if not provided, a new address is generated). The `on_create` message is called if it is implemented by the account.
 * `destroy(account address)`: deletes the account with the specified address and calls the `on_destroy` message if it is implemented by the account.
 * `migrate(account address, new code environment, new code id, miration data)`: migrates the account with the specified address to the new code environment and code id. The `on_migrate` message must be implemented by the new code and must not return an error for migration to succeed. `migrate` can only be called by the account itself (or by the app outside normal execution flow).
@@ -59,7 +57,7 @@ TODO: packet sizes and any details of message data and responses? what size pack
 
 TODO: should message names be specified globally? do we have any concept of services (bundles of message handlers)? should any encoding details be specified at this level? 
 
-TODO: how do we deal with pre- and post-handlers that have been specified now in core? are these an execution manager concern, can they be dealt with at another level, or should they be unsupporte?
+TODO: how do we deal with pre- and post-handlers that have been specified now in core? are these a hypervisor concern, can they be dealt with at another level, or should they be unsupported?
 
 ## Abandoned Ideas (Optional)
 

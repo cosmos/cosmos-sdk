@@ -4,9 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	any "github.com/cosmos/gogoproto/types/any"
+	"github.com/stretchr/testify/require"
 )
 
 // TODO: remove and use: robert/expect-error

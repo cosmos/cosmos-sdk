@@ -4,18 +4,6 @@ go 1.22.2
 
 replace cosmossdk.io/core => ../../../core
 
-replace cosmossdk.io/api => ../../../api
-
-replace cosmossdk.io/x/consensus => ../../../x/consensus
-
-replace cosmossdk.io/x/auth => ../../../x/auth
-
-replace cosmossdk.io/x/bank => ../../../x/bank
-
-replace cosmossdk.io/x/staking => ../../../x/staking
-
-replace github.com/cosmos/cosmos-sdk => ../../../.
-
 require cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
 
 require (

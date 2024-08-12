@@ -1,7 +1,6 @@
 package lockup
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -155,7 +154,6 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 
 		// check if tracking is updated accordingly
 		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, app, accountAddr)
-		fmt.Println(lockupAccountInfoResponse)
 		delLocking := lockupAccountInfoResponse.DelegatedLocking
 		require.True(t, delLocking.AmountOf("stake").Equal(math.NewInt(100)))
 	})

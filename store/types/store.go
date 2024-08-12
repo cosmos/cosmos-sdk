@@ -8,7 +8,6 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 
 	corestore "cosmossdk.io/core/store"
-
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	snapshottypes "cosmossdk.io/store/snapshots/types"

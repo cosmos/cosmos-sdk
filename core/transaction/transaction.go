@@ -1,6 +1,7 @@
 package transaction
 
 type (
+	// Msg uses structural types to define the interface for a message.
 	Msg = interface {
 		Reset()
 		String() string

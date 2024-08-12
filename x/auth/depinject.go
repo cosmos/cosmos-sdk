@@ -1,18 +1,24 @@
 package auth
 
 import (
+	"fmt"
+
 	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
+	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/keeper"
 	"cosmossdk.io/x/auth/simulation"
 	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/spf13/viper"
 )
+
+const FlagMinGasPricesV2 = "server.minimum-gas-prices"
 
 var _ depinject.OnePerModuleType = AppModule{}
 
@@ -36,6 +42,8 @@ type ModuleInputs struct {
 	AddressCodec            address.Codec
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
 	AccountI                func() sdk.AccountI           `optional:"true"`
+	Viper                   *viper.Viper                  `optional:"true"` // server v2
+	FeeTxValidator          ante.FeeTxValidator           `optional:"true"` // server v2
 }
 
 type ModuleOutputs struct {
@@ -72,6 +80,20 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 
 	k := keeper.NewAccountKeeper(in.Environment, in.Cdc, in.AccountI, in.AccountsModKeeper, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, auth)
 	m := NewAppModule(in.Cdc, k, in.AccountsModKeeper, in.RandomGenesisAccountsFn)
+
+	if in.Viper != nil {
+		minGasPricesStr := in.Viper.GetString(FlagMinGasPricesV2)
+		minGasPrices, err := sdk.ParseDecCoins(minGasPricesStr)
+		if err != nil {
+			panic(fmt.Sprintf("invalid minimum gas prices: %v", err))
+		}
+		m.SetMinGasPrices(minGasPrices)
+	}
+
+	// set feeTxValidator if found
+	if in.FeeTxValidator != nil {
+		m.SetFeeTxValidator(in.FeeTxValidator)
+	}
 
 	return ModuleOutputs{AccountKeeper: k, Module: m}
 }

@@ -45,6 +45,10 @@ type AppModule struct {
 	randGenAccountsFn types.RandomGenesisAccountsFn
 	accountsModKeeper types.AccountsModKeeper
 	cdc               codec.Codec
+
+	// deduct fee v2 tx validator
+	feeTxValidator ante.FeeTxValidator
+	minGasPrices   sdk.DecCoins
 }
 
 // IsAppModule implements the appmodule.AppModule interface.
@@ -150,6 +154,16 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 	return am.cdc.MarshalJSON(gs)
 }
 
+// SetFeeTxValidator sets feeTxValidator in AppModule which is used for deducting fee
+func (am *AppModule) SetFeeTxValidator(validator ante.FeeTxValidator) {
+	am.feeTxValidator = validator
+}
+
+// SetMinGasPrices sets minimum gas prices in AppModule
+func (am *AppModule) SetMinGasPrices(minGasPrices sdk.DecCoins) {
+	am.minGasPrices = minGasPrices
+}
+
 // TxValidator implements appmodulev2.HasTxValidator.
 // It replaces auth ante handlers for server/v2
 func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
@@ -159,6 +173,12 @@ func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 		ante.NewValidateMemoDecorator(am.accountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(am.accountKeeper),
 		ante.NewValidateSigCountDecorator(am.accountKeeper),
+	}
+
+	if am.feeTxValidator != nil {
+		// set minimum-gas-prices to use in DeductFeeDecorator
+		am.feeTxValidator.SetMinGasPrices(am.minGasPrices)
+		validators = append(validators, am.feeTxValidator)
 	}
 
 	sdkTx, ok := tx.(sdk.Tx)

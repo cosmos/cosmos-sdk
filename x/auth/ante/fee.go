@@ -9,6 +9,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/auth/types"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -16,6 +17,14 @@ import (
 // TxFeeChecker checks if the provided fee is enough and returns the effective fee and tx priority.
 // The effective fee should be deducted later, and the priority should be returned in the ABCI response.
 type TxFeeChecker func(ctx context.Context, tx sdk.Tx) (sdk.Coins, int64, error)
+
+// FeeTxValidator defines custom type used to represent deduct fee decorator
+// which will be passed from x/auth/tx to x/auth module.
+type FeeTxValidator interface {
+	appmodulev2.TxValidator[sdk.Tx]
+
+	SetMinGasPrices(sdk.DecCoins)
+}
 
 // DeductFeeDecorator deducts fees from the fee payer. The fee payer is the fee granter (if specified) or first signer of the tx.
 // If the fee payer does not have the funds to pay for the fees, return an InsufficientFunds error.
@@ -26,10 +35,13 @@ type DeductFeeDecorator struct {
 	bankKeeper     types.BankKeeper
 	feegrantKeeper FeegrantKeeper
 	txFeeChecker   TxFeeChecker
+
+	// pointer to a separate state struct
+	state *deductFeeState
 }
 
-// store below fields globally to use in different methods
-type dfdGlobalFields struct {
+// deductFeeState holds the mutable state needed across method calls
+type deductFeeState struct {
 	minGasPrices   sdk.DecCoins
 	feeTx          sdk.FeeTx
 	txPriority     int64
@@ -38,14 +50,13 @@ type dfdGlobalFields struct {
 	execMode       transaction.ExecMode
 }
 
-var globalFields = dfdGlobalFields{}
-
 func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKeeper, tfc TxFeeChecker) DeductFeeDecorator {
 	dfd := DeductFeeDecorator{
 		accountKeeper:  ak,
 		bankKeeper:     bk,
 		feegrantKeeper: fk,
 		txFeeChecker:   tfc,
+		state:          &deductFeeState{}, // Initialize the state
 	}
 
 	if tfc == nil {
@@ -55,30 +66,30 @@ func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKee
 	return dfd
 }
 
-// SetMinGasPrices sets the minimum-gas-prices value in global fields of DeductFeeDecorator
-func SetMinGasPrices(minGasPrices sdk.DecCoins) {
-	globalFields.minGasPrices = minGasPrices
+// SetMinGasPrices sets the minimum-gas-prices value in the state of DeductFeeDecorator
+func (dfd DeductFeeDecorator) SetMinGasPrices(minGasPrices sdk.DecCoins) {
+	dfd.state.minGasPrices = minGasPrices
 }
 
 // AnteHandle implements an AnteHandler decorator for the DeductFeeDecorator
 func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (sdk.Context, error) {
-	globalFields.minGasPrices = ctx.MinGasPrices()
+	dfd.state.minGasPrices = ctx.MinGasPrices()
 
 	if err := dfd.ValidateTx(ctx, tx); err != nil {
 		return ctx, err
 	}
 
-	// TODO: emit this event in v2 after executing ValidateTx
+	// TODO: emit this event in v2 after executing ValidateTx method
 	events := sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeTx,
-			sdk.NewAttribute(sdk.AttributeKeyFee, globalFields.txFee.String()),
-			sdk.NewAttribute(sdk.AttributeKeyFeePayer, sdk.AccAddress(globalFields.deductFeesFrom).String()),
+			sdk.NewAttribute(sdk.AttributeKeyFee, dfd.state.txFee.String()),
+			sdk.NewAttribute(sdk.AttributeKeyFeePayer, sdk.AccAddress(dfd.state.deductFeesFrom).String()),
 		),
 	}
 	ctx.EventManager().EmitEvents(events)
 
-	newCtx := ctx.WithPriority(globalFields.txPriority)
+	newCtx := ctx.WithPriority(dfd.state.txPriority)
 	return next(newCtx, tx, false)
 }
 
@@ -88,27 +99,29 @@ func (dfd DeductFeeDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
 	if !ok {
 		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must implement the FeeTx interface")
 	}
-	globalFields.feeTx = feeTx
 
-	globalFields.execMode = dfd.accountKeeper.GetEnvironment().TransactionService.ExecMode(ctx)
+	// update the state with the current transaction
+	dfd.state.feeTx = feeTx
+
+	dfd.state.execMode = dfd.accountKeeper.GetEnvironment().TransactionService.ExecMode(ctx)
 	headerInfo := dfd.accountKeeper.GetEnvironment().HeaderService.HeaderInfo(ctx)
 
-	if globalFields.execMode != transaction.ExecModeSimulate && headerInfo.Height > 0 && globalFields.feeTx.GetGas() == 0 {
+	if dfd.state.execMode != transaction.ExecModeSimulate && headerInfo.Height > 0 && dfd.state.feeTx.GetGas() == 0 {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide positive gas")
 	}
 
-	globalFields.txFee = globalFields.feeTx.GetFee()
+	dfd.state.txFee = dfd.state.feeTx.GetFee()
 
 	var err error
 
-	if globalFields.execMode != transaction.ExecModeSimulate {
-		globalFields.txFee, globalFields.txPriority, err = dfd.txFeeChecker(ctx, tx)
+	if dfd.state.execMode != transaction.ExecModeSimulate {
+		dfd.state.txFee, dfd.state.txPriority, err = dfd.txFeeChecker(ctx, tx)
 		if err != nil {
 			return err
 		}
 	}
 
-	if err := dfd.checkDeductFee(ctx, tx, globalFields.txFee); err != nil {
+	if err := dfd.checkDeductFee(ctx, tx, dfd.state.txFee); err != nil {
 		return err
 	}
 
@@ -121,9 +134,9 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx context.Context, sdkTx sdk.Tx, 
 		return fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
 	}
 
-	feePayer := globalFields.feeTx.FeePayer()
-	feeGranter := globalFields.feeTx.FeeGranter()
-	globalFields.deductFeesFrom = feePayer
+	feePayer := dfd.state.feeTx.FeePayer()
+	feeGranter := dfd.state.feeTx.FeeGranter()
+	dfd.state.deductFeesFrom = feePayer
 
 	// if feegranter set, deduct fee from feegranter account.
 	// this works only when feegrant is enabled.
@@ -147,12 +160,12 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx context.Context, sdkTx sdk.Tx, 
 			}
 		}
 
-		globalFields.deductFeesFrom = feeGranterAddr
+		dfd.state.deductFeesFrom = feeGranterAddr
 	}
 
 	// deduct the fees
 	if !fee.IsZero() {
-		err := DeductFees(dfd.bankKeeper, ctx, globalFields.deductFeesFrom, fee)
+		err := DeductFees(dfd.bankKeeper, ctx, dfd.state.deductFeesFrom, fee)
 		if err != nil {
 			return err
 		}

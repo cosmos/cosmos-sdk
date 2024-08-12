@@ -15,14 +15,14 @@ import (
 // checkTxFeeWithValidatorMinGasPrices implements the default fee logic, where the minimum price per
 // unit of gas is fixed and set by each validator, can the tx priority is computed from the gas price.
 func (dfd DeductFeeDecorator) checkTxFeeWithValidatorMinGasPrices(ctx context.Context, _ sdk.Tx) (sdk.Coins, int64, error) {
-	feeCoins := globalFields.feeTx.GetFee()
-	gas := globalFields.feeTx.GetGas()
+	feeCoins := dfd.state.feeTx.GetFee()
+	gas := dfd.state.feeTx.GetGas()
 
 	// Ensure that the provided fees meet a minimum threshold for the validator,
 	// if this is a CheckTx. This is only for local mempool purposes, and thus
 	// is only ran on check tx.
-	if globalFields.execMode == transaction.ExecModeCheck {
-		minGasPrices := globalFields.minGasPrices
+	if dfd.state.execMode == transaction.ExecModeCheck {
+		minGasPrices := dfd.state.minGasPrices
 		if !minGasPrices.IsZero() {
 			requiredFees := make(sdk.Coins, len(minGasPrices))
 

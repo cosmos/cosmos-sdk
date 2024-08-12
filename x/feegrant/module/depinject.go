@@ -1,10 +1,6 @@
 package module
 
 import (
-	"fmt"
-
-	"github.com/spf13/viper"
-
 	modulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
@@ -15,12 +11,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
-
-const FlagMinGasPricesV2 = "server.minimum-gas-prices"
 
 var _ depinject.OnePerModuleType = AppModule{}
 
@@ -41,23 +34,11 @@ type FeegrantInputs struct {
 	AccountKeeper feegrant.AccountKeeper
 	BankKeeper    feegrant.BankKeeper
 	Registry      cdctypes.InterfaceRegistry
-
-	Viper *viper.Viper `optional:"true"` // server v2
 }
 
 func ProvideModule(in FeegrantInputs) (keeper.Keeper, appmodule.AppModule) {
 	k := keeper.NewKeeper(in.Environment, in.Cdc, in.AccountKeeper)
 	m := NewAppModule(in.Cdc, in.AccountKeeper, in.BankKeeper, k, in.Registry)
-
-	if in.Viper != nil {
-		minGasPricesStr := in.Viper.GetString(FlagMinGasPricesV2)
-		minGasPrices, err := sdk.ParseDecCoins(minGasPricesStr)
-		if err != nil {
-			panic(fmt.Sprintf("invalid minimum gas prices: %v", err))
-		}
-		m.SetMinGasPrices(minGasPrices)
-	}
-
 	return k, m
 }
 

@@ -10,12 +10,9 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
-	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/errors"
-	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/keeper"
@@ -23,7 +20,6 @@ import (
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -47,9 +43,6 @@ type AppModule struct {
 	keeper        keeper.Keeper
 	accountKeeper feegrant.AccountKeeper
 	bankKeeper    feegrant.BankKeeper
-
-	// need for txValidator
-	minGasPrices sdk.DecCoins
 }
 
 // NewAppModule creates a new AppModule object
@@ -150,35 +143,6 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 	}
 
 	return am.cdc.MarshalJSON(gs)
-}
-
-// SetMinGasPrices sets minimum gas prices in AppModule
-func (am *AppModule) SetMinGasPrices(minGasPrices sdk.DecCoins) {
-	am.minGasPrices = minGasPrices
-}
-
-// TxValidator implements appmodulev2.HasTxValidator.
-// It replaces auth ante handlers for server/v2
-func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
-	dfd := ante.NewDeductFeeDecorator(am.accountKeeper, am.bankKeeper,
-		am.keeper, nil)
-	// set minimum-gas-prices to use in DeductFeeDecorator
-	ante.SetMinGasPrices(am.minGasPrices)
-
-	validators := []appmodulev2.TxValidator[sdk.Tx]{dfd}
-
-	sdkTx, ok := tx.(sdk.Tx)
-	if !ok {
-		return fmt.Errorf("invalid tx type %T, expected sdk.Tx", tx)
-	}
-
-	for _, validator := range validators {
-		if err := validator.ValidateTx(ctx, sdkTx); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // ConsensusVersion implements HasConsensusVersion

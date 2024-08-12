@@ -157,10 +157,18 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 	var appVersion uint64 = 0
 	if version > 0 {
 		cp, err := c.GetConsensusParams(ctx)
+		// if the consensus params are not found, we set the app version to 0
+		// in the case that the start version is > 0
+		if cp == nil || errors.Is(err, errors.New("collections: not found")) {
+			appVersion = 0
+		} else if err != nil {
+			return nil, err
+		} else {
+			appVersion = cp.Version.GetApp()
+		}
 		if err != nil {
 			return nil, err
 		}
-		appVersion = cp.Version.GetApp()
 	}
 
 	cid, err := c.store.LastCommitID()

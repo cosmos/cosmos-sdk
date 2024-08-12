@@ -10,6 +10,14 @@ import (
 )
 
 // TODO: remove and use: robert/expect-error
+func expecError(r *require.Assertions, expected string, received error) {
+	if expected == "" {
+		r.NoError(received)
+	} else {
+		r.Error(received)
+		r.Contains(received.Error(), expected)
+	}
+}
 
 func TestNewGrant(t *testing.T) {
 	a := NewGenericAuthorization("some-type")

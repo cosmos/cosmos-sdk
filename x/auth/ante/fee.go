@@ -68,6 +68,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, nex
 		return ctx, err
 	}
 
+	// TODO: emit this event in v2 after executing ValidateTx
 	events := sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeTx,

@@ -59,6 +59,8 @@ func (k *Keeper) InitGenesis(ctx context.Context) error {
 		return err
 	}
 
+	fmt.Println(nextParams, "nextParams")
+
 	return k.ParamsStore.Set(ctx, nextParams.ToProto())
 }
 

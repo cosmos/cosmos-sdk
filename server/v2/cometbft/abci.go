@@ -153,10 +153,15 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 		return nil, err
 	}
 
-	// cp, err := c.GetConsensusParams(ctx)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	// if height is 0, we dont know the consensus params
+	var appVersion uint64 = 0
+	if version > 0 {
+		cp, err := c.GetConsensusParams(ctx)
+		if err != nil {
+			return nil, err
+		}
+		appVersion = cp.Version.GetApp()
+	}
 
 	cid, err := c.store.LastCommitID()
 	if err != nil {
@@ -166,7 +171,7 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 	return &abciproto.InfoResponse{
 		Data:             c.appName,
 		Version:          c.version,
-		AppVersion:       0, // TODO fetch consensus params?
+		AppVersion:       appVersion,
 		LastBlockHeight:  int64(version),
 		LastBlockAppHash: cid.Hash,
 	}, nil

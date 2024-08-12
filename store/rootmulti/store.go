@@ -260,29 +260,29 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		if upgrades.IsDeleted(key.Name()) {
 			if err := deleteKVStore(store.(types.KVStore)); err != nil {
 				return errorsmod.Wrapf(err, "failed to delete store %s", key.Name())
-			}
-			rs.removalMap[key] = true
-		} else if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
-			// handle renames specially
-			// make an unregistered key to satisfy loadCommitStore params
-			oldKey := types.NewKVStoreKey(oldName)
-			oldParams := newStoreParams(oldKey, storeParams.db, storeParams.typ, 0)
+			} else if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
+				// handle renames specially
+				// make an unregistered key to satisfy loadCommitStore params
+				oldKey := types.NewKVStoreKey(oldName)
+				oldParams := newStoreParams(oldKey, storeParams.db, storeParams.typ, 0)
 
-			// load from the old name
-			oldStore, err := rs.loadCommitStoreFromParams(oldKey, rs.getCommitID(infos, oldName), oldParams)
-			if err != nil {
-				return errorsmod.Wrapf(err, "failed to load old store %s", oldName)
-			}
+				// load from the old name
+				oldStore, err := rs.loadCommitStoreFromParams(oldKey, rs.getCommitID(infos, oldName), oldParams)
+				if err != nil {
+					return errorsmod.Wrapf(err, "failed to load old store %s", oldName)
+				}
 
-			// move all data
-			if err := moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore)); err != nil {
-				return errorsmod.Wrapf(err, "failed to move store %s -> %s", oldName, key.Name())
-			}
+				// move all data
+				if err := moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore)); err != nil {
+					return errorsmod.Wrapf(err, "failed to move store %s -> %s", oldName, key.Name())
+				}
 
-			// add the old key so its deletion is committed
-			newStores[oldKey] = oldStore
-			// this will ensure it's not perpetually stored in commitInfo
-			rs.removalMap[oldKey] = true
+				// add the old key so its deletion is committed
+				newStores[oldKey] = oldStore
+				// this will ensure it's not perpetually stored in commitInfo
+				rs.removalMap[oldKey] = true
+			}
+		}
 	}
 
 	rs.lastCommitInfo = cInfo

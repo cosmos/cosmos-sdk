@@ -7,6 +7,8 @@ import (
 	crypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	dbm "github.com/cosmos/cosmos-db"
 
+	corestore "cosmossdk.io/core/store"
+
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -76,6 +78,7 @@ type ResponseQuery struct {
 // MultiStore
 
 // StoreUpgrades defines a series of transformations to apply the multistore db upon load
+// Deprecated: Use store.StoreUpgrades instead.
 type StoreUpgrades struct {
 	Added   []string      `json:"added"`
 	Renamed []StoreRename `json:"renamed"`
@@ -85,6 +88,7 @@ type StoreUpgrades struct {
 // StoreRename defines a name change of a sub-store.
 // All data previously under a PrefixStore with OldKey will be copied
 // to a PrefixStore with NewKey, then deleted from OldKey store.
+// Deprecated: Use store.StoreUpgrades instead. Store renaming was removed in core v1.0.0
 type StoreRename struct {
 	OldKey string `json:"old_key"`
 	NewKey string `json:"new_key"`
@@ -193,12 +197,12 @@ type CommitMultiStore interface {
 	// LoadLatestVersionAndUpgrade will load the latest version, but also
 	// rename/delete/create sub-store keys, before registering all the keys
 	// in order to handle breaking formats in migrations
-	LoadLatestVersionAndUpgrade(upgrades *StoreUpgrades) error
+	LoadLatestVersionAndUpgrade(upgrades *corestore.StoreUpgrades) error
 
 	// LoadVersionAndUpgrade will load the named version, but also
 	// rename/delete/create sub-store keys, before registering all the keys
 	// in order to handle breaking formats in migrations
-	LoadVersionAndUpgrade(ver int64, upgrades *StoreUpgrades) error
+	LoadVersionAndUpgrade(ver int64, upgrades *corestore.StoreUpgrades) error
 
 	// LoadVersion load a specific persisted version. When you load an old version, or when
 	// the last commit attempt didn't complete, the next commit after loading

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	corestore "cosmossdk.io/core/store"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
@@ -103,7 +104,7 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 	key4, key5 := types.NewKVStoreKey("store4"), types.NewKVStoreKey("store5")
 	ms.MountStoreWithDB(key4, types.StoreTypeIAVL, nil)
 	ms.MountStoreWithDB(key5, types.StoreTypeIAVL, nil)
-	err = ms.LoadLatestVersionAndUpgrade(&types.StoreUpgrades{Added: []string{"store4", "store5"}})
+	err = ms.LoadLatestVersionAndUpgrade(&corestore.StoreUpgrades{Added: []string{"store4", "store5"}})
 	require.NoError(t, err)
 	ms.Commit()
 
@@ -684,7 +685,7 @@ func TestUnevenStoresHeightCheck(t *testing.T) {
 	require.Error(t, err)
 
 	// now, let's load with upgrades...
-	upgrades := &types.StoreUpgrades{
+	upgrades := &corestore.StoreUpgrades{
 		Added: []string{"store4"},
 	}
 	err = store.LoadLatestVersionAndUpgrade(upgrades)
@@ -843,7 +844,7 @@ func newMultiStoreWithMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions)
 	return store
 }
 
-func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions) (*Store, *types.StoreUpgrades) {
+func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions) (*Store, *corestore.StoreUpgrades) {
 	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	store.SetPruning(pruningOpts)
 
@@ -852,12 +853,8 @@ func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts pruningtypes.Pruning
 	store.MountStoreWithDB(types.NewKVStoreKey("store3"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("store4"), types.StoreTypeIAVL, nil)
 
-	upgrades := &types.StoreUpgrades{
-		Added: []string{"store4"},
-		Renamed: []types.StoreRename{{
-			OldKey: "store2",
-			NewKey: "restore2",
-		}},
+	upgrades := &corestore.StoreUpgrades{
+		Added:   []string{"store4"},
 		Deleted: []string{"store3"},
 	}
 

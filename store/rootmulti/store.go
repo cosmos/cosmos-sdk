@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	corestore "cosmossdk.io/core/store"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
@@ -178,13 +179,13 @@ func (rs *Store) StoreKeysByName() map[string]types.StoreKey {
 }
 
 // LoadLatestVersionAndUpgrade implements CommitMultiStore
-func (rs *Store) LoadLatestVersionAndUpgrade(upgrades *types.StoreUpgrades) error {
+func (rs *Store) LoadLatestVersionAndUpgrade(upgrades *corestore.StoreUpgrades) error {
 	ver := GetLatestVersion(rs.db)
 	return rs.loadVersion(ver, upgrades)
 }
 
 // LoadVersionAndUpgrade allows us to rename substores while loading an older version
-func (rs *Store) LoadVersionAndUpgrade(ver int64, upgrades *types.StoreUpgrades) error {
+func (rs *Store) LoadVersionAndUpgrade(ver int64, upgrades *corestore.StoreUpgrades) error {
 	return rs.loadVersion(ver, upgrades)
 }
 
@@ -199,7 +200,7 @@ func (rs *Store) LoadVersion(ver int64) error {
 	return rs.loadVersion(ver, nil)
 }
 
-func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
+func (rs *Store) loadVersion(ver int64, upgrades *corestore.StoreUpgrades) error {
 	infos := make(map[string]types.StoreInfo)
 
 	rs.logger.Debug("loadVersion", "ver", ver)
@@ -243,7 +244,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		rs.logger.Debug("loadVersion commitID", "key", key, "ver", ver, "hash", fmt.Sprintf("%x", commitID.Hash))
 
 		// If it has been added, set the initial version
-		if upgrades.IsAdded(key.Name()) || upgrades.RenamedFrom(key.Name()) != "" {
+		if upgrades.IsAdded(key.Name()) {
 			storeParams.initialVersion = uint64(ver) + 1
 		} else if commitID.Version != ver && storeParams.typ == types.StoreTypeIAVL {
 			return fmt.Errorf("version of store %q mismatch root store's version; expected %d got %d; new stores should be added using StoreUpgrades", key.Name(), ver, commitID.Version)
@@ -262,27 +263,6 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 				return errorsmod.Wrapf(err, "failed to delete store %s", key.Name())
 			}
 			rs.removalMap[key] = true
-		} else if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
-			// handle renames specially
-			// make an unregistered key to satisfy loadCommitStore params
-			oldKey := types.NewKVStoreKey(oldName)
-			oldParams := newStoreParams(oldKey, storeParams.db, storeParams.typ, 0)
-
-			// load from the old name
-			oldStore, err := rs.loadCommitStoreFromParams(oldKey, rs.getCommitID(infos, oldName), oldParams)
-			if err != nil {
-				return errorsmod.Wrapf(err, "failed to load old store %s", oldName)
-			}
-
-			// move all data
-			if err := moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore)); err != nil {
-				return errorsmod.Wrapf(err, "failed to move store %s -> %s", oldName, key.Name())
-			}
-
-			// add the old key so its deletion is committed
-			newStores[oldKey] = oldStore
-			// this will ensure it's not perpetually stored in commitInfo
-			rs.removalMap[oldKey] = true
 		}
 	}
 

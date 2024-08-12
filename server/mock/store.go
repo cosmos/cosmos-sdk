@@ -3,6 +3,7 @@ package mock
 import (
 	"io"
 
+	corestore "cosmossdk.io/core/store"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 
@@ -98,11 +99,11 @@ func (ms multiStore) LoadLatestVersion() error {
 	return nil
 }
 
-func (ms multiStore) LoadLatestVersionAndUpgrade(upgrades *storetypes.StoreUpgrades) error {
+func (ms multiStore) LoadLatestVersionAndUpgrade(upgrades *corestore.StoreUpgrades) error {
 	return nil
 }
 
-func (ms multiStore) LoadVersionAndUpgrade(ver int64, upgrades *storetypes.StoreUpgrades) error {
+func (ms multiStore) LoadVersionAndUpgrade(ver int64, upgrades *corestore.StoreUpgrades) error {
 	panic("not implemented")
 }
 

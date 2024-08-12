@@ -26,6 +26,7 @@ var (
 	_ module.HasGRPCGateway = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
+	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 )
 
@@ -45,8 +46,22 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 
 // InitGenesis performs genesis initialization for the bank module.
 func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
-
 	return am.keeper.InitGenesis(ctx)
+}
+
+// DefaultGenesis returns the default genesis state. (Noop)
+func (am AppModule) DefaultGenesis() json.RawMessage {
+	return nil
+}
+
+// ValidateGenesis validates the genesis state. (Noop)
+func (am AppModule) ValidateGenesis(data json.RawMessage) error {
+	return nil
+}
+
+// ExportGenesis returns the exported genesis state. (Noop)
+func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
+	return nil, nil
 }
 
 // IsAppModule implements the appmodule.AppModule interface.

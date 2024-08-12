@@ -44,6 +44,7 @@ func (k *Keeper) GetAuthority() string {
 
 // InitGenesis initializes the initial state of the module
 func (k *Keeper) InitGenesis(ctx context.Context) error {
+	fmt.Println("InitGenesis consensus")
 	value := ctx.Value(corecontext.InitInfoKey).(*types.MsgUpdateParams)
 	if value == nil {
 		return nil
@@ -58,8 +59,6 @@ func (k *Keeper) InitGenesis(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(nextParams, "nextParams")
 
 	return k.ParamsStore.Set(ctx, nextParams.ToProto())
 }

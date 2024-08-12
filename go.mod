@@ -6,7 +6,7 @@ require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // main
-	cosmossdk.io/core v0.12.1-0.20240812125744-810a542d6bac // main
+	cosmossdk.io/core v0.12.1-0.20240812141913-3e413243db3c // main
 	cosmossdk.io/core/testing v0.0.0-20240812125744-810a542d6bac // main
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1

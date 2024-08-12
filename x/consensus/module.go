@@ -82,8 +82,3 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 
 // ConsensusVersion implements HasConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
-
-// RegisterConsensusMessages registers the consensus module's messages.
-func (am AppModule) RegisterConsensusMessages(builder any) {
-	// std.RegisterConsensusHandler(builder ,am.keeper.SetParams) // TODO uncomment when api is available
-}

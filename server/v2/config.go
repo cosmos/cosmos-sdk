@@ -21,14 +21,9 @@ func (c ServerConfig) ValidateBasic() error {
 	return nil
 }
 
-// DefaultMainServerConfig returns the default config of main server component
-func DefaultMainServerConfig() ServerConfig {
+// DefaultServerConfig returns the default config of server component
+func DefaultServerConfig() ServerConfig {
 	return ServerConfig{}
-}
-
-// SetMainServerConfig sets main server config with given config
-func (s *Server[T]) SetMainServerConfig(cfg ServerConfig) {
-	s.config = cfg
 }
 
 // ReadConfig returns a viper instance of the config file

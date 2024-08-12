@@ -183,7 +183,8 @@ func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 	if am.txValidatorOptions.Validate() == nil {
 		dfd := ante.NewDeductFeeDecorator(am.accountKeeper, am.txValidatorOptions.BankKeeper,
 			am.txValidatorOptions.FeegrantKeeper, nil)
-		dfd.SetMinGasPrices(am.minGasPrices)
+		// set minimum-gas-prices to use in DeductFeeDecorator
+		ante.SetMinGasPrices(am.minGasPrices)
 		validators = append(validators, dfd)
 	}
 

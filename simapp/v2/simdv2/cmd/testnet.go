@@ -337,7 +337,7 @@ func initTestnetFiles[T transaction.Tx](
 			return err
 		}
 
-		serverCfg := serverv2.DefaultMainServerConfig()
+		serverCfg := serverv2.DefaultServerConfig()
 		serverCfg.MinGasPrices = args.minGasPrices
 
 		// Write server config

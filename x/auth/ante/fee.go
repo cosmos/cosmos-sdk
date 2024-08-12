@@ -26,13 +26,9 @@ type DeductFeeDecorator struct {
 	bankKeeper     types.BankKeeper
 	feegrantKeeper FeegrantKeeper
 	txFeeChecker   TxFeeChecker
-
-	// store below fields to use in few methods
-	globalFields dfdGlobalFields
 }
 
-const globalFieldsKey = "dfdGlobalFields"
-
+// store below fields globally to use in different methods
 type dfdGlobalFields struct {
 	minGasPrices   sdk.DecCoins
 	feeTx          sdk.FeeTx
@@ -41,6 +37,8 @@ type dfdGlobalFields struct {
 	txFee          sdk.Coins
 	execMode       transaction.ExecMode
 }
+
+var globalFields = dfdGlobalFields{}
 
 func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKeeper, tfc TxFeeChecker) DeductFeeDecorator {
 	dfd := DeductFeeDecorator{
@@ -51,28 +49,20 @@ func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKee
 	}
 
 	if tfc == nil {
-		dfd.txFeeChecker = func(ctx context.Context, tx sdk.Tx) (sdk.Coins, int64, error) {
-			return dfd.checkTxFeeWithValidatorMinGasPrices(ctx, tx)
-		}
+		dfd.txFeeChecker = dfd.checkTxFeeWithValidatorMinGasPrices
 	}
 
 	return dfd
 }
 
-// UpdateGlobalFields updates the global fields required for the DeductFeeDecorator
-func (dfd *DeductFeeDecorator) UpdateGlobalFields(updated dfdGlobalFields) {
-	dfd.globalFields = updated
-}
-
 // SetMinGasPrices sets the minimum-gas-prices value in global fields of DeductFeeDecorator
-func (dfd *DeductFeeDecorator) SetMinGasPrices(minGasPrices sdk.DecCoins) {
-	dfd.globalFields.minGasPrices = minGasPrices
+func SetMinGasPrices(minGasPrices sdk.DecCoins) {
+	globalFields.minGasPrices = minGasPrices
 }
 
 // AnteHandle implements an AnteHandler decorator for the DeductFeeDecorator
 func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (sdk.Context, error) {
-	// update min-gas-price
-	dfd.SetMinGasPrices(ctx.MinGasPrices())
+	globalFields.minGasPrices = ctx.MinGasPrices()
 
 	if err := dfd.ValidateTx(ctx, tx); err != nil {
 		return ctx, err
@@ -81,20 +71,18 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, nex
 	events := sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeTx,
-			sdk.NewAttribute(sdk.AttributeKeyFee, dfd.globalFields.txFee.String()),
-			sdk.NewAttribute(sdk.AttributeKeyFeePayer, sdk.AccAddress(dfd.globalFields.deductFeesFrom).String()),
+			sdk.NewAttribute(sdk.AttributeKeyFee, globalFields.txFee.String()),
+			sdk.NewAttribute(sdk.AttributeKeyFeePayer, sdk.AccAddress(globalFields.deductFeesFrom).String()),
 		),
 	}
 	ctx.EventManager().EmitEvents(events)
 
-	newCtx := ctx.WithPriority(dfd.globalFields.txPriority)
+	newCtx := ctx.WithPriority(globalFields.txPriority)
 	return next(newCtx, tx, false)
 }
 
 // ValidateTx implements an TxValidator for DeductFeeDecorator
 func (dfd DeductFeeDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
-	globalFields := dfd.globalFields
-
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must implement the FeeTx interface")
@@ -110,30 +98,24 @@ func (dfd DeductFeeDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
 
 	// update global fields values
 	globalFields.txFee = globalFields.feeTx.GetFee()
-	dfd.UpdateGlobalFields(globalFields)
-
-	ctx = context.WithValue(ctx, globalFieldsKey, dfd.globalFields)
 
 	var err error
 
 	if globalFields.execMode != transaction.ExecModeSimulate {
-		dfd.globalFields.txFee, dfd.globalFields.txPriority, err = dfd.txFeeChecker(ctx, tx)
+		globalFields.txFee, globalFields.txPriority, err = dfd.txFeeChecker(ctx, tx)
 		if err != nil {
 			return err
 		}
 	}
 
-	dfd.UpdateGlobalFields(globalFields)
-
-	if err := dfd.checkDeductFee(ctx, tx, dfd.globalFields.txFee); err != nil {
+	if err := dfd.checkDeductFee(ctx, tx, globalFields.txFee); err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func (dfd DeductFeeDecorator) checkDeductFee(ctx context.Context, sdkTx sdk.Tx, fee sdk.Coins) error {
-	globalFields := dfd.globalFields
-
 	addr := dfd.accountKeeper.GetModuleAddress(types.FeeCollectorName)
 	if len(addr) == 0 {
 		return fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
@@ -167,9 +149,6 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx context.Context, sdkTx sdk.Tx, 
 
 		globalFields.deductFeesFrom = feeGranterAddr
 	}
-
-	// update global fields
-	dfd.UpdateGlobalFields(globalFields)
 
 	// deduct the fees
 	if !fee.IsZero() {

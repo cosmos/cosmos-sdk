@@ -38,7 +38,7 @@ func getDuration(d time.Duration) *time.Duration {
 }
 
 func (s *KeeperTestSuite) SetupTest(enabledFeatures bool) {
-	key := storetypes.NewKVStoreKey(consensusparamkeeper.StoreKey)
+	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 5})
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})

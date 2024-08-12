@@ -6,7 +6,6 @@ import "amino/amino.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cometbft/types/v1/params.proto";
-import "cometbft/abci/v1/types.proto";
 
 option go_package = "cosmossdk.io/x/consensus/types";
 

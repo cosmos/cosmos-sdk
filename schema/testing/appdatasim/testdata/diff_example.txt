@@ -60,10 +60,10 @@ Module all_kinds
     Object key=℠¼々¢~;-Ⱥ!˃a[ʰᾌ?{ᪧ৵%ᾯ¦〈: NOT FOUND
     Object Collection test_time
     OBJECT COUNT ERROR: expected 4, got 3
-    Object key=1970-01-01 01:00:00.000000005 +0100 CET: NOT FOUND
-    Object key=1970-01-01 01:00:00.001598687 +0100 CET
-      valNotNull: expected 1970-01-01 01:00:00.007727197 +0100 CET, got 1970-01-01 01:00:00.034531678 +0100 CET
-      valNullable: expected 1970-01-01 01:00:00.000000484 +0100 CET, got 1970-01-01 01:00:00.000000033 +0100 CET
+    Object key=1969-12-31 19:00:00.000000005 -0500 EST: NOT FOUND
+    Object key=1969-12-31 19:00:00.001598687 -0500 EST
+      valNotNull: expected 1969-12-31 19:00:00.007727197 -0500 EST, got 1969-12-31 19:00:00.034531678 -0500 EST
+      valNullable: expected 1969-12-31 19:00:00.000000484 -0500 EST, got 1969-12-31 19:00:00.000000033 -0500 EST
       Object Collection test_uint16
     OBJECT COUNT ERROR: expected 4, got 3
     Object key=23712: NOT FOUND
@@ -75,5 +75,5 @@ Module all_kinds
     Object Collection test_uint8
     OBJECT COUNT ERROR: expected 3, got 2
     Object key=1: NOT FOUND
-    Module test_cases: NOT FOUND
+    Module test_cases: actual module NOT FOUND
 BlockNum: expected 2, got 1

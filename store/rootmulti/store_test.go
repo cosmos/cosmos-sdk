@@ -853,7 +853,11 @@ func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts pruningtypes.Pruning
 	store.MountStoreWithDB(types.NewKVStoreKey("store4"), types.StoreTypeIAVL, nil)
 
 	upgrades := &types.StoreUpgrades{
-		Added:   []string{"store4"},
+		Added: []string{"store4"},
+		Renamed: []types.StoreRename{{
+			OldKey: "store2",
+			NewKey: "restore2",
+		}},
 		Deleted: []string{"store3"},
 	}
 

@@ -2,10 +2,7 @@ module cosmossdk.io/store
 
 go 1.22.2
 
-replace cosmossdk.io/core => ../core
-
 require (
-	cosmossdk.io/core v0.0.0-00010101000000-000000000000
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.0
 	cosmossdk.io/math v1.3.0

@@ -12,6 +12,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/consensus/exported"
 	"cosmossdk.io/x/consensus/types"
@@ -39,6 +40,31 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, authority strin
 
 func (k *Keeper) GetAuthority() string {
 	return k.authority
+}
+
+// InitGenesis initializes the initial state of the module
+func (k *Keeper) InitGenesis(ctx context.Context) error {
+	value, ok := ctx.Value(corecontext.InitInfoKey).(*types.MsgUpdateParams)
+	if !ok {
+		// no error for appv1 and appv2
+		return nil
+	}
+	if value == nil {
+		// no error for appv1
+		return nil
+	}
+
+	consensusParams, err := value.ToProtoConsensusParams()
+	if err != nil {
+		return err
+	}
+
+	nextParams, err := k.paramCheck(ctx, consensusParams)
+	if err != nil {
+		return err
+	}
+
+	return k.ParamsStore.Set(ctx, nextParams.ToProto())
 }
 
 // Querier
@@ -69,6 +95,27 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 		return nil, err
 	}
 
+	nextParams, err := k.paramCheck(ctx, consensusParams)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := k.ParamsStore.Set(ctx, nextParams.ToProto()); err != nil {
+		return nil, err
+	}
+
+	if err := k.EventService.EventManager(ctx).EmitKV(
+		"update_consensus_params",
+		event.NewAttribute("authority", msg.Authority),
+		event.NewAttribute("parameters", consensusParams.String())); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateParamsResponse{}, nil
+}
+
+// paramCheck validates the consensus params
+func (k Keeper) paramCheck(ctx context.Context, consensusParams cmtproto.ConsensusParams) (*cmttypes.ConsensusParams, error) {
 	paramsProto, err := k.ParamsStore.Get(ctx)
 
 	var params cmttypes.ConsensusParams
@@ -92,16 +139,5 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 		return nil, err
 	}
 
-	if err := k.ParamsStore.Set(ctx, nextParams.ToProto()); err != nil {
-		return nil, err
-	}
-
-	if err := k.EventService.EventManager(ctx).EmitKV(
-		"update_consensus_params",
-		event.NewAttribute("authority", msg.Authority),
-		event.NewAttribute("parameters", consensusParams.String())); err != nil {
-		return nil, err
-	}
-
-	return &types.MsgUpdateParamsResponse{}, nil
+	return &nextParams, nil
 }

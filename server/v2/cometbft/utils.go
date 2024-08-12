@@ -303,7 +303,6 @@ func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.Consen
 	}
 
 	if r, ok := res.(*consensus.QueryParamsResponse); !ok {
-		fmt.Println("err2")
 		return nil, errors.New("failed to query consensus params")
 	} else {
 		// convert our params to cometbft params

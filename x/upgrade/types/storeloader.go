@@ -14,7 +14,11 @@ func UpgradeStoreLoader(upgradeHeight int64, storeUpgrades *corestore.StoreUpgra
 		if upgradeHeight == ms.LastCommitID().Version+1 {
 			// Check if the current commit version and upgrade height matches
 			if len(storeUpgrades.Deleted) > 0 || len(storeUpgrades.Added) > 0 {
-				return ms.LoadLatestVersionAndUpgrade(storeUpgrades)
+				stup := &storetypes.StoreUpgrades{
+					Added:   storeUpgrades.Added,
+					Deleted: storeUpgrades.Deleted,
+				}
+				return ms.LoadLatestVersionAndUpgrade(stup)
 			}
 		}
 

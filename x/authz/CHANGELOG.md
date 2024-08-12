@@ -55,11 +55,3 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * [#19874](https://github.com/cosmos/cosmos-sdk/pull/19923) Now when querying transaction events (cosmos.tx.v1beta1.Service/GetTxsEvent) the response will contain only UTF-8 characters
-
-### Depricated
-
-* [#18039](https://github.com/cosmos/cosmos-sdk/pull/18039) Exec CLI is deprecated in favor of AutoCLI exec command.
-
-### CLI breaking changes
-
-* [#17970](https://github.com/cosmos/cosmos-sdk/pull/17970) Removed revoke command in favor of AutoCLI revoke command.

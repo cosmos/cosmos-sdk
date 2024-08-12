@@ -97,7 +97,6 @@ func (dfd DeductFeeDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide positive gas")
 	}
 
-	// update global fields values
 	globalFields.txFee = globalFields.feeTx.GetFee()
 
 	var err error

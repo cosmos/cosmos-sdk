@@ -32,7 +32,7 @@ var Migrations = MigrationMap{
 	"v0.50": defaultPlanBuilder,
 	"v0.52": defaultPlanBuilder,
 	"v2":    V2PlanBuilder,
-	// "v0.xx.x": PlanBuilder, // add specific migration in case of configuration changes in minor versions
+	// "v0.xx.x": defaultPlanBuilder, // add specific migration in case of configuration changes in minor versions
 }
 
 type v2KeyChangesMap map[string][]string

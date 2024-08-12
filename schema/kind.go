@@ -154,6 +154,16 @@ const (
 	// Go Encoding: json.RawMessage
 	// JSON Encoding: any valid JSON value
 	JSONKind
+
+	// UIntNKind represents a signed integer type with a width in bits specified by the Width field in the
+	// field definition.Values of this type must be of the go type [N]byte where Ceiling(Width / 8) = N.
+	// It is invalid for N to equal 8, 16, 32, 64. Values must be little-endian encoded.
+	UIntNKind
+
+	// IntNKind represents an unsigned integer type with a width in bits specified by the Width field in the
+	// field definition. Values of this type must be of the go type [N]byte where Ceiling(Width / 8) = N.
+	// It is invalid for N to equal 8, 16, 32, 64. Values must be two's complement little-endian encoded.
+	IntNKind
 )
 
 // MAX_VALID_KIND is the maximum valid kind value.

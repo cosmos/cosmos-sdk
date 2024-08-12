@@ -13,7 +13,7 @@ var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run an APP command.",
 	Long: `Run an APP command. This command is intended to be used by the cosmovisor binary.
-Provide cosmovisor config file path in command args or set env variables to load configuration.
+Provide '--cosmovisor-config' file path in command args or set env variables to load configuration.
 `,
 	SilenceUsage:       true,
 	DisableFlagParsing: true,

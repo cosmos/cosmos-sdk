@@ -44,7 +44,11 @@ func (k *Keeper) GetAuthority() string {
 
 // InitGenesis initializes the initial state of the module
 func (k *Keeper) InitGenesis(ctx context.Context) error {
-	value := ctx.Value(corecontext.InitInfoKey).(*types.MsgUpdateParams)
+	value, ok := ctx.Value(corecontext.InitInfoKey).(*types.MsgUpdateParams)
+	if !ok {
+		// no error for appv1 and appv2
+		return nil
+	}
 	if value == nil {
 		// no error for appv1
 		return nil

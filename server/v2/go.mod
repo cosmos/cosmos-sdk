@@ -1,6 +1,6 @@
 module cosmossdk.io/server/v2
 
-go 1.22.2
+go 1.21
 
 replace (
 	cosmossdk.io/api => ../../api

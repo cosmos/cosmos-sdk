@@ -46,6 +46,7 @@ func (k *Keeper) GetAuthority() string {
 func (k *Keeper) InitGenesis(ctx context.Context) error {
 	value := ctx.Value(corecontext.InitInfoKey).(*types.MsgUpdateParams)
 	if value == nil {
+		// no error for appv1
 		return nil
 	}
 

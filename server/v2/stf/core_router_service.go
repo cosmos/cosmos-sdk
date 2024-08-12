@@ -3,8 +3,6 @@ package stf
 import (
 	"context"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
-
 	"cosmossdk.io/core/router"
 	"cosmossdk.io/core/transaction"
 )
@@ -29,7 +27,7 @@ func (m msgRouterService) CanInvoke(ctx context.Context, typeURL string) error {
 }
 
 // Invoke execute a message and returns a response.
-func (m msgRouterService) Invoke(ctx context.Context, msg gogoproto.Message) (gogoproto.Message, error) {
+func (m msgRouterService) Invoke(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
 	return ctx.(*executionContext).msgRouter.Invoke(ctx, msg)
 }
 
@@ -50,7 +48,7 @@ func (m queryRouterService) CanInvoke(ctx context.Context, typeURL string) error
 // Invoke execute a message and returns a response.
 func (m queryRouterService) Invoke(
 	ctx context.Context,
-	req gogoproto.Message,
-) (gogoproto.Message, error) {
+	req transaction.Msg,
+) (transaction.Msg, error) {
 	return ctx.(*executionContext).queryRouter.Invoke(ctx, req)
 }

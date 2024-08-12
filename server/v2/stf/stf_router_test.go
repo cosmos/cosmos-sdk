@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/appmodule/v2"
+	transaction "cosmossdk.io/core/transaction"
 )
 
 func TestRouter(t *testing.T) {
@@ -18,7 +19,7 @@ func TestRouter(t *testing.T) {
 	expectedResp := &gogotypes.StringValue{Value: "test"}
 
 	router := coreRouterImpl{handlers: map[string]appmodule.Handler{
-		gogoproto.MessageName(expectedMsg): func(ctx context.Context, gotMsg appmodule.Message) (msgResp appmodule.Message, err error) {
+		gogoproto.MessageName(expectedMsg): func(ctx context.Context, gotMsg transaction.Msg) (msgResp transaction.Msg, err error) {
 			require.Equal(t, expectedMsg, gotMsg)
 			return expectedResp, nil
 		},
@@ -26,7 +27,7 @@ func TestRouter(t *testing.T) {
 
 	t.Run("can invoke message by name", func(t *testing.T) {
 		err := router.CanInvoke(context.Background(), expectedMsgName)
-		require.NoError(t, err, "must be invokable")
+		require.NoError(t, err, "must be invocable")
 	})
 
 	t.Run("can invoke message by type URL", func(t *testing.T) {

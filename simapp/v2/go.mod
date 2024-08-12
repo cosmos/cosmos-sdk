@@ -10,8 +10,8 @@ require (
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.4.0
 	cosmossdk.io/math v1.3.0
-	cosmossdk.io/runtime/v2 v2.0.0-20240806152830-8fb47b368cd4 // main
-	cosmossdk.io/server/v2 v2.0.0-20240806152830-8fb47b368cd4 // main
+	cosmossdk.io/runtime/v2 v2.0.0-20240812125744-810a542d6bac // main
+	cosmossdk.io/server/v2 v2.0.0-20240812125744-810a542d6bac // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-20240812125744-810a542d6bac // indirect; main
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000

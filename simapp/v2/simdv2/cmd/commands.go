@@ -95,7 +95,16 @@ func genesisCommand[T transaction.Tx](
 	) (serverv2.ExportedApp, error),
 	cmds ...*cobra.Command,
 ) *cobra.Command {
-	compatAppExporter := func(logger log.Logger, db dbm.DB, traceWriter io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOpts servertypes.AppOptions, modulesToExport []string) (serverv2.ExportedApp, error) {
+	compatAppExporter := func(
+		logger log.Logger,
+		db dbm.DB,
+		traceWriter io.Writer,
+		height int64,
+		forZeroHeight bool,
+		jailAllowedAddrs []string,
+		appOpts servertypes.AppOptions,
+		modulesToExport []string,
+	) (serverv2.ExportedApp, error) {
 		viperAppOpts, ok := appOpts.(*viper.Viper)
 		if !ok {
 			return serverv2.ExportedApp{}, errors.New("appOpts is not viper.Viper")

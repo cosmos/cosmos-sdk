@@ -88,58 +88,49 @@ func (ag *AppGenesis) SaveAs(file string) error {
 }
 
 // AppGenesisFromReader reads the AppGenesis from the reader.
-func AppGenesisFromReader(reader io.Reader) (*AppGenesis, error) {
+func AppGenesisFromReader(reader io.Reader) (ag *AppGenesis, err error) {
 	// check if io.ReadSeeker is implemented
 	if rs, ok := reader.(io.ReadSeeker); ok {
-		return genesisFromReadSeeker(rs)
-	}
+		err = json.NewDecoder(rs).Decode(ag)
+		if err == nil {
+			return
+		}
 
-	jsonBlob, err := io.ReadAll(reader)
-	if err != nil {
-		return nil, err
-	}
-	return genesisFromReadSeeker(bytes.NewReader(jsonBlob))
-}
-
-// genesisFromReadSeeker takes in a ReadSeeker and tries to first parse via
-// encoding/json and falls back to Comet BFT's cmtjson.Unmarshal
-func genesisFromReadSeeker(rs io.ReadSeeker) (*AppGenesis, error) {
-	var appGenesis AppGenesis
-
-	if err := json.NewDecoder(rs).Decode(&appGenesis); err != nil {
-		// fallback to CometBFT genesis
-		// but we need to seek back first
+		err = fmt.Errorf("error unmarshalling AppGenesis: %w", err)
 		if _, serr := rs.Seek(0, io.SeekStart); serr != nil {
-			return nil, fmt.Errorf("error unmarshalling AppGenesis: %w\n failed to seek to file's front: %w", err, serr)
-		}
-
-		// TODO: once cmtjson implements incremental parsing, we can avoid storing the entire file in memory
-		jsonBlob, jerr := io.ReadAll(rs)
-		if jerr != nil {
-			return nil, fmt.Errorf("error unmarshalling AppGenesis: %w\n failed to read file completely: %w", err, jerr)
-		}
-
-		var ctmGenesis cmttypes.GenesisDoc
-		if uerr := cmtjson.Unmarshal(jsonBlob, &ctmGenesis); uerr != nil {
-			return nil, fmt.Errorf("error unmarshalling AppGenesis: %w\n failed fallback to CometBFT GenDoc: %w", err, uerr)
-		}
-
-		appGenesis = AppGenesis{
-			AppName: version.AppName,
-			// AppVersion is not filled as we do not know it from a CometBFT genesis
-			GenesisTime:   ctmGenesis.GenesisTime,
-			ChainID:       ctmGenesis.ChainID,
-			InitialHeight: ctmGenesis.InitialHeight,
-			AppHash:       ctmGenesis.AppHash,
-			AppState:      ctmGenesis.AppState,
-			Consensus: &ConsensusGenesis{
-				Validators: ctmGenesis.Validators,
-				Params:     ctmGenesis.ConsensusParams,
-			},
+			err = errors.Join(err, fmt.Errorf("error seeking back to the front: %w", serr))
+			return
 		}
 	}
 
-	return &appGenesis, nil
+	// TODO: once cmtjson implements incremental parsing, we can avoid storing the entire file in memory
+	jsonBlob, ioerr := io.ReadAll(reader)
+	if ioerr != nil {
+		err = errors.Join(err, fmt.Errorf("failed to read file completely: %w", ioerr))
+		return
+	}
+
+	// fallback to comet genesis parsing
+	var ctmGenesis cmttypes.GenesisDoc
+	if uerr := cmtjson.Unmarshal(jsonBlob, &ctmGenesis); uerr != nil {
+		err = errors.Join(err, fmt.Errorf("failed fallback to CometBFT GenDoc: %w", uerr))
+		return
+	}
+
+	ag = &AppGenesis{
+		AppName: version.AppName,
+		// AppVersion is not filled as we do not know it from a CometBFT genesis
+		GenesisTime:   ctmGenesis.GenesisTime,
+		ChainID:       ctmGenesis.ChainID,
+		InitialHeight: ctmGenesis.InitialHeight,
+		AppHash:       ctmGenesis.AppHash,
+		AppState:      ctmGenesis.AppState,
+		Consensus: &ConsensusGenesis{
+			Validators: ctmGenesis.Validators,
+			Params:     ctmGenesis.ConsensusParams,
+		},
+	}
+	return
 }
 
 // AppGenesisFromFile reads the AppGenesis from the provided file.
@@ -149,13 +140,14 @@ func AppGenesisFromFile(genFile string) (*AppGenesis, error) {
 		return nil, err
 	}
 
-	appGenesis, err := AppGenesisFromReader(bufio.NewReader(file))
+	appGenesis, err := AppGenesisFromReader(file)
+	ferr := file.Close()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read genesis from file %s: %w", genFile, err)
 	}
 
-	if err := file.Close(); err != nil {
-		return nil, err
+	if ferr != nil {
+		return nil, ferr
 	}
 
 	return appGenesis, nil

@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	"github.com/cosmos/gogoproto/proto"
 
 	appmanager "cosmossdk.io/core/app"
 	"cosmossdk.io/core/store"
@@ -33,12 +32,7 @@ func NewDefaultProposalHandler[T transaction.Tx](mp mempool.Mempool[T]) *Default
 }
 
 func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
-	return func(ctx context.Context, app AppManager[T], txs []T, req proto.Message) ([]T, error) {
-		abciReq, ok := req.(*abci.PrepareProposalRequest)
-		if !ok {
-			return nil, fmt.Errorf("expected abci.PrepareProposalRequest, invalid request type: %T,", req)
-		}
-
+	return func(ctx context.Context, app AppManager[T], codec transaction.Codec[T], req *abci.PrepareProposalRequest) ([]T, error) {
 		var maxBlockGas uint64
 
 		res, err := app.Query(ctx, 0, &consensustypes.QueryParamsRequest{})
@@ -55,6 +49,8 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 			maxBlockGas = uint64(b.MaxGas)
 		}
 
+		txs := decodeTxs(codec, req.Txs)
+
 		defer h.txSelector.Clear()
 
 		// If the mempool is nil or NoOp we simply return the transactions
@@ -64,7 +60,7 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 		_, isNoOp := h.mempool.(mempool.NoOpMempool[T])
 		if h.mempool == nil || isNoOp {
 			for _, tx := range txs {
-				stop := h.txSelector.SelectTxForProposal(ctx, uint64(abciReq.MaxTxBytes), maxBlockGas, tx)
+				stop := h.txSelector.SelectTxForProposal(ctx, uint64(req.MaxTxBytes), maxBlockGas, tx)
 				if stop {
 					break
 				}
@@ -88,7 +84,7 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 					return nil, err
 				}
 			} else {
-				stop := h.txSelector.SelectTxForProposal(ctx, uint64(abciReq.MaxTxBytes), maxBlockGas, memTx)
+				stop := h.txSelector.SelectTxForProposal(ctx, uint64(req.MaxTxBytes), maxBlockGas, memTx)
 				if stop {
 					break
 				}
@@ -102,17 +98,12 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 }
 
 func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
-	return func(ctx context.Context, app AppManager[T], txs []T, req proto.Message) error {
+	return func(ctx context.Context, app AppManager[T], codec transaction.Codec[T], req *abci.ProcessProposalRequest) error {
 		// If the mempool is nil we simply return ACCEPT,
 		// because PrepareProposal may have included txs that could fail verification.
 		_, isNoOp := h.mempool.(mempool.NoOpMempool[T])
 		if h.mempool == nil || isNoOp {
 			return nil
-		}
-
-		_, ok := req.(*abci.ProcessProposalRequest)
-		if !ok {
-			return fmt.Errorf("invalid request type: %T", req)
 		}
 
 		res, err := app.Query(ctx, 0, &consensustypes.QueryParamsRequest{})
@@ -129,6 +120,8 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
 		if b := paramsResp.GetParams().Block; b != nil {
 			maxBlockGas = uint64(b.MaxGas)
 		}
+
+		txs := decodeTxs(codec, req.Txs)
 
 		var totalTxGas uint64
 		for _, tx := range txs {
@@ -153,18 +146,33 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
 	}
 }
 
+func decodeTxs[T transaction.Tx](codec transaction.Codec[T], txsBz [][]byte) []T {
+	var txs []T
+	for _, tx := range txsBz {
+		decTx, err := codec.Decode(tx)
+		if err != nil {
+			// TODO: vote extension meta data as a custom type to avoid possibly accepting invalid txs
+			// continue even if tx decoding fails
+			continue
+		}
+
+		txs = append(txs, decTx)
+	}
+	return txs
+}
+
 // NoOpPrepareProposal defines a no-op PrepareProposal handler. It will always
 // return the transactions sent by the client's request.
 func NoOpPrepareProposal[T transaction.Tx]() PrepareHandler[T] {
-	return func(ctx context.Context, app AppManager[T], txs []T, req proto.Message) ([]T, error) {
-		return txs, nil
+	return func(ctx context.Context, app AppManager[T], codec transaction.Codec[T], req *abci.PrepareProposalRequest) ([]T, error) {
+		return decodeTxs(codec, req.Txs), nil
 	}
 }
 
 // NoOpProcessProposal defines a no-op ProcessProposal Handler. It will always
 // return ACCEPT.
 func NoOpProcessProposal[T transaction.Tx]() ProcessHandler[T] {
-	return func(context.Context, AppManager[T], []T, proto.Message) error {
+	return func(context.Context, AppManager[T], transaction.Codec[T], *abci.ProcessProposalRequest) error {
 		return nil
 	}
 }

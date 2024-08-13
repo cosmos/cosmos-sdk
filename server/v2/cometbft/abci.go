@@ -319,19 +319,6 @@ func (c *Consensus[T]) PrepareProposal(
 		return nil, errors.New("no prepare proposal function was set")
 	}
 
-	var decodedTxs []T
-	for _, tx := range req.Txs {
-		decTx, err := c.txCodec.Decode(tx)
-		if err != nil {
-			// TODO: vote extension meta data as a custom type to avoid possibly accepting invalid txs
-			// continue even if tx decoding fails
-			c.logger.Error("failed to decode tx", "err", err)
-			continue
-		}
-
-		decodedTxs = append(decodedTxs, decTx)
-	}
-
 	ciCtx := contextWithCometInfo(ctx, comet.Info{
 		Evidence:        toCoreEvidence(req.Misbehavior),
 		ValidatorsHash:  req.NextValidatorsHash,
@@ -339,7 +326,7 @@ func (c *Consensus[T]) PrepareProposal(
 		LastCommit:      toCoreExtendedCommitInfo(req.LocalLastCommit),
 	})
 
-	txs, err := c.prepareProposalHandler(ciCtx, c.app, decodedTxs, req)
+	txs, err := c.prepareProposalHandler(ciCtx, c.app, c.txCodec, req)
 	if err != nil {
 		return nil, err
 	}
@@ -368,18 +355,6 @@ func (c *Consensus[T]) ProcessProposal(
 		return nil, errors.New("no process proposal function was set")
 	}
 
-	var decodedTxs []T
-	for _, tx := range req.Txs {
-		decTx, err := c.txCodec.Decode(tx)
-		if err != nil {
-			// TODO: vote extension meta data as a custom type to avoid possibly accepting invalid txs
-			// continue even if tx decoding fails
-			c.logger.Error("failed to decode tx", "err", err)
-			continue
-		}
-		decodedTxs = append(decodedTxs, decTx)
-	}
-
 	ciCtx := contextWithCometInfo(ctx, comet.Info{
 		Evidence:        toCoreEvidence(req.Misbehavior),
 		ValidatorsHash:  req.NextValidatorsHash,
@@ -387,7 +362,7 @@ func (c *Consensus[T]) ProcessProposal(
 		LastCommit:      toCoreCommitInfo(req.ProposedLastCommit),
 	})
 
-	err := c.processProposalHandler(ciCtx, c.app, decodedTxs, req)
+	err := c.processProposalHandler(ciCtx, c.app, c.txCodec, req)
 	if err != nil {
 		c.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abciproto.ProcessProposalResponse{

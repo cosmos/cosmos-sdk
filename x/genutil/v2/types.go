@@ -14,5 +14,4 @@ type AppExporter func(
 	height int64,
 	jailAllowedAddrs []string,
 	viper *viper.Viper,
-	modulesToExport []string,
 ) (serverv2.ExportedApp, error)

@@ -7,7 +7,7 @@ import (
 
 // ExportAppStateAndValidators exports the state of the application for a genesis
 // file.
-func (app *SimApp[T]) ExportAppStateAndValidators(jailAllowedAddrs, modulesToExport []string) (serverv2.ExportedApp, error) {
+func (app *SimApp[T]) ExportAppStateAndValidators(jailAllowedAddrs []string) (serverv2.ExportedApp, error) {
 	// as if they could withdraw from the start of the next block
 	ctx := context.Background()
 

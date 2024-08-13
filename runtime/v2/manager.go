@@ -193,11 +193,9 @@ func (m *MM[T]) InitGenesisJSON(
 // ExportGenesisForModules performs export genesis functionality for modules
 func (m *MM[T]) ExportGenesisForModules(
 	ctx context.Context,
-	modulesToExport ...string,
 ) (map[string]json.RawMessage, error) {
-	if len(modulesToExport) == 0 {
-		modulesToExport = m.config.ExportGenesis
-	}
+	modulesToExport := m.config.ExportGenesis
+
 	// verify modules exists in app, so that we don't panic in the middle of an export
 	if err := m.checkModulesExists(modulesToExport); err != nil {
 		return nil, err

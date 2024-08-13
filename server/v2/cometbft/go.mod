@@ -6,6 +6,7 @@ replace (
 	cosmossdk.io/api => ../../../api
 	cosmossdk.io/core => ../../../core
 	cosmossdk.io/core/testing => ../../../core/testing
+	cosmossdk.io/schema => ../../../schema
 	cosmossdk.io/server/v2 => ../
 	cosmossdk.io/server/v2/appmanager => ../appmanager
 	cosmossdk.io/store => ../../../store
@@ -25,6 +26,7 @@ require (
 	cosmossdk.io/core v0.12.1-0.20240725072823-6a2d039e1212
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.0
+	cosmossdk.io/schema v0.1.1
 	cosmossdk.io/server/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000

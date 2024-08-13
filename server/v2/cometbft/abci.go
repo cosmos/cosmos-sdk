@@ -11,14 +11,16 @@ import (
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
+
 	coreappmgr "cosmossdk.io/core/app"
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
+	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/cometbft/client/grpc/cmtservice"
 	"cosmossdk.io/server/v2/cometbft/handlers"
@@ -40,6 +42,7 @@ type Consensus[T transaction.Tx] struct {
 	txCodec            transaction.Codec[T]
 	store              types.Store
 	streaming          streaming.Manager
+	listener           appdata.Listener
 	snapshotManager    *snapshots.Manager
 	mempool            mempool.Mempool[T]
 

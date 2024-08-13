@@ -2,10 +2,12 @@ package cometbft
 
 import (
 	"context"
+	"fmt"
 
 	coreappmgr "cosmossdk.io/core/app"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/server/v2/streaming"
 )
 
@@ -18,6 +20,22 @@ func (c *Consensus[T]) streamDeliverBlockChanges(
 	events []event.Event,
 	stateChanges []store.StateChanges,
 ) error {
+	if c.listener.OnKVPair != nil {
+		for _, change := range stateChanges {
+			err := c.listener.OnKVPair(appdata.KVPairData{
+				Updates: []appdata.ModuleKVPairUpdate{
+					{
+						ModuleName: fmt.Sprintf("0x%x", change.Actor), // TODO: make human readable
+						Update:     change.StateChanges,
+					},
+				},
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	// convert txresults to streaming txresults
 	streamingTxResults := make([]*streaming.ExecTxResult, len(txResults))
 	for i, txResult := range txResults {

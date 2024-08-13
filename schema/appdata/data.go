@@ -81,7 +81,7 @@ type ModuleKVPairUpdate struct {
 	ModuleName string
 
 	// Update is the key-value pair update.
-	Update schema.KVPairUpdate
+	Update []schema.KVPairUpdate
 }
 
 // ObjectUpdateData represents object update data that is passed to a listener.

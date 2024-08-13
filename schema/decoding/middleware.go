@@ -80,22 +80,24 @@ func Middleware(target appdata.Listener, resolver DecoderResolver, opts Middlewa
 				continue
 			}
 
-			updates, err := pcdc.KVDecoder(kvUpdate.Update)
-			if err != nil {
-				return err
-			}
+			for _, update := range kvUpdate.Updates {
+				updates, err := pcdc.KVDecoder(update)
+				if err != nil {
+					return err
+				}
 
-			if len(updates) == 0 {
-				// no updates
-				continue
-			}
+				if len(updates) == 0 {
+					// no updates
+					continue
+				}
 
-			err = target.OnObjectUpdate(appdata.ObjectUpdateData{
-				ModuleName: kvUpdate.ModuleName,
-				Updates:    updates,
-			})
-			if err != nil {
-				return err
+				err = target.OnObjectUpdate(appdata.ObjectUpdateData{
+					ModuleName: kvUpdate.ModuleName,
+					Updates:    updates,
+				})
+				if err != nil {
+					return err
+				}
 			}
 		}
 

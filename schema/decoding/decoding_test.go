@@ -297,12 +297,14 @@ func (t testStore) GetUInt64(key []byte) uint64 {
 
 func (t testStore) Set(key, value []byte) {
 	if t.listener.OnKVPair != nil {
-		err := t.listener.OnKVPair(appdata.KVPairData{Updates: []appdata.ModuleKVPairUpdate{
+		err := t.listener.OnKVPair(appdata.KVPairData{Updates: []appdata.ModuleKVPairUpdates{
 			{
 				ModuleName: t.modName,
-				Update: schema.KVPairUpdate{
-					Key:   key,
-					Value: value,
+				Updates: []schema.KVPairUpdate{
+					{
+						Key:   key,
+						Value: value,
+					},
 				},
 			},
 		}})

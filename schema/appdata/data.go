@@ -72,16 +72,16 @@ type ToJSON = func() (json.RawMessage, error)
 
 // KVPairData represents a batch of key-value pair data that is passed to a listener.
 type KVPairData struct {
-	Updates []ModuleKVPairUpdate
+	Updates []ModuleKVPairUpdates
 }
 
-// ModuleKVPairUpdate represents a key-value pair update for a specific module.
-type ModuleKVPairUpdate struct {
-	// ModuleName is the name of the module that the key-value pair belongs to.
+// ModuleKVPairUpdates represents key-value pair updates for a specific module.
+type ModuleKVPairUpdates struct {
+	// ModuleName is the name of the module that the key-value pairs belongs to.
 	ModuleName string
 
-	// Update is the key-value pair update.
-	Update schema.KVPairUpdate
+	// Updates are the key-value pair updates.
+	Updates []schema.KVPairUpdate
 }
 
 // ObjectUpdateData represents object update data that is passed to a listener.

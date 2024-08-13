@@ -92,13 +92,13 @@ func genesisCommand[T transaction.Tx](
 		jailAllowedAddrs []string,
 		viper *viper.Viper,
 		modulesToExport []string,
-	) (servertypes.ExportedApp, error),
+	) (serverv2.ExportedApp, error),
 	cmds ...*cobra.Command,
 ) *cobra.Command {
-	compatAppExporter := func(logger log.Logger, db dbm.DB, traceWriter io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOpts servertypes.AppOptions, modulesToExport []string) (servertypes.ExportedApp, error) {
+	compatAppExporter := func(logger log.Logger, db dbm.DB, traceWriter io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOpts servertypes.AppOptions, modulesToExport []string) (serverv2.ExportedApp, error) {
 		viperAppOpts, ok := appOpts.(*viper.Viper)
 		if !ok {
-			return servertypes.ExportedApp{}, errors.New("appOpts is not viper.Viper")
+			return serverv2.ExportedApp{}, errors.New("appOpts is not viper.Viper")
 		}
 
 		return appExport(logger, height, forZeroHeight, jailAllowedAddrs, viperAppOpts, modulesToExport)
@@ -165,7 +165,7 @@ func appExport[T transaction.Tx](
 	jailAllowedAddrs []string,
 	viper *viper.Viper,
 	modulesToExport []string,
-) (servertypes.ExportedApp, error) {
+) (serverv2.ExportedApp, error) {
 	// overwrite the FlagInvCheckPeriod
 	viper.Set(server.FlagInvCheckPeriod, 1)
 
@@ -174,7 +174,7 @@ func appExport[T transaction.Tx](
 		simApp = simapp.NewSimApp[T](logger, viper)
 
 		if err := simApp.LoadHeight(uint64(height)); err != nil {
-			return servertypes.ExportedApp{}, err
+			return serverv2.ExportedApp{}, err
 		}
 	} else {
 		simApp = simapp.NewSimApp[T](logger, viper)

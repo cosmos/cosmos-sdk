@@ -46,25 +46,28 @@ func (c *Consensus[T]) streamDeliverBlockChanges(
 		}
 	}
 	if c.listener.OnEvent != nil {
-		for _, evt := range events {
-			err := c.listener.OnEvent(appdata.EventData{
-				TxIndex:    0, // TODO: missing this data
-				MsgIndex:   0, // TODO: missing this data
-				EventIndex: 0, // TODO: missing this data
-				Type:       evt.Type,
-				Data: func() (json.RawMessage, error) {
-					// TODO: this is unnecessarily lossy for typed events which have their own JSON encoding
-					m := map[string]interface{}{}
-					for _, attr := range evt.Attributes {
-						m[attr.Key] = attr.Value
-					}
-					return json.Marshal(m)
-				},
-			})
-			if err != nil {
-				return err
+		for i, result := range txResults {
+			for j, e := range result.Events {
+				err := c.listener.OnEvent(appdata.EventData{
+					TxIndex:    int32(i),
+					MsgIndex:   -1,       // TODO: missing this data
+					EventIndex: int32(j), // TODO: this doesn't match the spec because it should be the index of the event in the message
+					Type:       e.Type,
+					Data: func() (json.RawMessage, error) {
+						// TODO: this is unnecessarily lossy for typed events which have their own JSON encoding
+						m := map[string]interface{}{}
+						for _, attr := range e.Attributes {
+							m[attr.Key] = attr.Value
+						}
+						return json.Marshal(m)
+					},
+				})
+				if err != nil {
+					return err
+				}
 			}
 		}
+		// TODO: begin/end block events are in the main event array bundled with tx events which we already sent, what to do??
 	}
 	if c.listener.OnKVPair != nil {
 		for _, change := range stateChanges {

@@ -52,10 +52,12 @@ type EventData struct {
 	// MsgIndex is the index of the message in the transaction to which this event is associated.
 	// If TxIndex is negative, this index could correspond to the index of the message in
 	// begin or end block processing if such indexes exist, or it can be set to zero.
-	MsgIndex uint32
+	// If this is missing -1 should be returned.
+	MsgIndex int32
 
 	// EventIndex is the index of the event in the message to which this event is associated.
-	EventIndex uint32
+	// If this is missing -1 should be returned.
+	EventIndex int32
 
 	// Type is the type of the event.
 	Type string

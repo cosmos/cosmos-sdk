@@ -3,14 +3,14 @@ module cosmossdk.io/store/v2
 go 1.21
 
 require (
-	cosmossdk.io/core v0.12.1-0.20240725072823-6a2d039e1212
+	cosmossdk.io/core v0.12.1-0.20240813134434-072a29c838a5
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
 	cosmossdk.io/log v1.4.0
 	github.com/cockroachdb/pebble v1.1.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/gogoproto v1.6.0
-	github.com/cosmos/iavl v1.2.1-0.20240731145221-594b181f427e
+	github.com/cosmos/iavl v1.0.0-beta.1.0.20240813194616-eb5078efcf9e
 	github.com/cosmos/ics23/go v0.10.0
 	github.com/google/btree v1.1.2
 	github.com/hashicorp/go-metrics v0.5.3
@@ -32,7 +32,6 @@ require (
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cosmos/cosmos-db v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/emicklei/dot v1.6.2 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect

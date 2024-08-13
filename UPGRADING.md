@@ -32,11 +32,14 @@ messages, while maintaining the default behavior for other message types.
 
 Here is an example on how `SetIncludeNestedMsgsGas` option could be set to calculate the gas of a gov proposal
 nested messages:
+
 ```go
 baseAppOptions = append(baseAppOptions, baseapp.SetIncludeNestedMsgsGas([]sdk.Message{&gov.MsgSubmitProposal{}}))
 // ...
 app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 ```
+
+## [v0.52.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-alpha.0)
 
 ### SimApp
 

@@ -17,11 +17,8 @@ import (
 )
 
 const (
-	flagTraceStore       = "trace-store"
 	flagHeight           = "height"
-	flagForZeroHeight    = "for-zero-height"
 	flagJailAllowedAddrs = "jail-allowed-addrs"
-	flagModulesToExport  = "modules-to-export"
 )
 
 // ExportCmd dumps app state to JSON.
@@ -63,7 +60,6 @@ func ExportCmd(appExporter v2.AppExporter) *cobra.Command {
 
 			height, _ := cmd.Flags().GetInt64(flagHeight)
 			jailAllowedAddrs, _ := cmd.Flags().GetStringSlice(flagJailAllowedAddrs)
-			modulesToExport, _ := cmd.Flags().GetStringSlice(flagModulesToExport)
 			outputDocument, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
 
 			exported, err := appExporter(logger, height, jailAllowedAddrs, viper, modulesToExport)
@@ -104,7 +100,6 @@ func ExportCmd(appExporter v2.AppExporter) *cobra.Command {
 
 	cmd.Flags().Int64(flagHeight, -1, "Export state from a particular height (-1 means latest height)")
 	cmd.Flags().StringSlice(flagJailAllowedAddrs, []string{}, "Comma-separated list of operator addresses of jailed validators to unjail")
-	cmd.Flags().StringSlice(flagModulesToExport, []string{}, "Comma-separated list of modules to export. If empty, will export all modules")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "Exported state is written to the given file instead of STDOUT")
 
 	return cmd

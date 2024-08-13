@@ -1,7 +1,6 @@
 package types
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"errors"

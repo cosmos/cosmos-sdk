@@ -18,7 +18,7 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.23.0"
+          go-version: "1.23"
           check-latest: true
       - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff

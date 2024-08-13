@@ -80,6 +80,8 @@ func DiffFieldValues(field schema.Field, expected, actual any) string {
 
 // CompareKindValues compares the expected and actual values for the provided kind and returns true if they are equal,
 // false if they are not, and an error if the types are not valid for the kind.
+// For IntegerStringKind and DecimalStringKind values, comparisons are made based on equality of the underlying numeric
+// values rather than their string encoding.
 func CompareKindValues(kind schema.Kind, expected, actual any) (bool, error) {
 	if kind.ValidateValueType(expected) != nil {
 		return false, fmt.Errorf("unexpected type %T for kind %s", expected, kind)

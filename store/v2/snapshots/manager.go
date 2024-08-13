@@ -13,7 +13,7 @@ import (
 
 	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
-	errorsmod "cosmossdk.io/errors"
+	errorsmod "cosmossdk.io/errors/v2"
 	storeerrors "cosmossdk.io/store/v2/errors"
 	"cosmossdk.io/store/v2/snapshots/types"
 )
@@ -400,7 +400,6 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 
 	// chStorage is the channel to pass the KV pairs to the storage snapshotter.
 	chStorage := make(chan *corestore.StateChanges, defaultStorageChannelBufferSize)
-	defer close(chStorage)
 
 	storageErrs := make(chan error, 1)
 	go func() {
@@ -415,6 +414,7 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 	if err != nil {
 		return errorsmod.Wrap(err, "multistore restore")
 	}
+	close(chStorage)
 
 	for {
 		if nextItem.Item == nil {

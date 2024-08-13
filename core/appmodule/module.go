@@ -3,8 +3,6 @@ package appmodule
 import (
 	"context"
 
-	"google.golang.org/grpc"
-
 	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/legacy"
 )
@@ -35,23 +33,24 @@ type ValidatorUpdate = appmodule.ValidatorUpdate
 
 // HasServices is the extension interface that modules should implement to register
 // implementations of services defined in .proto files.
-type HasServices interface {
-	AppModule
+// This API is supported by the Cosmos SDK module managers but is excluded from core to limit dependencies.
+// type HasServices interface {
+// 	AppModule
 
-	// RegisterServices registers the module's services with the app's service
-	// registrar.
-	//
-	// Two types of services are currently supported:
-	// - read-only gRPC query services, which are the default.
-	// - transaction message services, which must have the protobuf service
-	//   option "cosmos.msg.v1.service" (defined in "cosmos/msg/v1/service.proto")
-	//   set to true.
-	//
-	// The service registrar will figure out which type of service you are
-	// implementing based on the presence (or absence) of protobuf options. You
-	// do not need to specify this in golang code.
-	RegisterServices(grpc.ServiceRegistrar) error
-}
+// 	// RegisterServices registers the module's services with the app's service
+// 	// registrar.
+// 	//
+// 	// Two types of services are currently supported:
+// 	// - read-only gRPC query services, which are the default.
+// 	// - transaction message services, which must have the protobuf service
+// 	//   option "cosmos.msg.v1.service" (defined in "cosmos/msg/v1/service.proto")
+// 	//   set to true.
+// 	//
+// 	// The service registrar will figure out which type of service you are
+// 	// implementing based on the presence (or absence) of protobuf options. You
+// 	// do not need to specify this in golang code.
+// 	RegisterServices(grpc.ServiceRegistrar) error
+// }
 
 // HasPrepareCheckState is an extension interface that contains information about the AppModule
 // and PrepareCheckState.

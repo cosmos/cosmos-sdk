@@ -2,6 +2,7 @@ package cometbft
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	coreappmgr "cosmossdk.io/core/app"
@@ -20,6 +21,51 @@ func (c *Consensus[T]) streamDeliverBlockChanges(
 	events []event.Event,
 	stateChanges []store.StateChanges,
 ) error {
+	if c.listener.StartBlock != nil {
+		err := c.listener.StartBlock(appdata.StartBlockData{
+			Height:      uint64(height),
+			HeaderBytes: nil, // TODO: missing this data
+			HeaderJSON:  nil, // TODO: missing this data
+		})
+		if err != nil {
+			return err
+		}
+	}
+	if c.listener.OnTx != nil {
+		for i, tx := range txs {
+			err := c.listener.OnTx(appdata.TxData{
+				TxIndex: int32(i),
+				Bytes: func() ([]byte, error) {
+					return tx, nil
+				},
+				JSON: nil, // TODO: missing this data
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+	if c.listener.OnEvent != nil {
+		for _, evt := range events {
+			err := c.listener.OnEvent(appdata.EventData{
+				TxIndex:    0, // TODO: missing this data
+				MsgIndex:   0, // TODO: missing this data
+				EventIndex: 0, // TODO: missing this data
+				Type:       evt.Type,
+				Data: func() (json.RawMessage, error) {
+					// TODO: this is unnecessarily lossy for typed events which have their own JSON encoding
+					m := map[string]interface{}{}
+					for _, attr := range evt.Attributes {
+						m[attr.Key] = attr.Value
+					}
+					return json.Marshal(m)
+				},
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
 	if c.listener.OnKVPair != nil {
 		for _, change := range stateChanges {
 			err := c.listener.OnKVPair(appdata.KVPairData{
@@ -33,6 +79,12 @@ func (c *Consensus[T]) streamDeliverBlockChanges(
 			if err != nil {
 				return err
 			}
+		}
+	}
+	if c.listener.Commit != nil {
+		err := c.listener.Commit(appdata.CommitData{})
+		if err != nil {
+			return err
 		}
 	}
 

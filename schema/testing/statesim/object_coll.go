@@ -110,16 +110,17 @@ func (o *ObjectCollection) UpdateGen() *rapid.Generator[schema.ObjectUpdate] {
 
 // AllState iterates over the state of the collection by calling the given function with each item in
 // state represented as an object update.
-func (o *ObjectCollection) AllState(f func(schema.ObjectUpdate) bool) {
+func (o *ObjectCollection) AllState(f func(schema.ObjectUpdate, error) bool) {
 	o.objects.Scan(func(_ string, v schema.ObjectUpdate) bool {
-		return f(v)
+		return f(v, nil)
 	})
 }
 
 // GetObject returns the object with the given key from the collection represented as an ObjectUpdate
 // itself. Deletions that are retained are returned as ObjectUpdate's with delete set to true.
-func (o *ObjectCollection) GetObject(key any) (update schema.ObjectUpdate, found bool) {
-	return o.objects.Get(fmtObjectKey(o.objectType, key))
+func (o *ObjectCollection) GetObject(key interface{}) (update schema.ObjectUpdate, found bool, err error) {
+	update, ok := o.objects.Get(fmtObjectKey(o.objectType, key))
+	return update, ok, nil
 }
 
 // ObjectType returns the object type of the collection.
@@ -128,8 +129,8 @@ func (o *ObjectCollection) ObjectType() schema.ObjectType {
 }
 
 // Len returns the number of objects in the collection.
-func (o *ObjectCollection) Len() int {
-	return o.objects.Len()
+func (o *ObjectCollection) Len() (int, error) {
+	return o.objects.Len(), nil
 }
 
 func fmtObjectKey(objectType schema.ObjectType, key any) string {

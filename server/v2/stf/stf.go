@@ -106,10 +106,6 @@ func (s STF[T]) DeliverBlock(
 
 	exCtx := s.makeContext(ctx, appmanager.ConsensusIdentity, newState, internal.ExecModeFinalize)
 	exCtx.setHeaderInfo(hi)
-	consMessagesResponses, err := s.runConsensusMessages(exCtx, block.ConsensusMessages)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to execute consensus messages: %w", err)
-	}
 
 	// reset events
 	exCtx.events = make([]event.Event, 0)
@@ -160,13 +156,12 @@ func (s STF[T]) DeliverBlock(
 	}
 
 	return &appmanager.BlockResponse{
-		Apphash:                   nil,
-		ConsensusMessagesResponse: consMessagesResponses,
-		ValidatorUpdates:          valset,
-		PreBlockEvents:            preBlockEvents,
-		BeginBlockEvents:          beginBlockEvents,
-		TxResults:                 txResults,
-		EndBlockEvents:            endBlockEvents,
+		Apphash:          nil,
+		ValidatorUpdates: valset,
+		PreBlockEvents:   preBlockEvents,
+		BeginBlockEvents: beginBlockEvents,
+		TxResults:        txResults,
+		EndBlockEvents:   endBlockEvents,
 	}, newState, nil
 }
 
@@ -333,6 +328,7 @@ func (s STF[T]) runTxMsgs(
 	return msgResps, consumed, execCtx.events, nil
 }
 
+// preBlock executes the pre block logic.
 func (s STF[T]) preBlock(
 	ctx *executionContext,
 	txs []T,
@@ -352,22 +348,7 @@ func (s STF[T]) preBlock(
 	return ctx.events, nil
 }
 
-func (s STF[T]) runConsensusMessages(
-	ctx *executionContext,
-	messages []transaction.Msg,
-) ([]transaction.Msg, error) {
-	responses := make([]transaction.Msg, len(messages))
-	for i := range messages {
-		resp, err := s.msgRouter.InvokeUntyped(ctx, messages[i])
-		if err != nil {
-			return nil, err
-		}
-		responses[i] = resp
-	}
-
-	return responses, nil
-}
-
+// beginBlock executes the begin block logic.
 func (s STF[T]) beginBlock(
 	ctx *executionContext,
 ) (beginBlockEvents []event.Event, err error) {
@@ -386,6 +367,7 @@ func (s STF[T]) beginBlock(
 	return ctx.events, nil
 }
 
+// endBlock executes the end block logic.
 func (s STF[T]) endBlock(
 	ctx *executionContext,
 ) ([]event.Event, []appmodulev2.ValidatorUpdate, error) {

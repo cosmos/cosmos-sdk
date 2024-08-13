@@ -31,7 +31,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Features
+## [v0.1.2](https://github.com/cosmos/cosmos-sdk/releases/tag/tools/confix/v0.1.2) - 2024-08-13
 
 * (confix) [#21202](https://github.com/cosmos/cosmos-sdk/pull/21202) Allow customization of migration `PlanBuilder`.
 

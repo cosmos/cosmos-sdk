@@ -225,7 +225,6 @@ func (m *MM[T]) ExportGenesisForModules(
 
 		channels[moduleName] = make(chan genesisResult)
 		go func(moduleI ModuleI, ch chan genesisResult) {
-			fmt.Println("Exporting genesis for module", moduleName)
 			jm, err := moduleI.ExportGenesis(ctx)
 			if err != nil {
 				ch <- genesisResult{nil, err}

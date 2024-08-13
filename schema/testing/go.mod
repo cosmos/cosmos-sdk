@@ -1,5 +1,7 @@
 module cosmossdk.io/schema/testing
 
+go 1.23.0
+
 require (
 	cosmossdk.io/schema v0.0.0
 	github.com/stretchr/testify v1.9.0
@@ -16,5 +18,3 @@ require (
 )
 
 replace cosmossdk.io/schema => ./..
-
-go 1.22

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"math"
 	"sort"
 	"strconv"
@@ -14,7 +15,6 @@ import (
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
-	"golang.org/x/exp/maps"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/core/header"

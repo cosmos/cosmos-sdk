@@ -2,11 +2,10 @@ package gov
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"sort"
 	"strings"
-
-	"golang.org/x/exp/maps"
 
 	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	"cosmossdk.io/core/appmodule"

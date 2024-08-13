@@ -2,10 +2,9 @@ package keeper
 
 import (
 	"fmt"
+	"maps"
 	"math"
 	"sort"
-
-	"golang.org/x/exp/maps"
 
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/x/group"

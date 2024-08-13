@@ -2,9 +2,8 @@ package bank
 
 import (
 	"fmt"
+	"maps"
 	"sort"
-
-	"golang.org/x/exp/maps"
 
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/core/appmodule"

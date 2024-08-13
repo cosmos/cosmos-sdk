@@ -1,12 +1,12 @@
 package keeper_test
 
 import (
+	"maps"
 	"sort"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/x/epochs/types"

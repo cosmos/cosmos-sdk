@@ -2,9 +2,8 @@ package staking
 
 import (
 	"fmt"
+	"maps"
 	"sort"
-
-	"golang.org/x/exp/maps"
 
 	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"

@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"math"
 	"sort"
 
 	protoio "github.com/cosmos/gogoproto/io"
-	"golang.org/x/exp/maps"
 
 	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"

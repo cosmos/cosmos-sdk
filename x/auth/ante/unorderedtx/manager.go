@@ -8,13 +8,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
 	"sort"
 	"sync"
 	"time"
-
-	"golang.org/x/exp/maps"
 )
 
 const (

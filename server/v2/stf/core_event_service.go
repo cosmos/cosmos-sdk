@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"maps"
 	"slices"
 
 	"github.com/cosmos/gogoproto/jsonpb"
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/core/event"
 	transaction "cosmossdk.io/core/transaction"

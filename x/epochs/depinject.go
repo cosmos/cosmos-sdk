@@ -2,9 +2,8 @@ package epochs
 
 import (
 	"fmt"
+	"maps"
 	"sort"
-
-	"golang.org/x/exp/maps"
 
 	modulev1 "cosmossdk.io/api/cosmos/epochs/module/v1"
 	"cosmossdk.io/core/appmodule"

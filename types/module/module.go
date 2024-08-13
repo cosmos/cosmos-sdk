@@ -24,12 +24,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"sort"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"

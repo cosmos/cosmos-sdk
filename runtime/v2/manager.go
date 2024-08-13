@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"reflect"
 	"sort"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
 	proto "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"

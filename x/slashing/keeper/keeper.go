@@ -137,11 +137,7 @@ func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 		return err
 	}
 
-	if err := k.EventService.EventManager(ctx).EmitKV(
+	return k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeSlash,
-		event.NewAttribute(types.AttributeKeyJailed, consStr),
-	); err != nil {
-		return err
-	}
-	return nil
+		event.NewAttribute(types.AttributeKeyJailed, consStr))
 }

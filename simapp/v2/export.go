@@ -13,7 +13,6 @@ func (app *SimApp[T]) ExportAppStateAndValidators(forZeroHeight bool, jailAllowe
 	ctx := context.Background()
 
 	latestHeight, err := app.LoadLatestHeight()
-
 	if err != nil {
 		return serverv2.ExportedApp{}, err
 	}

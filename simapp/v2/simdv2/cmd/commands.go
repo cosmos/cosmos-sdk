@@ -3,9 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"io"
-
-	dbm "github.com/cosmos/cosmos-db"
+	v2 "github.com/cosmos/cosmos-sdk/x/genutil/client/cli/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -26,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/server"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -88,32 +85,14 @@ func genesisCommand[T transaction.Tx](
 	moduleManager *runtimev2.MM[T],
 	appExport func(logger log.Logger,
 		height int64,
-		forZeroHeight bool,
 		jailAllowedAddrs []string,
 		viper *viper.Viper,
 		modulesToExport []string,
 	) (serverv2.ExportedApp, error),
 	cmds ...*cobra.Command,
 ) *cobra.Command {
-	compatAppExporter := func(
-		logger log.Logger,
-		db dbm.DB,
-		traceWriter io.Writer,
-		height int64,
-		forZeroHeight bool,
-		jailAllowedAddrs []string,
-		appOpts servertypes.AppOptions,
-		modulesToExport []string,
-	) (serverv2.ExportedApp, error) {
-		viperAppOpts, ok := appOpts.(*viper.Viper)
-		if !ok {
-			return serverv2.ExportedApp{}, errors.New("appOpts is not viper.Viper")
-		}
+	cmd := v2.Commands(moduleManager.Modules()[genutiltypes.ModuleName].(genutil.AppModule), moduleManager, appExport)
 
-		return appExport(logger, height, forZeroHeight, jailAllowedAddrs, viperAppOpts, modulesToExport)
-	}
-
-	cmd := genutilcli.Commands(moduleManager.Modules()[genutiltypes.ModuleName].(genutil.AppModule), moduleManager, compatAppExporter)
 	for _, subCmd := range cmds {
 		cmd.AddCommand(subCmd)
 	}
@@ -170,7 +149,6 @@ func txCommand() *cobra.Command {
 func appExport[T transaction.Tx](
 	logger log.Logger,
 	height int64,
-	forZeroHeight bool,
 	jailAllowedAddrs []string,
 	viper *viper.Viper,
 	modulesToExport []string,
@@ -189,7 +167,7 @@ func appExport[T transaction.Tx](
 		simApp = simapp.NewSimApp[T](logger, viper)
 	}
 
-	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
+	return simApp.ExportAppStateAndValidators(jailAllowedAddrs, modulesToExport)
 }
 
 var _ transaction.Codec[transaction.Tx] = &genericTxDecoder[transaction.Tx]{}

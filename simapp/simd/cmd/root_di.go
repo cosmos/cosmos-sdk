@@ -5,6 +5,7 @@ package cmd
 import (
 	"os"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/spf13/cobra"
 
@@ -85,6 +86,7 @@ func NewRootCmd() *cobra.Command {
 	initRootCmd(rootCmd, moduleManager)
 
 	nodeCmds := nodeservice.NewNodeCommands()
+	autoCliOpts.ModuleOptions = make(map[string]*autocliv1.ModuleOptions)
 	autoCliOpts.ModuleOptions[nodeCmds.Name()] = nodeCmds.AutoCLIOptions()
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {

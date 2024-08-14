@@ -187,10 +187,10 @@ func (a AppManager[T]) QueryWithState(
 	return a.stf.Query(ctx, state, a.config.QueryGasLimit, request)
 }
 
-// RunWithCtx is made to support genesis, if genesis was just the execution of messages instead
+// UnsafeRunWithCtx is made to support genesis, if genesis was just the execution of messages instead
 // of being something custom then we would not need this. PLEASE DO NOT USE.
 // TODO: Remove
-func (a AppManager[T]) RunWithCtx(
+func (a AppManager[T]) UnsafeRunWithCtx(
 	ctx context.Context,
 	closure func(ctx context.Context) error,
 ) (corestore.WriterMap, error) {

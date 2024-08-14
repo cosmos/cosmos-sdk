@@ -146,6 +146,9 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
 	}
 }
 
+// decodeTxs decodes the txs bytes into a decoded txs
+// If there a fail decoding tx, remove from the list
+// TODO: should return an err here?
 func decodeTxs[T transaction.Tx](codec transaction.Codec[T], txsBz [][]byte) []T {
 	var txs []T
 	for _, tx := range txsBz {

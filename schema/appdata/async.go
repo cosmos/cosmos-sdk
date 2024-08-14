@@ -151,11 +151,14 @@ func AsyncListener(opts AsyncListenerOptions, commitChan chan<- error, listener 
 		}
 	}
 
-	if listener.Commit != nil {
-		res.Commit = func(data CommitData) error {
-			packetChan <- data
-			return nil
-		}
+	res.Commit = func(data CommitData) error {
+		packetChan <- data
+		return nil
+	}
+
+	res.onBatch = func(batch PacketBatch) error {
+		packetChan <- batch
+		return nil
 	}
 
 	return res

@@ -37,5 +37,14 @@ type Listener struct {
 	// indexers should commit their data when this is called and return an error if
 	// they are unable to commit. Data sources MUST call Commit when data is committed,
 	// otherwise it should be assumed that indexers have not persisted their state.
+	// When listener processing is pushed into background go routines using AsyncListener
+	// or AsyncListenerMux, Commit will synchronize the processing of all listeners and
+	// is a blocking call. Producers that do not want to block on Commit in a given block
+	// can delay calling Commit until the start of the next block to give listener
+	// processing time to complete.
 	Commit func(CommitData) error
+
+	// onBatch can be used internally to efficiently forward packet batches to
+	// async listeners.
+	onBatch func(PacketBatch) error
 }

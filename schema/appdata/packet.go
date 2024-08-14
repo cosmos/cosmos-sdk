@@ -57,5 +57,12 @@ func (c CommitData) apply(l *Listener) error {
 	if l.Commit == nil {
 		return nil
 	}
-	return l.Commit(c)
+	cb, err := l.Commit(c)
+	if err != nil {
+		return err
+	}
+	if cb != nil {
+		return cb()
+	}
+	return nil
 }

@@ -496,7 +496,6 @@ func (c *Consensus[T]) FinalizeBlock(
 	c.lastCommittedHeight.Store(req.Height)
 
 	cp, err := c.GetConsensusParams(ctx) // we get the consensus params from the latest state because we committed state above
-	fmt.Println("GetConsensusParams", cp, err)
 	if err != nil {
 		return nil, err
 	}

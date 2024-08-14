@@ -170,9 +170,7 @@ func (r coreRouterImpl) InvokeTyped(ctx context.Context, req, resp transaction.M
 
 func (r coreRouterImpl) InvokeUntyped(ctx context.Context, req transaction.Msg) (res transaction.Msg, err error) {
 	typeName := msgTypeURL(req)
-	fmt.Println("typeName", typeName)
 	handler, exists := r.handlers[typeName]
-	fmt.Println("handler", exists)
 	if !exists {
 		return nil, fmt.Errorf("%w: %s", ErrNoHandler, typeName)
 	}

@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"reflect"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -68,9 +67,7 @@ func (t Tx) Bytes() []byte {
 
 func (t *Tx) Decode(b []byte) error {
 	rawTx := new(encodedTx)
-	fmt.Println("Decode", rawTx, b)
 	err := json.Unmarshal(b, rawTx)
-	fmt.Println("after", rawTx, err)
 	if err != nil {
 		return err
 	}

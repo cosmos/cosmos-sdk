@@ -83,7 +83,6 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 			"theChain",
 			ci.Hash,
 			nil,
-			nil,
 			true,
 		},
 		genesisBytes,
@@ -140,13 +139,13 @@ func TestSimAppExportAndBlockedAddrs_WithOneBlockProduced(t *testing.T) {
 
 	MoveNextBlock(t, app, ctx)
 
-	_, err := app.ExportAppStateAndValidators(false, nil, nil)
+	_, err := app.ExportAppStateAndValidators(nil)
 	require.NoError(t, err)
 }
 
 func TestSimAppExportAndBlockedAddrs_NoBlocksProduced(t *testing.T) {
 	app, _ := NewTestApp(t)
 
-	_, err := app.ExportAppStateAndValidators(false, nil, nil)
+	_, err := app.ExportAppStateAndValidators(nil)
 	require.NoError(t, err)
 }

@@ -39,6 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [v0.11.2](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.11.2)
 
 * [#21298](https://github.com/cosmos/cosmos-sdk/pull/21298) Backport [#19265](https://github.com/cosmos/cosmos-sdk/pull/19265) to core.
+* [#21298](https://github.com/cosmos/cosmos-sdk/pull/21298) Clean-up after depinject upgrade.
 
 ## [v0.11.1](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.11.1)
 

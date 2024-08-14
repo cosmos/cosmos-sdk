@@ -84,17 +84,7 @@ func (m Minter) BlockProvision(params Params) sdk.Coin {
 
 // IsEqual returns true if two minters are equal, it checks all the fields
 func (m Minter) IsEqual(minter Minter) bool {
-	if !m.Inflation.Equal(minter.Inflation) {
-		return false
-	}
-
-	if !m.AnnualProvisions.Equal(minter.AnnualProvisions) {
-		return false
-	}
-
-	if !bytes.Equal(m.Data, minter.Data) {
-		return false
-	}
-
-	return true
+	return m.Inflation.Equal(minter.Inflation) &&
+		m.AnnualProvisions.Equal(minter.AnnualProvisions) &&
+		bytes.Equal(m.Data, minter.Data)
 }

@@ -207,7 +207,7 @@ func (m *MM[T]) ExportGenesisForModules(
 
 	genesisData := make(map[string]json.RawMessage)
 
-	// TODO: make async export genesis
+	// TODO: make async export genesis https://github.com/cosmos/cosmos-sdk/issues/21303
 	for _, moduleName := range modulesToExport {
 		mod := m.modules[moduleName]
 		var moduleI ModuleI

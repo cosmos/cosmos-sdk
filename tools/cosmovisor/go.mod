@@ -1,8 +1,6 @@
 module cosmossdk.io/tools/cosmovisor
 
-go 1.22.2
-
-toolchain go1.22.4
+go 1.22.4
 
 require (
 	cosmossdk.io/log v1.4.0
@@ -55,7 +53,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.50.7 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/gogoproto v1.6.0 // indirect
+	github.com/cosmos/gogoproto v1.7.0 // indirect
 	github.com/cosmos/iavl v1.2.0 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect

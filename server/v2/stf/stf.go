@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/schema/appdata"
+
 	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	corecontext "cosmossdk.io/core/context"
@@ -40,6 +42,8 @@ type STF[T transaction.Tx] struct {
 	branchFn            branchFn // branchFn is a function that given a readonly state it returns a writable version of it.
 	makeGasMeter        makeGasMeterFn
 	makeGasMeteredState makeGasMeteredStateFn
+
+	listener appdata.Listener
 }
 
 // NewSTF returns a new STF instance.
@@ -109,6 +113,8 @@ func (s STF[T]) DeliverBlock(
 
 	// reset events
 	exCtx.events = make([]event.Event, 0)
+	exCtx.eventData = make([]appdata.EventDatum, 0)
+	exCtx.txIndex = -1
 	// pre block is called separate from begin block in order to prepopulate state
 	preBlockEvents, err := s.preBlock(exCtx, block.Txs)
 	if err != nil {
@@ -116,6 +122,11 @@ func (s STF[T]) DeliverBlock(
 	}
 
 	if err = isCtxCancelled(ctx); err != nil {
+		return nil, nil, err
+	}
+
+	err = s.sendEventsToListener(exCtx)
+	if err != nil {
 		return nil, nil, err
 	}
 
@@ -132,6 +143,11 @@ func (s STF[T]) DeliverBlock(
 		}
 	}
 
+	err = s.sendEventsToListener(exCtx)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	// check if we need to return early
 	if err = isCtxCancelled(ctx); err != nil {
 		return nil, nil, err
@@ -145,12 +161,21 @@ func (s STF[T]) DeliverBlock(
 		if err = isCtxCancelled(ctx); err != nil {
 			return nil, nil, err
 		}
-		txResults[i] = s.deliverTx(exCtx, newState, txBytes, transaction.ExecModeFinalize, hi)
+		txResults[i] = s.deliverTx(exCtx, newState, txBytes, transaction.ExecModeFinalize, hi, int32(i))
 	}
+
 	// reset events
 	exCtx.events = make([]event.Event, 0)
+	exCtx.txIndex = -2
+	exCtx.msgIndex = 0
+	exCtx.eventIndex = 0
 	// end block
 	endBlockEvents, valset, err := s.endBlock(exCtx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = s.sendEventsToListener(exCtx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -172,6 +197,7 @@ func (s STF[T]) deliverTx(
 	tx T,
 	execMode transaction.ExecMode,
 	hi header.Info,
+	txIndex int32,
 ) appmanager.TxResult {
 	// recover in the case of a panic
 	var recoveryError error
@@ -202,7 +228,7 @@ func (s STF[T]) deliverTx(
 		}
 	}
 
-	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode, hi)
+	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode, hi, txIndex)
 	return appmanager.TxResult{
 		Events:    append(validationEvents, execEvents...),
 		GasUsed:   execGas + validateGas,
@@ -247,10 +273,11 @@ func (s STF[T]) execTx(
 	tx T,
 	execMode transaction.ExecMode,
 	hi header.Info,
+	txIndex int32,
 ) ([]transaction.Msg, uint64, []event.Event, error) {
 	execState := s.branchFn(state)
 
-	msgsResp, gasUsed, runTxMsgsEvents, txErr := s.runTxMsgs(ctx, execState, gasLimit, tx, execMode, hi)
+	msgsResp, gasUsed, runTxMsgsEvents, txErr := s.runTxMsgs(ctx, execState, gasLimit, tx, execMode, hi, txIndex)
 	if txErr != nil {
 		// in case of error during message execution, we do not apply the exec state.
 		// instead we run the post exec handler in a new branchFn from the initial state.
@@ -301,6 +328,7 @@ func (s STF[T]) runTxMsgs(
 	tx T,
 	execMode transaction.ExecMode,
 	hi header.Info,
+	txIndex int32,
 ) ([]transaction.Msg, uint64, []event.Event, error) {
 	txSenders, err := tx.GetSenders()
 	if err != nil {
@@ -315,7 +343,10 @@ func (s STF[T]) runTxMsgs(
 	execCtx := s.makeContext(ctx, nil, state, execMode)
 	execCtx.setHeaderInfo(hi)
 	execCtx.setGasLimit(gasLimit)
+	execCtx.txIndex = txIndex
 	for i, msg := range msgs {
+		execCtx.msgIndex = int32(i)
+		execCtx.eventIndex = 0
 		execCtx.sender = txSenders[i]
 		resp, err := s.msgRouter.InvokeUntyped(execCtx, msg)
 		if err != nil {
@@ -416,7 +447,7 @@ func (s STF[T]) Simulate(
 	if err != nil {
 		return appmanager.TxResult{}, nil
 	}
-	txr := s.deliverTx(ctx, simulationState, tx, internal.ExecModeSimulate, hi)
+	txr := s.deliverTx(ctx, simulationState, tx, internal.ExecModeSimulate, hi, -1)
 
 	return txr, simulationState
 }
@@ -487,6 +518,23 @@ func (s STF[T]) clone() STF[T] {
 	}
 }
 
+func (s STF[T]) sendEventsToListener(exCtx *executionContext) error {
+	if s.listener.OnEvent == nil {
+		return nil
+	}
+
+	err := s.listener.OnEvent(appdata.EventData{
+		Events: exCtx.eventData,
+	})
+	if err != nil {
+		return err
+	}
+
+	exCtx.eventData = nil
+
+	return nil
+}
+
 // executionContext is a struct that holds the context for the execution of a tx.
 type executionContext struct {
 	context.Context
@@ -499,7 +547,8 @@ type executionContext struct {
 	// meter is the gas meter.
 	meter gas.Meter
 	// events are the current events.
-	events []event.Event
+	events    []event.Event
+	eventData []appdata.EventDatum
 	// sender is the causer of the state transition.
 	sender transaction.Identity
 	// headerInfo contains the block info.
@@ -513,6 +562,10 @@ type executionContext struct {
 
 	msgRouter   router.Service
 	queryRouter router.Service
+
+	txIndex    int32
+	msgIndex   int32
+	eventIndex int32
 }
 
 // setHeaderInfo sets the header info in the state to be used by queries in the future.

@@ -1,3 +1,5 @@
+cosmossdk.io/schema v0.1.1 h1:I0M6pgI7R10nq+/HCQfbO6BsGBZA8sQy+duR1Y3aKcA=
+cosmossdk.io/schema v0.1.1/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
 github.com/cosmos/gogoproto v1.6.1-0.20240809124342-d6a57064ada0 h1:qZdcY4sKyAnaUwFRtSKkk9YdeMuQixWxLagI/8jhJo4=
 github.com/cosmos/gogoproto v1.6.1-0.20240809124342-d6a57064ada0/go.mod h1:Y+g956rcUf2vr4uwtCcK/1Xx9BWVluCtcI9vsh0GHmk=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=

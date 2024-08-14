@@ -3,9 +3,11 @@ module cosmossdk.io/server/v2/stf
 go 1.21
 
 replace cosmossdk.io/core => ../../../core
+replace cosmossdk.io/schema => ../../../schema
 
 require (
 	cosmossdk.io/core v0.11.0
+	cosmossdk.io/schema v0.1.1
 	github.com/cosmos/gogoproto v1.6.0
 	github.com/stretchr/testify v1.9.0
 	github.com/tidwall/btree v1.7.0

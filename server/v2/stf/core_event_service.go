@@ -12,6 +12,7 @@ import (
 
 	"cosmossdk.io/core/event"
 	transaction "cosmossdk.io/core/transaction"
+	"cosmossdk.io/schema/appdata"
 )
 
 func NewEventService() event.Service {
@@ -40,12 +41,28 @@ func (em *eventManager) Emit(tev transaction.Msg) error {
 	}
 
 	em.executionContext.events = append(em.executionContext.events, res)
+	em.appendEventData(gogoproto.MessageName(tev), func() (json.RawMessage, error) {
+		buf := &bytes.Buffer{}
+		err := (&jsonpb.Marshaler{}).Marshal(buf, tev)
+		if err != nil {
+			return nil, err
+		}
+		return buf.Bytes(), nil
+	})
+
 	return nil
 }
 
 // EmitKV emits a key value pair event.
 func (em *eventManager) EmitKV(eventType string, attrs ...event.Attribute) error {
 	em.executionContext.events = append(em.executionContext.events, event.NewEvent(eventType, attrs...))
+	em.appendEventData(eventType, func() (json.RawMessage, error) {
+		m := map[string]interface{}{}
+		for _, attr := range attrs {
+			m[attr.Key] = attr.Value
+		}
+		return json.Marshal(m)
+	})
 	return nil
 }
 
@@ -53,6 +70,18 @@ func (em *eventManager) EmitKV(eventType string, attrs ...event.Attribute) error
 // These events will not be added to consensus.
 func (em *eventManager) EmitNonConsensus(event transaction.Msg) error {
 	return em.Emit(event)
+}
+
+func (em *eventManager) appendEventData(typeName string, toJSON appdata.ToJSON) {
+	em.executionContext.eventData = append(em.executionContext.eventData, appdata.EventDatum{
+		TxIndex:    em.executionContext.txIndex,
+		MsgIndex:   em.executionContext.msgIndex,
+		EventIndex: em.executionContext.eventIndex,
+		Type:       typeName,
+		Data:       toJSON,
+	})
+
+	em.executionContext.eventIndex++
 }
 
 // TypedEventToEvent takes typed event and converts to Event object

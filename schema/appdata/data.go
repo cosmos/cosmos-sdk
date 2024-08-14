@@ -43,6 +43,11 @@ type TxData struct {
 
 // EventData represents event data that is passed to a listener.
 type EventData struct {
+	Events []EventDatum
+}
+
+// EventDatum represents a single event that is passed to a listener.
+type EventDatum struct {
 	// TxIndex is the index of the transaction in the block to which this event is associated.
 	// It should be set to a negative number if the event is not associated with a transaction.
 	// Canonically -1 should be used to represent begin block processing and -2 should be used to
@@ -52,11 +57,9 @@ type EventData struct {
 	// MsgIndex is the index of the message in the transaction to which this event is associated.
 	// If TxIndex is negative, this index could correspond to the index of the message in
 	// begin or end block processing if such indexes exist, or it can be set to zero.
-	// If this is missing -1 should be returned.
 	MsgIndex int32
 
 	// EventIndex is the index of the event in the message to which this event is associated.
-	// If this is missing -1 should be returned.
 	EventIndex int32
 
 	// Type is the type of the event.

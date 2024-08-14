@@ -23,8 +23,7 @@ func (k Keeper) HasValidatorSigningInfo(ctx context.Context, consAddr sdk.ConsAd
 	return err == nil && has
 }
 
-// JailUntil attempts to set a validator's JailedUntil attribute in its signing
-// info.
+// JailUntil attempts to set a validator's JailedUntil attribute in its signing info.
 func (k Keeper) JailUntil(ctx context.Context, consAddr sdk.ConsAddress, jailTime time.Time) error {
 	signInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
 	if err != nil {
@@ -32,7 +31,7 @@ func (k Keeper) JailUntil(ctx context.Context, consAddr sdk.ConsAddress, jailTim
 		if err != nil {
 			return types.ErrNoSigningInfoFound.Wrapf("could not convert consensus address to string. Error: %s", err.Error())
 		}
-		return errorsmod.Wrap(err, fmt.Sprintf("cannot jail validator with consensus address %s that does not have any signing information", addr))
+		return types.ErrNoSigningInfoFound.Wrapf(fmt.Sprintf("cannot jail validator with consensus address %s that does not have any signing information", addr))
 	}
 
 	signInfo.JailedUntil = jailTime

@@ -119,8 +119,10 @@ func CollectTxs(txJSONDecoder sdk.TxDecoder, moniker, genTxsDir string,
 		// genesis transactions must be single-message
 		msgs := genTx.GetMsgs()
 
-		msg := msgs[0].(msgWithMoniker)
-
+		msg, ok := msgs[0].(msgWithMoniker)
+		if !ok {
+			return appGenTxs, persistentPeers, fmt.Errorf("expected msgWithMoniker, got %T", msgs[0])
+		}
 		// exclude itself from persistent peers
 		if msg.GetMoniker() != moniker {
 			addressesIPs = append(addressesIPs, nodeAddrIP)

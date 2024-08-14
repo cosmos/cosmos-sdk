@@ -90,7 +90,6 @@ func NewSimApp[T transaction.Tx](
 	logger log.Logger,
 	viper *viper.Viper,
 ) *SimApp[T] {
-	//viper.Set(serverv2.FlagHome, DefaultNodeHome) // TODO possibly set earlier when viper is created
 	var (
 		app        = &SimApp[T]{}
 		appBuilder *runtime.AppBuilder[T]

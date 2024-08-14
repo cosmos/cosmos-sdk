@@ -80,7 +80,6 @@ type (
 		GetMemo() string
 	}
 
-
 	// TxWithTimeoutTimeStamp extends the Tx interface by allowing a transaction to
 	// set a timeout timestamp.
 	TxWithTimeoutTimeStamp interface {

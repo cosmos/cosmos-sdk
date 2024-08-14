@@ -32,7 +32,7 @@ type TxHash [32]byte
 // Manager contains the tx hash dictionary for duplicates checking, and expire
 // them when block production progresses.
 type Manager struct {
-	// blockCh defines a channel to receive newly committed block heights
+	// blockCh defines a channel to receive newly committed block time
 	blockCh chan time.Time
 	// doneCh allows us to ensure the purgeLoop has gracefully terminated prior to closing
 	doneCh chan struct{}
@@ -152,7 +152,7 @@ func (m *Manager) OnInit() error {
 	return nil
 }
 
-// OnNewBlock sends the latest block number to the background purge loop, which
+// OnNewBlock sends the latest block time to the background purge loop, which
 // should be called in ABCI Commit event.
 func (m *Manager) OnNewBlock(blockTime time.Time) {
 	m.blockCh <- blockTime
@@ -213,7 +213,7 @@ func (m *Manager) flushToFile() error {
 	return nil
 }
 
-// expiredTxs returns expired tx hashes based on the provided block height.
+// expiredTxs returns expired tx hashes based on the provided block time.
 func (m *Manager) expiredTxs(blockTime time.Time) []TxHash {
 	m.mu.RLock()
 	defer m.mu.RUnlock()

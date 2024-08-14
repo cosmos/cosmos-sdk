@@ -1,10 +1,10 @@
 module cosmossdk.io/core/testing
 
-go 1.20
+go 1.23.0
 
 replace cosmossdk.io/core => ../
 
 require (
-	cosmossdk.io/core v0.12.0
+	cosmossdk.io/core v1.0.0
 	github.com/tidwall/btree v1.7.0
 )

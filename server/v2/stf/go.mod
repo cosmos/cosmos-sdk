@@ -1,6 +1,6 @@
 module cosmossdk.io/server/v2/stf
 
-go 1.21
+go 1.23.0
 
 replace cosmossdk.io/core => ../../../core
 

@@ -1,11 +1,7 @@
 package appmodule
 
 import (
-	"reflect"
-
-	"google.golang.org/protobuf/proto"
-
-	"cosmossdk.io/core/internal"
+	depinjectappconfig "cosmossdk.io/depinject/appconfig"
 )
 
 // Register registers a module with the global module registry. The provided
@@ -17,18 +13,4 @@ import (
 // Protobuf message types used for module configuration should define the
 // cosmos.app.v1alpha.module option and must explicitly specify go_package
 // to make debugging easier for users.
-func Register(msg proto.Message, options ...Option) {
-	ty := reflect.TypeOf(msg)
-	init := &internal.ModuleInitializer{
-		ConfigProtoMessage: msg,
-		ConfigGoType:       ty,
-	}
-	internal.ModuleRegistry[ty] = init
-
-	for _, option := range options {
-		init.Error = option.apply(init)
-		if init.Error != nil {
-			return
-		}
-	}
-}
+var Register = depinjectappconfig.RegisterModule

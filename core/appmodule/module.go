@@ -52,6 +52,22 @@ type HasPrecommit interface {
 	Precommit(context.Context) error
 }
 
+// ResponsePreBlock represents the response from the PreBlock method.
+// It can modify consensus parameters in storage and signal the caller through the return value.
+// When it returns ConsensusParamsChanged=true, the caller must refresh the consensus parameter in the finalize context.
+// The new context (ctx) must be passed to all the other lifecycle methods.
+type ResponsePreBlock interface {
+	IsConsensusParamsChanged() bool
+}
+
+// HasPreBlocker is the extension interface that modules should implement to run
+// custom logic before BeginBlock.
+type HasPreBlocker interface {
+	AppModule
+	// PreBlock is method that will be run before BeginBlock.
+	PreBlock(context.Context) (ResponsePreBlock, error)
+}
+
 // HasBeginBlocker is the extension interface that modules should implement to run
 // custom logic before transaction processing in a block.
 type HasBeginBlocker interface {
@@ -70,4 +86,11 @@ type HasEndBlocker interface {
 	// EndBlock is a method that will be run after transactions are processed in
 	// a block.
 	EndBlock(context.Context) error
+}
+
+// UpgradeModule is the extension interface that upgrade module should implement to differentiate
+// it from other modules, migration handler need ensure the upgrade module's migration is executed
+// before the rest of the modules.
+type UpgradeModule interface {
+	IsUpgradeModule()
 }

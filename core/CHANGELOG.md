@@ -36,6 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.11.2](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.11.2)
+
+* [#21298](https://github.com/cosmos/cosmos-sdk/pull/21298) Backport [#19265](https://github.com/cosmos/cosmos-sdk/pull/19265) to core.
+
 ## [v0.11.1](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.11.1)
 
 * [#21022](https://github.com/cosmos/cosmos-sdk/pull/21022) Upgrade depinject to v1.0.0.

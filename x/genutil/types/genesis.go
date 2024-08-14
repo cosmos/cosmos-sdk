@@ -87,18 +87,20 @@ func (ag *AppGenesis) SaveAs(file string) error {
 }
 
 // AppGenesisFromReader reads the AppGenesis from the reader.
-func AppGenesisFromReader(reader io.Reader) (ag *AppGenesis, err error) {
+func AppGenesisFromReader(reader io.Reader) (*AppGenesis, error) {
+	var ag AppGenesis
+	var err error
 	// check if io.ReadSeeker is implemented
 	if rs, ok := reader.(io.ReadSeeker); ok {
-		err = json.NewDecoder(rs).Decode(ag)
+		err = json.NewDecoder(rs).Decode(&ag)
 		if err == nil {
-			return
+			return &ag, nil
 		}
 
 		err = fmt.Errorf("error unmarshalling AppGenesis: %w", err)
 		if _, serr := rs.Seek(0, io.SeekStart); serr != nil {
 			err = errors.Join(err, fmt.Errorf("error seeking back to the front: %w", serr))
-			return
+			return nil, err
 		}
 	}
 
@@ -106,17 +108,17 @@ func AppGenesisFromReader(reader io.Reader) (ag *AppGenesis, err error) {
 	jsonBlob, ioerr := io.ReadAll(reader)
 	if ioerr != nil {
 		err = errors.Join(err, fmt.Errorf("failed to read file completely: %w", ioerr))
-		return
+		return nil, err
 	}
 
 	// fallback to comet genesis parsing
 	var ctmGenesis cmttypes.GenesisDoc
 	if uerr := cmtjson.Unmarshal(jsonBlob, &ctmGenesis); uerr != nil {
 		err = errors.Join(err, fmt.Errorf("failed fallback to CometBFT GenDoc: %w", uerr))
-		return
+		return nil, err
 	}
 
-	ag = &AppGenesis{
+	ag = AppGenesis{
 		AppName: version.AppName,
 		// AppVersion is not filled as we do not know it from a CometBFT genesis
 		GenesisTime:   ctmGenesis.GenesisTime,
@@ -129,7 +131,7 @@ func AppGenesisFromReader(reader io.Reader) (ag *AppGenesis, err error) {
 			Params:     ctmGenesis.ConsensusParams,
 		},
 	}
-	return
+	return &ag, nil
 }
 
 // AppGenesisFromFile reads the AppGenesis from the provided file.

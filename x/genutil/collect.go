@@ -134,6 +134,6 @@ func CollectTxs(txJSONDecoder sdk.TxDecoder, moniker, genTxsDir string,
 }
 
 // MsgWithMoniker must have GetMoniker() method to use CollectTx
-type MsgWithMoniker interface {
+type msgWithMoniker interface {
 	GetMoniker() string
 }

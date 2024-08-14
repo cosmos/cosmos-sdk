@@ -63,7 +63,7 @@ func TestBatchAsync(t *testing.T) {
 	l, got := batchListener()
 
 	ctx, cancel := context.WithCancel(context.Background())
-	t.Cleanup(cancel)
+	defer cancel()
 	l = AsyncListenerMux(AsyncListenerOptions{Context: ctx}, l)
 
 	if err := l.SendPacket(testBatch); err != nil {

@@ -74,7 +74,6 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (runtime) [#19953](https://github.com/cosmos/cosmos-sdk/pull/19953) Implement `core/transaction.Service` in runtime.
 * (tests) [#20013](https://github.com/cosmos/cosmos-sdk/pull/20013) Introduce system tests to run multi node local testnet in CI
 * (crypto/keyring) [#20212](https://github.com/cosmos/cosmos-sdk/pull/20212) Expose the db keyring used in the keystore.
-* (cli) [#20779](https://github.com/cosmos/cosmos-sdk/pull/20779) Added `module-hash-by-height` command to query and retrieve module hashes at a specified blockchain height, enhancing debugging capabilities.
 * (client/tx) [#20870](https://github.com/cosmos/cosmos-sdk/pull/20870) Add `timeout-timestamp` field for tx body defines time based timeout.Add `WithTimeoutTimestamp` to tx factory. Increased gas cost for processing newly added timeout timestamp field in tx body.
 
 ### Improvements
@@ -129,10 +128,6 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (server) [#18994](https://github.com/cosmos/cosmos-sdk/pull/18994) Update server context directly rather than a reference to a sub-object
 * [#19833](https://github.com/cosmos/cosmos-sdk/pull/19833) Fix some places in which we call Remove inside a Walk.
 * [#19851](https://github.com/cosmos/cosmos-sdk/pull/19851) Fix some places in which we call Remove inside a Walk (x/staking and x/gov).
-* [#20939](https://github.com/cosmos/cosmos-sdk/pull/20939) Fix collection reverse iterator to include `pagination.key` in the result.
-* (client/grpc) [#20969](https://github.com/cosmos/cosmos-sdk/pull/20969) Fix `node.NewQueryServer` method not setting `cfg`.
-* (testutil/integration) [#21006](https://github.com/cosmos/cosmos-sdk/pull/21006) Fix `NewIntegrationApp` method not writing default genesis to state.
-* (baseapp) [#21159](https://github.com/cosmos/cosmos-sdk/pull/21159) Return PreBlocker events in FinalizeBlockResponse.
 
 ### API Breaking Changes
 
@@ -220,6 +215,16 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (simapp) [#19146](https://github.com/cosmos/cosmos-sdk/pull/19146) Replace `--v` CLI option with `--validator-count`/`-n`.
 * (module) [#19370](https://github.com/cosmos/cosmos-sdk/pull/19370) Deprecate `module.Configurator`, use `appmodule.HasMigrations` and `appmodule.HasServices` instead from Core API.
 * (x/auth) [#20531](https://github.com/cosmos/cosmos-sdk/pull/20531) Deprecate auth keeper `NextAccountNumber`, use `keeper.AccountsModKeeper.NextAccountNumber` instead.
+
+## [v0.50.9](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.9) - 2024-08-07
+
+## Bug Fixes
+
+* (baseapp) [#21159](https://github.com/cosmos/cosmos-sdk/pull/21159) Return PreBlocker events in FinalizeBlockResponse.
+* [#20939](https://github.com/cosmos/cosmos-sdk/pull/20939) Fix collection reverse iterator to include `pagination.key` in the result.
+* (client/grpc) [#20969](https://github.com/cosmos/cosmos-sdk/pull/20969) Fix `node.NewQueryServer` method not setting `cfg`.
+* (testutil/integration) [#21006](https://github.com/cosmos/cosmos-sdk/pull/21006) Fix `NewIntegrationApp` method not writing default genesis to state.
+* (runtime) [#21080](https://github.com/cosmos/cosmos-sdk/pull/21080) Fix `app.yaml` / `app.json` incompatibility with `depinject v1.0.0`.
 
 ## [v0.50.8](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.8) - 2024-07-15
 

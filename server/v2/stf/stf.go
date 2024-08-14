@@ -355,6 +355,11 @@ func (s STF[T]) runTxMsgs(
 		msgResps[i] = resp
 	}
 
+	err = s.sendEventsToListener(execCtx)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+
 	consumed := execCtx.meter.Limit() - execCtx.meter.Remaining()
 	return msgResps, consumed, execCtx.events, nil
 }

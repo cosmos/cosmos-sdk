@@ -27,14 +27,14 @@ type ModuleCodec struct {
 type KVDecoder = func(KVPairUpdate) ([]ObjectUpdate, error)
 
 // KVPairUpdate represents a key-value pair set or delete.
-type KVPairUpdate struct {
+type KVPairUpdate = struct {
 	// Key is the key of the key-value pair.
 	Key []byte
 
-	// Value is the value of the key-value pair. It should be ignored when Delete is true.
+	// Value is the value of the key-value pair. It should be ignored when Remove is true.
 	Value []byte
 
-	// Delete is a flag that indicates that the key-value pair was deleted. If it is false,
+	// Remove is a flag that indicates that the key-value pair was deleted. If it is false,
 	// then it is assumed that this has been a set operation.
-	Delete bool
+	Remove bool
 }

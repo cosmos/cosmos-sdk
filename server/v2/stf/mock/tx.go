@@ -100,7 +100,7 @@ func (t *Tx) DecodeJSON(b []byte) error {
 	if err != nil {
 		return err
 	}
-	msg := reflect.New(msgType).Interface().(proto.Message)
+	msg := reflect.New(msgType).Interface().(transaction.Msg)
 	if err := gogoproto.UnmarshalAny(rawTx.Msg, msg); err != nil {
 		return err
 	}

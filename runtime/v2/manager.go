@@ -153,7 +153,7 @@ func (m *MM[T]) InitGenesisJSON(
 		switch module := mod.(type) {
 		case appmodule.HasGenesisAuto:
 			panic(fmt.Sprintf("module %s isn't server/v2 compatible", moduleName))
-		case appmodulev2.GenesisDecoder:
+		case appmodulev2.GenesisDecoder: // GenesisDecoder needs to supersede HasGenesis and HasABCIGenesis.
 			genTxs, err := module.DecodeGenesisJSON(genesisData[moduleName])
 			if err != nil {
 				return err
@@ -667,19 +667,19 @@ func registerMethod(
 
 	return string(requestName), stfRouter.RegisterHandler(string(requestName), func(
 		ctx context.Context,
-		msg appmodulev2.Message,
-	) (resp appmodulev2.Message, err error) {
+		msg transaction.Msg,
+	) (resp transaction.Msg, err error) {
 		res, err := md.Handler(ss, ctx, noopDecoder, messagePassingInterceptor(msg))
 		if err != nil {
 			return nil, err
 		}
-		return res.(appmodulev2.Message), nil
+		return res.(transaction.Msg), nil
 	})
 }
 
 func noopDecoder(_ interface{}) error { return nil }
 
-func messagePassingInterceptor(msg appmodulev2.Message) grpc.UnaryServerInterceptor {
+func messagePassingInterceptor(msg transaction.Msg) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
 		req interface{},

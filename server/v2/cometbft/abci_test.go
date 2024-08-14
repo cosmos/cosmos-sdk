@@ -10,12 +10,13 @@ import (
 	"time"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	am "cosmossdk.io/server/v2/appmanager"
+	"cosmossdk.io/server/v2/cometbft/handlers"
 	"cosmossdk.io/server/v2/cometbft/mempool"
 	cometmock "cosmossdk.io/server/v2/cometbft/mock"
 	"cosmossdk.io/server/v2/cometbft/types"
-	"cosmossdk.io/server/v2/cometbft/handlers"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/mock"
@@ -53,11 +54,11 @@ var (
 
 func addMsgHandlerToSTF[T any, PT interface {
 	*T
-	proto.Message
+	transaction.Msg
 },
 	U any, UT interface {
 		*U
-		proto.Message
+		transaction.Msg
 	}](
 	t *testing.T,
 	s *stf.STF[mock.Tx],
@@ -67,7 +68,7 @@ func addMsgHandlerToSTF[T any, PT interface {
 	msgRouterBuilder := stf.NewMsgRouterBuilder()
 	err := msgRouterBuilder.RegisterHandler(
 		proto.MessageName(PT(new(T))),
-		func(ctx context.Context, msg appmodulev2.Message) (msgResp appmodulev2.Message, err error) {
+		func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
 			typedReq := msg.(PT)
 			typedResp, err := handler(ctx, typedReq)
 			if err != nil {
@@ -100,7 +101,7 @@ func addQueryHandlerToSTF[T any, PT interface {
 	queryRouterBuilder := stf.NewMsgRouterBuilder()
 	err := queryRouterBuilder.RegisterHandler(
 		proto.MessageName(PT(new(T))),
-		func(ctx context.Context, msg appmodulev2.Message) (msgResp appmodulev2.Message, err error) {
+		func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
 			typedReq := msg.(PT)
 			typedResp, err := handler(ctx, typedReq)
 			if err != nil {
@@ -143,12 +144,8 @@ func TestConsensus_InitChain_Without_UpdateParam(t *testing.T) {
 }
 
 func TestConsensus_InitChain_With_UpdateParam(t *testing.T) {
-	c, s := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
+	c, _ := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
 	mockStore := c.store
-	addMsgHandlerToSTF(t, s, func(ctx context.Context, msg *consensustypes.MsgUpdateParams) (*consensustypes.MsgUpdateParams, error) {
-		kvSet(t, ctx, "exec")
-		return nil, nil
-	})
 	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
 		Time:            time.Now(),
 		ChainId:         "test",
@@ -157,11 +154,9 @@ func TestConsensus_InitChain_With_UpdateParam(t *testing.T) {
 	})
 	require.NoError(t, err)
 	stateStorageHas(t, mockStore, "init-chain", 1)
-	stateStorageHas(t, mockStore, "exec", 1)
 	stateStorageHas(t, mockStore, "end-block", 1)
 
 	stateCommitmentNoHas(t, mockStore, "init-chain", 1)
-	stateCommitmentNoHas(t, mockStore, "exec", 1)
 	stateCommitmentNoHas(t, mockStore, "end-block", 1)
 
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
@@ -171,7 +166,6 @@ func TestConsensus_InitChain_With_UpdateParam(t *testing.T) {
 	require.NoError(t, err)
 
 	stateCommitmentHas(t, mockStore, "init-chain", 1)
-	stateCommitmentHas(t, mockStore, "exec", 1)
 	stateCommitmentHas(t, mockStore, "end-block", 1)
 }
 
@@ -448,7 +442,7 @@ func TestConsensus_ExtendVote(t *testing.T) {
 	_, err = c.ExtendVote(context.Background(), &abciproto.ExtendVoteRequest{
 		Height: 2,
 	})
-	require.ErrorContains(t, err, "verify function was set")
+	require.ErrorContains(t, err, "no extend function was set")
 
 	// Use NoOp handler
 	c.extendVote = DefaultServerOptions[mock.Tx]().ExtendVoteHandler
@@ -511,7 +505,7 @@ func TestConsensus_VerifyVoteExtension(t *testing.T) {
 	_, err = c.VerifyVoteExtension(context.Background(), &abciproto.VerifyVoteExtensionRequest{
 		Height: 2,
 	})
-	require.ErrorContains(t, err, "verify function was set")
+	require.ErrorContains(t, err, "no verify function was set")
 
 	// Use NoOp handler
 	c.verifyVoteExt = DefaultServerOptions[mock.Tx]().VerifyVoteExtensionHandler

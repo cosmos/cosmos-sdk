@@ -307,7 +307,7 @@ Since this is more of a social feature than a technical feature, we'll now get i
 
 This genesis entry, "constitution" hasn't been designed for existing chains, who should likely just ratify a constitution using their governance system.  Instead, this is for new chains.  It will allow for validators to have a much clearer idea of purpose and the expectations placed on them while operating their nodes.  Likewise, for community members, the constitution will give them some idea of what to expect from both the "chain team" and the validators, respectively.
 
-This constitution is designed to be immutable, and placed only in genesis, though that could change over time by a pull request to the cosmos-sdk that allows for the constitution to be changed by governance.  Communities whishing to make amendments to their original constitution should use the governance mechanism and a "signaling proposal" to do exactly that.
+This constitution is designed to be immutable, and placed only in genesis, though that could change over time by a pull request to the cosmos-sdk that allows for the constitution to be changed by governance.  Communities wishing to make amendments to their original constitution should use the governance mechanism and a "signaling proposal" to do exactly that.
 
 **Ideal use scenario for a cosmos chain constitution**
 
@@ -317,7 +317,7 @@ As a chain developer, you decide that you'd like to provide clarity to your key 
 * token holders
 * developers (yourself)
 
-You use the constitution to immutably store some Markdown in genesis, so that when difficult questions come up, the constutituon can provide guidance to the community.
+You use the constitution to immutably store some Markdown in genesis, so that when difficult questions come up, the constitution can provide guidance to the community.
 
 ### Proposals
 
@@ -681,7 +681,7 @@ simd query gov --help
 The `deposit` command allows users to query a deposit for a given proposal from a given depositor.
 
 ```bash
-simd query gov deposit [proposal-id] [depositer-addr] [flags]
+simd query gov deposit [proposal-id] [depositor-addr] [flags]
 ```
 
 Example:
@@ -1080,7 +1080,7 @@ simd tx gov submit-legacy-proposal param-change proposal.json --from cosmos1..
 
 ##### cancel-proposal
 
-Once proposal is canceled, from the deposits of proposal `deposits * proposal_cancel_ratio` will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned. The `remaining deposits` will be sent to depositers.
+Once proposal is canceled, from the deposits of proposal `deposits * proposal_cancel_ratio` will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned. The `remaining deposits` will be sent to depositors.
 
 ```bash
 simd tx gov cancel-proposal [proposal-id] [flags]

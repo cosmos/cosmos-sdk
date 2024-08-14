@@ -765,6 +765,7 @@ func (m *Manager) PreBlock(ctx sdk.Context) (*sdk.ResponsePreBlock, error) {
 	}
 	return &sdk.ResponsePreBlock{
 		ConsensusParamsChanged: paramsChanged,
+		Events:                 ctx.EventManager().ABCIEvents(),
 	}, nil
 }
 

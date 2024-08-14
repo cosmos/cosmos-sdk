@@ -724,6 +724,7 @@ func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) ([]abci.Event, erro
 		if err != nil {
 			return nil, err
 		}
+		events = rsp.Events
 		// rsp.ConsensusParamsChanged is true from preBlocker means ConsensusParams in store get changed
 		// write the consensus parameters in store to context
 		if rsp.ConsensusParamsChanged {
@@ -733,7 +734,6 @@ func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) ([]abci.Event, erro
 			ctx = ctx.WithBlockGasMeter(gasMeter)
 			app.finalizeBlockState.SetContext(ctx)
 		}
-		events = ctx.EventManager().ABCIEvents()
 	}
 	return events, nil
 }

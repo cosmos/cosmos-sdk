@@ -771,8 +771,7 @@ func validatePubKey(pk cryptotypes.PubKey, knownPubKeyTypes []string) error {
 		)
 	}
 
-	switch pkType {
-	case sdk.PubKeyEd25519Type:
+	if pkType == sdk.PubKeyEd25519Type {
 		if len(pk.Bytes()) != ed25519.PubKeySize {
 			return errorsmod.Wrapf(
 				types.ErrConsensusPubKeyLenInvalid,

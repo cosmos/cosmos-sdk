@@ -119,7 +119,7 @@ func CollectTxs(txJSONDecoder sdk.TxDecoder, moniker, genTxsDir string,
 		// genesis transactions must be single-message
 		msgs := genTx.GetMsgs()
 
-		msg := msgs[0].(MsgWithMoniker)
+		msg := msgs[0].(msgWithMoniker)
 
 		// exclude itself from persistent peers
 		if msg.GetMoniker() != moniker {

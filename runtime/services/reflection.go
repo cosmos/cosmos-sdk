@@ -5,10 +5,10 @@ import (
 	"compress/gzip"
 	"context"
 	"io"
+	"sort"
 
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"github.com/cosmos/gogoproto/proto"
-	"golang.org/x/exp/slices"
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -57,8 +57,8 @@ func NewReflectionService() (*ReflectionService, error) {
 		return true
 	})
 
-	slices.SortFunc(fds.File, func(x, y *descriptorpb.FileDescriptorProto) bool {
-		return *x.Name < *y.Name
+	sort.Slice(fds.File, func(i, j int) bool {
+		return *fds.File[i].Name < *fds.File[j].Name
 	})
 
 	return &ReflectionService{files: fds}, nil

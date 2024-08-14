@@ -10,7 +10,7 @@ require (
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
-	github.com/cosmos/gogoproto v1.6.1-0.20240809124342-d6a57064ada0
+	github.com/cosmos/gogoproto v1.7.0
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/protobuf v1.34.2
 )

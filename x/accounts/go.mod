@@ -12,7 +12,7 @@ require (
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/tx v0.13.4-0.20240812125744-810a542d6bac // main
 	github.com/cosmos/cosmos-sdk v0.52.0
-	github.com/cosmos/gogoproto v1.6.1-0.20240809124342-d6a57064ada0
+	github.com/cosmos/gogoproto v1.7.0
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0

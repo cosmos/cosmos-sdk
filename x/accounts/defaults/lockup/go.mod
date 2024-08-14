@@ -10,7 +10,7 @@ require (
 	cosmossdk.io/x/distribution v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk v0.52.0
-	github.com/cosmos/gogoproto v1.6.1-0.20240809124342-d6a57064ada0
+	github.com/cosmos/gogoproto v1.7.0
 )
 
 require (

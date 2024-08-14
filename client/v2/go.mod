@@ -55,7 +55,7 @@ require (
 	github.com/cosmos/crypto v0.1.2 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/gogoproto v1.6.1-0.20240809124342-d6a57064ada0
+	github.com/cosmos/gogoproto v1.7.0
 	github.com/cosmos/iavl v1.2.1-0.20240725141113-7adc688cf179 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect

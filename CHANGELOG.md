@@ -50,8 +50,6 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Features
 
-Here's the list sorted by the PR number:
-
 * (client) [#17513](https://github.com/cosmos/cosmos-sdk/pull/17513) Allow overwriting `client.toml`. Use `client.CreateClientConfig` in place of `client.ReadFromClientConfig` and provide a custom template and a custom config.
 * (tests) [#17868](https://github.com/cosmos/cosmos-sdk/pull/17868) Added helper method `SubmitTestTx` in testutil to broadcast test txns to test e2e tests.
 * (client) [#18101](https://github.com/cosmos/cosmos-sdk/pull/18101) Add a `keyring-default-keyname` in `client.toml` for specifying a default key name, and skip the need to use the `--from` flag when signing transactions.
@@ -74,8 +72,6 @@ Here's the list sorted by the PR number:
 * (client/tx) [#20870](https://github.com/cosmos/cosmos-sdk/pull/20870) Add `timeout-timestamp` field for tx body defines time based timeout.Add `WithTimeoutTimestamp` to tx factory. Increased gas cost for processing newly added timeout timestamp field in tx body.
 
 ### Improvements
-
-Here's the list sorted by the PR number:
 
 * (all) [#16537](https://github.com/cosmos/cosmos-sdk/pull/16537) Properly propagated `fmt.Errorf` errors and using `errors.New` where appropriate.
 * (client) [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503) Add `client.Context{}.WithAddressCodec`, `WithValidatorAddressCodec`, `WithConsensusAddressCodec` to provide address codecs to the client context. See the [UPGRADING.md](./UPGRADING.md) for more details.
@@ -115,11 +111,8 @@ Here's the list sorted by the PR number:
 * (baseapp) [#20380](https://github.com/cosmos/cosmos-sdk/pull/20380) Enhanced OfferSnapshot documentation.
 * (client) [#20771](https://github.com/cosmos/cosmos-sdk/pull/20771) Remove `ReadDefaultValuesFromDefaultClientConfig` from `client` package. (It was introduced in `v0.50.6` as a quick fix).
 * (grpcserver) [#20945](https://github.com/cosmos/cosmos-sdk/pull/20945) Adds error handling for out-of-gas panics in grpc query handlers.
-* 
 
 ### Bug Fixes
-
-Here's the list sorted by the PR number:
 
 * (baseapp) [#18383](https://github.com/cosmos/cosmos-sdk/pull/18383) Fixed a data race inside BaseApp.getContext, found by end-to-end (e2e) tests.
 * (client/server) [#18345](https://github.com/cosmos/cosmos-sdk/pull/18345) Consistently set viper prefix in client and server. It defaults for the binary name for both client and server.
@@ -136,8 +129,6 @@ Here's the list sorted by the PR number:
 * (baseapp) [#21159](https://github.com/cosmos/cosmos-sdk/pull/21159) Return PreBlocker events in FinalizeBlockResponse.
 
 ### API Breaking Changes
-
-Here's the list sorted by the PR number:
 
 * (baseapp) [#16244](https://github.com/cosmos/cosmos-sdk/pull/16244) `SetProtocolVersion` has been renamed to `SetAppVersion`. It now updates the consensus params in baseapp's `ParamStore`.
 * (types) [#16918](https://github.com/cosmos/cosmos-sdk/pull/16918) Remove `IntProto` and `DecProto`. Instead, `math.Int` and `math.LegacyDec` should be used respectively. Both types support `Marshal` and `Unmarshal` which should be used for binary marshaling.

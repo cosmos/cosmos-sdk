@@ -12,7 +12,10 @@ import (
 	"cosmossdk.io/x/tx/signing"
 )
 
-const ModuleName = "runtime"
+const (
+	ModuleName = "runtime"
+	FlagHome   = "home"
+)
 
 // ValidateProtoAnnotations validates that the proto annotations are correct.
 // More specifically, it verifies:

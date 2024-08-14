@@ -22,14 +22,13 @@ import (
 const ConsensusVersion = 1
 
 var (
-	_ module.HasName             = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ appmodule.HasBeginBlocker       = AppModule{}
 )
 
 // AppModule implements an application module for the pool module
@@ -55,7 +54,8 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
 // IsAppModule implements the appmodule.AppModule interface.
 func (AppModule) IsAppModule() {}
 
-// Name returns the pool module's name.
+// Name returns the protocolpool module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string { return types.ModuleName }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes
@@ -110,6 +110,11 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 		return nil, err
 	}
 	return am.cdc.MarshalJSON(gs)
+}
+
+// BeginBlock implements appmodule.HasBeginBlocker.
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	return am.keeper.BeginBlocker(ctx)
 }
 
 // ConsensusVersion implements HasConsensusVersion

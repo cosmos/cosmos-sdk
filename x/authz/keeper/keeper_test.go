@@ -8,7 +8,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/authz"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
@@ -75,7 +76,7 @@ func (s *TestSuite) SetupTest() {
 	banktypes.RegisterInterfaces(s.encCfg.InterfaceRegistry)
 	banktypes.RegisterMsgServer(s.baseApp.MsgServiceRouter(), s.bankKeeper)
 
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithQueryRouterService(s.baseApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(s.baseApp.MsgServiceRouter()))
+	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(s.baseApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(s.baseApp.MsgServiceRouter()))
 	s.authzKeeper = authzkeeper.NewKeeper(env, s.encCfg.Codec, s.accountKeeper)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.encCfg.InterfaceRegistry)

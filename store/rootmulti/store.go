@@ -16,7 +16,6 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 	iavltree "github.com/cosmos/iavl"
 
-	"cosmossdk.io/core/log"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/dbadapter"
@@ -57,7 +56,7 @@ func keysFromStoreKeyMap[V any](m map[types.StoreKey]V) []types.StoreKey {
 // the CommitMultiStore interface.
 type Store struct {
 	db                  dbm.DB
-	logger              log.Logger
+	logger              iavltree.Logger
 	lastCommitInfo      *types.CommitInfo
 	pruningManager      *pruning.Manager
 	iavlCacheSize       int
@@ -85,7 +84,7 @@ var (
 // store will be created with a PruneNothing pruning strategy by default. After
 // a store is created, KVStores must be mounted and finally LoadLatestVersion or
 // LoadVersion must be called.
-func NewStore(db dbm.DB, logger log.Logger, metricGatherer metrics.StoreMetrics) *Store {
+func NewStore(db dbm.DB, logger iavltree.Logger, metricGatherer metrics.StoreMetrics) *Store {
 	return &Store{
 		db:                  db,
 		logger:              logger,
@@ -725,7 +724,7 @@ func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 	return nil
 }
 
-// getStoreByName performs a lookup of a StoreKey given a store name typically
+// GetStoreByName performs a lookup of a StoreKey given a store name typically
 // provided in a path. The StoreKey is then used to perform a lookup and return
 // a Store. If the Store is wrapped in an inter-block cache, it will be unwrapped
 // prior to being returned. If the StoreKey does not exist, nil is returned.

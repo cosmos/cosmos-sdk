@@ -110,7 +110,7 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, encodingConfig.TxConfig, tempApp.ModuleManager)
+	initRootCmd(rootCmd, tempApp.ModuleManager)
 
 	// autocli opts
 	customClientTemplate, customClientConfig := initClientConfig()

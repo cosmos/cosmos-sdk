@@ -5,31 +5,41 @@ import (
 	"io"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"cosmossdk.io/core/appmodule"
 )
 
 func TestSource(t *testing.T) {
 	source, err := SourceFromRawJSON(json.RawMessage(testJSON))
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("Error creating source: %s", err)
+	}
 
 	expectJSON(t, source, "foo", fooContents)
 	expectJSON(t, source, "bar", barContents)
 
 	// missing fields just return nil, nil
 	r, err := source("baz")
-	require.NoError(t, err)
-	require.Nil(t, r)
+	if err != nil {
+		t.Errorf("Error retrieving field: %s", err)
+	}
+	if r != nil {
+		t.Errorf("Expected nil result for missing field, got: %v", r)
+	}
 }
 
 func expectJSON(t *testing.T, source appmodule.GenesisSource, field, contents string) {
 	t.Helper()
 	r, err := source(field)
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("Error retrieving field: %s", err)
+	}
 	bz, err := io.ReadAll(r)
-	require.NoError(t, err)
-	require.Equal(t, contents, string(bz))
+	if err != nil {
+		t.Errorf("Error reading contents: %s", err)
+	}
+	if string(bz) != contents {
+		t.Errorf("Expected contents: %s, got: %s", contents, string(bz))
+	}
 }
 
 const (

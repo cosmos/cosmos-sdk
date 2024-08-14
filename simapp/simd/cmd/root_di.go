@@ -82,7 +82,7 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, clientCtx.TxConfig, moduleManager)
+	initRootCmd(rootCmd, moduleManager)
 
 	nodeCmds := nodeservice.NewNodeCommands()
 	autoCliOpts.ModuleOptions[nodeCmds.Name()] = nodeCmds.AutoCLIOptions()

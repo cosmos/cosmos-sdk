@@ -2,6 +2,7 @@ package feegrant
 
 import (
 	"github.com/cosmos/gogoproto/proto"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -11,8 +12,8 @@ import (
 )
 
 var (
-	_, _ sdk.Msg                       = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
-	_    types.UnpackInterfacesMessage = &MsgGrantAllowance{}
+	_, _ sdk.Msg                              = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
+	_    gogoprotoany.UnpackInterfacesMessage = &MsgGrantAllowance{}
 )
 
 // NewMsgGrantAllowance creates a new MsgGrantAllowance.
@@ -44,7 +45,7 @@ func (msg MsgGrantAllowance) GetFeeAllowanceI() (FeeAllowanceI, error) {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (msg MsgGrantAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (msg MsgGrantAllowance) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var allowance FeeAllowanceI
 	return unpacker.UnpackAny(msg.Allowance, &allowance)
 }

@@ -188,7 +188,7 @@ func ValidatePowerReduction(i interface{}) error {
 	}
 
 	if v.LT(math.NewInt(1)) {
-		return fmt.Errorf("power reduction cannot be lower than 1")
+		return errors.New("power reduction cannot be lower than 1")
 	}
 
 	return nil

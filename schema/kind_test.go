@@ -59,8 +59,8 @@ func TestKind_ValidateValueType(t *testing.T) {
 		{kind: DecimalStringKind, value: "1", valid: true},
 		{kind: DecimalStringKind, value: "1.1e4", valid: true},
 		{kind: DecimalStringKind, value: int32(1), valid: false},
-		{kind: Bech32AddressKind, value: []byte("hello"), valid: true},
-		{kind: Bech32AddressKind, value: 1, valid: false},
+		{kind: AddressKind, value: []byte("hello"), valid: true},
+		{kind: AddressKind, value: 1, valid: false},
 		{kind: BoolKind, value: true, valid: true},
 		{kind: BoolKind, value: false, valid: true},
 		{kind: BoolKind, value: 1, valid: false},
@@ -213,7 +213,7 @@ func TestKind_String(t *testing.T) {
 		{Float64Kind, "float64"},
 		{JSONKind, "json"},
 		{EnumKind, "enum"},
-		{Bech32AddressKind, "bech32address"},
+		{AddressKind, "address"},
 		{InvalidKind, "invalid(0)"},
 	}
 	for i, tt := range tests {

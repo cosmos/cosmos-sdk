@@ -20,9 +20,9 @@ import (
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/legacy"
-	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/stf"
 )
 
@@ -106,7 +106,7 @@ func (m *MM[T]) DefaultGenesis() map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
 	for name, b := range m.modules {
 		if mod, ok := b.(appmodule.HasGenesisBasics); ok {
-			genesisData[mod.Name()] = mod.DefaultGenesis()
+			genesisData[name] = mod.DefaultGenesis()
 		} else if mod, ok := b.(appmodulev2.HasGenesis); ok {
 			genesisData[name] = mod.DefaultGenesis()
 		} else {
@@ -121,7 +121,7 @@ func (m *MM[T]) DefaultGenesis() map[string]json.RawMessage {
 func (m *MM[T]) ValidateGenesis(genesisData map[string]json.RawMessage) error {
 	for name, b := range m.modules {
 		if mod, ok := b.(appmodule.HasGenesisBasics); ok {
-			if err := mod.ValidateGenesis(genesisData[mod.Name()]); err != nil {
+			if err := mod.ValidateGenesis(genesisData[name]); err != nil {
 				return err
 			}
 		} else if mod, ok := b.(appmodulev2.HasGenesis); ok {
@@ -153,7 +153,7 @@ func (m *MM[T]) InitGenesisJSON(
 		switch module := mod.(type) {
 		case appmodule.HasGenesisAuto:
 			panic(fmt.Sprintf("module %s isn't server/v2 compatible", moduleName))
-		case appmodulev2.GenesisDecoder:
+		case appmodulev2.GenesisDecoder: // GenesisDecoder needs to supersede HasGenesis and HasABCIGenesis.
 			genTxs, err := module.DecodeGenesisJSON(genesisData[moduleName])
 			if err != nil {
 				return err
@@ -166,7 +166,7 @@ func (m *MM[T]) InitGenesisJSON(
 		case appmodulev2.HasGenesis:
 			m.logger.Debug("running initialization for module", "module", moduleName)
 			if err := module.InitGenesis(ctx, genesisData[moduleName]); err != nil {
-				return err
+				return fmt.Errorf("init module %s: %w", moduleName, err)
 			}
 		case appmodulev2.HasABCIGenesis:
 			m.logger.Debug("running initialization for module", "module", moduleName)
@@ -410,7 +410,7 @@ func (m *MM[T]) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap
 
 				// The module manager assumes only one module will update the validator set, and it can't be a new module.
 				if len(moduleValUpdates) > 0 {
-					return nil, fmt.Errorf("validator InitGenesis update is already set by another module")
+					return nil, errors.New("validator InitGenesis update is already set by another module")
 				}
 			}
 		}
@@ -425,7 +425,7 @@ func (m *MM[T]) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap
 func (m *MM[T]) RegisterServices(app *App[T]) error {
 	for _, module := range m.modules {
 		// register msg + query
-		if services, ok := module.(appmodule.HasServices); ok {
+		if services, ok := module.(hasServicesV1); ok {
 			if err := registerServices(services, app, protoregistry.GlobalFiles); err != nil {
 				return err
 			}
@@ -554,9 +554,9 @@ func (m *MM[T]) assertNoForgottenModules(
 	return nil
 }
 
-func registerServices[T transaction.Tx](s appmodule.HasServices, app *App[T], registry *protoregistry.Files) error {
+func registerServices[T transaction.Tx](s hasServicesV1, app *App[T], registry *protoregistry.Files) error {
 	c := &configurator{
-		grpcQueryDecoders: map[string]func([]byte) (gogoproto.Message, error){},
+		grpcQueryDecoders: map[string]func() gogoproto.Message{},
 		stfQueryRouter:    app.queryRouterBuilder,
 		stfMsgRouter:      app.msgRouterBuilder,
 		registry:          registry,
@@ -567,7 +567,10 @@ func registerServices[T transaction.Tx](s appmodule.HasServices, app *App[T], re
 	if err != nil {
 		return fmt.Errorf("unable to register services: %w", err)
 	}
-	app.GRPCQueryDecoders = c.grpcQueryDecoders
+	// merge maps
+	for path, decoder := range c.grpcQueryDecoders {
+		app.GRPCMethodsToMessageMap[path] = decoder
+	}
 	return nil
 }
 
@@ -576,7 +579,7 @@ var _ grpc.ServiceRegistrar = (*configurator)(nil)
 type configurator struct {
 	// grpcQueryDecoders is required because module expose queries through gRPC
 	// this provides a way to route to modules using gRPC.
-	grpcQueryDecoders map[string]func([]byte) (gogoproto.Message, error)
+	grpcQueryDecoders map[string]func() gogoproto.Message
 
 	stfQueryRouter *stf.MsgRouterBuilder
 	stfMsgRouter   *stf.MsgRouterBuilder
@@ -618,11 +621,11 @@ func (c *configurator) registerQueryHandlers(sd *grpc.ServiceDesc, ss interface{
 		if typ == nil {
 			return fmt.Errorf("unable to find message in gogotype registry: %w", err)
 		}
-		decoderFunc := func(bytes []byte) (gogoproto.Message, error) {
-			msg := reflect.New(typ.Elem()).Interface().(gogoproto.Message)
-			return msg, gogoproto.Unmarshal(bytes, msg)
+		decoderFunc := func() gogoproto.Message {
+			return reflect.New(typ.Elem()).Interface().(gogoproto.Message)
 		}
-		c.grpcQueryDecoders[md.MethodName] = decoderFunc
+		methodName := fmt.Sprintf("/%s/%s", sd.ServiceName, md.MethodName)
+		c.grpcQueryDecoders[methodName] = decoderFunc
 	}
 	return nil
 }
@@ -664,19 +667,19 @@ func registerMethod(
 
 	return string(requestName), stfRouter.RegisterHandler(string(requestName), func(
 		ctx context.Context,
-		msg appmodulev2.Message,
-	) (resp appmodulev2.Message, err error) {
+		msg transaction.Msg,
+	) (resp transaction.Msg, err error) {
 		res, err := md.Handler(ss, ctx, noopDecoder, messagePassingInterceptor(msg))
 		if err != nil {
 			return nil, err
 		}
-		return res.(appmodulev2.Message), nil
+		return res.(transaction.Msg), nil
 	})
 }
 
 func noopDecoder(_ interface{}) error { return nil }
 
-func messagePassingInterceptor(msg appmodulev2.Message) grpc.UnaryServerInterceptor {
+func messagePassingInterceptor(msg transaction.Msg) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
 		req interface{},
@@ -706,4 +709,10 @@ func defaultMigrationsOrder(modules []string) []string {
 		out = append(out, authName)
 	}
 	return out
+}
+
+// hasServicesV1 is the interface for registering service in baseapp Cosmos SDK.
+// This API is part of core/appmodule but commented out for dependencies.
+type hasServicesV1 interface {
+	RegisterServices(grpc.ServiceRegistrar) error
 }

@@ -32,7 +32,7 @@ func TestProposalMsgs(t *testing.T) {
 	assert.Equal(t, simulation.OpWeightMsgUpdateParams, w0.AppParamsKey())
 	assert.Equal(t, simulation.DefaultWeightMsgUpdateParams, w0.DefaultWeight())
 
-	msg, err := w0.MsgSimulatorFn()(r, accounts, codectestutil.CodecOptions{}.GetAddressCodec())
+	msg, err := w0.MsgSimulatorFn()(sdk.Context{}, r, accounts, codectestutil.CodecOptions{}.GetAddressCodec())
 	assert.NilError(t, err)
 	msgUpdateParams, ok := msg.(*types.MsgUpdateParams)
 	assert.Assert(t, ok)

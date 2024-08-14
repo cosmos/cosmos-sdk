@@ -170,7 +170,7 @@ func TestObjectType_Validate(t *testing.T) {
 					{
 						Name: "key",
 						Kind: EnumKind,
-						EnumDefinition: EnumDefinition{
+						EnumType: EnumType{
 							Name:   "enum1",
 							Values: []string{"a", "b"},
 						},
@@ -180,7 +180,7 @@ func TestObjectType_Validate(t *testing.T) {
 					{
 						Name: "value",
 						Kind: EnumKind,
-						EnumDefinition: EnumDefinition{
+						EnumType: EnumType{
 							Name:   "enum1",
 							Values: []string{"c", "b"},
 						},

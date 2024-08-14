@@ -13,9 +13,10 @@ import (
 type AppCreator[T transaction.Tx] func(log.Logger, *viper.Viper) AppI[T]
 
 type AppI[T transaction.Tx] interface {
+	Name() string
+	InterfaceRegistry() coreapp.InterfaceRegistry
 	GetAppManager() *appmanager.AppManager[T]
 	GetConsensusAuthority() string
-	InterfaceRegistry() coreapp.InterfaceRegistry
-	GetGRPCQueryDecoders() map[string]func(requestBytes []byte) (gogoproto.Message, error)
+	GetGPRCMethodsToMessageMap() map[string]func() gogoproto.Message
 	GetStore() any
 }

@@ -27,7 +27,7 @@ localnet-debug: localnet-stop localnet-build-dlv localnet-build-nodes
 .PHONY: localnet-start localnet-stop localnet-debug localnet-build-env localnet-build-dlv localnet-build-nodes
 
 #? help: Get more info on make commands.
-help: Makefile
+help:
 	@echo " Choose a command run in "$(PROJECT_NAME)":"
-	@sed -n 's/^#?//p' $< | column -t -s ':' |  sort | sed -e 's/^/ /'
+	@cat $(MAKEFILE_LIST) | sed -n 's/^#?//p' | column -t -s ':' |  sort | sed -e 's/^/ /'
 .PHONY: help

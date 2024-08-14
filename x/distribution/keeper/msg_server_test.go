@@ -176,11 +176,12 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 
 func TestMsgFundCommunityPool(t *testing.T) {
 	ctx, addrs, distrKeeper, dep := initFixture(t)
-	dep.poolKeeper.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	msgServer := keeper.NewMsgServerImpl(distrKeeper)
 
 	addr0Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addrs[0])
 	require.NoError(t, err)
+
+	dep.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addrs[0], types.ProtocolPoolModuleName, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))).Return(nil)
 
 	cases := []struct {
 		name   string
@@ -281,13 +282,14 @@ func TestMsgUpdateParams(t *testing.T) {
 
 func TestMsgCommunityPoolSpend(t *testing.T) {
 	ctx, addrs, distrKeeper, dep := initFixture(t)
-	dep.poolKeeper.EXPECT().DistributeFromCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	msgServer := keeper.NewMsgServerImpl(distrKeeper)
 
 	authorityAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
 	addr0Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addrs[0])
 	require.NoError(t, err)
+
+	dep.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ProtocolPoolModuleName, addrs[0], sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))).Return(nil)
 
 	cases := []struct {
 		name   string

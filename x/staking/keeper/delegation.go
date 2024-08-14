@@ -719,7 +719,7 @@ func (k Keeper) Delegate(
 	// all non bonded
 	if subtractAccount {
 		if tokenSrc == types.Bonded {
-			return math.LegacyZeroDec(), fmt.Errorf("delegation token source cannot be bonded; expected Unbonded or Unbonding, got Bonded")
+			return math.LegacyZeroDec(), errors.New("delegation token source cannot be bonded; expected Unbonded or Unbonding, got Bonded")
 		}
 
 		var sendName string

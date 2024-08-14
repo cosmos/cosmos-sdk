@@ -2,6 +2,7 @@ package cometbft
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -19,7 +20,6 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"cosmossdk.io/server/v2/cometbft/client/rpc"
-	auth "cosmossdk.io/x/auth/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -29,7 +29,7 @@ import (
 )
 
 func (s *CometBFTServer[T]) rpcClient(cmd *cobra.Command) (rpc.CometRPC, error) {
-	if s.config.Standalone {
+	if s.config.AppTomlConfig.Standalone {
 		client, err := rpchttp.New(client.GetConfigFromCmd(cmd).RPC.ListenAddress)
 		if err != nil {
 			return nil, err
@@ -192,7 +192,7 @@ Please refer to each module's documentation for the full set of events to query
 for. Each module documents its respective events under 'xx_events.md'.
 `,
 		Example: fmt.Sprintf(
-			"$ %s query blocks --query \"message.sender='cosmos1...' AND block.height > 7\" --page 1 --limit 30 --order-by ASC",
+			"$ %s query blocks --query \"message.sender='cosmos1...' AND block.height > 7\" --page 1 --limit 30 --order_by asc",
 			version.AppName,
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -201,10 +201,10 @@ for. Each module documents its respective events under 'xx_events.md'.
 				return err
 			}
 
-			query, _ := cmd.Flags().GetString(auth.FlagQuery)
+			query, _ := cmd.Flags().GetString(FlagQuery)
 			page, _ := cmd.Flags().GetInt(FlagPage)
 			limit, _ := cmd.Flags().GetInt(FlagLimit)
-			orderBy, _ := cmd.Flags().GetString(auth.FlagOrderBy)
+			orderBy, _ := cmd.Flags().GetString(FlagOrderBy)
 
 			blocks, err := rpc.QueryBlocks(cmd.Context(), rpcclient, page, limit, query, orderBy)
 			if err != nil {
@@ -223,9 +223,9 @@ for. Each module documents its respective events under 'xx_events.md'.
 	AddQueryFlagsToCmd(cmd)
 	cmd.Flags().Int(FlagPage, query.DefaultPage, "Query a specific page of paginated results")
 	cmd.Flags().Int(FlagLimit, query.DefaultLimit, "Query number of transactions results per page returned")
-	cmd.Flags().String(auth.FlagQuery, "", "The blocks events query per CometBFT's query semantics")
-	cmd.Flags().String(auth.FlagOrderBy, "", "The ordering semantics (asc|dsc)")
-	_ = cmd.MarkFlagRequired(auth.FlagQuery)
+	cmd.Flags().String(FlagQuery, "", "The blocks events query per CometBFT's query semantics")
+	cmd.Flags().String(FlagOrderBy, "", "The ordering semantics (asc|dsc)")
+	_ = cmd.MarkFlagRequired(FlagQuery)
 
 	return cmd
 }
@@ -240,11 +240,11 @@ func (s *CometBFTServer[T]) QueryBlockCmd() *cobra.Command {
 $ %s query block --%s=%s <height>
 $ %s query block --%s=%s <hash>
 `,
-			version.AppName, auth.FlagType, auth.TypeHeight,
-			version.AppName, auth.FlagType, auth.TypeHash)),
+			version.AppName, FlagType, TypeHeight,
+			version.AppName, FlagType, TypeHash)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			typ, _ := cmd.Flags().GetString(auth.FlagType)
+			typ, _ := cmd.Flags().GetString(FlagType)
 
 			rpcclient, err := s.rpcClient(cmd)
 			if err != nil {
@@ -252,9 +252,9 @@ $ %s query block --%s=%s <hash>
 			}
 
 			switch typ {
-			case auth.TypeHeight:
+			case TypeHeight:
 				if args[0] == "" {
-					return fmt.Errorf("argument should be a block height")
+					return errors.New("argument should be a block height")
 				}
 
 				// optional height
@@ -282,10 +282,10 @@ $ %s query block --%s=%s <hash>
 
 				return printOutput(cmd, bz)
 
-			case auth.TypeHash:
+			case TypeHash:
 
 				if args[0] == "" {
-					return fmt.Errorf("argument should be a tx hash")
+					return errors.New("argument should be a tx hash")
 				}
 
 				// If hash is given, then query the tx by hash.
@@ -306,13 +306,13 @@ $ %s query block --%s=%s <hash>
 				return printOutput(cmd, bz)
 
 			default:
-				return fmt.Errorf("unknown --%s value %s", auth.FlagType, typ)
+				return fmt.Errorf("unknown --%s value %s", FlagType, typ)
 			}
 		},
 	}
 
 	AddQueryFlagsToCmd(cmd)
-	cmd.Flags().String(auth.FlagType, auth.TypeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\"", auth.TypeHeight, auth.TypeHash))
+	cmd.Flags().String(FlagType, TypeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\"", TypeHeight, TypeHash))
 
 	return cmd
 }
@@ -325,13 +325,6 @@ func (s *CometBFTServer[T]) QueryBlockResultsCmd() *cobra.Command {
 		Long:  "Query for a specific committed block's results using the CometBFT RPC `block_results` method",
 		Args:  cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// clientCtx, err := client.GetClientQueryContext(cmd)
-			// if err != nil {
-			// 	return err
-			// }
-
-			// TODO: we should be able to do this without using client context
-
 			node, err := s.rpcClient(cmd)
 			if err != nil {
 				return err

@@ -18,13 +18,11 @@ import (
 )
 
 var (
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 )
 
@@ -47,6 +45,7 @@ func NewAppModule(k keeper.Keeper) AppModule {
 func (am AppModule) IsAppModule() {}
 
 // Name returns the params module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return proposal.ModuleName
 }

@@ -9,6 +9,7 @@ use (
 	./core/testing
 	./depinject
 	./errors
+	./indexer/postgres
 	./log
 	./math
 	./orm

@@ -3,11 +3,10 @@ package stf
 import (
 	"context"
 	"crypto/sha256"
-	"fmt"
+	"errors"
 	"testing"
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
@@ -15,6 +14,7 @@ import (
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	coregas "cosmossdk.io/core/gas"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/gas"
 	"cosmossdk.io/server/v2/stf/mock"
@@ -22,11 +22,11 @@ import (
 
 func addMsgHandlerToSTF[T any, PT interface {
 	*T
-	proto.Message
+	transaction.Msg
 },
 	U any, UT interface {
 		*U
-		proto.Message
+		transaction.Msg
 	}](
 	t *testing.T,
 	stf *STF[mock.Tx],
@@ -36,7 +36,7 @@ func addMsgHandlerToSTF[T any, PT interface {
 	msgRouterBuilder := NewMsgRouterBuilder()
 	err := msgRouterBuilder.RegisterHandler(
 		msgTypeURL(PT(new(T))),
-		func(ctx context.Context, msg appmodulev2.Message) (msgResp appmodulev2.Message, err error) {
+		func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
 			typedReq := msg.(PT)
 			typedResp, err := handler(ctx, typedReq)
 			if err != nil {
@@ -158,7 +158,7 @@ func TestSTF(t *testing.T) {
 		// update the stf to fail on the handler
 		s := s.clone()
 		addMsgHandlerToSTF(t, &s, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
-			return nil, fmt.Errorf("failure")
+			return nil, errors.New("failure")
 		})
 
 		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
@@ -180,7 +180,7 @@ func TestSTF(t *testing.T) {
 	t.Run("tx is success but post tx failed", func(t *testing.T) {
 		s := s.clone()
 		s.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error {
-			return fmt.Errorf("post tx failure")
+			return errors.New("post tx failure")
 		}
 		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
 			Height:  uint64(1),
@@ -201,9 +201,9 @@ func TestSTF(t *testing.T) {
 	t.Run("tx failed and post tx failed", func(t *testing.T) {
 		s := s.clone()
 		addMsgHandlerToSTF(t, &s, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
-			return nil, fmt.Errorf("exec failure")
+			return nil, errors.New("exec failure")
 		})
-		s.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error { return fmt.Errorf("post tx failure") }
+		s.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error { return errors.New("post tx failure") }
 		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
 			Height:  uint64(1),
 			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
@@ -223,7 +223,7 @@ func TestSTF(t *testing.T) {
 	t.Run("fail validate tx", func(t *testing.T) {
 		// update stf to fail on the validation step
 		s := s.clone()
-		s.doTxValidation = func(ctx context.Context, tx mock.Tx) error { return fmt.Errorf("failure") }
+		s.doTxValidation = func(ctx context.Context, tx mock.Tx) error { return errors.New("failure") }
 		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
 			Height:  uint64(1),
 			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
@@ -237,6 +237,25 @@ func TestSTF(t *testing.T) {
 		stateHas(t, newState, "end-block")
 		stateNotHas(t, newState, "validate")
 		stateNotHas(t, newState, "exec")
+	})
+
+	t.Run("test validate tx with exec mode", func(t *testing.T) {
+		// update stf to fail on the validation step
+		s := s.clone()
+		s.doTxValidation = func(ctx context.Context, tx mock.Tx) error {
+			if ctx.(*executionContext).execMode == transaction.ExecModeCheck {
+				return errors.New("failure")
+			}
+			return nil
+		}
+		// test ValidateTx as it validates with check execMode
+		res := s.ValidateTx(context.Background(), state, mockTx.GasLimit, mockTx)
+		require.Error(t, res.Error)
+
+		// test validate tx with exec mode as finalize
+		_, _, err := s.validateTx(context.Background(), s.branchFn(state), mockTx.GasLimit,
+			mockTx, transaction.ExecModeFinalize)
+		require.NoError(t, err)
 	})
 }
 

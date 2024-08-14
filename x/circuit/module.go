@@ -22,11 +22,9 @@ import (
 const ConsensusVersion = 1
 
 var (
-	_ module.HasName        = AppModule{}
 	_ module.HasGRPCGateway = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 )
@@ -41,6 +39,7 @@ type AppModule struct {
 func (AppModule) IsAppModule() {}
 
 // Name returns the circuit module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string { return types.ModuleName }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the circuit module.

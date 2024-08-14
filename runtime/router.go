@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -31,7 +32,7 @@ type msgRouterService struct {
 // CanInvoke returns an error if the given message cannot be invoked.
 func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error {
 	if typeURL == "" {
-		return fmt.Errorf("missing type url")
+		return errors.New("missing type url")
 	}
 
 	typeURL = strings.TrimPrefix(typeURL, "/")
@@ -94,7 +95,7 @@ type queryRouterService struct {
 // CanInvoke returns an error if the given request cannot be invoked.
 func (m *queryRouterService) CanInvoke(ctx context.Context, typeURL string) error {
 	if typeURL == "" {
-		return fmt.Errorf("missing type url")
+		return errors.New("missing type url")
 	}
 
 	typeURL = strings.TrimPrefix(typeURL, "/")

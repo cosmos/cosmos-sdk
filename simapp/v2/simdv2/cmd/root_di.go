@@ -3,7 +3,6 @@ package cmd
 import (
 	"os"
 
-	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/client/v2/autocli"
@@ -20,6 +19,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"

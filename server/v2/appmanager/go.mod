@@ -1,6 +1,6 @@
 module cosmossdk.io/server/v2/appmanager
 
-go 1.23.0
+go 1.23
 
 replace cosmossdk.io/core => ../../../core
 

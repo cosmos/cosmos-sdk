@@ -1,6 +1,6 @@
 module cosmossdk.io/indexer/postgres/testing
 
-go 1.23.0
+go 1.23
 
 require (
 	cosmossdk.io/indexer/postgres v0.0.0-00010101000000-000000000000

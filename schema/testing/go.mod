@@ -1,6 +1,6 @@
 module cosmossdk.io/schema/testing
 
-go 1.23.0
+go 1.23
 
 require (
 	cosmossdk.io/schema v0.0.0

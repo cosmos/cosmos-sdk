@@ -18,6 +18,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
+type dummyCtxKey struct{}
+
 type contextTestSuite struct {
 	suite.Suite
 }
@@ -137,8 +139,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	s.Require().Equal(cp, ctx.WithConsensusParams(cp).ConsensusParams())
 
 	// test inner context
-	var ctxKey = struct{}{}
-	newContext := context.WithValue(ctx.Context(), ctxKey, "value")
+	newContext := context.WithValue(ctx.Context(), dummyCtxKey{}, "value")
 	s.Require().NotEqual(ctx.Context(), ctx.WithContext(newContext).Context())
 }
 
@@ -226,8 +227,7 @@ func (s *contextTestSuite) TestUnwrapSDKContext() {
 	s.Require().Panics(func() { types.UnwrapSDKContext(ctx) })
 
 	// test unwrapping when we've used context.WithValue
-	var ctxKey = struct{}{}
-	ctx = context.WithValue(sdkCtx, ctxKey, "bar")
+	ctx = context.WithValue(sdkCtx, dummyCtxKey{}, "bar")
 	sdkCtx2 = types.UnwrapSDKContext(ctx)
 	s.Require().Equal(sdkCtx, sdkCtx2)
 }

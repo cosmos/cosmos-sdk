@@ -20,7 +20,7 @@ import (
 )
 
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.
-// Abonormal scenarios are not tested here.
+// Abnormal scenarios are not tested here.
 func TestRandomizedGenState(t *testing.T) {
 	cdcOpts := codectestutil.CodecOptions{}
 	encCfg := moduletestutil.MakeTestEncodingConfig(cdcOpts, mint.AppModule{})

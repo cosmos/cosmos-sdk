@@ -44,6 +44,12 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 * (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
 
+### Improvements
+
+### Bug Fixes
+
+### API Breaking Changes
+
 ## [v0.52.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0) - 2024-XX-XX
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.

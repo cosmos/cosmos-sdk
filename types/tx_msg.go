@@ -80,11 +80,6 @@ type (
 		GetMemo() string
 	}
 
-	// MsgWithMoniker must have GetMoniker() method to use CollectTx
-	MsgWithMoniker interface {
-		Msg
-		GetMoniker() string
-	}
 
 	// TxWithTimeoutTimeStamp extends the Tx interface by allowing a transaction to
 	// set a timeout timestamp.

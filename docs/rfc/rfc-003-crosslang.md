@@ -1,31 +1,72 @@
-# RFC 003: Account, Module, Message Model
+# RFC 003: Account/Module Execution Model
 
 ## Changelog
 
-* {date}: {changelog}
+* 2024-08-09: Reworked initial draft (previous work was in https://github.com/cosmos/cosmos-sdk/pull/15410)
 
 ## Background
 
-> The next section is the "Background" section. This section should be at least two paragraphs and can take up to a whole
-> page in some cases. The guiding goal of the background section is: as a newcomer to this project (new employee, team
-> transfer), can I read the background section and follow any links to get the full context of why this change is  
-> necessary?
->
-> If you can't show a random engineer the background section and have them acquire nearly full context on the necessity
-> for the RFC, then the background section is not full enough. To help achieve this, link to prior RFCs, discussions, and
-> more here as necessary to provide context so you don't have to simply repeat yourself.
-
-
 ## Proposal
 
-> The next required section is "Proposal" or "Goal". Given the background above, this section proposes a solution.
-> This should be an overview of the "how" for the solution, but for details further sections will be used.
+### Core Concepts
 
-The base layer framework component for the cross-language framework is the **hypervisor** which specifies the meaning of the core concepts of **account**, **message**, **code environment**, **module** and **gas**.
+Let's start by defining core concepts from the perspective of a developer trying to write code for a module or account.
 
-An **account** is defined as having:
-* a unique **account address**
-* a code handler which allows it to execute **messages**
+An **account** as something which has:
+* a unique **address**
+* a code handler which allows it to receive and execute **messages**
+* a way of sending **messages** to other **accounts**
+
+An **address** is defined as a variable-length byte array of up to 255 bytes, although this may be subject to change.
+
+A **message** is defined as a tuple of:
+* a **message name** 
+* and **message data**
+
+When a **message** is sent to an **account**'s code handler, that handler will receive:
+* the **address** of the **account** (its own address)
+* the **address** of the account sending the message (the caller), which will be empty if the message is a query
+* the **message name**
+* the **message data**
+* a **gas limit**
+* optional static **account config** data
+
+The handler can then execute some code and return a response or an error.
+
+To send a **message** to another **account**, the caller must specify:
+* the **message name**
+* the **message data**
+* a **gas limit**
+* and optionally, the **address** of the **account** to send the message to
+
+There is a special class of **message name**'s known as **module messages**,
+where the caller should omit the **address** of the receiving **account**.
+The routing framework can look up the **address** of the receiving **account** based on the **message name** of a **module message**.
+
+**Accounts** which define handlers for **module messages** are known as **modules**.
+
+### Account Lifecycle
+
+Accounts can be created, destroyed and migrated to new code handlers.
+
+All accounts can define handlers for the following special **message name**'s:
+* `on_create`: called when an account is created with **message data** containing arbitrary initialization data
+* `on_destroy`: called when an account is destroyed with **message data** containing arbitrary destruction data
+* `on_migrate`: called when an account is migrated to a new code handler. Such handlers receive structured **message data** specifying the old code handler so that the account can perform migration operations or return an error if migration is not possible.
+
+Each account can also have optional static **account config** data.
+
+### Hypervisor Module
+
+A special module known as the **hypervisor** manages:
+* the mapping of **account address** to **code handler** and **account config**
+* the mapping of **message name** to **account address** for **module messages**
+* the creation, destruction and migration of accounts
+* loading of code handlers for accounts
+* execution and routing of messages by internal and external callers
+* loading of module configuration data (app config)
+
+--------------------------------------------
 
 Every **account** runs in a **code environment**. The **hypervisor** contains a stateful mapping from `account address -> (code environment, code id)`. The **hypervisor** executes messages by specifying the **account address** and **message name**.
 

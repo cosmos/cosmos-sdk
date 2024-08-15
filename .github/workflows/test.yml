@@ -4,7 +4,6 @@ on:
   merge_group:
   push:
     branches:
-      - main
       - release/v0.52.x
 
 permissions:

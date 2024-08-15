@@ -2,6 +2,7 @@ package simapp
 
 import (
 	"context"
+
 	serverv2 "cosmossdk.io/server/v2"
 )
 

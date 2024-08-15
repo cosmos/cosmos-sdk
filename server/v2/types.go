@@ -1,13 +1,15 @@
 package serverv2
 
 import (
+	"encoding/json"
+
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/viper"
+
 	coreapp "cosmossdk.io/core/app"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
-	"encoding/json"
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	"github.com/spf13/viper"
 )
 
 type AppCreator[T transaction.Tx] func(log.Logger, *viper.Viper) AppI[T]

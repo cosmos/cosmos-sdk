@@ -3,7 +3,8 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2/cli"
+
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -29,6 +30,7 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	genutilv2 "github.com/cosmos/cosmos-sdk/x/genutil/v2"
+	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2/cli"
 )
 
 func newApp[T transaction.Tx](

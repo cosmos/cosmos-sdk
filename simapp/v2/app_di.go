@@ -2,6 +2,7 @@ package simapp
 
 import (
 	_ "embed"
+
 	"github.com/spf13/viper"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"

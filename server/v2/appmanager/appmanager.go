@@ -94,7 +94,7 @@ func (a AppManager[T]) ExportGenesis(ctx context.Context, version uint64) ([]byt
 		return nil, fmt.Errorf("unable to get latest state: %w", err)
 	}
 
-	var bz = make([]byte, 0)
+	bz := make([]byte, 0)
 	_, err = a.stf.RunWithCtx(ctx, zeroState, func(ctx context.Context) error {
 		if a.exportGenesis == nil {
 			return errors.New("export genesis function not set")

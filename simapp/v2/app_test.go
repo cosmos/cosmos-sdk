@@ -2,30 +2,34 @@ package simapp
 
 import (
 	"context"
-	app2 "cosmossdk.io/core/app"
-	"cosmossdk.io/core/comet"
-	context2 "cosmossdk.io/core/context"
-	sdkmath "cosmossdk.io/math"
-	serverv2 "cosmossdk.io/server/v2"
-	authtypes "cosmossdk.io/x/auth/types"
-	banktypes "cosmossdk.io/x/bank/types"
 	"crypto/sha256"
 	"encoding/json"
-	"github.com/cometbft/cometbft/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/testutil/mock"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"testing"
 	"time"
 
+
+
+	"github.com/cometbft/cometbft/types"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/require"
+
+	app2 "cosmossdk.io/core/app"
+	"cosmossdk.io/core/comet"
+	context2 "cosmossdk.io/core/context"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
+	serverv2 "cosmossdk.io/server/v2"
 	comettypes "cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/db"
+	authtypes "cosmossdk.io/x/auth/types"
+	banktypes "cosmossdk.io/x/bank/types"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/require"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {

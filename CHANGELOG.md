@@ -42,7 +42,12 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Features
 
+<<<<<<< HEAD
 * (tools/confix) [#21052](https://github.com/cosmos/cosmos-sdk/pull/21052) Add a migration to v2 config.
+=======
+* (client) [#21074](https://github.com/cosmos/cosmos-sdk/pull/21074) Add auto cli for node service
+* (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
+>>>>>>> 1cb2336a6 (feat(client): add auto cli for node service (#21074))
 * (tests) [#20013](https://github.com/cosmos/cosmos-sdk/pull/20013) Introduce system tests to run multi node local testnet in CI
 * (runtime) [#19953](https://github.com/cosmos/cosmos-sdk/pull/19953) Implement `core/transaction.Service` in runtime.
 * (client) [#19905](https://github.com/cosmos/cosmos-sdk/pull/19905) Add grpc client config to `client.toml`.

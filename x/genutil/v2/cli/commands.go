@@ -2,8 +2,7 @@ package cli
 
 import (
 	"encoding/json"
-	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2"
+
 
 	"github.com/spf13/cobra"
 
@@ -11,7 +10,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2"
 )
 
 // TODO(serverv2): remove app exporter notion that is server v1 specific

@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2"
 	"io"
 	"os"
+
+	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2"
 
 	"github.com/spf13/cobra"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2"
 )
 
 const (

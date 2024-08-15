@@ -189,6 +189,8 @@ In cases where the packet size is too small, additional buffers can be reference
 
 More details on the specific layout of **message packets** will be specified in a future update to this RFC
 or a separate RFC.
+For now, we specify that within a 64kb **message packet**,
+at least 56kb will be available for **message data** and message responses.
 
 ### Further Specifications
 

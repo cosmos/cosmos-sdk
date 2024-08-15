@@ -1,6 +1,6 @@
 module cosmossdk.io/runtime/v2
 
-go 1.22.2
+go 1.23
 
 // server v2 integration
 replace (
@@ -15,7 +15,7 @@ replace (
 
 require (
 	cosmossdk.io/api v0.7.5
-	cosmossdk.io/core v0.12.1-0.20240725072823-6a2d039e1212
+	cosmossdk.io/core v1.0.0
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.4.0
 	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000

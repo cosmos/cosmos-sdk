@@ -90,6 +90,11 @@ func (msg MsgCreateValidator) Validate(ac address.Codec) error {
 	return nil
 }
 
+// GetMoniker returns the moniker of the validator
+func (msg MsgCreateValidator) GetMoniker() string {
+	return msg.Description.GetMoniker()
+}
+
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgCreateValidator) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var pubKey cryptotypes.PubKey

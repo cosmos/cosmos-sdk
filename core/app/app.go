@@ -21,26 +21,24 @@ type QueryResponse struct {
 }
 
 type BlockRequest[T transaction.Tx] struct {
-	Height            uint64
-	Time              time.Time
-	Hash              []byte
-	ChainId           string
-	AppHash           []byte
-	Txs               []T
-	ConsensusMessages []transaction.Msg
+	Height  uint64
+	Time    time.Time
+	Hash    []byte
+	ChainId string
+	AppHash []byte
+	Txs     []T
 
 	// IsGenesis indicates if this block is the first block of the chain.
 	IsGenesis bool
 }
 
 type BlockResponse struct {
-	Apphash                   []byte
-	ConsensusMessagesResponse []transaction.Msg
-	ValidatorUpdates          []appmodulev2.ValidatorUpdate
-	PreBlockEvents            []event.Event
-	BeginBlockEvents          []event.Event
-	TxResults                 []TxResult
-	EndBlockEvents            []event.Event
+	Apphash          []byte
+	ValidatorUpdates []appmodulev2.ValidatorUpdate
+	PreBlockEvents   []event.Event
+	BeginBlockEvents []event.Event
+	TxResults        []TxResult
+	EndBlockEvents   []event.Event
 }
 
 type RequestInitChain struct {

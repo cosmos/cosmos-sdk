@@ -3,38 +3,44 @@ package statesim
 import (
 	"fmt"
 
-	"cosmossdk.io/schema"
+	"cosmossdk.io/schema/view"
 )
-
-// ModuleState defines an interface for things that represent module state in schema format.
-type ModuleState interface {
-	// ModuleSchema returns the schema for the module.
-	ModuleSchema() schema.ModuleSchema
-
-	// GetObjectCollection returns the object collection state for the given object type.
-	GetObjectCollection(objectType string) (ObjectCollectionState, bool)
-
-	// ObjectCollections iterates over all the object collection states in the module.
-	ObjectCollections(f func(value ObjectCollectionState) bool)
-
-	// NumObjectCollections returns the number of object collections in the module.
-	NumObjectCollections() int
-}
 
 // DiffModuleStates compares the module state of two objects that implement ModuleState and returns a string with a diff if they
 // are different or the empty string if they are the same.
-func DiffModuleStates(expected, actual ModuleState) string {
+func DiffModuleStates(expected, actual view.ModuleState) string {
 	res := ""
 
-	if expected.NumObjectCollections() != actual.NumObjectCollections() {
-		res += fmt.Sprintf("OBJECT COLLECTION COUNT ERROR: expected %d, got %d\n", expected.NumObjectCollections(), actual.NumObjectCollections())
+	expectedNumObjectCollections, err := expected.NumObjectCollections()
+	if err != nil {
+		res += fmt.Sprintf("ERROR getting expected num object collections: %s\n", err)
+		return res
 	}
 
-	expected.ObjectCollections(func(expectedColl ObjectCollectionState) bool {
+	actualNumObjectCollections, err := actual.NumObjectCollections()
+	if err != nil {
+		res += fmt.Sprintf("ERROR getting actual num object collections: %s\n", err)
+		return res
+	}
+
+	if expectedNumObjectCollections != actualNumObjectCollections {
+		res += fmt.Sprintf("OBJECT COLLECTION COUNT ERROR: expected %d, got %d\n", expectedNumObjectCollections, actualNumObjectCollections)
+	}
+
+	expected.ObjectCollections(func(expectedColl view.ObjectCollection, err error) bool {
+		if err != nil {
+			res += fmt.Sprintf("ERROR getting expected object collection: %s\n", err)
+			return true
+		}
+
 		objTypeName := expectedColl.ObjectType().Name
-		actualColl, found := actual.GetObjectCollection(objTypeName)
-		if !found {
-			res += fmt.Sprintf("Object Collection %s: NOT FOUND\n", objTypeName)
+		actualColl, err := actual.GetObjectCollection(objTypeName)
+		if err != nil {
+			res += fmt.Sprintf("ERROR getting actual object collection: %s\n", err)
+			return true
+		}
+		if actualColl == nil {
+			res += fmt.Sprintf("Object Collection %s: actuall collection NOT FOUND\n", objTypeName)
 			return true
 		}
 

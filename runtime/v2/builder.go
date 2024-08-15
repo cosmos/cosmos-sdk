@@ -69,7 +69,7 @@ func (a *AppBuilder[T]) RegisterModules(modules map[string]appmodulev2.AppModule
 
 // RegisterStores registers the provided store keys.
 // This method should only be used for registering extra stores
-// wiich is necessary for modules that not registered using the app config.
+// which is necessary for modules that are not registered using the app config.
 // To be used in combination of RegisterModules.
 func (a *AppBuilder[T]) RegisterStores(keys ...string) {
 	a.app.storeKeys = append(a.app.storeKeys, keys...)
@@ -130,7 +130,7 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	storeOpts := rootstore.DefaultStoreOptions()
 	if s := v.Sub("store.options"); s != nil {
 		if err := s.Unmarshal(&storeOpts); err != nil {
-			return nil, fmt.Errorf("failed to store options: %w", err)
+			return nil, fmt.Errorf("failed to unmarshal store options: %w", err)
 		}
 	}
 

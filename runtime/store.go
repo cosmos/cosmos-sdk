@@ -63,13 +63,11 @@ func (failingStoreService) OpenTransientStore(ctx context.Context) store.KVStore
 }
 
 // CoreKVStore is a wrapper of Core/Store kvstore interface
-// Remove after https://github.com/cosmos/cosmos-sdk/issues/14714 is closed
 type coreKVStore struct {
 	kvStore storetypes.KVStore
 }
 
 // NewKVStore returns a wrapper of Core/Store kvstore interface
-// Remove once store migrates to core/store kvstore interface
 func newKVStore(store storetypes.KVStore) store.KVStore {
 	return coreKVStore{kvStore: store}
 }

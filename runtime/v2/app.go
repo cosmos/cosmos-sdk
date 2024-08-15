@@ -105,11 +105,6 @@ func (a *App[T]) GetStore() Store {
 	return a.db
 }
 
-// GetLogger returns the app logger.
-func (a *App[T]) GetLogger() log.Logger {
-	return a.logger
-}
-
 func (a *App[T]) GetAppManager() *appmanager.AppManager[T] {
 	return a.AppManager
 }

@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-
-
 	"github.com/cometbft/cometbft/types"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
@@ -33,6 +31,8 @@ import (
 )
 
 func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
+	t.Helper()
+
 	logger := log.NewTestLogger(t)
 
 	vp := viper.New()
@@ -81,13 +81,11 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 	_, newState, err := app.InitGenesis(
 		ctx,
 		&app2.BlockRequest[transaction.Tx]{
-			0,
-			time.Now(),
-			bz[:],
-			"theChain",
-			ci.Hash,
-			nil,
-			true,
+			Time:      time.Now(),
+			Hash:      bz[:],
+			ChainId:   "theChain",
+			AppHash:   ci.Hash,
+			IsGenesis: true,
 		},
 		genesisBytes,
 		nil,
@@ -97,13 +95,15 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 	changes, err := newState.GetStateChanges()
 	require.NoError(t, err)
 
-	_, err = st.Commit(&store.Changeset{changes})
+	_, err = st.Commit(&store.Changeset{Changes: changes})
 	require.NoError(t, err)
 
 	return app, ctx
 }
 
 func MoveNextBlock(t *testing.T, app *SimApp[transaction.Tx], ctx context.Context) {
+	t.Helper()
+
 	bz := sha256.Sum256([]byte{})
 
 	st := app.GetStore().(comettypes.Store)

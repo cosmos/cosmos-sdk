@@ -1,6 +1,6 @@
 module cosmossdk.io/server/v2/cometbft
 
-go 1.22.2
+go 1.23
 
 replace (
 	// pseudo version lower than the latest tag

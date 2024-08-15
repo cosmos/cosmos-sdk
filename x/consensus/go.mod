@@ -1,6 +1,6 @@
 module cosmossdk.io/x/consensus
 
-go 1.22.2
+go 1.23
 
 require (
 	cosmossdk.io/api v0.8.0 // main

@@ -21,6 +21,7 @@ const (
 	FlagWebsite         = "website"
 	FlagSecurityContact = "security-contact"
 	FlagDetails         = "details"
+	FlagMetadata        = "metadata"
 
 	FlagCommissionRate          = "commission-rate"
 	FlagCommissionMaxRate       = "commission-max-rate"

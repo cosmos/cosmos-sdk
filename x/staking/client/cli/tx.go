@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -20,6 +21,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 // default values
@@ -72,6 +74,7 @@ Where validator.json contains:
 	"website": "validator's (optional) website",
 	"security": "validator's (optional) security contact email",
 	"details": "validator's (optional) details",
+	"metadata": {"profile-pic": "link to profile picture"},
 	"commission-rate": "0.1",
 	"commission-max-rate": "0.2",
 	"commission-max-change-rate": "0.01",
@@ -129,7 +132,16 @@ func NewEditValidatorCmd() *cobra.Command {
 			website, _ := cmd.Flags().GetString(FlagWebsite)
 			security, _ := cmd.Flags().GetString(FlagSecurityContact)
 			details, _ := cmd.Flags().GetString(FlagDetails)
-			description := types.NewDescription(moniker, identity, website, security, details)
+			metadataString, _ := cmd.Flags().GetString(FlagMetadata)
+
+			var metadata map[string]*gogoprotoany.Any
+			if metadataString != "" {
+				if err := json.Unmarshal([]byte(metadataString), &metadata); err != nil {
+					return err
+				}
+			}
+
+			description := types.NewDescription(moniker, identity, website, security, details, metadata)
 
 			var newRate *math.LegacyDec
 
@@ -183,6 +195,7 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 		val.Website,
 		val.Security,
 		val.Details,
+		val.Metadata,
 	)
 
 	valStr, err := valAc.BytesToString(sdk.ValAddress(valAddr))
@@ -263,6 +276,7 @@ type TxCreateValidatorConfig struct {
 	SecurityContact string
 	Details         string
 	Identity        string
+	Metadata        map[string]*gogoprotoany.Any
 }
 
 func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, chainID string, valPubKey cryptotypes.PubKey) (TxCreateValidatorConfig, error) {
@@ -302,6 +316,15 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 		return c, err
 	}
 
+	metadataString, err := flagSet.GetString(FlagMetadata)
+	if err != nil {
+		return c, err
+	}
+	var metadata map[string]*gogoprotoany.Any
+	if err := json.Unmarshal([]byte(metadataString), &metadata); err != nil {
+		return c, err
+	}
+
 	c.Amount, err = flagSet.GetString(FlagAmount)
 	if err != nil {
 		return c, err
@@ -338,6 +361,7 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 	c.SecurityContact = securityContact
 	c.Details = details
 	c.Identity = identity
+	c.Metadata = metadata
 	c.ChainID = chainID
 	c.Moniker = moniker
 
@@ -379,6 +403,7 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 		config.Website,
 		config.SecurityContact,
 		config.Details,
+		config.Metadata,
 	)
 
 	// get the initial validator commission parameters

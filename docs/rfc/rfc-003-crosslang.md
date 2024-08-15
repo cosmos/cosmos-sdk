@@ -148,8 +148,9 @@ The **hypervisor** as a first-class **module** itself contains stateful mappings
 * **module name** to module **account address**
 * **message name** to **account address** for **module messages**
 
-Each **virtual machine** is expected to expose a `handle` method
-which takes the same arguments as each **account handler** itself takes plus the **handler id** of the **account handler** to run.
+Each **virtual machine** is expected to expose a method which takes a **handler id**
+and optional **account config** data and returns a reference to an **account handler**
+which can be used to run **messages**.
 **Virtual machines** will also receive an `invoke` function
 so that their **account handlers** can send messages to other **accounts**.
 **Virtual machines** must also implement a method to return the metadata for each **account handler** by **handler id**.
@@ -176,156 +177,53 @@ When modules are loaded in the **hypervisor**, a composite **message handler** w
 pre- and post-handlers for a given **message name** in the loaded module set.
 By default, the ordering will be done alphabetically by **module name**.
 
+### Message Data and Packet Specification
+
+To facilitate efficient cross-language and cross-VM message passing, the precise layout of message packets is important
+as it reduces the need for serialization and deserialization in the core **hypervisor** and **virtual machine** layers.
+
+We start by defining a **message packet** as a 64kb (65,536 bytes) array which is aligned to a 64kb boundary.
+For most **message handlers** this single packet should be sufficient to contain all the arguments and
+return values for a **message**.
+In cases where the packet size is too small, additional buffers can be referenced from within the **message packet**.
+
+More details on the specific layout of **message packets** will be specified in a future update to this RFC
+or a separate RFC.
+
 ### Further Specifications
 
-Any other specifications regarding the encoding of messages, storage, events, transaction execution or interaction with consensus environments should get specified at a level above the cross-language framework. The cross-language framework is intended to be a minimal specification that allows for the execution of messages across different code environments.
-
------
-
-TODO: packet sizes and any details of message data and responses? what size packets are allowed?
-
-TODO: should message names be specified globally? do we have any concept of services (bundles of message handlers)? should any encoding details be specified at this level? 
-
-TODO: how do we deal with pre- and post-handlers that have been specified now in core? are these a hypervisor concern, can they be dealt with at another level, or should they be unsupported?
-
-
-```go
-package hypervisor
-
-type VirtualMachine interface {
-	Invoke(HandleArgs) error
-	DescribeAccountHandler(handlerId string) (HandlerDescriptor, error)
-}
-
-type HandleArgs struct {
-	HandlerID string
-	Packet MessagePacket
-}
-
-type MessagePacket interface{
-    AccountAddress() Address
-    CallerAddress() Address
-    MessageName() string
-    MessageData() []byte
-    GasLimit() uint64
-    AccountConfig() []byte
-    ContextToken() []byte
-    Param1() []byte
-    Param2() []byte
-}
-
-type Address = [256]byte
-
-type HandlerDescriptor struct {
-	HandlerID string
-    MessageDescriptors []MessageDescriptor
-	Metadata []byte
-}
-
-type MessageDescriptor struct {
-	MessageName string
-	Volatility  Volatility    
-    Metadata    []byte
-}
-
-type Volatility uint8
-
-const (
-	Volatile Volatility = iota
-	ReadOnly
-	Pure
-)
-
-```
-
-### Message Packet
-
-We specify the format for message packets in Rust to precisely specify memory layout:
-
-```rust
-#[repr(packed)]
-struct MessagePacket {
-    account_address: Address,
-    caller_address: Address,
-    message_name_len: u8,
-    message_name: [u8; 255],
-    gas_limit: u64,
-    account_config_len: u32,
-    account_config: *const u8,
-    context_token: [u8; 32],
-    // TODO:
-    param1_len: u32,
-    param1_capacity: u32,
-    param1: *mut u8,    
-    param2_len: u32,    
-    param2_capacity: u32,
-    param2: *mut u8,
-    message_data_len: u16,
-    message_data: [u8; 4096],
-}
-
-struct Address {
-    len: u8,
-    bytes: [u8; 255],
-}
-```
+This specification does not cover many important parts of a complete system such as the encoding of message data,
+storage, events, transaction execution, or interaction with consensus environments.
+It is the intention of this specification that additional specifications regarding those systems will be layered on
+top of this specification.
+It may become necessary to include more details regarding specific parts of those systems in this specification
+at some point, but as a starting point, this specification is intentionally kept minimal.
 
 ## Abandoned Ideas (Optional)
 
-> As RFCs evolve, it is common that there are ideas that are abandoned. Rather than simply deleting them from the
-> document, you should try to organize them into sections that make it clear they're abandoned while explaining why they
-> were abandoned.
->
-> When sharing your RFC with others or having someone look back on your RFC in the future, it is common to walk the same
-> path and fall into the same pitfalls that we've since matured from. Abandoned ideas are a way to recognize that path
-> and explain the pitfalls and why they were abandoned.
-
 ## Decision
 
-> This section describes alternative designs to the chosen design. This section
-> is important and if an adr does not have any alternatives then it should be
-> considered that the ADR was not thought through.
+TODO
 
 ## Consequences (optional)
 
-> This section describes the resulting context, after applying the decision. All
-> consequences should be listed here, not just the "positive" ones. A particular
-> decision may have positive, negative, and neutral consequences, but all of them
-> affect the team and project in the future.
-
 ### Backwards Compatibility
 
-> All ADRs that introduce backwards incompatibilities must include a section
-> describing these incompatibilities and their severity. The ADR must explain
-> how the author proposes to deal with these incompatibilities. ADR submissions
-> without a sufficient backwards compatibility treatise may be rejected outright.
+It is intended that existing SDK modules built using `cosmossdk.io/core` can be integrated into this system with
+no or minimal changes.
 
 ### Positive
 
-> {positive consequences}
+TODO
 
 ### Negative
 
-> {negative consequences}
+TODO
 
 ### Neutral
 
-> {neutral consequences}
-
-
+TODO
 
 ### References
 
-> Links to external materials needed to follow the discussion may be added here.
->
-> In addition, if the discussion in a request for comments leads to any design
-> decisions, it may be helpful to add links to the ADR documents here after the
-> discussion has settled.
-
 ## Discussion
-
-> This section contains the core of the discussion.
->
-> There is no fixed format for this section, but ideally changes to this
-> section should be updated before merging to reflect any discussion that took
-> place on the PR that made those changes.

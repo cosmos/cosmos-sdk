@@ -57,20 +57,22 @@ A **message name** is an ASCII string of up to 255 characters so that it can be 
 
 The code that implements an account's message handling is known as the **account handler**.
 
-When a **message** is sent to an **account handler**, it will receive:
+When a **message** is sent to an **account handler**, it will receive a **message request** which contains:
 * the **address** of the **account** (its own address)
 * the **address** of the account sending the message (the caller), which will be empty if the message is a query
 * the **message name**
 * the **message data**
+* a 32-byte **state token**
 * a `uint64` **gas limit**
 * optional **account config** bytes
 
 The handler can then execute some code and return a response or an error. Details on message responses and errors will be described later.
 
 To send a **message** to another **account**, the caller must specify:
-* the **message name**
-* the **message data**
-* a **gas limit**
+* **message name**
+* **message data**
+* **state token**
+* **gas limit**
 * optionally, the **address** of the **account** to send the message to
 
 The handler for a specific message within an **account handler** is known as a **message handler**.
@@ -94,23 +96,13 @@ More details on **modules** and **module messages** will be given later.
 
 ### Account Handler and Message Metadata
 
-Every **account handler** is expected to provide metadata which at a minimum provides:
-* a list of the **message names** it defines **message handlers** for, and
-* the **volatility** of each message handler, described below
-
-Metadata for **account handlers** and **message handlers** can also contain additional bytes
-which for now are not standardized at this level.
-
-### State and Volatility
-
-**Account**s generally also have some mutable state, but within this specification, state is expected to be handled by some special state **module** which is defined by separate specifications.
-
-However, the metadata for each message handler in an **account handler** does specify its **volatility**,
-which describes a message handler's behavior with respect to state and side effects.
-**Volatility** is an enum value that can have one of the following values:
-* `volatile`: the handler can have side effects and send `volatile`, `radonly` or `pure` messages to other accounts. Such handlers are expected to both read and write state.
-* `readonly`: the handler cannot cause effects side effects and can only send `readonly` or `pure` messages to other accounts. Such handlers are expected to only read state.
-* `pure`: the handler cannot cause any side effects and can only call other pure handlers. Such handlers are expected to neither read nor write state.
+Every **account handler** is expected to provide metadata which provides:
+* a list of the **message names** it defines **message handlers** and for each of these, its:
+  * **volatility** (described below)
+  * optional additional bytes, which are not standardized at this level
+* **state config** bytes which are sent to the **state handler** (described below) but are otherwise opaque
+* **account config** descriptor bytes, which when empty indicate no **account config** is used
+* some optional additional bytes, which are not standardized at this level
 
 ### Account Lifecycle
 
@@ -155,12 +147,50 @@ which can be used to run **messages**.
 so that their **account handlers** can send messages to other **accounts**.
 **Virtual machines** must also implement a method to return the metadata for each **account handler** by **handler id**.
 
+### State and Volatility
+
+**Account**s generally also have some mutable state, but within this specification, state is mostly expected to be handled by some special state **module** which is defined by separate specifications. The few main concepts of **state handler**, **state token**, **state config** and **volatility** are defined here.
+
+The **state handler** is a system component which the **hypervisor** has a reference to,
+and which is responsible for managing the state of all **accounts**.
+It only exposes the following methods to the **hypervisor**:
+- `create(account address, state config)`: creates a new account state with the specified address and **state config**
+- `migrate(account address, new state config)`: migrates the account state with the specified address to a new state config
+- `destroy(account address)`: destroys the account state with the specified address
+
+**State config** are optional bytes that each **account handler**'s metadata can define which get passed to the **state handler** when an account is created.
+These bytes can be used by the **state handler** to determine what type of state and commitment store the **account** needs.
+
+A **state token** is an opaque array of 32-bytes that is passed in each **message request**.
+The **hypervisor** has no knowledge of what this token represents or how it is created,
+but it is expected that **modules** that mange state do understand this token and use it to manage all state changes
+in consistent transactions.
+All side effects regarding state, events, etc. are expected to coordinate around the usage of this token.
+It is possible that state **modules** expose methods for creating new **state tokens** to **message handlers**
+to create nested transactions.
+
+**Volatility** describes a message handler's behavior with respect to state and side effects.
+It is an enum value that can have one of the following values:
+* `volatile`: the handler can have side effects and send `volatile`, `radonly` or `pure` messages to other accounts. Such handlers are expected to both read and write state.
+* `readonly`: the handler cannot cause effects side effects and can only send `readonly` or `pure` messages to other accounts. Such handlers are expected to only read state.
+* `pure`: the handler cannot cause any side effects and can only call other pure handlers. Such handlers are expected to neither read nor write state.
+
+The **hypervisor** will enforce volatility rules when routing messages to **account handlers**.
+Caller **address**s are always passed to `volatile` methods,
+they are not required when calling `readonly` methods but may be present if available,
+and they are not passed at all to `pure` methods.
+
+### Management of Account Lifecycle with the Hypervisor
+
 The **hypervisor** module itself handles the following special **module messages** to manage account
 creation, destruction, and migration:
 * `create(handler id, address?)`: creates a new account in the specified code environment with the specified handler id and optional pre-defined address (if not provided, a new address is generated). The `on_create` message is called if it is implemented by the account.
 * `destroy(address)`: deletes the account with the specified address and calls the `on_destroy` message if it is implemented by the account.
 * `migrate(address, new handler id, migration data)`: migrates the account with the specified address to the new account handler. The `on_migrate` message must be implemented by the new code and must not return an error for migration to succeed. `migrate` can only be called by the account itself.
-* `force_migrate(account address, new handler id, init data, destroy data)`: this can be used when no `on_migrate` handler can perform a proper migration to the new account handler. In this case, `on_destroy` will be called on the old account handler, the account state will be cleared (TODO: how do we safely clear state?), and `on_create` will be called on the new code. This is a destructive operation and should be used with caution.
+* `force_migrate(account address, new handler id, init data, destroy data)`: this can be used when no `on_migrate` handler can perform a proper migration to the new account handler. In this case, `on_destroy` will be called on the old account handler, the account state will be cleared, and `on_create` will be called on the new code. This is a destructive operation and should be used with caution.
+
+The **hypervisor** will call the **state handler**'s `create`, `migrate`,
+and `destroy` methods as needed when accounts are created, migrated, or destroyed.
 
 ### Module Lifecycle & Module Messages
 
@@ -183,8 +213,8 @@ To facilitate efficient cross-language and cross-VM message passing, the precise
 as it reduces the need for serialization and deserialization in the core **hypervisor** and **virtual machine** layers.
 
 We start by defining a **message packet** as a 64kb (65,536 bytes) array which is aligned to a 64kb boundary.
-For most **message handlers** this single packet should be sufficient to contain all the arguments and
-return values for a **message**.
+For most **message handlers**, this single packet should be large enough to contain a full **message request**,
+including all **message data** as well as message return data.
 In cases where the packet size is too small, additional buffers can be referenced from within the **message packet**.
 
 More details on the specific layout of **message packets** will be specified in a future update to this RFC

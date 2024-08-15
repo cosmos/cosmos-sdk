@@ -1,5 +1,7 @@
 module cosmossdk.io/schema/testing
 
+go 1.23
+
 require (
 	cosmossdk.io/schema v0.0.0
 	github.com/cockroachdb/apd/v3 v3.2.1
@@ -17,5 +19,3 @@ require (
 )
 
 replace cosmossdk.io/schema => ./..
-
-go 1.22

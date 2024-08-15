@@ -12,10 +12,10 @@
 
 Let's start by defining core concepts from the perspective of a developer trying to write code for a module or account.
 
-An **account** as something which has:
+An **account** is defined as having:
 * a unique **address**
-* a code handler which allows it to receive and execute **messages**
-* a way of sending **messages** to other **accounts**
+* an **account handler** which is some code which can process **messages** and send **messages** to other **accounts**
+* some optional **account config** data
 
 An **address** is defined as a variable-length byte array of up to 255 bytes, although this may be subject to change.
 
@@ -29,7 +29,7 @@ When a **message** is sent to an **account**'s code handler, that handler will r
 * the **message name**
 * the **message data**
 * a **gas limit**
-* optional static **account config** data
+* **account config** data
 
 The handler can then execute some code and return a response or an error.
 
@@ -45,47 +45,48 @@ The routing framework can look up the **address** of the receiving **account** b
 
 **Accounts** which define handlers for **module messages** are known as **modules**.
 
-A **message**'s code handler can provide optional metadata about the message and its behavior.
-In the current design, the only part of the handler metadata
+**Account**s generally also have some mutable state, but within this specification, state is expected to be handled by some special state **module** which is defined by separate specifications.
+
+**Account handlers** should provide metadata about themselves and all the **messages that they handle.
+In the current design, the only part of the **message** metadata
 which is standardized at this level is an enum value, **volatility**,
 which describes the behavior of the handler with respect to state.
-This enum can be one of the following values:
-* `Stateful`: the handler is stateful and may modify state and cause other side effects
-* `ReadOnly`: the handler is read-only and will not modify state or cause side effects, such handlers cannot call stateful handlers
-* `Pure`: the handler cannot read or write state, cause side effects and can only call other pure handlers
+This `volatile` enum can have one of the following values:
+* `volatile`: the handler can have side effects and send `volatile`, `radonly` or `pure` messages to other accounts. Such handlers are expected to both read and write state.
+* `readonly`: the handler cannot cause effects side effects and can only send `readonly` or `pure` messages to other accounts. Such handlers are expected to only read state.
+* `pure`: the handler cannot cause any side effects and can only call other pure handlers. Such handlers are expected to neither read nor write state.
 
 For the time being, further standardization around message metadata is expected to be done at other levels of the stack,
 and as far as this specification is concerned, message metadata should be considered opaque bytes.
 
 ### Account Lifecycle
 
-Accounts can be created, destroyed and migrated to new code handlers.
+**Accounts* can be created, destroyed and migrated to new **account handlers**.
 
-All accounts can define handlers for the following special **message name**'s:
+**Account handlers** can define code for the following special **message name**'s:
 * `on_create`: called when an account is created with **message data** containing arbitrary initialization data
 * `on_destroy`: called when an account is destroyed with **message data** containing arbitrary destruction data
 * `on_migrate`: called when an account is migrated to a new code handler. Such handlers receive structured **message data** specifying the old code handler so that the account can perform migration operations or return an error if migration is not possible.
 
-Each account can have optional static **account config** data.
-
-### Hypervisor Module
+### Hypervisor and Virtual Machines
 
 A special module known as the **hypervisor** manages:
-* the mapping of **account address** to **code handler** and **account config**
+* the mapping of **account address** to **account handler**
 * the mapping of **message name** to **account address** for **module messages**
 * the creation, destruction and migration of accounts
-* loading of code handlers for accounts
-* execution and routing of messages by internal and external callers
+* storage of state **account config** data
+* **virtual machines** which run **account handlers**
+* routing of **messages** to **account handlers** for both internal and external callers
 * loading of module configuration data (app config)
 
-Each **code handler** runs inside in a specific code environment which for simplicity we will refer to as a **virtual machine**.
+Each **account handler** runs inside in a specific code environment which for simplicity we will refer to as a **virtual machine**.
 These code environments may or may not be sand-boxed **virtual machine**s in the strictest sense.
 For example, one such code environment may be native golang code while another may be an actual WASM virtual machine.
-However, for consistency we will refer to these all as **virtual machine** environments
-because the **hypervisor** will treat them in the same way.
+However, for consistency we will refer to these all as **virtual machines** 
+because the **hypervisor** will interact with them in the same way.
 
-Each **virtual machine** environment is expected to expose a `handle` function which takes the following parameters:
-* **code id**, which is a byte array that the **virtual machine** maps to a specific code handler
+Each **virtual machine** is expected to expose a `handle` function which takes the following parameters:
+* **handler id**, which is a byte array that the **virtual machine** maps to a specific **account handler**
 * **account address**
 * caller **account address**
 * **message name**
@@ -104,16 +105,16 @@ Each **virtual machine** environment receives a callback function
 
 `invoke` returns the same data as `handle`.
 
-**Virtual machine**s should also implement a `describe` function which returns metadata about the code handlers it supports. `describe` takes the **code id** as an input parameter and returns an array of **message** handler metadata containing:
+**Virtual machine**s should also implement a `describe` function which returns metadata about the code handlers it supports. `describe` takes the **handle id** as an input parameter and returns an array of **message** handler metadata containing:
 - the **message name**
 - its **volatility** enum value 
 - opaque bytes of additional metadata
 
 The **hypervisor** module itself handles the following **module messages**:
-* `create(virtual machine id, code id, account address?)`: creates a new account in the specified code environment with the specified code id and optional pre-defined account address (if not provided, a new address is generated). The `on_create` message is called if it is implemented by the account.
+* `create(code id, account address?)`: creates a new account in the specified code environment with the specified code id and optional pre-defined account address (if not provided, a new address is generated). The `on_create` message is called if it is implemented by the account.
 * `destroy(account address)`: deletes the account with the specified address and calls the `on_destroy` message if it is implemented by the account.
-* `migrate(account address, virtual machine id, new code id, miration data)`: migrates the account with the specified address to the new code environment and code id. The `on_migrate` message must be implemented by the new code and must not return an error for migration to succeed. `migrate` can only be called by the account itself (or by the app outside normal execution flow).
-* `force_migrate(account address, new virtual machine id, new code id, init data, destroy data)`: this can be used when no `on_migrate` handler can perform a proper migration to the new code. In this case, `on_destroy` will be called on the old event, its state will be cleared, and `on_create` will be called on the new code. This is a destructive operation and should be used with caution.
+* `migrate(account address, new code id, miration data)`: migrates the account with the specified address to the new code environment and code id. The `on_migrate` message must be implemented by the new code and must not return an error for migration to succeed. `migrate` can only be called by the account itself (or by the app outside normal execution flow).
+* `force_migrate(account address, new code id, init data, destroy data)`: this can be used when no `on_migrate` handler can perform a proper migration to the new code. In this case, `on_destroy` will be called on the old event, its state will be cleared, and `on_create` will be called on the new code. This is a destructive operation and should be used with caution.
 
 ### Module Lifecycle & Messages
 

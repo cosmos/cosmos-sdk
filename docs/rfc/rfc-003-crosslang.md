@@ -8,9 +8,11 @@
 
 ## Proposal
 
+We propose a conceptual and formal model for defining **accounts** and **modules** which can interoperate with each other through **messages** in a cross-language environment.
+
 ### Core Concepts
 
-Let's start by defining core concepts from the perspective of a developer trying to write code for a module or account.
+We start with the conceptual definition of some core concepts from the perspective of a developer trying to write code for a module or account. The formal representation of these concepts in a particular coding environment may vary depending on that environment, but the essence should remain more or less the same. Formal system-wide definitions will be given later in the section on the **hypervisor** and **virtual machines**.
 
 An **account** is defined as having:
 * a unique **address**
@@ -155,6 +157,88 @@ TODO: packet sizes and any details of message data and responses? what size pack
 TODO: should message names be specified globally? do we have any concept of services (bundles of message handlers)? should any encoding details be specified at this level? 
 
 TODO: how do we deal with pre- and post-handlers that have been specified now in core? are these a hypervisor concern, can they be dealt with at another level, or should they be unsupported?
+
+
+```go
+package hypervisor
+
+type VirtualMachine interface {
+	Invoke(HandleArgs) error
+	DescribeAccountHandler(handlerId string) (HandlerDescriptor, error)
+}
+
+type HandleArgs struct {
+	HandlerID string
+	Packet MessagePacket
+}
+
+type MessagePacket interface{
+    AccountAddress() Address
+    CallerAddress() Address
+    MessageName() string
+    MessageData() []byte
+    GasLimit() uint64
+    AccountConfig() []byte
+    ContextToken() []byte
+    Param1() []byte
+    Param2() []byte
+}
+
+type Address = [256]byte
+
+type HandlerDescriptor struct {
+	HandlerID string
+    MessageDescriptors []MessageDescriptor
+	Metadata []byte
+}
+
+type MessageDescriptor struct {
+	MessageName string
+	Volatility  Volatility    
+    Metadata    []byte
+}
+
+type Volatility uint8
+
+const (
+	Volatile Volatility = iota
+	ReadOnly
+	Pure
+)
+
+```
+
+### Message Packet
+
+We specify the format for message packets in Rust to precisely specify memory layout:
+
+```rust
+#[repr(packed)]
+struct MessagePacket {
+    account_address: Address,
+    caller_address: Address,
+    message_name_len: u8,
+    message_name: [u8; 255],
+    gas_limit: u64,
+    account_config_len: u32,
+    account_config: *const u8,
+    context_token: [u8; 32],
+    // TODO:
+    param1_len: u32,
+    param1_capacity: u32,
+    param1: *mut u8,    
+    param2_len: u32,    
+    param2_capacity: u32,
+    param2: *mut u8,
+    message_data_len: u16,
+    message_data: [u8; 4096],
+}
+
+struct Address {
+    len: u8,
+    bytes: [u8; 255],
+}
+```
 
 ## Abandoned Ideas (Optional)
 

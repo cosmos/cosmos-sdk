@@ -3,9 +3,9 @@ package cmd
 import (
 	"os"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/spf13/cobra"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/legacy"

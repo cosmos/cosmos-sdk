@@ -5,11 +5,10 @@ package cmd
 import (
 	"os"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/spf13/cobra"
 
 	authv1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	stakingv1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/address"
@@ -20,6 +19,7 @@ import (
 	"cosmossdk.io/x/auth/tx"
 	authtxconfig "cosmossdk.io/x/auth/tx/config"
 	"cosmossdk.io/x/auth/types"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"

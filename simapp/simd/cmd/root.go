@@ -6,7 +6,6 @@ import (
 	"os"
 
 	dbm "github.com/cosmos/cosmos-db"
-	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log"
@@ -19,6 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"

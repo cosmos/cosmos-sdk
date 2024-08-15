@@ -74,23 +74,23 @@ func newKVStore(store storetypes.KVStore) store.KVStore {
 	return coreKVStore{kvStore: store}
 }
 
-// Get returns nil iff key doesn't exist. Errors on nil key.
+// Get returns value corresponding to the key. Panics on nil key.
 func (store coreKVStore) Get(key []byte) ([]byte, error) {
 	return store.kvStore.Get(key), nil
 }
 
-// Has checks if a key exists. Errors on nil key.
+// Has checks if a key exists. Panics on nil key.
 func (store coreKVStore) Has(key []byte) (bool, error) {
 	return store.kvStore.Has(key), nil
 }
 
-// Set sets the key. Errors on nil key or value.
+// Set sets the key. Panics on nil key or value.
 func (store coreKVStore) Set(key, value []byte) error {
 	store.kvStore.Set(key, value)
 	return nil
 }
 
-// Delete deletes the key. Errors on nil key.
+// Delete deletes the key. Panics on nil key.
 func (store coreKVStore) Delete(key []byte) error {
 	store.kvStore.Delete(key)
 	return nil

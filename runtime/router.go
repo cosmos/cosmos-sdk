@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
-// NewMsgRouterService implements router.Service.
+// NewMsgRouterService return new implementation of router.Service.
 func NewMsgRouterService(msgRouter baseapp.MessageRouter) router.Service {
 	return &msgRouterService{
 		router: msgRouter,
@@ -47,7 +47,7 @@ func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error 
 
 // InvokeTyped execute a message and fill-in a response.
 // The response must be known and passed as a parameter.
-// Use InvokeUntyped if the response type is not known.
+// Use InvokeUntyped if the response type is unknown.
 func (m *msgRouterService) InvokeTyped(ctx context.Context, msg, resp gogoproto.Message) error {
 	messageName := msgTypeURL(msg)
 	handler := m.router.HybridHandlerByMsgName(messageName)
@@ -79,7 +79,7 @@ func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg gogoproto.Mess
 	return msgResp, m.InvokeTyped(ctx, msg, msgResp)
 }
 
-// NewQueryRouterService implements router.Service.
+// NewQueryRouterService return new implementation of router.Service.
 func NewQueryRouterService(queryRouter baseapp.QueryRouter) router.Service {
 	return &queryRouterService{
 		router: queryRouter,
@@ -112,7 +112,7 @@ func (m *queryRouterService) CanInvoke(ctx context.Context, typeURL string) erro
 
 // InvokeTyped execute a message and fill-in a response.
 // The response must be known and passed as a parameter.
-// Use InvokeUntyped if the response type is not known.
+// Use InvokeUntyped if the response type is unknown.
 func (m *queryRouterService) InvokeTyped(ctx context.Context, req, resp gogoproto.Message) error {
 	reqName := msgTypeURL(req)
 	handlers := m.router.HybridHandlerByRequestName(reqName)

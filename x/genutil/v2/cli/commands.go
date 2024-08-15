@@ -3,7 +3,6 @@ package cli
 import (
 	"encoding/json"
 
-
 	"github.com/spf13/cobra"
 
 	banktypes "cosmossdk.io/x/bank/types"

@@ -3,8 +3,9 @@ package v2
 import (
 	"encoding/json"
 
-	"cosmossdk.io/log"
 	"github.com/spf13/viper"
+
+	"cosmossdk.io/log"
 )
 
 // AppExporter is a function that dumps all app state to

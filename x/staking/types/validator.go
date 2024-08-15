@@ -188,13 +188,14 @@ func (v Validator) IsUnbonding() bool {
 // constant used in flags to indicate that description field should not be updated
 const DoNotModifyDesc = "[do-not-modify]"
 
-func NewDescription(moniker, identity, website, securityContact, details string) Description {
+func NewDescription(moniker, identity, website, securityContact, details string, metadata map[string]*gogoprotoany.Any) Description {
 	return Description{
 		Moniker:         moniker,
 		Identity:        identity,
 		Website:         website,
 		SecurityContact: securityContact,
 		Details:         details,
+		Metadata:        metadata,
 	}
 }
 
@@ -227,6 +228,7 @@ func (d Description) UpdateDescription(d2 Description) (Description, error) {
 		d2.Website,
 		d2.SecurityContact,
 		d2.Details,
+		d.Metadata, // TODO: how should we check for the DoNotModifyDesc
 	).EnsureLength()
 }
 
@@ -253,6 +255,12 @@ func (d Description) EnsureLength() (Description, error) {
 	}
 
 	return d, nil
+}
+
+func (d Description) IsEmpty() bool {
+	return d.Moniker == "" && d.Identity == "" &&
+		d.Website == "" && d.SecurityContact == "" &&
+		d.Details == "" && len(d.Metadata) == 0
 }
 
 // ModuleValidatorUpdate returns a appmodule.ValidatorUpdate from a staking validator type

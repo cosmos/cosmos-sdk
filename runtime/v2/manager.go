@@ -406,7 +406,6 @@ func (m *MM[T]) TxValidators() func(ctx context.Context, tx T) error {
 //
 // Example:
 //
-//	cfg := module.NewConfigurator(...)
 //	app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 //	    // Assume "foo" is a new module.
 //	    // `fromVM` is fetched from existing x/upgrade store. Since foo didn't exist
@@ -458,7 +457,7 @@ func (m *MM[T]) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap
 
 				// The module manager assumes only one module will update the validator set, and it can't be a new module.
 				if len(moduleValUpdates) > 0 {
-					return nil, errors.New("validator InitGenesis update is already set by another module")
+					return nil, errors.New("validator InitGenesis update cannot be set by a new module")
 				}
 			}
 		}

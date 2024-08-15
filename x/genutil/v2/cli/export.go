@@ -7,8 +7,6 @@ import (
 	"io"
 	"os"
 
-	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"

@@ -49,12 +49,6 @@ func (em *eventManager) EmitKV(eventType string, attrs ...event.Attribute) error
 	return nil
 }
 
-// EmitNonConsensus emits an typed event that is defined in the protobuf file.
-// These events will not be added to consensus.
-func (em *eventManager) EmitNonConsensus(event transaction.Msg) error {
-	return em.Emit(event)
-}
-
 // TypedEventToEvent takes typed event and converts to Event object
 func TypedEventToEvent(tev transaction.Msg) (event.Event, error) {
 	evtType := gogoproto.MessageName(tev)
@@ -71,10 +65,10 @@ func TypedEventToEvent(tev transaction.Msg) (event.Event, error) {
 
 	// sort the keys to ensure the order is always the same
 	keys := maps.Keys(attrMap)
-	slices.Sort(keys)
+	slices.Sorted(keys)
 
 	attrs := make([]event.Attribute, 0, len(attrMap))
-	for _, k := range keys {
+	for k := range keys {
 		v := attrMap[k]
 		attrs = append(attrs, event.Attribute{
 			Key:   k,

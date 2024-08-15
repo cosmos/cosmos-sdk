@@ -91,6 +91,10 @@ func InvokeSetStakingHooks(
 		return nil
 	}
 
+	if len(stakingHooks) == 0 {
+		return nil
+	}
+
 	modNames := maps.Keys(stakingHooks)
 	order := config.HooksOrder
 	if len(order) == 0 {
@@ -100,10 +104,6 @@ func InvokeSetStakingHooks(
 
 	if len(order) != len(modNames) {
 		return fmt.Errorf("len(hooks_order: %v) != len(hooks modules: %v)", order, modNames)
-	}
-
-	if len(modNames) == 0 {
-		return nil
 	}
 
 	var multiHooks types.MultiStakingHooks

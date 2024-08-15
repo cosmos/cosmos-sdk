@@ -11,7 +11,7 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"sync"
 	"time"
 )
@@ -162,10 +162,10 @@ func (m *Manager) exportSnapshot(height uint64, snapshotWriter func([]byte) erro
 	w := bufio.NewWriter(&buf)
 
 	keys := maps.Keys(m.txHashes)
-	sort.Slice(keys, func(i, j int) bool { return bytes.Compare(keys[i][:], keys[j][:]) < 0 })
+	slices.SortedFunc(keys, func(i, j TxHash) int { return bytes.Compare(i[:], j[:]) })
 
 	timestamp := time.Unix(int64(height), 0)
-	for _, txHash := range keys {
+	for txHash := range keys {
 		timeoutTime := m.txHashes[txHash]
 		if timestamp.After(timeoutTime) {
 			// skip expired txs that have yet to be purged

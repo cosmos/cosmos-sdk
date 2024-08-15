@@ -101,10 +101,10 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 
 	// sort the keys to ensure the order is always the same
 	keys := maps.Keys(attrMap)
-	slices.Sort(keys)
+	slices.Sorted(keys)
 
 	attrs := make([]abci.EventAttribute, 0, len(attrMap))
-	for _, k := range keys {
+	for k := range keys {
 		v := attrMap[k]
 		attrs = append(attrs, abci.EventAttribute{
 			Key:   k,

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"maps"
 	"math"
-	"sort"
+	"slices"
 	"strconv"
 	"sync"
 
@@ -341,8 +341,8 @@ func (app *BaseApp) MountTransientStores(keys map[string]*storetypes.TransientSt
 // commit multi-store.
 func (app *BaseApp) MountMemoryStores(keys map[string]*storetypes.MemoryStoreKey) {
 	skeys := maps.Keys(keys)
-	sort.Strings(skeys)
-	for _, key := range skeys {
+	slices.Sorted(skeys)
+	for key := range skeys {
 		memKey := keys[key]
 		app.MountStore(memKey, storetypes.StoreTypeMemory)
 	}

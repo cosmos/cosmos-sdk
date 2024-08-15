@@ -30,7 +30,7 @@ import (
 func NewRootCmd() *cobra.Command {
 	// we "pre"-instantiate the application for getting the injected/configured encoding configuration
 	// note, this is not necessary when using app wiring, as depinject can be directly used (see root_v2.go)
-	tempApp := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir()))
+	tempApp := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome))
 	encodingConfig := params.EncodingConfig{
 		InterfaceRegistry: tempApp.InterfaceRegistry(),
 		Codec:             tempApp.AppCodec(),
@@ -109,12 +109,12 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, encodingConfig.TxConfig, tempApp.ModuleManager)
+	initRootCmd(rootCmd, tempApp.ModuleManager)
 
 	// autocli opts
 	customClientTemplate, customClientConfig := initClientConfig()
 	var err error
-	initClientCtx, err = config.ReadDefaultValuesFromDefaultClientConfig(initClientCtx, customClientTemplate, customClientConfig)
+	initClientCtx, err = config.CreateClientConfig(initClientCtx, customClientTemplate, customClientConfig)
 	if err != nil {
 		panic(err)
 	}

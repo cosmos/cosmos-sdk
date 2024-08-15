@@ -28,7 +28,7 @@ type Launcher struct {
 }
 
 func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
-	fw, err := newUpgradeFileWatcher(cfg, logger)
+	fw, err := newUpgradeFileWatcher(cfg)
 	if err != nil {
 		return Launcher{}, err
 	}
@@ -176,7 +176,7 @@ func (l Launcher) doBackup() error {
 		}
 
 		if uInfo.Name == "" {
-			return fmt.Errorf("upgrade-info.json is empty")
+			return errors.New("upgrade-info.json is empty")
 		}
 
 		// a destination directory, Format YYYY-MM-DD
@@ -241,7 +241,7 @@ func (l Launcher) doCustomPreUpgrade() error {
 	if oldMode != newMode {
 		if err := os.Chmod(preupgradeFile, newMode); err != nil {
 			l.logger.Info("COSMOVISOR_CUSTOM_PREUPGRADE could not add execute permission")
-			return fmt.Errorf("COSMOVISOR_CUSTOM_PREUPGRADE could not add execute permission")
+			return errors.New("COSMOVISOR_CUSTOM_PREUPGRADE could not add execute permission")
 		}
 	}
 

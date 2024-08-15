@@ -29,6 +29,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#18737](https://github.com/cosmos/cosmos-sdk/pull/18737) Added a limit of 200 grants pruned per `BeginBlock` and the `PruneExpiredGrants` message that prunes 75 expired grants on every run.
 * [#20161](https://github.com/cosmos/cosmos-sdk/pull/20161) Added `RevokeAll` method to revoke all grants at once.
+* [#20687](https://github.com/cosmos/cosmos-sdk/pull/20687) Prevent user to grant authz MsgGrant to other accounts. Preventing user from accidentally authorizing their entire account to a different account.
+
+### Improvements 
+
+* [#18070](https://github.com/cosmos/cosmos-sdk/pull/18070) Use clientCtx address codecs in cli.
 
 ### API Breaking Changes
 

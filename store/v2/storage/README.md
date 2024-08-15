@@ -71,7 +71,7 @@ Iterate/backend_rocksdb_versiondb_opts-10          778ms ± 0%
 ## Pruning
 
 Pruning is an implementation and responsibility of the underlying SS backend.
-Specifically, the `StorageStore` accepts `store.PruneOptions` which defines the
+Specifically, the `StorageStore` accepts `store.PruningOption` which defines the
 pruning configuration. During `ApplyChangeset`, the `StorageStore` will check if
 pruning should occur based on the current height being committed. If so, it will
 delegate a `Prune` call on the underlying SS backend, which can be defined specific

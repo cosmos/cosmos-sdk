@@ -4,11 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
+	"strings"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/proto"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/router"
+	transaction "cosmossdk.io/core/transaction"
 )
 
 var ErrNoHandler = errors.New("no handler")
@@ -60,10 +63,10 @@ func (b *MsgRouterBuilder) HandlerExists(msgType string) bool {
 	return ok
 }
 
-func (b *MsgRouterBuilder) Build() (appmodulev2.Handler, error) {
+func (b *MsgRouterBuilder) Build() (coreRouterImpl, error) {
 	handlers := make(map[string]appmodulev2.Handler)
 
-	globalPreHandler := func(ctx context.Context, msg appmodulev2.Message) error {
+	globalPreHandler := func(ctx context.Context, msg transaction.Msg) error {
 		for _, h := range b.globalPreHandlers {
 			err := h(ctx, msg)
 			if err != nil {
@@ -73,7 +76,7 @@ func (b *MsgRouterBuilder) Build() (appmodulev2.Handler, error) {
 		return nil
 	}
 
-	globalPostHandler := func(ctx context.Context, msg, msgResp appmodulev2.Message) error {
+	globalPostHandler := func(ctx context.Context, msg, msgResp transaction.Msg) error {
 		for _, h := range b.globalPostHandlers {
 			err := h(ctx, msg, msgResp)
 			if err != nil {
@@ -92,14 +95,8 @@ func (b *MsgRouterBuilder) Build() (appmodulev2.Handler, error) {
 		handlers[msgType] = buildHandler(handler, preHandlers, globalPreHandler, postHandlers, globalPostHandler)
 	}
 
-	// return handler as function
-	return func(ctx context.Context, msg appmodulev2.Message) (appmodulev2.Message, error) {
-		typeName := msgTypeURL(msg)
-		handler, exists := handlers[typeName]
-		if !exists {
-			return nil, fmt.Errorf("%w: %s", ErrNoHandler, typeName)
-		}
-		return handler(ctx, msg)
+	return coreRouterImpl{
+		handlers: handlers,
 	}, nil
 }
 
@@ -110,7 +107,7 @@ func buildHandler(
 	postHandlers []appmodulev2.PostMsgHandler,
 	globalPostHandler appmodulev2.PostMsgHandler,
 ) appmodulev2.Handler {
-	return func(ctx context.Context, msg appmodulev2.Message) (msgResp appmodulev2.Message, err error) {
+	return func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
 		if len(preHandlers) != 0 {
 			for _, preHandler := range preHandlers {
 				if err := preHandler(ctx, msg); err != nil {
@@ -141,9 +138,76 @@ func buildHandler(
 
 // msgTypeURL returns the TypeURL of a proto message.
 func msgTypeURL(msg gogoproto.Message) string {
-	if m, ok := msg.(proto.Message); ok {
-		return string(m.ProtoReflect().Descriptor().FullName())
+	return gogoproto.MessageName(msg)
+}
+
+var _ router.Service = (*coreRouterImpl)(nil)
+
+// coreRouterImpl implements the STF router for msg and query handlers.
+type coreRouterImpl struct {
+	handlers map[string]appmodulev2.Handler
+}
+
+func (r coreRouterImpl) CanInvoke(_ context.Context, typeURL string) error {
+	// trimming prefixes is a backwards compatibility strategy that we use
+	// for baseapp components that did routing through type URL rather
+	// than protobuf message names.
+	typeURL = strings.TrimPrefix(typeURL, "/")
+	_, exists := r.handlers[typeURL]
+	if !exists {
+		return fmt.Errorf("%w: %s", ErrNoHandler, typeURL)
+	}
+	return nil
+}
+
+func (r coreRouterImpl) InvokeTyped(ctx context.Context, req, resp transaction.Msg) error {
+	handlerResp, err := r.InvokeUntyped(ctx, req)
+	if err != nil {
+		return err
+	}
+	return merge(handlerResp, resp)
+}
+
+func (r coreRouterImpl) InvokeUntyped(ctx context.Context, req transaction.Msg) (res transaction.Msg, err error) {
+	typeName := msgTypeURL(req)
+	handler, exists := r.handlers[typeName]
+	if !exists {
+		return nil, fmt.Errorf("%w: %s", ErrNoHandler, typeName)
+	}
+	return handler(ctx, req)
+}
+
+// merge merges together two protobuf messages by setting the pointer
+// to src in dst. Used internally.
+func merge(src, dst gogoproto.Message) error {
+	if src == nil {
+		return fmt.Errorf("source message is nil")
+	}
+	if dst == nil {
+		return fmt.Errorf("destination message is nil")
 	}
 
-	return gogoproto.MessageName(msg)
+	srcVal := reflect.ValueOf(src)
+	dstVal := reflect.ValueOf(dst)
+
+	if srcVal.Kind() == reflect.Interface {
+		srcVal = srcVal.Elem()
+	}
+	if dstVal.Kind() == reflect.Interface {
+		dstVal = dstVal.Elem()
+	}
+
+	if srcVal.Kind() != reflect.Ptr || dstVal.Kind() != reflect.Ptr {
+		return fmt.Errorf("both source and destination must be pointers")
+	}
+
+	srcElem := srcVal.Elem()
+	dstElem := dstVal.Elem()
+
+	if !srcElem.Type().AssignableTo(dstElem.Type()) {
+		return fmt.Errorf("incompatible types: cannot merge %v into %v", srcElem.Type(), dstElem.Type())
+	}
+
+	dstElem.Set(srcElem)
+	return nil
 }

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/appmodule"
 	corecontext "cosmossdk.io/core/context"
@@ -58,14 +58,14 @@ func (k Keeper) getGrant(ctx context.Context, skey []byte) (grant authz.Grant, f
 	return grant, true
 }
 
-func (k Keeper) update(ctx context.Context, grantee, granter sdk.AccAddress, updated authz.Authorization) error {
+func (k Keeper) updateGrant(ctx context.Context, grantee, granter sdk.AccAddress, updated authz.Authorization) error {
 	skey := grantStoreKey(grantee, granter, updated.MsgTypeURL())
 	grant, found := k.getGrant(ctx, skey)
 	if !found {
 		return authz.ErrNoAuthorizationFound
 	}
 
-	msg, ok := updated.(proto.Message)
+	msg, ok := updated.(gogoproto.Message)
 	if !ok {
 		return sdkerrors.ErrPackAny.Wrapf("cannot proto marshal %T", updated)
 	}
@@ -133,7 +133,7 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 				if !ok {
 					return nil, fmt.Errorf("expected authz.Authorization but got %T", resp.Updated)
 				}
-				err = k.update(ctx, grantee, granter, updated)
+				err = k.updateGrant(ctx, grantee, granter, updated)
 			}
 			if err != nil {
 				return nil, err

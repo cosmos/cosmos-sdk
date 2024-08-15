@@ -4,6 +4,8 @@ package testpb;
 
 import "cosmos/app/v1alpha1/module.proto";
 
+option go_package = "cosmossdk.io/depinject/internal/appconfig/testpb";
+
 message TestRuntimeModule {
   option (cosmos.app.v1alpha1.module) = {
     go_import: "cosmossdk.io/core/internal/testpb"

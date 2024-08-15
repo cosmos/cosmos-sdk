@@ -56,7 +56,7 @@ The [module manager](./01-module-manager.md#manager) of the application is respo
 See an example of `InitGenesis` from the `auth` module:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/keeper/genesis.go#L8-L35
+https://github.com/cosmos/cosmos-sdk/blob/452129d6aa45134f598f05be13f3fd961ff9734e/x/auth/keeper/genesis.go#L12-L43
 ```
 
 ### `ExportGenesis`
@@ -66,7 +66,7 @@ The `ExportGenesis` method is executed whenever an export of the state is made. 
 See an example of `ExportGenesis` from the `auth` module.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/keeper/genesis.go#L37-L49
+https://github.com/cosmos/cosmos-sdk/blob/452129d6aa45134f598f05be13f3fd961ff9734e/x/auth/keeper/genesis.go#L45-L60
 ```
 
 ### GenesisTxHandler

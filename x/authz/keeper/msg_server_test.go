@@ -199,6 +199,20 @@ func (suite *TestSuite) TestGrant() {
 				}
 			},
 		},
+		{
+			name: "invalid grant with msg grant",
+			malleate: func() *authz.MsgGrant {
+				grant, err := authz.NewGrant(curBlockTime, authz.NewGenericAuthorization("/cosmos.authz.v1beta1.MsgGrant"), nil)
+				suite.Require().NoError(err)
+				return &authz.MsgGrant{
+					Granter: granterStrAddr,
+					Grantee: granteeStrAddr,
+					Grant:   grant,
+				}
+			},
+			expErr: true,
+			errMsg: "authz msgGrant is not allowed",
+		},
 	}
 
 	for _, tc := range testCases {

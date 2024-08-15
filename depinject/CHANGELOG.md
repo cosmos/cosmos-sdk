@@ -22,6 +22,11 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
+## 1.0.0
+
+* [#20540](https://github.com/cosmos/cosmos-sdk/pull/20540) Add support for defining `appconfig` module configuration types using `github.com/cosmos/gogoproto/proto` in addition to `google.golang.org/protobuf` so that users can use gogo proto across their stack.
+* Move `cosmossdk.io/core/appconfig` to `cosmossdk.io/depinject/appconfig`.
+
 ## 1.0.0-alpha.x
 
 Depinject is still in alpha stage even though its API is already quite stable.

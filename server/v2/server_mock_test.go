@@ -33,6 +33,10 @@ func (s *mockServer) Name() string {
 	return s.name
 }
 
+func (s *mockServer) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
+	return nil
+}
+
 func (s *mockServer) Start(ctx context.Context) error {
 	for ctx.Err() == nil {
 		s.ch <- fmt.Sprintf("%s mock server: %d", s.name, rand.Int())
@@ -53,8 +57,4 @@ func (s *mockServer) Stop(ctx context.Context) error {
 
 func (s *mockServer) Config() any {
 	return MockServerDefaultConfig()
-}
-
-func (s *mockServer) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) (serverv2.ServerComponent[transaction.Tx], error) {
-	return nil, nil
 }

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -137,7 +138,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			}
 
 			if txFactory.ChainID() == "" {
-				return fmt.Errorf("set the chain id with either the --chain-id flag or config file")
+				return errors.New("set the chain id with either the --chain-id flag or config file")
 			}
 
 			for _, sig := range sigs {

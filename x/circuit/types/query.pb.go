@@ -219,7 +219,7 @@ func (m *AccountsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryDisableListRequest is the request type for the Query/DisabledList RPC method.
+// QueryDisabledListRequest is the request type for the Query/DisabledList RPC method.
 type QueryDisabledListRequest struct {
 }
 
@@ -363,7 +363,7 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Account returns account permissions.
 	Account(ctx context.Context, in *QueryAccountRequest, opts ...grpc.CallOption) (*AccountResponse, error)
-	// Account returns account permissions.
+	// Accounts returns multiple accounts permissions.
 	Accounts(ctx context.Context, in *QueryAccountsRequest, opts ...grpc.CallOption) (*AccountsResponse, error)
 	// DisabledList returns a list of disabled message urls
 	DisabledList(ctx context.Context, in *QueryDisabledListRequest, opts ...grpc.CallOption) (*DisabledListResponse, error)
@@ -408,7 +408,7 @@ func (c *queryClient) DisabledList(ctx context.Context, in *QueryDisabledListReq
 type QueryServer interface {
 	// Account returns account permissions.
 	Account(context.Context, *QueryAccountRequest) (*AccountResponse, error)
-	// Account returns account permissions.
+	// Accounts returns multiple accounts permissions.
 	Accounts(context.Context, *QueryAccountsRequest) (*AccountsResponse, error)
 	// DisabledList returns a list of disabled message urls
 	DisabledList(context.Context, *QueryDisabledListRequest) (*DisabledListResponse, error)
@@ -486,6 +486,7 @@ func _Query_DisabledList_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.circuit.v1.Query",
 	HandlerType: (*QueryServer)(nil),

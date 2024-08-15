@@ -24,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -38,10 +37,7 @@ func NewRootCmd() *cobra.Command {
 
 	if err := depinject.Inject(
 		depinject.Configs(simapp.AppConfig(),
-			depinject.Supply(
-				log.NewNopLogger(),
-				simtestutil.NewAppOptionsWithFlagHome(tempDir()),
-			),
+			depinject.Supply(log.NewNopLogger()),
 			depinject.Provide(
 				ProvideClientContext,
 			),
@@ -85,7 +81,7 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, clientCtx.TxConfig, moduleManager)
+	initRootCmd(rootCmd, moduleManager)
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
@@ -128,7 +124,7 @@ func ProvideClientContext(
 
 	// Read the config to overwrite the default values with the values from the config file
 	customClientTemplate, customClientConfig := initClientConfig()
-	clientCtx, err = config.ReadDefaultValuesFromDefaultClientConfig(clientCtx, customClientTemplate, customClientConfig)
+	clientCtx, err = config.CreateClientConfig(clientCtx, customClientTemplate, customClientConfig)
 	if err != nil {
 		panic(err)
 	}

@@ -44,6 +44,12 @@ func (k Keeper) Grant(ctx context.Context, msg *authz.MsgGrant) (*authz.MsgGrant
 		return nil, sdkerrors.ErrInvalidType.Wrapf("%s doesn't exist", t)
 	}
 
+	// Disable granting other accounts with grant permission.
+	// Preventing user from accidentally authorizing their entire account to a different account.
+	if t == sdk.MsgTypeURL(&authz.MsgGrant{}) {
+		return nil, sdkerrors.ErrInvalidType.Wrap("authz msgGrant is not allowed")
+	}
+
 	err = k.SaveGrant(ctx, grantee, granter, authorization, msg.Grant.Expiration)
 	if err != nil {
 		return nil, err

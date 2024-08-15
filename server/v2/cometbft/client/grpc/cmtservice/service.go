@@ -2,12 +2,12 @@ package cmtservice
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -23,8 +23,14 @@ import (
 )
 
 var (
-	_ ServiceServer                      = queryServer{}
-	_ codectypes.UnpackInterfacesMessage = &GetLatestValidatorSetResponse{}
+	_ ServiceServer                        = queryServer{}
+	_ gogoprotoany.UnpackInterfacesMessage = &GetLatestValidatorSetResponse{}
+)
+
+const (
+	QueryPathApp   = "app"
+	QueryPathP2P   = "p2p"
+	QueryPathStore = "store"
 )
 
 type (
@@ -131,7 +137,7 @@ func (s queryServer) GetLatestValidatorSet(
 	return ValidatorsOutput(ctx, s.client, nil, page, limit)
 }
 
-func (m *GetLatestValidatorSetResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (m *GetLatestValidatorSetResponse) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var pubKey cryptotypes.PubKey
 	for _, val := range m.Validators {
 		err := unpacker.UnpackAny(val.PubKey, &pubKey)
@@ -265,8 +271,8 @@ func (s queryServer) ABCIQuery(ctx context.Context, req *ABCIQueryRequest) (*ABC
 
 	if path := SplitABCIQueryPath(req.Path); len(path) > 0 {
 		switch path[0] {
-		case "app", "store", "p2p", "custom": // TODO: check if we can use the ones from abci.go without having circular deps.
-			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("ABCI query path not yet implemented: %s", req.Path))
+		case QueryPathApp, QueryPathStore, QueryPathP2P:
+			// valid path
 
 		default:
 			// Otherwise, error as to prevent either valid gRPC service requests or

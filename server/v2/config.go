@@ -1,24 +1,61 @@
 package serverv2
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
 
-var ServerContextKey = struct{}{}
+	"github.com/mitchellh/mapstructure"
+	"github.com/spf13/viper"
+)
 
-// Config is the config of the main server.
-type Config struct {
-	// StartBlock indicates if the server should block or not.
-	// If true, the server will block until the context is canceled.
-	StartBlock bool
+// ReadConfig returns a viper instance of the config file
+func ReadConfig(configPath string) (*viper.Viper, error) {
+	v := viper.New()
+	v.SetConfigType("toml")
+	v.SetConfigName("config")
+	v.AddConfigPath(configPath)
+	if err := v.ReadInConfig(); err != nil {
+		return nil, fmt.Errorf("failed to read config: %s: %w", configPath, err)
+	}
+
+	v.SetConfigName("app")
+	if err := v.MergeInConfig(); err != nil {
+		return nil, fmt.Errorf("failed to merge configuration: %w", err)
+	}
+
+	v.WatchConfig()
+
+	return v, nil
 }
 
-// CLIConfig defines the CLI configuration for a module server.
-type CLIConfig struct {
-	// Commands defines the main command of a module server.
-	Commands []*cobra.Command
-	// Queries defines the query commands of a module server.
-	// Those commands are meant to be added in the root query command.
-	Queries []*cobra.Command
-	// Txs defines the tx commands of a module server.
-	// Those commands are meant to be added in the root tx command.
-	Txs []*cobra.Command
+// UnmarshalSubConfig unmarshals the given subconfig from the viper instance.
+// It unmarshals the config, env, flags into the target struct.
+// Use this instead of viper.Sub because viper does not unmarshal flags.
+func UnmarshalSubConfig(v *viper.Viper, subName string, target any) error {
+	var sub any
+	for k, val := range v.AllSettings() {
+		if k == subName {
+			sub = val
+			break
+		}
+	}
+
+	// Create a new decoder with custom decoding options
+	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			mapstructure.StringToTimeDurationHookFunc(),
+			mapstructure.StringToSliceHookFunc(","),
+		),
+		Result:           target,
+		WeaklyTypedInput: true,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create decoder: %w", err)
+	}
+
+	// Decode the sub-configuration
+	if err := decoder.Decode(sub); err != nil {
+		return fmt.Errorf("failed to decode sub-configuration: %w", err)
+	}
+
+	return nil
 }

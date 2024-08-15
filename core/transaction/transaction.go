@@ -1,11 +1,12 @@
 package transaction
 
-import (
-	gogoproto "github.com/cosmos/gogoproto/proto"
-)
-
 type (
-	Msg      = gogoproto.Message
+	// Msg uses structural types to define the interface for a message.
+	Msg = interface {
+		Reset()
+		String() string
+		ProtoMessage()
+	}
 	Identity = []byte
 )
 

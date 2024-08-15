@@ -32,10 +32,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### API Breaking Changes
 
 * [#19443](https://github.com/cosmos/cosmos-sdk/pull/19443) `NewKeeper` takes an `appmodule.Environment` instead of individual services.
+* [#21259](https://github.com/cosmos/cosmos-sdk/pull/21259) Upgrade has been migrated to cosrestore.StoreUpgrades. Renaming keys support has been removed from the upgrade module.
 
 ### State Machine Breaking
 
 * (x/upgrade) [#16244](https://github.com/cosmos/cosmos-sdk/pull/16244) Upgrade module no longer stores the app version but gets and sets the app version stored in the `ParamStore` of baseapp.
+
+## [v0.1.4](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.1.4) - 2024-07-15
+
+### Improvements
+
+* [#20771](https://github.com/cosmos/cosmos-sdk/pull/20771) Create upgrade directory only when necessary (upgrade flow and not init flow).
 
 ## [v0.1.3](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.1.3) - 2024-06-04
 

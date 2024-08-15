@@ -59,7 +59,7 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 func TestExportCmd_HomeDir(t *testing.T) {
 	_, ctx, _, cmd := setupApp(t, t.TempDir())
 
-	v := ctx.Value(corectx.ViperContextKey{})
+	v := ctx.Value(corectx.ViperContextKey)
 	viper, ok := v.(*viper.Viper)
 	require.True(t, ok)
 	viper.Set(flags.FlagHome, "foobar")
@@ -220,7 +220,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper)
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
 
 	return app, ctx, appGenesis, cmd
 }

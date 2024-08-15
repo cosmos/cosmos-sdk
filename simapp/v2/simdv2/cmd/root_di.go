@@ -7,8 +7,8 @@ import (
 
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
@@ -22,16 +22,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the main function.
-func NewRootCmd() *cobra.Command {
+func NewRootCmd[T transaction.Tx]() *cobra.Command {
 	var (
-		autoCliOpts     autocli.AppOptions
-		moduleManager   *runtime.MM
-		v1ModuleManager *module.Manager
-		clientCtx       client.Context
+		autoCliOpts   autocli.AppOptions
+		moduleManager *runtime.MM[T]
+		clientCtx     client.Context
 	)
 
 	if err := depinject.Inject(
@@ -44,7 +42,6 @@ func NewRootCmd() *cobra.Command {
 				codec.ProvideProtoCodec,
 				codec.ProvideLegacyAmino,
 				ProvideClientContext,
-				ProvideV1ModuleManager,
 			),
 			depinject.Invoke(
 				std.RegisterInterfaces,
@@ -53,7 +50,6 @@ func NewRootCmd() *cobra.Command {
 		),
 		&autoCliOpts,
 		&moduleManager,
-		&v1ModuleManager,
 		&clientCtx,
 	); err != nil {
 		panic(err)
@@ -64,11 +60,7 @@ func NewRootCmd() *cobra.Command {
 		Short:         "simulation app",
 		SilenceErrors: true,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			// set the default command outputs
-			cmd.SetOut(cmd.OutOrStdout())
-			cmd.SetErr(cmd.ErrOrStderr())
-
-			clientCtx = clientCtx.WithCmdContext(cmd.Context()).WithViper("")
+			clientCtx = clientCtx.WithCmdContext(cmd.Context())
 			clientCtx, err := client.ReadPersistentCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -88,12 +80,7 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(
-		rootCmd,
-		clientCtx.TxConfig,
-		moduleManager,
-		v1ModuleManager,
-	)
+	initRootCmd[T](rootCmd, clientCtx.TxConfig, moduleManager)
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
@@ -131,7 +118,7 @@ func ProvideClientContext(
 
 	// Read the config to overwrite the default values with the values from the config file
 	customClientTemplate, customClientConfig := initClientConfig()
-	clientCtx, err = config.ReadDefaultValuesFromDefaultClientConfig(clientCtx, customClientTemplate, customClientConfig)
+	clientCtx, err = config.CreateClientConfig(clientCtx, customClientTemplate, customClientConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -145,8 +132,4 @@ func ProvideClientContext(
 	clientCtx = clientCtx.WithTxConfig(txConfig)
 
 	return clientCtx
-}
-
-func ProvideV1ModuleManager(modules map[string]appmodule.AppModule) *module.Manager {
-	return module.NewManagerFromMap(modules)
 }

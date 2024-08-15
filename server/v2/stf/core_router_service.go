@@ -2,120 +2,70 @@ package stf
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"reflect"
-	"strings"
 
-	"google.golang.org/protobuf/runtime/protoiface"
-
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/router"
+	"cosmossdk.io/core/transaction"
 )
 
 // NewMsgRouterService implements router.Service.
-func NewMsgRouterService(msgRouterBuilder *MsgRouterBuilder) router.Service {
-	msgRouter, err := msgRouterBuilder.Build()
-	if err != nil {
-		panic(fmt.Errorf("cannot create msgRouter: %w", err))
-	}
-
-	return &msgRouterService{
-		builder: msgRouterBuilder,
-		handler: msgRouter,
-	}
+func NewMsgRouterService(identity transaction.Identity) router.Service {
+	return msgRouterService{identity: identity}
 }
 
 var _ router.Service = (*msgRouterService)(nil)
 
 type msgRouterService struct {
-	builder *MsgRouterBuilder
-	handler appmodulev2.Handler
+	// TODO(tip): the identity sits here for the purpose of disallowing modules to impersonate others (sudo).
+	// right now this is not used, but it serves the reminder of something that we should be eventually
+	// looking into.
+	identity []byte
 }
 
 // CanInvoke returns an error if the given message cannot be invoked.
-func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error {
-	if typeURL == "" {
-		return errors.New("missing type url")
-	}
-
-	typeURL = strings.TrimPrefix(typeURL, "/")
-	if exists := m.builder.HandlerExists(typeURL); exists {
-		return fmt.Errorf("unknown request: %s", typeURL)
-	}
-
-	return nil
+func (m msgRouterService) CanInvoke(ctx context.Context, typeURL string) error {
+	return ctx.(*executionContext).msgRouter.CanInvoke(ctx, typeURL)
 }
 
 // InvokeTyped execute a message and fill-in a response.
 // The response must be known and passed as a parameter.
 // Use InvokeUntyped if the response type is not known.
-func (m *msgRouterService) InvokeTyped(ctx context.Context, msg, resp protoiface.MessageV1) error {
-	// see https://github.com/cosmos/cosmos-sdk/pull/20349
-	panic("not implemented")
+func (m msgRouterService) InvokeTyped(ctx context.Context, msg, resp transaction.Msg) error {
+	return ctx.(*executionContext).msgRouter.InvokeTyped(ctx, msg, resp)
 }
 
 // InvokeUntyped execute a message and returns a response.
-func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg protoiface.MessageV1) (protoiface.MessageV1, error) {
-	return m.handler(ctx, msg)
+func (m msgRouterService) InvokeUntyped(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
+	return ctx.(*executionContext).msgRouter.InvokeUntyped(ctx, msg)
 }
 
 // NewQueryRouterService implements router.Service.
-func NewQueryRouterService(queryRouterBuilder *MsgRouterBuilder) router.Service {
-	return &queryRouterService{
-		builder: queryRouterBuilder,
-	}
+func NewQueryRouterService() router.Service {
+	return queryRouterService{}
 }
 
 var _ router.Service = (*queryRouterService)(nil)
 
-type queryRouterService struct {
-	builder *MsgRouterBuilder
-	handler appmodulev2.Handler
-}
+type queryRouterService struct{}
 
 // CanInvoke returns an error if the given request cannot be invoked.
-func (m *queryRouterService) CanInvoke(ctx context.Context, typeURL string) error {
-	if typeURL == "" {
-		return errors.New("missing type url")
-	}
-
-	typeURL = strings.TrimPrefix(typeURL, "/")
-	if exists := m.builder.HandlerExists(typeURL); exists {
-		return fmt.Errorf("unknown request: %s", typeURL)
-	}
-
-	return nil
+func (m queryRouterService) CanInvoke(ctx context.Context, typeURL string) error {
+	return ctx.(*executionContext).queryRouter.CanInvoke(ctx, typeURL)
 }
 
 // InvokeTyped execute a message and fill-in a response.
 // The response must be known and passed as a parameter.
 // Use InvokeUntyped if the response type is not known.
-func (m *queryRouterService) InvokeTyped(
+func (m queryRouterService) InvokeTyped(
 	ctx context.Context,
-	req, resp protoiface.MessageV1,
+	req, resp transaction.Msg,
 ) error {
-	// TODO lazy initialization is ugly and not thread safe. we don't want to check a mutex on every InvokeTyped either.
-	if m.handler == nil {
-		var err error
-		m.handler, err = m.builder.Build()
-		if err != nil {
-			return fmt.Errorf("cannot create queryRouter: %w", err)
-		}
-	}
-	// reflection is required, see https://github.com/cosmos/cosmos-sdk/pull/20349
-	res, err := m.handler(ctx, req)
-	if err != nil {
-		return err
-	}
-	reflect.Indirect(reflect.ValueOf(resp)).Set(reflect.Indirect(reflect.ValueOf(res)))
-	return nil
+	return ctx.(*executionContext).queryRouter.InvokeTyped(ctx, req, resp)
 }
 
 // InvokeUntyped execute a message and returns a response.
-func (m *queryRouterService) InvokeUntyped(
+func (m queryRouterService) InvokeUntyped(
 	ctx context.Context,
-	req protoiface.MessageV1,
-) (protoiface.MessageV1, error) {
-	return m.handler(ctx, req)
+	req transaction.Msg,
+) (transaction.Msg, error) {
+	return ctx.(*executionContext).queryRouter.InvokeUntyped(ctx, req)
 }

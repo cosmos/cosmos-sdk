@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pelletier/go-toml/v2"
+	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
@@ -21,12 +23,15 @@ type ServerComponent[T transaction.Tx] interface {
 
 	Start(context.Context) error
 	Stop(context.Context) error
-	Init(AppI[T], *viper.Viper, log.Logger) (ServerComponent[T], error)
+	Init(AppI[T], *viper.Viper, log.Logger) error
 }
 
-// HasCLICommands is a server module that has CLI commands.
-type HasCLICommands interface {
-	CLICommands() CLIConfig
+// HasStartFlags is a server module that has start flags.
+type HasStartFlags interface {
+	// StartCmdFlags returns server start flags.
+	// Those flags should be prefixed with the server name.
+	// They are then merged with the server config in one viper instance.
+	StartCmdFlags() *pflag.FlagSet
 }
 
 // HasConfig is a server module that has a config.
@@ -34,52 +39,46 @@ type HasConfig interface {
 	Config() any
 }
 
-// HasStartFlags is a server module that has start flags.
-type HasStartFlags interface {
-	StartCmdFlags() *pflag.FlagSet
+// HasCLICommands is a server module that has CLI commands.
+type HasCLICommands interface {
+	CLICommands() CLIConfig
 }
 
-var _ ServerComponent[transaction.Tx] = (*Server)(nil)
-
-// Configs returns a viper instance of the config file
-func ReadConfig(configPath string) (*viper.Viper, error) {
-	v := viper.New()
-
-	v.SetConfigType("toml")
-	v.SetConfigName("config")
-	v.AddConfigPath(configPath)
-	if err := v.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to read config: %s: %w", configPath, err)
-	}
-
-	v.SetConfigName("app")
-	if err := v.MergeInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to merge configuration: %w", err)
-	}
-
-	v.WatchConfig()
-
-	return v, nil
+// CLIConfig defines the CLI configuration for a module server.
+type CLIConfig struct {
+	// Commands defines the main command of a module server.
+	Commands []*cobra.Command
+	// Queries defines the query commands of a module server.
+	// Those commands are meant to be added in the root query command.
+	Queries []*cobra.Command
+	// Txs defines the tx commands of a module server.
+	// Those commands are meant to be added in the root tx command.
+	Txs []*cobra.Command
 }
 
-type Server struct {
+var _ ServerComponent[transaction.Tx] = (*Server[transaction.Tx])(nil)
+
+type Server[T transaction.Tx] struct {
 	logger     log.Logger
-	components []ServerComponent[transaction.Tx]
+	components []ServerComponent[T]
 }
 
-func NewServer(logger log.Logger, components ...ServerComponent[transaction.Tx]) *Server {
-	return &Server{
+func NewServer[T transaction.Tx](
+	logger log.Logger,
+	components ...ServerComponent[T],
+) *Server[T] {
+	return &Server[T]{
 		logger:     logger,
 		components: components,
 	}
 }
 
-func (s *Server) Name() string {
+func (s *Server[T]) Name() string {
 	return "server"
 }
 
 // Start starts all components concurrently.
-func (s *Server) Start(ctx context.Context) error {
+func (s *Server[T]) Start(ctx context.Context) error {
 	s.logger.Info("starting servers...")
 
 	g, ctx := errgroup.WithContext(ctx)
@@ -94,16 +93,13 @@ func (s *Server) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to start servers: %w", err)
 	}
 
-	serverCfg := ctx.Value(ServerContextKey).(Config)
-	if serverCfg.StartBlock {
-		<-ctx.Done()
-	}
+	<-ctx.Done()
 
 	return nil
 }
 
 // Stop stops all components concurrently.
-func (s *Server) Stop(ctx context.Context) error {
+func (s *Server[T]) Stop(ctx context.Context) error {
 	s.logger.Info("stopping servers...")
 
 	g, ctx := errgroup.WithContext(ctx)
@@ -118,13 +114,37 @@ func (s *Server) Stop(ctx context.Context) error {
 }
 
 // CLICommands returns all CLI commands of all components.
-func (s *Server) CLICommands() CLIConfig {
+func (s *Server[T]) CLICommands() CLIConfig {
+	compart := func(name string, cmds ...*cobra.Command) *cobra.Command {
+		if len(cmds) == 1 && strings.HasPrefix(cmds[0].Use, name) {
+			return cmds[0]
+		}
+
+		subCmd := &cobra.Command{
+			Use:   name,
+			Short: fmt.Sprintf("Commands from the %s server component", name),
+		}
+		subCmd.AddCommand(cmds...)
+
+		return subCmd
+	}
+
 	commands := CLIConfig{}
 	for _, mod := range s.components {
 		if climod, ok := mod.(HasCLICommands); ok {
-			commands.Commands = append(commands.Commands, climod.CLICommands().Commands...)
-			commands.Queries = append(commands.Queries, climod.CLICommands().Queries...)
-			commands.Txs = append(commands.Txs, climod.CLICommands().Txs...)
+			srvCmd := climod.CLICommands()
+
+			if len(srvCmd.Commands) > 0 {
+				commands.Commands = append(commands.Commands, compart(mod.Name(), srvCmd.Commands...))
+			}
+
+			if len(srvCmd.Txs) > 0 {
+				commands.Txs = append(commands.Txs, compart(mod.Name(), srvCmd.Txs...))
+			}
+
+			if len(srvCmd.Queries) > 0 {
+				commands.Queries = append(commands.Queries, compart(mod.Name(), srvCmd.Queries...))
+			}
 		}
 	}
 
@@ -132,7 +152,7 @@ func (s *Server) CLICommands() CLIConfig {
 }
 
 // Configs returns all configs of all server components.
-func (s *Server) Configs() map[string]any {
+func (s *Server[T]) Configs() map[string]any {
 	cfgs := make(map[string]any)
 	for _, mod := range s.components {
 		if configmod, ok := mod.(HasConfig); ok {
@@ -144,25 +164,26 @@ func (s *Server) Configs() map[string]any {
 	return cfgs
 }
 
-// Configs returns all configs of all server components.
-func (s *Server) Init(appI AppI[transaction.Tx], v *viper.Viper, logger log.Logger) (ServerComponent[transaction.Tx], error) {
-	var components []ServerComponent[transaction.Tx]
+// Init initializes all server components with the provided application, configuration, and logger.
+// It returns an error if any component fails to initialize.
+func (s *Server[T]) Init(appI AppI[T], v *viper.Viper, logger log.Logger) error {
+	var components []ServerComponent[T]
 	for _, mod := range s.components {
 		mod := mod
-		module, err := mod.Init(appI, v, logger)
-		if err != nil {
-			return nil, err
+		if err := mod.Init(appI, v, logger); err != nil {
+			return err
 		}
-		components = append(components, module)
-	}
-	s.components = components
 
-	return s, nil
+		components = append(components, mod)
+	}
+
+	s.components = components
+	return nil
 }
 
 // WriteConfig writes the config to the given path.
 // Note: it does not use viper.WriteConfigAs because we do not want to store flag values in the config.
-func (s *Server) WriteConfig(configPath string) error {
+func (s *Server[T]) WriteConfig(configPath string) error {
 	cfgs := s.Configs()
 	b, err := toml.Marshal(cfgs)
 	if err != nil {
@@ -180,8 +201,11 @@ func (s *Server) WriteConfig(configPath string) error {
 	}
 
 	for _, component := range s.components {
-		if mod, ok := component.(interface{ WriteDefaultConfigAt(string) error }); ok {
-			if err := mod.WriteDefaultConfigAt(configPath); err != nil {
+		// undocumented interface to write the component default config in another file than app.toml
+		// it is used by cometbft for backward compatibility
+		// it should not be used by other components
+		if mod, ok := component.(interface{ WriteCustomConfigAt(string) error }); ok {
+			if err := mod.WriteCustomConfigAt(configPath); err != nil {
 				return err
 			}
 		}
@@ -190,8 +214,8 @@ func (s *Server) WriteConfig(configPath string) error {
 	return nil
 }
 
-// Flags returns all flags of all server components.
-func (s *Server) StartFlags() []*pflag.FlagSet {
+// StartFlags returns all flags of all server components.
+func (s *Server[T]) StartFlags() []*pflag.FlagSet {
 	flags := []*pflag.FlagSet{}
 	for _, mod := range s.components {
 		if startmod, ok := mod.(HasStartFlags); ok {

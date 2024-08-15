@@ -8,8 +8,6 @@ import (
 	"cosmossdk.io/x/accounts"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-
-	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the sample SimApp upgrade
@@ -20,7 +18,7 @@ import (
 // v0.50.x to v0.51.x.
 const UpgradeName = "v050-to-v051"
 
-func (app *SimApp) RegisterUpgradeHandlers() {
+func (app *SimApp[T]) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,
 		func(ctx context.Context, _ upgradetypes.Plan, fromVM appmodule.VersionMap) (appmodule.VersionMap, error) {
@@ -39,9 +37,7 @@ func (app *SimApp) RegisterUpgradeHandlers() {
 				accounts.ModuleName,
 				protocolpooltypes.ModuleName,
 			},
-			Deleted: []string{
-				crisistypes.ModuleName, // The SDK discontinued the crisis module in v0.51.0
-			},
+			Deleted: []string{"crisis"}, // The SDK discontinued the crisis module in v0.52.0
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades

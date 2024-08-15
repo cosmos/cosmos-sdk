@@ -2,20 +2,17 @@ package simapp
 
 import (
 	_ "embed"
-	"os"
-	"path/filepath"
 
 	"github.com/spf13/viper"
 
+	clienthelpers "cosmossdk.io/client/v2/helpers"
 	coreapp "cosmossdk.io/core/app"
 	"cosmossdk.io/core/legacy"
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
-	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/commitment/iavl"
-	"cosmossdk.io/store/v2/db"
-	"cosmossdk.io/store/v2/root"
+	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/x/accounts"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
@@ -36,11 +33,10 @@ import (
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 // DefaultNodeHome default home directories for the application daemon
@@ -49,8 +45,8 @@ var DefaultNodeHome string
 // SimApp extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
-type SimApp struct {
-	*runtime.App
+type SimApp[T transaction.Tx] struct {
+	*runtime.App[T]
 	legacyAmino       legacy.Amino
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
@@ -77,12 +73,11 @@ type SimApp struct {
 }
 
 func init() {
-	userHomeDir, err := os.UserHomeDir()
+	var err error
+	DefaultNodeHome, err = clienthelpers.GetNodeHomeDirectory(".simappv2")
 	if err != nil {
 		panic(err)
 	}
-
-	DefaultNodeHome = filepath.Join(userHomeDir, ".simappv2")
 }
 
 // AppConfig returns the default app config.
@@ -93,40 +88,21 @@ func AppConfig() depinject.Config {
 }
 
 // NewSimApp returns a reference to an initialized SimApp.
-func NewSimApp(
+func NewSimApp[T transaction.Tx](
 	logger log.Logger,
 	viper *viper.Viper,
-) *SimApp {
-	homeDir := viper.Get(flags.FlagHome).(string) // TODO
-	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(homeDir, "data"), nil)
-	if err != nil {
-		panic(err)
-	}
+) *SimApp[T] {
+	viper.Set(serverv2.FlagHome, DefaultNodeHome) // TODO possibly set earlier when viper is created
 	var (
-		app        = &SimApp{}
-		appBuilder *runtime.AppBuilder
+		app        = &SimApp[T]{}
+		appBuilder *runtime.AppBuilder[T]
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
 			AppConfig(),
 			depinject.Supply(
 				logger,
-				&root.FactoryOptions{
-					Logger:  logger,
-					RootDir: homeDir,
-					SSType:  0,
-					SCType:  0,
-					SCPruneOptions: &store.PruneOptions{
-						KeepRecent: 0,
-						Interval:   0,
-					},
-					IavlConfig: &iavl.Config{
-						CacheSize:              100_000,
-						SkipFastStorageUpgrade: true,
-					},
-					SCRawDB: scRawDb,
-				},
-				servertypes.AppOptions(viper),
+				viper,
 
 				// ADVANCED CONFIGURATION
 
@@ -207,6 +183,7 @@ func NewSimApp(
 		panic(err)
 	}
 
+	var err error
 	app.App, err = appBuilder.Build()
 	if err != nil {
 		panic(err)
@@ -225,7 +202,6 @@ func NewSimApp(
 	if err := app.LoadLatest(); err != nil {
 		panic(err)
 	}
-
 	return app
 }
 
@@ -233,26 +209,26 @@ func NewSimApp(
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *SimApp) AppCodec() codec.Codec {
+func (app *SimApp[T]) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
 // InterfaceRegistry returns SimApp's InterfaceRegistry.
-func (app *SimApp) InterfaceRegistry() coreapp.InterfaceRegistry {
+func (app *SimApp[T]) InterfaceRegistry() coreapp.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 
 // TxConfig returns SimApp's TxConfig.
-func (app *SimApp) TxConfig() client.TxConfig {
+func (app *SimApp[T]) TxConfig() client.TxConfig {
 	return app.txConfig
 }
 
 // GetConsensusAuthority gets the consensus authority.
-func (app *SimApp) GetConsensusAuthority() string {
+func (app *SimApp[T]) GetConsensusAuthority() string {
 	return app.ConsensusParamsKeeper.GetAuthority()
 }
 
 // GetStore gets the app store.
-func (app *SimApp) GetStore() any {
+func (app *SimApp[T]) GetStore() any {
 	return app.App.GetStore()
 }

@@ -25,6 +25,14 @@ type VersionedDatabase interface {
 	io.Closer
 }
 
+// UpgradableDatabase defines an API for a versioned database that allows pruning
+// deleted storeKeys
+type UpgradableDatabase interface {
+	// PruneStoreKeys prunes all data associated with the given storeKeys whenever
+	// the given version is pruned.
+	PruneStoreKeys(storeKeys []string, version uint64) error
+}
+
 // Committer defines an API for committing state.
 type Committer interface {
 	// WriteChangeset writes the changeset to the commitment state.
@@ -51,14 +59,11 @@ type Committer interface {
 	// Once migration is complete, this method should be removed and/or not used.
 	Get(storeKey []byte, version uint64, key []byte) ([]byte, error)
 
-	// SetInitialVersion sets the initial version of the tree.
+	// SetInitialVersion sets the initial version of the committer.
 	SetInitialVersion(version uint64) error
 
 	// GetCommitInfo returns the CommitInfo for the given version.
 	GetCommitInfo(version uint64) (*proof.CommitInfo, error)
-
-	// IsEmpty returns true if the database is empty.
-	IsEmpty() (bool, error)
 
 	// Close releases associated resources. It should NOT be idempotent. It must
 	// only be called once and any call after may panic.

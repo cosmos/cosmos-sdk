@@ -2,6 +2,7 @@ package root
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"sync"
@@ -10,7 +11,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	coreheader "cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/metrics"
@@ -19,14 +20,17 @@ import (
 	"cosmossdk.io/store/v2/pruning"
 )
 
-var _ store.RootStore = (*Store)(nil)
+var (
+	_ store.RootStore        = (*Store)(nil)
+	_ store.UpgradeableStore = (*Store)(nil)
+)
 
 // Store defines the SDK's default RootStore implementation. It contains a single
 // State Storage (SS) backend and a single State Commitment (SC) backend. The SC
 // backend may or may not support multiple store keys and is implementation
 // dependent.
 type Store struct {
-	logger         log.Logger
+	logger         corelog.Logger
 	initialVersion uint64
 
 	// stateStorage reflects the state storage backend
@@ -35,7 +39,8 @@ type Store struct {
 	// stateCommitment reflects the state commitment (SC) backend
 	stateCommitment store.Committer
 
-	// commitHeader reflects the header used when committing state (note, this isn't required and only used for query purposes)
+	// commitHeader reflects the header used when committing state
+	// note, this isn't required and only used for query purposes)
 	commitHeader *coreheader.Info
 
 	// lastCommitInfo reflects the last version/hash that has been committed
@@ -63,7 +68,7 @@ type Store struct {
 //
 // NOTE: The migration manager is optional and can be nil if no migration is required.
 func New(
-	logger log.Logger,
+	logger corelog.Logger,
 	ss store.VersionedDatabase,
 	sc store.Committer,
 	pm *pruning.Manager,
@@ -71,7 +76,7 @@ func New(
 	m metrics.StoreMetrics,
 ) (store.RootStore, error) {
 	return &Store{
-		logger:           logger.With("module", "root_store"),
+		logger:           logger,
 		initialVersion:   1,
 		stateStorage:     ss,
 		stateCommitment:  sc,
@@ -147,8 +152,10 @@ func (s *Store) LastCommitID() (proof.CommitID, error) {
 	if err != nil {
 		return proof.CommitID{}, err
 	}
+	// if the latest version is 0, we return a CommitID with version 0 and a hash of an empty byte slice
+	bz := sha256.Sum256([]byte{})
 
-	return proof.CommitID{Version: latestVersion}, nil
+	return proof.CommitID{Version: latestVersion, Hash: bz[:]}, nil
 }
 
 // GetLatestVersion returns the latest version based on the latest internal
@@ -221,7 +228,7 @@ func (s *Store) LoadLatestVersion() error {
 		return err
 	}
 
-	return s.loadVersion(lv)
+	return s.loadVersion(lv, nil)
 }
 
 func (s *Store) LoadVersion(version uint64) error {
@@ -230,20 +237,67 @@ func (s *Store) LoadVersion(version uint64) error {
 		defer s.telemetry.MeasureSince(now, "root_store", "load_version")
 	}
 
-	return s.loadVersion(version)
+	return s.loadVersion(version, nil)
 }
 
-func (s *Store) loadVersion(v uint64) error {
+// LoadVersionAndUpgrade implements the UpgradeableStore interface.
+//
+// NOTE: It cannot be called while the store is migrating.
+func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreUpgrades) error {
+	if upgrades == nil {
+		return fmt.Errorf("upgrades cannot be nil")
+	}
+
+	if s.telemetry != nil {
+		defer s.telemetry.MeasureSince(time.Now(), "root_store", "load_version_and_upgrade")
+	}
+
+	if s.isMigrating {
+		return fmt.Errorf("cannot upgrade while migrating")
+	}
+
+	if err := s.loadVersion(version, upgrades); err != nil {
+		return err
+	}
+
+	// if the state storage implements the UpgradableDatabase interface, prune the
+	// deleted store keys
+	upgradableDatabase, ok := s.stateStorage.(store.UpgradableDatabase)
+	if ok {
+		if err := upgradableDatabase.PruneStoreKeys(upgrades.Deleted, version); err != nil {
+			return fmt.Errorf("failed to prune store keys %v: %w", upgrades.Deleted, err)
+		}
+	}
+
+	return nil
+}
+
+func (s *Store) loadVersion(v uint64, upgrades *corestore.StoreUpgrades) error {
 	s.logger.Debug("loading version", "version", v)
 
-	if err := s.stateCommitment.LoadVersion(v); err != nil {
-		return fmt.Errorf("failed to load SC version %d: %w", v, err)
+	if upgrades == nil {
+		if err := s.stateCommitment.LoadVersion(v); err != nil {
+			return fmt.Errorf("failed to load SC version %d: %w", v, err)
+		}
+	} else {
+		// if upgrades are provided, we need to load the version and apply the upgrades
+		upgradeableStore, ok := s.stateCommitment.(store.UpgradeableStore)
+		if !ok {
+			return fmt.Errorf("SC store does not support upgrades")
+		}
+		if err := upgradeableStore.LoadVersionAndUpgrade(v, upgrades); err != nil {
+			return fmt.Errorf("failed to load SS version with upgrades %d: %w", v, err)
+		}
 	}
 
 	s.commitHeader = nil
 
 	// set lastCommitInfo explicitly s.t. Commit commits the correct version, i.e. v+1
-	s.lastCommitInfo = &proof.CommitInfo{Version: v}
+	var err error
+	s.lastCommitInfo, err = s.stateCommitment.GetCommitInfo(v)
+	if err != nil {
+		return fmt.Errorf("failed to get commit info for version %d: %w", v, err)
+	}
 
 	// if we're migrating, we need to start the migration process
 	if s.isMigrating {
@@ -257,10 +311,44 @@ func (s *Store) SetCommitHeader(h *coreheader.Info) {
 	s.commitHeader = h
 }
 
+// WorkingHash writes the changeset to SC and SS and returns the workingHash
+// of the CommitInfo.
+func (s *Store) WorkingHash(cs *corestore.Changeset) ([]byte, error) {
+	if s.telemetry != nil {
+		now := time.Now()
+		defer s.telemetry.MeasureSince(now, "root_store", "working_hash")
+	}
+
+	// write the changeset to the SC and SS backends
+	eg := new(errgroup.Group)
+	eg.Go(func() error {
+		if err := s.writeSC(cs); err != nil {
+			return fmt.Errorf("failed to write SC: %w", err)
+		}
+
+		return nil
+	})
+	eg.Go(func() error {
+		if err := s.stateStorage.ApplyChangeset(s.initialVersion, cs); err != nil {
+			return fmt.Errorf("failed to commit SS: %w", err)
+		}
+
+		return nil
+	})
+	if err := eg.Wait(); err != nil {
+		return nil, err
+	}
+
+	workingHash := s.lastCommitInfo.Hash()
+	s.lastCommitInfo.Version -= 1 // reset lastCommitInfo to allow Commit() to work correctly
+
+	return workingHash, nil
+}
+
 // Commit commits all state changes to the underlying SS and SC backends. It
 // writes a batch of the changeset to the SC tree, and retrieves the CommitInfo
-// from the SC tree. Finally, it commits the SC tree and returns the hash of the
-// CommitInfo.
+// from the SC tree. Finally, it commits the SC tree and returns the hash of
+// the CommitInfo.
 func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	if s.telemetry != nil {
 		now := time.Now()
@@ -388,13 +476,8 @@ func (s *Store) writeSC(cs *corestore.Changeset) error {
 		return fmt.Errorf("failed to write batch to SC store: %w", err)
 	}
 
-	isEmpty, err := s.stateCommitment.IsEmpty()
-	if err != nil {
-		return fmt.Errorf("failed to check if SC store is empty: %w", err)
-	}
-
 	var previousHeight, version uint64
-	if isEmpty {
+	if s.lastCommitInfo.GetVersion() == 0 && s.initialVersion > 1 {
 		// This case means that no commit has been made in the store, we
 		// start from initialVersion.
 		version = s.initialVersion
@@ -429,4 +512,8 @@ func (s *Store) commitSC() error {
 	}
 
 	return nil
+}
+
+func (s *Store) Prune(version uint64) error {
+	return s.pruningManager.Prune(version)
 }

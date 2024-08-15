@@ -2,6 +2,7 @@ package config
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -53,26 +54,6 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 	return CreateClientConfig(ctx, "", nil)
 }
 
-// ReadDefaultValuesFromDefaultClientConfig reads default values from default client.toml file and updates them in client.Context
-// The client.toml is then discarded.
-func ReadDefaultValuesFromDefaultClientConfig(ctx client.Context, customClientTemplate string, customConfig interface{}) (client.Context, error) {
-	prevHomeDir := ctx.HomeDir
-	dir, err := os.MkdirTemp("", "simapp")
-	if err != nil {
-		return ctx, fmt.Errorf("couldn't create temp dir: %w", err)
-	}
-	defer os.RemoveAll(dir)
-
-	ctx.HomeDir = dir
-	ctx, err = CreateClientConfig(ctx, customClientTemplate, customConfig)
-	if err != nil {
-		return ctx, fmt.Errorf("couldn't create client config: %w", err)
-	}
-
-	ctx.HomeDir = prevHomeDir
-	return ctx, nil
-}
-
 // CreateClientConfig reads the client.toml file and returns a new populated client.Context
 // If the client.toml file does not exist, it creates one with default values.
 // It takes a customClientTemplate and customConfig as input that can be used to overwrite the default config and enhance the client.toml file.
@@ -88,7 +69,7 @@ func CreateClientConfig(ctx client.Context, customClientTemplate string, customC
 		}
 
 		if (customClientTemplate != "" && customConfig == nil) || (customClientTemplate == "" && customConfig != nil) {
-			return ctx, fmt.Errorf("customClientTemplate and customConfig should be both nil or not nil")
+			return ctx, errors.New("customClientTemplate and customConfig should be both nil or not nil")
 		}
 
 		if customClientTemplate != "" {

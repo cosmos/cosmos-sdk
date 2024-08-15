@@ -10,7 +10,7 @@ import (
 
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -29,7 +29,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
-var consAddr = sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
+var consAddr = sdk.ConsAddress("addr1_______________")
 
 type KeeperTestSuite struct {
 	suite.Suite
@@ -46,7 +46,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(slashingtypes.StoreKey)
 	s.key = key
 	storeService := runtime.NewKVStoreService(key)
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
+	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 	testCtx := sdktestutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now().Round(0).UTC()})
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
@@ -153,7 +153,7 @@ func validatorMissedBlockBitmapKey(v sdk.ConsAddress, chunkIndex int64) []byte {
 func (s *KeeperTestSuite) TestValidatorMissedBlockBMMigrationToColls() {
 	s.SetupTest()
 
-	consAddr := sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
+	consAddr := sdk.ConsAddress("addr1_______________")
 	index := int64(0)
 	err := sdktestutil.DiffCollectionsMigration(
 		s.ctx,

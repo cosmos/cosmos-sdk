@@ -29,7 +29,6 @@ import (
 const ConsensusVersion = 2
 
 var (
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
@@ -37,7 +36,6 @@ var (
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasEndBlocker         = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
@@ -67,6 +65,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper,
 func (AppModule) IsAppModule() {}
 
 // Name returns the group module's name.
+// Deprecated: kept for legacy reasons.
 func (am AppModule) Name() string {
 	return group.ModuleName
 }

@@ -69,6 +69,20 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvB.Value, &paramsB)
 
 			return fmt.Sprintf("%v\n%v", paramsA, paramsB)
+		case bytes.Equal(kvA.Key[:1], types.ValidatorConsPubKeyRotationHistoryKey):
+			var historyA, historyB types.ConsPubKeyRotationHistory
+
+			cdc.MustUnmarshal(kvA.Value, &historyA)
+			cdc.MustUnmarshal(kvB.Value, &historyB)
+
+			return fmt.Sprintf("%v\n%v", historyA, historyB)
+		case bytes.Equal(kvA.Key[:1], types.ValidatorConsensusKeyRotationRecordQueueKey):
+			var historyA, historyB types.ValAddrsOfRotatedConsKeys
+
+			cdc.MustUnmarshal(kvA.Value, &historyA)
+			cdc.MustUnmarshal(kvB.Value, &historyB)
+
+			return fmt.Sprintf("%v\n%v", historyA, historyB)
 		default:
 			panic(fmt.Sprintf("invalid staking key prefix %X", kvA.Key[:1]))
 		}

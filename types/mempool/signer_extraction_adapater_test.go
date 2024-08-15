@@ -1,6 +1,7 @@
 package mempool_test
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -52,7 +53,7 @@ func TestDefaultSignerExtractor(t *testing.T) {
 	ext := mempool.NewDefaultSignerExtractionAdapter()
 	goodTx := testTx{id: 0, priority: 0, nonce: 0, address: sa}
 	badTx := &sigErrTx{getSigs: func() ([]txsigning.SignatureV2, error) {
-		return nil, fmt.Errorf("error")
+		return nil, errors.New("error")
 	}}
 	nonSigVerify := nonVerifiableTx{}
 
@@ -63,7 +64,7 @@ func TestDefaultSignerExtractor(t *testing.T) {
 		err  error
 	}{
 		{name: "valid tx extracts sigs", tx: goodTx, sea: ext, err: nil},
-		{name: "invalid tx fails on sig", tx: badTx, sea: ext, err: fmt.Errorf("err")},
+		{name: "invalid tx fails on sig", tx: badTx, sea: ext, err: errors.New("err")},
 		{name: "non-verifiable tx fails on conversion", tx: nonSigVerify, sea: ext, err: fmt.Errorf("tx of type %T does not implement SigVerifiableTx", nonSigVerify)},
 	}
 	for _, test := range tests {

@@ -1,4 +1,5 @@
-// Package abci contains shared data between the host and plugins.
+// Package streaming provides shared data structures and interfaces for communication
+// between the host application and plugins in a streaming context.
 package streaming
 
 import (
@@ -8,22 +9,20 @@ import (
 	"google.golang.org/grpc"
 )
 
-// Listener is the interface that we're exposing as a streaming service.
-// It hooks into the ABCI message processing of the BaseApp.
-// The error results are propagated to consensus state machine,
-// if you don't want to affect consensus, handle the errors internally and always return `nil` in these APIs.
+// Listener defines the interface for a streaming service that hooks into
+// the ABCI message processing of the BaseApp. Implementations should handle
+// errors internally and return nil if they don't want to affect consensus.
 type Listener interface {
-	// ListenDeliverBlock updates the streaming service with the latest Delivered Block messages
+	// ListenDeliverBlock updates the streaming service with the latest Delivered Block messages.
 	ListenDeliverBlock(context.Context, ListenDeliverBlockRequest) error
-	// ListenCommit updates the steaming service with the latest Commit messages and state changes
+
+	// ListenStateChanges updates the streaming service with the latest Commit messages and state changes.
 	ListenStateChanges(ctx context.Context, changeSet []*StoreKVPair) error
 }
 
-// Handshake is a common handshake that is shared by streaming and host.
-// This prevents users from executing bad plugins or executing a plugin
-// directory. It is a UX feature, not a security feature.
+// Handshake defines the handshake configuration shared by the streaming service and host.
+// It serves as a UX feature to prevent execution of incompatible or unintended plugins.
 var Handshake = plugin.HandshakeConfig{
-	// This isn't required when using VersionedPlugins
 	ProtocolVersion:  1,
 	MagicCookieKey:   "ABCI_LISTENER_PLUGIN",
 	MagicCookieValue: "ef78114d-7bdf-411c-868f-347c99a78345",
@@ -40,11 +39,13 @@ type ListenerGRPCPlugin struct {
 	Impl Listener
 }
 
+// GRPCServer registers the ListenerService server implementation.
 func (p *ListenerGRPCPlugin) GRPCServer(_ *plugin.GRPCBroker, s *grpc.Server) error {
 	RegisterListenerServiceServer(s, &GRPCServer{Impl: p.Impl})
 	return nil
 }
 
+// GRPCClient creates a new ListenerService client.
 func (p *ListenerGRPCPlugin) GRPCClient(
 	_ context.Context,
 	_ *plugin.GRPCBroker,

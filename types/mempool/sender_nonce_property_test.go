@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/log"
 	"cosmossdk.io/x/auth/signing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

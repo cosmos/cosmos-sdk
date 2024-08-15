@@ -14,7 +14,7 @@ func (ts TestStore) Get(bz []byte) ([]byte, error) {
 	return ts.Db.Get(bz)
 }
 
-// // Has checks if a key exists.
+// Has checks if a key exists.
 func (ts TestStore) Has(key []byte) (bool, error) {
 	return ts.Db.Has(key)
 }
@@ -23,18 +23,18 @@ func (ts TestStore) Set(k, v []byte) error {
 	return ts.Db.Set(k, v)
 }
 
-// // SetSync sets the value for the given key, and flushes it to storage before returning.
+// SetSync sets the value for the given key, and flushes it to storage before returning.
 func (ts TestStore) SetSync(k, v []byte) error {
 	return ts.Db.SetSync(k, v)
 }
 
-// // Delete deletes the key, or does nothing if the key does not exist.
-// // CONTRACT: key readonly []byte
+// Delete deletes the key, or does nothing if the key does not exist.
+// CONTRACT: key readonly []byte
 func (ts TestStore) Delete(bz []byte) error {
 	return ts.Db.Delete(bz)
 }
 
-// // DeleteSync deletes the key, and flushes the delete to storage before returning.
+// DeleteSync deletes the key, and flushes the delete to storage before returning.
 func (ts TestStore) DeleteSync(bz []byte) error {
 	return ts.Db.DeleteSync(bz)
 }

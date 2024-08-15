@@ -8,12 +8,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter/keeper"
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 var (
-	_ module.HasName = AppModule{}
-
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 )
@@ -43,7 +40,8 @@ func NewAppModule(keeper keeper.Keeper) AppModule {
 // ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
-// Name returns the consensus module's name.
+// Name returns the module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string { return types.ModuleName }
 
 // RegisterInterfaces registers interfaces and implementations of the bank module.

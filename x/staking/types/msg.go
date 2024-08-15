@@ -1,6 +1,8 @@
 package types
 
 import (
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
 	"cosmossdk.io/core/address"
 	coretransaction "cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
@@ -13,14 +15,14 @@ import (
 )
 
 var (
-	_ coretransaction.Msg                = &MsgCreateValidator{}
-	_ codectypes.UnpackInterfacesMessage = (*MsgCreateValidator)(nil)
-	_ coretransaction.Msg                = &MsgEditValidator{}
-	_ coretransaction.Msg                = &MsgDelegate{}
-	_ coretransaction.Msg                = &MsgUndelegate{}
-	_ coretransaction.Msg                = &MsgBeginRedelegate{}
-	_ coretransaction.Msg                = &MsgCancelUnbondingDelegation{}
-	_ coretransaction.Msg                = &MsgUpdateParams{}
+	_ coretransaction.Msg                  = &MsgCreateValidator{}
+	_ gogoprotoany.UnpackInterfacesMessage = (*MsgCreateValidator)(nil)
+	_ coretransaction.Msg                  = &MsgEditValidator{}
+	_ coretransaction.Msg                  = &MsgDelegate{}
+	_ coretransaction.Msg                  = &MsgUndelegate{}
+	_ coretransaction.Msg                  = &MsgBeginRedelegate{}
+	_ coretransaction.Msg                  = &MsgCancelUnbondingDelegation{}
+	_ coretransaction.Msg                  = &MsgUpdateParams{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -88,8 +90,13 @@ func (msg MsgCreateValidator) Validate(ac address.Codec) error {
 	return nil
 }
 
+// GetMoniker returns the moniker of the validator
+func (msg MsgCreateValidator) GetMoniker() string {
+	return msg.Description.GetMoniker()
+}
+
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (msg MsgCreateValidator) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var pubKey cryptotypes.PubKey
 	return unpacker.UnpackAny(msg.Pubkey, &pubKey)
 }
@@ -160,13 +167,13 @@ func NewMsgRotateConsPubKey(valAddr string, pubKey cryptotypes.PubKey) (*MsgRota
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (msg MsgRotateConsPubKey) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (msg MsgRotateConsPubKey) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var pubKey cryptotypes.PubKey
 	return unpacker.UnpackAny(msg.NewPubkey, &pubKey)
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (hi ConsPubKeyRotationHistory) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (hi ConsPubKeyRotationHistory) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var oldPubKey cryptotypes.PubKey
 	err := unpacker.UnpackAny(hi.OldConsPubkey, &oldPubKey)
 	if err != nil {

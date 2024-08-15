@@ -13,7 +13,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth"
 	authcodec "cosmossdk.io/x/auth/codec"
@@ -62,7 +62,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	suite.Require()
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
+	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
 
@@ -107,7 +107,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	suite.accountNumberLanes = 1
 }
 
-// createAndSetAccount creates a random account and sets to the keeper store.
+// createAndSetAccounts creates a random account and sets to the keeper store.
 func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int) []sdk.AccountI {
 	accs := make([]sdk.AccountI, 0, count)
 
@@ -155,7 +155,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccount() {
 }
 
 // pubkeyGenerator creates and returns a random pubkey generator using rapid.
-func pubkeyGenerator(t *rapid.T) *rapid.Generator[secp256k1.PubKey] {
+func pubkeyGenerator(_ *rapid.T) *rapid.Generator[secp256k1.PubKey] {
 	return rapid.Custom(func(t *rapid.T) secp256k1.PubKey {
 		pkBz := rapid.SliceOfN(rapid.Byte(), 33, 33).Draw(t, "hex")
 		return secp256k1.PubKey{Key: pkBz}

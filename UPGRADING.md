@@ -5,6 +5,39 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
+### BaseApp
+
+#### Nested Messages Simulation
+
+Now it is possible to simulate the nested messages of a message, providing developers with a powerful tool for
+testing and predicting the behavior of complex transactions. This feature allows for a more comprehensive
+evaluation of gas consumption, state changes, and potential errors that may occur when executing nested
+messages. However, it's important to note that while the simulation can provide valuable insights, it does not
+guarantee the correct execution of the nested messages in the future. Factors such as changes in the
+blockchain state or updates to the protocol could potentially affect the actual execution of these nested
+messages when the transaction is finally processed on the network.
+
+For example, consider a governance proposal that includes nested messages to update multiple protocol
+parameters. At the time of simulation, the blockchain state may be suitable for executing all these nested
+messages successfully. However, by the time the actual governance proposal is executed (which could be days or
+weeks later), the blockchain state might have changed significantly. As a result, while the simulation showed
+a successful execution, the actual governance proposal might fail when it's finally processed.
+
+By default, when simulating transactions, the gas cost of nested messages is not calculated. This means that
+only the gas cost of the top-level message is considered. However, this behavior can be customized using the
+`SetIncludeNestedMsgsGas` option when building the BaseApp. By providing a list of message types to this option,
+you can specify which messages should have their nested message gas costs included in the simulation. This
+allows for more accurate gas estimation for transactions involving specific message types that contain nested
+messages, while maintaining the default behavior for other message types.
+
+Here is an example on how `SetIncludeNestedMsgsGas` option could be set to calculate the gas of a gov proposal
+nested messages:
+```go
+baseAppOptions = append(baseAppOptions, baseapp.SetIncludeNestedMsgsGas([]sdk.Message{&gov.MsgSubmitProposal{}}))
+// ...
+app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
+```
+
 ### SimApp
 
 In this section we describe the changes made in Cosmos SDK' SimApp.
@@ -103,7 +136,7 @@ transactions in your application:
 	anteDecorators := []sdk.AnteDecorator{
 		ante.NewSetUpContextDecorator(),
 		// ...
-		ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, app.UnorderedTxManager),
+		ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, options.TxManager, options.Environment),
 		// ...
 	}
 
@@ -170,7 +203,9 @@ There is no longer a need for the Cosmos SDK to host these protos for itself and
 That package containing proto v2 generated code, but the SDK now uses [buf generated go SDK instead](https://buf.build/docs/bsr/generated-sdks/go).
 If you were depending on `cosmossdk.io/api/tendermint`, please use the buf generated go SDK instead, or ask CometBFT host the generated proto v2 code.
 
-The `codectypes.Any` has moved to `github.com/cosmos/gogoproto/types/any`. Module developers can update the `buf.gen.gogo.yaml` configuration files by adjusting the corresponding `opt` option to `Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any` for directly mapping the`Any` type to its new location. This change is optional as `codectypes.Any` is aliased to `gogoproto.Any` in the SDK.
+The `codectypes.Any` has moved to `github.com/cosmos/gogoproto/types/any`. Module developers need to update the `buf.gen.gogo.yaml` configuration files by adjusting the corresponding `opt` option to `Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any` for directly mapping the`Any` type to its new location. This change is optional, but recommended, as `codectypes.Any` is aliased to `gogoproto.Any` in the SDK.
+
+Also, any usages of the interfaces `AnyUnpacker` and `UnpackInterfacesMessage` must be replaced with the interfaces of the same name in the `github.com/cosmos/gogoproto/types/any` package.
 
 ### Modules
 
@@ -276,6 +311,10 @@ Authz was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/authz
 #### `x/bank`
 
 Bank was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/bank`
+
+### `x/crsis`
+
+The Crisis module was removed due to it not being supported or functional any longer. 
 
 #### `x/distribution`
 
@@ -476,7 +515,7 @@ Use `confix` to clean-up your `app.toml`. A nginx (or alike) reverse-proxy can b
 
 #### Database Support
 
-ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use a database migration tool.
+ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from an unsupported database to a supported database please use a database migration tool.
 
 ### Protobuf
 
@@ -689,7 +728,7 @@ And in the application client (usually `root.go`):
 	}
 ```
 
-When using `depinject` / `app v2`, the a tx config should be recreated from the `txConfigOpts` to use `NewGRPCCoinMetadataQueryFn` instead of depending on the bank keeper (that is used in the server).
+When using `depinject` / `app v2`, the tx config should be recreated from the `txConfigOpts` to use `NewGRPCCoinMetadataQueryFn` instead of depending on the bank keeper (that is used in the server).
 
 To learn more see the [docs](https://docs.cosmos.network/main/learn/advanced/transactions#sign_mode_textual) and the [ADR-050](https://docs.cosmos.network/main/build/architecture/adr-050-sign-mode-textual).
 
@@ -1219,7 +1258,7 @@ mistakes.
 
 #### `x/params`
 
-* The `x/params` module has been deprecated in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changeable during runtime have an authority, the authority can be a module or user account. The Cosmos SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363).
+* The `x/params` module has been deprecated in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changeable during runtime has an authority, the authority can be a module or user account. The Cosmos SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363).
 * The Param module will be maintained until April 18, 2023. At this point the module will reach end of life and be removed from the Cosmos SDK.
 
 #### `x/gov`
@@ -1232,11 +1271,11 @@ More information can be found in the gov module [client documentation](https://d
 
 #### `x/staking`
 
-The `staking module` added a new message type to cancel unbonding delegations. Users that have unbonded by accident or wish to cancel a undelegation can now specify the amount and valdiator they would like to cancel the unbond from
+The `staking module` added a new message type to cancel unbonding delegations. Users that have unbonded by accident or wish to cancel an undelegation can now specify the amount and validator they would like to cancel the unbond from
 
 ### Protobuf
 
-The `third_party/proto` folder that existed in [previous version](https://github.com/cosmos/cosmos-sdk/tree/v0.45.3/third_party/proto) now does not contains directly the [proto files](https://github.com/cosmos/cosmos-sdk/tree/release/v0.46.x/third_party/proto).
+The `third_party/proto` folder that existed in [previous version](https://github.com/cosmos/cosmos-sdk/tree/v0.45.3/third_party/proto) now does not contain directly the [proto files](https://github.com/cosmos/cosmos-sdk/tree/release/v0.46.x/third_party/proto).
 
 Instead, the SDK uses [`buf`](https://buf.build). Clients should have their own [`buf.yaml`](https://docs.buf.build/configuration/v1/buf-yaml) with `buf.build/cosmos/cosmos-sdk` as dependency, in order to avoid having to copy paste these files.
 
@@ -1256,4 +1295,4 @@ message MsgSetWithdrawAddress {
 }
 ```
 
-When clients interact with a node they are required to set a codec in in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).
+When clients interact with a node they are required to set a codec in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).

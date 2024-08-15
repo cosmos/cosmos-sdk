@@ -1,6 +1,11 @@
 package context
 
 type (
-	LoggerContextKey struct{}
-	ViperContextKey  struct{}
+	loggerContextKey struct{}
+	viperContextKey  struct{}
+)
+
+var (
+	LoggerContextKey loggerContextKey
+	ViperContextKey  viperContextKey
 )

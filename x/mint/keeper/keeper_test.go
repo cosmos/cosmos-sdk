@@ -1,12 +1,14 @@
 package keeper_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/appmodule"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -42,7 +44,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, mint.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
+	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.ctx = testCtx.Ctx
 
@@ -152,6 +154,17 @@ func (s *KeeperTestSuite) TestBeginBlocker() {
 	newMinter, err := s.mintKeeper.Minter.Get(s.ctx)
 	s.NoError(err)
 	s.NotEqual(minter, newMinter)
+
+	// now use a mintfn that doesn't do anything
+	err = s.mintKeeper.BeginBlocker(s.ctx, func(ctx context.Context, env appmodule.Environment, minter *types.Minter, epochId string, epochNumber int64) error {
+		return nil
+	})
+	s.NoError(err)
+
+	// get minter again and compare
+	unchangedMinter, err := s.mintKeeper.Minter.Get(s.ctx)
+	s.NoError(err)
+	s.Equal(newMinter, unchangedMinter)
 }
 
 func (s *KeeperTestSuite) TestMigrator() {

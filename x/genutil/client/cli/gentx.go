@@ -11,7 +11,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/errors"
 	authclient "cosmossdk.io/x/auth/client"
 	"cosmossdk.io/x/staking/client/cli"
@@ -22,14 +21,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 // GenTxCmd builds the application's gentx command.
-func GenTxCmd(mm *module.Manager, txEncCfg client.TxEncodingConfig, genBalIterator types.GenesisBalancesIterator, valAdddressCodec address.Codec) *cobra.Command {
+func GenTxCmd(genMM genesisMM, genBalIterator types.GenesisBalancesIterator) *cobra.Command {
 	ipDefault, _ := server.ExternalIP()
 	fsCreateValidator, defaultsDesc := cli.CreateValidatorMsgFlagSet(ipDefault)
 
@@ -94,7 +92,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 				return errors.Wrap(err, "failed to unmarshal genesis state")
 			}
 
-			if err = mm.ValidateGenesis(genesisState); err != nil {
+			if err = genMM.ValidateGenesis(genesisState); err != nil {
 				return errors.Wrap(err, "failed to validate genesis state")
 			}
 
@@ -140,11 +138,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 				return err
 			}
 
-			pub, err := key.GetAddress()
-			if err != nil {
-				return err
-			}
-			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(pub)
+			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(addr)
 
 			// The following line comes from a discrepancy between the `gentx`
 			// and `create-validator` commands:
@@ -160,7 +154,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			createValCfg.Amount = amount
 
 			// create a 'create-validator' message
-			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, createValCfg, txFactory, true, valAdddressCodec)
+			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, createValCfg, txFactory, true)
 			if err != nil {
 				return errors.Wrap(err, "failed to build create-validator message")
 			}

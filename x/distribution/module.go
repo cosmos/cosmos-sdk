@@ -28,7 +28,6 @@ import (
 const ConsensusVersion = 4
 
 var (
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
@@ -36,7 +35,6 @@ var (
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasBeginBlocker       = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
@@ -49,13 +47,12 @@ type AppModule struct {
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
-	poolKeeper    types.PoolKeeper
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
 	cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper, poolKeeper types.PoolKeeper,
+	bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper,
 ) AppModule {
 	return AppModule{
 		cdc:           cdc,
@@ -63,7 +60,6 @@ func NewAppModule(
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
 		stakingKeeper: stakingKeeper,
-		poolKeeper:    poolKeeper,
 	}
 }
 
@@ -71,6 +67,7 @@ func NewAppModule(
 func (am AppModule) IsAppModule() {}
 
 // Name returns the distribution module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }

@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/auth/ante/unorderedtx"
 	authtx "cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -41,7 +42,9 @@ import (
 type App struct {
 	*baseapp.BaseApp
 
-	ModuleManager     *module.Manager
+	ModuleManager      *module.Manager
+	UnorderedTxManager *unorderedtx.Manager
+
 	configurator      module.Configurator // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
 	config            *runtimev1alpha1.Module
 	storeKeys         []storetypes.StoreKey

@@ -6,6 +6,7 @@ import (
 	"slices"
 
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/viper"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
@@ -145,7 +146,7 @@ func ProvideApp(
 		msgServiceRouter:  msgServiceRouter,
 		grpcQueryRouter:   grpcQueryRouter,
 	}
-	appBuilder := &AppBuilder{app}
+	appBuilder := &AppBuilder{app: app}
 
 	return appBuilder, msgServiceRouter, grpcQueryRouter, appModule{app}, protoFiles, protoTypes, nil
 }
@@ -160,6 +161,7 @@ type AppInputs struct {
 	BaseAppOptions    []BaseAppOption
 	InterfaceRegistry codectypes.InterfaceRegistry
 	LegacyAmino       legacy.Amino
+	Viper             *viper.Viper
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -170,6 +172,7 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.ModuleManager = inputs.ModuleManager
 	app.ModuleManager.RegisterInterfaces(inputs.InterfaceRegistry)
 	app.ModuleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
+	inputs.AppBuilder.viper = inputs.Viper
 }
 
 func registerStoreKey(wrapper *AppBuilder, key storetypes.StoreKey) {

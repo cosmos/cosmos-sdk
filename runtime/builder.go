@@ -3,10 +3,15 @@ package runtime
 import (
 	"encoding/json"
 	"io"
+	"path/filepath"
 
+	"cosmossdk.io/x/auth/ante/unorderedtx"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/spf13/cast"
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -16,6 +21,8 @@ import (
 // the existing app.go initialization conventions.
 type AppBuilder struct {
 	app *App
+
+	viper *viper.Viper
 }
 
 // DefaultGenesis returns a default genesis from the registered modules.
@@ -39,6 +46,12 @@ func (a *AppBuilder) Build(db dbm.DB, traceStore io.Writer, baseAppOptions ...fu
 
 	a.app.BaseApp = bApp
 	a.app.configurator = module.NewConfigurator(a.app.cdc, a.app.MsgServiceRouter(), a.app.GRPCQueryRouter())
+
+	// register unordered tx manager
+	// create, start, and load the unordered tx manager
+	utxDataDir := filepath.Join(cast.ToString(a.viper.Get(flags.FlagHome)), "data")
+	a.app.UnorderedTxManager = unorderedtx.NewManager(utxDataDir)
+	a.app.UnorderedTxManager.Start()
 
 	if err := a.app.ModuleManager.RegisterServices(a.app.configurator); err != nil {
 		panic(err)

@@ -6,10 +6,9 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
-	"path/filepath"
 
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/spf13/cast"
+	"github.com/spf13/viper"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/appmodule"
@@ -44,7 +43,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -73,8 +71,6 @@ type SimApp struct {
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
-
-	UnorderedTxManager *unorderedtx.Manager
 
 	// keepers
 	AccountsKeeper        accounts.Keeper
@@ -134,7 +130,7 @@ func NewSimApp(
 			AppConfig(),
 			depinject.Supply(
 				// supply the application options
-				appOpts,
+				appOpts.(*viper.Viper),
 				// supply the logger
 				logger,
 				// ADVANCED CONFIGURATION
@@ -290,11 +286,6 @@ func NewSimApp(
 	// 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
 	// 	return app.App.InitChainer(ctx, req)
 	// })
-
-	// create, start, and load the unordered tx manager
-	utxDataDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
-	app.UnorderedTxManager = unorderedtx.NewManager(utxDataDir)
-	app.UnorderedTxManager.Start()
 
 	if err := app.UnorderedTxManager.OnInit(); err != nil {
 		panic(fmt.Errorf("failed to initialize unordered tx manager: %w", err))

@@ -44,7 +44,11 @@ type PostMsgRouter interface {
 	// the provided name.
 	Register(msgName string, handler PostMsgHandler)
 	// RegisterGlobal will register a global message handler hooking after the execution of any message.
-	RegisterGlobal(handler PreMsgHandler)
+	RegisterGlobal(handler PostMsgHandler)
+}
+
+type HasPostMsgHandlers interface {
+	RegisterPostMsgHandlers(router PostMsgRouter)
 }
 
 // query handler

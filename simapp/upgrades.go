@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"cosmossdk.io/core/appmodule"
-	storetypes "cosmossdk.io/store/types"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts"
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	epochstypes "cosmossdk.io/x/epochs/types"
@@ -42,7 +42,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 	}
 
 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := storetypes.StoreUpgrades{
+		storeUpgrades := corestore.StoreUpgrades{
 			Added: []string{
 				accounts.StoreKey,
 				protocolpooltypes.StoreKey,

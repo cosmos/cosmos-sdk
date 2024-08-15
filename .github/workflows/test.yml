@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - release/v0.52.x
 
 permissions:
   contents: read

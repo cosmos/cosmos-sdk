@@ -2,7 +2,7 @@ package v2
 
 import (
 	"cosmossdk.io/log"
-	serverv2 "cosmossdk.io/server/v2"
+	"encoding/json"
 
 	"github.com/spf13/viper"
 )
@@ -14,4 +14,13 @@ type AppExporter func(
 	height int64,
 	jailAllowedAddrs []string,
 	viper *viper.Viper,
-) (serverv2.ExportedApp, error)
+) (ExportedApp, error)
+
+// ExportedApp represents an exported app state, along with
+// validators, consensus params and latest app height.
+type ExportedApp struct {
+	// AppState is the application state as JSON.
+	AppState json.RawMessage
+	// Height is the app's latest block height.
+	Height int64
+}

@@ -146,7 +146,7 @@ func appExport[T transaction.Tx](
 	height int64,
 	jailAllowedAddrs []string,
 	viper *viper.Viper,
-) (serverv2.ExportedApp, error) {
+) (genutilv2.ExportedApp, error) {
 	// overwrite the FlagInvCheckPeriod
 	viper.Set(server.FlagInvCheckPeriod, 1)
 
@@ -155,7 +155,7 @@ func appExport[T transaction.Tx](
 		simApp = simapp.NewSimApp[T](logger, viper)
 
 		if err := simApp.LoadHeight(uint64(height)); err != nil {
-			return serverv2.ExportedApp{}, err
+			return genutilv2.ExportedApp{}, err
 		}
 	} else {
 		simApp = simapp.NewSimApp[T](logger, viper)

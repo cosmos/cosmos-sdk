@@ -348,7 +348,7 @@ func initTestnetFiles(
 			valStr,
 			valPubKeys[i],
 			sdk.NewCoin(args.bondTokenDenom, valTokens),
-			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
+			stakingtypes.NewDescription(nodeDirName, "", "", "", "", nil),
 			stakingtypes.NewCommissionRates(math.LegacyOneDec(), math.LegacyOneDec(), math.LegacyOneDec()),
 			math.OneInt(),
 		)

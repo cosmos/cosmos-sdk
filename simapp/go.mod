@@ -6,12 +6,12 @@ require (
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // main
-	cosmossdk.io/core v0.12.1-0.20240812141913-3e413243db3c // main
-	cosmossdk.io/core/testing v0.0.0-20240812125744-810a542d6bac // indirect; main
+	cosmossdk.io/core v1.0.0 // main
+	cosmossdk.io/core/testing v0.0.0-20240815194237-858ec2fcb897 // indirect; main
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.4.0
 	cosmossdk.io/math v1.3.0
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // main
+	cosmossdk.io/store v1.1.1-0.20240815194237-858ec2fcb897 // main
 	cosmossdk.io/tools/confix v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
@@ -31,7 +31,7 @@ require (
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-20240226161501-23359a0b6d91
-	cosmossdk.io/x/tx v0.13.4-0.20240812125744-810a542d6bac // main
+	cosmossdk.io/x/tx v0.13.4-0.20240815194237-858ec2fcb897 // main
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
 	github.com/cometbft/cometbft v1.0.0-rc1
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
@@ -177,7 +177,7 @@ require (
 	github.com/petermattis/goid v0.0.0-20240327183114-c42a807a84ba // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/client_golang v1.19.1 // indirect
+	github.com/prometheus/client_golang v1.20.0 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
@@ -241,10 +241,12 @@ require (
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
 	// pseudo version lower than the latest tag
-	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240802064046-23fac2f1b8ab // main
+	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 // main
 	cosmossdk.io/client/v2 => ../client/v2
 	// pseudo version lower than the latest tag
-	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240731205446-aee9803a0af6 // main
+	cosmossdk.io/core => cosmossdk.io/core v0.12.1-0.20240815194237-858ec2fcb897 // main
+	// pseudo version lower than the latest tag
+	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240815194237-858ec2fcb897 // main
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/accounts/defaults/lockup => ../x/accounts/defaults/lockup

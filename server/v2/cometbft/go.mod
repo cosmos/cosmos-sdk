@@ -4,8 +4,11 @@ go 1.23
 
 replace (
 	// pseudo version lower than the latest tag
-	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240802064046-23fac2f1b8ab // main
-
+	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 // main
+	// pseudo version lower than the latest tag
+	cosmossdk.io/core => cosmossdk.io/core v0.12.1-0.20240815194237-858ec2fcb897 // main
+	// pseudo version lower than the latest tag
+	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240815194237-858ec2fcb897 // main
 	cosmossdk.io/x/accounts => ../../../x/accounts
 	cosmossdk.io/x/auth => ../../../x/auth
 	cosmossdk.io/x/bank => ../../../x/bank
@@ -17,7 +20,7 @@ replace (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2
 	cosmossdk.io/api v0.8.0
-	cosmossdk.io/core v0.12.1-0.20240812141913-3e413243db3c // main
+	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.0
 	cosmossdk.io/server/v2 v2.0.0-20240802142126-a26970e547ab // main
@@ -46,11 +49,11 @@ require (
 	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/math v1.3.0 // indirect
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
+	cosmossdk.io/store v1.1.1-0.20240815194237-858ec2fcb897 // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/x/tx v0.13.4-0.20240812125744-810a542d6bac // indirect; main
+	cosmossdk.io/x/tx v0.13.4-0.20240815194237-858ec2fcb897 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -110,7 +113,7 @@ require (
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
-	github.com/klauspost/compress v1.17.8 // indirect
+	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
@@ -130,7 +133,7 @@ require (
 	github.com/petermattis/goid v0.0.0-20240327183114-c42a807a84ba // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/client_golang v1.19.1 // indirect
+	github.com/prometheus/client_golang v1.20.0 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect

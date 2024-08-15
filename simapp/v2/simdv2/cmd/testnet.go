@@ -176,14 +176,6 @@ func initTestnetFiles[T transaction.Tx](
 	nodeIDs := make([]string, args.numValidators)
 	valPubKeys := make([]cryptotypes.PubKey, args.numValidators)
 
-	// appConfig := srvconfig.DefaultConfig()
-	// appConfig.MinGasPrices = args.minGasPrices
-	// appConfig.API.Enable = true
-	// appConfig.Telemetry.Enabled = true
-	// appConfig.Telemetry.PrometheusRetentionTime = 60
-	// appConfig.Telemetry.EnableHostnameLabel = false
-	// appConfig.Telemetry.GlobalLabels = [][]string{{"chain_id", args.chainID}}
-
 	var (
 		genAccounts []authtypes.GenesisAccount
 		genBalances []banktypes.Balance
@@ -504,9 +496,5 @@ func writeFile(name, dir string, contents []byte) error {
 		return fmt.Errorf("could not create directory %q: %w", dir, err)
 	}
 
-	if err := os.WriteFile(file, contents, 0o600); err != nil {
-		return err
-	}
-
-	return nil
+	return os.WriteFile(file, contents, 0o600)
 }

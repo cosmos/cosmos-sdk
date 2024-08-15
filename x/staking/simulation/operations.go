@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/types"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 // Simulation operation weights constants
@@ -172,12 +174,20 @@ func SimulateMsgCreateValidator(
 			}
 		}
 
+		metadataValue, err := gogoprotoany.NewAnyWithCacheWithValue(wrapperspb.String(simtypes.RandStringOfLength(r, 10)))
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to generate metadata value"), nil, err
+		}
+
 		description := types.NewDescription(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 10),
+			map[string]*gogoprotoany.Any{
+				simtypes.RandStringOfLength(r, 10): metadataValue,
+			},
 		)
 
 		maxCommission := math.LegacyNewDecWithPrec(int64(simtypes.RandIntBetween(r, 0, 100)), 2)
@@ -271,12 +281,20 @@ func SimulateMsgEditValidator(
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
+		metadataValue, err := gogoprotoany.NewAnyWithCacheWithValue(wrapperspb.String(simtypes.RandStringOfLength(r, 10)))
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to generate metadata value"), nil, err
+		}
+
 		description := types.NewDescription(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 10),
+			map[string]*gogoprotoany.Any{
+				simtypes.RandStringOfLength(r, 10): metadataValue,
+			},
 		)
 
 		msg := types.NewMsgEditValidator(address, description, &newCommissionRate, nil)

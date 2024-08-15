@@ -6,64 +6,115 @@
 
 ## Background
 
+The Cosmos SDK has historically been a Golang only framework for building blockchain applications.
+However, discussions about supporting additional programming languages and virtual machine environments
+have been underway since early 2023.
+Recently we have identified the following key target user groups:
+1. projects that want to primarily target a single programming language and virtual machine environment besides Golang but who still want to use Cosmos SDK internals for consensus and storage
+2. projects that want to integrate multiple programming languages and virtual machine environments into an integrated application
+
+While these two user groups may have substantially different needs,
+the goals of the second group are more challenging to support and require a more clearly specified unified design.
+
+This RFC primarily attempts to address the needs of the second group.
+However, in doing so, it also intends to address the needs of the first group as we will likely build many of the components needed for this group by building an integrated cross-language, cross-VM framework.
+Those needs of the first group which are not satisfactorily addressed by the cross-language framework should be addressed in separate RFCs.
+
 ## Proposal
 
-We propose a conceptual and formal model for defining **accounts** and **modules** which can interoperate with each other through **messages** in a cross-language environment.
+We propose a conceptual and formal model for defining **accounts** and **modules** which can interoperate with each other through **messages** in a cross-language, cross-VM environment.
 
-### Core Concepts
+We start with the conceptual definition of core concepts from the perspective of a developer
+trying to write code for a module or account. 
+The formal details of how these concepts are represented in a specific coding environment may vary significantly,
+however, the essence should remain more or less the same in most coding environments. 
 
-We start with the conceptual definition of some core concepts from the perspective of a developer trying to write code for a module or account. The formal representation of these concepts in a particular coding environment may vary depending on that environment, but the essence should remain more or less the same. Formal system-wide definitions will be given later in the section on the **hypervisor** and **virtual machines**.
+### Account
 
 An **account** is defined as having:
 * a unique **address**
 * an **account handler** which is some code which can process **messages** and send **messages** to other **accounts**
-* some optional **account config** data
+* some optional **account config** bytes
 
-An **address** is defined as a variable-length byte array of up to 255 bytes, although this may be subject to change.
+### Address
+
+An **address** is defined as a variable-length byte array of up to 255 bytes
+so that an address can be represented as a 256-byte array with the first byte indicating the length of the address.
+TODO: a 255-byte is probably way longer than needed and we could likely shorten this to 63 bytes without any negative impact.
+
+### Message
 
 A **message** is defined as a tuple of:
 * a **message name** 
 * and **message data**
 
-When a **message** is sent to an **account**'s code handler, that handler will receive:
+A **message name** is an ASCII string of up to 255 characters so that it can be represented as a 256-byte array with the first byte indicating the length of the string. 
+**Message names** can only contain letters, numbers and the special characters `:`, `_`, `/`, and `.`.
+
+**Message data** will be defined in more detail later.
+
+### Account Handler
+
+The code that implements an account's message handling is known as the **account handler**.
+
+When a **message** is sent to an **account handler**, it will receive:
 * the **address** of the **account** (its own address)
 * the **address** of the account sending the message (the caller), which will be empty if the message is a query
 * the **message name**
 * the **message data**
-* a **gas limit**
-* **account config** data
+* a `uint64` **gas limit**
+* optional **account config** bytes
 
-The handler can then execute some code and return a response or an error.
+The handler can then execute some code and return a response or an error. Details on message responses and errors will be described later.
 
 To send a **message** to another **account**, the caller must specify:
 * the **message name**
 * the **message data**
 * a **gas limit**
-* and optionally, the **address** of the **account** to send the message to
+* optionally, the **address** of the **account** to send the message to
 
-There is a special class of **message name**'s known as **module messages**,
+The handler for a specific message within an **account handler** is known as a **message handler**.
+
+### Modules and Modules Messages
+
+There is a special class of **message**s known as **module messages**,
 where the caller should omit the **address** of the receiving **account**.
 The routing framework can look up the **address** of the receiving **account** based on the **message name** of a **module message**.
 
 **Accounts** which define handlers for **module messages** are known as **modules**.
 
+**Module messages** are distinguished from other messages because their **message name** must start with the `module:` prefix.
+
+The special kind of **account handler** which handles **module messages** is known as a **module handler**.
+A **module** is thus instance an instance of a **module handler** with a specific **address** 
+in the same way that an **account** is an instance of an **account handler**.
+In addition to a bytes **address**, **modules** also have a human-readable **module name**.
+
+More details on **modules** and **module messages** will be given later.
+
+### Account Handler and Message Metadata
+
+Every **account handler** is expected to provide metadata which at a minimum provides:
+* a list of the **message names** it defines **message handlers** for, and
+* the **volatility** of each message handler, described below
+
+Metadata for **account handlers** and **message handlers** can also contain additional bytes
+which for now are not standardized at this level.
+
+### State and Volatility
+
 **Account**s generally also have some mutable state, but within this specification, state is expected to be handled by some special state **module** which is defined by separate specifications.
 
-**Account handlers** should provide metadata about themselves and all the **messages that they handle.
-In the current design, the only part of the **message** metadata
-which is standardized at this level is an enum value, **volatility**,
-which describes the behavior of the handler with respect to state.
-This `volatile` enum can have one of the following values:
+However, the metadata for each message handler in an **account handler** does specify its **volatility**,
+which describes a message handler's behavior with respect to state and side effects.
+**Volatility** is an enum value that can have one of the following values:
 * `volatile`: the handler can have side effects and send `volatile`, `radonly` or `pure` messages to other accounts. Such handlers are expected to both read and write state.
 * `readonly`: the handler cannot cause effects side effects and can only send `readonly` or `pure` messages to other accounts. Such handlers are expected to only read state.
 * `pure`: the handler cannot cause any side effects and can only call other pure handlers. Such handlers are expected to neither read nor write state.
 
-For the time being, further standardization around message metadata is expected to be done at other levels of the stack,
-and as far as this specification is concerned, message metadata should be considered opaque bytes.
-
 ### Account Lifecycle
 
-**Accounts* can be created, destroyed and migrated to new **account handlers**.
+**Accounts** can be created, destroyed and migrated to new **account handlers**.
 
 **Account handlers** can define code for the following special **message name**'s:
 * `on_create`: called when an account is created with **message data** containing arbitrary initialization data
@@ -72,85 +123,64 @@ and as far as this specification is concerned, message metadata should be consid
 
 ### Hypervisor and Virtual Machines
 
-A special module known as the **hypervisor** manages:
-* the mapping of **account address** to **account handler**
-* the mapping of **message name** to **account address** for **module messages**
-* the creation, destruction and migration of accounts
-* storage of state **account config** data
-* **virtual machines** which run **account handlers**
-* routing of **messages** to **account handlers** for both internal and external callers
-* loading of module configuration data (app config)
+Formally, a coding environment where **account handlers** are run is known as a **virtual machine**.
+These **virtual machine**s may or may not be sandboxed virtual machines in the traditional sense.
+For instance, the existing Golang SDK module environment (currently specified by `cosmossdk.io/core`), will
+be known as the "native Golang" virtual machine.
+For consistency, however,
+we refer to these all as **virtual machines** because from the perspective of the cross-language framework,
+they must implement the same interface.
 
-Each **account handler** runs inside in a specific code environment which for simplicity we will refer to as a **virtual machine**.
-These code environments may or may not be sand-boxed **virtual machine**s in the strictest sense.
-For example, one such code environment may be native golang code while another may be an actual WASM virtual machine.
-However, for consistency we will refer to these all as **virtual machines** 
-because the **hypervisor** will interact with them in the same way.
+The special module which manages **virtual machines** and **accounts** is known as the **hypervisor**.
 
-Each **virtual machine** is expected to expose a `handle` function which takes the following parameters:
-* **handler id**, which is a byte array that the **virtual machine** maps to a specific **account handler**
-* **account address**
-* caller **account address**
-* **message name**
-* **message data**
-* **gas limit**
+Each **virtual machine** that is loaded by the **hypervisor** will get a unique **machine id** string.
+Each **account handler** that a **virtual machine** can load is referenced by a unique **handler id** string.
 
-`handle` returns an optional message response, the amount of gas consumed, or an error if the handler failed.
+There are two forms of **handler ids**:
+* **module handlers** which take the form `module:<module_config_name>`
+* **account handlers** which take the form `<machine_id>:<machine_handler_id>`, where `machine_handler_id` is a unique string scoped to the **virtual machine**
 
-Each **virtual machine** environment receives a callback function
-`invoke` which allows it to send messages to other accounts.
-`invoke` takes the following parameters:
-* **message name**
-* target **account address**, which may be empty if the **message name** refers to a **module message**
-* **message data**
-* **gas limit**
+Each **virtual machine** must expose a list of all the **module handlers** it can run,
+and the **hypervisor** will ensure that the **module handlers** are unique across all **virtual machines**.
 
-`invoke` returns the same data as `handle`.
+The **hypervisor** as a first-class **module** itself contains stateful mappings for:
+* **account address** to **handler id** and **account config** 
+* **module name** to module **account address**
+* **message name** to **account address** for **module messages**
 
-**Virtual machine**s should also implement a `describe` function which returns metadata about the code handlers it supports. `describe` takes the **handle id** as an input parameter and returns an array of **message** handler metadata containing:
-- the **message name**
-- its **volatility** enum value 
-- opaque bytes of additional metadata
+Each **virtual machine** is expected to expose a `handle` method
+which takes the same arguments as each **account handler** itself takes plus the **handler id** of the **account handler** to run.
+**Virtual machines** will also receive an `invoke` function
+so that their **account handlers** can send messages to other **accounts**.
+**Virtual machines** must also implement a method to return the metadata for each **account handler** by **handler id**.
 
-The **hypervisor** module itself handles the following **module messages**:
-* `create(code id, account address?)`: creates a new account in the specified code environment with the specified code id and optional pre-defined account address (if not provided, a new address is generated). The `on_create` message is called if it is implemented by the account.
-* `destroy(account address)`: deletes the account with the specified address and calls the `on_destroy` message if it is implemented by the account.
-* `migrate(account address, new code id, miration data)`: migrates the account with the specified address to the new code environment and code id. The `on_migrate` message must be implemented by the new code and must not return an error for migration to succeed. `migrate` can only be called by the account itself (or by the app outside normal execution flow).
-* `force_migrate(account address, new code id, init data, destroy data)`: this can be used when no `on_migrate` handler can perform a proper migration to the new code. In this case, `on_destroy` will be called on the old event, its state will be cleared, and `on_create` will be called on the new code. This is a destructive operation and should be used with caution.
+The **hypervisor** module itself handles the following special **module messages** to manage account
+creation, destruction, and migration:
+* `create(handler id, address?)`: creates a new account in the specified code environment with the specified handler id and optional pre-defined address (if not provided, a new address is generated). The `on_create` message is called if it is implemented by the account.
+* `destroy(address)`: deletes the account with the specified address and calls the `on_destroy` message if it is implemented by the account.
+* `migrate(address, new handler id, migration data)`: migrates the account with the specified address to the new account handler. The `on_migrate` message must be implemented by the new code and must not return an error for migration to succeed. `migrate` can only be called by the account itself.
+* `force_migrate(account address, new handler id, init data, destroy data)`: this can be used when no `on_migrate` handler can perform a proper migration to the new account handler. In this case, `on_destroy` will be called on the old account handler, the account state will be cleared (TODO: how do we safely clear state?), and `on_create` will be called on the new code. This is a destructive operation and should be used with caution.
 
-### Module Lifecycle & Messages
+### Module Lifecycle & Module Messages
 
 For legacy purposes, **modules** have specific lifecycles and **module messages** have special semantics.
+A **module handler** cannot be loaded with the `create` message,
+but must be loaded by an external call to the **hypervisor**
+which includes the **module name** and **module config** bytes (stored as **account config** internally).
+The existing `cosmos.app.v1alpha1.Config` can be used for this purpose if desired.
 
-When the **hypervisor** loads each **virtual machine** environment, it will ask the **virtual machine** to describe all the 
+**Module messages** also allow the definition of pre- and post-handlers.
+These are special **message handlers** that can only be defined in **module handlers**
+and must be prefixed by the `module:pre:` or `module:post:` prefixes
+When modules are loaded in the **hypervisor**, a composite **message handler** will be composed using all the defined
+pre- and post-handlers for a given **message name** in the loaded module set.
+By default, the ordering will be done alphabetically by **module name**.
 
---------------------------------------------
-
-Every **account** runs in a **code environment**. The **hypervisor** contains a stateful mapping from `account address -> (code environment, code id)`. The **hypervisor** executes messages by specifying the **account address** and **message name**.
-
-**Accounts** can register themselves as the default handler for a given message name. When this occurs a **message** can be invoked without knowing the address of the handling module - instead the **hypervisor** knows the mapping from **message name** to default account address. **Accounts** which register default message handlers are known as **modules**. Thus, the **hypervisor** also contains a stateful mapping from `message name -> account address`. TODO: can other accounts handle messages with the same name as messages that have a default handler, i.e. are "modules messages"?? 
-
-Every **code environment** must expose a `handle` function: which takes a `(code id, message data, account address, caller account address?, gas limit)` as input parameters and returns an optional response plus gas consumed. The `handle` function is the entry point for executing messages. `code id`s have a format defined by their code environment, although some common standards may emerge. `message data` is expected to include the message name embedded for routing purposes, and the code environment is expected to parse this data and route it to the appropriate handler. The `caller account address` is specified except when the message is a query (TODO: how to specify queries? - either by message name or with a separate query handler). 
-
-Every code environment receives the following callback functions:
-* `invoke(account address, message data, gas limit)`: sends a message to another account specified by its address
-* `invoke_default(message name, message data, gas limit)`: sends a message to the account registered with the default handler for the given message name, if one exists
-* `register_default_handler(message name)`: registers the account as the default handler for the given message name. This will fail if two accounts try to register as the default handler for the same message name
-
-**Gas limit** parameters are an integer which specifies the maximum number of gas units that may be consumed during the execution of the handler before the code environment returns an error. When each handler returns it should return the amount of gas consumed. Each code environment is expected to track execution cost consistently to avoid unbounded execution. The remaining gas should be passed to each nested call to enforce gas limits across the system.
-
-The following special messages are defined at the framework level and can optionally be implemented by accounts:
-* `on_create(init data)`: called when an account is created
-* `on_destroy(destroy data)`: called when an account is destroyed
-* `on_migrate(old code environment, old code id, migration data)`: called when an account is migrated to a new code environment and id. The previous code environment and id should be used to perform migration operations on the old state. If the old state can't be migrated, then the account should return an error.
-
-The **hypervisor** is itself the **root account** and understands the following special messages: 
-* `create(code environment, code id, account address?)`: creates a new account in the specified code environment with the specified code id and optional pre-defined account address (if not provided, a new address is generated). The `on_create` message is called if it is implemented by the account.
-* `destroy(account address)`: deletes the account with the specified address and calls the `on_destroy` message if it is implemented by the account.
-* `migrate(account address, new code environment, new code id, miration data)`: migrates the account with the specified address to the new code environment and code id. The `on_migrate` message must be implemented by the new code and must not return an error for migration to succeed. `migrate` can only be called by the account itself (or by the app outside normal execution flow).
-* `force_migrate(account address, new code environment, new code id, init data, destroy data)`: this can be used when no `on_migrate` handler can perform a proper migration to the new code. In this case, `on_destroy` will be called on the old event, its state will be cleared, and `on_create` will be called on the new code. This is a destructive operation and should be used with caution.
+### Further Specifications
 
 Any other specifications regarding the encoding of messages, storage, events, transaction execution or interaction with consensus environments should get specified at a level above the cross-language framework. The cross-language framework is intended to be a minimal specification that allows for the execution of messages across different code environments.
+
+-----
 
 TODO: packet sizes and any details of message data and responses? what size packets are allowed?
 

@@ -186,18 +186,3 @@ func (a AppManager[T]) QueryWithState(
 ) (transaction.Msg, error) {
 	return a.stf.Query(ctx, state, a.config.QueryGasLimit, request)
 }
-
-// UnsafeRunWithCtx is made to support genesis, if genesis was just the execution of messages instead
-// of being something custom then we would not need this. PLEASE DO NOT USE.
-// TODO: Remove
-func (a AppManager[T]) UnsafeRunWithCtx(
-	ctx context.Context,
-	closure func(ctx context.Context) error,
-) (corestore.WriterMap, error) {
-	_, st, err := a.db.StateLatest()
-	if err != nil {
-		return nil, fmt.Errorf("unable to get latest state: %w", err)
-	}
-
-	return a.stf.RunWithCtx(ctx, st, closure)
-}

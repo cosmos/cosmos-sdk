@@ -1,10 +1,15 @@
 module cosmossdk.io/x/params
 
-go 1.22.2
+go 1.23
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/core v0.12.1-0.20240812141913-3e413243db3c // main
+=======
+	cosmossdk.io/api v0.7.5
+	cosmossdk.io/core v1.0.0
+>>>>>>> 819330872 (build(deps): use Go 1.23 instead of Go 1.22 (#21280))
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.0

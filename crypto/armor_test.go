@@ -43,7 +43,7 @@ func TestArmorUnarmorPrivKey(t *testing.T) {
 	// empty string
 	decrypted, algo, err = crypto.UnarmorDecryptPrivKey("", "passphrase")
 	require.Error(t, err)
-	require.True(t, errors.Is(io.EOF, err))
+	require.True(t, errors.Is(err, io.EOF))
 	require.Nil(t, decrypted)
 	require.Empty(t, algo)
 
@@ -165,7 +165,7 @@ func TestArmorInfoBytes(t *testing.T) {
 func TestUnarmorInfoBytesErrors(t *testing.T) {
 	unarmoredBytes, err := crypto.UnarmorInfoBytes("")
 	require.Error(t, err)
-	require.True(t, errors.Is(io.EOF, err))
+	require.True(t, errors.Is(err, io.EOF))
 	require.Nil(t, unarmoredBytes)
 
 	header := map[string]string{

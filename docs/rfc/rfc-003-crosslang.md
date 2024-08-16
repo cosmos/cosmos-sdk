@@ -8,7 +8,7 @@
 
 The Cosmos SDK has historically been a Golang only framework for building blockchain applications.
 However, discussions about supporting additional programming languages and virtual machine environments
-have been underway since early 2023.
+have been underway since early 2023. Recently, we have identified the following key target user groups:
 Recently we have identified the following key target user groups:
 1. projects that want to primarily target a single programming language and virtual machine environment besides Golang but who still want to use Cosmos SDK internals for consensus and storage
 2. projects that want to integrate multiple programming languages and virtual machine environments into an integrated application

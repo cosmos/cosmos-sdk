@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	authv1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	stakingv1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/address"
@@ -21,6 +22,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -82,6 +84,10 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	initRootCmd(rootCmd, moduleManager)
+
+	nodeCmds := nodeservice.NewNodeCommands()
+	autoCliOpts.ModuleOptions = make(map[string]*autocliv1.ModuleOptions)
+	autoCliOpts.ModuleOptions[nodeCmds.Name()] = nodeCmds.AutoCLIOptions()
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)

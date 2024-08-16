@@ -16,24 +16,22 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/core/app"
-	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/legacy"
-	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
+	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
 )
 
 var (
 	_ appmodulev2.AppModule = appModule[transaction.Tx]{}
-	_ appmodule.HasServices = appModule[transaction.Tx]{}
+	_ hasServicesV1         = appModule[transaction.Tx]{}
 )
 
 type appModule[T transaction.Tx] struct {
@@ -100,7 +98,6 @@ func init() {
 			ProvideAppBuilder[transaction.Tx],
 			ProvideEnvironment[transaction.Tx],
 			ProvideModuleManager[transaction.Tx],
-			ProvideGenesisTxHandler[transaction.Tx],
 			ProvideCometService,
 			ProvideAppVersionModifier[transaction.Tx],
 		),
@@ -130,11 +127,12 @@ func ProvideAppBuilder[T transaction.Tx](
 
 	msgRouterBuilder := stf.NewMsgRouterBuilder()
 	app := &App[T]{
-		storeKeys:          nil,
-		interfaceRegistrar: interfaceRegistrar,
-		amino:              amino,
-		msgRouterBuilder:   msgRouterBuilder,
-		queryRouterBuilder: stf.NewMsgRouterBuilder(), // TODO dedicated query router
+		storeKeys:               nil,
+		interfaceRegistrar:      interfaceRegistrar,
+		amino:                   amino,
+		msgRouterBuilder:        msgRouterBuilder,
+		queryRouterBuilder:      stf.NewMsgRouterBuilder(), // TODO dedicated query router
+		GRPCMethodsToMessageMap: map[string]func() proto.Message{},
 	}
 	appBuilder := &AppBuilder[T]{app: app}
 
@@ -144,7 +142,6 @@ func ProvideAppBuilder[T transaction.Tx](
 type AppInputs struct {
 	depinject.In
 
-	AppConfig          *appv1alpha1.Config
 	Config             *runtimev2.Module
 	AppBuilder         *AppBuilder[transaction.Tx]
 	ModuleManager      *MM[transaction.Tx]
@@ -157,7 +154,6 @@ type AppInputs struct {
 func SetupAppBuilder(inputs AppInputs) {
 	app := inputs.AppBuilder.app
 	app.config = inputs.Config
-	app.appConfig = inputs.AppConfig
 	app.logger = inputs.Logger
 	app.moduleManager = inputs.ModuleManager
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistrar)
@@ -177,7 +173,12 @@ func ProvideModuleManager[T transaction.Tx](
 }
 
 // ProvideEnvironment provides the environment for keeper modules, while maintaining backward compatibility and provide services directly as well.
-func ProvideEnvironment[T transaction.Tx](logger log.Logger, config *runtimev2.Module, key depinject.ModuleKey, appBuilder *AppBuilder[T]) (
+func ProvideEnvironment[T transaction.Tx](
+	logger log.Logger,
+	config *runtimev2.Module,
+	key depinject.ModuleKey,
+	appBuilder *AppBuilder[T],
+) (
 	appmodulev2.Environment,
 	store.KVStoreService,
 	store.MemoryStoreService,
@@ -233,10 +234,6 @@ func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.St
 	}
 
 	return nil
-}
-
-func ProvideGenesisTxHandler[T transaction.Tx](appBuilder *AppBuilder[T]) genesis.TxHandler {
-	return appBuilder.app
 }
 
 func ProvideCometService() comet.Service {

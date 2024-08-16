@@ -14,14 +14,15 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/cometbft"
+	"cosmossdk.io/server/v2/store"
 	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -40,7 +41,7 @@ import (
 )
 
 var (
-	flagMinGasPrices      = "min-gas-prices"
+	flagMinGasPrices      = "minimum-gas-prices"
 	flagNodeDirPrefix     = "node-dir-prefix"
 	flagNumValidators     = "validator-count"
 	flagOutputDir         = "output-dir"
@@ -342,8 +343,9 @@ func initTestnetFiles[T transaction.Tx](
 			cometbft.ServerOptions[T]{},
 			cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig),
 		)
+		storeServer := store.New[T](newApp)
 		grpcServer := grpc.New[T](grpc.OverwriteDefaultConfig(grpcConfig))
-		server := serverv2.NewServer(coretesting.NewNopLogger(), cometServer, grpcServer)
+		server := serverv2.NewServer(log.NewNopLogger(), cometServer, grpcServer, storeServer)
 		err = server.WriteConfig(filepath.Join(nodeDir, "config"))
 		if err != nil {
 			return err
@@ -364,7 +366,7 @@ func initTestnetFiles[T transaction.Tx](
 	}
 
 	// Update viper root since root dir become rootdir/node/simd
-	client.GetViperFromCmd(cmd).Set(flags.FlagHome, nodeConfig.RootDir)
+	serverv2.GetViperFromCmd(cmd).Set(flags.FlagHome, nodeConfig.RootDir)
 
 	cmd.PrintErrf("Successfully initialized %d node directories\n", args.numValidators)
 	return nil

@@ -35,7 +35,6 @@ var (
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasBeginBlocker       = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
@@ -48,13 +47,12 @@ type AppModule struct {
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
-	poolKeeper    types.PoolKeeper
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
 	cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper, poolKeeper types.PoolKeeper,
+	bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper,
 ) AppModule {
 	return AppModule{
 		cdc:           cdc,
@@ -62,7 +60,6 @@ func NewAppModule(
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
 		stakingKeeper: stakingKeeper,
-		poolKeeper:    poolKeeper,
 	}
 }
 

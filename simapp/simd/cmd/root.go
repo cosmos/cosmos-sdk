@@ -18,6 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -121,6 +122,9 @@ func NewRootCmd() *cobra.Command {
 
 	autoCliOpts := tempApp.AutoCliOpts()
 	autoCliOpts.ClientCtx = initClientCtx
+
+	nodeCmds := nodeservice.NewNodeCommands()
+	autoCliOpts.ModuleOptions[nodeCmds.Name()] = nodeCmds.AutoCLIOptions()
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)

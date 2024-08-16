@@ -16,6 +16,7 @@ import (
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	grpc "cosmossdk.io/server/v2/api/grpc"
+	"cosmossdk.io/server/v2/appmanager"
 )
 
 type mockInterfaceRegistry struct{}
@@ -31,6 +32,14 @@ func (*mockInterfaceRegistry) ListAllInterfaces() []string { panic("not implemen
 
 type mockApp[T transaction.Tx] struct {
 	serverv2.AppI[T]
+}
+
+func (*mockApp[T]) GetGPRCMethodsToMessageMap() map[string]func() gogoproto.Message {
+	return map[string]func() gogoproto.Message{}
+}
+
+func (*mockApp[T]) GetAppManager() *appmanager.AppManager[T] {
+	return nil
 }
 
 func (*mockApp[T]) InterfaceRegistry() coreapp.InterfaceRegistry {

@@ -51,6 +51,21 @@ var deeplyNestedRepeatedSigner = &testpb.DeeplyNestedRepeatedSigner{
 	},
 }
 
+func TestGetGetSignersFnConcurrent(t *testing.T) {
+	ctx, err := NewContext(Options{
+		AddressCodec:          dummyAddressCodec{},
+		ValidatorAddressCodec: dummyValidatorAddressCodec{},
+	})
+	require.NoError(t, err)
+
+	desc := (&testpb.RepeatedSigner{}).ProtoReflect().Descriptor()
+	for i := 0; i < 50; i++ {
+		go func() {
+			_, _ = ctx.getGetSignersFn(desc)
+		}()
+	}
+}
+
 func TestGetSigners(t *testing.T) {
 	ctx, err := NewContext(Options{
 		AddressCodec:          dummyAddressCodec{},

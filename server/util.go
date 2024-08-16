@@ -25,7 +25,6 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	corectx "cosmossdk.io/core/context"
-	corelog "cosmossdk.io/core/log"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
@@ -51,7 +50,7 @@ const ServerContextKey = sdk.ContextKey("server.context")
 type Context struct {
 	Viper  *viper.Viper
 	Config *cmtcfg.Config
-	Logger corelog.Logger
+	Logger log.Logger
 }
 
 func NewDefaultContext() *Context {
@@ -169,7 +168,7 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 	return serverCtx, nil
 }
 
-// CreateSDKLogger creates a the default SDK logger.
+// CreateSDKLogger creates the default SDK logger.
 // It reads the log level and format from the server context.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	var opts []log.Option
@@ -354,6 +353,7 @@ func AddCommands[T types.Application](rootCmd *cobra.Command, appCreator types.A
 		cometCmd,
 		version.NewVersionCommand(),
 		NewRollbackCmd(appCreator),
+		ModuleHashByHeightQuery(appCreator),
 	)
 }
 

@@ -20,15 +20,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
-func useUpgradeLoader(height int64, upgrades *storetypes.StoreUpgrades) func(*baseapp.BaseApp) {
-	return func(app *baseapp.BaseApp) {
-		app.SetStoreLoader(UpgradeStoreLoader(height, upgrades))
-	}
-}
-
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 	t.Helper()
-	rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	rs := rootmulti.NewStore(db, coretesting.NewNopLogger(), metrics.NewNoOpMetrics())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := storetypes.NewKVStoreKey(storeKey)
 	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
@@ -46,7 +40,7 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 
 func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
 	t.Helper()
-	rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	rs := rootmulti.NewStore(db, coretesting.NewNopLogger(), metrics.NewNoOpMetrics())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := storetypes.NewKVStoreKey(storeKey)
 	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
@@ -93,16 +87,6 @@ func TestSetLoader(t *testing.T) {
 			origStoreKey: "foo",
 			loadStoreKey: "foo",
 		},
-		"rename with inline opts": {
-			setLoader: useUpgradeLoader(upgradeHeight, &storetypes.StoreUpgrades{
-				Renamed: []storetypes.StoreRename{{
-					OldKey: "foo",
-					NewKey: "bar",
-				}},
-			}),
-			origStoreKey: "foo",
-			loadStoreKey: "bar",
-		},
 	}
 
 	k := []byte("key")
@@ -119,9 +103,9 @@ func TestSetLoader(t *testing.T) {
 			// load the app with the existing db
 			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))}
 
-			logger := coretesting.NewNopLogger()
+			logger := log.NewNopLogger()
 
-			oldApp := baseapp.NewBaseApp(t.Name(), logger.With("instance", "orig"), db, nil, opts...)
+			oldApp := baseapp.NewBaseApp(t.Name(), logger, db, nil, opts...)
 			oldApp.MountStores(storetypes.NewKVStoreKey(tc.origStoreKey))
 
 			err := oldApp.LoadLatestVersion()

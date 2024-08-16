@@ -5,6 +5,45 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
+### BaseApp
+
+#### Nested Messages Simulation
+
+Now it is possible to simulate the nested messages of a message, providing developers with a powerful tool for
+testing and predicting the behavior of complex transactions. This feature allows for a more comprehensive
+evaluation of gas consumption, state changes, and potential errors that may occur when executing nested
+messages. However, it's important to note that while the simulation can provide valuable insights, it does not
+guarantee the correct execution of the nested messages in the future. Factors such as changes in the
+blockchain state or updates to the protocol could potentially affect the actual execution of these nested
+messages when the transaction is finally processed on the network.
+
+For example, consider a governance proposal that includes nested messages to update multiple protocol
+parameters. At the time of simulation, the blockchain state may be suitable for executing all these nested
+messages successfully. However, by the time the actual governance proposal is executed (which could be days or
+weeks later), the blockchain state might have changed significantly. As a result, while the simulation showed
+a successful execution, the actual governance proposal might fail when it's finally processed.
+
+By default, when simulating transactions, the gas cost of nested messages is not calculated. This means that
+only the gas cost of the top-level message is considered. However, this behavior can be customized using the
+`SetIncludeNestedMsgsGas` option when building the BaseApp. By providing a list of message types to this option,
+you can specify which messages should have their nested message gas costs included in the simulation. This
+allows for more accurate gas estimation for transactions involving specific message types that contain nested
+messages, while maintaining the default behavior for other message types.
+
+Here is an example on how `SetIncludeNestedMsgsGas` option could be set to calculate the gas of a gov proposal
+nested messages:
+
+```go
+baseAppOptions = append(baseAppOptions, baseapp.SetIncludeNestedMsgsGas([]sdk.Message{&gov.MsgSubmitProposal{}}))
+// ...
+app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
+```
+
+## [v0.52.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-alpha.0)
+
+Documentation to migrate an application from v0.50.x to server/v2 is available elsewhere.
+It is additional to the changes described here.
+
 ### SimApp
 
 In this section we describe the changes made in Cosmos SDK' SimApp.
@@ -103,7 +142,7 @@ transactions in your application:
 	anteDecorators := []sdk.AnteDecorator{
 		ante.NewSetUpContextDecorator(),
 		// ...
-		ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, app.UnorderedTxManager),
+		ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, options.TxManager, options.Environment),
 		// ...
 	}
 
@@ -149,8 +188,7 @@ for more details.
 ### Depinject `app_config.go` / `app.yml`
 
 With the introduction of [environment in modules](#core-api), depinject automatically creates the environment for all modules.
-Learn more about environment [here](https://example.com) <!-- TODO -->. Given the fields of environment, this means runtime creates a kv store service for all modules by default.
-It can happen that some modules do not have a store necessary (such as `x/auth/tx` for instance). In this case, the store creation should be skipped in `app_config.go`:
+Learn more about environment [here](https://example.com) <!-- TODO -->. Given the fields of environment, this means runtime creates a kv store service for all modules by default. It can happen that some modules do not have a store necessary (such as `x/auth/tx` for instance). In this case, the store creation should be skipped in `app_config.go`:
 
 ```diff
 InitGenesis: []string{
@@ -170,7 +208,20 @@ There is no longer a need for the Cosmos SDK to host these protos for itself and
 That package containing proto v2 generated code, but the SDK now uses [buf generated go SDK instead](https://buf.build/docs/bsr/generated-sdks/go).
 If you were depending on `cosmossdk.io/api/tendermint`, please use the buf generated go SDK instead, or ask CometBFT host the generated proto v2 code.
 
-The `codectypes.Any` has moved to `github.com/cosmos/gogoproto/types/any`. Module developers need to update the `buf.gen.gogo.yaml` configuration files by adjusting the corresponding `opt` option to `Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any` for directly mapping the`Any` type to its new location. This change is optional, but recommended, as `codectypes.Any` is aliased to `gogoproto.Any` in the SDK.
+The `codectypes.Any` has moved to `github.com/cosmos/gogoproto/types/any`. Module developers need to update the `buf.gen.gogo.yaml` configuration files by adjusting the corresponding `opt` option to `Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any` for directly mapping the`Any` type to its new location:
+
+```diff
+version: v1
+plugins:
+  - name: gocosmos
+    out: ..
+- 	 opt: plugins=grpc,Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types,Mcosmos/orm/v1/orm.proto=cosmossdk.io/orm
++    opt: plugins=grpc,Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any,Mcosmos/orm/v1/orm.proto=cosmossdk.io/orm
+  - name: grpc-gateway
+    out: ..
+    opt: logtostderr=true,allow_colon_final_segments=true
+
+```
 
 Also, any usages of the interfaces `AnyUnpacker` and `UnpackInterfacesMessage` must be replaced with the interfaces of the same name in the `github.com/cosmos/gogoproto/types/any` package.
 
@@ -695,7 +746,7 @@ And in the application client (usually `root.go`):
 	}
 ```
 
-When using `depinject` / `app v2`, the a tx config should be recreated from the `txConfigOpts` to use `NewGRPCCoinMetadataQueryFn` instead of depending on the bank keeper (that is used in the server).
+When using `depinject` / `app v2`, the tx config should be recreated from the `txConfigOpts` to use `NewGRPCCoinMetadataQueryFn` instead of depending on the bank keeper (that is used in the server).
 
 To learn more see the [docs](https://docs.cosmos.network/main/learn/advanced/transactions#sign_mode_textual) and the [ADR-050](https://docs.cosmos.network/main/build/architecture/adr-050-sign-mode-textual).
 
@@ -1262,4 +1313,4 @@ message MsgSetWithdrawAddress {
 }
 ```
 
-When clients interact with a node they are required to set a codec in in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).
+When clients interact with a node they are required to set a codec in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).

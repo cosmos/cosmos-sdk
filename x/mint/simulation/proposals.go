@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"context"
 	"math/rand"
 
 	coreaddress "cosmossdk.io/core/address"
@@ -20,10 +21,10 @@ const (
 	OpWeightMsgUpdateParams = "op_weight_msg_update_params"
 )
 
-// ProposalMsgs defines the module weighted proposals' contents
+// ProposalMsgs defines the module's weighted proposals contents
 func ProposalMsgs() []simtypes.WeightedProposalMsg {
 	return []simtypes.WeightedProposalMsg{
-		simulation.NewWeightedProposalMsg(
+		simulation.NewWeightedProposalMsgX(
 			OpWeightMsgUpdateParams,
 			DefaultWeightMsgUpdateParams,
 			SimulateMsgUpdateParams,
@@ -32,7 +33,7 @@ func ProposalMsgs() []simtypes.WeightedProposalMsg {
 }
 
 // SimulateMsgUpdateParams returns a random MsgUpdateParams
-func SimulateMsgUpdateParams(r *rand.Rand, _ []simtypes.Account, ac coreaddress.Codec) (sdk.Msg, error) {
+func SimulateMsgUpdateParams(_ context.Context, r *rand.Rand, _ []simtypes.Account, ac coreaddress.Codec) (sdk.Msg, error) {
 	// use the default gov module account address as authority
 	var authority sdk.AccAddress = address.Module("gov")
 

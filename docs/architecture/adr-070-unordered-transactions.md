@@ -35,13 +35,13 @@ this proposal, they'll follow the nonce rules the same as before.
 When an un-ordered transaction is included into a block, the transaction hash is
 recorded in a dictionary. New transactions are checked against this dictionary for
 duplicates, and to prevent the dictionary grow indefinitely, the transaction must
-specify `timeout_height` for expiration, so it's safe to removed it from the
+specify `timeout_timestamp` for expiration, so it's safe to removed it from the
 dictionary after it's expired.
 
 The dictionary can be simply implemented as an in-memory golang map, a preliminary
 analysis shows that the memory consumption won't be too big, for example `32M = 32 * 1024 * 1024`
 can support 1024 blocks where each block contains 1024 unordered transactions. For
-safety, we should limit the range of `timeout_height` to prevent very long expiration,
+safety, we should limit the range of `timeout_timestamp` to prevent very long expiration,
 and limit the size of the dictionary.
 
 ### Transaction Format
@@ -58,12 +58,12 @@ message TxBody {
 
 In order to provide replay protection, a user should ensure that the transaction's
 TTL value is relatively short-lived but long enough to provide enough time to be
-included in a block, e.g. ~H+50.
+included in a block, e.g. ~10 minutes.
 
 We facilitate this by storing the transaction's hash in a durable map, `UnorderedTxManager`,
 to prevent duplicates, i.e. replay attacks. Upon transaction ingress during `CheckTx`,
 we check if the transaction's hash exists in this map or if the TTL value is stale,
-i.e. before the current block. If so, we reject it. Upon inclusion in a block
+i.e. before the current block time. If so, we reject it. Upon inclusion in a block
 during `DeliverTx`, the transaction's hash is set in the map along with it's TTL
 value.
 
@@ -93,20 +93,20 @@ const PurgeLoopSleepMS = 500
 // UnorderedTxManager contains the tx hash dictionary for duplicates checking,
 // and expire them when block production progresses.
 type UnorderedTxManager struct {
-  // blockCh defines a channel to receive newly committed block heights
-  blockCh chan uint64
+  // blockCh defines a channel to receive newly committed block time
+  blockCh chan time.Time
 
   mu sync.RWMutex
 	// txHashes defines a map from tx hash -> TTL value, which is used for duplicate
 	// checking and replay protection, as well as purging the map when the TTL is
 	// expired.
-	txHashes map[TxHash]uint64
+	txHashes map[TxHash]time.Time
 }
 
 func NewUnorderedTxManager() *UnorderedTxManager {
   m := &UnorderedTxManager{
-		blockCh:  make(chan uint64, 16),
-		txHashes: make(map[TxHash]uint64),
+		blockCh:  make(chan time.Time, 16),
+		txHashes: make(map[TxHash]time.Time),
   }
 
  return m
@@ -137,27 +137,27 @@ func (m *UnorderedTxManager) Size() int {
   return len(m.txHashes)
 }
 
-func (m *UnorderedTxManager) Add(hash TxHash, expire uint64) {
+func (m *UnorderedTxManager) Add(hash TxHash, expire time.Time) {
   m.mu.Lock()
   defer m.mu.Unlock()
 
   m.txHashes[hash] = expire
 }
 
-// OnNewBlock send the latest block number to the background purge loop, which
+// OnNewBlock send the latest block time to the background purge loop, which
 // should be called in ABCI Commit event.
-func (m *UnorderedTxManager) OnNewBlock(blockHeight uint64) {
-  m.blockCh <- blockHeight
+func (m *UnorderedTxManager) OnNewBlock(blockTime time.Time) {
+  m.blockCh <- blockTime
 }
 
-// expiredTxs returns expired tx hashes based on the provided block height.
-func (m *UnorderedTxManager) expiredTxs(blockHeight uint64) []TxHash {
+// expiredTxs returns expired tx hashes based on the provided block time.
+func (m *UnorderedTxManager) expiredTxs(blockTime time.Time) []TxHash {
   m.mu.RLock()
   defer m.mu.RUnlock()
 
   var result []TxHash
   for txHash, expire := range m.txHashes {
-    if blockHeight > expire {
+    if blockTime.After(expire) {
       result = append(result, txHash)
     }
   }
@@ -178,21 +178,17 @@ func (m *UnorderedTxManager) purge(txHashes []TxHash) {
 // purgeLoop removes expired tx hashes in the background
 func (m *UnorderedTxManager) purgeLoop() error {
   for {
-    blocks := channelBatchRecv(m.blockCh)
-    if len(blocks) == 0 {
-      // channel closed
-      break
-    }
+		latestTime, ok := m.batchReceive()
+		if !ok {
+			// channel closed
+			return
+		}
 
-    latest := *blocks[len(blocks)-1]
-    hashes := m.expired(latest)
-    if len(hashes) > 0 {
-      m.purge(hashes)
-    }
-
-    // avoid burning cpu in catching up phase
-    time.Sleep(PurgeLoopSleepMS * time.Millisecond)
-  }
+		hashes := m.expiredTxs(latestTime)
+		if len(hashes) > 0 {
+			m.purge(hashes)
+		}
+	}
 }
 
 
@@ -237,14 +233,14 @@ verification and map lookup.
 
 ```golang
 const (
-	// DefaultMaxUnOrderedTTL defines the default maximum TTL an un-ordered transaction
+	// DefaultMaxTimeoutDuration defines the default maximum duration an un-ordered transaction
 	// can set.
-	DefaultMaxUnOrderedTTL = 1024
+	DefaultMaxTimeoutDuration = time.Minute * 40
 )
 
 type DedupTxDecorator struct {
   m *UnorderedTxManager
-  maxUnOrderedTTL uint64
+  maxTimeoutDuration time.Time
 }
 
 func (d *DedupTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
@@ -253,13 +249,17 @@ func (d *DedupTxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
     return next(ctx, tx, simulate)
   }
 
-  if tx.TimeoutHeight() == 0 {
-    return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "unordered tx must set timeout-height")
-  }
-
-  if tx.TimeoutHeight() > ctx.BlockHeight() + d.maxUnOrderedTTL {
-    return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "unordered tx ttl exceeds %d", d.maxUnOrderedTTL)
-  }
+  headerInfo := d.env.HeaderService.HeaderInfo(ctx)
+	timeoutTimestamp := unorderedTx.GetTimeoutTimeStamp()
+	if timeoutTimestamp.IsZero() || timeoutTimestamp.Unix() == 0 {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction must have timeout_timestamp set")
+	}
+	if timeoutTimestamp.Before(headerInfo.Time) {
+		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unordered transaction has a timeout_timestamp that has already passed")
+	}
+	if timeoutTimestamp.After(headerInfo.Time.Add(d.maxTimeoutDuration)) {
+		return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unordered tx ttl exceeds %s", d.maxTimeoutDuration.String())
+	}
 
   	// in order to create a deterministic hash based on the tx, we need to hash the contents of the tx with signature
 	// Get a Buffer from the pool
@@ -302,7 +302,7 @@ encoding is not malleable. If a given transaction, which is otherwise valid, can
 be encoded to produce different hashes, which reflect the same valid transaction,
 then a duplicate unordered transaction can be submitted and included in a block.
 
-In order to prevent this, the decoded transaction contents is taken. Starting with the content of the transaction we marshal the transaction in order to prevent a client reordering the transaction. Next we include the gas and timeout height as part of the identifier. All these fields are signed over in the transaction payload. If one of them changes the signature will not match the transaction. 
+In order to prevent this, the decoded transaction contents is taken. Starting with the content of the transaction we marshal the transaction in order to prevent a client reordering the transaction. Next we include the gas and timeout timestamp as part of the identifier. All these fields are signed over in the transaction payload. If one of them changes the signature will not match the transaction. 
 
 ### State Management
 

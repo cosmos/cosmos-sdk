@@ -1551,6 +1551,7 @@ func _Service_TxDecodeAmino_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+var Service_serviceDesc = _Service_serviceDesc
 var _Service_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.tx.v1beta1.Service",
 	HandlerType: (*ServiceServer)(nil),

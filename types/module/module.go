@@ -30,6 +30,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
+	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -90,6 +91,14 @@ type HasInvariants interface {
 type HasServices interface {
 	// RegisterServices allows a module to register services.
 	RegisterServices(Configurator)
+}
+
+// hasServicesV1 is the interface for registering service in baseapp Cosmos SDK.
+// This API is part of core/appmodule but commented out for dependencies.
+type hasServicesV1 interface {
+	appmodule.AppModule
+
+	RegisterServices(grpc.ServiceRegistrar) error
 }
 
 // MigrationHandler is the migration function that each module registers.
@@ -383,7 +392,7 @@ func (m *Manager) RegisterServices(cfg Configurator) error {
 			module.RegisterServices(cfg)
 		}
 
-		if module, ok := module.(appmodule.HasServices); ok {
+		if module, ok := module.(hasServicesV1); ok {
 			err := module.RegisterServices(cfg)
 			if err != nil {
 				return err

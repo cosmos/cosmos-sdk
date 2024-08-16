@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	"context"
 	"math/rand"
 	"testing"
 
@@ -32,7 +33,7 @@ func TestProposalMsgs(t *testing.T) {
 	assert.Equal(t, simulation.OpWeightMsgCommunityPoolSpend, w0.AppParamsKey())
 	assert.Equal(t, simulation.DefaultWeightMsgCommunityPoolSpend, w0.DefaultWeight())
 
-	msg, err := w0.MsgSimulatorFn()(r, accounts, addressCodec)
+	msg, err := w0.MsgSimulatorFn()(context.Background(), r, accounts, addressCodec)
 	assert.NilError(t, err)
 	msgCommunityPoolSpend, ok := msg.(*pooltypes.MsgCommunityPoolSpend)
 	assert.Assert(t, ok)

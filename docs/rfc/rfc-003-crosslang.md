@@ -37,9 +37,8 @@ An **account** is defined as having:
 
 ### Address
 
-An **address** is defined as a variable-length byte array of up to 255 bytes
-so that an address can be represented as a 256-byte array with the first byte indicating the length of the address.
-TODO: a 255-byte is probably way longer than needed and we could likely shorten this to 63 bytes without any negative impact.
+An **address** is defined as a variable-length byte array of up to 63 bytes
+so that an address can be represented as a 64-byte array with the first byte indicating the length of the address.
 
 ### Message
 
@@ -47,7 +46,8 @@ A **message** is defined as a tuple of:
 * a **message name** 
 * and **message data**
 
-A **message name** is an ASCII string of up to 255 characters so that it can be represented as a 256-byte array with the first byte indicating the length of the string. 
+A **message name** is an ASCII string of up to 127 characters
+so that it can be represented as a 128-byte array with the first byte indicating the length of the string. 
 **Message names** can only contain letters, numbers and the special characters `:`, `_`, `/`, and `.`.
 
 **Message data** will be defined in more detail later.

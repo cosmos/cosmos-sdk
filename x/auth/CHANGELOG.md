@@ -37,10 +37,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18780](https://github.com/cosmos/cosmos-sdk/pull/18780) Move sig verification out of the for loop, into the authenticate method.
 * [#19188](https://github.com/cosmos/cosmos-sdk/pull/19188) Remove creation of `BaseAccount` when sending a message to an account that does not exist. 
     * When signing a transaction with an account that has not been created accountnumber 0 must be used
+* [#19363](https://github.com/cosmos/cosmos-sdk/pull/19363), [#19370](https://github.com/cosmos/cosmos-sdk/pull/19370) RegisterMigrations, InitGenesis and ExportGenesis return error instead of panic.
 
 ### CLI Breaking Changes
 
-* (vesting) [#18100](https://github.com/cosmos/cosmos-sdk/pull/18100) `appd tx vesting create-vesting-account` takes an amount of coin as last argument instead of second. Coins are space separated.
+* (vesting) [#19539](https://github.com/cosmos/cosmos-sdk/pull/19539) Remove vesting CLI.
 
 ### API Breaking Changes
 
@@ -49,9 +50,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#19161](https://github.com/cosmos/cosmos-sdk/pull/19161) Remove `simulate` from `SetGasMeter`
 * [#19363](https://github.com/cosmos/cosmos-sdk/pull/19363) Remove `IterateAccounts` and `GetAllAccounts` methods from the AccountKeeper interface and Keeper.
 * [#19290](https://github.com/cosmos/cosmos-sdk/issues/19290) Pass `appmodule.Environment` to NewKeeper instead of passing individual services. 
-* [#19535](https://github.com/cosmos/cosmos-sdk/pull/19535) Remove vesting account creation when the chain is running. The accounts module is required for creating vesting accounts on a running chain. 
+* [#19535](https://github.com/cosmos/cosmos-sdk/pull/19535) Remove vesting account creation when the chain is running. The accounts module is required for creating [#vesting accounts](../accounts/defaults/lockup/README.md) on a running chain. 
 * [#19600](https://github.com/cosmos/cosmos-sdk/pull/19600) add a consensus query method to the consensus module in order for modules to query consensus for the consensus params. 
-<!-- TODO add a link to lockup accounts docs -->
 
 ### Consensus Breaking Changes
 
@@ -65,3 +65,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#19099](https://github.com/cosmos/cosmos-sdk/pull/19099) `verifyIsOnCurve` now checks if we are simulating to avoid malformed public key error.
 * [#20323](https://github.com/cosmos/cosmos-sdk/pull/20323) Ignore undecodable txs in GetBlocksWithTxs.
 * [#20963](https://github.com/cosmos/cosmos-sdk/pull/20963) UseGrantedFees used to return error with raw addresses. Now it uses addresses in string format.
+
+### Deprecated
+
+* (x/auth) [#20531](https://github.com/cosmos/cosmos-sdk/pull/20531) Deprecate auth keeper `NextAccountNumber`, use `keeper.AccountsModKeeper.NextAccountNumber` instead.

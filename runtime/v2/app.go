@@ -79,6 +79,11 @@ func (a *App[T]) LoadHeight(height uint64) error {
 	return a.db.LoadVersion(height)
 }
 
+// LoadLatestHeight loads the latest height.
+func (a *App[T]) LoadLatestHeight() (uint64, error) {
+	return a.db.GetLatestVersion()
+}
+
 // Close is called in start cmd to gracefully cleanup resources.
 func (a *App[T]) Close() error {
 	return nil
@@ -108,10 +113,6 @@ func (a *App[T]) GetStore() Store {
 // GetLogger returns the app logger.
 func (a *App[T]) GetLogger() log.Logger {
 	return a.logger
-}
-
-func (a *App[T]) ExecuteGenesisTx(_ []byte) error {
-	panic("App.ExecuteGenesisTx not supported in runtime/v2")
 }
 
 func (a *App[T]) GetAppManager() *appmanager.AppManager[T] {

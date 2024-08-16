@@ -20,7 +20,7 @@ type KVPairs = []KVPair
 
 // KVPair represents a change in a key and value of state.
 // Remove being true signals the key must be removed from state.
-type KVPair struct {
+type KVPair = struct {
 	// Key defines the key being updated.
 	Key []byte
 	// Value defines the value associated with the updated key.

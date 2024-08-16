@@ -59,7 +59,7 @@ func (k Keeper) getGrant(ctx context.Context, skey []byte) (grant authz.Grant, f
 	return grant, true
 }
 
-func (k Keeper) update(ctx context.Context, grantee, granter sdk.AccAddress, updated authz.Authorization) error {
+func (k Keeper) updateGrant(ctx context.Context, grantee, granter sdk.AccAddress, updated authz.Authorization) error {
 	skey := grantStoreKey(grantee, granter, updated.MsgTypeURL())
 	grant, found := k.getGrant(ctx, skey)
 	if !found {
@@ -134,7 +134,7 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 				if !ok {
 					return nil, fmt.Errorf("expected authz.Authorization but got %T", resp.Updated)
 				}
-				err = k.update(ctx, grantee, granter, updated)
+				err = k.updateGrant(ctx, grantee, granter, updated)
 			}
 			if err != nil {
 				return nil, err

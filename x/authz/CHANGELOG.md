@@ -31,6 +31,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#20161](https://github.com/cosmos/cosmos-sdk/pull/20161) Added `RevokeAll` method to revoke all grants at once.
 * [#20687](https://github.com/cosmos/cosmos-sdk/pull/20687) Prevent user to grant authz MsgGrant to other accounts. Preventing user from accidentally authorizing their entire account to a different account.
 
+### Improvements 
+
+* [#18070](https://github.com/cosmos/cosmos-sdk/pull/18070) Use clientCtx address codecs in cli.
+
 ### API Breaking Changes
 
 * [#21044](https://github.com/cosmos/cosmos-sdk/pull/21044) `k.DispatchActions` returns a slice of byte slices of proto marshaled anys instead of a slice of byte slices of `sdk.Result.Data`.

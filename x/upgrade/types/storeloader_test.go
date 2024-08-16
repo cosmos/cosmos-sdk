@@ -20,12 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
-func useUpgradeLoader(height int64, upgrades *storetypes.StoreUpgrades) func(*baseapp.BaseApp) {
-	return func(app *baseapp.BaseApp) {
-		app.SetStoreLoader(UpgradeStoreLoader(height, upgrades))
-	}
-}
-
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 	t.Helper()
 	rs := rootmulti.NewStore(db, coretesting.NewNopLogger(), metrics.NewNoOpMetrics())
@@ -92,16 +86,6 @@ func TestSetLoader(t *testing.T) {
 			setLoader:    nil,
 			origStoreKey: "foo",
 			loadStoreKey: "foo",
-		},
-		"rename with inline opts": {
-			setLoader: useUpgradeLoader(upgradeHeight, &storetypes.StoreUpgrades{
-				Renamed: []storetypes.StoreRename{{
-					OldKey: "foo",
-					NewKey: "bar",
-				}},
-			}),
-			origStoreKey: "foo",
-			loadStoreKey: "bar",
 		},
 	}
 

@@ -30,7 +30,9 @@ func init() {
 const ModuleKey = "module"
 
 // ContextKey is used to store the logger in the context.
-var ContextKey struct{}
+var ContextKey contextKey
+
+type contextKey struct{}
 
 // Logger is the Cosmos SDK logger interface.
 // It extends cosmossdk.io/core/log.Logger to return a child logger.

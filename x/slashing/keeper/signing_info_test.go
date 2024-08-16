@@ -102,7 +102,7 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBitmap_SmallWindow() {
 		require.Len(missedBlocks, int(params.SignedBlocksWindow)-1)
 
 		// if the validator rotated it's key there will be different consKeys and a mapping will be added in the state.
-		consAddr1 := sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
+		consAddr1 := sdk.ConsAddress("addr1_______________")
 		s.stakingKeeper.EXPECT().ValidatorIdentifier(gomock.Any(), consAddr1).Return(consAddr, nil).AnyTimes()
 
 		missedBlocks, err = keeper.GetValidatorMissedBlocks(ctx, consAddr1)
@@ -121,11 +121,11 @@ func (s *KeeperTestSuite) TestPerformConsensusPubKeyUpdate() {
 	oldConsAddr := sdk.ConsAddress(pks[0].Address())
 	newConsAddr := sdk.ConsAddress(pks[1].Address())
 
-	consAddr, err := s.stakingKeeper.ConsensusAddressCodec().BytesToString(newConsAddr)
+	consStrAddr, err := s.stakingKeeper.ConsensusAddressCodec().BytesToString(newConsAddr)
 	s.Require().NoError(err)
 
 	newInfo := slashingtypes.NewValidatorSigningInfo(
-		consAddr,
+		consStrAddr,
 		int64(4),
 		time.Unix(2, 0).UTC(),
 		false,

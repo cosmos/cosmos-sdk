@@ -1,16 +1,16 @@
 module cosmossdk.io/x/accounts/defaults/lockup
 
-go 1.22.2
+go 1.23
 
 require (
 	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
+	cosmossdk.io/core v1.0.0
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/distribution v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk v0.53.0
-	github.com/cosmos/gogoproto v1.6.0
+	github.com/cosmos/gogoproto v1.7.0
 )
 
 require cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
@@ -90,7 +90,7 @@ require (
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
-	github.com/klauspost/compress v1.17.8 // indirect
+	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
@@ -105,7 +105,7 @@ require (
 	github.com/petermattis/goid v0.0.0-20240327183114-c42a807a84ba // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/client_golang v1.19.1 // indirect
+	github.com/prometheus/client_golang v1.20.0 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect

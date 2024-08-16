@@ -1,8 +1,6 @@
 module cosmossdk.io/tools/cosmovisor
 
-go 1.22.2
-
-toolchain go1.22.4
+go 1.23
 
 require (
 	cosmossdk.io/log v1.4.0
@@ -55,7 +53,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.50.7 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/gogoproto v1.6.0 // indirect
+	github.com/cosmos/gogoproto v1.7.0 // indirect
 	github.com/cosmos/iavl v1.2.0 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
@@ -134,7 +132,7 @@ require (
 	github.com/petermattis/goid v0.0.0-20240503122002-4b96552b8156 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/client_golang v1.19.1 // indirect
+	github.com/prometheus/client_golang v1.20.0 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect

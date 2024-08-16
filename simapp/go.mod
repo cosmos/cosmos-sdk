@@ -1,12 +1,12 @@
 module cosmossdk.io/simapp
 
-go 1.22.2
+go 1.23
 
 require (
 	cosmossdk.io/api v0.7.5
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860
 	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
+	cosmossdk.io/core v1.0.0
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.4.0
@@ -177,7 +177,7 @@ require (
 	github.com/petermattis/goid v0.0.0-20240327183114-c42a807a84ba // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/client_golang v1.19.1 // indirect
+	github.com/prometheus/client_golang v1.20.0 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect

@@ -107,7 +107,6 @@ if [ "$(ls -A $GENTXS_DIR)" ]; then
 
             GENACC=$(cat $GENTX_FILE | sed -n 's|.*"delegator_address":"\([^"]*\)".*|\1|p')
             denomquery=$(jq -r '.body.messages[0].value.denom' $GENTX_FILE)
-            amountquery=$(jq -r '.body.messages[0].value.amount' $GENTX_FILE)
 
             # only allow $DENOM tokens to be bonded
             if [ $denomquery != $DENOM ]; then

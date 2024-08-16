@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"maps"
 	"slices"
-	"sort"
 	"strings"
 
 	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
@@ -121,12 +120,9 @@ func InvokeSetHooks(keeper *keeper.Keeper, govHooks map[string]govtypes.GovHooks
 
 	// Default ordering is lexical by module name.
 	// Explicit ordering can be added to the module config if required.
-	modNames := maps.Keys(govHooks)
-	order := modNames
-	sort.Strings(order)
-
+	modNames := slices.Sorted(maps.Keys(govHooks))
 	var multiHooks govtypes.MultiGovHooks
-	for _, modName := range order {
+	for _, modName := range modNames {
 		hook, ok := govHooks[modName]
 		if !ok {
 			return fmt.Errorf("can't find staking hooks for module %s", modName)

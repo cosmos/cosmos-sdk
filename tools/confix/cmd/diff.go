@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"maps"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -43,7 +44,7 @@ func DiffCommand() *cobra.Command {
 
 			targetVersion := args[0]
 			if _, ok := confix.Migrations[targetVersion]; !ok {
-				return fmt.Errorf("unknown version %q, supported versions are: %q", targetVersion, maps.Keys(confix.Migrations))
+				return fmt.Errorf("unknown version %q, supported versions are: %q", targetVersion, slices.Collect(maps.Keys(confix.Migrations)))
 			}
 
 			targetVersionFile, err := confix.LoadLocalConfig(targetVersion, configType)

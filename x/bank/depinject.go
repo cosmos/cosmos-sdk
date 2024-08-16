@@ -3,6 +3,7 @@ package bank
 import (
 	"fmt"
 	"maps"
+	"slices"
 	"sort"
 
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
@@ -102,7 +103,7 @@ func InvokeSetSendRestrictions(
 		return nil
 	}
 
-	modules := maps.Keys(restrictions)
+	modules := slices.Collect(maps.Keys(restrictions))
 	order := config.RestrictionsOrder
 	if len(order) == 0 {
 		order = modules

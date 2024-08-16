@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"maps"
 	"reflect"
+	"slices"
 	"sort"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -41,7 +42,7 @@ func NewModuleManager[T transaction.Tx](
 	modules map[string]appmodulev2.AppModule,
 ) *MM[T] {
 	// good defaults for the module manager order
-	modulesName := maps.Keys(modules)
+	modulesName := slices.Collect(maps.Keys(modules))
 	if len(config.PreBlockers) == 0 {
 		config.PreBlockers = modulesName
 	}

@@ -336,7 +336,7 @@ func (s *SystemUnderTest) withEachPid(cb func(p *os.Process)) {
 	pids := maps.Keys(s.pids)
 	s.pidsLock.RUnlock()
 
-	for _, pid := range pids {
+	for pid := range pids {
 		p, err := os.FindProcess(pid)
 		if err != nil {
 			continue

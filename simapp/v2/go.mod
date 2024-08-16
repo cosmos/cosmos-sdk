@@ -10,14 +10,10 @@ require (
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.4.0
 	cosmossdk.io/math v1.3.0
-	cosmossdk.io/runtime/v2 v2.0.0-20240815194237-858ec2fcb897 // main
+	cosmossdk.io/runtime/v2 v2.0.0-20240816111545-aeeaca64da2c // main
 	cosmossdk.io/server/v2 v2.0.0-20240815194237-858ec2fcb897 // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
-<<<<<<< HEAD
-	cosmossdk.io/store/v2 v2.0.0-20240815194237-858ec2fcb897 // indirect; main
-=======
-	cosmossdk.io/store/v2 v2.0.0
->>>>>>> aeeaca64d (feat: export genesis in simapp v2 (#21199))
+	cosmossdk.io/store/v2 v2.0.0-20240815194237-858ec2fcb897 // main
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
@@ -56,24 +52,13 @@ require (
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	cloud.google.com/go/iam v1.1.8 // indirect
 	cloud.google.com/go/storage v1.42.0 // indirect
-<<<<<<< HEAD
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // indirect; main
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/schema v0.1.1 // indirect
-	cosmossdk.io/server/v2/appmanager v0.0.0-20240815194237-858ec2fcb897 // indirect; main
+	cosmossdk.io/server/v2/appmanager v0.0.0-20240816111545-aeeaca64da2c // indirect; main
 	cosmossdk.io/server/v2/stf v0.0.0-20240815194237-858ec2fcb897 // indirect; main
 	cosmossdk.io/store v1.1.1-0.20240815194237-858ec2fcb897 // indirect; main
-=======
-	cosmossdk.io/collections v0.4.0 // indirect
-	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/errors v1.0.1 // indirect
-	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
-	cosmossdk.io/schema v0.1.1 // indirect
-	cosmossdk.io/server/v2/appmanager v0.0.0-20240802110823-cffeedff643d // indirect
-	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
->>>>>>> aeeaca64d (feat: export genesis in simapp v2 (#21199))
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect

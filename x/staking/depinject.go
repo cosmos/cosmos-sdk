@@ -3,6 +3,7 @@ package staking
 import (
 	"fmt"
 	"maps"
+	"slices"
 	"sort"
 
 	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
@@ -95,7 +96,7 @@ func InvokeSetStakingHooks(
 		return nil
 	}
 
-	modNames := maps.Keys(stakingHooks)
+	modNames := slices.Collect(maps.Keys(stakingHooks))
 	order := config.HooksOrder
 	if len(order) == 0 {
 		order = modNames

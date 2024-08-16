@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"maps"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -51,13 +52,7 @@ func MigrateHandler(cmd *cobra.Command, args []string, migrations types.Migratio
 	migrationFunc, ok := migrations[target]
 	if !ok || migrationFunc == nil {
 		versions := maps.Keys(migrations)
-		slices.Sorted(versions)
-		var versionsStr string
-		for v := range versions {
-			versionsStr += v + ", "
-		}
-
-		return fmt.Errorf("unknown migration function for version: %s (supported versions %s)", target, versionsStr)
+		return fmt.Errorf("unknown migration function for version: %s (supported versions %s)", target, strings.Join(slices.Sorted(versions), ", "))
 	}
 
 	importGenesis := args[1]

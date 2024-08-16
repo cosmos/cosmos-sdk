@@ -24,6 +24,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
+	"slices"
 	"sort"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
@@ -831,12 +833,7 @@ func (m *Manager) GetVersionMap() appmodule.VersionMap {
 
 // ModuleNames returns list of all module names, without any particular order.
 func (m *Manager) ModuleNames() []string {
-	moduleNames := make([]string, 0, len(m.Modules))
-	for k := range m.Modules {
-		moduleNames = append(moduleNames, k)
-	}
-
-	return moduleNames
+	return slices.Collect(maps.Keys(m.Modules))
 }
 
 // DefaultMigrationsOrder returns a default migrations order: ascending alphabetical by module name,

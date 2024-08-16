@@ -161,11 +161,9 @@ func (m *Manager) exportSnapshot(height uint64, snapshotWriter func([]byte) erro
 	var buf bytes.Buffer
 	w := bufio.NewWriter(&buf)
 
-	keys := maps.Keys(m.txHashes)
-	slices.SortedFunc(keys, func(i, j TxHash) int { return bytes.Compare(i[:], j[:]) })
-
+	keys := slices.SortedFunc(maps.Keys(m.txHashes), func(i, j TxHash) int { return bytes.Compare(i[:], j[:]) })
 	timestamp := time.Unix(int64(height), 0)
-	for txHash := range keys {
+	for _, txHash := range keys {
 		timeoutTime := m.txHashes[txHash]
 		if timestamp.After(timeoutTime) {
 			// skip expired txs that have yet to be purged

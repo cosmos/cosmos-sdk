@@ -10,10 +10,10 @@ require (
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.4.0
 	cosmossdk.io/math v1.3.0
-	cosmossdk.io/runtime/v2 v2.0.0-20240815194237-858ec2fcb897 // main
+	cosmossdk.io/runtime/v2 v2.0.0-20240816111545-aeeaca64da2c // main
 	cosmossdk.io/server/v2 v2.0.0-20240815194237-858ec2fcb897 // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store/v2 v2.0.0-20240815194237-858ec2fcb897 // indirect; main
+	cosmossdk.io/store/v2 v2.0.0-20240815194237-858ec2fcb897 // main
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
@@ -33,7 +33,7 @@ require (
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
 	github.com/cometbft/cometbft v1.0.0-rc1
-	github.com/cosmos/cosmos-db v1.0.2
+	github.com/cosmos/cosmos-db v1.0.2 // indirect
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/spf13/cobra v1.8.1
@@ -56,7 +56,7 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/schema v0.1.1 // indirect
-	cosmossdk.io/server/v2/appmanager v0.0.0-20240815194237-858ec2fcb897 // indirect; main
+	cosmossdk.io/server/v2/appmanager v0.0.0-20240816111545-aeeaca64da2c // indirect; main
 	cosmossdk.io/server/v2/stf v0.0.0-20240815194237-858ec2fcb897 // indirect; main
 	cosmossdk.io/store v1.1.1-0.20240815194237-858ec2fcb897 // indirect; main
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect

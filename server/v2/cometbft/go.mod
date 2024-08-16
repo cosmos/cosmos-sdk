@@ -24,7 +24,7 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.0
 	cosmossdk.io/server/v2 v2.0.0-20240802142126-a26970e547ab // main
-	cosmossdk.io/server/v2/appmanager v0.0.0-20240731205446-aee9803a0af6 // main
+	cosmossdk.io/server/v2/appmanager v0.0.0-20240816111545-aeeaca64da2c // main
 	cosmossdk.io/store/v2 v2.0.0-20240731205446-aee9803a0af6 // main
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-rc1

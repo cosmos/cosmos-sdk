@@ -42,7 +42,7 @@ func NewModuleManager[T transaction.Tx](
 	modules map[string]appmodulev2.AppModule,
 ) *MM[T] {
 	// good defaults for the module manager order
-	modulesName := slices.Collect(maps.Keys(modules))
+	modulesName := slices.Sorted(maps.Keys(modules))
 	if len(config.PreBlockers) == 0 {
 		config.PreBlockers = modulesName
 	}

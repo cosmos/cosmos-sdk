@@ -8,7 +8,7 @@
 
 The Cosmos SDK has historically been a Golang only framework for building blockchain applications.
 However, discussions about supporting additional programming languages and virtual machine environments
-have been underway since early 2023.
+have been underway since early 2023. Recently, we have identified the following key target user groups:
 Recently we have identified the following key target user groups:
 1. projects that want to primarily target a single programming language and virtual machine environment besides Golang but who still want to use Cosmos SDK internals for consensus and storage
 2. projects that want to integrate multiple programming languages and virtual machine environments into an integrated application
@@ -88,7 +88,7 @@ The routing framework can look up the **address** of the receiving **account** b
 The special kind of **account handler** which handles **module messages** is known as a **module handler**.
 A **module** is thus instance an instance of a **module handler** with a specific **address** 
 in the same way that an **account** is an instance of an **account handler**.
-In addition to a bytes **address**, **modules** also have a human-readable **module name**.
+In addition to a byte **address**, **modules** also have a human-readable **module name**.
 
 More details on **modules** and **module messages** will be given later.
 

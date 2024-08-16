@@ -34,7 +34,6 @@ however, the essence should remain more or less the same in most coding environm
 An **account** is defined as having:
 * a unique **address**
 * an **account handler** which is some code which can process **messages** and send **messages** to other **accounts**
-* some optional **account config** bytes
 
 ### Address
 
@@ -64,7 +63,6 @@ When a **message** is sent to an **account handler**, it will receive a **messag
 * the **message data**
 * a 32-byte **state token**
 * a `uint64` **gas limit**
-* optional **account config** bytes
 
 The handler can then execute some code and return a response or an error. Details on message responses and errors will be described later.
 
@@ -101,7 +99,6 @@ Every **account handler** is expected to provide metadata which provides:
   * **volatility** (described below)
   * optional additional bytes, which are not standardized at this level
 * **state config** bytes which are sent to the **state handler** (described below) but are otherwise opaque
-* **account config** descriptor bytes, which when empty indicate no **account config** is used
 * some optional additional bytes, which are not standardized at this level
 
 ### Account Lifecycle
@@ -136,12 +133,12 @@ Each **virtual machine** must expose a list of all the **module handlers** it ca
 and the **hypervisor** will ensure that the **module handlers** are unique across all **virtual machines**.
 
 The **hypervisor** as a first-class **module** itself contains stateful mappings for:
-* **account address** to **handler id** and **account config** 
-* **module name** to module **account address**
+* **account address** to **handler id** 
+* **module name** to module **account address** and **module config**
 * **message name** to **account address** for **module messages**
 
 Each **virtual machine** is expected to expose a method which takes a **handler id**
-and optional **account config** data and returns a reference to an **account handler**
+and returns a reference to an **account handler**
 which can be used to run **messages**.
 **Virtual machines** will also receive an `invoke` function
 so that their **account handlers** can send messages to other **accounts**.
@@ -197,7 +194,7 @@ and `destroy` methods as needed when accounts are created, migrated, or destroye
 For legacy purposes, **modules** have specific lifecycles and **module messages** have special semantics.
 A **module handler** cannot be loaded with the `create` message,
 but must be loaded by an external call to the **hypervisor**
-which includes the **module name** and **module config** bytes (stored as **account config** internally).
+which includes the **module name** and **module config** bytes.
 The existing `cosmos.app.v1alpha1.Config` can be used for this purpose if desired.
 
 **Module messages** also allow the definition of pre- and post-handlers.

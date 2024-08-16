@@ -1,0 +1,3 @@
+[workspace]
+members = ["cosmos_core"]
+resolver = "2"

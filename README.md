@@ -67,7 +67,7 @@ The version matrix below shows which versions of the Cosmos SDK, modules and lib
 #### Core Dependencies
 
 Core dependencies are the core libraries that an application may depend on.
-Core dependencies not mentionned here as compatible across all maintained SDK versions.
+Core dependencies not mentioned here as compatible across all maintained SDK versions.
 
 | Cosmos SDK | cosmossdk.io/core | cosmossdk.io/api | cosmossdk.io/x/tx |
 | ---------- | ----------------- | ---------------- | ----------------- |

@@ -83,9 +83,9 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		if !bytes.Equal(signers[0], k.GetGovernanceAccount(ctx).GetAddress()) {
 			addr, err := k.authKeeper.AddressCodec().BytesToString(signers[0])
 			if err != nil {
-				return v1.Proposal{}, errorsmod.Wrapf(types.ErrInvalidSigner, err.Error())
+				return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidSigner, err.Error())
 			}
-			return v1.Proposal{}, errorsmod.Wrapf(types.ErrInvalidSigner, addr)
+			return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidSigner, addr)
 		}
 
 		if err := k.MsgRouterService.CanInvoke(ctx, sdk.MsgTypeURL(msg)); err != nil {

@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/go-metrics"
-
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/distribution/types"
 
@@ -189,7 +187,7 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 	}
 
 	if validator == nil {
-		return nil, errors.Wrapf(types.ErrNoValidatorExists, msg.ValidatorAddress)
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, "validator address: %s", msg.ValidatorAddress)
 	}
 
 	// Allocate tokens from the distribution module to the validator, which are

@@ -247,7 +247,7 @@ func (s *SystemUnderTest) AwaitUpgradeInfo(t *testing.T) {
 			case err == nil:
 				found = true
 			case !os.IsNotExist(err):
-				t.Fatalf(err.Error())
+				t.Fatal(err.Error())
 			}
 		})
 		time.Sleep(s.blockTime / 2)

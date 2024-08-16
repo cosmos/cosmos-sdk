@@ -110,6 +110,78 @@ func TestValidateMinter(t *testing.T) {
 	}
 }
 
+func TestIsEqualMinter(t *testing.T) {
+	tests := []struct {
+		name  string
+		a     Minter
+		b     Minter
+		equal bool
+	}{
+		{
+			name: "equal minters",
+			a: Minter{
+				Inflation:        math.LegacyNewDec(10),
+				AnnualProvisions: math.LegacyNewDec(10),
+				Data:             []byte("data"),
+			},
+			b: Minter{
+				Inflation:        math.LegacyNewDec(10),
+				AnnualProvisions: math.LegacyNewDec(10),
+				Data:             []byte("data"),
+			},
+			equal: true,
+		},
+		{
+			name: "different inflation",
+			a: Minter{
+				Inflation:        math.LegacyNewDec(10),
+				AnnualProvisions: math.LegacyNewDec(10),
+				Data:             []byte("data"),
+			},
+			b: Minter{
+				Inflation:        math.LegacyNewDec(100),
+				AnnualProvisions: math.LegacyNewDec(10),
+				Data:             []byte("data"),
+			},
+			equal: false,
+		},
+		{
+			name: "different Annual Provisions",
+			a: Minter{
+				Inflation:        math.LegacyNewDec(10),
+				AnnualProvisions: math.LegacyNewDec(10),
+				Data:             []byte("data"),
+			},
+			b: Minter{
+				Inflation:        math.LegacyNewDec(10),
+				AnnualProvisions: math.LegacyNewDec(100),
+				Data:             []byte("data"),
+			},
+			equal: false,
+		},
+		{
+			name: "different data",
+			a: Minter{
+				Inflation:        math.LegacyNewDec(10),
+				AnnualProvisions: math.LegacyNewDec(10),
+				Data:             []byte("data"),
+			},
+			b: Minter{
+				Inflation:        math.LegacyNewDec(10),
+				AnnualProvisions: math.LegacyNewDec(10),
+				Data:             []byte("no data"),
+			},
+			equal: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			equal := tt.a.IsEqual(tt.b)
+			require.Equal(t, tt.equal, equal)
+		})
+	}
+}
+
 // Benchmarking :)
 // previously using math.Int operations:
 // BenchmarkBlockProvision-4 5000000 220 ns/op

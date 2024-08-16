@@ -32,11 +32,17 @@ messages, while maintaining the default behavior for other message types.
 
 Here is an example on how `SetIncludeNestedMsgsGas` option could be set to calculate the gas of a gov proposal
 nested messages:
+
 ```go
 baseAppOptions = append(baseAppOptions, baseapp.SetIncludeNestedMsgsGas([]sdk.Message{&gov.MsgSubmitProposal{}}))
 // ...
 app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 ```
+
+## [v0.52.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-alpha.0)
+
+Documentation to migrate an application from v0.50.x to server/v2 is available elsewhere.
+It is additional to the changes described here.
 
 ### SimApp
 
@@ -182,8 +188,7 @@ for more details.
 ### Depinject `app_config.go` / `app.yml`
 
 With the introduction of [environment in modules](#core-api), depinject automatically creates the environment for all modules.
-Learn more about environment [here](https://example.com) <!-- TODO -->. Given the fields of environment, this means runtime creates a kv store service for all modules by default.
-It can happen that some modules do not have a store necessary (such as `x/auth/tx` for instance). In this case, the store creation should be skipped in `app_config.go`:
+Learn more about environment [here](https://example.com) <!-- TODO -->. Given the fields of environment, this means runtime creates a kv store service for all modules by default. It can happen that some modules do not have a store necessary (such as `x/auth/tx` for instance). In this case, the store creation should be skipped in `app_config.go`:
 
 ```diff
 InitGenesis: []string{
@@ -203,7 +208,20 @@ There is no longer a need for the Cosmos SDK to host these protos for itself and
 That package containing proto v2 generated code, but the SDK now uses [buf generated go SDK instead](https://buf.build/docs/bsr/generated-sdks/go).
 If you were depending on `cosmossdk.io/api/tendermint`, please use the buf generated go SDK instead, or ask CometBFT host the generated proto v2 code.
 
-The `codectypes.Any` has moved to `github.com/cosmos/gogoproto/types/any`. Module developers need to update the `buf.gen.gogo.yaml` configuration files by adjusting the corresponding `opt` option to `Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any` for directly mapping the`Any` type to its new location. This change is optional, but recommended, as `codectypes.Any` is aliased to `gogoproto.Any` in the SDK.
+The `codectypes.Any` has moved to `github.com/cosmos/gogoproto/types/any`. Module developers need to update the `buf.gen.gogo.yaml` configuration files by adjusting the corresponding `opt` option to `Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any` for directly mapping the`Any` type to its new location:
+
+```diff
+version: v1
+plugins:
+  - name: gocosmos
+    out: ..
+- 	 opt: plugins=grpc,Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types,Mcosmos/orm/v1/orm.proto=cosmossdk.io/orm
++    opt: plugins=grpc,Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any,Mcosmos/orm/v1/orm.proto=cosmossdk.io/orm
+  - name: grpc-gateway
+    out: ..
+    opt: logtostderr=true,allow_colon_final_segments=true
+
+```
 
 Also, any usages of the interfaces `AnyUnpacker` and `UnpackInterfacesMessage` must be replaced with the interfaces of the same name in the `github.com/cosmos/gogoproto/types/any` package.
 
@@ -728,7 +746,7 @@ And in the application client (usually `root.go`):
 	}
 ```
 
-When using `depinject` / `app v2`, the a tx config should be recreated from the `txConfigOpts` to use `NewGRPCCoinMetadataQueryFn` instead of depending on the bank keeper (that is used in the server).
+When using `depinject` / `app v2`, the tx config should be recreated from the `txConfigOpts` to use `NewGRPCCoinMetadataQueryFn` instead of depending on the bank keeper (that is used in the server).
 
 To learn more see the [docs](https://docs.cosmos.network/main/learn/advanced/transactions#sign_mode_textual) and the [ADR-050](https://docs.cosmos.network/main/build/architecture/adr-050-sign-mode-textual).
 

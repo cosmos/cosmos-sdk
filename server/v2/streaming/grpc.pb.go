@@ -670,6 +670,7 @@ func _ListenerService_ListenStateChanges_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+var ListenerService_serviceDesc = _ListenerService_serviceDesc
 var _ListenerService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.streaming.v1.ListenerService",
 	HandlerType: (*ListenerServiceServer)(nil),

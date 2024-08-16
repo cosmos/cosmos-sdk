@@ -153,7 +153,7 @@ func (m *MM[T]) InitGenesisJSON(
 		switch module := mod.(type) {
 		case appmodule.HasGenesisAuto:
 			panic(fmt.Sprintf("module %s isn't server/v2 compatible", moduleName))
-		case appmodulev2.GenesisDecoder:
+		case appmodulev2.GenesisDecoder: // GenesisDecoder needs to supersede HasGenesis and HasABCIGenesis.
 			genTxs, err := module.DecodeGenesisJSON(genesisData[moduleName])
 			if err != nil {
 				return err
@@ -425,7 +425,7 @@ func (m *MM[T]) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap
 func (m *MM[T]) RegisterServices(app *App[T]) error {
 	for _, module := range m.modules {
 		// register msg + query
-		if services, ok := module.(appmodule.HasServices); ok {
+		if services, ok := module.(hasServicesV1); ok {
 			if err := registerServices(services, app, protoregistry.GlobalFiles); err != nil {
 				return err
 			}
@@ -554,7 +554,7 @@ func (m *MM[T]) assertNoForgottenModules(
 	return nil
 }
 
-func registerServices[T transaction.Tx](s appmodule.HasServices, app *App[T], registry *protoregistry.Files) error {
+func registerServices[T transaction.Tx](s hasServicesV1, app *App[T], registry *protoregistry.Files) error {
 	c := &configurator{
 		grpcQueryDecoders: map[string]func() gogoproto.Message{},
 		stfQueryRouter:    app.queryRouterBuilder,
@@ -667,19 +667,19 @@ func registerMethod(
 
 	return string(requestName), stfRouter.RegisterHandler(string(requestName), func(
 		ctx context.Context,
-		msg appmodulev2.Message,
-	) (resp appmodulev2.Message, err error) {
+		msg transaction.Msg,
+	) (resp transaction.Msg, err error) {
 		res, err := md.Handler(ss, ctx, noopDecoder, messagePassingInterceptor(msg))
 		if err != nil {
 			return nil, err
 		}
-		return res.(appmodulev2.Message), nil
+		return res.(transaction.Msg), nil
 	})
 }
 
 func noopDecoder(_ interface{}) error { return nil }
 
-func messagePassingInterceptor(msg appmodulev2.Message) grpc.UnaryServerInterceptor {
+func messagePassingInterceptor(msg transaction.Msg) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
 		req interface{},
@@ -709,4 +709,10 @@ func defaultMigrationsOrder(modules []string) []string {
 		out = append(out, authName)
 	}
 	return out
+}
+
+// hasServicesV1 is the interface for registering service in baseapp Cosmos SDK.
+// This API is part of core/appmodule but commented out for dependencies.
+type hasServicesV1 interface {
+	RegisterServices(grpc.ServiceRegistrar) error
 }

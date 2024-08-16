@@ -29,7 +29,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
-var consAddr = sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
+var consAddr = sdk.ConsAddress("addr1_______________")
 
 type KeeperTestSuite struct {
 	suite.Suite
@@ -153,7 +153,7 @@ func validatorMissedBlockBitmapKey(v sdk.ConsAddress, chunkIndex int64) []byte {
 func (s *KeeperTestSuite) TestValidatorMissedBlockBMMigrationToColls() {
 	s.SetupTest()
 
-	consAddr := sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
+	consAddr := sdk.ConsAddress("addr1_______________")
 	index := int64(0)
 	err := sdktestutil.DiffCollectionsMigration(
 		s.ctx,

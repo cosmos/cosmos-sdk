@@ -319,7 +319,7 @@ Here's an example of a concrete integration within an `simapp`:
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app.go#L411-L434
 ```
 
-This is the same example from `runtime` (the package that powers app v2):
+This is the same example from `runtime` (the package that powers app di):
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/runtime/module.go#L61

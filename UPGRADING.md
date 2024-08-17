@@ -31,9 +31,9 @@ clientCtx = clientCtx.
 + WithValidatorPrefix("cosmosvaloper")
 ```
 
-**When using `depinject` / `app v2`, the client codecs can be provided directly from application config.**
+**When using `depinject` / `app_di`, the client codecs can be provided directly from application config.**
 
-Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a legacy app.
+Refer to SimApp `root_v2.go` and `root.go` for an example with an app di and a legacy app.
 
 Additionally, a simplification of the start command leads to the following change:
 

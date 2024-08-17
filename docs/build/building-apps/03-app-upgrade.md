@@ -53,7 +53,7 @@ be a matter of minutes and not even require them to be awake at that time.
 ## Integrating With An App
 
 :::tip
-The following is not required for users using `depinject` / app v2, this is abstracted for them.
+The following is not required for users using `depinject`, this is abstracted for them.
 :::
 
 In addition to basic module wiring, setup the upgrade Keeper for the app and then define a `PreBlocker` that calls the upgrade

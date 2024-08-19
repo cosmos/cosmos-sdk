@@ -35,6 +35,7 @@ var FieldGen = rapid.Custom(func(t *rapid.T) schema.Field {
 	return field
 })
 
+// KeyFieldGen generates random key fields based on the validity criteria of key fields.
 var KeyFieldGen = FieldGen.Filter(func(f schema.Field) bool {
 	return !f.Nullable && f.Kind.ValidKeyKind()
 })

@@ -23,7 +23,7 @@ const (
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
 	appParams simtypes.AppParams,
-	cdc codec.JSONCodec,
+	_ codec.JSONCodec,
 	txConfig client.TxConfig,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -44,7 +44,7 @@ func WeightedOperations(
 
 // SimulateMsgFundCommunityPool simulates MsgFundCommunityPool execution where
 // a random account sends a random amount of its funds to the community pool.
-func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeeper, bk types.BankKeeper, _ keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app simtypes.AppEntrypoint, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {

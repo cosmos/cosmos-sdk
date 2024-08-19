@@ -48,7 +48,7 @@ type ModuleOutputs struct {
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress("gov")
+	authority := authtypes.NewModuleAddress(types.GovModuleName)
 	if in.Config.Authority != "" {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}

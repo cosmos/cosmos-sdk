@@ -186,7 +186,29 @@ func (suite *KeeperTestSuite) TestSetToDistribute() {
 	distrBal := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000000)))
 	suite.bankKeeper.EXPECT().GetAllBalances(suite.ctx, poolDistrAcc.GetAddress()).Return(distrBal).AnyTimes()
 
+	// because there are no continuous funds, all are going to the community pool
+	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, poolDistrAcc.GetName(), poolAcc.GetName(), distrBal)
+
 	err := suite.poolKeeper.SetToDistribute(suite.ctx)
+	suite.Require().NoError(err)
+
+	// Verify that LastBalance was not set (zero balance)
+	_, err = suite.poolKeeper.LastBalance.Get(suite.ctx)
+	suite.Require().ErrorContains(err, "not found")
+
+	// create new continuous fund and distribute again
+	addrCdc := address.NewBech32Codec("cosmos")
+	addrStr := "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2srklj6"
+	addrBz, err := addrCdc.StringToBytes(addrStr)
+	suite.Require().NoError(err)
+
+	suite.poolKeeper.ContinuousFund.Set(suite.ctx, addrBz, types.ContinuousFund{
+		Recipient:  addrStr,
+		Percentage: math.LegacyMustNewDecFromStr("0.3"),
+		Expiry:     nil,
+	})
+
+	err = suite.poolKeeper.SetToDistribute(suite.ctx)
 	suite.Require().NoError(err)
 
 	// Verify that LastBalance was set correctly

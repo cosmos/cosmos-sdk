@@ -195,7 +195,7 @@ func (k Keeper) SetToDistribute(ctx context.Context) error {
 			return err
 		}
 
-		if !lastBalance.IsZero() { // only reset if the last balance is not zero
+		if !lastBalance.IsZero() { // only reset if the last balance is not zero (so we leave it at zero/nil)
 			return k.LastBalance.Set(ctx, math.ZeroInt())
 		}
 

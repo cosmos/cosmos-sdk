@@ -7,11 +7,9 @@ require (
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/math v1.1.2
 	github.com/cosmos/cosmos-db v1.0.0
-	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/grpc v1.64.1
 	google.golang.org/protobuf v1.34.2
-	gotest.tools/v3 v3.5.1
 )
 
 require (
@@ -22,6 +20,7 @@ require (
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v0.0.0-20230525220056-bb4fc9527b3b // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
+	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/gogoproto v1.5.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/getsentry/sentry-go v0.23.0 // indirect

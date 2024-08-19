@@ -60,7 +60,8 @@ func TestSimsAppV2(t *testing.T) {
 	configPath := filepath.Join(currentDir, "testdata")
 	v, err := serverv2.ReadConfig(configPath)
 	require.NoError(t, err)
-	v.Set("store.app-db-backend", "memdb") // todo: I had added this new type to speed up testing. Does it make sense this way?
+	v.Set("home", DefaultNodeHome)
+	//v.Set("store.app-db-backend", "memdb") // todo: I had added this new type to speed up testing. Does it make sense this way?
 	logger := log.NewTestLoggerInfo(t)
 	app := NewSimApp[T](logger, v)
 
@@ -83,31 +84,31 @@ func TestSimsAppV2(t *testing.T) {
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, tCfg)
 
 	appStore := app.GetStore().(cometbfttypes.Store)
-	//consensusParams := simulation.RandomConsensusParams(r, appState, cdc, blockMaxGas)
 	genesisReq := &appmanager.BlockRequest[T]{
-		Height:  1,
-		Time:    genesisTimestamp,
-		Hash:    make([]byte, 32),
-		ChainId: chainID,
-		AppHash: make([]byte, 32),
-		ConsensusMessages: []transaction.Msg{&consensustypes.MsgUpdateParams{
-			Authority: app.GetConsensusAuthority(), // todo: what else is needed in setup ?
-			Block: &cmtproto.BlockParams{
-				MaxBytes: 200000,
-				MaxGas:   100_000_000,
-			},
-			Evidence: &cmtproto.EvidenceParams{
-				MaxAgeNumBlocks: 302400,
-				MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
-				MaxBytes:        10000,
-			},
-			Validator: &cmtproto.ValidatorParams{PubKeyTypes: []string{cmttypes.ABCIPubKeyTypeEd25519, cmttypes.ABCIPubKeyTypeSecp256k1}},
-		}},
+		Height:    0, // todo: or 1?
+		Time:      genesisTimestamp,
+		Hash:      make([]byte, 32),
+		ChainId:   chainID,
+		AppHash:   make([]byte, 32),
 		IsGenesis: true,
 	}
 	ctx, done := context.WithCancel(context.Background())
 	defer done()
-	initRsp, genesisState, err := app.InitGenesis(ctx, genesisReq, appState, &genericTxDecoder[T]{txConfig: app.TxConfig()})
+	genesisCtx := context.WithValue(ctx, corecontext.InitInfoKey, &consensustypes.MsgUpdateParams{
+		Authority: app.GetConsensusAuthority(), // todo: what else is needed in setup ?
+		Block: &cmtproto.BlockParams{
+			MaxBytes: 200000,
+			MaxGas:   100_000_000,
+		},
+		Evidence: &cmtproto.EvidenceParams{
+			MaxAgeNumBlocks: 302400,
+			MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+			MaxBytes:        10000,
+		},
+		Validator: &cmtproto.ValidatorParams{PubKeyTypes: []string{cmttypes.ABCIPubKeyTypeEd25519, cmttypes.ABCIPubKeyTypeSecp256k1}},
+	})
+
+	initRsp, genesisState, err := app.InitGenesis(genesisCtx, genesisReq, appState, &genericTxDecoder[T]{txConfig: app.TxConfig()})
 	require.NoError(t, err)
 	activeValidatorSet := NewWeightedValidators().Update(initRsp.ValidatorUpdates)
 	valsetHistory := NewValSetHistory(150) // todo: configure
@@ -135,8 +136,8 @@ func TestSimsAppV2(t *testing.T) {
 	// todo: register legacy and v1 msg proposals
 
 	const ( // todo: read from CLI instead
-		numBlocks     = 500 // 500 default
-		maxTXPerBlock = 250 // 200 default
+		numBlocks     = 50 // 500 default
+		maxTXPerBlock = 5  // 200 default
 	)
 
 	rootReporter := simsx.NewBasicSimulationReporter()

@@ -17,6 +17,11 @@ func (tm *objectIndexer) insertUpdate(ctx context.Context, conn dbConn, key, val
 	buf := new(strings.Builder)
 	var params []interface{}
 	if exists {
+		if len(tm.typ.ValueFields) == 0 {
+			// special case where there are no value fields, so we can't update anything
+			return nil
+		}
+
 		params, err = tm.updateSql(buf, key, value)
 	} else {
 		params, err = tm.insertSql(buf, key, value)

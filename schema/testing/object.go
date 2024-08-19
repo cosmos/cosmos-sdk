@@ -101,14 +101,7 @@ func ObjectUpdateGen(objectType schema.ObjectType, state *btree.Map[string, sche
 				update.Key = state.Values()[i].Key
 				update.Delete = true
 			} else {
-				update.Key = keyGen.Filter(func(key interface{}) bool {
-					// filter out keys that exist in the state
-					if state != nil {
-						_, exists := state.Get(key.(string))
-						return !exists
-					}
-					return true
-				}).Draw(t, "key")
+				update.Key = keyGen.Draw(t, "key")
 			}
 
 			return update

@@ -202,11 +202,12 @@ func (suite *KeeperTestSuite) TestSetToDistribute() {
 	addrBz, err := addrCdc.StringToBytes(addrStr)
 	suite.Require().NoError(err)
 
-	suite.poolKeeper.ContinuousFund.Set(suite.ctx, addrBz, types.ContinuousFund{
+	err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, addrBz, types.ContinuousFund{
 		Recipient:  addrStr,
 		Percentage: math.LegacyMustNewDecFromStr("0.3"),
 		Expiry:     nil,
 	})
+	suite.Require().NoError(err)
 
 	err = suite.poolKeeper.SetToDistribute(suite.ctx)
 	suite.Require().NoError(err)

@@ -6,7 +6,6 @@ import "amino/amino.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cometbft/types/v1/params.proto";
-import "cometbft/abci/v1/types.proto";
 
 option go_package = "cosmossdk.io/x/consensus/types";
 
@@ -38,9 +37,9 @@ message MsgUpdateParams {
   cometbft.types.v1.EvidenceParams  evidence  = 3;
   cometbft.types.v1.ValidatorParams validator = 4;
 
-  // Since: cosmos-sdk 0.51
-  cometbft.types.v1.ABCIParams      abci = 5 [deprecated = true, (cosmos_proto.field_added_in) = "cosmos-sdk 0.50"];
-  cometbft.types.v1.SynchronyParams synchrony = 6 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.51"];
+  cometbft.types.v1.ABCIParams abci = 5 [deprecated = true, (cosmos_proto.field_added_in) = "cosmos-sdk 0.50"];
+
+  cometbft.types.v1.SynchronyParams synchrony = 6 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.52"];
   cometbft.types.v1.FeatureParams   feature   = 7 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.52"];
 }
 

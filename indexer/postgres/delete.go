@@ -13,7 +13,7 @@ func (tm *objectIndexer) delete(ctx context.Context, conn dbConn, key interface{
 	var params []interface{}
 	var err error
 	if !tm.options.DisableRetainDeletions && tm.typ.RetainDeletions {
-		params, err = tm.RetainDeleteSqlAndParams(buf, key)
+		params, err = tm.retainDeleteSqlAndParams(buf, key)
 	} else {
 		params, err = tm.deleteSqlAndParams(buf, key)
 	}
@@ -43,9 +43,9 @@ func (tm *objectIndexer) deleteSqlAndParams(w io.Writer, key interface{}) ([]int
 	return keyParams, err
 }
 
-// RetainDeleteSqlAndParams generates an UPDATE statement to set the _deleted column to true for the provided key
+// retainDeleteSqlAndParams generates an UPDATE statement to set the _deleted column to true for the provided key
 // which is used when the table is set to retain deletions mode.
-func (tm *objectIndexer) RetainDeleteSqlAndParams(w io.Writer, key interface{}) ([]interface{}, error) {
+func (tm *objectIndexer) retainDeleteSqlAndParams(w io.Writer, key interface{}) ([]interface{}, error) {
 	_, err := fmt.Fprintf(w, "UPDATE %q SET _deleted = TRUE", tm.TableName())
 	if err != nil {
 		return nil, err

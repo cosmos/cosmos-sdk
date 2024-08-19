@@ -7,6 +7,7 @@ import (
 	"errors"
 
 	"cosmossdk.io/schema/indexer"
+	"cosmossdk.io/schema/logutil"
 )
 
 type Config struct {
@@ -28,6 +29,7 @@ type indexerImpl struct {
 	tx      *sql.Tx
 	opts    options
 	modules map[string]*moduleIndexer
+	logger  logutil.Logger
 }
 
 func StartIndexer(params indexer.InitParams) (indexer.InitResult, error) {
@@ -89,6 +91,7 @@ func StartIndexer(params indexer.InitParams) (indexer.InitResult, error) {
 		tx:      tx,
 		opts:    opts,
 		modules: moduleIndexers,
+		logger:  params.Logger,
 	}
 
 	return indexer.InitResult{

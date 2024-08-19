@@ -33,6 +33,9 @@ func (i *indexerImpl) Listener() appdata.Listener {
 			}
 
 			for _, update := range data.Updates {
+				if i.logger != nil {
+					i.logger.Debug("OnObjectUpdate", "module", module, "type", update.TypeName, "key", update.Key, "delete", update.Delete, "value", update.Value)
+				}
 				tm, ok := mod.tables[update.TypeName]
 				if !ok {
 					return fmt.Errorf("object type %s not found in schema for module %s", update.TypeName, module)

@@ -76,7 +76,7 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 	require.NoError(t, err)
 
 	blockDataGen := sim.BlockDataGenN(10, 100)
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		// using Example generates a deterministic data set based
 		// on a seed so that regression tests can be created OR rapid.Check can
 		// be used for fully random property-based testing
@@ -84,16 +84,13 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 
 		// process the generated block data with the simulator which will also
 		// send it to the indexer
-		require.NoError(t, sim.ProcessBlockData(blockData))
+		require.NoError(t, sim.ProcessBlockData(blockData), debugLog.String())
 
 		// compare the expected state in the simulator to the actual state in the indexer and expect the diff to be empty
-		diff := appdatasim.DiffAppData(sim, pgIndexer.View)
-		if diff != "" {
-			t.Log(debugLog.String())
-			t.Fatalf("unexpected diff:\n%s", diff)
-		} else {
-			debugLog.Reset()
-		}
+		require.Empty(t, appdatasim.DiffAppData(sim, pgIndexer.View), debugLog.String())
+
+		// reset the debug log after each successful block so that it doesn't get too long when debugging
+		debugLog.Reset()
 	}
 }
 

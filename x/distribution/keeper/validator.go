@@ -13,6 +13,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	maxReferenceCount = 2
+)
+
 // initialize rewards for a new validator
 func (k Keeper) initializeValidator(ctx context.Context, val sdk.ValidatorI) error {
 	valBz, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
@@ -126,8 +130,8 @@ func (k Keeper) incrementReferenceCount(ctx context.Context, valAddr sdk.ValAddr
 	}
 
 	historical.ReferenceCount++
-	if historical.ReferenceCount > 2 {
-		panic("reference count should never exceed 2")
+	if historical.ReferenceCount > maxReferenceCount {
+		return fmt.Errorf("reference count should never exceed %d", maxReferenceCount)
 	}
 	return k.ValidatorHistoricalRewards.Set(ctx, collections.Join(valAddr, period), historical)
 }
@@ -140,7 +144,7 @@ func (k Keeper) decrementReferenceCount(ctx context.Context, valAddr sdk.ValAddr
 	}
 
 	if historical.ReferenceCount == 0 {
-		panic("cannot set negative reference count")
+		return fmt.Errorf("cannot set negative reference count")
 	}
 	historical.ReferenceCount--
 	if historical.ReferenceCount == 0 {
@@ -152,7 +156,7 @@ func (k Keeper) decrementReferenceCount(ctx context.Context, valAddr sdk.ValAddr
 
 func (k Keeper) updateValidatorSlashFraction(ctx context.Context, valAddr sdk.ValAddress, fraction math.LegacyDec) error {
 	if fraction.GT(math.LegacyOneDec()) || fraction.IsNegative() {
-		panic(fmt.Sprintf("fraction must be >=0 and <=1, current fraction: %v", fraction))
+		return fmt.Errorf("fraction must be >=0 and <=1, current fraction: %v", fraction)
 	}
 
 	headerinfo := k.HeaderService.HeaderInfo(ctx)

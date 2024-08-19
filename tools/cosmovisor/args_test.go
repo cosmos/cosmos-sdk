@@ -769,7 +769,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 
 		s.T().Run(tc.name, func(t *testing.T) {
 			s.setEnv(t, &tc.envVals)
-			cfg, err := GetConfigFromEnv()
+			cfg, err := GetConfigFromEnv(false)
 			if tc.expectedErrCount == 0 {
 				assert.NoError(t, err)
 			} else if assert.Error(t, err) {

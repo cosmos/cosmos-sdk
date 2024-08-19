@@ -27,21 +27,21 @@ func DiffAppStates(expected, actual view.AppState) string {
 		res += fmt.Sprintf("MODULE COUNT ERROR: expected %d, got %d\n", expectNumModules, actualNumModules)
 	}
 
-	expected.Modules(func(expectedMod view.ModuleState, err error) bool {
+	for expectedMod, err := range expected.Modules {
 		if err != nil {
 			res += fmt.Sprintf("ERROR getting expected module: %s\n", err)
-			return true
+			continue
 		}
 
 		moduleName := expectedMod.ModuleName()
 		actualMod, err := actual.GetModule(moduleName)
 		if err != nil {
 			res += fmt.Sprintf("ERROR getting actual module: %s\n", err)
-			return true
+			continue
 		}
 		if actualMod == nil {
-			res += fmt.Sprintf("Module %s: actual module NOT FOUND\n")
-			return true
+			res += fmt.Sprintf("Module %s: actual module NOT FOUND\n", moduleName)
+			continue
 		}
 
 		diff := DiffModuleStates(expectedMod, actualMod)
@@ -49,9 +49,7 @@ func DiffAppStates(expected, actual view.AppState) string {
 			res += "Module " + moduleName + "\n"
 			res += indentAllLines(diff)
 		}
-
-		return true
-	})
+	}
 
 	return res
 }

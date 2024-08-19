@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"reflect"
+	"slices"
 	"sort"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
 	proto "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -41,7 +42,7 @@ func NewModuleManager[T transaction.Tx](
 	modules map[string]appmodulev2.AppModule,
 ) *MM[T] {
 	// good defaults for the module manager order
-	modulesName := maps.Keys(modules)
+	modulesName := slices.Sorted(maps.Keys(modules))
 	if len(config.PreBlockers) == 0 {
 		config.PreBlockers = modulesName
 	}
@@ -153,7 +154,7 @@ func (m *MM[T]) InitGenesisJSON(
 		switch module := mod.(type) {
 		case appmodule.HasGenesisAuto:
 			panic(fmt.Sprintf("module %s isn't server/v2 compatible", moduleName))
-		case appmodulev2.GenesisDecoder:
+		case appmodulev2.GenesisDecoder: // GenesisDecoder needs to supersede HasGenesis and HasABCIGenesis.
 			genTxs, err := module.DecodeGenesisJSON(genesisData[moduleName])
 			if err != nil {
 				return err
@@ -203,16 +204,13 @@ func (m *MM[T]) ExportGenesisForModules(
 		return nil, err
 	}
 
-	type genesisResult struct {
-		bz  json.RawMessage
-		err error
-	}
-
 	type ModuleI interface {
 		ExportGenesis(ctx context.Context) (json.RawMessage, error)
 	}
 
-	channels := make(map[string]chan genesisResult)
+	genesisData := make(map[string]json.RawMessage)
+
+	// TODO: make async export genesis https://github.com/cosmos/cosmos-sdk/issues/21303
 	for _, moduleName := range modulesToExport {
 		mod := m.modules[moduleName]
 		var moduleI ModuleI
@@ -221,27 +219,16 @@ func (m *MM[T]) ExportGenesisForModules(
 			moduleI = module.(ModuleI)
 		} else if module, hasABCIGenesis := mod.(appmodulev2.HasGenesis); hasABCIGenesis {
 			moduleI = module.(ModuleI)
+		} else {
+			continue
 		}
 
-		channels[moduleName] = make(chan genesisResult)
-		go func(moduleI ModuleI, ch chan genesisResult) {
-			jm, err := moduleI.ExportGenesis(ctx)
-			if err != nil {
-				ch <- genesisResult{nil, err}
-				return
-			}
-			ch <- genesisResult{jm, nil}
-		}(moduleI, channels[moduleName])
-	}
-
-	genesisData := make(map[string]json.RawMessage)
-	for moduleName := range channels {
-		res := <-channels[moduleName]
-		if res.err != nil {
-			return nil, fmt.Errorf("genesis export error in %s: %w", moduleName, res.err)
+		res, err := moduleI.ExportGenesis(ctx)
+		if err != nil {
+			return nil, err
 		}
 
-		genesisData[moduleName] = res.bz
+		genesisData[moduleName] = res
 	}
 
 	return genesisData, nil
@@ -425,7 +412,7 @@ func (m *MM[T]) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap
 func (m *MM[T]) RegisterServices(app *App[T]) error {
 	for _, module := range m.modules {
 		// register msg + query
-		if services, ok := module.(appmodule.HasServices); ok {
+		if services, ok := module.(hasServicesV1); ok {
 			if err := registerServices(services, app, protoregistry.GlobalFiles); err != nil {
 				return err
 			}
@@ -438,7 +425,14 @@ func (m *MM[T]) RegisterServices(app *App[T]) error {
 			}
 		}
 
-		// TODO: register pre and post msg
+		// register pre and post msg
+		if module, ok := module.(appmodulev2.HasPreMsgHandlers); ok {
+			module.RegisterPreMsgHandlers(app.msgRouterBuilder)
+		}
+
+		if module, ok := module.(appmodulev2.HasPostMsgHandlers); ok {
+			module.RegisterPostMsgHandlers(app.msgRouterBuilder)
+		}
 	}
 
 	return nil
@@ -554,7 +548,7 @@ func (m *MM[T]) assertNoForgottenModules(
 	return nil
 }
 
-func registerServices[T transaction.Tx](s appmodule.HasServices, app *App[T], registry *protoregistry.Files) error {
+func registerServices[T transaction.Tx](s hasServicesV1, app *App[T], registry *protoregistry.Files) error {
 	c := &configurator{
 		grpcQueryDecoders: map[string]func() gogoproto.Message{},
 		stfQueryRouter:    app.queryRouterBuilder,
@@ -667,19 +661,19 @@ func registerMethod(
 
 	return string(requestName), stfRouter.RegisterHandler(string(requestName), func(
 		ctx context.Context,
-		msg appmodulev2.Message,
-	) (resp appmodulev2.Message, err error) {
+		msg transaction.Msg,
+	) (resp transaction.Msg, err error) {
 		res, err := md.Handler(ss, ctx, noopDecoder, messagePassingInterceptor(msg))
 		if err != nil {
 			return nil, err
 		}
-		return res.(appmodulev2.Message), nil
+		return res.(transaction.Msg), nil
 	})
 }
 
 func noopDecoder(_ interface{}) error { return nil }
 
-func messagePassingInterceptor(msg appmodulev2.Message) grpc.UnaryServerInterceptor {
+func messagePassingInterceptor(msg transaction.Msg) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
 		req interface{},
@@ -709,4 +703,10 @@ func defaultMigrationsOrder(modules []string) []string {
 		out = append(out, authName)
 	}
 	return out
+}
+
+// hasServicesV1 is the interface for registering service in baseapp Cosmos SDK.
+// This API is part of core/appmodule but commented out for dependencies.
+type hasServicesV1 interface {
+	RegisterServices(grpc.ServiceRegistrar) error
 }

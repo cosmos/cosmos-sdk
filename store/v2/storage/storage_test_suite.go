@@ -640,6 +640,72 @@ func (s *StorageTestSuite) TestDatabase_Prune_KeepRecent() {
 	s.Require().Equal([]byte("val200"), bz)
 }
 
+func (s *StorageTestSuite) TestDatabase_Restore() {
+	db, err := s.NewDB(s.T().TempDir())
+	s.Require().NoError(err)
+	defer db.Close()
+
+	toVersion := uint64(10)
+	keyCount := 10
+
+	// for versions 1-10, set 10 keys
+	for v := uint64(1); v <= toVersion; v++ {
+		cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{storeKey1: {}})
+		for i := 0; i < keyCount; i++ {
+			key := fmt.Sprintf("key%03d", i)
+			val := fmt.Sprintf("val%03d-%03d", i, v)
+
+			cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(key), Value: []byte(val)})
+		}
+
+		s.Require().NoError(db.ApplyChangeset(v, cs))
+	}
+
+	latestVersion, err := db.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(10), latestVersion)
+
+	chStorage := make(chan *corestore.StateChanges, 5)
+
+	go func() {
+		for i := uint64(11); i <= 15; i++ {
+			kvPairs := []corestore.KVPair{}
+			for j := 0; j < keyCount; j++ {
+				key := fmt.Sprintf("key%03d-%03d", j, i)
+				val := fmt.Sprintf("val%03d-%03d", j, i)
+
+				kvPairs = append(kvPairs, corestore.KVPair{Key: []byte(key), Value: []byte(val)})
+			}
+			chStorage <- &corestore.StateChanges{
+				Actor:        storeKey1Bytes,
+				StateChanges: kvPairs,
+			}
+		}
+		close(chStorage)
+	}()
+
+	// restore with snapshot version smaller than latest version
+	// should return an error
+	err = db.Restore(9, chStorage)
+	s.Require().Error(err)
+
+	// restore
+	err = db.Restore(11, chStorage)
+	s.Require().NoError(err)
+
+	// check the storage
+	for i := uint64(11); i <= 15; i++ {
+		for j := 0; j < keyCount; j++ {
+			key := fmt.Sprintf("key%03d-%03d", j, i)
+			val := fmt.Sprintf("val%03d-%03d", j, i)
+
+			v, err := db.Get(storeKey1Bytes, 11, []byte(key))
+			s.Require().NoError(err)
+			s.Require().Equal([]byte(val), v)
+		}
+	}
+}
+
 func (s *StorageTestSuite) TestUpgradable() {
 	ss, err := s.NewDB(s.T().TempDir())
 	s.Require().NoError(err)

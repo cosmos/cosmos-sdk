@@ -373,10 +373,23 @@ func (s *RootStoreTestSuite) TestStateAt() {
 
 			reader, err := ro.GetReader(testStoreKeyBytes)
 			s.Require().NoError(err)
+			isExist, err := reader.Has([]byte(key))
+			s.Require().NoError(err)
+			s.Require().True(isExist)
 			result, err := reader.Get([]byte(key))
 			s.Require().NoError(err)
 			s.Require().Equal([]byte(val), result)
 		}
+
+		// non-existent key
+		reader, err := ro.GetReader(testStoreKey2Bytes)
+		s.Require().NoError(err)
+		isExist, err := reader.Has([]byte("key"))
+		s.Require().NoError(err)
+		s.Require().False(isExist)
+		v, err := reader.Get([]byte("key"))
+		s.Require().NoError(err)
+		s.Require().Nil(v)
 	}
 }
 
@@ -630,7 +643,7 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 			return false
 		}
 		// wait for async pruning process to finish
-		s.Require().Eventually(checkErr, 5*time.Second, 100*time.Millisecond, "expected error when loading height: %d", v)
+		s.Require().Eventually(checkErr, 10*time.Second, 1*time.Second, "expected error when loading height: %d", v)
 	}
 }
 

@@ -27,21 +27,21 @@ func DiffModuleStates(expected, actual view.ModuleState) string {
 		res += fmt.Sprintf("OBJECT COLLECTION COUNT ERROR: expected %d, got %d\n", expectedNumObjectCollections, actualNumObjectCollections)
 	}
 
-	expected.ObjectCollections(func(expectedColl view.ObjectCollection, err error) bool {
+	for expectedColl, err := range expected.ObjectCollections {
 		if err != nil {
 			res += fmt.Sprintf("ERROR getting expected object collection: %s\n", err)
-			return true
+			continue
 		}
 
 		objTypeName := expectedColl.ObjectType().Name
 		actualColl, err := actual.GetObjectCollection(objTypeName)
 		if err != nil {
 			res += fmt.Sprintf("ERROR getting actual object collection: %s\n", err)
-			return true
+			continue
 		}
 		if actualColl == nil {
 			res += fmt.Sprintf("Object Collection %s: actuall collection NOT FOUND\n", objTypeName)
-			return true
+			continue
 		}
 
 		diff := DiffObjectCollections(expectedColl, actualColl)
@@ -49,9 +49,7 @@ func DiffModuleStates(expected, actual view.ModuleState) string {
 			res += "Object Collection " + objTypeName + "\n"
 			res += indentAllLines(diff)
 		}
-
-		return true
-	})
+	}
 
 	return res
 }

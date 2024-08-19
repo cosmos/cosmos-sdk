@@ -22,6 +22,7 @@ done
 # no runtime/v2 or server/v2 imports in x/ modules
 RUNTIMEV2_REGEX="cosmossdk.io/runtime/v2"
 SEVERV2_REGEX="cosmossdk.io/server/v2"
+XEXP_REGEX="golang.org/x/exp"
 find ./x/ -type f -name 'go.mod' -print0 | while IFS= read -r -d '' file
 do
   d=$(dirname "$file")
@@ -32,6 +33,11 @@ do
 
   if cd "$CWD/$d" && go list -test -f '{{ .Imports }}' ./... | grep -q -E "${SEVERV2_REGEX}"; then
     echo "${d} has a dependency on server/v2!"
+    exit 1
+  fi
+
+  if cd "$CWD/$d" && go list -test -f '{{ .Imports }}' ./... | grep -q -E "${XEXP_REGEX}"; then
+    echo "${d} has a dependency on golang.org/x/exp"
     exit 1
   fi
 done

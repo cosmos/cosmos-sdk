@@ -7,7 +7,11 @@ import (
 	"cosmossdk.io/schema"
 )
 
-var fieldsGen = rapid.SliceOfNDistinct(FieldGen, 1, 12, func(f schema.Field) string {
+var keyFieldsGen = rapid.SliceOfNDistinct(KeyFieldGen, 1, 6, func(f schema.Field) string {
+	return f.Name
+})
+
+var valueFieldsGen = rapid.SliceOfNDistinct(FieldGen, 1, 12, func(f schema.Field) string {
 	return f.Name
 })
 
@@ -17,35 +21,44 @@ var ObjectTypeGen = rapid.Custom(func(t *rapid.T) schema.ObjectType {
 		Name: NameGen.Draw(t, "name"),
 	}
 
-	fields := fieldsGen.Draw(t, "fields")
-	numKeyFields := rapid.IntRange(0, len(fields)).Draw(t, "numKeyFields")
-
-	typ.KeyFields = fields[:numKeyFields]
-
-	for i := range typ.KeyFields {
-		// key fields can't be nullable
-		typ.KeyFields[i].Nullable = false
-	}
-
-	typ.ValueFields = fields[numKeyFields:]
-
+	typ.KeyFields = keyFieldsGen.Draw(t, "keyFields")
+	typ.ValueFields = valueFieldsGen.Draw(t, "valueFields")
 	typ.RetainDeletions = boolGen.Draw(t, "retainDeletions")
 
 	return typ
 }).Filter(func(typ schema.ObjectType) bool {
-	// filter out duplicate enum names
-	typeNames := map[string]bool{typ.Name: true}
-	if hasDuplicateNames(typeNames, typ.KeyFields) {
+	// filter out duplicate field names
+	fieldNames := map[string]bool{}
+	if hasDuplicateFieldNames(fieldNames, typ.KeyFields) {
 		return false
 	}
-	if hasDuplicateNames(typeNames, typ.ValueFields) {
+	if hasDuplicateFieldNames(fieldNames, typ.ValueFields) {
+		return false
+	}
+
+	// filter out duplicate type names
+	typeNames := map[string]bool{typ.Name: true}
+	if hasDuplicateTypeNames(typeNames, typ.KeyFields) {
+		return false
+	}
+	if hasDuplicateTypeNames(typeNames, typ.ValueFields) {
 		return false
 	}
 	return true
 })
 
-// hasDuplicateNames checks if there is type name in the fields
-func hasDuplicateNames(typeNames map[string]bool, fields []schema.Field) bool {
+func hasDuplicateFieldNames(typeNames map[string]bool, fields []schema.Field) bool {
+	for _, field := range fields {
+		if _, ok := typeNames[field.Name]; ok {
+			return true
+		}
+		typeNames[field.Name] = true
+	}
+	return false
+}
+
+// hasDuplicateTypeNames checks if there is type name in the fields
+func hasDuplicateTypeNames(typeNames map[string]bool, fields []schema.Field) bool {
 	for _, field := range fields {
 		if field.Kind != schema.EnumKind {
 			continue

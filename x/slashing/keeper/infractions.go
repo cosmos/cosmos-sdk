@@ -28,12 +28,12 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 	// fetch the validator public key
 	consAddr := sdk.ConsAddress(addr)
 
-	// don't update missed blocks when validator's jailed
 	val, err := k.sk.ValidatorByConsAddr(ctx, consAddr)
 	if err != nil {
 		return err
 	}
 
+	// don't update missed blocks when validator's jailed
 	if val.IsJailed() {
 		return nil
 	}
@@ -142,11 +142,11 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 		}
 		if validator != nil && !validator.IsJailed() {
 			// Downtime confirmed: slash and jail the validator
-			// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height,
+			// We need to retrieve the stake distribution that signed the block. To do this, we subtract ValidatorUpdateDelay from the evidence height,
 			// and subtract an additional 1 since this is the LastCommit.
-			// Note that this *can* result in a negative "distributionHeight" up to -ValidatorUpdateDelay-1,
+			// Note that this *can* result in a negative "distributionHeight" of up to -ValidatorUpdateDelay-1,
 			// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
-			// That's fine since this is just used to filter unbonding delegations & redelegations.
+			// This is acceptable since it's only used to filter unbonding delegations & redelegations.
 			distributionHeight := height - sdk.ValidatorUpdateDelay - 1
 
 			slashFractionDowntime, err := k.SlashFractionDowntime(ctx)

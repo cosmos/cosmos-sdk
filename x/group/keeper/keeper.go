@@ -455,7 +455,7 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx context.Context) error {
 // is greater than defined MaxMetadataLen in the module configuration
 func (k Keeper) assertMetadataLength(metadata, description string) error {
 	if uint64(len(metadata)) > k.config.MaxMetadataLen {
-		return errors.ErrMetadataTooLong.Wrapf(description)
+		return errors.ErrMetadataTooLong.Wrap(description)
 	}
 	return nil
 }

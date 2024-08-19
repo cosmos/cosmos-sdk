@@ -35,6 +35,6 @@ func (am AppModule) BeforeEpochStart(ctx context.Context, epochIdentifier string
 }
 
 // AfterEpochEnd is a noop
-func (am AppModule) AfterEpochEnd(ctx context.Context, epochIdentifier string, epochNumber int64) error {
+func (am AppModule) AfterEpochEnd(_ context.Context, _ string, _ int64) error {
 	return nil
 }

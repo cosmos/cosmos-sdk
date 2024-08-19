@@ -1,0 +1,75 @@
+name: SimApp (v2) v0.52 Integration with Main
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+jobs:
+  compat:
+    name: Software Compat
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/scripts/check-compat.sh
+          sparse-checkout-cone-mode: false
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          check-latest: true
+      - name: Test v052 with latest main
+        run: |
+          .github/scripts/check-compat.sh $BRANCH $SIMAPP_VERSION cosmossdk.io/runtime/v2 cosmossdk.io/server/v2 cosmossdk.io/store/v2 cosmossdk.io/server/v2/stf cosmossdk.io/server/v2/appmanager cosmossdk.io/api cosmossdk.io/store cosmossdk.io/core cosmossdk.io/core/testing
+        env:
+          BRANCH: release/v0.52.x
+          SIMAPP_VERSION: v1
+      - name: Test v052 v2 with latest main
+        run: |
+          .github/scripts/check-compat.sh $BRANCH $SIMAPP_VERSION cosmossdk.io/runtime/v2 cosmossdk.io/server/v2 cosmossdk.io/store/v2 cosmossdk.io/server/v2/stf cosmossdk.io/server/v2/appmanager cosmossdk.io/api cosmossdk.io/store cosmossdk.io/core cosmossdk.io/core/testing
+        env:
+          BRANCH: release/v0.52.x
+          SIMAPP_VERSION: v2
+  sims-notify-success:
+    needs: [compat]
+    runs-on: ubuntu-latest
+    if: ${{ success() }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get previous workflow status
+        uses: ./.github/actions/last-workflow-status
+        id: last_status
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify Slack on success
+        if: ${{ steps.last_status.outputs.last_status == 'failure' }}
+        uses: rtCamp/action-slack-notify@v2.3.0
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: sdk-sims
+          SLACK_USERNAME: release/v0.52.x x main compat
+          SLACK_ICON_EMOJI: ":white_check_mark:"
+          SLACK_COLOR: good
+          SLACK_MESSAGE: Latest main x v0.52.x is compatible
+          SLACK_FOOTER: ""
+
+  sims-notify-failure:
+    permissions:
+      contents: none
+    needs: [compat]
+    runs-on: ubuntu-latest
+    if: ${{ failure() }}
+    steps:
+      - name: Notify Slack on failure
+        uses: rtCamp/action-slack-notify@v2.3.0
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: sdk-sims
+          SLACK_USERNAME: release/v0.52.x x main compat
+          SLACK_ICON_EMOJI: ":skull:"
+          SLACK_COLOR: danger
+          SLACK_MESSAGE: Latest main x v0.52.x is breaking
+          SLACK_FOOTER: ""

@@ -36,6 +36,7 @@ type AppManager[T transaction.Tx] struct {
 	stf StateTransitionFunction[T]
 }
 
+// InitGenesis initializes the genesis state of the application.
 func (a AppManager[T]) InitGenesis(
 	ctx context.Context,
 	blockRequest *appmanager.BlockRequest[T],
@@ -65,8 +66,6 @@ func (a AppManager[T]) InitGenesis(
 		return nil, nil, fmt.Errorf("failed to import genesis state: %w", err)
 	}
 	// run block
-	// TODO: in an ideal world, genesis state is simply an initial state being applied
-	// unaware of what that state means in relation to every other
 	blockRequest.Txs = genTxs
 
 	blockResponse, blockZeroState, err := a.stf.DeliverBlock(ctx, blockRequest, genesisState)
@@ -75,23 +74,39 @@ func (a AppManager[T]) InitGenesis(
 	}
 
 	// after executing block 0, we extract the changes and apply them to the genesis state.
-	blockZeroStateChanges, err := blockZeroState.GetStateChanges()
+	stateChanges, err := blockZeroState.GetStateChanges()
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get block zero state changes: %w", err)
 	}
 
-	err = genesisState.ApplyStateChanges(blockZeroStateChanges)
+	err = genesisState.ApplyStateChanges(stateChanges)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to apply block zero state changes to genesis state: %w", err)
 	}
 
 	return blockResponse, genesisState, err
-	// consensus server will need to set the version of the store
 }
 
 // ExportGenesis exports the genesis state of the application.
 func (a AppManager[T]) ExportGenesis(ctx context.Context, version uint64) ([]byte, error) {
-	bz, err := a.exportGenesis(ctx, version)
+	zeroState, err := a.db.StateAt(version)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get latest state: %w", err)
+	}
+
+	bz := make([]byte, 0)
+	_, err = a.stf.RunWithCtx(ctx, zeroState, func(ctx context.Context) error {
+		if a.exportGenesis == nil {
+			return errors.New("export genesis function not set")
+		}
+
+		bz, err = a.exportGenesis(ctx, version)
+		if err != nil {
+			return fmt.Errorf("failed to export genesis state: %w", err)
+		}
+
+		return nil
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to export genesis state: %w", err)
 	}

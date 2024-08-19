@@ -32,7 +32,6 @@ var (
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasBeginBlocker       = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
@@ -51,7 +50,7 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object.
-// If the mintFn argument is nil, then the SDK's default minting function will be used.
+// If the mintFn argument is nil, then the default minting function will be used.
 func NewAppModule(
 	cdc codec.Codec,
 	keeper keeper.Keeper,

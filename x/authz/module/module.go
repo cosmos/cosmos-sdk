@@ -37,7 +37,6 @@ var (
 	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasBeginBlocker       = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 )
 

@@ -54,7 +54,7 @@
           devShells = rec {
             default = with pkgs; mkShell {
               buildInputs = [
-                go_1_22 # Use Go 1.22 version
+                go_1_23 # Use Go 1.23 version
                 rocksdb
                 gomod2nix
               ];

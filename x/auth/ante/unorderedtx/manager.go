@@ -8,13 +8,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"sync"
 	"time"
-
-	"golang.org/x/exp/maps"
 )
 
 const (
@@ -162,9 +161,7 @@ func (m *Manager) exportSnapshot(height uint64, snapshotWriter func([]byte) erro
 	var buf bytes.Buffer
 	w := bufio.NewWriter(&buf)
 
-	keys := maps.Keys(m.txHashes)
-	sort.Slice(keys, func(i, j int) bool { return bytes.Compare(keys[i][:], keys[j][:]) < 0 })
-
+	keys := slices.SortedFunc(maps.Keys(m.txHashes), func(i, j TxHash) int { return bytes.Compare(i[:], j[:]) })
 	timestamp := time.Unix(int64(height), 0)
 	for _, txHash := range keys {
 		timeoutTime := m.txHashes[txHash]

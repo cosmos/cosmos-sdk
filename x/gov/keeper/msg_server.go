@@ -383,7 +383,7 @@ func (k msgServer) SudoExec(ctx context.Context, msg *v1.MsgSudoExec) (*v1.MsgSu
 	if err := k.BranchService.Execute(ctx, func(ctx context.Context) error {
 		// TODO add route check here
 		if err := k.MsgRouterService.CanInvoke(ctx, sdk.MsgTypeURL(sudoedMsg)); err != nil {
-			return errors.Wrapf(govtypes.ErrInvalidProposal, err.Error())
+			return errors.Wrap(govtypes.ErrInvalidProposal, err.Error())
 		}
 
 		msgResp, err = k.MsgRouterService.Invoke(ctx, sudoedMsg)

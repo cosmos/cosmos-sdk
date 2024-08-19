@@ -39,19 +39,23 @@ type Keeper struct {
 	LastBalance               collections.Item[math.Int]
 }
 
+const (
+	errModuleAccountNotSet = "%s module account has not been set"
+)
+
 func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, authority string,
 ) Keeper {
 	// ensure pool module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+		panic(fmt.Sprintf(errModuleAccountNotSet, types.ModuleName))
 	}
 	// ensure stream account is set
 	if addr := ak.GetModuleAddress(types.StreamAccount); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.StreamAccount))
+		panic(fmt.Sprintf(errModuleAccountNotSet, types.StreamAccount))
 	}
 	// ensure protocol pool distribution account is set
 	if addr := ak.GetModuleAddress(types.ProtocolPoolDistrAccount); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.ProtocolPoolDistrAccount))
+		panic(fmt.Sprintf(errModuleAccountNotSet, types.ProtocolPoolDistrAccount))
 	}
 
 	sb := collections.NewSchemaBuilder(env.KVStoreService)

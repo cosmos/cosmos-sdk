@@ -10,7 +10,9 @@ import (
 
 // KeyringContextKey is the key used to store the keyring in the context.
 // The keyring must be wrapped using the KeyringImpl.
-var KeyringContextKey struct{}
+var KeyringContextKey keyringContextKey
+
+type keyringContextKey struct{}
 
 var _ Keyring = &KeyringImpl{}
 

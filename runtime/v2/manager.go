@@ -426,11 +426,11 @@ func (m *MM[T]) RegisterServices(app *App[T]) error {
 
 		// register pre and post msg
 		if module, ok := module.(appmodulev2.HasPreMsgHandlers); ok {
-			registerPreMsgHandler(module, app)
+			module.RegisterPreMsgHandlers(app.msgRouterBuilder)
 		}
 
 		if module, ok := module.(appmodulev2.HasPostMsgHandlers); ok {
-			registerPostMsgHandler(module, app)
+			module.RegisterPostMsgHandlers(app.msgRouterBuilder)
 		}
 	}
 
@@ -681,52 +681,6 @@ func messagePassingInterceptor(msg transaction.Msg) grpc.UnaryServerInterceptor 
 	) (interface{}, error) {
 		return handler(ctx, msg)
 	}
-}
-
-var _ appmodulev2.PreMsgRouter = (*preMsgRouter)(nil)
-
-// preMsgRouter implements appmodulev2.PreMsgRouter
-type preMsgRouter struct {
-	stfMsgRouter *stf.MsgRouterBuilder
-}
-
-func (p *preMsgRouter) Register(msgName string, handler appmodulev2.PreMsgHandler) {
-	p.stfMsgRouter.RegisterPreHandler(msgName, handler)
-}
-
-func (p *preMsgRouter) RegisterGlobal(handler appmodulev2.PreMsgHandler) {
-	p.stfMsgRouter.RegisterGlobalPreHandler(handler)
-}
-
-func registerPreMsgHandler[T transaction.Tx](mod appmodulev2.HasPreMsgHandlers, app *App[T]) {
-	p := &preMsgRouter{
-		stfMsgRouter: app.msgRouterBuilder,
-	}
-
-	mod.RegisterPreMsgHandlers(p)
-}
-
-var _ appmodulev2.PostMsgRouter = (*postMsgRouter)(nil)
-
-// postMsgRouter implements appmodulev2.PostMsgRouter
-type postMsgRouter struct {
-	stfMsgRouter *stf.MsgRouterBuilder
-}
-
-func (p *postMsgRouter) Register(msgName string, handler appmodulev2.PostMsgHandler) {
-	p.stfMsgRouter.RegisterPostHandler(msgName, handler)
-}
-
-func (p *postMsgRouter) RegisterGlobal(handler appmodulev2.PostMsgHandler) {
-	p.stfMsgRouter.RegisterGlobalPostHandler(handler)
-}
-
-func registerPostMsgHandler[T transaction.Tx](mod appmodulev2.HasPostMsgHandlers, app *App[T]) {
-	p := &postMsgRouter{
-		stfMsgRouter: app.msgRouterBuilder,
-	}
-
-	mod.RegisterPostMsgHandlers(p)
 }
 
 // defaultMigrationsOrder returns a default migrations order: ascending alphabetical by module name,

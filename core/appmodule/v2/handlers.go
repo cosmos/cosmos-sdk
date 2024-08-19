@@ -19,12 +19,12 @@ type (
 // msg handler
 
 type PreMsgRouter interface {
-	// Register will register a specific message handler hooking into the message with
+	// RegisterPreHandler will register a specific message handler hooking into the message with
 	// the provided name.
-	Register(msgName string, handler PreMsgHandler)
-	// RegisterGlobal will register a global message handler hooking into any message
+	RegisterPreHandler(msgName string, handler PreMsgHandler)
+	// RegisterGlobalPreHandler will register a global message handler hooking into any message
 	// being executed.
-	RegisterGlobal(handler PreMsgHandler)
+	RegisterGlobalPreHandler(handler PreMsgHandler)
 }
 
 type HasPreMsgHandlers interface {
@@ -40,11 +40,11 @@ type HasMsgHandlers interface {
 }
 
 type PostMsgRouter interface {
-	// Register will register a specific message handler hooking after the execution of message with
+	// RegisterPostHandler will register a specific message handler hooking after the execution of message with
 	// the provided name.
-	Register(msgName string, handler PostMsgHandler)
-	// RegisterGlobal will register a global message handler hooking after the execution of any message.
-	RegisterGlobal(handler PostMsgHandler)
+	RegisterPostHandler(msgName string, handler PostMsgHandler)
+	// RegisterGlobalPostHandler will register a global message handler hooking after the execution of any message.
+	RegisterGlobalPostHandler(handler PostMsgHandler)
 }
 
 type HasPostMsgHandlers interface {

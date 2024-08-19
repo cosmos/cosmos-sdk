@@ -39,6 +39,11 @@ baseAppOptions = append(baseAppOptions, baseapp.SetIncludeNestedMsgsGas([]sdk.Me
 app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 ```
 
+To be able to simulate nested messages within a transaction, message types containing nested messages must implement the
+`HasNestedMsgs` interface. This interface requires a single method: `GetMsgs() ([]sdk.Msg, error)`, which should return
+the nested messages. By implementing this interface, the BaseApp can simulate these nested messages during
+transaction simulation. 
+
 ## [v0.52.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-alpha.0)
 
 Documentation to migrate an application from v0.50.x to server/v2 is available elsewhere.

@@ -5,6 +5,7 @@ import (
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/schema"
+	"cosmossdk.io/schema/testing/statesim"
 )
 
 var keyFieldsGen = rapid.SliceOfNDistinct(KeyFieldGen, 1, 6, func(f schema.Field) string {
@@ -81,7 +82,14 @@ func ObjectInsertGen(objectType schema.ObjectType) *rapid.Generator[schema.Objec
 // ObjectUpdateGen generates object updates that are valid for updates using the provided state map as a source
 // of valid existing keys.
 func ObjectUpdateGen(objectType schema.ObjectType, state *btree.Map[string, schema.ObjectUpdate]) *rapid.Generator[schema.ObjectUpdate] {
-	keyGen := ObjectKeyGen(objectType.KeyFields)
+	keyGen := ObjectKeyGen(objectType.KeyFields).Filter(func(key interface{}) bool {
+		// filter out keys that exist in the state
+		if state != nil {
+			_, exists := state.Get(statesim.FormatObjectKey(objectType, key))
+			return !exists
+		}
+		return true
+	})
 
 	if len(objectType.ValueFields) == 0 {
 		// special case where there are no value fields,
@@ -91,15 +99,17 @@ func ObjectUpdateGen(objectType schema.ObjectType, state *btree.Map[string, sche
 				TypeName: objectType.Name,
 			}
 
-			// 50% of the time delete existing key (when there are keys)
+			// 50% of the time use an existing key (when there are keys)
 			n := 0
 			if state != nil {
 				n = state.Len()
 			}
-			if n > 0 && boolGen.Draw(t, "delete") {
+			if n > 0 && boolGen.Draw(t, "update existing") {
 				i := rapid.IntRange(0, n-1).Draw(t, "index")
 				update.Key = state.Values()[i].Key
-				update.Delete = true
+				// only delete 50% of the time because we do want to sometimes send
+				// trivial updates
+				update.Delete = boolGen.Draw(t, "delete")
 			} else {
 				update.Key = keyGen.Draw(t, "key")
 			}

@@ -335,25 +335,25 @@ simd tx feegrant grant [granter] [grantee] [flags]
 
 Examples:
 
-###### One-time spend limit:
+###### One-time spend limit
 
 ```shell
 simd tx feegrant grant cosmos1.. cosmos1.. --spend-limit 100stake
 ```
 
-###### Periodic spend limit:
+###### Periodic spend limit
 
 ```shell
 simd tx feegrant grant cosmos1.. cosmos1.. --spend-limit 100stake --period 3600 --period-limit 10stake
 ```
 
-###### With expiration:
+###### With expiration
 
 ```shell
 simd tx feegrant grant cosmos1.. cosmos1.. --spend-limit 100stake --expiration 2024-10-31T15:04:05Z
 ```
 
-###### With allowed messages:
+###### With allowed messages
 
 ```shell
 simd tx feegrant grant cosmos1.. cosmos1.. --spend-limit 100stake --expiration 2024-10-31T15:04:05Z --allowed-messages "/cosmos.gov.v1beta1.MsgSubmitProposal,/cosmos.gov.v1beta1.MsgVote"

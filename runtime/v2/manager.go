@@ -424,7 +424,14 @@ func (m *MM[T]) RegisterServices(app *App[T]) error {
 			}
 		}
 
-		// TODO: register pre and post msg
+		// register pre and post msg
+		if module, ok := module.(appmodulev2.HasPreMsgHandlers); ok {
+			module.RegisterPreMsgHandlers(app.msgRouterBuilder)
+		}
+
+		if module, ok := module.(appmodulev2.HasPostMsgHandlers); ok {
+			module.RegisterPostMsgHandlers(app.msgRouterBuilder)
+		}
 	}
 
 	return nil

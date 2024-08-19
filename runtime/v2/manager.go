@@ -482,8 +482,8 @@ func (m *MM[T]) RegisterServices(app *App[T]) error {
 func (m *MM[T]) validateConfig() error {
 	if err := m.assertNoForgottenModules("PreBlockers", m.config.PreBlockers, func(moduleName string) bool {
 		module := m.modules[moduleName]
-		_, hasBlock := module.(appmodulev2.HasPreBlocker)
-		return !hasBlock
+		_, hasPreBlock := module.(appmodulev2.HasPreBlocker)
+		return !hasPreBlock
 	}); err != nil {
 		return err
 	}

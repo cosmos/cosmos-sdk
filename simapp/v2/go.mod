@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/core/testing v0.0.0-20240815194237-858ec2fcb897 // indirect; main
 	cosmossdk.io/depinject v1.0.0
-	cosmossdk.io/log v1.4.0
+	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/runtime/v2 v2.0.0-20240816111545-aeeaca64da2c // main
 	cosmossdk.io/server/v2 v2.0.0-20240815194237-858ec2fcb897 // main

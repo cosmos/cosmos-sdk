@@ -31,7 +31,7 @@ func (k Keeper) JailUntil(ctx context.Context, consAddr sdk.ConsAddress, jailTim
 		if err != nil {
 			return types.ErrNoSigningInfoFound.Wrapf("could not convert consensus address to string. Error: %s", err.Error())
 		}
-		return types.ErrNoSigningInfoFound.Wrapf(fmt.Sprintf("cannot jail validator with consensus address %s that does not have any signing information", addr))
+		return types.ErrNoSigningInfoFound.Wrapf("cannot jail validator with consensus address %s that does not have any signing information", addr)
 	}
 
 	signInfo.JailedUntil = jailTime

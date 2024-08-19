@@ -3,7 +3,7 @@ module cosmossdk.io/tools/cosmovisor
 go 1.23
 
 require (
-	cosmossdk.io/log v1.4.0
+	cosmossdk.io/log v1.4.1
 	cosmossdk.io/x/upgrade v0.1.4
 	github.com/otiai10/copy v1.14.0
 	github.com/pelletier/go-toml/v2 v2.2.2

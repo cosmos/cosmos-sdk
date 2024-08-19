@@ -5,7 +5,6 @@ import (
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/schema"
-	"cosmossdk.io/schema/testing/statesim"
 )
 
 var keyFieldsGen = rapid.SliceOfNDistinct(KeyFieldGen, 1, 6, func(f schema.Field) string {
@@ -85,66 +84,38 @@ func ObjectUpdateGen(objectType schema.ObjectType, state *btree.Map[string, sche
 	keyGen := ObjectKeyGen(objectType.KeyFields).Filter(func(key interface{}) bool {
 		// filter out keys that exist in the state
 		if state != nil {
-			_, exists := state.Get(statesim.FormatObjectKey(objectType, key))
+			_, exists := state.Get(ObjectKeyString(objectType, key))
 			return !exists
 		}
 		return true
 	})
+	insertValueGen := ObjectValueGen(objectType.ValueFields, false)
+	updateValueGen := ObjectValueGen(objectType.ValueFields, true)
+	return rapid.Custom(func(t *rapid.T) schema.ObjectUpdate {
+		update := schema.ObjectUpdate{
+			TypeName: objectType.Name,
+		}
 
-	if len(objectType.ValueFields) == 0 {
-		// special case where there are no value fields,
-		// so we just insert or delete, no updates
-		return rapid.Custom(func(t *rapid.T) schema.ObjectUpdate {
-			update := schema.ObjectUpdate{
-				TypeName: objectType.Name,
-			}
+		// 50% of the time use existing key (when there are keys)
+		n := 0
+		if state != nil {
+			n = state.Len()
+		}
+		if n > 0 && boolGen.Draw(t, "existingKey") {
+			i := rapid.IntRange(0, n-1).Draw(t, "index")
+			update.Key = state.Values()[i].Key
 
-			// 50% of the time use an existing key (when there are keys)
-			n := 0
-			if state != nil {
-				n = state.Len()
-			}
-			if n > 0 && boolGen.Draw(t, "update existing") {
-				i := rapid.IntRange(0, n-1).Draw(t, "index")
-				update.Key = state.Values()[i].Key
-				// only delete 50% of the time because we do want to sometimes send
-				// trivial updates
-				update.Delete = boolGen.Draw(t, "delete")
+			// delete 50% of the time
+			if boolGen.Draw(t, "delete") {
+				update.Delete = true
 			} else {
-				update.Key = keyGen.Draw(t, "key")
+				update.Value = updateValueGen.Draw(t, "value")
 			}
+		} else {
+			update.Key = keyGen.Draw(t, "key")
+			update.Value = insertValueGen.Draw(t, "value")
+		}
 
-			return update
-		})
-	} else {
-		insertValueGen := ObjectValueGen(objectType.ValueFields, false)
-		updateValueGen := ObjectValueGen(objectType.ValueFields, true)
-		return rapid.Custom(func(t *rapid.T) schema.ObjectUpdate {
-			update := schema.ObjectUpdate{
-				TypeName: objectType.Name,
-			}
-
-			// 50% of the time use existing key (when there are keys)
-			n := 0
-			if state != nil {
-				n = state.Len()
-			}
-			if n > 0 && boolGen.Draw(t, "existingKey") {
-				i := rapid.IntRange(0, n-1).Draw(t, "index")
-				update.Key = state.Values()[i].Key
-
-				// delete 50% of the time
-				if boolGen.Draw(t, "delete") {
-					update.Delete = true
-				} else {
-					update.Value = updateValueGen.Draw(t, "value")
-				}
-			} else {
-				update.Key = keyGen.Draw(t, "key")
-				update.Value = insertValueGen.Draw(t, "value")
-			}
-
-			return update
-		})
-	}
+		return update
+	})
 }

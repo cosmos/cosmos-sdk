@@ -331,6 +331,36 @@ func (s *SystemUnderTest) StopChain() {
 	s.ChainStarted = false
 }
 
+// StopSingleNode stops a validator node without stop the chain running
+func (s *SystemUnderTest) StopSingleNode() error {
+	if !s.ChainStarted {
+		return nil
+	}
+
+	s.pidsLock.RLock()
+	pids := maps.Keys(s.pids)
+	s.pidsLock.RUnlock()
+
+	p, err := os.FindProcess(pids[0])
+	if err != nil {
+		return err
+	}
+
+	// Kill the 1st node
+	return p.Kill()
+}
+
+// StartSingleNode start running a validator node with dir input
+func (s *SystemUnderTest) StartSingleNode(t *testing.T, dir string) {
+	cmd := exec.Command( //nolint:gosec // used by tests only
+		locateExecutable(s.execBinary),
+		[]string{"start", "--log_level=info", "--log_no_color"}...,
+	)
+	cmd.Dir = WorkDir
+	err := cmd.Start()
+	require.NoError(t, err)
+}
+
 func (s *SystemUnderTest) withEachPid(cb func(p *os.Process)) {
 	s.pidsLock.RLock()
 	pids := maps.Keys(s.pids)

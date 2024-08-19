@@ -169,6 +169,16 @@ func (c CLIWrapper) Run(args ...string) string {
 	return rsp
 }
 
+// RunCommandWithArgs use for run cli command, not tx
+func (c CLIWrapper) RunCommandWithArgs(args ...string) string {
+	c.t.Helper()
+	execOutput, ok := c.run(args)
+	if !ok {
+		return execOutput
+	}
+	return execOutput
+}
+
 // AwaitTxCommitted wait for tx committed on chain
 func (c CLIWrapper) AwaitTxCommitted(submitResp string, timeout ...time.Duration) (string, bool) {
 	c.t.Helper()

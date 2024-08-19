@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1 // indirect
-	cosmossdk.io/log v1.4.0
+	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/simapp v0.0.0-20230309163709-87da587416ba
 	cosmossdk.io/store v1.1.1-0.20240815194237-858ec2fcb897 // main

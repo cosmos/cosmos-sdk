@@ -126,7 +126,7 @@ func TestSimsAppV2(t *testing.T) {
 	// register all msg factories
 	for name, v := range app.ModuleManager().Modules() {
 		if name == "authz" { //|| // todo: enable when router issue is solved with `/` prefix in MsgTypeURL
-			//name == "slashing" { // todo: enable when tree issue fixed
+			//	name == "slashing" { // todo: enable when tree issue fixed
 			continue
 		}
 		if w, ok := v.(HasWeightedOperationsX); ok {
@@ -136,8 +136,8 @@ func TestSimsAppV2(t *testing.T) {
 	// todo: register legacy and v1 msg proposals
 
 	const ( // todo: read from CLI instead
-		numBlocks     = 50 // 500 default
-		maxTXPerBlock = 5  // 200 default
+		numBlocks     = 500 // 500 default
+		maxTXPerBlock = 200 // 200 default
 	)
 
 	rootReporter := simsx.NewBasicSimulationReporter()
@@ -146,7 +146,7 @@ func TestSimsAppV2(t *testing.T) {
 		txSkippedCounter int
 		txTotalCounter   int
 	)
-	for i := 0; i < numBlocks; i++ {
+	for i := uint64(0); i < numBlocks; i++ {
 		if len(activeValidatorSet) == 0 {
 			t.Skipf("run out of validators in block: %d\n", i+1)
 			return
@@ -155,15 +155,17 @@ func TestSimsAppV2(t *testing.T) {
 		blockTime = blockTime.Add(time.Duration(int64(r.Intn(int(timeRangePerBlock)))) * time.Second)
 		valsetHistory.Add(blockTime, activeValidatorSet)
 		blockReqN := &appmanager.BlockRequest[T]{
-			Height:  uint64(2 + i),
+			Height:  genesisReq.Height + 2 + i,
 			Time:    blockTime,
 			Hash:    stateRoot,
 			AppHash: stateRoot,
 			ChainId: chainID,
 		}
+		nextProposer := activeValidatorSet.NextProposer(r)
+		fmt.Printf("proposer: %X\n", nextProposer)
 		cometInfo := comet.Info{
-			Evidence:        valsetHistory.MissBehaviour(r),
-			ProposerAddress: activeValidatorSet.NextProposer(r),
+			//Evidence:        valsetHistory.MissBehaviour(r),
+			ProposerAddress: nextProposer,
 			LastCommit:      activeValidatorSet.NewCommitInfo(r),
 		}
 
@@ -207,6 +209,7 @@ func TestSimsAppV2(t *testing.T) {
 		txTotalCounter += txPerBlockCounter
 		txSkippedCounter += txPerBlockSkippedCounter
 		activeValidatorSet = activeValidatorSet.Update(blockRsp.ValidatorUpdates)
+		fmt.Printf("active validators: %d at next height %d\n", len(activeValidatorSet), blockReqN.Height)
 	}
 	fmt.Println("+++ reporter: " + rootReporter.Summary().String())
 	fmt.Printf("Tx total: %d skipped: %d\n", txTotalCounter, txSkippedCounter)
@@ -362,23 +365,30 @@ func (v WeightedValidators) Update(updates []appmodulev2.ValidatorUpdate) Weight
 	})
 	newValset := slices.Clone(v)
 	for _, u := range valUpdates {
-		pos, ok := newValset.FindPosition(u.addr)
-		if !ok {
-			if u.power > 0 { // add to valset
-				newValset = append(newValset, WeightedValidator{addr: u.addr, power: u.power})
-			}
-			continue
-		}
-		if u.power == 0 { // remove from valset
+		switch pos, ok := newValset.FindPosition(u.addr); {
+		case !ok && u.power == 0: // ignore
+			fmt.Printf("ignoring validator: %X -> %d\n", u.addr, u.power)
+		case !ok && u.power > 0:
+			// add to valset
+			newValset = append(newValset, WeightedValidator{addr: u.addr, power: u.power})
+			fmt.Printf("adding validator: %X -> %d\n", u.addr, u.power)
+		case ok && u.power == 0:
+			// remove from valset
 			newValset = append(newValset[0:pos], newValset[pos+1:]...)
-			continue
+			fmt.Printf("removing validator: %X\n", u.addr)
+		case ok && u.power > 0:
+			// update entry
+			newValset[pos].power = u.power
+			fmt.Printf("update validator: %X -> %d\n", u.addr, u.power)
+		default:
+			panic(fmt.Sprintf("unsupported validator update: power %d, existing %v", u.power, ok))
 		}
-		newValset[pos].power = u.power // update entry
 	}
 	// sort vals by power, addr desc
 	newValset.sort()
 	return newValset
 }
+
 func (v WeightedValidators) FindPosition(addr []byte) (pos int, exists bool) {
 	return slices.BinarySearchFunc(v, WeightedValidator{addr: addr}, func(s, o WeightedValidator) int { return bytes.Compare(s.addr, o.addr) })
 }

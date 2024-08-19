@@ -2,6 +2,8 @@ package simulation
 
 import (
 	"context"
+	"crypto/sha256"
+	"fmt"
 	"slices"
 	"time"
 
@@ -318,6 +320,11 @@ func MsgRotateConsPubKeyFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.M
 			return nil, nil
 		}
 		msg := must(types.NewMsgRotateConsPubKey(val.GetOperator(), newPubKey))
+		asHash := func(s []byte) []byte {
+			hash := sha256.Sum256(s)
+			return hash[:20]
+		}
+		fmt.Printf("Rotating pubkey from %X to %X\n", asHash(valOper.ConsKey.PubKey().Bytes()), asHash(newPubKey.Bytes()))
 
 		// check if there's another key rotation for this same key in the same block
 		for _, r := range must(k.GetBlockConsPubKeyRotationHistory(ctx)) {

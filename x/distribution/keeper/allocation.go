@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/comet"
@@ -62,7 +63,7 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 
 		validator, err := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 		if err != nil {
-			return err
+			return fmt.Errorf("couldn't get validator by address: %X: %w", vote.Validator.Address, err)
 		}
 
 		// TODO: Consider micro-slashing for missing votes.

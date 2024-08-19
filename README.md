@@ -67,7 +67,7 @@ The version matrix below shows which versions of the Cosmos SDK, modules and lib
 #### Core Dependencies
 
 Core dependencies are the core libraries that an application may depend on.
-Core dependencies not mentionned here as compatible across all maintained SDK versions.
+Core dependencies not mentioned here as compatible across all maintained SDK versions.
 
 | Cosmos SDK | cosmossdk.io/core | cosmossdk.io/api | cosmossdk.io/x/tx |
 | ---------- | ----------------- | ---------------- | ----------------- |
@@ -105,4 +105,4 @@ Module Dependencies are the modules that an application may depend on and which 
 
 ## Disambiguation
 
-This Cosmos SDK project is not related to the [React-Cosmos](https://github.com/react-cosmos/react-cosmos) project (yet). Many thanks to Evan Coury and Ovidiu (@skidding) for this Github organization name. As per our agreement, this disambiguation notice will stay here.
+This Cosmos SDK project is not related to the [React-Cosmos](https://github.com/react-cosmos/react-cosmos) project (yet). Many thanks to Evan Coury and Ovidiu [(@skidding)](https://github.com/skidding) for this Github organization name. As per our agreement, this disambiguation notice will stay here.

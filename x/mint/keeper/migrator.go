@@ -22,7 +22,7 @@ func NewMigrator(k Keeper) Migrator {
 // version 2. Specifically, it takes the parameters that are currently stored
 // and managed by the x/params modules and stores them directly into the x/mint
 // module state.
-func (m Migrator) Migrate1to2(ctx context.Context) error {
+func (m Migrator) Migrate1to2(_ context.Context) error {
 	return nil
 }
 

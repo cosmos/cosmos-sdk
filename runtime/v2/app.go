@@ -79,6 +79,11 @@ func (a *App[T]) LoadHeight(height uint64) error {
 	return a.db.LoadVersion(height)
 }
 
+// LoadLatestHeight loads the latest height.
+func (a *App[T]) LoadLatestHeight() (uint64, error) {
+	return a.db.GetLatestVersion()
+}
+
 // Close is called in start cmd to gracefully cleanup resources.
 func (a *App[T]) Close() error {
 	return nil

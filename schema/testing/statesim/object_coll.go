@@ -3,6 +3,7 @@ package statesim
 import (
 	"fmt"
 
+	"github.com/cockroachdb/apd/v3"
 	"github.com/tidwall/btree"
 	"pgregory.net/rapid"
 
@@ -162,6 +163,15 @@ func fmtValue(kind schema.Kind, value any) string {
 		return fmt.Sprintf("0x%x", value)
 	case schema.JSONKind:
 		return fmt.Sprintf("%s", value)
+	case schema.DecimalStringKind, schema.IntegerStringKind:
+		// we need to normalize decimal & integer strings to remove leading & trailing zeros
+		d, _, err := apd.NewFromString(value.(string))
+		if err != nil {
+			panic(err)
+		}
+		r := &apd.Decimal{}
+		r, _ = r.Reduce(d)
+		return r.String()
 	default:
 		return fmt.Sprintf("%v", value)
 	}

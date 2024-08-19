@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/schema"
 	"cosmossdk.io/schema/appdata"
+	schematesting "cosmossdk.io/schema/testing"
 	"cosmossdk.io/schema/testing/statesim"
 	"cosmossdk.io/schema/view"
 )
@@ -129,7 +130,7 @@ func (a *Simulator) formatUpdateKey(moduleName string, update schema.ObjectUpdat
 		panic(err)
 	}
 
-	ks := fmt.Sprintf("%s:%s:%s", moduleName, update.TypeName, statesim.FormatObjectKey(objColl.ObjectType(), update.Key))
+	ks := fmt.Sprintf("%s:%s:%s", moduleName, update.TypeName, schematesting.ObjectKeyString(objColl.ObjectType(), update.Key))
 	return ks
 }
 

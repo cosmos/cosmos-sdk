@@ -132,9 +132,8 @@ func ObjectKeyGen(keyFields []schema.Field) *rapid.Generator[any] {
 // Values that are for update may skip some fields in a ValueUpdates instance whereas values for insertion
 // will always contain all values.
 func ObjectValueGen(valueFields []schema.Field, forUpdate bool) *rapid.Generator[any] {
-	// special case where there are no value fields
-	// we shouldn't end up here, but just in case
 	if len(valueFields) == 0 {
+		// if we have no value fields, always return nil
 		return rapid.Just[any](nil)
 	}
 

@@ -3,6 +3,7 @@ package statesim
 import (
 	"fmt"
 
+	"github.com/cockroachdb/apd/v3"
 	"github.com/tidwall/btree"
 	"pgregory.net/rapid"
 
@@ -48,7 +49,7 @@ func (o *ObjectCollection) ApplyUpdate(update schema.ObjectUpdate) error {
 		return err
 	}
 
-	keyStr := fmtObjectKey(o.objectType, update.Key)
+	keyStr := FormatObjectKey(o.objectType, update.Key)
 	cur, exists := o.objects.Get(keyStr)
 	if update.Delete {
 		if o.objectType.RetainDeletions && o.options.CanRetainDeletions {
@@ -119,7 +120,7 @@ func (o *ObjectCollection) AllState(f func(schema.ObjectUpdate, error) bool) {
 // GetObject returns the object with the given key from the collection represented as an ObjectUpdate
 // itself. Deletions that are retained are returned as ObjectUpdate's with delete set to true.
 func (o *ObjectCollection) GetObject(key interface{}) (update schema.ObjectUpdate, found bool, err error) {
-	update, ok := o.objects.Get(fmtObjectKey(o.objectType, key))
+	update, ok := o.objects.Get(FormatObjectKey(o.objectType, key))
 	return update, ok, nil
 }
 
@@ -133,7 +134,10 @@ func (o *ObjectCollection) Len() (int, error) {
 	return o.objects.Len(), nil
 }
 
-func fmtObjectKey(objectType schema.ObjectType, key any) string {
+// FormatObjectKey formats the object key as a string deterministically for storage in a map.
+// The key must be valid for the object type and the object type must be valid.
+// No validation is performed here.
+func FormatObjectKey(objectType schema.ObjectType, key any) string {
 	keyFields := objectType.KeyFields
 	n := len(keyFields)
 	switch n {
@@ -160,8 +164,15 @@ func fmtValue(kind schema.Kind, value any) string {
 	switch kind {
 	case schema.BytesKind, schema.AddressKind:
 		return fmt.Sprintf("0x%x", value)
-	case schema.JSONKind:
-		return fmt.Sprintf("%s", value)
+	case schema.DecimalStringKind, schema.IntegerStringKind:
+		// we need to normalize decimal & integer strings to remove leading & trailing zeros
+		d, _, err := apd.NewFromString(value.(string))
+		if err != nil {
+			panic(err)
+		}
+		r := &apd.Decimal{}
+		r, _ = r.Reduce(d)
+		return r.String()
 	default:
 		return fmt.Sprintf("%v", value)
 	}

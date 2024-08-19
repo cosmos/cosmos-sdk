@@ -92,10 +92,10 @@ func (a *Simulator) BlockDataGenN(minUpdatesPerBlock, maxUpdatesPerBlock int) *r
 		packets = append(packets, appdata.StartBlockData{Height: a.blockNum + 1})
 
 		updateSet := map[string]bool{}
-		// filter out any updates to the same key from this block, otherwise we can end up with weird errors
+		// filter out any updates to the same key from this block, otherwise we can end up with hard to debug errors
 		updateGen := a.state.UpdateGen().Filter(func(data appdata.ObjectUpdateData) bool {
 			for _, update := range data.Updates {
-				_, existing := updateSet[fmt.Sprintf("%s:%v", data.ModuleName, update.Key)]
+				_, existing := updateSet[a.formatUpdateKey(data.ModuleName, update)]
 				if existing {
 					return false
 				}
@@ -106,7 +106,8 @@ func (a *Simulator) BlockDataGenN(minUpdatesPerBlock, maxUpdatesPerBlock int) *r
 		for i := 0; i < numUpdates; i++ {
 			data := updateGen.Draw(t, fmt.Sprintf("update[%d]", i))
 			for _, update := range data.Updates {
-				updateSet[fmt.Sprintf("%s:%v", data.ModuleName, update.Key)] = true
+				// we need to set the update here each time so that this is used to filter out duplicates in the next round
+				updateSet[a.formatUpdateKey(data.ModuleName, update)] = true
 			}
 			packets = append(packets, data)
 		}
@@ -115,6 +116,21 @@ func (a *Simulator) BlockDataGenN(minUpdatesPerBlock, maxUpdatesPerBlock int) *r
 
 		return packets
 	})
+}
+
+func (a *Simulator) formatUpdateKey(moduleName string, update schema.ObjectUpdate) string {
+	mod, err := a.state.GetModule(moduleName)
+	if err != nil {
+		panic(err)
+	}
+
+	objColl, err := mod.GetObjectCollection(update.TypeName)
+	if err != nil {
+		panic(err)
+	}
+
+	ks := fmt.Sprintf("%s:%s:%s", moduleName, update.TypeName, statesim.FormatObjectKey(objColl.ObjectType(), update.Key))
+	return ks
 }
 
 // ProcessBlockData processes the given block data, advancing the app state based on the object updates in the block

@@ -35,6 +35,10 @@ var FieldGen = rapid.Custom(func(t *rapid.T) schema.Field {
 	return field
 })
 
+var KeyFieldGen = FieldGen.Filter(func(f schema.Field) bool {
+	return !f.Nullable && f.Kind.ValidKeyKind()
+})
+
 // FieldValueGen generates random valid values for the field, aiming to exercise the full range of possible
 // values for the field.
 func FieldValueGen(field schema.Field) *rapid.Generator[any] {

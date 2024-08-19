@@ -29,7 +29,7 @@ var objectTypesGen = rapid.Custom(func(t *rapid.T) []schema.ObjectType {
 }).Filter(func(objectTypes []schema.ObjectType) bool {
 	typeNames := map[string]bool{}
 	for _, objectType := range objectTypes {
-		if hasDuplicateNames(typeNames, objectType.KeyFields) || hasDuplicateNames(typeNames, objectType.ValueFields) {
+		if hasDuplicateTypeNames(typeNames, objectType.KeyFields) || hasDuplicateTypeNames(typeNames, objectType.ValueFields) {
 			return false
 		}
 		if typeNames[objectType.Name] {
@@ -43,9 +43,9 @@ var objectTypesGen = rapid.Custom(func(t *rapid.T) []schema.ObjectType {
 // MustNewModuleSchema calls NewModuleSchema and panics if there's an error. This should generally be used
 // only in tests or initialization code.
 func MustNewModuleSchema(objectTypes []schema.ObjectType) schema.ModuleSchema {
-	schema, err := schema.NewModuleSchema(objectTypes)
+	sch, err := schema.NewModuleSchema(objectTypes)
 	if err != nil {
 		panic(err)
 	}
-	return schema
+	return sch
 }

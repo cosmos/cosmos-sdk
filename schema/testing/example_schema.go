@@ -152,6 +152,9 @@ func mkTestObjectType(kind schema.Kind) schema.ObjectType {
 
 	keyField := field
 	keyField.Name = "key"
+	if !kind.ValidKeyKind() {
+		keyField.Kind = schema.Int32Kind
+	}
 	val1Field := field
 	val1Field.Name = "valNotNull"
 	val2Field := field

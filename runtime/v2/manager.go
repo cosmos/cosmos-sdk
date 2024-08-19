@@ -443,7 +443,7 @@ func (m *MM[T]) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap
 
 				// The module manager assumes only one module will update the validator set, and it can't be a new module.
 				if len(moduleValUpdates) > 0 {
-					return nil, errors.New("validator InitGenesis update cannot be set by a new module")
+					return nil, errors.New("validator InitGenesis update is already set by another module")
 				}
 			}
 		}

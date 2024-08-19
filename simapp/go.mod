@@ -31,7 +31,7 @@ require (
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/slashing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-20240226161501-23359a0b6d91
-	cosmossdk.io/x/tx v0.13.4-0.20240815194237-858ec2fcb897 // main
+	cosmossdk.io/x/tx v0.14.0 // main
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
 	github.com/cometbft/cometbft v1.0.0-rc1
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
@@ -45,10 +45,9 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
+	google.golang.org/grpc v1.65.0
 	google.golang.org/protobuf v1.34.2
 )
-
-require google.golang.org/grpc v1.65.0
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
@@ -268,6 +267,8 @@ replace (
 	cosmossdk.io/x/protocolpool => ../x/protocolpool
 	cosmossdk.io/x/slashing => ../x/slashing
 	cosmossdk.io/x/staking => ../x/staking
+	// pseudo version lower than the latest tag
+	cosmossdk.io/x/tx => cosmossdk.io/x/tx v0.13.4-0.20240815194237-858ec2fcb897 // main
 	cosmossdk.io/x/upgrade => ../x/upgrade
 )
 

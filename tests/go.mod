@@ -16,7 +16,7 @@ require (
 	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
-	cosmossdk.io/x/tx v0.13.4-0.20240815194237-858ec2fcb897 // main
+	cosmossdk.io/x/tx v0.14.0 // main
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
 	github.com/cometbft/cometbft v1.0.0-rc1
 	github.com/cosmos/cosmos-db v1.0.2
@@ -263,6 +263,8 @@ replace (
 	cosmossdk.io/x/protocolpool => ../x/protocolpool
 	cosmossdk.io/x/slashing => ../x/slashing
 	cosmossdk.io/x/staking => ../x/staking
+	// pseudo version lower than the latest tag
+	cosmossdk.io/x/tx => cosmossdk.io/x/tx v0.13.4-0.20240815194237-858ec2fcb897 // main
 	cosmossdk.io/x/upgrade => ../x/upgrade
 )
 

@@ -68,14 +68,14 @@ func StartIndexer(ctx context.Context, logger SqlLogger, config Config) (appdata
 
 			return mm.InitializeSchema(ctx, tx)
 		},
-		Commit: func(data appdata.CommitData) error {
+		Commit: func(data appdata.CommitData) (completionCallback func() error, err error) {
 			err = tx.Commit()
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			tx, err = db.BeginTx(ctx, nil)
-			return err
+			return nil, err
 		},
 	}, nil
 }

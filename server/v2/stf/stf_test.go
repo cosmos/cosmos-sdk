@@ -8,7 +8,7 @@ import (
 	"time"
 
 	gogotypes "github.com/cosmos/gogoproto/types"
-	"github.com/stretchr/testify/require"
+
 
 	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -19,7 +19,6 @@ import (
 	"cosmossdk.io/server/v2/stf/gas"
 	"cosmossdk.io/server/v2/stf/mock"
 )
-
 func addMsgHandlerToSTF[T any, PT interface {
 	*T
 	transaction.Msg
@@ -46,10 +45,14 @@ func addMsgHandlerToSTF[T any, PT interface {
 			return typedResp, nil
 		},
 	)
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("Failed to register handler: %v", err)
+	}
 
 	msgRouter, err := msgRouterBuilder.Build()
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("Failed to build message router: %v", err)
+	}
 	stf.msgRouter = msgRouter
 }
 
@@ -66,20 +69,20 @@ func TestSTF(t *testing.T) {
 	s := &STF[mock.Tx]{
 		doPreBlock: func(ctx context.Context, txs []mock.Tx) error { return nil },
 		doBeginBlock: func(ctx context.Context) error {
-			kvSet(t, ctx, "begin-block")
+			kvSet(ctx, state, "begin-block")
 			return nil
 		},
 		doEndBlock: func(ctx context.Context) error {
-			kvSet(t, ctx, "end-block")
+			kvSet(ctx, state, "end-block")
 			return nil
 		},
 		doValidatorUpdate: func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error) { return nil, nil },
 		doTxValidation: func(ctx context.Context, tx mock.Tx) error {
-			kvSet(t, ctx, "validate")
+			kvSet(ctx, state, "validate")
 			return nil
 		},
 		postTxExec: func(ctx context.Context, tx mock.Tx, success bool) error {
-			kvSet(t, ctx, "post-tx-exec")
+			kvSet(ctx, state, "post-tx-exec")
 			return nil
 		},
 		branchFn:            branch.DefaultNewWriterMap,
@@ -88,7 +91,7 @@ func TestSTF(t *testing.T) {
 	}
 
 	addMsgHandlerToSTF(t, s, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
-		kvSet(t, ctx, "exec")
+		kvSet(ctx, state, "exec")
 		return nil, nil
 	})
 
@@ -99,7 +102,9 @@ func TestSTF(t *testing.T) {
 			AppHash: sum[:],
 			Hash:    sum[:],
 		}, state)
-		require.NoError(t, err)
+		if err != nil {
+			t.Errorf("DeliverBlock error: %v", err)
+		}
 		stateHas(t, newState, "begin-block")
 		stateHas(t, newState, "end-block")
 	})
@@ -112,15 +117,23 @@ func TestSTF(t *testing.T) {
 			Hash:    sum[:],
 			Txs:     []mock.Tx{mockTx},
 		}, state)
-		require.NoError(t, err)
+		if err != nil {
+			t.Errorf("DeliverBlock error: %v", err)
+		}
 		stateHas(t, newState, "validate")
 		stateHas(t, newState, "exec")
 		stateHas(t, newState, "post-tx-exec")
 
-		require.Len(t, result.TxResults, 1)
+		if len(result.TxResults) != 1 {
+			t.Errorf("Expected 1 TxResult, got %d", len(result.TxResults))
+		}
 		txResult := result.TxResults[0]
-		require.NotZero(t, txResult.GasUsed)
-		require.Equal(t, mockTx.GasLimit, txResult.GasWanted)
+		if txResult.GasUsed == 0 {
+			t.Errorf("GasUsed should not be zero")
+		}
+		if txResult.GasWanted != mockTx.GasLimit {
+			t.Errorf("Expected GasWanted to be %d, got %d", mockTx.GasLimit, txResult.GasWanted)
+		}
 	})
 
 	t.Run("exec tx out of gas", func(t *testing.T) {
@@ -136,9 +149,13 @@ func TestSTF(t *testing.T) {
 		// out of gas immediately at tx validation level.
 		s.doTxValidation = func(ctx context.Context, tx mock.Tx) error {
 			w, err := ctx.(*executionContext).state.GetWriter(actorName)
-			require.NoError(t, err)
+			if err != nil {
+				t.Errorf("GetWriter error: %v", err)
+			}
 			err = w.Set([]byte("gas_failure"), []byte{})
-			require.Error(t, err)
+			if err == nil {
+				t.Error("Expected error, got nil")
+			}
 			return err
 		}
 
@@ -149,9 +166,13 @@ func TestSTF(t *testing.T) {
 			Hash:    sum[:],
 			Txs:     []mock.Tx{mockTx},
 		}, state)
-		require.NoError(t, err)
+		if err != nil {
+			t.Errorf("DeliverBlock error: %v", err)
+		}
 		stateNotHas(t, newState, "gas_failure") // assert during out of gas no state changes leaked.
-		require.ErrorIs(t, result.TxResults[0].Error, coregas.ErrOutOfGas, result.TxResults[0].Error)
+		if !errors.Is(result.TxResults[0].Error, coregas.ErrOutOfGas) {
+			t.Errorf("Expected ErrOutOfGas, got %v", result.TxResults[0].Error)
+		}
 	})
 
 	t.Run("fail exec tx", func(t *testing.T) {
@@ -168,8 +189,12 @@ func TestSTF(t *testing.T) {
 			Hash:    sum[:],
 			Txs:     []mock.Tx{mockTx},
 		}, state)
-		require.NoError(t, err)
-		require.ErrorContains(t, blockResult.TxResults[0].Error, "failure")
+		if err != nil {
+			t.Errorf("DeliverBlock error: %v", err)
+		}
+		if !strings.Contains(blockResult.TxResults[0].Error.Error(), "failure") {
+			t.Errorf("Expected error to contain 'failure', got %v", blockResult.TxResults[0].Error)
+		}
 		stateHas(t, newState, "begin-block")
 		stateHas(t, newState, "end-block")
 		stateHas(t, newState, "validate")
@@ -189,8 +214,12 @@ func TestSTF(t *testing.T) {
 			Hash:    sum[:],
 			Txs:     []mock.Tx{mockTx},
 		}, state)
-		require.NoError(t, err)
-		require.ErrorContains(t, blockResult.TxResults[0].Error, "post tx failure")
+		if err != nil {
+			t.Errorf("DeliverBlock error: %v", err)
+		}
+		if !strings.Contains(blockResult.TxResults[0].Error.Error(), "post tx failure") {
+			t.Errorf("Expected error to contain 'post tx failure', got %v", blockResult.TxResults[0].Error)
+		}
 		stateHas(t, newState, "begin-block")
 		stateHas(t, newState, "end-block")
 		stateHas(t, newState, "validate")
@@ -211,8 +240,12 @@ func TestSTF(t *testing.T) {
 			Hash:    sum[:],
 			Txs:     []mock.Tx{mockTx},
 		}, state)
-		require.NoError(t, err)
-		require.ErrorContains(t, blockResult.TxResults[0].Error, "exec failure\npost tx failure")
+		if err != nil {
+			t.Errorf("DeliverBlock error: %v", err)
+		}
+		if !strings.Contains(blockResult.TxResults[0].Error.Error(), "exec failure\npost tx failure") {
+			t.Errorf("Expected error to contain 'exec failure\npost tx failure', got %v", blockResult.TxResults[0].Error)
+		}
 		stateHas(t, newState, "begin-block")
 		stateHas(t, newState, "end-block")
 		stateHas(t, newState, "validate")
@@ -231,8 +264,12 @@ func TestSTF(t *testing.T) {
 			Hash:    sum[:],
 			Txs:     []mock.Tx{mockTx},
 		}, state)
-		require.NoError(t, err)
-		require.ErrorContains(t, blockResult.TxResults[0].Error, "failure")
+		if err != nil {
+			t.Errorf("DeliverBlock error: %v", err)
+		}
+		if !strings.Contains(blockResult.TxResults[0].Error.Error(), "failure") {
+			t.Errorf("Expected error to contain 'failure', got %v", blockResult.TxResults[0].Error)
+		}
 		stateHas(t, newState, "begin-block")
 		stateHas(t, newState, "end-block")
 		stateNotHas(t, newState, "validate")
@@ -250,38 +287,56 @@ func TestSTF(t *testing.T) {
 		}
 		// test ValidateTx as it validates with check execMode
 		res := s.ValidateTx(context.Background(), state, mockTx.GasLimit, mockTx)
-		require.Error(t, res.Error)
+		if res.Error == nil {
+			t.Error("Expected error, got nil")
+		}
 
 		// test validate tx with exec mode as finalize
 		_, _, err := s.validateTx(context.Background(), s.branchFn(state), mockTx.GasLimit,
 			mockTx, transaction.ExecModeFinalize)
-		require.NoError(t, err)
+		if err != nil {
+			t.Errorf("validateTx error: %v", err)
+		}
 	})
 }
 
 var actorName = []byte("cookies")
 
-func kvSet(t *testing.T, ctx context.Context, v string) {
-	t.Helper()
-	state, err := ctx.(*executionContext).state.GetWriter(actorName)
-	require.NoError(t, err)
-	require.NoError(t, state.Set([]byte(v), []byte(v)))
+func kvSet(ctx context.Context, accountState store.WriterMap, key string) {
+	state, err := accountState.GetWriter(actorName)
+	if err != nil {
+		panic(err)
+	}
+	err = state.Set([]byte(key), []byte(key))
+	if err != nil {
+		panic(err)
+	}
 }
 
 func stateHas(t *testing.T, accountState store.ReaderMap, key string) {
-	t.Helper()
 	state, err := accountState.GetReader(actorName)
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("GetReader error: %v", err)
+	}
 	has, err := state.Has([]byte(key))
-	require.NoError(t, err)
-	require.Truef(t, has, "state did not have key: %s", key)
+	if err != nil {
+		t.Errorf("Has error: %v", err)
+	}
+	if !has {
+		t.Errorf("State did not have key: %s", key)
+	}
 }
 
 func stateNotHas(t *testing.T, accountState store.ReaderMap, key string) {
-	t.Helper()
 	state, err := accountState.GetReader(actorName)
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("GetReader error: %v", err)
+	}
 	has, err := state.Has([]byte(key))
-	require.NoError(t, err)
-	require.Falsef(t, has, "state was not supposed to have key: %s", key)
+	if err != nil {
+		t.Errorf("Has error: %v", err)
+	}
+	if has {
+		t.Errorf("State was not supposed to have key: %s", key)
+	}
 }

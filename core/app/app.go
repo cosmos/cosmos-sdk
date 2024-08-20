@@ -9,17 +9,7 @@ import (
 	"cosmossdk.io/core/transaction"
 )
 
-type QueryRequest struct {
-	Height int64
-	Path   string
-	Data   []byte
-}
-
-type QueryResponse struct {
-	Height int64
-	Value  []byte
-}
-
+// BlockRequest defines the request structure for a block coming from consensus server to the state transition function.
 type BlockRequest[T transaction.Tx] struct {
 	Height  uint64
 	Time    time.Time
@@ -32,6 +22,7 @@ type BlockRequest[T transaction.Tx] struct {
 	IsGenesis bool
 }
 
+// BlockResponse defines the response structure for a block coming from the state transition function to consensus server.
 type BlockResponse struct {
 	Apphash          []byte
 	ValidatorUpdates []appmodulev2.ValidatorUpdate
@@ -41,19 +32,7 @@ type BlockResponse struct {
 	EndBlockEvents   []event.Event
 }
 
-type RequestInitChain struct {
-	Time          time.Time
-	ChainId       string
-	Validators    []appmodulev2.ValidatorUpdate
-	AppStateBytes []byte
-	InitialHeight int64
-}
-
-type ResponseInitChain struct {
-	Validators []appmodulev2.ValidatorUpdate
-	AppHash    []byte
-}
-
+// TxResult defines the result of a transaction execution.
 type TxResult struct {
 	Events    []event.Event
 	Resp      []transaction.Msg

@@ -3,7 +3,6 @@ package branch
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/tidwall/btree"
 
 	"cosmossdk.io/core/store"
@@ -11,21 +10,32 @@ import (
 
 func TestBranch(t *testing.T) {
 	set := func(s interface{ Set([]byte, []byte) error }, key, value string) {
-		require.NoError(t, s.Set([]byte(key), []byte(value)))
+		err := s.Set([]byte(key), []byte(value))
+		if err != nil {
+			t.Errorf("Error setting value: %v", err)
+		}
 	}
 	get := func(s interface{ Get([]byte) ([]byte, error) }, key, wantValue string) {
 		value, err := s.Get([]byte(key))
-		require.NoError(t, err)
+		if err != nil {
+			t.Errorf("Error getting value: %v", err)
+		}
 		if wantValue == "" {
-			require.Nil(t, value)
+			if value != nil {
+				t.Errorf("Expected nil value, got: %v", value)
+			}
 		} else {
-			require.Equal(t, wantValue, string(value))
+			if string(value) != wantValue {
+				t.Errorf("Expected value: %s, got: %s", wantValue, value)
+			}
 		}
 	}
 
 	remove := func(s interface{ Delete([]byte) error }, key string) {
 		err := s.Delete([]byte(key))
-		require.NoError(t, err)
+		if err != nil {
+			t.Errorf("Error deleting value: %v", err)
+		}
 	}
 
 	iter := func(s interface {
@@ -41,15 +51,23 @@ func TestBranch(t *testing.T) {
 			endKey = nil
 		}
 		iter, err := s.Iterator(startKey, endKey)
-		require.NoError(t, err)
+		if err != nil {
+			t.Errorf("Error creating iterator: %v", err)
+		}
 		defer iter.Close()
 		numPairs := len(wantPairs)
 		for i := 0; i < numPairs; i++ {
-			require.True(t, iter.Valid(), "expected iterator to be valid")
+			if !iter.Valid() {
+				t.Errorf("Expected iterator to be valid")
+			}
 			gotKey, gotValue := string(iter.Key()), string(iter.Value())
 			wantKey, wantValue := wantPairs[i][0], wantPairs[i][1]
-			require.Equal(t, wantKey, gotKey)
-			require.Equal(t, wantValue, gotValue)
+			if wantKey != gotKey {
+				t.Errorf("Expected key: %s, got: %s", wantKey, gotKey)
+			}
+			if wantValue != gotValue {
+				t.Errorf("Expected value: %s, got: %s", wantValue, gotValue)
+			}
 			iter.Next()
 		}
 	}
@@ -106,8 +124,6 @@ func TestBranch(t *testing.T) {
 func newMemState() memStore {
 	return memStore{btree.NewBTreeGOptions(byKeys, btree.Options{Degree: bTreeDegree, NoLocks: true})}
 }
-
-var _ store.Writer = memStore{}
 
 type memStore struct {
 	t *btree.BTreeG[item]

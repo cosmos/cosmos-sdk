@@ -9,15 +9,27 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	_ "cosmossdk.io/api/amino" // Import amino.proto file for reflection
-	appmanager "cosmossdk.io/core/app"
+	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/core/app"
 )
 
+// InterfaceRegistry defines the interface for getting the protobuf name of a message type
+type (
+// protocdc defines the interface for marshaling and unmarshaling messages in server/v2
+ protocdc interface {
+	Marshal(v transaction.Msg) ([]byte, error)
+	Unmarshal(data []byte, v transaction.Msg) error
+	Name() string
+}
+)
+
+
 type protoCodec struct {
-	interfaceRegistry appmanager.InterfaceRegistry
+	interfaceRegistry app.InterfaceRegistry
 }
 
 // newProtoCodec returns a reference to a new ProtoCodec
-func newProtoCodec(interfaceRegistry appmanager.InterfaceRegistry) *protoCodec {
+func newProtoCodec(interfaceRegistry app.InterfaceRegistry) *protoCodec {
 	return &protoCodec{
 		interfaceRegistry: interfaceRegistry,
 	}
@@ -60,9 +72,11 @@ func (pc *protoCodec) GRPCCodec() encoding.Codec {
 	return &grpcProtoCodec{cdc: pc}
 }
 
+
+
 // grpcProtoCodec is the implementation of the gRPC proto codec.
 type grpcProtoCodec struct {
-	cdc appmanager.ProtoCodec
+	cdc protocdc
 }
 
 var errUnknownProtoType = errors.New("codec: unknown proto type") // sentinel error

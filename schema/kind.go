@@ -98,7 +98,7 @@ const (
 )
 
 // MAX_VALID_KIND is the maximum valid kind value.
-const MAX_VALID_KIND = JSONKind
+const MAX_VALID_KIND = IntNKind
 
 const (
 	// IntegerFormat is a regex that describes the format integer number strings must match. It specifies
@@ -166,6 +166,10 @@ func (t Kind) String() string {
 		return "enum"
 	case JSONKind:
 		return "json"
+	case UIntNKind:
+		return "uint"
+	case IntNKind:
+		return "int"
 	default:
 		return fmt.Sprintf("invalid(%d)", t)
 	}
@@ -278,6 +282,11 @@ func (t Kind) ValidateValueType(value interface{}) error {
 		_, ok := value.(json.RawMessage)
 		if !ok {
 			return fmt.Errorf("expected json.RawMessage, got %T", value)
+		}
+	case UIntNKind:
+		_, ok := value.([]byte)
+		if !ok {
+			return fmt.Errorf("expected []byte, got %T", value)
 		}
 	default:
 		return fmt.Errorf("invalid type: %d", t)

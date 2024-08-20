@@ -148,7 +148,7 @@ func TestRequireFutureBlock(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
 	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: s.ctx.HeaderInfo().Height - 1})
 	require.Error(t, err)
-	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
+	require.True(t, errors.Is(err, sdkerrors.ErrInvalidRequest), err)
 }
 
 func TestDoHeightUpgrade(t *testing.T) {
@@ -223,7 +223,7 @@ func TestCantApplySameUpgradeTwice(t *testing.T) {
 	t.Log("Verify an executed upgrade \"test\" can't be rescheduled")
 	err = s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: height})
 	require.Error(t, err)
-	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
+	require.True(t, errors.Is(err, sdkerrors.ErrInvalidRequest), err)
 }
 
 func TestNoSpuriousUpgrades(t *testing.T) {

@@ -2,6 +2,8 @@ package appdata
 
 // Packet is the interface that all listener data structures implement so that this data can be "packetized"
 // and processed in a stream, possibly asynchronously.
+// Valid implementations are ModuleInitializationData, StartBlockData, TxData, EventData, KVPairData, ObjectUpdateData,
+// and CommitData.
 type Packet interface {
 	apply(*Listener) error
 }

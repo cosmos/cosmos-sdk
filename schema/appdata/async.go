@@ -132,5 +132,10 @@ func AsyncListener(opts AsyncListenerOptions, listener Listener) Listener {
 		}, nil
 	}
 
+	res.onBatch = func(batch PacketBatch) error {
+		packetChan <- batch
+		return nil
+	}
+
 	return res
 }

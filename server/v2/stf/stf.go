@@ -153,7 +153,6 @@ func (s STF[T]) DeliverBlock(
 	}
 
 	return &server.BlockResponse{
-		Apphash:          nil,
 		ValidatorUpdates: valset,
 		PreBlockEvents:   preBlockEvents,
 		BeginBlockEvents: beginBlockEvents,

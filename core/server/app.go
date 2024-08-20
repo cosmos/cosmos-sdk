@@ -24,7 +24,6 @@ type BlockRequest[T transaction.Tx] struct {
 
 // BlockResponse defines the response structure for a block coming from the state transition function to consensus server.
 type BlockResponse struct {
-	Apphash          []byte
 	ValidatorUpdates []appmodulev2.ValidatorUpdate
 	PreBlockEvents   []event.Event
 	BeginBlockEvents []event.Event
@@ -34,10 +33,10 @@ type BlockResponse struct {
 
 // TxResult defines the result of a transaction execution.
 type TxResult struct {
-	Events    []event.Event
-	Resp      []transaction.Msg
-	Error     error
-	Code      uint32
+	Events    []event.Event     // Events produced by the transaction.
+	Resp      []transaction.Msg // Response messages produced by the transaction.
+	Error     error             // Error produced by the transaction.
+	Code      uint32            // Code produced by the transaction.
 	Data      []byte
 	Log       string
 	Info      string

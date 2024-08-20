@@ -5,6 +5,8 @@ import (
 )
 
 // InterfaceRegistry defines the interface for resolving interfaces
+// The interface registry is used to resolve interfaces from type URLs,
+// this is only used for the server and not for modules
 type InterfaceRegistry interface {
 	AnyResolver
 	ListImplementations(ifaceTypeURL string) []string

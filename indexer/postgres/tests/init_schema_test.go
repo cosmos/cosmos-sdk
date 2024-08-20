@@ -58,7 +58,11 @@ func testInitSchema(t *testing.T, disableRetainDeletions bool, goldenFileName st
 	}))
 
 	require.NotNil(t, listener.Commit)
-	require.NoError(t, listener.Commit(appdata.CommitData{}))
+	cb, err := listener.Commit(appdata.CommitData{})
+	require.NoError(t, err)
+	if cb != nil {
+		require.NoError(t, cb())
+	}
 
 	golden.Assert(t, buf.String(), goldenFileName)
 }

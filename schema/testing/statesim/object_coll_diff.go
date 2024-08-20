@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/schema"
 	schematesting "cosmossdk.io/schema/testing"
 	"cosmossdk.io/schema/view"
 )
@@ -30,21 +29,21 @@ func DiffObjectCollections(expected, actual view.ObjectCollection) string {
 		res += fmt.Sprintf("OBJECT COUNT ERROR: expected %d, got %d\n", expectedNumObjects, actualNumObjects)
 	}
 
-	expected.AllState(func(expectedUpdate schema.ObjectUpdate, err error) bool {
+	for expectedUpdate, err := range expected.AllState {
 		if err != nil {
 			res += fmt.Sprintf("ERROR getting expected object: %s\n", err)
-			return true
+			continue
 		}
 
 		keyStr := fmtObjectKey(expected.ObjectType(), expectedUpdate.Key)
 		actualUpdate, found, err := actual.GetObject(expectedUpdate.Key)
 		if err != nil {
 			res += fmt.Sprintf("Object %s: ERROR: %v\n", keyStr, err)
-			return true
+			continue
 		}
 		if !found {
 			res += fmt.Sprintf("Object %s: NOT FOUND\n", keyStr)
-			return true
+			continue
 		}
 
 		if expectedUpdate.Delete != actualUpdate.Delete {
@@ -52,7 +51,7 @@ func DiffObjectCollections(expected, actual view.ObjectCollection) string {
 		}
 
 		if expectedUpdate.Delete {
-			return true
+			continue
 		}
 
 		valueDiff := schematesting.DiffObjectValues(expected.ObjectType().ValueFields, expectedUpdate.Value, actualUpdate.Value)
@@ -62,9 +61,7 @@ func DiffObjectCollections(expected, actual view.ObjectCollection) string {
 			res += "\n"
 			res += indentAllLines(valueDiff)
 		}
-
-		return true
-	})
+	}
 
 	return res
 }

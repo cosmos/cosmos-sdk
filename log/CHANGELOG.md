@@ -22,6 +22,10 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
+## [v1.4.1](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.4.1) - 2024-08-16
+
+* [#21326](https://github.com/cosmos/cosmos-sdk/pull/21326) Avoid context key collision.
+
 ## [v1.4.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.4.0) - 2024-08-07
 
 * [#21045](https://github.com/cosmos/cosmos-sdk/pull/21045) Add `WithContext` method implementations to make all returned loggers compatible with `cosmossdk.io/core/log.Logger` (v1) without a direct dependency.

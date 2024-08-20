@@ -500,8 +500,6 @@ type executionContext struct {
 	meter gas.Meter
 	// events are the current events.
 	events []event.Event
-	// sender is the causer of the state transition.
-	sender transaction.Identity
 	// headerInfo contains the block info.
 	headerInfo header.Info
 	// execMode retains information about the exec mode.

@@ -41,6 +41,7 @@ func CommandsWithCustomMigrationMap(genutilModule genutil.AppModule, genMM genes
 		CollectGenTxsCmd(genutilModule.GenTxValidator()),
 		ValidateGenesisCmd(genMM),
 		AddGenesisAccountCmd(),
+		AddBulkGenesisAccountCmd(),
 		ExportCmd(appExport),
 	)
 

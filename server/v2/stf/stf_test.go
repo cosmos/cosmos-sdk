@@ -10,9 +10,9 @@ import (
 
 	gogotypes "github.com/cosmos/gogoproto/types"
 
-	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	coregas "cosmossdk.io/core/gas"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/stf/branch"
@@ -97,7 +97,7 @@ func TestSTF(t *testing.T) {
 	})
 
 	t.Run("begin and end block", func(t *testing.T) {
-		_, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
+		_, newState, err := s.DeliverBlock(context.Background(), &server.BlockRequest[mock.Tx]{
 			Height:  uint64(1),
 			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
 			AppHash: sum[:],
@@ -111,7 +111,7 @@ func TestSTF(t *testing.T) {
 	})
 
 	t.Run("basic tx", func(t *testing.T) {
-		result, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
+		result, newState, err := s.DeliverBlock(context.Background(), &server.BlockRequest[mock.Tx]{
 			Height:  uint64(1),
 			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
 			AppHash: sum[:],
@@ -160,7 +160,7 @@ func TestSTF(t *testing.T) {
 			return err
 		}
 
-		result, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
+		result, newState, err := s.DeliverBlock(context.Background(), &server.BlockRequest[mock.Tx]{
 			Height:  uint64(1),
 			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
 			AppHash: sum[:],
@@ -183,7 +183,7 @@ func TestSTF(t *testing.T) {
 			return nil, errors.New("failure")
 		})
 
-		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
+		blockResult, newState, err := s.DeliverBlock(context.Background(), &server.BlockRequest[mock.Tx]{
 			Height:  uint64(1),
 			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
 			AppHash: sum[:],
@@ -208,7 +208,7 @@ func TestSTF(t *testing.T) {
 		s.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error {
 			return errors.New("post tx failure")
 		}
-		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
+		blockResult, newState, err := s.DeliverBlock(context.Background(), &server.BlockRequest[mock.Tx]{
 			Height:  uint64(1),
 			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
 			AppHash: sum[:],
@@ -234,7 +234,7 @@ func TestSTF(t *testing.T) {
 			return nil, errors.New("exec failure")
 		})
 		s.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error { return errors.New("post tx failure") }
-		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
+		blockResult, newState, err := s.DeliverBlock(context.Background(), &server.BlockRequest[mock.Tx]{
 			Height:  uint64(1),
 			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
 			AppHash: sum[:],
@@ -258,7 +258,7 @@ func TestSTF(t *testing.T) {
 		// update stf to fail on the validation step
 		s := s.clone()
 		s.doTxValidation = func(ctx context.Context, tx mock.Tx) error { return errors.New("failure") }
-		blockResult, newState, err := s.DeliverBlock(context.Background(), &appmanager.BlockRequest[mock.Tx]{
+		blockResult, newState, err := s.DeliverBlock(context.Background(), &server.BlockRequest[mock.Tx]{
 			Height:  uint64(1),
 			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
 			AppHash: sum[:],

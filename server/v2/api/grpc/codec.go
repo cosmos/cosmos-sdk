@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	_ "cosmossdk.io/api/amino" // Import amino.proto file for reflection
-	"cosmossdk.io/core/app"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 )
 
@@ -21,11 +21,11 @@ type protocdc interface {
 }
 
 type protoCodec struct {
-	interfaceRegistry app.InterfaceRegistry
+	interfaceRegistry server.InterfaceRegistry
 }
 
 // newProtoCodec returns a reference to a new ProtoCodec
-func newProtoCodec(interfaceRegistry app.InterfaceRegistry) *protoCodec {
+func newProtoCodec(interfaceRegistry server.InterfaceRegistry) *protoCodec {
 	return &protoCodec{
 		interfaceRegistry: interfaceRegistry,
 	}

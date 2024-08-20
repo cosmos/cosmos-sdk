@@ -366,23 +366,24 @@ func (m *MM[T]) TxValidators() func(ctx context.Context, tx T) error {
 //
 // Example:
 //
-//	app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-//	    return app.mm.RunMigrations(ctx, fromVM)
+//	app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx context.Context, plan upgradetypes.Plan, fromVM appmodule.VersionMap) (appmodule.VersionMap, error) {
+//	    return app.ModuleManager().RunMigrations(ctx, fromVM)
 //	})
 //
 // Internally, RunMigrations will perform the following steps:
-// - create an `updatedVM` VersionMap of module with their latest ConsensusVersion
-// - make a diff of `fromVM` and `udpatedVM`, and for each module:
-//   - if the module's `fromVM` version is less than its `updatedVM` version,
-//     then run in-place store migrations for that module between those versions.
+//   - create an `updatedVM` VersionMap of module with their latest ConsensusVersion
+//
+// -
+//   - get the current consensus version as toVersion. Get fromVersion from `fromVM`
+//   - if the module's name exists in `fromVM` map, then run in-place store migrations
+//     for that module between fromVersion and toVersion.
 //   - if the module does not exist in the `fromVM` (which means that it's a new module,
 //     because it was not in the previous x/upgrade's store), then run
 //     `InitGenesis` on that module.
 //
 // - return the `updatedVM` to be persisted in the x/upgrade's store.
 //
-// Migrations are run in an order defined by `Manager.OrderMigrations` or (if not set) defined by
-// `defaultMigrationsOrder` function.
+// Migrations are run in an order defined by `mm.config.OrderMigrations`.
 //
 // As an app developer, if you wish to skip running InitGenesis for your new
 // module "foo", you need to manually pass a `fromVM` argument to this function
@@ -401,7 +402,7 @@ func (m *MM[T]) TxValidators() func(ctx context.Context, tx T) error {
 //	    // consensus version:
 //	    fromVM["foo"] = foo.AppModule{}.ConsensusVersion()
 //
-//	    return app.mm.RunMigrations(ctx, fromVM)
+//	    return app.ModuleManager().RunMigrations(ctx, fromVM)
 //	})
 //
 // Please also refer to https://docs.cosmos.network/main/core/upgrade for more information.

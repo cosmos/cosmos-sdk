@@ -3,6 +3,9 @@ package schematesting
 import (
 	"bytes"
 	"fmt"
+	"math/big"
+
+	"github.com/cockroachdb/apd/v3"
 
 	"cosmossdk.io/schema"
 )
@@ -77,6 +80,8 @@ func DiffFieldValues(field schema.Field, expected, actual any) string {
 
 // CompareKindValues compares the expected and actual values for the provided kind and returns true if they are equal,
 // false if they are not, and an error if the types are not valid for the kind.
+// For IntegerStringKind and DecimalStringKind values, comparisons are made based on equality of the underlying numeric
+// values rather than their string encoding.
 func CompareKindValues(kind schema.Kind, expected, actual any) (bool, error) {
 	if kind.ValidateValueType(expected) != nil {
 		return false, fmt.Errorf("unexpected type %T for kind %s", expected, kind)
@@ -89,6 +94,36 @@ func CompareKindValues(kind schema.Kind, expected, actual any) (bool, error) {
 	switch kind {
 	case schema.BytesKind, schema.JSONKind, schema.AddressKind:
 		if !bytes.Equal(expected.([]byte), actual.([]byte)) {
+			return false, nil
+		}
+	case schema.IntegerStringKind:
+		expectedInt := big.NewInt(0)
+		expectedInt, ok := expectedInt.SetString(expected.(string), 10)
+		if !ok {
+			return false, fmt.Errorf("could not convert %v to big.Int", expected)
+		}
+
+		actualInt := big.NewInt(0)
+		actualInt, ok = actualInt.SetString(actual.(string), 10)
+		if !ok {
+			return false, fmt.Errorf("could not convert %v to big.Int", actual)
+		}
+
+		if expectedInt.Cmp(actualInt) != 0 {
+			return false, nil
+		}
+	case schema.DecimalStringKind:
+		expectedDec, _, err := apd.NewFromString(expected.(string))
+		if err != nil {
+			return false, fmt.Errorf("could not decode %v as a decimal: %w", expected, err)
+		}
+
+		actualDec, _, err := apd.NewFromString(actual.(string))
+		if err != nil {
+			return false, fmt.Errorf("could not decode %v as a decimal: %w", actual, err)
+		}
+
+		if expectedDec.Cmp(actualDec) != 0 {
 			return false, nil
 		}
 	default:

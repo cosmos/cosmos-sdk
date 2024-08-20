@@ -1,9 +1,9 @@
-github.com/cosmos/gogoproto v1.6.0 h1:Xm0F/96O5Ox4g6xGgjA41rWaaPjYtOdTi59uBcV2qEE=
-github.com/cosmos/gogoproto v1.6.0/go.mod h1:Y+g956rcUf2vr4uwtCcK/1Xx9BWVluCtcI9vsh0GHmk=
+github.com/cosmos/gogoproto v1.6.1-0.20240809124342-d6a57064ada0 h1:qZdcY4sKyAnaUwFRtSKkk9YdeMuQixWxLagI/8jhJo4=
+github.com/cosmos/gogoproto v1.6.1-0.20240809124342-d6a57064ada0/go.mod h1:Y+g956rcUf2vr4uwtCcK/1Xx9BWVluCtcI9vsh0GHmk=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/golang/protobuf v1.5.4 h1:i7eJL8qZTpSEXOPTxNKhASYpMn+8e5Q6AdndVa1dWek=
-github.com/golang/protobuf v1.5.4/go.mod h1:lnTiLA8Wa4RWRcIUkrtSVa5nRhsEGBg48fD6rSs7xps=
+github.com/golang/protobuf v1.5.3 h1:KhyjKVUg7Usr/dYsdSqoFveMYd5ko72D+zANwlG1mmg=
+github.com/golang/protobuf v1.5.3/go.mod h1:XVQd3VNwM+JqD3oG2Ue2ip4fOMUkwXdXDdiuN0vRsmY=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
 github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

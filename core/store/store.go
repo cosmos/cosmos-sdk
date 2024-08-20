@@ -35,7 +35,7 @@ type KVStore interface {
 //
 // As with KVStore, given keys and values should be considered read-only, and must not be modified after
 // passing them to the batch.
-type Batch interface {
+type Batch = interface {
 	// Set sets a key/value pair.
 	// CONTRACT: key, value readonly []byte
 	Set(key, value []byte) error

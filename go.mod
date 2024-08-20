@@ -1,15 +1,15 @@
-go 1.22.2
+go 1.23
 
 module github.com/cosmos/cosmos-sdk
 
 require (
 	cosmossdk.io/api v0.7.5
 	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v0.12.1-0.20231114100755-569e3ff6a0d7
+	cosmossdk.io/core v1.0.0
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/log v1.4.0
+	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/schema v0.1.1
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
@@ -28,7 +28,7 @@ require (
 	github.com/cosmos/crypto v0.1.2
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
-	github.com/cosmos/gogoproto v1.6.0
+	github.com/cosmos/gogoproto v1.7.0
 	github.com/cosmos/ledger-cosmos-go v0.13.3
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0
 	github.com/golang/mock v1.6.0
@@ -46,7 +46,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20
 	github.com/mdp/qrterminal/v3 v3.2.0
 	github.com/muesli/termenv v0.15.2
-	github.com/prometheus/client_golang v1.19.1
+	github.com/prometheus/client_golang v1.20.0
 	github.com/prometheus/common v0.55.0
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cast v1.7.0
@@ -57,7 +57,6 @@ require (
 	github.com/tendermint/go-amino v0.16.0
 	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b
 	golang.org/x/crypto v0.26.0
-	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc
 	golang.org/x/sync v0.8.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240528184218-531527333157
 	google.golang.org/grpc v1.65.0
@@ -122,7 +121,7 @@ require (
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
-	github.com/klauspost/compress v1.17.8 // indirect
+	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
@@ -164,6 +163,7 @@ require (
 	go.etcd.io/bbolt v1.4.0-alpha.0.0.20240404170359-43604f3112c5 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
+	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc // indirect
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect

@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"encoding/json"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -159,6 +161,67 @@ func TestField_ValidateValue(t *testing.T) {
 					t.Errorf("expected error, got nil")
 				} else if !strings.Contains(err.Error(), tt.errContains) {
 					t.Errorf("expected error contains: %s, got: %v", tt.errContains, err)
+				}
+			}
+		})
+	}
+}
+
+func TestFieldJSON(t *testing.T) {
+	tt := []struct {
+		field     Field
+		json      string
+		expectErr bool
+	}{
+		{
+			field: Field{
+				Name: "field1",
+				Kind: StringKind,
+			},
+			json: `{"name":"field1","kind":"string"}`,
+		},
+		{
+			field: Field{
+				Name:     "field1",
+				Kind:     Int32Kind,
+				Nullable: true,
+			},
+			json: `{"name":"field1","kind":"int32","nullable":true}`,
+		},
+		{
+			field: Field{
+				Name: "field1",
+				Kind: EnumKind,
+				EnumType: EnumType{
+					Name:   "enum",
+					Values: []string{"a", "b"},
+				},
+			},
+			json: `{"name":"field1","kind":"enum","enum_type":{"name":"enum","values":["a","b"]}}`,
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.json, func(t *testing.T) {
+			b, err := json.Marshal(tc.field)
+			if tc.expectErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil")
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if string(b) != tc.json {
+					t.Fatalf("expected %s, got %s", tc.json, string(b))
+				}
+				var field Field
+				err = json.Unmarshal(b, &field)
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if !reflect.DeepEqual(field, tc.field) {
+					t.Fatalf("expected %v, got %v", tc.field, field)
 				}
 			}
 		})

@@ -1,23 +1,26 @@
 package schema
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 // Field represents a field in an object type.
 type Field struct {
 	// Name is the name of the field. It must conform to the NameFormat regular expression.
-	Name string
+	Name string `json:"name"`
 
 	// Kind is the basic type of the field.
-	Kind Kind
+	Kind Kind `json:"kind"`
 
 	// Nullable indicates whether null values are accepted for the field. Key fields CANNOT be nullable.
-	Nullable bool
+	Nullable bool `json:"nullable,omitempty"`
 
 	// EnumType is the definition of the enum type and is only valid when Kind is EnumKind.
 	// The same enum types can be reused in the same module schema, but they always must contain
 	// the same values for the same enum name. This possibly introduces some duplication of
 	// definitions but makes it easier to reason about correctness and validation in isolation.
-	EnumType EnumType
+	EnumType EnumType `json:"enum_type,omitempty"`
 }
 
 // Validate validates the field.
@@ -64,4 +67,24 @@ func (c Field) ValidateValue(value interface{}) error {
 	}
 
 	return nil
+}
+
+// MarshalJSON implements the json.Marshaler interface in such a way that the EnumType is only
+// marshaled if the field is an EnumKind.
+func (c Field) MarshalJSON() ([]byte, error) {
+	var enumType *EnumType
+	if c.Kind == EnumKind {
+		enumType = &c.EnumType
+	}
+	return json.Marshal(struct {
+		Name     string    `json:"name"`
+		Kind     Kind      `json:"kind"`
+		Nullable bool      `json:"nullable,omitempty"`
+		EnumType *EnumType `json:"enum_type,omitempty"`
+	}{
+		Name:     c.Name,
+		Kind:     c.Kind,
+		Nullable: c.Nullable,
+		EnumType: enumType,
+	})
 }

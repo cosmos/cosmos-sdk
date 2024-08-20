@@ -415,3 +415,34 @@ func KindForGoValue(value interface{}) Kind {
 		return InvalidKind
 	}
 }
+
+// MarshalJSON marshals the kind to a JSON string and returns an error if the kind is invalid.
+func (t Kind) MarshalJSON() ([]byte, error) {
+	if err := t.Validate(); err != nil {
+		return nil, err
+	}
+	return json.Marshal(t.String())
+}
+
+// UnmarshalJSON unmarshals the kind from a JSON string and returns an error if the kind is invalid.
+func (t *Kind) UnmarshalJSON(data []byte) error {
+	var s string
+	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return err
+	}
+	k, ok := kindStrings[s]
+	if !ok {
+		return fmt.Errorf("invalid kind: %s", s)
+	}
+	*t = k
+	return nil
+}
+
+var kindStrings = map[string]Kind{}
+
+func init() {
+	for i := InvalidKind + 1; i <= MAX_VALID_KIND; i++ {
+		kindStrings[i.String()] = i
+	}
+}

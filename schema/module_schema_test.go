@@ -408,3 +408,27 @@ func TestModuleSchema_EnumTypes(t *testing.T) {
 		t.Fatalf("expected %v, got %v", expected, typeNames)
 	}
 }
+
+func TestModuleSchemaJSON(t *testing.T) {
+	moduleSchema := exampleSchema(t)
+
+	b, err := moduleSchema.MarshalJSON()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	const expectedJson = `{"object_types":[{"name":"object1","key_fields":[{"name":"field1","kind":"enum","enum_type":{"name":"enum2","values":["d","e","f"]}}]},{"name":"object2","key_fields":[{"name":"field1","kind":"enum","enum_type":{"name":"enum1","values":["a","b","c"]}}]}],"enum_types":[{"name":"enum1","values":["a","b","c"]},{"name":"enum2","values":["d","e","f"]}]}`
+	if string(b) != expectedJson {
+		t.Fatalf("expected %s, got %s", expectedJson, string(b))
+	}
+
+	var moduleSchema2 ModuleSchema
+	err = moduleSchema2.UnmarshalJSON(b)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !reflect.DeepEqual(moduleSchema, moduleSchema2) {
+		t.Fatalf("expected %v, got %v", moduleSchema, moduleSchema2)
+	}
+}

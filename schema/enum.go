@@ -11,11 +11,11 @@ type EnumType struct {
 	// Its name must be unique between all enum types and object types in the module.
 	// The same enum, however, can be used in multiple object types and fields as long as the
 	// definition is identical each time
-	Name string
+	Name string `json:"name,omitempty"`
 
 	// Values is a list of distinct, non-empty values that are part of the enum type.
 	// Each value must conform to the NameFormat regular expression.
-	Values []string
+	Values []string `json:"values,omitempty"`
 }
 
 // TypeName implements the Type interface.

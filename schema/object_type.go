@@ -6,25 +6,25 @@ import "fmt"
 type ObjectType struct {
 	// Name is the name of the object type. It must be unique within the module schema amongst all object and enum
 	// types and conform to the NameFormat regular expression.
-	Name string
+	Name string `json:"name"`
 
 	// KeyFields is a list of fields that make up the primary key of the object.
 	// It can be empty in which case indexers should assume that this object is
 	// a singleton and only has one value. Field names must be unique within the
 	// object between both key and value fields. Key fields CANNOT be nullable.
-	KeyFields []Field
+	KeyFields []Field `json:"key_fields,omitempty"`
 
 	// ValueFields is a list of fields that are not part of the primary key of the object.
 	// It can be empty in the case where all fields are part of the primary key.
 	// Field names must be unique within the object between both key and value fields.
-	ValueFields []Field
+	ValueFields []Field `json:"value_fields,omitempty"`
 
 	// RetainDeletions is a flag that indicates whether the indexer should retain
 	// deleted rows in the database and flag them as deleted rather than actually
 	// deleting the row. For many types of data in state, the data is deleted even
 	// though it is still valid in order to save space. Indexers will want to have
 	// the option of retaining such data and distinguishing from other "true" deletions.
-	RetainDeletions bool
+	RetainDeletions bool `json:"retain_deletions,omitempty"`
 }
 
 // TypeName implements the Type interface.

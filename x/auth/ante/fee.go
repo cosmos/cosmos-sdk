@@ -24,6 +24,7 @@ type FeeTxValidator interface {
 	appmodulev2.TxValidator[sdk.Tx]
 
 	SetMinGasPrices(sdk.DecCoins)
+	SetFeegrantKeeper(FeegrantKeeper) FeeTxValidator
 }
 
 // DeductFeeDecorator deducts fees from the fee payer. The fee payer is the fee granter (if specified) or first signer of the tx.
@@ -69,6 +70,12 @@ func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKee
 // SetMinGasPrices sets the minimum-gas-prices value in the state of DeductFeeDecorator
 func (dfd DeductFeeDecorator) SetMinGasPrices(minGasPrices sdk.DecCoins) {
 	dfd.state.minGasPrices = minGasPrices
+}
+
+// SetFeegrantKeeper sets the feegrant keeper in DeductFeeDecorator
+func (dfd DeductFeeDecorator) SetFeegrantKeeper(feegrantKeeper FeegrantKeeper) FeeTxValidator {
+	dfd.feegrantKeeper = feegrantKeeper
+	return dfd
 }
 
 // AnteHandle implements an AnteHandler decorator for the DeductFeeDecorator

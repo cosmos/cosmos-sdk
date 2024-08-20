@@ -63,7 +63,6 @@ type ModuleOutputs struct {
 	TxConfig        client.TxConfig
 	TxConfigOptions tx.ConfigOptions
 	BaseAppOption   runtime.BaseAppOption // This is only useful for chains using baseapp. Server/v2 chains use TxValidator.
-	FeeTxValidator  ante.FeeTxValidator   // pass deduct fee decorator to auth TxValidator
 }
 
 func ProvideProtoRegistry() txsigning.ProtoFileResolver {
@@ -141,18 +140,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		app.SetTxEncoder(txConfig.TxEncoder())
 	}
 
-	var feeTxValidator ante.FeeTxValidator
-	// check required keepers' exists and return deduct fee decorator
-	if in.AccountKeeper != nil && in.BankKeeper != nil && in.FeeGrantKeeper != nil {
-		feeTxValidator = ante.NewDeductFeeDecorator(in.AccountKeeper, in.BankKeeper, in.FeeGrantKeeper, nil)
-	}
-
-	return ModuleOutputs{
-		TxConfig:        txConfig,
-		TxConfigOptions: txConfigOptions,
-		BaseAppOption:   baseAppOption,
-		FeeTxValidator:  feeTxValidator,
-	}
+	return ModuleOutputs{TxConfig: txConfig, TxConfigOptions: txConfigOptions, BaseAppOption: baseAppOption}
 }
 
 func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler, error) {

@@ -10,11 +10,19 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
+	"cosmossdk.io/x/auth/ante"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/spf13/viper"
+)
+
+const (
+	FlagMinGasPricesV2 = "server.minimum-gas-prices"
+	feegrantModuleName = "feegrant"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -26,7 +34,7 @@ func init() {
 	appconfig.RegisterModule(
 		&modulev1.Module{},
 		appconfig.Provide(ProvideModule),
-		appconfig.Invoke(InvokeSetSendRestrictions),
+		appconfig.Invoke(InvokeSetSendRestrictions, InvokeCheckFeeGrantPresent),
 	)
 }
 
@@ -38,13 +46,15 @@ type ModuleInputs struct {
 	Environment appmodule.Environment
 
 	AccountKeeper types.AccountKeeper
+	Viper         *viper.Viper `optional:"true"` // server v2
 }
 
 type ModuleOutputs struct {
 	depinject.Out
 
-	BankKeeper keeper.BaseKeeper
-	Module     appmodule.AppModule
+	BankKeeper     keeper.BaseKeeper
+	Module         appmodule.AppModule
+	FeeTxValidator ante.FeeTxValidator // pass deduct fee decorator to feegrant TxValidator
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -91,7 +101,25 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)
 
-	return ModuleOutputs{BankKeeper: bankKeeper, Module: m}
+	var minGasPrices sdk.DecCoins
+	if in.Viper != nil {
+		minGasPricesStr := in.Viper.GetString(FlagMinGasPricesV2)
+		minGasPrices, err = sdk.ParseDecCoins(minGasPricesStr)
+		if err != nil {
+			panic(fmt.Sprintf("invalid minimum gas prices: %v", err))
+		}
+	}
+
+	var feeTxValidator ante.FeeTxValidator
+	if in.AccountKeeper != nil {
+		feeTxValidator = ante.NewDeductFeeDecorator(in.AccountKeeper, bankKeeper, nil, nil)
+		// set min gas price in deduct fee decorator
+		feeTxValidator.SetMinGasPrices(minGasPrices)
+		// pass deduct fee decorator to app module
+		m.SetFeeTxValidator(feeTxValidator)
+	}
+
+	return ModuleOutputs{BankKeeper: bankKeeper, Module: m, FeeTxValidator: feeTxValidator}
 }
 
 func InvokeSetSendRestrictions(
@@ -127,5 +155,21 @@ func InvokeSetSendRestrictions(
 		keeper.AppendSendRestriction(restriction)
 	}
 
+	return nil
+}
+
+func InvokeCheckFeeGrantPresent(modules map[string]appmodule.AppModule) error {
+	_, ok := modules[feegrantModuleName]
+	if ok {
+		// get bank module
+		bankMod, ok := modules[types.ModuleName]
+		if !ok {
+			return nil
+		}
+
+		// set isFeegrant
+		m := bankMod.(AppModule)
+		m.SetFeeTxValidator(nil)
+	}
 	return nil
 }

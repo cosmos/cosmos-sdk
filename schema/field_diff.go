@@ -10,7 +10,7 @@ type FieldDiff struct {
 	NewEnumType string
 }
 
-func DiffField(oldField, newField Field) FieldDiff {
+func compareField(oldField, newField Field) FieldDiff {
 	diff := FieldDiff{
 		Name: oldField.Name,
 	}

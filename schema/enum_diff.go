@@ -1,12 +1,18 @@
 package schema
 
+// EnumTypeDiff represents the difference between two enum types.
 type EnumTypeDiff struct {
-	Name          string
-	AddedValues   []string
+	// Name is the name of the enum type.
+	Name string
+
+	// AddedValues is a list of values that were added.
+	AddedValues []string
+
+	// RemovedValues is a list of values that were removed.
 	RemovedValues []string
 }
 
-func DiffEnumTypes(oldEnum, newEnum EnumType) EnumTypeDiff {
+func compareEnumType(oldEnum, newEnum EnumType) EnumTypeDiff {
 	diff := EnumTypeDiff{
 		Name: oldEnum.TypeName(),
 	}

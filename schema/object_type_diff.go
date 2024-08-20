@@ -1,27 +1,47 @@
 package schema
 
+// ObjectTypeDiff represents the difference between two object types.
 type ObjectTypeDiff struct {
-	Name            string
-	KeyFieldsDiff   FieldsDiff
+	// Name is the name of the object type.
+	Name string
+
+	// KeyFieldsDiff is the difference between the key fields of the object type.
+	KeyFieldsDiff FieldsDiff
+
+	// ValueFieldsDiff is the difference between the value fields of the object type.
 	ValueFieldsDiff FieldsDiff
 }
 
+// FieldsDiff represents the difference between two lists of fields.
 type FieldsDiff struct {
-	Added    []Field
-	Changed  []FieldDiff
-	Removed  []Field
+	// Added is a list of fields that were added.
+	Added []Field
+
+	// Changed is a list of fields that were changed.
+	Changed []FieldDiff
+
+	// Removed is a list of fields that were removed.
+	Removed []Field
+
+	// OldOrder is the order of fields in the old list. It will be empty if the order has not changed.
 	OldOrder []string
+
+	// NewOrder is the order of fields in the new list. It will be empty if the order has not changed.
 	NewOrder []string
 }
 
-func DiffObjectTypes(oldObj, newObj ObjectType) ObjectTypeDiff {
+func compareObjectType(oldObj, newObj ObjectType) ObjectTypeDiff {
 	diff := ObjectTypeDiff{
 		Name: oldObj.TypeName(),
 	}
+
+	diff.KeyFieldsDiff = compareFields(oldObj.KeyFields, newObj.KeyFields)
+	diff.ValueFieldsDiff = compareFields(oldObj.ValueFields, newObj.ValueFields)
+
 	return diff
 }
 
-func DiffFields(oldFields, newFields []Field) FieldsDiff {
+func compareFields(oldFields, newFields []Field) FieldsDiff {
 	diff := FieldsDiff{}
 
 	newFieldMap := make(map[string]Field)
@@ -36,7 +56,7 @@ func DiffFields(oldFields, newFields []Field) FieldsDiff {
 		if !ok {
 			diff.Removed = append(diff.Removed, oldField)
 		} else {
-			fieldDiff := DiffField(oldField, newField)
+			fieldDiff := compareField(oldField, newField)
 			if !fieldDiff.Empty() {
 				diff.Changed = append(diff.Changed, fieldDiff)
 			}

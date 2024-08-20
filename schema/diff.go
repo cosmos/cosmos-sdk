@@ -1,15 +1,40 @@
 package schema
 
+// ModuleSchemaDiff represents the difference between two module schemas.
 type ModuleSchemaDiff struct {
-	AddedObjectTypes   []ObjectType
+	// AddedObjectTypes is a list of object types that were added.
+	AddedObjectTypes []ObjectType
+
+	// ChangedObjectTypes is a list of object types that were changed.
 	ChangedObjectTypes []ObjectTypeDiff
+
+	// RemovedObjectTypes is a list of object types that were removed.
 	RemovedObjectTypes []ObjectType
-	AddedEnumTypes     []EnumType
-	ChangedEnumTypes   []EnumTypeDiff
-	RemovedEnumTypes   []EnumType
+
+	// AddedEnumTypes is a list of enum types that were added.
+	AddedEnumTypes []EnumType
+
+	// ChangedEnumTypes is a list of enum types that were changed.
+	ChangedEnumTypes []EnumTypeDiff
+
+	// RemovedEnumTypes is a list of enum types that were removed.
+	RemovedEnumTypes []EnumType
 }
 
-func DiffModuleSchemas(oldSchema, newSchema *ModuleSchema) ModuleSchemaDiff {
+// CompareModuleSchemas compares an old and a new module schemas and returns the difference between them.
+// If the schemas are equivalent, the Empty method of the returned ModuleSchemaDiff will return true.
+//
+// Indexer implementations can use these diffs to perform automatic schema migration.
+// The specific supported changes that a specific indexer supports are defined by that indexer implementation.
+// However, as a general rule, it is suggested that indexers support these changes:
+// - Adding new object types
+// - Adding new enum types
+// - Adding new value fields to object types
+// - Adding new enum values to enum types
+//
+// Module authors can use the above guidelines as a reference point for what changes are generally
+// considered safe to make to a module schema without breaking existing indexers.
+func CompareModuleSchemas(oldSchema, newSchema *ModuleSchema) ModuleSchemaDiff {
 	diff := ModuleSchemaDiff{}
 
 	oldSchema.ObjectTypes(func(oldObj ObjectType) bool {
@@ -23,7 +48,7 @@ func DiffModuleSchemas(oldSchema, newSchema *ModuleSchema) ModuleSchemaDiff {
 			diff.RemovedObjectTypes = append(diff.RemovedObjectTypes, oldObj)
 			return true
 		}
-		objDiff := DiffObjectTypes(oldObj, newObj)
+		objDiff := compareObjectType(oldObj, newObj)
 		if !objDiff.Empty() {
 			diff.ChangedObjectTypes = append(diff.ChangedObjectTypes, objDiff)
 		}
@@ -49,7 +74,7 @@ func DiffModuleSchemas(oldSchema, newSchema *ModuleSchema) ModuleSchemaDiff {
 			diff.RemovedEnumTypes = append(diff.RemovedEnumTypes, oldEnum)
 			return true
 		}
-		enumDiff := DiffEnumTypes(oldEnum, newEnum)
+		enumDiff := compareEnumType(oldEnum, newEnum)
 		if !enumDiff.Empty() {
 			diff.ChangedEnumTypes = append(diff.ChangedEnumTypes, enumDiff)
 		}

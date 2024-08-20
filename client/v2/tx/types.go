@@ -2,8 +2,7 @@ package tx
 
 import (
 	"fmt"
-
-	gogoany "github.com/cosmos/gogoproto/types/any"
+	"time"
 
 	base "cosmossdk.io/api/cosmos/base/v1beta1"
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
@@ -15,9 +14,6 @@ import (
 
 const defaultGas = 200000
 
-// PreprocessTxFn defines a hook by which chains can preprocess transactions before broadcasting
-type PreprocessTxFn func(chainID string, key uint, tx TxBuilder) error
-
 // HasValidateBasic is a copy of types.HasValidateBasic to avoid sdk import.
 type HasValidateBasic interface {
 	// ValidateBasic does a simple validation check that
@@ -27,16 +23,15 @@ type HasValidateBasic interface {
 
 // TxParameters defines the parameters required for constructing a transaction.
 type TxParameters struct {
-	timeoutHeight uint64                // timeoutHeight indicates the block height after which the transaction is no longer valid.
-	chainID       string                // chainID specifies the unique identifier of the blockchain where the transaction will be processed.
-	memo          string                // memo contains any arbitrary memo to be attached to the transaction.
-	signMode      apitxsigning.SignMode // signMode determines the signing mode to be used for the transaction.
+	timeoutTimestamp time.Time             // timeoutTimestamp indicates a timestamp after which the transaction is no longer valid.
+	chainID          string                // chainID specifies the unique identifier of the blockchain where the transaction will be processed.
+	memo             string                // memo contains any arbitrary memo to be attached to the transaction.
+	signMode         apitxsigning.SignMode // signMode determines the signing mode to be used for the transaction.
 
 	AccountConfig    // AccountConfig includes information about the transaction originator's account.
 	GasConfig        // GasConfig specifies the gas settings for the transaction.
 	FeeConfig        // FeeConfig details the fee associated with the transaction.
 	ExecutionOptions // ExecutionOptions includes settings that modify how the transaction is executed.
-	ExtensionOptions // ExtensionOptions allows for additional features or data to be included in the transaction.
 }
 
 // AccountConfig defines the 'account' related fields in a transaction.
@@ -106,18 +101,11 @@ func NewFeeConfig(fees, feePayer, feeGranter string) (FeeConfig, error) {
 // ExecutionOptions defines the transaction execution options ran by the client
 // ExecutionOptions defines the settings for transaction execution.
 type ExecutionOptions struct {
-	unordered          bool           // unordered indicates if the transaction execution order is not guaranteed.
-	offline            bool           // offline specifies if the transaction should be prepared for offline signing.
-	offChain           bool           // offChain indicates if the transaction should be executed off the blockchain.
-	generateOnly       bool           // generateOnly specifies if the transaction should only be generated and not executed.
-	simulateAndExecute bool           // simulateAndExecute indicates if the transaction should be simulated before execution.
-	preprocessTxHook   PreprocessTxFn // preprocessTxHook is a function hook for preprocessing the transaction.
-}
-
-// ExtensionOptions holds a slice of Any protocol buffer messages that can be used to extend the functionality
-// of a transaction with additional data. This is typically used to include non-standard or experimental features.
-type ExtensionOptions struct {
-	ExtOptions []*gogoany.Any // ExtOptions are the extension options in the form of Any protocol buffer messages.
+	unordered          bool // unordered indicates if the transaction execution order is not guaranteed.
+	offline            bool // offline specifies if the transaction should be prepared for offline signing.
+	offChain           bool // offChain indicates if the transaction should be executed off the blockchain.
+	generateOnly       bool // generateOnly specifies if the transaction should only be generated and not executed.
+	simulateAndExecute bool // simulateAndExecute indicates if the transaction should be simulated before execution.
 }
 
 // GasEstimateResponse defines a response definition for tx gas estimation.

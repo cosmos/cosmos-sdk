@@ -5,10 +5,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
-
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
+	"os"
+	"time"
 
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
@@ -25,7 +25,9 @@ import (
 
 // txParamsFromFlagSet extracts the transaction parameters from the provided FlagSet.
 func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring, ac address.Codec) (params TxParameters, err error) {
-	timeout, _ := flags.GetUint64(flags2.FlagTimeoutHeight)
+	//timeout, _ := flags.GetUint64(flags2.FlagTimeoutHeight)
+	timestampUnix, _ := flags.GetInt64(flags2.FlagTimeoutTimestamp)
+	timeoutTimestamp := time.Unix(timestampUnix, 0)
 	chainID, _ := flags.GetString(flags2.FlagChainID)
 	memo, _ := flags.GetString(flags2.FlagNote)
 	signMode, _ := flags.GetString(flags2.FlagSignMode)
@@ -72,10 +74,10 @@ func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring, ac addr
 	}
 
 	txParams := TxParameters{
-		timeoutHeight: timeout,
-		chainID:       chainID,
-		memo:          memo,
-		signMode:      getSignMode(signMode),
+		timeoutTimestamp: timeoutTimestamp,
+		chainID:          chainID,
+		memo:             memo,
+		signMode:         getSignMode(signMode),
 		AccountConfig: AccountConfig{
 			accountNumber: accNumber,
 			sequence:      sequence,
@@ -91,9 +93,7 @@ func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring, ac addr
 			offChain:           false,
 			generateOnly:       generateOnly,
 			simulateAndExecute: gasSetting.Simulate,
-			preprocessTxHook:   nil, // TODO: in context
 		},
-		ExtensionOptions: ExtensionOptions{}, // TODO
 	}
 
 	return txParams, nil

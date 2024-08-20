@@ -1,8 +1,10 @@
 package tx
 
 import (
-	gogoany "github.com/cosmos/gogoproto/types/any"
+	"time"
+
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	base "cosmossdk.io/api/cosmos/base/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
@@ -19,11 +21,6 @@ var (
 	_ TxBuilderProvider = BuilderProvider{}
 )
 
-// ExtendedTxBuilder defines an interface for setting extension options in a transaction.
-type ExtendedTxBuilder interface {
-	SetExtensionOptions(...*gogoany.Any)
-}
-
 // TxBuilder defines an interface which an application-defined concrete transaction
 // type must implement. Namely, it must be able to set messages, generate
 // signatures, and provide canonical bytes to sign over. The transaction must
@@ -36,7 +33,7 @@ type TxBuilder interface {
 	SetMemo(string)
 	SetFeeAmount([]*base.Coin)
 	SetGasLimit(uint64)
-	SetTimeoutHeight(uint64)
+	SetTimeoutTimestamp(time.Time)
 	SetFeePayer(string) error
 	SetFeeGranter(string) error
 	SetUnordered(bool)
@@ -85,16 +82,17 @@ type txBuilder struct {
 	decoder      Decoder
 	codec        codec.BinaryCodec
 
-	msgs          []transaction.Msg
-	timeoutHeight uint64
-	granter       []byte
-	payer         []byte
-	unordered     bool
-	memo          string
-	gasLimit      uint64
-	fees          []*base.Coin
-	signerInfos   []*apitx.SignerInfo
-	signatures    [][]byte
+	msgs             []transaction.Msg
+	timeoutHeight    uint64
+	timeoutTimestamp time.Time
+	granter          []byte
+	payer            []byte
+	unordered        bool
+	memo             string
+	gasLimit         uint64
+	fees             []*base.Coin
+	signerInfos      []*apitx.SignerInfo
+	signatures       [][]byte
 
 	extensionOptions            []*anypb.Any
 	nonCriticalExtensionOptions []*anypb.Any
@@ -123,6 +121,7 @@ func (b *txBuilder) getTx() (*wrappedTx, error) {
 		Messages:                    msgs,
 		Memo:                        b.memo,
 		TimeoutHeight:               b.timeoutHeight,
+		TimeoutTimestamp:            timestamppb.New(b.timeoutTimestamp),
 		Unordered:                   b.unordered,
 		ExtensionOptions:            b.extensionOptions,
 		NonCriticalExtensionOptions: b.nonCriticalExtensionOptions,
@@ -232,9 +231,9 @@ func (b *txBuilder) SetGasLimit(gasLimit uint64) {
 	b.gasLimit = gasLimit
 }
 
-// SetTimeoutHeight sets the timeout height for the transaction.
-func (b *txBuilder) SetTimeoutHeight(timeoutHeight uint64) {
-	b.timeoutHeight = timeoutHeight
+// SetTimeoutTimestamp sets the timeout timestamp for the transaction.
+func (b *txBuilder) SetTimeoutTimestamp(timeoutHeight time.Time) {
+	b.timeoutTimestamp = timeoutHeight
 }
 
 // SetFeePayer sets the fee payer for the transaction.

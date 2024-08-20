@@ -29,10 +29,10 @@ type Decoder interface {
 	Decode(txBytes []byte) (*txdecode.DecodedTx, error)
 }
 
-// txApiDecoder is a function type that unmarshals transaction bytes into an API Tx type.
+// txDecoder is a function type that unmarshals transaction bytes into an API Tx type.
 type txDecoder func(txBytes []byte) (Tx, error)
 
-// txApiEncoder is a function type that marshals a transaction into bytes.
+// txEncoder is a function type that marshals a transaction into bytes.
 type txEncoder func(tx Tx) ([]byte, error)
 
 // decodeTx decodes transaction bytes into an apitx.Tx structure.

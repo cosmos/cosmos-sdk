@@ -155,11 +155,7 @@ func (f *Factory) BuildUnsignedTx(msgs ...transaction.Msg) (TxBuilder, error) {
 	if err != nil {
 		return nil, err
 	}
-	txBuilder.SetTimeoutHeight(f.txParams.timeoutHeight)
-
-	if etx, ok := txBuilder.(ExtendedTxBuilder); ok {
-		etx.SetExtensionOptions(f.txParams.ExtOptions...)
-	}
+	txBuilder.SetTimeoutTimestamp(f.txParams.timeoutTimestamp)
 
 	return txBuilder, nil
 }
@@ -405,13 +401,6 @@ func (f *Factory) sign(ctx context.Context, txBuilder TxBuilder, overwriteSig bo
 		return nil, fmt.Errorf("unable to set signatures on payload: %w", err)
 	}
 
-	// Run optional preprocessing if specified. By default, this is unset
-	// and will return nil.
-	err = f.preprocessTx(f.txParams.fromName, txBuilder)
-	if err != nil {
-		return nil, err
-	}
-
 	return txBuilder.GetTx()
 }
 
@@ -439,21 +428,6 @@ func (f *Factory) WithSequence(sequence uint64) {
 // WithAccountNumber returns a copy of the Factory with an updated account number.
 func (f *Factory) WithAccountNumber(accnum uint64) {
 	f.txParams.accountNumber = accnum
-}
-
-// preprocessTx calls the preprocessing hook with the factory parameters and
-// returns the result.
-func (f *Factory) preprocessTx(keyname string, builder TxBuilder) error {
-	if f.txParams.preprocessTxHook == nil {
-		// Allow pass-through
-		return nil
-	}
-
-	keyType, err := f.keyring().KeyType(keyname)
-	if err != nil {
-		return err
-	}
-	return f.txParams.preprocessTxHook(f.txParams.chainID, keyType, builder)
 }
 
 // accountNumber returns the account number.

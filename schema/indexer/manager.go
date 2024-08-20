@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"cosmossdk.io/schema/addressutil"
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/decoding"
 	"cosmossdk.io/schema/logutil"
@@ -31,6 +32,11 @@ type ManagerOptions struct {
 	// be used to pass down other parameters to indexers if necessary. If it is omitted, context.Background
 	// will be used.
 	Context context.Context
+
+	// AddressCodec is the address codec that indexers can use to encode and decode addresses. It should always be
+	// provided, but if it is omitted, the indexer manager will use a default codec which encodes and decodes addresses
+	// as hex strings.
+	AddressCodec addressutil.AddressCodec
 }
 
 // ManagerConfig is the configuration of the indexer manager and contains the configuration for each indexer target.

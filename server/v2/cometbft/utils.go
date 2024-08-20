@@ -102,18 +102,24 @@ func intoABCIValidatorUpdates(updates []appmodulev2.ValidatorUpdate) []abci.Vali
 func intoABCITxResults(results []appmanager.TxResult, indexSet map[string]struct{}) []*abci.ExecTxResult {
 	res := make([]*abci.ExecTxResult, len(results))
 	for i := range results {
-		if results[i].Error == nil {
-			res[i] = responseExecTxResultWithEvents(
-				results[i].Error,
-				results[i].GasWanted,
-				results[i].GasUsed,
-				intoABCIEvents(results[i].Events, indexSet),
-				false,
-			)
+		if results[i].Error != nil {
+			space, code, log := errorsmod.ABCIInfo(results[i].Error, true)
+			res[i] = &abci.ExecTxResult{
+				Codespace: space,
+				Code:      code,
+				Log:       log,
+			}
+
 			continue
 		}
 
-		// TODO: handle properly once the we decide on the type of TxResult.Resp
+		res[i] = responseExecTxResultWithEvents(
+			results[i].Error,
+			results[i].GasWanted,
+			results[i].GasUsed,
+			intoABCIEvents(results[i].Events, indexSet),
+			false,
+		)
 	}
 
 	return res
@@ -300,29 +306,7 @@ func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.Consen
 		return nil, errors.New("failed to query consensus params")
 	} else {
 		// convert our params to cometbft params
-		evidenceMaxDuration := r.Params.Evidence.MaxAgeDuration
-		cs := &cmtproto.ConsensusParams{
-			Block: &cmtproto.BlockParams{
-				MaxBytes: r.Params.Block.MaxBytes,
-				MaxGas:   r.Params.Block.MaxGas,
-			},
-			Evidence: &cmtproto.EvidenceParams{
-				MaxAgeNumBlocks: r.Params.Evidence.MaxAgeNumBlocks,
-				MaxAgeDuration:  evidenceMaxDuration,
-			},
-			Validator: &cmtproto.ValidatorParams{
-				PubKeyTypes: r.Params.Validator.PubKeyTypes,
-			},
-			Version: &cmtproto.VersionParams{
-				App: r.Params.Version.App,
-			},
-		}
-		if r.Params.Abci != nil {
-			cs.Abci = &cmtproto.ABCIParams{ // nolint:staticcheck // deprecated type still supported for now
-				VoteExtensionsEnableHeight: r.Params.Abci.VoteExtensionsEnableHeight,
-			}
-		}
-		return cs, nil
+		return r.Params, nil
 	}
 }
 

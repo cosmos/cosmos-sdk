@@ -1,14 +1,17 @@
 package stf
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"maps"
 	"slices"
 
+	"github.com/cosmos/gogoproto/jsonpb"
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/core/event"
+	transaction "cosmossdk.io/core/transaction"
 )
 
 func NewEventService() event.Service {
@@ -30,7 +33,7 @@ type eventManager struct {
 
 // Emit emits an typed event that is defined in the protobuf file.
 // In the future these events will be added to consensus.
-func (em *eventManager) Emit(tev gogoproto.Message) error {
+func (em *eventManager) Emit(tev transaction.Msg) error {
 	res, err := TypedEventToEvent(tev)
 	if err != nil {
 		return err
@@ -46,30 +49,22 @@ func (em *eventManager) EmitKV(eventType string, attrs ...event.Attribute) error
 	return nil
 }
 
-// EmitNonConsensus emits an typed event that is defined in the protobuf file.
-// These events will not be added to consensus.
-func (em *eventManager) EmitNonConsensus(event gogoproto.Message) error {
-	return em.Emit(event)
-}
-
 // TypedEventToEvent takes typed event and converts to Event object
-func TypedEventToEvent(tev gogoproto.Message) (event.Event, error) {
+func TypedEventToEvent(tev transaction.Msg) (event.Event, error) {
 	evtType := gogoproto.MessageName(tev)
-	evtJSON, err := gogoproto.Marshal(tev)
-	if err != nil {
+	buf := new(bytes.Buffer)
+	jm := &jsonpb.Marshaler{OrigName: true, EmitDefaults: true, AnyResolver: nil}
+	if err := jm.Marshal(buf, tev); err != nil {
 		return event.Event{}, err
 	}
 
 	var attrMap map[string]json.RawMessage
-	err = json.Unmarshal(evtJSON, &attrMap)
-	if err != nil {
+	if err := json.Unmarshal(buf.Bytes(), &attrMap); err != nil {
 		return event.Event{}, err
 	}
 
 	// sort the keys to ensure the order is always the same
-	keys := maps.Keys(attrMap)
-	slices.Sort(keys)
-
+	keys := slices.Sorted(maps.Keys(attrMap))
 	attrs := make([]event.Attribute, 0, len(attrMap))
 	for _, k := range keys {
 		v := attrMap[k]

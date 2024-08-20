@@ -579,6 +579,9 @@ func (suite *KeeperTestSuite) TestSupply_BurnCoins() {
 	suite.mockBurnCoins(burnerAcc)
 	require.NoError(keeper.BurnCoins(ctx, burnerAcc.GetAddress(), initCoins))
 
+	suite.mockBurnCoins(burnerAcc)
+	require.ErrorContains(keeper.BurnCoins(ctx, burnerAcc.GetAddress(), sdk.Coins{sdk.Coin{Denom: "asd", Amount: math.NewInt(-1)}}), "-1asd: invalid coins")
+
 	supplyAfterBurn, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
 	require.NoError(err)
 	require.Equal(sdk.NewCoins(), keeper.GetAllBalances(ctx, burnerAcc.GetAddress()))

@@ -3,8 +3,6 @@ package stf
 import (
 	"context"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
-
 	"cosmossdk.io/core/router"
 	"cosmossdk.io/core/transaction"
 )
@@ -31,12 +29,12 @@ func (m msgRouterService) CanInvoke(ctx context.Context, typeURL string) error {
 // InvokeTyped execute a message and fill-in a response.
 // The response must be known and passed as a parameter.
 // Use InvokeUntyped if the response type is not known.
-func (m msgRouterService) InvokeTyped(ctx context.Context, msg, resp gogoproto.Message) error {
+func (m msgRouterService) InvokeTyped(ctx context.Context, msg, resp transaction.Msg) error {
 	return ctx.(*executionContext).msgRouter.InvokeTyped(ctx, msg, resp)
 }
 
 // InvokeUntyped execute a message and returns a response.
-func (m msgRouterService) InvokeUntyped(ctx context.Context, msg gogoproto.Message) (gogoproto.Message, error) {
+func (m msgRouterService) InvokeUntyped(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
 	return ctx.(*executionContext).msgRouter.InvokeUntyped(ctx, msg)
 }
 
@@ -59,7 +57,7 @@ func (m queryRouterService) CanInvoke(ctx context.Context, typeURL string) error
 // Use InvokeUntyped if the response type is not known.
 func (m queryRouterService) InvokeTyped(
 	ctx context.Context,
-	req, resp gogoproto.Message,
+	req, resp transaction.Msg,
 ) error {
 	return ctx.(*executionContext).queryRouter.InvokeTyped(ctx, req, resp)
 }
@@ -67,7 +65,7 @@ func (m queryRouterService) InvokeTyped(
 // InvokeUntyped execute a message and returns a response.
 func (m queryRouterService) InvokeUntyped(
 	ctx context.Context,
-	req gogoproto.Message,
-) (gogoproto.Message, error) {
+	req transaction.Msg,
+) (transaction.Msg, error) {
 	return ctx.(*executionContext).queryRouter.InvokeUntyped(ctx, req)
 }

@@ -177,7 +177,7 @@ func (k msgServer) SetSendEnabled(ctx context.Context, msg *types.MsgSetSendEnab
 	return &types.MsgSetSendEnabledResponse{}, nil
 }
 
-func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBurnResponse, error) {
+func (k msgServer) Burn(ctx context.Context, msg *types.MsgBurn) (*types.MsgBurnResponse, error) {
 	var (
 		from []byte
 		err  error
@@ -205,7 +205,7 @@ func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBu
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, coins.String())
 	}
 
-	err = k.BurnCoins(goCtx, from, coins)
+	err = k.BurnCoins(ctx, from, coins)
 	if err != nil {
 		return nil, err
 	}

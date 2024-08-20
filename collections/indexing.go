@@ -154,7 +154,7 @@ func (c collectionImpl[K, V]) schemaCodec() (*collectionSchemaCodec, error) {
 }
 
 // ensureFieldNames makes sure that all fields have valid names - either the
-// names were specified by user or they get filleed
+// names were specified by user or they get filled
 func ensureFieldNames(x any, defaultName string, cols []schema.Field) {
 	var names []string = nil
 	if hasName, ok := x.(interface{ Name() string }); ok {

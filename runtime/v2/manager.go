@@ -372,11 +372,11 @@ func (m *MM[T]) TxValidators() func(ctx context.Context, tx T) error {
 //
 // Internally, RunMigrations will perform the following steps:
 //   - create an `updatedVM` VersionMap of module with their latest ConsensusVersion
-//
-// -
-//   - get the current consensus version as toVersion. Get fromVersion from `fromVM`
+//   - if module implements `HasConsensusVersion` interface get the consensus version as `toVersion`,
+//     if not `toVersion` is set to 0.
+//   - get `fromVersion` from `fromVM` with module's name.
 //   - if the module's name exists in `fromVM` map, then run in-place store migrations
-//     for that module between fromVersion and toVersion.
+//     for that module between `fromVersion` and `toVersion`.
 //   - if the module does not exist in the `fromVM` (which means that it's a new module,
 //     because it was not in the previous x/upgrade's store), then run
 //     `InitGenesis` on that module.

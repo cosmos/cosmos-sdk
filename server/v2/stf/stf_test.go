@@ -4,11 +4,11 @@ import (
 	"context"
 	"crypto/sha256"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
 	gogotypes "github.com/cosmos/gogoproto/types"
-
 
 	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -19,6 +19,7 @@ import (
 	"cosmossdk.io/server/v2/stf/gas"
 	"cosmossdk.io/server/v2/stf/mock"
 )
+
 func addMsgHandlerToSTF[T any, PT interface {
 	*T
 	transaction.Msg
@@ -69,20 +70,20 @@ func TestSTF(t *testing.T) {
 	s := &STF[mock.Tx]{
 		doPreBlock: func(ctx context.Context, txs []mock.Tx) error { return nil },
 		doBeginBlock: func(ctx context.Context) error {
-			kvSet(ctx, state, "begin-block")
+			kvSet(t, ctx, "begin-block")
 			return nil
 		},
 		doEndBlock: func(ctx context.Context) error {
-			kvSet(ctx, state, "end-block")
+			kvSet(t, ctx, "end-block")
 			return nil
 		},
 		doValidatorUpdate: func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error) { return nil, nil },
 		doTxValidation: func(ctx context.Context, tx mock.Tx) error {
-			kvSet(ctx, state, "validate")
+			kvSet(t, ctx, "validate")
 			return nil
 		},
 		postTxExec: func(ctx context.Context, tx mock.Tx, success bool) error {
-			kvSet(ctx, state, "post-tx-exec")
+			kvSet(t, ctx, "post-tx-exec")
 			return nil
 		},
 		branchFn:            branch.DefaultNewWriterMap,
@@ -91,7 +92,7 @@ func TestSTF(t *testing.T) {
 	}
 
 	addMsgHandlerToSTF(t, s, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
-		kvSet(ctx, state, "exec")
+		kvSet(t, ctx, "exec")
 		return nil, nil
 	})
 
@@ -302,18 +303,21 @@ func TestSTF(t *testing.T) {
 
 var actorName = []byte("cookies")
 
-func kvSet(ctx context.Context, accountState store.WriterMap, key string) {
-	state, err := accountState.GetWriter(actorName)
+func kvSet(t *testing.T, ctx context.Context, v string) {
+	t.Helper()
+	state, err := ctx.(*executionContext).state.GetWriter(actorName)
 	if err != nil {
-		panic(err)
-	}
-	err = state.Set([]byte(key), []byte(key))
-	if err != nil {
-		panic(err)
+		t.Errorf("Set error: %v", err)
+	} else {
+		err = state.Set([]byte(v), []byte(v))
+		if err != nil {
+			t.Errorf("Set error: %v", err)
+		}
 	}
 }
 
 func stateHas(t *testing.T, accountState store.ReaderMap, key string) {
+	t.Helper()
 	state, err := accountState.GetReader(actorName)
 	if err != nil {
 		t.Errorf("GetReader error: %v", err)
@@ -328,6 +332,7 @@ func stateHas(t *testing.T, accountState store.ReaderMap, key string) {
 }
 
 func stateNotHas(t *testing.T, accountState store.ReaderMap, key string) {
+	t.Helper()
 	state, err := accountState.GetReader(actorName)
 	if err != nil {
 		t.Errorf("GetReader error: %v", err)

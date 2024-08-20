@@ -19,9 +19,6 @@ import (
 	"cosmossdk.io/server/v2/stf/internal"
 )
 
-// Identity defines STF's bytes identity and it's used by STF to store things in its own state.
-var Identity = []byte("stf")
-
 // STF is a struct that manages the state transition component of the app.
 type STF[T transaction.Tx] struct {
 	logger log.Logger
@@ -104,7 +101,7 @@ func (s STF[T]) DeliverBlock(
 		return nil, nil, fmt.Errorf("unable to set initial header info, %w", err)
 	}
 
-	exCtx := s.makeContext(ctx,  newState, internal.ExecModeFinalize)
+	exCtx := s.makeContext(ctx, RuntimeIdentity, newState, internal.ExecModeFinalize)
 	exCtx.setHeaderInfo(hi)
 
 	// reset events
@@ -226,7 +223,7 @@ func (s STF[T]) validateTx(
 	if err != nil {
 		return 0, nil, err
 	}
-	validateCtx := s.makeContext(ctx,  validateState, execMode)
+	validateCtx := s.makeContext(ctx, RuntimeIdentity, validateState, execMode)
 	validateCtx.setHeaderInfo(hi)
 	validateCtx.setGasLimit(gasLimit)
 	err = s.doTxValidation(validateCtx, tx)
@@ -255,7 +252,7 @@ func (s STF[T]) execTx(
 		// in case of error during message execution, we do not apply the exec state.
 		// instead we run the post exec handler in a new branchFn from the initial state.
 		postTxState := s.branchFn(state)
-		postTxCtx := s.makeContext(ctx, postTxState, execMode)
+		postTxCtx := s.makeContext(ctx, RuntimeIdentity, postTxState, execMode)
 		postTxCtx.setHeaderInfo(hi)
 
 		postTxErr := s.postTxExec(postTxCtx, tx, false)
@@ -275,7 +272,7 @@ func (s STF[T]) execTx(
 	// tx execution went fine, now we use the same state to run the post tx exec handler,
 	// in case the execution of the post tx fails, then no state change is applied and the
 	// whole execution step is rolled back.
-	postTxCtx := s.makeContext(ctx,  execState, execMode) // NO gas limit.
+	postTxCtx := s.makeContext(ctx, RuntimeIdentity, execState, execMode) // NO gas limit.
 	postTxCtx.setHeaderInfo(hi)
 	postTxErr := s.postTxExec(postTxCtx, tx, true)
 	if postTxErr != nil {
@@ -312,7 +309,7 @@ func (s STF[T]) runTxMsgs(
 	}
 	msgResps := make([]transaction.Msg, len(msgs))
 
-	execCtx := s.makeContext(ctx,  state, execMode)
+	execCtx := s.makeContext(ctx, RuntimeIdentity, state, execMode)
 	execCtx.setHeaderInfo(hi)
 	execCtx.setGasLimit(gasLimit)
 	for i, msg := range msgs {
@@ -450,7 +447,7 @@ func (s STF[T]) Query(
 	if err != nil {
 		return nil, err
 	}
-	queryCtx := s.makeContext(ctx,  queryState, internal.ExecModeSimulate)
+	queryCtx := s.makeContext(ctx, nil, queryState, internal.ExecModeSimulate)
 	queryCtx.setHeaderInfo(hi)
 	queryCtx.setGasLimit(gasLimit)
 	return s.queryRouter.InvokeUntyped(queryCtx, req)
@@ -465,7 +462,7 @@ func (s STF[T]) RunWithCtx(
 	closure func(ctx context.Context) error,
 ) (store.WriterMap, error) {
 	branchedState := s.branchFn(state)
-	stfCtx := s.makeContext(ctx,  branchedState, internal.ExecModeFinalize)
+	stfCtx := s.makeContext(ctx, nil, branchedState, internal.ExecModeFinalize)
 	return branchedState, closure(stfCtx)
 }
 
@@ -500,6 +497,8 @@ type executionContext struct {
 	meter gas.Meter
 	// events are the current events.
 	events []event.Event
+	// sender is the causer of the state transition.
+	sender transaction.Identity
 	// headerInfo contains the block info.
 	headerInfo header.Info
 	// execMode retains information about the exec mode.
@@ -539,6 +538,7 @@ func (e *executionContext) setGasLimit(limit uint64) {
 // It returns a pointer to the executionContext struct
 func (s STF[T]) makeContext(
 	ctx context.Context,
+	sender transaction.Identity,
 	store store.WriterMap,
 	execMode transaction.ExecMode,
 ) *executionContext {
@@ -548,6 +548,7 @@ func (s STF[T]) makeContext(
 		s.makeGasMeter,
 		s.makeGasMeteredState,
 		s.branchFn,
+		sender,
 		store,
 		execMode,
 		s.msgRouter,
@@ -560,6 +561,7 @@ func newExecutionContext(
 	makeGasMeterFn makeGasMeterFn,
 	makeGasMeteredStoreFn makeGasMeteredStateFn,
 	branchFn branchFn,
+	sender transaction.Identity,
 	state store.WriterMap,
 	execMode transaction.ExecMode,
 	msgRouter coreRouterImpl,
@@ -576,6 +578,7 @@ func newExecutionContext(
 		events:              make([]event.Event, 0),
 		headerInfo:          header.Info{},
 		execMode:            execMode,
+		sender:              sender,
 		branchFn:            branchFn,
 		makeGasMeter:        makeGasMeterFn,
 		makeGasMeteredStore: makeGasMeteredStoreFn,

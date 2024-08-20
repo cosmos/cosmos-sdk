@@ -10,16 +10,15 @@ import (
 
 	_ "cosmossdk.io/api/amino" // Import amino.proto file for reflection
 	"cosmossdk.io/core/app"
-	"cosmossdk.io/core/app"
 	"cosmossdk.io/core/transaction"
 )
 
 // protocdc defines the interface for marshaling and unmarshaling messages in server/v2
-type 	protocdc interface {
-		Marshal(v transaction.Msg) ([]byte, error)
-		Unmarshal(data []byte, v transaction.Msg) error
-		Name() string
-	}
+type protocdc interface {
+	Marshal(v transaction.Msg) ([]byte, error)
+	Unmarshal(data []byte, v transaction.Msg) error
+	Name() string
+}
 
 type protoCodec struct {
 	interfaceRegistry app.InterfaceRegistry

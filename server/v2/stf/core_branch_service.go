@@ -48,7 +48,6 @@ func (bs BranchService) execute(ctx *executionContext, f func(ctx context.Contex
 		state:               meteredBranchedState,
 		meter:               ctx.meter,
 		events:              nil,
-		sender:              ctx.sender,
 		headerInfo:          ctx.headerInfo,
 		execMode:            ctx.execMode,
 		branchFn:            ctx.branchFn,

@@ -48,6 +48,11 @@ type Factory struct {
 func NewFactory(keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever account.AccountRetriever,
 	txConfig TxConfig, ac address.Codec, conn gogogrpc.ClientConn, parameters TxParameters,
 ) (Factory, error) {
+	parameters, err := prepareTxParams(parameters, accRetriever)
+	if err != nil {
+		return Factory{}, err
+	}
+
 	return Factory{
 		keybase:          keybase,
 		cdc:              cdc,
@@ -59,36 +64,34 @@ func NewFactory(keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever acc
 	}, nil
 }
 
-// Prepare ensures the account defined by ctx.GetFromAddress() exists and
+// prepareTxParams ensures the account defined by ctx.GetFromAddress() exists and
 // if the account number and/or the account sequence number are zero (not set),
 // they will be queried for and set on the provided Factory.
-// A new Factory with the updated fields will be returned.
-// Note: When in offline mode, the Prepare does nothing and returns the original factory.
-func (f *Factory) Prepare() error {
-	if f.txParams.ExecutionOptions.offline || f.txParams.ExecutionOptions.offChain {
-		return nil
+func prepareTxParams(parameters TxParameters, accRetriever account.AccountRetriever) (TxParameters, error) {
+	if parameters.ExecutionOptions.offline || parameters.ExecutionOptions.offChain {
+		return parameters, nil
 	}
 
-	if len(f.txParams.address) == 0 {
-		return errors.New("missing 'from address' field")
+	if len(parameters.address) == 0 {
+		return parameters, errors.New("missing 'from address' field")
 	}
 
-	if f.txParams.accountNumber == 0 || f.txParams.sequence == 0 {
-		num, seq, err := f.accountRetriever.GetAccountNumberSequence(context.Background(), f.txParams.address)
+	if parameters.accountNumber == 0 || parameters.sequence == 0 {
+		num, seq, err := accRetriever.GetAccountNumberSequence(context.Background(), parameters.address)
 		if err != nil {
-			return err
+			return parameters, err
 		}
 
-		if f.txParams.accountNumber == 0 {
-			f.WithAccountNumber(num)
+		if parameters.accountNumber == 0 {
+			parameters.accountNumber = num
 		}
 
-		if f.txParams.sequence == 0 {
-			f.WithSequence(seq)
+		if parameters.sequence == 0 {
+			parameters.sequence = seq
 		}
 	}
 
-	return nil
+	return parameters, nil
 }
 
 // BuildUnsignedTx builds a transaction to be signed given a set of messages.
@@ -161,11 +164,6 @@ func (f *Factory) BuildUnsignedTx(msgs ...transaction.Msg) (TxBuilder, error) {
 }
 
 func (f *Factory) BuildsSignedTx(ctx context.Context, msgs ...transaction.Msg) (Tx, error) {
-	err := f.Prepare()
-	if err != nil {
-		return nil, err
-	}
-
 	tx, err := f.BuildUnsignedTx(msgs...)
 	if err != nil {
 		return nil, err

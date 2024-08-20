@@ -223,11 +223,6 @@ func generateAuxSignerData(ctx client.Context, txf Factory, msgs ...transaction.
 // It first calls Prepare on the transaction factory to set up any necessary pre-conditions.
 // If preparation is successful, it generates an unsigned transaction string using the provided messages.
 func generateOnly(ctx client.Context, txf Factory, msgs ...transaction.Msg) error {
-	err := txf.Prepare()
-	if err != nil {
-		return err
-	}
-
 	uTx, err := txf.UnsignedTxString(msgs...)
 	if err != nil {
 		return err
@@ -241,11 +236,6 @@ func generateOnly(ctx client.Context, txf Factory, msgs ...transaction.Msg) erro
 func dryRun(txf Factory, msgs ...transaction.Msg) error {
 	if txf.txParams.offline {
 		return errors.New("dry-run: cannot use offline mode")
-	}
-
-	err := txf.Prepare()
-	if err != nil {
-		return err
 	}
 
 	_, gas, err := txf.Simulate(msgs...)
@@ -272,13 +262,8 @@ func SimulateTx(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.
 // given set of messages. It will also simulate gas requirements if necessary.
 // It will return an error upon failure.
 func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...transaction.Msg) error {
-	err := txf.Prepare()
-	if err != nil {
-		return err
-	}
-
 	if txf.simulateAndExecute() {
-		err = txf.calculateGas(msgs...)
+		err := txf.calculateGas(msgs...)
 		if err != nil {
 			return err
 		}

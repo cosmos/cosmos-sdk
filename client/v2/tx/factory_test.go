@@ -16,7 +16,12 @@ import (
 	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 )
 
-func TestFactory_Prepare(t *testing.T) {
+var (
+	signer  = "cosmos1zglwfu6xjzvzagqcmvzewyzjp9xwqw5qwrr8n9"
+	addr, _ = ac.StringToBytes(signer)
+)
+
+func TestFactory_prepareTxParams(t *testing.T) {
 	tests := []struct {
 		name     string
 		txParams TxParameters
@@ -26,7 +31,7 @@ func TestFactory_Prepare(t *testing.T) {
 			name: "no error",
 			txParams: TxParameters{
 				AccountConfig: AccountConfig{
-					address: []byte("hello"),
+					address: addr,
 				},
 			},
 		},
@@ -38,10 +43,9 @@ func TestFactory_Prepare(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			f, err := NewFactory(keybase, cdc, mockAccountRetriever{}, txConf, ac, mockClientConn{}, tt.txParams)
-			require.NoError(t, err)
-			require.NotNil(t, f)
-			if err := f.Prepare(); (err != nil) != tt.error {
+			var err error
+			tt.txParams, err = prepareTxParams(tt.txParams, mockAccountRetriever{})
+			if (err != nil) != tt.error {
 				t.Errorf("Prepare() error = %v, wantErr %v", err, tt.error)
 			}
 		})
@@ -59,19 +63,26 @@ func TestFactory_BuildUnsignedTx(t *testing.T) {
 			name: "no error",
 			txParams: TxParameters{
 				chainID: "demo",
+				AccountConfig: AccountConfig{
+					address: addr,
+				},
 			},
 			msgs: []transaction.Msg{
 				&countertypes.MsgIncreaseCounter{
-					Signer: "cosmos1zglwfu6xjzvzagqcmvzewyzjp9xwqw5qwrr8n9",
+					Signer: signer,
 					Count:  0,
 				},
 			},
 		},
 		{
-			name:     "chainId not provided",
-			txParams: TxParameters{},
-			msgs:     []transaction.Msg{},
-			error:    true,
+			name: "chainId not provided",
+			txParams: TxParameters{
+				AccountConfig: AccountConfig{
+					address: addr,
+				},
+			},
+			msgs:  []transaction.Msg{},
+			error: true,
 		},
 		{
 			name: "offline and generateOnly with chainIde provided",
@@ -81,6 +92,9 @@ func TestFactory_BuildUnsignedTx(t *testing.T) {
 					offline:      true,
 					generateOnly: true,
 				},
+				AccountConfig: AccountConfig{
+					address: addr,
+				},
 			},
 			msgs:  []transaction.Msg{},
 			error: true,
@@ -89,6 +103,9 @@ func TestFactory_BuildUnsignedTx(t *testing.T) {
 			name: "fees and gas price provided",
 			txParams: TxParameters{
 				chainID: "demo",
+				AccountConfig: AccountConfig{
+					address: addr,
+				},
 				GasConfig: GasConfig{
 					gasPrices: []*base.DecCoin{
 						{
@@ -141,13 +158,16 @@ func TestFactory_calculateGas(t *testing.T) {
 			name: "no error",
 			txParams: TxParameters{
 				chainID: "demo",
+				AccountConfig: AccountConfig{
+					address: addr,
+				},
 				GasConfig: GasConfig{
 					gasAdjustment: 1,
 				},
 			},
 			msgs: []transaction.Msg{
 				&countertypes.MsgIncreaseCounter{
-					Signer: "cosmos1zglwfu6xjzvzagqcmvzewyzjp9xwqw5qwrr8n9",
+					Signer: signer,
 					Count:  0,
 				},
 			},
@@ -156,13 +176,16 @@ func TestFactory_calculateGas(t *testing.T) {
 			name: "offline mode",
 			txParams: TxParameters{
 				chainID: "demo",
+				AccountConfig: AccountConfig{
+					address: addr,
+				},
 				ExecutionOptions: ExecutionOptions{
 					offline: true,
 				},
 			},
 			msgs: []transaction.Msg{
 				&countertypes.MsgIncreaseCounter{
-					Signer: "cosmos1zglwfu6xjzvzagqcmvzewyzjp9xwqw5qwrr8n9",
+					Signer: signer,
 					Count:  0,
 				},
 			},
@@ -196,13 +219,16 @@ func TestFactory_Simulate(t *testing.T) {
 			name: "no error",
 			txParams: TxParameters{
 				chainID: "demo",
+				AccountConfig: AccountConfig{
+					address: addr,
+				},
 				GasConfig: GasConfig{
 					gasAdjustment: 1,
 				},
 			},
 			msgs: []transaction.Msg{
 				&countertypes.MsgIncreaseCounter{
-					Signer: "cosmos1zglwfu6xjzvzagqcmvzewyzjp9xwqw5qwrr8n9",
+					Signer: signer,
 					Count:  0,
 				},
 			},
@@ -237,6 +263,9 @@ func TestFactory_BuildSimTx(t *testing.T) {
 			name: "no error",
 			txParams: TxParameters{
 				chainID: "demo",
+				AccountConfig: AccountConfig{
+					address: addr,
+				},
 			},
 		},
 	}
@@ -268,6 +297,7 @@ func TestFactory_Sign(t *testing.T) {
 				chainID: "demo",
 				AccountConfig: AccountConfig{
 					fromName: "alice",
+					address:  addr,
 				},
 			},
 		},
@@ -280,7 +310,7 @@ func TestFactory_Sign(t *testing.T) {
 
 			builder, err := f.BuildUnsignedTx([]transaction.Msg{
 				&countertypes.MsgIncreaseCounter{
-					Signer: "cosmos1zglwfu6xjzvzagqcmvzewyzjp9xwqw5qwrr8n9",
+					Signer: signer,
 					Count:  0,
 				},
 			}...)
@@ -317,12 +347,18 @@ func TestFactory_getSignBytesAdapter(t *testing.T) {
 			txParams: TxParameters{
 				chainID:  "demo",
 				signMode: apitxsigning.SignMode_SIGN_MODE_DIRECT,
+				AccountConfig: AccountConfig{
+					address: addr,
+				},
 			},
 		},
 		{
 			name: "signMode not specified",
 			txParams: TxParameters{
 				chainID: "demo",
+				AccountConfig: AccountConfig{
+					address: addr,
+				},
 			},
 			error: true,
 		},
@@ -335,7 +371,7 @@ func TestFactory_getSignBytesAdapter(t *testing.T) {
 
 			txb, err := f.BuildUnsignedTx([]transaction.Msg{
 				&countertypes.MsgIncreaseCounter{
-					Signer: "cosmos1zglwfu6xjzvzagqcmvzewyzjp9xwqw5qwrr8n9",
+					Signer: signer,
 					Count:  0,
 				},
 			}...)
@@ -408,8 +444,12 @@ func TestFactory_WithFunctions(t *testing.T) {
 		checkFunc func(*Factory) bool
 	}{
 		{
-			name:     "with gas",
-			txParams: TxParameters{},
+			name: "with gas",
+			txParams: TxParameters{
+				AccountConfig: AccountConfig{
+					address: addr,
+				},
+			},
 			withFunc: func(f *Factory) {
 				f.WithGas(1000)
 			},
@@ -418,8 +458,12 @@ func TestFactory_WithFunctions(t *testing.T) {
 			},
 		},
 		{
-			name:     "with sequence",
-			txParams: TxParameters{},
+			name: "with sequence",
+			txParams: TxParameters{
+				AccountConfig: AccountConfig{
+					address: addr,
+				},
+			},
 			withFunc: func(f *Factory) {
 				f.WithSequence(10)
 			},
@@ -428,8 +472,12 @@ func TestFactory_WithFunctions(t *testing.T) {
 			},
 		},
 		{
-			name:     "with account number",
-			txParams: TxParameters{},
+			name: "with account number",
+			txParams: TxParameters{
+				AccountConfig: AccountConfig{
+					address: addr,
+				},
+			},
 			withFunc: func(f *Factory) {
 				f.WithAccountNumber(123)
 			},

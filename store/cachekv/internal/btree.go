@@ -89,3 +89,14 @@ func byKeys(a, b item) bool {
 func newItem(key, value []byte) item {
 	return item{key: key, value: value}
 }
+
+// IsKeyInDomain returns true if key is in the domain [start, end).
+func IsKeyInDomain(key, start, end []byte) bool {
+	if bytes.Compare(key, start) < 0 {
+		return false
+	}
+	if end != nil && bytes.Compare(end, key) <= 0 {
+		return false
+	}
+	return true
+}

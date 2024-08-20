@@ -3,21 +3,20 @@ package dbadapter
 import (
 	"io"
 
-	dbm "github.com/cosmos/cosmos-db"
-
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/tracekv"
 	"cosmossdk.io/store/types"
 )
 
-// Store is wrapper type for dbm.Db with implementation of KVStore
+// Store is wrapper type for corestore.KVStoreWithBatch with implementation of KVStore
 type Store struct {
-	dbm.DB
+	corestore.KVStoreWithBatch
 }
 
 // Get wraps the underlying DB's Get method panicking on error.
 func (dsa Store) Get(key []byte) []byte {
-	v, err := dsa.DB.Get(key)
+	v, err := dsa.KVStoreWithBatch.Get(key)
 	if err != nil {
 		panic(err)
 	}
@@ -27,7 +26,7 @@ func (dsa Store) Get(key []byte) []byte {
 
 // Has wraps the underlying DB's Has method panicking on error.
 func (dsa Store) Has(key []byte) bool {
-	ok, err := dsa.DB.Has(key)
+	ok, err := dsa.KVStoreWithBatch.Has(key)
 	if err != nil {
 		panic(err)
 	}
@@ -39,21 +38,21 @@ func (dsa Store) Has(key []byte) bool {
 func (dsa Store) Set(key, value []byte) {
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
-	if err := dsa.DB.Set(key, value); err != nil {
+	if err := dsa.KVStoreWithBatch.Set(key, value); err != nil {
 		panic(err)
 	}
 }
 
 // Delete wraps the underlying DB's Delete method panicking on error.
 func (dsa Store) Delete(key []byte) {
-	if err := dsa.DB.Delete(key); err != nil {
+	if err := dsa.KVStoreWithBatch.Delete(key); err != nil {
 		panic(err)
 	}
 }
 
 // Iterator wraps the underlying DB's Iterator method panicking on error.
 func (dsa Store) Iterator(start, end []byte) types.Iterator {
-	iter, err := dsa.DB.Iterator(start, end)
+	iter, err := dsa.KVStoreWithBatch.Iterator(start, end)
 	if err != nil {
 		panic(err)
 	}
@@ -63,7 +62,7 @@ func (dsa Store) Iterator(start, end []byte) types.Iterator {
 
 // ReverseIterator wraps the underlying DB's ReverseIterator method panicking on error.
 func (dsa Store) ReverseIterator(start, end []byte) types.Iterator {
-	iter, err := dsa.DB.ReverseIterator(start, end)
+	iter, err := dsa.KVStoreWithBatch.ReverseIterator(start, end)
 	if err != nil {
 		panic(err)
 	}
@@ -86,5 +85,5 @@ func (dsa Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Ca
 	return cachekv.NewStore(tracekv.NewStore(dsa, w, tc))
 }
 
-// dbm.DB implements KVStore so we can CacheKVStore it.
+// corestore.KVStoreWithBatch implements KVStore so we can CacheKVStore it.
 var _ types.KVStore = Store{}

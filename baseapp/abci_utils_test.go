@@ -10,7 +10,6 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmtsecp256k1 "github.com/cometbft/cometbft/crypto/secp256k1"
 	cmttypes "github.com/cometbft/cometbft/types"
-	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
@@ -20,6 +19,7 @@ import (
 
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	authtx "cosmossdk.io/x/auth/tx"
 
@@ -477,7 +477,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 
 	// create a baseapp along with a tx config for tx generation
 	txConfig := authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
-	app := baseapp.NewBaseApp(s.T().Name(), log.NewNopLogger(), dbm.NewMemDB(), txConfig.TxDecoder())
+	app := baseapp.NewBaseApp(s.T().Name(), log.NewNopLogger(), coretesting.NewMemDB(), txConfig.TxDecoder())
 
 	// create a proposal handler
 	ph := baseapp.NewDefaultProposalHandler(mempool.NoOpMempool{}, app)

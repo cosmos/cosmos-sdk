@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"io"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/client/v2/offchain"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
@@ -93,7 +93,7 @@ func genesisCommand[T transaction.Tx](
 	) (servertypes.ExportedApp, error),
 	cmds ...*cobra.Command,
 ) *cobra.Command {
-	compatAppExporter := func(logger log.Logger, db dbm.DB, traceWriter io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOpts servertypes.AppOptions, modulesToExport []string) (servertypes.ExportedApp, error) {
+	compatAppExporter := func(logger log.Logger, db corestore.KVStoreWithBatch, traceWriter io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOpts servertypes.AppOptions, modulesToExport []string) (servertypes.ExportedApp, error) {
 		viperAppOpts, ok := appOpts.(*viper.Viper)
 		if !ok {
 			return servertypes.ExportedApp{}, errors.New("appOpts is not viper.Viper")

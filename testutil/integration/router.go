@@ -7,10 +7,10 @@ import (
 	cmtabcitypes "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
-	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
@@ -54,7 +54,7 @@ func NewIntegrationApp(
 	msgRouter *baseapp.MsgServiceRouter,
 	grpcRouter *baseapp.GRPCQueryRouter,
 ) *App {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	moduleManager := module.NewManagerFromMap(modules)
@@ -201,7 +201,7 @@ func (app *App) QueryHelper() *baseapp.QueryServiceTestHelper {
 
 // CreateMultiStore is a helper for setting up multiple stores for provided modules.
 func CreateMultiStore(keys map[string]*storetypes.KVStoreKey, logger log.Logger) storetypes.CommitMultiStore {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	cms := store.NewCommitMultiStore(db, logger, metrics.NewNoOpMetrics())
 
 	for key := range keys {

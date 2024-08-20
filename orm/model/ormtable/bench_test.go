@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"google.golang.org/protobuf/proto"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/orm/internal/testkv"
 	"cosmossdk.io/orm/internal/testpb"
 	"cosmossdk.io/orm/model/ormtable"
@@ -241,13 +241,13 @@ func getBalance(store kv.Store, address, denom string) (*testpb.Balance, error) 
 
 func BenchmarkManualInsertMemory(b *testing.B) {
 	benchManual(b, func() (store.KVStore, error) {
-		return testkv.TestStore{Db: dbm.NewMemDB()}, nil
+		return testkv.TestStore{Db: coretesting.NewMemDB()}, nil
 	})
 }
 
 func BenchmarkManualInsertLevelDB(b *testing.B) {
 	benchManual(b, func() (store.KVStore, error) {
-		db, err := dbm.NewGoLevelDB("test", b.TempDir(), nil)
+		db, err := coretesting.NewGoLevelDB("test", b.TempDir(), nil)
 		return testkv.TestStore{Db: db}, err
 	})
 }

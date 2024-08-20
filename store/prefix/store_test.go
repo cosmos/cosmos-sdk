@@ -4,17 +4,16 @@ import (
 	"crypto/rand"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	tiavl "github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
 
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/gaskv"
 	"cosmossdk.io/store/iavl"
 	"cosmossdk.io/store/types"
-	"cosmossdk.io/store/wrapper"
 )
 
 // copied from iavl/store_test.go
@@ -91,8 +90,7 @@ func testPrefixStore(t *testing.T, baseStore types.KVStore, prefix []byte) {
 }
 
 func TestIAVLStorePrefix(t *testing.T) {
-	db := wrapper.NewDBWrapper(dbm.NewMemDB())
-	tree := tiavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
+	tree := tiavl.NewMutableTree(coretesting.NewMemDB(), cacheSize, false, log.NewNopLogger())
 	iavlStore := iavl.UnsafeNewStore(tree)
 
 	testPrefixStore(t, iavlStore, []byte("test"))
@@ -100,14 +98,14 @@ func TestIAVLStorePrefix(t *testing.T) {
 
 func TestPrefixKVStoreNoNilSet(t *testing.T) {
 	meter := types.NewGasMeter(100000000)
-	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	mem := dbadapter.Store{KVStoreWithBatch: coretesting.NewMemDB()}
 	gasStore := gaskv.NewStore(mem, meter, types.KVGasConfig())
 	require.Panics(t, func() { gasStore.Set([]byte("key"), nil) }, "setting a nil value should panic")
 }
 
 func TestPrefixStoreIterate(t *testing.T) {
-	db := dbm.NewMemDB()
-	baseStore := dbadapter.Store{DB: db}
+	db := coretesting.NewMemDB()
+	baseStore := dbadapter.Store{KVStoreWithBatch: db}
 	prefix := []byte("test")
 	prefixStore := NewStore(baseStore, prefix)
 
@@ -152,8 +150,8 @@ func TestCloneAppend(t *testing.T) {
 }
 
 func TestPrefixStoreIteratorEdgeCase(t *testing.T) {
-	db := dbm.NewMemDB()
-	baseStore := dbadapter.Store{DB: db}
+	db := coretesting.NewMemDB()
+	baseStore := dbadapter.Store{KVStoreWithBatch: db}
 
 	// overflow in cpIncr
 	prefix := []byte{0xAA, 0xFF, 0xFF}
@@ -182,8 +180,8 @@ func TestPrefixStoreIteratorEdgeCase(t *testing.T) {
 }
 
 func TestPrefixStoreReverseIteratorEdgeCase(t *testing.T) {
-	db := dbm.NewMemDB()
-	baseStore := dbadapter.Store{DB: db}
+	db := coretesting.NewMemDB()
+	baseStore := dbadapter.Store{KVStoreWithBatch: db}
 
 	// overflow in cpIncr
 	prefix := []byte{0xAA, 0xFF, 0xFF}
@@ -210,8 +208,8 @@ func TestPrefixStoreReverseIteratorEdgeCase(t *testing.T) {
 
 	iter.Close()
 
-	db = dbm.NewMemDB()
-	baseStore = dbadapter.Store{DB: db}
+	db = coretesting.NewMemDB()
+	baseStore = dbadapter.Store{KVStoreWithBatch: db}
 
 	// underflow in cpDecr
 	prefix = []byte{0xAA, 0x00, 0x00}
@@ -241,8 +239,8 @@ func TestPrefixStoreReverseIteratorEdgeCase(t *testing.T) {
 // Tests below are ported from https://github.com/cometbft/cometbft/blob/master/libs/db/prefix_db_test.go
 
 func mockStoreWithStuff() types.KVStore {
-	db := dbm.NewMemDB()
-	store := dbadapter.Store{DB: db}
+	db := coretesting.NewMemDB()
+	store := dbadapter.Store{KVStoreWithBatch: db}
 	// Under "key" prefix
 	store.Set(bz("key"), bz("value"))
 	store.Set(bz("key1"), bz("value1"))
@@ -440,8 +438,8 @@ func TestPrefixDBReverseIterator4(t *testing.T) {
 }
 
 func TestCacheWraps(t *testing.T) {
-	db := dbm.NewMemDB()
-	store := dbadapter.Store{DB: db}
+	db := coretesting.NewMemDB()
+	store := dbadapter.Store{KVStoreWithBatch: db}
 
 	cacheWrapper := store.CacheWrap()
 	require.IsType(t, &cachekv.Store{}, cacheWrapper)

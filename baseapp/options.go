@@ -7,14 +7,13 @@ import (
 	"io"
 	"math"
 
-	dbm "github.com/cosmos/cosmos-db"
-
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 
+	corestore "cosmossdk.io/core/store"
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -178,7 +177,7 @@ func (app *BaseApp) SetAppVersion(ctx context.Context, v uint64) error {
 	return nil
 }
 
-func (app *BaseApp) SetDB(db dbm.DB) {
+func (app *BaseApp) SetDB(db corestore.KVStoreWithBatch) {
 	if app.sealed {
 		panic("SetDB() on sealed BaseApp")
 	}

@@ -6,10 +6,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	dbm "cosmossdk.io/store/db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -59,7 +60,7 @@ func Run[T SimulationApp](
 	t *testing.T,
 	appFactory func(
 		logger log.Logger,
-		db dbm.DB,
+		db corestore.KVStoreWithBatch,
 		traceStore io.Writer,
 		loadLatest bool,
 		appOpts servertypes.AppOptions,
@@ -85,7 +86,7 @@ func RunWithSeeds[T SimulationApp](
 	t *testing.T,
 	appFactory func(
 		logger log.Logger,
-		db dbm.DB,
+		db corestore.KVStoreWithBatch,
 		traceStore io.Writer,
 		loadLatest bool,
 		appOpts servertypes.AppOptions,
@@ -134,7 +135,7 @@ func RunWithSeeds[T SimulationApp](
 			err = simtestutil.CheckExportSimulation(app, tCfg, simParams)
 			require.NoError(t, err)
 			if tCfg.Commit {
-				simtestutil.PrintStats(testInstance.DB)
+				simtestutil.PrintStats(testInstance.DB.(*dbm.GoLevelDB))
 			}
 			for _, step := range postRunActions {
 				step(t, testInstance)
@@ -153,7 +154,7 @@ func RunWithSeeds[T SimulationApp](
 //   - ExecLogWriter: Captures block and operation data coming from the simulation
 type TestInstance[T SimulationApp] struct {
 	App           T
-	DB            dbm.DB
+	DB            corestore.KVStoreWithBatch
 	WorkDir       string
 	Cfg           simtypes.Config
 	AppLogger     log.Logger
@@ -168,7 +169,7 @@ type TestInstance[T SimulationApp] struct {
 func NewSimulationAppInstance[T SimulationApp](
 	t *testing.T,
 	tCfg simtypes.Config,
-	appFactory func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	appFactory func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
 ) TestInstance[T] {
 	t.Helper()
 	workDir := t.TempDir()
@@ -181,7 +182,7 @@ func NewSimulationAppInstance[T SimulationApp](
 	}
 	logger = logger.With("seed", tCfg.Seed)
 
-	db, err := dbm.NewDB("Simulation", dbm.BackendType(tCfg.DBBackend), dbDir)
+	db, err := dbm.NewDB("Simulation", dbm.DBType(tCfg.DBBackend), dbDir, nil)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		require.NoError(t, db.Close())

@@ -6,8 +6,6 @@ import (
 	"sort"
 	"sync"
 
-	dbm "github.com/cosmos/cosmos-db"
-
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/cachekv/internal"
 	"cosmossdk.io/store/internal/conv"
@@ -310,8 +308,8 @@ func (store *Store) dirtyItems(start, end []byte) {
 	// than just not having the cache.
 	if n < minSortSize {
 		for key := range store.unsortedCache {
-			// dbm.IsKeyInDomain is nil safe and returns true iff key is greater than start
-			if dbm.IsKeyInDomain(conv.UnsafeStrToBytes(key), start, end) {
+			// internal.IsKeyInDomain is nil safe and returns true iff key is greater than start
+			if internal.IsKeyInDomain(conv.UnsafeStrToBytes(key), start, end) {
 				cacheValue := store.cache[key]
 				unsorted = append(unsorted, &kv.Pair{Key: []byte(key), Value: cacheValue.value})
 			}

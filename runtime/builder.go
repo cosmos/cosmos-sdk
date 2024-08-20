@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"io"
 
-	dbm "github.com/cosmos/cosmos-db"
+	corestore "cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -24,7 +24,7 @@ func (a *AppBuilder) DefaultGenesis() map[string]json.RawMessage {
 }
 
 // Build builds an *App instance.
-func (a *AppBuilder) Build(db dbm.DB, traceStore io.Writer, baseAppOptions ...func(*baseapp.BaseApp)) *App {
+func (a *AppBuilder) Build(db corestore.KVStoreWithBatch, traceStore io.Writer, baseAppOptions ...func(*baseapp.BaseApp)) *App {
 	for _, option := range a.app.baseAppOptions {
 		baseAppOptions = append(baseAppOptions, option)
 	}

@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -17,6 +16,7 @@ import (
 	"pgregory.net/rapid"
 
 	queryv1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
+	coretesting "cosmossdk.io/core/testing"
 	sdkerrors "cosmossdk.io/errors"
 	"cosmossdk.io/orm/encoding/ormkv"
 	"cosmossdk.io/orm/internal/testkv"
@@ -742,8 +742,8 @@ func TestReadonly(t *testing.T) {
 	})
 	assert.NilError(t, err)
 	readBackend := ormtable.NewReadBackend(ormtable.ReadBackendOptions{
-		CommitmentStoreReader: testkv.TestStore{Db: dbm.NewMemDB()},
-		IndexStoreReader:      testkv.TestStore{Db: dbm.NewMemDB()},
+		CommitmentStoreReader: testkv.TestStore{Db: coretesting.NewMemDB()},
+		IndexStoreReader:      testkv.TestStore{Db: coretesting.NewMemDB()},
 	})
 	ctx := ormtable.WrapContextDefault(readBackend)
 	assert.ErrorIs(t, ormerrors.ReadOnly, table.Insert(ctx, &testpb.ExampleTable{}))

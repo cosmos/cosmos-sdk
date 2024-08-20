@@ -16,7 +16,6 @@ import (
 
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -25,8 +24,10 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	corectx "cosmossdk.io/core/context"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
+	dbm "cosmossdk.io/store/db"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
@@ -429,22 +430,22 @@ func ListenForQuitSignals(g *errgroup.Group, block bool, cancelFn context.Cancel
 }
 
 // GetAppDBBackend gets the backend type to use for the application DBs.
-func GetAppDBBackend(opts types.AppOptions) dbm.BackendType {
+func GetAppDBBackend(opts types.AppOptions) dbm.DBType {
 	rv := cast.ToString(opts.Get("app-db-backend"))
 	if len(rv) == 0 {
 		rv = cast.ToString(opts.Get("db_backend"))
 	}
 
-	// Cosmos SDK has migrated to cosmos-db which does not support all the backends which tm-db supported
+	// Cosmos SDK has migrated to the db interface which does not support all the backends which tm-db supported
 	if rv == "cleveldb" || rv == "badgerdb" || rv == "boltdb" {
-		panic(fmt.Sprintf("invalid app-db-backend %q, use %q, %q, %q instead", rv, dbm.GoLevelDBBackend, dbm.PebbleDBBackend, dbm.RocksDBBackend))
+		panic(fmt.Sprintf("invalid app-db-backend %q, use %q, %q, %q instead", rv, dbm.DBTypeGoLevelDB, dbm.DBTypePebbleDB, dbm.DBTypeRocksDB))
 	}
 
 	if len(rv) != 0 {
-		return dbm.BackendType(rv)
+		return dbm.DBType(rv)
 	}
 
-	return dbm.GoLevelDBBackend
+	return dbm.DBTypeGoLevelDB
 }
 
 func skipInterface(iface net.Interface) bool {
@@ -472,9 +473,9 @@ func addrToIP(addr net.Addr) net.IP {
 }
 
 // OpenDB opens the application database using the appropriate driver.
-func OpenDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
+func OpenDB(rootDir string, backendType dbm.DBType) (corestore.KVStoreWithBatch, error) {
 	dataDir := filepath.Join(rootDir, "data")
-	return dbm.NewDB("application", backendType, dataDir)
+	return dbm.NewDB("application", backendType, dataDir, nil)
 }
 
 func openTraceWriter(traceWriterFile string) (w io.WriteCloser, err error) {
@@ -561,7 +562,7 @@ func GetSnapshotStore(appOpts types.AppOptions) (*snapshots.Store, error) {
 		return nil, fmt.Errorf("failed to create snapshots directory: %w", err)
 	}
 
-	snapshotDB, err := dbm.NewDB("metadata", GetAppDBBackend(appOpts), snapshotDir)
+	snapshotDB, err := dbm.NewDB("metadata", GetAppDBBackend(appOpts), snapshotDir, nil)
 	if err != nil {
 		return nil, err
 	}

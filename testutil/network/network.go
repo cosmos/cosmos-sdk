@@ -18,12 +18,12 @@ import (
 	"time"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/legacy"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -216,7 +216,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config, baseappOpts ...func(
 			panic(err)
 		}
 		app := appBuilder.Build(
-			dbm.NewMemDB(),
+			coretesting.NewMemDB(),
 			nil,
 			append(baseappOpts,
 				baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),

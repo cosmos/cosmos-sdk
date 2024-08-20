@@ -1,8 +1,7 @@
 package transient
 
 import (
-	dbm "github.com/cosmos/cosmos-db"
-
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/dbadapter"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/types"
@@ -20,13 +19,13 @@ type Store struct {
 
 // NewStore constructs new MemDB adapter
 func NewStore() *Store {
-	return &Store{Store: dbadapter.Store{DB: dbm.NewMemDB()}}
+	return &Store{Store: dbadapter.Store{KVStoreWithBatch: coretesting.NewMemDB()}}
 }
 
 // Commit cleans up Store.
 // Implements CommitStore
 func (ts *Store) Commit() (id types.CommitID) {
-	ts.Store = dbadapter.Store{DB: dbm.NewMemDB()}
+	ts.Store = dbadapter.Store{KVStoreWithBatch: coretesting.NewMemDB()}
 	return
 }
 

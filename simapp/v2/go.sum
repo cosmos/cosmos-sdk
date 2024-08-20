@@ -334,10 +334,10 @@ github.com/cosmos/keyring v1.2.0/go.mod h1:fc+wB5KTk9wQ9sDx0kFXB3A0MaeGHM9AwRStK
 github.com/cosmos/ledger-cosmos-go v0.13.3 h1:7ehuBGuyIytsXbd4MP43mLeoN2LTOEnk5nvue4rK+yM=
 github.com/cosmos/ledger-cosmos-go v0.13.3/go.mod h1:HENcEP+VtahZFw38HZ3+LS3Iv5XV6svsnkk9vdJtLr8=
 github.com/cpuguy83/go-md2man/v2 v2.0.4/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
-github.com/creachadair/atomicfile v0.3.4 h1:AjNK7To+S1p+nk7uJXJMZFpcV9XHOyAaULyDeU6LEqM=
-github.com/creachadair/atomicfile v0.3.4/go.mod h1:ByEUbfQyms+tRtE7Wk7WdS6PZeyMzfSFlNX1VoKEh6E=
-github.com/creachadair/mds v0.13.3 h1:OqXNRorXKsuvfjor+0ixtrpA4IINApH8zgm23XLlngk=
-github.com/creachadair/mds v0.13.3/go.mod h1:4vrFYUzTXMJpMBU+OA292I6IUxKWCCfZkgXg+/kBZMo=
+github.com/creachadair/atomicfile v0.3.5 h1:i93bxeaH/rQR6XfJslola3XkOM1nEP3eIexuk9SWcSc=
+github.com/creachadair/atomicfile v0.3.5/go.mod h1:m7kIY2OUMygtETnMYe141rubsG4b+EusFLinlxxdHYM=
+github.com/creachadair/mds v0.16.0 h1:v6DlvKXClowXFg4hkjLCR1FEFiREMf0qgX+Lm5GsEKk=
+github.com/creachadair/mds v0.16.0/go.mod h1:4vrFYUzTXMJpMBU+OA292I6IUxKWCCfZkgXg+/kBZMo=
 github.com/creachadair/tomledit v0.0.26 h1:MoDdgHIHZ5PctBVsAZDjxdxreWUEa9ObPKTRkk5PPwA=
 github.com/creachadair/tomledit v0.0.26/go.mod h1:SJi1OxKpMyR141tq1lzsbPtIg3j8TeVPM/ZftfieD7o=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=

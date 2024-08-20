@@ -32,3 +32,7 @@ func DiffEnumTypes(oldEnum, newEnum EnumType) EnumTypeDiff {
 
 	return diff
 }
+
+func (e EnumTypeDiff) Empty() bool {
+	return len(e.AddedValues) == 0 && len(e.RemovedValues) == 0
+}

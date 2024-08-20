@@ -12,9 +12,8 @@ type ModuleSchemaDiff struct {
 func DiffModuleSchemas(oldSchema, newSchema *ModuleSchema) ModuleSchemaDiff {
 	diff := ModuleSchemaDiff{}
 
-	oldObjectTypes := map[string]ObjectType{}
 	oldSchema.ObjectTypes(func(oldObj ObjectType) bool {
-		newTyp, ok := newSchema.LookupType(oldObj.TypeName())
+		newTyp, ok := newSchema.LookupType(oldObj.Name)
 		if !ok {
 			diff.RemovedObjectTypes = append(diff.RemovedObjectTypes, oldObj)
 			return true
@@ -39,9 +38,8 @@ func DiffModuleSchemas(oldSchema, newSchema *ModuleSchema) ModuleSchemaDiff {
 		return true
 	})
 
-	oldEnumTypes := map[string]EnumType{}
 	oldSchema.EnumTypes(func(oldEnum EnumType) bool {
-		newTyp, ok := newSchema.LookupType(oldEnum.TypeName())
+		newTyp, ok := newSchema.LookupType(oldEnum.Name)
 		if !ok {
 			diff.RemovedEnumTypes = append(diff.RemovedEnumTypes, oldEnum)
 			return true
@@ -54,6 +52,14 @@ func DiffModuleSchemas(oldSchema, newSchema *ModuleSchema) ModuleSchemaDiff {
 		enumDiff := DiffEnumTypes(oldEnum, newEnum)
 		if !enumDiff.Empty() {
 			diff.ChangedEnumTypes = append(diff.ChangedEnumTypes, enumDiff)
+		}
+		return true
+	})
+
+	newSchema.EnumTypes(func(newEnum EnumType) bool {
+		_, ok := oldSchema.LookupType(newEnum.TypeName())
+		if !ok {
+			diff.AddedEnumTypes = append(diff.AddedEnumTypes, newEnum)
 		}
 		return true
 	})

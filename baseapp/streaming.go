@@ -170,7 +170,7 @@ func (p listenerWrapper) ListenCommit(ctx context.Context, res abci.CommitRespon
 				Update: schema.KVPairUpdate{
 					Key:    pair.Key,
 					Value:  pair.Value,
-					Delete: pair.Delete,
+					Remove: pair.Delete,
 				},
 			}
 		}

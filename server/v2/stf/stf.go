@@ -101,7 +101,7 @@ func (s STF[T]) DeliverBlock(
 		return nil, nil, fmt.Errorf("unable to set initial header info, %w", err)
 	}
 
-	exCtx := s.makeContext(ctx, RuntimeIdentity, newState, internal.ExecModeFinalize)
+	exCtx := s.makeContext(ctx, ConsensusIdentity, newState, internal.ExecModeFinalize)
 	exCtx.setHeaderInfo(hi)
 
 	// reset events

@@ -78,7 +78,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "PruneExpiredGrants",
-					Use:       "prune-grants --from <signer>",
+					Use:       "prune-grants --from <granter>",
 					Short:     "Prune expired grants",
 					Long:      "Prune up to 75 expired grants in order to reduce the size of the store when the number of expired grants is large.",
 					Example:   fmt.Sprintf(`$ %s tx authz prune-grants --from [mykey]`, version.AppName),

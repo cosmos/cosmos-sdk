@@ -2,8 +2,8 @@ package indexer
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"sync"
 
 	"cosmossdk.io/schema/addressutil"
 	"cosmossdk.io/schema/appdata"
@@ -37,12 +37,21 @@ type ManagerOptions struct {
 	// provided, but if it is omitted, the indexer manager will use a default codec which encodes and decodes addresses
 	// as hex strings.
 	AddressCodec addressutil.AddressCodec
+
+	// DoneWaitGroup is a wait group that all indexer manager go routines will wait on before returning when the context
+	// is done.
+	// It is optional.
+	DoneWaitGroup *sync.WaitGroup
 }
 
 // ManagerConfig is the configuration of the indexer manager and contains the configuration for each indexer target.
 type ManagerConfig struct {
 	// Target is a map of named indexer targets to their configuration.
 	Target map[string]Config
+
+	// ChannelBufferSize is the buffer size of the channels used for buffering data sent to indexer go routines.
+	// It defaults to 1024.
+	ChannelBufferSize *int `json:"channel_buffer_size"`
 }
 
 type ManagerResult struct {
@@ -108,13 +117,30 @@ func StartManager(opts ManagerOptions) (ManagerResult, error) {
 		allModuleFilters = append(allModuleFilters, targetCfg.Filter.Modules)
 	}
 
+	bufSize := 1024
+	if cfg.ChannelBufferSize != nil {
+		bufSize = *cfg.ChannelBufferSize
+	}
+	asyncOpts := appdata.AsyncListenerOptions{
+		Context:       ctx,
+		DoneWaitGroup: opts.DoneWaitGroup,
+		BufferSize:    bufSize,
+	}
+
 	rootListener := appdata.AsyncListenerMux(
-		appdata.AsyncListenerOptions{Context: ctx},
+		asyncOpts,
 		listeners...,
 	)
 
 	rootModuleFilter := combineModuleFilters(allModuleFilters)
+	rootListener, err = decoding.Middleware(rootListener, opts.Resolver, decoding.MiddlewareOptions{
+		ModuleFilter: rootModuleFilter.ToFunction(),
+	})
+	if err != nil {
+		return ManagerResult{}, err
+	}
 	rootListener = rootModuleFilter.Apply(rootListener)
+	rootListener = appdata.AsyncListener(asyncOpts, rootListener)
 
 	return ManagerResult{
 		Listener:     rootListener,

@@ -37,5 +37,10 @@ type Listener struct {
 	// indexers should commit their data when this is called and return an error if
 	// they are unable to commit. Data sources MUST call Commit when data is committed,
 	// otherwise it should be assumed that indexers have not persisted their state.
-	Commit func(CommitData) error
+	// Commit is designed to support async processing so that implementations may return
+	// a completion callback to wait for commit to complete. Callers should first check
+	// if err is nil and then if it is, check if completionCallback is nil and if not
+	// call it and check for an error. Commit should be designed to be non-blocking if
+	// possible, but calling completionCallback should be blocking.
+	Commit func(CommitData) (completionCallback func() error, err error)
 }

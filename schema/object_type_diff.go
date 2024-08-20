@@ -1,6 +1,8 @@
 package schema
 
 // ObjectTypeDiff represents the difference between two object types.
+// The Empty method of KeyFieldsDiff and ValueFieldsDiff can be used to determine
+// if there were any changes to the key fields or value fields.
 type ObjectTypeDiff struct {
 	// Name is the name of the object type.
 	Name string
@@ -13,6 +15,11 @@ type ObjectTypeDiff struct {
 }
 
 // FieldsDiff represents the difference between two lists of fields.
+// Fields will be compared based on name first, and then if there is any
+// difference in ordering that will be reported in OldOrder and NewOrder.
+// If there is any order change, the OrderChanged method will return true.
+// If fields were only added or removed but the order otherwise didn't change,
+// then the OldOrder and NewOrder will still be empty.
 type FieldsDiff struct {
 	// Added is a list of fields that were added.
 	Added []Field
@@ -91,10 +98,12 @@ func compareFields(oldFields, newFields []Field) FieldsDiff {
 	return diff
 }
 
+// Empty returns true if the object type diff has no changes.
 func (o ObjectTypeDiff) Empty() bool {
 	return o.KeyFieldsDiff.Empty() && o.ValueFieldsDiff.Empty()
 }
 
+// Empty returns true if the field diff has no changes.
 func (d FieldsDiff) Empty() bool {
 	if len(d.Added) != 0 || len(d.Changed) != 0 || len(d.Removed) != 0 {
 		return false
@@ -103,6 +112,7 @@ func (d FieldsDiff) Empty() bool {
 	return !d.OrderChanged()
 }
 
+// OrderChanged returns true if the field order changed.
 func (d FieldsDiff) OrderChanged() bool {
 	if len(d.OldOrder) == 0 && len(d.NewOrder) == 0 {
 		return false

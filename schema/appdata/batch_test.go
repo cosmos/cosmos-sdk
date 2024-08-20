@@ -71,7 +71,11 @@ func TestBatchAsync(t *testing.T) {
 	}
 
 	// commit to synchronize
-	if err := l.Commit(CommitData{}); err != nil {
+	cb, err := l.Commit(CommitData{})
+	if err != nil {
+		t.Error(err)
+	}
+	if err := cb(); err != nil {
 		t.Error(err)
 	}
 

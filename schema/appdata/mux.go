@@ -137,5 +137,15 @@ func ListenerMux(listeners ...Listener) Listener {
 		}
 	}
 
+	mux.onBatch = func(batch PacketBatch) error {
+		for _, listener := range listeners {
+			err := batch.apply(&listener)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
 	return mux
 }

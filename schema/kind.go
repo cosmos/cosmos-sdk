@@ -141,13 +141,19 @@ const (
 	JSONKind
 
 	// UIntNKind represents a signed integer type with a width in bits specified by the Width field in the
-	// field definition.Values of this type must be of the go type [N]byte where Ceiling(Width / 8) = N.
-	// It is invalid for N to equal 8, 16, 32, 64. Values must be little-endian encoded.
+	// field definition.
+	// N must be a multiple of 8, and it is invalid for N to equal 8, 16, 32, 64 as there are more specific
+	// types for these widths.
+	// Go Encoding: []byte where len([]byte) == Width / 8, little-endian encoded.
+	// JSON Encoding: base10 integer string matching the IntegerFormat regex, canonically with no leading zeros.
 	UIntNKind
 
 	// IntNKind represents an unsigned integer type with a width in bits specified by the Width field in the
-	// field definition. Values of this type must be of the go type [N]byte where Ceiling(Width / 8) = N.
-	// It is invalid for N to equal 8, 16, 32, 64. Values must be two's complement little-endian encoded.
+	// field definition. N must be a multiple of 8.
+	// N must be a multiple of 8, and it is invalid for N to equal 8, 16, 32, 64 as there are more specific
+	// types for these widths.
+	// Go Encoding: []byte where len([]byte) == Width / 8, two's complement little-endian encoded.
+	// JSON Encoding: base10 integer string matching the IntegerFormat regex, canonically with no leading zeros.
 	IntNKind
 )
 

@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 
@@ -111,7 +112,13 @@ func StartManager(opts ManagerOptions) (ManagerResult, error) {
 		}
 
 		listener := targetCfg.Filter.Apply(initRes.Listener)
-		listener = addSyncAndSanityCheck(initRes.LastBlockPersisted, listener, opts, targetCfg.Filter.Modules)
+		if initRes.View != nil {
+			lastBlock, err := initRes.View.BlockNum()
+			if err != nil {
+				return ManagerResult{}, fmt.Errorf("failed to get block number from view: %w", err)
+			}
+			listener = addSyncAndSanityCheck(lastBlock, listener, opts, targetCfg.Filter.Modules)
+		}
 		listeners = append(listeners, listener)
 
 		allModuleFilters = append(allModuleFilters, targetCfg.Filter.Modules)

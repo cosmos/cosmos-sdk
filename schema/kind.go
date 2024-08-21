@@ -39,7 +39,7 @@ const (
 	// Key Wire Encoding:
 	//   non-terminal: UTF-8 string with no null characters suffixed with a null character
 	//   terminal: UTF-8 string with no null characters
-	// Value Wire Encoding: UTF-8 string with no null characters suffixed with a null character
+	// Value Wire Encoding: the same value wire encoding as BytesKind.
 	StringKind
 
 	// BytesKind represents a byte array.
@@ -48,9 +48,12 @@ const (
 	// Either standard or URL encoding with or without padding should be accepted.
 	// Key Wire Encoding:
 	//   non-terminal: length prefixed bytes where the width of the length prefix is 1, 2, 3 or 4 bytes depending on
-	//     the field's MaxLength. Length prefixes should be big-endian encoded. Values larger than 2^32 bytes are not
-	//     supported (likely key-value stores impose a lower limit).
+	//     the field's MaxLength (defaulting to 4 bytes).
+	//     Length prefixes should be big-endian encoded.
+	//     Values larger than 2^32 bytes are not supported (likely key-value stores impose a lower limit).
 	//   terminal: raw bytes with no length prefix
+	// Value Wire Encoding: two 32-bit unsigned little-endian integers, the first one representing the offset of the
+	//   value in the buffer and the second one representing the length of the value.
 	BytesKind
 
 	// Int8Kind represents an 8-bit signed integer.
@@ -180,7 +183,7 @@ const (
 	// Key Wire Encoding:
 	//   non-terminal: bytes prefixed with 1-byte length prefix
 	//   terminal: raw bytes with no length prefix
-	// Value Wire Encoding: bytes prefixed with 1-byte length prefix
+	// Value Wire Encoding: the same value wire encoding as BytesKind.
 	AddressKind
 
 	// EnumKind represents a value of an enum type.

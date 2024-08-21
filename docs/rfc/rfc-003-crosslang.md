@@ -60,6 +60,7 @@ The code that implements an account's message handling is known as the **account
 When a **message** is sent to an **account handler**, it will receive a **message request** which contains:
 * the **address** of the **account** (its own address)
 * the **address** of the account sending the message (the caller), which will be empty if the message is a query
+* the **address** of the account's **owner**
 * the **message name**
 * the **message data**
 * a 32-byte **state token**

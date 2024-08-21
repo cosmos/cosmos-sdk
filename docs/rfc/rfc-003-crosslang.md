@@ -60,7 +60,7 @@ The code that implements an account's message handling is known as the **account
 When a **message** is sent to an **account handler**, it will receive a **message request** which contains:
 * the **address** of the **account** (its own address)
 * the **address** of the account sending the message (the caller), which will be empty if the message is a query
-* the **address** of the account's **owner** (NOTE: not sure this is needed here as owner's are mainly for upgrading accounts)
+* the **address** of the account's **owner**
 * the **message name**
 * the **message data**
 * a 32-byte **state token**
@@ -74,6 +74,7 @@ To send a **message** to another **account**, the caller must specify:
 * **state token**
 * **gas limit**
 * optionally, the **address** of the **account** to send the message to
+* optionally, the **caller** of the **message** (for delegated execution)
 
 The handler for a specific message within an **account handler** is known as a **message handler**.
 
@@ -134,11 +135,6 @@ There are two forms of **handler ids**:
 Each **virtual machine** must expose a list of all the **module handlers** it can run,
 and the **hypervisor** will ensure that the **module handlers** are unique across all **virtual machines**.
 
-The **hypervisor** as a first-class **module** itself contains stateful mappings for:
-* **account address** to **handler id** and **owner**
-* **module name** to module **account address** and **module config**
-* **message name** to **account address** for **module messages**
-
 Each **virtual machine** is expected to expose a method which takes a **handler id**
 and returns a reference to an **account handler**
 which can be used to run **messages**.
@@ -181,7 +177,12 @@ and they are not passed at all to `pure` methods.
 
 ### Management of Account Lifecycle with the Hypervisor
 
-The **hypervisor** module itself handles the following special **module messages** to manage account
+In order to manage **accounts** and their mapping to **account handlers**, the **hypervisor** contains stateful mappings for:
+* **account address** to **handler id** and **owner**
+* **module name** to module **account address** and **module config**
+* **message name** to **account address** for **module messages**
+
+The **hypervisor** as a first-class module itself handles the following special **module messages** to manage account
 creation, destruction, and migration:
 * `create(handler id, address?, owner?)`: creates a new account in the specified code environment with the specified handler id and optional pre-defined address (if not provided, a new address is generated). The `on_create` message is called if it is implemented by the account. If the owner address is omitted, it defaults to the account itself.
 * `destroy(address)`: deletes the account with the specified address and calls the `on_destroy` message if it is implemented by the account. `destroy` can only be called by the account owner.
@@ -207,6 +208,26 @@ When modules are loaded in the **hypervisor**, a composite **message handler** w
 pre- and post-handlers for a given **message name** in the loaded module set.
 By default, the ordering will be done alphabetically by **module name**.
 
+### Authorization and Delegated Execution
+
+By default, when a **virtual machine** attempts to invoke a method call, the caller must be the address
+of the last account which was called and the **hypervisor** will check this using the **state token**.
+
+One key feature of the existing SDK is the ability to do delegated execution via the `x/authz` module.
+**hypervisor** will support this feature by maintaining a set of granter account to grantee account key pairs
+where every grantee account is allowed to set the granter as the caller if such a pair exists.
+The following special messages will be handled by the **hypervisor** to support this:
+* `grant_authorization(granter, grantee)` - only callable by granter
+* `revoke_authorization(granter, grantee)` - only callable by granter
+* `revoke_all_authorizations(granter)` - only callable by granter and revokes all authorizations at once
+
+It is expected that each account which receives such an authorization implements an account handler to provide more
+restrictive authorization restrictions even though at a framework level the authorization is very broad.
+
+In order to allow transaction processing modules to be implemented within a **virtual machine**, the **hypervisor**
+also has a list of "sudo" accounts which can execute messages on behalf of any caller.
+The list of "sudo" accounts must be configured at startup.
+
 ### Message Data and Packet Specification
 
 To facilitate efficient cross-language and cross-VM message passing, the precise layout of message packets is important
@@ -222,6 +243,7 @@ or a separate RFC.
 For now, we specify that within a 64kb **message packet**,
 at least 56kb will be available for **message data** and message responses.
 
+
 ### Further Specifications and Discussion Items
 
 This specification does not cover many important parts of a complete system such as the encoding of message data,
@@ -230,11 +252,6 @@ It is the intention of this specification that additional specifications regardi
 top of this specification.
 It may become necessary to include more details regarding specific parts of those systems in this specification
 at some point, but as a starting point, this specification is intentionally kept minimal.
-
-Discussion items that need to be addressed in future updates to this RFC include:
-* how would something like delegated authorization work (as in the current `x/authz` module)?
-* do we make any compatibility guarantees when accounts are upgraded?
-* is the account owner necessary and should this be included in message requests?
 
 ## Abandoned Ideas (Optional)
 

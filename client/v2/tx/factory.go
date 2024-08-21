@@ -7,11 +7,9 @@ import (
 	"math/big"
 	"strings"
 
-	flags2 "github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/spf13/pflag"
-
 	"github.com/cosmos/go-bip39"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
+	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	base "cosmossdk.io/api/cosmos/base/v1beta1"
@@ -26,6 +24,7 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/tx/signing"
 
+	flags2 "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -48,7 +47,8 @@ type Factory struct {
 }
 
 func NewFactoryFromFlagSet(flags *pflag.FlagSet, keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever account.AccountRetriever,
-	txConfig TxConfig, ac address.Codec, conn gogogrpc.ClientConn) (Factory, error) {
+	txConfig TxConfig, ac address.Codec, conn gogogrpc.ClientConn,
+) (Factory, error) {
 	offline, _ := flags.GetBool(flags2.FlagOffline)
 	if err := validateFlagSet(flags, offline); err != nil {
 		return Factory{}, err
@@ -71,7 +71,6 @@ func NewFactoryFromFlagSet(flags *pflag.FlagSet, keybase keyring.Keyring, cdc co
 func NewFactory(keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever account.AccountRetriever,
 	txConfig TxConfig, ac address.Codec, conn gogogrpc.ClientConn, parameters TxParameters,
 ) (Factory, error) {
-
 	return Factory{
 		keybase:          keybase,
 		cdc:              cdc,

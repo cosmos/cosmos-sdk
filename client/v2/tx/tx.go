@@ -3,15 +3,17 @@ package tx
 import (
 	"bufio"
 	"context"
+	"errors"
+	"fmt"
+	"os"
+
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/pflag"
+
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/client/v2/internal/account"
 	"cosmossdk.io/core/transaction"
-	"errors"
-	"fmt"
-	"github.com/cosmos/gogoproto/proto"
-	"github.com/spf13/pflag"
-	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	flags2 "github.com/cosmos/cosmos-sdk/client/flags"

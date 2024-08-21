@@ -73,6 +73,9 @@ func (tm *objectIndexer) insertSql(w io.Writer, key, value interface{}) ([]inter
 // updateSql generates an UPDATE statement and binding parameters for the provided key and value.
 func (tm *objectIndexer) updateSql(w io.Writer, key, value interface{}) ([]interface{}, error) {
 	_, err := fmt.Fprintf(w, "UPDATE %q SET ", tm.tableName())
+	if err != nil {
+		return nil, err
+	}
 
 	valueParams, valueCols, err := tm.bindValueParams(value)
 	if err != nil {

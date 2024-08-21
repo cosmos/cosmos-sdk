@@ -36,7 +36,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Consensus Breaking Changes
 
-* [#19188](https://github.com/cosmos/cosmos-sdk/pull/19188) Remove creation of `BaseAccount` when sending a message to an account that does not exist
+* [#19188](https://github.com/cosmos/cosmos-sdk/pull/19188) Remove creation of `BaseAccount` when sending a message to an account that does not exist.
 
 ## [v0.1.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/feegrant/v0.1.1) - 2024-04-22
 

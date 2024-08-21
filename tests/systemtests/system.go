@@ -352,6 +352,7 @@ func (s *SystemUnderTest) StopSingleNode() error {
 
 // StartSingleNode start running a validator node with dir input
 func (s *SystemUnderTest) StartSingleNode(t *testing.T, dir string) {
+	t.Helper()
 	cmd := exec.Command( //nolint:gosec // used by tests only
 		locateExecutable(s.execBinary),
 		[]string{"start", "--log_level=info", "--log_no_color"}...,

@@ -86,7 +86,7 @@ func (s *Server[T]) Name() string {
 
 // Start starts all components concurrently.
 func (s *Server[T]) Start(ctx context.Context) error {
-	// validate main server config
+	// validate server component config
 	if err := s.config.ValidateBasic(); err != nil {
 		return err
 	}
@@ -163,7 +163,7 @@ func (s *Server[T]) CLICommands() CLIConfig {
 	return commands
 }
 
-// Config returns config of the main server component
+// Config returns config of the server component
 func (s *Server[T]) Config() ServerConfig {
 	return s.config
 }
@@ -172,7 +172,7 @@ func (s *Server[T]) Config() ServerConfig {
 func (s *Server[T]) Configs() map[string]any {
 	cfgs := make(map[string]any)
 
-	// add main server component config
+	// add server component config
 	cfgs[s.Name()] = s.config
 
 	// add other components' config
@@ -254,7 +254,7 @@ func (s *Server[T]) WriteConfig(configPath string) error {
 func (s *Server[T]) StartFlags() []*pflag.FlagSet {
 	flags := []*pflag.FlagSet{}
 
-	// add main server component flags
+	// add server component flags
 	flags = append(flags, s.StartCmdFlags())
 
 	// add other components' start cmd flags

@@ -48,10 +48,10 @@ type AppModule struct {
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
 
-	state *feeTxState
+	state *deductFeeTxState
 }
 
-type feeTxState struct {
+type deductFeeTxState struct {
 	// deduct fee v2 tx validator
 	feeTxValidator ante.FeeTxValidator
 }
@@ -62,7 +62,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.Acc
 		cdc:           cdc,
 		keeper:        keeper,
 		accountKeeper: accountKeeper,
-		state:         &feeTxState{},
+		state:         &deductFeeTxState{}, // initialize state
 	}
 }
 

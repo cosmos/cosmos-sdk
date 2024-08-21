@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/spf13/viper"
 	"golang.org/x/exp/maps"
 
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
@@ -17,7 +18,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/spf13/viper"
 )
 
 const (

@@ -5,11 +5,11 @@ import (
 	"context"
 	"fmt"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/auth/types"
 
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

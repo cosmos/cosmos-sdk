@@ -147,25 +147,6 @@ func TestFactory_calculateGas(t *testing.T) {
 				},
 			},
 		},
-		{
-			name: "offline mode",
-			txParams: TxParameters{
-				chainID: "demo",
-				AccountConfig: AccountConfig{
-					address: addr,
-				},
-				ExecutionOptions: ExecutionOptions{
-					offline: true,
-				},
-			},
-			msgs: []transaction.Msg{
-				&countertypes.MsgIncreaseCounter{
-					Signer: signer,
-					Count:  0,
-				},
-			},
-			error: true,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

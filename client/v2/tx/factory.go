@@ -110,7 +110,7 @@ func validateFlagSet(flags *pflag.FlagSet, offline bool) error {
 	if offline && dryRun {
 		return errors.New("dry-run: cannot use offline mode")
 	}
-	
+
 	return nil
 }
 
@@ -147,14 +147,6 @@ func prepareTxParams(parameters TxParameters, accRetriever account.AccountRetrie
 // BuildUnsignedTx builds a transaction to be signed given a set of messages.
 // Once created, the fee, memo, and messages are set.
 func (f *Factory) BuildUnsignedTx(msgs ...transaction.Msg) (TxBuilder, error) {
-	//if f.txParams.offline && f.txParams.generateOnly {
-	//	if f.txParams.chainID != "" {
-	//		return nil, errors.New("chain ID cannot be used when offline and generate-only flags are set")
-	//	}
-	//} else if f.txParams.chainID == "" {
-	//	return nil, errors.New("chain ID required but not specified")
-	//}
-
 	fees := f.txParams.fees
 
 	isGasPriceZero, err := coins.IsZero(f.txParams.gasPrices)
@@ -224,9 +216,6 @@ func (f *Factory) BuildsSignedTx(ctx context.Context, msgs ...transaction.Msg) (
 
 // calculateGas calculates the gas required for the given messages.
 func (f *Factory) calculateGas(msgs ...transaction.Msg) error {
-	//if f.txParams.offline {
-	//	return errors.New("cannot simulate in offline mode")
-	//}
 	_, adjusted, err := f.Simulate(msgs...)
 	if err != nil {
 		return err

@@ -16,8 +16,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
-const defaultGas = 200000
-
 // HasValidateBasic is a copy of types.HasValidateBasic to avoid sdk import.
 type HasValidateBasic interface {
 	// ValidateBasic does a simple validation check that
@@ -64,10 +62,6 @@ type GasConfig struct {
 // If the provided gas value is zero, it defaults to a predefined value (defaultGas).
 // The gasPrices string is parsed into a slice of DecCoin.
 func NewGasConfig(gas uint64, gasAdjustment float64, gasPrices string) (GasConfig, error) {
-	if gas == 0 {
-		gas = defaultGas
-	}
-
 	parsedGasPrices, err := coins.ParseDecCoins(gasPrices)
 	if err != nil {
 		return GasConfig{}, err

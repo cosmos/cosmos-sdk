@@ -22,7 +22,6 @@ import (
 // GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
 func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.Msg) error {
-
 	if err := validateMessages(msgs...); err != nil {
 		return err
 	}
@@ -124,10 +123,6 @@ func generateOnly(ctx client.Context, txf Factory, msgs ...transaction.Msg) erro
 // dryRun performs a dry run of the transaction to estimate the gas required.
 // It prepares the transaction factory and simulates the transaction with the provided messages.
 func dryRun(txf Factory, msgs ...transaction.Msg) error {
-	//if txf.txParams.offline {
-	//	return errors.New("dry-run: cannot use offline mode")
-	//}
-
 	_, gas, err := txf.Simulate(msgs...)
 	if err != nil {
 		return err

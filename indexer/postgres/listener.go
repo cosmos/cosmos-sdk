@@ -25,14 +25,14 @@ func (i *indexerImpl) Listener() appdata.Listener {
 			_, err := i.tx.Exec("INSERT INTO block (number) VALUES ($1)", data.Height)
 			return err
 		},
-		Commit: func(data appdata.CommitData) error {
+		Commit: func(data appdata.CommitData) (func() error, error) {
 			err := i.tx.Commit()
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			i.tx, err = i.db.BeginTx(i.ctx, nil)
-			return err
+			return nil, err
 		},
 	}
 }

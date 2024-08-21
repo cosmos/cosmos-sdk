@@ -35,7 +35,7 @@ func DiffObjectCollections(expected, actual view.ObjectCollection) string {
 			continue
 		}
 
-		keyStr := fmtObjectKey(expected.ObjectType(), expectedUpdate.Key)
+		keyStr := schematesting.ObjectKeyString(expected.ObjectType(), expectedUpdate.Key)
 		actualUpdate, found, err := actual.GetObject(expectedUpdate.Key)
 		if err != nil {
 			res += fmt.Sprintf("Object %s: ERROR: %v\n", keyStr, err)

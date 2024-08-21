@@ -15,9 +15,9 @@ import (
 
 // Count returns the number of rows in the table.
 func (tm *objectIndexer) count(ctx context.Context, conn dbConn) (int, error) {
-	sqlStr := fmt.Sprintf("SELECT COUNT(*) FROM %q;", tm.TableName())
-	if tm.options.Logger != nil {
-		tm.options.Logger("Count", sqlStr)
+	sqlStr := fmt.Sprintf("SELECT COUNT(*) FROM %q;", tm.tableName())
+	if tm.options.logger != nil {
+		tm.options.logger.Debug("Count", "sql", sqlStr)
 	}
 	row := conn.QueryRowContext(ctx, sqlStr)
 	var count int
@@ -38,8 +38,8 @@ func (tm *objectIndexer) exists(ctx context.Context, conn dbConn, key interface{
 
 // checkExists checks if a row exists in the table.
 func (tm *objectIndexer) checkExists(ctx context.Context, conn dbConn, sqlStr string, params []interface{}) (bool, error) {
-	if tm.options.Logger != nil {
-		tm.options.Logger("Check exists", sqlStr, "params", params)
+	if tm.options.logger != nil {
+		tm.options.logger.Debug("Check exists", "sql", sqlStr, "params", params)
 	}
 	var res interface{}
 	err := conn.QueryRowContext(ctx, sqlStr, params...).Scan(&res)
@@ -55,7 +55,7 @@ func (tm *objectIndexer) checkExists(ctx context.Context, conn dbConn, sqlStr st
 
 // existsSqlAndParams generates a SELECT statement to check if a row with the provided key exists in the table.
 func (tm *objectIndexer) existsSqlAndParams(w io.Writer, key interface{}) ([]interface{}, error) {
-	_, err := fmt.Fprintf(w, "SELECT 1 FROM %q", tm.TableName())
+	_, err := fmt.Fprintf(w, "SELECT 1 FROM %q", tm.tableName())
 	if err != nil {
 		return nil, err
 	}
@@ -77,8 +77,8 @@ func (tm *objectIndexer) get(ctx context.Context, conn dbConn, key interface{}) 
 	}
 
 	sqlStr := buf.String()
-	if tm.options.Logger != nil {
-		tm.options.Logger("Get", sqlStr, "params", params)
+	if tm.options.logger != nil {
+		tm.options.logger.Debug("Get", "sql", sqlStr, "params", params)
 	}
 
 	row := conn.QueryRowContext(ctx, sqlStr, params...)
@@ -134,11 +134,11 @@ func (tm *objectIndexer) selectAllClause(w io.Writer) error {
 		allFields = append(allFields, colName)
 	}
 
-	if !tm.options.DisableRetainDeletions && tm.typ.RetainDeletions {
+	if !tm.options.disableRetainDeletions && tm.typ.RetainDeletions {
 		allFields = append(allFields, "_deleted")
 	}
 
-	_, err := fmt.Fprintf(w, "SELECT %s FROM %q", strings.Join(allFields, ", "), tm.TableName())
+	_, err := fmt.Fprintf(w, "SELECT %s FROM %q", strings.Join(allFields, ", "), tm.tableName())
 	if err != nil {
 		return err
 	}
@@ -156,7 +156,7 @@ func (tm *objectIndexer) readRow(row interface{ Scan(...interface{}) error }) (s
 		res = append(res, tm.colBindValue(f))
 	}
 
-	if !tm.options.DisableRetainDeletions && tm.typ.RetainDeletions {
+	if !tm.options.disableRetainDeletions && tm.typ.RetainDeletions {
 		res = append(res, new(bool))
 	}
 
@@ -204,7 +204,7 @@ func (tm *objectIndexer) readRow(row interface{ Scan(...interface{}) error }) (s
 		Value:    value,
 	}
 
-	if !tm.options.DisableRetainDeletions && tm.typ.RetainDeletions {
+	if !tm.options.disableRetainDeletions && tm.typ.RetainDeletions {
 		deleted := res[0].(*bool)
 		if *deleted {
 			update.Delete = true
@@ -291,7 +291,7 @@ func (tm *objectIndexer) readCol(field schema.Field, value interface{}) (interfa
 		}
 		return time.Duration(value), nil
 	case schema.AddressKind:
-		return tm.options.AddressCodec.StringToBytes(str)
+		return tm.options.addressCodec.StringToBytes(str)
 	default:
 		return value, nil
 	}

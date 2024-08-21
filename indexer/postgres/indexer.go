@@ -72,6 +72,7 @@ func StartIndexer(params indexer.InitParams) (indexer.InitResult, error) {
 	opts := options{
 		disableRetainDeletions: config.DisableRetainDeletions,
 		logger:                 params.Logger,
+		addressCodec:           params.AddressCodec,
 	}
 
 	idx := &indexerImpl{

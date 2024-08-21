@@ -26,9 +26,14 @@ func (tm *objectIndexer) insertUpdate(ctx context.Context, conn dbConn, key, val
 	} else {
 		params, err = tm.insertSql(buf, key, value)
 	}
+	if err != nil {
+		return err
+	}
 
 	sqlStr := buf.String()
-	tm.options.Logger("Insert or Update", "sql", sqlStr, "params", params)
+	if tm.options.logger != nil {
+		tm.options.logger.Debug("Insert or Update", "sql", sqlStr, "params", params)
+	}
 	_, err = conn.ExecContext(ctx, sqlStr, params...)
 	return err
 }
@@ -58,7 +63,7 @@ func (tm *objectIndexer) insertSql(w io.Writer, key, value interface{}) ([]inter
 		paramBindings = append(paramBindings, fmt.Sprintf("$%d", i))
 	}
 
-	_, err = fmt.Fprintf(w, "INSERT INTO %q (%s) VALUES (%s);", tm.TableName(),
+	_, err = fmt.Fprintf(w, "INSERT INTO %q (%s) VALUES (%s);", tm.tableName(),
 		strings.Join(allCols, ", "),
 		strings.Join(paramBindings, ", "),
 	)
@@ -67,7 +72,7 @@ func (tm *objectIndexer) insertSql(w io.Writer, key, value interface{}) ([]inter
 
 // updateSql generates an UPDATE statement and binding parameters for the provided key and value.
 func (tm *objectIndexer) updateSql(w io.Writer, key, value interface{}) ([]interface{}, error) {
-	_, err := fmt.Fprintf(w, "UPDATE %q SET ", tm.TableName())
+	_, err := fmt.Fprintf(w, "UPDATE %q SET ", tm.tableName())
 
 	valueParams, valueCols, err := tm.bindValueParams(value)
 	if err != nil {
@@ -90,7 +95,7 @@ func (tm *objectIndexer) updateSql(w io.Writer, key, value interface{}) ([]inter
 		paramIdx++
 	}
 
-	if !tm.options.DisableRetainDeletions && tm.typ.RetainDeletions {
+	if !tm.options.disableRetainDeletions && tm.typ.RetainDeletions {
 		_, err = fmt.Fprintf(w, ", _deleted = FALSE")
 		if err != nil {
 			return nil, err

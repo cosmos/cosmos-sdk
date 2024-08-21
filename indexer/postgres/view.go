@@ -116,8 +116,8 @@ func (tm *objectView) AllState(f func(schema.ObjectUpdate, error) bool) {
 	}
 
 	sqlStr := buf.String()
-	if tm.options.Logger != nil {
-		tm.options.Logger("Select", "sql", sqlStr)
+	if tm.options.logger != nil {
+		tm.options.logger.Debug("Select", "sql", sqlStr)
 	}
 
 	rows, err := tm.conn.QueryContext(tm.ctx, sqlStr)

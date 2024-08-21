@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	flags2 "github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/spf13/pflag"
 	"math/big"
 	"strings"
 
@@ -44,14 +46,29 @@ type Factory struct {
 	cachedTx TxBuilder
 }
 
+func NewFactoryFromFlagSet(flags *pflag.FlagSet, keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever account.AccountRetriever,
+	txConfig TxConfig, ac address.Codec, conn gogogrpc.ClientConn) (Factory, error) {
+	if err := validateFlagSet(flags); err != nil {
+		return Factory{}, err
+	}
+
+	params, err := txParamsFromFlagSet(flags, keybase, ac)
+	if err != nil {
+		return Factory{}, err
+	}
+
+	params, err = prepareTxParams(params, accRetriever)
+	if err != nil {
+		return Factory{}, err
+	}
+
+	return NewFactory(keybase, cdc, accRetriever, txConfig, ac, conn, params)
+}
+
 // NewFactory returns a new instance of Factory.
 func NewFactory(keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever account.AccountRetriever,
 	txConfig TxConfig, ac address.Codec, conn gogogrpc.ClientConn, parameters TxParameters,
 ) (Factory, error) {
-	parameters, err := prepareTxParams(parameters, accRetriever)
-	if err != nil {
-		return Factory{}, err
-	}
 
 	return Factory{
 		keybase:          keybase,
@@ -62,6 +79,29 @@ func NewFactory(keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever acc
 		txConfig:         txConfig,
 		txParams:         parameters,
 	}, nil
+}
+
+// validateFlagSet checks the provided flags for consistency and requirements based on the operation mode.
+func validateFlagSet(flags *pflag.FlagSet) error {
+	offline, _ := flags.GetBool(flags2.FlagOffline)
+	if offline {
+		if !flags.Changed(flags2.FlagAccountNumber) || !flags.Changed(flags2.FlagSequence) {
+			return errors.New("account-number and sequence must be set in offline mode")
+		}
+	}
+
+	generateOnly, _ := flags.GetBool(flags2.FlagGenerateOnly)
+	chainID, _ := flags.GetString(flags2.FlagChainID)
+	if offline && generateOnly {
+		if chainID != "" {
+			return errors.New("chain ID cannot be used when offline and generate-only flags are set")
+		}
+	}
+	if chainID == "" {
+		return errors.New("chain ID required but not specified")
+	}
+
+	return nil
 }
 
 // prepareTxParams ensures the account defined by ctx.GetFromAddress() exists and
@@ -97,13 +137,13 @@ func prepareTxParams(parameters TxParameters, accRetriever account.AccountRetrie
 // BuildUnsignedTx builds a transaction to be signed given a set of messages.
 // Once created, the fee, memo, and messages are set.
 func (f *Factory) BuildUnsignedTx(msgs ...transaction.Msg) (TxBuilder, error) {
-	if f.txParams.offline && f.txParams.generateOnly {
-		if f.txParams.chainID != "" {
-			return nil, errors.New("chain ID cannot be used when offline and generate-only flags are set")
-		}
-	} else if f.txParams.chainID == "" {
-		return nil, errors.New("chain ID required but not specified")
-	}
+	//if f.txParams.offline && f.txParams.generateOnly {
+	//	if f.txParams.chainID != "" {
+	//		return nil, errors.New("chain ID cannot be used when offline and generate-only flags are set")
+	//	}
+	//} else if f.txParams.chainID == "" {
+	//	return nil, errors.New("chain ID required but not specified")
+	//}
 
 	fees := f.txParams.fees
 

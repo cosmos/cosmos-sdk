@@ -1,7 +1,11 @@
 package tx
 
 import (
+	keyring2 "cosmossdk.io/client/v2/autocli/keyring"
+	"cosmossdk.io/core/address"
 	"fmt"
+	flags2 "github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/spf13/pflag"
 	"time"
 
 	base "cosmossdk.io/api/cosmos/base/v1beta1"
@@ -104,7 +108,6 @@ type ExecutionOptions struct {
 	unordered          bool // unordered indicates if the transaction execution order is not guaranteed.
 	offline            bool // offline specifies if the transaction should be prepared for offline signing.
 	offChain           bool // offChain indicates if the transaction should be executed off the blockchain.
-	generateOnly       bool // generateOnly specifies if the transaction should only be generated and not executed.
 	simulateAndExecute bool // simulateAndExecute indicates if the transaction should be simulated before execution.
 }
 
@@ -127,4 +130,77 @@ type Tx interface {
 	GetPubKeys() ([]cryptotypes.PubKey, error)
 	// GetSignatures fetches the signatures attached to the transaction.
 	GetSignatures() ([]Signature, error)
+}
+
+// txParamsFromFlagSet extracts the transaction parameters from the provided FlagSet.
+func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring, ac address.Codec) (params TxParameters, err error) {
+	timestampUnix, _ := flags.GetInt64(flags2.FlagTimeoutTimestamp)
+	timeoutTimestamp := time.Unix(timestampUnix, 0)
+	chainID, _ := flags.GetString(flags2.FlagChainID)
+	memo, _ := flags.GetString(flags2.FlagNote)
+	signMode, _ := flags.GetString(flags2.FlagSignMode)
+
+	accNumber, _ := flags.GetUint64(flags2.FlagAccountNumber)
+	sequence, _ := flags.GetUint64(flags2.FlagSequence)
+	from, _ := flags.GetString(flags2.FlagFrom)
+
+	var fromName, fromAddress string
+	var addr []byte
+	isDryRun, _ := flags.GetBool(flags2.FlagDryRun)
+	if isDryRun {
+		addr, err = ac.StringToBytes(from)
+	} else {
+		fromName, fromAddress, _, err = keybase.KeyInfo(from)
+		if err == nil {
+			addr, err = ac.StringToBytes(fromAddress)
+		}
+	}
+	if err != nil {
+		return params, err
+	}
+
+	gas, _ := flags.GetString(flags2.FlagGas)
+	gasSetting, _ := flags2.ParseGasSetting(gas)
+	gasAdjustment, _ := flags.GetFloat64(flags2.FlagGasAdjustment)
+	gasPrices, _ := flags.GetString(flags2.FlagGasPrices)
+
+	fees, _ := flags.GetString(flags2.FlagFees)
+	feePayer, _ := flags.GetString(flags2.FlagFeePayer)
+	feeGrater, _ := flags.GetString(flags2.FlagFeeGranter)
+
+	unordered, _ := flags.GetBool(flags2.FlagUnordered)
+	offline, _ := flags.GetBool(flags2.FlagOffline)
+
+	gasConfig, err := NewGasConfig(gasSetting.Gas, gasAdjustment, gasPrices)
+	if err != nil {
+		return params, err
+	}
+	feeConfig, err := NewFeeConfig(fees, feePayer, feeGrater)
+	if err != nil {
+		return params, err
+	}
+
+	txParams := TxParameters{
+		timeoutTimestamp: timeoutTimestamp,
+		chainID:          chainID,
+		memo:             memo,
+		signMode:         getSignMode(signMode),
+		AccountConfig: AccountConfig{
+			accountNumber: accNumber,
+			sequence:      sequence,
+			fromName:      fromName,
+			fromAddress:   fromAddress,
+			address:       addr,
+		},
+		GasConfig: gasConfig,
+		FeeConfig: feeConfig,
+		ExecutionOptions: ExecutionOptions{
+			unordered:          unordered,
+			offline:            offline,
+			offChain:           false,
+			simulateAndExecute: gasSetting.Simulate,
+		},
+	}
+
+	return txParams, nil
 }

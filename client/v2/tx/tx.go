@@ -3,19 +3,15 @@ package tx
 import (
 	"bufio"
 	"context"
+	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
+	"cosmossdk.io/client/v2/internal/account"
+	"cosmossdk.io/core/transaction"
 	"errors"
 	"fmt"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
 	"os"
-	"time"
-
-	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
-	keyring2 "cosmossdk.io/client/v2/autocli/keyring"
-	"cosmossdk.io/client/v2/internal/account"
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/transaction"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	flags2 "github.com/cosmos/cosmos-sdk/client/flags"
@@ -23,111 +19,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
-// txParamsFromFlagSet extracts the transaction parameters from the provided FlagSet.
-func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring, ac address.Codec) (params TxParameters, err error) {
-	//timeout, _ := flags.GetUint64(flags2.FlagTimeoutHeight)
-	timestampUnix, _ := flags.GetInt64(flags2.FlagTimeoutTimestamp)
-	timeoutTimestamp := time.Unix(timestampUnix, 0)
-	chainID, _ := flags.GetString(flags2.FlagChainID)
-	memo, _ := flags.GetString(flags2.FlagNote)
-	signMode, _ := flags.GetString(flags2.FlagSignMode)
-
-	accNumber, _ := flags.GetUint64(flags2.FlagAccountNumber)
-	sequence, _ := flags.GetUint64(flags2.FlagSequence)
-	from, _ := flags.GetString(flags2.FlagFrom)
-
-	var fromName, fromAddress string
-	var addr []byte
-	isDryRun, _ := flags.GetBool(flags2.FlagDryRun)
-	if isDryRun {
-		addr, err = ac.StringToBytes(from)
-	} else {
-		fromName, fromAddress, _, err = keybase.KeyInfo(from)
-		if err == nil {
-			addr, err = ac.StringToBytes(fromAddress)
-		}
-	}
-	if err != nil {
-		return params, err
-	}
-
-	gas, _ := flags.GetString(flags2.FlagGas)
-	gasSetting, _ := flags2.ParseGasSetting(gas)
-	gasAdjustment, _ := flags.GetFloat64(flags2.FlagGasAdjustment)
-	gasPrices, _ := flags.GetString(flags2.FlagGasPrices)
-
-	fees, _ := flags.GetString(flags2.FlagFees)
-	feePayer, _ := flags.GetString(flags2.FlagFeePayer)
-	feeGrater, _ := flags.GetString(flags2.FlagFeeGranter)
-
-	unordered, _ := flags.GetBool(flags2.FlagUnordered)
-	offline, _ := flags.GetBool(flags2.FlagOffline)
-	generateOnly, _ := flags.GetBool(flags2.FlagGenerateOnly)
-
-	gasConfig, err := NewGasConfig(gasSetting.Gas, gasAdjustment, gasPrices)
-	if err != nil {
-		return params, err
-	}
-	feeConfig, err := NewFeeConfig(fees, feePayer, feeGrater)
-	if err != nil {
-		return params, err
-	}
-
-	txParams := TxParameters{
-		timeoutTimestamp: timeoutTimestamp,
-		chainID:          chainID,
-		memo:             memo,
-		signMode:         getSignMode(signMode),
-		AccountConfig: AccountConfig{
-			accountNumber: accNumber,
-			sequence:      sequence,
-			fromName:      fromName,
-			fromAddress:   fromAddress,
-			address:       addr,
-		},
-		GasConfig: gasConfig,
-		FeeConfig: feeConfig,
-		ExecutionOptions: ExecutionOptions{
-			unordered:          unordered,
-			offline:            offline,
-			offChain:           false,
-			generateOnly:       generateOnly,
-			simulateAndExecute: gasSetting.Simulate,
-		},
-	}
-
-	return txParams, nil
-}
-
-// validate checks the provided flags for consistency and requirements based on the operation mode.
-func validate(flags *pflag.FlagSet) error {
-	offline, _ := flags.GetBool(flags2.FlagOffline)
-	if offline {
-		if !flags.Changed(flags2.FlagAccountNumber) || !flags.Changed(flags2.FlagSequence) {
-			return errors.New("account-number and sequence must be set in offline mode")
-		}
-	}
-
-	generateOnly, _ := flags.GetBool(flags2.FlagGenerateOnly)
-	chainID, _ := flags.GetString(flags2.FlagChainID)
-	if offline && generateOnly {
-		if chainID != "" {
-			return errors.New("chain ID cannot be used when offline and generate-only flags are set")
-		}
-	}
-	if chainID == "" {
-		return errors.New("chain ID required but not specified")
-	}
-
-	return nil
-}
-
 // GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
 func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.Msg) error {
-	if err := validate(flagSet); err != nil {
-		return err
-	}
 
 	if err := validateMessages(msgs...); err != nil {
 		return err
@@ -165,11 +59,6 @@ func newFactory(ctx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
 		return Factory{}, err
 	}
 
-	params, err := txParamsFromFlagSet(flagSet, k, ctx.AddressCodec)
-	if err != nil {
-		return Factory{}, err
-	}
-
 	txConfig, err := NewTxConfig(ConfigOptions{
 		AddressCodec:          ctx.AddressCodec,
 		Cdc:                   ctx.Codec,
@@ -182,7 +71,7 @@ func newFactory(ctx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
 
 	accRetriever := account.NewAccountRetriever(ctx.AddressCodec, ctx, ctx.InterfaceRegistry)
 
-	txf, err := NewFactory(k, ctx.Codec, accRetriever, txConfig, ctx.AddressCodec, ctx, params)
+	txf, err := NewFactoryFromFlagSet(flagSet, k, ctx.Codec, accRetriever, txConfig, ctx.AddressCodec, ctx)
 	if err != nil {
 		return Factory{}, err
 	}

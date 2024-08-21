@@ -75,31 +75,6 @@ func TestFactory_BuildUnsignedTx(t *testing.T) {
 			},
 		},
 		{
-			name: "chainId not provided",
-			txParams: TxParameters{
-				AccountConfig: AccountConfig{
-					address: addr,
-				},
-			},
-			msgs:  []transaction.Msg{},
-			error: true,
-		},
-		{
-			name: "offline and generateOnly with chainIde provided",
-			txParams: TxParameters{
-				chainID: "demo",
-				ExecutionOptions: ExecutionOptions{
-					offline:      true,
-					generateOnly: true,
-				},
-				AccountConfig: AccountConfig{
-					address: addr,
-				},
-			},
-			msgs:  []transaction.Msg{},
-			error: true,
-		},
-		{
 			name: "fees and gas price provided",
 			txParams: TxParameters{
 				chainID: "demo",

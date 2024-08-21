@@ -34,7 +34,7 @@ however, the essence should remain more or less the same in most coding environm
 An **account** is defined as having:
 * a unique **address**
 * an **account handler** which is some code which can process **messages** and send **messages** to other **accounts**
-* an **owner** address which is able to migrate, destroy or transfer account ownership
+* an **owner** address which is able to migrate the account handler; or destroy or transfer the account
 
 ### Address
 

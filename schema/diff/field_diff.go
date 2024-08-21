@@ -1,4 +1,6 @@
-package schema
+package diff
+
+import "cosmossdk.io/schema"
 
 // FieldDiff represents the difference between two fields.
 // The KindChanged, NullableChanged, and EnumTypeChanged methods can be used to determine
@@ -8,10 +10,10 @@ type FieldDiff struct {
 	Name string
 
 	// OldKind is the old kind of the field. It will be InvalidKind if there was no change.
-	OldKind Kind
+	OldKind schema.Kind
 
 	// NewKind is the new kind of the field. It will be InvalidKind if there was no change.
-	NewKind Kind
+	NewKind schema.Kind
 
 	// OldNullable is the old nullable property of the field.
 	OldNullable bool
@@ -28,7 +30,7 @@ type FieldDiff struct {
 	NewEnumType string
 }
 
-func compareField(oldField, newField Field) FieldDiff {
+func compareField(oldField, newField schema.Field) FieldDiff {
 	diff := FieldDiff{
 		Name: oldField.Name,
 	}

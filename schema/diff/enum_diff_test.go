@@ -1,24 +1,26 @@
-package schema
+package diff
 
 import (
 	"reflect"
 	"testing"
+
+	"cosmossdk.io/schema"
 )
 
 func Test_compareEnumType(t *testing.T) {
 	tt := []struct {
 		name                 string
-		oldEnum              EnumType
-		newEnum              EnumType
+		oldEnum              schema.EnumType
+		newEnum              schema.EnumType
 		diff                 EnumTypeDiff
 		hasCompatibleChanges bool
 	}{
 		{
 			name: "no change",
-			oldEnum: EnumType{
+			oldEnum: schema.EnumType{
 				Values: []string{"a", "b"},
 			},
-			newEnum: EnumType{
+			newEnum: schema.EnumType{
 				Values: []string{"a", "b"},
 			},
 			diff:                 EnumTypeDiff{},
@@ -26,10 +28,10 @@ func Test_compareEnumType(t *testing.T) {
 		},
 		{
 			name: "value added",
-			oldEnum: EnumType{
+			oldEnum: schema.EnumType{
 				Values: []string{"a"},
 			},
-			newEnum: EnumType{
+			newEnum: schema.EnumType{
 				Values: []string{"a", "b"},
 			},
 			diff: EnumTypeDiff{
@@ -39,10 +41,10 @@ func Test_compareEnumType(t *testing.T) {
 		},
 		{
 			name: "value removed",
-			oldEnum: EnumType{
+			oldEnum: schema.EnumType{
 				Values: []string{"a", "b"},
 			},
-			newEnum: EnumType{
+			newEnum: schema.EnumType{
 				Values: []string{"a"},
 			},
 			diff: EnumTypeDiff{

@@ -1,44 +1,46 @@
-package schema
+package diff
 
 import (
 	"fmt"
 	"reflect"
 	"testing"
+
+	"cosmossdk.io/schema"
 )
 
 func Test_compareField(t *testing.T) {
 	tests := []struct {
-		oldField Field
-		newField Field
+		oldField schema.Field
+		newField schema.Field
 		wantDiff FieldDiff
 		trueF    func(FieldDiff) bool
 	}{
 		{
-			oldField: Field{Kind: Int32Kind},
-			newField: Field{Kind: Int32Kind},
+			oldField: schema.Field{Kind: schema.Int32Kind},
+			newField: schema.Field{Kind: schema.Int32Kind},
 			wantDiff: FieldDiff{},
 			trueF:    FieldDiff.Empty,
 		},
 		{
-			oldField: Field{Kind: StringKind},
-			newField: Field{Kind: Int32Kind},
+			oldField: schema.Field{Kind: schema.StringKind},
+			newField: schema.Field{Kind: schema.Int32Kind},
 			wantDiff: FieldDiff{
-				OldKind: StringKind,
-				NewKind: Int32Kind,
+				OldKind: schema.StringKind,
+				NewKind: schema.Int32Kind,
 			},
 			trueF: FieldDiff.KindChanged,
 		},
 		{
-			oldField: Field{Kind: StringKind},
-			newField: Field{Kind: StringKind, Nullable: true},
+			oldField: schema.Field{Kind: schema.StringKind},
+			newField: schema.Field{Kind: schema.StringKind, Nullable: true},
 			wantDiff: FieldDiff{
 				NewNullable: true,
 			},
 			trueF: FieldDiff.NullableChanged,
 		},
 		{
-			oldField: Field{Kind: EnumKind, EnumType: EnumType{Name: "old"}},
-			newField: Field{Kind: EnumKind, EnumType: EnumType{Name: "new"}},
+			oldField: schema.Field{Kind: schema.EnumKind, EnumType: schema.EnumType{Name: "old"}},
+			newField: schema.Field{Kind: schema.EnumKind, EnumType: schema.EnumType{Name: "new"}},
 			wantDiff: FieldDiff{
 				OldEnumType: "old",
 				NewEnumType: "new",

@@ -1,28 +1,30 @@
-package schema
+package diff
 
 import (
 	"reflect"
 	"testing"
+
+	"cosmossdk.io/schema"
 )
 
 func TestCompareModuleSchemas(t *testing.T) {
 	tt := []struct {
 		name                 string
-		oldSchema            ModuleSchema
-		newSchema            ModuleSchema
+		oldSchema            schema.ModuleSchema
+		newSchema            schema.ModuleSchema
 		diff                 ModuleSchemaDiff
 		hasCompatibleChanges bool
 		empty                bool
 	}{
 		{
 			name: "no change",
-			oldSchema: mustModuleSchema(t, ObjectType{
+			oldSchema: mustModuleSchema(t, schema.ObjectType{
 				Name:      "object1",
-				KeyFields: []Field{{Name: "key1", Kind: StringKind}},
+				KeyFields: []schema.Field{{Name: "key1", Kind: schema.StringKind}},
 			}),
-			newSchema: mustModuleSchema(t, ObjectType{
+			newSchema: mustModuleSchema(t, schema.ObjectType{
 				Name:      "object1",
-				KeyFields: []Field{{Name: "key1", Kind: StringKind}},
+				KeyFields: []schema.Field{{Name: "key1", Kind: schema.StringKind}},
 			}),
 			diff:                 ModuleSchemaDiff{},
 			hasCompatibleChanges: true,
@@ -31,15 +33,15 @@ func TestCompareModuleSchemas(t *testing.T) {
 		{
 			name:      "object type added",
 			oldSchema: mustModuleSchema(t),
-			newSchema: mustModuleSchema(t, ObjectType{
+			newSchema: mustModuleSchema(t, schema.ObjectType{
 				Name:      "object1",
-				KeyFields: []Field{{Name: "key1", Kind: StringKind}},
+				KeyFields: []schema.Field{{Name: "key1", Kind: schema.StringKind}},
 			}),
 			diff: ModuleSchemaDiff{
-				AddedObjectTypes: []ObjectType{
+				AddedObjectTypes: []schema.ObjectType{
 					{
 						Name:      "object1",
-						KeyFields: []Field{{Name: "key1", Kind: StringKind}},
+						KeyFields: []schema.Field{{Name: "key1", Kind: schema.StringKind}},
 					},
 				},
 			},
@@ -47,16 +49,16 @@ func TestCompareModuleSchemas(t *testing.T) {
 		},
 		{
 			name: "object type removed",
-			oldSchema: mustModuleSchema(t, ObjectType{
+			oldSchema: mustModuleSchema(t, schema.ObjectType{
 				Name:      "object1",
-				KeyFields: []Field{{Name: "key1", Kind: StringKind}},
+				KeyFields: []schema.Field{{Name: "key1", Kind: schema.StringKind}},
 			}),
 			newSchema: mustModuleSchema(t),
 			diff: ModuleSchemaDiff{
-				RemovedObjectTypes: []ObjectType{
+				RemovedObjectTypes: []schema.ObjectType{
 					{
 						Name:      "object1",
-						KeyFields: []Field{{Name: "key1", Kind: StringKind}},
+						KeyFields: []schema.Field{{Name: "key1", Kind: schema.StringKind}},
 					},
 				},
 			},
@@ -64,21 +66,21 @@ func TestCompareModuleSchemas(t *testing.T) {
 		},
 		{
 			name: "object type changed, key field added",
-			oldSchema: mustModuleSchema(t, ObjectType{
+			oldSchema: mustModuleSchema(t, schema.ObjectType{
 				Name:      "object1",
-				KeyFields: []Field{{Name: "key1", Kind: StringKind}},
+				KeyFields: []schema.Field{{Name: "key1", Kind: schema.StringKind}},
 			}),
-			newSchema: mustModuleSchema(t, ObjectType{
+			newSchema: mustModuleSchema(t, schema.ObjectType{
 				Name:      "object1",
-				KeyFields: []Field{{Name: "key1", Kind: StringKind}, {Name: "key2", Kind: StringKind}},
+				KeyFields: []schema.Field{{Name: "key1", Kind: schema.StringKind}, {Name: "key2", Kind: schema.StringKind}},
 			}),
 			diff: ModuleSchemaDiff{
 				ChangedObjectTypes: []ObjectTypeDiff{
 					{
 						Name: "object1",
 						KeyFieldsDiff: FieldsDiff{
-							Added: []Field{
-								{Name: "key2", Kind: StringKind},
+							Added: []schema.Field{
+								{Name: "key2", Kind: schema.StringKind},
 							},
 						},
 					},
@@ -88,21 +90,21 @@ func TestCompareModuleSchemas(t *testing.T) {
 		},
 		{
 			name: "object type changed, nullable value field added",
-			oldSchema: mustModuleSchema(t, ObjectType{
+			oldSchema: mustModuleSchema(t, schema.ObjectType{
 				Name:      "object1",
-				KeyFields: []Field{{Name: "key1", Kind: StringKind}},
+				KeyFields: []schema.Field{{Name: "key1", Kind: schema.StringKind}},
 			}),
-			newSchema: mustModuleSchema(t, ObjectType{
+			newSchema: mustModuleSchema(t, schema.ObjectType{
 				Name:        "object1",
-				KeyFields:   []Field{{Name: "key1", Kind: StringKind}},
-				ValueFields: []Field{{Name: "value1", Kind: StringKind, Nullable: true}},
+				KeyFields:   []schema.Field{{Name: "key1", Kind: schema.StringKind}},
+				ValueFields: []schema.Field{{Name: "value1", Kind: schema.StringKind, Nullable: true}},
 			}),
 			diff: ModuleSchemaDiff{
 				ChangedObjectTypes: []ObjectTypeDiff{
 					{
 						Name: "object1",
 						ValueFieldsDiff: FieldsDiff{
-							Added: []Field{{Name: "value1", Kind: StringKind, Nullable: true}},
+							Added: []schema.Field{{Name: "value1", Kind: schema.StringKind, Nullable: true}},
 						},
 					},
 				},
@@ -111,21 +113,21 @@ func TestCompareModuleSchemas(t *testing.T) {
 		},
 		{
 			name: "object type changed, non-nullable value field added",
-			oldSchema: mustModuleSchema(t, ObjectType{
+			oldSchema: mustModuleSchema(t, schema.ObjectType{
 				Name:      "object1",
-				KeyFields: []Field{{Name: "key1", Kind: StringKind}},
+				KeyFields: []schema.Field{{Name: "key1", Kind: schema.StringKind}},
 			}),
-			newSchema: mustModuleSchema(t, ObjectType{
+			newSchema: mustModuleSchema(t, schema.ObjectType{
 				Name:        "object1",
-				KeyFields:   []Field{{Name: "key1", Kind: StringKind}},
-				ValueFields: []Field{{Name: "value1", Kind: StringKind}},
+				KeyFields:   []schema.Field{{Name: "key1", Kind: schema.StringKind}},
+				ValueFields: []schema.Field{{Name: "value1", Kind: schema.StringKind}},
 			}),
 			diff: ModuleSchemaDiff{
 				ChangedObjectTypes: []ObjectTypeDiff{
 					{
 						Name: "object1",
 						ValueFieldsDiff: FieldsDiff{
-							Added: []Field{{Name: "value1", Kind: StringKind}},
+							Added: []schema.Field{{Name: "value1", Kind: schema.StringKind}},
 						},
 					},
 				},
@@ -134,13 +136,13 @@ func TestCompareModuleSchemas(t *testing.T) {
 		},
 		{
 			name: "object type changed, fields reordered",
-			oldSchema: mustModuleSchema(t, ObjectType{
+			oldSchema: mustModuleSchema(t, schema.ObjectType{
 				Name:      "object1",
-				KeyFields: []Field{{Name: "key1", Kind: StringKind}, {Name: "key2", Kind: StringKind}},
+				KeyFields: []schema.Field{{Name: "key1", Kind: schema.StringKind}, {Name: "key2", Kind: schema.StringKind}},
 			}),
-			newSchema: mustModuleSchema(t, ObjectType{
+			newSchema: mustModuleSchema(t, schema.ObjectType{
 				Name:      "object1",
-				KeyFields: []Field{{Name: "key2", Kind: StringKind}, {Name: "key1", Kind: StringKind}},
+				KeyFields: []schema.Field{{Name: "key2", Kind: schema.StringKind}, {Name: "key1", Kind: schema.StringKind}},
 			}),
 			diff: ModuleSchemaDiff{
 				ChangedObjectTypes: []ObjectTypeDiff{
@@ -157,18 +159,18 @@ func TestCompareModuleSchemas(t *testing.T) {
 		},
 		{
 			name: "enum type added, nullable value field added",
-			oldSchema: mustModuleSchema(t, ObjectType{
+			oldSchema: mustModuleSchema(t, schema.ObjectType{
 				Name:      "object1",
-				KeyFields: []Field{{Name: "key1", Kind: Int32Kind}},
+				KeyFields: []schema.Field{{Name: "key1", Kind: schema.Int32Kind}},
 			}),
-			newSchema: mustModuleSchema(t, ObjectType{
+			newSchema: mustModuleSchema(t, schema.ObjectType{
 				Name:      "object1",
-				KeyFields: []Field{{Name: "key1", Kind: Int32Kind}},
-				ValueFields: []Field{
+				KeyFields: []schema.Field{{Name: "key1", Kind: schema.Int32Kind}},
+				ValueFields: []schema.Field{
 					{
 						Name:     "value1",
-						Kind:     EnumKind,
-						EnumType: EnumType{Name: "enum1", Values: []string{"a", "b"}},
+						Kind:     schema.EnumKind,
+						EnumType: schema.EnumType{Name: "enum1", Values: []string{"a", "b"}},
 						Nullable: true,
 					},
 				},
@@ -178,18 +180,18 @@ func TestCompareModuleSchemas(t *testing.T) {
 					{
 						Name: "object1",
 						ValueFieldsDiff: FieldsDiff{
-							Added: []Field{
+							Added: []schema.Field{
 								{
 									Name:     "value1",
-									Kind:     EnumKind,
-									EnumType: EnumType{Name: "enum1", Values: []string{"a", "b"}},
+									Kind:     schema.EnumKind,
+									EnumType: schema.EnumType{Name: "enum1", Values: []string{"a", "b"}},
 									Nullable: true,
 								},
 							},
 						},
 					},
 				},
-				AddedEnumTypes: []EnumType{
+				AddedEnumTypes: []schema.EnumType{
 					{Name: "enum1", Values: []string{"a", "b"}},
 				},
 			},
@@ -197,37 +199,37 @@ func TestCompareModuleSchemas(t *testing.T) {
 		},
 		{
 			name: "enum type removed",
-			oldSchema: mustModuleSchema(t, ObjectType{
+			oldSchema: mustModuleSchema(t, schema.ObjectType{
 				Name:      "object1",
-				KeyFields: []Field{{Name: "key1", Kind: Int32Kind}},
-				ValueFields: []Field{
+				KeyFields: []schema.Field{{Name: "key1", Kind: schema.Int32Kind}},
+				ValueFields: []schema.Field{
 					{
 						Name:     "value1",
-						Kind:     EnumKind,
-						EnumType: EnumType{Name: "enum1", Values: []string{"a", "b"}},
+						Kind:     schema.EnumKind,
+						EnumType: schema.EnumType{Name: "enum1", Values: []string{"a", "b"}},
 					},
 				},
 			}),
-			newSchema: mustModuleSchema(t, ObjectType{
+			newSchema: mustModuleSchema(t, schema.ObjectType{
 				Name:      "object1",
-				KeyFields: []Field{{Name: "key1", Kind: Int32Kind}},
+				KeyFields: []schema.Field{{Name: "key1", Kind: schema.Int32Kind}},
 			}),
 			diff: ModuleSchemaDiff{
 				ChangedObjectTypes: []ObjectTypeDiff{
 					{
 						Name: "object1",
 						ValueFieldsDiff: FieldsDiff{
-							Removed: []Field{
+							Removed: []schema.Field{
 								{
 									Name:     "value1",
-									Kind:     EnumKind,
-									EnumType: EnumType{Name: "enum1", Values: []string{"a", "b"}},
+									Kind:     schema.EnumKind,
+									EnumType: schema.EnumType{Name: "enum1", Values: []string{"a", "b"}},
 								},
 							},
 						},
 					},
 				},
-				RemovedEnumTypes: []EnumType{
+				RemovedEnumTypes: []schema.EnumType{
 					{Name: "enum1", Values: []string{"a", "b"}},
 				},
 			},
@@ -235,13 +237,13 @@ func TestCompareModuleSchemas(t *testing.T) {
 		},
 		{
 			name: "enum type value added",
-			oldSchema: mustModuleSchema(t, ObjectType{
+			oldSchema: mustModuleSchema(t, schema.ObjectType{
 				Name:      "object1",
-				KeyFields: []Field{{Name: "key1", Kind: EnumKind, EnumType: EnumType{Name: "enum1", Values: []string{"a"}}}},
+				KeyFields: []schema.Field{{Name: "key1", Kind: schema.EnumKind, EnumType: schema.EnumType{Name: "enum1", Values: []string{"a"}}}},
 			}),
-			newSchema: mustModuleSchema(t, ObjectType{
+			newSchema: mustModuleSchema(t, schema.ObjectType{
 				Name:      "object1",
-				KeyFields: []Field{{Name: "key1", Kind: EnumKind, EnumType: EnumType{Name: "enum1", Values: []string{"a", "b"}}}},
+				KeyFields: []schema.Field{{Name: "key1", Kind: schema.EnumKind, EnumType: schema.EnumType{Name: "enum1", Values: []string{"a", "b"}}}},
 			}),
 			diff: ModuleSchemaDiff{
 				ChangedEnumTypes: []EnumTypeDiff{
@@ -272,8 +274,8 @@ func TestCompareModuleSchemas(t *testing.T) {
 	}
 }
 
-func mustModuleSchema(t *testing.T, objectTypes ...ObjectType) ModuleSchema {
-	s, err := NewModuleSchema(objectTypes)
+func mustModuleSchema(t *testing.T, objectTypes ...schema.ObjectType) schema.ModuleSchema {
+	s, err := schema.NewModuleSchema(objectTypes)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,4 +1,6 @@
-package schema
+package diff
+
+import "cosmossdk.io/schema"
 
 // EnumTypeDiff represents the difference between two enum types.
 type EnumTypeDiff struct {
@@ -12,7 +14,7 @@ type EnumTypeDiff struct {
 	RemovedValues []string
 }
 
-func compareEnumType(oldEnum, newEnum EnumType) EnumTypeDiff {
+func compareEnumType(oldEnum, newEnum schema.EnumType) EnumTypeDiff {
 	diff := EnumTypeDiff{
 		Name: oldEnum.TypeName(),
 	}

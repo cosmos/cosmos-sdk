@@ -1,24 +1,26 @@
-package schema
+package diff
+
+import "cosmossdk.io/schema"
 
 // ModuleSchemaDiff represents the difference between two module schemas.
 type ModuleSchemaDiff struct {
 	// AddedObjectTypes is a list of object types that were added.
-	AddedObjectTypes []ObjectType
+	AddedObjectTypes []schema.ObjectType
 
 	// ChangedObjectTypes is a list of object types that were changed.
 	ChangedObjectTypes []ObjectTypeDiff
 
 	// RemovedObjectTypes is a list of object types that were removed.
-	RemovedObjectTypes []ObjectType
+	RemovedObjectTypes []schema.ObjectType
 
 	// AddedEnumTypes is a list of enum types that were added.
-	AddedEnumTypes []EnumType
+	AddedEnumTypes []schema.EnumType
 
 	// ChangedEnumTypes is a list of enum types that were changed.
 	ChangedEnumTypes []EnumTypeDiff
 
 	// RemovedEnumTypes is a list of enum types that were removed.
-	RemovedEnumTypes []EnumType
+	RemovedEnumTypes []schema.EnumType
 }
 
 // CompareModuleSchemas compares an old and a new module schemas and returns the difference between them.
@@ -36,16 +38,16 @@ type ModuleSchemaDiff struct {
 // ModuleSchemaDiff will return true if only compatible changes are present.
 // Module authors can use the above guidelines as a reference point for what changes are generally
 // considered safe to make to a module schema without breaking existing indexers.
-func CompareModuleSchemas(oldSchema, newSchema ModuleSchema) ModuleSchemaDiff {
+func CompareModuleSchemas(oldSchema, newSchema schema.ModuleSchema) ModuleSchemaDiff {
 	diff := ModuleSchemaDiff{}
 
-	oldSchema.ObjectTypes(func(oldObj ObjectType) bool {
+	oldSchema.ObjectTypes(func(oldObj schema.ObjectType) bool {
 		newTyp, ok := newSchema.LookupType(oldObj.Name)
 		if !ok {
 			diff.RemovedObjectTypes = append(diff.RemovedObjectTypes, oldObj)
 			return true
 		}
-		newObj, ok := newTyp.(ObjectType)
+		newObj, ok := newTyp.(schema.ObjectType)
 		if !ok {
 			diff.RemovedObjectTypes = append(diff.RemovedObjectTypes, oldObj)
 			return true
@@ -57,7 +59,7 @@ func CompareModuleSchemas(oldSchema, newSchema ModuleSchema) ModuleSchemaDiff {
 		return true
 	})
 
-	newSchema.ObjectTypes(func(newObj ObjectType) bool {
+	newSchema.ObjectTypes(func(newObj schema.ObjectType) bool {
 		_, ok := oldSchema.LookupType(newObj.TypeName())
 		if !ok {
 			diff.AddedObjectTypes = append(diff.AddedObjectTypes, newObj)
@@ -65,13 +67,13 @@ func CompareModuleSchemas(oldSchema, newSchema ModuleSchema) ModuleSchemaDiff {
 		return true
 	})
 
-	oldSchema.EnumTypes(func(oldEnum EnumType) bool {
+	oldSchema.EnumTypes(func(oldEnum schema.EnumType) bool {
 		newTyp, ok := newSchema.LookupType(oldEnum.Name)
 		if !ok {
 			diff.RemovedEnumTypes = append(diff.RemovedEnumTypes, oldEnum)
 			return true
 		}
-		newEnum, ok := newTyp.(EnumType)
+		newEnum, ok := newTyp.(schema.EnumType)
 		if !ok {
 			diff.RemovedEnumTypes = append(diff.RemovedEnumTypes, oldEnum)
 			return true
@@ -83,7 +85,7 @@ func CompareModuleSchemas(oldSchema, newSchema ModuleSchema) ModuleSchemaDiff {
 		return true
 	})
 
-	newSchema.EnumTypes(func(newEnum EnumType) bool {
+	newSchema.EnumTypes(func(newEnum schema.EnumType) bool {
 		_, ok := oldSchema.LookupType(newEnum.TypeName())
 		if !ok {
 			diff.AddedEnumTypes = append(diff.AddedEnumTypes, newEnum)

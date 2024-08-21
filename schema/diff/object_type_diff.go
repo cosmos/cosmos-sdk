@@ -1,4 +1,6 @@
-package schema
+package diff
+
+import "cosmossdk.io/schema"
 
 // ObjectTypeDiff represents the difference between two object types.
 // The Empty method of KeyFieldsDiff and ValueFieldsDiff can be used to determine
@@ -22,13 +24,13 @@ type ObjectTypeDiff struct {
 // then the OldOrder and NewOrder will still be empty.
 type FieldsDiff struct {
 	// Added is a list of fields that were added.
-	Added []Field
+	Added []schema.Field
 
 	// Changed is a list of fields that were changed.
 	Changed []FieldDiff
 
 	// Removed is a list of fields that were removed.
-	Removed []Field
+	Removed []schema.Field
 
 	// OldOrder is the order of fields in the old list. It will be empty if the order has not changed.
 	OldOrder []string
@@ -37,7 +39,7 @@ type FieldsDiff struct {
 	NewOrder []string
 }
 
-func compareObjectType(oldObj, newObj ObjectType) ObjectTypeDiff {
+func compareObjectType(oldObj, newObj schema.ObjectType) ObjectTypeDiff {
 	diff := ObjectTypeDiff{
 		Name: oldObj.TypeName(),
 	}
@@ -48,15 +50,15 @@ func compareObjectType(oldObj, newObj ObjectType) ObjectTypeDiff {
 	return diff
 }
 
-func compareFields(oldFields, newFields []Field) FieldsDiff {
+func compareFields(oldFields, newFields []schema.Field) FieldsDiff {
 	diff := FieldsDiff{}
 
-	newFieldMap := make(map[string]Field)
+	newFieldMap := make(map[string]schema.Field)
 	for _, f := range newFields {
 		newFieldMap[f.Name] = f
 	}
 
-	oldFieldMap := make(map[string]Field)
+	oldFieldMap := make(map[string]schema.Field)
 	for _, oldField := range oldFields {
 		oldFieldMap[oldField.Name] = oldField
 		newField, ok := newFieldMap[oldField.Name]

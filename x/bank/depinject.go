@@ -159,6 +159,8 @@ func InvokeSetSendRestrictions(
 	return nil
 }
 
+// TODO: Remove below check and move deduct-fee-decorator check completely to x/bank txValidator once sims v2 is done.
+// Sims v2 PR will remove dependency between x/bank and x/feegrant.https://github.com/cosmos/cosmos-sdk/pull/20940
 func InvokeCheckFeeGrantPresent(modules map[string]appmodule.AppModule) error {
 	_, ok := modules[feegrantModuleName]
 	if ok {

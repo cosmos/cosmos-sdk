@@ -143,9 +143,10 @@ so that their **account handlers** can send messages to other **accounts**.
 The **state handler** is a system component which the **hypervisor** has a reference to,
 and which is responsible for managing the state of all **accounts**.
 It only exposes the following methods to the **hypervisor**:
-- `create(account address, state config)`: creates a new account state with the specified address and **state config**
+- `create(account address, state config)`: creates a new account state with the specified address and **state config**.
 - `migrate(account address, new state config)`: migrates the account state with the specified address to a new state config
 - `destroy(account address)`: destroys the account state with the specified address
+- `create_temp(account address, state config)`: creates a temporary account state which exists in memory only for the scope of the enclosing message call.
 
 **State config** are optional bytes that each **account handler**'s metadata can define which get passed to the **state handler** when an account is created.
 These bytes can be used by the **state handler** to determine what type of state and commitment store the **account** needs.
@@ -178,11 +179,13 @@ In order to manage **accounts** and their mapping to **account handlers**, the *
 
 The **hypervisor** as a first-class module itself handles the following special **module messages** to manage account
 creation, destruction, and migration:
-* `create(handler id, address?, owner?)`: creates a new account in the specified code environment with the specified handler id and optional pre-defined address (if not provided, a new address is generated). The `on_create` message is called if it is implemented by the account. If the owner address is omitted, it defaults to the account itself.
-* `destroy(address)`: deletes the account with the specified address and calls the `on_destroy` message if it is implemented by the account. `destroy` can only be called by the account owner.
-* `migrate(address, new handler id, migration data)`: migrates the account with the specified address to the new account handler. The `on_migrate` message must be implemented by the new code and must not return an error for migration to succeed. `migrate` can only be called by the account owner.
-* `force_migrate(account address, new handler id, init data, destroy data)`: this can be used when no `on_migrate` handler can perform a proper migration to the new account handler. In this case, `on_destroy` will be called on the old account handler, the account state will be cleared, and `on_create` will be called on the new code. This is a destructive operation and should be used with caution.
+* `create(handler_id, init_data, address?, owner?)`: creates a new account in the specified code environment with the specified handler id and optional pre-defined address (if not provided, a new address is generated). The `on_create` message is called if it is implemented by the account. If the owner address is omitted, it defaults to the account itself.
+* `destroy(address, destroy_data)`: deletes the account with the specified address and calls the `on_destroy` message if it is implemented by the account. `destroy` can only be called by the account owner.
+* `migrate(address, new_handler_id)`: migrates the account with the specified address to the new account handler. The `on_migrate` message must be implemented by the new code and must not return an error for migration to succeed. `migrate` can only be called by the account owner.
+* `force_migrate(address, new_handler_id, init_data, destroy_data)`: this can be used when no `on_migrate` handler can perform a proper migration to the new account handler. In this case, `on_destroy` will be called on the old account handler, the account state will be cleared, and `on_create` will be called on the new code. This is a destructive operation and should be used with caution.
 * `transfer(address, new_owner?)`: changes the account owner to the new owner. If `new_owner` is empty then the account has no owner and can't be migrated, transferred, or destroyed. This can only be called by the current owner.
+* `create_temp(handler_id, init_data)`: creates a temporary account which exists in memory only for the scope of
+the enclosing message call.
 
 The **hypervisor** will call the **state handler**'s `create`, `migrate`,
 and `destroy` methods as needed when accounts are created, migrated, or destroyed.
@@ -205,7 +208,9 @@ By default, the ordering will be done alphabetically by **module name**.
 ### Authorization and Delegated Execution
 
 By default, when a **virtual machine** attempts to invoke a method call, the caller must be the address
-of the last account which was called and the **hypervisor** will check this using the **state token**.
+of the last account.
+Authorization will be ensured by the **hypervisor** using private context token 
+set within the **message packet**.
 
 One key feature of the existing SDK is the ability to do delegated execution via the `x/authz` module.
 **hypervisor** will support this feature by maintaining a set of granter account to grantee account key pairs
@@ -214,13 +219,27 @@ The following special messages will be handled by the **hypervisor** to support 
 * `grant_authorization(granter, grantee)` - only callable by granter
 * `revoke_authorization(granter, grantee)` - only callable by granter
 * `revoke_all_authorizations(granter)` - only callable by granter and revokes all authorizations at once
+* `grant_temp_authorization(granter, grantee, interceptor?)` - only callable by granter and grants authorization for the scope of the enclosing message call.
 
 It is expected that each account which receives such an authorization implements an account handler to provide more
 restrictive authorization restrictions even though at a framework level the authorization is very broad.
+Grantees are prohibited from calling `grant_authorization` on behalf of the granter as that would allow them
+to bypass any restrictions otherwise set by the granter.
+
+Temporary authorizations can be used for patterns where an account needs to do an operation on behalf of another account
+but only to accomplish something else within the scope of one message call.
+An example would be a module moving coins just to require a payment which currently in the SDK is done by
+just letting that module move any coins of any account.
+A temporary authorization scopes it to the calling account.
+If the `interceptor` parameter is provided, the interceptor will receive the actual temporary grant
+and any messages a caller attempts to send on behalf of the granter will instead be routed to the interceptors
+`execute_authorized` method to decide whether to allow or deny the message.
+`grant_temp_authorization` can be used in combination with `create_temp` to create a temporary account
+which can only be used for the scope of the enclosing message call.
 
 In order to allow transaction processing modules to be implemented within a **virtual machine**, the **hypervisor**
-also has a list of "sudo" accounts which can execute messages on behalf of any caller.
-The list of "sudo" accounts must be configured at startup.
+also has a list of "superuser" accounts which can execute messages on behalf of any caller.
+The list of "superuser" accounts must be configured at startup.
 
 ### Message Data and Packet Specification
 

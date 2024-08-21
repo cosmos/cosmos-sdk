@@ -42,13 +42,9 @@ func CompareModuleSchemas(oldSchema, newSchema schema.ModuleSchema) ModuleSchema
 	diff := ModuleSchemaDiff{}
 
 	oldSchema.ObjectTypes(func(oldObj schema.ObjectType) bool {
-		newTyp, ok := newSchema.LookupType(oldObj.Name)
-		if !ok {
-			diff.RemovedObjectTypes = append(diff.RemovedObjectTypes, oldObj)
-			return true
-		}
-		newObj, ok := newTyp.(schema.ObjectType)
-		if !ok {
+		newTyp, found := newSchema.LookupType(oldObj.Name)
+		newObj, typeMatch := newTyp.(schema.ObjectType)
+		if !found || !typeMatch {
 			diff.RemovedObjectTypes = append(diff.RemovedObjectTypes, oldObj)
 			return true
 		}
@@ -60,21 +56,18 @@ func CompareModuleSchemas(oldSchema, newSchema schema.ModuleSchema) ModuleSchema
 	})
 
 	newSchema.ObjectTypes(func(newObj schema.ObjectType) bool {
-		_, ok := oldSchema.LookupType(newObj.TypeName())
-		if !ok {
+		oldTyp, found := oldSchema.LookupType(newObj.TypeName())
+		_, typeMatch := oldTyp.(schema.ObjectType)
+		if !found || !typeMatch {
 			diff.AddedObjectTypes = append(diff.AddedObjectTypes, newObj)
 		}
 		return true
 	})
 
 	oldSchema.EnumTypes(func(oldEnum schema.EnumType) bool {
-		newTyp, ok := newSchema.LookupType(oldEnum.Name)
-		if !ok {
-			diff.RemovedEnumTypes = append(diff.RemovedEnumTypes, oldEnum)
-			return true
-		}
-		newEnum, ok := newTyp.(schema.EnumType)
-		if !ok {
+		newTyp, found := newSchema.LookupType(oldEnum.Name)
+		newEnum, typeMatch := newTyp.(schema.EnumType)
+		if !found || !typeMatch {
 			diff.RemovedEnumTypes = append(diff.RemovedEnumTypes, oldEnum)
 			return true
 		}
@@ -86,8 +79,9 @@ func CompareModuleSchemas(oldSchema, newSchema schema.ModuleSchema) ModuleSchema
 	})
 
 	newSchema.EnumTypes(func(newEnum schema.EnumType) bool {
-		_, ok := oldSchema.LookupType(newEnum.TypeName())
-		if !ok {
+		oldTyp, found := oldSchema.LookupType(newEnum.TypeName())
+		_, typeMatch := oldTyp.(schema.EnumType)
+		if !found || !typeMatch {
 			diff.AddedEnumTypes = append(diff.AddedEnumTypes, newEnum)
 		}
 		return true

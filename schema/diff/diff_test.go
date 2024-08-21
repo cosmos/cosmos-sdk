@@ -236,7 +236,7 @@ func TestCompareModuleSchemas(t *testing.T) {
 			hasCompatibleChanges: false,
 		},
 		{
-			name: "enum type value added",
+			name: "enum value added",
 			oldSchema: mustModuleSchema(t, schema.ObjectType{
 				Name:      "object1",
 				KeyFields: []schema.Field{{Name: "key1", Kind: schema.EnumKind, EnumType: schema.EnumType{Name: "enum1", Values: []string{"a"}}}},
@@ -254,6 +254,57 @@ func TestCompareModuleSchemas(t *testing.T) {
 				},
 			},
 			hasCompatibleChanges: true,
+		},
+		{
+			name: "enum value removed",
+			oldSchema: mustModuleSchema(t, schema.ObjectType{
+				Name:      "object1",
+				KeyFields: []schema.Field{{Name: "key1", Kind: schema.EnumKind, EnumType: schema.EnumType{Name: "enum1", Values: []string{"a", "b", "c"}}}},
+			}),
+			newSchema: mustModuleSchema(t, schema.ObjectType{
+				Name:      "object1",
+				KeyFields: []schema.Field{{Name: "key1", Kind: schema.EnumKind, EnumType: schema.EnumType{Name: "enum1", Values: []string{"a", "b"}}}},
+			}),
+			diff: ModuleSchemaDiff{
+				ChangedEnumTypes: []EnumTypeDiff{
+					{
+						Name:          "enum1",
+						RemovedValues: []string{"c"},
+					},
+				},
+			},
+			hasCompatibleChanges: false,
+		},
+		{
+			name: "object type and enum type name switched",
+			oldSchema: mustModuleSchema(t, schema.ObjectType{
+				Name:      "foo",
+				KeyFields: []schema.Field{{Name: "key1", Kind: schema.EnumKind, EnumType: schema.EnumType{Name: "bar", Values: []string{"a"}}}},
+			}),
+			newSchema: mustModuleSchema(t, schema.ObjectType{
+				Name:      "bar",
+				KeyFields: []schema.Field{{Name: "key1", Kind: schema.EnumKind, EnumType: schema.EnumType{Name: "foo", Values: []string{"a"}}}},
+			}),
+			diff: ModuleSchemaDiff{
+				RemovedObjectTypes: []schema.ObjectType{
+					{
+						Name:      "foo",
+						KeyFields: []schema.Field{{Name: "key1", Kind: schema.EnumKind, EnumType: schema.EnumType{Name: "bar", Values: []string{"a"}}}},
+					}},
+				AddedObjectTypes: []schema.ObjectType{
+					{
+						Name:      "bar",
+						KeyFields: []schema.Field{{Name: "key1", Kind: schema.EnumKind, EnumType: schema.EnumType{Name: "foo", Values: []string{"a"}}}},
+					},
+				},
+				RemovedEnumTypes: []schema.EnumType{
+					{Name: "bar", Values: []string{"a"}},
+				},
+				AddedEnumTypes: []schema.EnumType{
+					{Name: "foo", Values: []string{"a"}},
+				},
+			},
+			hasCompatibleChanges: false,
 		},
 	}
 

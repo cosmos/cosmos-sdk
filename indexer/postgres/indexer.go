@@ -70,8 +70,8 @@ func StartIndexer(params indexer.InitParams) (indexer.InitResult, error) {
 
 	moduleIndexers := map[string]*moduleIndexer{}
 	opts := options{
-		DisableRetainDeletions: config.DisableRetainDeletions,
-		Logger:                 params.Logger,
+		disableRetainDeletions: config.DisableRetainDeletions,
+		logger:                 params.Logger,
 	}
 
 	idx := &indexerImpl{
@@ -84,7 +84,7 @@ func StartIndexer(params indexer.InitParams) (indexer.InitResult, error) {
 	}
 
 	return indexer.InitResult{
-		Listener: idx.Listener(),
+		Listener: idx.listener(),
 	}, nil
 }
 

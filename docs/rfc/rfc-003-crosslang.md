@@ -88,7 +88,7 @@ The routing framework can look up the **address** of the receiving **account** b
 **Module messages** are distinguished from other messages because their **message name** must start with the `module:` prefix.
 
 The special kind of **account handler** which handles **module messages** is known as a **module handler**.
-A **module** is thus instance an instance of a **module handler** with a specific **address** 
+A **module** is thus an instance of a **module handler** with a specific **address** 
 in the same way that an **account** is an instance of an **account handler**.
 In addition to a byte **address**, **modules** also have a human-readable **module name**.
 

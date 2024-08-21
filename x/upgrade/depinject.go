@@ -6,8 +6,8 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/app"
 	"cosmossdk.io/core/appmodule"
+	coreserver "cosmossdk.io/core/server"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -40,7 +40,7 @@ type ModuleInputs struct {
 	Environment        appmodule.Environment
 	Cdc                codec.Codec
 	AddressCodec       address.Codec
-	AppVersionModifier app.VersionModifier
+	AppVersionModifier coreserver.VersionModifier
 
 	AppOpts servertypes.AppOptions `optional:"true"` // server v0
 	Viper   *viper.Viper           `optional:"true"` // server v2

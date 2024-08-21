@@ -3,8 +3,8 @@ package cometbft
 import (
 	"context"
 
-	coreappmgr "cosmossdk.io/core/app"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/server/v2/streaming"
 )
@@ -14,7 +14,7 @@ func (c *Consensus[T]) streamDeliverBlockChanges(
 	ctx context.Context,
 	height int64,
 	txs [][]byte,
-	txResults []coreappmgr.TxResult,
+	txResults []server.TxResult,
 	events []event.Event,
 	stateChanges []store.StateChanges,
 ) error {

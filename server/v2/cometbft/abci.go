@@ -11,10 +11,10 @@ import (
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
-	coreappmgr "cosmossdk.io/core/app"
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
@@ -268,7 +268,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	// populate hash with empty byte slice instead of nil
 	bz := sha256.Sum256([]byte{})
 
-	br := &coreappmgr.BlockRequest[T]{
+	br := &server.BlockRequest[T]{
 		Height:    uint64(req.InitialHeight - 1),
 		Time:      req.Time,
 		Hash:      bz[:],
@@ -441,7 +441,7 @@ func (c *Consensus[T]) FinalizeBlock(
 		return nil, err
 	}
 
-	blockReq := &coreappmgr.BlockRequest[T]{
+	blockReq := &server.BlockRequest[T]{
 		Height:  uint64(req.Height),
 		Time:    req.Time,
 		Hash:    req.Hash,

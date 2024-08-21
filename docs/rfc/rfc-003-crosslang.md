@@ -66,15 +66,9 @@ When a **message** is sent to an **account handler**, it will receive a **messag
 * a 32-byte **state token**
 * a `uint64` **gas limit**
 
-The handler can then execute some code and return a response or an error. Details on message responses and errors will be described later.
+The handler can then execute some code and return a response or an error. Details on message responses and errors as well as the packet format for **message requests** will be described later.
 
-To send a **message** to another **account**, the caller must specify:
-* **message name**
-* **message data**
-* **state token**
-* **gas limit**
-* optionally, the **address** of the **account** to send the message to
-* optionally, the **caller** of the **message** (for delegated execution)
+**Message requests** can also be prepared by **account handlers** and used to send **messages** to other accounts.
 
 The handler for a specific message within an **account handler** is known as a **message handler**.
 

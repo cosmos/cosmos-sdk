@@ -43,3 +43,7 @@ func compareEnumType(oldEnum, newEnum EnumType) EnumTypeDiff {
 func (e EnumTypeDiff) Empty() bool {
 	return len(e.AddedValues) == 0 && len(e.RemovedValues) == 0
 }
+
+func (e EnumTypeDiff) HasCompatibleChanges() bool {
+	return len(e.RemovedValues) == 0
+}

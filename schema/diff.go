@@ -26,15 +26,18 @@ type ModuleSchemaDiff struct {
 //
 // Indexer implementations can use these diffs to perform automatic schema migration.
 // The specific supported changes that a specific indexer supports are defined by that indexer implementation.
-// However, as a general rule, it is suggested that indexers support these changes:
+// However, as a general rule, it is suggested that indexers support the following changes to module schemas:
 // - Adding new object types
 // - Adding new enum types
 // - Adding new value fields to object types
 // - Adding new enum values to enum types
+// - Reordering fields in object types
 //
+// These changes are officially considered "compatible" changes, and the HasCompatibleChanges method of the returned
+// ModuleSchemaDiff will return true if only compatible changes are present.
 // Module authors can use the above guidelines as a reference point for what changes are generally
 // considered safe to make to a module schema without breaking existing indexers.
-func CompareModuleSchemas(oldSchema, newSchema *ModuleSchema) ModuleSchemaDiff {
+func CompareModuleSchemas(oldSchema, newSchema ModuleSchema) ModuleSchemaDiff {
 	diff := ModuleSchemaDiff{}
 
 	oldSchema.ObjectTypes(func(oldObj ObjectType) bool {
@@ -90,4 +93,38 @@ func CompareModuleSchemas(oldSchema, newSchema *ModuleSchema) ModuleSchemaDiff {
 	})
 
 	return diff
+}
+
+func (m ModuleSchemaDiff) Empty() bool {
+	return len(m.AddedObjectTypes) == 0 &&
+		len(m.ChangedObjectTypes) == 0 &&
+		len(m.RemovedObjectTypes) == 0 &&
+		len(m.AddedEnumTypes) == 0 &&
+		len(m.ChangedEnumTypes) == 0 &&
+		len(m.RemovedEnumTypes) == 0
+}
+
+// HasCompatibleChanges returns true if the diff contains only compatible changes.
+// Compatible changes are changes that are generally safe to make to a module schema without breaking existing indexers
+// and indexers should aim to automatically migrate to such changes.
+func (m ModuleSchemaDiff) HasCompatibleChanges() bool {
+	// object and enum types can be added but not removed
+	// changed object and enum types must have compatible changes
+	if len(m.RemovedObjectTypes) != 0 || len(m.RemovedEnumTypes) != 0 {
+		return false
+	}
+
+	for _, objectType := range m.ChangedObjectTypes {
+		if !objectType.HasCompatibleChanges() {
+			return false
+		}
+	}
+
+	for _, enumType := range m.ChangedEnumTypes {
+		if !enumType.HasCompatibleChanges() {
+			return false
+		}
+	}
+
+	return true
 }

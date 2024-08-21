@@ -103,6 +103,16 @@ func (o ObjectTypeDiff) Empty() bool {
 	return o.KeyFieldsDiff.Empty() && o.ValueFieldsDiff.Empty()
 }
 
+func (o ObjectTypeDiff) HasCompatibleChanges() bool {
+	// key fields can't be added, removed, or changed, but they can be reordered
+	// value fields can't be removed or changed, but they can be added or reordered
+	return len(o.KeyFieldsDiff.Added) == 0 &&
+		len(o.KeyFieldsDiff.Removed) == 0 &&
+		len(o.KeyFieldsDiff.Changed) == 0 &&
+		len(o.ValueFieldsDiff.Removed) == 0 &&
+		len(o.ValueFieldsDiff.Changed) == 0
+}
+
 // Empty returns true if the field diff has no changes.
 func (d FieldsDiff) Empty() bool {
 	if len(d.Added) != 0 || len(d.Changed) != 0 || len(d.Removed) != 0 {

@@ -107,7 +107,6 @@ func NewFeeConfig(fees, feePayer, feeGranter string) (FeeConfig, error) {
 type ExecutionOptions struct {
 	unordered          bool // unordered indicates if the transaction execution order is not guaranteed.
 	offline            bool // offline specifies if the transaction should be prepared for offline signing.
-	offChain           bool // offChain indicates if the transaction should be executed off the blockchain.
 	simulateAndExecute bool // simulateAndExecute indicates if the transaction should be simulated before execution.
 }
 
@@ -197,7 +196,6 @@ func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring, ac addr
 		ExecutionOptions: ExecutionOptions{
 			unordered:          unordered,
 			offline:            offline,
-			offChain:           false,
 			simulateAndExecute: gasSetting.Simulate,
 		},
 	}

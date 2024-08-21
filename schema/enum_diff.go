@@ -44,6 +44,8 @@ func (e EnumTypeDiff) Empty() bool {
 	return len(e.AddedValues) == 0 && len(e.RemovedValues) == 0
 }
 
+// HasCompatibleChanges returns true if the diff contains only compatible changes.
+// The only supported compatible change is adding values.
 func (e EnumTypeDiff) HasCompatibleChanges() bool {
 	return len(e.RemovedValues) == 0
 }

@@ -107,6 +107,7 @@ func (m ModuleSchemaDiff) Empty() bool {
 // HasCompatibleChanges returns true if the diff contains only compatible changes.
 // Compatible changes are changes that are generally safe to make to a module schema without breaking existing indexers
 // and indexers should aim to automatically migrate to such changes.
+// See the CompareModuleSchemas function for a list of changes that are considered compatible.
 func (m ModuleSchemaDiff) HasCompatibleChanges() bool {
 	// object and enum types can be added but not removed
 	// changed object and enum types must have compatible changes

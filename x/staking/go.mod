@@ -23,7 +23,6 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
-	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc
 	google.golang.org/genproto/googleapis/api v0.0.0-20240528184218-531527333157
 	google.golang.org/grpc v1.65.0
 	google.golang.org/protobuf v1.34.2
@@ -158,7 +157,7 @@ require (
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
-	cosmossdk.io/log v1.4.0
+	cosmossdk.io/log v1.4.1
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cosmos/crypto v0.1.2 // indirect
 	github.com/dgraph-io/badger/v4 v4.2.0 // indirect
@@ -173,6 +172,7 @@ require (
 require (
 	cosmossdk.io/schema v0.1.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc // indirect
 )
 
 replace github.com/cosmos/cosmos-sdk => ../../.

@@ -1,12 +1,12 @@
 package keeper_test
 
 import (
-	"sort"
+	"maps"
+	"slices"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/x/epochs/types"
@@ -89,9 +89,14 @@ func (suite *KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 			suite.Require().NoError(err)
 
 			// get sorted heights
-			heights := maps.Keys(test.blockHeightTimePairs)
-			sort.Slice(heights, func(i, j int) bool { return heights[i] < heights[j] })
-
+			heights := slices.SortedFunc(maps.Keys(test.blockHeightTimePairs), func(i, j int) int {
+				if test.blockHeightTimePairs[i].Before(test.blockHeightTimePairs[j]) {
+					return -1
+				} else if test.blockHeightTimePairs[i].After(test.blockHeightTimePairs[j]) {
+					return 1
+				}
+				return 0
+			})
 			for _, h := range heights {
 				// for each height in order, run begin block
 				suite.Ctx = suite.Ctx.WithHeaderInfo(header.Info{Height: int64(h), Time: test.blockHeightTimePairs[h]})

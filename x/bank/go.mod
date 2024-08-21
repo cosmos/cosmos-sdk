@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/core v1.0.0
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/log v1.4.0 // indirect
+	cosmossdk.io/log v1.4.1 // indirect
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
@@ -149,7 +149,7 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.26.0 // indirect
-	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc
+	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc // indirect
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect

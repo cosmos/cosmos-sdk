@@ -146,7 +146,7 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.26.0 // indirect
-	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc
+	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc // indirect
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
@@ -165,7 +165,7 @@ require (
 )
 
 require (
-	cosmossdk.io/log v1.4.0 // indirect
+	cosmossdk.io/log v1.4.1 // indirect
 	cosmossdk.io/schema v0.1.1 // indirect
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect

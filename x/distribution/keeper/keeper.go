@@ -46,7 +46,7 @@ type Keeper struct {
 	DelegatorStartingInfo collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], types.DelegatorStartingInfo]
 	// ValidatorsAccumulatedCommission key: valAddr | value: ValidatorAccumulatedCommission
 	ValidatorsAccumulatedCommission collections.Map[sdk.ValAddress, types.ValidatorAccumulatedCommission]
-	// ValidatorOutstandingRewards key: valAddr | value: ValidatorOustandingRewards
+	// ValidatorOutstandingRewards key: valAddr | value: ValidatorOutstandingRewards
 	ValidatorOutstandingRewards collections.Map[sdk.ValAddress, types.ValidatorOutstandingRewards]
 	// ValidatorHistoricalRewards key: valAddr+period | value: ValidatorHistoricalRewards
 	ValidatorHistoricalRewards collections.Map[collections.Pair[sdk.ValAddress, uint64], types.ValidatorHistoricalRewards]

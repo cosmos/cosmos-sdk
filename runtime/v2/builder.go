@@ -69,7 +69,7 @@ func (a *AppBuilder[T]) RegisterModules(modules map[string]appmodulev2.AppModule
 
 // RegisterStores registers the provided store keys.
 // This method should only be used for registering extra stores
-// wiich is necessary for modules that not registered using the app config.
+// which is necessary for modules that not registered using the app config.
 // To be used in combination of RegisterModules.
 func (a *AppBuilder[T]) RegisterStores(keys ...string) {
 	a.app.storeKeys = append(a.app.storeKeys, keys...)
@@ -174,6 +174,19 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 				return fmt.Errorf("failed to init genesis: %w", err)
 			}
 			return nil
+		},
+		ExportGenesis: func(ctx context.Context, version uint64) ([]byte, error) {
+			genesisJson, err := a.app.moduleManager.ExportGenesisForModules(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("failed to export genesis: %w", err)
+			}
+
+			bz, err := json.Marshal(genesisJson)
+			if err != nil {
+				return nil, fmt.Errorf("failed to marshal genesis: %w", err)
+			}
+
+			return bz, nil
 		},
 	}
 

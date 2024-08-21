@@ -8,12 +8,9 @@ import (
 	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
-	"cosmossdk.io/x/feegrant/simulation"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -49,24 +46,4 @@ func ProvideModule(in FeegrantInputs) (keeper.Keeper, appmodule.AppModule) {
 	}
 
 	return k, m
-}
-
-// AppModuleSimulation functions
-
-// GenerateGenesisState creates a randomized GenState of the feegrant module.
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
-}
-
-// RegisterStoreDecoder registers a decoder for feegrant module's types
-func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
-	sdr[feegrant.StoreKey] = simulation.NewDecodeStore(am.cdc)
-}
-
-// WeightedOperations returns all the feegrant module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		am.registry, simState.AppParams, simState.Cdc, simState.TxConfig,
-		am.accountKeeper, am.bankKeeper, am.keeper, am.accountKeeper.AddressCodec(),
-	)
 }

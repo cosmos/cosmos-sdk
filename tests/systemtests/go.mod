@@ -29,7 +29,6 @@ require (
 	github.com/creachadair/tomledit v0.0.26
 	github.com/tidwall/gjson v1.14.2
 	github.com/tidwall/sjson v1.2.5
-	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc
 )
 
 require (
@@ -38,7 +37,7 @@ require (
 	cosmossdk.io/core v0.11.0 // indirect
 	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
-	cosmossdk.io/log v1.4.0 // indirect
+	cosmossdk.io/log v1.4.1 // indirect
 	cosmossdk.io/store v1.1.0 // indirect
 	cosmossdk.io/x/tx v0.13.3-0.20240419091757-db5906b1e894 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
@@ -147,6 +146,7 @@ require (
 	go.etcd.io/bbolt v1.3.8 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.26.0 // indirect
+	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc // indirect
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect

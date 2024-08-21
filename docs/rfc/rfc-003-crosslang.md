@@ -222,7 +222,7 @@ or a separate RFC.
 For now, we specify that within a 64kb **message packet**,
 at least 56kb will be available for **message data** and message responses.
 
-### Further Specifications
+### Further Specifications and Discussion Items
 
 This specification does not cover many important parts of a complete system such as the encoding of message data,
 storage, events, transaction execution, or interaction with consensus environments.
@@ -230,6 +230,11 @@ It is the intention of this specification that additional specifications regardi
 top of this specification.
 It may become necessary to include more details regarding specific parts of those systems in this specification
 at some point, but as a starting point, this specification is intentionally kept minimal.
+
+Discussion items that need to be addressed in future updates to this RFC include:
+* how would something like delegated authorization work (as in the current `x/authz` module)?
+* do we make any compatibility guarantees when accounts are upgraded?
+* is the account owner necessary and should this be included in message requests?
 
 ## Abandoned Ideas (Optional)
 

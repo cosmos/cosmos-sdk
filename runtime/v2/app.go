@@ -3,9 +3,9 @@ package runtime
 import (
 	"encoding/json"
 	"errors"
+	"slices"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"golang.org/x/exp/slices"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	"cosmossdk.io/core/legacy"

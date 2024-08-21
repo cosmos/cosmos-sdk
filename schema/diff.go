@@ -27,11 +27,10 @@ type ModuleSchemaDiff struct {
 // Indexer implementations can use these diffs to perform automatic schema migration.
 // The specific supported changes that a specific indexer supports are defined by that indexer implementation.
 // However, as a general rule, it is suggested that indexers support the following changes to module schemas:
-// - Adding new object types
-// - Adding new enum types
-// - Adding new value fields to object types
-// - Adding new enum values to enum types
-// - Reordering fields in object types
+// - Adding object types
+// - Adding enum types
+// - Adding nullable value fields to object types
+// - Adding enum values to enum types
 //
 // These changes are officially considered "compatible" changes, and the HasCompatibleChanges method of the returned
 // ModuleSchemaDiff will return true if only compatible changes are present.

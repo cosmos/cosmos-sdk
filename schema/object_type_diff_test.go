@@ -71,7 +71,23 @@ func Test_objectTypeDiff(t *testing.T) {
 			hasCompatibleChanges: false,
 		},
 		{
-			name: "value fields added",
+			name: "nullable value field added",
+			oldType: ObjectType{
+				ValueFields: []Field{{Name: "id", Kind: Int32Kind}},
+			},
+			newType: ObjectType{
+				ValueFields: []Field{{Name: "id", Kind: Int32Kind}, {Name: "name", Kind: StringKind, Nullable: true}},
+			},
+			diff: ObjectTypeDiff{
+				ValueFieldsDiff: FieldsDiff{
+					Added: []Field{{Name: "name", Kind: StringKind, Nullable: true}},
+				},
+			},
+			trueF:                func(d ObjectTypeDiff) bool { return !d.ValueFieldsDiff.Empty() },
+			hasCompatibleChanges: true,
+		},
+		{
+			name: "non-nullable value field added",
 			oldType: ObjectType{
 				ValueFields: []Field{{Name: "id", Kind: Int32Kind}},
 			},
@@ -84,7 +100,7 @@ func Test_objectTypeDiff(t *testing.T) {
 				},
 			},
 			trueF:                func(d ObjectTypeDiff) bool { return !d.ValueFieldsDiff.Empty() },
-			hasCompatibleChanges: true,
+			hasCompatibleChanges: false,
 		},
 		{
 			name: "fields reordered",
@@ -107,7 +123,7 @@ func Test_objectTypeDiff(t *testing.T) {
 				},
 			},
 			trueF:                func(d ObjectTypeDiff) bool { return !d.KeyFieldsDiff.Empty() && !d.ValueFieldsDiff.Empty() },
-			hasCompatibleChanges: true,
+			hasCompatibleChanges: false,
 		},
 	}
 

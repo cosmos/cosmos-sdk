@@ -87,31 +87,50 @@ func TestCompareModuleSchemas(t *testing.T) {
 			hasCompatibleChanges: false,
 		},
 		{
-			name: "object type changed, value field added",
+			name: "object type changed, nullable value field added",
 			oldSchema: mustModuleSchema(t, ObjectType{
 				Name:      "object1",
 				KeyFields: []Field{{Name: "key1", Kind: StringKind}},
 			}),
 			newSchema: mustModuleSchema(t, ObjectType{
-				Name:      "object1",
-				KeyFields: []Field{{Name: "key1", Kind: StringKind}},
-				ValueFields: []Field{
-					{Name: "value1", Kind: StringKind},
-				},
+				Name:        "object1",
+				KeyFields:   []Field{{Name: "key1", Kind: StringKind}},
+				ValueFields: []Field{{Name: "value1", Kind: StringKind, Nullable: true}},
 			}),
 			diff: ModuleSchemaDiff{
 				ChangedObjectTypes: []ObjectTypeDiff{
 					{
 						Name: "object1",
 						ValueFieldsDiff: FieldsDiff{
-							Added: []Field{
-								{Name: "value1", Kind: StringKind},
-							},
+							Added: []Field{{Name: "value1", Kind: StringKind, Nullable: true}},
 						},
 					},
 				},
 			},
 			hasCompatibleChanges: true,
+		},
+		{
+			name: "object type changed, non-nullable value field added",
+			oldSchema: mustModuleSchema(t, ObjectType{
+				Name:      "object1",
+				KeyFields: []Field{{Name: "key1", Kind: StringKind}},
+			}),
+			newSchema: mustModuleSchema(t, ObjectType{
+				Name:        "object1",
+				KeyFields:   []Field{{Name: "key1", Kind: StringKind}},
+				ValueFields: []Field{{Name: "value1", Kind: StringKind}},
+			}),
+			diff: ModuleSchemaDiff{
+				ChangedObjectTypes: []ObjectTypeDiff{
+					{
+						Name: "object1",
+						ValueFieldsDiff: FieldsDiff{
+							Added: []Field{{Name: "value1", Kind: StringKind}},
+						},
+					},
+				},
+			},
+			hasCompatibleChanges: false,
 		},
 		{
 			name: "object type changed, fields reordered",
@@ -134,10 +153,10 @@ func TestCompareModuleSchemas(t *testing.T) {
 					},
 				},
 			},
-			hasCompatibleChanges: true,
+			hasCompatibleChanges: false,
 		},
 		{
-			name: "enum type added",
+			name: "enum type added, nullable value field added",
 			oldSchema: mustModuleSchema(t, ObjectType{
 				Name:      "object1",
 				KeyFields: []Field{{Name: "key1", Kind: Int32Kind}},
@@ -150,6 +169,7 @@ func TestCompareModuleSchemas(t *testing.T) {
 						Name:     "value1",
 						Kind:     EnumKind,
 						EnumType: EnumType{Name: "enum1", Values: []string{"a", "b"}},
+						Nullable: true,
 					},
 				},
 			}),
@@ -163,6 +183,7 @@ func TestCompareModuleSchemas(t *testing.T) {
 									Name:     "value1",
 									Kind:     EnumKind,
 									EnumType: EnumType{Name: "enum1", Values: []string{"a", "b"}},
+									Nullable: true,
 								},
 							},
 						},

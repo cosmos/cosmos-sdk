@@ -104,17 +104,25 @@ func (o ObjectTypeDiff) Empty() bool {
 }
 
 // HasCompatibleChanges returns true if the diff contains only compatible changes.
-// The supported compatible changes are:
-// - Adding value fields
-// - Reordering of fields
+// The only supported compatible change is adding nullable value fields.
 func (o ObjectTypeDiff) HasCompatibleChanges() bool {
-	// key fields can't be added, removed, or changed, but they can be reordered
-	// value fields can't be removed or changed, but they can be added or reordered
-	return len(o.KeyFieldsDiff.Added) == 0 &&
-		len(o.KeyFieldsDiff.Removed) == 0 &&
-		len(o.KeyFieldsDiff.Changed) == 0 &&
-		len(o.ValueFieldsDiff.Removed) == 0 &&
-		len(o.ValueFieldsDiff.Changed) == 0
+	if !o.KeyFieldsDiff.Empty() {
+		return false
+	}
+
+	if len(o.ValueFieldsDiff.Changed) != 0 ||
+		len(o.ValueFieldsDiff.Removed) != 0 ||
+		o.ValueFieldsDiff.OrderChanged() {
+		return false
+	}
+
+	for _, field := range o.ValueFieldsDiff.Added {
+		if !field.Nullable {
+			return false
+		}
+	}
+
+	return true
 }
 
 // Empty returns true if the field diff has no changes.

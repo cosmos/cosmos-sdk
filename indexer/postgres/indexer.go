@@ -69,20 +69,9 @@ func StartIndexer(params indexer.InitParams) (indexer.InitResult, error) {
 	}
 
 	moduleIndexers := map[string]*moduleIndexer{}
-	var sqlLogger func(msg, sql string, params ...interface{})
-	if logger := params.Logger; logger != nil {
-		sqlLogger = func(msg, sql string, params ...interface{}) {
-			if len(params) == 0 {
-				logger.Debug(msg, "sql", sql)
-			} else {
-				logger.Debug(msg, "sql", sql, "params", params)
-			}
-		}
-	}
 	opts := options{
-		DisableRetainDeletions: config.DisableRetainDeletions,
-		Logger:                 sqlLogger,
-		AddressCodec:           params.AddressCodec,
+		disableRetainDeletions: config.DisableRetainDeletions,
+		logger:                 params.Logger,
 	}
 
 	idx := &indexerImpl{
@@ -95,8 +84,7 @@ func StartIndexer(params indexer.InitParams) (indexer.InitResult, error) {
 	}
 
 	return indexer.InitResult{
-		Listener: idx.Listener(),
-		View:     idx,
+		Listener: idx.listener(),
 	}, nil
 }
 

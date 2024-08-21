@@ -27,8 +27,8 @@ func newModuleIndexer(moduleName string, modSchema schema.ModuleSchema, options 
 	}
 }
 
-// InitializeSchema creates tables for all object types in the module schema and creates enum types.
-func (m *moduleIndexer) InitializeSchema(ctx context.Context, conn dbConn) error {
+// initializeSchema creates tables for all object types in the module schema and creates enum types.
+func (m *moduleIndexer) initializeSchema(ctx context.Context, conn dbConn) error {
 	// create enum types
 	var err error
 	m.schema.EnumTypes(func(enumType schema.EnumType) bool {
@@ -43,7 +43,7 @@ func (m *moduleIndexer) InitializeSchema(ctx context.Context, conn dbConn) error
 	m.schema.ObjectTypes(func(typ schema.ObjectType) bool {
 		tm := newObjectIndexer(m.moduleName, typ, m.options)
 		m.tables[typ.Name] = tm
-		err = tm.CreateTable(ctx, conn)
+		err = tm.createTable(ctx, conn)
 		if err != nil {
 			err = fmt.Errorf("failed to create table for %s in module %s: %v", typ.Name, m.moduleName, err) //nolint:errorlint // using %v for go 1.12 compat
 		}
@@ -51,9 +51,4 @@ func (m *moduleIndexer) InitializeSchema(ctx context.Context, conn dbConn) error
 	})
 
 	return err
-}
-
-// ObjectIndexers returns the object indexers for the module.
-func (m *moduleIndexer) ObjectIndexers() map[string]*objectIndexer {
-	return m.tables
 }

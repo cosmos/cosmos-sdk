@@ -38,7 +38,7 @@ func newObjectIndexer(moduleName string, typ schema.ObjectType, options options)
 	}
 }
 
-// TableName returns the name of the table for the object type scoped to its module.
-func (tm *objectIndexer) TableName() string {
+// tableName returns the name of the table for the object type scoped to its module.
+func (tm *objectIndexer) tableName() string {
 	return fmt.Sprintf("%s_%s", tm.moduleName, tm.typ.Name)
 }

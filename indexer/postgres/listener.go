@@ -6,7 +6,7 @@ import (
 	"cosmossdk.io/schema/appdata"
 )
 
-func (i *indexerImpl) Listener() appdata.Listener {
+func (i *indexerImpl) listener() appdata.Listener {
 	return appdata.Listener{
 		InitializeModuleData: func(data appdata.ModuleInitializationData) error {
 			moduleName := data.ModuleName
@@ -19,7 +19,7 @@ func (i *indexerImpl) Listener() appdata.Listener {
 			mm := newModuleIndexer(moduleName, modSchema, i.opts)
 			i.modules[moduleName] = mm
 
-			return mm.InitializeSchema(i.ctx, i.tx)
+			return mm.initializeSchema(i.ctx, i.tx)
 		},
 		StartBlock: func(data appdata.StartBlockData) error {
 			_, err := i.tx.Exec("INSERT INTO block (number) VALUES ($1)", data.Height)
@@ -53,14 +53,14 @@ func (i *indexerImpl) Listener() appdata.Listener {
 			}
 			return nil
 		},
-		Commit: func(data appdata.CommitData) error {
+		Commit: func(data appdata.CommitData) (func() error, error) {
 			err := i.tx.Commit()
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			i.tx, err = i.db.BeginTx(i.ctx, nil)
-			return err
+			return nil, err
 		},
 	}
 }

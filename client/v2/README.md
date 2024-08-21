@@ -131,6 +131,30 @@ AutoCLI can create a gov proposal of any tx by simply setting the `GovProposal` 
 Users can however use the `--no-proposal` flag to disable the proposal creation (which is useful if the authority isn't the gov module on a chain).
 :::
 
+### Conventions for the `Use` field in Cobra
+
+According to the [Cobra documentation](https://pkg.go.dev/github.com/spf13/cobra#Command) the following conventions should be followed for the `Use` field in Cobra commands:
+
+1. **Required arguments**:
+   * Should not be enclosed in brackets. They can be enclosed in angle brackets `< >` for clarity.
+   * Example: `command <required_argument>`
+
+2. **Optional arguments**:
+   * Should be enclosed in square brackets `[ ]`.
+   * Example: `command [optional_argument]`
+
+3. **Alternative (mutually exclusive) arguments**:
+   * Should be enclosed in curly braces `{ }`.
+   * Example: `command {-a | -b}` for required alternatives.
+   * Example: `command [-a | -b]` for optional alternatives.
+
+4. **Multiple arguments**:
+   * Indicated with `...` after the argument.
+   * Example: `command argument...`
+
+5. **Combination of options**:
+   * Example: `command [-F file | -D dir]... [-f format] profile`
+
 ### Specifying Subcommands
 
 By default, `autocli` generates a command for each method in your gRPC service. However, you can specify subcommands to group related commands together. To specify subcommands, use the `autocliv1.ServiceCommandDescriptor` struct.

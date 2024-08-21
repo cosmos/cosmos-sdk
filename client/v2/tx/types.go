@@ -106,7 +106,6 @@ func NewFeeConfig(fees, feePayer, feeGranter string) (FeeConfig, error) {
 // ExecutionOptions defines the settings for transaction execution.
 type ExecutionOptions struct {
 	unordered          bool // unordered indicates if the transaction execution order is not guaranteed.
-	offline            bool // offline specifies if the transaction should be prepared for offline signing.
 	simulateAndExecute bool // simulateAndExecute indicates if the transaction should be simulated before execution.
 }
 
@@ -168,7 +167,6 @@ func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring, ac addr
 	feeGrater, _ := flags.GetString(flags2.FlagFeeGranter)
 
 	unordered, _ := flags.GetBool(flags2.FlagUnordered)
-	offline, _ := flags.GetBool(flags2.FlagOffline)
 
 	gasConfig, err := NewGasConfig(gasSetting.Gas, gasAdjustment, gasPrices)
 	if err != nil {
@@ -195,7 +193,6 @@ func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring, ac addr
 		FeeConfig: feeConfig,
 		ExecutionOptions: ExecutionOptions{
 			unordered:          unordered,
-			offline:            offline,
 			simulateAndExecute: gasSetting.Simulate,
 		},
 	}

@@ -44,7 +44,7 @@ func TestFactory_prepareTxParams(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var err error
-			tt.txParams, err = prepareTxParams(tt.txParams, mockAccountRetriever{})
+			tt.txParams, err = prepareTxParams(tt.txParams, mockAccountRetriever{}, false)
 			if (err != nil) != tt.error {
 				t.Errorf("Prepare() error = %v, wantErr %v", err, tt.error)
 			}

@@ -34,7 +34,8 @@ func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs .
 
 	isAux, _ := flagSet.GetBool(flags2.FlagAux)
 	if isAux {
-		return generateAuxSignerData(ctx, txf, msgs...)
+		offline, _ := flagSet.GetBool(flags2.FlagOffline)
+		return generateAuxSignerData(ctx, txf, offline, msgs...)
 	}
 
 	genOnly, _ := flagSet.GetBool(flags2.FlagGenerateOnly)
@@ -99,8 +100,8 @@ func validateMessages(msgs ...transaction.Msg) error {
 }
 
 // generateAuxSignerData simply generates and prints the AuxSignerData.
-func generateAuxSignerData(ctx client.Context, txf Factory, msgs ...transaction.Msg) error {
-	auxSignerData, err := makeAuxSignerData(txf, msgs...)
+func generateAuxSignerData(ctx client.Context, txf Factory, offline bool, msgs ...transaction.Msg) error {
+	auxSignerData, err := makeAuxSignerData(txf, offline, msgs...)
 	if err != nil {
 		return err
 	}
@@ -123,9 +124,9 @@ func generateOnly(ctx client.Context, txf Factory, msgs ...transaction.Msg) erro
 // dryRun performs a dry run of the transaction to estimate the gas required.
 // It prepares the transaction factory and simulates the transaction with the provided messages.
 func dryRun(txf Factory, msgs ...transaction.Msg) error {
-	if txf.txParams.offline {
-		return errors.New("dry-run: cannot use offline mode")
-	}
+	//if txf.txParams.offline {
+	//	return errors.New("dry-run: cannot use offline mode")
+	//}
 
 	_, gas, err := txf.Simulate(msgs...)
 	if err != nil {
@@ -214,11 +215,11 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...transaction.Msg)
 }
 
 // makeAuxSignerData generates an AuxSignerData from the client inputs.
-func makeAuxSignerData(f Factory, msgs ...transaction.Msg) (*apitx.AuxSignerData, error) {
+func makeAuxSignerData(f Factory, offline bool, msgs ...transaction.Msg) (*apitx.AuxSignerData, error) {
 	b := NewAuxTxBuilder()
 
 	b.SetAddress(f.txParams.fromAddress)
-	if f.txParams.offline {
+	if offline {
 		b.SetAccountNumber(f.accountNumber())
 		b.SetSequence(f.sequence())
 	} else {

@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	flags2 "github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/spf13/pflag"
 	"math/big"
 	"strings"
+
+	flags2 "github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/spf13/pflag"
 
 	"github.com/cosmos/go-bip39"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
@@ -48,7 +49,8 @@ type Factory struct {
 
 func NewFactoryFromFlagSet(flags *pflag.FlagSet, keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever account.AccountRetriever,
 	txConfig TxConfig, ac address.Codec, conn gogogrpc.ClientConn) (Factory, error) {
-	if err := validateFlagSet(flags); err != nil {
+	offline, _ := flags.GetBool(flags2.FlagOffline)
+	if err := validateFlagSet(flags, offline); err != nil {
 		return Factory{}, err
 	}
 
@@ -57,7 +59,7 @@ func NewFactoryFromFlagSet(flags *pflag.FlagSet, keybase keyring.Keyring, cdc co
 		return Factory{}, err
 	}
 
-	params, err = prepareTxParams(params, accRetriever)
+	params, err = prepareTxParams(params, accRetriever, offline)
 	if err != nil {
 		return Factory{}, err
 	}
@@ -82,33 +84,41 @@ func NewFactory(keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever acc
 }
 
 // validateFlagSet checks the provided flags for consistency and requirements based on the operation mode.
-func validateFlagSet(flags *pflag.FlagSet) error {
-	offline, _ := flags.GetBool(flags2.FlagOffline)
+func validateFlagSet(flags *pflag.FlagSet, offline bool) error {
 	if offline {
 		if !flags.Changed(flags2.FlagAccountNumber) || !flags.Changed(flags2.FlagSequence) {
 			return errors.New("account-number and sequence must be set in offline mode")
+		}
+
+		gas, _ := flags.GetString(flags2.FlagGas)
+		gasSetting, _ := flags2.ParseGasSetting(gas)
+		if gasSetting.Simulate {
+			return errors.New("simulate and offline flags cannot be set at the same time")
 		}
 	}
 
 	generateOnly, _ := flags.GetBool(flags2.FlagGenerateOnly)
 	chainID, _ := flags.GetString(flags2.FlagChainID)
-	if offline && generateOnly {
-		if chainID != "" {
-			return errors.New("chain ID cannot be used when offline and generate-only flags are set")
-		}
+	if offline && generateOnly && chainID != "" {
+		return errors.New("chain ID cannot be used when offline and generate-only flags are set")
 	}
 	if chainID == "" {
 		return errors.New("chain ID required but not specified")
 	}
 
+	dryRun, _ := flags.GetBool(flags2.FlagDryRun)
+	if offline && dryRun {
+		return errors.New("dry-run: cannot use offline mode")
+	}
+	
 	return nil
 }
 
 // prepareTxParams ensures the account defined by ctx.GetFromAddress() exists and
 // if the account number and/or the account sequence number are zero (not set),
 // they will be queried for and set on the provided Factory.
-func prepareTxParams(parameters TxParameters, accRetriever account.AccountRetriever) (TxParameters, error) {
-	if parameters.ExecutionOptions.offline {
+func prepareTxParams(parameters TxParameters, accRetriever account.AccountRetriever, offline bool) (TxParameters, error) {
+	if offline {
 		return parameters, nil
 	}
 
@@ -214,9 +224,9 @@ func (f *Factory) BuildsSignedTx(ctx context.Context, msgs ...transaction.Msg) (
 
 // calculateGas calculates the gas required for the given messages.
 func (f *Factory) calculateGas(msgs ...transaction.Msg) error {
-	if f.txParams.offline {
-		return errors.New("cannot simulate in offline mode")
-	}
+	//if f.txParams.offline {
+	//	return errors.New("cannot simulate in offline mode")
+	//}
 	_, adjusted, err := f.Simulate(msgs...)
 	if err != nil {
 		return err

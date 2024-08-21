@@ -25,7 +25,7 @@ func NewQuerier(keeper Keeper) Querier {
 }
 
 // CommunityPool queries the community pool coins
-func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
+func (k Querier) CommunityPool(ctx context.Context, _ *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
 	amount, err := k.Keeper.GetCommunityPool(ctx)
 	if err != nil {
 		return nil, err

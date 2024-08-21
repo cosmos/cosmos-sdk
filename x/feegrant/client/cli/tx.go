@@ -48,7 +48,7 @@ func GetTxCmd() *cobra.Command {
 // This command is more powerful than AutoCLI generated command as it allows a better input validation.
 func NewCmdFeeGrant() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "grant [granter_key_or_address] [grantee]",
+		Use:     "grant <granter_key_or_address> <grantee>",
 		Aliases: []string{"grant-allowance"},
 		Short:   "Grant Fee allowance to an address",
 		Long: strings.TrimSpace(

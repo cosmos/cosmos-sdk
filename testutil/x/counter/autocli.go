@@ -23,7 +23,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod:      "IncreaseCount",
-					Use:            "increase-count [count]",
+					Use:            "increase-count <count>",
 					Alias:          []string{"increase-counter", "increase", "inc", "bump"},
 					Short:          "Increase the counter by the specified amount",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "count"}},

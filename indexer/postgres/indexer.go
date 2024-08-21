@@ -86,6 +86,7 @@ func StartIndexer(params indexer.InitParams) (indexer.InitResult, error) {
 
 	return indexer.InitResult{
 		Listener: idx.listener(),
+		View:     idx,
 	}, nil
 }
 

@@ -33,16 +33,20 @@ type BlockResponse struct {
 
 // TxResult defines the result of a transaction execution.
 type TxResult struct {
-	Events    []event.Event     // Events produced by the transaction.
-	Resp      []transaction.Msg // Response messages produced by the transaction.
-	Error     error             // Error produced by the transaction.
-	Code      uint32            // Code produced by the transaction.
-	Data      []byte
-	Log       string
-	Info      string
+	// Events produced by the transaction.
+	Events []event.Event
+	// Response messages produced by the transaction.
+	Resp []transaction.Msg
+	// Error produced by the transaction.
+	Error error
+	// Code produced by the transaction.
+	// A non-zero code is an error that is either define by the module via the cosmossdk.io/errors/v2 package
+	// or injected through the antehandler along the execution of the transaction.
+	Code uint32
+	// GasWanted is the maximum units of work we allow this tx to perform.
 	GasWanted uint64
-	GasUsed   uint64
-	Codespace string
+	// GasUsed is the amount of gas actually consumed.
+	GasUsed uint64
 }
 
 // VersionModifier defines the interface fulfilled by BaseApp

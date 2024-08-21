@@ -134,10 +134,6 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 		GasWanted: uint64ToInt64(resp.GasWanted),
 		GasUsed:   uint64ToInt64(resp.GasUsed),
 		Events:    intoABCIEvents(resp.Events, c.indexedEvents),
-		Info:      resp.Info,
-		Data:      resp.Data,
-		Log:       resp.Log,
-		Codespace: resp.Codespace,
 	}
 	if resp.Error != nil {
 		cometResp.Code = 1
@@ -289,7 +285,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	// TODO necessary? where should this WARN live if it all. helpful for testing
 	for _, txRes := range blockresponse.TxResults {
 		if txRes.Error != nil {
-			c.logger.Warn("genesis tx failed", "code", txRes.Code, "log", txRes.Log, "error", txRes.Error)
+			c.logger.Warn("genesis tx failed", "code", txRes.Code, "error", txRes.Error)
 		}
 	}
 

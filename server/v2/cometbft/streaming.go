@@ -23,13 +23,9 @@ func (c *Consensus[T]) streamDeliverBlockChanges(
 	for i, txResult := range txResults {
 		streamingTxResults[i] = &streaming.ExecTxResult{
 			Code:      txResult.Code,
-			Data:      txResult.Data,
-			Log:       txResult.Log,
-			Info:      txResult.Info,
 			GasWanted: uint64ToInt64(txResult.GasWanted),
 			GasUsed:   uint64ToInt64(txResult.GasUsed),
 			Events:    streaming.IntoStreamingEvents(txResult.Events),
-			Codespace: txResult.Codespace,
 		}
 	}
 

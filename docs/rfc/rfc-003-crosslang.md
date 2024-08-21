@@ -34,7 +34,7 @@ however, the essence should remain more or less the same in most coding environm
 An **account** is defined as having:
 * a unique **address**
 * an **account handler** which is some code which can process **messages** and send **messages** to other **accounts**
-* an **owner** address which is able to migrate the account handler; or destroy or transfer the account
+* an **owner** address which is able to migrate the account handler, destroy the account or transfer that capability
 
 ### Address
 
@@ -60,7 +60,7 @@ The code that implements an account's message handling is known as the **account
 When a **message** is sent to an **account handler**, it will receive a **message request** which contains:
 * the **address** of the **account** (its own address)
 * the **address** of the account sending the message (the caller), which will be empty if the message is a query
-* the **address** of the account's **owner**
+* the **address** of the account's **owner** (NOTE: not sure this is needed here as owner's are mainly for upgrading accounts)
 * the **message name**
 * the **message data**
 * a 32-byte **state token**

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"sync"
 
 	"github.com/huandu/skiplist"
 
@@ -53,20 +52,17 @@ type (
 	// priority to other sender txs and must be partially ordered by both sender-nonce
 	// and priority.
 	PriorityNonceMempool[C comparable] struct {
-		mtx            sync.Mutex
-		priorityIndex  *skiplist.SkipList
-		priorityCounts map[C]int
-		senderIndices  map[string]*skiplist.SkipList
-		scores         map[txMeta[C]]txMeta[C]
-		cfg            PriorityNonceMempoolConfig[C]
+		priorityIndex *ConcurrentSkipList[C]
+		senderIndices map[string]*ConcurrentSkipList[C]
+		cfg           PriorityNonceMempoolConfig[C]
 	}
 
 	// PriorityNonceIterator defines an iterator that is used for mempool iteration
 	// on Select().
 	PriorityNonceIterator[C comparable] struct {
 		mempool       *PriorityNonceMempool[C]
-		priorityNode  *skiplist.Element
-		senderCursors map[string]*skiplist.Element
+		priorityNode  *ConcurrentListElement
+		senderCursors map[string]*ConcurrentListElement
 		sender        string
 		nextPriority  C
 	}
@@ -99,7 +95,7 @@ type (
 		// with the same priority
 		weight C
 		// senderElement is a pointer to the transaction's element in the sender index
-		senderElement *skiplist.Element
+		senderElement *ConcurrentListElement
 	}
 )
 
@@ -165,11 +161,9 @@ func NewPriorityMempool[C comparable](cfg PriorityNonceMempoolConfig[C]) *Priori
 		cfg.SignerExtractor = NewDefaultSignerExtractionAdapter()
 	}
 	mp := &PriorityNonceMempool[C]{
-		priorityIndex:  skiplist.New(skiplistComparable(cfg.TxPriority)),
-		priorityCounts: make(map[C]int),
-		senderIndices:  make(map[string]*skiplist.SkipList),
-		scores:         make(map[txMeta[C]]txMeta[C]),
-		cfg:            cfg,
+		priorityIndex: newConcurrentPriorityIndex[C](skiplistComparable(cfg.TxPriority), true),
+		senderIndices: make(map[string]*ConcurrentSkipList[C]),
+		cfg:           cfg,
 	}
 
 	return mp
@@ -203,8 +197,6 @@ func (mp *PriorityNonceMempool[C]) NextSenderTx(sender string) sdk.Tx {
 // Inserting a duplicate tx with a different priority overwrites the existing tx,
 // changing the total order of the mempool.
 func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error {
-	mp.mtx.Lock()
-	defer mp.mtx.Unlock()
 	if mp.cfg.MaxTx > 0 && mp.priorityIndex.Len() >= mp.cfg.MaxTx {
 		return ErrMempoolTxMaxCapacity
 	} else if mp.cfg.MaxTx < 0 {
@@ -227,9 +219,9 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 
 	senderIndex, ok := mp.senderIndices[sender]
 	if !ok {
-		senderIndex = skiplist.New(skiplist.LessThanFunc(func(a, b any) int {
+		senderIndex = newConcurrentPriorityIndex[C](skiplist.LessThanFunc(func(a, b any) int {
 			return skiplist.Uint64.Compare(b.(txMeta[C]).nonce, a.(txMeta[C]).nonce)
-		}))
+		}), false)
 
 		// initialize sender index if not found
 		mp.senderIndices[sender] = senderIndex
@@ -242,12 +234,11 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 	//
 	// This O(log n) remove operation is rare and only happens when a tx's priority
 	// changes.
-	sk := txMeta[C]{nonce: nonce, sender: sender}
-	if oldScore, txExists := mp.scores[sk]; txExists {
-		if mp.cfg.TxReplacement != nil && !mp.cfg.TxReplacement(oldScore.priority, priority, senderIndex.Get(key).Value.(sdk.Tx), tx) {
+	if oldScore := mp.priorityIndex.GetScore(nonce, sender); oldScore != nil {
+		if mp.cfg.TxReplacement != nil && !mp.cfg.TxReplacement(oldScore.Priority, priority, senderIndex.Get(key).Value.(sdk.Tx), tx) {
 			return fmt.Errorf(
 				"tx doesn't fit the replacement rule, oldPriority: %v, newPriority: %v, oldTx: %v, newTx: %v",
-				oldScore.priority,
+				oldScore.Priority,
 				priority,
 				senderIndex.Get(key).Value.(sdk.Tx),
 				tx,
@@ -257,19 +248,14 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 		mp.priorityIndex.Remove(txMeta[C]{
 			nonce:    nonce,
 			sender:   sender,
-			priority: oldScore.priority,
-			weight:   oldScore.weight,
+			priority: oldScore.Priority,
+			weight:   oldScore.Weight,
 		})
-		mp.priorityCounts[oldScore.priority]--
 	}
-
-	mp.priorityCounts[priority]++
 
 	// Since senderIndex is scored by nonce, a changed priority will overwrite the
 	// existing key.
 	key.senderElement = senderIndex.Set(key, tx)
-
-	mp.scores[sk] = txMeta[C]{priority: priority}
 	mp.priorityIndex.Set(key, tx)
 
 	return nil
@@ -277,7 +263,6 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 
 func (i *PriorityNonceIterator[C]) iteratePriority() Iterator {
 	// beginning of priority iteration
-	i.mempool.mtx.Lock()
 	if i.priorityNode == nil {
 		i.priorityNode = i.mempool.priorityIndex.Front()
 	} else {
@@ -286,15 +271,12 @@ func (i *PriorityNonceIterator[C]) iteratePriority() Iterator {
 
 	// end of priority iteration
 	if i.priorityNode == nil {
-		i.mempool.mtx.Unlock()
 		return nil
 	}
 
 	i.sender = i.priorityNode.Key().(txMeta[C]).sender
 
 	nextPriorityNode := i.priorityNode.Next()
-	i.mempool.mtx.Unlock()
-
 	if nextPriorityNode != nil {
 		i.nextPriority = nextPriorityNode.Key().(txMeta[C]).priority
 	} else {
@@ -325,18 +307,14 @@ func (i *PriorityNonceIterator[C]) Next() Iterator {
 
 	key := cursor.Key().(txMeta[C])
 
-	i.mempool.mtx.Lock()
-	weight := i.mempool.scores[txMeta[C]{nonce: key.nonce, sender: key.sender}].weight
-	i.mempool.mtx.Unlock()
+	weight := i.mempool.priorityIndex.GetScore(key.nonce, key.sender).Weight
 
 	// We've reached a transaction with a priority lower than the next highest
 	// priority in the pool.
 	if i.mempool.cfg.TxPriority.Compare(key.priority, i.nextPriority) < 0 {
 		return i.iteratePriority()
 	}
-	i.mempool.mtx.Lock()
 	nextElem := i.priorityNode.Next()
-	i.mempool.mtx.Unlock()
 	if nextElem != nil && i.mempool.cfg.TxPriority.Compare(key.priority, i.nextPriority) == 0 {
 		// Weight is incorporated into the priority index key only (not sender index)
 		// so we must fetch it here from the scores map.
@@ -367,13 +345,11 @@ func (mp *PriorityNonceMempool[C]) Select(_ context.Context, _ [][]byte) Iterato
 		return nil
 	}
 
-	mp.mtx.Lock()
 	mp.reorderPriorityTies()
-	mp.mtx.Unlock()
 
 	iterator := &PriorityNonceIterator[C]{
 		mempool:       mp,
-		senderCursors: make(map[string]*skiplist.Element),
+		senderCursors: make(map[string]*ConcurrentListElement),
 	}
 
 	return iterator.iteratePriority()
@@ -387,11 +363,10 @@ type reorderKey[C comparable] struct {
 
 func (mp *PriorityNonceMempool[C]) reorderPriorityTies() {
 	node := mp.priorityIndex.Front()
-
 	var reordering []reorderKey[C]
 	for node != nil {
 		key := node.Key().(txMeta[C])
-		if mp.priorityCounts[key.priority] > 1 {
+		if mp.priorityIndex.GetCount(key.priority) > 1 {
 			newKey := key
 			newKey.weight = senderWeight(mp.cfg.TxPriority, key.senderElement)
 			reordering = append(reordering, reorderKey[C]{deleteKey: key, insertKey: newKey, tx: node.Value.(sdk.Tx)})
@@ -402,9 +377,7 @@ func (mp *PriorityNonceMempool[C]) reorderPriorityTies() {
 
 	for _, k := range reordering {
 		mp.priorityIndex.Remove(k.deleteKey)
-		delete(mp.scores, txMeta[C]{nonce: k.deleteKey.nonce, sender: k.deleteKey.sender})
 		mp.priorityIndex.Set(k.insertKey, k.tx)
-		mp.scores[txMeta[C]{nonce: k.insertKey.nonce, sender: k.insertKey.sender}] = k.insertKey
 	}
 }
 
@@ -412,7 +385,7 @@ func (mp *PriorityNonceMempool[C]) reorderPriorityTies() {
 // defined as the first (nonce-wise) same sender tx with a priority not equal to
 // t. It is used to resolve priority collisions, that is when 2 or more txs from
 // different senders have the same priority.
-func senderWeight[C comparable](txPriority TxPriority[C], senderCursor *skiplist.Element) C {
+func senderWeight[C comparable](txPriority TxPriority[C], senderCursor *ConcurrentListElement) C {
 	if senderCursor == nil {
 		return txPriority.MinValue
 	}
@@ -433,16 +406,12 @@ func senderWeight[C comparable](txPriority TxPriority[C], senderCursor *skiplist
 
 // CountTx returns the number of transactions in the mempool.
 func (mp *PriorityNonceMempool[C]) CountTx() int {
-	mp.mtx.Lock()
-	defer mp.mtx.Unlock()
 	return mp.priorityIndex.Len()
 }
 
 // Remove removes a transaction from the mempool in O(log n) time, returning an
 // error if unsuccessful.
 func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
-	mp.mtx.Lock()
-	defer mp.mtx.Unlock()
 	sigs, err := mp.cfg.SignerExtractor.GetSigners(tx)
 	if err != nil {
 		return err
@@ -455,12 +424,11 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 	sender := sig.Signer.String()
 	nonce := sig.Sequence
 
-	scoreKey := txMeta[C]{nonce: nonce, sender: sender}
-	score, ok := mp.scores[scoreKey]
-	if !ok {
+	score := mp.priorityIndex.GetScore(nonce, sender)
+	if score == nil {
 		return ErrTxNotFound
 	}
-	tk := txMeta[C]{nonce: nonce, priority: score.priority, sender: sender, weight: score.weight}
+	tk := txMeta[C]{nonce: nonce, priority: score.Priority, sender: sender, weight: score.Weight}
 
 	senderTxs, ok := mp.senderIndices[sender]
 	if !ok {
@@ -469,8 +437,6 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 
 	mp.priorityIndex.Remove(tk)
 	senderTxs.Remove(tk)
-	delete(mp.scores, scoreKey)
-	mp.priorityCounts[score.priority]--
 
 	return nil
 }
@@ -481,14 +447,10 @@ func IsEmpty[C comparable](mempool Mempool) error {
 		return errors.New("priorityIndex not empty")
 	}
 
-	countKeys := make([]C, 0, len(mp.priorityCounts))
-	for k := range mp.priorityCounts {
-		countKeys = append(countKeys, k)
-	}
-
-	for _, k := range countKeys {
-		if mp.priorityCounts[k] != 0 {
-			return fmt.Errorf("priorityCounts not zero at %v, got %v", k, mp.priorityCounts[k])
+	priorityCounts := mp.priorityIndex.CloneCounts()
+	for k, count := range priorityCounts {
+		if count != 0 {
+			return fmt.Errorf("priorityCounts not zero at %v, got %v", k, count)
 		}
 	}
 

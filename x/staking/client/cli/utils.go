@@ -24,7 +24,7 @@ type validator struct {
 	Website           string
 	Security          string
 	Details           string
-	Metadata          *types.Metadata
+	Metadata          types.Metadata
 	CommissionRates   types.CommissionRates
 	MinSelfDelegation math.Int
 }
@@ -38,7 +38,7 @@ func parseAndValidateValidatorJSON(cdc codec.Codec, path string) (validator, err
 		Website             string          `json:"website,omitempty"`
 		Security            string          `json:"security,omitempty"`
 		Details             string          `json:"details,omitempty"`
-		Metadata            *types.Metadata `json:"metadata,omitempty"`
+		Metadata            types.Metadata  `json:"metadata,omitempty"`
 		CommissionRate      string          `json:"commission-rate"`
 		CommissionMaxRate   string          `json:"commission-max-rate"`
 		CommissionMaxChange string          `json:"commission-max-change-rate"`

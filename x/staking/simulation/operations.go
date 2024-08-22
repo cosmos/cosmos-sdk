@@ -178,7 +178,7 @@ func SimulateMsgCreateValidator(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 10),
-			&types.Metadata{
+			types.Metadata{
 				ProfilePicUri: simtypes.RandStringOfLength(r, 10),
 			},
 		)
@@ -280,7 +280,7 @@ func SimulateMsgEditValidator(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 10),
-			&types.Metadata{
+			types.Metadata{
 				ProfilePicUri: simtypes.RandStringOfLength(r, 10),
 			},
 		)

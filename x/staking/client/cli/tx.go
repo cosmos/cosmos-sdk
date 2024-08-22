@@ -133,9 +133,9 @@ func NewEditValidatorCmd() *cobra.Command {
 			details, _ := cmd.Flags().GetString(FlagDetails)
 			metadataString, _ := cmd.Flags().GetString(FlagMetadata)
 
-			var metadata *types.Metadata
+			var metadata types.Metadata
 			if metadataString != "" {
-				if err := json.Unmarshal([]byte(metadataString), metadata); err != nil {
+				if err := json.Unmarshal([]byte(metadataString), &metadata); err != nil {
 					return err
 				}
 			}
@@ -275,7 +275,7 @@ type TxCreateValidatorConfig struct {
 	SecurityContact string
 	Details         string
 	Identity        string
-	Metadata        *types.Metadata
+	Metadata        types.Metadata
 }
 
 func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, chainID string, valPubKey cryptotypes.PubKey) (TxCreateValidatorConfig, error) {
@@ -319,9 +319,9 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 	if err != nil {
 		return c, err
 	}
-	var metadata *types.Metadata
+	var metadata types.Metadata
 	if metadataString != "" {
-		if err := json.Unmarshal([]byte(metadataString), metadata); err != nil {
+		if err := json.Unmarshal([]byte(metadataString), &metadata); err != nil {
 			return c, err
 		}
 	}

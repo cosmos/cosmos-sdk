@@ -106,7 +106,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		)
 	}
 
-	if _, err := msg.Description.EnsureLength(); err != nil {
+	if _, err := msg.Description.Validate(); err != nil {
 		return nil, err
 	}
 

@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"fmt"
+	"net/url"
 	"sort"
 	"strings"
 	"time"
@@ -188,7 +189,7 @@ func (v Validator) IsUnbonding() bool {
 // constant used in flags to indicate that description field should not be updated
 const DoNotModifyDesc = "[do-not-modify]"
 
-func NewDescription(moniker, identity, website, securityContact, details string, metadata *Metadata) Description {
+func NewDescription(moniker, identity, website, securityContact, details string, metadata Metadata) Description {
 	return Description{
 		Moniker:         moniker,
 		Identity:        identity,
@@ -229,7 +230,7 @@ func (d Description) UpdateDescription(d2 Description) (Description, error) {
 		d2.SecurityContact,
 		d2.Details,
 		d.Metadata, // TODO: how should we check for the DoNotModifyDesc
-	).EnsureLength()
+	).Validate()
 }
 
 // EnsureLength ensures the length of a validator's description.
@@ -255,6 +256,26 @@ func (d Description) EnsureLength() (Description, error) {
 	}
 
 	return d, nil
+}
+
+// Validate calls metadata.Validate() description.EnsureLength()
+func (d Description) Validate() (Description, error) {
+	if err := d.Metadata.Validate(); err != nil {
+		return d, err
+	}
+
+	return d.EnsureLength()
+}
+
+// Validate checks that the metadata fields are valid. For the ProfilePicUri, checks if a valid URI.
+func (m Metadata) Validate() error {
+	if m.ProfilePicUri != "" {
+		_, err := url.ParseRequestURI(m.ProfilePicUri)
+		if err != nil {
+			return errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid profile_pic format: %s, err: %s", m.ProfilePicUri, err)
+		}
+	}
+	return nil
 }
 
 // ModuleValidatorUpdate returns a appmodule.ValidatorUpdate from a staking validator type

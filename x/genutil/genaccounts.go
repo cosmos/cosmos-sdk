@@ -81,9 +81,6 @@ func AddGenesisAccounts(
 		balances := banktypes.Balance{Address: addr, Coins: coins.Sort()}
 		baseAccount := authtypes.NewBaseAccount(accAddr, nil, 0, 0)
 
-		// TODO: remove vesting logic here? or require it to be done through accounts
-		// ref: https://github.com/cosmos/cosmos-sdk/issues/21340#issuecomment-2295828922
-		// Maybe a separate PR since this is already refactoring the original logic.
 		vestingAmt := acc.VestingAmt
 		if !vestingAmt.IsZero() {
 			vestingStart := acc.VestingStart

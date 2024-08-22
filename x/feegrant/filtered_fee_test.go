@@ -141,8 +141,7 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 		},
 	}
 
-	for name, stc := range cases {
-		tc := stc // to make scopelint happy
+	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			err := tc.allowance.ValidateBasic()
 			require.NoError(t, err)
@@ -150,7 +149,7 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 			ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: tc.blockTime})
 
 			// create grant
-			var granter, grantee sdk.AccAddress
+			granter, grantee := sdk.AccAddress("granter"), sdk.AccAddress("grantee")
 			allowance, err := feegrant.NewAllowedMsgAllowance(tc.allowance, tc.msgs)
 			require.NoError(t, err)
 			granterStr, err := ac.BytesToString(granter)

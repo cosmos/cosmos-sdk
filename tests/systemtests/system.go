@@ -346,8 +346,18 @@ func (s *SystemUnderTest) StopSingleNode() error {
 		return err
 	}
 
-	// Kill the 1st node
-	return p.Kill()
+	// Stop the 1st node
+	if err := p.Signal(syscall.SIGTERM); err != nil {
+		s.Logf("failed to stop node with pid %d: %s\n", p.Pid, err)
+	}
+
+	// Wait for node stop, if not force kill 
+	_, err = p.Wait()
+	if err != nil {
+		return p.Kill()
+	}
+
+	return nil
 }
 
 // StartSingleNode start running a validator node with dir input

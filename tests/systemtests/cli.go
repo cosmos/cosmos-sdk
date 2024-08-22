@@ -172,10 +172,7 @@ func (c CLIWrapper) Run(args ...string) string {
 // RunCommandWithArgs use for run cli command, not tx
 func (c CLIWrapper) RunCommandWithArgs(args ...string) string {
 	c.t.Helper()
-	execOutput, ok := c.run(args)
-	if !ok {
-		return execOutput
-	}
+	execOutput, _ := c.run(args)
 	return execOutput
 }
 

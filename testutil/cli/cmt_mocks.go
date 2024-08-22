@@ -37,14 +37,6 @@ func NewMockCometRPCWithValue(bz []byte) MockCometRPC {
 	}}
 }
 
-func CreateCmtTx(txs [][]byte) []cmttypes.Tx {
-	cmtTxs := make([]cmttypes.Tx, len(txs))
-	for i, tx := range txs {
-		cmtTxs[i] = tx
-	}
-	return cmtTxs
-}
-
 // except [][]byte so that module that use this for testing dont have to import comet directly
 func (m MockCometRPC) WithTxs(txs [][]byte) MockCometRPC {
 	cmtTxs := make([]cmttypes.Tx, len(txs))

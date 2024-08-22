@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"sync"
 	"testing"
 	"time"
 
@@ -383,14 +384,28 @@ func (s *MempoolTestSuite) TestIterator() {
 			}
 
 			// iterate through txs
+			wg := new(sync.WaitGroup)
+			wg.Add(1)
+			go func() {
+				for j := len(tt.txs); j < len(tt.txs)+100; j++ {
+					tx := testTx{id: j, priority: int64(rand.Intn(100)), nonce: uint64(j), address: sa}
+					c := ctx.WithPriority(tx.priority)
+					_ = pool.Insert(c, tx)
+				}
+				wg.Done()
+			}()
+
 			iterator := pool.Select(ctx, nil)
 			for iterator != nil {
 				tx := iterator.Tx().(testTx)
-				require.Equal(t, tt.txs[tx.id].p, int(tx.priority))
-				require.Equal(t, tt.txs[tx.id].n, int(tx.nonce))
-				require.Equal(t, tt.txs[tx.id].a, tx.address)
+				if tx.id < len(tt.txs) {
+					require.Equal(t, tt.txs[tx.id].p, int(tx.priority))
+					require.Equal(t, tt.txs[tx.id].n, int(tx.nonce))
+					require.Equal(t, tt.txs[tx.id].a, tx.address)
+				}
 				iterator = iterator.Next()
 			}
+			wg.Wait()
 		})
 	}
 }

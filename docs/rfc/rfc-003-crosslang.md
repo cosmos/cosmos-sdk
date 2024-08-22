@@ -57,9 +57,13 @@ so that it can be represented as a 128-byte array with the first byte indicating
 
 ### Account Handler
 
-The code that implements an account's message handling is known as the **account handler**.
+The code that implements an account's message handling is known as the **account handler**. The handler receives a **message request** and can return some **message response** or an error.
 
-When a **message** is sent to an **account handler**, it will receive a **message request** which contains:
+The handler for a specific message within an **account handler** is known as a **message handler**.
+
+### Message Request
+
+A **message request** contains:
 * the **address** of the **account** (its own address)
 * the **address** of the account sending the message (the **caller**), which will be empty if the message is a query
 * the **message name**
@@ -68,11 +72,7 @@ When a **message** is sent to an **account handler**, it will receive a **messag
 * a 32-byte **context token**
 * a `uint64` **gas limit**
 
-The handler can then execute some code and return a response or an error. Details on message responses and errors as well as the packet format for **message requests** will be described later.
-
 **Message requests** can also be prepared by **account handlers** to send **messages** to other accounts.
-
-The handler for a specific message within an **account handler** is known as a **message handler**.
 
 ### Modules and Modules Messages
 

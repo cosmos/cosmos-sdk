@@ -31,6 +31,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#21377](https://github.com/cosmos/cosmos-sdk/pull/21377) Simulation API breaking changes:
+  * `SimulateMsgGrantAllowance` and `SimulateMsgRevokeAllowance` no longer require a `ProtoCodec` parameter.
+  * `WeightedOperations` functions no longer require `ProtoCodec`, `JSONCodec`, or `address.Codec` parameters.
 * [#20529](https://github.com/cosmos/cosmos-sdk/pull/20529) `Accept` on the `FeeAllowanceI` interface now expects the feegrant environment in the `context.Context`.
 * [#19450](https://github.com/cosmos/cosmos-sdk/pull/19450) Migrate module to use `appmodule.Environment` instead of passing individual services.
 

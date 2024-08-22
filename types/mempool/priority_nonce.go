@@ -277,6 +277,7 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 
 func (i *PriorityNonceIterator[C]) iteratePriority() Iterator {
 	// beginning of priority iteration
+	i.mempool.mtx.Lock()
 	if i.priorityNode == nil {
 		i.priorityNode = i.mempool.priorityIndex.Front()
 	} else {
@@ -285,12 +286,15 @@ func (i *PriorityNonceIterator[C]) iteratePriority() Iterator {
 
 	// end of priority iteration
 	if i.priorityNode == nil {
+		i.mempool.mtx.Unlock()
 		return nil
 	}
 
 	i.sender = i.priorityNode.Key().(txMeta[C]).sender
 
 	nextPriorityNode := i.priorityNode.Next()
+	i.mempool.mtx.Unlock()
+
 	if nextPriorityNode != nil {
 		i.nextPriority = nextPriorityNode.Key().(txMeta[C]).priority
 	} else {
@@ -321,15 +325,22 @@ func (i *PriorityNonceIterator[C]) Next() Iterator {
 
 	key := cursor.Key().(txMeta[C])
 
+	i.mempool.mtx.Lock()
+	weight := i.mempool.scores[txMeta[C]{nonce: key.nonce, sender: key.sender}].weight
+	i.mempool.mtx.Unlock()
+
 	// We've reached a transaction with a priority lower than the next highest
 	// priority in the pool.
 	if i.mempool.cfg.TxPriority.Compare(key.priority, i.nextPriority) < 0 {
 		return i.iteratePriority()
-	} else if i.priorityNode.Next() != nil && i.mempool.cfg.TxPriority.Compare(key.priority, i.nextPriority) == 0 {
+	}
+	i.mempool.mtx.Lock()
+	nextElem := i.priorityNode.Next()
+	i.mempool.mtx.Unlock()
+	if nextElem != nil && i.mempool.cfg.TxPriority.Compare(key.priority, i.nextPriority) == 0 {
 		// Weight is incorporated into the priority index key only (not sender index)
 		// so we must fetch it here from the scores map.
-		weight := i.mempool.scores[txMeta[C]{nonce: key.nonce, sender: key.sender}].weight
-		if i.mempool.cfg.TxPriority.Compare(weight, i.priorityNode.Next().Key().(txMeta[C]).weight) < 0 {
+		if i.mempool.cfg.TxPriority.Compare(weight, nextElem.Key().(txMeta[C]).weight) < 0 {
 			return i.iteratePriority()
 		}
 	}
@@ -352,13 +363,13 @@ func (i *PriorityNonceIterator[C]) Tx() sdk.Tx {
 // NOTE: It is not safe to use this iterator while removing transactions from
 // the underlying mempool.
 func (mp *PriorityNonceMempool[C]) Select(_ context.Context, _ [][]byte) Iterator {
-	mp.mtx.Lock()
-	defer mp.mtx.Unlock()
 	if mp.priorityIndex.Len() == 0 {
 		return nil
 	}
 
+	mp.mtx.Lock()
 	mp.reorderPriorityTies()
+	mp.mtx.Unlock()
 
 	iterator := &PriorityNonceIterator[C]{
 		mempool:       mp,

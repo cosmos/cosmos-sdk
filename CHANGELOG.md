@@ -264,6 +264,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (baseapp) [#20107](https://github.com/cosmos/cosmos-sdk/pull/20107) Avoid header height overwrite block height.
 * (cli) [#20020](https://github.com/cosmos/cosmos-sdk/pull/20020) Make bootstrap-state command support both new and legacy genesis format.
 * (testutil/sims) [#20151](https://github.com/cosmos/cosmos-sdk/pull/20151) Set all signatures and don't overwrite the previous one in `GenSignedMockTx`.
+* (mempool) [#21379](https://github.com/cosmos/cosmos-sdk/pull/21379) Avoid concurrent map read and map write in priority nonce mempool.
 
 ## [v0.50.6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.6) - 2024-04-22
 

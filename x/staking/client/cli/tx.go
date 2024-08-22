@@ -21,7 +21,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 )
 
 // default values
@@ -134,9 +133,9 @@ func NewEditValidatorCmd() *cobra.Command {
 			details, _ := cmd.Flags().GetString(FlagDetails)
 			metadataString, _ := cmd.Flags().GetString(FlagMetadata)
 
-			var metadata map[string]*gogoprotoany.Any
+			var metadata *types.Metadata
 			if metadataString != "" {
-				if err := json.Unmarshal([]byte(metadataString), &metadata); err != nil {
+				if err := json.Unmarshal([]byte(metadataString), metadata); err != nil {
 					return err
 				}
 			}
@@ -276,7 +275,7 @@ type TxCreateValidatorConfig struct {
 	SecurityContact string
 	Details         string
 	Identity        string
-	Metadata        map[string]*gogoprotoany.Any
+	Metadata        *types.Metadata
 }
 
 func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, chainID string, valPubKey cryptotypes.PubKey) (TxCreateValidatorConfig, error) {
@@ -320,9 +319,11 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 	if err != nil {
 		return c, err
 	}
-	var metadata map[string]*gogoprotoany.Any
-	if err := json.Unmarshal([]byte(metadataString), &metadata); err != nil {
-		return c, err
+	var metadata *types.Metadata
+	if metadataString != "" {
+		if err := json.Unmarshal([]byte(metadataString), metadata); err != nil {
+			return c, err
+		}
 	}
 
 	c.Amount, err = flagSet.GetString(FlagAmount)

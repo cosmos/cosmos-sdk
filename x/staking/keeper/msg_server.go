@@ -173,7 +173,7 @@ func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidato
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
 
-	if msg.Description.IsEmpty() {
+	if msg.Description == (types.Description{}) {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
 

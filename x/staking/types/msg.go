@@ -64,7 +64,7 @@ func (msg MsgCreateValidator) Validate(ac address.Codec) error {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid delegation amount")
 	}
 
-	if msg.Description.IsEmpty() {
+	if msg.Description == (Description{}) {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
 

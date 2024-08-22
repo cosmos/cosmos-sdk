@@ -5,8 +5,6 @@ import (
 	"errors"
 	"os"
 
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
-
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/types"
@@ -26,25 +24,25 @@ type validator struct {
 	Website           string
 	Security          string
 	Details           string
-	Metadata          map[string]*gogoprotoany.Any
+	Metadata          *types.Metadata
 	CommissionRates   types.CommissionRates
 	MinSelfDelegation math.Int
 }
 
 func parseAndValidateValidatorJSON(cdc codec.Codec, path string) (validator, error) {
 	type internalVal struct {
-		Amount              string                       `json:"amount"`
-		PubKey              json.RawMessage              `json:"pubkey"`
-		Moniker             string                       `json:"moniker"`
-		Identity            string                       `json:"identity,omitempty"`
-		Website             string                       `json:"website,omitempty"`
-		Security            string                       `json:"security,omitempty"`
-		Details             string                       `json:"details,omitempty"`
-		Metadata            map[string]*gogoprotoany.Any `json:"metadata,omitempty"`
-		CommissionRate      string                       `json:"commission-rate"`
-		CommissionMaxRate   string                       `json:"commission-max-rate"`
-		CommissionMaxChange string                       `json:"commission-max-change-rate"`
-		MinSelfDelegation   string                       `json:"min-self-delegation"`
+		Amount              string          `json:"amount"`
+		PubKey              json.RawMessage `json:"pubkey"`
+		Moniker             string          `json:"moniker"`
+		Identity            string          `json:"identity,omitempty"`
+		Website             string          `json:"website,omitempty"`
+		Security            string          `json:"security,omitempty"`
+		Details             string          `json:"details,omitempty"`
+		Metadata            *types.Metadata `json:"metadata,omitempty"`
+		CommissionRate      string          `json:"commission-rate"`
+		CommissionMaxRate   string          `json:"commission-max-rate"`
+		CommissionMaxChange string          `json:"commission-max-change-rate"`
+		MinSelfDelegation   string          `json:"min-self-delegation"`
 	}
 
 	contents, err := os.ReadFile(path)

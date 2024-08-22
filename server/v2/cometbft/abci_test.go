@@ -3,7 +3,6 @@ package cometbft
 import (
 	"context"
 	"crypto/sha256"
-	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -42,13 +41,13 @@ var (
 	mockTx = mock.Tx{
 		Sender:   []byte("sender"),
 		Msg:      &gogotypes.BoolValue{Value: true},
-		GasLimit: 100_000,                                 
+		GasLimit: 100_000,
 	}
 
 	invalidMockTx = mock.Tx{
 		Sender:   []byte("sender"),
 		Msg:      &gogotypes.BoolValue{Value: true},
-		GasLimit: 0,                                 
+		GasLimit: 0,
 	}
 )
 
@@ -210,7 +209,6 @@ func TestConsensus_FinalizeBlock_Invalid_Height(t *testing.T) {
 		Height: 3,
 	})
 	require.Error(t, err)
-	fmt.Println(err)
 }
 
 func TestConsensus_FinalizeBlock_NoTxs(t *testing.T) {
@@ -290,7 +288,6 @@ func TestConsensus_FinalizeBlock_MultiTxs_OutOfGas(t *testing.T) {
 			Hash:   sum[:],
 			Txs:    [][]byte{invalidMockTx.Bytes()},
 		})
-		fmt.Println("res", res, err)
 		require.NoError(t, err)
 		require.NotEqual(t, res.TxResults[0].Code, 0)
 		require.Contains(t, res.TxResults[0].Log, "out of gas")
@@ -511,9 +508,8 @@ func TestConsensus_VerifyVoteExtension(t *testing.T) {
 	c.verifyVoteExt = DefaultServerOptions[mock.Tx]().VerifyVoteExtensionHandler
 	res, err := c.VerifyVoteExtension(context.Background(), &abciproto.VerifyVoteExtensionRequest{
 		Height: 2,
-		Hash: []byte("test"),
+		Hash:   []byte("test"),
 	})
-	fmt.Println("res", res, err)
 	require.NoError(t, err)
 	require.Equal(t, res.Status, abciproto.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT)
 }
@@ -537,7 +533,7 @@ func TestConsensus_PrepareProposal(t *testing.T) {
 	c.prepareProposalHandler = DefaultServerOptions[mock.Tx]().PrepareProposalHandler
 	_, err = c.PrepareProposal(context.Background(), &abciproto.PrepareProposalRequest{
 		Height: 1,
-		Txs: [][]byte{mockTx.Bytes()},
+		Txs:    [][]byte{mockTx.Bytes()},
 	})
 	require.NoError(t, err)
 }
@@ -557,12 +553,12 @@ func TestConsensus_PrepareProposal_With_Handler_NoOpMempool(t *testing.T) {
 	})
 
 	c.prepareProposalHandler = handlers.NewDefaultProposalHandler(c.mempool).PrepareHandler()
-	
+
 	// zero MaxTxBytes
 	res, err := c.PrepareProposal(context.Background(), &abciproto.PrepareProposalRequest{
-		Height: 1,
+		Height:     1,
 		MaxTxBytes: 0,
-		Txs: [][]byte{mockTx.Bytes()},
+		Txs:        [][]byte{mockTx.Bytes()},
 	})
 	require.NoError(t, err)
 	require.Equal(t, len(res.Txs), 0)
@@ -570,18 +566,18 @@ func TestConsensus_PrepareProposal_With_Handler_NoOpMempool(t *testing.T) {
 	// have tx exeed MaxTxBytes
 	// each mock tx has 128 bytes, should select 2 txs
 	res, err = c.PrepareProposal(context.Background(), &abciproto.PrepareProposalRequest{
-		Height: 1,
+		Height:     1,
 		MaxTxBytes: 300,
-		Txs: [][]byte{mockTx.Bytes(), mockTx.Bytes(), mockTx.Bytes()},
+		Txs:        [][]byte{mockTx.Bytes(), mockTx.Bytes(), mockTx.Bytes()},
 	})
 	require.NoError(t, err)
 	require.Equal(t, len(res.Txs), 2)
 
 	// reach MaxTxBytes
 	res, err = c.PrepareProposal(context.Background(), &abciproto.PrepareProposalRequest{
-		Height: 1,
+		Height:     1,
 		MaxTxBytes: 256,
-		Txs: [][]byte{mockTx.Bytes(), mockTx.Bytes()},
+		Txs:        [][]byte{mockTx.Bytes(), mockTx.Bytes()},
 	})
 	require.NoError(t, err)
 	require.Equal(t, len(res.Txs), 2)
@@ -589,27 +585,27 @@ func TestConsensus_PrepareProposal_With_Handler_NoOpMempool(t *testing.T) {
 	// Over gas, under MaxTxBytes
 	// 300_000 gas limit, should only take 3 txs
 	res, err = c.PrepareProposal(context.Background(), &abciproto.PrepareProposalRequest{
-		Height: 1,
+		Height:     1,
 		MaxTxBytes: 1000,
-		Txs: [][]byte{mockTx.Bytes(), mockTx.Bytes(), mockTx.Bytes(), mockTx.Bytes()},
+		Txs:        [][]byte{mockTx.Bytes(), mockTx.Bytes(), mockTx.Bytes(), mockTx.Bytes()},
 	})
 	require.NoError(t, err)
 	require.Equal(t, len(res.Txs), 3)
 
 	// Reach max gas
 	res, err = c.PrepareProposal(context.Background(), &abciproto.PrepareProposalRequest{
-		Height: 1,
+		Height:     1,
 		MaxTxBytes: 1000,
-		Txs: [][]byte{mockTx.Bytes(), mockTx.Bytes(), mockTx.Bytes()},
+		Txs:        [][]byte{mockTx.Bytes(), mockTx.Bytes(), mockTx.Bytes()},
 	})
 	require.NoError(t, err)
 	require.Equal(t, len(res.Txs), 3)
 
 	// have a bad encoding tx
 	res, err = c.PrepareProposal(context.Background(), &abciproto.PrepareProposalRequest{
-		Height: 1,
+		Height:     1,
 		MaxTxBytes: 1000,
-		Txs: [][]byte{mockTx.Bytes(), append(mockTx.Bytes(), []byte("bad")...), mockTx.Bytes()},
+		Txs:        [][]byte{mockTx.Bytes(), append(mockTx.Bytes(), []byte("bad")...), mockTx.Bytes()},
 	})
 	require.NoError(t, err)
 	require.Equal(t, len(res.Txs), 2)
@@ -634,16 +630,15 @@ func TestConsensus_ProcessProposal(t *testing.T) {
 	c.processProposalHandler = DefaultServerOptions[mock.Tx]().ProcessProposalHandler
 	_, err = c.ProcessProposal(context.Background(), &abciproto.ProcessProposalRequest{
 		Height: 1,
-		Txs: [][]byte{mockTx.Bytes()},
+		Txs:    [][]byte{mockTx.Bytes()},
 	})
 	require.NoError(t, err)
 
 	// have bad encode tx
 	_, err = c.ProcessProposal(context.Background(), &abciproto.ProcessProposalRequest{
 		Height: 1,
-		Txs: [][]byte{mockTx.Bytes(), append(mockTx.Bytes(), []byte("bad")...), mockTx.Bytes()},
+		Txs:    [][]byte{mockTx.Bytes(), append(mockTx.Bytes(), []byte("bad")...), mockTx.Bytes()},
 	})
-	fmt.Println("err bad encode", err)
 	require.Error(t, err)
 }
 
@@ -662,7 +657,7 @@ func TestConsensus_ProcessProposal_With_Handler_OutOfGas(t *testing.T) {
 	})
 	res, err := c.ProcessProposal(context.Background(), &abciproto.ProcessProposalRequest{
 		Height: 1,
-		Txs: [][]byte{invalidMockTx.Bytes(), invalidMockTx.Bytes(), invalidMockTx.Bytes()},
+		Txs:    [][]byte{invalidMockTx.Bytes(), invalidMockTx.Bytes(), invalidMockTx.Bytes()},
 	})
 	require.NoError(t, err)
 	require.Equal(t, res.Status, abciproto.PROCESS_PROPOSAL_STATUS_REJECT)
@@ -687,7 +682,7 @@ func TestConsensus_ProcessProposal_With_Handler(t *testing.T) {
 	// exeed max gas
 	res, err := c.ProcessProposal(context.Background(), &abciproto.ProcessProposalRequest{
 		Height: 1,
-		Txs: [][]byte{mockTx.Bytes(), mockTx.Bytes(), mockTx.Bytes(), mockTx.Bytes()},
+		Txs:    [][]byte{mockTx.Bytes(), mockTx.Bytes(), mockTx.Bytes(), mockTx.Bytes()},
 	})
 	require.NoError(t, err)
 	require.Equal(t, res.Status, abciproto.PROCESS_PROPOSAL_STATUS_REJECT)
@@ -696,10 +691,108 @@ func TestConsensus_ProcessProposal_With_Handler(t *testing.T) {
 	// should remove that tx and accept
 	res, err = c.ProcessProposal(context.Background(), &abciproto.ProcessProposalRequest{
 		Height: 1,
-		Txs: [][]byte{mockTx.Bytes(), append(mockTx.Bytes(), []byte("bad")...), mockTx.Bytes(), mockTx.Bytes()},
+		Txs:    [][]byte{mockTx.Bytes(), append(mockTx.Bytes(), []byte("bad")...), mockTx.Bytes(), mockTx.Bytes()},
 	})
-	fmt.Println(res, err)
 	require.Equal(t, res.Status, abciproto.PROCESS_PROPOSAL_STATUS_ACCEPT)
+}
+
+func TestConsensus_Info(t *testing.T) {
+	c, s := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
+
+	addQueryHandlerToSTF(t, s, func(ctx context.Context, q *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error) {
+		cParams := &v1.ConsensusParams{
+			Block: &v1.BlockParams{
+				MaxGas: 300_000,
+			},
+			Version: &v1.VersionParams{
+				App: 1,
+			},
+		}
+		return &consensustypes.QueryParamsResponse{
+			Params: cParams,
+		}, nil
+	})
+
+	// Version 0
+	res, err := c.Info(context.Background(), &abciproto.InfoRequest{})
+	require.NoError(t, err)
+	require.Equal(t, res.LastBlockHeight, int64(0))
+
+	// Commit store to version 1
+	_, err = c.InitChain(context.Background(), &abciproto.InitChainRequest{
+		Time:          time.Now(),
+		ChainId:       "test",
+		InitialHeight: 1,
+	})
+	require.NoError(t, err)
+
+	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
+		Time:   time.Now(),
+		Height: 1,
+	})
+	require.NoError(t, err)
+
+	res, err = c.Info(context.Background(), &abciproto.InfoRequest{})
+	require.NoError(t, err)
+	require.Equal(t, res.LastBlockHeight, int64(1))
+}
+
+// TODO:
+//   - GRPC request
+//   - app request
+//   - p2p request
+func TestConsensus_Query(t *testing.T) {
+	c, s := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
+	addQueryHandlerToSTF(t, s, func(ctx context.Context, q *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error) {
+		cParams := DefaulConsensusParams
+		return &consensustypes.QueryParamsResponse{
+			Params: cParams,
+		}, nil
+	})
+	addMsgHandlerToSTF(t, s, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
+		kvSet(t, ctx, "exec")
+		return nil, nil
+	})
+
+	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
+		Time:          time.Now(),
+		ChainId:       "test",
+		InitialHeight: 1,
+	})
+	require.NoError(t, err)
+
+	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
+		Time:   time.Now(),
+		Height: 1,
+		Txs:    [][]byte{mockTx.Bytes()},
+	})
+	require.NoError(t, err)
+
+	stateStorageHas(t, c.store, "init-chain", 1)
+
+	// empty request
+	res, err := c.Query(context.Background(), &abciproto.QueryRequest{})
+	require.NoError(t, err)
+	require.Equal(t, res.Code, uint32(1))
+	require.Contains(t, res.Log, "no query path provided")
+
+	// Query store
+	res, err = c.Query(context.Background(), &abciproto.QueryRequest{
+		Path:   "store/cookies/",
+		Data:   []byte("init-chain"),
+		Height: 1,
+	})
+	require.NoError(t, err)
+	require.Equal(t, string(res.Value), "init-chain")
+
+	// Query store with no value
+	res, err = c.Query(context.Background(), &abciproto.QueryRequest{
+		Path:   "store/cookies/",
+		Data:   []byte("exec"),
+		Height: 1,
+	})
+	require.NoError(t, err)
+	require.Equal(t, res.Value, []byte(nil))
 }
 
 func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.Tx]) (*Consensus[mock.Tx], *stf.STF[mock.Tx]) {

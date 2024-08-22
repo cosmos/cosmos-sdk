@@ -23,8 +23,7 @@ type MockStore struct {
 }
 
 func NewMockStorage(logger log.Logger, dir string) storev2.VersionedDatabase {
-	storageDB, err := sqlite.New(dir)
-	fmt.Println("storageDB", storageDB, err)
+	storageDB, _ := sqlite.New(dir)
 	ss := storage.NewStorageStore(storageDB, logger)
 	return ss
 }

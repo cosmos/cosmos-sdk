@@ -19,7 +19,7 @@ func TestGetExecutionCtxFromContext(t *testing.T) {
 
 	t.Run("context value of type *executionContext", func(t *testing.T) {
 		ec := &executionContext{}
-		ctx := context.WithValue(context.Background(), theExecutionContext, ec)
+		ctx := context.WithValue(context.Background(), executionContextKey, ec)
 		result, err := getExecutionCtxFromContext(ctx)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)

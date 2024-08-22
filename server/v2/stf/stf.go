@@ -22,7 +22,9 @@ import (
 // Identity defines STF's bytes identity and it's used by STF to store things in its own state.
 var Identity = []byte("stf")
 
-var theExecutionContext = struct{}{}
+type eContextKey struct{}
+
+var executionContextKey = eContextKey{}
 
 // STF is a struct that manages the state transition component of the app.
 type STF[T transaction.Tx] struct {
@@ -532,7 +534,7 @@ func (e *executionContext) setGasLimit(limit uint64) {
 }
 
 func (e *executionContext) Value(key any) any {
-	if key == theExecutionContext {
+	if key == executionContextKey {
 		return e
 	}
 

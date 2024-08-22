@@ -11,7 +11,7 @@ func getExecutionCtxFromContext(ctx context.Context) (*executionContext, error) 
 		return ec, nil
 	}
 
-	value, ok := ctx.Value(theExecutionContext).(*executionContext)
+	value, ok := ctx.Value(executionContextKey).(*executionContext)
 	if ok {
 		return value, nil
 	}

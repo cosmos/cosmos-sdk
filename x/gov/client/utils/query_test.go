@@ -1,12 +1,9 @@
 package utils_test
 
 import (
-	"context"
+	"fmt"
 	"testing"
 
-	"github.com/cometbft/cometbft/rpc/client/mock"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
@@ -16,43 +13,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
-
-type TxSearchMock struct {
-	txConfig client.TxConfig
-	mock.Client
-	txs []cmttypes.Tx
-}
-
-func (mock TxSearchMock) TxSearch(ctx context.Context, query string, prove bool, page, perPage *int, orderBy string) (*coretypes.ResultTxSearch, error) {
-	if page == nil {
-		*page = 0
-	}
-
-	if perPage == nil {
-		*perPage = 0
-	}
-
-	start, end := client.Paginate(len(mock.txs), *page, *perPage, 100)
-	if start < 0 || end < 0 {
-		// nil result with nil error crashes utils.QueryTxsByEvents
-		return &coretypes.ResultTxSearch{}, nil
-	}
-
-	txs := mock.txs[start:end]
-	rst := &coretypes.ResultTxSearch{Txs: make([]*coretypes.ResultTx, len(txs)), TotalCount: len(txs)}
-	for i := range txs {
-		rst.Txs[i] = &coretypes.ResultTx{Tx: txs[i]}
-	}
-	return rst, nil
-}
-
-func (mock TxSearchMock) Block(ctx context.Context, height *int64) (*coretypes.ResultBlock, error) {
-	// any non nil Block needs to be returned. used to get time value
-	return &coretypes.ResultBlock{Block: &cmttypes.Block{}}, nil
-}
 
 func TestGetPaginatedVotes(t *testing.T) {
 	cdcOpts := codectestutil.CodecOptions{}
@@ -149,11 +113,10 @@ func TestGetPaginatedVotes(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.description, func(t *testing.T) {
-			marshaled := make([]cmttypes.Tx, len(tc.msgs))
-			cli := TxSearchMock{txs: marshaled, txConfig: encCfg.TxConfig}
+			marshaled := make([][]byte, len(tc.msgs))
+			fmt.Println(marshaled)
 			clientCtx := client.Context{}.
 				WithLegacyAmino(encCfg.Amino).
-				WithClient(cli).
 				WithTxConfig(encCfg.TxConfig)
 
 			for i := range tc.msgs {
@@ -165,6 +128,9 @@ func TestGetPaginatedVotes(t *testing.T) {
 				require.NoError(t, err)
 				marshaled[i] = tx
 			}
+
+			cli := clitestutil.MockCometRPC{}.WithTxs(marshaled).WithTxConfig(encCfg.TxConfig)
+			clientCtx = clientCtx.WithClient(cli)
 
 			params := utils.QueryProposalVotesParams{0, tc.page, tc.limit}
 			votesData, err := utils.QueryVotesByTxQuery(clientCtx, params)

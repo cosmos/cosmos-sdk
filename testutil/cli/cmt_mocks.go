@@ -18,6 +18,8 @@ var _ client.CometRPC = (*MockCometRPC)(nil)
 type MockCometRPC struct {
 	rpcclientmock.Client
 
+	txConfig      client.TxConfig
+	txs           []cmttypes.Tx
 	responseQuery abci.QueryResponse
 }
 
@@ -35,8 +37,58 @@ func NewMockCometRPCWithValue(bz []byte) MockCometRPC {
 	}}
 }
 
+func CreateCmtTx(txs [][]byte) []cmttypes.Tx {
+	cmtTxs := make([]cmttypes.Tx, len(txs))
+	for i, tx := range txs {
+		cmtTxs[i] = tx
+	}
+	return cmtTxs
+}
+
+// except [][]byte so that module that use this for testing dont have to import comet directly
+func (m MockCometRPC) WithTxs(txs [][]byte) MockCometRPC {
+	cmtTxs := make([]cmttypes.Tx, len(txs))
+	for i, tx := range txs {
+		cmtTxs[i] = tx
+	}
+	m.txs = cmtTxs
+	return m
+}
+
+func (m MockCometRPC) WithTxConfig(cfg client.TxConfig) MockCometRPC {
+	m.txConfig = cfg
+	return m
+}
+
 func (MockCometRPC) BroadcastTxSync(context.Context, cmttypes.Tx) (*coretypes.ResultBroadcastTx, error) {
 	return &coretypes.ResultBroadcastTx{Code: 0}, nil
+}
+
+func (mock MockCometRPC) TxSearch(ctx context.Context, query string, prove bool, page, perPage *int, orderBy string) (*coretypes.ResultTxSearch, error) {
+	if page == nil {
+		*page = 0
+	}
+
+	if perPage == nil {
+		*perPage = 0
+	}
+
+	start, end := client.Paginate(len(mock.txs), *page, *perPage, 100)
+	if start < 0 || end < 0 {
+		// nil result with nil error crashes utils.QueryTxsByEvents
+		return &coretypes.ResultTxSearch{}, nil
+	}
+
+	txs := mock.txs[start:end]
+	rst := &coretypes.ResultTxSearch{Txs: make([]*coretypes.ResultTx, len(txs)), TotalCount: len(txs)}
+	for i := range txs {
+		rst.Txs[i] = &coretypes.ResultTx{Tx: txs[i]}
+	}
+	return rst, nil
+}
+
+func (mock MockCometRPC) Block(ctx context.Context, height *int64) (*coretypes.ResultBlock, error) {
+	return &coretypes.ResultBlock{Block: &cmttypes.Block{}}, nil
 }
 
 func (m MockCometRPC) ABCIQueryWithOptions(

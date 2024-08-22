@@ -79,13 +79,14 @@ message Description {
   // details define other optional details.
   string details = 5;
   // metadata defines extra information about the validator.
-  Metadata metadata = 6;
+  Metadata metadata = 6 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // Metadata defines extra information about the validator.
 message Metadata {
   option (gogoproto.equal) = true;
 
+  // profile_pic_uri defines a link to the validator profile picture.
   string profile_pic_uri = 1;
 }
 

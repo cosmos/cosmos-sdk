@@ -13,7 +13,7 @@ The transactions are checked and can be rejected at two points:
 * In `CircuitBreakerDecorator` [ante handler](https://docs.cosmos.network/main/learn/advanced/baseapp#antehandler):
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/circuit/ante/circuit.go#L26-L44
+https://github.com/cosmos/cosmos-sdk/blob/x/circuit/v0.1.0/x/circuit/ante/circuit.go#L27-L41
 ``` 
 
 * With a [message router check](https://docs.cosmos.network/main/learn/advanced/baseapp#msg-service-router):

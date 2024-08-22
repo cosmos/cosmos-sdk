@@ -226,3 +226,38 @@ func TestConcurrentSkipList_Remove(t *testing.T) {
 	require.Equal(t, 1, concurrentList.priorityCounts[key2.priority])
 	require.Equal(t, score[int]{Priority: 20, Weight: 3}, concurrentList.scores[scoreKey{nonce: 2, sender: "sender2"}])
 }
+
+func TestConcurrentPriorityIndex_Concurrent(t *testing.T) {
+	index := newConcurrentPriorityIndex[int](skiplist.LessThanFunc(func(a, b any) int {
+		return skiplist.Uint64.Compare(b.(txMeta[int]).nonce, a.(txMeta[int]).nonce)
+	}), true)
+
+	total := 10
+	for i := 0; i < total; i++ {
+		index.Set(txMeta[int]{nonce: uint64(i)}, i)
+	}
+
+	wg := new(sync.WaitGroup)
+	wg.Add(2)
+	go func() {
+		for i := 0; i < total; i++ {
+			index.Set(txMeta[int]{nonce: uint64(i)}, i)
+		}
+		wg.Done()
+	}()
+
+	go func() {
+		for i := 0; i < total; i++ {
+			index.Remove(txMeta[int]{nonce: uint64(i)})
+		}
+		wg.Done()
+	}()
+
+	for i := 0; i < total; i++ {
+		ele := index.Get(txMeta[int]{nonce: uint64(i)})
+		if ele != nil {
+			require.Equal(t, i, ele.Value)
+		}
+	}
+	wg.Wait()
+}

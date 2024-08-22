@@ -11,6 +11,7 @@ import (
 type ConcurrentListElement struct {
 	*skiplist.Element
 	mutex *sync.RWMutex
+	Value interface{}
 }
 
 // Next safely retrieves the next node in the priority index.
@@ -25,6 +26,7 @@ func (n *ConcurrentListElement) Next() *ConcurrentListElement {
 	return &ConcurrentListElement{
 		Element: ele,
 		mutex:   n.mutex,
+		Value:   ele.Value,
 	}
 }
 
@@ -83,6 +85,7 @@ func (i *ConcurrentSkipList[C]) Front() *ConcurrentListElement {
 	return &ConcurrentListElement{
 		Element: ele,
 		mutex:   &i.mutex,
+		Value:   ele.Value,
 	}
 }
 
@@ -138,6 +141,7 @@ func (i *ConcurrentSkipList[C]) Get(key txMeta[C]) *ConcurrentListElement {
 	return &ConcurrentListElement{
 		Element: ele,
 		mutex:   &i.mutex,
+		Value:   ele.Value,
 	}
 }
 
@@ -165,6 +169,7 @@ func (i *ConcurrentSkipList[C]) Set(key txMeta[C], value any) *ConcurrentListEle
 	return &ConcurrentListElement{
 		Element: ele,
 		mutex:   &i.mutex,
+		Value:   ele.Value,
 	}
 }
 

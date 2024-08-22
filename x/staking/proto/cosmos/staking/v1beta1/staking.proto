@@ -78,9 +78,15 @@ message Description {
   string security_contact = 4;
   // details define other optional details.
   string details = 5;
-  // metadata is a map of string keys to any values that can be used to store additional information about the
-  // validator.
-  map<string, google.protobuf.Any> metadata = 6;
+  // metadata defines extra information about the validator.
+  Metadata metadata = 6;
+}
+
+// Metadata defines extra information about the validator.
+message Metadata {
+  option (gogoproto.equal) = true;
+
+  string profile_pic_uri = 1;
 }
 
 // Validator defines a validator, together with the total amount of the

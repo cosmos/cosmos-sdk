@@ -34,7 +34,6 @@ however, the essence should remain more or less the same in most coding environm
 An **account** is defined as having:
 * a unique **address**
 * an **account handler** which is some code which can process **messages** and send **messages** to other **accounts**
-* an **owner** address which is able to migrate the account handler, destroy the account or transfer that capability
 
 ### Address
 
@@ -60,7 +59,6 @@ The code that implements an account's message handling is known as the **account
 When a **message** is sent to an **account handler**, it will receive a **message request** which contains:
 * the **address** of the **account** (its own address)
 * the **address** of the account sending the message (the caller), which will be empty if the message is a query
-* the **address** of the account's **owner**
 * the **message name**
 * the **message data**
 * a 32-byte **state token**
@@ -103,9 +101,8 @@ Every **account handler** is expected to provide metadata which provides:
 
 **Accounts** can be created, destroyed and migrated to new **account handlers**.
 
-**Account handlers** can define code for the following special **message name**'s:
-* `on_create`: called when an account is created with **message data** containing arbitrary initialization data
-* `on_destroy`: called when an account is destroyed with **message data** containing arbitrary destruction data
+**Account handlers** can define message handlers for the following special message name's:
+* `on_create`: called when an account is created with message data containing arbitrary initialization data.
 * `on_migrate`: called when an account is migrated to a new code handler. Such handlers receive structured **message data** specifying the old code handler so that the account can perform migration operations or return an error if migration is not possible.
 
 ### Hypervisor and Virtual Machines
@@ -173,17 +170,16 @@ and they are not passed at all to `pure` methods.
 ### Management of Account Lifecycle with the Hypervisor
 
 In order to manage **accounts** and their mapping to **account handlers**, the **hypervisor** contains stateful mappings for:
-* **account address** to **handler id** and **owner**
+* **account address** to **handler id**
 * **module name** to module **account address** and **module config**
 * **message name** to **account address** for **module messages**
 
 The **hypervisor** as a first-class module itself handles the following special **module messages** to manage account
 creation, destruction, and migration:
-* `create(handler_id, init_data, address?, owner?)`: creates a new account in the specified code environment with the specified handler id and optional pre-defined address (if not provided, a new address is generated). The `on_create` message is called if it is implemented by the account. If the owner address is omitted, it defaults to the account itself.
-* `destroy(address, destroy_data)`: deletes the account with the specified address and calls the `on_destroy` message if it is implemented by the account. `destroy` can only be called by the account owner.
-* `migrate(address, new_handler_id)`: migrates the account with the specified address to the new account handler. The `on_migrate` message must be implemented by the new code and must not return an error for migration to succeed. `migrate` can only be called by the account owner.
-* `force_migrate(address, new_handler_id, init_data, destroy_data)`: this can be used when no `on_migrate` handler can perform a proper migration to the new account handler. In this case, `on_destroy` will be called on the old account handler, the account state will be cleared, and `on_create` will be called on the new code. This is a destructive operation and should be used with caution.
-* `transfer(address, new_owner?)`: changes the account owner to the new owner. If `new_owner` is empty then the account has no owner and can't be migrated, transferred, or destroyed. This can only be called by the current owner.
+* `create(handler_id, init_data, address?)`: creates a new account in the specified code environment with the specified handler id and optional pre-defined address (if not provided, a new address is generated). The `on_create` message is called if it is implemented by the account.
+* `destroy(address)`: deletes the account with the specified address. `destroy` can only be called by the account itself.
+* `migrate(address, new_handler_id)`: migrates the account with the specified address to the new account handler. The `on_migrate` message must be implemented by the new code and must not return an error for migration to succeed. `migrate` can only be called by the account itself.
+* `force_migrate(address, new_handler_id, init_data)`: this can be used when no `on_migrate` handler can perform a proper migration to the new account handler. In this case, the old account state will be destroyed, and `on_create` will be called on the new code. This is a destructive operation and should be used with caution.
 
 The **hypervisor** will call the **state handler**'s `create`, `migrate`,
 and `destroy` methods as needed when accounts are created, migrated, or destroyed.

@@ -58,8 +58,8 @@ func GetTxCmd() *cobra.Command {
 // but it will be removed in future versions.
 func NewCmdExecAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "legacy-exec [tx-json-file] --from [grantee]",
-		Short:   "Execute tx on behalf of granter account. Deprecated, use exec instead.",
+		Use:   "legacy-exec <tx-json-file> --from <grantee>",
+		Short: "Execute tx on behalf of granter account. Deprecated, use exec instead.",
 		Example: fmt.Sprintf("$ %s tx authz exec tx.json --from grantee\n $ %[1]s tx bank send [granter] [recipient] [amount] --generate-only tx.json && %[1]s tx authz exec tx.json --from grantee", version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -95,7 +95,7 @@ func NewCmdExecAuthorization() *cobra.Command {
 // Migrating this command to AutoCLI is possible but would be CLI breaking.
 func NewCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant [grantee] <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from [granter]",
+		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from <granter>",
 		Short: "Grant authorization to an address",
 		Long: fmt.Sprintf(`create a new grant authorization to an address to execute a transaction on your behalf:
 Examples:

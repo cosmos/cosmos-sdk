@@ -82,7 +82,7 @@ func getCodecInterfaces() *cobra.Command {
 // getCodecInterfaceImpls creates and returns a new cmd used for listing all registered implementations of a given interface on the application codec.
 func getCodecInterfaceImpls() *cobra.Command {
 	return &cobra.Command{
-		Use:     "list-implementations [interface]",
+		Use:     "list-implementations <interface>",
 		Short:   "List the registered type URLs for the provided interface",
 		Long:    "List the registered type URLs that can be used for the provided interface name using the application codec",
 		Example: fmt.Sprintf("%s debug codec list-implementations cosmos.crypto.PubKey", version.AppName),
@@ -109,7 +109,7 @@ func getPubKeyFromString(ctx client.Context, pkstr string) (cryptotypes.PubKey, 
 
 func PubkeyCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:     "pubkey [pubkey]",
+		Use:     "pubkey <pubkey>",
 		Short:   "Decode a pubkey from proto JSON",
 		Long:    "Decode a pubkey from proto JSON and display it's address.",
 		Example: fmt.Sprintf(`%s debug pubkey '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AurroA7jvfPd1AadmmOvWM2rJSwipXfRf8yD6pLbA2DJ"}'`, version.AppName),
@@ -181,7 +181,7 @@ func getPubKeyFromRawString(pkstr, keytype string) (cryptotypes.PubKey, error) {
 
 func PubkeyRawCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "pubkey-raw [pubkey] -t [{ed25519, secp256k1}]",
+		Use:   "pubkey-raw <pubkey> [-t {ed25519, secp256k1}]",
 		Short: "Decode a ED25519 or secp256k1 pubkey from hex, base64, or bech32",
 		Long:  "Decode a pubkey from hex, base64, or bech32.",
 		Example: fmt.Sprintf(`
@@ -247,7 +247,7 @@ func PubkeyRawCmd() *cobra.Command {
 
 func AddrCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:     "addr [address]",
+		Use:     "addr <address>",
 		Short:   "Convert an address between hex and bech32",
 		Example: fmt.Sprintf("%s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg", version.AppName),
 		Args:    cobra.ExactArgs(1),
@@ -303,7 +303,7 @@ func AddrCmd() *cobra.Command {
 
 func RawBytesCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:     "raw-bytes [raw-bytes]",
+		Use:     "raw-bytes <raw-bytes>",
 		Short:   "Convert raw bytes output (eg. [10 21 13 255]) to hex",
 		Long:    "Convert raw-bytes to hex.",
 		Example: fmt.Sprintf("%s debug raw-bytes [72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]", version.AppName),

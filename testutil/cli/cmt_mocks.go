@@ -37,7 +37,7 @@ func NewMockCometRPCWithValue(bz []byte) MockCometRPC {
 	}}
 }
 
-// except [][]byte so that module that use this for testing dont have to import comet directly
+// accept [][]byte so that module that use this for testing dont have to import comet directly
 func (m MockCometRPC) WithTxs(txs [][]byte) MockCometRPC {
 	cmtTxs := make([]cmttypes.Tx, len(txs))
 	for i, tx := range txs {

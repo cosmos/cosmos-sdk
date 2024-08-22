@@ -13,8 +13,8 @@ import (
 	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/auth"
-
 	banktypes "cosmossdk.io/x/bank/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -240,7 +240,7 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 				require.NoError(t, err)
 
 				filePath := path.Join(home, "accounts.json")
-				err = os.WriteFile(filePath, bz, 0644)
+				err = os.WriteFile(filePath, bz, 0o644)
 				require.NoError(t, err)
 
 				cmd := genutilcli.AddBulkGenesisAccountCmd()
@@ -277,7 +277,6 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 				expectedSupply = expectedSupply.Add(coins...)
 			}
 			require.Equal(t, expectedSupply, bankState.Supply)
-
 		})
 	}
 }

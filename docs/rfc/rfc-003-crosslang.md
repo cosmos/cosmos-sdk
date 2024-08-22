@@ -64,6 +64,7 @@ When a **message** is sent to an **account handler**, it will receive a **messag
 * the **message name**
 * the **message data**
 * a 32-byte **state token**
+* a 32-byte **context token**
 * a `uint64` **gas limit**
 
 The handler can then execute some code and return a response or an error. Details on message responses and errors as well as the packet format for **message requests** will be described later.
@@ -146,7 +147,6 @@ It only exposes the following methods to the **hypervisor**:
 - `create(account address, state config)`: creates a new account state with the specified address and **state config**.
 - `migrate(account address, new state config)`: migrates the account state with the specified address to a new state config
 - `destroy(account address)`: destroys the account state with the specified address
-- `create_temp(account address, state config)`: creates a temporary account state which exists in memory only for the scope of the enclosing message call.
 
 **State config** are optional bytes that each **account handler**'s metadata can define which get passed to the **state handler** when an account is created.
 These bytes can be used by the **state handler** to determine what type of state and commitment store the **account** needs.
@@ -156,8 +156,8 @@ The **hypervisor** has no knowledge of what this token represents or how it is c
 but it is expected that **modules** that mange state do understand this token and use it to manage all state changes
 in consistent transactions.
 All side effects regarding state, events, etc. are expected to coordinate around the usage of this token.
-It is possible that state **modules** expose methods for creating new **state tokens** to **message handlers**
-to create nested transactions.
+It is possible that state **modules** expose methods for creating new **state tokens**
+for nesting transactions.
 
 **Volatility** describes a message handler's behavior with respect to state and side effects.
 It is an enum value that can have one of the following values:
@@ -184,8 +184,6 @@ creation, destruction, and migration:
 * `migrate(address, new_handler_id)`: migrates the account with the specified address to the new account handler. The `on_migrate` message must be implemented by the new code and must not return an error for migration to succeed. `migrate` can only be called by the account owner.
 * `force_migrate(address, new_handler_id, init_data, destroy_data)`: this can be used when no `on_migrate` handler can perform a proper migration to the new account handler. In this case, `on_destroy` will be called on the old account handler, the account state will be cleared, and `on_create` will be called on the new code. This is a destructive operation and should be used with caution.
 * `transfer(address, new_owner?)`: changes the account owner to the new owner. If `new_owner` is empty then the account has no owner and can't be migrated, transferred, or destroyed. This can only be called by the current owner.
-* `create_temp(handler_id, init_data)`: creates a temporary account which exists in memory only for the scope of
-the enclosing message call.
 
 The **hypervisor** will call the **state handler**'s `create`, `migrate`,
 and `destroy` methods as needed when accounts are created, migrated, or destroyed.
@@ -207,39 +205,19 @@ By default, the ordering will be done alphabetically by **module name**.
 
 ### Authorization and Delegated Execution
 
-By default, when a **virtual machine** attempts to invoke a method call, the caller must be the address
-of the last account.
-Authorization will be ensured by the **hypervisor** using private context token 
-set within the **message packet**.
+When a **message handler** creates a **message request** it can pass any **address** as the caller address,
+but it must pass the same **context token** that it received in its **message request**.
+The **hypervisor** will use the **context token** to verify the "real" caller address.
+Every nested message call will receive a new non-forgeable **context token** so that virtual machines
+and their account handlers cannot arbitrarily fool the **hypervisor** about the real caller address.
 
-One key feature of the existing SDK is the ability to do delegated execution via the `x/authz` module.
-**hypervisor** will support this feature by maintaining a set of granter account to grantee account key pairs
-where every grantee account is allowed to set the granter as the caller if such a pair exists.
-The following special messages will be handled by the **hypervisor** to support this:
-* `grant_authorization(granter, grantee)` - only callable by granter
-* `revoke_authorization(granter, grantee)` - only callable by granter
-* `revoke_all_authorizations(granter)` - only callable by granter and revokes all authorizations at once
-* `grant_temp_authorization(granter, grantee, interceptor?)` - only callable by granter and grants authorization for the scope of the enclosing message call.
+By default, the **hypervisor** will only allow the real caller to act as the caller.
 
-It is expected that each account which receives such an authorization implements an account handler to provide more
-restrictive authorization restrictions even though at a framework level the authorization is very broad.
-Grantees are prohibited from calling `grant_authorization` on behalf of the granter as that would allow them
-to bypass any restrictions otherwise set by the granter.
-
-Temporary authorizations can be used for patterns where an account needs to do an operation on behalf of another account
-but only to accomplish something else within the scope of one message call.
-An example would be a module moving coins just to require a payment which currently in the SDK is done by
-just letting that module move any coins of any account.
-A temporary authorization scopes it to the calling account.
-If the `interceptor` parameter is provided, the interceptor will receive the actual temporary grant
-and any messages a caller attempts to send on behalf of the granter will instead be routed to the interceptors
-`execute_authorized` method to decide whether to allow or deny the message.
-`grant_temp_authorization` can be used in combination with `create_temp` to create a temporary account
-which can only be used for the scope of the enclosing message call.
-
-In order to allow transaction processing modules to be implemented within a **virtual machine**, the **hypervisor**
-also has a list of "superuser" accounts which can execute messages on behalf of any caller.
-The list of "superuser" accounts must be configured at startup.
+There are use cases, however, for delegated authorization of messages or even for modules which can execute
+a message on behalf of any account.
+To support these, the **hypervisor** will accept an **authorization middleware** parameter which checks
+whether a given real caller account (verified by the hypervisor) is authorized to act as a different caller
+account for a given **message request**.
 
 ### Message Data and Packet Specification
 
@@ -256,15 +234,20 @@ or a separate RFC.
 For now, we specify that within a 64kb **message packet**,
 at least 56kb will be available for **message data** and message responses.
 
-
-### Further Specifications and Discussion Items
+### Further Specifications
 
 This specification does not cover many important parts of a complete system such as the encoding of message data,
 storage, events, transaction execution, or interaction with consensus environments.
-It is the intention of this specification that additional specifications regarding those systems will be layered on
-top of this specification.
-It may become necessary to include more details regarding specific parts of those systems in this specification
-at some point, but as a starting point, this specification is intentionally kept minimal.
+It is the intention of this specification to specify the minimum necessary for this layer in a modular layer.
+The full framework should be composed of a set of independent, minimally defined layers that together
+form a "standard" execution environment, but that at the same time can be replaced and recomposed by
+different applications with different needs.
+
+The basic set of standards necessary to provide a coherent framework includes:
+* message encoding and naming, including compatibility with the existing protobuf-based message encoding
+* storage
+* events
+* authorization middleware
 
 ## Abandoned Ideas (Optional)
 

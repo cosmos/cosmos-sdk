@@ -29,13 +29,9 @@ type GenesisAccount struct {
 	ModuleName string `json:"module_name,omitempty"`
 }
 
-// AddGenesisAccounts adds a genesis account to the genesis state.
-// Where `cdc` is client codec, `genesisFileUrl` is the path/url of current genesis file,
-// `accAddr` is the address to be added to the genesis state, `amountStr` is the list of initial coins
-// to be added for the account, `appendAcct` updates the account if already exists.
-// `vestingStart, vestingEnd and vestingAmtStr` respectively are the schedule start time, end time (unix epoch)
-// `moduleName` is the module name for which the account is being created
-// and coins to be appended to the account already in the genesis.json file.
+// AddGenesisAccounts adds genesis accounts to the genesis state.
+// Where `cdc` is the client codec, `addressCodec` is the address codec, `accounts` are the genesis accounts to add,
+// `appendAcct` updates the account if already exists, and `genesisFileURL` is the path/url of the current genesis file.
 func AddGenesisAccounts(
 	cdc codec.Codec,
 	addressCodec address.Codec,

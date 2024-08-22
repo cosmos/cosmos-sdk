@@ -27,7 +27,7 @@ const (
 // This command is provided as a default, applications are expected to provide their own command if custom genesis accounts are needed.
 func AddGenesisAccountCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-genesis-account [address_or_key_name] [coin][,[coin]]",
+		Use:   "add-genesis-account <address_or_key_name> <coin>[,<coin>...]",
 		Short: "Add a genesis account to genesis.json",
 		Long: `Add a genesis account to genesis.json. The provided account must specify
 the account address or key name and a list of initial coins. If a key name is given,

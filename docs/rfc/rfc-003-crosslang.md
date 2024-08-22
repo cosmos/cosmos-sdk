@@ -29,6 +29,9 @@ trying to write code for a module or account.
 The formal details of how these concepts are represented in a specific coding environment may vary significantly,
 however, the essence should remain more or less the same in most coding environments. 
 
+This specification is intentionally kept minimal as it is always easier to add features than to remove them.
+Where possible, other layers of the system should be specified in a complementary, modular way in separate specifications.
+
 ### Account
 
 An **account** is defined as having:
@@ -103,7 +106,7 @@ Every **account handler** is expected to provide metadata which provides:
 
 **Account handlers** can define message handlers for the following special message name's:
 * `on_create`: called when an account is created with message data containing arbitrary initialization data.
-* `on_migrate`: called when an account is migrated to a new code handler. Such handlers receive structured **message data** specifying the old code handler so that the account can perform migration operations or return an error if migration is not possible.
+* `on_migrate`: called when an account is migrated to a new code handler. Such handlers receive structured message data specifying the old code handler so that the account can perform migration operations or return an error if migration is not possible.
 
 ### Hypervisor and Virtual Machines
 
@@ -138,9 +141,9 @@ so that their **account handlers** can send messages to other **accounts**.
 
 **Account**s generally also have some mutable state, but within this specification, state is mostly expected to be handled by some special state **module** which is defined by separate specifications. The few main concepts of **state handler**, **state token**, **state config** and **volatility** are defined here.
 
-The **state handler** is a system component which the **hypervisor** has a reference to,
-and which is responsible for managing the state of all **accounts**.
-It only exposes the following methods to the **hypervisor**:
+The **state handler** is a system component which the hypervisor has a reference to,
+and which is responsible for managing the state of all accounts.
+It only exposes the following methods to the hypervisor:
 - `create(account address, state config)`: creates a new account state with the specified address and **state config**.
 - `migrate(account address, new state config)`: migrates the account state with the specified address to a new state config
 - `destroy(account address)`: destroys the account state with the specified address
@@ -149,11 +152,11 @@ It only exposes the following methods to the **hypervisor**:
 These bytes can be used by the **state handler** to determine what type of state and commitment store the **account** needs.
 
 A **state token** is an opaque array of 32-bytes that is passed in each **message request**.
-The **hypervisor** has no knowledge of what this token represents or how it is created,
-but it is expected that **modules** that mange state do understand this token and use it to manage all state changes
+The hypervisor has no knowledge of what this token represents or how it is created,
+but it is expected that modules that mange state do understand this token and use it to manage all state changes
 in consistent transactions.
 All side effects regarding state, events, etc. are expected to coordinate around the usage of this token.
-It is possible that state **modules** expose methods for creating new **state tokens**
+It is possible that state modules expose methods for creating new **state tokens**
 for nesting transactions.
 
 **Volatility** describes a message handler's behavior with respect to state and side effects.
@@ -162,9 +165,9 @@ It is an enum value that can have one of the following values:
 * `readonly`: the handler cannot cause effects side effects and can only send `readonly` or `pure` messages to other accounts. Such handlers are expected to only read state.
 * `pure`: the handler cannot cause any side effects and can only call other pure handlers. Such handlers are expected to neither read nor write state.
 
-The **hypervisor** will enforce volatility rules when routing messages to **account handlers**.
-Caller **address**s are always passed to `volatile` methods,
-they are not required when calling `readonly` methods but may be present if available,
+The hypervisor will enforce **volatility** rules when routing messages to account handlers.
+Caller addresses are always passed to `volatile` methods,
+they are not required when calling `readonly` methods but will be passed when available,
 and they are not passed at all to `pure` methods.
 
 ### Management of Account Lifecycle with the Hypervisor

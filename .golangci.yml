@@ -76,6 +76,9 @@ issues:
     - text: "SA1019: params.SendEnabled is deprecated" # TODO remove once ready to remove from the sdk
       linters:
         - staticcheck
+    - text: "SA1029: Inappropriate key in context.WithValue" # TODO remove this when dependency is updated
+      linters:
+        - staticcheck
     - text: "leading space"
       linters:
         - nolintlint

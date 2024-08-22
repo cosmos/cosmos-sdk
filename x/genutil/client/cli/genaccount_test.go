@@ -240,7 +240,7 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 				require.NoError(t, err)
 
 				filePath := path.Join(home, "accounts.json")
-				err = os.WriteFile(filePath, bz, 0o644)
+				err = os.WriteFile(filePath, bz, 0o600)
 				require.NoError(t, err)
 
 				cmd := genutilcli.AddBulkGenesisAccountCmd()

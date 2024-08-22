@@ -22,14 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32" //nolint:staticcheck // we're using this to support the legacy way of dealing with bech32
 )
 
-const (
-	pubStr     = "pub"
-	valoper    = "valoper"
-	valoperpub = "valoperpub"
-	valcons    = "valcons"
-	valconspub = "valconspub"
-)
-
 type addressTestSuite struct {
 	suite.Suite
 }
@@ -161,6 +153,12 @@ func (s *addressTestSuite) TestUnmarshalYAMLWithInvalidInput() {
 	s.Require().Equal(types.ErrEmptyHexAddress, err)
 }
 
+func setConfigWithPrefix(conf *types.Config, prefix string) {
+	conf.SetBech32PrefixForAccount(prefix, types.GetBech32PrefixAccPub(prefix))
+	conf.SetBech32PrefixForValidator(types.GetBech32PrefixValAddr(prefix), types.GetBech32PrefixValPub(prefix))
+	conf.SetBech32PrefixForConsensusNode(types.GetBech32PrefixConsAddr(prefix), types.GetBech32PrefixConsPub(prefix))
+}
+
 // Test that the account address cache ignores the bech32 prefix setting, retrieving bech32 addresses from the cache.
 // This will cause the AccAddress.String() to print out unexpected prefixes if the config was changed between bech32 lookups.
 // See https://github.com/cosmos/cosmos-sdk/issues/15317.
@@ -173,18 +171,14 @@ func (s *addressTestSuite) TestAddrCache() {
 	// Set SDK bech32 prefixes to 'osmo'
 	prefix := "osmo"
 	conf := types.GetConfig()
-	conf.SetBech32PrefixForAccount(prefix, prefix+pubStr)
-	conf.SetBech32PrefixForValidator(prefix+valoper, prefix+valoperpub)
-	conf.SetBech32PrefixForConsensusNode(prefix+valcons, prefix+valconspub)
+	setConfigWithPrefix(conf, prefix)
 
 	acc := types.AccAddress(pub.Address())
 	osmoAddrBech32 := acc.String()
 
 	// Set SDK bech32 to 'cosmos'
 	prefix = "cosmos"
-	conf.SetBech32PrefixForAccount(prefix, prefix+pubStr)
-	conf.SetBech32PrefixForValidator(prefix+valoper, prefix+valoperpub)
-	conf.SetBech32PrefixForConsensusNode(prefix+valcons, prefix+valconspub)
+	setConfigWithPrefix(conf, prefix)
 
 	// We name this 'addrCosmos' to prove a point, but the bech32 address will still begin with 'osmo' due to the cache behavior.
 	addrCosmos := types.AccAddress(pub.Address())
@@ -210,18 +204,14 @@ func (s *addressTestSuite) TestAddrCacheDisabled() {
 	// Set SDK bech32 prefixes to 'osmo'
 	prefix := "osmo"
 	conf := types.GetConfig()
-	conf.SetBech32PrefixForAccount(prefix, prefix+pubStr)
-	conf.SetBech32PrefixForValidator(prefix+valoper, prefix+valoperpub)
-	conf.SetBech32PrefixForConsensusNode(prefix+valcons, prefix+valconspub)
+	setConfigWithPrefix(conf, prefix)
 
 	acc := types.AccAddress(pub.Address())
 	osmoAddrBech32 := acc.String()
 
 	// Set SDK bech32 to 'cosmos'
 	prefix = "cosmos"
-	conf.SetBech32PrefixForAccount(prefix, prefix+pubStr)
-	conf.SetBech32PrefixForValidator(prefix+valoper, prefix+valoperpub)
-	conf.SetBech32PrefixForConsensusNode(prefix+valcons, prefix+valconspub)
+	setConfigWithPrefix(conf, prefix)
 
 	addrCosmos := types.AccAddress(pub.Address())
 	cosmosAddrBech32 := addrCosmos.String()
@@ -631,7 +621,7 @@ func (s *addressTestSuite) TestFormatAccAddressAsString() {
 	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
 	accAddr := types.AccAddress(addr20byte)
 
-	actual := fmt.Sprintf("%s", accAddr) // this will call internally  the method AccAddress.Format
+	actual := fmt.Sprintf("%s", accAddr) // this will internally calls AccAddress.Format method
 
 	hrp := types.GetConfig().GetBech32AccountAddrPrefix()
 	expected, err := bech32.ConvertAndEncode(hrp, addr20byte)
@@ -642,7 +632,7 @@ func (s *addressTestSuite) TestFormatAccAddressAsString() {
 func (s *addressTestSuite) TestFormatAccAddressAsPointer() {
 	accAddr := types.AccAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
 	ptrAddr := &accAddr
-	actual := fmt.Sprintf("%p", ptrAddr) // this will call internally  the method AccAddress.Format
+	actual := fmt.Sprintf("%p", ptrAddr) // this will internally calls AccAddress.Format method
 	expected := fmt.Sprintf("0x%x", uintptr(unsafe.Pointer(&accAddr)))
 	s.Require().Equal(expected, actual)
 }

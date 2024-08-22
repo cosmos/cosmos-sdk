@@ -41,8 +41,14 @@ type TxData struct {
 	JSON ToJSON
 }
 
-// EventData represents event data that is passed to a listener.
+// EventData represents event data that is passed to a listener when events are received.
 type EventData struct {
+	// Events are the events that are received.
+	Events []Event
+}
+
+// Event represents the data for a single event.
+type Event struct {
 	// TxIndex is the index of the transaction in the block to which this event is associated.
 	// It should be set to a negative number if the event is not associated with a transaction.
 	// Canonically -1 should be used to represent begin block processing and -2 should be used to
@@ -52,16 +58,23 @@ type EventData struct {
 	// MsgIndex is the index of the message in the transaction to which this event is associated.
 	// If TxIndex is negative, this index could correspond to the index of the message in
 	// begin or end block processing if such indexes exist, or it can be set to zero.
-	MsgIndex uint32
+	MsgIndex int32
 
 	// EventIndex is the index of the event in the message to which this event is associated.
-	EventIndex uint32
+	EventIndex int32
 
 	// Type is the type of the event.
 	Type string
 
-	// Data is the JSON representation of the event data. It should generally be a JSON object.
+	// Data lazily returns the JSON representation of the event.
 	Data ToJSON
+
+	// Attributes lazily returns the key-value attribute representation of the event.
+	Attributes ToEventAttributes
+}
+
+type EventAttribute = struct {
+	Key, Value string
 }
 
 // ToBytes is a function that lazily returns the raw byte representation of data.
@@ -70,18 +83,21 @@ type ToBytes = func() ([]byte, error)
 // ToJSON is a function that lazily returns the JSON representation of data.
 type ToJSON = func() (json.RawMessage, error)
 
+// ToEventAttributes is a function that lazily returns the key-value attribute representation of an event.
+type ToEventAttributes = func() ([]EventAttribute, error)
+
 // KVPairData represents a batch of key-value pair data that is passed to a listener.
 type KVPairData struct {
-	Updates []ModuleKVPairUpdate
+	Updates []ActorKVPairUpdate
 }
 
-// ModuleKVPairUpdate represents a key-value pair update for a specific module.
-type ModuleKVPairUpdate struct {
-	// ModuleName is the name of the module that the key-value pair belongs to.
-	ModuleName string
+// ActorKVPairUpdate represents a key-value pair update for a specific module or account.
+type ActorKVPairUpdate = struct {
+	// Actor is the byte representation of the module or account that is updating the key-value pair.
+	Actor []byte
 
-	// Update is the key-value pair update.
-	Update schema.KVPairUpdate
+	// StateChanges are key-value pair updates.
+	StateChanges []schema.KVPairUpdate
 }
 
 // ObjectUpdateData represents object update data that is passed to a listener.

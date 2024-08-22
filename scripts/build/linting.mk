@@ -1,4 +1,4 @@
-golangci_version=v1.59.0
+golangci_version=v1.60.1
 
 #? setup-pre-commit: Set pre-commit git hook
 setup-pre-commit:

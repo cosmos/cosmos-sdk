@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
@@ -245,12 +247,13 @@ func (s *TestSuite) TestDispatchAction() {
 	a := banktypes.NewSendAuthorization(coins100, nil, s.accountKeeper.AddressCodec())
 
 	testCases := []struct {
-		name      string
-		req       authz.MsgExec
-		expectErr bool
-		errMsg    string
-		preRun    func() sdk.Context
-		postRun   func()
+		name       string
+		req        authz.MsgExec
+		expectErr  bool
+		errMsg     string
+		expectResp string
+		preRun     func() sdk.Context
+		postRun    func()
 	}{
 		{
 			"expect error authorization not found",
@@ -263,6 +266,7 @@ func (s *TestSuite) TestDispatchAction() {
 			}),
 			true,
 			"authorization not found",
+			"",
 			func() sdk.Context {
 				// remove any existing authorizations
 				err := s.authzKeeper.DeleteGrant(s.ctx, granteeAddr, granterAddr, bankSendAuthMsgType)
@@ -282,6 +286,7 @@ func (s *TestSuite) TestDispatchAction() {
 			}),
 			true,
 			"authorization expired",
+			"",
 			func() sdk.Context {
 				e := now.AddDate(0, 0, 1)
 				err := s.authzKeeper.SaveGrant(s.ctx, granteeAddr, granterAddr, a, &e)
@@ -301,6 +306,7 @@ func (s *TestSuite) TestDispatchAction() {
 			}),
 			true,
 			"requested amount is more than spend limit",
+			"",
 			func() sdk.Context {
 				e := now.AddDate(0, 1, 0)
 				err := s.authzKeeper.SaveGrant(s.ctx, granteeAddr, granterAddr, a, &e)
@@ -320,6 +326,7 @@ func (s *TestSuite) TestDispatchAction() {
 			}),
 			false,
 			"",
+			"/cosmos.bank.v1beta1.MsgSendResponse",
 			func() sdk.Context {
 				e := now.AddDate(0, 1, 0)
 				err := s.authzKeeper.SaveGrant(s.ctx, granteeAddr, granterAddr, a, &e)
@@ -346,6 +353,7 @@ func (s *TestSuite) TestDispatchAction() {
 			}),
 			false,
 			"",
+			"/cosmos.bank.v1beta1.MsgSendResponse",
 			func() sdk.Context {
 				e := now.AddDate(0, 1, 0)
 				err := s.authzKeeper.SaveGrant(s.ctx, granteeAddr, granterAddr, a, &e)
@@ -372,7 +380,15 @@ func (s *TestSuite) TestDispatchAction() {
 				require.Contains(err.Error(), tc.errMsg)
 			} else {
 				require.NoError(err)
-				require.NotNil(result)
+				require.NotEmpty(result)
+				// unmarshal the result
+				for _, res := range result {
+					var msgRes gogoprotoany.Any
+					err := gogoproto.Unmarshal(res, &msgRes)
+					require.NoError(err)
+					require.NotNil(msgRes)
+					require.Equal(msgRes.TypeUrl, tc.expectResp)
+				}
 			}
 			tc.postRun()
 		})

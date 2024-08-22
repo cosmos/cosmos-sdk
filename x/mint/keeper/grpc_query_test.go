@@ -34,7 +34,7 @@ type MintTestSuite struct {
 func (suite *MintTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, mint.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx
 
@@ -48,7 +48,7 @@ func (suite *MintTestSuite) SetupTest() {
 
 	suite.mintKeeper = keeper.NewKeeper(
 		encCfg.Codec,
-		storeService,
+		env,
 		stakingKeeper,
 		accountKeeper,
 		bankKeeper,

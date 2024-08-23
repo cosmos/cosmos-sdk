@@ -45,7 +45,7 @@ func GetTxCmd() *cobra.Command {
 // This commands is not migrated to autocli as it contains extra validation that is useful for submitting upgrade proposals.
 func NewCmdSubmitUpgradeProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "software-upgrade [name] (--upgrade-height [height]) (--upgrade-info [info]) [flags]",
+		Use:   "software-upgrade <name> [--upgrade-height <height>] [--upgrade-info <info>] [flags]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Submit a software upgrade proposal",
 		Long: "Submit a software upgrade along with an initial deposit.\n" +

@@ -10,6 +10,6 @@ func PacketForwarder(f func(Packet) error) Listener {
 		OnKVPair:             func(data KVPairData) error { return f(data) },
 		OnObjectUpdate:       func(data ObjectUpdateData) error { return f(data) },
 		StartBlock:           func(data StartBlockData) error { return f(data) },
-		Commit:               func(data CommitData) error { return f(data) },
+		Commit:               func(data CommitData) (func() error, error) { return nil, f(data) },
 	}
 }

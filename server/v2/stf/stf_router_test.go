@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/appmodule/v2"
-	transaction "cosmossdk.io/core/transaction"
+	"cosmossdk.io/core/transaction"
 )
 
 func TestRouter(t *testing.T) {

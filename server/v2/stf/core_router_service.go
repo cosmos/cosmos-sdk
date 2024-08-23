@@ -23,12 +23,22 @@ type msgRouterService struct {
 
 // CanInvoke returns an error if the given message cannot be invoked.
 func (m msgRouterService) CanInvoke(ctx context.Context, typeURL string) error {
-	return ctx.(*executionContext).msgRouter.CanInvoke(ctx, typeURL)
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	return exCtx.msgRouter.CanInvoke(ctx, typeURL)
 }
 
 // Invoke execute a message and returns a response.
 func (m msgRouterService) Invoke(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
-	return ctx.(*executionContext).msgRouter.Invoke(ctx, msg)
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return exCtx.msgRouter.Invoke(ctx, msg)
 }
 
 // NewQueryRouterService implements router.Service.
@@ -42,13 +52,23 @@ type queryRouterService struct{}
 
 // CanInvoke returns an error if the given request cannot be invoked.
 func (m queryRouterService) CanInvoke(ctx context.Context, typeURL string) error {
-	return ctx.(*executionContext).queryRouter.CanInvoke(ctx, typeURL)
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	return exCtx.queryRouter.CanInvoke(ctx, typeURL)
 }
 
-// Invoke execute a message and returns a response.
+// InvokeUntyped execute a message and returns a response.
 func (m queryRouterService) Invoke(
 	ctx context.Context,
 	req transaction.Msg,
 ) (transaction.Msg, error) {
-	return ctx.(*executionContext).queryRouter.Invoke(ctx, req)
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return exCtx.queryRouter.Invoke(ctx, req)
 }

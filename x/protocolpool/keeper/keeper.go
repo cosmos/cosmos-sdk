@@ -177,6 +177,31 @@ func (k Keeper) SetToDistribute(ctx context.Context) error {
 	// Calculate the amount to be distributed
 	amountToDistribute := distributionBalance.Sub(lastBalance)
 
+	// Check if there are any recipients to distribute to, if not, send straight to the community pool and avoid
+	// setting the distributions
+	hasContinuousFunds := false
+	err = k.ContinuousFund.Walk(ctx, nil, func(_ sdk.AccAddress, _ types.ContinuousFund) (bool, error) {
+		hasContinuousFunds = true
+		return true, nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// if there are no continuous funds, send all the funds to the community pool and reset the last balance
+	if !hasContinuousFunds {
+		poolCoins := sdk.NewCoins(sdk.NewCoin(denom, amountToDistribute))
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.ModuleName, poolCoins); err != nil {
+			return err
+		}
+
+		if !lastBalance.IsZero() { // only reset if the last balance is not zero (so we leave it at zero/nil)
+			return k.LastBalance.Set(ctx, math.ZeroInt())
+		}
+
+		return nil
+	}
+
 	if err = k.Distributions.Set(ctx, k.HeaderService.HeaderInfo(ctx).Time, amountToDistribute); err != nil {
 		return fmt.Errorf("error while setting Distributions: %w", err)
 	}

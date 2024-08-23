@@ -11,7 +11,9 @@ type ObjectType struct {
 	// KeyFields is a list of fields that make up the primary key of the object.
 	// It can be empty in which case indexers should assume that this object is
 	// a singleton and only has one value. Field names must be unique within the
-	// object between both key and value fields. Key fields CANNOT be nullable.
+	// object between both key and value fields.
+	// Key fields CANNOT be nullable and Float32Kind, Float64Kind, and JSONKind types
+	// are not allowed.
 	KeyFields []Field `json:"key_fields,omitempty"`
 
 	// ValueFields is a list of fields that are not part of the primary key of the object.
@@ -51,6 +53,10 @@ func (o ObjectType) validate(types map[string]Type) error {
 	for _, field := range o.KeyFields {
 		if err := field.Validate(); err != nil {
 			return fmt.Errorf("invalid key field %q: %v", field.Name, err) //nolint:errorlint // false positive due to using go1.12
+		}
+
+		if !field.Kind.ValidKeyKind() {
+			return fmt.Errorf("key field %q of kind %q uses an invalid key field kind", field.Name, field.Kind)
 		}
 
 		if field.Nullable {

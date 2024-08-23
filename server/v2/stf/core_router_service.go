@@ -23,19 +23,34 @@ type msgRouterService struct {
 
 // CanInvoke returns an error if the given message cannot be invoked.
 func (m msgRouterService) CanInvoke(ctx context.Context, typeURL string) error {
-	return ctx.(*executionContext).msgRouter.CanInvoke(ctx, typeURL)
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	return exCtx.msgRouter.CanInvoke(ctx, typeURL)
 }
 
 // InvokeTyped execute a message and fill-in a response.
 // The response must be known and passed as a parameter.
 // Use InvokeUntyped if the response type is not known.
 func (m msgRouterService) InvokeTyped(ctx context.Context, msg, resp transaction.Msg) error {
-	return ctx.(*executionContext).msgRouter.InvokeTyped(ctx, msg, resp)
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	return exCtx.msgRouter.InvokeTyped(ctx, msg, resp)
 }
 
 // InvokeUntyped execute a message and returns a response.
 func (m msgRouterService) InvokeUntyped(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
-	return ctx.(*executionContext).msgRouter.InvokeUntyped(ctx, msg)
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return exCtx.msgRouter.InvokeUntyped(ctx, msg)
 }
 
 // NewQueryRouterService implements router.Service.
@@ -49,7 +64,12 @@ type queryRouterService struct{}
 
 // CanInvoke returns an error if the given request cannot be invoked.
 func (m queryRouterService) CanInvoke(ctx context.Context, typeURL string) error {
-	return ctx.(*executionContext).queryRouter.CanInvoke(ctx, typeURL)
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	return exCtx.queryRouter.CanInvoke(ctx, typeURL)
 }
 
 // InvokeTyped execute a message and fill-in a response.
@@ -59,7 +79,12 @@ func (m queryRouterService) InvokeTyped(
 	ctx context.Context,
 	req, resp transaction.Msg,
 ) error {
-	return ctx.(*executionContext).queryRouter.InvokeTyped(ctx, req, resp)
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	return exCtx.queryRouter.InvokeTyped(ctx, req, resp)
 }
 
 // InvokeUntyped execute a message and returns a response.
@@ -67,5 +92,10 @@ func (m queryRouterService) InvokeUntyped(
 	ctx context.Context,
 	req transaction.Msg,
 ) (transaction.Msg, error) {
-	return ctx.(*executionContext).queryRouter.InvokeUntyped(ctx, req)
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return exCtx.queryRouter.InvokeUntyped(ctx, req)
 }

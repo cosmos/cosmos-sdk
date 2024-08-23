@@ -25,8 +25,10 @@ import (
 // should be preferably emitted by serializers.
 //
 // Wire encodings were chosen based on what is likely to be the most convenient default binary encoding
-// in key-value stores so that implementations that chose the wire encoding natively have a trivial
-// decoder implementation.
+// for state management implementations. This encoding allows for sorted keys whenever it is possible for a kind
+// and is deterministic.
+// Modules that use the specified encoding natively will have a trivial decoder implementation because the
+// encoding is already in the correct format after any initial prefix bytes are stripped.
 type Kind int
 
 const (
@@ -191,8 +193,8 @@ const (
 	// definition.
 	// Go Encoding: string
 	// JSON Encoding: string
-	// Key Wire Encoding: the same wire encoding as the underlying numeric kind.
-	// Value Wire Encoding: the same wire encoding as the underlying numeric kind.
+	// Key Wire Encoding: the same wire encoding as the EnumType's numeric kind.
+	// Value Wire Encoding: the same wire encoding as the EnumType's numeric kind.
 	EnumKind
 
 	// JSONKind represents arbitrary JSON data.
@@ -203,24 +205,40 @@ const (
 	JSONKind
 
 	// UIntNKind represents a signed integer type with a width in bits specified by the Size field in the
-	// field definition.Values of this type must be of the go type [N]byte where Ceiling(Size / 8) = N.
-	// It is invalid for N to equal 8, 16, 32, 64. Values must be little-endian encoded.
+	// field definition.
+	// N must be a multiple of 8, and it is invalid for N to equal 8, 16, 32, 64 as there are more specific
+	// types for these widths.
+	// Go Encoding: []byte where len([]byte) == Size / 8, little-endian encoded.
+	// JSON Encoding: base10 integer string matching the IntegerFormat regex, canonically with no leading zeros.
+	// Key Wire Encoding: N / 8 bytes big-endian encoded
+	// Value Wire Encoding: N / 8 bytes little-endian encoded
 	UIntNKind
 
 	// IntNKind represents an unsigned integer type with a width in bits specified by the Size field in the
-	// field definition.Values of this type must be of the go type [N]byte where Ceiling(Size / 8) = N.
-	// It is invalid for N to equal 8, 16, 32, 64. Values must be two's complement little-endian encoded.
+	// field definition. N must be a multiple of 8.
+	// N must be a multiple of 8, and it is invalid for N to equal 8, 16, 32, 64 as there are more specific
+	// types for these widths.
+	// Go Encoding: []byte where len([]byte) == Size / 8, two's complement little-endian encoded.
+	// JSON Encoding: base10 integer string matching the IntegerFormat regex, canonically with no leading zeros.
+	// Key Wire Encoding: N / 8 bytes big-endian two's complement encoded with the first bit inverted for sorting.
+	// Value Wire Encoding: N / 8 bytes little-endian two's complement encoded.
 	IntNKind
 
 	// StructKind represents a struct object.
 	// Go Encoding: an array of type []interface{} where each element is of the respective field's kind type.
 	// JSON Encoding: an object where each key is the field name and the value is the field value.
 	// Canonically, keys are in alphabetical order with no extra whitespace.
+	// Key Wire Encoding: not valid as a key field.
+	// Value Wire Encoding: 32-bit unsigned little-endian length prefix,
+	// followed by the value wire encoding of each field in order.
 	StructKind
 
 	// OneOfKind represents a field that can be one of a set of types.
-	// Go Encoding: TODO
-	// JSON Encoding: TODO
+	// Go Encoding: the anonymous struct { Case string; Value interface{} }, aliased as OneOfValue.
+	// JSON Encoding: same as the case's struct encoding with "@type" set to the case name.
+	// Key Wire Encoding: not valid as a key field.
+	// Value Wire Encoding: the oneof's discriminant numeric value encoded as its discriminant kind
+	// followed by the encoded value.
 	OneOfKind
 
 	// ObjectKind represents a nested object.
@@ -228,12 +246,19 @@ const (
 	// are encoded first followed by value fields.
 	// JSON Encoding: an object where each key is the field name and the value is the field value.
 	// Canonically, keys are in alphabetical order with no extra whitespace.
+	// Key Wire Encoding: not valid as a key field.
+	// Value Wire Encoding: 32-bit unsigned little-endian length prefix,
+	// followed by the encoded fields encoded with value wire encoding.
 	ObjectKind
 
 	// ListKind represents a list of elements.
 	// Go Encoding: an array of type []interface{} where each element is of the respective field's kind type.
 	// JSON Encoding: an array of values where each element is the field value.
 	// Canonically, there is no extra whitespace.
+	// Key Wire Encoding: not valid as a key field.
+	// Value Wire Encoding: 32-bit unsigned little-endian size prefix indicating the size of the encoded data in bytes,
+	// followed by a 32-bit unsigned little-endian count of the number of elements in the list,
+	// followed by each element encoded with value wire encoding.
 	ListKind
 )
 

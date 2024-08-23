@@ -1,6 +1,15 @@
 package schema
 
 // APIDefinition is a public versioned descriptor of an API.
+//
+// Method handlers may accept different compatible encodings.
+// Protobuf binary is one such encoding and protobuf mappings for each kind and type will be described (TODO).
+//
+// A "native" wire encoding is, however, already specified for each type and kind.
+// While this encoding is intended to be used for storage purposes, it can also be used
+// as for API method calls and has the advantage of being deterministic.
+// If method handlers choose to use this "native" encoding, they should simply encode
+// input and output parameters each field's value wire encoding.
 type APIDefinition struct {
 	// Name is the versioned name of the API.
 	Name string

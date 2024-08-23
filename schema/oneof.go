@@ -25,6 +25,16 @@ type OneOfCase struct {
 	// the message will be incomprehensible.
 	StructType
 
+	Name string
+
 	// Discriminant is the discriminant value for the case.
 	Discriminant int32
+}
+
+type OneOfValue = struct {
+	// Case is the name of the case.
+	Case string
+
+	// Value is the value of the case.
+	Value interface{}
 }

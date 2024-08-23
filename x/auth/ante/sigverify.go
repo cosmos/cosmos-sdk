@@ -670,7 +670,7 @@ func signatureDataToBz(data signing.SignatureData) ([][]byte, error) {
 // isSigverifyTx will always return true, unless the context is a sdk.Context, in which case we will return the
 // value of IsSigverifyTx.
 func isSigverifyTx(ctx context.Context) bool {
-	if sdkCtx, ok := ctx.(sdk.Context); ok {
+	if sdkCtx, ok := sdk.TryUnwrapSDKContext(ctx); ok {
 		return sdkCtx.IsSigverifyTx()
 	}
 	return true

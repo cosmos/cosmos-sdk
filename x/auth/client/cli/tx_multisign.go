@@ -29,7 +29,7 @@ import (
 // GetMultiSignCommand returns the multi-sign command
 func GetMultiSignCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "multi-sign <file> <name> [<signature>...]",
+		Use:     "multi-sign <file> <name> [<signature>...]",
 		Aliases: []string{"multisign"},
 		Short:   "Generate multisig signatures for transactions generated offline",
 		Long: strings.TrimSpace(

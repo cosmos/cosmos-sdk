@@ -6,6 +6,6 @@ type StructType struct {
 	Name string
 
 	// Fields is the list of fields in the struct. ObjectKind fields are not allowed.
-	// It is an incompatible change to add, remove or update fields in a struct.
+	// It is an INCOMPATIBLE change to add, remove or update fields in a struct.
 	Fields []Field
 }

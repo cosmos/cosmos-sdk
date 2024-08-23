@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/accounts/internal/prefixstore"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,8 +15,8 @@ import (
 var AccountStatePrefix = collections.NewPrefix(255)
 
 type (
-	ModuleExecFunc  = func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error)
-	ModuleQueryFunc = func(ctx context.Context, queryReq ProtoMsg) (ProtoMsg, error)
+	ModuleExecFunc  = func(ctx context.Context, sender []byte, msg transaction.Msg) (transaction.Msg, error)
+	ModuleQueryFunc = func(ctx context.Context, queryReq transaction.Msg) (transaction.Msg, error)
 )
 
 type contextKey struct{}
@@ -82,7 +83,7 @@ func makeAccountStore(ctx context.Context, storeSvc store.KVStoreService, accNum
 }
 
 // ExecModule can be used to execute a message towards a module, when the response type is unknown.
-func ExecModule(ctx context.Context, msg ProtoMsg) (ProtoMsg, error) {
+func ExecModule(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
 	// get sender
 	v := getCtx(ctx)
 
@@ -95,7 +96,7 @@ func ExecModule(ctx context.Context, msg ProtoMsg) (ProtoMsg, error) {
 }
 
 // QueryModule can be used by an account to execute a module query.
-func QueryModule(ctx context.Context, req ProtoMsg) (ProtoMsg, error) {
+func QueryModule(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
 	// we do not need to check the sender in a query because it is not a state transition.
 	// we also unwrap the original context.
 	v := getCtx(ctx)

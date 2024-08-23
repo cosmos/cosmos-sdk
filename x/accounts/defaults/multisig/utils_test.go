@@ -16,6 +16,7 @@ import (
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -163,10 +164,10 @@ func (a addressCodec) BytesToString(bz []byte) (string, error)   { return string
 func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 	t.Helper()
 	return accountstd.NewMockContext(
-		0, []byte("mock_multisig_account"), []byte("sender"), TestFunds, func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error) {
+		0, []byte("mock_multisig_account"), []byte("sender"), TestFunds, func(ctx context.Context, sender []byte, msg transaction.Msg) (transaction.Msg, error) {
 			return nil, nil
-		}, func(ctx context.Context, req ProtoMsg) (ProtoMsg, error) {
-			var resp ProtoMsg
+		}, func(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
+			var resp transaction.Msg
 			_, ok := req.(*banktypes.QueryBalanceRequest)
 			require.True(t, ok)
 			gogoproto.Merge(resp, &banktypes.QueryBalanceResponse{

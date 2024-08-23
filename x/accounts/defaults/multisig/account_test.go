@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/accounts/accountstd"
 	v1 "cosmossdk.io/x/accounts/defaults/multisig/v1"
 	accountsv1 "cosmossdk.io/x/accounts/v1"
@@ -442,12 +443,12 @@ func TestProposal_NotPassing(t *testing.T) {
 	}
 
 	ctx, ss := accountstd.NewMockContext(
-		0, []byte("multisig_acc"), []byte("addr1"), TestFunds, func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error) {
+		0, []byte("multisig_acc"), []byte("addr1"), TestFunds, func(ctx context.Context, sender []byte, msg transaction.Msg) (transaction.Msg, error) {
 			if _, ok := msg.(*v1.MsgUpdateConfig); ok {
 				return &v1.MsgUpdateConfigResponse{}, nil
 			}
 			return nil, nil
-		}, func(ctx context.Context, req ProtoMsg) (ProtoMsg, error) {
+		}, func(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
 			return nil, nil
 		},
 	)
@@ -564,7 +565,7 @@ func TestProposalPassing(t *testing.T) {
 	var ss store.KVStoreService
 	ctx, ss = accountstd.NewMockContext(
 		0, []byte("multisig_acc"), []byte("addr1"), TestFunds,
-		func(ictx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error) {
+		func(ictx context.Context, sender []byte, msg transaction.Msg) (transaction.Msg, error) {
 			if execmsg, ok := msg.(*accountsv1.MsgExecute); ok {
 				updateCfg, err := accountstd.UnpackAny[v1.MsgUpdateConfig](execmsg.GetMessage())
 				if err != nil {
@@ -575,7 +576,7 @@ func TestProposalPassing(t *testing.T) {
 				return acc.UpdateConfig(ctx, updateCfg)
 			}
 			return nil, nil
-		}, func(ctx context.Context, req ProtoMsg) (ProtoMsg, error) {
+		}, func(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
 			return nil, nil
 		},
 	)

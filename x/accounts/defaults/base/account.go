@@ -170,7 +170,7 @@ func (a Account) getNumber(ctx context.Context, addrStr string) (uint64, error) 
 
 	resp, ok := accNum.(*accountsv1.AccountNumberResponse)
 	if !ok {
-		return 0, errors.New("unexpected response type")
+		return 0, fmt.Errorf("unexpected response type: %T", accNum)
 	}
 
 	return resp.Number, nil

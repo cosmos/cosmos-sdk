@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
@@ -14,6 +13,7 @@ import (
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/accounts/accountstd"
 	accountsv1 "cosmossdk.io/x/accounts/v1"
 	"cosmossdk.io/x/tx/signing"
@@ -59,18 +59,12 @@ func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 	t.Helper()
 	return accountstd.NewMockContext(
 		0, []byte("mock_base_account"), []byte("sender"), nil,
-		func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error) {
+		func(ctx context.Context, sender []byte, msg transaction.Msg) (transaction.Msg, error) {
 			return nil, nil
-		}, func(ctx context.Context, req ProtoMsg) (ProtoMsg, error) {
-			var resp ProtoMsg
-
-			_, ok := req.(*accountsv1.AccountNumberRequest)
-			require.True(t, ok)
-			gogoproto.Merge(resp, &accountsv1.AccountNumberResponse{
+		}, func(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
+			return &accountsv1.AccountNumberResponse{
 				Number: 1,
-			})
-
-			return resp, nil
+			}, nil
 		},
 	)
 }

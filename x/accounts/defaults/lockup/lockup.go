@@ -536,8 +536,7 @@ func (bva *BaseLockup) TrackUndelegation(ctx context.Context, amount sdk.Coins) 
 
 func (bva BaseLockup) getBalance(ctx context.Context, sender, denom string) (*sdk.Coin, error) {
 	// Query account balance for the sent denom
-	balanceQueryReq := &banktypes.QueryBalanceRequest{Address: sender, Denom: denom}
-	resp, err := accountstd.QueryModule(ctx, balanceQueryReq)
+	resp, err := accountstd.QueryModule(ctx, &banktypes.QueryBalanceRequest{Address: sender, Denom: denom})
 	if err != nil {
 		return nil, err
 	}

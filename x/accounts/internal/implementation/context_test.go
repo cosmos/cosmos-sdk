@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/collections"
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/core/transaction"
 )
 
 func TestMakeAccountContext(t *testing.T) {
@@ -44,7 +45,7 @@ func TestMakeAccountContext(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, []byte{0, 0, 0, 0, 0, 0, 3, 232}, value)
 	// ensure calling ExecModuleUntyped works
-	accountCtx = MakeAccountContext(originalContext, storeService, 1, []byte("legit-exec-module-untyped"), []byte("invoker"), nil, func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error) {
+	accountCtx = MakeAccountContext(originalContext, storeService, 1, []byte("legit-exec-module-untyped"), []byte("invoker"), nil, func(ctx context.Context, sender []byte, msg transaction.Msg) (transaction.Msg, error) {
 		require.Equal(t, originalContext, ctx)
 		return &types.StringValue{Value: "module exec untyped was called"}, nil
 	}, nil)
@@ -55,11 +56,9 @@ func TestMakeAccountContext(t *testing.T) {
 
 	// ensure calling QueryModule works, also by setting everything else communication related to nil
 	// we can guarantee that exec paths do not impact query paths.
-	accountCtx = MakeAccountContext(originalContext, storeService, 1, nil, nil, nil, nil, func(ctx context.Context, req ProtoMsg) (ProtoMsg, error) {
-		var resp ProtoMsg
+	accountCtx = MakeAccountContext(originalContext, storeService, 1, nil, nil, nil, nil, func(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
 		require.Equal(t, originalContext, ctx)
-		Merge(resp, &types.StringValue{Value: "module query was called"})
-		return resp, nil
+		return &types.StringValue{Value: "module query was called"}, nil
 	})
 
 	resp, err := QueryModule(accountCtx, &types.UInt64Value{Value: 1000})

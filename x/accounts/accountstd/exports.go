@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/accounts/internal/implementation"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -90,12 +91,12 @@ func SenderIsAccountsModule(ctx context.Context) bool {
 // returns nil.
 func Funds(ctx context.Context) sdk.Coins { return implementation.Funds(ctx) }
 
-func ExecModule(ctx context.Context, msg implementation.ProtoMsg) (implementation.ProtoMsg, error) {
+func ExecModule(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
 	return implementation.ExecModule(ctx, msg)
 }
 
 // QueryModule can be used by an account to execute a module query.
-func QueryModule(ctx context.Context, req implementation.ProtoMsg) (implementation.ProtoMsg, error) {
+func QueryModule(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
 	return implementation.QueryModule(ctx, req)
 }
 
@@ -105,7 +106,7 @@ func UnpackAny[Msg any, ProtoMsg implementation.ProtoMsgG[Msg]](any *implementat
 }
 
 // PackAny packs a protobuf Any message generically.
-func PackAny(msg implementation.ProtoMsg) (*implementation.Any, error) {
+func PackAny(msg transaction.Msg) (*implementation.Any, error) {
 	return implementation.PackAny(msg)
 }
 

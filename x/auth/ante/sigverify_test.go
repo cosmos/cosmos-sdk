@@ -9,7 +9,7 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/core/gas"
-	gastestutil "cosmossdk.io/core/gas/testutil"
+	gastestutil "cosmossdk.io/core/testing/gas"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/migrations/legacytx"

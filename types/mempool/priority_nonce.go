@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"sync"
 
 	"github.com/huandu/skiplist"
 
@@ -53,7 +54,7 @@ type (
 	// and priority.
 	PriorityNonceMempool[C comparable] struct {
 		priorityIndex *ConcurrentSkipList[C]
-		senderIndices map[string]*ConcurrentSkipList[C]
+		senderIndices sync.Map
 		cfg           PriorityNonceMempoolConfig[C]
 	}
 
@@ -162,7 +163,7 @@ func NewPriorityMempool[C comparable](cfg PriorityNonceMempoolConfig[C]) *Priori
 	}
 	mp := &PriorityNonceMempool[C]{
 		priorityIndex: newConcurrentPriorityIndex[C](skiplistComparable(cfg.TxPriority), true),
-		senderIndices: make(map[string]*ConcurrentSkipList[C]),
+		senderIndices: sync.Map{},
 		cfg:           cfg,
 	}
 
@@ -178,12 +179,12 @@ func DefaultPriorityMempool() *PriorityNonceMempool[int64] {
 // i.e. the next valid transaction for the sender. If no such transaction exists,
 // nil will be returned.
 func (mp *PriorityNonceMempool[C]) NextSenderTx(sender string) sdk.Tx {
-	senderIndex, ok := mp.senderIndices[sender]
+	senderIndex, ok := mp.senderIndices.Load(sender)
 	if !ok {
 		return nil
 	}
-
-	cursor := senderIndex.Front()
+	senderIndexList := senderIndex.(*ConcurrentSkipList[C])
+	cursor := senderIndexList.Front()
 	return cursor.Value.(sdk.Tx)
 }
 
@@ -216,15 +217,14 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 	priority := mp.cfg.TxPriority.GetTxPriority(ctx, tx)
 	nonce := sig.Sequence
 	key := txMeta[C]{nonce: nonce, priority: priority, sender: sender}
-
-	senderIndex, ok := mp.senderIndices[sender]
+	senderIndex, ok := mp.senderIndices.Load(sender)
 	if !ok {
 		senderIndex = newConcurrentPriorityIndex[C](skiplist.LessThanFunc(func(a, b any) int {
 			return skiplist.Uint64.Compare(b.(txMeta[C]).nonce, a.(txMeta[C]).nonce)
 		}), false)
 
 		// initialize sender index if not found
-		mp.senderIndices[sender] = senderIndex
+		mp.senderIndices.Store(sender, senderIndex)
 	}
 
 	// Since mp.priorityIndex is scored by priority, then sender, then nonce, a
@@ -235,14 +235,18 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 	// This O(log n) remove operation is rare and only happens when a tx's priority
 	// changes.
 	if oldScore := mp.priorityIndex.GetScore(nonce, sender); oldScore != nil {
-		if mp.cfg.TxReplacement != nil && !mp.cfg.TxReplacement(oldScore.Priority, priority, senderIndex.Get(key).Value.(sdk.Tx), tx) {
-			return fmt.Errorf(
-				"tx doesn't fit the replacement rule, oldPriority: %v, newPriority: %v, oldTx: %v, newTx: %v",
-				oldScore.Priority,
-				priority,
-				senderIndex.Get(key).Value.(sdk.Tx),
-				tx,
-			)
+		if mp.cfg.TxReplacement != nil {
+			senderIndexList := senderIndex.(*ConcurrentSkipList[C])
+			oldTx := senderIndexList.Get(key).Value.(sdk.Tx)
+			if !mp.cfg.TxReplacement(oldScore.Priority, priority, oldTx, tx) {
+				return fmt.Errorf(
+					"tx doesn't fit the replacement rule: old priority=%v, new priority=%v, old tx=%v, new tx=%v",
+					oldScore.Priority,
+					priority,
+					oldTx,
+					tx,
+				)
+			}
 		}
 
 		mp.priorityIndex.Remove(txMeta[C]{
@@ -255,7 +259,7 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 
 	// Since senderIndex is scored by nonce, a changed priority will overwrite the
 	// existing key.
-	key.senderElement = senderIndex.Set(key, tx)
+	key.senderElement = senderIndex.(*ConcurrentSkipList[C]).Set(key, tx)
 	mp.priorityIndex.Set(key, tx)
 
 	return nil
@@ -290,11 +294,16 @@ func (i *PriorityNonceIterator[C]) Next() Iterator {
 	if i.priorityNode == nil {
 		return nil
 	}
+	senderIndexValue, ok := i.mempool.senderIndices.Load(i.sender)
+	if !ok {
+		return i.iteratePriority()
+	}
+	senderIndex := senderIndexValue.(*ConcurrentSkipList[C])
 
 	cursor, ok := i.senderCursors[i.sender]
 	if !ok {
 		// beginning of sender iteration
-		cursor = i.mempool.senderIndices[i.sender].Front()
+		cursor = senderIndex.Front()
 	} else {
 		// middle of sender iteration
 		cursor = cursor.Next()
@@ -430,13 +439,13 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 	}
 	tk := txMeta[C]{nonce: nonce, priority: score.Priority, sender: sender, weight: score.Weight}
 
-	senderTxs, ok := mp.senderIndices[sender]
+	senderTxs, ok := mp.senderIndices.Load(sender)
 	if !ok {
 		return fmt.Errorf("sender %s not found", sender)
 	}
 
 	mp.priorityIndex.Remove(tk)
-	senderTxs.Remove(tk)
+	senderTxs.(*ConcurrentSkipList[C]).Remove(tk)
 
 	return nil
 }
@@ -454,13 +463,19 @@ func IsEmpty[C comparable](mempool Mempool) error {
 		}
 	}
 
-	senderKeys := make([]string, 0, len(mp.senderIndices))
-	for k := range mp.senderIndices {
-		senderKeys = append(senderKeys, k)
-	}
+	senderKeys := make([]string, 0)
+	mp.senderIndices.Range(func(key, value interface{}) bool {
+		senderKeys = append(senderKeys, key.(string))
+		return true
+	})
 
 	for _, k := range senderKeys {
-		if mp.senderIndices[k].Len() != 0 {
+		senderIndexValue, ok := mp.senderIndices.Load(k)
+		if !ok {
+			continue
+		}
+		senderIndex := senderIndexValue.(*ConcurrentSkipList[C])
+		if senderIndex.Len() != 0 {
 			return fmt.Errorf("senderIndex not empty for sender %v", k)
 		}
 	}

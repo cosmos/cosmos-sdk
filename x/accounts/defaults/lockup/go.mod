@@ -13,11 +13,21 @@ require (
 	github.com/cosmos/gogoproto v1.7.0
 )
 
+<<<<<<< HEAD
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
 	cosmossdk.io/api v0.8.0 // indirect
 	cosmossdk.io/core/testing v0.0.0-20240815194237-858ec2fcb897 // indirect; main
+=======
+require github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+
+require (
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
+	cosmossdk.io/api v0.7.5 // indirect
+	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
+>>>>>>> a554a21a0 (refactor(core,stf,x)!: remove InvokeTyped from router (#21224))
 	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
@@ -25,7 +35,11 @@ require (
 	cosmossdk.io/store v1.1.1-0.20240815194237-858ec2fcb897 // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
+<<<<<<< HEAD
 	cosmossdk.io/x/tx v0.13.4-0.20240815194237-858ec2fcb897 // indirect; main
+=======
+	cosmossdk.io/x/tx v0.13.3 // indirect
+>>>>>>> a554a21a0 (refactor(core,stf,x)!: remove InvokeTyped from router (#21224))
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -66,8 +80,12 @@ require (
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/glog v1.2.1 // indirect
+<<<<<<< HEAD
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.4
+=======
+	github.com/golang/protobuf v1.5.4 // indirect
+>>>>>>> a554a21a0 (refactor(core,stf,x)!: remove InvokeTyped from router (#21224))
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/flatbuffers v2.0.8+incompatible // indirect

@@ -11,7 +11,7 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/event"
-	transaction "cosmossdk.io/core/transaction"
+	"cosmossdk.io/core/transaction"
 )
 
 func NewEventService() event.Service {
@@ -22,7 +22,12 @@ type eventService struct{}
 
 // EventManager implements event.Service.
 func (eventService) EventManager(ctx context.Context) event.Manager {
-	return &eventManager{ctx.(*executionContext)}
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	return &eventManager{exCtx}
 }
 
 var _ event.Manager = (*eventManager)(nil)

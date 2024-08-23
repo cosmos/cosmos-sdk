@@ -45,7 +45,7 @@ func (k Keeper) doExecuteMsgs(ctx context.Context, proposal group.Proposal, grou
 	}
 
 	for i, msg := range msgs {
-		if _, err := k.MsgRouterService.InvokeUntyped(ctx, msg); err != nil {
+		if _, err := k.MsgRouterService.Invoke(ctx, msg); err != nil {
 			return errorsmod.Wrapf(err, "message %s at position %d", sdk.MsgTypeURL(msg), i)
 		}
 	}

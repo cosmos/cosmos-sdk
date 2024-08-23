@@ -321,7 +321,7 @@ func (s STF[T]) runTxMsgs(
 	execCtx.setGasLimit(gasLimit)
 	for i, msg := range msgs {
 		execCtx.sender = txSenders[i]
-		resp, err := s.msgRouter.InvokeUntyped(execCtx, msg)
+		resp, err := s.msgRouter.Invoke(execCtx, msg)
 		if err != nil {
 			return nil, 0, nil, fmt.Errorf("message execution at index %d failed: %w", i, err)
 		}
@@ -457,7 +457,7 @@ func (s STF[T]) Query(
 	queryCtx := s.makeContext(ctx, nil, queryState, internal.ExecModeSimulate)
 	queryCtx.setHeaderInfo(hi)
 	queryCtx.setGasLimit(gasLimit)
-	return s.queryRouter.InvokeUntyped(queryCtx, req)
+	return s.queryRouter.Invoke(queryCtx, req)
 }
 
 // RunWithCtx is made to support genesis, if genesis was just the execution of messages instead

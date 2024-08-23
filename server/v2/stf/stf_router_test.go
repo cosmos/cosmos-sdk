@@ -6,7 +6,6 @@ import (
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/appmodule/v2"
@@ -41,68 +40,9 @@ func TestRouter(t *testing.T) {
 		require.Error(t, err)
 	})
 
-	t.Run("invoke untyped", func(t *testing.T) {
-		gotResp, err := router.InvokeUntyped(context.Background(), expectedMsg)
+	t.Run("invoke", func(t *testing.T) {
+		gotResp, err := router.Invoke(context.Background(), expectedMsg)
 		require.NoError(t, err)
 		require.Equal(t, expectedResp, gotResp)
 	})
-
-	t.Run("invoked typed", func(t *testing.T) {
-		gotResp := new(gogotypes.StringValue)
-		err := router.InvokeTyped(context.Background(), expectedMsg, gotResp)
-		require.NoError(t, err)
-		require.Equal(t, expectedResp, gotResp)
-	})
-}
-
-func TestMerge(t *testing.T) {
-	tests := []struct {
-		name     string
-		src      transaction.Msg
-		dst      transaction.Msg
-		expected transaction.Msg
-		wantErr  bool
-	}{
-		{
-			name:     "success",
-			src:      &gogotypes.BoolValue{Value: true},
-			dst:      &gogotypes.BoolValue{},
-			expected: &gogotypes.BoolValue{Value: true},
-			wantErr:  false,
-		},
-		{
-			name:     "nil src",
-			src:      nil,
-			dst:      &gogotypes.StringValue{},
-			expected: &gogotypes.StringValue{},
-			wantErr:  true,
-		},
-		{
-			name:     "nil dst",
-			src:      &gogotypes.StringValue{Value: "hello"},
-			dst:      nil,
-			expected: nil,
-			wantErr:  true,
-		},
-		{
-			name:     "incompatible types",
-			src:      &gogotypes.StringValue{Value: "hello"},
-			dst:      &gogotypes.BoolValue{},
-			expected: &gogotypes.BoolValue{},
-			wantErr:  true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := merge(tt.src, tt.dst)
-
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.expected, tt.dst)
-			}
-		})
-	}
 }

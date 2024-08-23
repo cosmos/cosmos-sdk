@@ -14,19 +14,21 @@ Except stated otherwise, all participants in the testnet must follow through wit
 
 Download the Cosmos SDK and unzip it. You can do this manually (via the GitHub UI) or with the git clone command.
 
-```python
+```sh
 git clone github.com/cosmos/cosmos-sdk.git
 ```
 
 Next, run this command to build the `simd` binary in the `build` directory.
 
-```python
+```sh
 make build
 ```
+Similarly, you can run this command to 
+
 
 If you’ve run `simd` in the past, you may need to reset your database before starting up a new testnet. You can do that with this command:
 
-```python
+```sh
 # you need to provide the moniker and chain ID
 $ ./simd init [moniker] --chain-id [chain-id]
 ```
@@ -35,22 +37,12 @@ The command should initialize a new working directory at the `~simapp` location.
 
 The `moniker` and `chain-id` can be anything but you need to use the same `chain-id` subsequently.
 
-You can cut the hassles of specifying the directory by making the `simd` binary executable from all directories. 
-
-Open your bash profile file, add this command, and save the file.
-
-```python
-export PATH=$PATH:</PATH/to/SIMAPP>
-# replace </PATH/to/SIMAPP> with the path to the binary
-```
-
-Now, Running `simd` from any part of your computer should work.
 
 ### 2. Create a New Key
 
 Execute this command to create a new key.
 
-```python
+```sh
  ./simd keys add [key_name]
 ```
 
@@ -62,7 +54,7 @@ The command will create a new key with your chosen name.
 
 Add a genesis account to your testnet blockchain.
 
-```python
+```sh
 $ ./simd genesis add-genesis-account [key_name] [amount]
 ```
 
@@ -72,7 +64,7 @@ Where `key_name` is the same key name as before, and the `amount` is something l
 
 This creates the genesis transaction for your testnet chain.
 
-```python
+```sh
 $ ./simd genesis gentx [key_name] [amount] --chain-id [chain-id]
 ```
 
@@ -84,7 +76,7 @@ A participant must create the genesis file `genesis.json` with every participant
 
 You can do this by gathering all the Genesis transactions under `config/gentx` and then executing this command.
 
-```python
+```sh
 $ ./simd genesis collect-gentxs
 ```
 
@@ -103,7 +95,7 @@ persistent_peers = "[validator_address]@[ip_address]:[port],[validator_address]@
 
 You can find `validator_address` by executing:
 
-```python
+```sh
 $ ./simd comet show-node-id
 ```
 
@@ -113,7 +105,7 @@ The output will be the hex-encoded `validator_address`. The default `port` is 26
 
 Finally, execute this command to start your nodes.
 
-```python
+```sh
 $ ./simd start
 ```
 

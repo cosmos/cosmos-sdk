@@ -7,5 +7,7 @@ type StructType struct {
 
 	// Fields is the list of fields in the struct. ObjectKind fields are not allowed.
 	// It is an INCOMPATIBLE change to add, remove or update fields in a struct.
+	// The addition of new fields introduces the possibility that a newer client
+	// will send an incomprehensible message to an older server.
 	Fields []Field
 }

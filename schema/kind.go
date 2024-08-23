@@ -144,12 +144,28 @@ const (
 	// JSON Encoding: any valid JSON value
 	JSONKind
 
+	// StructKind represents a struct object.
+	// Go Encoding: an array of type []interface{} where each element is of the respective field's kind type.
+	// JSON Encoding: an object where each key is the field name and the value is the field value.
+	// Canonically, keys are in alphabetical order with no extra whitespace.
 	StructKind
 
+	// OneOfKind represents a field that can be one of a set of types.
+	// Go Encoding: TODO
+	// JSON Encoding: TODO
 	OneOfKind
 
+	// ObjectKind represents a nested object.
+	// Go Encoding: an array of type []interface{} where each element is of the respective field's kind type, key fields
+	// are encoded first followed by value fields.
+	// JSON Encoding: an object where each key is the field name and the value is the field value.
+	// Canonically, keys are in alphabetical order with no extra whitespace.
 	ObjectKind
 
+	// ListKind represents a list of elements.
+	// Go Encoding: an array of type []interface{} where each element is of the respective field's kind type.
+	// JSON Encoding: an array of values where each element is the field value.
+	// Canonically, there is no extra whitespace.
 	ListKind
 )
 

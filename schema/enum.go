@@ -14,8 +14,20 @@ type EnumType struct {
 	Name string
 
 	// Values is a list of distinct, non-empty values that are part of the enum type.
-	// Each value must conform to the NameFormat regular expression.
-	Values []string
+	Values []EnumValue
+
+	// NumericKind is the numeric kind of the enum.
+	// It must be Uint8Kind, Int8Kind, Uint16Kind, Int16Kind, or Int32Kind.
+	NumericKind Kind
+}
+
+// EnumValue represents a value in an enum type.
+type EnumValue struct {
+	// Name is the name of the enum value. It must conform to the NameFormat regular expression.
+	Name string
+
+	// Value is the numeric value of the enum.
+	Value int32
 }
 
 // TypeName implements the Type interface.

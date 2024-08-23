@@ -217,7 +217,7 @@ for. Each module documents its respective events under 'xx_events.md'.
 // QueryBlockCmd implements the default command for a Block query.
 func QueryBlockCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "block --type=[height|hash] [height|hash]",
+		Use:   "block --type={height|hash} [height|hash]",
 		Short: "Query for a committed block by height, hash, or event(s)",
 		Long:  "Query for a specific committed block using the CometBFT RPC `block` and `block_by_hash` method",
 		Example: strings.TrimSpace(fmt.Sprintf(`

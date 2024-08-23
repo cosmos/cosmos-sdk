@@ -3,10 +3,9 @@ run:
   timeout: 15m
   allow-parallel-runners: true
   build-tags:
-  - e2e
-  - ledger
-  - test_ledger_mock
-
+    - e2e
+    - ledger
+    - test_ledger_mock
 
 linters:
   disable-all: true
@@ -35,7 +34,7 @@ linters:
     - unused
 
 issues:
-  exclude-dirs: 
+  exclude-dirs:
     - testutil/testdata
   exclude-files:
     - server/grpc/gogoreflection/fix_registration.go

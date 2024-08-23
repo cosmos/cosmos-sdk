@@ -1159,22 +1159,6 @@ func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []cryptoty
 	return
 }
 
-func expectedGasCostByKeys(pubkeys []cryptotypes.PubKey) uint64 {
-	cost := uint64(0)
-	for _, pubkey := range pubkeys {
-		pubkeyType := strings.ToLower(fmt.Sprintf("%T", pubkey))
-		switch {
-		case strings.Contains(pubkeyType, "ed25519"):
-			cost += authtypes.DefaultParams().SigVerifyCostED25519
-		case strings.Contains(pubkeyType, "secp256k1"):
-			cost += authtypes.DefaultParams().SigVerifyCostSecp256k1
-		default:
-			panic("unexpected key type")
-		}
-	}
-	return cost
-}
-
 func TestCountSubkeys(t *testing.T) {
 	genPubKeys := func(n int) []cryptotypes.PubKey {
 		var ret []cryptotypes.PubKey

@@ -143,6 +143,14 @@ const (
 	// Go Encoding: json.RawMessage
 	// JSON Encoding: any valid JSON value
 	JSONKind
+
+	StructKind
+
+	OneOfKind
+
+	ObjectKind
+
+	ListKind
 )
 
 // MAX_VALID_KIND is the maximum valid kind value.

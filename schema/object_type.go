@@ -12,13 +12,17 @@ type ObjectType struct {
 	// It can be empty in which case indexers should assume that this object is
 	// a singleton and only has one value. Field names must be unique within the
 	// object between both key and value fields.
-	// Key fields CANNOT be nullable and Float32Kind, Float64Kind, and JSONKind types
-	// are not allowed.
+	// Key fields CANNOT be nullable and Float32Kind, Float64Kind, JSONKind, StructKind,
+	// OneOfKind, RepeatedKind, ListKind or ObjectKind are not allowed.
+	// It is an incompatible change to add, remove or change fields in the key.
 	KeyFields []Field
 
 	// ValueFields is a list of fields that are not part of the primary key of the object.
 	// It can be empty in the case where all fields are part of the primary key.
 	// Field names must be unique within the object between both key and value fields.
+	// ObjectKind is not allowed.
+	// It is a compatible change to add new fields to an object type,
+	// but existing fields should not be removed or modified.
 	ValueFields []Field
 
 	// RetainDeletions is a flag that indicates whether the indexer should retain

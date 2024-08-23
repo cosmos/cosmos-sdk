@@ -13,11 +13,12 @@ type Field struct {
 	// Nullable indicates whether null values are accepted for the field. Key fields CANNOT be nullable.
 	Nullable bool
 
-	// EnumType is the definition of the enum type and is only valid when Kind is EnumKind.
-	// The same enum types can be reused in the same module schema, but they always must contain
-	// the same values for the same enum name. This possibly introduces some duplication of
-	// definitions but makes it easier to reason about correctness and validation in isolation.
-	EnumType EnumType
+	// ElementKind is the element type when Kind is ListKind.
+	ElementKind Kind
+
+	// String is the referenced type name when Kind is EnumKind, StructKind, OneOfKind or ObjectType.
+	// When the main kind is ListKind, this type name is the referenced type of the ElementKind.
+	Type string
 }
 
 // Validate validates the field.

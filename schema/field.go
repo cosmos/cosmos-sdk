@@ -20,12 +20,13 @@ type Field struct {
 	// When the main kind is ListKind, this type name is the referenced type of the ElementKind.
 	Type string
 
-	// Width specifies the width of the field for IntNKind and UintNKind fields.
-	// It is invalid to have a non-zero Width for other kinds.
-	// MaxLength specifies a maximum length for StringKind, BytesKind, AddressKind, and JSONKind fields.
-	// If it is 0, the field has no maximum length.
-	// It is invalid to have a non-zero MaxLength for other kinds.
-	MaxSize uint32
+	// Size specifies the size or max-size of a field.
+	// Its specific meaning may vary depending on the field kind.
+	// For IntNKind and UintNKind fields, it specifies the bit width of the field.
+	// For StringKind, BytesKind, AddressKind, and JSONKind, fields it specifies the maximum length rather than a fixed length.
+	// If it is 0, such fields have no maximum length.
+	// It is invalid to have a non-zero Size for other kinds.
+	Size uint32
 }
 
 // Validate validates the field.

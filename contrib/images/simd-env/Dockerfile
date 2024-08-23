@@ -33,7 +33,7 @@ COPY core/testing/go.mod core/testing/go.sum /work/core/testing/
 RUN go mod download
 
 COPY ./ /work
-RUN LEDGER_ENABLED=false make clean build
+RUN COSMOS_BUILD_OPTIONS=v2 LEDGER_ENABLED=false make clean build
 
 
 FROM alpine AS run
@@ -46,4 +46,4 @@ VOLUME /simd
 WORKDIR /simd
 
 COPY contrib/images/simd-env/wrapper.sh /usr/bin/wrapper.sh
-COPY --from=build /work/build/simd /simd/
+COPY --from=build /work/build/simdv2 /simd/

@@ -14,21 +14,23 @@ type EnumType struct {
 	Name string
 
 	// Values is a list of distinct, non-empty values that are part of the enum type.
-	Values []EnumValue
+	// Each value must conform to the NameFormat regular expression.
+	Values []EnumValueDefinition
 
-	// NumericKind is the numeric kind of the enum.
-	// It must be Uint8Kind, Int8Kind, Uint16Kind, Int16Kind, or Int32Kind.
+	// NumericKind is the numeric kind used to represent the enum values numerically.
+	// If it is left empty, Int32Kind is used by default.
+	// Valid values are Uint8Kind, Int8Kind, Uint16Kind, Int16Kind, and Int32Kind.
 	NumericKind Kind
 }
-
-// EnumValue represents a value in an enum type.
-type EnumValue struct {
+// EnumValueDefinitio represents a value in an enum type.
+type EnumValueDefinition struct {
 	// Name is the name of the enum value. It must conform to the NameFormat regular expression.
 	Name string
 
 	// Value is the numeric value of the enum.
 	Value int32
 }
+
 
 // TypeName implements the Type interface.
 func (e EnumType) TypeName() string {
@@ -48,14 +50,14 @@ func (e EnumType) Validate() error {
 	}
 	seen := make(map[string]bool, len(e.Values))
 	for i, v := range e.Values {
-		if !ValidateName(v) {
+		if !ValidateName(v.Name) {
 			return fmt.Errorf("invalid enum definition value %q at index %d for enum %s", v, i, e.Name)
 		}
 
-		if seen[v] {
+		if seen[v.Name] {
 			return fmt.Errorf("duplicate enum definition value %q for enum %s", v, e.Name)
 		}
-		seen[v] = true
+		seen[v.Name] = true
 	}
 	return nil
 }
@@ -63,7 +65,7 @@ func (e EnumType) Validate() error {
 // ValidateValue validates that the value is a valid enum value.
 func (e EnumType) ValidateValue(value string) error {
 	for _, v := range e.Values {
-		if v == value {
+		if v.Name == value {
 			return nil
 		}
 	}

@@ -19,6 +19,13 @@ type Field struct {
 	// String is the referenced type name when Kind is EnumKind, StructKind, OneOfKind or ObjectType.
 	// When the main kind is ListKind, this type name is the referenced type of the ElementKind.
 	Type string
+
+	// Width specifies the width of the field for IntNKind and UintNKind fields.
+	// It is invalid to have a non-zero Width for other kinds.
+	// MaxLength specifies a maximum length for StringKind, BytesKind, AddressKind, and JSONKind fields.
+	// If it is 0, the field has no maximum length.
+	// It is invalid to have a non-zero MaxLength for other kinds.
+	MaxSize uint32
 }
 
 // Validate validates the field.

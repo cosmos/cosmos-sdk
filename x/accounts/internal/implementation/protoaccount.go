@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/core/transaction"
 	"google.golang.org/protobuf/proto"
+
+	"cosmossdk.io/core/transaction"
 )
 
 // RegisterInitHandler registers an initialisation handler for a smart account that uses protobuf.

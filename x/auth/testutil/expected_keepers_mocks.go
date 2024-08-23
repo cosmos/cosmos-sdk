@@ -8,9 +8,9 @@ import (
 	context "context"
 	reflect "reflect"
 
+	"cosmossdk.io/core/transaction"
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
-	protoiface "google.golang.org/protobuf/runtime/protoiface"
 )
 
 // MockBankKeeper is a mock of BankKeeper interface.
@@ -150,10 +150,10 @@ func (mr *MockAccountsModKeeperMockRecorder) NextAccountNumber(ctx interface{}) 
 }
 
 // SendModuleMessage mocks base method.
-func (m *MockAccountsModKeeper) SendModuleMessage(ctx context.Context, sender []byte, msg protoiface.MessageV1) (protoiface.MessageV1, error) {
+func (m *MockAccountsModKeeper) SendModuleMessage(ctx context.Context, sender []byte, msg transaction.Msg) (transaction.Msg, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendModuleMessage", ctx, sender, msg)
-	ret0, _ := ret[0].(protoiface.MessageV1)
+	ret0, _ := ret[0].(transaction.Msg)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

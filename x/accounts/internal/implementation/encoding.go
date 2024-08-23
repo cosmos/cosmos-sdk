@@ -5,8 +5,9 @@ import (
 	"reflect"
 	"strings"
 
-	"cosmossdk.io/core/transaction"
 	"github.com/cosmos/gogoproto/proto"
+
+	"cosmossdk.io/core/transaction"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )

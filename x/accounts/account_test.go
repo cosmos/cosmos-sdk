@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	banktypes "cosmossdk.io/x/bank/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

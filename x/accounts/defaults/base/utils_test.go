@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/runtime/protoiface"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/collections"
@@ -23,8 +22,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
-
-type ProtoMsg = protoiface.MessageV1
 
 // mock statecodec
 type mockStateCodec struct {

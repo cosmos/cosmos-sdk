@@ -2,8 +2,8 @@ package ante
 
 import (
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/gas"
 	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth/types"
 	txsigning "cosmossdk.io/x/tx/signing"
 
@@ -21,7 +21,7 @@ type HandlerOptions struct {
 	ExtensionOptionChecker   ExtensionOptionChecker
 	FeegrantKeeper           FeegrantKeeper
 	SignModeHandler          *txsigning.HandlerMap
-	SigGasConsumer           func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
+	SigGasConsumer           func(meter gas.Meter, sig signing.SignatureV2, params types.Params) error
 	TxFeeChecker             TxFeeChecker
 }
 

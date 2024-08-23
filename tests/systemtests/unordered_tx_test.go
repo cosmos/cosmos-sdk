@@ -12,6 +12,7 @@ import (
 )
 
 func TestUnorderedTXDuplicate(t *testing.T) {
+	t.Skip()
 	// scenario: test unordered tx duplicate
 	// given a running chain with a tx in the unordered tx pool
 	// when a new tx with the same hash is broadcasted

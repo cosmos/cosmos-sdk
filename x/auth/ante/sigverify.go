@@ -311,9 +311,12 @@ func (svd SigVerificationDecorator) verifySig(ctx context.Context, tx sdk.Tx, ac
 		)
 	}
 
-	// we're in simulation mode, or in ReCheckTx, then we do not need to verify
-	// the signatures in the tx.
-	if svd.ak.GetEnvironment().TransactionService.ExecMode(ctx) == transaction.ExecModeSimulate || svd.ak.GetEnvironment().TransactionService.ExecMode(ctx) == transaction.ExecModeReCheck {
+	// we're in simulation mode, or in ReCheckTx, or context is not
+	// on sig verify tx, then we do not need to verify the signatures
+	// in the tx.
+	if svd.ak.GetEnvironment().TransactionService.ExecMode(ctx) == transaction.ExecModeSimulate ||
+		svd.ak.GetEnvironment().TransactionService.ExecMode(ctx) == transaction.ExecModeReCheck ||
+		!isSigverifyTx(ctx) {
 		return nil
 	}
 
@@ -377,6 +380,11 @@ func (svd SigVerificationDecorator) verifySig(ctx context.Context, tx sdk.Tx, ac
 // setPubKey will attempt to set the pubkey for the account given the list of available public keys.
 // This must be called only in case the account has not a pubkey set yet.
 func (svd SigVerificationDecorator) setPubKey(ctx context.Context, acc sdk.AccountI, txPubKey cryptotypes.PubKey) error {
+	// if we're not in sig verify then we can just skip.
+	if !isSigverifyTx(ctx) {
+		return nil
+	}
+
 	// if the pubkey is nil then we don't have any pubkey to set
 	// for this account, which also means we cannot do signature
 	// verification.
@@ -657,4 +665,13 @@ func signatureDataToBz(data signing.SignatureData) ([][]byte, error) {
 	default:
 		return nil, sdkerrors.ErrInvalidType.Wrapf("unexpected signature data type %T", data)
 	}
+}
+
+// isSigverifyTx will always return true, unless the context is a sdk.Context, in which case we will return the
+// value of IsSigverifyTx.
+func isSigverifyTx(ctx context.Context) bool {
+	if sdkCtx, ok := ctx.(sdk.Context); ok {
+		return sdkCtx.IsSigverifyTx()
+	}
+	return true
 }

@@ -65,7 +65,7 @@ func TestServer(t *testing.T) {
 
 	server := serverv2.NewServer(
 		logger,
-		serverv2.ServerConfig{MinGasPrices: "0stake"},
+		serverv2.DefaultServerConfig(),
 		grpcServer,
 		mockServer,
 	)

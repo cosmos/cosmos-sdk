@@ -86,11 +86,6 @@ func (s *Server[T]) Name() string {
 
 // Start starts all components concurrently.
 func (s *Server[T]) Start(ctx context.Context) error {
-	// validate server component config
-	if err := s.config.ValidateBasic(); err != nil {
-		return err
-	}
-
 	s.logger.Info("starting servers...")
 
 	g, ctx := errgroup.WithContext(ctx)

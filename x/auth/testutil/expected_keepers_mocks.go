@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	"cosmossdk.io/core/transaction"
+	transaction "cosmossdk.io/core/transaction"
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
 )

@@ -27,11 +27,7 @@ require (
 	cosmossdk.io/log v1.4.1 // indirect
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/schema v0.1.1 // indirect
-<<<<<<< HEAD
 	cosmossdk.io/store v1.1.1-0.20240815194237-858ec2fcb897 // indirect
-=======
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
->>>>>>> a554a21a0 (refactor(core,stf,x)!: remove InvokeTyped from router (#21224))
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
@@ -181,20 +177,13 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 
 // TODO remove post spinning out all modules
 replace (
-<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/core => cosmossdk.io/core v0.12.1-0.20240815194237-858ec2fcb897 // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240815194237-858ec2fcb897 // main
-=======
-	cosmossdk.io/api => ../../api
-	cosmossdk.io/collections => ../../collections
-	cosmossdk.io/core => ../../core
-	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/x/accounts/defaults/lockup => ./defaults/lockup
->>>>>>> a554a21a0 (refactor(core,stf,x)!: remove InvokeTyped from router (#21224))
 	cosmossdk.io/x/accounts/defaults/multisig => ./defaults/multisig
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank

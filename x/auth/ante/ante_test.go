@@ -1270,8 +1270,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 						SigGasConsumer: func(meter gas.Meter, sig signing.SignatureV2, params authtypes.Params) error {
 							switch pubkey := sig.PubKey.(type) {
 							case *ed25519.PubKey:
-								meter.Consume(params.SigVerifyCostED25519, "ante verify: ed25519")
-								return nil
+								return meter.Consume(params.SigVerifyCostED25519, "ante verify: ed25519")
 							default:
 								return errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 							}

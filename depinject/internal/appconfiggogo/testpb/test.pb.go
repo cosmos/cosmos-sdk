@@ -4,7 +4,7 @@
 package testpb
 
 import (
-	_ "cosmossdk.io/api/cosmos/app/v1alpha1"
+	_ "cosmossdk.io/depinject/appconfig/v1alpha1"
 	fmt "fmt"
 	proto "github.com/cosmos/gogoproto/proto"
 	io "io"

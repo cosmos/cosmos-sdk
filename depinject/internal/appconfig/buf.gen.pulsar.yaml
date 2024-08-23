@@ -2,8 +2,8 @@ version: v1
 managed:
   enabled: true
   go_package_prefix:
-    default: cosmossdk.io/api
+    default: cosmossdk.io/depinject
 plugins:
   - name: go-pulsar
     out: .
-    opt: paths=source_relative
+    opt: paths=source_relative,Mcosmos/app/v1alpha1/module.proto=cosmossdk.io/depinject/appconfig/v1alpha1

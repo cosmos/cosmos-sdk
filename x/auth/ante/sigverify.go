@@ -315,7 +315,7 @@ func (svd SigVerificationDecorator) verifySig(ctx context.Context, tx sdk.Tx, ac
 	// on sig verify tx, then we do not need to verify the signatures
 	// in the tx.
 	if svd.ak.GetEnvironment().TransactionService.ExecMode(ctx) == transaction.ExecModeSimulate ||
-		svd.ak.GetEnvironment().TransactionService.ExecMode(ctx) == transaction.ExecModeReCheck ||
+		isRecheckTx(ctx, svd.ak.GetEnvironment().TransactionService) ||
 		!isSigverifyTx(ctx) {
 		return nil
 	}
@@ -674,4 +674,11 @@ func isSigverifyTx(ctx context.Context) bool {
 		return sdkCtx.IsSigverifyTx()
 	}
 	return true
+}
+
+func isRecheckTx(ctx context.Context, txSvc transaction.Service) bool {
+	if sdkCtx, ok := sdk.TryUnwrapSDKContext(ctx); ok {
+		return sdkCtx.IsReCheckTx()
+	}
+	return txSvc.ExecMode(ctx) == transaction.ExecModeReCheck
 }

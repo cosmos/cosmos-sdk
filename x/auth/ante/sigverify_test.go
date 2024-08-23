@@ -9,6 +9,7 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/core/gas"
+	"cosmossdk.io/core/header"
 	gastestutil "cosmossdk.io/core/testing/gas"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth/ante"
@@ -157,7 +158,7 @@ func TestSigVerification(t *testing.T) {
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// make block height non-zero to ensure account numbers part of signBytes
-	suite.ctx = suite.ctx.WithBlockHeight(1)
+	suite.ctx = suite.ctx.WithBlockHeight(1).WithHeaderInfo(header.Info{Height: 1, ChainID: suite.ctx.ChainID()})
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -227,6 +228,12 @@ func TestSigVerification(t *testing.T) {
 			t.Run(fmt.Sprintf("%s with %s", tc.name, signMode), func(t *testing.T) {
 				ctx, _ := suite.ctx.CacheContext()
 				ctx = ctx.WithIsReCheckTx(tc.recheck).WithIsSigverifyTx(tc.sigverify)
+				if tc.recheck {
+					ctx = ctx.WithExecMode(sdk.ExecModeReCheck)
+				} else {
+					ctx = ctx.WithExecMode(sdk.ExecModeCheck)
+				}
+
 				suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder() // Create new txBuilder for each test
 
 				require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
@@ -285,23 +292,23 @@ func TestSigIntegration(t *testing.T) {
 
 	params := types.DefaultParams()
 	initialSigCost := params.SigVerifyCostSecp256k1
-	initialCost, err := runSigDecorators(t, params, false, privs...)
+	initialCost, err := runSigDecorators(t, params, privs...)
 	require.Nil(t, err)
 
 	params.SigVerifyCostSecp256k1 *= 2
-	doubleCost, err := runSigDecorators(t, params, false, privs...)
+	doubleCost, err := runSigDecorators(t, params, privs...)
 	require.Nil(t, err)
 
 	require.Equal(t, initialSigCost*uint64(len(privs)), doubleCost-initialCost)
 }
 
-func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...cryptotypes.PrivKey) (storetypes.Gas, error) {
+func runSigDecorators(t *testing.T, params types.Params, privs ...cryptotypes.PrivKey) (storetypes.Gas, error) {
 	t.Helper()
 	suite := SetupTestSuite(t, true)
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// Make block-height non-zero to include accNum in SignBytes
-	suite.ctx = suite.ctx.WithBlockHeight(1)
+	suite.ctx = suite.ctx.WithBlockHeight(1).WithHeaderInfo(header.Info{Height: 1})
 	err := suite.accountKeeper.Params.Set(suite.ctx, params)
 	require.NoError(t, err)
 

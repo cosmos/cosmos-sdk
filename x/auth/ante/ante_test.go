@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/gas"
+	"cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/auth/ante"
@@ -392,7 +393,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("Case %s", tc.desc), func(t *testing.T) {
 			suite := SetupTestSuite(t, false)
-			suite.ctx = suite.ctx.WithBlockHeight(0)
+			suite.ctx = suite.ctx.WithBlockHeight(0).WithHeaderInfo(header.Info{Height: 0, ChainID: suite.ctx.ChainID()})
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 			args := tc.malleate(suite)

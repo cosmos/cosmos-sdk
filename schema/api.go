@@ -2,14 +2,36 @@ package schema
 
 // APIDefinition is a public versioned descriptor of an API.
 //
-// Method handlers may accept different compatible encodings.
-// Protobuf binary is one such encoding and protobuf mappings for each kind and type will be described (TODO).
+// An APIDefinition can be used as a native descriptor of an API's encoding.
+// The native binary encoding of API requests and responses is to encode the input and output
+// fields using value binary encoding.
+// The native JSON encoding would be to encode the fields as a JSON object, canonically
+// sorted by field name with no extra whitespace.
+// Thus, APIDefinitions have deterministic binary and JSON encodings.
 //
-// A "native" wire encoding is, however, already specified for each type and kind.
-// While this encoding is intended to be used for storage purposes, it can also be used
-// as for API method calls and has the advantage of being deterministic.
-// If method handlers choose to use this "native" encoding, they should simply encode
-// input and output parameters each field's value wire encoding.
+// APIDefinitions have a strong definition of compatibility between different versions
+// of the same API.
+// It is compatible to add new methods to an API and to add new output fields
+// to existing methods.
+// It is incompatible to add new input fields to existing methods or to remove or modify
+// existing input or output fields.
+// Input fields cannot reference any types that can add new fields, such as ObjectKind fields.
+// Adding new input fields to a method, directly or transitively, introduces the possibility that a newer client
+// will send an incomprehensible message to an older server.
+// The only safe ways that input field schemas can be extended are by adding
+// new values to EnumType's and new cases to OneOfType's.
+// Output fields can reference ObjectKind or ObjectValueKind fields, which do allow for new value fields to be added.
+// Object types are used to represent data in storage, so it is natural that object values
+// can be returned as output fields of methods.
+// If a newer client tries to call a method on an older server,
+// any new output fields that the newer client knows about will simply be populated with their default values.
+// If an older client tries to call a method on a newer server, the older client will simply ignore any new output fields.
+//
+// Existing protobuf APIs could also be mapped into APIDefinitions, and used in the following ways:
+// - to produce, user-friendly deterministic JSON
+// - to produce a deterministic binary encoding
+// - to check for compatibility in a way that is more appropriate to blockchain applications
+// - to use any code generators designed to support this spec as an alternative to protobuf
 type APIDefinition struct {
 	// Name is the versioned name of the API.
 	Name string
@@ -30,7 +52,7 @@ type MethodType struct {
 	// It is an INCOMPATIBLE change to add, remove or update input fields to a method.
 	// The addition of new fields introduces the possibility that a newer client
 	// will send an incomprehensible message to an older server.
-	// ObjectKind fields are NOT ALLOWED because it is possible to add new value fields
+	// ObjectKind and ObjectValueKind fields are NOT ALLOWED because it is possible to add new value fields
 	// to an object type which would be an incompatible change for input fields.
 	InputFields []Field
 

@@ -23,8 +23,12 @@ Next, run this command to build the `simd` binary in the `build` directory.
 ```sh
 make build
 ```
-Similarly, you can run this command to 
 
+Similarly, you can run this command in place of make build to build the simd binary in the build directory
+
+```sh
+make init-simapp
+```
 
 If you’ve run `simd` in the past, you may need to reset your database before starting up a new testnet. You can do that with this command:
 

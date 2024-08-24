@@ -22,6 +22,7 @@ type ObjectType struct {
 	// ValueFields is a list of fields that are not part of the primary key of the object.
 	// It can be empty in the case where all fields are part of the primary key.
 	// Field names must be unique within the object between both key and value fields.
+	// ObjectKind fields are not allowed.
 	// It is a COMPATIBLE change to add new value fields to an object type because
 	// this does not affect the primary key of the object.
 	// Existing value fields should not be removed or modified.

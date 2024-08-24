@@ -253,16 +253,6 @@ const (
 	// followed by value fields encoded with value binary encoding.
 	ObjectKind
 
-	// ObjectValueKind represents the value an ObjectType value.
-	// The only purpose of this type is to allow an API to reference just the value fields of an object type
-	// without the key fields.
-	// Go Encoding: the same encoding as ObjectUpdate values.
-	// JSON Encoding: the same encoding as ObjectKind minus the key fields.
-	// Key Binary Encoding: not valid as a key field.
-	// Value Binary Encoding: 32-bit unsigned little-endian size prefix indicating the size of the encoded data in bytes,
-	// followed by each field encoded with value binary encoding.
-	ObjectValueKind
-
 	// ListKind represents a list of elements.
 	// Go Encoding: an array of type []interface{} where each element is of the respective field's kind type.
 	// JSON Encoding: an array of values where each element is the field value.

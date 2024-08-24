@@ -20,7 +20,7 @@ package schema
 // will send an incomprehensible message to an older server.
 // The only safe ways that input field schemas can be extended are by adding
 // new values to EnumType's and new cases to OneOfType's.
-// Output fields can reference ObjectKind or ObjectValueKind fields, which do allow for new value fields to be added.
+// Output fields can reference ObjectKind fields, which do allow for new value fields to be added.
 // Object types are used to represent data in storage, so it is natural that object values
 // can be returned as output fields of methods.
 // If a newer client tries to call a method on an older server,
@@ -52,7 +52,7 @@ type MethodType struct {
 	// It is an INCOMPATIBLE change to add, remove or update input fields to a method.
 	// The addition of new fields introduces the possibility that a newer client
 	// will send an incomprehensible message to an older server.
-	// ObjectKind and ObjectValueKind fields are NOT ALLOWED because it is possible to add new value fields
+	// ObjectKind fields are NOT ALLOWED because it is possible to add new value fields
 	// to an object type which would be an incompatible change for input fields.
 	InputFields []Field
 

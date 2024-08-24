@@ -1529,6 +1529,28 @@ func (suite *KeeperTestSuite) TestSpendableCoins() {
 
 	suite.mockSpendableCoins(ctx, vacc)
 	require.Equal(origCoins.Sub(lockedCoins...)[0], suite.bankKeeper.SpendableCoin(ctx, accAddrs[0], "stake"))
+
+	acc2 := authtypes.NewBaseAccountWithAddress(accAddrs[2])
+	lockedCoins2 := sdk.NewCoins(sdk.NewInt64Coin("stake", 50), sdk.NewInt64Coin("tarp", 40), sdk.NewInt64Coin("rope", 30))
+	balanceCoins2 := sdk.NewCoins(sdk.NewInt64Coin("stake", 49), sdk.NewInt64Coin("tarp", 40), sdk.NewInt64Coin("rope", 31), sdk.NewInt64Coin("pole", 20))
+	expCoigns2 := sdk.NewCoins(sdk.NewInt64Coin("rope", 1), sdk.NewInt64Coin("pole", 20))
+	vacc2, err := vesting.NewPermanentLockedAccount(acc2, lockedCoins2)
+	suite.Require().NoError(err)
+
+	// Go back to the suite's context since mockFundAccount uses that; FundAccount would fail for bad mocking otherwise.
+	ctx = sdk.UnwrapSDKContext(suite.ctx)
+	suite.mockFundAccount(accAddrs[2])
+	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[2], balanceCoins2))
+	suite.mockSpendableCoins(ctx, vacc2)
+	require.Equal(expCoins2, suite.bankKeeper.SpendableCoins(ctx, accAddrs[2]))
+	suite.mockSpendableCoins(ctx, vacc2)
+	require.Equal(sdk.NewInt64Coin("stake", 0), suite.bankKeeper.SpendableCoin(ctx, accAddrs[2], "stake"))
+	suite.mockSpendableCoins(ctx, vacc2)
+	require.Equal(sdk.NewInt64Coin("tarp", 0), suite.bankKeeper.SpendableCoin(ctx, accAddrs[2], "tarp"))
+	suite.mockSpendableCoins(ctx, vacc2)
+	require.Equal(sdk.NewInt64Coin("rope", 1), suite.bankKeeper.SpendableCoin(ctx, accAddrs[2], "rope"))
+	suite.mockSpendableCoins(ctx, vacc2)
+	require.Equal(sdk.NewInt64Coin("pole", 20), suite.bankKeeper.SpendableCoin(ctx, accAddrs[2], "pole"))
 }
 
 func (suite *KeeperTestSuite) TestVestingAccountSend() {

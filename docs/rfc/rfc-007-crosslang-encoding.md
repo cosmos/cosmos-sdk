@@ -119,8 +119,49 @@ fn example_send(bank: &Bank, ctx: &mut Context) -> Result<()> {
 ### Regular Function Arguments
 
 ```rust
+type Denom = VarChar<64>;
+
+struct Bank {
+    #[map(prefix = 1, key(addres, denom), value(amount))]
+    balances: Map<(Address, Denom), u128>,
+
+    #[map(prefix = 2, key(denom), value(amount))]
+    supply: Map<Denom, u128>,
+
+    #[object_table(prefix = 3)]
+    metadata: ObjectTable<Metadata>,
+}
+
+#[derive(Object)]
+struct Metadata {
+    #[key]
+    denom: Denom,
+    description: VarChar<256>,
+    decimals: u8,
+}
+
+struct Coin {
+    denom: Denom,
+    amount: u128,
+}
+
 impl Bank {
-    fn send(from: &str, to: &str, coins: &[Coin]) -> Result<()> { /* ... */ }
+    fn send(ctx: &Context, from: &Address, to: &Address, coins: &[Coin]) -> Result<()> { 
+        for coin in coins {
+            let from_balance = self.balances.get(ctx, (from, coin.denom))?;
+            if from_balance < coin.amount {
+                return Err(Error::InsufficientFunds);
+            }
+            let to_balance = self.balances.get(ctx, (to, coin.denom))?;
+            self.balances.insert(ctx, (from, coin.denom), from_balance - coin.amount)?;
+            self.balances.insert(ctx, (to, coin.denom), to_balance + coin.amount)?;
+        }
+        Ok(())
+    }
+    
+    fn get_metadata(ctx: &Context, denom: &Denom) -> Result<Metadata> { 
+        self.metadata.get(ctx, denom)
+    }
 }
 ```
 

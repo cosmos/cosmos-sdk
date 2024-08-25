@@ -24,7 +24,7 @@ Next, run this command to build the `simd` binary in the `build` directory.
 make build
 ```
 
-Similarly, you can run this command in place of make build to build the simd binary in the build directory
+Use the following command and skip all the next steps to configure your SimApp node:
 
 ```sh
 make init-simapp

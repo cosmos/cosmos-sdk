@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/pkg/errors"
+	pkgerr "github.com/pkg/errors"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -56,7 +56,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val sdk.ValidatorI
 
 	// fetch current rewards
 	rewards, err := k.ValidatorCurrentRewards.Get(ctx, valBz)
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+	if err != nil && !pkgerr.Is(err, collections.ErrNotFound) {
 		return 0, err
 	}
 
@@ -72,7 +72,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val sdk.ValidatorI
 		}
 
 		outstanding, err := k.ValidatorOutstandingRewards.Get(ctx, valBz)
-		if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		if err != nil && !pkgerr.Is(err, collections.ErrNotFound) {
 			return 0, err
 		}
 

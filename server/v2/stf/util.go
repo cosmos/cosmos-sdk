@@ -2,7 +2,7 @@ package stf
 
 import (
 	"context"
-	"fmt"
+	"errors"
 )
 
 // getExecutionCtxFromContext tries to get the execution context from the given go context.
@@ -16,5 +16,5 @@ func getExecutionCtxFromContext(ctx context.Context) (*executionContext, error) 
 		return value, nil
 	}
 
-	return nil, fmt.Errorf("failed to get executionContext from context")
+	return nil, errors.New("failed to get executionContext from context")
 }

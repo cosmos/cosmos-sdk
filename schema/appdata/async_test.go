@@ -2,7 +2,7 @@ package appdata
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"sync"
 	"testing"
 )
@@ -78,7 +78,7 @@ func TestAsyncListenerMux(t *testing.T) {
 			calls1 = append(calls1, name)
 		})
 		listener1.Commit = func(data CommitData) (completionCallback func() error, err error) {
-			return nil, fmt.Errorf("error")
+			return nil, errors.New("error")
 		}
 		listener2 := callCollector(2, func(name string, _ int, _ Packet) {
 			calls2 = append(calls2, name)
@@ -141,7 +141,7 @@ func TestAsyncListener(t *testing.T) {
 		})
 
 		listener.OnKVPair = func(updates KVPairData) error {
-			return fmt.Errorf("error")
+			return errors.New("error")
 		}
 
 		res := AsyncListener(AsyncListenerOptions{BufferSize: 16}, listener)

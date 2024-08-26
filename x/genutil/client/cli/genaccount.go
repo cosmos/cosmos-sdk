@@ -120,6 +120,31 @@ func AddBulkGenesisAccountCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bulk-add-genesis-account [/file/path.json]",
 		Short: "Bulk add genesis accounts to genesis.json",
+		Example: `bulk-add-genesis-account accounts.json
+
+where accounts.json is:
+
+[
+    {
+        "address": "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+        "coins": [
+            { "denom": "umuon", "amount": "100000000" },
+            { "denom": "stake", "amount": "200000000" }
+        ]
+    },
+    {
+        "address": "cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg",
+        "coins": [
+            { "denom": "umuon", "amount": "500000000" }
+        ],
+        "vesting_amt": [
+            { "denom": "umuon", "amount": "400000000" }
+        ],
+        "vesting_start": 1724711478,
+        "vesting_end": 1914013878
+    }
+]
+`,
 		Long: `Add genesis accounts in bulk to genesis.json. The provided account must specify
 the account address and a list of initial coins. The list of initial tokens must
 contain valid denominations. Accounts may optionally be supplied with vesting parameters.

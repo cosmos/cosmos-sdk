@@ -66,7 +66,7 @@ func AddGenesisAccounts(
 		addr := acc.Address
 		coins := acc.Coins
 
-		accAddr, err := sdk.AccAddressFromBech32(addr)
+		accAddr, err := addressCodec.StringToBytes(addr)
 		if err != nil {
 			return fmt.Errorf("failed to parse account address %s: %w", addr, err)
 		}

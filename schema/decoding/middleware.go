@@ -23,6 +23,7 @@ func Middleware(target appdata.Listener, resolver DecoderResolver, opts Middlewa
 	onKVPair := target.OnKVPair
 
 	moduleCodecs := map[string]*schema.ModuleCodec{}
+	moduleNames := map[string]string{}
 
 	target.OnKVPair = func(data appdata.KVPairData) error {
 		// first forward kv pair updates
@@ -34,17 +35,28 @@ func Middleware(target appdata.Listener, resolver DecoderResolver, opts Middlewa
 		}
 
 		for _, kvUpdate := range data.Updates {
-			// look for an existing codec
-			pcdc, ok := moduleCodecs[kvUpdate.ModuleName]
+			moduleName, ok := moduleNames[string(kvUpdate.Actor)]
 			if !ok {
-				if opts.ModuleFilter != nil && !opts.ModuleFilter(kvUpdate.ModuleName) {
+				var err error
+				moduleName, err = resolver.DecodeModuleName(kvUpdate.Actor)
+				if err != nil {
+					return err
+				}
+
+				moduleNames[string(kvUpdate.Actor)] = moduleName
+			}
+
+			// look for an existing codec
+			pcdc, ok := moduleCodecs[moduleName]
+			if !ok {
+				if opts.ModuleFilter != nil && !opts.ModuleFilter(moduleName) {
 					// we don't care about this module so store nil and continue
-					moduleCodecs[kvUpdate.ModuleName] = nil
+					moduleCodecs[moduleName] = nil
 					continue
 				}
 
 				// look for a new codec
-				cdc, found, err := resolver.LookupDecoder(kvUpdate.ModuleName)
+				cdc, found, err := resolver.LookupDecoder(moduleName)
 				if err != nil {
 					return err
 				}
@@ -52,16 +64,16 @@ func Middleware(target appdata.Listener, resolver DecoderResolver, opts Middlewa
 				if !found {
 					// store nil to indicate we've seen this module and don't have a codec
 					// and keep processing the kv updates
-					moduleCodecs[kvUpdate.ModuleName] = nil
+					moduleCodecs[moduleName] = nil
 					continue
 				}
 
 				pcdc = &cdc
-				moduleCodecs[kvUpdate.ModuleName] = pcdc
+				moduleCodecs[moduleName] = pcdc
 
 				if initializeModuleData != nil {
 					err = initializeModuleData(appdata.ModuleInitializationData{
-						ModuleName: kvUpdate.ModuleName,
+						ModuleName: moduleName,
 						Schema:     cdc.Schema,
 					})
 					if err != nil {
@@ -80,22 +92,24 @@ func Middleware(target appdata.Listener, resolver DecoderResolver, opts Middlewa
 				continue
 			}
 
-			updates, err := pcdc.KVDecoder(kvUpdate.Update)
-			if err != nil {
-				return err
-			}
+			for _, u := range kvUpdate.StateChanges {
+				updates, err := pcdc.KVDecoder(u)
+				if err != nil {
+					return err
+				}
 
-			if len(updates) == 0 {
-				// no updates
-				continue
-			}
+				if len(updates) == 0 {
+					// no updates
+					continue
+				}
 
-			err = target.OnObjectUpdate(appdata.ObjectUpdateData{
-				ModuleName: kvUpdate.ModuleName,
-				Updates:    updates,
-			})
-			if err != nil {
-				return err
+				err = target.OnObjectUpdate(appdata.ObjectUpdateData{
+					ModuleName: moduleName,
+					Updates:    updates,
+				})
+				if err != nil {
+					return err
+				}
 			}
 		}
 

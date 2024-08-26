@@ -13,7 +13,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Params",
-					Use:       "subspace [subspace] [key]",
+					Use:       "subspace <subspace> <key>",
 					Short:     "Query for raw parameters by subspace and key",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "subspace"},

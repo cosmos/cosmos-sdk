@@ -20,7 +20,7 @@ func TestVersionCommand_Error(t *testing.T) {
 	rootCmd.SetOut(out)
 	rootCmd.SetErr(out)
 
-	ctx := context.WithValue(context.Background(), log.ContextKey, logger) //nolint:staticcheck // temporary issue in dependency
+	ctx := context.WithValue(context.Background(), log.ContextKey, logger)
 
 	require.Error(t, rootCmd.ExecuteContext(ctx))
 	require.Contains(t, out.String(), "DAEMON_NAME is not set")

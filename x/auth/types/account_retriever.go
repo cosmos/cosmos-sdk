@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -75,7 +76,8 @@ func (ar AccountRetriever) EnsureExists(clientCtx client.Context, addr sdk.AccAd
 func (ar AccountRetriever) GetAccountNumberSequence(clientCtx client.Context, addr sdk.AccAddress) (uint64, uint64, error) {
 	acc, err := ar.GetAccount(clientCtx, addr)
 	if err != nil {
-		if status.Code(err) == codes.NotFound {
+		// the error might come wrapped from CometBFT, so we check with the string too
+		if status.Code(err) == codes.NotFound || strings.Contains(err.Error(), "code = NotFound") {
 			return 0, 0, nil
 		}
 		return 0, 0, err

@@ -130,8 +130,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 		},
 	}
 
-	for name, stc := range cases {
-		tc := stc // to make scopelint happy
+	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			err := tc.allowance.UpdatePeriodReset(tc.blockTime)
 			require.NoError(t, err)

@@ -293,15 +293,15 @@ func (app *SimApp) setCustomAnteHandler() {
 	anteHandler, err := NewAnteHandler(
 		HandlerOptions{
 			ante.HandlerOptions{
-				AccountKeeper:   app.AuthKeeper,
-				BankKeeper:      app.BankKeeper,
-				SignModeHandler: app.txConfig.SignModeHandler(),
-				FeegrantKeeper:  app.FeeGrantKeeper,
-				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-				Environment:     app.AuthKeeper.Environment,
+				AccountKeeper:      app.AuthKeeper,
+				BankKeeper:         app.BankKeeper,
+				SignModeHandler:    app.txConfig.SignModeHandler(),
+				FeegrantKeeper:     app.FeeGrantKeeper,
+				SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
+				UnorderedTxManager: app.UnorderedTxManager,
+				Environment:        app.AuthKeeper.Environment,
 			},
 			&app.CircuitBreakerKeeper,
-			app.UnorderedTxManager,
 		},
 	)
 	if err != nil {

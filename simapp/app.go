@@ -638,9 +638,9 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 				SignModeHandler:          txConfig.SignModeHandler(),
 				FeegrantKeeper:           app.FeeGrantKeeper,
 				SigGasConsumer:           ante.DefaultSigVerificationGasConsumer,
+				UnorderedTxManager:       app.UnorderedTxManager,
 			},
 			&app.CircuitKeeper,
-			app.UnorderedTxManager,
 		},
 	)
 	if err != nil {
@@ -665,6 +665,10 @@ func (app *SimApp) setPostHandler() {
 // Close implements the Application interface and closes all necessary application
 // resources.
 func (app *SimApp) Close() error {
+	if err := app.BaseApp.Close(); err != nil {
+		return err
+	}
+
 	return app.UnorderedTxManager.Close()
 }
 

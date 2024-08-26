@@ -9,7 +9,9 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/core/gas"
-	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/core/header"
+	gastestutil "cosmossdk.io/core/testing/gas"
+	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/migrations/legacytx"
 	authsign "cosmossdk.io/x/auth/signing"
@@ -40,7 +42,6 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 	pkSet1, sigSet1 := generatePubKeysAndSignatures(5, msg, false)
 	multisigKey1 := kmultisig.NewLegacyAminoPubKey(2, pkSet1)
 	multisignature1 := multisig.NewMultisig(len(pkSet1))
-	expectedCost1 := expectedGasCostByKeys(pkSet1)
 	for i := 0; i < len(pkSet1); i++ {
 		stdSig := legacytx.StdSignature{PubKey: pkSet1[i], Signature: sigSet1[i]} //nolint:staticcheck // SA1019: legacytx.StdSignature is deprecated
 		sigV2, err := legacytx.StdSignatureToSignatureV2(suite.clientCtx.LegacyAmino, stdSig)
@@ -49,7 +50,6 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	simulationExpectedCost := expectedGasCostByKeys(pkSet1[:multisigKey1.Threshold])
 	simulationMultiSignatureData := make([]signing.SignatureData, 0, multisigKey1.Threshold)
 	for i := uint32(0); i < multisigKey1.Threshold; i++ {
 		simulationMultiSignatureData = append(simulationMultiSignatureData, &signing.SingleSignatureData{})
@@ -59,38 +59,77 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 	}
 
 	type args struct {
-		meter  gas.Meter
-		sig    signing.SignatureData
-		pubkey cryptotypes.PubKey
-		params types.Params
+		sig      signing.SignatureData
+		pubkey   cryptotypes.PubKey
+		params   types.Params
+		malleate func(*gastestutil.MockMeter)
 	}
 	tests := []struct {
-		name        string
-		args        args
-		gasConsumed uint64
-		shouldErr   bool
+		name      string
+		args      args
+		shouldErr bool
 	}{
-		{"PubKeyEd25519", args{coretesting.NewInfiniteGasMeter(), nil, ed25519.GenPrivKey().PubKey(), params}, p.SigVerifyCostED25519, true},
-		{"PubKeySecp256k1", args{coretesting.NewInfiniteGasMeter(), nil, secp256k1.GenPrivKey().PubKey(), params}, p.SigVerifyCostSecp256k1, false},
-		{"PubKeySecp256r1", args{coretesting.NewInfiniteGasMeter(), nil, skR1.PubKey(), params}, p.SigVerifyCostSecp256r1(), false},
-		{"Multisig", args{coretesting.NewInfiniteGasMeter(), multisignature1, multisigKey1, params}, expectedCost1, false},
-		{"Multisig simulation", args{coretesting.NewInfiniteGasMeter(), multisigSimulationSignature, multisigKey1, params}, simulationExpectedCost, false},
-		{"unknown key", args{coretesting.NewInfiniteGasMeter(), nil, nil, params}, 0, true},
+		{
+			"PubKeyEd25519",
+			args{nil, ed25519.GenPrivKey().PubKey(), params, func(mm *gastestutil.MockMeter) {
+				mm.EXPECT().Consume(p.SigVerifyCostED25519, "ante verify: ed25519").Times(1)
+			}},
+			true,
+		},
+		{
+			"PubKeySecp256k1",
+			args{nil, secp256k1.GenPrivKey().PubKey(), params, func(mm *gastestutil.MockMeter) {
+				mm.EXPECT().Consume(p.SigVerifyCostSecp256k1, "ante verify: secp256k1").Times(1)
+			}},
+			false,
+		},
+		{
+			"PubKeySecp256r1",
+			args{nil, skR1.PubKey(), params, func(mm *gastestutil.MockMeter) {
+				mm.EXPECT().Consume(p.SigVerifyCostSecp256r1(), "ante verify: secp256r1").Times(1)
+			}},
+			false,
+		},
+		{
+			"Multisig",
+			args{multisignature1, multisigKey1, params, func(mm *gastestutil.MockMeter) {
+				// 5 signatures
+				mm.EXPECT().Consume(p.SigVerifyCostSecp256k1, "ante verify: secp256k1").Times(5)
+			}},
+			false,
+		},
+		{
+			"Multisig simulation",
+			args{multisigSimulationSignature, multisigKey1, params, func(mm *gastestutil.MockMeter) {
+				mm.EXPECT().Consume(p.SigVerifyCostSecp256k1, "ante verify: secp256k1").Times(int(multisigKey1.Threshold))
+			}},
+			false,
+		},
+		{
+			"unknown key",
+			args{nil, nil, params, func(mm *gastestutil.MockMeter) {}},
+			true,
+		},
 	}
 	for _, tt := range tests {
-		sigV2 := signing.SignatureV2{
-			PubKey:   tt.args.pubkey,
-			Data:     tt.args.sig,
-			Sequence: 0, // Arbitrary account sequence
-		}
-		err := ante.DefaultSigVerificationGasConsumer(tt.args.meter, sigV2, tt.args.params)
+		t.Run(tt.name, func(t *testing.T) {
+			sigV2 := signing.SignatureV2{
+				PubKey:   tt.args.pubkey,
+				Data:     tt.args.sig,
+				Sequence: 0, // Arbitrary account sequence
+			}
 
-		if tt.shouldErr {
-			require.NotNil(t, err)
-		} else {
-			require.Nil(t, err)
-			require.Equal(t, tt.gasConsumed, tt.args.meter.Consumed(), fmt.Sprintf("%d != %d", tt.gasConsumed, tt.args.meter.Consumed()))
-		}
+			ctrl := gomock.NewController(t)
+			mockMeter := gastestutil.NewMockMeter(ctrl)
+			tt.args.malleate(mockMeter)
+			err := ante.DefaultSigVerificationGasConsumer(mockMeter, sigV2, tt.args.params)
+
+			if tt.shouldErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
 	}
 }
 
@@ -119,7 +158,7 @@ func TestSigVerification(t *testing.T) {
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// make block height non-zero to ensure account numbers part of signBytes
-	suite.ctx = suite.ctx.WithBlockHeight(1)
+	suite.ctx = suite.ctx.WithBlockHeight(1).WithHeaderInfo(header.Info{Height: 1, ChainID: suite.ctx.ChainID()})
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -189,6 +228,12 @@ func TestSigVerification(t *testing.T) {
 			t.Run(fmt.Sprintf("%s with %s", tc.name, signMode), func(t *testing.T) {
 				ctx, _ := suite.ctx.CacheContext()
 				ctx = ctx.WithIsReCheckTx(tc.recheck).WithIsSigverifyTx(tc.sigverify)
+				if tc.recheck {
+					ctx = ctx.WithExecMode(sdk.ExecModeReCheck)
+				} else {
+					ctx = ctx.WithExecMode(sdk.ExecModeCheck)
+				}
+
 				suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder() // Create new txBuilder for each test
 
 				require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
@@ -247,23 +292,23 @@ func TestSigIntegration(t *testing.T) {
 
 	params := types.DefaultParams()
 	initialSigCost := params.SigVerifyCostSecp256k1
-	initialCost, err := runSigDecorators(t, params, false, privs...)
+	initialCost, err := runSigDecorators(t, params, privs...)
 	require.Nil(t, err)
 
 	params.SigVerifyCostSecp256k1 *= 2
-	doubleCost, err := runSigDecorators(t, params, false, privs...)
+	doubleCost, err := runSigDecorators(t, params, privs...)
 	require.Nil(t, err)
 
 	require.Equal(t, initialSigCost*uint64(len(privs)), doubleCost-initialCost)
 }
 
-func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...cryptotypes.PrivKey) (gas.Gas, error) {
+func runSigDecorators(t *testing.T, params types.Params, privs ...cryptotypes.PrivKey) (storetypes.Gas, error) {
 	t.Helper()
 	suite := SetupTestSuite(t, true)
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// Make block-height non-zero to include accNum in SignBytes
-	suite.ctx = suite.ctx.WithBlockHeight(1)
+	suite.ctx = suite.ctx.WithBlockHeight(1).WithHeaderInfo(header.Info{Height: 1})
 	err := suite.accountKeeper.Params.Set(suite.ctx, params)
 	require.NoError(t, err)
 

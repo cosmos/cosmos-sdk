@@ -45,7 +45,7 @@ func Test_TestnetCmd(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.NotNil(t, moduleManager)
-	require.Len(t, moduleManager.Modules, 8)
+	require.Len(t, moduleManager.Modules, 9) // the registered above + runtime
 
 	home := t.TempDir()
 	cdcOpts := codectestutil.CodecOptions{}

@@ -288,7 +288,7 @@ func safeExecuteHandler(ctx context.Context, msg sdk.Msg, router router.Service)
 		}
 	}()
 
-	res, err = router.InvokeUntyped(ctx, msg)
+	res, err = router.Invoke(ctx, msg)
 	return
 }
 

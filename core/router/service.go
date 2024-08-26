@@ -11,8 +11,6 @@ import (
 type Service interface {
 	// CanInvoke returns an error if the given request cannot be invoked.
 	CanInvoke(ctx context.Context, typeURL string) error
-	// InvokeTyped execute a message or query. It should be used when the called knows the type of the response.
-	InvokeTyped(ctx context.Context, req, res transaction.Msg) error
-	// InvokeUntyped execute a Msg or query. It should be used when the called doesn't know the type of the response.
-	InvokeUntyped(ctx context.Context, req transaction.Msg) (res transaction.Msg, err error)
+	// Invoke execute a message or query. The response should be type casted by the caller to the expected response.
+	Invoke(ctx context.Context, req transaction.Msg) (res transaction.Msg, err error)
 }

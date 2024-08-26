@@ -342,8 +342,13 @@ func (s *SystemUnderTest) StopSingleNode() error {
 	pids := maps.Keys(s.pids)
 	s.pidsLock.RUnlock()
 
-	sort.Ints(pids)
-	p, err := os.FindProcess(pids[0])
+	var intPids []int
+	for pid := range pids {
+		intPids = append(intPids, pid)
+	}
+
+	sort.Ints(intPids)
+	p, err := os.FindProcess(intPids[0])
 	if err != nil {
 		return err
 	}

@@ -87,13 +87,20 @@ func TestFeegrantPruning(t *testing.T) {
 	feegrant.RegisterQueryServer(queryHelper, feegrantKeeper)
 	queryClient := feegrant.NewQueryClient(queryHelper)
 
-	require.NoError(t, module.EndBlocker(testCtx.Ctx, feegrantKeeper))
-
 	granteeStr, err := ac.BytesToString(grantee)
 	require.NoError(t, err)
-	res, err := queryClient.Allowances(testCtx.Ctx.Context(), &feegrant.QueryAllowancesRequest{
+	queryRequest := &feegrant.QueryAllowancesRequest{
 		Grantee: granteeStr,
-	})
+	}
+
+	res, err := queryClient.Allowances(testCtx.Ctx.Context(), queryRequest)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res.Allowances, 3)
+
+	require.NoError(t, module.EndBlocker(testCtx.Ctx, feegrantKeeper))
+
+	res, err = queryClient.Allowances(testCtx.Ctx.Context(), queryRequest)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res.Allowances, 2)
@@ -101,9 +108,7 @@ func TestFeegrantPruning(t *testing.T) {
 	testCtx.Ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: now.AddDate(0, 0, 2)})
 	require.NoError(t, module.EndBlocker(testCtx.Ctx, feegrantKeeper))
 
-	res, err = queryClient.Allowances(testCtx.Ctx.Context(), &feegrant.QueryAllowancesRequest{
-		Grantee: granteeStr,
-	})
+	res, err = queryClient.Allowances(testCtx.Ctx.Context(), queryRequest)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res.Allowances, 1)

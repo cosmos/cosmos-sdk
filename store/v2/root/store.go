@@ -245,7 +245,7 @@ func (s *Store) LoadVersion(version uint64) error {
 // NOTE: It cannot be called while the store is migrating.
 func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreUpgrades) error {
 	if upgrades == nil {
-		return fmt.Errorf("upgrades cannot be nil")
+		return errors.New("upgrades cannot be nil")
 	}
 
 	if s.telemetry != nil {
@@ -253,7 +253,7 @@ func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreU
 	}
 
 	if s.isMigrating {
-		return fmt.Errorf("cannot upgrade while migrating")
+		return errors.New("cannot upgrade while migrating")
 	}
 
 	if err := s.loadVersion(version, upgrades); err != nil {
@@ -283,7 +283,7 @@ func (s *Store) loadVersion(v uint64, upgrades *corestore.StoreUpgrades) error {
 		// if upgrades are provided, we need to load the version and apply the upgrades
 		upgradeableStore, ok := s.stateCommitment.(store.UpgradeableStore)
 		if !ok {
-			return fmt.Errorf("SC store does not support upgrades")
+			return errors.New("SC store does not support upgrades")
 		}
 		if err := upgradeableStore.LoadVersionAndUpgrade(v, upgrades); err != nil {
 			return fmt.Errorf("failed to load SS version with upgrades %d: %w", v, err)

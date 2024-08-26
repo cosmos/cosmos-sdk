@@ -1,7 +1,7 @@
 Send coins from one account to another
 
 Usage:
-  test send [from_key_or_address] [to_address] [amount] [flags]
+  test send <from_key_or_address> <to_address> <amount> [flags]
 
 Flags:
   -a, --account-number uint      The account number of the signing account (offline mode only)

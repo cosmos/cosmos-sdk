@@ -2,15 +2,18 @@ package accounts
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/cosmos/gogoproto/types"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
+	banktypes "cosmossdk.io/x/bank/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ implementation.Account = (*TestAccount)(nil)
@@ -28,7 +31,7 @@ type TestAccount struct {
 func (t TestAccount) RegisterInitHandler(builder *implementation.InitBuilder) {
 	implementation.RegisterInitHandler(builder, func(ctx context.Context, _ *types.Empty) (*types.Empty, error) {
 		// we also force a module call here to test things work as expected.
-		_, err := implementation.QueryModule[bankv1beta1.QueryBalanceResponse](ctx, &bankv1beta1.QueryBalanceRequest{
+		_, err := implementation.QueryModule(ctx, &banktypes.QueryBalanceRequest{
 			Address: string(implementation.Whoami(ctx)),
 			Denom:   "atom",
 		})
@@ -52,15 +55,10 @@ func (t TestAccount) RegisterExecuteHandlers(builder *implementation.ExecuteBuil
 
 	// this is for intermodule comms testing, we simulate a bank send
 	implementation.RegisterExecuteHandler(builder, func(ctx context.Context, req *types.Int64Value) (*types.Empty, error) {
-		resp, err := implementation.ExecModule[bankv1beta1.MsgSendResponse](ctx, &bankv1beta1.MsgSend{
+		resp, err := implementation.ExecModule(ctx, &banktypes.MsgSend{
 			FromAddress: string(implementation.Whoami(ctx)),
 			ToAddress:   "recipient",
-			Amount: []*basev1beta1.Coin{
-				{
-					Denom:  "test",
-					Amount: strconv.FormatInt(req.Value, 10),
-				},
-			},
+			Amount:      sdk.NewCoins(sdk.NewCoin("test", math.NewInt(req.Value))),
 		})
 		if err != nil {
 			return nil, err
@@ -90,7 +88,7 @@ func (t TestAccount) RegisterQueryHandlers(builder *implementation.QueryBuilder)
 	// test intermodule comms, we simulate someone is sending the account a request for the accounts balance
 	// of a given denom.
 	implementation.RegisterQueryHandler(builder, func(ctx context.Context, req *types.StringValue) (*types.Int64Value, error) {
-		resp, err := implementation.QueryModule[bankv1beta1.QueryBalanceResponse](ctx, &bankv1beta1.QueryBalanceRequest{
+		resp, err := implementation.QueryModule(ctx, &banktypes.QueryBalanceRequest{
 			Address: string(implementation.Whoami(ctx)),
 			Denom:   req.Value,
 		})
@@ -98,11 +96,12 @@ func (t TestAccount) RegisterQueryHandlers(builder *implementation.QueryBuilder)
 			return nil, err
 		}
 
-		amt, err := strconv.ParseInt(resp.Balance.Amount, 10, 64)
-		if err != nil {
-			return nil, err
+		r, ok := resp.(*banktypes.QueryBalanceResponse)
+		if !ok {
+			panic(fmt.Sprintf("unexpected response type: %T", resp))
 		}
-		return &types.Int64Value{Value: amt}, nil
+
+		return &types.Int64Value{Value: r.Balance.Amount.Int64()}, nil
 	})
 
 	// genesis testing; DoubleValue does not make sense as a request type for this query, but empty is already taken

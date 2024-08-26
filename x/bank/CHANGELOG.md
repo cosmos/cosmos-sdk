@@ -36,6 +36,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#20517](https://github.com/cosmos/cosmos-sdk/pull/20517) `SendCoins` now checks for `SendRestrictions` before instead of after deducting coins using `subUnlockedCoins`.
 * [#20354](https://github.com/cosmos/cosmos-sdk/pull/20354) Reduce the number of `ValidateDenom` calls in `bank.SendCoins`.
 
+### Bug Fixes
+
+* [#21407](https://github.com/cosmos/cosmos-sdk/pull/21407) Fix the `SpendableBalances` query to correctly report spendable balances when one or more are negative. Also restrict the balance lookups to only the denoms in the page being returned.
+* [#21407](https://github.com/cosmos/cosmos-sdk/pull/21407) Fix the `SpendableCoins` keeper method to correctly return the positive spendable balances when one or more denoms have more locked than spendable.
+* [#21407](https://github.com/cosmos/cosmos-sdk/pull/21407) Fix the `SpendableCoin` keeper method to return a zero coin if there's more locked than available.
+
 ### API Breaking Changes
 
 * [#19954](https://github.com/cosmos/cosmos-sdk/pull/19954) Removal of the Address.String() method and related changes:

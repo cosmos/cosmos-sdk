@@ -6,35 +6,34 @@ import (
 	"strings"
 
 	"github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/runtime/protoiface"
+
+	"cosmossdk.io/core/transaction"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-type ProtoMsg = protoiface.MessageV1
-
 // ProtoMsgG is a generic interface for protobuf messages.
 type ProtoMsgG[T any] interface {
 	*T
-	protoiface.MessageV1
+	transaction.Msg
 }
 
 type Any = codectypes.Any
 
-func FindMessageByName(name string) (ProtoMsg, error) {
+func FindMessageByName(name string) (transaction.Msg, error) {
 	typ := proto.MessageType(name)
 	if typ == nil {
 		return nil, fmt.Errorf("no message type found for %s", name)
 	}
-	return reflect.New(typ.Elem()).Interface().(ProtoMsg), nil
+	return reflect.New(typ.Elem()).Interface().(transaction.Msg), nil
 }
 
-func MessageName(msg ProtoMsg) string {
+func MessageName(msg transaction.Msg) string {
 	return proto.MessageName(msg)
 }
 
 // PackAny packs a proto message into an anypb.Any.
-func PackAny(msg ProtoMsg) (*Any, error) {
+func PackAny(msg transaction.Msg) (*Any, error) {
 	return codectypes.NewAnyWithValue(msg)
 }
 
@@ -44,7 +43,7 @@ func UnpackAny[T any, PT ProtoMsgG[T]](anyPB *Any) (PT, error) {
 	return to, UnpackAnyTo(anyPB, PT(to))
 }
 
-func UnpackAnyTo(anyPB *Any, to ProtoMsg) error {
+func UnpackAnyTo(anyPB *Any, to transaction.Msg) error {
 	return proto.Unmarshal(anyPB.Value, to)
 }
 
@@ -59,10 +58,10 @@ func UnpackAnyRaw(anyPB *Any) (proto.Message, error) {
 	return to, UnpackAnyTo(anyPB, to)
 }
 
-func Merge(a, b ProtoMsg) {
+func Merge(a, b transaction.Msg) {
 	proto.Merge(a, b)
 }
 
-func Equal(a, b ProtoMsg) bool {
+func Equal(a, b transaction.Msg) bool {
 	return proto.Equal(a, b)
 }

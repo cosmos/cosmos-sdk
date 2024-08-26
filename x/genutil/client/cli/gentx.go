@@ -32,7 +32,7 @@ func GenTxCmd(genMM genesisMM, genBalIterator types.GenesisBalancesIterator) *co
 	fsCreateValidator, defaultsDesc := cli.CreateValidatorMsgFlagSet(ipDefault)
 
 	cmd := &cobra.Command{
-		Use:   "gentx [key_name] [amount]",
+		Use:   "gentx <key_name> <amount>",
 		Short: "Generate a genesis tx carrying a self delegation",
 		Args:  cobra.ExactArgs(2),
 		Long: fmt.Sprintf(`Generate a genesis transaction that creates a validator with a self-delegation,

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -23,7 +24,6 @@ import (
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/sjson"
-	"golang.org/x/exp/maps"
 
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -247,7 +247,7 @@ func (s *SystemUnderTest) AwaitUpgradeInfo(t *testing.T) {
 			case err == nil:
 				found = true
 			case !os.IsNotExist(err):
-				t.Fatalf(err.Error())
+				t.Fatal(err.Error())
 			}
 		})
 		time.Sleep(s.blockTime / 2)
@@ -336,7 +336,7 @@ func (s *SystemUnderTest) withEachPid(cb func(p *os.Process)) {
 	pids := maps.Keys(s.pids)
 	s.pidsLock.RUnlock()
 
-	for _, pid := range pids {
+	for pid := range pids {
 		p, err := os.FindProcess(pid)
 		if err != nil {
 			continue

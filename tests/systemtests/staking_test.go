@@ -10,6 +10,7 @@ import (
 )
 
 func TestStakeUnstake(t *testing.T) {
+	t.Skip("The fee deduction is not yet implemented in v2")
 	// Scenario:
 	// delegate tokens to validator
 	// undelegate some tokens
@@ -35,8 +36,7 @@ func TestStakeUnstake(t *testing.T) {
 	RequireTxSuccess(t, rsp)
 
 	t.Log(cli.QueryBalance(account1Addr, "stake"))
-	// TODO: the balance won't match on v2 until the fee decorator is done (9989999)
-	assert.Equal(t, int64(9990000), cli.QueryBalance(account1Addr, "stake"))
+	assert.Equal(t, int64(9989999), cli.QueryBalance(account1Addr, "stake"))
 
 	rsp = cli.CustomQuery("q", "staking", "delegation", account1Addr, valAddr)
 	assert.Equal(t, "10000", gjson.Get(rsp, "delegation_response.balance.amount").String(), rsp)

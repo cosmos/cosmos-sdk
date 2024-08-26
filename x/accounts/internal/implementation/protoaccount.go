@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"google.golang.org/protobuf/proto"
+
+	"cosmossdk.io/core/transaction"
 )
 
 // RegisterInitHandler registers an initialisation handler for a smart account that uses protobuf.
@@ -14,7 +16,7 @@ func RegisterInitHandler[
 ) {
 	reqName := MessageName(ProtoReq(new(Req)))
 
-	router.handler = func(ctx context.Context, initRequest ProtoMsg) (initResponse ProtoMsg, err error) {
+	router.handler = func(ctx context.Context, initRequest transaction.Msg) (initResponse transaction.Msg, err error) {
 		concrete, ok := initRequest.(ProtoReq)
 		if !ok {
 			return nil, fmt.Errorf("%w: wanted %s, got %T", errInvalidMessage, reqName, initRequest)
@@ -40,7 +42,7 @@ func RegisterExecuteHandler[
 		return
 	}
 
-	router.handlers[reqName] = func(ctx context.Context, executeRequest ProtoMsg) (executeResponse ProtoMsg, err error) {
+	router.handlers[reqName] = func(ctx context.Context, executeRequest transaction.Msg) (executeResponse transaction.Msg, err error) {
 		concrete, ok := executeRequest.(ProtoReq)
 		if !ok {
 			return nil, fmt.Errorf("%w: wanted %s, got %T", errInvalidMessage, reqName, executeRequest)
@@ -69,7 +71,7 @@ func NewProtoMessageSchema[T any, PT ProtoMsgG[T]]() *MessageSchema {
 	}
 	return &MessageSchema{
 		Name: MessageName(msg),
-		New: func() ProtoMsg {
+		New: func() transaction.Msg {
 			return PT(new(T))
 		},
 	}

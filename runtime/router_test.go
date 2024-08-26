@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	counterv1 "cosmossdk.io/api/cosmos/counter/v1"
 	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
 
@@ -38,12 +37,12 @@ func TestRouterService(t *testing.T) {
 	// Messages
 
 	t.Run("invalid msg", func(t *testing.T) {
-		_, err := messageRouterService.InvokeUntyped(testCtx.Ctx, &bankv1beta1.MsgSend{})
+		_, err := messageRouterService.Invoke(testCtx.Ctx, &bankv1beta1.MsgSend{})
 		require.ErrorContains(t, err, "could not find response type for message cosmos.bank.v1beta1.MsgSend")
 	})
 
-	t.Run("invoke untyped: valid msg (proto v1)", func(t *testing.T) {
-		resp, err := messageRouterService.InvokeUntyped(testCtx.Ctx, &countertypes.MsgIncreaseCounter{
+	t.Run("invoke: valid msg (proto v1)", func(t *testing.T) {
+		resp, err := messageRouterService.Invoke(testCtx.Ctx, &countertypes.MsgIncreaseCounter{
 			Signer: "cosmos1",
 			Count:  42,
 		})
@@ -51,57 +50,17 @@ func TestRouterService(t *testing.T) {
 		require.NotNil(t, resp)
 	})
 
-	t.Run("invoke typed: valid msg (proto v1)", func(t *testing.T) {
-		resp := &countertypes.MsgIncreaseCountResponse{}
-		err := messageRouterService.InvokeTyped(testCtx.Ctx, &countertypes.MsgIncreaseCounter{
-			Signer: "cosmos1",
-			Count:  42,
-		}, resp)
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-	})
-
-	t.Run("invoke typed: valid msg (proto v2)", func(t *testing.T) {
-		resp := &counterv1.MsgIncreaseCountResponse{}
-		err := messageRouterService.InvokeTyped(testCtx.Ctx, &counterv1.MsgIncreaseCounter{
-			Signer: "cosmos1",
-			Count:  42,
-		}, resp)
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-	})
-
 	// Queries
 
 	t.Run("invalid query", func(t *testing.T) {
-		err := queryRouterService.InvokeTyped(testCtx.Ctx, &bankv1beta1.QueryBalanceRequest{}, &bankv1beta1.QueryBalanceResponse{})
-		require.ErrorContains(t, err, "unknown request: cosmos.bank.v1beta1.QueryBalanceRequest")
+		_, err := queryRouterService.Invoke(testCtx.Ctx, &bankv1beta1.QueryBalanceRequest{})
+		require.ErrorContains(t, err, "could not find response type for request cosmos.bank.v1beta1.QueryBalanceRequest")
 	})
 
-	t.Run("invoke typed: valid query (proto v1)", func(t *testing.T) {
+	t.Run("invoke: valid query (proto v1)", func(t *testing.T) {
 		_ = counterKeeper.CountStore.Set(testCtx.Ctx, 42)
 
-		resp := &countertypes.QueryGetCountResponse{}
-		err := queryRouterService.InvokeTyped(testCtx.Ctx, &countertypes.QueryGetCountRequest{}, resp)
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		require.Equal(t, int64(42), resp.TotalCount)
-	})
-
-	t.Run("invoke typed: valid query (proto v2)", func(t *testing.T) {
-		_ = counterKeeper.CountStore.Set(testCtx.Ctx, 42)
-
-		resp := &counterv1.QueryGetCountResponse{}
-		err := queryRouterService.InvokeTyped(testCtx.Ctx, &counterv1.QueryGetCountRequest{}, resp)
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		require.Equal(t, int64(42), resp.TotalCount)
-	})
-
-	t.Run("invoke untyped: valid query (proto v1)", func(t *testing.T) {
-		_ = counterKeeper.CountStore.Set(testCtx.Ctx, 42)
-
-		resp, err := queryRouterService.InvokeUntyped(testCtx.Ctx, &countertypes.QueryGetCountRequest{})
+		resp, err := queryRouterService.Invoke(testCtx.Ctx, &countertypes.QueryGetCountRequest{})
 		require.NoError(t, err)
 		require.NotNil(t, resp)
 		respVal, ok := resp.(*countertypes.QueryGetCountResponse)

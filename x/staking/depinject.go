@@ -2,9 +2,9 @@ package staking
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"sort"
-
-	"golang.org/x/exp/maps"
 
 	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
@@ -92,7 +92,11 @@ func InvokeSetStakingHooks(
 		return nil
 	}
 
-	modNames := maps.Keys(stakingHooks)
+	if len(stakingHooks) == 0 {
+		return nil
+	}
+
+	modNames := slices.Collect(maps.Keys(stakingHooks))
 	order := config.HooksOrder
 	if len(order) == 0 {
 		order = modNames
@@ -101,10 +105,6 @@ func InvokeSetStakingHooks(
 
 	if len(order) != len(modNames) {
 		return fmt.Errorf("len(hooks_order: %v) != len(hooks modules: %v)", order, modNames)
-	}
-
-	if len(modNames) == 0 {
-		return nil
 	}
 
 	var multiHooks types.MultiStakingHooks

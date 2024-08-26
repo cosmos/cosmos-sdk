@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"math"
-	"sort"
+	"slices"
 
 	protoio "github.com/cosmos/gogoproto/io"
-	"golang.org/x/exp/maps"
 
 	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
@@ -111,9 +111,7 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 func (c *CommitStore) LoadVersionAndUpgrade(targetVersion uint64, upgrades *corestore.StoreUpgrades) error {
 	// deterministic iteration order for upgrades (as the underlying store may change and
 	// upgrades make store changes where the execution order may matter)
-	storeKeys := maps.Keys(c.multiTrees)
-	sort.Strings(storeKeys)
-
+	storeKeys := slices.Sorted(maps.Keys(c.multiTrees))
 	removeTree := func(storeKey string) error {
 		if oldTree, ok := c.multiTrees[storeKey]; ok {
 			if err := oldTree.Close(); err != nil {

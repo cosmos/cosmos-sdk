@@ -189,6 +189,45 @@ func TestObjectType_Validate(t *testing.T) {
 			},
 			errContains: "enum \"enum1\" has different values",
 		},
+		{
+			name: "float32 key field",
+			objectType: ObjectType{
+				Name: "o1",
+				KeyFields: []Field{
+					{
+						Name: "field1",
+						Kind: Float32Kind,
+					},
+				},
+			},
+			errContains: "invalid key field kind",
+		},
+		{
+			name: "float64 key field",
+			objectType: ObjectType{
+				Name: "o1",
+				KeyFields: []Field{
+					{
+						Name: "field1",
+						Kind: Float64Kind,
+					},
+				},
+			},
+			errContains: "invalid key field kind",
+		},
+		{
+			name: "json key field",
+			objectType: ObjectType{
+				Name: "o1",
+				KeyFields: []Field{
+					{
+						Name: "field1",
+						Kind: JSONKind,
+					},
+				},
+			},
+			errContains: "invalid key field kind",
+		},
 	}
 
 	for _, tt := range tests {

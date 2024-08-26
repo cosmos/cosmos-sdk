@@ -93,7 +93,7 @@ func TestUnorderedTxDecorator_UnorderedTx_AlreadyExists(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	mockMeter := gastestutil.NewMockMeter(ctrl)
-	mockMeter.EXPECT().Consume(uint64(ante.DefaultSha256Cost), "consume gas for calculating tx hash").Times(1)
+	mockMeter.EXPECT().Consume(gasConsumed, "consume gas for calculating tx hash").Times(1)
 
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithHeaderInfo(header.Info{Time: time.Now()}).WithGasMeter(runtime.NewSDKGasMeter(
 		mockMeter,
@@ -123,7 +123,7 @@ func TestUnorderedTxDecorator_UnorderedTx_ValidCheckTx(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	mockMeter := gastestutil.NewMockMeter(ctrl)
-	mockMeter.EXPECT().Consume(uint64(ante.DefaultSha256Cost), "consume gas for calculating tx hash").Times(1)
+	mockMeter.EXPECT().Consume(gasConsumed, "consume gas for calculating tx hash").Times(1)
 
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithHeaderInfo(header.Info{Time: time.Now()}).WithExecMode(sdk.ExecModeCheck).WithGasMeter(runtime.NewSDKGasMeter(
 		mockMeter,
@@ -149,7 +149,7 @@ func TestUnorderedTxDecorator_UnorderedTx_ValidDeliverTx(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	mockMeter := gastestutil.NewMockMeter(ctrl)
-	mockMeter.EXPECT().Consume(uint64(ante.DefaultSha256Cost), "consume gas for calculating tx hash").Times(1)
+	mockMeter.EXPECT().Consume(gasConsumed, "consume gas for calculating tx hash").Times(1)
 
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithHeaderInfo(header.Info{Time: time.Now()}).WithExecMode(sdk.ExecModeFinalize).WithGasMeter(runtime.NewSDKGasMeter(
 		mockMeter,

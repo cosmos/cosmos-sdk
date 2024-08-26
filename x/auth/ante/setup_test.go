@@ -3,9 +3,11 @@ package ante_test
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
-	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/core/gas"
+	gastestutil "cosmossdk.io/core/testing/gas"
 	"cosmossdk.io/x/auth/ante"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -37,10 +39,13 @@ func TestSetupDecorator_BlockMaxGas(t *testing.T) {
 	sud := ante.NewSetUpContextDecorator(suite.env)
 	antehandler := sdk.ChainAnteDecorators(sud)
 
+	ctrl := gomock.NewController(t)
+	mockMeter := gastestutil.NewMockMeter(ctrl)
+
 	suite.ctx = suite.ctx.
 		WithBlockHeight(1).
 		WithGasMeter(runtime.NewSDKGasMeter(
-			coretesting.NewMeter(0),
+			mockMeter,
 		))
 
 	_, err = antehandler(suite.ctx, tx, false)
@@ -69,9 +74,13 @@ func TestSetup(t *testing.T) {
 	sud := ante.NewSetUpContextDecorator(suite.env)
 	antehandler := sdk.ChainAnteDecorators(sud)
 
+	ctrl := gomock.NewController(t)
+	mockMeter := gastestutil.NewMockMeter(ctrl)
+	mockMeter.EXPECT().Limit().Return(gas.Gas(0)).Times(1)
+
 	// Set height to non-zero value for GasMeter to be set
 	suite.ctx = suite.ctx.WithBlockHeight(1).WithGasMeter(runtime.NewSDKGasMeter(
-		coretesting.NewMeter(0),
+		mockMeter,
 	))
 
 	// Context GasMeter Limit not set

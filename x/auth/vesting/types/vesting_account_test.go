@@ -10,7 +10,6 @@ import (
 
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
-	storetypes "cosmossdk.io/store/types"
 	authcodec "cosmossdk.io/x/auth/codec"
 	"cosmossdk.io/x/auth/keeper"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -43,9 +42,9 @@ type VestingAccountTestSuite struct {
 func (s *VestingAccountTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, vesting.AppModule{})
 
-	key := storetypes.NewKVStoreKey(authtypes.StoreKey)
+	key := runtime.NewKVStoreKey(authtypes.StoreKey)
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, runtime.NewTransientStoreKey("transient_test"))
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
 
 	// gomock initializations

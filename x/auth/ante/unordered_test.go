@@ -4,10 +4,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
-	coretesting "cosmossdk.io/core/testing"
+	gastestutil "cosmossdk.io/core/testing/gas"
 	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/ante/unorderedtx"
 
@@ -89,8 +90,13 @@ func TestUnorderedTxDecorator_UnorderedTx_AlreadyExists(t *testing.T) {
 	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment(), ante.DefaultSha256Cost))
 
 	tx, txBz := genUnorderedTx(t, true, time.Now().Add(time.Minute))
+
+	ctrl := gomock.NewController(t)
+	mockMeter := gastestutil.NewMockMeter(ctrl)
+	mockMeter.EXPECT().Consume(uint64(ante.DefaultSha256Cost), "consume gas for calculating tx hash").Times(1)
+
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithHeaderInfo(header.Info{Time: time.Now()}).WithGasMeter(runtime.NewSDKGasMeter(
-		coretesting.NewMeter(gasConsumed),
+		mockMeter,
 	))
 
 	bz := [32]byte{}
@@ -114,8 +120,13 @@ func TestUnorderedTxDecorator_UnorderedTx_ValidCheckTx(t *testing.T) {
 	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment(), ante.DefaultSha256Cost))
 
 	tx, txBz := genUnorderedTx(t, true, time.Now().Add(time.Minute))
+
+	ctrl := gomock.NewController(t)
+	mockMeter := gastestutil.NewMockMeter(ctrl)
+	mockMeter.EXPECT().Consume(uint64(ante.DefaultSha256Cost), "consume gas for calculating tx hash").Times(1)
+
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithHeaderInfo(header.Info{Time: time.Now()}).WithExecMode(sdk.ExecModeCheck).WithGasMeter(runtime.NewSDKGasMeter(
-		coretesting.NewMeter(gasConsumed),
+		mockMeter,
 	))
 
 	_, err := chain(ctx, tx, false)
@@ -135,8 +146,13 @@ func TestUnorderedTxDecorator_UnorderedTx_ValidDeliverTx(t *testing.T) {
 	chain := sdk.ChainAnteDecorators(ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, txm, suite.accountKeeper.GetEnvironment(), ante.DefaultSha256Cost))
 
 	tx, txBz := genUnorderedTx(t, true, time.Now().Add(time.Minute))
+
+	ctrl := gomock.NewController(t)
+	mockMeter := gastestutil.NewMockMeter(ctrl)
+	mockMeter.EXPECT().Consume(uint64(ante.DefaultSha256Cost), "consume gas for calculating tx hash").Times(1)
+
 	ctx := sdk.Context{}.WithTxBytes(txBz).WithHeaderInfo(header.Info{Time: time.Now()}).WithExecMode(sdk.ExecModeFinalize).WithGasMeter(runtime.NewSDKGasMeter(
-		coretesting.NewMeter(gasConsumed),
+		mockMeter,
 	))
 
 	_, err := chain(ctx, tx, false)

@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
 	gastestutil "cosmossdk.io/core/testing/gas"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/migrations/legacytx"
 	authsign "cosmossdk.io/x/auth/signing"
@@ -302,7 +301,7 @@ func TestSigIntegration(t *testing.T) {
 	require.Equal(t, initialSigCost*uint64(len(privs)), doubleCost-initialCost)
 }
 
-func runSigDecorators(t *testing.T, params types.Params, privs ...cryptotypes.PrivKey) (storetypes.Gas, error) {
+func runSigDecorators(t *testing.T, params types.Params, privs ...cryptotypes.PrivKey) (gas.Gas, error) {
 	t.Helper()
 	suite := SetupTestSuite(t, true)
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()

@@ -2,10 +2,9 @@ package keeper
 
 import (
 	"fmt"
+	"maps"
 	"math"
-	"sort"
-
-	"golang.org/x/exp/maps"
+	"slices"
 
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/x/group"
@@ -58,9 +57,14 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, storeService storetypes.KV
 		groups[groupInfo.Id] = groupInfo
 	}
 
-	groupByIDs := maps.Keys(groups)
-	sort.Slice(groupByIDs, func(i, j int) bool {
-		return groupByIDs[i] < groupByIDs[j]
+	groupByIDs := slices.Collect(maps.Keys(groups))
+	slices.SortFunc(groupByIDs, func(i, j uint64) int {
+		if groupByIDs[i] < groupByIDs[j] {
+			return -1
+		} else if groupByIDs[i] > groupByIDs[j] {
+			return 1
+		}
+		return 0
 	})
 
 	for _, groupID := range groupByIDs {

@@ -39,6 +39,11 @@ baseAppOptions = append(baseAppOptions, baseapp.SetIncludeNestedMsgsGas([]sdk.Me
 app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 ```
 
+To be able to simulate nested messages within a transaction, message types containing nested messages must implement the
+`HasNestedMsgs` interface. This interface requires a single method: `GetMsgs() ([]sdk.Msg, error)`, which should return
+the nested messages. By implementing this interface, the BaseApp can simulate these nested messages during
+transaction simulation. 
+
 ## [v0.52.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-alpha.0)
 
 Documentation to migrate an application from v0.50.x to server/v2 is available elsewhere.
@@ -727,7 +732,7 @@ When using (legacy) application wiring, the following must be added to `app.go` 
 	app.txConfig = txConfig
 ```
 
-When using `depinject` / `app v2`, **it's enabled by default** if there's a bank keeper present.
+When using `depinject` / `app di`, **it's enabled by default** if there's a bank keeper present.
 
 And in the application client (usually `root.go`):
 
@@ -746,7 +751,7 @@ And in the application client (usually `root.go`):
 	}
 ```
 
-When using `depinject` / `app v2`, the tx config should be recreated from the `txConfigOpts` to use `NewGRPCCoinMetadataQueryFn` instead of depending on the bank keeper (that is used in the server).
+When using `depinject` / `app di`, the tx config should be recreated from the `txConfigOpts` to use `NewGRPCCoinMetadataQueryFn` instead of depending on the bank keeper (that is used in the server).
 
 To learn more see the [docs](https://docs.cosmos.network/main/learn/advanced/transactions#sign_mode_textual) and the [ADR-050](https://docs.cosmos.network/main/build/architecture/adr-050-sign-mode-textual).
 

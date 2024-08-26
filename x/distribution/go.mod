@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/log v1.4.0
+	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
@@ -128,7 +128,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/petermattis/goid v0.0.0-20240327183114-c42a807a84ba // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/client_golang v1.20.0 // indirect
+	github.com/prometheus/client_golang v1.20.1 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect

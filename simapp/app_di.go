@@ -8,14 +8,12 @@ import (
 	"io"
 
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/spf13/viper"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/auth"
 	"cosmossdk.io/x/auth/ante"
@@ -130,7 +128,7 @@ func NewSimApp(
 			AppConfig(),
 			depinject.Supply(
 				// supply the application options
-				appOpts.(*viper.Viper),
+				appOpts,
 				// supply the logger
 				logger,
 				// ADVANCED CONFIGURATION
@@ -240,23 +238,6 @@ func NewSimApp(
 
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 
-	if indexerOpts := appOpts.Get("indexer"); indexerOpts != nil {
-		// if we have indexer options in app.toml, then enable the built-in indexer framework
-		moduleSet := map[string]any{}
-		for modName, mod := range appModules {
-			moduleSet[modName] = mod
-		}
-		err := app.EnableIndexer(indexerOpts, app.kvStoreKeys(), moduleSet)
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		// register legacy streaming services if we don't have the built-in indexer enabled
-		if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
-			panic(err)
-		}
-	}
-
 	/****  Module Options ****/
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
@@ -287,16 +268,11 @@ func NewSimApp(
 	// 	return app.App.InitChainer(ctx, req)
 	// })
 
-	if err := app.UnorderedTxManager.OnInit(); err != nil {
-		panic(fmt.Errorf("failed to initialize unordered tx manager: %w", err))
-	}
-
 	// register custom snapshot extensions (if any)
 	if manager := app.SnapshotManager(); manager != nil {
-		err := manager.RegisterExtensions(
+		if err := manager.RegisterExtensions(
 			unorderedtx.NewSnapshotter(app.UnorderedTxManager),
-		)
-		if err != nil {
+		); err != nil {
 			panic(fmt.Errorf("failed to register snapshot extension: %w", err))
 		}
 	}
@@ -336,12 +312,6 @@ func (app *SimApp) setCustomAnteHandler() {
 	app.SetAnteHandler(anteHandler)
 }
 
-// Close implements the Application interface and closes all necessary application
-// resources.
-func (app *SimApp) Close() error {
-	return app.UnorderedTxManager.Close()
-}
-
 // LegacyAmino returns SimApp's amino codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
@@ -371,29 +341,6 @@ func (app *SimApp) InterfaceRegistry() codectypes.InterfaceRegistry {
 // TxConfig returns SimApp's TxConfig
 func (app *SimApp) TxConfig() client.TxConfig {
 	return app.txConfig
-}
-
-// GetKey returns the KVStoreKey for the provided store key.
-//
-// NOTE: This is solely to be used for testing purposes.
-func (app *SimApp) GetKey(storeKey string) *storetypes.KVStoreKey {
-	sk := app.UnsafeFindStoreKey(storeKey)
-	kvStoreKey, ok := sk.(*storetypes.KVStoreKey)
-	if !ok {
-		return nil
-	}
-	return kvStoreKey
-}
-
-func (app *SimApp) kvStoreKeys() map[string]*storetypes.KVStoreKey {
-	keys := make(map[string]*storetypes.KVStoreKey)
-	for _, k := range app.GetStoreKeys() {
-		if kv, ok := k.(*storetypes.KVStoreKey); ok {
-			keys[kv.Name()] = kv
-		}
-	}
-
-	return keys
 }
 
 // SimulationManager implements the SimulationApp interface

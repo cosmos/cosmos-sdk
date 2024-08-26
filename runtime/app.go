@@ -157,6 +157,16 @@ func (a *App) Load(loadLatest bool) error {
 	return nil
 }
 
+// Close implements the Application interface and closes all necessary application
+// resources.
+func (a *App) Close() error {
+	if err := a.UnorderedTxManager.Close(); err != nil {
+		return err
+	}
+
+	return a.BaseApp.Close()
+}
+
 // PreBlocker application updates every pre block
 func (a *App) PreBlocker(ctx sdk.Context, _ *abci.FinalizeBlockRequest) error {
 	return a.ModuleManager.PreBlock(ctx)
@@ -250,16 +260,28 @@ func (a *App) DefaultGenesis() map[string]json.RawMessage {
 	return a.ModuleManager.DefaultGenesis()
 }
 
-// GetStoreKeys returns all the stored store keys.
-func (a *App) GetStoreKeys() []storetypes.StoreKey {
-	return a.storeKeys
-}
-
 // SetInitChainer sets the init chainer function
 // It wraps `BaseApp.SetInitChainer` to allow setting a custom init chainer from an app.
 func (a *App) SetInitChainer(initChainer sdk.InitChainer) {
 	a.initChainer = initChainer
 	a.BaseApp.SetInitChainer(initChainer)
+}
+
+// GetStoreKeys returns all the stored store keys.
+func (a *App) GetStoreKeys() []storetypes.StoreKey {
+	return a.storeKeys
+}
+
+// GetKey returns the KVStoreKey for the provided store key.
+//
+// NOTE: This should only be used in testing.
+func (a *App) GetKey(storeKey string) *storetypes.KVStoreKey {
+	sk := a.UnsafeFindStoreKey(storeKey)
+	kvStoreKey, ok := sk.(*storetypes.KVStoreKey)
+	if !ok {
+		return nil
+	}
+	return kvStoreKey
 }
 
 // UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.

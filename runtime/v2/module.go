@@ -148,7 +148,7 @@ type AppInputs struct {
 	InterfaceRegistrar registry.InterfaceRegistrar
 	LegacyAmino        legacy.Amino
 	Logger             log.Logger
-	Viper              *viper.Viper
+	Viper              *viper.Viper `optional:"true"` // can be nil in client wiring
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -158,7 +158,10 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager = inputs.ModuleManager
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistrar)
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
-	inputs.AppBuilder.viper = inputs.Viper
+
+	if inputs.Viper != nil {
+		inputs.AppBuilder.viper = inputs.Viper
+	}
 }
 
 func ProvideModuleManager[T transaction.Tx](

@@ -6,7 +6,6 @@ import (
 	"slices"
 
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/spf13/viper"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
@@ -26,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -161,7 +161,7 @@ type AppInputs struct {
 	BaseAppOptions    []BaseAppOption
 	InterfaceRegistry codectypes.InterfaceRegistry
 	LegacyAmino       legacy.Amino
-	Viper             *viper.Viper
+	AppOptions        servertypes.AppOptions `optional:"true"` // can be nil in client wiring
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -172,7 +172,10 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.ModuleManager = inputs.ModuleManager
 	app.ModuleManager.RegisterInterfaces(inputs.InterfaceRegistry)
 	app.ModuleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
-	inputs.AppBuilder.viper = inputs.Viper
+
+	if inputs.AppOptions != nil {
+		inputs.AppBuilder.appOptions = inputs.AppOptions
+	}
 }
 
 func registerStoreKey(wrapper *AppBuilder, key storetypes.StoreKey) {

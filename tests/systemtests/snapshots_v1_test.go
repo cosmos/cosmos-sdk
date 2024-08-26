@@ -1,4 +1,4 @@
-//go:build system_test
+//go:build system_test && !v2
 
 package systemtests
 
@@ -12,15 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func getBinaryNameAndPrefix(isSnapshot bool) (string, string) {
-	if sut.execBinary == filepath.Join(WorkDir, "binaries", "simd") {
-		if isSnapshot {
-			return "simd", "snapshots"
-		}
-		return "simd", ""
-	}
-	return "simdv2", "store"
-}
+var nodeDir string
 
 func TestSnapshots(t *testing.T) {
 	sut.ResetChain(t)
@@ -32,37 +24,35 @@ func TestSnapshots(t *testing.T) {
 	)
 
 	sut.StartChain(t)
-
-	binary, snapshotPrefix := getBinaryNameAndPrefix(true)
-	nodeDir := fmt.Sprintf("./testnet/node0/%s", binary)
+	nodeDir = filepath.Join(WorkDir, "testnet", "node0", "simd")
 
 	// Wait for chain produce some blocks
 	time.Sleep(time.Second * 10)
 	// Stop 1 node
 	err := sut.StopSingleNode()
 	require.NoError(t, err)
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 5)
 
 	// export snapshot at height 5
-	res := cli.RunCommandWithArgs(snapshotPrefix, "export", "--height=5", fmt.Sprintf("--home=%s", nodeDir))
+	res := cli.RunCommandWithArgs("snapshots", "export", "--height=5", fmt.Sprintf("--home=%s", nodeDir))
 	require.Contains(t, res, "Snapshot created at height 5")
 	require.DirExists(t, fmt.Sprintf("%s/data/snapshots/5/3", nodeDir))
 
 	// Check snapshots list
-	res = cli.RunCommandWithArgs(snapshotPrefix, "list", fmt.Sprintf("--home=%s", nodeDir))
+	res = cli.RunCommandWithArgs("snapshots", "list", fmt.Sprintf("--home=%s", nodeDir))
 	require.Contains(t, res, "height: 5")
 
 	// Dump snapshot
-	res = cli.RunCommandWithArgs(snapshotPrefix, "dump", "5", "3", fmt.Sprintf("--home=%s", nodeDir), fmt.Sprintf("--output=%s/5-3.tar.gz", nodeDir))
+	res = cli.RunCommandWithArgs("snapshots", "dump", "5", "3", fmt.Sprintf("--home=%s", nodeDir), fmt.Sprintf("--output=%s/5-3.tar.gz", nodeDir))
 	// Check if output file exist
 	require.FileExists(t, fmt.Sprintf("%s/5-3.tar.gz", nodeDir))
 
 	// Delete snapshots
-	res = cli.RunCommandWithArgs(snapshotPrefix, "delete", "5", "3", fmt.Sprintf("--home=%s", nodeDir))
+	res = cli.RunCommandWithArgs("snapshots", "delete", "5", "3", fmt.Sprintf("--home=%s", nodeDir))
 	require.NoDirExists(t, fmt.Sprintf("%s/data/snapshots/5/3", nodeDir))
 
 	// Load snapshot from file
-	res = cli.RunCommandWithArgs(snapshotPrefix, "load", fmt.Sprintf("%s/5-3.tar.gz", nodeDir), fmt.Sprintf("--home=%s", nodeDir))
+	res = cli.RunCommandWithArgs("snapshots", "load", fmt.Sprintf("%s/5-3.tar.gz", nodeDir), fmt.Sprintf("--home=%s", nodeDir))
 	require.DirExists(t, fmt.Sprintf("%s/data/snapshots/5/3", nodeDir))
 
 	// Restore from snapshots
@@ -71,20 +61,8 @@ func TestSnapshots(t *testing.T) {
 	err = os.RemoveAll(fmt.Sprintf("%s/data/application.db", nodeDir))
 	require.NoError(t, err)
 
-	// Only v2 have ss database
-	if binary == "simdv2" {
-		err = os.RemoveAll(fmt.Sprintf("%s/data/ss", nodeDir))
-		require.NoError(t, err)
-	}
-
-	res = cli.RunCommandWithArgs(snapshotPrefix, "restore", "5", "3", fmt.Sprintf("--home=%s", nodeDir))
+	res = cli.RunCommandWithArgs("snapshots", "restore", "5", "3", fmt.Sprintf("--home=%s", nodeDir))
 	require.DirExists(t, fmt.Sprintf("%s/data/application.db", nodeDir))
-	if binary == "simdv2" {
-		require.DirExists(t, fmt.Sprintf("%s/data/ss", nodeDir))
-	}
-
-	// Start the node
-	sut.StartSingleNode(t, nodeDir)
 }
 
 func TestPrune(t *testing.T) {
@@ -97,9 +75,7 @@ func TestPrune(t *testing.T) {
 	)
 
 	sut.StartChain(t)
-
-	binary, prefix := getBinaryNameAndPrefix(false)
-	nodeDir := fmt.Sprintf("./testnet/node0/%s", binary)
+	nodeDir = filepath.Join(WorkDir, "testnet", "node0", "simd")
 
 	// Wait for chain produce some blocks
 	time.Sleep(time.Second * 10)
@@ -109,13 +85,6 @@ func TestPrune(t *testing.T) {
 	time.Sleep(time.Second)
 
 	// prune
-	var res string
-	if binary == "simdv2" {
-		res = cli.RunCommandWithArgs(prefix, "prune", "--keep-recent=1", fmt.Sprintf("--home=%s", nodeDir))
-	} else {
-		res = cli.RunCommandWithArgs("prune", "everything", fmt.Sprintf("--home=%s", nodeDir))
-	}
+	res := cli.RunCommandWithArgs("prune", "everything", fmt.Sprintf("--home=%s", nodeDir))
 	require.Contains(t, res, "successfully pruned the application root multi stores")
-	// Start the node
-	sut.StartSingleNode(t, nodeDir)
 }

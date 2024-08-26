@@ -121,7 +121,6 @@ func ProvideApp(
 	appmodule.AppModule,
 	protodesc.Resolver,
 	protoregistry.MessageTypeResolver,
-	error,
 ) {
 	protoFiles := proto.HybridResolver
 	protoTypes := protoregistry.GlobalTypes
@@ -148,7 +147,7 @@ func ProvideApp(
 	}
 	appBuilder := &AppBuilder{app: app}
 
-	return appBuilder, msgServiceRouter, grpcQueryRouter, appModule{app}, protoFiles, protoTypes, nil
+	return appBuilder, msgServiceRouter, grpcQueryRouter, appModule{app}, protoFiles, protoTypes
 }
 
 type AppInputs struct {

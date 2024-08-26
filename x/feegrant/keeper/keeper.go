@@ -227,19 +227,20 @@ func (k Keeper) UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddr
 	}
 
 	remove, err := grant.Accept(context.WithValue(ctx, corecontext.EnvironmentContextKey, k.Environment), fee, msgs)
+	if remove && err == nil {
+		// Ignoring the `revokeFeeAllowance` error, because the user has enough grants to perform this transaction.
+		_ = k.revokeAllowance(ctx, granter, grantee)
+
+		return k.emitUseGrantEvent(ctx, granterStr, granteeStr)
+	}
 	if err != nil {
 		return err
 	}
-
 	if err := k.emitUseGrantEvent(ctx, granterStr, granteeStr); err != nil {
 		return err
 	}
 
-	if remove {
-		return k.revokeAllowance(ctx, granter, grantee)
-	}
-
-	// If fee allowance is accepted and not removed, store the updated state of the allowance
+	// if fee allowance is accepted, store the updated state of the allowance
 	return k.UpdateAllowance(ctx, granter, grantee, grant)
 }
 

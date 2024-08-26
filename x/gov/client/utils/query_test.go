@@ -1,7 +1,6 @@
 package utils_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -114,7 +113,6 @@ func TestGetPaginatedVotes(t *testing.T) {
 
 		t.Run(tc.description, func(t *testing.T) {
 			marshaled := make([][]byte, len(tc.msgs))
-			fmt.Println(marshaled)
 			clientCtx := client.Context{}.
 				WithLegacyAmino(encCfg.Amino).
 				WithTxConfig(encCfg.TxConfig)

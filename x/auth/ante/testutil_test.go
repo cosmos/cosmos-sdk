@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
@@ -121,7 +120,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 
 	suite.clientCtx = client.Context{}.
 		WithTxConfig(suite.encCfg.TxConfig).
-		WithClient(clitestutil.NewMockCometRPC(abci.QueryResponse{}))
+		WithClient(clitestutil.NewMockCometRPCWithValue(nil))
 
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{

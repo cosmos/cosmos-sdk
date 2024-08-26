@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"sync/atomic"
 	"syscall"
@@ -341,6 +342,7 @@ func (s *SystemUnderTest) StopSingleNode() error {
 	pids := maps.Keys(s.pids)
 	s.pidsLock.RUnlock()
 
+	sort.Ints(pids)
 	p, err := os.FindProcess(pids[0])
 	if err != nil {
 		return err

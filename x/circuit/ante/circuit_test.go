@@ -31,7 +31,7 @@ type MockCircuitBreaker struct {
 	isAllowed bool
 }
 
-func (m MockCircuitBreaker) IsAllowed(ctx context.Context, typeURL string) (bool, error) {
+func (m MockCircuitBreaker) IsAllowed(_ context.Context, typeURL string) (bool, error) {
 	return typeURL == "/cosmos.circuit.v1.MsgAuthorizeCircuitBreaker", nil
 }
 

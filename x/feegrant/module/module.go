@@ -203,7 +203,7 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 // WeightedOperations returns all the feegrant module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
-		am.registry, simState.AppParams, simState.Cdc, simState.TxConfig,
-		am.accountKeeper, am.bankKeeper, am.keeper, am.accountKeeper.AddressCodec(),
+		simState.AppParams, simState.TxConfig,
+		am.accountKeeper, am.bankKeeper, am.keeper,
 	)
 }

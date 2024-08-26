@@ -157,11 +157,15 @@ func (a *App) Load(loadLatest bool) error {
 	return nil
 }
 
-// Close implements the Application interface and closes all necessary application
-// resources.
+// Close closes all necessary application resources.
+// It implements servertypes.Application.
 func (a *App) Close() error {
-	if err := a.UnorderedTxManager.Close(); err != nil {
-		return err
+	// the unordered tx manager could be nil (unlikely but possible)
+	// if the app has no app options supplied.
+	if a.UnorderedTxManager != nil {
+		if err := a.UnorderedTxManager.Close(); err != nil {
+			return err
+		}
 	}
 
 	return a.BaseApp.Close()

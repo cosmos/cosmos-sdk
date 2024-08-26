@@ -164,12 +164,12 @@ func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler,
 
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
+			Environment:        in.Environment,
 			AccountKeeper:      in.AccountKeeper,
 			BankKeeper:         in.BankKeeper,
 			SignModeHandler:    txConfig.SignModeHandler(),
 			FeegrantKeeper:     in.FeeGrantKeeper,
 			SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
-			Environment:        in.Environment,
 			UnorderedTxManager: in.UnorderedTxManager,
 		},
 	)

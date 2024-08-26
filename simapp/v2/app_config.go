@@ -1,3 +1,4 @@
+//nolint:unused,nolintlint // ignore unused code linting
 package simapp
 
 import (

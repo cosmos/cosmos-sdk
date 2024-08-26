@@ -9,7 +9,6 @@ import (
 	reflect "reflect"
 
 	address "cosmossdk.io/core/address"
-	appmodule "cosmossdk.io/core/appmodule/v2"
 	types "cosmossdk.io/x/auth/types"
 	types0 "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
@@ -64,20 +63,6 @@ func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types0.AccAddre
 func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).GetAccount), ctx, addr)
-}
-
-// GetEnvironment mocks base method.
-func (m *MockAccountKeeper) GetEnvironment() appmodule.Environment {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEnvironment")
-	ret0, _ := ret[0].(appmodule.Environment)
-	return ret0
-}
-
-// GetEnvironment indicates an expected call of GetEnvironment.
-func (mr *MockAccountKeeperMockRecorder) GetEnvironment() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironment", reflect.TypeOf((*MockAccountKeeper)(nil).GetEnvironment))
 }
 
 // GetModuleAccount mocks base method.
@@ -150,20 +135,6 @@ func (m *MockAccountKeeper) GetModulePermissions() map[string]types.PermissionsF
 func (mr *MockAccountKeeperMockRecorder) GetModulePermissions() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetModulePermissions", reflect.TypeOf((*MockAccountKeeper)(nil).GetModulePermissions))
-}
-
-// GetParams mocks base method.
-func (m *MockAccountKeeper) GetParams(ctx context.Context) types.Params {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetParams", ctx)
-	ret0, _ := ret[0].(types.Params)
-	return ret0
-}
-
-// GetParams indicates an expected call of GetParams.
-func (mr *MockAccountKeeperMockRecorder) GetParams(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetParams", reflect.TypeOf((*MockAccountKeeper)(nil).GetParams), ctx)
 }
 
 // HasAccount mocks base method.

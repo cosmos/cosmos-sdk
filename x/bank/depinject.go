@@ -6,24 +6,15 @@ import (
 	"slices"
 	"sort"
 
-	"github.com/spf13/viper"
-
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	"cosmossdk.io/x/auth/ante"
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
-const (
-	FlagMinGasPricesV2 = "server.minimum-gas-prices"
-	feegrantModuleName = "feegrant"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -35,7 +26,7 @@ func init() {
 	appconfig.RegisterModule(
 		&modulev1.Module{},
 		appconfig.Provide(ProvideModule),
-		appconfig.Invoke(InvokeSetSendRestrictions, InvokeCheckFeeGrantPresent),
+		appconfig.Invoke(InvokeSetSendRestrictions),
 	)
 }
 
@@ -47,15 +38,13 @@ type ModuleInputs struct {
 	Environment appmodule.Environment
 
 	AccountKeeper types.AccountKeeper
-	Viper         *viper.Viper `optional:"true"` // server v2
 }
 
 type ModuleOutputs struct {
 	depinject.Out
 
-	BankKeeper     keeper.BaseKeeper
-	Module         appmodule.AppModule
-	FeeTxValidator ante.FeeTxValidator // pass deduct fee decorator to feegrant TxValidator
+	BankKeeper keeper.BaseKeeper
+	Module     appmodule.AppModule
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -102,25 +91,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)
 
-	var minGasPrices sdk.DecCoins
-	if in.Viper != nil {
-		minGasPricesStr := in.Viper.GetString(FlagMinGasPricesV2)
-		minGasPrices, err = sdk.ParseDecCoins(minGasPricesStr)
-		if err != nil {
-			panic(fmt.Sprintf("invalid minimum gas prices: %v", err))
-		}
-	}
-
-	var feeTxValidator ante.FeeTxValidator
-	if in.AccountKeeper != nil {
-		feeTxValidator = ante.NewDeductFeeDecorator(in.AccountKeeper, bankKeeper, nil, nil)
-		// set min gas price in deduct fee decorator
-		feeTxValidator.SetMinGasPrices(minGasPrices)
-		// pass deduct fee decorator to app module
-		m.SetFeeTxValidator(feeTxValidator)
-	}
-
-	return ModuleOutputs{BankKeeper: bankKeeper, Module: m, FeeTxValidator: feeTxValidator}
+	return ModuleOutputs{BankKeeper: bankKeeper, Module: m}
 }
 
 func InvokeSetSendRestrictions(
@@ -156,23 +127,5 @@ func InvokeSetSendRestrictions(
 		keeper.AppendSendRestriction(restriction)
 	}
 
-	return nil
-}
-
-// TODO: Remove below check and move deduct-fee-decorator check completely to x/bank txValidator once sims v2 is done.
-// Sims v2 PR will remove dependency between x/bank and x/feegrant.https://github.com/cosmos/cosmos-sdk/pull/20940
-func InvokeCheckFeeGrantPresent(modules map[string]appmodule.AppModule) error {
-	_, ok := modules[feegrantModuleName]
-	if ok {
-		// get bank module
-		bankMod, ok := modules[types.ModuleName]
-		if !ok {
-			return nil
-		}
-
-		// set isFeegrant
-		m := bankMod.(AppModule)
-		m.SetFeeTxValidator(nil)
-	}
 	return nil
 }

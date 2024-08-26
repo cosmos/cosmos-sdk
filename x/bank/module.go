@@ -10,11 +10,8 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
-	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/bank/client/cli"
 	"cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/simulation"
@@ -47,13 +44,6 @@ type AppModule struct {
 	cdc           codec.Codec
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
-
-	state *deductFeeTxState
-}
-
-type deductFeeTxState struct {
-	// deduct fee v2 tx validator
-	feeTxValidator ante.FeeTxValidator
 }
 
 // NewAppModule creates a new AppModule object
@@ -62,7 +52,6 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.Acc
 		cdc:           cdc,
 		keeper:        keeper,
 		accountKeeper: accountKeeper,
-		state:         &deductFeeTxState{}, // initialize state
 	}
 }
 
@@ -160,34 +149,6 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 		return nil, err
 	}
 	return am.cdc.MarshalJSON(gs)
-}
-
-// SetFeeTxValidator sets feeTxValidator in AppModule which is used for deducting fee
-func (am AppModule) SetFeeTxValidator(validator ante.FeeTxValidator) {
-	am.state.feeTxValidator = validator
-}
-
-// TxValidator implements appmodulev2.HasTxValidator.
-// It replaces auth ante handlers for server/v2
-func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
-	validators := []appmodulev2.TxValidator[sdk.Tx]{}
-
-	if am.state != nil && am.state.feeTxValidator != nil {
-		validators = append(validators, am.state.feeTxValidator)
-	}
-
-	sdkTx, ok := tx.(sdk.Tx)
-	if !ok {
-		return fmt.Errorf("invalid tx type %T, expected sdk.Tx", tx)
-	}
-
-	for _, validator := range validators {
-		if err := validator.ValidateTx(ctx, sdkTx); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // ConsensusVersion implements HasConsensusVersion

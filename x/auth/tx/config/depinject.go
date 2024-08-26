@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
@@ -34,6 +35,8 @@ import (
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
+const FlagMinGasPricesV2 = "server.minimum-gas-prices"
+
 func init() {
 	appconfig.RegisterModule(&txconfigv1.Config{},
 		appconfig.Provide(ProvideModule),
@@ -58,6 +61,7 @@ type ModuleInputs struct {
 	AccountAbstractionKeeper ante.AccountAbstractionKeeper      `optional:"true"`
 	CustomSignModeHandlers   func() []txsigning.SignModeHandler `optional:"true"`
 	CustomGetSigners         []txsigning.CustomGetSigner        `optional:"true"`
+	Viper                    *viper.Viper                       `optional:"true"` // server v2
 }
 
 type ModuleOutputs struct {
@@ -150,7 +154,24 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		ante.DefaultSigVerificationGasConsumer,
 		in.AccountAbstractionKeeper,
 	)
-	appModule := AppModule{svd}
+	appModule := AppModule{sigVerification: svd}
+
+	var minGasPrices sdk.DecCoins
+	if in.Viper != nil {
+		minGasPricesStr := in.Viper.GetString(FlagMinGasPricesV2)
+		minGasPrices, err = sdk.ParseDecCoins(minGasPricesStr)
+		if err != nil {
+			panic(fmt.Sprintf("invalid minimum gas prices: %v", err))
+		}
+	}
+
+	if in.AccountKeeper != nil && in.BankKeeper != nil {
+		feeTxValidator := ante.NewDeductFeeDecorator(in.AccountKeeper, in.BankKeeper, nil, nil)
+		// set min gas price in deduct fee decorator
+		feeTxValidator.SetMinGasPrices(minGasPrices)
+		// set deduct fee decorator to app module
+		appModule.feeTxValidator = feeTxValidator
+	}
 
 	return ModuleOutputs{TxConfig: txConfig, TxConfigOptions: txConfigOptions, BaseAppOption: baseAppOption, Module: appModule}
 }
@@ -240,11 +261,27 @@ var (
 
 type AppModule struct {
 	sigVerification ante.SigVerificationDecorator
+
+	// deduct fee v2 tx validator
+	feeTxValidator ante.DeductFeeDecorator
 }
 
 // TxValidator implements appmodule.HasTxValidator.
 func (a AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
-	return a.sigVerification.ValidateTx(ctx, tx)
+	if err := a.sigVerification.ValidateTx(ctx, tx); err != nil {
+		return err
+	}
+
+	sdkTx, ok := tx.(sdk.Tx)
+	if !ok {
+		return fmt.Errorf("invalid tx type %T, expected sdk.Tx", tx)
+	}
+
+	if err := a.feeTxValidator.ValidateTx(ctx, sdkTx); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // IsAppModule implements appmodule.AppModule.

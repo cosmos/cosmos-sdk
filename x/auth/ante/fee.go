@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/auth/types"
@@ -17,15 +16,6 @@ import (
 // TxFeeChecker checks if the provided fee is enough and returns the effective fee and tx priority.
 // The effective fee should be deducted later, and the priority should be returned in the ABCI response.
 type TxFeeChecker func(ctx context.Context, tx sdk.Tx) (sdk.Coins, int64, error)
-
-// FeeTxValidator defines custom type used to represent deduct fee decorator
-// which will be passed from x/auth/tx to x/auth module.
-type FeeTxValidator interface {
-	appmodulev2.TxValidator[sdk.Tx]
-
-	SetMinGasPrices(sdk.DecCoins)
-	SetFeegrantKeeper(FeegrantKeeper) FeeTxValidator
-}
 
 // DeductFeeDecorator deducts fees from the fee payer. The fee payer is the fee granter (if specified) or first signer of the tx.
 // If the fee payer does not have the funds to pay for the fees, return an InsufficientFunds error.
@@ -70,12 +60,6 @@ func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKee
 // SetMinGasPrices sets the minimum-gas-prices value in the state of DeductFeeDecorator
 func (dfd DeductFeeDecorator) SetMinGasPrices(minGasPrices sdk.DecCoins) {
 	dfd.state.minGasPrices = minGasPrices
-}
-
-// SetFeegrantKeeper sets the feegrant keeper in DeductFeeDecorator
-func (dfd DeductFeeDecorator) SetFeegrantKeeper(feegrantKeeper FeegrantKeeper) FeeTxValidator {
-	dfd.feegrantKeeper = feegrantKeeper
-	return dfd
 }
 
 // AnteHandle implements an AnteHandler decorator for the DeductFeeDecorator

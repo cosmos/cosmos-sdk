@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +17,6 @@ type AccountKeeper interface {
 	NewAccount(context.Context, sdk.AccountI) sdk.AccountI
 	NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 
-	GetParams(ctx context.Context) (params types.Params)
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 	HasAccount(ctx context.Context, addr sdk.AccAddress) bool
 	SetAccount(ctx context.Context, acc sdk.AccountI)
@@ -30,5 +28,4 @@ type AccountKeeper interface {
 	GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI
 	SetModuleAccount(ctx context.Context, macc sdk.ModuleAccountI)
 	GetModulePermissions() map[string]types.PermissionsForAddress
-	GetEnvironment() appmodule.Environment
 }

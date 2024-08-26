@@ -5,7 +5,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
 
@@ -32,18 +31,10 @@ type FeegrantInputs struct {
 	AccountKeeper feegrant.AccountKeeper
 	BankKeeper    feegrant.BankKeeper
 	Registry      cdctypes.InterfaceRegistry
-
-	FeeTxValidator ante.FeeTxValidator `optional:"true"` // server v2
 }
 
 func ProvideModule(in FeegrantInputs) (keeper.Keeper, appmodule.AppModule) {
 	k := keeper.NewKeeper(in.Environment, in.Cdc, in.AccountKeeper)
 	m := NewAppModule(in.Cdc, in.AccountKeeper, in.BankKeeper, k, in.Registry)
-
-	if in.FeeTxValidator != nil {
-		feeTxValidator := in.FeeTxValidator.SetFeegrantKeeper(k)
-		m.SetFeeTxValidator(feeTxValidator)
-	}
-
 	return k, m
 }

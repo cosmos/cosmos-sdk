@@ -1533,7 +1533,7 @@ func (suite *KeeperTestSuite) TestSpendableCoins() {
 	acc2 := authtypes.NewBaseAccountWithAddress(accAddrs[2])
 	lockedCoins2 := sdk.NewCoins(sdk.NewInt64Coin("stake", 50), sdk.NewInt64Coin("tarp", 40), sdk.NewInt64Coin("rope", 30))
 	balanceCoins2 := sdk.NewCoins(sdk.NewInt64Coin("stake", 49), sdk.NewInt64Coin("tarp", 40), sdk.NewInt64Coin("rope", 31), sdk.NewInt64Coin("pole", 20))
-	expCoigns2 := sdk.NewCoins(sdk.NewInt64Coin("rope", 1), sdk.NewInt64Coin("pole", 20))
+	expCoins2 := sdk.NewCoins(sdk.NewInt64Coin("rope", 1), sdk.NewInt64Coin("pole", 20))
 	vacc2, err := vesting.NewPermanentLockedAccount(acc2, lockedCoins2)
 	suite.Require().NoError(err)
 

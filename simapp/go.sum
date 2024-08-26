@@ -196,10 +196,10 @@ cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 h1:YV9M+9pClbzPncO5XMSc3kI
 cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897/go.mod h1:oqpDMZQpEgSo0Cm4F+0yxoC9UQbo/SlodZR4zeOqBsE=
 cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab h1:E/IWad76v1Nc4Atswaccpt7twJ0VwHkbY94/PhmZfTo=
 cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab/go.mod h1:Or+5eVAo1aiS1DnPK90eQykGc59LGBWtqwBoJcxXTmw=
-cosmossdk.io/core v0.12.1-0.20240823213806-a554a21a0e84 h1:BQwKXixfOweuJrGtXUZN3iToOfl/WGRO1H9jW8dWJAo=
-cosmossdk.io/core v0.12.1-0.20240823213806-a554a21a0e84/go.mod h1:abgLjeFLhtuKIYZWSPlVUgQBrKObO7ULV35KYfexE90=
-cosmossdk.io/core/testing v0.0.0-20240815194237-858ec2fcb897 h1:gmixMHnBIgk3d65paDohDPrZQsFq00EI7jSTNfrApH0=
-cosmossdk.io/core/testing v0.0.0-20240815194237-858ec2fcb897/go.mod h1:sZWK1RejJogkZEDof+UTMyl2mrUxAXcX+IIQ0ZHk5WQ=
+cosmossdk.io/core v0.12.1-0.20240826100755-28c792bcd06c h1:NhVJ8mH5JnOBV/b1mR3NO8PJhUi6VND8S9FI1wO7hIU=
+cosmossdk.io/core v0.12.1-0.20240826100755-28c792bcd06c/go.mod h1:abgLjeFLhtuKIYZWSPlVUgQBrKObO7ULV35KYfexE90=
+cosmossdk.io/core/testing v0.0.0-20240826100755-28c792bcd06c h1:JabqeaOY2EJ3+uH5K+bNRWOFO9dOKXBueMyHtGIEg0E=
+cosmossdk.io/core/testing v0.0.0-20240826100755-28c792bcd06c/go.mod h1:+k84x9hU54Ckuc/JtppTSSQ+niEOU3CWcQghNz5NJWY=
 cosmossdk.io/depinject v1.0.0 h1:dQaTu6+O6askNXO06+jyeUAnF2/ssKwrrszP9t5q050=
 cosmossdk.io/depinject v1.0.0/go.mod h1:zxK/h3HgHoA/eJVtiSsoaRaRA2D5U4cJ5thIG4ssbB8=
 cosmossdk.io/errors v1.0.1 h1:bzu+Kcr0kS/1DuPBtUFdWjzLqyUuCiyHjyJB6srBV/0=

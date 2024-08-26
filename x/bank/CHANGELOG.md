@@ -39,7 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * [#21407](https://github.com/cosmos/cosmos-sdk/pull/21407) Fix the `SpendableBalances` query to correctly report spendable balances when one or more are negative. Also restrict the balance lookups to only the denoms in the page being returned.
-* [#21407](https://github.com/cosmos/cosmos-sdk/pull/21407) Fix the `SpendableCoins` keeper method to correctly return the positive spendable balances when one or more denoms have more locked than spendable.
+* [#21407](https://github.com/cosmos/cosmos-sdk/pull/21407) Fix the `SpendableCoins` keeper method to correctly return the positive spendable balances when one or more denoms have more locked than available.
 * [#21407](https://github.com/cosmos/cosmos-sdk/pull/21407) Fix the `SpendableCoin` keeper method to return a zero coin if there's more locked than available.
 
 ### API Breaking Changes

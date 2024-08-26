@@ -3,7 +3,6 @@ package cosmos.tx.signing.v1beta1;
 
 import "cosmos/crypto/multisig/v1beta1/multisig.proto";
 import "google/protobuf/any.proto";
-import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx/signing";
 
@@ -27,13 +26,16 @@ enum SignMode {
   // SIGN_MODE_TEXTUAL is a future signing mode that will verify some
   // human-readable textual representation on top of the binary representation
   // from SIGN_MODE_DIRECT.
-  SIGN_MODE_TEXTUAL = 2 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.50"];
+  //
+  // Since: cosmos-sdk 0.50
+  SIGN_MODE_TEXTUAL = 2;
 
   // SIGN_MODE_DIRECT_AUX specifies a signing mode which uses
   // SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode does not
   // require signers signing over other signers' `signer_info`.
-  SIGN_MODE_DIRECT_AUX = 3 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.46"];
-  ;
+  //
+  // Since: cosmos-sdk 0.46
+  SIGN_MODE_DIRECT_AUX = 3;
 
   // SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses
   // Amino JSON and will be removed in the future.
@@ -48,12 +50,13 @@ enum SignMode {
   // `SignModeHandler` for EIP-191. The SDK may decide to fully support
   // EIP-191 in the future.
   //
+  // Since: cosmos-sdk 0.45.2
   // Deprecated: post 0.47.x Sign mode refers to a method of encoding string data for
   // signing, but in the SDK, it also refers to how to encode a transaction into a string.
   // This opens the possibility for additional EIP191 sign modes, like SIGN_MODE_EIP_191_TEXTUAL,
   // SIGN_MODE_EIP_191_LEGACY_JSON, and more.
   // Each new EIP191 sign mode should be accompanied by an associated ADR.
-  SIGN_MODE_EIP_191 = 191 [deprecated = true, (cosmos_proto.field_added_in) = "cosmos-sdk 0.45.2"];
+  SIGN_MODE_EIP_191 = 191 [deprecated = true];
 }
 
 // SignatureDescriptors wraps multiple SignatureDescriptor's.

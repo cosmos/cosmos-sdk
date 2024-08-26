@@ -8,7 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/core/gas"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/auth/migrations/legacytx"
 	authsign "cosmossdk.io/x/auth/signing"
@@ -58,7 +59,7 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 	}
 
 	type args struct {
-		meter  storetypes.GasMeter
+		meter  gas.Meter
 		sig    signing.SignatureData
 		pubkey cryptotypes.PubKey
 		params types.Params
@@ -69,12 +70,12 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 		gasConsumed uint64
 		shouldErr   bool
 	}{
-		{"PubKeyEd25519", args{storetypes.NewInfiniteGasMeter(), nil, ed25519.GenPrivKey().PubKey(), params}, p.SigVerifyCostED25519, true},
-		{"PubKeySecp256k1", args{storetypes.NewInfiniteGasMeter(), nil, secp256k1.GenPrivKey().PubKey(), params}, p.SigVerifyCostSecp256k1, false},
-		{"PubKeySecp256r1", args{storetypes.NewInfiniteGasMeter(), nil, skR1.PubKey(), params}, p.SigVerifyCostSecp256r1(), false},
-		{"Multisig", args{storetypes.NewInfiniteGasMeter(), multisignature1, multisigKey1, params}, expectedCost1, false},
-		{"Multisig simulation", args{storetypes.NewInfiniteGasMeter(), multisigSimulationSignature, multisigKey1, params}, simulationExpectedCost, false},
-		{"unknown key", args{storetypes.NewInfiniteGasMeter(), nil, nil, params}, 0, true},
+		{"PubKeyEd25519", args{coretesting.NewInfiniteGasMeter(), nil, ed25519.GenPrivKey().PubKey(), params}, p.SigVerifyCostED25519, true},
+		{"PubKeySecp256k1", args{coretesting.NewInfiniteGasMeter(), nil, secp256k1.GenPrivKey().PubKey(), params}, p.SigVerifyCostSecp256k1, false},
+		{"PubKeySecp256r1", args{coretesting.NewInfiniteGasMeter(), nil, skR1.PubKey(), params}, p.SigVerifyCostSecp256r1(), false},
+		{"Multisig", args{coretesting.NewInfiniteGasMeter(), multisignature1, multisigKey1, params}, expectedCost1, false},
+		{"Multisig simulation", args{coretesting.NewInfiniteGasMeter(), multisigSimulationSignature, multisigKey1, params}, simulationExpectedCost, false},
+		{"unknown key", args{coretesting.NewInfiniteGasMeter(), nil, nil, params}, 0, true},
 	}
 	for _, tt := range tests {
 		sigV2 := signing.SignatureV2{
@@ -88,7 +89,7 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 			require.NotNil(t, err)
 		} else {
 			require.Nil(t, err)
-			require.Equal(t, tt.gasConsumed, tt.args.meter.GasConsumed(), fmt.Sprintf("%d != %d", tt.gasConsumed, tt.args.meter.GasConsumed()))
+			require.Equal(t, tt.gasConsumed, tt.args.meter.Consumed(), fmt.Sprintf("%d != %d", tt.gasConsumed, tt.args.meter.Consumed()))
 		}
 	}
 }
@@ -154,7 +155,7 @@ func TestSigVerification(t *testing.T) {
 		txConfigOpts,
 	)
 	require.NoError(t, err)
-	noOpGasConsume := func(_ storetypes.GasMeter, _ signing.SignatureV2, _ types.Params) error { return nil }
+	noOpGasConsume := func(_ gas.Meter, _ signing.SignatureV2, _ types.Params) error { return nil }
 	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler(), noOpGasConsume, nil)
 	antehandler := sdk.ChainAnteDecorators(svd)
 	defaultSignMode, err := authsign.APISignModeToInternal(anteTxConfig.SignModeHandler().DefaultMode())
@@ -256,7 +257,7 @@ func TestSigIntegration(t *testing.T) {
 	require.Equal(t, initialSigCost*uint64(len(privs)), doubleCost-initialCost)
 }
 
-func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...cryptotypes.PrivKey) (storetypes.Gas, error) {
+func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...cryptotypes.PrivKey) (gas.Gas, error) {
 	t.Helper()
 	suite := SetupTestSuite(t, true)
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()

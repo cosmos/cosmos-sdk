@@ -5,10 +5,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	storetypes "cosmossdk.io/store/types"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/x/auth/ante"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -38,7 +39,9 @@ func TestSetupDecorator_BlockMaxGas(t *testing.T) {
 
 	suite.ctx = suite.ctx.
 		WithBlockHeight(1).
-		WithGasMeter(storetypes.NewGasMeter(0))
+		WithGasMeter(runtime.NewSDKGasMeter(
+			coretesting.NewMeter(0),
+		))
 
 	_, err = antehandler(suite.ctx, tx, false)
 	require.Error(t, err)
@@ -67,7 +70,9 @@ func TestSetup(t *testing.T) {
 	antehandler := sdk.ChainAnteDecorators(sud)
 
 	// Set height to non-zero value for GasMeter to be set
-	suite.ctx = suite.ctx.WithBlockHeight(1).WithGasMeter(storetypes.NewGasMeter(0))
+	suite.ctx = suite.ctx.WithBlockHeight(1).WithGasMeter(runtime.NewSDKGasMeter(
+		coretesting.NewMeter(0),
+	))
 
 	// Context GasMeter Limit not set
 	require.Equal(t, uint64(0), suite.ctx.GasMeter().Limit(), "GasMeter set with limit before setup")

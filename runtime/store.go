@@ -16,6 +16,14 @@ func NewKVStoreService(storeKey *storetypes.KVStoreKey) store.KVStoreService {
 	return &kvStoreService{key: storeKey}
 }
 
+func NewKVStoreKey(name string) *storetypes.KVStoreKey {
+	return storetypes.NewKVStoreKey(name)
+}
+
+func NewTransientStoreKey(name string) *storetypes.TransientStoreKey {
+	return storetypes.NewTransientStoreKey(name)
+}
+
 type kvStoreService struct {
 	key *storetypes.KVStoreKey
 }

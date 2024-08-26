@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth/ante"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -138,7 +138,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 			require.Nil(t, err, "Cannot marshal tx: %v", err)
 
 			params := suite.accountKeeper.GetParams(suite.ctx)
-			expectedGas := storetypes.Gas(len(txBytes)) * params.TxSizeCostPerByte
+			expectedGas := gas.Gas(len(txBytes)) * params.TxSizeCostPerByte
 
 			// Set suite.ctx with TxBytes manually
 			suite.ctx = suite.ctx.WithTxBytes(txBytes)

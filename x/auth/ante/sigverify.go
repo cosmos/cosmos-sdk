@@ -10,9 +10,9 @@ import (
 	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
 	authsigning "cosmossdk.io/x/auth/signing"
 	"cosmossdk.io/x/auth/types"
 	txsigning "cosmossdk.io/x/tx/signing"
@@ -47,7 +47,7 @@ func init() {
 // SignatureVerificationGasConsumer is the type of function that is used to both
 // consume gas when verifying signatures and also to accept or reject different types of pubkeys
 // This is where apps can define their own PubKey
-type SignatureVerificationGasConsumer = func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
+type SignatureVerificationGasConsumer = func(meter gas.Meter, sig signing.SignatureV2, params types.Params) error
 
 type AccountAbstractionKeeper interface {
 	IsAbstractedAccount(ctx context.Context, addr []byte) (bool, error)
@@ -291,7 +291,9 @@ func (svd SigVerificationDecorator) consumeSignatureGas(
 		Sequence: signature.Sequence,
 	}
 
-	err := svd.sigGasConsumer(ctx.GasMeter(), signature, svd.ak.GetParams(ctx))
+	gasMeter := svd.ak.GetEnvironment().GasService.GasMeter(ctx)
+
+	err := svd.sigGasConsumer(gasMeter, signature, svd.ak.GetParams(ctx))
 	if err != nil {
 		return err
 	}
@@ -500,20 +502,20 @@ func (vscd ValidateSigCountDecorator) ValidateTx(ctx context.Context, tx sdk.Tx)
 // DefaultSigVerificationGasConsumer is the default implementation of SignatureVerificationGasConsumer. It consumes gas
 // for signature verification based upon the public key type. The cost is fetched from the given params and is matched
 // by the concrete type.
-func DefaultSigVerificationGasConsumer(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error {
+func DefaultSigVerificationGasConsumer(meter gas.Meter, sig signing.SignatureV2, params types.Params) error {
 	pubkey := sig.PubKey
 
 	switch pubkey := pubkey.(type) {
 	case *ed25519.PubKey:
-		meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
+		meter.Consume(params.SigVerifyCostED25519, "ante verify: ed25519")
 		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "ED25519 public keys are unsupported")
 
 	case *secp256k1.PubKey:
-		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
+		meter.Consume(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
 		return nil
 
 	case *secp256r1.PubKey:
-		meter.ConsumeGas(params.SigVerifyCostSecp256r1(), "ante verify: secp256r1")
+		meter.Consume(params.SigVerifyCostSecp256r1(), "ante verify: secp256r1")
 		return nil
 
 	case multisig.PubKey:
@@ -536,7 +538,7 @@ func DefaultSigVerificationGasConsumer(meter storetypes.GasMeter, sig signing.Si
 
 // ConsumeMultisignatureVerificationGas consumes gas from a GasMeter for verifying a multisig pubKey signature.
 func ConsumeMultisignatureVerificationGas(
-	meter storetypes.GasMeter, sig *signing.MultiSignatureData, pubKey multisig.PubKey,
+	meter gas.Meter, sig *signing.MultiSignatureData, pubKey multisig.PubKey,
 	params types.Params, accSeq uint64,
 ) error {
 	// if BitArray is nil, it means tx has been built for simulation.
@@ -571,7 +573,7 @@ func ConsumeMultisignatureVerificationGas(
 // multisignatureSimulationVerificationGas consume gas for verifying a simulation multisig pubKey signature. As it's
 // a simulation tx the number of signatures its equal to the multisig threshold.
 func multisignatureSimulationVerificationGas(
-	meter storetypes.GasMeter, sig *signing.MultiSignatureData, pubKey multisig.PubKey,
+	meter gas.Meter, sig *signing.MultiSignatureData, pubKey multisig.PubKey,
 	params types.Params, accSeq uint64,
 ) error {
 	for i := 0; i < len(sig.Signatures); i++ {

@@ -16,6 +16,10 @@ var (
 	_ appmodulev2.HasTxValidator[transaction.Tx] = AppModule{}
 )
 
+// AppModule is a module that only implements tx validators.
+// The goal of this module is to allow extensible registration of tx validators provided by chains without requiring a new modules.
+// Additionally, it registers tx validators that do not really have a place in other modules.
+// This module is only useful for chains using server/v2. Ante/Post handlers are setup via baseapp options in depinject.
 type AppModule struct {
 	sigVerification ante.SigVerificationDecorator
 	// txValidators contains tx validator that can be injected into the module via depinject.

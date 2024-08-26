@@ -28,7 +28,7 @@ var testBatch = PacketBatch{
 }
 
 func batchListener() (Listener, *PacketBatch) {
-	var got = new(PacketBatch)
+	got := new(PacketBatch)
 	l := Listener{
 		InitializeModuleData: func(m ModuleInitializationData) error {
 			*got = append(*got, m)

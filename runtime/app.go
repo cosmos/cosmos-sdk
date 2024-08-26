@@ -184,16 +184,14 @@ func (a *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
 
 // Precommiter application updates every commit
 func (a *App) Precommiter(ctx sdk.Context) {
-	err := a.ModuleManager.Precommit(ctx)
-	if err != nil {
+	if err := a.ModuleManager.Precommit(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // PrepareCheckStater application updates every commit
 func (a *App) PrepareCheckStater(ctx sdk.Context) {
-	err := a.ModuleManager.PrepareCheckState(ctx)
-	if err != nil {
+	if err := a.ModuleManager.PrepareCheckState(ctx); err != nil {
 		panic(err)
 	}
 }

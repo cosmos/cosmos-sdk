@@ -13,8 +13,7 @@ type Mempool interface {
 	Insert(context.Context, sdk.Tx) error
 
 	// Select returns an Iterator over the app-side mempool. If txs are specified,
-	// then they shall be incorporated into the Iterator. The Iterator must be
-	// closed by the caller.
+	// then they shall be incorporated into the Iterator. The Iterator is not thread-safe to use.
 	Select(context.Context, [][]byte) Iterator
 
 	// SelectBy use callback to iterate over the mempool, it's thread-safe to use.

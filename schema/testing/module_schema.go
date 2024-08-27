@@ -1,7 +1,7 @@
 package schematesting
 
 import (
-	"fmt"
+	"slices"
 
 	"pgregory.net/rapid"
 
@@ -9,43 +9,34 @@ import (
 )
 
 // ModuleSchemaGen generates random ModuleSchema's based on the validity criteria of module schemas.
-var ModuleSchemaGen = rapid.Custom(func(t *rapid.T) schema.ModuleSchema {
-	objectTypes := objectTypesGen.Draw(t, "objectTypes")
-	modSchema, err := schema.NewModuleSchema(objectTypes)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return modSchema
-})
-
-var objectTypesGen = rapid.Custom(func(t *rapid.T) []schema.ObjectType {
-	var objectTypes []schema.ObjectType
-	numObjectTypes := rapid.IntRange(1, 10).Draw(t, "numObjectTypes")
-	for i := 0; i < numObjectTypes; i++ {
-		objectType := ObjectTypeGen.Draw(t, fmt.Sprintf("objectType[%d]", i))
-		objectTypes = append(objectTypes, objectType)
-	}
-	return objectTypes
-}).Filter(func(objectTypes []schema.ObjectType) bool {
-	typeNames := map[string]bool{}
-	for _, objectType := range objectTypes {
-		if hasDuplicateTypeNames(typeNames, objectType.KeyFields) || hasDuplicateTypeNames(typeNames, objectType.ValueFields) {
-			return false
+func ModuleSchemaGen() *rapid.Generator[schema.ModuleSchema] {
+	enumTypesGen := distinctTypes(EnumType())
+	return rapid.Custom(func(t *rapid.T) schema.ModuleSchema {
+		enumTypes := enumTypesGen.Draw(t, "enumTypes")
+		tempSchema, err := schema.NewModuleSchema(enumTypes...)
+		if err != nil {
+			t.Fatal(err)
 		}
-		if typeNames[objectType.Name] {
-			return false
-		}
-		typeNames[objectType.Name] = true
-	}
-	return true
-})
+		objectTypes := distinctTypes(ObjectTypeGen(tempSchema)).Draw(t, "objectTypes")
+		allTypes := append(enumTypes, objectTypes...)
 
-// MustNewModuleSchema calls NewModuleSchema and panics if there's an error. This should generally be used
-// only in tests or initialization code.
-func MustNewModuleSchema(objectTypes []schema.ObjectType) schema.ModuleSchema {
-	sch, err := schema.NewModuleSchema(objectTypes)
-	if err != nil {
-		panic(err)
-	}
-	return sch
+		// remove duplicate type names
+		slices.CompactFunc(allTypes, func(s schema.Type, s2 schema.Type) bool {
+			return s.TypeName() == s2.TypeName()
+		})
+
+		modSchema, err := schema.NewModuleSchema(allTypes...)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return modSchema
+	})
+}
+
+func distinctTypes[T schema.Type](g *rapid.Generator[T]) *rapid.Generator[[]schema.Type] {
+	return rapid.SliceOfNDistinct(rapid.Map(g, func(t T) schema.Type {
+		return t
+	}), 1, 10, func(t schema.Type) string {
+		return t.TypeName()
+	})
 }

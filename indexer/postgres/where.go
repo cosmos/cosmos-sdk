@@ -21,7 +21,7 @@ func (tm *objectIndexer) whereSqlAndParams(w io.Writer, key interface{}, startPa
 func (tm *objectIndexer) whereSql(w io.Writer, params []interface{}, cols []string, startParamIdx int) (endParamIdx int, resParams []interface{}, err error) {
 	_, err = fmt.Fprintf(w, " WHERE ")
 	if err != nil {
-		return
+		return 0, nil, err
 	}
 
 	endParamIdx = startParamIdx
@@ -29,25 +29,25 @@ func (tm *objectIndexer) whereSql(w io.Writer, params []interface{}, cols []stri
 		if i > 0 {
 			_, err = fmt.Fprintf(w, " AND ")
 			if err != nil {
-				return
+				return 0, nil, err
 			}
 		}
 
 		_, err = fmt.Fprintf(w, "%s ", col)
 		if err != nil {
-			return
+			return 0, nil, err
 		}
 
 		if params[i] == nil {
 			_, err = fmt.Fprintf(w, "IS NULL")
 			if err != nil {
-				return
+				return 0, nil, err
 			}
 
 		} else {
 			_, err = fmt.Fprintf(w, "= $%d", endParamIdx)
 			if err != nil {
-				return
+				return 0, nil, err
 			}
 
 			resParams = append(resParams, params[i])
@@ -56,5 +56,5 @@ func (tm *objectIndexer) whereSql(w io.Writer, params []interface{}, cols []stri
 		}
 	}
 
-	return
+	return endParamIdx, resParams, nil
 }

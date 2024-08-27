@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -162,7 +163,7 @@ func (tm *objectIndexer) readRow(row interface{ Scan(...interface{}) error }) (s
 
 	err := row.Scan(res...)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return schema.ObjectUpdate{}, false, err
 		}
 		return schema.ObjectUpdate{}, false, err

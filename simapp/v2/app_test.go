@@ -11,9 +11,9 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	app2 "cosmossdk.io/core/app"
 	"cosmossdk.io/core/comet"
 	context2 "cosmossdk.io/core/context"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -80,7 +80,7 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 
 	_, newState, err := app.InitGenesis(
 		ctx,
-		&app2.BlockRequest[transaction.Tx]{
+		&server.BlockRequest[transaction.Tx]{
 			Time:      time.Now(),
 			Hash:      bz[:],
 			ChainId:   "theChain",
@@ -123,7 +123,7 @@ func MoveNextBlock(t *testing.T, app *SimApp[transaction.Tx], ctx context.Contex
 
 	_, newState, err := app.DeliverBlock(
 		ctx,
-		&app2.BlockRequest[transaction.Tx]{
+		&server.BlockRequest[transaction.Tx]{
 			Height:  height + 1,
 			Time:    time.Now(),
 			Hash:    bz[:],

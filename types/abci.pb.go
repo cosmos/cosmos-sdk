@@ -63,8 +63,6 @@ type TxResponse struct {
 	// these events include those emitted by processing all the messages and those
 	// emitted from the ante. Whereas Logs contains the events, with
 	// additional metadata, emitted only by processing the messages.
-	//
-	// Since: cosmos-sdk 0.42.11, 0.44.5, 0.45
 	Events []v1.Event `protobuf:"bytes,13,rep,name=events,proto3" json:"events"`
 }
 

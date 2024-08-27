@@ -76,6 +76,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, nex
 }
 
 // ValidateTx implements an TxValidator for DeductFeeDecorator
+// Note: This method is applicable only for transactions that implement the sdk.FeeTx interface.
 func (dfd DeductFeeDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {

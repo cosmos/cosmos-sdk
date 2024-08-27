@@ -166,7 +166,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	if in.AccountKeeper != nil && in.BankKeeper != nil {
-		feeTxValidator := ante.NewDeductFeeDecorator(in.AccountKeeper, in.BankKeeper, nil, nil)
+		feeTxValidator := ante.NewDeductFeeDecorator(in.AccountKeeper, in.BankKeeper, in.FeeGrantKeeper, nil)
 		// set min gas price in deduct fee decorator
 		feeTxValidator.SetMinGasPrices(minGasPrices)
 		// set deduct fee decorator to app module

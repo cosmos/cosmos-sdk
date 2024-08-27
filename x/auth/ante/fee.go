@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/auth/types"
@@ -70,16 +71,6 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, nex
 		return ctx, err
 	}
 
-	// TODO: emit this event in v2 after executing ValidateTx method
-	events := sdk.Events{
-		sdk.NewEvent(
-			sdk.EventTypeTx,
-			sdk.NewAttribute(sdk.AttributeKeyFee, dfd.state.txFee.String()),
-			sdk.NewAttribute(sdk.AttributeKeyFeePayer, sdk.AccAddress(dfd.state.deductFeesFrom).String()),
-		),
-	}
-	ctx.EventManager().EmitEvents(events)
-
 	newCtx := ctx.WithPriority(dfd.state.txPriority)
 	return next(newCtx, tx, false)
 }
@@ -113,6 +104,14 @@ func (dfd DeductFeeDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
 	}
 
 	if err := dfd.checkDeductFee(ctx, tx, dfd.state.txFee); err != nil {
+		return err
+	}
+
+	if err := dfd.accountKeeper.GetEnvironment().EventService.EventManager(ctx).EmitKV(
+		sdk.EventTypeTx,
+		event.NewAttribute(sdk.AttributeKeyFee, dfd.state.txFee.String()),
+		event.NewAttribute(sdk.AttributeKeyFeePayer, sdk.AccAddress(dfd.state.deductFeesFrom).String()),
+	); err != nil {
 		return err
 	}
 

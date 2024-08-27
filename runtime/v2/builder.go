@@ -127,7 +127,7 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	storeOpts := rootstore.DefaultStoreOptions()
 	if s := a.viper.Sub("store.options"); s != nil {
 		if err := s.Unmarshal(&storeOpts); err != nil {
-			return nil, fmt.Errorf("failed to store options: %w", err)
+			return nil, fmt.Errorf("failed to unmarshal store options: %w", err)
 		}
 	}
 

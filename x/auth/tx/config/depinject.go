@@ -146,13 +146,20 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		app.SetTxEncoder(txConfig.TxEncoder())
 	}
 
-	svd := ante.NewSigVerificationDecorator(
-		in.AccountKeeper,
-		txConfig.SignModeHandler(),
-		ante.DefaultSigVerificationGasConsumer,
-		in.AccountAbstractionKeeper,
-	)
-	appModule := AppModule{svd}
+	validators := []appmodulev2.TxValidator[transaction.Tx]{
+		ante.NewSigVerificationDecorator(
+			in.AccountKeeper,
+			txConfig.SignModeHandler(),
+			ante.DefaultSigVerificationGasConsumer,
+			in.AccountAbstractionKeeper,
+		),
+	}
+
+	if in.UnorderedTxManager != nil {
+		validators = append(validators, ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, in.UnorderedTxManager, in.Environment, ante.DefaultSha256Cost))
+	}
+
+	appModule := AppModule{validators}
 
 	return ModuleOutputs{TxConfig: txConfig, TxConfigOptions: txConfigOptions, BaseAppOption: baseAppOption, Module: appModule}
 }
@@ -242,12 +249,17 @@ var (
 )
 
 type AppModule struct {
-	sigVerification ante.SigVerificationDecorator
+	validators []appmodulev2.TxValidator[transaction.Tx]
 }
 
 // TxValidator implements appmodule.HasTxValidator.
 func (a AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
-	return a.sigVerification.ValidateTx(ctx, tx)
+	for _, validator := range a.validators {
+		if err := validator.ValidateTx(ctx, tx); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // IsAppModule implements appmodule.AppModule.

@@ -79,10 +79,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 		if err != nil {
 			panic(err)
 		}
-		_, err = app.DistrKeeper.WithdrawValidatorCommission(ctx, valBz)
-		if err != nil {
-			panic(err)
-		}
+		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, valBz)
 		return false
 	})
 	if err != nil {
@@ -99,10 +96,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 		valAddr:= sdk.MustValAddressFromBech32(delegation.ValidatorAddress)
 		delAddr := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)
 
-		_, err = app.DistrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr)
-		if err != nil {
-			panic(err)
-		}
+		_, _ = app.DistrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr)
 	}
 
 	// clear validator slash events

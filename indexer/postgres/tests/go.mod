@@ -11,7 +11,6 @@ require (
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/stretchr/testify v1.9.0
 	gotest.tools/v3 v3.5.1
-	pgregory.net/rapid v1.1.0
 )
 
 require (
@@ -32,6 +31,7 @@ require (
 	golang.org/x/sys v0.23.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	pgregory.net/rapid v1.1.0 // indirect
 )
 
 replace cosmossdk.io/indexer/postgres => ../.

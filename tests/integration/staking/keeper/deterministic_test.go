@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 	"testing"
 	"time"
 
@@ -207,6 +209,21 @@ func bondTypeGenerator() *rapid.Generator[stakingtypes.BondStatus] {
 	})
 }
 
+func metadataGenerator() *rapid.Generator[stakingtypes.Metadata] {
+	return rapid.Custom(func(t *rapid.T) stakingtypes.Metadata {
+		host := fmt.Sprintf("%s.com", rapid.StringN(5, 250, 255).Draw(t, "host"))
+		path := rapid.StringN(5, 250, 255).Draw(t, "path")
+		uri := url.URL{
+			Scheme: "https",
+			Host:   host,
+			Path:   path,
+		}
+		return stakingtypes.Metadata{
+			ProfilePicUri: uri.String(),
+		}
+	})
+}
+
 // createValidator creates a validator with random values.
 func createValidator(t *testing.T, rt *rapid.T, _ *deterministicFixture) stakingtypes.Validator {
 	t.Helper()
@@ -226,6 +243,7 @@ func createValidator(t *testing.T, rt *rapid.T, _ *deterministicFixture) staking
 			rapid.StringN(5, 250, 255).Draw(rt, "website"),
 			rapid.StringN(5, 250, 255).Draw(rt, "securityContact"),
 			rapid.StringN(5, 250, 255).Draw(rt, "details"),
+			metadataGenerator().Draw(rt, "metadata"),
 		),
 		UnbondingHeight: rapid.Int64Min(1).Draw(rt, "unbonding-height"),
 		UnbondingTime:   time.Now().Add(durationGenerator().Draw(rt, "duration")),
@@ -301,6 +319,7 @@ func getStaticValidator(t *testing.T, f *deterministicFixture) stakingtypes.Vali
 			"website",
 			"securityContact",
 			"details",
+			stakingtypes.Metadata{},
 		),
 		UnbondingHeight: 10,
 		UnbondingTime:   time.Date(2022, 10, 1, 0, 0, 0, 0, time.UTC),
@@ -336,6 +355,7 @@ func getStaticValidator2(t *testing.T, f *deterministicFixture) stakingtypes.Val
 			"website",
 			"securityContact",
 			"details",
+			stakingtypes.Metadata{},
 		),
 		UnbondingHeight: 100132,
 		UnbondingTime:   time.Date(2025, 10, 1, 0, 0, 0, 0, time.UTC),

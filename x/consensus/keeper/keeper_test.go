@@ -152,8 +152,6 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.msg, func() {
 			s.SetupTest(false) // reset
 
@@ -189,8 +187,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name: "invalid  params",
@@ -258,8 +254,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 300},
 				},
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name: "valid Feature update - pbts",
@@ -272,8 +266,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					PbtsEnableHeight: &gogotypes.Int64Value{Value: 150},
 				},
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name: "valid Feature update - vote extensions + pbts",
@@ -287,8 +279,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					PbtsEnableHeight:           &gogotypes.Int64Value{Value: 110},
 				},
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name:            "valid noop Feature update - vote extensions + pbts (enabled feature)",
@@ -303,8 +293,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					PbtsEnableHeight:           &gogotypes.Int64Value{Value: 5},
 				},
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name: "valid (deprecated) ABCI update",
@@ -317,8 +305,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					VoteExtensionsEnableHeight: 90,
 				},
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name: "invalid Feature + (deprecated) ABCI vote extensions update",
@@ -462,8 +448,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					Precision: getDuration(3 * time.Second),
 				},
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name: "valid Synchrony update - delay",
@@ -476,8 +460,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					MessageDelay: getDuration(10 * time.Second),
 				},
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name: "valid Synchrony update - precision + delay",
@@ -491,8 +473,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					MessageDelay: getDuration(11 * time.Second),
 				},
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name: "valid Synchrony update - 0 precision",
@@ -505,8 +485,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					Precision: getDuration(0),
 				},
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name: "valid Synchrony update - 0 delay",
@@ -519,8 +497,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					MessageDelay: getDuration(0),
 				},
 			},
-			expErr:    false,
-			expErrMsg: "",
 		},
 		{
 			name: "invalid Synchrony update - 0 precision with PBTS set",
@@ -559,7 +535,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupTest(tc.enabledFeatures)
 			_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, tc.input)

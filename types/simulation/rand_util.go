@@ -2,8 +2,10 @@ package simulation
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
 	"math/rand"
+	"net/url"
 	"time"
 	"unsafe"
 
@@ -144,6 +146,16 @@ func RandSubsetCoins(r *rand.Rand, coins sdk.Coins) sdk.Coins {
 	}
 
 	return subset.Sort()
+}
+
+// RandURIOfLength returns a random valid uri with a path of length: n and a host of length:  n - length(tld)
+func RandURIOfLength(r *rand.Rand, n int) string {
+	uri := &url.URL{
+		Scheme: "https",
+		Host:   fmt.Sprintf("%s.com", RandStringOfLength(r, n)),
+		Path:   RandStringOfLength(r, n),
+	}
+	return uri.String()
 }
 
 // DeriveRand derives a new Rand deterministically from another random source.

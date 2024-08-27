@@ -78,8 +78,22 @@ need to remove them both from your app.go code, they will yield to unresolvable 
 
 The Cosmos SDK now supports unordered transactions. This means that transactions
 can be executed in any order and doesn't require the client to deal with or manage
-nonces. This also means the order of execution is not guaranteed. To enable unordered
-transactions in your application:
+nonces. This also means the order of execution is not guaranteed.
+
+Unordered transactions are automatically enabled when using `depinject` / app di, simply supply the `servertypes.AppOptions` in `app.go`:
+
+```diff
+	depinject.Supply(
++		// supply the application options
++		appOpts,
+		// supply the logger
+		logger,
+	)
+```
+
+<details>
+<summary>Step-by-step Wiring </summary>
+If you are still using the legacy wiring, you must enable unordered transactions manually:
 
 * Update the `App` constructor to create, load, and save the unordered transaction
   manager.
@@ -142,6 +156,8 @@ transactions in your application:
 		return err
 	}
 	```
+
+</details>
 
 To submit an unordered transaction, the client must set the `unordered` flag to
 `true` and ensure a reasonable `timeout_height` is set. The `timeout_height` is

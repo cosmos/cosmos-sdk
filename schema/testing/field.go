@@ -35,6 +35,11 @@ var FieldGen = rapid.Custom(func(t *rapid.T) schema.Field {
 	return field
 })
 
+// KeyFieldGen generates random key fields based on the validity criteria of key fields.
+var KeyFieldGen = FieldGen.Filter(func(f schema.Field) bool {
+	return !f.Nullable && f.Kind.ValidKeyKind()
+})
+
 // FieldValueGen generates random valid values for the field, aiming to exercise the full range of possible
 // values for the field.
 func FieldValueGen(field schema.Field) *rapid.Generator[any] {
@@ -128,9 +133,8 @@ func ObjectKeyGen(keyFields []schema.Field) *rapid.Generator[any] {
 // Values that are for update may skip some fields in a ValueUpdates instance whereas values for insertion
 // will always contain all values.
 func ObjectValueGen(valueFields []schema.Field, forUpdate bool) *rapid.Generator[any] {
-	// special case where there are no value fields
-	// we shouldn't end up here, but just in case
 	if len(valueFields) == 0 {
+		// if we have no value fields, always return nil
 		return rapid.Just[any](nil)
 	}
 

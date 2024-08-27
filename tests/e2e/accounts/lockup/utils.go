@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"google.golang.org/protobuf/runtime/protoiface"
 
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/x/accounts/defaults/lockup/types"
 	"cosmossdk.io/x/bank/testutil"
@@ -14,8 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-type ProtoMsg = protoiface.MessageV1
 
 var (
 	ownerAddr = secp256k1.GenPrivKey().PubKey().Address()
@@ -52,7 +50,7 @@ func (s *E2ETestSuite) executeTx(ctx sdk.Context, msg sdk.Msg, app *simapp.SimAp
 	return err
 }
 
-func (s *E2ETestSuite) queryAcc(ctx sdk.Context, req sdk.Msg, app *simapp.SimApp, accAddr []byte) (ProtoMsg, error) {
+func (s *E2ETestSuite) queryAcc(ctx sdk.Context, req sdk.Msg, app *simapp.SimApp, accAddr []byte) (transaction.Msg, error) {
 	resp, err := app.AccountsKeeper.Query(ctx, accAddr, req)
 	return resp, err
 }

@@ -12,6 +12,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/consensus/exported"
 	"cosmossdk.io/x/consensus/types"
@@ -28,6 +29,7 @@ type Keeper struct {
 
 var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
 
+// NewKeeper creates a new Keeper instance.
 func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, authority string) Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	return Keeper{
@@ -37,8 +39,31 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, authority strin
 	}
 }
 
+// GetAuthority returns the authority address for the consensus module.
+// This address has the permission to update consensus parameters.
 func (k *Keeper) GetAuthority() string {
 	return k.authority
+}
+
+// InitGenesis initializes the initial state of the module
+func (k *Keeper) InitGenesis(ctx context.Context) error {
+	value, ok := ctx.Value(corecontext.InitInfoKey).(*types.MsgUpdateParams)
+	if !ok || value == nil {
+		// no error for appv1 and appv2
+		return nil
+	}
+
+	consensusParams, err := value.ToProtoConsensusParams()
+	if err != nil {
+		return err
+	}
+
+	nextParams, err := k.paramCheck(ctx, consensusParams)
+	if err != nil {
+		return err
+	}
+
+	return k.ParamsStore.Set(ctx, nextParams.ToProto())
 }
 
 // Querier
@@ -59,6 +84,7 @@ func (k Keeper) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types
 
 var _ types.MsgServer = Keeper{}
 
+// UpdateParams updates the consensus parameters.
 func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if k.GetAuthority() != msg.Authority {
 		return nil, fmt.Errorf("invalid authority; expected %s, got %s", k.GetAuthority(), msg.Authority)
@@ -69,26 +95,8 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 		return nil, err
 	}
 
-	paramsProto, err := k.ParamsStore.Get(ctx)
-
-	var params cmttypes.ConsensusParams
+	nextParams, err := k.paramCheck(ctx, consensusParams)
 	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			params = cmttypes.ConsensusParams{}
-		} else {
-			return nil, err
-		}
-	} else {
-		params = cmttypes.ConsensusParamsFromProto(paramsProto)
-	}
-
-	nextParams := params.Update(&consensusParams)
-
-	if err := nextParams.ValidateBasic(); err != nil {
-		return nil, err
-	}
-
-	if err := params.ValidateUpdate(&consensusParams, k.HeaderService.HeaderInfo(ctx).Height); err != nil {
 		return nil, err
 	}
 
@@ -104,4 +112,30 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
+}
+
+// paramCheck validates the consensus params
+func (k Keeper) paramCheck(ctx context.Context, consensusParams cmtproto.ConsensusParams) (*cmttypes.ConsensusParams, error) {
+	var params cmttypes.ConsensusParams
+
+	paramsProto, err := k.ParamsStore.Get(ctx)
+	if err == nil {
+		params = cmttypes.ConsensusParamsFromProto(paramsProto)
+	} else if errors.Is(err, collections.ErrNotFound) {
+		params = cmttypes.ConsensusParams{}
+	} else {
+		return nil, err
+	}
+
+	nextParams := params.Update(&consensusParams)
+
+	if err := nextParams.ValidateBasic(); err != nil {
+		return nil, err
+	}
+
+	if err := params.ValidateUpdate(&consensusParams, k.HeaderService.HeaderInfo(ctx).Height); err != nil {
+		return nil, err
+	}
+
+	return &nextParams, nil
 }

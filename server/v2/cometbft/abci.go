@@ -11,9 +11,10 @@ import (
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
-	coreappmgr "cosmossdk.io/core/app"
 	"cosmossdk.io/core/comet"
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
@@ -60,7 +61,7 @@ type Consensus[T transaction.Tx] struct {
 	addrPeerFilter types.PeerFilter // filter peers by address and port
 	idPeerFilter   types.PeerFilter // filter peers by node ID
 
-	grpcMethodsMap map[string]func() gogoproto.Message // maps gRPC method to message creator func
+	grpcMethodsMap map[string]func() transaction.Msg // maps gRPC method to message creator func
 }
 
 func NewConsensus[T transaction.Tx](
@@ -70,7 +71,7 @@ func NewConsensus[T transaction.Tx](
 	app *appmanager.AppManager[T],
 	mp mempool.Mempool[T],
 	indexedEvents map[string]struct{},
-	gRPCMethodsMap map[string]func() gogoproto.Message,
+	gRPCMethodsMap map[string]func() transaction.Msg,
 	store types.Store,
 	cfg Config,
 	txCodec transaction.Codec[T],
@@ -133,10 +134,6 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 		GasWanted: uint64ToInt64(resp.GasWanted),
 		GasUsed:   uint64ToInt64(resp.GasUsed),
 		Events:    intoABCIEvents(resp.Events, c.indexedEvents),
-		Info:      resp.Info,
-		Data:      resp.Data,
-		Log:       resp.Log,
-		Codespace: resp.Codespace,
 	}
 	if resp.Error != nil {
 		cometResp.Code = 1
@@ -152,10 +149,23 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 		return nil, err
 	}
 
-	// cp, err := c.GetConsensusParams(ctx)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	// if height is 0, we dont know the consensus params
+	var appVersion uint64 = 0
+	if version > 0 {
+		cp, err := c.GetConsensusParams(ctx)
+		// if the consensus params are not found, we set the app version to 0
+		// in the case that the start version is > 0
+		if cp == nil || errors.Is(err, errors.New("collections: not found")) {
+			appVersion = 0
+		} else if err != nil {
+			return nil, err
+		} else {
+			appVersion = cp.Version.GetApp()
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	cid, err := c.store.LastCommitID()
 	if err != nil {
@@ -165,7 +175,7 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 	return &abciproto.InfoResponse{
 		Data:             c.appName,
 		Version:          c.version,
-		AppVersion:       0, // TODO fetch consensus params?
+		AppVersion:       appVersion,
 		LastBlockHeight:  int64(version),
 		LastBlockAppHash: cid.Hash,
 	}, nil
@@ -234,14 +244,15 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		c.initialHeight = 1
 	}
 
-	var consMessages []transaction.Msg
 	if req.ConsensusParams != nil {
-		consMessages = append(consMessages, &consensustypes.MsgUpdateParams{
+		ctx = context.WithValue(ctx, corecontext.InitInfoKey, &consensustypes.MsgUpdateParams{
 			Authority: c.consensusAuthority,
 			Block:     req.ConsensusParams.Block,
 			Evidence:  req.ConsensusParams.Evidence,
 			Validator: req.ConsensusParams.Validator,
 			Abci:      req.ConsensusParams.Abci,
+			Synchrony: req.ConsensusParams.Synchrony,
+			Feature:   req.ConsensusParams.Feature,
 		})
 	}
 
@@ -253,14 +264,13 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	// populate hash with empty byte slice instead of nil
 	bz := sha256.Sum256([]byte{})
 
-	br := &coreappmgr.BlockRequest[T]{
-		Height:            uint64(req.InitialHeight - 1),
-		Time:              req.Time,
-		Hash:              bz[:],
-		AppHash:           ci.Hash,
-		ChainId:           req.ChainId,
-		ConsensusMessages: consMessages,
-		IsGenesis:         true,
+	br := &server.BlockRequest[T]{
+		Height:    uint64(req.InitialHeight - 1),
+		Time:      req.Time,
+		Hash:      bz[:],
+		AppHash:   ci.Hash,
+		ChainId:   req.ChainId,
+		IsGenesis: true,
 	}
 
 	blockresponse, genesisState, err := c.app.InitGenesis(
@@ -275,7 +285,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	// TODO necessary? where should this WARN live if it all. helpful for testing
 	for _, txRes := range blockresponse.TxResults {
 		if txRes.Error != nil {
-			c.logger.Warn("genesis tx failed", "code", txRes.Code, "log", txRes.Log, "error", txRes.Error)
+			c.logger.Warn("genesis tx failed", "code", txRes.Code, "error", txRes.Error)
 		}
 	}
 
@@ -427,7 +437,7 @@ func (c *Consensus[T]) FinalizeBlock(
 		return nil, err
 	}
 
-	blockReq := &coreappmgr.BlockRequest[T]{
+	blockReq := &server.BlockRequest[T]{
 		Height:  uint64(req.Height),
 		Time:    req.Time,
 		Hash:    req.Hash,

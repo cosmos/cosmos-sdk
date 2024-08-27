@@ -1,6 +1,6 @@
 module cosmossdk.io/x/tx
 
-go 1.21
+go 1.23
 
 require (
 	cosmossdk.io/api v0.7.5
@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.3.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/gogoproto v1.6.0
+	github.com/cosmos/gogoproto v1.7.0
 	github.com/google/go-cmp v0.6.0
 	github.com/google/gofuzz v1.2.0
 	github.com/iancoleman/strcase v0.3.0

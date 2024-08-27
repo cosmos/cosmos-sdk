@@ -7,6 +7,7 @@ import (
 	"time"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	"cosmossdk.io/core/appmodule"
 	corecontext "cosmossdk.io/core/context"
@@ -58,7 +59,7 @@ func (k Keeper) getGrant(ctx context.Context, skey []byte) (grant authz.Grant, f
 	return grant, true
 }
 
-func (k Keeper) update(ctx context.Context, grantee, granter sdk.AccAddress, updated authz.Authorization) error {
+func (k Keeper) updateGrant(ctx context.Context, grantee, granter sdk.AccAddress, updated authz.Authorization) error {
 	skey := grantStoreKey(grantee, granter, updated.MsgTypeURL())
 	grant, found := k.getGrant(ctx, skey)
 	if !found {
@@ -133,7 +134,7 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 				if !ok {
 					return nil, fmt.Errorf("expected authz.Authorization but got %T", resp.Updated)
 				}
-				err = k.update(ctx, grantee, granter, updated)
+				err = k.updateGrant(ctx, grantee, granter, updated)
 			}
 			if err != nil {
 				return nil, err
@@ -145,9 +146,19 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 		}
 
 		// no need to use the branch service here, as if the transaction fails, the transaction will be reverted
-		_, err = k.MsgRouterService.InvokeUntyped(ctx, msg)
+		resp, err := k.MsgRouterService.Invoke(ctx, msg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to execute message %d; message %v: %w", i, msg, err)
+		}
+
+		msgRespAny, err := gogoprotoany.NewAnyWithCacheWithValue(resp)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create any for response %d; message %s: %w", i, gogoproto.MessageName(msg), err)
+		}
+
+		results[i], err = gogoproto.Marshal(msgRespAny)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal response %d; message %s: %w", i, gogoproto.MessageName(msg), err)
 		}
 	}
 

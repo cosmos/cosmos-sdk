@@ -20,7 +20,7 @@ import (
 
 func GetValidateSignaturesCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "validate-signatures [file]",
+		Use:   "validate-signatures <file>",
 		Short: "validate transactions signatures",
 		Long: `Print the addresses that must sign the transaction, those who have already
 signed it, and make sure that signatures are in the correct order.

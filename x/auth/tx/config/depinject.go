@@ -15,9 +15,12 @@ import (
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/auth/ante"
+	"cosmossdk.io/x/auth/ante/unorderedtx"
 	"cosmossdk.io/x/auth/posthandler"
 	"cosmossdk.io/x/auth/tx"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -49,12 +52,14 @@ type ModuleInputs struct {
 	ProtoFileResolver     txsigning.ProtoFileResolver
 	Environment           appmodule.Environment
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
-	BankKeeper             authtypes.BankKeeper               `optional:"true"`
-	MetadataBankKeeper     BankKeeper                         `optional:"true"`
-	AccountKeeper          ante.AccountKeeper                 `optional:"true"`
-	FeeGrantKeeper         ante.FeegrantKeeper                `optional:"true"`
-	CustomSignModeHandlers func() []txsigning.SignModeHandler `optional:"true"`
-	CustomGetSigners       []txsigning.CustomGetSigner        `optional:"true"`
+	BankKeeper               authtypes.BankKeeper               `optional:"true"`
+	MetadataBankKeeper       BankKeeper                         `optional:"true"`
+	AccountKeeper            ante.AccountKeeper                 `optional:"true"`
+	FeeGrantKeeper           ante.FeegrantKeeper                `optional:"true"`
+	AccountAbstractionKeeper ante.AccountAbstractionKeeper      `optional:"true"`
+	CustomSignModeHandlers   func() []txsigning.SignModeHandler `optional:"true"`
+	CustomGetSigners         []txsigning.CustomGetSigner        `optional:"true"`
+	UnorderedTxManager       *unorderedtx.Manager               `optional:"true"`
 }
 
 type ModuleOutputs struct {
@@ -63,6 +68,7 @@ type ModuleOutputs struct {
 	TxConfig        client.TxConfig
 	TxConfigOptions tx.ConfigOptions
 	BaseAppOption   runtime.BaseAppOption // This is only useful for chains using baseapp. Server/v2 chains use TxValidator.
+	Module          appmodule.AppModule
 }
 
 func ProvideProtoRegistry() txsigning.ProtoFileResolver {
@@ -140,7 +146,15 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		app.SetTxEncoder(txConfig.TxEncoder())
 	}
 
-	return ModuleOutputs{TxConfig: txConfig, TxConfigOptions: txConfigOptions, BaseAppOption: baseAppOption}
+	svd := ante.NewSigVerificationDecorator(
+		in.AccountKeeper,
+		txConfig.SignModeHandler(),
+		ante.DefaultSigVerificationGasConsumer,
+		in.AccountAbstractionKeeper,
+	)
+	appModule := AppModule{svd}
+
+	return ModuleOutputs{TxConfig: txConfig, TxConfigOptions: txConfigOptions, BaseAppOption: baseAppOption, Module: appModule}
 }
 
 func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler, error) {
@@ -150,12 +164,13 @@ func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler,
 
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
-			AccountKeeper:   in.AccountKeeper,
-			BankKeeper:      in.BankKeeper,
-			SignModeHandler: txConfig.SignModeHandler(),
-			FeegrantKeeper:  in.FeeGrantKeeper,
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-			Environment:     in.Environment,
+			Environment:        in.Environment,
+			AccountKeeper:      in.AccountKeeper,
+			BankKeeper:         in.BankKeeper,
+			SignModeHandler:    txConfig.SignModeHandler(),
+			FeegrantKeeper:     in.FeeGrantKeeper,
+			SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
+			UnorderedTxManager: in.UnorderedTxManager,
 		},
 	)
 	if err != nil {
@@ -220,3 +235,23 @@ func metadataExists(err error) error {
 
 	return err
 }
+
+var (
+	_ appmodulev2.AppModule                      = AppModule{}
+	_ appmodulev2.HasTxValidator[transaction.Tx] = AppModule{}
+)
+
+type AppModule struct {
+	sigVerification ante.SigVerificationDecorator
+}
+
+// TxValidator implements appmodule.HasTxValidator.
+func (a AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
+	return a.sigVerification.ValidateTx(ctx, tx)
+}
+
+// IsAppModule implements appmodule.AppModule.
+func (a AppModule) IsAppModule() {}
+
+// IsOnePerModuleType implements appmodule.AppModule.
+func (a AppModule) IsOnePerModuleType() {}

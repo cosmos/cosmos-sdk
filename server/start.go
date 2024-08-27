@@ -667,7 +667,7 @@ func InPlaceTestnetCreator[T types.Application](testnetAppCreator types.AppCreat
 	}
 
 	cmd := &cobra.Command{
-		Use:   "in-place-testnet [newChainID] [newOperatorAddress]",
+		Use:   "in-place-testnet <newChainID> <newOperatorAddress>",
 		Short: "Create and start a testnet from current local state",
 		Long: `Create and start a testnet from current local state.
 After utilizing this command the network will start. If the network is stopped,

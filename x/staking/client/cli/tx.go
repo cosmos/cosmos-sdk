@@ -55,7 +55,7 @@ func NewTxCmd() *cobra.Command {
 // TODO(@julienrbrt): remove this once AutoCLI can flatten nested structs.
 func NewCreateValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-validator [path/to/validator.json]",
+		Use:   "create-validator <path/to/validator.json>",
 		Short: "Create new validator initialized with a self-delegation to it",
 		Args:  cobra.ExactArgs(1),
 		Long:  `Create a new validator initialized with a self-delegation by submitting a JSON file with the new validator details.`,

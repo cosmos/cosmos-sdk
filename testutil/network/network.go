@@ -49,6 +49,7 @@ import (
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -210,7 +211,10 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config, baseappOpts ...func(
 		if err := depinject.Inject(
 			depinject.Configs(
 				appConfig,
-				depinject.Supply(val.GetLogger()),
+				depinject.Supply(
+					val.GetLogger(),
+					simtestutil.NewAppOptionsWithFlagHome(val.GetViper().GetString(flags.FlagHome)),
+				),
 			),
 			&appBuilder); err != nil {
 			panic(err)

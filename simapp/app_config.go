@@ -1,4 +1,4 @@
-//nolint:unused,nolintlint // ignore unused code linting and directive `//nolint:unused // ignore unused code linting` is unused for linter "unused"
+//nolint:unused,nolintlint // ignore unused code linting
 package simapp
 
 import (
@@ -149,6 +149,7 @@ var (
 					// properly initialized with tokens from genesis accounts.
 					// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
 					InitGenesis: []string{
+						consensustypes.ModuleName,
 						accounts.ModuleName,
 						authtypes.ModuleName,
 						banktypes.ModuleName,

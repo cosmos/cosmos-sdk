@@ -16,7 +16,7 @@ func ViewCommand() *cobra.Command {
 	flagOutputFormat := "output-format"
 
 	cmd := &cobra.Command{
-		Use:   "view [config]",
+		Use:   "view <config>",
 		Short: "View the config file",
 		Long:  "View the config file. The [config] argument must be the path of the file when using the `confix` tool standalone, otherwise it must be the name of the config file without the .toml extension.",
 		Args:  cobra.ExactArgs(1),

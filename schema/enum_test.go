@@ -59,6 +59,51 @@ func TestEnumDefinition_Validate(t *testing.T) {
 			},
 			errContains: `duplicate enum numeric value 1 for enum test`,
 		},
+		{
+			name: "invalid numeric kind",
+			enum: EnumType{
+				Name:        "test",
+				NumericKind: StringKind,
+				Values:      []EnumValueDefinition{{Name: "a", Value: 1}, {Name: "b", Value: 2}, {Name: "c", Value: 3}},
+			},
+			errContains: "invalid numeric kind",
+		},
+		{
+			name: "out of range value for Int8Kind",
+			enum: EnumType{
+				Name:        "test",
+				NumericKind: Int8Kind,
+				Values:      []EnumValueDefinition{{Name: "a", Value: -129}},
+			},
+			errContains: "out of range",
+		},
+		{
+			name: "out of range value for Uint8Kind",
+			enum: EnumType{
+				Name:        "test",
+				NumericKind: Uint8Kind,
+				Values:      []EnumValueDefinition{{Name: "a", Value: -1}},
+			},
+			errContains: "out of range",
+		},
+		{
+			name: "out of range value for Int16Kind",
+			enum: EnumType{
+				Name:        "test",
+				NumericKind: Int16Kind,
+				Values:      []EnumValueDefinition{{Name: "a", Value: -32769}},
+			},
+			errContains: "out of range",
+		},
+		{
+			name: "out of range value for Uint16Kind",
+			enum: EnumType{
+				Name:        "test",
+				NumericKind: Uint16Kind,
+				Values:      []EnumValueDefinition{{Name: "a", Value: -1}},
+			},
+			errContains: "out of range",
+		},
 	}
 
 	for _, tt := range tests {

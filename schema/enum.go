@@ -68,6 +68,29 @@ func (e EnumType) Validate(Schema) error {
 			return fmt.Errorf("duplicate enum numeric value %d for enum %s", v.Value, e.Name)
 		}
 		values[v.Value] = true
+
+		switch e.GetNumericKind() {
+		case Int8Kind:
+			if v.Value < -128 || v.Value > 127 {
+				return fmt.Errorf("enum value %q for enum %s is out of range for Int8Kind", v.Name, e.Name)
+			}
+		case Uint8Kind:
+			if v.Value < 0 || v.Value > 255 {
+				return fmt.Errorf("enum value %q for enum %s is out of range for Uint8Kind", v.Name, e.Name)
+			}
+		case Int16Kind:
+			if v.Value < -32768 || v.Value > 32767 {
+				return fmt.Errorf("enum value %q for enum %s is out of range for Int16Kind", v.Name, e.Name)
+			}
+		case Uint16Kind:
+			if v.Value < 0 || v.Value > 65535 {
+				return fmt.Errorf("enum value %q for enum %s is out of range for Uint16Kind", v.Name, e.Name)
+			}
+		case Int32Kind:
+			// no range check needed
+		default:
+			return fmt.Errorf("invalid numeric kind %s for enum %s", e.NumericKind, e.Name)
+		}
 	}
 	return nil
 }

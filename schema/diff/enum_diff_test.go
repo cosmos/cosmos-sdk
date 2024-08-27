@@ -52,6 +52,35 @@ func Test_compareEnumType(t *testing.T) {
 			},
 			hasCompatibleChanges: false,
 		},
+		{
+			name: "value changed",
+			oldEnum: schema.EnumType{
+				Values: []schema.EnumValueDefinition{{Name: "a", Value: 1}, {Name: "b", Value: 2}},
+			},
+			newEnum: schema.EnumType{
+				Values: []schema.EnumValueDefinition{{Name: "a", Value: 1}, {Name: "b", Value: 3}},
+			},
+			diff: EnumTypeDiff{
+				ChangedValues: []EnumValueDefinitionDiff{{Name: "b", OldValue: 2, NewValue: 3}},
+			},
+			hasCompatibleChanges: false,
+		},
+		{
+			name: "numeric kind changed",
+			oldEnum: schema.EnumType{
+				NumericKind: schema.Int32Kind,
+				Values:      []schema.EnumValueDefinition{{Name: "a", Value: 1}},
+			},
+			newEnum: schema.EnumType{
+				NumericKind: schema.Int16Kind,
+				Values:      []schema.EnumValueDefinition{{Name: "a", Value: 1}},
+			},
+			diff: EnumTypeDiff{
+				OldNumericKind: schema.Int32Kind,
+				NewNumericKind: schema.Int16Kind,
+			},
+			hasCompatibleChanges: false,
+		},
 	}
 
 	for _, tc := range tt {

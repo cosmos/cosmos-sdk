@@ -6,17 +6,14 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
-	"path/filepath"
 
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/spf13/cast"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/auth"
 	"cosmossdk.io/x/auth/ante"
@@ -44,7 +41,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -73,8 +69,6 @@ type SimApp struct {
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
-
-	UnorderedTxManager *unorderedtx.Manager
 
 	// keepers
 	AccountsKeeper        accounts.Keeper
@@ -244,23 +238,6 @@ func NewSimApp(
 
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 
-	if indexerOpts := appOpts.Get("indexer"); indexerOpts != nil {
-		// if we have indexer options in app.toml, then enable the built-in indexer framework
-		moduleSet := map[string]any{}
-		for modName, mod := range appModules {
-			moduleSet[modName] = mod
-		}
-		err := app.EnableIndexer(indexerOpts, app.kvStoreKeys(), moduleSet)
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		// register legacy streaming services if we don't have the built-in indexer enabled
-		if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
-			panic(err)
-		}
-	}
-
 	/****  Module Options ****/
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
@@ -286,26 +263,16 @@ func NewSimApp(
 	// However, when registering a module manually (i.e. that does not support app wiring), the module version map
 	// must be set manually as follow. The upgrade module will de-duplicate the module version map.
 	//
-	// app.SetInitChainer(func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.InitChainResponse, error) {
+	// app.SetInitChainer(func(ctx sdk.Context, req *abci.InitChainRequest) (*abci.InitChainResponse, error) {
 	// 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
 	// 	return app.App.InitChainer(ctx, req)
 	// })
 
-	// create, start, and load the unordered tx manager
-	utxDataDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
-	app.UnorderedTxManager = unorderedtx.NewManager(utxDataDir)
-	app.UnorderedTxManager.Start()
-
-	if err := app.UnorderedTxManager.OnInit(); err != nil {
-		panic(fmt.Errorf("failed to initialize unordered tx manager: %w", err))
-	}
-
 	// register custom snapshot extensions (if any)
 	if manager := app.SnapshotManager(); manager != nil {
-		err := manager.RegisterExtensions(
+		if err := manager.RegisterExtensions(
 			unorderedtx.NewSnapshotter(app.UnorderedTxManager),
-		)
-		if err != nil {
+		); err != nil {
 			panic(fmt.Errorf("failed to register snapshot extension: %w", err))
 		}
 	}
@@ -326,15 +293,15 @@ func (app *SimApp) setCustomAnteHandler() {
 	anteHandler, err := NewAnteHandler(
 		HandlerOptions{
 			ante.HandlerOptions{
-				AccountKeeper:   app.AuthKeeper,
-				BankKeeper:      app.BankKeeper,
-				SignModeHandler: app.txConfig.SignModeHandler(),
-				FeegrantKeeper:  app.FeeGrantKeeper,
-				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-				Environment:     app.AuthKeeper.Environment,
+				AccountKeeper:      app.AuthKeeper,
+				BankKeeper:         app.BankKeeper,
+				SignModeHandler:    app.txConfig.SignModeHandler(),
+				FeegrantKeeper:     app.FeeGrantKeeper,
+				SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
+				UnorderedTxManager: app.UnorderedTxManager,
+				Environment:        app.AuthKeeper.Environment,
 			},
 			&app.CircuitBreakerKeeper,
-			app.UnorderedTxManager,
 		},
 	)
 	if err != nil {
@@ -343,12 +310,6 @@ func (app *SimApp) setCustomAnteHandler() {
 
 	// Set the AnteHandler for the app
 	app.SetAnteHandler(anteHandler)
-}
-
-// Close implements the Application interface and closes all necessary application
-// resources.
-func (app *SimApp) Close() error {
-	return app.UnorderedTxManager.Close()
 }
 
 // LegacyAmino returns SimApp's amino codec.
@@ -380,29 +341,6 @@ func (app *SimApp) InterfaceRegistry() codectypes.InterfaceRegistry {
 // TxConfig returns SimApp's TxConfig
 func (app *SimApp) TxConfig() client.TxConfig {
 	return app.txConfig
-}
-
-// GetKey returns the KVStoreKey for the provided store key.
-//
-// NOTE: This is solely to be used for testing purposes.
-func (app *SimApp) GetKey(storeKey string) *storetypes.KVStoreKey {
-	sk := app.UnsafeFindStoreKey(storeKey)
-	kvStoreKey, ok := sk.(*storetypes.KVStoreKey)
-	if !ok {
-		return nil
-	}
-	return kvStoreKey
-}
-
-func (app *SimApp) kvStoreKeys() map[string]*storetypes.KVStoreKey {
-	keys := make(map[string]*storetypes.KVStoreKey)
-	for _, k := range app.GetStoreKeys() {
-		if kv, ok := k.(*storetypes.KVStoreKey); ok {
-			keys[kv.Name()] = kv
-		}
-	}
-
-	return keys
 }
 
 // SimulationManager implements the SimulationApp interface

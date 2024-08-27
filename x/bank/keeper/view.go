@@ -68,6 +68,22 @@ type BaseViewKeeper struct {
 	Params        collections.Item[types.Params]
 }
 
+// // AstraBaseViewKeeper implements a read only keeper implementation of ViewKeeper.
+// type AstraBaseViewKeeper struct {
+// 	appmodule.Environment
+
+// 	cdc codec.BinaryCodec
+// 	ak  types.AccountKeeper
+
+// 	Schema        collections.Schema
+// 	Supply        collections.Map[string, math.Int]
+// 	DenomMetadata collections.Map[string, types.Metadata]
+// 	SendEnabled   collections.Map[string, bool]
+// 	Balances      *collections.IndexedMap[collections.Pair[sdk.AccAddress, string], math.Int, BalancesIndexes]
+// 	Shares        *collections.IndexedMap[collections.Pair[sdk.AccAddress, string], math.Int, BalancesIndexes]
+// 	Params        collections.Item[types.Params]
+// }
+
 // NewBaseViewKeeper returns a new BaseViewKeeper.
 func NewBaseViewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak types.AccountKeeper) BaseViewKeeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)

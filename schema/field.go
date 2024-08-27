@@ -13,10 +13,10 @@ type Field struct {
 	// Nullable indicates whether null values are accepted for the field. Key fields CANNOT be nullable.
 	Nullable bool
 
-	// ElementKind is the element type when Kind is ListKind. ObjectKind fields are not allowed.
+	// ElementKind is the element type when Kind is ListKind.
 	ElementKind Kind
 
-	// String is the referenced type name when Kind is EnumKind, StructKind, OneOfKind or ObjectType.
+	// String is the referenced type name when Kind is EnumKind, StructKind, or OneOfKind.
 	// When the main kind is ListKind, this type name is the referenced type of the ElementKind.
 	Type string
 

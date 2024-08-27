@@ -1,8 +1,6 @@
 package schematesting
 
 import (
-	"slices"
-
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/schema"
@@ -17,13 +15,9 @@ func ModuleSchemaGen() *rapid.Generator[schema.ModuleSchema] {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		objectTypes := distinctTypes(ObjectTypeGen(tempSchema)).Draw(t, "objectTypes")
 		allTypes := append(enumTypes, objectTypes...)
-
-		// remove duplicate type names
-		slices.CompactFunc(allTypes, func(s schema.Type, s2 schema.Type) bool {
-			return s.TypeName() == s2.TypeName()
-		})
 
 		modSchema, err := schema.NewModuleSchema(allTypes...)
 		if err != nil {

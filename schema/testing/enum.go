@@ -15,6 +15,14 @@ var enumNumericKindGen = rapid.SampledFrom([]schema.Kind{
 	schema.Uint16Kind,
 })
 
+var enumNumericValueGens = map[schema.Kind]*rapid.Generator[int32]{
+	schema.Int8Kind:   rapid.Map(rapid.Int8(), func(a int8) int32 { return int32(a) }),
+	schema.Int16Kind:  rapid.Map(rapid.Int16(), func(a int16) int32 { return int32(a) }),
+	schema.Int32Kind:  rapid.Map(rapid.Int32(), func(a int32) int32 { return a }),
+	schema.Uint8Kind:  rapid.Map(rapid.Uint8(), func(a uint8) int32 { return int32(a) }),
+	schema.Uint16Kind: rapid.Map(rapid.Uint16(), func(a uint16) int32 { return int32(a) }),
+}
+
 // EnumType generates random valid EnumTypes.
 func EnumType() *rapid.Generator[schema.EnumType] {
 	return rapid.Custom(func(t *rapid.T) schema.EnumType {
@@ -23,10 +31,10 @@ func EnumType() *rapid.Generator[schema.EnumType] {
 			NumericKind: enumNumericKindGen.Draw(t, "numericKind"),
 		}
 
-		// we generate enum field values using FieldValueGen, which is a generator for random field values
-		numericValueGen := FieldValueGen(schema.Field{Kind: enum.GetNumericKind()}, schema.EmptySchema{})
-		numericValues := rapid.SliceOfNDistinct(rapid.Map(numericValueGen, func(a any) int32 { return a.(int32) }), 1, 10,
-			func(a int32) int32 { return a }).Draw(t, "values")
+		numericValueGen := enumNumericValueGens[enum.GetNumericKind()]
+		numericValues := rapid.SliceOfNDistinct(numericValueGen, 1, 10, func(e int32) int32 {
+			return e
+		}).Draw(t, "values")
 		n := len(numericValues)
 		names := rapid.SliceOfNDistinct(NameGen, n, n, func(a string) string { return a }).Draw(t, "names")
 		values := make([]schema.EnumValueDefinition, n)

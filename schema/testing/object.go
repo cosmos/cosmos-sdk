@@ -18,9 +18,12 @@ func ObjectTypeGen(sch schema.Schema) *rapid.Generator[schema.ObjectType] {
 	})
 
 	return rapid.Custom(func(t *rapid.T) schema.ObjectType {
-
 		typ := schema.ObjectType{
-			Name: NameGen.Draw(t, "name"),
+			Name: NameGen.Filter(func(s string) bool {
+				// filter out names that already exist in the schema
+				_, found := sch.LookupType(s)
+				return !found
+			}).Draw(t, "name"),
 		}
 
 		typ.KeyFields = keyFieldsGen.Draw(t, "keyFields")

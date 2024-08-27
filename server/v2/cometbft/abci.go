@@ -11,10 +11,10 @@ import (
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
-	coreappmgr "cosmossdk.io/core/app"
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
@@ -134,10 +134,6 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 		GasWanted: uint64ToInt64(resp.GasWanted),
 		GasUsed:   uint64ToInt64(resp.GasUsed),
 		Events:    intoABCIEvents(resp.Events, c.indexedEvents),
-		Info:      resp.Info,
-		Data:      resp.Data,
-		Log:       resp.Log,
-		Codespace: resp.Codespace,
 	}
 	if resp.Error != nil {
 		cometResp.Code = 1
@@ -268,7 +264,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	// populate hash with empty byte slice instead of nil
 	bz := sha256.Sum256([]byte{})
 
-	br := &coreappmgr.BlockRequest[T]{
+	br := &server.BlockRequest[T]{
 		Height:    uint64(req.InitialHeight - 1),
 		Time:      req.Time,
 		Hash:      bz[:],
@@ -289,7 +285,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	// TODO necessary? where should this WARN live if it all. helpful for testing
 	for _, txRes := range blockresponse.TxResults {
 		if txRes.Error != nil {
-			c.logger.Warn("genesis tx failed", "code", txRes.Code, "log", txRes.Log, "error", txRes.Error)
+			c.logger.Warn("genesis tx failed", "code", txRes.Code, "error", txRes.Error)
 		}
 	}
 
@@ -441,7 +437,7 @@ func (c *Consensus[T]) FinalizeBlock(
 		return nil, err
 	}
 
-	blockReq := &coreappmgr.BlockRequest[T]{
+	blockReq := &server.BlockRequest[T]{
 		Height:  uint64(req.Height),
 		Time:    req.Time,
 		Hash:    req.Hash,

@@ -12,7 +12,7 @@ import (
 
 // createEnumType creates an enum type in the database.
 func (m *moduleIndexer) createEnumType(ctx context.Context, conn dbConn, enum schema.EnumType) error {
-	typeName := enumTypeName(m.moduleName, enum)
+	typeName := enumTypeName(m.moduleName, enum.Name)
 	row := conn.QueryRowContext(ctx, "SELECT 1 FROM pg_type WHERE typname = $1", typeName)
 	var res interface{}
 	if err := row.Scan(&res); err != nil {
@@ -40,7 +40,7 @@ func (m *moduleIndexer) createEnumType(ctx context.Context, conn dbConn, enum sc
 
 // createEnumTypeSql generates a CREATE TYPE statement for the enum definition.
 func createEnumTypeSql(writer io.Writer, moduleName string, enum schema.EnumType) error {
-	_, err := fmt.Fprintf(writer, "CREATE TYPE %q AS ENUM (", enumTypeName(moduleName, enum))
+	_, err := fmt.Fprintf(writer, "CREATE TYPE %q AS ENUM (", enumTypeName(moduleName, enum.Name))
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func createEnumTypeSql(writer io.Writer, moduleName string, enum schema.EnumType
 				return err
 			}
 		}
-		_, err = fmt.Fprintf(writer, "'%s'", value)
+		_, err = fmt.Fprintf(writer, "'%s'", value.Name)
 		if err != nil {
 			return err
 		}
@@ -63,6 +63,6 @@ func createEnumTypeSql(writer io.Writer, moduleName string, enum schema.EnumType
 }
 
 // enumTypeName returns the name of the enum type scoped to the module.
-func enumTypeName(moduleName string, enum schema.EnumType) string {
-	return fmt.Sprintf("%s_%s", moduleName, enum.Name)
+func enumTypeName(moduleName string, enumName string) string {
+	return fmt.Sprintf("%s_%s", moduleName, enumName)
 }

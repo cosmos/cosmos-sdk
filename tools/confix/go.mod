@@ -6,7 +6,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.50.9
 	github.com/creachadair/atomicfile v0.3.5
 	github.com/creachadair/tomledit v0.0.26
-	github.com/pelletier/go-toml/v2 v2.2.2
+	github.com/pelletier/go-toml/v2 v2.2.3
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	gotest.tools/v3 v3.5.1

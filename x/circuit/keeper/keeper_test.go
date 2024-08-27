@@ -46,7 +46,7 @@ func initFixture(t *testing.T) *fixture {
 	mockStoreKey := storetypes.NewKVStoreKey("test")
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(mockStoreKey), coretesting.NewNopLogger())
-	authority, err := ac.BytesToString(authtypes.NewModuleAddress("gov"))
+	authority, err := ac.BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
 	require.NoError(t, err)
 	k := keeper.NewKeeper(env, encCfg.Codec, authority, ac)
 
@@ -165,4 +165,42 @@ func TestIterateDisabledList(t *testing.T) {
 	require.Len(t, returnedDisabled, 2)
 	require.Equal(t, mockMsgs[1], returnedDisabled[0])
 	require.Equal(t, mockMsgs[2], returnedDisabled[1])
+}
+
+func TestIsAllowed(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	testCases := []struct {
+		name        string
+		msgURL      string
+		setDisabled bool
+		expected    bool
+	}{
+		{
+			name:        "allowed message",
+			msgURL:      "test_allowed",
+			setDisabled: false,
+			expected:    true,
+		},
+		{
+			name:        "disabled message",
+			msgURL:      "test_disabled",
+			setDisabled: true,
+			expected:    false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.setDisabled {
+				err := f.keeper.DisableList.Set(f.ctx, tc.msgURL)
+				require.NoError(t, err)
+			}
+
+			allowed, err := f.keeper.IsAllowed(f.ctx, tc.msgURL)
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, allowed)
+		})
+	}
 }

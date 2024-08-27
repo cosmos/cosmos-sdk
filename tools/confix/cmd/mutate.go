@@ -20,7 +20,7 @@ import (
 // SetCommand returns a CLI command to interactively update an application config value.
 func SetCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "set [config] [key] [value]",
+		Use:   "set <config> <key> <value>",
 		Short: "Set an application config value",
 		Long:  "Set an application config value. The [config] argument must be the path of the file when using the `confix` tool standalone, otherwise it must be the name of the config file without the .toml extension.",
 		Args:  cobra.ExactArgs(3),
@@ -92,7 +92,7 @@ func SetCommand() *cobra.Command {
 // GetCommand returns a CLI command to interactively get an application config value.
 func GetCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get [config] [key]",
+		Use:   "get <config> <key>",
 		Short: "Get an application config value",
 		Long:  "Get an application config value. The [config] argument must be the path of the file when using the `confix` tool standalone, otherwise it must be the name of the config file without the .toml extension.",
 		Args:  cobra.ExactArgs(2),

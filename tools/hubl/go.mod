@@ -1,6 +1,8 @@
 module cosmossdk.io/tools/hubl
 
-go 1.21
+go 1.21.0
+
+toolchain go1.23.0
 
 require (
 	cosmossdk.io/api v0.7.5
@@ -9,7 +11,7 @@ require (
 	cosmossdk.io/errors v1.0.1
 	github.com/cosmos/cosmos-sdk v0.50.9
 	github.com/manifoldco/promptui v0.9.0
-	github.com/pelletier/go-toml/v2 v2.2.2
+	github.com/pelletier/go-toml/v2 v2.2.3
 	github.com/spf13/cobra v1.8.1
 	google.golang.org/grpc v1.65.0
 	google.golang.org/protobuf v1.34.2
@@ -114,7 +116,7 @@ require (
 	github.com/petermattis/goid v0.0.0-20240327183114-c42a807a84ba // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/client_golang v1.20.0 // indirect
+	github.com/prometheus/client_golang v1.20.2 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect

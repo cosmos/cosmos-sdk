@@ -2,9 +2,9 @@ package bank
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"sort"
-
-	"golang.org/x/exp/maps"
 
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/core/appmodule"
@@ -103,7 +103,7 @@ func InvokeSetSendRestrictions(
 		return nil
 	}
 
-	modules := maps.Keys(restrictions)
+	modules := slices.Collect(maps.Keys(restrictions))
 	order := config.RestrictionsOrder
 	if len(order) == 0 {
 		order = modules

@@ -25,7 +25,7 @@ func InitCmd(config *config.Config, configDir string) *cobra.Command {
 	var insecure bool
 
 	cmd := &cobra.Command{
-		Use:   "init [foochain]",
+		Use:   "init <foochain>",
 		Short: "Initialize a new chain",
 		Long: `To configure a new chain, run this command using the --init flag and the name of the chain as it's listed in the chain registry (https://github.com/cosmos/chain-registry).
 If the chain is not listed in the chain registry, you can use any unique name.`,

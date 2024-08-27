@@ -3,8 +3,8 @@ package cometbft
 import (
 	"context"
 
-	coreappmgr "cosmossdk.io/core/app"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/server/v2/streaming"
 )
@@ -14,7 +14,7 @@ func (c *Consensus[T]) streamDeliverBlockChanges(
 	ctx context.Context,
 	height int64,
 	txs [][]byte,
-	txResults []coreappmgr.TxResult,
+	txResults []server.TxResult,
 	events []event.Event,
 	stateChanges []store.StateChanges,
 ) error {
@@ -23,13 +23,9 @@ func (c *Consensus[T]) streamDeliverBlockChanges(
 	for i, txResult := range txResults {
 		streamingTxResults[i] = &streaming.ExecTxResult{
 			Code:      txResult.Code,
-			Data:      txResult.Data,
-			Log:       txResult.Log,
-			Info:      txResult.Info,
 			GasWanted: uint64ToInt64(txResult.GasWanted),
 			GasUsed:   uint64ToInt64(txResult.GasUsed),
 			Events:    streaming.IntoStreamingEvents(txResult.Events),
-			Codespace: txResult.Codespace,
 		}
 	}
 

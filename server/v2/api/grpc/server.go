@@ -5,13 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net"
+	"slices"
 	"strconv"
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -65,7 +66,7 @@ func (s *Server[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logge
 	)
 
 	// Reflection allows external clients to see what services and methods the gRPC server exposes.
-	gogoreflection.Register(grpcSrv, maps.Keys(methodsMap), logger.With("sub-module", "grpc-reflection"))
+	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(methodsMap)), logger.With("sub-module", "grpc-reflection"))
 
 	s.grpcSrv = grpcSrv
 	s.config = cfg

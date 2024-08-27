@@ -19,5 +19,5 @@ jq '.app_state.gov.params.expedited_voting_period = "300s"' $SIMD_HOME/config/ge
 jq '.app_state.mint.minter.inflation = "0.300000000000000000"' $SIMD_HOME/config/genesis.json > temp.json && mv temp.json $SIMD_HOME/config/genesis.json # to change the inflation
 $SIMD_BIN genesis add-genesis-account alice 5000000000stake --keyring-backend test
 $SIMD_BIN genesis add-genesis-account bob 5000000000stake --keyring-backend test
-$SIMD_BIN genesis gentx alice 1000000stake --chain-id demo
+$SIMD_BIN genesis gentx alice 1000000stake --chain-id simapp-v2-chain
 $SIMD_BIN genesis collect-gentxs

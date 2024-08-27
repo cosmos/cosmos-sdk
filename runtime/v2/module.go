@@ -148,7 +148,7 @@ type AppInputs struct {
 	InterfaceRegistrar registry.InterfaceRegistrar
 	LegacyAmino        legacy.Amino
 	Logger             log.Logger
-	Viper              *viper.Viper `optional:"true"`
+	Viper              *viper.Viper `optional:"true"` // can be nil in client wiring
 }
 
 func SetupAppBuilder(inputs AppInputs) {

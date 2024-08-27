@@ -2,7 +2,7 @@ package genutil
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -22,7 +22,7 @@ func InitGenesis(
 	txEncodingConfig client.TxEncodingConfig,
 ) (validatorUpdates []module.ValidatorUpdate, err error) {
 	if deliverTx == nil {
-		return nil, fmt.Errorf("deliverTx (genesis.TxHandler) not defined, verify x/genutil wiring")
+		return nil, errors.New("deliverTx (genesis.TxHandler) not defined, verify x/genutil wiring")
 	}
 
 	if len(genesisState.GenTxs) > 0 {

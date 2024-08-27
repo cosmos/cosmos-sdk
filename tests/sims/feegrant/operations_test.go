@@ -28,7 +28,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -101,9 +100,8 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	appParams := make(simtypes.AppParams)
 
 	weightedOps := simulation.WeightedOperations(
-		suite.interfaceRegistry,
-		appParams, suite.cdc, suite.txConfig, suite.accountKeeper,
-		suite.bankKeeper, suite.feegrantKeeper, codecaddress.NewBech32Codec("cosmos"),
+		appParams, suite.txConfig, suite.accountKeeper,
+		suite.bankKeeper, suite.feegrantKeeper,
 	)
 
 	s := rand.NewSource(1)
@@ -153,7 +151,7 @@ func (suite *SimTestSuite) TestSimulateMsgGrantAllowance() {
 	require.NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgGrantAllowance(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper)
+	op := simulation.SimulateMsgGrantAllowance(suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper)
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx.WithHeaderInfo(header.Info{Time: time.Now()}), accounts, "")
 	require.NoError(err)
 
@@ -197,7 +195,7 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	require.NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgRevokeAllowance(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper)
+	op := simulation.SimulateMsgRevokeAllowance(suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper)
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(err)
 

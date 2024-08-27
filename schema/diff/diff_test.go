@@ -290,7 +290,8 @@ func TestCompareModuleSchemas(t *testing.T) {
 					{
 						Name:      "foo",
 						KeyFields: []schema.Field{{Name: "key1", Kind: schema.EnumKind, EnumType: schema.EnumType{Name: "bar", Values: []string{"a"}}}},
-					}},
+					},
+				},
 				AddedObjectTypes: []schema.ObjectType{
 					{
 						Name:      "bar",

@@ -45,10 +45,16 @@ func (k Keeper) PreBlocker(ctx context.Context) error {
 			if lastAppliedPlan != "" && !k.HasHandler(lastAppliedPlan) {
 				var appVersion uint64
 
-				var res consensusv1.QueryParamsResponse
-				if err := k.QueryRouterService.InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
+				resp, err := k.QueryRouterService.Invoke(ctx, &consensusv1.QueryParamsRequest{})
+				if err != nil {
 					return errors.New("failed to query consensus params")
 				}
+
+				res, ok := resp.(*consensusv1.QueryParamsResponse)
+				if !ok {
+					return fmt.Errorf("unexpected response type: %T", resp)
+				}
+
 				if res.Params.Version != nil {
 					appVersion = res.Params.Version.App
 				}

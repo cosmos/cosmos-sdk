@@ -14,7 +14,8 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/auth/ante"
@@ -50,15 +51,15 @@ type ModuleInputs struct {
 	ProtoFileResolver     txsigning.ProtoFileResolver
 	Environment           appmodule.Environment
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
-	BankKeeper               authtypes.BankKeeper               `optional:"true"`
-	MetadataBankKeeper       BankKeeper                         `optional:"true"`
-	AccountKeeper            ante.AccountKeeper                 `optional:"true"`
-	FeeGrantKeeper           ante.FeegrantKeeper                `optional:"true"`
-	AccountAbstractionKeeper ante.AccountAbstractionKeeper      `optional:"true"`
-	CustomSignModeHandlers   func() []txsigning.SignModeHandler `optional:"true"`
-	CustomGetSigners         []txsigning.CustomGetSigner        `optional:"true"`
-	UnorderedTxManager       *unorderedtx.Manager               `optional:"true"`
-	ExtraTxValidators        []TxValidator                      `optional:"true"`
+	BankKeeper               authtypes.BankKeeper                    `optional:"true"`
+	MetadataBankKeeper       BankKeeper                              `optional:"true"`
+	AccountKeeper            ante.AccountKeeper                      `optional:"true"`
+	FeeGrantKeeper           ante.FeegrantKeeper                     `optional:"true"`
+	AccountAbstractionKeeper ante.AccountAbstractionKeeper           `optional:"true"`
+	CustomSignModeHandlers   func() []txsigning.SignModeHandler      `optional:"true"`
+	CustomGetSigners         []txsigning.CustomGetSigner             `optional:"true"`
+	UnorderedTxManager       *unorderedtx.Manager                    `optional:"true"`
+	ExtraTxValidators        []appmodule.TxValidator[transaction.Tx] `optional:"true"`
 }
 
 type ModuleOutputs struct {

@@ -8,9 +8,6 @@ import (
 	"cosmossdk.io/x/auth/ante"
 )
 
-// TxValidator is appmodulev2.HasTxValidator without the AppModule requirement.
-type TxValidator = func(context.Context, transaction.Tx) error
-
 var (
 	_ appmodulev2.AppModule                      = AppModule{}
 	_ appmodulev2.HasTxValidator[transaction.Tx] = AppModule{}
@@ -25,13 +22,13 @@ type AppModule struct {
 	// txValidators contains tx validator that can be injected into the module via depinject.
 	// tx validators should be module based, but it can happen that you do not want to create a new module
 	// and simply depinject-it.
-	txValidators []TxValidator
+	txValidators []appmodulev2.TxValidator[transaction.Tx]
 }
 
 // NewAppModule creates a new AppModule object.
 func NewAppModule(
 	sigVerification ante.SigVerificationDecorator,
-	txValidators ...TxValidator,
+	txValidators ...appmodulev2.TxValidator[transaction.Tx],
 ) AppModule {
 	return AppModule{
 		sigVerification: sigVerification,
@@ -47,8 +44,8 @@ func (a AppModule) IsOnePerModuleType() {}
 
 // TxValidator implements appmodule.HasTxValidator.
 func (a AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
-	for _, validator := range a.txValidators {
-		if err := validator(ctx, tx); err != nil {
+	for _, txValidator := range a.txValidators {
+		if err := txValidator.ValidateTx(ctx, tx); err != nil {
 			return err
 		}
 	}

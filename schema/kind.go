@@ -241,18 +241,6 @@ const (
 	// followed by the encoded value.
 	OneOfKind
 
-	// ObjectKind represents a value of an ObjectType.
-	// Go Encoding: an array of type []interface{} where each element is of the respective field's kind type, key fields
-	// are encoded first followed by value fields.
-	// JSON Encoding: an object where each key is the field name and the value is the field value.
-	// Canonically, keys are in alphabetical order with no extra whitespace.
-	// Key Binary Encoding: not valid as a key field.
-	// Value Binary Encoding: 32-bit unsigned little-endian prefix of the length of the encoded key fields,
-	// followed by a 32-bit unsigned little-endian prefix of the length of the encoded value fields,
-	// followed by key fields encoded with key binary encoding,
-	// followed by value fields encoded with value binary encoding.
-	ObjectKind
-
 	// ListKind represents a list of elements.
 	// Go Encoding: an array of type []interface{} where each element is of the respective field's kind type.
 	// JSON Encoding: an array of values where each element is the field value.

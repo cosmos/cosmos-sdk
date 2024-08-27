@@ -6,8 +6,12 @@ type StructType struct {
 	Name string
 
 	// Fields is the list of fields in the struct. ObjectKind fields are not allowed.
-	// It is an INCOMPATIBLE change to add, remove or update fields in a struct.
-	// The addition of new fields introduces the possibility that a newer client
-	// will send an incomprehensible message to an older server.
+	// It is a COMPATIBLE change to add new fields to an unsealed struct,
+	// but it is an INCOMPATIBLE change to add new fields to a sealed struct.
 	Fields []Field
+
+	// Sealed is true if it is an INCOMPATIBLE change to add new fields to the struct.
+	// It is a COMPATIBLE change to change an unsealed struct to sealed, but it is
+	// an INCOMPATIBLE change to change a sealed struct to unsealed.
+	Sealed bool
 }

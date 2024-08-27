@@ -45,7 +45,7 @@ func Test_compareField(t *testing.T) {
 				OldEnumType: "old",
 				NewEnumType: "new",
 			},
-			trueF: FieldDiff.EnumTypeChanged,
+			trueF: FieldDiff.ReferenceTypeChanged,
 		},
 	}
 

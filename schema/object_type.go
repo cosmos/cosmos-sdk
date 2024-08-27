@@ -37,13 +37,7 @@ func (o ObjectType) TypeName() string {
 func (ObjectType) isType() {}
 
 // Validate validates the object type.
-func (o ObjectType) Validate() error {
-	return o.validate(map[string]Type{})
-}
-
-// validate validates the object type with an enumValueMap that can be
-// shared across a whole module schema.
-func (o ObjectType) validate(types map[string]Type) error {
+func (o ObjectType) Validate(schema Schema) error {
 	if !ValidateName(o.Name) {
 		return fmt.Errorf("invalid object type name %q", o.Name)
 	}
@@ -51,7 +45,7 @@ func (o ObjectType) validate(types map[string]Type) error {
 	fieldNames := map[string]bool{}
 
 	for _, field := range o.KeyFields {
-		if err := field.Validate(); err != nil {
+		if err := field.Validate(schema); err != nil {
 			return fmt.Errorf("invalid key field %q: %v", field.Name, err) //nolint:errorlint // false positive due to using go1.12
 		}
 
@@ -67,15 +61,10 @@ func (o ObjectType) validate(types map[string]Type) error {
 			return fmt.Errorf("duplicate field name %q", field.Name)
 		}
 		fieldNames[field.Name] = true
-
-		err := addEnumType(types, field)
-		if err != nil {
-			return err
-		}
 	}
 
 	for _, field := range o.ValueFields {
-		if err := field.Validate(); err != nil {
+		if err := field.Validate(schema); err != nil {
 			return fmt.Errorf("invalid value field %q: %v", field.Name, err) //nolint:errorlint // false positive due to using go1.12
 		}
 
@@ -83,11 +72,6 @@ func (o ObjectType) validate(types map[string]Type) error {
 			return fmt.Errorf("duplicate field name %q", field.Name)
 		}
 		fieldNames[field.Name] = true
-
-		err := addEnumType(types, field)
-		if err != nil {
-			return err
-		}
 	}
 
 	if len(o.KeyFields) == 0 && len(o.ValueFields) == 0 {

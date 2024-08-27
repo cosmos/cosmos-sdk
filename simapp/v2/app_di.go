@@ -6,8 +6,8 @@ import (
 	"github.com/spf13/viper"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
-	coreapp "cosmossdk.io/core/app"
 	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -214,7 +214,7 @@ func (app *SimApp[T]) AppCodec() codec.Codec {
 }
 
 // InterfaceRegistry returns SimApp's InterfaceRegistry.
-func (app *SimApp[T]) InterfaceRegistry() coreapp.InterfaceRegistry {
+func (app *SimApp[T]) InterfaceRegistry() server.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 

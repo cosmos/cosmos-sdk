@@ -12,10 +12,10 @@ import (
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
-	"cosmossdk.io/core/app"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
@@ -288,7 +288,7 @@ func ProvideTransientStoreService(
 	return transientStoreService{key: storeKey}
 }
 
-func ProvideAppVersionModifier(app *AppBuilder) app.VersionModifier {
+func ProvideAppVersionModifier(app *AppBuilder) server.VersionModifier {
 	return app.app
 }
 

@@ -29,6 +29,7 @@ type Keeper struct {
 
 var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
 
+// NewKeeper creates a new Keeper instance.
 func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, authority string) Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	return Keeper{
@@ -38,6 +39,8 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, authority strin
 	}
 }
 
+// GetAuthority returns the authority address for the consensus module.
+// This address has the permission to update consensus parameters.
 func (k *Keeper) GetAuthority() string {
 	return k.authority
 }
@@ -45,12 +48,8 @@ func (k *Keeper) GetAuthority() string {
 // InitGenesis initializes the initial state of the module
 func (k *Keeper) InitGenesis(ctx context.Context) error {
 	value, ok := ctx.Value(corecontext.InitInfoKey).(*types.MsgUpdateParams)
-	if !ok {
+	if !ok || value == nil {
 		// no error for appv1 and appv2
-		return nil
-	}
-	if value == nil {
-		// no error for appv1
 		return nil
 	}
 
@@ -85,6 +84,7 @@ func (k Keeper) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types
 
 var _ types.MsgServer = Keeper{}
 
+// UpdateParams updates the consensus parameters.
 func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if k.GetAuthority() != msg.Authority {
 		return nil, fmt.Errorf("invalid authority; expected %s, got %s", k.GetAuthority(), msg.Authority)
@@ -116,17 +116,15 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 
 // paramCheck validates the consensus params
 func (k Keeper) paramCheck(ctx context.Context, consensusParams cmtproto.ConsensusParams) (*cmttypes.ConsensusParams, error) {
-	paramsProto, err := k.ParamsStore.Get(ctx)
-
 	var params cmttypes.ConsensusParams
-	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			params = cmttypes.ConsensusParams{}
-		} else {
-			return nil, err
-		}
-	} else {
+
+	paramsProto, err := k.ParamsStore.Get(ctx)
+	if err == nil {
 		params = cmttypes.ConsensusParamsFromProto(paramsProto)
+	} else if errors.Is(err, collections.ErrNotFound) {
+		params = cmttypes.ConsensusParams{}
+	} else {
+		return nil, err
 	}
 
 	nextParams := params.Update(&consensusParams)

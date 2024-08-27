@@ -13,22 +13,3 @@ var nameRegex = regexp.MustCompile(NameFormat)
 func ValidateName(name string) bool {
 	return nameRegex.MatchString(name)
 }
-
-// QualifiedNameFormat is the regular expression that a qualified name must match.
-// A qualified name is a dot-separated list of names, where each name must match NameFormat.
-// A qualified name must be at least one character long and can be at most 127 characters long.
-const QualifiedNameFormat = `^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*$`
-
-var qualifiedNameRegex = regexp.MustCompile(QualifiedNameFormat)
-
-func ValidateQualifiedName(name string) bool {
-	if !qualifiedNameRegex.MatchString(name) {
-		return false
-	}
-
-	if len(name) > 127 {
-		return false
-	}
-
-	return true
-}

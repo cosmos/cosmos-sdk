@@ -8,12 +8,10 @@ import (
 // EnumType represents the definition of an enum type.
 type EnumType struct {
 	// Name is the name of the enum type.
-	// It must conform to the QualifiedNameFormat regular expression.
+	// It must conform to the NameFormat regular expression.
 	// Its name must be unique between all enum types and object types in the module.
 	// The same enum, however, can be used in multiple object types and fields as long as the
 	// definition is identical each time.
-	// In addition, if it is qualified, then instances of the same enum type in different modules
-	// must be identical.
 	Name string
 
 	// Values is a list of distinct, non-empty values that are part of the enum type.
@@ -26,7 +24,7 @@ type EnumType struct {
 	NumericKind Kind
 }
 
-// EnumValueDefinitio represents a value in an enum type.
+// EnumValueDefinition represents a value in an enum type.
 type EnumValueDefinition struct {
 	// Name is the name of the enum value.
 	// It must conform to the NameFormat regular expression.

@@ -285,14 +285,16 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			return &abci.PrepareProposalResponse{Txs: h.txSelector.SelectedTxs(ctx)}, nil
 		}
 
-		iterator := h.mempool.Select(ctx, req.Txs)
 		selectedTxsSignersSeqs := make(map[string]uint64)
-		var selectedTxsNums int
-		for iterator != nil {
-			memTx := iterator.Tx()
-			signerData, err := h.signerExtAdapter.GetSigners(memTx)
+		var (
+			err             error
+			selectedTxsNums int
+		)
+		h.mempool.SelectBy(ctx, req.Txs, func(memTx sdk.Tx) bool {
+			var signerData []mempool.SignerData
+			signerData, err = h.signerExtAdapter.GetSigners(memTx)
 			if err != nil {
-				return nil, err
+				return false
 			}
 
 			// If the signers aren't in selectedTxsSignersSeqs then we haven't seen them before
@@ -316,24 +318,24 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 				txSignersSeqs[signer.Signer.String()] = signer.Sequence
 			}
 			if !shouldAdd {
-				iterator = iterator.Next()
-				continue
+				return true
 			}
 
 			// NOTE: Since transaction verification was already executed in CheckTx,
 			// which calls mempool.Insert, in theory everything in the pool should be
 			// valid. But some mempool implementations may insert invalid txs, so we
 			// check again.
-			txBz, err := h.txVerifier.PrepareProposalVerifyTx(memTx)
+			var txBz []byte
+			txBz, err = h.txVerifier.PrepareProposalVerifyTx(memTx)
 			if err != nil {
-				err := h.mempool.Remove(memTx)
+				err = h.mempool.Remove(memTx)
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-					return nil, err
+					return false
 				}
 			} else {
 				stop := h.txSelector.SelectTxForProposal(ctx, uint64(req.MaxTxBytes), maxBlockGas, memTx, txBz)
 				if stop {
-					break
+					return false
 				}
 
 				txsLen := len(h.txSelector.SelectedTxs(ctx))
@@ -354,8 +356,8 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 				selectedTxsNums = txsLen
 			}
 
-			iterator = iterator.Next()
-		}
+			return true
+		})
 
 		return &abci.PrepareProposalResponse{Txs: h.txSelector.SelectedTxs(ctx)}, nil
 	}

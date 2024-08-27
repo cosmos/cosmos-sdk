@@ -189,6 +189,40 @@ func (snm *SenderNonceMempool) Select(_ context.Context, _ [][]byte) Iterator {
 	return iter.Next()
 }
 
+// SelectBy will hold the mutex during the iteration, callback returns if continue.
+func (snm *SenderNonceMempool) SelectBy(_ context.Context, _ [][]byte, callback func(sdk.Tx) bool) {
+	snm.mtx.Lock()
+	defer snm.mtx.Unlock()
+	var senders []string
+
+	senderCursors := make(map[string]*skiplist.Element)
+	orderedSenders := skiplist.New(skiplist.String)
+
+	// #nosec
+	for s := range snm.senders {
+		orderedSenders.Set(s, s)
+	}
+
+	s := orderedSenders.Front()
+	for s != nil {
+		sender := s.Value.(string)
+		senders = append(senders, sender)
+		senderCursors[sender] = snm.senders[sender].Front()
+		s = s.Next()
+	}
+
+	iterator := &senderNonceMempoolIterator{
+		senders:       senders,
+		rnd:           snm.rnd,
+		senderCursors: senderCursors,
+	}
+
+	iter := iterator.Next()
+	for iter != nil && callback(iter.Tx()) {
+		iter = iter.Next()
+	}
+}
+
 // CountTx returns the total count of txs in the mempool.
 func (snm *SenderNonceMempool) CountTx() int {
 	snm.mtx.Lock()

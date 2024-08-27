@@ -368,6 +368,27 @@ func (mp *PriorityNonceMempool[C]) Select(_ context.Context, _ [][]byte) Iterato
 	return iterator.iteratePriority()
 }
 
+// SelectBy will hold the mutex during the iteration, callback returns if continue.
+func (mp *PriorityNonceMempool[C]) SelectBy(_ context.Context, _ [][]byte, callback func(sdk.Tx) bool) {
+	mp.mtx.Lock()
+	defer mp.mtx.Unlock()
+	if mp.priorityIndex.Len() == 0 {
+		return
+	}
+
+	mp.reorderPriorityTies()
+
+	iterator := &PriorityNonceIterator[C]{
+		mempool:       mp,
+		senderCursors: make(map[string]*skiplist.Element),
+	}
+
+	iter := iterator.iteratePriority()
+	for iter != nil && callback(iter.Tx()) {
+		iter = iter.Next()
+	}
+}
+
 type reorderKey[C comparable] struct {
 	deleteKey txMeta[C]
 	insertKey txMeta[C]

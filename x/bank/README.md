@@ -4,6 +4,14 @@ sidebar_position: 1
 
 # `x/bank`
 
+## Astra Modifications
+
+To support rebasing assests, this module will be modified to include `shares` and a `multiplier` (redemption rate). However, all queries will maintain their existing API as to not break any wallet support.
+
+The module will follow a push model for `multiplier` updates. Contracts can be whitelisted to update multipliers, which will be associated with specific denoms. 
+
+A fork of token factory will be created to support the creation of rebasing tokens. Instead of the `/factory` prefix, they will have the `/rebase` prefix.
+
 ## Abstract
 
 This document specifies the bank module of the Cosmos SDK.

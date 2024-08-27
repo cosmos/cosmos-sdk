@@ -351,9 +351,13 @@ func (i *PriorityNonceIterator[C]) Tx() sdk.Tx {
 //
 // NOTE: It is not safe to use this iterator while removing transactions from
 // the underlying mempool.
-func (mp *PriorityNonceMempool[C]) Select(_ context.Context, _ [][]byte) Iterator {
+func (mp *PriorityNonceMempool[C]) Select(ctx context.Context, txs [][]byte) Iterator {
 	mp.mtx.Lock()
 	defer mp.mtx.Unlock()
+	return mp.doSelect(ctx, txs)
+}
+
+func (mp *PriorityNonceMempool[C]) doSelect(_ context.Context, _ [][]byte) Iterator {
 	if mp.priorityIndex.Len() == 0 {
 		return nil
 	}
@@ -369,21 +373,11 @@ func (mp *PriorityNonceMempool[C]) Select(_ context.Context, _ [][]byte) Iterato
 }
 
 // SelectBy will hold the mutex during the iteration, callback returns if continue.
-func (mp *PriorityNonceMempool[C]) SelectBy(_ context.Context, _ [][]byte, callback func(sdk.Tx) bool) {
+func (mp *PriorityNonceMempool[C]) SelectBy(ctx context.Context, txs [][]byte, callback func(sdk.Tx) bool) {
 	mp.mtx.Lock()
 	defer mp.mtx.Unlock()
-	if mp.priorityIndex.Len() == 0 {
-		return
-	}
 
-	mp.reorderPriorityTies()
-
-	iterator := &PriorityNonceIterator[C]{
-		mempool:       mp,
-		senderCursors: make(map[string]*skiplist.Element),
-	}
-
-	iter := iterator.iteratePriority()
+	iter := mp.doSelect(ctx, txs)
 	for iter != nil && callback(iter.Tx()) {
 		iter = iter.Next()
 	}

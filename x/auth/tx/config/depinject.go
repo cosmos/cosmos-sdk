@@ -18,6 +18,7 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/auth/ante"
+	"cosmossdk.io/x/auth/ante/unorderedtx"
 	"cosmossdk.io/x/auth/posthandler"
 	"cosmossdk.io/x/auth/tx"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -56,6 +57,7 @@ type ModuleInputs struct {
 	AccountAbstractionKeeper ante.AccountAbstractionKeeper      `optional:"true"`
 	CustomSignModeHandlers   func() []txsigning.SignModeHandler `optional:"true"`
 	CustomGetSigners         []txsigning.CustomGetSigner        `optional:"true"`
+	UnorderedTxManager       *unorderedtx.Manager               `optional:"true"`
 	ExtraTxValidators        []TxValidator                      `optional:"true"`
 }
 
@@ -165,12 +167,13 @@ func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler,
 
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
-			AccountKeeper:   in.AccountKeeper,
-			BankKeeper:      in.BankKeeper,
-			SignModeHandler: txConfig.SignModeHandler(),
-			FeegrantKeeper:  in.FeeGrantKeeper,
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-			Environment:     in.Environment,
+			Environment:        in.Environment,
+			AccountKeeper:      in.AccountKeeper,
+			BankKeeper:         in.BankKeeper,
+			SignModeHandler:    txConfig.SignModeHandler(),
+			FeegrantKeeper:     in.FeeGrantKeeper,
+			SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
+			UnorderedTxManager: in.UnorderedTxManager,
 		},
 	)
 	if err != nil {

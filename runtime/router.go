@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
-// NewMsgRouterService implements router.Service.
+// NewMsgRouterService return new implementation of router.Service.
 func NewMsgRouterService(msgRouter baseapp.MessageRouter) router.Service {
 	return &msgRouterService{
 		router: msgRouter,
@@ -75,7 +75,7 @@ func (m *msgRouterService) Invoke(ctx context.Context, msg gogoproto.Message) (g
 	return msgResp, nil
 }
 
-// NewQueryRouterService implements router.Service.
+// NewQueryRouterService return new implementation of router.Service.
 func NewQueryRouterService(queryRouter baseapp.QueryRouter) router.Service {
 	return &queryRouterService{
 		router: queryRouter,

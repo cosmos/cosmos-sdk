@@ -17,9 +17,11 @@ type EnumTypeDiff struct {
 	ChangedValues []EnumValueDiff
 
 	// OldNumericKind is the numeric kind used to represent the enum values numerically in the old enum type.
+	// It will be empty if the kind did not change.
 	OldNumericKind schema.Kind
 
 	// NewNumericKind is the numeric kind used to represent the enum values numerically in the new enum type.
+	// It will be empty if the kind did not change.
 	NewNumericKind schema.Kind
 }
 
@@ -31,9 +33,12 @@ type EnumValueDiff struct {
 
 func compareEnumType(oldEnum, newEnum schema.EnumType) EnumTypeDiff {
 	diff := EnumTypeDiff{
-		Name:           oldEnum.TypeName(),
-		OldNumericKind: oldEnum.GetNumericKind(),
-		NewNumericKind: newEnum.GetNumericKind(),
+		Name: oldEnum.TypeName(),
+	}
+
+	if oldEnum.GetNumericKind() != newEnum.GetNumericKind() {
+		diff.OldNumericKind = oldEnum.GetNumericKind()
+		diff.NewNumericKind = newEnum.GetNumericKind()
 	}
 
 	newValues := make(map[string]schema.EnumValueDefinition)
@@ -47,8 +52,7 @@ func compareEnumType(oldEnum, newEnum schema.EnumType) EnumTypeDiff {
 		newV, ok := newValues[v.Name]
 		if !ok {
 			diff.RemovedValues = append(diff.RemovedValues, v)
-		}
-		if newV.Value != v.Value {
+		} else if newV.Value != v.Value {
 			diff.ChangedValues = append(diff.ChangedValues, EnumValueDiff{
 				Name:     v.Name,
 				OldValue: v.Value,

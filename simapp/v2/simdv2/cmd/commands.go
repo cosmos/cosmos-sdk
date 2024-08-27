@@ -70,10 +70,10 @@ func initRootCmd[T transaction.Tx](
 		offchain.OffChain(),
 	)
 
-	// Allow the chain developer to overwrite the cometbft default
+	// Allow the chain developer to overwrite the server default
 	// app toml config.
 	serverCfg := serverv2.DefaultServerConfig()
-	// The cometbft server's default minimum gas price is set to "0stake" inside
+	// The server's default minimum gas price is set to "0stake" inside
 	// app.toml. However, the chain developer can set a default app.toml value for their
 	// validators here. Please update value based on chain denom.
 	//

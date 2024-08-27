@@ -18,10 +18,10 @@ func Test_compareEnumType(t *testing.T) {
 		{
 			name: "no change",
 			oldEnum: schema.EnumType{
-				Values: []string{"a", "b"},
+				Values: []schema.EnumValueDefinition{{Name: "a", Value: 1}, {Name: "b", Value: 2}},
 			},
 			newEnum: schema.EnumType{
-				Values: []string{"a", "b"},
+				Values: []schema.EnumValueDefinition{{Name: "a", Value: 1}, {Name: "b", Value: 2}},
 			},
 			diff:                 EnumTypeDiff{},
 			hasCompatibleChanges: true,
@@ -29,26 +29,26 @@ func Test_compareEnumType(t *testing.T) {
 		{
 			name: "value added",
 			oldEnum: schema.EnumType{
-				Values: []string{"a"},
+				Values: []schema.EnumValueDefinition{{Name: "a", Value: 1}},
 			},
 			newEnum: schema.EnumType{
-				Values: []string{"a", "b"},
+				Values: []schema.EnumValueDefinition{{Name: "a", Value: 1}, {Name: "b", Value: 2}},
 			},
 			diff: EnumTypeDiff{
-				AddedValues: []string{"b"},
+				AddedValues: []schema.EnumValueDefinition{{Name: "b", Value: 2}},
 			},
 			hasCompatibleChanges: true,
 		},
 		{
 			name: "value removed",
 			oldEnum: schema.EnumType{
-				Values: []string{"a", "b"},
+				Values: []schema.EnumValueDefinition{{Name: "a", Value: 1}, {Name: "b", Value: 2}},
 			},
 			newEnum: schema.EnumType{
-				Values: []string{"a"},
+				Values: []schema.EnumValueDefinition{{Name: "a", Value: 1}},
 			},
 			diff: EnumTypeDiff{
-				RemovedValues: []string{"b"},
+				RemovedValues: []schema.EnumValueDefinition{{Name: "b", Value: 2}},
 			},
 			hasCompatibleChanges: false,
 		},

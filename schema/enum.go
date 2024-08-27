@@ -62,12 +62,12 @@ func (e EnumType) Validate(Schema) error {
 		}
 
 		if names[v.Name] {
-			return fmt.Errorf("duplicate enum definition name %q for enum %s", v, e.Name)
+			return fmt.Errorf("duplicate enum value name %q for enum %s", v.Name, e.Name)
 		}
 		names[v.Name] = true
 
 		if values[v.Value] {
-			return fmt.Errorf("duplicate enum definition numeric value %d for enum %s", v.Value, e.Name)
+			return fmt.Errorf("duplicate enum numeric value %d for enum %s", v.Value, e.Name)
 		}
 		values[v.Value] = true
 	}

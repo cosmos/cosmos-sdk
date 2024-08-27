@@ -18,10 +18,12 @@ type Schema interface {
 	Types(f func(Type) bool)
 }
 
-type emptySchema struct{}
+// EmptySchema is a schema that contains no types.
+// It can be used in Validate methods when there is no schema needed or available.
+type EmptySchema struct{}
 
-func (emptySchema) LookupType(name string) (Type, bool) {
+func (EmptySchema) LookupType(name string) (Type, bool) {
 	return nil, false
 }
 
-func (emptySchema) Types(f func(Type) bool) {}
+func (EmptySchema) Types(f func(Type) bool) {}

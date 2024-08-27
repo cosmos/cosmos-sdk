@@ -33,7 +33,7 @@ func (c Field) Validate(schema Schema) error {
 	switch c.Kind {
 	case EnumKind:
 		if c.ReferencedType == "" {
-			return fmt.Errorf("enum field %q must have a type", c.Name)
+			return fmt.Errorf("enum field %q must have a referenced type", c.Name)
 		}
 
 		ty, ok := schema.LookupType(c.ReferencedType)
@@ -46,7 +46,7 @@ func (c Field) Validate(schema Schema) error {
 		}
 	default:
 		if c.ReferencedType != "" {
-			return fmt.Errorf("field %q with kind %q cannot have a type", c.Name, c.Kind)
+			return fmt.Errorf("field %q with kind %q cannot have a referenced type", c.Name, c.Kind)
 		}
 	}
 
@@ -56,7 +56,7 @@ func (c Field) Validate(schema Schema) error {
 // ValidateValue validates that the value conforms to the field's kind and nullability.
 // Unlike Kind.ValidateValue, it also checks that the value conforms to the EnumType
 // if the field is an EnumKind.
-func (c Field) ValidateValue(value interface{}) error {
+func (c Field) ValidateValue(value interface{}, schema Schema) error {
 	if value == nil {
 		if !c.Nullable {
 			return fmt.Errorf("field %q cannot be null", c.Name)
@@ -66,14 +66,6 @@ func (c Field) ValidateValue(value interface{}) error {
 	err := c.Kind.ValidateValueType(value)
 	if err != nil {
 		return fmt.Errorf("invalid value for field %q: %v", c.Name, err) //nolint:errorlint // false positive due to using go1.12
-	}
-
-	return nil
-}
-
-func (c Field) ValidateValueWithSchema(value interface{}, schema Schema) error {
-	if err := c.ValidateValue(value); err != nil {
-		return err
 	}
 
 	switch c.Kind {

@@ -39,11 +39,11 @@ func Test_compareField(t *testing.T) {
 			trueF: FieldDiff.NullableChanged,
 		},
 		{
-			oldField: schema.Field{Kind: schema.EnumKind, EnumType: schema.EnumType{Name: "old"}},
-			newField: schema.Field{Kind: schema.EnumKind, EnumType: schema.EnumType{Name: "new"}},
+			oldField: schema.Field{Kind: schema.EnumKind, ReferencedType: "old"},
+			newField: schema.Field{Kind: schema.EnumKind, ReferencedType: "new"},
 			wantDiff: FieldDiff{
-				OldEnumType: "old",
-				NewEnumType: "new",
+				OldReferencedType: "old",
+				NewReferencedType: "new",
 			},
 			trueF: FieldDiff.ReferenceTypeChanged,
 		},

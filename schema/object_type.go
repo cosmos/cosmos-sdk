@@ -82,12 +82,12 @@ func (o ObjectType) Validate(schema Schema) error {
 }
 
 // ValidateObjectUpdate validates that the update conforms to the object type.
-func (o ObjectType) ValidateObjectUpdate(update ObjectUpdate) error {
+func (o ObjectType) ValidateObjectUpdate(update ObjectUpdate, schema Schema) error {
 	if o.Name != update.TypeName {
 		return fmt.Errorf("object type name %q does not match update type name %q", o.Name, update.TypeName)
 	}
 
-	if err := ValidateObjectKey(o.KeyFields, update.Key); err != nil {
+	if err := ValidateObjectKey(o.KeyFields, update.Key, schema); err != nil {
 		return fmt.Errorf("invalid key for object type %q: %v", update.TypeName, err) //nolint:errorlint // false positive due to using go1.12
 	}
 
@@ -95,5 +95,5 @@ func (o ObjectType) ValidateObjectUpdate(update ObjectUpdate) error {
 		return nil
 	}
 
-	return ValidateObjectValue(o.ValueFields, update.Value)
+	return ValidateObjectValue(o.ValueFields, update.Value, schema)
 }

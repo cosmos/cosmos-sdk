@@ -12,7 +12,7 @@ type ModuleSchema struct {
 
 // NewModuleSchema constructs a new ModuleSchema and validates it. Any module schema returned without an error
 // is guaranteed to be valid.
-func NewModuleSchema(types []Type) (ModuleSchema, error) {
+func NewModuleSchema(types ...Type) (ModuleSchema, error) {
 	typeMap := map[string]Type{}
 
 	for _, typ := range types {
@@ -31,6 +31,16 @@ func NewModuleSchema(types []Type) (ModuleSchema, error) {
 	}
 
 	return res, nil
+}
+
+// MustNewModuleSchema constructs a new ModuleSchema and panics if it is invalid.
+// This should only be used in test code or static initialization where it is safe to panic!
+func MustNewModuleSchema(types ...Type) ModuleSchema {
+	sch, err := NewModuleSchema(types...)
+	if err != nil {
+		panic(err)
+	}
+	return sch
 }
 
 // Validate validates the module schema.
@@ -57,7 +67,7 @@ func (s ModuleSchema) ValidateObjectUpdate(update ObjectUpdate) error {
 		return fmt.Errorf("type %q is not an object type", update.TypeName)
 	}
 
-	return objTyp.ValidateObjectUpdate(update)
+	return objTyp.ValidateObjectUpdate(update, s)
 }
 
 // LookupType looks up a type by name in the module schema.

@@ -15,7 +15,7 @@ func TestEnumDefinition_Validate(t *testing.T) {
 			name: "valid enum",
 			enum: EnumType{
 				Name:   "test",
-				Values: []string{"a", "b", "c"},
+				Values: []EnumValueDefinition{{Name: "a", Value: 1}, {Name: "b", Value: 2}, {Name: "c", Value: 3}},
 			},
 			errContains: "",
 		},
@@ -23,7 +23,7 @@ func TestEnumDefinition_Validate(t *testing.T) {
 			name: "empty name",
 			enum: EnumType{
 				Name:   "",
-				Values: []string{"a", "b", "c"},
+				Values: []EnumValueDefinition{{Name: "a", Value: 1}, {Name: "b", Value: 2}, {Name: "c", Value: 3}},
 			},
 			errContains: "invalid enum definition name",
 		},
@@ -31,31 +31,39 @@ func TestEnumDefinition_Validate(t *testing.T) {
 			name: "empty values",
 			enum: EnumType{
 				Name:   "test",
-				Values: []string{},
+				Values: []EnumValueDefinition{},
 			},
 			errContains: "enum definition values cannot be empty",
 		},
 		{
-			name: "empty value",
+			name: "empty value name",
 			enum: EnumType{
 				Name:   "test",
-				Values: []string{"a", "", "c"},
+				Values: []EnumValueDefinition{{Name: "a", Value: 1}, {Name: "", Value: 2}, {Name: "c", Value: 3}},
 			},
 			errContains: "invalid enum definition value",
 		},
 		{
-			name: "duplicate value",
+			name: "duplicate value name",
 			enum: EnumType{
 				Name:   "test",
-				Values: []string{"a", "b", "a"},
+				Values: []EnumValueDefinition{{Name: "a", Value: 1}, {Name: "a", Value: 2}, {Name: "c", Value: 3}},
 			},
-			errContains: "duplicate enum definition value \"a\" for enum test",
+			errContains: `duplicate enum value name "a" for enum test`,
+		},
+		{
+			name: "duplicate value numeric",
+			enum: EnumType{
+				Name:   "test",
+				Values: []EnumValueDefinition{{Name: "a", Value: 1}, {Name: "b", Value: 1}, {Name: "c", Value: 3}},
+			},
+			errContains: `duplicate enum numeric value 1 for enum test`,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.enum.Validate()
+			err := tt.enum.Validate(EmptySchema{})
 			if tt.errContains == "" {
 				if err != nil {
 					t.Errorf("expected valid enum definition to pass validation, got: %v", err)
@@ -74,7 +82,7 @@ func TestEnumDefinition_Validate(t *testing.T) {
 func TestEnumDefinition_ValidateValue(t *testing.T) {
 	enum := EnumType{
 		Name:   "test",
-		Values: []string{"a", "b", "c"},
+		Values: []EnumValueDefinition{{Name: "a", Value: 1}, {Name: "b", Value: 2}, {Name: "c", Value: 3}},
 	}
 
 	tests := []struct {

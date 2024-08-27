@@ -21,11 +21,11 @@ type FieldDiff struct {
 	// NewNullable is the new nullable property of the field.
 	NewNullable bool
 
-	// OldEnumType is the name of the old referenced type.
+	// OldReferencedType is the name of the old referenced type.
 	// It will be empty if the field is not a reference type or if there was no change.
-	OldReferenceType string
+	OldReferencedType string
 
-	// NewEnumType is the name of the new referenced type.
+	// NewReferencedType is the name of the new referenced type.
 	// It will be empty if the field is not a reference type or if there was no change.
 	NewReferencedType string
 }
@@ -43,7 +43,7 @@ func compareField(oldField, newField schema.Field) FieldDiff {
 	diff.NewNullable = newField.Nullable
 
 	if oldField.ReferencedType != newField.ReferencedType {
-		diff.OldReferenceType = oldField.ReferencedType
+		diff.OldReferencedType = oldField.ReferencedType
 		diff.NewReferencedType = newField.ReferencedType
 	}
 
@@ -67,5 +67,5 @@ func (d FieldDiff) NullableChanged() bool {
 
 // ReferenceTypeChanged returns true if the referenced type changed.
 func (d FieldDiff) ReferenceTypeChanged() bool {
-	return d.OldReferenceType != d.NewReferencedType
+	return d.OldReferencedType != d.NewReferencedType
 }

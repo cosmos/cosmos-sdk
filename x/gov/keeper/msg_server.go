@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"google.golang.org/protobuf/runtime/protoiface"
-
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	govtypes "cosmossdk.io/x/gov/types"
@@ -379,14 +378,14 @@ func (k msgServer) SudoExec(ctx context.Context, msg *v1.MsgSudoExec) (*v1.MsgSu
 		}
 	}
 
-	var msgResp protoiface.MessageV1
+	var msgResp transaction.Msg
 	if err := k.BranchService.Execute(ctx, func(ctx context.Context) error {
 		// TODO add route check here
 		if err := k.MsgRouterService.CanInvoke(ctx, sdk.MsgTypeURL(sudoedMsg)); err != nil {
-			return errors.Wrapf(govtypes.ErrInvalidProposal, err.Error())
+			return errors.Wrap(govtypes.ErrInvalidProposal, err.Error())
 		}
 
-		msgResp, err = k.MsgRouterService.InvokeUntyped(ctx, sudoedMsg)
+		msgResp, err = k.MsgRouterService.Invoke(ctx, sudoedMsg)
 		if err != nil {
 			return errors.Wrapf(err, "failed to execute sudo-ed message; message %v", sudoedMsg)
 		}

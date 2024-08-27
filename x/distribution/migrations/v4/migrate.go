@@ -16,16 +16,16 @@ import (
 var OldProposerKey = []byte{0x01}
 
 // MigrateStore removes the last proposer from store.
-func MigrateStore(ctx context.Context, env appmodule.Environment, cdc codec.BinaryCodec) error {
-	store := env.KVStoreService.OpenKVStore(ctx)
-	return store.Delete(OldProposerKey)
+func MigrateStore(ctx context.Context, env appmodule.Environment, _ codec.BinaryCodec) error {
+	kvStore := env.KVStoreService.OpenKVStore(ctx)
+	return kvStore.Delete(OldProposerKey)
 }
 
 // GetPreviousProposerConsAddr returns the proposer consensus address for the
 // current block.
 func GetPreviousProposerConsAddr(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec) (sdk.ConsAddress, error) {
-	store := storeService.OpenKVStore(ctx)
-	bz, err := store.Get(OldProposerKey)
+	kvStore := storeService.OpenKVStore(ctx)
+	bz, err := kvStore.Get(OldProposerKey)
 	if err != nil {
 		return nil, err
 	}
@@ -43,9 +43,9 @@ func GetPreviousProposerConsAddr(ctx context.Context, storeService store.KVStore
 	return addrValue.GetValue(), nil
 }
 
-// set the proposer public key for this block
+// SetPreviousProposerConsAddr set the proposer public key for this block.
 func SetPreviousProposerConsAddr(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec, consAddr sdk.ConsAddress) error {
-	store := storeService.OpenKVStore(ctx)
+	kvStore := storeService.OpenKVStore(ctx)
 	bz := cdc.MustMarshal(&gogotypes.BytesValue{Value: consAddr})
-	return store.Set(OldProposerKey, bz)
+	return kvStore.Set(OldProposerKey, bz)
 }

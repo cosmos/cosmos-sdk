@@ -32,11 +32,22 @@ messages, while maintaining the default behavior for other message types.
 
 Here is an example on how `SetIncludeNestedMsgsGas` option could be set to calculate the gas of a gov proposal
 nested messages:
+
 ```go
 baseAppOptions = append(baseAppOptions, baseapp.SetIncludeNestedMsgsGas([]sdk.Message{&gov.MsgSubmitProposal{}}))
 // ...
 app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 ```
+
+To be able to simulate nested messages within a transaction, message types containing nested messages must implement the
+`HasNestedMsgs` interface. This interface requires a single method: `GetMsgs() ([]sdk.Msg, error)`, which should return
+the nested messages. By implementing this interface, the BaseApp can simulate these nested messages during
+transaction simulation. 
+
+## [v0.52.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-alpha.0)
+
+Documentation to migrate an application from v0.50.x to server/v2 is available elsewhere.
+It is additional to the changes described here.
 
 ### SimApp
 
@@ -61,9 +72,9 @@ clientCtx = clientCtx.
 + WithValidatorPrefix("cosmosvaloper")
 ```
 
-**When using `depinject` / `app v2`, the client codecs can be provided directly from application config.**
+**When using `depinject` / `app_di`, the client codecs can be provided directly from application config.**
 
-Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a legacy app.
+Refer to SimApp `root_di.go` and `root.go` for an example with an app di and a legacy app.
 
 Additionally, a simplification of the start command leads to the following change:
 
@@ -182,8 +193,7 @@ for more details.
 ### Depinject `app_config.go` / `app.yml`
 
 With the introduction of [environment in modules](#core-api), depinject automatically creates the environment for all modules.
-Learn more about environment [here](https://example.com) <!-- TODO -->. Given the fields of environment, this means runtime creates a kv store service for all modules by default.
-It can happen that some modules do not have a store necessary (such as `x/auth/tx` for instance). In this case, the store creation should be skipped in `app_config.go`:
+Learn more about environment [here](https://example.com) <!-- TODO -->. Given the fields of environment, this means runtime creates a kv store service for all modules by default. It can happen that some modules do not have a store necessary (such as `x/auth/tx` for instance). In this case, the store creation should be skipped in `app_config.go`:
 
 ```diff
 InitGenesis: []string{
@@ -203,7 +213,20 @@ There is no longer a need for the Cosmos SDK to host these protos for itself and
 That package containing proto v2 generated code, but the SDK now uses [buf generated go SDK instead](https://buf.build/docs/bsr/generated-sdks/go).
 If you were depending on `cosmossdk.io/api/tendermint`, please use the buf generated go SDK instead, or ask CometBFT host the generated proto v2 code.
 
-The `codectypes.Any` has moved to `github.com/cosmos/gogoproto/types/any`. Module developers need to update the `buf.gen.gogo.yaml` configuration files by adjusting the corresponding `opt` option to `Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any` for directly mapping the`Any` type to its new location. This change is optional, but recommended, as `codectypes.Any` is aliased to `gogoproto.Any` in the SDK.
+The `codectypes.Any` has moved to `github.com/cosmos/gogoproto/types/any`. Module developers need to update the `buf.gen.gogo.yaml` configuration files by adjusting the corresponding `opt` option to `Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any` for directly mapping the`Any` type to its new location:
+
+```diff
+version: v1
+plugins:
+  - name: gocosmos
+    out: ..
+- 	 opt: plugins=grpc,Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types,Mcosmos/orm/v1/orm.proto=cosmossdk.io/orm
++    opt: plugins=grpc,Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any,Mcosmos/orm/v1/orm.proto=cosmossdk.io/orm
+  - name: grpc-gateway
+    out: ..
+    opt: logtostderr=true,allow_colon_final_segments=true
+
+```
 
 Also, any usages of the interfaces `AnyUnpacker` and `UnpackInterfacesMessage` must be replaced with the interfaces of the same name in the `github.com/cosmos/gogoproto/types/any` package.
 
@@ -449,7 +472,7 @@ for more info.
 A `SetPreBlocker` method has been added to BaseApp. This is essential for BaseApp to run `PreBlock` which runs before begin blocker other modules, and allows to modify consensus parameters, and the changes are visible to the following state machine logics.
 Read more about other use cases [here](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-068-preblock.md).
 
-`depinject` / app v2 users need to add `x/upgrade` in their `app_config.go` / `app.yml`:
+`depinject` / app di users need to add `x/upgrade` in their `app_config.go` / `app.yml`:
 
 ```diff
 + PreBlockers: []string{
@@ -557,7 +580,7 @@ The following modules `NewKeeper` function now take a `KVStoreService` instead o
 * `x/slashing`
 * `x/upgrade`
 
-**Users using `depinject` / app v2 do not need any changes, this is abstracted for them.**
+**Users using `depinject` / app di do not need any changes, this is abstracted for them.**
 
 Users manually wiring their chain need to use the `runtime.NewKVStoreService` method to create a `KVStoreService` from a `StoreKey`:
 
@@ -574,7 +597,7 @@ app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 
 Replace all your CometBFT logger imports by `cosmossdk.io/log`.
 
-Additionally, `depinject` / app v2 users must now supply a logger through the main `depinject.Supply` function instead of passing it to `appBuilder.Build`.
+Additionally, `depinject` / app di users must now supply a logger through the main `depinject.Supply` function instead of passing it to `appBuilder.Build`.
 
 ```diff
 appConfig = depinject.Configs(
@@ -598,7 +621,7 @@ User manually wiring their chain need to add the logger argument when creating t
 Previously, the `ModuleBasics` was a global variable that was used to register all modules' `AppModuleBasic` implementation.
 The global variable has been removed and the basic module manager can be now created from the module manager.
 
-This is automatically done for `depinject` / app v2 users, however for supplying different app module implementation, pass them via `depinject.Supply` in the main `AppConfig` (`app_config.go`):
+This is automatically done for `depinject` / app di users, however for supplying different app module implementation, pass them via `depinject.Supply` in the main `AppConfig` (`app_config.go`):
 
 ```go
 depinject.Supply(
@@ -709,7 +732,7 @@ When using (legacy) application wiring, the following must be added to `app.go` 
 	app.txConfig = txConfig
 ```
 
-When using `depinject` / `app v2`, **it's enabled by default** if there's a bank keeper present.
+When using `depinject` / `app di`, **it's enabled by default** if there's a bank keeper present.
 
 And in the application client (usually `root.go`):
 
@@ -728,7 +751,7 @@ And in the application client (usually `root.go`):
 	}
 ```
 
-When using `depinject` / `app v2`, the tx config should be recreated from the `txConfigOpts` to use `NewGRPCCoinMetadataQueryFn` instead of depending on the bank keeper (that is used in the server).
+When using `depinject` / `app di`, the tx config should be recreated from the `txConfigOpts` to use `NewGRPCCoinMetadataQueryFn` instead of depending on the bank keeper (that is used in the server).
 
 To learn more see the [docs](https://docs.cosmos.network/main/learn/advanced/transactions#sign_mode_textual) and the [ADR-050](https://docs.cosmos.network/main/build/architecture/adr-050-sign-mode-textual).
 

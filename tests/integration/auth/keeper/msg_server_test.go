@@ -116,7 +116,7 @@ func initFixture(t *testing.T) *fixture {
 	assert.NilError(t, bankKeeper.SetParams(newCtx, params))
 
 	accountsModule := accounts.NewAppModule(cdc, accountsKeeper)
-	authModule := auth.NewAppModule(cdc, authKeeper, accountsKeeper, authsims.RandomGenesisAccounts)
+	authModule := auth.NewAppModule(cdc, authKeeper, accountsKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, authKeeper)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,

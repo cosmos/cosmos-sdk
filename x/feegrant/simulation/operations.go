@@ -3,13 +3,10 @@ package simulation
 import (
 	"math/rand"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -29,14 +26,11 @@ var (
 )
 
 func WeightedOperations(
-	registry codectypes.InterfaceRegistry,
 	appParams simtypes.AppParams,
-	cdc codec.JSONCodec,
 	txConfig client.TxConfig,
 	ak feegrant.AccountKeeper,
 	bk feegrant.BankKeeper,
 	k keeper.Keeper,
-	ac address.Codec,
 ) simulation.WeightedOperations {
 	var (
 		weightMsgGrantAllowance  int
@@ -55,23 +49,20 @@ func WeightedOperations(
 		},
 	)
 
-	pCdc := codec.NewProtoCodec(registry)
-
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgGrantAllowance,
-			SimulateMsgGrantAllowance(pCdc, txConfig, ak, bk, k),
+			SimulateMsgGrantAllowance(txConfig, ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgRevokeAllowance,
-			SimulateMsgRevokeAllowance(pCdc, txConfig, ak, bk, k),
+			SimulateMsgRevokeAllowance(txConfig, ak, bk, k),
 		),
 	}
 }
 
 // SimulateMsgGrantAllowance generates MsgGrantAllowance with random values.
 func SimulateMsgGrantAllowance(
-	cdc *codec.ProtoCodec,
 	txConfig client.TxConfig,
 	ak feegrant.AccountKeeper,
 	bk feegrant.BankKeeper,
@@ -135,7 +126,6 @@ func SimulateMsgGrantAllowance(
 
 // SimulateMsgRevokeAllowance generates a MsgRevokeAllowance with random values.
 func SimulateMsgRevokeAllowance(
-	cdc *codec.ProtoCodec,
 	txConfig client.TxConfig,
 	ak feegrant.AccountKeeper,
 	bk feegrant.BankKeeper,

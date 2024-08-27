@@ -22,6 +22,10 @@ import (
 // Identity defines STF's bytes identity and it's used by STF to store things in its own state.
 var Identity = []byte("stf")
 
+type eContextKey struct{}
+
+var executionContextKey = eContextKey{}
+
 // STF is a struct that manages the state transition component of the app.
 type STF[T transaction.Tx] struct {
 	logger log.Logger
@@ -317,7 +321,7 @@ func (s STF[T]) runTxMsgs(
 	execCtx.setGasLimit(gasLimit)
 	for i, msg := range msgs {
 		execCtx.sender = txSenders[i]
-		resp, err := s.msgRouter.InvokeUntyped(execCtx, msg)
+		resp, err := s.msgRouter.Invoke(execCtx, msg)
 		if err != nil {
 			return nil, 0, nil, fmt.Errorf("message execution at index %d failed: %w", i, err)
 		}
@@ -453,7 +457,7 @@ func (s STF[T]) Query(
 	queryCtx := s.makeContext(ctx, nil, queryState, internal.ExecModeSimulate)
 	queryCtx.setHeaderInfo(hi)
 	queryCtx.setGasLimit(gasLimit)
-	return s.queryRouter.InvokeUntyped(queryCtx, req)
+	return s.queryRouter.Invoke(queryCtx, req)
 }
 
 // RunWithCtx is made to support genesis, if genesis was just the execution of messages instead
@@ -527,6 +531,14 @@ func (e *executionContext) setGasLimit(limit uint64) {
 
 	e.meter = meter
 	e.state = meteredState
+}
+
+func (e *executionContext) Value(key any) any {
+	if key == executionContextKey {
+		return e
+	}
+
+	return e.Context.Value(key)
 }
 
 // TODO: too many calls to makeContext can be expensive

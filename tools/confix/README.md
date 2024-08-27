@@ -39,6 +39,11 @@ An implementation example can be found in `simapp`.
 
 The command will be available as `simd config`.
 
+```tip
+Using confix directly in the application can have less features than using it standalone.
+This is because confix is versioned with the SDK, while `latest` is the standalone version.
+```
+
 ### Using Confix Standalone
 
 To use Confix standalone, without having to add it in your application, install it with the following command:
@@ -135,6 +140,15 @@ confix view ~/.simapp/config/client.toml # views the current app client conf
 
 At each SDK modification of the default configuration, add the default SDK config under `data/v0.XX-app.toml`.
 This allows users to use the tool standalone.
+
+### Compatibility
+
+The recommended standalone version is `latest`, which is using the latest development version of the Confix.
+
+| SDK Version | Confix Version |
+| ----------- | -------------- |
+| v0.50       | v0.1.x         |
+| v0.52       | v0.2.x         |
 
 ## Credits
 

@@ -19,7 +19,7 @@ type mockGasService struct {
 	coregas.Service
 }
 
-func (m mockGasService) GasMeter(ctx context.Context) coregas.Meter {
+func (m mockGasService) GasMeter(_ context.Context) coregas.Meter {
 	return mockGasMeter{}
 }
 
@@ -27,6 +27,6 @@ type mockGasMeter struct {
 	coregas.Meter
 }
 
-func (m mockGasMeter) Consume(amount coregas.Gas, descriptor string) error {
+func (m mockGasMeter) Consume(_ coregas.Gas, _ string) error {
 	return nil
 }

@@ -46,9 +46,14 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, 
 	newCtx = SetGasMeter(ctx, gasTx.GetGas())
 
 	// TODO: possibly cache the result of this query for other antehandlers to use
-	var res consensusv1.QueryParamsResponse
-	if err := sud.env.QueryRouterService.InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
+	resp, err := sud.env.QueryRouterService.Invoke(ctx, &consensusv1.QueryParamsRequest{})
+	if err != nil {
 		return newCtx, err
+	}
+
+	res, ok := resp.(*consensusv1.QueryParamsResponse)
+	if !ok {
+		return newCtx, fmt.Errorf("unexpected response type: %T", resp)
 	}
 
 	if res.Params.Block != nil {

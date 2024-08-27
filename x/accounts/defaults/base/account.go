@@ -163,12 +163,17 @@ func (a Account) computeSignerData(ctx context.Context) (secp256k1.PubKey, signi
 }
 
 func (a Account) getNumber(ctx context.Context, addrStr string) (uint64, error) {
-	accNum, err := accountstd.QueryModule[accountsv1.AccountNumberResponse](ctx, &accountsv1.AccountNumberRequest{Address: addrStr})
+	accNum, err := accountstd.QueryModule(ctx, &accountsv1.AccountNumberRequest{Address: addrStr})
 	if err != nil {
 		return 0, err
 	}
 
-	return accNum.Number, nil
+	resp, ok := accNum.(*accountsv1.AccountNumberResponse)
+	if !ok {
+		return 0, fmt.Errorf("unexpected response type: %T", accNum)
+	}
+
+	return resp.Number, nil
 }
 
 func (a Account) getTxData(msg *aa_interface_v1.MsgAuthenticate) (signing.TxData, error) {

@@ -120,7 +120,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 
 	suite.clientCtx = client.Context{}.
 		WithTxConfig(suite.encCfg.TxConfig).
-		WithClient(clitestutil.NewMockCometRPCWithValue(nil))
+		WithClient(clitestutil.NewMockCometRPCWithResponseQueryValue(nil))
 
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{

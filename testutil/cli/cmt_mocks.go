@@ -29,9 +29,9 @@ func NewMockCometRPC(respQuery abci.QueryResponse) MockCometRPC {
 	return MockCometRPC{responseQuery: respQuery}
 }
 
-// NewMockCometRPCWithValue returns a mock CometBFT RPC implementation with value only.
+// NewMockCometRPCWithResponseQueryValue returns a mock CometBFT RPC implementation with value only.
 // It is used for CLI testing.
-func NewMockCometRPCWithValue(bz []byte) MockCometRPC {
+func NewMockCometRPCWithResponseQueryValue(bz []byte) MockCometRPC {
 	return MockCometRPC{responseQuery: abci.QueryResponse{
 		Value: bz,
 	}}

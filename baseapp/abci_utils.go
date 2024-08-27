@@ -359,6 +359,10 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			return true
 		})
 
+		if err != nil {
+			return nil, err
+		}
+
 		return &abci.PrepareProposalResponse{Txs: h.txSelector.SelectedTxs(ctx)}, nil
 	}
 }

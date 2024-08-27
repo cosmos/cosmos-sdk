@@ -7,7 +7,6 @@ import (
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
-	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
@@ -51,7 +50,11 @@ func TestRouter(t *testing.T) {
 
 	t.Run("invoke", func(t *testing.T) {
 		gotResp, err := router.Invoke(context.Background(), expectedMsg)
-		require.NoError(t, err)
-		require.Equal(t, expectedResp, gotResp)
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+		if !reflect.DeepEqual(expectedResp, gotResp) {
+			t.Errorf("expected response: %v, got: %v", expectedResp, gotResp)
+		}
 	})
 }

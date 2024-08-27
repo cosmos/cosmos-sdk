@@ -240,7 +240,7 @@ func ProvideCometService() comet.Service {
 	return &services.ContextAwareCometInfoService{}
 }
 
-// ProvideAppVersionModifier returns nil, `app.VersionModifier` is a feature of BaseApp and neither used nor required for runtim/v2.
+// ProvideAppVersionModifier returns nil, `app.VersionModifier` is a feature of BaseApp and neither used nor required for runtime/v2.
 // nil is acceptable, see: https://github.com/cosmos/cosmos-sdk/blob/0a6ee406a02477ae8ccbfcbe1b51fc3930087f4c/x/upgrade/keeper/keeper.go#L438
 func ProvideAppVersionModifier[T transaction.Tx](app *AppBuilder[T]) server.VersionModifier {
 	return nil

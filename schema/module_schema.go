@@ -13,16 +13,19 @@ type ModuleSchema struct {
 
 // NewModuleSchema constructs a new ModuleSchema and validates it. Any module schema returned without an error
 // is guaranteed to be valid.
-func NewModuleSchema(objectTypes []ObjectType) (ModuleSchema, error) {
-	types := map[string]Type{}
+func NewModuleSchema(types ...Type) (ModuleSchema, error) {
+	typeMap := map[string]Type{}
 
-	for _, objectType := range objectTypes {
-		types[objectType.Name] = objectType
+	for _, typ := range types {
+		if _, ok := typeMap[typ.TypeName()]; ok {
+			return ModuleSchema{}, fmt.Errorf("duplicate type %q", typ.TypeName())
+		}
+
+		typeMap[typ.TypeName()] = typ
 	}
 
-	res := ModuleSchema{types: types}
+	res := ModuleSchema{types: typeMap}
 
-	// validate adds all enum types to the type map
 	err := res.Validate()
 	if err != nil {
 		return ModuleSchema{}, err
@@ -31,52 +34,20 @@ func NewModuleSchema(objectTypes []ObjectType) (ModuleSchema, error) {
 	return res, nil
 }
 
-func addEnumType(types map[string]Type, field Field) error {
-	enumDef := field.EnumType
-	if enumDef.Name == "" {
-		return nil
+// MustNewModuleSchema constructs a new ModuleSchema and panics if it is invalid.
+// This should only be used in test code or static initialization where it is safe to panic!
+func MustNewModuleSchema(types ...Type) ModuleSchema {
+	sch, err := NewModuleSchema(types...)
+	if err != nil {
+		panic(err)
 	}
-
-	existing, ok := types[enumDef.Name]
-	if !ok {
-		types[enumDef.Name] = enumDef
-		return nil
-	}
-
-	existingEnum, ok := existing.(EnumType)
-	if !ok {
-		return fmt.Errorf("enum %q already exists as a different non-enum type", enumDef.Name)
-	}
-
-	if len(existingEnum.Values) != len(enumDef.Values) {
-		return fmt.Errorf("enum %q has different number of values in different fields", enumDef.Name)
-	}
-
-	existingValues := map[string]bool{}
-	for _, value := range existingEnum.Values {
-		existingValues[value] = true
-	}
-
-	for _, value := range enumDef.Values {
-		_, ok := existingValues[value]
-		if !ok {
-			return fmt.Errorf("enum %q has different values in different fields", enumDef.Name)
-		}
-	}
-
-	return nil
+	return sch
 }
 
 // Validate validates the module schema.
 func (s ModuleSchema) Validate() error {
 	for _, typ := range s.types {
-		objTyp, ok := typ.(ObjectType)
-		if !ok {
-			continue
-		}
-
-		// all enum types get added to the type map when we call ObjectType.validate
-		err := objTyp.validate(s.types)
+		err := typ.Validate(s)
 		if err != nil {
 			return err
 		}
@@ -97,7 +68,7 @@ func (s ModuleSchema) ValidateObjectUpdate(update ObjectUpdate) error {
 		return fmt.Errorf("type %q is not an object type", update.TypeName)
 	}
 
-	return objTyp.ValidateObjectUpdate(update)
+	return objTyp.ValidateObjectUpdate(update, s)
 }
 
 // LookupType looks up a type by name in the module schema.
@@ -197,3 +168,5 @@ func (s *ModuleSchema) UnmarshalJSON(data []byte) error {
 
 	return nil
 }
+
+var _ Schema = ModuleSchema{}

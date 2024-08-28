@@ -38,35 +38,35 @@ func TestField_Validate(t *testing.T) {
 			errContains: "invalid field kind",
 		},
 		{
-			name: "invalid enum definition",
+			name: "missing enum type",
 			field: Field{
 				Name: "field1",
 				Kind: EnumKind,
 			},
-			errContains: "invalid enum definition",
+			errContains: `enum field "field1" must have a referenced type`,
 		},
 		{
 			name: "enum definition with non-EnumKind",
 			field: Field{
-				Name:     "field1",
-				Kind:     StringKind,
-				EnumType: EnumType{Name: "enum"},
+				Name:           "field1",
+				Kind:           StringKind,
+				ReferencedType: "enum",
 			},
-			errContains: "enum definition is only valid for field \"field1\" with type EnumKind",
+			errContains: `field "field1" with kind "string" cannot have a referenced type`,
 		},
 		{
 			name: "valid enum",
 			field: Field{
-				Name:     "field1",
-				Kind:     EnumKind,
-				EnumType: EnumType{Name: "enum", Values: []string{"a", "b"}},
+				Name:           "field1",
+				Kind:           EnumKind,
+				ReferencedType: "enum",
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.field.Validate()
+			err := tt.field.Validate(testEnumSchema)
 			if tt.errContains == "" {
 				if err != nil {
 					t.Errorf("expected no error, got: %v", err)
@@ -130,9 +130,9 @@ func TestField_ValidateValue(t *testing.T) {
 		{
 			name: "valid enum",
 			field: Field{
-				Name:     "field1",
-				Kind:     EnumKind,
-				EnumType: EnumType{Name: "enum", Values: []string{"a", "b"}},
+				Name:           "field1",
+				Kind:           EnumKind,
+				ReferencedType: "enum",
 			},
 			value:       "a",
 			errContains: "",
@@ -140,9 +140,9 @@ func TestField_ValidateValue(t *testing.T) {
 		{
 			name: "invalid enum",
 			field: Field{
-				Name:     "field1",
-				Kind:     EnumKind,
-				EnumType: EnumType{Name: "enum", Values: []string{"a", "b"}},
+				Name:           "field1",
+				Kind:           EnumKind,
+				ReferencedType: "enum",
 			},
 			value:       "c",
 			errContains: "not a valid enum value",
@@ -151,7 +151,7 @@ func TestField_ValidateValue(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.field.ValidateValue(tt.value)
+			err := tt.field.ValidateValue(tt.value, testEnumSchema)
 			if tt.errContains == "" {
 				if err != nil {
 					t.Errorf("expected no error, got: %v", err)
@@ -227,3 +227,8 @@ func TestFieldJSON(t *testing.T) {
 		})
 	}
 }
+
+var testEnumSchema = MustNewModuleSchema(EnumType{
+	Name:   "enum",
+	Values: []EnumValueDefinition{{Name: "a", Value: 1}, {Name: "b", Value: 2}},
+})

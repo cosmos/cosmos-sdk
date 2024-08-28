@@ -16,15 +16,12 @@ type Field struct {
 	// Nullable indicates whether null values are accepted for the field. Key fields CANNOT be nullable.
 	Nullable bool `json:"nullable,omitempty"`
 
-	// EnumType is the definition of the enum type and is only valid when Kind is EnumKind.
-	// The same enum types can be reused in the same module schema, but they always must contain
-	// the same values for the same enum name. This possibly introduces some duplication of
-	// definitions but makes it easier to reason about correctness and validation in isolation.
-	EnumType EnumType `json:"enum_type,omitempty"`
+	// ReferencedType is the referenced type name when Kind is EnumKind.
+	ReferencedType string
 }
 
 // Validate validates the field.
-func (c Field) Validate() error {
+func (c Field) Validate(schema Schema) error {
 	// valid name
 	if !ValidateName(c.Name) {
 		return fmt.Errorf("invalid field name %q", c.Name)
@@ -36,12 +33,24 @@ func (c Field) Validate() error {
 	}
 
 	// enum definition only valid with EnumKind
-	if c.Kind == EnumKind {
-		if err := c.EnumType.Validate(); err != nil {
-			return fmt.Errorf("invalid enum definition for field %q: %v", c.Name, err) //nolint:errorlint // false positive due to using go1.12
+	switch c.Kind {
+	case EnumKind:
+		if c.ReferencedType == "" {
+			return fmt.Errorf("enum field %q must have a referenced type", c.Name)
 		}
-	} else if c.Kind != EnumKind && (c.EnumType.Name != "" || c.EnumType.Values != nil) {
-		return fmt.Errorf("enum definition is only valid for field %q with type EnumKind", c.Name)
+
+		ty, ok := schema.LookupType(c.ReferencedType)
+		if !ok {
+			return fmt.Errorf("enum field %q references unknown type %q", c.Name, c.ReferencedType)
+		}
+
+		if _, ok := ty.(EnumType); !ok {
+			return fmt.Errorf("enum field %q references non-enum type %q", c.Name, c.ReferencedType)
+		}
+	default:
+		if c.ReferencedType != "" {
+			return fmt.Errorf("field %q with kind %q cannot have a referenced type", c.Name, c.Kind)
+		}
 	}
 
 	return nil
@@ -50,7 +59,7 @@ func (c Field) Validate() error {
 // ValidateValue validates that the value conforms to the field's kind and nullability.
 // Unlike Kind.ValidateValue, it also checks that the value conforms to the EnumType
 // if the field is an EnumKind.
-func (c Field) ValidateValue(value interface{}) error {
+func (c Field) ValidateValue(value interface{}, schema Schema) error {
 	if value == nil {
 		if !c.Nullable {
 			return fmt.Errorf("field %q cannot be null", c.Name)
@@ -62,8 +71,21 @@ func (c Field) ValidateValue(value interface{}) error {
 		return fmt.Errorf("invalid value for field %q: %v", c.Name, err) //nolint:errorlint // false positive due to using go1.12
 	}
 
-	if c.Kind == EnumKind {
-		return c.EnumType.ValidateValue(value.(string))
+	switch c.Kind {
+	case EnumKind:
+		ty, ok := schema.LookupType(c.ReferencedType)
+		if !ok {
+			return fmt.Errorf("enum field %q references unknown type %q", c.Name, c.ReferencedType)
+		}
+		enumType, ok := ty.(EnumType)
+		if !ok {
+			return fmt.Errorf("enum field %q references non-enum type %q", c.Name, c.ReferencedType)
+		}
+		err := enumType.ValidateValue(value.(string))
+		if err != nil {
+			return fmt.Errorf("invalid value for enum field %q: %v", c.Name, err)
+		}
+	default:
 	}
 
 	return nil

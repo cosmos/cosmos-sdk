@@ -51,7 +51,7 @@ type AppModule struct {
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
-// NewAppModule creates a new AppModule object
+// NewAppModule creates a new AppModule object.
 func NewAppModule(
 	cdc codec.Codec,
 	accountKeeper keeper.AccountKeeper,

@@ -10,7 +10,7 @@ import (
 type modA struct{}
 
 func (m modA) ModuleCodec() (schema.ModuleCodec, error) {
-	modSchema, err := schema.NewModuleSchema([]schema.ObjectType{{Name: "A", KeyFields: []schema.Field{{Name: "field1", Kind: schema.StringKind}}}})
+	modSchema, err := schema.NewModuleSchema(schema.ObjectType{Name: "A", KeyFields: []schema.Field{{Name: "field1", Kind: schema.StringKind}}})
 	if err != nil {
 		return schema.ModuleCodec{}, err
 	}
@@ -22,7 +22,7 @@ func (m modA) ModuleCodec() (schema.ModuleCodec, error) {
 type modB struct{}
 
 func (m modB) ModuleCodec() (schema.ModuleCodec, error) {
-	modSchema, err := schema.NewModuleSchema([]schema.ObjectType{{Name: "B", KeyFields: []schema.Field{{Name: "field2", Kind: schema.StringKind}}}})
+	modSchema, err := schema.NewModuleSchema(schema.ObjectType{Name: "B", KeyFields: []schema.Field{{Name: "field2", Kind: schema.StringKind}}})
 	if err != nil {
 		return schema.ModuleCodec{}, err
 	}

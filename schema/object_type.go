@@ -37,7 +37,7 @@ func (o ObjectType) TypeName() string {
 func (ObjectType) isType() {}
 
 // Validate validates the object type.
-func (o ObjectType) Validate(schema TypeSet) error {
+func (o ObjectType) Validate(typeSet TypeSet) error {
 	if !ValidateName(o.Name) {
 		return fmt.Errorf("invalid object type name %q", o.Name)
 	}
@@ -45,7 +45,7 @@ func (o ObjectType) Validate(schema TypeSet) error {
 	fieldNames := map[string]bool{}
 
 	for _, field := range o.KeyFields {
-		if err := field.Validate(schema); err != nil {
+		if err := field.Validate(typeSet); err != nil {
 			return fmt.Errorf("invalid key field %q: %v", field.Name, err) //nolint:errorlint // false positive due to using go1.12
 		}
 
@@ -64,7 +64,7 @@ func (o ObjectType) Validate(schema TypeSet) error {
 	}
 
 	for _, field := range o.ValueFields {
-		if err := field.Validate(schema); err != nil {
+		if err := field.Validate(typeSet); err != nil {
 			return fmt.Errorf("invalid value field %q: %v", field.Name, err) //nolint:errorlint // false positive due to using go1.12
 		}
 
@@ -82,12 +82,12 @@ func (o ObjectType) Validate(schema TypeSet) error {
 }
 
 // ValidateObjectUpdate validates that the update conforms to the object type.
-func (o ObjectType) ValidateObjectUpdate(update ObjectUpdate, schema TypeSet) error {
+func (o ObjectType) ValidateObjectUpdate(update ObjectUpdate, typeSet TypeSet) error {
 	if o.Name != update.TypeName {
 		return fmt.Errorf("object type name %q does not match update type name %q", o.Name, update.TypeName)
 	}
 
-	if err := ValidateObjectKey(o.KeyFields, update.Key, schema); err != nil {
+	if err := ValidateObjectKey(o.KeyFields, update.Key, typeSet); err != nil {
 		return fmt.Errorf("invalid key for object type %q: %v", update.TypeName, err) //nolint:errorlint // false positive due to using go1.12
 	}
 
@@ -95,5 +95,5 @@ func (o ObjectType) ValidateObjectUpdate(update ObjectUpdate, schema TypeSet) er
 		return nil
 	}
 
-	return ValidateObjectValue(o.ValueFields, update.Value, schema)
+	return ValidateObjectValue(o.ValueFields, update.Value, typeSet)
 }

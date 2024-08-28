@@ -66,8 +66,8 @@ func TestModuleSchema_Validate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// because validate is called when calling NewModuleSchema, we just call NewModuleSchema
-			_, err := NewModuleSchema(tt.types...)
+			// because validate is called when calling CompileModuleSchema, we just call CompileModuleSchema
+			_, err := CompileModuleSchema(tt.types...)
 			if tt.errContains == "" {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
@@ -169,7 +169,7 @@ func TestModuleSchema_ValidateObjectUpdate(t *testing.T) {
 
 func requireModuleSchema(t *testing.T, types ...Type) ModuleSchema {
 	t.Helper()
-	moduleSchema, err := NewModuleSchema(types...)
+	moduleSchema, err := CompileModuleSchema(types...)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

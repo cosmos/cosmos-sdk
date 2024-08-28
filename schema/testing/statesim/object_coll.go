@@ -14,7 +14,7 @@ import (
 type ObjectCollection struct {
 	options           Options
 	objectType        schema.ObjectType
-	sch               schema.TypeSet
+	typeSet           schema.TypeSet
 	objects           *btree.Map[string, schema.ObjectUpdate]
 	updateGen         *rapid.Generator[schema.ObjectUpdate]
 	valueFieldIndices map[string]int
@@ -32,7 +32,7 @@ func NewObjectCollection(objectType schema.ObjectType, options Options, sch sche
 	return &ObjectCollection{
 		options:           options,
 		objectType:        objectType,
-		sch:               sch,
+		typeSet:           sch,
 		objects:           objects,
 		updateGen:         updateGen,
 		valueFieldIndices: valueFieldIndices,
@@ -45,7 +45,7 @@ func (o *ObjectCollection) ApplyUpdate(update schema.ObjectUpdate) error {
 		return fmt.Errorf("update type name %q does not match object type name %q", update.TypeName, o.objectType.Name)
 	}
 
-	err := o.objectType.ValidateObjectUpdate(update, o.sch)
+	err := o.objectType.ValidateObjectUpdate(update, o.typeSet)
 	if err != nil {
 		return err
 	}

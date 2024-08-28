@@ -10,9 +10,9 @@ type ModuleSchema struct {
 	types map[string]Type
 }
 
-// NewModuleSchema constructs a new ModuleSchema and validates it. Any module schema returned without an error
-// is guaranteed to be valid.
-func NewModuleSchema(types ...Type) (ModuleSchema, error) {
+// CompileModuleSchema compiles the types into a ModuleSchema and validates it.
+// Any module schema returned without an error is guaranteed to be valid.
+func CompileModuleSchema(types ...Type) (ModuleSchema, error) {
 	typeMap := map[string]Type{}
 
 	for _, typ := range types {
@@ -33,10 +33,10 @@ func NewModuleSchema(types ...Type) (ModuleSchema, error) {
 	return res, nil
 }
 
-// MustNewModuleSchema constructs a new ModuleSchema and panics if it is invalid.
+// MustCompileModuleSchema constructs a new ModuleSchema and panics if it is invalid.
 // This should only be used in test code or static initialization where it is safe to panic!
-func MustNewModuleSchema(types ...Type) ModuleSchema {
-	sch, err := NewModuleSchema(types...)
+func MustCompileModuleSchema(types ...Type) ModuleSchema {
+	sch, err := CompileModuleSchema(types...)
 	if err != nil {
 		panic(err)
 	}

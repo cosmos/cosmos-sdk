@@ -19,7 +19,7 @@ type TypeSet interface {
 	// LookupType looks up a type by name.
 	LookupType(name string) (Type, bool)
 
-	// Types calls the given function for each type in the schema.
+	// Types calls the given function for each type in the type set.
 	Types(f func(Type) bool)
 
 	// isTypeSet is a private method that ensures that only types in this package can be marked as type sets.

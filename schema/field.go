@@ -18,7 +18,7 @@ type Field struct {
 }
 
 // Validate validates the field.
-func (c Field) Validate(schema TypeSet) error {
+func (c Field) Validate(typeSet TypeSet) error {
 	// valid name
 	if !ValidateName(c.Name) {
 		return fmt.Errorf("invalid field name %q", c.Name)
@@ -36,7 +36,7 @@ func (c Field) Validate(schema TypeSet) error {
 			return fmt.Errorf("enum field %q must have a referenced type", c.Name)
 		}
 
-		ty, ok := schema.LookupType(c.ReferencedType)
+		ty, ok := typeSet.LookupType(c.ReferencedType)
 		if !ok {
 			return fmt.Errorf("enum field %q references unknown type %q", c.Name, c.ReferencedType)
 		}

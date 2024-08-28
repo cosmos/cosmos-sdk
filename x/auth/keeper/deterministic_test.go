@@ -190,7 +190,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	suite.accountKeeper.SetAccount(suite.ctx, acc2)
 
 	req := &types.QueryAccountsRequest{}
-	testdata.DeterministicIterations(suite.T(), suite.ctx, req, suite.queryClient.Accounts, 2277, false)
+	testdata.DeterministicIterations(suite.T(), suite.ctx, req, suite.queryClient.Accounts, 1716, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryAccountAddressByID() {

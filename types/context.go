@@ -220,6 +220,18 @@ func (c Context) WithGasMeter(meter storetypes.GasMeter) Context {
 	return c
 }
 
+// WithNewGasMeter returns a Context with a newly created transaction GasMeter.
+func (c Context) WithNewGasMeter(gaslimit storetypes.Gas) Context {
+	c.gasMeter = storetypes.NewGasMeter(gaslimit)
+	return c
+}
+
+// WithNewGasMeter returns a Context with a newly created transaction InfiniteGasMeter.
+func (c Context) WithNewInfiniteGasMeter() Context {
+	c.gasMeter = storetypes.NewInfiniteGasMeter()
+	return c
+}
+
 // WithBlockGasMeter returns a Context with an updated block GasMeter
 func (c Context) WithBlockGasMeter(meter storetypes.GasMeter) Context {
 	c.blockGasMeter = meter

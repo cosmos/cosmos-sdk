@@ -149,6 +149,7 @@ type Address interface {
 	Marshal() ([]byte, error)
 	MarshalJSON() ([]byte, error)
 	Bytes() []byte
+	// Deprecated: Use an address.Codec to convert addresses from and to string/bytes.
 	String() string
 	Format(s fmt.State, verb rune)
 }
@@ -281,6 +282,7 @@ func (aa AccAddress) Bytes() []byte {
 }
 
 // String implements the Stringer interface.
+// Deprecated: Use an address.Codec to convert addresses from and to string/bytes.
 func (aa AccAddress) String() string {
 	if aa.Empty() {
 		return ""
@@ -432,6 +434,7 @@ func (va ValAddress) Bytes() []byte {
 }
 
 // String implements the Stringer interface.
+// Deprecated: Use an address.Codec to convert addresses from and to string/bytes.
 func (va ValAddress) String() string {
 	if va.Empty() {
 		return ""
@@ -579,6 +582,7 @@ func (ca ConsAddress) Bytes() []byte {
 }
 
 // String implements the Stringer interface.
+// Deprecated: Use an address.Codec to convert addresses from and to string/bytes.
 func (ca ConsAddress) String() string {
 	if ca.Empty() {
 		return ""

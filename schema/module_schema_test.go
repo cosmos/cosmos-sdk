@@ -325,9 +325,9 @@ func TestModuleSchemaJSON(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	const expectedJson = `{"object_types":[{"name":"object1","key_fields":[{"name":"field1","kind":"enum","enum_type":{"name":"enum2","values":["d","e","f"]}}]},{"name":"object2","key_fields":[{"name":"field1","kind":"enum","enum_type":{"name":"enum1","values":["a","b","c"]}}]}],"enum_types":[{"name":"enum1","values":["a","b","c"]},{"name":"enum2","values":["d","e","f"]}]}`
+	const expectedJson = `{"object_types":[{"name":"object1","key_fields":[{"name":"field1","kind":"enum","referenced_type":"enum2"}]},{"name":"object2","key_fields":[{"name":"field1","kind":"enum","referenced_type":"enum1"}]}],"enum_types":[{"name":"enum1","values":[{"name":"a","value":1},{"name":"b","value":2},{"name":"c","value":3}]},{"name":"enum2","values":[{"name":"d","value":4},{"name":"e","value":5},{"name":"f","value":6}]}]}`
 	if string(b) != expectedJson {
-		t.Fatalf("expected %s, got %s", expectedJson, string(b))
+		t.Fatalf("expected %s\n, got %s", expectedJson, string(b))
 	}
 
 	var moduleSchema2 ModuleSchema

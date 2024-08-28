@@ -1,7 +1,6 @@
 package schema
 
 import (
-	"encoding/json"
 	"fmt"
 )
 
@@ -17,7 +16,7 @@ type Field struct {
 	Nullable bool `json:"nullable,omitempty"`
 
 	// ReferencedType is the referenced type name when Kind is EnumKind.
-	ReferencedType string
+	ReferencedType string `json:"referenced_type,omitempty"`
 }
 
 // Validate validates the field.
@@ -89,24 +88,4 @@ func (c Field) ValidateValue(value interface{}, schema Schema) error {
 	}
 
 	return nil
-}
-
-// MarshalJSON implements the json.Marshaler interface in such a way that the EnumType is only
-// marshaled if the field is an EnumKind.
-func (c Field) MarshalJSON() ([]byte, error) {
-	var enumType *EnumType
-	if c.Kind == EnumKind {
-		enumType = &c.EnumType
-	}
-	return json.Marshal(struct {
-		Name     string    `json:"name"`
-		Kind     Kind      `json:"kind"`
-		Nullable bool      `json:"nullable,omitempty"`
-		EnumType *EnumType `json:"enum_type,omitempty"`
-	}{
-		Name:     c.Name,
-		Kind:     c.Kind,
-		Nullable: c.Nullable,
-		EnumType: enumType,
-	})
 }

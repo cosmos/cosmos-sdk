@@ -190,14 +190,11 @@ func TestFieldJSON(t *testing.T) {
 		},
 		{
 			field: Field{
-				Name: "field1",
-				Kind: EnumKind,
-				EnumType: EnumType{
-					Name:   "enum",
-					Values: []string{"a", "b"},
-				},
+				Name:           "field1",
+				Kind:           EnumKind,
+				ReferencedType: "enum",
 			},
-			json: `{"name":"field1","kind":"enum","enum_type":{"name":"enum","values":["a","b"]}}`,
+			json: `{"name":"field1","kind":"enum","referenced_type":"enum"}`,
 		},
 	}
 

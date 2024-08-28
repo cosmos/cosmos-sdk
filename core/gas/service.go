@@ -38,6 +38,7 @@ type Meter interface {
 	Consume(amount Gas, descriptor string) error
 	Refund(amount Gas, descriptor string) error
 	Remaining() Gas
+	Consumed() Gas
 	Limit() Gas
 }
 

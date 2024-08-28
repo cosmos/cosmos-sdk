@@ -29,7 +29,8 @@ import (
 )
 
 func (s *CometBFTServer[T]) rpcClient(cmd *cobra.Command) (rpc.CometRPC, error) {
-	if s.config.AppTomlConfig.Standalone {
+	appTomlConfig := getAppTomlFromViper(client.GetViperFromCmd(cmd))
+	if appTomlConfig.Standalone {
 		client, err := rpchttp.New(client.GetConfigFromCmd(cmd).RPC.ListenAddress)
 		if err != nil {
 			return nil, err

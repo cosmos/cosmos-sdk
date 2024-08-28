@@ -58,15 +58,9 @@ func New[T transaction.Tx](txCodec transaction.Codec[T], serverOptions ServerOpt
 
 func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
 	// get configs (app.toml + config.toml) from viper
-	appTomlConfig := s.Config().(*AppTomlConfig)
-	if v != nil {
-		if err := serverv2.UnmarshalSubConfig(v, s.Name(), &appTomlConfig); err != nil {
-			return fmt.Errorf("failed to unmarshal config: %w", err)
-		}
-	}
 	s.config = Config{
 		ConfigTomlConfig: getConfigTomlFromViper(v),
-		AppTomlConfig:    appTomlConfig,
+		AppTomlConfig:    getAppTomlFromViper(v),
 	}
 
 	chainID := v.GetString(FlagChainID)

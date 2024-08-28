@@ -143,7 +143,7 @@ func StartCmdWithOptions[T types.Application](appCreator types.AppCreator[T], op
 	}
 
 	if opts.StartCommandHandler == nil {
-		opts.StartCommandHandler = start
+		opts.StartCommandHandler = getStartCommandHandler[T]()
 	}
 
 	cmd := &cobra.Command{
@@ -660,7 +660,7 @@ func InPlaceTestnetCreator[T types.Application](testnetAppCreator types.AppCreat
 	}
 
 	if opts.StartCommandHandler == nil {
-		opts.StartCommandHandler = start
+		opts.StartCommandHandler = getStartCommandHandler[T]()
 	}
 
 	cmd := &cobra.Command{
@@ -1023,4 +1023,10 @@ func addStartNodeFlags[T types.Application](cmd *cobra.Command, opts StartCmdOpt
 	if opts.AddFlags != nil {
 		opts.AddFlags(cmd)
 	}
+}
+
+// getStartCommandHandler returns a function that can be used as the start command handler.
+// This function instantiates the generic `start` function with the appropriate type.
+func getStartCommandHandler[T types.Application]() func(*Context, client.Context, types.AppCreator[T], bool, StartCmdOptions[T]) error {
+	return start[T]
 }

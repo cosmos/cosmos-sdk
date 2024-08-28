@@ -16,7 +16,7 @@ import (
 
 // TxFeeChecker checks if the provided fee is enough and returns the effective fee and tx priority.
 // The effective fee should be deducted later, and the priority should be returned in the ABCI response.
-type TxFeeChecker func(ctx context.Context, tx sdk.Tx) (sdk.Coins, int64, error)
+type TxFeeChecker func(ctx context.Context, tx transaction.Tx) (sdk.Coins, int64, error)
 
 // DeductFeeDecorator deducts fees from the fee payer. The fee payer is the fee granter (if specified) or first signer of the tx.
 // If the fee payer does not have the funds to pay for the fees, return an InsufficientFunds error.
@@ -63,7 +63,7 @@ func (dfd *DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 	return next(newCtx, tx, false)
 }
 
-func (dfd *DeductFeeDecorator) innerValidateTx(ctx context.Context, tx sdk.Tx) (priority int64, err error) {
+func (dfd *DeductFeeDecorator) innerValidateTx(ctx context.Context, tx transaction.Tx) (priority int64, err error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return 0, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must implement the FeeTx interface")
@@ -93,7 +93,7 @@ func (dfd *DeductFeeDecorator) innerValidateTx(ctx context.Context, tx sdk.Tx) (
 
 // ValidateTx implements an TxValidator for DeductFeeDecorator
 // Note: This method is applicable only for transactions that implement the sdk.FeeTx interface.
-func (dfd *DeductFeeDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
+func (dfd *DeductFeeDecorator) ValidateTx(ctx context.Context, tx transaction.Tx) error {
 	_, err := dfd.innerValidateTx(ctx, tx)
 	return err
 }

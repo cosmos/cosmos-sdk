@@ -34,6 +34,7 @@ func NewAppModule(
 ) AppModule {
 	return AppModule{
 		sigVerification: sigVerification,
+		feeTxValidator:  feeTxValidator,
 		txValidators:    txValidators,
 	}
 }

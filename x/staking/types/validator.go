@@ -223,13 +223,17 @@ func (d Description) UpdateDescription(d2 Description) (Description, error) {
 		d2.Details = d.Details
 	}
 
+	if d2.Metadata.ProfilePicUri == DoNotModifyDesc {
+		d2.Metadata.ProfilePicUri = d.Metadata.ProfilePicUri
+	}
+
 	return NewDescription(
 		d2.Moniker,
 		d2.Identity,
 		d2.Website,
 		d2.SecurityContact,
 		d2.Details,
-		d.Metadata, // TODO: how should we check for the DoNotModifyDesc
+		d.Metadata,
 	).Validate()
 }
 

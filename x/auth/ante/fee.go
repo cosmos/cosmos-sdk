@@ -111,12 +111,10 @@ func (dfd *DeductFeeDecorator) checkDeductFee(ctx context.Context, feeTx sdk.Fee
 	// if feegranter set, deduct fee from feegranter account.
 	// this works only when feegrant is enabled.
 	if feeGranter != nil {
-		feeGranterAddr := sdk.AccAddress(feeGranter)
-
 		if dfd.feegrantKeeper == nil {
 			return sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
-		} else if !bytes.Equal(feeGranterAddr, feePayer) {
-			err := dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranterAddr, feePayer, fee, feeTx.GetMsgs())
+		} else if !bytes.Equal(feeGranter, feePayer) {
+			err := dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, feeTx.GetMsgs())
 			if err != nil {
 				granterAddr, acErr := dfd.accountKeeper.AddressCodec().BytesToString(feeGranter)
 				if acErr != nil {
@@ -129,7 +127,7 @@ func (dfd *DeductFeeDecorator) checkDeductFee(ctx context.Context, feeTx sdk.Fee
 				return errorsmod.Wrapf(err, "%s does not allow to pay fees for %s", granterAddr, payerAddr)
 			}
 		}
-		deductFeesFrom = feeGranterAddr
+		deductFeesFrom = feeGranter
 	}
 
 	// deduct the fees
@@ -156,7 +154,7 @@ func DeductFees(bankKeeper types.BankKeeper, ctx context.Context, acc []byte, fe
 		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
 
-	if err := bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(acc), types.FeeCollectorName, fees); err != nil {
+	if err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc, types.FeeCollectorName, fees); err != nil {
 		return fmt.Errorf("failed to deduct fees: %w", err)
 	}
 

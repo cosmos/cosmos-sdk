@@ -12,16 +12,16 @@ type EnumType struct {
 	// Its name must be unique between all enum types and object types in the module.
 	// The same enum, however, can be used in multiple object types and fields as long as the
 	// definition is identical each time.
-	Name string
+	Name string `json:"name,omitempty"`
 
 	// Values is a list of distinct, non-empty values that are part of the enum type.
 	// Each value must conform to the NameFormat regular expression.
-	Values []EnumValueDefinition
+	Values []EnumValueDefinition `json:"values"`
 
 	// NumericKind is the numeric kind used to represent the enum values numerically.
 	// If it is left empty, Int32Kind is used by default.
 	// Valid values are Uint8Kind, Int8Kind, Uint16Kind, Int16Kind, and Int32Kind.
-	NumericKind Kind
+	NumericKind Kind `json:"numeric_kind,omitempty"`
 }
 
 // EnumValueDefinition represents a value in an enum type.
@@ -29,11 +29,11 @@ type EnumValueDefinition struct {
 	// Name is the name of the enum value.
 	// It must conform to the NameFormat regular expression.
 	// Its name must be unique between all values in the enum.
-	Name string
+	Name string `json:"name"`
 
 	// Value is the numeric value of the enum.
 	// It must be unique between all values in the enum.
-	Value int32
+	Value int32 `json:"value"`
 }
 
 // TypeName implements the Type interface.

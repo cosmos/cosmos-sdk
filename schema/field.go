@@ -1,20 +1,22 @@
 package schema
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Field represents a field in an object type.
 type Field struct {
 	// Name is the name of the field. It must conform to the NameFormat regular expression.
-	Name string
+	Name string `json:"name"`
 
 	// Kind is the basic type of the field.
-	Kind Kind
+	Kind Kind `json:"kind"`
 
 	// Nullable indicates whether null values are accepted for the field. Key fields CANNOT be nullable.
-	Nullable bool
+	Nullable bool `json:"nullable,omitempty"`
 
 	// ReferencedType is the referenced type name when Kind is EnumKind.
-	ReferencedType string
+	ReferencedType string `json:"referenced_type,omitempty"`
 }
 
 // Validate validates the field.

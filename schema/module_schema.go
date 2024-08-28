@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 )
@@ -111,6 +112,61 @@ func (s ModuleSchema) EnumTypes(f func(EnumType) bool) {
 		}
 		return true
 	})
+}
+
+type moduleSchemaJson struct {
+	ObjectTypes []ObjectType `json:"object_types"`
+	EnumTypes   []EnumType   `json:"enum_types"`
+}
+
+// MarshalJSON implements the json.Marshaler interface for ModuleSchema.
+// It marshals the module schema into a JSON object with the object types and enum types
+// under the keys "object_types" and "enum_types" respectively.
+func (s ModuleSchema) MarshalJSON() ([]byte, error) {
+	asJson := moduleSchemaJson{}
+
+	s.ObjectTypes(func(objType ObjectType) bool {
+		asJson.ObjectTypes = append(asJson.ObjectTypes, objType)
+		return true
+	})
+
+	s.EnumTypes(func(enumType EnumType) bool {
+		asJson.EnumTypes = append(asJson.EnumTypes, enumType)
+		return true
+	})
+
+	return json.Marshal(asJson)
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface for ModuleSchema.
+// See MarshalJSON for the JSON format.
+func (s *ModuleSchema) UnmarshalJSON(data []byte) error {
+	asJson := moduleSchemaJson{}
+
+	err := json.Unmarshal(data, &asJson)
+	if err != nil {
+		return err
+	}
+
+	types := map[string]Type{}
+
+	for _, objType := range asJson.ObjectTypes {
+		types[objType.Name] = objType
+	}
+
+	for _, enumType := range asJson.EnumTypes {
+		types[enumType.Name] = enumType
+	}
+
+	s.types = types
+
+	// validate adds all enum types to the type map
+	err = s.Validate()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 var _ Schema = ModuleSchema{}

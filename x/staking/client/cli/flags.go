@@ -84,9 +84,12 @@ func FlagSetPublicKey() *flag.FlagSet {
 
 func FlagSetMetadata() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
+
 	fs.String(FlagMetadataProfilePicUri, "", "The  validator's profile pic uri")
+
 	return fs
 }
+
 func flagSetDescriptionEdit() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 

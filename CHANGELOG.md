@@ -43,16 +43,32 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Features
 
 * (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
+* (x/staking/types) [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) Create metadata type and add metadata field in validator details proto
+* (x/staking/cli) [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) Add parsing of `metadata-profile-pic-uri` in `create-validator` JSON.
+  * Add cli flag: `metadata-profile-pic-uri` to `edit-validator` cmd.
+* (types) [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) New function `RandURIOfLength` to generate random valid URIs for sims.
 
 ### Improvements
 
 * (client) [#21436](https://github.com/cosmos/cosmos-sdk/pull/21436) Use `address.Codec` from client.Context in `tx.Sign`.
+* (x/staking/types) [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) Add a `Validate` method to the `Description` type that validates the metadata as well as other description details.
+
 
 ### Bug Fixes
 
 * (baseapp) [#21256](https://github.com/cosmos/cosmos-sdk/pull/21256) Halt height will not commit the block indicated, meaning that if halt-height is set to 10, only blocks until 9 (included) will be committed. This is to go back to the original behavior before a change was introduced in v0.50.0.
 
+### Client Breaking
+
+* (x/staking/types) [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) `Description` now has a new field `Metadata`.
+
+
 ### API Breaking Changes
+
+* (types) [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) New struct `Metadata` to store extra validator information.
+  * The signature of `NewDescription` has changed to accept an extra argument of type `Metadata`.
+  * `Description` now has a new field , `Metadata` of type `Metadata`.
+
 
 ### Deprecated
 

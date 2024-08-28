@@ -63,7 +63,7 @@ func (dfd *DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, ne
 	return next(newCtx, tx, false)
 }
 
-func (dfd *DeductFeeDecorator) innerValidateTx(ctx context.Context, tx sdk.Tx) (txPriority int64, err error) {
+func (dfd *DeductFeeDecorator) innerValidateTx(ctx context.Context, tx sdk.Tx) (priority int64, err error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return 0, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must implement the FeeTx interface")
@@ -76,19 +76,19 @@ func (dfd *DeductFeeDecorator) innerValidateTx(ctx context.Context, tx sdk.Tx) (
 		return 0, errorsmod.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide positive gas")
 	}
 
-	txFee := feeTx.GetFee()
+	fee := feeTx.GetFee()
 	if execMode != transaction.ExecModeSimulate {
-		txFee, txPriority, err = dfd.txFeeChecker(ctx, tx)
+		fee, priority, err = dfd.txFeeChecker(ctx, tx)
 		if err != nil {
 			return 0, err
 		}
 	}
 
-	if err := dfd.checkDeductFee(ctx, feeTx, txFee); err != nil {
+	if err := dfd.checkDeductFee(ctx, feeTx, fee); err != nil {
 		return 0, err
 	}
 
-	return txPriority, nil
+	return priority, nil
 }
 
 // ValidateTx implements an TxValidator for DeductFeeDecorator
@@ -134,8 +134,7 @@ func (dfd *DeductFeeDecorator) checkDeductFee(ctx context.Context, feeTx sdk.Fee
 
 	// deduct the fees
 	if !fee.IsZero() {
-		err := DeductFees(dfd.bankKeeper, ctx, deductFeesFrom, fee)
-		if err != nil {
+		if err := DeductFees(dfd.bankKeeper, ctx, deductFeesFrom, fee); err != nil {
 			return err
 		}
 	}
@@ -157,8 +156,7 @@ func DeductFees(bankKeeper types.BankKeeper, ctx context.Context, acc []byte, fe
 		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
 
-	err := bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(acc), types.FeeCollectorName, fees)
-	if err != nil {
+	if err := bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(acc), types.FeeCollectorName, fees); err != nil {
 		return fmt.Errorf("failed to deduct fees: %w", err)
 	}
 

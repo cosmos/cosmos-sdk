@@ -55,18 +55,17 @@ type ModuleInputs struct {
 	ProtoFileResolver     txsigning.ProtoFileResolver
 	Environment           appmodule.Environment
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers / Tx Validators
-	BankKeeper               authtypes.BankKeeper               `optional:"true"`
-	MetadataBankKeeper       BankKeeper                         `optional:"true"`
-	AccountKeeper            ante.AccountKeeper                 `optional:"true"`
-	FeeGrantKeeper           ante.FeegrantKeeper                `optional:"true"`
-	AccountAbstractionKeeper ante.AccountAbstractionKeeper      `optional:"true"`
-	CustomSignModeHandlers   func() []txsigning.SignModeHandler `optional:"true"`
-	CustomGetSigners         []txsigning.CustomGetSigner        `optional:"true"`
-	UnorderedTxManager       *unorderedtx.Manager               `optional:"true"`
-	TxFeeChecker             ante.TxFeeChecker                  `optional:"true"`
-	Viper                    *viper.Viper                       `optional:"true"` // server v2
-
-	ExtraTxValidators []appmodule.TxValidator[transaction.Tx] `optional:"true"`
+	BankKeeper               authtypes.BankKeeper                    `optional:"true"`
+	MetadataBankKeeper       BankKeeper                              `optional:"true"`
+	AccountKeeper            ante.AccountKeeper                      `optional:"true"`
+	FeeGrantKeeper           ante.FeegrantKeeper                     `optional:"true"`
+	AccountAbstractionKeeper ante.AccountAbstractionKeeper           `optional:"true"`
+	CustomSignModeHandlers   func() []txsigning.SignModeHandler      `optional:"true"`
+	CustomGetSigners         []txsigning.CustomGetSigner             `optional:"true"`
+	ExtraTxValidators        []appmodule.TxValidator[transaction.Tx] `optional:"true"`
+	UnorderedTxManager       *unorderedtx.Manager                    `optional:"true"`
+	TxFeeChecker             ante.TxFeeChecker                       `optional:"true"`
+	Viper                    *viper.Viper                            `optional:"true"` // server v2
 }
 
 type ModuleOutputs struct {

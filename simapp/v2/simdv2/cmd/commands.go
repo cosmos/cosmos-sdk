@@ -70,26 +70,12 @@ func initRootCmd[T transaction.Tx](
 		offchain.OffChain(),
 	)
 
-	// Allow the chain developer to overwrite the server default
-	// app toml config.
-	serverCfg := serverv2.DefaultServerConfig()
-	// The server's default minimum gas price is set to "0stake" inside
-	// app.toml. However, the chain developer can set a default app.toml value for their
-	// validators here. Please update value based on chain denom.
-	//
-	// In summary:
-	// - if you set serverCfg.MinGasPrices value, validators CAN tweak their
-	//   own app.toml to override, or use this default value.
-	//
-	// In simapp, we set the min gas prices to 0.
-	serverCfg.MinGasPrices = "0stake"
-
 	// wire server commands
 	if err = serverv2.AddCommands(
 		rootCmd,
 		newApp,
 		logger,
-		serverCfg,
+		serverv2.DefaultServerConfig(),
 		cometbft.New(&genericTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
 		grpc.New[T](),
 		store.New[T](newApp),

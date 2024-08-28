@@ -2,7 +2,6 @@ package config
 
 import (
 	"bytes"
-	pruningtypes "cosmossdk.io/store/pruning/types"
 	"os"
 	"path/filepath"
 	"testing"
@@ -10,6 +9,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	pruningtypes "cosmossdk.io/store/pruning/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

@@ -4,8 +4,8 @@ import (
 	storetypes "cosmossdk.io/store/types"
 )
 
-// Wrapper Error for store/v1 ErrorOutOfGas, ErrorNegativeGasConsumed and ErrorGasOverflow so that
-// modules don't have to import storev1 directly
+// Wrapper errors for store/v1 ErrorOutOfGas, ErrorNegativeGasConsumed and ErrorGasOverflow so that
+// modules don't have to import storev1 directly.
 
 // ErrorNegativeGasConsumed defines an error thrown when the amount of gas refunded results in a
 // negative gas consumed amount.

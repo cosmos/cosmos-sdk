@@ -14,8 +14,7 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
@@ -52,23 +51,24 @@ type ModuleInputs struct {
 	ProtoFileResolver     txsigning.ProtoFileResolver
 	Environment           appmodule.Environment
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
-	BankKeeper               authtypes.BankKeeper               `optional:"true"`
-	MetadataBankKeeper       BankKeeper                         `optional:"true"`
-	AccountKeeper            ante.AccountKeeper                 `optional:"true"`
-	FeeGrantKeeper           ante.FeegrantKeeper                `optional:"true"`
-	AccountAbstractionKeeper ante.AccountAbstractionKeeper      `optional:"true"`
-	CustomSignModeHandlers   func() []txsigning.SignModeHandler `optional:"true"`
-	CustomGetSigners         []txsigning.CustomGetSigner        `optional:"true"`
-	UnorderedTxManager       *unorderedtx.Manager               `optional:"true"`
+	BankKeeper               authtypes.BankKeeper                    `optional:"true"`
+	MetadataBankKeeper       BankKeeper                              `optional:"true"`
+	AccountKeeper            ante.AccountKeeper                      `optional:"true"`
+	FeeGrantKeeper           ante.FeegrantKeeper                     `optional:"true"`
+	AccountAbstractionKeeper ante.AccountAbstractionKeeper           `optional:"true"`
+	CustomSignModeHandlers   func() []txsigning.SignModeHandler      `optional:"true"`
+	CustomGetSigners         []txsigning.CustomGetSigner             `optional:"true"`
+	UnorderedTxManager       *unorderedtx.Manager                    `optional:"true"`
+	ExtraTxValidators        []appmodule.TxValidator[transaction.Tx] `optional:"true"`
 }
 
 type ModuleOutputs struct {
 	depinject.Out
 
+	Module          appmodule.AppModule   // This is only useful for chains using server/v2. It setup tx validators that don't belong to other modules.
+	BaseAppOption   runtime.BaseAppOption // This is only useful for chains using baseapp. Server/v2 chains use TxValidator.
 	TxConfig        client.TxConfig
 	TxConfigOptions tx.ConfigOptions
-	BaseAppOption   runtime.BaseAppOption // This is only useful for chains using baseapp. Server/v2 chains use TxValidator.
-	Module          appmodule.AppModule
 }
 
 func ProvideProtoRegistry() txsigning.ProtoFileResolver {
@@ -146,22 +146,23 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		app.SetTxEncoder(txConfig.TxEncoder())
 	}
 
-	validators := []appmodulev2.TxValidator[transaction.Tx]{
-		ante.NewSigVerificationDecorator(
-			in.AccountKeeper,
-			txConfig.SignModeHandler(),
-			ante.DefaultSigVerificationGasConsumer,
-			in.AccountAbstractionKeeper,
-		),
-	}
+	svd := ante.NewSigVerificationDecorator(
+		in.AccountKeeper,
+		txConfig.SignModeHandler(),
+		ante.DefaultSigVerificationGasConsumer,
+		in.AccountAbstractionKeeper,
+	)
 
 	if in.UnorderedTxManager != nil {
-		validators = append(validators, ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, in.UnorderedTxManager, in.Environment, ante.DefaultSha256Cost))
+		in.ExtraTxValidators = append(in.ExtraTxValidators, ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, in.UnorderedTxManager, in.Environment, ante.DefaultSha256Cost))
 	}
 
-	appModule := AppModule{validators}
-
-	return ModuleOutputs{TxConfig: txConfig, TxConfigOptions: txConfigOptions, BaseAppOption: baseAppOption, Module: appModule}
+	return ModuleOutputs{
+		Module:          NewAppModule(svd, in.ExtraTxValidators...),
+		TxConfig:        txConfig,
+		TxConfigOptions: txConfigOptions,
+		BaseAppOption:   baseAppOption,
+	}
 }
 
 func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler, error) {
@@ -242,28 +243,3 @@ func metadataExists(err error) error {
 
 	return err
 }
-
-var (
-	_ appmodulev2.AppModule                      = AppModule{}
-	_ appmodulev2.HasTxValidator[transaction.Tx] = AppModule{}
-)
-
-type AppModule struct {
-	validators []appmodulev2.TxValidator[transaction.Tx]
-}
-
-// TxValidator implements appmodule.HasTxValidator.
-func (a AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
-	for _, validator := range a.validators {
-		if err := validator.ValidateTx(ctx, tx); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// IsAppModule implements appmodule.AppModule.
-func (a AppModule) IsAppModule() {}
-
-// IsOnePerModuleType implements appmodule.AppModule.
-func (a AppModule) IsOnePerModuleType() {}

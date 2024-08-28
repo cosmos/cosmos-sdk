@@ -65,11 +65,3 @@ func getConfigTomlFromViper(v *viper.Viper) *cmtcfg.Config {
 	return conf.SetRoot(rootDir)
 }
 
-func getAppTomlFromViper(v *viper.Viper) *AppTomlConfig {
-	appTomlConfig := DefaultAppTomlConfig()
-	if err := serverv2.UnmarshalSubConfig(v, ServerName, &appTomlConfig); err != nil {
-		return DefaultAppTomlConfig()
-	}
-
-	return appTomlConfig
-}

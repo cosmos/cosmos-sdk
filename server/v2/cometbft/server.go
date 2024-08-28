@@ -58,9 +58,15 @@ func New[T transaction.Tx](txCodec transaction.Codec[T], serverOptions ServerOpt
 
 func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
 	// get configs (app.toml + config.toml) from viper
+	appTomlConfig := s.Config().(*AppTomlConfig)
+	if v != nil {
+		if err := serverv2.UnmarshalSubConfig(v, s.Name(), &appTomlConfig); err != nil {
+			return fmt.Errorf("failed to unmarshal config: %w", err)
+		}
+	}
 	s.config = Config{
 		ConfigTomlConfig: getConfigTomlFromViper(v),
-		AppTomlConfig:    getAppTomlFromViper(v),
+		AppTomlConfig:    appTomlConfig,
 	}
 
 	chainID := v.GetString(FlagChainID)
@@ -227,18 +233,19 @@ func (s *CometBFTServer[T]) StartCmdFlags() *pflag.FlagSet {
 func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
 	return serverv2.CLIConfig{
 		Commands: []*cobra.Command{
-			s.StatusCommand(),
-			s.ShowNodeIDCmd(),
-			s.ShowValidatorCmd(),
-			s.ShowAddressCmd(),
-			s.VersionCmd(),
+			StatusCommand(),
+			ShowNodeIDCmd(),
+			ShowValidatorCmd(),
+			ShowAddressCmd(),
+			VersionCmd(),
+			s.BootstrapStateCmd(),
 			cmtcmd.ResetAllCmd,
 			cmtcmd.ResetStateCmd,
 		},
 		Queries: []*cobra.Command{
-			s.QueryBlockCmd(),
-			s.QueryBlocksCmd(),
-			s.QueryBlockResultsCmd(),
+			QueryBlockCmd(),
+			QueryBlocksCmd(),
+			QueryBlockResultsCmd(),
 		},
 	}
 }

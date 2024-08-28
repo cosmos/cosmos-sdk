@@ -12,7 +12,7 @@ import (
 
 func TestModuleSchemaJSON(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
-		modSchema := ModuleSchemaGen.Draw(t, "moduleSchema")
+		modSchema := ModuleSchemaGen().Draw(t, "moduleSchema")
 		bz, err := json.Marshal(modSchema)
 		require.NoError(t, err)
 		var modSchema2 schema.ModuleSchema

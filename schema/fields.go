@@ -4,13 +4,13 @@ import "fmt"
 
 // ValidateObjectKey validates that the value conforms to the set of fields as a Key in an ObjectUpdate.
 // See ObjectUpdate.Key for documentation on the requirements of such keys.
-func ValidateObjectKey(keyFields []Field, value interface{}, schema Schema) error {
+func ValidateObjectKey(keyFields []Field, value interface{}, schema TypeSet) error {
 	return validateFieldsValue(keyFields, value, schema)
 }
 
 // ValidateObjectValue validates that the value conforms to the set of fields as a Value in an ObjectUpdate.
 // See ObjectUpdate.Value for documentation on the requirements of such values.
-func ValidateObjectValue(valueFields []Field, value interface{}, schema Schema) error {
+func ValidateObjectValue(valueFields []Field, value interface{}, schema TypeSet) error {
 	valueUpdates, ok := value.(ValueUpdates)
 	if !ok {
 		return validateFieldsValue(valueFields, value, schema)
@@ -45,7 +45,7 @@ func ValidateObjectValue(valueFields []Field, value interface{}, schema Schema) 
 	return nil
 }
 
-func validateFieldsValue(fields []Field, value interface{}, schema Schema) error {
+func validateFieldsValue(fields []Field, value interface{}, schema TypeSet) error {
 	if len(fields) == 0 {
 		return nil
 	}

@@ -44,7 +44,7 @@ func (e EnumType) TypeName() string {
 func (EnumType) isType() {}
 
 // Validate validates the enum definition.
-func (e EnumType) Validate(Schema) error {
+func (e EnumType) Validate(TypeSet) error {
 	if !ValidateName(e.Name) {
 		return fmt.Errorf("invalid enum definition name %q", e.Name)
 	}

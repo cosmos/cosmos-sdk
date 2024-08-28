@@ -37,7 +37,7 @@ func (o ObjectType) TypeName() string {
 func (ObjectType) isType() {}
 
 // Validate validates the object type.
-func (o ObjectType) Validate(schema Schema) error {
+func (o ObjectType) Validate(schema TypeSet) error {
 	if !ValidateName(o.Name) {
 		return fmt.Errorf("invalid object type name %q", o.Name)
 	}
@@ -82,7 +82,7 @@ func (o ObjectType) Validate(schema Schema) error {
 }
 
 // ValidateObjectUpdate validates that the update conforms to the object type.
-func (o ObjectType) ValidateObjectUpdate(update ObjectUpdate, schema Schema) error {
+func (o ObjectType) ValidateObjectUpdate(update ObjectUpdate, schema TypeSet) error {
 	if o.Name != update.TypeName {
 		return fmt.Errorf("object type name %q does not match update type name %q", o.Name, update.TypeName)
 	}

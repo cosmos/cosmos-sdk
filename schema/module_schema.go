@@ -113,4 +113,6 @@ func (s ModuleSchema) EnumTypes(f func(EnumType) bool) {
 	})
 }
 
-var _ Schema = ModuleSchema{}
+func (ModuleSchema) isTypeSet() {}
+
+var _ TypeSet = ModuleSchema{}

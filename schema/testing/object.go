@@ -8,7 +8,7 @@ import (
 )
 
 // ObjectTypeGen generates random ObjectType's based on the validity criteria of object types.
-func ObjectTypeGen(sch schema.Schema) *rapid.Generator[schema.ObjectType] {
+func ObjectTypeGen(sch schema.TypeSet) *rapid.Generator[schema.ObjectType] {
 	keyFieldsGen := rapid.SliceOfNDistinct(KeyFieldGen(sch), 1, 6, func(f schema.Field) string {
 		return f.Name
 	})
@@ -56,13 +56,13 @@ func hasDuplicateFieldNames(typeNames map[string]bool, fields []schema.Field) bo
 }
 
 // ObjectInsertGen generates object updates that are valid for insertion.
-func ObjectInsertGen(objectType schema.ObjectType, sch schema.Schema) *rapid.Generator[schema.ObjectUpdate] {
+func ObjectInsertGen(objectType schema.ObjectType, sch schema.TypeSet) *rapid.Generator[schema.ObjectUpdate] {
 	return ObjectUpdateGen(objectType, nil, sch)
 }
 
 // ObjectUpdateGen generates object updates that are valid for updates using the provided state map as a source
 // of valid existing keys.
-func ObjectUpdateGen(objectType schema.ObjectType, state *btree.Map[string, schema.ObjectUpdate], sch schema.Schema) *rapid.Generator[schema.ObjectUpdate] {
+func ObjectUpdateGen(objectType schema.ObjectType, state *btree.Map[string, schema.ObjectUpdate], sch schema.TypeSet) *rapid.Generator[schema.ObjectUpdate] {
 	keyGen := ObjectKeyGen(objectType.KeyFields, sch).Filter(func(key interface{}) bool {
 		// filter out keys that exist in the state
 		if state != nil {

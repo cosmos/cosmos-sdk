@@ -19,7 +19,7 @@ var (
 )
 
 // FieldGen generates random Field's based on the validity criteria of fields.
-func FieldGen(sch schema.Schema) *rapid.Generator[schema.Field] {
+func FieldGen(sch schema.TypeSet) *rapid.Generator[schema.Field] {
 	enumTypes := slices.DeleteFunc(slices.Collect(sch.Types), func(t schema.Type) bool {
 		_, ok := t.(schema.EnumType)
 		return !ok
@@ -50,7 +50,7 @@ func FieldGen(sch schema.Schema) *rapid.Generator[schema.Field] {
 }
 
 // KeyFieldGen generates random key fields based on the validity criteria of key fields.
-func KeyFieldGen(sch schema.Schema) *rapid.Generator[schema.Field] {
+func KeyFieldGen(sch schema.TypeSet) *rapid.Generator[schema.Field] {
 	return FieldGen(sch).Filter(func(f schema.Field) bool {
 		return !f.Nullable && f.Kind.ValidKeyKind()
 	})
@@ -58,7 +58,7 @@ func KeyFieldGen(sch schema.Schema) *rapid.Generator[schema.Field] {
 
 // FieldValueGen generates random valid values for the field, aiming to exercise the full range of possible
 // values for the field.
-func FieldValueGen(field schema.Field, sch schema.Schema) *rapid.Generator[any] {
+func FieldValueGen(field schema.Field, sch schema.TypeSet) *rapid.Generator[any] {
 	gen := baseFieldValue(field, sch)
 
 	if field.Nullable {
@@ -68,7 +68,7 @@ func FieldValueGen(field schema.Field, sch schema.Schema) *rapid.Generator[any] 
 	return gen
 }
 
-func baseFieldValue(field schema.Field, sch schema.Schema) *rapid.Generator[any] {
+func baseFieldValue(field schema.Field, sch schema.TypeSet) *rapid.Generator[any] {
 	switch field.Kind {
 	case schema.StringKind:
 		return rapid.StringOf(rapid.Rune().Filter(func(r rune) bool {
@@ -128,7 +128,7 @@ func baseFieldValue(field schema.Field, sch schema.Schema) *rapid.Generator[any]
 }
 
 // ObjectKeyGen generates a value that is valid for the provided object key fields.
-func ObjectKeyGen(keyFields []schema.Field, sch schema.Schema) *rapid.Generator[any] {
+func ObjectKeyGen(keyFields []schema.Field, sch schema.TypeSet) *rapid.Generator[any] {
 	if len(keyFields) == 0 {
 		return rapid.Just[any](nil)
 	}
@@ -156,7 +156,7 @@ func ObjectKeyGen(keyFields []schema.Field, sch schema.Schema) *rapid.Generator[
 // are valid for insertion (in the case forUpdate is false) or for update (in the case forUpdate is true).
 // Values that are for update may skip some fields in a ValueUpdates instance whereas values for insertion
 // will always contain all values.
-func ObjectValueGen(valueFields []schema.Field, forUpdate bool, sch schema.Schema) *rapid.Generator[any] {
+func ObjectValueGen(valueFields []schema.Field, forUpdate bool, sch schema.TypeSet) *rapid.Generator[any] {
 	if len(valueFields) == 0 {
 		// if we have no value fields, always return nil
 		return rapid.Just[any](nil)

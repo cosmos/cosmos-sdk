@@ -14,14 +14,14 @@ import (
 type ObjectCollection struct {
 	options           Options
 	objectType        schema.ObjectType
-	sch               schema.Schema
+	sch               schema.TypeSet
 	objects           *btree.Map[string, schema.ObjectUpdate]
 	updateGen         *rapid.Generator[schema.ObjectUpdate]
 	valueFieldIndices map[string]int
 }
 
 // NewObjectCollection creates a new ObjectCollection for the given object type.
-func NewObjectCollection(objectType schema.ObjectType, options Options, sch schema.Schema) *ObjectCollection {
+func NewObjectCollection(objectType schema.ObjectType, options Options, sch schema.TypeSet) *ObjectCollection {
 	objects := &btree.Map[string, schema.ObjectUpdate]{}
 	updateGen := schematesting.ObjectUpdateGen(objectType, objects, sch)
 	valueFieldIndices := make(map[string]int, len(objectType.ValueFields))

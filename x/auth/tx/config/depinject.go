@@ -153,12 +153,18 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountAbstractionKeeper,
 	)
 
+	var utd *ante.UnorderedTxDecorator
 	if in.UnorderedTxManager != nil {
-		in.ExtraTxValidators = append(in.ExtraTxValidators, ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, in.UnorderedTxManager, in.Environment, ante.DefaultSha256Cost))
+		utd = ante.NewUnorderedTxDecorator(
+			unorderedtx.DefaultMaxTimeoutDuration, 
+			in.UnorderedTxManager, 
+			in.Environment, 
+			ante.DefaultSha256Cost,
+		)
 	}
 
 	return ModuleOutputs{
-		Module:          NewAppModule(svd, in.ExtraTxValidators...),
+		Module:          NewAppModule(svd, utd, in.ExtraTxValidators...),
 		TxConfig:        txConfig,
 		TxConfigOptions: txConfigOptions,
 		BaseAppOption:   baseAppOption,

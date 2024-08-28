@@ -2,10 +2,12 @@ package tx
 
 import (
 	"context"
+	"fmt"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/auth/ante"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -18,7 +20,8 @@ var (
 // Additionally, it registers tx validators that do not really have a place in other modules.
 // This module is only useful for chains using server/v2. Ante/Post handlers are setup via baseapp options in depinject.
 type AppModule struct {
-	sigVerification ante.SigVerificationDecorator
+	sigVerification    ante.SigVerificationDecorator
+	unorderTxValidator *ante.UnorderedTxDecorator
 	// txValidators contains tx validator that can be injected into the module via depinject.
 	// tx validators should be module based, but it can happen that you do not want to create a new module
 	// and simply depinject-it.
@@ -28,11 +31,13 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object.
 func NewAppModule(
 	sigVerification ante.SigVerificationDecorator,
+	unorderedTxValidator *ante.UnorderedTxDecorator,
 	txValidators ...appmodulev2.TxValidator[transaction.Tx],
 ) AppModule {
 	return AppModule{
-		sigVerification: sigVerification,
-		txValidators:    txValidators,
+		sigVerification:    sigVerification,
+		unorderTxValidator: unorderedTxValidator,
+		txValidators:       txValidators,
 	}
 }
 
@@ -46,6 +51,17 @@ func (a AppModule) IsOnePerModuleType() {}
 func (a AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 	for _, txValidator := range a.txValidators {
 		if err := txValidator.ValidateTx(ctx, tx); err != nil {
+			return err
+		}
+	}
+
+	sdkTx, ok := tx.(sdk.Tx)
+	if !ok {
+		return fmt.Errorf("invalid tx type %T, expected sdk.Tx", tx)
+	}
+
+	if a.unorderTxValidator != nil {
+		if err := a.unorderTxValidator.ValidateTx(ctx, sdkTx); err != nil {
 			return err
 		}
 	}

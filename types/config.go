@@ -10,8 +10,16 @@ import (
 // DefaultKeyringServiceName defines a default service name for the keyring.
 const DefaultKeyringServiceName = "cosmos"
 
+func KeyringServiceName() string {
+	if len(version.Name) == 0 {
+		return DefaultKeyringServiceName
+	}
+	return version.Name
+}
+
 // Config is the structure that holds the SDK configuration parameters.
-// This could be used to initialize certain configuration parameters for the SDK.
+// Deprecated: The global SDK config is deprecated and users should prefer using an address codec.
+// Users must still set the global config until the Stringer interface on `AccAddress`, `ValAddress`, and `ConsAddress` is removed.
 type Config struct {
 	bech32AddressPrefix map[string]string
 	mtx                 sync.RWMutex
@@ -139,11 +147,4 @@ func (config *Config) GetBech32ValidatorPubPrefix() string {
 // GetBech32ConsensusPubPrefix returns the Bech32 prefix for consensus node public key
 func (config *Config) GetBech32ConsensusPubPrefix() string {
 	return config.bech32AddressPrefix["consensus_pub"]
-}
-
-func KeyringServiceName() string {
-	if len(version.Name) == 0 {
-		return DefaultKeyringServiceName
-	}
-	return version.Name
 }

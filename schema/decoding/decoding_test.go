@@ -297,12 +297,14 @@ func (t testStore) GetUInt64(key []byte) uint64 {
 
 func (t testStore) Set(key, value []byte) {
 	if t.listener.OnKVPair != nil {
-		err := t.listener.OnKVPair(appdata.KVPairData{Updates: []appdata.ModuleKVPairUpdate{
+		err := t.listener.OnKVPair(appdata.KVPairData{Updates: []appdata.ActorKVPairUpdate{
 			{
-				ModuleName: t.modName,
-				Update: schema.KVPairUpdate{
-					Key:   key,
-					Value: value,
+				Actor: []byte(t.modName),
+				StateChanges: []schema.KVPairUpdate{
+					{
+						Key:   key,
+						Value: value,
+					},
 				},
 			},
 		}})
@@ -369,24 +371,22 @@ func (e exampleBankModule) subBalance(acct, denom string, amount uint64) error {
 
 func init() {
 	var err error
-	exampleBankSchema, err = schema.NewModuleSchema([]schema.ObjectType{
-		{
-			Name: "balances",
-			KeyFields: []schema.Field{
-				{
-					Name: "account",
-					Kind: schema.StringKind,
-				},
-				{
-					Name: "denom",
-					Kind: schema.StringKind,
-				},
+	exampleBankSchema, err = schema.NewModuleSchema(schema.ObjectType{
+		Name: "balances",
+		KeyFields: []schema.Field{
+			{
+				Name: "account",
+				Kind: schema.StringKind,
 			},
-			ValueFields: []schema.Field{
-				{
-					Name: "amount",
-					Kind: schema.Uint64Kind,
-				},
+			{
+				Name: "denom",
+				Kind: schema.StringKind,
+			},
+		},
+		ValueFields: []schema.Field{
+			{
+				Name: "amount",
+				Kind: schema.Uint64Kind,
 			},
 		},
 	})
@@ -435,16 +435,12 @@ type oneValueModule struct {
 
 func init() {
 	var err error
-	oneValueModSchema, err = schema.NewModuleSchema(
-		[]schema.ObjectType{
-			{
-				Name: "item",
-				ValueFields: []schema.Field{
-					{Name: "value", Kind: schema.StringKind},
-				},
-			},
+	oneValueModSchema, err = schema.NewModuleSchema(schema.ObjectType{
+		Name: "item",
+		ValueFields: []schema.Field{
+			{Name: "value", Kind: schema.StringKind},
 		},
-	)
+	})
 	if err != nil {
 		panic(err)
 	}

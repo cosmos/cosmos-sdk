@@ -37,5 +37,19 @@ type Listener struct {
 	// indexers should commit their data when this is called and return an error if
 	// they are unable to commit. Data sources MUST call Commit when data is committed,
 	// otherwise it should be assumed that indexers have not persisted their state.
-	Commit func(CommitData) error
+	// Commit is designed to support async processing so that implementations may return
+	// a completion callback to wait for commit to complete. Callers should first check
+	// if err is nil and then if it is, check if completionCallback is nil and if not
+	// call it and check for an error. Commit should be designed to be non-blocking if
+	// possible, but calling completionCallback should be blocking.
+	// When listener processing is pushed into background go routines using AsyncListener
+	// or AsyncListenerMux, the Commit completion callback will synchronize the processing of
+	// all listeners. Producers that do not want to block on Commit in a given block
+	// can delay calling the completion callback until the start of the next block to
+	// give listeners time to complete their processing.
+	Commit func(CommitData) (completionCallback func() error, err error)
+
+	// onBatch can be used internally to efficiently forward packet batches to
+	// async listeners.
+	onBatch func(PacketBatch) error
 }

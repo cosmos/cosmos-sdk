@@ -44,7 +44,7 @@ func (s *GenesisTestSuite) SetupTest() {
 	s.cdc = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	ac := addresscodec.NewBech32Codec("cosmos")
 
-	authority, err := ac.BytesToString(authtypes.NewModuleAddress("gov"))
+	authority, err := ac.BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
 	s.Require().NoError(err)
 
 	bz, err := ac.StringToBytes(authority)

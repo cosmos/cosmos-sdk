@@ -139,9 +139,9 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 			case SCTypeIavl:
 				return iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, storeOpts.IavlConfig), nil
 			case SCTypeIavlV2:
-				return nil, fmt.Errorf("iavl v2 not supported")
+				return nil, errors.New("iavl v2 not supported")
 			default:
-				return nil, fmt.Errorf("unsupported commitment store type")
+				return nil, errors.New("unsupported commitment store type")
 			}
 		}
 	}

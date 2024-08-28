@@ -13,7 +13,10 @@ require (
 	github.com/cosmos/gogoproto v1.7.0
 )
 
-require github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+require (
+	cosmossdk.io/schema v0.1.1 // indirect
+	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+)
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect

@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -131,13 +130,10 @@ func NewEditValidatorCmd() *cobra.Command {
 			website, _ := cmd.Flags().GetString(FlagWebsite)
 			security, _ := cmd.Flags().GetString(FlagSecurityContact)
 			details, _ := cmd.Flags().GetString(FlagDetails)
-			metadataString, _ := cmd.Flags().GetString(FlagMetadata)
+			profilePicUri, _ := cmd.Flags().GetString(FlagMetadataProfilePicUri)
 
-			var metadata types.Metadata
-			if metadataString != "" {
-				if err := json.Unmarshal([]byte(metadataString), &metadata); err != nil {
-					return err
-				}
+			metadata := types.Metadata{
+				ProfilePicUri: profilePicUri,
 			}
 
 			description := types.NewDescription(moniker, identity, website, security, details, metadata)
@@ -241,6 +237,7 @@ func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc
 	fsCreateValidator.AddFlagSet(FlagSetMinSelfDelegation())
 	fsCreateValidator.AddFlagSet(FlagSetAmount())
 	fsCreateValidator.AddFlagSet(FlagSetPublicKey())
+	fsCreateValidator.AddFlagSet(FlagSetMetadata())
 
 	defaultsDesc = fmt.Sprintf(`
 	delegation amount:           %s
@@ -315,15 +312,12 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 		return c, err
 	}
 
-	metadataString, err := flagSet.GetString(FlagMetadata)
+	profilePicUri, err := flagSet.GetString(FlagMetadataProfilePicUri)
 	if err != nil {
 		return c, err
 	}
-	var metadata types.Metadata
-	if metadataString != "" {
-		if err := json.Unmarshal([]byte(metadataString), &metadata); err != nil {
-			return c, err
-		}
+	metadata := types.Metadata{
+		ProfilePicUri: profilePicUri,
 	}
 
 	c.Amount, err = flagSet.GetString(FlagAmount)

@@ -15,13 +15,13 @@ const (
 	FlagSharesAmount        = "shares-amount"
 	FlagSharesFraction      = "shares-fraction"
 
-	FlagMoniker         = "moniker"
-	FlagEditMoniker     = "new-moniker"
-	FlagIdentity        = "identity"
-	FlagWebsite         = "website"
-	FlagSecurityContact = "security-contact"
-	FlagDetails         = "details"
-	FlagMetadata        = "metadata"
+	FlagMoniker               = "moniker"
+	FlagEditMoniker           = "new-moniker"
+	FlagIdentity              = "identity"
+	FlagWebsite               = "website"
+	FlagSecurityContact       = "security-contact"
+	FlagDetails               = "details"
+	FlagMetadataProfilePicUri = "metadata-profile-pic-uri"
 
 	FlagCommissionRate          = "commission-rate"
 	FlagCommissionMaxRate       = "commission-max-rate"
@@ -82,6 +82,11 @@ func FlagSetPublicKey() *flag.FlagSet {
 	return fs
 }
 
+func FlagSetMetadata() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+	fs.String(FlagMetadataProfilePicUri, "", "The  validator's profile pic uri")
+	return fs
+}
 func flagSetDescriptionEdit() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 

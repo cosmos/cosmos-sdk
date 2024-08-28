@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -267,6 +268,10 @@ func TestSign(t *testing.T) {
 	txbSimple, err := txfNoKeybase.BuildUnsignedTx(msg2)
 	requireT.NoError(err)
 
+	clientCtx := client.Context{}.
+		WithAddressCodec(addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())).
+		WithCmdContext(context.TODO())
+
 	testCases := []struct {
 		name         string
 		txf          Factory
@@ -356,7 +361,7 @@ func TestSign(t *testing.T) {
 	var prevSigs []signingtypes.SignatureV2
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err = Sign(context.TODO(), tc.txf, tc.from, tc.txb, tc.overwrite)
+			err = Sign(clientCtx, tc.txf, tc.from, tc.txb, tc.overwrite)
 			if len(tc.expectedPKs) == 0 {
 				requireT.Error(err)
 			} else {
@@ -413,7 +418,11 @@ func TestPreprocessHook(t *testing.T) {
 	txb, err := txfDirect.BuildUnsignedTx(msg1, msg2)
 	requireT.NoError(err)
 
-	err = Sign(context.TODO(), txfDirect, from, txb, false)
+	clientCtx := client.Context{}.
+		WithAddressCodec(addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())).
+		WithCmdContext(context.TODO())
+
+	err = Sign(clientCtx, txfDirect, from, txb, false)
 	requireT.NoError(err)
 
 	// Run preprocessing

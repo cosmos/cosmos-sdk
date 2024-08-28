@@ -44,6 +44,4 @@ func (emptyTypeSet) LookupType(string) (Type, bool) {
 // Types does nothing because there are no types in an EmptyTypeSet.
 func (emptyTypeSet) Types(func(Type) bool) {}
 
-func (emptyTypeSet) isTypeSet() {
-
-}
+func (emptyTypeSet) isTypeSet() {}

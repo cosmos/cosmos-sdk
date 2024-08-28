@@ -5,7 +5,6 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
 	consensusv1 "cosmossdk.io/x/consensus/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -72,7 +71,7 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, 
 	defer func() {
 		if r := recover(); r != nil {
 			switch rType := r.(type) {
-			case storetypes.ErrorOutOfGas:
+			case sdk.ErrorOutOfGas:
 				log := fmt.Sprintf(
 					"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
 					rType.Descriptor, gasTx.GetGas(), newCtx.GasMeter().GasConsumed())

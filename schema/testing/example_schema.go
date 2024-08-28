@@ -10,8 +10,8 @@ import (
 // that can be used in reproducible unit testing and property based testing.
 var ExampleAppSchema = map[string]schema.ModuleSchema{
 	"all_kinds": mkAllKindsModule(),
-	"test_cases": MustNewModuleSchema([]schema.ObjectType{
-		{
+	"test_cases": schema.MustNewModuleSchema(
+		schema.ObjectType{
 			Name:      "Singleton",
 			KeyFields: []schema.Field{},
 			ValueFields: []schema.Field{
@@ -25,7 +25,7 @@ var ExampleAppSchema = map[string]schema.ModuleSchema{
 				},
 			},
 		},
-		{
+		schema.ObjectType{
 			Name: "Simple",
 			KeyFields: []schema.Field{
 				{
@@ -44,7 +44,7 @@ var ExampleAppSchema = map[string]schema.ModuleSchema{
 				},
 			},
 		},
-		{
+		schema.ObjectType{
 			Name: "TwoKeys",
 			KeyFields: []schema.Field{
 				{
@@ -57,7 +57,7 @@ var ExampleAppSchema = map[string]schema.ModuleSchema{
 				},
 			},
 		},
-		{
+		schema.ObjectType{
 			Name: "ThreeKeys",
 			KeyFields: []schema.Field{
 				{
@@ -80,7 +80,7 @@ var ExampleAppSchema = map[string]schema.ModuleSchema{
 				},
 			},
 		},
-		{
+		schema.ObjectType{
 			Name: "ManyValues",
 			KeyFields: []schema.Field{
 				{
@@ -107,7 +107,7 @@ var ExampleAppSchema = map[string]schema.ModuleSchema{
 				},
 			},
 		},
-		{
+		schema.ObjectType{
 			Name: "RetainDeletions",
 			KeyFields: []schema.Field{
 				{
@@ -127,18 +127,18 @@ var ExampleAppSchema = map[string]schema.ModuleSchema{
 			},
 			RetainDeletions: true,
 		},
-	}),
+	),
 }
 
 func mkAllKindsModule() schema.ModuleSchema {
-	var objTypes []schema.ObjectType
+	types := []schema.Type{testEnum}
 	for i := 1; i < int(schema.MAX_VALID_KIND); i++ {
 		kind := schema.Kind(i)
 		typ := mkTestObjectType(kind)
-		objTypes = append(objTypes, typ)
+		types = append(types, typ)
 	}
 
-	return MustNewModuleSchema(objTypes)
+	return schema.MustNewModuleSchema(types...)
 }
 
 func mkTestObjectType(kind schema.Kind) schema.ObjectType {
@@ -147,7 +147,7 @@ func mkTestObjectType(kind schema.Kind) schema.ObjectType {
 	}
 
 	if kind == schema.EnumKind {
-		field.EnumType = testEnum
+		field.ReferencedType = testEnum.Name
 	}
 
 	keyField := field
@@ -170,5 +170,5 @@ func mkTestObjectType(kind schema.Kind) schema.ObjectType {
 
 var testEnum = schema.EnumType{
 	Name:   "test_enum_type",
-	Values: []string{"foo", "bar", "baz"},
+	Values: []schema.EnumValueDefinition{{Name: "foo", Value: 1}, {Name: "bar", Value: 2}, {Name: "baz", Value: 3}},
 }

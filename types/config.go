@@ -19,7 +19,7 @@ func KeyringServiceName() string {
 
 // Config is the structure that holds the SDK configuration parameters.
 // Deprecated: The global SDK config is deprecated and users should prefer using an address codec.
-// Users should still set the global config until the Stringer interface on `AccAddress`, `ValAddress`, and `ConsAddress` is removed.
+// Users must still set the global config until the Stringer interface on `AccAddress`, `ValAddress`, and `ConsAddress` is removed.
 type Config struct {
 	bech32AddressPrefix map[string]string
 	mtx                 sync.RWMutex

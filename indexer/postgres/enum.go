@@ -63,6 +63,6 @@ func createEnumTypeSql(writer io.Writer, moduleName string, enum schema.EnumType
 }
 
 // enumTypeName returns the name of the enum type scoped to the module.
-func enumTypeName(moduleName string, enumName string) string {
+func enumTypeName(moduleName, enumName string) string {
 	return fmt.Sprintf("%s_%s", moduleName, enumName)
 }

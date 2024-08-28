@@ -76,7 +76,7 @@ func (d *UnorderedTxDecorator) AnteHandle(
 	return next(ctx, tx, false)
 }
 
-func (d *UnorderedTxDecorator) ValidateTx(ctx context.Context, tx transaction.Tx) error {
+func (d *UnorderedTxDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
 	unorderedTx, ok := tx.(sdk.TxWithUnordered)
 	if !ok || !unorderedTx.GetUnordered() {
 		// If the transaction does not implement unordered capabilities or has the
@@ -118,7 +118,7 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx context.Context, tx transaction.Tx
 	}
 
 	// calculate the tx hash
-	txHash, err := TxIdentifier(uint64(timeoutTimestamp.Unix()), tx.(sdk.Tx))
+	txHash, err := TxIdentifier(uint64(timeoutTimestamp.Unix()), tx)
 	if err != nil {
 		return err
 	}

@@ -53,6 +53,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -295,6 +296,7 @@ func NewSimApp(
 	utxDataDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
 	app.UnorderedTxManager = unorderedtx.NewManager(utxDataDir)
 	app.UnorderedTxManager.Start()
+	app.SetPrecommiter(app.Precommiter)
 
 	if err := app.UnorderedTxManager.OnInit(); err != nil {
 		panic(fmt.Errorf("failed to initialize unordered tx manager: %w", err))
@@ -343,6 +345,14 @@ func (app *SimApp) setCustomAnteHandler() {
 
 	// Set the AnteHandler for the app
 	app.SetAnteHandler(anteHandler)
+}
+
+func (app *SimApp) Precommiter(ctx sdk.Context) {
+	if err := app.ModuleManager.Precommit(ctx); err != nil {
+		panic(err)
+	}
+
+	app.UnorderedTxManager.OnNewBlock(ctx.BlockTime())
 }
 
 // Close implements the Application interface and closes all necessary application

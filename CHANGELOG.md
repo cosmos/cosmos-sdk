@@ -43,27 +43,20 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Features
 
 * (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
-* (staking) [#2135](...) Create metadata type and add metadata field in validator details proto
-* (staking/cli) [#](https://github.com/cosmos/cosmos-sdk/pull/21315) Add parsing of `metadata-profile-pic-uri` in `create-validator` JSON.
-  * Add cli flag: `metadata-profile-pic-uri` to `edit-validator` cmd.
-* (types) [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) New function `RandURIOfLength` to generate random valid URIs for sims.
 
 ### Improvements
-* (types) [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) Add a `Validate` method to the `Description` type that validates the metadata as well as other description details.
+
+* (client) [#21436](https://github.com/cosmos/cosmos-sdk/pull/21436) Use `address.Codec` from client.Context in `tx.Sign`.
 
 ### Bug Fixes
 
 * (baseapp) [#21256](https://github.com/cosmos/cosmos-sdk/pull/21256) Halt height will not commit the block indicated, meaning that if halt-height is set to 10, only blocks until 9 (included) will be committed. This is to go back to the original behavior before a change was introduced in v0.50.0.
 
-### Client Breaking
-
-* (x/staking) [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) `Description` now has a new field `Metadata`.
-
 ### API Breaking Changes
 
-* (types) [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) New struct `Metadata` to store extra validator information.
-  * The signature of `NewDescription` has changed to accept an extra argument of type `Metadata`.
-  * `Description` now has a new field , `Metadata` of type `Metadata`.
+### Deprecated
+
+* (types) [#21435](https://github.com/cosmos/cosmos-sdk/pull/21435) The `String()` method on `AccAddress`, `ValAddress` and `ConsAddress` have been deprecated. This is done because those are still using the deprecated global `sdk.Config`. Use an `address.Codec` instead.
 
 ## [v0.52.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0) - 2024-XX-XX
 

@@ -524,8 +524,23 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			WithKeybase(kb).
 			WithTxConfig(cfg.TxConfig)
 
-		err = tx.Sign(context.Background(), txFactory, nodeDirName, txBuilder, true)
-		if err != nil {
+		clientCtx := client.Context{}.
+			WithKeyringDir(clientDir).
+			WithKeyring(kb).
+			WithHomeDir(cmtCfg.RootDir).
+			WithChainID(cfg.ChainID).
+			WithInterfaceRegistry(cfg.InterfaceRegistry).
+			WithCodec(cfg.Codec).
+			WithLegacyAmino(cfg.LegacyAmino).
+			WithTxConfig(cfg.TxConfig).
+			WithAccountRetriever(cfg.AccountRetriever).
+			WithAddressCodec(cfg.AddressCodec).
+			WithValidatorAddressCodec(cfg.ValidatorAddressCodec).
+			WithConsensusAddressCodec(cfg.ConsensusAddressCodec).
+			WithNodeURI(cmtCfg.RPC.ListenAddress).
+			WithCmdContext(context.TODO())
+
+		if err := tx.Sign(clientCtx, txFactory, nodeDirName, txBuilder, true); err != nil {
 			return nil, err
 		}
 
@@ -541,21 +556,6 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		if err != nil {
 			return nil, err
 		}
-
-		clientCtx := client.Context{}.
-			WithKeyringDir(clientDir).
-			WithKeyring(kb).
-			WithHomeDir(cmtCfg.RootDir).
-			WithChainID(cfg.ChainID).
-			WithInterfaceRegistry(cfg.InterfaceRegistry).
-			WithCodec(cfg.Codec).
-			WithLegacyAmino(cfg.LegacyAmino).
-			WithTxConfig(cfg.TxConfig).
-			WithAccountRetriever(cfg.AccountRetriever).
-			WithAddressCodec(cfg.AddressCodec).
-			WithValidatorAddressCodec(cfg.ValidatorAddressCodec).
-			WithConsensusAddressCodec(cfg.ConsensusAddressCodec).
-			WithNodeURI(cmtCfg.RPC.ListenAddress)
 
 		// Provide ChainID here since we can't modify it in the Comet config.
 		viper.Set(flags.FlagChainID, cfg.ChainID)

@@ -15,12 +15,12 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/auth/ante"
+	"cosmossdk.io/x/auth/ante/unorderedtx"
 	"cosmossdk.io/x/auth/posthandler"
 	"cosmossdk.io/x/auth/tx"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -35,7 +35,8 @@ import (
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
-const FlagMinGasPricesV2 = "server.minimum-gas-prices"
+// flagMinGasPricesV2 is the flag name for the minimum gas prices in the main server v2 component.
+const flagMinGasPricesV2 = "server.minimum-gas-prices"
 
 func init() {
 	appconfig.RegisterModule(&txconfigv1.Config{},
@@ -53,7 +54,7 @@ type ModuleInputs struct {
 	Codec                 codec.Codec
 	ProtoFileResolver     txsigning.ProtoFileResolver
 	Environment           appmodule.Environment
-	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
+	// BankKeeper is the expected bank keeper to be passed to AnteHandlers / Tx Validators
 	BankKeeper               authtypes.BankKeeper               `optional:"true"`
 	MetadataBankKeeper       BankKeeper                         `optional:"true"`
 	AccountKeeper            ante.AccountKeeper                 `optional:"true"`
@@ -61,16 +62,20 @@ type ModuleInputs struct {
 	AccountAbstractionKeeper ante.AccountAbstractionKeeper      `optional:"true"`
 	CustomSignModeHandlers   func() []txsigning.SignModeHandler `optional:"true"`
 	CustomGetSigners         []txsigning.CustomGetSigner        `optional:"true"`
+	UnorderedTxManager       *unorderedtx.Manager               `optional:"true"`
+	TxFeeChecker             ante.TxFeeChecker                  `optional:"true"`
 	Viper                    *viper.Viper                       `optional:"true"` // server v2
+
+	ExtraTxValidators []appmodule.TxValidator[transaction.Tx] `optional:"true"`
 }
 
 type ModuleOutputs struct {
 	depinject.Out
 
+	Module          appmodule.AppModule   // This is only useful for chains using server/v2. It setup tx validators that don't belong to other modules.
+	BaseAppOption   runtime.BaseAppOption // This is only useful for chains using baseapp. Server/v2 chains use TxValidator.
 	TxConfig        client.TxConfig
 	TxConfigOptions tx.ConfigOptions
-	BaseAppOption   runtime.BaseAppOption // This is only useful for chains using baseapp. Server/v2 chains use TxValidator.
-	Module          appmodule.AppModule
 }
 
 func ProvideProtoRegistry() txsigning.ProtoFileResolver {
@@ -109,7 +114,40 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		panic(err)
 	}
 
-	baseAppOption := func(app *baseapp.BaseApp) {
+	svd := ante.NewSigVerificationDecorator(
+		in.AccountKeeper,
+		txConfig.SignModeHandler(),
+		ante.DefaultSigVerificationGasConsumer,
+		in.AccountAbstractionKeeper,
+	)
+
+	var (
+		minGasPrices   sdk.DecCoins
+		feeTxValidator *ante.DeductFeeDecorator
+	)
+	if in.AccountKeeper != nil && in.BankKeeper != nil && in.Viper != nil {
+		minGasPricesStr := in.Viper.GetString(flagMinGasPricesV2)
+		minGasPrices, err = sdk.ParseDecCoins(minGasPricesStr)
+		if err != nil {
+			panic(fmt.Sprintf("invalid minimum gas prices: %v", err))
+		}
+
+		feeTxValidator = ante.NewDeductFeeDecorator(in.AccountKeeper, in.BankKeeper, in.FeeGrantKeeper, in.TxFeeChecker)
+		feeTxValidator.SetMinGasPrices(minGasPrices) // set min gas price in deduct fee decorator
+	}
+
+	return ModuleOutputs{
+		Module:          NewAppModule(svd, feeTxValidator, in.ExtraTxValidators...),
+		BaseAppOption:   newBaseAppOption(txConfig, in),
+		TxConfig:        txConfig,
+		TxConfigOptions: txConfigOptions,
+	}
+}
+
+// newBaseAppOption returns baseapp option that sets the ante handler and post handler
+// and set the tx encoder and decoder on baseapp.
+func newBaseAppOption(txConfig client.TxConfig, in ModuleInputs) func(app *baseapp.BaseApp) {
+	return func(app *baseapp.BaseApp) {
 		// AnteHandlers
 		if !in.Config.SkipAnteHandler {
 			anteHandler, err := newAnteHandler(txConfig, in)
@@ -147,33 +185,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		app.SetTxDecoder(txConfig.TxDecoder())
 		app.SetTxEncoder(txConfig.TxEncoder())
 	}
-
-	svd := ante.NewSigVerificationDecorator(
-		in.AccountKeeper,
-		txConfig.SignModeHandler(),
-		ante.DefaultSigVerificationGasConsumer,
-		in.AccountAbstractionKeeper,
-	)
-	appModule := AppModule{sigVerification: svd}
-
-	var minGasPrices sdk.DecCoins
-	if in.Viper != nil {
-		minGasPricesStr := in.Viper.GetString(FlagMinGasPricesV2)
-		minGasPrices, err = sdk.ParseDecCoins(minGasPricesStr)
-		if err != nil {
-			panic(fmt.Sprintf("invalid minimum gas prices: %v", err))
-		}
-	}
-
-	if in.AccountKeeper != nil && in.BankKeeper != nil {
-		feeTxValidator := ante.NewDeductFeeDecorator(in.AccountKeeper, in.BankKeeper, in.FeeGrantKeeper, nil)
-		// set min gas price in deduct fee decorator
-		feeTxValidator.SetMinGasPrices(minGasPrices)
-		// set deduct fee decorator to app module
-		appModule.feeTxValidator = feeTxValidator
-	}
-
-	return ModuleOutputs{TxConfig: txConfig, TxConfigOptions: txConfigOptions, BaseAppOption: baseAppOption, Module: appModule}
 }
 
 func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler, error) {
@@ -183,12 +194,13 @@ func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler,
 
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
-			AccountKeeper:   in.AccountKeeper,
-			BankKeeper:      in.BankKeeper,
-			SignModeHandler: txConfig.SignModeHandler(),
-			FeegrantKeeper:  in.FeeGrantKeeper,
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-			Environment:     in.Environment,
+			Environment:        in.Environment,
+			AccountKeeper:      in.AccountKeeper,
+			BankKeeper:         in.BankKeeper,
+			SignModeHandler:    txConfig.SignModeHandler(),
+			FeegrantKeeper:     in.FeeGrantKeeper,
+			SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
+			UnorderedTxManager: in.UnorderedTxManager,
 		},
 	)
 	if err != nil {
@@ -253,39 +265,3 @@ func metadataExists(err error) error {
 
 	return err
 }
-
-var (
-	_ appmodulev2.AppModule                      = AppModule{}
-	_ appmodulev2.HasTxValidator[transaction.Tx] = AppModule{}
-)
-
-type AppModule struct {
-	sigVerification ante.SigVerificationDecorator
-
-	// deduct fee v2 tx validator
-	feeTxValidator ante.DeductFeeDecorator
-}
-
-// TxValidator implements appmodule.HasTxValidator.
-func (a AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
-	if err := a.sigVerification.ValidateTx(ctx, tx); err != nil {
-		return err
-	}
-
-	sdkTx, ok := tx.(sdk.Tx)
-	if !ok {
-		return fmt.Errorf("invalid tx type %T, expected sdk.Tx", tx)
-	}
-
-	if err := a.feeTxValidator.ValidateTx(ctx, sdkTx); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// IsAppModule implements appmodule.AppModule.
-func (a AppModule) IsAppModule() {}
-
-// IsOnePerModuleType implements appmodule.AppModule.
-func (a AppModule) IsOnePerModuleType() {}

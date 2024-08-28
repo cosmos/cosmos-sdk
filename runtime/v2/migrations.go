@@ -14,7 +14,7 @@ type migrationRegistrar struct {
 	migrations map[string]map[uint64]appmodulev2.MigrationHandler
 }
 
-// newMigrationRegistrar is constructor for registering in-place store migrations for modules.
+// newMigrationRegistrar is a constructor for registering in-place store migrations for modules.
 func newMigrationRegistrar() *migrationRegistrar {
 	return &migrationRegistrar{
 		migrations: make(map[string]map[uint64]appmodulev2.MigrationHandler),

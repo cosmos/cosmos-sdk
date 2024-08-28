@@ -1,4 +1,4 @@
-//nolint:unused,nolintlint // ignore unused code linting and directive `//nolint:unused // ignore unused code linting` is unused for linter "unused"
+//nolint:unused,nolintlint // ignore unused code linting
 package simapp
 
 import (

@@ -29,7 +29,7 @@ func (s Schema) ModuleCodec(opts IndexingOptions) (schema.ModuleCodec, error) {
 		retainDeletions[collName] = true
 	}
 
-	var objectTypes []schema.ObjectType
+	var types []schema.Type
 	for _, collName := range s.collectionsOrdered {
 		coll := s.collectionsByName[collName]
 
@@ -47,15 +47,18 @@ func (s Schema) ModuleCodec(opts IndexingOptions) (schema.ModuleCodec, error) {
 			cdc.objectType.RetainDeletions = true
 		}
 
-		objectTypes = append(objectTypes, cdc.objectType)
+		types = append(types, cdc.objectType)
 
 		decoder.collectionLookup.Set(string(coll.GetPrefix()), cdc)
 	}
 
+	modSchema, err := schema.NewModuleSchema(types...)
+	if err != nil {
+		return schema.ModuleCodec{}, err
+	}
+
 	return schema.ModuleCodec{
-		Schema: schema.ModuleSchema{
-			ObjectTypes: objectTypes,
-		},
+		Schema:    modSchema,
 		KVDecoder: decoder.decodeKV,
 	}, nil
 }
@@ -98,7 +101,7 @@ func (c collectionSchemaCodec) decodeKVPair(update schema.KVPairUpdate) ([]schem
 
 	}
 
-	if update.Delete {
+	if update.Remove {
 		return []schema.ObjectUpdate{
 			{TypeName: c.coll.GetName(), Key: k, Delete: true},
 		}, nil

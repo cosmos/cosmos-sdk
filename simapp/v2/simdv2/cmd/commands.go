@@ -75,7 +75,7 @@ func initRootCmd[T transaction.Tx](
 		rootCmd,
 		newApp,
 		logger,
-		serverv2.DefaultServerConfig(),
+		initServerConfig(),
 		cometbft.New(&genericTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
 		grpc.New[T](),
 		store.New[T](newApp),

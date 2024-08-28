@@ -377,10 +377,12 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"staking/create_validator": {
 			gogo: &stakingtypes.MsgCreateValidator{Pubkey: pubkeyAny},
 			pulsar: &stakingapi.MsgCreateValidator{
-				Pubkey:      pubkeyAnyPulsar,
-				Description: &stakingapi.Description{},
-				Commission:  &stakingapi.CommissionRates{},
-				Value:       &v1beta1.Coin{},
+				Pubkey: pubkeyAnyPulsar,
+				Description: &stakingapi.Description{
+					Metadata: &stakingapi.Metadata{},
+				},
+				Commission: &stakingapi.CommissionRates{},
+				Value:      &v1beta1.Coin{},
 			},
 		},
 		"staking/msg_cancel_unbonding_delegation_response": {

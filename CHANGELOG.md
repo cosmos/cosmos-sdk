@@ -54,7 +54,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Deprecated
 
-* (types) [#21435](https://github.com/cosmos/cosmos-sdk/pull/21435) The string methods on `AccAddress` and `ValAddress` have been deprecated. This is done because those are still using the deprecated global `sdk.Config`. Use an `address.Codec` instead.
+* (types) [#21435](https://github.com/cosmos/cosmos-sdk/pull/21435) The `String()` method on `AccAddress`, `ValAddress` and `ConsAddress` have been deprecated. This is done because those are still using the deprecated global `sdk.Config`. Use an `address.Codec` instead.
 
 ## [v0.52.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0) - 2024-XX-XX
 

@@ -72,7 +72,7 @@ Where validator.json contains:
 	"website": "validator's (optional) website",
 	"security": "validator's (optional) security contact email",
 	"details": "validator's (optional) details",
-	"metadata": {"profile-pic": "link to profile picture"},
+	"metadata-profile-pic-uri": "link to validator's (optional) profile picture",
 	"commission-rate": "0.1",
 	"commission-max-rate": "0.2",
 	"commission-max-change-rate": "0.01",

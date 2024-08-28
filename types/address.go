@@ -180,6 +180,7 @@ func AccAddressFromHexUnsafe(address string) (addr AccAddress, err error) {
 }
 
 // MustAccAddressFromBech32 calls AccAddressFromBech32 and panics on error.
+// Deprecated: Use an address.Codec to convert addresses from and to string/bytes.
 func MustAccAddressFromBech32(address string) AccAddress {
 	addr, err := AccAddressFromBech32(address)
 	if err != nil {
@@ -190,6 +191,7 @@ func MustAccAddressFromBech32(address string) AccAddress {
 }
 
 // AccAddressFromBech32 creates an AccAddress from a Bech32 string.
+// Deprecated: Use an address.Codec to convert addresses from and to string/bytes.
 func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
 
@@ -330,6 +332,7 @@ func ValAddressFromHex(address string) (addr ValAddress, err error) {
 }
 
 // ValAddressFromBech32 creates a ValAddress from a Bech32 string.
+// Deprecated: Use an address.Codec to convert addresses from and to string/bytes.
 func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 	bech32PrefixValAddr := GetConfig().GetBech32ValidatorAddrPrefix()
 
@@ -338,6 +341,7 @@ func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 }
 
 // MustValAddressFromBech32 calls ValAddressFromBech32 and panics on error.
+// Deprecated: Use an address.Codec to convert addresses from and to string/bytes.
 func MustValAddressFromBech32(address string) ValAddress {
 	addr, err := ValAddressFromBech32(address)
 	if err != nil {
@@ -483,6 +487,7 @@ func ConsAddressFromHex(address string) (addr ConsAddress, err error) {
 }
 
 // ConsAddressFromBech32 creates a ConsAddress from a Bech32 string.
+// Deprecated: Use an address.Codec to convert addresses from and to string/bytes.
 func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
 	bech32PrefixConsAddr := GetConfig().GetBech32ConsensusAddrPrefix()
 

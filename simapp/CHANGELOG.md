@@ -24,7 +24,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 `SimApp` is an application built using the Cosmos SDK for testing and educational purposes.
-It won't be tagged or intented to be imported in an application.
+It won't be tagged or intended to be imported in an application.
 This changelog is aimed to help developers understand the wiring changes between SDK versions.
 It is an exautive list of changes that completes the SimApp section in the [UPGRADING.md](https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#simapp)
 

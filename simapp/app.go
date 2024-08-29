@@ -516,7 +516,6 @@ func NewSimApp(
 		group.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
-		consensustypes.ModuleName,
 		circuittypes.ModuleName,
 		pooltypes.ModuleName,
 		epochstypes.ModuleName,

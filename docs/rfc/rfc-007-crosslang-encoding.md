@@ -24,6 +24,8 @@ _This section is non-standard and replaces the standard Proposal section._
 
 #### Prost 
 
+This would
+
 ```rust
 #[derive(Clone, Debug, PartialEq, Message)]
 pub struct MsgSend {
@@ -44,9 +46,9 @@ impl Bank {
 
 fn example_send(bank: &Bank, ctx: &mut Context) -> Result<()> {
     let msg = MsgSend {
-        from: "alice".to_string(),
-        to: "bob".to_string(),
-        coins: vec![Coin { amount: "100".to_string(), denom: "uatom".to_string() }]
+        from: "alice".to_string(), // allocates
+        to: "bob".to_string(), // allocates
+        coins: vec![Coin { amount: "100".to_string(), denom: "uatom".to_string() }] // allocates 3 times
     };
     bank.send(&mut ctx, &msg)
 }
@@ -73,7 +75,7 @@ impl Bank {
 }
 
 fn example_send(bank: &Bank, ctx: &mut Context) -> Result<()> {
-    let mut msg = zerop::Root::<Bank>::new();
+    let mut msg = zerop::Root::<Bank>::new(); // one allocation only here
     msg.from.set("alice")?;
     msg.to.set("bob")?;    
     let mut amount_writer = msg.amount.start_write()?;
@@ -87,17 +89,19 @@ fn example_send(bank: &Bank, ctx: &mut Context) -> Result<()> {
 ### BorrowPB
 
 ```rust
+type Denom = VarChar<64>;
+
 #[derive(Clone, Debug, PartialEq, Message)]
 pub struct MsgSend<'a> {
-    from: Cow<'a, str>,
-    to: Cow<'a, str>,
+    from: Address,
+    to: Address,
     coins: Repeated<'a, Coin<'a>, 16>, // note the use of a fixed size Repeated buffer here holding up to 16 coins
 }
 
 #[derive(Clone, Debug, PartialEq, Message)]
 pub struct Coin<'a> {
-    denom: Cow<'a, str>,
-    amount: Cow<'a, str>,
+    denom: Denom,
+    amount: u128,
 }
 
 impl Bank {
@@ -105,13 +109,13 @@ impl Bank {
 }
 
 fn example_send(bank: &Bank, ctx: &mut Context) -> Result<()> {
+    let mut coins = Repeated::<_, 16>::new(); // stack allocated
+    coins.push(Coin{ amount: 100, denom: Varchar::new("uatom") }); // stack allocated
     let msg = MsgSend {
-        from: Cow::Borrowed("alice"), // no allocation here
-        to: Cow::Borrowed("bob"), // no allocation here
-        coins: Repeated::Borrowed(&[
-            Coin { amount: Cow::Borrowed("100"), denom: Cow::Borrowed("uatom") }
-        ])
-    };
+        from: Address::from_str("alice"), // using the stack here - fixed size buffer 
+        to: Address::from_str("bob"), // using the stack here
+        coins,
+    }; // this whole struct gets allocated on the stack
     bank.send(&mut ctx, &msg)
 }
 ```
@@ -121,47 +125,19 @@ fn example_send(bank: &Bank, ctx: &mut Context) -> Result<()> {
 ```rust
 type Denom = VarChar<64>;
 
-struct Bank {
-    #[map(prefix = 1, key(addres, denom), value(amount))]
-    balances: Map<(Address, Denom), u128>,
-
-    #[map(prefix = 2, key(denom), value(amount))]
-    supply: Map<Denom, u128>,
-
-    #[object_table(prefix = 3)]
-    metadata: ObjectTable<Metadata>,
-}
-
-#[derive(Object)]
-struct Metadata {
-    #[key]
-    denom: Denom,
-    description: VarChar<256>,
-    decimals: u8,
-}
-
 struct Coin {
     denom: Denom,
     amount: u128,
 }
 
 impl Bank {
-    fn send(ctx: &Context, from: &Address, to: &Address, coins: &[Coin]) -> Result<()> { 
-        for coin in coins {
-            let from_balance = self.balances.get(ctx, (from, coin.denom))?;
-            if from_balance < coin.amount {
-                return Err(Error::InsufficientFunds);
-            }
-            let to_balance = self.balances.get(ctx, (to, coin.denom))?;
-            self.balances.insert(ctx, (from, coin.denom), from_balance - coin.amount)?;
-            self.balances.insert(ctx, (to, coin.denom), to_balance + coin.amount)?;
-        }
-        Ok(())
-    }
-    
-    fn get_metadata(ctx: &Context, denom: &Denom) -> Result<Metadata> { 
-        self.metadata.get(ctx, denom)
-    }
+    fn send(ctx: &Context, from: &Address, to: &Address, coins: &[Coin]) -> Result<()> {  /* ... */ }
+}
+
+fn example_send(bank: &Bank, ctx: &mut Context) -> Result<()> {
+    let mut coins = ArrayVec::<_, 16>::new(); // stack allocated
+    coins.push(Coin{ amount: 100, denom: Varchar::new("uatom") }); // stack allocated
+    bank.send(&mut ctx, "alice", "bob", &coins);
 }
 ```
 

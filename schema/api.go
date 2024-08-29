@@ -1,8 +1,8 @@
 package schema
 
-// APIDefinition is a public versioned descriptor of an API.
+// APIDescriptor is a public versioned descriptor of an API.
 //
-// An APIDefinition can be used as a native descriptor of an API's encoding.
+// An APIDescriptor can be used as a native descriptor of an API's encoding.
 // The native binary encoding of API requests and responses is to encode the input and output
 // fields using value binary encoding.
 // The native JSON encoding would be to encode the fields as a JSON object, canonically
@@ -38,7 +38,7 @@ package schema
 //
 // In this way, we can define an interop layer between contracts in the EVM world,
 // SDK modules accepting protobuf types, and any API using this schema system natively.
-type APIDefinition struct {
+type APIDescriptor struct {
 	// Name is the versioned name of the API.
 	Name string
 
@@ -46,11 +46,11 @@ type APIDefinition struct {
 	// It is a COMPATIBLE change to add new methods to an API.
 	// If a newer client tries to call a method that an older server does not recognize it,
 	// an error will simply be returned.
-	Methods []MethodType
+	Methods []MethodDescriptor
 }
 
-// MethodType describes a method in the API.
-type MethodType struct {
+// MethodDescriptor describes a method in the API.
+type MethodDescriptor struct {
 	// Name is the name of the method.
 	Name string
 

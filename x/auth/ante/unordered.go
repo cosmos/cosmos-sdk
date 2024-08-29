@@ -82,7 +82,7 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx context.Context, tx transaction.Tx
 	if !ok {
 		return fmt.Errorf("invalid tx type %T, expected sdk.Tx", tx)
 	}
-	
+
 	unorderedTx, ok := tx.(sdk.TxWithUnordered)
 	if !ok || !unorderedTx.GetUnordered() {
 		// If the transaction does not implement unordered capabilities or has the

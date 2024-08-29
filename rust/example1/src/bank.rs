@@ -6,7 +6,7 @@ use cosmos_core_macros::{service, Serializable, proto_method};
 type Denom = ArrayString<256>;
 
 #[derive(Serializable)]
-#[proto_name="cosmos.bank.v1beta1.Coin"]
+#[proto(name="cosmos.bank.v1beta1.Coin")]
 pub struct Coin {
     #[proto(tag="1")]
     denom: Denom,

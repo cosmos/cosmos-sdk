@@ -1,0 +1,12 @@
+[package]
+name = "example1"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cosmos_core = { path = "../cosmos_core" }
+cosmos_core_macros = { path = "../cosmos_core_macros" }
+arrayvec = "0.7.6"
+crypto-bigint = "0.6.0-rc.3"
+serde = { version = "1.0.209", features = ["derive"] }
+

@@ -1,9 +1,10 @@
 use arrayvec::ArrayString;
-use cosmos_core::{Address, Context, Result, Module, Item, Map, OnCreate};
-use cosmos_core_macros::{Account};
+use cosmos_core::{Address, Context, Result, Item, Map, OnCreate};
+use cosmos_core_macros::{Account, Serializable, State};
 use crypto_bigint::U256;
+use serde::Serialize;
 
-#[derive(Account)]
+#[derive(Account, State)]
 pub struct BasicERC20 {
     #[item(prefix=0)]
     owner: Item<Address>,
@@ -24,7 +25,8 @@ pub struct BasicERC20 {
     balances: Map<Address, U256>
 }
 
-struct Init {
+#[derive(Serializable)]
+pub struct Init {
     name: ArrayString<256>,
     symbol: ArrayString<32>,
     decimals: u8,
@@ -33,7 +35,7 @@ struct Init {
 impl OnCreate for BasicERC20 {
     type InitMessage = Init;
 
-    fn on_create(&mut self, ctx: &mut Context, msg: Self::InitMessage) -> Result<()> {
+    fn on_create(&self, ctx: &mut Context, msg: &Self::InitMessage) -> Result<()> {
         self.owner.set(ctx, &ctx.self_address())?;
         self.name.set(ctx, &msg.name)?;
         self.symbol.set(ctx, &msg.symbol)?;

@@ -35,6 +35,15 @@ pub struct Address {
     bytes: [u8; 63],
 }
 
+impl Default for Address {
+    fn default() -> Self {
+        Self {
+            len: 0,
+            bytes: [0; 63],
+        }
+    }
+}
+
 pub struct MessageName {
     len: u8,
     bytes: [u8; 127],
@@ -46,6 +55,7 @@ pub struct BufferRef {
     len: u32,
 }
 
+#[derive(Default, Copy, Clone, PartialEq, Eq, Ord, PartialOrd)]
 pub struct Time(u64);
 
 #[service]
@@ -95,3 +105,5 @@ pub trait OnCreate {
 
     fn on_create(&self, ctx: &mut Context, msg: &Self::InitMessage) -> Result<()>;
 }
+
+pub trait State {}

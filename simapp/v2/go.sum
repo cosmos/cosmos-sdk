@@ -214,7 +214,6 @@ cosmossdk.io/runtime/v2 v2.0.0-20240827121911-e98b8e96174f h1:k/naA1PbdzhQ6EdiPh
 cosmossdk.io/runtime/v2 v2.0.0-20240827121911-e98b8e96174f/go.mod h1:SoCx1xyZn+tVPAtTAuLSEYjocVtZips+O2QLGBj99/c=
 cosmossdk.io/schema v0.1.1 h1:I0M6pgI7R10nq+/HCQfbO6BsGBZA8sQy+duR1Y3aKcA=
 cosmossdk.io/schema v0.1.1/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
-<<<<<<< HEAD
 cosmossdk.io/server/v2 v2.0.0-20240829074658-81a225e6a29b h1:FFixNVq2SbtRlYvr1fB/WikfYTRrA0o/35ImIhhZzrE=
 cosmossdk.io/server/v2 v2.0.0-20240829074658-81a225e6a29b/go.mod h1:MgjYKtPEW4FPEYxh1h0idVBjgblFgdrAWkeqn7UOrVA=
 cosmossdk.io/server/v2/appmanager v0.0.0-20240827095516-355f748add9e h1:9eB2si1gT6c5ea8Jsh498Ei6E3Th1yMyuJgSLiT6D4Y=
@@ -225,12 +224,8 @@ cosmossdk.io/store v1.0.0-rc.0.0.20240815194237-858ec2fcb897 h1:o024zaPHYtmUGL2B
 cosmossdk.io/store v1.0.0-rc.0.0.20240815194237-858ec2fcb897/go.mod h1:Ma4uny4RFegWTbU71fBmkSIoHrWHlLC/JwwgWgehZm4=
 cosmossdk.io/store/v2 v2.0.0-20240815194237-858ec2fcb897 h1:i2KoUy2254WwK671eROhHyRGk60W7Omv7nax6gybCKQ=
 cosmossdk.io/store/v2 v2.0.0-20240815194237-858ec2fcb897/go.mod h1:G90StljUVhAEelT8lMDz42jLeDmHN6ITMj9v/KyulIg=
-cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 h1:GuBrfHsK3RD5vlD4DuBz3DXslR6VlnzrYmHOC3L679Q=
-cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337/go.mod h1:PhLn1pMBilyRC4GfRkoYhm+XVAYhF4adVrzut8AdpJI=
 cosmossdk.io/x/tx v0.13.4-0.20240815194237-858ec2fcb897 h1:J3vS3G41JtTWkUX3wVKcXdy1yPUca0d3QnexCR52PeY=
 cosmossdk.io/x/tx v0.13.4-0.20240815194237-858ec2fcb897/go.mod h1:5+Hpds6bhT6CdR7DqPh0dVOqyqL7NJkq+x+yjLdYSQU=
-=======
->>>>>>> 4096fb803 (refactor(simapp): Audit simapp (#21311))
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=

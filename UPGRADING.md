@@ -110,6 +110,9 @@ Additionally, thanks to the genesis simplification, as explained in [the genesis
 
 Grpc-web embedded client has been removed from the server. If you would like to use grpc-web, you can use the [envoy proxy](https://www.envoyproxy.io/docs/envoy/latest/start/start). Here's how to set it up:
 
+<details>
+<summary>Step by step guide</summary>
+
 1. Install Envoy following the [official installation guide](https://www.envoyproxy.io/docs/envoy/latest/start/install).
 
 2. Create an Envoy configuration file named `envoy.yaml` with the following content:
@@ -193,6 +196,8 @@ Grpc-web embedded client has been removed from the server. If you would like to 
    This indicates that Envoy has started and is ready to proxy requests.
 
 6. Update your client applications to connect to Envoy (http://localhost:8080 by default).
+
+</details>
 
 By following these steps, Envoy will handle the translation between gRPC-Web and gRPC, allowing your existing gRPC-Web clients to continue functioning without modifications to your Cosmos SDK application.
 

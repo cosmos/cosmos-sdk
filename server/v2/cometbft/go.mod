@@ -23,7 +23,7 @@ require (
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
-	cosmossdk.io/server/v2 v2.0.0-20240827095516-355f748add9e // main
+	cosmossdk.io/server/v2 v2.0.0-20240829074658-81a225e6a29b // main
 	cosmossdk.io/server/v2/appmanager v0.0.0-20240827095516-355f748add9e // main
 	cosmossdk.io/store/v2 v2.0.0-20240731205446-aee9803a0af6 // main
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
@@ -135,7 +135,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.20.2 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.55.0 // indirect
+	github.com/prometheus/common v0.57.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect

@@ -56,7 +56,7 @@ func (c Field) Validate(typeSet TypeSet) error {
 // ValidateValue validates that the value conforms to the field's kind and nullability.
 // Unlike Kind.ValidateValue, it also checks that the value conforms to the EnumType
 // if the field is an EnumKind.
-func (c Field) ValidateValue(value interface{}, schema TypeSet) error {
+func (c Field) ValidateValue(value interface{}, typeSet TypeSet) error {
 	if value == nil {
 		if !c.Nullable {
 			return fmt.Errorf("field %q cannot be null", c.Name)
@@ -70,7 +70,7 @@ func (c Field) ValidateValue(value interface{}, schema TypeSet) error {
 
 	switch c.Kind {
 	case EnumKind:
-		ty, ok := schema.LookupType(c.ReferencedType)
+		ty, ok := typeSet.LookupType(c.ReferencedType)
 		if !ok {
 			return fmt.Errorf("enum field %q references unknown type %q", c.Name, c.ReferencedType)
 		}

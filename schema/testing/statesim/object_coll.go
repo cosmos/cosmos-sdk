@@ -21,9 +21,9 @@ type ObjectCollection struct {
 }
 
 // NewObjectCollection creates a new ObjectCollection for the given object type.
-func NewObjectCollection(objectType schema.ObjectType, options Options, sch schema.TypeSet) *ObjectCollection {
+func NewObjectCollection(objectType schema.ObjectType, options Options, typeSet schema.TypeSet) *ObjectCollection {
 	objects := &btree.Map[string, schema.ObjectUpdate]{}
-	updateGen := schematesting.ObjectUpdateGen(objectType, objects, sch)
+	updateGen := schematesting.ObjectUpdateGen(objectType, objects, typeSet)
 	valueFieldIndices := make(map[string]int, len(objectType.ValueFields))
 	for i, field := range objectType.ValueFields {
 		valueFieldIndices[field.Name] = i
@@ -32,7 +32,7 @@ func NewObjectCollection(objectType schema.ObjectType, options Options, sch sche
 	return &ObjectCollection{
 		options:           options,
 		objectType:        objectType,
-		typeSet:           sch,
+		typeSet:           typeSet,
 		objects:           objects,
 		updateGen:         updateGen,
 		valueFieldIndices: valueFieldIndices,

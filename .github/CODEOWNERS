@@ -47,13 +47,13 @@
 /x/epochs/ @alpe @facundomedica @cosmos/sdk-core-dev
 /x/evidence/ @alpe @akhilkumarpilli @cosmos/sdk-core-dev
 /x/feegrant/ @cool-develope @alpe @cosmos/sdk-core-dev
-/x/genutil/ @kocubinski @hieuvubk @cosmos/sdk-core-dev
+/x/genutil/ @kocubinski @hieuvubk @julienrbrt @cosmos/sdk-core-dev
 /x/gov/ @julienrbrt @sontrinh16 @cosmos/sdk-core-dev
 /x/group/ @kocubinski @akhilkumarpilli @cosmos/sdk-core-dev
 /x/mint/ @lucaslopezf @facundomedica @cosmos/sdk-core-dev
 /x/nft/ @alpe @lucaslopezf @cosmos/sdk-core-dev
 /x/params/ @cosmos/sdk-core-dev # deprecated so whole team
-/x/protocolpool/ @facundomedica @hieuvubk @cosmos/sdk-core-dev
+/x/protocolpool/ @facundomedica @hieuvubk @alpe @cosmos/sdk-core-dev
 /x/simulation/ @cosmos/sdk-core-dev # deprecated so whole team
 /x/slashing/ @testinginprod @raynaudoe @lucaslopezf @cosmos/sdk-core-dev
 /x/staking/ @facundomedica @testinginprod @JulianToledano @ziscky @cosmos/sdk-core-dev

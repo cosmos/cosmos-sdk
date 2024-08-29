@@ -182,7 +182,7 @@ func (s *Store) Query(storeKey []byte, version uint64, key []byte, prove bool) (
 		val, err = s.stateCommitment.Get(storeKey, version, key)
 		if err != nil {
 			return store.QueryResult{}, fmt.Errorf("failed to query SC store: %w", err)
-		}   
+		}
 	} else {
 		val, err = s.stateStorage.Get(storeKey, version, key)
 		if err != nil {

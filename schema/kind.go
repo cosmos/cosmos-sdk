@@ -178,14 +178,14 @@ const (
 	// AddressKind represents an account address which is represented by a variable length array of bytes.
 	// Addresses usually have a human-readable rendering, such as bech32, and tooling should provide
 	// a way for apps to define a string encoder for friendly user-facing display. Addresses have a maximum
-	// supported length of 255 bytes.
+	// supported length of 63 bytes.
 	// Go Encoding: []byte
 	// JSON Encoding: addresses should be encoded as strings using the human-readable address renderer
 	// provided to the JSON encoder.
 	// Key Binary Encoding:
 	//   non-terminal: bytes prefixed with 1-byte length prefix
 	//   terminal: raw bytes with no length prefix
-	// Value Binary Encoding: the same value binary encoding as BytesKind.
+	// Value Binary Encoding: bytes prefixed with 1-byte length prefix.
 	AddressKind
 
 	// EnumKind represents a value of an enum type.

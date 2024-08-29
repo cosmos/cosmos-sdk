@@ -19,18 +19,20 @@ type OneOfType struct {
 
 // OneOfCase represents a case in a oneof type. It is represented by a struct type internally with a discriminant value.
 type OneOfCase struct {
-	// StructType represents the name and fields of the case.
-	// If a newer client tries to send a message to an older server and the case has new fields,
-	// the message will be incomprehensible.
-	StructType
-
 	// Name is the name of the case. It must conform to the NameFormat regular expression.
 	Name string
 
 	// Discriminant is the discriminant value for the case.
 	Discriminant int32
+
+	// Kind is the kind of the case. ListKind is not allowed.
+	Kind Kind
+
+	// Reference is the referenced type if Kind is EnumKind, StructKind, or OneOfKind.
+	ReferencedType string
 }
 
+// OneOfValue is the golang runtime representation of a oneof value.
 type OneOfValue = struct {
 	// Case is the name of the case.
 	Case string

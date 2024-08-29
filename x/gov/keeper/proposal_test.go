@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -147,6 +148,24 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 	})
 	suite.Require().NoError(err)
 
+	// add 1 more messageBasedParams with the same value as above
+	err = suite.govKeeper.MessageBasedParams.Set(suite.ctx, sdk.MsgTypeURL(&v1.MsgSudoExec{}), v1.MessageBasedParams{
+		VotingPeriod:  func() *time.Duration { t := time.Hour * 24 * 7; return &t }(),
+		Quorum:        "0.4",
+		Threshold:     "0.50",
+		VetoThreshold: "0.66",
+	})
+	suite.Require().NoError(err)
+
+	// add 1 more messageBasedParams with different value as above
+	err = suite.govKeeper.MessageBasedParams.Set(suite.ctx, sdk.MsgTypeURL(&v1.MsgCancelProposal{}), v1.MessageBasedParams{
+		VotingPeriod:  func() *time.Duration { t := time.Hour * 24 * 7; return &t }(),
+		Quorum:        "0.2",
+		Threshold:     "0.4",
+		VetoThreshold: "0.7",
+	})
+	suite.Require().NoError(err)
+
 	testCases := []struct {
 		msgs         []sdk.Msg
 		metadata     string
@@ -156,6 +175,12 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 		{legacyProposal(&tp, govAcct), "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
 		// normal proposal with msg with custom params
 		{[]sdk.Msg{&v1.MsgUpdateParams{Authority: govAcct}}, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
+		// normal proposal with 2 identical msgs with custom params
+		{[]sdk.Msg{&v1.MsgUpdateParams{Authority: govAcct}, &v1.MsgUpdateParams{Authority: govAcct}}, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
+		// normal proposal with 2 msgs with custom params shared the same value
+		{[]sdk.Msg{&v1.MsgUpdateParams{Authority: govAcct}, &v1.MsgSudoExec{Authority: govAcct}}, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
+		// normal proposal with 2 msgs with different custom params
+		{[]sdk.Msg{&v1.MsgUpdateParams{Authority: govAcct}, &v1.MsgCancelProposal{}}, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, errors.New("cannot submit multiple messages proposal with message based params")},
 		{legacyProposal(&tp, govAcct), "", v1.ProposalType_PROPOSAL_TYPE_EXPEDITED, nil},
 		{nil, "", v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE, nil},
 		// Keeper does not check the validity of title and description, no error

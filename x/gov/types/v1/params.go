@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/errors"
+	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -331,4 +333,77 @@ func (p MessageBasedParams) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+func (p MessageBasedParams) Equal(params *MessageBasedParams) (bool, error) {
+	if p.VotingPeriod != nil || params.VotingPeriod != nil {
+		return false, nil
+	}
+
+	if p.VotingPeriod.Seconds() != params.VotingPeriod.Seconds() {
+		return false, nil
+	}
+
+	quorum1, err := sdkmath.LegacyNewDecFromStr(p.Quorum)
+	if err != nil {
+		return false, fmt.Errorf("invalid quorum string: %w", err)
+	}
+
+	quorum2, err := sdkmath.LegacyNewDecFromStr(params.Quorum)
+	if err != nil {
+		return false, fmt.Errorf("invalid compared quorum string: %w", err)
+	}
+
+	if !quorum1.Equal(quorum2) {
+		return false, nil
+	}
+
+	// yes quorum can be set to empty to disable
+	yesQuorum1, err := sdkmath.LegacyNewDecFromStr(p.YesQuorum)
+	if err != nil && errors.IsOf(err, math.ErrLegacyEmptyDecimalStr) {
+		return false, fmt.Errorf("invalid yes quorum string: %w", err)
+	} else if err != nil {
+		yesQuorum1 = sdkmath.ZeroInt().ToLegacyDec()
+	}
+
+	yesQuorum2, err := sdkmath.LegacyNewDecFromStr(params.YesQuorum)
+	if err != nil && errors.IsOf(err, math.ErrLegacyEmptyDecimalStr) {
+		return false, fmt.Errorf("invalid compared yes quorum string: %w", err)
+	} else if err != nil {
+		yesQuorum2 = sdkmath.ZeroInt().ToLegacyDec()
+	}
+
+	if !yesQuorum1.Equal(yesQuorum2) {
+		return false, nil
+	}
+
+	threshold1, err := sdkmath.LegacyNewDecFromStr(p.Threshold)
+	if err != nil {
+		return false, fmt.Errorf("invalid vote threshold string: %w", err)
+	}
+
+	threshold2, err := sdkmath.LegacyNewDecFromStr(params.Threshold)
+	if err != nil {
+		return false, fmt.Errorf("invalid compared vote threshold string: %w", err)
+	}
+
+	if !threshold1.Equal(threshold2) {
+		return false, nil
+	}
+
+	vetoThreshold1, err := sdkmath.LegacyNewDecFromStr(p.VetoThreshold)
+	if err != nil {
+		return false, fmt.Errorf("invalid veto threshold string: %w", err)
+	}
+
+	vetoThreshold2, err := sdkmath.LegacyNewDecFromStr(params.VetoThreshold)
+	if err != nil {
+		return false, fmt.Errorf("invalid compared veto threshold string: %w", err)
+	}
+
+	if !vetoThreshold1.Equal(vetoThreshold2) {
+		return false, nil
+	}
+
+	return true, nil
 }

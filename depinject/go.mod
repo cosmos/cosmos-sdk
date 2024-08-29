@@ -2,8 +2,6 @@ module cosmossdk.io/depinject
 
 go 1.21
 
-toolchain go1.23.0
-
 require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/gogoproto v1.7.0

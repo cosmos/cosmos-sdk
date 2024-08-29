@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/binary"
+	"fmt"
 	"sync"
 	"time"
 
@@ -76,7 +77,12 @@ func (d *UnorderedTxDecorator) AnteHandle(
 	return next(ctx, tx, false)
 }
 
-func (d *UnorderedTxDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
+func (d *UnorderedTxDecorator) ValidateTx(ctx context.Context, tx transaction.Tx) error {
+	sdkTx, ok := tx.(sdk.Tx)
+	if !ok {
+		return fmt.Errorf("invalid tx type %T, expected sdk.Tx", tx)
+	}
+	
 	unorderedTx, ok := tx.(sdk.TxWithUnordered)
 	if !ok || !unorderedTx.GetUnordered() {
 		// If the transaction does not implement unordered capabilities or has the
@@ -118,7 +124,7 @@ func (d *UnorderedTxDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error 
 	}
 
 	// calculate the tx hash
-	txHash, err := TxIdentifier(uint64(timeoutTimestamp.Unix()), tx)
+	txHash, err := TxIdentifier(uint64(timeoutTimestamp.Unix()), sdkTx)
 	if err != nil {
 		return err
 	}

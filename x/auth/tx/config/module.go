@@ -2,12 +2,10 @@ package tx
 
 import (
 	"context"
-	"fmt"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/auth/ante"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -62,13 +60,8 @@ func (a AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 		return err
 	}
 
-	sdkTx, ok := tx.(sdk.Tx)
-	if !ok {
-		return fmt.Errorf("invalid tx type %T, expected sdk.Tx", tx)
-	}
-
 	if a.unorderTxValidator != nil {
-		if err := a.unorderTxValidator.ValidateTx(ctx, sdkTx); err != nil {
+		if err := a.unorderTxValidator.ValidateTx(ctx, tx); err != nil {
 			return err
 		}
 	}

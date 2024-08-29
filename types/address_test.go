@@ -526,19 +526,6 @@ func (s *addressTestSuite) TestGetFromBech32() {
 	s.Require().Equal("invalid Bech32 prefix; expected x, got cosmos", err.Error())
 }
 
-func (s *addressTestSuite) TestMustValAddressFromBech32() {
-	valAddress1 := types.ValAddress(addr20byte)
-	valAddress2 := types.MustValAddressFromBech32(valAddress1.String())
-
-	s.Require().Equal(valAddress1, valAddress2)
-}
-
-func (s *addressTestSuite) TestMustValAddressFromBech32Panic() {
-	s.Require().Panics(func() {
-		types.MustValAddressFromBech32("")
-	})
-}
-
 func (s *addressTestSuite) TestGetBech32PrefixAccPub() {
 	actual := types.GetBech32PrefixAccPub("")
 	s.Require().Equal("pub", actual)

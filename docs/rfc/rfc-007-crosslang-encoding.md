@@ -125,6 +125,7 @@ fn example_send(bank: &Bank, ctx: &mut Context) -> Result<()> {
 ```rust
 type Denom = VarChar<64>;
 
+#[derive(Clone, Debug, PartialEq, Message)]
 struct Coin {
     denom: Denom,
     amount: u128,

@@ -5,6 +5,9 @@ import (
 	"strings"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	dcrd_secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 )
 
 // this file implements a general mechanism to plugin public keys to a baseaccount
@@ -12,7 +15,7 @@ import (
 // PubKey defines a generic pubkey.
 type PubKey interface {
 	gogoproto.Message
-	VerifySignature(msg []byte, sig []byte) bool
+	VerifySignature(msg, sig []byte) bool
 }
 
 type PubKeyG[T any] interface {
@@ -23,6 +26,13 @@ type PubKeyG[T any] interface {
 type pubKeyImpl struct {
 	decode   func(b []byte) (PubKey, error)
 	validate func(key PubKey) error
+}
+
+func WithSecp256K1PubKey() Option {
+	return WithPubKeyWithValidationFunc(func(pt *secp256k1.PubKey) error {
+		_, err := dcrd_secp256k1.ParsePubKey(pt.Key)
+		return err
+	})
 }
 
 func WithPubKey[T any, PT PubKeyG[T]]() Option {

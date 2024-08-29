@@ -7,6 +7,7 @@ import (
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	types "github.com/cosmos/gogoproto/types/any"
+	dcrd_secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/store"
@@ -14,7 +15,6 @@ import (
 	v1 "cosmossdk.io/x/accounts/defaults/base/v1"
 	aa_interface_v1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	"cosmossdk.io/x/tx/signing"
-	dcrd_secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"

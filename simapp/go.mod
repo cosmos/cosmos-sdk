@@ -48,7 +48,7 @@ require (
 	google.golang.org/protobuf v1.34.2
 )
 
-require google.golang.org/grpc v1.65.0
+require google.golang.org/grpc v1.66.0
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect

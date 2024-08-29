@@ -97,7 +97,7 @@ type HasServices interface {
 // hasServicesV1 is the interface for registering service in baseapp Cosmos SDK.
 // This API is part of core/appmodule but commented out for dependencies.
 type hasServicesV1 interface {
-	appmodule.AppModule
+	appmodulev2.AppModule
 
 	RegisterServices(grpc.ServiceRegistrar) error
 }
@@ -714,7 +714,6 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM app
 // It takes the current context as a parameter and returns a boolean value
 // indicating whether the migration was successfully executed or not.
 func (m *Manager) PreBlock(ctx sdk.Context) error {
-	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	for _, moduleName := range m.OrderPreBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasPreBlocker); ok {
 			if err := module.PreBlock(ctx); err != nil {

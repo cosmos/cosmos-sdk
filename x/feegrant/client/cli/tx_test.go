@@ -446,7 +446,7 @@ func (s *CLITestSuite) TestTxWithFeeGrant() {
 	granterAddr, err := s.baseCtx.AddressCodec.BytesToString(granter)
 	s.Require().NoError(err)
 
-	// creating an account manually (This account won't be exist in state)
+	// creating an account manually (This account won't exist in state)
 	k, _, err := s.baseCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 	pub, err := k.GetPubKey()

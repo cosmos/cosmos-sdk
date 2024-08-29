@@ -45,23 +45,26 @@ type AppModule struct {
 	randGenAccountsFn types.RandomGenesisAccountsFn
 	accountsModKeeper types.AccountsModKeeper
 	cdc               codec.Codec
+	extOptChecker     ante.ExtensionOptionChecker
 }
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
-// NewAppModule creates a new AppModule object
+// NewAppModule creates a new AppModule object.
 func NewAppModule(
 	cdc codec.Codec,
 	accountKeeper keeper.AccountKeeper,
 	ak types.AccountsModKeeper,
 	randGenAccountsFn types.RandomGenesisAccountsFn,
+	extOptChecker ante.ExtensionOptionChecker,
 ) AppModule {
 	return AppModule{
 		accountKeeper:     accountKeeper,
 		randGenAccountsFn: randGenAccountsFn,
 		accountsModKeeper: ak,
 		cdc:               cdc,
+		extOptChecker:     extOptChecker,
 	}
 }
 
@@ -159,6 +162,7 @@ func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 		ante.NewValidateMemoDecorator(am.accountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(am.accountKeeper),
 		ante.NewValidateSigCountDecorator(am.accountKeeper),
+		ante.NewExtensionOptionsDecorator(am.extOptChecker),
 	}
 
 	sdkTx, ok := tx.(sdk.Tx)

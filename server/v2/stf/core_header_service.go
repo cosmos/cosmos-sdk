@@ -12,7 +12,12 @@ var _ header.Service = (*HeaderService)(nil)
 type HeaderService struct{}
 
 func (h HeaderService) HeaderInfo(ctx context.Context) header.Info {
-	return ctx.(*executionContext).headerInfo
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	return exCtx.headerInfo
 }
 
 const headerInfoPrefix = 0x37

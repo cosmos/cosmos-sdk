@@ -15,11 +15,11 @@ type Field struct {
 	// Nullable indicates whether null values are accepted for the field. Key fields CANNOT be nullable.
 	Nullable bool `json:"nullable,omitempty"`
 
-	// ElementKind is the element type when Kind is ListKind.
-	ElementKind Kind
-
 	// ReferencedType is the referenced type name when Kind is EnumKind, StructKind or OneOfKind.
 	ReferencedType string `json:"referenced_type,omitempty"`
+
+	// ElementKind is the element type when Kind is ListKind.
+	ElementKind Kind
 
 	// Size specifies the size or max-size of a field.
 	// Its specific meaning may vary depending on the field kind.

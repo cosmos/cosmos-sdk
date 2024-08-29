@@ -1,3 +1,17 @@
+pub struct Context {}
+
+impl Context {
+    pub fn self_address(&self) -> Address {
+        todo!()
+    }
+
+    pub fn sender(&self) -> Address {
+        todo!()
+    }
+}
+
+pub type Result<T> = core::result::Result<T, String>;
+
 pub struct MessagePacket {
     header: MessagePacketHeader, // 64 + 64 + 32 + 8 + 128 + 64 + 664 = 1024
     data: [u8; 0xFC00], // 64512

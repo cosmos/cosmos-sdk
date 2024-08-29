@@ -360,16 +360,20 @@ func (p MessageBasedParams) Equal(params *MessageBasedParams) (bool, error) {
 	// yes quorum can be set to empty to disable so we need to catch
 	// the case where yes quorum is not set.
 	yesQuorum1, err := sdkmath.LegacyNewDecFromStr(p.YesQuorum)
-	if err != nil && errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
-		return false, fmt.Errorf("invalid yes quorum string: %w", err)
-	} else if err != nil {
+	if err != nil {
+		if !errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
+			return false, fmt.Errorf("invalid yes quorum string: %w", err)
+		}
+
 		yesQuorum1 = sdkmath.ZeroInt().ToLegacyDec()
 	}
 
 	yesQuorum2, err := sdkmath.LegacyNewDecFromStr(params.YesQuorum)
-	if err != nil && errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
-		return false, fmt.Errorf("invalid compared yes quorum string: %w", err)
-	} else if err != nil {
+	if err != nil {
+		if !errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
+			return false, fmt.Errorf("invalid compared yes quorum string: %w", err)
+		}
+
 		yesQuorum2 = sdkmath.ZeroInt().ToLegacyDec()
 	}
 

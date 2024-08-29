@@ -11,27 +11,33 @@ package schema
 //
 // APIDefinitions have a strong definition of compatibility between different versions
 // of the same API.
-// It is compatible to add new methods to an API and to add new output fields
-// to existing methods.
-// It is incompatible to add new input fields to existing methods or to remove or modify
+// It is an INCOMPATIBLE change to add new input fields to existing methods or to remove or modify
 // existing input or output fields.
-// Input fields cannot reference any types that can add new fields, such as ObjectKind fields.
-// Adding new input fields to a method, directly or transitively, introduces the possibility that a newer client
+// Input fields also cannot reference any unsealed structs, directly or transitively,
+// because these types allow adding new fields.
+// Adding new input fields to a method introduces the possibility that a newer client
 // will send an incomprehensible message to an older server.
 // The only safe ways that input field schemas can be extended are by adding
 // new values to EnumType's and new cases to OneOfType's.
-// Output fields can reference ObjectKind fields, which do allow for new value fields to be added.
-// Object types are used to represent data in storage, so it is natural that object values
-// can be returned as output fields of methods.
-// If a newer client tries to call a method on an older server,
-// any new output fields that the newer client knows about will simply be populated with their default values.
-// If an older client tries to call a method on a newer server, the older client will simply ignore any new output fields.
+// It is a COMPATIBLE change to add new methods to an API and to add new output fields
+// to existing methods.
+// Output fields can reference any sealed or unsealed StructType, directly or transitively.
 //
 // Existing protobuf APIs could also be mapped into APIDefinitions, and used in the following ways:
 // - to produce, user-friendly deterministic JSON
 // - to produce a deterministic binary encoding
 // - to check for compatibility in a way that is more appropriate to blockchain applications
 // - to use any code generators designed to support this spec as an alternative to protobuf
+// Also, a standardized way of serializing schema types as protobuf could be defined which
+// maps to the original protobuf encoding, so that schemas can be used as an interop
+// layer between different less expressive encoding systems.
+//
+// Existing EVM contract APIs expressed in Solidity could be mapped into APIDefinitions, and
+// a mapping of all schema values to ABI encoding could be defined which preserves the
+// original ABI encoding.
+//
+// In this way, we can define an interop layer between contracts in the EVM world,
+// SDK modules accepting protobuf types, and any API using this schema system natively.
 type APIDefinition struct {
 	// Name is the versioned name of the API.
 	Name string
@@ -49,17 +55,28 @@ type MethodType struct {
 	Name string
 
 	// InputFields is the list of input fields for the method.
+	//
 	// It is an INCOMPATIBLE change to add, remove or update input fields to a method.
 	// The addition of new fields introduces the possibility that a newer client
 	// will send an incomprehensible message to an older server.
 	// InputFields can only reference sealed StructTypes, either directly and transitively.
+	//
+	// As a special case to represent protobuf service definitions, there can be a single
+	// unnamed struct input field that code generators can choose to either reference
+	// as a named struct or to expand inline as function arguments.
 	InputFields []Field
 
 	// OutputFields is the list of output fields for the method.
+	//
 	// It is a COMPATIBLE change to add new output fields to a method,
 	// but existing output fields should not be removed or modified.
 	// OutputFields can reference any sealed or unsealed StructType, directly or transitively.
 	// If a newer client tries to call a method on an older server, the newer expected result output
 	// fields will simply be populated with the default values for that field kind.
+	//
+	// As a special case to represent protobuf service definitions, there can be a single
+	// unnamed struct output field.
+	// In this case, adding new output fields is an INCOMPATIBLE change (because protobuf service definitions
+	// don't allow this), but new fields can be added to the referenced struct if it is unsealed.
 	OutputFields []Field
 }

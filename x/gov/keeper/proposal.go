@@ -13,7 +13,6 @@ import (
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
-	sdkerr "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
@@ -56,7 +55,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		hasMessagedBasedParams := true
 		messagedBasedParams, err := k.MessageBasedParams.Get(ctx, sdk.MsgTypeURL(msg))
 		if err != nil {
-			if !sdkerr.IsOf(err, collections.ErrNotFound) {
+			if !errorsmod.IsOf(err, collections.ErrNotFound) {
 				return v1.Proposal{}, err
 			}
 

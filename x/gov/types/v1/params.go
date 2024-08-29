@@ -6,7 +6,6 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/errors"
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -358,16 +357,17 @@ func (p MessageBasedParams) Equal(params *MessageBasedParams) (bool, error) {
 		return false, nil
 	}
 
-	// yes quorum can be set to empty to disable
+	// yes quorum can be set to empty to disable so we need to catch
+	// the case where yes quorum is not set.
 	yesQuorum1, err := sdkmath.LegacyNewDecFromStr(p.YesQuorum)
-	if err != nil && errors.IsOf(err, math.ErrLegacyEmptyDecimalStr) {
+	if err != nil && errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
 		return false, fmt.Errorf("invalid yes quorum string: %w", err)
 	} else if err != nil {
 		yesQuorum1 = sdkmath.ZeroInt().ToLegacyDec()
 	}
 
 	yesQuorum2, err := sdkmath.LegacyNewDecFromStr(params.YesQuorum)
-	if err != nil && errors.IsOf(err, math.ErrLegacyEmptyDecimalStr) {
+	if err != nil && errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
 		return false, fmt.Errorf("invalid compared yes quorum string: %w", err)
 	} else if err != nil {
 		yesQuorum2 = sdkmath.ZeroInt().ToLegacyDec()

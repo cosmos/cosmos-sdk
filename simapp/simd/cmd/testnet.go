@@ -544,11 +544,7 @@ func writeFile(name, dir string, contents []byte) error {
 		return fmt.Errorf("could not create directory %q: %w", dir, err)
 	}
 
-	if err := os.WriteFile(file, contents, 0o600); err != nil {
-		return err
-	}
-
-	return nil
+	return os.WriteFile(file, contents, 0o600)
 }
 
 // startTestnet starts an in-process testnet

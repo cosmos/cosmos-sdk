@@ -224,8 +224,6 @@ cosmossdk.io/store v1.0.0-rc.0.0.20240815194237-858ec2fcb897 h1:o024zaPHYtmUGL2B
 cosmossdk.io/store v1.0.0-rc.0.0.20240815194237-858ec2fcb897/go.mod h1:Ma4uny4RFegWTbU71fBmkSIoHrWHlLC/JwwgWgehZm4=
 cosmossdk.io/store/v2 v2.0.0-20240815194237-858ec2fcb897 h1:i2KoUy2254WwK671eROhHyRGk60W7Omv7nax6gybCKQ=
 cosmossdk.io/store/v2 v2.0.0-20240815194237-858ec2fcb897/go.mod h1:G90StljUVhAEelT8lMDz42jLeDmHN6ITMj9v/KyulIg=
-cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 h1:GuBrfHsK3RD5vlD4DuBz3DXslR6VlnzrYmHOC3L679Q=
-cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337/go.mod h1:PhLn1pMBilyRC4GfRkoYhm+XVAYhF4adVrzut8AdpJI=
 cosmossdk.io/x/tx v0.13.4-0.20240815194237-858ec2fcb897 h1:J3vS3G41JtTWkUX3wVKcXdy1yPUca0d3QnexCR52PeY=
 cosmossdk.io/x/tx v0.13.4-0.20240815194237-858ec2fcb897/go.mod h1:5+Hpds6bhT6CdR7DqPh0dVOqyqL7NJkq+x+yjLdYSQU=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=

@@ -121,8 +121,9 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	)
 
 	var (
-		minGasPrices   sdk.DecCoins
-		feeTxValidator *ante.DeductFeeDecorator
+		minGasPrices         sdk.DecCoins
+		feeTxValidator       *ante.DeductFeeDecorator
+		unorderedTxValidator *ante.UnorderedTxDecorator
 	)
 	if in.AccountKeeper != nil && in.BankKeeper != nil && in.Viper != nil {
 		minGasPricesStr := in.Viper.GetString(flagMinGasPricesV2)
@@ -135,8 +136,12 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		feeTxValidator.SetMinGasPrices(minGasPrices) // set min gas price in deduct fee decorator
 	}
 
+	if in.UnorderedTxManager != nil {
+		unorderedTxValidator = ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, in.UnorderedTxManager, in.Environment, ante.DefaultSha256Cost)
+	}
+
 	return ModuleOutputs{
-		Module:          NewAppModule(svd, feeTxValidator, in.ExtraTxValidators...),
+		Module:          NewAppModule(svd, feeTxValidator, unorderedTxValidator, in.ExtraTxValidators...),
 		BaseAppOption:   newBaseAppOption(txConfig, in),
 		TxConfig:        txConfig,
 		TxConfigOptions: txConfigOptions,

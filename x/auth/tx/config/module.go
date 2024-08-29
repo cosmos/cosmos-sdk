@@ -19,6 +19,7 @@ var (
 // This module is only useful for chains using server/v2. Ante/Post handlers are setup via baseapp options in depinject.
 type AppModule struct {
 	sigVerification ante.SigVerificationDecorator
+	feeTxValidator  *ante.DeductFeeDecorator
 	// txValidators contains tx validator that can be injected into the module via depinject.
 	// tx validators should be module based, but it can happen that you do not want to create a new module
 	// and simply depinject-it.
@@ -28,10 +29,12 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object.
 func NewAppModule(
 	sigVerification ante.SigVerificationDecorator,
+	feeTxValidator *ante.DeductFeeDecorator,
 	txValidators ...appmodulev2.TxValidator[transaction.Tx],
 ) AppModule {
 	return AppModule{
 		sigVerification: sigVerification,
+		feeTxValidator:  feeTxValidator,
 		txValidators:    txValidators,
 	}
 }
@@ -48,6 +51,10 @@ func (a AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 		if err := txValidator.ValidateTx(ctx, tx); err != nil {
 			return err
 		}
+	}
+
+	if err := a.feeTxValidator.ValidateTx(ctx, tx); err != nil {
+		return err
 	}
 
 	return a.sigVerification.ValidateTx(ctx, tx)

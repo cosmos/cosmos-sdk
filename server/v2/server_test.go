@@ -65,6 +65,7 @@ func TestServer(t *testing.T) {
 
 	server := serverv2.NewServer(
 		logger,
+		serverv2.DefaultServerConfig(),
 		grpcServer,
 		mockServer,
 	)

@@ -78,7 +78,7 @@ func initFixture(t *testing.T) *fixture {
 	queryRouter := baseapp.NewGRPCQueryRouter()
 
 	handler := directHandler{}
-	account := baseaccount.NewAccount("base", signing.NewHandlerMap(handler))
+	account := baseaccount.NewAccount("base", signing.NewHandlerMap(handler), baseaccount.WithSecp256K1PubKey())
 	accountsKeeper, err := accounts.NewKeeper(
 		cdc,
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(router)),

@@ -166,6 +166,23 @@ transactions in your application:
 	}
 	```
 
+* Create or update the App's `Precommiter()` method to call the unordered tx
+  manager's `OnNewBlock()` method.
+
+	```go
+	...
+	app.SetPrecommiter(app.Precommiter)
+	...
+
+	func (app *SimApp) Precommiter(ctx sdk.Context) {
+		if err := app.ModuleManager.Precommit(ctx); err != nil {
+			panic(err)
+		}
+
+		app.UnorderedTxManager.OnNewBlock(ctx.BlockTime())
+	}
+	```
+
 * Create or update the App's `Close()` method to close the unordered tx manager.
   Note, this is critical as it ensures the manager's state is written to file
   such that when the node restarts, it can recover the state to provide replay

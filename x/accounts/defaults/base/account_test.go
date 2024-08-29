@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/store"
@@ -12,6 +13,7 @@ import (
 	v1 "cosmossdk.io/x/accounts/defaults/base/v1"
 	aa_interface_v1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	"cosmossdk.io/x/tx/signing"
+	dcrd_secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -24,7 +26,10 @@ func setupBaseAccount(t *testing.T, ss store.KVStoreService) Account {
 	deps := makeMockDependencies(ss)
 	handler := directHandler{}
 
-	createAccFn := NewAccount("base", signing.NewHandlerMap(handler))
+	createAccFn := NewAccount("base", signing.NewHandlerMap(handler), WithPubKeyWithValidationFunc(func(pt *secp256k1.PubKey) error {
+		_, err := dcrd_secp256k1.ParsePubKey(pt.Key)
+		return err
+	}))
 	_, acc, err := createAccFn(deps)
 	baseAcc := acc.(Account)
 	require.NoError(t, err)
@@ -36,7 +41,7 @@ func TestInit(t *testing.T) {
 	ctx, ss := newMockContext(t)
 	baseAcc := setupBaseAccount(t, ss)
 	_, err := baseAcc.Init(ctx, &v1.MsgInit{
-		PubKey: secp256k1.GenPrivKey().PubKey().Bytes(),
+		PubKey: toAnyPb(t, secp256k1.GenPrivKey().PubKey()),
 	})
 	require.NoError(t, err)
 
@@ -48,14 +53,14 @@ func TestInit(t *testing.T) {
 		{
 			"valid init",
 			&v1.MsgInit{
-				PubKey: secp256k1.GenPrivKey().PubKey().Bytes(),
+				PubKey: toAnyPb(t, secp256k1.GenPrivKey().PubKey()),
 			},
 			false,
 		},
 		{
 			"invalid pubkey",
 			&v1.MsgInit{
-				PubKey: []byte("invalid_pk"),
+				PubKey: toAnyPb(t, &secp256k1.PubKey{Key: []byte("invalid")}),
 			},
 			true,
 		},
@@ -77,7 +82,7 @@ func TestSwapKey(t *testing.T) {
 	ctx, ss := newMockContext(t)
 	baseAcc := setupBaseAccount(t, ss)
 	_, err := baseAcc.Init(ctx, &v1.MsgInit{
-		PubKey: secp256k1.GenPrivKey().PubKey().Bytes(),
+		PubKey: toAnyPb(t, secp256k1.GenPrivKey().PubKey()),
 	})
 	require.NoError(t, err)
 
@@ -94,7 +99,7 @@ func TestSwapKey(t *testing.T) {
 				return accountstd.SetSender(ctx, []byte("mock_base_account"))
 			},
 			&v1.MsgSwapPubKey{
-				NewPubKey: secp256k1.GenPrivKey().PubKey().Bytes(),
+				NewPubKey: toAnyPb(t, secp256k1.GenPrivKey().PubKey()),
 			},
 			false,
 			nil,
@@ -105,7 +110,7 @@ func TestSwapKey(t *testing.T) {
 				return accountstd.SetSender(ctx, []byte("sender"))
 			},
 			&v1.MsgSwapPubKey{
-				NewPubKey: secp256k1.GenPrivKey().PubKey().Bytes(),
+				NewPubKey: toAnyPb(t, secp256k1.GenPrivKey().PubKey()),
 			},
 			true,
 			errors.New("unauthorized"),
@@ -116,7 +121,7 @@ func TestSwapKey(t *testing.T) {
 				return accountstd.SetSender(ctx, []byte("mock_base_account"))
 			},
 			&v1.MsgSwapPubKey{
-				NewPubKey: []byte("invalid_pk"),
+				NewPubKey: toAnyPb(t, &secp256k1.PubKey{Key: []byte("invalid")}),
 			},
 			true,
 			nil,
@@ -149,7 +154,7 @@ func TestAuthenticate(t *testing.T) {
 	pkAny, err := codectypes.NewAnyWithValue(privKey.PubKey())
 	require.NoError(t, err)
 	_, err = baseAcc.Init(ctx, &v1.MsgInit{
-		PubKey: privKey.PubKey().Bytes(),
+		PubKey: toAnyPb(t, privKey.PubKey()),
 	})
 	require.NoError(t, err)
 
@@ -250,4 +255,11 @@ func TestAuthenticate(t *testing.T) {
 		SignerIndex: 0,
 	})
 	require.Equal(t, errors.New("signature verification failed"), err)
+}
+
+func toAnyPb(t *testing.T, pm gogoproto.Message) *codectypes.Any {
+	t.Helper()
+	pb, err := codectypes.NewAnyWithValue(pm)
+	require.NoError(t, err)
+	return pb
 }

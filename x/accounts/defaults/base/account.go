@@ -24,8 +24,9 @@ import (
 )
 
 var (
-	PubKeyPrefix   = collections.NewPrefix(0)
-	SequencePrefix = collections.NewPrefix(1)
+	PubKeyPrefix     = collections.NewPrefix(0)
+	PubKeyTypePrefix = collections.NewPrefix(1)
+	SequencePrefix   = collections.NewPrefix(2)
 )
 
 type Option func(a *Account)
@@ -34,7 +35,7 @@ func NewAccount(name string, handlerMap *signing.HandlerMap, options ...Option) 
 	return func(deps accountstd.Dependencies) (string, accountstd.Interface, error) {
 		acc := Account{
 			PubKey:           collections.NewItem(deps.SchemaBuilder, PubKeyPrefix, "pub_key_bytes", collections.BytesValue),
-			PubKeyType:       collections.NewItem(deps.SchemaBuilder, PubKeyPrefix, "pub_key_type", collections.StringValue),
+			PubKeyType:       collections.NewItem(deps.SchemaBuilder, PubKeyTypePrefix, "pub_key_type", collections.StringValue),
 			Sequence:         collections.NewSequence(deps.SchemaBuilder, SequencePrefix, "sequence"),
 			addrCodec:        deps.AddressCodec,
 			hs:               deps.Environment.HeaderService,
@@ -86,12 +87,12 @@ func (a Account) Authenticate(ctx context.Context, msg *aa_interface_v1.MsgAuthe
 
 	pubKey, signerData, err := a.computeSignerData(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to compute signer data: %w", err)
 	}
 
 	txData, err := a.getTxData(msg)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to get tx data: %w", err)
 	}
 
 	gotSeq := msg.Tx.AuthInfo.SignerInfos[msg.SignerIndex].Sequence
@@ -108,7 +109,7 @@ func (a Account) Authenticate(ctx context.Context, msg *aa_interface_v1.MsgAuthe
 
 	signBytes, err := a.signingHandlers.GetSignBytes(ctx, signMode, signerData, txData)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to get sign bytes: %w", err)
 	}
 
 	if !pubKey.VerifySignature(signBytes, signature) {
@@ -221,7 +222,11 @@ func (a Account) loadPubKey(ctx context.Context) (PubKey, error) {
 		return nil, err
 	}
 
-	return publicKey.decode(pkBytes)
+	pubKey, err := publicKey.decode(pkBytes)
+	if err != nil {
+		return nil, err
+	}
+	return pubKey, nil
 }
 
 func (a Account) savePubKey(ctx context.Context, anyPk *codectypes.Any) error {

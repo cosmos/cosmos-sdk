@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	types "github.com/cosmos/gogoproto/types/any"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/store"
@@ -259,6 +260,9 @@ func TestAuthenticate(t *testing.T) {
 
 func toAnyPb(t *testing.T, pm gogoproto.Message) *codectypes.Any {
 	t.Helper()
+	if gogoproto.MessageName(pm) == gogoproto.MessageName(&types.Any{}) {
+		t.Fatal("no")
+	}
 	pb, err := codectypes.NewAnyWithValue(pm)
 	require.NoError(t, err)
 	return pb

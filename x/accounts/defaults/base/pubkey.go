@@ -35,7 +35,11 @@ func WithPubKeyWithValidationFunc[T any, PT PubKeyG[T]](validateFn func(PT) erro
 	pkImpl := pubKeyImpl{
 		decode: func(b []byte) (PubKey, error) {
 			key := PT(new(T))
-			return key, gogoproto.Unmarshal(b, key)
+			err := gogoproto.Unmarshal(b, key)
+			if err != nil {
+				return nil, err
+			}
+			return key, nil
 		},
 		validate: func(k PubKey) error {
 			concrete, ok := k.(PT)

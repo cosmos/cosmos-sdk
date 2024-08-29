@@ -3,15 +3,16 @@ module cosmossdk.io/store
 go 1.22.2
 
 require (
+	cosmossdk.io/core v0.12.1-0.20240813134434-072a29c838a5
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
 	github.com/cometbft/cometbft v1.0.0-rc1
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
-	github.com/cosmos/cosmos-db v1.0.2
+	github.com/cosmos/cosmos-db v1.0.3-0.20240829004618-717cba019b33
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/gogoproto v1.7.0
-	github.com/cosmos/iavl v1.2.1-0.20240725141113-7adc688cf179
+	github.com/cosmos/iavl v1.0.0-beta.1.0.20240813194616-eb5078efcf9e
 	github.com/cosmos/ics23/go v0.10.0
 	github.com/golang/mock v1.6.0
 	github.com/hashicorp/go-hclog v1.6.3

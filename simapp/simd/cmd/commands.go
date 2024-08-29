@@ -116,7 +116,7 @@ func txCommand() *cobra.Command {
 // newApp creates the application
 func newApp(
 	logger log.Logger,
-	db dbm.DB,
+	db corestore.KVStoreWithBatch,
 	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
 ) servertypes.Application {
@@ -131,7 +131,7 @@ func newApp(
 // appExport creates a new simapp (optionally at a given height) and exports state.
 func appExport(
 	logger log.Logger,
-	db dbm.DB,
+	db corestore.KVStoreWithBatch,
 	traceStore io.Writer,
 	height int64,
 	forZeroHeight bool,

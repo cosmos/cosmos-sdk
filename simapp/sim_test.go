@@ -169,7 +169,7 @@ func TestAppStateDeterminism(t *testing.T) {
 		}
 	}
 	// overwrite default app config
-	interBlockCachingAppFactory := func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) *SimApp {
+	interBlockCachingAppFactory := func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) *SimApp {
 		if FlagEnableStreamingValue {
 			m := map[string]any{
 				"streaming.abci.keys":             []string{"*"},

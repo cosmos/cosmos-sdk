@@ -20,7 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
-func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
+func initStore(t *testing.T, db corestore.KVStoreWithBatch, storeKey string, k, v []byte) {
 	t.Helper()
 	rs := rootmulti.NewStore(db, coretesting.NewNopLogger(), metrics.NewNoOpMetrics())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
@@ -38,7 +38,7 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 	require.Equal(t, int64(1), commitID.Version)
 }
 
-func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
+func checkStore(t *testing.T, db corestore.KVStoreWithBatch, ver int64, storeKey string, k, v []byte) {
 	t.Helper()
 	rs := rootmulti.NewStore(db, coretesting.NewNopLogger(), metrics.NewNoOpMetrics())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))

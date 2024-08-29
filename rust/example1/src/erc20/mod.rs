@@ -2,10 +2,10 @@ pub mod fixed_size {
     use arrayvec::ArrayString;
     use crypto_bigint::U256;
     use cosmos_core::{Address, Context, Result};
-    use cosmos_core_macros::derive_client;
+    use cosmos_core_macros::service;
 
-    #[derive_client]
-    pub trait ERC20Fixed {
+    #[service(solidity)]
+    pub trait ERC20 {
         fn name(&self, ctx: &Context) -> Result<ArrayString<256>>;
         fn symbol(&self, ctx: &Context) -> Result<ArrayString<32>>;
         fn decimals(&self, ctx: &Context) -> Result<u8>;
@@ -21,9 +21,9 @@ pub mod fixed_size {
 pub mod dynamic_size {
     use crypto_bigint::U256;
     use cosmos_core::{Address, Context, Result};
-    use cosmos_core_macros::derive_client;
+    use cosmos_core_macros::service;
 
-    #[derive_client]
+    #[service(solidity)]
     pub trait ERC20 {
         fn name(&self, ctx: &Context) -> Result<String>;
         fn symbol(&self, ctx: &Context) -> Result<String>;
@@ -36,3 +36,5 @@ pub mod dynamic_size {
         fn allowance(&self, ctx: &Context, owner: Address, spender: Address) -> Result<U256>;
     }
 }
+
+mod example;

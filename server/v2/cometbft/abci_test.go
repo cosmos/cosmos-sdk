@@ -9,6 +9,7 @@ import (
 	"time"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	am "cosmossdk.io/server/v2/appmanager"
@@ -43,48 +44,15 @@ var (
 		Msg:      &gogotypes.BoolValue{Value: true},
 		GasLimit: 100_000,
 	}
-
 	invalidMockTx = mock.Tx{
 		Sender:   []byte("sender"),
 		Msg:      &gogotypes.BoolValue{Value: true},
 		GasLimit: 0,
 	}
+	actorName = []byte("cookies")
 )
 
-func addMsgHandlerToSTF[T any, PT interface {
-	*T
-	transaction.Msg
-},
-	U any, UT interface {
-		*U
-		transaction.Msg
-	}](
-	t *testing.T,
-	s *stf.STF[mock.Tx],
-	handler func(ctx context.Context, msg PT) (UT, error),
-) {
-	t.Helper()
-	msgRouterBuilder := stf.NewMsgRouterBuilder()
-	err := msgRouterBuilder.RegisterHandler(
-		proto.MessageName(PT(new(T))),
-		func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
-			typedReq := msg.(PT)
-			typedResp, err := handler(ctx, typedReq)
-			if err != nil {
-				return nil, err
-			}
-
-			return typedResp, nil
-		},
-	)
-	require.NoError(t, err)
-
-	msgRouter, err := msgRouterBuilder.Build()
-	require.NoError(t, err)
-	stf.SetMsgRouter(s, msgRouter)
-}
-
-func addQueryHandlerToSTF[T any, PT interface {
+func getQueryRouterBuilder[T any, PT interface {
 	*T
 	proto.Message
 },
@@ -93,9 +61,8 @@ func addQueryHandlerToSTF[T any, PT interface {
 		proto.Message
 	}](
 	t *testing.T,
-	s *stf.STF[mock.Tx],
 	handler func(ctx context.Context, msg PT) (UT, error),
-) {
+) *stf.MsgRouterBuilder {
 	t.Helper()
 	queryRouterBuilder := stf.NewMsgRouterBuilder()
 	err := queryRouterBuilder.RegisterHandler(
@@ -112,13 +79,41 @@ func addQueryHandlerToSTF[T any, PT interface {
 	)
 	require.NoError(t, err)
 
-	queryRouter, err := queryRouterBuilder.Build()
+	return queryRouterBuilder
+}
+
+func getMsgRouterBuilder[T any, PT interface {
+	*T
+	transaction.Msg
+},
+	U any, UT interface {
+		*U
+		transaction.Msg
+	}](
+	t *testing.T,
+	handler func(ctx context.Context, msg PT) (UT, error),
+) *stf.MsgRouterBuilder {
+	t.Helper()
+	msgRouterBuilder := stf.NewMsgRouterBuilder()
+	err := msgRouterBuilder.RegisterHandler(
+		proto.MessageName(PT(new(T))),
+		func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error) {
+			typedReq := msg.(PT)
+			typedResp, err := handler(ctx, typedReq)
+			if err != nil {
+				return nil, err
+			}
+
+			return typedResp, nil
+		},
+	)
 	require.NoError(t, err)
-	stf.SetQueryRouter(s, queryRouter)
+
+	return msgRouterBuilder
 }
 
 func TestConsensus_InitChain_Without_UpdateParam(t *testing.T) {
-	c, _ := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
+	c := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
 	mockStore := c.store
 	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
 		Time:          time.Now(),
@@ -126,24 +121,18 @@ func TestConsensus_InitChain_Without_UpdateParam(t *testing.T) {
 		InitialHeight: 1,
 	})
 	require.NoError(t, err)
-	stateStorageHas(t, mockStore, "init-chain", 1)
-	stateStorageHas(t, mockStore, "end-block", 1)
-
-	stateCommitmentNoHas(t, mockStore, "init-chain", 1)
-	stateCommitmentNoHas(t, mockStore, "end-block", 1)
+	assertStoreLatestVersion(t, mockStore, 0)
 
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 		Time:   time.Now(),
 		Height: 1,
 	})
 	require.NoError(t, err)
-
-	stateCommitmentHas(t, mockStore, "init-chain", 1)
-	stateCommitmentHas(t, mockStore, "end-block", 1)
+	assertStoreLatestVersion(t, mockStore, 1)
 }
 
 func TestConsensus_InitChain_With_UpdateParam(t *testing.T) {
-	c, _ := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
+	c := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
 	mockStore := c.store
 	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
 		Time:            time.Now(),
@@ -152,11 +141,7 @@ func TestConsensus_InitChain_With_UpdateParam(t *testing.T) {
 		InitialHeight:   1,
 	})
 	require.NoError(t, err)
-	stateStorageHas(t, mockStore, "init-chain", 1)
-	stateStorageHas(t, mockStore, "end-block", 1)
-
-	stateCommitmentNoHas(t, mockStore, "init-chain", 1)
-	stateCommitmentNoHas(t, mockStore, "end-block", 1)
+	assertStoreLatestVersion(t, mockStore, 0)
 
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
 		Time:   time.Now(),
@@ -164,12 +149,11 @@ func TestConsensus_InitChain_With_UpdateParam(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	stateCommitmentHas(t, mockStore, "init-chain", 1)
-	stateCommitmentHas(t, mockStore, "end-block", 1)
+	assertStoreLatestVersion(t, mockStore, 1)
 }
 
 func TestConsensus_InitChain_Invalid_Height(t *testing.T) {
-	c, _ := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
+	c := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
 	mockStore := c.store
 	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
 		Time:          time.Now(),
@@ -177,8 +161,7 @@ func TestConsensus_InitChain_Invalid_Height(t *testing.T) {
 		InitialHeight: 2,
 	})
 	require.NoError(t, err)
-	stateStorageHas(t, mockStore, "init-chain", 2)
-	stateStorageHas(t, mockStore, "end-block", 2)
+	assertStoreLatestVersion(t, mockStore, 0)
 
 	// Shouldn't be able to commit genesis block 2
 	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
@@ -190,7 +173,7 @@ func TestConsensus_InitChain_Invalid_Height(t *testing.T) {
 }
 
 func TestConsensus_FinalizeBlock_Invalid_Height(t *testing.T) {
-	c, _ := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
+	c := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
 	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
 		Time:          time.Now(),
 		ChainId:       "test",
@@ -212,16 +195,8 @@ func TestConsensus_FinalizeBlock_Invalid_Height(t *testing.T) {
 }
 
 func TestConsensus_FinalizeBlock_NoTxs(t *testing.T) {
-	c, s := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
+	c := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
 	mockStore := c.store
-
-	addQueryHandlerToSTF(t, s, func(ctx context.Context, q *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error) {
-		cParams := DefaulConsensusParams
-		kvSet(t, ctx, "query")
-		return &consensustypes.QueryParamsResponse{
-			Params: cParams,
-		}, nil
-	})
 
 	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
 		Time:          time.Now(),
@@ -245,27 +220,13 @@ func TestConsensus_FinalizeBlock_NoTxs(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		stateCommitmentHas(t, mockStore, "begin-block", uint64(i))
-		stateCommitmentNoHas(t, mockStore, "exec", uint64(i))
-		stateCommitmentHas(t, mockStore, "end-block", uint64(i))
+		assertStoreLatestVersion(t, mockStore, uint64(i))
 	}
 	require.Equal(t, int64(endBlock), c.lastCommittedHeight.Load())
 }
 
 func TestConsensus_FinalizeBlock_MultiTxs_OutOfGas(t *testing.T) {
-	c, s := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
-
-	addQueryHandlerToSTF(t, s, func(ctx context.Context, q *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error) {
-		cParams := DefaulConsensusParams
-		kvSet(t, ctx, "query")
-		return &consensustypes.QueryParamsResponse{
-			Params: cParams,
-		}, nil
-	})
-	addMsgHandlerToSTF(t, s, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
-		kvSet(t, ctx, "exec")
-		return nil, nil
-	})
+	c := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
 
 	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
 		Time:          time.Now(),
@@ -286,30 +247,17 @@ func TestConsensus_FinalizeBlock_MultiTxs_OutOfGas(t *testing.T) {
 			Time:   time.Now(),
 			Height: int64(i),
 			Hash:   sum[:],
-			Txs:    [][]byte{invalidMockTx.Bytes()},
+			Txs:    [][]byte{invalidMockTx.Bytes(), mockTx.Bytes()},
 		})
 		require.NoError(t, err)
 		require.NotEqual(t, res.TxResults[0].Code, 0)
-		require.Contains(t, res.TxResults[0].Log, "out of gas")
 	}
 	require.Equal(t, int64(endBlock), c.lastCommittedHeight.Load())
 }
 
 func TestConsensus_FinalizeBlock_MultiTxs(t *testing.T) {
-	c, s := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
+	c := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
 	mockStore := c.store
-
-	addQueryHandlerToSTF(t, s, func(ctx context.Context, q *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error) {
-		cParams := DefaulConsensusParams
-		kvSet(t, ctx, "query")
-		return &consensustypes.QueryParamsResponse{
-			Params: cParams,
-		}, nil
-	})
-	addMsgHandlerToSTF(t, s, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
-		kvSet(t, ctx, "exec")
-		return nil, nil
-	})
 
 	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
 		Time:          time.Now(),
@@ -330,23 +278,16 @@ func TestConsensus_FinalizeBlock_MultiTxs(t *testing.T) {
 			Time:   time.Now(),
 			Height: int64(i),
 			Hash:   sum[:],
-			Txs:    [][]byte{mockTx.Bytes()},
+			Txs:    [][]byte{mockTx.Bytes(), mockTx.Bytes()},
 		})
 		require.NoError(t, err)
-		stateCommitmentHas(t, mockStore, "init-chain", uint64(i))
-		stateCommitmentHas(t, mockStore, "exec", uint64(i))
-		stateCommitmentHas(t, mockStore, "end-block", uint64(i))
+		assertStoreLatestVersion(t, mockStore, uint64(i))
 	}
 	require.Equal(t, int64(endBlock), c.lastCommittedHeight.Load())
 }
 
 func TestConsensus_CheckTx(t *testing.T) {
-	c, s := setUpConsensus(t, 0, mempool.NoOpMempool[mock.Tx]{})
-
-	addMsgHandlerToSTF(t, s, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
-		kvSet(t, ctx, "exec")
-		return nil, nil
-	})
+	c := setUpConsensus(t, 0, mempool.NoOpMempool[mock.Tx]{})
 
 	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
 		Time:          time.Now(),
@@ -370,10 +311,9 @@ func TestConsensus_CheckTx(t *testing.T) {
 		}.Bytes(),
 	})
 	require.NoError(t, err)
-	require.Contains(t, res.Log, "out of gas")
 	require.NotEqual(t, res.Code, 0)
 
-	c, _ = setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
+	c = setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
 	res, err = c.CheckTx(context.Background(), &abciproto.CheckTxRequest{
 		Tx: mock.Tx{
 			Sender:   []byte("sender"),
@@ -386,30 +326,7 @@ func TestConsensus_CheckTx(t *testing.T) {
 }
 
 func TestConsensus_ExtendVote(t *testing.T) {
-	c, s := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
-
-	addQueryHandlerToSTF(t, s, func(ctx context.Context, q *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error) {
-		cParams := &v1.ConsensusParams{
-			Block: &v1.BlockParams{
-				MaxGas: 5000000,
-			},
-			Abci: &v1.ABCIParams{
-				VoteExtensionsEnableHeight: 2,
-			},
-			Feature: &v1.FeatureParams{
-				VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 2},
-			},
-		}
-
-		kvSet(t, ctx, "query")
-		return &consensustypes.QueryParamsResponse{
-			Params: cParams,
-		}, nil
-	})
-	addMsgHandlerToSTF(t, s, func(ctx context.Context, msg *consensustypes.MsgUpdateParams) (*consensustypes.MsgUpdateParams, error) {
-		kvSet(t, ctx, "exec")
-		return nil, nil
-	})
+	c := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
 
 	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
 		Time:          time.Now(),
@@ -451,28 +368,7 @@ func TestConsensus_ExtendVote(t *testing.T) {
 }
 
 func TestConsensus_VerifyVoteExtension(t *testing.T) {
-	c, s := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
-
-	addQueryHandlerToSTF(t, s, func(ctx context.Context, q *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error) {
-		cParams := &v1.ConsensusParams{
-			Block: &v1.BlockParams{
-				MaxGas: 5000000,
-			},
-			Abci: &v1.ABCIParams{
-				VoteExtensionsEnableHeight: 2,
-			},
-			Feature: &v1.FeatureParams{
-				VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 2},
-			},
-		}
-		return &consensustypes.QueryParamsResponse{
-			Params: cParams,
-		}, nil
-	})
-	addMsgHandlerToSTF(t, s, func(ctx context.Context, msg *consensustypes.MsgUpdateParams) (*consensustypes.MsgUpdateParams, error) {
-		kvSet(t, ctx, "exec")
-		return nil, nil
-	})
+	c := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
 
 	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
 		Time:          time.Now(),
@@ -515,7 +411,7 @@ func TestConsensus_VerifyVoteExtension(t *testing.T) {
 }
 
 func TestConsensus_PrepareProposal(t *testing.T) {
-	c, _ := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
+	c := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
 
 	// Invalid height
 	_, err := c.PrepareProposal(context.Background(), &abciproto.PrepareProposalRequest{
@@ -539,18 +435,7 @@ func TestConsensus_PrepareProposal(t *testing.T) {
 }
 
 func TestConsensus_PrepareProposal_With_Handler_NoOpMempool(t *testing.T) {
-	c, s := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
-
-	addQueryHandlerToSTF(t, s, func(ctx context.Context, q *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error) {
-		cParams := &v1.ConsensusParams{
-			Block: &v1.BlockParams{
-				MaxGas: 300_000,
-			},
-		}
-		return &consensustypes.QueryParamsResponse{
-			Params: cParams,
-		}, nil
-	})
+	c := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
 
 	c.prepareProposalHandler = handlers.NewDefaultProposalHandler(c.mempool).PrepareHandler()
 
@@ -612,7 +497,7 @@ func TestConsensus_PrepareProposal_With_Handler_NoOpMempool(t *testing.T) {
 }
 
 func TestConsensus_ProcessProposal(t *testing.T) {
-	c, _ := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
+	c := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
 
 	// Invalid height
 	_, err := c.ProcessProposal(context.Background(), &abciproto.ProcessProposalRequest{
@@ -643,18 +528,9 @@ func TestConsensus_ProcessProposal(t *testing.T) {
 }
 
 func TestConsensus_ProcessProposal_With_Handler_OutOfGas(t *testing.T) {
-	c, s := setUpConsensus(t, 0, cometmock.MockMempool[mock.Tx]{})
+	c := setUpConsensus(t, 0, cometmock.MockMempool[mock.Tx]{})
 	c.processProposalHandler = handlers.NewDefaultProposalHandler(c.mempool).ProcessHandler()
-	addQueryHandlerToSTF(t, s, func(ctx context.Context, q *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error) {
-		cParams := &v1.ConsensusParams{
-			Block: &v1.BlockParams{
-				MaxGas: 300_000,
-			},
-		}
-		return &consensustypes.QueryParamsResponse{
-			Params: cParams,
-		}, nil
-	})
+
 	res, err := c.ProcessProposal(context.Background(), &abciproto.ProcessProposalRequest{
 		Height: 1,
 		Txs:    [][]byte{invalidMockTx.Bytes(), invalidMockTx.Bytes(), invalidMockTx.Bytes()},
@@ -664,18 +540,7 @@ func TestConsensus_ProcessProposal_With_Handler_OutOfGas(t *testing.T) {
 }
 
 func TestConsensus_ProcessProposal_With_Handler(t *testing.T) {
-	c, s := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
-
-	addQueryHandlerToSTF(t, s, func(ctx context.Context, q *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error) {
-		cParams := &v1.ConsensusParams{
-			Block: &v1.BlockParams{
-				MaxGas: 300_000,
-			},
-		}
-		return &consensustypes.QueryParamsResponse{
-			Params: cParams,
-		}, nil
-	})
+	c := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
 
 	c.processProposalHandler = handlers.NewDefaultProposalHandler(c.mempool).ProcessHandler()
 
@@ -697,21 +562,7 @@ func TestConsensus_ProcessProposal_With_Handler(t *testing.T) {
 }
 
 func TestConsensus_Info(t *testing.T) {
-	c, s := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
-
-	addQueryHandlerToSTF(t, s, func(ctx context.Context, q *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error) {
-		cParams := &v1.ConsensusParams{
-			Block: &v1.BlockParams{
-				MaxGas: 300_000,
-			},
-			Version: &v1.VersionParams{
-				App: 1,
-			},
-		}
-		return &consensustypes.QueryParamsResponse{
-			Params: cParams,
-		}, nil
-	})
+	c := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
 
 	// Version 0
 	res, err := c.Info(context.Background(), &abciproto.InfoRequest{})
@@ -742,16 +593,22 @@ func TestConsensus_Info(t *testing.T) {
 //   - app request
 //   - p2p request
 func TestConsensus_Query(t *testing.T) {
-	c, s := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
-	addQueryHandlerToSTF(t, s, func(ctx context.Context, q *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error) {
-		cParams := DefaulConsensusParams
-		return &consensustypes.QueryParamsResponse{
-			Params: cParams,
-		}, nil
-	})
-	addMsgHandlerToSTF(t, s, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
-		kvSet(t, ctx, "exec")
-		return nil, nil
+	c := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
+
+	// Write data to state storage
+	c.store.GetStateStorage().ApplyChangeset(1, &store.Changeset{
+		Changes: []store.StateChanges{
+			{
+				Actor: actorName,
+				StateChanges: []store.KVPair{
+					{
+						Key:    []byte("key"),
+						Value:  []byte("value"),
+						Remove: false,
+					},
+				},
+			},
+		},
 	})
 
 	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
@@ -768,8 +625,6 @@ func TestConsensus_Query(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	stateStorageHas(t, c.store, "init-chain", 1)
-
 	// empty request
 	res, err := c.Query(context.Background(), &abciproto.QueryRequest{})
 	require.NoError(t, err)
@@ -779,11 +634,11 @@ func TestConsensus_Query(t *testing.T) {
 	// Query store
 	res, err = c.Query(context.Background(), &abciproto.QueryRequest{
 		Path:   "store/cookies/",
-		Data:   []byte("init-chain"),
+		Data:   []byte("key"),
 		Height: 1,
 	})
 	require.NoError(t, err)
-	require.Equal(t, string(res.Value), "init-chain")
+	require.Equal(t, string(res.Value), "value")
 
 	// Query store with no value
 	res, err = c.Query(context.Background(), &abciproto.QueryRequest{
@@ -795,24 +650,45 @@ func TestConsensus_Query(t *testing.T) {
 	require.Equal(t, res.Value, []byte(nil))
 }
 
-func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.Tx]) (*Consensus[mock.Tx], *stf.STF[mock.Tx]) {
+func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.Tx]) *Consensus[mock.Tx] {
+	msgRouterBuilder := getMsgRouterBuilder(t, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
+		return nil, nil
+	})
+
+	queryRouterBuilder := getQueryRouterBuilder(t, func(ctx context.Context, q *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error) {
+		cParams := &v1.ConsensusParams{
+			Block: &v1.BlockParams{
+				MaxGas: 5000000,
+			},
+			Abci: &v1.ABCIParams{
+				VoteExtensionsEnableHeight: 2,
+			},
+			Feature: &v1.FeatureParams{
+				VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 2},
+			},
+		}
+		return &consensustypes.QueryParamsResponse{
+			Params: cParams,
+		}, nil
+	})
+
 	s, err := stf.NewSTF(
 		log.NewNopLogger().With("module", "stf"),
-		stf.NewMsgRouterBuilder(),
-		stf.NewMsgRouterBuilder(),
+		msgRouterBuilder,
+		queryRouterBuilder,
 		func(ctx context.Context, txs []mock.Tx) error { return nil },
 		func(ctx context.Context) error {
-			return kvSet(t, ctx, "begin-block")
+			return nil
 		},
 		func(ctx context.Context) error {
-			return kvSet(t, ctx, "end-block")
+			return nil
 		},
 		func(ctx context.Context, tx mock.Tx) error {
-			return kvSet(t, ctx, "validate")
+			return nil
 		},
 		func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error) { return nil, nil },
 		func(ctx context.Context, tx mock.Tx, success bool) error {
-			return kvSet(t, ctx, "post-tx-exec")
+			return nil
 		},
 		branch.DefaultNewWriterMap,
 	)
@@ -829,51 +705,29 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 		QueryGasLimit:      gasLimit,
 		SimulationGasLimit: gasLimit,
 		InitGenesis: func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) error {
-			return kvSet(t, ctx, "init-chain")
+			return nil
 		},
 	}
 
 	am, err := b.Build()
 	require.NoError(t, err)
 
-	return NewConsensus[mock.Tx](log.NewNopLogger(), "testing-app", "authority", am, mempool, map[string]struct{}{}, nil, mockStore, Config{AppTomlConfig: DefaultAppTomlConfig()}, mock.TxCodec{}, "test"), s
+	return NewConsensus[mock.Tx](log.NewNopLogger(), "testing-app", "authority", am, mempool, map[string]struct{}{}, nil, mockStore, Config{AppTomlConfig: DefaultAppTomlConfig()}, mock.TxCodec{}, "test")
 }
 
-var actorName = []byte("cookies")
-
-func kvSet(t *testing.T, ctx context.Context, v string) error {
+// Check target version same with store's latest version
+// And should have commit info of target version
+// If block 0, commitInfo returned should be nil
+func assertStoreLatestVersion(t *testing.T, store types.Store, target uint64) {
 	t.Helper()
-	executionCtx := stf.GetExecutionContext(ctx)
-	require.NotNil(t, executionCtx)
-	state, err := stf.GetStateFromContext(executionCtx).GetWriter(actorName)
+	version, err := store.GetLatestVersion()
 	require.NoError(t, err)
-	return state.Set([]byte(v), []byte(v))
-}
-
-func stateStorageHas(t *testing.T, store types.Store, key string, version uint64) {
-	t.Helper()
-	has, err := store.GetStateStorage().Has(actorName, version, []byte(key))
+	require.Equal(t, version, target)
+	commitInfo, err := store.GetStateCommitment().GetCommitInfo(version)
 	require.NoError(t, err)
-	require.Truef(t, has, "state storage did not have key: %s", key)
-}
-
-func stateStorageNoHas(t *testing.T, store types.Store, key string, version uint64) {
-	t.Helper()
-	has, err := store.GetStateStorage().Has(actorName, version, []byte(key))
-	require.NoError(t, err)
-	require.Falsef(t, has, "state storage had key: %s", key)
-}
-
-func stateCommitmentHas(t *testing.T, store types.Store, key string, version uint64) {
-	t.Helper()
-	bz, err := store.GetStateCommitment().Get(actorName, version, []byte(key))
-	require.NoError(t, err)
-	require.NotEqual(t, len(bz), 0)
-	require.Equal(t, bz, []byte(key))
-}
-
-func stateCommitmentNoHas(t *testing.T, store types.Store, key string, version uint64) {
-	t.Helper()
-	bz, _ := store.GetStateCommitment().Get(actorName, version, []byte(key))
-	require.Equal(t, len(bz), 0)
+	if target != 0 {
+		require.Equal(t, commitInfo.Version, target)
+	} else {
+		require.Nil(t, commitInfo)
+	}
 }

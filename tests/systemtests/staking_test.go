@@ -10,7 +10,6 @@ import (
 )
 
 func TestStakeUnstake(t *testing.T) {
-	t.Skip("The fee deduction is not yet implemented in v2")
 	// Scenario:
 	// delegate tokens to validator
 	// undelegate some tokens

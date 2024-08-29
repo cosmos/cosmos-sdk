@@ -20,7 +20,8 @@ var (
 // Additionally, it registers tx validators that do not really have a place in other modules.
 // This module is only useful for chains using server/v2. Ante/Post handlers are setup via baseapp options in depinject.
 type AppModule struct {
-	sigVerification    ante.SigVerificationDecorator
+	sigVerification ante.SigVerificationDecorator
+	feeTxValidator  *ante.DeductFeeDecorator
 	unorderTxValidator *ante.UnorderedTxDecorator
 	// txValidators contains tx validator that can be injected into the module via depinject.
 	// tx validators should be module based, but it can happen that you do not want to create a new module
@@ -31,13 +32,15 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object.
 func NewAppModule(
 	sigVerification ante.SigVerificationDecorator,
-	unorderedTxValidator *ante.UnorderedTxDecorator,
+	feeTxValidator *ante.DeductFeeDecorator,
+	unorderTxValidator *ante.UnorderedTxDecorator,
 	txValidators ...appmodulev2.TxValidator[transaction.Tx],
 ) AppModule {
 	return AppModule{
-		sigVerification:    sigVerification,
-		unorderTxValidator: unorderedTxValidator,
-		txValidators:       txValidators,
+		sigVerification: sigVerification,
+		feeTxValidator:  feeTxValidator,
+		unorderTxValidator: unorderTxValidator,
+		txValidators:    txValidators,
 	}
 }
 
@@ -55,6 +58,10 @@ func (a AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 		}
 	}
 
+	if err := a.feeTxValidator.ValidateTx(ctx, tx); err != nil {
+		return err
+	}
+
 	sdkTx, ok := tx.(sdk.Tx)
 	if !ok {
 		return fmt.Errorf("invalid tx type %T, expected sdk.Tx", tx)
@@ -64,7 +71,7 @@ func (a AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 		if err := a.unorderTxValidator.ValidateTx(ctx, sdkTx); err != nil {
 			return err
 		}
-	}
+	}	
 
 	return a.sigVerification.ValidateTx(ctx, tx)
 }

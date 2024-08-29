@@ -18,7 +18,6 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"sigs.k8s.io/yaml"
 
-	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/cometbft/client/rpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -29,21 +28,6 @@ import (
 )
 
 func rpcClient(cmd *cobra.Command) (rpc.CometRPC, error) {
-	v := client.GetViperFromCmd(cmd)
-	appTomlConfig := AppTomlConfig{}
-	if v != nil {
-		if err := serverv2.UnmarshalSubConfig(v, ServerName, &appTomlConfig); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal config: %w", err)
-		}
-	}
-	if appTomlConfig.Standalone {
-		client, err := rpchttp.New(client.GetConfigFromCmd(cmd).RPC.ListenAddress)
-		if err != nil {
-			return nil, err
-		}
-		return client, nil
-	}
-
 	rpcURI, err := cmd.Flags().GetString(FlagNode)
 	if err != nil {
 		return nil, err

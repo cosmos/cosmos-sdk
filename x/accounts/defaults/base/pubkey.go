@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/core/transaction"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	dcrd_secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
 
@@ -14,7 +15,7 @@ import (
 
 // PubKey defines a generic pubkey.
 type PubKey interface {
-	gogoproto.Message
+	transaction.Msg
 	VerifySignature(msg, sig []byte) bool
 }
 

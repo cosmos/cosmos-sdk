@@ -10,55 +10,55 @@
 
 # Components
 
-/baseapp/ @facundomedica @aaronc @testinginprod @kocubinski
-/client/ @julienrbrt @JulianToledano
-/client/v2/ @julienrbrt @JulianToledano
-/collections/ @testinginprod @facundomedica
+/baseapp/ @facundomedica @aaronc @testinginprod @kocubinski @cosmos/sdk-core-dev
+/client/ @julienrbrt @JulianToledano @cosmos/sdk-core-dev
+/client/v2/ @julienrbrt @JulianToledano @cosmos/sdk-core-dev
+/collections/ @testinginprod @facundomedica @cosmos/sdk-core-dev
 /core/ @cosmos/sdk-core-dev
-/crypto/ @JulianToledano @raynaudoe
-/depinject/ @aaronc @kocubinski @julienrbrt
-/indexer/ @aaronc @cool-develope
-/log/ @julienrbrt @sontrinh16
-/math/ @testinginprod @alpe
-/orm/ @aaronc @testinginprod @lucaslopezf
-/runtime/ @julienrbrt @hieuvubk
-/runtime/v2/ @julienrbrt @hieuvubk
-/schema/ @aaronc @testinginprod
+/crypto/ @JulianToledano @raynaudoe @cosmos/sdk-core-dev
+/depinject/ @aaronc @kocubinski @julienrbrt @cosmos/sdk-core-dev
+/indexer/ @aaronc @cool-develope @cosmos/sdk-core-dev
+/log/ @julienrbrt @sontrinh16 @cosmos/sdk-core-dev
+/math/ @testinginprod @alpe @cosmos/sdk-core-dev
+/orm/ @aaronc @testinginprod @lucaslopezf @cosmos/sdk-core-dev
+/runtime/ @julienrbrt @hieuvubk @cosmos/sdk-core-dev
+/runtime/v2/ @julienrbrt @hieuvubk @cosmos/sdk-core-dev
+/schema/ @aaronc @testinginprod @cosmos/sdk-core-dev
 /server/ @cosmos/sdk-core-dev
-/server/v2/ @julienrbrt @hieuvubk
-/server/v2/stf/ @testinginprod @kocubinski
-/server/v2/appmanager/ @testinginprod @facundomedica
-/server/v2/cometbft/ @facundomedica @sontrinh16
-/simapp/ @facundomedica @julienrbrt
-/simapp/v2/ @kocubinski @julienrbrt
-/store/ @cool-develope @kocubinski
-/store/v2/ @cool-develope @kocubinski
-/types/mempool/ @kocubinski
+/server/v2/ @julienrbrt @hieuvubk @cosmos/sdk-core-dev
+/server/v2/stf/ @testinginprod @kocubinski @cosmos/sdk-core-dev
+/server/v2/appmanager/ @testinginprod @facundomedica @cosmos/sdk-core-dev
+/server/v2/cometbft/ @facundomedica @sontrinh16 @cosmos/sdk-core-dev
+/simapp/ @facundomedica @julienrbrt @cosmos/sdk-core-dev
+/simapp/v2/ @kocubinski @julienrbrt @cosmos/sdk-core-dev
+/store/ @cool-develope @kocubinski @cosmos/sdk-core-dev
+/store/v2/ @cool-develope @kocubinski @cosmos/sdk-core-dev
+/types/mempool/ @kocubinski @cosmos/sdk-core-dev
 
 # x modules
 
-/x/accounts/ @testinginprod @sontrinh16
-/x/auth/ @facundomedica @testinginprod @aaronc
-/x/authz/ @akhilkumarpilli @raynaudoe
-/x/bank/ @julienrbrt @sontrinh16
-/x/circuit/ @kocubinski @akhilkumarpilli @raynaudoe
-/x/consensus/ @testinginprod @raynaudoe
-/x/distribution/ @alpe @JulianToledano
-/x/epochs/ @alpe @facundomedica
-/x/evidence/ @alpe @akhilkumarpilli
-/x/feegrant/ @cool-develope @alpe
-/x/genutil/ @kocubinski @hieuvubk
-/x/gov/ @julienrbrt @sontrinh16
-/x/group/ @kocubinski @akhilkumarpilli
-/x/mint/ @lucaslopezf @facundomedica
-/x/nft/ @alpe @lucaslopezf
-/x/params/ @cosmos/sdk-core-dev
-/x/protocolpool/ @facundomedica @hieuvubk
-/x/simulation/ @cosmos/sdk-core-dev
-/x/slashing/ @testinginprod @raynaudoe @lucaslopezf
-/x/staking/ @facundomedica @testinginprod @JulianToledano @ziscky
-/x/tx/ @kocubinski @testinginprod @aaronc
-/x/upgrade/ @facundomedica @cool-develope @akhilkumarpilli
+/x/accounts/ @testinginprod @sontrinh16 @cosmos/sdk-core-dev
+/x/auth/ @facundomedica @testinginprod @aaronc @cosmos/sdk-core-dev
+/x/authz/ @akhilkumarpilli @raynaudoe @cosmos/sdk-core-dev
+/x/bank/ @julienrbrt @sontrinh16 @cosmos/sdk-core-dev
+/x/circuit/ @kocubinski @akhilkumarpilli @raynaudoe @cosmos/sdk-core-dev
+/x/consensus/ @testinginprod @raynaudoe @cosmos/sdk-core-dev
+/x/distribution/ @alpe @JulianToledano @cosmos/sdk-core-dev
+/x/epochs/ @alpe @facundomedica @cosmos/sdk-core-dev
+/x/evidence/ @alpe @akhilkumarpilli @cosmos/sdk-core-dev
+/x/feegrant/ @cool-develope @alpe @cosmos/sdk-core-dev
+/x/genutil/ @kocubinski @hieuvubk @cosmos/sdk-core-dev
+/x/gov/ @julienrbrt @sontrinh16 @cosmos/sdk-core-dev
+/x/group/ @kocubinski @akhilkumarpilli @cosmos/sdk-core-dev
+/x/mint/ @lucaslopezf @facundomedica @cosmos/sdk-core-dev
+/x/nft/ @alpe @lucaslopezf @cosmos/sdk-core-dev
+/x/params/ @cosmos/sdk-core-dev # deprecated so whole team
+/x/protocolpool/ @facundomedica @hieuvubk @cosmos/sdk-core-dev
+/x/simulation/ @cosmos/sdk-core-dev # deprecated so whole team
+/x/slashing/ @testinginprod @raynaudoe @lucaslopezf @cosmos/sdk-core-dev
+/x/staking/ @facundomedica @testinginprod @JulianToledano @ziscky @cosmos/sdk-core-dev
+/x/tx/ @kocubinski @testinginprod @aaronc @cosmos/sdk-core-dev
+/x/upgrade/ @facundomedica @cool-develope @akhilkumarpilli @cosmos/sdk-core-dev
 
 # CODEOWNERS for docs configuration
 

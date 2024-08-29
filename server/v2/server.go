@@ -56,25 +56,32 @@ type CLIConfig struct {
 	Txs []*cobra.Command
 }
 
+const (
+	serverName = "server"
+)
+
 var _ ServerComponent[transaction.Tx] = (*Server[transaction.Tx])(nil)
 
 type Server[T transaction.Tx] struct {
 	logger     log.Logger
 	components []ServerComponent[T]
+	config     ServerConfig
 }
 
 func NewServer[T transaction.Tx](
 	logger log.Logger,
+	config ServerConfig,
 	components ...ServerComponent[T],
 ) *Server[T] {
 	return &Server[T]{
 		logger:     logger,
+		config:     config,
 		components: components,
 	}
 }
 
 func (s *Server[T]) Name() string {
-	return "server"
+	return serverName
 }
 
 // Start starts all components concurrently.
@@ -151,9 +158,19 @@ func (s *Server[T]) CLICommands() CLIConfig {
 	return commands
 }
 
+// Config returns config of the server component
+func (s *Server[T]) Config() ServerConfig {
+	return s.config
+}
+
 // Configs returns all configs of all server components.
 func (s *Server[T]) Configs() map[string]any {
 	cfgs := make(map[string]any)
+
+	// add server component config
+	cfgs[s.Name()] = s.config
+
+	// add other components' config
 	for _, mod := range s.components {
 		if configmod, ok := mod.(HasConfig); ok {
 			cfg := configmod.Config()
@@ -164,9 +181,22 @@ func (s *Server[T]) Configs() map[string]any {
 	return cfgs
 }
 
+func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
+	flags := pflag.NewFlagSet(s.Name(), pflag.ExitOnError)
+	flags.String(FlagMinGasPrices, "", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)")
+	return flags
+}
+
 // Init initializes all server components with the provided application, configuration, and logger.
 // It returns an error if any component fails to initialize.
 func (s *Server[T]) Init(appI AppI[T], v *viper.Viper, logger log.Logger) error {
+	cfg := s.config
+	if v != nil {
+		if err := UnmarshalSubConfig(v, s.Name(), &cfg); err != nil {
+			return fmt.Errorf("failed to unmarshal config: %w", err)
+		}
+	}
+
 	var components []ServerComponent[T]
 	for _, mod := range s.components {
 		mod := mod
@@ -177,6 +207,7 @@ func (s *Server[T]) Init(appI AppI[T], v *viper.Viper, logger log.Logger) error 
 		components = append(components, mod)
 	}
 
+	s.config = cfg
 	s.components = components
 	return nil
 }
@@ -217,6 +248,11 @@ func (s *Server[T]) WriteConfig(configPath string) error {
 // StartFlags returns all flags of all server components.
 func (s *Server[T]) StartFlags() []*pflag.FlagSet {
 	flags := []*pflag.FlagSet{}
+
+	// add server component flags
+	flags = append(flags, s.StartCmdFlags())
+
+	// add other components' start cmd flags
 	for _, mod := range s.components {
 		if startmod, ok := mod.(HasStartFlags); ok {
 			flags = append(flags, startmod.StartCmdFlags())

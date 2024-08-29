@@ -6,7 +6,7 @@ import "fmt"
 type ObjectType struct {
 	// Name is the name of the object type. It must be unique within the module schema amongst all object and enum
 	// types and conform to the NameFormat regular expression.
-	Name string
+	Name string `json:"name"`
 
 	// KeyFields is a list of fields that make up the primary key of the object.
 	// It can be empty, in which case, indexers should assume that this object is
@@ -17,7 +17,7 @@ type ObjectType struct {
 	// are NOT ALLOWED.
 	// It is an INCOMPATIBLE change to add, remove or change fields in the key as this
 	// changes the underlying primary key of the object.
-	KeyFields []Field
+	KeyFields []Field `json:"key_fields,omitempty"`
 
 	// ValueFields is a list of fields that are not part of the primary key of the object.
 	// It can be empty in the case where all fields are part of the primary key.
@@ -26,14 +26,14 @@ type ObjectType struct {
 	// It is a COMPATIBLE change to add new value fields to an object type because
 	// this does not affect the primary key of the object.
 	// Existing value fields should not be removed or modified.
-	ValueFields []Field
+	ValueFields []Field `json:"value_fields,omitempty"`
 
 	// RetainDeletions is a flag that indicates whether the indexer should retain
 	// deleted rows in the database and flag them as deleted rather than actually
 	// deleting the row. For many types of data in state, the data is deleted even
 	// though it is still valid in order to save space. Indexers will want to have
 	// the option of retaining such data and distinguishing from other "true" deletions.
-	RetainDeletions bool
+	RetainDeletions bool `json:"retain_deletions,omitempty"`
 }
 
 // TypeName implements the Type interface.
@@ -44,13 +44,7 @@ func (o ObjectType) TypeName() string {
 func (ObjectType) isType() {}
 
 // Validate validates the object type.
-func (o ObjectType) Validate() error {
-	return o.validate(map[string]Type{})
-}
-
-// validate validates the object type with an enumValueMap that can be
-// shared across a whole module schema.
-func (o ObjectType) validate(types map[string]Type) error {
+func (o ObjectType) Validate(schema Schema) error {
 	if !ValidateName(o.Name) {
 		return fmt.Errorf("invalid object type name %q", o.Name)
 	}
@@ -58,7 +52,7 @@ func (o ObjectType) validate(types map[string]Type) error {
 	fieldNames := map[string]bool{}
 
 	for _, field := range o.KeyFields {
-		if err := field.Validate(); err != nil {
+		if err := field.Validate(schema); err != nil {
 			return fmt.Errorf("invalid key field %q: %v", field.Name, err) //nolint:errorlint // false positive due to using go1.12
 		}
 
@@ -74,15 +68,10 @@ func (o ObjectType) validate(types map[string]Type) error {
 			return fmt.Errorf("duplicate field name %q", field.Name)
 		}
 		fieldNames[field.Name] = true
-
-		err := addEnumType(types, field)
-		if err != nil {
-			return err
-		}
 	}
 
 	for _, field := range o.ValueFields {
-		if err := field.Validate(); err != nil {
+		if err := field.Validate(schema); err != nil {
 			return fmt.Errorf("invalid value field %q: %v", field.Name, err) //nolint:errorlint // false positive due to using go1.12
 		}
 
@@ -90,11 +79,6 @@ func (o ObjectType) validate(types map[string]Type) error {
 			return fmt.Errorf("duplicate field name %q", field.Name)
 		}
 		fieldNames[field.Name] = true
-
-		err := addEnumType(types, field)
-		if err != nil {
-			return err
-		}
 	}
 
 	if len(o.KeyFields) == 0 && len(o.ValueFields) == 0 {
@@ -105,12 +89,12 @@ func (o ObjectType) validate(types map[string]Type) error {
 }
 
 // ValidateObjectUpdate validates that the update conforms to the object type.
-func (o ObjectType) ValidateObjectUpdate(update ObjectUpdate) error {
+func (o ObjectType) ValidateObjectUpdate(update ObjectUpdate, schema Schema) error {
 	if o.Name != update.TypeName {
 		return fmt.Errorf("object type name %q does not match update type name %q", o.Name, update.TypeName)
 	}
 
-	if err := ValidateObjectKey(o.KeyFields, update.Key); err != nil {
+	if err := ValidateObjectKey(o.KeyFields, update.Key, schema); err != nil {
 		return fmt.Errorf("invalid key for object type %q: %v", update.TypeName, err) //nolint:errorlint // false positive due to using go1.12
 	}
 
@@ -118,5 +102,5 @@ func (o ObjectType) ValidateObjectUpdate(update ObjectUpdate) error {
 		return nil
 	}
 
-	return ValidateObjectValue(o.ValueFields, update.Value)
+	return ValidateObjectValue(o.ValueFields, update.Value, schema)
 }

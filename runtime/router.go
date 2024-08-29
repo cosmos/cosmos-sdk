@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
-// NewMsgRouterService implements router.Service.
+// NewMsgRouterService return new implementation of router.Service.
 func NewMsgRouterService(msgRouter baseapp.MessageRouter) router.Service {
 	return &msgRouterService{
 		router: msgRouter,
@@ -45,21 +45,8 @@ func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error 
 	return nil
 }
 
-// InvokeTyped execute a message and fill-in a response.
-// The response must be known and passed as a parameter.
-// Use InvokeUntyped if the response type is not known.
-func (m *msgRouterService) InvokeTyped(ctx context.Context, msg, resp gogoproto.Message) error {
-	messageName := msgTypeURL(msg)
-	handler := m.router.HybridHandlerByMsgName(messageName)
-	if handler == nil {
-		return fmt.Errorf("unknown message: %s", messageName)
-	}
-
-	return handler(ctx, msg, resp)
-}
-
-// InvokeUntyped execute a message and returns a response.
-func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg gogoproto.Message) (gogoproto.Message, error) {
+// Invoke execute a message and returns a response.
+func (m *msgRouterService) Invoke(ctx context.Context, msg gogoproto.Message) (gogoproto.Message, error) {
 	messageName := msgTypeURL(msg)
 	respName := m.router.ResponseNameByMsgName(messageName)
 	if respName == "" {
@@ -76,10 +63,19 @@ func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg gogoproto.Mess
 		return nil, fmt.Errorf("could not create response message %s", respName)
 	}
 
-	return msgResp, m.InvokeTyped(ctx, msg, msgResp)
+	handler := m.router.HybridHandlerByMsgName(messageName)
+	if handler == nil {
+		return nil, fmt.Errorf("unknown message: %s", messageName)
+	}
+
+	if err := handler(ctx, msg, msgResp); err != nil {
+		return nil, err
+	}
+
+	return msgResp, nil
 }
 
-// NewQueryRouterService implements router.Service.
+// NewQueryRouterService return new implementation of router.Service.
 func NewQueryRouterService(queryRouter baseapp.QueryRouter) router.Service {
 	return &queryRouterService{
 		router: queryRouter,
@@ -110,27 +106,12 @@ func (m *queryRouterService) CanInvoke(ctx context.Context, typeURL string) erro
 	return nil
 }
 
-// InvokeTyped execute a message and fill-in a response.
-// The response must be known and passed as a parameter.
-// Use InvokeUntyped if the response type is not known.
-func (m *queryRouterService) InvokeTyped(ctx context.Context, req, resp gogoproto.Message) error {
-	reqName := msgTypeURL(req)
-	handlers := m.router.HybridHandlerByRequestName(reqName)
-	if len(handlers) == 0 {
-		return fmt.Errorf("unknown request: %s", reqName)
-	} else if len(handlers) > 1 {
-		return fmt.Errorf("ambiguous request, query have multiple handlers: %s", reqName)
-	}
-
-	return handlers[0](ctx, req, resp)
-}
-
-// InvokeUntyped execute a message and returns a response.
-func (m *queryRouterService) InvokeUntyped(ctx context.Context, req gogoproto.Message) (gogoproto.Message, error) {
+// Invoke execute a message and returns a response.
+func (m *queryRouterService) Invoke(ctx context.Context, req gogoproto.Message) (gogoproto.Message, error) {
 	reqName := msgTypeURL(req)
 	respName := m.router.ResponseNameByRequestName(reqName)
 	if respName == "" {
-		return nil, fmt.Errorf("could not find response type for request %s (%T)", reqName, req)
+		return nil, fmt.Errorf("unknown request: could not find response type for request %s (%T)", reqName, req)
 	}
 
 	// get response type
@@ -143,7 +124,18 @@ func (m *queryRouterService) InvokeUntyped(ctx context.Context, req gogoproto.Me
 		return nil, fmt.Errorf("could not create response request %s", respName)
 	}
 
-	return reqResp, m.InvokeTyped(ctx, req, reqResp)
+	handlers := m.router.HybridHandlerByRequestName(reqName)
+	if len(handlers) == 0 {
+		return nil, fmt.Errorf("unknown request: %s", reqName)
+	} else if len(handlers) > 1 {
+		return nil, fmt.Errorf("ambiguous request, query have multiple handlers: %s", reqName)
+	}
+
+	if err := handlers[0](ctx, req, reqResp); err != nil {
+		return nil, err
+	}
+
+	return reqResp, nil
 }
 
 // msgTypeURL returns the TypeURL of a proto message.

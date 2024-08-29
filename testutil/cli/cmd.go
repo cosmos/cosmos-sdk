@@ -113,7 +113,7 @@ func SubmitTestTx(clientCtx client.Context, msg proto.Message, from sdk.AccAddre
 		return nil, err
 	}
 
-	err = tx.Sign(context.Background(), txFactory, keyRecord.Name, txBuilder, true)
+	err = tx.Sign(clientCtx, txFactory, keyRecord.Name, txBuilder, true)
 	if err != nil {
 		return nil, err
 	}

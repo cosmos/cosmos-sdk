@@ -263,3 +263,58 @@ func TestKindForGoValue(t *testing.T) {
 		})
 	}
 }
+
+func TestKindJSON(t *testing.T) {
+	tt := []struct {
+		kind      Kind
+		want      string
+		expectErr bool
+	}{
+		{StringKind, `"string"`, false},
+		{BytesKind, `"bytes"`, false},
+		{Int8Kind, `"int8"`, false},
+		{Uint8Kind, `"uint8"`, false},
+		{Int16Kind, `"int16"`, false},
+		{Uint16Kind, `"uint16"`, false},
+		{Int32Kind, `"int32"`, false},
+		{Uint32Kind, `"uint32"`, false},
+		{Int64Kind, `"int64"`, false},
+		{Uint64Kind, `"uint64"`, false},
+		{IntegerStringKind, `"integer"`, false},
+		{DecimalStringKind, `"decimal"`, false},
+		{BoolKind, `"bool"`, false},
+		{TimeKind, `"time"`, false},
+		{DurationKind, `"duration"`, false},
+		{Float32Kind, `"float32"`, false},
+		{Float64Kind, `"float64"`, false},
+		{JSONKind, `"json"`, false},
+		{EnumKind, `"enum"`, false},
+		{AddressKind, `"address"`, false},
+		{InvalidKind, `""`, true},
+		{Kind(100), `""`, true},
+	}
+	for i, tc := range tt {
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			b, err := json.Marshal(tc.kind)
+			if tc.expectErr && err == nil {
+				t.Errorf("test %d: expected error, got nil", i)
+			}
+			if !tc.expectErr && err != nil {
+				t.Errorf("test %d: unexpected error: %v", i, err)
+			}
+			if !tc.expectErr {
+				if string(b) != tc.want {
+					t.Errorf("test %d: expected %s, got %s", i, tc.want, string(b))
+				}
+				var k Kind
+				err := json.Unmarshal(b, &k)
+				if err != nil {
+					t.Errorf("test %d: unexpected error: %v", i, err)
+				}
+				if k != tc.kind {
+					t.Errorf("test %d: expected %s, got %s", i, tc.kind, k)
+				}
+			}
+		})
+	}
+}

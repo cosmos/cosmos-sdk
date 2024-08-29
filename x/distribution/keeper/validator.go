@@ -2,9 +2,10 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
-	"github.com/pkg/errors"
+	pkgerr "github.com/pkg/errors"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -55,7 +56,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val sdk.ValidatorI
 
 	// fetch current rewards
 	rewards, err := k.ValidatorCurrentRewards.Get(ctx, valBz)
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+	if err != nil && !pkgerr.Is(err, collections.ErrNotFound) {
 		return 0, err
 	}
 
@@ -71,7 +72,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val sdk.ValidatorI
 		}
 
 		outstanding, err := k.ValidatorOutstandingRewards.Get(ctx, valBz)
-		if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		if err != nil && !pkgerr.Is(err, collections.ErrNotFound) {
 			return 0, err
 		}
 
@@ -144,7 +145,7 @@ func (k Keeper) decrementReferenceCount(ctx context.Context, valAddr sdk.ValAddr
 	}
 
 	if historical.ReferenceCount == 0 {
-		return fmt.Errorf("cannot set negative reference count")
+		return errors.New("cannot set negative reference count")
 	}
 	historical.ReferenceCount--
 	if historical.ReferenceCount == 0 {

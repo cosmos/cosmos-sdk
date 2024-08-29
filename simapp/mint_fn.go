@@ -3,6 +3,7 @@ package simapp
 import (
 	"context"
 	"encoding/binary"
+	"fmt"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
@@ -29,29 +30,43 @@ func ProvideExampleMintFn(bankKeeper MintBankKeeper) minttypes.MintFn {
 			return nil
 		}
 
-		var stakingParams stakingtypes.QueryParamsResponse
-		err := env.QueryRouterService.InvokeTyped(ctx, &stakingtypes.QueryParamsRequest{}, &stakingParams)
+		resp, err := env.QueryRouterService.Invoke(ctx, &stakingtypes.QueryParamsRequest{})
 		if err != nil {
 			return err
+		}
+		stakingParams, ok := resp.(*stakingtypes.QueryParamsResponse)
+		if !ok {
+			return fmt.Errorf("unexpected response type: %T", resp)
 		}
 
-		var bankSupply banktypes.QuerySupplyOfResponse
-		err = env.QueryRouterService.InvokeTyped(ctx, &banktypes.QuerySupplyOfRequest{Denom: stakingParams.Params.BondDenom}, &bankSupply)
+		resp, err = env.QueryRouterService.Invoke(ctx, &banktypes.QuerySupplyOfRequest{Denom: stakingParams.Params.BondDenom})
 		if err != nil {
 			return err
 		}
+		bankSupply, ok := resp.(*banktypes.QuerySupplyOfResponse)
+		if !ok {
+			return fmt.Errorf("unexpected response type: %T", resp)
+		}
+
 		stakingTokenSupply := bankSupply.Amount
 
-		var mintParams minttypes.QueryParamsResponse
-		err = env.QueryRouterService.InvokeTyped(ctx, &minttypes.QueryParamsRequest{}, &mintParams)
+		resp, err = env.QueryRouterService.Invoke(ctx, &minttypes.QueryParamsRequest{})
+		if err != nil {
+			return err
+		}
+		mintParams, ok := resp.(*minttypes.QueryParamsResponse)
+		if !ok {
+			return fmt.Errorf("unexpected response type: %T", resp)
+		}
+
+		resp, err = env.QueryRouterService.Invoke(ctx, &stakingtypes.QueryPoolRequest{})
 		if err != nil {
 			return err
 		}
 
-		var stakingPool stakingtypes.QueryPoolResponse
-		err = env.QueryRouterService.InvokeTyped(ctx, &stakingtypes.QueryPoolRequest{}, &stakingPool)
-		if err != nil {
-			return err
+		stakingPool, ok := resp.(*stakingtypes.QueryPoolResponse)
+		if !ok {
+			return fmt.Errorf("unexpected response type: %T", resp)
 		}
 
 		// bondedRatio

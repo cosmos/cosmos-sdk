@@ -2,12 +2,67 @@
 
 # NOTE: Order is important; the last matching pattern takes the most precedence
 
-# Primary repo maintainers
+# Cosmos SDK Codeowners
 
-*       @cosmos/sdk-core-dev
+# Core team as default owners
+
+* @cosmos/sdk-core-dev
+
+# Components
+
+/baseapp/ @facundomedica @aaronc @testinginprod @kocubinski
+/client/ @julienrbrt @JulianToledano
+/client/v2/ @julienrbrt @JulianToledano
+/collections/ @testinginprod @facundomedica
+/core/ @cosmos/sdk-core-dev
+/crypto/ @JulianToledano @raynaudoe
+/depinject/ @aaronc @kocubinski @julienrbrt
+/indexer/ @aaronc @cool-develope
+/log/ @julienrbrt @sontrinh16
+/math/ @testinginprod @alpe
+/orm/ @aaronc @testinginprod @lucaslopezf
+/runtime/ @julienrbrt @hieuvubk
+/runtime/v2/ @julienrbrt @hieuvubk
+/schema/ @aaronc @testinginprod
+/server/ @cosmos/sdk-core-dev
+/server/v2/ @julienrbrt @hieuvubk
+/server/v2/stf/ @testinginprod @kocubinski
+/server/v2/appmanager/ @testinginprod @facundomedica
+/server/v2/cometbft/ @facundomedica @sontrinh16
+/simapp/ @facundomedica @julienrbrt
+/simapp/v2/ @kocubinski @julienrbrt
+/store/ @cool-develope @kocubinski
+/store/v2/ @cool-develope @kocubinski
+/types/mempool/ @kocubinski
+
+# x modules
+
+/x/accounts/ @testinginprod @sontrinh16
+/x/auth/ @facundomedica @testinginprod @aaronc
+/x/authz/ @akhilkumarpilli @raynaudoe
+/x/bank/ @julienrbrt @sontrinh16
+/x/circuit/ @kocubinski @akhilkumarpilli @raynaudoe
+/x/consensus/ @testinginprod @raynaudoe
+/x/distribution/ @alpe @JulianToledano
+/x/epochs/ @alpe @facundomedica
+/x/evidence/ @alpe @akhilkumarpilli
+/x/feegrant/ @cool-develope @alpe
+/x/genutil/ @kocubinski @hieuvubk
+/x/gov/ @julienrbrt @sontrinh16
+/x/group/ @kocubinski @akhilkumarpilli
+/x/mint/ @lucaslopezf @facundomedica
+/x/nft/ @alpe @lucaslopezf
+/x/params/ @cosmos/sdk-core-dev
+/x/protocolpool/ @facundomedica @hieuvubk
+/x/simulation/ @cosmos/sdk-core-dev
+/x/slashing/ @testinginprod @raynaudoe @lucaslopezf
+/x/staking/ @facundomedica @testinginprod @JulianToledano @ziscky
+/x/tx/ @kocubinski @testinginprod @aaronc
+/x/upgrade/ @facundomedica @cool-develope @akhilkumarpilli
 
 # CODEOWNERS for docs configuration
 
+/docs/ @cosmos/sdk-core-dev
 /docs/docusaurus.config.js @julienrbrt @tac0turtle
 /docs/sidebars.js @julienrbrt @tac0turtle
 /docs/pre.sh @julienrbrt @tac0turtle

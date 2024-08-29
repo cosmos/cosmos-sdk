@@ -707,9 +707,14 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) ([]abci.Event, error) {
 	var events []abci.Event
 	if app.preBlocker != nil {
+<<<<<<< HEAD
 		ctx := app.finalizeBlockState.Context()
 		rsp, err := app.preBlocker(ctx, req)
 		if err != nil {
+=======
+		ctx := app.finalizeBlockState.Context().WithEventManager(sdk.NewEventManager())
+		if err := app.preBlocker(ctx, req); err != nil {
+>>>>>>> 58bbcd9d7 (fix(baseapp): preblock events are not emmitted correctly (#21444))
 			return nil, err
 		}
 		// rsp.ConsensusParamsChanged is true from preBlocker means ConsensusParams in store get changed

@@ -19,8 +19,12 @@ type TypeSet interface {
 	// LookupType looks up a type by name.
 	LookupType(name string) (Type, bool)
 
-	// Types calls the given function for each type in the type set.
-	Types(f func(Type) bool)
+	// AllTypes calls the given function for each type in the type set.
+	// This function is compatible with go 1.23 iterators and can be used like this:
+	// for t := range types.AllTypes {
+	//     // do something with t
+	// }
+	AllTypes(f func(Type) bool)
 
 	// isTypeSet is a private method that ensures that only types in this package can be marked as type sets.
 	isTypeSet()
@@ -42,6 +46,6 @@ func (emptyTypeSet) LookupType(string) (Type, bool) {
 }
 
 // Types does nothing because there are no types in an EmptyTypeSet.
-func (emptyTypeSet) Types(func(Type) bool) {}
+func (emptyTypeSet) AllTypes(func(Type) bool) {}
 
 func (emptyTypeSet) isTypeSet() {}

@@ -20,7 +20,7 @@ var (
 
 // FieldGen generates random Field's based on the validity criteria of fields.
 func FieldGen(typeSet schema.TypeSet) *rapid.Generator[schema.Field] {
-	enumTypes := slices.DeleteFunc(slices.Collect(typeSet.Types), func(t schema.Type) bool {
+	enumTypes := slices.DeleteFunc(slices.Collect(typeSet.AllTypes), func(t schema.Type) bool {
 		_, ok := t.(schema.EnumType)
 		return !ok
 	})

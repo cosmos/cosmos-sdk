@@ -240,7 +240,7 @@ func TestModuleSchema_Types(t *testing.T) {
 	moduleSchema := exampleSchema(t)
 
 	var typeNames []string
-	moduleSchema.Types(func(typ Type) bool {
+	moduleSchema.AllTypes(func(typ Type) bool {
 		typeNames = append(typeNames, typ.TypeName())
 		return true
 	})
@@ -252,7 +252,7 @@ func TestModuleSchema_Types(t *testing.T) {
 
 	typeNames = nil
 	// scan just the first type and return false
-	moduleSchema.Types(func(typ Type) bool {
+	moduleSchema.AllTypes(func(typ Type) bool {
 		typeNames = append(typeNames, typ.TypeName())
 		return false
 	})

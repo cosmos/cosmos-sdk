@@ -44,7 +44,7 @@ var testResolver = ModuleSetDecoderResolver(moduleSet)
 func TestModuleSetDecoderResolver_IterateAll(t *testing.T) {
 	objectTypes := map[string]bool{}
 	err := testResolver.IterateAll(func(moduleName string, cdc schema.ModuleCodec) error {
-		cdc.Schema.Types(func(t schema.Type) bool {
+		cdc.Schema.AllTypes(func(t schema.Type) bool {
 			objTyp, ok := t.(schema.ObjectType)
 			if ok {
 				objectTypes[objTyp.Name] = true

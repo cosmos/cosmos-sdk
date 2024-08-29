@@ -121,8 +121,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	)
 
 	var (
-		minGasPrices   sdk.DecCoins
-		feeTxValidator *ante.DeductFeeDecorator
+		minGasPrices         sdk.DecCoins
+		feeTxValidator       *ante.DeductFeeDecorator
 		unorderedTxValidator *ante.UnorderedTxDecorator
 	)
 	if in.AccountKeeper != nil && in.BankKeeper != nil && in.Viper != nil {

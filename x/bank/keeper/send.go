@@ -181,11 +181,11 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 			return err
 		}
 
-<<<<<<< HEAD
 		sdkCtx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeTransfer,
 				sdk.NewAttribute(types.AttributeKeyRecipient, outAddress.String()),
+				sdk.NewAttribute(types.AttributeKeySender, input.Address),
 				sdk.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
 			),
 		)
@@ -198,15 +198,6 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		if !accExists {
 			defer telemetry.IncrCounter(1, "new", "account")
 			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, outAddress))
-=======
-		if err := k.EventService.EventManager(ctx).EmitKV(
-			types.EventTypeTransfer,
-			event.NewAttribute(types.AttributeKeyRecipient, out.Address),
-			event.NewAttribute(types.AttributeKeySender, input.Address),
-			event.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
-		); err != nil {
-			return err
->>>>>>> 33c463ec2 (feat(x/bank): add origin address in event multisend (#21460))
 		}
 	}
 

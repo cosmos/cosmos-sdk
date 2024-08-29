@@ -1449,16 +1449,14 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 
 	event2 := sdk.Event{
 		Type:       banktypes.EventTypeTransfer,
-<<<<<<< HEAD
 		Attributes: []abci.EventAttribute{},
 	}
 	event2.Attributes = append(
 		event2.Attributes,
 		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: accAddrs[2].String()},
+		abci.EventAttribute{Key: banktypes.AttributeKeySender, Value: accAddrs[0].String()},
+		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()},
 	)
-	event2.Attributes = append(
-		event2.Attributes,
-		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()})
 	event3 := sdk.Event{
 		Type:       banktypes.EventTypeTransfer,
 		Attributes: []abci.EventAttribute{},
@@ -1466,30 +1464,8 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	event3.Attributes = append(
 		event3.Attributes,
 		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: accAddrs[3].String()},
-	)
-	event3.Attributes = append(
-		event3.Attributes,
+		abci.EventAttribute{Key: banktypes.AttributeKeySender, Value: accAddrs[0].String()},
 		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins2.String()},
-=======
-		Attributes: []coreevent.Attribute{},
-	}
-	event1.Attributes = append(
-		event1.Attributes,
-		coreevent.Attribute{Key: banktypes.AttributeKeyRecipient, Value: acc2StrAddr},
-		coreevent.Attribute{Key: sdk.AttributeKeySender, Value: acc0StrAddr},
-		coreevent.Attribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()},
-	)
-
-	event2 := coreevent.Event{
-		Type:       banktypes.EventTypeTransfer,
-		Attributes: []coreevent.Attribute{},
-	}
-	event2.Attributes = append(
-		event2.Attributes,
-		coreevent.Attribute{Key: banktypes.AttributeKeyRecipient, Value: acc3StrAddr},
-		coreevent.Attribute{Key: sdk.AttributeKeySender, Value: acc0StrAddr},
-		coreevent.Attribute{Key: sdk.AttributeKeyAmount, Value: newCoins2.String()},
->>>>>>> 33c463ec2 (feat(x/bank): add origin address in event multisend (#21460))
 	)
 	// events are shifted due to the funding account events
 	require.Equal(abci.Event(event1), events[25])

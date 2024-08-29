@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
+	v1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/core/header"
 	authtypes "cosmossdk.io/x/auth/types"
 	vestingtypes "cosmossdk.io/x/auth/vesting/types"
 	"cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/bank/types"
 
-	v1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"

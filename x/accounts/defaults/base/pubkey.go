@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/core/transaction"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	dcrd_secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
+
+	"cosmossdk.io/core/transaction"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 )

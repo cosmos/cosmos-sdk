@@ -34,6 +34,8 @@
 /store/ @cool-develope @kocubinski @cosmos/sdk-core-dev
 /store/v2/ @cool-develope @kocubinski @cosmos/sdk-core-dev
 /types/mempool/ @kocubinski @cosmos/sdk-core-dev
+/tools/hubl @julienrbrt @JulianToledano @cosmos/sdk-core-dev
+/tools/cosmovisor @julienrbrt @facundomedica @cosmos/sdk-core-dev
 
 # x modules
 
@@ -60,7 +62,12 @@
 /x/tx/ @kocubinski @testinginprod @aaronc @cosmos/sdk-core-dev
 /x/upgrade/ @facundomedica @cool-develope @akhilkumarpilli @lucaslopezf @cosmos/sdk-core-dev
 
-# CODEOWNERS for docs configuration
+# go mods
+
+**/go.mod @cosmos/sdk-core-dev
+**/go.sum @cosmos/sdk-core-dev
+
+# docs configuration
 
 /docs/ @cosmos/sdk-core-dev
 /docs/docusaurus.config.js @julienrbrt @tac0turtle

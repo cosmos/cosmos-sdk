@@ -57,6 +57,9 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 
 	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(sims.SimAppChainID))
 
+	blockedAddrs, err := BlockedAddresses(app.InterfaceRegistry().SigningContext().AddressCodec())
+	require.NoError(b, err)
+
 	// run randomized simulation
 	simParams, simErr := simulation.SimulateFromSeedX(
 		b,
@@ -66,7 +69,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		simtestutil.AppStateFn(app.AppCodec(), app.AuthKeeper.AddressCodec(), app.StakingKeeper.ValidatorAddressCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts,
 		simtestutil.SimulationOperations(app, app.AppCodec(), config, app.txConfig),
-		BlockedAddresses(),
+		blockedAddrs,
 		config,
 		app.AppCodec(),
 		app.txConfig.SigningContext().AddressCodec(),

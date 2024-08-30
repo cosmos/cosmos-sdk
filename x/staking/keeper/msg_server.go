@@ -650,6 +650,9 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	}
 
 	pubkeyTypes, err := k.consensusKeeper.ValidatorPubKeyTypes(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	pkType := pk.Type()
 	if !slices.Contains(pubkeyTypes, pkType) {

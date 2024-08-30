@@ -24,6 +24,7 @@ import (
 	distrtestutil "cosmossdk.io/x/distribution/testutil"
 	disttypes "cosmossdk.io/x/distribution/types"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
+
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"

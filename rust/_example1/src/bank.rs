@@ -28,6 +28,7 @@ pub struct Bank {
     supply: Map<Denom, u128>,
 }
 
+// a trait that accounts can implement to intercept send calls
 #[service]
 pub trait DenomOnSend {
     fn on_send(&self, ctx: &Context, from_address: &Address, to_address: &Address, coin: &Coin) -> Result<()>;

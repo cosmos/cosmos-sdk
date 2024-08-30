@@ -20,6 +20,13 @@ This RFC primarily attempts to address the needs of the second group.
 However, in doing so, it also intends to address the needs of the first group as we will likely build many of the components needed for this group by building an integrated cross-language, cross-VM framework.
 Those needs of the first group which are not satisfactorily addressed by the cross-language framework should be addressed in separate RFCs.
 
+Prior work on cross-language support in the SDK includes:
+- [RFC 003: Language-independent Module Semantics & ABI](https://github.com/cosmos/cosmos-sdk/pull/15410): an earlier, significantly different and unmerged version of this RFC.
+- [RFC 002: Zero Copy Encoding](./rfc-002-zero-copy-encoding.md): a zero-copy encoding specification for ProtoBuf messages, which was partly implemented and may or may not still be relevant to the current work.
+
+Also, this design largely builds on the existing `x/accounts` module and extends that paradigm to environments beyond just Golang.
+That design was specified in [RFC 004: Accounts](./rfc-004-accounts.md).
+
 ## Proposal
 
 We propose a conceptual and formal model for defining **accounts** and **modules** which can interoperate with each other through **messages** in a cross-language, cross-VM environment.
@@ -235,21 +242,6 @@ or a separate RFC.
 For now, we specify that within a 64kb **message packet**,
 at least 56kb will be available for **message data** and message responses.
 
-### Further Specifications
-
-This specification does not cover many important parts of a complete system such as the encoding of message data,
-storage, events, transaction execution, or interaction with consensus environments.
-It is the intention of this specification to specify the minimum necessary for this layer in a modular layer.
-The full framework should be composed of a set of independent, minimally defined layers that together
-form a "standard" execution environment, but that at the same time can be replaced and recomposed by
-different applications with different needs.
-
-The basic set of standards necessary to provide a coherent framework includes:
-* message encoding and naming, including compatibility with the existing protobuf-based message encoding
-* storage
-* events
-* authorization middleware
-
 ## Abandoned Ideas (Optional)
 
 ## Decision
@@ -277,4 +269,21 @@ TODO
 
 ### References
 
+- [Abandoned RFC 003: Language-independent Module Semantics & ABI](https://github.com/cosmos/cosmos-sdk/pull/15410)
+- [RFC 002: Zero Copy Encoding](./rfc-002-zero-copy-encoding.md) 
+- [RFC 004: Accounts](./rfc-004-accounts.md)
+
 ## Discussion
+
+This specification does not cover many important parts of a complete system such as the encoding of message data,
+storage, events, transaction execution, or interaction with consensus environments.
+It is the intention of this specification to specify the minimum necessary for this layer in a modular layer.
+The full framework should be composed of a set of independent, minimally defined layers that together
+form a "standard" execution environment, but that at the same time can be replaced and recomposed by
+different applications with different needs.
+
+The basic set of standards necessary to provide a coherent framework includes:
+* message encoding and naming, including compatibility with the existing protobuf-based message encoding
+* storage
+* events
+* authorization middleware

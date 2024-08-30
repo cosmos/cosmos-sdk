@@ -179,7 +179,8 @@ func SimulateMsgCreateValidator(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 10),
 			types.Metadata{
-				ProfilePicUri: RandURIOfLength(r, 10),
+				ProfilePicUri:    RandURIOfHostLength(r, 10),
+				SocialHandleUris: []string{RandURIOfHostLength(r, 10), RandURIOfHostLength(r, 10)},
 			},
 		)
 
@@ -281,7 +282,8 @@ func SimulateMsgEditValidator(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 10),
 			types.Metadata{
-				ProfilePicUri: RandURIOfLength(r, 10),
+				ProfilePicUri:    RandURIOfHostLength(r, 10),
+				SocialHandleUris: []string{RandURIOfHostLength(r, 10), RandURIOfHostLength(r, 10)},
 			},
 		)
 

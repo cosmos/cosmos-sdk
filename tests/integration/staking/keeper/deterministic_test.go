@@ -211,17 +211,22 @@ func bondTypeGenerator() *rapid.Generator[stakingtypes.BondStatus] {
 
 func metadataGenerator() *rapid.Generator[stakingtypes.Metadata] {
 	return rapid.Custom(func(t *rapid.T) stakingtypes.Metadata {
-		host := fmt.Sprintf("%s.com", rapid.StringN(5, 250, 255).Draw(t, "host"))
-		path := rapid.StringN(5, 250, 255).Draw(t, "path")
-		uri := url.URL{
-			Scheme: "https",
-			Host:   host,
-			Path:   path,
-		}
 		return stakingtypes.Metadata{
-			ProfilePicUri: uri.String(),
+			ProfilePicUri:    generateUri(t),
+			SocialHandleUris: []string{generateUri(t), generateUri(t)},
 		}
 	})
+}
+
+func generateUri(t *rapid.T) string {
+	host := fmt.Sprintf("%s.com", rapid.StringN(5, 250, 255).Draw(t, "host"))
+	path := rapid.StringN(5, 250, 255).Draw(t, "path")
+	uri := url.URL{
+		Scheme: "https",
+		Host:   host,
+		Path:   path,
+	}
+	return uri.String()
 }
 
 // createValidator creates a validator with random values.

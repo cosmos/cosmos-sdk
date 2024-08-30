@@ -16,7 +16,7 @@ func (msg MsgUpdateParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, e
 		return cmtproto.ConsensusParams{}, errors.New("all parameters must be present")
 	}
 
-	if msg.Feature != nil && msg.Feature.VoteExtensionsEnableHeight != nil {
+	if msg.Abci != nil && msg.Feature != nil && msg.Feature.VoteExtensionsEnableHeight != nil {
 		return cmtproto.ConsensusParams{}, errors.New("abci in sections Feature and (deprecated) ABCI cannot be used simultaneously")
 	}
 

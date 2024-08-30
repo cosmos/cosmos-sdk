@@ -289,7 +289,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 		var (
 			err             error
 			selectedTxsNums int
-			invalidTxs      []sdk.Tx // invalid txs to be removed after the iteration
+			invalidTxs      []sdk.Tx // invalid txs to be removed out of the loop to avoid dead lock
 		)
 		h.mempool.SelectBy(ctx, req.Txs, func(memTx sdk.Tx) bool {
 			var signerData []mempool.SignerData

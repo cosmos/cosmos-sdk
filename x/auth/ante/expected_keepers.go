@@ -28,5 +28,5 @@ type FeegrantKeeper interface {
 }
 
 type ConsensusKeeper interface {
-	BlockGas(context.Context) (uint64, error)
+	BlockParams(context.Context) (uint64, uint64, error)
 }

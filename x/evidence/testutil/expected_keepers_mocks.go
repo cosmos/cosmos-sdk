@@ -278,18 +278,19 @@ func (m *MockConsensusKeeper) EXPECT() *MockConsensusKeeperMockRecorder {
 	return m.recorder
 }
 
-// EvidenceAge mocks base method.
-func (m *MockConsensusKeeper) EvidenceAge(arg0 context.Context) (int64, time.Duration, error) {
+// EvidenceParams mocks base method.
+func (m *MockConsensusKeeper) EvidenceParams(arg0 context.Context) (int64, time.Duration, uint64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EvidenceAge", arg0)
+	ret := m.ctrl.Call(m, "EvidenceParams", arg0)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(time.Duration)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret2, _ := ret[2].(uint64)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
 }
 
-// EvidenceAge indicates an expected call of EvidenceAge.
-func (mr *MockConsensusKeeperMockRecorder) EvidenceAge(arg0 interface{}) *gomock.Call {
+// EvidenceParams indicates an expected call of EvidenceParams.
+func (mr *MockConsensusKeeperMockRecorder) EvidenceParams(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EvidenceAge", reflect.TypeOf((*MockConsensusKeeper)(nil).EvidenceAge), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EvidenceParams", reflect.TypeOf((*MockConsensusKeeper)(nil).EvidenceParams), arg0)
 }

@@ -194,17 +194,18 @@ func (m *MockConsensusKeeper) EXPECT() *MockConsensusKeeperMockRecorder {
 	return m.recorder
 }
 
-// BlockGas mocks base method.
-func (m *MockConsensusKeeper) BlockGas(arg0 context.Context) (uint64, error) {
+// BlockParams mocks base method.
+func (m *MockConsensusKeeper) BlockParams(arg0 context.Context) (uint64, uint64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BlockGas", arg0)
+	ret := m.ctrl.Call(m, "BlockParams", arg0)
 	ret0, _ := ret[0].(uint64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(uint64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
-// BlockGas indicates an expected call of BlockGas.
-func (mr *MockConsensusKeeperMockRecorder) BlockGas(arg0 interface{}) *gomock.Call {
+// BlockParams indicates an expected call of BlockParams.
+func (mr *MockConsensusKeeperMockRecorder) BlockParams(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BlockGas", reflect.TypeOf((*MockConsensusKeeper)(nil).BlockGas), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BlockParams", reflect.TypeOf((*MockConsensusKeeper)(nil).BlockParams), arg0)
 }

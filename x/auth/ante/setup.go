@@ -46,7 +46,7 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, 
 
 	newCtx = SetGasMeter(ctx, gasTx.GetGas())
 
-	maxGas, err := sud.consensusKeeper.BlockGas(ctx)
+	maxGas, _, err := sud.consensusKeeper.BlockParams(ctx)
 	if err != nil {
 		return newCtx, err
 	}

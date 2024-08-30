@@ -141,17 +141,17 @@ func (k Keeper) paramCheck(ctx context.Context, consensusParams cmtproto.Consens
 	return &nextParams, nil
 }
 
-// BlockGas returns the maximum gas allowed in a block.
-func (k Keeper) BlockGas(ctx context.Context) (uint64, error) {
+// BlockParams returns the maximum gas allowed in a block and the maximum bytes allowed in a block.
+func (k Keeper) BlockParams(ctx context.Context) (uint64, uint64, error) {
 	params, err := k.ParamsStore.Get(ctx)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 	if params.Block == nil {
-		return 0, errors.New("block gas is nil")
+		return 0, 0, errors.New("block gas is nil")
 	}
 
-	return uint64(params.Block.MaxGas), nil
+	return uint64(params.Block.MaxGas), uint64(params.Block.MaxBytes), nil
 }
 
 // AppVersion returns the current application version.
@@ -182,15 +182,15 @@ func (k Keeper) ValidatorPubKeyTypes(ctx context.Context) ([]string, error) {
 	return params.Validator.PubKeyTypes, nil
 }
 
-// EvidenceAge returns the maximum age of evidence and the time duration of the maximum age.
-func (k Keeper) EvidenceAge(ctx context.Context) (int64, time.Duration, error) {
+// EvidenceParams returns the maximum age of evidence, the time duration of the maximum age, and the maximum bytes.
+func (k Keeper) EvidenceParams(ctx context.Context) (int64, time.Duration, uint64, error) {
 	params, err := k.ParamsStore.Get(ctx)
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, 0, err
 	}
 	if params.Evidence == nil {
-		return 0, 0, errors.New("evidence age is nil")
+		return 0, 0, 0, errors.New("evidence age is nil")
 	}
 
-	return params.Evidence.MaxAgeNumBlocks, params.Evidence.MaxAgeDuration, nil
+	return params.Evidence.MaxAgeNumBlocks, params.Evidence.MaxAgeDuration, uint64(params.Evidence.MaxBytes), nil
 }

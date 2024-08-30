@@ -39,5 +39,5 @@ type AccountKeeper interface {
 }
 
 type ConsensusKeeper interface {
-	EvidenceAge(context.Context) (int64, time.Duration, error)
+	EvidenceParams(context.Context) (maxAge int64, maxAgeDuration time.Duration, maxBytes uint64, err error)
 }

@@ -73,7 +73,7 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 	// if the difference in time and number of blocks is greater than the allowed
 	// parameters defined.
 
-	eviAgeBlocks, eviAgeDuration, err := k.consensusKeeper.EvidenceAge(ctx)
+	eviAgeBlocks, eviAgeDuration, _, err := k.consensusKeeper.EvidenceParams(ctx)
 	if err != nil {
 		return err
 	}

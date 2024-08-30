@@ -100,7 +100,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	grpcQueryRouter.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
 
 	suite.consensusKeeper = antetestutil.NewMockConsensusKeeper(ctrl)
-	suite.consensusKeeper.EXPECT().BlockGas(gomock.Any()).Return(simtestutil.DefaultConsensusParams.Block.MaxGas, nil).AnyTimes()
+	suite.consensusKeeper.EXPECT().BlockParams(gomock.Any()).Return(simtestutil.DefaultConsensusParams.Block.MaxGas, simtestutil.DefaultConsensusParams.Block.MaxBytes, nil).AnyTimes()
 
 	suite.env = runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter))
 	suite.accountKeeper = keeper.NewAccountKeeper(

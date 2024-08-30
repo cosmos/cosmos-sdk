@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	pruningtypes "cosmossdk.io/store/pruning/types"
 	"os"
 	"path/filepath"
 	"testing"
@@ -9,8 +10,6 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	pruningtypes "cosmossdk.io/store/pruning/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -264,6 +263,7 @@ func TestValidateBasic(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test case 2: Default configuration (MinGasPrices is empty)
+	cfg.MinGasPrices = ""
 	err = cfg.ValidateBasic()
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "set min gas price in app.toml or flag or env variable")

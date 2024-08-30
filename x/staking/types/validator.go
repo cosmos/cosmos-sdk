@@ -262,6 +262,11 @@ func (d Description) EnsureLength() (Description, error) {
 	return d, nil
 }
 
+func (d Description) IsEmpty() bool {
+	return d.Moniker == "" && d.Details == "" && d.Identity == "" && d.Website == "" && d.SecurityContact == "" &&
+		d.Metadata.ProfilePicUri == "" && len(d.Metadata.SocialHandleUris) == 0
+}
+
 // Validate calls metadata.Validate() description.EnsureLength()
 func (d Description) Validate() (Description, error) {
 	if err := d.Metadata.Validate(); err != nil {
@@ -276,7 +281,16 @@ func (m Metadata) Validate() error {
 	if m.ProfilePicUri != "" {
 		_, err := url.ParseRequestURI(m.ProfilePicUri)
 		if err != nil {
-			return errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid profile_pic format: %s, err: %s", m.ProfilePicUri, err)
+			return errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid profile_pic_uri format: %s, err: %s", m.ProfilePicUri, err)
+		}
+	}
+
+	if m.SocialHandleUris != nil {
+		for _, socialHandleUri := range m.SocialHandleUris {
+			_, err := url.ParseRequestURI(socialHandleUri)
+			if err != nil {
+				return errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid social_handle_uri: %s, err: %s", socialHandleUri, err)
+			}
 		}
 	}
 	return nil

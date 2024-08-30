@@ -286,7 +286,7 @@ func NewSimApp(
 	return app
 }
 
-// overwrite default ante handlers with custom ante handlers
+// setCustomAnteHandler overwrites default ante handlers with custom ante handlers
 // set SkipAnteHandler to true in app config and set custom ante handler on baseapp
 func (app *SimApp) setCustomAnteHandler() {
 	anteHandler, err := NewAnteHandler(

@@ -233,18 +233,19 @@ func (s *CometBFTServer[T]) StartCmdFlags() *pflag.FlagSet {
 func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
 	return serverv2.CLIConfig{
 		Commands: []*cobra.Command{
-			s.StatusCommand(),
-			s.ShowNodeIDCmd(),
-			s.ShowValidatorCmd(),
-			s.ShowAddressCmd(),
-			s.VersionCmd(),
+			StatusCommand(),
+			ShowNodeIDCmd(),
+			ShowValidatorCmd(),
+			ShowAddressCmd(),
+			VersionCmd(),
+			s.BootstrapStateCmd(),
 			cmtcmd.ResetAllCmd,
 			cmtcmd.ResetStateCmd,
 		},
 		Queries: []*cobra.Command{
-			s.QueryBlockCmd(),
-			s.QueryBlocksCmd(),
-			s.QueryBlockResultsCmd(),
+			QueryBlockCmd(),
+			QueryBlocksCmd(),
+			QueryBlockResultsCmd(),
 		},
 	}
 }

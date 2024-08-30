@@ -225,7 +225,7 @@ func TestFieldJSON(t *testing.T) {
 	}
 }
 
-var testEnumSchema = MustNewModuleSchema(EnumType{
+var testEnumSchema = MustCompileModuleSchema(EnumType{
 	Name:   "enum",
 	Values: []EnumValueDefinition{{Name: "a", Value: 1}, {Name: "b", Value: 2}},
 })

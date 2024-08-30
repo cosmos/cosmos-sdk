@@ -146,17 +146,16 @@ func appExport(
 
 	// overwrite the FlagInvCheckPeriod
 	viperAppOpts.Set(server.FlagInvCheckPeriod, 1)
-	appOpts = viperAppOpts
 
 	var simApp *simapp.SimApp
 	if height != -1 {
-		simApp = simapp.NewSimApp(logger, db, traceStore, false, appOpts)
+		simApp = simapp.NewSimApp(logger, db, traceStore, false, viperAppOpts)
 
 		if err := simApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		simApp = simapp.NewSimApp(logger, db, traceStore, true, appOpts)
+		simApp = simapp.NewSimApp(logger, db, traceStore, true, viperAppOpts)
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)

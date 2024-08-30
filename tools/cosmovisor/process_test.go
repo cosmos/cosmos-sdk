@@ -25,7 +25,7 @@ import (
 func TestLaunchProcess(t *testing.T) {
 	// binaries from testdata/validate directory
 	home := copyTestData(t, "validate")
-	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PollInterval: 20, UnsafeSkipBackup: true}
+	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PollInterval: 15, UnsafeSkipBackup: true}
 	logger := log.NewTestLogger(t).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output

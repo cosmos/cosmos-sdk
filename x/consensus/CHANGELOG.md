@@ -35,6 +35,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/consensus) [#19483](https://github.com/cosmos/cosmos-sdk/pull/19483) Add consensus messages registration to consensus module.
 * [#20615](https://github.com/cosmos/cosmos-sdk/pull/20615) Add consensus messages to add cometinfo to consensus modules
+* (x/consensus) [#21484](https://github.com/cosmos/cosmos-sdk/pull/21484) Avoid nil pointer dereference during MsgUpdateParams
 
 ### API Breaking Changes
 

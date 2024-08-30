@@ -3,7 +3,7 @@ syntax = "proto3";
 package cosmos.consensus.v1;
 
 import "google/api/annotations.proto";
-import "cometbft/types/v1/params.proto";
+import "cosmos/consensus/v1/params.proto";
 
 option go_package = "cosmossdk.io/x/consensus/types";
 
@@ -23,5 +23,5 @@ message QueryParamsResponse {
   // params are the tendermint consensus params stored in the consensus module.
   // Please note that `params.version` is not populated in this response, it is
   // tracked separately in the x/upgrade module.
-  cometbft.types.v1.ConsensusParams params = 1;
+  ConsensusParams params = 1;
 }

@@ -58,7 +58,7 @@
 /x/slashing/ @testinginprod @raynaudoe @lucaslopezf @cosmos/sdk-core-dev
 /x/staking/ @facundomedica @testinginprod @JulianToledano @ziscky @cosmos/sdk-core-dev
 /x/tx/ @kocubinski @testinginprod @aaronc @cosmos/sdk-core-dev
-/x/upgrade/ @facundomedica @cool-develope @akhilkumarpilli @cosmos/sdk-core-dev
+/x/upgrade/ @facundomedica @cool-develope @akhilkumarpilli @lucaslopezf @cosmos/sdk-core-dev
 
 # CODEOWNERS for docs configuration
 

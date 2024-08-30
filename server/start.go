@@ -143,7 +143,7 @@ func StartCmdWithOptions[T types.Application](appCreator types.AppCreator[T], op
 	}
 
 	if opts.StartCommandHandler == nil {
-		opts.StartCommandHandler = getStartCommandHandler[T]()
+		opts.StartCommandHandler = start
 	}
 
 	cmd := &cobra.Command{
@@ -660,7 +660,7 @@ func InPlaceTestnetCreator[T types.Application](testnetAppCreator types.AppCreat
 	}
 
 	if opts.StartCommandHandler == nil {
-		opts.StartCommandHandler = getStartCommandHandler[T]()
+		opts.StartCommandHandler = start
 	}
 
 	cmd := &cobra.Command{

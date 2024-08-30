@@ -145,7 +145,7 @@ func TestLaunchProcessWithRestartDelay(t *testing.T) {
 func TestPlanShutdownGrace(t *testing.T) {
 	// binaries from testdata/validate directory
 	home := copyTestData(t, "dontdie")
-	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PollInterval: 20, UnsafeSkipBackup: true, ShutdownGrace: 2 * time.Second}
+	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PollInterval: 15, UnsafeSkipBackup: true, ShutdownGrace: 2 * time.Second}
 	logger := log.NewTestLogger(t).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output

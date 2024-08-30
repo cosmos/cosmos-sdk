@@ -256,7 +256,7 @@ func (s *KeeperTestSuite) TestIsSkipHeight() {
 	skip := map[int64]bool{skipOne: true}
 	storeService := runtime.NewKVStoreService(s.key)
 	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
-	upgradeKeeper := keeper.NewKeeper(env, skip, s.encCfg.Codec, s.T().TempDir(), s.baseApp, s.encodedAuthority)
+	upgradeKeeper := keeper.NewKeeper(env, skip, s.encCfg.Codec, s.T().TempDir(), s.baseApp, s.encodedAuthority, nil) //TODO:
 	s.Require().True(upgradeKeeper.IsSkipHeight(9))
 	s.Require().False(upgradeKeeper.IsSkipHeight(10))
 }

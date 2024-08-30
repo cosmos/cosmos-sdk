@@ -179,7 +179,6 @@ replace (
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
-	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/distribution => ../distribution
 	cosmossdk.io/x/gov => ../gov
 	cosmossdk.io/x/mint => ../mint

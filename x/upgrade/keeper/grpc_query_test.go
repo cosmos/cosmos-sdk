@@ -47,7 +47,7 @@ func (suite *UpgradeTestSuite) SetupTest() {
 	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
 	suite.Require().NoError(err)
 	suite.encodedAuthority = authority
-	suite.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, suite.encCfg.Codec, suite.T().TempDir(), nil, authority)
+	suite.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, suite.encCfg.Codec, suite.T().TempDir(), nil, authority, nil) //TODO:
 	err = suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, appmodule.VersionMap{
 		"bank": 0,
 	})

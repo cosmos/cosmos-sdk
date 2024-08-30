@@ -16,20 +16,19 @@ import (
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
 	authtx "cosmossdk.io/x/auth/tx"
-	authtypes "cosmossdk.io/x/auth/types"
-	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
-	consensusparamtypes "cosmossdk.io/x/consensus/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-const appName = "integration-app"
+const (
+	appName   = "integration-app"
+	consensus = "consensus"
+)
 
 // App is a test application that can be used to test the integration of modules.
 type App struct {
@@ -88,16 +87,17 @@ func NewIntegrationApp(
 	grpcRouter.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetGRPCQueryRouter(grpcRouter)
 
-	if keys[consensusparamtypes.StoreKey] != nil {
+	if keys[consensus] != nil {
 		// set baseApp param store
-		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcRouter), runtime.EnvWithMsgRouterService(msgRouter)), authtypes.NewModuleAddress("gov").String())
-		bApp.SetParamStore(consensusParamsKeeper.ParamsStore)
-		consensusparamtypes.RegisterQueryServer(grpcRouter, consensusParamsKeeper)
+		consensusParamsKeeper, ok := modules[consensus].(baseapp.ParamStore)
+		if ok {
+			bApp.SetParamStore(consensusParamsKeeper)
 
-		params := cmttypes.ConsensusParamsFromProto(*simtestutil.DefaultConsensusParams) // This fills up missing param sections
-		err := consensusParamsKeeper.ParamsStore.Set(sdkCtx, params.ToProto())
-		if err != nil {
-			panic(fmt.Errorf("failed to set consensus params: %w", err))
+			params := cmttypes.ConsensusParamsFromProto(*simtestutil.DefaultConsensusParams) // This fills up missing param sections
+			err := consensusParamsKeeper.Set(sdkCtx, params.ToProto())
+			if err != nil {
+				panic(fmt.Errorf("failed to set consensus params: %w", err))
+			}
 		}
 
 		if err := bApp.LoadLatestVersion(); err != nil {

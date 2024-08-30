@@ -136,7 +136,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govModuleName))
 	require.NoError(t, err)
 
-	s.keeper = keeper.NewKeeper(s.env, skip, s.encCfg.Codec, t.TempDir(), s.baseApp, authority)
+	s.keeper = keeper.NewKeeper(s.env, skip, s.encCfg.Codec, t.TempDir(), s.baseApp, authority, nil) //TODO:
 
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: height})
 
@@ -511,7 +511,7 @@ func TestDowngradeVerification(t *testing.T) {
 		require.NoError(t, err)
 
 		// downgrade. now keeper does not have the handler.
-		k := keeper.NewKeeper(s.env, map[int64]bool{}, s.encCfg.Codec, t.TempDir(), nil, authority)
+		k := keeper.NewKeeper(s.env, map[int64]bool{}, s.encCfg.Codec, t.TempDir(), nil, authority, nil) //TODO:
 		m := upgrade.NewAppModule(k)
 
 		// assertions

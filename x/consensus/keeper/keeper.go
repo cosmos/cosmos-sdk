@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
@@ -138,4 +139,44 @@ func (k Keeper) paramCheck(ctx context.Context, consensusParams cmtproto.Consens
 	}
 
 	return &nextParams, nil
+}
+
+// BlockGas returns the maximum gas allowed in a block.
+func (k Keeper) BlockGas(ctx context.Context) (uint64, error) {
+	params, err := k.ParamsStore.Get(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	return uint64(params.Block.MaxGas), nil
+}
+
+// AppVersion returns the current application version.
+func (k Keeper) AppVersion(ctx context.Context) (uint64, error) {
+	params, err := k.ParamsStore.Get(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	return params.Version.App, nil
+}
+
+// ValidatorPubKeyTypes returns the list of public key types that are allowed to be used for validators.
+func (k Keeper) ValidatorPubKeyTypes(ctx context.Context) ([]string, error) {
+	params, err := k.ParamsStore.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return params.Validator.PubKeyTypes, nil
+}
+
+// EvidenceAge returns the maximum age of evidence and the time duration of the maximum age.
+func (k Keeper) EvidenceAge(ctx context.Context) (int64, time.Duration, error) {
+	params, err := k.ParamsStore.Get(ctx)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return params.Evidence.MaxAgeNumBlocks, params.Evidence.MaxAgeDuration, nil
 }

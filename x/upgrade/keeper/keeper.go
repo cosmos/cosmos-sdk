@@ -55,6 +55,7 @@ func NewKeeper(
 	homePath string,
 	vs server.VersionModifier,
 	authority string,
+	ck types.ConsensusKeeper,
 ) *Keeper {
 	k := &Keeper{
 		Environment:        env,
@@ -64,6 +65,7 @@ func NewKeeper(
 		upgradeHandlers:    map[string]types.UpgradeHandler{},
 		versionModifier:    vs,
 		authority:          authority,
+		consensusKeeper:    ck,
 	}
 
 	if homePath == "" {

@@ -78,7 +78,7 @@ func (mock LedgerSECP256K1Mock) GetAddressPubKeySECP256K1(derivationPath []uint3
 
 	// Generate the bech32 addr using existing cmtcrypto/etc.
 	pub := &csecp256k1.PubKey{Key: compressedPublicKey}
-	addr, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(pub.Address())
+	addr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(pub.Address())
 	if err != nil {
 		return nil, "", err
 	}

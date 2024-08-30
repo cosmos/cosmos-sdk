@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 
+	"cosmossdk.io/core/address"
+
 	dbm "github.com/cosmos/cosmos-db"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
@@ -371,7 +373,9 @@ func GetMaccPerms() map[string][]string {
 }
 
 // BlockedAddresses returns all the app's blocked account addresses.
-func BlockedAddresses() map[string]bool {
+// This function takes an address.Codec parameter to maintain compatibility
+// with the signature of the same function in appV1.
+func BlockedAddresses(_ address.Codec) (map[string]bool, error) {
 	result := make(map[string]bool)
 
 	if len(blockAccAddrs) > 0 {
@@ -384,5 +388,5 @@ func BlockedAddresses() map[string]bool {
 		}
 	}
 
-	return result
+	return result, nil
 }

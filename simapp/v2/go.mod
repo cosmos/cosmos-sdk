@@ -21,6 +21,7 @@ require (
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190
+	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337
 	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
@@ -61,7 +62,6 @@ require (
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
 	cosmossdk.io/x/tx v0.13.4 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -260,6 +260,7 @@ replace (
 	cosmossdk.io/x/circuit => ../../x/circuit
 	cosmossdk.io/x/consensus => ../../x/consensus
 	cosmossdk.io/x/distribution => ../../x/distribution
+	cosmossdk.io/x/epochs => ../../x/epochs
 	cosmossdk.io/x/evidence => ../../x/evidence
 	cosmossdk.io/x/feegrant => ../../x/feegrant
 	cosmossdk.io/x/gov => ../../x/gov

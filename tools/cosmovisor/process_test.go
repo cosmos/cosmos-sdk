@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"sync"
 	"testing"
@@ -28,6 +29,7 @@ func TestLaunchProcess(t *testing.T) {
 	logger := log.NewTestLogger(t).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output
+	stdin, _ := os.Open(os.DevNull)
 	stdout, stderr := newBuffer(), newBuffer()
 	currentBin, err := cfg.CurrentBin()
 	require.NoError(t, err)
@@ -39,7 +41,7 @@ func TestLaunchProcess(t *testing.T) {
 	upgradeFile := cfg.UpgradeInfoFilePath()
 
 	args := []string{"foo", "bar", "1234", upgradeFile}
-	doUpgrade, err := launcher.Run(args, stdout, stderr)
+	doUpgrade, err := launcher.Run(args, stdin, stdout, stderr)
 	require.NoError(t, err)
 	require.True(t, doUpgrade)
 	require.Empty(t, stderr.String())
@@ -54,7 +56,7 @@ func TestLaunchProcess(t *testing.T) {
 	stdout.Reset()
 	stderr.Reset()
 
-	doUpgrade, err = launcher.Run(args, stdout, stderr)
+	doUpgrade, err = launcher.Run(args, stdin, stdout, stderr)
 	require.NoError(t, err)
 	require.False(t, doUpgrade)
 	require.Empty(t, stderr.String())
@@ -72,6 +74,7 @@ func TestPlanDisableRecase(t *testing.T) {
 	logger := log.NewTestLogger(t).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output
+	stdin, _ := os.Open(os.DevNull)
 	stdout, stderr := newBuffer(), newBuffer()
 	currentBin, err := cfg.CurrentBin()
 	require.NoError(t, err)
@@ -83,7 +86,7 @@ func TestPlanDisableRecase(t *testing.T) {
 	upgradeFile := cfg.UpgradeInfoFilePath()
 
 	args := []string{"foo", "bar", "1234", upgradeFile}
-	doUpgrade, err := launcher.Run(args, stdout, stderr)
+	doUpgrade, err := launcher.Run(args, stdin, stdout, stderr)
 	require.NoError(t, err)
 	require.True(t, doUpgrade)
 	require.Empty(t, stderr.String())
@@ -98,7 +101,7 @@ func TestPlanDisableRecase(t *testing.T) {
 	stdout.Reset()
 	stderr.Reset()
 
-	doUpgrade, err = launcher.Run(args, stdout, stderr)
+	doUpgrade, err = launcher.Run(args, stdin, stdout, stderr)
 	require.NoError(t, err)
 	require.False(t, doUpgrade)
 	require.Empty(t, stderr.String())
@@ -115,6 +118,7 @@ func TestLaunchProcessWithRestartDelay(t *testing.T) {
 	logger := log.NewTestLogger(t).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output
+	stdin, _ := os.Open(os.DevNull)
 	stdout, stderr := newBuffer(), newBuffer()
 	currentBin, err := cfg.CurrentBin()
 	require.NoError(t, err)
@@ -126,7 +130,7 @@ func TestLaunchProcessWithRestartDelay(t *testing.T) {
 	upgradeFile := cfg.UpgradeInfoFilePath()
 
 	start := time.Now()
-	doUpgrade, err := launcher.Run([]string{"foo", "bar", "1234", upgradeFile}, stdout, stderr)
+	doUpgrade, err := launcher.Run([]string{"foo", "bar", "1234", upgradeFile}, stdin, stdout, stderr)
 	require.NoError(t, err)
 	require.True(t, doUpgrade)
 
@@ -145,6 +149,7 @@ func TestPlanShutdownGrace(t *testing.T) {
 	logger := log.NewTestLogger(t).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output
+	stdin, _ := os.Open(os.DevNull)
 	stdout, stderr := newBuffer(), newBuffer()
 	currentBin, err := cfg.CurrentBin()
 	require.NoError(t, err)
@@ -156,7 +161,7 @@ func TestPlanShutdownGrace(t *testing.T) {
 	upgradeFile := cfg.UpgradeInfoFilePath()
 
 	args := []string{"foo", "bar", "1234", upgradeFile}
-	doUpgrade, err := launcher.Run(args, stdout, stderr)
+	doUpgrade, err := launcher.Run(args, stdin, stdout, stderr)
 	require.NoError(t, err)
 	require.True(t, doUpgrade)
 	require.Empty(t, stderr.String())
@@ -171,7 +176,7 @@ func TestPlanShutdownGrace(t *testing.T) {
 	stdout.Reset()
 	stderr.Reset()
 
-	doUpgrade, err = launcher.Run(args, stdout, stderr)
+	doUpgrade, err = launcher.Run(args, stdin, stdout, stderr)
 	require.NoError(t, err)
 	require.False(t, doUpgrade)
 	require.Empty(t, stderr.String())
@@ -201,9 +206,10 @@ func TestLaunchProcessWithDownloads(t *testing.T) {
 	launcher, err := cosmovisor.NewLauncher(logger, cfg)
 	require.NoError(t, err)
 
+	stdin, _ := os.Open(os.DevNull)
 	stdout, stderr := newBuffer(), newBuffer()
 	args := []string{"some", "args", upgradeFilename}
-	doUpgrade, err := launcher.Run(args, stdout, stderr)
+	doUpgrade, err := launcher.Run(args, stdin, stdout, stderr)
 	require.NoError(t, err)
 	require.True(t, doUpgrade)
 	require.Empty(t, stderr.String())
@@ -216,7 +222,7 @@ func TestLaunchProcessWithDownloads(t *testing.T) {
 	stdout.Reset()
 	stderr.Reset()
 	args = []string{"run", "--fast", upgradeFilename}
-	doUpgrade, err = launcher.Run(args, stdout, stderr)
+	doUpgrade, err = launcher.Run(args, stdin, stdout, stderr)
 	require.NoError(t, err)
 
 	require.Empty(t, stderr.String())
@@ -231,7 +237,7 @@ func TestLaunchProcessWithDownloads(t *testing.T) {
 	args = []string{"end", "--halt", upgradeFilename}
 	stdout.Reset()
 	stderr.Reset()
-	doUpgrade, err = launcher.Run(args, stdout, stderr)
+	doUpgrade, err = launcher.Run(args, stdin, stdout, stderr)
 	require.NoError(t, err)
 	require.False(t, doUpgrade)
 	require.Empty(t, stderr.String())
@@ -270,9 +276,10 @@ func TestLaunchProcessWithDownloadsAndMissingPreupgrade(t *testing.T) {
 	require.NoError(t, err)
 
 	// Missing Preupgrade Script
+	stdin, _ := os.Open(os.DevNull)
 	stdout, stderr := newBuffer(), newBuffer()
 	args := []string{"some", "args", upgradeFilename}
-	_, err = launcher.Run(args, stdout, stderr)
+	_, err = launcher.Run(args, stdin, stdout, stderr)
 
 	require.ErrorContains(t, err, "missing.sh")
 	require.ErrorIs(t, err, fs.ErrNotExist)
@@ -305,9 +312,10 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	launcher, err := cosmovisor.NewLauncher(logger, cfg)
 	require.NoError(t, err)
 
+	stdin, _ := os.Open(os.DevNull)
 	stdout, stderr := newBuffer(), newBuffer()
 	args := []string{"some", "args", upgradeFilename}
-	doUpgrade, err := launcher.Run(args, stdout, stderr)
+	doUpgrade, err := launcher.Run(args, stdin, stdout, stderr)
 
 	require.NoError(t, err)
 	require.True(t, doUpgrade)
@@ -324,7 +332,7 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	stdout.Reset()
 	stderr.Reset()
 	args = []string{"run", "--fast", upgradeFilename}
-	doUpgrade, err = launcher.Run(args, stdout, stderr)
+	doUpgrade, err = launcher.Run(args, stdin, stdout, stderr)
 	require.NoError(t, err)
 
 	require.Empty(t, stderr.String())
@@ -342,7 +350,7 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	args = []string{"end", "--halt", upgradeFilename}
 	stdout.Reset()
 	stderr.Reset()
-	doUpgrade, err = launcher.Run(args, stdout, stderr)
+	doUpgrade, err = launcher.Run(args, stdin, stdout, stderr)
 	require.NoError(t, err)
 	require.False(t, doUpgrade)
 	require.Empty(t, stderr.String())

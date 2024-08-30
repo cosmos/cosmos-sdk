@@ -36,6 +36,8 @@ import (
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
+	cmttypes "github.com/cometbft/cometbft/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -185,6 +187,14 @@ func initFixture(t *testing.T) *fixture {
 		msgRouter,
 		grpcRouter,
 	)
+
+	integrationApp.BaseApp.SetParamStore(consensusParamsKeeper.ParamsStore)
+
+	params := cmttypes.ConsensusParamsFromProto(*simtestutil.DefaultConsensusParams) // This fills up missing param sections
+	err := consensusParamsKeeper.ParamsStore.Set(integrationApp.Context(), params.ToProto())
+	if err != nil {
+		panic(fmt.Errorf("failed to set consensus params: %w", err))
+	}
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 

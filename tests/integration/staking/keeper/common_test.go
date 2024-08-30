@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 	"testing"
 
@@ -29,6 +30,7 @@ import (
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/testutil"
 	"cosmossdk.io/x/staking/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -185,6 +187,14 @@ func initFixture(tb testing.TB) *fixture {
 		msgRouter,
 		queryRouter,
 	)
+
+	integrationApp.BaseApp.SetParamStore(consensusParamsKeeper.ParamsStore)
+
+	params := cmttypes.ConsensusParamsFromProto(*simtestutil.DefaultConsensusParams) // This fills up missing param sections
+	err := consensusParamsKeeper.ParamsStore.Set(integrationApp.Context(), params.ToProto())
+	if err != nil {
+		panic(fmt.Errorf("failed to set consensus params: %w", err))
+	}
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -32,6 +33,8 @@ import (
 	"cosmossdk.io/x/staking"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
+	cmttypes "github.com/cometbft/cometbft/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -166,6 +169,13 @@ func initFixture(tb testing.TB) *fixture {
 		baseapp.NewMsgServiceRouter(),
 		baseapp.NewGRPCQueryRouter(),
 	)
+
+	integrationApp.BaseApp.SetParamStore(consensusParamsKeeper.ParamsStore)
+
+	params := cmttypes.ConsensusParamsFromProto(*simtestutil.DefaultConsensusParams) // This fills up missing param sections
+	if err := consensusParamsKeeper.ParamsStore.Set(integrationApp.Context(), params.ToProto()); err != nil {
+		panic(fmt.Errorf("failed to set consensus params: %w", err))
+	}
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 

@@ -6,7 +6,6 @@ import (
 
 	cmtabcitypes "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/core/address"
@@ -88,18 +87,6 @@ func NewIntegrationApp(
 	bApp.SetGRPCQueryRouter(grpcRouter)
 
 	if keys[consensus] != nil {
-		// set baseApp param store
-		consensusParamsKeeper, ok := modules[consensus].(baseapp.ParamStore)
-		if ok {
-			bApp.SetParamStore(consensusParamsKeeper)
-
-			params := cmttypes.ConsensusParamsFromProto(*simtestutil.DefaultConsensusParams) // This fills up missing param sections
-			err := consensusParamsKeeper.Set(sdkCtx, params.ToProto())
-			if err != nil {
-				panic(fmt.Errorf("failed to set consensus params: %w", err))
-			}
-		}
-
 		if err := bApp.LoadLatestVersion(); err != nil {
 			panic(fmt.Errorf("failed to load application version from store: %w", err))
 		}

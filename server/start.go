@@ -1024,9 +1024,3 @@ func addStartNodeFlags[T types.Application](cmd *cobra.Command, opts StartCmdOpt
 		opts.AddFlags(cmd)
 	}
 }
-
-// getStartCommandHandler returns a function that can be used as the start command handler.
-// This function instantiates the generic `start` function with the appropriate type.
-func getStartCommandHandler[T types.Application]() func(*Context, client.Context, types.AppCreator[T], bool, StartCmdOptions[T]) error {
-	return start[T]
-}

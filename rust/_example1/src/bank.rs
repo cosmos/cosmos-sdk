@@ -16,17 +16,36 @@ pub struct Coin {
     amount: u128,
 }
 
-
 #[derive(State)]
 pub struct Bank {
-    #[map(prefix = 1, key(denom), value(owner))]
-    denom_owners: Map<Denom, Address>,
+    #[map(prefix = 1, key(denom), value(.))]
+    denom_owners: Map<Denom, DenomOwnerInfo>,
 
     #[map(prefix = 2, key(addess, denom), value(balance))]
     balances: Map<(Address, Denom), u128>,
 
     #[map(prefix = 3, key(denom), value(supply))]
     supply: Map<Denom, u128>,
+}
+
+#[service]
+pub trait DenomOnSend {
+    fn on_send(&self, ctx: &Context, from_address: &Address, to_address: &Address, coin: &Coin) -> Result<()>;
+}
+
+#[service]
+pub trait DenomOverride {
+    fn balance(&self, ctx: &Context, address: &Address, denom: &Denom) -> Result<u128>;
+    fn supply(&self, ctx: &Context, denom: &Denom) -> Result<u128>;
+}
+
+#[derive(Serializable)]
+pub struct DenomOwnerInfo {
+    owner: Address,
+
+    // if true, then the owner has overridden balance, supply and send tracking
+    // this value can't be changed from its initial value (that would require a major data migration)
+    has_override: bool,
 }
 
 #[service(proto_package = "cosmos.bank.v1beta1")]
@@ -43,33 +62,23 @@ pub trait BankQuery {
 
 #[service(proto_package = "cosmos.bank.v2")]
 pub trait BankV2 {
-    fn create_denom(&self, ctx: &mut Context, denom: &Denom, owner: &Address) -> Result<()>;
+    fn create_denom(&self, ctx: &mut Context, denom: &Denom, owner: &Address, has_override: bool) -> Result<()>;
     fn send(&self, ctx: &mut Context, to_address: &Address, amount: &[Coin]) -> Result<()>;
-    fn balance(&self, ctx: &Context, address: &Address, denom: &Denom) -> Result<u128>;
     fn mint(&self, ctx: &mut Context, to_address: &Address, coin: &Coin) -> Result<()>;
     fn burn(&self, ctx: &mut Context, from_address: &Address, coin: &Coin) -> Result<()>;
-}
-
-#[service]
-pub trait DenomCanSend {
-    fn can_send(&self, ctx: &Context, from_address: &Address, to_address: &Address, coin: &Coin) -> Result<bool>;
-}
-
-#[service]
-pub trait DenomOverride {
-    fn send(&self, ctx: &Context, from_address: &Address, to_address: &Address, coin: &Coin) -> Result<bool>;
     fn balance(&self, ctx: &Context, address: &Address, denom: &Denom) -> Result<u128>;
-    fn mint(&self, ctx: &mut Context, to_address: &Address, coin: &Coin) -> Result<()>;
-    fn burn(&self, ctx: &mut Context, from_address: &Address, coin: &Coin) -> Result<()>;
     fn supply(&self, ctx: &Context, denom: &Denom) -> Result<u128>;
 }
 
 impl BankV2 for Bank {
-    fn create_denom(&self, ctx: &mut Context, denom: &Denom, owner: &Address) -> Result<()> {
+    fn create_denom(&self, ctx: &mut Context, denom: &Denom, owner: &Address, has_override: bool) -> Result<()> {
         if self.denom_owners.get(ctx, denom)?.is_some() {
             return Err("denom already exists".to_string());
         }
-        self.denom_owners.set(ctx, denom, owner)
+        self.denom_owners.set(ctx, denom, &DenomOwnerInfo {
+            owner: owner.clone(),
+            has_override,
+        })
     }
 
     fn send(&self, ctx: &mut Context, to_address: &Address, amount: &[Coin]) -> Result<()> {
@@ -81,11 +90,9 @@ impl BankV2 for Bank {
     }
 
     fn mint(&self, ctx: &mut Context, to_address: &Address, coin: &Coin) -> Result<()> {
-        if let Some(denom_owner) = self.denom_owners.get(ctx, &coin.denom)? {
-            let mint_client = DenomOverrideClient(denom_owner);
-            if mint_client.mint_implemented(ctx)? {
-                // if mint is implemented, then we can mint using that method and not do any other logic
-                return mint_client.mint(ctx, to_address, coin);
+        if let Some(owner_info) = self.denom_owners.get(ctx, &coin.denom)? {
+            if owner_info.has_override {
+                return Err("denom has balance and supply tracking override".to_string());
             }
 
             let supply = self.supply.get(ctx, &coin.denom)?.unwrap_or(0);
@@ -97,11 +104,9 @@ impl BankV2 for Bank {
     }
 
     fn burn(&self, ctx: &mut Context, from_address: &Address, coin: &Coin) -> Result<()> {
-        if let Some(denom_owner) = self.denom_owners.get(ctx, &coin.denom)? {
-            let burn_client = DenomOverrideClient(denom_owner);
-            if burn_client.burn_implemented(ctx)? {
-                // if burn is implemented, then we can burn using that method and not do any other logic
-                return burn_client.burn(ctx, from_address, coin);
+        if let Some(owner_info) = self.denom_owners.get(ctx, &coin.denom)? {
+            if owner_info.has_override {
+                return Err("denom has balance and supply tracking override".to_string());
             }
 
             let from_balance = self.balances.get(ctx, &(from_address.clone(), coin.denom.clone()))?.unwrap_or(0);
@@ -119,24 +124,34 @@ impl BankV2 for Bank {
             Err("denom not found".to_string())
         }
     }
+
+    fn supply(&self, ctx: &Context, denom: &Denom) -> Result<u128> {
+        if let Some(owner_info) = self.denom_owners.get(ctx, denom)? {
+            if owner_info.has_override {
+                let supply_client = DenomOverrideClient(owner_info.owner);
+                return supply_client.supply(ctx, denom);
+            }
+        }
+
+        self.supply.get(ctx, denom).map(|supply| supply.unwrap_or(0))
+    }
 }
 
 impl BankMsg for Bank {
     fn send(&self, ctx: &mut Context, from_address: &Address, to_address: &Address, amount: &[Coin]) -> Result<()> {
         for coin in amount {
-            if let Some(denom_owner) = self.denom_owners.get(ctx, &coin.denom)? {
-                let send_client = DenomOverrideClient(denom_owner);
-                if send_client.send_implemented(ctx)? {
-                    // if send is implemented, then we can send using that method and not do any other logic
-                    send_client.send(ctx, from_address, to_address, coin)?;
+            if let Some(owner_info) = self.denom_owners.get(ctx, &coin.denom)? {
+                let can_send_client = DenomOnSendClient(owner_info.owner);
+                if owner_info.has_override {
+                    // if the owner has an override, then we just call on_send to process the transfer
+                    // if it's not implemented then this call will error, which is what we want
+                    can_send_client.on_send(ctx, from_address, to_address, coin)?;
                     continue;
                 }
 
-                let can_send_client = DenomCanSendClient(denom_owner);
-                if can_send_client.can_send_implemented(ctx)? {
-                    if !can_send_client.can_send(ctx, from_address, to_address, coin)? {
-                        return Err("send blocked".to_string());
-                    }
+                if can_send_client.on_send_implemented(ctx)? {
+                    // we'll return with an error here if the on_send method returns an error blocking the send
+                    can_send_client.on_send(ctx, from_address, to_address, coin)?
                 }
             } else {
                 return Err("denom not found".to_string());
@@ -156,10 +171,9 @@ impl BankMsg for Bank {
 
 impl BankQuery for Bank {
     fn balance(&self, ctx: &Context, address: &Address, denom: &Denom) -> Result<u128> {
-        if let Some(denom_owner) = self.denom_owners.get(ctx, denom)? {
-            let balance_client = DenomOverrideClient(denom_owner);
-            if balance_client.balance_implemented(ctx)? {
-                // if balance is implemented, then we can get the balance using that method and not do any other logic
+        if let Some(owner_info) = self.denom_owners.get(ctx, denom)? {
+            if owner_info.has_override {
+                let balance_client = DenomOverrideClient(owner_info.owner);
                 return balance_client.balance(ctx, address, denom);
             }
         }

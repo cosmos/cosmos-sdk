@@ -100,6 +100,20 @@ func (mr *MockMeterMockRecorder) Consume(amount, descriptor interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Consume", reflect.TypeOf((*MockMeter)(nil).Consume), amount, descriptor)
 }
 
+// Consumed mocks base method.
+func (m *MockMeter) Consumed() gas.Gas {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Consumed")
+	ret0, _ := ret[0].(gas.Gas)
+	return ret0
+}
+
+// Consumed indicates an expected call of Consumed.
+func (mr *MockMeterMockRecorder) Consumed() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Consumed", reflect.TypeOf((*MockMeter)(nil).Consumed))
+}
+
 // Limit mocks base method.
 func (m *MockMeter) Limit() gas.Gas {
 	m.ctrl.T.Helper()

@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	coreapp "cosmossdk.io/core/app"
+	coreserver "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
@@ -42,7 +42,7 @@ func (*mockApp[T]) GetAppManager() *appmanager.AppManager[T] {
 	return nil
 }
 
-func (*mockApp[T]) InterfaceRegistry() coreapp.InterfaceRegistry {
+func (*mockApp[T]) InterfaceRegistry() coreserver.InterfaceRegistry {
 	return &mockInterfaceRegistry{}
 }
 
@@ -65,6 +65,7 @@ func TestServer(t *testing.T) {
 
 	server := serverv2.NewServer(
 		logger,
+		serverv2.DefaultServerConfig(),
 		grpcServer,
 		mockServer,
 	)

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
@@ -13,14 +12,12 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/router"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	stfgas "cosmossdk.io/server/v2/stf/gas"
 	"cosmossdk.io/server/v2/stf/internal"
 )
-
-// Identity defines STF's bytes identity and it's used by STF to store things in its own state.
-var Identity = []byte("stf")
 
 type eContextKey struct{}
 
@@ -89,9 +86,9 @@ func NewSTF[T transaction.Tx](
 // executes the block and returns the block results and the new state.
 func (s STF[T]) DeliverBlock(
 	ctx context.Context,
-	block *appmanager.BlockRequest[T],
+	block *server.BlockRequest[T],
 	state store.ReaderMap,
-) (blockResult *appmanager.BlockResponse, newState store.WriterMap, err error) {
+) (blockResult *server.BlockResponse, newState store.WriterMap, err error) {
 	// creates a new branchFn state, from the readonly view of the state
 	// that can be written to.
 	newState = s.branchFn(state)
@@ -108,7 +105,7 @@ func (s STF[T]) DeliverBlock(
 		return nil, nil, fmt.Errorf("unable to set initial header info, %w", err)
 	}
 
-	exCtx := s.makeContext(ctx, appmanager.ConsensusIdentity, newState, internal.ExecModeFinalize)
+	exCtx := s.makeContext(ctx, ConsensusIdentity, newState, internal.ExecModeFinalize)
 	exCtx.setHeaderInfo(hi)
 
 	// reset events
@@ -142,7 +139,7 @@ func (s STF[T]) DeliverBlock(
 	}
 
 	// execute txs
-	txResults := make([]appmanager.TxResult, len(block.Txs))
+	txResults := make([]server.TxResult, len(block.Txs))
 	// TODO: skip first tx if vote extensions are enabled (marko)
 	for i, txBytes := range block.Txs {
 		// check if we need to return early or continue delivering txs
@@ -159,8 +156,7 @@ func (s STF[T]) DeliverBlock(
 		return nil, nil, err
 	}
 
-	return &appmanager.BlockResponse{
-		Apphash:          nil,
+	return &server.BlockResponse{
 		ValidatorUpdates: valset,
 		PreBlockEvents:   preBlockEvents,
 		BeginBlockEvents: beginBlockEvents,
@@ -176,7 +172,7 @@ func (s STF[T]) deliverTx(
 	tx T,
 	execMode transaction.ExecMode,
 	hi header.Info,
-) appmanager.TxResult {
+) server.TxResult {
 	// recover in the case of a panic
 	var recoveryError error
 	defer func() {
@@ -188,26 +184,26 @@ func (s STF[T]) deliverTx(
 	// handle error from GetGasLimit
 	gasLimit, gasLimitErr := tx.GetGasLimit()
 	if gasLimitErr != nil {
-		return appmanager.TxResult{
+		return server.TxResult{
 			Error: gasLimitErr,
 		}
 	}
 
 	if recoveryError != nil {
-		return appmanager.TxResult{
+		return server.TxResult{
 			Error: recoveryError,
 		}
 	}
 
 	validateGas, validationEvents, err := s.validateTx(ctx, state, gasLimit, tx, execMode)
 	if err != nil {
-		return appmanager.TxResult{
+		return server.TxResult{
 			Error: err,
 		}
 	}
 
 	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode, hi)
-	return appmanager.TxResult{
+	return server.TxResult{
 		Events:    append(validationEvents, execEvents...),
 		GasUsed:   execGas + validateGas,
 		GasWanted: gasLimit,
@@ -230,7 +226,7 @@ func (s STF[T]) validateTx(
 	if err != nil {
 		return 0, nil, err
 	}
-	validateCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, validateState, execMode)
+	validateCtx := s.makeContext(ctx, RuntimeIdentity, validateState, execMode)
 	validateCtx.setHeaderInfo(hi)
 	validateCtx.setGasLimit(gasLimit)
 	err = s.doTxValidation(validateCtx, tx)
@@ -259,7 +255,7 @@ func (s STF[T]) execTx(
 		// in case of error during message execution, we do not apply the exec state.
 		// instead we run the post exec handler in a new branchFn from the initial state.
 		postTxState := s.branchFn(state)
-		postTxCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, postTxState, execMode)
+		postTxCtx := s.makeContext(ctx, RuntimeIdentity, postTxState, execMode)
 		postTxCtx.setHeaderInfo(hi)
 
 		postTxErr := s.postTxExec(postTxCtx, tx, false)
@@ -279,7 +275,7 @@ func (s STF[T]) execTx(
 	// tx execution went fine, now we use the same state to run the post tx exec handler,
 	// in case the execution of the post tx fails, then no state change is applied and the
 	// whole execution step is rolled back.
-	postTxCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, execState, execMode) // NO gas limit.
+	postTxCtx := s.makeContext(ctx, RuntimeIdentity, execState, execMode) // NO gas limit.
 	postTxCtx.setHeaderInfo(hi)
 	postTxErr := s.postTxExec(postTxCtx, tx, true)
 	if postTxErr != nil {
@@ -316,7 +312,7 @@ func (s STF[T]) runTxMsgs(
 	}
 	msgResps := make([]transaction.Msg, len(msgs))
 
-	execCtx := s.makeContext(ctx, nil, state, execMode)
+	execCtx := s.makeContext(ctx, RuntimeIdentity, state, execMode)
 	execCtx.setHeaderInfo(hi)
 	execCtx.setGasLimit(gasLimit)
 	for i, msg := range msgs {
@@ -414,11 +410,11 @@ func (s STF[T]) Simulate(
 	state store.ReaderMap,
 	gasLimit uint64,
 	tx T,
-) (appmanager.TxResult, store.WriterMap) {
+) (server.TxResult, store.WriterMap) {
 	simulationState := s.branchFn(state)
 	hi, err := s.getHeaderInfo(simulationState)
 	if err != nil {
-		return appmanager.TxResult{}, nil
+		return server.TxResult{}, nil
 	}
 	txr := s.deliverTx(ctx, simulationState, tx, internal.ExecModeSimulate, hi)
 
@@ -432,10 +428,10 @@ func (s STF[T]) ValidateTx(
 	state store.ReaderMap,
 	gasLimit uint64,
 	tx T,
-) appmanager.TxResult {
+) server.TxResult {
 	validationState := s.branchFn(state)
 	gasUsed, events, err := s.validateTx(ctx, validationState, gasLimit, tx, transaction.ExecModeCheck)
-	return appmanager.TxResult{
+	return server.TxResult{
 		Events:  events,
 		GasUsed: gasUsed,
 		Error:   err,
@@ -591,9 +587,9 @@ func newExecutionContext(
 		state:               meteredState,
 		meter:               meter,
 		events:              make([]event.Event, 0),
-		sender:              sender,
 		headerInfo:          header.Info{},
 		execMode:            execMode,
+		sender:              sender,
 		branchFn:            branchFn,
 		makeGasMeter:        makeGasMeterFn,
 		makeGasMeteredStore: makeGasMeteredStoreFn,

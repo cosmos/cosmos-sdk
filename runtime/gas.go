@@ -36,6 +36,10 @@ func (cgm CoreGasmeter) Consume(amount gas.Gas, descriptor string) error {
 	return nil
 }
 
+func (cgm CoreGasmeter) Consumed() gas.Gas {
+	return cgm.gm.GasConsumed()
+}
+
 func (cgm CoreGasmeter) Refund(amount gas.Gas, descriptor string) error {
 	cgm.gm.RefundGas(amount, descriptor)
 	return nil
@@ -55,14 +59,14 @@ type SDKGasMeter struct {
 }
 
 func (gm SDKGasMeter) GasConsumed() storetypes.Gas {
-	return gm.gm.Remaining()
+	return gm.gm.Consumed()
 }
 
 func (gm SDKGasMeter) GasConsumedToLimit() storetypes.Gas {
 	if gm.IsPastLimit() {
 		return gm.gm.Limit()
 	}
-	return gm.gm.Remaining()
+	return gm.gm.Consumed()
 }
 
 func (gm SDKGasMeter) GasRemaining() storetypes.Gas {

@@ -71,7 +71,8 @@ func (s *KeeperTestSuite) SetupTest() {
 	authority, err := ac.BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
 	s.Require().NoError(err)
 	s.encodedAuthority = authority
-	s.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, s.encCfg.Codec, homeDir, s.baseApp, authority)
+
+	s.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, s.encCfg.Codec, homeDir, s.baseApp, authority, nil) //TODO: pass consensus keeper
 
 	s.T().Log("home dir:", homeDir)
 	s.homeDir = homeDir

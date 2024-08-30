@@ -24,13 +24,33 @@ pub fn service(_: TokenStream, item: TokenStream) -> TokenStream {
             _ => None
         }
     });
+
+    let implemented_methods = input.items.iter().filter_map(|ti| {
+        match ti {
+            TraitItem::Fn(f) => {
+                let name = &f.sig.ident;
+                let method_name = format_ident!("{}_implemented", name);
+                Some(quote! {
+                    fn #method_name(&self, ctx: &::cosmos_core::Context) -> ::cosmos_core::Result<bool> {
+                        todo!()
+                    }
+                })
+            }
+            _ => None
+        }
+    });
+
     let tokens = quote! {
         #item2
 
-        pub struct #client_struct_name {}
+        pub struct #client_struct_name (::cosmos_core::Address)
 
         impl #trait_name for #client_struct_name {
             #(#methods)*
+        }
+
+        impl #client_struct_name {
+            #(#implemented_methods)*
         }
     };
 
@@ -42,14 +62,14 @@ pub fn proto_method(_: TokenStream, item: TokenStream) -> TokenStream {
     item
 }
 
-#[proc_macro_derive(Account)]
-pub fn derive_account(item: TokenStream) -> TokenStream {
-    TokenStream::new()
+#[proc_macro_attribute]
+pub fn derive_account(_: TokenStream, item: TokenStream) -> TokenStream {
+    item
 }
 
-#[proc_macro_derive(Module)]
-pub fn derive_module(item: TokenStream) -> TokenStream {
-    TokenStream::new()
+#[proc_macro_attribute]
+pub fn derive_module(_: TokenStream, item: TokenStream) -> TokenStream {
+    item
 }
 
 #[proc_macro_derive(State, attributes(map, item, table))]

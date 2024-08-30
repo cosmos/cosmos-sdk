@@ -1,10 +1,11 @@
+#![derive_account(BasicERC20)]
+
 use arrayvec::ArrayString;
 use cosmos_core::{Address, Context, Result, Item, Map, OnCreate};
-use cosmos_core_macros::{Account, Serializable, State};
+use cosmos_core_macros::{Serializable, State};
 use crypto_bigint::U256;
-use serde::Serialize;
 
-#[derive(Account, State)]
+#[derive(State)]
 pub struct BasicERC20 {
     #[item(prefix=0)]
     owner: Item<Address>,

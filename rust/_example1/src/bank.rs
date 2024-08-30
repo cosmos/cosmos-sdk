@@ -41,6 +41,7 @@ pub trait BankQuery {
     fn balance(&self, ctx: &Context, address: &Address, denom: &Denom) -> Result<u128>;
 }
 
+#[service(proto_package = "cosmos.bank.v2")]
 pub trait BankV2 {
     fn create_denom(&self, ctx: &mut Context, denom: &Denom, owner: &Address) -> Result<()>;
     fn send(&self, ctx: &mut Context, to_address: &Address, amount: &[Coin]) -> Result<()>;

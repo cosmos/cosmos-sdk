@@ -1,19 +1,19 @@
 #![derive_module(Bank)]
 
-use arrayvec::ArrayString;
+use arrayvec::{ArrayString, ArrayVec};
 use cosmos_core::{Address, Context, Map, Result};
 use cosmos_core_macros::{service, Serializable, proto_method, derive_module, State};
 
-type Denom = ArrayString<256>;
+pub type Denom = ArrayString<256>;
 
 #[derive(Serializable, Clone)]
 #[proto(name = "cosmos.bank.v1beta1.Coin")]
 pub struct Coin {
     #[proto(tag = "1")]
-    denom: Denom,
+    pub denom: Denom,
 
     #[proto(tag="2", type="string")]
-    amount: u128,
+    pub amount: u128,
 }
 
 #[derive(State)]

@@ -14,7 +14,15 @@ impl Context {
         todo!()
     }
 
-    pub fn with_state_token(&self, state_token: StateToken) -> Context {
+    pub fn derived_context(&self) -> Context {
+        todo!()
+    }
+
+    pub fn set_state_token(&mut self, state_token: StateToken) {
+        todo!()
+    }
+
+    pub fn set_sender(&mut self, sender: Address) {
         todo!()
     }
 
@@ -124,3 +132,9 @@ pub trait OnCreate {
 }
 
 pub trait State {}
+
+pub trait Service {
+    fn client() -> Box<Self>;
+    fn client_with_ctx<F>(ctx_fn: F) -> Box<Self>
+        where F: FnOnce(&mut Context);
+}

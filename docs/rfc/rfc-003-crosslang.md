@@ -246,26 +246,33 @@ at least 56kb will be available for **message data** and message responses.
 
 ## Decision
 
-TODO
+Based on internal discussions, we have decided to move forward with this design. 
 
 ## Consequences (optional)
 
 ### Backwards Compatibility
 
-It is intended that existing SDK modules built using `cosmossdk.io/core` can be integrated into this system with
-no or minimal changes.
+It is intended that existing SDK modules built using `cosmossdk.io/core` and
+account handlers built with `cosmossdk.io/x/accounts` can be integrated into this system with zero or minimal changes.
 
 ### Positive
 
-TODO
+This design will allow native SDK modules to be built using other languages such as Rust and Zig, and
+for modules to be executed in different virtual machine environments such as Wasm and the EVM.
+It also extends the concept of a module to first-class accounts in the style of the existing `x/accounts` module
+and EVM contracts.
 
 ### Negative
 
-TODO
-
 ### Neutral
 
-TODO
+Similar to other message passing designs,
+the raw performance invoking a message handler will be slower than a golang method call as in the existing keeper paradigm.
+
+However, this design does nothing to preclude the continued existence of golang native keeper passing, and it is likely
+that we can find performance optimizations in other areas to mitigate any performance loss.
+In addition, a cross-language, cross-VM is simply not possible without some overhead.
+
 
 ### References
 

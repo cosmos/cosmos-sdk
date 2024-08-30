@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/decoding"
 	"cosmossdk.io/schema/indexer"
+
 	"cosmossdk.io/store/streaming"
 	storetypes "cosmossdk.io/store/types"
 
@@ -163,14 +164,16 @@ func (p listenerWrapper) ListenFinalizeBlock(_ context.Context, req abci.Finaliz
 
 func (p listenerWrapper) ListenCommit(ctx context.Context, res abci.CommitResponse, changeSet []*storetypes.StoreKVPair) error {
 	if cb := p.listener.OnKVPair; cb != nil {
-		updates := make([]appdata.ModuleKVPairUpdate, len(changeSet))
+		updates := make([]appdata.ActorKVPairUpdate, len(changeSet))
 		for i, pair := range changeSet {
-			updates[i] = appdata.ModuleKVPairUpdate{
-				ModuleName: pair.StoreKey,
-				Update: schema.KVPairUpdate{
-					Key:    pair.Key,
-					Value:  pair.Value,
-					Delete: pair.Delete,
+			updates[i] = appdata.ActorKVPairUpdate{
+				Actor: []byte(pair.StoreKey),
+				StateChanges: []schema.KVPairUpdate{
+					{
+						Key:    pair.Key,
+						Value:  pair.Value,
+						Remove: pair.Delete,
+					},
 				},
 			}
 		}
@@ -181,9 +184,15 @@ func (p listenerWrapper) ListenCommit(ctx context.Context, res abci.CommitRespon
 	}
 
 	if p.listener.Commit != nil {
-		err := p.listener.Commit(appdata.CommitData{})
+		commitCb, err := p.listener.Commit(appdata.CommitData{})
 		if err != nil {
 			return err
+		}
+		if commitCb != nil {
+			err := commitCb()
+			if err != nil {
+				return err
+			}
 		}
 	}
 

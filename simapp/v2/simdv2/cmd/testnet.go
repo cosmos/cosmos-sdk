@@ -288,7 +288,11 @@ func initTestnetFiles[T transaction.Tx](
 			sdk.NewCoin(args.bondTokenDenom, accStakingTokens),
 		}
 
-		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
+		addrStr, err := clientCtx.AddressCodec.BytesToString(addr)
+		if err != nil {
+			return err
+		}
+		genBalances = append(genBalances, banktypes.Balance{Address: addrStr, Coins: coins.Sort()})
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
 		valStr, err := clientCtx.ValidatorAddressCodec.BytesToString(addr)

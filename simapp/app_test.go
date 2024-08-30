@@ -51,10 +51,10 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	})
 
-	// BlockedAddresses returns a map of addresses in app v1 and a map of modules name in app di.
+	// BlockedAddresses returns a map of addresses in app v1 and a map of modules names in app di.
 	for acc := range BlockedAddresses() {
 		var addr sdk.AccAddress
-		if modAddr, err := sdk.AccAddressFromBech32(acc); err == nil {
+		if modAddr, err := app.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(acc); err == nil {
 			addr = modAddr
 		} else {
 			addr = app.AuthKeeper.GetModuleAddress(acc)

@@ -14,16 +14,16 @@ import (
 type ObjectCollection struct {
 	options           Options
 	objectType        schema.ObjectType
-	sch               schema.Schema
+	typeSet           schema.TypeSet
 	objects           *btree.Map[string, schema.ObjectUpdate]
 	updateGen         *rapid.Generator[schema.ObjectUpdate]
 	valueFieldIndices map[string]int
 }
 
 // NewObjectCollection creates a new ObjectCollection for the given object type.
-func NewObjectCollection(objectType schema.ObjectType, options Options, sch schema.Schema) *ObjectCollection {
+func NewObjectCollection(objectType schema.ObjectType, options Options, typeSet schema.TypeSet) *ObjectCollection {
 	objects := &btree.Map[string, schema.ObjectUpdate]{}
-	updateGen := schematesting.ObjectUpdateGen(objectType, objects, sch)
+	updateGen := schematesting.ObjectUpdateGen(objectType, objects, typeSet)
 	valueFieldIndices := make(map[string]int, len(objectType.ValueFields))
 	for i, field := range objectType.ValueFields {
 		valueFieldIndices[field.Name] = i
@@ -32,7 +32,7 @@ func NewObjectCollection(objectType schema.ObjectType, options Options, sch sche
 	return &ObjectCollection{
 		options:           options,
 		objectType:        objectType,
-		sch:               sch,
+		typeSet:           typeSet,
 		objects:           objects,
 		updateGen:         updateGen,
 		valueFieldIndices: valueFieldIndices,
@@ -45,7 +45,7 @@ func (o *ObjectCollection) ApplyUpdate(update schema.ObjectUpdate) error {
 		return fmt.Errorf("update type name %q does not match object type name %q", update.TypeName, o.objectType.Name)
 	}
 
-	err := o.objectType.ValidateObjectUpdate(update, o.sch)
+	err := o.objectType.ValidateObjectUpdate(update, o.typeSet)
 	if err != nil {
 		return err
 	}

@@ -332,7 +332,7 @@ func TestCompareModuleSchemas(t *testing.T) {
 }
 
 func requireModuleSchema(t *testing.T, types ...schema.Type) schema.ModuleSchema {
-	s, err := schema.NewModuleSchema(types...)
+	s, err := schema.CompileModuleSchema(types...)
 	if err != nil {
 		t.Fatal(err)
 	}

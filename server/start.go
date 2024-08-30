@@ -126,7 +126,7 @@ type StartCmdOptions[T types.Application] struct {
 	// AddFlags add custom flags to start cmd
 	AddFlags func(cmd *cobra.Command)
 	// StartCommandHandler can be used to customize the start command handler
-	StartCommandHandler func(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator[T], inProcessConsensus bool, opts StartCmdOptions[T]) error
+	StartCommandHandler func(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator[T], withCMT bool, opts StartCmdOptions[T]) error
 }
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -415,31 +415,28 @@ func getAndValidateConfig(svrCtx *Context) (serverconfig.Config, error) {
 // getGenDocProvider returns a function which returns the genesis doc from the genesis file.
 func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, error) {
 	return func() (node.ChecksummedGenesisDoc, error) {
+		defaultGenesisDoc := node.ChecksummedGenesisDoc{
+			Sha256Checksum: []byte{},
+		}
+
 		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
 		if err != nil {
-			return node.ChecksummedGenesisDoc{
-				Sha256Checksum: []byte{},
-			}, err
+			return defaultGenesisDoc, err
 		}
 
 		gen, err := appGenesis.ToGenesisDoc()
 		if err != nil {
-			return node.ChecksummedGenesisDoc{
-				Sha256Checksum: []byte{},
-			}, err
+			return defaultGenesisDoc, err
 		}
+
 		genbz, err := gen.AppState.MarshalJSON()
 		if err != nil {
-			return node.ChecksummedGenesisDoc{
-				Sha256Checksum: []byte{},
-			}, err
+			return defaultGenesisDoc, err
 		}
 
 		bz, err := json.Marshal(genbz)
 		if err != nil {
-			return node.ChecksummedGenesisDoc{
-				Sha256Checksum: []byte{},
-			}, err
+			return defaultGenesisDoc, err
 		}
 		sum := sha256.Sum256(bz)
 

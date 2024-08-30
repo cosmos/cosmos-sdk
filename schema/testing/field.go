@@ -19,8 +19,8 @@ var (
 )
 
 // FieldGen generates random Field's based on the validity criteria of fields.
-func FieldGen(sch schema.Schema) *rapid.Generator[schema.Field] {
-	enumTypes := slices.DeleteFunc(slices.Collect(sch.Types), func(t schema.Type) bool {
+func FieldGen(typeSet schema.TypeSet) *rapid.Generator[schema.Field] {
+	enumTypes := slices.DeleteFunc(slices.Collect(typeSet.AllTypes), func(t schema.Type) bool {
 		_, ok := t.(schema.EnumType)
 		return !ok
 	})
@@ -50,16 +50,16 @@ func FieldGen(sch schema.Schema) *rapid.Generator[schema.Field] {
 }
 
 // KeyFieldGen generates random key fields based on the validity criteria of key fields.
-func KeyFieldGen(sch schema.Schema) *rapid.Generator[schema.Field] {
-	return FieldGen(sch).Filter(func(f schema.Field) bool {
+func KeyFieldGen(typeSet schema.TypeSet) *rapid.Generator[schema.Field] {
+	return FieldGen(typeSet).Filter(func(f schema.Field) bool {
 		return !f.Nullable && f.Kind.ValidKeyKind()
 	})
 }
 
 // FieldValueGen generates random valid values for the field, aiming to exercise the full range of possible
 // values for the field.
-func FieldValueGen(field schema.Field, sch schema.Schema) *rapid.Generator[any] {
-	gen := baseFieldValue(field, sch)
+func FieldValueGen(field schema.Field, typeSet schema.TypeSet) *rapid.Generator[any] {
+	gen := baseFieldValue(field, typeSet)
 
 	if field.Nullable {
 		return rapid.OneOf(gen, rapid.Just[any](nil)).AsAny()
@@ -68,7 +68,7 @@ func FieldValueGen(field schema.Field, sch schema.Schema) *rapid.Generator[any] 
 	return gen
 }
 
-func baseFieldValue(field schema.Field, sch schema.Schema) *rapid.Generator[any] {
+func baseFieldValue(field schema.Field, typeSet schema.TypeSet) *rapid.Generator[any] {
 	switch field.Kind {
 	case schema.StringKind:
 		return rapid.StringOf(rapid.Rune().Filter(func(r rune) bool {
@@ -113,7 +113,7 @@ func baseFieldValue(field schema.Field, sch schema.Schema) *rapid.Generator[any]
 	case schema.AddressKind:
 		return rapid.SliceOfN(rapid.Byte(), 20, 64).AsAny()
 	case schema.EnumKind:
-		typ, found := sch.LookupType(field.ReferencedType)
+		typ, found := typeSet.LookupType(field.ReferencedType)
 		enumTyp, ok := typ.(schema.EnumType)
 		if !found || !ok {
 			panic(fmt.Errorf("enum type %q not found", field.ReferencedType))
@@ -128,18 +128,18 @@ func baseFieldValue(field schema.Field, sch schema.Schema) *rapid.Generator[any]
 }
 
 // ObjectKeyGen generates a value that is valid for the provided object key fields.
-func ObjectKeyGen(keyFields []schema.Field, sch schema.Schema) *rapid.Generator[any] {
+func ObjectKeyGen(keyFields []schema.Field, typeSet schema.TypeSet) *rapid.Generator[any] {
 	if len(keyFields) == 0 {
 		return rapid.Just[any](nil)
 	}
 
 	if len(keyFields) == 1 {
-		return FieldValueGen(keyFields[0], sch)
+		return FieldValueGen(keyFields[0], typeSet)
 	}
 
 	gens := make([]*rapid.Generator[any], len(keyFields))
 	for i, field := range keyFields {
-		gens[i] = FieldValueGen(field, sch)
+		gens[i] = FieldValueGen(field, typeSet)
 	}
 
 	return rapid.Custom(func(t *rapid.T) any {
@@ -156,7 +156,7 @@ func ObjectKeyGen(keyFields []schema.Field, sch schema.Schema) *rapid.Generator[
 // are valid for insertion (in the case forUpdate is false) or for update (in the case forUpdate is true).
 // Values that are for update may skip some fields in a ValueUpdates instance whereas values for insertion
 // will always contain all values.
-func ObjectValueGen(valueFields []schema.Field, forUpdate bool, sch schema.Schema) *rapid.Generator[any] {
+func ObjectValueGen(valueFields []schema.Field, forUpdate bool, typeSet schema.TypeSet) *rapid.Generator[any] {
 	if len(valueFields) == 0 {
 		// if we have no value fields, always return nil
 		return rapid.Just[any](nil)
@@ -164,7 +164,7 @@ func ObjectValueGen(valueFields []schema.Field, forUpdate bool, sch schema.Schem
 
 	gens := make([]*rapid.Generator[any], len(valueFields))
 	for i, field := range valueFields {
-		gens[i] = FieldValueGen(field, sch)
+		gens[i] = FieldValueGen(field, typeSet)
 	}
 	return rapid.Custom(func(t *rapid.T) any {
 		// return ValueUpdates 50% of the time

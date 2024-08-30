@@ -66,8 +66,8 @@ func TestModuleSchema_Validate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// because validate is called when calling NewModuleSchema, we just call NewModuleSchema
-			_, err := NewModuleSchema(tt.types...)
+			// because validate is called when calling CompileModuleSchema, we just call CompileModuleSchema
+			_, err := CompileModuleSchema(tt.types...)
 			if tt.errContains == "" {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
@@ -169,7 +169,7 @@ func TestModuleSchema_ValidateObjectUpdate(t *testing.T) {
 
 func requireModuleSchema(t *testing.T, types ...Type) ModuleSchema {
 	t.Helper()
-	moduleSchema, err := NewModuleSchema(types...)
+	moduleSchema, err := CompileModuleSchema(types...)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -240,7 +240,7 @@ func TestModuleSchema_Types(t *testing.T) {
 	moduleSchema := exampleSchema(t)
 
 	var typeNames []string
-	moduleSchema.Types(func(typ Type) bool {
+	moduleSchema.AllTypes(func(typ Type) bool {
 		typeNames = append(typeNames, typ.TypeName())
 		return true
 	})
@@ -252,7 +252,7 @@ func TestModuleSchema_Types(t *testing.T) {
 
 	typeNames = nil
 	// scan just the first type and return false
-	moduleSchema.Types(func(typ Type) bool {
+	moduleSchema.AllTypes(func(typ Type) bool {
 		typeNames = append(typeNames, typ.TypeName())
 		return false
 	})
@@ -314,5 +314,29 @@ func TestModuleSchema_EnumTypes(t *testing.T) {
 	expected = []string{"enum1"}
 	if !reflect.DeepEqual(typeNames, expected) {
 		t.Fatalf("expected %v, got %v", expected, typeNames)
+	}
+}
+
+func TestModuleSchemaJSON(t *testing.T) {
+	moduleSchema := exampleSchema(t)
+
+	b, err := moduleSchema.MarshalJSON()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	const expectedJson = `{"object_types":[{"name":"object1","key_fields":[{"name":"field1","kind":"enum","referenced_type":"enum2"}]},{"name":"object2","key_fields":[{"name":"field1","kind":"enum","referenced_type":"enum1"}]}],"enum_types":[{"name":"enum1","values":[{"name":"a","value":1},{"name":"b","value":2},{"name":"c","value":3}]},{"name":"enum2","values":[{"name":"d","value":4},{"name":"e","value":5},{"name":"f","value":6}]}]}`
+	if string(b) != expectedJson {
+		t.Fatalf("expected %s\n, got %s", expectedJson, string(b))
+	}
+
+	var moduleSchema2 ModuleSchema
+	err = moduleSchema2.UnmarshalJSON(b)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !reflect.DeepEqual(moduleSchema, moduleSchema2) {
+		t.Fatalf("expected %v, got %v", moduleSchema, moduleSchema2)
 	}
 }

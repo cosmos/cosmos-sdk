@@ -23,11 +23,12 @@ import (
 type Keeper struct {
 	appmodule.Environment
 
-	cdc            codec.BinaryCodec
-	router         types.Router
-	stakingKeeper  types.StakingKeeper
-	slashingKeeper types.SlashingKeeper
-	addressCodec   address.Codec
+	cdc             codec.BinaryCodec
+	router          types.Router
+	stakingKeeper   types.StakingKeeper
+	slashingKeeper  types.SlashingKeeper
+	consensusKeeper types.ConsensusKeeper
+	addressCodec    address.Codec
 
 	Schema collections.Schema
 	// Evidences key: evidence hash bytes | value: Evidence

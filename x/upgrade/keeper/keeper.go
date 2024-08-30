@@ -38,6 +38,8 @@ type Keeper struct {
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
 	authority          string                          // the address capable of executing and canceling an upgrade. Usually the gov module account
 	initVersionMap     appmodule.VersionMap            // the module version map at init genesis
+
+	consensusKeeper types.ConsensusKeeper
 }
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:

@@ -57,6 +57,7 @@ type Keeper struct {
 	cdc                   codec.BinaryCodec
 	authKeeper            types.AccountKeeper
 	bankKeeper            types.BankKeeper
+	consensusKeeper       types.ConsensusKeeper
 	hooks                 types.StakingHooks
 	authority             string
 	validatorAddressCodec addresscodec.Codec

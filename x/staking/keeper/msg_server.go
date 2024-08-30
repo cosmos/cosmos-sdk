@@ -17,7 +17,6 @@ import (
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	consensusv1 "cosmossdk.io/x/consensus/types"
 	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -69,30 +68,24 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", msg.Pubkey.GetCachedValue())
 	}
 
-	resp, err := k.QueryRouterService.Invoke(ctx, &consensusv1.QueryParamsRequest{})
+	pubkeyTypes, err := k.consensusKeeper.ValidatorPubKeyTypes(ctx)
 	if err != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "failed to query consensus params: %s", err)
 	}
-	res, ok := resp.(*consensusv1.QueryParamsResponse)
-	if !ok {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unexpected response type: %T", resp)
+
+	pkType := pk.Type()
+	if !slices.Contains(pubkeyTypes, pkType) {
+		return nil, errorsmod.Wrapf(
+			types.ErrValidatorPubKeyTypeNotSupported,
+			"got: %s, expected: %s", pk.Type(), pubkeyTypes,
+		)
 	}
 
-	if res.Params.Validator != nil {
-		pkType := pk.Type()
-		if !slices.Contains(res.Params.Validator.PubKeyTypes, pkType) {
-			return nil, errorsmod.Wrapf(
-				types.ErrValidatorPubKeyTypeNotSupported,
-				"got: %s, expected: %s", pk.Type(), res.Params.Validator.PubKeyTypes,
-			)
-		}
-
-		if pkType == sdk.PubKeyEd25519Type && len(pk.Bytes()) != ed25519.PubKeySize {
-			return nil, errorsmod.Wrapf(
-				types.ErrConsensusPubKeyLenInvalid,
-				"got: %d, expected: %d", len(pk.Bytes()), ed25519.PubKeySize,
-			)
-		}
+	if pkType == sdk.PubKeyEd25519Type && len(pk.Bytes()) != ed25519.PubKeySize {
+		return nil, errorsmod.Wrapf(
+			types.ErrConsensusPubKeyLenInvalid,
+			"got: %d, expected: %d", len(pk.Bytes()), ed25519.PubKeySize,
+		)
 	}
 
 	err = k.checkConsKeyAlreadyUsed(ctx, pk)
@@ -656,31 +649,21 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", cv)
 	}
 
-	// check if the new public key type is valid
-	resp, err := k.QueryRouterService.Invoke(ctx, &consensusv1.QueryParamsRequest{})
-	if err != nil {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "failed to query consensus params: %s", err)
-	}
-	paramsRes, ok := resp.(*consensusv1.QueryParamsResponse)
-	if !ok {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unexpected response type: %T", resp)
+	pubkeyTypes, err := k.consensusKeeper.ValidatorPubKeyTypes(ctx)
+
+	pkType := pk.Type()
+	if !slices.Contains(pubkeyTypes, pkType) {
+		return nil, errorsmod.Wrapf(
+			types.ErrValidatorPubKeyTypeNotSupported,
+			"got: %s, expected: %s", pk.Type(), pubkeyTypes,
+		)
 	}
 
-	if paramsRes.Params.Validator != nil {
-		pkType := pk.Type()
-		if !slices.Contains(paramsRes.Params.Validator.PubKeyTypes, pkType) {
-			return nil, errorsmod.Wrapf(
-				types.ErrValidatorPubKeyTypeNotSupported,
-				"got: %s, expected: %s", pk.Type(), paramsRes.Params.Validator.PubKeyTypes,
-			)
-		}
-
-		if pkType == sdk.PubKeyEd25519Type && len(pk.Bytes()) != ed25519.PubKeySize {
-			return nil, errorsmod.Wrapf(
-				types.ErrConsensusPubKeyLenInvalid,
-				"got: %d, expected: %d", len(pk.Bytes()), ed25519.PubKeySize,
-			)
-		}
+	if pkType == sdk.PubKeyEd25519Type && len(pk.Bytes()) != ed25519.PubKeySize {
+		return nil, errorsmod.Wrapf(
+			types.ErrConsensusPubKeyLenInvalid,
+			"got: %d, expected: %d", len(pk.Bytes()), ed25519.PubKeySize,
+		)
 	}
 
 	err = k.checkConsKeyAlreadyUsed(ctx, pk)

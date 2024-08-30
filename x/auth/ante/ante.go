@@ -19,6 +19,7 @@ type HandlerOptions struct {
 	AccountKeeper            AccountKeeper
 	AccountAbstractionKeeper AccountAbstractionKeeper
 	BankKeeper               types.BankKeeper
+	ConsensusKeeper          ConsensusKeeper
 	ExtensionOptionChecker   ExtensionOptionChecker
 	FeegrantKeeper           FeegrantKeeper
 	SignModeHandler          *txsigning.HandlerMap
@@ -44,7 +45,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 
 	anteDecorators := []sdk.AnteDecorator{
-		NewSetUpContextDecorator(options.Environment), // outermost AnteDecorator. SetUpContext must be called first
+		NewSetUpContextDecorator(options.Environment, options.ConsensusKeeper), // outermost AnteDecorator. SetUpContext must be called first
 		NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		NewValidateBasicDecorator(options.Environment),
 		NewTxTimeoutHeightDecorator(options.Environment),

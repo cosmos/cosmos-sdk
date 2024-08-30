@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/schema"
 	"github.com/tidwall/btree"
 
 	"cosmossdk.io/collections/codec"
-	"cosmossdk.io/schema"
 )
 
 // IndexingOptions are indexing options for the collections schema.
@@ -52,7 +52,7 @@ func (s Schema) ModuleCodec(opts IndexingOptions) (schema.ModuleCodec, error) {
 		decoder.collectionLookup.Set(string(coll.GetPrefix()), cdc)
 	}
 
-	modSchema, err := schema.NewModuleSchema(types...)
+	modSchema, err := schema.CompileModuleSchema(types...)
 	if err != nil {
 		return schema.ModuleCodec{}, err
 	}

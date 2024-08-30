@@ -5,6 +5,7 @@ package ledger
 
 import (
 	"fmt"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -15,6 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+var ac = codectestutil.CodecOptions{}.GetAddressCodec()
 
 func TestPublicKeyUnsafe(t *testing.T) {
 	path := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
@@ -31,7 +34,8 @@ func checkDefaultPubKey(t *testing.T, priv types.LedgerPrivKey) {
 		fmt.Sprintf("%x", cdc.Amino.MustMarshalBinaryBare(priv.PubKey())),
 		"Is your device using test mnemonic: %s ?", testdata.TestMnemonic)
 	require.Equal(t, expectedPkStr, priv.PubKey().String())
-	addr := sdk.AccAddress(priv.PubKey().Address()).String()
+	addr, err := ac.BytesToString(priv.PubKey().Address())
+	require.NoError(t, err)
 	require.Equal(t, "cosmos1w34k53py5v5xyluazqpq65agyajavep2rflq6h",
 		addr, "Is your device using test mnemonic: %s ?", testdata.TestMnemonic)
 }
@@ -98,7 +102,8 @@ func TestPublicKeySafe(t *testing.T) {
 	require.Nil(t, ShowAddress(path, priv.PubKey(), "cosmos"))
 	checkDefaultPubKey(t, priv)
 
-	addr2 := sdk.AccAddress(priv.PubKey().Address()).String()
+	addr2, err := ac.BytesToString(priv.PubKey().Address())
+	require.NoError(t, err)
 	require.Equal(t, addr, addr2)
 }
 
@@ -143,7 +148,9 @@ func TestPublicKeyHDPath(t *testing.T) {
 		require.NotNil(t, addr)
 		require.NotNil(t, priv)
 
-		addr2 := sdk.AccAddress(priv.PubKey().Address()).String()
+		addr2, err := ac.BytesToString(priv.PubKey().Address())
+		require.NoError(t, err)
+
 		require.Equal(t, addr2, addr)
 		require.Equal(t,
 			expectedAddrs[i], addr,

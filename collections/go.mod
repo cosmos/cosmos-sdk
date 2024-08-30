@@ -5,7 +5,7 @@ go 1.23
 require (
 	cosmossdk.io/core v1.0.0
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
-	cosmossdk.io/schema v0.1.0
+	cosmossdk.io/schema v0.2.0
 	github.com/stretchr/testify v1.9.0
 	github.com/tidwall/btree v1.7.0
 	pgregory.net/rapid v1.1.0
@@ -20,5 +20,4 @@ require (
 replace (
 	cosmossdk.io/core => ../core
 	cosmossdk.io/core/testing => ../core/testing
-	cosmossdk.io/schema => ../schema
 )

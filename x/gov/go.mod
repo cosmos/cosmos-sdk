@@ -1,6 +1,6 @@
 module cosmossdk.io/x/gov
 
-go 1.23
+go 1.23.0
 
 require (
 	cosmossdk.io/api v0.7.5

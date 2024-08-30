@@ -75,7 +75,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 			}
 
 			if len(messages) > 1 && !isEqual {
-				return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposalMsg, "cannot submit multiple messages proposal with message based params")
+				return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposalMsg, "cannot submit multiple messages proposal with different message based params")
 			}
 
 			if proposalType != v1.ProposalType_PROPOSAL_TYPE_STANDARD {

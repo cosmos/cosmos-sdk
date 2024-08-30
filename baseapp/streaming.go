@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/decoding"
 	"cosmossdk.io/schema/indexer"
-
 	"cosmossdk.io/store/streaming"
 	storetypes "cosmossdk.io/store/types"
 

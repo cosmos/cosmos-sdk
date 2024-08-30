@@ -131,9 +131,11 @@ func NewEditValidatorCmd() *cobra.Command {
 			security, _ := cmd.Flags().GetString(FlagSecurityContact)
 			details, _ := cmd.Flags().GetString(FlagDetails)
 			profilePicUri, _ := cmd.Flags().GetString(FlagMetadataProfilePicUri)
+			socialHandlesUris, _ := cmd.Flags().GetStringArray(FlagMetadataSocialHandleUris)
 
 			metadata := types.Metadata{
-				ProfilePicUri: profilePicUri,
+				ProfilePicUri:    profilePicUri,
+				SocialHandleUris: socialHandlesUris,
 			}
 
 			description := types.NewDescription(moniker, identity, website, security, details, metadata)
@@ -233,11 +235,12 @@ func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc
 	fsCreateValidator.String(FlagSecurityContact, "", "The validator's (optional) security contact email")
 	fsCreateValidator.String(FlagDetails, "", "The validator's (optional) details")
 	fsCreateValidator.String(FlagIdentity, "", "The (optional) identity signature (ex. UPort or Keybase)")
+	fsCreateValidator.String(FlagMetadataProfilePicUri, "", "The  validator's profile pic uri")
+	fsCreateValidator.StringArray(FlagMetadataSocialHandleUris, []string{}, "The  validator's social handles uris")
 	fsCreateValidator.AddFlagSet(FlagSetCommissionCreate())
 	fsCreateValidator.AddFlagSet(FlagSetMinSelfDelegation())
 	fsCreateValidator.AddFlagSet(FlagSetAmount())
 	fsCreateValidator.AddFlagSet(FlagSetPublicKey())
-	fsCreateValidator.AddFlagSet(FlagSetMetadata())
 
 	defaultsDesc = fmt.Sprintf(`
 	delegation amount:           %s

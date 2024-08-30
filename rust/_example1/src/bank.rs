@@ -149,6 +149,8 @@ impl BankMsg for Bank {
                     continue;
                 }
 
+                // we dynamically check if there is an on_send method implemented,
+                // as an upgradeable account may dynamically add or remove the on_send method
                 if can_send_client.on_send_implemented(ctx)? {
                     // we'll return with an error here if the on_send method returns an error blocking the send
                     can_send_client.on_send(ctx, from_address, to_address, coin)?

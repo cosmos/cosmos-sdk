@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	gogotypes "github.com/cosmos/gogoproto/types"
+	"github.com/stretchr/testify/require"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/server/v2/stf/branch"
@@ -71,6 +72,7 @@ func TestBranchService(t *testing.T) {
 
 	t.Run("fail - reverts state", func(t *testing.T) {
 		stfCtx := makeContext()
+		originalGas := stfCtx.meter.Remaining()
 		gasUsed, err := branchService.ExecuteWithGasLimit(stfCtx, 10000, func(ctx context.Context) error {
 			kvSet(t, ctx, "cookies")
 			return errors.New("fail")
@@ -81,6 +83,7 @@ func TestBranchService(t *testing.T) {
 		if gasUsed == 0 {
 			t.Error("expected non-zero gasUsed")
 		}
+		require.Equal(t, int(originalGas-gasUsed), int(stfCtx.meter.Remaining()))
 		stateNotHas(t, stfCtx.state, "cookies")
 	})
 

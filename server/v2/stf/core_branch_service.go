@@ -41,7 +41,7 @@ func (bs BranchService) ExecuteWithGasLimit(
 	// restore original context
 	gasUsed = exCtx.meter.Limit() - exCtx.meter.Remaining()
 	_ = originalGasMeter.Consume(gasUsed, "execute-with-gas-limit")
-	exCtx.setGasLimit(originalGasMeter.Limit() - originalGasMeter.Remaining())
+	exCtx.setGasLimit(originalGasMeter.Remaining())
 
 	return gasUsed, err
 }

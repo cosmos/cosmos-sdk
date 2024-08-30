@@ -19,7 +19,6 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
-	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
@@ -99,7 +98,6 @@ func init() {
 			ProvideEnvironment[transaction.Tx],
 			ProvideModuleManager[transaction.Tx],
 			ProvideCometService,
-			ProvideAppVersionModifier[transaction.Tx],
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -238,10 +236,4 @@ func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.St
 
 func ProvideCometService() comet.Service {
 	return &services.ContextAwareCometInfoService{}
-}
-
-// ProvideAppVersionModifier returns nil, `app.VersionModifier` is a feature of BaseApp and neither used nor required for runtime/v2.
-// nil is acceptable, see: https://github.com/cosmos/cosmos-sdk/blob/0a6ee406a02477ae8ccbfcbe1b51fc3930087f4c/x/upgrade/keeper/keeper.go#L438
-func ProvideAppVersionModifier[T transaction.Tx](app *AppBuilder[T]) server.VersionModifier {
-	return nil
 }

@@ -6,11 +6,28 @@ impl Context {
     pub fn self_address(&self) -> Address {
         todo!()
     }
-
     pub fn sender(&self) -> Address {
         todo!()
     }
+
+    pub fn state_token(&self) -> StateToken {
+        todo!()
+    }
+
+    pub fn with_state_token(&self, state_token: StateToken) -> Context {
+        todo!()
+    }
+
+    // consume_gas consumes gas from the gas meter.
+    // It returns an error if the gas meter has run out.
+    // This method uses interior mutability to update the gas meter so that it can
+    // work from read-only references to the context.
+    pub fn consume_gas(&self, gas: u64) -> Result<()> {
+        todo!()
+    }
 }
+
+pub type StateToken = [u8; 32];
 
 pub type Result<T> = core::result::Result<T, String>;
 

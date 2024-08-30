@@ -169,7 +169,7 @@ require (
 require cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
 
 require (
-	cosmossdk.io/schema v0.1.1 // indirect
+	cosmossdk.io/schema v0.2.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 )
 

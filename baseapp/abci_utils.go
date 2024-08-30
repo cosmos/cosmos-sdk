@@ -287,14 +287,15 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 
 		selectedTxsSignersSeqs := make(map[string]uint64)
 		var (
-			err             error
+			resError        error
 			selectedTxsNums int
 			invalidTxs      []sdk.Tx // invalid txs to be removed out of the loop to avoid dead lock
 		)
 		h.mempool.SelectBy(ctx, req.Txs, func(memTx sdk.Tx) bool {
-			var signerData []mempool.SignerData
-			signerData, err = h.signerExtAdapter.GetSigners(memTx)
+			signerData, err := h.signerExtAdapter.GetSigners(memTx)
 			if err != nil {
+				// propogate the error to the caller
+				resError = err
 				return false
 			}
 
@@ -326,8 +327,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			// which calls mempool.Insert, in theory everything in the pool should be
 			// valid. But some mempool implementations may insert invalid txs, so we
 			// check again.
-			var txBz []byte
-			txBz, err = h.txVerifier.PrepareProposalVerifyTx(memTx)
+			txBz, err := h.txVerifier.PrepareProposalVerifyTx(memTx)
 			if err != nil {
 				invalidTxs = append(invalidTxs, memTx)
 			} else {
@@ -357,8 +357,8 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			return true
 		})
 
-		if err != nil {
-			return nil, err
+		if resError != nil {
+			return nil, resError
 		}
 
 		for _, tx := range invalidTxs {

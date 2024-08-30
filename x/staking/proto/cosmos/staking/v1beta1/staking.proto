@@ -88,6 +88,9 @@ message Metadata {
 
   // profile_pic_uri defines a link to the validator profile picture.
   string profile_pic_uri = 1;
+
+  // social_handle_uris defines a string array of uris to the validator's social handles.
+  repeated string social_handle_uris = 2;
 }
 
 // Validator defines a validator, together with the total amount of the

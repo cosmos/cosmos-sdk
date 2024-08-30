@@ -290,34 +290,41 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 		var selectedTxsNums int
 		for iterator != nil {
 			memTx := iterator.Tx()
-			signerData, err := h.signerExtAdapter.GetSigners(memTx)
-			if err != nil {
-				return nil, err
-			}
-
-			// If the signers aren't in selectedTxsSignersSeqs then we haven't seen them before
-			// so we add them and continue given that we don't need to check the sequence.
-			shouldAdd := true
 			txSignersSeqs := make(map[string]uint64)
-			for _, signer := range signerData {
-				seq, ok := selectedTxsSignersSeqs[signer.Signer.String()]
-				if !ok {
+
+			unorderedTx, ok := memTx.(sdk.TxWithUnordered)
+			isUnordered := ok && unorderedTx.GetUnordered()
+
+			if !isUnordered {
+				var err error
+				signerData, err := h.signerExtAdapter.GetSigners(memTx)
+				if err != nil {
+					return nil, err
+				}
+
+				// If the signers aren't in selectedTxsSignersSeqs then we haven't seen them before
+				// so we add them and continue given that we don't need to check the sequence.
+				shouldAdd := true
+				for _, signer := range signerData {
+					seq, ok := selectedTxsSignersSeqs[signer.Signer.String()]
+					if !ok {
+						txSignersSeqs[signer.Signer.String()] = signer.Sequence
+						continue
+					}
+
+					// If we have seen this signer before in this block, we must make
+					// sure that the current sequence is seq+1; otherwise is invalid
+					// and we skip it.
+					if seq+1 != signer.Sequence {
+						shouldAdd = false
+						break
+					}
 					txSignersSeqs[signer.Signer.String()] = signer.Sequence
+				}
+				if !shouldAdd {
+					iterator = iterator.Next()
 					continue
 				}
-
-				// If we have seen this signer before in this block, we must make
-				// sure that the current sequence is seq+1; otherwise is invalid
-				// and we skip it.
-				if seq+1 != signer.Sequence {
-					shouldAdd = false
-					break
-				}
-				txSignersSeqs[signer.Signer.String()] = signer.Sequence
-			}
-			if !shouldAdd {
-				iterator = iterator.Next()
-				continue
 			}
 
 			// NOTE: Since transaction verification was already executed in CheckTx,
@@ -337,18 +344,20 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 				}
 
 				txsLen := len(h.txSelector.SelectedTxs(ctx))
-				for sender, seq := range txSignersSeqs {
-					// If txsLen != selectedTxsNums is true, it means that we've
-					// added a new tx to the selected txs, so we need to update
-					// the sequence of the sender.
-					if txsLen != selectedTxsNums {
-						selectedTxsSignersSeqs[sender] = seq
-					} else if _, ok := selectedTxsSignersSeqs[sender]; !ok {
-						// The transaction hasn't been added but it passed the
-						// verification, so we know that the sequence is correct.
-						// So we set this sender's sequence to seq-1, in order
-						// to avoid unnecessary calls to PrepareProposalVerifyTx.
-						selectedTxsSignersSeqs[sender] = seq - 1
+				if !isUnordered {
+					for sender, seq := range txSignersSeqs {
+						// If txsLen != selectedTxsNums is true, it means that we've
+						// added a new tx to the selected txs, so we need to update
+						// the sequence of the sender.
+						if txsLen != selectedTxsNums {
+							selectedTxsSignersSeqs[sender] = seq
+						} else if _, ok := selectedTxsSignersSeqs[sender]; !ok {
+							// The transaction hasn't been added but it passed the
+							// verification, so we know that the sequence is correct.
+							// So we set this sender's sequence to seq-1, in order
+							// to avoid unnecessary calls to PrepareProposalVerifyTx.
+							selectedTxsSignersSeqs[sender] = seq - 1
+						}
 					}
 				}
 				selectedTxsNums = txsLen

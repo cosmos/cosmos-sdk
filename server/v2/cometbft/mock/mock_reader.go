@@ -2,8 +2,6 @@ package mock
 
 import (
 	corestore "cosmossdk.io/core/store"
-	// ammstore "cosmossdk.io/server/v2/appmanager/store"
-	// "cosmossdk.io/server/v2/stf/branch"
 )
 
 // ReaderMap defines an adapter around a RootStore that only exposes read-only
@@ -27,9 +25,9 @@ func (roa *ReaderMap) GetReader(actor []byte) (corestore.Reader, error) {
 
 // Reader represents a read-only adapter for accessing data from the root store.
 type MockReader struct {
-	version uint64    // The version of the data.
+	version uint64     // The version of the data.
 	store   *MockStore // The root store to read data from.
-	actor   []byte    // The actor associated with the data.
+	actor   []byte     // The actor associated with the data.
 }
 
 func NewMockReader(v uint64, rs *MockStore, actor []byte) *MockReader {

@@ -3,7 +3,6 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 
@@ -50,7 +49,7 @@ func (app *SimApp) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAd
 	}, err
 }
 
-// prepare for fresh start at zero height
+// prepForZeroHeightGenesis prepares for fresh start at zero height
 // NOTE zero height genesis is a temporary feature which will be deprecated
 //
 //	in favor of export at a block height
@@ -67,7 +66,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 	for _, addr := range jailAllowedAddrs {
 		_, err := app.InterfaceRegistry().SigningContext().ValidatorAddressCodec().StringToBytes(addr)
 		if err != nil {
-			log.Fatal(err)
+			panic(err)
 		}
 		allowedAddrsMap[addr] = true
 	}
@@ -158,7 +157,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 		if err != nil {
 			panic(err)
 		}
-		delAddr, err := app.InterfaceRegistry().SigningContext().ValidatorAddressCodec().StringToBytes(del.DelegatorAddress)
+		delAddr, err := app.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(del.DelegatorAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -198,7 +197,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 	err = app.StakingKeeper.UnbondingDelegations.Walk(
 		ctx,
 		nil,
-		func(key collections.Pair[[]byte, []byte], ubd stakingtypes.UnbondingDelegation) (stop bool, err error) {
+		func(_ collections.Pair[[]byte, []byte], ubd stakingtypes.UnbondingDelegation) (stop bool, err error) {
 			for i := range ubd.Entries {
 				ubd.Entries[i].CreationHeight = 0
 			}
@@ -248,7 +247,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 
 	_, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	/* Handle slashing state. */

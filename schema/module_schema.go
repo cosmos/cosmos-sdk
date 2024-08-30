@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 )
@@ -10,9 +11,9 @@ type ModuleSchema struct {
 	types map[string]Type
 }
 
-// NewModuleSchema constructs a new ModuleSchema and validates it. Any module schema returned without an error
-// is guaranteed to be valid.
-func NewModuleSchema(types ...Type) (ModuleSchema, error) {
+// CompileModuleSchema compiles the types into a ModuleSchema and validates it.
+// Any module schema returned without an error is guaranteed to be valid.
+func CompileModuleSchema(types ...Type) (ModuleSchema, error) {
 	typeMap := map[string]Type{}
 
 	for _, typ := range types {
@@ -33,10 +34,10 @@ func NewModuleSchema(types ...Type) (ModuleSchema, error) {
 	return res, nil
 }
 
-// MustNewModuleSchema constructs a new ModuleSchema and panics if it is invalid.
+// MustCompileModuleSchema constructs a new ModuleSchema and panics if it is invalid.
 // This should only be used in test code or static initialization where it is safe to panic!
-func MustNewModuleSchema(types ...Type) ModuleSchema {
-	sch, err := NewModuleSchema(types...)
+func MustCompileModuleSchema(types ...Type) ModuleSchema {
+	sch, err := CompileModuleSchema(types...)
 	if err != nil {
 		panic(err)
 	}
@@ -78,7 +79,7 @@ func (s ModuleSchema) LookupType(name string) (Type, bool) {
 
 // Types calls the provided function for each type in the module schema and stops if the function returns false.
 // The types are iterated over in sorted order by name. This function is compatible with go 1.23 iterators.
-func (s ModuleSchema) Types(f func(Type) bool) {
+func (s ModuleSchema) AllTypes(f func(Type) bool) {
 	keys := make([]string, 0, len(s.types))
 	for k := range s.types {
 		keys = append(keys, k)
@@ -93,7 +94,7 @@ func (s ModuleSchema) Types(f func(Type) bool) {
 
 // ObjectTypes iterators over all the object types in the schema in alphabetical order.
 func (s ModuleSchema) ObjectTypes(f func(ObjectType) bool) {
-	s.Types(func(t Type) bool {
+	s.AllTypes(func(t Type) bool {
 		objTyp, ok := t.(ObjectType)
 		if ok {
 			return f(objTyp)
@@ -104,7 +105,7 @@ func (s ModuleSchema) ObjectTypes(f func(ObjectType) bool) {
 
 // EnumTypes iterators over all the enum types in the schema in alphabetical order.
 func (s ModuleSchema) EnumTypes(f func(EnumType) bool) {
-	s.Types(func(t Type) bool {
+	s.AllTypes(func(t Type) bool {
 		enumType, ok := t.(EnumType)
 		if ok {
 			return f(enumType)
@@ -113,4 +114,61 @@ func (s ModuleSchema) EnumTypes(f func(EnumType) bool) {
 	})
 }
 
-var _ Schema = ModuleSchema{}
+type moduleSchemaJson struct {
+	ObjectTypes []ObjectType `json:"object_types"`
+	EnumTypes   []EnumType   `json:"enum_types"`
+}
+
+// MarshalJSON implements the json.Marshaler interface for ModuleSchema.
+// It marshals the module schema into a JSON object with the object types and enum types
+// under the keys "object_types" and "enum_types" respectively.
+func (s ModuleSchema) MarshalJSON() ([]byte, error) {
+	asJson := moduleSchemaJson{}
+
+	s.ObjectTypes(func(objType ObjectType) bool {
+		asJson.ObjectTypes = append(asJson.ObjectTypes, objType)
+		return true
+	})
+
+	s.EnumTypes(func(enumType EnumType) bool {
+		asJson.EnumTypes = append(asJson.EnumTypes, enumType)
+		return true
+	})
+
+	return json.Marshal(asJson)
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface for ModuleSchema.
+// See MarshalJSON for the JSON format.
+func (s *ModuleSchema) UnmarshalJSON(data []byte) error {
+	asJson := moduleSchemaJson{}
+
+	err := json.Unmarshal(data, &asJson)
+	if err != nil {
+		return err
+	}
+
+	types := map[string]Type{}
+
+	for _, objType := range asJson.ObjectTypes {
+		types[objType.Name] = objType
+	}
+
+	for _, enumType := range asJson.EnumTypes {
+		types[enumType.Name] = enumType
+	}
+
+	s.types = types
+
+	// validate adds all enum types to the type map
+	err = s.Validate()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ModuleSchema) isTypeSet() {}
+
+var _ TypeSet = ModuleSchema{}

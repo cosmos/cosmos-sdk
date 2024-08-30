@@ -371,7 +371,7 @@ func (e exampleBankModule) subBalance(acct, denom string, amount uint64) error {
 
 func init() {
 	var err error
-	exampleBankSchema, err = schema.NewModuleSchema(schema.ObjectType{
+	exampleBankSchema, err = schema.CompileModuleSchema(schema.ObjectType{
 		Name: "balances",
 		KeyFields: []schema.Field{
 			{
@@ -435,7 +435,7 @@ type oneValueModule struct {
 
 func init() {
 	var err error
-	oneValueModSchema, err = schema.NewModuleSchema(schema.ObjectType{
+	oneValueModSchema, err = schema.CompileModuleSchema(schema.ObjectType{
 		Name: "item",
 		ValueFields: []schema.Field{
 			{Name: "value", Kind: schema.StringKind},

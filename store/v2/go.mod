@@ -11,7 +11,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/cosmos/iavl v1.2.1-0.20240731145221-594b181f427e
-	github.com/cosmos/ics23/go v0.10.0
+	github.com/cosmos/ics23/go v0.11.0
 	github.com/google/btree v1.1.2
 	github.com/hashicorp/go-metrics v0.5.3
 	github.com/linxGnu/grocksdb v1.8.14
@@ -52,7 +52,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.20.2 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.56.0 // indirect
+	github.com/prometheus/common v0.57.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/rs/zerolog v1.33.0 // indirect

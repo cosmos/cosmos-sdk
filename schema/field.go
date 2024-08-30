@@ -1,24 +1,26 @@
 package schema
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Field represents a field in an object type.
 type Field struct {
 	// Name is the name of the field. It must conform to the NameFormat regular expression.
-	Name string
+	Name string `json:"name"`
 
 	// Kind is the basic type of the field.
-	Kind Kind
+	Kind Kind `json:"kind"`
 
 	// Nullable indicates whether null values are accepted for the field. Key fields CANNOT be nullable.
-	Nullable bool
+	Nullable bool `json:"nullable,omitempty"`
 
 	// ReferencedType is the referenced type name when Kind is EnumKind.
-	ReferencedType string
+	ReferencedType string `json:"referenced_type,omitempty"`
 }
 
 // Validate validates the field.
-func (c Field) Validate(schema Schema) error {
+func (c Field) Validate(typeSet TypeSet) error {
 	// valid name
 	if !ValidateName(c.Name) {
 		return fmt.Errorf("invalid field name %q", c.Name)
@@ -36,7 +38,7 @@ func (c Field) Validate(schema Schema) error {
 			return fmt.Errorf("enum field %q must have a referenced type", c.Name)
 		}
 
-		ty, ok := schema.LookupType(c.ReferencedType)
+		ty, ok := typeSet.LookupType(c.ReferencedType)
 		if !ok {
 			return fmt.Errorf("enum field %q references unknown type %q", c.Name, c.ReferencedType)
 		}
@@ -56,7 +58,7 @@ func (c Field) Validate(schema Schema) error {
 // ValidateValue validates that the value conforms to the field's kind and nullability.
 // Unlike Kind.ValidateValue, it also checks that the value conforms to the EnumType
 // if the field is an EnumKind.
-func (c Field) ValidateValue(value interface{}, schema Schema) error {
+func (c Field) ValidateValue(value interface{}, typeSet TypeSet) error {
 	if value == nil {
 		if !c.Nullable {
 			return fmt.Errorf("field %q cannot be null", c.Name)
@@ -70,7 +72,7 @@ func (c Field) ValidateValue(value interface{}, schema Schema) error {
 
 	switch c.Kind {
 	case EnumKind:
-		ty, ok := schema.LookupType(c.ReferencedType)
+		ty, ok := typeSet.LookupType(c.ReferencedType)
 		if !ok {
 			return fmt.Errorf("enum field %q references unknown type %q", c.Name, c.ReferencedType)
 		}

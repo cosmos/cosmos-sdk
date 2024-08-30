@@ -7,30 +7,45 @@ type Type interface {
 	TypeName() string
 
 	// Validate validates the type.
-	Validate(Schema) error
+	Validate(TypeSet) error
 
 	// isType is a private method that ensures that only types in this package can be marked as types.
 	isType()
 }
 
-// Schema represents something that has types and allows them to be looked up by name.
+// TypeSet represents something that has types and allows them to be looked up by name.
 // Currently, the only implementation is ModuleSchema.
-type Schema interface {
+type TypeSet interface {
 	// LookupType looks up a type by name.
 	LookupType(name string) (Type, bool)
 
-	// Types calls the given function for each type in the schema.
-	Types(f func(Type) bool)
+	// AllTypes calls the given function for each type in the type set.
+	// This function is compatible with go 1.23 iterators and can be used like this:
+	// for t := range types.AllTypes {
+	//     // do something with t
+	// }
+	AllTypes(f func(Type) bool)
+
+	// isTypeSet is a private method that ensures that only types in this package can be marked as type sets.
+	isTypeSet()
 }
 
-// EmptySchema is a schema that contains no types.
+// EmptyTypeSet is a schema that contains no types.
 // It can be used in Validate methods when there is no schema needed or available.
-type EmptySchema struct{}
+func EmptyTypeSet() TypeSet {
+	return emptyTypeSetInst
+}
 
-// LookupType always returns false because there are no types in an EmptySchema.
-func (EmptySchema) LookupType(name string) (Type, bool) {
+var emptyTypeSetInst = emptyTypeSet{}
+
+type emptyTypeSet struct{}
+
+// LookupType always returns false because there are no types in an EmptyTypeSet.
+func (emptyTypeSet) LookupType(string) (Type, bool) {
 	return nil, false
 }
 
-// Types does nothing because there are no types in an EmptySchema.
-func (EmptySchema) Types(f func(Type) bool) {}
+// Types does nothing because there are no types in an EmptyTypeSet.
+func (emptyTypeSet) AllTypes(func(Type) bool) {}
+
+func (emptyTypeSet) isTypeSet() {}

@@ -1,4 +1,4 @@
-# RFC 003: Account/Module Execution Model
+# RFC 003: Cross Language Account/Module Execution Model
 
 ## Changelog
 

@@ -88,7 +88,7 @@ pub struct Map<K, V> {
 }
 
 impl <K, V> Map<K, V> {
-    pub fn get(&self, ctx: &Context, key: &K) -> Result<V> {
+    pub fn get(&self, ctx: &Context, key: &K) -> Result<Option<V>> {
         todo!()
     }
 

@@ -1,9 +1,11 @@
+#![derive_account(FixedVestingAccount)]
+
 use arrayvec::ArrayVec;
 use cosmos_core::{Address, Context, Item, Time, Result, BlockServiceClient, BlockService};
-use cosmos_core_macros::{service, Account, State};
+use cosmos_core_macros::{service, State};
 use crate::bank::{Coin, BankMsgClient, BankMsg};
 
-#[derive(Account, State)]
+#[derive(State)]
 pub struct FixedVestingAccount {
     #[item(prefix=1)]
     beneficiary: Item<Address>,

@@ -36,6 +36,7 @@
 /types/mempool/ @kocubinski @cosmos/sdk-core-dev
 /tools/hubl @julienrbrt @JulianToledano @cosmos/sdk-core-dev
 /tools/cosmovisor @julienrbrt @facundomedica @cosmos/sdk-core-dev
+/tools/confix @julienrbrt @akhilkumarpilli @cosmos/sdk-core-dev
 
 # x modules
 

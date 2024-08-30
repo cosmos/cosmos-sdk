@@ -8,12 +8,17 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
-// RandURIOfLength returns a random valid uri with a path of length: n and a host of length:  n - length(tld)
-func RandURIOfLength(r *rand.Rand, n int) string {
+// RandURIOfHostLength returns a random valid uri with hostname length n. If n = 0, returns an empty string.
+func RandURIOfHostLength(r *rand.Rand, n int) string {
+	if n == 0 {
+		return ""
+	}
+	tld := ".com"
+	hostLength := n - len(tld)
 	uri := &url.URL{
 		Scheme: "https",
-		Host:   fmt.Sprintf("%s.com", simtypes.RandStringOfLength(r, n)),
-		Path:   simtypes.RandStringOfLength(r, n),
+		Host:   fmt.Sprintf("%s%s", simtypes.RandStringOfLength(r, hostLength), tld),
 	}
+
 	return uri.String()
 }

@@ -147,6 +147,9 @@ func (k Keeper) BlockGas(ctx context.Context) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
+	if params.Block == nil {
+		return 0, nil
+	}
 
 	return uint64(params.Block.MaxGas), nil
 }
@@ -156,6 +159,10 @@ func (k Keeper) AppVersion(ctx context.Context) (uint64, error) {
 	params, err := k.ParamsStore.Get(ctx)
 	if err != nil {
 		return 0, err
+	}
+
+	if params.Version == nil {
+		return 0, nil
 	}
 
 	return params.Version.App, nil
@@ -168,6 +175,10 @@ func (k Keeper) ValidatorPubKeyTypes(ctx context.Context) ([]string, error) {
 		return nil, err
 	}
 
+	if params.Validator == nil {
+		return []string{}, nil
+	}
+
 	return params.Validator.PubKeyTypes, nil
 }
 
@@ -176,6 +187,9 @@ func (k Keeper) EvidenceAge(ctx context.Context) (int64, time.Duration, error) {
 	params, err := k.ParamsStore.Get(ctx)
 	if err != nil {
 		return 0, 0, err
+	}
+	if params.Evidence == nil {
+		return 0, 0, nil
 	}
 
 	return params.Evidence.MaxAgeNumBlocks, params.Evidence.MaxAgeDuration, nil

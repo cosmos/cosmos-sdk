@@ -113,14 +113,21 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 		return false
 	}
 
+	// check https://github.com/cosmos/cosmos-sdk/issues/21086
+	// If new file is still empty, wait a small amount of time for write to complete
+	if stat.Size() == 0 {
+		time.Sleep(2 * time.Millisecond)
+		stat, err = os.Stat(fw.filename)
+		if err != nil {
+			// file doesn't exists
+			return false
+		}
+	}
+
 	// no update if the file already exists and has not been modified
 	if !stat.ModTime().After(fw.lastModTime) {
 		return false
 	}
-
-	// check https://github.com/cosmos/cosmos-sdk/issues/21086
-	// wait tiniest bit of time to allow the upgrade-info.json file to be fully written.
-	time.Sleep(2 * time.Millisecond)
 
 	info, err := parseUpgradeInfoFile(fw.filename, fw.disableRecase)
 	if err != nil {

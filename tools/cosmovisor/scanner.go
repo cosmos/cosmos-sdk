@@ -16,7 +16,7 @@ import (
 )
 
 type fileWatcher struct {
-	deamonHome string
+	daemonHome string
 	filename   string // full path to a watched file
 	interval   time.Duration
 
@@ -53,7 +53,7 @@ func newUpgradeFileWatcher(cfg *Config) (*fileWatcher, error) {
 	}
 
 	return &fileWatcher{
-		deamonHome:    cfg.Home,
+		daemonHome:    cfg.Home,
 		currentBin:    bin,
 		filename:      filenameAbs,
 		interval:      cfg.PollInterval,
@@ -167,7 +167,7 @@ func (fw *fileWatcher) checkHeight() (int64, error) {
 		return 0, nil
 	}
 
-	result, err := exec.Command(fw.currentBin, "status", "--home", fw.deamonHome).CombinedOutput() //nolint:gosec // we want to execute the status command
+	result, err := exec.Command(fw.currentBin, "status", "--home", fw.daemonHome).CombinedOutput() //nolint:gosec // we want to execute the status command
 	if err != nil {
 		return 0, err
 	}

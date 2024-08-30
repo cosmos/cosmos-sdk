@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/appmodule"
@@ -14,6 +15,7 @@ import (
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
+	upgradetestutil "cosmossdk.io/x/upgrade/testutil"
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -47,7 +49,8 @@ func (suite *UpgradeTestSuite) SetupTest() {
 	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
 	suite.Require().NoError(err)
 	suite.encodedAuthority = authority
-	suite.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, suite.encCfg.Codec, suite.T().TempDir(), nil, authority, nil) //TODO:
+	ctrl := gomock.NewController(suite.T())
+	suite.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, suite.encCfg.Codec, suite.T().TempDir(), nil, authority, upgradetestutil.NewMockConsensusKeeper(ctrl))
 	err = suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, appmodule.VersionMap{
 		"bank": 0,
 	})

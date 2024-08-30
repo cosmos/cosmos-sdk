@@ -7,6 +7,7 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/appmodule"
@@ -17,6 +18,7 @@ import (
 	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
+	upgradetestutil "cosmossdk.io/x/upgrade/testutil"
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -72,7 +74,8 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.Require().NoError(err)
 	s.encodedAuthority = authority
 
-	s.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, s.encCfg.Codec, homeDir, s.baseApp, authority, nil) //TODO: pass consensus keeper
+	ctrl := gomock.NewController(s.T())
+	s.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, s.encCfg.Codec, homeDir, s.baseApp, authority, upgradetestutil.NewMockConsensusKeeper(ctrl))
 
 	s.T().Log("home dir:", homeDir)
 	s.homeDir = homeDir
@@ -256,7 +259,8 @@ func (s *KeeperTestSuite) TestIsSkipHeight() {
 	skip := map[int64]bool{skipOne: true}
 	storeService := runtime.NewKVStoreService(s.key)
 	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
-	upgradeKeeper := keeper.NewKeeper(env, skip, s.encCfg.Codec, s.T().TempDir(), s.baseApp, s.encodedAuthority, nil) //TODO:
+	ctrl := gomock.NewController(s.T())
+	upgradeKeeper := keeper.NewKeeper(env, skip, s.encCfg.Codec, s.T().TempDir(), s.baseApp, s.encodedAuthority, upgradetestutil.NewMockConsensusKeeper(ctrl))
 	s.Require().True(upgradeKeeper.IsSkipHeight(9))
 	s.Require().False(upgradeKeeper.IsSkipHeight(10))
 }

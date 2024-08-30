@@ -289,6 +289,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 		var (
 			err             error
 			selectedTxsNums int
+			invalidTxs      []sdk.Tx // invalid txs to be removed after the iteration
 		)
 		h.mempool.SelectBy(ctx, req.Txs, func(memTx sdk.Tx) bool {
 			var signerData []mempool.SignerData
@@ -328,10 +329,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			var txBz []byte
 			txBz, err = h.txVerifier.PrepareProposalVerifyTx(memTx)
 			if err != nil {
-				err = h.mempool.Remove(memTx)
-				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-					return false
-				}
+				invalidTxs = append(invalidTxs, memTx)
 			} else {
 				stop := h.txSelector.SelectTxForProposal(ctx, uint64(req.MaxTxBytes), maxBlockGas, memTx, txBz)
 				if stop {
@@ -361,6 +359,13 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 
 		if err != nil {
 			return nil, err
+		}
+
+		for _, tx := range invalidTxs {
+			err := h.mempool.Remove(tx)
+			if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
+				return nil, err
+			}
 		}
 
 		return &abci.PrepareProposalResponse{Txs: h.txSelector.SelectedTxs(ctx)}, nil

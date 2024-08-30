@@ -1,8 +1,9 @@
 package cmtservice
 
 import (
-	"cosmossdk.io/core/address"
 	cmtprototypes "github.com/cometbft/cometbft/api/cometbft/types/v1"
+
+	"cosmossdk.io/core/address"
 )
 
 // convertHeader converts CometBFT header to sdk header

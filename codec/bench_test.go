@@ -1,7 +1,6 @@
 package codec_test
 
 import (
-	"cosmossdk.io/core/address"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -9,6 +8,7 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 
 	counterv1 "cosmossdk.io/api/cosmos/counter/v1"
+	"cosmossdk.io/core/address"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

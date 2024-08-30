@@ -7,11 +7,10 @@ import (
 	"fmt"
 	"io"
 
-	"cosmossdk.io/core/address"
-
 	dbm "github.com/cosmos/cosmos-db"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/depinject"

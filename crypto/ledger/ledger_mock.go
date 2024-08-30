@@ -6,13 +6,13 @@ package ledger
 import (
 	"errors"
 	"fmt"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cosmos/go-bip39"
 	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	csecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"

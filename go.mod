@@ -183,6 +183,8 @@ require (
 // 	<temporary replace>
 // )
 // TODO remove after all modules have their own go.mods
+replace github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.0-beta.1.0.20240813194616-eb5078efcf9e
+
 replace (
 	cosmossdk.io/api => ./api
 	cosmossdk.io/collections => ./collections

@@ -176,3 +176,5 @@ require (
 	gotest.tools/v3 v3.5.1 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 )
+
+replace github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.0-beta.1.0.20240813194616-eb5078efcf9e

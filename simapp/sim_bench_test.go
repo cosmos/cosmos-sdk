@@ -6,17 +6,18 @@ import (
 	"os"
 	"testing"
 
-	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/testutils/sims"
-
+	dbm "github.com/cosmos/cosmos-db"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/testutils/sims"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
@@ -83,6 +84,6 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	}
 
 	if config.Commit {
-		simtestutil.PrintStats(db)
+		simtestutil.PrintStats(db.(*dbm.GoLevelDB))
 	}
 }

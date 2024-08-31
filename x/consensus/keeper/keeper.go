@@ -78,7 +78,41 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 	if err != nil {
 		return nil, err
 	}
+<<<<<<< HEAD
 	params := cmttypes.ConsensusParamsFromProto(paramsProto)
+=======
+
+	if err := k.ParamsStore.Set(ctx, nextParams.ToProto()); err != nil {
+		return nil, err
+	}
+
+	if err := k.EventService.EventManager(ctx).EmitKV(
+		"update_consensus_params",
+		event.NewAttribute("authority", msg.Authority),
+		event.NewAttribute("parameters", consensusParams.String())); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateParamsResponse{}, nil
+}
+
+// paramCheck validates the consensus params
+func (k Keeper) paramCheck(ctx context.Context, consensusParams cmtproto.ConsensusParams) (*cmttypes.ConsensusParams, error) {
+	var params cmttypes.ConsensusParams
+
+	paramsProto, err := k.ParamsStore.Get(ctx)
+	if err == nil {
+		// initialize version params with zero value if not set
+		if paramsProto.Version == nil {
+			paramsProto.Version = &cmtproto.VersionParams{}
+		}
+		params = cmttypes.ConsensusParamsFromProto(paramsProto)
+	} else if errors.Is(err, collections.ErrNotFound) {
+		params = cmttypes.ConsensusParams{}
+	} else {
+		return nil, err
+	}
+>>>>>>> f79b3802a (fix(x/consensus)!: update cons params parsing checks (#21484))
 
 	nextParams := params.Update(&consensusParams)
 

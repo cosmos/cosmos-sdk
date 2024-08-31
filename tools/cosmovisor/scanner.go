@@ -109,19 +109,33 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 
 	stat, err := os.Stat(fw.filename)
 	if err != nil {
-		// file doesn't exists
-		return false
+		if os.IsNotExist(err) {
+			return false
+		} else {
+			panic(fmt.Errorf("failed to stat upgrade info file: %w", err))
+		}
 	}
 
 	// check https://github.com/cosmos/cosmos-sdk/issues/21086
 	// If new file is still empty, wait a small amount of time for write to complete
 	if stat.Size() == 0 {
-		time.Sleep(2 * time.Millisecond)
-		stat, err = os.Stat(fw.filename)
-		if err != nil {
-			// file doesn't exists
-			return false
+		for range 10 {
+			time.Sleep(2 * time.Millisecond)
+			stat, err = os.Stat(fw.filename)
+			if err != nil {
+				if os.IsNotExist(err) {
+					return false
+				} else {
+					panic(fmt.Errorf("failed to stat upgrade info file: %w", err))
+				}
+			}
+			if stat.Size() == 0 {
+				break
+			}
 		}
+	}
+	if stat.Size() == 0 {
+		return false
 	}
 
 	// no update if the file already exists and has not been modified

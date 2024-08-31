@@ -10,7 +10,7 @@ import (
 // that can be used in reproducible unit testing and property based testing.
 var ExampleAppSchema = map[string]schema.ModuleSchema{
 	"all_kinds": mkAllKindsModule(),
-	"test_cases": schema.MustNewModuleSchema(
+	"test_cases": schema.MustCompileModuleSchema(
 		schema.ObjectType{
 			Name:      "Singleton",
 			KeyFields: []schema.Field{},
@@ -138,7 +138,7 @@ func mkAllKindsModule() schema.ModuleSchema {
 		types = append(types, typ)
 	}
 
-	return schema.MustNewModuleSchema(types...)
+	return schema.MustCompileModuleSchema(types...)
 }
 
 func mkTestObjectType(kind schema.Kind) schema.ObjectType {

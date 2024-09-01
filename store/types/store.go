@@ -5,8 +5,8 @@ import (
 	"io"
 
 	crypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
-	dbm "github.com/cosmos/cosmos-db"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -178,7 +178,7 @@ type CommitMultiStore interface {
 
 	// MountStoreWithDB mount a store of type using the given db.
 	// If db == nil, the new store will use the CommitMultiStore db.
-	MountStoreWithDB(key StoreKey, typ StoreType, db dbm.DB)
+	MountStoreWithDB(key StoreKey, typ StoreType, db corestore.KVStoreWithBatch)
 
 	// GetCommitStore panics on a nil key.
 	GetCommitStore(key StoreKey) CommitStore
@@ -276,7 +276,7 @@ type KVStore interface {
 }
 
 // Iterator is an alias db's Iterator for convenience.
-type Iterator = dbm.Iterator
+type Iterator = corestore.Iterator
 
 // CacheKVStore branches a KVStore and provides read cache functionality.
 // After calling .Write() on the CacheKVStore, all previously created

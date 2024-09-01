@@ -13,7 +13,6 @@ import (
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
-	"github.com/cometbft/cometbft/rpc/client/local"
 	cmtversion "github.com/cometbft/cometbft/version"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -28,35 +27,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
-func (s *CometBFTServer[T]) rpcClient(cmd *cobra.Command) (rpc.CometRPC, error) {
-	if s.config.AppTomlConfig.Standalone {
-		client, err := rpchttp.New(client.GetConfigFromCmd(cmd).RPC.ListenAddress)
-		if err != nil {
-			return nil, err
-		}
-		return client, nil
+func rpcClient(cmd *cobra.Command) (rpc.CometRPC, error) {
+	rpcURI, err := cmd.Flags().GetString(FlagNode)
+	if err != nil {
+		return nil, err
+	}
+	if rpcURI == "" {
+		return nil, fmt.Errorf("rpc URI is empty")
 	}
 
-	if s.Node == nil || cmd.Flags().Changed(FlagNode) {
-		rpcURI, err := cmd.Flags().GetString(FlagNode)
-		if err != nil {
-			return nil, err
-		}
-		if rpcURI != "" {
-			return rpchttp.New(rpcURI)
-		}
-	}
-
-	return local.New(s.Node), nil
+	return rpchttp.New(rpcURI)
 }
 
 // StatusCommand returns the command to return the status of the network.
-func (s *CometBFTServer[T]) StatusCommand() *cobra.Command {
+func StatusCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status",
 		Short: "Query remote node for status",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			rpcclient, err := s.rpcClient(cmd)
+			rpcclient, err := rpcClient(cmd)
 			if err != nil {
 				return err
 			}
@@ -82,7 +71,7 @@ func (s *CometBFTServer[T]) StatusCommand() *cobra.Command {
 }
 
 // ShowNodeIDCmd - ported from CometBFT, dump node ID to stdout
-func (s *CometBFTServer[T]) ShowNodeIDCmd() *cobra.Command {
+func ShowNodeIDCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "show-node-id",
 		Short: "Show this node's ID",
@@ -100,7 +89,7 @@ func (s *CometBFTServer[T]) ShowNodeIDCmd() *cobra.Command {
 }
 
 // ShowValidatorCmd - ported from CometBFT, show this node's validator info
-func (s *CometBFTServer[T]) ShowValidatorCmd() *cobra.Command {
+func ShowValidatorCmd() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "show-validator",
 		Short: "Show this node's CometBFT validator info",
@@ -134,7 +123,7 @@ func (s *CometBFTServer[T]) ShowValidatorCmd() *cobra.Command {
 }
 
 // ShowAddressCmd - show this node's validator address
-func (s *CometBFTServer[T]) ShowAddressCmd() *cobra.Command {
+func ShowAddressCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show-address",
 		Short: "Shows this node's CometBFT validator consensus address",
@@ -153,7 +142,7 @@ func (s *CometBFTServer[T]) ShowAddressCmd() *cobra.Command {
 }
 
 // VersionCmd prints CometBFT and ABCI version numbers.
-func (s *CometBFTServer[T]) VersionCmd() *cobra.Command {
+func VersionCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
 		Short: "Print CometBFT libraries' version",
@@ -181,7 +170,7 @@ func (s *CometBFTServer[T]) VersionCmd() *cobra.Command {
 }
 
 // QueryBlocksCmd returns a command to search through blocks by events.
-func (s *CometBFTServer[T]) QueryBlocksCmd() *cobra.Command {
+func QueryBlocksCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "blocks",
 		Short: "Query for paginated blocks that match a set of events",
@@ -196,7 +185,7 @@ for. Each module documents its respective events under 'xx_events.md'.
 			version.AppName,
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			rpcclient, err := s.rpcClient(cmd)
+			rpcclient, err := rpcClient(cmd)
 			if err != nil {
 				return err
 			}
@@ -231,7 +220,7 @@ for. Each module documents its respective events under 'xx_events.md'.
 }
 
 // QueryBlockCmd implements the default command for a Block query.
-func (s *CometBFTServer[T]) QueryBlockCmd() *cobra.Command {
+func QueryBlockCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "block --type={height|hash} <height|hash>",
 		Short: "Query for a committed block by height, hash, or event(s)",
@@ -246,7 +235,8 @@ $ %s query block --%s=%s <hash>
 		RunE: func(cmd *cobra.Command, args []string) error {
 			typ, _ := cmd.Flags().GetString(FlagType)
 
-			rpcclient, err := s.rpcClient(cmd)
+			rpcclient, err := rpcClient(cmd)
+			fmt.Println("rpcclient", rpcclient, err)
 			if err != nil {
 				return err
 			}
@@ -318,14 +308,14 @@ $ %s query block --%s=%s <hash>
 }
 
 // QueryBlockResultsCmd implements the default command for a BlockResults query.
-func (s *CometBFTServer[T]) QueryBlockResultsCmd() *cobra.Command {
+func QueryBlockResultsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "block-results [height]",
 		Short: "Query for a committed block's results by height",
 		Long:  "Query for a specific committed block's results using the CometBFT RPC `block_results` method",
 		Args:  cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			node, err := s.rpcClient(cmd)
+			node, err := rpcClient(cmd)
 			if err != nil {
 				return err
 			}

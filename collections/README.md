@@ -1166,7 +1166,7 @@ func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
 // RedelegationsByDelegator iterates over all the redelegations of a given delegator and calls onResult providing
 // each redelegation from source validator towards the destination validator.
 func (k Keeper) RedelegationsByDelegator(ctx context.Context, delegator AccAddress, onResult func(src, dst ValAddress) (stop bool, err error)) error {
- rng := collections.NewPrefixedTripleRange[AccAddress, ValAddress, ValAddress](delegator)
+ rng := collections.NewPrefixedTripleRange[AccAddress, ValAddress, ValAddress](delegator, false)
  return k.Redelegations.Walk(ctx, rng, func(key collections.Triple[AccAddress, ValAddress, ValAddress]) (stop bool, err error) {
   return onResult(key.K2(), key.K3())
  })
@@ -1175,7 +1175,7 @@ func (k Keeper) RedelegationsByDelegator(ctx context.Context, delegator AccAddre
 // RedelegationsByDelegatorAndValidator iterates over all the redelegations of a given delegator and its source validator and calls onResult for each
 // destination validator.
 func (k Keeper) RedelegationsByDelegatorAndValidator(ctx context.Context, delegator AccAddress, validator ValAddress, onResult func(dst ValAddress) (stop bool, err error)) error {
- rng := collections.NewSuperPrefixedTripleRange[AccAddress, ValAddress, ValAddress](delegator, validator)
+ rng := collections.NewSuperPrefixedTripleRange[AccAddress, ValAddress, ValAddress](delegator, validator, false)
  return k.Redelegations.Walk(ctx, rng, func(key collections.Triple[AccAddress, ValAddress, ValAddress]) (stop bool, err error) {
   return onResult(key.K3())
  })

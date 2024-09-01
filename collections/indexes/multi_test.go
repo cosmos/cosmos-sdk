@@ -26,6 +26,14 @@ func TestMultiIndex(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, []uint64{1, 2}, pks)
 
+	// we get all reference keys, should only be "milan"
+	rks, err := mi.RefKeys(ctx, false)
+	require.NoError(t, err)
+	require.Equal(t, []string{"milan", "milan"}, rks)
+	rks, err = mi.RefKeys(ctx, true)
+	require.NoError(t, err)
+	require.Equal(t, []string{"milan"}, rks)
+
 	// replace
 	require.NoError(t, mi.Reference(ctx, 1, company{City: "new york"}, func() (company, error) { return company{City: "milan"}, nil }))
 
@@ -42,6 +50,11 @@ func TestMultiIndex(t *testing.T) {
 	pks, err = iter.PrimaryKeys()
 	require.NoError(t, err)
 	require.Equal(t, []uint64{1}, pks)
+
+	// assert after replace the reference keys should be "milan" and "new york"
+	rks, err = mi.RefKeys(ctx, false)
+	require.NoError(t, err)
+	require.ElementsMatch(t, []string{"milan", "new york"}, rks)
 
 	// test iter methods
 	iter, err = mi.Iterate(ctx, nil)

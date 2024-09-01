@@ -4,11 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"math"
+	"slices"
 
 	protoio "github.com/cosmos/gogoproto/io"
 
-	"cosmossdk.io/core/log"
+	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/internal"
@@ -20,9 +22,14 @@ import (
 
 var (
 	_ store.Committer             = (*CommitStore)(nil)
+	_ store.UpgradeableStore      = (*CommitStore)(nil)
 	_ snapshots.CommitSnapshotter = (*CommitStore)(nil)
 	_ store.PausablePruner        = (*CommitStore)(nil)
 )
+
+// MountTreeFn is a function that mounts a tree given a store key.
+// It is used to lazily mount trees when needed (e.g. during upgrade or proof generation).
+type MountTreeFn func(storeKey string) (Tree, error)
 
 // CommitStore is a wrapper around multiple Tree objects mapped by a unique store
 // key. Each store key reflects dedicated and unique usage within a module. A caller
@@ -30,23 +37,26 @@ var (
 // RootStore use a CommitStore as an abstraction to handle multiple store keys
 // and trees.
 type CommitStore struct {
-	logger     log.Logger
+	logger     corelog.Logger
 	metadata   *MetadataStore
 	multiTrees map[string]Tree
+	// oldTrees is a map of store keys to old trees that have been deleted or renamed.
+	// It is used to get the proof for the old store keys.
+	oldTrees map[string]Tree
 }
 
 // NewCommitStore creates a new CommitStore instance.
-func NewCommitStore(trees map[string]Tree, db corestore.KVStoreWithBatch, logger log.Logger) (*CommitStore, error) {
+func NewCommitStore(trees, oldTrees map[string]Tree, db corestore.KVStoreWithBatch, logger corelog.Logger) (*CommitStore, error) {
 	return &CommitStore{
 		logger:     logger,
 		multiTrees: trees,
+		oldTrees:   oldTrees,
 		metadata:   NewMetadataStore(db),
 	}, nil
 }
 
 func (c *CommitStore) WriteChangeset(cs *corestore.Changeset) error {
 	for _, pairs := range cs.Changes {
-
 		key := conv.UnsafeBytesToStr(pairs.Actor)
 
 		tree, ok := c.multiTrees[key]
@@ -90,6 +100,60 @@ func (c *CommitStore) WorkingCommitInfo(version uint64) *proof.CommitInfo {
 }
 
 func (c *CommitStore) LoadVersion(targetVersion uint64) error {
+	storeKeys := make([]string, 0, len(c.multiTrees))
+	for storeKey := range c.multiTrees {
+		storeKeys = append(storeKeys, storeKey)
+	}
+	return c.loadVersion(targetVersion, storeKeys)
+}
+
+// LoadVersionAndUpgrade implements store.UpgradeableStore.
+func (c *CommitStore) LoadVersionAndUpgrade(targetVersion uint64, upgrades *corestore.StoreUpgrades) error {
+	// deterministic iteration order for upgrades (as the underlying store may change and
+	// upgrades make store changes where the execution order may matter)
+	storeKeys := slices.Sorted(maps.Keys(c.multiTrees))
+	removeTree := func(storeKey string) error {
+		if oldTree, ok := c.multiTrees[storeKey]; ok {
+			if err := oldTree.Close(); err != nil {
+				return err
+			}
+			delete(c.multiTrees, storeKey)
+		}
+		return nil
+	}
+
+	newStoreKeys := make([]string, 0, len(c.multiTrees))
+	removedStoreKeys := make([]string, 0)
+	for _, storeKey := range storeKeys {
+		// If it has been deleted, remove the tree.
+		if upgrades.IsDeleted(storeKey) {
+			if err := removeTree(storeKey); err != nil {
+				return err
+			}
+			removedStoreKeys = append(removedStoreKeys, storeKey)
+			continue
+		}
+
+		// If it has been added, set the initial version.
+		if upgrades.IsAdded(storeKey) {
+			if err := c.multiTrees[storeKey].SetInitialVersion(targetVersion + 1); err != nil {
+				return err
+			}
+			// This is the empty tree, no need to load the version.
+			continue
+		}
+
+		newStoreKeys = append(newStoreKeys, storeKey)
+	}
+
+	if err := c.metadata.flushRemovedStoreKeys(targetVersion, removedStoreKeys); err != nil {
+		return err
+	}
+
+	return c.loadVersion(targetVersion, newStoreKeys)
+}
+
+func (c *CommitStore) loadVersion(targetVersion uint64, storeKeys []string) error {
 	// Rollback the metadata to the target version.
 	latestVersion, err := c.GetLatestVersion()
 	if err != nil {
@@ -101,22 +165,25 @@ func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 				return err
 			}
 		}
+		if err := c.metadata.setLatestVersion(targetVersion); err != nil {
+			return err
+		}
 	}
 
-	for _, tree := range c.multiTrees {
-		if err := tree.LoadVersion(targetVersion); err != nil {
+	for _, storeKey := range storeKeys {
+		if err := c.multiTrees[storeKey].LoadVersion(targetVersion); err != nil {
 			return err
 		}
 	}
 
 	// If the target version is greater than the latest version, it is the snapshot
 	// restore case, we should create a new commit info for the target version.
-	var cInfo *proof.CommitInfo
 	if targetVersion > latestVersion {
-		cInfo = c.WorkingCommitInfo(targetVersion)
+		cInfo := c.WorkingCommitInfo(targetVersion)
+		return c.metadata.flushCommitInfo(targetVersion, cInfo)
 	}
 
-	return c.metadata.flushCommitInfo(targetVersion, cInfo)
+	return nil
 }
 
 func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
@@ -130,7 +197,11 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 		// will be larger than the RMS's metadata, when the block is replayed, we
 		// should avoid committing that iavl store again.
 		var commitID proof.CommitID
-		if tree.GetLatestVersion() >= version {
+		v, err := tree.GetLatestVersion()
+		if err != nil {
+			return nil, err
+		}
+		if v >= version {
 			commitID.Version = version
 			commitID.Hash = tree.Hash()
 		} else {
@@ -175,9 +246,13 @@ func (c *CommitStore) SetInitialVersion(version uint64) error {
 }
 
 func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]proof.CommitmentOp, error) {
-	tree, ok := c.multiTrees[conv.UnsafeBytesToStr(storeKey)]
+	rawStoreKey := conv.UnsafeBytesToStr(storeKey)
+	tree, ok := c.multiTrees[rawStoreKey]
 	if !ok {
-		return nil, fmt.Errorf("store %s not found", storeKey)
+		tree, ok = c.oldTrees[rawStoreKey]
+		if !ok {
+			return nil, fmt.Errorf("store %s not found", rawStoreKey)
+		}
 	}
 
 	iProof, err := tree.GetProof(version, key)
@@ -215,21 +290,36 @@ func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, 
 }
 
 // Prune implements store.Pruner.
-func (c *CommitStore) Prune(version uint64) (ferr error) {
+func (c *CommitStore) Prune(version uint64) error {
 	// prune the metadata
 	for v := version; v > 0; v-- {
 		if err := c.metadata.deleteCommitInfo(v); err != nil {
 			return err
 		}
 	}
-
+	// prune the trees
 	for _, tree := range c.multiTrees {
 		if err := tree.Prune(version); err != nil {
-			ferr = errors.Join(ferr, err)
+			return err
 		}
 	}
+	// prune the removed store keys
+	if err := c.pruneRemovedStoreKeys(version); err != nil {
+		return err
+	}
 
-	return ferr
+	return nil
+}
+
+func (c *CommitStore) pruneRemovedStoreKeys(version uint64) error {
+	clearKVStore := func(storeKey []byte, version uint64) (err error) {
+		tree, ok := c.oldTrees[string(storeKey)]
+		if !ok {
+			return fmt.Errorf("store %s not found in oldTrees", storeKey)
+		}
+		return tree.Prune(version)
+	}
+	return c.metadata.deleteRemovedStoreKeys(version, clearKVStore)
 }
 
 // PausePruning implements store.PausablePruner.
@@ -244,7 +334,7 @@ func (c *CommitStore) PausePruning(pause bool) {
 // Snapshot implements snapshotstypes.CommitSnapshotter.
 func (c *CommitStore) Snapshot(version uint64, protoWriter protoio.Writer) error {
 	if version == 0 {
-		return fmt.Errorf("the snapshot version must be greater than 0")
+		return errors.New("the snapshot version must be greater than 0")
 	}
 
 	latestVersion, err := c.GetLatestVersion()
@@ -348,7 +438,7 @@ loop:
 
 		case *snapshotstypes.SnapshotItem_IAVL:
 			if importer == nil {
-				return snapshotstypes.SnapshotItem{}, fmt.Errorf("received IAVL node item before store item")
+				return snapshotstypes.SnapshotItem{}, errors.New("received IAVL node item before store item")
 			}
 			node := item.IAVL
 			if node.Height > int32(math.MaxInt8) {
@@ -402,12 +492,12 @@ func (c *CommitStore) GetLatestVersion() (uint64, error) {
 	return c.metadata.GetLatestVersion()
 }
 
-func (c *CommitStore) Close() (ferr error) {
+func (c *CommitStore) Close() error {
 	for _, tree := range c.multiTrees {
 		if err := tree.Close(); err != nil {
-			ferr = errors.Join(ferr, err)
+			return err
 		}
 	}
 
-	return ferr
+	return nil
 }

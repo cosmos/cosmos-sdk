@@ -8,7 +8,7 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/errors"
+	"cosmossdk.io/errors/v2"
 )
 
 const (

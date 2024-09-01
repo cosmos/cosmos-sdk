@@ -38,7 +38,7 @@ Here are the steps to use AutoCLI:
 
 1. Ensure your app's modules implements the `appmodule.AppModule` interface.
 2. (optional) Configure how to behave as `autocli` command generation, by implementing the `func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions` method on the module.
-3. Use the `autocli.AppOptions` struct to specify the modules you defined. If you are using `depinject` / app v2, it can automatically create an instance of `autocli.AppOptions` based on your app's configuration.
+3. Use the `autocli.AppOptions` struct to specify the modules you defined. If you are using `depinject`, it can automatically create an instance of `autocli.AppOptions` based on your app's configuration.
 4. Use the `EnhanceRootCommand()` method provided by `autocli` to add the CLI commands for the specified modules to your root command.
 
 :::tip
@@ -130,6 +130,30 @@ The `AutoCLIOptions()` method on your module allows to specify custom commands, 
 AutoCLI can create a gov proposal of any tx by simply setting the `GovProposal` field to `true` in the `autocli.RpcCommandOptions` struct.
 Users can however use the `--no-proposal` flag to disable the proposal creation (which is useful if the authority isn't the gov module on a chain).
 :::
+
+### Conventions for the `Use` field in Cobra
+
+According to the [Cobra documentation](https://pkg.go.dev/github.com/spf13/cobra#Command) the following conventions should be followed for the `Use` field in Cobra commands:
+
+1. **Required arguments**:
+   * Should not be enclosed in brackets. They can be enclosed in angle brackets `< >` for clarity.
+   * Example: `command <required_argument>`
+
+2. **Optional arguments**:
+   * Should be enclosed in square brackets `[ ]`.
+   * Example: `command [optional_argument]`
+
+3. **Alternative (mutually exclusive) arguments**:
+   * Should be enclosed in curly braces `{ }`.
+   * Example: `command {-a | -b}` for required alternatives.
+   * Example: `command [-a | -b]` for optional alternatives.
+
+4. **Multiple arguments**:
+   * Indicated with `...` after the argument.
+   * Example: `command argument...`
+
+5. **Combination of options**:
+   * Example: `command [-F file | -D dir]... [-f format] profile`
 
 ### Specifying Subcommands
 

@@ -9,14 +9,14 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
-	appmanager "cosmossdk.io/core/app"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/cometbft/mempool"
 )
 
 type AppManager[T transaction.Tx] interface {
-	ValidateTx(ctx context.Context, tx T) (appmanager.TxResult, error)
+	ValidateTx(ctx context.Context, tx T) (server.TxResult, error)
 	Query(ctx context.Context, version uint64, request transaction.Msg) (response transaction.Msg, err error)
 }
 
@@ -140,7 +140,7 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
 			if maxBlockGas > 0 {
 				gaslimit, err := tx.GetGasLimit()
 				if err != nil {
-					return fmt.Errorf("failed to get gas limit")
+					return errors.New("failed to get gas limit")
 				}
 				totalTxGas += gaslimit
 				if totalTxGas > maxBlockGas {

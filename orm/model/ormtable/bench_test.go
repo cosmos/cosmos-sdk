@@ -2,6 +2,7 @@ package ormtable_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -143,7 +144,7 @@ func insertBalance(store kv.Store, balance *testpb.Balance) error {
 	}
 
 	if has {
-		return fmt.Errorf("already exists")
+		return errors.New("already exists")
 	}
 
 	bz, err := proto.Marshal(balance)
@@ -223,7 +224,7 @@ func getBalance(store kv.Store, address, denom string) (*testpb.Balance, error) 
 	}
 
 	if bz == nil {
-		return nil, fmt.Errorf("not found")
+		return nil, errors.New("not found")
 	}
 
 	balance := testpb.Balance{}

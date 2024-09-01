@@ -1,0 +1,161 @@
+InitializeModuleData: {"ModuleName":"all_kinds","Schema":{"object_types":[{"name":"test_address","key_fields":[{"name":"key","kind":"address"}],"value_fields":[{"name":"valNotNull","kind":"address"},{"name":"valNullable","kind":"address","nullable":true}]},{"name":"test_bool","key_fields":[{"name":"key","kind":"bool"}],"value_fields":[{"name":"valNotNull","kind":"bool"},{"name":"valNullable","kind":"bool","nullable":true}]},{"name":"test_bytes","key_fields":[{"name":"key","kind":"bytes"}],"value_fields":[{"name":"valNotNull","kind":"bytes"},{"name":"valNullable","kind":"bytes","nullable":true}]},{"name":"test_decimal","key_fields":[{"name":"key","kind":"decimal"}],"value_fields":[{"name":"valNotNull","kind":"decimal"},{"name":"valNullable","kind":"decimal","nullable":true}]},{"name":"test_duration","key_fields":[{"name":"key","kind":"duration"}],"value_fields":[{"name":"valNotNull","kind":"duration"},{"name":"valNullable","kind":"duration","nullable":true}]},{"name":"test_enum","key_fields":[{"name":"key","kind":"enum","referenced_type":"test_enum_type"}],"value_fields":[{"name":"valNotNull","kind":"enum","referenced_type":"test_enum_type"},{"name":"valNullable","kind":"enum","nullable":true,"referenced_type":"test_enum_type"}]},{"name":"test_float32","key_fields":[{"name":"key","kind":"int32"}],"value_fields":[{"name":"valNotNull","kind":"float32"},{"name":"valNullable","kind":"float32","nullable":true}]},{"name":"test_float64","key_fields":[{"name":"key","kind":"int32"}],"value_fields":[{"name":"valNotNull","kind":"float64"},{"name":"valNullable","kind":"float64","nullable":true}]},{"name":"test_int16","key_fields":[{"name":"key","kind":"int16"}],"value_fields":[{"name":"valNotNull","kind":"int16"},{"name":"valNullable","kind":"int16","nullable":true}]},{"name":"test_int32","key_fields":[{"name":"key","kind":"int32"}],"value_fields":[{"name":"valNotNull","kind":"int32"},{"name":"valNullable","kind":"int32","nullable":true}]},{"name":"test_int64","key_fields":[{"name":"key","kind":"int64"}],"value_fields":[{"name":"valNotNull","kind":"int64"},{"name":"valNullable","kind":"int64","nullable":true}]},{"name":"test_int8","key_fields":[{"name":"key","kind":"int8"}],"value_fields":[{"name":"valNotNull","kind":"int8"},{"name":"valNullable","kind":"int8","nullable":true}]},{"name":"test_integer","key_fields":[{"name":"key","kind":"integer"}],"value_fields":[{"name":"valNotNull","kind":"integer"},{"name":"valNullable","kind":"integer","nullable":true}]},{"name":"test_string","key_fields":[{"name":"key","kind":"string"}],"value_fields":[{"name":"valNotNull","kind":"string"},{"name":"valNullable","kind":"string","nullable":true}]},{"name":"test_time","key_fields":[{"name":"key","kind":"time"}],"value_fields":[{"name":"valNotNull","kind":"time"},{"name":"valNullable","kind":"time","nullable":true}]},{"name":"test_uint16","key_fields":[{"name":"key","kind":"uint16"}],"value_fields":[{"name":"valNotNull","kind":"uint16"},{"name":"valNullable","kind":"uint16","nullable":true}]},{"name":"test_uint32","key_fields":[{"name":"key","kind":"uint32"}],"value_fields":[{"name":"valNotNull","kind":"uint32"},{"name":"valNullable","kind":"uint32","nullable":true}]},{"name":"test_uint64","key_fields":[{"name":"key","kind":"uint64"}],"value_fields":[{"name":"valNotNull","kind":"uint64"},{"name":"valNullable","kind":"uint64","nullable":true}]},{"name":"test_uint8","key_fields":[{"name":"key","kind":"uint8"}],"value_fields":[{"name":"valNotNull","kind":"uint8"},{"name":"valNullable","kind":"uint8","nullable":true}]}],"enum_types":[{"name":"test_enum_type","values":[{"name":"foo","value":1},{"name":"bar","value":2},{"name":"baz","value":3}]}]}}
+InitializeModuleData: {"ModuleName":"test_cases","Schema":{"object_types":[{"name":"ManyValues","key_fields":[{"name":"Key","kind":"string"}],"value_fields":[{"name":"Value1","kind":"int32"},{"name":"Value2","kind":"bytes"},{"name":"Value3","kind":"float64"},{"name":"Value4","kind":"uint64"}]},{"name":"RetainDeletions","key_fields":[{"name":"Key","kind":"string"}],"value_fields":[{"name":"Value1","kind":"int32"},{"name":"Value2","kind":"bytes"}],"retain_deletions":true},{"name":"Simple","key_fields":[{"name":"Key","kind":"string"}],"value_fields":[{"name":"Value1","kind":"int32"},{"name":"Value2","kind":"bytes"}]},{"name":"Singleton","value_fields":[{"name":"Value","kind":"string"},{"name":"Value2","kind":"bytes"}]},{"name":"ThreeKeys","key_fields":[{"name":"Key1","kind":"string"},{"name":"Key2","kind":"int32"},{"name":"Key3","kind":"uint64"}],"value_fields":[{"name":"Value1","kind":"int32"}]},{"name":"TwoKeys","key_fields":[{"name":"Key1","kind":"string"},{"name":"Key2","kind":"int32"}]}],"enum_types":null}}
+StartBlock: {1 <nil> <nil>}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"RetainDeletions","Key":"","Value":[4602,"NwsAtcME5moByAKKwXU="],"Delete":false},{"TypeName":"Simple","Key":"","Value":[-89,"fgY="],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"Singleton","Key":null,"Value":["֑Ⱥ|@!`",""],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"TwoKeys","Key":["a\u003c",-84],"Value":null,"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_time","Key":"1969-12-31T19:00:19.631216449-05:00","Value":{"valNotNull":"1969-12-31T18:59:59.999999998-05:00","valNullable":null},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"Simple","Key":"\u0026ắA","Value":[-507,"AFLIDwIESxgAgQEDAS8="],"Delete":false},{"TypeName":"ManyValues","Key":"῭𝚰ഃȺAᶊ?","Value":[-6,"GDU=",-11992.413883053847,57],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_int8","Key":98,"Value":[-4,-83],"Delete":false},{"TypeName":"test_string","Key":"ਃÙ࣢Ⱥ +\u001c","Value":{"valNotNull":"𐹹aa","valNullable":"aa"},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"Simple","Key":"_ _^.ෛ᧰;1A","Value":{"Value1":-29,"Value2":"9w=="},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"Simple","Key":"ᾏ","Value":{"Value1":773,"Value2":"9QEUBwEOAg=="},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_bool","Key":true,"Value":{"valNotNull":false,"valNullable":null},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_uint64","Key":5388077,"Value":[1382203,null],"Delete":false},{"TypeName":"test_int16","Key":151,"Value":[-19691,3],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"TwoKeys","Key":["|󺪆𝅲＝鄖_.;ǀ⃣%; #~",16],"Value":null,"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ManyValues","Key":"¨¹^Z_{/ a","Value":[-645,"ABQBAw==",0.33674474700582796,2023],"Delete":false},{"TypeName":"RetainDeletions","Key":"𝅲𝡇","Value":{"Value1":3666,"Value2":"PLgAFjwIEw=="},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_int32","Key":13,"Value":[1,639842],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"TwoKeys","Key":["[",-5782],"Value":null,"Delete":false}]}
+Commit: {}
+StartBlock: {2 <nil> <nil>}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"RetainDeletions","Key":"ᾢ","Value":[3,"AQQF3LYA"],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ManyValues","Key":"_; ᾚ ǲA{˭҄\nA ^$?ᾦ,:\u003c\"?_\u0014;|","Value":{"Value1":-15,"Value2":"PED/","Value3":7.997156312768529e-26,"Value4":33975920899014},"Delete":false},{"TypeName":"Simple","Key":"$#","Value":[2114984433,"M/80"],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_string","Key":"a]\u003e/a֍)!\"˂A","Value":["",null],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"Simple","Key":" Ⅻ\t%a","Value":{"Value1":12733,"Value2":"hAL/"},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_address","Key":"AAEgvwGmbgFqAAGkMQAYlBICzQEYAgsBFRcDAiud/ykGAitFA6tJA04SB+8DwBMAAQxXDyz/","Value":["GwADWP8AMB6z0AZCDgEDMv8DfQEQ","DAHaBAOt3g16AQAfNQEBeQYBAlv/AfgKUi0YAgg="],"Delete":false},{"TypeName":"test_duration","Key":468,"Value":[-52600,null],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"Simple","Key":": Ⱥ","Value":[-14,"fmoD3wY="],"Delete":false},{"TypeName":"TwoKeys","Key":["Ⱥ꙱ǈ",12],"Value":null,"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ThreeKeys","Key":["$",-1,774000],"Value":-11,"Delete":false},{"TypeName":"RetainDeletions","Key":"","Value":[-889,"AWoJAQI+4wEDAAD/A14DNwCH7O7QtACtCh4JCrwID+GQawo="],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_bool","Key":false,"Value":[true,false],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"Simple","Key":"\"رऻ","Value":[-9237464,"BQ4CYQ=="],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"RetainDeletions","Key":"ᾎⅰ\u000bA*","Value":{"Value1":0,"Value2":"AA=="},"Delete":false}]}
+Commit: {}
+StartBlock: {3 <nil> <nil>}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_int32","Key":-103,"Value":{"valNotNull":-1887959808,"valNullable":2096073436},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_bool","Key":true,"Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ManyValues","Key":"","Value":{"Value1":-4,"Value2":"","Value3":5.199354003997906e-290,"Value4":2703222758},"Delete":false},{"TypeName":"ThreeKeys","Key":["$",-1,774000],"Value":11281,"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_uint8","Key":7,"Value":{"valNotNull":1,"valNullable":150},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"Simple","Key":"_ _^.ෛ᧰;1A","Value":[-1,"LP8="],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_integer","Key":"-7261530924372552","Value":["080207094","-598415299"],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_float64","Key":-368,"Value":{"valNotNull":1.142364501953125,"valNullable":4.509373305100153e-141},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ManyValues","Key":"_; ᾚ ǲA{˭҄\nA ^$?ᾦ,:\u003c\"?_\u0014;|","Value":{"Value1":-102862,"Value3":-0.4372412548364082,"Value4":3369109024730919},"Delete":false},{"TypeName":"Simple","Key":"$#","Value":[-15470,"sgAB"],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_decimal","Key":"2.78157850","Value":{"valNotNull":"-2.564","valNullable":null},"Delete":false},{"TypeName":"test_int64","Key":9223372036854775807,"Value":[-9223372036854775808,6033],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ManyValues","Key":"↓ʰ/₱ {","Value":{"Value1":2147483647,"Value2":"","Value3":-4.236080089134453e-9,"Value4":3392046},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"RetainDeletions","Key":"~ᾈ\u0004󱜏a _〩ãᛮǅ𑣠ʰA%a","Value":{"Value1":361,"Value2":"AVpAjeACFY7Tph5n"},"Delete":false}]}
+Commit: {}
+StartBlock: {4 <nil> <nil>}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_duration","Key":-152,"Value":{"valNotNull":1476419818092,"valNullable":-163469},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"Simple","Key":"‮","Value":[-1,"GwE="],"Delete":false},{"TypeName":"ManyValues","Key":"↓ʰ/₱ {","Value":[1,"",4.1017235364794545e-228,25],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"RetainDeletions","Key":"ᾎⅰ\u000bA*","Value":null,"Delete":true},{"TypeName":"Singleton","Key":null,"Value":{"Value2":""},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_enum","Key":"foo","Value":{"valNotNull":"baz","valNullable":"bar"},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_decimal","Key":"-618.7416010936009","Value":["4",null],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ThreeKeys","Key":["",11,107],"Value":{"Value1":-31402597},"Delete":false},{"TypeName":"Simple","Key":"\"رऻ","Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_uint16","Key":24,"Value":[0,null],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_uint8","Key":61,"Value":[6,6],"Delete":false},{"TypeName":"test_int64","Key":9223372036854775807,"Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"Simple","Key":"\u0026ắA","Value":null,"Delete":true},{"TypeName":"ManyValues","Key":"","Value":{"Value4":7},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"RetainDeletions","Key":"؁〩a_𞥟","Value":[-9890928,"5AB0mZv/SEYYAzMShq3/Bh4B"],"Delete":false}]}
+Commit: {}
+StartBlock: {5 <nil> <nil>}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_bool","Key":false,"Value":null,"Delete":true},{"TypeName":"test_int8","Key":-6,"Value":{"valNotNull":122,"valNullable":null},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ManyValues","Key":"¨¹^Z_{/ a","Value":{"Value4":80},"Delete":false},{"TypeName":"RetainDeletions","Key":"﻿@‮:","Value":[3016,"AQ=="],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_bytes","Key":"AQ==","Value":{"valNotNull":"ogMIrOI=","valNullable":null},"Delete":false},{"TypeName":"test_float32","Key":-463,"Value":{"valNotNull":-58786,"valNullable":null},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ManyValues","Key":"῭𝚰ഃȺAᶊ?","Value":[-1164946,"",1.176159974717759e+49,1691822],"Delete":false},{"TypeName":"RetainDeletions","Key":"#\\","Value":[1,"FQMCAG04AaQN"],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_decimal","Key":"2.78157850","Value":null,"Delete":true},{"TypeName":"test_uint64","Key":43469486790,"Value":{"valNotNull":49,"valNullable":null},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"TwoKeys","Key":["\"A",-2147483648],"Value":null,"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_int32","Key":-103,"Value":[2147483647,null],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"Singleton","Key":null,"Value":{"Value2":"BmoB"},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"TwoKeys","Key":["#",0],"Value":null,"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_string","Key":"","Value":["₦~＄",""],"Delete":false},{"TypeName":"test_int64","Key":-9943728846472,"Value":{"valNotNull":-3216,"valNullable":null},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"RetainDeletions","Key":"!\u0003ᾩ̴+a","Value":{"Value1":314182053,"Value2":"Gxc="},"Delete":false},{"TypeName":"TwoKeys","Key":["a\u003c",-84],"Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ManyValues","Key":"?﻿","Value":{"Value1":-6813,"Value2":"AhRPdlAC","Value3":0.00182342529296875,"Value4":2},"Delete":false},{"TypeName":"ManyValues","Key":"յ","Value":[2147483647,"AA==",4.804339095791555e-248,395354],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ManyValues","Key":"","Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_uint8","Key":61,"Value":{"valNullable":255},"Delete":false},{"TypeName":"test_int64","Key":-3,"Value":[-6367,null],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"TwoKeys","Key":["@",2],"Value":null,"Delete":false},{"TypeName":"TwoKeys","Key":["Ⱥ꙱ǈ",12],"Value":null,"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"TwoKeys","Key":["|󺪆𝅲＝鄖_.;ǀ⃣%; #~",16],"Value":null,"Delete":true},{"TypeName":"ThreeKeys","Key":["$",-1,774000],"Value":{"Value1":-2147483648},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_enum","Key":"bar","Value":{"valNotNull":"bar","valNullable":"baz"},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_uint32","Key":1275013456,"Value":[0,null],"Delete":false},{"TypeName":"test_decimal","Key":"-924017190.947061628950076222998262213","Value":{"valNotNull":"5063","valNullable":null},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ManyValues","Key":"\t","Value":{"Value1":17694,"Value2":"","Value3":-3.0734751418966004,"Value4":1505826045},"Delete":false}]}
+Commit: {}
+StartBlock: {6 <nil> <nil>}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"TwoKeys","Key":["A𞥟",981],"Value":null,"Delete":false},{"TypeName":"ManyValues","Key":"¨¹^Z_{/ a","Value":[-1060712359,"",14247.827343544246,589],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"RetainDeletions","Key":"̅Ⱥ‮","Value":[1,"AA=="],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_integer","Key":"-902404257","Value":["-34617","11684004"],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"Singleton","Key":null,"Value":{"Value":"\u0011.-A©Aa"},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_decimal","Key":"-618.7416010936009","Value":["-2","88111430.0122412446"],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_uint8","Key":7,"Value":null,"Delete":true},{"TypeName":"test_time","Key":"1969-12-31T19:00:19.631216449-05:00","Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_uint8","Key":3,"Value":[105,null],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_duration","Key":100403021838,"Value":[1547,null],"Delete":false},{"TypeName":"test_uint8","Key":61,"Value":[0,17],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"RetainDeletions","Key":",a _ŕ,A","Value":{"Value1":-2956,"Value2":"b8ABC3UL"},"Delete":false},{"TypeName":"TwoKeys","Key":["#",0],"Value":null,"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"RetainDeletions","Key":"A","Value":[-1634,"xYV1wGkDTQQD5w=="],"Delete":false},{"TypeName":"TwoKeys","Key":["\"A",-2147483648],"Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_address","Key":"AAEgvwGmbgFqAAGkMQAYlBICzQEYAgsBFRcDAiud/ykGAitFA6tJA04SB+8DwBMAAQxXDyz/","Value":["BFEKBowcIgQV/wCLEmwagiSjAANRA/EELQFeGDQtGv/5rdA1AAMeuQEoF8eoAQ==","HXoB/wT4E1QBVHuwBhkBAecMS5cABRkBIychAQhyHAdtbnvkAQcAUQEAAiIJAQczcAEDAAAA2uiNAQEAY4d1Aw=="],"Delete":false},{"TypeName":"test_string","Key":"a]\u003e/a֍)!\"˂A","Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_uint16","Key":24,"Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_bool","Key":true,"Value":[true,null],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"Simple","Key":"~_̀\u000b","Value":[1,""],"Delete":false},{"TypeName":"RetainDeletions","Key":"𑇕|िaA\u003eA˖Aࢍ󾊥","Value":[-41836,"qUoBBFA="],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"TwoKeys","Key":["Ⱥ꙱ǈ",12],"Value":null,"Delete":false}]}
+Commit: {}
+StartBlock: {7 <nil> <nil>}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_bool","Key":false,"Value":[true,null],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_integer","Key":"-7261530924372552","Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"Singleton","Key":null,"Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_bool","Key":true,"Value":[true,false],"Delete":false},{"TypeName":"test_int16","Key":3,"Value":[0,null],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ThreeKeys","Key":["A˜Ľ᠔",191623,168792497866039],"Value":{"Value1":87},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ManyValues","Key":"🚞;aীǲ","Value":{"Value1":294,"Value2":"BATeW2cC","Value3":5.9263472855091095,"Value4":23},"Delete":false},{"TypeName":"Simple","Key":"\taaaa𐅋́{󠁐 #\t\u001bץः𒐟𐅘᭢a","Value":[-23103798,"AwcGAg=="],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_int16","Key":453,"Value":{"valNotNull":15040,"valNullable":3},"Delete":false},{"TypeName":"test_enum","Key":"bar","Value":{"valNullable":"bar"},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"RetainDeletions","Key":"ᾢ","Value":[-4,"AtkOBQphAII3AQ=="],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ThreeKeys","Key":["±?󠀮_? ‍*🄑󠇯",-40,138699519114],"Value":{"Value1":-275850},"Delete":false},{"TypeName":"TwoKeys","Key":["#/\u003c_",-5],"Value":null,"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"RetainDeletions","Key":"","Value":null,"Delete":true},{"TypeName":"ThreeKeys","Key":["$",-1,774000],"Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ManyValues","Key":"_; ᾚ ǲA{˭҄\nA ^$?ᾦ,:\u003c\"?_\u0014;|","Value":{"Value3":8.808423392052715e-20,"Value4":0},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ManyValues","Key":"?﻿","Value":null,"Delete":true},{"TypeName":"Simple","Key":";|⃝⤎?‮","Value":[8706,"AI8mhQ=="],"Delete":false}]}
+Commit: {}
+StartBlock: {8 <nil> <nil>}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"Simple","Key":"‮","Value":[0,""],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_decimal","Key":"8E4","Value":{"valNotNull":"4043421E29","valNullable":null},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_address","Key":"AAEgvwGmbgFqAAGkMQAYlBICzQEYAgsBFRcDAiud/ykGAitFA6tJA04SB+8DwBMAAQxXDyz/","Value":{"valNullable":"BOYwACUAABLY7gECcQYUogBeNQE="},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"RetainDeletions","Key":"?+‌᭵̄$߃ ","Value":[-526,""],"Delete":false},{"TypeName":"Simple","Key":" Ⅻ\t%a","Value":{"Value1":-3584},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_time","Key":"1969-12-31T19:00:00.000000081-05:00","Value":{"valNotNull":"1969-12-31T18:59:59.999998159-05:00","valNullable":null},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_uint8","Key":1,"Value":[56,54],"Delete":false},{"TypeName":"test_uint32","Key":6,"Value":{"valNotNull":13,"valNullable":null},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_bool","Key":true,"Value":null,"Delete":true},{"TypeName":"test_int8","Key":98,"Value":{"valNotNull":25,"valNullable":-49},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"RetainDeletions","Key":"A","Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ThreeKeys","Key":["A˜Ľ᠔",191623,168792497866039],"Value":{"Value1":87072},"Delete":false},{"TypeName":"TwoKeys","Key":["aA\u003c‌ऻ⁠\r#﻿#﹍/$ͥ",-4],"Value":null,"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_bytes","Key":"AQ==","Value":null,"Delete":true},{"TypeName":"test_uint64","Key":271328219,"Value":[9960,1],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_uint64","Key":43469486790,"Value":null,"Delete":true},{"TypeName":"test_float64","Key":-368,"Value":{"valNotNull":-3.9541311264038086,"valNullable":null},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"Singleton","Key":null,"Value":["","DTQAB6ENAQ=="],"Delete":false},{"TypeName":"ManyValues","Key":"յ","Value":[248203,"",-29237.73048098229,108708571677],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_float64","Key":-2,"Value":[1.1408884758148922e-229,null],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_uint64","Key":5388077,"Value":{"valNotNull":4576150250879893,"valNullable":329},"Delete":false},{"TypeName":"test_duration","Key":-152,"Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_uint8","Key":3,"Value":[1,null],"Delete":false},{"TypeName":"test_bool","Key":false,"Value":{"valNullable":true},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ManyValues","Key":"\t","Value":{"Value2":"ABU=","Value3":-2.1604673743609532e-204},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ManyValues","Key":"꙱؁\t­","Value":[-3,"",1.3442634946997238e+307,1561872634],"Delete":false},{"TypeName":"ManyValues","Key":"A⃟`?+₯~ী²a𞥃💵𐴸-/","Value":{"Value1":1647,"Value2":"aocGBA==","Value3":700057251012346200,"Value4":22},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_enum","Key":"baz","Value":["foo","foo"],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ManyValues","Key":"ƻ̄n","Value":[-4385933,"9QARXRwUUPU=",3.130815935698223e+222,46],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"RetainDeletions","Key":"ऻ^￦́Ì'\u0017A:ĕ\u0026\\⁡\r$a","Value":[-27600,"LAYJAzkABc0A"],"Delete":false},{"TypeName":"TwoKeys","Key":[" ",2],"Value":null,"Delete":false}]}
+Commit: {}
+StartBlock: {9 <nil> <nil>}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"TwoKeys","Key":["#",0],"Value":null,"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ThreeKeys","Key":["�é",4,5],"Value":-21,"Delete":false},{"TypeName":"RetainDeletions","Key":"ǀȺA%aa ¹­ ᾏaĵ¨","Value":[9,"A/faBuYCCecZ3ATQAQcC3gAsizI="],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_bool","Key":true,"Value":{"valNotNull":false,"valNullable":null},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ManyValues","Key":"@d𒐽\u001b⃠","Value":[83523,"fgihAbYBRq4BAR4ATWUwAAADAUgDCZEI",5.463114807757741e-9,2],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_uint8","Key":146,"Value":[2,null],"Delete":false},{"TypeName":"test_uint16","Key":36451,"Value":[2,null],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ThreeKeys","Key":["±?󠀮_? ‍*🄑󠇯",-40,138699519114],"Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_integer","Key":"-902404257","Value":null,"Delete":true},{"TypeName":"test_bool","Key":false,"Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_int8","Key":98,"Value":[-45,16],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"Simple","Key":"V:\u0004","Value":{"Value1":-2,"Value2":""},"Delete":false},{"TypeName":"ManyValues","Key":"A⃟`?+₯~ী²a𞥃💵𐴸-/","Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"RetainDeletions","Key":"~ᾈ\u0004󱜏a _〩ãᛮǅ𑣠ʰA%a","Value":null,"Delete":true},{"TypeName":"Simple","Key":"$#","Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ManyValues","Key":"B;ᛮ\"𐅕\u0026؀ा󠁿","Value":[7541152,"",-3.2742207969630795e+66,1],"Delete":false},{"TypeName":"Simple","Key":"A{","Value":[4,"BQ34"],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_uint8","Key":1,"Value":[18,1],"Delete":false},{"TypeName":"test_bytes","Key":"xxV9kyMR","Value":["SwFUlRYWA7Q1C5MCMA==",null],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"Simple","Key":"~_̀\u000b","Value":[2147483647,"WgL/BAEBsg=="],"Delete":false}]}
+Commit: {}
+StartBlock: {10 <nil> <nil>}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_duration","Key":87208838869,"Value":[-9725,4968373],"Delete":false},{"TypeName":"test_duration","Key":100403021838,"Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"RetainDeletions","Key":"","Value":[-1,"FQIK"],"Delete":false},{"TypeName":"Singleton","Key":null,"Value":["%﻿؄ೲȺ","ADei6AACZTMDDss="],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_time","Key":"1969-12-31T18:59:59.999999999-05:00","Value":["1969-12-31T19:00:00.000000203-05:00","1969-12-31T18:59:59.988846518-05:00"],"Delete":false},{"TypeName":"test_bool","Key":true,"Value":{"valNotNull":false,"valNullable":true},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"RetainDeletions","Key":"ȺAª","Value":{"Value1":5,"Value2":"ByIBAAF0"},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ManyValues","Key":"ʱ? ﻿-@","Value":[26,"BQ==",40371.625,136914],"Delete":false},{"TypeName":"RetainDeletions","Key":"?+‌᭵̄$߃ ","Value":[-4,"AWcfjgc="],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"RetainDeletions","Key":"𝅲𝡇","Value":[3,"AQX4eAM="],"Delete":false},{"TypeName":"ManyValues","Key":"\t","Value":{"Value4":1956},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_int64","Key":-12,"Value":{"valNotNull":-121,"valNullable":-2},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ManyValues","Key":"","Value":[-23,"AQ==",-1.448908652612274e-70,579180],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"RetainDeletions","Key":",a _ŕ,A","Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_bytes","Key":"xxV9kyMR","Value":null,"Delete":true}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_float32","Key":-463,"Value":[-3.594342e-17,6.4607563e-37],"Delete":false},{"TypeName":"test_bytes","Key":"","Value":["IBEeAY8BAC1uKQU=",null],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ThreeKeys","Key":["",11,107],"Value":{"Value1":-80},"Delete":false},{"TypeName":"RetainDeletions","Key":"#\\","Value":[5521,"kwsBjw=="],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"Simple","Key":"˚~%!ˍ˃\"ᾜȺ൜堯Ⱥ៵\"","Value":{"Value1":-10,"Value2":"jg=="},"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"all_kinds","Updates":[{"TypeName":"test_bool","Key":false,"Value":[true,null],"Delete":false}]}
+OnObjectUpdate: {"ModuleName":"test_cases","Updates":[{"TypeName":"ThreeKeys","Key":["A⒄a𲎯ڥ\u0026\u000b",1,0],"Value":{"Value1":154068889},"Delete":false},{"TypeName":"ManyValues","Key":"~ʳ{ {Ⱥ\t$࿐(#","Value":{"Value1":-26,"Value2":"","Value3":121.70742593632353,"Value4":1762146},"Delete":false}]}
+Commit: {}

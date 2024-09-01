@@ -2,6 +2,7 @@ package integration_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"testing"
@@ -69,7 +70,7 @@ func Example() {
 	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)
-	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts)
+	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 
 	// here bankkeeper and staking keeper is nil because we are not testing them
 	// subspace is nil because we don't test params (which is legacy anyway)
@@ -112,7 +113,7 @@ func Example() {
 	// in this example the result is an empty response, a nil check is enough
 	// in other cases, it is recommended to check the result value.
 	if result == nil {
-		panic(fmt.Errorf("unexpected nil result"))
+		panic(errors.New("unexpected nil result"))
 	}
 
 	// we now check the result
@@ -173,7 +174,7 @@ func Example_oneModule() {
 	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)
-	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts)
+	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 
 	// create the application and register all the modules from the previous step
 	integrationApp := integration.NewIntegrationApp(
@@ -220,7 +221,7 @@ func Example_oneModule() {
 	// in this example the result is an empty response, a nil check is enough
 	// in other cases, it is recommended to check the result value.
 	if result == nil {
-		panic(fmt.Errorf("unexpected nil result"))
+		panic(errors.New("unexpected nil result"))
 	}
 
 	// we now check the result

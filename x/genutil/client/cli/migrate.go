@@ -3,12 +3,12 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"sort"
+	"maps"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/maps"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -26,7 +26,7 @@ var MigrationMap = types.MigrationMap{}
 // When the application migration includes a SDK migration, the Cosmos SDK migration function should as well be called.
 func MigrateGenesisCmd(migrations types.MigrationMap) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "migrate [target-version] [genesis-file]",
+		Use:     "migrate <target-version> <genesis-file>",
 		Short:   "Migrate genesis to a specified target version",
 		Long:    "Migrate the source genesis into the target version and print to STDOUT",
 		Example: fmt.Sprintf("%s migrate v0.47 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2019-04-22T17:00:00Z", version.AppName),
@@ -52,8 +52,7 @@ func MigrateHandler(cmd *cobra.Command, args []string, migrations types.Migratio
 	migrationFunc, ok := migrations[target]
 	if !ok || migrationFunc == nil {
 		versions := maps.Keys(migrations)
-		sort.Strings(versions)
-		return fmt.Errorf("unknown migration function for version: %s (supported versions %s)", target, strings.Join(versions, ", "))
+		return fmt.Errorf("unknown migration function for version: %s (supported versions %s)", target, strings.Join(slices.Sorted(versions), ", "))
 	}
 
 	importGenesis := args[1]

@@ -2,6 +2,7 @@ package sims
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 
 	coreheader "cosmossdk.io/core/header"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -83,7 +85,7 @@ type StartupConfig struct {
 	BaseAppOption   runtime.BaseAppOption
 	AtGenesis       bool
 	GenesisAccounts []GenesisAccount
-	DB              dbm.DB
+	DB              corestore.KVStoreWithBatch
 }
 
 func DefaultStartUpConfig() StartupConfig {
@@ -164,7 +166,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	// create validator set
 	valSet, err := startupConfig.ValidatorSet()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create validator set")
+		return nil, errors.New("failed to create validator set")
 	}
 
 	var (

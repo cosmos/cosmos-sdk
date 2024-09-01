@@ -11,11 +11,12 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	coreapp "cosmossdk.io/core/app"
+	coreserver "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	grpc "cosmossdk.io/server/v2/api/grpc"
+	"cosmossdk.io/server/v2/appmanager"
 )
 
 type mockInterfaceRegistry struct{}
@@ -33,7 +34,15 @@ type mockApp[T transaction.Tx] struct {
 	serverv2.AppI[T]
 }
 
-func (*mockApp[T]) InterfaceRegistry() coreapp.InterfaceRegistry {
+func (*mockApp[T]) GetGPRCMethodsToMessageMap() map[string]func() gogoproto.Message {
+	return map[string]func() gogoproto.Message{}
+}
+
+func (*mockApp[T]) GetAppManager() *appmanager.AppManager[T] {
+	return nil
+}
+
+func (*mockApp[T]) InterfaceRegistry() coreserver.InterfaceRegistry {
 	return &mockInterfaceRegistry{}
 }
 
@@ -56,6 +65,7 @@ func TestServer(t *testing.T) {
 
 	server := serverv2.NewServer(
 		logger,
+		serverv2.DefaultServerConfig(),
 		grpcServer,
 		mockServer,
 	)

@@ -114,7 +114,7 @@ func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundComm
 		return nil, err
 	}
 
-	if err := k.poolKeeper.FundCommunityPool(ctx, msg.Amount, depositor); err != nil {
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, depositor, types.ProtocolPoolModuleName, msg.Amount); err != nil {
 		return nil, err
 	}
 
@@ -158,7 +158,7 @@ func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 		return nil, fmt.Errorf("invalid recipient address: %w", err)
 	}
 
-	if err := k.poolKeeper.DistributeFromCommunityPool(ctx, msg.Amount, recipient); err != nil {
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ProtocolPoolModuleName, recipient, msg.Amount); err != nil {
 		return nil, err
 	}
 
@@ -189,7 +189,7 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 	}
 
 	if validator == nil {
-		return nil, errors.Wrapf(types.ErrNoValidatorExists, msg.ValidatorAddress)
+		return nil, errors.Wrap(types.ErrNoValidatorExists, msg.ValidatorAddress)
 	}
 
 	// Allocate tokens from the distribution module to the validator, which are

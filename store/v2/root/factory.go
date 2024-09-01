@@ -55,11 +55,11 @@ func DefaultStoreOptions() Options {
 		SCType: 0,
 		SCPruningOption: &store.PruningOption{
 			KeepRecent: 2,
-			Interval:   1,
+			Interval:   100,
 		},
 		SSPruningOption: &store.PruningOption{
 			KeepRecent: 2,
-			Interval:   1,
+			Interval:   100,
 		},
 		IavlConfig: &iavl.Config{
 			CacheSize:              100_000,
@@ -109,12 +109,12 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 	}
 	ss = storage.NewStorageStore(ssDb, opts.Logger)
 
+	metadata := commitment.NewMetadataStore(opts.SCRawDB)
+	latestVersion, err := metadata.GetLatestVersion()
+	if err != nil {
+		return nil, err
+	}
 	if len(opts.StoreKeys) == 0 {
-		metadata := commitment.NewMetadataStore(opts.SCRawDB)
-		latestVersion, err := metadata.GetLatestVersion()
-		if err != nil {
-			return nil, err
-		}
 		lastCommitInfo, err := metadata.GetCommitInfo(latestVersion)
 		if err != nil {
 			return nil, err
@@ -126,21 +126,43 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 			opts.StoreKeys = append(opts.StoreKeys, string(si.Name))
 		}
 	}
+	removedStoreKeys, err := metadata.GetRemovedStoreKeys(latestVersion)
+	if err != nil {
+		return nil, err
+	}
 
-	trees := make(map[string]commitment.Tree)
-	for _, key := range opts.StoreKeys {
+	newTreeFn := func(key string) (commitment.Tree, error) {
 		if internal.IsMemoryStoreKey(key) {
-			trees[key] = mem.New()
+			return mem.New(), nil
 		} else {
 			switch storeOpts.SCType {
 			case SCTypeIavl:
-				trees[key] = iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, storeOpts.IavlConfig)
+				return iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, storeOpts.IavlConfig), nil
 			case SCTypeIavlV2:
 				return nil, errors.New("iavl v2 not supported")
+			default:
+				return nil, errors.New("unsupported commitment store type")
 			}
 		}
 	}
-	sc, err = commitment.NewCommitStore(trees, opts.SCRawDB, opts.Logger)
+
+	trees := make(map[string]commitment.Tree, len(opts.StoreKeys))
+	for _, key := range opts.StoreKeys {
+		tree, err := newTreeFn(key)
+		if err != nil {
+			return nil, err
+		}
+		trees[key] = tree
+	}
+	oldTrees := make(map[string]commitment.Tree, len(opts.StoreKeys))
+	for _, key := range removedStoreKeys {
+		tree, err := newTreeFn(string(key))
+		if err != nil {
+			return nil, err
+		}
+		oldTrees[string(key)] = tree
+	}
+	sc, err = commitment.NewCommitStore(trees, oldTrees, opts.SCRawDB, opts.Logger)
 	if err != nil {
 		return nil, err
 	}

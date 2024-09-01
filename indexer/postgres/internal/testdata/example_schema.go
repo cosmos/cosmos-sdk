@@ -29,22 +29,20 @@ func init() {
 
 		switch i {
 		case schema.EnumKind:
-			field.EnumDefinition = MyEnum
-		case schema.Bech32AddressKind:
-			field.AddressPrefix = "foo"
+			field.ReferencedType = MyEnum.Name
 		default:
 		}
 
 		AllKindsObject.ValueFields = append(AllKindsObject.ValueFields, field)
 	}
 
-	ExampleSchema = schema.ModuleSchema{
-		ObjectTypes: []schema.ObjectType{
-			AllKindsObject,
-			SingletonObject,
-			VoteObject,
-		},
-	}
+	ExampleSchema = schema.MustCompileModuleSchema(
+		AllKindsObject,
+		SingletonObject,
+		VoteObject,
+		MyEnum,
+		VoteType,
+	)
 }
 
 var SingletonObject = schema.ObjectType{
@@ -62,7 +60,7 @@ var SingletonObject = schema.ObjectType{
 		{
 			Name:           "an_enum",
 			Kind:           schema.EnumKind,
-			EnumDefinition: MyEnum,
+			ReferencedType: MyEnum.Name,
 		},
 	},
 }
@@ -76,23 +74,33 @@ var VoteObject = schema.ObjectType{
 		},
 		{
 			Name: "address",
-			Kind: schema.Bech32AddressKind,
+			Kind: schema.AddressKind,
 		},
 	},
 	ValueFields: []schema.Field{
 		{
-			Name: "vote",
-			Kind: schema.EnumKind,
-			EnumDefinition: schema.EnumDefinition{
-				Name:   "vote_type",
-				Values: []string{"yes", "no", "abstain"},
-			},
+			Name:           "vote",
+			Kind:           schema.EnumKind,
+			ReferencedType: VoteType.Name,
 		},
 	},
 	RetainDeletions: true,
 }
 
-var MyEnum = schema.EnumDefinition{
-	Name:   "my_enum",
-	Values: []string{"a", "b", "c"},
+var VoteType = schema.EnumType{
+	Name: "vote_type",
+	Values: []schema.EnumValueDefinition{
+		{Name: "yes", Value: 1},
+		{Name: "no", Value: 2},
+		{Name: "abstain", Value: 3},
+	},
+}
+
+var MyEnum = schema.EnumType{
+	Name: "my_enum",
+	Values: []schema.EnumValueDefinition{
+		{Name: "a", Value: 1},
+		{Name: "b", Value: 2},
+		{Name: "c", Value: 3},
+	},
 }

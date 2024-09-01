@@ -9,7 +9,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -27,8 +27,9 @@ import (
 )
 
 var (
-	poolAcc   = authtypes.NewEmptyModuleAccount(types.ModuleName)
-	streamAcc = authtypes.NewEmptyModuleAccount(types.StreamAccount)
+	poolAcc      = authtypes.NewEmptyModuleAccount(types.ModuleName)
+	streamAcc    = authtypes.NewEmptyModuleAccount(types.StreamAccount)
+	poolDistrAcc = authtypes.NewEmptyModuleAccount(types.ProtocolPoolDistrAccount)
 )
 
 type KeeperTestSuite struct {
@@ -48,7 +49,7 @@ type KeeperTestSuite struct {
 func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
-	environment := runtime.NewEnvironment(storeService, log.NewNopLogger())
+	environment := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
@@ -57,6 +58,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
 	accountKeeper := pooltestutil.NewMockAccountKeeper(ctrl)
 	accountKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(poolAcc.GetAddress())
+	accountKeeper.EXPECT().GetModuleAddress(types.ProtocolPoolDistrAccount).Return(poolDistrAcc.GetAddress())
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 	accountKeeper.EXPECT().GetModuleAddress(types.StreamAccount).Return(streamAcc.GetAddress())
 	s.authKeeper = accountKeeper
@@ -102,12 +104,14 @@ func (s *KeeperTestSuite) mockWithdrawContinuousFund() {
 	s.stakingKeeper.EXPECT().BondDenom(gomock.Any()).Return("stake", nil).AnyTimes()
 }
 
-func (s *KeeperTestSuite) mockStreamFunds() {
+func (s *KeeperTestSuite) mockStreamFunds(distributed math.Int) {
 	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ModuleName).Return(poolAcc).AnyTimes()
+	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ProtocolPoolDistrAccount).Return(poolDistrAcc).AnyTimes()
 	s.authKeeper.EXPECT().GetModuleAddress(types.StreamAccount).Return(streamAcc.GetAddress()).AnyTimes()
-	distrBal := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
-	s.bankKeeper.EXPECT().GetAllBalances(s.ctx, poolAcc.GetAddress()).Return(distrBal).AnyTimes()
-	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, poolAcc.GetName(), streamAcc.GetName(), gomock.Any()).AnyTimes()
+	distrBal := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, distributed))
+	s.bankKeeper.EXPECT().GetAllBalances(s.ctx, poolDistrAcc.GetAddress()).Return(distrBal).AnyTimes()
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, poolDistrAcc.GetName(), streamAcc.GetName(), gomock.Any()).AnyTimes()
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, poolDistrAcc.GetName(), poolAcc.GetName(), gomock.Any()).AnyTimes()
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -118,10 +122,11 @@ func (s *KeeperTestSuite) TestIterateAndUpdateFundsDistribution() {
 	// We'll create 2 continuous funds of 30% each, and the total pool is 1000000, meaning each fund should get 300000
 
 	s.SetupTest()
-	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ModuleName).Return(poolAcc).AnyTimes()
+	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ProtocolPoolDistrAccount).Return(poolAcc).AnyTimes()
 	distrBal := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000000)))
 	s.bankKeeper.EXPECT().GetAllBalances(s.ctx, poolAcc.GetAddress()).Return(distrBal).AnyTimes()
-	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, poolAcc.GetName(), streamAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(600000)))).AnyTimes()
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, poolDistrAcc.GetName(), streamAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(600000))))
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, poolDistrAcc.GetName(), poolAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(400000))))
 
 	_, err := s.msgServer.CreateContinuousFund(s.ctx, &types.MsgCreateContinuousFund{
 		Authority:  s.poolKeeper.GetAuthority(),
@@ -137,7 +142,7 @@ func (s *KeeperTestSuite) TestIterateAndUpdateFundsDistribution() {
 	})
 	s.Require().NoError(err)
 
-	_ = s.poolKeeper.SetToDistribute(s.ctx, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000000))), s.poolKeeper.GetAuthority())
+	_ = s.poolKeeper.SetToDistribute(s.ctx)
 
 	err = s.poolKeeper.IterateAndUpdateFundsDistribution(s.ctx)
 	s.Require().NoError(err)
@@ -154,4 +159,86 @@ func (s *KeeperTestSuite) TestIterateAndUpdateFundsDistribution() {
 		return false, nil
 	})
 	s.Require().NoError(err)
+}
+
+func (suite *KeeperTestSuite) TestGetCommunityPool() {
+	suite.SetupTest()
+
+	expectedBalance := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000000)))
+	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ModuleName).Return(poolAcc).Times(1)
+	suite.bankKeeper.EXPECT().GetAllBalances(suite.ctx, poolAcc.GetAddress()).Return(expectedBalance).Times(1)
+
+	balance, err := suite.poolKeeper.GetCommunityPool(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Equal(expectedBalance, balance)
+
+	// Test error case when module account doesn't exist
+	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ModuleName).Return(nil).Times(1)
+	_, err = suite.poolKeeper.GetCommunityPool(suite.ctx)
+	suite.Require().Error(err)
+	suite.Require().Contains(err.Error(), "module account protocolpool does not exist")
+}
+
+func (suite *KeeperTestSuite) TestSetToDistribute() {
+	suite.SetupTest()
+
+	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).Return(poolDistrAcc).AnyTimes()
+	distrBal := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000000)))
+	suite.bankKeeper.EXPECT().GetAllBalances(suite.ctx, poolDistrAcc.GetAddress()).Return(distrBal).AnyTimes()
+
+	// because there are no continuous funds, all are going to the community pool
+	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, poolDistrAcc.GetName(), poolAcc.GetName(), distrBal)
+
+	err := suite.poolKeeper.SetToDistribute(suite.ctx)
+	suite.Require().NoError(err)
+
+	// Verify that LastBalance was not set (zero balance)
+	_, err = suite.poolKeeper.LastBalance.Get(suite.ctx)
+	suite.Require().ErrorContains(err, "not found")
+
+	// create new continuous fund and distribute again
+	addrCdc := address.NewBech32Codec("cosmos")
+	addrStr := "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2srklj6"
+	addrBz, err := addrCdc.StringToBytes(addrStr)
+	suite.Require().NoError(err)
+
+	err = suite.poolKeeper.ContinuousFund.Set(suite.ctx, addrBz, types.ContinuousFund{
+		Recipient:  addrStr,
+		Percentage: math.LegacyMustNewDecFromStr("0.3"),
+		Expiry:     nil,
+	})
+	suite.Require().NoError(err)
+
+	err = suite.poolKeeper.SetToDistribute(suite.ctx)
+	suite.Require().NoError(err)
+
+	// Verify that LastBalance was set correctly
+	lastBalance, err := suite.poolKeeper.LastBalance.Get(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Equal(math.NewInt(1000000), lastBalance)
+
+	// Verify that a distribution was set
+	var distribution math.Int
+	err = suite.poolKeeper.Distributions.Walk(suite.ctx, nil, func(key time.Time, value math.Int) (bool, error) {
+		distribution = value
+		return true, nil
+	})
+	suite.Require().NoError(err)
+	suite.Require().Equal(math.NewInt(1000000), distribution)
+
+	// Test case when balance is zero
+	zeroBal := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt()))
+	suite.bankKeeper.EXPECT().GetAllBalances(suite.ctx, poolDistrAcc.GetAddress()).Return(zeroBal).AnyTimes()
+
+	err = suite.poolKeeper.SetToDistribute(suite.ctx)
+	suite.Require().NoError(err)
+
+	// Verify that no new distribution was set
+	count := 0
+	err = suite.poolKeeper.Distributions.Walk(suite.ctx, nil, func(key time.Time, value math.Int) (bool, error) {
+		count++
+		return false, nil
+	})
+	suite.Require().NoError(err)
+	suite.Require().Equal(1, count) // Only the previous distribution should exist
 }

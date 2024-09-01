@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	appmanager "cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
@@ -13,21 +12,23 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/router"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	stfgas "cosmossdk.io/server/v2/stf/gas"
 	"cosmossdk.io/server/v2/stf/internal"
 )
 
-// Identity defines STF's bytes identity and it's used by STF to store things in its own state.
-var Identity = []byte("stf")
+type eContextKey struct{}
+
+var executionContextKey = eContextKey{}
 
 // STF is a struct that manages the state transition component of the app.
 type STF[T transaction.Tx] struct {
 	logger log.Logger
 
-	msgRouter   Router
-	queryRouter Router
+	msgRouter   coreRouterImpl
+	queryRouter coreRouterImpl
 
 	doPreBlock        func(ctx context.Context, txs []T) error
 	doBeginBlock      func(ctx context.Context) error
@@ -85,9 +86,9 @@ func NewSTF[T transaction.Tx](
 // executes the block and returns the block results and the new state.
 func (s STF[T]) DeliverBlock(
 	ctx context.Context,
-	block *appmanager.BlockRequest[T],
+	block *server.BlockRequest[T],
 	state store.ReaderMap,
-) (blockResult *appmanager.BlockResponse, newState store.WriterMap, err error) {
+) (blockResult *server.BlockResponse, newState store.WriterMap, err error) {
 	// creates a new branchFn state, from the readonly view of the state
 	// that can be written to.
 	newState = s.branchFn(state)
@@ -104,12 +105,8 @@ func (s STF[T]) DeliverBlock(
 		return nil, nil, fmt.Errorf("unable to set initial header info, %w", err)
 	}
 
-	exCtx := s.makeContext(ctx, appmanager.ConsensusIdentity, newState, internal.ExecModeFinalize)
+	exCtx := s.makeContext(ctx, ConsensusIdentity, newState, internal.ExecModeFinalize)
 	exCtx.setHeaderInfo(hi)
-	consMessagesResponses, err := s.runConsensusMessages(exCtx, block.ConsensusMessages)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to execute consensus messages: %w", err)
-	}
 
 	// reset events
 	exCtx.events = make([]event.Event, 0)
@@ -142,14 +139,14 @@ func (s STF[T]) DeliverBlock(
 	}
 
 	// execute txs
-	txResults := make([]appmanager.TxResult, len(block.Txs))
+	txResults := make([]server.TxResult, len(block.Txs))
 	// TODO: skip first tx if vote extensions are enabled (marko)
 	for i, txBytes := range block.Txs {
 		// check if we need to return early or continue delivering txs
 		if err = isCtxCancelled(ctx); err != nil {
 			return nil, nil, err
 		}
-		txResults[i] = s.deliverTx(ctx, newState, txBytes, transaction.ExecModeFinalize, hi)
+		txResults[i] = s.deliverTx(exCtx, newState, txBytes, transaction.ExecModeFinalize, hi)
 	}
 	// reset events
 	exCtx.events = make([]event.Event, 0)
@@ -159,14 +156,12 @@ func (s STF[T]) DeliverBlock(
 		return nil, nil, err
 	}
 
-	return &appmanager.BlockResponse{
-		Apphash:                   nil,
-		ConsensusMessagesResponse: consMessagesResponses,
-		ValidatorUpdates:          valset,
-		PreBlockEvents:            preBlockEvents,
-		BeginBlockEvents:          beginBlockEvents,
-		TxResults:                 txResults,
-		EndBlockEvents:            endBlockEvents,
+	return &server.BlockResponse{
+		ValidatorUpdates: valset,
+		PreBlockEvents:   preBlockEvents,
+		BeginBlockEvents: beginBlockEvents,
+		TxResults:        txResults,
+		EndBlockEvents:   endBlockEvents,
 	}, newState, nil
 }
 
@@ -177,7 +172,7 @@ func (s STF[T]) deliverTx(
 	tx T,
 	execMode transaction.ExecMode,
 	hi header.Info,
-) appmanager.TxResult {
+) server.TxResult {
 	// recover in the case of a panic
 	var recoveryError error
 	defer func() {
@@ -189,26 +184,26 @@ func (s STF[T]) deliverTx(
 	// handle error from GetGasLimit
 	gasLimit, gasLimitErr := tx.GetGasLimit()
 	if gasLimitErr != nil {
-		return appmanager.TxResult{
+		return server.TxResult{
 			Error: gasLimitErr,
 		}
 	}
 
 	if recoveryError != nil {
-		return appmanager.TxResult{
+		return server.TxResult{
 			Error: recoveryError,
 		}
 	}
 
-	validateGas, validationEvents, err := s.validateTx(ctx, state, gasLimit, tx)
+	validateGas, validationEvents, err := s.validateTx(ctx, state, gasLimit, tx, execMode)
 	if err != nil {
-		return appmanager.TxResult{
+		return server.TxResult{
 			Error: err,
 		}
 	}
 
 	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode, hi)
-	return appmanager.TxResult{
+	return server.TxResult{
 		Events:    append(validationEvents, execEvents...),
 		GasUsed:   execGas + validateGas,
 		GasWanted: gasLimit,
@@ -224,13 +219,14 @@ func (s STF[T]) validateTx(
 	state store.WriterMap,
 	gasLimit uint64,
 	tx T,
+	execMode transaction.ExecMode,
 ) (gasUsed uint64, events []event.Event, err error) {
 	validateState := s.branchFn(state)
 	hi, err := s.getHeaderInfo(validateState)
 	if err != nil {
 		return 0, nil, err
 	}
-	validateCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, validateState, transaction.ExecModeCheck)
+	validateCtx := s.makeContext(ctx, RuntimeIdentity, validateState, execMode)
 	validateCtx.setHeaderInfo(hi)
 	validateCtx.setGasLimit(gasLimit)
 	err = s.doTxValidation(validateCtx, tx)
@@ -259,7 +255,7 @@ func (s STF[T]) execTx(
 		// in case of error during message execution, we do not apply the exec state.
 		// instead we run the post exec handler in a new branchFn from the initial state.
 		postTxState := s.branchFn(state)
-		postTxCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, postTxState, execMode)
+		postTxCtx := s.makeContext(ctx, RuntimeIdentity, postTxState, execMode)
 		postTxCtx.setHeaderInfo(hi)
 
 		postTxErr := s.postTxExec(postTxCtx, tx, false)
@@ -279,7 +275,7 @@ func (s STF[T]) execTx(
 	// tx execution went fine, now we use the same state to run the post tx exec handler,
 	// in case the execution of the post tx fails, then no state change is applied and the
 	// whole execution step is rolled back.
-	postTxCtx := s.makeContext(ctx, appmanager.RuntimeIdentity, execState, execMode) // NO gas limit.
+	postTxCtx := s.makeContext(ctx, RuntimeIdentity, execState, execMode) // NO gas limit.
 	postTxCtx.setHeaderInfo(hi)
 	postTxErr := s.postTxExec(postTxCtx, tx, true)
 	if postTxErr != nil {
@@ -316,12 +312,12 @@ func (s STF[T]) runTxMsgs(
 	}
 	msgResps := make([]transaction.Msg, len(msgs))
 
-	execCtx := s.makeContext(ctx, nil, state, execMode)
+	execCtx := s.makeContext(ctx, RuntimeIdentity, state, execMode)
 	execCtx.setHeaderInfo(hi)
 	execCtx.setGasLimit(gasLimit)
 	for i, msg := range msgs {
 		execCtx.sender = txSenders[i]
-		resp, err := s.msgRouter.InvokeUntyped(execCtx, msg)
+		resp, err := s.msgRouter.Invoke(execCtx, msg)
 		if err != nil {
 			return nil, 0, nil, fmt.Errorf("message execution at index %d failed: %w", i, err)
 		}
@@ -332,6 +328,7 @@ func (s STF[T]) runTxMsgs(
 	return msgResps, consumed, execCtx.events, nil
 }
 
+// preBlock executes the pre block logic.
 func (s STF[T]) preBlock(
 	ctx *executionContext,
 	txs []T,
@@ -351,22 +348,7 @@ func (s STF[T]) preBlock(
 	return ctx.events, nil
 }
 
-func (s STF[T]) runConsensusMessages(
-	ctx *executionContext,
-	messages []transaction.Msg,
-) ([]transaction.Msg, error) {
-	responses := make([]transaction.Msg, len(messages))
-	for i := range messages {
-		resp, err := s.msgRouter.InvokeUntyped(ctx, messages[i])
-		if err != nil {
-			return nil, err
-		}
-		responses[i] = resp
-	}
-
-	return responses, nil
-}
-
+// beginBlock executes the begin block logic.
 func (s STF[T]) beginBlock(
 	ctx *executionContext,
 ) (beginBlockEvents []event.Event, err error) {
@@ -385,6 +367,7 @@ func (s STF[T]) beginBlock(
 	return ctx.events, nil
 }
 
+// endBlock executes the end block logic.
 func (s STF[T]) endBlock(
 	ctx *executionContext,
 ) ([]event.Event, []appmodulev2.ValidatorUpdate, error) {
@@ -427,11 +410,11 @@ func (s STF[T]) Simulate(
 	state store.ReaderMap,
 	gasLimit uint64,
 	tx T,
-) (appmanager.TxResult, store.WriterMap) {
+) (server.TxResult, store.WriterMap) {
 	simulationState := s.branchFn(state)
 	hi, err := s.getHeaderInfo(simulationState)
 	if err != nil {
-		return appmanager.TxResult{}, nil
+		return server.TxResult{}, nil
 	}
 	txr := s.deliverTx(ctx, simulationState, tx, internal.ExecModeSimulate, hi)
 
@@ -445,10 +428,10 @@ func (s STF[T]) ValidateTx(
 	state store.ReaderMap,
 	gasLimit uint64,
 	tx T,
-) appmanager.TxResult {
+) server.TxResult {
 	validationState := s.branchFn(state)
-	gasUsed, events, err := s.validateTx(ctx, validationState, gasLimit, tx)
-	return appmanager.TxResult{
+	gasUsed, events, err := s.validateTx(ctx, validationState, gasLimit, tx, transaction.ExecModeCheck)
+	return server.TxResult{
 		Events:  events,
 		GasUsed: gasUsed,
 		Error:   err,
@@ -470,7 +453,7 @@ func (s STF[T]) Query(
 	queryCtx := s.makeContext(ctx, nil, queryState, internal.ExecModeSimulate)
 	queryCtx.setHeaderInfo(hi)
 	queryCtx.setGasLimit(gasLimit)
-	return s.queryRouter.InvokeUntyped(queryCtx, req)
+	return s.queryRouter.Invoke(queryCtx, req)
 }
 
 // RunWithCtx is made to support genesis, if genesis was just the execution of messages instead
@@ -546,6 +529,14 @@ func (e *executionContext) setGasLimit(limit uint64) {
 	e.state = meteredState
 }
 
+func (e *executionContext) Value(key any) any {
+	if key == executionContextKey {
+		return e
+	}
+
+	return e.Context.Value(key)
+}
+
 // TODO: too many calls to makeContext can be expensive
 // makeContext creates and returns a new execution context for the STF[T] type.
 // It takes in the following parameters:
@@ -564,10 +555,10 @@ func (s STF[T]) makeContext(
 ) *executionContext {
 	valuedCtx := context.WithValue(ctx, corecontext.ExecModeKey, execMode)
 	return newExecutionContext(
+		valuedCtx,
 		s.makeGasMeter,
 		s.makeGasMeteredState,
 		s.branchFn,
-		valuedCtx,
 		sender,
 		store,
 		execMode,
@@ -577,15 +568,15 @@ func (s STF[T]) makeContext(
 }
 
 func newExecutionContext(
+	ctx context.Context,
 	makeGasMeterFn makeGasMeterFn,
 	makeGasMeteredStoreFn makeGasMeteredStateFn,
 	branchFn branchFn,
-	ctx context.Context,
 	sender transaction.Identity,
 	state store.WriterMap,
 	execMode transaction.ExecMode,
-	msgRouter Router,
-	queryRouter Router,
+	msgRouter coreRouterImpl,
+	queryRouter coreRouterImpl,
 ) *executionContext {
 	meter := makeGasMeterFn(gas.NoGasLimit)
 	meteredState := makeGasMeteredStoreFn(meter, state)
@@ -596,9 +587,9 @@ func newExecutionContext(
 		state:               meteredState,
 		meter:               meter,
 		events:              make([]event.Event, 0),
-		sender:              sender,
 		headerInfo:          header.Info{},
 		execMode:            execMode,
+		sender:              sender,
 		branchFn:            branchFn,
 		makeGasMeter:        makeGasMeterFn,
 		makeGasMeteredStore: makeGasMeteredStoreFn,

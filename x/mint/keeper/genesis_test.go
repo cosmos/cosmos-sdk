@@ -75,21 +75,21 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 	)
 
 	err := s.keeper.InitGenesis(s.sdkCtx, s.accountKeeper, genesisState)
-	s.Require().NoError(err)
+	s.NoError(err)
 
 	minter, err := s.keeper.Minter.Get(s.sdkCtx)
-	s.Require().Equal(genesisState.Minter, minter)
-	s.Require().NoError(err)
+	s.Equal(genesisState.Minter, minter)
+	s.NoError(err)
 
 	invalidCtx := testutil.DefaultContextWithDB(s.T(), s.key, storetypes.NewTransientStoreKey("transient_test"))
 	_, err = s.keeper.Minter.Get(invalidCtx.Ctx)
-	s.Require().ErrorIs(err, collections.ErrNotFound)
+	s.ErrorIs(err, collections.ErrNotFound)
 
 	params, err := s.keeper.Params.Get(s.sdkCtx)
-	s.Require().Equal(genesisState.Params, params)
-	s.Require().NoError(err)
+	s.Equal(genesisState.Params, params)
+	s.NoError(err)
 
 	genesisState2, err := s.keeper.ExportGenesis(s.sdkCtx)
-	s.Require().NoError(err)
-	s.Require().Equal(genesisState, genesisState2)
+	s.NoError(err)
+	s.Equal(genesisState, genesisState2)
 }

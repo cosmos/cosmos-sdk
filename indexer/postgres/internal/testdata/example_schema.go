@@ -36,7 +36,7 @@ func init() {
 		AllKindsObject.ValueFields = append(AllKindsObject.ValueFields, field)
 	}
 
-	ExampleSchema = schema.MustNewModuleSchema(
+	ExampleSchema = schema.MustCompileModuleSchema(
 		AllKindsObject,
 		SingletonObject,
 		VoteObject,

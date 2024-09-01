@@ -27,7 +27,7 @@ var checkFieldValue = func(t *rapid.T) {
 	require.NoError(t, field.ValidateValue(fieldValue, testEnumSchema))
 }
 
-var testEnumSchema = schema.MustNewModuleSchema(schema.EnumType{
+var testEnumSchema = schema.MustCompileModuleSchema(schema.EnumType{
 	Name:   "test_enum",
 	Values: []schema.EnumValueDefinition{{Name: "a", Value: 1}, {Name: "b", Value: 2}},
 })

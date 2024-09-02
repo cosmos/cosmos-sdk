@@ -17,12 +17,12 @@ import (
 	stakingtypes "cosmossdk.io/x/staking/types"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 func TestMsgGrantGetAuthorization(t *testing.T) {

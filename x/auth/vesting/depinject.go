@@ -5,6 +5,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
+
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )

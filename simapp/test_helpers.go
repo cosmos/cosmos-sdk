@@ -17,7 +17,6 @@ import (
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	minttypes "cosmossdk.io/x/mint/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -30,6 +29,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // SetupOptions defines arguments that are passed into `Simapp` constructor.

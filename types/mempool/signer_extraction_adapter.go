@@ -3,9 +3,8 @@ package mempool
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // SignerData contains canonical useful information about the signer of a transaction

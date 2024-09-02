@@ -15,7 +15,6 @@ import (
 	"cosmossdk.io/x/slashing/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
@@ -24,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (

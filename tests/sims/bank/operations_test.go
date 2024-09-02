@@ -17,8 +17,6 @@ import (
 	"cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/consensus"
 	_ "cosmossdk.io/x/staking"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,6 +25,8 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 type SimTestSuite struct {

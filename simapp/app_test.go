@@ -30,8 +30,6 @@ import (
 	"cosmossdk.io/x/slashing"
 	"cosmossdk.io/x/staking"
 	"cosmossdk.io/x/upgrade"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
@@ -39,6 +37,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 

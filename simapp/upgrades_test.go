@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
+
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )

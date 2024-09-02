@@ -13,8 +13,6 @@ import (
 	sdklog "cosmossdk.io/log"
 	"cosmossdk.io/math"
 	_ "cosmossdk.io/x/accounts"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "cosmossdk.io/x/bank"
 	_ "cosmossdk.io/x/consensus"
 	"cosmossdk.io/x/gov/types"
@@ -23,12 +21,16 @@ import (
 	_ "cosmossdk.io/x/protocolpool"
 	_ "cosmossdk.io/x/staking"
 	stakingtypes "cosmossdk.io/x/staking/types"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (

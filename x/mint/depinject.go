@@ -8,9 +8,9 @@ import (
 	epochstypes "cosmossdk.io/x/epochs/types"
 	"cosmossdk.io/x/mint/keeper"
 	"cosmossdk.io/x/mint/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}

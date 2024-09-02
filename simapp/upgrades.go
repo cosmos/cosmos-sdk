@@ -9,9 +9,9 @@ import (
 	epochstypes "cosmossdk.io/x/epochs/types"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 // UpgradeName defines the on-chain upgrade name for the sample SimApp upgrade

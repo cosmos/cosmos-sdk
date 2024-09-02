@@ -11,12 +11,6 @@ import (
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
-	vestingtestutil "github.com/cosmos/cosmos-sdk/x/auth/vesting/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -25,6 +19,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	vestingtestutil "github.com/cosmos/cosmos-sdk/x/auth/vesting/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 var (

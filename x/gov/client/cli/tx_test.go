@@ -17,7 +17,6 @@ import (
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -28,6 +27,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type CLITestSuite struct {

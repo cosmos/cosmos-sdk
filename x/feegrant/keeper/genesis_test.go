@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/x/feegrant/keeper"
 	"cosmossdk.io/x/feegrant/module"
 	feegranttestutil "cosmossdk.io/x/feegrant/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -25,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (

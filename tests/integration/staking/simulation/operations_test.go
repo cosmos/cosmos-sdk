@@ -27,8 +27,6 @@ import (
 	"cosmossdk.io/x/staking/simulation"
 	"cosmossdk.io/x/staking/testutil"
 	"cosmossdk.io/x/staking/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -40,6 +38,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type SimTestSuite struct {

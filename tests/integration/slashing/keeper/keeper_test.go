@@ -27,10 +27,6 @@ import (
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -41,6 +37,10 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type fixture struct {

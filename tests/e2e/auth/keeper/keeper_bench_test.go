@@ -7,10 +7,10 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 func BenchmarkAccountMapperGetAccountFound(b *testing.B) {

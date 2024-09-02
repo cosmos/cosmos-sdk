@@ -17,12 +17,12 @@ import (
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/tests/integration/slashing"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 func TestSlashRedelegation(t *testing.T) {

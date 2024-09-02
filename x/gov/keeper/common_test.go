@@ -20,7 +20,6 @@ import (
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -30,6 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (

@@ -8,10 +8,10 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/staking/types"
-	authKeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	authKeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {

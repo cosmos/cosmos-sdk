@@ -21,7 +21,6 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -34,6 +33,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 const (

@@ -18,9 +18,6 @@ import (
 	"cosmossdk.io/x/gov"
 	govtestutil "cosmossdk.io/x/gov/client/testutil"
 	govtypes "cosmossdk.io/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -36,6 +33,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 

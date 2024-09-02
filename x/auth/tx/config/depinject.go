@@ -21,11 +21,6 @@ import (
 	"cosmossdk.io/depinject/appconfig"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/textual"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
-	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -33,6 +28,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
+	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // flagMinGasPricesV2 is the flag name for the minimum gas prices in the main server v2 component.

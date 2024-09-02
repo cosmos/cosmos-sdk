@@ -32,12 +32,6 @@ import (
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -50,6 +44,12 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // DefaultNodeHome default home directories for the application daemon

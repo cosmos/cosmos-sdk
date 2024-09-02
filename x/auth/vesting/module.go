@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
+
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )

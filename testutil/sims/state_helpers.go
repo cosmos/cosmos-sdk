@@ -16,7 +16,6 @@ import (
 	"cosmossdk.io/math"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -25,6 +24,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 )

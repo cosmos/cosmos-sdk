@@ -18,7 +18,6 @@ import (
 	"cosmossdk.io/x/distribution/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,6 +26,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 // TestWeightedOperations tests the weights of the operations.

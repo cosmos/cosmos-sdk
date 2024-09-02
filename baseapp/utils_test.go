@@ -24,9 +24,6 @@ import (
 	"cosmossdk.io/depinject/appconfig"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -39,6 +36,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 var ParamStoreKey = []byte("paramstore")

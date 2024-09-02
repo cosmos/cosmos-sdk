@@ -19,7 +19,6 @@ import (
 	govv1 "cosmossdk.io/x/gov/types/v1"
 	govv1beta1 "cosmossdk.io/x/gov/types/v1beta1"
 	stakingtypes "cosmossdk.io/x/staking/types"
-	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -28,6 +27,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 )
 
 type E2ETestSuite struct {

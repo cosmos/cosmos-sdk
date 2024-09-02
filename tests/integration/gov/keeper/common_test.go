@@ -10,10 +10,10 @@ import (
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
 	stakingtypes "cosmossdk.io/x/staking/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var TestProposal = getTestProposal()

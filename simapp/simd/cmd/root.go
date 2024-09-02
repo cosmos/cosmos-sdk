@@ -12,9 +12,6 @@ import (
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
 	txsigning "cosmossdk.io/x/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -24,6 +21,9 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the

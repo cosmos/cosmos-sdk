@@ -8,14 +8,14 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	txsigning "cosmossdk.io/x/tx/signing"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 func GetValidateSignaturesCommand() *cobra.Command {

@@ -15,7 +15,6 @@ import (
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/tx/decode"
-	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -24,6 +23,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 var (

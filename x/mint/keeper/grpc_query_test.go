@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/x/mint/keeper"
 	minttestutil "cosmossdk.io/x/mint/testutil"
 	"cosmossdk.io/x/mint/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -21,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type MintTestSuite struct {

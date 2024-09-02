@@ -42,10 +42,10 @@ import (
 	slashingtypes "cosmossdk.io/x/slashing/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 type GeneratedType struct {

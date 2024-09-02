@@ -11,9 +11,9 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	minttypes "cosmossdk.io/x/mint/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type MintBankKeeper interface {

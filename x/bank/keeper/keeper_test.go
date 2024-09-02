@@ -22,8 +22,6 @@ import (
 	"cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -34,6 +32,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 const (

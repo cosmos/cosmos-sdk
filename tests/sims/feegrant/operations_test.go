@@ -22,9 +22,6 @@ import (
 	"cosmossdk.io/x/feegrant/simulation"
 	_ "cosmossdk.io/x/mint"
 	_ "cosmossdk.io/x/staking"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -34,6 +31,9 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 )
 

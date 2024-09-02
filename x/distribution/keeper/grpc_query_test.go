@@ -11,10 +11,10 @@ import (
 	distrtestutil "cosmossdk.io/x/distribution/testutil"
 	"cosmossdk.io/x/distribution/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestQueryParams(t *testing.T) {

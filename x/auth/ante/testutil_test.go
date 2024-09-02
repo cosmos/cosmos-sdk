@@ -17,15 +17,6 @@ import (
 	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
 	consensustypes "cosmossdk.io/x/consensus/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	antetestutil "github.com/cosmos/cosmos-sdk/x/auth/ante/testutil"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
-	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/tx/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -41,6 +32,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	antetestutil "github.com/cosmos/cosmos-sdk/x/auth/ante/testutil"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/tx/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // TestAccount represents an account used in the tests in x/auth/ante.

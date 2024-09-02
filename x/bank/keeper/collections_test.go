@@ -15,7 +15,6 @@ import (
 	"cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -23,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestBankStateCompatibility(t *testing.T) {

@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"cosmossdk.io/core/address"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // AccountKeeper defines the account contract that must be fulfilled when

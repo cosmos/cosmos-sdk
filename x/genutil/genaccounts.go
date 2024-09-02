@@ -7,11 +7,11 @@ import (
 
 	"cosmossdk.io/core/address"
 	banktypes "cosmossdk.io/x/bank/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 

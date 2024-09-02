@@ -15,8 +15,6 @@ import (
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	txsigning "cosmossdk.io/x/tx/signing"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -29,6 +27,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (

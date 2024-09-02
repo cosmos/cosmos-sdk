@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
@@ -19,6 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
 func TestValidateBasic(t *testing.T) {

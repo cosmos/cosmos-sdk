@@ -14,10 +14,10 @@ import (
 	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 )
 
 // bufPool is a pool of bytes.Buffer objects to reduce memory allocations.

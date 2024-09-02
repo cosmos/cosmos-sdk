@@ -15,8 +15,6 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -26,6 +24,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 func newWrapperFromDecodedTx(

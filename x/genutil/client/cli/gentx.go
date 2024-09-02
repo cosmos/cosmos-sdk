@@ -13,7 +13,6 @@ import (
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/staking/client/cli"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -22,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )

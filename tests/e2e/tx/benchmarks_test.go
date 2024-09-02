@@ -9,7 +9,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 	banktypes "cosmossdk.io/x/bank/types"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -19,6 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 type E2EBenchmarkSuite struct {

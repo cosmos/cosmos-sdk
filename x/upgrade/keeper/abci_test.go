@@ -18,7 +18,6 @@ import (
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -28,6 +27,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const govModuleName = "gov"

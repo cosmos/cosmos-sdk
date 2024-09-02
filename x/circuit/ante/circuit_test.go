@@ -9,7 +9,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/circuit/ante"
 	cbtypes "cosmossdk.io/x/circuit/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -17,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 type fixture struct {

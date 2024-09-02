@@ -14,9 +14,9 @@ import (
 	"cosmossdk.io/x/gov/keeper"
 	govtypes "cosmossdk.io/x/gov/types"
 	"cosmossdk.io/x/gov/types/v1beta1"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}

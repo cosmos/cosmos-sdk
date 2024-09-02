@@ -22,12 +22,12 @@ import (
 	comettypes "cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/db"
 	banktypes "cosmossdk.io/x/bank/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {

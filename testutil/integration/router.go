@@ -17,8 +17,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
 	consensusparamtypes "cosmossdk.io/x/consensus/types"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,6 +25,8 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const appName = "integration-app"

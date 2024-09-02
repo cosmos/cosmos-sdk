@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/x/feegrant/keeper"
 	"cosmossdk.io/x/feegrant/module"
 	feegranttestutil "cosmossdk.io/x/feegrant/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -23,6 +22,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type KeeperTestSuite struct {

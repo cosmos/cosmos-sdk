@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/log"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -21,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )

@@ -14,8 +14,6 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/consensus"
 	_ "cosmossdk.io/x/staking"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -23,6 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 type IntegrationTestOutOfGasSuite struct {

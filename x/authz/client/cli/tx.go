@@ -11,13 +11,13 @@ import (
 	"cosmossdk.io/x/authz"
 	bank "cosmossdk.io/x/bank/types"
 	staking "cosmossdk.io/x/staking/types"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 // Flag names and values

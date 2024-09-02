@@ -16,7 +16,6 @@ import (
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	slashingtestutil "cosmossdk.io/x/slashing/testutil"
 	slashingtypes "cosmossdk.io/x/slashing/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -27,6 +26,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	addresstypes "github.com/cosmos/cosmos-sdk/types/address"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var consAddr = sdk.ConsAddress("addr1_______________")

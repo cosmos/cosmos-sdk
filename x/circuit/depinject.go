@@ -8,11 +8,11 @@ import (
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/circuit/keeper"
 	"cosmossdk.io/x/circuit/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}

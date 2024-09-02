@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/x/circuit"
 	"cosmossdk.io/x/circuit/keeper"
 	"cosmossdk.io/x/circuit/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -19,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type GenesisTestSuite struct {

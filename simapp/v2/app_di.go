@@ -30,12 +30,12 @@ import (
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 )
 

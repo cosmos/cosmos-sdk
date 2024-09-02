@@ -8,11 +8,11 @@ import (
 	"cosmossdk.io/x/protocolpool/keeper"
 	"cosmossdk.io/x/protocolpool/simulation"
 	"cosmossdk.io/x/protocolpool/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}

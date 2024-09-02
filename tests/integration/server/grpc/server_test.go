@@ -18,9 +18,6 @@ import (
 	_ "cosmossdk.io/x/consensus"
 	_ "cosmossdk.io/x/staking"
 	stakingtypes "cosmossdk.io/x/staking/types"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	reflectionv1 "github.com/cosmos/cosmos-sdk/client/grpc/reflection"
@@ -34,6 +31,9 @@ import (
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 type IntegrationTestSuite struct {

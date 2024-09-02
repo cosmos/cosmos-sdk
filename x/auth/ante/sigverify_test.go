@@ -13,12 +13,6 @@ import (
 	gastestutil "cosmossdk.io/core/testing/gas"
 	storetypes "cosmossdk.io/store/types"
 	txsigning "cosmossdk.io/x/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -30,6 +24,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestConsumeSignatureVerificationGas(t *testing.T) {

@@ -25,13 +25,13 @@ import (
 	"cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/testutil"
 	"cosmossdk.io/x/staking/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 // bootstrapSlashTest creates 3 validators and bootstrap the app.

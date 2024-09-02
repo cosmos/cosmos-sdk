@@ -12,8 +12,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	txsigning "cosmossdk.io/x/tx/signing"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -24,6 +22,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // GetMultiSignCommand returns the multi-sign command

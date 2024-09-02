@@ -17,7 +17,6 @@ import (
 	nftkeeper "cosmossdk.io/x/nft/keeper"
 	"cosmossdk.io/x/nft/simulation"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -26,6 +25,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 type SimTestSuite struct {

@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -21,6 +20,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var moduleAccAddr = authtypes.NewModuleAddress(stakingtypes.BondedPoolName)

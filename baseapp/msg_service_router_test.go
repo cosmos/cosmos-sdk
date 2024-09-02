@@ -10,8 +10,6 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,6 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 func TestRegisterMsgService(t *testing.T) {

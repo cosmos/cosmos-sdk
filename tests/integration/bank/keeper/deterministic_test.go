@@ -19,12 +19,6 @@ import (
 	_ "cosmossdk.io/x/consensus"
 	minttypes "cosmossdk.io/x/mint/types"
 	_ "cosmossdk.io/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -34,6 +28,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (

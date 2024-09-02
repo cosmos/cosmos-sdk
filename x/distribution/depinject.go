@@ -9,9 +9,9 @@ import (
 	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/types"
 	staking "cosmossdk.io/x/staking/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}

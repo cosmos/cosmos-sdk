@@ -19,10 +19,6 @@ import (
 	distrtestutil "cosmossdk.io/x/distribution/testutil"
 	disttypes "cosmossdk.io/x/distribution/types"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -30,6 +26,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type emptyCometService struct{}

@@ -13,13 +13,13 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	_ "cosmossdk.io/x/accounts"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	_ "cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/consensus"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -31,6 +31,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 const (

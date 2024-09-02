@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/comet"
-	context2 "cosmossdk.io/core/context"
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -114,7 +114,7 @@ func MoveNextBlock(t *testing.T, app *SimApp[transaction.Tx], ctx context.Contex
 	require.NoError(t, err)
 
 	// TODO: this is a hack to set the comet info in the context for distribution module dependency.
-	ctx = context.WithValue(ctx, context2.CometInfoKey, comet.Info{
+	ctx = context.WithValue(ctx, corecontext.CometInfoKey, comet.Info{
 		Evidence:        nil,
 		ValidatorsHash:  nil,
 		ProposerAddress: nil,

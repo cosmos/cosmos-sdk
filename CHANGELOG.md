@@ -54,6 +54,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### API Breaking Changes
 
+* []() Rename `x/consensus` to `x/comet`. Only the module/package name has changed, endpoints, proto package, and other references remain the same.
+
 ### Deprecated
 
 * (types) [#21435](https://github.com/cosmos/cosmos-sdk/pull/21435) The `String()` method on `AccAddress`, `ValAddress` and `ConsAddress` have been deprecated. This is done because those are still using the deprecated global `sdk.Config`. Use an `address.Codec` instead.

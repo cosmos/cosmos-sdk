@@ -443,26 +443,7 @@ if err != nil {
 The `x/consensus` module has been renamed to `x/comet`. More consensus engines are supported in the Cosmos SDK for server/v2.
 The renaming was done to signify that.
 
-For backward compatibility the store key has been kept as `consensus`, a genesis migration have been added as well.
-
-Due to add add the following in your `app_config.go` / `app.yaml` when using `runtime`:
-
-```diff
-OverrideStoreKeys: []*runtimev2.StoreKeyConfig{
-	{
-		ModuleName: authtypes.ModuleName,
-		KvStoreKey: "acc",
-	},
-	{
-		ModuleName: accounts.ModuleName,
-		KvStoreKey: accounts.StoreKey,
-	},
-+	{
-+		ModuleName: comettypes.ModuleName,
-+		KvStoreKey: comettypes.StoreKey,
-+	},
-},
-```
+For backward compatibility the module name and its store key has been kept as `consensus`.
 
 ### `x/crsis`
 

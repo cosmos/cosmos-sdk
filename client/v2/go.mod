@@ -182,7 +182,6 @@ replace (
 	cosmossdk.io/core => cosmossdk.io/core v0.12.1-0.20240829151633-41a9af76e071 // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240815194237-858ec2fcb897 // main
-	cosmossdk.io/x/accounts => ./../../x/accounts
 	cosmossdk.io/x/auth => ./../../x/auth
 	cosmossdk.io/x/bank => ./../../x/bank
 	cosmossdk.io/x/consensus => ./../../x/consensus

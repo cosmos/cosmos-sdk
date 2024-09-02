@@ -146,7 +146,7 @@ func TestSlashRedelegation(t *testing.T) {
 	_, stop = bankkeeper.AllInvariants(bankKeeper)(ctx)
 	require.False(t, stop)
 
-	_, stop = distributionkeeper.AllInvariants(distrKeeper)(ctx)
+	_, stop = distributionkeeper.AllInvariants(&distrKeeper)(ctx)
 	require.False(t, stop)
 
 	// one eternity later

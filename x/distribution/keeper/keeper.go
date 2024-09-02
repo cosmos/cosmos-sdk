@@ -25,6 +25,7 @@ type Keeper struct {
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
+	hooks     types.DistributionHook
 
 	Schema  collections.Schema
 	Params  collections.Item[types.Params]
@@ -38,7 +39,7 @@ func NewKeeper(
 	cdc codec.BinaryCodec, storeService store.KVStoreService,
 	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper,
 	feeCollectorName, authority string,
-) Keeper {
+) *Keeper {
 	// ensure distribution module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -62,7 +63,7 @@ func NewKeeper(
 		panic(err)
 	}
 	k.Schema = schema
-	return k
+	return &k
 }
 
 // GetAuthority returns the x/distribution module's authority.
@@ -74,6 +75,14 @@ func (k Keeper) GetAuthority() string {
 func (k Keeper) Logger(ctx context.Context) log.Logger {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	return sdkCtx.Logger().With(log.ModuleKey, "x/"+types.ModuleName)
+}
+
+// SetHooks sets the hook
+func (k *Keeper) SetHooks(h types.DistributionHook) {
+	if k.hooks != nil {
+		panic("cannot set send hooks twice")
+	}
+	k.hooks = h
 }
 
 // SetWithdrawAddr sets a new address that will receive the rewards upon withdrawal

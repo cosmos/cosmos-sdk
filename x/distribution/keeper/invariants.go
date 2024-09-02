@@ -9,7 +9,7 @@ import (
 )
 
 // register all distribution invariants
-func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
+func RegisterInvariants(ir sdk.InvariantRegistry, k *Keeper) {
 	ir.RegisterRoute(types.ModuleName, "nonnegative-outstanding",
 		NonNegativeOutstandingInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "can-withdraw",
@@ -21,7 +21,7 @@ func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 }
 
 // AllInvariants runs all invariants of the distribution module
-func AllInvariants(k Keeper) sdk.Invariant {
+func AllInvariants(k *Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		res, stop := CanWithdrawInvariant(k)(ctx)
 		if stop {
@@ -40,7 +40,7 @@ func AllInvariants(k Keeper) sdk.Invariant {
 }
 
 // NonNegativeOutstandingInvariant checks that outstanding unwithdrawn fees are never negative
-func NonNegativeOutstandingInvariant(k Keeper) sdk.Invariant {
+func NonNegativeOutstandingInvariant(k *Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		var msg string
 		var count int
@@ -62,7 +62,7 @@ func NonNegativeOutstandingInvariant(k Keeper) sdk.Invariant {
 }
 
 // CanWithdrawInvariant checks that current rewards can be completely withdrawn
-func CanWithdrawInvariant(k Keeper) sdk.Invariant {
+func CanWithdrawInvariant(k *Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		// cache, we don't want to write changes
 		ctx, _ = ctx.CacheContext()
@@ -124,7 +124,7 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 }
 
 // ReferenceCountInvariant checks that the number of historical rewards records is correct
-func ReferenceCountInvariant(k Keeper) sdk.Invariant {
+func ReferenceCountInvariant(k *Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		valCount := uint64(0)
 		err := k.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
@@ -162,7 +162,7 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 
 // ModuleAccountInvariant checks that the coins held by the distr ModuleAccount
 // is consistent with the sum of validator outstanding rewards
-func ModuleAccountInvariant(k Keeper) sdk.Invariant {
+func ModuleAccountInvariant(k *Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		var expectedCoins sdk.DecCoins
 		k.IterateValidatorOutstandingRewards(ctx, func(_ sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {

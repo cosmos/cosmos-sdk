@@ -181,7 +181,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 		valPower,
 		math.LegacyNewDecWithPrec(5, 1),
 		&val,
-		&distrKeeper,
+		distrKeeper,
 		stakingKeeper,
 	)
 	require.True(t, slashedTokens.IsPositive(), "expected positive slashed tokens, got: %s", slashedTokens)
@@ -283,7 +283,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 		valPower,
 		math.LegacyNewDecWithPrec(5, 1),
 		&val,
-		&distrKeeper,
+		distrKeeper,
 		stakingKeeper,
 	)
 	require.True(t, slashedTokens.IsPositive(), "expected positive slashed tokens, got: %s", slashedTokens)
@@ -307,7 +307,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 		valPower/2,
 		math.LegacyNewDecWithPrec(2, 1),
 		&val,
-		&distrKeeper,
+		distrKeeper,
 		stakingKeeper,
 	)
 	require.True(t, slashedTokens.IsPositive(), "expected positive slashed tokens, got: %s", slashedTokens)
@@ -584,7 +584,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 		valPower,
 		math.LegacyNewDecWithPrec(5, 1),
 		&val,
-		&distrKeeper,
+		distrKeeper,
 		stakingKeeper,
 	)
 
@@ -597,7 +597,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 		valPower/2,
 		math.LegacyNewDecWithPrec(5, 1),
 		&val,
-		&distrKeeper,
+		distrKeeper,
 		stakingKeeper,
 	)
 
@@ -689,7 +689,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		valPower,
 		math.LegacyNewDecWithPrec(5, 1),
 		&val,
-		&distrKeeper,
+		distrKeeper,
 		stakingKeeper,
 	)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
@@ -732,7 +732,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		valPower,
 		math.LegacyNewDecWithPrec(5, 1),
 		&val,
-		&distrKeeper,
+		distrKeeper,
 		stakingKeeper,
 	)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)

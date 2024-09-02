@@ -421,7 +421,7 @@ func (k Keeper) GetRedelegations(ctx context.Context, delegator sdk.AccAddress, 
 	redelegations = make([]types.Redelegation, maxRetrieve)
 
 	i := 0
-	rng := collections.NewPrefixedTripleRange[[]byte, []byte, []byte](delegator, false)
+	rng := collections.NewPrefixedTripleRange[[]byte, []byte, []byte](delegator)
 	err = k.Redelegations.Walk(ctx, rng, func(key collections.Triple[[]byte, []byte, []byte], redelegation types.Redelegation) (stop bool, err error) {
 		if i >= int(maxRetrieve) {
 			return true, nil
@@ -441,7 +441,7 @@ func (k Keeper) GetRedelegations(ctx context.Context, delegator sdk.AccAddress, 
 // GetRedelegationsFromSrcValidator returns all redelegations from a particular
 // validator.
 func (k Keeper) GetRedelegationsFromSrcValidator(ctx context.Context, valAddr sdk.ValAddress) (reds []types.Redelegation, err error) {
-	rng := collections.NewPrefixedTripleRange[[]byte, []byte, []byte](valAddr, false)
+	rng := collections.NewPrefixedTripleRange[[]byte, []byte, []byte](valAddr)
 	err = k.RedelegationsByValSrc.Walk(ctx, rng, func(key collections.Triple[[]byte, []byte, []byte], value []byte) (stop bool, err error) {
 		valSrcAddr, delAddr, valDstAddr := key.K1(), key.K2(), key.K3()
 
@@ -462,7 +462,7 @@ func (k Keeper) GetRedelegationsFromSrcValidator(ctx context.Context, valAddr sd
 
 // HasReceivingRedelegation checks if validator is receiving a redelegation.
 func (k Keeper) HasReceivingRedelegation(ctx context.Context, delAddr sdk.AccAddress, valDstAddr sdk.ValAddress) (bool, error) {
-	rng := collections.NewSuperPrefixedTripleRange[[]byte, []byte, []byte](valDstAddr, delAddr, false)
+	rng := collections.NewSuperPrefixedTripleRange[[]byte, []byte, []byte](valDstAddr, delAddr)
 	hasReceivingRedelegation := false
 	err := k.RedelegationsByValDst.Walk(ctx, rng, func(key collections.Triple[[]byte, []byte, []byte], value []byte) (stop bool, err error) {
 		hasReceivingRedelegation = true

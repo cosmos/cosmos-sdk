@@ -110,7 +110,7 @@ func (h Hooks) AfterValidatorRemoved(ctx context.Context, _ sdk.ConsAddress, val
 	}
 
 	// clear slashes
-	err = h.k.ValidatorSlashEvents.Clear(ctx, collections.NewPrefixedTripleRange[sdk.ValAddress, uint64, uint64](valAddr, false))
+	err = h.k.ValidatorSlashEvents.Clear(ctx, collections.NewPrefixedTripleRange[sdk.ValAddress, uint64, uint64](valAddr))
 	if err != nil {
 		return err
 	}

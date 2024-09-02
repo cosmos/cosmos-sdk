@@ -274,13 +274,17 @@ func (t tripleKeyCodec[K1, K2, K3]) SizeNonTerminal(key Triple[K1, K2, K3]) int 
 }
 
 // NewPrefixUntilTripleRange defines a collection query which ranges until the provided Pair prefix.
-// Unstable: this API might change in the future.
-func NewPrefixUntilTripleRange[K1, K2, K3 any](k1 K1, reverse bool) Ranger[Triple[K1, K2, K3]] {
+// Unstable: this API might change in the future. Use the first boolean option to get a reverse iterator (reverse=true).
+func NewPrefixUntilTripleRange[K1, K2, K3 any](k1 K1, opts ...bool) Ranger[Triple[K1, K2, K3]] {
 	key := TriplePrefix[K1, K2, K3](k1)
 	order := OrderAscending
-	if reverse {
-		order = OrderDescending
+	if len(opts) > 0 {
+		reverse := opts[0]
+		if reverse {
+			order = OrderDescending
+		}
 	}
+
 	return &Range[Triple[K1, K2, K3]]{
 		end:   RangeKeyPrefixEnd(key),
 		order: order,
@@ -288,13 +292,17 @@ func NewPrefixUntilTripleRange[K1, K2, K3 any](k1 K1, reverse bool) Ranger[Tripl
 }
 
 // NewPrefixedTripleRange provides a Range for all keys prefixed with the given
-// first part of the Triple key.
-func NewPrefixedTripleRange[K1, K2, K3 any](k1 K1, reverse bool) Ranger[Triple[K1, K2, K3]] {
+// first part of the Triple key. Use the first boolean option to get a reverse iterator (reverse=true).
+func NewPrefixedTripleRange[K1, K2, K3 any](k1 K1, opts ...bool) Ranger[Triple[K1, K2, K3]] {
 	key := TriplePrefix[K1, K2, K3](k1)
 	order := OrderAscending
-	if reverse {
-		order = OrderDescending
+	if len(opts) > 0 {
+		reverse := opts[0]
+		if reverse {
+			order = OrderDescending
+		}
 	}
+
 	return &Range[Triple[K1, K2, K3]]{
 		start: RangeKeyExact(key),
 		end:   RangeKeyPrefixEnd(key),
@@ -303,13 +311,17 @@ func NewPrefixedTripleRange[K1, K2, K3 any](k1 K1, reverse bool) Ranger[Triple[K
 }
 
 // NewSuperPrefixedTripleRange provides a Range for all keys prefixed with the given
-// first and second parts of the Triple key.
-func NewSuperPrefixedTripleRange[K1, K2, K3 any](k1 K1, k2 K2, reverse bool) Ranger[Triple[K1, K2, K3]] {
+// first and second parts of the Triple key. Use the first boolean option to get a reverse iterator (reverse=true).
+func NewSuperPrefixedTripleRange[K1, K2, K3 any](k1 K1, k2 K2, opts ...bool) Ranger[Triple[K1, K2, K3]] {
 	key := TripleSuperPrefix[K1, K2, K3](k1, k2)
 	order := OrderAscending
-	if reverse {
-		order = OrderDescending
+	if len(opts) > 0 {
+		reverse := opts[0]
+		if reverse {
+			order = OrderDescending
+		}
 	}
+
 	return &Range[Triple[K1, K2, K3]]{
 		start: RangeKeyExact(key),
 		end:   RangeKeyPrefixEnd(key),

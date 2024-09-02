@@ -3,6 +3,7 @@ module cosmossdk.io/server/v2/cometbft
 go 1.23
 
 replace (
+<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 // main
 	// pseudo version lower than the latest tag
@@ -10,6 +11,15 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240815194237-858ec2fcb897 // main
 	cosmossdk.io/x/accounts => ../../../x/accounts
+=======
+	cosmossdk.io/api => ../../../api
+	cosmossdk.io/core => ../../../core
+	cosmossdk.io/core/testing => ../../../core/testing
+	cosmossdk.io/server/v2 => ../
+	cosmossdk.io/server/v2/appmanager => ../appmanager
+	cosmossdk.io/store => ../../../store
+	cosmossdk.io/store/v2 => ../../../store/v2
+>>>>>>> 9197f541e (chore: remove accounts replaces  (#21504))
 	cosmossdk.io/x/auth => ../../../x/auth
 	cosmossdk.io/x/bank => ../../../x/bank
 	cosmossdk.io/x/consensus => ../../../x/consensus

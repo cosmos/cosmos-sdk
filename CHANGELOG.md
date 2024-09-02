@@ -54,7 +54,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### API Breaking Changes
 
-* []() Rename `x/consensus` to `x/comet`. Only the module/package name has changed, endpoints, proto package, and other references remain the same.
+* [#21497](https://github.com/cosmos/cosmos-sdk/pull/21497) Rename `x/consensus` to `x/comet`. Only the module/package name has changed, endpoints, proto package, and other references remain the same.
 
 ### Deprecated
 

@@ -188,6 +188,7 @@ replace (
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/store => ../../store
+	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/accounts/defaults/lockup => ../accounts/defaults/lockup
 	cosmossdk.io/x/accounts/defaults/multisig => ../accounts/defaults/multisig
 	cosmossdk.io/x/auth => ../auth

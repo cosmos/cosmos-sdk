@@ -21,7 +21,7 @@ require (
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cometbft/cometbft v1.0.0-rc1
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
-	github.com/cosmos/cosmos-db v1.0.2
+	github.com/cosmos/cosmos-db v1.0.3-0.20240829004618-717cba019b33
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
@@ -41,7 +41,7 @@ require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
-	cosmossdk.io/schema v0.1.1 // indirect
+	cosmossdk.io/schema v0.2.0 // indirect
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
 	cosmossdk.io/x/tx v0.13.3 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -179,12 +179,15 @@ require (
 
 replace github.com/cosmos/cosmos-sdk => ../../
 
+replace github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.0-beta.1.0.20240813194616-eb5078efcf9e
+
 // TODO remove post spinning out all modules
 replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/core/testing => ../../core/testing
+	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/accounts/defaults/lockup => ../accounts/defaults/lockup
 	cosmossdk.io/x/accounts/defaults/multisig => ../accounts/defaults/multisig
 	cosmossdk.io/x/auth => ../auth

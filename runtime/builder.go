@@ -6,9 +6,9 @@ import (
 	"io"
 	"path/filepath"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cast"
 
+	corestore "cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/auth/ante/unorderedtx"
 
@@ -34,7 +34,7 @@ func (a *AppBuilder) DefaultGenesis() map[string]json.RawMessage {
 }
 
 // Build builds an *App instance.
-func (a *AppBuilder) Build(db dbm.DB, traceStore io.Writer, baseAppOptions ...func(*baseapp.BaseApp)) *App {
+func (a *AppBuilder) Build(db corestore.KVStoreWithBatch, traceStore io.Writer, baseAppOptions ...func(*baseapp.BaseApp)) *App {
 	for _, option := range a.app.baseAppOptions {
 		baseAppOptions = append(baseAppOptions, option)
 	}

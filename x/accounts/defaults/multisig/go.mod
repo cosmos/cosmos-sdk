@@ -23,7 +23,7 @@ require (
 	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.4.1 // indirect
-	cosmossdk.io/schema v0.1.1 // indirect
+	cosmossdk.io/schema v0.2.0 // indirect
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
@@ -48,7 +48,7 @@ require (
 	github.com/cometbft/cometbft-db v0.12.0 // indirect
 	github.com/cometbft/cometbft/api v1.0.0-rc.1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
-	github.com/cosmos/cosmos-db v1.0.2 // indirect
+	github.com/cosmos/cosmos-db v1.0.3-0.20240829004618-717cba019b33 // indirect
 	github.com/cosmos/crypto v0.1.2 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
@@ -172,11 +172,14 @@ require (
 
 replace github.com/cosmos/cosmos-sdk => ../../../../.
 
+replace github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.0-beta.1.0.20240813194616-eb5078efcf9e
+
 replace (
 	cosmossdk.io/api => ../../../../api
 	cosmossdk.io/collections => ../../../../collections // TODO tag new collections ASAP
 	cosmossdk.io/core => ../../../../core
 	cosmossdk.io/core/testing => ../../../../core/testing
+	cosmossdk.io/store => ../../../../store
 	cosmossdk.io/x/accounts => ../../.
 	cosmossdk.io/x/auth => ../../../auth
 	cosmossdk.io/x/bank => ../../../bank

@@ -51,7 +51,7 @@ require (
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cometbft/cometbft-db v0.12.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
-	github.com/cosmos/cosmos-db v1.0.2 // indirect
+	github.com/cosmos/cosmos-db v1.0.3-0.20240829004618-717cba019b33 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.2.1-0.20240725141113-7adc688cf179 // indirect
@@ -170,12 +170,14 @@ require (
 )
 
 require (
-	cosmossdk.io/schema v0.1.1 // indirect
+	cosmossdk.io/schema v0.2.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc // indirect
 )
 
 replace github.com/cosmos/cosmos-sdk => ../../.
+
+replace github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.0-beta.1.0.20240813194616-eb5078efcf9e
 
 // TODO remove post spinning out all modules
 replace (
@@ -183,6 +185,7 @@ replace (
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/core/testing => ../../core/testing
+	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/consensus => ../consensus

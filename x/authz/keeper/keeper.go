@@ -290,8 +290,14 @@ func (k Keeper) DeleteAllGrants(ctx context.Context, granter sdk.AccAddress) err
 			return err
 		}
 	}
+
+	grantAddr, err := k.authKeeper.AddressCodec().BytesToString(granter)
+	if err != nil {
+		return err
+	}
+
 	return k.EventService.EventManager(ctx).Emit(&authz.EventRevokeAll{
-		Granter: granter.String(),
+		Granter: grantAddr,
 	})
 }
 

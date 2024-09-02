@@ -53,8 +53,10 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	accAddr, err := app.txConfig.SigningContext().AddressCodec().BytesToString(acc.GetAddress())
+	require.NoError(t, err)
 	balance := banktypes.Balance{
-		Address: acc.GetAddress().String(),
+		Address: accAddr,
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
 	}
 

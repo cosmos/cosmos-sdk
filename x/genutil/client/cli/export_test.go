@@ -12,12 +12,12 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
 	corectx "cosmossdk.io/core/context"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -155,7 +155,7 @@ func (e *mockExporter) SetDefaultExportApp() {
 // Export panics if neither e.ExportApp nor e.Err have been set.
 func (e *mockExporter) Export(
 	logger log.Logger,
-	db dbm.DB,
+	db corestore.KVStoreWithBatch,
 	traceWriter io.Writer,
 	height int64,
 	forZeroHeight bool,

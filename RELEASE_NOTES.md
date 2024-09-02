@@ -1,4 +1,4 @@
-# Cosmos SDK v0.47.13 Release Notes
+# Cosmos SDK v0.47.14 Release Notes
 
 💬 [**Release Discussion**](https://github.com/orgs/cosmos/discussions/6)
 
@@ -6,7 +6,7 @@
 
 For this month's patch release of the v0.47.x line, a few bugs were fixed in the SDK.
 
-Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.47.32/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.47.12...v0.47.13) from last release.
+Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.47.14/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.47.13...v0.47.14) from last release.
 
 Refer to the [upgrading guide](https://github.com/cosmos/cosmos-sdk/blob/release/v0.50.x/UPGRADING.md) when migrating from `v0.47.x` to `v0.50.x`.
 

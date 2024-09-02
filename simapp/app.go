@@ -49,7 +49,7 @@ import (
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	circuittypes "cosmossdk.io/x/circuit/types"
 	cometmodule "cosmossdk.io/x/comet"
-	cometkeeper "cosmossdk.io/x/comet/types"
+	cometkeeper "cosmossdk.io/x/comet/keeper"
 	comettypes "cosmossdk.io/x/comet/types"
 	distr "cosmossdk.io/x/distribution"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"

@@ -294,7 +294,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 		h.mempool.SelectBy(ctx, req.Txs, func(memTx sdk.Tx) bool {
 			signerData, err := h.signerExtAdapter.GetSigners(memTx)
 			if err != nil {
-				// propogate the error to the caller
+				// propagate the error to the caller
 				resError = err
 				return false
 			}

@@ -43,7 +43,7 @@ import (
 	_ "cosmossdk.io/x/circuit" // import for side-effects
 	circuittypes "cosmossdk.io/x/circuit/types"
 	_ "cosmossdk.io/x/comet" // import for side-effects
-	consensustypes "cosmossdk.io/x/comet/types"
+	comettypes "cosmossdk.io/x/comet/types"
 	_ "cosmossdk.io/x/distribution" // import for side-effects
 	distrtypes "cosmossdk.io/x/distribution/types"
 	_ "cosmossdk.io/x/epochs" // import for side-effects
@@ -138,12 +138,20 @@ var (
 							ModuleName: authtypes.ModuleName,
 							KvStoreKey: "acc",
 						},
+						{
+							ModuleName: accounts.ModuleName,
+							KvStoreKey: accounts.StoreKey,
+						},
+						{
+							ModuleName: comettypes.ModuleName,
+							KvStoreKey: comettypes.StoreKey,
+						},
 					},
 					// NOTE: The genutils module must occur after staking so that pools are
 					// properly initialized with tokens from genesis accounts.
 					// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
 					InitGenesis: []string{
-						consensustypes.ModuleName,
+						comettypes.ModuleName,
 						accounts.ModuleName,
 						authtypes.ModuleName,
 						banktypes.ModuleName,
@@ -258,7 +266,7 @@ var (
 				Config: appconfig.WrapAny(&govmodulev1.Module{}),
 			},
 			{
-				Name: consensustypes.ModuleName,
+				Name: comettypes.ModuleName,
 				Config: appconfig.WrapAny(&consensusmodulev1.Module{
 					Authority: "consensus",
 				}),

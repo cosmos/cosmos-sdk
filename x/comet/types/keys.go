@@ -2,8 +2,8 @@ package types
 
 const (
 	// ModuleName defines the name of the x/comet module.
-	ModuleName = "consensus"
+	ModuleName = "comet"
 
 	// StoreKey defines the module's store key.
-	StoreKey = ModuleName
+	StoreKey = "consensus"
 )

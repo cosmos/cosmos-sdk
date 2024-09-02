@@ -17,7 +17,7 @@ import (
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
-	consensuskeeper "cosmossdk.io/x/comet/keeper"
+	cometkeeper "cosmossdk.io/x/comet/keeper"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
 	epochskeeper "cosmossdk.io/x/epochs/keeper"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
@@ -53,24 +53,24 @@ type SimApp[T transaction.Tx] struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 
 	// keepers
-	AccountsKeeper        accounts.Keeper
-	AuthKeeper            authkeeper.AccountKeeper
-	BankKeeper            bankkeeper.Keeper
-	StakingKeeper         *stakingkeeper.Keeper
-	SlashingKeeper        slashingkeeper.Keeper
-	MintKeeper            mintkeeper.Keeper
-	DistrKeeper           distrkeeper.Keeper
-	GovKeeper             *govkeeper.Keeper
-	UpgradeKeeper         *upgradekeeper.Keeper
-	AuthzKeeper           authzkeeper.Keeper
-	EvidenceKeeper        evidencekeeper.Keeper
-	FeeGrantKeeper        feegrantkeeper.Keeper
-	GroupKeeper           groupkeeper.Keeper
-	NFTKeeper             nftkeeper.Keeper
-	ConsensusParamsKeeper consensuskeeper.Keeper
-	CircuitBreakerKeeper  circuitkeeper.Keeper
-	PoolKeeper            poolkeeper.Keeper
-	EpochsKeeper          *epochskeeper.Keeper
+	AccountsKeeper       accounts.Keeper
+	AuthKeeper           authkeeper.AccountKeeper
+	BankKeeper           bankkeeper.Keeper
+	StakingKeeper        *stakingkeeper.Keeper
+	SlashingKeeper       slashingkeeper.Keeper
+	MintKeeper           mintkeeper.Keeper
+	DistrKeeper          distrkeeper.Keeper
+	GovKeeper            *govkeeper.Keeper
+	UpgradeKeeper        *upgradekeeper.Keeper
+	AuthzKeeper          authzkeeper.Keeper
+	EvidenceKeeper       evidencekeeper.Keeper
+	FeeGrantKeeper       feegrantkeeper.Keeper
+	GroupKeeper          groupkeeper.Keeper
+	NFTKeeper            nftkeeper.Keeper
+	CometParamsKeeper    cometkeeper.Keeper
+	CircuitBreakerKeeper circuitkeeper.Keeper
+	PoolKeeper           poolkeeper.Keeper
+	EpochsKeeper         *epochskeeper.Keeper
 }
 
 func init() {
@@ -176,7 +176,7 @@ func NewSimApp[T transaction.Tx](
 		&app.FeeGrantKeeper,
 		&app.GroupKeeper,
 		&app.NFTKeeper,
-		&app.ConsensusParamsKeeper,
+		&app.CometParamsKeeper,
 		&app.CircuitBreakerKeeper,
 		&app.PoolKeeper,
 		&app.EpochsKeeper,
@@ -225,7 +225,7 @@ func (app *SimApp[T]) TxConfig() client.TxConfig {
 
 // GetConsensusAuthority gets the consensus authority.
 func (app *SimApp[T]) GetConsensusAuthority() string {
-	return app.ConsensusParamsKeeper.GetAuthority()
+	return app.CometParamsKeeper.GetAuthority()
 }
 
 // GetStore gets the app store.

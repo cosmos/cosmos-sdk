@@ -205,7 +205,7 @@ newly committed state and `finalizeBlockState` is set to `nil` to be reset on `F
 During `InitChain`, the `RequestInitChain` provides `ConsensusParams` which contains parameters
 related to block execution such as maximum gas and size in addition to evidence parameters. If these
 parameters are non-nil, they are set in the BaseApp's `ParamStore`. Behind the scenes, the `ParamStore`
-is managed by an `x/comet_params` module. This allows the parameters to be tweaked via
+is managed by an `x/comet` module. This allows the parameters to be tweaked via
  on-chain governance.
 
 ## Service Routers
@@ -394,9 +394,9 @@ The `AnteHandler` operates on a copy of the cached context, allowing it to perfo
 
 Key operations performed by the `AnteHandler` include:
 
-- **Signature Verification**: Ensures that the transaction's signatures are valid.
-- **Sequence Checking**: Verifies and increments the sequence numbers to prevent replay attacks.
-- **Fee Deduction**: Deducts the transaction fees from the accounts involved, typically starting with the first signer.
+* **Signature Verification**: Ensures that the transaction's signatures are valid.
+* **Sequence Checking**: Verifies and increments the sequence numbers to prevent replay attacks.
+* **Fee Deduction**: Deducts the transaction fees from the accounts involved, typically starting with the first signer.
 
 These operations are crucial for maintaining the security and integrity of transactions on the blockchain.
 

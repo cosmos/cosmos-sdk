@@ -71,28 +71,15 @@ func (t TestAccountRetriever) GetAccountWithHeight(clientCtx Context, addr sdk.A
 
 // EnsureExists implements AccountRetriever.EnsureExists
 func (t TestAccountRetriever) EnsureExists(clientCtx Context, addr sdk.AccAddress) error {
-	addrStr, err := clientCtx.AddressCodec.BytesToString(addr)
-	if err != nil {
-		return err
-	}
-
-	_, ok := t.Accounts[addrStr]
-	if !ok {
-		return fmt.Errorf("ensureExists: account %s not found", addr)
-	}
-	return nil
+	_, err := t.GetAccount(clientCtx, addr)
+	return err
 }
 
 // GetAccountNumberSequence implements AccountRetriever.GetAccountNumberSequence
 func (t TestAccountRetriever) GetAccountNumberSequence(clientCtx Context, addr sdk.AccAddress) (accNum, accSeq uint64, err error) {
-	addrStr, err := clientCtx.AddressCodec.BytesToString(addr)
+	acc, err := t.GetAccount(clientCtx, addr)
 	if err != nil {
 		return 0, 0, err
 	}
-
-	acc, ok := t.Accounts[addrStr]
-	if !ok {
-		return 0, 0, fmt.Errorf("accountNumberSequence: account %s not found", addr)
-	}
-	return acc.Num, acc.Seq, nil
+	return acc.GetAccountNumber(), acc.GetSequence(), nil
 }

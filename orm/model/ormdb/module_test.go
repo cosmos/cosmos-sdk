@@ -18,6 +18,7 @@ import (
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	_ "cosmossdk.io/orm" // required for ORM module registration
@@ -357,7 +358,7 @@ func TestHooks(t *testing.T) {
 }
 
 type testStoreService struct {
-	db dbm.DB
+	db corestore.KVStoreWithBatch
 }
 
 func (t testStoreService) OpenKVStore(context.Context) store.KVStore {

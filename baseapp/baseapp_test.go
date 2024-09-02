@@ -23,7 +23,7 @@ import (
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
-	authtx "cosmossdk.io/x/auth/tx"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"

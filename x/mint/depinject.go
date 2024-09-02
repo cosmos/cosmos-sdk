@@ -5,10 +5,10 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	authtypes "cosmossdk.io/x/auth/types"
 	epochstypes "cosmossdk.io/x/epochs/types"
 	"cosmossdk.io/x/mint/keeper"
 	"cosmossdk.io/x/mint/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )

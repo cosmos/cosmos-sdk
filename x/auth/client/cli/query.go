@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	authtx "cosmossdk.io/x/auth/tx"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

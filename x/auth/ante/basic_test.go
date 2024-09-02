@@ -11,7 +11,7 @@ import (
 	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"

@@ -12,9 +12,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	_ "cosmossdk.io/x/accounts" // import as blank for app wiring
-	_ "cosmossdk.io/x/auth"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	_ "cosmossdk.io/x/auth/tx/config"
 	_ "cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
@@ -25,6 +22,9 @@ import (
 	"cosmossdk.io/x/feegrant/simulation"
 	_ "cosmossdk.io/x/mint"
 	_ "cosmossdk.io/x/staking"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

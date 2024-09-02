@@ -13,8 +13,8 @@ import (
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth/ante/unorderedtx"
-	authtx "cosmossdk.io/x/auth/tx"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"

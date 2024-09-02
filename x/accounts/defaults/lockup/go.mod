@@ -28,7 +28,6 @@ require (
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
-	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.13.3 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -162,7 +161,6 @@ replace (
 	cosmossdk.io/core/testing => ../../../../core/testing
 	cosmossdk.io/store => ../../../../store
 	cosmossdk.io/x/accounts => ../../.
-	cosmossdk.io/x/auth => ../../../auth
 	cosmossdk.io/x/bank => ../../../bank
 	cosmossdk.io/x/consensus => ../../../consensus
 	cosmossdk.io/x/distribution => ../../../distribution

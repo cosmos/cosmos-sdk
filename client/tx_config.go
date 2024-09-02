@@ -3,8 +3,8 @@ package client
 import (
 	"time"
 
-	"cosmossdk.io/x/auth/signing"
 	txsigning "cosmossdk.io/x/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

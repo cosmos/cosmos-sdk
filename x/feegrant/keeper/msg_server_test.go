@@ -7,8 +7,8 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/feegrant"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

@@ -21,7 +21,7 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
-	authtx "cosmossdk.io/x/auth/tx"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"

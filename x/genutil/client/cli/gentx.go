@@ -12,8 +12,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/errors"
-	authclient "cosmossdk.io/x/auth/client"
 	"cosmossdk.io/x/staking/client/cli"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

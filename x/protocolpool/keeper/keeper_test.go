@@ -12,10 +12,10 @@ import (
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
 	pooltestutil "cosmossdk.io/x/protocolpool/testutil"
 	"cosmossdk.io/x/protocolpool/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"

@@ -8,8 +8,8 @@ import (
 
 	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth/ante"
-	"cosmossdk.io/x/auth/ante/unorderedtx"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"

@@ -24,9 +24,9 @@ import (
 	"cosmossdk.io/depinject/appconfig"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	_ "cosmossdk.io/x/auth"
-	"cosmossdk.io/x/auth/signing"
-	_ "cosmossdk.io/x/auth/tx/config"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"

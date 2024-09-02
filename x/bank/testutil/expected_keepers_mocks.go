@@ -9,7 +9,7 @@ import (
 	reflect "reflect"
 
 	address "cosmossdk.io/core/address"
-	types "cosmossdk.io/x/auth/types"
+	types "github.com/cosmos/cosmos-sdk/x/auth/types"
 	types0 "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
 )

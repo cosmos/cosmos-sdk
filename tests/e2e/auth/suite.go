@@ -14,11 +14,11 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
-	authcli "cosmossdk.io/x/auth/client/cli"
-	authclitestutil "cosmossdk.io/x/auth/client/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
 	govtestutil "cosmossdk.io/x/gov/client/testutil"
 	govtypes "cosmossdk.io/x/gov/types/v1beta1"
+	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	authclitestutil "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

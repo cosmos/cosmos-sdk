@@ -9,7 +9,7 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"

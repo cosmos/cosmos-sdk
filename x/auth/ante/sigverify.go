@@ -14,9 +14,9 @@ import (
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
-	authsigning "cosmossdk.io/x/auth/signing"
-	"cosmossdk.io/x/auth/types"
 	txsigning "cosmossdk.io/x/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"

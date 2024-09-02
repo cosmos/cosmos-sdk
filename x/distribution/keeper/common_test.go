@@ -1,8 +1,8 @@
 package keeper_test
 
 import (
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/distribution/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

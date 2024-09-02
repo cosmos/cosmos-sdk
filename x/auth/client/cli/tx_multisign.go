@@ -11,9 +11,9 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	errorsmod "cosmossdk.io/errors"
-	authclient "cosmossdk.io/x/auth/client"
-	"cosmossdk.io/x/auth/signing"
 	txsigning "cosmossdk.io/x/tx/signing"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

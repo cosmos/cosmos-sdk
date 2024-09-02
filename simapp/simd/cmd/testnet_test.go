@@ -11,9 +11,9 @@ import (
 	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/auth"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

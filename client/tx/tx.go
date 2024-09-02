@@ -11,7 +11,7 @@ import (
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/pflag"
 
-	authsigning "cosmossdk.io/x/auth/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"

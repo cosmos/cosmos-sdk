@@ -7,9 +7,9 @@ import (
 
 	"cosmossdk.io/core/header"
 	sdkmath "cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/authz"
 	banktypes "cosmossdk.io/x/bank/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"

@@ -13,8 +13,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/core/address"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/gov/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

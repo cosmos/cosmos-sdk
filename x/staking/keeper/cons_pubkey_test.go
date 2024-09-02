@@ -7,10 +7,10 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
-	authtypes "cosmossdk.io/x/auth/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/testutil"
 	"cosmossdk.io/x/staking/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

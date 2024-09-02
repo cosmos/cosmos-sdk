@@ -8,8 +8,8 @@ import (
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth/migrations/legacytx"
-	authsigning "cosmossdk.io/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"

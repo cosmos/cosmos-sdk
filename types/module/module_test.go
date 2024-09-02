@@ -15,7 +15,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
-	authtypes "cosmossdk.io/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"

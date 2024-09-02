@@ -13,14 +13,14 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	_ "cosmossdk.io/x/accounts"
-	_ "cosmossdk.io/x/auth"
-	authclient "cosmossdk.io/x/auth/client"
-	_ "cosmossdk.io/x/auth/tx/config"
 	_ "cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/consensus"
 	_ "cosmossdk.io/x/staking"
 	stakingtypes "cosmossdk.io/x/staking/types"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	reflectionv1 "github.com/cosmos/cosmos-sdk/client/grpc/reflection"

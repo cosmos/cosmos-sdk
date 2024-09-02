@@ -6,9 +6,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/group"
 	v2 "cosmossdk.io/x/group/migrations/v2"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 )

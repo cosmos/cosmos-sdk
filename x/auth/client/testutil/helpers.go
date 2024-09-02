@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/x/auth/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

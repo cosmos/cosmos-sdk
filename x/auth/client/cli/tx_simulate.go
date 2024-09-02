@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	authclient "cosmossdk.io/x/auth/client"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

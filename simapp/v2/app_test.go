@@ -21,8 +21,8 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	comettypes "cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/db"
-	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"

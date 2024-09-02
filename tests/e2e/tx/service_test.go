@@ -13,10 +13,10 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
-	authclient "cosmossdk.io/x/auth/client"
-	authtest "cosmossdk.io/x/auth/client/testutil"
-	"cosmossdk.io/x/auth/migrations/legacytx"
 	banktypes "cosmossdk.io/x/bank/types"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"

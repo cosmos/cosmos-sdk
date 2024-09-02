@@ -9,7 +9,7 @@ import (
 
 	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"

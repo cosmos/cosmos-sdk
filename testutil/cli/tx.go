@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	authcli "cosmossdk.io/x/auth/client/cli"
+	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

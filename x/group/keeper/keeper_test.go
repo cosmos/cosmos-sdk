@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/group"
@@ -20,6 +19,7 @@ import (
 	"cosmossdk.io/x/group/module"
 	grouptestutil "cosmossdk.io/x/group/testutil"
 	minttypes "cosmossdk.io/x/mint/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"

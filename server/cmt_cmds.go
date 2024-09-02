@@ -18,7 +18,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"cosmossdk.io/log"
-	auth "cosmossdk.io/x/auth/client/cli"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

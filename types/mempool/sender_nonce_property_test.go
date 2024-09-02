@@ -7,7 +7,7 @@ import (
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

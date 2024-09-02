@@ -9,13 +9,13 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	authkeeper "cosmossdk.io/x/auth/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/protocolpool/keeper"
 	"cosmossdk.io/x/protocolpool/simulation"
 	"cosmossdk.io/x/protocolpool/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

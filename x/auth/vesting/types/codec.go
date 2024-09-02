@@ -3,8 +3,8 @@ package types
 import (
 	corelegacy "cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
-	authtypes "cosmossdk.io/x/auth/types"
-	"cosmossdk.io/x/auth/vesting/exported"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

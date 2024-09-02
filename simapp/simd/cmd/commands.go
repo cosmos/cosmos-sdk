@@ -12,7 +12,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
-	authcmd "cosmossdk.io/x/auth/client/cli"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/debug"

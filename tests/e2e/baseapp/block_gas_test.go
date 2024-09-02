@@ -18,7 +18,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	store "cosmossdk.io/store/types"
 	_ "cosmossdk.io/x/accounts"
-	xauthsigning "cosmossdk.io/x/auth/signing"
+	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"

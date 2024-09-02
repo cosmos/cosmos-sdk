@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	authclient "cosmossdk.io/x/auth/client"
-	authsigning "cosmossdk.io/x/auth/signing"
 	txsigning "cosmossdk.io/x/tx/signing"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

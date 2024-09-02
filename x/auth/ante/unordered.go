@@ -14,7 +14,7 @@ import (
 	"cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/auth/ante/unorderedtx"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

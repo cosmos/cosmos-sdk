@@ -15,11 +15,11 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	_ "cosmossdk.io/x/accounts"
-	_ "cosmossdk.io/x/auth"
-	_ "cosmossdk.io/x/auth/tx/config"
 	_ "cosmossdk.io/x/bank"
 	_ "cosmossdk.io/x/consensus"
 	_ "cosmossdk.io/x/staking"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

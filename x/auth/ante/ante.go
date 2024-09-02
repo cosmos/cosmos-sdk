@@ -4,9 +4,9 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/gas"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/auth/ante/unorderedtx"
-	"cosmossdk.io/x/auth/types"
 	txsigning "cosmossdk.io/x/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

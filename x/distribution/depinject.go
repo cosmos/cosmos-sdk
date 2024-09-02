@@ -6,10 +6,10 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/types"
 	staking "cosmossdk.io/x/staking/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )

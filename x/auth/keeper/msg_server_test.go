@@ -8,7 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"google.golang.org/protobuf/runtime/protoiface"
 
-	"cosmossdk.io/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"

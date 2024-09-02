@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	authsigning "cosmossdk.io/x/auth/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"

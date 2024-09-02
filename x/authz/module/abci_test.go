@@ -11,12 +11,12 @@ import (
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/authz"
 	"cosmossdk.io/x/authz/keeper"
 	authzmodule "cosmossdk.io/x/authz/module"
 	authztestutil "cosmossdk.io/x/authz/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"

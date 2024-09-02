@@ -9,7 +9,7 @@ import (
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"

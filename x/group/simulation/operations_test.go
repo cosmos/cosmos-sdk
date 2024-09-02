@@ -10,7 +10,6 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	authkeeper "cosmossdk.io/x/auth/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -18,6 +17,7 @@ import (
 	groupkeeper "cosmossdk.io/x/group/keeper"
 	"cosmossdk.io/x/group/simulation"
 	grouptestutil "cosmossdk.io/x/group/testutil"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

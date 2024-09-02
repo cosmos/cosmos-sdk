@@ -11,7 +11,7 @@ import (
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/errors"
-	authsign "cosmossdk.io/x/auth/signing"
+	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"

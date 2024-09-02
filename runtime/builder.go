@@ -10,7 +10,7 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth/ante/unorderedtx"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"

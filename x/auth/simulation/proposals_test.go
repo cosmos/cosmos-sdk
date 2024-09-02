@@ -6,8 +6,8 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/x/auth/simulation"
-	"cosmossdk.io/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"

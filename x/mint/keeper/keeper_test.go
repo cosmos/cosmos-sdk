@@ -11,11 +11,11 @@ import (
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/mint"
 	"cosmossdk.io/x/mint/keeper"
 	minttestutil "cosmossdk.io/x/mint/testutil"
 	"cosmossdk.io/x/mint/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"

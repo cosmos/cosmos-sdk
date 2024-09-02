@@ -3,9 +3,9 @@ package simapp
 import (
 	"errors"
 
-	"cosmossdk.io/x/auth/ante"
-	"cosmossdk.io/x/auth/ante/unorderedtx"
 	circuitante "cosmossdk.io/x/circuit/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

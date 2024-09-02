@@ -12,9 +12,6 @@ import (
 
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/auth"
-	"cosmossdk.io/x/auth/migrations/legacytx"
-	"cosmossdk.io/x/auth/vesting"
 	authzmodule "cosmossdk.io/x/authz/module"
 	"cosmossdk.io/x/bank"
 	"cosmossdk.io/x/consensus"
@@ -29,6 +26,9 @@ import (
 	"cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/upgrade"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"

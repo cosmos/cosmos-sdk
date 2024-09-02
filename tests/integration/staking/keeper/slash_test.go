@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	_ "cosmossdk.io/x/accounts"
-	authkeeper "cosmossdk.io/x/auth/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	_ "cosmossdk.io/x/consensus"
@@ -26,6 +25,7 @@ import (
 	"cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/testutil"
 	"cosmossdk.io/x/staking/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"

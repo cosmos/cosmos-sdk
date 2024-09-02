@@ -5,7 +5,7 @@ import (
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
 var (

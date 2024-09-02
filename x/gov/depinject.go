@@ -10,11 +10,11 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	authtypes "cosmossdk.io/x/auth/types"
 	govclient "cosmossdk.io/x/gov/client"
 	"cosmossdk.io/x/gov/keeper"
 	govtypes "cosmossdk.io/x/gov/types"
 	"cosmossdk.io/x/gov/types/v1beta1"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )

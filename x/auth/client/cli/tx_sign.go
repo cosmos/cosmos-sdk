@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 
 	errorsmod "cosmossdk.io/errors"
-	authclient "cosmossdk.io/x/auth/client"
-	"cosmossdk.io/x/auth/signing"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

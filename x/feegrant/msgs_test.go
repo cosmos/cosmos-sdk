@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/auth/migrations/legacytx"
 	"cosmossdk.io/x/feegrant"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

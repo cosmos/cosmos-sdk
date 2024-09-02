@@ -6,9 +6,9 @@ import (
 	"fmt"
 
 	"cosmossdk.io/core/store"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/internal/orm"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"

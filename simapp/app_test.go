@@ -16,8 +16,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts"
-	"cosmossdk.io/x/auth"
-	"cosmossdk.io/x/auth/vesting"
 	authzmodule "cosmossdk.io/x/authz/module"
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -32,6 +30,8 @@ import (
 	"cosmossdk.io/x/slashing"
 	"cosmossdk.io/x/staking"
 	"cosmossdk.io/x/upgrade"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"

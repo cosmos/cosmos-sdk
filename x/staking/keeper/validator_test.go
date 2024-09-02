@@ -9,10 +9,10 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

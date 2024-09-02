@@ -14,7 +14,7 @@ import (
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

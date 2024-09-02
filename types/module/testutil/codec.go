@@ -1,7 +1,7 @@
 package testutil
 
 import (
-	"cosmossdk.io/x/auth/tx"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

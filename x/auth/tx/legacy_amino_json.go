@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/auth/migrations/legacytx"
-	"cosmossdk.io/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

@@ -7,7 +7,7 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"

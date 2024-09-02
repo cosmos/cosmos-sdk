@@ -22,7 +22,7 @@ import (
 	"cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
-	_ "cosmossdk.io/x/consensus"
+	_ "cosmossdk.io/x/comet"
 	minttypes "cosmossdk.io/x/mint/types"
 	_ "cosmossdk.io/x/staking"
 

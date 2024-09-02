@@ -6,7 +6,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/auth/types"
-	consensustypes "cosmossdk.io/x/consensus/types"
+	consensustypes "cosmossdk.io/x/comet/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

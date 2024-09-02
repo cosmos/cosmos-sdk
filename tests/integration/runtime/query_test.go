@@ -18,7 +18,7 @@ import (
 	_ "cosmossdk.io/x/auth"
 	_ "cosmossdk.io/x/auth/tx/config"
 	_ "cosmossdk.io/x/bank"
-	_ "cosmossdk.io/x/consensus"
+	_ "cosmossdk.io/x/comet"
 	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"

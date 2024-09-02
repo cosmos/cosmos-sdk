@@ -23,7 +23,7 @@ import (
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
-	consensus "cosmossdk.io/x/consensus/types"
+	consensus "cosmossdk.io/x/comet/types"
 )
 
 func queryResponse(res transaction.Msg, height int64) (*abci.QueryResponse, error) {

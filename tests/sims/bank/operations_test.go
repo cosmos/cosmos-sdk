@@ -17,7 +17,7 @@ import (
 	"cosmossdk.io/x/bank/simulation"
 	"cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/bank/types"
-	_ "cosmossdk.io/x/consensus"
+	_ "cosmossdk.io/x/comet"
 	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/client"

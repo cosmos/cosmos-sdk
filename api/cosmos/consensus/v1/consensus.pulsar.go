@@ -733,7 +733,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// CometInfo defines the structure of the x/consensus module's comet info.
+// CometInfo defines the structure of the x/comet module's comet info.
 type CometInfo struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

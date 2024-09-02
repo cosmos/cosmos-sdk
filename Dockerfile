@@ -40,7 +40,7 @@ COPY x/authz/go.mod x/authz/go.sum ./x/authz/
 COPY x/bank/go.mod x/bank/go.sum ./x/bank/
 COPY x/mint/go.mod x/mint/go.sum ./x/mint/
 COPY x/tx/go.mod x/tx/go.sum ./x/tx/
-COPY x/consensus/go.mod x/consensus/go.sum ./x/consensus/
+COPY x/comet/go.mod x/comet/go.sum ./x/comet/
 COPY depinject/go.mod depinject/go.sum ./depinject/
 COPY core/testing/go.mod core/testing/go.sum ./core/testing/
 COPY log/go.mod log/go.sum ./log/

@@ -17,7 +17,7 @@ import (
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	consensusv1 "cosmossdk.io/x/consensus/types"
+	consensusv1 "cosmossdk.io/x/comet/types"
 	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"

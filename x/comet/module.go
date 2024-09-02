@@ -10,15 +10,15 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
-	"cosmossdk.io/x/consensus/keeper"
-	"cosmossdk.io/x/consensus/types"
+	"cosmossdk.io/x/comet/keeper"
+	"cosmossdk.io/x/comet/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-// ConsensusVersion defines the current x/consensus module consensus version.
+// ConsensusVersion defines the current x/comet module consensus version.
 const ConsensusVersion = 1
 
 var (

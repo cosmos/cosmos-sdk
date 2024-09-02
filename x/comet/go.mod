@@ -1,4 +1,4 @@
-module cosmossdk.io/x/consensus
+module cosmossdk.io/x/comet
 
 go 1.23
 

@@ -205,7 +205,7 @@ newly committed state and `finalizeBlockState` is set to `nil` to be reset on `F
 During `InitChain`, the `RequestInitChain` provides `ConsensusParams` which contains parameters
 related to block execution such as maximum gas and size in addition to evidence parameters. If these
 parameters are non-nil, they are set in the BaseApp's `ParamStore`. Behind the scenes, the `ParamStore`
-is managed by an `x/consensus_params` module. This allows the parameters to be tweaked via
+is managed by an `x/comet_params` module. This allows the parameters to be tweaked via
  on-chain governance.
 
 ## Service Routers

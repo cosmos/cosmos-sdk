@@ -14,8 +14,8 @@ import (
 	"cosmossdk.io/core/appmodule"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
-	"cosmossdk.io/x/consensus/exported"
-	"cosmossdk.io/x/consensus/types"
+	"cosmossdk.io/x/comet/exported"
+	"cosmossdk.io/x/comet/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )

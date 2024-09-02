@@ -31,7 +31,7 @@ use (
 	./x/authz
 	./x/bank
 	./x/circuit
-	./x/consensus
+	./x/comet
 	./x/distribution
 	./x/evidence
 	./x/feegrant

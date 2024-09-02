@@ -33,7 +33,7 @@ import (
 	vestingtypes "cosmossdk.io/x/auth/vesting/types"
 	authztypes "cosmossdk.io/x/authz"
 	banktypes "cosmossdk.io/x/bank/types"
-	consensustypes "cosmossdk.io/x/consensus/types"
+	consensustypes "cosmossdk.io/x/comet/types"
 	disttypes "cosmossdk.io/x/distribution/types"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	feegranttypes "cosmossdk.io/x/feegrant"

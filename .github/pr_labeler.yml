@@ -40,8 +40,8 @@
   - x/bank/**/*
 "C:x/circuit":
   - x/circuit/**/*
-"C:x/consensus":
-  - x/consensus/**/*
+"C:x/comet":
+  - x/comet/**/*
 "C:x/crisis":
   - x/crisis/**/*
 "C:x/distribution":

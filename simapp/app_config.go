@@ -41,8 +41,8 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/circuit" // import for side-effects
 	circuittypes "cosmossdk.io/x/circuit/types"
-	_ "cosmossdk.io/x/consensus" // import for side-effects
-	consensustypes "cosmossdk.io/x/consensus/types"
+	_ "cosmossdk.io/x/comet" // import for side-effects
+	consensustypes "cosmossdk.io/x/comet/types"
 	_ "cosmossdk.io/x/distribution" // import for side-effects
 	distrtypes "cosmossdk.io/x/distribution/types"
 	_ "cosmossdk.io/x/epochs" // import for side-effects

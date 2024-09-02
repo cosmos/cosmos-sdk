@@ -4,9 +4,9 @@ package cosmos.consensus.v1;
 
 import "cometbft/abci/v1/types.proto";
 
-option go_package = "cosmossdk.io/x/consensus/types";
+option go_package = "cosmossdk.io/x/comet/types";
 
-// CometInfo defines the structure of the x/consensus module's comet info.
+// CometInfo defines the structure of the x/comet module's comet info.
 message CometInfo {
   repeated cometbft.abci.v1.Misbehavior evidence         = 1;
   bytes                                 validators_hash  = 2;

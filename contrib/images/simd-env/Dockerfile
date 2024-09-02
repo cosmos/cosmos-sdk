@@ -21,7 +21,7 @@ COPY x/auth/go.mod x/auth/go.sum /work/x/auth/
 COPY x/authz/go.mod x/authz/go.sum /work/x/authz/
 COPY x/bank/go.mod x/bank/go.sum /work/x/bank/
 COPY x/mint/go.mod x/mint/go.sum /work/x/mint/
-COPY x/consensus/go.mod x/consensus/go.sum /work/x/consensus/
+COPY x/comet/go.mod x/comet/go.sum /work/x/comet/
 COPY x/accounts/go.mod x/accounts/go.sum /work/x/accounts/
 COPY runtime/v2/go.mod runtime/v2/go.sum /work/runtime/v2/
 COPY server/v2/go.mod server/v2/go.sum /work/server/v2/

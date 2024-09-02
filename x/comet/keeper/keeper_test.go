@@ -12,8 +12,8 @@ import (
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
-	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
-	"cosmossdk.io/x/consensus/types"
+	consensusparamkeeper "cosmossdk.io/x/comet/keeper"
+	"cosmossdk.io/x/comet/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"

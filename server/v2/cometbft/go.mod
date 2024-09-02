@@ -13,7 +13,7 @@ replace (
 	cosmossdk.io/x/accounts => ../../../x/accounts
 	cosmossdk.io/x/auth => ../../../x/auth
 	cosmossdk.io/x/bank => ../../../x/bank
-	cosmossdk.io/x/consensus => ../../../x/consensus
+	cosmossdk.io/x/comet => ../../../x/comet
 	cosmossdk.io/x/staking => ../../../x/staking
 	cosmossdk.io/x/tx => ../../../x/tx
 	github.com/cosmos/cosmos-sdk => ../../../
@@ -28,7 +28,7 @@ require (
 	cosmossdk.io/server/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2/appmanager v0.0.0-20240802110823-cffeedff643d
 	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
-	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/comet v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-rc1
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5

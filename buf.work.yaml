@@ -6,7 +6,7 @@ directories:
   - x/authz/proto
   - x/bank/proto
   - x/circuit/proto
-  - x/consensus/proto
+  - x/comet/proto
   - x/distribution/proto
   - x/evidence/proto
   - x/feegrant/proto

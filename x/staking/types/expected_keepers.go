@@ -6,7 +6,7 @@ import (
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
-	consensustypes "cosmossdk.io/x/consensus/types"
+	consensustypes "cosmossdk.io/x/comet/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

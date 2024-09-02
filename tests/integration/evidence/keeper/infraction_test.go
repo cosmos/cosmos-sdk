@@ -25,7 +25,7 @@ import (
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
-	consensusparamtypes "cosmossdk.io/x/consensus/types"
+	consensusparamtypes "cosmossdk.io/x/comet/types"
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"

@@ -23,10 +23,10 @@ import (
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
-	_ "cosmossdk.io/x/consensus" // import as blank for app wiring
-	_ "cosmossdk.io/x/gov"       // import as blank for app wiring
-	_ "cosmossdk.io/x/mint"      // import as blank for app wiring
-	_ "cosmossdk.io/x/staking"   // import as blank for app wiring
+	_ "cosmossdk.io/x/comet"   // import as blank for app wiring
+	_ "cosmossdk.io/x/gov"     // import as blank for app wiring
+	_ "cosmossdk.io/x/mint"    // import as blank for app wiring
+	_ "cosmossdk.io/x/staking" // import as blank for app wiring
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

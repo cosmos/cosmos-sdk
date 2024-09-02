@@ -17,7 +17,7 @@ import (
 	authkeeper "cosmossdk.io/x/auth/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
-	_ "cosmossdk.io/x/consensus"
+	_ "cosmossdk.io/x/comet"
 	_ "cosmossdk.io/x/distribution"
 	distributionkeeper "cosmossdk.io/x/distribution/keeper"
 	_ "cosmossdk.io/x/protocolpool"

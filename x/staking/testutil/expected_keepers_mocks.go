@@ -11,7 +11,7 @@ import (
 	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
 	address "cosmossdk.io/core/address"
 	math "cosmossdk.io/math"
-	types "cosmossdk.io/x/consensus/types"
+	types "cosmossdk.io/x/comet/types"
 	types0 "cosmossdk.io/x/staking/types"
 	types1 "github.com/cosmos/cosmos-sdk/crypto/types"
 	types2 "github.com/cosmos/cosmos-sdk/types"

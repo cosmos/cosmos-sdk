@@ -27,7 +27,7 @@ import (
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
-	consensustypes "cosmossdk.io/x/consensus/types"
+	consensustypes "cosmossdk.io/x/comet/types"
 )
 
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)

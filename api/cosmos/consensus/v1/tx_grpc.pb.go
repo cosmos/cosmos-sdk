@@ -30,7 +30,7 @@ const (
 //
 // Msg defines the consensus Msg service.
 type MsgClient interface {
-	// UpdateParams defines a governance operation for updating the x/consensus module parameters.
+	// UpdateParams defines a governance operation for updating the x/comet module parameters.
 	// The authority is defined in the keeper.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 }
@@ -59,7 +59,7 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 //
 // Msg defines the consensus Msg service.
 type MsgServer interface {
-	// UpdateParams defines a governance operation for updating the x/consensus module parameters.
+	// UpdateParams defines a governance operation for updating the x/comet module parameters.
 	// The authority is defined in the keeper.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	mustEmbedUnimplementedMsgServer()

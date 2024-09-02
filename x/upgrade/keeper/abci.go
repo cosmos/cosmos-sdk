@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	consensusv1 "cosmossdk.io/x/consensus/types"
+	consensusv1 "cosmossdk.io/x/comet/types"
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"

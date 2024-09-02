@@ -21,7 +21,7 @@ import (
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
-	consensustypes "cosmossdk.io/x/consensus/types"
+	consensustypes "cosmossdk.io/x/comet/types"
 	minttypes "cosmossdk.io/x/mint/types"
 	"cosmossdk.io/x/slashing"
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"

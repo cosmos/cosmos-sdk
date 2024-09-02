@@ -2,7 +2,7 @@
 
 // Legacy types are defined below to aid in the migration of CometBFT consensus
 // parameters from use of the now deprecated x/params modules to a new dedicated
-// x/consensus module.
+// x/comet module.
 //
 // Application developers should ensure that they implement their upgrade handler
 // correctly such that app.ConsensusParamsKeeper.Set() is called with the values

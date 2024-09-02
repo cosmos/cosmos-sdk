@@ -17,7 +17,7 @@ import (
 	"cosmossdk.io/x/auth/vesting"
 	authzmodule "cosmossdk.io/x/authz/module"
 	"cosmossdk.io/x/bank"
-	"cosmossdk.io/x/consensus"
+	consensus "cosmossdk.io/x/comet"
 	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"

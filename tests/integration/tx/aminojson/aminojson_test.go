@@ -44,7 +44,7 @@ import (
 	authzmodule "cosmossdk.io/x/authz/module"
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
-	"cosmossdk.io/x/consensus"
+	consensus "cosmossdk.io/x/comet"
 	"cosmossdk.io/x/distribution"
 	disttypes "cosmossdk.io/x/distribution/types"
 	"cosmossdk.io/x/evidence"

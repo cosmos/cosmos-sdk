@@ -10,7 +10,7 @@ Here are some production-grade modules that can be used in Cosmos SDK applicatio
 * [Authz](./authz/README.md) - Authorization for accounts to perform actions on behalf of other accounts.
 * [Bank](./bank/README.md) - Token transfer functionalities.
 * [Circuit](./circuit/README.md) - Circuit breaker module for pausing messages.
-* [Consensus](./consensus/README.md) - Consensus module for modifying CometBFT's ABCI consensus params.
+* [Comet](./comet/README.md) - Comet module for modifying CometBFT's ABCI consensus params.
 * [Distribution](./distribution/README.md) - Fee distribution, and staking token provision distribution.
 * [Epochs](./epochs/README.md) - Allow other modules to set that they would like to be signaled once every period
 * [Evidence](./evidence/README.md) - Evidence handling for double signing, misbehaviour, etc.

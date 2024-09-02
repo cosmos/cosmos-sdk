@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
-	consensusv1 "cosmossdk.io/x/consensus/types"
+	consensusv1 "cosmossdk.io/x/comet/types"
 	"cosmossdk.io/x/evidence/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

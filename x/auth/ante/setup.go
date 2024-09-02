@@ -6,7 +6,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	consensusv1 "cosmossdk.io/x/consensus/types"
+	consensusv1 "cosmossdk.io/x/comet/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# `x/consensus`
+# `x/comet`
 
 ## Abstract 
 
@@ -21,7 +21,7 @@ Functionality to modify CometBFT's ABCI consensus params.
 
 ## State
 
-The `x/consensus` module keeps state of the consensus params from cometbft.:
+The `x/comet` module keeps state of the consensus params from cometbft.:
 
 ## Params
 
@@ -31,12 +31,12 @@ it can be updated with governance or the address with authority.
 * Params: `0x05 | ProtocolBuffer(cometbft.ConsensusParams)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/consensus/proto/cosmos/consensus/v1/consensus.proto#L9-L15
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/comet/proto/cosmos/consensus/v1/consensus.proto#L9-L15
 ```
 
 ## Keepers
 
-The consensus module provides methods to Set and Get consensus params. It is recommended to use the `x/consensus` module keeper to get consensus params instead of accessing them through the context.
+The consensus module provides methods to Set and Get consensus params. It is recommended to use the `x/comet` module keeper to get consensus params instead of accessing them through the context.
 
 ## Messages
 
@@ -45,7 +45,7 @@ The consensus module provides methods to Set and Get consensus params. It is rec
 Update consensus params.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/consensus/proto/cosmos/consensus/v1/tx.proto#L23-L44
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/comet/proto/cosmos/consensus/v1/tx.proto#L23-L44
 ```
 
 The message will fail under the following conditions:

@@ -33,7 +33,7 @@ import (
 	vestingtypes "cosmossdk.io/x/auth/vesting/types"
 	authztypes "cosmossdk.io/x/authz"
 	banktypes "cosmossdk.io/x/bank/types"
-	consensustypes "cosmossdk.io/x/comet/types"
+	comettypes "cosmossdk.io/x/comet/types"
 	disttypes "cosmossdk.io/x/distribution/types"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	feegranttypes "cosmossdk.io/x/feegrant"
@@ -120,8 +120,8 @@ var (
 		GenType(&banktypes.MsgUpdateParams{}, &bankapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
 		GenType(&banktypes.MsgSetSendEnabled{}, &bankapi.MsgSetSendEnabled{}, GenOpts),
 
-		// consensus
-		GenType(&consensustypes.MsgUpdateParams{}, &consensusapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
+		// x/comet
+		GenType(&comettypes.MsgUpdateParams{}, &consensusapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
 
 		// distribution
 		GenType(&disttypes.MsgWithdrawDelegatorReward{}, &distapi.MsgWithdrawDelegatorReward{}, GenOpts),

@@ -6,7 +6,7 @@ import (
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
-	consensustypes "cosmossdk.io/x/comet/types"
+	comettypes "cosmossdk.io/x/comet/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -117,5 +117,5 @@ type StakingHooksWrapper struct{ StakingHooks }
 func (StakingHooksWrapper) IsOnePerModuleType() {}
 
 type ConsensusKeeper interface {
-	Params(context.Context, *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error)
+	Params(context.Context, *comettypes.QueryParamsRequest) (*comettypes.QueryParamsResponse, error)
 }

@@ -25,7 +25,7 @@ import (
 	authtestutil "cosmossdk.io/x/auth/testutil"
 	txtestutil "cosmossdk.io/x/auth/tx/testutil"
 	"cosmossdk.io/x/auth/types"
-	consensustypes "cosmossdk.io/x/comet/types"
+	comettypes "cosmossdk.io/x/comet/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -101,10 +101,10 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	grpcQueryRouter.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
 
 	suite.consensusKeeper = antetestutil.NewMockConsensusKeeper(ctrl)
-	suite.consensusKeeper.EXPECT().Params(gomock.Any(), gomock.Any()).Return(&consensustypes.QueryParamsResponse{
+	suite.consensusKeeper.EXPECT().Params(gomock.Any(), gomock.Any()).Return(&comettypes.QueryParamsResponse{
 		Params: simtestutil.DefaultConsensusParams,
 	}, nil).AnyTimes()
-	consensustypes.RegisterQueryServer(grpcQueryRouter, suite.consensusKeeper)
+	comettypes.RegisterQueryServer(grpcQueryRouter, suite.consensusKeeper)
 
 	suite.env = runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter))
 	suite.accountKeeper = keeper.NewAccountKeeper(

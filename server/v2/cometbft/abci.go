@@ -27,7 +27,7 @@ import (
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
-	consensustypes "cosmossdk.io/x/comet/types"
+	comettypes "cosmossdk.io/x/comet/types"
 )
 
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
@@ -245,7 +245,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	}
 
 	if req.ConsensusParams != nil {
-		ctx = context.WithValue(ctx, corecontext.InitInfoKey, &consensustypes.MsgUpdateParams{
+		ctx = context.WithValue(ctx, corecontext.InitInfoKey, &comettypes.MsgUpdateParams{
 			Authority: c.consensusAuthority,
 			Block:     req.ConsensusParams.Block,
 			Evidence:  req.ConsensusParams.Evidence,

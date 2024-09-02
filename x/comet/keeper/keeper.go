@@ -39,8 +39,8 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, authority strin
 	}
 }
 
-// GetAuthority returns the authority address for the consensus module.
-// This address has the permission to update consensus parameters.
+// GetAuthority returns the authority address for the comet module.
+// This address has the permission to update comet parameters.
 func (k *Keeper) GetAuthority() string {
 	return k.authority
 }

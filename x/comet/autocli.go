@@ -32,7 +32,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "UpdateParams",
 					Use:       "update-params-proposal <params>",
-					Short:     "Submit a proposal to update consensus module params. Note: the entire params must be provided.",
+					Short:     "Submit a proposal to update comet module params. Note: the entire params must be provided.",
 					Example:   fmt.Sprintf(`%s tx consensus update-params-proposal '{ params }'`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "block"},

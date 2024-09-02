@@ -21,4 +21,4 @@ There are two semantics around the new lifecycle method:
 * It runs before the `BeginBlocker` of all modules
 * It can modify consensus parameters in storage, and signal the caller through the return value.
 
-Modules are required to get the consensus params from the consensus module. Consensus params located in `sdk.Context` were deprecated and should be treated as unsafe. `sdk.Context` is deprecated due to it being a global state within the entire state machine, it has been replaced with `appmodule.Environment`.
+Modules are required to get the consensus params from the comet module. Consensus params located in `sdk.Context` were deprecated and should be treated as unsafe. `sdk.Context` is deprecated due to it being a global state within the entire state machine, it has been replaced with `appmodule.Environment`.

@@ -48,9 +48,9 @@ import (
 	"cosmossdk.io/x/circuit"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	circuittypes "cosmossdk.io/x/circuit/types"
-	consensus "cosmossdk.io/x/comet"
-	consensusparamkeeper "cosmossdk.io/x/comet/keeper"
-	consensustypes "cosmossdk.io/x/comet/types"
+	cometmodule "cosmossdk.io/x/comet"
+	cometkeeper "cosmossdk.io/x/comet/types"
+	comettypes "cosmossdk.io/x/comet/types"
 	distr "cosmossdk.io/x/distribution"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
 	distrtypes "cosmossdk.io/x/distribution/types"
@@ -157,24 +157,24 @@ type SimApp struct {
 	keys map[string]*storetypes.KVStoreKey
 
 	// keepers
-	AccountsKeeper        accounts.Keeper
-	AuthKeeper            authkeeper.AccountKeeper
-	BankKeeper            bankkeeper.BaseKeeper
-	StakingKeeper         *stakingkeeper.Keeper
-	SlashingKeeper        slashingkeeper.Keeper
-	MintKeeper            mintkeeper.Keeper
-	DistrKeeper           distrkeeper.Keeper
-	GovKeeper             govkeeper.Keeper
-	UpgradeKeeper         *upgradekeeper.Keeper
-	AuthzKeeper           authzkeeper.Keeper
-	EvidenceKeeper        evidencekeeper.Keeper
-	FeeGrantKeeper        feegrantkeeper.Keeper
-	GroupKeeper           groupkeeper.Keeper
-	NFTKeeper             nftkeeper.Keeper
-	ConsensusParamsKeeper consensusparamkeeper.Keeper
-	CircuitKeeper         circuitkeeper.Keeper
-	PoolKeeper            poolkeeper.Keeper
-	EpochsKeeper          *epochskeeper.Keeper
+	AccountsKeeper    accounts.Keeper
+	AuthKeeper        authkeeper.AccountKeeper
+	BankKeeper        bankkeeper.BaseKeeper
+	StakingKeeper     *stakingkeeper.Keeper
+	SlashingKeeper    slashingkeeper.Keeper
+	MintKeeper        mintkeeper.Keeper
+	DistrKeeper       distrkeeper.Keeper
+	GovKeeper         govkeeper.Keeper
+	UpgradeKeeper     *upgradekeeper.Keeper
+	AuthzKeeper       authzkeeper.Keeper
+	EvidenceKeeper    evidencekeeper.Keeper
+	FeeGrantKeeper    feegrantkeeper.Keeper
+	GroupKeeper       groupkeeper.Keeper
+	NFTKeeper         nftkeeper.Keeper
+	CometParamsKeeper cometkeeper.Keeper
+	CircuitKeeper     circuitkeeper.Keeper
+	PoolKeeper        poolkeeper.Keeper
+	EpochsKeeper      *epochskeeper.Keeper
 
 	// managers
 	ModuleManager      *module.Manager
@@ -264,7 +264,7 @@ func NewSimApp(
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-		govtypes.StoreKey, consensustypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
+		govtypes.StoreKey, comettypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, circuittypes.StoreKey,
 		authzkeeper.StoreKey, nftkeeper.StoreKey, group.StoreKey, pooltypes.StoreKey,
 		accounts.StoreKey, epochstypes.StoreKey,
@@ -287,8 +287,8 @@ func NewSimApp(
 	cometService := runtime.NewContextAwareCometInfoService()
 
 	// set the BaseApp's parameter store
-	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensustypes.StoreKey]), logger.With(log.ModuleKey, "x/comet")), authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
+	app.CometParamsKeeper = cometkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[comettypes.StoreKey]), logger.With(log.ModuleKey, "x/comet")), authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	bApp.SetParamStore(app.CometParamsKeeper.ParamsStore)
 
 	// add keepers
 	accountsKeeper, err := accounts.NewKeeper(
@@ -460,7 +460,7 @@ func NewSimApp(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AuthKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AuthKeeper, app.BankKeeper, app.interfaceRegistry),
 		nftmodule.NewAppModule(appCodec, app.NFTKeeper, app.AuthKeeper, app.BankKeeper, app.interfaceRegistry),
-		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
+		cometmodule.NewAppModule(appCodec, app.CometParamsKeeper),
 		circuit.NewAppModule(appCodec, app.CircuitKeeper),
 		protocolpool.NewAppModule(appCodec, app.PoolKeeper, app.AuthKeeper, app.BankKeeper),
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
@@ -501,7 +501,7 @@ func NewSimApp(
 	// properly initialized with tokens from genesis accounts.
 	// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
 	genesisModuleOrder := []string{
-		consensustypes.ModuleName,
+		comettypes.ModuleName,
 		accounts.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,

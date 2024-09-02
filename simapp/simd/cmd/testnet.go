@@ -370,7 +370,7 @@ func initTestnetFiles(
 			WithKeybase(kb).
 			WithTxConfig(clientCtx.TxConfig)
 
-		if err := tx.Sign(cmd.Context(), txFactory, nodeDirName, txBuilder, true); err != nil {
+		if err := tx.Sign(clientCtx, txFactory, nodeDirName, txBuilder, true); err != nil {
 			return err
 		}
 
@@ -544,11 +544,7 @@ func writeFile(name, dir string, contents []byte) error {
 		return fmt.Errorf("could not create directory %q: %w", dir, err)
 	}
 
-	if err := os.WriteFile(file, contents, 0o600); err != nil {
-		return err
-	}
-
-	return nil
+	return os.WriteFile(file, contents, 0o600)
 }
 
 // startTestnet starts an in-process testnet

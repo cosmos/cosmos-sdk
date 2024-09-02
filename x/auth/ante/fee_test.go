@@ -41,6 +41,11 @@ func TestDeductFeeDecorator_ZeroGas(t *testing.T) {
 	// Set IsCheckTx to true
 	s.ctx = s.ctx.WithIsCheckTx(true)
 
+	// Set current block height in headerInfo
+	headerInfo := s.ctx.HeaderInfo()
+	headerInfo.Height = s.ctx.BlockHeight()
+	s.ctx = s.ctx.WithHeaderInfo(headerInfo)
+
 	_, err = antehandler(s.ctx, tx, false)
 	require.Error(t, err)
 

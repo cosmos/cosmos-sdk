@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cast"
 
@@ -19,6 +18,7 @@ import (
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/client/v2/autocli"
 	clienthelpers "cosmossdk.io/client/v2/helpers"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/accounts"
@@ -196,7 +196,7 @@ func init() {
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(
 	logger log.Logger,
-	db dbm.DB,
+	db corestore.KVStoreWithBatch,
 	traceStore io.Writer,
 	loadLatest bool,
 	appOpts servertypes.AppOptions,
@@ -518,7 +518,6 @@ func NewSimApp(
 		group.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
-		consensustypes.ModuleName,
 		circuittypes.ModuleName,
 		pooltypes.ModuleName,
 		epochstypes.ModuleName,
@@ -638,9 +637,9 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 				SignModeHandler:          txConfig.SignModeHandler(),
 				FeegrantKeeper:           app.FeeGrantKeeper,
 				SigGasConsumer:           ante.DefaultSigVerificationGasConsumer,
+				UnorderedTxManager:       app.UnorderedTxManager,
 			},
 			&app.CircuitKeeper,
-			app.UnorderedTxManager,
 		},
 	)
 	if err != nil {
@@ -662,9 +661,13 @@ func (app *SimApp) setPostHandler() {
 	app.SetPostHandler(postHandler)
 }
 
-// Close implements the Application interface and closes all necessary application
-// resources.
+// Close closes all necessary application resources.
+// It implements servertypes.Application.
 func (app *SimApp) Close() error {
+	if err := app.BaseApp.Close(); err != nil {
+		return err
+	}
+
 	return app.UnorderedTxManager.Close()
 }
 

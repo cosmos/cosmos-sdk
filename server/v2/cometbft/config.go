@@ -64,3 +64,4 @@ func getConfigTomlFromViper(v *viper.Viper) *cmtcfg.Config {
 
 	return conf.SetRoot(rootDir)
 }
+

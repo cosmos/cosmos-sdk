@@ -39,7 +39,7 @@ func TestProposalMsgs(t *testing.T) {
 	msgUpdateParams, ok := msg.(*types.MsgUpdateParams)
 	assert.Assert(t, ok)
 
-	authority, err := ac.BytesToString(address.Module("gov"))
+	authority, err := ac.BytesToString(address.Module(types.GovModuleName))
 	assert.NilError(t, err)
 	assert.Equal(t, authority, msgUpdateParams.Authority)
 	assert.Assert(t, len(msgUpdateParams.Params.SendEnabled) == 0) //nolint:staticcheck // we're testing the old way here

@@ -67,7 +67,7 @@ type Consensus[T transaction.Tx] struct {
 func NewConsensus[T transaction.Tx](
 	logger log.Logger,
 	appName string,
-	consensusAuthority string,
+	consensusAuthority string, // TODO remove
 	app *appmanager.AppManager[T],
 	mp mempool.Mempool[T],
 	indexedEvents map[string]struct{},

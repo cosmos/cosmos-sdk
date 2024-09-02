@@ -189,7 +189,6 @@ replace (
 	cosmossdk.io/core => ./core
 	cosmossdk.io/core/testing => ./core/testing
 	cosmossdk.io/store => ./store
-	cosmossdk.io/x/accounts => ./x/accounts
 	cosmossdk.io/x/auth => ./x/auth
 	cosmossdk.io/x/bank => ./x/bank
 	cosmossdk.io/x/consensus => ./x/consensus

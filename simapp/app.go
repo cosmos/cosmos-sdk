@@ -19,11 +19,8 @@ import (
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/client/v2/autocli"
 	clienthelpers "cosmossdk.io/client/v2/helpers"
-<<<<<<< HEAD
-=======
 	coreaddress "cosmossdk.io/core/address"
 	corestore "cosmossdk.io/core/store"
->>>>>>> a51b432b7 (refactor(types,client,simapp): remove some address String() calls (#21455))
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/accounts"

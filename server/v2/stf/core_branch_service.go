@@ -62,6 +62,8 @@ func (bs BranchService) execute(ctx *executionContext, f func(ctx context.Contex
 		branchFn:            ctx.branchFn,
 		makeGasMeter:        ctx.makeGasMeter,
 		makeGasMeteredStore: ctx.makeGasMeteredStore,
+		msgRouter:           ctx.msgRouter,
+		queryRouter:         ctx.queryRouter,
 	}
 
 	err := f(branchedCtx)

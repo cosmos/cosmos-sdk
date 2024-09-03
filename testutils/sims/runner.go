@@ -134,13 +134,8 @@ func RunWithSeeds[T SimulationApp](
 			require.NoError(t, err)
 			err = simtestutil.CheckExportSimulation(app, tCfg, simParams)
 			require.NoError(t, err)
-<<<<<<< HEAD
-			if tCfg.Commit {
-				simtestutil.PrintStats(testInstance.DB)
-=======
 			if tCfg.Commit && tCfg.DBBackend == "goleveldb" {
 				simtestutil.PrintStats(testInstance.DB.(*dbm.GoLevelDB))
->>>>>>> 62bf23a5a (fix(sims): OOM at sim-multi-seed-long run (#21503))
 			}
 			for _, step := range postRunActions {
 				step(t, testInstance)

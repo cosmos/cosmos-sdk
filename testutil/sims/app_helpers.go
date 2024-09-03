@@ -10,10 +10,10 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttypes "github.com/cometbft/cometbft/types"
-	dbm "github.com/cosmos/cosmos-db"
 
 	coreheader "cosmossdk.io/core/header"
 	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -96,7 +96,7 @@ func DefaultStartUpConfig() StartupConfig {
 		ValidatorSet:    CreateRandomValidatorSet,
 		AtGenesis:       false,
 		GenesisAccounts: []GenesisAccount{ga},
-		DB:              dbm.NewMemDB(),
+		DB:              coretesting.NewMemDB(),
 	}
 }
 

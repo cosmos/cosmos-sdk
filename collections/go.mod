@@ -13,7 +13,10 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/golang/snappy v0.0.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/spf13/cast v1.7.0 // indirect
+	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

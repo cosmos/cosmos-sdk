@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/schema"
 	"github.com/tidwall/btree"
 
 	"cosmossdk.io/collections/codec"
+	"cosmossdk.io/schema"
 )
 
 // IndexingOptions are indexing options for the collections schema.

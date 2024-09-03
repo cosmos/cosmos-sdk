@@ -41,7 +41,6 @@ require (
 	github.com/cockroachdb/pebble v1.1.0 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cosmos/cosmos-db v1.0.3-0.20240829004618-717cba019b33 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/iavl v1.2.1-0.20240731145221-594b181f427e // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
@@ -101,3 +100,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
+
+replace github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.0-beta.1.0.20240813194616-eb5078efcf9e

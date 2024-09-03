@@ -3,6 +3,7 @@ package coretesting
 import (
 	"bytes"
 	"errors"
+	"fmt"
 
 	"github.com/tidwall/btree"
 
@@ -15,7 +16,11 @@ const (
 	bTreeDegree = 32
 )
 
-var errKeyEmpty = errors.New("key cannot be empty")
+var (
+	errKeyEmpty    = errors.New("key cannot be empty")
+	errValueNil    = errors.New("value cannot be nil")
+	errBatchClosed = errors.New("batch is closed")
+)
 
 var _ store.KVStore = (*MemKV)(nil)
 
@@ -195,9 +200,6 @@ var errInvalidIterator = errors.New("invalid iterator")
 // If the iterator is not valid, it returns the errInvalidIterator error.
 // Otherwise, it returns nil.
 func (mi *memIterator) Error() error {
-	if !mi.Valid() {
-		return errInvalidIterator
-	}
 	return nil
 }
 
@@ -237,18 +239,149 @@ func (mi *memIterator) keyInRange(key []byte) bool {
 
 // Key returns the key of the current item in the iterator.
 func (mi *memIterator) Key() []byte {
+	mi.assertValid()
 	return mi.iter.Item().key
 }
 
 // Value returns the value of the current item in the iterator.
 func (mi *memIterator) Value() []byte {
+	mi.assertValid()
 	return mi.iter.Item().value
 }
 
 // assertValid checks if the memIterator is in a valid state.
 // If there is an error, it panics with the error message.
 func (mi *memIterator) assertValid() {
-	if err := mi.Error(); err != nil {
-		panic(err)
+	if !mi.valid {
+		panic(errInvalidIterator)
 	}
+}
+
+var _ store.KVStoreWithBatch = (*MemDB)(nil)
+
+// MemDB is a simple in-memory key-value store with Batch support.
+type MemDB struct {
+	MemKV
+}
+
+// NewMemDB creates a new MemDB.
+func NewMemDB() store.KVStoreWithBatch {
+	return &MemDB{NewMemKV()}
+}
+
+// Close closes the MemDB, releasing any resources held.
+func (db *MemDB) Close() error {
+	return nil
+}
+
+// NewBatch returns a new memDBBatch.
+func (db *MemDB) NewBatch() store.Batch {
+	return newMemDBBatch(db)
+}
+
+// NewBatchWithSize returns a new memDBBatch with the given size.
+func (db *MemDB) NewBatchWithSize(size int) store.Batch {
+	return newMemDBBatch(db)
+}
+
+// memDBBatch operations
+type opType int
+
+const (
+	opTypeSet opType = iota + 1
+	opTypeDelete
+)
+
+type operation struct {
+	opType
+	key   []byte
+	value []byte
+}
+
+// memDBBatch handles in-memory batching.
+type memDBBatch struct {
+	db   *MemDB
+	ops  []operation
+	size int
+}
+
+var _ store.Batch = (*memDBBatch)(nil)
+
+// newMemDBBatch creates a new memDBBatch
+func newMemDBBatch(db *MemDB) *memDBBatch {
+	return &memDBBatch{
+		db:   db,
+		ops:  []operation{},
+		size: 0,
+	}
+}
+
+// Set implements Batch.
+func (b *memDBBatch) Set(key, value []byte) error {
+	if len(key) == 0 {
+		return errKeyEmpty
+	}
+	if value == nil {
+		return errValueNil
+	}
+	if b.ops == nil {
+		return errBatchClosed
+	}
+	b.size += len(key) + len(value)
+	b.ops = append(b.ops, operation{opTypeSet, key, value})
+	return nil
+}
+
+// Delete implements Batch.
+func (b *memDBBatch) Delete(key []byte) error {
+	if len(key) == 0 {
+		return errKeyEmpty
+	}
+	if b.ops == nil {
+		return errBatchClosed
+	}
+	b.size += len(key)
+	b.ops = append(b.ops, operation{opTypeDelete, key, nil})
+	return nil
+}
+
+// Write implements Batch.
+func (b *memDBBatch) Write() error {
+	if b.ops == nil {
+		return errBatchClosed
+	}
+
+	for _, op := range b.ops {
+		switch op.opType {
+		case opTypeSet:
+			b.db.set(op.key, op.value)
+		case opTypeDelete:
+			b.db.delete(op.key)
+		default:
+			return fmt.Errorf("unknown operation type %v (%v)", op.opType, op)
+		}
+	}
+
+	// Make sure batch cannot be used afterwards. Callers should still call Close(), for
+	return b.Close()
+}
+
+// WriteSync implements Batch.
+func (b *memDBBatch) WriteSync() error {
+	return b.Write()
+}
+
+// Close implements Batch.
+func (b *memDBBatch) Close() error {
+	b.ops = nil
+	b.size = 0
+	return nil
+}
+
+// GetByteSize implements Batch
+func (b *memDBBatch) GetByteSize() (int, error) {
+	if b.ops == nil {
+		return 0, errBatchClosed
+	}
+	return b.size, nil
 }

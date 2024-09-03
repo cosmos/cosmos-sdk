@@ -6,11 +6,11 @@ import (
 	"os"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -87,6 +87,6 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	}
 
 	if config.Commit {
-		simtestutil.PrintStats(db.(*dbm.GoLevelDB))
+		simtestutil.PrintStats(db.(*coretesting.GoLevelDB))
 	}
 }

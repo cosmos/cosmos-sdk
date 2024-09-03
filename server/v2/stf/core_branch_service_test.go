@@ -5,13 +5,11 @@ import (
 	"errors"
 	"testing"
 
-	gogotypes "github.com/cosmos/gogoproto/types"
-	"github.com/stretchr/testify/require"
-
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/gas"
 	"cosmossdk.io/server/v2/stf/mock"
+	gogotypes "github.com/cosmos/gogoproto/types"
 )
 
 func TestBranchService(t *testing.T) {
@@ -83,7 +81,10 @@ func TestBranchService(t *testing.T) {
 		if gasUsed == 0 {
 			t.Error("expected non-zero gasUsed")
 		}
-		require.Equal(t, int(originalGas-gasUsed), int(stfCtx.meter.Remaining()))
+		if stfCtx.meter.Remaining() != originalGas-gasUsed {
+			t.Error("expected gas to be reverted")
+		}
+
 		stateNotHas(t, stfCtx.state, "cookies")
 	})
 

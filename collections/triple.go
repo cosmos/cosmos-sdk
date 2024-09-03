@@ -273,69 +273,64 @@ func (t tripleKeyCodec[K1, K2, K3]) SizeNonTerminal(key Triple[K1, K2, K3]) int 
 	return size
 }
 
-// defaultConfig has all the options disabled, except Color and TimeFormat
-var defaultConfig = Config{
-	Order: OrderAscending,
-}
-
-// Config defines configuration for the Triple collection iterator.
-type Config struct {
-	Order Order
-}
-
-type Option func(*Config)
-
-// OrderOption sets the order for the iterator.
-func OrderOption(order Order) Option {
-	return func(cfg *Config) {
-		cfg.Order = order
-	}
-}
-
 // NewPrefixUntilTripleRange defines a collection query which ranges until the provided Pair prefix.
 // Unstable: this API might change in the future.
-func NewPrefixUntilTripleRange[K1, K2, K3 any](k1 K1, options ...Option) Ranger[Triple[K1, K2, K3]] {
-	cfg := defaultConfig
-	for _, opt := range options {
-		opt(&cfg)
-	}
-
+func NewPrefixUntilTripleRange[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]] {
 	key := TriplePrefix[K1, K2, K3](k1)
-
 	return &Range[Triple[K1, K2, K3]]{
-		end:   RangeKeyPrefixEnd(key),
-		order: cfg.Order,
+		end: RangeKeyPrefixEnd(key),
 	}
 }
 
-// NewPrefixedTripleRange provides a Range for all keys prefixed with the given first part of the Triple key.
-func NewPrefixedTripleRange[K1, K2, K3 any](k1 K1, options ...Option) Ranger[Triple[K1, K2, K3]] {
-	cfg := defaultConfig
-	for _, opt := range options {
-		opt(&cfg)
-	}
-
+// NewPrefixedTripleRange provides a Range for all keys prefixed with the given
+// first part of the Triple key.
+func NewPrefixedTripleRange[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]] {
 	key := TriplePrefix[K1, K2, K3](k1)
-
 	return &Range[Triple[K1, K2, K3]]{
 		start: RangeKeyExact(key),
 		end:   RangeKeyPrefixEnd(key),
-		order: cfg.Order,
 	}
 }
 
 // NewSuperPrefixedTripleRange provides a Range for all keys prefixed with the given
 // first and second parts of the Triple key.
-func NewSuperPrefixedTripleRange[K1, K2, K3 any](k1 K1, k2 K2, options ...Option) Ranger[Triple[K1, K2, K3]] {
+func NewSuperPrefixedTripleRange[K1, K2, K3 any](k1 K1, k2 K2) Ranger[Triple[K1, K2, K3]] {
 	key := TripleSuperPrefix[K1, K2, K3](k1, k2)
-	cfg := defaultConfig
-	for _, opt := range options {
-		opt(&cfg)
-	}
-
 	return &Range[Triple[K1, K2, K3]]{
 		start: RangeKeyExact(key),
 		end:   RangeKeyPrefixEnd(key),
-		order: cfg.Order,
+	}
+}
+
+// NewPrefixUntilTripleRangeReversed defines a collection query which ranges until the provided Pair prefix
+// in reverse order.
+// Unstable: this API might change in the future.
+func NewPrefixUntilTripleRangeReversed[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]] {
+	key := TriplePrefix[K1, K2, K3](k1)
+	return &Range[Triple[K1, K2, K3]]{
+		end:   RangeKeyPrefixEnd(key),
+		order: OrderDescending,
+	}
+}
+
+// NewPrefixedTripleRange provides a Range for all keys prefixed with the given
+// first part of the Triple key in reverse order.
+func NewPrefixedTripleRangeReversed[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]] {
+	key := TriplePrefix[K1, K2, K3](k1)
+	return &Range[Triple[K1, K2, K3]]{
+		start: RangeKeyExact(key),
+		end:   RangeKeyPrefixEnd(key),
+		order: OrderDescending,
+	}
+}
+
+// NewSuperPrefixedTripleRange provides a Range for all keys prefixed with the given
+// first and second parts of the Triple key in reverse order.
+func NewSuperPrefixedTripleRangeReversed[K1, K2, K3 any](k1 K1, k2 K2) Ranger[Triple[K1, K2, K3]] {
+	key := TripleSuperPrefix[K1, K2, K3](k1, k2)
+	return &Range[Triple[K1, K2, K3]]{
+		start: RangeKeyExact(key),
+		end:   RangeKeyPrefixEnd(key),
+		order: OrderDescending,
 	}
 }

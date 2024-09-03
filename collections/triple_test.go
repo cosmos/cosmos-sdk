@@ -46,7 +46,7 @@ func TestTripleRange(t *testing.T) {
 	require.Equal(t, keys[:3], gotKeys)
 
 	// we prefix over (1) with "reverse" enabled, we expect 3 results in reverse order
-	iter, err = keySet.Iterate(ctx, collections.NewPrefixedTripleRange[uint64, string, []byte](uint64(1), collections.OrderOption(collections.OrderDescending)))
+	iter, err = keySet.Iterate(ctx, collections.NewPrefixedTripleRangeReversed[uint64, string, []byte](uint64(1)))
 	require.NoError(t, err)
 	gotKeys, err = iter.Keys()
 	require.NoError(t, err)
@@ -63,7 +63,7 @@ func TestTripleRange(t *testing.T) {
 	require.Equal(t, keys[:2], gotKeys)
 
 	// we prefix over Join(1, "A") with "reverse" enabled, we expect 2 results in reverse order
-	iter, err = keySet.Iterate(ctx, collections.NewSuperPrefixedTripleRange[uint64, string, []byte](1, "A", collections.OrderOption(collections.OrderDescending)))
+	iter, err = keySet.Iterate(ctx, collections.NewSuperPrefixedTripleRangeReversed[uint64, string, []byte](1, "A"))
 	require.NoError(t, err)
 	gotKeys, err = iter.Keys()
 	require.NoError(t, err)

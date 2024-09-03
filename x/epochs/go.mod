@@ -25,11 +25,7 @@ require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
 	cosmossdk.io/log v1.4.1 // indirect
 	cosmossdk.io/math v1.3.0 // indirect
-<<<<<<< HEAD
 	cosmossdk.io/schema v0.2.0 // indirect
-	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000 // indirect
-=======
->>>>>>> 70488a89a (refactor: revert auth extraction  (#21507))
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
@@ -176,20 +172,12 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 
 // TODO remove post spinning out all modules
 replace (
-<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/core => cosmossdk.io/core v0.12.1-0.20240829151633-41a9af76e071 // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240815194237-858ec2fcb897 // main
-	cosmossdk.io/x/auth => ../auth
-=======
-	cosmossdk.io/api => ../../api
-	cosmossdk.io/core => ../../core
-	cosmossdk.io/core/testing => ../../core/testing
-	cosmossdk.io/store => ../../store
->>>>>>> 70488a89a (refactor: revert auth extraction  (#21507))
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/staking => ../staking

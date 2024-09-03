@@ -3,23 +3,12 @@ module cosmossdk.io/server/v2/cometbft
 go 1.23
 
 replace (
-<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/core => cosmossdk.io/core v0.12.1-0.20240829151633-41a9af76e071 // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240815194237-858ec2fcb897 // main
-	cosmossdk.io/x/auth => ../../../x/auth
-=======
-	cosmossdk.io/api => ../../../api
-	cosmossdk.io/core => ../../../core
-	cosmossdk.io/core/testing => ../../../core/testing
-	cosmossdk.io/server/v2 => ../
-	cosmossdk.io/server/v2/appmanager => ../appmanager
-	cosmossdk.io/store => ../../../store
-	cosmossdk.io/store/v2 => ../../../store/v2
->>>>>>> 70488a89a (refactor: revert auth extraction  (#21507))
 	cosmossdk.io/x/bank => ../../../x/bank
 	cosmossdk.io/x/consensus => ../../../x/consensus
 	cosmossdk.io/x/staking => ../../../x/staking
@@ -58,12 +47,7 @@ require (
 	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/math v1.3.0 // indirect
-<<<<<<< HEAD
 	cosmossdk.io/store v1.1.1-0.20240815194237-858ec2fcb897 // indirect
-	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000 // indirect
-=======
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
->>>>>>> 70488a89a (refactor: revert auth extraction  (#21507))
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.13.4-0.20240815194237-858ec2fcb897 // indirect; main

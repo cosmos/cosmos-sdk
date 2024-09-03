@@ -26,9 +26,13 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.4.1 // indirect
 	cosmossdk.io/math v1.3.0
+<<<<<<< HEAD
 	cosmossdk.io/schema v0.2.0 // indirect
 	cosmossdk.io/store v1.1.1-0.20240815194237-858ec2fcb897 // indirect
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
+=======
+	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
+>>>>>>> 70488a89a (refactor: revert auth extraction  (#21507))
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -176,6 +180,7 @@ replace github.com/cosmos/cosmos-sdk => ./../../
 
 // TODO remove post spinning out all modules
 replace (
+<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 // main
 	// pseudo version lower than the latest tag
@@ -183,6 +188,12 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240815194237-858ec2fcb897 // main
 	cosmossdk.io/x/auth => ./../../x/auth
+=======
+	cosmossdk.io/api => ./../../api
+	cosmossdk.io/core => ./../../core
+	cosmossdk.io/core/testing => ../../core/testing
+	cosmossdk.io/store => ./../../store
+>>>>>>> 70488a89a (refactor: revert auth extraction  (#21507))
 	cosmossdk.io/x/bank => ./../../x/bank
 	cosmossdk.io/x/consensus => ./../../x/consensus
 	cosmossdk.io/x/distribution => ./../../x/distribution

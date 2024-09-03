@@ -9,8 +9,12 @@ require (
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
+<<<<<<< HEAD
 	cosmossdk.io/store v1.1.1-0.20240815194237-858ec2fcb897 // main
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
+=======
+	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
+>>>>>>> 70488a89a (refactor: revert auth extraction  (#21507))
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
 	github.com/cometbft/cometbft v1.0.0-rc1
@@ -205,6 +209,7 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../.
 
 replace (
+<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 // main
 	// pseudo version lower than the latest tag
@@ -212,6 +217,12 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240815194237-858ec2fcb897 // main
 	cosmossdk.io/x/auth => ../auth
+=======
+	cosmossdk.io/api => ../../api
+	cosmossdk.io/core => ../../core
+	cosmossdk.io/core/testing => ../../core/testing
+	cosmossdk.io/store => ../../store
+>>>>>>> 70488a89a (refactor: revert auth extraction  (#21507))
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/gov => ../gov

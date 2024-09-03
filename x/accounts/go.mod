@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // main
 	cosmossdk.io/core v1.0.0 // main
-	cosmossdk.io/core/testing v0.0.0-20240826100755-28c792bcd06c // main
+	cosmossdk.io/core/testing v0.0.0-20240903211221-70488a89a87a // main
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91

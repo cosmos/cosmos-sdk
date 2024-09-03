@@ -5,7 +5,7 @@ go 1.23
 require (
 	cosmossdk.io/api v0.8.0
 	cosmossdk.io/core v1.0.0 // main
-	cosmossdk.io/core/testing v0.0.0-20240826100755-28c792bcd06c // main
+	cosmossdk.io/core/testing v0.0.0-20240903211221-70488a89a87a // main
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1

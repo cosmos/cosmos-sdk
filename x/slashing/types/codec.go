@@ -1,7 +1,6 @@
 package types
 
 import (
-	corelegacy "cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	coretransaction "cosmossdk.io/core/transaction"
 
@@ -10,7 +9,7 @@ import (
 )
 
 // RegisterLegacyAminoCodec registers concrete types on LegacyAmino codec
-func RegisterLegacyAminoCodec(cdc corelegacy.Amino) {
+func RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
 	cdc.RegisterConcrete(Params{}, "cosmos-sdk/x/slashing/Params")
 	legacy.RegisterAminoMsg(cdc, &MsgUnjail{}, "cosmos-sdk/MsgUnjail")
 	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/x/slashing/MsgUpdateParams")

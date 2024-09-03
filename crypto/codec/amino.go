@@ -3,7 +3,7 @@ package codec
 import (
 	"github.com/cometbft/cometbft/crypto/sr25519"
 
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 
 	bls12_381 "github.com/cosmos/cosmos-sdk/crypto/keys/bls12_381"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -14,7 +14,7 @@ import (
 
 // RegisterCrypto registers all crypto dependency types with the provided Amino
 // codec.
-func RegisterCrypto(cdc legacy.Amino) {
+func RegisterCrypto(cdc registry.AminoRegistrar) {
 	cdc.RegisterInterface((*cryptotypes.PubKey)(nil), nil)
 	cdc.RegisterConcrete(sr25519.PubKey{},
 		sr25519.PubKeyName)

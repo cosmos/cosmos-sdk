@@ -7,7 +7,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/params/keeper"
 	"cosmossdk.io/x/params/types/proposal"
@@ -51,7 +50,7 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the params module's types on the given LegacyAmino codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
 	proposal.RegisterLegacyAminoCodec(cdc)
 }
 

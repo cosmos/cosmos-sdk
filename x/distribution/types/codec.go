@@ -1,7 +1,6 @@
 package types
 
 import (
-	corelegacy "cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	coretransaction "cosmossdk.io/core/transaction"
 
@@ -12,7 +11,7 @@ import (
 // RegisterLegacyAminoCodec registers the necessary x/distribution interfaces
 // and concrete types on the provided LegacyAmino codec. These types are used
 // for Amino JSON serialization.
-func RegisterLegacyAminoCodec(cdc corelegacy.Amino) {
+func RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
 	legacy.RegisterAminoMsg(cdc, &MsgWithdrawDelegatorReward{}, "cosmos-sdk/MsgWithdrawDelegationReward")
 	legacy.RegisterAminoMsg(cdc, &MsgWithdrawValidatorCommission{}, "cosmos-sdk/MsgWithdrawValCommission")
 	legacy.RegisterAminoMsg(cdc, &MsgSetWithdrawAddress{}, "cosmos-sdk/MsgModifyWithdrawAddress")

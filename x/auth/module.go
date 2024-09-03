@@ -10,7 +10,6 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 
@@ -75,7 +74,7 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the auth module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 

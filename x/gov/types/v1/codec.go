@@ -1,7 +1,6 @@
 package v1
 
 import (
-	corelegacy "cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	coretransaction "cosmossdk.io/core/transaction"
 
@@ -11,7 +10,7 @@ import (
 
 // RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
 // governance module.
-func RegisterLegacyAminoCodec(cdc corelegacy.Amino) {
+func RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
 	legacy.RegisterAminoMsg(cdc, &MsgSubmitProposal{}, "cosmos-sdk/v1/MsgSubmitProposal")
 	legacy.RegisterAminoMsg(cdc, &MsgSubmitMultipleChoiceProposal{}, "gov/MsgSubmitMultipleChoiceProposal")
 	legacy.RegisterAminoMsg(cdc, &MsgDeposit{}, "cosmos-sdk/v1/MsgDeposit")

@@ -1,7 +1,6 @@
 package group
 
 import (
-	corelegacy "cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	coretransaction "cosmossdk.io/core/transaction"
 
@@ -12,7 +11,7 @@ import (
 // RegisterLegacyAminoCodec registers all the necessary group module concrete
 // types and interfaces with the provided codec reference.
 // These types are used for Amino JSON serialization.
-func RegisterLegacyAminoCodec(cdc corelegacy.Amino) {
+func RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
 	cdc.RegisterInterface((*DecisionPolicy)(nil), nil)
 	cdc.RegisterConcrete(&ThresholdDecisionPolicy{}, "cosmos-sdk/ThresholdDecisionPolicy")
 	cdc.RegisterConcrete(&PercentageDecisionPolicy{}, "cosmos-sdk/PercentageDecisionPolicy")

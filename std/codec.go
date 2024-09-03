@@ -1,7 +1,6 @@
 package std
 
 import (
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -11,7 +10,7 @@ import (
 )
 
 // RegisterLegacyAminoCodec registers types with the Amino codec.
-func RegisterLegacyAminoCodec(cdc legacy.Amino) {
+func RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
 	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
 	codec.RegisterEvidences(cdc)

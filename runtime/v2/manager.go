@@ -20,7 +20,6 @@ import (
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -85,7 +84,7 @@ func (m *MM[T]) Modules() map[string]appmodulev2.AppModule {
 }
 
 // RegisterLegacyAminoCodec registers all module codecs
-func (m *MM[T]) RegisterLegacyAminoCodec(cdc legacy.Amino) {
+func (m *MM[T]) RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
 	for _, b := range m.modules {
 		if mod, ok := b.(appmodule.HasAminoCodec); ok {
 			mod.RegisterLegacyAminoCodec(cdc)

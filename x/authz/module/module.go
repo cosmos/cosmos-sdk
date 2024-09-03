@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/authz"
@@ -93,7 +92,7 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 }
 
 // RegisterLegacyAminoCodec registers the authz module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
 	authz.RegisterLegacyAminoCodec(cdc)
 }
 

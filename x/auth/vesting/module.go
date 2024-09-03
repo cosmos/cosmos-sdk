@@ -2,7 +2,6 @@ package vesting
 
 import (
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -34,7 +33,7 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the module's types with the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
+func (AppModule) RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 

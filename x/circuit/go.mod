@@ -10,7 +10,6 @@ require (
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
-	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/golang/protobuf v1.5.4
@@ -180,7 +179,6 @@ replace (
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/store => ../../store
-	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/staking => ../staking

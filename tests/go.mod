@@ -7,7 +7,6 @@ require (
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v1.0.0
 	cosmossdk.io/depinject v1.0.0
-	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/simapp v0.0.0-20230309163709-87da587416ba
@@ -38,7 +37,6 @@ require (
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/auth v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
@@ -65,6 +63,7 @@ require (
 	cloud.google.com/go/iam v1.1.13 // indirect
 	cloud.google.com/go/storage v1.43.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860 // indirect
+	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/schema v0.2.0 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
@@ -245,7 +244,6 @@ replace (
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/accounts/defaults/lockup => ../x/accounts/defaults/lockup
 	cosmossdk.io/x/accounts/defaults/multisig => ../x/accounts/defaults/multisig
-	cosmossdk.io/x/auth => ../x/auth
 	cosmossdk.io/x/authz => ../x/authz
 	cosmossdk.io/x/bank => ../x/bank
 	cosmossdk.io/x/circuit => ../x/circuit

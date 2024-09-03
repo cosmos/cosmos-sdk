@@ -24,7 +24,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 `SimApp` is an application built using the Cosmos SDK for testing and educational purposes.
-It won't be tagged or intented to be imported in an application.
+It won't be tagged or intended to be imported in an application.
 This changelog is aimed to help developers understand the wiring changes between SDK versions.
 It is an exautive list of changes that completes the SimApp section in the [UPGRADING.md](https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#simapp)
 
@@ -45,7 +45,7 @@ Always refer to the [UPGRADING.md](https://github.com/cosmos/cosmos-sdk/blob/mai
 * [#20771](https://github.com/cosmos/cosmos-sdk/pull/20771) Use client/v2 `GetNodeHomeDirectory` helper in `app.go` and use the `DefaultNodeHome` constant everywhere in the app.
 * [#20490](https://github.com/cosmos/cosmos-sdk/pull/20490) Refactor simulations to make use of `testutil/sims` instead of `runsims`.
 * [#19726](https://github.com/cosmos/cosmos-sdk/pull/19726) Update APIs to match CometBFT v1.
-
+* [#21466](https://github.com/cosmos/cosmos-sdk/pull/21466) Allow chains to plug in their own public key types in `base.Account`
 <!-- TODO: move changelog.md elements to here -->
 
 ## v0.47 to v0.50

@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"io"
 
-	dbm "github.com/cosmos/cosmos-db"
-
 	clienthelpers "cosmossdk.io/client/v2/helpers"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/legacy"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts"
@@ -113,7 +113,7 @@ func AppConfig() depinject.Config {
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(
 	logger log.Logger,
-	db dbm.DB,
+	db corestore.KVStoreWithBatch,
 	traceStore io.Writer,
 	loadLatest bool,
 	appOpts servertypes.AppOptions,
@@ -287,7 +287,7 @@ func NewSimApp(
 	return app
 }
 
-// overwrite default ante handlers with custom ante handlers
+// setCustomAnteHandler overwrites default ante handlers with custom ante handlers
 // set SkipAnteHandler to true in app config and set custom ante handler on baseapp
 func (app *SimApp) setCustomAnteHandler() {
 	anteHandler, err := NewAnteHandler(
@@ -371,7 +371,9 @@ func GetMaccPerms() map[string][]string {
 }
 
 // BlockedAddresses returns all the app's blocked account addresses.
-func BlockedAddresses() map[string]bool {
+// This function takes an address.Codec parameter to maintain compatibility
+// with the signature of the same function in appV1.
+func BlockedAddresses(_ address.Codec) (map[string]bool, error) {
 	result := make(map[string]bool)
 
 	if len(blockAccAddrs) > 0 {
@@ -384,5 +386,5 @@ func BlockedAddresses() map[string]bool {
 		}
 	}
 
-	return result
+	return result, nil
 }

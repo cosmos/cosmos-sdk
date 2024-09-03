@@ -618,7 +618,7 @@ e.g. in `NewSimApp`:
 ```go
 func NewSimApp(
     logger log.Logger,
-    db dbm.DB,
+    db corestore.KVStoreWithBatch,
     traceStore io.Writer,
     loadLatest bool,
     appOpts servertypes.AppOptions,

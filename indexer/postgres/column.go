@@ -25,7 +25,7 @@ func (tm *objectIndexer) createColumnDefinition(writer io.Writer, field schema.F
 	} else {
 		switch field.Kind {
 		case schema.EnumKind:
-			_, err = fmt.Fprintf(writer, "%q", enumTypeName(tm.moduleName, field.EnumType))
+			_, err = fmt.Fprintf(writer, "%q", enumTypeName(tm.moduleName, field.ReferencedType))
 			if err != nil {
 				return err
 			}

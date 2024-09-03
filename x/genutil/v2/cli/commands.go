@@ -21,7 +21,7 @@ type genesisMM interface {
 
 // Commands adds core sdk's sub-commands into genesis command.
 func Commands(genutilModule genutil.AppModule, genMM genesisMM, appExport v2.AppExporter) *cobra.Command {
-	return CommandsWithCustomMigrationMap(genutilModule, genMM, appExport, genutiltypes.MigrationMap{})
+	return CommandsWithCustomMigrationMap(genutilModule, genMM, appExport, cli.MigrationMap)
 }
 
 // CommandsWithCustomMigrationMap adds core sdk's sub-commands into genesis command with custom migration map.

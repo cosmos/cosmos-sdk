@@ -8,12 +8,12 @@ import (
 )
 
 // ObjectTypeGen generates random ObjectType's based on the validity criteria of object types.
-func ObjectTypeGen(sch schema.Schema) *rapid.Generator[schema.ObjectType] {
-	keyFieldsGen := rapid.SliceOfNDistinct(KeyFieldGen(sch), 1, 6, func(f schema.Field) string {
+func ObjectTypeGen(typeSet schema.TypeSet) *rapid.Generator[schema.ObjectType] {
+	keyFieldsGen := rapid.SliceOfNDistinct(KeyFieldGen(typeSet), 1, 6, func(f schema.Field) string {
 		return f.Name
 	})
 
-	valueFieldsGen := rapid.SliceOfNDistinct(FieldGen(sch), 1, 12, func(f schema.Field) string {
+	valueFieldsGen := rapid.SliceOfNDistinct(FieldGen(typeSet), 1, 12, func(f schema.Field) string {
 		return f.Name
 	})
 
@@ -21,7 +21,7 @@ func ObjectTypeGen(sch schema.Schema) *rapid.Generator[schema.ObjectType] {
 		typ := schema.ObjectType{
 			Name: NameGen.Filter(func(s string) bool {
 				// filter out names that already exist in the schema
-				_, found := sch.LookupType(s)
+				_, found := typeSet.LookupType(s)
 				return !found
 			}).Draw(t, "name"),
 		}
@@ -56,13 +56,13 @@ func hasDuplicateFieldNames(typeNames map[string]bool, fields []schema.Field) bo
 }
 
 // ObjectInsertGen generates object updates that are valid for insertion.
-func ObjectInsertGen(objectType schema.ObjectType, sch schema.Schema) *rapid.Generator[schema.ObjectUpdate] {
-	return ObjectUpdateGen(objectType, nil, sch)
+func ObjectInsertGen(objectType schema.ObjectType, typeSet schema.TypeSet) *rapid.Generator[schema.ObjectUpdate] {
+	return ObjectUpdateGen(objectType, nil, typeSet)
 }
 
 // ObjectUpdateGen generates object updates that are valid for updates using the provided state map as a source
 // of valid existing keys.
-func ObjectUpdateGen(objectType schema.ObjectType, state *btree.Map[string, schema.ObjectUpdate], sch schema.Schema) *rapid.Generator[schema.ObjectUpdate] {
+func ObjectUpdateGen(objectType schema.ObjectType, state *btree.Map[string, schema.ObjectUpdate], sch schema.TypeSet) *rapid.Generator[schema.ObjectUpdate] {
 	keyGen := ObjectKeyGen(objectType.KeyFields, sch).Filter(func(key interface{}) bool {
 		// filter out keys that exist in the state
 		if state != nil {

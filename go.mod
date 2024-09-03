@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
-	cosmossdk.io/schema v0.1.1
+	cosmossdk.io/schema v0.2.0
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
 	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
@@ -22,7 +22,7 @@ require (
 	github.com/cometbft/cometbft v1.0.0-rc1
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
 	github.com/cosmos/btcutil v1.0.5
-	github.com/cosmos/cosmos-db v1.0.2
+	github.com/cosmos/cosmos-db v1.0.3-0.20240829004618-717cba019b33
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/crypto v0.1.2
 	github.com/cosmos/go-bip39 v1.0.0
@@ -84,7 +84,7 @@ require (
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cometbft/cometbft-db v0.12.0 // indirect
 	github.com/cosmos/iavl v1.2.1-0.20240725141113-7adc688cf179 // indirect
-	github.com/cosmos/ics23/go v0.10.0 // indirect
+	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgraph-io/badger/v4 v4.2.0 // indirect
@@ -182,13 +182,14 @@ require (
 // 	<temporary replace>
 // )
 // TODO remove after all modules have their own go.mods
+replace github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.0-beta.1.0.20240813194616-eb5078efcf9e
+
 replace (
 	cosmossdk.io/api => ./api
 	cosmossdk.io/collections => ./collections
 	cosmossdk.io/core => ./core
 	cosmossdk.io/core/testing => ./core/testing
 	cosmossdk.io/store => ./store
-	cosmossdk.io/x/accounts => ./x/accounts
 	cosmossdk.io/x/auth => ./x/auth
 	cosmossdk.io/x/bank => ./x/bank
 	cosmossdk.io/x/staking => ./x/staking

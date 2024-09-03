@@ -121,6 +121,10 @@ func (k Keeper) paramCheck(ctx context.Context, consensusParams cmtproto.Consens
 
 	paramsProto, err := k.ParamsStore.Get(ctx)
 	if err == nil {
+		// initialize version params with zero value if not set
+		if paramsProto.Version == nil {
+			paramsProto.Version = &cmtproto.VersionParams{}
+		}
 		params = cmttypes.ConsensusParamsFromProto(paramsProto)
 	} else if errors.Is(err, collections.ErrNotFound) {
 		params = cmttypes.ConsensusParams{}

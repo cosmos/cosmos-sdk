@@ -13,6 +13,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 
 	coreheader "cosmossdk.io/core/header"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
 	authtypes "cosmossdk.io/x/auth/types"
@@ -84,7 +85,7 @@ type StartupConfig struct {
 	BaseAppOption   runtime.BaseAppOption
 	AtGenesis       bool
 	GenesisAccounts []GenesisAccount
-	DB              dbm.DB
+	DB              corestore.KVStoreWithBatch
 }
 
 func DefaultStartUpConfig() StartupConfig {

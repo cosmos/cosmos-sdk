@@ -50,12 +50,12 @@ require (
 	github.com/cometbft/cometbft-db v0.12.0 // indirect
 	github.com/cometbft/cometbft/api v1.0.0-rc.1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
-	github.com/cosmos/cosmos-db v1.0.2 // indirect
+	github.com/cosmos/cosmos-db v1.0.3-0.20240829004618-717cba019b33 // indirect
 	github.com/cosmos/crypto v0.1.2 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.2.1-0.20240725141113-7adc688cf179 // indirect
-	github.com/cosmos/ics23/go v0.10.0 // indirect
+	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -168,11 +168,13 @@ require (
 require cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
 
 require (
-	cosmossdk.io/schema v0.1.1 // indirect
+	cosmossdk.io/schema v0.2.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 )
 
 replace github.com/cosmos/cosmos-sdk => ../../.
+
+replace github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.0-beta.1.0.20240813194616-eb5078efcf9e
 
 // TODO remove post spinning out all modules
 replace (
@@ -180,7 +182,7 @@ replace (
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/core/testing => ../../core/testing
-	cosmossdk.io/x/accounts => ../accounts
+	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/staking => ../staking
 	cosmossdk.io/x/tx => ../tx

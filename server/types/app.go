@@ -6,9 +6,9 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/grpc"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/snapshots"
 	storetypes "cosmossdk.io/store/types"
@@ -65,7 +65,7 @@ type (
 
 	// AppCreator is a function that allows us to lazily initialize an
 	// application using various configurations.
-	AppCreator[T Application] func(log.Logger, dbm.DB, io.Writer, AppOptions) T
+	AppCreator[T Application] func(log.Logger, corestore.KVStoreWithBatch, io.Writer, AppOptions) T
 
 	// ExportedApp represents an exported app state, along with
 	// validators, consensus params and latest app height.
@@ -84,7 +84,7 @@ type (
 	// JSON-serializable structure and returns the current validator set.
 	AppExporter func(
 		logger log.Logger,
-		db dbm.DB,
+		db corestore.KVStoreWithBatch,
 		traceWriter io.Writer,
 		height int64,
 		forZeroHeight bool,

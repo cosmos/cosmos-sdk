@@ -436,7 +436,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 			expErrMsg: "validator does not exist",
 		},
 		{
-			name: "change commmission rate in <24hrs",
+			name: "change commission rate in <24hrs",
 			ctx:  ctx,
 			input: &types.MsgEditValidator{
 				Description: types.Description{
@@ -1320,7 +1320,7 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 			name:      "pubkey already associated with another validator",
 			malleate:  func() sdk.Context { return ctx },
 			isErr:     true,
-			errMsg:    "validator already exist for this pubkey; must use new validator pubkey",
+			errMsg:    "validator already exists for this pubkey; must use new validator pubkey",
 			newPubKey: existingPubkey,
 			validator: validators[0].GetOperator(),
 		},

@@ -11,10 +11,10 @@ import (
 
 // RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
 // evidence module.
-func RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
-	cdc.RegisterInterface((*exported.Evidence)(nil), nil)
-	legacy.RegisterAminoMsg(cdc, &MsgSubmitEvidence{}, "cosmos-sdk/MsgSubmitEvidence")
-	cdc.RegisterConcrete(&Equivocation{}, "cosmos-sdk/Equivocation")
+func RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	registrar.RegisterInterface((*exported.Evidence)(nil), nil)
+	legacy.RegisterAminoMsg(registrar, &MsgSubmitEvidence{}, "cosmos-sdk/MsgSubmitEvidence")
+	registrar.RegisterConcrete(&Equivocation{}, "cosmos-sdk/Equivocation")
 }
 
 // RegisterInterfaces registers the interfaces types with the interface registry.

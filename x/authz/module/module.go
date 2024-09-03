@@ -92,8 +92,8 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 }
 
 // RegisterLegacyAminoCodec registers the authz module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
-	authz.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	authz.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterInterfaces registers the authz module's interface types

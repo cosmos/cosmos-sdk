@@ -293,14 +293,14 @@ func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 }
 
 // RegisterLegacyAminoCodec registers all module codecs
-func (m *Manager) RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
+func (m *Manager) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
 	for name, b := range m.Modules {
 		if _, ok := b.(interface{ RegisterLegacyAminoCodec(*codec.LegacyAmino) }); ok {
 			panic(fmt.Sprintf("%s uses a deprecated amino registration api, implement HasAminoCodec instead if necessary", name))
 		}
 
 		if mod, ok := b.(HasAminoCodec); ok {
-			mod.RegisterLegacyAminoCodec(cdc)
+			mod.RegisterLegacyAminoCodec(registrar)
 		}
 	}
 }

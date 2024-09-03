@@ -11,9 +11,9 @@ const (
 )
 
 // RegisterLegacyAminoCodec registers the sdk message type.
-func RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
-	cdc.RegisterInterface((*transaction.Msg)(nil), nil)
-	cdc.RegisterInterface((*Tx)(nil), nil)
+func RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	registrar.RegisterInterface((*transaction.Msg)(nil), nil)
+	registrar.RegisterInterface((*Tx)(nil), nil)
 }
 
 // RegisterInterfaces registers the sdk message type.

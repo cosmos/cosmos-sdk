@@ -14,24 +14,23 @@ import (
 
 // RegisterCrypto registers all crypto dependency types with the provided Amino
 // codec.
-func RegisterCrypto(cdc registry.AminoRegistrar) {
-	cdc.RegisterInterface((*cryptotypes.PubKey)(nil), nil)
-	cdc.RegisterConcrete(sr25519.PubKey{},
+func RegisterCrypto(registrar registry.AminoRegistrar) {
+	registrar.RegisterInterface((*cryptotypes.PubKey)(nil), nil)
+	registrar.RegisterConcrete(sr25519.PubKey{},
 		sr25519.PubKeyName)
-	cdc.RegisterConcrete(&ed25519.PubKey{},
+	registrar.RegisterConcrete(&ed25519.PubKey{},
 		ed25519.PubKeyName)
-	cdc.RegisterConcrete(&secp256k1.PubKey{},
+	registrar.RegisterConcrete(&secp256k1.PubKey{},
 		secp256k1.PubKeyName)
-	cdc.RegisterConcrete(&bls12_381.PubKey{}, bls12_381.PubKeyName)
-	cdc.RegisterConcrete(&kmultisig.LegacyAminoPubKey{},
+	registrar.RegisterConcrete(&bls12_381.PubKey{}, bls12_381.PubKeyName)
+	registrar.RegisterConcrete(&kmultisig.LegacyAminoPubKey{},
 		kmultisig.PubKeyAminoRoute)
-
-	cdc.RegisterInterface((*cryptotypes.PrivKey)(nil), nil)
-	cdc.RegisterConcrete(sr25519.PrivKey{},
+	registrar.RegisterInterface((*cryptotypes.PrivKey)(nil), nil)
+	registrar.RegisterConcrete(sr25519.PrivKey{},
 		sr25519.PrivKeyName)
-	cdc.RegisterConcrete(&ed25519.PrivKey{},
+	registrar.RegisterConcrete(&ed25519.PrivKey{},
 		ed25519.PrivKeyName)
-	cdc.RegisterConcrete(&secp256k1.PrivKey{},
+	registrar.RegisterConcrete(&secp256k1.PrivKey{},
 		secp256k1.PrivKeyName)
-	cdc.RegisterConcrete(&bls12_381.PrivKey{}, bls12_381.PrivKeyName)
+	registrar.RegisterConcrete(&bls12_381.PrivKey{}, bls12_381.PrivKeyName)
 }

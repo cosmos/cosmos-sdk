@@ -12,13 +12,13 @@ import (
 
 // RegisterLegacyAminoCodec registers the necessary x/authz interfaces and concrete types
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
-func RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
-	legacy.RegisterAminoMsg(cdc, &MsgGrant{}, "cosmos-sdk/MsgGrant")
-	legacy.RegisterAminoMsg(cdc, &MsgRevoke{}, "cosmos-sdk/MsgRevoke")
-	legacy.RegisterAminoMsg(cdc, &MsgExec{}, "cosmos-sdk/MsgExec")
+func RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	legacy.RegisterAminoMsg(registrar, &MsgGrant{}, "cosmos-sdk/MsgGrant")
+	legacy.RegisterAminoMsg(registrar, &MsgRevoke{}, "cosmos-sdk/MsgRevoke")
+	legacy.RegisterAminoMsg(registrar, &MsgExec{}, "cosmos-sdk/MsgExec")
 
-	cdc.RegisterInterface((*Authorization)(nil), nil)
-	cdc.RegisterConcrete(&GenericAuthorization{}, "cosmos-sdk/GenericAuthorization")
+	registrar.RegisterInterface((*Authorization)(nil), nil)
+	registrar.RegisterConcrete(&GenericAuthorization{}, "cosmos-sdk/GenericAuthorization")
 }
 
 // RegisterInterfaces registers the interfaces types with the interface registry

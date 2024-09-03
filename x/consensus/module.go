@@ -71,8 +71,8 @@ func (AppModule) IsAppModule() {}
 func (AppModule) Name() string { return types.ModuleName }
 
 // RegisterLegacyAminoCodec registers the consensus module's types on the LegacyAmino codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
-	types.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	types.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes

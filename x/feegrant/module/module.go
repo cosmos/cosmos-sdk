@@ -67,8 +67,8 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the feegrant module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
-	feegrant.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	feegrant.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterInterfaces registers the feegrant module's interface types

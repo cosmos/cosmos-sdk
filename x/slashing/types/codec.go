@@ -9,10 +9,10 @@ import (
 )
 
 // RegisterLegacyAminoCodec registers concrete types on LegacyAmino codec
-func RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
-	cdc.RegisterConcrete(Params{}, "cosmos-sdk/x/slashing/Params")
-	legacy.RegisterAminoMsg(cdc, &MsgUnjail{}, "cosmos-sdk/MsgUnjail")
-	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/x/slashing/MsgUpdateParams")
+func RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	registrar.RegisterConcrete(Params{}, "cosmos-sdk/x/slashing/Params")
+	legacy.RegisterAminoMsg(registrar, &MsgUnjail{}, "cosmos-sdk/MsgUnjail")
+	legacy.RegisterAminoMsg(registrar, &MsgUpdateParams{}, "cosmos-sdk/x/slashing/MsgUpdateParams")
 }
 
 // RegisterInterfaces registers the interfaces types with the Interface Registry.

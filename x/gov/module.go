@@ -78,9 +78,9 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the gov module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
-	v1beta1.RegisterLegacyAminoCodec(cdc)
-	v1.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	v1beta1.RegisterLegacyAminoCodec(registrar)
+	v1.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the gov module.

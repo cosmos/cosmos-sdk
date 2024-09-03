@@ -80,8 +80,8 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the slashing module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
-	types.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	types.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterInterfaces registers the slashing module's interface types

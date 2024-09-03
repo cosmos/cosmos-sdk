@@ -33,9 +33,9 @@ func NewLegacyAmino() *LegacyAmino {
 
 // RegisterEvidences registers CometBFT evidence types with the provided Amino
 // codec.
-func RegisterEvidences(cdc registry.AminoRegistrar) {
-	cdc.RegisterInterface((*cmttypes.Evidence)(nil), nil)
-	cdc.RegisterConcrete(&cmttypes.DuplicateVoteEvidence{}, "tendermint/DuplicateVoteEvidence")
+func RegisterEvidences(registrar registry.AminoRegistrar) {
+	registrar.RegisterInterface((*cmttypes.Evidence)(nil), nil)
+	registrar.RegisterConcrete(&cmttypes.DuplicateVoteEvidence{}, "tendermint/DuplicateVoteEvidence")
 }
 
 // MarshalJSONIndent provides a utility for indented JSON encoding of an object

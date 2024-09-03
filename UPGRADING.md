@@ -379,7 +379,7 @@ The signature of the extension interface `HasAminoCodec` has been changed to acc
 
 ```diff
 -func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-+func (AppModule) RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
++func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
 ```
 
 ##### Simulation

@@ -9,12 +9,12 @@ import (
 )
 
 // RegisterLegacyAminoCodec registers concrete types on the LegacyAmino codec
-func RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
-	cdc.RegisterConcrete(Plan{}, "cosmos-sdk/Plan")
-	cdc.RegisterConcrete(&SoftwareUpgradeProposal{}, "cosmos-sdk/SoftwareUpgradeProposal")
-	cdc.RegisterConcrete(&CancelSoftwareUpgradeProposal{}, "cosmos-sdk/CancelSoftwareUpgradeProposal")
-	legacy.RegisterAminoMsg(cdc, &MsgSoftwareUpgrade{}, "cosmos-sdk/MsgSoftwareUpgrade")
-	legacy.RegisterAminoMsg(cdc, &MsgCancelUpgrade{}, "cosmos-sdk/MsgCancelUpgrade")
+func RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	registrar.RegisterConcrete(Plan{}, "cosmos-sdk/Plan")
+	registrar.RegisterConcrete(&SoftwareUpgradeProposal{}, "cosmos-sdk/SoftwareUpgradeProposal")
+	registrar.RegisterConcrete(&CancelSoftwareUpgradeProposal{}, "cosmos-sdk/CancelSoftwareUpgradeProposal")
+	legacy.RegisterAminoMsg(registrar, &MsgSoftwareUpgrade{}, "cosmos-sdk/MsgSoftwareUpgrade")
+	legacy.RegisterAminoMsg(registrar, &MsgCancelUpgrade{}, "cosmos-sdk/MsgCancelUpgrade")
 }
 
 // RegisterInterfaces registers the interfaces types with the Interface Registry.

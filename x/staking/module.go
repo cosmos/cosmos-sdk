@@ -74,8 +74,8 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the staking module's types on the given LegacyAmino codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
-	types.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	types.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterInterfaces registers the module's interface types

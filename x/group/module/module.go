@@ -87,8 +87,8 @@ func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 }
 
 // RegisterLegacyAminoCodec registers the group module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
-	group.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	group.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterInvariants does nothing, there are no invariants to enforce

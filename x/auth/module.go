@@ -74,8 +74,8 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the auth module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
-	types.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	types.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the auth module.

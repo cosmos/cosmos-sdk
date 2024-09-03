@@ -84,10 +84,10 @@ func (m *MM[T]) Modules() map[string]appmodulev2.AppModule {
 }
 
 // RegisterLegacyAminoCodec registers all module codecs
-func (m *MM[T]) RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
+func (m *MM[T]) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
 	for _, b := range m.modules {
 		if mod, ok := b.(appmodule.HasAminoCodec); ok {
-			mod.RegisterLegacyAminoCodec(cdc)
+			mod.RegisterLegacyAminoCodec(registrar)
 		}
 	}
 }

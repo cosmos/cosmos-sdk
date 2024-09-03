@@ -50,8 +50,8 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the params module's types on the given LegacyAmino codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
-	proposal.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	proposal.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the params module.

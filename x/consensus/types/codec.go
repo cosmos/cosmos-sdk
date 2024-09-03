@@ -20,6 +20,6 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 
 // RegisterLegacyAminoCodec registers the necessary x/consensus interfaces and concrete types
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
-func RegisterLegacyAminoCodec(cdc registry.AminoRegistrar) {
-	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/x/consensus/MsgUpdateParams")
+func RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	legacy.RegisterAminoMsg(registrar, &MsgUpdateParams{}, "cosmos-sdk/x/consensus/MsgUpdateParams")
 }

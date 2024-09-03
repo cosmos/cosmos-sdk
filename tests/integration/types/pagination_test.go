@@ -19,7 +19,6 @@ import (
 	"cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"

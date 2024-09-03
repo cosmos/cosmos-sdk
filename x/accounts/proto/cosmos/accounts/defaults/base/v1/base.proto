@@ -4,10 +4,12 @@ package cosmos.accounts.defaults.base.v1;
 
 option go_package = "cosmossdk.io/x/accounts/defaults/base/v1";
 
+import "google/protobuf/any.proto";
+
 // MsgInit is used to initialize a base account.
 message MsgInit {
-  // pub_key defines the secp256k1 pubkey for the account.
-  bytes pub_key = 1;
+  // pub_key defines a pubkey for the account arbitrary encapsulated.
+  google.protobuf.Any pub_key = 1;
 }
 
 // MsgInitResponse is the response returned after base account initialization.
@@ -17,7 +19,7 @@ message MsgInitResponse {}
 // MsgSwapPubKey is used to change the pubkey for the account.
 message MsgSwapPubKey {
   // new_pub_key defines the secp256k1 pubkey to swap the account to.
-  bytes new_pub_key = 1;
+  google.protobuf.Any new_pub_key = 1;
 }
 
 // MsgSwapPubKeyResponse is the response for the MsgSwapPubKey message.
@@ -31,4 +33,12 @@ message QuerySequence {}
 message QuerySequenceResponse {
   // sequence is the current sequence of the account.
   uint64 sequence = 1;
+}
+
+// QueryPubKey is the request used to query the pubkey of an account.
+message QueryPubKey {}
+
+// QueryPubKeyResponse is the response returned when a QueryPubKey message is sent.
+message QueryPubKeyResponse {
+  google.protobuf.Any pub_key = 1;
 }

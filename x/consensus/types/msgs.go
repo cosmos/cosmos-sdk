@@ -38,12 +38,14 @@ func (msg MsgUpdateParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, e
 		Synchrony: msg.Synchrony,
 	}
 
-	if cp.Feature == nil {
-		cp.Feature = &cmtproto.FeatureParams{}
-	}
+	if msg.Abci != nil {
+		if cp.Feature == nil {
+			cp.Feature = &cmtproto.FeatureParams{}
+		}
 
-	cp.Feature.VoteExtensionsEnableHeight = &types.Int64Value{
-		Value: msg.Abci.VoteExtensionsEnableHeight,
+		cp.Feature.VoteExtensionsEnableHeight = &types.Int64Value{
+			Value: msg.Abci.VoteExtensionsEnableHeight,
+		}
 	}
 
 	return cp, nil

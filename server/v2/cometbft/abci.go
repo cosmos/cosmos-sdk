@@ -245,7 +245,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	}
 
 	if req.ConsensusParams != nil {
-		ctx = context.WithValue(ctx, corecontext.InitInfoKey, &consensustypes.MsgUpdateParams{
+		ctx = context.WithValue(ctx, corecontext.CometParamsInitInfoKey, &consensustypes.MsgUpdateParams{
 			Authority: c.consensusAuthority,
 			Block:     req.ConsensusParams.Block,
 			Evidence:  req.ConsensusParams.Evidence,

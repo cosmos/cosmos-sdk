@@ -55,10 +55,11 @@ func TestFullAppSimulation(t *testing.T) {
 }
 
 func setupStateFactory(app *SimApp) sims.SimStateFactory {
+	blockedAddre, _ := BlockedAddresses(app.interfaceRegistry.SigningContext().AddressCodec())
 	return sims.SimStateFactory{
 		Codec:       app.AppCodec(),
 		AppStateFn:  simtestutil.AppStateFn(app.AppCodec(), app.AuthKeeper.AddressCodec(), app.StakingKeeper.ValidatorAddressCodec(), app.SimulationManager(), app.DefaultGenesis()),
-		BlockedAddr: BlockedAddresses(),
+		BlockedAddr: blockedAddre,
 	}
 }
 

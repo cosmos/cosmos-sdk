@@ -113,3 +113,7 @@ func (e EnumType) GetNumericKind() Kind {
 	}
 	return e.NumericKind
 }
+
+func (EnumType) isReferenceType() {
+
+}

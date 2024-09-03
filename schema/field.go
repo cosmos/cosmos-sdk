@@ -17,6 +17,13 @@ type Field struct {
 
 	// ReferencedType is the referenced type name when Kind is EnumKind.
 	ReferencedType string `json:"referenced_type,omitempty"`
+
+	// ProtoFieldNumber is the field number when natively represented in protobuf.
+	ProtoFieldNumber int32 `json:"proto_field_number,omitempty"`
+
+	// ProtoType is the type of the field when natively represented in protobuf.
+	// This will be empty where there is an unambiguous mapping between Kind and ProtoType.
+	ProtoType string `json:"proto_type,omitempty"`
 }
 
 // Validate validates the field.

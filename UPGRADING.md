@@ -347,7 +347,7 @@ Also, any usages of the interfaces `AnyUnpacker` and `UnpackInterfacesMessage` m
 
 #### `**all**`
 
-All modules were spun out into their own `go.mod`. Replace imports by `cosmossdk.io/x/{moduleName}`.
+All modules (expect `auth`) were spun out into their own `go.mod`. Replace their imports by `cosmossdk.io/x/{moduleName}`.
 
 ##### Core API
 

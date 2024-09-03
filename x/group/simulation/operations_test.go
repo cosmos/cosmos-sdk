@@ -17,7 +17,6 @@ import (
 	groupkeeper "cosmossdk.io/x/group/keeper"
 	"cosmossdk.io/x/group/simulation"
 	grouptestutil "cosmossdk.io/x/group/testutil"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -26,6 +25,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 type SimTestSuite struct {

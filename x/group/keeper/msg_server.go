@@ -14,10 +14,10 @@ import (
 	"cosmossdk.io/x/group/errors"
 	"cosmossdk.io/x/group/internal/math"
 	"cosmossdk.io/x/group/internal/orm"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ group.MsgServer = Keeper{}

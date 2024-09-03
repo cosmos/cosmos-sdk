@@ -8,10 +8,10 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/internal/orm"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const (

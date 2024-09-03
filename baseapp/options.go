@@ -120,10 +120,6 @@ func SetOptimisticExecution(opts ...func(*oe.OptimisticExecution)) func(*BaseApp
 	}
 }
 
-func SetVersionModifier(vm server.VersionModifier) func(*BaseApp) {
-	return func(app *BaseApp) { app.versionModifier = vm }
-}
-
 // SetIncludeNestedMsgsGas sets the message types for which gas costs for its nested messages are calculated when simulating.
 func SetIncludeNestedMsgsGas(msgs []sdk.Msg) func(*BaseApp) {
 	return func(app *BaseApp) {
@@ -329,6 +325,14 @@ func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 // SetTxEncoder sets the TxEncoder if it wasn't provided in the BaseApp constructor.
 func (app *BaseApp) SetTxEncoder(txEncoder sdk.TxEncoder) {
 	app.txEncoder = txEncoder
+}
+
+func (app *BaseApp) SetVersionModifier(versionModifier server.VersionModifier) {
+	if app.sealed {
+		panic("SetVersionModifier() on sealed BaseApp")
+	}
+
+	app.versionModifier = versionModifier
 }
 
 // SetQueryMultiStore set a alternative MultiStore implementation to support grpc query service.

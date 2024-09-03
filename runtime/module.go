@@ -15,7 +15,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/legacy"
-	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
@@ -103,7 +102,6 @@ func init() {
 			ProvideEnvironment,
 			ProvideTransientStoreService,
 			ProvideModuleManager,
-			ProvideAppVersionModifier,
 			ProvideCometService,
 		),
 		appconfig.Invoke(SetupAppBuilder),
@@ -291,10 +289,6 @@ func ProvideTransientStoreService(
 	}
 
 	return transientStoreService{key: storeKey}
-}
-
-func ProvideAppVersionModifier(app *AppBuilder) server.VersionModifier {
-	return app.app
 }
 
 func ProvideCometService() comet.Service {

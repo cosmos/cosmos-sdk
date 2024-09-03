@@ -290,6 +290,9 @@ func NewSimApp(
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensustypes.StoreKey]), logger.With(log.ModuleKey, "x/consensus")), authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
 
+	// set the version modifier
+	bApp.SetVersionModifier(consensus.ProvideAppVersionModifier(app.ConsensusParamsKeeper))
+
 	// add keepers
 	accountsKeeper, err := accounts.NewKeeper(
 		appCodec,

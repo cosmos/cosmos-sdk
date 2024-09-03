@@ -3,10 +3,9 @@
 ## audit usages of [NewIntegrationApp](../../testutil/integration/router.go#L46)
 
 All modules:
-
-* create and register query and message servers. 
-* call `App.QueryHelper` in setup, and may call in test.
-* make use of `sdk.Context`. a `context.Context` could be substituted except 
+- create and register query and message servers. 
+- call `App.QueryHelper` in setup, and may call in test.
+- make use of `sdk.Context`. a `context.Context` could be substituted except 
 where otherwise noted.
 
 * [x/auth](./auth/keeper/msg_server_test.go#L122) 

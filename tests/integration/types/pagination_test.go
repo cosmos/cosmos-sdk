@@ -18,7 +18,6 @@ import (
 	"cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"

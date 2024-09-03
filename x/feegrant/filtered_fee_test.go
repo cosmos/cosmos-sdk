@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/appmodule/v2"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
@@ -158,7 +158,7 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 			require.NoError(t, err)
 
 			// now try to deduct
-			removed, err := allowance.Accept(context.WithValue(ctx, corecontext.EnvironmentContextKey, appmodule.Environment{
+			removed, err := allowance.Accept(context.WithValue(ctx, corecontext.EnvironmentContextKey, appmodulev2.Environment{
 				HeaderService: mockHeaderService{},
 				GasService:    mockGasService{},
 			}), tc.fee, []sdk.Msg{&call})

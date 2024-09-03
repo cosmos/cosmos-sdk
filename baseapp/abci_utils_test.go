@@ -419,7 +419,7 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsIncorrectVotingPower() {
 	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, llc))
 }
 
-func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsIncorrecOrder() {
+func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsIncorrectOrder() {
 	ext := []byte("vote-extension")
 	cve := cmtproto.CanonicalVoteExtension{
 		Extension: ext,

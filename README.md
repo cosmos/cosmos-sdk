@@ -85,7 +85,6 @@ Module Dependencies are the modules that an application may depend on and which 
 
 | Cosmos SDK                  | 0.50.z | 0.52.z |
 | --------------------------- | ------ | ------ |
-| cosmossdk.io/x/auth         | X      | 0.2.z  |
 | cosmossdk.io/x/accounts     | N/A    | 0.2.z  |
 | cosmossdk.io/x/bank         | X      | 0.2.z  |
 | cosmossdk.io/x/circuit      | 0.1.z  | 0.2.z  |

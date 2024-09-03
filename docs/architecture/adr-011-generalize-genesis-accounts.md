@@ -63,7 +63,7 @@ The `auth` codec must have all custom account types registered to marshal them. 
 An example custom account definition:
 
 ```go
-import authtypes "cosmossdk.io/x/auth/types"
+import authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 // Register the module account type with the auth module codec so it can decode module accounts stored in a genesis file
 func init() {

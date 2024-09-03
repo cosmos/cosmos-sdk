@@ -2,7 +2,6 @@ package baseapp_test
 
 import (
 	"bytes"
-	"cosmossdk.io/core/address"
 	"sort"
 	"testing"
 
@@ -19,6 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"

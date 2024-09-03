@@ -3,7 +3,6 @@ package baseapp_test
 import (
 	"bytes"
 	"context"
-	"cosmossdk.io/core/address"
 	"crypto/sha256"
 	"fmt"
 	"math/rand"
@@ -15,6 +14,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/address"
 	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"

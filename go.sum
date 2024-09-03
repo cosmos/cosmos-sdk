@@ -8,8 +8,8 @@ cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 h1:YV9M+9pClbzPncO5XMSc3kI
 cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897/go.mod h1:oqpDMZQpEgSo0Cm4F+0yxoC9UQbo/SlodZR4zeOqBsE=
 cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab h1:E/IWad76v1Nc4Atswaccpt7twJ0VwHkbY94/PhmZfTo=
 cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab/go.mod h1:Or+5eVAo1aiS1DnPK90eQykGc59LGBWtqwBoJcxXTmw=
-cosmossdk.io/core v0.12.1-0.20240829151633-41a9af76e071 h1:6jXiei3eD7Bl7kXk7blhsPuUCitCnjVSk4eF3/qkqoI=
-cosmossdk.io/core v0.12.1-0.20240829151633-41a9af76e071/go.mod h1:abgLjeFLhtuKIYZWSPlVUgQBrKObO7ULV35KYfexE90=
+cosmossdk.io/core v0.12.1-0.20240903222005-6fc677faecf8 h1:F5bO9Z/MVHk4nj48OERj2Bx3rBPDSj7GCsoTdFdzGkw=
+cosmossdk.io/core v0.12.1-0.20240903222005-6fc677faecf8/go.mod h1:abgLjeFLhtuKIYZWSPlVUgQBrKObO7ULV35KYfexE90=
 cosmossdk.io/core/testing v0.0.0-20240903211221-70488a89a87a h1:ZGdQEJkQLXOcU9lPkowIFxPR4kjZuqoq3jDJ5Qe4D3Y=
 cosmossdk.io/core/testing v0.0.0-20240903211221-70488a89a87a/go.mod h1:+k84x9hU54Ckuc/JtppTSSQ+niEOU3CWcQghNz5NJWY=
 cosmossdk.io/depinject v1.0.0 h1:dQaTu6+O6askNXO06+jyeUAnF2/ssKwrrszP9t5q050=

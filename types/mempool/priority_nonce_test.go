@@ -71,7 +71,7 @@ func (a signerExtractionAdapter) GetSigners(tx sdk.Tx) ([]mempool.SignerData, er
 	if err != nil {
 		return nil, err
 	}
-	signerData := make([]mempool.SignerData, len(sigs))
+	signerData := make([]mempool.SignerData, 0, len(sigs))
 	for _, sig := range sigs {
 		signerData = append(signerData, mempool.SignerData{
 			Signer:   sig.PubKey.Address().Bytes(),

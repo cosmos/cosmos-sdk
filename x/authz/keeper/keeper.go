@@ -146,7 +146,7 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 		}
 
 		// no need to use the branch service here, as if the transaction fails, the transaction will be reverted
-		resp, err := k.MsgRouterService.InvokeUntyped(ctx, msg)
+		resp, err := k.MsgRouterService.Invoke(ctx, msg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to execute message %d; message %v: %w", i, msg, err)
 		}
@@ -290,8 +290,14 @@ func (k Keeper) DeleteAllGrants(ctx context.Context, granter sdk.AccAddress) err
 			return err
 		}
 	}
+
+	grantAddr, err := k.authKeeper.AddressCodec().BytesToString(granter)
+	if err != nil {
+		return err
+	}
+
 	return k.EventService.EventManager(ctx).Emit(&authz.EventRevokeAll{
-		Granter: granter.String(),
+		Granter: grantAddr,
 	})
 }
 

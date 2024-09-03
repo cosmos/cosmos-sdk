@@ -74,8 +74,8 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", cv)
 	}
 
-	res := consensusv1.QueryParamsResponse{}
-	if err := k.QueryRouterService.InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
+	resp, err := k.QueryRouterService.Invoke(ctx, &consensusv1.QueryParamsRequest{})
+	if err != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "failed to query consensus params: %s", err)
 	}
 
@@ -653,8 +653,8 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	}
 
 	// check if the new public key type is valid
-	paramsRes := consensusv1.QueryParamsResponse{}
-	if err := k.QueryRouterService.InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &paramsRes); err != nil {
+	resp, err := k.QueryRouterService.Invoke(ctx, &consensusv1.QueryParamsRequest{})
+	if err != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "failed to query consensus params: %s", err)
 	}
 

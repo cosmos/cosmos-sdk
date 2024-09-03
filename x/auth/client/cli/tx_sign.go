@@ -31,7 +31,7 @@ const (
 // GetSignBatchCommand returns the transaction sign-batch command.
 func GetSignBatchCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "sign-batch [file] ([file2]...)",
+		Use:   "sign-batch <file> [<file2>...]",
 		Short: "Sign transaction batch files",
 		Long: `Sign batch files of transactions generated with --generate-only.
 The command processes list of transactions from a file (one StdTx each line), or multiple files.
@@ -322,7 +322,7 @@ func setOutputFile(cmd *cobra.Command) (func(), error) {
 // GetSignCommand returns the transaction sign command.
 func GetSignCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "sign [file]",
+		Use:   "sign <file>",
 		Short: "Sign a transaction generated offline",
 		Long: `Sign a transaction created with the --generate-only flag.
 It will read a transaction from [file], sign it, and print its JSON encoding.

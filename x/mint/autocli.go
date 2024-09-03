@@ -36,7 +36,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod:      "UpdateParams",
-					Use:            "update-params-proposal [params]",
+					Use:            "update-params-proposal <params>",
 					Short:          "Submit a proposal to update mint module params. Note: the entire params must be provided.",
 					Long:           fmt.Sprintf("Submit a proposal to update mint module params. Note: the entire params must be provided.\n See the fields to fill in by running `%s query mint params --output json`", version.AppName),
 					Example:        fmt.Sprintf(`%s tx mint update-params-proposal '{ "mint_denom": "stake", ... }'`, version.AppName),

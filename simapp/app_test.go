@@ -51,10 +51,12 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	})
 
-	// BlockedAddresses returns a map of addresses in app v1 and a map of modules name in app di.
-	for acc := range BlockedAddresses() {
+	// BlockedAddresses returns a map of addresses in app v1 and a map of modules names in app di.
+	blockedAddrs, err := BlockedAddresses(app.interfaceRegistry.SigningContext().AddressCodec())
+	require.NoError(t, err)
+	for acc := range blockedAddrs {
 		var addr sdk.AccAddress
-		if modAddr, err := sdk.AccAddressFromBech32(acc); err == nil {
+		if modAddr, err := app.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(acc); err == nil {
 			addr = modAddr
 		} else {
 			addr = app.AuthKeeper.GetModuleAddress(acc)
@@ -68,7 +70,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	}
 
 	// finalize block so we have CheckTx state set
-	_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{
+	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: 1,
 	})
 	require.NoError(t, err)

@@ -40,7 +40,12 @@ func TestListenerMux(t *testing.T) {
 
 		res := ListenerMux(callCollector(1, onCall), callCollector(2, onCall))
 
-		callAllCallbacksOnces(t, res)
+		completeCb := callAllCallbacksOnces(t, res)
+		if completeCb != nil {
+			if err := completeCb(); err != nil {
+				t.Fatal(err)
+			}
+		}
 
 		checkExpectedCallOrder(t, calls, []string{
 			"InitializeModuleData 1",
@@ -61,7 +66,7 @@ func TestListenerMux(t *testing.T) {
 	})
 }
 
-func callAllCallbacksOnces(t *testing.T, listener Listener) {
+func callAllCallbacksOnces(t *testing.T, listener Listener) (completeCb func() error) {
 	t.Helper()
 	if err := listener.InitializeModuleData(ModuleInitializationData{}); err != nil {
 		t.Error(err)
@@ -81,9 +86,12 @@ func callAllCallbacksOnces(t *testing.T, listener Listener) {
 	if err := listener.OnObjectUpdate(ObjectUpdateData{}); err != nil {
 		t.Error(err)
 	}
-	if err := listener.Commit(CommitData{}); err != nil {
+	var err error
+	completeCb, err = listener.Commit(CommitData{})
+	if err != nil {
 		t.Error(err)
 	}
+	return completeCb
 }
 
 func callCollector(i int, onCall func(string, int, Packet)) Listener {
@@ -112,9 +120,9 @@ func callCollector(i int, onCall func(string, int, Packet)) Listener {
 			onCall("OnObjectUpdate", i, nil)
 			return nil
 		},
-		Commit: func(CommitData) error {
+		Commit: func(data CommitData) (completionCallback func() error, err error) {
 			onCall("Commit", i, nil)
-			return nil
+			return nil, nil
 		},
 	}
 }

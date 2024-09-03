@@ -3,9 +3,9 @@ package runtime
 import (
 	"encoding/json"
 	"errors"
+	"slices"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"golang.org/x/exp/slices"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	"cosmossdk.io/core/legacy"
@@ -108,11 +108,6 @@ func (a *App[T]) UnsafeFindStoreKey(storeKey string) (string, error) {
 // GetStore returns the app store.
 func (a *App[T]) GetStore() Store {
 	return a.db
-}
-
-// GetLogger returns the app logger.
-func (a *App[T]) GetLogger() log.Logger {
-	return a.logger
 }
 
 func (a *App[T]) GetAppManager() *appmanager.AppManager[T] {

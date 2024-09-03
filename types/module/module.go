@@ -24,12 +24,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
+	"slices"
 	"sort"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
@@ -96,7 +97,7 @@ type HasServices interface {
 // hasServicesV1 is the interface for registering service in baseapp Cosmos SDK.
 // This API is part of core/appmodule but commented out for dependencies.
 type hasServicesV1 interface {
-	appmodule.AppModule
+	appmodulev2.AppModule
 
 	RegisterServices(grpc.ServiceRegistrar) error
 }
@@ -713,7 +714,6 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM app
 // It takes the current context as a parameter and returns a boolean value
 // indicating whether the migration was successfully executed or not.
 func (m *Manager) PreBlock(ctx sdk.Context) error {
-	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	for _, moduleName := range m.OrderPreBlockers {
 		if module, ok := m.Modules[moduleName].(appmodule.HasPreBlocker); ok {
 			if err := module.PreBlock(ctx); err != nil {
@@ -832,7 +832,7 @@ func (m *Manager) GetVersionMap() appmodule.VersionMap {
 
 // ModuleNames returns list of all module names, without any particular order.
 func (m *Manager) ModuleNames() []string {
-	return maps.Keys(m.Modules)
+	return slices.Collect(maps.Keys(m.Modules))
 }
 
 // DefaultMigrationsOrder returns a default migrations order: ascending alphabetical by module name,

@@ -218,7 +218,7 @@ for. Each module documents its respective events under 'xx_events.md'.
 // QueryBlockCmd implements the default command for a Block query.
 func QueryBlockCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "block --type=[height|hash] [height|hash]",
+		Use:   "block --type={height|hash} [height|hash]",
 		Short: "Query for a committed block by height, hash, or event(s)",
 		Long:  "Query for a specific committed block using the CometBFT RPC `block` and `block_by_hash` method",
 		Example: strings.TrimSpace(fmt.Sprintf(`
@@ -363,9 +363,10 @@ func QueryBlockResultsCmd() *cobra.Command {
 
 func BootstrapStateCmd[T types.Application](appCreator types.AppCreator[T]) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "bootstrap-state",
-		Short: "Bootstrap CometBFT state at an arbitrary block height using a light client",
-		Args:  cobra.NoArgs,
+		Use:     "bootstrap-state",
+		Short:   "Bootstrap CometBFT state at an arbitrary block height using a light client",
+		Args:    cobra.NoArgs,
+		Example: fmt.Sprintf("%s bootstrap-state --height 1000000", version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
 			logger := log.NewLogger(cmd.OutOrStdout())

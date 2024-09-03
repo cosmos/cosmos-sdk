@@ -21,7 +21,7 @@ import (
 // ModuleHashByHeightQuery retrieves the module hashes at a given height.
 func ModuleHashByHeightQuery[T servertypes.Application](appCreator servertypes.AppCreator[T]) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "module-hash-by-height [height]",
+		Use:     "module-hash-by-height <height>",
 		Short:   "Get module hashes at a given height",
 		Long:    "Get module hashes at a given height. This command is useful for debugging and verifying the state of the application at a given height. Daemon should not be running when calling this command.",
 		Example: fmt.Sprintf("%s module-hash-by-height 16841115", version.AppName),

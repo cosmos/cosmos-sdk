@@ -9,6 +9,7 @@ import (
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/spf13/cast"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/schema"
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/decoding"
@@ -36,7 +37,7 @@ func (app *BaseApp) EnableIndexer(indexerOpts interface{}, keys map[string]*stor
 		Config:     indexerOpts,
 		Resolver:   decoding.ModuleSetDecoderResolver(appModules),
 		SyncSource: nil,
-		Logger:     app.logger.With("module", "indexer"),
+		Logger:     app.logger.With(log.ModuleKey, "indexer"),
 	})
 	if err != nil {
 		return err

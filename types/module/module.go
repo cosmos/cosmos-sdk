@@ -42,6 +42,8 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -293,7 +295,11 @@ func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 
 // RegisterLegacyAminoCodec registers all module codecs
 func (m *Manager) RegisterLegacyAminoCodec(cdc legacy.Amino) {
-	for _, b := range m.Modules {
+	for name, b := range m.Modules {
+		if _, ok := b.(interface{ RegisterLegacyAminoCodec(*codec.LegacyAmino) }); ok {
+			panic(fmt.Sprintf("%s uses a deprecated amino registration api, implement HasAminoCodec instead if necessary", name))
+		}
+
 		if mod, ok := b.(HasAminoCodec); ok {
 			mod.RegisterLegacyAminoCodec(cdc)
 		}
@@ -302,7 +308,13 @@ func (m *Manager) RegisterLegacyAminoCodec(cdc legacy.Amino) {
 
 // RegisterInterfaces registers all module interface types
 func (m *Manager) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
-	for _, b := range m.Modules {
+	for name, b := range m.Modules {
+		if _, ok := b.(interface {
+			RegisterInterfaces(cdctypes.InterfaceRegistry)
+		}); ok {
+			panic(fmt.Sprintf("%s uses a deprecated interface registration api, implement appmodule.HasRegisterInterfaces instead", name))
+		}
+
 		if mod, ok := b.(appmodule.HasRegisterInterfaces); ok {
 			mod.RegisterInterfaces(registrar)
 		}

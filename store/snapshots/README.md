@@ -11,6 +11,7 @@ This document describes the Cosmos SDK implementation of the ABCI state sync
 interface, for more information on CometBFT state sync in general see:
 
 * [CometBFT State Sync for Developers](https://medium.com/cometbft/cometbft-core-state-sync-for-developers-70a96ba3ee35)
+* [CometBFT State Sync](https://docs.cometbft.com/v0.38/core/state-sync)
 * [ABCI State Sync Spec](https://docs.cometbft.com/v0.38/spec/p2p/legacy-docs/messages/state-sync)
 * [ABCI State Sync Method/Type Reference](https://docs.cometbft.com/v0.38/spec/p2p/legacy-docs/messages/state-sync)
 

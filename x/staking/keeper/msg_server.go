@@ -39,7 +39,8 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-// CreateValidator defines a method for creating a new validator
+// CreateValidator defines a method for creating a new validator.
+// The validator's params should not be nil for this function to execute successfully.
 func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateValidator) (*types.MsgCreateValidatorResponse, error) {
 	valAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
 	if err != nil {
@@ -645,6 +646,9 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
+// RotateConsPubKey handles the rotation of a validator's consensus public key.
+// It validates the new key, checks for conflicts, and updates the necessary state.
+// The function requires that the validator params are not nil for successful execution.
 func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateConsPubKey) (res *types.MsgRotateConsPubKeyResponse, err error) {
 	cv := msg.NewPubkey.GetCachedValue()
 	if cv == nil {

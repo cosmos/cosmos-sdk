@@ -78,6 +78,10 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 	if err != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "failed to query consensus params: %s", err)
 	}
+	res, ok := resp.(*consensusv1.QueryParamsResponse)
+	if !ok {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unexpected response type: %T", resp)
+	}
 
 	if res.Params.Validator == nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "validator params are not set")
@@ -656,6 +660,10 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	resp, err := k.QueryRouterService.Invoke(ctx, &consensusv1.QueryParamsRequest{})
 	if err != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "failed to query consensus params: %s", err)
+	}
+	paramsRes, ok := resp.(*consensusv1.QueryParamsResponse)
+	if !ok {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unexpected response type: %T", resp)
 	}
 
 	if paramsRes.Params.Validator == nil {

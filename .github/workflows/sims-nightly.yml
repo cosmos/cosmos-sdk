@@ -2,11 +2,10 @@ name: Sims Nightly (Long)
 # Release Sims workflow runs long-lived (multi-seed & large block size) simulations
 # This workflow only runs mightly at 8am UTC and on releases
 on:
-  pull_request:
-  merge_group:
-  push:
-    branches:
-      - main
+  schedule:
+    - cron: "0 8 * * *"
+  release:
+    types: [published]
 
 permissions:
   contents: read
@@ -26,7 +25,7 @@ jobs:
           check-latest: true
       - name: test-sim-multi-seed-long
         env:
-          GOMEMLIMIT: 14GiB
+          GOMEMLIMIT: 14GiB # reserve 2 GiB as buffer for GC to avoid OOM
         run: |
           make test-sim-multi-seed-long
 

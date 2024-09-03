@@ -13,9 +13,6 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
-	authclient "cosmossdk.io/x/auth/client"
-	authtest "cosmossdk.io/x/auth/client/testutil"
-	"cosmossdk.io/x/auth/migrations/legacytx"
 	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -32,6 +29,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var bankMsgSendEventAction = fmt.Sprintf("message.action='%s'", sdk.MsgTypeURL(&banktypes.MsgSend{}))

@@ -9,7 +9,7 @@ import "cosmos/auth/v1beta1/auth.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/query/v1/query.proto";
 
-option go_package = "cosmossdk.io/x/auth/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 
 // Query defines the gRPC querier service.
 service Query {

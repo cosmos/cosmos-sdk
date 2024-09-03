@@ -11,7 +11,10 @@ sleep 1
 test -z $4 && exit 1001
 echo 'UPGRADE "Chain2" NEEDED at height: 49: {}'
 echo '{"name":"Chain2","height":49,"info":""}' > $4
+# Shutdown grace test waits 2 seconds for flush
+# Flush within 1 second
 sleep 1
 echo 'Flushed'
-sleep 1
+# Now chain is halted for shutdown grace test.
+sleep 2
 echo Did not kill in time. Never should be printed!!!

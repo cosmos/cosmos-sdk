@@ -69,7 +69,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import for side-effects
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting" // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting" // import for side-effects
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )

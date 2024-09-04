@@ -5,8 +5,6 @@ import (
 	"errors"
 	"io"
 	"time"
-
-	corestore "cosmossdk.io/core/store"
 )
 
 const (
@@ -78,20 +76,20 @@ func (s *Snapshotter) SupportedFormats() []uint32 {
 	return []uint32{SnapshotFormat}
 }
 
-func (s *Snapshotter) SnapshotExtension(height uint64, payloadWriter corestore.ExtensionPayloadWriter) error {
+func (s *Snapshotter) SnapshotExtension(height uint64, payloadWriter ExtensionPayloadWriter) error {
 	// export all unordered transactions as a single blob
 	return s.m.exportSnapshot(height, payloadWriter)
 }
 
-func (s *Snapshotter) RestoreExtension(height uint64, format uint32, payloadReader corestore.ExtensionPayloadReader) error {
+func (s *Snapshotter) RestoreExtension(height uint64, format uint32, payloadReader ExtensionPayloadReader) error {
 	if format == SnapshotFormat {
 		return s.restore(height, payloadReader)
 	}
 
-	return corestore.ErrUnknownFormat
+	return ErrUnknownFormat
 }
 
-func (s *Snapshotter) restore(height uint64, payloadReader corestore.ExtensionPayloadReader) error {
+func (s *Snapshotter) restore(height uint64, payloadReader ExtensionPayloadReader) error {
 	// the payload should be the entire set of unordered transactions
 	payload, err := payloadReader()
 	if err != nil {

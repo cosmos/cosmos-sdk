@@ -45,11 +45,11 @@ func run(cfgPath string, args []string, options ...RunOption) error {
 		return err
 	}
 
-	doUpgrade, err := launcher.Run(args, runCfg.StdOut, runCfg.StdErr)
+	doUpgrade, err := launcher.Run(args, runCfg.StdIn, runCfg.StdOut, runCfg.StdErr)
 	// if RestartAfterUpgrade, we launch after a successful upgrade (given that condition launcher.Run returns nil)
 	for cfg.RestartAfterUpgrade && err == nil && doUpgrade {
 		logger.Info("upgrade detected, relaunching", "app", cfg.Name)
-		doUpgrade, err = launcher.Run(args, runCfg.StdOut, runCfg.StdErr)
+		doUpgrade, err = launcher.Run(args, runCfg.StdIn, runCfg.StdOut, runCfg.StdErr)
 	}
 
 	if doUpgrade && err == nil {

@@ -17,7 +17,6 @@ import (
 	"cosmossdk.io/server/v2/store"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
-	authcmd "cosmossdk.io/x/auth/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/debug"
@@ -25,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -110,11 +110,8 @@ func queryCommand() *cobra.Command {
 
 	cmd.AddCommand(
 		rpc.QueryEventForTxCmd(),
-		server.QueryBlockCmd(),
 		authcmd.QueryTxsByEventsCmd(),
-		server.QueryBlocksCmd(),
 		authcmd.QueryTxCmd(),
-		server.QueryBlockResultsCmd(),
 	)
 
 	return cmd

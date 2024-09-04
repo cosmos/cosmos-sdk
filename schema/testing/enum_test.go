@@ -12,6 +12,6 @@ import (
 func TestEnumType(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
 		enumType := EnumType().Draw(t, "enum")
-		require.NoError(t, enumType.Validate(schema.EmptySchema{}))
+		require.NoError(t, enumType.Validate(schema.EmptyTypeSet()))
 	})
 }

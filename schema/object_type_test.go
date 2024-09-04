@@ -205,7 +205,7 @@ func TestObjectType_Validate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.objectType.Validate(EmptySchema{})
+			err := tt.objectType.Validate(EmptyTypeSet())
 			if tt.errContains == "" {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
@@ -267,7 +267,7 @@ func TestObjectType_ValidateObjectUpdate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.objectType.ValidateObjectUpdate(tt.object, EmptySchema{})
+			err := tt.objectType.ValidateObjectUpdate(tt.object, EmptyTypeSet())
 			if tt.errContains == "" {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)

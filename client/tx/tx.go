@@ -11,8 +11,6 @@ import (
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/pflag"
 
-	authsigning "cosmossdk.io/x/auth/signing"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -20,6 +18,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
@@ -382,7 +381,12 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx
 		return tx.AuxSignerData{}, err
 	}
 
-	b.SetAddress(fromAddress.String())
+	fromAddrStr, err := clientCtx.AddressCodec.BytesToString(fromAddress)
+	if err != nil {
+		return tx.AuxSignerData{}, err
+	}
+
+	b.SetAddress(fromAddrStr)
 	if clientCtx.Offline {
 		b.SetAccountNumber(f.accountNumber)
 		b.SetSequence(f.sequence)

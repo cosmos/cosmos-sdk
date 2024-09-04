@@ -168,7 +168,7 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 				})))
 			}
 
-			grpcClient, err := grpc.Dial(grpcURI, dialOpts...)
+			grpcClient, err := grpc.Dial(grpcURI, dialOpts...) // nolint:staticcheck // grpc.Dial is deprecated but we still use it
 			if err != nil {
 				return Context{}, err
 			}

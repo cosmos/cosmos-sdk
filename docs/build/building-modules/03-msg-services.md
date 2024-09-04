@@ -61,7 +61,7 @@ It is recommended to implement all validation checks in a separate function that
 ```go
 ValidateMsgA(msg MsgA, now Time, gm GasMeter) error {
 	if now.Before(msg.Expire) {
-		return sdkerrrors.ErrInvalidRequest.Wrap("msg expired")
+		return sdkerrors.ErrInvalidRequest.Wrap("msg expired")
 	}
 	gm.ConsumeGas(1000, "signature verification")
 	return signatureVerificaton(msg.Prover, msg.Data)

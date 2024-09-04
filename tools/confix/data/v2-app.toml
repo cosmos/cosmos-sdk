@@ -28,6 +28,10 @@ max-recv-msg-size = 10485760
 # The default value is math.MaxInt32.
 max-send-msg-size = 2147483647
 
+[server]
+# minimum-gas-prices defines the price which a validator is willing to accept for processing a transaction. A transaction's fees must meet the minimum of any denomination specified in this config (e.g. 0.25token1;0.0001token2).
+minimum-gas-prices = '0stake'
+
 [store]
 # The type of database for application and snapshots databases.
 app-db-backend = 'goleveldb'

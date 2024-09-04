@@ -12,9 +12,6 @@ import (
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
 	_ "cosmossdk.io/x/accounts" // import as blank for app wiring
-	_ "cosmossdk.io/x/auth"     // import as blank for app wiring
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	_ "cosmossdk.io/x/auth/tx/config" // import as blank for app wiring
 	"cosmossdk.io/x/authz"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	_ "cosmossdk.io/x/authz/module" // import as blank for app wiring
@@ -36,7 +33,10 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	_ "github.com/cosmos/cosmos-sdk/x/genutil" // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/auth" // import as blank for app wiring
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
 )
 
 var AppConfig = configurator.NewAppConfig(

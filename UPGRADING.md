@@ -108,7 +108,104 @@ Additionally, thanks to the genesis simplification, as explained in [the genesis
 
 ##### GRPC-WEB
 
-Grpc-web embedded client has been removed from the server. If you would like to use grpc-web, you can use the [envoy proxy](https://www.envoyproxy.io/docs/envoy/latest/start/start).
+Grpc-web embedded client has been removed from the server. If you would like to use grpc-web, you can use the [envoy proxy](https://www.envoyproxy.io/docs/envoy/latest/start/start). Here's how to set it up:
+
+<details>
+<summary>Step by step guide</summary>
+
+1. Install Envoy following the [official installation guide](https://www.envoyproxy.io/docs/envoy/latest/start/install).
+
+2. Create an Envoy configuration file named `envoy.yaml` with the following content:
+
+   ```yaml
+	static_resources:
+	listeners:
+	- name: listener_0
+		address:
+		socket_address: { address: 0.0.0.0, port_value: 8080 }
+		filter_chains:
+		- filters:
+		- name: envoy.filters.network.http_connection_manager
+			typed_config:
+			"@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+			codec_type: auto
+			stat_prefix: ingress_http
+			route_config:
+				name: local_route
+				virtual_hosts:
+				- name: local_service
+				domains: ["*"]
+				routes:
+				- match: { prefix: "/" }
+					route:
+					cluster: grpc_service
+					timeout: 0s
+					max_stream_duration:
+						grpc_timeout_header_max: 0s
+				cors:
+					allow_origin_string_match:
+					- prefix: "*"
+					allow_methods: GET, PUT, DELETE, POST, OPTIONS
+					allow_headers: keep-alive,user-agent,cache-control,content-type,content-transfer-encoding,custom-header-1,x-accept-content-transfer-encoding,x-accept-response-streaming,x-user-agent,x-grpc-web,grpc-timeout
+					max_age: "1728000"
+					expose_headers: custom-header-1,grpc-status,grpc-message
+			http_filters:
+			- name: envoy.filters.http.grpc_web
+				typed_config:
+				"@type": type.googleapis.com/envoy.extensions.filters.http.grpc_web.v3.GrpcWeb
+			- name: envoy.filters.http.cors
+				typed_config:
+				"@type": type.googleapis.com/envoy.extensions.filters.http.cors.v3.Cors
+			- name: envoy.filters.http.router
+				typed_config:
+				"@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+	clusters:
+	- name: grpc_service
+		connect_timeout: 0.25s
+		type: logical_dns
+		http2_protocol_options: {}
+		lb_policy: round_robin
+		load_assignment:
+		cluster_name: cluster_0
+		endpoints:
+			- lb_endpoints:
+				- endpoint:
+					address:
+					socket_address:
+						address: 0.0.0.0
+						port_value: 9090
+   ```
+
+   This configuration tells Envoy to listen on port 8080 and forward requests to your gRPC service on port 9090. Note that this configuration is a starting point and can be modified according to your specific needs and preferences. You may need to adjust ports, addresses, or add additional settings based on your particular setup and requirements.
+
+3. Start your Cosmos SDK application, ensuring it's configured to serve gRPC on port 9090.
+
+4. Start Envoy with the configuration file:
+
+   ```bash
+   envoy -c envoy.yaml
+   ```
+
+5. If Envoy starts successfully, you should see output similar to this:
+
+   ```bash
+   [2024-08-29 10:47:08.753][6281320][info][config] [source/common/listener_manager/listener_manager_impl.cc:930] all dependencies initialized. starting workers
+   [2024-08-29 10:47:08.754][6281320][info][main] [source/server/server.cc:978] starting main dispatch loop
+   ```
+
+   This indicates that Envoy has started and is ready to proxy requests.
+
+6. Update your client applications to connect to Envoy (http://localhost:8080 by default).
+
+</details>
+
+By following these steps, Envoy will handle the translation between gRPC-Web and gRPC, allowing your existing gRPC-Web clients to continue functioning without modifications to your Cosmos SDK application.
+
+To test the setup, you can use a tool like [grpcurl](https://github.com/fullstorydev/grpcurl). For example:
+
+```bash
+grpcurl -plaintext localhost:8080 cosmos.base.tendermint.v1beta1.Service/GetLatestBlock
+```
 
 ##### AnteHandlers
 
@@ -331,7 +428,7 @@ For modules that have migrated, verify you are checking against `collections.Err
 Accounts's AccountNumber will be used as a global account number tracking replacing Auth legacy AccountNumber. Must set accounts's AccountNumber with auth's AccountNumber value in upgrade handler. This is done through auth keeper MigrateAccountNumber function.
 
 ```go
-import authkeeper "cosmossdk.io/x/auth/keeper" 
+import authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper" 
 ...
 err := authkeeper.MigrateAccountNumberUnsafe(ctx, &app.AuthKeeper)
 if err != nil {

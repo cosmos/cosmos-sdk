@@ -19,38 +19,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TODO(tip): remove this
-func (suite *KeeperTestSuite) TestDeleteProposal() {
-	testCases := map[string]struct {
-		proposalType v1.ProposalType
-	}{
-		"unspecified proposal type": {},
-		"regular proposal": {
-			proposalType: v1.ProposalType_PROPOSAL_TYPE_STANDARD,
-		},
-		"expedited proposal": {
-			proposalType: v1.ProposalType_PROPOSAL_TYPE_EXPEDITED,
-		},
-	}
-
-	for _, tc := range testCases {
-		// delete non-existing proposal
-		suite.Require().ErrorIs(suite.govKeeper.DeleteProposal(suite.ctx, 10), collections.ErrNotFound)
-
-		tp := TestProposal
-		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.proposalType)
-		suite.Require().NoError(err)
-		proposalID := proposal.Id
-		err = suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
-		suite.Require().NoError(err)
-
-		suite.Require().NotPanics(func() {
-			err := suite.govKeeper.DeleteProposal(suite.ctx, proposalID)
-			suite.Require().NoError(err)
-		}, "")
-	}
-}
-
 func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 	testCases := []struct {
 		name         string
@@ -180,7 +148,7 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 		// normal proposal with 2 msgs with custom params shared the same value
 		{[]sdk.Msg{&v1.MsgUpdateParams{Authority: govAcct}, &v1.MsgSudoExec{Authority: govAcct}}, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
 		// normal proposal with 2 msgs with different custom params
-		{[]sdk.Msg{&v1.MsgUpdateParams{Authority: govAcct}, &v1.MsgCancelProposal{}}, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, errors.New("cannot submit multiple messages proposal with message based params")},
+		{[]sdk.Msg{&v1.MsgUpdateParams{Authority: govAcct}, &v1.MsgCancelProposal{}}, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, errors.New("cannot submit multiple messages proposal with different message based params")},
 		{legacyProposal(&tp, govAcct), "", v1.ProposalType_PROPOSAL_TYPE_EXPEDITED, nil},
 		{nil, "", v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE, nil},
 		// Keeper does not check the validity of title and description, no error

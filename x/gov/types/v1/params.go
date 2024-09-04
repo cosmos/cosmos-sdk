@@ -335,37 +335,44 @@ func (p MessageBasedParams) ValidateBasic() error {
 }
 
 func (p MessageBasedParams) Equal(params *MessageBasedParams) (bool, error) {
-	if p.VotingPeriod != nil || params.VotingPeriod != nil {
-		return false, nil
-	}
-
-	if p.VotingPeriod.Seconds() != params.VotingPeriod.Seconds() {
+	if p.VotingPeriod != nil && params.VotingPeriod != nil {
+		if p.VotingPeriod.Seconds() != params.VotingPeriod.Seconds() {
+			return false, nil
+		}
+	} else if p.VotingPeriod == nil && params.VotingPeriod != nil ||
+		p.VotingPeriod != nil && params.VotingPeriod == nil {
 		return false, nil
 	}
 
 	quorum1, err := sdkmath.LegacyNewDecFromStr(p.Quorum)
 	if err != nil {
-		return false, fmt.Errorf("invalid quorum string: %w", err)
+		if !errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
+			return false, fmt.Errorf("invalid quorum string: %w", err)
+		}
+
+		quorum1 = sdkmath.LegacyZeroDec()
 	}
 
 	quorum2, err := sdkmath.LegacyNewDecFromStr(params.Quorum)
 	if err != nil {
-		return false, fmt.Errorf("invalid compared quorum string: %w", err)
+		if !errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
+			return false, fmt.Errorf("invalid compared quorum string: %w", err)
+		}
+
+		quorum2 = sdkmath.LegacyZeroDec()
 	}
 
 	if !quorum1.Equal(quorum2) {
 		return false, nil
 	}
 
-	// yes quorum can be set to empty to disable so we need to catch
-	// the case where yes quorum is not set.
 	yesQuorum1, err := sdkmath.LegacyNewDecFromStr(p.YesQuorum)
 	if err != nil {
 		if !errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
 			return false, fmt.Errorf("invalid yes quorum string: %w", err)
 		}
 
-		yesQuorum1 = sdkmath.ZeroInt().ToLegacyDec()
+		yesQuorum1 = sdkmath.LegacyZeroDec()
 	}
 
 	yesQuorum2, err := sdkmath.LegacyNewDecFromStr(params.YesQuorum)
@@ -374,7 +381,7 @@ func (p MessageBasedParams) Equal(params *MessageBasedParams) (bool, error) {
 			return false, fmt.Errorf("invalid compared yes quorum string: %w", err)
 		}
 
-		yesQuorum2 = sdkmath.ZeroInt().ToLegacyDec()
+		yesQuorum2 = sdkmath.LegacyZeroDec()
 	}
 
 	if !yesQuorum1.Equal(yesQuorum2) {
@@ -383,12 +390,20 @@ func (p MessageBasedParams) Equal(params *MessageBasedParams) (bool, error) {
 
 	threshold1, err := sdkmath.LegacyNewDecFromStr(p.Threshold)
 	if err != nil {
-		return false, fmt.Errorf("invalid vote threshold string: %w", err)
+		if !errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
+			return false, fmt.Errorf("invalid vote threshold string: %w", err)
+		}
+
+		threshold1 = sdkmath.LegacyZeroDec()
 	}
 
 	threshold2, err := sdkmath.LegacyNewDecFromStr(params.Threshold)
 	if err != nil {
-		return false, fmt.Errorf("invalid compared vote threshold string: %w", err)
+		if !errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
+			return false, fmt.Errorf("invalid compared vote threshold string: %w", err)
+		}
+
+		threshold2 = sdkmath.LegacyZeroDec()
 	}
 
 	if !threshold1.Equal(threshold2) {
@@ -397,12 +412,20 @@ func (p MessageBasedParams) Equal(params *MessageBasedParams) (bool, error) {
 
 	vetoThreshold1, err := sdkmath.LegacyNewDecFromStr(p.VetoThreshold)
 	if err != nil {
-		return false, fmt.Errorf("invalid veto threshold string: %w", err)
+		if !errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
+			return false, fmt.Errorf("invalid veto threshold string: %w", err)
+		}
+
+		vetoThreshold1 = sdkmath.LegacyZeroDec()
 	}
 
 	vetoThreshold2, err := sdkmath.LegacyNewDecFromStr(params.VetoThreshold)
 	if err != nil {
-		return false, fmt.Errorf("invalid compared veto threshold string: %w", err)
+		if !errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
+			return false, fmt.Errorf("invalid compared veto threshold string: %w", err)
+		}
+
+		vetoThreshold2 = sdkmath.LegacyZeroDec()
 	}
 
 	if !vetoThreshold1.Equal(vetoThreshold2) {

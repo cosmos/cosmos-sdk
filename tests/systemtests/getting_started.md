@@ -4,10 +4,13 @@
 
 Build a new binary from current branch and copy it to the `tests/systemtests/binaries` folder by running system tests.
 In project root:
+
 ```shell
 make test-system
 ```
+
 Or via manual steps
+
 ```shell
 make build
 mkdir -p ./tests/systemtests/binaries
@@ -39,6 +42,7 @@ func TestQueryTotalSupply(t *testing.T) {
 	t.Log("### got: " + raw)
 }
 ```
+
 The file begins with a Go build tag to exclude it from regular go test runs.
 All tests in the `systemtests` folder build upon the *test runner* initialized in `main_test.go`.
 This gives you a multi node chain started on your box.
@@ -57,6 +61,7 @@ go test -mod=readonly -tags='system_test' -v ./...  --run TestQueryTotalSupply -
 
 This give very verbose output. You would see all simd CLI commands used for starting the server or by the client to interact.
 In the example code, we just log the output. Watch out for 
+
 ```shell
     bank_test.go:15: ### got: {
           "supply": [
@@ -106,6 +111,7 @@ In order to test our assumptions in the system test, we modify the code to use `
 		assert.Equal(t, v, got, raw)
 	}
 ```
+
 The assumption on the staking token usually fails due to inflation minted on the staking token. Let's fix this in the next step 
 
 ### Run the test
@@ -158,6 +164,7 @@ of `gjson`, `sjson` and stdlib json operations.
 	})
     sut.StartChain(t)
 ```
+
 Next step is to add the new token to the assert map. But we can also make it more resilient to different node counts.
 
 ```go
@@ -183,8 +190,10 @@ The CLI wrapper works similar to the query. Just pass the parameters. It uses th
 	txHash := cli.Run("tx", "bank", "burn", "node0", "400000mytoken")
 	RequireTxSuccess(t, txHash)
 ```
+
 `RequireTxSuccess` or `RequireTxFailure` can be used to ensure the expected result of the operation.
 Next, check that the changes are applied.
+
 ```go
 	exp["mytoken"] = 600_000 // update expected state
 	raw = cli.CustomQuery("q", "bank", "total-supply")
@@ -197,6 +206,7 @@ Next, check that the changes are applied.
 
 While tests are still more or less readable, it can gets harder the longer they are. I found it helpful to add
 some comments at the beginning to describe what the intention is. For example:
+
 ```go
 	// scenario:
 	// given a chain with a custom token on genesis

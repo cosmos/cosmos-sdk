@@ -7,14 +7,13 @@ import (
 	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 
-	
 	storev2 "cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
+	"cosmossdk.io/store/v2/commitment/iavl"
 	dbm "cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/sqlite"
-	"cosmossdk.io/store/v2/commitment/iavl"
 )
 
 type MockStore struct {
@@ -72,7 +71,7 @@ func (s *MockStore) Commit(changeset *corestore.Changeset) (corestore.Hash, erro
 		return []byte{}, err
 	}
 
-	commitInfo, err := s.Commiter.Commit(v+1)
+	commitInfo, err := s.Commiter.Commit(v + 1)
 	fmt.Println("commitInfo", commitInfo, err)
 	return []byte{}, err
 }
@@ -138,5 +137,3 @@ func (s *MockStore) WorkingHash(changeset *corestore.Changeset) (corestore.Hash,
 	}
 	return []byte{}, nil
 }
-
-

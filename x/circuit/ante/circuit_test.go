@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
 	"cosmossdk.io/x/circuit/ante"
 	cbtypes "cosmossdk.io/x/circuit/types"
 
@@ -17,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 type fixture struct {

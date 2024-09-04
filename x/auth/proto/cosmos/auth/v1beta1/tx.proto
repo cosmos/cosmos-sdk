@@ -8,7 +8,7 @@ import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
 import "cosmos/auth/v1beta1/auth.proto";
 
-option go_package = "cosmossdk.io/x/auth/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 
 // Msg defines the x/auth Msg service.
 service Msg {

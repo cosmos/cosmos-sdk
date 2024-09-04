@@ -15,6 +15,7 @@ import (
 	circuitmodulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
 	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
+	epochsmodulev1 "cosmossdk.io/api/cosmos/epochs/module/v1"
 	evidencemodulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
@@ -30,11 +31,6 @@ import (
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/accounts"
-	_ "cosmossdk.io/x/auth"           // import for side-effects
-	_ "cosmossdk.io/x/auth/tx/config" // import for side-effects
-	authtypes "cosmossdk.io/x/auth/types"
-	_ "cosmossdk.io/x/auth/vesting" // import for side-effects
-	vestingtypes "cosmossdk.io/x/auth/vesting/types"
 	"cosmossdk.io/x/authz"
 	_ "cosmossdk.io/x/authz/module" // import for side-effects
 	_ "cosmossdk.io/x/bank"         // import for side-effects
@@ -45,6 +41,8 @@ import (
 	consensustypes "cosmossdk.io/x/consensus/types"
 	_ "cosmossdk.io/x/distribution" // import for side-effects
 	distrtypes "cosmossdk.io/x/distribution/types"
+	_ "cosmossdk.io/x/epochs" // import for side-effects
+	epochstypes "cosmossdk.io/x/epochs/types"
 	_ "cosmossdk.io/x/evidence" // import for side-effects
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	"cosmossdk.io/x/feegrant"
@@ -67,6 +65,11 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import for side-effects
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting" // import for side-effects
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -121,6 +124,7 @@ var (
 						evidencetypes.ModuleName,
 						stakingtypes.ModuleName,
 						authz.ModuleName,
+						epochstypes.ModuleName,
 					},
 					EndBlockers: []string{
 						govtypes.ModuleName,
@@ -133,6 +137,10 @@ var (
 						{
 							ModuleName: authtypes.ModuleName,
 							KvStoreKey: "acc",
+						},
+						{
+							ModuleName: accounts.ModuleName,
+							KvStoreKey: accounts.StoreKey,
 						},
 					},
 					// NOTE: The genutils module must occur after staking so that pools are
@@ -158,6 +166,7 @@ var (
 						vestingtypes.ModuleName,
 						circuittypes.ModuleName,
 						pooltypes.ModuleName,
+						epochstypes.ModuleName,
 					},
 					// When ExportGenesis is not specified, the export genesis module order
 					// is equal to the init genesis order
@@ -255,7 +264,7 @@ var (
 			{
 				Name: consensustypes.ModuleName,
 				Config: appconfig.WrapAny(&consensusmodulev1.Module{
-					Authority: "consensus",
+					Authority: "consensus", // TODO remove.
 				}),
 			},
 			{
@@ -269,6 +278,10 @@ var (
 			{
 				Name:   pooltypes.ModuleName,
 				Config: appconfig.WrapAny(&poolmodulev1.Module{}),
+			},
+			{
+				Name:   epochstypes.ModuleName,
+				Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
 			},
 		},
 	})

@@ -8,7 +8,7 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
-	"cosmossdk.io/core/appmodule/v2"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 )
 
@@ -18,7 +18,7 @@ func TestRouter(t *testing.T) {
 
 	expectedResp := &gogotypes.StringValue{Value: "test"}
 
-	router := coreRouterImpl{handlers: map[string]appmodule.Handler{
+	router := coreRouterImpl{handlers: map[string]appmodulev2.Handler{
 		gogoproto.MessageName(expectedMsg): func(ctx context.Context, gotMsg transaction.Msg) (msgResp transaction.Msg, err error) {
 			if !reflect.DeepEqual(expectedMsg, gotMsg) {
 				t.Errorf("expected message: %v, got: %v", expectedMsg, gotMsg)

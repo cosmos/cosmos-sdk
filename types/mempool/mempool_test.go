@@ -14,7 +14,6 @@ import (
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/auth/signing"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -24,6 +23,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // testPubKey is a dummy implementation of PubKey used for testing.

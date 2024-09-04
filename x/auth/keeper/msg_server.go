@@ -5,9 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/x/auth/types"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ types.MsgServer = msgServer{}

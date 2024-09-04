@@ -18,9 +18,9 @@ import (
 
 	// the following will be extracted to a separate module
 	// https://github.com/cosmos/cosmos-sdk/issues/14403
-	authtypes "cosmossdk.io/x/auth/types"
 	govcli "cosmossdk.io/x/gov/client/cli"
 	govtypes "cosmossdk.io/x/gov/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"

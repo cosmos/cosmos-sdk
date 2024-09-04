@@ -19,6 +19,8 @@ type Codec[T Tx] interface {
 	DecodeJSON([]byte) (T, error)
 }
 
+// Tx defines the interface for a transaction.
+// All custom transactions must implement this interface.
 type Tx interface {
 	// Hash returns the unique identifier for the Tx.
 	Hash() [32]byte

@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/types"
 
@@ -21,6 +20,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (

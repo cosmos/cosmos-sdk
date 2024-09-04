@@ -13,11 +13,10 @@ import (
 	"cosmossdk.io/store/cachekv"
 	iavlstore "cosmossdk.io/store/iavl"
 	"cosmossdk.io/store/types"
-	"cosmossdk.io/store/wrapper"
 )
 
 func TestGetOrSetStoreCache(t *testing.T) {
-	db := wrapper.NewDBWrapper(dbm.NewMemDB())
+	db := dbm.NewMemDB()
 	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
@@ -30,7 +29,7 @@ func TestGetOrSetStoreCache(t *testing.T) {
 }
 
 func TestUnwrap(t *testing.T) {
-	db := wrapper.NewDBWrapper(dbm.NewMemDB())
+	db := dbm.NewMemDB()
 	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
@@ -43,7 +42,7 @@ func TestUnwrap(t *testing.T) {
 }
 
 func TestStoreCache(t *testing.T) {
-	db := wrapper.NewDBWrapper(dbm.NewMemDB())
+	db := dbm.NewMemDB()
 	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
@@ -69,7 +68,7 @@ func TestStoreCache(t *testing.T) {
 }
 
 func TestReset(t *testing.T) {
-	db := wrapper.NewDBWrapper(dbm.NewMemDB())
+	db := dbm.NewMemDB()
 	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
@@ -89,7 +88,7 @@ func TestReset(t *testing.T) {
 }
 
 func TestCacheWrap(t *testing.T) {
-	db := wrapper.NewDBWrapper(dbm.NewMemDB())
+	db := dbm.NewMemDB()
 	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")

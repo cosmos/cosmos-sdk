@@ -13,8 +13,6 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-// TODO(serverv2): remove app exporter notion that is server v1 specific
-
 type genesisMM interface {
 	DefaultGenesis() map[string]json.RawMessage
 	ValidateGenesis(genesisData map[string]json.RawMessage) error

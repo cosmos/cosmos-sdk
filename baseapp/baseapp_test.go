@@ -14,6 +14,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/metrics"
@@ -22,7 +23,6 @@ import (
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
-	authtx "cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -32,6 +32,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 var (
@@ -296,7 +297,7 @@ func TestSetLoader(t *testing.T) {
 		app.SetStoreLoader(baseapp.DefaultStoreLoader)
 	}
 
-	initStore := func(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
+	initStore := func(t *testing.T, db corestore.KVStoreWithBatch, storeKey string, k, v []byte) {
 		t.Helper()
 		rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 		rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
@@ -317,7 +318,7 @@ func TestSetLoader(t *testing.T) {
 		require.Equal(t, int64(1), commitID.Version)
 	}
 
-	checkStore := func(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
+	checkStore := func(t *testing.T, db corestore.KVStoreWithBatch, ver int64, storeKey string, k, v []byte) {
 		t.Helper()
 		rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 		rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))

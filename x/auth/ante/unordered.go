@@ -2,20 +2,22 @@ package ante
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/binary"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/core/appmodule/v2"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/auth/ante/unorderedtx"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 )
 
 // bufPool is a pool of bytes.Buffer objects to reduce memory allocations.
@@ -45,14 +47,14 @@ type UnorderedTxDecorator struct {
 	// maxUnOrderedTTL defines the maximum TTL a transaction can define.
 	maxTimeoutDuration time.Duration
 	txManager          *unorderedtx.Manager
-	env                appmodule.Environment
+	env                appmodulev2.Environment
 	sha256Cost         uint64
 }
 
 func NewUnorderedTxDecorator(
 	maxDuration time.Duration,
 	m *unorderedtx.Manager,
-	env appmodule.Environment,
+	env appmodulev2.Environment,
 	gasCost uint64,
 ) *UnorderedTxDecorator {
 	return &UnorderedTxDecorator{
@@ -69,29 +71,41 @@ func (d *UnorderedTxDecorator) AnteHandle(
 	_ bool,
 	next sdk.AnteHandler,
 ) (sdk.Context, error) {
+	if err := d.ValidateTx(ctx, tx); err != nil {
+		return ctx, err
+	}
+	return next(ctx, tx, false)
+}
+
+func (d *UnorderedTxDecorator) ValidateTx(ctx context.Context, tx transaction.Tx) error {
+	sdkTx, ok := tx.(sdk.Tx)
+	if !ok {
+		return fmt.Errorf("invalid tx type %T, expected sdk.Tx", tx)
+	}
+
 	unorderedTx, ok := tx.(sdk.TxWithUnordered)
 	if !ok || !unorderedTx.GetUnordered() {
 		// If the transaction does not implement unordered capabilities or has the
 		// unordered value as false, we bypass.
-		return next(ctx, tx, false)
+		return nil
 	}
 
 	headerInfo := d.env.HeaderService.HeaderInfo(ctx)
 	timeoutTimestamp := unorderedTx.GetTimeoutTimeStamp()
 	if timeoutTimestamp.IsZero() || timeoutTimestamp.Unix() == 0 {
-		return ctx, errorsmod.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"unordered transaction must have timeout_timestamp set",
 		)
 	}
 	if timeoutTimestamp.Before(headerInfo.Time) {
-		return ctx, errorsmod.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"unordered transaction has a timeout_timestamp that has already passed",
 		)
 	}
 	if timeoutTimestamp.After(headerInfo.Time.Add(d.maxTimeoutDuration)) {
-		return ctx, errorsmod.Wrapf(
+		return errorsmod.Wrapf(
 			sdkerrors.ErrInvalidRequest,
 			"unordered tx ttl exceeds %s",
 			d.maxTimeoutDuration.String(),
@@ -100,24 +114,24 @@ func (d *UnorderedTxDecorator) AnteHandle(
 
 	// consume gas in all exec modes to avoid gas estimation discrepancies
 	if err := d.env.GasService.GasMeter(ctx).Consume(d.sha256Cost, "consume gas for calculating tx hash"); err != nil {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrOutOfGas, "out of gas")
+		return errorsmod.Wrap(sdkerrors.ErrOutOfGas, "out of gas")
 	}
 
 	// Avoid checking for duplicates and creating the identifier in simulation mode
 	// This is done to avoid sha256 computation in simulation mode
 	if d.env.TransactionService.ExecMode(ctx) == transaction.ExecModeSimulate {
-		return next(ctx, tx, false)
+		return nil
 	}
 
 	// calculate the tx hash
-	txHash, err := TxIdentifier(uint64(timeoutTimestamp.Unix()), tx)
+	txHash, err := TxIdentifier(uint64(timeoutTimestamp.Unix()), sdkTx)
 	if err != nil {
-		return ctx, err
+		return err
 	}
 
 	// check for duplicates
 	if d.txManager.Contains(txHash) {
-		return ctx, errorsmod.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"tx %X is duplicated",
 		)
@@ -127,7 +141,7 @@ func (d *UnorderedTxDecorator) AnteHandle(
 		d.txManager.Add(txHash, timeoutTimestamp)
 	}
 
-	return next(ctx, tx, false)
+	return nil
 }
 
 // TxIdentifier returns a unique identifier for a transaction that is intended to be unordered.

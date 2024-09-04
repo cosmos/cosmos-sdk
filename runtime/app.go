@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	authtx "cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -27,6 +26,8 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 // App is a wrapper around BaseApp and ModuleManager that can be used in hybrid
@@ -41,7 +42,9 @@ import (
 type App struct {
 	*baseapp.BaseApp
 
-	ModuleManager     *module.Manager
+	ModuleManager      *module.Manager
+	UnorderedTxManager *unorderedtx.Manager
+
 	configurator      module.Configurator // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
 	config            *runtimev1alpha1.Module
 	storeKeys         []storetypes.StoreKey
@@ -154,6 +157,20 @@ func (a *App) Load(loadLatest bool) error {
 	return nil
 }
 
+// Close closes all necessary application resources.
+// It implements servertypes.Application.
+func (a *App) Close() error {
+	// the unordered tx manager could be nil (unlikely but possible)
+	// if the app has no app options supplied.
+	if a.UnorderedTxManager != nil {
+		if err := a.UnorderedTxManager.Close(); err != nil {
+			return err
+		}
+	}
+
+	return a.BaseApp.Close()
+}
+
 // PreBlocker application updates every pre block
 func (a *App) PreBlocker(ctx sdk.Context, _ *abci.FinalizeBlockRequest) error {
 	return a.ModuleManager.PreBlock(ctx)
@@ -171,16 +188,14 @@ func (a *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
 
 // Precommiter application updates every commit
 func (a *App) Precommiter(ctx sdk.Context) {
-	err := a.ModuleManager.Precommit(ctx)
-	if err != nil {
+	if err := a.ModuleManager.Precommit(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // PrepareCheckStater application updates every commit
 func (a *App) PrepareCheckStater(ctx sdk.Context) {
-	err := a.ModuleManager.PrepareCheckState(ctx)
-	if err != nil {
+	if err := a.ModuleManager.PrepareCheckState(ctx); err != nil {
 		panic(err)
 	}
 }
@@ -247,16 +262,28 @@ func (a *App) DefaultGenesis() map[string]json.RawMessage {
 	return a.ModuleManager.DefaultGenesis()
 }
 
-// GetStoreKeys returns all the stored store keys.
-func (a *App) GetStoreKeys() []storetypes.StoreKey {
-	return a.storeKeys
-}
-
 // SetInitChainer sets the init chainer function
 // It wraps `BaseApp.SetInitChainer` to allow setting a custom init chainer from an app.
 func (a *App) SetInitChainer(initChainer sdk.InitChainer) {
 	a.initChainer = initChainer
 	a.BaseApp.SetInitChainer(initChainer)
+}
+
+// GetStoreKeys returns all the stored store keys.
+func (a *App) GetStoreKeys() []storetypes.StoreKey {
+	return a.storeKeys
+}
+
+// GetKey returns the KVStoreKey for the provided store key.
+//
+// NOTE: This should only be used in testing.
+func (a *App) GetKey(storeKey string) *storetypes.KVStoreKey {
+	sk := a.UnsafeFindStoreKey(storeKey)
+	kvStoreKey, ok := sk.(*storetypes.KVStoreKey)
+	if !ok {
+		return nil
+	}
+	return kvStoreKey
 }
 
 // UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.

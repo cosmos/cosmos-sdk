@@ -2,6 +2,7 @@ package schema
 
 import (
 	"fmt"
+	"time"
 )
 
 // Field represents a field in an object type.
@@ -90,6 +91,9 @@ func (c Field) ValidateValue(value interface{}, typeSet TypeSet) error {
 	return nil
 }
 
+// DefaultValue returns the default value for the field if one is known.
+// If validDefault is false, the field does not have a known default value.
+// TimeKind and JSONKind values do not have valid default values.
 func (c Field) DefaultValue(typeSet TypeSet) (value interface{}, validDefault bool) {
 	switch c.Kind {
 	case StringKind:
@@ -122,7 +126,21 @@ func (c Field) DefaultValue(typeSet TypeSet) (value interface{}, validDefault bo
 			return nil, false
 		}
 		return t.DefaultValue()
-		//default:
-		//	return nil, false
+	case BytesKind:
+		return []byte{}, true
+	case AddressKind:
+		return []byte{}, true
+	case DurationKind:
+		return time.Duration(0), true
+	case IntegerStringKind:
+		return "0", true
+	case DecimalStringKind:
+		return "0", true
+	case JSONKind:
+		return nil, false
+	case TimeKind:
+		return nil, false
+	default:
+		return nil, false
 	}
 }

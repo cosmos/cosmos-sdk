@@ -16,6 +16,8 @@ type EnumType struct {
 
 	// Values is a list of distinct, non-empty values that are part of the enum type.
 	// Each value must conform to the NameFormat regular expression.
+	// A valid enum has one and only one value with a numeric value of 0, which is the
+	// default value of the enum.
 	Values []EnumValueDefinition `json:"values"`
 
 	// NumericKind is the numeric kind used to represent the enum values numerically.
@@ -92,6 +94,11 @@ func (e EnumType) Validate(TypeSet) error {
 			return fmt.Errorf("invalid numeric kind %s for enum %s", e.NumericKind, e.Name)
 		}
 	}
+
+	if _, ok := values[0]; !ok {
+		return fmt.Errorf("enum %s must have a value of 0", e.Name)
+	}
+
 	return nil
 }
 

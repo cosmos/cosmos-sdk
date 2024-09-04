@@ -43,9 +43,8 @@ func MakeHybridHandler(cdc codec.BinaryCodec, sd *grpc.ServiceDesc, method grpc.
 	}
 	if isProtov2Handler {
 		return makeProtoV2HybridHandler(methodDesc, cdc, method, handler)
-	} else {
-		return makeGogoHybridHandler(methodDesc, cdc, method, handler)
 	}
+	return makeGogoHybridHandler(methodDesc, cdc, method, handler)
 }
 
 // makeProtoV2HybridHandler returns a handler that can handle both gogo and protov2 messages.

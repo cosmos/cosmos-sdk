@@ -41,7 +41,7 @@ func (app *BaseApp) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo,
 }
 
 // SimWriteState is an entrypoint for simulations only. They are not executed during the normal ABCI finalize
-// block step but later. Therefore an extra call to the root multi-store (app.cms) is required to write the changes.
+// block step but later. Therefore, an extra call to the root multi-store (app.cms) is required to write the changes.
 func (app *BaseApp) SimWriteState() {
 	app.finalizeBlockState.ms.Write()
 }

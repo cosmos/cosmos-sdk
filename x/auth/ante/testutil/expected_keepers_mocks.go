@@ -10,8 +10,8 @@ import (
 
 	address "cosmossdk.io/core/address"
 	appmodule "cosmossdk.io/core/appmodule"
-	types "cosmossdk.io/x/auth/types"
-	types0 "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
+	types0 "github.com/cosmos/cosmos-sdk/x/auth/types"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -53,10 +53,10 @@ func (mr *MockAccountKeeperMockRecorder) AddressCodec() *gomock.Call {
 }
 
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types0.AccAddress) types0.AccountI {
+func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddress) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
-	ret0, _ := ret[0].(types0.AccountI)
+	ret0, _ := ret[0].(types.AccountI)
 	return ret0
 }
 
@@ -81,10 +81,10 @@ func (mr *MockAccountKeeperMockRecorder) GetEnvironment() *gomock.Call {
 }
 
 // GetModuleAddress mocks base method.
-func (m *MockAccountKeeper) GetModuleAddress(moduleName string) types0.AccAddress {
+func (m *MockAccountKeeper) GetModuleAddress(moduleName string) types.AccAddress {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetModuleAddress", moduleName)
-	ret0, _ := ret[0].(types0.AccAddress)
+	ret0, _ := ret[0].(types.AccAddress)
 	return ret0
 }
 
@@ -95,10 +95,10 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(moduleName interface{}
 }
 
 // GetParams mocks base method.
-func (m *MockAccountKeeper) GetParams(ctx context.Context) types.Params {
+func (m *MockAccountKeeper) GetParams(ctx context.Context) types0.Params {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetParams", ctx)
-	ret0, _ := ret[0].(types.Params)
+	ret0, _ := ret[0].(types0.Params)
 	return ret0
 }
 
@@ -109,10 +109,10 @@ func (mr *MockAccountKeeperMockRecorder) GetParams(ctx interface{}) *gomock.Call
 }
 
 // NewAccountWithAddress mocks base method.
-func (m *MockAccountKeeper) NewAccountWithAddress(ctx context.Context, addr types0.AccAddress) types0.AccountI {
+func (m *MockAccountKeeper) NewAccountWithAddress(ctx context.Context, addr types.AccAddress) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewAccountWithAddress", ctx, addr)
-	ret0, _ := ret[0].(types0.AccountI)
+	ret0, _ := ret[0].(types.AccountI)
 	return ret0
 }
 
@@ -123,7 +123,7 @@ func (mr *MockAccountKeeperMockRecorder) NewAccountWithAddress(ctx, addr interfa
 }
 
 // SetAccount mocks base method.
-func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types0.AccountI) {
+func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types.AccountI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetAccount", ctx, acc)
 }
@@ -158,7 +158,7 @@ func (m *MockFeegrantKeeper) EXPECT() *MockFeegrantKeeperMockRecorder {
 }
 
 // UseGrantedFees mocks base method.
-func (m *MockFeegrantKeeper) UseGrantedFees(ctx context.Context, granter, grantee types0.AccAddress, fee types0.Coins, msgs []types0.Msg) error {
+func (m *MockFeegrantKeeper) UseGrantedFees(ctx context.Context, granter, grantee types.AccAddress, fee types.Coins, msgs []types.Msg) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UseGrantedFees", ctx, granter, grantee, fee, msgs)
 	ret0, _ := ret[0].(error)

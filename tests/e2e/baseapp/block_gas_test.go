@@ -18,7 +18,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	store "cosmossdk.io/store/types"
 	_ "cosmossdk.io/x/accounts"
-	xauthsigning "cosmossdk.io/x/auth/signing"
 
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -36,6 +35,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 var blockMaxGas = uint64(simtestutil.DefaultConsensusParams.Block.MaxGas)

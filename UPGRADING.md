@@ -428,7 +428,7 @@ For modules that have migrated, verify you are checking against `collections.Err
 Accounts's AccountNumber will be used as a global account number tracking replacing Auth legacy AccountNumber. Must set accounts's AccountNumber with auth's AccountNumber value in upgrade handler. This is done through auth keeper MigrateAccountNumber function.
 
 ```go
-import authkeeper "cosmossdk.io/x/auth/keeper" 
+import authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper" 
 ...
 err := authkeeper.MigrateAccountNumberUnsafe(ctx, &app.AuthKeeper)
 if err != nil {

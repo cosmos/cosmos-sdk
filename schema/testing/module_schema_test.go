@@ -9,7 +9,7 @@ import (
 
 func TestModuleSchema(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
-		schema := ModuleSchemaGen.Draw(t, "schema")
+		schema := ModuleSchemaGen().Draw(t, "schema")
 		require.NoError(t, schema.Validate())
 	})
 }

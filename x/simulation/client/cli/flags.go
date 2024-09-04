@@ -46,7 +46,7 @@ func GetSimulatorFlags() {
 	flag.IntVar(&FlagBlockSizeValue, "BlockSize", 200, "operations per block")
 	flag.BoolVar(&FlagLeanValue, "Lean", false, "lean simulation log output")
 	flag.BoolVar(&FlagCommitValue, "Commit", true, "have the simulation commit")
-	flag.StringVar(&FlagDBBackendValue, "DBBackend", "goleveldb", "custom db backend type")
+	flag.StringVar(&FlagDBBackendValue, "DBBackend", "goleveldb", "custom db backend type: goleveldb, memdb")
 
 	// simulation flags
 	flag.BoolVar(&FlagEnabledValue, "Enabled", false, "enable the simulation")

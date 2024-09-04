@@ -20,5 +20,6 @@ const (
 
 // Service creates a transaction service.
 type Service interface {
+	// ExecMode returns the current execution mode.
 	ExecMode(ctx context.Context) ExecMode
 }

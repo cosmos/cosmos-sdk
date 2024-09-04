@@ -3,7 +3,7 @@
 ## Changelog
 
 * 2024-08-09: Reworked initial draft (previous work was in https://github.com/cosmos/cosmos-sdk/pull/15410)
-* 2024-09-04: Added details on message packet specification
+* 2024-09-04: Added message packet, error handling and gas specifications
 
 ## Background
 

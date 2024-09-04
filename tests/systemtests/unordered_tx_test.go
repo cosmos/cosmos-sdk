@@ -12,7 +12,6 @@ import (
 )
 
 func TestUnorderedTXDuplicate(t *testing.T) {
-	t.Skip("The unordered tx antehanlder is missing in v2")
 	// scenario: test unordered tx duplicate
 	// given a running chain with a tx in the unordered tx pool
 	// when a new tx with the same hash is broadcasted

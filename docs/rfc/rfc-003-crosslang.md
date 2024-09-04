@@ -232,15 +232,51 @@ account for a given message request.
 To facilitate efficient cross-language and cross-VM message passing, the precise layout of **message packets** is important
 as it reduces the need for serialization and deserialization in the core hypervisor and virtual machine layers.
 
-We start by defining a **message packet** as a 64kb (65,536 bytes) array which is aligned to a 64kb boundary.
-For most message handlers, this single packet should be large enough to contain a full **message request**,
-including all **message data** as well as message return data.
-In cases where the packet size is too small, additional buffers can be referenced from within the **message packet**.
+#### Message Packet Header
 
-More details on the specific layout of **message packets** will be specified in a future update to this RFC
-or a separate RFC.
-For now, we specify that within a 64kb **message packet**,
-at least 56kb will be available for **message data** and message responses.
+The **message packet** header occupies 512 bytes and is laid out as follows:
+- **message name**: a 128-byte array with the first byte indicating the length of the string
+- **self-address**: a 64-byte array with the first byte indicating the length of the address
+- **caller-address**: a 64-byte array with the first byte indicating the length of the address
+- **context token**: a 32-byte array
+- **state token**: a 32-byte array
+- **message name hash**: the first 8-bytes of the SHA256 hash of the message name, which can be used for simplified routing
+- **gas limit**: an unsigned 64-bit integer
+- **input param space**: 32 bytes which may be used as input parameters message handlers choose
+- **output param space**: 32 bytes which may be used as output parameters message handlers choose
+- **input data pointer 1**: 16 bytes, see below for the **data pointer** spec
+- **input data pointer 2**: 16 bytes
+- **output data pointer 1**: 16 bytes
+- **output data pointer 2**: 16 bytes
+- remaining 96 bytes: reserved for future use, should be zeroed when a packet is initialized
+
+The minimum size allocated for a **message packet** is thus 512 bytes,
+but larger packets may be allocated so that data pointers can point to memory within the same packet.
+
+#### Data Pointer
+
+A **data pointer** is specified as follows:
+- **native pointer**: 8-bytes, a pointer to the actual data in the native environment or zero
+- **length**: unsigned 32-bit integer
+- **capacity or offset**: unsigned 32-bit integer
+
+In a **data pointer**, if **native pointer** is zero, then **capacity or offset** points to an offset within the
+**message packet** to the start of the data.
+Any such offset must occur after the 512-byte **message packet** header.
+If **native pointer** is non-zero, then **capacity or offset** is the capacity of the allocated buffer in bytes,
+which should be used when freeing the buffer.
+The **length** value indicates the length of the data in bytes that needs to be copied from source to target
+when data is passed from one environment to another.
+
+When passing a packet from one environment to another, a VM should follow these steps:
+1. allocate the packet in the new environment
+2. copy all 512-bytes of the **message packet** header from the source packet to the target packet
+3. if input data pointers point to additional buffers, then allocate these buffers in the new environment
+and update the **data pointers** in the target packet to point to the new buffers
+4. (optional) output data pointers may point to pre-allocated buffers or regions, but should generally have zero-length, if needed, do special handling of these
+5. after execution, copy the **output param space**
+and update the **output data pointers** in the source packet to point to the appropriate memory
+regions, copying and allocating memory as needed
 
 ## Abandoned Ideas (Optional)
 

@@ -236,18 +236,6 @@ To support these, the hypervisor will accept an **authorization middleware** par
 whether a given real caller account (verified by the hypervisor) is authorized to act as a different caller
 account for a given message request.
 
-### Gas
-
-Gas is a measure of computational resources consumed by a message handler.
-Whenever a gas limit is imposed, if at any point that gas limit is exceeded,
-execution will halt and an out-of-gas error will be returned to the last handler
-executing without a gas limit.
-If at the execution root (made via a call external to the hypervisor), the gas limit is
-set to zero, then execution of that handler is unmetered and essentially infinite.
-Such unmetered handlers may set any gas limit they wish for nested calls.
-Once there is a gas limit, gas consumed is a monotonically increasing value that can't be bypassed
-and is unaffected by any nesting of state tokens.
-
 ### Message Data and Packet Specification
 
 To facilitate efficient cross-language and cross-VM message passing, the precise layout of **message packets** is important
@@ -268,6 +256,7 @@ for that handler.
 - **state token**: a 32-byte array
 - **message name hash**: the first 8-bytes of the SHA256 hash of the message name, which can be used for simplified routing
 - **gas limit**: an unsigned 64-bit integer
+- **gas consumed**: an unsigned 64-bit integer
 - **input data pointer 1**: 16 bytes, see below for the **data pointer** spec
 - **input data pointer 2**: 16 bytes
 - **output data pointer 1**: 16 bytes
@@ -297,6 +286,76 @@ and update the **data pointers** in the target packet to point to the new buffer
 4. (optional) output data pointers may point to pre-allocated buffers or regions, but should generally have zero-length, if needed, do special handling of these
 5. after execution, copy and allocate output buffers as needed,
 and update the **output data pointers** in the source packet to point to the appropriate memory regions
+
+### Error Codes & Handling
+
+All invoke and handler methods return a 32-bit unsigned integer error code.
+If the error code is zero, then the operation was successful.
+
+#### System-Level Error Codes
+The following non-zero error codes are defined at the system level:
+* 1: out of gas
+* 2: fatal execution error (when an unexpected, likely non-deterministic fatal error occurs)
+* 3: account not found
+* 4: message handler not found
+* 5: invalid state access (when volatility rules are violated)
+* 6: unauthorized caller address (when the caller address impersonation is not authorized)
+* 7: invalid handler (when hypervisor or vm-level rules are violated by the handler implementation)
+* 8: unknown handler error (when handler execution failed for an unknown, but likely deterministic reason)
+
+Error codes through 255 are reserved for system-level errors and should only be returned by the hypervisor or 
+a virtual machine implementation.
+
+#### Handler-level Error Codes
+
+Any error code above 255 is interpreted as an error returned by a handler itself and is to be interpreted by the caller
+based on the message handler's specification.
+
+It is an error for a handler implementation to return a system-level error code, and if such a code is received it
+will be translated to error code 7 (invalid handler).
+If a handler implementation wants to simply propagate a system-level error code that it receives,
+it should wrap it with a different error code.
+Developer SDKs should handle this wrapping automatically.
+
+#### Error Data
+
+If additional data is included in the error,
+it is generally expected that this would be referenced by **output data pointer 1**,
+although message handlers are free to use **output data pointer 2** if necessary as well.
+System-level errors, if they do include additional data, will encode it as a string in **output data pointer 1**
+and will limit such messages to a maximum of 255 bytes.
+
+#### Unwinding Errors
+
+Error codes 1 (out of gas) and 2 (fatal execution error) are considered unwinding errors.
+If one of these errors is returned, the hypervisor will halt execution of the calling message handler
+and unwind the call stack up to the last recoverable message handler if there is one.
+When unwinding, the hypervisor will call the `discard_cleanup` method on the **state handler**
+with the **state token** of each message handler that is unwound.
+
+For out-of-gas errors, the hypervisor will unwind up to the caller that set the gas limit.
+For fatal execution errors, the hypervisor will unwind up to the external caller that called the hypervisor, likely
+resulting in process termination.
+A fatal execution error should only be returned when it is expected that the error is non-deterministic and unrecoverable.
+An example of such an error would be running out of disk space or losing network connectivity.
+If there is an execution error that is likely to be deterministic, such as Wasm code failing to execute, then
+the virtual machine should return error code 8 (unknown handler error), which is not an unwinding error.
+
+### Gas
+
+Gas is a measure of computational resources consumed by a message handler.
+Whenever a gas limit is imposed, if at any point that gas limit is exceeded,
+execution will halt and an out-of-gas error will be returned to the last handler
+executing without a gas limit.
+If at the execution root (made via a call external to the hypervisor), the gas limit is
+set to zero, then execution of that handler is unmetered and essentially infinite.
+Such unmetered handlers may set any gas limit they wish for nested calls.
+Once there is a gas limit, gas consumed is a monotonically increasing value that can't be bypassed
+and is unaffected by any nesting of state tokens.
+When making calls when there is a gas limit set, a caller can either choose to inherit the existing
+gas limit or set a more restrictive gas limit.
+Any gas that a handler marks as consumed in a message packet should be added to any gas that a
+virtual machine has metered for that handler when returning consumed gas to the hypervisor.
 
 ## Abandoned Ideas (Optional)
 

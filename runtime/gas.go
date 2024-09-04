@@ -45,10 +45,6 @@ func (cgm CoreGasmeter) Refund(amount gas.Gas, descriptor string) error {
 	return nil
 }
 
-func (cgm CoreGasmeter) Consumed() gas.Gas {
-	return cgm.gm.GasConsumed()
-}
-
 func (cgm CoreGasmeter) Remaining() gas.Gas {
 	return cgm.gm.GasRemaining()
 }

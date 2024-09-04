@@ -22,7 +22,7 @@ The state API defines the following messages:
 
 #### `cosmos.state.v1.new_branch`
 
-Takes no parameters and returns a new volatile state token which branches/caches off the current state token as **output parameter 1**. Retuns an error if the current state token is not in a valid state to branch off of.
+Takes no parameters and returns a new volatile state token which branches/caches off the current state token as **output parameter 1**. Returns an error if the current state token is not in a valid state to branch off of.
 
 #### `cosmos.state.v1.commit`
 
@@ -41,12 +41,17 @@ Takes no parameters and rolls back any changes to the branched state token in th
 * Output Parameter 1: `value`
 * Errors: `key_not_found`
 
+A 64kb packet size is suggested with the key at offset 16,384 and the value at offset 32,768.
+
 #### `cosmos.kvstore.v1.set`
 
 * Volatility: Volatile
 * Input Parameter 1: `key`
 * Input Parameter 2: `value`
 * Errors: None
+* Suggested packet size: 64kb
+
+The same packet utilization as get is suggested.
 
 #### `cosmos.kvstore.v1.delete`
 
@@ -54,11 +59,15 @@ Takes no parameters and rolls back any changes to the branched state token in th
 * Input Parameters 1: `key`
 * Errors: None (should there be an error for key not found?)
 
+The suggested packet size is 32kb with the key at offset 16,384.
+
 #### `cosmos.kvstore.v1.has`
 
 * Volatility: Readonly
 * Input Parameter 1: `key`
 * Errors: `not_found`
+
+The same packet utilization as delete is suggested.
 
 ### Ordered KV Store API
 
@@ -70,6 +79,9 @@ Takes no parameters and rolls back any changes to the branched state token in th
 * Output Parameter 1: `iterator` - 32 bytes that are to be used as the next state token
 * Errors: None
 
+The suggested packet size is 32kb with the start key at offset 16,384 and the end key at offset 32,768,
+and iterator at any offset not otherwise used.
+
 #### `cosmos.orderedkvstore.v1.reverse_iterator`
 
 * Volatility: Readonly
@@ -78,6 +90,8 @@ Takes no parameters and rolls back any changes to the branched state token in th
 * Output Parameter 1: `iterator` - 32 bytes that are to be used as the next state token
 * Errors: None
 
+The same packet utilization as iterator is suggested.
+
 #### `cosmos.orderedkvstore.v1.iterator_next`
 
 * Volatility: Readonly
@@ -85,6 +99,8 @@ Takes no parameters and rolls back any changes to the branched state token in th
 * Output Parameter 1: `key`
 * Output Parameter 2: `value`
 * Errors: `iterator_done`
+
+The same packet utilization as get is suggested.
 
 #### `cosmos.orderedkvstore.v1.iterator_close`
 

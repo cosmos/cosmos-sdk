@@ -2258,6 +2258,8 @@ Example Output:
 }
 ```
 
+Note: `params_type` are deprecated in v1 since all params are stored in Params.
+
 #### deposits
 
 The `deposits` endpoint allows users to query a deposit for a given proposal from a given depositor.

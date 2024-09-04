@@ -10,7 +10,7 @@ import (
 	reflect "reflect"
 
 	appmodule "cosmossdk.io/core/appmodule"
-	appmodule0 "cosmossdk.io/core/appmodule/v2"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	types "github.com/cosmos/cosmos-sdk/types"
 	module "github.com/cosmos/cosmos-sdk/types/module"
 	gomock "github.com/golang/mock/gomock"
@@ -269,10 +269,10 @@ func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) ExportGenesis(ctx inte
 }
 
 // InitGenesis mocks base method.
-func (m *MockAppModuleWithAllExtensionsABCI) InitGenesis(ctx context.Context, data json.RawMessage) ([]appmodule0.ValidatorUpdate, error) {
+func (m *MockAppModuleWithAllExtensionsABCI) InitGenesis(ctx context.Context, data json.RawMessage) ([]appmodulev2.ValidatorUpdate, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InitGenesis", ctx, data)
-	ret0, _ := ret[0].([]appmodule0.ValidatorUpdate)
+	ret0, _ := ret[0].([]appmodulev2.ValidatorUpdate)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

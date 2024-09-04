@@ -10,7 +10,6 @@ import (
 	// without this import amino json encoding will fail when resolving any types
 	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
 	"cosmossdk.io/math"
-	authcli "cosmossdk.io/x/auth/client/cli"
 	"cosmossdk.io/x/authz"
 	"cosmossdk.io/x/authz/client/cli"
 	authzclitestutil "cosmossdk.io/x/authz/client/testutil"
@@ -28,6 +27,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 )
 
 type E2ETestSuite struct {

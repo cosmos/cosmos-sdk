@@ -31,7 +31,6 @@ require (
 
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
-	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/tx v0.13.3 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -116,7 +115,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.20.2 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.57.0 // indirect
+	github.com/prometheus/common v0.58.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
@@ -186,7 +185,6 @@ replace (
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/store => ../../store
-	cosmossdk.io/x/auth => ../auth
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/tx => ../tx

@@ -15,10 +15,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/accounts"
 	baseaccount "cosmossdk.io/x/accounts/defaults/base"
-	"cosmossdk.io/x/auth"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authsims "cosmossdk.io/x/auth/simulation"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/testutil"
@@ -36,6 +32,10 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type fixture struct {

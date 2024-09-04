@@ -148,7 +148,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 			appendflag, _ := cmd.Flags().GetBool(flagAppendMode)
 
-			return genutil.AddBulkGenesisAccounts(clientCtx.Codec, addressCodec, accounts, appendflag, config.GenesisFile())
+			return genutil.AddGenesisAccounts(clientCtx.Codec, addressCodec, accounts, appendflag, config.GenesisFile())
 		},
 	}
 

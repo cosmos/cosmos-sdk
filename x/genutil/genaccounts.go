@@ -158,10 +158,10 @@ type GenesisAccount struct {
 	ModuleName string `json:"module_name,omitempty"`
 }
 
-// AddBulkGenesisAccounts adds genesis accounts to the genesis state.
+// AddGenesisAccounts adds genesis accounts to the genesis state.
 // Where `cdc` is the client codec, `accounts` are the genesis accounts to add,
 // `appendAcct` updates the account if already exists, and `genesisFileURL` is the path/url of the current genesis file.
-func AddBulkGenesisAccounts(
+func AddGenesisAccounts(
 	cdc codec.Codec,
 	ac address.Codec,
 	accounts []GenesisAccount,

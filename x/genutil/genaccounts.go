@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/core/address"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -13,7 +14,6 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-<<<<<<< HEAD
 // AddGenesisAccount adds a genesis account to the genesis state.
 // Where `cdc` is client codec, `genesisFileUrl` is the path/url of current genesis file,
 // `accAddr` is the address to be added to the genesis state, `amountStr` is the list of initial coins
@@ -24,33 +24,11 @@ import (
 func AddGenesisAccount(
 	cdc codec.Codec,
 	accAddr sdk.AccAddress,
-=======
-type GenesisAccount struct {
-	// Base
-	Address string    `json:"address"`
-	Coins   sdk.Coins `json:"coins"`
-
-	// Vesting
-	VestingAmt   sdk.Coins `json:"vesting_amt,omitempty"`
-	VestingStart int64     `json:"vesting_start,omitempty"`
-	VestingEnd   int64     `json:"vesting_end,omitempty"`
-
-	// Module
-	ModuleName string `json:"module_name,omitempty"`
-}
-
-// AddGenesisAccounts adds genesis accounts to the genesis state.
-// Where `cdc` is the client codec, `addressCodec` is the address codec, `accounts` are the genesis accounts to add,
-// `appendAcct` updates the account if already exists, and `genesisFileURL` is the path/url of the current genesis file.
-func AddGenesisAccounts(
-	cdc codec.Codec,
-	addressCodec address.Codec,
-	accounts []GenesisAccount,
->>>>>>> 4b78f15f6 (feat(x/genutil)!: bulk add genesis accounts (#21372))
 	appendAcct bool,
-	genesisFileURL string,
+	genesisFileURL, amountStr, vestingAmtStr string,
+	vestingStart, vestingEnd int64,
+	moduleName string,
 ) error {
-<<<<<<< HEAD
 	coins, err := sdk.ParseCoinsNormalized(amountStr)
 	if err != nil {
 		return fmt.Errorf("failed to parse coins: %w", err)
@@ -98,8 +76,97 @@ func AddGenesisAccounts(
 		return fmt.Errorf("failed to validate new genesis account: %w", err)
 	}
 
-=======
->>>>>>> 4b78f15f6 (feat(x/genutil)!: bulk add genesis accounts (#21372))
+	appState, appGenesis, err := genutiltypes.GenesisStateFromGenFile(genesisFileURL)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal genesis state: %w", err)
+	}
+
+	authGenState := authtypes.GetGenesisStateFromAppState(cdc, appState)
+
+	accs, err := authtypes.UnpackAccounts(authGenState.Accounts)
+	if err != nil {
+		return fmt.Errorf("failed to get accounts from any: %w", err)
+	}
+
+	bankGenState := banktypes.GetGenesisStateFromAppState(cdc, appState)
+	if accs.Contains(accAddr) {
+		if !appendAcct {
+			return fmt.Errorf(" Account %s already exists\nUse `append` flag to append account at existing address", accAddr)
+		}
+
+		genesisB := banktypes.GetGenesisStateFromAppState(cdc, appState)
+		for idx, acc := range genesisB.Balances {
+			if acc.Address != accAddr.String() {
+				continue
+			}
+
+			updatedCoins := acc.Coins.Add(coins...)
+			bankGenState.Balances[idx] = banktypes.Balance{Address: accAddr.String(), Coins: updatedCoins.Sort()}
+			break
+		}
+	} else {
+		// Add the new account to the set of genesis accounts and sanitize the accounts afterwards.
+		accs = append(accs, genAccount)
+		accs = authtypes.SanitizeGenesisAccounts(accs)
+
+		genAccs, err := authtypes.PackAccounts(accs)
+		if err != nil {
+			return fmt.Errorf("failed to convert accounts into any's: %w", err)
+		}
+		authGenState.Accounts = genAccs
+
+		authGenStateBz, err := cdc.MarshalJSON(&authGenState)
+		if err != nil {
+			return fmt.Errorf("failed to marshal auth genesis state: %w", err)
+		}
+		appState[authtypes.ModuleName] = authGenStateBz
+
+		bankGenState.Balances = append(bankGenState.Balances, balances)
+	}
+
+	bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
+
+	bankGenState.Supply = bankGenState.Supply.Add(balances.Coins...)
+
+	bankGenStateBz, err := cdc.MarshalJSON(bankGenState)
+	if err != nil {
+		return fmt.Errorf("failed to marshal bank genesis state: %w", err)
+	}
+	appState[banktypes.ModuleName] = bankGenStateBz
+
+	appStateJSON, err := json.Marshal(appState)
+	if err != nil {
+		return fmt.Errorf("failed to marshal application genesis state: %w", err)
+	}
+
+	appGenesis.AppState = appStateJSON
+	return ExportGenesisFile(appGenesis, genesisFileURL)
+}
+
+type GenesisAccount struct {
+	// Base
+	Address string    `json:"address"`
+	Coins   sdk.Coins `json:"coins"`
+
+	// Vesting
+	VestingAmt   sdk.Coins `json:"vesting_amt,omitempty"`
+	VestingStart int64     `json:"vesting_start,omitempty"`
+	VestingEnd   int64     `json:"vesting_end,omitempty"`
+
+	// Module
+	ModuleName string `json:"module_name,omitempty"`
+}
+
+// AddBulkGenesisAccounts adds genesis accounts to the genesis state.
+// Where `cdc` is the client codec, `accounts` are the genesis accounts to add,
+// `appendAcct` updates the account if already exists, and `genesisFileURL` is the path/url of the current genesis file.
+func AddBulkGenesisAccounts(
+	cdc codec.Codec,
+	ac address.Codec,
+	accounts []GenesisAccount,
+	appendAcct bool,
+	genesisFileURL string,
+) error {
 	appState, appGenesis, err := genutiltypes.GenesisStateFromGenFile(genesisFileURL)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal genesis state: %w", err)
@@ -127,27 +194,11 @@ func AddGenesisAccounts(
 		addr := acc.Address
 		coins := acc.Coins
 
-		accAddr, err := addressCodec.StringToBytes(addr)
+		accAddr, err := ac.StringToBytes(addr)
 		if err != nil {
 			return fmt.Errorf("failed to parse account address %s: %w", addr, err)
 		}
 
-<<<<<<< HEAD
-		genesisB := banktypes.GetGenesisStateFromAppState(cdc, appState)
-		for idx, acc := range genesisB.Balances {
-			if acc.Address != accAddr.String() {
-				continue
-			}
-
-			updatedCoins := acc.Coins.Add(coins...)
-			bankGenState.Balances[idx] = banktypes.Balance{Address: accAddr.String(), Coins: updatedCoins.Sort()}
-			break
-		}
-	} else {
-		// Add the new account to the set of genesis accounts and sanitize the accounts afterwards.
-		accs = append(accs, genAccount)
-		accs = authtypes.SanitizeGenesisAccounts(accs)
-=======
 		// create concrete account type based on input parameters
 		var genAccount authtypes.GenesisAccount
 
@@ -168,7 +219,6 @@ func AddGenesisAccounts(
 				baseVestingAccount.OriginalVesting.IsAnyGT(balances.Coins) {
 				return errors.New("vesting amount cannot be greater than total amount")
 			}
->>>>>>> 4b78f15f6 (feat(x/genutil)!: bulk add genesis accounts (#21372))
 
 			switch {
 			case vestingStart != 0 && vestingEnd != 0:
@@ -224,17 +274,7 @@ func AddGenesisAccounts(
 		return fmt.Errorf("failed to marshal auth genesis state: %w", err)
 	}
 
-<<<<<<< HEAD
 	bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
-
-	bankGenState.Supply = bankGenState.Supply.Add(balances.Coins...)
-=======
-	bankGenState.Balances, err = banktypes.SanitizeGenesisBalances(bankGenState.Balances, addressCodec)
-	if err != nil {
-		return fmt.Errorf("failed to sanitize genesis bank Balances: %w", err)
-	}
->>>>>>> 4b78f15f6 (feat(x/genutil)!: bulk add genesis accounts (#21372))
-
 	bankGenState.Supply = bankGenState.Supply.Add(newSupplyCoinsCache...)
 
 	appState[banktypes.ModuleName], err = cdc.MarshalJSON(bankGenState)

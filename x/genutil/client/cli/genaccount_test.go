@@ -2,20 +2,16 @@ package cli_test
 
 import (
 	"context"
-<<<<<<< HEAD
-	"fmt"
-=======
 	"encoding/json"
+	"fmt"
 	"os"
 	"path"
->>>>>>> 4b78f15f6 (feat(x/genutil)!: bulk add genesis accounts (#21372))
 	"testing"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
-	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -27,6 +23,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
@@ -117,16 +114,12 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 }
 
 func TestBulkAddGenesisAccountCmd(t *testing.T) {
-	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	_, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	_, _, addr3 := testdata.KeyTestPubAddr()
-	addr1Str, err := ac.BytesToString(addr1)
-	require.NoError(t, err)
-	addr2Str, err := ac.BytesToString(addr2)
-	require.NoError(t, err)
-	addr3Str, err := ac.BytesToString(addr3)
-	require.NoError(t, err)
+	addr1Str := addr1.String()
+	addr2Str := addr2.String()
+	addr3Str := addr3.String()
 
 	tests := []struct {
 		name       string
@@ -210,23 +203,19 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			home := t.TempDir()
 			logger := log.NewNopLogger()
-			v := viper.New()
+			cfg, err := genutiltest.CreateDefaultCometConfig(home)
+			require.NoError(t, err)
 
-			encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
-			appCodec := encodingConfig.Codec
-			txConfig := encodingConfig.TxConfig
+			appCodec := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}).Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 
-			err = writeAndTrackDefaultConfig(v, home)
-			require.NoError(t, err)
-			clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(home).
-				WithAddressCodec(ac).WithTxConfig(txConfig)
+			serverCtx := server.NewContext(viper.New(), cfg, logger)
+			clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(home)
 
 			ctx := context.Background()
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-			ctx = context.WithValue(ctx, corectx.ViperContextKey, v)
-			ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
+			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
 			// The first iteration (pre-append) may not error.
 			// Check if any errors after all state transitions to genesis.
@@ -241,7 +230,7 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 				err = os.WriteFile(filePath, bz, 0o600)
 				require.NoError(t, err)
 
-				cmd := genutilcli.AddBulkGenesisAccountCmd()
+				cmd := genutilcli.AddBulkGenesisAccountCmd(home, addresscodec.NewBech32Codec("cosmos"))
 				args := []string{filePath}
 				if tc.appendFlag {
 					args = append(args, "--append")
@@ -263,7 +252,7 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 			appState, _, err := genutiltypes.GenesisStateFromGenFile(path.Join(home, "config", "genesis.json"))
 			require.NoError(t, err)
 
-			bankState := banktypes.GetGenesisStateFromAppState(encodingConfig.Codec, appState)
+			bankState := banktypes.GetGenesisStateFromAppState(appCodec, appState)
 
 			require.EqualValues(t, len(tc.expected), len(bankState.Balances))
 			for _, acc := range bankState.Balances {

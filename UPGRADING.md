@@ -438,7 +438,7 @@ if err != nil {
 }
 ```
 
-### `x/crsis`
+### `x/crisis`
 
 The `x/crisis` module was removed due to it not being supported or functional any longer. 
 

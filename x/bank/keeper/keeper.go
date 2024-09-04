@@ -6,16 +6,15 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
-	"cosmossdk.io/core/log"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ Keeper = (*BaseKeeper)(nil)
@@ -91,9 +90,6 @@ func NewBaseKeeper(
 	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
-
-	// add the module name to the logger
-	env.Logger = env.Logger.With(log.ModuleKey, "x/"+types.ModuleName)
 
 	return BaseKeeper{
 		Environment:            env,
@@ -418,12 +414,13 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.C
 		k.setSupply(ctx, supply)
 	}
 
-	k.Logger.Debug("burned tokens from account", "amount", amounts.String(), "from", address)
-
 	addrStr, err := k.ak.AddressCodec().BytesToString(acc.GetAddress())
 	if err != nil {
 		return err
 	}
+
+	k.Logger.Debug("burned tokens from account", "amount", amounts.String(), "from", addrStr)
+
 	// emit burn event
 	return k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCoinBurn,

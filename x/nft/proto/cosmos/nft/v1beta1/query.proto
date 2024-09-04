@@ -15,7 +15,7 @@ service Query {
     option (google.api.http).get = "/cosmos/nft/v1beta1/balance/{owner}/{class_id}";
   }
 
-  // BalancebyQueryString queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
+  // BalanceByQueryString queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
   rpc BalanceByQueryString(QueryBalanceByQueryStringRequest) returns (QueryBalanceByQueryStringResponse) {
     option (google.api.http).get          = "/cosmos/nft/v1beta1/balance";
     option (cosmos_proto.method_added_in) = "nft v0.1.1";
@@ -171,7 +171,7 @@ message QuerySupplyByQueryStringResponse {
   uint64 amount = 1;
 }
 
-// QueryNFTstRequest is the request type for the Query/NFTs RPC method
+// QueryNFTsRequest is the request type for the Query/NFTs RPC method
 message QueryNFTsRequest {
   // class_id associated with the nft
   string class_id = 1;

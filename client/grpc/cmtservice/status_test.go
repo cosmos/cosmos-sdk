@@ -6,6 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/server"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -14,7 +16,7 @@ import (
 func TestStatusCommand(t *testing.T) {
 	t.Skip() // https://github.com/cosmos/cosmos-sdk/issues/17446
 
-	cfg, err := network.DefaultConfigWithAppConfig(network.MinimumAppConfig())
+	cfg, err := network.DefaultConfigWithAppConfig(depinject.Configs() /* TODO, test skipped anyway */)
 	require.NoError(t, err)
 
 	network, err := network.New(t, t.TempDir(), cfg)

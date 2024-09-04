@@ -83,9 +83,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/tx_msg.go#L91-L9
 
 A standard implementation of both these objects can be found in the [`auth/tx` module](https://docs.cosmos.network/main/build/modules/auth#transactions):
 
-```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/tx/decoder.go
-```
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/tx/encoder.go

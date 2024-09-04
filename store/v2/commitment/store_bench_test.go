@@ -10,8 +10,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
 	dbm "cosmossdk.io/store/v2/db"
@@ -63,10 +63,10 @@ func getCommitStore(b *testing.B, db corestore.KVStoreWithBatch) *commitment.Com
 	multiTrees := make(map[string]commitment.Tree)
 	for _, storeKey := range storeKeys {
 		prefixDB := dbm.NewPrefixDB(db, []byte(storeKey))
-		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, log.NewNopLogger(), iavl.DefaultConfig())
+		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, coretesting.NewNopLogger(), iavl.DefaultConfig())
 	}
 
-	sc, err := commitment.NewCommitStore(multiTrees, db, log.NewNopLogger())
+	sc, err := commitment.NewCommitStore(multiTrees, nil, db, coretesting.NewNopLogger())
 	require.NoError(b, err)
 
 	return sc

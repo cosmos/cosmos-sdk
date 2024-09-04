@@ -1,9 +1,11 @@
 package registry
 
 import (
-	gogoproto "github.com/cosmos/gogoproto/proto"
+	"cosmossdk.io/core/transaction"
 )
 
+// InterfaceRegistrar is an interface for registering interfaces and their implementation.
+// It is a subset of the Cosmos SDK InterfaceRegistry for registration only.
 type InterfaceRegistrar interface {
 	// RegisterInterface associates protoName as the public name for the
 	// interface passed in as iface. This is to be used primarily to create
@@ -14,12 +16,12 @@ type InterfaceRegistrar interface {
 	//
 	// Ex:
 	//   registry.RegisterInterface("cosmos.base.v1beta1.Msg", (*sdk.Msg)(nil))
-	RegisterInterface(protoName string, iface interface{}, impls ...gogoproto.Message)
+	RegisterInterface(protoName string, iface interface{}, impls ...transaction.Msg)
 
 	// RegisterImplementations registers impls as concrete implementations of
 	// the interface iface.
 	//
 	// Ex:
 	//  registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSend{}, &MsgMultiSend{})
-	RegisterImplementations(iface interface{}, impls ...gogoproto.Message)
+	RegisterImplementations(iface interface{}, impls ...transaction.Msg)
 }

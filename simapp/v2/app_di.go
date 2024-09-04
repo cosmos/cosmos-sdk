@@ -2,29 +2,23 @@ package simapp
 
 import (
 	_ "embed"
-	"path/filepath"
 
 	"github.com/spf13/viper"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
-	coreapp "cosmossdk.io/core/app"
 	"cosmossdk.io/core/legacy"
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
-	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/commitment/iavl"
-	"cosmossdk.io/store/v2/db"
-	"cosmossdk.io/store/v2/root"
 	"cosmossdk.io/x/accounts"
-	authkeeper "cosmossdk.io/x/auth/keeper"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	consensuskeeper "cosmossdk.io/x/consensus/keeper"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
+	epochskeeper "cosmossdk.io/x/epochs/keeper"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	govkeeper "cosmossdk.io/x/gov/keeper"
@@ -41,6 +35,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 // DefaultNodeHome default home directories for the application daemon
@@ -74,6 +70,7 @@ type SimApp[T transaction.Tx] struct {
 	ConsensusParamsKeeper consensuskeeper.Keeper
 	CircuitBreakerKeeper  circuitkeeper.Keeper
 	PoolKeeper            poolkeeper.Keeper
+	EpochsKeeper          *epochskeeper.Keeper
 }
 
 func init() {
@@ -96,11 +93,6 @@ func NewSimApp[T transaction.Tx](
 	logger log.Logger,
 	viper *viper.Viper,
 ) *SimApp[T] {
-	viper.Set(serverv2.FlagHome, DefaultNodeHome) // TODO possibly set earlier when viper is created
-	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(DefaultNodeHome, "data"), nil)
-	if err != nil {
-		panic(err)
-	}
 	var (
 		app        = &SimApp[T]{}
 		appBuilder *runtime.AppBuilder[T]
@@ -110,21 +102,6 @@ func NewSimApp[T transaction.Tx](
 			AppConfig(),
 			depinject.Supply(
 				logger,
-				&root.FactoryOptions{
-					Logger:  logger,
-					RootDir: DefaultNodeHome,
-					SSType:  0,
-					SCType:  0,
-					SCPruningOption: &store.PruningOption{
-						KeepRecent: 0,
-						Interval:   0,
-					},
-					IavlConfig: &iavl.Config{
-						CacheSize:              100_000,
-						SkipFastStorageUpgrade: true,
-					},
-					SCRawDB: scRawDb,
-				},
 				viper,
 
 				// ADVANCED CONFIGURATION
@@ -202,10 +179,12 @@ func NewSimApp[T transaction.Tx](
 		&app.ConsensusParamsKeeper,
 		&app.CircuitBreakerKeeper,
 		&app.PoolKeeper,
+		&app.EpochsKeeper,
 	); err != nil {
 		panic(err)
 	}
 
+	var err error
 	app.App, err = appBuilder.Build()
 	if err != nil {
 		panic(err)
@@ -218,13 +197,11 @@ func NewSimApp[T transaction.Tx](
 
 	// TODO (here or in runtime/v2)
 	// wire simulation manager
-	// wire snapshot manager
 	// wire unordered tx manager
 
 	if err := app.LoadLatest(); err != nil {
 		panic(err)
 	}
-
 	return app
 }
 
@@ -237,7 +214,7 @@ func (app *SimApp[T]) AppCodec() codec.Codec {
 }
 
 // InterfaceRegistry returns SimApp's InterfaceRegistry.
-func (app *SimApp[T]) InterfaceRegistry() coreapp.InterfaceRegistry {
+func (app *SimApp[T]) InterfaceRegistry() server.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 

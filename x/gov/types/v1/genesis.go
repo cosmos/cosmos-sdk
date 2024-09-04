@@ -4,11 +4,10 @@ import (
 	"errors"
 	"fmt"
 
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/core/address"
-
-	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // NewGenesisState creates a new genesis state for the governance module
@@ -107,10 +106,10 @@ func ValidateGenesis(ac address.Codec, data *GenesisState) error {
 	return errGroup.Wait()
 }
 
-var _ types.UnpackInterfacesMessage = GenesisState{}
+var _ gogoprotoany.UnpackInterfacesMessage = GenesisState{}
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (data GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (data GenesisState) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	for _, p := range data.Proposals {
 		err := p.UnpackInterfaces(unpacker)
 		if err != nil {

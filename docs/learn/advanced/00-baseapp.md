@@ -49,9 +49,7 @@ management logic.
 
 The `BaseApp` type holds many important parameters for any Cosmos SDK based application.
 
-```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/baseapp.go#L58-L182
-```
 
 Let us go through the most important components.
 
@@ -110,7 +108,7 @@ Finally, a few more important parameters:
 
 ```go
 func NewBaseApp(
-  name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
+  name string, logger log.Logger, db corestore.KVStoreWithBatch, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
 
   // ...
@@ -148,7 +146,7 @@ To avoid unnecessary roundtrip to the main state, all reads to the branched stor
 
 ### CheckTx State Updates
 
-During `CheckTx`, the `checkState`, which is based off of the last committed state from the root
+During `CheckTx`, the `checkState`, which is based on the last committed state from the root
 store, is used for any reads and writes. Here we only execute the `AnteHandler` and verify a service router
 exists for every message in the transaction. Note, when we execute the `AnteHandler`, we branch
 the already branched `checkState`.
@@ -207,7 +205,7 @@ newly committed state and `finalizeBlockState` is set to `nil` to be reset on `F
 During `InitChain`, the `RequestInitChain` provides `ConsensusParams` which contains parameters
 related to block execution such as maximum gas and size in addition to evidence parameters. If these
 parameters are non-nil, they are set in the BaseApp's `ParamStore`. Behind the scenes, the `ParamStore`
-is managed by an `x/consensus_params` module. This allows the parameters to be tweaked via
+is managed by an `x/consensus` module. This allows the parameters to be tweaked via
  on-chain governance.
 
 ## Service Routers
@@ -482,7 +480,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci.go#L623
 
 When the underlying consensus engine receives a block proposal, each transaction in the block needs to be processed by the application. To that end, the underlying consensus engine sends the transactions in FinalizeBlock message to the application for each transaction in a sequential order.
 
-Since `FinalizeBlock` is an ABCI call, `Tx` is received in the encoded `[]byte` form. Nodes first unmarshal the transaction, using the [`TxConfig`](./00-app-anatomy.md#register-codec) defined in the app, then call `runTx` in `execModeFinalize`, which is very similar to `CheckTx` but also executes and writes state changes.
+Since `FinalizeBlock` is an ABCI call, `Tx` is received in the encoded `[]byte` form. Nodes first unmarshal the transaction, using the [`TxConfig`](../beginner/00-app-anatomy.md#register-codec) defined in the app, then call `runTx` in `execModeFinalize`, which is very similar to `CheckTx` but also executes and writes state changes.
 
 ![blockprocessing](./blockprocessing-1.png)
 
@@ -492,9 +490,8 @@ The `FinalizeBlock` ABCI function defined in `BaseApp` does the bulk of the stat
 
 Instead of using their `checkState`, full-nodes use `finalizeblock`:
 
-```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/baseapp.go#LL708-L743
-```
+
 
 Transaction execution within `FinalizeBlock` performs the **exact same steps as `CheckTx`**, with a little caveat at step 3 and the addition of a fifth step:
 

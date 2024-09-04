@@ -50,13 +50,13 @@ func defaultConfig() *Config {
 		BeginBlockersOrder: []string{
 			testutil.MintModuleName,
 			testutil.DistributionModuleName,
+			testutil.ProtocolPoolModuleName,
 			testutil.SlashingModuleName,
 			testutil.EvidenceModuleName,
 			testutil.StakingModuleName,
 			testutil.AuthModuleName,
 			testutil.BankModuleName,
 			testutil.GovModuleName,
-			"crisis",
 			"genutil",
 			testutil.AuthzModuleName,
 			testutil.FeegrantModuleName,
@@ -69,7 +69,6 @@ func defaultConfig() *Config {
 			testutil.EpochsModuleName,
 		},
 		EndBlockersOrder: []string{
-			"crisis",
 			testutil.GovModuleName,
 			testutil.StakingModuleName,
 			testutil.AuthModuleName,
@@ -98,7 +97,6 @@ func defaultConfig() *Config {
 			testutil.SlashingModuleName,
 			testutil.GovModuleName,
 			testutil.MintModuleName,
-			"crisis",
 			"genutil",
 			testutil.EvidenceModuleName,
 			testutil.AuthzModuleName,
@@ -167,6 +165,7 @@ func AuthModule() ModuleOption {
 					{Account: testutil.NFTModuleName},
 					{Account: testutil.ProtocolPoolModuleName},
 					{Account: "stream_acc"},
+					{Account: "protocolpool_distr"},
 				},
 			}),
 		}

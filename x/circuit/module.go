@@ -9,7 +9,10 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/x/circuit/ante"
 	"cosmossdk.io/x/circuit/keeper"
 	"cosmossdk.io/x/circuit/types"
 
@@ -22,13 +25,12 @@ import (
 const ConsensusVersion = 1
 
 var (
-	_ module.HasName        = AppModule{}
 	_ module.HasGRPCGateway = AppModule{}
 
-	_ appmodule.AppModule             = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
-	_ appmodule.HasGenesis            = AppModule{}
-	_ appmodule.HasRegisterInterfaces = AppModule{}
+	_ appmodule.AppModule                        = AppModule{}
+	_ appmodule.HasGenesis                       = AppModule{}
+	_ appmodule.HasRegisterInterfaces            = AppModule{}
+	_ appmodulev2.HasTxValidator[transaction.Tx] = AppModule{}
 )
 
 // AppModule implements an application module for the circuit module.
@@ -41,6 +43,7 @@ type AppModule struct {
 func (AppModule) IsAppModule() {}
 
 // Name returns the circuit module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string { return types.ModuleName }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the circuit module.
@@ -107,4 +110,10 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 		return nil, err
 	}
 	return am.cdc.MarshalJSON(gs)
+}
+
+// TxValidator implements appmodule.HasTxValidator.
+func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
+	validator := ante.NewCircuitBreakerDecorator(&am.keeper)
+	return validator.ValidateTx(ctx, tx)
 }

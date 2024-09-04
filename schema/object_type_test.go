@@ -148,11 +148,64 @@ func TestObjectType_Validate(t *testing.T) {
 			},
 			errContains: "duplicate field name",
 		},
+		{
+			name: "nullable key field",
+			objectType: ObjectType{
+				Name: "objectNullKey",
+				KeyFields: []Field{
+					{
+						Name:     "field1",
+						Kind:     StringKind,
+						Nullable: true,
+					},
+				},
+			},
+			errContains: "key field \"field1\" cannot be nullable",
+		},
+		{
+			name: "float32 key field",
+			objectType: ObjectType{
+				Name: "o1",
+				KeyFields: []Field{
+					{
+						Name: "field1",
+						Kind: Float32Kind,
+					},
+				},
+			},
+			errContains: "invalid key field kind",
+		},
+		{
+			name: "float64 key field",
+			objectType: ObjectType{
+				Name: "o1",
+				KeyFields: []Field{
+					{
+						Name: "field1",
+						Kind: Float64Kind,
+					},
+				},
+			},
+			errContains: "invalid key field kind",
+		},
+		{
+			name: "json key field",
+			objectType: ObjectType{
+				Name: "o1",
+				KeyFields: []Field{
+					{
+						Name: "field1",
+						Kind: JSONKind,
+					},
+				},
+			},
+			errContains: "invalid key field kind",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.objectType.Validate()
+			err := tt.objectType.Validate(EmptyTypeSet())
 			if tt.errContains == "" {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
@@ -214,7 +267,7 @@ func TestObjectType_ValidateObjectUpdate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.objectType.ValidateObjectUpdate(tt.object)
+			err := tt.objectType.ValidateObjectUpdate(tt.object, EmptyTypeSet())
 			if tt.errContains == "" {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)

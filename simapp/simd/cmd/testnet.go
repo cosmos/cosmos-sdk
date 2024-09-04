@@ -17,7 +17,6 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	"cosmossdk.io/simapp"
-	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
@@ -34,6 +33,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
@@ -103,7 +103,7 @@ func addTestnetFlagsToCmd(cmd *cobra.Command) {
 
 // NewTestnetCmd creates a root testnet command with subcommands to run an in-process testnet or initialize
 // validator configuration files for running a multi-validator testnet in a separate process
-func NewTestnetCmd(mm *module.Manager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
+func NewTestnetCmd(mm *module.Manager) *cobra.Command {
 	testnetCmd := &cobra.Command{
 		Use:                        "testnet",
 		Short:                      "subcommands for starting or configuring local testnets",
@@ -113,13 +113,13 @@ func NewTestnetCmd(mm *module.Manager, genBalIterator banktypes.GenesisBalancesI
 	}
 
 	testnetCmd.AddCommand(testnetStartCmd())
-	testnetCmd.AddCommand(testnetInitFilesCmd(mm, genBalIterator))
+	testnetCmd.AddCommand(testnetInitFilesCmd(mm))
 
 	return testnetCmd
 }
 
 // testnetInitFilesCmd returns a cmd to initialize all files for CometBFT testnet and application
-func testnetInitFilesCmd(mm *module.Manager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
+func testnetInitFilesCmd(mm *module.Manager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init-files",
 		Short: "Initialize config directories & files for a multi-validator testnet running locally via separate processes (e.g. Docker Compose or similar)",
@@ -160,7 +160,7 @@ Example:
 				return err
 			}
 
-			return initTestnetFiles(clientCtx, cmd, config, mm, genBalIterator, args)
+			return initTestnetFiles(clientCtx, cmd, config, mm, args)
 		},
 	}
 
@@ -223,7 +223,6 @@ func initTestnetFiles(
 	cmd *cobra.Command,
 	nodeConfig *cmtconfig.Config,
 	mm *module.Manager,
-	genBalIterator banktypes.GenesisBalancesIterator,
 	args initArgs,
 ) error {
 	if args.chainID == "" {
@@ -337,7 +336,12 @@ func initTestnetFiles(
 			sdk.NewCoin(args.bondTokenDenom, accStakingTokens),
 		}
 
-		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
+		addrStr, err := clientCtx.AddressCodec.BytesToString(addr)
+		if err != nil {
+			return err
+		}
+
+		genBalances = append(genBalances, banktypes.Balance{Address: addrStr, Coins: coins.Sort()})
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
 		valStr, err := clientCtx.ValidatorAddressCodec.BytesToString(addr)
@@ -371,7 +375,7 @@ func initTestnetFiles(
 			WithKeybase(kb).
 			WithTxConfig(clientCtx.TxConfig)
 
-		if err := tx.Sign(cmd.Context(), txFactory, nodeDirName, txBuilder, true); err != nil {
+		if err := tx.Sign(clientCtx, txFactory, nodeDirName, txBuilder, true); err != nil {
 			return err
 		}
 
@@ -399,7 +403,7 @@ func initTestnetFiles(
 
 	err := collectGenFiles(
 		clientCtx, nodeConfig, args.chainID, nodeIDs, valPubKeys, args.numValidators,
-		args.outputDir, args.nodeDirPrefix, args.nodeDaemonHome, genBalIterator,
+		args.outputDir, args.nodeDirPrefix, args.nodeDaemonHome,
 		rpcPort, p2pPortStart, args.singleMachine,
 	)
 	if err != nil {
@@ -463,7 +467,7 @@ func initGenFiles(
 func collectGenFiles(
 	clientCtx client.Context, nodeConfig *cmtconfig.Config, chainID string,
 	nodeIDs []string, valPubKeys []cryptotypes.PubKey, numValidators int,
-	outputDir, nodeDirPrefix, nodeDaemonHome string, genBalIterator banktypes.GenesisBalancesIterator,
+	outputDir, nodeDirPrefix, nodeDaemonHome string,
 	rpcPortStart, p2pPortStart int,
 	singleMachine bool,
 ) error {
@@ -492,7 +496,7 @@ func collectGenFiles(
 			return err
 		}
 
-		nodeAppState, err := genutil.GenAppStateFromConfig(clientCtx.Codec, clientCtx.TxConfig, nodeConfig, initCfg, appGenesis, genBalIterator, genutiltypes.DefaultMessageValidator,
+		nodeAppState, err := genutil.GenAppStateFromConfig(clientCtx.Codec, clientCtx.TxConfig, nodeConfig, initCfg, appGenesis, genutiltypes.DefaultMessageValidator,
 			clientCtx.ValidatorAddressCodec, clientCtx.AddressCodec)
 		if err != nil {
 			return err
@@ -545,11 +549,7 @@ func writeFile(name, dir string, contents []byte) error {
 		return fmt.Errorf("could not create directory %q: %w", dir, err)
 	}
 
-	if err := os.WriteFile(file, contents, 0o600); err != nil {
-		return err
-	}
-
-	return nil
+	return os.WriteFile(file, contents, 0o600)
 }
 
 // startTestnet starts an in-process testnet

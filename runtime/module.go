@@ -10,26 +10,26 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
-	"cosmossdk.io/core/app"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/legacy"
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 // appModule defines runtime as an AppModule
@@ -121,7 +121,6 @@ func ProvideApp(
 	appmodule.AppModule,
 	protodesc.Resolver,
 	protoregistry.MessageTypeResolver,
-	error,
 ) {
 	protoFiles := proto.HybridResolver
 	protoTypes := protoregistry.GlobalTypes
@@ -146,33 +145,36 @@ func ProvideApp(
 		msgServiceRouter:  msgServiceRouter,
 		grpcQueryRouter:   grpcQueryRouter,
 	}
-	appBuilder := &AppBuilder{app}
+	appBuilder := &AppBuilder{app: app}
 
-	return appBuilder, msgServiceRouter, grpcQueryRouter, appModule{app}, protoFiles, protoTypes, nil
+	return appBuilder, msgServiceRouter, grpcQueryRouter, appModule{app}, protoFiles, protoTypes
 }
 
 type AppInputs struct {
 	depinject.In
 
 	Logger            log.Logger
-	AppConfig         *appv1alpha1.Config
 	Config            *runtimev1alpha1.Module
 	AppBuilder        *AppBuilder
 	ModuleManager     *module.Manager
 	BaseAppOptions    []BaseAppOption
 	InterfaceRegistry codectypes.InterfaceRegistry
 	LegacyAmino       legacy.Amino
+	AppOptions        servertypes.AppOptions `optional:"true"` // can be nil in client wiring
 }
 
 func SetupAppBuilder(inputs AppInputs) {
 	app := inputs.AppBuilder.app
 	app.baseAppOptions = inputs.BaseAppOptions
 	app.config = inputs.Config
-	app.appConfig = inputs.AppConfig
 	app.logger = inputs.Logger
 	app.ModuleManager = inputs.ModuleManager
 	app.ModuleManager.RegisterInterfaces(inputs.InterfaceRegistry)
 	app.ModuleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
+
+	if inputs.AppOptions != nil {
+		inputs.AppBuilder.appOptions = inputs.AppOptions
+	}
 }
 
 func registerStoreKey(wrapper *AppBuilder, key storetypes.StoreKey) {
@@ -243,7 +245,7 @@ func ProvideModuleManager(modules map[string]appmodule.AppModule) *module.Manage
 	return module.NewManagerFromMap(modules)
 }
 
-func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
+func ProvideGenesisTxHandler(appBuilder *AppBuilder) genutil.TxHandler {
 	return appBuilder.app
 }
 
@@ -291,7 +293,7 @@ func ProvideTransientStoreService(
 	return transientStoreService{key: storeKey}
 }
 
-func ProvideAppVersionModifier(app *AppBuilder) app.VersionModifier {
+func ProvideAppVersionModifier(app *AppBuilder) server.VersionModifier {
 	return app.app
 }
 

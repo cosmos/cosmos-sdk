@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"errors"
 	"sort"
 	"strings"
 	"time"
@@ -2706,7 +2706,7 @@ func (s *TestSuite) TestExecProposal() {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1, msgSend2}
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, nil)
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, fmt.Errorf("error"))
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, errors.New("error"))
 
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
@@ -2723,7 +2723,7 @@ func (s *TestSuite) TestExecProposal() {
 				// Wait after min execution period end before Exec
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: sdkCtx.HeaderInfo().Time.Add(minExecutionPeriod)}) // MinExecutionPeriod is 5s
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, fmt.Errorf("error"))
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, errors.New("error"))
 				_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: s.addrsStr[0], ProposalId: myProposalID})
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, nil)
 
@@ -2902,7 +2902,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 				}
 
 				msgs := []sdk.Msg{msgSend1, msgSend2}
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, fmt.Errorf("error"))
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, errors.New("error"))
 
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
@@ -2920,7 +2920,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 
 				myProposalID := submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, fmt.Errorf("error"))
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, errors.New("error"))
 
 				// Wait for min execution period end
 				sdkCtx := sdk.UnwrapSDKContext(ctx)

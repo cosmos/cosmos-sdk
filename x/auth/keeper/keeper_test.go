@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"context"
+	"encoding/binary"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -9,13 +10,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
-	authcodec "cosmossdk.io/x/auth/codec"
-	"cosmossdk.io/x/auth/keeper"
-	authtestutil "cosmossdk.io/x/auth/testutil"
-	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -25,6 +21,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const (
@@ -55,7 +56,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
+	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
 
@@ -249,4 +250,33 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	suite.Require().NoError(err)
 	// we expect nextNum to be 2 because we initialize fee_collector as account number 1
 	suite.Require().Equal(2, int(nextNum))
+}
+
+func (suite *KeeperTestSuite) TestMigrateAccountNumberUnsafe() {
+	suite.SetupTest() // reset
+
+	legacyAccNum := uint64(10)
+	val := make([]byte, 8)
+	binary.LittleEndian.PutUint64(val, legacyAccNum)
+
+	// Set value for legacy account number
+	store := suite.accountKeeper.KVStoreService.OpenKVStore(suite.ctx)
+	err := store.Set(types.GlobalAccountNumberKey.Bytes(), val)
+	require.NoError(suite.T(), err)
+
+	// check if value is set
+	val, err = store.Get(types.GlobalAccountNumberKey.Bytes())
+	require.NoError(suite.T(), err)
+	require.NotEmpty(suite.T(), val)
+
+	suite.acctsModKeeper.EXPECT().InitAccountNumberSeqUnsafe(gomock.Any(), gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context, accNum uint64) (uint64, error) {
+		return legacyAccNum, nil
+	})
+
+	err = keeper.MigrateAccountNumberUnsafe(suite.ctx, &suite.accountKeeper)
+	require.NoError(suite.T(), err)
+
+	val, err = store.Get(types.GlobalAccountNumberKey.Bytes())
+	require.NoError(suite.T(), err)
+	require.Empty(suite.T(), val)
 }

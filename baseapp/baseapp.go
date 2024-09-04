@@ -4,23 +4,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"math"
-	"sort"
+	"slices"
 	"strconv"
 	"sync"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cometbft/cometbft/crypto/tmhash"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
-	"golang.org/x/exp/maps"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
-	sdklog "cosmossdk.io/log"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	storemetrics "cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/snapshots"
@@ -66,7 +65,7 @@ type BaseApp struct {
 	mu                sync.Mutex // mu protects the fields below.
 	logger            log.Logger
 	name              string                      // application name from abci.BlockInfo
-	db                dbm.DB                      // common DB backend
+	db                corestore.KVStoreWithBatch  // common DB backend
 	cms               storetypes.CommitMultiStore // Main (uncached) state
 	qms               storetypes.MultiStore       // Optional alternative multistore for querying only.
 	storeLoader       StoreLoader                 // function to handle store loading, may be overridden with SetStoreLoader()
@@ -186,19 +185,22 @@ type BaseApp struct {
 	// including the goroutine handling.This is experimental and must be enabled
 	// by developers.
 	optimisticExec *oe.OptimisticExecution
+
+	// includeNestedMsgsGas holds a set of message types for which gas costs for its nested messages are calculated.
+	includeNestedMsgsGas map[string]struct{}
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
 // variadic number of option functions, which act on the BaseApp to set
 // configuration choices.
 func NewBaseApp(
-	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
+	name string, logger log.Logger, db corestore.KVStoreWithBatch, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
 	app := &BaseApp{
 		logger:           logger.With(log.ModuleKey, "baseapp"),
 		name:             name,
 		db:               db,
-		cms:              store.NewCommitMultiStore(db, sdklog.LogWrapper{Logger: logger}, storemetrics.NewNoOpMetrics()), // by default we use a no-op metric gather in store
+		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default we use a no-op metric gather in store
 		storeLoader:      DefaultStoreLoader,
 		grpcQueryRouter:  NewGRPCQueryRouter(),
 		msgServiceRouter: NewMsgServiceRouter(),
@@ -233,7 +235,9 @@ func NewBaseApp(
 	if app.interBlockCache != nil {
 		app.cms.SetInterBlockCache(app.interBlockCache)
 	}
-
+	if app.includeNestedMsgsGas == nil {
+		app.includeNestedMsgsGas = make(map[string]struct{})
+	}
 	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()
 
 	// Initialize with an empty interface registry to avoid nil pointer dereference.
@@ -336,8 +340,7 @@ func (app *BaseApp) MountTransientStores(keys map[string]*storetypes.TransientSt
 // MountMemoryStores mounts all in-memory KVStores with the BaseApp's internal
 // commit multi-store.
 func (app *BaseApp) MountMemoryStores(keys map[string]*storetypes.MemoryStoreKey) {
-	skeys := maps.Keys(keys)
-	sort.Strings(skeys)
+	skeys := slices.Sorted(maps.Keys(keys))
 	for _, key := range skeys {
 		memKey := keys[key]
 		app.MountStore(memKey, storetypes.StoreTypeMemory)
@@ -705,11 +708,12 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	return ctx.WithMultiStore(msCache), msCache
 }
 
-func (app *BaseApp) preBlock(req *abci.FinalizeBlockRequest) error {
+func (app *BaseApp) preBlock(req *abci.FinalizeBlockRequest) ([]abci.Event, error) {
+	var events []abci.Event
 	if app.preBlocker != nil {
-		ctx := app.finalizeBlockState.Context()
+		ctx := app.finalizeBlockState.Context().WithEventManager(sdk.NewEventManager())
 		if err := app.preBlocker(ctx, req); err != nil {
-			return err
+			return nil, err
 		}
 		// ConsensusParams can change in preblocker, so we need to
 		// write the consensus parameters in store to context
@@ -718,8 +722,9 @@ func (app *BaseApp) preBlock(req *abci.FinalizeBlockRequest) error {
 		gasMeter := app.getBlockGasMeter(ctx)
 		ctx = ctx.WithBlockGasMeter(gasMeter)
 		app.finalizeBlockState.SetContext(ctx)
+		events = ctx.EventManager().ABCIEvents()
 	}
-	return nil
+	return events, nil
 }
 
 func (app *BaseApp) beginBlock(_ *abci.FinalizeBlockRequest) (sdk.BeginBlock, error) {
@@ -811,6 +816,10 @@ func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
 	return endblock, nil
 }
 
+type HasNestedMsgs interface {
+	GetMsgs() ([]sdk.Msg, error)
+}
+
 // runTx processes a transaction within a given execution mode, encoded transaction
 // bytes, and the decoded transaction itself. All state transitions occur through
 // a cached Context depending on the mode provided. State only gets persisted
@@ -868,7 +877,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 
 	tx, err := app.txDecoder(txBytes)
 	if err != nil {
-		return sdk.GasInfo{}, nil, nil, err
+		return sdk.GasInfo{GasUsed: 0, GasWanted: 0}, nil, nil, sdkerrors.ErrTxDecode.Wrap(err.Error())
 	}
 
 	msgs := tx.GetMsgs()
@@ -953,6 +962,15 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 	reflectMsgs, err := tx.GetReflectMessages()
 	if err == nil {
 		result, err = app.runMsgs(runMsgCtx, msgs, reflectMsgs, mode)
+	}
+
+	if mode == execModeSimulate {
+		for _, msg := range msgs {
+			nestedErr := app.simulateNestedMessages(ctx, msg)
+			if nestedErr != nil {
+				return gInfo, nil, anteEvents, nestedErr
+			}
+		}
 	}
 
 	// Run optional postHandlers (should run regardless of the execution result).
@@ -1059,6 +1077,49 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, reflectMsgs []proto
 		Events:       events.ToABCIEvents(),
 		MsgResponses: msgResponses,
 	}, nil
+}
+
+// simulateNestedMessages simulates a message nested messages.
+func (app *BaseApp) simulateNestedMessages(ctx sdk.Context, msg sdk.Msg) error {
+	nestedMsgs, ok := msg.(HasNestedMsgs)
+	if !ok {
+		return nil
+	}
+
+	msgs, err := nestedMsgs.GetMsgs()
+	if err != nil {
+		return err
+	}
+
+	if err := validateBasicTxMsgs(app.msgServiceRouter, msgs); err != nil {
+		return err
+	}
+
+	for _, msg := range msgs {
+		err = app.simulateNestedMessages(ctx, msg)
+		if err != nil {
+			return err
+		}
+	}
+
+	protoMessages := make([]protoreflect.Message, len(msgs))
+	for i, msg := range msgs {
+		_, protoMsg, err := app.cdc.GetMsgSigners(msg)
+		if err != nil {
+			return err
+		}
+		protoMessages[i] = protoMsg
+	}
+
+	initialGas := ctx.GasMeter().GasConsumed()
+	_, err = app.runMsgs(ctx, msgs, protoMessages, execModeSimulate)
+	if err == nil {
+		if _, includeGas := app.includeNestedMsgsGas[sdk.MsgTypeURL(msg)]; !includeGas {
+			consumedGas := ctx.GasMeter().GasConsumed() - initialGas
+			ctx.GasMeter().RefundGas(consumedGas, "simulation of nested messages")
+		}
+	}
+	return err
 }
 
 // makeABCIData generates the Data field to be sent to ABCI Check/DeliverTx.

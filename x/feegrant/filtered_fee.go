@@ -2,10 +2,11 @@ package feegrant
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	"cosmossdk.io/core/appmodule"
 	corecontext "cosmossdk.io/core/context"
@@ -23,12 +24,12 @@ const (
 )
 
 var (
-	_ FeeAllowanceI                 = (*AllowedMsgAllowance)(nil)
-	_ types.UnpackInterfacesMessage = (*AllowedMsgAllowance)(nil)
+	_ FeeAllowanceI                        = (*AllowedMsgAllowance)(nil)
+	_ gogoprotoany.UnpackInterfacesMessage = (*AllowedMsgAllowance)(nil)
 )
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (a *AllowedMsgAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (a *AllowedMsgAllowance) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var allowance FeeAllowanceI
 	return unpacker.UnpackAny(a.Allowance, &allowance)
 }
@@ -62,11 +63,12 @@ func (a *AllowedMsgAllowance) GetAllowance() (FeeAllowanceI, error) {
 
 // SetAllowance sets allowed fee allowance.
 func (a *AllowedMsgAllowance) SetAllowance(allowance FeeAllowanceI) error {
-	var err error
-	a.Allowance, err = types.NewAnyWithValue(allowance.(proto.Message))
+	newAllowance, err := types.NewAnyWithValue(allowance.(proto.Message))
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", allowance)
 	}
+
+	a.Allowance = newAllowance
 
 	return nil
 }
@@ -95,18 +97,18 @@ func (a *AllowedMsgAllowance) Accept(ctx context.Context, fee sdk.Coins, msgs []
 	return remove, err
 }
 
-func (a *AllowedMsgAllowance) allowedMsgsToMap(ctx context.Context) (map[string]bool, error) {
-	msgsMap := make(map[string]bool, len(a.AllowedMessages))
+func (a *AllowedMsgAllowance) allowedMsgsToMap(ctx context.Context) (map[string]struct{}, error) {
+	msgsMap := make(map[string]struct{}, len(a.AllowedMessages))
 	environment, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodule.Environment)
 	if !ok {
-		return nil, fmt.Errorf("environment not set")
+		return nil, errors.New("environment not set")
 	}
 	gasMeter := environment.GasService.GasMeter(ctx)
 	for _, msg := range a.AllowedMessages {
 		if err := gasMeter.Consume(gasCostPerIteration, "check msg"); err != nil {
 			return nil, err
 		}
-		msgsMap[msg] = true
+		msgsMap[msg] = struct{}{}
 	}
 
 	return msgsMap, nil
@@ -119,14 +121,14 @@ func (a *AllowedMsgAllowance) allMsgTypesAllowed(ctx context.Context, msgs []sdk
 	}
 	environment, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodule.Environment)
 	if !ok {
-		return false, fmt.Errorf("environment not set")
+		return false, errors.New("environment not set")
 	}
 	gasMeter := environment.GasService.GasMeter(ctx)
 	for _, msg := range msgs {
 		if err := gasMeter.Consume(gasCostPerIteration, "check msg"); err != nil {
 			return false, err
 		}
-		if !msgsMap[sdk.MsgTypeURL(msg)] {
+		if _, allowed := msgsMap[sdk.MsgTypeURL(msg)]; !allowed {
 			return false, nil
 		}
 	}

@@ -5,6 +5,50 @@ Note, always read the **SimApp** section for more information on application wir
 
 ## [Unreleased]
 
+### BaseApp
+
+#### Nested Messages Simulation
+
+Now it is possible to simulate the nested messages of a message, providing developers with a powerful tool for
+testing and predicting the behavior of complex transactions. This feature allows for a more comprehensive
+evaluation of gas consumption, state changes, and potential errors that may occur when executing nested
+messages. However, it's important to note that while the simulation can provide valuable insights, it does not
+guarantee the correct execution of the nested messages in the future. Factors such as changes in the
+blockchain state or updates to the protocol could potentially affect the actual execution of these nested
+messages when the transaction is finally processed on the network.
+
+For example, consider a governance proposal that includes nested messages to update multiple protocol
+parameters. At the time of simulation, the blockchain state may be suitable for executing all these nested
+messages successfully. However, by the time the actual governance proposal is executed (which could be days or
+weeks later), the blockchain state might have changed significantly. As a result, while the simulation showed
+a successful execution, the actual governance proposal might fail when it's finally processed.
+
+By default, when simulating transactions, the gas cost of nested messages is not calculated. This means that
+only the gas cost of the top-level message is considered. However, this behavior can be customized using the
+`SetIncludeNestedMsgsGas` option when building the BaseApp. By providing a list of message types to this option,
+you can specify which messages should have their nested message gas costs included in the simulation. This
+allows for more accurate gas estimation for transactions involving specific message types that contain nested
+messages, while maintaining the default behavior for other message types.
+
+Here is an example on how `SetIncludeNestedMsgsGas` option could be set to calculate the gas of a gov proposal
+nested messages:
+
+```go
+baseAppOptions = append(baseAppOptions, baseapp.SetIncludeNestedMsgsGas([]sdk.Message{&gov.MsgSubmitProposal{}}))
+// ...
+app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
+```
+
+To be able to simulate nested messages within a transaction, message types containing nested messages must implement the
+`HasNestedMsgs` interface. This interface requires a single method: `GetMsgs() ([]sdk.Msg, error)`, which should return
+the nested messages. By implementing this interface, the BaseApp can simulate these nested messages during
+transaction simulation. 
+
+## [v0.52.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-alpha.0)
+
+Documentation to migrate an application from v0.50.x to server/v2 is available elsewhere.
+It is additional to the changes described here.
+
 ### SimApp
 
 In this section we describe the changes made in Cosmos SDK' SimApp.
@@ -28,9 +72,9 @@ clientCtx = clientCtx.
 + WithValidatorPrefix("cosmosvaloper")
 ```
 
-**When using `depinject` / `app v2`, the client codecs can be provided directly from application config.**
+**When using `depinject` / `app_di`, the client codecs can be provided directly from application config.**
 
-Refer to SimApp `root_v2.go` and `root.go` for an example with an app v2 and a legacy app.
+Refer to SimApp `root_di.go` and `root.go` for an example with an app di and a legacy app.
 
 Additionally, a simplification of the start command leads to the following change:
 
@@ -62,9 +106,106 @@ For non depinject users, simply call `RegisterLegacyAminoCodec` and `RegisterInt
 
 Additionally, thanks to the genesis simplification, as explained in [the genesis interface update](#genesis-interface), the module manager `InitGenesis` and `ExportGenesis` methods do not require the codec anymore.
 
-##### GRPC-WEB
+##### GRPC WEB
 
-Grpc-web embedded client has been removed from the server. If you would like to use grpc-web, you can use the [envoy proxy](https://www.envoyproxy.io/docs/envoy/latest/start/start).
+Grpc-web embedded client has been removed from the server. If you would like to use grpc-web, you can use the [envoy proxy](https://www.envoyproxy.io/docs/envoy/latest/start/start). Here's how to set it up:
+
+<details>
+<summary>Step by step guide</summary>
+
+1. Install Envoy following the [official installation guide](https://www.envoyproxy.io/docs/envoy/latest/start/install).
+
+2. Create an Envoy configuration file named `envoy.yaml` with the following content:
+
+   ```yaml
+	static_resources:
+	listeners:
+	- name: listener_0
+		address:
+		socket_address: { address: 0.0.0.0, port_value: 8080 }
+		filter_chains:
+		- filters:
+		- name: envoy.filters.network.http_connection_manager
+			typed_config:
+			"@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+			codec_type: auto
+			stat_prefix: ingress_http
+			route_config:
+				name: local_route
+				virtual_hosts:
+				- name: local_service
+				domains: ["*"]
+				routes:
+				- match: { prefix: "/" }
+					route:
+					cluster: grpc_service
+					timeout: 0s
+					max_stream_duration:
+						grpc_timeout_header_max: 0s
+				cors:
+					allow_origin_string_match:
+					- prefix: "*"
+					allow_methods: GET, PUT, DELETE, POST, OPTIONS
+					allow_headers: keep-alive,user-agent,cache-control,content-type,content-transfer-encoding,custom-header-1,x-accept-content-transfer-encoding,x-accept-response-streaming,x-user-agent,x-grpc-web,grpc-timeout
+					max_age: "1728000"
+					expose_headers: custom-header-1,grpc-status,grpc-message
+			http_filters:
+			- name: envoy.filters.http.grpc_web
+				typed_config:
+				"@type": type.googleapis.com/envoy.extensions.filters.http.grpc_web.v3.GrpcWeb
+			- name: envoy.filters.http.cors
+				typed_config:
+				"@type": type.googleapis.com/envoy.extensions.filters.http.cors.v3.Cors
+			- name: envoy.filters.http.router
+				typed_config:
+				"@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+	clusters:
+	- name: grpc_service
+		connect_timeout: 0.25s
+		type: logical_dns
+		http2_protocol_options: {}
+		lb_policy: round_robin
+		load_assignment:
+		cluster_name: cluster_0
+		endpoints:
+			- lb_endpoints:
+				- endpoint:
+					address:
+					socket_address:
+						address: 0.0.0.0
+						port_value: 9090
+   ```
+
+   This configuration tells Envoy to listen on port 8080 and forward requests to your gRPC service on port 9090. Note that this configuration is a starting point and can be modified according to your specific needs and preferences. You may need to adjust ports, addresses, or add additional settings based on your particular setup and requirements.
+
+3. Start your Cosmos SDK application, ensuring it's configured to serve gRPC on port 9090.
+
+4. Start Envoy with the configuration file:
+
+   ```bash
+   envoy -c envoy.yaml
+   ```
+
+5. If Envoy starts successfully, you should see output similar to this:
+
+   ```bash
+   [2024-08-29 10:47:08.753][6281320][info][config] [source/common/listener_manager/listener_manager_impl.cc:930] all dependencies initialized. starting workers
+   [2024-08-29 10:47:08.754][6281320][info][main] [source/server/server.cc:978] starting main dispatch loop
+   ```
+
+   This indicates that Envoy has started and is ready to proxy requests.
+
+6. Update your client applications to connect to Envoy (http://localhost:8080 by default).
+
+</details>
+
+By following these steps, Envoy will handle the translation between gRPC-Web and gRPC, allowing your existing gRPC-Web clients to continue functioning without modifications to your Cosmos SDK application.
+
+To test the setup, you can use a tool like [grpcurl](https://github.com/fullstorydev/grpcurl). For example:
+
+```bash
+grpcurl -plaintext localhost:8080 cosmos.base.tendermint.v1beta1.Service/GetLatestBlock
+```
 
 ##### AnteHandlers
 
@@ -75,8 +216,22 @@ need to remove them both from your app.go code, they will yield to unresolvable 
 
 The Cosmos SDK now supports unordered transactions. This means that transactions
 can be executed in any order and doesn't require the client to deal with or manage
-nonces. This also means the order of execution is not guaranteed. To enable unordered
-transactions in your application:
+nonces. This also means the order of execution is not guaranteed.
+
+Unordered transactions are automatically enabled when using `depinject` / app di, simply supply the `servertypes.AppOptions` in `app.go`:
+
+```diff
+	depinject.Supply(
++		// supply the application options
++		appOpts,
+		// supply the logger
+		logger,
+	)
+```
+
+<details>
+<summary>Step-by-step Wiring </summary>
+If you are still using the legacy wiring, you must enable unordered transactions manually:
 
 * Update the `App` constructor to create, load, and save the unordered transaction
   manager.
@@ -103,7 +258,7 @@ transactions in your application:
 	anteDecorators := []sdk.AnteDecorator{
 		ante.NewSetUpContextDecorator(),
 		// ...
-		ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxUnOrderedTTL, app.UnorderedTxManager),
+		ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, options.TxManager, options.Environment),
 		// ...
 	}
 
@@ -140,6 +295,8 @@ transactions in your application:
 	}
 	```
 
+</details>
+
 To submit an unordered transaction, the client must set the `unordered` flag to
 `true` and ensure a reasonable `timeout_height` is set. The `timeout_height` is
 used as a TTL for the transaction and is used to provide replay protection. See
@@ -149,8 +306,7 @@ for more details.
 ### Depinject `app_config.go` / `app.yml`
 
 With the introduction of [environment in modules](#core-api), depinject automatically creates the environment for all modules.
-Learn more about environment [here](https://example.com) <!-- TODO -->. Given the fields of environment, this means runtime creates a kv store service for all modules by default.
-It can happen that some modules do not have a store necessary (such as `x/auth/tx` for instance). In this case, the store creation should be skipped in `app_config.go`:
+Learn more about environment [here](https://example.com) <!-- TODO -->. Given the fields of environment, this means runtime creates a kv store service for all modules by default. It can happen that some modules do not have a store necessary (such as `x/auth/tx` for instance). In this case, the store creation should be skipped in `app_config.go`:
 
 ```diff
 InitGenesis: []string{
@@ -170,11 +326,28 @@ There is no longer a need for the Cosmos SDK to host these protos for itself and
 That package containing proto v2 generated code, but the SDK now uses [buf generated go SDK instead](https://buf.build/docs/bsr/generated-sdks/go).
 If you were depending on `cosmossdk.io/api/tendermint`, please use the buf generated go SDK instead, or ask CometBFT host the generated proto v2 code.
 
-The `codectypes.Any` has moved to `github.com/cosmos/gogoproto/types/any`. Module developers can update the `buf.gen.gogo.yaml` configuration files by adjusting the corresponding `opt` option to `Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any` for directly mapping the`Any` type to its new location. This change is optional as `codectypes.Any` is aliased to `gogoproto.Any` in the SDK.
+The `codectypes.Any` has moved to `github.com/cosmos/gogoproto/types/any`. Module developers need to update the `buf.gen.gogo.yaml` configuration files by adjusting the corresponding `opt` option to `Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any` for directly mapping the`Any` type to its new location:
+
+```diff
+version: v1
+plugins:
+  - name: gocosmos
+    out: ..
+- 	 opt: plugins=grpc,Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types,Mcosmos/orm/v1/orm.proto=cosmossdk.io/orm
++    opt: plugins=grpc,Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any,Mcosmos/orm/v1/orm.proto=cosmossdk.io/orm
+  - name: grpc-gateway
+    out: ..
+    opt: logtostderr=true,allow_colon_final_segments=true
+
+```
+
+Also, any usages of the interfaces `AnyUnpacker` and `UnpackInterfacesMessage` must be replaced with the interfaces of the same name in the `github.com/cosmos/gogoproto/types/any` package.
 
 ### Modules
 
 #### `**all**`
+
+All modules (expect `auth`) were spun out into their own `go.mod`. Replace their imports by `cosmossdk.io/x/{moduleName}`.
 
 ##### Core API
 
@@ -228,7 +401,7 @@ All modules using dependency injection must update their imports.
 
 ##### Params
 
-Previous module migrations have been removed. It is required to migrate to v0.50 prior to upgrading to v0.51 for not missing any module migrations.
+Previous module migrations have been removed. It is required to migrate to v0.50 prior to upgrading to v0.52 for not missing any module migrations.
 
 ##### Genesis Interface
 
@@ -257,7 +430,7 @@ For modules that have migrated, verify you are checking against `collections.Err
 Accounts's AccountNumber will be used as a global account number tracking replacing Auth legacy AccountNumber. Must set accounts's AccountNumber with auth's AccountNumber value in upgrade handler. This is done through auth keeper MigrateAccountNumber function.
 
 ```go
-import authkeeper "cosmossdk.io/x/auth/keeper" 
+import authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper" 
 ...
 err := authkeeper.MigrateAccountNumberUnsafe(ctx, &app.AuthKeeper)
 if err != nil {
@@ -265,56 +438,24 @@ if err != nil {
 }
 ```
 
-#### `x/auth`
+### `x/crisis`
 
-Auth was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/auth`
-
-#### `x/authz`
-
-Authz was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/authz`
-
-#### `x/bank`
-
-Bank was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/bank`
+The `x/crisis` module was removed due to it not being supported or functional any longer. 
 
 #### `x/distribution`
 
-Distribution was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/distribution`
-
-The existing chains using x/distribution module needs to add the new x/protocolpool module.
-
-#### `x/group`
-
-Group was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/group`
+Existing chains using `x/distribution` module must add the new `x/protocolpool` module.
 
 #### `x/gov`
-
-Gov was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/gov`
 
 Gov v1beta1 proposal handler has been changed to take in a `context.Context` instead of `sdk.Context`.
 This change was made to allow legacy proposals to be compatible with server/v2.
 If you wish to migrate to server/v2, you should update your proposal handler to take in a `context.Context` and use services.
 On the other hand, if you wish to keep using baseapp, simply unwrap the sdk context in your proposal handler.
 
-#### `x/mint`
-
-Mint was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/mint`
-
-#### `x/slashing`
-
-Slashing was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/slashing`
-
-#### `x/staking`
-
-Staking was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/staking`
-
-#### `x/params`
-
-A standalone Go module was created and it is accessible at "cosmossdk.io/x/params".
-
 #### `x/protocolpool`
 
-Introducing a new `x/protocolpool` module to handle community pool funds. Its store must be added while upgrading to v0.51.x.
+Introducing a new `x/protocolpool` module to handle community pool funds. Its store must be added while upgrading to v0.52.x.
 
 Example:
 
@@ -331,7 +472,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 }
 ```
 
-Add `x/protocolpool` store while upgrading to v0.51.x:
+Add `x/protocolpool` store while upgrading to v0.52.x:
 
 ```go
 storetypes.StoreUpgrades{
@@ -410,7 +551,7 @@ for more info.
 A `SetPreBlocker` method has been added to BaseApp. This is essential for BaseApp to run `PreBlock` which runs before begin blocker other modules, and allows to modify consensus parameters, and the changes are visible to the following state machine logics.
 Read more about other use cases [here](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-068-preblock.md).
 
-`depinject` / app v2 users need to add `x/upgrade` in their `app_config.go` / `app.yml`:
+`depinject` / app di users need to add `x/upgrade` in their `app_config.go` / `app.yml`:
 
 ```diff
 + PreBlockers: []string{
@@ -518,7 +659,7 @@ The following modules `NewKeeper` function now take a `KVStoreService` instead o
 * `x/slashing`
 * `x/upgrade`
 
-**Users using `depinject` / app v2 do not need any changes, this is abstracted for them.**
+**Users using `depinject` / app di do not need any changes, this is abstracted for them.**
 
 Users manually wiring their chain need to use the `runtime.NewKVStoreService` method to create a `KVStoreService` from a `StoreKey`:
 
@@ -535,7 +676,7 @@ app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 
 Replace all your CometBFT logger imports by `cosmossdk.io/log`.
 
-Additionally, `depinject` / app v2 users must now supply a logger through the main `depinject.Supply` function instead of passing it to `appBuilder.Build`.
+Additionally, `depinject` / app di users must now supply a logger through the main `depinject.Supply` function instead of passing it to `appBuilder.Build`.
 
 ```diff
 appConfig = depinject.Configs(
@@ -559,7 +700,7 @@ User manually wiring their chain need to add the logger argument when creating t
 Previously, the `ModuleBasics` was a global variable that was used to register all modules' `AppModuleBasic` implementation.
 The global variable has been removed and the basic module manager can be now created from the module manager.
 
-This is automatically done for `depinject` / app v2 users, however for supplying different app module implementation, pass them via `depinject.Supply` in the main `AppConfig` (`app_config.go`):
+This is automatically done for `depinject` / app di users, however for supplying different app module implementation, pass them via `depinject.Supply` in the main `AppConfig` (`app_config.go`):
 
 ```go
 depinject.Supply(
@@ -670,7 +811,7 @@ When using (legacy) application wiring, the following must be added to `app.go` 
 	app.txConfig = txConfig
 ```
 
-When using `depinject` / `app v2`, **it's enabled by default** if there's a bank keeper present.
+When using `depinject` / `app di`, **it's enabled by default** if there's a bank keeper present.
 
 And in the application client (usually `root.go`):
 
@@ -689,7 +830,7 @@ And in the application client (usually `root.go`):
 	}
 ```
 
-When using `depinject` / `app v2`, the a tx config should be recreated from the `txConfigOpts` to use `NewGRPCCoinMetadataQueryFn` instead of depending on the bank keeper (that is used in the server).
+When using `depinject` / `app di`, the tx config should be recreated from the `txConfigOpts` to use `NewGRPCCoinMetadataQueryFn` instead of depending on the bank keeper (that is used in the server).
 
 To learn more see the [docs](https://docs.cosmos.network/main/learn/advanced/transactions#sign_mode_textual) and the [ADR-050](https://docs.cosmos.network/main/build/architecture/adr-050-sign-mode-textual).
 
@@ -1256,4 +1397,4 @@ message MsgSetWithdrawAddress {
 }
 ```
 
-When clients interact with a node they are required to set a codec in in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).
+When clients interact with a node they are required to set a codec in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).

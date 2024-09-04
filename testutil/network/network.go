@@ -29,14 +29,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	pruningtypes "cosmossdk.io/store/pruning/types"
-	_ "cosmossdk.io/x/accounts"
-	_ "cosmossdk.io/x/auth"           // import auth as a blank
-	_ "cosmossdk.io/x/auth/tx/config" // import auth tx config as a blank
-	authtypes "cosmossdk.io/x/auth/types"
-	_ "cosmossdk.io/x/bank" // import bank as a blank
 	banktypes "cosmossdk.io/x/bank/types"
-	_ "cosmossdk.io/x/consensus" // import consensus as a blank
-	_ "cosmossdk.io/x/staking"   // import staking as a blank
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -55,10 +48,11 @@ import (
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
@@ -170,20 +164,7 @@ func DefaultConfig(factory TestFixtureFactory) Config {
 	}
 }
 
-// MinimumAppConfig defines the minimum of modules required for a call to New to succeed
-func MinimumAppConfig() depinject.Config {
-	return configurator.NewAppConfig(
-		configurator.AccountsModule(),
-		configurator.AuthModule(),
-		configurator.BankModule(),
-		configurator.GenutilModule(),
-		configurator.StakingModule(),
-		configurator.ConsensusModule(),
-		configurator.TxModule(),
-	)
-}
-
-func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
+func DefaultConfigWithAppConfig(appConfig depinject.Config, baseappOpts ...func(*baseapp.BaseApp)) (Config, error) {
 	var (
 		appBuilder            *runtime.AppBuilder
 		txConfig              client.TxConfig
@@ -230,7 +211,10 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 		if err := depinject.Inject(
 			depinject.Configs(
 				appConfig,
-				depinject.Supply(val.GetLogger()),
+				depinject.Supply(
+					val.GetLogger(),
+					simtestutil.NewAppOptionsWithFlagHome(val.GetViper().GetString(flags.FlagHome)),
+				),
 			),
 			&appBuilder); err != nil {
 			panic(err)
@@ -238,9 +222,11 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 		app := appBuilder.Build(
 			dbm.NewMemDB(),
 			nil,
-			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
-			baseapp.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
-			baseapp.SetChainID(cfg.ChainID),
+			append(baseappOpts,
+				baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
+				baseapp.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
+				baseapp.SetChainID(cfg.ChainID),
+			)...,
 		)
 
 		testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})
@@ -365,7 +351,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 				apiListenAddr = cfg.APIAddress
 			} else {
 				if len(portPool) == 0 {
-					return nil, fmt.Errorf("failed to get port for API server")
+					return nil, errors.New("failed to get port for API server")
 				}
 				port := <-portPool
 				apiListenAddr = fmt.Sprintf("tcp://127.0.0.1:%s", port)
@@ -382,7 +368,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 				cmtCfg.RPC.ListenAddress = cfg.RPCAddress
 			} else {
 				if len(portPool) == 0 {
-					return nil, fmt.Errorf("failed to get port for RPC server")
+					return nil, errors.New("failed to get port for RPC server")
 				}
 				port := <-portPool
 				cmtCfg.RPC.ListenAddress = fmt.Sprintf("tcp://127.0.0.1:%s", port)
@@ -392,7 +378,7 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 				appCfg.GRPC.Address = cfg.GRPCAddress
 			} else {
 				if len(portPool) == 0 {
-					return nil, fmt.Errorf("failed to get port for GRPC server")
+					return nil, errors.New("failed to get port for GRPC server")
 				}
 				port := <-portPool
 				appCfg.GRPC.Address = fmt.Sprintf("127.0.0.1:%s", port)
@@ -425,14 +411,14 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		monikers[i] = nodeDirName
 
 		if len(portPool) == 0 {
-			return nil, fmt.Errorf("failed to get port for Proxy server")
+			return nil, errors.New("failed to get port for Proxy server")
 		}
 		port := <-portPool
 		proxyAddr := fmt.Sprintf("tcp://127.0.0.1:%s", port)
 		cmtCfg.ProxyApp = proxyAddr
 
 		if len(portPool) == 0 {
-			return nil, fmt.Errorf("failed to get port for Proxy server")
+			return nil, errors.New("failed to get port for Proxy server")
 		}
 		port = <-portPool
 		p2pAddr := fmt.Sprintf("tcp://127.0.0.1:%s", port)
@@ -538,8 +524,23 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			WithKeybase(kb).
 			WithTxConfig(cfg.TxConfig)
 
-		err = tx.Sign(context.Background(), txFactory, nodeDirName, txBuilder, true)
-		if err != nil {
+		clientCtx := client.Context{}.
+			WithKeyringDir(clientDir).
+			WithKeyring(kb).
+			WithHomeDir(cmtCfg.RootDir).
+			WithChainID(cfg.ChainID).
+			WithInterfaceRegistry(cfg.InterfaceRegistry).
+			WithCodec(cfg.Codec).
+			WithLegacyAmino(cfg.LegacyAmino).
+			WithTxConfig(cfg.TxConfig).
+			WithAccountRetriever(cfg.AccountRetriever).
+			WithAddressCodec(cfg.AddressCodec).
+			WithValidatorAddressCodec(cfg.ValidatorAddressCodec).
+			WithConsensusAddressCodec(cfg.ConsensusAddressCodec).
+			WithNodeURI(cmtCfg.RPC.ListenAddress).
+			WithCmdContext(context.TODO())
+
+		if err := tx.Sign(clientCtx, txFactory, nodeDirName, txBuilder, true); err != nil {
 			return nil, err
 		}
 
@@ -555,21 +556,6 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		if err != nil {
 			return nil, err
 		}
-
-		clientCtx := client.Context{}.
-			WithKeyringDir(clientDir).
-			WithKeyring(kb).
-			WithHomeDir(cmtCfg.RootDir).
-			WithChainID(cfg.ChainID).
-			WithInterfaceRegistry(cfg.InterfaceRegistry).
-			WithCodec(cfg.Codec).
-			WithLegacyAmino(cfg.LegacyAmino).
-			WithTxConfig(cfg.TxConfig).
-			WithAccountRetriever(cfg.AccountRetriever).
-			WithAddressCodec(cfg.AddressCodec).
-			WithValidatorAddressCodec(cfg.ValidatorAddressCodec).
-			WithConsensusAddressCodec(cfg.ConsensusAddressCodec).
-			WithNodeURI(cmtCfg.RPC.ListenAddress)
 
 		// Provide ChainID here since we can't modify it in the Comet config.
 		viper.Set(flags.FlagChainID, cfg.ChainID)

@@ -57,8 +57,7 @@ var (
 	RedelegationQueueKey = collections.NewPrefix(66) // prefix for the timestamps in redelegations queue
 	ValidatorQueueKey    = collections.NewPrefix(67) // prefix for the timestamps in validator queue
 
-	HistoricalInfoKey = collections.NewPrefix(80) // prefix for the historical info
-	ParamsKey         = collections.NewPrefix(81) // prefix for parameters for module x/staking
+	ParamsKey = collections.NewPrefix(81) // prefix for parameters for module x/staking
 
 	DelegationByValIndexKey = collections.NewPrefix(113) // key for delegations by a validator
 

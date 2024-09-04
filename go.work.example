@@ -1,4 +1,4 @@
-go 1.22.2
+go 1.23
 
 use (
 	.
@@ -9,12 +9,14 @@ use (
 	./core/testing
 	./depinject
 	./errors
+	./indexer/postgres
 	./log
 	./math
 	./orm
 	./simapp
 	./tests
 	./tests/systemtests
+	./schema
 	./server/v2/stf
 	./server/v2/appmanager
 	./store

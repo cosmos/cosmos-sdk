@@ -73,7 +73,7 @@ func displayInfo(dst io.Writer, info printInfo) error {
 // and the respective application.
 func InitCmd(mm genesisMM) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "init [moniker]",
+		Use:   "init <moniker>",
 		Short: "Initialize private validator, p2p, genesis, and application configuration files",
 		Long:  `Initialize validators's and node's configuration files.`,
 		Args:  cobra.ExactArgs(1),
@@ -88,6 +88,9 @@ func InitCmd(mm genesisMM) *cobra.Command {
 				chainID = clientCtx.ChainID
 			default:
 				chainID = fmt.Sprintf("test-chain-%v", unsafe.Str(6))
+			}
+			if config.RootDir == "" {
+				config.RootDir = clientCtx.HomeDir
 			}
 
 			// Get bip39 mnemonic

@@ -20,7 +20,7 @@ import (
 )
 
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.
-// Abonormal scenarios are not tested here.
+// Abnormal scenarios are not tested here.
 func TestRandomizedGenState(t *testing.T) {
 	cdcOpts := codectestutil.CodecOptions{}
 	encCfg := moduletestutil.MakeTestEncodingConfig(cdcOpts, mint.AppModule{})
@@ -62,7 +62,7 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, "0.000000000000000000", mintGenesis.Minter.AnnualProvisions.String())
 }
 
-// TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.
+// TestRandomizedGenState1 tests abnormal scenarios of applying RandomizedGenState.
 func TestRandomizedGenState1(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, mint.AppModule{})
 
@@ -84,8 +84,6 @@ func TestRandomizedGenState1(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		require.Panicsf(t, func() { simulation.RandomizedGenState(&tt.simState) }, tt.panicMsg)
 	}
 }

@@ -15,11 +15,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authsims "cosmossdk.io/x/auth/simulation"
-	authtestutil "cosmossdk.io/x/auth/testutil"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -43,6 +38,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -86,11 +86,12 @@ func initFixture(t *testing.T) *fixture {
 	authority := authtypes.NewModuleAddress("gov")
 
 	maccPerms := map[string][]string{
-		pooltypes.ModuleName:           {},
-		pooltypes.StreamAccount:        {},
-		distrtypes.ModuleName:          {authtypes.Minter},
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+		pooltypes.ModuleName:               {},
+		pooltypes.StreamAccount:            {},
+		pooltypes.ProtocolPoolDistrAccount: {},
+		distrtypes.ModuleName:              {authtypes.Minter},
+		stakingtypes.BondedPoolName:        {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:     {authtypes.Burner, authtypes.Staking},
 	}
 
 	// gomock initializations
@@ -137,13 +138,13 @@ func initFixture(t *testing.T) *fixture {
 	poolKeeper := poolkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[pooltypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, stakingKeeper, authority.String())
 
 	distrKeeper := distrkeeper.NewKeeper(
-		cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[distrtypes.StoreKey]), logger), accountKeeper, bankKeeper, stakingKeeper, poolKeeper, cometService, distrtypes.ModuleName, authority.String(),
+		cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[distrtypes.StoreKey]), logger), accountKeeper, bankKeeper, stakingKeeper, cometService, distrtypes.ModuleName, authority.String(),
 	)
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts)
+	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
-	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper, poolKeeper)
+	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper)
 	poolModule := protocolpool.NewAppModule(cdc, poolKeeper, accountKeeper, bankKeeper)
 
 	addr := sdk.AccAddress(PKS[0].Address())
@@ -216,7 +217,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	require.NoError(t, f.distrKeeper.Params.Set(f.sdkCtx, distrtypes.DefaultParams()))
 
 	delAddr := sdk.AccAddress(PKS[1].Address())
-	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
 
 	valCommission := sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", math.LegacyNewDec(5).Quo(math.LegacyNewDec(4))),
@@ -325,9 +325,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	}
 	height := f.app.LastBlockHeight()
 
-	_, err = f.distrKeeper.PreviousProposer.Get(f.sdkCtx)
-	assert.ErrorIs(t, err, collections.ErrNotFound)
-
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
@@ -358,10 +355,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				assert.Assert(t, initBalance.IsAllLTE(curBalance))
 			}
 
-			prevProposerConsAddr, err := f.distrKeeper.PreviousProposer.Get(f.sdkCtx)
-			assert.NilError(t, err)
-			assert.Assert(t, prevProposerConsAddr.Empty() == false)
-			assert.DeepEqual(t, prevProposerConsAddr, valConsAddr)
 			var previousTotalPower int64
 			for _, vote := range f.sdkCtx.CometInfo().LastCommit.Votes {
 				previousTotalPower += vote.Validator.Power

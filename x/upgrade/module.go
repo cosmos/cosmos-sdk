@@ -24,13 +24,11 @@ import (
 const ConsensusVersion uint64 = 3
 
 var (
-	_ module.HasName        = AppModule{}
 	_ module.HasAminoCodec  = AppModule{}
 	_ module.HasGRPCGateway = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasPreBlocker         = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
@@ -52,6 +50,7 @@ func NewAppModule(keeper *keeper.Keeper) AppModule {
 func (AppModule) IsAppModule() {}
 
 // Name returns the ModuleName
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }

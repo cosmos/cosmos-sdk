@@ -9,7 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/mock"
 	"cosmossdk.io/store/pruning"
 	"cosmossdk.io/store/pruning/types"
@@ -202,7 +202,7 @@ func TestHandleSnapshotHeight_DbErr_Panic(t *testing.T) {
 	// Setup
 	dbMock := mock.NewMockDB(ctrl)
 
-	dbMock.EXPECT().SetSync(gomock.Any(), gomock.Any()).Return(errors.New(dbErr)).Times(1)
+	dbMock.EXPECT().Set(gomock.Any(), gomock.Any()).Return(errors.New(dbErr)).Times(1)
 
 	manager := pruning.NewManager(dbMock, log.NewNopLogger())
 	manager.SetOptions(types.NewPruningOptions(types.PruningEverything))

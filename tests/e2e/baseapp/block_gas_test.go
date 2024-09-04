@@ -18,9 +18,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	store "cosmossdk.io/store/types"
 	_ "cosmossdk.io/x/accounts"
-	xauthsigning "cosmossdk.io/x/auth/signing"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -37,6 +35,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 var blockMaxGas = uint64(simtestutil.DefaultConsensusParams.Block.MaxGas)
@@ -74,8 +73,8 @@ func TestBaseApp_BlockGas(t *testing.T) {
 
 	for _, tc := range testcases {
 		var (
-			bankKeeper        baseapp.BankKeeper
-			accountKeeper     baseapp.AuthKeeper
+			bankKeeper        baseapputil.BankKeeper
+			accountKeeper     baseapputil.AuthKeeper
 			appBuilder        *runtime.AppBuilder
 			txConfig          client.TxConfig
 			cdc               codec.Codec
@@ -175,7 +174,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				require.Equal(t, []byte("ok"), okValue)
 			}
 			// check block gas is always consumed
-			baseGas := uint64(38012) // baseGas is the gas consumed before tx msg
+			baseGas := uint64(38142) // baseGas is the gas consumed before tx msg
 			expGasConsumed := addUint64Saturating(tc.gasToConsume, baseGas)
 			if expGasConsumed > uint64(simtestutil.DefaultConsensusParams.Block.MaxGas) {
 				// capped by gasLimit

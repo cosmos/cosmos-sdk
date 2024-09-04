@@ -15,8 +15,6 @@ import (
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
-	authtx "cosmossdk.io/x/auth/tx"
-	authtypes "cosmossdk.io/x/auth/types"
 	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
 	consensusparamtypes "cosmossdk.io/x/consensus/types"
 
@@ -27,6 +25,8 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const appName = "integration-app"
@@ -64,10 +64,10 @@ func NewIntegrationApp(
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
 	bApp.MountKVStores(keys)
 
-	bApp.SetInitChainer(func(ctx sdk.Context, _ *cmtabcitypes.InitChainRequest) (*cmtabcitypes.InitChainResponse, error) {
+	bApp.SetInitChainer(func(_ sdk.Context, _ *cmtabcitypes.InitChainRequest) (*cmtabcitypes.InitChainResponse, error) {
 		for _, mod := range modules {
 			if m, ok := mod.(module.HasGenesis); ok {
-				if err := m.InitGenesis(ctx, m.DefaultGenesis()); err != nil {
+				if err := m.InitGenesis(sdkCtx, m.DefaultGenesis()); err != nil {
 					return nil, err
 				}
 			}

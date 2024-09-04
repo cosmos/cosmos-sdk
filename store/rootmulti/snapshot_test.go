@@ -14,7 +14,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/log"
+	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/iavl"
 	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/rootmulti"
@@ -23,7 +24,7 @@ import (
 	"cosmossdk.io/store/types"
 )
 
-func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *rootmulti.Store {
+func newMultiStoreWithGeneratedData(db corestore.KVStoreWithBatch, stores uint8, storeKeys uint64) *rootmulti.Store {
 	multiStore := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	r := rand.New(rand.NewSource(49872768940)) // Fixed seed for deterministic tests
 
@@ -61,7 +62,7 @@ func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *
 	return multiStore
 }
 
-func newMultiStoreWithMixedMounts(db dbm.DB) *rootmulti.Store {
+func newMultiStoreWithMixedMounts(db corestore.KVStoreWithBatch) *rootmulti.Store {
 	store := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
@@ -73,7 +74,7 @@ func newMultiStoreWithMixedMounts(db dbm.DB) *rootmulti.Store {
 	return store
 }
 
-func newMultiStoreWithMixedMountsAndBasicData(db dbm.DB) *rootmulti.Store {
+func newMultiStoreWithMixedMountsAndBasicData(db corestore.KVStoreWithBatch) *rootmulti.Store {
 	store := newMultiStoreWithMixedMounts(db)
 	store1 := store.GetStoreByName("iavl1").(types.CommitKVStore)
 	store2 := store.GetStoreByName("iavl2").(types.CommitKVStore)

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	dcrd_secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -20,42 +19,56 @@ import (
 	accountsv1 "cosmossdk.io/x/accounts/v1"
 	"cosmossdk.io/x/tx/signing"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 var (
-	PubKeyPrefix   = collections.NewPrefix(0)
-	SequencePrefix = collections.NewPrefix(1)
+	PubKeyPrefix     = collections.NewPrefix(0)
+	PubKeyTypePrefix = collections.NewPrefix(1)
+	SequencePrefix   = collections.NewPrefix(2)
 )
 
-func NewAccount(name string, handlerMap *signing.HandlerMap) accountstd.AccountCreatorFunc {
+type Option func(a *Account)
+
+func NewAccount(name string, handlerMap *signing.HandlerMap, options ...Option) accountstd.AccountCreatorFunc {
 	return func(deps accountstd.Dependencies) (string, accountstd.Interface, error) {
-		return name, Account{
-			PubKey:          collections.NewItem(deps.SchemaBuilder, PubKeyPrefix, "pub_key", codec.CollValue[secp256k1.PubKey](deps.LegacyStateCodec)),
-			Sequence:        collections.NewSequence(deps.SchemaBuilder, SequencePrefix, "sequence"),
-			addrCodec:       deps.AddressCodec,
-			signingHandlers: handlerMap,
-			hs:              deps.Environment.HeaderService,
-		}, nil
+		acc := Account{
+			PubKey:           collections.NewItem(deps.SchemaBuilder, PubKeyPrefix, "pub_key_bytes", collections.BytesValue),
+			PubKeyType:       collections.NewItem(deps.SchemaBuilder, PubKeyTypePrefix, "pub_key_type", collections.StringValue),
+			Sequence:         collections.NewSequence(deps.SchemaBuilder, SequencePrefix, "sequence"),
+			addrCodec:        deps.AddressCodec,
+			hs:               deps.Environment.HeaderService,
+			supportedPubKeys: map[string]pubKeyImpl{},
+			signingHandlers:  handlerMap,
+		}
+		for _, option := range options {
+			option(&acc)
+		}
+		if len(acc.supportedPubKeys) == 0 {
+			return "", nil, fmt.Errorf("no public keys plugged for account type %s", name)
+		}
+		return name, acc, nil
 	}
 }
 
 // Account implements a base account.
 type Account struct {
-	PubKey   collections.Item[secp256k1.PubKey]
+	PubKey     collections.Item[[]byte]
+	PubKeyType collections.Item[string]
+
 	Sequence collections.Sequence
 
 	addrCodec address.Codec
 	hs        header.Service
 
+	supportedPubKeys map[string]pubKeyImpl
+
 	signingHandlers *signing.HandlerMap
 }
 
 func (a Account) Init(ctx context.Context, msg *v1.MsgInit) (*v1.MsgInitResponse, error) {
-	return &v1.MsgInitResponse{}, a.verifyAndSetPubKey(ctx, msg.PubKey)
+	return &v1.MsgInitResponse{}, a.savePubKey(ctx, msg.PubKey)
 }
 
 func (a Account) SwapPubKey(ctx context.Context, msg *v1.MsgSwapPubKey) (*v1.MsgSwapPubKeyResponse, error) {
@@ -63,15 +76,7 @@ func (a Account) SwapPubKey(ctx context.Context, msg *v1.MsgSwapPubKey) (*v1.Msg
 		return nil, errors.New("unauthorized")
 	}
 
-	return &v1.MsgSwapPubKeyResponse{}, a.verifyAndSetPubKey(ctx, msg.NewPubKey)
-}
-
-func (a Account) verifyAndSetPubKey(ctx context.Context, key []byte) error {
-	_, err := dcrd_secp256k1.ParsePubKey(key)
-	if err != nil {
-		return err
-	}
-	return a.PubKey.Set(ctx, secp256k1.PubKey{Key: key})
+	return &v1.MsgSwapPubKeyResponse{}, a.savePubKey(ctx, msg.NewPubKey)
 }
 
 // Authenticate implements the authentication flow of an abstracted base account.
@@ -82,12 +87,12 @@ func (a Account) Authenticate(ctx context.Context, msg *aa_interface_v1.MsgAuthe
 
 	pubKey, signerData, err := a.computeSignerData(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to compute signer data: %w", err)
 	}
 
 	txData, err := a.getTxData(msg)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to get tx data: %w", err)
 	}
 
 	gotSeq := msg.Tx.AuthInfo.SignerInfos[msg.SignerIndex].Sequence
@@ -104,7 +109,7 @@ func (a Account) Authenticate(ctx context.Context, msg *aa_interface_v1.MsgAuthe
 
 	signBytes, err := a.signingHandlers.GetSignBytes(ctx, signMode, signerData, txData)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to get sign bytes: %w", err)
 	}
 
 	if !pubKey.VerifySignature(signBytes, signature) {
@@ -123,31 +128,31 @@ func parseSignMode(info *tx.ModeInfo) (signingv1beta1.SignMode, error) {
 }
 
 // computeSignerData will populate signer data and also increase the sequence.
-func (a Account) computeSignerData(ctx context.Context) (secp256k1.PubKey, signing.SignerData, error) {
+func (a Account) computeSignerData(ctx context.Context) (PubKey, signing.SignerData, error) {
 	addrStr, err := a.addrCodec.BytesToString(accountstd.Whoami(ctx))
 	if err != nil {
-		return secp256k1.PubKey{}, signing.SignerData{}, err
+		return nil, signing.SignerData{}, err
 	}
 	chainID := a.hs.HeaderInfo(ctx).ChainID
 
 	wantSequence, err := a.Sequence.Next(ctx)
 	if err != nil {
-		return secp256k1.PubKey{}, signing.SignerData{}, err
+		return nil, signing.SignerData{}, err
 	}
 
-	pk, err := a.PubKey.Get(ctx)
+	pk, err := a.loadPubKey(ctx)
 	if err != nil {
-		return secp256k1.PubKey{}, signing.SignerData{}, err
+		return nil, signing.SignerData{}, err
 	}
 
-	pkAny, err := codectypes.NewAnyWithValue(&pk)
+	pkAny, err := codectypes.NewAnyWithValue(pk)
 	if err != nil {
-		return secp256k1.PubKey{}, signing.SignerData{}, err
+		return nil, signing.SignerData{}, err
 	}
 
 	accNum, err := a.getNumber(ctx, addrStr)
 	if err != nil {
-		return secp256k1.PubKey{}, signing.SignerData{}, err
+		return nil, signing.SignerData{}, err
 	}
 
 	return pk, signing.SignerData{
@@ -163,12 +168,17 @@ func (a Account) computeSignerData(ctx context.Context) (secp256k1.PubKey, signi
 }
 
 func (a Account) getNumber(ctx context.Context, addrStr string) (uint64, error) {
-	accNum, err := accountstd.QueryModule[accountsv1.AccountNumberResponse](ctx, &accountsv1.AccountNumberRequest{Address: addrStr})
+	accNum, err := accountstd.QueryModule(ctx, &accountsv1.AccountNumberRequest{Address: addrStr})
 	if err != nil {
 		return 0, err
 	}
 
-	return accNum.Number, nil
+	resp, ok := accNum.(*accountsv1.AccountNumberResponse)
+	if !ok {
+		return 0, fmt.Errorf("unexpected response type: %T", accNum)
+	}
+
+	return resp.Number, nil
 }
 
 func (a Account) getTxData(msg *aa_interface_v1.MsgAuthenticate) (signing.TxData, error) {
@@ -193,6 +203,54 @@ func (a Account) getTxData(msg *aa_interface_v1.MsgAuthenticate) (signing.TxData
 		AuthInfoBytes:              msg.RawTx.AuthInfoBytes,
 		BodyHasUnknownNonCriticals: false, // NOTE: amino signing must be disabled.
 	}, nil
+}
+
+func (a Account) loadPubKey(ctx context.Context) (PubKey, error) {
+	pkType, err := a.PubKeyType.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	publicKey, exists := a.supportedPubKeys[pkType]
+	// this means that the chain developer suddenly started using a key type.
+	if !exists {
+		return nil, fmt.Errorf("pubkey type %s is not supported by the chain anymore", pkType)
+	}
+
+	pkBytes, err := a.PubKey.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	pubKey, err := publicKey.decode(pkBytes)
+	if err != nil {
+		return nil, err
+	}
+	return pubKey, nil
+}
+
+func (a Account) savePubKey(ctx context.Context, anyPk *codectypes.Any) error {
+	// check if known
+	name := nameFromTypeURL(anyPk.TypeUrl)
+	impl, exists := a.supportedPubKeys[name]
+	if !exists {
+		return fmt.Errorf("unknown pubkey type %s", name)
+	}
+	pk, err := impl.decode(anyPk.Value)
+	if err != nil {
+		return fmt.Errorf("unable to decode pubkey: %w", err)
+	}
+	err = impl.validate(pk)
+	if err != nil {
+		return fmt.Errorf("unable to validate pubkey: %w", err)
+	}
+
+	// save into state
+	err = a.PubKey.Set(ctx, anyPk.Value)
+	if err != nil {
+		return fmt.Errorf("unable to save pubkey: %w", err)
+	}
+	return a.PubKeyType.Set(ctx, name)
 }
 
 func (a Account) QuerySequence(ctx context.Context, _ *v1.QuerySequence) (*v1.QuerySequenceResponse, error) {

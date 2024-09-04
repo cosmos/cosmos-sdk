@@ -13,16 +13,16 @@ import (
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/x/auth/ante"
-	"cosmossdk.io/x/auth/keeper"
-	"cosmossdk.io/x/auth/simulation"
-	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // ConsensusVersion defines the current x/auth module consensus version.
@@ -33,11 +33,9 @@ const (
 
 var (
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasName             = AppModule{}
 
 	_ appmodulev2.HasGenesis    = AppModule{}
 	_ appmodulev2.AppModule     = AppModule{}
-	_ appmodule.HasServices     = AppModule{}
 	_ appmodulev2.HasMigrations = AppModule{}
 )
 
@@ -47,27 +45,31 @@ type AppModule struct {
 	randGenAccountsFn types.RandomGenesisAccountsFn
 	accountsModKeeper types.AccountsModKeeper
 	cdc               codec.Codec
+	extOptChecker     ante.ExtensionOptionChecker
 }
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
-// NewAppModule creates a new AppModule object
+// NewAppModule creates a new AppModule object.
 func NewAppModule(
 	cdc codec.Codec,
 	accountKeeper keeper.AccountKeeper,
 	ak types.AccountsModKeeper,
 	randGenAccountsFn types.RandomGenesisAccountsFn,
+	extOptChecker ante.ExtensionOptionChecker,
 ) AppModule {
 	return AppModule{
 		accountKeeper:     accountKeeper,
 		randGenAccountsFn: randGenAccountsFn,
 		accountsModKeeper: ak,
 		cdc:               cdc,
+		extOptChecker:     extOptChecker,
 	}
 }
 
-// Name returns the auth module's name.
+// Name returns the module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
@@ -160,6 +162,7 @@ func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 		ante.NewValidateMemoDecorator(am.accountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(am.accountKeeper),
 		ante.NewValidateSigCountDecorator(am.accountKeeper),
+		ante.NewExtensionOptionsDecorator(am.extOptChecker),
 	}
 
 	sdkTx, ok := tx.(sdk.Tx)

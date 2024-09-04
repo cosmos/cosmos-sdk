@@ -285,7 +285,7 @@ func (coins Coins) Validate() error {
 	}
 }
 
-// IsSorted returns true when coins are order ASC sorted with denoms.
+// IsSorted returns true when coins are sorted in ASC order by denoms.
 func (coins Coins) IsSorted() bool {
 	for i := 1; i < len(coins); i++ {
 		if coins[i-1].Denom > coins[i].Denom {

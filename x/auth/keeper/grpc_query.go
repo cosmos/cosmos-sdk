@@ -9,11 +9,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"cosmossdk.io/x/auth/types"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ types.QueryServer = queryServer{}
@@ -86,7 +85,7 @@ func (s queryServer) Account(ctx context.Context, req *types.QueryAccountRequest
 
 	any, err := codectypes.NewAnyWithValue(account)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryAccountResponse{Account: any}, nil
@@ -124,7 +123,7 @@ func (s queryServer) ModuleAccounts(ctx context.Context, req *types.QueryModuleA
 		}
 		any, err := codectypes.NewAnyWithValue(account)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 		modAccounts = append(modAccounts, any)
 	}
@@ -150,7 +149,7 @@ func (s queryServer) ModuleAccountByName(ctx context.Context, req *types.QueryMo
 	}
 	any, err := codectypes.NewAnyWithValue(account)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryModuleAccountByNameResponse{Account: any}, nil
@@ -234,7 +233,7 @@ func (s queryServer) AccountInfo(ctx context.Context, req *types.QueryAccountInf
 	if pubKey != nil {
 		pkAny, err = codectypes.NewAnyWithValue(account.GetPubKey())
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 	}
 

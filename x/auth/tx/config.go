@@ -94,11 +94,11 @@ func NewTxConfig(protoCodec codec.Codec, addressCodec, validatorAddressCodec add
 
 // NewSigningOptions returns signing options used by x/tx. This includes account and
 // validator address prefix enabled codecs.
-func NewSigningOptions(addressCodec, validatorAddressCodec address.Codec) (*txsigning.Options, error) {
+func NewSigningOptions(addressCodec, validatorAddressCodec address.Codec) *txsigning.Options {
 	return &txsigning.Options{
 		AddressCodec:          addressCodec,
 		ValidatorAddressCodec: validatorAddressCodec,
-	}, nil
+	}
 }
 
 // NewSigningHandlerMap returns a new txsigning.HandlerMap using the provided ConfigOptions.
@@ -149,7 +149,7 @@ func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, erro
 				TypeResolver:        signingOpts.TypeResolver,
 			})
 			if configOpts.TextualCoinMetadataQueryFn == nil {
-				return nil, fmt.Errorf("cannot enable SIGN_MODE_TEXTUAL without a TextualCoinMetadataQueryFn")
+				return nil, errors.New("cannot enable SIGN_MODE_TEXTUAL without a TextualCoinMetadataQueryFn")
 			}
 			if err != nil {
 				return nil, err

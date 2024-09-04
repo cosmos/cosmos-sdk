@@ -30,9 +30,8 @@ There are 2 main application module interfaces:
 
 The above interfaces are mostly embedding smaller interfaces (extension interfaces), that defines specific functionalities:
 
-<!-- TO UPDATE - THIS IS SEVERELY OUTDATED -->
+<!-- TO UPDATE - THIS IS SEVERELY OUTDATED appmodule / appmodulev2-->
 
-* (legacy) `module.HasName`: Allows the module to provide its own name for legacy purposes.
 * (legacy) [`module.HasGenesisBasics`](#modulehasgenesisbasics): The legacy interface for stateless genesis methods.
 * (legacy) [`module.HasGenesis`](#modulehasgenesis) for inter-dependent genesis-related module functionalities.
 * (legacy) [`module.HasABCIGenesis`](#modulehasabcigenesis) for inter-dependent genesis-related module functionalities.
@@ -72,19 +71,10 @@ https://github.com/cosmos/cosmos-sdk/blob/eee5e21e1c8d0995b6d4f83b7f55ec0b58d27b
 
 * `RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)`: Registers gRPC routes for the module.
 
-
-### `HasName`
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L71-L73
-```
-
-* `HasName` is an interface that has a method `Name()`. This method returns the name of the module as a `string`.
-
 ### Genesis
 
 :::tip
-For easily creating an `AppModule` that only has genesis functionalities, implement `module.HasGenesis/HasABCIGenesis` and `module.HasName`.
+For easily creating an `AppModule` that only has genesis functionalities, implement `module.HasGenesis/HasABCIGenesis`.
 :::
 
 #### `module.HasGenesisBasics`
@@ -270,7 +260,7 @@ Here's an example of a concrete integration within an `simapp`:
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app.go#L411-L434
 ```
 
-This is the same example from `runtime` (the package that powers app v2):
+This is the same example from `runtime` (the package that powers app di):
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/runtime/module.go#L61

@@ -7,21 +7,22 @@ sidebar_position: 1
 `cosmovisor` is a process manager for Cosmos SDK application binaries that automates application binary switch at chain upgrades.
 It polls the `upgrade-info.json` file that is created by the x/upgrade module at upgrade height, and then can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
 
-* [Design](#design)
-* [Contributing](#contributing)
-* [Setup](#setup)
-  * [Installation](#installation)
-  * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
-  * [Folder Layout](#folder-layout)
-* [Usage](#usage)
-  * [Initialization](#initialization)
-  * [Detecting Upgrades](#detecting-upgrades)
-  * [Adding Upgrade Binary](#adding-upgrade-binary)
-  * [Auto-Download](#auto-download)
-* [Example: SimApp Upgrade](#example-simapp-upgrade)
-  * [Chain Setup](#chain-setup)
-    * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
-  * [Update App](#update-app)
+* [Cosmovisor](#cosmovisor)
+  * [Design](#design)
+  * [Contributing](#contributing)
+  * [Setup](#setup)
+    * [Installation](#installation)
+    * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
+    * [Folder Layout](#folder-layout)
+  * [Usage](#usage)
+    * [Initialization](#initialization)
+    * [Detecting Upgrades](#detecting-upgrades)
+    * [Adding Upgrade Binary](#adding-upgrade-binary)
+    * [Auto-Download](#auto-download)
+  * [Example: SimApp Upgrade](#example-simapp-upgrade)
+    * [Chain Setup](#chain-setup)
+      * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
+    * [Update App](#update-app)
 
 ## Design
 
@@ -87,11 +88,7 @@ The first argument passed to `cosmovisor` is the action for `cosmovisor` to take
 
 All arguments passed to `cosmovisor run` will be passed to the application binary (as a subprocess). `cosmovisor` will return `/dev/stdout` and `/dev/stderr` of the subprocess as its own. For this reason, `cosmovisor run` cannot accept any command-line arguments other than those available to the application binary.
 
-:::warning
-Use of `cosmovisor` without one of the action arguments is deprecated. For backwards compatibility, if the first argument is not an action argument, `run` is assumed. However, this fallback might be removed in future versions, so it is recommended that you always provide `run`.
-:::
-
-`cosmovisor` reads its configuration from environment variables:
+`cosmovisor` reads its configuration from environment variables, or its configuration file (use `--cosmovisor-config <path>`):
 
 * `DAEMON_HOME` is the location where the `cosmovisor/` directory is kept that contains the genesis binary, the upgrade binaries, and any additional auxiliary files associated with each binary (e.g. `$HOME/.gaiad`, `$HOME/.regend`, `$HOME/.simd`, etc.).
 * `DAEMON_NAME` is the name of the binary itself (e.g. `gaiad`, `regend`, `simd`, etc.).
@@ -130,7 +127,7 @@ Use of `cosmovisor` without one of the action arguments is deprecated. For backw
 
 The `cosmovisor/` directory includes a subdirectory for each version of the application (i.e. `genesis` or `upgrades/<name>`). Within each subdirectory is the application binary (i.e. `bin/$DAEMON_NAME`) and any additional auxiliary files associated with each binary. `current` is a symbolic link to the currently active directory (i.e. `genesis` or `upgrades/<name>`). The `name` variable in `upgrades/<name>` is the lowercased URI-encoded name of the upgrade as specified in the upgrade module plan. Note that the upgrade name path are normalized to be lowercased: for instance, `MyUpgrade` is normalized to `myupgrade`, and its path is `upgrades/myupgrade`.
 
-Please note that `$DAEMON_HOME/cosmovisor` only stores the *application binaries*. The `cosmovisor` binary itself can be stored in any typical location (e.g. `/usr/local/bin`). The application will continue to store its data in the default data directory (e.g. `$HOME/.simapp`) or the data directory specified with the `--home` flag. `$DAEMON_HOME` is independent of the data directory and can be set to any location. If you set `$DAEMON_HOME` to the same directory as the data directory, you will end up with a configuration like the following:
+Please note that `$DAEMON_HOME/cosmovisor` only stores the *application binaries*. The `cosmovisor` binary itself can be stored in any typical location (e.g. `/usr/local/bin`). The application will continue to store its data in the default data directory (e.g. `$HOME/.simapp`) or the data directory specified with the `--home` flag. `$DAEMON_HOME` is dependent of the data directory and must be set to the same directory as the data directory, you will end up with a configuration like the following:
 
 ```text
 .simapp

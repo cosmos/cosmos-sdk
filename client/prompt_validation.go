@@ -1,6 +1,7 @@
 package client
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"unicode"
@@ -11,7 +12,7 @@ import (
 // ValidatePromptNotEmpty validates that the input is not empty.
 func ValidatePromptNotEmpty(input string) error {
 	if input == "" {
-		return fmt.Errorf("input cannot be empty")
+		return errors.New("input cannot be empty")
 	}
 
 	return nil

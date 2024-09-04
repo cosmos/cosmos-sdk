@@ -3,7 +3,6 @@ package serverv2
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -33,96 +32,31 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 	return rootCmd.Execute()
 }
 
-// Commands creates the start command of an application and gives back the CLIConfig containing all the server commands.
-// This API is for advanced user only, most users should use AddCommands instead that abstract more.
-func Commands[AppT AppI[T], T transaction.Tx](
-	rootCmd *cobra.Command,
-	newApp AppCreator[AppT, T],
-	logger log.Logger,
-	components ...ServerComponent[AppT, T],
-) (CLIConfig, error) {
-	if len(components) == 0 {
-		return CLIConfig{}, errors.New("no components provided")
-	}
-
-	server := NewServer(logger, components...)
-	flags := server.StartFlags()
-
-	startCmd := &cobra.Command{
-		Use:   "start",
-		Short: "Run the application",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			v := GetViperFromCmd(cmd)
-			l := GetLoggerFromCmd(cmd)
-
-			for _, startFlags := range flags {
-				if err := v.BindPFlags(startFlags); err != nil {
-					return err
-				}
-			}
-
-			if err := v.BindPFlags(cmd.Flags()); err != nil {
-				return err
-			}
-
-			app := newApp(l, v)
-
-			if err := server.Init(app, v, l); err != nil {
-				return err
-			}
-
-			ctx, cancelFn := context.WithCancel(cmd.Context())
-			go func() {
-				sigCh := make(chan os.Signal, 1)
-				signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-				sig := <-sigCh
-				cancelFn()
-				cmd.Printf("caught %s signal\n", sig.String())
-
-				if err := server.Stop(ctx); err != nil {
-					cmd.PrintErrln("failed to stop servers:", err)
-				}
-			}()
-
-			if err := server.Start(ctx); err != nil {
-				return fmt.Errorf("failed to start servers: %w", err)
-			}
-
-			return nil
-		},
-	}
-	startCmd.SetContext(rootCmd.Context())
-
-	cmds := server.CLICommands()
-	cmds.Commands = append(cmds.Commands, startCmd)
-
-	return cmds, nil
-}
-
 // AddCommands add the server commands to the root command
 // It configure the config handling and the logger handling
-func AddCommands[AppT AppI[T], T transaction.Tx](
+func AddCommands[T transaction.Tx](
 	rootCmd *cobra.Command,
-	newApp AppCreator[AppT, T],
+	newApp AppCreator[T],
 	logger log.Logger,
-	components ...ServerComponent[AppT, T],
+	serverCfg ServerConfig,
+	components ...ServerComponent[T],
 ) error {
-	cmds, err := Commands(rootCmd, newApp, logger, components...)
-	if err != nil {
-		return err
+	if len(components) == 0 {
+		return errors.New("no components provided")
 	}
 
-	srv := NewServer(logger, components...)
+	server := NewServer(logger, serverCfg, components...)
 	originalPersistentPreRunE := rootCmd.PersistentPreRunE
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		// set the default command outputs
 		cmd.SetOut(cmd.OutOrStdout())
 		cmd.SetErr(cmd.ErrOrStderr())
 
-		if err = configHandle(srv, cmd); err != nil {
+		if err := configHandle(server, cmd); err != nil {
 			return err
 		}
 
+		// call the original PersistentPreRun(E) if it exists
 		if rootCmd.PersistentPreRun != nil {
 			rootCmd.PersistentPreRun(cmd, args)
 			return nil
@@ -131,6 +65,10 @@ func AddCommands[AppT AppI[T], T transaction.Tx](
 		return originalPersistentPreRunE(cmd, args)
 	}
 
+	cmds := server.CLICommands()
+	startCmd := createStartCommand(server, newApp)
+	startCmd.SetContext(rootCmd.Context())
+	cmds.Commands = append(cmds.Commands, startCmd)
 	rootCmd.AddCommand(cmds.Commands...)
 
 	if len(cmds.Queries) > 0 {
@@ -148,7 +86,7 @@ func AddCommands[AppT AppI[T], T transaction.Tx](
 		if txCmd := findSubCommand(rootCmd, "tx"); txCmd != nil {
 			txCmd.AddCommand(cmds.Txs...)
 		} else {
-			txCmd := topLevelCmd(rootCmd.Context(), "tx", "Transaction subcommands")
+			txCmd := topLevelCmd(rootCmd.Context(), "tx", "Transactions subcommands")
 			txCmd.AddCommand(cmds.Txs...)
 			rootCmd.AddCommand(txCmd)
 		}
@@ -157,8 +95,58 @@ func AddCommands[AppT AppI[T], T transaction.Tx](
 	return nil
 }
 
+// createStartCommand creates the start command for the application.
+func createStartCommand[T transaction.Tx](
+	server *Server[T],
+	newApp AppCreator[T],
+) *cobra.Command {
+	flags := server.StartFlags()
+
+	cmd := &cobra.Command{
+		Use:   "start",
+		Short: "Run the application",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			v := GetViperFromCmd(cmd)
+			l := GetLoggerFromCmd(cmd)
+			if err := v.BindPFlags(cmd.Flags()); err != nil {
+				return err
+			}
+
+			if err := server.Init(newApp(l, v), v, l); err != nil {
+				return err
+			}
+
+			ctx, cancelFn := context.WithCancel(cmd.Context())
+			go func() {
+				sigCh := make(chan os.Signal, 1)
+				signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+				sig := <-sigCh
+				cancelFn()
+				cmd.Printf("caught %s signal\n", sig.String())
+
+				if err := server.Stop(ctx); err != nil {
+					cmd.PrintErrln("failed to stop servers:", err)
+				}
+			}()
+
+			if err := server.Start(ctx); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+
+	// add the start flags to the command
+	for _, startFlags := range flags {
+		cmd.Flags().AddFlagSet(startFlags)
+	}
+
+	return cmd
+}
+
 // configHandle writes the default config to the home directory if it does not exist and sets the server context
-func configHandle[AppT AppI[T], T transaction.Tx](s *Server[AppT, T], cmd *cobra.Command) error {
+func configHandle[T transaction.Tx](s *Server[T], cmd *cobra.Command) error {
 	home, err := cmd.Flags().GetString(FlagHome)
 	if err != nil {
 		return err

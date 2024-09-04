@@ -53,14 +53,14 @@ func TestKind_ValidateValueType(t *testing.T) {
 		{kind: Int64Kind, value: int32(1), valid: false},
 		{kind: Uint64Kind, value: uint64(1), valid: true},
 		{kind: Uint64Kind, value: uint32(1), valid: false},
-		{kind: IntegerKind, value: "1", valid: true},
-		{kind: IntegerKind, value: int32(1), valid: false},
-		{kind: DecimalKind, value: "1.0", valid: true},
-		{kind: DecimalKind, value: "1", valid: true},
-		{kind: DecimalKind, value: "1.1e4", valid: true},
-		{kind: DecimalKind, value: int32(1), valid: false},
-		{kind: Bech32AddressKind, value: []byte("hello"), valid: true},
-		{kind: Bech32AddressKind, value: 1, valid: false},
+		{kind: IntegerStringKind, value: "1", valid: true},
+		{kind: IntegerStringKind, value: int32(1), valid: false},
+		{kind: DecimalStringKind, value: "1.0", valid: true},
+		{kind: DecimalStringKind, value: "1", valid: true},
+		{kind: DecimalStringKind, value: "1.1e4", valid: true},
+		{kind: DecimalStringKind, value: int32(1), valid: false},
+		{kind: AddressKind, value: []byte("hello"), valid: true},
+		{kind: AddressKind, value: 1, valid: false},
 		{kind: BoolKind, value: true, valid: true},
 		{kind: BoolKind, value: false, valid: true},
 		{kind: BoolKind, value: 1, valid: false},
@@ -110,55 +110,59 @@ func TestKind_ValidateValue(t *testing.T) {
 		{Int64Kind, int64(1), true},
 		{Int32Kind, "abc", false},
 		{BytesKind, nil, false},
+		// string must be valid UTF-8
+		{StringKind, string([]byte{0xff, 0xfe, 0xfd}), false},
+		// strings with null characters are invalid
+		{StringKind, string([]byte{1, 2, 0, 3}), false},
 		// check integer, decimal and json more thoroughly
-		{IntegerKind, "1", true},
-		{IntegerKind, "0", true},
-		{IntegerKind, "10", true},
-		{IntegerKind, "-100", true},
-		{IntegerKind, "1.0", false},
-		{IntegerKind, "00", true}, // leading zeros are allowed
-		{IntegerKind, "001", true},
-		{IntegerKind, "-01", true},
+		{IntegerStringKind, "1", true},
+		{IntegerStringKind, "0", true},
+		{IntegerStringKind, "10", true},
+		{IntegerStringKind, "-100", true},
+		{IntegerStringKind, "1.0", false},
+		{IntegerStringKind, "00", true}, // leading zeros are allowed
+		{IntegerStringKind, "001", true},
+		{IntegerStringKind, "-01", true},
 		// 100 digits
-		{IntegerKind, "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", true},
+		{IntegerStringKind, "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", true},
 		// more than 100 digits
-		{IntegerKind, "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", false},
-		{IntegerKind, "", false},
-		{IntegerKind, "abc", false},
-		{IntegerKind, "abc100", false},
-		{DecimalKind, "1.0", true},
-		{DecimalKind, "0.0", true},
-		{DecimalKind, "-100.075", true},
-		{DecimalKind, "1002346.000", true},
-		{DecimalKind, "0", true},
-		{DecimalKind, "10", true},
-		{DecimalKind, "-100", true},
-		{DecimalKind, "1", true},
-		{DecimalKind, "1.0e4", true},
-		{DecimalKind, "1.0e-4", true},
-		{DecimalKind, "1.0e+4", true},
-		{DecimalKind, "1.0e", false},
-		{DecimalKind, "1.0e4.0", false},
-		{DecimalKind, "1.0e-4.0", false},
-		{DecimalKind, "1.0e+4.0", false},
-		{DecimalKind, "-1.0e-4", true},
-		{DecimalKind, "-1.0e+4", true},
-		{DecimalKind, "-1.0E4", true},
-		{DecimalKind, "1E-9", true},
-		{DecimalKind, "1E-99", true},
-		{DecimalKind, "1E+9", true},
-		{DecimalKind, "1E+99", true},
+		{IntegerStringKind, "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", false},
+		{IntegerStringKind, "", false},
+		{IntegerStringKind, "abc", false},
+		{IntegerStringKind, "abc100", false},
+		{DecimalStringKind, "1.0", true},
+		{DecimalStringKind, "0.0", true},
+		{DecimalStringKind, "-100.075", true},
+		{DecimalStringKind, "1002346.000", true},
+		{DecimalStringKind, "0", true},
+		{DecimalStringKind, "10", true},
+		{DecimalStringKind, "-100", true},
+		{DecimalStringKind, "1", true},
+		{DecimalStringKind, "1.0e4", true},
+		{DecimalStringKind, "1.0e-4", true},
+		{DecimalStringKind, "1.0e+4", true},
+		{DecimalStringKind, "1.0e", false},
+		{DecimalStringKind, "1.0e4.0", false},
+		{DecimalStringKind, "1.0e-4.0", false},
+		{DecimalStringKind, "1.0e+4.0", false},
+		{DecimalStringKind, "-1.0e-4", true},
+		{DecimalStringKind, "-1.0e+4", true},
+		{DecimalStringKind, "-1.0E4", true},
+		{DecimalStringKind, "1E-9", true},
+		{DecimalStringKind, "1E-99", true},
+		{DecimalStringKind, "1E+9", true},
+		{DecimalStringKind, "1E+99", true},
 		// 50 digits before and after the decimal point
-		{DecimalKind, "10000000000000000000000000000000000000000000000000.10000000000000000000000000000000000000000000000001", true},
+		{DecimalStringKind, "10000000000000000000000000000000000000000000000000.10000000000000000000000000000000000000000000000001", true},
 		// too many digits before the decimal point
-		{DecimalKind, "10000000000000000000000000000000000000000000000000000000000000000000000000", false},
+		{DecimalStringKind, "10000000000000000000000000000000000000000000000000000000000000000000000000", false},
 		// too many digits after the decimal point
-		{DecimalKind, "1.0000000000000000000000000000000000000000000000000000000000000000000000001", false},
+		{DecimalStringKind, "1.0000000000000000000000000000000000000000000000000000000000000000000000001", false},
 		// exponent too big
-		{DecimalKind, "1E-999", false},
-		{DecimalKind, "", false},
-		{DecimalKind, "abc", false},
-		{DecimalKind, "abc", false},
+		{DecimalStringKind, "1E-999", false},
+		{DecimalStringKind, "", false},
+		{DecimalStringKind, "abc", false},
+		{DecimalStringKind, "abc", false},
 		{JSONKind, json.RawMessage(`{"a":10}`), true},
 		{JSONKind, json.RawMessage("10"), true},
 		{JSONKind, json.RawMessage("10.0"), true},
@@ -200,8 +204,8 @@ func TestKind_String(t *testing.T) {
 		{Uint32Kind, "uint32"},
 		{Int64Kind, "int64"},
 		{Uint64Kind, "uint64"},
-		{IntegerKind, "integer"},
-		{DecimalKind, "decimal"},
+		{IntegerStringKind, "integer"},
+		{DecimalStringKind, "decimal"},
 		{BoolKind, "bool"},
 		{TimeKind, "time"},
 		{DurationKind, "duration"},
@@ -209,7 +213,7 @@ func TestKind_String(t *testing.T) {
 		{Float64Kind, "float64"},
 		{JSONKind, "json"},
 		{EnumKind, "enum"},
-		{Bech32AddressKind, "bech32address"},
+		{AddressKind, "address"},
 		{InvalidKind, "invalid(0)"},
 	}
 	for i, tt := range tests {
@@ -254,6 +258,61 @@ func TestKindForGoValue(t *testing.T) {
 			if tt.want.Validate() == nil {
 				if err := tt.want.ValidateValue(tt.value); err != nil {
 					t.Errorf("test %d: expected valid value %v for kind %s to pass validation, got: %v", i, tt.value, tt.want, err)
+				}
+			}
+		})
+	}
+}
+
+func TestKindJSON(t *testing.T) {
+	tt := []struct {
+		kind      Kind
+		want      string
+		expectErr bool
+	}{
+		{StringKind, `"string"`, false},
+		{BytesKind, `"bytes"`, false},
+		{Int8Kind, `"int8"`, false},
+		{Uint8Kind, `"uint8"`, false},
+		{Int16Kind, `"int16"`, false},
+		{Uint16Kind, `"uint16"`, false},
+		{Int32Kind, `"int32"`, false},
+		{Uint32Kind, `"uint32"`, false},
+		{Int64Kind, `"int64"`, false},
+		{Uint64Kind, `"uint64"`, false},
+		{IntegerStringKind, `"integer"`, false},
+		{DecimalStringKind, `"decimal"`, false},
+		{BoolKind, `"bool"`, false},
+		{TimeKind, `"time"`, false},
+		{DurationKind, `"duration"`, false},
+		{Float32Kind, `"float32"`, false},
+		{Float64Kind, `"float64"`, false},
+		{JSONKind, `"json"`, false},
+		{EnumKind, `"enum"`, false},
+		{AddressKind, `"address"`, false},
+		{InvalidKind, `""`, true},
+		{Kind(100), `""`, true},
+	}
+	for i, tc := range tt {
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			b, err := json.Marshal(tc.kind)
+			if tc.expectErr && err == nil {
+				t.Errorf("test %d: expected error, got nil", i)
+			}
+			if !tc.expectErr && err != nil {
+				t.Errorf("test %d: unexpected error: %v", i, err)
+			}
+			if !tc.expectErr {
+				if string(b) != tc.want {
+					t.Errorf("test %d: expected %s, got %s", i, tc.want, string(b))
+				}
+				var k Kind
+				err := json.Unmarshal(b, &k)
+				if err != nil {
+					t.Errorf("test %d: unexpected error: %v", i, err)
+				}
+				if k != tc.kind {
+					t.Errorf("test %d: expected %s, got %s", i, tc.kind, k)
 				}
 			}
 		})

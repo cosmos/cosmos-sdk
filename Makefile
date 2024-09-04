@@ -8,10 +8,9 @@ include scripts/build/testing.mk
 include scripts/build/documentation.mk
 include scripts/build/build.mk
 
-###############################################################################
-###                          Tools & Dependencies                           ###
-###############################################################################
+.DEFAULT_GOAL := help
 
+#? go.sum: Run go mod tidy and ensure dependencies have not been modified
 go.sum: go.mod
 	echo "Ensure dependencies have not been modified ..." >&2
 	go mod verify

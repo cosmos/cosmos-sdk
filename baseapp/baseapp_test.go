@@ -14,6 +14,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/metrics"
@@ -22,7 +23,6 @@ import (
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
-	authtx "cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -32,6 +32,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 var (
@@ -296,7 +297,7 @@ func TestSetLoader(t *testing.T) {
 		app.SetStoreLoader(baseapp.DefaultStoreLoader)
 	}
 
-	initStore := func(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
+	initStore := func(t *testing.T, db corestore.KVStoreWithBatch, storeKey string, k, v []byte) {
 		t.Helper()
 		rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 		rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
@@ -317,7 +318,7 @@ func TestSetLoader(t *testing.T) {
 		require.Equal(t, int64(1), commitID.Version)
 	}
 
-	checkStore := func(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
+	checkStore := func(t *testing.T, db corestore.KVStoreWithBatch, ver int64, storeKey string, k, v []byte) {
 		t.Helper()
 		rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 		rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
@@ -892,4 +893,25 @@ func TestLoadVersionPruning(t *testing.T) {
 	err = app.LoadLatestVersion()
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(7), lastCommitID)
+}
+
+func TestABCI_FinalizeWithInvalidTX(t *testing.T) {
+	suite := NewBaseAppSuite(t)
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
+
+	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{ConsensusParams: &cmtproto.ConsensusParams{}})
+	require.NoError(t, err)
+
+	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	bz, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	// when
+	gotRsp, gotErr := suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{
+		Height: 1,
+		Txs:    [][]byte{bz[0 : len(bz)-5]},
+	})
+	require.NoError(t, gotErr)
+	require.Len(t, gotRsp.TxResults, 1)
+	require.Equal(t, uint32(2), gotRsp.TxResults[0].Code)
 }

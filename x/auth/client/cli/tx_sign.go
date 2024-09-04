@@ -1,14 +1,13 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 
 	errorsmod "cosmossdk.io/errors"
-	authclient "cosmossdk.io/x/auth/client"
-	"cosmossdk.io/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -16,6 +15,8 @@ import (
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 const (
@@ -30,7 +31,7 @@ const (
 // GetSignBatchCommand returns the transaction sign-batch command.
 func GetSignBatchCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "sign-batch [file] ([file2]...)",
+		Use:   "sign-batch <file> [<file2>...]",
 		Short: "Sign transaction batch files",
 		Long: `Sign batch files of transactions generated with --generate-only.
 The command processes list of transactions from a file (one StdTx each line), or multiple files.
@@ -257,7 +258,7 @@ func multisigSign(clientCtx client.Context, txBuilder client.TxBuilder, txFactor
 	}
 
 	if !isSigner {
-		return fmt.Errorf("signing key is not a part of multisig key")
+		return errors.New("signing key is not a part of multisig key")
 	}
 
 	if err = authclient.SignTxWithSignerAddress(
@@ -321,7 +322,7 @@ func setOutputFile(cmd *cobra.Command) (func(), error) {
 // GetSignCommand returns the transaction sign command.
 func GetSignCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "sign [file]",
+		Use:   "sign <file>",
 		Short: "Sign a transaction generated offline",
 		Long: `Sign a transaction created with the --generate-only flag.
 It will read a transaction from [file], sign it, and print its JSON encoding.
@@ -449,7 +450,7 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txFactory tx.Factory, 
 			return err
 		}
 		if !isSigner {
-			return fmt.Errorf("signing key is not a part of multisig key")
+			return errors.New("signing key is not a part of multisig key")
 		}
 
 		err = authclient.SignTxWithSignerAddress(

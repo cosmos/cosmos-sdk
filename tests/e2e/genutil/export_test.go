@@ -22,6 +22,7 @@ import (
 	"gotest.tools/v3/assert"
 
 	corectx "cosmossdk.io/core/context"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 
@@ -204,7 +205,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	_, err = app.Commit()
 	assert.NilError(t, err)
 
-	cmd := genutilcli.ExportCmd(func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions, modulesToExport []string) (types.ExportedApp, error) {
+	cmd := genutilcli.ExportCmd(func(_ log.Logger, _ corestore.KVStoreWithBatch, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions, modulesToExport []string) (types.ExportedApp, error) {
 		var simApp *simapp.SimApp
 		if height != -1 {
 			simApp = simapp.NewSimApp(logger, db, nil, false, appOptions)

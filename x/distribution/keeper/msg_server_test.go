@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestMsgSetWithdrawAddress(t *testing.T) {
@@ -176,11 +176,12 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 
 func TestMsgFundCommunityPool(t *testing.T) {
 	ctx, addrs, distrKeeper, dep := initFixture(t)
-	dep.poolKeeper.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	msgServer := keeper.NewMsgServerImpl(distrKeeper)
 
 	addr0Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addrs[0])
 	require.NoError(t, err)
+
+	dep.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addrs[0], types.ProtocolPoolModuleName, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))).Return(nil)
 
 	cases := []struct {
 		name   string
@@ -281,13 +282,14 @@ func TestMsgUpdateParams(t *testing.T) {
 
 func TestMsgCommunityPoolSpend(t *testing.T) {
 	ctx, addrs, distrKeeper, dep := initFixture(t)
-	dep.poolKeeper.EXPECT().DistributeFromCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	msgServer := keeper.NewMsgServerImpl(distrKeeper)
 
 	authorityAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
 	addr0Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addrs[0])
 	require.NoError(t, err)
+
+	dep.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ProtocolPoolModuleName, addrs[0], sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))).Return(nil)
 
 	cases := []struct {
 		name   string

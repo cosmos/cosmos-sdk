@@ -13,17 +13,9 @@ import (
 	_ "cosmossdk.io/api/cosmos/bank/v1beta1"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/core/header"
+	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
-	"cosmossdk.io/x/auth/ante"
-	antetestutil "cosmossdk.io/x/auth/ante/testutil"
-	authcodec "cosmossdk.io/x/auth/codec"
-	"cosmossdk.io/x/auth/keeper"
-	xauthsigning "cosmossdk.io/x/auth/signing"
-	authtestutil "cosmossdk.io/x/auth/testutil"
-	txtestutil "cosmossdk.io/x/auth/tx/testutil"
-	"cosmossdk.io/x/auth/types"
 	consensustypes "cosmossdk.io/x/consensus/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -40,6 +32,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	antetestutil "github.com/cosmos/cosmos-sdk/x/auth/ante/testutil"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/tx/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // TestAccount represents an account used in the tests in x/auth/ante.
@@ -77,7 +78,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	suite.ctx = testCtx.Ctx.WithIsCheckTx(isCheckTx).WithBlockHeight(1)
+	suite.ctx = testCtx.Ctx.WithIsCheckTx(isCheckTx).WithBlockHeight(1).WithHeaderInfo(header.Info{Height: 1, ChainID: testCtx.Ctx.ChainID()})
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
 
 	accNum := uint64(0)
@@ -105,9 +106,9 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	}, nil).AnyTimes()
 	consensustypes.RegisterQueryServer(grpcQueryRouter, suite.consensusKeeper)
 
-	suite.env = runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter))
+	suite.env = runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter))
 	suite.accountKeeper = keeper.NewAccountKeeper(
-		runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger()), suite.encCfg.Codec, types.ProtoBaseAccount, suite.acctsModKeeper, maccPerms, authcodec.NewBech32Codec("cosmos"),
+		runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger()), suite.encCfg.Codec, types.ProtoBaseAccount, suite.acctsModKeeper, maccPerms, authcodec.NewBech32Codec("cosmos"),
 		sdk.Bech32MainPrefix, types.NewModuleAddress("gov").String(),
 	)
 	suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)

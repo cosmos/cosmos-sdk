@@ -382,7 +382,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Module is the config object of the authz module.
+// Module is the config object of the epochs module.
 type Module struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

@@ -2,7 +2,7 @@ package feegrant
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"time"
 
 	"cosmossdk.io/core/appmodule"
@@ -28,7 +28,7 @@ var _ FeeAllowanceI = (*BasicAllowance)(nil)
 func (a *BasicAllowance) Accept(ctx context.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
 	environment, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodule.Environment)
 	if !ok {
-		return false, fmt.Errorf("environment not set")
+		return false, errors.New("environment not set")
 	}
 	headerInfo := environment.HeaderService.HeaderInfo(ctx)
 	if a.Expiration != nil && a.Expiration.Before(headerInfo.Time) {
@@ -72,4 +72,4 @@ func (a BasicAllowance) ExpiresAt() (*time.Time, error) {
 }
 
 // UpdatePeriodReset BasicAllowance does not update "PeriodReset"
-func (a BasicAllowance) UpdatePeriodReset(validTime time.Time) error { return nil }
+func (a BasicAllowance) UpdatePeriodReset(_ time.Time) error { return nil }

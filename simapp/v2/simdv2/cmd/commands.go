@@ -3,9 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"io"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -16,69 +14,34 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/cometbft"
+	"cosmossdk.io/server/v2/store"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
-	authcmd "cosmossdk.io/x/auth/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/server"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	genutilv2 "github.com/cosmos/cosmos-sdk/x/genutil/v2"
+	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2/cli"
 )
 
-var _ transaction.Codec[transaction.Tx] = &temporaryTxDecoder[transaction.Tx]{}
-
-type temporaryTxDecoder[T transaction.Tx] struct {
-	txConfig client.TxConfig
-}
-
-// Decode implements transaction.Codec.
-func (t *temporaryTxDecoder[T]) Decode(bz []byte) (T, error) {
-	var out T
-	tx, err := t.txConfig.TxDecoder()(bz)
-	if err != nil {
-		return out, err
-	}
-
-	var ok bool
-	out, ok = tx.(T)
-	if !ok {
-		return out, errors.New("unexpected Tx type")
-	}
-
-	return out, nil
-}
-
-// DecodeJSON implements transaction.Codec.
-func (t *temporaryTxDecoder[T]) DecodeJSON(bz []byte) (T, error) {
-	var out T
-	tx, err := t.txConfig.TxJSONDecoder()(bz)
-	if err != nil {
-		return out, err
-	}
-
-	var ok bool
-	out, ok = tx.(T)
-	if !ok {
-		return out, errors.New("unexpected Tx type")
-	}
-
-	return out, nil
-}
-
-func newApp[AppT serverv2.AppI[T], T transaction.Tx](
+func newApp[T transaction.Tx](
 	logger log.Logger, viper *viper.Viper,
-) AppT {
-	return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper)).(AppT)
+) serverv2.AppI[T] {
+	viper.Set(serverv2.FlagHome, simapp.DefaultNodeHome)
+
+	return serverv2.AppI[T](
+		simapp.NewSimApp[T](logger, viper))
 }
 
-func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
+func initRootCmd[T transaction.Tx](
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,
 	moduleManager *runtimev2.MM[T],
@@ -90,8 +53,7 @@ func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
 		genutilcli.InitCmd(moduleManager),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
-		// pruning.Cmd(newApp), // TODO add to comet server
-		// snapshot.Cmd(newApp), // TODO add to comet server
+		NewTestnetCmd(moduleManager),
 	)
 
 	logger, err := serverv2.NewLogger(viper.New(), rootCmd.OutOrStdout())
@@ -99,51 +61,37 @@ func initRootCmd[AppT serverv2.AppI[T], T transaction.Tx](
 		panic(fmt.Sprintf("failed to create logger: %v", err))
 	}
 
-	// Add empty server struct here for writing default config
-	if err = serverv2.AddCommands(
-		rootCmd,
-		newApp,
-		logger,
-		cometbft.New[AppT, T](&temporaryTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
-		grpc.New[AppT, T](),
-	); err != nil {
-		panic(err)
-	}
-
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
-		server.StatusCommand(),
-		genesisCommand[T](txConfig, moduleManager, appExport[T]),
+		genesisCommand(moduleManager, appExport[T]),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
 		offchain.OffChain(),
 	)
+
+	// wire server commands
+	if err = serverv2.AddCommands(
+		rootCmd,
+		newApp,
+		logger,
+		initServerConfig(),
+		cometbft.New(&genericTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
+		grpc.New[T](),
+		store.New[T](newApp),
+	); err != nil {
+		panic(err)
+	}
 }
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
 func genesisCommand[T transaction.Tx](
-	txConfig client.TxConfig,
 	moduleManager *runtimev2.MM[T],
-	appExport func(logger log.Logger,
-		height int64,
-		forZeroHeight bool,
-		jailAllowedAddrs []string,
-		viper *viper.Viper,
-		modulesToExport []string,
-	) (servertypes.ExportedApp, error),
+	appExport genutilv2.AppExporter,
 	cmds ...*cobra.Command,
 ) *cobra.Command {
-	compatAppExporter := func(logger log.Logger, db dbm.DB, traceWriter io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOpts servertypes.AppOptions, modulesToExport []string) (servertypes.ExportedApp, error) {
-		viperAppOpts, ok := appOpts.(*viper.Viper)
-		if !ok {
-			return servertypes.ExportedApp{}, errors.New("appOpts is not viper.Viper")
-		}
+	cmd := v2.Commands(moduleManager.Modules()[genutiltypes.ModuleName].(genutil.AppModule), moduleManager, appExport)
 
-		return appExport(logger, height, forZeroHeight, jailAllowedAddrs, viperAppOpts, modulesToExport)
-	}
-
-	cmd := genutilcli.Commands(txConfig, moduleManager.Modules()[genutiltypes.ModuleName].(genutil.AppModule), moduleManager, compatAppExporter)
 	for _, subCmd := range cmds {
 		cmd.AddCommand(subCmd)
 	}
@@ -162,11 +110,8 @@ func queryCommand() *cobra.Command {
 
 	cmd.AddCommand(
 		rpc.QueryEventForTxCmd(),
-		server.QueryBlockCmd(),
 		authcmd.QueryTxsByEventsCmd(),
-		server.QueryBlocksCmd(),
 		authcmd.QueryTxCmd(),
-		server.QueryBlockResultsCmd(),
 	)
 
 	return cmd
@@ -200,24 +145,63 @@ func txCommand() *cobra.Command {
 func appExport[T transaction.Tx](
 	logger log.Logger,
 	height int64,
-	forZeroHeight bool,
 	jailAllowedAddrs []string,
 	viper *viper.Viper,
-	modulesToExport []string,
-) (servertypes.ExportedApp, error) {
+) (genutilv2.ExportedApp, error) {
 	// overwrite the FlagInvCheckPeriod
 	viper.Set(server.FlagInvCheckPeriod, 1)
+	viper.Set(serverv2.FlagHome, simapp.DefaultNodeHome)
 
 	var simApp *simapp.SimApp[T]
 	if height != -1 {
 		simApp = simapp.NewSimApp[T](logger, viper)
 
 		if err := simApp.LoadHeight(uint64(height)); err != nil {
-			return servertypes.ExportedApp{}, err
+			return genutilv2.ExportedApp{}, err
 		}
 	} else {
 		simApp = simapp.NewSimApp[T](logger, viper)
 	}
 
-	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
+	return simApp.ExportAppStateAndValidators(jailAllowedAddrs)
+}
+
+var _ transaction.Codec[transaction.Tx] = &genericTxDecoder[transaction.Tx]{}
+
+type genericTxDecoder[T transaction.Tx] struct {
+	txConfig client.TxConfig
+}
+
+// Decode implements transaction.Codec.
+func (t *genericTxDecoder[T]) Decode(bz []byte) (T, error) {
+	var out T
+	tx, err := t.txConfig.TxDecoder()(bz)
+	if err != nil {
+		return out, err
+	}
+
+	var ok bool
+	out, ok = tx.(T)
+	if !ok {
+		return out, errors.New("unexpected Tx type")
+	}
+
+	return out, nil
+}
+
+// DecodeJSON implements transaction.Codec.
+func (t *genericTxDecoder[T]) DecodeJSON(bz []byte) (T, error) {
+	var out T
+	tx, err := t.txConfig.TxJSONDecoder()(bz)
+	if err != nil {
+		return out, err
+	}
+
+	var ok bool
+	out, ok = tx.(T)
+	if !ok {
+		return out, errors.New("unexpected Tx type")
+	}
+
+	return out, nil
 }

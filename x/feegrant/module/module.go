@@ -16,22 +16,22 @@ import (
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/keeper"
+	"cosmossdk.io/x/feegrant/simulation"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 var (
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasEndBlocker         = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
@@ -62,6 +62,7 @@ func NewAppModule(cdc codec.Codec, ak feegrant.AccountKeeper, bk feegrant.BankKe
 func (AppModule) IsAppModule() {}
 
 // Name returns the feegrant module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return feegrant.ModuleName
 }
@@ -152,4 +153,24 @@ func (AppModule) ConsensusVersion() uint64 { return 2 }
 // EndBlock returns the end blocker for the feegrant module.
 func (am AppModule) EndBlock(ctx context.Context) error {
 	return EndBlocker(ctx, am.keeper)
+}
+
+// AppModuleSimulation functions
+
+// GenerateGenesisState creates a randomized GenState of the feegrant module.
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
+
+// RegisterStoreDecoder registers a decoder for feegrant module's types
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
+	sdr[feegrant.StoreKey] = simulation.NewDecodeStore(am.cdc)
+}
+
+// WeightedOperations returns all the feegrant module operations with their respective weights.
+func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	return simulation.WeightedOperations(
+		simState.AppParams, simState.TxConfig,
+		am.accountKeeper, am.bankKeeper, am.keeper,
+	)
 }

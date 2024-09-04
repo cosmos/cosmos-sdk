@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -12,8 +11,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
-	coreapp "cosmossdk.io/core/app"
 	"cosmossdk.io/core/appmodule"
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/consensus/exported"
 	"cosmossdk.io/x/consensus/types"
@@ -21,31 +20,50 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-var StoreKey = "Consensus"
-
 type Keeper struct {
 	appmodule.Environment
 
 	authority   string
 	ParamsStore collections.Item[cmtproto.ConsensusParams]
-	// storage of the last comet info
-	cometInfo collections.Item[types.CometInfo]
 }
 
 var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
 
+// NewKeeper creates a new Keeper instance.
 func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, authority string) Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	return Keeper{
 		Environment: env,
 		authority:   authority,
 		ParamsStore: collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
-		cometInfo:   collections.NewItem(sb, collections.NewPrefix("CometInfo"), "comet_info", codec.CollValue[types.CometInfo](cdc)),
 	}
 }
 
+// GetAuthority returns the authority address for the consensus module.
+// This address has the permission to update consensus parameters.
 func (k *Keeper) GetAuthority() string {
 	return k.authority
+}
+
+// InitGenesis initializes the initial state of the module
+func (k *Keeper) InitGenesis(ctx context.Context) error {
+	value, ok := ctx.Value(corecontext.CometParamsInitInfoKey).(*types.MsgUpdateParams)
+	if !ok || value == nil {
+		// no error for appv1 and appv2
+		return nil
+	}
+
+	consensusParams, err := value.ToProtoConsensusParams()
+	if err != nil {
+		return err
+	}
+
+	nextParams, err := k.paramCheck(ctx, consensusParams)
+	if err != nil {
+		return err
+	}
+
+	return k.ParamsStore.Set(ctx, nextParams.ToProto())
 }
 
 // Querier
@@ -66,6 +84,7 @@ func (k Keeper) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types
 
 var _ types.MsgServer = Keeper{}
 
+// UpdateParams updates the consensus parameters.
 func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if k.GetAuthority() != msg.Authority {
 		return nil, fmt.Errorf("invalid authority; expected %s, got %s", k.GetAuthority(), msg.Authority)
@@ -76,26 +95,8 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 		return nil, err
 	}
 
-	paramsProto, err := k.ParamsStore.Get(ctx)
-
-	var params cmttypes.ConsensusParams
+	nextParams, err := k.paramCheck(ctx, consensusParams)
 	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			params = cmttypes.ConsensusParams{}
-		} else {
-			return nil, err
-		}
-	} else {
-		params = cmttypes.ConsensusParamsFromProto(paramsProto)
-	}
-
-	nextParams := params.Update(&consensusParams)
-
-	if err := nextParams.ValidateBasic(); err != nil {
-		return nil, err
-	}
-
-	if err := params.ValidateUpdate(&consensusParams, k.HeaderService.HeaderInfo(ctx).Height); err != nil {
 		return nil, err
 	}
 
@@ -113,30 +114,32 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
-func (k Keeper) SetCometInfo(ctx context.Context, msg *types.MsgSetCometInfo) (*types.MsgSetCometInfoResponse, error) {
-	if !bytes.Equal(coreapp.ConsensusIdentity, []byte(msg.Authority)) {
-		return nil, fmt.Errorf("invalid authority; expected %s, got %s", coreapp.ConsensusIdentity, msg.Authority)
-	}
+// paramCheck validates the consensus params
+func (k Keeper) paramCheck(ctx context.Context, consensusParams cmtproto.ConsensusParams) (*cmttypes.ConsensusParams, error) {
+	var params cmttypes.ConsensusParams
 
-	cometInfo := types.CometInfo{
-		Evidence:        msg.Evidence,
-		ValidatorsHash:  msg.ValidatorsHash,
-		ProposerAddress: msg.ProposerAddress,
-		LastCommit:      msg.LastCommit,
-	}
-
-	if err := k.cometInfo.Set(ctx, cometInfo); err != nil {
+	paramsProto, err := k.ParamsStore.Get(ctx)
+	if err == nil {
+		// initialize version params with zero value if not set
+		if paramsProto.Version == nil {
+			paramsProto.Version = &cmtproto.VersionParams{}
+		}
+		params = cmttypes.ConsensusParamsFromProto(paramsProto)
+	} else if errors.Is(err, collections.ErrNotFound) {
+		params = cmttypes.ConsensusParams{}
+	} else {
 		return nil, err
 	}
 
-	return &types.MsgSetCometInfoResponse{}, nil
-}
+	nextParams := params.Update(&consensusParams)
 
-func (k Keeper) GetCometInfo(ctx context.Context, _ *types.QueryGetCometInfoRequest) (*types.QueryGetCometInfoResponse, error) {
-	cometInfo, err := k.cometInfo.Get(ctx)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+	if err := nextParams.ValidateBasic(); err != nil {
+		return nil, err
 	}
 
-	return &types.QueryGetCometInfoResponse{CometInfo: &cometInfo}, nil
+	if err := params.ValidateUpdate(&consensusParams, k.HeaderService.HeaderInfo(ctx).Height); err != nil {
+		return nil, err
+	}
+
+	return &nextParams, nil
 }

@@ -3,14 +3,15 @@ package sims
 import (
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/log"
-	tlog "cosmossdk.io/log"
+	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -50,6 +51,7 @@ type SimulationApp interface {
 	SetNotSigverifyTx()
 	GetBaseApp() *baseapp.BaseApp
 	TxConfig() client.TxConfig
+	Close() error
 }
 
 // Run is a helper function that runs a simulation test with the given parameters.
@@ -60,7 +62,7 @@ func Run[T SimulationApp](
 	t *testing.T,
 	appFactory func(
 		logger log.Logger,
-		db dbm.DB,
+		db corestore.KVStoreWithBatch,
 		traceStore io.Writer,
 		loadLatest bool,
 		appOpts servertypes.AppOptions,
@@ -86,7 +88,7 @@ func RunWithSeeds[T SimulationApp](
 	t *testing.T,
 	appFactory func(
 		logger log.Logger,
-		db dbm.DB,
+		db corestore.KVStoreWithBatch,
 		traceStore io.Writer,
 		loadLatest bool,
 		appOpts servertypes.AppOptions,
@@ -109,12 +111,11 @@ func RunWithSeeds[T SimulationApp](
 			testInstance := NewSimulationAppInstance(t, tCfg, appFactory)
 			var runLogger log.Logger
 			if cli.FlagVerboseValue {
-				runLogger = tlog.NewTestLogger(t)
+				runLogger = log.NewTestLogger(t)
 			} else {
-				runLogger = tlog.NewTestLoggerInfo(t)
+				runLogger = log.NewTestLoggerInfo(t)
 			}
 			runLogger = runLogger.With("seed", tCfg.Seed)
-
 			app := testInstance.App
 			stateFactory := setupStateFactory(app)
 			simParams, err := simulation.SimulateFromSeedX(
@@ -124,7 +125,7 @@ func RunWithSeeds[T SimulationApp](
 				app.GetBaseApp(),
 				stateFactory.AppStateFn,
 				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-				simtestutil.SimulationOperations(app, stateFactory.Codec, tCfg, testInstance.App.TxConfig()),
+				simtestutil.SimulationOperations(app, stateFactory.Codec, tCfg, app.TxConfig()),
 				stateFactory.BlockedAddr,
 				tCfg,
 				stateFactory.Codec,
@@ -134,12 +135,13 @@ func RunWithSeeds[T SimulationApp](
 			require.NoError(t, err)
 			err = simtestutil.CheckExportSimulation(app, tCfg, simParams)
 			require.NoError(t, err)
-			if tCfg.Commit {
-				simtestutil.PrintStats(testInstance.DB)
+			if tCfg.Commit && tCfg.DBBackend == "goleveldb" {
+				simtestutil.PrintStats(testInstance.DB.(*dbm.GoLevelDB))
 			}
 			for _, step := range postRunActions {
 				step(t, testInstance)
 			}
+			require.NoError(t, app.Close())
 		})
 	}
 }
@@ -154,7 +156,7 @@ func RunWithSeeds[T SimulationApp](
 //   - ExecLogWriter: Captures block and operation data coming from the simulation
 type TestInstance[T SimulationApp] struct {
 	App           T
-	DB            dbm.DB
+	DB            corestore.KVStoreWithBatch
 	WorkDir       string
 	Cfg           simtypes.Config
 	AppLogger     log.Logger
@@ -169,23 +171,25 @@ type TestInstance[T SimulationApp] struct {
 func NewSimulationAppInstance[T SimulationApp](
 	t *testing.T,
 	tCfg simtypes.Config,
-	appFactory func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	appFactory func(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
 ) TestInstance[T] {
 	t.Helper()
 	workDir := t.TempDir()
+	require.NoError(t, os.Mkdir(filepath.Join(workDir, "data"), 0o755))
+
 	dbDir := filepath.Join(workDir, "leveldb-app-sim")
 	var logger log.Logger
 	if cli.FlagVerboseValue {
-		logger = tlog.NewTestLogger(t)
+		logger = log.NewTestLogger(t)
 	} else {
-		logger = tlog.NewTestLoggerError(t)
+		logger = log.NewTestLoggerError(t)
 	}
 	logger = logger.With("seed", tCfg.Seed)
 
 	db, err := dbm.NewDB("Simulation", dbm.BackendType(tCfg.DBBackend), dbDir)
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		require.NoError(t, db.Close())
+		_ = db.Close() // ensure db is closed
 	})
 	appOptions := make(simtestutil.AppOptionsMap)
 	appOptions[flags.FlagHome] = workDir

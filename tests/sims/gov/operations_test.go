@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -14,9 +15,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	_ "cosmossdk.io/x/accounts"
-	_ "cosmossdk.io/x/auth"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	_ "cosmossdk.io/x/auth/tx/config"
 	_ "cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/testutil"
@@ -37,6 +35,9 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 var (
@@ -56,8 +57,8 @@ func (m MockWeightedProposals) DefaultWeight() int {
 	return m.n
 }
 
-func (m MockWeightedProposals) MsgSimulatorFn() simtypes.MsgSimulatorFn {
-	return func(r *rand.Rand, _ []simtypes.Account, _ address.Codec) (sdk.Msg, error) {
+func (m MockWeightedProposals) MsgSimulatorFn() simtypes.MsgSimulatorFnX {
+	return func(_ context.Context, r *rand.Rand, _ []simtypes.Account, _ address.Codec) (sdk.Msg, error) {
 		return nil, nil
 	}
 }

@@ -145,7 +145,6 @@ jobs:
           path: ./tests/e2e-profile.out
 
   test-system:
-    needs: [tests, test-integration, test-e2e]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -38,9 +38,11 @@ type Meter interface {
 	Consume(amount Gas, descriptor string) error
 	Refund(amount Gas, descriptor string) error
 	Remaining() Gas
+	Consumed() Gas
 	Limit() Gas
 }
 
+// GasConfig defines the gas costs for the application.
 type GasConfig struct {
 	HasCost          Gas
 	DeleteCost       Gas

@@ -7,7 +7,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 
-	appmanager "cosmossdk.io/core/app"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/cometbft/mempool"
@@ -15,7 +15,7 @@ import (
 )
 
 type AppManager[T transaction.Tx] interface {
-	ValidateTx(ctx context.Context, tx T) (appmanager.TxResult, error)
+	ValidateTx(ctx context.Context, tx T) (server.TxResult, error)
 	Query(ctx context.Context, version uint64, request transaction.Msg) (response transaction.Msg, err error)
 }
 

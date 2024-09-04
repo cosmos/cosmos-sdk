@@ -2,7 +2,7 @@ package appdata
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"sync"
 	"testing"
 )
@@ -47,7 +47,12 @@ func TestAsyncListenerMux(t *testing.T) {
 			BufferSize: 16, Context: ctx, DoneWaitGroup: wg,
 		}, listener1, listener2)
 
-		callAllCallbacksOnces(t, res)
+		completeCb := callAllCallbacksOnces(t, res)
+		if completeCb != nil {
+			if err := completeCb(); err != nil {
+				t.Fatal(err)
+			}
+		}
 
 		expectedCalls := []string{
 			"InitializeModuleData",
@@ -72,15 +77,23 @@ func TestAsyncListenerMux(t *testing.T) {
 		listener1 := callCollector(1, func(name string, _ int, _ Packet) {
 			calls1 = append(calls1, name)
 		})
-		listener1.Commit = func(data CommitData) error {
-			return fmt.Errorf("error")
+		listener1.Commit = func(data CommitData) (completionCallback func() error, err error) {
+			return nil, errors.New("error")
 		}
 		listener2 := callCollector(2, func(name string, _ int, _ Packet) {
 			calls2 = append(calls2, name)
 		})
 		res := AsyncListenerMux(AsyncListenerOptions{}, listener1, listener2)
 
-		err := res.Commit(CommitData{})
+		cb, err := res.Commit(CommitData{})
+		if err != nil {
+			t.Fatalf("expected first error to be nil, got %v", err)
+		}
+		if cb == nil {
+			t.Fatalf("expected completion callback")
+		}
+
+		err = cb()
 		if err == nil || err.Error() != "error" {
 			t.Fatalf("expected error, got %v", err)
 		}
@@ -89,21 +102,19 @@ func TestAsyncListenerMux(t *testing.T) {
 
 func TestAsyncListener(t *testing.T) {
 	t.Run("call cancel", func(t *testing.T) {
-		commitChan := make(chan error)
 		ctx, cancel := context.WithCancel(context.Background())
 		wg := &sync.WaitGroup{}
 		var calls []string
 		listener := callCollector(1, func(name string, _ int, _ Packet) {
 			calls = append(calls, name)
 		})
-		res := AsyncListener(AsyncListenerOptions{BufferSize: 16, Context: ctx, DoneWaitGroup: wg},
-			commitChan, listener)
+		res := AsyncListener(AsyncListenerOptions{BufferSize: 16, Context: ctx, DoneWaitGroup: wg}, listener)
 
-		callAllCallbacksOnces(t, res)
-
-		err := <-commitChan
-		if err != nil {
-			t.Fatalf("expected nil, got %v", err)
+		completeCb := callAllCallbacksOnces(t, res)
+		if completeCb != nil {
+			if err := completeCb(); err != nil {
+				t.Fatal(err)
+			}
 		}
 
 		checkExpectedCallOrder(t, calls, []string{
@@ -124,21 +135,23 @@ func TestAsyncListener(t *testing.T) {
 	})
 
 	t.Run("error", func(t *testing.T) {
-		commitChan := make(chan error)
 		var calls []string
 		listener := callCollector(1, func(name string, _ int, _ Packet) {
 			calls = append(calls, name)
 		})
 
 		listener.OnKVPair = func(updates KVPairData) error {
-			return fmt.Errorf("error")
+			return errors.New("error")
 		}
 
-		res := AsyncListener(AsyncListenerOptions{BufferSize: 16}, commitChan, listener)
+		res := AsyncListener(AsyncListenerOptions{BufferSize: 16}, listener)
 
-		callAllCallbacksOnces(t, res)
+		completeCb := callAllCallbacksOnces(t, res)
+		if completeCb == nil {
+			t.Fatalf("expected completion callback")
+		}
 
-		err := <-commitChan
+		err := completeCb()
 		if err == nil || err.Error() != "error" {
 			t.Fatalf("expected error, got %v", err)
 		}

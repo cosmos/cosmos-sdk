@@ -1,4 +1,4 @@
-package app
+package server
 
 import (
 	"context"
@@ -9,17 +9,7 @@ import (
 	"cosmossdk.io/core/transaction"
 )
 
-type QueryRequest struct {
-	Height int64
-	Path   string
-	Data   []byte
-}
-
-type QueryResponse struct {
-	Height int64
-	Value  []byte
-}
-
+// BlockRequest defines the request structure for a block coming from consensus server to the state transition function.
 type BlockRequest[T transaction.Tx] struct {
 	Height  uint64
 	Time    time.Time
@@ -32,8 +22,8 @@ type BlockRequest[T transaction.Tx] struct {
 	IsGenesis bool
 }
 
+// BlockResponse defines the response structure for a block coming from the state transition function to consensus server.
 type BlockResponse struct {
-	Apphash          []byte
 	ValidatorUpdates []appmodulev2.ValidatorUpdate
 	PreBlockEvents   []event.Event
 	BeginBlockEvents []event.Event
@@ -41,30 +31,22 @@ type BlockResponse struct {
 	EndBlockEvents   []event.Event
 }
 
-type RequestInitChain struct {
-	Time          time.Time
-	ChainId       string
-	Validators    []appmodulev2.ValidatorUpdate
-	AppStateBytes []byte
-	InitialHeight int64
-}
-
-type ResponseInitChain struct {
-	Validators []appmodulev2.ValidatorUpdate
-	AppHash    []byte
-}
-
+// TxResult defines the result of a transaction execution.
 type TxResult struct {
-	Events    []event.Event
-	Resp      []transaction.Msg
-	Error     error
-	Code      uint32
-	Data      []byte
-	Log       string
-	Info      string
+	// Events produced by the transaction.
+	Events []event.Event
+	// Response messages produced by the transaction.
+	Resp []transaction.Msg
+	// Error produced by the transaction.
+	Error error
+	// Code produced by the transaction.
+	// A non-zero code is an error that is either define by the module via the cosmossdk.io/errors/v2 package
+	// or injected through the antehandler along the execution of the transaction.
+	Code uint32
+	// GasWanted is the maximum units of work we allow this tx to perform.
 	GasWanted uint64
-	GasUsed   uint64
-	Codespace string
+	// GasUsed is the amount of gas actually consumed.
+	GasUsed uint64
 }
 
 // VersionModifier defines the interface fulfilled by BaseApp

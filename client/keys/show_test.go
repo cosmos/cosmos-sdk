@@ -116,8 +116,10 @@ func Test_runShowCmd(t *testing.T) {
 	require.NoError(t, err)
 	addr, err := k.GetAddress()
 	require.NoError(t, err)
+	addrStr, err := clientCtx.AddressCodec.BytesToString(addr)
+	require.NoError(t, err)
 	cmd.SetArgs([]string{
-		addr.String(),
+		addrStr,
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),

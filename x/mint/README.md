@@ -109,7 +109,7 @@ related to minting (in the `data` field)
 * Minter: `0x00 -> ProtocolBuffer(minter)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/ace7bca105a8d5363782cfd19c6f169b286cd3b2/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L11-L29
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L11-L29
 ```
 
 ### Params
@@ -122,7 +122,7 @@ A value of `0` indicates an unlimited supply.
 * Params: `mint/params -> legacy_amino(params)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/7068d0da52d954430054768b2c56aff44666933b/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L26-L68
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L31-L73
 ```
 
 ## Epoch minting

@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	_ Mempool  = (*PriorityNonceMempool[int64])(nil)
-	_ Iterator = (*PriorityNonceIterator[int64])(nil)
+	_ ExtMempool = (*PriorityNonceMempool[int64])(nil)
+	_ Iterator   = (*PriorityNonceIterator[int64])(nil)
 )
 
 type (

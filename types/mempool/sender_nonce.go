@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	_ Mempool  = (*SenderNonceMempool)(nil)
-	_ Iterator = (*senderNonceMempoolIterator)(nil)
+	_ ExtMempool = (*SenderNonceMempool)(nil)
+	_ Iterator   = (*senderNonceMempoolIterator)(nil)
 )
 
 var DefaultMaxTx = -1

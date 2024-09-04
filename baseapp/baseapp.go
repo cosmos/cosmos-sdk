@@ -73,9 +73,9 @@ type BaseApp struct {
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
 
-	mempool     mempool.Mempool // application side mempool
-	anteHandler sdk.AnteHandler // ante handler for fee and auth
-	postHandler sdk.PostHandler // post handler, optional
+	mempool     mempool.ExtMempool // application side mempool
+	anteHandler sdk.AnteHandler    // ante handler for fee and auth
+	postHandler sdk.PostHandler    // post handler, optional
 
 	initChainer        sdk.InitChainer                // ABCI InitChain handler
 	preBlocker         sdk.PreBlocker                 // logic to run before BeginBlocker

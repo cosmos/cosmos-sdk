@@ -208,14 +208,14 @@ type (
 	// DefaultProposalHandler defines the default ABCI PrepareProposal and
 	// ProcessProposal handlers.
 	DefaultProposalHandler struct {
-		mempool          mempool.Mempool
+		mempool          mempool.ExtMempool
 		txVerifier       ProposalTxVerifier
 		txSelector       TxSelector
 		signerExtAdapter mempool.SignerExtractionAdapter
 	}
 )
 
-func NewDefaultProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier) *DefaultProposalHandler {
+func NewDefaultProposalHandler(mp mempool.ExtMempool, txVerifier ProposalTxVerifier) *DefaultProposalHandler {
 	return &DefaultProposalHandler{
 		mempool:          mp,
 		txVerifier:       txVerifier,

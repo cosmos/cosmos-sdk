@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ Mempool = (*NoOpMempool)(nil)
+var _ ExtMempool = (*NoOpMempool)(nil)
 
 // NoOpMempool defines a no-op mempool. Transactions are completely discarded and
 // ignored when BaseApp interacts with the mempool.

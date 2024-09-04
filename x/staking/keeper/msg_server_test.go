@@ -1320,7 +1320,7 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 			name:      "pubkey already associated with another validator",
 			malleate:  func() sdk.Context { return ctx },
 			isErr:     true,
-			errMsg:    "validator already exists for this pubkey; must use new validator pubkey",
+			errMsg:    "validator already exist for this pubkey; must use new validator pubkey",
 			newPubKey: existingPubkey,
 			validator: validators[0].GetOperator(),
 		},

@@ -337,6 +337,9 @@ func (app *SimApp) Precommiter(ctx sdk.Context) {
 // Close implements the Application interface and closes all necessary application
 // resources.
 func (app *SimApp) Close() error {
+	if err := app.BaseApp.Close(); err != nil {
+		return err
+	}
 	return app.UnorderedTxManager.Close()
 }
 

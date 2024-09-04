@@ -156,13 +156,17 @@ It only exposes the following methods to the hypervisor:
 - `create(account address, state config)`: creates a new account state with the specified address and **state config**.
 - `migrate(account address, new state config)`: migrates the account state with the specified address to a new state config
 - `destroy(account address)`: destroys the account state with the specified address
+- `discard_cleanup(state token)`: called by the hypervisor when a call fails due to a fatal unwinding error (such as out of gas), with any state tokens that were used in the call stack that is unwound. This allows for a graceful cleanup of state resources in the event of fatal errors.
 
 **State config** are optional bytes that each account handler's metadata can define which get passed to the **state handler** when an account is created.
 These bytes can be used by the **state handler** to determine what type of state and commitment store the **account** needs.
 
-A **state token** is an opaque array of 32-bytes that is passed in each message request.
-The hypervisor has no knowledge of what this token represents or how it is created,
-but it is expected that modules that mange state do understand this token and use it to manage all state changes
+A **state token** is an array of 32-bytes that is passed in each message request.
+It is opaque to the hypervisor except that the first bit of the first byte (the high bit)
+indicates the volatility of the state token.
+If the high bit is set then the state token is **volatile**, and if it is unset, it is **readonly**.
+Otherwise, the hypervisor has no knowledge of what this token represents or how it is created.
+It is expected that modules that manage state do understand this token and use it to manage all state changes
 in consistent transactions.
 All side effects regarding state, events, etc. are expected to coordinate around the usage of this token.
 It is possible that state modules expose methods for creating new **state tokens**
@@ -170,7 +174,7 @@ for nesting transactions.
 
 **Volatility** describes a message handler's behavior with respect to state and side effects.
 It is an enum value that can have one of the following values:
-* `volatile`: the handler can have side effects and send `volatile`, `radonly` or `pure` messages to other accounts. Such handlers are expected to both read and write state.
+* `volatile`: the handler can have side effects and send `volatile`, `readonly` or `pure` messages to other accounts. Such handlers are expected to both read and write state.
 * `readonly`: the handler cannot cause effects side effects and can only send `readonly` or `pure` messages to other accounts. Such handlers are expected to only read state.
 * `pure`: the handler cannot cause any side effects and can only call other pure handlers. Such handlers are expected to neither read nor write state.
 
@@ -178,6 +182,10 @@ The hypervisor will enforce **volatility** rules when routing messages to accoun
 Caller addresses are always passed to `volatile` methods,
 they are not required when calling `readonly` methods but will be passed when available,
 and they are not passed at all to `pure` methods.
+Volatile handlers can only be called with volatile state tokens.
+Readonly handlers cannot call volatile handlers even if they receive a volatile state token,
+except in the case that they acquire a new volatile state token.
+This can be used for simulations.
 
 ### Management of Account Lifecycle with the Hypervisor
 
@@ -226,6 +234,18 @@ a message on behalf of any account.
 To support these, the hypervisor will accept an **authorization middleware** parameter which checks
 whether a given real caller account (verified by the hypervisor) is authorized to act as a different caller
 account for a given message request.
+
+### Gas
+
+Gas is a measure of computational resources consumed by a message handler.
+Whenever a gas limit is imposed, if at any point that gas limit is exceeded,
+execution will halt and an out-of-gas error will be returned to the last handler
+executing without a gas limit.
+If at the execution root (made via a call external to the hypervisor), the gas limit is
+set to zero, then execution of that handler is unmetered and essentially infinite.
+Such unmetered handlers may set any gas limit they wish for nested calls.
+Once there is a gas limit, gas consumed is a monotonically increasing value that can't be bypassed
+and is unaffected by any nesting of state tokens.
 
 ### Message Data and Packet Specification
 

@@ -241,7 +241,7 @@ for that handler.
 #### Message Packet Header
 
 **Message packets** always start with the 512-byte header with the following layout.
-- **message name**: a 128-byte array with the first byte indicating the length of the string
+- **message name**: a 128-byte array with the first byte indicating the length of the message name
 - **self-address**: a 64-byte array with the first byte indicating the length of the address
 - **caller-address**: a 64-byte array with the first byte indicating the length of the address
 - **context token**: a 32-byte array
@@ -254,14 +254,10 @@ for that handler.
 - **output data pointer 2**: 16 bytes
 - remaining bytes: reserved for future use, should be zeroed when a packet is initialized
 
-The minimum size allocated for a **message packet** is thus 512 bytes,
-but larger packets may be allocated so that data pointers can point to memory within the same packet.
-The actual packet size always be passed as a parameter to invoke entry points in the hypervisor and virtual machines.
-
 #### Data Pointer
 
 A **data pointer** is specified as follows:
-- **native pointer**: 8-bytes, a pointer to the actual data in the native environment or zero
+- **native pointer**: 8-bytes, a pointer to a separate buffer in the native environment or zero
 - **length**: unsigned 32-bit integer
 - **capacity or offset**: unsigned 32-bit integer
 
@@ -279,9 +275,8 @@ When passing a packet from one environment to another, a VM should follow these 
 3. if input data pointers point to additional buffers, then allocate these buffers in the new environment
 and update the **data pointers** in the target packet to point to the new buffers
 4. (optional) output data pointers may point to pre-allocated buffers or regions, but should generally have zero-length, if needed, do special handling of these
-5. after execution, copy the **output param space**
-and update the **output data pointers** in the source packet to point to the appropriate memory
-regions, copying and allocating memory as needed
+5. after execution, copy and allocate output buffers as needed,
+and update the **output data pointers** in the source packet to point to the appropriate memory regions
 
 ## Abandoned Ideas (Optional)
 

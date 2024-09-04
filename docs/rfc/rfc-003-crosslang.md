@@ -242,16 +242,15 @@ The **message packet** header occupies 512 bytes and is laid out as follows:
 - **state token**: a 32-byte array
 - **message name hash**: the first 8-bytes of the SHA256 hash of the message name, which can be used for simplified routing
 - **gas limit**: an unsigned 64-bit integer
-- **input param space**: 32 bytes which may be used as input parameters message handlers choose
-- **output param space**: 32 bytes which may be used as output parameters message handlers choose
 - **input data pointer 1**: 16 bytes, see below for the **data pointer** spec
 - **input data pointer 2**: 16 bytes
 - **output data pointer 1**: 16 bytes
 - **output data pointer 2**: 16 bytes
-- remaining 96 bytes: reserved for future use, should be zeroed when a packet is initialized
+- remaining bytes: reserved for future use, should be zeroed when a packet is initialized
 
 The minimum size allocated for a **message packet** is thus 512 bytes,
 but larger packets may be allocated so that data pointers can point to memory within the same packet.
+The actual packet size always be passed as a parameter to invoke entry points in the hypervisor and virtual machines.
 
 #### Data Pointer
 

@@ -57,7 +57,7 @@ type Manager struct {
 func NewManager(dataDir string) *Manager {
 	path := filepath.Join(dataDir, dirName)
 	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
-		if err = os.Mkdir(path, os.ModePerm); err != nil {
+		if err = os.MkdirAll(path, os.ModePerm); err != nil {
 			panic(fmt.Errorf("failed to create unordered txs directory: %w", err))
 		}
 	}

@@ -47,6 +47,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### API Breaking Changes
 
 * (baseapp) [#21413](https://github.com/cosmos/cosmos-sdk/pull/21413) Add `SelectBy` method to `Mempool` interface, which is thread-safe to use.
+* (x/genutil) [#21372](https://github.com/cosmos/cosmos-sdk/pull/21372) Remove `AddGenesisAccount` for `AddGenesisAccounts`.
 
 ### Deprecated
 

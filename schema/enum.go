@@ -113,3 +113,12 @@ func (e EnumType) GetNumericKind() Kind {
 	}
 	return e.NumericKind
 }
+
+func (e EnumType) DefaultValue() (value interface{}, validDefault bool) {
+	for _, definition := range e.Values {
+		if definition.Value == 0 {
+			return definition.Name, true
+		}
+	}
+	return nil, false
+}

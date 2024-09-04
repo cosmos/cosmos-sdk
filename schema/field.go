@@ -89,3 +89,40 @@ func (c Field) ValidateValue(value interface{}, typeSet TypeSet) error {
 
 	return nil
 }
+
+func (c Field) DefaultValue(typeSet TypeSet) (value interface{}, validDefault bool) {
+	switch c.Kind {
+	case StringKind:
+		return "", true
+	case Int8Kind:
+		return int8(0), true
+	case Int16Kind:
+		return int16(0), true
+	case Int32Kind:
+		return int32(0), true
+	case Int64Kind:
+		return int64(0), true
+	case Uint8Kind:
+		return uint8(0), true
+	case Uint16Kind:
+		return uint16(0), true
+	case Uint32Kind:
+		return uint32(0), true
+	case Uint64Kind:
+		return uint64(0), true
+	case Float32Kind:
+		return float32(0), true
+	case Float64Kind:
+		return float64(0), true
+	case BoolKind:
+		return false, true
+	case EnumKind:
+		t, found := typeSet.LookupEnumType(c.ReferencedType)
+		if !found {
+			return nil, false
+		}
+		return t.DefaultValue()
+		//default:
+		//	return nil, false
+	}
+}

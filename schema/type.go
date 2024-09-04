@@ -17,7 +17,12 @@ type Type interface {
 // Currently, the only implementation is ModuleSchema.
 type TypeSet interface {
 	// LookupType looks up a type by name.
-	LookupType(name string) (Type, bool)
+	LookupType(name string) (t Type, found bool)
+
+	// LookupEnumType is a convenience method which looks up
+	LookupEnumType(name string) (t EnumType, found bool)
+
+	LookupObjectType(name string) (t ObjectType, found bool)
 
 	// AllTypes calls the given function for each type in the type set.
 	// This function is compatible with go 1.23 iterators and can be used like this:
@@ -25,6 +30,10 @@ type TypeSet interface {
 	//     // do something with t
 	// }
 	AllTypes(f func(Type) bool)
+
+	EnumTypes(f func(EnumType) bool)
+
+	ObjectTypes(f func(ObjectType) bool)
 
 	// isTypeSet is a private method that ensures that only types in this package can be marked as type sets.
 	isTypeSet()

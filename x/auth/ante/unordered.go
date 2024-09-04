@@ -11,13 +11,13 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/core/appmodule/v2"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/auth/ante/unorderedtx"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 )
 
 // bufPool is a pool of bytes.Buffer objects to reduce memory allocations.
@@ -47,14 +47,14 @@ type UnorderedTxDecorator struct {
 	// maxUnOrderedTTL defines the maximum TTL a transaction can define.
 	maxTimeoutDuration time.Duration
 	txManager          *unorderedtx.Manager
-	env                appmodule.Environment
+	env                appmodulev2.Environment
 	sha256Cost         uint64
 }
 
 func NewUnorderedTxDecorator(
 	maxDuration time.Duration,
 	m *unorderedtx.Manager,
-	env appmodule.Environment,
+	env appmodulev2.Environment,
 	gasCost uint64,
 ) *UnorderedTxDecorator {
 	return &UnorderedTxDecorator{

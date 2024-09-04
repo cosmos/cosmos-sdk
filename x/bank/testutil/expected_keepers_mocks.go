@@ -9,8 +9,8 @@ import (
 	reflect "reflect"
 
 	address "cosmossdk.io/core/address"
-	types "cosmossdk.io/x/auth/types"
-	types0 "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
+	types0 "github.com/cosmos/cosmos-sdk/x/auth/types"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -52,10 +52,10 @@ func (mr *MockAccountKeeperMockRecorder) AddressCodec() *gomock.Call {
 }
 
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types0.AccAddress) types0.AccountI {
+func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddress) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
-	ret0, _ := ret[0].(types0.AccountI)
+	ret0, _ := ret[0].(types.AccountI)
 	return ret0
 }
 
@@ -66,10 +66,10 @@ func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr interface{}) *gomo
 }
 
 // GetModuleAccount mocks base method.
-func (m *MockAccountKeeper) GetModuleAccount(ctx context.Context, moduleName string) types0.ModuleAccountI {
+func (m *MockAccountKeeper) GetModuleAccount(ctx context.Context, moduleName string) types.ModuleAccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetModuleAccount", ctx, moduleName)
-	ret0, _ := ret[0].(types0.ModuleAccountI)
+	ret0, _ := ret[0].(types.ModuleAccountI)
 	return ret0
 }
 
@@ -80,10 +80,10 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAccount(ctx, moduleName interf
 }
 
 // GetModuleAccountAndPermissions mocks base method.
-func (m *MockAccountKeeper) GetModuleAccountAndPermissions(ctx context.Context, moduleName string) (types0.ModuleAccountI, []string) {
+func (m *MockAccountKeeper) GetModuleAccountAndPermissions(ctx context.Context, moduleName string) (types.ModuleAccountI, []string) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetModuleAccountAndPermissions", ctx, moduleName)
-	ret0, _ := ret[0].(types0.ModuleAccountI)
+	ret0, _ := ret[0].(types.ModuleAccountI)
 	ret1, _ := ret[1].([]string)
 	return ret0, ret1
 }
@@ -95,10 +95,10 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAccountAndPermissions(ctx, mod
 }
 
 // GetModuleAddress mocks base method.
-func (m *MockAccountKeeper) GetModuleAddress(moduleName string) types0.AccAddress {
+func (m *MockAccountKeeper) GetModuleAddress(moduleName string) types.AccAddress {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetModuleAddress", moduleName)
-	ret0, _ := ret[0].(types0.AccAddress)
+	ret0, _ := ret[0].(types.AccAddress)
 	return ret0
 }
 
@@ -109,10 +109,10 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(moduleName interface{}
 }
 
 // GetModuleAddressAndPermissions mocks base method.
-func (m *MockAccountKeeper) GetModuleAddressAndPermissions(moduleName string) (types0.AccAddress, []string) {
+func (m *MockAccountKeeper) GetModuleAddressAndPermissions(moduleName string) (types.AccAddress, []string) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetModuleAddressAndPermissions", moduleName)
-	ret0, _ := ret[0].(types0.AccAddress)
+	ret0, _ := ret[0].(types.AccAddress)
 	ret1, _ := ret[1].([]string)
 	return ret0, ret1
 }
@@ -124,10 +124,10 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAddressAndPermissions(moduleNa
 }
 
 // GetModulePermissions mocks base method.
-func (m *MockAccountKeeper) GetModulePermissions() map[string]types.PermissionsForAddress {
+func (m *MockAccountKeeper) GetModulePermissions() map[string]types0.PermissionsForAddress {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetModulePermissions")
-	ret0, _ := ret[0].(map[string]types.PermissionsForAddress)
+	ret0, _ := ret[0].(map[string]types0.PermissionsForAddress)
 	return ret0
 }
 
@@ -138,7 +138,7 @@ func (mr *MockAccountKeeperMockRecorder) GetModulePermissions() *gomock.Call {
 }
 
 // HasAccount mocks base method.
-func (m *MockAccountKeeper) HasAccount(ctx context.Context, addr types0.AccAddress) bool {
+func (m *MockAccountKeeper) HasAccount(ctx context.Context, addr types.AccAddress) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HasAccount", ctx, addr)
 	ret0, _ := ret[0].(bool)
@@ -152,10 +152,10 @@ func (mr *MockAccountKeeperMockRecorder) HasAccount(ctx, addr interface{}) *gomo
 }
 
 // NewAccount mocks base method.
-func (m *MockAccountKeeper) NewAccount(arg0 context.Context, arg1 types0.AccountI) types0.AccountI {
+func (m *MockAccountKeeper) NewAccount(arg0 context.Context, arg1 types.AccountI) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewAccount", arg0, arg1)
-	ret0, _ := ret[0].(types0.AccountI)
+	ret0, _ := ret[0].(types.AccountI)
 	return ret0
 }
 
@@ -166,10 +166,10 @@ func (mr *MockAccountKeeperMockRecorder) NewAccount(arg0, arg1 interface{}) *gom
 }
 
 // NewAccountWithAddress mocks base method.
-func (m *MockAccountKeeper) NewAccountWithAddress(ctx context.Context, addr types0.AccAddress) types0.AccountI {
+func (m *MockAccountKeeper) NewAccountWithAddress(ctx context.Context, addr types.AccAddress) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewAccountWithAddress", ctx, addr)
-	ret0, _ := ret[0].(types0.AccountI)
+	ret0, _ := ret[0].(types.AccountI)
 	return ret0
 }
 
@@ -180,7 +180,7 @@ func (mr *MockAccountKeeperMockRecorder) NewAccountWithAddress(ctx, addr interfa
 }
 
 // SetAccount mocks base method.
-func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types0.AccountI) {
+func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types.AccountI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetAccount", ctx, acc)
 }
@@ -192,7 +192,7 @@ func (mr *MockAccountKeeperMockRecorder) SetAccount(ctx, acc interface{}) *gomoc
 }
 
 // SetModuleAccount mocks base method.
-func (m *MockAccountKeeper) SetModuleAccount(ctx context.Context, macc types0.ModuleAccountI) {
+func (m *MockAccountKeeper) SetModuleAccount(ctx context.Context, macc types.ModuleAccountI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetModuleAccount", ctx, macc)
 }
@@ -204,7 +204,7 @@ func (mr *MockAccountKeeperMockRecorder) SetModuleAccount(ctx, macc interface{})
 }
 
 // ValidatePermissions mocks base method.
-func (m *MockAccountKeeper) ValidatePermissions(macc types0.ModuleAccountI) error {
+func (m *MockAccountKeeper) ValidatePermissions(macc types.ModuleAccountI) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidatePermissions", macc)
 	ret0, _ := ret[0].(error)

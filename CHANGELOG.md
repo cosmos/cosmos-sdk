@@ -40,20 +40,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
 
-### Improvements
-
-* (client) [#21436](https://github.com/cosmos/cosmos-sdk/pull/21436) Use `address.Codec` from client.Context in `tx.Sign`.
-* (internal) [#21412](https://github.com/cosmos/cosmos-sdk/pull/21412) Using unsafe.String and unsafe.SliceData.
-
-### API Breaking Changes
-
-* (baseapp) [#21413](https://github.com/cosmos/cosmos-sdk/pull/21413) Add `SelectBy` method to `Mempool` interface, which is thread-safe to use.
-* (x/genutil) [#21372](https://github.com/cosmos/cosmos-sdk/pull/21372) Remove `AddGenesisAccount` for `AddGenesisAccounts`.
-
-### Deprecated
-
-* (types) [#21435](https://github.com/cosmos/cosmos-sdk/pull/21435) The `String()` method on `AccAddress`, `ValAddress` and `ConsAddress` have been deprecated. This is done because those are still using the deprecated global `sdk.Config`. Use an `address.Codec` instead.
-
 ## [v0.52.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0) - 2024-XX-XX
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
@@ -124,6 +110,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (baseapp) [#20380](https://github.com/cosmos/cosmos-sdk/pull/20380) Enhanced OfferSnapshot documentation.
 * (client) [#20771](https://github.com/cosmos/cosmos-sdk/pull/20771) Remove `ReadDefaultValuesFromDefaultClientConfig` from `client` package. (It was introduced in `v0.50.6` as a quick fix).
 * (grpcserver) [#20945](https://github.com/cosmos/cosmos-sdk/pull/20945) Adds error handling for out-of-gas panics in grpc query handlers.
+* (internal) [#21412](https://github.com/cosmos/cosmos-sdk/pull/21412) Using unsafe.String and unsafe.SliceData.
+* (client) [#21436](https://github.com/cosmos/cosmos-sdk/pull/21436) Use `address.Codec` from client.Context in `tx.Sign`.
 
 ### Bug Fixes
 
@@ -207,6 +195,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
     * Remove parameter `txConfig` from `genutilcli.Commands`,`genutilcli.CommandsWithCustomMigrationMap`,`genutilcli.GenTxCmd`.
     * Remove parameter `addressCodec` from `genutilcli.GenTxCmd`,`genutilcli.AddGenesisAccountCmd`,`stakingcli.BuildCreateValidatorMsg`.
 * (sims) [#21039](https://github.com/cosmos/cosmos-sdk/pull/21039): Remove Baseapp from sims by a new interface `simtypes.AppEntrypoint`.
+* (x/genutil) [#21372](https://github.com/cosmos/cosmos-sdk/pull/21372) Remove `AddGenesisAccount` for `AddGenesisAccounts`.
+* (baseapp) [#21413](https://github.com/cosmos/cosmos-sdk/pull/21413) Add `SelectBy` method to `Mempool` interface, which is thread-safe to use.
 
 ### Client Breaking Changes
 
@@ -222,6 +212,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 * (simapp) [#19146](https://github.com/cosmos/cosmos-sdk/pull/19146) Replace `--v` CLI option with `--validator-count`/`-n`.
 * (module) [#19370](https://github.com/cosmos/cosmos-sdk/pull/19370) Deprecate `module.Configurator`, use `appmodule.HasMigrations` and `appmodule.HasServices` instead from Core API.
+* (types) [#21435](https://github.com/cosmos/cosmos-sdk/pull/21435) The `String()` method on `AccAddress`, `ValAddress` and `ConsAddress` have been deprecated. This is done because those are still using the deprecated global `sdk.Config`. Use an `address.Codec` instead.
 
 ## Previous Versions
 

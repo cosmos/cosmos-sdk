@@ -19,7 +19,7 @@ type FeeAllowanceI interface {
 	// and will be saved again after an acceptance.
 	//
 	// If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
-	// (eg. when it is used up). (See call to RevokeAllowance in Keeper.UseGrantedFees)
+	// (e.g. when it is used up). (See call to RevokeAllowance in Keeper.UseGrantedFees)
 	Accept(ctx context.Context, fee sdk.Coins, msgs []sdk.Msg) (remove bool, err error)
 
 	// ValidateBasic should evaluate this FeeAllowance for internal consistency.

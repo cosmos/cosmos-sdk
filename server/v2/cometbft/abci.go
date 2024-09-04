@@ -11,10 +11,10 @@ import (
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
-	coreappmgr "cosmossdk.io/core/app"
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
@@ -134,10 +134,6 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 		GasWanted: uint64ToInt64(resp.GasWanted),
 		GasUsed:   uint64ToInt64(resp.GasUsed),
 		Events:    intoABCIEvents(resp.Events, c.indexedEvents),
-		Info:      resp.Info,
-		Data:      resp.Data,
-		Log:       resp.Log,
-		Codespace: resp.Codespace,
 	}
 	if resp.Error != nil {
 		cometResp.Code = 1
@@ -249,7 +245,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	}
 
 	if req.ConsensusParams != nil {
-		ctx = context.WithValue(ctx, corecontext.InitInfoKey, &consensustypes.MsgUpdateParams{
+		ctx = context.WithValue(ctx, corecontext.CometParamsInitInfoKey, &consensustypes.MsgUpdateParams{
 			Authority: c.consensusAuthority,
 			Block:     req.ConsensusParams.Block,
 			Evidence:  req.ConsensusParams.Evidence,
@@ -268,7 +264,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	// populate hash with empty byte slice instead of nil
 	bz := sha256.Sum256([]byte{})
 
-	br := &coreappmgr.BlockRequest[T]{
+	br := &server.BlockRequest[T]{
 		Height:    uint64(req.InitialHeight - 1),
 		Time:      req.Time,
 		Hash:      bz[:],
@@ -289,7 +285,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	// TODO necessary? where should this WARN live if it all. helpful for testing
 	for _, txRes := range blockresponse.TxResults {
 		if txRes.Error != nil {
-			c.logger.Warn("genesis tx failed", "code", txRes.Code, "log", txRes.Log, "error", txRes.Error)
+			c.logger.Warn("genesis tx failed", "code", txRes.Code, "error", txRes.Error)
 		}
 	}
 
@@ -329,17 +325,8 @@ func (c *Consensus[T]) PrepareProposal(
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
 
-	decodedTxs := make([]T, len(req.Txs))
-	for i, tx := range req.Txs {
-		decTx, err := c.txCodec.Decode(tx)
-		if err != nil {
-			// TODO: vote extension meta data as a custom type to avoid possibly accepting invalid txs
-			// continue even if tx decoding fails
-			c.logger.Error("failed to decode tx", "err", err)
-			continue
-		}
-
-		decodedTxs[i] = decTx
+	if c.prepareProposalHandler == nil {
+		return nil, errors.New("no prepare proposal function was set")
 	}
 
 	ciCtx := contextWithCometInfo(ctx, comet.Info{
@@ -349,7 +336,7 @@ func (c *Consensus[T]) PrepareProposal(
 		LastCommit:      toCoreExtendedCommitInfo(req.LocalLastCommit),
 	})
 
-	txs, err := c.prepareProposalHandler(ciCtx, c.app, decodedTxs, req)
+	txs, err := c.prepareProposalHandler(ciCtx, c.app, c.txCodec, req)
 	if err != nil {
 		return nil, err
 	}
@@ -370,16 +357,12 @@ func (c *Consensus[T]) ProcessProposal(
 	ctx context.Context,
 	req *abciproto.ProcessProposalRequest,
 ) (*abciproto.ProcessProposalResponse, error) {
-	decodedTxs := make([]T, len(req.Txs))
-	for _, tx := range req.Txs {
-		decTx, err := c.txCodec.Decode(tx)
-		if err != nil {
-			// TODO: vote extension meta data as a custom type to avoid possibly accepting invalid txs
-			// continue even if tx decoding fails
-			c.logger.Error("failed to decode tx", "err", err)
-			continue
-		}
-		decodedTxs = append(decodedTxs, decTx)
+	if req.Height < 1 {
+		return nil, errors.New("ProcessProposal called with invalid height")
+	}
+
+	if c.processProposalHandler == nil {
+		return nil, errors.New("no process proposal function was set")
 	}
 
 	ciCtx := contextWithCometInfo(ctx, comet.Info{
@@ -389,7 +372,7 @@ func (c *Consensus[T]) ProcessProposal(
 		LastCommit:      toCoreCommitInfo(req.ProposedLastCommit),
 	})
 
-	err := c.processProposalHandler(ciCtx, c.app, decodedTxs, req)
+	err := c.processProposalHandler(ciCtx, c.app, c.txCodec, req)
 	if err != nil {
 		c.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abciproto.ProcessProposalResponse{
@@ -441,7 +424,7 @@ func (c *Consensus[T]) FinalizeBlock(
 		return nil, err
 	}
 
-	blockReq := &coreappmgr.BlockRequest[T]{
+	blockReq := &server.BlockRequest[T]{
 		Height:  uint64(req.Height),
 		Time:    req.Time,
 		Hash:    req.Hash,

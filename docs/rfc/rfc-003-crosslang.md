@@ -3,6 +3,7 @@
 ## Changelog
 
 * 2024-08-09: Reworked initial draft (previous work was in https://github.com/cosmos/cosmos-sdk/pull/15410)
+* 2024-09-04: Added more details on message data and packet specification
 
 ## Background
 
@@ -232,9 +233,14 @@ account for a given message request.
 To facilitate efficient cross-language and cross-VM message passing, the precise layout of **message packets** is important
 as it reduces the need for serialization and deserialization in the core hypervisor and virtual machine layers.
 
+Message packets have a minimum size of 512 bytes to accommodate the 512-byte header specified below.
+Larger packets may be allocated depending on message handler needs.
+Generally, each message handler specification should describe the precise utilization of the message packet
+for that handler.
+
 #### Message Packet Header
 
-The **message packet** header occupies 512 bytes and is laid out as follows:
+**Message packets** always start with the 512-byte header with the following layout.
 - **message name**: a 128-byte array with the first byte indicating the length of the string
 - **self-address**: a 64-byte array with the first byte indicating the length of the address
 - **caller-address**: a 64-byte array with the first byte indicating the length of the address

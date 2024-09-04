@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"encoding/binary"
 	"fmt"
 	"strings"
 	"time"
@@ -125,8 +126,9 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	case 's':
 		_, _ = s.Write([]byte(status.String()))
 	default:
-		// TODO: Do this conversion more directly
-		_, _ = s.Write([]byte(fmt.Sprintf("%v", byte(status))))
+		var arr []byte
+		binary.BigEndian.PutUint32(arr, uint32(status))
+		_, _ = s.Write(arr)
 	}
 }
 

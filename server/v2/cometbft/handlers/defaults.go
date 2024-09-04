@@ -121,7 +121,16 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
 			maxBlockGas = uint64(b.MaxGas)
 		}
 
-		txs := decodeTxs(codec, req.Txs)
+		// Decode request txs bytes
+		// If there an tx decoded fail, return err
+		var txs []T
+		for _, tx := range req.Txs {
+			decTx, err := codec.Decode(tx)
+			if err != nil {
+				return fmt.Errorf("failed to decode tx: %w", err)
+			}
+			txs = append(txs, decTx)
+		}
 
 		var totalTxGas uint64
 		for _, tx := range txs {
@@ -148,14 +157,12 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
 
 // decodeTxs decodes the txs bytes into a decoded txs
 // If there a fail decoding tx, remove from the list
-// TODO: should return an err here?
+// Used for prepare proposal
 func decodeTxs[T transaction.Tx](codec transaction.Codec[T], txsBz [][]byte) []T {
 	var txs []T
 	for _, tx := range txsBz {
 		decTx, err := codec.Decode(tx)
 		if err != nil {
-			// TODO: vote extension meta data as a custom type to avoid possibly accepting invalid txs
-			// continue even if tx decoding fails
 			continue
 		}
 

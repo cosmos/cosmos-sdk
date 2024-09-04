@@ -40,7 +40,7 @@ func TestProposalMsgs(t *testing.T) {
 	msgUpdateParams, ok := msg.(*types.MsgUpdateParams)
 	assert.Assert(t, ok)
 
-	moduleAddr, err := ac.BytesToString(address.Module("gov"))
+	moduleAddr, err := ac.BytesToString(address.Module(types.GovModuleName))
 	assert.NilError(t, err)
 
 	assert.Equal(t, moduleAddr, msgUpdateParams.Authority)

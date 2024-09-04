@@ -64,7 +64,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 	allowedAddrsMap := make(map[string]bool)
 
 	for _, addr := range jailAllowedAddrs {
-		_, err := sdk.ValAddressFromBech32(addr)
+		_, err := app.InterfaceRegistry().SigningContext().ValidatorAddressCodec().StringToBytes(addr)
 		if err != nil {
 			panic(err)
 		}
@@ -93,8 +93,15 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 	}
 
 	for _, delegation := range dels {
-		valAddr:= sdk.MustValAddressFromBech32(delegation.ValidatorAddress)
-		delAddr := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)
+		valAddr, err := app.InterfaceRegistry().SigningContext().ValidatorAddressCodec().StringToBytes(delegation.ValidatorAddress)
+		if err != nil {
+			panic(err)
+		}
+
+		delAddr, err := app.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(delegation.DelegatorAddress)
+		if err != nil {
+			panic(err)
+		}
 
 		_, _ = app.DistrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr)
 	}
@@ -146,8 +153,14 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 
 	// reinitialize all delegations
 	for _, del := range dels {
-		valAddr := sdk.MustValAddressFromBech32(del.ValidatorAddress)
-		delAddr := sdk.MustAccAddressFromBech32(del.DelegatorAddress)
+		valAddr, err := app.InterfaceRegistry().SigningContext().ValidatorAddressCodec().StringToBytes(del.ValidatorAddress)
+		if err != nil {
+			panic(err)
+		}
+		delAddr, err := app.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(del.DelegatorAddress)
+		if err != nil {
+			panic(err)
+		}
 
 		if err := app.DistrKeeper.Hooks().BeforeDelegationCreated(ctx, delAddr, valAddr); err != nil {
 			// never called as BeforeDelegationCreated always returns nil
@@ -211,8 +224,13 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 			panic("expected validator, not found")
 		}
 
+		valAddr, err := app.StakingKeeper.ValidatorAddressCodec().BytesToString(addr)
+		if err != nil {
+			panic(err)
+		}
+
 		validator.UnbondingHeight = 0
-		if applyAllowedAddrs && !allowedAddrsMap[addr.String()] {
+		if applyAllowedAddrs && !allowedAddrsMap[valAddr] {
 			validator.Jailed = true
 		}
 

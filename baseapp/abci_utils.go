@@ -23,7 +23,7 @@ import (
 )
 
 type (
-	// ValidatorStore defines the interface contract require for verifying vote
+	// ValidatorStore defines the interface contract required for verifying vote
 	// extension signatures. Typically, this will be implemented by the x/staking
 	// module, which has knowledge of the CometBFT public key.
 	ValidatorStore interface {
@@ -84,7 +84,7 @@ func ValidateVoteExtensions(
 		totalVP += vote.Validator.Power
 
 		// Only check + include power if the vote is a commit vote. There must be super-majority, otherwise the
-		// previous block (the block vote is for) could not have been committed.
+		// previous block (the block the vote is for) could not have been committed.
 		if vote.BlockIdFlag != cmtproto.BlockIDFlagCommit {
 			continue
 		}

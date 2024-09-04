@@ -11,7 +11,7 @@ func ModuleSchemaGen() *rapid.Generator[schema.ModuleSchema] {
 	enumTypesGen := distinctTypes(EnumType())
 	return rapid.Custom(func(t *rapid.T) schema.ModuleSchema {
 		enumTypes := enumTypesGen.Draw(t, "enumTypes")
-		tempSchema, err := schema.NewModuleSchema(enumTypes...)
+		tempSchema, err := schema.CompileModuleSchema(enumTypes...)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -19,7 +19,7 @@ func ModuleSchemaGen() *rapid.Generator[schema.ModuleSchema] {
 		objectTypes := distinctTypes(ObjectTypeGen(tempSchema)).Draw(t, "objectTypes")
 		allTypes := append(enumTypes, objectTypes...)
 
-		modSchema, err := schema.NewModuleSchema(allTypes...)
+		modSchema, err := schema.CompileModuleSchema(allTypes...)
 		if err != nil {
 			t.Fatal(err)
 		}

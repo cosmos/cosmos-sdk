@@ -11,9 +11,8 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
-	cosmossdk.io/schema v0.1.1
+	cosmossdk.io/schema v0.2.0
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
-	cosmossdk.io/x/auth v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
@@ -23,7 +22,7 @@ require (
 	github.com/cometbft/cometbft v1.0.0-rc1
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
 	github.com/cosmos/btcutil v1.0.5
-	github.com/cosmos/cosmos-db v1.0.2
+	github.com/cosmos/cosmos-db v1.0.3-0.20240829004618-717cba019b33
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/crypto v0.1.2
 	github.com/cosmos/go-bip39 v1.0.0
@@ -47,7 +46,7 @@ require (
 	github.com/mdp/qrterminal/v3 v3.2.0
 	github.com/muesli/termenv v0.15.2
 	github.com/prometheus/client_golang v1.20.2
-	github.com/prometheus/common v0.57.0
+	github.com/prometheus/common v0.58.0
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cast v1.7.0
 	github.com/spf13/cobra v1.8.1
@@ -183,14 +182,14 @@ require (
 // 	<temporary replace>
 // )
 // TODO remove after all modules have their own go.mods
+replace github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.0-beta.1.0.20240813194616-eb5078efcf9e
+
 replace (
 	cosmossdk.io/api => ./api
 	cosmossdk.io/collections => ./collections
 	cosmossdk.io/core => ./core
 	cosmossdk.io/core/testing => ./core/testing
 	cosmossdk.io/store => ./store
-	cosmossdk.io/x/accounts => ./x/accounts
-	cosmossdk.io/x/auth => ./x/auth
 	cosmossdk.io/x/bank => ./x/bank
 	cosmossdk.io/x/consensus => ./x/consensus
 	cosmossdk.io/x/staking => ./x/staking

@@ -8,7 +8,7 @@ import (
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/appmodule/v2"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
@@ -73,7 +73,7 @@ func makeMockDependencies(storeservice store.KVStoreService) accountstd.Dependen
 		SchemaBuilder:    sb,
 		AddressCodec:     addressCodec{},
 		LegacyStateCodec: mockStateCodec{},
-		Environment: appmodule.Environment{
+		Environment: appmodulev2.Environment{
 			EventService:  eventService{},
 			HeaderService: headerService{},
 		},

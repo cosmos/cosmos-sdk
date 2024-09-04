@@ -9,6 +9,7 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
@@ -24,7 +25,7 @@ import (
 // SetupSimulation creates the config, db (levelDB), temporary directory and logger for the simulation tests.
 // If `skip` is false it skips the current test. `skip` should be set using the `FlagEnabledValue` flag.
 // Returns error on an invalid db instantiation or temp dir creation.
-func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, skip bool) (dbm.DB, string, log.Logger, bool, error) {
+func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, skip bool) (corestore.KVStoreWithBatch, string, log.Logger, bool, error) {
 	if !skip {
 		return nil, "", nil, true, nil
 	}
@@ -109,7 +110,7 @@ func CheckExportSimulation(app runtime.AppSimI, config simtypes.Config, params s
 }
 
 // PrintStats prints the corresponding statistics from the app DB.
-func PrintStats(db dbm.DB) {
+func PrintStats(db *dbm.GoLevelDB) {
 	fmt.Println("\nLevelDB Stats")
 	fmt.Println(db.Stats()["leveldb.stats"])
 	fmt.Println("LevelDB cached block size", db.Stats()["leveldb.cachedblock"])

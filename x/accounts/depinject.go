@@ -64,7 +64,7 @@ func (s directHandler) GetSignBytes(_ context.Context, _ signing.SignerData, _ s
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	handler := directHandler{}
-	account := baseaccount.NewAccount("base", signing.NewHandlerMap(handler))
+	account := baseaccount.NewAccount("base", signing.NewHandlerMap(handler), baseaccount.WithSecp256K1PubKey())
 	accountskeeper, err := NewKeeper(
 		in.Cdc, in.Environment, in.AddressCodec, in.Registry, account,
 		accountstd.AddAccount(lockup.CONTINUOUS_LOCKING_ACCOUNT, lockup.NewContinuousLockingAccount),

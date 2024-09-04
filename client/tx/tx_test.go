@@ -10,10 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
-	"cosmossdk.io/x/auth/ante"
-	"cosmossdk.io/x/auth/signing"
-	authtx "cosmossdk.io/x/auth/tx"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -28,7 +24,12 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
+
+var ac = testutil.CodecOptions{}.GetAddressCodec()
 
 func newTestTxConfig() (client.TxConfig, codec.Codec) {
 	encodingConfig := moduletestutil.MakeTestEncodingConfig(testutil.CodecOptions{})
@@ -130,8 +131,11 @@ func TestBuildSimTx(t *testing.T) {
 	_, _, err = kb.NewMnemonic("test_key1", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
 
+	fromAddr, err := ac.BytesToString(sdk.AccAddress("from"))
+	require.NoError(t, err)
+
 	txf := mockTxFactory(txCfg).WithSignMode(defaultSignMode).WithKeybase(kb)
-	msg := &countertypes.MsgIncreaseCounter{Signer: sdk.AccAddress("from").String(), Count: 1}
+	msg := &countertypes.MsgIncreaseCounter{Signer: fromAddr, Count: 1}
 	bz, err := txf.BuildSimTx(msg)
 	require.NoError(t, err)
 	require.NotNil(t, bz)
@@ -146,8 +150,10 @@ func TestBuildUnsignedTx(t *testing.T) {
 
 	_, _, err = kb.NewMnemonic("test_key1", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
+	fromAddr, err := ac.BytesToString(sdk.AccAddress("from"))
+	require.NoError(t, err)
 	txf := mockTxFactory(txConfig).WithKeybase(kb)
-	msg := &countertypes.MsgIncreaseCounter{Signer: sdk.AccAddress("from").String(), Count: 1}
+	msg := &countertypes.MsgIncreaseCounter{Signer: fromAddr, Count: 1}
 	tx, err := txf.BuildUnsignedTx(msg)
 	require.NoError(t, err)
 	require.NotNil(t, tx)
@@ -165,8 +171,11 @@ func TestBuildUnsignedTxWithWithExtensionOptions(t *testing.T) {
 			Value:   []byte("test"),
 		},
 	}
+
+	fromAddr, err := ac.BytesToString(sdk.AccAddress("from"))
+	require.NoError(t, err)
 	txf := mockTxFactory(txCfg).WithExtensionOptions(extOpts...)
-	msg := &countertypes.MsgIncreaseCounter{Signer: sdk.AccAddress("from").String(), Count: 1}
+	msg := &countertypes.MsgIncreaseCounter{Signer: fromAddr, Count: 1}
 	tx, err := txf.BuildUnsignedTx(msg)
 	require.NoError(t, err)
 	require.NotNil(t, tx)
@@ -209,7 +218,9 @@ func TestMnemonicInMemo(t *testing.T) {
 				WithChainID("test-chain").
 				WithKeybase(kb)
 
-			msg := &countertypes.MsgIncreaseCounter{Signer: sdk.AccAddress("from").String(), Count: 1}
+			fromAddr, err := ac.BytesToString(sdk.AccAddress("from"))
+			require.NoError(t, err)
+			msg := &countertypes.MsgIncreaseCounter{Signer: fromAddr, Count: 1}
 			tx, err := txf.BuildUnsignedTx(msg)
 			if tc.error {
 				require.Error(t, err)
@@ -260,8 +271,12 @@ func TestSign(t *testing.T) {
 	requireT.NoError(err)
 	addr2, err := k2.GetAddress()
 	requireT.NoError(err)
-	msg1 := &countertypes.MsgIncreaseCounter{Signer: addr1.String(), Count: 1}
-	msg2 := &countertypes.MsgIncreaseCounter{Signer: addr2.String(), Count: 1}
+	addr1Str, err := ac.BytesToString(addr1)
+	require.NoError(t, err)
+	addr2Str, err := ac.BytesToString(addr2)
+	require.NoError(t, err)
+	msg1 := &countertypes.MsgIncreaseCounter{Signer: addr1Str, Count: 1}
+	msg2 := &countertypes.MsgIncreaseCounter{Signer: addr2Str, Count: 1}
 	txb, err := txfNoKeybase.BuildUnsignedTx(msg1, msg2)
 	requireT.NoError(err)
 	txb2, err := txfNoKeybase.BuildUnsignedTx(msg1, msg2)
@@ -414,8 +429,12 @@ func TestPreprocessHook(t *testing.T) {
 
 	addr1, err := kr.GetAddress()
 	requireT.NoError(err)
-	msg1 := &countertypes.MsgIncreaseCounter{Signer: addr1.String(), Count: 1}
-	msg2 := &countertypes.MsgIncreaseCounter{Signer: addr2.String(), Count: 1}
+	addr1Str, err := ac.BytesToString(addr1)
+	require.NoError(t, err)
+	addr2Str, err := ac.BytesToString(addr2)
+	require.NoError(t, err)
+	msg1 := &countertypes.MsgIncreaseCounter{Signer: addr1Str, Count: 1}
+	msg2 := &countertypes.MsgIncreaseCounter{Signer: addr2Str, Count: 1}
 	txb, err := txfDirect.BuildUnsignedTx(msg1, msg2)
 	requireT.NoError(err)
 

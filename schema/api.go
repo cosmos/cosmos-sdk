@@ -79,4 +79,20 @@ type MethodDescriptor struct {
 	// In this case, adding new output fields is an INCOMPATIBLE change (because protobuf service definitions
 	// don't allow this), but new fields can be added to the referenced struct if it is unsealed.
 	OutputFields []Field
+
+	// Volatility is the volatility of the method.
+	Volatility Volatility
 }
+
+// Volatility is the volatility of a method.
+type Volatility int
+
+const (
+	// PureVolatility indicates that the method can neither read nor write state.
+	PureVolatility Volatility = iota
+	// ReadonlyVolatility indicates that the method can read state but not write state.
+	ReadonlyVolatility
+
+	// VolatileVolatility indicates that the method can read and write state.
+	VolatileVolatility
+)

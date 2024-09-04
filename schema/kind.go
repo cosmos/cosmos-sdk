@@ -206,7 +206,7 @@ const (
 
 	// UIntNKind represents a signed integer type with a width in bits specified by the Size field in the
 	// field definition.
-	// This is currently UNIMPLEMENTED, this notice will be removed when support is added.
+	// Support for this is currently UNIMPLEMENTED, this notice will be removed when it is added.
 	// N must be a multiple of 8, and it is invalid for N to equal 8, 16, 32, 64 as there are more specific
 	// types for these widths.
 	// Go Encoding: []byte where len([]byte) == Size / 8, little-endian encoded.
@@ -217,7 +217,7 @@ const (
 
 	// IntNKind represents an unsigned integer type with a width in bits specified by the Size field in the
 	// field definition. N must be a multiple of 8.
-	// This is currently UNIMPLEMENTED, this notice will be removed when support is added.
+	// Support for this is currently UNIMPLEMENTED, this notice will be removed when it is added.
 	// N must be a multiple of 8, and it is invalid for N to equal 8, 16, 32, 64 as there are more specific
 	// types for these widths.
 	// Go Encoding: []byte where len([]byte) == Size / 8, two's complement little-endian encoded.
@@ -227,7 +227,7 @@ const (
 	IntNKind
 
 	// StructKind represents a struct object.
-	// This is currently UNIMPLEMENTED, this notice will be removed when support is added.
+	// Support for this is currently UNIMPLEMENTED, this notice will be removed when it is added.
 	// Go Encoding: an array of type []interface{} where each element is of the respective field's kind type.
 	// JSON Encoding: an object where each key is the field name and the value is the field value.
 	// Canonically, keys are in alphabetical order with no extra whitespace.
@@ -237,7 +237,7 @@ const (
 	StructKind
 
 	// OneOfKind represents a field that can be one of a set of types.
-	// This is currently UNIMPLEMENTED, this notice will be removed when support is added.
+	// Support for this is currently UNIMPLEMENTED, this notice will be removed when it is added.
 	// Go Encoding: the anonymous struct { Case string; Value interface{} }, aliased as OneOfValue.
 	// JSON Encoding: same as the case's struct encoding with "@type" set to the case name.
 	// Key Binary Encoding: not valid as a key field.
@@ -246,7 +246,7 @@ const (
 	OneOfKind
 
 	// ListKind represents a list of elements.
-	// This is currently UNIMPLEMENTED, this notice will be removed when support is added.
+	// Support for this is currently UNIMPLEMENTED, this notice will be removed when it is added.
 	// Go Encoding: an array of type []interface{} where each element is of the respective field's kind type.
 	// JSON Encoding: an array of values where each element is the field value.
 	// Canonically, there is no extra whitespace.

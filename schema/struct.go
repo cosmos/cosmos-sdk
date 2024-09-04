@@ -1,6 +1,7 @@
 package schema
 
 // StructType represents a struct type.
+// Support for this is currently UNIMPLEMENTED, this notice will be removed when it is added.
 type StructType struct {
 	// Name is the name of the struct type.
 	Name string

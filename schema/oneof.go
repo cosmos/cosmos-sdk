@@ -1,6 +1,7 @@
 package schema
 
 // OneOfType represents a oneof type.
+// Support for this is currently UNIMPLEMENTED, this notice will be removed when it is added.
 type OneOfType struct {
 	// Name is the name of the oneof type. It must conform to the NameFormat regular expression.
 	Name string

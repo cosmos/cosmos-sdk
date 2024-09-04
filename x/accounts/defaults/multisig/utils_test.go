@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/appmodule/v2"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
@@ -185,7 +185,7 @@ func makeMockDependencies(storeservice store.KVStoreService, timefn func() time.
 		SchemaBuilder:    sb,
 		AddressCodec:     addressCodec{},
 		LegacyStateCodec: mockStateCodec{},
-		Environment: appmodule.Environment{
+		Environment: appmodulev2.Environment{
 			HeaderService: headerService{timefn},
 			EventService:  eventService{},
 		},

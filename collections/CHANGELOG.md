@@ -38,6 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#19343](https://github.com/cosmos/cosmos-sdk/pull/19343) Simplify IndexedMap creation by allowing to infer indexes through reflection.
 * [#19861](https://github.com/cosmos/cosmos-sdk/pull/19861) Add `NewJSONValueCodec` value codec as an alternative for `codec.CollValue` from the SDK for non protobuf types.
 * [#21090](https://github.com/cosmos/cosmos-sdk/pull/21090) Introduces `Quad`, a composite key with four keys.
+* [#20704](https://github.com/cosmos/cosmos-sdk/pull/20704) Add `ModuleCodec` method to `Schema` and `HasSchemaCodec` interface in order to support `cosmossdk.io/schema` compatible indexing.
 
 ## [v0.4.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv0.4.0)
 

@@ -8,7 +8,6 @@ import (
 
 	"cosmossdk.io/core/gas"
 	gastestutil "cosmossdk.io/core/testing/gas"
-	"cosmossdk.io/x/auth/ante"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -16,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
 func TestSetupDecorator_BlockMaxGas(t *testing.T) {

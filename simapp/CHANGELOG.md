@@ -45,6 +45,7 @@ Always refer to the [UPGRADING.md](https://github.com/cosmos/cosmos-sdk/blob/mai
 * [#20771](https://github.com/cosmos/cosmos-sdk/pull/20771) Use client/v2 `GetNodeHomeDirectory` helper in `app.go` and use the `DefaultNodeHome` constant everywhere in the app.
 * [#20490](https://github.com/cosmos/cosmos-sdk/pull/20490) Refactor simulations to make use of `testutil/sims` instead of `runsims`.
 * [#19726](https://github.com/cosmos/cosmos-sdk/pull/19726) Update APIs to match CometBFT v1.
+* [#21508](https://github.com/cosmos/cosmos-sdk/pull/21508) Abstract the way we update the version of the app state in `app.go` using the interface `VersionModifier`.
 
 <!-- TODO: move changelog.md elements to here -->
 

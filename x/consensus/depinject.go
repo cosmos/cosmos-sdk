@@ -66,6 +66,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	m := NewAppModule(in.Cdc, k)
 	baseappOpt := func(app *baseapp.BaseApp) {
 		app.SetParamStore(k.ParamsStore)
+		app.SetVersionModifier(versionModifier{Keeper: k})
 	}
 
 	return ModuleOutputs{

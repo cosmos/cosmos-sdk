@@ -327,6 +327,7 @@ func (app *BaseApp) SetTxEncoder(txEncoder sdk.TxEncoder) {
 	app.txEncoder = txEncoder
 }
 
+// SetVersionModifier sets the version modifier for the BaseApp that allows to set the app version.
 func (app *BaseApp) SetVersionModifier(versionModifier server.VersionModifier) {
 	if app.sealed {
 		panic("SetVersionModifier() on sealed BaseApp")

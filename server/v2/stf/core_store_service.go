@@ -30,7 +30,6 @@ func (s storeService) OpenKVStore(ctx context.Context) store.KVStore {
 	if err != nil {
 		panic(err)
 	}
-
 	return state
 }
 

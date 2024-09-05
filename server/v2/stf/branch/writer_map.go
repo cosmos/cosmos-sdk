@@ -36,33 +36,33 @@ func (b WriterMap) GetReader(actor []byte) (store.Reader, error) {
 func (b WriterMap) GetWriter(actor []byte) (store.Writer, error) {
 	actorKey := unsafeString(actor)
 
-	// Step 1: Attempt to read the map with a read lock
+	// attempt to read the map with a read lock
 	b.mu.RLock()
 	actorState, ok := b.branchedWriterState[actorKey]
 	b.mu.RUnlock()
 
 	if ok {
-		// If the actorState is found, return it
+		// if the actorState is found, return it
 		return actorState, nil
 	}
 
-	// Step 2: If not found, proceed with acquiring a write lock to update the map
+	// if not found, proceed with acquiring a write lock to update the map
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	// Double-check: Ensure that the actorState wasn't created by another goroutine while waiting for the write lock
+	// ensure that the actorState wasn't created by another goroutine while waiting for the write lock
 	if actorState, ok = b.branchedWriterState[actorKey]; ok {
 		return actorState, nil
 	}
 
-	// Step 3: If still not found, create the actorState and update the map
+	// if still not found, create the actorState and update the map
 	writerState, err := b.state.GetReader(actor)
 	if err != nil {
 		return nil, err
 	}
 
 	actorState = b.branch(writerState)
-	b.branchedWriterState[actorKey] = actorState // This line is now protected by the mutex
+	b.branchedWriterState[actorKey] = actorState
 
 	return actorState, nil
 }

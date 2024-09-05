@@ -22,12 +22,15 @@ cosmossdk.io/math v1.3.0 h1:RC+jryuKeytIiictDslBP9i1fhkVm6ZDmZEoNP316zE=
 cosmossdk.io/math v1.3.0/go.mod h1:vnRTxewy+M7BtXBNFybkuhSH4WfedVAAnERHgVFhp3k=
 cosmossdk.io/schema v0.2.0 h1:UH5CR1DqUq8yP+5Np8PbvG4YX0zAUsTN2Qk6yThmfMk=
 cosmossdk.io/schema v0.2.0/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
+<<<<<<< HEAD
 cosmossdk.io/store v1.0.0-rc.0.0.20240815194237-858ec2fcb897 h1:o024zaPHYtmUGL2BCX1ns9rfZmMc19U4hQ2CAPt2Xgg=
 cosmossdk.io/store v1.0.0-rc.0.0.20240815194237-858ec2fcb897/go.mod h1:Ma4uny4RFegWTbU71fBmkSIoHrWHlLC/JwwgWgehZm4=
 cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 h1:GuBrfHsK3RD5vlD4DuBz3DXslR6VlnzrYmHOC3L679Q=
 cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337/go.mod h1:PhLn1pMBilyRC4GfRkoYhm+XVAYhF4adVrzut8AdpJI=
 cosmossdk.io/x/tx v0.13.4-0.20240815194237-858ec2fcb897 h1:J3vS3G41JtTWkUX3wVKcXdy1yPUca0d3QnexCR52PeY=
 cosmossdk.io/x/tx v0.13.4-0.20240815194237-858ec2fcb897/go.mod h1:5+Hpds6bhT6CdR7DqPh0dVOqyqL7NJkq+x+yjLdYSQU=
+=======
+>>>>>>> 30688b02b (refactor: simplify epoch hooks (#21552))
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
 github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 h1:/vQbFIOMbk2FiG/kXiLl8BRyzTWDw7gX/Hz7Dd5eDMs=

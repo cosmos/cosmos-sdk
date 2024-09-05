@@ -285,7 +285,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			selectedTxsNums int
 			invalidTxs      []sdk.Tx // invalid txs to be removed out of the loop to avoid dead lock
 		)
-		mempool.SelectBy(h.mempool, ctx, req.Txs, func(memTx sdk.Tx) bool {
+		mempool.SelectBy(ctx, h.mempool, req.Txs, func(memTx sdk.Tx) bool {
 			signerData, err := h.signerExtAdapter.GetSigners(memTx)
 			if err != nil {
 				// propagate the error to the caller

@@ -24,6 +24,9 @@ type Mempool interface {
 	Remove(sdk.Tx) error
 }
 
+// ExtMempool is a extension of Mempool interface introduced in v0.50
+// not not breaking our patch versioning policy.
+// In v0.52+, it will be merged into Mempool interface.
 type ExtMempool interface {
 	Mempool
 
@@ -49,7 +52,8 @@ var (
 )
 
 // SelectBy is compatible with old interface to avoid breaking api.
-func SelectBy(mempool Mempool, ctx context.Context, txs [][]byte, callback func(sdk.Tx) bool) {
+// In v0.52+, this function is removed and SelectBy is merged into Mempool interface.
+func SelectBy(ctx context.Context, mempool Mempool, txs [][]byte, callback func(sdk.Tx) bool) {
 	if ext, ok := mempool.(ExtMempool); ok {
 		ext.SelectBy(ctx, txs, callback)
 		return

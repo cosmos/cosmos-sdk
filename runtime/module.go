@@ -14,7 +14,7 @@ import (
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
@@ -112,7 +112,7 @@ func init() {
 
 func ProvideApp(
 	interfaceRegistry codectypes.InterfaceRegistry,
-	amino legacy.Amino,
+	amino registry.AminoRegistrar,
 	protoCodec *codec.ProtoCodec,
 ) (
 	*AppBuilder,
@@ -159,7 +159,7 @@ type AppInputs struct {
 	ModuleManager     *module.Manager
 	BaseAppOptions    []BaseAppOption
 	InterfaceRegistry codectypes.InterfaceRegistry
-	LegacyAmino       legacy.Amino
+	LegacyAmino       registry.AminoRegistrar
 	AppOptions        servertypes.AppOptions `optional:"true"` // can be nil in client wiring
 }
 

@@ -10,7 +10,6 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 
 	corestore "cosmossdk.io/core/store"
-	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
@@ -110,8 +109,13 @@ func CheckExportSimulation(app runtime.AppSimI, config simtypes.Config, params s
 	return nil
 }
 
+// DBStatsInterface defines the interface for the app DB statistics.
+type DBStatsInterface interface {
+	Stats() map[string]string
+}
+
 // PrintStats prints the corresponding statistics from the app DB.
-func PrintStats(db *coretesting.GoLevelDB) {
+func PrintStats(db DBStatsInterface) {
 	fmt.Println("\nLevelDB Stats")
 	fmt.Println(db.Stats()["leveldb.stats"])
 	fmt.Println("LevelDB cached block size", db.Stats()["leveldb.cachedblock"])

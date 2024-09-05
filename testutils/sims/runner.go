@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	corestore "cosmossdk.io/core/store"
-	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -137,7 +136,7 @@ func RunWithSeeds[T SimulationApp](
 			err = simtestutil.CheckExportSimulation(app, tCfg, simParams)
 			require.NoError(t, err)
 			if tCfg.Commit && tCfg.DBBackend == "goleveldb" {
-				simtestutil.PrintStats(testInstance.DB.(*coretesting.GoLevelDB))
+				simtestutil.PrintStats(testInstance.DB.(simtestutil.DBStatsInterface))
 			}
 			for _, step := range postRunActions {
 				step(t, testInstance)

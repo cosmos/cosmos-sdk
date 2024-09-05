@@ -59,5 +59,6 @@ rm -rf github.com
 
 # UNTIL WE FIGURE OUT ABOUT COSMOSSDK.IO/API, DO NOT GENERATE PULSAR FILES FOR NEW MODULES
 rm -r api/cosmos/bank/v2
+rm -r api/cosmos/bank/module/v2
 
 go mod tidy

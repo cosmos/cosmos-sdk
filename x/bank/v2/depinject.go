@@ -1,13 +1,13 @@
 package bankv2
 
 import (
-	bankv2api "cosmossdk.io/api/cosmos/bank/module/v2"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/bank/v2/keeper"
 	"cosmossdk.io/x/bank/v2/types"
+	moduletypes "cosmossdk.io/x/bank/v2/types/module"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
@@ -20,7 +20,7 @@ func (am AppModule) IsOnePerModuleType() {}
 
 func init() {
 	appconfig.RegisterModule(
-		&bankv2api.Module{},
+		&moduletypes.Module{},
 		appconfig.Provide(ProvideModule),
 	)
 }
@@ -28,7 +28,7 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config       *bankv2api.Module
+	Config       *moduletypes.Module
 	Cdc          codec.Codec
 	Environment  appmodule.Environment
 	AddressCodec address.Codec

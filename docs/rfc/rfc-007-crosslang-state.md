@@ -124,8 +124,8 @@ JSON can be specified as a fallback encoding in an event schema when a suitable 
 isn't available and then no special decoding step is necessary.
 
 * Volatility: Volatile
-* Input Parameter 1: `event_type` string
-* Input Parameter 2: `event_data` binary
+* Input Parameter 1: `event_type` string with a maximum length of 127 bytes
+* Input Parameter 2: `event_data`
 * Errors: None
 
 ## Decision

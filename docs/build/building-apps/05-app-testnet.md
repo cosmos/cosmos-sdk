@@ -76,7 +76,7 @@ When creating a testnet the important part is migrate the validator set from man
 	}
 	iterator.Close()
 
-	// Remove all valdiators from last validators store
+	// Remove all validators from last validators store
 	iterator = app.StakingKeeper.LastValidatorsIterator(ctx)
 	for ; iterator.Valid(); iterator.Next() {
 		app.StakingKeeper.LastValidatorPower.Delete(iterator.Key())

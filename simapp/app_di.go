@@ -12,7 +12,12 @@ import (
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+<<<<<<< HEAD
 	"cosmossdk.io/core/legacy"
+=======
+	"cosmossdk.io/core/registry"
+	corestore "cosmossdk.io/core/store"
+>>>>>>> a57b25418 (refactor(core): move amino registrar and drop legacy package (#21531))
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts"
@@ -66,7 +71,7 @@ var (
 // capabilities aren't needed for testing.
 type SimApp struct {
 	*runtime.App
-	legacyAmino       legacy.Amino
+	legacyAmino       registry.AminoRegistrar
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry

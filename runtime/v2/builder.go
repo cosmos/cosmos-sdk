@@ -174,7 +174,7 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 			return nil
 		},
 		ExportGenesis: func(ctx context.Context, version uint64) ([]byte, error) {
-			genesisJson, err := a.app.moduleManager.ExportGenesisForModules(ctx)
+			genesisJson, err := a.app.moduleManager.ExportGenesisForModules(ctx, a.app.db, a.app.stf)
 			if err != nil {
 				return nil, fmt.Errorf("failed to export genesis: %w", err)
 			}

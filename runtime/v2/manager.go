@@ -9,7 +9,6 @@ import (
 	"reflect"
 	"slices"
 	"sort"
-	"sync"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
@@ -25,6 +24,7 @@ import (
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 )
 
@@ -195,6 +195,8 @@ func (m *MM[T]) InitGenesisJSON(
 // ExportGenesisForModules performs export genesis functionality for modules
 func (m *MM[T]) ExportGenesisForModules(
 	ctx context.Context,
+	db appmanager.Store,
+	appStf *stf.STF[T],
 	modulesToExport ...string,
 ) (map[string]json.RawMessage, error) {
 	if len(modulesToExport) == 0 {
@@ -205,50 +207,58 @@ func (m *MM[T]) ExportGenesisForModules(
 		return nil, err
 	}
 
+	_, state, err := db.StateLatest()
+	if err != nil {
+		return nil, err
+	}
+
 	type genesisResult struct {
-		moduleName string
-		bz         json.RawMessage
-		err        error
+		bz  json.RawMessage
+		err error
 	}
 
 	type ModuleI interface {
 		ExportGenesis(ctx context.Context) (json.RawMessage, error)
 	}
 
-	var wg sync.WaitGroup
-	results := make(chan genesisResult, len(modulesToExport))
-
+	channels := make(map[string]chan genesisResult)
 	for _, moduleName := range modulesToExport {
 		mod := m.modules[moduleName]
 		var moduleI ModuleI
-
 		if module, hasGenesis := mod.(appmodulev2.HasGenesis); hasGenesis {
 			moduleI = module.(ModuleI)
-		} else if module, hasABCIGenesis := mod.(appmodulev2.HasABCIGenesis); hasABCIGenesis {
+		} else if module, hasABCIGenesis := mod.(appmodulev2.HasGenesis); hasABCIGenesis {
 			moduleI = module.(ModuleI)
 		} else {
 			continue
 		}
 
-		wg.Add(1)
-		go func(moduleName string, moduleI ModuleI) {
-			defer wg.Done()
-			jm, err := moduleI.ExportGenesis(ctx)
-			results <- genesisResult{moduleName, jm, err}
-		}(moduleName, moduleI)
+		channels[moduleName] = make(chan genesisResult)
+		go func(moduleI ModuleI, ch chan genesisResult) {
+			_, err = appStf.RunWithCtx(ctx, state, func(ctx context.Context) error {
+				jm, err := moduleI.ExportGenesis(ctx)
+				if err != nil {
+					ch <- genesisResult{nil, err}
+					return err
+				}
+				ch <- genesisResult{jm, nil}
+				return nil
+			})
+			if err != nil {
+				panic(err)
+			}
+			return
+		}(moduleI, channels[moduleName])
 	}
 
-	go func() {
-		wg.Wait()
-		close(results)
-	}()
-
 	genesisData := make(map[string]json.RawMessage)
-	for res := range results {
+	for moduleName := range channels {
+		res := <-channels[moduleName]
 		if res.err != nil {
-			return nil, fmt.Errorf("genesis export error in %s: %w", res.moduleName, res.err)
+			return nil, fmt.Errorf("genesis export error in %s: %w", moduleName, res.err)
 		}
-		genesisData[res.moduleName] = res.bz
+
+		genesisData[moduleName] = res.bz
 	}
 
 	return genesisData, nil

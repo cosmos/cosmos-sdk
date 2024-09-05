@@ -47,7 +47,7 @@ func (k *Keeper) GetAuthority() string {
 
 // InitGenesis initializes the initial state of the module
 func (k *Keeper) InitGenesis(ctx context.Context) error {
-	value, ok := ctx.Value(corecontext.InitInfoKey).(*types.MsgUpdateParams)
+	value, ok := ctx.Value(corecontext.CometParamsInitInfoKey).(*types.MsgUpdateParams)
 	if !ok || value == nil {
 		// no error for appv1 and appv2
 		return nil
@@ -120,6 +120,10 @@ func (k Keeper) paramCheck(ctx context.Context, consensusParams cmtproto.Consens
 
 	paramsProto, err := k.ParamsStore.Get(ctx)
 	if err == nil {
+		// initialize version params with zero value if not set
+		if paramsProto.Version == nil {
+			paramsProto.Version = &cmtproto.VersionParams{}
+		}
 		params = cmttypes.ConsensusParamsFromProto(paramsProto)
 	} else if errors.Is(err, collections.ErrNotFound) {
 		params = cmttypes.ConsensusParams{}

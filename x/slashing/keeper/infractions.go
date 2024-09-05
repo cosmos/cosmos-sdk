@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// HandleValidatorSignature handles a validator signature, must be called once per validator per block.
+// HandleValidatorSignature handles a validator signature, must be called once per validator for each block.
 func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.Address, power int64, signed comet.BlockIDFlag) error {
 	params, err := k.Params.Get(ctx)
 	if err != nil {
@@ -22,6 +22,7 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 	return k.HandleValidatorSignatureWithParams(ctx, params, addr, power, signed)
 }
 
+// HandleValidatorSignature handles a validator signature with the provided slashing module params.
 func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params types.Params, addr cryptotypes.Address, power int64, signed comet.BlockIDFlag) error {
 	height := k.HeaderService.HeaderInfo(ctx).Height
 
@@ -38,7 +39,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 		return nil
 	}
 
-	// read the cons address again because validator may've rotated it's key
+	// read the cons address again because validator may've rotated its key
 	valConsAddr, err := val.GetConsAddr()
 	if err != nil {
 		return err

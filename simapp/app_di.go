@@ -7,20 +7,14 @@ import (
 	"fmt"
 	"io"
 
-	dbm "github.com/cosmos/cosmos-db"
-
 	clienthelpers "cosmossdk.io/client/v2/helpers"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/legacy"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts"
-	"cosmossdk.io/x/auth"
-	"cosmossdk.io/x/auth/ante"
-	"cosmossdk.io/x/auth/ante/unorderedtx"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authsims "cosmossdk.io/x/auth/simulation"
-	authtypes "cosmossdk.io/x/auth/types"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
@@ -50,6 +44,12 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // DefaultNodeHome default home directories for the application daemon
@@ -113,7 +113,7 @@ func AppConfig() depinject.Config {
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(
 	logger log.Logger,
-	db dbm.DB,
+	db corestore.KVStoreWithBatch,
 	traceStore io.Writer,
 	loadLatest bool,
 	appOpts servertypes.AppOptions,
@@ -287,7 +287,7 @@ func NewSimApp(
 	return app
 }
 
-// overwrite default ante handlers with custom ante handlers
+// setCustomAnteHandler overwrites default ante handlers with custom ante handlers
 // set SkipAnteHandler to true in app config and set custom ante handler on baseapp
 func (app *SimApp) setCustomAnteHandler() {
 	anteHandler, err := NewAnteHandler(
@@ -371,7 +371,9 @@ func GetMaccPerms() map[string][]string {
 }
 
 // BlockedAddresses returns all the app's blocked account addresses.
-func BlockedAddresses() map[string]bool {
+// This function takes an address.Codec parameter to maintain compatibility
+// with the signature of the same function in appV1.
+func BlockedAddresses(_ address.Codec) (map[string]bool, error) {
 	result := make(map[string]bool)
 
 	if len(blockAccAddrs) > 0 {
@@ -384,5 +386,5 @@ func BlockedAddresses() map[string]bool {
 		}
 	}
 
-	return result
+	return result, nil
 }

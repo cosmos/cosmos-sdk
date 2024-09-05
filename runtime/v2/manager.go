@@ -222,7 +222,7 @@ func (m *MM[T]) ExportGenesisForModules(
 		var moduleI ModuleI
 		if module, hasGenesis := mod.(appmodulev2.HasGenesis); hasGenesis {
 			moduleI = module.(ModuleI)
-		} else if module, hasABCIGenesis := mod.(appmodulev2.HasGenesis); hasABCIGenesis {
+		} else if module, hasABCIGenesis := mod.(appmodulev2.HasABCIGenesis); hasABCIGenesis {
 			moduleI = module.(ModuleI)
 		} else {
 			continue

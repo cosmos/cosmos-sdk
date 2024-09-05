@@ -1,4 +1,4 @@
-# RFC {RFC-NUMBER}: {TITLE}
+# RFC 007: Cross Language State, Storage and Events
 
 ## Changelog
 
@@ -18,7 +18,10 @@ The following APIs are expected to be used by
 
 ### State API
 
-The state API defines the following messages:
+The state API coordinates all state access and mutation.
+It is independent of any underlying storage API such as key-value storage.
+All state mutations including key-value storage and event emission should be
+coordinated with this API.
 
 #### `cosmos.state.v1.new_branch`
 
@@ -106,6 +109,23 @@ The same packet utilization as get is suggested.
 
 * Volatility: Readonly
 * Input Parameters: None (uses the state token)
+* Errors: None
+
+### Event API
+
+#### `cosmos.event.v1.emit_binary`
+
+This is the preferred method for emitting events.
+It is expected that the event is serialized in a binary format described by an account's
+event schema.
+Event indexers are expected to be able to decode this binary format into something that can be
+rendered as a JSON object.
+JSON can be specified as a fallback encoding in an event schema when a suitable binary format
+isn't available and then no special decoding step is necessary.
+
+* Volatility: Volatile
+* Input Parameter 1: `event_type` string
+* Input Parameter 2: `event_data` binary
 * Errors: None
 
 ## Decision

@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"slices"
 	"sort"
+	"sync"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
@@ -204,13 +205,19 @@ func (m *MM[T]) ExportGenesisForModules(
 		return nil, err
 	}
 
+	type genesisResult struct {
+		moduleName string
+		bz         json.RawMessage
+		err        error
+	}
+
 	type ModuleI interface {
 		ExportGenesis(ctx context.Context) (json.RawMessage, error)
 	}
 
-	genesisData := make(map[string]json.RawMessage)
+	var wg sync.WaitGroup
+	results := make(chan genesisResult, len(modulesToExport))
 
-	// TODO: make async export genesis https://github.com/cosmos/cosmos-sdk/issues/21303
 	for _, moduleName := range modulesToExport {
 		mod := m.modules[moduleName]
 		var moduleI ModuleI
@@ -223,12 +230,25 @@ func (m *MM[T]) ExportGenesisForModules(
 			continue
 		}
 
-		res, err := moduleI.ExportGenesis(ctx)
-		if err != nil {
-			return nil, err
-		}
+		wg.Add(1)
+		go func(moduleName string, moduleI ModuleI) {
+			defer wg.Done()
+			jm, err := moduleI.ExportGenesis(ctx)
+			results <- genesisResult{moduleName, jm, err}
+		}(moduleName, moduleI)
+	}
 
-		genesisData[moduleName] = res
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	genesisData := make(map[string]json.RawMessage)
+	for res := range results {
+		if res.err != nil {
+			return nil, fmt.Errorf("genesis export error in %s: %w", res.moduleName, res.err)
+		}
+		genesisData[res.moduleName] = res.bz
 	}
 
 	return genesisData, nil

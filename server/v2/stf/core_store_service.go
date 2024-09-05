@@ -2,6 +2,7 @@ package stf
 
 import (
 	"context"
+	"sync"
 
 	"cosmossdk.io/core/store"
 )
@@ -9,15 +10,16 @@ import (
 var _ store.KVStoreService = (*storeService)(nil)
 
 func NewKVStoreService(address []byte) store.KVStoreService {
-	return storeService{actor: address}
+	return storeService{actor: address, mu: &sync.RWMutex{}}
 }
 
 func NewMemoryStoreService(address []byte) store.MemoryStoreService {
-	return storeService{actor: address}
+	return storeService{actor: address, mu: &sync.RWMutex{}}
 }
 
 type storeService struct {
 	actor []byte
+	mu    *sync.RWMutex
 }
 
 func (s storeService) OpenKVStore(ctx context.Context) store.KVStore {
@@ -26,10 +28,15 @@ func (s storeService) OpenKVStore(ctx context.Context) store.KVStore {
 		panic(err)
 	}
 
+	s.mu.Lock()
+
 	state, err := exCtx.state.GetWriter(s.actor)
 	if err != nil {
 		panic(err)
 	}
+
+	s.mu.Unlock()
+
 	return state
 }
 

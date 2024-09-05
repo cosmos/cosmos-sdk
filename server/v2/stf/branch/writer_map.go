@@ -2,6 +2,7 @@ package branch
 
 import (
 	"fmt"
+	"sync"
 	"unsafe"
 
 	"cosmossdk.io/core/store"
@@ -25,6 +26,7 @@ type WriterMap struct {
 	state               store.ReaderMap
 	branchedWriterState map[string]store.Writer
 	branch              func(state store.Reader) store.Writer
+	mu                  sync.RWMutex // mutex to protect branchedWriterState
 }
 
 func (b WriterMap) GetReader(actor []byte) (store.Reader, error) {
@@ -32,16 +34,37 @@ func (b WriterMap) GetReader(actor []byte) (store.Reader, error) {
 }
 
 func (b WriterMap) GetWriter(actor []byte) (store.Writer, error) {
-	// Simplify and optimize state retrieval
-	if actorState, ok := b.branchedWriterState[unsafeString(actor)]; ok {
-		return actorState, nil
-	} else if writerState, err := b.state.GetReader(actor); err != nil {
-		return nil, err
-	} else {
-		actorState = b.branch(writerState)
-		b.branchedWriterState[string(actor)] = actorState
+	actorKey := unsafeString(actor)
+
+	// Step 1: Attempt to read the map with a read lock
+	b.mu.RLock()
+	actorState, ok := b.branchedWriterState[actorKey]
+	b.mu.RUnlock()
+
+	if ok {
+		// If the actorState is found, return it
 		return actorState, nil
 	}
+
+	// Step 2: If not found, proceed with acquiring a write lock to update the map
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	// Double-check: Ensure that the actorState wasn't created by another goroutine while waiting for the write lock
+	if actorState, ok = b.branchedWriterState[actorKey]; ok {
+		return actorState, nil
+	}
+
+	// Step 3: If still not found, create the actorState and update the map
+	writerState, err := b.state.GetReader(actor)
+	if err != nil {
+		return nil, err
+	}
+
+	actorState = b.branch(writerState)
+	b.branchedWriterState[actorKey] = actorState // This line is now protected by the mutex
+
+	return actorState, nil
 }
 
 func (b WriterMap) ApplyStateChanges(stateChanges []store.StateChanges) error {

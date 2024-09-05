@@ -77,6 +77,7 @@ func NewRootCmd() *cobra.Command {
 			customCMTConfig := initCometBFTConfig()
 
 			// set the default command outputs
+			// TODO: Make it configurable
 			stdout, stderr := logmonitor.InitGlobalLogMonitor(func(reason string) {
 				fmt.Println("Shutting down due to:", reason)
 				os.Exit(1)

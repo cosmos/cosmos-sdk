@@ -35,7 +35,6 @@ func NewLogMonitor(shutdownFn func(string), shutdownStrings []string) *LogMonito
 }
 
 // InitGlobalLogMonitor initializes the log monitoring system.
-// This function is kept for backwards compatibility with existing code.
 func InitGlobalLogMonitor(shutdownFn func(string), shutdownStrings []string) (io.Writer, io.Writer) {
 	monitor := NewLogMonitor(shutdownFn, shutdownStrings)
 	stdout := NewMultiWriter(monitor, os.Stdout)

@@ -81,6 +81,7 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	app.SetParamStore(paramStore{db: dbm.NewMemDB()})
 	app.SetTxDecoder(txConfig.TxDecoder())
 	app.SetTxEncoder(txConfig.TxEncoder())
+	app.SetVersionModifier(newMockedVersionModifier(0))
 
 	// mount stores and seal
 	require.Nil(t, app.LoadLatestVersion())

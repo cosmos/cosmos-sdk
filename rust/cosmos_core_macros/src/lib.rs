@@ -31,7 +31,7 @@ pub fn service(_: TokenStream, item: TokenStream) -> TokenStream {
                 let name = &f.sig.ident;
                 let method_name = format_ident!("{}_implemented", name);
                 Some(quote! {
-                    fn #method_name(&self, ctx: &::cosmos_core::Context) -> ::cosmos_core::Result<bool> {
+                    fn #method_name(&self, ctx: ::cosmos_core::ReadContext) -> ::cosmos_core::Response<bool> {
                         todo!()
                     }
                 })

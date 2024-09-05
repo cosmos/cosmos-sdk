@@ -277,20 +277,17 @@ If you are still using the legacy wiring, you must enable unordered transactions
 	}
 	```
 
-* Create or update the App's `Precommiter()` method to call the unordered tx
+* Create or update the App's `Preblocker()` method to call the unordered tx
   manager's `OnNewBlock()` method.
 
 	```go
 	...
-	app.SetPrecommiter(app.Precommiter)
+	app.SetPreblocker(app.PreBlocker)
 	...
 
-	func (app *SimApp) Precommiter(ctx sdk.Context) {
-		if err := app.ModuleManager.Precommit(ctx); err != nil {
-			panic(err)
-		}
-
+	func (app *SimApp) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
 		app.UnorderedTxManager.OnNewBlock(ctx.BlockTime())
+		return app.ModuleManager.PreBlock(ctx, req)
 	}
 	```
 

@@ -22,9 +22,9 @@ import (
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 )
 
@@ -195,8 +195,8 @@ func (m *MM[T]) InitGenesisJSON(
 // ExportGenesisForModules performs export genesis functionality for modules
 func (m *MM[T]) ExportGenesisForModules(
 	ctx context.Context,
-	db appmanager.Store,
 	appStf *stf.STF[T],
+	state store.ReaderMap,
 	modulesToExport ...string,
 ) (map[string]json.RawMessage, error) {
 	if len(modulesToExport) == 0 {
@@ -204,11 +204,6 @@ func (m *MM[T]) ExportGenesisForModules(
 	}
 	// verify modules exists in app, so that we don't panic in the middle of an export
 	if err := m.checkModulesExists(modulesToExport); err != nil {
-		return nil, err
-	}
-
-	_, state, err := db.StateLatest()
-	if err != nil {
 		return nil, err
 	}
 
@@ -235,7 +230,7 @@ func (m *MM[T]) ExportGenesisForModules(
 
 		channels[moduleName] = make(chan genesisResult)
 		go func(moduleI ModuleI, ch chan genesisResult) {
-			_, err = appStf.RunWithCtx(ctx, state, func(ctx context.Context) error {
+			_, _ = appStf.RunWithCtx(ctx, state, func(ctx context.Context) error {
 				jm, err := moduleI.ExportGenesis(ctx)
 				if err != nil {
 					ch <- genesisResult{nil, err}
@@ -244,9 +239,6 @@ func (m *MM[T]) ExportGenesisForModules(
 				ch <- genesisResult{jm, nil}
 				return nil
 			})
-			if err != nil {
-				panic(err)
-			}
 			return
 		}(moduleI, channels[moduleName])
 	}

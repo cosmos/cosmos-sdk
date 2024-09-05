@@ -29,13 +29,12 @@ func (s storeService) OpenKVStore(ctx context.Context) store.KVStore {
 	}
 
 	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	state, err := exCtx.state.GetWriter(s.actor)
 	if err != nil {
 		panic(err)
 	}
-
-	s.mu.Unlock()
 
 	return state
 }

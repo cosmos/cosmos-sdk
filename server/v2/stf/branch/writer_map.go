@@ -34,24 +34,16 @@ func (b WriterMap) GetReader(actor []byte) (store.Reader, error) {
 }
 
 func (b WriterMap) GetWriter(actor []byte) (store.Writer, error) {
+	// Simplify and optimize state retrieval
 	actorKey := unsafeString(actor)
 
-	// attempt to read the map with a read lock
-	b.mu.RLock()
-	actorState, ok := b.branchedWriterState[actorKey]
-	b.mu.RUnlock()
-
-	if ok {
-		// if the actorState is found, return it
-		return actorState, nil
-	}
-
-	// if not found, proceed with acquiring a write lock to update the map
+	// acquire a lock to ensure thread-safe access to the branchedWriterState map
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	// ensure that the actorState wasn't created by another goroutine while waiting for the write lock
-	if actorState, ok = b.branchedWriterState[actorKey]; ok {
+	// check if the writer for the given actor already exists in the map
+	actorState, ok := b.branchedWriterState[actorKey]
+	if ok {
 		return actorState, nil
 	}
 

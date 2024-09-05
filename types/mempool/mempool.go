@@ -25,8 +25,8 @@ type Mempool interface {
 }
 
 // ExtMempool is a extension of Mempool interface introduced in v0.50
-// not not breaking our patch versioning policy.
-// In v0.52+, it will be merged into Mempool interface.
+// for not be breaking in a patch release.
+// In v0.52+, this interface will be merged into Mempool interface.
 type ExtMempool interface {
 	Mempool
 

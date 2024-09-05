@@ -3,6 +3,8 @@ package cmd
 import (
 	"strings"
 
+	serverv2 "cosmossdk.io/server/v2"
+
 	clientconfig "github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
@@ -48,4 +50,21 @@ gas-adjustment = {{ .GasConfig.GasAdjustment }}
 `)
 
 	return customClientConfigTemplate, customClientConfig
+}
+
+// Allow the chain developer to overwrite the server default app toml config.
+func initServerConfig() serverv2.ServerConfig {
+	serverCfg := serverv2.DefaultServerConfig()
+	// The server's default minimum gas price is set to "0stake" inside
+	// app.toml. However, the chain developer can set a default app.toml value for their
+	// validators here. Please update value based on chain denom.
+	//
+	// In summary:
+	// - if you set serverCfg.MinGasPrices value, validators CAN tweak their
+	//   own app.toml to override, or use this default value.
+	//
+	// In simapp, we set the min gas prices to 0.
+	serverCfg.MinGasPrices = "0stake"
+
+	return serverCfg
 }

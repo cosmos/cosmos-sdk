@@ -141,13 +141,13 @@ The documentation on the IAVL Tree is located [here](https://github.com/cosmos/i
 
 ### `DbAdapter` Store
 
-`dbadapter.Store` is an adapter for `dbm.DB` making it fulfilling the `KVStore` interface.
+`dbadapter.Store` is an adapter for `corestore.KVStoreWithBatch` making it fulfilling the `KVStore` interface.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/store/dbadapter/store.go#L13-L16
 ```
 
-`dbadapter.Store` embeds `dbm.DB`, meaning most of the `KVStore` interface functions are implemented. The other functions (mostly miscellaneous) are manually implemented. This store is primarily used within [Transient Stores](#transient-store)
+`dbadapter.Store` embeds `corestore.KVStoreWithBatch`, meaning most of the `KVStore` interface functions are implemented. The other functions (mostly miscellaneous) are manually implemented. This store is primarily used within [Transient Stores](#transient-store)
 
 ### `Transient` Store 
 

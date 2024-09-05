@@ -10,11 +10,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/auth/signing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 func TestOutOfOrder(t *testing.T) {
@@ -71,7 +71,7 @@ func (a signerExtractionAdapter) GetSigners(tx sdk.Tx) ([]mempool.SignerData, er
 	if err != nil {
 		return nil, err
 	}
-	signerData := make([]mempool.SignerData, len(sigs))
+	signerData := make([]mempool.SignerData, 0, len(sigs))
 	for _, sig := range sigs {
 		signerData = append(signerData, mempool.SignerData{
 			Signer:   sig.PubKey.Address().Bytes(),

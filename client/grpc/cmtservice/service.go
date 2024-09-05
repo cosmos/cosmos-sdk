@@ -15,7 +15,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -73,10 +72,15 @@ func (s queryServer) GetLatestBlock(ctx context.Context, _ *GetLatestBlockReques
 		return nil, err
 	}
 
+	sdkBlock, err := convertBlock(protoBlock, s.clientCtx.ConsensusAddressCodec)
+	if err != nil {
+		return nil, err
+	}
+
 	return &GetLatestBlockResponse{
 		BlockId:  &protoBlockID,
 		Block:    protoBlock,
-		SdkBlock: convertBlock(protoBlock),
+		SdkBlock: sdkBlock,
 	}, nil
 }
 
@@ -96,10 +100,15 @@ func (s queryServer) GetBlockByHeight(ctx context.Context, req *GetBlockByHeight
 		return nil, err
 	}
 
+	sdkBlock, err := convertBlock(protoBlock, s.clientCtx.ConsensusAddressCodec)
+	if err != nil {
+		return nil, err
+	}
+
 	return &GetBlockByHeightResponse{
 		BlockId:  &protoBlockID,
 		Block:    protoBlock,
-		SdkBlock: convertBlock(protoBlock),
+		SdkBlock: sdkBlock,
 	}, nil
 }
 
@@ -177,8 +186,13 @@ func ValidatorsOutput(ctx context.Context, clientCtx client.Context, height *int
 			return nil, err
 		}
 
+		addr, err := clientCtx.ConsensusAddressCodec.BytesToString(v.Address)
+		if err != nil {
+			return nil, err
+		}
+
 		resp.Validators[i] = &Validator{
-			Address:          sdk.ConsAddress(v.Address).String(),
+			Address:          addr,
 			ProposerPriority: v.ProposerPriority,
 			PubKey:           anyPub,
 			VotingPower:      v.VotingPower,

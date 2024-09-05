@@ -4,6 +4,8 @@ package cosmos.bank.module.v2;
 
 import "cosmos/app/v1alpha1/module.proto";
 
+option go_package = "cosmossdk.io/x/bank/v2/types/module";
+
 // Module is the config object of the bank module.
 message Module {
   option (cosmos.app.v1alpha1.module) = {

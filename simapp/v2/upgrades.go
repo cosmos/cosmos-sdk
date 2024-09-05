@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts"
+	bankv2types "cosmossdk.io/x/bank/v2/types"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
@@ -36,6 +37,7 @@ func (app *SimApp[T]) RegisterUpgradeHandlers() {
 			Added: []string{
 				accounts.ModuleName,
 				protocolpooltypes.ModuleName,
+				bankv2types.ModuleName,
 			},
 			Deleted: []string{"crisis"}, // The SDK discontinued the crisis module in v0.52.0
 		}

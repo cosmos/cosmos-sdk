@@ -57,4 +57,7 @@ done
 cp -r github.com/cosmos/cosmos-sdk/* ./
 rm -rf github.com
 
+# UNTIL WE FIGURE OUT ABOUT COSMOSSDK.IO/API, DO NOT GENERATE PULSAR FILES FOR NEW MODULES
+rm -r api/cosmos/bank/v2
+
 go mod tidy

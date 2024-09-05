@@ -18,7 +18,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "Params",
 					Use:       "params",
-					Short:     "Query the current bank/v2 parameters",
+					Short:     "Query current bank/v2 parameters",
 				},
 			},
 		},
@@ -30,7 +30,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod:      "UpdateParams",
 					Use:            "update-params-proposal <params>",
 					Short:          "Submit a proposal to update bank module params. Note: the entire params must be provided.",
-					Example:        fmt.Sprintf(`%s tx bank update-params-proposal '{ "default_send_enabled": true }'`, version.AppName),
+					Example:        fmt.Sprintf(`%s tx bank update-params-proposal '{ }'`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
 					GovProposal:    true,
 				},

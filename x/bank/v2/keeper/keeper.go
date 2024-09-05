@@ -15,16 +15,26 @@ type Keeper struct {
 	authority    []byte
 	addressCodec address.Codec
 	environment  appmodulev2.Environment
+	schema       collections.Schema
 	params       collections.Item[types.Params]
 }
 
 func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Environment, cdc codec.BinaryCodec) *Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
-	return &Keeper{
+	k := &Keeper{
 		authority:    authority,
 		addressCodec: addressCodec, // TODO(@julienrbrt): Should we add address codec to the environment?
 		environment:  env,
 		params:       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
+
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+
+	k.schema = schema
+
+	return k
 }

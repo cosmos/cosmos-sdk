@@ -3,9 +3,10 @@
 package cmd
 
 import (
-	"os"
-
+	"fmt"
+	"github.com/cosmos/cosmos-sdk/server/log/logmonitor"
 	"github.com/spf13/cobra"
+	"os"
 
 	authv1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
@@ -56,10 +57,6 @@ func NewRootCmd() *cobra.Command {
 		Short:         "simulation app",
 		SilenceErrors: true,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			// set the default command outputs
-			cmd.SetOut(cmd.OutOrStdout())
-			cmd.SetErr(cmd.ErrOrStderr())
-
 			clientCtx = clientCtx.WithCmdContext(cmd.Context()).WithViper("")
 			clientCtx, err := client.ReadPersistentCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
@@ -78,6 +75,17 @@ func NewRootCmd() *cobra.Command {
 
 			customAppTemplate, customAppConfig := initAppConfig()
 			customCMTConfig := initCometBFTConfig()
+
+			// set the default command outputs
+			stdout, stderr := logmonitor.InitGlobalLogMonitor(func(reason string) {
+				fmt.Println("Shutting down due to:", reason)
+				os.Exit(1)
+			}, []string{"test"})
+			//
+			// Set the output of the root command to use our MultiWriter
+			cmd.SetOut(stdout)
+			cmd.SetErr(stderr)
+			//
 
 			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customCMTConfig)
 		},

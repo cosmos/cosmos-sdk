@@ -185,5 +185,6 @@ replace (
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240815194237-858ec2fcb897 // main
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/consensus => ../consensus
+	cosmossdk.io/x/epochs => ../epochs
 	cosmossdk.io/x/staking => ../staking
 )

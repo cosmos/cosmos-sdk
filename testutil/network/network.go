@@ -22,7 +22,7 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -168,7 +168,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config, baseappOpts ...func(
 	var (
 		appBuilder            *runtime.AppBuilder
 		txConfig              client.TxConfig
-		legacyAmino           legacy.Amino
+		legacyAmino           registry.AminoRegistrar
 		cdc                   codec.Codec
 		interfaceRegistry     codectypes.InterfaceRegistry
 		addressCodec          address.Codec

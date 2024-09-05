@@ -10,7 +10,6 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/simulation"
@@ -81,8 +80,8 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the slashing module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
-	types.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	types.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterInterfaces registers the slashing module's interface types

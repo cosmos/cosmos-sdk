@@ -1,5 +1,5 @@
 version: v1
-name: buf.build/cosmos/circuit
+name: buf.build/cosmos/x-circuit
 deps:
   - buf.build/cosmos/cosmos-sdk # pin the Cosmos SDK version
   - buf.build/cosmos/cosmos-proto

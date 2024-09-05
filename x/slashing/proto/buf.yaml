@@ -1,5 +1,5 @@
 version: v1
-name: buf.build/cosmos/slashing
+name: buf.build/cosmos/x-slashing
 deps:
   - buf.build/cosmos/cosmos-sdk # pin the Cosmos SDK version
   - buf.build/cosmos/cosmos-proto

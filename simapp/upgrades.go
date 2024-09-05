@@ -4,14 +4,14 @@ import (
 	"context"
 
 	"cosmossdk.io/core/appmodule"
-	storetypes "cosmossdk.io/store/types"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts"
-	authkeeper "cosmossdk.io/x/auth/keeper"
 	epochstypes "cosmossdk.io/x/epochs/types"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 // UpgradeName defines the on-chain upgrade name for the sample SimApp upgrade
@@ -42,7 +42,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 	}
 
 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := storetypes.StoreUpgrades{
+		storeUpgrades := corestore.StoreUpgrades{
 			Added: []string{
 				accounts.StoreKey,
 				protocolpooltypes.StoreKey,

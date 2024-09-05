@@ -58,7 +58,7 @@ func (s SingleHostTestnetCmdInitializer) Initialize() {
 		"--single-host",
 	}
 	s.log(fmt.Sprintf("+++ %s %s\n", s.execBinary, strings.Join(args, " ")))
-	out, err := runShellCmdX(s.execBinary, args...)
+	out, err := RunShellCmd(s.execBinary, args...)
 	if err != nil {
 		panic(err)
 	}
@@ -112,7 +112,7 @@ func (s ModifyConfigYamlInitializer) Initialize() {
 	}
 	s.log(fmt.Sprintf("+++ %s %s\n", s.execBinary, strings.Join(args, " ")))
 
-	out, err := runShellCmdX(s.execBinary, args...)
+	out, err := RunShellCmd(s.execBinary, args...)
 	if err != nil {
 		panic(err)
 	}

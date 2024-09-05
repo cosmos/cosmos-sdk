@@ -74,7 +74,7 @@ the viper literal and passed to the application construction.
 Example:
 
 ```go
-func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
+func newApp(logger log.Logger, db corestore.KVStoreWithBatch, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 	return simapp.NewSimApp(
 		logger, db, traceStore, true,

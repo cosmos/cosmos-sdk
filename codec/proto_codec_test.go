@@ -17,6 +17,7 @@ import (
 	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
@@ -176,17 +177,19 @@ func BenchmarkProtoCodecMarshalLengthPrefixed(b *testing.B) {
 }
 
 func TestGetSigners(t *testing.T) {
+	cdcOpts := codectestutil.CodecOptions{}
 	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
 		SigningOptions: signing.Options{
-			AddressCodec:          testAddressCodec{},
-			ValidatorAddressCodec: testAddressCodec{},
+			AddressCodec:          cdcOpts.GetAddressCodec(),
+			ValidatorAddressCodec: cdcOpts.GetValidatorCodec(),
 		},
 		ProtoFiles: protoregistry.GlobalFiles,
 	})
 	require.NoError(t, err)
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	testAddr := sdk.AccAddress("test")
-	testAddrStr := testAddr.String()
+	testAddrStr, err := cdcOpts.GetAddressCodec().BytesToString(testAddr)
+	require.NoError(t, err)
 
 	msgSendV1 := &countertypes.MsgIncreaseCounter{Signer: testAddrStr, Count: 1}
 	msgSendV2 := &counterv1.MsgIncreaseCounter{Signer: testAddrStr, Count: 1}
@@ -206,14 +209,4 @@ func TestGetSigners(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, [][]byte{testAddr}, signers)
 	require.True(t, protov2.Equal(msgSendV2, msgSendV2Copy.Interface()))
-}
-
-type testAddressCodec struct{}
-
-func (t testAddressCodec) StringToBytes(text string) ([]byte, error) {
-	return sdk.AccAddressFromBech32(text)
-}
-
-func (t testAddressCodec) BytesToString(bz []byte) (string, error) {
-	return sdk.AccAddress(bz).String(), nil
 }

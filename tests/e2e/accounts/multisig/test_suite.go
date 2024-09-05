@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"google.golang.org/protobuf/runtime/protoiface"
 
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 	multisigaccount "cosmossdk.io/x/accounts/defaults/multisig"
@@ -18,8 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-type ProtoMsg = protoiface.MessageV1
 
 type E2ETestSuite struct {
 	suite.Suite
@@ -59,7 +57,7 @@ func (s *E2ETestSuite) executeTx(ctx context.Context, msg sdk.Msg, accAddr, send
 	return err
 }
 
-func (s *E2ETestSuite) queryAcc(ctx context.Context, req sdk.Msg, accAddr []byte) (ProtoMsg, error) {
+func (s *E2ETestSuite) queryAcc(ctx context.Context, req sdk.Msg, accAddr []byte) (transaction.Msg, error) {
 	resp, err := s.app.AccountsKeeper.Query(ctx, accAddr, req)
 	return resp, err
 }

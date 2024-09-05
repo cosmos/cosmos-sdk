@@ -2,11 +2,22 @@ package serverv2
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 )
+
+// ServerConfig defines configuration for the server component.
+type ServerConfig struct {
+	MinGasPrices string `mapstructure:"minimum-gas-prices" toml:"minimum-gas-prices" comment:"minimum-gas-prices defines the price which a validator is willing to accept for processing a transaction. A transaction's fees must meet the minimum of any denomination specified in this config (e.g. 0.25token1;0.0001token2)."`
+}
+
+// DefaultServerConfig returns the default config of server component
+func DefaultServerConfig() ServerConfig {
+	return ServerConfig{
+		MinGasPrices: "0stake",
+	}
+}
 
 // ReadConfig returns a viper instance of the config file
 func ReadConfig(configPath string) (*viper.Viper, error) {
@@ -34,8 +45,9 @@ func ReadConfig(configPath string) (*viper.Viper, error) {
 func UnmarshalSubConfig(v *viper.Viper, subName string, target any) error {
 	var sub any
 	for k, val := range v.AllSettings() {
-		if strings.HasPrefix(k, subName) {
+		if k == subName {
 			sub = val
+			break
 		}
 	}
 

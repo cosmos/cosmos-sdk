@@ -31,7 +31,7 @@ it can be updated with governance or the address with authority.
 * Params: `0x05 | ProtocolBuffer(cometbft.ConsensusParams)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/381de6452693a9338371223c232fba0c42773a4b/proto/cosmos/consensus/v1/consensus.proto#L11-L18
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/consensus/proto/cosmos/consensus/v1/consensus.proto#L9-L15
 ```
 
 ## Keepers
@@ -45,21 +45,13 @@ The consensus module provides methods to Set and Get consensus params. It is rec
 Update consensus params.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/381de6452693a9338371223c232fba0c42773a4b/proto/cosmos/consensus/v1/tx.proto#L12-L47
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/consensus/proto/cosmos/consensus/v1/tx.proto#L23-L44
 ```
 
 The message will fail under the following conditions:
 
 * The signer is not the set authority 
 * Not all values are set
-
-## Consensus Messages
-
-The consensus module has a consensus message that is used to set the consensus params when the chain initializes. It is similar to the `UpdateParams` message but it is only used once at the start of the chain.
-
-```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/381de6452693a9338371223c232fba0c42773a4b/proto/cosmos/consensus/v1/consensus.proto#L9-L24
-```
 
 ## Events
 

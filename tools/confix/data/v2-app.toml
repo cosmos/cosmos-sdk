@@ -1,0 +1,63 @@
+[comet]
+# min-retain-blocks defines the minimum block height offset from the current block being committed, such that all blocks past this offset are pruned from CometBFT. A value of 0 indicates that no blocks should be pruned.
+min-retain-blocks = 0
+# index-events defines the set of events in the form {eventType}.{attributeKey}, which informs CometBFT what to index. If empty, all events will be indexed.
+index-events = []
+# halt-height contains a non-zero block height at which a node will gracefully halt and shutdown that can be used to assist upgrades and testing.
+halt-height = 0
+# halt-time contains a non-zero minimum block time (in Unix seconds) at which a node will gracefully halt and shutdown that can be used to assist upgrades and testing.
+halt-time = 0
+# address defines the CometBFT RPC server address to bind to.
+address = 'tcp://127.0.0.1:26658'
+# transport defines the CometBFT RPC server transport protocol: socket, grpc
+transport = 'socket'
+# trace enables the CometBFT RPC server to output trace information about its internal operations.
+trace = false
+# standalone starts the application without the CometBFT node. The node should be started separately.
+standalone = false
+
+[grpc]
+# Enable defines if the gRPC server should be enabled.
+enable = true
+# Address defines the gRPC server address to bind to.
+address = 'localhost:9090'
+# MaxRecvMsgSize defines the max message size in bytes the server can receive.
+# The default value is 10MB.
+max-recv-msg-size = 10485760
+# MaxSendMsgSize defines the max message size in bytes the server can send.
+# The default value is math.MaxInt32.
+max-send-msg-size = 2147483647
+
+[server]
+# minimum-gas-prices defines the price which a validator is willing to accept for processing a transaction. A transaction's fees must meet the minimum of any denomination specified in this config (e.g. 0.25token1;0.0001token2).
+minimum-gas-prices = '0stake'
+
+[store]
+# The type of database for application and snapshots databases.
+app-db-backend = 'goleveldb'
+
+[store.options]
+# State storage database type. Currently we support: 0 for SQLite, 1 for Pebble
+ss-type = 0
+# State commitment database type. Currently we support:0 for iavl, 1 for iavl v2
+sc-type = 0
+
+# Pruning options for state storage
+[store.options.ss-pruning-option]
+# Number of recent heights to keep on disk.
+keep-recent = 2
+# Height interval at which pruned heights are removed from disk.
+interval = 1
+
+# Pruning options for state commitment
+[store.options.sc-pruning-option]
+# Number of recent heights to keep on disk.
+keep-recent = 2
+# Height interval at which pruned heights are removed from disk.
+interval = 1
+
+[store.options.iavl-config]
+# CacheSize set the size of the iavl tree cache.
+cache-size = 100000
+# If true, the tree will work like no fast storage and always not upgrade fast storage.
+skip-fast-storage-upgrade = true

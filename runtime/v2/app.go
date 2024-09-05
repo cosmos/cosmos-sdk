@@ -3,15 +3,14 @@ package runtime
 import (
 	"encoding/json"
 	"errors"
+	"slices"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"golang.org/x/exp/slices"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
-	"cosmossdk.io/core/legacy"
-	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 )
@@ -41,12 +40,12 @@ type App[T transaction.Tx] struct {
 	// modules configuration
 	storeKeys          []string
 	interfaceRegistrar registry.InterfaceRegistrar
-	amino              legacy.Amino
+	amino              registry.AminoRegistrar
 	moduleManager      *MM[T]
 
-	// GRPCQueryDecoders maps gRPC method name to a function that decodes the request
+	// GRPCMethodsToMessageMap maps gRPC method name to a function that decodes the request
 	// bytes into a gogoproto.Message, which then can be passed to appmanager.
-	GRPCQueryDecoders map[string]func(requestBytes []byte) (gogoproto.Message, error)
+	GRPCMethodsToMessageMap map[string]func() gogoproto.Message
 }
 
 // Name returns the app name.
@@ -79,6 +78,11 @@ func (a *App[T]) LoadHeight(height uint64) error {
 	return a.db.LoadVersion(height)
 }
 
+// LoadLatestHeight loads the latest height.
+func (a *App[T]) LoadLatestHeight() (uint64, error) {
+	return a.db.GetLatestVersion()
+}
+
 // Close is called in start cmd to gracefully cleanup resources.
 func (a *App[T]) Close() error {
 	return nil
@@ -105,19 +109,10 @@ func (a *App[T]) GetStore() Store {
 	return a.db
 }
 
-// GetLogger returns the app logger.
-func (a *App[T]) GetLogger() log.Logger {
-	return a.logger
-}
-
-func (a *App[T]) ExecuteGenesisTx(_ []byte) error {
-	panic("App.ExecuteGenesisTx not supported in runtime/v2")
-}
-
 func (a *App[T]) GetAppManager() *appmanager.AppManager[T] {
 	return a.AppManager
 }
 
-func (a *App[T]) GetGRPCQueryDecoders() map[string]func(requestBytes []byte) (gogoproto.Message, error) {
-	return a.GRPCQueryDecoders
+func (a *App[T]) GetGPRCMethodsToMessageMap() map[string]func() gogoproto.Message {
+	return a.GRPCMethodsToMessageMap
 }

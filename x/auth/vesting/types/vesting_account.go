@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
-	vestexported "cosmossdk.io/x/auth/vesting/exported"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 )
 
 // Compile-time type assertions

@@ -2,21 +2,19 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
-	"cosmossdk.io/core/log"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/auth/ante"
 	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
 // Keeper manages state of all fee grants, as well as calculating approval.
@@ -58,11 +56,6 @@ func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak feegrant.Acc
 			collections.BoolValue,
 		),
 	}
-}
-
-// Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", feegrant.ModuleName))
 }
 
 // GrantAllowance creates a new grant
@@ -197,7 +190,7 @@ func (k Keeper) revokeAllowance(ctx context.Context, granter, grantee sdk.AccAdd
 }
 
 // GetAllowance returns the allowance between the granter and grantee.
-// If there is none, it returns nil, nil.
+// If there is none, it returns nil, collections.ErrNotFound.
 // Returns an error on parsing issues
 func (k Keeper) GetAllowance(ctx context.Context, granter, grantee sdk.AccAddress) (feegrant.FeeAllowanceI, error) {
 	grant, err := k.FeeAllowance.Get(ctx, collections.Join(grantee, granter))

@@ -5,9 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/x/auth/types"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ types.MsgServer = msgServer{}
@@ -23,7 +22,7 @@ func NewMsgServerImpl(ak AccountKeeper) types.MsgServer {
 	}
 }
 
-func (ms msgServer) NonAtomicExec(goCtx context.Context, msg *types.MsgNonAtomicExec) (*types.MsgNonAtomicExecResponse, error) {
+func (ms msgServer) NonAtomicExec(ctx context.Context, msg *types.MsgNonAtomicExec) (*types.MsgNonAtomicExecResponse, error) {
 	if msg.Signer == "" {
 		return nil, errors.New("empty signer address string is not allowed")
 	}
@@ -42,7 +41,7 @@ func (ms msgServer) NonAtomicExec(goCtx context.Context, msg *types.MsgNonAtomic
 		return nil, err
 	}
 
-	results, err := ms.ak.NonAtomicMsgsExec(goCtx, signer, msgs)
+	results, err := ms.ak.NonAtomicMsgsExec(ctx, signer, msgs)
 	if err != nil {
 		return nil, err
 	}

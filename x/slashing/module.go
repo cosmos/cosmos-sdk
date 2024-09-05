@@ -10,7 +10,6 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/simulation"
@@ -33,7 +32,6 @@ var (
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasBeginBlocker       = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
@@ -82,23 +80,23 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the slashing module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
-	types.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	types.RegisterLegacyAminoCodec(registrar)
 }
 
-// RegisterInterfaces registers the module's interface types
+// RegisterInterfaces registers the slashing module's interface types
 func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 	types.RegisterInterfaces(registrar)
 }
 
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the slashig module.
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the slashing module.
 func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
 
-// RegisterServices registers module services.
+// RegisterServices registers slashing module's services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	types.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(registrar, keeper.NewQuerier(am.keeper))
@@ -106,7 +104,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	return nil
 }
 
-// RegisterMigrations registers module migrations.
+// RegisterMigrations registers slashing module's migrations.
 func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper, am.stakingKeeper.ValidatorAddressCodec())
 

@@ -3,18 +3,17 @@ module cosmossdk.io/store
 go 1.22.2
 
 require (
-	cosmossdk.io/core v0.12.0
-	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
+	cosmossdk.io/core v0.12.1-0.20240813134434-072a29c838a5
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/log v1.3.1
+	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
 	github.com/cometbft/cometbft v1.0.0-rc1
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
-	github.com/cosmos/cosmos-db v1.0.2
+	github.com/cosmos/cosmos-db v1.0.3-0.20240829004618-717cba019b33
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/gogoproto v1.5.0
-	github.com/cosmos/iavl v1.2.0
-	github.com/cosmos/ics23/go v0.10.0
+	github.com/cosmos/gogoproto v1.7.0
+	github.com/cosmos/iavl v1.0.0-beta.1.0.20240813194616-eb5078efcf9e
+	github.com/cosmos/ics23/go v0.11.0
 	github.com/golang/mock v1.6.0
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/go-metrics v0.5.3
@@ -23,16 +22,10 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/tidwall/btree v1.7.0
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
-	google.golang.org/grpc v1.64.1
+	google.golang.org/grpc v1.66.0
 	google.golang.org/protobuf v1.34.2
 	gotest.tools/v3 v3.5.1
 )
-
-replace cosmossdk.io/core => ../core
-
-replace cosmossdk.io/core/testing => ../core/testing
-
-replace cosmossdk.io/log => ../log
 
 require (
 	github.com/DataDog/zstd v1.5.5 // indirect
@@ -56,7 +49,7 @@ require (
 	github.com/hashicorp/go-uuid v1.0.1 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/jhump/protoreflect v1.15.3 // indirect
-	github.com/klauspost/compress v1.17.8 // indirect
+	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/linxGnu/grocksdb v1.8.14 // indirect
@@ -68,18 +61,18 @@ require (
 	github.com/petermattis/goid v0.0.0-20221215004737-a150e88a970d // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/client_golang v1.19.1 // indirect
+	github.com/prometheus/client_golang v1.20.2 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.55.0 // indirect
+	github.com/prometheus/common v0.58.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/rs/zerolog v1.33.0 // indirect
-	github.com/spf13/cast v1.6.0 // indirect
+	github.com/spf13/cast v1.7.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
-	golang.org/x/crypto v0.25.0 // indirect
-	golang.org/x/net v0.27.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240709173604-40e1e62336c5 // indirect
+	golang.org/x/crypto v0.26.0 // indirect
+	golang.org/x/net v0.28.0 // indirect
+	golang.org/x/sys v0.24.0 // indirect
+	golang.org/x/text v0.17.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240827150818-7e3bb234dfed // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

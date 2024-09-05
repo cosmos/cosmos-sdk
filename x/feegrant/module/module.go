@@ -10,17 +10,18 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/client/cli"
 	"cosmossdk.io/x/feegrant/keeper"
+	"cosmossdk.io/x/feegrant/simulation"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 var (
@@ -30,7 +31,6 @@ var (
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasEndBlocker         = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
@@ -67,8 +67,8 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the feegrant module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
-	feegrant.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	feegrant.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterInterfaces registers the feegrant module's interface types
@@ -152,4 +152,24 @@ func (AppModule) ConsensusVersion() uint64 { return 2 }
 // EndBlock returns the end blocker for the feegrant module.
 func (am AppModule) EndBlock(ctx context.Context) error {
 	return EndBlocker(ctx, am.keeper)
+}
+
+// AppModuleSimulation functions
+
+// GenerateGenesisState creates a randomized GenState of the feegrant module.
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
+
+// RegisterStoreDecoder registers a decoder for feegrant module's types
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
+	sdr[feegrant.StoreKey] = simulation.NewDecodeStore(am.cdc)
+}
+
+// WeightedOperations returns all the feegrant module operations with their respective weights.
+func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	return simulation.WeightedOperations(
+		simState.AppParams, simState.TxConfig,
+		am.accountKeeper, am.bankKeeper, am.keeper,
+	)
 }

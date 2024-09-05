@@ -125,7 +125,7 @@ aforementioned state:
 
 ## Params
 
-The bank module stores it's params in state with the prefix of `0x05`,
+The bank module stores its params in state with the prefix of `0x05`,
 it can be updated with governance or the address with authority.
 
 * Params: `0x05 | ProtocolBuffer(Params)`

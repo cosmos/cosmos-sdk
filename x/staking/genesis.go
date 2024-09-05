@@ -1,6 +1,7 @@
 package staking
 
 import (
+	"context"
 	"fmt"
 
 	cmttypes "github.com/cometbft/cometbft/types"
@@ -14,7 +15,7 @@ import (
 )
 
 // WriteValidators returns a slice of bonded genesis validators.
-func WriteValidators(ctx sdk.Context, keeper *keeper.Keeper) (vals []cmttypes.GenesisValidator, returnErr error) {
+func WriteValidators(ctx context.Context, keeper *keeper.Keeper) (vals []cmttypes.GenesisValidator, returnErr error) {
 	err := keeper.LastValidatorPower.Walk(ctx, nil, func(key []byte, _ gogotypes.Int64Value) (bool, error) {
 		validator, err := keeper.GetValidator(ctx, key)
 		if err != nil {

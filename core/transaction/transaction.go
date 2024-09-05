@@ -1,11 +1,12 @@
 package transaction
 
-import (
-	gogoproto "github.com/cosmos/gogoproto/proto"
-)
-
 type (
-	Msg      = gogoproto.Message
+	// Msg uses structural types to define the interface for a message.
+	Msg = interface {
+		Reset()
+		String() string
+		ProtoMessage()
+	}
 	Identity = []byte
 )
 
@@ -18,6 +19,8 @@ type Codec[T Tx] interface {
 	DecodeJSON([]byte) (T, error)
 }
 
+// Tx defines the interface for a transaction.
+// All custom transactions must implement this interface.
 type Tx interface {
 	// Hash returns the unique identifier for the Tx.
 	Hash() [32]byte

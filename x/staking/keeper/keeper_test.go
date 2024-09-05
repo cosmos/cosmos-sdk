@@ -11,9 +11,9 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	consensustypes "cosmossdk.io/x/consensus/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
@@ -30,6 +30,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	addresstypes "github.com/cosmos/cosmos-sdk/types/address"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -65,7 +66,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	s.baseApp = baseapp.NewBaseApp(
 		"staking",
-		coretesting.NewNopLogger(),
+		log.NewNopLogger(),
 		testCtx.DB,
 		encCfg.TxConfig.TxDecoder(),
 	)

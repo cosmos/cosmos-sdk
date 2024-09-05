@@ -6,11 +6,10 @@ import (
 	"io"
 
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
 	ics23 "github.com/cosmos/ics23/go"
 
-	"cosmossdk.io/core/log"
+	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/internal/kv"
@@ -18,7 +17,6 @@ import (
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/tracekv"
 	"cosmossdk.io/store/types"
-	"cosmossdk.io/store/wrapper"
 )
 
 const (
@@ -37,14 +35,14 @@ var (
 // Store Implements types.KVStore and CommitKVStore.
 type Store struct {
 	tree    Tree
-	logger  log.Logger
+	logger  types.Logger
 	metrics metrics.StoreMetrics
 }
 
 // LoadStore returns an IAVL Store as a CommitKVStore. Internally, it will load the
 // store's version (id) from the provided DB. An error is returned if the version
 // fails to load, or if called with a positive version on an empty tree.
-func LoadStore(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics) (types.CommitKVStore, error) {
+func LoadStore(db corestore.KVStoreWithBatch, logger types.Logger, key types.StoreKey, id types.CommitID, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics) (types.CommitKVStore, error) {
 	return LoadStoreWithInitialVersion(db, logger, key, id, 0, cacheSize, disableFastNode, metrics)
 }
 
@@ -52,8 +50,8 @@ func LoadStore(db dbm.DB, logger log.Logger, key types.StoreKey, id types.Commit
 // to the one given. Internally, it will load the store's version (id) from the
 // provided DB. An error is returned if the version fails to load, or if called with a positive
 // version on an empty tree.
-func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, initialVersion uint64, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics) (types.CommitKVStore, error) {
-	tree := iavl.NewMutableTree(wrapper.NewDBWrapper(db), cacheSize, disableFastNode, logger, iavl.InitialVersionOption(initialVersion), iavl.AsyncPruningOption(true))
+func LoadStoreWithInitialVersion(db corestore.KVStoreWithBatch, logger types.Logger, key types.StoreKey, id types.CommitID, initialVersion uint64, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics) (types.CommitKVStore, error) {
+	tree := iavl.NewMutableTree(db, cacheSize, disableFastNode, logger, iavl.InitialVersionOption(initialVersion), iavl.AsyncPruningOption(true))
 
 	isUpgradeable, err := tree.IsUpgradeable()
 	if err != nil {

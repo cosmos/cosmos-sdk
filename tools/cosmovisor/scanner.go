@@ -9,15 +9,16 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"testing"
 	"time"
 
-	"cosmossdk.io/log"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 type fileWatcher struct {
-	filename string // full path to a watched file
-	interval time.Duration
+	daemonHome string
+	filename   string // full path to a watched file
+	interval   time.Duration
 
 	currentBin  string
 	currentInfo upgradetypes.Plan
@@ -30,7 +31,7 @@ type fileWatcher struct {
 	disableRecase bool
 }
 
-func newUpgradeFileWatcher(cfg *Config, logger log.Logger) (*fileWatcher, error) {
+func newUpgradeFileWatcher(cfg *Config) (*fileWatcher, error) {
 	filename := cfg.UpgradeInfoFilePath()
 	if filename == "" {
 		return nil, errors.New("filename undefined")
@@ -52,6 +53,7 @@ func newUpgradeFileWatcher(cfg *Config, logger log.Logger) (*fileWatcher, error)
 	}
 
 	return &fileWatcher{
+		daemonHome:    cfg.Home,
 		currentBin:    bin,
 		filename:      filenameAbs,
 		interval:      cfg.PollInterval,
@@ -107,10 +109,36 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 
 	stat, err := os.Stat(fw.filename)
 	if err != nil {
-		// file doesn't exists
+		if os.IsNotExist(err) {
+			return false
+		} else {
+			panic(fmt.Errorf("failed to stat upgrade info file: %w", err))
+		}
+	}
+
+	// check https://github.com/cosmos/cosmos-sdk/issues/21086
+	// If new file is still empty, wait a small amount of time for write to complete
+	if stat.Size() == 0 {
+		for range 10 {
+			time.Sleep(2 * time.Millisecond)
+			stat, err = os.Stat(fw.filename)
+			if err != nil {
+				if os.IsNotExist(err) {
+					return false
+				} else {
+					panic(fmt.Errorf("failed to stat upgrade info file: %w", err))
+				}
+			}
+			if stat.Size() == 0 {
+				break
+			}
+		}
+	}
+	if stat.Size() == 0 {
 		return false
 	}
 
+	// no update if the file already exists and has not been modified
 	if !stat.ModTime().After(fw.lastModTime) {
 		return false
 	}
@@ -153,20 +181,20 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 
 // checkHeight checks if the current block height
 func (fw *fileWatcher) checkHeight() (int64, error) {
-	// TODO(@julienrbrt) use `if !testing.Testing()` from Go 1.22
-	// The tests from `process_test.go`, which run only on linux, are failing when using `autod` that is a bash script.
-	// In production, the binary will always be an application with a status command, but in tests it isn't not.
-	if strings.HasSuffix(os.Args[0], ".test") {
+	if testing.Testing() { // we cannot test the command in the test environment
 		return 0, nil
 	}
 
-	result, err := exec.Command(fw.currentBin, "status").Output() //nolint:gosec // we want to execute the status command
+	result, err := exec.Command(fw.currentBin, "status", "--home", fw.daemonHome).CombinedOutput() //nolint:gosec // we want to execute the status command
 	if err != nil {
 		return 0, err
 	}
 
 	type response struct {
 		SyncInfo struct {
+			LatestBlockHeight string `json:"latest_block_height"`
+		} `json:"sync_info"`
+		AnotherCasingSyncInfo struct {
 			LatestBlockHeight string `json:"latest_block_height"`
 		} `json:"SyncInfo"`
 	}
@@ -176,11 +204,13 @@ func (fw *fileWatcher) checkHeight() (int64, error) {
 		return 0, err
 	}
 
-	if resp.SyncInfo.LatestBlockHeight == "" {
-		return 0, errors.New("latest block height is empty")
+	if resp.SyncInfo.LatestBlockHeight != "" {
+		return strconv.ParseInt(resp.SyncInfo.LatestBlockHeight, 10, 64)
+	} else if resp.AnotherCasingSyncInfo.LatestBlockHeight != "" {
+		return strconv.ParseInt(resp.AnotherCasingSyncInfo.LatestBlockHeight, 10, 64)
 	}
 
-	return strconv.ParseInt(resp.SyncInfo.LatestBlockHeight, 10, 64)
+	return 0, errors.New("latest block height is empty")
 }
 
 func parseUpgradeInfoFile(filename string, disableRecase bool) (upgradetypes.Plan, error) {

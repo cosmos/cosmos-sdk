@@ -51,7 +51,10 @@ func ExtractAutoCLIOptions(appModules map[string]appmodule.AppModule) (map[strin
 
 		// try to auto-discover options based on the last msg and query
 		// services registered for the module
-		if mod, ok := mod.(appmodule.HasServices); ok {
+		// this supports the legacy core/appmodule v1 service registration
+		if mod, ok := mod.(interface {
+			RegisterServices(grpc.ServiceRegistrar) error
+		}); ok {
 			err := mod.RegisterServices(autoCliRegistrar)
 			if err != nil {
 				return nil, err

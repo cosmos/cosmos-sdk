@@ -4,6 +4,9 @@ on: pull_request
 permissions:
   pull-requests: write
 
+env:
+  PR_TITLE: ${{ github.event.pull_request.title }}
+
 jobs:
   update-all:
     runs-on: ubuntu-latest
@@ -17,7 +20,7 @@ jobs:
           token: ${{ secrets.PRBOT_PAT }}
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.23"
           check-latest: true
       - name: Extract updated dependency
         id: deps
@@ -25,8 +28,8 @@ jobs:
           # Extract the dependency name from the PR title
           # Example: "build(deps): Bump github.com/cosmos/cosmos-sdk from 0.46.0 to 0.47.0"
           # Extracts "github.com/cosmos/cosmos-sdk" and "0.47.0"
-          echo "name=$(echo "${{ github.event.pull_request.title }}" | cut -d ' ' -f 3)" >> $GITHUB_OUTPUT
-          echo "version=$(echo "${{ github.event.pull_request.title }}" | cut -d ' ' -f 7)" >> $GITHUB_OUTPUT
+          echo "name=$(echo "$PR_TITLE" | cut -d ' ' -f 3)" >> $GITHUB_OUTPUT
+          echo "version=$(echo "$PR_TITLE" | cut -d ' ' -f 7)" >> $GITHUB_OUTPUT
       - name: Update all Go modules
         run: |
           ./scripts/go-update-dep-all.sh ${{ format('{0}@v{1}', steps.deps.outputs.name, steps.deps.outputs.version) }}

@@ -43,14 +43,14 @@ type CfgOption func(*Config)
 // OverwriteDefaultConfigTomlConfig overwrites the default comet config with the new config.
 func OverwriteDefaultConfigTomlConfig(newCfg *cmtcfg.Config) CfgOption {
 	return func(cfg *Config) {
-		cfg.ConfigTomlConfig = newCfg // nolint:ineffassign,staticcheck // We want to overwrite everything
+		cfg.ConfigTomlConfig = newCfg
 	}
 }
 
 // OverwriteDefaultAppTomlConfig overwrites the default comet config with the new config.
 func OverwriteDefaultAppTomlConfig(newCfg *AppTomlConfig) CfgOption {
 	return func(cfg *Config) {
-		cfg.AppTomlConfig = newCfg // nolint:ineffassign,staticcheck // We want to overwrite everything
+		cfg.AppTomlConfig = newCfg
 	}
 }
 

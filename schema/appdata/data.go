@@ -49,6 +49,8 @@ type EventData struct {
 
 // Event represents the data for a single event.
 type Event struct {
+	// BlockStage represents the stage of the block at which this event is associated.
+	// If the block stage is unknown, it should be set to UnknownBlockStage.
 	BlockStage BlockStage
 
 	// TxIndex is the 1-based index of the transaction in the block to which this event is associated.
@@ -76,13 +78,23 @@ type Event struct {
 	Attributes ToEventAttributes
 }
 
+// BlockStage represents the stage of block processsing for an event.
 type BlockStage int32
 
 const (
+	// UnknownBlockStage indicates that we do not know the block stage.
 	UnknownBlockStage BlockStage = iota
+
+	// PreBlockStage indicates that the event is associated with the pre-block stage.
 	PreBlockStage
+
+	// BeginBlockStage indicates that the event is associated with the begin-block stage.
 	BeginBlockStage
+
+	// TxProcessingStage indicates that the event is associated with the transaction processing stage.
 	TxProcessingStage
+
+	// EndBlockStage indicates that the event is associated with the end-block stage.
 	EndBlockStage
 )
 

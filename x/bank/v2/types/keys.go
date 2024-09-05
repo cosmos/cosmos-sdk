@@ -11,7 +11,5 @@ const (
 	GovModuleName = "gov"
 )
 
-var (
-	// ParamsKey is the prefix for x/bank/v2 parameters
-	ParamsKey = collections.NewPrefix(2)
-)
+// ParamsKey is the prefix for x/bank/v2 parameters
+var ParamsKey = collections.NewPrefix(2)

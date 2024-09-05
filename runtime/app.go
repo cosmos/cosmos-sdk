@@ -173,6 +173,9 @@ func (a *App) Close() error {
 
 // PreBlocker application updates every pre block
 func (a *App) PreBlocker(ctx sdk.Context, _ *abci.FinalizeBlockRequest) error {
+	if a.UnorderedTxManager != nil {
+		a.UnorderedTxManager.OnNewBlock(ctx.BlockTime())
+	}
 	return a.ModuleManager.PreBlock(ctx)
 }
 

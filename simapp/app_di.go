@@ -6,7 +6,6 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
-	"path/filepath"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/address"
@@ -36,7 +35,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -45,7 +43,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -53,7 +50,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/spf13/cast"
 )
 
 // DefaultNodeHome default home directories for the application daemon
@@ -272,16 +268,6 @@ func NewSimApp(
 	// 	return app.App.InitChainer(ctx, req)
 	// })
 
-	// create, start, and load the unordered tx manager
-	utxDataDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data")
-	app.UnorderedTxManager = unorderedtx.NewManager(utxDataDir)
-	app.UnorderedTxManager.Start()
-	app.SetPrecommiter(app.Precommiter)
-
-	if err := app.UnorderedTxManager.OnInit(); err != nil {
-		panic(fmt.Errorf("failed to initialize unordered tx manager: %w", err))
-	}
-
 	// register custom snapshot extensions (if any)
 	if manager := app.SnapshotManager(); manager != nil {
 		if err := manager.RegisterExtensions(
@@ -324,23 +310,6 @@ func (app *SimApp) setCustomAnteHandler() {
 
 	// Set the AnteHandler for the app
 	app.SetAnteHandler(anteHandler)
-}
-
-func (app *SimApp) Precommiter(ctx sdk.Context) {
-	if err := app.ModuleManager.Precommit(ctx); err != nil {
-		panic(err)
-	}
-
-	app.UnorderedTxManager.OnNewBlock(ctx.BlockTime())
-}
-
-// Close implements the Application interface and closes all necessary application
-// resources.
-func (app *SimApp) Close() error {
-	if err := app.BaseApp.Close(); err != nil {
-		return err
-	}
-	return app.UnorderedTxManager.Close()
 }
 
 // LegacyAmino returns SimApp's amino codec.

@@ -8,13 +8,13 @@ import (
 
 	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/auth/ante"
+	"cosmossdk.io/x/auth/ante/unorderedtx"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 )
 
 const gasConsumed = uint64(25)
@@ -141,7 +141,7 @@ func TestUnorderedTxDecorator_UnorderedTx_ValidDeliverTx(t *testing.T) {
 	require.True(t, txm.Contains(bz))
 }
 
-func genUnorderedTx(t *testing.T, unordered bool, timestamp time.Time) (sdk.Tx, []byte) {
+func genUnorderedTx(t testing.TB, unordered bool, timestamp time.Time) (sdk.Tx, []byte) {
 	t.Helper()
 
 	s := SetupTestSuite(t, true)
@@ -171,3 +171,49 @@ func genUnorderedTx(t *testing.T, unordered bool, timestamp time.Time) (sdk.Tx, 
 
 	return tx, txBz[:]
 }
+
+// Benchmark function for genUnorderedTx
+func BenchmarkGenUnorderedTxOld(b *testing.B) {
+	// tx, _ := genUnorderedTx(b, true, time.Now().Add(time.Minute))
+	// b.ResetTimer()
+	// for _, iterations := range []int{1000, 10000, 100000, 100000} {
+	// 	b.Run("Iterations_"+strconv.Itoa(iterations), func(b *testing.B) {
+	// 		for i := 0; i < iterations; i++ {
+	// createAllocations(12000000)
+	// 			_, err := ante.TxIdentifier(uint64(time.Now().Unix()+int64(i)), tx)
+	// 			if err != nil {
+	// 				b.Fatal(err)
+	// 			}
+	// 		}
+	// 	})
+	// }
+}
+
+func BenchmarkGenUnorderedTx(b *testing.B) {
+	tx, _ := genUnorderedTx(b, true, time.Now().Add(time.Minute))
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = ante.TxIdentifier(uint64(time.Now().Unix()+int64(i)), tx)
+
+	}
+}
+
+// goos: darwin
+// goarch: arm64
+// pkg: cosmossdk.io/x/auth/ante
+// cpu: Apple M2
+// BenchmarkGenUnorderedTx-8   	 5807298	       205.9 ns/op	      88 B/op	       5 allocs/op
+// BenchmarkGenUnorderedTx-8   	 5373726	       207.8 ns/op	      88 B/op	       5 allocs/op
+// BenchmarkGenUnorderedTx-8   	 5718591	       204.9 ns/op	      88 B/op	       5 allocs/op
+// PASS
+// ok  	cosmossdk.io/x/auth/ante	2.066s
+
+// goos: darwin
+// goarch: arm64
+// pkg: cosmossdk.io/x/auth/ante
+// cpu: Apple M2
+// BenchmarkGenUnorderedTx-8   	 5298655	       225.0 ns/op	     248 B/op	       7 allocs/op
+// BenchmarkGenUnorderedTx-8   	 5279116	       226.7 ns/op	     248 B/op	       7 allocs/op
+// BenchmarkGenUnorderedTx-8   	 5361398	       221.6 ns/op	     248 B/op	       7 allocs/op
+// PASS
+// ok  	cosmossdk.io/x/auth/ante	2.230s

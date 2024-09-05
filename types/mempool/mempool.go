@@ -47,3 +47,16 @@ var (
 	ErrTxNotFound           = errors.New("tx not found in mempool")
 	ErrMempoolTxMaxCapacity = errors.New("pool reached max tx capacity")
 )
+
+func SelectBy(mempool Mempool, ctx context.Context, txs [][]byte, callback func(sdk.Tx) bool) {
+	if ext, ok := mempool.(ExtMempool); ok {
+		ext.SelectBy(ctx, txs, callback)
+		return
+	}
+
+	// fallback to old behavior, without holding the lock while iteration.
+	iter := mempool.Select(ctx, txs)
+	for iter != nil && callback(iter.Tx()) {
+		iter = iter.Next()
+	}
+}

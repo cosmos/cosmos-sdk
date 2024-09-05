@@ -208,14 +208,14 @@ type (
 	// DefaultProposalHandler defines the default ABCI PrepareProposal and
 	// ProcessProposal handlers.
 	DefaultProposalHandler struct {
-		mempool          mempool.ExtMempool
+		mempool          mempool.Mempool
 		txVerifier       ProposalTxVerifier
 		txSelector       TxSelector
 		signerExtAdapter mempool.SignerExtractionAdapter
 	}
 )
 
-func NewDefaultProposalHandler(mp mempool.ExtMempool, txVerifier ProposalTxVerifier) *DefaultProposalHandler {
+func NewDefaultProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier) *DefaultProposalHandler {
 	return &DefaultProposalHandler{
 		mempool:          mp,
 		txVerifier:       txVerifier,
@@ -285,7 +285,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			selectedTxsNums int
 			invalidTxs      []sdk.Tx // invalid txs to be removed out of the loop to avoid dead lock
 		)
-		h.mempool.SelectBy(ctx, req.Txs, func(memTx sdk.Tx) bool {
+		mempool.SelectBy(h.mempool, ctx, req.Txs, func(memTx sdk.Tx) bool {
 			signerData, err := h.signerExtAdapter.GetSigners(memTx)
 			if err != nil {
 				// propagate the error to the caller

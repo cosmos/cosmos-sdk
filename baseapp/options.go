@@ -96,7 +96,7 @@ func SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOpti
 }
 
 // SetMempool sets the mempool on BaseApp.
-func SetMempool(mempool mempool.ExtMempool) func(*BaseApp) {
+func SetMempool(mempool mempool.Mempool) func(*BaseApp) {
 	return func(app *BaseApp) { app.SetMempool(mempool) }
 }
 
@@ -319,7 +319,7 @@ func (app *BaseApp) SetQueryMultiStore(ms storetypes.MultiStore) {
 }
 
 // SetMempool sets the mempool for the BaseApp and is required for the app to start up.
-func (app *BaseApp) SetMempool(mempool mempool.ExtMempool) {
+func (app *BaseApp) SetMempool(mempool mempool.Mempool) {
 	if app.sealed {
 		panic("SetMempool() on sealed BaseApp")
 	}

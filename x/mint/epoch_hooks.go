@@ -8,11 +8,6 @@ import (
 
 var _ epochstypes.EpochHooks = AppModule{}
 
-// GetModuleName implements types.EpochHooks.
-func (am AppModule) GetModuleName() string {
-	return am.Name()
-}
-
 // BeforeEpochStart calls the mint function.
 func (am AppModule) BeforeEpochStart(ctx context.Context, epochIdentifier string, epochNumber int64) error {
 	minter, err := am.keeper.Minter.Get(ctx)

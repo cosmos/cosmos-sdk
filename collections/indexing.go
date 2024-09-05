@@ -13,7 +13,6 @@ import (
 
 // IndexingOptions are indexing options for the collections schema.
 type IndexingOptions struct {
-
 	// RetainDeletionsFor is the list of collections to retain deletions for.
 	RetainDeletionsFor []string
 }
@@ -98,7 +97,6 @@ func (c collectionSchemaCodec) decodeKVPair(update schema.KVPairUpdate) ([]schem
 		return []schema.ObjectUpdate{
 			{TypeName: c.coll.GetName()},
 		}, err
-
 	}
 
 	if update.Remove {

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -13,17 +12,13 @@ import (
 	"cosmossdk.io/x/bank/v2/keeper"
 	"cosmossdk.io/x/bank/v2/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 // ConsensusVersion defines the current x/bank/v2 module consensus version.
 const ConsensusVersion = 1
 
 var (
-	_ module.HasGRPCGateway = AppModule{}
-
 	_ appmodulev2.AppModule             = AppModule{}
 	_ appmodulev2.HasGenesis            = AppModule{}
 	_ appmodulev2.HasRegisterInterfaces = AppModule{}
@@ -52,13 +47,6 @@ func (AppModule) Name() string { return types.ModuleName }
 
 // ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
-
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the bank module.
-func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
-	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
-		panic(err)
-	}
-}
 
 // RegisterInterfaces registers interfaces and implementations of the bank module.
 func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {

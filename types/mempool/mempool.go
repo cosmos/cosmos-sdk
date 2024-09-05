@@ -48,6 +48,7 @@ var (
 	ErrMempoolTxMaxCapacity = errors.New("pool reached max tx capacity")
 )
 
+// SelectBy is compatible with old interface to avoid breaking api.
 func SelectBy(mempool Mempool, ctx context.Context, txs [][]byte, callback func(sdk.Tx) bool) {
 	if ext, ok := mempool.(ExtMempool); ok {
 		ext.SelectBy(ctx, txs, callback)

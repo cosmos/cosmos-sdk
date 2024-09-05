@@ -14,7 +14,8 @@ Uses:
 * testify
 * gjson
 * sjson
-Server and client side are executed on the host machine
+
+Server and client side are executed on the host machine.
 
 ## Developer
 
@@ -23,6 +24,10 @@ Server and client side are executed on the host machine
 System tests cover the full stack via cli and a running (multi node) network. They are more expensive (in terms of time/ cpu) 
 to run compared to unit or integration tests. 
 Therefore, we focus on the **critical path** and do not cover every condition.
+
+## How to use
+
+Read the [getting_started.md](getting_started.md) guide to get started.
 
 ### Execute a single test
 

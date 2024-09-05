@@ -43,11 +43,11 @@ mod digital_good {
 
     #[service]
     pub trait BuyIt {
-        fn buy_it(&self, ctx: &mut Context, voucher: payment_voucher::PaymentVoucher) -> cosmos_core::Result<()>;
+        fn buy_it(&self, ctx: &mut Context, voucher: &payment_voucher::PaymentVoucher::Ref) -> cosmos_core::Result<()>;
     }
 
     impl BuyIt for DigitalGood {
-        fn buy_it(&self, ctx: &mut Context, voucher: payment_voucher::PaymentVoucher) -> cosmos_core::Result<()> {
+        fn buy_it(&self, ctx: &mut Context, voucher: &payment_voucher::PaymentVoucher::Ref) -> cosmos_core::Result<()> {
             if self.purchasers.get(ctx, &ctx.sender())?.is_some() {
                 return Err("already purchased".to_string());
             }

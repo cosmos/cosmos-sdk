@@ -391,11 +391,11 @@ The signature of the extension interface `HasRegisterInterfaces` has been change
 +func (AppModule) RegisterInterfaces(registry registry.InterfaceRegistrar) {
 ```
 
-The signature of the extension interface `HasAminoCodec` has been changed to accept a `cosmossdk.io/core/legacy.Amino` instead of a `codec.LegacyAmino`. Modules should update their `HasAminoCodec` implementation to accept a `cosmossdk.io/core/legacy.Amino` interface.
+The signature of the extension interface `HasAminoCodec` has been changed to accept a `cosmossdk.io/core/registry.AminoRegistrar` instead of a `codec.LegacyAmino`. Modules should update their `HasAminoCodec` implementation to accept a `cosmossdk.io/core/registry.AminoRegistrar` interface.
 
 ```diff
 -func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-+func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
++func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
 ```
 
 ##### Simulation

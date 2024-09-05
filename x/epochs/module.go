@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/epochs/keeper"
 	"cosmossdk.io/x/epochs/simulation"
 	"cosmossdk.io/x/epochs/types"
@@ -56,7 +56,7 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the epochs module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {}
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the epochs module.
 func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {

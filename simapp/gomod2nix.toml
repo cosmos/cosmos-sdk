@@ -409,8 +409,8 @@ schema = 3
     version = "v0.6.1"
     hash = "sha256-rIDyUzNfxRA934PIoySR0EhuBbZVRK/25Jlc/r8WODw="
   [mod."github.com/prometheus/common"]
-    version = "v0.57.0"
-    hash = "sha256-Lh9qK+5EfNHvT9u9QNvCTZFHJDB7CiFiHB+XqGENXNY="
+    version = "v0.58.0"
+    hash = "sha256-OtQpd2Llq+22+c6zESg4rJJFmJldnVxGS/6UZ79BWGI="
   [mod."github.com/prometheus/procfs"]
     version = "v0.15.1"
     hash = "sha256-H+WXJemFFwdoglmD6p7JRjrJJZmIVAmJwYmLbZ8Q9sw="
